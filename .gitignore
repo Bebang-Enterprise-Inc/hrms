@@ -1,22 +1,20 @@
-.DS_Store
-*.pyc
-*.egg-info
-*.swp
-tags
-hrms/public/dist
-hrms/public/node_modules
-hrms/docs/current
-node_modules/
-dist/
-__pycache__/
+# ... existing content ...
 
-# build/
-.vscode
-.vs
-node_modules
-*debug.log
-hrms/docs/current
-hrms/public/frontend
-hrms/www/hrms.html
-hrms/public/roster
-hrms/www/roster.html
+# AWS Credentials
+.aws/
+*.pem
+*.key
+.env
+.env.local
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# AWS MCP
+.cursor/mcp.json.local
+
+# Cursor Rules (may contain sensitive info)
+.cursor/rules/*credentials*.mdc

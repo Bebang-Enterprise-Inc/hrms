@@ -1,0 +1,96 @@
+name: Deploy Frappe HRMS to AWS
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  workflow_dispatch: # Allows manual triggering from GitHub UI
+
+env:
+  AWS_REGION: ap-southeast-1
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Verify AWS connection
+        run: |
+          aws sts get-caller-identity
+          echo "✅ AWS credentials verified"
+      
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
+          script: |
+            set -e
+            echo "🚀 Starting deployment..."
+            
+            # Navigate to project directory
+            cd /home/ubuntu/frappe-hrms || cd ~/frappe-hrms
+            
+            # Pull latest code
+            echo "📥 Pulling latest code..."
+            git fetch origin
+            git reset --hard origin/main
+            git pull origin main
+            
+            # Backup current deployment
+            echo "💾 Creating backup..."
+            if [ -d "docker" ]; then
+              cd docker
+              docker-compose exec -T frappe bench --site hrms.yourdomain.com backup --with-files || true
+              cd ..
+            fi
+            
+            # Restart services
+            echo "🔄 Restarting services..."
+            cd docker
+            docker-compose down
+            docker-compose pull
+            docker-compose up -d --build
+            
+            # Wait for services to be ready
+            echo "⏳ Waiting for services to start..."
+            sleep 30
+            
+            # Run migrations
+            echo "🔧 Running database migrations..."
+            docker-compose exec -T frappe bench --site hrms.yourdomain.com migrate || true
+            
+            # Clear cache
+            echo "🧹 Clearing cache..."
+            docker-compose exec -T frappe bench --site hrms.yourdomain.com clear-cache || true
+            
+            # Verify deployment
+            echo "✅ Verifying deployment..."
+            docker-compose ps
+            
+            echo "🎉 Deployment complete!"
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment succeeded"
+          else
+            echo "❌ Deployment failed"
+          fi
+
+

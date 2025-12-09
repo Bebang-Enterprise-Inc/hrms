@@ -1,0 +1,369 @@
+ORGANIZATIONAL CHART EXTRACTED FROM DRAW.IO XML FILE
+================================================================================
+
+Total employees found: 78
+Total connections found: 74
+
+--- EMPLOYEE LIST ---
+
+1. Sam Karazi
+   Email: sam@bebang.ph
+
+2. Chimes Marco
+   Position: Executive Assistant
+   Email: ea@bebang.ph
+
+3. Mae Salumbides
+   Position: Chief Product Officer
+   Email: sam@bebang.ph
+
+4. Butch Formoso
+   Position: Chief Financial Officer
+   Email: sam@bebang.ph
+
+5. Herdie Hernandez
+   Position: VP of Operations
+   Email: sam@bebang.ph
+
+6. Andrew Manansala
+   Position: Director of Business Development
+   Email: sam@bebang.ph
+
+7. Edlice dela Cruz
+   Position: Regional Manager
+   Email: sam@bebang.ph
+
+8. Aldrin Reyes
+   Position: Supply Chain Manager
+   Email: sam@bebang.ph
+
+9. arnoldjames@bebang.ph
+   Position: Sr. Food Scientist
+   Email: sam@bebang.ph
+
+10. Julius Tin-ga
+   Position: Business Dev. Officer
+   Email: sam@bebang.ph
+
+11. Gena Alegre
+   Position: Accounts Manager
+   Email: sam@bebang.ph
+
+12. Dan Marquez
+   Position: Head of Projects
+   Email: dan@bebang.ph
+
+13. Pao Sunga
+   Position: Director of Projects
+   Email: sam@bebang.ph
+
+14. Mark Maynigo
+   Position: Project Supervisor
+   Email: sam@bebang.ph
+
+15. Erik Ferrer
+   Position: Project Supervisor
+   Email: sam@bebang.ph
+
+16. Alyssa
+   Position: Accounting Manager
+   Email: sam@bebang.ph
+
+17. Jennalyn Liwanag
+   Position: QA Specialist
+   Email: sam@bebang.ph
+
+18. Arshier Ching
+   Position: Internal Audit Head
+   Email: sam@bebang.ph
+
+19. Angela Lazaro
+   Position: Project Accountant
+   Email: sam@bebang.ph
+
+20. Hannah
+   Email: sam@bebang.ph
+
+21. Jasmine
+   Position: Store Accountant
+   Email: sam@bebang.ph
+
+22. Cassie Cabug-os
+   Position: Store Accountant
+   Email: sam@bebang.ph
+
+23. Justine
+   Position: Store Accountant
+   Email: sam@bebang.ph
+
+24. Eddie
+   Position: Store Accountant
+   Email: sam@bebang.ph
+
+25. Lyndon Olea
+
+26. Jeanele Molina
+   Position: Area Supervisor
+   Email: sam@bebang.ph
+
+27. Jojo Alvarez
+   Position: Content Ideation Strategist
+   Email: sam@bebang.ph
+
+28. Joalie Yapchulay
+   Position: Video Producer
+   Email: sam@bebang.ph
+
+29. Jay Dalag
+   Position: Sr. Graphic Designer
+   Email: sam@bebang.ph
+
+30. Ralph Nala
+   Position: Jr. Graphic Designer
+   Email: sam@bebang.ph
+
+31. Dave Martinez
+   Position: Ops. Excellence Specialist (Ops)
+   Email: sam@bebang.ph
+
+32. Jocelyn Chan
+   Position: Area Supervisor
+   Email: sam@bebang.ph
+
+33. Islar Isles
+   Position: Audit Associate
+   Email: sam@bebang.ph
+
+34. Mark Paulo Aguilar
+   Position: Ops. Excellence Specialist (SCM)
+   Email: sam@bebang.ph
+
+35. Jose Sumagui Jr.
+   Email: sam@bebang.ph
+
+36. Ian Dionisio
+   Position: Logistics & Warehouse
+   Email: sam@bebang.ph
+
+37. JR Jamandra
+   Position: Procurement Specialist
+   Email: sam@bebang.ph
+
+38. Cayla Cabagnot
+   Position: Procurement Assistant
+   Email: sam@bebang.ph
+
+39. Runa Ortiz
+   Position: Quantity Surveyor
+   Email: sam@bebang.ph
+
+40. Brian Pe
+   Position: Commissary Supervisor
+   Email: sam@bebang.ph
+
+41. Bebang Halo-Halo
+
+42. Rhean Bernardo
+   Position: Accounts Manager
+   Email: sam@bebang.ph
+
+43. Jomar Templo
+
+44. Ana Soriano
+   Position: Chief of Staff
+   Email: sam@bebang.ph
+
+45. Ronald Caringal
+   Position: HR Manager
+   Email: sam@bebang.ph
+
+46. Prima Fernandez
+   Position: HR Generalist
+   Email: sam@bebang.ph
+
+47. MJ Rosendo
+   Position: HR Specialist - Benefits
+   Email: sam@bebang.ph
+
+48. Paula Marie
+   Position: Recruitment Associate
+   Email: sam@bebang.ph
+
+49. Pauline Rivera
+   Position: Recruitment Officer
+   Email: sam@bebang.ph
+
+50. Noel Nava
+   Position: Admin Officer
+   Email: sam@bebang.ph
+
+51. Mae Salumbides
+   Position: Co-Founder
+   Email: sam@bebang.ph
+
+52. Maui Mauricio
+   Position: Sr. Marketing Manager
+   Email: sam@bebang.ph
+
+53. Bebang Halo-Halo
+
+54. Bebang Halo-Halo
+
+55. Dom Hernandez
+   Position: Strategic Advisor
+   Email: sam@bebang.ph
+
+56. Ron Galanga
+   Position: Jr. Video Producer
+   Email: sam@bebang.ph
+
+57. Jenna Tejada
+   Position: Content Creator
+   Email: sam@bebang.ph
+
+58. AJ Cusilit
+   Position: Marketing Admin
+   Email: sam@bebang.ph
+
+59. Jelien Aguila
+   Position: Housekeeper
+
+60. Dhency Baldomar
+   Position: Housekeeper
+
+61. Ruby Bernal
+   Email: sam@bebang.ph
+
+62. Evelyn Gruy
+   Position: QA Assistant
+
+63. Lalaine Sugay
+   Position: Lab Aide
+
+64. Andrei Villanueva
+   Position: Jr. R&D Specialist
+   Email: sam@bebang.ph
+
+65. Archie Reyes
+   Position: IT Officer
+   Email: sam@bebang.ph
+
+66. Ron Andrew Santos
+   Position: IT Associate
+   Email: sam@bebang.ph
+
+67. Bea Lunasco
+   Position: CSR (Logistics)
+   Email: sam@bebang.ph
+
+68. Avis Principe
+   Position: Training Manager
+   Email: sam@bebang.ph
+
+69. Ruby Bernal
+   Position: Customer Service Manager
+   Email: sam@bebang.ph
+
+70. Jaycel Calbello
+   Position: CSR (Admin/Refund)
+   Email: sam@bebang.ph
+
+71. Kath Jagoriles
+   Position: Receptionist
+   Email: sam@bebang.ph
+
+72. Jade Tigtig
+   Position: CSR (Escalation)
+   Email: sam@bebang.ph
+
+73. Trish Javier
+   Position: CSR (Online Delivery)
+   Email: sam@bebang.ph
+
+74. Marj Nativo
+   Position: CSR
+   Email: sam@bebang.ph
+
+75. Aubrey Ocampo
+   Position: CSR
+   Email: sam@bebang.ph
+
+76. Shane Almarez
+   Position: CSR
+   Email: sam@bebang.ph
+
+77. Billy Coronel
+   Position: CSR (Trainee)
+   Email: sam@bebang.ph
+
+78. Kat Mengilla
+   Position: CSR (Trainee)
+   Email: sam@bebang.ph
+
+
+--- ORGANIZATIONAL HIERARCHY ---
+
++- Sam Karazi
+  +- Chimes Marco - Executive Assistant
+  +- Mae Salumbides - Chief Product Officer
+  +- Butch Formoso - Chief Financial Officer
+    +- Alyssa - Accounting Manager
+      +- Angela Lazaro - Project Accountant
+        +- Hannah
+        +- Jasmine - Store Accountant
+        +- Cassie Cabug-os - Store Accountant
+        +- Justine - Store Accountant
+        +- Eddie - Store Accountant
+  +- Herdie Hernandez - VP of Operations
+    +- Edlice dela Cruz - Regional Manager
+      +- Jocelyn Chan - Area Supervisor
+        +- Bebang Halo-Halo
+          +- Bebang Halo-Halo
+          +- Jeanele Molina - Area Supervisor
+    +- Aldrin Reyes - Supply Chain Manager
+      +- Jose Sumagui Jr.
+      +- Ian Dionisio - Logistics & Warehouse
+      +- JR Jamandra - Procurement Specialist
+        +- Cayla Cabagnot - Procurement Assistant
+      +- Brian Pe - Commissary Supervisor
+        +- Bebang Halo-Halo
+    +- Dave Martinez - Ops. Excellence Specialist (Ops)
+    +- Mark Paulo Aguilar - Ops. Excellence Specialist (SCM)
+    +- Avis Principe - Training Manager
+  +- Pao Sunga - Director of Projects
+    +- Dan Marquez - Head of Projects
+      +- Erik Ferrer - Project Supervisor
+  +- Arshier Ching - Internal Audit Head
+    +- Islar Isles - Audit Associate
+  +- Ana Soriano - Chief of Staff
+  +- Ronald Caringal - HR Manager
+    +- Prima Fernandez - HR Generalist
+    +- MJ Rosendo - HR Specialist - Benefits
+    +- Pauline Rivera - Recruitment Officer
+      +- Paula Marie - Recruitment Associate
+    +- Kath Jagoriles - Receptionist
+  +- Noel Nava - Admin Officer
+    +- Jelien Aguila - Housekeeper
+    +- Dhency Baldomar - Housekeeper
+  +- Mae Salumbides - Co-Founder
+  +- Maui Mauricio - Sr. Marketing Manager
+    +- Jojo Alvarez - Content Ideation Strategist
+      +- Joalie Yapchulay - Video Producer
+        +- Ron Galanga - Jr. Video Producer
+          +- Jenna Tejada - Content Creator
+      +- Jay Dalag - Sr. Graphic Designer
+        +- Ralph Nala - Jr. Graphic Designer
+  +- Dom Hernandez - Strategic Advisor
+  +- Ruby Bernal
+    +- Bea Lunasco - CSR (Logistics)
+  +- Archie Reyes - IT Officer
+    +- Ron Andrew Santos - IT Associate
+  +- Ruby Bernal - Customer Service Manager
+    +- Jaycel Calbello - CSR (Admin/Refund)
+    +- Jade Tigtig - CSR (Escalation)
+    +- Trish Javier - CSR (Online Delivery)
+    +- Marj Nativo - CSR
+    +- Aubrey Ocampo - CSR
+    +- Shane Almarez - CSR
+    +- Billy Coronel - CSR (Trainee)
+    +- Kat Mengilla - CSR (Trainee)

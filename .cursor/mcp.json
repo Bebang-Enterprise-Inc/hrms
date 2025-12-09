@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "aws": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-aws"
+      ],
+      "env": {
+        "AWS_REGION": "ap-southeast-1",
+        "AWS_DEFAULT_REGION": "ap-southeast-1"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      }
+    }
+  }
+}
+
+
