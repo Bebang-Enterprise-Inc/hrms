@@ -80,11 +80,9 @@ def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
     # Runtime evidence in prod:
     # - `/memberships` returned HTML 404
     # - `fields=` caused 400 INVALID_ARGUMENT
+    # - `readMask=` caused 400 INVALID_ARGUMENT
     #
-    # Use the documented `spaces.members.list` endpoint:
-    #   GET /v1/{space}/members
-    #
-    # Request richer member data via `readMask` (instead of `fields`).
+    # Therefore we keep this as minimal as possible: pageSize only.
     endpoints = [
         ("members", f"https://chat.googleapis.com/v1/{space_name}/members"),
         ("memberships", f"https://chat.googleapis.com/v1/{space_name}/memberships"),
@@ -92,11 +90,7 @@ def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
 
     last_err = None
     for kind, url in endpoints:
-        # Chat API prefers readMask over fields for these resources.
-        params = {
-            "pageSize": 100,
-            "readMask": "member.name,member.displayName,member.type,name",
-        }
+        params = {"pageSize": 100}
 
         resp = requests.get(
             url,
@@ -270,10 +264,19 @@ def get_user_chat_spaces():
             display_name = (s.get("displayName") or "").strip()
             fallback = display_name or _space_id_suffix(space_name) or "Unnamed"
 
-            # Enrich any "unnamed" / ID-like spaces with membership-derived label.
-            # This covers:
-            # - DIRECT_MESSAGE / GROUP_CHAT (often no displayName)
-            # - Occasionally SPACE entries that come back without displayName (would otherwise show ID-like text)
+            # Pragmatic product decision (runtime evidence):
+            # Listing membership for DMs / unnamed group chats is not reliable in this environment
+            # (404/400 errors), and Google often does not provide enough data to derive a label.
+            #
+            # To avoid showing users opaque IDs like "AAQA...", we filter:
+            # - ALL DIRECT_MESSAGE spaces
+            # - GROUP_CHAT spaces whose displayName looks like an ID or is missing
+            if space_type == "DIRECT_MESSAGE":
+                continue
+            if space_type == "GROUP_CHAT" and _needs_membership_label(s):
+                continue
+
+            # For regular SPACE entries (and named group chats), attempt enrichment only if needed.
             if _needs_membership_label(s):
                 try:
                     memberships = _fetch_space_memberships(access_token, space_name)

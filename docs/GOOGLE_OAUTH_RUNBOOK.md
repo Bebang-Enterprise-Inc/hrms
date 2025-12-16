@@ -105,6 +105,22 @@ Backend now tries:
 
 and derives labels from membership `member.displayName` when available.
 
+### Limitation (Confirmed by Production Logs)
+
+In our current Google Chat tenant/API behavior, member listing for **DIRECT_MESSAGE** and many unnamed **GROUP_CHAT** spaces is unreliable:
+- `memberships` endpoint can return **404**
+- adding `fields=` or `readMask=` has produced **400 INVALID_ARGUMENT**
+
+Result: for many DMs/group chats Google does not provide enough data to derive a human-friendly label.
+
+### Product Decision (Implemented)
+
+To avoid showing users opaque IDs in the dropdown:
+- **Filter out all `DIRECT_MESSAGE` spaces**
+- **Filter out `GROUP_CHAT` spaces whose `displayName` is missing or ID-like**
+
+Named group chats (e.g. “Sam - Ching - Chimes”) and normal spaces remain selectable.
+
 ### If it still shows IDs
 
 Check Frappe Error Log for:
