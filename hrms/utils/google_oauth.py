@@ -148,9 +148,9 @@ def _refresh_token(doc) -> str:
                 "client_id": client_id,
                 "client_secret": client_secret,
                 "refresh_token": doc.refresh_token,
-                "grant_type": "refresh_token"
+                "grant_type": "refresh_token",
             },
-            timeout=30
+            timeout=30,
         )
     except requests.RequestException as e:
         frappe.log_error(
@@ -163,24 +163,44 @@ def _refresh_token(doc) -> str:
         )
     
     if response.status_code != 200:
-        error_data = response.json() if response.text else {}
-        error_msg = error_data.get("error_description", error_data.get("error", "Unknown error"))
-        
+        # Google's token endpoint typically returns JSON, but be defensive.
+        try:
+            error_data = response.json() if response.text else {}
+        except Exception:
+            error_data = {}
+
+        error_code = error_data.get("error") if isinstance(error_data, dict) else None
+        error_desc = (
+            error_data.get("error_description") if isinstance(error_data, dict) else None
+        )
+        body_snippet = (response.text or "")[:800]
+
         frappe.log_error(
             title="Google Token Refresh Failed",
-            message=f"User: {doc.user}, Status: {response.status_code}, Error: {error_msg}"
+            message=(
+                f"User: {doc.user}, Status: {response.status_code}, "
+                f"error={error_code}, error_description={error_desc}, body={body_snippet}"
+            ),
         )
-        
+
         # If refresh token is invalid/revoked, user needs to re-authenticate
-        if error_data.get("error") in ("invalid_grant", "invalid_token"):
+        if error_code in ("invalid_grant", "invalid_token"):
             frappe.throw(
                 "Your Google authorization has expired or been revoked. Please sign in with Google again.",
-                frappe.AuthenticationError
+                frappe.AuthenticationError,
             )
-        
+
+        # If client credentials are wrong/mismatched, surface a clearer message
+        if error_code in ("invalid_client", "unauthorized_client"):
+            frappe.throw(
+                "Google OAuth client configuration is invalid. Please contact your administrator.",
+                frappe.AuthenticationError,
+            )
+
+        display_msg = error_code or error_desc or "Unknown error"
         frappe.throw(
-            f"Failed to refresh Google token: {error_msg}",
-            frappe.AuthenticationError
+            f"Failed to refresh Google token: {display_msg}",
+            frappe.AuthenticationError,
         )
     
     data = response.json()

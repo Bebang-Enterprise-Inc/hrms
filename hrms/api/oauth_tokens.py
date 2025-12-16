@@ -92,3 +92,65 @@ def check_token_status():
         "token_expiry": str(doc.token_expiry) if doc.token_expiry else None,
         "last_refreshed": str(doc.last_refreshed) if doc.last_refreshed else None
     }
+
+
+@frappe.whitelist()
+def disconnect_google(revoke: int | None = 1):
+    """
+    Disconnect the current user's Google OAuth connection.
+
+    - Attempts to revoke the refresh_token (best-effort)
+    - Deletes the stored User OAuth Token doc
+
+    Args:
+        revoke: 1 (default) to attempt Google revoke call, 0 to skip
+
+    Returns:
+        dict: {"success": True/False, "message": "..."}
+    """
+    user = frappe.session.user
+
+    if user == "Guest":
+        return {"success": False, "message": "Not authenticated"}
+
+    doc_name = f"{user}-google"
+
+    if not frappe.db.exists("User OAuth Token", doc_name):
+        return {"success": True, "message": "No Google token found"}
+
+    doc = frappe.get_doc("User OAuth Token", doc_name)
+
+    # Best-effort revoke (does not require the token to still be valid)
+    if revoke:
+        try:
+            import requests
+
+            token_to_revoke = None
+            try:
+                token_to_revoke = doc.get_password("refresh_token") or None
+            except Exception:
+                token_to_revoke = None
+
+            if token_to_revoke:
+                requests.post(
+                    "https://oauth2.googleapis.com/revoke",
+                    params={"token": token_to_revoke},
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    timeout=15,
+                )
+        except Exception as e:
+            frappe.log_error(
+                title="Google Disconnect Revoke Failed",
+                message=f"User: {user}, Error: {str(e)}",
+            )
+
+    try:
+        frappe.delete_doc("User OAuth Token", doc_name, ignore_permissions=True)
+        frappe.db.commit()
+        return {"success": True, "message": "Disconnected successfully"}
+    except Exception as e:
+        frappe.log_error(
+            title="Google Disconnect Delete Failed",
+            message=f"User: {user}, Error: {str(e)}",
+        )
+        return {"success": False, "message": "Failed to disconnect"}
