@@ -77,24 +77,23 @@ def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
     Returns memberships list. Do not log member names/emails (PII).
     """
     # Runtime evidence in prod showed `/memberships` returning `404 <h1>Not Found</h1>` for DM/group chats.
-    # Some Google Chat deployments still expose the legacy `/members` endpoint.
-    # To be robust, try `/memberships` first, then fallback to `/members` on 404.
+    # The documented Chat API method is `spaces.members.list` which uses:
+    #   GET /v1/{parent=spaces/*}/members
+    # and returns a payload containing `memberships[]`.
+    #
+    # To be robust across deployments, try `/members` first, then fallback to `/memberships` on 404.
     endpoints = [
-        ("memberships", f"https://chat.googleapis.com/v1/{space_name}/memberships"),
         ("members", f"https://chat.googleapis.com/v1/{space_name}/members"),
+        ("memberships", f"https://chat.googleapis.com/v1/{space_name}/memberships"),
     ]
 
     last_err = None
     for kind, url in endpoints:
-        # Endpoint-specific partial response shape.
-        # - /memberships returns { memberships: [...] }
-        # - /members returns { members: [...] }
-        fields = (
-            "memberships(member(type,displayName),name),nextPageToken"
-            if kind == "memberships"
-            else "members(member(type,displayName),name),nextPageToken"
-        )
-        params = {"pageSize": 100, "fields": fields}
+        # Both endpoints (in practice) return `memberships[]`. Request only what we need.
+        params = {
+            "pageSize": 100,
+            "fields": "memberships(member(type,displayName),name),nextPageToken",
+        }
 
         resp = requests.get(
             url,
@@ -115,8 +114,8 @@ def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
             },
         )
 
-        # Known mismatch: some environments return HTML 404 for `/memberships`.
-        if kind == "memberships" and resp.status_code == 404:
+        # Known mismatch: some environments return HTML 404 for one of these endpoints.
+        if resp.status_code == 404:
             last_err = f"{kind} 404"
             continue
 
@@ -130,10 +129,7 @@ def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
         except Exception:
             data = {}
 
-        if kind == "memberships":
-            items = data.get("memberships") or []
-        else:
-            items = data.get("members") or []
+        items = data.get("memberships") or []
         return items or []
 
     raise requests.HTTPError(f"memberships.list failed: 404 ({last_err or 'unknown'})")
