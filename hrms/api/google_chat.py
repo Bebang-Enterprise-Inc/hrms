@@ -26,6 +26,10 @@ from hrms.utils.google_oauth import (
 _SPACE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{8,}$")
 
 
+class UserLookupPermissionError(Exception):
+    """Raised when Chat users.get is forbidden due to missing OAuth scope."""
+
+
 def _agent_log(hypothesis_id: str, location: str, message: str, data: dict | None = None) -> None:
     """
     Debug-mode NDJSON logger. Writes to local Cursor debug log.
@@ -155,6 +159,9 @@ def _derive_space_label(space_type: str, memberships: list[dict], fallback: str)
                 headers={"Authorization": f"Bearer {access_token}"},
                 timeout=20,
             )
+            if r.status_code == 403:
+                # Missing chat.users.readonly (or admin) scope.
+                raise UserLookupPermissionError("users.get forbidden (missing scope)")
             if r.status_code != 200:
                 # Don't log body (may contain PII); record only status.
                 _agent_log(
@@ -337,6 +344,15 @@ def get_user_chat_spaces():
                             "membershipCount": len(memberships),
                         },
                     )
+                except UserLookupPermissionError:
+                    return {
+                        "success": False,
+                        "error": (
+                            "Google Chat user profile permission not granted. "
+                            "Please reconnect your Google account."
+                        ),
+                        "needs_auth": True,
+                    }
                 except requests.HTTPError as e:
                     # If scope missing, force reconnect with upgraded scopes
                     msg = str(e)
