@@ -13,7 +13,11 @@ from __future__ import annotations
 import frappe
 import requests
 
-from hrms.utils.google_oauth import get_valid_access_token, has_valid_token
+from hrms.utils.google_oauth import (
+    force_refresh_access_token,
+    get_valid_access_token,
+    has_valid_token,
+)
 
 
 @frappe.whitelist()
@@ -62,12 +66,26 @@ def get_user_chat_spaces():
         )
         
         if response.status_code == 401:
-            # Token was valid but rejected - user may have revoked access
-            return {
-                "success": False,
-                "error": "Google access was revoked. Please reconnect your account.",
-                "needs_auth": True
-            }
+            # Token might be expired/invalid due to clock skew or revocation.
+            # Try a forced refresh once before asking the user to reconnect.
+            try:
+                refreshed = force_refresh_access_token(user)
+                response = requests.get(
+                    "https://chat.googleapis.com/v1/spaces",
+                    headers={"Authorization": f"Bearer {refreshed}"},
+                    params={"pageSize": 100},
+                    timeout=30,
+                )
+            except frappe.AuthenticationError as e:
+                return {"success": False, "error": str(e), "needs_auth": True}
+
+            if response.status_code == 401:
+                # Token was refreshed but still rejected - user may have revoked access
+                return {
+                    "success": False,
+                    "error": "Google access was revoked. Please reconnect your account.",
+                    "needs_auth": True,
+                }
         
         if response.status_code == 403:
             # User hasn't granted chat.spaces.readonly scope

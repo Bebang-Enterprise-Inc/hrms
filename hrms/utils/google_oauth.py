@@ -85,6 +85,25 @@ def get_valid_access_token(user: str) -> str:
     return _refresh_token(doc)
 
 
+def force_refresh_access_token(user: str) -> str:
+    """
+    Force-refresh a user's access token (ignore expiry checks).
+
+    Useful when downstream Google APIs return 401 due to clock skew or
+    token invalidation while we still have a valid refresh token.
+    """
+    doc_name = f"{user}-google"
+
+    if not frappe.db.exists("User OAuth Token", doc_name):
+        frappe.throw(
+            "Google account not connected. Please sign in with Google to connect your account.",
+            frappe.AuthenticationError,
+        )
+
+    doc = frappe.get_doc("User OAuth Token", doc_name)
+    return _refresh_token(doc)
+
+
 def _refresh_token(doc) -> str:
     """
     Refresh the OAuth token using refresh_token.

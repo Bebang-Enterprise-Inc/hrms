@@ -13,7 +13,11 @@ from __future__ import annotations
 import frappe
 import requests
 
-from hrms.utils.google_oauth import get_valid_access_token, has_valid_token
+from hrms.utils.google_oauth import (
+    force_refresh_access_token,
+    get_valid_access_token,
+    has_valid_token,
+)
 
 
 @frappe.whitelist()
@@ -89,11 +93,25 @@ def search_drive_files(query: str = "", folder_id: str = None, page_token: str =
         )
         
         if response.status_code == 401:
-            return {
-                "success": False,
-                "error": "Google access was revoked. Please reconnect your account.",
-                "needs_auth": True
-            }
+            # Token might be expired/invalid due to clock skew or revocation.
+            # Try a forced refresh once before asking the user to reconnect.
+            try:
+                refreshed = force_refresh_access_token(user)
+                response = requests.get(
+                    "https://www.googleapis.com/drive/v3/files",
+                    headers={"Authorization": f"Bearer {refreshed}"},
+                    params=params,
+                    timeout=30,
+                )
+            except frappe.AuthenticationError as e:
+                return {"success": False, "error": str(e), "needs_auth": True}
+
+            if response.status_code == 401:
+                return {
+                    "success": False,
+                    "error": "Google access was revoked. Please reconnect your account.",
+                    "needs_auth": True,
+                }
         
         if response.status_code == 403:
             # Check if it's a scope issue
