@@ -78,6 +78,40 @@ When “Connect” loops / spaces fail to load:
    - Use `force=1` reconnect (Tasks → `/api/auth/google/start?...&force=1`) which calls `disconnect_google` best-effort
    - Re-consent with upgraded scopes
 
+## Google Chat: DMs / Private Chats show as IDs (e.g. `AAQA...`)
+
+### Symptom
+
+The Google Chat Space dropdown shows entries like:
+- `AAQAMVRXohc`
+- `AAQAx13IzBc`
+
+instead of human-friendly participant names.
+
+### Root Cause (Confirmed by Frappe Error Log)
+
+For some DM/group chat spaces, `spaces.list` does not provide a usable `displayName`.
+We attempted to derive a label via Chat membership listing, but production logs showed:
+
+- `Google Chat Memberships Error ... memberships.list failed: 404 <h1>Not Found</h1>`
+
+Meaning the `/v1/{space}/memberships` endpoint returned HTML 404 in this deployment.
+
+### Fix (Implemented)
+
+Backend now tries:
+1) `GET /v1/{space}/memberships`
+2) If **404**, fallback to legacy `GET /v1/{space}/members`
+
+and derives labels from membership `member.displayName` when available.
+
+### If it still shows IDs
+
+Check Frappe Error Log for:
+- `Google Chat Memberships Error`
+
+Look for `403` (scope issue), `404` (endpoint mismatch), or `401` (token problems).
+
 ## Guardrails / How We Prevent This Forever
 
 ### 1) Coding rules (mandatory)

@@ -76,22 +76,60 @@ def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
     """
     Returns memberships list. Do not log member names/emails (PII).
     """
-    url = f"https://chat.googleapis.com/v1/{space_name}/memberships"
-    resp = requests.get(
-        url,
-        headers={"Authorization": f"Bearer {access_token}"},
-        params={
-            "pageSize": 100,
-            # Partial response: request only fields we need.
-            "fields": "memberships(member(type,displayName),name),nextPageToken",
-        },
-        timeout=30,
-    )
-    if resp.status_code != 200:
-        raise requests.HTTPError(
-            f"memberships.list failed: {resp.status_code} {resp.text[:200]}"
+    # Runtime evidence in prod showed `/memberships` returning `404 <h1>Not Found</h1>` for DM/group chats.
+    # Some Google Chat deployments still expose the legacy `/members` endpoint.
+    # To be robust, try `/memberships` first, then fallback to `/members` on 404.
+    endpoints = [
+        ("memberships", f"https://chat.googleapis.com/v1/{space_name}/memberships"),
+        ("members", f"https://chat.googleapis.com/v1/{space_name}/members"),
+    ]
+
+    params = {
+        "pageSize": 100,
+        # Partial response: request only fields we need.
+        "fields": "memberships(member(type,displayName),name),nextPageToken",
+    }
+
+    last_err = None
+    for kind, url in endpoints:
+        resp = requests.get(
+            url,
+            headers={"Authorization": f"Bearer {access_token}"},
+            params=params,
+            timeout=30,
         )
-    return resp.json().get("memberships", []) or []
+
+        _agent_log(
+            "H3",
+            "hrms/api/google_chat.py:_fetch_space_memberships",
+            "Tried membership endpoint",
+            {
+                "kind": kind,
+                "status": resp.status_code,
+                "spaceId": _space_id_suffix(space_name),
+                "contentType": (resp.headers.get("Content-Type") or "")[:60],
+            },
+        )
+
+        # Known mismatch: some environments return HTML 404 for `/memberships`.
+        if kind == "memberships" and resp.status_code == 404:
+            last_err = f"{kind} 404"
+            continue
+
+        if resp.status_code != 200:
+            # Avoid JSON parsing here; Google errors can be JSON but we've observed HTML responses too.
+            snippet = (resp.text or "")[:200]
+            raise requests.HTTPError(f"{kind}.list failed: {resp.status_code} {snippet}")
+
+        try:
+            data = resp.json() if resp.text else {}
+        except Exception:
+            data = {}
+
+        memberships = data.get("memberships") or data.get("members") or []
+        return memberships or []
+
+    raise requests.HTTPError(f"memberships.list failed: 404 ({last_err or 'unknown'})")
 
 
 def _derive_space_label(space_type: str, memberships: list[dict], fallback: str) -> str:
