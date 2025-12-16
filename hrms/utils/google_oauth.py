@@ -194,7 +194,8 @@ def has_valid_token(user: str) -> bool:
         True if user has connected their Google account
     """
     doc_name = f"{user}-google"
-    return frappe.db.exists("User OAuth Token", doc_name)
+    # frappe.db.exists returns the docname (truthy string) or None, so cast to bool
+    return bool(frappe.db.exists("User OAuth Token", doc_name))
 
 
 def delete_user_token(user: str) -> None:
