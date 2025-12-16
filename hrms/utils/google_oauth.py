@@ -32,11 +32,15 @@ def store_user_oauth_token(user: str, token_data: dict) -> None:
         doc.user = user
         doc.provider = "google"
     
-    doc.access_token = token_data.get("access_token")
+    access_token = token_data.get("access_token")
+    if access_token:
+        # Password fields must be set via set_password so we can retrieve them later with get_password.
+        doc.set_password("access_token", access_token)
     
     # Only update refresh_token if provided (not always returned on subsequent logins)
-    if token_data.get("refresh_token"):
-        doc.refresh_token = token_data["refresh_token"]
+    refresh_token = token_data.get("refresh_token")
+    if refresh_token:
+        doc.set_password("refresh_token", refresh_token)
     
     expires_in = token_data.get("expires_in", 3600)
     doc.token_expiry = datetime.now() + timedelta(seconds=expires_in)
@@ -79,7 +83,13 @@ def get_valid_access_token(user: str) -> str:
             expiry_time = datetime.fromisoformat(expiry_time)
         
         if datetime.now() < expiry_time - timedelta(minutes=5):
-            return doc.access_token
+            token = None
+            try:
+                token = doc.get_password("access_token")
+            except Exception:
+                token = None
+            if token:
+                return token
     
     # Token expired or about to expire - refresh it
     return _refresh_token(doc)
@@ -117,7 +127,13 @@ def _refresh_token(doc) -> str:
     Raises:
         frappe.AuthenticationError: If refresh fails
     """
-    if not doc.refresh_token:
+    refresh_token = None
+    try:
+        refresh_token = doc.get_password("refresh_token")
+    except Exception:
+        refresh_token = None
+
+    if not refresh_token:
         frappe.throw(
             "No refresh token available. Please sign out and sign in again with Google.",
             frappe.AuthenticationError
@@ -147,7 +163,7 @@ def _refresh_token(doc) -> str:
             data={
                 "client_id": client_id,
                 "client_secret": client_secret,
-                "refresh_token": doc.refresh_token,
+                "refresh_token": refresh_token,
                 "grant_type": "refresh_token",
             },
             timeout=30,
@@ -206,20 +222,20 @@ def _refresh_token(doc) -> str:
     data = response.json()
     
     # Update the token document
-    doc.access_token = data["access_token"]
+    doc.set_password("access_token", data["access_token"])
     doc.token_expiry = datetime.now() + timedelta(seconds=data.get("expires_in", 3600))
     doc.last_refreshed = datetime.now()
     
     # Sometimes Google returns a new refresh token
     if data.get("refresh_token"):
-        doc.refresh_token = data["refresh_token"]
+        doc.set_password("refresh_token", data["refresh_token"])
     
     doc.save(ignore_permissions=True)
     frappe.db.commit()
     
     frappe.logger().info(f"[Google OAuth] Refreshed token for user {doc.user}")
     
-    return doc.access_token
+    return data["access_token"]
 
 
 def has_valid_token(user: str) -> bool:
