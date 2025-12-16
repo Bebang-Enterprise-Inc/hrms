@@ -88,7 +88,9 @@ def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
         timeout=30,
     )
     if resp.status_code != 200:
-        raise requests.HTTPError(f"memberships.list failed: {resp.status_code} {resp.text[:200]}")
+        raise requests.HTTPError(
+            f"memberships.list failed: {resp.status_code} {resp.text[:200]}"
+        )
     return resp.json().get("memberships", []) or []
 
 
@@ -224,8 +226,11 @@ def get_user_chat_spaces():
             display_name = (s.get("displayName") or "").strip()
             fallback = display_name or _space_id_suffix(space_name) or "Unnamed"
 
-            # Enrich DMs / unnamed group chats with membership-derived label
-            if space_type in ("DIRECT_MESSAGE", "GROUP_CHAT") and _needs_membership_label(s):
+            # Enrich any "unnamed" / ID-like spaces with membership-derived label.
+            # This covers:
+            # - DIRECT_MESSAGE / GROUP_CHAT (often no displayName)
+            # - Occasionally SPACE entries that come back without displayName (would otherwise show ID-like text)
+            if _needs_membership_label(s):
                 try:
                     memberships = _fetch_space_memberships(access_token, space_name)
                     display_name = _derive_space_label(space_type, memberships, fallback)
@@ -255,6 +260,14 @@ def get_user_chat_spaces():
                             "error": "Google Chat membership permission not granted. Please reconnect your account.",
                             "needs_auth": True,
                         }
+                    # Surface evidence in server logs for non-403 failures (do not log member names/emails).
+                    frappe.log_error(
+                        title="Google Chat Memberships Error",
+                        message=(
+                            f"User: {user}, spaceType={space_type}, "
+                            f"spaceId={_space_id_suffix(space_name)}, err={msg[:200]}"
+                        ),
+                    )
                     display_name = fallback
                 except Exception as e:
                     _agent_log(
@@ -262,6 +275,13 @@ def get_user_chat_spaces():
                         "hrms/api/google_chat.py:get_user_chat_spaces",
                         "Membership enrichment unexpected error",
                         {"spaceType": space_type, "spaceId": _space_id_suffix(space_name)},
+                    )
+                    frappe.log_error(
+                        title="Google Chat Memberships Unexpected Error",
+                        message=(
+                            f"User: {user}, spaceType={space_type}, "
+                            f"spaceId={_space_id_suffix(space_name)}, err={str(e)[:200]}"
+                        ),
                     )
                     display_name = fallback
             else:

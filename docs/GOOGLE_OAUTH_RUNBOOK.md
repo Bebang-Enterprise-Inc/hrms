@@ -4,6 +4,12 @@
 
 This document captures the production incident where **Google Chat + Google Drive would not “connect”** for users (e.g. `sam@bebang.ph`), even after approving permissions, and the exact fix to prevent recurrence.
 
+## Incident Timeline (What Broke, Twice)
+
+1) **Refresh flow failed** (`invalid_grant`) because Password fields were being read incorrectly (masked token).
+
+2) **Token storage failed** (`Most probably your password is too long.`) because storing OAuth tokens in Frappe **Password fields** can hit a DB length limit (implementation-dependent via `__Auth.value`).
+
 ## Symptoms
 
 - Tasks UI shows **“Google Chat not connected”** / **“Connect Google Drive”** repeatedly.
@@ -22,31 +28,62 @@ We were sending this masked value to Google’s token endpoint (`grant_type=refr
 
 - `error = "invalid_grant"`
 
-## Fix (Implemented)
+## Fix #1 (Implemented): Masked Password fields → invalid_grant
 
-In `hrms/utils/google_oauth.py`:
+**Legacy approach:** `doc.get_password()` / `doc.set_password()` (or password helpers) for Password fields.
 
-- **Store tokens using `doc.set_password(fieldname, value)`**
-  - `access_token`
-  - `refresh_token`
-- **Read tokens using `doc.get_password(fieldname)`**
-  - Use this when refreshing access tokens and when returning tokens for downstream API calls.
+This fixes masked-token reads, but we later hit a second production issue below.
 
-This ensures the refresh flow uses the real refresh token, not the masked placeholder.
+## Root Cause #2 (Confirmed): “Most probably your password is too long.”
+
+Frappe Error Log showed repeated:
+
+- `Google OAuth Token Storage Error` → `Error: Most probably your password is too long.`
+- `Google Chat Token Error` / `Google Drive Token Error` → same message
+
+This happens because Frappe `Password` fields are stored in `__Auth.value` and can hit a length constraint for large OAuth tokens.
+
+## Fix #2 (Implemented): Store tokens in encrypted Long Text fields
+
+We changed `User OAuth Token` to store tokens in **Long Text** fields instead of Password fields:
+
+- `access_token`: `Password` → `Long Text`
+- `refresh_token`: `Password` → `Long Text`
+
+And we store values **encrypted** using Frappe’s `encrypt()` / `decrypt()` helpers, so secrets are not stored as plaintext.
+
+Migration behavior:
+- If a user already has legacy Password-field tokens, we **migrate on read** (best-effort) into the new encrypted Long Text column.
+
+## Files / Locations (Source of Truth)
+
+- `hrms/utils/google_oauth.py`
+  - Token storage (encrypted Long Text) + refresh flow
+- `hrms/hr/doctype/user_oauth_token/user_oauth_token.json`
+  - Fieldtype changes (`Password` → `Long Text`)
+- `hrms/api/oauth_tokens.py`
+  - `disconnect_google` (revoke + delete)
+
+## Operational Runbook Checks (Fast Triage)
+
+When “Connect” loops / spaces fail to load:
+
+1) **Check Frappe Error Log first** (this is always the truth).
+
+2) If you see:
+   - **`invalid_grant`** → likely revoked token OR masked-token bug OR OAuth client mismatch  
+   - **`Most probably your password is too long.`** → token storage is failing (field length), so Chat/Drive will never work
+
+3) Recovery:
+   - Use `force=1` reconnect (Tasks → `/api/auth/google/start?...&force=1`) which calls `disconnect_google` best-effort
+   - Re-consent with upgraded scopes
 
 ## Guardrails / How We Prevent This Forever
 
 ### 1) Coding rules (mandatory)
 
-- **Never** read Password fields directly:
-  - ❌ `doc.refresh_token`
-  - ❌ `doc.access_token`
-- Always:
-  - ✅ `doc.get_password("refresh_token")`
-  - ✅ `doc.get_password("access_token")`
-- Always store secrets with:
-  - ✅ `doc.set_password("refresh_token", token)`
-  - ✅ `doc.set_password("access_token", token)`
+- **Do not store OAuth tokens in Password fields** for this project (risk of length constraints).
+- Store tokens in **Long Text**, encrypted via `encrypt()` / `decrypt()`.
 
 ### 2) Operational runbook checks
 
