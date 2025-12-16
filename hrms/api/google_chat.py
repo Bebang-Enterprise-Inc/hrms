@@ -84,14 +84,18 @@ def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
         ("members", f"https://chat.googleapis.com/v1/{space_name}/members"),
     ]
 
-    params = {
-        "pageSize": 100,
-        # Partial response: request only fields we need.
-        "fields": "memberships(member(type,displayName),name),nextPageToken",
-    }
-
     last_err = None
     for kind, url in endpoints:
+        # Endpoint-specific partial response shape.
+        # - /memberships returns { memberships: [...] }
+        # - /members returns { members: [...] }
+        fields = (
+            "memberships(member(type,displayName),name),nextPageToken"
+            if kind == "memberships"
+            else "members(member(type,displayName),name),nextPageToken"
+        )
+        params = {"pageSize": 100, "fields": fields}
+
         resp = requests.get(
             url,
             headers={"Authorization": f"Bearer {access_token}"},
@@ -126,8 +130,11 @@ def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
         except Exception:
             data = {}
 
-        memberships = data.get("memberships") or data.get("members") or []
-        return memberships or []
+        if kind == "memberships":
+            items = data.get("memberships") or []
+        else:
+            items = data.get("members") or []
+        return items or []
 
     raise requests.HTTPError(f"memberships.list failed: 404 ({last_err or 'unknown'})")
 
