@@ -10,6 +10,10 @@ using their OAuth tokens.
 
 from __future__ import annotations
 
+import json
+import os
+import re
+import time
 import frappe
 import requests
 
@@ -18,6 +22,104 @@ from hrms.utils.google_oauth import (
     get_valid_access_token,
     has_valid_token,
 )
+
+_SPACE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{8,}$")
+
+
+def _agent_log(hypothesis_id: str, location: str, message: str, data: dict | None = None) -> None:
+    """
+    Debug-mode NDJSON logger. Writes to local Cursor debug log.
+    Do not log secrets or PII (emails, names, tokens).
+    """
+    try:
+        log_path = os.path.join(frappe.get_site_path("..", ".cursor"), "debug.log")
+    except Exception:
+        # Fallback for non-site contexts
+        log_path = os.path.join(os.getcwd(), ".cursor", "debug.log")
+
+    payload = {
+        "sessionId": "debug-session",
+        "runId": "run1",
+        "hypothesisId": hypothesis_id,
+        "location": location,
+        "message": message,
+        "data": data or {},
+        "timestamp": int(time.time() * 1000),
+    }
+    try:
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    except Exception:
+        # Never break main flow due to logging
+        pass
+
+
+def _space_id_suffix(space_name: str) -> str:
+    # "spaces/AAQA..." -> "AAQA..."
+    return (space_name or "").split("/")[-1][:16]
+
+
+def _needs_membership_label(space: dict) -> bool:
+    """
+    DMs and unnamed group chats often have empty displayName.
+    We treat "displayName missing" OR "looks like an ID" as needing enrichment.
+    """
+    dn = (space.get("displayName") or "").strip()
+    if not dn:
+        return True
+    if " " not in dn and _SPACE_ID_RE.match(dn):
+        return True
+    return False
+
+
+def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
+    """
+    Returns memberships list. Do not log member names/emails (PII).
+    """
+    url = f"https://chat.googleapis.com/v1/{space_name}/memberships"
+    resp = requests.get(
+        url,
+        headers={"Authorization": f"Bearer {access_token}"},
+        params={
+            "pageSize": 100,
+            # Partial response: request only fields we need.
+            "fields": "memberships(member(type,displayName),name),nextPageToken",
+        },
+        timeout=30,
+    )
+    if resp.status_code != 200:
+        raise requests.HTTPError(f"memberships.list failed: {resp.status_code} {resp.text[:200]}")
+    return resp.json().get("memberships", []) or []
+
+
+def _derive_space_label(space_type: str, memberships: list[dict], fallback: str) -> str:
+    """
+    Build a human-friendly label from membership displayNames.
+    We intentionally avoid logging/returning emails; displayName is what Chat shows.
+    """
+    # Collect member display names (may be missing).
+    names = []
+    for m in memberships:
+        member = m.get("member") or {}
+        dn = (member.get("displayName") or "").strip()
+        if dn:
+            names.append(dn)
+
+    names = list(dict.fromkeys(names))  # de-dupe, preserve order
+    if not names:
+        return fallback
+
+    # DIRECT_MESSAGE: prefer single other name, but we can't reliably identify "me" here;
+    # still better than opaque IDs.
+    if space_type == "DIRECT_MESSAGE":
+        if len(names) == 1:
+            return names[0]
+        return ", ".join(names[:2])
+
+    # GROUP_CHAT (group DM / unnamed group): join up to 3 names + "+N"
+    if len(names) <= 3:
+        return ", ".join(names)
+    return ", ".join(names[:3]) + f" +{len(names) - 3}"
 
 
 @frappe.whitelist()
@@ -103,19 +205,77 @@ def get_user_chat_spaces():
             return {"success": False, "error": "Failed to fetch spaces from Google"}
         
         data = response.json()
-        
-        # Filter out DMs and format the response
-        spaces = [
+
+        raw_spaces = data.get("spaces", []) or []
+        _agent_log(
+            "H1",
+            "hrms/api/google_chat.py:get_user_chat_spaces",
+            "Fetched spaces.list",
             {
-                "name": s["name"],
-                "displayName": s.get("displayName") or s["name"].split("/")[-1],
-                "type": s.get("spaceType", "SPACE")
-            }
-            for s in data.get("spaces", [])
-            if s.get("spaceType") != "DIRECT_MESSAGE"
-        ]
-        
-        return {"success": True, "spaces": spaces}
+                "count": len(raw_spaces),
+                "types": sorted(list({(s.get('spaceType') or 'UNKNOWN') for s in raw_spaces}))[:10],
+            },
+        )
+
+        spaces_out = []
+        for s in raw_spaces:
+            space_name = s.get("name") or ""
+            space_type = s.get("spaceType", "SPACE")
+            display_name = (s.get("displayName") or "").strip()
+            fallback = display_name or _space_id_suffix(space_name) or "Unnamed"
+
+            # Enrich DMs / unnamed group chats with membership-derived label
+            if space_type in ("DIRECT_MESSAGE", "GROUP_CHAT") and _needs_membership_label(s):
+                try:
+                    memberships = _fetch_space_memberships(access_token, space_name)
+                    display_name = _derive_space_label(space_type, memberships, fallback)
+                    _agent_log(
+                        "H1",
+                        "hrms/api/google_chat.py:get_user_chat_spaces",
+                        "Enriched space label via memberships",
+                        {
+                            "spaceType": space_type,
+                            "spaceId": _space_id_suffix(space_name),
+                            "membershipCount": len(memberships),
+                        },
+                    )
+                except requests.HTTPError as e:
+                    # If scope missing, force reconnect with upgraded scopes
+                    msg = str(e)
+                    _agent_log(
+                        "H2",
+                        "hrms/api/google_chat.py:get_user_chat_spaces",
+                        "Membership enrichment failed",
+                        {"spaceType": space_type, "spaceId": _space_id_suffix(space_name), "error": msg[:120]},
+                    )
+                    if " 403 " in msg or msg.startswith("memberships.list failed: 403"):
+                        # Return a clear reconnect signal so UI prompts consent again.
+                        return {
+                            "success": False,
+                            "error": "Google Chat membership permission not granted. Please reconnect your account.",
+                            "needs_auth": True,
+                        }
+                    display_name = fallback
+                except Exception as e:
+                    _agent_log(
+                        "H2",
+                        "hrms/api/google_chat.py:get_user_chat_spaces",
+                        "Membership enrichment unexpected error",
+                        {"spaceType": space_type, "spaceId": _space_id_suffix(space_name)},
+                    )
+                    display_name = fallback
+            else:
+                display_name = display_name or fallback
+
+            spaces_out.append(
+                {
+                    "name": space_name,
+                    "displayName": display_name,
+                    "type": space_type,
+                }
+            )
+
+        return {"success": True, "spaces": spaces_out}
         
     except requests.Timeout:
         frappe.log_error(
