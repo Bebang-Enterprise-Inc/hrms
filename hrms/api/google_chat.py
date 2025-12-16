@@ -89,11 +89,9 @@ def _fetch_space_memberships(access_token: str, space_name: str) -> list[dict]:
 
     last_err = None
     for kind, url in endpoints:
-        # Both endpoints (in practice) return `memberships[]`. Request only what we need.
-        params = {
-            "pageSize": 100,
-            "fields": "memberships(member(type,displayName),name),nextPageToken",
-        }
+        # Runtime evidence showed Google returning 400 INVALID_ARGUMENT for our partial-response
+        # `fields=` mask. To maximize compatibility, do NOT send a `fields` mask here.
+        params = {"pageSize": 100}
 
         resp = requests.get(
             url,
