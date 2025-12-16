@@ -13,27 +13,55 @@ from __future__ import annotations
 import frappe
 import requests
 from datetime import datetime, timedelta
-from frappe.utils.password import get_decrypted_password, set_encrypted_password
+from frappe.utils.password import decrypt, encrypt, get_decrypted_password
 
 
-def _get_pw(doctype: str, name: str, fieldname: str) -> str | None:
+def _maybe_migrate_password_field_to_text(doc, fieldname: str) -> None:
     """
-    Read a Password field value safely.
-    Compatible with older Frappe versions where Document.set_password may not exist.
+    Transitional helper:
+    - Old schema used Password fields (stored in __Auth).
+    - New schema uses Long Text fields (stored in tabUser OAuth Token).
+
+    If the new text field is empty but the old password value exists, migrate it.
     """
     try:
-        return get_decrypted_password(doctype, name, fieldname, raise_exception=False)
+        current = (getattr(doc, fieldname, None) or "").strip()
+        if current:
+            return
+        legacy = get_decrypted_password("User OAuth Token", doc.name, fieldname, raise_exception=False)
+        if not legacy:
+            return
+        # Store encrypted in the Long Text column.
+        doc.db_set(fieldname, encrypt(legacy), update_modified=False)
+    except Exception:
+        # Best-effort migration only.
+        return
+
+
+def _get_token(doc, fieldname: str) -> str | None:
+    """
+    Read token from Long Text field (encrypted), with fallback migration from legacy Password storage.
+    """
+    try:
+        _maybe_migrate_password_field_to_text(doc, fieldname)
+        raw = getattr(doc, fieldname, None)
+        if not raw:
+            return None
+        raw = str(raw)
+        # If already plaintext (older/manual), return as-is; otherwise decrypt.
+        try:
+            return decrypt(raw)
+        except Exception:
+            return raw
     except Exception:
         return None
 
 
-def _set_pw(doctype: str, name: str, fieldname: str, value: str) -> None:
+def _set_token(doc, fieldname: str, value: str) -> None:
     """
-    Write a Password field value safely.
-    Compatible with older Frappe versions where Document.set_password may not exist.
+    Store token into Long Text field, encrypted.
     """
-    # set_encrypted_password writes directly; no need to save the doc again.
-    set_encrypted_password(doctype, name, fieldname, value)
+    doc.db_set(fieldname, encrypt(value), update_modified=False)
 
 
 def store_user_oauth_token(user: str, token_data: dict) -> None:
@@ -57,13 +85,12 @@ def store_user_oauth_token(user: str, token_data: dict) -> None:
     
     access_token = token_data.get("access_token")
     if access_token:
-        # Password fields: use encrypted password helpers (Document.set_password may not exist).
-        _set_pw("User OAuth Token", doc.name, "access_token", access_token)
+        _set_token(doc, "access_token", access_token)
     
     # Only update refresh_token if provided (not always returned on subsequent logins)
     refresh_token = token_data.get("refresh_token")
     if refresh_token:
-        _set_pw("User OAuth Token", doc.name, "refresh_token", refresh_token)
+        _set_token(doc, "refresh_token", refresh_token)
     
     expires_in = token_data.get("expires_in", 3600)
     doc.token_expiry = datetime.now() + timedelta(seconds=expires_in)
@@ -106,7 +133,7 @@ def get_valid_access_token(user: str) -> str:
             expiry_time = datetime.fromisoformat(expiry_time)
         
         if datetime.now() < expiry_time - timedelta(minutes=5):
-            token = _get_pw("User OAuth Token", doc.name, "access_token")
+            token = _get_token(doc, "access_token")
             if token:
                 return token
     
@@ -146,7 +173,7 @@ def _refresh_token(doc) -> str:
     Raises:
         frappe.AuthenticationError: If refresh fails
     """
-    refresh_token = _get_pw("User OAuth Token", doc.name, "refresh_token")
+    refresh_token = _get_token(doc, "refresh_token")
 
     if not refresh_token:
         frappe.throw(
@@ -242,13 +269,13 @@ def _refresh_token(doc) -> str:
     data = response.json()
     
     # Update the token document
-    _set_pw("User OAuth Token", doc.name, "access_token", data["access_token"])
+    _set_token(doc, "access_token", data["access_token"])
     doc.token_expiry = datetime.now() + timedelta(seconds=data.get("expires_in", 3600))
     doc.last_refreshed = datetime.now()
     
     # Sometimes Google returns a new refresh token
     if data.get("refresh_token"):
-        _set_pw("User OAuth Token", doc.name, "refresh_token", data["refresh_token"])
+        _set_token(doc, "refresh_token", data["refresh_token"])
     
     doc.save(ignore_permissions=True)
     frappe.db.commit()

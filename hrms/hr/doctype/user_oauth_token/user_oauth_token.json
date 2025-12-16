@@ -35,12 +35,12 @@
     },
     {
       "fieldname": "access_token",
-      "fieldtype": "Password",
+      "fieldtype": "Long Text",
       "label": "Access Token"
     },
     {
       "fieldname": "refresh_token",
-      "fieldtype": "Password",
+      "fieldtype": "Long Text",
       "label": "Refresh Token"
     },
     {

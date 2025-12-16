@@ -13,6 +13,7 @@ from __future__ import annotations
 import frappe
 
 from hrms.utils.google_oauth import store_user_oauth_token
+from frappe.utils.password import decrypt
 
 
 @frappe.whitelist()
@@ -127,7 +128,12 @@ def disconnect_google(revoke: int | None = 1):
 
             token_to_revoke = None
             try:
-                token_to_revoke = doc.get_password("refresh_token") or None
+                raw = getattr(doc, "refresh_token", None)
+                if raw:
+                    try:
+                        token_to_revoke = decrypt(str(raw))
+                    except Exception:
+                        token_to_revoke = str(raw)
             except Exception:
                 token_to_revoke = None
 
