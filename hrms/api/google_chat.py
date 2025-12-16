@@ -138,13 +138,62 @@ def _derive_space_label(space_type: str, memberships: list[dict], fallback: str)
     Build a human-friendly label from membership displayNames.
     We intentionally avoid logging/returning emails; displayName is what Chat shows.
     """
-    # Collect member display names (may be missing).
+    # Collect member display names (may be missing). If missing, try resolving via users.get.
+    #
+    # NOTE: do NOT log resolved names (PII), only use them for UI labels.
     names = []
+    user_cache: dict[str, str] = {}
+
+    def resolve_user_display_name(access_token: str, user_resource: str) -> str | None:
+        if not user_resource:
+            return None
+        if user_resource in user_cache:
+            return user_cache[user_resource] or None
+        try:
+            r = requests.get(
+                f"https://chat.googleapis.com/v1/{user_resource}",
+                headers={"Authorization": f"Bearer {access_token}"},
+                timeout=20,
+            )
+            if r.status_code != 200:
+                # Don't log body (may contain PII); record only status.
+                _agent_log(
+                    "H4",
+                    "hrms/api/google_chat.py:_derive_space_label",
+                    "users.get failed",
+                    {"status": r.status_code, "userResourceSuffix": user_resource.split('/')[-1][:16]},
+                )
+                user_cache[user_resource] = ""
+                return None
+            data = {}
+            try:
+                data = r.json() if r.text else {}
+            except Exception:
+                data = {}
+            dn = (data.get("displayName") or "").strip() if isinstance(data, dict) else ""
+            user_cache[user_resource] = dn
+            return dn or None
+        except Exception:
+            user_cache[user_resource] = ""
+            return None
+    # memberships list shape: each item has `member` object.
+    # The member may contain `displayName` or only a `name` like `users/XXXX`.
     for m in memberships:
         member = m.get("member") or {}
         dn = (member.get("displayName") or "").strip()
         if dn:
             names.append(dn)
+            continue
+
+        # Fallback: resolve via users.get if member.name exists.
+        # access_token is not passed into this function today, so we use the module-global trick:
+        # store it on the membership dict if provided by caller.
+        token = m.get("_access_token")
+        user_name = (member.get("name") or "").strip()
+        if token and user_name:
+            resolved = resolve_user_display_name(token, user_name)
+            if resolved:
+                names.append(resolved)
 
     names = list(dict.fromkeys(names))  # de-dupe, preserve order
     if not names:
@@ -272,6 +321,11 @@ def get_user_chat_spaces():
             if _needs_membership_label(s):
                 try:
                     memberships = _fetch_space_memberships(access_token, space_name)
+                    # Pass access token down for optional users.get resolution without widening signatures.
+                    # Do not log or return the token.
+                    for m in memberships:
+                        if isinstance(m, dict):
+                            m["_access_token"] = access_token
                     display_name = _derive_space_label(space_type, memberships, fallback)
                     _agent_log(
                         "H1",
