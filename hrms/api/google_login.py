@@ -82,13 +82,30 @@ def login_with_google(code: str, redirect_uri: str):
         return {"success": False, "error": "Network error during authentication"}
     
     if token_response.status_code != 200:
-        error_data = token_response.json() if token_response.text else {}
-        error_msg = error_data.get("error_description", error_data.get("error", "Unknown error"))
+        # Google's token endpoint typically returns JSON, but be defensive.
+        try:
+            error_data = token_response.json() if token_response.text else {}
+        except Exception:
+            error_data = {}
+
+        error_code = error_data.get("error") if isinstance(error_data, dict) else None
+        error_desc = (
+            error_data.get("error_description") if isinstance(error_data, dict) else None
+        )
+        # Keep a short body snippet for debugging (never includes client_secret since we don't log request payload).
+        body_snippet = (token_response.text or "")[:800]
+
         frappe.log_error(
             title="Google OAuth Token Exchange Failed",
-            message=f"Status: {token_response.status_code}, Error: {error_msg}"
+            message=(
+                f"Status: {token_response.status_code}, "
+                f"error={error_code}, error_description={error_desc}, body={body_snippet}"
+            ),
         )
-        return {"success": False, "error": f"Google authentication failed: {error_msg}"}
+
+        # Prefer showing the error code to make misconfiguration obvious (e.g., redirect_uri_mismatch, invalid_grant)
+        display_msg = error_code or error_desc or "Unknown error"
+        return {"success": False, "error": f"Google authentication failed: {display_msg}"}
     
     token_data = token_response.json()
     access_token = token_data.get("access_token")
@@ -120,7 +137,7 @@ def login_with_google(code: str, redirect_uri: str):
         return {"success": False, "error": "No email address returned by Google"}
     
     # Verify email domain if configured
-    allowed_domains = social_login.get("allowed_domains", "").strip()
+    allowed_domains = (social_login.get("allowed_domains") or "").strip()
     if allowed_domains:
         domains = [d.strip() for d in allowed_domains.split(",") if d.strip()]
         email_domain = email.split("@")[-1]
