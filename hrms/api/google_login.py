@@ -28,8 +28,9 @@ from hrms.utils.google_oauth import store_user_oauth_token
 # Default roles for auto-provisioned users (domain SSO).
 # This role set is intentionally chosen to ensure the Tasks app is usable immediately:
 # - Projects User: CRUD Task + Project
+# - Projects Manager: broad Projects/Tasks access (Option A: open access now, tighten later)
 # - HR User: read Department (Department selector in the app depends on this)
-_DEFAULT_NEW_USER_ROLES = ["Projects User", "HR User"]
+_DEFAULT_NEW_USER_ROLES = ["Projects User", "Projects Manager", "HR User"]
 _DEFAULT_ALLOWED_DOMAINS = ["bebang.ph"]
 
 
