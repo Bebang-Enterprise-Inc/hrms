@@ -25,6 +25,10 @@ from frappe.utils.password import get_decrypted_password
 
 from hrms.utils.google_oauth import store_user_oauth_token
 
+# Default roles for auto-provisioned users (domain SSO).
+# Keep this minimal; admins can grant broader roles later.
+_DEFAULT_NEW_USER_ROLES = ["Projects User", "Employee"]
+
 
 @frappe.whitelist(allow_guest=True)
 def login_with_google(code: str, redirect_uri: str):
@@ -157,8 +161,13 @@ def login_with_google(code: str, redirect_uri: str):
     
     # Step 3: Find or create user
     if not frappe.db.exists("User", email):
-        # Check if social login allows user creation
-        if not social_login.get("allow_signup"):
+        # Check if social login allows user creation.
+        # Frappe uses `sign_ups` ("Allow"/"Deny") on Social Login Key; some installs don't have `allow_signup`.
+        allow_signup = social_login.get("allow_signup")
+        if allow_signup is None:
+            allow_signup = (social_login.get("sign_ups") == "Allow")
+
+        if not allow_signup:
             return {"success": False, "error": "User registration is disabled. Please contact your administrator."}
         
         # Create new user
@@ -171,6 +180,7 @@ def login_with_google(code: str, redirect_uri: str):
                 "enabled": 1,
                 "user_type": "System User",
                 "send_welcome_email": 0,
+                "roles": [{"doctype": "Has Role", "role": r} for r in _DEFAULT_NEW_USER_ROLES],
             })
             user_doc.insert(ignore_permissions=True)
             frappe.db.commit()
