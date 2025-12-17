@@ -44,7 +44,7 @@ def _base_email_shell(*, title: str, subtitle: str, body_html: str, cta_url: str
           <tr>
             <td style="padding:12px 0 0 0">
               <div style="font-family:Arial,Helvetica,sans-serif;color:#6b7280;font-size:12px;line-height:1.45">
-                This is an automated notification from <strong>tasks.bei.ph</strong>.
+                This is an automated notification from <strong>tasks.bebang.ph</strong>.
               </div>
             </td>
           </tr>
@@ -146,7 +146,7 @@ def _update_notification(name: str, *, subject: str, message_html: str) -> bool:
 
 def execute():
 	"""
-	Upgrade Task-related Notification emails for tasks.bei.ph:
+	Upgrade Task-related Notification emails for tasks.bebang.ph:
 	- Remove stray '? ' from subjects
 	- Replace bland/plain email bodies with branded HTML templates
 	"""
