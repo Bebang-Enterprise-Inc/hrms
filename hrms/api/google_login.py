@@ -26,8 +26,10 @@ from frappe.utils.password import get_decrypted_password
 from hrms.utils.google_oauth import store_user_oauth_token
 
 # Default roles for auto-provisioned users (domain SSO).
-# Keep this minimal; admins can grant broader roles later.
-_DEFAULT_NEW_USER_ROLES = ["Projects User", "Employee"]
+# This role set is intentionally chosen to ensure the Tasks app is usable immediately:
+# - Projects User: CRUD Task + Project
+# - HR User: read Department (Department selector in the app depends on this)
+_DEFAULT_NEW_USER_ROLES = ["Projects User", "HR User"]
 _DEFAULT_ALLOWED_DOMAINS = ["bebang.ph"]
 
 
