@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import frappe
 import requests
+from urllib.parse import urlparse
 from frappe import _
 from frappe.utils.password import get_decrypted_password
 
@@ -63,6 +64,12 @@ def login_with_google(code: str, redirect_uri: str):
     
     # Step 1: Exchange code for tokens
     try:
+        # NOTE: Don't log the auth code. It is sensitive and short-lived.
+        ru = urlparse(redirect_uri)
+        req = getattr(frappe.local, "request", None)
+        req_host = (getattr(req, "host", None) or (req.headers.get("Host") if req else None) or "")[:80]
+        req_origin = ((req.headers.get("Origin") if req else None) or "")[:80]
+
         token_response = requests.post(
             "https://oauth2.googleapis.com/token",
             data={
@@ -99,7 +106,11 @@ def login_with_google(code: str, redirect_uri: str):
             title="Google OAuth Token Exchange Failed",
             message=(
                 f"Status: {token_response.status_code}, "
-                f"error={error_code}, error_description={error_desc}, body={body_snippet}"
+                f"error={error_code}, error_description={error_desc}, "
+                f"redirect_host={ru.netloc}, redirect_path={ru.path}, "
+                f"request_host={req_host}, origin={req_origin}, "
+                f"code_len={len(code) if code else 0}, "
+                f"body={body_snippet}"
             ),
         )
 
