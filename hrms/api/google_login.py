@@ -28,6 +28,7 @@ from hrms.utils.google_oauth import store_user_oauth_token
 # Default roles for auto-provisioned users (domain SSO).
 # Keep this minimal; admins can grant broader roles later.
 _DEFAULT_NEW_USER_ROLES = ["Projects User", "Employee"]
+_DEFAULT_ALLOWED_DOMAINS = ["bebang.ph"]
 
 
 @frappe.whitelist(allow_guest=True)
@@ -151,13 +152,16 @@ def login_with_google(code: str, redirect_uri: str):
     if not email:
         return {"success": False, "error": "No email address returned by Google"}
     
-    # Verify email domain if configured
-    allowed_domains = (social_login.get("allowed_domains") or "").strip()
-    if allowed_domains:
-        domains = [d.strip() for d in allowed_domains.split(",") if d.strip()]
-        email_domain = email.split("@")[-1]
-        if domains and email_domain not in domains:
-            return {"success": False, "error": f"Email domain '{email_domain}' is not allowed"}
+    # Verify email domain.
+    # Note: Some Frappe installs do not expose `allowed_domains` on Social Login Key.
+    # Enforce at handler level to ensure only @bebang.ph can auto-provision.
+    email_domain = email.split("@")[-1]
+    allowed_domains_raw = (social_login.get("allowed_domains") or "").strip()
+    domains = [d.strip() for d in allowed_domains_raw.split(",") if d.strip()] if allowed_domains_raw else []
+    if not domains:
+        domains = _DEFAULT_ALLOWED_DOMAINS
+    if domains and email_domain not in domains:
+        return {"success": False, "error": f"Email domain '{email_domain}' is not allowed"}
     
     # Step 3: Find or create user
     if not frappe.db.exists("User", email):
