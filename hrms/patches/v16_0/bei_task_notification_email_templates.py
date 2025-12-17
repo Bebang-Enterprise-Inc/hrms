@@ -67,7 +67,17 @@ def _task_details_block() -> str:
   </tr>
   <tr>
     <td style="padding:8px 0;border-top:1px solid #eef2f7;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111827">
+      <strong>Task ID</strong>: {{ doc.name }}
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:8px 0;border-top:1px solid #eef2f7;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111827">
       <strong>Project</strong>: {{ doc.project or "-" }}
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:8px 0;border-top:1px solid #eef2f7;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111827">
+      <strong>Status</strong>: {{ doc.status or "-" }}
     </td>
   </tr>
   <tr>
@@ -77,7 +87,26 @@ def _task_details_block() -> str:
   </tr>
   <tr>
     <td style="padding:8px 0;border-top:1px solid #eef2f7;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111827">
-      <strong>Due Date</strong>: {{ frappe.format_date(doc.exp_end_date) if doc.exp_end_date else "-" }}
+      <strong>Due Date</strong>: {{ doc.exp_end_date or "-" }}
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:8px 0;border-top:1px solid #eef2f7;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111827">
+      <strong>Assigned to</strong>: {{ doc._assign or "-" }}
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:8px 0;border-top:1px solid #eef2f7;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111827">
+      <strong>Assigned/Updated by</strong>:
+      {{ frappe.utils.get_fullname(doc.modified_by) if doc.modified_by else "-" }}
+      ({{ doc.modified_by or "-" }})
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:8px 0;border-top:1px solid #eef2f7;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111827">
+      <strong>Created by</strong>:
+      {{ frappe.utils.get_fullname(doc.owner) if doc.owner else "-" }}
+      ({{ doc.owner or "-" }})
     </td>
   </tr>
 </table>
