@@ -1,0 +1,343 @@
+{
+  "actions": [],
+  "allow_import": 0,
+  "allow_rename": 0,
+  "autoname": "hash",
+  "creation": "2025-12-17 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Setup",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "session_token",
+    "employee",
+    "request_type",
+    "status",
+    "submitted_at",
+    "submitted_via",
+    "selfie_file_url",
+    "requested_changes",
+    "submitted_by_meta",
+    "approver_email",
+    "approver_notes",
+    "approved_at",
+    "escalated_to_hr",
+    "applied_at",
+    "applied_by"
+  ],
+  "fields": [
+    {
+      "fieldname": "session_token",
+      "fieldtype": "Data",
+      "label": "Session Token",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "employee",
+      "fieldtype": "Link",
+      "label": "Employee",
+      "options": "Employee",
+      "reqd": 0,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "request_type",
+      "fieldtype": "Select",
+      "label": "Request Type",
+      "options": "update_existing\nnew_hire",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Pending\nApproved\nRejected\nEscalated\nApplied",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "submitted_at",
+      "fieldtype": "Datetime",
+      "label": "Submitted At",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "submitted_via",
+      "fieldtype": "Data",
+      "label": "Submitted Via",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "selfie_file_url",
+      "fieldtype": "Data",
+      "label": "Selfie File URL",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "requested_changes",
+      "fieldtype": "Long Text",
+      "label": "Requested Changes (JSON)",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "submitted_by_meta",
+      "fieldtype": "Long Text",
+      "label": "Submitted By Meta (JSON)",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "approver_email",
+      "fieldtype": "Data",
+      "label": "Approver Email"
+    },
+    {
+      "fieldname": "approver_notes",
+      "fieldtype": "Small Text",
+      "label": "Approver Notes"
+    },
+    {
+      "fieldname": "approved_at",
+      "fieldtype": "Datetime",
+      "label": "Approved At"
+    },
+    {
+      "fieldname": "escalated_to_hr",
+      "fieldtype": "Check",
+      "label": "Escalated To HR"
+    },
+    {
+      "fieldname": "applied_at",
+      "fieldtype": "Datetime",
+      "label": "Applied At"
+    },
+    {
+      "fieldname": "applied_by",
+      "fieldtype": "Data",
+      "label": "Applied By"
+    }
+  ],
+  "links": [],
+  "modified": "2025-12-17 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Onboarding Request",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 0,
+      "read": 1,
+      "report": 0,
+      "role": "HR Manager",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "quick_entry": 0,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}
+
+
+
+
+
+
+
+
+
+
+  "actions": [],
+  "allow_import": 0,
+  "allow_rename": 0,
+  "autoname": "hash",
+  "creation": "2025-12-17 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Setup",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "session_token",
+    "employee",
+    "request_type",
+    "status",
+    "submitted_at",
+    "submitted_via",
+    "selfie_file_url",
+    "requested_changes",
+    "submitted_by_meta",
+    "approver_email",
+    "approver_notes",
+    "approved_at",
+    "escalated_to_hr",
+    "applied_at",
+    "applied_by"
+  ],
+  "fields": [
+    {
+      "fieldname": "session_token",
+      "fieldtype": "Data",
+      "label": "Session Token",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "employee",
+      "fieldtype": "Link",
+      "label": "Employee",
+      "options": "Employee",
+      "reqd": 0,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "request_type",
+      "fieldtype": "Select",
+      "label": "Request Type",
+      "options": "update_existing\nnew_hire",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Pending\nApproved\nRejected\nEscalated\nApplied",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "submitted_at",
+      "fieldtype": "Datetime",
+      "label": "Submitted At",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "submitted_via",
+      "fieldtype": "Data",
+      "label": "Submitted Via",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "selfie_file_url",
+      "fieldtype": "Data",
+      "label": "Selfie File URL",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "requested_changes",
+      "fieldtype": "Long Text",
+      "label": "Requested Changes (JSON)",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "submitted_by_meta",
+      "fieldtype": "Long Text",
+      "label": "Submitted By Meta (JSON)",
+      "in_list_view": 0
+    },
+    {
+      "fieldname": "approver_email",
+      "fieldtype": "Data",
+      "label": "Approver Email"
+    },
+    {
+      "fieldname": "approver_notes",
+      "fieldtype": "Small Text",
+      "label": "Approver Notes"
+    },
+    {
+      "fieldname": "approved_at",
+      "fieldtype": "Datetime",
+      "label": "Approved At"
+    },
+    {
+      "fieldname": "escalated_to_hr",
+      "fieldtype": "Check",
+      "label": "Escalated To HR"
+    },
+    {
+      "fieldname": "applied_at",
+      "fieldtype": "Datetime",
+      "label": "Applied At"
+    },
+    {
+      "fieldname": "applied_by",
+      "fieldtype": "Data",
+      "label": "Applied By"
+    }
+  ],
+  "links": [],
+  "modified": "2025-12-17 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Onboarding Request",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 0,
+      "read": 1,
+      "report": 0,
+      "role": "HR Manager",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "quick_entry": 0,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

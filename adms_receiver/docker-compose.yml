@@ -1,0 +1,68 @@
+version: "3.9"
+
+services:
+  adms-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: adms
+      POSTGRES_PASSWORD: adms
+      POSTGRES_DB: adms
+    volumes:
+      - adms_db_data:/var/lib/postgresql/data
+
+  adms-api:
+    build:
+      context: .
+    environment:
+      ADMS_DATABASE_URL: postgresql+psycopg://adms:adms@adms-db:5432/adms
+      # FRAPPE_* must be provided at deploy-time (do not commit secrets)
+      FRAPPE_BASE_URL: ${FRAPPE_BASE_URL}
+      FRAPPE_TOKEN: ${FRAPPE_TOKEN}
+      # Default assumes this repo is mounted at /repo inside the container.
+      SN_MAPPING_CSV: ${SN_MAPPING_CSV:-/repo/data/04_Project_Management/Import_Log/IT_Device_SN_Mapping_CANONICAL_2026-01-07.csv}
+      # Optional extra safety gate
+      SN_ALLOWLIST: ${SN_ALLOWLIST:-}
+      SKIP_AUTO_ATTENDANCE: ${SKIP_AUTO_ATTENDANCE:-1}
+      MAX_ATTEMPTS: ${MAX_ATTEMPTS:-20}
+      # Unknown Bio ID catcher (optional): set to 'UNKNOWN' to enable.
+      UNKNOWN_EMPLOYEE_FIELD_VALUE: ${UNKNOWN_EMPLOYEE_FIELD_VALUE:-}
+      UNKNOWN_COMMENT_ENABLED: ${UNKNOWN_COMMENT_ENABLED:-1}
+      DEVICE_ID_FORMAT: ${DEVICE_ID_FORMAT:-canonical_location_id}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      CMD_MAX_ATTEMPTS: ${CMD_MAX_ATTEMPTS:-3}
+    volumes:
+      - ..:/repo:ro
+    depends_on:
+      - adms-db
+
+  adms-nginx:
+    image: nginx:alpine
+    depends_on:
+      - adms-api
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:8080"
+
+  adms-worker:
+    build:
+      context: .
+    command: ["python", "worker.py"]
+    environment:
+      ADMS_DATABASE_URL: postgresql+psycopg://adms:adms@adms-db:5432/adms
+      FRAPPE_BASE_URL: ${FRAPPE_BASE_URL}
+      FRAPPE_TOKEN: ${FRAPPE_TOKEN}
+      SN_MAPPING_CSV: ${SN_MAPPING_CSV:-/repo/data/04_Project_Management/Import_Log/IT_Device_SN_Mapping_CANONICAL_2026-01-07.csv}
+      SN_ALLOWLIST: ${SN_ALLOWLIST:-}
+      SKIP_AUTO_ATTENDANCE: ${SKIP_AUTO_ATTENDANCE:-1}
+      MAX_ATTEMPTS: ${MAX_ATTEMPTS:-20}
+      UNKNOWN_EMPLOYEE_FIELD_VALUE: ${UNKNOWN_EMPLOYEE_FIELD_VALUE:-}
+      UNKNOWN_COMMENT_ENABLED: ${UNKNOWN_COMMENT_ENABLED:-1}
+      DEVICE_ID_FORMAT: ${DEVICE_ID_FORMAT:-canonical_location_id}
+    volumes:
+      - ..:/repo:ro
+    depends_on:
+      - adms-db
+
+volumes:
+  adms_db_data:

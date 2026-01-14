@@ -16,5 +16,35 @@
 # AWS MCP
 .cursor/mcp.json.local
 
-# Cursor Rules (may contain sensitive info)
-.cursor/rules/*credentials*.mdc
+# Cursor (ALWAYS local-only)
+.cursor/
+
+# Claude Code (ALWAYS local-only)
+.claude/
+tmpclaude-*
+
+# Private investigations / audit artifacts (LOCAL ONLY)
+Audit/
+
+# ERP Data Warehouse (local only - too large for git)
+data/
+!data/README.md
+
+# Local documentation (not synced)
+docs/
+!docs/GOOGLE_OAUTH_RUNBOOK.md
+
+# AWS deployment artifacts
+aws/
+
+# Company data (local only)
+BEI Company Details/
+
+# Assets (local only)
+assets/
+
+# Credentials (NEVER commit)
+credentials/
+**/credentials/
+*.local.mdc
+*.tar.gz
