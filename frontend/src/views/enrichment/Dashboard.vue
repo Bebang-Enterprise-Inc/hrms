@@ -249,12 +249,12 @@ const reportingIssue = ref(false)
 
 // API Resources
 const userStores = createResource({
-	url: "hrms.api.enrichment.get_user_stores",
+	url: "hrms.api.get_user_stores",
 	auto: true,
 })
 
 const enrichmentData = createResource({
-	url: "hrms.api.enrichment.get_enrichment_dashboard",
+	url: "hrms.api.get_enrichment_dashboard",
 	auto: true,
 	makeParams() {
 		return {
@@ -264,7 +264,7 @@ const enrichmentData = createResource({
 })
 
 const storeProgress = createResource({
-	url: "hrms.api.enrichment.get_store_progress",
+	url: "hrms.api.get_store_progress",
 	auto: true,
 })
 
@@ -317,7 +317,7 @@ async function markAsVerified() {
 	verifyingEmployee.value = true
 	try {
 		await createResource({
-			url: "hrms.api.enrichment.mark_employee_verified",
+			url: "hrms.api.mark_employee_verified",
 			params: {
 				employee: selectedEmployee.value.name,
 			},
@@ -339,7 +339,7 @@ async function submitIssue() {
 	reportingIssue.value = true
 	try {
 		await createResource({
-			url: "hrms.api.enrichment.report_employee_issue",
+			url: "hrms.api.report_employee_issue",
 			params: {
 				employee: selectedEmployee.value.name,
 				issue_type: issueType.value,

@@ -808,3 +808,201 @@ def get_allowed_states_for_workflow(workflow: dict, user_id: str) -> list[str]:
 @frappe.whitelist()
 def get_permitted_fields_for_write(doctype: str) -> list[str]:
 	return get_permitted_fields(doctype, permission_type="write")
+
+
+# =============================================================================
+# Employee Data Enrichment API
+# =============================================================================
+# Functions for the Store Supervisor data verification dashboard
+# Added 2026-01-16 for Enrichment Campaign
+
+from frappe.utils import today
+
+
+@frappe.whitelist()
+def get_enrichment_dashboard(store: str = None) -> dict:
+	"""Get dashboard data for enrichment campaign."""
+	filters = {"status": "Active"}
+	if store:
+		filters["branch"] = store
+
+	employees = frappe.get_all(
+		"Employee",
+		filters=filters,
+		fields=[
+			"name",
+			"employee_name",
+			"first_name",
+			"last_name",
+			"branch",
+			"department",
+			"designation",
+			"attendance_device_id",
+			"employee_number",
+			"image",
+			"cell_number",
+			"personal_email",
+			"custom_verification_status",
+			"custom_verified_by",
+			"custom_verified_date",
+			"custom_issue_type",
+		],
+		order_by="branch asc, employee_name asc",
+	)
+
+	total = len(employees)
+	verified = len([e for e in employees if e.get("custom_verification_status") == "Verified"])
+	pending = len([e for e in employees if e.get("custom_verification_status") in ("Pending", None, "")])
+	issues = len([e for e in employees if e.get("custom_verification_status") == "Has Issues"])
+
+	return {
+		"stats": {
+			"total": total,
+			"verified": verified,
+			"pending": pending,
+			"issues": issues,
+			"progress_pct": round(verified / total * 100, 1) if total > 0 else 0,
+		},
+		"employees": employees,
+	}
+
+
+@frappe.whitelist()
+def get_store_progress() -> list:
+	"""Get verification progress by store/branch."""
+	sql = """
+		SELECT
+			branch,
+			COUNT(*) as total,
+			SUM(CASE WHEN custom_verification_status = 'Verified' THEN 1 ELSE 0 END) as verified,
+			SUM(CASE WHEN custom_verification_status = 'Has Issues' THEN 1 ELSE 0 END) as has_issues
+		FROM `tabEmployee`
+		WHERE status = 'Active' AND branch IS NOT NULL AND branch != ''
+		GROUP BY branch
+		ORDER BY branch
+	"""
+	results = frappe.db.sql(sql, as_dict=True)
+
+	for row in results:
+		row["pending"] = row["total"] - row["verified"] - row["has_issues"]
+		row["progress_pct"] = round(row["verified"] / row["total"] * 100, 1) if row["total"] > 0 else 0
+
+	return results
+
+
+@frappe.whitelist()
+def get_employee_details(employee: str) -> dict:
+	"""Get full employee details for verification."""
+	doc = frappe.get_doc("Employee", employee)
+	return doc.as_dict()
+
+
+@frappe.whitelist()
+def mark_employee_verified(employee: str, notes: str = None) -> dict:
+	"""Mark an employee as verified."""
+	emp = frappe.get_doc("Employee", employee)
+	emp.custom_verification_status = "Verified"
+	emp.custom_verified_by = frappe.session.user
+	emp.custom_verified_date = today()
+	if notes:
+		emp.custom_verification_notes = notes
+	emp.save(ignore_permissions=True)
+
+	return {"status": "success", "message": _("Employee {0} marked as verified").format(emp.employee_name)}
+
+
+@frappe.whitelist()
+def report_employee_issue(employee: str, issue_type: str, description: str) -> dict:
+	"""Report an issue with employee data."""
+	emp = frappe.get_doc("Employee", employee)
+	emp.custom_verification_status = "Has Issues"
+	emp.custom_issue_type = issue_type
+	emp.custom_issue_description = description
+	emp.custom_issue_reported_by = frappe.session.user
+	emp.custom_issue_reported_date = today()
+	emp.save(ignore_permissions=True)
+
+	return {"status": "success", "message": _("Issue reported to HR")}
+
+
+@frappe.whitelist()
+def update_employee_field(employee: str, fieldname: str, value: str) -> dict:
+	"""Update a single field on an employee record."""
+	allowed_fields = [
+		"cell_number",
+		"personal_email",
+		"emergency_phone_number",
+		"custom_verification_notes",
+	]
+
+	if fieldname not in allowed_fields:
+		frappe.throw(_("You are not allowed to update the field: {0}").format(fieldname))
+
+	emp = frappe.get_doc("Employee", employee)
+	emp.set(fieldname, value)
+	emp.save(ignore_permissions=True)
+
+	return {"status": "success", "message": _("Field {0} updated successfully").format(fieldname)}
+
+
+@frappe.whitelist()
+def get_user_stores() -> list:
+	"""Get stores/branches that the current user can manage."""
+	user = frappe.session.user
+	roles = frappe.get_roles(user)
+
+	if "HR Manager" in roles or "System Manager" in roles or "HR User" in roles:
+		stores = frappe.get_all(
+			"Employee",
+			filters={"status": "Active", "branch": ("is", "set")},
+			distinct=True,
+			pluck="branch",
+		)
+		return sorted(set(stores))
+
+	employee = frappe.db.get_value("Employee", {"user_id": user, "status": "Active"}, "branch")
+
+	if employee:
+		return [employee]
+
+	return []
+
+
+@frappe.whitelist()
+def get_enrichment_summary() -> dict:
+	"""Get overall enrichment campaign summary."""
+	sql = """
+		SELECT
+			COUNT(*) as total,
+			SUM(CASE WHEN custom_verification_status = 'Verified' THEN 1 ELSE 0 END) as verified,
+			SUM(CASE WHEN custom_verification_status = 'Has Issues' THEN 1 ELSE 0 END) as has_issues,
+			SUM(CASE WHEN custom_verification_status IN ('Pending', '', NULL) OR custom_verification_status IS NULL THEN 1 ELSE 0 END) as pending
+		FROM `tabEmployee`
+		WHERE status = 'Active'
+	"""
+	result = frappe.db.sql(sql, as_dict=True)[0]
+
+	result["progress_pct"] = round(result["verified"] / result["total"] * 100, 1) if result["total"] > 0 else 0
+
+	top_stores = frappe.db.sql(
+		"""
+		SELECT
+			branch,
+			COUNT(*) as total,
+			SUM(CASE WHEN custom_verification_status = 'Verified' THEN 1 ELSE 0 END) as verified
+		FROM `tabEmployee`
+		WHERE status = 'Active' AND branch IS NOT NULL AND branch != ''
+		GROUP BY branch
+		HAVING COUNT(*) > 0
+		ORDER BY (SUM(CASE WHEN custom_verification_status = 'Verified' THEN 1 ELSE 0 END) / COUNT(*)) DESC
+		LIMIT 5
+	""",
+		as_dict=True,
+	)
+
+	for store in top_stores:
+		store["progress_pct"] = round(store["verified"] / store["total"] * 100, 1) if store["total"] > 0 else 0
+
+	result["top_stores"] = top_stores
+
+	return result
