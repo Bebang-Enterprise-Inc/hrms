@@ -48,3 +48,12 @@ credentials/
 **/credentials/
 *.local.mdc
 *.tar.gz
+
+# Claude hook session tracking
+.claude/hooks/.brain_session_tracker.json
+
+# Auto Claude data directory
+.auto-claude/
+
+# ADMS Receiver (has its own repo: Bebang-Enterprise-Inc/adms-receiver)
+adms_receiver/
