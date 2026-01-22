@@ -1006,3 +1006,7 @@ def get_enrichment_summary() -> dict:
 	result["top_stores"] = top_stores
 
 	return result
+
+
+# Import employee clearance API to register whitelisted methods
+import hrms.api.employee_clearance  # noqa: E402, F401
