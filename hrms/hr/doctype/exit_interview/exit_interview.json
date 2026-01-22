@@ -28,6 +28,13 @@
   "questionnaire_email_sent",
   "column_break_10",
   "reference_document_name",
+  "bei_questionnaire_section",
+  "custom_questionnaire_responses",
+  "bei_exit_summary_section",
+  "custom_primary_reason",
+  "custom_rehire_recommendation",
+  "column_break_bei_exit",
+  "custom_separation_link",
   "interview_summary_section",
   "interviewers",
   "interview_summary",
@@ -213,6 +220,45 @@
    "fieldname": "interview_summary",
    "fieldtype": "Text Editor",
    "label": "Interview Summary"
+  },
+  {
+   "fieldname": "bei_questionnaire_section",
+   "fieldtype": "Section Break",
+   "label": "BEI Exit Questionnaire"
+  },
+  {
+   "fieldname": "custom_questionnaire_responses",
+   "fieldtype": "Table",
+   "label": "Questionnaire Responses",
+   "options": "BEI Exit Interview Response"
+  },
+  {
+   "fieldname": "bei_exit_summary_section",
+   "fieldtype": "Section Break",
+   "label": "BEI Exit Summary"
+  },
+  {
+   "fieldname": "custom_primary_reason",
+   "fieldtype": "Select",
+   "label": "Primary Reason for Leaving",
+   "options": "\nBetter Pay\nCareer Growth\nManagement Issues\nPersonal Reasons\nRelocation\nHealth Reasons\nWork-Life Balance\nOther"
+  },
+  {
+   "fieldname": "custom_rehire_recommendation",
+   "fieldtype": "Select",
+   "label": "Rehire Recommendation",
+   "options": "\nYes\nNo\nConditional"
+  },
+  {
+   "fieldname": "column_break_bei_exit",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_separation_link",
+   "fieldtype": "Link",
+   "label": "Employee Separation",
+   "options": "Employee Separation",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,

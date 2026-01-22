@@ -1,0 +1,105 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:item_code",
+ "creation": "2026-01-22 20:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "description",
+  "column_break_1",
+  "sla_days",
+  "dole_reference",
+  "section_break_2",
+  "applicable_separation_types"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sla_days",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "SLA (Days)",
+   "description": "Number of days to complete this item"
+  },
+  {
+   "fieldname": "dole_reference",
+   "fieldtype": "Data",
+   "label": "DOLE Reference",
+   "description": "Legal reference (e.g., Art. 297, Labor Code)"
+  },
+  {
+   "fieldname": "section_break_2",
+   "fieldtype": "Section Break",
+   "label": "Applicable Separation Types"
+  },
+  {
+   "fieldname": "applicable_separation_types",
+   "fieldtype": "Table MultiSelect",
+   "label": "Applicable Types",
+   "options": "BEI Separation Type Item",
+   "description": "Which separation types require this compliance item"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-22 20:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI DOLE Compliance Item",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "HR User"
+  }
+ ],
+ "sort_field": "item_code",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}

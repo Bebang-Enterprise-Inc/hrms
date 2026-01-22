@@ -37,3 +37,4 @@ hrms.patches.v15_0.rename_claim_date_to_payroll_date_in_employee_benefit_claim
 hrms.patches.v16_0.create_custom_field_for_employee_advance_in_employee_master
 hrms.patches.v16_0.bei_task_notification_email_templates #2025-12-17
 hrms.patches.v16_0.add_employee_enrichment_fields #2026-01-16
+hrms.patches.v16_0.seed_bei_separation_data #2026-01-22

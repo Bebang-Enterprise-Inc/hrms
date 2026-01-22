@@ -17,10 +17,22 @@
   "resignation_letter_date",
   "boarding_begins_on",
   "project",
+  "bei_separation_section",
+  "custom_separation_type",
+  "custom_separation_reason",
+  "column_break_bei_1",
+  "custom_rehire_eligible",
+  "custom_fnf_statement",
+  "bei_status_section",
+  "custom_exit_interview_completed",
+  "custom_final_pay_approved",
+  "custom_coe_generated",
   "table_for_activity",
   "employee_separation_template",
   "activities",
   "notify_users_by_email",
+  "bei_dole_compliance_section",
+  "custom_dole_compliance",
   "section_break_14",
   "exit_interview",
   "amended_from"
@@ -151,6 +163,80 @@
    "fieldtype": "Date",
    "label": "Separation Begins On",
    "reqd": 1
+  },
+  {
+   "fieldname": "bei_separation_section",
+   "fieldtype": "Section Break",
+   "label": "BEI Separation Details"
+  },
+  {
+   "fieldname": "custom_separation_type",
+   "fieldtype": "Select",
+   "label": "Separation Type",
+   "options": "Resignation\nTermination - Just Cause\nTermination - Authorized Cause\nAWOL\nProbation Failure\nEnd of Contract\nRetirement",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "custom_separation_reason",
+   "fieldtype": "Small Text",
+   "label": "Separation Reason"
+  },
+  {
+   "fieldname": "column_break_bei_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_rehire_eligible",
+   "fieldtype": "Select",
+   "label": "Rehire Eligible",
+   "options": "\nYes\nNo\nConditional"
+  },
+  {
+   "fieldname": "custom_fnf_statement",
+   "fieldtype": "Link",
+   "label": "Full and Final Statement",
+   "options": "Full and Final Statement",
+   "read_only": 1
+  },
+  {
+   "fieldname": "bei_status_section",
+   "fieldtype": "Section Break",
+   "label": "BEI Clearance Status",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "custom_exit_interview_completed",
+   "fieldtype": "Check",
+   "label": "Exit Interview Completed",
+   "default": "0",
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "custom_final_pay_approved",
+   "fieldtype": "Check",
+   "label": "Final Pay Approved",
+   "default": "0",
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "custom_coe_generated",
+   "fieldtype": "Check",
+   "label": "COE Generated",
+   "default": "0",
+   "allow_on_submit": 1
+  },
+  {
+   "fieldname": "bei_dole_compliance_section",
+   "fieldtype": "Section Break",
+   "label": "DOLE Compliance Checklist"
+  },
+  {
+   "fieldname": "custom_dole_compliance",
+   "fieldtype": "Table",
+   "label": "Compliance Items",
+   "options": "BEI DOLE Compliance Checklist",
+   "allow_on_submit": 1
   }
  ],
  "is_submittable": 1,
