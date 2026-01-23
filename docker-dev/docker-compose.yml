@@ -9,6 +9,11 @@
 #   Bench:    docker exec -it frappe-dev bench <command>
 #   Test API: docker exec -it frappe-dev bench execute hrms.api.employee_clearance.get_exit_interview_questions
 #
+# Development:
+#   - Edit files in hrms/api/ locally - changes sync to container automatically
+#   - Run `docker exec -it frappe-dev bench --site dev.localhost clear-cache` after changes
+#   - Or restart: docker compose restart frappe
+#
 # First Run:
 #   The first startup takes 10-15 minutes to initialize bench and install apps.
 #   Subsequent starts are fast (~30 seconds) because frappe-bench is persisted.
@@ -39,19 +44,10 @@ services:
           bench set-config -g redis_queue redis://redis-queue:6379
           bench set-config -g redis_socketio redis://redis-queue:6379
 
-          # Install ERPNext and Payments
+          # Install ERPNext, Payments, and upstream HRMS v15
           bench get-app --branch version-15 https://github.com/frappe/erpnext
           bench get-app --branch version-15 https://github.com/frappe/payments
-
-          # Link local HRMS code from mounted repo (or use upstream v15)
-          if [ -d /hrms-repo/hrms ]; then
-            echo '>>> Linking mounted HRMS code...'
-            rm -rf apps/hrms 2>/dev/null || true
-            ln -sf /hrms-repo apps/hrms
-            ./env/bin/pip install -e apps/hrms
-          else
-            bench get-app --branch version-15 https://github.com/frappe/hrms
-          fi
+          bench get-app --branch version-15 https://github.com/frappe/hrms
 
           # Create site and install apps
           bench new-site dev.localhost --mariadb-root-password admin --admin-password admin --no-mariadb-socket
@@ -61,11 +57,14 @@ services:
           echo '>>> Initialization complete!'
         fi
 
-        # Re-link HRMS on every start to pick up code changes
-        if [ -d /hrms-repo/hrms ]; then
-          rm -rf apps/hrms 2>/dev/null || true
-          ln -sf /hrms-repo apps/hrms
-          ./env/bin/pip install -q -e apps/hrms
+        # Sync BEI custom API files on every start
+        if [ -d /bei-api ]; then
+          echo '>>> Syncing BEI custom API files...'
+          cp -f /bei-api/*.py apps/hrms/hrms/api/ 2>/dev/null || true
+          # Update __init__.py to include BEI APIs
+          if [ -f /bei-api/__init__.py ]; then
+            cp -f /bei-api/__init__.py apps/hrms/hrms/api/__init__.py
+          fi
         fi
 
         echo '>>> Starting bench...'
@@ -76,8 +75,8 @@ services:
     volumes:
       # Persist bench directory (speeds up subsequent starts)
       - frappe-bench:/home/frappe/frappe-bench
-      # Mount BEI-ERP repo root (contains pyproject.toml and hrms/ module)
-      - ..:/hrms-repo:cached
+      # Mount BEI custom API files (synced on container start)
+      - ../hrms/api:/bei-api:cached
     ports:
       - "8000:8000"
       - "9000:9000"
