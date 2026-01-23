@@ -1,0 +1,111 @@
+# Local Frappe Development Environment
+# Controlled entirely via CLI - no GUI required
+#
+# Usage:
+#   Start:    docker compose up -d
+#   Stop:     docker compose down
+#   Logs:     docker compose logs -f frappe
+#   Shell:    docker exec -it frappe-dev bash
+#   Bench:    docker exec -it frappe-dev bench <command>
+#   Test API: docker exec -it frappe-dev bench execute hrms.api.employee_clearance.get_exit_interview_questions
+
+services:
+  frappe:
+    container_name: frappe-dev
+    image: frappe/bench:v5.25.11
+    command: >
+      bash -c "
+        if [ ! -f /home/frappe/frappe-bench/sites/dev.localhost/site_config.json ]; then
+          echo '>>> First run - initializing bench...'
+          cd /home/frappe
+
+          # Initialize bench in the standard location
+          bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
+
+          cd /home/frappe/frappe-bench
+          bench set-config -g db_host mariadb
+          bench set-config -g redis_cache redis://redis-cache:6379
+          bench set-config -g redis_queue redis://redis-queue:6379
+          bench set-config -g redis_socketio redis://redis-queue:6379
+          bench get-app --branch version-15 https://github.com/frappe/erpnext
+          bench get-app --branch version-15 https://github.com/frappe/payments
+
+          # Link local HRMS code from mounted repo
+          if [ -d /hrms-repo/hrms ]; then
+            echo '>>> Linking mounted HRMS code...'
+            ln -sf /hrms-repo apps/hrms
+            ./env/bin/pip install -e apps/hrms
+          else
+            bench get-app --branch version-15 https://github.com/frappe/hrms
+          fi
+
+          bench new-site dev.localhost --mariadb-root-password admin --admin-password admin --no-mariadb-socket
+          bench --site dev.localhost install-app erpnext
+          bench --site dev.localhost install-app hrms
+          bench use dev.localhost
+          echo '>>> Initialization complete!'
+        fi
+        echo '>>> Starting bench...'
+        cd /home/frappe/frappe-bench
+        bench start
+      "
+    environment:
+      - SHELL=/bin/bash
+    volumes:
+      # Mount BEI-ERP repo root (contains pyproject.toml and hrms/ module)
+      - ..:/hrms-repo:cached
+      # No persistence - ephemeral dev environment (rebuilds on restart)
+    ports:
+      - "8000:8000"
+      - "9000:9000"
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis-cache:
+        condition: service_started
+      redis-queue:
+        condition: service_started
+    networks:
+      - frappe-dev-network
+    tty: true
+
+  mariadb:
+    container_name: mariadb-dev
+    image: mariadb:10.6
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+      - --skip-innodb-read-only-compressed
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-padmin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - frappe-dev-network
+
+  redis-cache:
+    container_name: redis-cache-dev
+    image: redis:alpine
+    networks:
+      - frappe-dev-network
+
+  redis-queue:
+    container_name: redis-queue-dev
+    image: redis:alpine
+    networks:
+      - frappe-dev-network
+
+volumes:
+  mariadb-data:
+
+networks:
+  frappe-dev-network:
+    driver: bridge

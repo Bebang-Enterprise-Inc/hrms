@@ -1,0 +1,179 @@
+>>> First run - initializing bench...
+[33mSetting Up Environment[0m
+[90m$ python3 -m venv env[0m
+[90m$ /home/frappe/frappe-bench-init/env/bin/python -m pip install --quiet --upgrade pip[0m
+[90m$ /home/frappe/frappe-bench-init/env/bin/python -m pip install --quiet wheel[0m
+[33mGetting frappe[0m
+[90m$ git clone https://github.com/frappe/frappe.git --branch version-15 --depth 1 --origin upstream[0m
+Cloning into 'frappe'...
+remote: Enumerating objects: 3393, done.[K
+remote: Counting objects:   0% (1/3393)[Kremote: Counting objects:   1% (34/3393)[Kremote: Counting objects:   2% (68/3393)[Kremote: Counting objects:   3% (102/3393)[Kremote: Counting objects:   4% (136/3393)[Kremote: Counting objects:   5% (170/3393)[Kremote: Counting objects:   6% (204/3393)[Kremote: Counting objects:   7% (238/3393)[Kremote: Counting objects:   8% (272/3393)[Kremote: Counting objects:   9% (306/3393)[Kremote: Counting objects:  10% (340/3393)[Kremote: Counting objects:  11% (374/3393)[Kremote: Counting objects:  12% (408/3393)[Kremote: Counting objects:  13% (442/3393)[Kremote: Counting objects:  14% (476/3393)[Kremote: Counting objects:  15% (509/3393)[Kremote: Counting objects:  16% (543/3393)[Kremote: Counting objects:  17% (577/3393)[Kremote: Counting objects:  18% (611/3393)[Kremote: Counting objects:  19% (645/3393)[Kremote: Counting objects:  20% (679/3393)[Kremote: Counting objects:  21% (713/3393)[Kremote: Counting objects:  22% (747/3393)[Kremote: Counting objects:  23% (781/3393)[Kremote: Counting objects:  24% (815/3393)[Kremote: Counting objects:  25% (849/3393)[Kremote: Counting objects:  26% (883/3393)[Kremote: Counting objects:  27% (917/3393)[Kremote: Counting objects:  28% (951/3393)[Kremote: Counting objects:  29% (984/3393)[Kremote: Counting objects:  30% (1018/3393)[Kremote: Counting objects:  31% (1052/3393)[Kremote: Counting objects:  32% (1086/3393)[Kremote: Counting objects:  33% (1120/3393)[Kremote: Counting objects:  34% (1154/3393)[Kremote: Counting objects:  35% (1188/3393)[Kremote: Counting objects:  36% (1222/3393)[Kremote: Counting objects:  37% (1256/3393)[Kremote: Counting objects:  38% (1290/3393)[Kremote: Counting objects:  39% (1324/3393)[Kremote: Counting objects:  40% (1358/3393)[Kremote: Counting objects:  41% (1392/3393)[Kremote: Counting objects:  42% (1426/3393)[Kremote: Counting objects:  43% (1459/3393)[Kremote: Counting objects:  44% (1493/3393)[Kremote: Counting objects:  45% (1527/3393)[Kremote: Counting objects:  46% (1561/3393)[Kremote: Counting objects:  47% (1595/3393)[Kremote: Counting objects:  48% (1629/3393)[Kremote: Counting objects:  49% (1663/3393)[Kremote: Counting objects:  50% (1697/3393)[Kremote: Counting objects:  51% (1731/3393)[Kremote: Counting objects:  52% (1765/3393)[Kremote: Counting objects:  53% (1799/3393)[Kremote: Counting objects:  54% (1833/3393)[Kremote: Counting objects:  55% (1867/3393)[Kremote: Counting objects:  56% (1901/3393)[Kremote: Counting objects:  57% (1935/3393)[Kremote: Counting objects:  58% (1968/3393)[Kremote: Counting objects:  59% (2002/3393)[Kremote: Counting objects:  60% (2036/3393)[Kremote: Counting objects:  61% (2070/3393)[Kremote: Counting objects:  62% (2104/3393)[Kremote: Counting objects:  63% (2138/3393)[Kremote: Counting objects:  64% (2172/3393)[Kremote: Counting objects:  65% (2206/3393)[Kremote: Counting objects:  66% (2240/3393)[Kremote: Counting objects:  67% (2274/3393)[Kremote: Counting objects:  68% (2308/3393)[Kremote: Counting objects:  69% (2342/3393)[Kremote: Counting objects:  70% (2376/3393)[Kremote: Counting objects:  71% (2410/3393)[Kremote: Counting objects:  72% (2443/3393)[Kremote: Counting objects:  73% (2477/3393)[Kremote: Counting objects:  74% (2511/3393)[Kremote: Counting objects:  75% (2545/3393)[Kremote: Counting objects:  76% (2579/3393)[Kremote: Counting objects:  77% (2613/3393)[Kremote: Counting objects:  78% (2647/3393)[Kremote: Counting objects:  79% (2681/3393)[Kremote: Counting objects:  80% (2715/3393)[Kremote: Counting objects:  81% (2749/3393)[Kremote: Counting objects:  82% (2783/3393)[Kremote: Counting objects:  83% (2817/3393)[Kremote: Counting objects:  84% (2851/3393)[Kremote: Counting objects:  85% (2885/3393)[Kremote: Counting objects:  86% (2918/3393)[Kremote: Counting objects:  87% (2952/3393)[Kremote: Counting objects:  88% (2986/3393)[Kremote: Counting objects:  89% (3020/3393)[Kremote: Counting objects:  90% (3054/3393)[Kremote: Counting objects:  91% (3088/3393)[Kremote: Counting objects:  92% (3122/3393)[Kremote: Counting objects:  93% (3156/3393)[Kremote: Counting objects:  94% (3190/3393)[Kremote: Counting objects:  95% (3224/3393)[Kremote: Counting objects:  96% (3258/3393)[Kremote: Counting objects:  97% (3292/3393)[Kremote: Counting objects:  98% (3326/3393)[Kremote: Counting objects:  99% (3360/3393)[Kremote: Counting objects: 100% (3393/3393)[Kremote: Counting objects: 100% (3393/3393), done.[K
+remote: Compressing objects:   0% (1/3060)[Kremote: Compressing objects:   1% (31/3060)[Kremote: Compressing objects:   2% (62/3060)[Kremote: Compressing objects:   3% (92/3060)[Kremote: Compressing objects:   4% (123/3060)[Kremote: Compressing objects:   5% (153/3060)[Kremote: Compressing objects:   6% (184/3060)[Kremote: Compressing objects:   7% (215/3060)[Kremote: Compressing objects:   8% (245/3060)[Kremote: Compressing objects:   9% (276/3060)[Kremote: Compressing objects:  10% (306/3060)[Kremote: Compressing objects:  11% (337/3060)[Kremote: Compressing objects:  12% (368/3060)[Kremote: Compressing objects:  13% (398/3060)[Kremote: Compressing objects:  14% (429/3060)[Kremote: Compressing objects:  15% (459/3060)[Kremote: Compressing objects:  16% (490/3060)[Kremote: Compressing objects:  17% (521/3060)[Kremote: Compressing objects:  18% (551/3060)[Kremote: Compressing objects:  19% (582/3060)[Kremote: Compressing objects:  20% (612/3060)[Kremote: Compressing objects:  21% (643/3060)[Kremote: Compressing objects:  22% (674/3060)[Kremote: Compressing objects:  23% (704/3060)[Kremote: Compressing objects:  24% (735/3060)[Kremote: Compressing objects:  25% (765/3060)[Kremote: Compressing objects:  26% (796/3060)[Kremote: Compressing objects:  27% (827/3060)[Kremote: Compressing objects:  28% (857/3060)[Kremote: Compressing objects:  29% (888/3060)[Kremote: Compressing objects:  30% (918/3060)[Kremote: Compressing objects:  31% (949/3060)[Kremote: Compressing objects:  32% (980/3060)[Kremote: Compressing objects:  33% (1010/3060)[Kremote: Compressing objects:  34% (1041/3060)[Kremote: Compressing objects:  35% (1071/3060)[Kremote: Compressing objects:  36% (1102/3060)[Kremote: Compressing objects:  37% (1133/3060)[Kremote: Compressing objects:  38% (1163/3060)[Kremote: Compressing objects:  39% (1194/3060)[Kremote: Compressing objects:  40% (1224/3060)[Kremote: Compressing objects:  41% (1255/3060)[Kremote: Compressing objects:  42% (1286/3060)[Kremote: Compressing objects:  43% (1316/3060)[Kremote: Compressing objects:  44% (1347/3060)[Kremote: Compressing objects:  45% (1377/3060)[Kremote: Compressing objects:  46% (1408/3060)[Kremote: Compressing objects:  47% (1439/3060)[Kremote: Compressing objects:  48% (1469/3060)[Kremote: Compressing objects:  49% (1500/3060)[Kremote: Compressing objects:  50% (1530/3060)[Kremote: Compressing objects:  51% (1561/3060)[Kremote: Compressing objects:  52% (1592/3060)[Kremote: Compressing objects:  53% (1622/3060)[Kremote: Compressing objects:  54% (1653/3060)[Kremote: Compressing objects:  55% (1683/3060)[Kremote: Compressing objects:  56% (1714/3060)[Kremote: Compressing objects:  57% (1745/3060)[Kremote: Compressing objects:  58% (1775/3060)[Kremote: Compressing objects:  59% (1806/3060)[Kremote: Compressing objects:  60% (1836/3060)[Kremote: Compressing objects:  61% (1867/3060)[Kremote: Compressing objects:  62% (1898/3060)[Kremote: Compressing objects:  63% (1928/3060)[Kremote: Compressing objects:  64% (1959/3060)[Kremote: Compressing objects:  65% (1989/3060)[Kremote: Compressing objects:  66% (2020/3060)[Kremote: Compressing objects:  67% (2051/3060)[Kremote: Compressing objects:  68% (2081/3060)[Kremote: Compressing objects:  69% (2112/3060)[Kremote: Compressing objects:  70% (2142/3060)[Kremote: Compressing objects:  71% (2173/3060)[Kremote: Compressing objects:  72% (2204/3060)[Kremote: Compressing objects:  73% (2234/3060)[Kremote: Compressing objects:  73% (2239/3060)[Kremote: Compressing objects:  74% (2265/3060)[Kremote: Compressing objects:  75% (2295/3060)[Kremote: Compressing objects:  76% (2326/3060)[Kremote: Compressing objects:  77% (2357/3060)[Kremote: Compressing objects:  78% (2387/3060)[Kremote: Compressing objects:  79% (2418/3060)[Kremote: Compressing objects:  80% (2448/3060)[Kremote: Compressing objects:  81% (2479/3060)[Kremote: Compressing objects:  82% (2510/3060)[Kremote: Compressing objects:  83% (2540/3060)[Kremote: Compressing objects:  84% (2571/3060)[Kremote: Compressing objects:  85% (2601/3060)[Kremote: Compressing objects:  86% (2632/3060)[Kremote: Compressing objects:  87% (2663/3060)[Kremote: Compressing objects:  88% (2693/3060)[Kremote: Compressing objects:  89% (2724/3060)[Kremote: Compressing objects:  90% (2754/3060)[Kremote: Compressing objects:  91% (2785/3060)[Kremote: Compressing objects:  92% (2816/3060)[Kremote: Compressing objects:  93% (2846/3060)[Kremote: Compressing objects:  94% (2877/3060)[Kremote: Compressing objects:  95% (2907/3060)[Kremote: Compressing objects:  96% (2938/3060)[Kremote: Compressing objects:  97% (2969/3060)[Kremote: Compressing objects:  98% (2999/3060)[Kremote: Compressing objects:  99% (3030/3060)[Kremote: Compressing objects: 100% (3060/3060)[Kremote: Compressing objects: 100% (3060/3060), done.[K
+Receiving objects:   0% (1/3393)Receiving objects:   1% (34/3393)Receiving objects:   2% (68/3393)Receiving objects:   3% (102/3393)Receiving objects:   4% (136/3393)Receiving objects:   5% (170/3393)Receiving objects:   6% (204/3393)Receiving objects:   7% (238/3393)Receiving objects:   8% (272/3393)Receiving objects:   9% (306/3393)Receiving objects:  10% (340/3393)Receiving objects:  11% (374/3393)Receiving objects:  12% (408/3393)Receiving objects:  13% (442/3393)Receiving objects:  14% (476/3393)Receiving objects:  15% (509/3393)Receiving objects:  16% (543/3393)Receiving objects:  17% (577/3393)Receiving objects:  18% (611/3393)Receiving objects:  19% (645/3393)Receiving objects:  20% (679/3393)Receiving objects:  21% (713/3393)Receiving objects:  22% (747/3393)Receiving objects:  23% (781/3393)Receiving objects:  24% (815/3393)Receiving objects:  25% (849/3393)Receiving objects:  26% (883/3393)Receiving objects:  27% (917/3393)Receiving objects:  28% (951/3393)Receiving objects:  29% (984/3393)Receiving objects:  30% (1018/3393)Receiving objects:  31% (1052/3393)Receiving objects:  32% (1086/3393)Receiving objects:  33% (1120/3393)Receiving objects:  34% (1154/3393)Receiving objects:  35% (1188/3393)Receiving objects:  36% (1222/3393)Receiving objects:  37% (1256/3393)Receiving objects:  38% (1290/3393)Receiving objects:  39% (1324/3393)Receiving objects:  40% (1358/3393)Receiving objects:  41% (1392/3393)Receiving objects:  42% (1426/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  43% (1459/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  44% (1493/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  45% (1527/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  46% (1561/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  47% (1595/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  48% (1629/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  49% (1663/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  50% (1697/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  51% (1731/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  52% (1765/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  53% (1799/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  54% (1833/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  55% (1867/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  56% (1901/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  57% (1935/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  58% (1968/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  59% (2002/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  60% (2036/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  61% (2070/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  62% (2104/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  63% (2138/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  63% (2154/3393), 996.00 KiB | 1.60 MiB/sReceiving objects:  64% (2172/3393), 5.82 MiB | 5.27 MiB/s  Receiving objects:  65% (2206/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  66% (2240/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  67% (2274/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  68% (2308/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  69% (2342/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  70% (2376/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  71% (2410/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  72% (2443/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  73% (2477/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  74% (2511/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  75% (2545/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  76% (2579/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  77% (2613/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  78% (2647/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  79% (2681/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  80% (2715/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  81% (2749/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  82% (2783/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  83% (2817/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  84% (2851/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  85% (2885/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  86% (2918/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  87% (2952/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  88% (2986/3393), 5.82 MiB | 5.27 MiB/sReceiving objects:  89% (3020/3393), 12.70 MiB | 7.92 MiB/sReceiving objects:  90% (3054/3393), 12.70 MiB | 7.92 MiB/sReceiving objects:  91% (3088/3393), 12.70 MiB | 7.92 MiB/sReceiving objects:  92% (3122/3393), 12.70 MiB | 7.92 MiB/sReceiving objects:  93% (3156/3393), 12.70 MiB | 7.92 MiB/sReceiving objects:  94% (3190/3393), 12.70 MiB | 7.92 MiB/sReceiving objects:  95% (3224/3393), 12.70 MiB | 7.92 MiB/sReceiving objects:  96% (3258/3393), 12.70 MiB | 7.92 MiB/sReceiving objects:  97% (3292/3393), 12.70 MiB | 7.92 MiB/sReceiving objects:  98% (3326/3393), 12.70 MiB | 7.92 MiB/sReceiving objects:  99% (3360/3393), 12.70 MiB | 7.92 MiB/sremote: Total 3393 (delta 406), reused 1947 (delta 221), pack-reused 0 (from 0)[K
+Receiving objects: 100% (3393/3393), 12.70 MiB | 7.92 MiB/sReceiving objects: 100% (3393/3393), 17.41 MiB | 8.93 MiB/s, done.
+Resolving deltas:   0% (0/406)Resolving deltas:   1% (5/406)Resolving deltas:   2% (9/406)Resolving deltas:   3% (13/406)Resolving deltas:   4% (17/406)Resolving deltas:   5% (21/406)Resolving deltas:   6% (25/406)Resolving deltas:   7% (31/406)Resolving deltas:   8% (34/406)Resolving deltas:   9% (39/406)Resolving deltas:  10% (41/406)Resolving deltas:  11% (45/406)Resolving deltas:  12% (49/406)Resolving deltas:  13% (54/406)Resolving deltas:  14% (57/406)Resolving deltas:  15% (61/406)Resolving deltas:  16% (65/406)Resolving deltas:  17% (70/406)Resolving deltas:  18% (75/406)Resolving deltas:  19% (78/406)Resolving deltas:  20% (82/406)Resolving deltas:  21% (86/406)Resolving deltas:  22% (90/406)Resolving deltas:  23% (95/406)Resolving deltas:  24% (98/406)Resolving deltas:  25% (102/406)Resolving deltas:  26% (106/406)Resolving deltas:  27% (111/406)Resolving deltas:  28% (114/406)Resolving deltas:  29% (118/406)Resolving deltas:  30% (122/406)Resolving deltas:  31% (126/406)Resolving deltas:  32% (130/406)Resolving deltas:  33% (134/406)Resolving deltas:  34% (139/406)Resolving deltas:  35% (143/406)Resolving deltas:  36% (148/406)Resolving deltas:  37% (152/406)Resolving deltas:  38% (155/406)Resolving deltas:  39% (159/406)Resolving deltas:  40% (163/406)Resolving deltas:  41% (167/406)Resolving deltas:  42% (171/406)Resolving deltas:  43% (175/406)Resolving deltas:  44% (179/406)Resolving deltas:  45% (183/406)Resolving deltas:  46% (187/406)Resolving deltas:  47% (194/406)Resolving deltas:  48% (195/406)Resolving deltas:  49% (199/406)Resolving deltas:  50% (203/406)Resolving deltas:  51% (208/406)Resolving deltas:  52% (213/406)Resolving deltas:  53% (217/406)Resolving deltas:  54% (220/406)Resolving deltas:  55% (224/406)Resolving deltas:  56% (228/406)Resolving deltas:  57% (232/406)Resolving deltas:  58% (237/406)Resolving deltas:  59% (240/406)Resolving deltas:  60% (244/406)Resolving deltas:  61% (248/406)Resolving deltas:  62% (253/406)Resolving deltas:  63% (256/406)Resolving deltas:  64% (260/406)Resolving deltas:  65% (264/406)Resolving deltas:  66% (268/406)Resolving deltas:  67% (273/406)Resolving deltas:  68% (277/406)Resolving deltas:  69% (281/406)Resolving deltas:  70% (285/406)Resolving deltas:  71% (290/406)Resolving deltas:  72% (293/406)Resolving deltas:  73% (297/406)Resolving deltas:  74% (301/406)Resolving deltas:  75% (305/406)Resolving deltas:  76% (309/406)Resolving deltas:  77% (313/406)Resolving deltas:  78% (317/406)Resolving deltas:  79% (321/406)Resolving deltas:  80% (325/406)Resolving deltas:  81% (329/406)Resolving deltas:  82% (333/406)Resolving deltas:  83% (337/406)Resolving deltas:  84% (342/406)Resolving deltas:  85% (346/406)Resolving deltas:  86% (350/406)Resolving deltas:  87% (354/406)Resolving deltas:  88% (360/406)Resolving deltas:  89% (362/406)Resolving deltas:  90% (366/406)Resolving deltas:  91% (370/406)Resolving deltas:  92% (374/406)Resolving deltas:  93% (378/406)Resolving deltas:  94% (382/406)Resolving deltas:  95% (386/406)Resolving deltas:  96% (390/406)Resolving deltas:  97% (394/406)Resolving deltas:  98% (398/406)Resolving deltas:  99% (402/406)Resolving deltas: 100% (406/406)Resolving deltas: 100% (406/406), done.
+[33mInstalling frappe[0m
+[90m$ /home/frappe/frappe-bench-init/env/bin/python -m pip install --quiet --upgrade -e /home/frappe/frappe-bench-init/apps/frappe [0m
+[90m$ yarn install --check-files[0m
+[2K[1G[1myarn install v1.22.22[22m
+[2K[1G[2m[1/5][22m Validating package.json...
+[2K[1G[2m[2/5][22m Resolving packages...
+[1G[0K[2K[1G[2K[1G[2m[3/5][22m Fetching packages...
+[2K[1G[1G[] 0/518[1G[] 3/518[1G[] 6/518[1G[] 9/518[1G[] 10/518[1G[] 15/518[1G[] 22/518[1G[] 28/518[1G[] 34/518[1G[] 42/518[1G[] 48/518[1G[] 54/518[1G[] 61/518[1G[] 68/518[1G[] 76/518[1G[] 85/518[1G[] 96/518[1G[] 106/518[1G[] 116/518[1G[] 124/518[1G[] 125/518[1G[] 128/518[1G[] 130/518[1G[] 132/518[1G[] 133/518[1G[] 134/518[1G[] 135/518[1G[] 137/518[1G[] 140/518[1G[] 142/518[1G[] 146/518[1G[] 150/518[1G[] 154/518[1G[] 159/518[1G[] 163/518[1G[] 166/518[1G[] 169/518[1G[] 175/518[1G[] 184/518[1G[] 192/518[1G[] 200/518[1G[] 211/518[1G[] 222/518[1G[] 229/518[1G[] 237/518[1G[] 242/518[1G[] 250/518[1G[] 258/518[1G[] 262/518[1G[] 266/518[1G[] 270/518[1G[] 276/518[1G[] 282/518[1G[] 289/518[1G[] 295/518[1G[] 305/518[1G[] 313/518[1G[] 319/518[1G[] 325/518[1G[] 331/518[1G[] 337/518[1G[] 343/518[1G[] 344/518[1G[] 349/518[1G[] 351/518[1G[] 354/518[1G[] 359/518[1G[] 360/518[1G[] 361/518[1G[] 365/518[1G[] 368/518[1G[] 374/518[1G[] 380/518[1G[] 384/518[1G[] 388/518[1G[] 391/518[1G[] 395/518[1G[] 401/518[1G[] 404/518[1G[] 406/518[1G[] 409/518[1G[] 411/518[1G[] 414/518[1G[] 416/518[1G[] 419/518[1G[] 421/518[1G[] 424/518[1G[] 428/518[1G[] 431/518[1G[] 435/518[1G[] 439/518[1G[] 446/518[1G[] 451/518[1G[] 454/518[1G[] 457/518[1G[] 462/518[1G[] 469/518[1G[] 476/518[1G[] 483/518[1G[] 490/518[1G[] 498/518[1G[] 501/518[1G[] 506/518[1G[] 514/518[1G[] 517/518[2K[1G[2m[4/5][22m Linking dependencies...
+[2K[1G[33mwarning[39m " > @frappe/esbuild-plugin-postcss2@0.1.3" has unmet peer dependency "less@^4.x".
+[2K[1G[33mwarning[39m " > @frappe/esbuild-plugin-postcss2@0.1.3" has unmet peer dependency "stylus@^0.x".
+[2K[1G[33mwarning[39m " > @vue/component-compiler@4.2.4" has unmet peer dependency "vue-template-compiler@*".
+[1G[] 518/518[2K[1G[2K[1G[1G[] 0/509[2K[1G[2K[1G[1G[] 0/20944[1G[] 128/20944[1G[] 972/20944[1G[] 1788/20944[1G[] 2830/20944[1G[] 3794/20944[1G[] 4721/20944[1G[] 5734/20944[1G[] 6527/20944[1G[] 7376/20944[1G[] 8270/20944[1G[] 9164/20944[1G[] 10151/20944[1G[] 10949/20944[1G[] 11869/20944[1G[] 12754/20944[1G[] 13762/20944[1G[] 14756/20944[1G[] 15742/20944[1G[] 16793/20944[1G[] 17919/20944[1G[] 19044/20944[1G[] 20120/20944[2K[1G[2K[1G[1G[] 0/954[1G[] 350/954[1G[] 954/954[2K[1G[2m[5/5][22m Building fresh packages...
+[2K[1G
+[2K[1G
+[2K[1G
+[2K[1G
+[1G[0K[1G[1A[0K[1G[1B[1G[2A[0K[1G[2B[1G[3A[0K[1G[3B[1G[4A[0K[1G[4B[1G[0K[1G[1A[0K[1G[1B[1G[2A[0K[1G[2B[1G[3A[0K[1G[3B[1G[4A[0K[1G[4B[1G[0K[1G[1A[0K[1G[1B[1G[2A[0K[1G[2B[1G[3A[0K[1G[3B[1G[4A[0K[1G[4B[1G[0K[1G[1A[0K[1G[1B[1G[2A[0K[1G[2B[1G[3A[0K[1G[3B[1G[4A[0K[1G[4B[1G[4A[2K[4B[1G[3A[2K[3B[1G[2A[2K[2B[1G[1A[2K[1B[2K[1G[4A[2K[1G[2K[1GDone in 15.89s.
+Found existing apps updating states...
+[90m$ bench build[0m
+[33mAssets for Release v15.97.0 don't exist[0m
+Linking /home/frappe/frappe-bench-init/apps/frappe/frappe/public to ./assets/frappeLinking /home/frappe/frappe-bench-init/apps/frappe/node_modules to ./assets/frappe/node_modules[32m✔[0m Application Assets Linked
+
+
+[2K[1G[1myarn run v1.22.22[22m
+[2K[1G[2m$ node esbuild --production --run-build-command[22m
+Browserslist: caniuse-lite is outdated. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[36m[1mFile[22m[39m                                                        [36m[1mSize[22m[39m
+
+frappe/dist/js/
+├─ [32mbilling.bundle.QQE2RPCA.js[39m                               4.44 Kb
+├─ [32mbootstrap-4-web.bundle.FOZOVELL.js[39m                       1.73 Kb
+├─ [32mcontrols.bundle.7MWSZZOU.js[39m                              879.80 Kb
+├─ [32mdata_import_tools.bundle.IGMLQRF6.js[39m                     129.07 Kb
+├─ [32mdesk.bundle.ZK6KGUAV.js[39m                                  1356.80 Kb
+├─ [32mdialog.bundle.RXVRDGGP.js[39m                                57.74 Kb
+├─ [32mform.bundle.MT2EDMMW.js[39m                                  171.77 Kb
+├─ [32mfrappe-web.bundle.QR66UWQL.js[39m                            830.89 Kb
+├─ [32mlibs.bundle.TIV7ZGVY.js[39m                                  556.25 Kb
+├─ [32mlist.bundle.XOZPH666.js[39m                                  200.81 Kb
+├─ [32mlogtypes.bundle.EKN7LWKW.js[39m                              0.73 Kb
+├─ [32monboarding_tours.bundle.RAUR6X4Z.js[39m                      7.60 Kb
+├─ [32mreport.bundle.PDSBNVYX.js[39m                                204.67 Kb
+├─ [32msentry.bundle.AX44GVWW.js[39m                                74.42 Kb
+├─ [32mtelemetry.bundle.3ICFTNWB.js[39m                             5.32 Kb
+├─ [32muser_profile_controller.bundle.TPZWXYWN.js[39m               11.97 Kb
+├─ [32mvideo_player.bundle.DUYYLSFO.js[39m                          120.67 Kb
+├─ [32mweb_form.bundle.OTWZPSGZ.js[39m                              1072.89 Kb
+├─ [32mform_builder.bundle.XXMRX45A.js[39m                          798.78 Kb
+├─ [34mform_builder.bundle.6OQZ7OSS.css[39m                         23.39 Kb
+├─ [32mprint_format_builder.bundle.JE5LKCM5.js[39m                  685.24 Kb
+├─ [34mprint_format_builder.bundle.75ZMZKDI.css[39m                 5.54 Kb
+├─ [32mworkflow_builder.bundle.ENLALP47.js[39m                      351.85 Kb
+├─ [34mworkflow_builder.bundle.DGJVAQDO.css[39m                     11.02 Kb
+├─ [32mbuild_events.bundle.B6R4SRCA.js[39m                          105.71 Kb
+├─ [34mbuild_events.bundle.V3KRYF3F.css[39m                         1.29 Kb
+├─ [32mfile_uploader.bundle.S3QWJDX3.js[39m                         203.50 Kb
+├─ [34mfile_uploader.bundle.66F7L32J.css[39m                        6.58 Kb
+└─ [32mkanban_board.bundle.FBBHCLAN.js[39m                          578.16 Kb
+
+frappe/dist/css/
+├─ [34mdesk.bundle.BPTPDQ4D.css[39m                                 595.78 Kb
+├─ [34memail.bundle.JUCRK37Y.css[39m                                5.97 Kb
+├─ [34mlogin.bundle.5VKZLUZO.css[39m                                32.29 Kb
+├─ [34mprint.bundle.ES7DROJD.css[39m                                206.74 Kb
+├─ [34mprint_format.bundle.SGPYA7IR.css[39m                         186.11 Kb
+├─ [34mreport.bundle.EVSV7JUA.css[39m                               5.53 Kb
+├─ [34mweb_form.bundle.VXVYDVLR.css[39m                             14.88 Kb
+└─ [34mwebsite.bundle.IHVNS7M3.css[39m                              447.09 Kb
+
+frappe/dist/css-rtl/
+├─ [34mdesk.bundle.TSTGENNN.css[39m                                 596.29 Kb
+├─ [34memail.bundle.7AALC53T.css[39m                                5.98 Kb
+├─ [34mlogin.bundle.UIXQPNY4.css[39m                                32.29 Kb
+├─ [34mprint.bundle.KLPBOUBC.css[39m                                206.90 Kb
+├─ [34mprint_format.bundle.U5CZLFO5.css[39m                         186.24 Kb
+├─ [34mreport.bundle.NXC6PPVT.css[39m                               5.52 Kb
+├─ [34mweb_form.bundle.FOLSS5RD.css[39m                             14.88 Kb
+└─ [34mwebsite.bundle.P7JRPGMW.css[39m                              447.25 Kb
+
+[30m[42m DONE [49m[39m Total Build Time: 6.283s
+
+[30m[103m WARN [49m[39m Cannot connect to redis_cache to update assets_json
+[30m[103m WARN [49m[39m Cannot connect to redis_cache to update assets_json
+[30m[103m WARN [49m[39m Cannot connect to redis_cache to update assets_json
+[2K[1GDone in 6.67s.
+Compiling translations for frappe
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/ar/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/es/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/de/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/sr_CS/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/pt/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/hu/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/zh/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/fr/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/hr/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/pt_BR/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/eo/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/sv/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/th/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/fa/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/ru/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/bs/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/pl/LC_MESSAGES/frappe.mo
+MO file created at /home/frappe/frappe-bench-init/sites/assets/locale/tr/LC_MESSAGES/frappe.mo
+[32mSUCCESS: Bench frappe-bench-init initialized[0m
+[34mINFO: A newer version of bench is available: 5.25.11 → 5.29.0[0m
+cp: cannot create regular file 'frappe-bench/Procfile': Permission denied
+cp: cannot create directory 'frappe-bench/apps/frappe': Permission denied
+cp: cannot create directory 'frappe-bench/config': Permission denied
+cp: cannot create directory 'frappe-bench/env': Permission denied
+cp: cannot create directory 'frappe-bench/logs': Permission denied
+cp: cannot create regular file 'frappe-bench/patches.txt': Permission denied
+cp: cannot create directory 'frappe-bench/sites': Permission denied
+[33mWARN: Command not being executed in bench directory[0m
+Usage: bench [OPTIONS] COMMAND [ARGS]...
+Try 'bench --help' for help.
+
+Error: No such command 'set-config'.
+[33mWARN: Command not being executed in bench directory[0m
+Usage: bench [OPTIONS] COMMAND [ARGS]...
+Try 'bench --help' for help.
+
+Error: No such command 'set-config'.
+[33mWARN: Command not being executed in bench directory[0m
+Usage: bench [OPTIONS] COMMAND [ARGS]...
+Try 'bench --help' for help.
+
+Error: No such command 'set-config'.
+[33mWARN: Command not being executed in bench directory[0m
+Usage: bench [OPTIONS] COMMAND [ARGS]...
+Try 'bench --help' for help.
+
+Error: No such command 'set-config'.
+[31m/home/frappe/frappe-bench is not a valid bench directory. Run with --init-bench if you'd like to create a Bench too.[0m
+[34mINFO: A newer version of bench is available: 5.25.11 → 5.29.0[0m
+[31m/home/frappe/frappe-bench is not a valid bench directory. Run with --init-bench if you'd like to create a Bench too.[0m
+[34mINFO: A newer version of bench is available: 5.25.11 → 5.29.0[0m
+[31m/home/frappe/frappe-bench is not a valid bench directory. Run with --init-bench if you'd like to create a Bench too.[0m
+[34mINFO: A newer version of bench is available: 5.25.11 → 5.29.0[0m
+[33mWARN: Command not being executed in bench directory[0m
+Usage: bench [OPTIONS] COMMAND [ARGS]...
+Try 'bench --help' for help.
+
+Error: No such command 'new-site'.
+[33mWARN: Command not being executed in bench directory[0m
+Usage: bench [OPTIONS] COMMAND [ARGS]...
+Try 'bench --help' for help.
+
+Error: No such option: --site
+[33mWARN: Command not being executed in bench directory[0m
+Usage: bench [OPTIONS] COMMAND [ARGS]...
+Try 'bench --help' for help.
+
+Error: No such option: --site
+[33mWARN: Command not being executed in bench directory[0m
+Usage: bench [OPTIONS] COMMAND [ARGS]...
+Try 'bench --help' for help.
+
+Error: No such command 'use'.
+>>> Initialization complete!
+>>> Starting bench...
+[33mWARN: Command not being executed in bench directory[0m
+2026-01-22 23:52:41 [1] [ERROR] Procfile does not exist or is not a file

@@ -1,0 +1,211 @@
+name: Build and Deploy Frappe HRMS
+
+on:
+  push:
+    branches:
+      - production
+    paths:
+      - 'hrms/**'
+      - '.github/helper/apps.json'
+      - '.github/workflows/build-and-deploy.yml'
+  workflow_dispatch:
+    inputs:
+      skip_build:
+        description: 'Skip image build (deploy existing image)'
+        required: false
+        default: 'false'
+        type: boolean
+      run_migrate:
+        description: 'Run bench migrate after deploy'
+        required: false
+        default: 'true'
+        type: boolean
+
+env:
+  AWS_REGION: ap-southeast-1
+  EC2_INSTANCE_ID: i-026b7477d27bd46d6
+  DOCKER_IMAGE: bebang/erpnext-hrms
+  DOCKER_TAG: v15
+  FRAPPE_SITE: hrms.bebang.ph
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.skip_build != 'true' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Checkout frappe_docker
+        uses: actions/checkout@v4
+        with:
+          repository: frappe/frappe_docker
+          path: frappe_docker
+
+      - name: Prepare apps.json
+        run: |
+          cp .github/helper/apps.json frappe_docker/apps.json
+          echo "📦 Apps to be included:"
+          cat frappe_docker/apps.json
+          export APPS_JSON_BASE64=$(base64 -w 0 frappe_docker/apps.json)
+          echo "APPS_JSON_BASE64=$APPS_JSON_BASE64" >> $GITHUB_ENV
+
+      - name: Generate image tags
+        id: tags
+        run: |
+          DATE_TAG=$(date +%Y%m%d-%H%M%S)
+          SHORT_SHA=${GITHUB_SHA::7}
+          echo "date_tag=$DATE_TAG" >> $GITHUB_OUTPUT
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "📌 Tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}, ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-$DATE_TAG"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: frappe_docker
+          file: frappe_docker/images/custom/Containerfile
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+            ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.date_tag }}
+            ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.short_sha }}
+          build-args: |
+            FRAPPE_BRANCH=version-15
+            PYTHON_VERSION=3.11.6
+            NODE_VERSION=20.19.2
+            APPS_JSON_BASE64=${{ env.APPS_JSON_BASE64 }}
+          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+          cache-to: type=inline
+
+      - name: Output image info
+        run: |
+          echo "✅ Image built and pushed successfully!"
+          echo "📦 Image: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}"
+          echo "📦 Dated: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.date_tag }}"
+
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: always() && (needs.build.result == 'success' || github.event.inputs.skip_build == 'true')
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy via AWS SSM
+        id: deploy
+        run: |
+          echo "🚀 Deploying to EC2 instance ${{ env.EC2_INSTANCE_ID }}..."
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "set -e",
+              "echo \"📥 Pulling latest image...\"",
+              "cd /home/ubuntu/frappe-docker",
+              "docker compose pull",
+              "echo \"🔄 Restarting containers...\"",
+              "docker compose up -d --no-deps backend websocket queue-short queue-default queue-long scheduler",
+              "echo \"⏳ Waiting for services to stabilize...\"",
+              "sleep 15",
+              "docker compose ps",
+              "echo \"✅ Deployment complete!\""
+            ]' \
+            --output text \
+            --query 'Command.CommandId')
+
+          echo "command_id=$COMMAND_ID" >> $GITHUB_OUTPUT
+          echo "📋 SSM Command ID: $COMMAND_ID"
+
+          # Wait for command to complete
+          echo "⏳ Waiting for deployment to complete..."
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
+
+          # Get command output
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
+            --query '[Status, StandardOutputContent, StandardErrorContent]' \
+            --output text
+
+      - name: Run migrations (if enabled)
+        if: ${{ github.event.inputs.run_migrate != 'false' }}
+        run: |
+          echo "🔧 Running database migrations..."
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "cd /home/ubuntu/frappe-docker",
+              "docker compose exec -T backend bench --site ${{ env.FRAPPE_SITE }} migrate",
+              "docker compose exec -T backend bench --site ${{ env.FRAPPE_SITE }} clear-cache",
+              "echo \"✅ Migration complete!\""
+            ]' \
+            --output text \
+            --query 'Command.CommandId')
+
+          echo "📋 Migration Command ID: $COMMAND_ID"
+
+          # Wait and get output
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
+
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
+            --query '[Status, StandardOutputContent, StandardErrorContent]' \
+            --output text
+
+      - name: Verify deployment
+        run: |
+          echo "🔍 Verifying API is responding..."
+          sleep 10
+
+          # Test API endpoint
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.FRAPPE_SITE }}/api/method/frappe.client.get_count?doctype=User" || echo "000")
+
+          if [ "$HTTP_CODE" == "200" ]; then
+            echo "✅ API is responding (HTTP $HTTP_CODE)"
+          else
+            echo "⚠️ API returned HTTP $HTTP_CODE - may need investigation"
+          fi
+
+  notify:
+    name: Notify on completion
+    runs-on: ubuntu-latest
+    needs: [build, deploy]
+    if: always()
+
+    steps:
+      - name: Send notification
+        run: |
+          if [ "${{ needs.deploy.result }}" == "success" ]; then
+            echo "✅ Deployment to ${{ env.FRAPPE_SITE }} succeeded!"
+          else
+            echo "❌ Deployment failed. Check logs above."
+          fi

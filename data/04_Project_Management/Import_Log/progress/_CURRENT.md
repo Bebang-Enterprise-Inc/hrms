@@ -8,6 +8,51 @@
 
 ## 2026-01-22 (Today)
 
+### INCIDENT: Frappe API Down - Docker Image Corrupted 🔴
+
+**Status:** PRODUCTION DOWN - ALL API endpoints returning "not whitelisted"
+**Severity:** CRITICAL
+**Details:** See `progress/clearance-deployment.md`
+
+**What Happened:**
+1. Attempted to deploy `employee_clearance.py` API to production Docker
+2. Used `docker commit` to capture running container as new image (MISTAKE)
+3. This corrupted the entire Frappe API - even core functions broken
+4. Original image was overwritten, cannot rollback easily
+
+**Impact:**
+- https://hrms.bebang.ph/api/* - ALL endpoints return 403
+- https://erp.bebang.ph/api/* - ALL endpoints return 403
+- Affects: Employee self-service, task management, all API consumers
+
+**To Fix Tomorrow:**
+1. Pull original image from Docker Hub (need credentials)
+2. OR rebuild Docker image from scratch using frappe_docker
+3. See `progress/clearance-deployment.md` for detailed steps
+
+**Root Cause:** `docker commit` doesn't work for Frappe - the `--preload` gunicorn flag means code must be in the IMAGE, not patched into running container.
+
+---
+
+### Employee Clearance Module - PARTIAL ✅/🔴
+
+**Frontend:** DEPLOYED to Vercel ✅
+- https://my.bebang.ph/clearance (status page)
+- https://my.bebang.ph/clearance/exit-interview (questionnaire)
+
+**Backend:** BLOCKED 🔴
+- API code written and committed to production branch
+- Cannot deploy until Docker image fixed
+- See `progress/clearance-deployment.md` for full status
+
+**Components Built:**
+- 5 new DocTypes (DOLE compliance, exit interview questions)
+- 12 API endpoints in `hrms/api/employee_clearance.py`
+- React pages and components in bei-tasks repo
+- Seed data patch with 12 DOLE items + 26 questions
+
+---
+
 ### Store Ops Questionnaire RECEIVED - COMPLETE ✅
 
 **Blocker #5 RESOLVED** - Edlice and Dave completed the questionnaire on Jan 21, 2026.
