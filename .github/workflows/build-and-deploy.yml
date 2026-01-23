@@ -155,6 +155,27 @@ jobs:
             --query '[Status, StandardOutputContent, StandardErrorContent]' \
             --output text
 
+      - name: Fix nginx site header
+        run: |
+          echo "🔧 Fixing nginx X-Frappe-Site-Name header..."
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "docker exec frappe_docker-frontend-1 sed -i \"s/X-Frappe-Site-Name frontend/X-Frappe-Site-Name ${{ env.FRAPPE_SITE }}/g\" /etc/nginx/conf.d/frappe.conf",
+              "docker exec frappe_docker-frontend-1 nginx -s reload",
+              "echo \"✅ Nginx site header fixed!\""
+            ]' \
+            --output text \
+            --query 'Command.CommandId')
+
+          echo "📋 Nginx Fix Command ID: $COMMAND_ID"
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
+
       - name: Run migrations (if enabled)
         if: ${{ github.event.inputs.run_migrate != 'false' }}
         run: |
