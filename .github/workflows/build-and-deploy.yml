@@ -123,7 +123,7 @@ jobs:
             --parameters 'commands=[
               "set -e",
               "echo \"📥 Pulling latest image...\"",
-              "cd /home/ubuntu/frappe-docker",
+              "cd /home/ubuntu/frappe-hrms/docker",
               "docker compose pull",
               "echo \"🔄 Restarting containers...\"",
               "docker compose up -d --no-deps backend websocket queue-short queue-default queue-long scheduler",
@@ -160,7 +160,7 @@ jobs:
             --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "cd /home/ubuntu/frappe-docker",
+              "cd /home/ubuntu/frappe-hrms/docker",
               "docker compose exec -T backend bench --site ${{ env.FRAPPE_SITE }} migrate",
               "docker compose exec -T backend bench --site ${{ env.FRAPPE_SITE }} clear-cache",
               "echo \"✅ Migration complete!\""
