@@ -24,7 +24,7 @@ on:
 env:
   AWS_REGION: ap-southeast-1
   EC2_INSTANCE_ID: i-026b7477d27bd46d6
-  DOCKER_IMAGE: bebang/erpnext-hrms
+  DOCKER_IMAGE: samkarazi/bebang-erpnext-hrms
   DOCKER_TAG: v15
   FRAPPE_SITE: hrms.bebang.ph
 
