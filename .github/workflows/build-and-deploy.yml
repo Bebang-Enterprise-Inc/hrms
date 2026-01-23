@@ -122,14 +122,18 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
               "set -e",
+              "cd /home/ubuntu/frappe_docker",
+              "echo \"📥 Restoring and updating pwd.yml...\"",
+              "git checkout pwd.yml",
+              "sed -i \"s|image: frappe/erpnext:.*|image: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}|g\" pwd.yml",
+              "sed -i \"s/8080:8080/80:8080/g\" pwd.yml",
               "echo \"📥 Pulling latest image...\"",
-              "cd /home/ubuntu/frappe-hrms/docker",
-              "docker compose pull",
+              "docker compose -f pwd.yml -f volumes-override.yml pull",
               "echo \"🔄 Restarting containers...\"",
-              "docker compose up -d --no-deps backend websocket queue-short queue-default queue-long scheduler",
+              "docker compose -f pwd.yml -f volumes-override.yml up -d --no-deps backend websocket queue-short queue-long scheduler frontend",
               "echo \"⏳ Waiting for services to stabilize...\"",
               "sleep 15",
-              "docker compose ps",
+              "docker compose -f pwd.yml -f volumes-override.yml ps",
               "echo \"✅ Deployment complete!\""
             ]' \
             --output text \
@@ -160,9 +164,9 @@ jobs:
             --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "cd /home/ubuntu/frappe-hrms/docker",
-              "docker compose exec -T backend bench --site ${{ env.FRAPPE_SITE }} migrate",
-              "docker compose exec -T backend bench --site ${{ env.FRAPPE_SITE }} clear-cache",
+              "cd /home/ubuntu/frappe_docker",
+              "docker compose -f pwd.yml -f volumes-override.yml exec -T backend bench --site ${{ env.FRAPPE_SITE }} migrate",
+              "docker compose -f pwd.yml -f volumes-override.yml exec -T backend bench --site ${{ env.FRAPPE_SITE }} clear-cache",
               "echo \"✅ Migration complete!\""
             ]' \
             --output text \
@@ -186,13 +190,15 @@ jobs:
           echo "🔍 Verifying API is responding..."
           sleep 10
 
-          # Test API endpoint
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://${{ env.FRAPPE_SITE }}/api/method/frappe.client.get_count?doctype=User" || echo "000")
+          # Test API endpoint (frappe.ping doesn't require auth)
+          RESPONSE=$(curl -s "https://${{ env.FRAPPE_SITE }}/api/method/frappe.ping" || echo "{}")
 
-          if [ "$HTTP_CODE" == "200" ]; then
-            echo "✅ API is responding (HTTP $HTTP_CODE)"
+          if echo "$RESPONSE" | grep -q '"pong"'; then
+            echo "✅ API is responding correctly"
+            echo "$RESPONSE"
           else
-            echo "⚠️ API returned HTTP $HTTP_CODE - may need investigation"
+            echo "⚠️ API may not be responding correctly"
+            echo "Response: $RESPONSE"
           fi
 
   notify:
