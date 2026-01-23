@@ -1,16 +1,64 @@
 # Current Progress (Rolling 30 Days)
 
-> **Window:** 2025-12-23 to 2026-01-22
-> **Last Updated:** 2026-01-22
+> **Window:** 2025-12-24 to 2026-01-23
+> **Last Updated:** 2026-01-23
 > **For detailed topic history, see the topic-specific files in this folder.**
 
 ---
 
-## 2026-01-22 (Today)
+## 2026-01-23 (Today)
 
-### INCIDENT: Frappe API Down - Docker Image Corrupted 🔴
+### INCIDENT RESOLVED: Frappe API Restored ✅
 
-**Status:** PRODUCTION DOWN - ALL API endpoints returning "not whitelisted"
+**Status:** PRODUCTION ONLINE
+**Resolution Time:** ~2 hours
+**Details:** See `progress/clearance-deployment.md`
+
+**What Was Done:**
+
+1. **Created CI/CD Pipeline** (`.github/workflows/build-and-deploy.yml`)
+   - Triggers on push to `production` branch or manual dispatch
+   - Builds Docker image with frappe_docker Containerfile
+   - Deploys via AWS SSM to EC2
+   - Runs migrations automatically
+   - Image pushed to: `samkarazi/bebang-erpnext-hrms:v15`
+
+2. **Fixed Server Configuration**
+   - Discovered correct path: `/home/ubuntu/frappe_docker` (not `frappe-hrms`)
+   - Created `volumes-override.yml` for external volume mounting
+   - Changed frontend port from 8080 to 80 (ADMS receiver uses 8080)
+   - Stopped old `bebang-hrms-*` containers, started new `frappe_docker-*` stack
+
+3. **Preserved Site Data**
+   - Site data in `bebang-hrms_sites` volume preserved
+   - New stack uses external volumes to access existing data
+   - All sites working: hrms.bebang.ph, erp.bebang.ph, hr.bebang.ph, lfg.bebang.ph
+
+**Key Files:**
+| File | Purpose |
+|------|---------|
+| `.github/workflows/build-and-deploy.yml` | CI/CD workflow |
+| `.github/helper/apps.json` | Apps for Docker build |
+| `docker-dev/docker-compose.yml` | Local dev environment |
+| `progress/clearance-deployment.md` | Full incident documentation |
+
+**Verification:**
+```bash
+curl https://hrms.bebang.ph/api/method/frappe.ping
+# {"message":"pong"}
+```
+
+**Still Pending:**
+- Run `bench migrate` to create Employee Clearance DocTypes
+- Local dev environment has HRMS version mismatch (v16 code on v15 Frappe)
+
+---
+
+## 2026-01-22
+
+### INCIDENT: Frappe API Down - Docker Image Corrupted 🔴 (NOW RESOLVED)
+
+**Status:** ~~PRODUCTION DOWN~~ RESOLVED 2026-01-23
 **Severity:** CRITICAL
 **Details:** See `progress/clearance-deployment.md`
 
@@ -21,20 +69,19 @@
 4. Original image was overwritten, cannot rollback easily
 
 **Impact:**
-- https://hrms.bebang.ph/api/* - ALL endpoints return 403
-- https://erp.bebang.ph/api/* - ALL endpoints return 403
+- https://hrms.bebang.ph/api/* - ALL endpoints returned 403
+- https://erp.bebang.ph/api/* - ALL endpoints returned 403
 - Affects: Employee self-service, task management, all API consumers
-
-**To Fix Tomorrow:**
-1. Pull original image from Docker Hub (need credentials)
-2. OR rebuild Docker image from scratch using frappe_docker
-3. See `progress/clearance-deployment.md` for detailed steps
 
 **Root Cause:** `docker commit` doesn't work for Frappe - the `--preload` gunicorn flag means code must be in the IMAGE, not patched into running container.
 
 ---
 
 ### Employee Clearance Module - PARTIAL ✅/🔴
+
+**Key Files:**
+- **Full Plan:** `C:\Users\Sam\.claude\plans\eager-doodling-treehouse.md`
+- **Deployment Status:** `progress/clearance-deployment.md`
 
 **Frontend:** DEPLOYED to Vercel ✅
 - https://my.bebang.ph/clearance (status page)

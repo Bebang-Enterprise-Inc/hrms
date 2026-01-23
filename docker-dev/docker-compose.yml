@@ -8,6 +8,13 @@
 #   Shell:    docker exec -it frappe-dev bash
 #   Bench:    docker exec -it frappe-dev bench <command>
 #   Test API: docker exec -it frappe-dev bench execute hrms.api.employee_clearance.get_exit_interview_questions
+#
+# First Run:
+#   The first startup takes 10-15 minutes to initialize bench and install apps.
+#   Subsequent starts are fast (~30 seconds) because frappe-bench is persisted.
+#
+# Reset:
+#   To start fresh: docker compose down -v && docker compose up -d
 
 services:
   frappe:
@@ -15,46 +22,62 @@ services:
     image: frappe/bench:v5.25.11
     command: >
       bash -c "
-        if [ ! -f /home/frappe/frappe-bench/sites/dev.localhost/site_config.json ]; then
+        cd /home/frappe/frappe-bench
+
+        if [ ! -f sites/dev.localhost/site_config.json ]; then
           echo '>>> First run - initializing bench...'
-          cd /home/frappe
 
-          # Initialize bench in the standard location
-          bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
+          # Initialize if Procfile doesn't exist (fresh volume)
+          if [ ! -f Procfile ]; then
+            cd /home/frappe
+            bench init --skip-redis-config-generation --frappe-branch version-15 frappe-bench
+            cd /home/frappe/frappe-bench
+          fi
 
-          cd /home/frappe/frappe-bench
           bench set-config -g db_host mariadb
           bench set-config -g redis_cache redis://redis-cache:6379
           bench set-config -g redis_queue redis://redis-queue:6379
           bench set-config -g redis_socketio redis://redis-queue:6379
+
+          # Install ERPNext and Payments
           bench get-app --branch version-15 https://github.com/frappe/erpnext
           bench get-app --branch version-15 https://github.com/frappe/payments
 
-          # Link local HRMS code from mounted repo
+          # Link local HRMS code from mounted repo (or use upstream v15)
           if [ -d /hrms-repo/hrms ]; then
             echo '>>> Linking mounted HRMS code...'
+            rm -rf apps/hrms 2>/dev/null || true
             ln -sf /hrms-repo apps/hrms
             ./env/bin/pip install -e apps/hrms
           else
             bench get-app --branch version-15 https://github.com/frappe/hrms
           fi
 
+          # Create site and install apps
           bench new-site dev.localhost --mariadb-root-password admin --admin-password admin --no-mariadb-socket
           bench --site dev.localhost install-app erpnext
           bench --site dev.localhost install-app hrms
           bench use dev.localhost
           echo '>>> Initialization complete!'
         fi
+
+        # Re-link HRMS on every start to pick up code changes
+        if [ -d /hrms-repo/hrms ]; then
+          rm -rf apps/hrms 2>/dev/null || true
+          ln -sf /hrms-repo apps/hrms
+          ./env/bin/pip install -q -e apps/hrms
+        fi
+
         echo '>>> Starting bench...'
-        cd /home/frappe/frappe-bench
         bench start
       "
     environment:
       - SHELL=/bin/bash
     volumes:
+      # Persist bench directory (speeds up subsequent starts)
+      - frappe-bench:/home/frappe/frappe-bench
       # Mount BEI-ERP repo root (contains pyproject.toml and hrms/ module)
       - ..:/hrms-repo:cached
-      # No persistence - ephemeral dev environment (rebuilds on restart)
     ports:
       - "8000:8000"
       - "9000:9000"
@@ -104,6 +127,7 @@ services:
       - frappe-dev-network
 
 volumes:
+  frappe-bench:
   mariadb-data:
 
 networks:
