@@ -360,12 +360,18 @@ def approve_and_apply(
                 # Emergency contact fields
                 "emergency_contact_name": "person_to_be_contacted",
                 "emergency_phone": "emergency_phone_number",
+                "emergency_phone_number": "emergency_phone_number",  # Direct match
                 "emergency_relationship": "relation",
-                # Government ID fields
+                # Government ID fields (standard names)
                 "tin_number": "tin_number",
                 "sss_number": "sss_number",
                 "philhealth_number": "philhealth_number",
                 "pagibig_number": "pagibig_number",
+                # Government ID fields (custom_ prefix from enrichment wizard)
+                "custom_tin": "tin_number",
+                "custom_sss": "sss_number",
+                "custom_philhealth": "philhealth_number",
+                "custom_pagibig": "pagibig_number",
                 # Legacy field names (for backward compatibility)
                 "emergency_contact_person": "person_to_be_contacted",
                 "emergency_contact_number": "emergency_phone_number",
