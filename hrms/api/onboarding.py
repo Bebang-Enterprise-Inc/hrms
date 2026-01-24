@@ -402,3 +402,67 @@ def approve_and_apply(
     return {"success": True, "data": {"status": req.status}}
 
 
+@frappe.whitelist()
+def request_revision(
+    request_name: str,
+    reviewer_email: str,
+    fields_to_revise: str,  # JSON array of field keys
+    revision_notes: str | None = None,
+) -> Dict[str, Any]:
+    """
+    Request revision for specific fields in an onboarding request.
+
+    Instead of rejecting the whole request, HR can ask the employee
+    to correct specific fields and resubmit.
+    """
+    if not request_name:
+        return {"success": False, "error": "Request is required", "code": "MISSING_REQUEST"}
+
+    if not frappe.db.exists(REQUEST_DOCTYPE, request_name):
+        return {"success": False, "error": "Request not found", "code": "NOT_FOUND"}
+
+    req = frappe.get_doc(REQUEST_DOCTYPE, request_name)
+
+    if req.status not in ("Pending", "Escalated"):
+        return {"success": False, "error": "Request not pending", "code": "NOT_PENDING"}
+
+    # Parse fields to revise
+    try:
+        fields = json.loads(fields_to_revise) if isinstance(fields_to_revise, str) else fields_to_revise
+        if not isinstance(fields, list) or len(fields) == 0:
+            return {"success": False, "error": "Fields to revise required", "code": "MISSING_FIELDS"}
+    except Exception:
+        return {"success": False, "error": "Invalid fields format", "code": "INVALID_FIELDS"}
+
+    # Update request with revision info
+    req.status = "Revision Requested"
+    req.approver_email = reviewer_email or ""
+    req.approver_notes = revision_notes or ""
+
+    # Store revision details in a custom field or in approver_notes
+    revision_info = {
+        "fields": fields,
+        "requested_by": reviewer_email,
+        "requested_at": str(now_datetime()),
+        "notes": revision_notes or "",
+    }
+
+    # Append revision info to approver_notes for now
+    # (Could be stored in a separate field if needed)
+    req.approver_notes = json.dumps(revision_info, ensure_ascii=False)
+
+    try:
+        req.save(ignore_permissions=True)
+        frappe.db.commit()
+        return {
+            "success": True,
+            "data": {
+                "status": req.status,
+                "fields_to_revise": fields,
+            }
+        }
+    except Exception as e:
+        frappe.log_error(title="BEI Onboarding request_revision failed", message=str(e))
+        return {"success": False, "error": "Failed to request revision", "code": "REVISION_FAILED"}
+
+

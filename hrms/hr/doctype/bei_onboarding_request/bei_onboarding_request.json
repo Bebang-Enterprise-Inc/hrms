@@ -53,7 +53,7 @@
       "fieldname": "status",
       "fieldtype": "Select",
       "label": "Status",
-      "options": "Pending\nApproved\nRejected\nEscalated\nApplied",
+      "options": "Pending\nApproved\nRejected\nEscalated\nApplied\nRevision Requested",
       "reqd": 1,
       "in_list_view": 1
     },
