@@ -351,32 +351,26 @@ def approve_and_apply(
 
             # Apply ONLY whitelisted-safe fields. Keep restricted fields for HR-only flow.
             # Maps input field names -> Employee doctype field names
+            # NOTE: Only map to fields that actually exist in the Employee doctype
             safe_map = {
-                # Contact fields
+                # Contact fields (standard Employee fields)
                 "personal_email": "personal_email",
                 "cell_number": "cell_number",
                 "current_address": "current_address",
                 "permanent_address": "permanent_address",
-                # Emergency contact fields
+                # Emergency contact fields (standard Employee fields)
                 "emergency_contact_name": "person_to_be_contacted",
                 "emergency_phone": "emergency_phone_number",
                 "emergency_phone_number": "emergency_phone_number",  # Direct match
                 "emergency_relationship": "relation",
-                # Government ID fields (standard names)
-                "tin_number": "tin_number",
-                "sss_number": "sss_number",
-                "philhealth_number": "philhealth_number",
-                "pagibig_number": "pagibig_number",
-                # Government ID fields (custom_ prefix from enrichment wizard)
-                "custom_tin": "tin_number",
-                "custom_sss": "sss_number",
-                "custom_philhealth": "philhealth_number",
-                "custom_pagibig": "pagibig_number",
                 # Legacy field names (for backward compatibility)
                 "emergency_contact_person": "person_to_be_contacted",
                 "emergency_contact_number": "emergency_phone_number",
                 # Special fields
                 "selfie_file_url": None,  # stored on request; Employee photo handled separately
+                # NOTE: Government ID fields (tin_number, sss_number, etc.) are NOT applied
+                # because they don't exist in the standard Employee doctype yet.
+                # These would need custom fields created first.
             }
 
             # Build dict of fields to update
