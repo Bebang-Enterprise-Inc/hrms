@@ -1,0 +1,158 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "autoname": "naming_series:",
+  "creation": "2026-01-24 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "store",
+    "trip",
+    "receiving_date",
+    "status",
+    "column_break_1",
+    "receiver_1",
+    "receiver_2",
+    "driver",
+    "section_break_signatures",
+    "receiver_1_signature",
+    "receiver_2_signature",
+    "driver_signature",
+    "section_break_items",
+    "items"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "BEI-RCV-.YYYY.-.#####",
+      "reqd": 1
+    },
+    {
+      "fieldname": "store",
+      "fieldtype": "Link",
+      "label": "Store",
+      "options": "Warehouse",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "trip",
+      "fieldtype": "Link",
+      "label": "Trip",
+      "options": "BEI Distribution Trip",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "receiving_date",
+      "fieldtype": "Datetime",
+      "label": "Receiving Date",
+      "default": "Now",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "In Progress\nCompleted\nWith Issues",
+      "default": "In Progress",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "receiver_1",
+      "fieldtype": "Link",
+      "label": "Receiver 1 (Supervisor)",
+      "options": "User"
+    },
+    {
+      "fieldname": "receiver_2",
+      "fieldtype": "Link",
+      "label": "Receiver 2 (Staff)",
+      "options": "User"
+    },
+    {
+      "fieldname": "driver",
+      "fieldtype": "Data",
+      "label": "Driver Name"
+    },
+    {
+      "fieldname": "section_break_signatures",
+      "fieldtype": "Section Break",
+      "label": "Signatures"
+    },
+    {
+      "fieldname": "receiver_1_signature",
+      "fieldtype": "Signature",
+      "label": "Receiver 1 Signature"
+    },
+    {
+      "fieldname": "receiver_2_signature",
+      "fieldtype": "Signature",
+      "label": "Receiver 2 Signature"
+    },
+    {
+      "fieldname": "driver_signature",
+      "fieldtype": "Signature",
+      "label": "Driver Signature"
+    },
+    {
+      "fieldname": "section_break_items",
+      "fieldtype": "Section Break",
+      "label": "Receiving Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "BEI Store Receiving Item",
+      "reqd": 1
+    }
+  ],
+  "links": [],
+  "modified": "2026-01-24 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Store Receiving",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "HR Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 1,
+      "read": 1,
+      "report": 0,
+      "role": "Employee",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

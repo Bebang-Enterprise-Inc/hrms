@@ -1,0 +1,148 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "autoname": "naming_series:",
+  "creation": "2026-01-24 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "trip_date",
+    "route_name",
+    "status",
+    "column_break_1",
+    "driver",
+    "vehicle",
+    "vehicle_plate",
+    "section_break_departure",
+    "departure_time",
+    "departure_temp",
+    "seal_number",
+    "section_break_stops",
+    "stops"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "BEI-TRIP-.YYYY.-.#####",
+      "reqd": 1
+    },
+    {
+      "fieldname": "trip_date",
+      "fieldtype": "Date",
+      "label": "Trip Date",
+      "default": "Today",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "route_name",
+      "fieldtype": "Data",
+      "label": "Route Name",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Preparing\nIn Transit\nCompleted\nPartial",
+      "default": "Preparing",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "driver",
+      "fieldtype": "Link",
+      "label": "Driver",
+      "options": "User",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "vehicle",
+      "fieldtype": "Data",
+      "label": "Vehicle"
+    },
+    {
+      "fieldname": "vehicle_plate",
+      "fieldtype": "Data",
+      "label": "Vehicle Plate"
+    },
+    {
+      "fieldname": "section_break_departure",
+      "fieldtype": "Section Break",
+      "label": "Departure Details"
+    },
+    {
+      "fieldname": "departure_time",
+      "fieldtype": "Datetime",
+      "label": "Departure Time"
+    },
+    {
+      "fieldname": "departure_temp",
+      "fieldtype": "Float",
+      "label": "Departure Temperature (°C)"
+    },
+    {
+      "fieldname": "seal_number",
+      "fieldtype": "Data",
+      "label": "Seal Number"
+    },
+    {
+      "fieldname": "section_break_stops",
+      "fieldtype": "Section Break",
+      "label": "Delivery Stops"
+    },
+    {
+      "fieldname": "stops",
+      "fieldtype": "Table",
+      "label": "Stops",
+      "options": "BEI Trip Stop",
+      "reqd": 1
+    }
+  ],
+  "links": [],
+  "modified": "2026-01-24 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Distribution Trip",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "HR Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 1,
+      "read": 1,
+      "report": 0,
+      "role": "Employee",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

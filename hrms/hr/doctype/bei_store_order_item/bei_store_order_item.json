@@ -1,0 +1,78 @@
+{
+  "actions": [],
+  "creation": "2026-01-24 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "item_code",
+    "item_name",
+    "uom",
+    "qty_requested",
+    "qty_approved",
+    "qty_delivered",
+    "last_order_qty"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item Code",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "label": "Item Name",
+      "fetch_from": "item_code.item_name",
+      "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "uom",
+      "fieldtype": "Link",
+      "label": "UOM",
+      "options": "UOM",
+      "fetch_from": "item_code.stock_uom",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "qty_requested",
+      "fieldtype": "Float",
+      "label": "Qty Requested",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "qty_approved",
+      "fieldtype": "Float",
+      "label": "Qty Approved",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "qty_delivered",
+      "fieldtype": "Float",
+      "label": "Qty Delivered",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "last_order_qty",
+      "fieldtype": "Float",
+      "label": "Last Order Qty",
+      "read_only": 1
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2026-01-24 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Store Order Item",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "creation",
+  "sort_order": "ASC",
+  "states": [],
+  "track_changes": 1
+}
