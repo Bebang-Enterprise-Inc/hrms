@@ -152,7 +152,7 @@ def lookup_employee(token: str, biometric_id: str | None = None, employee: str |
     if employee:
         filters["name"] = employee
     if biometric_id:
-        filters["biometric_id"] = biometric_id
+        filters["attendance_device_id"] = biometric_id
 
     # NOTE: Request all fields needed for prefilling the onboarding form
     fields = [
@@ -181,6 +181,7 @@ def lookup_employee(token: str, biometric_id: str | None = None, employee: str |
         "bank_name",                # If exists
         "bank_ac_no",               # Bank account number
         "image",                    # Profile photo
+        "attendance_device_id",     # Biometric ID
     ]
     rows = frappe.get_all("Employee", filters=filters, fields=fields, limit=2)
 
@@ -224,7 +225,7 @@ def lookup_employee(token: str, biometric_id: str | None = None, employee: str |
             "bank_name": row.get("bank_name"),
             "bank_ac_no": row.get("bank_ac_no"),
             "image": row.get("image"),
-            "biometric_id": row.get("biometric_id"),
+            "biometric_id": row.get("attendance_device_id"),
         },
     }
 
