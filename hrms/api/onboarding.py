@@ -340,20 +340,42 @@ def approve_and_apply(
             changes = _as_dict(req.requested_changes)
             emp = frappe.get_doc("Employee", req.employee)
 
+            # Flatten nested structure from enrichment wizard
+            # Enrichment sends: { contact: {...}, emergency: {...}, government_ids: {...} }
+            flat_changes = {}
+            for section_key, section_value in changes.items():
+                if isinstance(section_value, dict):
+                    flat_changes.update(section_value)
+                else:
+                    flat_changes[section_key] = section_value
+
             # Apply ONLY whitelisted-safe fields. Keep restricted fields for HR-only flow.
-            # These fieldnames are common in ERPNext; if your instance differs, update mapping.
+            # Maps input field names -> Employee doctype field names
             safe_map = {
+                # Contact fields
                 "personal_email": "personal_email",
                 "cell_number": "cell_number",
                 "current_address": "current_address",
-                "emergency_contact_person": "emergency_contact_person",
+                "permanent_address": "permanent_address",
+                # Emergency contact fields
+                "emergency_contact_name": "person_to_be_contacted",
+                "emergency_phone": "emergency_phone_number",
+                "emergency_relationship": "relation",
+                # Government ID fields
+                "tin_number": "tin_number",
+                "sss_number": "sss_number",
+                "philhealth_number": "philhealth_number",
+                "pagibig_number": "pagibig_number",
+                # Legacy field names (for backward compatibility)
+                "emergency_contact_person": "person_to_be_contacted",
                 "emergency_contact_number": "emergency_phone_number",
+                # Special fields
                 "selfie_file_url": None,  # stored on request; Employee photo handled separately
             }
 
             for input_key, emp_field in safe_map.items():
-                if emp_field and input_key in changes and changes[input_key] is not None:
-                    setattr(emp, emp_field, changes[input_key])
+                if emp_field and input_key in flat_changes and flat_changes[input_key] is not None:
+                    setattr(emp, emp_field, flat_changes[input_key])
 
             emp.save(ignore_permissions=True)
             req.status = "Applied"
