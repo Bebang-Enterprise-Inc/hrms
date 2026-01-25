@@ -12,6 +12,31 @@ from frappe.utils import nowdate, add_days, now_datetime
 import json
 
 
+def resolve_warehouse(store_or_branch):
+    """
+    Resolve a branch name or partial warehouse name to the full warehouse name.
+    Branch names like 'TEST-STORE-BGC' need to be converted to warehouse names 'TEST-STORE-BGC - BEI'.
+    """
+    if not store_or_branch:
+        return None
+
+    # First check if the exact warehouse exists
+    if frappe.db.exists("Warehouse", store_or_branch):
+        return store_or_branch
+
+    # Try appending company abbreviation (BEI is the default company)
+    warehouse_with_company = f"{store_or_branch} - BEI"
+    if frappe.db.exists("Warehouse", warehouse_with_company):
+        return warehouse_with_company
+
+    # Try to find warehouse by warehouse_name (without company suffix)
+    warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": store_or_branch}, "name")
+    if warehouse:
+        return warehouse
+
+    frappe.throw(_("Could not find Store: {0}").format(store_or_branch))
+
+
 @frappe.whitelist()
 def get_orderable_items(store):
     """
@@ -20,6 +45,9 @@ def get_orderable_items(store):
     """
     if not store:
         frappe.throw(_("Store is required"))
+
+    # Resolve branch name to warehouse name
+    warehouse = resolve_warehouse(store)
 
     # Get items that can be ordered by this store
     # For now, return all stock items - can be filtered later by store config
@@ -41,7 +69,7 @@ def get_orderable_items(store):
                 "item_code": item.name,
                 "parent": ["in", frappe.get_all(
                     "BEI Store Order",
-                    filters={"store": store, "status": ["!=", "Draft"]},
+                    filters={"store": warehouse, "status": ["!=", "Draft"]},
                     pluck="name",
                     limit=1
                 )]
@@ -64,6 +92,9 @@ def submit_order(store, items):
     if not store:
         frappe.throw(_("Store is required"))
 
+    # Resolve branch name to warehouse name
+    warehouse = resolve_warehouse(store)
+
     if isinstance(items, str):
         items = json.loads(items)
 
@@ -71,7 +102,7 @@ def submit_order(store, items):
         frappe.throw(_("At least one item is required"))
 
     order = frappe.new_doc("BEI Store Order")
-    order.store = store
+    order.store = warehouse
     order.order_date = nowdate()
     order.delivery_date = add_days(nowdate(), 1)
     order.status = "Pending Approval"
@@ -98,9 +129,12 @@ def get_order_history(store=None, limit=20):
     if not store:
         return {"orders": []}
 
+    # Resolve branch name to warehouse name
+    warehouse = resolve_warehouse(store)
+
     orders = frappe.get_all(
         "BEI Store Order",
-        filters={"store": store},
+        filters={"store": warehouse},
         fields=["name", "order_date", "delivery_date", "status", "submitted_by", "approved_by"],
         order_by="creation desc",
         limit=int(limit)
