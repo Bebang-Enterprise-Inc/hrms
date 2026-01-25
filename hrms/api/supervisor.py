@@ -217,8 +217,10 @@ def create_weekly_plan(store, week_start, shifts, labor_budget=None):
 
 
 @frappe.whitelist()
-def get_weekly_plan(store, week_start):
+def get_weekly_plan(store=None, week_start=None):
     """Get weekly labor plan for a store."""
+    if not store or not week_start:
+        return {"plan": None}
     plans = frappe.get_all(
         "BEI Weekly Labor Plan",
         filters={"store": store, "week_start_date": week_start},

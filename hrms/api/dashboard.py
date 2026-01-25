@@ -13,10 +13,10 @@ import json
 
 
 @frappe.whitelist()
-def get_store_dashboard(store, period="week"):
+def get_store_dashboard(store=None, period="week"):
     """Get dashboard KPIs for a store."""
     if not store:
-        frappe.throw(_("Store is required"))
+        return {"store": None, "period": period, "kpis": {}}
 
     today = nowdate()
     if period == "week":
@@ -84,11 +84,15 @@ def get_area_dashboard(area_supervisor=None, period="week"):
         area_supervisor = frappe.session.user
 
     # Get stores managed by this supervisor
-    stores = frappe.get_all(
-        "Warehouse",
-        filters={"custom_area_supervisor": area_supervisor},
-        pluck="name"
-    )
+    try:
+        stores = frappe.get_all(
+            "Warehouse",
+            filters={"custom_area_supervisor": area_supervisor},
+            pluck="name"
+        )
+    except Exception:
+        # custom_area_supervisor field may not exist in this environment
+        stores = []
 
     if not stores:
         return {"stores": [], "kpis": {}}
@@ -145,8 +149,10 @@ def get_ops_dashboard(period="week"):
 
 
 @frappe.whitelist()
-def get_sales_trend(store, period="week"):
+def get_sales_trend(store=None, period="week"):
     """Get sales trend from POS uploads."""
+    if not store:
+        return {"trend": []}
     today = nowdate()
     start_date = add_days(today, -7) if period == "week" else add_days(today, -30)
 

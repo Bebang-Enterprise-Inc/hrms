@@ -93,10 +93,10 @@ def submit_order(store, items):
 
 
 @frappe.whitelist()
-def get_order_history(store, limit=20):
+def get_order_history(store=None, limit=20):
     """Get past orders for a store."""
     if not store:
-        frappe.throw(_("Store is required"))
+        return {"orders": []}
 
     orders = frappe.get_all(
         "BEI Store Order",
@@ -151,13 +151,13 @@ def approve_order(order_name, approved_quantities=None):
 
 
 @frappe.whitelist()
-def get_expected_deliveries(store):
+def get_expected_deliveries(store=None):
     """
     Get trips expected to deliver to this store today.
     Returns distribution trips with this store as a stop.
     """
     if not store:
-        frappe.throw(_("Store is required"))
+        return {"deliveries": []}
 
     today = nowdate()
 
