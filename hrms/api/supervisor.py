@@ -324,3 +324,156 @@ def get_team_attendance(date=None):
         })
 
     return {"date": date, "attendance": attendance}
+
+
+# ==============================================================================
+# UNIFIED APPROVAL QUEUE
+# ==============================================================================
+
+
+@frappe.whitelist()
+def get_unified_approval_queue(approver=None, store=None):
+    """Get all pending items requiring approval from various sources."""
+    if not approver:
+        approver = frappe.session.user
+
+    items = []
+
+    # 1. Store Orders pending approval
+    try:
+        order_filters = {"status": "Pending Approval"}
+        if store:
+            order_filters["store"] = store
+
+        orders = frappe.get_all(
+            "BEI Store Order",
+            filters=order_filters,
+            fields=["name", "store", "order_date", "submitted_by", "creation", "total_amount"]
+        )
+        for order in orders:
+            items.append({
+                "type": "store_order",
+                "name": order.name,
+                "store": order.store,
+                "submitted_by": order.submitted_by,
+                "submitted_at": str(order.creation) if order.creation else None,
+                "title": f"Store Order: {order.name}",
+                "description": f"Total: {order.total_amount or 0}",
+                "order_date": str(order.order_date) if order.order_date else None,
+            })
+    except Exception:
+        pass  # DocType may not exist
+
+    # 2. Leave Applications pending (supervisor's team)
+    try:
+        employee = frappe.db.get_value("Employee", {"user_id": approver}, "name")
+        if employee:
+            # Get direct reports
+            direct_reports = frappe.get_all(
+                "Employee",
+                filters={"reports_to": employee, "status": "Active"},
+                pluck="name"
+            )
+            if direct_reports:
+                leaves = frappe.get_all(
+                    "Leave Application",
+                    filters={
+                        "status": "Open",
+                        "employee": ["in", direct_reports]
+                    },
+                    fields=["name", "employee", "employee_name", "leave_type", "from_date", "to_date", "creation", "total_leave_days"]
+                )
+                for leave in leaves:
+                    items.append({
+                        "type": "leave_request",
+                        "name": leave.name,
+                        "employee": leave.employee,
+                        "employee_name": leave.employee_name,
+                        "leave_type": leave.leave_type,
+                        "dates": f"{leave.from_date} to {leave.to_date}",
+                        "total_days": leave.total_leave_days,
+                        "submitted_at": str(leave.creation) if leave.creation else None,
+                        "title": f"Leave: {leave.employee_name} - {leave.leave_type}",
+                        "description": f"{leave.total_leave_days} day(s)",
+                    })
+    except Exception:
+        pass
+
+    # 3. Coverage Requests pending
+    try:
+        coverage_filters = {"status": "Open"}
+        if store:
+            coverage_filters["store"] = store
+
+        coverage = frappe.get_all(
+            "BEI Staff Coverage Request",
+            filters=coverage_filters,
+            fields=["name", "store", "coverage_date", "shift", "requested_by", "creation", "absent_employee", "reason"]
+        )
+        for req in coverage:
+            items.append({
+                "type": "coverage_request",
+                "name": req.name,
+                "store": req.store,
+                "coverage_date": str(req.coverage_date) if req.coverage_date else None,
+                "shift": req.shift,
+                "absent_employee": req.absent_employee,
+                "reason": req.reason,
+                "submitted_at": str(req.creation) if req.creation else None,
+                "title": f"Coverage: {req.store} - {req.shift}",
+                "description": f"For {req.absent_employee}",
+            })
+    except Exception:
+        pass
+
+    # 4. Weekly Plans pending (for area supervisors)
+    try:
+        plan_filters = {"status": "Draft"}
+        if store:
+            plan_filters["store"] = store
+
+        plans = frappe.get_all(
+            "BEI Weekly Labor Plan",
+            filters=plan_filters,
+            fields=["name", "store", "week_start_date", "total_hours", "creation", "planned_by"]
+        )
+        for plan in plans:
+            items.append({
+                "type": "labor_plan",
+                "name": plan.name,
+                "store": plan.store,
+                "week_start": str(plan.week_start_date) if plan.week_start_date else None,
+                "total_hours": plan.total_hours,
+                "planned_by": plan.planned_by,
+                "submitted_at": str(plan.creation) if plan.creation else None,
+                "title": f"Labor Plan: {plan.store}",
+                "description": f"Week of {plan.week_start_date}, {plan.total_hours}h",
+            })
+    except Exception:
+        pass
+
+    # 5. Onboarding requests pending
+    try:
+        onboarding = frappe.get_all(
+            "BEI Onboarding Request",
+            filters={"status": "Pending"},
+            fields=["name", "employee", "employee_name", "store", "creation"]
+        )
+        for req in onboarding:
+            items.append({
+                "type": "onboarding_request",
+                "name": req.name,
+                "employee": req.employee,
+                "employee_name": req.employee_name,
+                "store": req.store,
+                "submitted_at": str(req.creation) if req.creation else None,
+                "title": f"Onboarding: {req.employee_name}",
+                "description": f"New employee at {req.store}",
+            })
+    except Exception:
+        pass
+
+    # Sort by creation date (most recent first)
+    items.sort(key=lambda x: x.get("submitted_at") or "", reverse=True)
+
+    return {"items": items, "count": len(items)}
