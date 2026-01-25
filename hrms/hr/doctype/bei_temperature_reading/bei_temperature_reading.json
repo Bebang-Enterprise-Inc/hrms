@@ -1,0 +1,54 @@
+{
+ "actions": [],
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "equipment",
+  "temperature",
+  "is_within_range",
+  "action_taken"
+ ],
+ "fields": [
+  {
+   "fieldname": "equipment",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Equipment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "temperature",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Temperature (\u00b0C)",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_within_range",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Within Range"
+  },
+  {
+   "fieldname": "action_taken",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Action Taken"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-01-25 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Temperature Reading",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

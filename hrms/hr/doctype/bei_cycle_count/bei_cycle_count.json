@@ -1,0 +1,132 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-CC-.YYYY.-.#####",
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "store",
+  "count_date",
+  "counted_by",
+  "column_break_1",
+  "verified_by",
+  "status",
+  "total_variance_value",
+  "section_items",
+  "items",
+  "section_notes",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "count_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Count Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "counted_by",
+   "fieldtype": "Link",
+   "label": "Counted By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Link",
+   "label": "Verified By",
+   "options": "User"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nSubmitted\nVerified\nReconciled"
+  },
+  {
+   "fieldname": "total_variance_value",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Variance Value",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_items",
+   "fieldtype": "Section Break",
+   "label": "Count Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "BEI Cycle Count Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_notes",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-25 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Cycle Count",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

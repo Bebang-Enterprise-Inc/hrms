@@ -1008,9 +1008,11 @@ def get_enrichment_summary() -> dict:
 	return result
 
 
-# Import employee clearance API to register whitelisted methods
+# Import all API modules to register whitelisted methods
 import hrms.api.employee_clearance  # noqa: E402, F401
-
-# Import store operations APIs
 import hrms.api.store  # noqa: E402, F401
-import hrms.api.dispatch  # noqa: E402, F401
+import hrms.api.supervisor  # noqa: E402, F401
+import hrms.api.communication  # noqa: E402, F401
+import hrms.api.dashboard  # noqa: E402, F401
+import hrms.api.inventory  # noqa: E402, F401
+import hrms.api.coverage  # noqa: E402, F401

@@ -1,0 +1,180 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-SLE-.YYYY.-.#####",
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "store",
+  "request_date",
+  "item_code",
+  "batch_no",
+  "column_break_1",
+  "status",
+  "requested_by",
+  "section_dates",
+  "original_expiry",
+  "requested_expiry",
+  "quantity",
+  "section_approval",
+  "approved_by",
+  "approved_expiry",
+  "rejection_reason",
+  "section_details",
+  "reason",
+  "photo_evidence"
+ ],
+ "fields": [
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "request_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Request Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Code",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "batch_no",
+   "fieldtype": "Data",
+   "label": "Batch No"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending\nApproved\nRejected"
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_dates",
+   "fieldtype": "Section Break",
+   "label": "Expiry Dates"
+  },
+  {
+   "fieldname": "original_expiry",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Original Expiry",
+   "reqd": 1
+  },
+  {
+   "fieldname": "requested_expiry",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Requested Expiry",
+   "reqd": 1
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "label": "Quantity",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_approval",
+   "fieldtype": "Section Break",
+   "label": "Approval"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved/Rejected By",
+   "options": "User"
+  },
+  {
+   "fieldname": "approved_expiry",
+   "fieldtype": "Date",
+   "label": "Approved Expiry"
+  },
+  {
+   "fieldname": "rejection_reason",
+   "fieldtype": "Text",
+   "label": "Rejection Reason"
+  },
+  {
+   "fieldname": "section_details",
+   "fieldtype": "Section Break",
+   "label": "Details"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Text",
+   "label": "Reason for Extension",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_evidence",
+   "fieldtype": "Attach Image",
+   "label": "Photo Evidence"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-25 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Shelf Life Extension",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

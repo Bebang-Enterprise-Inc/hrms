@@ -1,0 +1,152 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-TKT-.YYYY.-.#####",
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "submitted_by",
+  "submission_date",
+  "category",
+  "column_break_1",
+  "priority",
+  "status",
+  "assigned_to",
+  "section_details",
+  "subject",
+  "description",
+  "section_resolution",
+  "resolution",
+  "resolved_date",
+  "satisfaction_rating"
+ ],
+ "fields": [
+  {
+   "fieldname": "submitted_by",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Submitted By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "Now",
+   "fieldname": "submission_date",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Submission Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Category",
+   "options": "IT/Technical\nHR Question\nPayroll Issue\nApp Bug\nFeature Request\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Medium",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Priority",
+   "options": "Low\nMedium\nHigh\nCritical",
+   "reqd": 1
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Open\nIn Progress\nWaiting on User\nResolved\nClosed"
+  },
+  {
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Assigned To",
+   "options": "User"
+  },
+  {
+   "fieldname": "section_details",
+   "fieldtype": "Section Break",
+   "label": "Ticket Details"
+  },
+  {
+   "fieldname": "subject",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Subject",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text",
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_resolution",
+   "fieldtype": "Section Break",
+   "label": "Resolution"
+  },
+  {
+   "fieldname": "resolution",
+   "fieldtype": "Text",
+   "label": "Resolution"
+  },
+  {
+   "fieldname": "resolved_date",
+   "fieldtype": "Datetime",
+   "label": "Resolved Date"
+  },
+  {
+   "fieldname": "satisfaction_rating",
+   "fieldtype": "Select",
+   "label": "Satisfaction Rating",
+   "options": "\n1\n2\n3\n4\n5"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-25 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Support Ticket",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Employee",
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

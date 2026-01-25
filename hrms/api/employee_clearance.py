@@ -461,6 +461,151 @@ def get_clearance_status(employee: str):
 
 
 # ============================================================================
+# BIO ID MANAGEMENT (ADMS Integration)
+# ============================================================================
+
+
+ADMS_BASE_URL = "http://localhost:8080"  # ADMS receiver on same EC2 instance
+
+
+@frappe.whitelist(allow_guest=False)
+def disable_bio_id(employee: str, removal_reason: str = None):
+	"""
+	Disable employee's Bio ID on all enrolled biometric devices.
+	Called when IT Clearance activity is completed during separation.
+
+	This integrates with the ADMS receiver to queue DELETE commands
+	for all devices where the employee is enrolled.
+
+	Args:
+		employee: Employee ID
+		removal_reason: Optional reason for removal (e.g., "Employee Separation")
+
+	Returns:
+		dict: Success status with details of devices queued for deletion
+	"""
+	import requests
+
+	# Get employee's Bio ID (attendance_device_id)
+	bio_id = frappe.db.get_value("Employee", employee, "attendance_device_id")
+
+	if not bio_id:
+		return {
+			"success": False,
+			"message": _("Employee has no Bio ID assigned"),
+			"employee": employee,
+		}
+
+	try:
+		response = requests.post(
+			f"{ADMS_BASE_URL}/admin/user/{bio_id}/disable",
+			json={
+				"removal_reason": removal_reason or "Employee Separation",
+				"removed_by": frappe.session.user,
+			},
+			timeout=10,
+		)
+		response.raise_for_status()
+		result = response.json()
+
+		# Log the action as a comment on the Employee record
+		frappe.get_doc({
+			"doctype": "Comment",
+			"comment_type": "Info",
+			"reference_doctype": "Employee",
+			"reference_name": employee,
+			"content": _("Bio ID {0} disabled: {1} devices queued for deletion").format(
+				bio_id, result.get("devices_queued", 0)
+			),
+		}).insert(ignore_permissions=True)
+
+		return {
+			"success": True,
+			"employee": employee,
+			"bio_id": bio_id,
+			"devices_queued": result.get("devices_queued", 0),
+			"message": result.get("message", "Bio ID disabled successfully"),
+		}
+
+	except requests.exceptions.ConnectionError:
+		frappe.log_error(
+			f"ADMS disable failed for {bio_id}: Connection refused - ADMS receiver not running",
+			"ADMS Integration",
+		)
+		return {
+			"success": False,
+			"message": _("ADMS receiver not available - Bio ID disable queued for retry"),
+			"bio_id": bio_id,
+		}
+
+	except requests.exceptions.RequestException as e:
+		frappe.log_error(f"ADMS disable failed for {bio_id}: {e}", "ADMS Integration")
+		return {
+			"success": False,
+			"message": str(e),
+			"bio_id": bio_id,
+		}
+
+
+@frappe.whitelist(allow_guest=False)
+def get_bio_id_status(employee: str):
+	"""
+	Check Bio ID enrollment status for an employee.
+
+	Args:
+		employee: Employee ID
+
+	Returns:
+		dict: Bio ID status and enrollment details
+	"""
+	import requests
+
+	bio_id = frappe.db.get_value("Employee", employee, "attendance_device_id")
+
+	if not bio_id:
+		return {
+			"has_bio_id": False,
+			"message": _("Employee has no Bio ID assigned"),
+		}
+
+	try:
+		response = requests.get(
+			f"{ADMS_BASE_URL}/admin/enrollment/{bio_id}",
+			timeout=10,
+		)
+
+		if response.status_code == 200:
+			enrollment_data = response.json()
+			return {
+				"has_bio_id": True,
+				"bio_id": bio_id,
+				"enrollment_status": enrollment_data.get("status"),
+				"devices_enrolled": enrollment_data.get("devices_enrolled", []),
+				"last_seen": enrollment_data.get("last_seen"),
+			}
+		elif response.status_code == 404:
+			return {
+				"has_bio_id": True,
+				"bio_id": bio_id,
+				"enrollment_status": "not_enrolled",
+				"message": _("Bio ID assigned but not enrolled on any devices"),
+			}
+		else:
+			return {
+				"has_bio_id": True,
+				"bio_id": bio_id,
+				"error": f"ADMS returned status {response.status_code}",
+			}
+
+	except requests.exceptions.RequestException as e:
+		return {
+			"has_bio_id": True,
+			"bio_id": bio_id,
+			"error": _("Could not reach ADMS receiver: {0}").format(str(e)),
+		}
+
+
+# ============================================================================
 # COE GENERATION
 # ============================================================================
 

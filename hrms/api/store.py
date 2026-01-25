@@ -277,3 +277,237 @@ def get_fqi_reports(store=None, status=None, limit=20):
     )
 
     return {"reports": reports}
+
+
+# ==============================================================================
+# STORE OPENING/CLOSING REPORTS
+# ==============================================================================
+
+
+@frappe.whitelist()
+def submit_opening_report(store, report_time, checklist_items, notes=None,
+                          photo_backup_area=None, photo_frozen_milk=None,
+                          photo_toppings_area=None, photo_dispatch_area=None,
+                          photo_cold_storage_temp=None):
+    """Submit daily opening report with 5 required photos."""
+    if not store:
+        frappe.throw(_("Store is required"))
+
+    if isinstance(checklist_items, str):
+        checklist_items = json.loads(checklist_items)
+
+    doc = frappe.new_doc("BEI Store Opening Report")
+    doc.store = store
+    doc.report_date = nowdate()
+    doc.report_time = report_time
+    doc.submitted_by = frappe.session.user
+    doc.notes = notes
+    doc.photo_backup_area = photo_backup_area
+    doc.photo_frozen_milk = photo_frozen_milk
+    doc.photo_toppings_area = photo_toppings_area
+    doc.photo_dispatch_area = photo_dispatch_area
+    doc.photo_cold_storage_temp = photo_cold_storage_temp
+
+    for item in checklist_items:
+        doc.append("checklist_items", item)
+
+    doc.insert()
+    return {"success": True, "name": doc.name}
+
+
+@frappe.whitelist()
+def get_opening_reports(store=None, date_from=None, date_to=None, limit=20):
+    """Get opening report history."""
+    filters = {}
+    if store:
+        filters["store"] = store
+    if date_from:
+        filters["report_date"] = [">=", date_from]
+    if date_to:
+        if "report_date" in filters:
+            filters["report_date"] = ["between", [date_from, date_to]]
+        else:
+            filters["report_date"] = ["<=", date_to]
+
+    reports = frappe.get_all(
+        "BEI Store Opening Report",
+        filters=filters,
+        fields=["name", "store", "report_date", "report_time", "status", "submitted_by"],
+        order_by="report_date desc",
+        limit=int(limit)
+    )
+    return {"reports": reports}
+
+
+@frappe.whitelist()
+def submit_closing_report(store, report_time, checklist_items, pos_total_sales,
+                          actual_cash_count, card_payments, gcash_total,
+                          variance_explanation=None, notes=None,
+                          photo_xread_opening=None, photo_xread_closing=None,
+                          photo_zread=None, photo_closing_reports=None,
+                          photo_dashboard_report=None, photo_logo_signage=None,
+                          photo_hygrometer=None, photo_water_meter=None,
+                          photo_backup_area_clean=None, photo_frozen_milk_clean=None,
+                          photo_toppings_clean=None, photo_dispatch_clean=None,
+                          photo_cold_storage_close=None, photo_cashier_clean=None,
+                          photo_rollup_closed=None):
+    """Submit daily closing report with cash reconciliation and 15 required photos."""
+    if not store:
+        frappe.throw(_("Store is required"))
+
+    if isinstance(checklist_items, str):
+        checklist_items = json.loads(checklist_items)
+
+    doc = frappe.new_doc("BEI Store Closing Report")
+    doc.store = store
+    doc.report_date = nowdate()
+    doc.report_time = report_time
+    doc.submitted_by = frappe.session.user
+    doc.pos_total_sales = float(pos_total_sales)
+    doc.actual_cash_count = float(actual_cash_count)
+    doc.card_payments = float(card_payments)
+    doc.gcash_total = float(gcash_total)
+    doc.variance_explanation = variance_explanation
+    doc.notes = notes
+
+    # Photos
+    doc.photo_xread_opening = photo_xread_opening
+    doc.photo_xread_closing = photo_xread_closing
+    doc.photo_zread = photo_zread
+    doc.photo_closing_reports = photo_closing_reports
+    doc.photo_dashboard_report = photo_dashboard_report
+    doc.photo_logo_signage = photo_logo_signage
+    doc.photo_hygrometer = photo_hygrometer
+    doc.photo_water_meter = photo_water_meter
+    doc.photo_backup_area_clean = photo_backup_area_clean
+    doc.photo_frozen_milk_clean = photo_frozen_milk_clean
+    doc.photo_toppings_clean = photo_toppings_clean
+    doc.photo_dispatch_clean = photo_dispatch_clean
+    doc.photo_cold_storage_close = photo_cold_storage_close
+    doc.photo_cashier_clean = photo_cashier_clean
+    doc.photo_rollup_closed = photo_rollup_closed
+
+    for item in checklist_items:
+        doc.append("checklist_items", item)
+
+    doc.insert()
+    return {"success": True, "name": doc.name, "variance": doc.cash_variance}
+
+
+@frappe.whitelist()
+def get_closing_reports(store=None, date_from=None, date_to=None, limit=20):
+    """Get closing report history."""
+    filters = {}
+    if store:
+        filters["store"] = store
+    if date_from:
+        filters["report_date"] = [">=", date_from]
+    if date_to:
+        if "report_date" in filters:
+            filters["report_date"] = ["between", [date_from, date_to]]
+        else:
+            filters["report_date"] = ["<=", date_to]
+
+    reports = frappe.get_all(
+        "BEI Store Closing Report",
+        filters=filters,
+        fields=["name", "store", "report_date", "status", "cash_variance"],
+        order_by="report_date desc",
+        limit=int(limit)
+    )
+    return {"reports": reports}
+
+
+@frappe.whitelist()
+def submit_midshift_check(store, shift, temperature_readings, cleanliness_status,
+                          issues_found=None, corrective_action=None, photo_evidence=None):
+    """Submit mid-shift temperature and cleanliness check."""
+    if not store:
+        frappe.throw(_("Store is required"))
+
+    if isinstance(temperature_readings, str):
+        temperature_readings = json.loads(temperature_readings)
+
+    doc = frappe.new_doc("BEI Midshift Checklist")
+    doc.store = store
+    doc.check_datetime = now_datetime()
+    doc.submitted_by = frappe.session.user
+    doc.shift = shift
+    doc.cleanliness_status = cleanliness_status
+    doc.issues_found = issues_found
+    doc.corrective_action = corrective_action
+    doc.photo_evidence = photo_evidence
+
+    for reading in temperature_readings:
+        doc.append("temperature_readings", reading)
+
+    doc.insert()
+    return {"success": True, "name": doc.name}
+
+
+@frappe.whitelist()
+def get_midshift_checks(store=None, date=None, limit=20):
+    """Get mid-shift check history."""
+    filters = {}
+    if store:
+        filters["store"] = store
+    if date:
+        filters["check_datetime"] = ["like", f"{date}%"]
+
+    checks = frappe.get_all(
+        "BEI Midshift Checklist",
+        filters=filters,
+        fields=["name", "store", "check_datetime", "shift", "cleanliness_status"],
+        order_by="check_datetime desc",
+        limit=int(limit)
+    )
+    return {"checks": checks}
+
+
+@frappe.whitelist()
+def upload_pos_data(store, pos_date, pos_system, gross_sales, net_sales,
+                    transaction_count, z_reading_file, void_count=None,
+                    void_amount=None, discount_amount=None, notes=None):
+    """Upload daily POS Z-reading data."""
+    if not store:
+        frappe.throw(_("Store is required"))
+
+    doc = frappe.new_doc("BEI POS Upload")
+    doc.store = store
+    doc.pos_date = pos_date
+    doc.uploaded_by = frappe.session.user
+    doc.pos_system = pos_system
+    doc.gross_sales = float(gross_sales)
+    doc.net_sales = float(net_sales)
+    doc.transaction_count = int(transaction_count)
+    doc.void_count = int(void_count) if void_count else 0
+    doc.void_amount = float(void_amount) if void_amount else 0
+    doc.discount_amount = float(discount_amount) if discount_amount else 0
+    doc.z_reading_file = z_reading_file
+    doc.notes = notes
+    doc.insert()
+    return {"success": True, "name": doc.name}
+
+
+@frappe.whitelist()
+def get_pos_uploads(store=None, date_from=None, date_to=None, limit=20):
+    """Get POS upload history."""
+    filters = {}
+    if store:
+        filters["store"] = store
+    if date_from:
+        filters["pos_date"] = [">=", date_from]
+    if date_to:
+        if "pos_date" in filters:
+            filters["pos_date"] = ["between", [date_from, date_to]]
+        else:
+            filters["pos_date"] = ["<=", date_to]
+
+    uploads = frappe.get_all(
+        "BEI POS Upload",
+        filters=filters,
+        fields=["name", "store", "pos_date", "gross_sales", "net_sales", "status"],
+        order_by="pos_date desc",
+        limit=int(limit)
+    )
+    return {"uploads": uploads}

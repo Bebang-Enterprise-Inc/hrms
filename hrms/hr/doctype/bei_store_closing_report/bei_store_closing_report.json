@@ -1,0 +1,305 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-CLOSE-.YYYY.-.#####",
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "store",
+  "report_date",
+  "report_time",
+  "submitted_by",
+  "column_break_1",
+  "status",
+  "section_checklist",
+  "checklist_items",
+  "section_cash",
+  "pos_total_sales",
+  "actual_cash_count",
+  "column_break_cash",
+  "card_payments",
+  "gcash_total",
+  "cash_variance",
+  "variance_explanation",
+  "notes",
+  "section_photos_pos",
+  "photo_xread_opening",
+  "photo_xread_closing",
+  "photo_zread",
+  "column_break_photos_pos",
+  "photo_closing_reports",
+  "photo_dashboard_report",
+  "section_photos_store",
+  "photo_logo_signage",
+  "photo_hygrometer",
+  "photo_water_meter",
+  "column_break_photos_store1",
+  "photo_backup_area_clean",
+  "photo_frozen_milk_clean",
+  "photo_toppings_clean",
+  "column_break_photos_store2",
+  "photo_dispatch_clean",
+  "photo_cold_storage_close",
+  "photo_cashier_clean",
+  "photo_rollup_closed"
+ ],
+ "fields": [
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "report_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Report Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "report_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Report Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "submitted_by",
+   "fieldtype": "Link",
+   "label": "Submitted By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Submitted",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "\nSubmitted\nReviewed\nVariance Flagged"
+  },
+  {
+   "fieldname": "section_checklist",
+   "fieldtype": "Section Break",
+   "label": "Closing Checklist"
+  },
+  {
+   "fieldname": "checklist_items",
+   "fieldtype": "Table",
+   "label": "Checklist Items",
+   "options": "BEI Closing Checklist Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_cash",
+   "fieldtype": "Section Break",
+   "label": "Cash Reconciliation"
+  },
+  {
+   "fieldname": "pos_total_sales",
+   "fieldtype": "Currency",
+   "label": "POS Total Sales",
+   "reqd": 1
+  },
+  {
+   "fieldname": "actual_cash_count",
+   "fieldtype": "Currency",
+   "label": "Actual Cash Count",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_cash",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "card_payments",
+   "fieldtype": "Currency",
+   "label": "Card Payments",
+   "reqd": 1
+  },
+  {
+   "fieldname": "gcash_total",
+   "fieldtype": "Currency",
+   "label": "GCash Total",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cash_variance",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Cash Variance",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.cash_variance != 0",
+   "fieldname": "variance_explanation",
+   "fieldtype": "Text",
+   "label": "Variance Explanation"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "section_photos_pos",
+   "fieldtype": "Section Break",
+   "label": "POS/Reports Photos (5)"
+  },
+  {
+   "fieldname": "photo_xread_opening",
+   "fieldtype": "Attach Image",
+   "label": "1. X-reading Opening Cutoff",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_xread_closing",
+   "fieldtype": "Attach Image",
+   "label": "2. X-reading Closing Cutoff",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_zread",
+   "fieldtype": "Attach Image",
+   "label": "3. Z-reading Screenshot",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_photos_pos",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "photo_closing_reports",
+   "fieldtype": "Attach Image",
+   "label": "4. Closing Reports Screenshot",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_dashboard_report",
+   "fieldtype": "Attach Image",
+   "label": "5. Dashboard Report Screenshot",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_photos_store",
+   "fieldtype": "Section Break",
+   "label": "Store Area Photos (10)"
+  },
+  {
+   "fieldname": "photo_logo_signage",
+   "fieldtype": "Attach Image",
+   "label": "6. Logo/Signage (off)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_hygrometer",
+   "fieldtype": "Attach Image",
+   "label": "7. Hygrometer Reading",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_water_meter",
+   "fieldtype": "Attach Image",
+   "label": "8. Water Meter Reading",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_photos_store1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "photo_backup_area_clean",
+   "fieldtype": "Attach Image",
+   "label": "9. Backup Area (clean)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_frozen_milk_clean",
+   "fieldtype": "Attach Image",
+   "label": "10. Frozen Milk Area (clean)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_toppings_clean",
+   "fieldtype": "Attach Image",
+   "label": "11. Toppings Area (clean)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_photos_store2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "photo_dispatch_clean",
+   "fieldtype": "Attach Image",
+   "label": "12. Dispatch Area (clean)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_cold_storage_close",
+   "fieldtype": "Attach Image",
+   "label": "13. Cold Storage Temp (closing)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_cashier_clean",
+   "fieldtype": "Attach Image",
+   "label": "14. Cashier Area (clean)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_rollup_closed",
+   "fieldtype": "Attach Image",
+   "label": "15. Roll-up (closed)",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-25 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Store Closing Report",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
