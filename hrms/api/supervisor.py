@@ -89,6 +89,23 @@ def escalate_item(queue_name, escalate_to):
 # STORE VISITS
 # ==============================================================================
 
+# Category mapping for store visit audit items
+# Frontend may send short codes, but DocType requires full labels with prefix
+CATEGORY_MAP = {
+    # Short codes
+    "A": "A. Funds",
+    "B": "B. Stocks",
+    "C": "C. Organization",
+    "D": "D. Staffing",
+    "E": "E. Coaching",
+    # Short names (without prefix)
+    "Funds": "A. Funds",
+    "Stocks": "B. Stocks",
+    "Organization": "C. Organization",
+    "Staffing": "D. Staffing",
+    "Coaching": "E. Coaching",
+}
+
 
 @frappe.whitelist()
 def create_store_visit(store, visit_type, audit_items, score_funds=None,
@@ -124,6 +141,9 @@ def create_store_visit(store, visit_type, audit_items, score_funds=None,
     doc.score_coaching = int(score_coaching) if score_coaching else 0
 
     for item in audit_items:
+        # Normalize category to full label with prefix
+        if item.get("category") in CATEGORY_MAP:
+            item["category"] = CATEGORY_MAP[item["category"]]
         doc.append("audit_items", item)
 
     if photos:
@@ -554,6 +574,172 @@ def _get_area_supervisor_stores(user=None):
 
 
 @frappe.whitelist()
+def get_my_stores():
+    """
+    Get stores (warehouses) assigned to the current area supervisor.
+    Used by store dropdowns in Store Visit, Reports, and Action Plans forms.
+
+    Returns:
+        {"stores": [{"name": str, "warehouse_name": str, "custom_area_supervisor": str, "is_group": int}]}
+    """
+    stores = _get_area_supervisor_stores()
+
+    # Enrich with required fields for frontend
+    result = []
+    for store in stores:
+        result.append({
+            "name": store.name,
+            "warehouse_name": store.warehouse_name,
+            "custom_area_supervisor": frappe.session.user,
+            "is_group": 0
+        })
+
+    return {"stores": result}
+
+
+@frappe.whitelist()
+def get_area_dashboard():
+    """
+    Get area supervisor dashboard data including stores list and statistics.
+    Main endpoint for the supervisor dashboard page.
+
+    Returns:
+        {
+            "stats": SupervisorDashboardStats,
+            "stores": [SupervisorStore]
+        }
+    """
+    from frappe.utils import getdate, add_days
+
+    user = frappe.session.user
+    stores = _get_area_supervisor_stores(user)
+    store_names = [s.name for s in stores]
+
+    today = nowdate()
+    week_start = add_days(today, -getdate(today).weekday())
+
+    # Initialize stats with defaults
+    stats = {
+        "total_stores": len(stores),
+        "pending_approvals": 0,
+        "reports_today": {
+            "opening": {"submitted": 0, "missing": 0, "reviewed": 0, "revision_requested": 0},
+            "closing": {"submitted": 0, "missing": 0, "reviewed": 0, "revision_requested": 0}
+        },
+        "open_action_plans": 0,
+        "overdue_action_plans": 0,
+        "cash_variance_alerts": 0,
+        "visits_this_week": 0,
+        "avg_store_score": None
+    }
+
+    # Enrich stores for response
+    enriched_stores = []
+    for store in stores:
+        enriched_stores.append({
+            "name": store.name,
+            "warehouse_name": store.warehouse_name,
+            "custom_area_supervisor": user,
+            "is_group": 0
+        })
+
+    if not store_names:
+        return {"stats": stats, "stores": enriched_stores}
+
+    # Count pending approvals
+    try:
+        queue_result = get_unified_approval_queue(approver=user)
+        stats["pending_approvals"] = queue_result.get("count", 0)
+    except Exception:
+        pass
+
+    # Count opening reports for today
+    _count_reports_by_status(stats, "opening", "BEI Store Opening Report", store_names, today)
+
+    # Count closing reports for today
+    _count_reports_by_status(stats, "closing", "BEI Store Closing Report", store_names, today)
+
+    # Count action plans
+    try:
+        stats["open_action_plans"] = frappe.db.count("BEI Store Action Plan", {
+            "store": ["in", store_names],
+            "status": ["in", ["Open", "In Progress"]]
+        })
+        stats["overdue_action_plans"] = frappe.db.count("BEI Store Action Plan", {
+            "store": ["in", store_names],
+            "status": ["in", ["Open", "In Progress"]],
+            "due_date": ["<", today]
+        })
+    except Exception:
+        pass
+
+    # Count cash variance alerts (variance > 100 or < -100)
+    try:
+        stats["cash_variance_alerts"] = frappe.db.count("BEI Store Closing Report", {
+            "store": ["in", store_names],
+            "report_date": today,
+            "cash_variance": [">", 100]
+        }) + frappe.db.count("BEI Store Closing Report", {
+            "store": ["in", store_names],
+            "report_date": today,
+            "cash_variance": ["<", -100]
+        })
+    except Exception:
+        pass
+
+    # Count store visits this week
+    try:
+        stats["visits_this_week"] = frappe.db.count("BEI Store Visit Report", {
+            "store": ["in", store_names],
+            "visit_date": [">=", week_start]
+        })
+
+        # Average store score from recent visits
+        recent_visits = frappe.get_all(
+            "BEI Store Visit Report",
+            filters={"store": ["in", store_names]},
+            fields=["total_score"],
+            limit=20,
+            order_by="visit_date desc"
+        )
+        if recent_visits:
+            scores = [v.total_score for v in recent_visits if v.total_score]
+            if scores:
+                stats["avg_store_score"] = round(sum(scores) / len(scores), 1)
+    except Exception:
+        pass
+
+    return {"stats": stats, "stores": enriched_stores}
+
+
+def _count_reports_by_status(stats, report_key, doctype, store_names, today):
+    """Helper to count reports by status for a given doctype."""
+    total_stores = len(store_names)
+    submitted = reviewed = flagged = 0
+
+    try:
+        for status in ["Submitted", "Reviewed", "Flagged"]:
+            count = frappe.db.count(doctype, {
+                "store": ["in", store_names],
+                "report_date": today,
+                "status": status
+            })
+            if status == "Submitted":
+                submitted = count
+            elif status == "Reviewed":
+                reviewed = count
+            elif status == "Flagged":
+                flagged = count
+    except Exception:
+        pass
+
+    stats["reports_today"][report_key]["submitted"] = submitted
+    stats["reports_today"][report_key]["reviewed"] = reviewed
+    stats["reports_today"][report_key]["revision_requested"] = flagged
+    stats["reports_today"][report_key]["missing"] = max(0, total_stores - submitted - reviewed - flagged)
+
+
+@frappe.whitelist()
 def get_area_store_reports(report_type, report_date=None, status=None):
     """
     Get opening/closing reports for all stores under the area supervisor.
@@ -619,8 +805,11 @@ def get_area_store_reports(report_type, report_date=None, status=None):
 
     # Transform reports to include structured photo data
     for report in reports:
-        # Get user full name
-        report["submitted_by_name"] = frappe.db.get_value("User", report.submitted_by, "full_name") or report.submitted_by
+        # Get user full name (with null check)
+        if report.get("submitted_by"):
+            report["submitted_by_name"] = frappe.db.get_value("User", report.submitted_by, "full_name") or report.submitted_by
+        else:
+            report["submitted_by_name"] = "Unknown"
 
         # Structure photos as array
         photos = []
