@@ -85,8 +85,10 @@ website_route_rules = [
 	{"from_route": "/hr/<path:app_path>", "to_route": "roster"},
 ]
 
-# Page renderers - custom login page for BEI HQ branding
-page_renderer = ["hrms.utils.page_renderers.CustomLoginPage"]
+# Website redirects - redirect /login to custom BEI HQ login page
+website_redirects = [
+	{"source": "/login", "target": "/bei-login", "redirect_http_status": 302},
+]
 # Jinja
 # ----------
 
