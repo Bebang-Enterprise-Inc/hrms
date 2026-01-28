@@ -158,7 +158,7 @@ def send_task_notification(task_name, event_type="created"):
                                             "text": "👁️ View Task",
                                             "onClick": {
                                                 "openLink": {
-                                                    "url": f"https://lfg.bebang.ph/app/task/{task.name}"
+                                                    "url": f"https://hq.bebang.ph/app/task/{task.name}"
                                                 }
                                             }
                                         }

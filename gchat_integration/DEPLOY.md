@@ -39,7 +39,7 @@ cd /home/frappe/frappe-bench
 pip install google-auth google-api-python-client
 
 # 4. Install the app to the site
-bench --site lfg.bebang.ph install-app gchat_integration
+bench --site hrms.bebang.ph install-app gchat_integration
 
 # 5. Restart services
 bench restart
@@ -67,7 +67,7 @@ bench new-app gchat_integration --no-git
 
 ```bash
 # Inside container
-bench --site lfg.bebang.ph list-apps
+bench --site hrms.bebang.ph list-apps
 # Should show: gchat_integration
 ```
 
@@ -75,7 +75,7 @@ bench --site lfg.bebang.ph list-apps
 
 After deployment, configure via Frappe:
 
-1. Go to https://lfg.bebang.ph/app/google-chat-settings
+1. Go to https://hq.bebang.ph/app/google-chat-settings
 2. Enable the integration
 3. Enter service account credentials:
    - Client Email: `task-manager-service@quiet-walker-475722-s2.iam.gserviceaccount.com`
@@ -86,7 +86,7 @@ After deployment, configure via Frappe:
 
 ```bash
 # Inside container, test the API
-bench --site lfg.bebang.ph execute gchat_integration.api.send_to_google_chat \
+bench --site hrms.bebang.ph execute gchat_integration.api.send_to_google_chat \
   --args '["ERP Automation Committee", "Test message from Frappe!"]'
 ```
 
