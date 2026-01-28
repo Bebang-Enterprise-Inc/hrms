@@ -1,0 +1,172 @@
+/* BEI HQ Custom Login Styles
+ * This gets bundled into hrms.bundle.css which loads on all pages
+ */
+
+// Only apply on login page
+body.frappe-login {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 20px;
+}
+
+.for-login,
+.for-forgot,
+.for-signup {
+  .page-card {
+    background: #fff !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+    max-width: 420px !important;
+    width: 100% !important;
+    padding: 40px !important;
+    margin: 0 auto !important;
+    animation: slideUp 0.5s ease-out;
+
+    .page-card-head {
+      text-align: center;
+      margin-bottom: 30px;
+
+      img,
+      .app-logo {
+        max-width: 120px !important;
+        max-height: 80px !important;
+        width: auto !important;
+        height: auto !important;
+        margin: 0 auto 20px;
+        display: block;
+      }
+
+      h4,
+      .page-title {
+        font-size: 24px !important;
+        font-weight: 600 !important;
+        color: #1a1a2e !important;
+        margin: 0;
+      }
+    }
+
+    .page-card-body {
+      input[type="email"],
+      input[type="text"],
+      input[type="password"] {
+        width: 100% !important;
+        padding: 14px 16px !important;
+        border: 2px solid #e0e0e0 !important;
+        border-radius: 10px !important;
+        font-size: 16px !important;
+        transition: all 0.3s ease;
+        background: #fafafa !important;
+        box-sizing: border-box;
+
+        &:focus {
+          border-color: #667eea !important;
+          background: #fff !important;
+          outline: none;
+          box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+      }
+    }
+
+    .btn-primary,
+    button[type="submit"] {
+      width: 100% !important;
+      padding: 14px 24px !important;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+      border: none !important;
+      border-radius: 10px !important;
+      color: #fff !important;
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      }
+    }
+
+    a {
+      color: #667eea !important;
+      text-decoration: none;
+      font-weight: 500;
+
+      &:hover {
+        color: #764ba2 !important;
+        text-decoration: underline;
+      }
+    }
+
+    // Social login buttons
+    .social-logins,
+    .or-section {
+      margin-top: 30px;
+      padding-top: 30px;
+      border-top: 1px solid #e0e0e0;
+      text-align: center;
+    }
+
+    .btn-default,
+    .social-login-btn,
+    .provider-login {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 24px;
+      background: #fff !important;
+      border: 2px solid #e0e0e0 !important;
+      border-radius: 10px !important;
+      color: #333;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      margin-bottom: 10px;
+
+      &:hover {
+        background: #f8f9fa !important;
+        border-color: #4285f4 !important;
+        box-shadow: 0 4px 12px rgba(66, 133, 244, 0.2);
+      }
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Mobile responsive
+@media (max-width: 480px) {
+  body.frappe-login {
+    padding: 10px;
+  }
+
+  .for-login,
+  .for-forgot,
+  .for-signup {
+    .page-card {
+      padding: 30px 24px !important;
+      border-radius: 12px !important;
+
+      .page-card-head h4 {
+        font-size: 20px !important;
+      }
+    }
+  }
+}

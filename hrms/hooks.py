@@ -32,7 +32,8 @@ app_include_css = "hrms.bundle.css"
 # website
 
 # include js, css files in header of web template
-web_include_css = "/assets/hrms/css/login.css"
+# Note: hrms.bundle.css contains login.scss styles for the login page
+web_include_css = "hrms.bundle.css"
 # web_include_js = "/assets/hrms/js/hrms.js"
 
 # include custom scss in every website theme (without file extension ".scss")
