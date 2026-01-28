@@ -32,7 +32,7 @@ app_include_css = "hrms.bundle.css"
 # website
 
 # include js, css files in header of web template
-# web_include_css = "/assets/hrms/css/hrms.css"
+web_include_css = "/assets/hrms/css/login.css"
 # web_include_js = "/assets/hrms/js/hrms.js"
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -373,3 +373,7 @@ company_data_to_be_ignored = [
 
 # List of apps whose translatable strings should be excluded from this app's translations.
 ignore_translatable_strings_from = ["frappe", "erpnext"]
+
+# Fixtures
+# --------
+fixtures = ["Custom Field"]

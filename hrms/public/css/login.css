@@ -1,0 +1,361 @@
+/* BEI HQ Login Page Styles */
+
+/* Hide default broken elements */
+.page-card .indicator,
+.page-card .page-card-head .indicator-right {
+  display: none !important;
+}
+
+/* Center the login container */
+body.frappe-login {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 20px;
+}
+
+/* Login card container */
+.page-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 420px;
+  width: 100%;
+  padding: 40px;
+  margin: 0 auto;
+}
+
+.page-card .page-card-head {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+/* Logo styling */
+.page-card .page-card-head img,
+.page-card .page-card-head .app-logo {
+  max-width: 120px !important;
+  max-height: 80px !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 auto 20px;
+  display: block;
+}
+
+/* Title */
+.page-card .page-card-head h4,
+.page-card .page-card-head .page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+}
+
+/* Form styling */
+.page-card form {
+  margin-top: 20px;
+}
+
+.page-card .form-group {
+  margin-bottom: 20px;
+}
+
+.page-card label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a4a4a;
+  margin-bottom: 8px;
+}
+
+.page-card input[type="email"],
+.page-card input[type="text"],
+.page-card input[type="password"] {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+
+.page-card input[type="email"]:focus,
+.page-card input[type="text"]:focus,
+.page-card input[type="password"]:focus {
+  border-color: #667eea;
+  background: #ffffff;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+/* Password show button */
+.page-card .password-toggle,
+.page-card .show-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+/* Input group for password */
+.page-card .input-group {
+  position: relative;
+}
+
+.page-card .input-group input {
+  padding-right: 70px;
+}
+
+/* Primary button */
+.page-card .btn-primary,
+.page-card button[type="submit"],
+.page-card .btn-primary-dark {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.page-card .btn-primary:hover,
+.page-card button[type="submit"]:hover,
+.page-card .btn-primary-dark:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Links */
+.page-card a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.page-card a:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+/* Forgot password link */
+.page-card .forgot-password,
+.page-card a[href*="forgot-password"] {
+  display: block;
+  text-align: right;
+  margin-top: -10px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* Social login section */
+.page-card .social-logins,
+.page-card .or-section,
+.page-card .login-options {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.page-card .or-section span,
+.page-card .social-logins-label {
+  display: block;
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* Social login buttons */
+.page-card .btn-google,
+.page-card .social-login-btn,
+.page-card .provider-login,
+.page-card [data-provider="google"],
+.page-card a[href*="google"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 24px;
+  background: #ffffff;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  margin-bottom: 10px;
+}
+
+.page-card .btn-google:hover,
+.page-card .social-login-btn:hover,
+.page-card .provider-login:hover,
+.page-card [data-provider="google"]:hover {
+  background: #f8f9fa;
+  border-color: #4285f4;
+  box-shadow: 0 4px 12px rgba(66, 133, 244, 0.2);
+}
+
+/* Google icon in social login */
+.page-card .btn-google img,
+.page-card .social-login-btn img,
+.page-card .provider-login img {
+  width: 20px;
+  height: 20px;
+}
+
+/* Email link login section */
+.page-card .login-with-email-link,
+.page-card .email-link-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.page-card .login-with-email-link input,
+.page-card .email-link-section input {
+  width: calc(100% - 110px);
+  display: inline-block;
+}
+
+.page-card .login-with-email-link button,
+.page-card .email-link-section button {
+  width: auto;
+  padding: 14px 20px;
+  margin-left: 10px;
+  vertical-align: top;
+}
+
+/* Footer powered by */
+.page-card .powered-by,
+.page-card footer,
+.page-card .page-footer {
+  margin-top: 30px;
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+}
+
+.page-card .powered-by a {
+  color: #999;
+  font-weight: normal;
+}
+
+/* Error messages */
+.page-card .alert,
+.page-card .error-message {
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  color: #c53030;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+/* Success messages */
+.page-card .alert-success {
+  background: #f0fff4;
+  border-color: #9ae6b4;
+  color: #276749;
+}
+
+/* Hide unnecessary elements */
+.page-card .text-muted.small {
+  display: none;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  body.frappe-login {
+    padding: 10px;
+  }
+
+  .page-card {
+    padding: 30px 24px;
+    border-radius: 12px;
+  }
+
+  .page-card .page-card-head h4 {
+    font-size: 20px;
+  }
+
+  .page-card input[type="email"],
+  .page-card input[type="text"],
+  .page-card input[type="password"] {
+    padding: 12px 14px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .page-card .btn-primary,
+  .page-card button[type="submit"] {
+    padding: 12px 20px;
+    font-size: 15px;
+  }
+}
+
+/* Dropdown/select styling for social providers */
+.page-card select,
+.page-card .social-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 15px;
+  background: #fff;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+}
+
+/* Fix for provider icons */
+.page-card .provider-icon,
+.page-card .social-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Loading state */
+.page-card .btn-primary[disabled],
+.page-card button[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Animation for card */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-card {
+  animation: slideUp 0.5s ease-out;
+}
