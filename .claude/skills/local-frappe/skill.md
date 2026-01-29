@@ -543,3 +543,31 @@ curl -X POST https://hq.bebang.ph/api/resource/Employee \
 4. **HR pages show "Failed to get employee data":**
    - HR APIs need token auth, not session auth
    - Check `app/api/hr/*/route.ts` uses `Authorization: token` header
+
+5. **Code deployed but changes not visible:**
+   - Docker build caching issue - use `no_cache=true` when deploying
+   - See `/deploy-frappe` for details on when to use no_cache
+   - Verify with: `curl https://hq.bebang.ph/api/method/hrms.api.hello.hello`
+   - Response should include `build_version` field showing deployment timestamp
+
+### Deployment Verification Endpoint
+
+The hello API includes deployment info for verification:
+
+```bash
+curl -s https://hq.bebang.ph/api/method/hrms.api.hello.hello | python -m json.tool
+```
+
+Expected response:
+```json
+{
+    "message": {
+        "message": "Hello from Frappe HRMS!",
+        "timestamp": "2026-01-29 10:04:11.569399",
+        "build_version": "2026-01-29T12:16:00+08:00",
+        "deployment": "docker-swarm"
+    }
+}
+```
+
+If `build_version` doesn't update after deployment, rebuild with `no_cache=true`.

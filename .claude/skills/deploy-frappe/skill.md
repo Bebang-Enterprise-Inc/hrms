@@ -19,10 +19,46 @@ Deploys code changes from the `production` branch to AWS EC2 running Frappe Dock
 
 | Deployment Type | Method | Time |
 |-----------------|--------|------|
-| Python/API changes | Full rebuild via GitHub Actions | 10-20 min |
-| DocType schema changes | Rebuild + `bench migrate` | 10-20 min |
+| Python/API changes | Full rebuild via GitHub Actions | 5-10 min |
+| Python/API changes (no cache) | Full rebuild with `no_cache=true` | 8-12 min |
+| DocType schema changes | Rebuild + `bench migrate` | 8-12 min |
 | Config/data only | SSM command (no rebuild) | 2-3 min |
 | Emergency rollback | SSM with previous tag | 2-3 min |
+
+## ⚠️ CRITICAL: Docker Build Caching Issue
+
+**Problem discovered 2026-01-29:** When pushing Python/API code changes, the build may use cached Docker layers and **NOT include your new code**.
+
+### When to Use `no_cache=true`
+
+| Scenario | Use `no_cache=true`? |
+|----------|---------------------|
+| Python code changes (`.py` files) | **YES** - Always |
+| DocType JSON changes | **YES** - Always |
+| Workflow config changes | No - Cache is fine |
+| Dependencies changes (`apps.json`) | **YES** - Always |
+
+### How to Deploy with No Cache
+
+**Option 1: Manual Workflow Dispatch (Recommended)**
+```bash
+gh workflow run build-and-deploy.yml --repo Bebang-Enterprise-Inc/hrms -f no_cache=true
+```
+
+**Option 2: Via GitHub UI**
+1. Go to https://github.com/Bebang-Enterprise-Inc/hrms/actions
+2. Select "Build and Deploy Frappe HRMS"
+3. Click "Run workflow"
+4. **Check `no_cache` checkbox** ← IMPORTANT
+5. Click "Run workflow"
+
+### Why This Happens
+
+The Docker build uses layer caching. The HRMS app is cloned during build via `apps.json`. If the git clone step is cached, your new commits won't be included even though they're in the repo.
+
+**Build time comparison:**
+- With cache: ~30 seconds (may miss code changes)
+- Without cache: ~5 minutes (guaranteed fresh code)
 
 ## Infrastructure (UPDATED 2026-01-29 - DOCKER SWARM)
 
@@ -83,6 +119,7 @@ Or trigger manually from GitHub:
 2. Select "Build and Deploy Frappe HRMS"
 3. Click "Run workflow"
 4. Options:
+   - **`no_cache`**: Build without Docker cache (**USE THIS FOR CODE CHANGES**)
    - `skip_build`: Skip image rebuild (deploy existing)
    - `run_migrate`: Run `bench migrate` after deploy
 

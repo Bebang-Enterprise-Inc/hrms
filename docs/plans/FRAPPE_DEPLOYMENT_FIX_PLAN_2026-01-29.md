@@ -473,6 +473,43 @@ docker compose -f pwd.yml -f volumes-override.yml up -d
 
 ---
 
+### Deployment Test Results (2026-01-29 12:16 PHT)
+
+Tested real code deployment to verify Swarm rolling updates work.
+
+**Test:** Added `build_version` field to `hrms/api/hello.py`
+
+| Attempt | Build Type | Build Time | Deploy Time | Code Deployed? |
+|---------|------------|------------|-------------|----------------|
+| 1 | Cached (default) | 30s | 3m25s | ❌ No (cached) |
+| 2 | No-cache | 5m8s | 3m36s | ✅ Yes |
+
+**Key Finding: Docker Build Caching Issue**
+
+The workflow uses Docker layer caching by default. When Python code changes, the git clone step may be cached, causing new commits to be missed.
+
+**Solution:** Always use `no_cache=true` for code deployments:
+```bash
+gh workflow run build-and-deploy.yml --repo Bebang-Enterprise-Inc/hrms -f no_cache=true
+```
+
+**Downtime During Deployment:**
+- One brief 521 error (~30 seconds) observed during first deploy
+- Service recovered automatically
+- Not true "zero-downtime" but very brief interruption
+
+**Verification Endpoint:**
+```bash
+curl https://hq.bebang.ph/api/method/hrms.api.hello.hello
+# Returns: {"build_version": "2026-01-29T12:16:00+08:00", "deployment": "docker-swarm"}
+```
+
+**Documentation Updated:**
+- `.claude/skills/deploy-frappe/skill.md` - Added caching section
+- `.claude/skills/local-frappe/skill.md` - Added verification endpoint
+
+---
+
 ## Rollback Plan (Not Needed - Fix Successful)
 
 ### If containers won't start:
