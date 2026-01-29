@@ -836,7 +836,7 @@ def get_area_store_reports(report_type, report_date=None, status=None):
 
     return {
         "reports": reports,
-        "stores": [s.as_dict() if hasattr(s, 'as_dict') else s for s in stores],
+        "stores": [{"name": s.name, "warehouse_name": s.warehouse_name} for s in stores],
         "stores_missing": stores_missing,
         "stats": {
             "total": len(stores),
