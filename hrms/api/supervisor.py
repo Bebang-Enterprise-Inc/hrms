@@ -1317,3 +1317,81 @@ def create_coaching_log(store, topic, coaching_remarks, employee=None,
     doc.insert()
 
     return {"success": True, "name": doc.name}
+
+
+# ==============================================================================
+# STORE REPORTS - COMMENTS (for Reports Feed)
+# ==============================================================================
+
+
+@frappe.whitelist()
+def add_report_comment(report_name, doctype, comment):
+    """
+    Add a supervisor comment to a store report.
+
+    Args:
+        report_name: Document name (e.g., 'BEI-OPEN-2026-00001')
+        doctype: 'BEI Store Opening Report' or 'BEI Store Closing Report'
+        comment: Comment text
+
+    Returns:
+        {success: True, message: "Comment added", comment_name: "..."}
+    """
+    if not comment:
+        frappe.throw(_("Comment is required"))
+
+    if doctype not in ["BEI Store Opening Report", "BEI Store Closing Report"]:
+        frappe.throw(_("Invalid doctype"))
+
+    # Verify the document exists
+    if not frappe.db.exists(doctype, report_name):
+        frappe.throw(_("Report not found"))
+
+    # Create comment
+    comment_doc = frappe.get_doc({
+        "doctype": "Comment",
+        "comment_type": "Comment",
+        "reference_doctype": doctype,
+        "reference_name": report_name,
+        "content": comment,
+    })
+    comment_doc.insert(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "message": "Comment added",
+        "comment_name": comment_doc.name
+    }
+
+
+@frappe.whitelist()
+def get_report_comments(report_name, doctype):
+    """
+    Get all comments for a store report.
+
+    Args:
+        report_name: Document name
+        doctype: 'BEI Store Opening Report' or 'BEI Store Closing Report'
+
+    Returns:
+        {comments: [{name, content, owner, creation, owner_name}]}
+    """
+    if doctype not in ["BEI Store Opening Report", "BEI Store Closing Report"]:
+        frappe.throw(_("Invalid doctype"))
+
+    comments = frappe.get_all(
+        "Comment",
+        filters={
+            "reference_doctype": doctype,
+            "reference_name": report_name,
+            "comment_type": "Comment"
+        },
+        fields=["name", "content", "owner", "creation"],
+        order_by="creation desc"
+    )
+
+    # Add owner names
+    for c in comments:
+        c["owner_name"] = frappe.db.get_value("User", c["owner"], "full_name") or c["owner"]
+
+    return {"comments": comments}
