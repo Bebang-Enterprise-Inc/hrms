@@ -1,6 +1,9 @@
 """Hello World API - test endpoint for Smart Ralph workflow."""
 import frappe
 
+# Build version - updated on each deployment to verify zero-downtime deploys
+BUILD_VERSION = "2026-01-29T12:16:00+08:00"
+
 
 @frappe.whitelist(allow_guest=True)
 def hello() -> dict:
@@ -14,6 +17,8 @@ def hello() -> dict:
     return {
         "message": "Hello from Frappe HRMS!",
         "timestamp": frappe.utils.now(),
+        "build_version": BUILD_VERSION,
+        "deployment": "docker-swarm",
     }
 
 
