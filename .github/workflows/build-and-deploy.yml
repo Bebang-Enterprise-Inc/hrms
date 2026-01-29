@@ -118,31 +118,34 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy via AWS SSM
+      - name: Deploy via Docker Swarm
         id: deploy
         run: |
-          echo "🚀 Deploying to EC2 instance ${{ env.EC2_INSTANCE_ID }}..."
+          echo "🚀 Deploying to EC2 instance ${{ env.EC2_INSTANCE_ID }} via Docker Swarm..."
 
-          # Step 1: Stop containers to ensure fresh asset state (fixes CSS 404 issues)
+          # Rolling update all Frappe services with zero downtime
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
               "set -e",
-              "cd /home/ubuntu/frappe_docker",
-              "echo \"📥 Restoring and updating pwd.yml...\"",
-              "git checkout pwd.yml",
-              "sed -i \"s|image: frappe/erpnext:.*|image: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}|g\" pwd.yml",
-              "sed -i \"s/8080:8080/80:8080/g\" pwd.yml",
-              "echo \"🛑 Stopping containers (ensures fresh assets)...\"",
-              "docker compose -f pwd.yml -f volumes-override.yml down",
               "echo \"📥 Pulling latest image...\"",
-              "docker compose -f pwd.yml -f volumes-override.yml pull",
-              "echo \"🚀 Starting containers with fresh assets...\"",
-              "docker compose -f pwd.yml -f volumes-override.yml up -d",
-              "echo \"⏳ Waiting for services to stabilize...\"",
-              "sleep 30",
-              "docker compose -f pwd.yml -f volumes-override.yml ps",
+              "docker pull ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}",
+              "echo \"\"",
+              "echo \"🚀 Starting rolling updates (zero-downtime)...\"",
+              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_backend --with-registry-auth",
+              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_frontend --with-registry-auth",
+              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_websocket --with-registry-auth",
+              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_queue-short --with-registry-auth",
+              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_queue-long --with-registry-auth",
+              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_scheduler --with-registry-auth",
+              "echo \"\"",
+              "echo \"⏳ Waiting for rolling update to complete...\"",
+              "sleep 60",
+              "echo \"\"",
+              "echo \"📋 Service status:\"",
+              "docker service ls",
+              "echo \"\"",
               "echo \"✅ Deployment complete!\""
             ]' \
             --output text \
@@ -151,8 +154,9 @@ jobs:
           echo "command_id=$COMMAND_ID" >> $GITHUB_OUTPUT
           echo "📋 SSM Command ID: $COMMAND_ID"
 
-          # Wait for command to complete
-          echo "⏳ Waiting for deployment to complete..."
+          # Wait for command to complete (rolling updates take longer)
+          echo "⏳ Waiting for rolling updates to complete..."
+          sleep 90
           aws ssm wait command-executed \
             --command-id "$COMMAND_ID" \
             --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
@@ -172,9 +176,14 @@ jobs:
             --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "docker exec frappe_docker-frontend-1 sed -i \"s/X-Frappe-Site-Name frontend/X-Frappe-Site-Name ${{ env.FRAPPE_SITE }}/g\" /etc/nginx/conf.d/frappe.conf",
-              "docker exec frappe_docker-frontend-1 nginx -s reload",
-              "echo \"✅ Nginx site header fixed!\""
+              "FRONTEND_CONTAINER=$(docker ps --filter name=frappe_frontend --format \"{{.Names}}\" | head -1)",
+              "if [ -n \"$FRONTEND_CONTAINER\" ]; then",
+              "  docker exec $FRONTEND_CONTAINER sed -i \"s/X-Frappe-Site-Name frontend/X-Frappe-Site-Name ${{ env.FRAPPE_SITE }}/g\" /etc/nginx/conf.d/frappe.conf",
+              "  docker exec $FRONTEND_CONTAINER nginx -s reload",
+              "  echo \"✅ Nginx site header fixed!\"",
+              "else",
+              "  echo \"⚠️ Frontend container not found, skipping nginx fix\"",
+              "fi"
             ]' \
             --output text \
             --query 'Command.CommandId')
@@ -194,9 +203,11 @@ jobs:
             --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "cd /home/ubuntu/frappe_docker",
-              "docker compose -f pwd.yml -f volumes-override.yml exec -T backend bench --site ${{ env.FRAPPE_SITE }} migrate",
-              "docker compose -f pwd.yml -f volumes-override.yml exec -T backend bench --site ${{ env.FRAPPE_SITE }} clear-cache",
+              "BACKEND_CONTAINER=$(docker ps --filter name=frappe_backend --format \"{{.Names}}\" | head -1)",
+              "if [ -z \"$BACKEND_CONTAINER\" ]; then echo \"❌ Backend container not found\"; exit 1; fi",
+              "echo \"Using container: $BACKEND_CONTAINER\"",
+              "docker exec -T $BACKEND_CONTAINER bench --site ${{ env.FRAPPE_SITE }} migrate",
+              "docker exec -T $BACKEND_CONTAINER bench --site ${{ env.FRAPPE_SITE }} clear-cache",
               "echo \"✅ Migration complete!\""
             ]' \
             --output text \
@@ -224,9 +235,11 @@ jobs:
             --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "cd /home/ubuntu/frappe_docker",
-              "echo \"📦 Copying CSS and JS assets from backend to frontend...\"",
-              "docker compose -f pwd.yml -f volumes-override.yml exec -T backend tar czf - /home/frappe/frappe-bench/sites/assets/frappe/dist/css /home/frappe/frappe-bench/sites/assets/erpnext/dist/css /home/frappe/frappe-bench/sites/assets/hrms/dist/css /home/frappe/frappe-bench/sites/assets/assets.json 2>/dev/null | docker compose -f pwd.yml -f volumes-override.yml exec -T -i frontend tar xzf - -C /",
+              "BACKEND_CONTAINER=$(docker ps --filter name=frappe_backend --format \"{{.Names}}\" | head -1)",
+              "FRONTEND_CONTAINER=$(docker ps --filter name=frappe_frontend --format \"{{.Names}}\" | head -1)",
+              "if [ -z \"$BACKEND_CONTAINER\" ] || [ -z \"$FRONTEND_CONTAINER\" ]; then echo \"❌ Container not found\"; exit 1; fi",
+              "echo \"📦 Copying CSS and JS assets from $BACKEND_CONTAINER to $FRONTEND_CONTAINER...\"",
+              "docker exec -T $BACKEND_CONTAINER tar czf - /home/frappe/frappe-bench/sites/assets/frappe/dist/css /home/frappe/frappe-bench/sites/assets/erpnext/dist/css /home/frappe/frappe-bench/sites/assets/hrms/dist/css /home/frappe/frappe-bench/sites/assets/assets.json 2>/dev/null | docker exec -T -i $FRONTEND_CONTAINER tar xzf - -C /",
               "echo \"✅ Assets synced successfully!\""
             ]' \
             --output text \
