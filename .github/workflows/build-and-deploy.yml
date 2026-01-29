@@ -123,6 +123,7 @@ jobs:
         run: |
           echo "🚀 Deploying to EC2 instance ${{ env.EC2_INSTANCE_ID }}..."
 
+          # Step 1: Stop containers to ensure fresh asset state (fixes CSS 404 issues)
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
@@ -133,12 +134,14 @@ jobs:
               "git checkout pwd.yml",
               "sed -i \"s|image: frappe/erpnext:.*|image: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}|g\" pwd.yml",
               "sed -i \"s/8080:8080/80:8080/g\" pwd.yml",
+              "echo \"🛑 Stopping containers (ensures fresh assets)...\"",
+              "docker compose -f pwd.yml -f volumes-override.yml down",
               "echo \"📥 Pulling latest image...\"",
               "docker compose -f pwd.yml -f volumes-override.yml pull",
-              "echo \"🔄 Restarting containers...\"",
-              "docker compose -f pwd.yml -f volumes-override.yml up -d --no-deps backend websocket queue-short queue-long scheduler frontend",
+              "echo \"🚀 Starting containers with fresh assets...\"",
+              "docker compose -f pwd.yml -f volumes-override.yml up -d",
               "echo \"⏳ Waiting for services to stabilize...\"",
-              "sleep 15",
+              "sleep 30",
               "docker compose -f pwd.yml -f volumes-override.yml ps",
               "echo \"✅ Deployment complete!\""
             ]' \
@@ -256,6 +259,37 @@ jobs:
           else
             echo "⚠️ API may not be responding correctly"
             echo "Response: $RESPONSE"
+          fi
+
+      - name: Verify CSS assets loading
+        run: |
+          echo "🎨 Verifying CSS assets are loading correctly..."
+
+          # Get a CSS file reference from the login page
+          CSS_URL=$(curl -s https://hq.bebang.ph/login | grep -oP 'href="/assets/frappe/dist/css/[^"]+\.css"' | head -1 | tr -d '"' | sed 's/href=//')
+
+          if [ -n "$CSS_URL" ]; then
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hq.bebang.ph$CSS_URL")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ CSS loading correctly: $CSS_URL"
+            else
+              echo "❌ CSS 404 error: $CSS_URL returned $HTTP_CODE"
+              echo "⚠️ This may indicate stale assets. Consider re-running deployment."
+              exit 1
+            fi
+          else
+            echo "⚠️ Could not find CSS reference in page (may be OK for API-only changes)"
+          fi
+
+          # Verify JS assets as well
+          JS_URL=$(curl -s https://hq.bebang.ph/login | grep -oP 'src="/assets/frappe/dist/js/[^"]+\.js"' | head -1 | tr -d '"' | sed 's/src=//')
+          if [ -n "$JS_URL" ]; then
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hq.bebang.ph$JS_URL")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "✅ JS loading correctly: $JS_URL"
+            else
+              echo "⚠️ JS returned $HTTP_CODE: $JS_URL"
+            fi
           fi
 
   cleanup:
