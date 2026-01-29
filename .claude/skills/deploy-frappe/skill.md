@@ -510,15 +510,18 @@ docker compose -f pwd.yml -f volumes-override.yml exec -T backend bench --site h
 
 ---
 
-## CSS 404 Asset Desync Issue - RESOLVED (2026-01-29) ✅
+## CSS 404 Asset Desync Issue - RESOLVED (2026-01-29, Updated 2026-01-29) ✅
 
 ### Status: PERMANENTLY FIXED
 
 The GitHub Actions workflow has been updated to prevent CSS 404 errors. Every deployment now:
-1. Runs `docker compose down` before pulling/starting (ensures fresh asset state)
-2. Verifies CSS/JS assets load correctly after deploy (fails workflow on 404)
+1. Runs Swarm rolling updates (recreates containers with fresh assets)
+2. **Flushes Redis cache** (prevents stale HTML serving old asset hashes)
+3. Verifies CSS/JS assets load correctly after deploy (fails workflow on 404)
 
-**Commit:** `48f1c2f9b` - fix: Add asset volume reset and CSS health check to deployment
+**Commits:**
+- `48f1c2f9b` - fix: Add asset volume reset and CSS health check to deployment
+- `TBD` - fix: Add Redis flush step to prevent stale HTML caching
 
 ### The Original Problem
 
@@ -590,18 +593,53 @@ docker service update --image samkarazi/bebang-erpnext-hrms:v15-newtag frappe_ba
 
 **Your DocTypes, employees, APIs - all safe.** Only compiled CSS/JS is deleted and recreated.
 
+### EMERGENCY FIX: CSS 404 (If It Happens Again)
+
+**Fastest fix (30 seconds):**
+```bash
+export AWS_ACCESS_KEY_ID=$(doppler secrets get AWS_ACCESS_KEY_ID --project bei-erp --config dev --plain)
+export AWS_SECRET_ACCESS_KEY=$(doppler secrets get AWS_SECRET_ACCESS_KEY --project bei-erp --config dev --plain)
+export AWS_DEFAULT_REGION=ap-southeast-1
+
+# 1. Force redeploy all services (recreates containers with fresh assets)
+aws ssm send-command --instance-ids "i-026b7477d27bd46d6" --document-name "AWS-RunShellScript" \
+  --parameters 'commands=[
+    "docker service update --force frappe_backend",
+    "docker service update --force frappe_frontend"
+  ]'
+
+# 2. Wait 60 seconds for services to converge
+
+# 3. Flush Redis (CRITICAL - clears cached HTML with old hashes)
+aws ssm send-command --instance-ids "i-026b7477d27bd46d6" --document-name "AWS-RunShellScript" \
+  --parameters 'commands=[
+    "docker exec $(docker ps -qf name=frappe_redis-cache) redis-cli FLUSHALL",
+    "docker exec $(docker ps -qf name=frappe_redis-queue) redis-cli FLUSHALL"
+  ]'
+```
+
+**Why this works:** The CSS 404 happens when:
+1. `assets.json` has hash A (from cache/migrate)
+2. Actual CSS files have hash B (from Docker image)
+3. Redis caches HTML referencing hash A
+4. Force redeploy syncs assets.json to hash B
+5. Redis flush clears cached HTML, forcing fresh generation with hash B
+
 ### How to Diagnose CSS 404
 
 ```bash
-# 1. Check what hashes assets.json expects
-aws ssm send-command --instance-ids "i-026b7477d27bd46d6" --document-name "AWS-RunShellScript" \
-  --parameters 'commands=["cd /home/ubuntu/frappe_docker && docker compose -f pwd.yml -f volumes-override.yml exec -T backend cat /home/frappe/frappe-bench/sites/assets/assets.json | head -50"]'
+# 1. Check what HTML is requesting
+curl -s https://hq.bebang.ph/ | grep -oP "website\.bundle\.[A-Z0-9]+\.css"
 
-# 2. Check what CSS files actually exist
+# 2. Check what CSS files actually exist (Swarm)
 aws ssm send-command --instance-ids "i-026b7477d27bd46d6" --document-name "AWS-RunShellScript" \
-  --parameters 'commands=["cd /home/ubuntu/frappe_docker && docker compose -f pwd.yml -f volumes-override.yml exec -T frontend ls -la /home/frappe/frappe-bench/sites/assets/frappe/dist/css/"]'
+  --parameters 'commands=["docker exec $(docker ps -qf name=frappe_frontend) ls /home/frappe/frappe-bench/sites/assets/frappe/dist/css/ | grep website"]'
 
-# 3. If hashes don't match → delete assets volume and redeploy
+# 3. Check what assets.json says
+aws ssm send-command --instance-ids "i-026b7477d27bd46d6" --document-name "AWS-RunShellScript" \
+  --parameters 'commands=["docker exec $(docker ps -qf name=frappe_backend) cat /home/frappe/frappe-bench/sites/assets/assets.json | grep website.bundle.css"]'
+
+# 4. If hashes don't match → Force redeploy + Redis flush (see above)
 ```
 
 ### Research Reference

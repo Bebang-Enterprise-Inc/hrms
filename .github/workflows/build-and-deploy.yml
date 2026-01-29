@@ -257,6 +257,29 @@ jobs:
             --query '[Status, StandardOutputContent, StandardErrorContent]' \
             --output text
 
+      - name: Flush Redis cache
+        run: |
+          echo "🧹 Flushing Redis cache (prevents stale HTML with old asset hashes)..."
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "echo \"Flushing Redis cache...\"",
+              "docker exec $(docker ps --filter name=frappe_redis-cache --format \"{{.Names}}\" | head -1) redis-cli FLUSHALL",
+              "echo \"Flushing Redis queue...\"",
+              "docker exec $(docker ps --filter name=frappe_redis-queue --format \"{{.Names}}\" | head -1) redis-cli FLUSHALL || true",
+              "echo \"✅ Redis flushed!\""
+            ]' \
+            --output text \
+            --query 'Command.CommandId')
+
+          echo "📋 Redis Flush Command ID: $COMMAND_ID"
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
+
       - name: Verify deployment
         run: |
           echo "🔍 Verifying API is responding..."
