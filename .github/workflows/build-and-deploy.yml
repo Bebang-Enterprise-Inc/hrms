@@ -94,6 +94,7 @@ jobs:
             PYTHON_VERSION=3.11.6
             NODE_VERSION=20.19.2
             APPS_JSON_BASE64=${{ env.APPS_JSON_BASE64 }}
+            CACHE_BUST=${{ github.sha }}
           no-cache: ${{ github.event.inputs.no_cache == 'true' }}
           cache-from: ${{ github.event.inputs.no_cache != 'true' && format('type=registry,ref={0}:{1}', env.DOCKER_IMAGE, env.DOCKER_TAG) || '' }}
           cache-to: type=inline
