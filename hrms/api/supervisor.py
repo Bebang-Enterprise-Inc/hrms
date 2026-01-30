@@ -880,7 +880,11 @@ def get_area_store_reports(report_type, report_date=None, status=None):
         if time_field and time_field != "report_time" and time_field != date_field:
             report["report_time"] = report.pop(time_field, None)
         elif not time_field:
-            report["report_time"] = report.get("creation", "")[:8] if report.get("creation") else ""
+            creation = report.get("creation")
+            if creation:
+                report["report_time"] = str(creation.time())[:8] if hasattr(creation, 'time') else str(creation)[11:19]
+            else:
+                report["report_time"] = ""
 
         # Normalize submitter field
         submitter = report.get(submitter_field) or report.get("submitted_by") or report.get("uploaded_by")
