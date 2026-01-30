@@ -12,16 +12,14 @@
   "pos_system",
   "column_break_1",
   "status",
-  "section_sales",
-  "gross_sales",
-  "net_sales",
-  "transaction_count",
-  "column_break_sales",
-  "void_count",
-  "void_amount",
-  "discount_amount",
-  "section_file",
-  "z_reading_file",
+  "section_files",
+  "discount_report",
+  "transaction_report",
+  "product_mix",
+  "column_break_files",
+  "daily_sales_revenue",
+  "sales_summary",
+  "section_notes",
   "notes"
  ],
  "fields": [
@@ -72,62 +70,48 @@
    "options": "Uploaded\nVerified\nDiscrepancy"
   },
   {
-   "fieldname": "section_sales",
+   "fieldname": "section_files",
    "fieldtype": "Section Break",
-   "label": "Sales Data"
+   "label": "POS Files Upload"
   },
   {
-   "fieldname": "gross_sales",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Gross Sales",
+   "fieldname": "discount_report",
+   "fieldtype": "Attach",
+   "label": "Discount Report",
    "reqd": 1
   },
   {
-   "fieldname": "net_sales",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Net Sales",
+   "fieldname": "transaction_report",
+   "fieldtype": "Attach",
+   "label": "Transaction Report",
    "reqd": 1
   },
   {
-   "fieldname": "transaction_count",
-   "fieldtype": "Int",
-   "label": "Transaction Count",
+   "fieldname": "product_mix",
+   "fieldtype": "Attach",
+   "label": "Product Mix",
    "reqd": 1
   },
   {
-   "fieldname": "column_break_sales",
+   "fieldname": "column_break_files",
    "fieldtype": "Column Break"
   },
   {
-   "default": "0",
-   "fieldname": "void_count",
-   "fieldtype": "Int",
-   "label": "Void Count"
-  },
-  {
-   "default": "0",
-   "fieldname": "void_amount",
-   "fieldtype": "Currency",
-   "label": "Void Amount"
-  },
-  {
-   "default": "0",
-   "fieldname": "discount_amount",
-   "fieldtype": "Currency",
-   "label": "Discount Amount"
-  },
-  {
-   "fieldname": "section_file",
-   "fieldtype": "Section Break",
-   "label": "Z-Reading File"
-  },
-  {
-   "fieldname": "z_reading_file",
+   "fieldname": "daily_sales_revenue",
    "fieldtype": "Attach",
-   "label": "Z-Reading File",
+   "label": "Daily Sales Revenue - Summary",
    "reqd": 1
+  },
+  {
+   "fieldname": "sales_summary",
+   "fieldtype": "Attach",
+   "label": "Sales Summary",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_notes",
+   "fieldtype": "Section Break",
+   "label": "Additional Information"
   },
   {
    "fieldname": "notes",
@@ -137,7 +121,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-25 10:00:00.000000",
+ "modified": "2026-01-30 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "BEI POS Upload",
