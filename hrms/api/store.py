@@ -499,25 +499,39 @@ def get_midshift_checks(store=None, date=None, limit=20):
 
 
 @frappe.whitelist()
-def upload_pos_data(store, pos_date, pos_system, gross_sales, net_sales,
-                    transaction_count, z_reading_file, void_count=None,
-                    void_amount=None, discount_amount=None, notes=None):
-    """Upload daily POS Z-reading data."""
+def upload_pos_data(store, pos_date, pos_system, discount_report, transaction_report,
+                    product_mix, daily_sales_revenue, sales_summary, notes=None):
+    """
+    Upload daily POS data with 5 required report files.
+
+    Args:
+        store: Store/branch name
+        pos_date: Date of POS data
+        pos_system: POS system used (MOSAIC)
+        discount_report: Discount Report file (base64)
+        transaction_report: Transaction Report file (base64)
+        product_mix: Product Mix file (base64)
+        daily_sales_revenue: Daily Sales Revenue - Summary file (base64)
+        sales_summary: Sales Summary file (base64)
+        notes: Optional notes
+    """
     if not store:
         frappe.throw(_("Store is required"))
+
+    if not all([discount_report, transaction_report, product_mix,
+                daily_sales_revenue, sales_summary]):
+        frappe.throw(_("All 5 POS report files are required"))
 
     doc = frappe.new_doc("BEI POS Upload")
     doc.store = store
     doc.pos_date = pos_date
     doc.uploaded_by = frappe.session.user
     doc.pos_system = pos_system
-    doc.gross_sales = float(gross_sales)
-    doc.net_sales = float(net_sales)
-    doc.transaction_count = int(transaction_count)
-    doc.void_count = int(void_count) if void_count else 0
-    doc.void_amount = float(void_amount) if void_amount else 0
-    doc.discount_amount = float(discount_amount) if discount_amount else 0
-    doc.z_reading_file = z_reading_file
+    doc.discount_report = discount_report
+    doc.transaction_report = transaction_report
+    doc.product_mix = product_mix
+    doc.daily_sales_revenue = daily_sales_revenue
+    doc.sales_summary = sales_summary
     doc.notes = notes
     doc.insert()
     return {"success": True, "name": doc.name}
