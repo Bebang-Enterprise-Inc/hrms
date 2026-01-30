@@ -745,11 +745,11 @@ def _count_reports_by_status(stats, report_key, doctype, store_names, today):
 @frappe.whitelist()
 def get_area_store_reports(report_type, report_date=None, status=None):
     """
-    Get opening/closing reports for all stores under the area supervisor.
+    Get store reports for all stores under the area supervisor.
     Returns reports with photo URLs and a list of stores that haven't submitted.
 
     Args:
-        report_type: 'opening' or 'closing'
+        report_type: 'opening', 'closing', 'midshift', 'pos_upload', or 'bank_deposit'
         report_date: Date to filter by (defaults to today)
         status: Optional status filter ('Submitted', 'Reviewed', 'Flagged')
 
@@ -766,51 +766,127 @@ def get_area_store_reports(report_type, report_date=None, status=None):
     if not store_names:
         return {"reports": [], "stores": [], "stores_missing": [], "stats": {"total": 0, "submitted": 0, "missing": 0}}
 
-    # Determine doctype and photo fields
-    if report_type == "opening":
-        doctype = "BEI Store Opening Report"
-        photo_fields = [
-            "photo_backup_area", "photo_frozen_milk", "photo_toppings_area",
-            "photo_dispatch_area", "photo_cold_storage_temp"
-        ]
-    else:
-        doctype = "BEI Store Closing Report"
-        photo_fields = [
-            "photo_xread_opening", "photo_xread_closing", "photo_zread",
-            "photo_closing_reports", "photo_dashboard_report", "photo_logo_signage",
-            "photo_hygrometer", "photo_water_meter", "photo_backup_area_clean",
-            "photo_frozen_milk_clean", "photo_toppings_clean", "photo_dispatch_clean",
-            "photo_cold_storage_close", "photo_cashier_clean", "photo_rollup_closed"
-        ]
-
-    # Build filters
-    filters = {
-        "store": ["in", store_names],
-        "report_date": report_date
+    # Report type configuration
+    report_config = {
+        "opening": {
+            "doctype": "BEI Store Opening Report",
+            "date_field": "report_date",
+            "time_field": "report_time",
+            "submitter_field": "submitted_by",
+            "photo_fields": [
+                "photo_backup_area", "photo_frozen_milk", "photo_toppings_area",
+                "photo_dispatch_area", "photo_cold_storage_temp"
+            ],
+            "extra_fields": []
+        },
+        "closing": {
+            "doctype": "BEI Store Closing Report",
+            "date_field": "report_date",
+            "time_field": "report_time",
+            "submitter_field": "submitted_by",
+            "photo_fields": [
+                "photo_xread_opening", "photo_xread_closing", "photo_zread",
+                "photo_closing_reports", "photo_dashboard_report", "photo_logo_signage",
+                "photo_hygrometer", "photo_water_meter", "photo_backup_area_clean",
+                "photo_frozen_milk_clean", "photo_toppings_clean", "photo_dispatch_clean",
+                "photo_cold_storage_close", "photo_cashier_clean", "photo_rollup_closed"
+            ],
+            "extra_fields": ["pos_total_sales", "actual_cash_count", "card_payments", "gcash_total", "cash_variance", "variance_explanation"]
+        },
+        "midshift": {
+            "doctype": "BEI Midshift Checklist",
+            "date_field": "check_datetime",  # Datetime field - will extract date
+            "time_field": "check_datetime",  # Will extract time
+            "submitter_field": "submitted_by",
+            "photo_fields": ["photo_evidence"],
+            "extra_fields": ["shift", "cleanliness_status", "issues_found", "corrective_action"]
+        },
+        "pos_upload": {
+            "doctype": "BEI POS Upload",
+            "date_field": "pos_date",
+            "time_field": None,  # No time field
+            "submitter_field": "uploaded_by",
+            "photo_fields": [],  # No photos, has z_reading_file attachment
+            "extra_fields": ["pos_system", "gross_sales", "net_sales", "transaction_count", "void_count", "void_amount", "discount_amount", "z_reading_file"]
+        },
+        "bank_deposit": {
+            "doctype": "BEI Bank Deposit",
+            "date_field": "deposit_date",
+            "time_field": None,  # No time field
+            "submitter_field": "submitted_by",
+            "photo_fields": [],  # Photos are in child table
+            "extra_fields": ["bank", "total_amount"]
+        }
     }
+
+    config = report_config.get(report_type)
+    if not config:
+        frappe.throw(f"Invalid report type: {report_type}")
+
+    doctype = config["doctype"]
+    date_field = config["date_field"]
+    time_field = config["time_field"]
+    submitter_field = config["submitter_field"]
+    photo_fields = config["photo_fields"]
+    extra_fields = config["extra_fields"]
+
+    # Build filters based on date field type
+    if report_type == "midshift":
+        # For datetime field, filter by date portion
+        filters = {
+            "store": ["in", store_names],
+            date_field: ["between", [f"{report_date} 00:00:00", f"{report_date} 23:59:59"]]
+        }
+    else:
+        filters = {
+            "store": ["in", store_names],
+            date_field: report_date
+        }
+
     if status:
         filters["status"] = status
 
     # Get base fields
-    base_fields = ["name", "store", "report_date", "report_time", "status", "submitted_by", "creation", "notes"]
+    base_fields = ["name", "store", date_field, "creation", "notes" if frappe.db.has_column(doctype, "notes") else None]
+    base_fields = [f for f in base_fields if f]  # Remove None
 
-    # Add closing-specific fields
-    if report_type == "closing":
-        base_fields.extend(["pos_total_sales", "actual_cash_count", "card_payments", "gcash_total", "cash_variance", "variance_explanation"])
+    if time_field and time_field != date_field:
+        base_fields.append(time_field)
+
+    if submitter_field:
+        base_fields.append(submitter_field)
+
+    if frappe.db.has_column(doctype, "status"):
+        base_fields.append("status")
 
     # Fetch reports
+    all_fields = list(set(base_fields + extra_fields + photo_fields))
     reports = frappe.get_all(
         doctype,
         filters=filters,
-        fields=base_fields + photo_fields,
+        fields=all_fields,
         order_by="store asc, creation desc"
     )
 
-    # Transform reports to include structured photo data
+    # Transform reports
     for report in reports:
-        # Get user full name (with null check)
-        if report.get("submitted_by"):
-            report["submitted_by_name"] = frappe.db.get_value("User", report.submitted_by, "full_name") or report.submitted_by
+        # Normalize date/time fields
+        if report_type == "midshift" and report.get("check_datetime"):
+            dt = report.get("check_datetime")
+            report["report_date"] = str(dt.date()) if hasattr(dt, 'date') else str(dt)[:10]
+            report["report_time"] = str(dt.time()) if hasattr(dt, 'time') else str(dt)[11:19]
+        elif date_field != "report_date":
+            report["report_date"] = report.pop(date_field, None)
+        if time_field and time_field != "report_time" and time_field != date_field:
+            report["report_time"] = report.pop(time_field, None)
+        elif not time_field:
+            report["report_time"] = report.get("creation", "")[:8] if report.get("creation") else ""
+
+        # Normalize submitter field
+        submitter = report.get(submitter_field) or report.get("submitted_by") or report.get("uploaded_by")
+        report["submitted_by"] = submitter
+        if submitter:
+            report["submitted_by_name"] = frappe.db.get_value("User", submitter, "full_name") or submitter
         else:
             report["submitted_by_name"] = "Unknown"
 
@@ -824,9 +900,28 @@ def get_area_store_reports(report_type, report_date=None, status=None):
                     "label": label,
                     "url": report.get(field)
                 })
-            # Remove the individual photo field from response
             report.pop(field, None)
+
+        # For bank_deposit, get photos from child table
+        if report_type == "bank_deposit":
+            deposit_photos = frappe.get_all(
+                "BEI Bank Deposit Photo",
+                filters={"parent": report["name"]},
+                fields=["photo", "description"]
+            )
+            for idx, dp in enumerate(deposit_photos):
+                if dp.get("photo"):
+                    photos.append({
+                        "field": f"deposit_photo_{idx}",
+                        "label": dp.get("description") or f"Deposit Slip {idx + 1}",
+                        "url": dp.get("photo")
+                    })
+
         report["photos"] = photos
+
+        # Ensure status field exists
+        if "status" not in report:
+            report["status"] = "Submitted"
 
     # Find stores that submitted
     submitted_stores = set(r["store"] for r in reports)
