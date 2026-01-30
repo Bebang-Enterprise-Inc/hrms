@@ -233,6 +233,12 @@ scheduler_events = {
 	"hourly": [
 		"hrms.hr.doctype.daily_work_summary_group.daily_work_summary_group.trigger_emails",
 	],
+	"cron": {
+		# Weather collection 5x daily: 6AM, 10AM, 2PM, 6PM, 10PM
+		"0 6,10,14,18,22 * * *": [
+			"hrms.utils.weather_service.collect_all_weather",
+		],
+	},
 	"hourly_long": [
 		"hrms.hr.doctype.shift_type.shift_type.update_last_sync_of_checkin",
 		"hrms.hr.doctype.shift_type.shift_type.process_auto_attendance_for_all_shifts",
