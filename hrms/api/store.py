@@ -647,3 +647,151 @@ def get_bank_deposits(store=None, date_from=None, date_to=None, limit=20):
         limit=int(limit)
     )
     return {"deposits": deposits}
+
+
+# ==============================================================================
+# POS DATA EXTRACTION
+# ==============================================================================
+
+
+@frappe.whitelist()
+def extract_pos_data(sales_summary=None, transaction_report=None, discount_report=None,
+                     daily_sales_revenue=None, product_mix=None):
+    """
+    Extract and parse data from MOSAIC POS export files.
+
+    Accepts file content in multiple formats:
+    - File URL (stored in Frappe File)
+    - Base64 encoded string
+    - Direct file content
+
+    Args:
+        sales_summary: Sales Summary file
+        transaction_report: Transaction Report file
+        discount_report: Discount Report file
+        daily_sales_revenue: Daily Sales Revenue file
+        product_mix: Product Mix file
+
+    Returns:
+        Consolidated extracted data for frontend display:
+        {
+            "success": True,
+            "data": {
+                "date": "2026-01-30",
+                "gross_sales": 65474.00,
+                "net_sales": 55587.24,
+                "vat": 5575.73,
+                "beginning_si": 16526,
+                "ending_si": 16735,
+                "transaction_count": 209,
+                "eod_counter": 76,
+                "discount_pwd": 1056.85,
+                "discount_senior": 1223.28,
+                "by_payment_type": {
+                    "Cash": 38970.00,
+                    "MosaicPay QRPH": 26504.00
+                },
+                "total_items_sold": 357,
+                ...
+            }
+        }
+    """
+    from hrms.utils.pos_parser import extract_all_pos_data
+    import base64
+
+    def get_file_content(file_input):
+        """Get file content from various input formats."""
+        if not file_input:
+            return None
+
+        # If it's a Frappe file URL
+        if isinstance(file_input, str) and file_input.startswith("/files/"):
+            file_doc = frappe.get_doc("File", {"file_url": file_input})
+            return file_doc.get_content()
+
+        # If it's base64 encoded
+        if isinstance(file_input, str):
+            try:
+                # Try to decode base64
+                return base64.b64decode(file_input)
+            except Exception:
+                pass
+
+        # If it's already bytes
+        if isinstance(file_input, bytes):
+            return file_input
+
+        return None
+
+    try:
+        result = extract_all_pos_data(
+            sales_summary_content=get_file_content(sales_summary),
+            transaction_report_content=get_file_content(transaction_report),
+            discount_report_content=get_file_content(discount_report),
+            daily_sales_revenue_content=get_file_content(daily_sales_revenue),
+            product_mix_content=get_file_content(product_mix)
+        )
+
+        return {
+            "success": result.get("success", False),
+            "data": result.get("consolidated", {}),
+            "sales_summary": result.get("sales_summary"),
+            "transaction_report": result.get("transaction_report"),
+            "discount_report": result.get("discount_report"),
+            "daily_sales_revenue": result.get("daily_sales_revenue"),
+            "product_mix": result.get("product_mix"),
+            "errors": result.get("errors", [])
+        }
+
+    except Exception as e:
+        frappe.log_error(f"POS extraction error: {str(e)}", "POS Extraction")
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+
+@frappe.whitelist()
+def get_extracted_pos_data(pos_upload_name):
+    """
+    Get extracted data for a POS Upload document.
+
+    If extraction hasn't been done yet, perform it now.
+    Stores extracted data in the document for caching.
+
+    Args:
+        pos_upload_name: Name of BEI POS Upload document
+
+    Returns:
+        Extracted POS data
+    """
+    doc = frappe.get_doc("BEI POS Upload", pos_upload_name)
+
+    # Check if already extracted
+    if doc.extracted_data:
+        try:
+            return {
+                "success": True,
+                "data": json.loads(doc.extracted_data),
+                "cached": True
+            }
+        except Exception:
+            pass
+
+    # Extract data from uploaded files
+    result = extract_pos_data(
+        sales_summary=doc.sales_summary,
+        transaction_report=doc.transaction_report,
+        discount_report=doc.discount_report,
+        daily_sales_revenue=doc.daily_sales_revenue,
+        product_mix=doc.product_mix
+    )
+
+    # Cache the result if successful
+    if result.get("success") and result.get("data"):
+        doc.db_set("extracted_data", json.dumps(result["data"]))
+        doc.db_set("gross_sales", result["data"].get("gross_sales", 0))
+        doc.db_set("net_sales", result["data"].get("net_sales", 0))
+        doc.db_set("status", "Extracted")
+
+    return result

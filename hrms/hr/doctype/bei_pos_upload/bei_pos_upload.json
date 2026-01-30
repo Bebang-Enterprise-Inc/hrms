@@ -19,6 +19,26 @@
   "column_break_files",
   "daily_sales_revenue",
   "sales_summary",
+  "section_extracted",
+  "gross_sales",
+  "net_sales",
+  "vat_amount",
+  "column_break_extracted",
+  "beginning_si",
+  "ending_si",
+  "transaction_count",
+  "eod_counter",
+  "section_discounts",
+  "discount_pwd",
+  "discount_senior",
+  "discount_other",
+  "column_break_discounts",
+  "total_discount",
+  "vat_adjustment",
+  "section_payment_breakdown",
+  "payment_breakdown_html",
+  "section_raw_data",
+  "extracted_data",
   "section_notes",
   "notes"
  ],
@@ -67,7 +87,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Uploaded\nVerified\nDiscrepancy"
+   "options": "Uploaded\nExtracted\nVerified\nDiscrepancy"
   },
   {
    "fieldname": "section_files",
@@ -109,6 +129,123 @@
    "reqd": 1
   },
   {
+   "collapsible": 1,
+   "fieldname": "section_extracted",
+   "fieldtype": "Section Break",
+   "label": "Extracted Sales Data"
+  },
+  {
+   "fieldname": "gross_sales",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Gross Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "net_sales",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Net Sales",
+   "read_only": 1
+  },
+  {
+   "fieldname": "vat_amount",
+   "fieldtype": "Currency",
+   "label": "VAT Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_extracted",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "beginning_si",
+   "fieldtype": "Int",
+   "label": "Beginning SI",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ending_si",
+   "fieldtype": "Int",
+   "label": "Ending SI",
+   "read_only": 1
+  },
+  {
+   "fieldname": "transaction_count",
+   "fieldtype": "Int",
+   "label": "Transaction Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "eod_counter",
+   "fieldtype": "Int",
+   "label": "EOD Counter",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_discounts",
+   "fieldtype": "Section Break",
+   "label": "Discount Breakdown"
+  },
+  {
+   "fieldname": "discount_pwd",
+   "fieldtype": "Currency",
+   "label": "PWD Discount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "discount_senior",
+   "fieldtype": "Currency",
+   "label": "Senior Citizen Discount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "discount_other",
+   "fieldtype": "Currency",
+   "label": "Other Discounts",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_discounts",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_discount",
+   "fieldtype": "Currency",
+   "label": "Total Discount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "vat_adjustment",
+   "fieldtype": "Currency",
+   "label": "VAT Adjustment",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_payment_breakdown",
+   "fieldtype": "Section Break",
+   "label": "Payment Breakdown"
+  },
+  {
+   "fieldname": "payment_breakdown_html",
+   "fieldtype": "HTML",
+   "label": "Payment Breakdown"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_raw_data",
+   "fieldtype": "Section Break",
+   "label": "Raw Extracted Data"
+  },
+  {
+   "fieldname": "extracted_data",
+   "fieldtype": "Long Text",
+   "label": "Extracted Data (JSON)",
+   "read_only": 1
+  },
+  {
    "fieldname": "section_notes",
    "fieldtype": "Section Break",
    "label": "Additional Information"
@@ -121,7 +258,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-30 10:00:00.000000",
+ "modified": "2026-01-31 10:00:00.000000",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "BEI POS Upload",
