@@ -545,3 +545,91 @@ def get_pos_uploads(store=None, date_from=None, date_to=None, limit=20):
         limit=int(limit)
     )
     return {"uploads": uploads}
+
+
+# ==============================================================================
+# BANK DEPOSIT REPORTS
+# ==============================================================================
+
+
+@frappe.whitelist()
+def submit_bank_deposit(store, deposit_date, bank, deposits, total_amount,
+                        photos, notes=None):
+    """
+    Submit bank deposit record with deposit slip photos.
+
+    Args:
+        store: Store/branch name
+        deposit_date: Date of deposit
+        bank: Bank name (BDO, BPI, etc.)
+        deposits: List of {dates_covered, amount} for each deposit entry
+        total_amount: Total deposit amount
+        photos: List of deposit slip photo URLs/base64
+        notes: Optional notes
+    """
+    if not store:
+        frappe.throw(_("Store is required"))
+
+    if not bank:
+        frappe.throw(_("Bank is required"))
+
+    if isinstance(deposits, str):
+        deposits = json.loads(deposits)
+
+    if isinstance(photos, str):
+        photos = json.loads(photos)
+
+    if not deposits:
+        frappe.throw(_("At least one deposit entry is required"))
+
+    if not photos:
+        frappe.throw(_("At least one deposit slip photo is required"))
+
+    doc = frappe.new_doc("BEI Bank Deposit")
+    doc.store = store
+    doc.deposit_date = deposit_date
+    doc.bank = bank
+    doc.total_amount = float(total_amount)
+    doc.submitted_by = frappe.session.user
+    doc.notes = notes
+
+    # Add deposit entries
+    for entry in deposits:
+        doc.append("deposit_entries", {
+            "dates_covered": entry.get("dates_covered"),
+            "amount": float(entry.get("amount", 0))
+        })
+
+    # Add photos
+    for i, photo in enumerate(photos):
+        doc.append("deposit_photos", {
+            "photo": photo,
+            "photo_number": i + 1
+        })
+
+    doc.insert()
+    return {"success": True, "name": doc.name}
+
+
+@frappe.whitelist()
+def get_bank_deposits(store=None, date_from=None, date_to=None, limit=20):
+    """Get bank deposit history."""
+    filters = {}
+    if store:
+        filters["store"] = store
+    if date_from:
+        filters["deposit_date"] = [">=", date_from]
+    if date_to:
+        if "deposit_date" in filters:
+            filters["deposit_date"] = ["between", [date_from, date_to]]
+        else:
+            filters["deposit_date"] = ["<=", date_to]
+
+    deposits = frappe.get_all(
+        "BEI Bank Deposit",
+        filters=filters,
+        fields=["name", "store", "deposit_date", "bank", "total_amount", "submitted_by"],
+        order_by="deposit_date desc",
+        limit=int(limit)
+    )
+    return {"deposits": deposits}

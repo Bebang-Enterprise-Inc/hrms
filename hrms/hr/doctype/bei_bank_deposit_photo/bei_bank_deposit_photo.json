@@ -1,0 +1,40 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-01-30 08:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "photo_number",
+  "photo"
+ ],
+ "fields": [
+  {
+   "fieldname": "photo_number",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Photo #"
+  },
+  {
+   "fieldname": "photo",
+   "fieldtype": "Attach Image",
+   "in_list_view": 1,
+   "label": "Deposit Slip Photo",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-01-30 08:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Bank Deposit Photo",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
