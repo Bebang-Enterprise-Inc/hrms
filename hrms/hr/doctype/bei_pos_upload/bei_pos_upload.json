@@ -12,6 +12,7 @@
   "pos_system",
   "column_break_1",
   "status",
+  "validation_status",
   "section_files",
   "discount_report",
   "transaction_report",
@@ -37,6 +38,8 @@
   "vat_adjustment",
   "section_payment_breakdown",
   "payment_breakdown_html",
+  "section_validation",
+  "validation_result",
   "section_raw_data",
   "extracted_data",
   "section_notes",
@@ -88,6 +91,13 @@
    "in_standard_filter": 1,
    "label": "Status",
    "options": "Uploaded\nExtracted\nVerified\nDiscrepancy"
+  },
+  {
+   "fieldname": "validation_status",
+   "fieldtype": "Select",
+   "label": "Validation Status",
+   "options": "\nmatch\nmismatch\nlow_confidence",
+   "read_only": 1
   },
   {
    "fieldname": "section_files",
@@ -232,6 +242,18 @@
    "fieldname": "payment_breakdown_html",
    "fieldtype": "HTML",
    "label": "Payment Breakdown"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_validation",
+   "fieldtype": "Section Break",
+   "label": "Z-Reading OCR Validation"
+  },
+  {
+   "fieldname": "validation_result",
+   "fieldtype": "Long Text",
+   "label": "Validation Result (JSON)",
+   "read_only": 1
   },
   {
    "collapsible": 1,
