@@ -574,15 +574,18 @@ def _get_area_supervisor_stores(user=None):
 
 
 @frappe.whitelist()
-def get_my_stores():
+def get_my_stores(user=None):
     """
-    Get stores (warehouses) assigned to the current area supervisor.
+    Get stores (warehouses) assigned to the area supervisor.
     Used by store dropdowns in Store Visit, Reports, and Action Plans forms.
+
+    Args:
+        user: Optional user email to get stores for (defaults to current session user)
 
     Returns:
         {"stores": [{"name": str, "warehouse_name": str, "custom_area_supervisor": str, "is_group": int}]}
     """
-    stores = _get_area_supervisor_stores()
+    stores = _get_area_supervisor_stores(user)
 
     # Enrich with required fields for frontend
     result = []
