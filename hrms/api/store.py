@@ -459,11 +459,14 @@ def submit_midshift_check(store, shift, temperature_readings, cleanliness_status
     if not store:
         frappe.throw(_("Store is required"))
 
+    # Resolve branch name to warehouse name
+    warehouse = resolve_warehouse(store)
+
     if isinstance(temperature_readings, str):
         temperature_readings = json.loads(temperature_readings)
 
     doc = frappe.new_doc("BEI Midshift Checklist")
-    doc.store = store
+    doc.store = warehouse
     doc.check_datetime = now_datetime()
     doc.submitted_by = frappe.session.user
     doc.shift = shift
@@ -1145,8 +1148,11 @@ def submit_maintenance_request(store, issue_category, equipment_area, priority,
     if not store:
         frappe.throw(_("Store is required"))
 
+    # Resolve branch name to warehouse name
+    warehouse = resolve_warehouse(store)
+
     doc = frappe.new_doc("BEI Maintenance Request")
-    doc.store = store
+    doc.store = warehouse
     doc.request_date = nowdate()
     doc.issue_category = issue_category
     doc.equipment_area = equipment_area
