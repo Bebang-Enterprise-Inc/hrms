@@ -531,7 +531,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-01 00:30:00.000000",
+ "modified": "2026-02-01 00:45:00.000000",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "BEI Store Closing Report",
@@ -566,6 +566,12 @@
    "read": 1,
    "write": 1,
    "role": "Employee Self Service"
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee"
   }
  ],
  "sort_field": "creation",
