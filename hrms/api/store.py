@@ -795,3 +795,429 @@ def get_extracted_pos_data(pos_upload_name):
         doc.db_set("status", "Extracted")
 
     return result
+
+
+# ==============================================================================
+# CLOSING REPORT 3-STAGE FLOW (Enhanced 2026-01-31)
+# ==============================================================================
+
+
+@frappe.whitelist()
+def get_or_create_closing_report(store):
+    """
+    Get existing closing report for today or create a new one.
+    Returns the report document with current stage status.
+    """
+    if not store:
+        frappe.throw(_("Store is required"))
+
+    today = nowdate()
+
+    # Check for existing report
+    existing = frappe.db.get_value(
+        "BEI Store Closing Report",
+        {"store": store, "report_date": today},
+        ["name", "stage_completed", "status"],
+        as_dict=True
+    )
+
+    if existing:
+        doc = frappe.get_doc("BEI Store Closing Report", existing.name)
+        return {
+            "success": True,
+            "name": doc.name,
+            "is_new": False,
+            "stage_completed": doc.stage_completed,
+            "status": doc.status,
+            "data": doc.as_dict()
+        }
+
+    # Create new report
+    doc = frappe.new_doc("BEI Store Closing Report")
+    doc.store = store
+    doc.report_date = today
+    doc.submitted_by = frappe.session.user
+    doc.stage_completed = "Cash"
+    doc.insert()
+
+    return {
+        "success": True,
+        "name": doc.name,
+        "is_new": True,
+        "stage_completed": "Cash",
+        "status": "Draft",
+        "data": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def submit_closing_stage1_cash(report_name, petty_cash_fund=0, delivery_fund=0,
+                                change_fund=0, cash_notes=None, pos_down=False,
+                                pos_down_estimated_sales=None, pos_down_transaction_count=None,
+                                pos_down_notes=None):
+    """
+    Submit Stage 1: Cash Count
+
+    Note: Cash Sales Fund stays in POS only - not entered here.
+    Only Petty Cash, Delivery Fund, and Change Fund are entered in this stage.
+    """
+    doc = frappe.get_doc("BEI Store Closing Report", report_name)
+
+    doc.petty_cash_fund = float(petty_cash_fund or 0)
+    doc.delivery_fund = float(delivery_fund or 0)
+    doc.change_fund = float(change_fund or 0)
+    doc.cash_notes = cash_notes
+
+    # POS Down mode
+    doc.pos_down = 1 if pos_down else 0
+    if pos_down:
+        doc.pos_down_estimated_sales = float(pos_down_estimated_sales or 0)
+        doc.pos_down_transaction_count = int(pos_down_transaction_count or 0)
+        doc.pos_down_notes = pos_down_notes
+
+    doc.stage_completed = "Checklist"
+    doc.save()
+
+    return {
+        "success": True,
+        "name": doc.name,
+        "stage_completed": doc.stage_completed,
+        "total_funds": doc.total_funds
+    }
+
+
+@frappe.whitelist()
+def submit_closing_stage2_checklist(report_name, inventory_items, checklist_items=None,
+                                     cashier_signoff=False, production_signoff=False,
+                                     supervisor_signoff=False, equipment_status=None):
+    """
+    Submit Stage 2: Checklist & Inventory Spot Check
+
+    inventory_items: List of {item_name, expected_count, actual_count}
+    - 12 specific items categorized by: Highest Cost, Single Count Variances,
+      Shortest Shelf Life, Most Used Items
+
+    checklist_items: General end-of-day tasks
+    """
+    doc = frappe.get_doc("BEI Store Closing Report", report_name)
+
+    if isinstance(inventory_items, str):
+        inventory_items = json.loads(inventory_items)
+
+    if isinstance(checklist_items, str):
+        checklist_items = json.loads(checklist_items)
+
+    if isinstance(equipment_status, str):
+        equipment_status = json.loads(equipment_status)
+
+    # Clear existing inventory items
+    doc.inventory_spot_check = []
+
+    # Add inventory spot check items (12 items)
+    for item in inventory_items:
+        doc.append("inventory_spot_check", {
+            "item_name": item.get("item_name"),
+            "category": item.get("category"),
+            "expected_count": float(item.get("expected_count", 0)),
+            "actual_count": float(item.get("actual_count", 0))
+        })
+
+    # Add checklist items if provided
+    if checklist_items:
+        doc.checklist_items = []
+        for item in checklist_items:
+            doc.append("checklist_items", item)
+
+    # Equipment status
+    if equipment_status:
+        doc.freezer_temp = equipment_status.get("freezer_temp")
+        doc.chiller_temp = equipment_status.get("chiller_temp")
+        doc.pos_closed_properly = equipment_status.get("pos_closed_properly", 0)
+
+    # Staff signoffs
+    doc.cashier_signoff = 1 if cashier_signoff else 0
+    doc.production_signoff = 1 if production_signoff else 0
+    doc.supervisor_signoff = 1 if supervisor_signoff else 0
+
+    doc.stage_completed = "Photos"
+    doc.save()
+
+    return {
+        "success": True,
+        "name": doc.name,
+        "stage_completed": doc.stage_completed,
+        "inventory_variance_total": doc.inventory_variance_total,
+        "inventory_variance_count": doc.inventory_variance_count
+    }
+
+
+@frappe.whitelist()
+def submit_closing_stage3_photos(report_name, x_reading_opening_photo, x_reading_closing_photo,
+                                  z_reading_photo, pos_files=None, store_photos=None,
+                                  variance_explanation=None, notes=None):
+    """
+    Submit Stage 3: Photos & Files
+
+    Document Scanner Photos (with edge detection):
+    - x_reading_opening_photo: X-Reading from opening shift
+    - x_reading_closing_photo: X-Reading from closing shift
+    - z_reading_photo: Z-Reading (end of day)
+
+    pos_files: List of 5 POS export files
+    store_photos: Dict of store area photos (logo_signage, hygrometer, etc.)
+    """
+    doc = frappe.get_doc("BEI Store Closing Report", report_name)
+
+    # Document scanner photos (required)
+    doc.x_reading_opening_photo = x_reading_opening_photo
+    doc.x_reading_closing_photo = x_reading_closing_photo
+    doc.z_reading_photo = z_reading_photo
+
+    # POS files (5 required)
+    if pos_files:
+        if isinstance(pos_files, str):
+            pos_files = json.loads(pos_files)
+        doc.pos_discount_report = pos_files.get("discount_report")
+        doc.pos_transaction_report = pos_files.get("transaction_report")
+        doc.pos_product_mix = pos_files.get("product_mix")
+        doc.pos_daily_sales_revenue = pos_files.get("daily_sales_revenue")
+        doc.pos_sales_summary = pos_files.get("sales_summary")
+
+    # Store area photos (standard camera)
+    if store_photos:
+        if isinstance(store_photos, str):
+            store_photos = json.loads(store_photos)
+        doc.photo_logo_signage = store_photos.get("logo_signage")
+        doc.photo_hygrometer = store_photos.get("hygrometer")
+        doc.photo_water_meter = store_photos.get("water_meter")
+        doc.photo_backup_area_clean = store_photos.get("backup_area")
+        doc.photo_frozen_milk_clean = store_photos.get("frozen_milk")
+        doc.photo_toppings_clean = store_photos.get("toppings")
+        doc.photo_dispatch_clean = store_photos.get("dispatch")
+        doc.photo_cold_storage_close = store_photos.get("cold_storage")
+        doc.photo_cashier_clean = store_photos.get("cashier")
+        doc.photo_rollup_closed = store_photos.get("rollup_door")
+
+    # Variance explanation (required if variance > ±50)
+    if variance_explanation:
+        doc.variance_explanation = variance_explanation
+
+    doc.notes = notes
+    doc.report_time = now_datetime().strftime("%H:%M:%S")
+    doc.stage_completed = "Complete"
+    doc.save()
+
+    return {
+        "success": True,
+        "name": doc.name,
+        "stage_completed": doc.stage_completed,
+        "status": doc.status,
+        "cash_variance": doc.cash_variance
+    }
+
+
+@frappe.whitelist()
+def get_closing_report_status(store, date=None):
+    """
+    Get closing report status for a store on a specific date.
+    Returns stage progress and completion status.
+    """
+    if not date:
+        date = nowdate()
+
+    report = frappe.db.get_value(
+        "BEI Store Closing Report",
+        {"store": store, "report_date": date},
+        ["name", "stage_completed", "status", "pos_down", "cash_variance",
+         "inventory_variance_total", "cashier_signoff", "production_signoff"],
+        as_dict=True
+    )
+
+    if not report:
+        return {
+            "exists": False,
+            "stage_completed": None,
+            "status": None
+        }
+
+    return {
+        "exists": True,
+        "name": report.name,
+        "stage_completed": report.stage_completed,
+        "status": report.status,
+        "pos_down": report.pos_down,
+        "cash_variance": report.cash_variance,
+        "inventory_variance_total": report.inventory_variance_total,
+        "cashier_signoff": report.cashier_signoff,
+        "production_signoff": report.production_signoff
+    }
+
+
+# ==============================================================================
+# MID-SHIFT HANDOVER
+# ==============================================================================
+
+
+@frappe.whitelist()
+def submit_mid_shift_handover(store, outgoing_cashier, incoming_cashier,
+                               x_reading_photo, cash_count, expected_cash,
+                               variance_explanation=None):
+    """
+    Submit mid-shift handover when cashiers switch shifts.
+    Identifies shortage/overage per cashier shift.
+    """
+    if not store:
+        frappe.throw(_("Store is required"))
+
+    if outgoing_cashier == incoming_cashier:
+        frappe.throw(_("Outgoing and incoming cashiers must be different"))
+
+    doc = frappe.new_doc("BEI Mid-Shift Handover")
+    doc.store = store
+    doc.report_date = nowdate()
+    doc.handover_time = now_datetime().strftime("%H:%M:%S")
+    doc.outgoing_cashier = outgoing_cashier
+    doc.incoming_cashier = incoming_cashier
+    doc.x_reading_photo = x_reading_photo
+    doc.cash_count = float(cash_count)
+    doc.expected_cash = float(expected_cash)
+    doc.variance_explanation = variance_explanation
+    doc.submitted_by = frappe.session.user
+
+    doc.insert()
+
+    # Link to closing report if exists
+    closing_report = frappe.db.get_value(
+        "BEI Store Closing Report",
+        {"store": store, "report_date": nowdate()},
+        "name"
+    )
+    if closing_report:
+        doc.db_set("closing_report", closing_report)
+
+    return {
+        "success": True,
+        "name": doc.name,
+        "variance": doc.variance,
+        "status": doc.status
+    }
+
+
+@frappe.whitelist()
+def get_mid_shift_handovers(store, date=None, limit=10):
+    """Get mid-shift handovers for a store on a specific date."""
+    if not date:
+        date = nowdate()
+
+    handovers = frappe.get_all(
+        "BEI Mid-Shift Handover",
+        filters={"store": store, "report_date": date},
+        fields=["name", "handover_time", "outgoing_cashier", "incoming_cashier",
+                "cash_count", "expected_cash", "variance", "status"],
+        order_by="handover_time desc",
+        limit=int(limit)
+    )
+
+    # Get employee names
+    for h in handovers:
+        h["outgoing_cashier_name"] = frappe.db.get_value(
+            "Employee", h["outgoing_cashier"], "employee_name"
+        ) or h["outgoing_cashier"]
+        h["incoming_cashier_name"] = frappe.db.get_value(
+            "Employee", h["incoming_cashier"], "employee_name"
+        ) or h["incoming_cashier"]
+
+    return {"handovers": handovers}
+
+
+# ==============================================================================
+# MAINTENANCE REQUESTS
+# ==============================================================================
+
+
+@frappe.whitelist()
+def submit_maintenance_request(store, issue_category, equipment_area, priority,
+                                description, impact_on_operations, before_photos=None):
+    """
+    Submit a maintenance request from store staff.
+    Notifies Projects team (Daniel) for assessment and assignment.
+    """
+    if not store:
+        frappe.throw(_("Store is required"))
+
+    doc = frappe.new_doc("BEI Maintenance Request")
+    doc.store = store
+    doc.request_date = nowdate()
+    doc.issue_category = issue_category
+    doc.equipment_area = equipment_area
+    doc.priority = priority
+    doc.description = description
+    doc.impact_on_operations = impact_on_operations
+    doc.before_photos = before_photos
+    doc.reported_by = frappe.session.user
+    doc.status = "Open"
+
+    doc.insert()
+
+    return {
+        "success": True,
+        "name": doc.name,
+        "message": _("Maintenance request {0} submitted. Projects team will be notified.").format(doc.name)
+    }
+
+
+@frappe.whitelist()
+def get_maintenance_requests(store=None, status=None, limit=20):
+    """Get maintenance requests optionally filtered by store and status."""
+    filters = {}
+    if store:
+        filters["store"] = store
+    if status:
+        if isinstance(status, str):
+            filters["status"] = status
+        else:
+            filters["status"] = ["in", status]
+
+    requests = frappe.get_all(
+        "BEI Maintenance Request",
+        filters=filters,
+        fields=["name", "store", "store_code", "issue_category", "equipment_area",
+                "priority", "status", "scheduled_date", "request_date"],
+        order_by="request_date desc",
+        limit=int(limit)
+    )
+
+    return {"requests": requests}
+
+
+@frappe.whitelist()
+def check_maintenance_for_closing(store, date=None):
+    """
+    Check if there's maintenance scheduled or completed today that needs verification.
+    Used to show dynamic maintenance section in closing report.
+    """
+    if not date:
+        date = nowdate()
+
+    # Get completed maintenance that needs verification
+    from hrms.hr.doctype.bei_maintenance_completion.bei_maintenance_completion import (
+        check_maintenance_for_closing_report
+    )
+
+    return check_maintenance_for_closing_report(store, date)
+
+
+@frappe.whitelist()
+def verify_maintenance_from_closing(maintenance_completion, verified=True,
+                                     verification_notes=None):
+    """
+    Verify or reject maintenance completion from closing report.
+    """
+    doc = frappe.get_doc("BEI Maintenance Completion", maintenance_completion)
+
+    if verified:
+        return doc.verify_completion(notes=verification_notes)
+    else:
+        if not verification_notes:
+            frappe.throw(_("Rejection reason is required"))
+        return doc.reject_completion(notes=verification_notes)

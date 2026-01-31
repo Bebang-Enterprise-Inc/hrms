@@ -1,0 +1,255 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "format:MC-{store_code}-{####}",
+	"creation": "2026-01-31 10:00:00.000000",
+	"default_view": "List",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"section_basic",
+		"maintenance_request",
+		"store",
+		"store_code",
+		"completion_date",
+		"column_break_basic",
+		"status",
+		"resolution_status",
+		"section_work",
+		"technician_name",
+		"work_description",
+		"column_break_work",
+		"actual_cost",
+		"follow_up_needed",
+		"follow_up_notes",
+		"section_photos",
+		"after_photos",
+		"section_verification",
+		"verified_by_store",
+		"verification_notes",
+		"column_break_verification",
+		"verified_at",
+		"verified_by",
+		"section_audit",
+		"submitted_by",
+		"submitted_at"
+	],
+	"fields": [
+		{
+			"fieldname": "section_basic",
+			"fieldtype": "Section Break",
+			"label": "Completion Details"
+		},
+		{
+			"fieldname": "maintenance_request",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Maintenance Request",
+			"options": "BEI Maintenance Request",
+			"reqd": 1
+		},
+		{
+			"fetch_from": "maintenance_request.store",
+			"fieldname": "store",
+			"fieldtype": "Link",
+			"label": "Store",
+			"options": "BEI Store",
+			"read_only": 1
+		},
+		{
+			"fetch_from": "maintenance_request.store_code",
+			"fieldname": "store_code",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Store Code",
+			"read_only": 1
+		},
+		{
+			"default": "Today",
+			"fieldname": "completion_date",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Completion Date",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "Pending Verification",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "Pending Verification\nVerified\nRejected"
+		},
+		{
+			"fieldname": "resolution_status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "Resolution Status",
+			"options": "Fully Resolved\nPartially Resolved\nNot Resolved",
+			"reqd": 1
+		},
+		{
+			"fieldname": "section_work",
+			"fieldtype": "Section Break",
+			"label": "Work Details"
+		},
+		{
+			"fieldname": "technician_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Technician Name",
+			"reqd": 1
+		},
+		{
+			"fieldname": "work_description",
+			"fieldtype": "Text",
+			"label": "Work Description",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_work",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "actual_cost",
+			"fieldtype": "Currency",
+			"label": "Actual Cost",
+			"precision": "2"
+		},
+		{
+			"default": "0",
+			"fieldname": "follow_up_needed",
+			"fieldtype": "Check",
+			"label": "Follow-up Needed?"
+		},
+		{
+			"depends_on": "follow_up_needed",
+			"fieldname": "follow_up_notes",
+			"fieldtype": "Small Text",
+			"label": "Follow-up Notes",
+			"mandatory_depends_on": "follow_up_needed"
+		},
+		{
+			"fieldname": "section_photos",
+			"fieldtype": "Section Break",
+			"label": "After Photos"
+		},
+		{
+			"fieldname": "after_photos",
+			"fieldtype": "Attach Image",
+			"label": "After Photos (proof of completion)",
+			"reqd": 1
+		},
+		{
+			"fieldname": "section_verification",
+			"fieldtype": "Section Break",
+			"label": "Store Verification"
+		},
+		{
+			"default": "0",
+			"fieldname": "verified_by_store",
+			"fieldtype": "Check",
+			"label": "Verified by Store Staff"
+		},
+		{
+			"depends_on": "verified_by_store",
+			"fieldname": "verification_notes",
+			"fieldtype": "Small Text",
+			"label": "Verification Notes"
+		},
+		{
+			"fieldname": "column_break_verification",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "verified_at",
+			"fieldtype": "Datetime",
+			"label": "Verified At",
+			"read_only": 1
+		},
+		{
+			"fieldname": "verified_by",
+			"fieldtype": "Link",
+			"label": "Verified By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_audit",
+			"fieldtype": "Section Break",
+			"label": "Audit Trail"
+		},
+		{
+			"fieldname": "submitted_by",
+			"fieldtype": "Link",
+			"label": "Submitted By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "submitted_at",
+			"fieldtype": "Datetime",
+			"label": "Submitted At",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2026-01-31 10:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Maintenance Completion",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Employee",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "HR Manager",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects User",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"title_field": "store_code",
+	"track_changes": 1
+}

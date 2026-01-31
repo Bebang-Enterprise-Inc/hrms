@@ -1,0 +1,224 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "format:MSH-{store_code}-{report_date}-{####}",
+	"creation": "2026-01-31 10:00:00.000000",
+	"default_view": "List",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"section_basic",
+		"store",
+		"store_code",
+		"report_date",
+		"handover_time",
+		"column_break_basic",
+		"outgoing_cashier",
+		"incoming_cashier",
+		"status",
+		"section_cash_count",
+		"x_reading_photo",
+		"column_break_cash",
+		"cash_count",
+		"expected_cash",
+		"variance",
+		"section_variance",
+		"variance_explanation",
+		"section_links",
+		"closing_report",
+		"column_break_links",
+		"submitted_by",
+		"submitted_at"
+	],
+	"fields": [
+		{
+			"fieldname": "section_basic",
+			"fieldtype": "Section Break",
+			"label": "Handover Details"
+		},
+		{
+			"fieldname": "store",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Store",
+			"options": "BEI Store",
+			"reqd": 1
+		},
+		{
+			"fetch_from": "store.store_code",
+			"fieldname": "store_code",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Store Code",
+			"read_only": 1
+		},
+		{
+			"default": "Today",
+			"fieldname": "report_date",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Report Date",
+			"reqd": 1
+		},
+		{
+			"default": "Now",
+			"fieldname": "handover_time",
+			"fieldtype": "Time",
+			"in_list_view": 1,
+			"label": "Handover Time",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "outgoing_cashier",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"label": "Outgoing Cashier",
+			"options": "Employee",
+			"reqd": 1
+		},
+		{
+			"fieldname": "incoming_cashier",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"label": "Incoming Cashier",
+			"options": "Employee",
+			"reqd": 1
+		},
+		{
+			"default": "Draft",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "Draft\nSubmitted\nVariance Flagged\nReviewed"
+		},
+		{
+			"fieldname": "section_cash_count",
+			"fieldtype": "Section Break",
+			"label": "Cash Count & X-Reading"
+		},
+		{
+			"fieldname": "x_reading_photo",
+			"fieldtype": "Attach Image",
+			"label": "X-Reading Photo",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_cash",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "cash_count",
+			"fieldtype": "Currency",
+			"label": "Actual Cash Count",
+			"precision": "2",
+			"reqd": 1
+		},
+		{
+			"fieldname": "expected_cash",
+			"fieldtype": "Currency",
+			"label": "Expected Cash (from X-Reading)",
+			"precision": "2",
+			"reqd": 1
+		},
+		{
+			"fieldname": "variance",
+			"fieldtype": "Currency",
+			"label": "Variance",
+			"precision": "2",
+			"read_only": 1
+		},
+		{
+			"depends_on": "eval:Math.abs(doc.variance) > 50",
+			"fieldname": "section_variance",
+			"fieldtype": "Section Break",
+			"label": "Variance Explanation"
+		},
+		{
+			"fieldname": "variance_explanation",
+			"fieldtype": "Small Text",
+			"label": "Variance Explanation",
+			"mandatory_depends_on": "eval:Math.abs(doc.variance) > 50"
+		},
+		{
+			"fieldname": "section_links",
+			"fieldtype": "Section Break",
+			"label": "Links"
+		},
+		{
+			"fieldname": "closing_report",
+			"fieldtype": "Link",
+			"label": "Linked Closing Report",
+			"options": "BEI Store Closing Report",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_links",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "submitted_by",
+			"fieldtype": "Link",
+			"label": "Submitted By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "submitted_at",
+			"fieldtype": "Datetime",
+			"label": "Submitted At",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [
+		{
+			"link_doctype": "BEI Store Closing Report",
+			"link_fieldname": "closing_report"
+		}
+	],
+	"modified": "2026-01-31 10:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Mid-Shift Handover",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Employee",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "HR Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"title_field": "store_code",
+	"track_changes": 1
+}
