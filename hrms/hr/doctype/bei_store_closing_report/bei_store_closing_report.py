@@ -57,8 +57,6 @@ class BEIStoreClosingReport(Document):
 			self.cashier_signoff_time = now_datetime()
 		if self.production_signoff and not self.production_signoff_time:
 			self.production_signoff_time = now_datetime()
-		if self.supervisor_signoff and not self.supervisor_signoff_time:
-			self.supervisor_signoff_time = now_datetime()
 
 	def update_stage_completed(self):
 		"""Update stage_completed based on which sections are filled."""
@@ -77,22 +75,22 @@ class BEIStoreClosingReport(Document):
 			self.production_signoff
 		)
 
-		# Check Stage 3: Photos & Files
+		# Check Stage 3: Photos & Files (required photos from DocType)
 		stage3_complete = bool(
-			self.z_reading_photo and
-			self.x_reading_opening_photo and
-			self.x_reading_closing_photo
+			self.photo_zread and
+			self.photo_xread_opening and
+			self.photo_xread_closing
 		)
 
-		# Set stage_completed based on progress
+		# Set stage_completed based on progress (lowercase to match DocType options)
 		if stage3_complete and stage2_complete and stage1_complete:
-			self.stage_completed = "Complete"
+			self.stage_completed = "complete"
 		elif stage2_complete and stage1_complete:
-			self.stage_completed = "Photos"
+			self.stage_completed = "photos"
 		elif stage1_complete:
-			self.stage_completed = "Checklist"
+			self.stage_completed = "checklist"
 		else:
-			self.stage_completed = "Cash"
+			self.stage_completed = "cash"
 
 	def update_status(self):
 		"""Update status based on various conditions."""
@@ -117,7 +115,7 @@ class BEIStoreClosingReport(Document):
 			return
 
 		# All good
-		if self.stage_completed == "Complete":
+		if self.stage_completed == "complete":
 			self.status = "Submitted"
 
 	def validate_variance_explanation(self):
