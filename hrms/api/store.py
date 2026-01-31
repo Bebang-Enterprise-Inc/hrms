@@ -465,12 +465,19 @@ def submit_midshift_check(store, shift, temperature_readings, cleanliness_status
     if isinstance(temperature_readings, str):
         temperature_readings = json.loads(temperature_readings)
 
+    # Normalize shift and cleanliness values to title case (Frappe Select field expects exact match)
+    shift_map = {"morning": "Morning", "afternoon": "Afternoon", "evening": "Evening"}
+    normalized_shift = shift_map.get(shift.lower(), shift.title()) if shift else shift
+
+    cleanliness_map = {"excellent": "Excellent", "good": "Good", "needs attention": "Needs Attention", "critical": "Critical"}
+    normalized_cleanliness = cleanliness_map.get(cleanliness_status.lower(), cleanliness_status.title()) if cleanliness_status else cleanliness_status
+
     doc = frappe.new_doc("BEI Midshift Checklist")
     doc.store = warehouse
     doc.check_datetime = now_datetime()
     doc.submitted_by = frappe.session.user
-    doc.shift = shift
-    doc.cleanliness_status = cleanliness_status
+    doc.shift = normalized_shift
+    doc.cleanliness_status = normalized_cleanliness
     doc.issues_found = issues_found
     doc.corrective_action = corrective_action
     doc.photo_evidence = photo_evidence
