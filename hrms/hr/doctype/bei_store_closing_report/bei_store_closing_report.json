@@ -12,8 +12,10 @@
   "submitted_by",
   "column_break_1",
   "status",
-  "section_checklist",
-  "checklist_items",
+  "pos_upload",
+  "extraction_confirmed",
+  "section_extracted_data",
+  "extracted_data",
   "section_cash",
   "pos_total_sales",
   "actual_cash_count",
@@ -22,6 +24,13 @@
   "gcash_total",
   "cash_variance",
   "variance_explanation",
+  "section_weather",
+  "weather_condition",
+  "temperature",
+  "column_break_weather",
+  "weather_auto_fetched",
+  "section_checklist",
+  "checklist_items",
   "notes",
   "section_photos_pos",
   "photo_xread_opening",
@@ -87,19 +96,34 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "\nSubmitted\nReviewed\nVariance Flagged"
+   "options": "\nSubmitted\nReviewed\nVariance Flagged\nVerified\nDiscrepancy"
   },
   {
-   "fieldname": "section_checklist",
+   "description": "Link to POS Upload document containing extracted sales data",
+   "fieldname": "pos_upload",
+   "fieldtype": "Link",
+   "label": "POS Upload",
+   "options": "BEI POS Upload"
+  },
+  {
+   "default": "0",
+   "description": "Staff confirmed the extracted data is correct",
+   "fieldname": "extraction_confirmed",
+   "fieldtype": "Check",
+   "label": "Data Confirmed"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_extracted_data",
    "fieldtype": "Section Break",
-   "label": "Closing Checklist"
+   "label": "Extracted POS Data"
   },
   {
-   "fieldname": "checklist_items",
-   "fieldtype": "Table",
-   "label": "Checklist Items",
-   "options": "BEI Closing Checklist Item",
-   "reqd": 1
+   "description": "Auto-extracted data from POS files (JSON)",
+   "fieldname": "extracted_data",
+   "fieldtype": "JSON",
+   "hidden": 1,
+   "label": "Extracted Data"
   },
   {
    "fieldname": "section_cash",
@@ -107,9 +131,11 @@
    "label": "Cash Reconciliation"
   },
   {
+   "description": "Auto-populated from POS extraction",
    "fieldname": "pos_total_sales",
    "fieldtype": "Currency",
    "label": "POS Total Sales",
+   "read_only_depends_on": "eval:doc.pos_upload",
    "reqd": 1
   },
   {
@@ -123,15 +149,19 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "Auto-populated from POS extraction",
    "fieldname": "card_payments",
    "fieldtype": "Currency",
    "label": "Card Payments",
+   "read_only_depends_on": "eval:doc.pos_upload",
    "reqd": 1
   },
   {
+   "description": "Auto-populated from POS extraction",
    "fieldname": "gcash_total",
    "fieldtype": "Currency",
-   "label": "GCash Total",
+   "label": "GCash/QRPH Total",
+   "read_only_depends_on": "eval:doc.pos_upload",
    "reqd": 1
   },
   {
@@ -148,14 +178,57 @@
    "label": "Variance Explanation"
   },
   {
+   "fieldname": "section_weather",
+   "fieldtype": "Section Break",
+   "label": "Weather Conditions"
+  },
+  {
+   "description": "Auto-fetched from Open-Meteo API",
+   "fieldname": "weather_condition",
+   "fieldtype": "Select",
+   "label": "Weather Condition",
+   "options": "\nClear sky\nMainly clear\nPartly cloudy\nOvercast\nFoggy\nLight drizzle\nModerate drizzle\nDense drizzle\nSlight rain\nModerate rain\nHeavy rain\nSlight rain showers\nModerate rain showers\nViolent rain showers\nThunderstorm"
+  },
+  {
+   "description": "Temperature in Celsius (auto-fetched)",
+   "fieldname": "temperature",
+   "fieldtype": "Float",
+   "label": "Temperature (°C)"
+  },
+  {
+   "fieldname": "column_break_weather",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Checked if weather was auto-fetched from API",
+   "fieldname": "weather_auto_fetched",
+   "fieldtype": "Check",
+   "label": "Weather Auto-Fetched",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_checklist",
+   "fieldtype": "Section Break",
+   "label": "Closing Checklist"
+  },
+  {
+   "fieldname": "checklist_items",
+   "fieldtype": "Table",
+   "label": "Checklist Items",
+   "options": "BEI Closing Checklist Item",
+   "reqd": 1
+  },
+  {
    "fieldname": "notes",
    "fieldtype": "Text",
    "label": "Notes"
   },
   {
+   "description": "These photos require document scanning (edge detection, perspective correction)",
    "fieldname": "section_photos_pos",
    "fieldtype": "Section Break",
-   "label": "POS/Reports Photos (5)"
+   "label": "POS/Reports Photos (Document Scanner)"
   },
   {
    "fieldname": "photo_xread_opening",
@@ -170,9 +243,10 @@
    "reqd": 1
   },
   {
+   "description": "Used for OCR validation against POS CSV data",
    "fieldname": "photo_zread",
    "fieldtype": "Attach Image",
-   "label": "3. Z-reading Screenshot",
+   "label": "3. Z-reading (OCR Validated)",
    "reqd": 1
   },
   {
@@ -182,14 +256,14 @@
   {
    "fieldname": "photo_closing_reports",
    "fieldtype": "Attach Image",
-   "label": "4. Closing Reports Screenshot",
-   "reqd": 1
+   "label": "4. Closing Reports Screenshot"
   },
   {
+   "description": "DEPRECATED: Dashboard data now captured via POS Upload",
    "fieldname": "photo_dashboard_report",
    "fieldtype": "Attach Image",
-   "label": "5. Dashboard Report Screenshot",
-   "reqd": 1
+   "hidden": 1,
+   "label": "5. Dashboard Report Screenshot (DEPRECATED)"
   },
   {
    "fieldname": "section_photos_store",
@@ -267,7 +341,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-25 10:00:00.000000",
+ "modified": "2026-01-31 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "BEI Store Closing Report",
