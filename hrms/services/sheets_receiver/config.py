@@ -1,13 +1,27 @@
 """
 Configuration for Sheets Receiver Service.
 
-Defines which sheets to watch, sync mappings, and service settings.
+Defines which sheets/folders to watch, sync mappings, and service settings.
 """
 
 import os
+import json
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 from pathlib import Path
+
+
+@dataclass
+class FolderConfig:
+    """Configuration for a watched folder."""
+    name: str
+    folder_id: str
+    parent_folder_id: Optional[str] = None  # For subfolders
+    store_code: Optional[str] = None        # Normalized store identifier
+    owner_email: str = "ops@bebang.ph"
+    enabled: bool = True
+    file_patterns: List[str] = field(default_factory=lambda: ['*.xlsx', '*.pdf'])
+    processor: str = "pos"  # Processor type: pos, invoice, etc.
 
 
 @dataclass
@@ -174,4 +188,95 @@ def get_sheet_by_spreadsheet_id(spreadsheet_id: str) -> Optional[SheetConfig]:
     for sheet in WATCHED_SHEETS.values():
         if sheet.spreadsheet_id == spreadsheet_id:
             return sheet
+    return None
+
+
+# ============================================================================
+# POS Folder Watch Configuration
+# ============================================================================
+
+# Root folder containing all store POS exports
+POS_ROOT_FOLDER_ID = "1z5_26svRHFmrCujWEY4oQH8eEg6d5YqT"
+POS_ROOT_FOLDER_NAME = "Operations - ERPNEXT Project"
+
+# Store folders - loaded from JSON or discovered via Drive API
+_store_folders_cache: Optional[Dict[str, FolderConfig]] = None
+
+
+def _normalize_store_code(folder_name: str) -> str:
+    """
+    Convert folder name to normalized store code.
+
+    Examples:
+        'SM Megamall' -> 'sm_megamall'
+        'Ayala Market! Market!' -> 'ayala_market_market'
+        'D'VERDE' -> 'd_verde'
+    """
+    import re
+    # Remove special characters, replace spaces/punctuation with underscore
+    code = re.sub(r"[^a-zA-Z0-9\s]", "", folder_name)
+    code = re.sub(r"\s+", "_", code.strip())
+    return code.lower()
+
+
+def load_store_folders() -> Dict[str, FolderConfig]:
+    """
+    Load store folder configurations.
+
+    First tries to load from cached JSON file, falls back to empty dict
+    (folders will be discovered via Drive API on service startup).
+    """
+    global _store_folders_cache
+
+    if _store_folders_cache is not None:
+        return _store_folders_cache
+
+    config = get_config()
+    json_path = Path(config.db_path).parent / "store_folders.json"
+
+    # Also check local development path
+    if not json_path.exists():
+        json_path = Path(__file__).parent.parent.parent.parent / "data" / "POS_Extraction" / "store_folders.json"
+
+    if json_path.exists():
+        try:
+            with open(json_path) as f:
+                data = json.load(f)
+
+            _store_folders_cache = {}
+            for store in data.get("stores", []):
+                # Skip non-store folders
+                if store["name"].startswith("01. Sample") or "Finance Validation" in store["name"]:
+                    continue
+
+                store_code = _normalize_store_code(store["name"])
+                _store_folders_cache[store_code] = FolderConfig(
+                    name=store["name"],
+                    folder_id=store["folder_id"],
+                    parent_folder_id=POS_ROOT_FOLDER_ID,
+                    store_code=store_code,
+                    owner_email="ops@bebang.ph",
+                    enabled=True,
+                    processor="pos"
+                )
+
+            return _store_folders_cache
+        except Exception as e:
+            print(f"Warning: Failed to load store folders from {json_path}: {e}")
+
+    _store_folders_cache = {}
+    return _store_folders_cache
+
+
+def get_watched_folders() -> Dict[str, FolderConfig]:
+    """Get all enabled watched folders."""
+    folders = load_store_folders()
+    return {k: v for k, v in folders.items() if v.enabled}
+
+
+def get_folder_by_id(folder_id: str) -> Optional[FolderConfig]:
+    """Look up folder config by Google Drive folder ID."""
+    for folder in load_store_folders().values():
+        if folder.folder_id == folder_id:
+            return folder
     return None

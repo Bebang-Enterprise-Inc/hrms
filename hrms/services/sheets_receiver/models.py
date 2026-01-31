@@ -131,6 +131,55 @@ class Database:
 
                 CREATE INDEX IF NOT EXISTS idx_watch_expiration
                 ON watch_channels(expiration);
+
+                -- Folder watch tables (POS file processing)
+                CREATE TABLE IF NOT EXISTS folder_watches (
+                    channel_id TEXT PRIMARY KEY,
+                    folder_id TEXT NOT NULL,
+                    folder_name TEXT,
+                    store_code TEXT,
+                    resource_id TEXT,
+                    expiration TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS file_queue (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    file_id TEXT NOT NULL UNIQUE,
+                    file_name TEXT NOT NULL,
+                    folder_id TEXT NOT NULL,
+                    store_code TEXT,
+                    mime_type TEXT,
+                    file_size INTEGER,
+                    md5_checksum TEXT,
+                    status TEXT DEFAULT 'pending',
+                    detected_at TEXT NOT NULL,
+                    processed_at TEXT,
+                    error_message TEXT,
+                    record_count INTEGER DEFAULT 0,
+                    report_type TEXT
+                );
+
+                CREATE TABLE IF NOT EXISTS processed_files (
+                    file_id TEXT PRIMARY KEY,
+                    file_name TEXT NOT NULL,
+                    folder_id TEXT NOT NULL,
+                    store_code TEXT,
+                    md5_checksum TEXT,
+                    processed_at TEXT NOT NULL,
+                    record_count INTEGER DEFAULT 0,
+                    report_type TEXT,
+                    extracted_data TEXT
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_folder_watch_expiration
+                ON folder_watches(expiration);
+
+                CREATE INDEX IF NOT EXISTS idx_file_queue_status
+                ON file_queue(status, detected_at);
+
+                CREATE INDEX IF NOT EXISTS idx_processed_files_store
+                ON processed_files(store_code, processed_at DESC);
             """)
 
     @contextmanager
@@ -289,6 +338,262 @@ class Database:
         """Check if data has changed since last sync."""
         stored = self.get_checksum(spreadsheet_id, sheet_name)
         return stored != new_checksum
+
+    # =========================================================================
+    # Folder Watches (POS file processing)
+    # =========================================================================
+
+    def save_folder_watch(self, watch: Dict[str, Any]):
+        """Save or update a folder watch channel."""
+        with self._connection() as conn:
+            expiration = watch['expiration']
+            if isinstance(expiration, datetime):
+                expiration = expiration.isoformat()
+
+            created_at = watch.get('created_at', datetime.utcnow())
+            if isinstance(created_at, datetime):
+                created_at = created_at.isoformat()
+
+            conn.execute("""
+                INSERT OR REPLACE INTO folder_watches
+                (channel_id, folder_id, folder_name, store_code, resource_id, expiration, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                watch['channel_id'],
+                watch['folder_id'],
+                watch.get('folder_name'),
+                watch.get('store_code'),
+                watch.get('resource_id'),
+                expiration,
+                created_at
+            ))
+
+    def get_folder_watch(self, folder_id: str) -> Optional[Dict[str, Any]]:
+        """Get folder watch by folder ID."""
+        with self._connection() as conn:
+            row = conn.execute(
+                "SELECT * FROM folder_watches WHERE folder_id = ?",
+                (folder_id,)
+            ).fetchone()
+
+            if row:
+                return {
+                    'channel_id': row['channel_id'],
+                    'folder_id': row['folder_id'],
+                    'folder_name': row['folder_name'],
+                    'store_code': row['store_code'],
+                    'resource_id': row['resource_id'],
+                    'expiration': datetime.fromisoformat(row['expiration']),
+                    'created_at': datetime.fromisoformat(row['created_at'])
+                }
+        return None
+
+    def get_folder_watch_by_channel(self, channel_id: str) -> Optional[Dict[str, Any]]:
+        """Get folder watch by channel ID."""
+        with self._connection() as conn:
+            row = conn.execute(
+                "SELECT * FROM folder_watches WHERE channel_id = ?",
+                (channel_id,)
+            ).fetchone()
+
+            if row:
+                return {
+                    'channel_id': row['channel_id'],
+                    'folder_id': row['folder_id'],
+                    'folder_name': row['folder_name'],
+                    'store_code': row['store_code'],
+                    'resource_id': row['resource_id'],
+                    'expiration': datetime.fromisoformat(row['expiration']),
+                    'created_at': datetime.fromisoformat(row['created_at'])
+                }
+        return None
+
+    def get_expiring_folder_watches(self, hours: int = 2) -> List[Dict[str, Any]]:
+        """Get folder watches expiring within given hours."""
+        cutoff = datetime.utcnow()
+        with self._connection() as conn:
+            rows = conn.execute("""
+                SELECT * FROM folder_watches
+                WHERE expiration <= datetime(?, '+' || ? || ' hours')
+            """, (cutoff.isoformat(), hours)).fetchall()
+
+            return [
+                {
+                    'channel_id': row['channel_id'],
+                    'folder_id': row['folder_id'],
+                    'folder_name': row['folder_name'],
+                    'store_code': row['store_code'],
+                    'resource_id': row['resource_id'],
+                    'expiration': datetime.fromisoformat(row['expiration']),
+                    'created_at': datetime.fromisoformat(row['created_at'])
+                }
+                for row in rows
+            ]
+
+    def delete_folder_watch(self, channel_id: str):
+        """Delete a folder watch channel."""
+        with self._connection() as conn:
+            conn.execute(
+                "DELETE FROM folder_watches WHERE channel_id = ?",
+                (channel_id,)
+            )
+
+    def get_all_folder_watches(self) -> List[Dict[str, Any]]:
+        """Get all folder watches."""
+        with self._connection() as conn:
+            rows = conn.execute("SELECT * FROM folder_watches").fetchall()
+
+            return [
+                {
+                    'channel_id': row['channel_id'],
+                    'folder_id': row['folder_id'],
+                    'folder_name': row['folder_name'],
+                    'store_code': row['store_code'],
+                    'resource_id': row['resource_id'],
+                    'expiration': datetime.fromisoformat(row['expiration']),
+                    'created_at': datetime.fromisoformat(row['created_at'])
+                }
+                for row in rows
+            ]
+
+    # =========================================================================
+    # File Queue (POS file processing)
+    # =========================================================================
+
+    def queue_file(self, file_info: Dict[str, Any], store_code: str = None):
+        """Add a file to the processing queue."""
+        with self._connection() as conn:
+            conn.execute("""
+                INSERT OR IGNORE INTO file_queue
+                (file_id, file_name, folder_id, store_code, mime_type, file_size,
+                 md5_checksum, status, detected_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+            """, (
+                file_info['id'],
+                file_info['name'],
+                file_info.get('parents', [''])[0] if 'parents' in file_info else file_info.get('folder_id', ''),
+                store_code,
+                file_info.get('mimeType'),
+                file_info.get('size'),
+                file_info.get('md5Checksum'),
+                datetime.utcnow().isoformat()
+            ))
+
+    def get_pending_files(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get files pending processing."""
+        with self._connection() as conn:
+            rows = conn.execute("""
+                SELECT * FROM file_queue
+                WHERE status = 'pending'
+                ORDER BY detected_at ASC
+                LIMIT ?
+            """, (limit,)).fetchall()
+
+            return [dict(row) for row in rows]
+
+    def update_file_status(
+        self,
+        file_id: str,
+        status: str,
+        record_count: int = 0,
+        report_type: str = None,
+        error: str = None
+    ):
+        """Update file processing status."""
+        with self._connection() as conn:
+            if status == 'completed':
+                conn.execute("""
+                    UPDATE file_queue
+                    SET status = ?, processed_at = ?, record_count = ?, report_type = ?
+                    WHERE file_id = ?
+                """, (status, datetime.utcnow().isoformat(), record_count, report_type, file_id))
+            elif status == 'failed':
+                conn.execute("""
+                    UPDATE file_queue
+                    SET status = ?, error_message = ?
+                    WHERE file_id = ?
+                """, (status, error, file_id))
+            else:
+                conn.execute("""
+                    UPDATE file_queue SET status = ? WHERE file_id = ?
+                """, (status, file_id))
+
+    def is_file_processed(self, file_id: str) -> bool:
+        """Check if a file has already been processed."""
+        with self._connection() as conn:
+            row = conn.execute("""
+                SELECT 1 FROM processed_files WHERE file_id = ?
+                UNION
+                SELECT 1 FROM file_queue WHERE file_id = ? AND status IN ('completed', 'processing')
+            """, (file_id, file_id)).fetchone()
+
+            return row is not None
+
+    def mark_file_processed(
+        self,
+        file_id: str,
+        file_name: str,
+        folder_id: str,
+        store_code: str,
+        md5_checksum: str,
+        record_count: int,
+        report_type: str,
+        extracted_data: Dict = None
+    ):
+        """Record a processed file."""
+        with self._connection() as conn:
+            conn.execute("""
+                INSERT OR REPLACE INTO processed_files
+                (file_id, file_name, folder_id, store_code, md5_checksum,
+                 processed_at, record_count, report_type, extracted_data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                file_id,
+                file_name,
+                folder_id,
+                store_code,
+                md5_checksum,
+                datetime.utcnow().isoformat(),
+                record_count,
+                report_type,
+                json.dumps(extracted_data) if extracted_data else None
+            ))
+
+    def get_processed_files(
+        self,
+        store_code: str = None,
+        since: datetime = None,
+        limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """Get list of processed files."""
+        with self._connection() as conn:
+            query = "SELECT * FROM processed_files WHERE 1=1"
+            params = []
+
+            if store_code:
+                query += " AND store_code = ?"
+                params.append(store_code)
+
+            if since:
+                query += " AND processed_at >= ?"
+                params.append(since.isoformat())
+
+            query += " ORDER BY processed_at DESC LIMIT ?"
+            params.append(limit)
+
+            rows = conn.execute(query, params).fetchall()
+            return [dict(row) for row in rows]
+
+    def get_file_queue_summary(self) -> Dict[str, int]:
+        """Get summary counts of file queue by status."""
+        with self._connection() as conn:
+            rows = conn.execute("""
+                SELECT status, COUNT(*) as count
+                FROM file_queue
+                GROUP BY status
+            """).fetchall()
+
+            return {row['status']: row['count'] for row in rows}
 
 
 # Singleton instance

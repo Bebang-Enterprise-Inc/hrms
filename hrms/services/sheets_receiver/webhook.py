@@ -369,6 +369,410 @@ async def acknowledge_alert(alert_id: int):
         raise HTTPException(status_code=404, detail=f"Alert {alert_id} not found")
 
 
+# ========================================
+# FOLDER WATCHING ENDPOINTS (POS Files)
+# ========================================
+
+@app.post("/webhook/folder")
+async def handle_folder_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    x_goog_channel_id: Optional[str] = Header(None, alias="X-Goog-Channel-ID"),
+    x_goog_resource_id: Optional[str] = Header(None, alias="X-Goog-Resource-ID"),
+    x_goog_resource_state: Optional[str] = Header(None, alias="X-Goog-Resource-State"),
+    x_goog_changed: Optional[str] = Header(None, alias="X-Goog-Changed"),
+):
+    """
+    Handle Google Drive folder push notification.
+
+    When files are added/modified in a watched folder, Google sends a notification.
+    We respond quickly and process in background.
+    """
+    logger.info(
+        f"Folder webhook received: state={x_goog_resource_state}, "
+        f"channel={x_goog_channel_id}, changed={x_goog_changed}"
+    )
+
+    if x_goog_resource_state == 'sync':
+        return {"status": "sync_acknowledged"}
+
+    if not x_goog_channel_id:
+        logger.warning("No channel ID in folder webhook")
+        return {"status": "missing_channel_id"}
+
+    # Look up folder watch
+    from .models import get_db
+    db = get_db()
+    watch = db.get_folder_watch_by_channel(x_goog_channel_id)
+
+    if not watch:
+        logger.warning(f"Unknown folder channel: {x_goog_channel_id}")
+        return {"status": "unknown_channel"}
+
+    # Process in background
+    background_tasks.add_task(
+        process_folder_change_background,
+        folder_id=watch['folder_id'],
+        folder_name=watch['folder_name'],
+        store_code=watch.get('store_code'),
+        resource_state=x_goog_resource_state
+    )
+
+    return {"status": "processing", "folder": watch['folder_name']}
+
+
+async def process_folder_change_background(
+    folder_id: str,
+    folder_name: str,
+    store_code: str,
+    resource_state: str
+):
+    """Background task to check for new files in folder."""
+    try:
+        from .folder_watcher import get_folder_watcher
+        from .models import get_db
+
+        watcher = get_folder_watcher()
+        db = get_db()
+
+        # Get files modified in last hour (Google doesn't tell us which file changed)
+        from datetime import datetime, timedelta
+        since = datetime.utcnow() - timedelta(hours=1)
+
+        new_files = watcher.list_new_files(folder_id, since=since)
+
+        queued_count = 0
+        for file_info in new_files:
+            if not db.is_file_processed(file_info['id']):
+                file_info['folder_id'] = folder_id
+                db.queue_file(file_info, store_code=store_code)
+                queued_count += 1
+                logger.info(f"Queued new file: {file_info['name']} from {folder_name}")
+
+        logger.info(f"Folder change processed: {folder_name}, {queued_count} files queued")
+
+    except Exception as e:
+        logger.error(f"Error processing folder change for {folder_name}: {e}")
+
+
+@app.post("/api/folders/seed")
+async def seed_existing_files():
+    """
+    Mark all existing files in watched folders as 'already processed'.
+
+    CRITICAL: Run this BEFORE setting up watches to prevent reprocessing
+    files that were already extracted (e.g., January 2026 data).
+
+    Files are marked with report_type='seeded' and record_count=0 to
+    distinguish them from actually processed files.
+    """
+    from .folder_watcher import get_folder_watcher
+    from .models import get_db
+    from .config import get_watched_folders
+    from datetime import datetime
+
+    watcher = get_folder_watcher()
+    db = get_db()
+    folders = get_watched_folders()
+
+    total_seeded = 0
+    folder_counts = {}
+
+    for store_code, folder_config in folders.items():
+        try:
+            # Get ALL files in folder (no time filter)
+            files = watcher.list_new_files(folder_config.folder_id, since=None)
+
+            seeded = 0
+            for file_info in files:
+                if not db.is_file_processed(file_info['id']):
+                    # Mark as processed WITHOUT extracting data
+                    db.mark_file_processed(
+                        file_id=file_info['id'],
+                        file_name=file_info['name'],
+                        folder_id=folder_config.folder_id,
+                        store_code=store_code,
+                        md5_checksum=file_info.get('md5Checksum', ''),
+                        record_count=0,  # 0 = seeded, not extracted
+                        report_type='seeded',
+                        extracted_data={
+                            'seeded_at': datetime.utcnow().isoformat(),
+                            'reason': 'pre-existing file, already processed in Jan 2026 extraction'
+                        }
+                    )
+                    seeded += 1
+
+            folder_counts[folder_config.name] = seeded
+            total_seeded += seeded
+            logger.info(f"Seeded {seeded} existing files in {folder_config.name}")
+
+        except Exception as e:
+            logger.error(f"Error seeding {folder_config.name}: {e}")
+            folder_counts[folder_config.name] = f"ERROR: {str(e)}"
+
+    return {
+        'status': 'success',
+        'message': 'Existing files marked as processed - will NOT be re-extracted',
+        'total_seeded': total_seeded,
+        'by_folder': folder_counts
+    }
+
+
+@app.post("/api/folders/setup")
+async def setup_folder_watches(seed_existing: bool = True):
+    """
+    Set up watches for all POS store folders.
+
+    Args:
+        seed_existing: If True (default), mark all existing files as processed
+                      BEFORE creating watches. This prevents reprocessing
+                      files from January 2026 that were already extracted.
+
+    Process:
+        1. Seed existing files (if enabled) - marks ~6000 files as 'seeded'
+        2. Create folder watches for all 43 stores
+        3. Only NEW uploads after this point will be processed
+    """
+    from .folder_watcher import get_folder_watcher
+
+    result = {
+        'status': 'success',
+        'seeding': None,
+        'watches_created': 0,
+        'watches': []
+    }
+
+    # Step 1: Seed existing files first (CRITICAL - prevents reprocessing)
+    if seed_existing:
+        logger.info("Seeding existing files before creating watches...")
+        seed_result = await seed_existing_files()
+        result['seeding'] = {
+            'total_seeded': seed_result['total_seeded'],
+            'message': 'Existing files marked as processed - only NEW uploads will be extracted'
+        }
+
+    # Step 2: Create folder watches
+    watcher = get_folder_watcher()
+    watches = watcher.setup_all_folder_watches()
+
+    result['watches_created'] = len(watches)
+    result['watches'] = [
+        {
+            'folder_name': w.get('folder_name'),
+            'store_code': w.get('store_code'),
+            'channel_id': w.get('channel_id'),
+            'expires': w.get('expiration').isoformat() if hasattr(w.get('expiration'), 'isoformat') else w.get('expiration')
+        }
+        for w in watches
+    ]
+
+    return result
+
+
+@app.post("/api/folders/renew")
+async def renew_folder_watches():
+    """Renew expiring folder watches."""
+    from .folder_watcher import get_folder_watcher
+
+    watcher = get_folder_watcher()
+    renewed = watcher.renew_expiring_folder_watches()
+
+    return {
+        'status': 'success',
+        'watches_renewed': len(renewed)
+    }
+
+
+@app.get("/api/folders/status")
+async def get_folder_status():
+    """Get status of all folder watches."""
+    from .models import get_db
+
+    db = get_db()
+    watches = db.get_all_folder_watches()
+    queue_summary = db.get_file_queue_summary()
+
+    from datetime import datetime
+    now = datetime.utcnow()
+
+    return {
+        'service': 'folder-watcher',
+        'total_folders': len(watches),
+        'watches': [
+            {
+                'folder_name': w['folder_name'],
+                'store_code': w['store_code'],
+                'hours_until_expiry': (w['expiration'] - now).total_seconds() / 3600
+            }
+            for w in watches
+        ],
+        'file_queue': queue_summary
+    }
+
+
+@app.get("/api/files/queue")
+async def get_file_queue(status: Optional[str] = None, limit: int = 50):
+    """Get files in processing queue."""
+    from .models import get_db
+
+    db = get_db()
+
+    if status == 'pending':
+        files = db.get_pending_files(limit=limit)
+    else:
+        # Get all files from queue
+        with db._connection() as conn:
+            if status:
+                rows = conn.execute(
+                    "SELECT * FROM file_queue WHERE status = ? ORDER BY detected_at DESC LIMIT ?",
+                    (status, limit)
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM file_queue ORDER BY detected_at DESC LIMIT ?",
+                    (limit,)
+                ).fetchall()
+            files = [dict(row) for row in rows]
+
+    return {
+        'total': len(files),
+        'files': files
+    }
+
+
+@app.get("/api/files/processed")
+async def get_processed_files(store_code: Optional[str] = None, limit: int = 100):
+    """Get list of processed files."""
+    from .models import get_db
+
+    db = get_db()
+    files = db.get_processed_files(store_code=store_code, limit=limit)
+
+    return {
+        'total': len(files),
+        'files': files
+    }
+
+
+@app.post("/api/files/{file_id}/reprocess")
+async def reprocess_file(file_id: str, background_tasks: BackgroundTasks):
+    """Reprocess a failed file."""
+    from .models import get_db
+
+    db = get_db()
+
+    # Update status back to pending
+    db.update_file_status(file_id, 'pending')
+
+    return {'status': 'requeued', 'file_id': file_id}
+
+
+@app.post("/api/folders/scan")
+async def scan_folder(folder_id: str, background_tasks: BackgroundTasks):
+    """
+    Manually scan a folder for new files.
+
+    Useful for initial setup or if webhooks missed something.
+    """
+    from .folder_watcher import get_folder_watcher
+    from .models import get_db
+    from .config import get_folder_by_id
+
+    watcher = get_folder_watcher()
+    db = get_db()
+
+    folder_config = get_folder_by_id(folder_id)
+    store_code = folder_config.store_code if folder_config else None
+
+    # Get all files in folder
+    files = watcher.list_new_files(folder_id, since=None)
+
+    queued = 0
+    skipped = 0
+    for file_info in files:
+        if db.is_file_processed(file_info['id']):
+            skipped += 1
+        else:
+            file_info['folder_id'] = folder_id
+            db.queue_file(file_info, store_code=store_code)
+            queued += 1
+
+    return {
+        'status': 'scanned',
+        'folder_id': folder_id,
+        'files_queued': queued,
+        'files_skipped': skipped
+    }
+
+
+@app.post("/api/files/process")
+async def process_pending_files(background_tasks: BackgroundTasks, limit: int = 10):
+    """
+    Process pending files from the queue.
+
+    Downloads files from Google Drive, extracts POS data, and updates
+    the database. Use this to manually trigger processing.
+
+    Args:
+        limit: Maximum files to process (default 10)
+    """
+    from .file_processor import get_file_processor
+
+    processor = get_file_processor()
+    result = processor.process_pending_files(limit=limit)
+
+    return result
+
+
+@app.post("/api/files/process-all")
+async def process_all_pending_files(background_tasks: BackgroundTasks):
+    """
+    Process ALL pending files in the queue.
+
+    Warning: This may take a while if there are many files.
+    Consider using /api/files/process with limit for batches.
+    """
+    from .file_processor import get_file_processor
+    from .models import get_db
+
+    db = get_db()
+    queue_summary = db.get_file_queue_summary()
+    pending_count = queue_summary.get('pending', 0)
+
+    if pending_count == 0:
+        return {
+            'status': 'no_pending_files',
+            'message': 'No files in queue to process'
+        }
+
+    # Process in background
+    async def process_all():
+        processor = get_file_processor()
+        total_processed = 0
+        total_failed = 0
+        total_records = 0
+
+        while True:
+            result = processor.process_pending_files(limit=20)
+            if result.get('processed', 0) == 0 and result.get('failed', 0) == 0:
+                break
+
+            total_processed += result.get('processed', 0)
+            total_failed += result.get('failed', 0)
+            total_records += result.get('total_records', 0)
+
+        logger.info(f"Process-all complete: {total_processed} processed, "
+                   f"{total_failed} failed, {total_records} records")
+
+    background_tasks.add_task(process_all)
+
+    return {
+        'status': 'processing_started',
+        'pending_files': pending_count,
+        'message': f'Processing {pending_count} files in background'
+    }
+
+
 def run_server():
     """Run the webhook server."""
     config = get_config()
