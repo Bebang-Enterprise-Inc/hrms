@@ -1,0 +1,49 @@
+# Sheets Receiver - Standalone Deployment
+# NOT part of Frappe stack - runs independently on same server
+# Temporary service for ERP migration period
+
+version: "3.8"
+
+services:
+  sheets-receiver:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: sheets-receiver
+    restart: unless-stopped
+
+    environment:
+      # Google API
+      GOOGLE_SERVICE_ACCOUNT_FILE: /app/credentials/task-manager-service.json
+      IMPERSONATE_USER: sam@bebang.ph
+
+      # Frappe API - calls external URL (not internal Docker network)
+      FRAPPE_URL: https://hq.bebang.ph
+      FRAPPE_API_KEY: ${FRAPPE_API_KEY}
+      FRAPPE_API_SECRET: ${FRAPPE_API_SECRET}
+
+      # Webhook - Google sends to this URL
+      PUBLIC_WEBHOOK_URL: https://hq.bebang.ph/sheets-webhook
+      SHEETS_RECEIVER_PORT: 8765
+
+      # Logging
+      LOG_LEVEL: INFO
+
+    volumes:
+      # Google service account (copy from main credentials folder)
+      - ./credentials:/app/credentials:ro
+
+      # Persistent data
+      - ./data:/app/data
+
+      # Logs
+      - ./logs:/app/logs
+
+    ports:
+      - "127.0.0.1:8765:8765"  # Only localhost - nginx will proxy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
