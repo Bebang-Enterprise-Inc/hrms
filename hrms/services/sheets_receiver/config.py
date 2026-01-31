@@ -103,7 +103,7 @@ WATCHED_SHEETS: Dict[str, SheetConfig] = {
     'ar_aging': SheetConfig(
         name='AR Aging',
         spreadsheet_id='1puwkr5hzrki9srxq10_jOeb5mfngkbo-VVpydmAf2kQ',
-        sheet_name='AR Details',
+        sheet_name='AR',  # Actual tab name
         range='A:Z',
         owner_email='alyssa@bebang.ph',
         sync_endpoint='/api/method/hrms.api.erp_sync.sync_ar_aging',
@@ -114,7 +114,7 @@ WATCHED_SHEETS: Dict[str, SheetConfig] = {
     'inventory': SheetConfig(
         name='Inventory',
         spreadsheet_id='1Eh_BhDK_LgdOzJ002F7XUYLBsd4EM8ec7sPz43mudGc',
-        sheet_name='Summary 2026',
+        sheet_name='SUMMARY 2026',  # Case-sensitive tab name
         range='A:Z',
         owner_email='ian@bebang.ph',
         sync_endpoint='/api/method/hrms.api.erp_sync.sync_inventory',
@@ -125,7 +125,7 @@ WATCHED_SHEETS: Dict[str, SheetConfig] = {
     'coa': SheetConfig(
         name='Chart of Accounts',
         spreadsheet_id='1EXCd4Ah2n6Q42vQvTG3dYLFzPsPFhdbzmHp_2wBpN7g',
-        sheet_name='COA',
+        sheet_name='01 - Chart of Accounts (217)',  # Actual tab name
         range='A:I',
         owner_email='sam@bebang.ph',
         sync_endpoint='/api/method/hrms.api.erp_sync.sync_coa',
@@ -136,7 +136,7 @@ WATCHED_SHEETS: Dict[str, SheetConfig] = {
     'bank_directory': SheetConfig(
         name='Bank Directory',
         spreadsheet_id='1rkQDLREjTG8eyqB7wO5rRsnkjvaasOgmnPcKnqjXNnY',
-        sheet_name='Bank Directory',
+        sheet_name='02 - Bank Directory (53)',  # Actual tab name
         range='A:G',
         owner_email='sam@bebang.ph',
         sync_endpoint='/api/method/hrms.api.erp_sync.sync_bank_accounts',
