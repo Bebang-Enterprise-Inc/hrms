@@ -436,21 +436,18 @@
   {
    "fieldname": "photo_xread_opening",
    "fieldtype": "Attach Image",
-   "label": "1. X-reading Opening Cutoff",
-   "reqd": 1
+   "label": "1. X-reading Opening Cutoff"
   },
   {
    "fieldname": "photo_xread_closing",
    "fieldtype": "Attach Image",
-   "label": "2. X-reading Closing Cutoff",
-   "reqd": 1
+   "label": "2. X-reading Closing Cutoff"
   },
   {
    "description": "Used for OCR validation against POS CSV data",
    "fieldname": "photo_zread",
    "fieldtype": "Attach Image",
-   "label": "3. Z-reading (OCR Validated)",
-   "reqd": 1
+   "label": "3. Z-reading (OCR Validated)"
   },
   {
    "fieldname": "column_break_photos_pos",
@@ -476,20 +473,17 @@
   {
    "fieldname": "photo_logo_signage",
    "fieldtype": "Attach Image",
-   "label": "6. Logo/Signage (off)",
-   "reqd": 1
+   "label": "6. Logo/Signage (off)"
   },
   {
    "fieldname": "photo_hygrometer",
    "fieldtype": "Attach Image",
-   "label": "7. Hygrometer Reading",
-   "reqd": 1
+   "label": "7. Hygrometer Reading"
   },
   {
    "fieldname": "photo_water_meter",
    "fieldtype": "Attach Image",
-   "label": "8. Water Meter Reading",
-   "reqd": 1
+   "label": "8. Water Meter Reading"
   },
   {
    "fieldname": "column_break_photos_store1",
@@ -498,20 +492,17 @@
   {
    "fieldname": "photo_backup_area_clean",
    "fieldtype": "Attach Image",
-   "label": "9. Backup Area (clean)",
-   "reqd": 1
+   "label": "9. Backup Area (clean)"
   },
   {
    "fieldname": "photo_frozen_milk_clean",
    "fieldtype": "Attach Image",
-   "label": "10. Frozen Milk Area (clean)",
-   "reqd": 1
+   "label": "10. Frozen Milk Area (clean)"
   },
   {
    "fieldname": "photo_toppings_clean",
    "fieldtype": "Attach Image",
-   "label": "11. Toppings Area (clean)",
-   "reqd": 1
+   "label": "11. Toppings Area (clean)"
   },
   {
    "fieldname": "column_break_photos_store2",
@@ -520,26 +511,22 @@
   {
    "fieldname": "photo_dispatch_clean",
    "fieldtype": "Attach Image",
-   "label": "12. Dispatch Area (clean)",
-   "reqd": 1
+   "label": "12. Dispatch Area (clean)"
   },
   {
    "fieldname": "photo_cold_storage_close",
    "fieldtype": "Attach Image",
-   "label": "13. Cold Storage Temp (closing)",
-   "reqd": 1
+   "label": "13. Cold Storage Temp (closing)"
   },
   {
    "fieldname": "photo_cashier_clean",
    "fieldtype": "Attach Image",
-   "label": "14. Cashier Area (clean)",
-   "reqd": 1
+   "label": "14. Cashier Area (clean)"
   },
   {
    "fieldname": "photo_rollup_closed",
    "fieldtype": "Attach Image",
-   "label": "15. Roll-up (closed)",
-   "reqd": 1
+   "label": "15. Roll-up (closed)"
   }
  ],
  "index_web_pages_for_search": 1,
