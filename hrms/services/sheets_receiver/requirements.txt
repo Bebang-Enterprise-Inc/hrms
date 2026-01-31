@@ -15,5 +15,6 @@ requests>=2.31.0
 # Scheduling
 schedule>=1.2.0
 
-# Data handling (already in Frappe stack, but listed for standalone)
-# pandas>=2.0.0  # Optional - for data transformation
+# Data handling
+pandas>=2.0.0
+openpyxl>=3.1.0  # For Excel file reading
