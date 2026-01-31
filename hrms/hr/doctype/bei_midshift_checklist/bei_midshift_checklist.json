@@ -129,6 +129,18 @@
    "role": "HR User",
    "share": 1,
    "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee"
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee Self Service"
   }
  ],
  "sort_field": "creation",
