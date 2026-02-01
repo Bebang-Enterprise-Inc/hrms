@@ -151,12 +151,16 @@ class POSExtractor:
 
         logger.info(f"Extracting {report_type} from {filename}")
 
-        # Read Excel file
+        # Read Excel file - use appropriate engine based on file extension
+        # .xlsx = openpyxl (new format), .xls = xlrd (old format)
         try:
+            file_ext = Path(file_path).suffix.lower()
+            engine = 'xlrd' if file_ext == '.xls' else 'openpyxl'
+
             df = pd.read_excel(
                 file_path,
                 header=schema['header_row'],
-                engine='openpyxl'
+                engine=engine
             )
         except Exception as e:
             logger.error(f"Failed to read Excel file {filename}: {e}")
@@ -206,11 +210,14 @@ class POSExtractor:
 
         try:
             # Read first N rows as metadata
+            file_ext = Path(file_path).suffix.lower()
+            engine = 'xlrd' if file_ext == '.xls' else 'openpyxl'
+
             df_meta = pd.read_excel(
                 file_path,
                 header=None,
                 nrows=schema['header_row'],
-                engine='openpyxl'
+                engine=engine
             )
 
             # Common metadata patterns

@@ -17,4 +17,5 @@ schedule>=1.2.0
 
 # Data handling
 pandas>=2.0.0
-openpyxl>=3.1.0  # For Excel file reading
+openpyxl>=3.1.0  # For .xlsx files (Excel 2007+)
+xlrd>=2.0.1  # For .xls files (Excel 97-2003)
