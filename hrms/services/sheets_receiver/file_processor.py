@@ -40,8 +40,9 @@ class FileProcessor:
         self.db = get_db()
         self.temp_dir = Path(tempfile.gettempdir()) / "pos_processing"
         self.temp_dir.mkdir(exist_ok=True)
-        # Default 10 workers - Google Drive handles concurrent requests well
-        self.max_workers = max_workers or int(os.environ.get('PARALLEL_WORKERS', '10'))
+        # Default 5 workers - conservative to avoid Google Drive SSL/rate limit errors
+        # Can increase via PARALLEL_WORKERS env var if needed
+        self.max_workers = max_workers or int(os.environ.get('PARALLEL_WORKERS', '5'))
 
     def process_queued_file(self, queue_entry: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -212,18 +213,20 @@ class FileProcessor:
         return results
 
 
-    def process_all_pending(self, batch_size: int = 50) -> Dict[str, Any]:
+    def process_all_pending(self, batch_size: int = 25) -> Dict[str, Any]:
         """
         Process ALL pending files in batches with parallel processing.
 
         For initial backlog processing of large queues.
 
         Args:
-            batch_size: Files per batch (default 50 for optimal throughput)
+            batch_size: Files per batch (default 25 - conservative for Google Drive API limits)
 
         Returns:
             Summary of all processing
         """
+        import time
+
         total_results = {
             'status': 'completed',
             'processed': 0,
@@ -250,6 +253,9 @@ class FileProcessor:
                 f"{batch_result['failed']} failed, "
                 f"Total so far: {total_results['processed']}"
             )
+
+            # Small delay between batches to let Google API connections settle
+            time.sleep(1)
 
         return total_results
 
