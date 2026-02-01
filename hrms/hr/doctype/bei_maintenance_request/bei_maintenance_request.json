@@ -23,6 +23,7 @@
 		"description",
 		"section_photos",
 		"before_photos",
+		"photos",
 		"section_assignment",
 		"assigned_to",
 		"vendor",
@@ -141,7 +142,15 @@
 		{
 			"fieldname": "before_photos",
 			"fieldtype": "Attach Image",
-			"label": "Before Photos (showing the problem)"
+			"hidden": 1,
+			"label": "Before Photos (showing the problem)",
+			"description": "Deprecated - use Photos table instead"
+		},
+		{
+			"fieldname": "photos",
+			"fieldtype": "Table",
+			"label": "Photos",
+			"options": "BEI Maintenance Request Photo"
 		},
 		{
 			"fieldname": "section_assignment",
@@ -239,7 +248,7 @@
 			"link_fieldname": "maintenance_request"
 		}
 	],
-	"modified": "2026-01-31 10:00:00.000000",
+	"modified": "2026-02-01 10:00:00.000000",
 	"modified_by": "Administrator",
 	"module": "HR",
 	"name": "BEI Maintenance Request",

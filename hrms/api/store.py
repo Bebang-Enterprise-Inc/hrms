@@ -1149,7 +1149,7 @@ def get_mid_shift_handovers(store, date=None, limit=10):
 def submit_maintenance_request(store, priority, description,
                                 issue_category=None, category=None,
                                 equipment_area=None, impact_on_operations=None,
-                                title=None, before_photos=None):
+                                title=None, before_photos=None, photos=None):
     """
     Submit a maintenance request from store staff.
     Notifies Projects team (Daniel) for assessment and assignment.
@@ -1163,8 +1163,11 @@ def submit_maintenance_request(store, priority, description,
         equipment_area: Specific equipment/area affected (optional)
         impact_on_operations: Can Operate, Partial Impact, Cannot Operate (optional)
         title: Issue title (optional, prepended to description)
-        before_photos: Photo evidence (optional)
+        before_photos: Single photo (deprecated, for backward compatibility)
+        photos: JSON array of photo objects [{photo: url, caption: text}, ...]
     """
+    import json
+
     if not store:
         frappe.throw(_("Store is required"))
 
@@ -1189,9 +1192,29 @@ def submit_maintenance_request(store, priority, description,
     doc.priority = priority
     doc.description = full_description
     doc.impact_on_operations = impact_on_operations or "Can Operate"
-    doc.before_photos = before_photos
     doc.reported_by = frappe.session.user
     doc.status = "Open"
+
+    # Handle photos - support both old single photo and new array format
+    if photos:
+        # Parse JSON if string
+        if isinstance(photos, str):
+            photos = json.loads(photos)
+
+        # Add each photo to the child table
+        for photo_data in photos:
+            if isinstance(photo_data, str):
+                # Simple URL string
+                doc.append("photos", {"photo": photo_data})
+            elif isinstance(photo_data, dict):
+                # Object with photo and optional caption
+                doc.append("photos", {
+                    "photo": photo_data.get("photo") or photo_data.get("url"),
+                    "caption": photo_data.get("caption", "")
+                })
+    elif before_photos:
+        # Backward compatibility: convert single photo to child table entry
+        doc.append("photos", {"photo": before_photos})
 
     doc.insert()
 
