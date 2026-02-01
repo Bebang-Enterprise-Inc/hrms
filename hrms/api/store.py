@@ -1185,7 +1185,7 @@ def submit_maintenance_request(store, priority, description,
     doc.store = warehouse
     doc.request_date = nowdate()
     doc.issue_category = final_category
-    doc.equipment_area = equipment_area or "General"
+    doc.equipment_area = equipment_area or "Other"
     doc.priority = priority
     doc.description = full_description
     doc.impact_on_operations = impact_on_operations or "Can Operate"
