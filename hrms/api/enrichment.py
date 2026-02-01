@@ -720,7 +720,6 @@ def get_enrichment_tracker(
             "custom_enrichment_status as enrichment_status",
             "user_id as email",
             "cell_number",
-            "last_login",
         ],
         order_by="custom_enrichment_status asc, employee_name asc",
         start=offset,
