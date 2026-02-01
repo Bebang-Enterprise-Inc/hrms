@@ -165,7 +165,10 @@ class FileProcessor:
             'workers': self.max_workers if parallel else 1
         }
 
-        if parallel and len(pending) > 1:
+        # NOTE: Parallel processing disabled due to Google API client thread-safety issues
+        # The googleapiclient shared state causes memory corruption when used with ThreadPoolExecutor
+        # TODO: Fix by using thread-local Drive service instances
+        if False and parallel and len(pending) > 1:
             # Parallel processing with ThreadPoolExecutor
             workers = min(self.max_workers, len(pending))
             logger.info(f"Processing {len(pending)} files with {workers} parallel workers")
