@@ -730,34 +730,58 @@ async def scan_all_folders(background_tasks: BackgroundTasks):
 
 
 @app.post("/api/files/process")
-async def process_pending_files(background_tasks: BackgroundTasks, limit: int = 10):
+async def process_pending_files(
+    background_tasks: BackgroundTasks,
+    limit: int = 50,
+    parallel: bool = True,
+    workers: int = 10
+):
     """
-    Process pending files from the queue.
+    Process pending files from the queue with parallel processing.
 
     Downloads files from Google Drive, extracts POS data, and updates
-    the database. Use this to manually trigger processing.
+    the database. Uses parallel workers to overcome Google Drive API latency.
 
     Args:
-        limit: Maximum files to process (default 10)
-    """
-    from .file_processor import get_file_processor
+        limit: Maximum files to process (default 50)
+        parallel: Use parallel processing (default True)
+        workers: Number of parallel workers (default 10)
 
-    processor = get_file_processor()
-    result = processor.process_pending_files(limit=limit)
+    Performance:
+        Sequential: ~1.3s/file (Google Drive latency bottleneck)
+        Parallel (10 workers): ~0.13s/file effective throughput
+    """
+    from .file_processor import FileProcessor
+
+    processor = FileProcessor(max_workers=workers)
+    result = processor.process_pending_files(limit=limit, parallel=parallel)
 
     return result
 
 
 @app.post("/api/files/process-all")
-async def process_all_pending_files(background_tasks: BackgroundTasks):
+async def process_all_pending_files(
+    background_tasks: BackgroundTasks,
+    batch_size: int = 50,
+    workers: int = 10
+):
     """
-    Process ALL pending files in the queue.
+    Process ALL pending files in the queue with parallel processing.
 
-    Warning: This may take a while if there are many files.
-    Consider using /api/files/process with limit for batches.
+    Uses parallel workers for high throughput processing of large queues.
+
+    Args:
+        batch_size: Files per batch (default 50)
+        workers: Parallel workers per batch (default 10)
+
+    Performance estimate:
+        - 6,300 files with 10 workers at 1.3s/file
+        - Effective: ~13 files/sec = ~8 minutes total
+        - vs Sequential: ~2.3 hours
     """
-    from .file_processor import get_file_processor
+    from .file_processor import FileProcessor
     from .models import get_db
+    import time
 
     db = get_db()
     queue_summary = db.get_file_queue_summary()
@@ -769,31 +793,24 @@ async def process_all_pending_files(background_tasks: BackgroundTasks):
             'message': 'No files in queue to process'
         }
 
-    # Process in background
-    async def process_all():
-        processor = get_file_processor()
-        total_processed = 0
-        total_failed = 0
-        total_records = 0
+    start_time = time.time()
 
-        while True:
-            result = processor.process_pending_files(limit=20)
-            if result.get('processed', 0) == 0 and result.get('failed', 0) == 0:
-                break
+    # Process synchronously for now to get accurate timing
+    processor = FileProcessor(max_workers=workers)
+    result = processor.process_all_pending(batch_size=batch_size)
 
-            total_processed += result.get('processed', 0)
-            total_failed += result.get('failed', 0)
-            total_records += result.get('total_records', 0)
-
-        logger.info(f"Process-all complete: {total_processed} processed, "
-                   f"{total_failed} failed, {total_records} records")
-
-    background_tasks.add_task(process_all)
+    elapsed = time.time() - start_time
+    files_per_sec = result['processed'] / elapsed if elapsed > 0 else 0
 
     return {
-        'status': 'processing_started',
-        'pending_files': pending_count,
-        'message': f'Processing {pending_count} files in background'
+        'status': 'completed',
+        'processed': result['processed'],
+        'failed': result['failed'],
+        'total_records': result['total_records'],
+        'batches': result['batches'],
+        'elapsed_seconds': round(elapsed, 1),
+        'files_per_second': round(files_per_sec, 2),
+        'parallel_workers': workers
     }
 
 
