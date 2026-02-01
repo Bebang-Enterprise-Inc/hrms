@@ -195,6 +195,68 @@ jobs:
             --command-id "$COMMAND_ID" \
             --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
 
+      - name: Configure Blip webhook proxy
+        run: |
+          echo "🤖 Configuring nginx proxy for Blip webhook..."
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "FRONTEND_CONTAINER=$(docker ps --filter name=frappe_frontend --format \"{{.Names}}\" | head -1)",
+              "if [ -z \"$FRONTEND_CONTAINER\" ]; then echo \"❌ Frontend container not found\"; exit 1; fi",
+              "",
+              "# Create Python script to inject Blip location block",
+              "cat > /tmp/add_blip_nginx.py << PYEOF",
+              "import re",
+              "",
+              "with open(\"/etc/nginx/conf.d/frappe.conf\", \"r\") as f:",
+              "    content = f.read()",
+              "",
+              "blip_block = \"\"\"",
+              "\\tlocation /webhook/gchat {",
+              "\\t\\tproxy_http_version 1.1;",
+              "\\t\\tproxy_set_header Host \\$host;",
+              "\\t\\tproxy_set_header X-Real-IP \\$remote_addr;",
+              "\\t\\tproxy_set_header X-Forwarded-For \\$proxy_add_x_forwarded_for;",
+              "\\t\\tproxy_set_header X-Forwarded-Proto \\$scheme;",
+              "\\t\\tproxy_pass http://172.17.0.1:8766/webhook/gchat;",
+              "\\t}",
+              "\"\"\"",
+              "",
+              "if \"location /webhook/gchat\" not in content:",
+              "    content = content.replace(\"location /socket.io\", blip_block + \"\\n\\tlocation /socket.io\")",
+              "    with open(\"/etc/nginx/conf.d/frappe.conf\", \"w\") as f:",
+              "        f.write(content)",
+              "    print(\"Added Blip location block\")",
+              "else:",
+              "    print(\"Blip location block already exists\")",
+              "PYEOF",
+              "",
+              "# Copy and execute script in container",
+              "docker cp /tmp/add_blip_nginx.py $FRONTEND_CONTAINER:/tmp/",
+              "docker exec $FRONTEND_CONTAINER python3 /tmp/add_blip_nginx.py",
+              "",
+              "# Test and reload nginx",
+              "docker exec $FRONTEND_CONTAINER nginx -t",
+              "docker exec $FRONTEND_CONTAINER nginx -s reload",
+              "echo \"✅ Blip webhook proxy configured!\""
+            ]' \
+            --output text \
+            --query 'Command.CommandId')
+
+          echo "📋 Blip Config Command ID: $COMMAND_ID"
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
+
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
+            --query '[Status, StandardOutputContent, StandardErrorContent]' \
+            --output text
+
       - name: Run migrations (if enabled)
         if: ${{ github.event.inputs.run_migrate != 'false' }}
         run: |
