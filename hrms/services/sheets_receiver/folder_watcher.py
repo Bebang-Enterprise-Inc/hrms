@@ -3,10 +3,14 @@ Google Drive Folder Watcher for POS File Processing.
 
 Watches store folders for new file uploads and queues them for processing.
 Uses Google Drive Watch API with auto-renewal (24h expiry).
+
+Thread Safety: Uses thread-local storage for Drive API clients to enable
+safe parallel processing with ThreadPoolExecutor.
 """
 
 import io
 import logging
+import threading
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -36,11 +40,17 @@ class FolderWatcher:
     Manages Google Drive folder watches for POS file processing.
 
     Watches 42+ store folders and detects new file uploads.
+
+    Thread Safety: Each thread gets its own Drive API client via thread-local
+    storage, enabling safe parallel processing with ThreadPoolExecutor.
     """
 
     SCOPES = [
         'https://www.googleapis.com/auth/drive.readonly',
     ]
+
+    # Thread-local storage for Drive services (one per thread)
+    _thread_local = threading.local()
 
     def __init__(self):
         config = get_config()
@@ -51,14 +61,21 @@ class FolderWatcher:
             scopes=self.SCOPES
         ).with_subject(config.impersonate_user)
 
-        self._drive_service = None
-
     @property
     def drive(self):
-        """Lazy-load Drive API service."""
-        if self._drive_service is None:
-            self._drive_service = build('drive', 'v3', credentials=self.credentials)
-        return self._drive_service
+        """
+        Get thread-local Drive API service.
+
+        Each thread gets its own service instance, preventing the memory
+        corruption issues that occur when sharing googleapiclient across threads.
+        """
+        if not hasattr(self._thread_local, 'drive_service'):
+            self._thread_local.drive_service = build(
+                'drive', 'v3',
+                credentials=self.credentials,
+                cache_discovery=False  # Disable cache to avoid thread issues
+            )
+        return self._thread_local.drive_service
 
     # =========================================================================
     # Folder Discovery

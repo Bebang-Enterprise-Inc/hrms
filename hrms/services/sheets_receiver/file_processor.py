@@ -40,9 +40,9 @@ class FileProcessor:
         self.db = get_db()
         self.temp_dir = Path(tempfile.gettempdir()) / "pos_processing"
         self.temp_dir.mkdir(exist_ok=True)
-        # Default 5 workers - conservative to avoid Google Drive SSL/rate limit errors
-        # Can increase via PARALLEL_WORKERS env var if needed
-        self.max_workers = max_workers or int(os.environ.get('PARALLEL_WORKERS', '5'))
+        # Default 10 workers - thread-local Drive services allow safe parallel processing
+        # Can adjust via PARALLEL_WORKERS env var if needed
+        self.max_workers = max_workers or int(os.environ.get('PARALLEL_WORKERS', '10'))
 
     def process_queued_file(self, queue_entry: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -165,10 +165,8 @@ class FileProcessor:
             'workers': self.max_workers if parallel else 1
         }
 
-        # NOTE: Parallel processing disabled due to Google API client thread-safety issues
-        # The googleapiclient shared state causes memory corruption when used with ThreadPoolExecutor
-        # TODO: Fix by using thread-local Drive service instances
-        if False and parallel and len(pending) > 1:
+        # Parallel processing enabled - folder_watcher.py now uses thread-local Drive services
+        if parallel and len(pending) > 1:
             # Parallel processing with ThreadPoolExecutor
             workers = min(self.max_workers, len(pending))
             logger.info(f"Processing {len(pending)} files with {workers} parallel workers")
