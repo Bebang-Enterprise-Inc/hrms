@@ -157,7 +157,8 @@ class Database:
                     processed_at TEXT,
                     error_message TEXT,
                     record_count INTEGER DEFAULT 0,
-                    report_type TEXT
+                    report_type TEXT,
+                    retry_count INTEGER DEFAULT 0
                 );
 
                 CREATE TABLE IF NOT EXISTS processed_files (
@@ -181,6 +182,12 @@ class Database:
                 CREATE INDEX IF NOT EXISTS idx_processed_files_store
                 ON processed_files(store_code, processed_at DESC);
             """)
+
+            # Migration: Add retry_count column if it doesn't exist
+            try:
+                conn.execute("ALTER TABLE file_queue ADD COLUMN retry_count INTEGER DEFAULT 0")
+            except sqlite3.OperationalError:
+                pass  # Column already exists
 
     @contextmanager
     def _connection(self):
@@ -594,6 +601,98 @@ class Database:
             """).fetchall()
 
             return {row['status']: row['count'] for row in rows}
+
+    def get_pending_count(self) -> int:
+        """Get count of pending files."""
+        with self._connection() as conn:
+            row = conn.execute("""
+                SELECT COUNT(*) as count FROM file_queue WHERE status = 'pending'
+            """).fetchone()
+            return row['count'] if row else 0
+
+    def get_failed_files(self, max_retries: int = 3) -> List[Dict[str, Any]]:
+        """
+        Get failed files that haven't exceeded retry limit.
+
+        Args:
+            max_retries: Maximum number of retries before giving up
+
+        Returns:
+            List of failed file entries
+        """
+        with self._connection() as conn:
+            rows = conn.execute("""
+                SELECT * FROM file_queue
+                WHERE status = 'failed'
+                AND (retry_count IS NULL OR retry_count < ?)
+                ORDER BY detected_at ASC
+            """, (max_retries,)).fetchall()
+
+            return [dict(row) for row in rows]
+
+    def reset_for_retry(self, file_id: str):
+        """
+        Reset a failed file's status to pending for retry.
+
+        Increments the retry_count and clears error_message.
+        """
+        with self._connection() as conn:
+            conn.execute("""
+                UPDATE file_queue
+                SET status = 'pending',
+                    retry_count = COALESCE(retry_count, 0) + 1,
+                    error_message = NULL
+                WHERE file_id = ?
+            """, (file_id,))
+
+    def get_processing_stats(self) -> Dict[str, Any]:
+        """
+        Get comprehensive processing statistics.
+
+        Returns:
+            Dict with counts, recent activity, and performance metrics
+        """
+        with self._connection() as conn:
+            # Status counts
+            status_rows = conn.execute("""
+                SELECT status, COUNT(*) as count
+                FROM file_queue
+                GROUP BY status
+            """).fetchall()
+            status_counts = {row['status']: row['count'] for row in status_rows}
+
+            # Total records extracted
+            record_row = conn.execute("""
+                SELECT SUM(record_count) as total_records
+                FROM processed_files
+            """).fetchone()
+            total_records = record_row['total_records'] or 0
+
+            # Files processed in last hour
+            recent_row = conn.execute("""
+                SELECT COUNT(*) as count
+                FROM processed_files
+                WHERE processed_at >= datetime('now', '-1 hour')
+            """).fetchone()
+            last_hour = recent_row['count'] if recent_row else 0
+
+            # Files processed today
+            today_row = conn.execute("""
+                SELECT COUNT(*) as count
+                FROM processed_files
+                WHERE date(processed_at) = date('now')
+            """).fetchone()
+            today = today_row['count'] if today_row else 0
+
+            return {
+                'pending': status_counts.get('pending', 0),
+                'processing': status_counts.get('processing', 0),
+                'completed': status_counts.get('completed', 0),
+                'failed': status_counts.get('failed', 0),
+                'total_records': total_records,
+                'processed_last_hour': last_hour,
+                'processed_today': today
+            }
 
 
 # Singleton instance

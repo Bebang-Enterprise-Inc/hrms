@@ -46,6 +46,8 @@ from .models import get_db
 from .sheets_client import get_sheets_client
 from .processor import get_processor
 from .webhook import run_server
+from .file_processor import get_file_processor
+from .folder_watcher import get_folder_watcher
 
 # Configure logging
 logging.basicConfig(
@@ -102,21 +104,163 @@ def scheduled_sync_job():
         logger.error(f"Scheduled sync failed: {e}")
 
 
+# =============================================================================
+# POS File Processing Jobs (Automatic - No Manual Intervention Required)
+# =============================================================================
+
+def process_pending_files_job():
+    """
+    Automatic job to process pending POS files from the queue.
+
+    Runs every 2 minutes to pick up newly queued files.
+    Uses parallel processing (10 workers) for fast throughput.
+    """
+    try:
+        processor = get_file_processor()
+        db = get_db()
+
+        # Get pending count first
+        pending_count = db.get_pending_count()
+        if pending_count == 0:
+            return  # Nothing to do, skip logging
+
+        logger.info(f"Processing {pending_count} pending files...")
+
+        # Process up to 50 files per batch with parallel processing
+        result = processor.process_pending_files(limit=50, parallel=True)
+
+        if result['processed'] > 0 or result['failed'] > 0:
+            logger.info(
+                f"File processing complete: {result['processed']} processed, "
+                f"{result['failed']} failed, {result['total_records']} records extracted"
+            )
+
+    except Exception as e:
+        logger.error(f"File processing job failed: {e}")
+
+
+def retry_failed_files_job():
+    """
+    Automatic job to retry failed POS files.
+
+    Runs every 15 minutes to retry files that failed processing.
+    Only retries files that failed less than 3 times.
+    """
+    try:
+        db = get_db()
+
+        # Get failed files that haven't exceeded retry limit
+        failed_files = db.get_failed_files(max_retries=3)
+        if not failed_files:
+            return  # Nothing to retry
+
+        logger.info(f"Retrying {len(failed_files)} failed files...")
+
+        # Reset status to pending for retry
+        retry_count = 0
+        for entry in failed_files:
+            db.reset_for_retry(entry['file_id'])
+            retry_count += 1
+
+        if retry_count > 0:
+            logger.info(f"Reset {retry_count} files for retry")
+
+            # Immediately process the reset files
+            processor = get_file_processor()
+            result = processor.process_pending_files(limit=retry_count, parallel=True)
+            logger.info(
+                f"Retry results: {result['processed']} succeeded, "
+                f"{result['failed']} still failing"
+            )
+
+    except Exception as e:
+        logger.error(f"Failed files retry job failed: {e}")
+
+
+def scan_for_new_files_job():
+    """
+    Automatic job to scan all store folders for new files.
+
+    Runs every 30 minutes as a backup to webhook notifications.
+    Discovers new files that might have been missed by push notifications.
+    """
+    try:
+        watcher = get_folder_watcher()
+        logger.info("Scanning all store folders for new files...")
+
+        result = watcher.scan_all_stores()
+
+        if result['total_queued'] > 0:
+            logger.info(
+                f"Folder scan: {result['total_found']} files found, "
+                f"{result['total_queued']} queued for processing, "
+                f"{result['stores_with_files']} stores with new files"
+            )
+        else:
+            logger.debug("Folder scan: No new files found")
+
+    except Exception as e:
+        logger.error(f"Folder scan job failed: {e}")
+
+
+def renew_folder_watches_job():
+    """
+    Scheduled job to renew expiring folder watches.
+
+    Folder watches expire after 24 hours. This runs hourly
+    to renew any watches expiring in the next 2 hours.
+    """
+    logger.info("Running folder watch renewal job...")
+    try:
+        watcher = get_folder_watcher()
+        renewed = watcher.renew_expiring_folder_watches(hours_before=2)
+        if renewed:
+            logger.info(f"Renewed {len(renewed)} folder watches")
+    except Exception as e:
+        logger.error(f"Folder watch renewal failed: {e}")
+
+
 def run_scheduler():
     """Run the scheduler in a background thread."""
     config = get_config()
 
-    # Renew watches every hour (they expire after 24h)
+    # ==========================================================================
+    # Sheets Processing (Original)
+    # ==========================================================================
+
+    # Renew sheet watches every hour (they expire after 24h)
     schedule.every(1).hour.do(renew_watches_job)
 
     # Backup sync every 6 hours (in case webhooks missed)
     schedule.every(6).hours.do(scheduled_sync_job)
 
-    logger.info("Scheduler started")
+    # ==========================================================================
+    # POS File Processing (Automatic - No Manual Intervention)
+    # ==========================================================================
+
+    # Process pending files every 2 minutes (fast turnaround)
+    schedule.every(2).minutes.do(process_pending_files_job)
+
+    # Retry failed files every 15 minutes (give time for transient issues)
+    schedule.every(15).minutes.do(retry_failed_files_job)
+
+    # Scan all folders every 30 minutes (backup to webhooks)
+    schedule.every(30).minutes.do(scan_for_new_files_job)
+
+    # Renew folder watches every hour (they expire after 24h)
+    schedule.every(1).hour.do(renew_folder_watches_job)
+
+    logger.info("Scheduler started with jobs:")
+    logger.info("  - Sheet watch renewal: every 1 hour")
+    logger.info("  - Sheet backup sync: every 6 hours")
+    logger.info("  - POS file processing: every 2 minutes")
+    logger.info("  - Failed file retry: every 15 minutes")
+    logger.info("  - Folder scan (backup): every 30 minutes")
+    logger.info("  - Folder watch renewal: every 1 hour")
 
     while True:
         schedule.run_pending()
-        time.sleep(60)  # Check every minute
+        time.sleep(30)  # Check every 30 seconds for faster response
 
 
 def initial_setup():
@@ -142,24 +286,57 @@ def initial_setup():
     for key, sheet in sheets.items():
         logger.info(f"  - {sheet.name} ({sheet.spreadsheet_id})")
 
-    # Set up watches
-    logger.info("Setting up Google Drive watches...")
+    # Set up sheet watches
+    logger.info("Setting up Google Drive watches for sheets...")
     try:
         client = get_sheets_client()
         watches = client.setup_all_watches()
-        logger.info(f"Created/verified {len(watches)} watches")
+        logger.info(f"Created/verified {len(watches)} sheet watches")
     except Exception as e:
-        logger.error(f"Failed to set up watches: {e}")
+        logger.error(f"Failed to set up sheet watches: {e}")
         logger.warning("Service will continue without real-time notifications")
         logger.warning("Using scheduled sync as fallback")
 
-    # Initial sync
-    logger.info("Performing initial sync check...")
+    # Set up folder watches for POS files
+    logger.info("Setting up Google Drive watches for POS folders...")
+    try:
+        watcher = get_folder_watcher()
+        folder_watches = watcher.setup_all_folder_watches()
+        logger.info(f"Created/verified {len(folder_watches)} folder watches")
+    except Exception as e:
+        logger.error(f"Failed to set up folder watches: {e}")
+        logger.warning("Using scheduled folder scan as fallback")
+
+    # Initial sync for sheets
+    logger.info("Performing initial sheet sync check...")
     try:
         processor = get_processor()
         processor.sync_all_sheets(trigger='startup', force=False)
     except Exception as e:
-        logger.error(f"Initial sync failed: {e}")
+        logger.error(f"Initial sheet sync failed: {e}")
+
+    # Initial scan for POS files
+    logger.info("Performing initial POS folder scan...")
+    try:
+        watcher = get_folder_watcher()
+        scan_result = watcher.scan_all_stores()
+        logger.info(
+            f"Initial scan: {scan_result['total_found']} files found, "
+            f"{scan_result['total_queued']} queued"
+        )
+
+        # Process any pending files immediately
+        file_processor = get_file_processor()
+        pending_count = db.get_pending_count()
+        if pending_count > 0:
+            logger.info(f"Processing {pending_count} pending files on startup...")
+            result = file_processor.process_pending_files(limit=100, parallel=True)
+            logger.info(
+                f"Startup processing: {result['processed']} processed, "
+                f"{result['failed']} failed"
+            )
+    except Exception as e:
+        logger.error(f"Initial POS scan failed: {e}")
 
     logger.info("Initial setup complete")
     logger.info("=" * 60)
