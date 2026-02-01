@@ -120,13 +120,23 @@ class PubSubConsumer:
         )
 
     def _get_chat_credentials(self):
-        """Get credentials for Chat API (with DWD)."""
+        """Get credentials for Chat API (with DWD) - for reading messages."""
         return get_service_account_credentials(
             scopes=[
                 'https://www.googleapis.com/auth/chat.spaces',
                 'https://www.googleapis.com/auth/chat.messages'
             ],
             subject='sam@bebang.ph'
+        )
+
+    def _get_bot_credentials(self):
+        """Get credentials for Chat API as BOT - for sending responses.
+
+        CRITICAL: Must NOT use DWD (no subject) so messages appear from bot,
+        not from a user. This prevents the response loop.
+        """
+        return get_service_account_credentials(
+            scopes=['https://www.googleapis.com/auth/chat.bot']
         )
 
     async def start(self):
@@ -360,8 +370,10 @@ class PubSubConsumer:
         return None
 
     async def _send_chat_response(self, space_name: str, text: str):
-        """Send a response message to the Chat space."""
-        creds = self._get_chat_credentials()
+        """Send a response message to the Chat space as the bot."""
+        # CRITICAL: Use bot credentials (NOT DWD) so the message sender.type == "BOT"
+        # This allows the bot message filter to prevent response loops
+        creds = self._get_bot_credentials()
 
         async with httpx.AsyncClient() as client:
             response = await client.post(
