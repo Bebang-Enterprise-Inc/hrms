@@ -214,6 +214,10 @@ class PubSubConsumer:
                     data = base64.b64decode(msg["message"]["data"]).decode("utf-8")
                     event_data = json.loads(data)
 
+                    # Debug: Log the raw event structure
+                    logger.info(f"Raw event type: {event_data.get('type', 'NO TYPE')}")
+                    logger.info(f"Event keys: {list(event_data.keys())}")
+
                     await self._process_event(event_data)
                     ack_ids.append(ack_id)
 
@@ -237,15 +241,21 @@ class PubSubConsumer:
         """Process a Workspace Events event."""
         event_type = event_data.get("type", "")
 
+        # Workspace Events API uses full type like "google.workspace.chat.message.v1.created"
         if "message.v1.created" not in event_type:
-            logger.debug(f"Ignoring event type: {event_type}")
+            logger.info(f"Ignoring event type: {event_type}")
             return
 
-        # Extract the Chat message from the event
-        message_resource = event_data.get("message", {})
+        # Workspace Events puts the message inside data.message
+        # The structure is: { "type": "...", "data": { "message": {...} } }
+        data_payload = event_data.get("data", {})
+        message_resource = data_payload.get("message", {}) or event_data.get("message", {})
+
         if not message_resource:
-            logger.warning("No message resource in event")
+            logger.warning(f"No message resource in event. Keys: {list(event_data.keys())}, data keys: {list(data_payload.keys())}")
             return
+
+        logger.info(f"Processing message: {message_resource.get('text', '')[:50]}...")
 
         # Get sender info
         sender = message_resource.get("sender", {})
