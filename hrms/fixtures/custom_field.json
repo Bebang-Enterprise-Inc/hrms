@@ -1,0 +1,69 @@
+[
+    {
+        "doctype": "Custom Field",
+        "dt": "Warehouse",
+        "fieldname": "custom_area_supervisor",
+        "fieldtype": "Link",
+        "label": "Area Supervisor",
+        "options": "User",
+        "insert_after": "is_group",
+        "description": "Area Supervisor responsible for this store"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Employee",
+        "fieldname": "custom_nickname",
+        "fieldtype": "Data",
+        "label": "Nickname",
+        "insert_after": "employee_name",
+        "description": "Searchable nickname (e.g., Bong for Edilberto)",
+        "in_global_search": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Employee",
+        "fieldname": "custom_government_id_photo",
+        "fieldtype": "Attach Image",
+        "label": "Government ID Photo",
+        "insert_after": "image",
+        "description": "Latest verified government ID for name verification"
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Employee",
+        "fieldname": "custom_enrichment_section",
+        "fieldtype": "Section Break",
+        "label": "Data Enrichment Status",
+        "insert_after": "custom_government_id_photo",
+        "collapsible": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Employee",
+        "fieldname": "custom_enrichment_status",
+        "fieldtype": "Select",
+        "label": "Enrichment Status",
+        "options": "Not Started\nIn Progress\nSubmitted\nComplete",
+        "default": "Not Started",
+        "insert_after": "custom_enrichment_section",
+        "in_standard_filter": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Employee",
+        "fieldname": "custom_enrichment_submitted_date",
+        "fieldtype": "Date",
+        "label": "Enrichment Submitted Date",
+        "insert_after": "custom_enrichment_status",
+        "read_only": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "dt": "Employee",
+        "fieldname": "custom_enrichment_complete_date",
+        "fieldtype": "Date",
+        "label": "Enrichment Complete Date",
+        "insert_after": "custom_enrichment_submitted_date",
+        "read_only": 1
+    }
+]
