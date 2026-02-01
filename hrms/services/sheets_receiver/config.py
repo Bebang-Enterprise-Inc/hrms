@@ -158,17 +158,29 @@ WATCHED_SHEETS: Dict[str, SheetConfig] = {
         key_column='account_number',
         sync_mode='upsert'
     ),
-    'supplier_soa': SheetConfig(
-        name='Supplier SOA (AP)',
-        spreadsheet_id='1TmENuP8HgCVbo3lJtTpe4PVemLCkPnGL',  # Update with actual ID
-        sheet_name='SUPPLIERS SOA',
+    'ap_opening_balance': SheetConfig(
+        name='AP Opening Balance',
+        spreadsheet_id='1ZHe2VoAFa94ET4I68C1jWM7nMzTdTCvttwZbICaLtB4',
+        sheet_name='05 - AP Opening Balance (PHP 24.4M)',
         range='A:Z',
-        owner_email='izza@bebang.ph',
+        owner_email='alyssa@bebang.ph',
         sync_endpoint='/api/method/hrms.api.erp_sync.sync_ap_opening',
         doctype='Purchase Invoice',
         key_column='invoice_no',
         sync_mode='upsert',
-        enabled=False  # Enable when ready
+        enabled=True
+    ),
+    'supplier_soa': SheetConfig(
+        name='Supplier SOA',
+        spreadsheet_id='1ZHe2VoAFa94ET4I68C1jWM7nMzTdTCvttwZbICaLtB4',
+        sheet_name='SUPPLIERS SOA',
+        range='A:Z',
+        owner_email='alyssa@bebang.ph',
+        sync_endpoint='/api/method/hrms.api.erp_sync.sync_supplier_soa',
+        doctype='Supplier',
+        key_column='supplier_name',
+        sync_mode='upsert',
+        enabled=True
     ),
 }
 
