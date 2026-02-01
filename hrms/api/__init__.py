@@ -1017,3 +1017,4 @@ import hrms.api.dashboard  # noqa: E402, F401
 import hrms.api.inventory  # noqa: E402, F401
 import hrms.api.coverage  # noqa: E402, F401
 import hrms.api.image_utils  # noqa: E402, F401
+import hrms.api.projects  # noqa: E402, F401
