@@ -24,6 +24,7 @@ from handlers.gchat import handle_gchat_event
 from ai.agent import BlipAgentWithFallback
 from frappe_client import FrappeClient
 from memory import BlipMemory, conversation_manager
+from pubsub_consumer import PubSubConsumer
 
 # Configure logging
 logging.basicConfig(
@@ -36,12 +37,13 @@ logger = logging.getLogger(__name__)
 blip_agent: BlipAgentWithFallback = None
 frappe_client: FrappeClient = None
 memory_store: BlipMemory = None
+pubsub_consumer: PubSubConsumer = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize and cleanup resources."""
-    global blip_agent, frappe_client, memory_store
+    global blip_agent, frappe_client, memory_store, pubsub_consumer
 
     logger.info("Starting Blip AI Assistant (Agentic Mode)...")
 
@@ -62,9 +64,29 @@ async def lifespan(app: FastAPI):
     memory_store = BlipMemory()
     logger.info("Memory store initialized (in-memory mode)")
 
+    # Initialize Pub/Sub consumer for receiving all messages in dedicated space
+    # This allows Blip to respond without @mention in the "! Blip Notifications" space
+    try:
+        pubsub_consumer = PubSubConsumer(
+            message_handler=handle_gchat_event,
+            blip_agent=blip_agent,
+            frappe_client=frappe_client,
+            memory_store=memory_store,
+            conversation_manager=conversation_manager
+        )
+        await pubsub_consumer.start()
+        logger.info("Pub/Sub consumer started - Blip will receive all messages in dedicated space")
+    except Exception as e:
+        logger.warning(f"Pub/Sub consumer failed to start: {e}")
+        logger.warning("Blip will only respond to @mentions (webhook mode only)")
+
     yield
 
     logger.info("Shutting down Blip AI Assistant...")
+
+    # Stop Pub/Sub consumer
+    if pubsub_consumer:
+        await pubsub_consumer.stop()
 
 
 app = FastAPI(

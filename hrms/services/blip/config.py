@@ -30,8 +30,10 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""  # Gemini API key (maps to GOOGLE_API_KEY internally)
     GEMINI_MODEL: str = "gemini-3-flash-preview"  # Gemini 3 Flash - LATEST
 
-    # Google Service Account (for sending proactive messages to Chat)
+    # Google Service Account (for Pub/Sub and Chat API)
+    # Use either file path OR base64-encoded JSON content
     GOOGLE_SERVICE_ACCOUNT_FILE: Optional[str] = None
+    GOOGLE_SERVICE_ACCOUNT_JSON: Optional[str] = None  # Base64-encoded JSON
 
     # Admin users (full access) - comma-separated in env var
     ADMIN_EMAILS: str = "sam@bebang.ph"
