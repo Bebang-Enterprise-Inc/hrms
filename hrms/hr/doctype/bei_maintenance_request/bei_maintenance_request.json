@@ -115,7 +115,7 @@
 			"in_list_view": 1,
 			"in_standard_filter": 1,
 			"label": "Issue Category",
-			"options": "Equipment\nPlumbing\nElectrical\nHVAC\nStructural\nOther",
+			"options": "Electrical\nPlumbing\nMechanical\nPest\nSecurity\nNetwork\nArchitectural\nOther",
 			"reqd": 1
 		},
 		{
