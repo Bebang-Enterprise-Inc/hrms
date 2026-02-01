@@ -384,6 +384,111 @@ class FolderWatcher:
             logger.error(f"Failed to get metadata for file {file_id}: {e}")
             raise
 
+    def scan_folder_recursive(
+        self,
+        folder_id: str,
+        store_code: str,
+        max_depth: int = 2
+    ) -> List[Dict[str, Any]]:
+        """
+        Recursively scan a folder and its subfolders for new files.
+
+        Store folders have date subfolders (e.g., Store/2026-01-31/files).
+        This method scans both direct files and files in subfolders.
+
+        Args:
+            folder_id: Google Drive folder ID
+            store_code: Store identifier for tracking
+            max_depth: Maximum folder depth to scan (default: 2 levels)
+
+        Returns:
+            List of file info dicts with folder_id added
+        """
+        all_files = []
+        db = get_db()
+
+        def _scan_folder(fid: str, depth: int):
+            if depth > max_depth:
+                return
+
+            # Get files in this folder
+            try:
+                files = self.list_new_files(fid)
+                for f in files:
+                    # Skip already processed files
+                    if db.is_file_processed(f['id']):
+                        continue
+                    f['folder_id'] = fid
+                    f['store_code'] = store_code
+                    all_files.append(f)
+            except Exception as e:
+                logger.error(f"Error listing files in {fid}: {e}")
+
+            # Get subfolders and recurse
+            if depth < max_depth:
+                try:
+                    subfolders = self.list_subfolders(fid)
+                    for sf in subfolders:
+                        # Only recurse into date-like folders (YYYY-MM-DD)
+                        if len(sf['name']) == 10 and sf['name'][4] == '-':
+                            _scan_folder(sf['id'], depth + 1)
+                except Exception as e:
+                    logger.error(f"Error listing subfolders in {fid}: {e}")
+
+        _scan_folder(folder_id, 0)
+        return all_files
+
+    def scan_all_stores(self) -> Dict[str, Any]:
+        """
+        Scan all store folders (including subfolders) for new files.
+
+        Returns:
+            Summary with total files found and queued
+        """
+        db = get_db()
+        folders = get_watched_folders()
+
+        if not folders:
+            folders = self.discover_store_folders()
+
+        total_found = 0
+        total_queued = 0
+        store_results = {}
+
+        for store_code, folder_config in folders.items():
+            try:
+                files = self.scan_folder_recursive(
+                    folder_config.folder_id,
+                    store_code
+                )
+
+                queued = 0
+                for f in files:
+                    if not db.is_file_processed(f['id']):
+                        db.queue_file(f, store_code=store_code)
+                        queued += 1
+
+                total_found += len(files)
+                total_queued += queued
+
+                if files:
+                    store_results[store_code] = {
+                        'found': len(files),
+                        'queued': queued
+                    }
+                    logger.info(f"{folder_config.name}: {len(files)} files found, {queued} queued")
+
+            except Exception as e:
+                logger.error(f"Error scanning {folder_config.name}: {e}")
+                store_results[store_code] = {'error': str(e)}
+
+        return {
+            'total_found': total_found,
+            'total_queued': total_queued,
+            'stores_with_files': len([s for s in store_results.values() if s.get('found', 0) > 0]),
+            'stores': store_results
+        }
+
 
 # Singleton instance
 _watcher: Optional[FolderWatcher] = None

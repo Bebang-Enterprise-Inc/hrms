@@ -705,6 +705,30 @@ async def scan_folder(folder_id: str, background_tasks: BackgroundTasks):
     }
 
 
+@app.post("/api/folders/scan-all")
+async def scan_all_folders(background_tasks: BackgroundTasks):
+    """
+    Scan ALL store folders (including date subfolders) for new files.
+
+    This recursively scans each store folder and its date subfolders
+    (e.g., Store/2026-01-31/files) to find all unprocessed files.
+
+    Use this to catch up on missed files or after initial setup.
+    """
+    from .folder_watcher import get_folder_watcher
+
+    watcher = get_folder_watcher()
+    result = watcher.scan_all_stores()
+
+    return {
+        'status': 'scanned',
+        'total_found': result['total_found'],
+        'total_queued': result['total_queued'],
+        'stores_with_files': result['stores_with_files'],
+        'stores': result['stores']
+    }
+
+
 @app.post("/api/files/process")
 async def process_pending_files(background_tasks: BackgroundTasks, limit: int = 10):
     """
