@@ -281,16 +281,24 @@ class PubSubConsumer:
             logger.warning(f"No message resource in event. Keys: {list(event_data.keys())}")
             return
 
-        logger.info(f"Processing message: {message_resource.get('text', '')[:50]}...")
-
         # Get sender info
         sender = message_resource.get("sender", {})
         sender_name = sender.get("name", "")
+        sender_type = sender.get("type", "")
+
+        logger.info(f"Message sender: name={sender_name}, type={sender_type}")
 
         # Skip bot messages (prevent loop)
-        if sender.get("type") == "BOT":
-            logger.debug("Skipping bot message")
+        # Check 1: sender.type == "BOT"
+        # Check 2: sender.name matches bot's user ID (service account)
+        # The bot's user ID from task-manager-service.json client_id
+        BOT_USER_ID = "users/109500378742787827702"
+
+        if sender_type == "BOT" or sender_name == BOT_USER_ID:
+            logger.info(f"Skipping bot message (type={sender_type}, name={sender_name})")
             return
+
+        logger.info(f"Processing message: {message_resource.get('text', '')[:50]}...")
 
         # Extract user email from sender
         # The sender name format is "users/USER_ID" - we need to look up the email
