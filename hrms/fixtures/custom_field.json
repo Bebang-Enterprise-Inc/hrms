@@ -1,6 +1,7 @@
 [
     {
         "doctype": "Custom Field",
+        "name": "Warehouse-custom_area_supervisor",
         "dt": "Warehouse",
         "fieldname": "custom_area_supervisor",
         "fieldtype": "Link",
@@ -11,6 +12,7 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Employee-custom_nickname",
         "dt": "Employee",
         "fieldname": "custom_nickname",
         "fieldtype": "Data",
@@ -21,6 +23,7 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Employee-custom_government_id_photo",
         "dt": "Employee",
         "fieldname": "custom_government_id_photo",
         "fieldtype": "Attach Image",
@@ -30,6 +33,7 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Employee-custom_enrichment_section",
         "dt": "Employee",
         "fieldname": "custom_enrichment_section",
         "fieldtype": "Section Break",
@@ -39,6 +43,7 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Employee-custom_enrichment_status",
         "dt": "Employee",
         "fieldname": "custom_enrichment_status",
         "fieldtype": "Select",
@@ -50,6 +55,7 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Employee-custom_enrichment_submitted_date",
         "dt": "Employee",
         "fieldname": "custom_enrichment_submitted_date",
         "fieldtype": "Date",
@@ -59,6 +65,7 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Employee-custom_enrichment_complete_date",
         "dt": "Employee",
         "fieldname": "custom_enrichment_complete_date",
         "fieldtype": "Date",
