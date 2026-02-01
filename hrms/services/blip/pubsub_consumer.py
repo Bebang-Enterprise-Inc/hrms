@@ -211,14 +211,19 @@ class PubSubConsumer:
             for msg in messages:
                 try:
                     ack_id = msg["ackId"]
-                    data = base64.b64decode(msg["message"]["data"]).decode("utf-8")
+                    pubsub_msg = msg["message"]
+                    data = base64.b64decode(pubsub_msg["data"]).decode("utf-8")
                     event_data = json.loads(data)
 
+                    # Check message attributes for event type (Workspace Events puts type here)
+                    attributes = pubsub_msg.get("attributes", {})
+                    event_type = attributes.get("ce-type", "")
+
                     # Debug: Log the raw event structure
-                    logger.info(f"Raw event type: {event_data.get('type', 'NO TYPE')}")
+                    logger.info(f"Pub/Sub attributes: {attributes}")
                     logger.info(f"Event keys: {list(event_data.keys())}")
 
-                    await self._process_event(event_data)
+                    await self._process_event(event_data, event_type)
                     ack_ids.append(ack_id)
 
                 except Exception as e:
@@ -237,22 +242,33 @@ class PubSubConsumer:
                     json={"ackIds": ack_ids}
                 )
 
-    async def _process_event(self, event_data: dict):
-        """Process a Workspace Events event."""
-        event_type = event_data.get("type", "")
+    async def _process_event(self, event_data: dict, event_type: str = ""):
+        """Process a Workspace Events event.
 
-        # Workspace Events API uses full type like "google.workspace.chat.message.v1.created"
-        if "message.v1.created" not in event_type:
+        Args:
+            event_data: The decoded JSON payload from Pub/Sub
+            event_type: The event type from Pub/Sub message attributes (ce-type)
+        """
+        # Workspace Events sends type in Pub/Sub message attributes (ce-type)
+        # If no event_type from attributes, try to get from payload
+        if not event_type:
+            event_type = event_data.get("type", "")
+
+        # Check for message.created event
+        if event_type and "message.v1.created" not in event_type:
             logger.info(f"Ignoring event type: {event_type}")
             return
 
-        # Workspace Events puts the message inside data.message
-        # The structure is: { "type": "...", "data": { "message": {...} } }
-        data_payload = event_data.get("data", {})
-        message_resource = data_payload.get("message", {}) or event_data.get("message", {})
+        # Handle both payload formats:
+        # 1. Direct message at top level: {"message": {...}}
+        # 2. Nested in data: {"data": {"message": {...}}}
+        message_resource = event_data.get("message", {})
+        if not message_resource:
+            data_payload = event_data.get("data", {})
+            message_resource = data_payload.get("message", {})
 
         if not message_resource:
-            logger.warning(f"No message resource in event. Keys: {list(event_data.keys())}, data keys: {list(data_payload.keys())}")
+            logger.warning(f"No message resource in event. Keys: {list(event_data.keys())}")
             return
 
         logger.info(f"Processing message: {message_resource.get('text', '')[:50]}...")
