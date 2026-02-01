@@ -407,6 +407,18 @@ class PubSubConsumer:
                 result = response.json()
                 sub_response = result.get("response", result)
                 EVENTS_SUBSCRIPTION_NAME = sub_response.get("name")
+            elif response.status_code == 409:
+                # Subscription already exists - extract name from error details
+                result = response.json()
+                details = result.get("error", {}).get("details", [])
+                for detail in details:
+                    if detail.get("@type", "").endswith("ErrorInfo"):
+                        existing_sub = detail.get("metadata", {}).get("current_subscription")
+                        if existing_sub:
+                            EVENTS_SUBSCRIPTION_NAME = existing_sub
+                            logger.info(f"Using existing subscription: {EVENTS_SUBSCRIPTION_NAME}")
+                            return
+                logger.info("Subscription exists but couldn't extract name")
                 EVENTS_SUBSCRIPTION_EXPIRY = sub_response.get("expireTime")
                 logger.info(f"Created subscription: {EVENTS_SUBSCRIPTION_NAME}")
                 logger.info(f"Expires: {EVENTS_SUBSCRIPTION_EXPIRY}")
