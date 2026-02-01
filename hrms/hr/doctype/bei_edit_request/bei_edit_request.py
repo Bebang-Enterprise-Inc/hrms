@@ -61,16 +61,22 @@ class BEIEditRequest(Document):
     def _apply_change(self):
         """Apply the approved change to the employee record."""
         try:
-            emp = frappe.get_doc("Employee", self.employee)
-            emp.set(self.field_name, self.requested_value)
-            emp.save(ignore_permissions=True)
+            # Use db.set_value to bypass document validation (some employees
+            # may have data quality issues like missing naming_series)
+            frappe.db.set_value(
+                "Employee",
+                self.employee,
+                self.field_name,
+                self.requested_value,
+                update_modified=True,
+            )
 
-            self.processed_by = frappe.session.user
-            self.processed_date = now_datetime()
+            # Get employee name for the message
+            emp_name = frappe.db.get_value("Employee", self.employee, "employee_name")
 
             frappe.msgprint(
                 _("Employee {0} field '{1}' updated to '{2}'").format(
-                    emp.employee_name, self.field_label, self.requested_value
+                    emp_name, self.field_label, self.requested_value
                 )
             )
         except Exception as e:
