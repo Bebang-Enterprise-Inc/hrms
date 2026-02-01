@@ -16,6 +16,17 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
+# Beta testing whitelist - only these users can interact with Blip
+# Remove this restriction once permissions are finalized
+ALLOWED_USERS = [
+    "sam@bebang.ph",
+]
+
+BETA_MESSAGE = (
+    "Hi! I'm Blip, BEI's AI assistant. I'm currently in beta testing "
+    "and only available to select users. Please check back soon!"
+)
+
 
 def normalize_event(raw_event: dict) -> Tuple[dict, str]:
     """
@@ -178,18 +189,24 @@ async def handle_message(
     Handle an incoming message using the agentic Blip.
 
     Flow:
-    1. Extract user info and get conversation history
-    2. Build user context (permissions, store, roles)
-    3. Run the agentic loop (Claude decides what tools to use)
-    4. Store messages in history
-    5. Return response
+    1. Check if user is in beta whitelist
+    2. Extract user info and get conversation history
+    3. Build user context (permissions, store, roles)
+    4. Run the agentic loop (Claude decides what tools to use)
+    5. Store messages in history
+    6. Return response
     """
     user = event.get("user", {})
-    user_email = user.get("email", "")
+    user_email = user.get("email", "").lower()
     space = event.get("space", {})
     space_name = space.get("name", "")
     message = event.get("message", {})
     message_text = message.get("text", "").strip()
+
+    # Beta testing restriction - only allow whitelisted users
+    if user_email not in [email.lower() for email in ALLOWED_USERS]:
+        logger.info(f"User {user_email} not in beta whitelist, rejecting")
+        return {"text": BETA_MESSAGE}
 
     # Remove @Blip mention if present
     message_text = message_text.replace("@Blip", "").strip()
