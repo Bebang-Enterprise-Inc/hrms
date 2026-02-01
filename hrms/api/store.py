@@ -1146,26 +1146,49 @@ def get_mid_shift_handovers(store, date=None, limit=10):
 
 
 @frappe.whitelist()
-def submit_maintenance_request(store, issue_category, equipment_area, priority,
-                                description, impact_on_operations, before_photos=None):
+def submit_maintenance_request(store, priority, description,
+                                issue_category=None, category=None,
+                                equipment_area=None, impact_on_operations=None,
+                                title=None, before_photos=None):
     """
     Submit a maintenance request from store staff.
     Notifies Projects team (Daniel) for assessment and assignment.
+
+    Args:
+        store: Store/branch name
+        priority: Urgent, High, Normal
+        description: Issue description
+        issue_category: Category (Equipment, Plumbing, etc.) - backend param name
+        category: Category - frontend param name (alias for issue_category)
+        equipment_area: Specific equipment/area affected (optional)
+        impact_on_operations: Can Operate, Partial Impact, Cannot Operate (optional)
+        title: Issue title (optional, prepended to description)
+        before_photos: Photo evidence (optional)
     """
     if not store:
         frappe.throw(_("Store is required"))
 
+    # Support both parameter names (frontend sends 'category', backend expects 'issue_category')
+    final_category = issue_category or category
+    if not final_category:
+        frappe.throw(_("Issue category is required"))
+
     # Resolve branch name to warehouse name
     warehouse = resolve_warehouse(store)
+
+    # Build full description from title + description
+    full_description = description
+    if title:
+        full_description = f"{title}\n\n{description}"
 
     doc = frappe.new_doc("BEI Maintenance Request")
     doc.store = warehouse
     doc.request_date = nowdate()
-    doc.issue_category = issue_category
-    doc.equipment_area = equipment_area
+    doc.issue_category = final_category
+    doc.equipment_area = equipment_area or "General"
     doc.priority = priority
-    doc.description = description
-    doc.impact_on_operations = impact_on_operations
+    doc.description = full_description
+    doc.impact_on_operations = impact_on_operations or "Can Operate"
     doc.before_photos = before_photos
     doc.reported_by = frappe.session.user
     doc.status = "Open"
