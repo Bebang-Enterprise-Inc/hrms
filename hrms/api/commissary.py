@@ -314,6 +314,8 @@ def get_inventory_levels(item_group=None, show_low_stock_only=False):
     if show_low_stock_only == "1" or show_low_stock_only is True:
         conditions += " AND b.actual_qty < IFNULL(i.safety_stock, 10)"
 
+    # Note: reorder_level and safety_stock fields may not exist on Item DocType
+    # Using simple status based on actual_qty thresholds
     items = frappe.db.sql("""
         SELECT
             b.item_code,
@@ -321,13 +323,13 @@ def get_inventory_levels(item_group=None, show_low_stock_only=False):
             i.item_group,
             i.stock_uom as uom,
             b.actual_qty as current_qty,
-            IFNULL(i.safety_stock, 10) as safety_stock,
-            IFNULL(i.reorder_level, 20) as reorder_level,
+            10 as safety_stock,
+            20 as reorder_level,
             i.valuation_rate,
             CASE
                 WHEN b.actual_qty <= 0 THEN 'Out of Stock'
-                WHEN b.actual_qty < IFNULL(i.safety_stock, 10) THEN 'Low Stock'
-                WHEN b.actual_qty < IFNULL(i.reorder_level, 20) THEN 'Reorder'
+                WHEN b.actual_qty < 10 THEN 'Low Stock'
+                WHEN b.actual_qty < 20 THEN 'Reorder'
                 ELSE 'OK'
             END as stock_status
         FROM `tabBin` b
@@ -336,8 +338,8 @@ def get_inventory_levels(item_group=None, show_low_stock_only=False):
         ORDER BY
             CASE
                 WHEN b.actual_qty <= 0 THEN 1
-                WHEN b.actual_qty < IFNULL(i.safety_stock, 10) THEN 2
-                WHEN b.actual_qty < IFNULL(i.reorder_level, 20) THEN 3
+                WHEN b.actual_qty < 10 THEN 2
+                WHEN b.actual_qty < 20 THEN 3
                 ELSE 4
             END,
             i.item_name
@@ -357,6 +359,8 @@ def get_low_stock_alerts():
     """
     commissary_warehouse = get_commissary_warehouse()
 
+    # Note: reorder_level and safety_stock fields don't exist on Item DocType
+    # Using hardcoded thresholds: safety_stock=10, reorder_level=20
     alerts = frappe.db.sql("""
         SELECT
             b.item_code,
@@ -364,11 +368,11 @@ def get_low_stock_alerts():
             i.item_group,
             i.stock_uom as uom,
             b.actual_qty as current_qty,
-            IFNULL(i.safety_stock, 10) as safety_stock,
-            IFNULL(i.reorder_level, 20) as reorder_level,
+            10 as safety_stock,
+            20 as reorder_level,
             CASE
                 WHEN b.actual_qty <= 0 THEN 'critical'
-                WHEN b.actual_qty < IFNULL(i.safety_stock, 10) THEN 'warning'
+                WHEN b.actual_qty < 10 THEN 'warning'
                 ELSE 'info'
             END as alert_level
         FROM `tabBin` b
@@ -378,13 +382,13 @@ def get_low_stock_alerts():
         AND i.is_stock_item = 1
         AND (
             b.actual_qty <= 0
-            OR b.actual_qty < IFNULL(i.safety_stock, 10)
-            OR b.actual_qty < IFNULL(i.reorder_level, 20)
+            OR b.actual_qty < 10
+            OR b.actual_qty < 20
         )
         ORDER BY
             CASE
                 WHEN b.actual_qty <= 0 THEN 1
-                WHEN b.actual_qty < IFNULL(i.safety_stock, 10) THEN 2
+                WHEN b.actual_qty < 10 THEN 2
                 ELSE 3
             END,
             i.item_name
