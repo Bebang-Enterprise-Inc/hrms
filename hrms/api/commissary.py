@@ -704,7 +704,11 @@ def fulfill_store_order(mr_name, items):
 
     mr = frappe.get_doc("Material Request", mr_name)
     commissary_warehouse = get_commissary_warehouse()
+
+    # Get target warehouse from header or first item
     target_warehouse = mr.set_warehouse
+    if not target_warehouse and mr.items:
+        target_warehouse = mr.items[0].warehouse
 
     if not target_warehouse:
         frappe.throw(_("Material Request has no target warehouse set"))
