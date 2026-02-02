@@ -6,6 +6,8 @@ Sends real-time alerts to Ops space when:
 - Any file fails to process
 
 Also sends daily summary report.
+
+All notifications are tracked in the database for audit trail.
 """
 
 import logging
@@ -15,6 +17,13 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 logger = logging.getLogger(__name__)
+
+# Import database for notification tracking
+try:
+    from .models import get_db
+except ImportError:
+    # Fallback for when module is run directly
+    from models import get_db
 
 # Google Chat Configuration
 CREDS_FILE = "/app/credentials/task-manager-service.json"
@@ -288,8 +297,20 @@ def send_daily_summary(
             body={'text': message}
         ).execute()
 
-        logger.info(f"Sent daily summary for {date_str}")
-        return result.get('name')
+        message_id = result.get('name')
+        logger.info(f"Sent daily summary for {date_str}: {message_id}")
+
+        # Log to database for audit trail
+        try:
+            db.log_notification(
+                message_id=message_id,
+                message_type='daily_summary',
+                message_preview=message[:100]
+            )
+        except Exception as log_error:
+            logger.warning(f"Failed to log notification to database: {log_error}")
+
+        return message_id
 
     except Exception as e:
         logger.error(f"Failed to send daily summary: {e}")
@@ -358,3 +379,107 @@ def send_batch_failure_alert(
     except Exception as e:
         logger.error(f"Failed to send batch failure alert: {e}")
         return None
+
+
+def delete_notification(message_id: str) -> bool:
+    """
+    Delete a notification message from Google Chat.
+
+    Args:
+        message_id: Google Chat message ID (e.g., "spaces/XXX/messages/YYY")
+
+    Returns:
+        True if deletion succeeded
+    """
+    try:
+        # Get bot credentials with delete permission
+        creds = service_account.Credentials.from_service_account_file(
+            CREDS_FILE,
+            scopes=[
+                'https://www.googleapis.com/auth/chat.bot',
+                'https://www.googleapis.com/auth/chat.app.delete'
+            ]
+        )
+        chat = build('chat', 'v1', credentials=creds)
+
+        # Delete the message
+        chat.spaces().messages().delete(name=message_id).execute()
+
+        logger.info(f"Deleted notification: {message_id}")
+
+        # Mark as deleted in database
+        try:
+            db = get_db()
+            db.mark_notification_deleted(message_id)
+        except Exception as db_error:
+            logger.warning(f"Failed to mark notification as deleted in DB: {db_error}")
+
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to delete notification {message_id}: {e}")
+        return False
+
+
+def search_notifications_by_content(
+    store_name: Optional[str] = None,
+    file_name: Optional[str] = None,
+    date_str: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """
+    Search for notifications by content (for screenshot-based identification).
+
+    Args:
+        store_name: Store name from screenshot (e.g., "BF Homes")
+        file_name: File name from screenshot
+        date_str: Date from screenshot (e.g., "2026-02-02")
+
+    Returns:
+        List of matching notification records with message_id for deletion
+    """
+    try:
+        db = get_db()
+        results = db.find_notification_by_content(
+            store_name=store_name,
+            file_name=file_name,
+            date_str=date_str
+        )
+
+        logger.info(f"Found {len(results)} notifications matching criteria")
+        return results
+
+    except Exception as e:
+        logger.error(f"Failed to search notifications: {e}")
+        return []
+
+
+def get_notification_history(
+    store_code: Optional[str] = None,
+    message_type: Optional[str] = None,
+    days: int = 7
+) -> List[Dict[str, Any]]:
+    """
+    Get notification history.
+
+    Args:
+        store_code: Filter by store code
+        message_type: Filter by type (daily_summary, wrong_format, etc.)
+        days: Number of days to look back
+
+    Returns:
+        List of notification records
+    """
+    try:
+        db = get_db()
+        since = datetime.utcnow() - timedelta(days=days)
+        results = db.search_notifications(
+            store_code=store_code,
+            message_type=message_type,
+            since=since
+        )
+
+        return results
+
+    except Exception as e:
+        logger.error(f"Failed to get notification history: {e}")
+        return []

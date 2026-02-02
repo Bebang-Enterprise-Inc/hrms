@@ -173,6 +173,19 @@ class Database:
                     extracted_data TEXT
                 );
 
+                -- Notification tracking table for Google Chat messages
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    message_id TEXT NOT NULL UNIQUE,
+                    message_type TEXT NOT NULL,
+                    file_id TEXT,
+                    store_code TEXT,
+                    sent_at TEXT NOT NULL,
+                    message_preview TEXT,
+                    deleted_at TEXT,
+                    FOREIGN KEY (file_id) REFERENCES file_queue(file_id)
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_folder_watch_expiration
                 ON folder_watches(expiration);
 
@@ -181,6 +194,15 @@ class Database:
 
                 CREATE INDEX IF NOT EXISTS idx_processed_files_store
                 ON processed_files(store_code, processed_at DESC);
+
+                CREATE INDEX IF NOT EXISTS idx_notifications_message_id
+                ON notifications(message_id);
+
+                CREATE INDEX IF NOT EXISTS idx_notifications_sent_at
+                ON notifications(sent_at DESC);
+
+                CREATE INDEX IF NOT EXISTS idx_notifications_file_id
+                ON notifications(file_id);
             """)
 
             # Migration: Add retry_count column if it doesn't exist
@@ -693,6 +715,153 @@ class Database:
                 'processed_last_hour': last_hour,
                 'processed_today': today
             }
+
+    def log_notification(
+        self,
+        message_id: str,
+        message_type: str,
+        message_preview: str,
+        file_id: Optional[str] = None,
+        store_code: Optional[str] = None
+    ) -> int:
+        """
+        Log a sent notification to the database.
+
+        Args:
+            message_id: Google Chat message ID (e.g., "spaces/XXX/messages/YYY")
+            message_type: Type of notification (daily_summary, wrong_format, processing_failure, batch_failure)
+            message_preview: First 100 chars of message for identification
+            file_id: Associated file ID (if file-specific notification)
+            store_code: Store code (if applicable)
+
+        Returns:
+            Notification ID
+        """
+        with self._connection() as conn:
+            cursor = conn.execute("""
+                INSERT INTO notifications (
+                    message_id, message_type, file_id, store_code,
+                    sent_at, message_preview
+                ) VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                message_id,
+                message_type,
+                file_id,
+                store_code,
+                datetime.utcnow().isoformat(),
+                message_preview[:100] if message_preview else None
+            ))
+            return cursor.lastrowid
+
+    def get_notification_by_message_id(self, message_id: str) -> Optional[Dict[str, Any]]:
+        """Get notification record by Google Chat message ID."""
+        with self._connection() as conn:
+            row = conn.execute("""
+                SELECT * FROM notifications WHERE message_id = ?
+            """, (message_id,)).fetchone()
+            return dict(row) if row else None
+
+    def search_notifications(
+        self,
+        store_code: Optional[str] = None,
+        message_type: Optional[str] = None,
+        since: Optional[datetime] = None,
+        limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """
+        Search notifications by criteria.
+
+        Args:
+            store_code: Filter by store code
+            message_type: Filter by notification type
+            since: Filter by sent date
+            limit: Maximum results
+
+        Returns:
+            List of notification records
+        """
+        with self._connection() as conn:
+            query = "SELECT * FROM notifications WHERE deleted_at IS NULL"
+            params = []
+
+            if store_code:
+                query += " AND store_code = ?"
+                params.append(store_code)
+
+            if message_type:
+                query += " AND message_type = ?"
+                params.append(message_type)
+
+            if since:
+                query += " AND sent_at >= ?"
+                params.append(since.isoformat())
+
+            query += " ORDER BY sent_at DESC LIMIT ?"
+            params.append(limit)
+
+            rows = conn.execute(query, params).fetchall()
+            return [dict(row) for row in rows]
+
+    def mark_notification_deleted(self, message_id: str) -> bool:
+        """
+        Mark notification as deleted.
+
+        Args:
+            message_id: Google Chat message ID
+
+        Returns:
+            True if notification was found and marked deleted
+        """
+        with self._connection() as conn:
+            cursor = conn.execute("""
+                UPDATE notifications
+                SET deleted_at = ?
+                WHERE message_id = ? AND deleted_at IS NULL
+            """, (datetime.utcnow().isoformat(), message_id))
+            return cursor.rowcount > 0
+
+    def find_notification_by_content(
+        self,
+        store_name: Optional[str] = None,
+        file_name: Optional[str] = None,
+        date_str: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Find notifications by content (for screenshot-based search).
+
+        Args:
+            store_name: Store name to search for
+            file_name: File name to search for
+            date_str: Date string from message (e.g., "2026-02-02")
+
+        Returns:
+            List of matching notifications
+        """
+        with self._connection() as conn:
+            query = """
+                SELECT * FROM notifications
+                WHERE deleted_at IS NULL
+            """
+            params = []
+
+            if store_name:
+                # Convert "Bf Homes" to "bf_homes" for matching
+                store_code = store_name.lower().replace(' ', '_')
+                query += " AND LOWER(REPLACE(store_code, '_', ' ')) LIKE ?"
+                params.append(f"%{store_name.lower()}%")
+
+            if file_name:
+                query += " AND message_preview LIKE ?"
+                params.append(f"%{file_name}%")
+
+            if date_str:
+                query += " AND sent_at LIKE ?"
+                params.append(f"{date_str}%")
+
+            query += " ORDER BY sent_at DESC LIMIT 10"
+
+            rows = conn.execute(query, params).fetchall()
+            return [dict(row) for row in rows]
 
 
 # Singleton instance
