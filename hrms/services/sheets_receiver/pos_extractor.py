@@ -43,6 +43,14 @@ REPORT_PATTERNS = {
     'discount_report': [
         r'discount.?report',
         r'discounts?\.xlsx',
+    ],
+    'hourly_sales': [
+        r'hourly.?sales',
+        r'hourlysales',
+    ],
+    'daily_sales_detailed': [
+        r'daily.?sales.?detail',
+        r'dailysalesdetail',
     ]
 }
 
@@ -89,6 +97,22 @@ REPORT_SCHEMAS = {
         'numeric_columns': [
             'Discount Amount', 'Vat Adjustment', 'VAT',
             'Service Charge Amount', 'Sub Total', 'Other Charges', 'Final Amount'
+        ]
+    },
+    'hourly_sales': {
+        'header_row': 9,
+        'key_columns': ['Hour', 'Date', 'Net Sales', 'Gross Sales'],
+        'numeric_columns': [
+            'Net Sales', 'Gross Sales', 'Transaction Count', 'Guest Count',
+            'VAT', 'Discount Amount', 'Service Charge'
+        ]
+    },
+    'daily_sales_detailed': {
+        'header_row': 9,
+        'key_columns': ['Date', 'Bill No', 'Net Sales', 'Gross Sales'],
+        'numeric_columns': [
+            'Discount Amount', 'Vat Adjustment', 'Tax Amount', 'VAT',
+            'Service Charge Amount', 'Net Sales', 'Gross Sales', 'Gc Excess'
         ]
     }
 }
