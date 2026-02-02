@@ -83,16 +83,17 @@ def get_commissary_dashboard():
         }
     )
 
-    # FQI issues (last 7 days)
+    # FQI issues (last 7 days) - disabled until DocType is created
     fqi_issues = 0
-    if frappe.db.exists("DocType", "BEI FQI Report"):
-        fqi_issues = frappe.db.count(
-            "BEI FQI Report",
-            filters={
-                "inspection_date": [">=", add_days(today_date, -7)],
-                "status": "Failed"
-            }
-        )
+    # TODO: Enable when BEI FQI Report DocType is created
+    # if frappe.db.exists("DocType", "BEI FQI Report"):
+    #     fqi_issues = frappe.db.count(
+    #         "BEI FQI Report",
+    #         filters={
+    #             "inspection_date": [">=", add_days(today_date, -7)],
+    #             "status": "Failed"
+    #         }
+    #     )
 
     # Recent production activity
     recent_production = frappe.get_all(
@@ -524,40 +525,10 @@ def get_order_summary():
 def get_fqi_summary(days=7):
     """
     Get FQI (Food Quality Inspection) summary from stores.
+    Note: BEI FQI Report DocType not yet created - returns empty for now.
     """
-    if not frappe.db.exists("DocType", "BEI FQI Report"):
-        return {"success": True, "data": [], "message": "FQI tracking not configured"}
-
-    from_date = add_days(today(), -int(days))
-
-    reports = frappe.get_all(
-        "BEI FQI Report",
-        filters={
-            "inspection_date": [">=", from_date]
-        },
-        fields=[
-            "name", "store", "inspection_date", "status",
-            "inspector", "remarks"
-        ],
-        order_by="inspection_date desc",
-        limit=50
-    )
-
-    # Summary stats
-    total = len(reports)
-    passed = sum(1 for r in reports if r["status"] == "Passed")
-    failed = sum(1 for r in reports if r["status"] == "Failed")
-
-    return {
-        "success": True,
-        "data": reports,
-        "summary": {
-            "total": total,
-            "passed": passed,
-            "failed": failed,
-            "pass_rate": round((passed / total * 100) if total > 0 else 0, 1)
-        }
-    }
+    # TODO: Enable when BEI FQI Report DocType is created with proper schema
+    return {"success": True, "data": [], "message": "FQI tracking not yet configured"}
 
 
 @frappe.whitelist()
