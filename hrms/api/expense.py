@@ -9,8 +9,15 @@ import frappe
 from frappe import _
 import json
 from frappe.utils import today, now_datetime, flt, get_url
-from hrms.api.expense_classifier import classify_expense
-from hrms.api.expense_ocr import extract_receipt_data
+# Lazy imports - only when OCR/classification is needed
+# This prevents module load failures if dependencies are missing
+def _get_classifier():
+    from hrms.api.expense_classifier import classify_expense
+    return classify_expense
+
+def _get_ocr():
+    from hrms.api.expense_ocr import extract_receipt_data
+    return extract_receipt_data
 
 
 # ============================================================
@@ -103,6 +110,7 @@ def process_expense_background(expense_name: str):
 
     # Step 1: OCR Receipt
     try:
+        extract_receipt_data = _get_ocr()
         ocr_result = extract_receipt_data(expense.receipt_photo)
         expense.internal_ocr_vendor = ocr_result.get("vendor")
         expense.internal_ocr_amount = flt(ocr_result.get("amount"))
@@ -125,6 +133,7 @@ def process_expense_background(expense_name: str):
 
     # Step 3: AI Classification
     try:
+        classify_expense = _get_classifier()
         classification = classify_expense(
             description=expense.manual_description,
             vendor=expense.manual_vendor,
