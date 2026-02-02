@@ -226,14 +226,22 @@ def get_material_request_items(mr_name):
         ]
     )
 
-    # Add stock availability from source warehouse (Commissary)
-    commissary = "Commissary - BEI"
+    # Add stock availability from source warehouse (from_warehouse in MR items)
+    # Fall back to "Commissary - BEI" or "TEST-COMMISSARY - BEI" if not specified
+    default_commissary = "Commissary - BEI"
     for item in items:
         item["pending_qty"] = item["qty"] - (item["ordered_qty"] or 0)
-        # Get available stock at commissary
+        # Get from_warehouse for this item
+        from_warehouse = frappe.db.get_value(
+            "Material Request Item",
+            item["name"],
+            "from_warehouse"
+        ) or default_commissary
+        item["from_warehouse"] = from_warehouse
+        # Get available stock at source warehouse
         bin_qty = frappe.db.get_value(
             "Bin",
-            {"item_code": item["item_code"], "warehouse": commissary},
+            {"item_code": item["item_code"], "warehouse": from_warehouse},
             "actual_qty"
         ) or 0
         item["available_qty"] = bin_qty
