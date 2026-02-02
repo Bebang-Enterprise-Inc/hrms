@@ -526,7 +526,7 @@ def get_warehouse_dashboard():
             "posting_date": [">=", frappe.utils.add_days(today, -7)],
             "stock_entry_type": "Material Transfer"
         },
-        fields=["name", "posting_date", "to_warehouse", "total_qty"],
+        fields=["name", "posting_date", "to_warehouse", "total_outgoing_value"],
         order_by="posting_date desc",
         limit=5
     )
