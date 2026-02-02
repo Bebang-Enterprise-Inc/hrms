@@ -56,17 +56,38 @@ def submit_expense(
     employee = frappe.db.get_value(
         "Employee",
         {"user_id": frappe.session.user},
-        ["name", "employee_name", "branch"],
+        ["name", "employee_name", "branch", "company"],
         as_dict=True
     )
 
     if not employee:
         frappe.throw(_("Employee record not found for current user"))
 
+    # Look up warehouse for the employee's branch
+    # ERPNext warehouses are named like "Branch - Company"
+    store = None
+    if employee.branch:
+        # Try exact match first
+        store = frappe.db.exists("Warehouse", employee.branch)
+        if not store:
+            # Try with company suffix
+            company = employee.company or "Bebang Enterprise Inc."
+            store = frappe.db.exists("Warehouse", f"{employee.branch} - {company}")
+        if not store:
+            # Try partial match (warehouse name starts with branch)
+            store = frappe.db.get_value(
+                "Warehouse",
+                {"name": ["like", f"{employee.branch}%"]},
+                "name"
+            )
+
+    if not store:
+        frappe.throw(_("Could not find warehouse for your branch. Please contact HR."))
+
     # Create expense request
     expense = frappe.new_doc("BEI Expense Request")
     expense.employee = employee.name
-    expense.store = employee.branch
+    expense.store = store
     expense.request_date = today()
 
     # Manual input from store staff
