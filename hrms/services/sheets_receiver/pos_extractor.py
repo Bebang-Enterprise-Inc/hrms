@@ -26,11 +26,16 @@ logger = logging.getLogger(__name__)
 REPORT_PATTERNS = {
     'daily_sales_revenue': [
         r'daily.?sales.?revenue',
+        r'daily.?sale.?revenue',  # PITX variant (singular "sale")
         r'dailysales',
     ],
     'sales_summary': [
         r'sales.?summary',
         r'salessummary',
+    ],
+    'bir_summary': [
+        r'bir.?summary',  # PITX BIR compliance report
+        r'birsummary',
     ],
     'transaction_report': [
         r'transaction.?report',
@@ -67,6 +72,17 @@ REPORT_SCHEMAS = {
     'sales_summary': {
         'header_row': 9,
         'key_columns': ['Date', 'Net Sales', 'Gross Sales'],
+        'numeric_columns': [
+            'Beginning Balance', 'Ending Balance', 'Net Sales', 'Gross Sales',
+            'VATABLE Sales', 'VAT', 'VAT Exempt Sales', 'Zero Rated Sales',
+            'Delivery Fee', 'Other Income', 'Gc Excess', 'Discount Pwd',
+            'Discount Senior', 'Discount Other', 'Vat Adjustment',
+            'Sales Overrun Amount', 'Returns', 'Void'
+        ]
+    },
+    'bir_summary': {
+        'header_row': 9,
+        'key_columns': ['Date', 'Net Sales', 'Gross Sales', 'VAT'],
         'numeric_columns': [
             'Beginning Balance', 'Ending Balance', 'Net Sales', 'Gross Sales',
             'VATABLE Sales', 'VAT', 'VAT Exempt Sales', 'Zero Rated Sales',
