@@ -101,8 +101,10 @@ jobs:
             NODE_VERSION=20.19.2
             APPS_JSON_BASE64=${{ env.APPS_JSON_BASE64 }}
             CACHE_BUST=${{ github.sha }}
-          no-cache: ${{ github.event.inputs.no_cache == 'true' }}
-          cache-from: ${{ github.event.inputs.no_cache != 'true' && format('type=registry,ref={0}:{1}', env.DOCKER_IMAGE, env.DOCKER_TAG) || '' }}
+          # For push events, always disable cache (github.event_name == 'push')
+          # For workflow_dispatch, respect the no_cache input
+          no-cache: ${{ github.event_name == 'push' || github.event.inputs.no_cache == 'true' }}
+          cache-from: ${{ github.event_name != 'push' && github.event.inputs.no_cache != 'true' && format('type=registry,ref={0}:{1}', env.DOCKER_IMAGE, env.DOCKER_TAG) || '' }}
           cache-to: type=inline
 
       - name: Output image info
