@@ -10,7 +10,14 @@ import frappe
 from frappe import _
 import json
 import base64
-import google.generativeai as genai
+
+# Optional import - Gemini SDK may not be installed
+try:
+    import google.generativeai as genai
+    HAS_GENAI = True
+except ImportError:
+    genai = None
+    HAS_GENAI = False
 
 
 # OCR extraction prompt
@@ -41,6 +48,9 @@ Return ONLY the JSON object, no markdown or explanation."""
 
 def get_gemini_model():
     """Get configured Gemini model."""
+    if not HAS_GENAI:
+        raise ValueError("google-generativeai package not installed. Run: pip install google-generativeai")
+
     api_key = frappe.conf.get("gemini_api_key")
     if not api_key:
         raise ValueError("Gemini API key not configured. Add 'gemini_api_key' to site_config.json")
