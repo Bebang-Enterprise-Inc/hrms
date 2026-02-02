@@ -225,7 +225,7 @@ def submit_production_output(items, batch_no=None, remarks=None):
     for item_data in items:
         item = frappe.get_doc("Item", item_data["item_code"])
 
-        se.append("items", {
+        item_row = {
             "item_code": item_data["item_code"],
             "item_name": item.item_name,
             "description": item.description,
@@ -234,8 +234,11 @@ def submit_production_output(items, batch_no=None, remarks=None):
             "stock_uom": item.stock_uom,
             "conversion_factor": 1,
             "t_warehouse": commissary_warehouse,
-            "batch_no": batch_no
-        })
+        }
+        # Only include batch_no if it's a valid non-empty string
+        if batch_no and batch_no.strip():
+            item_row["batch_no"] = batch_no
+        se.append("items", item_row)
 
     se.insert()
     se.submit()

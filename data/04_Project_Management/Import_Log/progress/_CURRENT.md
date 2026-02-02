@@ -4,21 +4,353 @@ window: 7d
 structure: tiered
 full_detail_days: 2
 summary_days: 5
-last_updated: 2026-02-01
+last_updated: 2026-02-02
 tokens: ~10000
-topics: [data-enrichment-v2, nickname-search, hr-approval-workflow, marketing-brain, clearance, docker, ci-cd, my.bebang.ph, hr-self-service, local-dev, onboarding, store-ops, rbac, backend-build, testing, frontend-planning, area-supervisor, sidebar-fix, custom-login, css-desync, css-404-fix, ap-opening-balance, cashflow, adms-reset, biometrics, source-documentation, sheets-receiver, change-tracking, maintenance-request]
+topics: [frappe-upload, employee-enrichment, blip-pubsub, data-enrichment-v2, nickname-search, hr-approval-workflow, marketing-brain, clearance, docker, ci-cd, my.bebang.ph, hr-self-service, local-dev, onboarding, store-ops, rbac, backend-build, testing, frontend-planning, area-supervisor, sidebar-fix, custom-login, css-desync, css-404-fix, ap-opening-balance, cashflow, adms-reset, biometrics, source-documentation, sheets-receiver, change-tracking, maintenance-request, commissary-dashboard]
 ---
 
 # Current Progress (Rolling 7 Days - Tiered)
 
-> **Window:** 2026-01-25 to 2026-02-01
-> **Last Updated:** 2026-02-01 - Data Enrichment V2 E2E tested and verified working
+> **Window:** 2026-01-27 to 2026-02-02
+> **Last Updated:** 2026-02-02 - Phase 1 + Commissary Dashboard Complete
 > **Structure:** Full detail (2 days) + Summary (5 days)
 > **Archives:** 2026-W03.md, 2026-W02-and-earlier.md
 
 ---
 
-## 2026-02-01 (Today)
+## 2026-02-02 (Today)
+
+### ✅ PHASE 1 COMPLETE - MASTER DATA UPLOADED & AUDITED
+
+**Plan:** `docs/plans/ERP_GOLIVE_PHASED_APPROACH_2026-02-02.md`
+
+| Milestone | Status |
+|-----------|--------|
+| Master data uploaded | ✅ Complete |
+| Post-upload audit | ✅ Complete (fixed 74 designations, 16 UOMs, 13 depts) |
+| Test stock in commissary | ✅ Complete (MAT-STE-2026-00001) |
+| Warehouse E2E testing | ✅ Complete (MR→Approve→Transfer→Stock Moved) |
+| Commissary dashboard | ✅ Complete (Backend API + Frontend deployed) |
+
+### ✅ Commissary Supervisor Dashboard - LIVE
+
+**Backend:** `hrms/api/commissary.py` - 12 API endpoints deployed to AWS
+**Frontend:** `my.bebang.ph/dashboard/commissary` - 4 pages deployed to Vercel
+
+| Component | Status | Details |
+|-----------|--------|---------|
+| Backend API | ✅ Deployed | 12 endpoints (dashboard, production, inventory, orders, fulfillment) |
+| Frontend Pages | ✅ Live | Dashboard, Production, Inventory, Fulfillment |
+| Navigation | ✅ Added | Sidebar shows for Warehouse User, HR Manager, Admin |
+| E2E Test | ✅ PASS | All pages load, data displays correctly |
+
+**API Endpoints (hrms.api.commissary):**
+- `get_commissary_dashboard()` - KPIs and summaries
+- `get_production_items()` - Items available for production
+- `get_production_log()` - Today's production entries
+- `submit_production_output()` - Log production
+- `get_inventory_levels()` - Stock levels with status
+- `get_low_stock_alerts()` - Items below threshold
+- `get_pending_store_orders()` - Material Requests pending
+- `get_order_detail()` - Single MR with items
+- `fulfill_order()` - Mark items fulfilled
+- `get_ready_for_dispatch()` - Fulfilled orders
+- `create_dispatch_transfer()` - Create Stock Entry transfer
+- `get_item_groups()` - For filtering
+
+**Bug Fixed:** Removed references to non-existent `reorder_level`/`safety_stock` fields on Item DocType. Using hardcoded thresholds (10/20) instead.
+
+**Commits:**
+- BEI-ERP: `5268973b7` - fix: Replace non-existent reorder_level/safety_stock fields
+- bei-tasks: `64e623f` - fix: Replace useToast with Sonner toast
+
+**Live URLs:**
+- https://my.bebang.ph/dashboard/commissary (Main dashboard)
+- https://my.bebang.ph/dashboard/commissary/production (Log production)
+- https://my.bebang.ph/dashboard/commissary/inventory (Stock levels - 5 items showing)
+- https://my.bebang.ph/dashboard/commissary/fulfillment (1 pending order: MAT-MR-2026-00002)
+
+---
+
+### ✅ Warehouse E2E Testing Complete
+
+**Test Report:** `scratchpad/warehouse_e2e_test_results_2026-02-02.md`
+
+| Step | Result | Evidence |
+|------|--------|----------|
+| Create Material Request | ✅ PASS | MAT-MR-2026-00002 |
+| View stock availability | ✅ PASS | Fixed API bug, shows correct stock |
+| Approve MR | ✅ PASS | Comment logged in Frappe |
+| Create Stock Transfer | ✅ PASS | MAT-STE-2026-00003 |
+| Verify stock moved | ✅ PASS | A011: 100→90, A013: 50→45 |
+
+**Bug Fixed:** `hrms/api/warehouse.py` - `get_material_request_items()` was hardcoded to check stock at "Commissary - BEI" instead of reading actual `from_warehouse` from MR items. Deployed with no_cache=true.
+
+---
+
+### 🚀 GO-LIVE APPROACH: PHASED DATA LOADING
+
+**Plan:** `docs/plans/ERP_GOLIVE_PHASED_APPROACH_2026-02-02.md`
+
+| Phase | What | When | Why |
+|-------|------|------|-----|
+| **Phase 1** | Master Data (COA, Warehouse, Supplier, Item, Employee) | **Now** | Static data, enables testing |
+| **Phase 2** | Opening Balances (Inventory, AP, AR, Bank) | **At Cutover** | Dynamic data, changes daily |
+
+**Key Decisions:**
+- Master data uploaded first enables full cycle testing with real item codes
+- Opening balances wait until cutover to avoid stale data
+- Test transactions marked with `[E2E TEST - DELETE BEFORE GO-LIVE]`
+- Cutover date flexible - align with physical inventory count
+
+---
+
+### ✅ DATABASE STATUS: Phase 1 Master Data UPLOADED
+
+**Uploaded 2026-02-02 via S3 → AWS SSM → Docker → MariaDB:**
+
+| DocType | Expected | Actual | Status |
+|---------|----------|--------|--------|
+| Account | 297 | **297** | ✅ Uploaded |
+| Warehouse | 47+ | **50** | ✅ Uploaded (47 new + 3 test) |
+| Supplier | 90+ | **91** | ✅ Uploaded (90 new + 1 test) |
+| Item | 348+ | **358** | ✅ Uploaded (348 new + 10 test) |
+| Employee | 592+ | **597** | ✅ Uploaded (592 new + 5 test) |
+
+**Also configured during upload:**
+- UOMs: BOX, SACK, BOTTLE, GALLON, UNIT
+- Item Groups: Raw Materials, Packaging Materials, Finished Goods, Consumables, Fixed Assets
+- Stock Entry Types: Material Issue, Material Receipt, Material Transfer, etc.
+- Cost Center: Main - BEI (default for company)
+- Stock Adjustment Account: Stock Adjustment - Bebang Enterprise Inc.
+- Default Inventory Account: INVENTORY - COMMISSARY - Bebang Enterprise Inc.
+- Fiscal Year: 2026
+
+**Test Stock Added to Commissary:**
+
+| Item | Qty | Warehouse |
+|------|-----|-----------|
+| A011 (Jollycow Condensed) | 100 | TEST-COMMISSARY - BEI |
+| A013 (Nestle Cream) | 50 | TEST-COMMISSARY - BEI |
+| A014 (Daisy Condensed) | 75 | TEST-COMMISSARY - BEI |
+| A025 (White Sugar) | 20 | TEST-COMMISSARY - BEI |
+| A027 (Banana/Saba) | 200 | TEST-COMMISSARY - BEI |
+
+Stock Entry: `MAT-STE-2026-00001` (Submitted)
+
+---
+
+### SQL Files Ready (scratchpad/)
+
+| File | Size | Records | Upload Order |
+|------|------|---------|--------------|
+| `COA_IMPORT.sql` | 207 KB | 297 | 1st |
+| `WAREHOUSE_IMPORT.sql` | 31 KB | 47 | 2nd |
+| `SUPPLIER_IMPORT.sql` | 48 KB | 90 | 3rd |
+| `ITEM_IMPORT.sql` | 230 KB | 348 | 4th |
+| `EMPLOYEE_IMPORT.sql` | 695 KB | 592 | 5th |
+
+**Generator Script:** `scratchpad/generate_all_import_sql.py`
+
+#### HR Guide Document Created
+
+**Google Doc:** [Employee Data Enrichment Guide for HR - February 2026](https://docs.google.com/document/d/1oHLKI7gDzZyudV-dK_m6Mvq1PlVTbSuu6_BLjwOSgVc/edit)
+
+**Contents:**
+- Employees without bank info (92 employees) - need manual bank/salary entry
+- Step-by-step Frappe navigation guide at hq.bebang.ph
+- Verification checklist
+
+**Shared with:** ronald@bebang.ph (HR Manager)
+
+#### Employee Import Audit (2026-02-02)
+
+| Check | Result |
+|-------|--------|
+| Record count match | ✅ 592 source = 592 imported |
+| Data integrity (required fields) | ✅ 100% populated |
+| Enriched data (bank info) | ✅ 500/592 (84.5%) |
+| Enriched data (salary) | ✅ 498/592 (84.1%) |
+| Duplicates | ✅ None found |
+| Sample verification | ✅ 100% accurate |
+| Test accounts preserved | ✅ 9 accounts intact |
+
+**Old data cleaned:** 820 bad records deleted (name-based IDs from Jan 14-17 imports)
+
+#### Nad's Access Verified
+
+| Item | Value |
+|------|-------|
+| User | ronald@bebang.ph |
+| Full Name | Ronald Caringal |
+| Roles | HR Manager, HR User, System Manager, Projects User |
+| Employee Permissions | Read, Write, Create, Delete ✓ |
+
+---
+
+### ✅ POST-UPLOAD DATA AUDIT (2026-02-02)
+
+**Purpose:** Verify uploaded data integrity and fix orphaned references.
+
+#### Audit Results
+
+| Check | Before | After | Status |
+|-------|--------|-------|--------|
+| Record counts | - | All match expected | ✅ |
+| Duplicate records | - | None found | ✅ |
+| Test vs production separation | - | TEST-* prefix clearly marked | ✅ |
+| Required fields populated | - | 100% | ✅ |
+| Items with invalid UOMs | 51 | 0 | ✅ Fixed (created 16 UOMs) |
+| Employee orphaned depts | Unknown | 0 | ✅ Fixed (created 13 depts) |
+| Employee orphaned designations | 591 | 0 | ✅ Fixed (created 74 designations) |
+| Item group references | 0 | 0 | ✅ All exist |
+
+#### Final Record Counts (Post-Audit)
+
+| DocType | Count | Notes |
+|---------|-------|-------|
+| Account | 298 | 297 imported + 1 stock adjustment |
+| Warehouse | 50 | 47 imported + 3 test |
+| Supplier | 91 | 90 imported + 1 test |
+| Item | 358 | 348 imported + 10 test |
+| Employee | 597 | 592 imported + 5 test |
+| Department | 13 | Created during audit |
+| Designation | 84 | 10 existed + 74 created |
+| UOM | 27 | 11 existed + 16 created |
+| Item Group | 10 | All referenced groups exist |
+| Stock Entry | 1 | Test stock in commissary |
+
+#### Created During Audit
+
+**16 UOMs:** BUNDLE, PCS, GAL, CASE, KILOGRAMS, ROLL, SET, PACKS, BARREL, UNITS, Grams, PAIR, REAM, LOT, PC, JAR
+
+**13 Departments:** Operations, Commissary, Customer Service, HR and Admin, Marketing, Projects, Finance and Accounting, R&D, Audit, IT, Business Development, Supply Chain, Executive
+
+**74 Designations:** STORE CREW, CASHIER, ASSISTANT STORE SUPERVISOR, STORE SUPERVISOR, COMMISSARY CREW, and 69 others
+
+**Conclusion:** No contamination from previous imports. All data is clean and all foreign key references are valid.
+
+---
+
+### 📋 Opening Balances (Phase 2 - At Cutover)
+
+| Data | Records | Amount | Status |
+|------|---------|--------|--------|
+| AP Opening | 418 rows | PHP 66.2M | ✅ Ready, upload at cutover |
+| AR Opening | 219 rows | PHP 25.2M | ✅ Ready, upload at cutover |
+| Opening Inventory | ~35K items | TBD | ⏳ Fresh count at cutover |
+| Bank Balances | TBD | TBD | ⏳ Statement at cutover |
+
+**Decision:** Opening balances uploaded at cutover to avoid stale data. Team continues using current systems until then.
+
+---
+
+### ✅ WAREHOUSE E2E TESTING COMPLETE
+
+Full cycle test of warehouse supervisor interface using Chrome DevTools MCP.
+
+#### Test Results
+
+| Test Category | Result | Notes |
+|---------------|--------|-------|
+| Page Rendering | 4/4 PASS | Dashboard, Receive, Approve, Dispatch |
+| Navigation | PASS | All sidebar and button links work |
+| Console Errors | 0 | No JavaScript errors |
+| API Integration | PASS | All warehouse APIs return 200 |
+| E2E Workflow (Reject MR) | PASS | Created MR → Rejected via UI → Verified in Frappe |
+| Frappe Verification | PASS | Record updated (status=Cancelled, docstatus=2) |
+
+#### Bug Fixed During Testing
+
+**"e.map is not a function" error on receive page**
+- **Cause:** API response was double-nested: `{success:true, data:{success:true, data:[]}}`
+- **Fix:** Updated `app/api/warehouse/route.ts` to extract inner data
+- **Commit:** b5c3ecf
+
+#### Test Data Created
+
+| DocType | Name | Status |
+|---------|------|--------|
+| Material Request | MAT-MR-2026-00001 | Cancelled |
+| Supplier | TEST-SUPPLIER-001 | Active |
+| Items | TEST-FG001, TEST-FG002 | Active |
+| Warehouses | TEST-COMMISSARY, TEST-STORE-BGC, TEST-STORE-MAKATI | Active |
+
+#### Limitations (Require Accounting Setup)
+
+| Workflow | Status | Blocker |
+|----------|--------|---------|
+| Approve MR | NOT TESTED | No stock in commissary (Available: 0) |
+| Receive PO | NOT TESTED | Supplier missing accounting config |
+| Dispatch | NOT TESTED | No approved MRs to dispatch |
+
+**Test Report:** `scratchpad/warehouse_e2e_FULL_CYCLE_2026-02-02.md`
+
+**Next Steps:**
+1. Complete accounting setup (expense accounts, supplier accounts)
+2. Add opening stock to commissary via Stock Reconciliation
+3. Test approval and dispatch workflows
+
+---
+
+## 2026-02-01 (Yesterday)
+
+### 🚀 FRAPPE UPLOAD READY - Final Master Data List
+
+**Decision:** Upload to Frappe now. HR will enrich unmatched employees directly in Frappe (94 employees missing payroll data).
+
+#### Master Data Files
+
+| File | Records | DocType | Status |
+|------|---------|---------|--------|
+| `EMPLOYEES_ENRICHED_MASTER.csv` | 592 | Employee | ✅ Ready (463 enriched, 94 need HR review) |
+| `SUPPLIER_MASTER.csv` | 90 | Supplier | ✅ Ready |
+| `ITEM_MASTER.csv` | 348 | Item | ✅ Ready |
+| `COA.csv` | 297 | Account | ✅ Ready |
+| `WAREHOUSE_TREE.csv` | 47 | Warehouse | ✅ Ready |
+
+#### Opening Balances
+
+| File | Records | DocType | Amount |
+|------|---------|---------|--------|
+| `AP_OPENING.csv` | 418 | Purchase Invoice | PHP 66.2M |
+| `AR_AGING/` | 219 | Sales Invoice | PHP 25.2M |
+| `OPENING_INVENTORY_SUMMARY` | 88 | Stock Entry | 35K line items |
+
+#### File Locations
+
+```
+data/_FINAL/
+├── EMPLOYEES_ENRICHED_MASTER.csv    # 592 employees with bank/SSS/rates
+├── EMPLOYEES_UNMATCHED_FOR_REVIEW.csv # 94 needing HR enrichment
+├── SUPPLIER_MASTER.csv              # 90 suppliers
+├── ITEM_MASTER.csv                  # 348 items (5 groups)
+├── COA.csv                          # 297 accounts
+├── WAREHOUSE_TREE.csv               # 47 warehouses/branches
+├── AP_OPENING.csv                   # PHP 66.2M payables
+├── BANK_DIRECTORY.csv               # 54 banks (reference)
+└── STORE_MAPPING.csv                # 44 stores (reference)
+
+data/ERP_Reprocessing/2026-01-30/
+├── AR_AGING/                        # PHP 25.2M receivables
+└── ACTIVE_EMPLOYEES_MASTER_FINAL.csv # Original 592 (source of truth)
+
+data/Inventory/
+└── OPENING_INVENTORY_SUMMARY_2026-01-14.csv  # Opening stock
+```
+
+#### Employee Enrichment Summary
+
+| Confidence | Count | Has Bank | Has SSS | Action |
+|------------|-------|----------|---------|--------|
+| HIGH | 204 | ✓ | ✓ | Upload as-is |
+| MEDIUM | 162 | ✓ | ✓ | Upload as-is |
+| LOW | 97 | ✓ | ✓ | Upload, verify names |
+| NONE | 94 | ✗ | ✗ | HR to enrich in Frappe |
+
+**Payroll data added:** bank_name, account_no, monthly_rate, semimonthly_rate, daily_rate, sss_ee, phic_ee, hdmf_ee
+
+---
 
 ### Data Enrichment V2 - ✅ FULLY COMPLETE
 
@@ -87,6 +419,120 @@ topics: [data-enrichment-v2, nickname-search, hr-approval-workflow, marketing-br
 - `components/my-profile/hr-edit-request-dialog.tsx` - Camera dialog
 - `app/dashboard/hr/enrichment-tracker/page.tsx` - HR tracker page
 - `app/dashboard/my-profile/page.tsx` - Integrated V2 tiered editing
+
+---
+
+### Blip Pub/Sub - ✅ COMPLETE (Receive Messages Without @Mention)
+
+**Feature:** Enable Blip to receive ALL messages in "! Blip Notifications" space without requiring @Blip mention
+
+**Why Needed:** Users in the dedicated Blip space should be able to chat naturally without @mentioning the bot every time
+
+**Architecture Implemented:**
+```
+User message in "! Blip Notifications" space
+    ↓
+Google Workspace Events API detects message.created
+    ↓
+Pub/Sub delivers event to blip-chat-pull subscription
+    ↓
+PubSubConsumer pulls and processes message
+    ↓
+Blip responds via Chat API (as bot, not user)
+    ↓
+Bot's own message detected and skipped (no loop)
+```
+
+**Infrastructure Created (Programmatically):**
+
+| Resource | ID |
+|----------|-----|
+| GCP Project | `quiet-walker-475722-s2` |
+| Pub/Sub Topic | `projects/quiet-walker-475722-s2/topics/blip-chat-events` |
+| Pub/Sub Subscription | `projects/quiet-walker-475722-s2/subscriptions/blip-chat-pull` |
+| Workspace Events Sub | `subscriptions/chat-spaces-czpBQVFBQmlObXBCZzoxMTUxNDE4MDM3Nzc0NDMzNzIwOTI6MTA5NTAwMzc4NzQyNzg3ODI3NzAy` |
+| Target Space | `spaces/AAQABiNmpBg` (! Blip Notifications) |
+
+**New File:** `hrms/services/blip/pubsub_consumer.py` (~500 lines)
+
+Key components:
+- `PubSubConsumer` class - polls Pub/Sub every 2 seconds
+- `_ensure_events_subscription()` - creates/renews Workspace Events subscription (7-day expiry)
+- `_process_event()` - handles `google.workspace.chat.message.v1.created` events
+- `_send_chat_response()` - sends responses as bot (not via DWD)
+- Bot message detection using `sender.type == "BOT"` and bot user ID
+
+**Bugs Encountered & Fixed:**
+
+| Bug | Root Cause | Fix | Commit |
+|-----|------------|-----|--------|
+| API 403 after enabling | Pub/Sub API propagation delay | Added 10-second sleep before creating resources | - |
+| Credential scope error | Combined cloud-platform + chat scopes with DWD | Separated `_get_cloud_credentials()` and `_get_chat_credentials()` | - |
+| Credentials not in container | Created file on host, container couldn't access | Mount volume: `-v /path/credentials:/app/credentials:ro` | - |
+| Port conflict | Old `blip-assistant` container on port 8766 | Stop/remove both old containers before starting | - |
+| Event type not found | Expected `type` in payload | Type is in Pub/Sub attributes (`ce-type`) | `f1d3f88f9` |
+| Message structure wrong | Expected `data.message` | Message is at top level `{"message": {...}}` | `f1d3f88f9` |
+| Response loop | Bot messages processed | Check `sender.type == "BOT"` but wasn't working | `d906e5ce0` |
+| Response loop (still) | DWD made bot look like user | Send as bot (not DWD): `_get_bot_credentials()` | `d906e5ce0` |
+| Response loop (FINAL fix) | `sender.type` not always BOT | Check both `sender.type` AND bot user ID | `d92e66692` |
+
+**Key Discovery - Workspace Events Payload Structure:**
+
+```json
+// Pub/Sub message.attributes (NOT in payload)
+{
+  "ce-type": "google.workspace.chat.message.v1.created",
+  "ce-source": "//workspaceevents.googleapis.com/subscriptions/...",
+  "ce-subject": "//chat.googleapis.com/spaces/AAQABiNmpBg"
+}
+
+// Pub/Sub message.data (decoded)
+{
+  "message": {
+    "name": "spaces/AAQABiNmpBg/messages/...",
+    "sender": {
+      "name": "users/115141803777443372092",
+      "type": "HUMAN"  // or "BOT"
+    },
+    "text": "Hello Blip"
+  }
+}
+```
+
+**Bot User ID:** `users/109500378742787827702` (task-manager-service.json client_id)
+
+**Commits:**
+1. `16e2199fd` - Add debug logging for event structure
+2. `f1d3f88f9` - Handle Workspace Events payload format
+3. `d906e5ce0` - Send responses as BOT to prevent loop
+4. `d92e66692` - Add bot user ID check for final loop fix
+
+**Files Changed:**
+- `hrms/services/blip/pubsub_consumer.py` - NEW (PubSubConsumer class)
+- `hrms/services/blip/main.py` - Updated (import and start consumer)
+- `hrms/services/blip/config.py` - Updated (GOOGLE_SERVICE_ACCOUNT_JSON option)
+
+**Docker Deployment:**
+```bash
+docker run -d --name blip --restart unless-stopped -p 8766:8766 \
+  -e FRAPPE_URL=https://hq.bebang.ph \
+  -e FRAPPE_API_KEY=... \
+  -e FRAPPE_API_SECRET=... \
+  -e ANTHROPIC_API_KEY=... \
+  -v /path/credentials:/app/credentials:ro \
+  -v /path/blip:/app:ro \
+  python:3.11-slim bash -c "cd /app && pip install -r requirements.txt && python main.py"
+```
+
+**Common Issues & Solutions:**
+
+| Issue | Solution |
+|-------|----------|
+| "you must provide a token" (Doppler) | `cd F:\Dropbox\Projects\BEI-ERP && doppler login` (select global) |
+| SSM output encoding errors (emojis) | Use `grep` filters or Python JSON parsing |
+| Workspace Events 400 on filter query | The filter format is finicky; use `targetResource="//chat.googleapis.com/spaces/ID"` |
+| Workspace Events 409 Conflict | Subscription already exists; extract ID from error details |
+| Bot sends as user (via DWD) | Use `chat.bot` scope WITHOUT `subject` parameter |
 
 ---
 
