@@ -630,3 +630,175 @@ def create_dispatch_transfer(target_warehouse, items, mr_name=None, remarks=None
         },
         "message": f"Dispatch {se.name} created successfully"
     }
+
+
+# ============================================================
+# 7. ORDER DETAIL & FULFILLMENT
+# ============================================================
+
+@frappe.whitelist()
+def get_order_detail(mr_name):
+    """
+    Get detailed information about a Material Request for fulfillment.
+
+    Args:
+        mr_name: Material Request name (e.g., 'MAT-MR-2026-00002')
+    """
+    if not mr_name:
+        frappe.throw(_("Material Request name is required"))
+
+    mr = frappe.get_doc("Material Request", mr_name)
+    commissary_warehouse = get_commissary_warehouse()
+
+    items = []
+    for item in mr.items:
+        # Get current stock in commissary
+        stock = frappe.db.get_value(
+            "Bin",
+            {"item_code": item.item_code, "warehouse": commissary_warehouse},
+            "actual_qty"
+        ) or 0
+
+        items.append({
+            "item_code": item.item_code,
+            "item_name": item.item_name,
+            "qty_requested": item.qty,
+            "qty_ordered": item.ordered_qty or 0,
+            "qty_received": item.received_qty or 0,
+            "qty_pending": item.qty - (item.received_qty or 0),
+            "uom": item.uom,
+            "current_stock": flt(stock),
+            "can_fulfill": flt(stock) >= (item.qty - (item.received_qty or 0))
+        })
+
+    return {
+        "success": True,
+        "data": {
+            "name": mr.name,
+            "set_warehouse": mr.set_warehouse or "",
+            "transaction_date": str(mr.transaction_date) if mr.transaction_date else "",
+            "schedule_date": str(mr.schedule_date) if mr.schedule_date else "",
+            "status": mr.status,
+            "owner": mr.owner,
+            "items": items
+        }
+    }
+
+
+@frappe.whitelist()
+def fulfill_store_order(mr_name, items):
+    """
+    Fulfill a Material Request by creating a Stock Entry (Material Transfer).
+
+    Args:
+        mr_name: Material Request name
+        items: JSON array of {item_code, qty_to_fulfill, uom}
+    """
+    if isinstance(items, str):
+        items = json.loads(items)
+
+    if not items:
+        frappe.throw(_("No items to fulfill"))
+
+    mr = frappe.get_doc("Material Request", mr_name)
+    commissary_warehouse = get_commissary_warehouse()
+    target_warehouse = mr.set_warehouse
+
+    if not target_warehouse:
+        frappe.throw(_("Material Request has no target warehouse set"))
+
+    # Create Stock Entry
+    se = frappe.new_doc("Stock Entry")
+    se.stock_entry_type = "Material Transfer"
+    se.company = "Bebang Enterprise Inc."
+    se.posting_date = today()
+    se.posting_time = frappe.utils.nowtime()
+    se.from_warehouse = commissary_warehouse
+    se.to_warehouse = target_warehouse
+    se.remarks = f"Fulfillment for {mr_name}"
+
+    for item_data in items:
+        qty = flt(item_data.get("qty_to_fulfill") or item_data.get("qty"))
+        if qty <= 0:
+            continue
+
+        item = frappe.get_doc("Item", item_data["item_code"])
+
+        se.append("items", {
+            "item_code": item_data["item_code"],
+            "item_name": item.item_name,
+            "description": item.description,
+            "qty": qty,
+            "uom": item_data.get("uom") or item.stock_uom,
+            "stock_uom": item.stock_uom,
+            "conversion_factor": 1,
+            "s_warehouse": commissary_warehouse,
+            "t_warehouse": target_warehouse,
+            "material_request": mr_name,
+            "material_request_item": item_data.get("material_request_item")
+        })
+
+    if not se.items:
+        frappe.throw(_("No valid items to fulfill"))
+
+    se.insert()
+    se.submit()
+
+    return {
+        "success": True,
+        "data": {
+            "name": se.name,
+            "mr_name": mr_name,
+            "total_qty": sum(i.qty for i in se.items),
+            "items_count": len(se.items)
+        },
+        "message": f"Order fulfilled: {se.name}"
+    }
+
+
+@frappe.whitelist()
+def get_ready_for_pickup():
+    """
+    Get Stock Entries that are ready for pickup/dispatch.
+    These are submitted Material Transfer entries from commissary.
+    """
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Get recent Material Transfer stock entries from commissary
+    entries = frappe.get_all(
+        "Stock Entry",
+        filters={
+            "stock_entry_type": "Material Transfer",
+            "from_warehouse": commissary_warehouse,
+            "docstatus": 1,
+            "posting_date": [">=", frappe.utils.add_days(today(), -7)]  # Last 7 days
+        },
+        fields=["name", "posting_date", "to_warehouse", "remarks", "owner"],
+        order_by="posting_date desc",
+        limit=50
+    )
+
+    result = []
+    for entry in entries:
+        # Get items for this entry
+        items = frappe.get_all(
+            "Stock Entry Detail",
+            filters={"parent": entry.name},
+            fields=["item_code", "item_name", "qty", "uom"]
+        )
+
+        result.append({
+            "name": entry.name,
+            "posting_date": str(entry.posting_date) if entry.posting_date else "",
+            "target_warehouse": entry.to_warehouse,
+            "remarks": entry.remarks,
+            "owner": entry.owner,
+            "items_count": len(items),
+            "total_qty": sum(i.qty for i in items),
+            "items": items[:5]  # First 5 items for preview
+        })
+
+    return {
+        "success": True,
+        "data": result
+    }
