@@ -1,5 +1,11 @@
 name: Build and Deploy Frappe HRMS
 
+# Ensure only one deployment runs at a time - prevents race conditions
+# when multiple PRs merge in quick succession
+concurrency:
+  group: frappe-production-deploy
+  cancel-in-progress: false  # Queue subsequent runs, don't cancel them
+
 on:
   push:
     branches:
