@@ -1,0 +1,382 @@
+{
+    "actions": [],
+    "allow_rename": 0,
+    "autoname": "BEI-EXP-.YYYY.-.#####",
+    "creation": "2026-02-02 00:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "section_basic",
+        "employee",
+        "employee_name",
+        "column_break_basic",
+        "store",
+        "request_date",
+        "status",
+        "section_manual",
+        "manual_vendor",
+        "manual_description",
+        "column_break_manual",
+        "manual_amount",
+        "manual_date",
+        "section_receipt",
+        "receipt_photo",
+        "section_ocr",
+        "internal_ocr_vendor",
+        "internal_ocr_amount",
+        "internal_ocr_date",
+        "column_break_ocr",
+        "internal_ocr_confidence",
+        "internal_ocr_status",
+        "internal_ocr_line_items",
+        "internal_ocr_raw_text",
+        "section_matching",
+        "internal_match_score",
+        "internal_match_status",
+        "internal_amount_diff",
+        "column_break_match",
+        "internal_match_details",
+        "internal_review_status",
+        "section_classification",
+        "internal_suggested_coa",
+        "internal_coa_confidence",
+        "column_break_class",
+        "internal_classification_method",
+        "internal_coa_alternatives",
+        "section_approval",
+        "internal_final_coa",
+        "internal_approved_amount",
+        "internal_approval_source",
+        "column_break_approval",
+        "internal_reviewed_by",
+        "internal_review_date",
+        "internal_review_notes"
+    ],
+    "fields": [
+        {
+            "fieldname": "section_basic",
+            "fieldtype": "Section Break",
+            "label": "Request Details"
+        },
+        {
+            "fieldname": "employee",
+            "fieldtype": "Link",
+            "label": "Employee",
+            "options": "Employee",
+            "reqd": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "employee_name",
+            "fieldtype": "Data",
+            "label": "Employee Name",
+            "fetch_from": "employee.employee_name",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_basic",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "store",
+            "fieldtype": "Link",
+            "label": "Store",
+            "options": "Warehouse",
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "request_date",
+            "fieldtype": "Date",
+            "label": "Request Date",
+            "default": "Today",
+            "reqd": 1
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Draft\nSubmitted\nApproved\nRejected",
+            "default": "Draft",
+            "reqd": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "section_manual",
+            "fieldtype": "Section Break",
+            "label": "Manual Input"
+        },
+        {
+            "fieldname": "manual_vendor",
+            "fieldtype": "Data",
+            "label": "Vendor",
+            "reqd": 1
+        },
+        {
+            "fieldname": "manual_description",
+            "fieldtype": "Small Text",
+            "label": "Description",
+            "reqd": 1
+        },
+        {
+            "fieldname": "column_break_manual",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "manual_amount",
+            "fieldtype": "Currency",
+            "label": "Amount",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "manual_date",
+            "fieldtype": "Date",
+            "label": "Expense Date",
+            "reqd": 1
+        },
+        {
+            "fieldname": "section_receipt",
+            "fieldtype": "Section Break",
+            "label": "Receipt"
+        },
+        {
+            "fieldname": "receipt_photo",
+            "fieldtype": "Attach Image",
+            "label": "Receipt Photo",
+            "reqd": 1
+        },
+        {
+            "fieldname": "section_ocr",
+            "fieldtype": "Section Break",
+            "label": "OCR Results",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "internal_ocr_vendor",
+            "fieldtype": "Data",
+            "label": "OCR Vendor",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_ocr_amount",
+            "fieldtype": "Currency",
+            "label": "OCR Amount",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_ocr_date",
+            "fieldtype": "Date",
+            "label": "OCR Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_ocr",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "internal_ocr_confidence",
+            "fieldtype": "Float",
+            "label": "OCR Confidence",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_ocr_status",
+            "fieldtype": "Select",
+            "label": "OCR Status",
+            "options": "\nsuccess\npartial\nfailed",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_ocr_line_items",
+            "fieldtype": "JSON",
+            "label": "OCR Line Items",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_ocr_raw_text",
+            "fieldtype": "Long Text",
+            "label": "OCR Raw Text",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_matching",
+            "fieldtype": "Section Break",
+            "label": "Matching Results",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "internal_match_score",
+            "fieldtype": "Float",
+            "label": "Match Score",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_match_status",
+            "fieldtype": "Select",
+            "label": "Match Status",
+            "options": "\nmatch\nmismatch\nocr_failed",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_amount_diff",
+            "fieldtype": "Currency",
+            "label": "Amount Difference",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_match",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "internal_match_details",
+            "fieldtype": "JSON",
+            "label": "Match Details",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_review_status",
+            "fieldtype": "Select",
+            "label": "Review Status",
+            "options": "\npending_review\nmismatch_review\nneeds_classification\nocr_failed\nauto_approved",
+            "read_only": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "section_classification",
+            "fieldtype": "Section Break",
+            "label": "AI Classification",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "internal_suggested_coa",
+            "fieldtype": "Link",
+            "label": "Suggested COA",
+            "options": "Account",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_coa_confidence",
+            "fieldtype": "Float",
+            "label": "COA Confidence",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_class",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "internal_classification_method",
+            "fieldtype": "Select",
+            "label": "Classification Method",
+            "options": "\nrule\nml\nopenai",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_coa_alternatives",
+            "fieldtype": "JSON",
+            "label": "COA Alternatives",
+            "read_only": 1
+        },
+        {
+            "fieldname": "section_approval",
+            "fieldtype": "Section Break",
+            "label": "Approval"
+        },
+        {
+            "fieldname": "internal_final_coa",
+            "fieldtype": "Link",
+            "label": "Final COA",
+            "options": "Account"
+        },
+        {
+            "fieldname": "internal_approved_amount",
+            "fieldtype": "Currency",
+            "label": "Approved Amount"
+        },
+        {
+            "fieldname": "internal_approval_source",
+            "fieldtype": "Select",
+            "label": "Approval Source",
+            "options": "\nmanual\nocr\nedited\nauto"
+        },
+        {
+            "fieldname": "column_break_approval",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "internal_reviewed_by",
+            "fieldtype": "Link",
+            "label": "Reviewed By",
+            "options": "User",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_review_date",
+            "fieldtype": "Datetime",
+            "label": "Review Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "internal_review_notes",
+            "fieldtype": "Small Text",
+            "label": "Review Notes"
+        }
+    ],
+    "index_web_pages_for_search": 0,
+    "links": [],
+    "modified": "2026-02-02 00:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "HR",
+    "name": "BEI Expense Request",
+    "naming_rule": "Expression",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "share": 1,
+            "write": 1,
+            "role": "System Manager"
+        },
+        {
+            "create": 0,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "share": 1,
+            "write": 1,
+            "role": "Accounts Manager"
+        },
+        {
+            "create": 0,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "write": 1,
+            "role": "Accounts User"
+        },
+        {
+            "create": 1,
+            "read": 1,
+            "write": 0,
+            "role": "Employee"
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}
