@@ -10,8 +10,10 @@ safe parallel processing with ThreadPoolExecutor.
 
 import io
 import logging
+import os
 import threading
 import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -455,14 +457,61 @@ class FolderWatcher:
         _scan_folder(folder_id, 0)
         return all_files
 
-    def scan_all_stores(self) -> Dict[str, Any]:
+    def _scan_single_store(self, store_code: str, folder_config: FolderConfig) -> Dict[str, Any]:
+        """
+        Scan a single store folder. Used by parallel scan_all_stores.
+
+        Args:
+            store_code: Store identifier
+            folder_config: Folder configuration
+
+        Returns:
+            Dict with store_code, found, queued, or error
+        """
+        db = get_db()
+        try:
+            files = self.scan_folder_recursive(
+                folder_config.folder_id,
+                store_code
+            )
+
+            queued = 0
+            for f in files:
+                if not db.is_file_processed(f['id']):
+                    db.queue_file(f, store_code=store_code)
+                    queued += 1
+
+            if files:
+                logger.info(f"{folder_config.name}: {len(files)} files found, {queued} queued")
+
+            return {
+                'store_code': store_code,
+                'name': folder_config.name,
+                'found': len(files),
+                'queued': queued
+            }
+
+        except Exception as e:
+            logger.error(f"Error scanning {folder_config.name}: {e}")
+            return {
+                'store_code': store_code,
+                'name': folder_config.name,
+                'error': str(e)
+            }
+
+    def scan_all_stores(self, parallel: bool = True) -> Dict[str, Any]:
         """
         Scan all store folders (including subfolders) for new files.
+
+        Uses parallel processing by default to overcome Google Drive API latency.
+        With 10 workers scanning 43 stores: ~4-5 minutes vs ~45 minutes sequential.
+
+        Args:
+            parallel: Use parallel processing (default True)
 
         Returns:
             Summary with total files found and queued
         """
-        db = get_db()
         folders = get_watched_folders()
 
         if not folders:
@@ -472,32 +521,51 @@ class FolderWatcher:
         total_queued = 0
         store_results = {}
 
-        for store_code, folder_config in folders.items():
-            try:
-                files = self.scan_folder_recursive(
-                    folder_config.folder_id,
-                    store_code
-                )
+        if parallel and len(folders) > 1:
+            # Parallel processing - 10 workers by default
+            max_workers = int(os.environ.get('SCAN_WORKERS', '10'))
+            workers = min(max_workers, len(folders))
+            logger.info(f"Scanning {len(folders)} stores with {workers} parallel workers")
 
-                queued = 0
-                for f in files:
-                    if not db.is_file_processed(f['id']):
-                        db.queue_file(f, store_code=store_code)
-                        queued += 1
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                # Submit all scan tasks
+                future_to_store = {
+                    executor.submit(self._scan_single_store, store_code, folder_config): store_code
+                    for store_code, folder_config in folders.items()
+                }
 
-                total_found += len(files)
-                total_queued += queued
-
-                if files:
-                    store_results[store_code] = {
-                        'found': len(files),
-                        'queued': queued
-                    }
-                    logger.info(f"{folder_config.name}: {len(files)} files found, {queued} queued")
-
-            except Exception as e:
-                logger.error(f"Error scanning {folder_config.name}: {e}")
-                store_results[store_code] = {'error': str(e)}
+                # Collect results as they complete
+                for future in as_completed(future_to_store):
+                    store_code = future_to_store[future]
+                    try:
+                        result = future.result()
+                        if 'error' in result:
+                            store_results[store_code] = {'error': result['error']}
+                        else:
+                            total_found += result['found']
+                            total_queued += result['queued']
+                            if result['found'] > 0:
+                                store_results[store_code] = {
+                                    'found': result['found'],
+                                    'queued': result['queued']
+                                }
+                    except Exception as e:
+                        logger.error(f"Parallel scan error for {store_code}: {e}")
+                        store_results[store_code] = {'error': str(e)}
+        else:
+            # Sequential fallback
+            for store_code, folder_config in folders.items():
+                result = self._scan_single_store(store_code, folder_config)
+                if 'error' in result:
+                    store_results[store_code] = {'error': result['error']}
+                else:
+                    total_found += result['found']
+                    total_queued += result['queued']
+                    if result['found'] > 0:
+                        store_results[store_code] = {
+                            'found': result['found'],
+                            'queued': result['queued']
+                        }
 
         return {
             'total_found': total_found,

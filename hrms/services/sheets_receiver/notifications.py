@@ -277,7 +277,7 @@ def send_daily_summary(
             if failed > 0:
                 message += (
                     f"*Action Required:* {failed} files need attention.\n"
-                    f"Report: https://docs.google.com/spreadsheets/d/1bsW62PhATRVTdUH_q-Ce_PQqDl_suTlXJ_p9SaQMdEI\n\n"
+                    f"Report: https://docs.google.com/spreadsheets/d/1odzIdRNdgNvvXM5FL0TpMif3Cm2kIK5qFgVRQu5bIEc\n\n"
                 )
 
             message += f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"
