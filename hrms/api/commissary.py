@@ -662,6 +662,7 @@ def get_order_detail(mr_name):
         items.append({
             "item_code": item.item_code,
             "item_name": item.item_name,
+            "qty": item.qty,  # Alias for frontend compatibility
             "qty_requested": item.qty,
             "qty_ordered": item.ordered_qty or 0,
             "qty_received": item.received_qty or 0,
@@ -675,6 +676,7 @@ def get_order_detail(mr_name):
         "success": True,
         "data": {
             "name": mr.name,
+            "mr_name": mr.name,  # Alias for frontend compatibility
             "set_warehouse": mr.set_warehouse or "",
             "transaction_date": str(mr.transaction_date) if mr.transaction_date else "",
             "schedule_date": str(mr.schedule_date) if mr.schedule_date else "",
@@ -718,7 +720,7 @@ def fulfill_store_order(mr_name, items):
     se.remarks = f"Fulfillment for {mr_name}"
 
     for item_data in items:
-        qty = flt(item_data.get("qty_to_fulfill") or item_data.get("qty"))
+        qty = flt(item_data.get("qty_to_fulfill") or item_data.get("fulfilled_qty") or item_data.get("qty"))
         if qty <= 0:
             continue
 
