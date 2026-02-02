@@ -125,26 +125,8 @@ class FileProcessor:
                 error=error_msg
             )
 
-            # Send notification for failed file
-            detected_at = queue_entry.get('detected_at', datetime.utcnow().isoformat())
-            try:
-                # Check if it's an XLS file (wrong format)
-                if file_name.lower().endswith('.xls') and not file_name.lower().endswith('.xlsx'):
-                    notifications.send_wrong_format_alert(
-                        store_code=store_code,
-                        file_name=file_name,
-                        detected_at=detected_at
-                    )
-                else:
-                    # Other processing failure
-                    notifications.send_processing_failure_alert(
-                        store_code=store_code,
-                        file_name=file_name,
-                        error_message=error_msg,
-                        detected_at=detected_at
-                    )
-            except Exception as notif_error:
-                logger.warning(f"Failed to send notification: {notif_error}")
+            # Real-time notifications disabled - only daily summary is sent
+            # See notifications.send_daily_summary() scheduled at 23:00 UTC (7 AM PHT)
 
             return {
                 'status': 'failed',
