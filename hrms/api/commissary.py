@@ -713,6 +713,9 @@ def fulfill_store_order(mr_name, items):
     if not target_warehouse:
         frappe.throw(_("Material Request has no target warehouse set"))
 
+    # Build item_code to MR item name mapping
+    mr_item_map = {item.item_code: item.name for item in mr.items}
+
     # Create Stock Entry
     se = frappe.new_doc("Stock Entry")
     se.stock_entry_type = "Material Transfer"
@@ -728,10 +731,14 @@ def fulfill_store_order(mr_name, items):
         if qty <= 0:
             continue
 
-        item = frappe.get_doc("Item", item_data["item_code"])
+        item_code = item_data["item_code"]
+        item = frappe.get_doc("Item", item_code)
+
+        # Get the MR item reference (required by ERPNext validation)
+        mr_item_name = item_data.get("material_request_item") or mr_item_map.get(item_code)
 
         se.append("items", {
-            "item_code": item_data["item_code"],
+            "item_code": item_code,
             "item_name": item.item_name,
             "description": item.description,
             "qty": qty,
@@ -741,7 +748,7 @@ def fulfill_store_order(mr_name, items):
             "s_warehouse": commissary_warehouse,
             "t_warehouse": target_warehouse,
             "material_request": mr_name,
-            "material_request_item": item_data.get("material_request_item")
+            "material_request_item": mr_item_name
         })
 
     if not se.items:
