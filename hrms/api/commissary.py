@@ -104,7 +104,7 @@ def get_commissary_dashboard():
             "to_warehouse": commissary_warehouse,
             "docstatus": 1
         },
-        fields=["name", "posting_date", "total_qty", "remarks"],
+        fields=["name", "posting_date", "total_outgoing_value", "remarks"],
         order_by="posting_date desc",
         limit=5
     )
@@ -274,7 +274,7 @@ def get_production_history(date_from=None, date_to=None, limit=20):
     entries = frappe.get_all(
         "Stock Entry",
         filters=filters,
-        fields=["name", "posting_date", "total_qty", "remarks", "owner"],
+        fields=["name", "posting_date", "remarks", "owner"],
         order_by="posting_date desc",
         limit=int(limit)
     )
@@ -287,6 +287,7 @@ def get_production_history(date_from=None, date_to=None, limit=20):
             fields=["item_code", "item_name", "qty", "uom"]
         )
         entry["items"] = items
+        entry["total_qty"] = sum(i.get("qty", 0) for i in items)
         entry["items_count"] = len(items)
 
     return {"success": True, "data": entries}
