@@ -12,7 +12,7 @@ topics: [data-enrichment-v2, nickname-search, hr-approval-workflow, marketing-br
 # Current Progress (Rolling 7 Days - Tiered)
 
 > **Window:** 2026-01-25 to 2026-02-01
-> **Last Updated:** 2026-02-01 - Data Enrichment V2 backend complete
+> **Last Updated:** 2026-02-01 - Data Enrichment V2 E2E tested and verified working
 > **Structure:** Full detail (2 days) + Summary (5 days)
 > **Archives:** 2026-W03.md, 2026-W02-and-earlier.md
 
@@ -20,7 +20,7 @@ topics: [data-enrichment-v2, nickname-search, hr-approval-workflow, marketing-br
 
 ## 2026-02-01 (Today)
 
-### Data Enrichment V2 - ✅ BACKEND COMPLETE
+### Data Enrichment V2 - ✅ FULLY COMPLETE
 
 **Feature:** Tiered employee profile editing with HR approval workflow
 
@@ -36,34 +36,57 @@ topics: [data-enrichment-v2, nickname-search, hr-approval-workflow, marketing-br
 | HR Approval | Legal name, birthdate, SSS/TIN/PhilHealth/Pag-IBIG | Submit with Gov ID photo |
 | Locked | Employee ID, hire date, job title, department, branch | HR Desk only |
 
-**New DocType:**
-- `BEI Edit Request` - Tracks field change requests with Pending/Approved/Rejected status
+**Backend (Frappe):**
+- New DocType: `BEI Edit Request` with auto-apply on approval
+- 9 new API endpoints in `hrms/api/enrichment.py`
+- 6 custom fields on Employee DocType
+- Docker deployed to production
 
-**New APIs (9 endpoints):**
-- `submit_edit_request()` - Employee submits change with reason + optional Gov ID photo
-- `get_my_edit_requests()` - Employee views their pending requests
-- `get_pending_edit_requests()` - HR queue
-- `process_edit_request()` - HR approve/reject/request info
-- `update_self_service_field()` - Instant save for safe fields
-- `search_employees()` - Nickname-aware search
-- `get_enrichment_tracker()` - HR dashboard data
-- `send_enrichment_reminders()` - Bulk email reminders
-- `mark_enrichment_complete()` - HR marks employee complete
+**Frontend (bei-tasks):**
+- Updated `/dashboard/my-profile` page with tiered editing
+- New HR Edit Request dialog with camera capture for Gov ID photos
+- New HR Enrichment Tracker at `/dashboard/hr/enrichment-tracker`
+- V2 hooks: `use-profile-v2.ts` for tiered updates
+- Build verified passing
 
-**Custom Fields Added to Employee:**
-- `custom_nickname` - Searchable nickname
-- `custom_government_id_photo` - Latest verified ID
-- `custom_enrichment_status` - Not Started/In Progress/Submitted/Complete
-- `custom_enrichment_submitted_date`, `custom_enrichment_complete_date`
+**E2E Testing - ✅ COMPLETE (2026-02-01):**
 
-**Files Created/Modified:**
+| Test | Status | Details |
+|------|--------|---------|
+| Self-service field edit | ✅ PASS | Nickname "Tester" saved instantly |
+| HR approval request | ✅ PASS | Marital Status request created |
+| Edit request in Frappe | ✅ PASS | BEI-EDIT-2026-00001 created |
+| HR Tracker displays | ✅ PASS | Pending request shown |
+| HR approval action | ✅ PASS | Approved by test.hr@bebang.ph |
+| Employee record updated | ✅ PASS | marital_status = "Single" |
+
+*Test Accounts:* test.staff@bebang.ph (employee), test.hr@bebang.ph (HR)
+
+*Bugs Fixed During Testing:*
+1. `v2-update route` - parameter name `employee_id` → `employee`
+2. `v2-update route` - missing `employee` param in submit_edit_request
+3. `enrichment.py` - use `db.set_value()` to bypass validation
+4. `edit-requests route` - action mapping (Approved → approve)
+5. `edit-requests route` - param name `request_name` → `edit_request`
+6. `bei_edit_request.py` - use `db.set_value()` in `_apply_change()`
+
+**Files Changed:**
+
+*Frappe (this repo):*
 - `hrms/hr/doctype/bei_edit_request/` - New DocType (3 files)
-- `hrms/fixtures/custom_field.json` - Added 6 Employee custom fields
-- `hrms/api/enrichment.py` - Added 9 new endpoints
-- `docs/plans/DATA_ENRICHMENT_V2_PLAN_2026-02-01.md` - Full implementation plan
-- `docs/MY_BEBANG_PH_COMPLETE_REFERENCE.md` - Updated with V2 features
+- `hrms/fixtures/custom_field.json` - 6 Employee custom fields
+- `hrms/api/enrichment.py` - 9 new endpoints
+- `docs/plans/DATA_ENRICHMENT_V2_PLAN_2026-02-01.md`
 
-**Next:** Frontend implementation in bei-tasks repo
+*bei-tasks:*
+- `types/my-profile.ts` - Added FieldEditTier, FIELD_TIERS
+- `app/api/my-profile/v2-update/route.ts` - Tiered update API
+- `app/api/hr/enrichment-tracker/route.ts` - HR tracker API
+- `app/api/hr/edit-requests/route.ts` - Edit requests API
+- `hooks/use-profile-v2.ts` - V2 profile hooks
+- `components/my-profile/hr-edit-request-dialog.tsx` - Camera dialog
+- `app/dashboard/hr/enrichment-tracker/page.tsx` - HR tracker page
+- `app/dashboard/my-profile/page.tsx` - Integrated V2 tiered editing
 
 ---
 
