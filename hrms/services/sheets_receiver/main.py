@@ -220,6 +220,29 @@ def renew_folder_watches_job():
         logger.error(f"Folder watch renewal failed: {e}")
 
 
+def daily_summary_job():
+    """
+    Scheduled job to send daily summary report via Google Chat.
+
+    Runs at 7 AM Philippines time (23:00 UTC previous day).
+    Reports on the previous day's file processing.
+    """
+    try:
+        from . import notifications
+        db = get_db()
+
+        logger.info("Sending daily POS file summary report...")
+        result = notifications.send_daily_summary(db)
+
+        if result:
+            logger.info(f"Daily summary sent: {result}")
+        else:
+            logger.warning("Failed to send daily summary")
+
+    except Exception as e:
+        logger.error(f"Daily summary job failed: {e}")
+
+
 def run_scheduler():
     """Run the scheduler in a background thread."""
     config = get_config()
@@ -250,6 +273,13 @@ def run_scheduler():
     # Renew folder watches every hour (they expire after 24h)
     schedule.every(1).hour.do(renew_folder_watches_job)
 
+    # ==========================================================================
+    # Notifications & Reporting
+    # ==========================================================================
+
+    # Daily summary at 7 AM Philippines time (23:00 UTC)
+    schedule.every().day.at("23:00").do(daily_summary_job)
+
     logger.info("Scheduler started with jobs:")
     logger.info("  - Sheet watch renewal: every 1 hour")
     logger.info("  - Sheet backup sync: every 6 hours")
@@ -257,6 +287,7 @@ def run_scheduler():
     logger.info("  - Failed file retry: every 15 minutes")
     logger.info("  - Folder scan (backup): every 30 minutes")
     logger.info("  - Folder watch renewal: every 1 hour")
+    logger.info("  - Daily summary report: 7 AM PHT (23:00 UTC)")
 
     while True:
         schedule.run_pending()

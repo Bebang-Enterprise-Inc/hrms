@@ -21,6 +21,7 @@ from datetime import datetime
 from .folder_watcher import get_folder_watcher
 from .pos_extractor import process_pos_file
 from .models import get_db
+from . import notifications
 
 logger = logging.getLogger(__name__)
 
@@ -124,10 +125,32 @@ class FileProcessor:
                 error=error_msg
             )
 
+            # Send notification for failed file
+            detected_at = queue_entry.get('detected_at', datetime.utcnow().isoformat())
+            try:
+                # Check if it's an XLS file (wrong format)
+                if file_name.lower().endswith('.xls') and not file_name.lower().endswith('.xlsx'):
+                    notifications.send_wrong_format_alert(
+                        store_code=store_code,
+                        file_name=file_name,
+                        detected_at=detected_at
+                    )
+                else:
+                    # Other processing failure
+                    notifications.send_processing_failure_alert(
+                        store_code=store_code,
+                        file_name=file_name,
+                        error_message=error_msg,
+                        detected_at=detected_at
+                    )
+            except Exception as notif_error:
+                logger.warning(f"Failed to send notification: {notif_error}")
+
             return {
                 'status': 'failed',
                 'file_id': file_id,
                 'file_name': file_name,
+                'store_code': store_code,
                 'error': error_msg
             }
 
