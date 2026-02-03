@@ -55,7 +55,7 @@ class BEIPaymentRequest(Document):
         if self.supplier:
             supplier = frappe.get_doc("BEI Supplier", self.supplier)
             self.supplier_bank_name = supplier.bank_name
-            self.supplier_bank_account = supplier.bank_account_no
+            self.supplier_bank_account = supplier.bank_account_number
             self.supplier_account_name = supplier.bank_account_name
 
     @frappe.whitelist()
@@ -184,7 +184,189 @@ class BEIPaymentRequest(Document):
             supplier.update_metrics()
             supplier.save()
 
-        # TODO: Create Payment Entry in Frappe
+    def create_frappe_payment_entry(self):
+        """
+        Create corresponding Frappe Payment Entry.
+
+        PREREQUISITES:
+        - Payment Request must be fully approved (status = "Approved")
+        - Linked BEI Invoice must have Frappe Purchase Invoice
+        - Payment mode must be Bank Transfer or Check
+
+        FIELD MAPPING:
+        - payment_amount -> paid_amount
+        - payment_mode -> mode_of_payment
+        - payment_date -> posting_date
+        - bank_account -> paid_from (for Bank Transfer)
+        - check_number -> reference_no (for Check)
+        - transaction_reference -> reference_no
+
+        GL ENTRIES (created automatically by Frappe):
+        - Dr: Accounts Payable (Supplier)
+        - Cr: Bank/Cash Account
+
+        Returns: Frappe Payment Entry name or None
+        """
+        if hasattr(self, 'frappe_payment_entry') and self.frappe_payment_entry:
+            frappe.msgprint(
+                _("Already linked to Frappe Payment Entry: {0}").format(
+                    self.frappe_payment_entry
+                ),
+                indicator="blue"
+            )
+            return self.frappe_payment_entry
+
+        # Validate status
+        if self.status not in ["Approved", "Processing", "Paid"]:
+            frappe.throw(
+                _("Cannot create Payment Entry - Request not approved. "
+                  "Current status: {0}").format(self.status)
+            )
+
+        # Validate payment mode
+        if self.payment_mode not in ["Bank Transfer", "Check"]:
+            frappe.throw(
+                _("Payment mode must be 'Bank Transfer' or 'Check'. "
+                  "Current mode: {0}").format(self.payment_mode or "Not set")
+            )
+
+        # Get linked documents
+        bei_invoice = frappe.get_doc("BEI Invoice", self.invoice)
+
+        # Ensure Frappe Purchase Invoice exists
+        if not bei_invoice.frappe_purchase_invoice:
+            if bei_invoice.status in ["Verified", "Partially Paid", "Paid"]:
+                bei_invoice.create_frappe_purchase_invoice()
+            else:
+                frappe.throw(
+                    _("No Frappe Purchase Invoice linked. "
+                      "Verify BEI Invoice first.")
+                )
+
+        frappe_pi = bei_invoice.frappe_purchase_invoice
+
+        # Check PI is submitted
+        pi_doc = frappe.get_doc("Purchase Invoice", frappe_pi)
+        if pi_doc.docstatus != 1:
+            frappe.throw(
+                _("Frappe Purchase Invoice {0} is not submitted. "
+                  "Please submit it first.").format(frappe_pi)
+            )
+
+        # Get Frappe Supplier
+        bei_supplier = frappe.get_doc("BEI Supplier", self.supplier)
+        frappe_supplier = bei_supplier.get_or_create_frappe_supplier()
+
+        # Determine accounts and mode of payment
+        paid_from, mode_of_payment = self._get_payment_accounts()
+
+        # Determine reference number
+        reference_no = self.transaction_reference or self.check_number or ""
+
+        # Create Payment Entry
+        pe = frappe.get_doc({
+            "doctype": "Payment Entry",
+            "payment_type": "Pay",
+            "posting_date": self.payment_date or frappe.utils.nowdate(),
+            "company": "Bebang Enterprise Inc.",
+            "party_type": "Supplier",
+            "party": frappe_supplier,
+            "party_name": bei_supplier.supplier_name,
+            "paid_from": paid_from,
+            "paid_to": pi_doc.credit_to,  # Supplier payable account
+            "paid_amount": flt(self.payment_amount, 2),
+            "received_amount": flt(self.payment_amount, 2),
+            "source_exchange_rate": 1,
+            "target_exchange_rate": 1,
+            "mode_of_payment": mode_of_payment,
+            "reference_no": reference_no,
+            "reference_date": self.payment_date or frappe.utils.nowdate(),
+            "bei_payment_request": self.name,  # Reference back
+        })
+
+        # Add reference to Purchase Invoice
+        pe.append("references", {
+            "reference_doctype": "Purchase Invoice",
+            "reference_name": frappe_pi,
+            "total_amount": pi_doc.grand_total,
+            "outstanding_amount": pi_doc.outstanding_amount,
+            "allocated_amount": flt(self.payment_amount, 2)
+        })
+
+        try:
+            pe.insert(ignore_permissions=True)
+            # Submit the payment entry
+            pe.submit()
+
+            # Store reference (need to add field if not exists)
+            self.db_set("frappe_payment_entry", pe.name, update_modified=False)
+
+            frappe.msgprint(
+                _("Created and submitted Frappe Payment Entry: {0}").format(pe.name),
+                indicator="green"
+            )
+
+            return pe.name
+
+        except Exception as e:
+            frappe.log_error(
+                f"Failed to create Frappe PE for BEI Payment Request {self.name}: {e}",
+                "BEI Payment Request Integration Error"
+            )
+            frappe.throw(
+                _("Failed to create Frappe Payment Entry: {0}").format(str(e))
+            )
+
+    def _get_payment_accounts(self):
+        """
+        Get payment from account and mode of payment based on payment mode.
+
+        Bank Transfer: Uses specified bank account
+        Check: Uses check bank account
+
+        Returns: (paid_from_account, mode_of_payment)
+        """
+        company = "Bebang Enterprise Inc."
+
+        if self.payment_mode == "Bank Transfer":
+            # Get bank account
+            if self.bank_account:
+                bank_account = frappe.get_doc("Bank Account", self.bank_account)
+                paid_from = bank_account.account
+            else:
+                # Default bank account
+                paid_from = frappe.db.get_value(
+                    "Company", company, "default_bank_account"
+                ) or "1100 - Cash and Bank - BEI"
+
+            mode_of_payment = "Wire Transfer"
+
+        elif self.payment_mode == "Check":
+            # Check payments typically from a specific check account
+            if self.bank_account:
+                bank_account = frappe.get_doc("Bank Account", self.bank_account)
+                paid_from = bank_account.account
+            else:
+                paid_from = frappe.db.get_value(
+                    "Company", company, "default_bank_account"
+                ) or "1100 - Cash and Bank - BEI"
+
+            mode_of_payment = "Cheque"
+
+        else:
+            frappe.throw(_("Unsupported payment mode: {0}").format(self.payment_mode))
+
+        # Verify mode of payment exists
+        if not frappe.db.exists("Mode of Payment", mode_of_payment):
+            # Create if doesn't exist
+            mop = frappe.get_doc({
+                "doctype": "Mode of Payment",
+                "mode_of_payment": mode_of_payment,
+                "type": "Bank"
+            })
+            mop.insert(ignore_permissions=True)
+
+        return paid_from, mode_of_payment
 
     @frappe.whitelist()
     def reject(self, level, reason):
@@ -233,22 +415,67 @@ class BEIPaymentRequest(Document):
 
     @frappe.whitelist()
     def mark_as_paid(self, transaction_reference=None, payment_proof=None):
-        """Mark payment as processed/paid."""
+        """
+        Mark payment as processed/paid and create Frappe Payment Entry.
+
+        This is the final step in the payment workflow:
+        1. Updates status to Processing
+        2. Creates Frappe Payment Entry (with GL postings)
+        3. Updates status to Paid
+        4. Updates BEI Invoice payment tracking
+        """
         if self.status != "Approved":
             frappe.throw(_("Only approved requests can be marked as paid"))
 
-        self.status = "Processing"
-        self.processed_by = frappe.session.user
-        self.processed_date = now_datetime()
+        # Update tracking fields
         self.transaction_reference = transaction_reference
         self.payment_proof = payment_proof
+        self.processed_by = frappe.session.user
+        self.processed_date = now_datetime()
+        self.status = "Processing"
         self.save()
 
-        # Update status to Paid after confirmation
-        self.status = "Paid"
-        self.save()
+        # Create Frappe Payment Entry
+        try:
+            pe_name = self.create_frappe_payment_entry()
 
-        return {"success": True, "message": _("Payment marked as completed")}
+            if pe_name:
+                # Update status to Paid
+                self.status = "Paid"
+                self.save()
+
+                return {
+                    "success": True,
+                    "message": _("Payment completed. Frappe Payment Entry: {0}").format(pe_name),
+                    "payment_entry": pe_name
+                }
+            else:
+                # PE creation didn't return name, but might have succeeded
+                self.status = "Paid"
+                self.save()
+
+                return {
+                    "success": True,
+                    "message": _("Payment marked as completed")
+                }
+
+        except Exception as e:
+            # Log error but don't fail - payment was made in reality
+            frappe.log_error(
+                f"Payment Entry creation failed for {self.name}: {e}",
+                "BEI Payment Entry Error"
+            )
+
+            # Still mark as paid since the actual payment happened
+            self.status = "Paid"
+            self.save()
+
+            return {
+                "success": True,
+                "message": _("Payment marked as completed. Note: Frappe Payment Entry "
+                           "creation failed - manual entry may be required."),
+                "warning": str(e)
+            }
 
     @frappe.whitelist()
     def get_approval_status(self):

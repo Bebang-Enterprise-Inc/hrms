@@ -61,7 +61,9 @@
     "processed_date",
     "column_break_process",
     "transaction_reference",
-    "payment_proof"
+    "payment_proof",
+    "integration_section",
+    "frappe_payment_entry"
   ],
   "fields": [
     {
@@ -214,7 +216,7 @@
       "read_only": 1
     },
     {
-      "fetch_from": "supplier.bank_account_no",
+      "fetch_from": "supplier.bank_account_number",
       "fieldname": "supplier_bank_account",
       "fieldtype": "Data",
       "label": "Bank Account No",
@@ -412,6 +414,19 @@
       "fieldname": "payment_proof",
       "fieldtype": "Attach",
       "label": "Payment Proof"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "integration_section",
+      "fieldtype": "Section Break",
+      "label": "ERP Integration"
+    },
+    {
+      "fieldname": "frappe_payment_entry",
+      "fieldtype": "Link",
+      "label": "Frappe Payment Entry",
+      "options": "Payment Entry",
+      "read_only": 1
     }
   ],
   "index_web_pages_for_search": 1,

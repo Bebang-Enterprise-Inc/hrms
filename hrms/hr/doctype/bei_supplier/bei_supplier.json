@@ -34,7 +34,8 @@
     "column_break_metrics",
     "total_outstanding",
     "avg_delivery_days",
-    "on_time_rate"
+    "on_time_rate",
+    "is_new_supplier"
   ],
   "fields": [
     {
@@ -201,6 +202,13 @@
       "fieldname": "on_time_rate",
       "fieldtype": "Percent",
       "label": "On-Time Delivery %",
+      "read_only": 1
+    },
+    {
+      "description": "Computed: No POs older than 6 months",
+      "fieldname": "is_new_supplier",
+      "fieldtype": "Check",
+      "label": "New Supplier",
       "read_only": 1
     }
   ],

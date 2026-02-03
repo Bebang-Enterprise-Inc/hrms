@@ -152,22 +152,123 @@ class BEIInvoice(Document):
         return {"success": True, "message": _("Invoice rejected due to variance")}
 
     def create_frappe_purchase_invoice(self):
-        """Create corresponding Frappe Purchase Invoice."""
-        if self.frappe_purchase_invoice:
-            return  # Already created
+        """
+        Create corresponding Frappe Purchase Invoice.
 
-        # Get Frappe supplier from BEI Supplier
-        supplier = frappe.get_doc("BEI Supplier", self.supplier)
-        frappe_supplier = supplier.frappe_supplier
+        PREREQUISITES:
+        - BEI Invoice must be Verified (3-way match passed or variance approved)
+        - BEI PO must have Frappe PO linked
+        - BEI GR must have Frappe Purchase Receipt linked
+
+        FIELD MAPPING:
+        - invoice_date -> posting_date
+        - due_date -> due_date
+        - supplier_invoice_no -> bill_no
+        - items from GR (accepted quantities)
+        - withholding_tax -> taxes (EWT)
+        - Links to Frappe PO and PR for proper AP posting
+
+        GL ENTRIES (created automatically by Frappe):
+        - Dr: Expense/Stock Account (per item)
+        - Cr: Accounts Payable
+
+        Returns: Frappe Purchase Invoice name or None
+        """
+        if self.frappe_purchase_invoice:
+            frappe.msgprint(
+                _("Already linked to Frappe Purchase Invoice: {0}").format(
+                    self.frappe_purchase_invoice
+                ),
+                indicator="blue"
+            )
+            return self.frappe_purchase_invoice
+
+        # Validate status - must be verified
+        if self.status not in ["Verified", "Partially Paid", "Paid"]:
+            frappe.throw(
+                _("Cannot create Purchase Invoice - 3-way match not verified. "
+                  "Current status: {0}").format(self.status)
+            )
+
+        # Validate match status
+        if self.match_status not in ["Matched", "Approved with Variance"]:
+            frappe.throw(
+                _("Cannot create Purchase Invoice - Match status: {0}").format(
+                    self.match_status
+                )
+            )
+
+        # Get Frappe Supplier
+        bei_supplier = frappe.get_doc("BEI Supplier", self.supplier)
+        frappe_supplier = bei_supplier.get_or_create_frappe_supplier()
 
         if not frappe_supplier:
             frappe.throw(
-                _("Supplier {0} not linked to Frappe Supplier").format(self.supplier)
+                _("Could not get or create Frappe Supplier for {0}").format(
+                    self.supplier
+                )
             )
 
-        # Get PO items
-        po = frappe.get_doc("BEI Purchase Order", self.purchase_order)
+        # Get linked documents
+        bei_po = frappe.get_doc("BEI Purchase Order", self.purchase_order)
+        bei_gr = frappe.get_doc("BEI Goods Receipt", self.goods_receipt)
 
+        # Ensure Frappe PO exists
+        if not bei_po.frappe_po:
+            if bei_po.status == "Approved":
+                bei_po.create_frappe_purchase_order()
+            else:
+                frappe.throw(
+                    _("No Frappe PO linked. Please ensure BEI PO is approved first.")
+                )
+
+        frappe_po = bei_po.frappe_po
+
+        # Ensure Frappe PR exists
+        if not bei_gr.frappe_purchase_receipt:
+            if bei_gr.status in ["Accepted", "Partially Accepted"]:
+                bei_gr.create_frappe_purchase_receipt()
+            else:
+                frappe.throw(
+                    _("No Frappe Purchase Receipt linked. "
+                      "Please ensure GR is accepted first.")
+                )
+
+        frappe_pr = bei_gr.frappe_purchase_receipt
+
+        # Prepare invoice items from GR (actual received quantities)
+        pi_items = []
+        for gr_item in bei_gr.items:
+            accepted_qty = flt(gr_item.accepted_qty, 2)
+
+            if accepted_qty <= 0:
+                continue
+
+            # Find corresponding PO and PR items
+            po_item = self._find_po_item(frappe_po, gr_item.item_code)
+            pr_item = self._find_pr_item(frappe_pr, gr_item.item_code)
+
+            pi_items.append({
+                "item_code": gr_item.item_code,
+                "item_name": gr_item.item_name,
+                "description": gr_item.description or gr_item.item_name,
+                "qty": accepted_qty,
+                "stock_uom": gr_item.uom or "Nos",
+                "uom": gr_item.uom or "Nos",
+                "conversion_factor": 1,
+                "rate": flt(gr_item.unit_cost, 2),
+                "expense_account": self._get_expense_account(gr_item),
+                "purchase_order": frappe_po,
+                "po_detail": po_item,
+                "purchase_receipt": frappe_pr,
+                "pr_detail": pr_item,
+                "bei_invoice_item": gr_item.name,  # Reference
+            })
+
+        if not pi_items:
+            frappe.throw(_("No valid items to create Purchase Invoice"))
+
+        # Create Frappe Purchase Invoice
         pi = frappe.get_doc({
             "doctype": "Purchase Invoice",
             "supplier": frappe_supplier,
@@ -175,29 +276,159 @@ class BEIInvoice(Document):
             "due_date": self.due_date,
             "bill_no": self.supplier_invoice_no,
             "bill_date": self.invoice_date,
-            "company": "Bebang Enterprise Inc."
+            "company": "Bebang Enterprise Inc.",
+            "currency": "PHP",
+            "buying_price_list": "Standard Buying",
+            "update_stock": 0,  # Stock already updated via PR
+            "is_return": 0,
+            "bei_invoice": self.name,  # Reference back
+            "payment_terms_template": self.payment_terms,
+            "items": pi_items
         })
 
-        # Get GR items for actual received quantities
-        gr = frappe.get_doc("BEI Goods Receipt", self.goods_receipt)
+        # Add withholding tax (EWT) if applicable
+        if flt(self.withholding_tax, 2) > 0:
+            self._add_withholding_tax(pi)
 
-        for gr_item in gr.items:
-            if flt(gr_item.accepted_qty, 2) > 0:
-                pi.append("items", {
-                    "item_code": gr_item.item_code,
-                    "item_name": gr_item.item_name,
-                    "description": gr_item.description,
-                    "qty": gr_item.accepted_qty,
-                    "uom": gr_item.uom or "Nos",
-                    "rate": gr_item.unit_cost,
-                    "purchase_order": po.frappe_po if po.frappe_po else None
-                })
-
-        if pi.items:
+        try:
             pi.insert(ignore_permissions=True)
+            # Don't submit yet - may need review
+            # pi.submit()
 
             self.frappe_purchase_invoice = pi.name
-            self.db_set("frappe_purchase_invoice", pi.name)
+            self.db_set("frappe_purchase_invoice", pi.name, update_modified=False)
+
+            frappe.msgprint(
+                _("Created Frappe Purchase Invoice (Draft): {0}. "
+                  "Review and submit manually.").format(pi.name),
+                indicator="green"
+            )
+
+            return pi.name
+
+        except Exception as e:
+            frappe.log_error(
+                f"Failed to create Frappe PI for BEI Invoice {self.name}: {e}",
+                "BEI Invoice Integration Error"
+            )
+            frappe.throw(
+                _("Failed to create Frappe Purchase Invoice: {0}").format(str(e))
+            )
+
+    def _find_po_item(self, frappe_po_name, item_code):
+        """Find Purchase Order Item for linking."""
+        return frappe.db.get_value(
+            "Purchase Order Item",
+            {"parent": frappe_po_name, "item_code": item_code},
+            "name"
+        )
+
+    def _find_pr_item(self, frappe_pr_name, item_code):
+        """Find Purchase Receipt Item for linking."""
+        return frappe.db.get_value(
+            "Purchase Receipt Item",
+            {"parent": frappe_pr_name, "item_code": item_code},
+            "name"
+        )
+
+    def _get_expense_account(self, item):
+        """
+        Get appropriate expense account for invoice item.
+
+        Account mapping based on item group:
+        - Raw Materials: 5110 - Cost of Raw Materials
+        - Finished Goods: 5100 - Cost of Goods Sold
+        - Packaging: 5120 - Packaging Expenses
+        - Consumables: 6200 - Operating Supplies
+        - Fixed Assets: 1500 - Fixed Assets
+
+        Returns: Account name
+        """
+        # Get item group
+        item_group = frappe.db.get_value("Item", item.item_code, "item_group")
+
+        # Account mapping (BEI COA)
+        account_map = {
+            "Raw Material": "5110 - Cost of Raw Materials - BEI",
+            "Finished Goods": "5100 - Cost of Goods Sold - BEI",
+            "Packaging Material": "5120 - Packaging Expenses - BEI",
+            "Consumable": "6200 - Operating Supplies - BEI",
+            "Fixed Asset": "1500 - Fixed Assets - BEI",
+            "Products": "5100 - Cost of Goods Sold - BEI",  # Default
+        }
+
+        # Return mapped account or default
+        account = account_map.get(item_group, "5100 - Cost of Goods Sold - BEI")
+
+        # Verify account exists, fallback to default expense account
+        if not frappe.db.exists("Account", account):
+            default_expense = frappe.db.get_value(
+                "Company",
+                "Bebang Enterprise Inc.",
+                "default_expense_account"
+            )
+            return default_expense or "5100 - Cost of Goods Sold - BEI"
+
+        return account
+
+    def _add_withholding_tax(self, pi):
+        """
+        Add withholding tax (EWT) to Purchase Invoice.
+
+        Philippine EWT rates:
+        - 1% for goods
+        - 2% for services
+        - 5% for professional fees
+
+        This method adds a negative tax entry for EWT.
+        """
+        ewt_account = "2150 - Withholding Tax Payable - BEI"
+
+        # Verify EWT account exists
+        if not frappe.db.exists("Account", ewt_account):
+            # Try to find any withholding account
+            ewt_account = frappe.db.get_value(
+                "Account",
+                {"account_name": ["like", "%Withholding%"], "company": "Bebang Enterprise Inc."},
+                "name"
+            )
+
+        if ewt_account:
+            pi.append("taxes", {
+                "charge_type": "Actual",
+                "account_head": ewt_account,
+                "description": "Expanded Withholding Tax (EWT)",
+                "tax_amount": -flt(self.withholding_tax, 2),  # Negative to reduce payable
+                "category": "Total",
+                "add_deduct_tax": "Deduct"
+            })
+
+    @frappe.whitelist()
+    def submit_frappe_invoice(self):
+        """Submit the linked Frappe Purchase Invoice."""
+        if not self.frappe_purchase_invoice:
+            frappe.throw(_("No Frappe Purchase Invoice linked"))
+
+        pi = frappe.get_doc("Purchase Invoice", self.frappe_purchase_invoice)
+
+        if pi.docstatus == 1:
+            frappe.msgprint(
+                _("Frappe Purchase Invoice already submitted"),
+                indicator="blue"
+            )
+            return
+
+        try:
+            pi.submit()
+            frappe.msgprint(
+                _("Submitted Frappe Purchase Invoice: {0}").format(pi.name),
+                indicator="green"
+            )
+            return pi.name
+        except Exception as e:
+            frappe.throw(
+                _("Failed to submit Purchase Invoice: {0}").format(str(e))
+            )
 
     @frappe.whitelist()
     def record_payment(self, amount, payment_date=None, reference=None):

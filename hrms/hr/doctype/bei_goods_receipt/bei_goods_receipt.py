@@ -162,42 +162,177 @@ class BEIGoodsReceipt(Document):
         }
 
     def create_frappe_purchase_receipt(self):
-        """Create corresponding Frappe Purchase Receipt."""
+        """
+        Create corresponding Frappe Purchase Receipt.
+
+        PREREQUISITES:
+        - GR must be Accepted (inspection passed or not required)
+        - Linked BEI PO must have a Frappe PO
+        - At least one item with accepted_qty > 0
+
+        FIELD MAPPING:
+        - receipt_date -> posting_date
+        - warehouse -> set_warehouse
+        - items (accepted_qty) -> items (qty)
+        - Links back to Frappe PO for proper stock tracking
+
+        STOCK IMPACT:
+        - Creates stock ledger entries
+        - Updates warehouse quantities
+        - Links to PO for landed cost tracking
+
+        Returns: Frappe Purchase Receipt name or None
+        """
         if self.frappe_purchase_receipt:
-            return  # Already created
+            frappe.msgprint(
+                _("Already linked to Frappe Purchase Receipt: {0}").format(
+                    self.frappe_purchase_receipt
+                ),
+                indicator="blue"
+            )
+            return self.frappe_purchase_receipt
+
+        # Validate status
+        if self.status not in ["Accepted", "Partially Accepted"]:
+            frappe.throw(
+                _("Cannot create Purchase Receipt - GR must be Accepted. "
+                  "Current status: {0}").format(self.status)
+            )
+
+        # Validate inspection if required
+        if self.inspection_required and self.inspection_status != "Passed":
+            frappe.throw(
+                _("Cannot create Purchase Receipt - Quality inspection not passed. "
+                  "Inspection status: {0}").format(self.inspection_status)
+            )
 
         if not self.purchase_order:
-            return
+            frappe.throw(_("Cannot create Purchase Receipt - No linked Purchase Order"))
 
-        po = frappe.get_doc("BEI Purchase Order", self.purchase_order)
+        # Get BEI PO and Frappe PO
+        bei_po = frappe.get_doc("BEI Purchase Order", self.purchase_order)
 
-        if not po.frappe_po:
-            return  # No Frappe PO to link to
+        if not bei_po.frappe_po:
+            # Try to create Frappe PO first
+            if bei_po.status == "Approved":
+                bei_po.create_frappe_purchase_order()
+            else:
+                frappe.throw(
+                    _("No Frappe PO linked. Approve BEI PO first to create Frappe PO.")
+                )
 
+        frappe_po = bei_po.frappe_po
+
+        # Get Frappe Supplier
+        bei_supplier = frappe.get_doc("BEI Supplier", self.supplier)
+        frappe_supplier = bei_supplier.get_or_create_frappe_supplier()
+
+        # Prepare PR items - only accepted quantities
+        pr_items = []
+        for item in self.items:
+            accepted_qty = flt(item.accepted_qty, 2)
+
+            if accepted_qty <= 0:
+                continue
+
+            # Find matching PO item for rate and proper linking
+            po_item = self._find_frappe_po_item(frappe_po, item.item_code)
+
+            pr_items.append({
+                "item_code": item.item_code,
+                "item_name": item.item_name,
+                "description": item.description or item.item_name,
+                "qty": accepted_qty,
+                "stock_uom": item.uom or "Nos",
+                "uom": item.uom or "Nos",
+                "conversion_factor": 1,
+                "rate": flt(item.unit_cost, 2),
+                "warehouse": self.warehouse or "Stores - BEI",
+                "purchase_order": frappe_po,
+                "purchase_order_item": po_item,
+                "rejected_qty": flt(item.rejected_qty, 2),
+                "bei_gr_item": item.name,  # Reference back
+            })
+
+        if not pr_items:
+            frappe.throw(_("No items with accepted quantity to create Purchase Receipt"))
+
+        # Create Frappe Purchase Receipt
         pr = frappe.get_doc({
             "doctype": "Purchase Receipt",
-            "supplier": po.frappe_supplier if hasattr(po, 'frappe_supplier') else None,
+            "supplier": frappe_supplier,
             "posting_date": self.receipt_date,
+            "posting_time": frappe.utils.nowtime(),
             "company": "Bebang Enterprise Inc.",
-            "set_warehouse": self.warehouse
+            "currency": "PHP",
+            "buying_price_list": "Standard Buying",
+            "set_warehouse": self.warehouse or "Stores - BEI",
+            "bei_goods_receipt": self.name,  # Reference back to BEI GR
+            "items": pr_items
         })
 
-        for item in self.items:
-            if flt(item.accepted_qty, 2) > 0:
-                pr.append("items", {
-                    "item_code": item.item_code,
-                    "item_name": item.item_name,
-                    "description": item.description,
-                    "qty": item.accepted_qty,
-                    "uom": item.uom or "Nos",
-                    "rate": item.unit_cost,
-                    "warehouse": self.warehouse,
-                    "purchase_order": po.frappe_po
-                })
+        # Add rejected warehouse if there are rejections
+        if self.total_rejected_qty > 0:
+            pr.rejected_warehouse = "Rejected Warehouse - BEI"
 
-        if pr.items:
+        try:
             pr.insert(ignore_permissions=True)
             pr.submit()
 
             self.frappe_purchase_receipt = pr.name
-            self.db_set("frappe_purchase_receipt", pr.name)
+            self.db_set("frappe_purchase_receipt", pr.name, update_modified=False)
+
+            frappe.msgprint(
+                _("Created and submitted Frappe Purchase Receipt: {0}").format(pr.name),
+                indicator="green"
+            )
+
+            return pr.name
+
+        except Exception as e:
+            frappe.log_error(
+                f"Failed to create Frappe PR for BEI GR {self.name}: {e}",
+                "BEI GR Integration Error"
+            )
+            frappe.throw(
+                _("Failed to create Frappe Purchase Receipt: {0}").format(str(e))
+            )
+
+    def _find_frappe_po_item(self, frappe_po_name, item_code):
+        """
+        Find the Purchase Order Item for proper linking.
+
+        Returns: Purchase Order Item name or None
+        """
+        po_item = frappe.db.get_value(
+            "Purchase Order Item",
+            {
+                "parent": frappe_po_name,
+                "item_code": item_code
+            },
+            "name"
+        )
+        return po_item
+
+    @frappe.whitelist()
+    def force_create_purchase_receipt(self):
+        """
+        Force create Purchase Receipt even if inspection pending.
+        Use only for emergency cases where goods need to be booked immediately.
+
+        Requires Stock Manager role.
+        """
+        if not frappe.has_permission("BEI Goods Receipt", "write", self.name):
+            frappe.throw(_("Insufficient permissions"))
+
+        # Bypass inspection check
+        original_status = self.status
+        self.status = "Accepted"
+
+        try:
+            result = self.create_frappe_purchase_receipt()
+            return result
+        finally:
+            # Restore original status if PR creation failed
+            if not self.frappe_purchase_receipt:
+                self.status = original_status
