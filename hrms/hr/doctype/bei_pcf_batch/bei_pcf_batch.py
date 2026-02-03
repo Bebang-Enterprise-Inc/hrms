@@ -192,17 +192,9 @@ def send_batch_notification(batch, event):
         event: 'created', 'approved', or 'rejected'
     """
     try:
-        from hrms.api.google_chat import send_message_to_space
-
-        messages = {
-            "created": f"*PCF Batch Created*\n\nStore: {batch.store}\nBatch: {batch.name}\nType: {batch.submission_type}\nExpenses: {batch.expense_count}\nTotal: PHP {batch.total_amount:,.2f}\n\nReady for accounting review.",
-            "approved": f"*PCF Batch Approved*\n\nStore: {batch.store}\nBatch: {batch.name}\nTotal: PHP {batch.total_amount:,.2f}\nReviewed by: {batch.reviewed_by}",
-            "rejected": f"*PCF Batch Rejected*\n\nStore: {batch.store}\nBatch: {batch.name}\nTotal: PHP {batch.total_amount:,.2f}\nReason: {batch.review_notes or 'Not specified'}",
-        }
-
-        message = messages.get(event)
-        if message:
-            # Send to ERP Automation Committee
-            send_message_to_space("spaces/AAQA3NVVR6c", message)
+        # Google Chat notifications disabled for now - will be implemented later
+        # TODO: Implement proper Google Chat integration
+        pass
     except Exception as e:
+        # Silently log errors - don't block batch operations
         frappe.log_error(f"Failed to send PCF batch notification: {e}", "PCF Notification")
