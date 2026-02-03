@@ -37,10 +37,6 @@ def get_suppliers(filters=None, page=1, page_size=20, search=None):
             conditions.append("status = %(status)s")
             values["status"] = filters["status"]
 
-        if filters.get("category"):
-            conditions.append("category = %(category)s")
-            values["category"] = filters["category"]
-
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
 
@@ -53,9 +49,12 @@ def get_suppliers(filters=None, page=1, page_size=20, search=None):
     # Get suppliers
     suppliers = frappe.db.sql(f"""
         SELECT
-            name, supplier_code, supplier_name, status, category,
-            email, contact_person, phone, total_orders, total_amount,
-            bir_2307, sec_certificate, rating
+            name, supplier_code, supplier_name, status,
+            email, contact_person, contact_number, address,
+            tin, bank_name, bank_account_number, payment_terms,
+            total_po_count, total_po_value, total_outstanding,
+            avg_delivery_days, on_time_rate, is_new_supplier,
+            bir_2307, sec_certificate, business_permit
         FROM `tabBEI Supplier`
         WHERE {where_clause}
         ORDER BY supplier_name ASC
