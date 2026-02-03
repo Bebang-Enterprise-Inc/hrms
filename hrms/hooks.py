@@ -221,6 +221,14 @@ doc_events = {
 	},
 	"Project": {"validate": "hrms.controllers.employee_boarding_controller.update_employee_boarding_status"},
 	"Task": {"on_update": "hrms.controllers.employee_boarding_controller.update_task"},
+	"BEI Expense Request": {
+		"on_update": "hrms.api.pcf.on_expense_update",
+		"on_trash": "hrms.api.pcf.on_expense_delete",
+	},
+	"BEI PCF Batch": {
+		"validate": "hrms.api.pcf.validate_pcf_batch",
+		"on_update": "hrms.api.pcf.on_batch_update",
+	},
 }
 
 # Scheduled Tasks
@@ -232,6 +240,7 @@ scheduler_events = {
 	],
 	"hourly": [
 		"hrms.hr.doctype.daily_work_summary_group.daily_work_summary_group.trigger_emails",
+		"hrms.api.pcf.check_threshold_and_auto_submit",
 	],
 	"cron": {
 		# Weather collection 5x daily: 6AM, 10AM, 2PM, 6PM, 10PM
@@ -250,6 +259,7 @@ scheduler_events = {
 		"hrms.hr.doctype.daily_work_summary_group.daily_work_summary_group.send_summary",
 		"hrms.hr.doctype.interview.interview.send_daily_feedback_reminder",
 		"hrms.hr.doctype.job_opening.job_opening.close_expired_job_openings",
+		"hrms.api.pcf.check_month_end_auto_submit",
 	],
 	"daily_long": [
 		"hrms.hr.doctype.leave_ledger_entry.leave_ledger_entry.process_expired_allocation",

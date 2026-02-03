@@ -1,6 +1,26 @@
 [
     {
         "doctype": "Custom Field",
+        "name": "User-custom_is_pcf_custodian",
+        "dt": "User",
+        "fieldname": "custom_is_pcf_custodian",
+        "fieldtype": "Check",
+        "label": "Is PCF Custodian",
+        "insert_after": "enabled",
+        "description": "Can manage Petty Cash Fund batches"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Warehouse-custom_pcf_enabled",
+        "dt": "Warehouse",
+        "fieldname": "custom_pcf_enabled",
+        "fieldtype": "Check",
+        "label": "PCF Enabled",
+        "insert_after": "custom_area_supervisor",
+        "description": "Whether this store uses PCF batch workflow"
+    },
+    {
+        "doctype": "Custom Field",
         "name": "Warehouse-custom_area_supervisor",
         "dt": "Warehouse",
         "fieldname": "custom_area_supervisor",

@@ -1,0 +1,95 @@
+{
+    "actions": [],
+    "allow_rename": 0,
+    "creation": "2026-02-03 00:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "istable": 1,
+    "field_order": [
+        "expense_request",
+        "employee",
+        "employee_name",
+        "expense_date",
+        "vendor",
+        "description",
+        "amount",
+        "item_status"
+    ],
+    "fields": [
+        {
+            "fieldname": "expense_request",
+            "fieldtype": "Link",
+            "label": "Expense Request",
+            "options": "BEI Expense Request",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "employee",
+            "fieldtype": "Link",
+            "label": "Employee",
+            "options": "Employee",
+            "fetch_from": "expense_request.employee",
+            "read_only": 1
+        },
+        {
+            "fieldname": "employee_name",
+            "fieldtype": "Data",
+            "label": "Employee Name",
+            "fetch_from": "expense_request.employee_name",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "expense_date",
+            "fieldtype": "Date",
+            "label": "Expense Date",
+            "fetch_from": "expense_request.manual_date",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "vendor",
+            "fieldtype": "Data",
+            "label": "Vendor",
+            "fetch_from": "expense_request.manual_vendor",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "description",
+            "fieldtype": "Small Text",
+            "label": "Description",
+            "fetch_from": "expense_request.manual_description",
+            "read_only": 1
+        },
+        {
+            "fieldname": "amount",
+            "fieldtype": "Currency",
+            "label": "Amount",
+            "fetch_from": "expense_request.manual_amount",
+            "reqd": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "item_status",
+            "fieldtype": "Select",
+            "label": "Item Status",
+            "options": "Pending\nApproved\nRejected",
+            "default": "Pending",
+            "in_list_view": 1
+        }
+    ],
+    "index_web_pages_for_search": 0,
+    "links": [],
+    "modified": "2026-02-03 00:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "HR",
+    "name": "BEI PCF Batch Item",
+    "owner": "Administrator",
+    "permissions": [],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 0
+}

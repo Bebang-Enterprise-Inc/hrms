@@ -13,6 +13,8 @@
         "store",
         "request_date",
         "status",
+        "pcf_batch",
+        "added_to_pending_at",
         "section_manual",
         "manual_vendor",
         "manual_description",
@@ -97,11 +99,26 @@
             "fieldname": "status",
             "fieldtype": "Select",
             "label": "Status",
-            "options": "Draft\nSubmitted\nApproved\nRejected",
+            "options": "Draft\nPending\nSubmitted\nApproved\nRejected",
             "default": "Draft",
             "reqd": 1,
             "in_list_view": 1,
             "in_standard_filter": 1
+        },
+        {
+            "fieldname": "pcf_batch",
+            "fieldtype": "Link",
+            "label": "PCF Batch",
+            "options": "BEI PCF Batch",
+            "read_only": 1,
+            "description": "Reference to PCF batch when submitted"
+        },
+        {
+            "fieldname": "added_to_pending_at",
+            "fieldtype": "Datetime",
+            "label": "Added to Pending At",
+            "read_only": 1,
+            "description": "When expense was added to pending queue"
         },
         {
             "fieldname": "section_manual",
