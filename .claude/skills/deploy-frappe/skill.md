@@ -103,18 +103,32 @@ The site data is stored in external volumes:
 
 ## Deployment Methods
 
-### Method 1: GitHub Actions (Recommended)
+### Method 1: PR Workflow (Recommended) - INCLUDES AUTO-CLEANUP
 
-Push to `production` branch triggers automatic build and deploy:
+**The `production` branch is protected.** Use the PR workflow.
+
+**Note:** The GitHub Actions workflow automatically cleans up old images after each successful deployment, keeping the 4 most recent versions. No manual cleanup needed when using this method.
 
 ```bash
-# From local machine
+# 1. Create feature branch (if not already on one)
+/feature-branch my-api-change
+
+# 2. Commit your changes
 git add .
 git commit -m "feat: Add employee_clearance API"
-git push origin production
+
+# 3. Deploy via PR (auto-merges when CI passes)
+/pr-deploy --auto-merge
 ```
 
-Or trigger manually from GitHub:
+This creates a PR, enables auto-merge, and GitHub Actions builds and deploys when the PR merges.
+
+See `/workflow` for the full deployment workflow.
+
+### Method 1b: Manual Workflow Dispatch
+
+For triggering a rebuild without merging (e.g., to force `no_cache`):
+
 1. Go to https://github.com/Bebang-Enterprise-Inc/hrms/actions
 2. Select "Build and Deploy Frappe HRMS"
 3. Click "Run workflow"
@@ -133,18 +147,25 @@ export AWS_ACCESS_KEY_ID=$(doppler secrets get AWS_ACCESS_KEY_ID --project bei-e
 export AWS_SECRET_ACCESS_KEY=$(doppler secrets get AWS_SECRET_ACCESS_KEY --project bei-erp --config dev --plain)
 export AWS_DEFAULT_REGION=ap-southeast-1
 
-# Rolling update all services (ZERO DOWNTIME)
+# Rolling update all services (ZERO DOWNTIME) + CLEANUP OLD IMAGES
 aws ssm send-command \
   --instance-ids "i-026b7477d27bd46d6" \
   --document-name "AWS-RunShellScript" \
   --parameters 'commands=[
+    "echo === Updating services ===",
     "docker service update --image samkarazi/bebang-erpnext-hrms:v15 frappe_backend",
     "docker service update --image samkarazi/bebang-erpnext-hrms:v15 frappe_frontend",
     "docker service update --image samkarazi/bebang-erpnext-hrms:v15 frappe_websocket",
     "docker service update --image samkarazi/bebang-erpnext-hrms:v15 frappe_queue-short",
     "docker service update --image samkarazi/bebang-erpnext-hrms:v15 frappe_queue-long",
     "docker service update --image samkarazi/bebang-erpnext-hrms:v15 frappe_scheduler",
-    "docker service ls"
+    "docker service ls",
+    "echo === Cleaning up old images (keeping 4 newest) ===",
+    "docker container prune -f",
+    "IMAGES=$(docker images samkarazi/bebang-erpnext-hrms --format \"{{.ID}}\" | tail -n +5)",
+    "if [ -n \"$IMAGES\" ]; then docker rmi $IMAGES 2>/dev/null || true; fi",
+    "docker image prune -f",
+    "df -h / | tail -1"
   ]' \
   --output json
 ```
@@ -204,6 +225,39 @@ docker push bebang/erpnext-hrms:v15
 ```
 
 ## Post-Deployment Steps
+
+### Automatic Image Cleanup (ALWAYS RUN)
+
+**After every deployment, clean up old images to prevent disk space issues.**
+
+The server has limited storage (50 GB). Each deployment creates a new ~2.5 GB image. Without cleanup, the disk fills up within days.
+
+**Policy:** Keep the 4 most recent images, remove all older ones.
+
+```bash
+# Run this after every successful deployment
+aws ssm send-command \
+  --instance-ids "i-026b7477d27bd46d6" \
+  --document-name "AWS-RunShellScript" \
+  --parameters 'commands=[
+    "echo \"=== Cleaning up old Docker images (keeping 4 newest) ===\"",
+    "docker container prune -f",
+    "IMAGES=$(docker images samkarazi/bebang-erpnext-hrms --format \"{{.ID}}\" | tail -n +5)",
+    "if [ -n \"$IMAGES\" ]; then docker rmi $IMAGES 2>/dev/null || true; fi",
+    "docker image prune -f",
+    "echo \"=== Disk usage after cleanup ===\"",
+    "df -h / | tail -1"
+  ]' \
+  --output json
+```
+
+**What this does:**
+1. Removes exited containers (from previous deployments)
+2. Lists all bebang-erpnext-hrms images, skips the 4 newest, removes the rest
+3. Removes any remaining dangling images
+4. Reports disk usage
+
+**Expected savings:** ~2.5 GB per old image removed.
 
 ### Run Migrations (if schema changed)
 
