@@ -46,15 +46,16 @@ def get_suppliers(filters=None, page=1, page_size=20, search=None):
         values
     )[0][0]
 
-    # Get suppliers
+    # Get suppliers (is_new_supplier computed based on creation date - last 30 days)
     suppliers = frappe.db.sql(f"""
         SELECT
             name, supplier_code, supplier_name, status,
             email, contact_person, contact_number, address,
             tin, bank_name, bank_account_number, payment_terms,
             total_po_count, total_po_value, total_outstanding,
-            avg_delivery_days, on_time_rate, is_new_supplier,
-            bir_2307, sec_certificate, business_permit
+            avg_delivery_days, on_time_rate,
+            bir_2307, sec_certificate, business_permit,
+            CASE WHEN creation >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END as is_new_supplier
         FROM `tabBEI Supplier`
         WHERE {where_clause}
         ORDER BY supplier_name ASC
