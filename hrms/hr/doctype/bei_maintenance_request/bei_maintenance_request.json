@@ -30,6 +30,22 @@
 		"column_break_assignment",
 		"scheduled_date",
 		"estimated_cost",
+		"section_charging",
+		"concern_type",
+		"charge_to_store",
+		"charge_amount",
+		"charging_reason",
+		"column_break_charging",
+		"store_acknowledged",
+		"acknowledged_by",
+		"acknowledgement_date",
+		"section_costs",
+		"materials",
+		"materials_cost",
+		"column_break_costs",
+		"labor_hours",
+		"labor_cost",
+		"total_cost",
 		"section_resolution",
 		"completion",
 		"column_break_resolution",
@@ -84,7 +100,7 @@
 			"in_list_view": 1,
 			"in_standard_filter": 1,
 			"label": "Status",
-			"options": "Open\nAssigned\nIn Progress\nCompleted\nVerified\nCancelled"
+			"options": "Open\nAssigned\nIn Progress\nCompleted\nPending Acknowledgement\nVerified\nCancelled"
 		},
 		{
 			"default": "Normal",
@@ -182,6 +198,101 @@
 			"fieldtype": "Currency",
 			"label": "Estimated Cost",
 			"precision": "2"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_charging",
+			"fieldtype": "Section Break",
+			"label": "Charging"
+		},
+		{
+			"fieldname": "concern_type",
+			"fieldtype": "Select",
+			"label": "Concern Type",
+			"options": "Wear & Tear\nSupplier Deficiency\nContractor Deficiency"
+		},
+		{
+			"default": "0",
+			"fieldname": "charge_to_store",
+			"fieldtype": "Check",
+			"label": "Charge to Store"
+		},
+		{
+			"depends_on": "charge_to_store",
+			"fieldname": "charge_amount",
+			"fieldtype": "Currency",
+			"label": "Charge Amount",
+			"precision": "2"
+		},
+		{
+			"depends_on": "charge_to_store",
+			"fieldname": "charging_reason",
+			"fieldtype": "Small Text",
+			"label": "Charging Reason"
+		},
+		{
+			"fieldname": "column_break_charging",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "0",
+			"fieldname": "store_acknowledged",
+			"fieldtype": "Check",
+			"label": "Store Acknowledged",
+			"read_only": 1
+		},
+		{
+			"fieldname": "acknowledged_by",
+			"fieldtype": "Link",
+			"label": "Acknowledged By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "acknowledgement_date",
+			"fieldtype": "Date",
+			"label": "Acknowledgement Date",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_costs",
+			"fieldtype": "Section Break",
+			"label": "Costs & Materials"
+		},
+		{
+			"fieldname": "materials",
+			"fieldtype": "Table",
+			"label": "Materials Used",
+			"options": "BEI Maintenance Material"
+		},
+		{
+			"fieldname": "materials_cost",
+			"fieldtype": "Currency",
+			"label": "Materials Cost",
+			"precision": "2",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_costs",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "labor_hours",
+			"fieldtype": "Float",
+			"label": "Labor Hours"
+		},
+		{
+			"fieldname": "labor_cost",
+			"fieldtype": "Currency",
+			"label": "Labor Cost",
+			"precision": "2"
+		},
+		{
+			"fieldname": "total_cost",
+			"fieldtype": "Currency",
+			"label": "Total Cost",
+			"precision": "2",
+			"read_only": 1
 		},
 		{
 			"fieldname": "section_resolution",

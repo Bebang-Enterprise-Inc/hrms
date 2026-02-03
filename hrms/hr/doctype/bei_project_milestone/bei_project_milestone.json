@@ -1,0 +1,282 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "format:MILE-{YYYY}-{####}",
+	"creation": "2026-02-04 00:00:00.000000",
+	"default_view": "List",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"section_basic",
+		"project",
+		"project_name",
+		"milestone_name",
+		"milestone_type",
+		"column_break_basic",
+		"status",
+		"completion_percentage",
+		"sequence",
+		"section_schedule",
+		"target_date",
+		"actual_date",
+		"column_break_schedule",
+		"days_variance",
+		"section_billing",
+		"billing_percentage",
+		"billing_amount",
+		"column_break_billing",
+		"payment_request",
+		"payment_status",
+		"section_deliverables",
+		"deliverables",
+		"acceptance_criteria",
+		"section_verification",
+		"verified",
+		"verified_by",
+		"column_break_verification",
+		"verification_date",
+		"verification_notes",
+		"section_audit",
+		"created_by",
+		"created_at"
+	],
+	"fields": [
+		{
+			"fieldname": "section_basic",
+			"fieldtype": "Section Break",
+			"label": "Milestone Details"
+		},
+		{
+			"fieldname": "project",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Project",
+			"options": "BEI Project",
+			"reqd": 1
+		},
+		{
+			"fetch_from": "project.project_name",
+			"fieldname": "project_name",
+			"fieldtype": "Data",
+			"label": "Project Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "milestone_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Milestone Name",
+			"reqd": 1
+		},
+		{
+			"fieldname": "milestone_type",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Milestone Type",
+			"options": "Downpayment\nMobilization\nFoundation\nStructural\nRough-in\nFinishing\nFinal Completion\nTurnover\nWarranty End\nOther",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "Pending",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "Pending\nIn Progress\nCompleted\nVerified\nDelayed\nCancelled"
+		},
+		{
+			"description": "Progress towards completion (0-100%)",
+			"fieldname": "completion_percentage",
+			"fieldtype": "Percent",
+			"in_list_view": 1,
+			"label": "Completion %"
+		},
+		{
+			"default": "1",
+			"description": "Order of milestone in project timeline",
+			"fieldname": "sequence",
+			"fieldtype": "Int",
+			"label": "Sequence"
+		},
+		{
+			"fieldname": "section_schedule",
+			"fieldtype": "Section Break",
+			"label": "Schedule"
+		},
+		{
+			"fieldname": "target_date",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"label": "Target Date",
+			"reqd": 1
+		},
+		{
+			"fieldname": "actual_date",
+			"fieldtype": "Date",
+			"label": "Actual Date"
+		},
+		{
+			"fieldname": "column_break_schedule",
+			"fieldtype": "Column Break"
+		},
+		{
+			"description": "Negative = early, Positive = late",
+			"fieldname": "days_variance",
+			"fieldtype": "Int",
+			"label": "Days Variance",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_billing",
+			"fieldtype": "Section Break",
+			"label": "Billing"
+		},
+		{
+			"description": "Percentage of contract amount for this milestone",
+			"fieldname": "billing_percentage",
+			"fieldtype": "Percent",
+			"label": "Billing %"
+		},
+		{
+			"fieldname": "billing_amount",
+			"fieldtype": "Currency",
+			"in_list_view": 1,
+			"label": "Billing Amount",
+			"precision": "2"
+		},
+		{
+			"fieldname": "column_break_billing",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "payment_request",
+			"fieldtype": "Link",
+			"label": "Payment Request",
+			"options": "BEI Payment Request"
+		},
+		{
+			"default": "Not Billed",
+			"fieldname": "payment_status",
+			"fieldtype": "Select",
+			"label": "Payment Status",
+			"options": "Not Billed\nBilled\nPaid\nOn Hold"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_deliverables",
+			"fieldtype": "Section Break",
+			"label": "Deliverables"
+		},
+		{
+			"fieldname": "deliverables",
+			"fieldtype": "Text Editor",
+			"label": "Deliverables"
+		},
+		{
+			"fieldname": "acceptance_criteria",
+			"fieldtype": "Text Editor",
+			"label": "Acceptance Criteria"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_verification",
+			"fieldtype": "Section Break",
+			"label": "Verification"
+		},
+		{
+			"default": "0",
+			"fieldname": "verified",
+			"fieldtype": "Check",
+			"label": "Verified"
+		},
+		{
+			"fieldname": "verified_by",
+			"fieldtype": "Link",
+			"label": "Verified By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_verification",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "verification_date",
+			"fieldtype": "Date",
+			"label": "Verification Date",
+			"read_only": 1
+		},
+		{
+			"fieldname": "verification_notes",
+			"fieldtype": "Small Text",
+			"label": "Verification Notes"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_audit",
+			"fieldtype": "Section Break",
+			"label": "Audit Trail"
+		},
+		{
+			"default": "__user",
+			"fieldname": "created_by",
+			"fieldtype": "Link",
+			"label": "Created By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "created_at",
+			"fieldtype": "Datetime",
+			"label": "Created At",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2026-02-04 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Project Milestone",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects User",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "sequence",
+	"sort_order": "ASC",
+	"states": [],
+	"title_field": "milestone_name",
+	"track_changes": 1
+}
