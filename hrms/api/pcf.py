@@ -490,21 +490,26 @@ def submit_batch_now(store: str):
 
 
 @frappe.whitelist()
-def get_batch_history(store: str, limit: int = 20, offset: int = 0):
+def get_batch_history(store: str = None, limit: int = 20, offset: int = 0):
     """
     Get batch history for a store.
 
     Args:
-        store: Warehouse name
+        store: Warehouse name or branch name (will resolve to full warehouse name)
         limit: Number of batches to return
         offset: Pagination offset
 
     Returns:
         List of past batches
     """
+    # Resolve store from branch if needed
+    resolved_store = _resolve_store_name(store)
+    if not resolved_store:
+        return {"success": True, "batches": [], "total": 0, "limit": limit, "offset": offset}
+
     batches = frappe.get_all(
         "BEI PCF Batch",
-        filters={"store": store},
+        filters={"store": resolved_store},
         fields=[
             "name",
             "batch_date",
@@ -522,7 +527,7 @@ def get_batch_history(store: str, limit: int = 20, offset: int = 0):
         limit_start=offset,
     )
 
-    total = frappe.db.count("BEI PCF Batch", {"store": store})
+    total = frappe.db.count("BEI PCF Batch", {"store": resolved_store})
 
     return {
         "success": True,
@@ -530,6 +535,7 @@ def get_batch_history(store: str, limit: int = 20, offset: int = 0):
         "total": total,
         "limit": limit,
         "offset": offset,
+        "store": resolved_store,
     }
 
 
@@ -1087,3 +1093,28 @@ def _get_store_for_employee(employee):
     # Try partial match
     store = frappe.db.get_value("Warehouse", {"name": ["like", f"{employee.branch}%"]}, "name")
     return store
+
+
+def _resolve_store_name(store_or_branch: str) -> str:
+    """
+    Resolve a store name from branch or partial warehouse name.
+    Frontend may pass just 'TEST-STORE-BGC' but warehouse is 'TEST-STORE-BGC - BEI'.
+    """
+    if not store_or_branch:
+        return None
+
+    # Try exact match first
+    if frappe.db.exists("Warehouse", store_or_branch):
+        return store_or_branch
+
+    # Try with common company suffixes
+    for suffix in ["Bebang Enterprise Inc.", "BEI"]:
+        full_name = f"{store_or_branch} - {suffix}"
+        if frappe.db.exists("Warehouse", full_name):
+            return full_name
+
+    # Try partial match
+    warehouse = frappe.db.get_value(
+        "Warehouse", {"name": ["like", f"{store_or_branch}%"]}, "name"
+    )
+    return warehouse
