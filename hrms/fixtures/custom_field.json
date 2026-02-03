@@ -1,6 +1,57 @@
 [
     {
         "doctype": "Custom Field",
+        "name": "Item-custom_shelf_life_days",
+        "dt": "Item",
+        "fieldname": "custom_shelf_life_days",
+        "fieldtype": "Int",
+        "label": "Shelf Life (Days)",
+        "insert_after": "shelf_life_in_days",
+        "description": "Product shelf life in days for expiry tracking"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Item-custom_reorder_days",
+        "dt": "Item",
+        "fieldname": "custom_reorder_days",
+        "fieldtype": "Int",
+        "label": "Target Days Inventory",
+        "insert_after": "custom_shelf_life_days",
+        "description": "Target Days Inventory (DI) for this product. Default is 14 days."
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Item-custom_storage_temp_min",
+        "dt": "Item",
+        "fieldname": "custom_storage_temp_min",
+        "fieldtype": "Float",
+        "label": "Min Storage Temp (°C)",
+        "insert_after": "custom_reorder_days",
+        "description": "Minimum storage temperature in Celsius"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Item-custom_storage_temp_max",
+        "dt": "Item",
+        "fieldname": "custom_storage_temp_max",
+        "fieldtype": "Float",
+        "label": "Max Storage Temp (°C)",
+        "insert_after": "custom_storage_temp_min",
+        "description": "Maximum storage temperature in Celsius"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Item-custom_formula_variant",
+        "dt": "Item",
+        "fieldname": "custom_formula_variant",
+        "fieldtype": "Select",
+        "label": "Formula Variant",
+        "options": "\nOriginal\nGriffith\nN/A",
+        "insert_after": "custom_storage_temp_max",
+        "description": "Formula variant for Frozen Milk (FG020) tracking"
+    },
+    {
+        "doctype": "Custom Field",
         "name": "User-custom_is_pcf_custodian",
         "dt": "User",
         "fieldname": "custom_is_pcf_custodian",
