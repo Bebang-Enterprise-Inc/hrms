@@ -1,0 +1,303 @@
+{
+  "actions": [],
+  "autoname": "format:GR-{YYYY}-{#####}",
+  "creation": "2026-02-03 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "header_section",
+    "gr_no",
+    "receipt_date",
+    "status",
+    "column_break_header",
+    "purchase_order",
+    "po_date",
+    "supplier",
+    "supplier_name",
+    "delivery_section",
+    "delivery_note_no",
+    "delivery_date",
+    "column_break_delivery",
+    "received_by",
+    "warehouse",
+    "items_section",
+    "items",
+    "totals_section",
+    "total_ordered_qty",
+    "total_received_qty",
+    "column_break_totals",
+    "total_accepted_qty",
+    "total_rejected_qty",
+    "total_amount",
+    "quality_section",
+    "inspection_required",
+    "inspection_status",
+    "inspector",
+    "column_break_quality",
+    "inspection_date",
+    "inspection_notes",
+    "integration_section",
+    "frappe_purchase_receipt"
+  ],
+  "fields": [
+    {
+      "fieldname": "header_section",
+      "fieldtype": "Section Break",
+      "label": "Receipt Information"
+    },
+    {
+      "fieldname": "gr_no",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "GR Number",
+      "read_only": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "receipt_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Receipt Date",
+      "reqd": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Draft\nPending Inspection\nPartially Accepted\nAccepted\nRejected\nCancelled"
+    },
+    {
+      "fieldname": "column_break_header",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Purchase Order",
+      "options": "BEI Purchase Order",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "purchase_order.po_date",
+      "fieldname": "po_date",
+      "fieldtype": "Date",
+      "label": "PO Date",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "purchase_order.supplier",
+      "fieldname": "supplier",
+      "fieldtype": "Link",
+      "label": "Supplier",
+      "options": "BEI Supplier",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "supplier.supplier_name",
+      "fieldname": "supplier_name",
+      "fieldtype": "Data",
+      "label": "Supplier Name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "delivery_section",
+      "fieldtype": "Section Break",
+      "label": "Delivery Details"
+    },
+    {
+      "fieldname": "delivery_note_no",
+      "fieldtype": "Data",
+      "label": "Delivery Note No"
+    },
+    {
+      "default": "Today",
+      "fieldname": "delivery_date",
+      "fieldtype": "Date",
+      "label": "Delivery Date"
+    },
+    {
+      "fieldname": "column_break_delivery",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "received_by",
+      "fieldtype": "Link",
+      "label": "Received By",
+      "options": "Employee"
+    },
+    {
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "label": "Warehouse",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "items_section",
+      "fieldtype": "Section Break",
+      "label": "Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "BEI GR Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "totals_section",
+      "fieldtype": "Section Break",
+      "label": "Totals"
+    },
+    {
+      "fieldname": "total_ordered_qty",
+      "fieldtype": "Float",
+      "label": "Total Ordered Qty",
+      "precision": "2",
+      "read_only": 1
+    },
+    {
+      "fieldname": "total_received_qty",
+      "fieldtype": "Float",
+      "label": "Total Received Qty",
+      "precision": "2",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_totals",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "total_accepted_qty",
+      "fieldtype": "Float",
+      "label": "Total Accepted Qty",
+      "precision": "2",
+      "read_only": 1
+    },
+    {
+      "fieldname": "total_rejected_qty",
+      "fieldtype": "Float",
+      "label": "Total Rejected Qty",
+      "precision": "2",
+      "read_only": 1
+    },
+    {
+      "fieldname": "total_amount",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Total Amount",
+      "read_only": 1
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "quality_section",
+      "fieldtype": "Section Break",
+      "label": "Quality Inspection"
+    },
+    {
+      "default": "0",
+      "fieldname": "inspection_required",
+      "fieldtype": "Check",
+      "label": "Inspection Required"
+    },
+    {
+      "default": "Pending",
+      "depends_on": "eval:doc.inspection_required",
+      "fieldname": "inspection_status",
+      "fieldtype": "Select",
+      "label": "Inspection Status",
+      "options": "Pending\nIn Progress\nPassed\nFailed"
+    },
+    {
+      "depends_on": "eval:doc.inspection_required",
+      "fieldname": "inspector",
+      "fieldtype": "Link",
+      "label": "Inspector",
+      "options": "Employee"
+    },
+    {
+      "fieldname": "column_break_quality",
+      "fieldtype": "Column Break"
+    },
+    {
+      "depends_on": "eval:doc.inspection_required",
+      "fieldname": "inspection_date",
+      "fieldtype": "Date",
+      "label": "Inspection Date"
+    },
+    {
+      "depends_on": "eval:doc.inspection_required",
+      "fieldname": "inspection_notes",
+      "fieldtype": "Small Text",
+      "label": "Inspection Notes"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "integration_section",
+      "fieldtype": "Section Break",
+      "label": "ERP Integration"
+    },
+    {
+      "fieldname": "frappe_purchase_receipt",
+      "fieldtype": "Link",
+      "label": "Frappe Purchase Receipt",
+      "options": "Purchase Receipt",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-02-03 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Goods Receipt",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock User",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "search_fields": "supplier_name,purchase_order",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "title_field": "gr_no",
+  "track_changes": 1
+}

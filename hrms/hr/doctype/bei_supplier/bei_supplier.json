@@ -1,0 +1,258 @@
+{
+  "actions": [],
+  "autoname": "field:supplier_code",
+  "creation": "2026-02-03 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "basic_info_section",
+    "supplier_code",
+    "supplier_name",
+    "status",
+    "frappe_supplier",
+    "column_break_basic",
+    "contact_person",
+    "contact_number",
+    "email",
+    "address",
+    "legal_section",
+    "tin",
+    "sec_registration",
+    "column_break_legal",
+    "bir_2307",
+    "sec_certificate",
+    "business_permit",
+    "bank_section",
+    "bank_name",
+    "bank_account_name",
+    "column_break_bank",
+    "bank_account_number",
+    "payment_terms",
+    "metrics_section",
+    "total_po_count",
+    "total_po_value",
+    "column_break_metrics",
+    "total_outstanding",
+    "avg_delivery_days",
+    "on_time_rate"
+  ],
+  "fields": [
+    {
+      "fieldname": "basic_info_section",
+      "fieldtype": "Section Break",
+      "label": "Basic Information"
+    },
+    {
+      "fieldname": "supplier_code",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Supplier Code",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "supplier_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Supplier Name",
+      "reqd": 1
+    },
+    {
+      "default": "Pending Verification",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Active\nInactive\nPending Verification\nBlacklisted"
+    },
+    {
+      "fieldname": "frappe_supplier",
+      "fieldtype": "Link",
+      "label": "Frappe Supplier Link",
+      "options": "Supplier"
+    },
+    {
+      "fieldname": "column_break_basic",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "contact_person",
+      "fieldtype": "Data",
+      "label": "Contact Person"
+    },
+    {
+      "fieldname": "contact_number",
+      "fieldtype": "Data",
+      "label": "Contact Number"
+    },
+    {
+      "fieldname": "email",
+      "fieldtype": "Data",
+      "label": "Email",
+      "options": "Email"
+    },
+    {
+      "fieldname": "address",
+      "fieldtype": "Small Text",
+      "label": "Address"
+    },
+    {
+      "fieldname": "legal_section",
+      "fieldtype": "Section Break",
+      "label": "Tax & Legal Documents"
+    },
+    {
+      "fieldname": "tin",
+      "fieldtype": "Data",
+      "label": "TIN"
+    },
+    {
+      "fieldname": "sec_registration",
+      "fieldtype": "Data",
+      "label": "SEC Registration No"
+    },
+    {
+      "fieldname": "column_break_legal",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "bir_2307",
+      "fieldtype": "Attach",
+      "label": "BIR 2307"
+    },
+    {
+      "fieldname": "sec_certificate",
+      "fieldtype": "Attach",
+      "label": "SEC Certificate"
+    },
+    {
+      "fieldname": "business_permit",
+      "fieldtype": "Attach",
+      "label": "Business Permit"
+    },
+    {
+      "fieldname": "bank_section",
+      "fieldtype": "Section Break",
+      "label": "Bank Details"
+    },
+    {
+      "fieldname": "bank_name",
+      "fieldtype": "Data",
+      "label": "Bank Name"
+    },
+    {
+      "fieldname": "bank_account_name",
+      "fieldtype": "Data",
+      "label": "Account Name"
+    },
+    {
+      "fieldname": "column_break_bank",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "bank_account_number",
+      "fieldtype": "Data",
+      "label": "Account Number"
+    },
+    {
+      "fieldname": "payment_terms",
+      "fieldtype": "Link",
+      "label": "Default Payment Terms",
+      "options": "Payment Terms Template"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "metrics_section",
+      "fieldtype": "Section Break",
+      "label": "Performance Metrics"
+    },
+    {
+      "fieldname": "total_po_count",
+      "fieldtype": "Int",
+      "label": "Total POs",
+      "read_only": 1
+    },
+    {
+      "fieldname": "total_po_value",
+      "fieldtype": "Currency",
+      "label": "Total PO Value",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_metrics",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "total_outstanding",
+      "fieldtype": "Currency",
+      "label": "Outstanding Balance",
+      "read_only": 1
+    },
+    {
+      "fieldname": "avg_delivery_days",
+      "fieldtype": "Float",
+      "label": "Avg Delivery Days",
+      "precision": "1",
+      "read_only": 1
+    },
+    {
+      "fieldname": "on_time_rate",
+      "fieldtype": "Percent",
+      "label": "On-Time Delivery %",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-02-03 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Supplier",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Procurement User",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Procurement Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "search_fields": "supplier_name,contact_person,email",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "title_field": "supplier_name",
+  "track_changes": 1
+}
