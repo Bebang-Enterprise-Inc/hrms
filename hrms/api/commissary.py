@@ -2112,3 +2112,198 @@ def get_rm_for_requisition():
         "data": result,
         "alerts_count": len(alerts)
     }
+
+
+# ============================================================
+# 9. QUALITY INSPECTION
+# ============================================================
+
+@frappe.whitelist()
+def get_pending_inspections():
+    """
+    Get production batches awaiting quality inspection.
+    Returns Stock Entries (Manufacture) that don't have a linked QI.
+    """
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Get manufacture entries from last 7 days without QI
+    pending = frappe.db.sql("""
+        SELECT
+            se.name,
+            se.posting_date,
+            sed.item_code,
+            sed.item_name,
+            sed.qty,
+            sed.uom,
+            i.quality_inspection_template
+        FROM `tabStock Entry` se
+        JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
+        JOIN `tabItem` i ON i.name = sed.item_code
+        WHERE se.stock_entry_type = 'Manufacture'
+        AND se.docstatus = 1
+        AND sed.t_warehouse = %s
+        AND se.posting_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+        AND i.inspection_required_before_delivery = 1
+        AND NOT EXISTS (
+            SELECT 1 FROM `tabQuality Inspection` qi
+            WHERE qi.reference_name = se.name
+            AND qi.item_code = sed.item_code
+            AND qi.docstatus != 2
+        )
+        ORDER BY se.posting_date DESC
+    """, commissary_warehouse, as_dict=True)
+
+    return {
+        "success": True,
+        "data": pending,
+        "total": len(pending)
+    }
+
+
+@frappe.whitelist()
+def create_quality_inspection(stock_entry_name, item_code, inspected_by=None, readings=None, status="Accepted"):
+    """
+    Create a quality inspection record for a production batch.
+
+    Args:
+        stock_entry_name: Reference Stock Entry
+        item_code: Item being inspected
+        inspected_by: Inspector name (defaults to current user)
+        readings: Dict of {specification: reading_value}
+        status: "Accepted" or "Rejected"
+    """
+    if isinstance(readings, str):
+        readings = json.loads(readings)
+
+    # Get the Stock Entry Detail
+    sed = frappe.db.get_value(
+        "Stock Entry Detail",
+        {"parent": stock_entry_name, "item_code": item_code},
+        ["qty", "batch_no"],
+        as_dict=True
+    )
+
+    if not sed:
+        return {"success": False, "error": f"Item {item_code} not found in Stock Entry {stock_entry_name}"}
+
+    # Get the QI template for this item
+    template = frappe.db.get_value("Item", item_code, "quality_inspection_template")
+
+    # Create QI
+    qi = frappe.new_doc("Quality Inspection")
+    qi.inspection_type = "Outgoing"
+    qi.reference_type = "Stock Entry"
+    qi.reference_name = stock_entry_name
+    qi.item_code = item_code
+    qi.sample_size = sed.qty
+    qi.inspected_by = inspected_by or frappe.session.user
+    qi.status = status
+    qi.batch_no = sed.batch_no
+
+    # If template exists, populate readings
+    if template:
+        qi.quality_inspection_template = template
+        template_doc = frappe.get_doc("Quality Inspection Template", template)
+        for param in template_doc.item_quality_inspection_parameter:
+            reading = {
+                "specification": param.specification,
+                "value": param.value,
+                "status": "Accepted"
+            }
+            # Override with provided readings
+            if readings and param.specification in readings:
+                reading["reading_1"] = readings[param.specification]
+            qi.append("readings", reading)
+    elif readings:
+        # Create readings from provided data
+        for spec, value in readings.items():
+            qi.append("readings", {
+                "specification": spec,
+                "reading_1": value,
+                "status": "Accepted"
+            })
+
+    qi.insert()
+    qi.submit()
+
+    return {
+        "success": True,
+        "message": f"Quality Inspection {qi.name} created",
+        "data": {"name": qi.name, "status": qi.status}
+    }
+
+
+@frappe.whitelist()
+def get_inspection_history(item_code=None, days=30):
+    """
+    Get quality inspection history.
+
+    Args:
+        item_code: Filter by specific item (optional)
+        days: Number of days to look back (default 30)
+    """
+    filters = {
+        "docstatus": 1,
+        "inspection_type": "Outgoing",
+        "creation": [">=", add_days(today(), -int(days))]
+    }
+
+    if item_code:
+        filters["item_code"] = item_code
+
+    inspections = frappe.get_all(
+        "Quality Inspection",
+        filters=filters,
+        fields=[
+            "name", "item_code", "item_name", "status",
+            "inspected_by", "sample_size", "batch_no",
+            "reference_name", "modified"
+        ],
+        order_by="modified desc",
+        limit=100
+    )
+
+    # Get summary stats
+    total = len(inspections)
+    accepted = len([i for i in inspections if i.status == "Accepted"])
+    rejected = len([i for i in inspections if i.status == "Rejected"])
+
+    return {
+        "success": True,
+        "data": inspections,
+        "summary": {
+            "total": total,
+            "accepted": accepted,
+            "rejected": rejected,
+            "acceptance_rate": round(accepted / total * 100, 1) if total > 0 else 0
+        }
+    }
+
+
+@frappe.whitelist()
+def get_inspection_details(inspection_name):
+    """Get full details of a quality inspection including readings."""
+    qi = frappe.get_doc("Quality Inspection", inspection_name)
+
+    return {
+        "success": True,
+        "data": {
+            "name": qi.name,
+            "item_code": qi.item_code,
+            "item_name": qi.item_name,
+            "status": qi.status,
+            "inspected_by": qi.inspected_by,
+            "sample_size": qi.sample_size,
+            "batch_no": qi.batch_no,
+            "reference_name": qi.reference_name,
+            "readings": [
+                {
+                    "specification": r.specification,
+                    "value": r.value,
+                    "reading_1": r.reading_1,
+                    "status": r.status
+                }
+                for r in qi.readings
+            ]
+        }
+    }
