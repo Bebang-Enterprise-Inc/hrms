@@ -93,6 +93,10 @@
   {
    "read": 1,
    "role": "HR User"
+  },
+  {
+   "read": 1,
+   "role": "Employee"
   }
  ],
  "sort_field": "display_order",
