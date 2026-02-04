@@ -2307,3 +2307,244 @@ def get_inspection_details(inspection_name):
             ]
         }
     }
+
+
+# ============================================================
+# 10. PRODUCTION PLANNING
+# ============================================================
+
+@frappe.whitelist()
+def get_production_suggestions():
+    """
+    Get production suggestions based on stock levels and demand.
+    Suggests FG items that are below safety stock or have pending orders.
+    """
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Get FG items with current stock and pending demand
+    suggestions = frappe.db.sql("""
+        SELECT
+            i.item_code,
+            i.item_name,
+            i.stock_uom,
+            COALESCE(bin.actual_qty, 0) as current_stock,
+            COALESCE(bin.reserved_qty, 0) as reserved_qty,
+            COALESCE(
+                (SELECT SUM(mri.qty - mri.ordered_qty)
+                 FROM `tabMaterial Request Item` mri
+                 JOIN `tabMaterial Request` mr ON mr.name = mri.parent
+                 WHERE mri.item_code = i.item_code
+                 AND mr.docstatus = 1
+                 AND mr.status NOT IN ('Stopped', 'Cancelled')
+                ), 0
+            ) as pending_demand,
+            b.name as bom_name
+        FROM `tabItem` i
+        LEFT JOIN `tabBin` bin ON bin.item_code = i.name AND bin.warehouse = %s
+        LEFT JOIN `tabBOM` b ON b.item = i.name AND b.is_active = 1 AND b.is_default = 1
+        WHERE i.item_group = 'Finished Goods'
+        AND i.disabled = 0
+        ORDER BY pending_demand DESC, current_stock ASC
+    """, commissary_warehouse, as_dict=True)
+
+    result = []
+    for item in suggestions:
+        # Calculate suggested production qty
+        target_stock = 100  # Default safety stock
+        gap = target_stock - item.current_stock + item.pending_demand
+
+        if gap > 0 and item.bom_name:
+            result.append({
+                "item_code": item.item_code,
+                "item_name": item.item_name,
+                "uom": item.stock_uom,
+                "current_stock": flt(item.current_stock),
+                "pending_demand": flt(item.pending_demand),
+                "suggested_qty": flt(gap, 0),
+                "bom_name": item.bom_name,
+                "priority": "high" if item.pending_demand > 0 else "normal"
+            })
+
+    return {
+        "success": True,
+        "data": result,
+        "total": len(result)
+    }
+
+
+@frappe.whitelist()
+def create_work_order(item_code, qty, planned_start_date=None, remarks=None):
+    """
+    Create a Work Order for a Finished Good item.
+
+    Args:
+        item_code: FG item to produce
+        qty: Quantity to produce
+        planned_start_date: When to start (defaults to today)
+        remarks: Optional notes
+    """
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Get the default BOM for this item
+    bom = frappe.db.get_value(
+        "BOM",
+        {"item": item_code, "is_active": 1, "is_default": 1},
+        ["name", "quantity"],
+        as_dict=True
+    )
+
+    if not bom:
+        return {"success": False, "error": f"No active BOM found for item {item_code}"}
+
+    # Create Work Order
+    wo = frappe.new_doc("Work Order")
+    wo.production_item = item_code
+    wo.bom_no = bom.name
+    wo.qty = flt(qty)
+    wo.fg_warehouse = commissary_warehouse
+    wo.wip_warehouse = commissary_warehouse  # Same warehouse for simplicity
+    wo.company = "Bebang Enterprise Inc."
+    wo.planned_start_date = planned_start_date or today()
+    wo.expected_delivery_date = planned_start_date or today()
+
+    if remarks:
+        wo.remarks = remarks
+
+    wo.insert()
+
+    return {
+        "success": True,
+        "message": f"Work Order {wo.name} created",
+        "data": {
+            "name": wo.name,
+            "item_code": wo.production_item,
+            "qty": wo.qty,
+            "bom_no": wo.bom_no,
+            "status": wo.status
+        }
+    }
+
+
+@frappe.whitelist()
+def get_work_orders(status=None, days=7):
+    """
+    Get Work Orders for commissary production.
+
+    Args:
+        status: Filter by status (optional)
+        days: Days to look back (default 7)
+    """
+    filters = {
+        "fg_warehouse": ["like", "%Commissary%"],
+        "creation": [">=", add_days(today(), -int(days))]
+    }
+
+    if status:
+        filters["status"] = status
+
+    work_orders = frappe.get_all(
+        "Work Order",
+        filters=filters,
+        fields=[
+            "name", "production_item", "item_name", "qty",
+            "produced_qty", "status", "planned_start_date",
+            "expected_delivery_date", "bom_no"
+        ],
+        order_by="creation desc",
+        limit=50
+    )
+
+    # Calculate completion percentage
+    for wo in work_orders:
+        wo["completion_pct"] = round(wo.produced_qty / wo.qty * 100, 1) if wo.qty > 0 else 0
+
+    # Summary by status
+    summary = {}
+    for wo in work_orders:
+        status = wo.status
+        if status not in summary:
+            summary[status] = {"count": 0, "qty": 0}
+        summary[status]["count"] += 1
+        summary[status]["qty"] += wo.qty
+
+    return {
+        "success": True,
+        "data": work_orders,
+        "summary": summary
+    }
+
+
+@frappe.whitelist()
+def start_work_order(work_order_name):
+    """Start a work order (submit if draft, begin manufacturing)."""
+    wo = frappe.get_doc("Work Order", work_order_name)
+
+    if wo.docstatus == 0:
+        wo.submit()
+
+    if wo.status == "Submitted":
+        # Create Stock Entry for Material Transfer for Manufacture
+        se = frappe.new_doc("Stock Entry")
+        se.stock_entry_type = "Material Transfer for Manufacture"
+        se.work_order = wo.name
+        se.from_bom = 1
+        se.bom_no = wo.bom_no
+        se.fg_completed_qty = wo.qty
+        se.company = wo.company
+
+        # Get items from BOM
+        se.get_items()
+        se.insert()
+        se.submit()
+
+        return {
+            "success": True,
+            "message": f"Work Order {wo.name} started. Material transferred.",
+            "data": {"work_order": wo.name, "stock_entry": se.name}
+        }
+
+    return {
+        "success": False,
+        "error": f"Work Order is in status {wo.status}, cannot start"
+    }
+
+
+@frappe.whitelist()
+def complete_work_order(work_order_name, qty_produced=None):
+    """Complete a work order by creating manufacture stock entry."""
+    wo = frappe.get_doc("Work Order", work_order_name)
+
+    if wo.status not in ["Submitted", "In Process"]:
+        return {
+            "success": False,
+            "error": f"Work Order is in status {wo.status}, cannot complete"
+        }
+
+    qty = flt(qty_produced) or wo.qty - wo.produced_qty
+
+    # Create Stock Entry for Manufacture
+    se = frappe.new_doc("Stock Entry")
+    se.stock_entry_type = "Manufacture"
+    se.work_order = wo.name
+    se.from_bom = 1
+    se.bom_no = wo.bom_no
+    se.fg_completed_qty = qty
+    se.company = wo.company
+
+    se.get_items()
+    se.insert()
+    se.submit()
+
+    # Refresh work order status
+    wo.reload()
+
+    return {
+        "success": True,
+        "message": f"Manufactured {qty} units of {wo.production_item}",
+        "data": {
+            "work_order": wo.name,
+            "stock_entry": se.name,
+            "produced_qty": wo.produced_qty,
+            "status": wo.status
+        }
+    }
