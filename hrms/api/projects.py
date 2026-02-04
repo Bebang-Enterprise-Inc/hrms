@@ -598,6 +598,9 @@ def record_maintenance_completion(
 
     completion.insert()
 
+    # Reload request to get latest modified timestamp (avoids version conflict)
+    request_doc.reload()
+
     # Update request with completion link and status
     request_doc.completion = completion.name
     request_doc.status = "Completed"
