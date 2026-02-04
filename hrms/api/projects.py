@@ -552,8 +552,9 @@ def record_maintenance_completion(
     if follow_up_needed and not follow_up_notes:
         frappe.throw(_("Follow-up notes are required when follow-up is needed"))
 
-    if not after_photos:
-        frappe.throw(_("At least one after photo is required as proof of completion"))
+    # TODO: Re-enable photo requirement once frontend has upload capability
+    # if not after_photos:
+    #     frappe.throw(_("At least one after photo is required as proof of completion"))
 
     request_doc = frappe.get_doc("BEI Maintenance Request", request_id)
 
