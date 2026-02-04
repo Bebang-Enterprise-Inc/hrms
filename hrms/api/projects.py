@@ -898,6 +898,275 @@ def get_stores_list():
     return {"stores": stores}
 
 
+# ==============================================================================
+# CHARGING WORKFLOW
+# ==============================================================================
+
+
+@frappe.whitelist()
+def assess_maintenance_request(request_id, concern_type, notes=None):
+    """
+    Technician assesses the request and sets concern type.
+
+    Args:
+        request_id: The maintenance request name
+        concern_type: "Wear & Tear", "Supplier Deficiency", "Contractor Deficiency"
+        notes: Optional assessment notes
+
+    Returns:
+        {"success": True, "message": "...", "request": {...}}
+    """
+    if not request_id:
+        frappe.throw(_("Request ID is required"))
+
+    valid_concern_types = ["Wear & Tear", "Supplier Deficiency", "Contractor Deficiency"]
+    if concern_type not in valid_concern_types:
+        frappe.throw(_("Invalid concern type. Must be one of: {0}").format(", ".join(valid_concern_types)))
+
+    if not frappe.db.exists("BEI Maintenance Request", request_id):
+        frappe.throw(_("Maintenance request {0} not found").format(request_id))
+
+    doc = frappe.get_doc("BEI Maintenance Request", request_id)
+    doc.concern_type = concern_type
+
+    if notes:
+        doc.add_comment("Comment", f"Assessment: {notes}")
+
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Request {0} assessed as {1}").format(request_id, concern_type),
+        "request": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def set_maintenance_charge(request_id, charge_amount, charging_reason):
+    """
+    Set a charge to store for a maintenance request.
+
+    Args:
+        request_id: The maintenance request name
+        charge_amount: Amount to charge
+        charging_reason: Reason for the charge
+
+    Returns:
+        {"success": True, "message": "...", "request": {...}}
+    """
+    if not request_id:
+        frappe.throw(_("Request ID is required"))
+
+    if not charge_amount or flt(charge_amount) <= 0:
+        frappe.throw(_("Charge amount must be greater than 0"))
+
+    if not charging_reason:
+        frappe.throw(_("Charging reason is required"))
+
+    if not frappe.db.exists("BEI Maintenance Request", request_id):
+        frappe.throw(_("Maintenance request {0} not found").format(request_id))
+
+    doc = frappe.get_doc("BEI Maintenance Request", request_id)
+    doc.charge_to_store = 1
+    doc.charge_amount = flt(charge_amount)
+    doc.charging_reason = charging_reason
+    doc.status = "Pending Acknowledgement"
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Charge of {0} set for {1}. Pending store acknowledgement.").format(
+            doc.charge_amount, request_id
+        ),
+        "request": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def acknowledge_maintenance_charge(request_id):
+    """
+    Store supervisor acknowledges charge to store.
+
+    Args:
+        request_id: The maintenance request name
+
+    Returns:
+        {"success": True, "message": "..."}
+    """
+    if not request_id:
+        frappe.throw(_("Request ID is required"))
+
+    if not frappe.db.exists("BEI Maintenance Request", request_id):
+        frappe.throw(_("Maintenance request {0} not found").format(request_id))
+
+    doc = frappe.get_doc("BEI Maintenance Request", request_id)
+
+    if not doc.charge_to_store:
+        frappe.throw(_("This request has no charge to acknowledge"))
+
+    if doc.store_acknowledged:
+        frappe.throw(_("Charge already acknowledged"))
+
+    doc.store_acknowledged = 1
+    doc.acknowledged_by = frappe.session.user
+    doc.acknowledgement_date = nowdate()
+    doc.status = "Verified"
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Charge acknowledged for {0}").format(request_id)
+    }
+
+
+@frappe.whitelist()
+def get_pending_charges(store=None, page=1, page_size=20):
+    """
+    Get maintenance requests with pending store charges.
+
+    Args:
+        store: Filter by specific store (optional)
+        page: Page number (default: 1)
+        page_size: Items per page (default: 20)
+
+    Returns:
+        {
+            "requests": [...],
+            "total": int,
+            "page": int,
+            "page_size": int
+        }
+    """
+    filters = {
+        "charge_to_store": 1,
+        "store_acknowledged": 0,
+        "status": ["in", ["Completed", "Pending Acknowledgement"]]
+    }
+
+    if store:
+        filters["store"] = store
+
+    page = int(page)
+    page_size = int(page_size)
+
+    total = frappe.db.count("BEI Maintenance Request", filters)
+
+    requests = frappe.get_all(
+        "BEI Maintenance Request",
+        filters=filters,
+        fields=[
+            "name", "store", "store_code", "request_date", "issue_category",
+            "description", "charge_amount", "charging_reason", "concern_type",
+            "priority", "status"
+        ],
+        order_by="request_date desc",
+        limit_page_length=page_size,
+        limit_start=(page - 1) * page_size
+    )
+
+    # Get store names
+    for req in requests:
+        if req.store:
+            req["store_name"] = frappe.db.get_value("Warehouse", req.store, "warehouse_name")
+
+    return {
+        "requests": requests,
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+
+
+@frappe.whitelist()
+def add_maintenance_materials(request_id, materials):
+    """
+    Add materials to a maintenance request.
+
+    Args:
+        request_id: The maintenance request name
+        materials: List of materials [{material, quantity, unit, unit_cost}, ...]
+
+    Returns:
+        {"success": True, "message": "...", "request": {...}}
+    """
+    if not request_id:
+        frappe.throw(_("Request ID is required"))
+
+    if not frappe.db.exists("BEI Maintenance Request", request_id):
+        frappe.throw(_("Maintenance request {0} not found").format(request_id))
+
+    if isinstance(materials, str):
+        materials = json.loads(materials)
+
+    if not materials or not isinstance(materials, list):
+        frappe.throw(_("Materials must be a non-empty list"))
+
+    doc = frappe.get_doc("BEI Maintenance Request", request_id)
+
+    total_materials_cost = 0
+    for mat in materials:
+        quantity = flt(mat.get("quantity", 1))
+        unit_cost = flt(mat.get("unit_cost", 0))
+        total_cost = quantity * unit_cost
+        total_materials_cost += total_cost
+
+        doc.append("materials", {
+            "material": mat.get("material"),
+            "quantity": quantity,
+            "unit": mat.get("unit", "pcs"),
+            "unit_cost": unit_cost,
+            "total_cost": total_cost
+        })
+
+    doc.materials_cost = total_materials_cost
+    doc.total_cost = total_materials_cost + flt(doc.labor_cost or 0)
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("{0} materials added to {1}").format(len(materials), request_id),
+        "request": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def update_maintenance_costs(request_id, labor_hours=None, labor_cost=None):
+    """
+    Update labor costs for a maintenance request.
+
+    Args:
+        request_id: The maintenance request name
+        labor_hours: Hours of labor
+        labor_cost: Cost of labor
+
+    Returns:
+        {"success": True, "message": "...", "request": {...}}
+    """
+    if not request_id:
+        frappe.throw(_("Request ID is required"))
+
+    if not frappe.db.exists("BEI Maintenance Request", request_id):
+        frappe.throw(_("Maintenance request {0} not found").format(request_id))
+
+    doc = frappe.get_doc("BEI Maintenance Request", request_id)
+
+    if labor_hours is not None:
+        doc.labor_hours = flt(labor_hours)
+
+    if labor_cost is not None:
+        doc.labor_cost = flt(labor_cost)
+
+    # Recalculate total cost
+    doc.total_cost = flt(doc.materials_cost or 0) + flt(doc.labor_cost or 0)
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Costs updated for {0}").format(request_id),
+        "request": doc.as_dict()
+    }
+
+
 @frappe.whitelist()
 def get_maintenance_categories():
     """
@@ -916,3 +1185,1035 @@ def get_maintenance_categories():
         categories = ["Electrical", "Plumbing", "Mechanical", "Pest", "Security", "Network", "Architectural", "Other"]
 
     return {"categories": categories}
+
+
+# ==============================================================================
+# PROJECT MANAGEMENT
+# ==============================================================================
+
+
+@frappe.whitelist()
+def get_project_dashboard():
+    """
+    Get projects grouped by stage for kanban dashboard.
+
+    Returns:
+        {
+            "pre_design": [...],
+            "design": [...],
+            ...
+            "summary": {"total_active": int, "total_budget": float}
+        }
+    """
+    stages = ["Pre-Design", "Design", "Bidding", "Pre-Construction",
+              "Construction", "Post-Construction", "Completed"]
+
+    result = {}
+    for stage in stages:
+        projects = frappe.get_all(
+            "BEI Project",
+            filters={"stage": stage, "status": ["!=", "Cancelled"]},
+            fields=[
+                "name", "project_name", "project_type", "store", "store_code",
+                "target_opening_date", "progress_percent", "contract_amount",
+                "priority", "project_manager"
+            ],
+            order_by="priority desc, target_opening_date asc"
+        )
+
+        # Get project manager names
+        for proj in projects:
+            if proj.project_manager:
+                proj["project_manager_name"] = frappe.db.get_value(
+                    "Employee", proj.project_manager, "employee_name"
+                )
+
+        key = stage.lower().replace("-", "_").replace(" ", "_")
+        result[key] = projects
+
+    # Summary stats
+    total_active = frappe.db.count("BEI Project", {
+        "stage": ["not in", ["Completed", "Cancelled", "On Hold"]],
+        "status": ["!=", "Cancelled"]
+    })
+
+    total_budget = frappe.db.sql("""
+        SELECT COALESCE(SUM(contract_amount), 0)
+        FROM `tabBEI Project`
+        WHERE stage NOT IN ('Completed', 'Cancelled', 'On Hold')
+        AND status != 'Cancelled'
+    """)[0][0]
+
+    result["summary"] = {
+        "total_active": total_active,
+        "total_budget": flt(total_budget),
+        "stages": stages
+    }
+
+    return result
+
+
+@frappe.whitelist()
+def get_project_detail(project):
+    """
+    Get full project detail with related documents.
+
+    Args:
+        project: The project name (e.g., PROJ-2026-0001)
+
+    Returns:
+        {
+            "project": {...},
+            "site_inspections": [...],
+            "bids": [...],
+            "permits": [...],
+            "milestones": [...],
+            "open_punchlist": [...],
+            "punchlist_count": int
+        }
+    """
+    if not project:
+        frappe.throw(_("Project name is required"))
+
+    if not frappe.db.exists("BEI Project", project):
+        frappe.throw(_("Project {0} not found").format(project))
+
+    doc = frappe.get_doc("BEI Project", project)
+    project_data = doc.as_dict()
+
+    # Get project manager name
+    if doc.project_manager:
+        project_data["project_manager_name"] = frappe.db.get_value(
+            "Employee", doc.project_manager, "employee_name"
+        )
+
+    # Get contractor name
+    if doc.contractor:
+        project_data["contractor_name"] = frappe.db.get_value(
+            "BEI Supplier", doc.contractor, "supplier_name"
+        )
+
+    # Get site inspections
+    site_inspections = frappe.get_all(
+        "BEI Site Inspection",
+        filters={"project": project},
+        fields=["name", "inspection_date", "inspection_type", "status",
+                "overall_status", "inspector_name"],
+        order_by="inspection_date desc"
+    )
+
+    # Get bids
+    bids = frappe.get_all(
+        "BEI Project Bid",
+        filters={"project": project},
+        fields=["name", "contractor", "contractor_name", "total_amount",
+                "final_amount", "status", "is_awarded", "submission_date"],
+        order_by="submission_date desc"
+    )
+
+    # Get permits
+    permits = frappe.get_all(
+        "BEI Project Permit",
+        filters={"project": project},
+        fields=["name", "permit_type", "status", "permit_number",
+                "approval_date", "expiry_date"],
+        order_by="permit_type"
+    )
+
+    # Get milestones
+    milestones = frappe.get_all(
+        "BEI Project Milestone",
+        filters={"project": project},
+        fields=["name", "milestone_name", "milestone_type", "status",
+                "target_date", "actual_date", "completion_percentage",
+                "billing_amount", "payment_status"],
+        order_by="sequence asc"
+    )
+
+    # Get open punchlist items
+    punchlist = frappe.get_all(
+        "BEI Punchlist Item",
+        filters={"project": project, "status": ["not in", ["Closed", "Waived"]]},
+        fields=["name", "category", "severity", "status", "location",
+                "description", "due_date"],
+        order_by="severity desc, due_date asc"
+    )
+
+    # Count total punchlist items
+    total_punchlist = frappe.db.count("BEI Punchlist Item", {"project": project})
+    closed_punchlist = frappe.db.count("BEI Punchlist Item", {
+        "project": project,
+        "status": ["in", ["Closed", "Waived"]]
+    })
+
+    return {
+        "project": project_data,
+        "site_inspections": site_inspections,
+        "bids": bids,
+        "permits": permits,
+        "milestones": milestones,
+        "open_punchlist": punchlist,
+        "punchlist_count": {
+            "total": total_punchlist,
+            "open": len(punchlist),
+            "closed": closed_punchlist
+        }
+    }
+
+
+@frappe.whitelist()
+def advance_project_stage(project, new_stage, notes=None):
+    """
+    Move project to a new stage.
+
+    Args:
+        project: The project name
+        new_stage: The new stage
+        notes: Optional notes for the stage change
+
+    Returns:
+        {"success": True, "message": "...", "project": {...}}
+    """
+    valid_stages = ["Pre-Design", "Design", "Bidding", "Pre-Construction",
+                    "Construction", "Post-Construction", "Completed",
+                    "On Hold", "Cancelled"]
+
+    if new_stage not in valid_stages:
+        frappe.throw(_("Invalid stage: {0}").format(new_stage))
+
+    if not frappe.db.exists("BEI Project", project):
+        frappe.throw(_("Project {0} not found").format(project))
+
+    doc = frappe.get_doc("BEI Project", project)
+    old_stage = doc.stage
+    doc.stage = new_stage
+    doc.last_update_date = nowdate()
+
+    if notes:
+        doc.notes = notes
+        doc.add_comment("Comment", f"Stage changed from {old_stage} to {new_stage}: {notes}")
+
+    # Update status based on stage
+    if new_stage == "Completed":
+        doc.status = "Completed"
+        doc.actual_completion_date = nowdate()
+    elif new_stage in ["On Hold", "Cancelled"]:
+        doc.status = new_stage
+    else:
+        doc.status = "Active"
+
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Project {0} moved from {1} to {2}").format(
+            project, old_stage, new_stage
+        ),
+        "project": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def update_project_progress(project, progress_percent, notes=None):
+    """
+    Update project progress percentage.
+
+    Args:
+        project: The project name
+        progress_percent: New progress percentage (0-100)
+        notes: Optional progress notes
+
+    Returns:
+        {"success": True, "message": "...", "project": {...}}
+    """
+    if not frappe.db.exists("BEI Project", project):
+        frappe.throw(_("Project {0} not found").format(project))
+
+    progress = flt(progress_percent)
+    if progress < 0 or progress > 100:
+        frappe.throw(_("Progress must be between 0 and 100"))
+
+    doc = frappe.get_doc("BEI Project", project)
+    doc.progress_percent = progress
+    doc.last_update_date = nowdate()
+
+    if notes:
+        doc.notes = notes
+
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Project {0} progress updated to {1}%").format(project, progress),
+        "project": doc.as_dict()
+    }
+
+
+# ==============================================================================
+# SITE INSPECTIONS
+# ==============================================================================
+
+
+@frappe.whitelist()
+def submit_site_inspection(inspection_id):
+    """
+    Submit a site inspection for approval.
+
+    Args:
+        inspection_id: The site inspection name
+
+    Returns:
+        {"success": True, "message": "...", "inspection": {...}}
+    """
+    if not frappe.db.exists("BEI Site Inspection", inspection_id):
+        frappe.throw(_("Site inspection {0} not found").format(inspection_id))
+
+    doc = frappe.get_doc("BEI Site Inspection", inspection_id)
+
+    if doc.status != "Draft":
+        frappe.throw(_("Only draft inspections can be submitted"))
+
+    doc.status = "Submitted"
+    doc.submitted_by = frappe.session.user
+    doc.submitted_at = now_datetime()
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Site inspection {0} submitted for approval").format(inspection_id),
+        "inspection": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def approve_site_inspection(inspection_id, approval_notes=None):
+    """
+    Approve a submitted site inspection.
+
+    Args:
+        inspection_id: The site inspection name
+        approval_notes: Optional approval notes
+
+    Returns:
+        {"success": True, "message": "...", "inspection": {...}}
+    """
+    if not frappe.db.exists("BEI Site Inspection", inspection_id):
+        frappe.throw(_("Site inspection {0} not found").format(inspection_id))
+
+    doc = frappe.get_doc("BEI Site Inspection", inspection_id)
+
+    if doc.status != "Submitted":
+        frappe.throw(_("Only submitted inspections can be approved"))
+
+    doc.status = "Approved"
+    doc.approved_by = frappe.session.user
+    doc.approved_date = nowdate()
+
+    if approval_notes:
+        doc.add_comment("Comment", f"Approved: {approval_notes}")
+
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Site inspection {0} approved").format(inspection_id),
+        "inspection": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def reject_site_inspection(inspection_id, rejection_reason):
+    """
+    Reject a submitted site inspection.
+
+    Args:
+        inspection_id: The site inspection name
+        rejection_reason: Reason for rejection
+
+    Returns:
+        {"success": True, "message": "...", "inspection": {...}}
+    """
+    if not rejection_reason:
+        frappe.throw(_("Rejection reason is required"))
+
+    if not frappe.db.exists("BEI Site Inspection", inspection_id):
+        frappe.throw(_("Site inspection {0} not found").format(inspection_id))
+
+    doc = frappe.get_doc("BEI Site Inspection", inspection_id)
+
+    if doc.status != "Submitted":
+        frappe.throw(_("Only submitted inspections can be rejected"))
+
+    doc.status = "Rejected"
+    doc.rejection_reason = rejection_reason
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Site inspection {0} rejected").format(inspection_id),
+        "inspection": doc.as_dict()
+    }
+
+
+# ==============================================================================
+# BID MANAGEMENT
+# ==============================================================================
+
+
+@frappe.whitelist()
+def get_bid_comparison(project):
+    """
+    Get bid comparison for a project.
+
+    Args:
+        project: The project name
+
+    Returns:
+        {
+            "project": {...},
+            "bids": [...],
+            "lowest_bid": {...} or None,
+            "awarded_bid": {...} or None
+        }
+    """
+    if not frappe.db.exists("BEI Project", project):
+        frappe.throw(_("Project {0} not found").format(project))
+
+    project_doc = frappe.get_doc("BEI Project", project)
+
+    bids = frappe.get_all(
+        "BEI Project Bid",
+        filters={"project": project, "status": ["!=", "Withdrawn"]},
+        fields=[
+            "name", "contractor", "contractor_name", "submission_date",
+            "base_amount", "vat_amount", "total_amount", "final_amount",
+            "status", "technical_score", "financial_score", "overall_score",
+            "is_awarded"
+        ],
+        order_by="total_amount asc"
+    )
+
+    lowest_bid = bids[0] if bids else None
+    awarded_bid = next((b for b in bids if b.is_awarded), None)
+
+    return {
+        "project": {
+            "name": project_doc.name,
+            "project_name": project_doc.project_name,
+            "approved_budget": project_doc.approved_budget
+        },
+        "bids": bids,
+        "lowest_bid": lowest_bid,
+        "awarded_bid": awarded_bid,
+        "bid_count": len(bids)
+    }
+
+
+@frappe.whitelist()
+def evaluate_bid(bid_id, technical_score, financial_score, evaluation_notes=None):
+    """
+    Evaluate a project bid.
+
+    Args:
+        bid_id: The bid name
+        technical_score: Technical evaluation score (0-100)
+        financial_score: Financial evaluation score (0-100)
+        evaluation_notes: Optional notes
+
+    Returns:
+        {"success": True, "message": "...", "bid": {...}}
+    """
+    if not frappe.db.exists("BEI Project Bid", bid_id):
+        frappe.throw(_("Bid {0} not found").format(bid_id))
+
+    tech = flt(technical_score)
+    fin = flt(financial_score)
+
+    if tech < 0 or tech > 100 or fin < 0 or fin > 100:
+        frappe.throw(_("Scores must be between 0 and 100"))
+
+    doc = frappe.get_doc("BEI Project Bid", bid_id)
+    doc.technical_score = tech
+    doc.financial_score = fin
+    doc.overall_score = (tech * 0.6) + (fin * 0.4)  # 60% technical, 40% financial
+    doc.status = "Under Review"
+
+    if evaluation_notes:
+        doc.evaluation_notes = evaluation_notes
+
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Bid {0} evaluated with overall score {1}%").format(
+            bid_id, round(doc.overall_score, 1)
+        ),
+        "bid": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def award_bid(bid_id, final_amount=None, award_notes=None):
+    """
+    Award a bid to a contractor.
+
+    Args:
+        bid_id: The bid name
+        final_amount: Negotiated final amount (optional)
+        award_notes: Award notes (optional)
+
+    Returns:
+        {"success": True, "message": "...", "bid": {...}}
+    """
+    if not frappe.db.exists("BEI Project Bid", bid_id):
+        frappe.throw(_("Bid {0} not found").format(bid_id))
+
+    doc = frappe.get_doc("BEI Project Bid", bid_id)
+
+    # Check no other bid is awarded for this project
+    existing_award = frappe.db.exists("BEI Project Bid", {
+        "project": doc.project,
+        "is_awarded": 1,
+        "name": ["!=", bid_id]
+    })
+
+    if existing_award:
+        frappe.throw(_("Another bid is already awarded for this project"))
+
+    doc.is_awarded = 1
+    doc.status = "Awarded"
+    doc.award_date = nowdate()
+    doc.awarded_by = frappe.session.user
+
+    if final_amount:
+        doc.final_amount = flt(final_amount)
+    else:
+        doc.final_amount = doc.total_amount
+
+    if award_notes:
+        doc.award_notes = award_notes
+
+    doc.save()
+
+    # Update project with contractor info
+    project = frappe.get_doc("BEI Project", doc.project)
+    project.contractor = doc.contractor
+    project.contract_amount = doc.final_amount
+    project.save()
+
+    # Mark other bids as not awarded
+    frappe.db.sql("""
+        UPDATE `tabBEI Project Bid`
+        SET status = 'Not Awarded'
+        WHERE project = %s AND name != %s AND status NOT IN ('Withdrawn', 'Awarded')
+    """, (doc.project, bid_id))
+
+    return {
+        "success": True,
+        "message": _("Bid {0} awarded to {1}").format(bid_id, doc.contractor_name),
+        "bid": doc.as_dict()
+    }
+
+
+# ==============================================================================
+# MILESTONES
+# ==============================================================================
+
+
+@frappe.whitelist()
+def complete_milestone(milestone_id, actual_date=None, notes=None):
+    """
+    Mark a milestone as completed.
+
+    Args:
+        milestone_id: The milestone name
+        actual_date: Actual completion date (defaults to today)
+        notes: Completion notes
+
+    Returns:
+        {"success": True, "message": "...", "milestone": {...}}
+    """
+    if not frappe.db.exists("BEI Project Milestone", milestone_id):
+        frappe.throw(_("Milestone {0} not found").format(milestone_id))
+
+    doc = frappe.get_doc("BEI Project Milestone", milestone_id)
+    doc.status = "Completed"
+    doc.completion_percentage = 100
+    doc.actual_date = actual_date or nowdate()
+
+    # Calculate variance
+    if doc.target_date and doc.actual_date:
+        doc.days_variance = date_diff(doc.actual_date, doc.target_date)
+
+    doc.save()
+
+    # Update project progress based on completed milestones
+    _update_project_progress_from_milestones(doc.project)
+
+    return {
+        "success": True,
+        "message": _("Milestone {0} completed").format(doc.milestone_name),
+        "milestone": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def verify_milestone(milestone_id, verification_notes=None):
+    """
+    Verify a completed milestone.
+
+    Args:
+        milestone_id: The milestone name
+        verification_notes: Verification notes
+
+    Returns:
+        {"success": True, "message": "...", "milestone": {...}}
+    """
+    if not frappe.db.exists("BEI Project Milestone", milestone_id):
+        frappe.throw(_("Milestone {0} not found").format(milestone_id))
+
+    doc = frappe.get_doc("BEI Project Milestone", milestone_id)
+
+    if doc.status != "Completed":
+        frappe.throw(_("Only completed milestones can be verified"))
+
+    doc.status = "Verified"
+    doc.verified = 1
+    doc.verified_by = frappe.session.user
+    doc.verification_date = nowdate()
+
+    if verification_notes:
+        doc.verification_notes = verification_notes
+
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Milestone {0} verified").format(doc.milestone_name),
+        "milestone": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def create_milestone_billing(milestone_id):
+    """
+    Create a payment request for a verified milestone.
+
+    Args:
+        milestone_id: The milestone name
+
+    Returns:
+        {"success": True, "message": "...", "milestone": {...}, "payment_request": {...}}
+    """
+    if not frappe.db.exists("BEI Project Milestone", milestone_id):
+        frappe.throw(_("Milestone {0} not found").format(milestone_id))
+
+    doc = frappe.get_doc("BEI Project Milestone", milestone_id)
+
+    if doc.status != "Verified":
+        frappe.throw(_("Only verified milestones can be billed"))
+
+    if doc.payment_request:
+        frappe.throw(_("Payment request already exists: {0}").format(doc.payment_request))
+
+    if not doc.billing_amount or flt(doc.billing_amount) <= 0:
+        frappe.throw(_("Billing amount must be greater than 0"))
+
+    # Get project details
+    project = frappe.get_doc("BEI Project", doc.project)
+
+    # Create payment request
+    payment_request = frappe.new_doc("BEI Payment Request")
+    payment_request.supplier = project.contractor
+    payment_request.amount = doc.billing_amount
+    payment_request.description = f"Progress billing for {project.project_name} - {doc.milestone_name}"
+    payment_request.insert()
+
+    # Link payment request to milestone
+    doc.payment_request = payment_request.name
+    doc.payment_status = "Billed"
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Payment request {0} created for milestone {1}").format(
+            payment_request.name, doc.milestone_name
+        ),
+        "milestone": doc.as_dict(),
+        "payment_request": payment_request.as_dict()
+    }
+
+
+def _update_project_progress_from_milestones(project_name):
+    """
+    Internal: Update project progress based on milestone completion.
+    """
+    milestones = frappe.get_all(
+        "BEI Project Milestone",
+        filters={"project": project_name},
+        fields=["completion_percentage"]
+    )
+
+    if milestones:
+        avg_progress = sum(m.completion_percentage or 0 for m in milestones) / len(milestones)
+        frappe.db.set_value("BEI Project", project_name, "progress_percent", avg_progress)
+
+
+# ==============================================================================
+# PUNCHLIST
+# ==============================================================================
+
+
+@frappe.whitelist()
+def get_punchlist(project, status=None, category=None, severity=None, page=1, page_size=50):
+    """
+    Get punchlist items for a project.
+
+    Args:
+        project: The project name
+        status: Filter by status (optional)
+        category: Filter by category (optional)
+        severity: Filter by severity (optional)
+        page: Page number
+        page_size: Items per page
+
+    Returns:
+        {
+            "items": [...],
+            "total": int,
+            "page": int,
+            "summary": {...}
+        }
+    """
+    if not frappe.db.exists("BEI Project", project):
+        frappe.throw(_("Project {0} not found").format(project))
+
+    filters = {"project": project}
+
+    if status:
+        filters["status"] = status
+
+    if category:
+        filters["category"] = category
+
+    if severity:
+        filters["severity"] = severity
+
+    page = int(page)
+    page_size = int(page_size)
+
+    total = frappe.db.count("BEI Punchlist Item", filters)
+
+    items = frappe.get_all(
+        "BEI Punchlist Item",
+        filters=filters,
+        fields=[
+            "name", "category", "severity", "status", "location",
+            "description", "due_date", "assigned_to", "contractor",
+            "photo", "resolved_date"
+        ],
+        order_by="severity desc, status asc, due_date asc",
+        limit_page_length=page_size,
+        limit_start=(page - 1) * page_size
+    )
+
+    # Get summary by severity
+    summary = {}
+    for sev in ["Critical", "Major", "Minor", "Cosmetic"]:
+        summary[sev.lower()] = frappe.db.count("BEI Punchlist Item", {
+            "project": project,
+            "severity": sev,
+            "status": ["not in", ["Closed", "Waived"]]
+        })
+
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "summary": summary
+    }
+
+
+@frappe.whitelist()
+def add_punchlist_item(
+    project,
+    category,
+    location,
+    description,
+    severity="Minor",
+    photo=None,
+    assigned_to=None,
+    contractor=None,
+    due_date=None
+):
+    """
+    Add a punchlist item to a project.
+
+    Args:
+        project: The project name
+        category: Issue category
+        location: Location in the project
+        description: Issue description
+        severity: Critical, Major, Minor, Cosmetic (default: Minor)
+        photo: Photo attachment (optional)
+        assigned_to: Assigned user (optional)
+        contractor: Assigned contractor (optional)
+        due_date: Due date (optional)
+
+    Returns:
+        {"success": True, "message": "...", "item": {...}}
+    """
+    if not frappe.db.exists("BEI Project", project):
+        frappe.throw(_("Project {0} not found").format(project))
+
+    doc = frappe.new_doc("BEI Punchlist Item")
+    doc.project = project
+    doc.category = category
+    doc.location = location
+    doc.description = description
+    doc.severity = severity
+    doc.status = "Open"
+    doc.reported_by = frappe.session.user
+    doc.reported_at = now_datetime()
+
+    if photo:
+        doc.photo = photo
+
+    if assigned_to:
+        doc.assigned_to = assigned_to
+
+    if contractor:
+        doc.contractor = contractor
+
+    if due_date:
+        doc.due_date = due_date
+
+    doc.insert()
+
+    return {
+        "success": True,
+        "message": _("Punchlist item {0} created").format(doc.name),
+        "item": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def resolve_punchlist_item(item_id, resolution_notes, after_photo=None):
+    """
+    Mark a punchlist item as resolved.
+
+    Args:
+        item_id: The punchlist item name
+        resolution_notes: Notes about the resolution
+        after_photo: Photo after fix (optional)
+
+    Returns:
+        {"success": True, "message": "...", "item": {...}}
+    """
+    if not resolution_notes:
+        frappe.throw(_("Resolution notes are required"))
+
+    if not frappe.db.exists("BEI Punchlist Item", item_id):
+        frappe.throw(_("Punchlist item {0} not found").format(item_id))
+
+    doc = frappe.get_doc("BEI Punchlist Item", item_id)
+
+    if doc.status in ["Closed", "Waived"]:
+        frappe.throw(_("Item is already closed"))
+
+    doc.status = "Resolved"
+    doc.resolution_notes = resolution_notes
+    doc.resolved_date = nowdate()
+    doc.resolved_by = frappe.session.user
+
+    if after_photo:
+        doc.after_photo = after_photo
+
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Punchlist item {0} resolved").format(item_id),
+        "item": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def close_punchlist_item(item_id):
+    """
+    Close a resolved punchlist item after verification.
+
+    Args:
+        item_id: The punchlist item name
+
+    Returns:
+        {"success": True, "message": "...", "item": {...}}
+    """
+    if not frappe.db.exists("BEI Punchlist Item", item_id):
+        frappe.throw(_("Punchlist item {0} not found").format(item_id))
+
+    doc = frappe.get_doc("BEI Punchlist Item", item_id)
+
+    if doc.status != "Resolved":
+        frappe.throw(_("Only resolved items can be closed"))
+
+    doc.status = "Closed"
+    doc.verified = 1
+    doc.verified_by = frappe.session.user
+    doc.verification_date = nowdate()
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Punchlist item {0} closed").format(item_id),
+        "item": doc.as_dict()
+    }
+
+
+@frappe.whitelist()
+def waive_punchlist_item(item_id, reason):
+    """
+    Waive a punchlist item (accept as-is).
+
+    Args:
+        item_id: The punchlist item name
+        reason: Reason for waiving
+
+    Returns:
+        {"success": True, "message": "...", "item": {...}}
+    """
+    if not reason:
+        frappe.throw(_("Waiver reason is required"))
+
+    if not frappe.db.exists("BEI Punchlist Item", item_id):
+        frappe.throw(_("Punchlist item {0} not found").format(item_id))
+
+    doc = frappe.get_doc("BEI Punchlist Item", item_id)
+
+    if doc.status in ["Closed", "Waived"]:
+        frappe.throw(_("Item is already closed"))
+
+    doc.status = "Waived"
+    doc.resolution_notes = f"WAIVED: {reason}"
+    doc.resolved_date = nowdate()
+    doc.resolved_by = frappe.session.user
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Punchlist item {0} waived").format(item_id),
+        "item": doc.as_dict()
+    }
+
+
+# ==============================================================================
+# PERMIT MANAGEMENT
+# ==============================================================================
+
+
+@frappe.whitelist()
+def get_permit_checklist(project):
+    """
+    Get permit status checklist for a project.
+
+    Args:
+        project: The project name
+
+    Returns:
+        {
+            "project": {...},
+            "permits": [...],
+            "summary": {"total": int, "approved": int, "pending": int}
+        }
+    """
+    if not frappe.db.exists("BEI Project", project):
+        frappe.throw(_("Project {0} not found").format(project))
+
+    project_doc = frappe.get_doc("BEI Project", project)
+
+    permits = frappe.get_all(
+        "BEI Project Permit",
+        filters={"project": project},
+        fields=[
+            "name", "permit_type", "permit_number", "status",
+            "issuing_authority", "application_date", "approval_date",
+            "expiry_date", "total_fees"
+        ],
+        order_by="permit_type"
+    )
+
+    # Summary
+    total = len(permits)
+    approved = len([p for p in permits if p.status == "Approved"])
+    pending = len([p for p in permits if p.status in ["Not Started", "In Progress", "Pending Requirements", "Submitted"]])
+
+    return {
+        "project": {
+            "name": project_doc.name,
+            "project_name": project_doc.project_name,
+            "store_code": project_doc.store_code
+        },
+        "permits": permits,
+        "summary": {
+            "total": total,
+            "approved": approved,
+            "pending": pending,
+            "completion_rate": round((approved / total * 100), 1) if total > 0 else 0
+        }
+    }
+
+
+@frappe.whitelist()
+def update_permit_status(permit_id, status, permit_number=None, approval_date=None, expiry_date=None, remarks=None):
+    """
+    Update permit status and details.
+
+    Args:
+        permit_id: The permit name
+        status: New status
+        permit_number: Permit number (if approved)
+        approval_date: Approval date (if approved)
+        expiry_date: Expiry date (if applicable)
+        remarks: Optional remarks
+
+    Returns:
+        {"success": True, "message": "...", "permit": {...}}
+    """
+    valid_statuses = ["Not Started", "In Progress", "Pending Requirements",
+                      "Submitted", "Approved", "Rejected", "Expired", "Renewed"]
+
+    if status not in valid_statuses:
+        frappe.throw(_("Invalid status: {0}").format(status))
+
+    if not frappe.db.exists("BEI Project Permit", permit_id):
+        frappe.throw(_("Permit {0} not found").format(permit_id))
+
+    doc = frappe.get_doc("BEI Project Permit", permit_id)
+    old_status = doc.status
+    doc.status = status
+
+    if permit_number:
+        doc.permit_number = permit_number
+
+    if approval_date:
+        doc.approval_date = approval_date
+
+    if expiry_date:
+        doc.expiry_date = expiry_date
+
+    if remarks:
+        doc.remarks = remarks
+
+    # Calculate total fees
+    doc.total_fees = flt(doc.application_fee or 0) + flt(doc.permit_fee or 0)
+
+    doc.save()
+
+    return {
+        "success": True,
+        "message": _("Permit {0} status updated from {1} to {2}").format(
+            doc.permit_type, old_status, status
+        ),
+        "permit": doc.as_dict()
+    }

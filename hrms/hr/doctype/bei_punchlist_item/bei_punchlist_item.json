@@ -1,0 +1,293 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "format:PUNCH-{YYYY}-{#####}",
+	"creation": "2026-02-04 00:00:00.000000",
+	"default_view": "List",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"section_basic",
+		"project",
+		"project_name",
+		"store",
+		"store_code",
+		"column_break_basic",
+		"status",
+		"category",
+		"severity",
+		"section_issue",
+		"location",
+		"description",
+		"column_break_issue",
+		"photo",
+		"section_assignment",
+		"assigned_to",
+		"contractor",
+		"column_break_assignment",
+		"due_date",
+		"section_resolution",
+		"resolution_notes",
+		"resolved_date",
+		"column_break_resolution",
+		"resolved_by",
+		"after_photo",
+		"section_verification",
+		"verified",
+		"verified_by",
+		"column_break_verification",
+		"verification_date",
+		"section_audit",
+		"reported_by",
+		"reported_at"
+	],
+	"fields": [
+		{
+			"fieldname": "section_basic",
+			"fieldtype": "Section Break",
+			"label": "Punchlist Item"
+		},
+		{
+			"fieldname": "project",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Project",
+			"options": "BEI Project",
+			"reqd": 1
+		},
+		{
+			"fetch_from": "project.project_name",
+			"fieldname": "project_name",
+			"fieldtype": "Data",
+			"label": "Project Name",
+			"read_only": 1
+		},
+		{
+			"fetch_from": "project.store",
+			"fieldname": "store",
+			"fieldtype": "Link",
+			"label": "Store",
+			"options": "Warehouse",
+			"read_only": 1
+		},
+		{
+			"fetch_from": "project.store_code",
+			"fieldname": "store_code",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Store Code",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "Open",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "Open\nIn Progress\nResolved\nVerified\nClosed\nWaived"
+		},
+		{
+			"fieldname": "category",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Category",
+			"options": "Structural\nElectrical\nPlumbing\nHVAC\nFinishing\nPainting\nFlooring\nCeiling\nDoors & Windows\nFixtures\nSignage\nSafety\nCleaning\nOther",
+			"reqd": 1
+		},
+		{
+			"default": "Minor",
+			"fieldname": "severity",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Severity",
+			"options": "Critical\nMajor\nMinor\nCosmetic"
+		},
+		{
+			"fieldname": "section_issue",
+			"fieldtype": "Section Break",
+			"label": "Issue Details"
+		},
+		{
+			"fieldname": "location",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Location",
+			"reqd": 1
+		},
+		{
+			"fieldname": "description",
+			"fieldtype": "Text",
+			"label": "Description",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_issue",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "photo",
+			"fieldtype": "Attach Image",
+			"label": "Photo"
+		},
+		{
+			"fieldname": "section_assignment",
+			"fieldtype": "Section Break",
+			"label": "Assignment"
+		},
+		{
+			"fieldname": "assigned_to",
+			"fieldtype": "Link",
+			"label": "Assigned To",
+			"options": "User"
+		},
+		{
+			"fieldname": "contractor",
+			"fieldtype": "Link",
+			"label": "Contractor",
+			"options": "BEI Supplier"
+		},
+		{
+			"fieldname": "column_break_assignment",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "due_date",
+			"fieldtype": "Date",
+			"label": "Due Date"
+		},
+		{
+			"fieldname": "section_resolution",
+			"fieldtype": "Section Break",
+			"label": "Resolution"
+		},
+		{
+			"fieldname": "resolution_notes",
+			"fieldtype": "Text",
+			"label": "Resolution Notes"
+		},
+		{
+			"fieldname": "resolved_date",
+			"fieldtype": "Date",
+			"label": "Resolved Date"
+		},
+		{
+			"fieldname": "column_break_resolution",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "resolved_by",
+			"fieldtype": "Link",
+			"label": "Resolved By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "after_photo",
+			"fieldtype": "Attach Image",
+			"label": "After Photo"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_verification",
+			"fieldtype": "Section Break",
+			"label": "Verification"
+		},
+		{
+			"default": "0",
+			"fieldname": "verified",
+			"fieldtype": "Check",
+			"label": "Verified"
+		},
+		{
+			"fieldname": "verified_by",
+			"fieldtype": "Link",
+			"label": "Verified By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_verification",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "verification_date",
+			"fieldtype": "Date",
+			"label": "Verification Date",
+			"read_only": 1
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_audit",
+			"fieldtype": "Section Break",
+			"label": "Audit Trail"
+		},
+		{
+			"default": "__user",
+			"fieldname": "reported_by",
+			"fieldtype": "Link",
+			"label": "Reported By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "reported_at",
+			"fieldtype": "Datetime",
+			"label": "Reported At",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2026-02-04 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Punchlist Item",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects User",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects Manager",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"read": 1,
+			"write": 1,
+			"role": "Employee"
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"title_field": "location",
+	"track_changes": 1
+}

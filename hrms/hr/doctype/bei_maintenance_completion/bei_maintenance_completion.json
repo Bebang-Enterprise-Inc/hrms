@@ -55,7 +55,7 @@
 			"fieldname": "store",
 			"fieldtype": "Link",
 			"label": "Store",
-			"options": "BEI Store",
+			"options": "Warehouse",
 			"read_only": 1
 		},
 		{

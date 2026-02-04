@@ -1,0 +1,311 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "format:SITE-{YYYY}-{####}",
+	"creation": "2026-02-04 00:00:00.000000",
+	"default_view": "List",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"section_basic",
+		"project",
+		"project_name",
+		"store",
+		"store_code",
+		"column_break_basic",
+		"inspection_date",
+		"inspection_type",
+		"status",
+		"section_inspector",
+		"inspector",
+		"inspector_name",
+		"column_break_inspector",
+		"inspector_role",
+		"inspector_company",
+		"section_findings",
+		"overall_status",
+		"structural_score",
+		"electrical_score",
+		"plumbing_score",
+		"column_break_findings",
+		"hvac_score",
+		"finishing_score",
+		"safety_score",
+		"section_notes",
+		"findings",
+		"recommendations",
+		"section_photos",
+		"photos",
+		"section_approval",
+		"approved_by",
+		"approved_date",
+		"column_break_approval",
+		"rejection_reason",
+		"section_audit",
+		"submitted_by",
+		"submitted_at"
+	],
+	"fields": [
+		{
+			"fieldname": "section_basic",
+			"fieldtype": "Section Break",
+			"label": "Inspection Details"
+		},
+		{
+			"fieldname": "project",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Project",
+			"options": "BEI Project",
+			"reqd": 1
+		},
+		{
+			"fetch_from": "project.project_name",
+			"fieldname": "project_name",
+			"fieldtype": "Data",
+			"label": "Project Name",
+			"read_only": 1
+		},
+		{
+			"fetch_from": "project.store",
+			"fieldname": "store",
+			"fieldtype": "Link",
+			"label": "Store",
+			"options": "Warehouse",
+			"read_only": 1
+		},
+		{
+			"fetch_from": "project.store_code",
+			"fieldname": "store_code",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Store Code",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "Today",
+			"fieldname": "inspection_date",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Inspection Date",
+			"reqd": 1
+		},
+		{
+			"fieldname": "inspection_type",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Inspection Type",
+			"options": "Pre-Construction\nProgress\nPre-Opening\nFinal\nPunch List\nWarranty",
+			"reqd": 1
+		},
+		{
+			"default": "Draft",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "Draft\nSubmitted\nApproved\nRejected"
+		},
+		{
+			"fieldname": "section_inspector",
+			"fieldtype": "Section Break",
+			"label": "Inspector"
+		},
+		{
+			"fieldname": "inspector",
+			"fieldtype": "Link",
+			"label": "Inspector",
+			"options": "User"
+		},
+		{
+			"fieldname": "inspector_name",
+			"fieldtype": "Data",
+			"label": "Inspector Name",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_inspector",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "inspector_role",
+			"fieldtype": "Select",
+			"label": "Inspector Role",
+			"options": "Projects Team\nContractor\nThird Party\nGovernment Inspector"
+		},
+		{
+			"fieldname": "inspector_company",
+			"fieldtype": "Data",
+			"label": "Inspector Company"
+		},
+		{
+			"fieldname": "section_findings",
+			"fieldtype": "Section Break",
+			"label": "Scores & Findings"
+		},
+		{
+			"default": "Acceptable",
+			"fieldname": "overall_status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "Overall Status",
+			"options": "Excellent\nAcceptable\nNeeds Work\nFailed"
+		},
+		{
+			"fieldname": "structural_score",
+			"fieldtype": "Rating",
+			"label": "Structural"
+		},
+		{
+			"fieldname": "electrical_score",
+			"fieldtype": "Rating",
+			"label": "Electrical"
+		},
+		{
+			"fieldname": "plumbing_score",
+			"fieldtype": "Rating",
+			"label": "Plumbing"
+		},
+		{
+			"fieldname": "column_break_findings",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "hvac_score",
+			"fieldtype": "Rating",
+			"label": "HVAC"
+		},
+		{
+			"fieldname": "finishing_score",
+			"fieldtype": "Rating",
+			"label": "Finishing"
+		},
+		{
+			"fieldname": "safety_score",
+			"fieldtype": "Rating",
+			"label": "Safety"
+		},
+		{
+			"fieldname": "section_notes",
+			"fieldtype": "Section Break",
+			"label": "Notes"
+		},
+		{
+			"fieldname": "findings",
+			"fieldtype": "Text Editor",
+			"label": "Findings"
+		},
+		{
+			"fieldname": "recommendations",
+			"fieldtype": "Text Editor",
+			"label": "Recommendations"
+		},
+		{
+			"fieldname": "section_photos",
+			"fieldtype": "Section Break",
+			"label": "Photos"
+		},
+		{
+			"fieldname": "photos",
+			"fieldtype": "Table",
+			"label": "Photos",
+			"options": "BEI Site Inspection Photo"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_approval",
+			"fieldtype": "Section Break",
+			"label": "Approval"
+		},
+		{
+			"fieldname": "approved_by",
+			"fieldtype": "Link",
+			"label": "Approved By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "approved_date",
+			"fieldtype": "Date",
+			"label": "Approved Date",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_approval",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "rejection_reason",
+			"fieldtype": "Small Text",
+			"label": "Rejection Reason"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_audit",
+			"fieldtype": "Section Break",
+			"label": "Audit Trail"
+		},
+		{
+			"default": "__user",
+			"fieldname": "submitted_by",
+			"fieldtype": "Link",
+			"label": "Submitted By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "submitted_at",
+			"fieldtype": "Datetime",
+			"label": "Submitted At",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2026-02-04 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Site Inspection",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects User",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"title_field": "project_name",
+	"track_changes": 1
+}

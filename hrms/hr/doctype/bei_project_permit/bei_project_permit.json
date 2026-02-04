@@ -1,0 +1,268 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "format:PERMIT-{YYYY}-{####}",
+	"creation": "2026-02-04 00:00:00.000000",
+	"default_view": "List",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"section_basic",
+		"project",
+		"project_name",
+		"permit_type",
+		"permit_number",
+		"column_break_basic",
+		"status",
+		"issuing_authority",
+		"section_dates",
+		"application_date",
+		"approval_date",
+		"column_break_dates",
+		"expiry_date",
+		"renewal_date",
+		"section_fees",
+		"application_fee",
+		"permit_fee",
+		"column_break_fees",
+		"total_fees",
+		"receipt_number",
+		"section_requirements",
+		"requirements_checklist",
+		"section_documents",
+		"application_form",
+		"permit_document",
+		"column_break_documents",
+		"supporting_documents",
+		"section_notes",
+		"remarks",
+		"section_audit",
+		"processed_by",
+		"processed_at"
+	],
+	"fields": [
+		{
+			"fieldname": "section_basic",
+			"fieldtype": "Section Break",
+			"label": "Permit Details"
+		},
+		{
+			"fieldname": "project",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Project",
+			"options": "BEI Project",
+			"reqd": 1
+		},
+		{
+			"fetch_from": "project.project_name",
+			"fieldname": "project_name",
+			"fieldtype": "Data",
+			"label": "Project Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "permit_type",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Permit Type",
+			"options": "Building Permit\nOccupancy Permit\nFire Safety Inspection Certificate\nSanitary Permit\nBusiness Permit\nBrgy Clearance\nZoning Clearance\nLocational Clearance\nElectrical Permit\nMechanical Permit\nPlumbing Permit\nEnvironmental Compliance Certificate\nOther",
+			"reqd": 1
+		},
+		{
+			"fieldname": "permit_number",
+			"fieldtype": "Data",
+			"label": "Permit Number"
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "Pending",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "Not Started\nIn Progress\nPending Requirements\nSubmitted\nApproved\nRejected\nExpired\nRenewed"
+		},
+		{
+			"fieldname": "issuing_authority",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Issuing Authority"
+		},
+		{
+			"fieldname": "section_dates",
+			"fieldtype": "Section Break",
+			"label": "Dates"
+		},
+		{
+			"fieldname": "application_date",
+			"fieldtype": "Date",
+			"label": "Application Date"
+		},
+		{
+			"fieldname": "approval_date",
+			"fieldtype": "Date",
+			"label": "Approval Date"
+		},
+		{
+			"fieldname": "column_break_dates",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "expiry_date",
+			"fieldtype": "Date",
+			"label": "Expiry Date"
+		},
+		{
+			"fieldname": "renewal_date",
+			"fieldtype": "Date",
+			"label": "Renewal Date"
+		},
+		{
+			"fieldname": "section_fees",
+			"fieldtype": "Section Break",
+			"label": "Fees"
+		},
+		{
+			"fieldname": "application_fee",
+			"fieldtype": "Currency",
+			"label": "Application Fee",
+			"precision": "2"
+		},
+		{
+			"fieldname": "permit_fee",
+			"fieldtype": "Currency",
+			"label": "Permit Fee",
+			"precision": "2"
+		},
+		{
+			"fieldname": "column_break_fees",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "total_fees",
+			"fieldtype": "Currency",
+			"label": "Total Fees",
+			"precision": "2",
+			"read_only": 1
+		},
+		{
+			"fieldname": "receipt_number",
+			"fieldtype": "Data",
+			"label": "Receipt Number"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_requirements",
+			"fieldtype": "Section Break",
+			"label": "Requirements"
+		},
+		{
+			"fieldname": "requirements_checklist",
+			"fieldtype": "Text Editor",
+			"label": "Requirements Checklist"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_documents",
+			"fieldtype": "Section Break",
+			"label": "Documents"
+		},
+		{
+			"fieldname": "application_form",
+			"fieldtype": "Attach",
+			"label": "Application Form"
+		},
+		{
+			"fieldname": "permit_document",
+			"fieldtype": "Attach",
+			"label": "Permit Document"
+		},
+		{
+			"fieldname": "column_break_documents",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "supporting_documents",
+			"fieldtype": "Attach",
+			"label": "Supporting Documents"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_notes",
+			"fieldtype": "Section Break",
+			"label": "Notes"
+		},
+		{
+			"fieldname": "remarks",
+			"fieldtype": "Text",
+			"label": "Remarks"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_audit",
+			"fieldtype": "Section Break",
+			"label": "Audit Trail"
+		},
+		{
+			"default": "__user",
+			"fieldname": "processed_by",
+			"fieldtype": "Link",
+			"label": "Processed By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "processed_at",
+			"fieldtype": "Datetime",
+			"label": "Processed At",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2026-02-04 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Project Permit",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects User",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"title_field": "permit_type",
+	"track_changes": 1
+}
