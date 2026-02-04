@@ -183,7 +183,7 @@ def get_purchase_requisitions(filters=None, page=1, page_size=20, search=None):
     prs = frappe.db.sql(f"""
         SELECT
             name, pr_no, request_date, status, department,
-            requested_by, urgency, estimated_total
+            requested_by, total_estimated_cost
         FROM `tabBEI Purchase Requisition`
         WHERE {where_clause}
         ORDER BY request_date DESC

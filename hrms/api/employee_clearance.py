@@ -606,6 +606,79 @@ def get_bio_id_status(employee: str):
 
 
 # ============================================================================
+# MY SEPARATION (Current User)
+# ============================================================================
+
+
+@frappe.whitelist(allow_guest=False)
+def get_my_separation():
+	"""
+	Get the current user's active or most recent employee separation.
+	Used by my.bebang.ph clearance page to show the logged-in user's clearance status.
+
+	Returns:
+		dict: Separation details or null if no separation found
+	"""
+	# Get the employee ID linked to the current user
+	employee = frappe.db.get_value(
+		"Employee",
+		{"user_id": frappe.session.user, "status": ["in", ["Active", "Left"]]},
+		"name",
+	)
+
+	if not employee:
+		return {
+			"has_separation": False,
+			"message": _("No employee record found for current user"),
+		}
+
+	# Find active separation first, then most recent
+	separation = frappe.get_all(
+		"Employee Separation",
+		filters={"employee": employee},
+		fields=[
+			"name", "employee", "employee_name", "department", "designation",
+			"custom_separation_type", "custom_separation_reason", "boarding_status",
+			"boarding_begins_on", "custom_exit_interview_completed",
+			"custom_final_pay_approved", "custom_coe_generated", "custom_rehire_eligible",
+		],
+		order_by="creation desc",
+		limit=1,
+	)
+
+	if not separation:
+		return {
+			"has_separation": False,
+			"employee": employee,
+			"message": _("No separation record found"),
+		}
+
+	sep = separation[0]
+
+	# Get DOLE compliance items
+	compliance_items = frappe.get_all(
+		"BEI DOLE Compliance Checklist",
+		filters={"parent": sep.name, "parenttype": "Employee Separation"},
+		fields=["name", "compliance_item", "status", "completed_date", "completed_by", "notes"],
+	)
+
+	# Calculate progress
+	total_items = len(compliance_items)
+	completed_items = sum(1 for i in compliance_items if i.status == "Completed")
+
+	return {
+		"has_separation": True,
+		"separation": sep,
+		"compliance_items": compliance_items,
+		"compliance_progress": {
+			"total": total_items,
+			"completed": completed_items,
+			"percentage": round((completed_items / total_items * 100) if total_items > 0 else 0, 1),
+		},
+	}
+
+
+# ============================================================================
 # COE GENERATION
 # ============================================================================
 
