@@ -1360,7 +1360,7 @@ def get_price_history(item_code=None, supplier=None, months=6):
             po.supplier,
             po.supplier_name,
             po.po_date,
-            poi.rate as unit_price,
+            poi.unit_cost as unit_price,
             poi.qty,
             poi.amount
         FROM `tabBEI PO Item` poi
@@ -1605,7 +1605,7 @@ def check_price_variance(item_code, supplier, new_price):
     new_price = flt(new_price)
 
     avg_price = frappe.db.sql("""
-        SELECT AVG(poi.rate) as avg_price
+        SELECT AVG(poi.unit_cost) as avg_price
         FROM `tabBEI PO Item` poi
         JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
         WHERE poi.item_code = %s
