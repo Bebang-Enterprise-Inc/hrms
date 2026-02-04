@@ -143,10 +143,11 @@
 			"label": "After Photos"
 		},
 		{
+			"description": "Photo upload feature coming soon",
 			"fieldname": "after_photos",
 			"fieldtype": "Attach Image",
 			"label": "After Photos (proof of completion)",
-			"reqd": 1
+			"reqd": 0
 		},
 		{
 			"fieldname": "section_verification",
