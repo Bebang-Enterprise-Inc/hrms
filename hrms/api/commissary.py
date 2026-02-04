@@ -1584,3 +1584,531 @@ def update_hub_inventory(hub_code, item_code, qty, uom=None):
             "new_qty": flt(qty)
         }
     }
+
+
+# ============================================================
+# 11. HUB TRANSFER (NEW - Task #3)
+# ============================================================
+
+# Distribution hub warehouse mapping
+DISTRIBUTION_HUBS = {
+    "3MD": "3MD Logistics - Camangyanan - BEI",
+    "JENTEC": "Jentec Storage Inc. - BEI",
+    "RCS": "Royal Cold Storage - Taytay - BEI",
+    "PINNACLE": "Pinnacle Cold Storage - BEI",
+}
+
+
+@frappe.whitelist()
+def get_distribution_hubs():
+    """
+    Get list of available distribution hubs for transfer.
+    """
+    hubs = []
+    for code, warehouse in DISTRIBUTION_HUBS.items():
+        # Check if warehouse exists
+        exists = frappe.db.exists("Warehouse", warehouse)
+        hub_info = {
+            "hub_code": code,
+            "warehouse": warehouse,
+            "exists": exists,
+            "hub_type": "Cold + Dry" if code in ["3MD", "PINNACLE"] else ("Frozen" if code == "RCS" else "Dry")
+        }
+
+        # Get current stock count if warehouse exists
+        if exists:
+            stock_count = frappe.db.sql("""
+                SELECT COUNT(DISTINCT item_code) as items, SUM(actual_qty) as total_qty
+                FROM `tabBin` WHERE warehouse = %s AND actual_qty > 0
+            """, warehouse, as_dict=True)[0]
+            hub_info["items_count"] = stock_count.get("items") or 0
+            hub_info["total_qty"] = flt(stock_count.get("total_qty") or 0)
+
+        hubs.append(hub_info)
+
+    return {"success": True, "data": hubs}
+
+
+@frappe.whitelist()
+def create_hub_transfer(destination_hub, items, remarks=None):
+    """
+    Create Stock Entry (Material Transfer) from Commissary to Distribution Hub.
+
+    Args:
+        destination_hub: Hub code (3MD, JENTEC, RCS, PINNACLE)
+        items: JSON array of {item_code, qty, batch_no (optional)}
+        remarks: Optional notes
+
+    Returns:
+        Stock Entry name and details
+    """
+    if isinstance(items, str):
+        items = json.loads(items)
+
+    if not items:
+        frappe.throw(_("No items to transfer"))
+
+    destination_hub = destination_hub.upper()
+    if destination_hub not in DISTRIBUTION_HUBS:
+        frappe.throw(_(f"Invalid hub code: {destination_hub}. Valid codes: {', '.join(DISTRIBUTION_HUBS.keys())}"))
+
+    target_warehouse = DISTRIBUTION_HUBS[destination_hub]
+
+    # Verify warehouse exists
+    if not frappe.db.exists("Warehouse", target_warehouse):
+        frappe.throw(_(f"Warehouse {target_warehouse} does not exist. Please create it first."))
+
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Create Stock Entry
+    se = frappe.new_doc("Stock Entry")
+    se.stock_entry_type = "Material Transfer"
+    se.company = "Bebang Enterprise Inc."
+    se.posting_date = today()
+    se.posting_time = frappe.utils.nowtime()
+    se.from_warehouse = commissary_warehouse
+    se.to_warehouse = target_warehouse
+    se.remarks = remarks or f"Hub Transfer to {destination_hub}"
+
+    for item_data in items:
+        item = frappe.get_doc("Item", item_data["item_code"])
+
+        # Validate sufficient stock
+        current_stock = frappe.db.get_value(
+            "Bin",
+            {"item_code": item_data["item_code"], "warehouse": commissary_warehouse},
+            "actual_qty"
+        ) or 0
+
+        qty = flt(item_data["qty"])
+        if qty > current_stock:
+            frappe.throw(_(f"Insufficient stock for {item.item_name}. Available: {current_stock}, Requested: {qty}"))
+
+        item_row = {
+            "item_code": item_data["item_code"],
+            "item_name": item.item_name,
+            "description": item.description,
+            "qty": qty,
+            "uom": item_data.get("uom") or item.stock_uom,
+            "stock_uom": item.stock_uom,
+            "conversion_factor": 1,
+            "s_warehouse": commissary_warehouse,
+            "t_warehouse": target_warehouse,
+        }
+
+        # Handle batch if provided
+        if item_data.get("batch_no"):
+            valid_batch = get_or_create_batch(item_data["batch_no"], item_data["item_code"])
+            if valid_batch:
+                item_row["batch_no"] = valid_batch
+
+        se.append("items", item_row)
+
+    se.insert()
+    se.submit()
+
+    return {
+        "success": True,
+        "data": {
+            "name": se.name,
+            "destination_hub": destination_hub,
+            "target_warehouse": target_warehouse,
+            "total_qty": sum(i.qty for i in se.items),
+            "items_count": len(se.items)
+        },
+        "message": f"Transfer {se.name} to {destination_hub} created successfully"
+    }
+
+
+@frappe.whitelist()
+def get_transfer_history(destination_hub=None, date_from=None, date_to=None, limit=50):
+    """
+    Get history of transfers from Commissary to Distribution Hubs.
+
+    Args:
+        destination_hub: Optional filter by hub code
+        date_from: Optional start date
+        date_to: Optional end date
+        limit: Max results (default 50)
+    """
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Build warehouse filter
+    if destination_hub:
+        destination_hub = destination_hub.upper()
+        if destination_hub not in DISTRIBUTION_HUBS:
+            frappe.throw(_(f"Invalid hub code: {destination_hub}"))
+        target_warehouses = [DISTRIBUTION_HUBS[destination_hub]]
+    else:
+        target_warehouses = list(DISTRIBUTION_HUBS.values())
+
+    # Build date filter
+    date_filter = ""
+    params = [commissary_warehouse]
+
+    if date_from and date_to:
+        date_filter = "AND se.posting_date BETWEEN %s AND %s"
+        params.extend([date_from, date_to])
+    elif date_from:
+        date_filter = "AND se.posting_date >= %s"
+        params.append(date_from)
+    elif date_to:
+        date_filter = "AND se.posting_date <= %s"
+        params.append(date_to)
+
+    # Query transfers
+    warehouse_placeholders = ", ".join(["%s"] * len(target_warehouses))
+    params.extend(target_warehouses)
+    params.append(int(limit))
+
+    transfers = frappe.db.sql(f"""
+        SELECT
+            se.name,
+            se.posting_date,
+            se.to_warehouse,
+            se.remarks,
+            se.owner,
+            se.docstatus,
+            COUNT(sed.item_code) as items_count,
+            SUM(sed.qty) as total_qty
+        FROM `tabStock Entry` se
+        JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
+        WHERE se.stock_entry_type = 'Material Transfer'
+        AND se.from_warehouse = %s
+        AND se.to_warehouse IN ({warehouse_placeholders})
+        AND se.docstatus = 1
+        {date_filter}
+        GROUP BY se.name
+        ORDER BY se.posting_date DESC, se.creation DESC
+        LIMIT %s
+    """, params, as_dict=True)
+
+    # Add hub code to each transfer
+    warehouse_to_hub = {v: k for k, v in DISTRIBUTION_HUBS.items()}
+    for t in transfers:
+        t["hub_code"] = warehouse_to_hub.get(t["to_warehouse"], "UNKNOWN")
+        t["total_qty"] = flt(t["total_qty"])
+
+    return {
+        "success": True,
+        "data": transfers,
+        "summary": {
+            "total_transfers": len(transfers),
+            "total_qty": sum(t["total_qty"] for t in transfers)
+        }
+    }
+
+
+# ============================================================
+# 12. RAW MATERIAL REORDER ALERTS (NEW - Task #4)
+# ============================================================
+
+@frappe.whitelist()
+def get_rm_reorder_alerts():
+    """
+    Get raw materials that are below reorder level in Commissary.
+
+    Uses reorder_level field on Item if set, otherwise estimates based on
+    7-day consumption average x 3 (lead time buffer).
+
+    Returns items needing reorder with suggested quantities.
+    """
+    commissary_warehouse = get_commissary_warehouse()
+    today_date = today()
+    date_7_days_ago = add_days(today_date, -7)
+
+    # Get all raw material items (item_group contains 'Raw' or item_code starts with RM)
+    rm_items = frappe.db.sql("""
+        SELECT
+            i.name as item_code,
+            i.item_name,
+            i.item_group,
+            i.stock_uom as uom,
+            i.reorder_level,
+            i.safety_stock,
+            IFNULL(b.actual_qty, 0) as current_qty
+        FROM `tabItem` i
+        LEFT JOIN `tabBin` b ON b.item_code = i.name AND b.warehouse = %s
+        WHERE i.disabled = 0
+        AND i.is_stock_item = 1
+        AND (
+            i.item_group LIKE '%%Raw%%'
+            OR i.item_code LIKE 'RM%%'
+            OR i.item_group = 'Raw Materials'
+        )
+        ORDER BY i.item_name
+    """, commissary_warehouse, as_dict=True)
+
+    alerts = []
+    for item in rm_items:
+        # Calculate 7-day consumption
+        consumption = frappe.db.sql("""
+            SELECT IFNULL(SUM(ABS(sed.qty)), 0) as total_out
+            FROM `tabStock Entry` se
+            JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
+            WHERE se.docstatus = 1
+            AND se.posting_date BETWEEN %s AND %s
+            AND sed.s_warehouse = %s
+            AND sed.item_code = %s
+        """, (date_7_days_ago, today_date, commissary_warehouse, item["item_code"]))[0][0] or 0
+
+        avg_daily = flt(consumption / 7, 2)
+
+        # Determine reorder level (use Item field if set, otherwise estimate)
+        if item["reorder_level"] and item["reorder_level"] > 0:
+            reorder_level = flt(item["reorder_level"])
+        else:
+            # Estimate: 3 days of consumption (lead time buffer)
+            reorder_level = flt(avg_daily * 3, 2)
+
+        # Determine safety stock
+        if item["safety_stock"] and item["safety_stock"] > 0:
+            safety_stock = flt(item["safety_stock"])
+        else:
+            # Estimate: 1 day of consumption
+            safety_stock = flt(avg_daily, 2)
+
+        current_qty = flt(item["current_qty"])
+
+        # Check if needs reorder
+        if current_qty <= 0:
+            alert_level = "critical"
+            status = "Out of Stock"
+        elif current_qty < safety_stock:
+            alert_level = "critical"
+            status = "Below Safety Stock"
+        elif current_qty < reorder_level:
+            alert_level = "warning"
+            status = "Reorder Needed"
+        else:
+            continue  # No alert needed
+
+        # Calculate suggested order quantity (target = 7 days supply)
+        target_qty = flt(avg_daily * 7, 2)
+        suggested_qty = max(target_qty - current_qty, reorder_level)
+
+        alerts.append({
+            "item_code": item["item_code"],
+            "item_name": item["item_name"],
+            "item_group": item["item_group"],
+            "uom": item["uom"],
+            "current_qty": current_qty,
+            "reorder_level": reorder_level,
+            "safety_stock": safety_stock,
+            "avg_daily_consumption": avg_daily,
+            "suggested_order_qty": flt(suggested_qty, 2),
+            "alert_level": alert_level,
+            "status": status
+        })
+
+    # Sort by alert level priority
+    alert_order = {"critical": 0, "warning": 1}
+    alerts.sort(key=lambda x: (alert_order.get(x["alert_level"], 99), x["item_name"]))
+
+    return {
+        "success": True,
+        "data": alerts,
+        "summary": {
+            "total_alerts": len(alerts),
+            "critical": sum(1 for a in alerts if a["alert_level"] == "critical"),
+            "warning": sum(1 for a in alerts if a["alert_level"] == "warning")
+        }
+    }
+
+
+# ============================================================
+# 13. RAW MATERIAL REQUISITION (NEW - Task #5)
+# ============================================================
+
+@frappe.whitelist()
+def create_rm_requisition(items, required_by_date=None, remarks=None):
+    """
+    Create Material Request for raw materials from Commissary.
+
+    Args:
+        items: JSON array of {item_code, qty, uom (optional)}
+        required_by_date: When materials are needed (defaults to 3 days from now)
+        remarks: Optional notes
+
+    Returns:
+        Material Request name and details
+    """
+    if isinstance(items, str):
+        items = json.loads(items)
+
+    if not items:
+        frappe.throw(_("No items to request"))
+
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Default required_by_date to 3 days from now (standard lead time)
+    if not required_by_date:
+        required_by_date = add_days(today(), 3)
+
+    # Create Material Request
+    mr = frappe.new_doc("Material Request")
+    mr.material_request_type = "Purchase"
+    mr.company = "Bebang Enterprise Inc."
+    mr.transaction_date = today()
+    mr.schedule_date = required_by_date
+    mr.set_warehouse = commissary_warehouse
+    mr.remarks = remarks or "Raw Material Requisition from Commissary"
+
+    for item_data in items:
+        item = frappe.get_doc("Item", item_data["item_code"])
+
+        mr.append("items", {
+            "item_code": item_data["item_code"],
+            "item_name": item.item_name,
+            "description": item.description,
+            "qty": flt(item_data["qty"]),
+            "uom": item_data.get("uom") or item.stock_uom,
+            "stock_uom": item.stock_uom,
+            "conversion_factor": 1,
+            "warehouse": commissary_warehouse,
+            "schedule_date": required_by_date
+        })
+
+    mr.insert()
+    mr.submit()
+
+    return {
+        "success": True,
+        "data": {
+            "name": mr.name,
+            "items_count": len(mr.items),
+            "total_qty": sum(i.qty for i in mr.items),
+            "required_by_date": str(required_by_date),
+            "status": mr.status
+        },
+        "message": f"Material Request {mr.name} created successfully"
+    }
+
+
+@frappe.whitelist()
+def get_my_requisitions(status=None, limit=50):
+    """
+    Get Material Requests created from Commissary.
+
+    Args:
+        status: Optional filter by status (Pending, Ordered, Received, etc.)
+        limit: Max results (default 50)
+
+    Returns list of requisitions with item details.
+    """
+    commissary_warehouse = get_commissary_warehouse()
+
+    filters = {
+        "material_request_type": "Purchase",
+        "set_warehouse": commissary_warehouse,
+        "docstatus": ["in", [0, 1]]  # Draft or Submitted
+    }
+
+    if status:
+        filters["status"] = status
+
+    mrs = frappe.get_all(
+        "Material Request",
+        filters=filters,
+        fields=[
+            "name", "transaction_date", "schedule_date",
+            "status", "owner", "remarks", "docstatus"
+        ],
+        order_by="transaction_date desc",
+        limit=int(limit)
+    )
+
+    for mr in mrs:
+        # Get items
+        items = frappe.get_all(
+            "Material Request Item",
+            filters={"parent": mr["name"]},
+            fields=["item_code", "item_name", "qty", "ordered_qty", "received_qty", "uom"]
+        )
+        mr["items"] = items
+        mr["items_count"] = len(items)
+        mr["total_qty"] = sum(i.get("qty", 0) for i in items)
+        mr["total_ordered"] = sum(i.get("ordered_qty", 0) for i in items)
+        mr["total_received"] = sum(i.get("received_qty", 0) for i in items)
+
+        # Calculate fulfillment percentage
+        if mr["total_qty"] > 0:
+            mr["fulfillment_pct"] = flt((mr["total_received"] / mr["total_qty"]) * 100, 1)
+        else:
+            mr["fulfillment_pct"] = 0
+
+    return {
+        "success": True,
+        "data": mrs,
+        "summary": {
+            "total": len(mrs),
+            "pending": sum(1 for m in mrs if m["status"] in ["Pending", "Draft"]),
+            "ordered": sum(1 for m in mrs if m["status"] == "Ordered"),
+            "partially_received": sum(1 for m in mrs if m["status"] == "Partially Received"),
+            "received": sum(1 for m in mrs if m["status"] == "Received")
+        }
+    }
+
+
+@frappe.whitelist()
+def get_rm_for_requisition():
+    """
+    Get raw materials available for requisition with current stock and alerts.
+    Combines inventory levels with reorder recommendations.
+    """
+    # Get reorder alerts first
+    alerts_data = get_rm_reorder_alerts()
+    alerts = {a["item_code"]: a for a in alerts_data["data"]}
+
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Get all raw materials
+    rm_items = frappe.db.sql("""
+        SELECT
+            i.name as item_code,
+            i.item_name,
+            i.item_group,
+            i.stock_uom as uom,
+            IFNULL(b.actual_qty, 0) as current_qty
+        FROM `tabItem` i
+        LEFT JOIN `tabBin` b ON b.item_code = i.name AND b.warehouse = %s
+        WHERE i.disabled = 0
+        AND i.is_stock_item = 1
+        AND (
+            i.item_group LIKE '%%Raw%%'
+            OR i.item_code LIKE 'RM%%'
+            OR i.item_group = 'Raw Materials'
+        )
+        ORDER BY i.item_name
+    """, commissary_warehouse, as_dict=True)
+
+    result = []
+    for item in rm_items:
+        item_data = {
+            "item_code": item["item_code"],
+            "item_name": item["item_name"],
+            "item_group": item["item_group"],
+            "uom": item["uom"],
+            "current_qty": flt(item["current_qty"]),
+            "needs_reorder": item["item_code"] in alerts,
+            "suggested_qty": 0,
+            "alert_level": None
+        }
+
+        # Add alert data if available
+        if item["item_code"] in alerts:
+            alert = alerts[item["item_code"]]
+            item_data["suggested_qty"] = alert["suggested_order_qty"]
+            item_data["alert_level"] = alert["alert_level"]
+            item_data["reorder_level"] = alert["reorder_level"]
+
+        result.append(item_data)
+
+    # Sort: items needing reorder first
+    result.sort(key=lambda x: (0 if x["needs_reorder"] else 1, x["item_name"]))
+
+    return {
+        "success": True,
+        "data": result,
+        "alerts_count": len(alerts)
+    }
