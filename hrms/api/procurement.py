@@ -470,6 +470,12 @@ def create_goods_receipt(data):
     if isinstance(data, str):
         data = frappe.parse_json(data)
 
+    # Map 'rate' to 'unit_cost' in items if needed
+    if "items" in data:
+        for item in data["items"]:
+            if "rate" in item and "unit_cost" not in item:
+                item["unit_cost"] = item.pop("rate")
+
     gr = frappe.get_doc({
         "doctype": "BEI Goods Receipt",
         **data
@@ -989,14 +995,13 @@ def get_supplier_performance():
         SELECT
             s.name as supplier,
             s.supplier_name,
-            s.rating,
-            s.total_orders,
-            s.total_amount,
-            ROUND(s.total_amount / NULLIF(s.total_orders, 0), 2) as avg_order_value,
-            s.on_time_delivery_rate
+            s.total_po_count as po_count,
+            s.total_po_value as total_value,
+            ROUND(s.total_po_value / NULLIF(s.total_po_count, 0), 2) as avg_order_value,
+            COALESCE(s.on_time_rate, 0) as on_time_delivery_rate
         FROM `tabBEI Supplier` s
-        WHERE s.status = 'Active' AND s.total_orders > 0
-        ORDER BY s.total_amount DESC
+        WHERE s.status = 'Active'
+        ORDER BY s.total_po_value DESC
         LIMIT 10
     """, as_dict=True)
 
