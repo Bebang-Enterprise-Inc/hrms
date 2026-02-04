@@ -2720,3 +2720,181 @@ def get_wastage_reasons():
             for code, desc in WASTAGE_REASONS.items()
         ]
     }
+
+
+# ============================================================
+# 12. FEFO PICKING HELPER
+# ============================================================
+
+@frappe.whitelist()
+def get_fefo_picking_list(item_code=None, warehouse=None):
+    """
+    Get FEFO (First Expired First Out) picking recommendations.
+    Returns batches sorted by expiry date for picking priority.
+
+    Args:
+        item_code: Filter by specific item (optional)
+        warehouse: Filter by warehouse (defaults to commissary)
+    """
+    commissary_warehouse = warehouse or get_commissary_warehouse()
+
+    # Get batches with stock ordered by expiry date (FEFO)
+    picking_list = frappe.db.sql("""
+        SELECT
+            sle.item_code,
+            i.item_name,
+            sle.batch_no,
+            b.expiry_date,
+            b.manufacturing_date,
+            SUM(sle.actual_qty) as available_qty,
+            i.stock_uom,
+            DATEDIFF(b.expiry_date, CURDATE()) as days_to_expiry,
+            CASE
+                WHEN b.expiry_date IS NULL THEN 'no_expiry'
+                WHEN b.expiry_date <= CURDATE() THEN 'expired'
+                WHEN DATEDIFF(b.expiry_date, CURDATE()) <= 3 THEN 'critical'
+                WHEN DATEDIFF(b.expiry_date, CURDATE()) <= 7 THEN 'warning'
+                ELSE 'ok'
+            END as expiry_status
+        FROM `tabStock Ledger Entry` sle
+        JOIN `tabItem` i ON i.name = sle.item_code
+        LEFT JOIN `tabBatch` b ON b.name = sle.batch_no
+        WHERE sle.warehouse = %(warehouse)s
+        AND sle.is_cancelled = 0
+        AND i.item_group = 'Finished Goods'
+        GROUP BY sle.item_code, sle.batch_no
+        HAVING available_qty > 0
+        ORDER BY
+            CASE WHEN b.expiry_date IS NULL THEN 1 ELSE 0 END,
+            b.expiry_date ASC,
+            sle.item_code
+    """, {"warehouse": commissary_warehouse}, as_dict=True)
+
+    if item_code:
+        picking_list = [p for p in picking_list if p.item_code == item_code]
+
+    # Summary by expiry status
+    summary = {
+        "expired": 0,
+        "critical": 0,
+        "warning": 0,
+        "ok": 0,
+        "no_expiry": 0
+    }
+    for item in picking_list:
+        status = item.expiry_status or "no_expiry"
+        summary[status] += 1
+
+    return {
+        "success": True,
+        "data": picking_list,
+        "summary": summary,
+        "note": "Items without batch numbers will not appear. Enable batch tracking on items for FEFO."
+    }
+
+
+@frappe.whitelist()
+def get_expiring_batches(days=7, item_group=None):
+    """
+    Get batches expiring within specified days.
+    Helps identify items that need to be used or disposed.
+
+    Args:
+        days: Days until expiry (default 7)
+        item_group: Filter by item group (optional)
+    """
+    commissary_warehouse = get_commissary_warehouse()
+
+    filters = """
+        WHERE b.expiry_date IS NOT NULL
+        AND b.expiry_date <= DATE_ADD(CURDATE(), INTERVAL %(days)s DAY)
+        AND bin.actual_qty > 0
+        AND bin.warehouse = %(warehouse)s
+    """
+
+    params = {
+        "days": int(days),
+        "warehouse": commissary_warehouse
+    }
+
+    if item_group:
+        filters += " AND i.item_group = %(item_group)s"
+        params["item_group"] = item_group
+
+    expiring = frappe.db.sql(f"""
+        SELECT
+            b.name as batch_no,
+            b.item as item_code,
+            i.item_name,
+            i.item_group,
+            b.expiry_date,
+            b.manufacturing_date,
+            bin.actual_qty as available_qty,
+            i.stock_uom,
+            DATEDIFF(b.expiry_date, CURDATE()) as days_to_expiry,
+            CASE
+                WHEN b.expiry_date <= CURDATE() THEN 'expired'
+                WHEN DATEDIFF(b.expiry_date, CURDATE()) <= 3 THEN 'critical'
+                ELSE 'warning'
+            END as urgency
+        FROM `tabBatch` b
+        JOIN `tabItem` i ON i.name = b.item
+        LEFT JOIN `tabBin` bin ON bin.item_code = b.item AND bin.batch_no = b.name
+        {filters}
+        ORDER BY b.expiry_date ASC
+    """, params, as_dict=True)
+
+    # Group by urgency
+    by_urgency = {"expired": [], "critical": [], "warning": []}
+    for batch in expiring:
+        urgency = batch.urgency
+        by_urgency[urgency].append(batch)
+
+    return {
+        "success": True,
+        "data": expiring,
+        "by_urgency": {
+            "expired": len(by_urgency["expired"]),
+            "critical": len(by_urgency["critical"]),
+            "warning": len(by_urgency["warning"])
+        },
+        "total": len(expiring)
+    }
+
+
+@frappe.whitelist()
+def enable_batch_tracking_for_fg():
+    """
+    Enable batch and expiry date tracking for all Finished Goods items.
+    This is required for FEFO picking to work.
+
+    Note: Run this once to enable batch tracking. New batches will be created
+    automatically during production.
+    """
+    updated = 0
+
+    # Get all FG items without batch tracking
+    items = frappe.get_all(
+        "Item",
+        filters={
+            "item_group": "Finished Goods",
+            "has_batch_no": 0
+        },
+        fields=["name"]
+    )
+
+    for item in items:
+        frappe.db.set_value("Item", item.name, {
+            "has_batch_no": 1,
+            "create_new_batch": 1,
+            "has_expiry_date": 1
+        })
+        updated += 1
+
+    frappe.db.commit()
+
+    return {
+        "success": True,
+        "message": f"Enabled batch tracking for {updated} Finished Goods items",
+        "updated": updated
+    }
