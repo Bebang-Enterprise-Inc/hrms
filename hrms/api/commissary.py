@@ -198,6 +198,35 @@ def get_production_items():
     return {"success": True, "data": items}
 
 
+def get_or_create_batch(batch_id, item_code):
+    """
+    Get existing batch or create a new one.
+    Frappe requires Batch documents to exist before referencing in Stock Entry.
+    """
+    batch_id = batch_id.strip()
+    if not batch_id:
+        return None
+
+    # Check if batch already exists
+    if frappe.db.exists("Batch", batch_id):
+        return batch_id
+
+    # Check if item has batch tracking enabled
+    has_batch_no = frappe.db.get_value("Item", item_code, "has_batch_no")
+    if not has_batch_no:
+        # Item doesn't use batch tracking - skip batch_no
+        return None
+
+    # Create new batch
+    batch = frappe.new_doc("Batch")
+    batch.batch_id = batch_id
+    batch.item = item_code
+    batch.manufacturing_date = today()
+    batch.insert(ignore_permissions=True)
+
+    return batch.name
+
+
 @frappe.whitelist()
 def submit_production_output(items, batch_no=None, remarks=None):
     """
@@ -206,7 +235,7 @@ def submit_production_output(items, batch_no=None, remarks=None):
 
     Args:
         items: JSON array of {item_code, qty, uom}
-        batch_no: Optional batch reference
+        batch_no: Optional batch reference (will auto-create if doesn't exist)
         remarks: Optional production notes
     """
     if isinstance(items, str):
@@ -240,9 +269,11 @@ def submit_production_output(items, batch_no=None, remarks=None):
             "conversion_factor": 1,
             "t_warehouse": commissary_warehouse,
         }
-        # Only include batch_no if it's a valid non-empty string
+        # Auto-create batch if it doesn't exist (only for batch-tracked items)
         if batch_no and batch_no.strip():
-            item_row["batch_no"] = batch_no
+            valid_batch = get_or_create_batch(batch_no, item_data["item_code"])
+            if valid_batch:
+                item_row["batch_no"] = valid_batch
         se.append("items", item_row)
 
     se.insert()
