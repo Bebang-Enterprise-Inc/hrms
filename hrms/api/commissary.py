@@ -2548,3 +2548,175 @@ def complete_work_order(work_order_name, qty_produced=None):
             "status": wo.status
         }
     }
+
+
+# ============================================================
+# 11. WASTAGE TRACKING
+# ============================================================
+
+# Wastage reason codes
+WASTAGE_REASONS = {
+    "expired": "Expired/Past shelf life",
+    "damaged": "Damaged during handling",
+    "quality_fail": "Failed quality inspection",
+    "contaminated": "Contaminated/Spoiled",
+    "production_loss": "Production loss/Spillage",
+    "sampling": "Quality sampling/Testing",
+    "other": "Other (specify in remarks)"
+}
+
+
+@frappe.whitelist()
+def log_wastage(item_code, qty, reason_code, batch_no=None, remarks=None):
+    """
+    Log wastage for a commissary item.
+    Creates a Material Issue Stock Entry for inventory reduction.
+
+    Args:
+        item_code: Item being wasted
+        qty: Quantity wasted
+        reason_code: Code from WASTAGE_REASONS
+        batch_no: Batch number (optional)
+        remarks: Additional notes
+    """
+    commissary_warehouse = get_commissary_warehouse()
+
+    if reason_code not in WASTAGE_REASONS:
+        return {
+            "success": False,
+            "error": f"Invalid reason code. Valid codes: {', '.join(WASTAGE_REASONS.keys())}"
+        }
+
+    # Get item details
+    item = frappe.db.get_value(
+        "Item", item_code,
+        ["item_name", "stock_uom", "valuation_rate"],
+        as_dict=True
+    )
+
+    if not item:
+        return {"success": False, "error": f"Item {item_code} not found"}
+
+    # Create Stock Entry for Material Issue (Wastage)
+    se = frappe.new_doc("Stock Entry")
+    se.stock_entry_type = "Material Issue"
+    se.company = "Bebang Enterprise Inc."
+    se.purpose = "Material Issue"
+
+    # Build remarks with reason
+    full_remarks = f"WASTAGE: {WASTAGE_REASONS[reason_code]}"
+    if remarks:
+        full_remarks += f" - {remarks}"
+    se.remarks = full_remarks
+
+    se.append("items", {
+        "item_code": item_code,
+        "item_name": item.item_name,
+        "s_warehouse": commissary_warehouse,
+        "qty": flt(qty),
+        "uom": item.stock_uom,
+        "stock_uom": item.stock_uom,
+        "batch_no": batch_no
+    })
+
+    se.insert()
+    se.submit()
+
+    # Calculate wastage value
+    wastage_value = flt(qty) * flt(item.valuation_rate or 0)
+
+    return {
+        "success": True,
+        "message": f"Wastage logged: {qty} {item.stock_uom} of {item.item_name}",
+        "data": {
+            "name": se.name,
+            "item_code": item_code,
+            "qty": qty,
+            "reason": WASTAGE_REASONS[reason_code],
+            "wastage_value": wastage_value
+        }
+    }
+
+
+@frappe.whitelist()
+def get_wastage_history(days=30, item_code=None):
+    """
+    Get wastage history from commissary.
+
+    Args:
+        days: Days to look back (default 30)
+        item_code: Filter by specific item (optional)
+    """
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Build filters
+    filters = """
+        WHERE se.stock_entry_type = 'Material Issue'
+        AND se.docstatus = 1
+        AND se.remarks LIKE 'WASTAGE:%'
+        AND sed.s_warehouse = %(warehouse)s
+        AND se.posting_date >= DATE_SUB(CURDATE(), INTERVAL %(days)s DAY)
+    """
+
+    params = {
+        "warehouse": commissary_warehouse,
+        "days": int(days)
+    }
+
+    if item_code:
+        filters += " AND sed.item_code = %(item_code)s"
+        params["item_code"] = item_code
+
+    wastage = frappe.db.sql(f"""
+        SELECT
+            se.name,
+            se.posting_date,
+            sed.item_code,
+            sed.item_name,
+            sed.qty,
+            sed.uom,
+            sed.basic_amount as wastage_value,
+            se.remarks,
+            se.owner as logged_by
+        FROM `tabStock Entry` se
+        JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
+        {filters}
+        ORDER BY se.posting_date DESC
+    """, params, as_dict=True)
+
+    # Calculate summary
+    total_qty = sum(w.qty for w in wastage)
+    total_value = sum(w.wastage_value or 0 for w in wastage)
+
+    # Group by reason
+    by_reason = {}
+    for w in wastage:
+        reason = w.remarks.replace("WASTAGE: ", "").split(" - ")[0] if w.remarks else "Unknown"
+        if reason not in by_reason:
+            by_reason[reason] = {"count": 0, "qty": 0, "value": 0}
+        by_reason[reason]["count"] += 1
+        by_reason[reason]["qty"] += w.qty
+        by_reason[reason]["value"] += w.wastage_value or 0
+
+    return {
+        "success": True,
+        "data": wastage,
+        "summary": {
+            "total_entries": len(wastage),
+            "total_qty": total_qty,
+            "total_value": total_value,
+            "by_reason": by_reason
+        }
+    }
+
+
+@frappe.whitelist()
+def get_wastage_reasons():
+    """Get available wastage reason codes and descriptions."""
+    return {
+        "success": True,
+        "data": [
+            {"code": code, "description": desc}
+            for code, desc in WASTAGE_REASONS.items()
+        ]
+    }
