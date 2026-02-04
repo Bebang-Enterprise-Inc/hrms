@@ -1363,7 +1363,7 @@ def get_price_history(item_code=None, supplier=None, months=6):
             poi.rate as unit_price,
             poi.qty,
             poi.amount
-        FROM `tabBEI Purchase Order Item` poi
+        FROM `tabBEI PO Item` poi
         JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
         WHERE {where_clause}
         AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL %(months)s MONTH)
@@ -1430,7 +1430,7 @@ def get_single_source_suppliers():
                 po.supplier_name,
                 SUM(poi.amount) as total_value,
                 COUNT(DISTINCT po.name) as po_count
-            FROM `tabBEI Purchase Order Item` poi
+            FROM `tabBEI PO Item` poi
             JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
             WHERE po.status NOT IN ('Draft', 'Cancelled')
             AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
@@ -1606,7 +1606,7 @@ def check_price_variance(item_code, supplier, new_price):
 
     avg_price = frappe.db.sql("""
         SELECT AVG(poi.rate) as avg_price
-        FROM `tabBEI Purchase Order Item` poi
+        FROM `tabBEI PO Item` poi
         JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
         WHERE poi.item_code = %s
         AND po.supplier = %s
