@@ -80,9 +80,85 @@ def get_supplier(name):
 
 @frappe.whitelist()
 def create_supplier(data):
-    """Create new supplier."""
+    """Create new supplier.
+
+    AUDIT CONTROL 2.5: Duplicate detection (phone, email, bank account, TIN)
+    Ref: Internal Audit Jan 30, 2026 - Same phone number across multiple suppliers
+    """
     if isinstance(data, str):
         data = frappe.parse_json(data)
+
+    warnings = []
+
+    # AUDIT CONTROL 2.5: Check for duplicate phone number
+    contact_number = data.get("contact_number")
+    if contact_number:
+        existing = frappe.db.get_value(
+            "BEI Supplier",
+            {"contact_number": contact_number},
+            ["name", "supplier_name"],
+            as_dict=True
+        )
+        if existing:
+            frappe.throw(
+                _("Phone number {0} is already used by supplier: {1} ({2}). "
+                  "Duplicate contact info may indicate shell companies.").format(
+                    contact_number, existing.supplier_name, existing.name
+                ),
+                title=_("Duplicate Contact Detected")
+            )
+
+    # AUDIT CONTROL 2.5: Check for duplicate email
+    email = data.get("email")
+    if email:
+        existing = frappe.db.get_value(
+            "BEI Supplier",
+            {"email": email},
+            ["name", "supplier_name"],
+            as_dict=True
+        )
+        if existing:
+            warnings.append(
+                _("Email {0} is already used by supplier: {1}").format(
+                    email, existing.supplier_name
+                )
+            )
+
+    # AUDIT CONTROL 2.5: Check for duplicate bank account
+    bank_account = data.get("bank_account_number")
+    if bank_account:
+        existing = frappe.db.get_value(
+            "BEI Supplier",
+            {"bank_account_number": bank_account},
+            ["name", "supplier_name"],
+            as_dict=True
+        )
+        if existing:
+            frappe.throw(
+                _("Bank account {0} is already used by supplier: {1} ({2}). "
+                  "This is a critical fraud indicator.").format(
+                    bank_account, existing.supplier_name, existing.name
+                ),
+                title=_("Duplicate Bank Account Detected")
+            )
+
+    # AUDIT CONTROL 2.5: Check for duplicate TIN
+    tin = data.get("tin")
+    if tin:
+        existing = frappe.db.get_value(
+            "BEI Supplier",
+            {"tin": tin},
+            ["name", "supplier_name"],
+            as_dict=True
+        )
+        if existing:
+            frappe.throw(
+                _("TIN {0} is already registered to supplier: {1} ({2}). "
+                  "Each supplier must have a unique TIN.").format(
+                    tin, existing.supplier_name, existing.name
+                ),
+                title=_("Duplicate TIN Detected")
+            )
 
     supplier = frappe.get_doc({
         "doctype": "BEI Supplier",
@@ -90,7 +166,11 @@ def create_supplier(data):
     })
     supplier.insert()
 
-    return {"success": True, "name": supplier.name, "message": _("Supplier created")}
+    result = {"success": True, "name": supplier.name, "message": _("Supplier created")}
+    if warnings:
+        result["warnings"] = warnings
+
+    return result
 
 
 @frappe.whitelist()
@@ -322,9 +402,58 @@ def get_purchase_order(name):
 
 @frappe.whitelist()
 def create_purchase_order(data):
-    """Create new PO."""
+    """Create new PO.
+
+    AUDIT CONTROL 2.8: Supplier master data quality checks
+    - Mandatory TIN for suppliers with >₱250K annual purchases
+    Ref: Internal Audit Jan 30, 2026 - Max's Bakeshop ₱10M not in master list
+    """
     if isinstance(data, str):
         data = frappe.parse_json(data)
+
+    warnings = []
+    supplier_name = data.get("supplier")
+
+    if supplier_name:
+        supplier = frappe.get_doc("BEI Supplier", supplier_name)
+
+        # AUDIT CONTROL 2.8: Check TIN for high-value suppliers
+        # Calculate annual purchase value for this supplier
+        annual_purchases = frappe.db.sql("""
+            SELECT COALESCE(SUM(grand_total), 0)
+            FROM `tabBEI Purchase Order`
+            WHERE supplier = %s
+            AND po_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+            AND status NOT IN ('Draft', 'Cancelled')
+        """, (supplier_name,))[0][0] or 0
+
+        po_value = flt(data.get("grand_total", 0))
+
+        # If total annual + this PO > ₱250K, require TIN
+        if flt(annual_purchases) + po_value > 250000:
+            if not supplier.tin:
+                frappe.throw(
+                    _("Supplier {0} requires TIN registration. "
+                      "Annual purchases (₱{1:,.2f}) + this PO (₱{2:,.2f}) exceed ₱250,000 threshold. "
+                      "Update supplier master data before proceeding.").format(
+                        supplier.supplier_name, annual_purchases, po_value
+                    ),
+                    title=_("TIN Required")
+                )
+
+        # AUDIT CONTROL 2.8: Warn if supplier missing key documents
+        missing_docs = []
+        if not supplier.bir_2307:
+            missing_docs.append("BIR 2307")
+        if not supplier.business_permit:
+            missing_docs.append("Business Permit")
+
+        if missing_docs:
+            warnings.append(
+                _("Supplier {0} is missing documents: {1}").format(
+                    supplier.supplier_name, ", ".join(missing_docs)
+                )
+            )
 
     po = frappe.get_doc({
         "doctype": "BEI Purchase Order",
@@ -332,7 +461,11 @@ def create_purchase_order(data):
     })
     po.insert()
 
-    return {"success": True, "name": po.name, "message": _("PO created")}
+    result = {"success": True, "name": po.name, "message": _("PO created")}
+    if warnings:
+        result["warnings"] = warnings
+
+    return result
 
 
 @frappe.whitelist()
@@ -466,9 +599,44 @@ def get_goods_receipt(name):
 
 @frappe.whitelist()
 def create_goods_receipt(data):
-    """Create new GR."""
+    """Create new GR.
+
+    AUDIT CONTROL 2.4: Block GR creation for >₱500K POs without complete approval
+    Ref: Internal Audit Jan 30, 2026 - CFO "Pending" but payment released
+    """
     if isinstance(data, str):
         data = frappe.parse_json(data)
+
+    # AUDIT CONTROL 2.4: Validate PO approval for >₱500K
+    purchase_order = data.get("purchase_order")
+    if purchase_order:
+        po = frappe.get_doc("BEI Purchase Order", purchase_order)
+        if flt(po.grand_total) > 500000:
+            if not po.mae_approval:
+                frappe.throw(
+                    _("Cannot create GR: PO {0} (₱{1:,.2f}) requires CPO (Mae) approval first").format(
+                        po.po_no, po.grand_total
+                    ),
+                    title=_("Approval Required")
+                )
+            if not po.butch_approval:
+                frappe.throw(
+                    _("Cannot create GR: PO {0} (₱{1:,.2f}) requires CFO (Butch) approval first").format(
+                        po.po_no, po.grand_total
+                    ),
+                    title=_("Approval Required")
+                )
+
+        # AUDIT CONTROL 2.2: Validate GR date >= PO date
+        gr_date = getdate(data.get("receipt_date") or nowdate())
+        po_date = getdate(po.po_date)
+        if gr_date < po_date:
+            frappe.throw(
+                _("GR date ({0}) cannot be earlier than PO date ({1})").format(
+                    gr_date, po_date
+                ),
+                title=_("Invalid Date Sequence")
+            )
 
     # Map 'rate' to 'unit_cost' in items if needed
     if "items" in data:
@@ -606,9 +774,50 @@ def get_invoice(name):
 
 @frappe.whitelist()
 def create_invoice(data):
-    """Create new invoice."""
+    """Create new invoice.
+
+    AUDIT CONTROL 2.1: Require Goods Receipt before Invoice (Three-Way Matching)
+    AUDIT CONTROL 2.2: Invoice date cannot be earlier than PO date
+    Ref: Internal Audit Jan 30, 2026 - PO-2025108 paid without GR; Invoice Nov 21 vs PO Nov 25
+    """
     if isinstance(data, str):
         data = frappe.parse_json(data)
+
+    purchase_order = data.get("purchase_order")
+    if purchase_order:
+        # AUDIT CONTROL 2.1: Check GR exists for this PO
+        gr_exists = frappe.db.exists("BEI Goods Receipt", {
+            "purchase_order": purchase_order,
+            "status": ["in", ["Submitted", "Approved", "Inspected"]]
+        })
+        if not gr_exists:
+            frappe.throw(
+                _("Cannot create Invoice: No Goods Receipt found for PO {0}. "
+                  "Create a GR first to confirm delivery.").format(purchase_order),
+                title=_("Three-Way Match Required")
+            )
+
+        # AUDIT CONTROL 2.2: Invoice date >= PO date
+        po = frappe.get_doc("BEI Purchase Order", purchase_order)
+        invoice_date = getdate(data.get("invoice_date") or nowdate())
+        po_date = getdate(po.po_date)
+        if invoice_date < po_date:
+            frappe.throw(
+                _("Invoice date ({0}) cannot be earlier than PO date ({1}). "
+                  "This indicates the invoice was created before the PO was approved.").format(
+                    invoice_date, po_date
+                ),
+                title=_("Invalid Date Sequence")
+            )
+
+        # AUDIT CONTROL 2.4: Check PO approval for >₱500K
+        if flt(po.grand_total) > 500000:
+            if not po.mae_approval or not po.butch_approval:
+                frappe.throw(
+                    _("Cannot create Invoice: PO {0} (₱{1:,.2f}) requires complete approval "
+                      "(CPO + CFO) before invoicing").format(po.po_no, po.grand_total),
+                    title=_("Approval Required")
+                )
 
     invoice = frappe.get_doc({
         "doctype": "BEI Invoice",
@@ -720,9 +929,75 @@ def get_payment_request(name):
 
 @frappe.whitelist()
 def create_payment_request(data):
-    """Create new payment request."""
+    """Create new payment request.
+
+    AUDIT CONTROL 2.1: Require Goods Receipt before Payment (Three-Way Matching)
+    AUDIT CONTROL 2.2: Payment date cannot be earlier than Invoice date
+    AUDIT CONTROL 2.3: Payment limited to received value (partial delivery control)
+    AUDIT CONTROL 2.4: Block payment without complete PO approval for >₱500K
+    Ref: Internal Audit Jan 30, 2026 - PO-2025320 paid ₱848,800 for partial delivery
+    """
     if isinstance(data, str):
         data = frappe.parse_json(data)
+
+    invoice_name = data.get("invoice")
+    if invoice_name:
+        invoice = frappe.get_doc("BEI Invoice", invoice_name)
+        purchase_order = invoice.purchase_order
+
+        if purchase_order:
+            po = frappe.get_doc("BEI Purchase Order", purchase_order)
+
+            # AUDIT CONTROL 2.1: Check GR exists for this PO
+            gr_exists = frappe.db.exists("BEI Goods Receipt", {
+                "purchase_order": purchase_order,
+                "status": ["in", ["Submitted", "Approved", "Inspected"]]
+            })
+            if not gr_exists:
+                frappe.throw(
+                    _("Cannot create Payment Request: No Goods Receipt found for PO {0}. "
+                      "Delivery must be confirmed before payment.").format(purchase_order),
+                    title=_("Three-Way Match Required")
+                )
+
+            # AUDIT CONTROL 2.3: Payment limited to received value
+            received_value = frappe.db.sql("""
+                SELECT COALESCE(SUM(gri.quantity * gri.unit_cost), 0)
+                FROM `tabBEI Goods Receipt Item` gri
+                JOIN `tabBEI Goods Receipt` gr ON gri.parent = gr.name
+                WHERE gr.purchase_order = %s
+                AND gr.status IN ('Submitted', 'Approved', 'Inspected')
+            """, (purchase_order,))[0][0] or 0
+
+            payment_amount = flt(data.get("payment_amount") or invoice.balance_due)
+            if payment_amount > received_value:
+                frappe.throw(
+                    _("Payment amount (₱{0:,.2f}) exceeds received value (₱{1:,.2f}). "
+                      "You can only pay for goods actually received.").format(
+                        payment_amount, received_value
+                    ),
+                    title=_("Partial Delivery Control")
+                )
+
+            # AUDIT CONTROL 2.4: Check PO approval for >₱500K
+            if flt(po.grand_total) > 500000:
+                if not po.mae_approval or not po.butch_approval:
+                    frappe.throw(
+                        _("Cannot create Payment Request: PO {0} (₱{1:,.2f}) requires complete "
+                          "approval (CPO + CFO) before payment").format(po.po_no, po.grand_total),
+                        title=_("Approval Required")
+                    )
+
+        # AUDIT CONTROL 2.2: Payment date >= Invoice date
+        payment_date = getdate(data.get("request_date") or nowdate())
+        invoice_date = getdate(invoice.invoice_date)
+        if payment_date < invoice_date:
+            frappe.throw(
+                _("Payment request date ({0}) cannot be earlier than invoice date ({1})").format(
+                    payment_date, invoice_date
+                ),
+                title=_("Invalid Date Sequence")
+            )
 
     request = frappe.get_doc({
         "doctype": "BEI Payment Request",
@@ -1006,3 +1281,506 @@ def get_supplier_performance():
     """, as_dict=True)
 
     return data
+
+
+# =============================================================================
+# AUDIT CONTROL ENDPOINTS (Added 2026-02-05 per Internal Audit Jan 30, 2026)
+# =============================================================================
+
+@frappe.whitelist()
+def get_open_po_aging():
+    """Get POs without Goods Receipt (Three-Way Match monitoring).
+
+    AUDIT CONTROL 2.1: Track POs that haven't been received
+    Ref: Internal Audit Jan 30, 2026 - PO-2025108 paid without GR
+    """
+    data = frappe.db.sql("""
+        SELECT
+            po.name,
+            po.po_no,
+            po.po_date,
+            po.supplier_name,
+            po.grand_total,
+            po.status,
+            po.delivery_date,
+            DATEDIFF(CURDATE(), po.po_date) as days_open,
+            CASE
+                WHEN gr.name IS NOT NULL THEN 'Has GR'
+                ELSE 'No GR'
+            END as gr_status,
+            gr.name as gr_name
+        FROM `tabBEI Purchase Order` po
+        LEFT JOIN `tabBEI Goods Receipt` gr ON gr.purchase_order = po.name
+            AND gr.status IN ('Submitted', 'Approved', 'Inspected')
+        WHERE po.status NOT IN ('Draft', 'Cancelled', 'Closed')
+        ORDER BY
+            CASE WHEN gr.name IS NULL THEN 0 ELSE 1 END,
+            po.po_date ASC
+    """, as_dict=True)
+
+    # Summary stats
+    no_gr = [d for d in data if d.get("gr_status") == "No GR"]
+    total_at_risk = sum(flt(d.get("grand_total", 0)) for d in no_gr)
+
+    return {
+        "data": data,
+        "summary": {
+            "total_open_pos": len(data),
+            "pos_without_gr": len(no_gr),
+            "total_at_risk": flt(total_at_risk, 2),
+            "avg_days_open": flt(sum(d.get("days_open", 0) for d in no_gr) / max(len(no_gr), 1), 1)
+        }
+    }
+
+
+@frappe.whitelist()
+def get_price_history(item_code=None, supplier=None, months=6):
+    """Get price history for variance detection.
+
+    AUDIT CONTROL 2.6: Price variance alerts
+    Ref: Internal Audit Jan 30, 2026 - XYZCO FOODS ₱116→₱120→₱116
+    """
+    conditions = ["po.status NOT IN ('Draft', 'Cancelled')"]
+    values = {"months": int(months)}
+
+    if item_code:
+        conditions.append("poi.item_code = %(item_code)s")
+        values["item_code"] = item_code
+
+    if supplier:
+        conditions.append("po.supplier = %(supplier)s")
+        values["supplier"] = supplier
+
+    where_clause = " AND ".join(conditions)
+
+    data = frappe.db.sql(f"""
+        SELECT
+            poi.item_code,
+            poi.item_name,
+            po.supplier,
+            po.supplier_name,
+            po.po_date,
+            poi.rate as unit_price,
+            poi.qty,
+            poi.amount
+        FROM `tabBEI Purchase Order Item` poi
+        JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+        WHERE {where_clause}
+        AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL %(months)s MONTH)
+        ORDER BY poi.item_code, po.po_date DESC
+    """, values, as_dict=True)
+
+    # Calculate variance for each item
+    item_prices = {}
+    for row in data:
+        key = (row.item_code, row.supplier)
+        if key not in item_prices:
+            item_prices[key] = []
+        item_prices[key].append(row)
+
+    variance_alerts = []
+    for key, prices in item_prices.items():
+        if len(prices) >= 2:
+            latest_price = flt(prices[0].unit_price)
+            avg_price = sum(flt(p.unit_price) for p in prices) / len(prices)
+            max_price = max(flt(p.unit_price) for p in prices)
+            min_price = min(flt(p.unit_price) for p in prices)
+
+            if avg_price > 0:
+                variance_pct = abs(latest_price - avg_price) / avg_price * 100
+                if variance_pct > 5:  # 5% threshold
+                    variance_alerts.append({
+                        "item_code": key[0],
+                        "supplier": key[1],
+                        "supplier_name": prices[0].supplier_name,
+                        "item_name": prices[0].item_name,
+                        "latest_price": latest_price,
+                        "avg_price": flt(avg_price, 2),
+                        "max_price": max_price,
+                        "min_price": min_price,
+                        "variance_pct": flt(variance_pct, 1),
+                        "price_count": len(prices)
+                    })
+
+    return {
+        "data": data,
+        "variance_alerts": sorted(variance_alerts, key=lambda x: -x["variance_pct"]),
+        "summary": {
+            "total_items_tracked": len(item_prices),
+            "items_with_variance": len(variance_alerts),
+            "threshold_pct": 5
+        }
+    }
+
+
+@frappe.whitelist()
+def get_single_source_suppliers():
+    """Get suppliers with concentration risk (single-source items).
+
+    AUDIT CONTROL 2.7: Single-source supplier flagging
+    Ref: Internal Audit Jan 30, 2026 - RIGHT GOODS ₱23.6M for 1 item
+    """
+    # Find items where >80% of purchases come from a single supplier
+    data = frappe.db.sql("""
+        WITH item_supplier_totals AS (
+            SELECT
+                poi.item_code,
+                poi.item_name,
+                po.supplier,
+                po.supplier_name,
+                SUM(poi.amount) as total_value,
+                COUNT(DISTINCT po.name) as po_count
+            FROM `tabBEI Purchase Order Item` poi
+            JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+            WHERE po.status NOT IN ('Draft', 'Cancelled')
+            AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            GROUP BY poi.item_code, poi.item_name, po.supplier, po.supplier_name
+        ),
+        item_totals AS (
+            SELECT
+                item_code,
+                SUM(total_value) as item_total_value
+            FROM item_supplier_totals
+            GROUP BY item_code
+        )
+        SELECT
+            ist.item_code,
+            ist.item_name,
+            ist.supplier,
+            ist.supplier_name,
+            ist.total_value,
+            ist.po_count,
+            it.item_total_value,
+            ROUND(ist.total_value / NULLIF(it.item_total_value, 0) * 100, 1) as concentration_pct
+        FROM item_supplier_totals ist
+        JOIN item_totals it ON ist.item_code = it.item_code
+        WHERE ist.total_value / NULLIF(it.item_total_value, 0) >= 0.8
+        ORDER BY ist.total_value DESC
+    """, as_dict=True)
+
+    # Supplier-level summary
+    supplier_concentration = {}
+    for row in data:
+        supplier = row.supplier
+        if supplier not in supplier_concentration:
+            supplier_concentration[supplier] = {
+                "supplier": supplier,
+                "supplier_name": row.supplier_name,
+                "single_source_items": 0,
+                "total_value": 0
+            }
+        supplier_concentration[supplier]["single_source_items"] += 1
+        supplier_concentration[supplier]["total_value"] += flt(row.total_value)
+
+    return {
+        "data": data,
+        "supplier_summary": sorted(
+            supplier_concentration.values(),
+            key=lambda x: -x["total_value"]
+        ),
+        "summary": {
+            "total_single_source_items": len(data),
+            "total_at_risk_value": flt(sum(d.get("total_value", 0) for d in data), 2),
+            "suppliers_with_concentration": len(supplier_concentration)
+        }
+    }
+
+
+@frappe.whitelist()
+def get_supplier_duplicates():
+    """Get suppliers with duplicate contact information.
+
+    AUDIT CONTROL 2.5: Duplicate detection report
+    Ref: Internal Audit Jan 30, 2026 - Same phone across Labelmen & MGrace
+    """
+    duplicates = []
+
+    # Check duplicate phone numbers
+    phone_dups = frappe.db.sql("""
+        SELECT
+            contact_number,
+            GROUP_CONCAT(CONCAT(name, ':', supplier_name) SEPARATOR '|') as suppliers,
+            COUNT(*) as count
+        FROM `tabBEI Supplier`
+        WHERE contact_number IS NOT NULL AND contact_number != ''
+        GROUP BY contact_number
+        HAVING COUNT(*) > 1
+    """, as_dict=True)
+
+    for dup in phone_dups:
+        suppliers = [s.split(":") for s in dup.suppliers.split("|")]
+        duplicates.append({
+            "type": "Phone Number",
+            "value": dup.contact_number,
+            "suppliers": [{"name": s[0], "supplier_name": s[1]} for s in suppliers],
+            "count": dup["count"],
+            "risk_level": "HIGH"
+        })
+
+    # Check duplicate emails
+    email_dups = frappe.db.sql("""
+        SELECT
+            email,
+            GROUP_CONCAT(CONCAT(name, ':', supplier_name) SEPARATOR '|') as suppliers,
+            COUNT(*) as count
+        FROM `tabBEI Supplier`
+        WHERE email IS NOT NULL AND email != ''
+        GROUP BY email
+        HAVING COUNT(*) > 1
+    """, as_dict=True)
+
+    for dup in email_dups:
+        suppliers = [s.split(":") for s in dup.suppliers.split("|")]
+        duplicates.append({
+            "type": "Email",
+            "value": dup.email,
+            "suppliers": [{"name": s[0], "supplier_name": s[1]} for s in suppliers],
+            "count": dup["count"],
+            "risk_level": "MEDIUM"
+        })
+
+    # Check duplicate bank accounts
+    bank_dups = frappe.db.sql("""
+        SELECT
+            bank_account_number,
+            bank_name,
+            GROUP_CONCAT(CONCAT(name, ':', supplier_name) SEPARATOR '|') as suppliers,
+            COUNT(*) as count
+        FROM `tabBEI Supplier`
+        WHERE bank_account_number IS NOT NULL AND bank_account_number != ''
+        GROUP BY bank_account_number, bank_name
+        HAVING COUNT(*) > 1
+    """, as_dict=True)
+
+    for dup in bank_dups:
+        suppliers = [s.split(":") for s in dup.suppliers.split("|")]
+        duplicates.append({
+            "type": "Bank Account",
+            "value": f"{dup.bank_name} - {dup.bank_account_number}",
+            "suppliers": [{"name": s[0], "supplier_name": s[1]} for s in suppliers],
+            "count": dup["count"],
+            "risk_level": "CRITICAL"
+        })
+
+    # Check duplicate TINs
+    tin_dups = frappe.db.sql("""
+        SELECT
+            tin,
+            GROUP_CONCAT(CONCAT(name, ':', supplier_name) SEPARATOR '|') as suppliers,
+            COUNT(*) as count
+        FROM `tabBEI Supplier`
+        WHERE tin IS NOT NULL AND tin != ''
+        GROUP BY tin
+        HAVING COUNT(*) > 1
+    """, as_dict=True)
+
+    for dup in tin_dups:
+        suppliers = [s.split(":") for s in dup.suppliers.split("|")]
+        duplicates.append({
+            "type": "TIN",
+            "value": dup.tin,
+            "suppliers": [{"name": s[0], "supplier_name": s[1]} for s in suppliers],
+            "count": dup["count"],
+            "risk_level": "CRITICAL"
+        })
+
+    return {
+        "data": sorted(duplicates, key=lambda x: {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}.get(x["risk_level"], 3)),
+        "summary": {
+            "total_duplicates": len(duplicates),
+            "critical": len([d for d in duplicates if d["risk_level"] == "CRITICAL"]),
+            "high": len([d for d in duplicates if d["risk_level"] == "HIGH"]),
+            "medium": len([d for d in duplicates if d["risk_level"] == "MEDIUM"])
+        }
+    }
+
+
+@frappe.whitelist()
+def check_price_variance(item_code, supplier, new_price):
+    """Check if a new price has significant variance from historical average.
+
+    AUDIT CONTROL 2.6: Real-time price variance check during PO creation
+    Returns warning if variance > 5%
+    """
+    new_price = flt(new_price)
+
+    avg_price = frappe.db.sql("""
+        SELECT AVG(poi.rate) as avg_price
+        FROM `tabBEI Purchase Order Item` poi
+        JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+        WHERE poi.item_code = %s
+        AND po.supplier = %s
+        AND po.status NOT IN ('Draft', 'Cancelled')
+        AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
+    """, (item_code, supplier))[0][0]
+
+    if not avg_price:
+        return {"has_variance": False, "message": "No historical data for comparison"}
+
+    avg_price = flt(avg_price)
+    variance_pct = abs(new_price - avg_price) / avg_price * 100 if avg_price > 0 else 0
+
+    return {
+        "has_variance": variance_pct > 5,
+        "new_price": new_price,
+        "avg_price": flt(avg_price, 2),
+        "variance_pct": flt(variance_pct, 1),
+        "threshold_pct": 5,
+        "message": _("Price ₱{0:,.2f} is {1:.1f}% different from 90-day average ₱{2:,.2f}").format(
+            new_price, variance_pct, avg_price
+        ) if variance_pct > 5 else None
+    }
+
+
+@frappe.whitelist()
+def get_received_value_for_po(purchase_order):
+    """Get total received value for a PO (for partial delivery control).
+
+    AUDIT CONTROL 2.3: Calculate maximum payable amount
+    Ref: Internal Audit Jan 30, 2026 - PO-2025320 paid ₱848,800 for partial
+    """
+    po = frappe.get_doc("BEI Purchase Order", purchase_order)
+
+    received_data = frappe.db.sql("""
+        SELECT
+            gri.item_code,
+            gri.item_name,
+            SUM(gri.quantity) as received_qty,
+            gri.unit_cost,
+            SUM(gri.quantity * gri.unit_cost) as received_value
+        FROM `tabBEI Goods Receipt Item` gri
+        JOIN `tabBEI Goods Receipt` gr ON gri.parent = gr.name
+        WHERE gr.purchase_order = %s
+        AND gr.status IN ('Submitted', 'Approved', 'Inspected')
+        GROUP BY gri.item_code, gri.item_name, gri.unit_cost
+    """, (purchase_order,), as_dict=True)
+
+    total_received = sum(flt(d.get("received_value", 0)) for d in received_data)
+    total_ordered = flt(po.grand_total)
+
+    return {
+        "purchase_order": purchase_order,
+        "po_no": po.po_no,
+        "total_ordered": total_ordered,
+        "total_received": flt(total_received, 2),
+        "max_payable": flt(total_received, 2),
+        "pending_delivery": flt(total_ordered - total_received, 2),
+        "items": received_data
+    }
+
+
+@frappe.whitelist()
+def get_supplier_data_quality():
+    """Get suppliers with missing/incomplete master data.
+
+    AUDIT CONTROL 2.8: Supplier master data quality report
+    Ref: Internal Audit Jan 30, 2026 - Max's Bakeshop ₱10M not in master list
+    """
+    # Get all active suppliers with their annual purchase values
+    suppliers = frappe.db.sql("""
+        SELECT
+            s.name,
+            s.supplier_name,
+            s.tin,
+            s.bir_2307,
+            s.sec_certificate,
+            s.business_permit,
+            s.bank_name,
+            s.bank_account_number,
+            s.contact_number,
+            s.email,
+            COALESCE(po_totals.annual_value, 0) as annual_purchases,
+            COALESCE(po_totals.po_count, 0) as po_count
+        FROM `tabBEI Supplier` s
+        LEFT JOIN (
+            SELECT
+                supplier,
+                SUM(grand_total) as annual_value,
+                COUNT(*) as po_count
+            FROM `tabBEI Purchase Order`
+            WHERE po_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+            AND status NOT IN ('Draft', 'Cancelled')
+            GROUP BY supplier
+        ) po_totals ON po_totals.supplier = s.name
+        WHERE s.status = 'Active'
+        ORDER BY po_totals.annual_value DESC
+    """, as_dict=True)
+
+    issues = []
+    for sup in suppliers:
+        supplier_issues = []
+
+        # Check TIN for high-value suppliers
+        if flt(sup.annual_purchases) > 250000 and not sup.tin:
+            supplier_issues.append({
+                "field": "TIN",
+                "severity": "CRITICAL",
+                "message": "TIN required for suppliers with >₱250K annual purchases"
+            })
+
+        # Check bank details
+        if not sup.bank_account_number:
+            supplier_issues.append({
+                "field": "Bank Account",
+                "severity": "HIGH",
+                "message": "Bank account required for payment processing"
+            })
+
+        # Check documents
+        if not sup.bir_2307:
+            supplier_issues.append({
+                "field": "BIR 2307",
+                "severity": "MEDIUM",
+                "message": "BIR 2307 certificate missing"
+            })
+
+        if not sup.business_permit:
+            supplier_issues.append({
+                "field": "Business Permit",
+                "severity": "MEDIUM",
+                "message": "Business permit missing"
+            })
+
+        # Check contact info
+        if not sup.contact_number and not sup.email:
+            supplier_issues.append({
+                "field": "Contact Info",
+                "severity": "LOW",
+                "message": "No contact phone or email"
+            })
+
+        if supplier_issues:
+            issues.append({
+                "supplier": sup.name,
+                "supplier_name": sup.supplier_name,
+                "annual_purchases": flt(sup.annual_purchases, 2),
+                "po_count": sup.po_count,
+                "issues": supplier_issues,
+                "issue_count": len(supplier_issues),
+                "max_severity": max(
+                    i["severity"] for i in supplier_issues
+                ) if supplier_issues else None
+            })
+
+    # Sort by severity and annual purchases
+    severity_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+    issues.sort(key=lambda x: (
+        severity_order.get(x.get("max_severity"), 4),
+        -x.get("annual_purchases", 0)
+    ))
+
+    return {
+        "data": issues,
+        "summary": {
+            "total_suppliers_with_issues": len(issues),
+            "critical": len([i for i in issues if i.get("max_severity") == "CRITICAL"]),
+            "high": len([i for i in issues if i.get("max_severity") == "HIGH"]),
+            "medium": len([i for i in issues if i.get("max_severity") == "MEDIUM"]),
+            "low": len([i for i in issues if i.get("max_severity") == "LOW"]),
+            "total_at_risk_value": flt(sum(
+                i.get("annual_purchases", 0)
+                for i in issues
+                if i.get("max_severity") in ("CRITICAL", "HIGH")
+            ), 2)
+        }
+    }
