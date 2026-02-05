@@ -127,7 +127,7 @@ def checkout(
         file_doc = frappe.get_doc({
             "doctype": "File",
             "attached_to_doctype": "BEI Official Business",
-            "file_name": f"checkout_selfie_{employee}_{frappe.utils.now()}.jpg",
+            "file_name": f"checkout_selfie_{employee}_{now_datetime().strftime('%Y%m%d_%H%M%S')}_{frappe.generate_hash(length=6)}.jpg",
             "is_private": 1,
             "content": img_data
         })
@@ -208,7 +208,7 @@ def checkin(
             "doctype": "File",
             "attached_to_doctype": "BEI Official Business",
             "attached_to_name": ob_name,
-            "file_name": f"checkin_selfie_{employee}_{frappe.utils.now()}.jpg",
+            "file_name": f"checkin_selfie_{employee}_{now_datetime().strftime('%Y%m%d_%H%M%S')}_{frappe.generate_hash(length=6)}.jpg",
             "is_private": 1,
             "content": img_data
         })
