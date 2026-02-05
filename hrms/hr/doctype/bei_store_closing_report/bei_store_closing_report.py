@@ -14,6 +14,7 @@ class BEIStoreClosingReport(Document):
 
 	def before_save(self):
 		self.calculate_funds()
+		self.calculate_denomination_total()
 		self.calculate_cash_variance()
 		self.calculate_inventory_variance()
 		self.update_signoff_timestamps()
@@ -31,6 +32,18 @@ class BEIStoreClosingReport(Document):
 			(self.petty_cash_fund or 0) +
 			(self.delivery_fund or 0) +
 			(self.change_fund or 0)
+		)
+
+	def calculate_denomination_total(self):
+		"""Auto-calculate total from bill/coin denominations."""
+		self.denom_total = (
+			(self.denom_1000 or 0) * 1000 +
+			(self.denom_500 or 0) * 500 +
+			(self.denom_200 or 0) * 200 +
+			(self.denom_100 or 0) * 100 +
+			(self.denom_50 or 0) * 50 +
+			(self.denom_20 or 0) * 20 +
+			(self.denom_coins or 0)
 		)
 
 	def calculate_cash_variance(self):
