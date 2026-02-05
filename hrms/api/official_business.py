@@ -8,15 +8,15 @@ from frappe.query_builder import DocType
 from hrms.utils.aws_location import AWSLocationService
 
 
-def validate_image_upload(base64_data: str, max_size_mb: int = 5) -> bool:
-    """Validate image upload for security
+def validate_image_upload(base64_data: str, max_size_mb: int = 5) -> bytes:
+    """Validate image upload for security and return decoded data
 
     Args:
         base64_data: Base64-encoded image data
         max_size_mb: Maximum allowed file size in MB (default: 5)
 
     Returns:
-        bool: True if valid
+        bytes: Decoded image data if valid
 
     Raises:
         frappe.ValidationError: If validation fails
@@ -45,7 +45,7 @@ def validate_image_upload(base64_data: str, max_size_mb: int = 5) -> bool:
     if image_type not in ['jpeg', 'png', 'webp', 'gif']:
         frappe.throw(_("Invalid image format. Only JPEG, PNG, WebP, GIF allowed"))
 
-    return True
+    return image_data
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)  # 10 requests per minute (AWS geocoding costs)
@@ -116,15 +116,11 @@ def checkout(
 
     # Save selfie
     if selfie_base64:
-        # Validate image first (security check)
-        validate_image_upload(selfie_base64)
-
-        import base64
         import io
         from PIL import Image
 
-        # Decode base64
-        img_data = base64.b64decode(selfie_base64.split(',')[1] if ',' in selfie_base64 else selfie_base64)
+        # Validate and decode image (security check + decode in one step)
+        img_data = validate_image_upload(selfie_base64)
         img = Image.open(io.BytesIO(img_data))
 
         # Save as file
@@ -201,14 +197,11 @@ def checkin(
 
     # Save selfie
     if selfie_base64:
-        # Validate image first (security check)
-        validate_image_upload(selfie_base64)
-
-        import base64
         import io
         from PIL import Image
 
-        img_data = base64.b64decode(selfie_base64.split(',')[1] if ',' in selfie_base64 else selfie_base64)
+        # Validate and decode image (security check + decode in one step)
+        img_data = validate_image_upload(selfie_base64)
         img = Image.open(io.BytesIO(img_data))
 
         file_doc = frappe.get_doc({
