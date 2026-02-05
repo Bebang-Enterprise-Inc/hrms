@@ -3,6 +3,7 @@
 import frappe
 from frappe import _
 from frappe.utils import now_datetime
+from frappe.rate_limiter import rate_limit
 from hrms.utils.aws_location import AWSLocationService
 
 
@@ -46,6 +47,7 @@ def validate_image_upload(base64_data: str, max_size_mb: int = 5) -> bool:
     return True
 
 @frappe.whitelist()
+@rate_limit(limit=10, seconds=60)  # 10 requests per minute (AWS geocoding costs)
 def checkout(
     destination: str,
     purpose: str,
@@ -149,6 +151,7 @@ def checkout(
 
 
 @frappe.whitelist()
+@rate_limit(limit=10, seconds=60)  # 10 requests per minute (AWS geocoding costs)
 def checkin(
     ob_name: str,
     latitude: float,
@@ -278,6 +281,7 @@ def get_active_ob():
 
 
 @frappe.whitelist()
+@rate_limit(limit=30, seconds=60)  # 30/min for read-only operations
 def get_pending_review():
     """Get OB records pending supervisor review
 
@@ -311,6 +315,7 @@ def get_pending_review():
 
 
 @frappe.whitelist()
+@rate_limit(limit=20, seconds=60)  # 20/min for supervisor actions
 def review_ob(
     ob_name: str,
     action: str,
@@ -350,6 +355,7 @@ def review_ob(
 
 
 @frappe.whitelist()
+@rate_limit(limit=10, seconds=60)  # 10/min for write operations
 def cancel_ob(ob_name: str):
     """Cancel an OB record (before check-in)
 
