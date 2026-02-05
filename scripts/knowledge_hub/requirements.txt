@@ -1,0 +1,7 @@
+# scripts/knowledge_hub/requirements.txt
+google-genai>=0.1.0
+supabase>=2.0.0
+python-pptx>=0.6.21
+python-docx>=0.8.11
+PyPDF2>=3.0.0
+tiktoken>=0.5.0
