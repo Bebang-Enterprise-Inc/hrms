@@ -22,22 +22,24 @@ class BEIOfficialBusiness(Document):
 
     def _check_velocity(self):
         """Flag if employee moved impossibly fast"""
-        # Get last check-out/in
-        last_record = frappe.db.sql("""
-            SELECT checkout_datetime, checkout_latitude, checkout_longitude
-            FROM `tabBEI Official Business`
-            WHERE employee = %s
-              AND name != %s
-              AND checkout_datetime IS NOT NULL
-              AND (status IN ('Out', 'Returned'))
-            ORDER BY checkout_datetime DESC
-            LIMIT 1
-        """, (self.employee, self.name), as_dict=True)
+        # Get last check-out/in using Frappe ORM (safer than raw SQL)
+        last_records = frappe.get_all(
+            "BEI Official Business",
+            filters={
+                "employee": self.employee,
+                "name": ["!=", self.name],
+                "checkout_datetime": ["is", "set"],
+                "status": ["in", ["Out", "Returned"]]
+            },
+            fields=["checkout_datetime", "checkout_latitude", "checkout_longitude"],
+            order_by="checkout_datetime desc",
+            limit=1
+        )
 
-        if not last_record or not last_record[0].checkout_latitude:
+        if not last_records or not last_records[0].checkout_latitude:
             return
 
-        last = last_record[0]
+        last = last_records[0]
 
         # Calculate distance (Haversine)
         distance_km = self._get_distance_between_coordinates(
