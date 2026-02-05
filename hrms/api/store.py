@@ -10,6 +10,72 @@ import frappe
 from frappe import _
 from frappe.utils import nowdate, add_days, now_datetime
 import json
+import base64
+import hashlib
+
+
+def save_base64_image(base64_data, doctype, docname=None, fieldname="photo"):
+    """
+    Save a base64-encoded image as a Frappe file attachment.
+    Returns the file URL that can be stored in Attach Image fields.
+
+    Args:
+        base64_data: Base64 string (with or without data:image/... prefix)
+        doctype: DocType to attach the file to
+        docname: Document name (optional, can attach later)
+        fieldname: Field name for the attachment
+
+    Returns:
+        str: File URL (e.g., /files/maintenance_photo_abc123.jpg)
+    """
+    if not base64_data:
+        return None
+
+    # Check if it's already a URL (not base64)
+    if base64_data.startswith(('/files/', '/private/', 'http://', 'https://')):
+        return base64_data
+
+    # Extract the actual base64 content and determine file type
+    if ',' in base64_data:
+        # Format: data:image/jpeg;base64,/9j/4AAQ...
+        header, content = base64_data.split(',', 1)
+        if 'png' in header.lower():
+            ext = 'png'
+        elif 'gif' in header.lower():
+            ext = 'gif'
+        elif 'webp' in header.lower():
+            ext = 'webp'
+        else:
+            ext = 'jpg'
+    else:
+        # Raw base64 without header, assume JPEG
+        content = base64_data
+        ext = 'jpg'
+
+    # Decode base64
+    try:
+        file_content = base64.b64decode(content)
+    except Exception as e:
+        frappe.log_error(f"Failed to decode base64 image: {str(e)}", "Base64 Decode Error")
+        frappe.throw(_("Invalid image data"))
+
+    # Generate unique filename using hash
+    file_hash = hashlib.md5(file_content).hexdigest()[:12]
+    filename = f"{doctype.lower().replace(' ', '_')}_{file_hash}.{ext}"
+
+    # Save using Frappe's file handler
+    file_doc = frappe.get_doc({
+        "doctype": "File",
+        "file_name": filename,
+        "content": file_content,
+        "attached_to_doctype": doctype if docname else None,
+        "attached_to_name": docname,
+        "attached_to_field": fieldname,
+        "is_private": 0
+    })
+    file_doc.save(ignore_permissions=True)
+
+    return file_doc.file_url
 
 
 def resolve_warehouse(store_or_branch):
@@ -154,8 +220,15 @@ def get_order_history(store=None, limit=20):
 def approve_order(order_name, approved_quantities=None):
     """
     Approve a store order. Optionally adjust quantities.
+    Only Area Supervisors can approve orders.
+
     approved_quantities: {item_code: qty_approved}
     """
+    # Verify user has Area Supervisor role
+    user_roles = frappe.get_roles(frappe.session.user)
+    if "Area Supervisor" not in user_roles and "System Manager" not in user_roles:
+        frappe.throw(_("Only Area Supervisors can approve store orders"))
+
     order = frappe.get_doc("BEI Store Order", order_name)
 
     if order.status != "Pending Approval":
@@ -272,8 +345,25 @@ def create_fqi_report(store, receiving=None, item_code=None, issue_type=None, de
     if not issue_type:
         frappe.throw(_("Issue type is required"))
 
+    # Resolve store name to valid warehouse (handles branch codes like TEST-STORE-BGC)
+    try:
+        warehouse = resolve_warehouse(store)
+    except Exception:
+        # Provide helpful suggestions for common typos
+        similar_stores = frappe.db.sql("""
+            SELECT name FROM tabWarehouse
+            WHERE name LIKE %s OR warehouse_name LIKE %s
+            LIMIT 5
+        """, (f"%{store[:10]}%", f"%{store[:10]}%"), as_dict=True)
+
+        suggestions = [s.name for s in similar_stores] if similar_stores else []
+        msg = _("Store '{0}' not found.").format(store)
+        if suggestions:
+            msg += _(" Did you mean: {0}?").format(", ".join(suggestions))
+        frappe.throw(msg)
+
     fqi = frappe.new_doc("BEI FQI Report")
-    fqi.store = store
+    fqi.store = warehouse
     fqi.receiving = receiving
     fqi.item_code = item_code
     fqi.issue_type = issue_type
@@ -324,29 +414,42 @@ def submit_opening_report(store, report_time, checklist_items, notes=None,
                           photo_toppings_area=None, photo_dispatch_area=None,
                           photo_cold_storage_temp=None):
     """Submit daily opening report with 5 required photos."""
-    if not store:
-        frappe.throw(_("Store is required"))
+    try:
+        if not store:
+            frappe.throw(_("Store is required"))
 
-    if isinstance(checklist_items, str):
-        checklist_items = json.loads(checklist_items)
+        # Resolve store name to valid warehouse
+        warehouse = resolve_warehouse(store)
 
-    doc = frappe.new_doc("BEI Store Opening Report")
-    doc.store = store
-    doc.report_date = nowdate()
-    doc.report_time = report_time
-    doc.submitted_by = frappe.session.user
-    doc.notes = notes
-    doc.photo_backup_area = photo_backup_area
-    doc.photo_frozen_milk = photo_frozen_milk
-    doc.photo_toppings_area = photo_toppings_area
-    doc.photo_dispatch_area = photo_dispatch_area
-    doc.photo_cold_storage_temp = photo_cold_storage_temp
+        if isinstance(checklist_items, str):
+            checklist_items = json.loads(checklist_items)
 
-    for item in checklist_items:
-        doc.append("checklist_items", item)
+        doc = frappe.new_doc("BEI Store Opening Report")
+        doc.store = warehouse
+        doc.report_date = nowdate()
+        doc.report_time = report_time
+        doc.submitted_by = frappe.session.user
+        doc.notes = notes
 
-    doc.insert()
-    return {"success": True, "name": doc.name}
+        # Handle photos - convert base64 to file URLs if needed
+        doc.photo_backup_area = save_base64_image(photo_backup_area, "BEI Store Opening Report", fieldname="photo_backup_area")
+        doc.photo_frozen_milk = save_base64_image(photo_frozen_milk, "BEI Store Opening Report", fieldname="photo_frozen_milk")
+        doc.photo_toppings_area = save_base64_image(photo_toppings_area, "BEI Store Opening Report", fieldname="photo_toppings_area")
+        doc.photo_dispatch_area = save_base64_image(photo_dispatch_area, "BEI Store Opening Report", fieldname="photo_dispatch_area")
+        doc.photo_cold_storage_temp = save_base64_image(photo_cold_storage_temp, "BEI Store Opening Report", fieldname="photo_cold_storage_temp")
+
+        for item in checklist_items:
+            doc.append("checklist_items", item)
+
+        doc.insert()
+        return {"success": True, "name": doc.name}
+
+    except Exception as e:
+        frappe.log_error(
+            f"Opening Report Error for store {store}: {str(e)}\n\n{frappe.get_traceback()}",
+            "Opening Report Submission Error"
+        )
+        raise
 
 
 @frappe.whitelist()
@@ -454,8 +557,9 @@ def get_closing_reports(store=None, date_from=None, date_to=None, limit=20):
 
 @frappe.whitelist()
 def submit_midshift_check(store, shift, temperature_readings, cleanliness_status,
-                          issues_found=None, corrective_action=None, photo_evidence=None):
-    """Submit mid-shift temperature and cleanliness check."""
+                          issues_found=None, corrective_action=None, photo_evidence=None,
+                          late_reason=None):
+    """Submit mid-shift temperature and cleanliness check with time window validation."""
     if not store:
         frappe.throw(_("Store is required"))
 
@@ -472,9 +576,25 @@ def submit_midshift_check(store, shift, temperature_readings, cleanliness_status
     cleanliness_map = {"excellent": "Excellent", "good": "Good", "needs attention": "Needs Attention", "critical": "Critical"}
     normalized_cleanliness = cleanliness_map.get(cleanliness_status.lower(), cleanliness_status.title()) if cleanliness_status else cleanliness_status
 
+    # Define time windows per shift (can be moved to BEI Shift Template later)
+    shift_windows = {
+        "Morning": ("10:00:00", "11:00:00"),
+        "Afternoon": ("14:00:00", "15:00:00"),
+        "Evening": ("18:00:00", "19:00:00")
+    }
+
+    current_time = now_datetime()
+    current_time_str = current_time.strftime("%H:%M:%S")
+
+    # Get time window for this shift
+    window_start, window_end = shift_windows.get(normalized_shift, ("00:00:00", "23:59:59"))
+
+    # Check if submission is on time
+    is_on_time = window_start <= current_time_str <= window_end
+
     doc = frappe.new_doc("BEI Midshift Checklist")
     doc.store = warehouse
-    doc.check_datetime = now_datetime()
+    doc.check_datetime = current_time
     doc.submitted_by = frappe.session.user
     doc.shift = normalized_shift
     doc.cleanliness_status = normalized_cleanliness
@@ -482,11 +602,30 @@ def submit_midshift_check(store, shift, temperature_readings, cleanliness_status
     doc.corrective_action = corrective_action
     doc.photo_evidence = photo_evidence
 
+    # Time window fields
+    doc.window_start = window_start
+    doc.window_end = window_end
+    doc.is_on_time = 1 if is_on_time else 0
+    doc.late_reason = late_reason if not is_on_time else None
+
+    # Validate late reason if not on time
+    if not is_on_time and not late_reason:
+        frappe.throw(_(
+            "Midshift check is outside the expected window ({0} - {1}). "
+            "Please provide a reason for the late submission."
+        ).format(window_start, window_end))
+
     for reading in temperature_readings:
         doc.append("temperature_readings", reading)
 
     doc.insert()
-    return {"success": True, "name": doc.name}
+    return {
+        "success": True,
+        "name": doc.name,
+        "is_on_time": is_on_time,
+        "window_start": window_start,
+        "window_end": window_end
+    }
 
 
 @frappe.whitelist()
@@ -510,7 +649,8 @@ def get_midshift_checks(store=None, date=None, limit=20):
 
 @frappe.whitelist()
 def upload_pos_data(store, pos_date, pos_system, discount_report, transaction_report,
-                    product_mix, daily_sales_revenue, sales_summary, notes=None):
+                    product_mix, daily_sales_revenue, sales_summary, notes=None,
+                    skip_date_validation=False):
     """
     Upload daily POS data with 5 required report files.
 
@@ -524,6 +664,7 @@ def upload_pos_data(store, pos_date, pos_system, discount_report, transaction_re
         daily_sales_revenue: Daily Sales Revenue - Summary file (base64)
         sales_summary: Sales Summary file (base64)
         notes: Optional notes
+        skip_date_validation: Skip date validation (for back-dated uploads with supervisor approval)
     """
     if not store:
         frappe.throw(_("Store is required"))
@@ -531,6 +672,43 @@ def upload_pos_data(store, pos_date, pos_system, discount_report, transaction_re
     if not all([discount_report, transaction_report, product_mix,
                 daily_sales_revenue, sales_summary]):
         frappe.throw(_("All 5 POS report files are required"))
+
+    # Date validation: Extract date from sales_summary and validate it matches pos_date
+    date_mismatch_warning = None
+    if not skip_date_validation:
+        try:
+            from hrms.utils.pos_parser import parse_sales_summary
+            import base64
+
+            # Decode sales_summary if it's base64
+            if isinstance(sales_summary, str) and not sales_summary.startswith('/files/'):
+                try:
+                    content = base64.b64decode(sales_summary)
+                except Exception:
+                    content = sales_summary.encode() if isinstance(sales_summary, str) else sales_summary
+            else:
+                content = None
+
+            if content:
+                summary_data = parse_sales_summary(content)
+                file_date = summary_data.get("metadata", {}).get("from_date")
+
+                if file_date and str(file_date) != str(pos_date):
+                    date_mismatch_warning = _(
+                        "Warning: POS file date ({0}) does not match claimed date ({1}). "
+                        "Please verify the correct date before submitting."
+                    ).format(file_date, pos_date)
+                    # Log the mismatch but allow upload (with warning returned)
+                    frappe.log_error(
+                        f"POS date mismatch - Store: {store}, File date: {file_date}, Claimed date: {pos_date}",
+                        "POS Upload Date Mismatch"
+                    )
+        except Exception as e:
+            # Don't block upload if date validation fails, just log it
+            frappe.log_error(
+                f"POS date validation error: {str(e)}",
+                "POS Upload Date Validation Error"
+            )
 
     doc = frappe.new_doc("BEI POS Upload")
     doc.store = store
@@ -544,7 +722,12 @@ def upload_pos_data(store, pos_date, pos_system, discount_report, transaction_re
     doc.sales_summary = sales_summary
     doc.notes = notes
     doc.insert()
-    return {"success": True, "name": doc.name}
+
+    result = {"success": True, "name": doc.name}
+    if date_mismatch_warning:
+        result["warning"] = date_mismatch_warning
+        result["date_mismatch"] = True
+    return result
 
 
 @frappe.whitelist()
@@ -1196,6 +1379,7 @@ def submit_maintenance_request(store, priority, description,
     doc.status = "Open"
 
     # Handle photos - support both old single photo and new array format
+    # Also handles base64 data by saving to file system first
     if photos:
         # Parse JSON if string
         if isinstance(photos, str):
@@ -1203,18 +1387,28 @@ def submit_maintenance_request(store, priority, description,
 
         # Add each photo to the child table
         for photo_data in photos:
+            photo_url = None
+            caption = ""
+
             if isinstance(photo_data, str):
-                # Simple URL string
-                doc.append("photos", {"photo": photo_data})
+                # Simple string - could be URL or base64
+                photo_url = save_base64_image(photo_data, "BEI Maintenance Request", fieldname="photo")
             elif isinstance(photo_data, dict):
                 # Object with photo and optional caption
+                raw_photo = photo_data.get("photo") or photo_data.get("url")
+                photo_url = save_base64_image(raw_photo, "BEI Maintenance Request", fieldname="photo")
+                caption = photo_data.get("caption", "")
+
+            if photo_url:
                 doc.append("photos", {
-                    "photo": photo_data.get("photo") or photo_data.get("url"),
-                    "caption": photo_data.get("caption", "")
+                    "photo": photo_url,
+                    "caption": caption
                 })
     elif before_photos:
         # Backward compatibility: convert single photo to child table entry
-        doc.append("photos", {"photo": before_photos})
+        photo_url = save_base64_image(before_photos, "BEI Maintenance Request", fieldname="photo")
+        if photo_url:
+            doc.append("photos", {"photo": photo_url})
 
     doc.insert()
 

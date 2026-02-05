@@ -1,0 +1,217 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:template_name",
+ "creation": "2026-02-05 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "template_name",
+  "is_active",
+  "description",
+  "column_break_1",
+  "applies_to",
+  "store_type",
+  "section_shift_times",
+  "opening_time",
+  "closing_time",
+  "column_break_shifts",
+  "midshift_window_start",
+  "midshift_window_end",
+  "section_store_hours",
+  "mall_opening",
+  "mall_closing",
+  "column_break_hours",
+  "prep_time_minutes",
+  "cleanup_time_minutes",
+  "section_compliance",
+  "max_daily_hours",
+  "min_break_minutes",
+  "require_two_person_close"
+ ],
+ "fields": [
+  {
+   "fieldname": "template_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Template Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "applies_to",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Applies To",
+   "options": "All Stores\nMall Stores\nStreet Stores\nSpecific Store"
+  },
+  {
+   "depends_on": "eval:doc.applies_to=='Specific Store'",
+   "fieldname": "store_type",
+   "fieldtype": "Link",
+   "label": "Specific Store",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "section_shift_times",
+   "fieldtype": "Section Break",
+   "label": "Shift Times"
+  },
+  {
+   "description": "Store opening time (when first staff arrives)",
+   "fieldname": "opening_time",
+   "fieldtype": "Time",
+   "label": "Opening Time",
+   "reqd": 1
+  },
+  {
+   "description": "Store closing time (when last staff leaves)",
+   "fieldname": "closing_time",
+   "fieldtype": "Time",
+   "label": "Closing Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_shifts",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Start of midshift check time window",
+   "fieldname": "midshift_window_start",
+   "fieldtype": "Time",
+   "label": "Midshift Window Start"
+  },
+  {
+   "description": "End of midshift check time window",
+   "fieldname": "midshift_window_end",
+   "fieldtype": "Time",
+   "label": "Midshift Window End"
+  },
+  {
+   "fieldname": "section_store_hours",
+   "fieldtype": "Section Break",
+   "label": "Mall/Location Hours"
+  },
+  {
+   "description": "Mall/location opening time (for mall stores)",
+   "fieldname": "mall_opening",
+   "fieldtype": "Time",
+   "label": "Mall Opening"
+  },
+  {
+   "description": "Mall/location closing time",
+   "fieldname": "mall_closing",
+   "fieldtype": "Time",
+   "label": "Mall Closing"
+  },
+  {
+   "fieldname": "column_break_hours",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "30",
+   "description": "Minutes before mall opens for prep",
+   "fieldname": "prep_time_minutes",
+   "fieldtype": "Int",
+   "label": "Prep Time (minutes)"
+  },
+  {
+   "default": "30",
+   "description": "Minutes after mall closes for cleanup",
+   "fieldname": "cleanup_time_minutes",
+   "fieldtype": "Int",
+   "label": "Cleanup Time (minutes)"
+  },
+  {
+   "fieldname": "section_compliance",
+   "fieldtype": "Section Break",
+   "label": "Compliance Settings"
+  },
+  {
+   "default": "8",
+   "description": "Maximum daily working hours per DOLE",
+   "fieldname": "max_daily_hours",
+   "fieldtype": "Int",
+   "label": "Max Daily Hours"
+  },
+  {
+   "default": "60",
+   "description": "Minimum break time in minutes",
+   "fieldname": "min_break_minutes",
+   "fieldtype": "Int",
+   "label": "Min Break (minutes)"
+  },
+  {
+   "default": "1",
+   "description": "Require 2 people present during closing",
+   "fieldname": "require_two_person_close",
+   "fieldtype": "Check",
+   "label": "Require Two-Person Close"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-05 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Shift Template",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "HR User"
+  },
+  {
+   "read": 1,
+   "role": "Area Supervisor"
+  },
+  {
+   "read": 1,
+   "role": "Store Supervisor"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

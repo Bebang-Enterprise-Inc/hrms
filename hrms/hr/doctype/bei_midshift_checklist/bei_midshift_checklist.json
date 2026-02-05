@@ -11,7 +11,14 @@
   "submitted_by",
   "column_break_1",
   "shift",
+  "shift_template",
   "cleanliness_status",
+  "section_time_window",
+  "window_start",
+  "window_end",
+  "column_break_window",
+  "is_on_time",
+  "late_reason",
   "section_temps",
   "temperature_readings",
   "section_issues",
@@ -58,12 +65,58 @@
    "reqd": 1
   },
   {
+   "description": "Link to shift template that defines expected time windows",
+   "fieldname": "shift_template",
+   "fieldtype": "Link",
+   "label": "Shift Template",
+   "options": "BEI Shift Template"
+  },
+  {
    "fieldname": "cleanliness_status",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Cleanliness Status",
    "options": "Excellent\nGood\nNeeds Attention\nCritical",
    "reqd": 1
+  },
+  {
+   "description": "Expected time window for this midshift check",
+   "fieldname": "section_time_window",
+   "fieldtype": "Section Break",
+   "label": "Time Window"
+  },
+  {
+   "description": "Start of expected midshift check window (e.g., 14:00)",
+   "fieldname": "window_start",
+   "fieldtype": "Time",
+   "label": "Window Start"
+  },
+  {
+   "description": "End of expected midshift check window (e.g., 15:00)",
+   "fieldname": "window_end",
+   "fieldtype": "Time",
+   "label": "Window End"
+  },
+  {
+   "fieldname": "column_break_window",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Check was submitted within the expected time window",
+   "fieldname": "is_on_time",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "On Time",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:!doc.is_on_time",
+   "description": "Required if check is submitted outside the time window",
+   "fieldname": "late_reason",
+   "fieldtype": "Small Text",
+   "label": "Late Reason",
+   "mandatory_depends_on": "eval:!doc.is_on_time"
   },
   {
    "fieldname": "section_temps",
