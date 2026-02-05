@@ -2,7 +2,7 @@
 
 import pytest
 from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock, call
 
 
 class TestExtractContent:
@@ -102,7 +102,7 @@ class TestIngestLocalFile:
 
             assert result["document_id"] == "doc-123"
             assert result["chunks_created"] == 1
-            mock_update.assert_called_with("doc-123", "completed", None)
+            mock_update.assert_called_with("doc-123", "completed", None, doc_metadata=None)
 
     def test_ingest_local_file_passes_metadata(self):
         """Custom metadata should be passed to store_document."""
@@ -211,7 +211,7 @@ class TestIngestDriveFile:
             assert result["document_id"] == "doc-456"
             assert result["chunks_created"] == 1
             assert result["skipped"] is False
-            mock_update.assert_called_with("doc-456", "completed", None)
+            mock_update.assert_called_with("doc-456", "completed", None, doc_metadata=None)
 
     def test_ingest_drive_file_stores_source_type_gdrive(self):
         """Drive files should have source_type='gdrive'."""
@@ -261,3 +261,179 @@ class TestIngestDriveFile:
             assert result["error"] is not None
             assert "Chunking failed" in result["error"]
             mock_update.assert_called_with("doc-456", "failed", "Chunking failed")
+
+
+class TestIngestWithMetadataGeneration:
+    """Tests for metadata generation during ingestion."""
+
+    def test_ingest_local_file_with_metadata_generation(self):
+        """When generate_metadata=True, should call metadata functions and merge into chunks."""
+        from scripts.knowledge_hub.ingest import ingest_local_file
+
+        mock_chunk_metadata = {
+            "summary": "Test chunk summary",
+            "keywords": ["test", "keyword"],
+            "potential_questions": ["What is test?"],
+            "quality_score": 0.85
+        }
+        mock_doc_metadata = {
+            "summary": "Test document summary",
+            "keywords": ["document", "test"],
+            "entities": {"organizations": ["BEI"], "people": [], "topics": ["testing"]}
+        }
+
+        with patch("scripts.knowledge_hub.ingest.extract_content") as mock_extract, \
+             patch("scripts.knowledge_hub.ingest.chunk_text") as mock_chunk, \
+             patch("scripts.knowledge_hub.ingest.generate_embeddings_batch") as mock_embed, \
+             patch("scripts.knowledge_hub.ingest.store_document") as mock_store_doc, \
+             patch("scripts.knowledge_hub.ingest.store_chunks") as mock_store_chunks, \
+             patch("scripts.knowledge_hub.ingest.update_document_status") as mock_update, \
+             patch("scripts.knowledge_hub.metadata.batch_generate_chunk_metadata") as mock_batch_meta, \
+             patch("scripts.knowledge_hub.metadata.generate_document_metadata") as mock_doc_meta:
+
+            mock_extract.return_value = "Document content for testing"
+            mock_chunk.return_value = [
+                {"content": "chunk1", "chunk_index": 0, "char_count": 6},
+                {"content": "chunk2", "chunk_index": 1, "char_count": 6}
+            ]
+            mock_embed.return_value = [[0.1] * 768, [0.2] * 768]
+            mock_store_doc.return_value = "doc-meta-123"
+            mock_store_chunks.return_value = ["chunk-1", "chunk-2"]
+            mock_batch_meta.return_value = [mock_chunk_metadata, mock_chunk_metadata]
+            mock_doc_meta.return_value = mock_doc_metadata
+
+            result = ingest_local_file("/test/file.txt", generate_metadata=True)
+
+            # Verify metadata functions were called
+            mock_batch_meta.assert_called_once()
+            mock_doc_meta.assert_called_once()
+
+            # Verify chunks were updated with metadata before storage
+            stored_chunks = mock_store_chunks.call_args[0][1]
+            assert stored_chunks[0]["summary"] == "Test chunk summary"
+            assert stored_chunks[0]["keywords"] == ["test", "keyword"]
+            assert stored_chunks[0]["quality_score"] == 0.85
+            assert stored_chunks[0]["potential_questions"] == ["What is test?"]
+
+            # Verify document metadata was passed to update
+            mock_update.assert_called_with(
+                "doc-meta-123", "completed", None, doc_metadata=mock_doc_metadata
+            )
+
+            assert result["document_id"] == "doc-meta-123"
+            assert result["chunks_created"] == 2
+            assert result["error"] is None
+
+    def test_ingest_local_file_without_metadata_generation(self):
+        """When generate_metadata=False (default), should not call metadata functions."""
+        from scripts.knowledge_hub.ingest import ingest_local_file
+
+        with patch("scripts.knowledge_hub.ingest.extract_content") as mock_extract, \
+             patch("scripts.knowledge_hub.ingest.chunk_text") as mock_chunk, \
+             patch("scripts.knowledge_hub.ingest.generate_embeddings_batch") as mock_embed, \
+             patch("scripts.knowledge_hub.ingest.store_document") as mock_store_doc, \
+             patch("scripts.knowledge_hub.ingest.store_chunks") as mock_store_chunks, \
+             patch("scripts.knowledge_hub.ingest.update_document_status") as mock_update:
+
+            mock_extract.return_value = "Content"
+            mock_chunk.return_value = [{"content": "chunk", "chunk_index": 0, "char_count": 5}]
+            mock_embed.return_value = [[0.1] * 768]
+            mock_store_doc.return_value = "doc-123"
+            mock_store_chunks.return_value = ["chunk-456"]
+
+            result = ingest_local_file("/test/file.txt", generate_metadata=False)
+
+            # Verify chunks do not have metadata fields
+            stored_chunks = mock_store_chunks.call_args[0][1]
+            assert "summary" not in stored_chunks[0]
+            assert "keywords" not in stored_chunks[0]
+
+            # Verify update was called with doc_metadata=None
+            mock_update.assert_called_with("doc-123", "completed", None, doc_metadata=None)
+
+    def test_ingest_drive_file_with_metadata_generation(self):
+        """Drive file ingestion should also support metadata generation."""
+        from scripts.knowledge_hub.ingest import ingest_drive_file
+
+        mock_chunk_metadata = {
+            "summary": "Drive chunk summary",
+            "keywords": ["drive", "file"],
+            "potential_questions": ["How to use Drive?"],
+            "quality_score": 0.9
+        }
+        mock_doc_metadata = {
+            "summary": "Drive document summary",
+            "keywords": ["google", "drive"],
+            "entities": {"organizations": [], "people": ["Sam"], "topics": ["file sharing"]}
+        }
+
+        with patch("scripts.knowledge_hub.ingest.document_exists") as mock_exists, \
+             patch("scripts.knowledge_hub.ingest.chunk_text") as mock_chunk, \
+             patch("scripts.knowledge_hub.ingest.generate_embeddings_batch") as mock_embed, \
+             patch("scripts.knowledge_hub.ingest.store_document") as mock_store_doc, \
+             patch("scripts.knowledge_hub.ingest.store_chunks") as mock_store_chunks, \
+             patch("scripts.knowledge_hub.ingest.update_document_status") as mock_update, \
+             patch("scripts.knowledge_hub.metadata.batch_generate_chunk_metadata") as mock_batch_meta, \
+             patch("scripts.knowledge_hub.metadata.generate_document_metadata") as mock_doc_meta:
+
+            mock_exists.return_value = False
+            mock_chunk.return_value = [
+                {"content": "drive content", "chunk_index": 0, "char_count": 13}
+            ]
+            mock_embed.return_value = [[0.1] * 768]
+            mock_store_doc.return_value = "doc-drive-456"
+            mock_store_chunks.return_value = ["chunk-drive-1"]
+            mock_batch_meta.return_value = [mock_chunk_metadata]
+            mock_doc_meta.return_value = mock_doc_metadata
+
+            result = ingest_drive_file(
+                file_id="drive-123",
+                title="Test Drive Doc",
+                content="Drive file content for testing",
+                generate_metadata=True
+            )
+
+            # Verify metadata functions were called
+            mock_batch_meta.assert_called_once()
+            mock_doc_meta.assert_called_once()
+
+            # Verify chunks have metadata
+            stored_chunks = mock_store_chunks.call_args[0][1]
+            assert stored_chunks[0]["summary"] == "Drive chunk summary"
+            assert stored_chunks[0]["quality_score"] == 0.9
+
+            # Verify document metadata was passed
+            mock_update.assert_called_with(
+                "doc-drive-456", "completed", None, doc_metadata=mock_doc_metadata
+            )
+
+            assert result["document_id"] == "doc-drive-456"
+            assert result["skipped"] is False
+
+    def test_ingest_drive_file_empty_content_skips_metadata(self):
+        """Empty content should not attempt metadata generation."""
+        from scripts.knowledge_hub.ingest import ingest_drive_file
+
+        with patch("scripts.knowledge_hub.ingest.document_exists") as mock_exists, \
+             patch("scripts.knowledge_hub.ingest.chunk_text") as mock_chunk, \
+             patch("scripts.knowledge_hub.ingest.generate_embeddings_batch") as mock_embed, \
+             patch("scripts.knowledge_hub.ingest.store_document") as mock_store_doc, \
+             patch("scripts.knowledge_hub.ingest.store_chunks") as mock_store_chunks, \
+             patch("scripts.knowledge_hub.ingest.update_document_status") as mock_update:
+
+            mock_exists.return_value = False
+            mock_chunk.return_value = []  # Empty chunks
+            mock_embed.return_value = []
+            mock_store_doc.return_value = "doc-empty"
+
+            result = ingest_drive_file(
+                file_id="drive-empty",
+                title="Empty Doc",
+                content="",
+                generate_metadata=True
+            )
+
+            # Should complete without error even with generate_metadata=True
+            assert result["document_id"] == "doc-empty"
+            assert result["chunks_created"] == 0
+            assert result["error"] is None

@@ -72,20 +72,24 @@ def ingest_local_file(
     category: str = None,
     metadata: Dict[str, Any] = None,
     title: str = None,
+    generate_metadata: bool = False,
 ) -> Dict[str, Any]:
     """Ingest a local file into the Knowledge Hub.
 
     This is the main entry point for local file ingestion. It performs:
     1. Content extraction based on file type
     2. Text chunking
-    3. Embedding generation
-    4. Storage in Supabase
+    3. Optional LLM-powered metadata generation
+    4. Embedding generation
+    5. Storage in Supabase
 
     Args:
         file_path: Path to the local file
         category: Optional document category (e.g., "mancom", "training")
         metadata: Optional additional metadata dictionary
         title: Optional document title (defaults to filename stem)
+        generate_metadata: If True, generate LLM-powered metadata for chunks
+            (summary, keywords, quality_score, potential_questions)
 
     Returns:
         Dictionary containing:
@@ -109,12 +113,32 @@ def ingest_local_file(
         metadata=metadata,
     )
 
+    doc_metadata = None
+
     try:
         # Extract content
         content = extract_content(file_path)
 
         # Chunk the content
         chunks = chunk_text(content)
+
+        # Generate LLM-powered metadata if requested
+        if generate_metadata:
+            from .metadata import batch_generate_chunk_metadata, generate_document_metadata
+
+            # Document-level metadata
+            doc_metadata = generate_document_metadata(content, doc_title)
+
+            # Chunk-level metadata
+            chunk_texts = [c["content"] for c in chunks]
+            chunk_metadata_list = batch_generate_chunk_metadata(chunk_texts)
+
+            # Merge metadata into chunks
+            for chunk, meta in zip(chunks, chunk_metadata_list):
+                chunk["summary"] = meta.get("summary", "")
+                chunk["keywords"] = meta.get("keywords", [])
+                chunk["quality_score"] = meta.get("quality_score", 1.0)
+                chunk["potential_questions"] = meta.get("potential_questions", [])
 
         # Generate embeddings for all chunks
         chunk_texts = [c["content"] for c in chunks]
@@ -123,8 +147,8 @@ def ingest_local_file(
         # Store chunks with embeddings
         chunk_ids = store_chunks(doc_id, chunks, embeddings)
 
-        # Update status to completed
-        update_document_status(doc_id, "completed", None)
+        # Update document with metadata and completed status
+        update_document_status(doc_id, "completed", None, doc_metadata=doc_metadata)
 
         return {
             "document_id": doc_id,
@@ -151,6 +175,7 @@ def ingest_drive_file(
     file_size_bytes: int = None,
     owner_email: str = None,
     metadata: Dict[str, Any] = None,
+    generate_metadata: bool = False,
 ) -> Dict[str, Any]:
     """Ingest a Google Drive file into the Knowledge Hub.
 
@@ -166,6 +191,8 @@ def ingest_drive_file(
         file_size_bytes: Optional file size
         owner_email: Optional owner email from Drive
         metadata: Optional additional metadata
+        generate_metadata: If True, generate LLM-powered metadata for chunks
+            (summary, keywords, quality_score, potential_questions)
 
     Returns:
         Dictionary containing:
@@ -198,9 +225,29 @@ def ingest_drive_file(
         metadata=metadata,
     )
 
+    doc_metadata = None
+
     try:
         # Chunk the content
         chunks = chunk_text(content or "")
+
+        # Generate LLM-powered metadata if requested
+        if generate_metadata and chunks:
+            from .metadata import batch_generate_chunk_metadata, generate_document_metadata
+
+            # Document-level metadata
+            doc_metadata = generate_document_metadata(content or "", title)
+
+            # Chunk-level metadata
+            chunk_texts = [c["content"] for c in chunks]
+            chunk_metadata_list = batch_generate_chunk_metadata(chunk_texts)
+
+            # Merge metadata into chunks
+            for chunk, meta in zip(chunks, chunk_metadata_list):
+                chunk["summary"] = meta.get("summary", "")
+                chunk["keywords"] = meta.get("keywords", [])
+                chunk["quality_score"] = meta.get("quality_score", 1.0)
+                chunk["potential_questions"] = meta.get("potential_questions", [])
 
         # Generate embeddings for all chunks
         chunk_texts = [c["content"] for c in chunks]
@@ -209,8 +256,8 @@ def ingest_drive_file(
         # Store chunks with embeddings
         chunk_ids = store_chunks(doc_id, chunks, embeddings) if chunks else []
 
-        # Update status to completed
-        update_document_status(doc_id, "completed", None)
+        # Update document with metadata and completed status
+        update_document_status(doc_id, "completed", None, doc_metadata=doc_metadata)
 
         return {
             "document_id": doc_id,
