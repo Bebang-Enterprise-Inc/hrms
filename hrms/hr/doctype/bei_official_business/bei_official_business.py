@@ -36,7 +36,7 @@ class BEIOfficialBusiness(Document):
             limit=1
         )
 
-        if not last_records or not last_records[0].checkout_latitude:
+        if not last_records or not last_records[0].checkout_latitude or not last_records[0].checkout_longitude:
             return
 
         last = last_records[0]
