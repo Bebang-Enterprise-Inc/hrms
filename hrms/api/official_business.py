@@ -4,6 +4,7 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 from frappe.rate_limiter import rate_limit
+from frappe.query_builder import DocType
 from hrms.utils.aws_location import AWSLocationService
 
 
@@ -77,11 +78,16 @@ def checkout(
     if not employee:
         frappe.throw(_("No employee record found for current user"))
 
-    # Check if employee already has active OB
-    active_ob = frappe.db.exists("BEI Official Business", {
-        "employee": employee,
-        "status": "Out"
-    })
+    # Check if employee already has active OB (with row-level lock to prevent race condition)
+    BEIOfficialBusiness = DocType("BEI Official Business")
+    active_ob = (
+        frappe.qb.from_(BEIOfficialBusiness)
+        .select(BEIOfficialBusiness.name)
+        .where(BEIOfficialBusiness.employee == employee)
+        .where(BEIOfficialBusiness.status == "Out")
+        .for_update()  # Row-level lock prevents duplicate checkout race condition
+        .run()
+    )
 
     if active_ob:
         frappe.throw(_("You already have an active OB. Please check in first."))
