@@ -113,7 +113,7 @@ class AWSLocationService:
         Returns:
             Dict with location name, distance, within_geofence
         """
-        from hrms.hr.doctype.bei_official_business.bei_official_business import BEIOfficialBusiness
+        from hrms.utils.geo import calculate_haversine_distance
 
         # Get all active OB locations
         locations = frappe.get_all(
@@ -129,10 +129,8 @@ class AWSLocationService:
         nearest = None
         min_distance = float('inf')
 
-        ob_doc = BEIOfficialBusiness()
-
         for loc in locations:
-            distance = ob_doc._get_distance_between_coordinates(
+            distance = calculate_haversine_distance(
                 loc['latitude'], loc['longitude'],
                 latitude, longitude
             )

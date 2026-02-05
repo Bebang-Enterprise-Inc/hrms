@@ -63,18 +63,10 @@ class BEIOfficialBusiness(Document):
     def _get_distance_between_coordinates(
         self, lat1: float, lon1: float, lat2: float, lon2: float
     ) -> float:
-        """Calculate distance between two coordinates using Haversine formula (meters)"""
-        from math import radians, cos, sin, asin, sqrt
+        """Calculate distance between two coordinates using Haversine formula (meters)
 
-        # Convert to radians
-        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
-
-        # Haversine formula
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-        a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
-        c = 2 * asin(sqrt(a))
-
-        # Earth radius in meters
-        r = 6371000
-        return c * r
+        Deprecated: Use hrms.utils.geo.calculate_haversine_distance() directly.
+        This method is kept for backward compatibility.
+        """
+        from hrms.utils.geo import calculate_haversine_distance
+        return calculate_haversine_distance(lat1, lon1, lat2, lon2)
