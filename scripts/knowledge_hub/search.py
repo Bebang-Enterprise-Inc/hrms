@@ -3,7 +3,7 @@
 from typing import List, Dict, Any, Optional
 
 from .embeddings import generate_embedding
-from .storage import search_chunks
+from .storage import search_chunks, get_supabase_client
 
 
 def search(
@@ -119,3 +119,70 @@ def search_with_context(
     sources_footer = "\n".join(sources_lines)
 
     return f"{context_body}\n\n{sources_footer}"
+
+
+def search_with_recency(
+    query: str,
+    top_k: int = 5,
+    threshold: float = 0.5,
+    decay_rate: float = 0.01,
+    recency_weight: float = 0.3
+) -> List[Dict[str, Any]]:
+    """
+    Search with recency weighting.
+
+    Formula: final_score = (1-w) * semantic_score + w * exp(-decay * age_days)
+
+    Args:
+        query: Search query text
+        top_k: Maximum number of results to return
+        threshold: Minimum similarity threshold
+        decay_rate: Decay rate for recency scoring (higher = faster decay)
+        recency_weight: Weight for recency vs semantic similarity (0-1)
+
+    Returns:
+        List of formatted results with keys:
+        - title: Document title
+        - section: Section title (may be None)
+        - content: Chunk content text
+        - source: Source file path
+        - similarity: Raw semantic similarity score
+        - recency: Recency score based on document age
+        - score: Final combined score
+        - date: Document date (may be None)
+    """
+    query_embedding = generate_embedding(query, task_type="RETRIEVAL_QUERY")
+
+    supabase = get_supabase_client()
+    response = supabase.rpc(
+        "match_chunks_with_recency",
+        {
+            "query_embedding": query_embedding,
+            "match_threshold": threshold,
+            "match_count": top_k,
+            "decay_rate": decay_rate,
+            "recency_weight": recency_weight
+        }
+    ).execute()
+
+    results = []
+    chunk_ids = []
+
+    for chunk in response.data:
+        results.append({
+            "title": chunk.get("document_title", "Unknown"),
+            "section": chunk.get("section_title"),
+            "content": chunk.get("content", ""),
+            "source": chunk.get("source_path", ""),
+            "similarity": chunk.get("similarity", 0.0),
+            "recency": chunk.get("recency_score", 1.0),
+            "score": chunk.get("final_score", 0.0),
+            "date": chunk.get("document_date")
+        })
+        chunk_ids.append(chunk["chunk_id"])
+
+    # Track access for forgetting system
+    if chunk_ids:
+        supabase.rpc("track_chunk_access", {"chunk_ids": chunk_ids}).execute()
+
+    return results
