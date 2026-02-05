@@ -5,6 +5,46 @@ from frappe import _
 from frappe.utils import now_datetime
 from hrms.utils.aws_location import AWSLocationService
 
+
+def validate_image_upload(base64_data: str, max_size_mb: int = 5) -> bool:
+    """Validate image upload for security
+
+    Args:
+        base64_data: Base64-encoded image data
+        max_size_mb: Maximum allowed file size in MB (default: 5)
+
+    Returns:
+        bool: True if valid
+
+    Raises:
+        frappe.ValidationError: If validation fails
+    """
+    import base64
+    import imghdr
+
+    if not base64_data or not isinstance(base64_data, str):
+        frappe.throw(_("Invalid image data"))
+
+    try:
+        # Remove data URL prefix if present
+        image_data = base64.b64decode(
+            base64_data.split(',')[1] if ',' in base64_data else base64_data
+        )
+    except Exception:
+        frappe.throw(_("Invalid base64 image format"))
+
+    # Check size
+    size_mb = len(image_data) / (1024 * 1024)
+    if size_mb > max_size_mb:
+        frappe.throw(_(f"Image too large ({size_mb:.1f}MB). Maximum {max_size_mb}MB allowed"))
+
+    # Validate image format using imghdr
+    image_type = imghdr.what(None, h=image_data)
+    if image_type not in ['jpeg', 'png', 'webp', 'gif']:
+        frappe.throw(_("Invalid image format. Only JPEG, PNG, WebP, GIF allowed"))
+
+    return True
+
 @frappe.whitelist()
 def checkout(
     destination: str,
@@ -68,6 +108,9 @@ def checkout(
 
     # Save selfie
     if selfie_base64:
+        # Validate image first (security check)
+        validate_image_upload(selfie_base64)
+
         import base64
         import io
         from PIL import Image
@@ -149,6 +192,9 @@ def checkin(
 
     # Save selfie
     if selfie_base64:
+        # Validate image first (security check)
+        validate_image_upload(selfie_base64)
+
         import base64
         import io
         from PIL import Image
