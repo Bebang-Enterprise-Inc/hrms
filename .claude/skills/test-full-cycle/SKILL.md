@@ -81,6 +81,8 @@ def should_continue():
 
     pending_tests = [t for t in tasks if t.subject.startswith("[TEST]") and t.status != "completed"]
     pending_bugs = [t for t in tasks if t.subject.startswith("[BUG]") and t.status != "completed"]
+    pending_verify = [t for t in tasks if t.subject.startswith("[VERIFY]") and t.status != "completed"]
+    in_progress_tasks = [t for t in tasks if t.status == "in_progress"]
     blocked_tests = [t for t in pending_tests if len(t.blockedBy) > 0]
 
     # If tests are blocked by deployments, WAIT for deployments
@@ -88,12 +90,15 @@ def should_continue():
         wait_for_deployments()  # MANDATORY - DO NOT SKIP
         return True  # Continue after deployments complete
 
-    # If no pending work at all
-    if len(pending_tests) == 0 and len(pending_bugs) == 0:
-        return False  # ALL DONE
+    # CRITICAL: Check ALL pending work
+    all_pending = pending_tests + pending_bugs + pending_verify + in_progress_tasks
 
-    # If there are pending tests/bugs, continue
-    return True  # KEEP GOING
+    # If ANY work remains, continue
+    if len(all_pending) > 0:
+        return True  # KEEP GOING - DO NOT STOP
+
+    # Only stop when EVERYTHING is complete
+    return False  # ALL DONE
 
 # After EVERY action:
 if should_continue():
@@ -684,3 +689,62 @@ mcp__chrome-devtools__list_console_messages()
 ║                                                                  ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
+
+---
+
+## ⚠️ CRITICAL: Never Stop Prematurely ⚠️
+
+**THIS IS A BLOCKING ERROR - NEVER DO THIS:**
+
+```
+❌ WRONG:
+1. Create 8 tests
+2. Complete 3 tests
+3. Find 5 tests blocked
+4. Generate report
+5. Output <promise>COMPLETE</promise>
+6. Stop and wait for user
+
+PROBLEM: Tasks #22 [VERIFY] and #24 [BUG] are still pending!
+```
+
+**CORRECT BEHAVIOR:**
+
+```
+✅ RIGHT:
+1. Create 8 tests
+2. Complete 3 tests
+3. Find 5 tests blocked
+4. Work on Task #22 [VERIFY] - Check migration status
+5. Work on Task #24 [BUG] - Debug data loading
+6. If blocked, trigger deployment and POLL
+7. Continue until TaskList shows ZERO pending
+8. THEN output <promise>COMPLETE</promise>
+```
+
+**MANDATORY CHECK BEFORE COMPLETION:**
+
+```python
+tasks = TaskList()
+pending = [t for t in tasks if t.status != "completed"]
+
+if len(pending) > 0:
+    # STOP - YOU CANNOT COMPLETE YET
+    # Pick next pending task and work on it
+    continue_loop()
+else:
+    # OK - All tasks complete
+    output_completion_promise()
+```
+
+**Task Types That Count As Pending:**
+- [TEST] - Test tasks
+- [BUG] - Bug fixes
+- [VERIFY] - Verification tasks (CAN be worked on!)
+- [NEGATIVE] - Negative test cases
+- ANY task with status != "completed"
+
+**The ONLY valid reason to stop:**
+- TaskList shows ZERO pending/in_progress tasks
+- ALL work is genuinely complete
+- No verification, bugs, or tests remain
