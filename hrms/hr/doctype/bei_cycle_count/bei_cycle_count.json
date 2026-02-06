@@ -13,6 +13,10 @@
   "verified_by",
   "status",
   "total_variance_value",
+  "section_rejection",
+  "rejection_reason",
+  "resubmission_count",
+  "original_count",
   "section_items",
   "items",
   "section_notes",
@@ -60,13 +64,44 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Draft\nSubmitted\nVerified\nReconciled"
+   "options": "Draft\nSubmitted\nRejected\nResubmitted\nVerified\nReconciled"
   },
   {
    "fieldname": "total_variance_value",
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Total Variance Value",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:!doc.rejection_reason",
+   "depends_on": "eval:doc.status=='Rejected' || doc.status=='Resubmitted' || doc.rejection_reason",
+   "fieldname": "section_rejection",
+   "fieldtype": "Section Break",
+   "label": "Rejection / Resubmission"
+  },
+  {
+   "depends_on": "eval:doc.rejection_reason",
+   "fieldname": "rejection_reason",
+   "fieldtype": "Text",
+   "label": "Rejection Reason",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Number of times this count has been resubmitted",
+   "fieldname": "resubmission_count",
+   "fieldtype": "Int",
+   "label": "Resubmission Count",
+   "read_only": 1
+  },
+  {
+   "description": "Link to original cycle count if this is a resubmission",
+   "fieldname": "original_count",
+   "fieldtype": "Link",
+   "label": "Original Count",
+   "options": "BEI Cycle Count",
    "read_only": 1
   },
   {

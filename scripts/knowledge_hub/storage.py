@@ -77,7 +77,8 @@ def store_chunks(
     Args:
         document_id: Parent document UUID
         chunks: List of chunk dicts with 'content', 'chunk_index', 'char_count',
-                and optional 'section_title'
+                and optional 'section_title', 'summary', 'keywords',
+                'quality_score', 'potential_questions'
         embeddings: List of embedding vectors (must match chunks length)
 
     Returns:
@@ -86,32 +87,60 @@ def store_chunks(
     chunk_records = []
     for chunk, embedding in zip(chunks, embeddings):
         content_hash = hashlib.sha256(chunk["content"].encode()).hexdigest()
-        chunk_records.append({
+        chunk_record = {
             "document_id": document_id,
             "chunk_index": chunk["chunk_index"],
             "section_title": chunk.get("section_title"),
             "content": chunk["content"],
             "content_hash": content_hash,
             "char_count": chunk["char_count"],
-            "embedding": embedding
-        })
+            "embedding": embedding,
+        }
+
+        # Add metadata fields if present
+        if "summary" in chunk:
+            chunk_record["summary"] = chunk["summary"]
+        if "keywords" in chunk:
+            chunk_record["keywords"] = chunk["keywords"]
+        if "quality_score" in chunk:
+            chunk_record["quality_score"] = chunk["quality_score"]
+        if "potential_questions" in chunk:
+            chunk_record["potential_questions"] = chunk["potential_questions"]
+
+        chunk_records.append(chunk_record)
 
     client = get_supabase_client()
     response = client.table("kb_chunks").insert(chunk_records).execute()
     return [r["id"] for r in response.data]
 
 
-def update_document_status(document_id: str, status: str, error_message: str = None) -> None:
-    """Update document processing status.
+def update_document_status(
+    document_id: str,
+    status: str,
+    error_message: str = None,
+    doc_metadata: Dict[str, Any] = None
+) -> None:
+    """Update document processing status and optional metadata.
 
     Args:
         document_id: Document UUID
         status: New status ('processing', 'completed', 'failed')
         error_message: Optional error message (for failed status)
+        doc_metadata: Optional document-level metadata from LLM
+            (summary, keywords, entities)
     """
     update_data = {"status": status}
     if error_message:
         update_data["error_message"] = error_message
+
+    # Add document metadata fields if present
+    if doc_metadata:
+        if "summary" in doc_metadata:
+            update_data["summary"] = doc_metadata["summary"]
+        if "keywords" in doc_metadata:
+            update_data["keywords"] = doc_metadata["keywords"]
+        if "entities" in doc_metadata:
+            update_data["entities"] = doc_metadata["entities"]
 
     client = get_supabase_client()
     client.table("kb_documents").update(update_data).eq("id", document_id).execute()

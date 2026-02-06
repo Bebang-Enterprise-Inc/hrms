@@ -29,6 +29,16 @@
   "column_break_funds",
   "total_funds",
   "fund_notes",
+  "section_denomination",
+  "denom_1000",
+  "denom_500",
+  "denom_200",
+  "denom_100",
+  "column_break_denom1",
+  "denom_50",
+  "denom_20",
+  "denom_coins",
+  "denom_total",
   "section_cash",
   "pos_total_sales",
   "actual_cash_count",
@@ -235,6 +245,72 @@
    "fieldname": "fund_notes",
    "fieldtype": "Small Text",
    "label": "Fund Notes"
+  },
+  {
+   "description": "Count bills and coins by denomination",
+   "fieldname": "section_denomination",
+   "fieldtype": "Section Break",
+   "label": "Cash Denomination Breakdown"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 1000 bills",
+   "fieldname": "denom_1000",
+   "fieldtype": "Int",
+   "label": "PHP 1000 x"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 500 bills",
+   "fieldname": "denom_500",
+   "fieldtype": "Int",
+   "label": "PHP 500 x"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 200 bills",
+   "fieldname": "denom_200",
+   "fieldtype": "Int",
+   "label": "PHP 200 x"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 100 bills",
+   "fieldname": "denom_100",
+   "fieldtype": "Int",
+   "label": "PHP 100 x"
+  },
+  {
+   "fieldname": "column_break_denom1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 50 bills",
+   "fieldname": "denom_50",
+   "fieldtype": "Int",
+   "label": "PHP 50 x"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 20 bills",
+   "fieldname": "denom_20",
+   "fieldtype": "Int",
+   "label": "PHP 20 x"
+  },
+  {
+   "default": "0",
+   "description": "Total value of all coins (1, 5, 10, 25 centavos and 1, 5, 10 pesos)",
+   "fieldname": "denom_coins",
+   "fieldtype": "Currency",
+   "label": "Coins Total"
+  },
+  {
+   "description": "Auto-calculated: Sum of all denominations",
+   "fieldname": "denom_total",
+   "fieldtype": "Currency",
+   "label": "Denomination Total",
+   "read_only": 1
   },
   {
    "fieldname": "section_cash",
