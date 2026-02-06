@@ -26,6 +26,13 @@
     "bank_account",
     "check_number",
     "payment_date",
+    "rfp_details_section",
+    "rfp_type",
+    "rfp_purpose",
+    "column_break_rfp",
+    "payee_tin",
+    "payee_address",
+    "account_code",
     "bank_info_section",
     "supplier_bank_name",
     "supplier_bank_account",
@@ -202,6 +209,47 @@
       "fieldname": "payment_date",
       "fieldtype": "Date",
       "label": "Target Payment Date"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "rfp_details_section",
+      "fieldtype": "Section Break",
+      "label": "RFP Details (Request for Payment)"
+    },
+    {
+      "description": "Type of payment request for validation and GL account assignment",
+      "fieldname": "rfp_type",
+      "fieldtype": "Select",
+      "label": "RFP Type",
+      "options": "\nPCF Replenishment\nDelivery Fund\nTranspo Allowance\nRentals\nVendor Invoice\nCash Advance\nReimbursement\nCredit Card Transaction"
+    },
+    {
+      "description": "Detailed purpose and justification for this payment request",
+      "fieldname": "rfp_purpose",
+      "fieldtype": "Small Text",
+      "label": "RFP Purpose"
+    },
+    {
+      "fieldname": "column_break_rfp",
+      "fieldtype": "Column Break"
+    },
+    {
+      "description": "Tax Identification Number of payee",
+      "fieldname": "payee_tin",
+      "fieldtype": "Data",
+      "label": "Payee TIN"
+    },
+    {
+      "fieldname": "payee_address",
+      "fieldtype": "Small Text",
+      "label": "Payee Address"
+    },
+    {
+      "description": "Auto-assigned based on RFP Type. Override if needed.",
+      "fieldname": "account_code",
+      "fieldtype": "Link",
+      "label": "GL Account Code",
+      "options": "Account"
     },
     {
       "fieldname": "bank_info_section",

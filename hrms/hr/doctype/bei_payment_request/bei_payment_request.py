@@ -24,6 +24,7 @@ class BEIPaymentRequest(Document):
         self.set_payment_request_no()
         self.check_ceo_requirement()
         self.load_supplier_bank_info()
+        self.auto_assign_gl_account()
 
     def set_payment_request_no(self):
         """Set payment request number from name if not already set."""
@@ -57,6 +58,51 @@ class BEIPaymentRequest(Document):
             self.supplier_bank_name = supplier.bank_name
             self.supplier_bank_account = supplier.bank_account_number
             self.supplier_account_name = supplier.bank_account_name
+
+    def auto_assign_gl_account(self):
+        """
+        Auto-assign GL account code based on RFP type.
+
+        Account Code Mapping (from Finance & Accounting Module):
+        - PCF Replenishment → 1113000 (Petty Cash Fund)
+        - Delivery Fund → 1115000 (Delivery Fund)
+        - Vendor Invoice → Uses supplier's default expense account
+        - Other types → Manual assignment required
+
+        Priority #5 from Automation List: Automatic Account Titles
+        """
+        if not self.rfp_type or self.account_code:
+            # Skip if no RFP type or account already assigned
+            return
+
+        # Account code mapping
+        rfp_account_map = {
+            "PCF Replenishment": "1113000",  # Petty Cash Fund
+            "Delivery Fund": "1115000",      # Delivery Fund
+            "Transpo Allowance": "5300",     # Transportation Expense (to be created)
+            "Rentals": "5400",               # Rent Expense (to be created)
+            "Vendor Invoice": None,          # Use supplier default
+            "Cash Advance": "1200",          # Advances/Prepayments (to be created)
+            "Reimbursement": "2100",         # Accounts Payable - Reimbursements
+            "Credit Card Transaction": "2110" # Credit Card Payable
+        }
+
+        account_code = rfp_account_map.get(self.rfp_type)
+
+        if account_code:
+            # Verify account exists
+            if frappe.db.exists("Account", account_code):
+                self.account_code = account_code
+            else:
+                frappe.msgprint(
+                    _("GL Account {0} for RFP type '{1}' does not exist. "
+                      "Please assign account manually.").format(account_code, self.rfp_type),
+                    indicator="orange"
+                )
+        elif self.rfp_type == "Vendor Invoice" and self.supplier:
+            # For vendor invoices, could use supplier's default expense account
+            # For now, leave for manual assignment
+            pass
 
     @frappe.whitelist()
     def submit_for_approval(self):

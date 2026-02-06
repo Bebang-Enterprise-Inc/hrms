@@ -29,6 +29,14 @@
   "column_break_funds",
   "total_funds",
   "fund_notes",
+  "section_variance_thresholds",
+  "pcf_variance_threshold",
+  "df_variance_threshold",
+  "column_break_variance",
+  "pcf_variance",
+  "pcf_variance_alert",
+  "df_variance",
+  "df_variance_alert",
   "section_denomination",
   "denom_1000",
   "denom_500",
@@ -245,6 +253,65 @@
    "fieldname": "fund_notes",
    "fieldtype": "Small Text",
    "label": "Fund Notes"
+  },
+  {
+   "collapsible": 1,
+   "description": "Variance alert thresholds for cash fund monitoring",
+   "fieldname": "section_variance_thresholds",
+   "fieldtype": "Section Break",
+   "label": "Variance Monitoring"
+  },
+  {
+   "default": "7500",
+   "description": "Alert if PCF variance exceeds this amount (from Accounting questionnaire)",
+   "fieldname": "pcf_variance_threshold",
+   "fieldtype": "Currency",
+   "label": "PCF Variance Threshold",
+   "precision": "2"
+  },
+  {
+   "default": "15000",
+   "description": "Alert if Delivery Fund variance exceeds this amount (from Accounting questionnaire)",
+   "fieldname": "df_variance_threshold",
+   "fieldtype": "Currency",
+   "label": "DF Variance Threshold",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_variance",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Auto-calculated variance from expected PCF balance",
+   "fieldname": "pcf_variance",
+   "fieldtype": "Currency",
+   "label": "PCF Variance",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Auto-set if PCF variance exceeds threshold",
+   "fieldname": "pcf_variance_alert",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "PCF Alert",
+   "read_only": 1
+  },
+  {
+   "description": "Auto-calculated variance from expected DF balance",
+   "fieldname": "df_variance",
+   "fieldtype": "Currency",
+   "label": "DF Variance",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Auto-set if DF variance exceeds threshold",
+   "fieldname": "df_variance_alert",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "DF Alert",
+   "read_only": 1
   },
   {
    "description": "Count bills and coins by denomination",

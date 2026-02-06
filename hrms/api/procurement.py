@@ -1784,3 +1784,186 @@ def get_supplier_data_quality():
             ), 2)
         }
     }
+
+
+# =============================================================================
+# ACCOUNTING/FINANCE ENDPOINTS (Finance & Accounting Module)
+# =============================================================================
+
+@frappe.whitelist()
+def get_ap_aging_report(aging_buckets=None):
+    """
+    Get AP aging report using existing BEI Invoice DocType.
+
+    Priority #2 from Finance & Accounting Automation List: AP Aging Dashboard
+
+    Args:
+        aging_buckets: Optional list of custom aging bucket thresholds
+                      (default: [30, 60, 90, 120, 150])
+
+    Returns:
+        Dict with aging summary by bucket and total payables
+
+    Aging Buckets (from Accounting questionnaire):
+    - 0-30 days
+    - 31-60 days
+    - 61-90 days
+    - 91-120 days
+    - 121-150 days
+    - Over 150 days
+
+    Example:
+        >>> get_ap_aging_report()
+        {
+            "aging_summary": {
+                "0-30": {"count": 10, "amount": 150000.00},
+                "31-60": {"count": 5, "amount": 75000.00},
+                ...
+            },
+            "total_payables": 500000.00,
+            "as_of_date": "2026-02-06"
+        }
+    """
+    if aging_buckets:
+        if isinstance(aging_buckets, str):
+            aging_buckets = frappe.parse_json(aging_buckets)
+    else:
+        aging_buckets = [30, 60, 90, 120, 150]
+
+    today = getdate()
+
+    # Get all unpaid/partially paid invoices
+    invoices = frappe.db.sql("""
+        SELECT
+            name,
+            posting_date,
+            total_amount,
+            paid_amount,
+            supplier,
+            supplier_name,
+            status
+        FROM `tabBEI Invoice`
+        WHERE status IN ('Pending Payment', 'Partially Paid', 'Verified')
+        AND docstatus != 2
+        ORDER BY posting_date ASC
+    """, as_dict=True)
+
+    # Initialize aging buckets
+    aging_summary = {
+        "0-30": {"count": 0, "amount": 0, "invoices": []},
+        "31-60": {"count": 0, "amount": 0, "invoices": []},
+        "61-90": {"count": 0, "amount": 0, "invoices": []},
+        "91-120": {"count": 0, "amount": 0, "invoices": []},
+        "121-150": {"count": 0, "amount": 0, "invoices": []},
+        "Over 150": {"count": 0, "amount": 0, "invoices": []}
+    }
+
+    total_payables = 0
+    invoice_details = []
+
+    for inv in invoices:
+        # Calculate outstanding
+        outstanding = flt(inv.total_amount, 2) - flt(inv.paid_amount, 2)
+
+        if outstanding <= 0:
+            continue
+
+        # Calculate age in days
+        age_days = (today - getdate(inv.posting_date)).days
+
+        # Classify into bucket
+        if age_days <= 30:
+            bucket = "0-30"
+        elif age_days <= 60:
+            bucket = "31-60"
+        elif age_days <= 90:
+            bucket = "61-90"
+        elif age_days <= 120:
+            bucket = "91-120"
+        elif age_days <= 150:
+            bucket = "121-150"
+        else:
+            bucket = "Over 150"
+
+        # Add to bucket
+        aging_summary[bucket]["count"] += 1
+        aging_summary[bucket]["amount"] = flt(aging_summary[bucket]["amount"], 2) + outstanding
+        aging_summary[bucket]["invoices"].append({
+            "invoice": inv.name,
+            "supplier": inv.supplier_name,
+            "posting_date": str(inv.posting_date),
+            "age_days": age_days,
+            "outstanding": flt(outstanding, 2)
+        })
+
+        total_payables += outstanding
+
+        invoice_details.append({
+            "invoice": inv.name,
+            "supplier": inv.supplier_name,
+            "posting_date": str(inv.posting_date),
+            "total_amount": flt(inv.total_amount, 2),
+            "paid_amount": flt(inv.paid_amount, 2),
+            "outstanding": flt(outstanding, 2),
+            "age_days": age_days,
+            "bucket": bucket,
+            "status": inv.status
+        })
+
+    # Round all amounts
+    for bucket in aging_summary.values():
+        bucket["amount"] = flt(bucket["amount"], 2)
+
+    return {
+        "aging_summary": aging_summary,
+        "total_payables": flt(total_payables, 2),
+        "total_invoices": len(invoice_details),
+        "as_of_date": str(today),
+        "invoice_details": invoice_details
+    }
+
+
+@frappe.whitelist()
+def get_supplier_aging(supplier):
+    """
+    Get AP aging for a specific supplier.
+
+    Args:
+        supplier: Supplier name/ID
+
+    Returns:
+        Dict with supplier aging details
+    """
+    aging = get_ap_aging_report()
+
+    # Filter invoice details for this supplier
+    supplier_invoices = [
+        inv for inv in aging["invoice_details"]
+        if inv["supplier"] == supplier or frappe.db.get_value("BEI Invoice", inv["invoice"], "supplier") == supplier
+    ]
+
+    supplier_total = sum(inv["outstanding"] for inv in supplier_invoices)
+
+    # Rebuild aging summary for this supplier only
+    supplier_aging = {
+        "0-30": {"count": 0, "amount": 0},
+        "31-60": {"count": 0, "amount": 0},
+        "61-90": {"count": 0, "amount": 0},
+        "91-120": {"count": 0, "amount": 0},
+        "121-150": {"count": 0, "amount": 0},
+        "Over 150": {"count": 0, "amount": 0}
+    }
+
+    for inv in supplier_invoices:
+        bucket = inv["bucket"]
+        supplier_aging[bucket]["count"] += 1
+        supplier_aging[bucket]["amount"] = flt(supplier_aging[bucket]["amount"], 2) + inv["outstanding"]
+
+    return {
+        "supplier": supplier,
+        "aging_summary": supplier_aging,
+        "total_outstanding": flt(supplier_total, 2),
+        "invoice_count": len(supplier_invoices),
+        "invoices": supplier_invoices,
+        "as_of_date": aging["as_of_date"]
+    }

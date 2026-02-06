@@ -16,6 +16,8 @@ class BEIStoreClosingReport(Document):
 		self.calculate_funds()
 		self.calculate_denomination_total()
 		self.calculate_cash_variance()
+		self.calculate_fund_variances()
+		self.check_cash_variance_alerts()
 		self.calculate_inventory_variance()
 		self.update_signoff_timestamps()
 		self.update_stage_completed()
@@ -50,6 +52,58 @@ class BEIStoreClosingReport(Document):
 		"""Calculate cash variance from POS sales minus non-cash payments."""
 		expected_cash = (self.pos_total_sales or 0) - (self.card_payments or 0) - (self.gcash_total or 0)
 		self.cash_variance = (self.actual_cash_count or 0) - expected_cash
+
+	def calculate_fund_variances(self):
+		"""
+		Calculate variances for PCF and Delivery Fund.
+
+		For now, variance is calculated as actual vs expected (baseline).
+		This will be enhanced once we have expected fund baselines per store.
+		"""
+		# PCF variance: actual fund vs expected baseline
+		# TODO: Get expected PCF baseline from store configuration
+		expected_pcf = 5000  # Placeholder - should be from store master
+		if self.petty_cash_fund is not None:
+			self.pcf_variance = self.petty_cash_fund - expected_pcf
+		else:
+			self.pcf_variance = 0
+
+		# DF variance: actual fund vs expected baseline
+		# TODO: Get expected DF baseline from store configuration
+		expected_df = 10000  # Placeholder - should be from store master
+		if self.delivery_fund is not None:
+			self.df_variance = self.delivery_fund - expected_df
+		else:
+			self.df_variance = 0
+
+	def check_cash_variance_alerts(self):
+		"""
+		Check if cash fund variances exceed thresholds and set alerts.
+
+		Priority #2 from Finance & Accounting Automation: Cash variance monitoring
+		Thresholds from Accounting questionnaire:
+		- PCF: PHP 7,500
+		- Delivery Fund: PHP 15,000
+		"""
+		# PCF variance check
+		if self.pcf_variance is not None and self.pcf_variance_threshold:
+			if abs(self.pcf_variance) > self.pcf_variance_threshold:
+				self.pcf_variance_alert = 1
+				# TODO: Send Google Chat notification to Accounting Manager
+				# Space: Accounting Alerts (to be created)
+				# Message: "PCF Variance Alert: {store} - PHP {variance:,.2f} (Threshold: PHP {threshold:,.2f})"
+			else:
+				self.pcf_variance_alert = 0
+
+		# DF variance check
+		if self.df_variance is not None and self.df_variance_threshold:
+			if abs(self.df_variance) > self.df_variance_threshold:
+				self.df_variance_alert = 1
+				# TODO: Send Google Chat notification to Accounting Manager
+				# Space: Accounting Alerts (to be created)
+				# Message: "DF Variance Alert: {store} - PHP {variance:,.2f} (Threshold: PHP {threshold:,.2f})"
+			else:
+				self.df_variance_alert = 0
 
 	def calculate_inventory_variance(self):
 		"""Calculate total inventory variance from spot check items."""

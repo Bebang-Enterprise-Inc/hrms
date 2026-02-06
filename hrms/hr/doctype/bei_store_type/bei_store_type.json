@@ -1,0 +1,111 @@
+{
+ "actions": [],
+ "creation": "2026-02-06 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "store",
+  "store_type",
+  "price_list_multiplier",
+  "column_break_1",
+  "royalty_rate",
+  "management_fee_rate",
+  "marketing_fee_rate"
+ ],
+ "fields": [
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Store",
+   "options": "Department",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "store_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Store Type",
+   "options": "JV\nManaged Franchise\nFull Franchise",
+   "reqd": 1
+  },
+  {
+   "description": "Markup percentage for deliveries and logistics (e.g., 8 for 8%)",
+   "fieldname": "price_list_multiplier",
+   "fieldtype": "Percent",
+   "label": "Delivery/Logistics Markup"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "7",
+   "description": "Royalty fee percentage (default: 7%)",
+   "fieldname": "royalty_rate",
+   "fieldtype": "Percent",
+   "label": "Royalty Rate"
+  },
+  {
+   "default": "2.5",
+   "description": "Management fee percentage (default: 2.5%)",
+   "fieldname": "management_fee_rate",
+   "fieldtype": "Percent",
+   "label": "Management Fee Rate"
+  },
+  {
+   "default": "5",
+   "description": "Marketing fee percentage (default: 5%)",
+   "fieldname": "marketing_fee_rate",
+   "fieldtype": "Percent",
+   "label": "Marketing Fee Rate"
+  }
+ ],
+ "modified": "2026-02-06 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Store Type",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
