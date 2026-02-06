@@ -98,6 +98,11 @@
    "role": "HR Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "permlevel": 0,
+   "read": 1,
+   "role": "Employee"
   }
  ],
  "sort_field": "modified",

@@ -22,7 +22,8 @@ def validate_image_upload(base64_data: str, max_size_mb: int = 5) -> bytes:
         frappe.ValidationError: If validation fails
     """
     import base64
-    import imghdr
+    import io
+    from PIL import Image
 
     if not base64_data or not isinstance(base64_data, str):
         frappe.throw(_("Invalid image data"))
@@ -40,10 +41,15 @@ def validate_image_upload(base64_data: str, max_size_mb: int = 5) -> bytes:
     if size_mb > max_size_mb:
         frappe.throw(_(f"Image too large ({size_mb:.1f}MB). Maximum {max_size_mb}MB allowed"))
 
-    # Validate image format using imghdr
-    image_type = imghdr.what(None, h=image_data)
-    if image_type not in ['jpeg', 'png', 'webp', 'gif']:
-        frappe.throw(_("Invalid image format. Only JPEG, PNG, WebP, GIF allowed"))
+    # Validate image format using Pillow (imghdr removed in Python 3.13)
+    try:
+        img = Image.open(io.BytesIO(image_data))
+        img.verify()
+        image_format = img.format.lower() if img.format else None
+        if image_format not in ('jpeg', 'png', 'webp', 'gif'):
+            frappe.throw(_("Invalid image format. Only JPEG, PNG, WebP, GIF allowed"))
+    except Exception:
+        frappe.throw(_("Invalid or corrupted image file"))
 
     return image_data
 
@@ -77,6 +83,14 @@ def checkout(
 
     if not employee:
         frappe.throw(_("No employee record found for current user"))
+
+    # Enforce selfie requirement
+    if not selfie_base64:
+        frappe.throw(_("Selfie is required for check-out"))
+
+    # Reject poor GPS signal
+    if float(accuracy) > 100:
+        frappe.throw(_("GPS accuracy too low ({0}m). Please move to an open area with clear sky view for better signal.".format(int(float(accuracy)))))
 
     # Check if employee already has active OB (with row-level lock to prevent race condition)
     BEIOfficialBusiness = DocType("BEI Official Business")
@@ -116,12 +130,8 @@ def checkout(
 
     # Save selfie
     if selfie_base64:
-        import io
-        from PIL import Image
-
         # Validate and decode image (security check + decode in one step)
         img_data = validate_image_upload(selfie_base64)
-        img = Image.open(io.BytesIO(img_data))
 
         # Save as file
         file_doc = frappe.get_doc({
@@ -183,6 +193,10 @@ def checkin(
     if ob_doc.status != "Out":
         frappe.throw(_("This OB is not in 'Out' status"))
 
+    # Reject poor GPS signal
+    if float(accuracy) > 100:
+        frappe.throw(_("GPS accuracy too low ({0}m). Please move to an open area with clear sky view for better signal.".format(int(float(accuracy)))))
+
     # Reverse geocode address
     aws_location = AWSLocationService()
     address = aws_location.reverse_geocode(float(latitude), float(longitude))
@@ -197,12 +211,8 @@ def checkin(
 
     # Save selfie
     if selfie_base64:
-        import io
-        from PIL import Image
-
         # Validate and decode image (security check + decode in one step)
         img_data = validate_image_upload(selfie_base64)
-        img = Image.open(io.BytesIO(img_data))
 
         file_doc = frappe.get_doc({
             "doctype": "File",

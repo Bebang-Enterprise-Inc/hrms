@@ -241,6 +241,7 @@ scheduler_events = {
 	"hourly": [
 		"hrms.hr.doctype.daily_work_summary_group.daily_work_summary_group.trigger_emails",
 		"hrms.api.pcf.check_threshold_and_auto_submit",
+		"hrms.tasks.auto_punch_out_stale_shifts",
 	],
 	"cron": {
 		# Weather collection 5x daily: 6AM, 10AM, 2PM, 6PM, 10PM
