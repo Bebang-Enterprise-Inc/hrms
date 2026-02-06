@@ -41,7 +41,7 @@ def _has_supervisor_role() -> bool:
     """Check whether the current user holds a supervisor role."""
     roles = frappe.get_roles()
     return bool(
-        set(roles) & {"Shift Supervisor", "Area Supervisor", "HR Manager", "System Manager"}
+        set(roles) & {"Store Supervisor", "Area Supervisor", "HR User", "HR Manager", "System Manager"}
     )
 
 
