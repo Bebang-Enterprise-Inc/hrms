@@ -172,7 +172,7 @@ class BEIStoreClosingReport(Document):
 			return
 
 		# Inventory variance check
-		if hasattr(self, 'inventory_variance_count') and self.inventory_variance_count > 0:
+		if self.get("inventory_variance_count") and self.inventory_variance_count > 0:
 			self.status = "Inventory Variance"
 			return
 

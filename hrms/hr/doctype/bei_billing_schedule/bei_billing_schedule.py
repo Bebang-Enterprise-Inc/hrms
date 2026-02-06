@@ -4,6 +4,8 @@
 import frappe
 from frappe.model.document import Document
 from frappe import _
+from frappe.utils import flt
+from markupsafe import escape as html_escape
 
 
 class BEIBillingSchedule(Document):
@@ -98,7 +100,7 @@ class BEIBillingSchedule(Document):
 	def calculate_line_items(self):
 		"""Update line item amounts."""
 		for item in self.line_items:
-			item.amount = (item.quantity or 0) * (item.unit_price or 0)
+			item.amount = flt(item.quantity or 0) * flt(item.unit_price or 0)
 
 	def calculate_totals(self):
 		"""Calculate subtotal, VAT, and total."""
@@ -130,10 +132,101 @@ class BEIBillingSchedule(Document):
 		self.total_amount = self.subtotal + self.vat_amount
 
 	def send_to_store(self):
-		"""Generate and send Statement of Account to store."""
+		"""Generate and send Statement of Account to store via email."""
+		if self.status not in ("Draft", "Sent"):
+			frappe.throw(_("Can only send billing statements with Draft or Sent status"))
+
+		# Build the billing breakdown HTML
+		rows = []
+		if self.royalty_fee:
+			rows.append(("Royalty Fee", self.royalty_fee))
+		if self.management_fee:
+			rows.append(("Management Fee", self.management_fee))
+		if self.marketing_fee:
+			rows.append(("Marketing Fee", self.marketing_fee))
+		if self.ecommerce_fee:
+			rows.append(("eCommerce Fee", self.ecommerce_fee))
+		if self.delivery_fee:
+			rows.append(("Delivery Fee", self.delivery_fee))
+		if self.logistics_fee:
+			rows.append(("Logistics Fee", self.logistics_fee))
+		if self.repairs_maintenance:
+			rows.append(("Repairs & Maintenance", self.repairs_maintenance))
+		if self.preventive_maintenance:
+			rows.append(("Preventive Maintenance", self.preventive_maintenance))
+
+		for item in self.line_items:
+			if item.amount:
+				rows.append((item.description, item.amount))
+
+		fee_rows_html = "".join(
+			f"<tr><td>{html_escape(str(desc))}</td><td style='text-align:right'>₱{flt(amt):,.2f}</td></tr>"
+			for desc, amt in rows
+		)
+
+		message = f"""
+		<h2>Statement of Account</h2>
+		<p><strong>Billing Period:</strong> {self.billing_period}</p>
+		<p><strong>Store:</strong> {self.store}</p>
+		<p><strong>Store Type:</strong> {self.store_type}</p>
+
+		<table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse; width:100%">
+			<thead>
+				<tr style="background:#f5f5f5">
+					<th style="text-align:left">Description</th>
+					<th style="text-align:right">Amount</th>
+				</tr>
+			</thead>
+			<tbody>
+				{fee_rows_html}
+			</tbody>
+			<tfoot>
+				<tr><td><strong>Subtotal</strong></td><td style="text-align:right"><strong>₱{self.subtotal:,.2f}</strong></td></tr>
+				<tr><td>VAT (on line items)</td><td style="text-align:right">₱{self.vat_amount:,.2f}</td></tr>
+				<tr style="background:#f5f5f5"><td><strong>Total Amount Due</strong></td><td style="text-align:right"><strong>₱{self.total_amount:,.2f}</strong></td></tr>
+			</tfoot>
+		</table>
+
+		<p style="margin-top:16px"><em>This is a system-generated statement from Bebang ERP.</em></p>
+		"""
+
+		# Get store manager email from Department
+		recipients = []
+		dept = frappe.db.get_value("Department", self.store, "department_email")
+		if dept:
+			recipients.append(dept)
+
+		# Also notify Accounts Manager role users
+		accounts_managers = frappe.get_all(
+			"Has Role",
+			filters={"role": "Accounts Manager", "parenttype": "User"},
+			fields=["parent"],
+		)
+		for user in accounts_managers:
+			if user.parent not in recipients and user.parent != "Administrator":
+				recipients.append(user.parent)
+
+		if recipients:
+			try:
+				frappe.sendmail(
+					recipients=recipients,
+					subject=_("Billing Statement: {0} - {1}").format(
+						self.store, self.billing_period
+					),
+					message=message,
+				)
+			except Exception:
+				frappe.log_error(
+					f"Failed to send billing statement email for {self.name}",
+					"Billing Statement Email Error",
+				)
+
 		self.status = "Sent"
 		self.sent_on = frappe.utils.now()
 		self.save()
 
-		# TODO: Generate PDF and send via email
-		frappe.msgprint(_("Billing statement sent to {0}").format(self.store))
+		return {
+			"success": True,
+			"message": _("Billing statement sent to {0}").format(self.store),
+			"recipients": recipients,
+		}

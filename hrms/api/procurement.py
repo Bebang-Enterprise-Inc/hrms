@@ -13,6 +13,19 @@ from frappe import _
 from frappe.utils import flt, getdate, nowdate, add_days, get_first_day, get_last_day
 
 
+# System fields that must never be set by API callers
+_BLOCKED_FIELDS = frozenset({
+    "doctype", "name", "owner", "creation", "modified", "modified_by",
+    "docstatus", "idx", "parent", "parenttype", "parentfield",
+    "_user_tags", "_comments", "_assign", "_liked_by",
+})
+
+
+def _sanitize_doc_data(data):
+    """Remove system/internal fields from user-supplied data before doc creation."""
+    return {k: v for k, v in data.items() if k not in _BLOCKED_FIELDS}
+
+
 # =============================================================================
 # SUPPLIER ENDPOINTS
 # =============================================================================
@@ -162,7 +175,7 @@ def create_supplier(data):
 
     supplier = frappe.get_doc({
         "doctype": "BEI Supplier",
-        **data
+        **_sanitize_doc_data(data)
     })
     supplier.insert()
 
@@ -181,7 +194,8 @@ def update_supplier(name, data):
 
     supplier = frappe.get_doc("BEI Supplier", name)
 
-    for key, value in data.items():
+    safe_data = _sanitize_doc_data(data)
+    for key, value in safe_data.items():
         if hasattr(supplier, key):
             setattr(supplier, key, value)
 
@@ -294,7 +308,7 @@ def create_purchase_requisition(data):
 
     pr = frappe.get_doc({
         "doctype": "BEI Purchase Requisition",
-        **data
+        **_sanitize_doc_data(data)
     })
     pr.insert()
 
@@ -457,7 +471,7 @@ def create_purchase_order(data):
 
     po = frappe.get_doc({
         "doctype": "BEI Purchase Order",
-        **data
+        **_sanitize_doc_data(data)
     })
     po.insert()
 
@@ -646,7 +660,7 @@ def create_goods_receipt(data):
 
     gr = frappe.get_doc({
         "doctype": "BEI Goods Receipt",
-        **data
+        **_sanitize_doc_data(data)
     })
     gr.insert()
 
@@ -821,7 +835,7 @@ def create_invoice(data):
 
     invoice = frappe.get_doc({
         "doctype": "BEI Invoice",
-        **data
+        **_sanitize_doc_data(data)
     })
     invoice.insert()
 
@@ -1001,7 +1015,7 @@ def create_payment_request(data):
 
     request = frappe.get_doc({
         "doctype": "BEI Payment Request",
-        **data
+        **_sanitize_doc_data(data)
     })
     request.insert()
 
@@ -1836,16 +1850,16 @@ def get_ap_aging_report(aging_buckets=None):
     invoices = frappe.db.sql("""
         SELECT
             name,
-            posting_date,
-            total_amount,
-            paid_amount,
+            invoice_date,
+            grand_total,
+            amount_paid,
             supplier,
             supplier_name,
             status
         FROM `tabBEI Invoice`
-        WHERE status IN ('Pending Payment', 'Partially Paid', 'Verified')
+        WHERE status IN ('Verified', 'Partially Paid')
         AND docstatus != 2
-        ORDER BY posting_date ASC
+        ORDER BY invoice_date ASC
     """, as_dict=True)
 
     # Initialize aging buckets
@@ -1863,13 +1877,13 @@ def get_ap_aging_report(aging_buckets=None):
 
     for inv in invoices:
         # Calculate outstanding
-        outstanding = flt(inv.total_amount, 2) - flt(inv.paid_amount, 2)
+        outstanding = flt(inv.grand_total, 2) - flt(inv.amount_paid, 2)
 
         if outstanding <= 0:
             continue
 
         # Calculate age in days
-        age_days = (today - getdate(inv.posting_date)).days
+        age_days = (today - getdate(inv.invoice_date)).days
 
         # Classify into bucket
         if age_days <= 30:
@@ -1891,7 +1905,7 @@ def get_ap_aging_report(aging_buckets=None):
         aging_summary[bucket]["invoices"].append({
             "invoice": inv.name,
             "supplier": inv.supplier_name,
-            "posting_date": str(inv.posting_date),
+            "invoice_date": str(inv.invoice_date),
             "age_days": age_days,
             "outstanding": flt(outstanding, 2)
         })
@@ -1901,9 +1915,10 @@ def get_ap_aging_report(aging_buckets=None):
         invoice_details.append({
             "invoice": inv.name,
             "supplier": inv.supplier_name,
-            "posting_date": str(inv.posting_date),
-            "total_amount": flt(inv.total_amount, 2),
-            "paid_amount": flt(inv.paid_amount, 2),
+            "supplier_id": inv.supplier,
+            "invoice_date": str(inv.invoice_date),
+            "grand_total": flt(inv.grand_total, 2),
+            "amount_paid": flt(inv.amount_paid, 2),
             "outstanding": flt(outstanding, 2),
             "age_days": age_days,
             "bucket": bucket,
@@ -1936,10 +1951,10 @@ def get_supplier_aging(supplier):
     """
     aging = get_ap_aging_report()
 
-    # Filter invoice details for this supplier
+    # Filter invoice details for this supplier (match by ID or display name)
     supplier_invoices = [
         inv for inv in aging["invoice_details"]
-        if inv["supplier"] == supplier or frappe.db.get_value("BEI Invoice", inv["invoice"], "supplier") == supplier
+        if inv.get("supplier_id") == supplier or inv["supplier"] == supplier
     ]
 
     supplier_total = sum(inv["outstanding"] for inv in supplier_invoices)
@@ -1966,4 +1981,84 @@ def get_supplier_aging(supplier):
         "invoice_count": len(supplier_invoices),
         "invoices": supplier_invoices,
         "as_of_date": aging["as_of_date"]
+    }
+
+
+@frappe.whitelist()
+def send_billing_statement(name):
+    """
+    Send billing statement to store via email.
+
+    Generates an HTML Statement of Account and emails it to the store's
+    department email and Accounts Manager users. Updates billing status
+    to 'Sent' with timestamp.
+
+    Args:
+        name: BEI Billing Schedule document name
+
+    Returns:
+        Dict with success status, message, and recipient list
+    """
+    billing = frappe.get_doc("BEI Billing Schedule", name)
+    return billing.send_to_store()
+
+
+@frappe.whitelist()
+def get_billing_list(store=None, status=None, billing_period=None, page=1, page_size=20):
+    """
+    Get paginated list of billing schedules with optional filters.
+
+    Args:
+        store: Filter by store (Department link)
+        status: Filter by status (Draft/Sent/Paid/Disputed/Cancelled)
+        billing_period: Filter by billing period (YYYY-MM)
+        page: Page number (default 1)
+        page_size: Results per page (default 20, max 100)
+
+    Returns:
+        Dict with billing list and pagination info
+    """
+    page = max(1, int(page or 1))
+    page_size = min(100, max(1, int(page_size or 20)))
+    offset = (page - 1) * page_size
+
+    conditions = []
+    values = {}
+
+    if store:
+        conditions.append("store = %(store)s")
+        values["store"] = store
+
+    if status:
+        conditions.append("status = %(status)s")
+        values["status"] = status
+
+    if billing_period:
+        conditions.append("billing_period = %(billing_period)s")
+        values["billing_period"] = billing_period
+
+    where_clause = " AND ".join(conditions) if conditions else "1=1"
+
+    total = frappe.db.sql(
+        f"SELECT COUNT(*) FROM `tabBEI Billing Schedule` WHERE {where_clause}",
+        values
+    )[0][0]
+
+    billings = frappe.db.sql(f"""
+        SELECT
+            name, billing_period, store, store_type, status,
+            gross_sales, net_sales, total_amount,
+            generated_on, sent_on, paid_on
+        FROM `tabBEI Billing Schedule`
+        WHERE {where_clause}
+        ORDER BY billing_period DESC, store ASC
+        LIMIT %(page_size)s OFFSET %(offset)s
+    """, {**values, "page_size": page_size, "offset": offset}, as_dict=True)
+
+    return {
+        "data": billings,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": -(-total // page_size) if total else 0,
     }
