@@ -109,6 +109,16 @@ class BEIPaymentRequest(Document):
             # For now, leave for manual assignment
             pass
 
+    def _check_role(self, allowed_roles):
+        """Verify current user has one of the allowed roles."""
+        user_roles = frappe.get_roles(frappe.session.user)
+        if not any(role in user_roles for role in allowed_roles):
+            frappe.throw(
+                _("You do not have permission to perform this action. "
+                  "Required role: {0}").format(" or ".join(allowed_roles)),
+                frappe.PermissionError,
+            )
+
     @frappe.whitelist()
     def submit_for_approval(self):
         """Submit payment request for approval workflow."""
@@ -138,6 +148,7 @@ class BEIPaymentRequest(Document):
     @frappe.whitelist()
     def approve_review(self, comment=None):
         """Level 1: Reviewer approves."""
+        self._check_role(["Accounts User", "Accounts Manager", "System Manager"])
         if self.status != "Pending Review":
             frappe.throw(_("Request is not pending review"))
 
@@ -157,6 +168,7 @@ class BEIPaymentRequest(Document):
     @frappe.whitelist()
     def approve_budget(self, comment=None):
         """Level 2: Budget approver approves."""
+        self._check_role(["Accounts Manager", "System Manager"])
         if self.status != "Pending Budget Approval":
             frappe.throw(_("Request is not pending budget approval"))
 
@@ -176,6 +188,7 @@ class BEIPaymentRequest(Document):
     @frappe.whitelist()
     def approve_cfo(self, comment=None):
         """Level 3: CFO (Butch) approves."""
+        self._check_role(["Accounts Manager", "System Manager"])
         if self.status != "Pending CFO Approval":
             frappe.throw(_("Request is not pending CFO approval"))
 
@@ -203,6 +216,7 @@ class BEIPaymentRequest(Document):
     @frappe.whitelist()
     def approve_ceo(self, comment=None):
         """Level 4: CEO approves (only for new suppliers or >1M)."""
+        self._check_role(["Accounts Manager", "System Manager"])
         if self.status != "Pending CEO Approval":
             frappe.throw(_("Request is not pending CEO approval"))
 
@@ -422,6 +436,7 @@ class BEIPaymentRequest(Document):
     @frappe.whitelist()
     def reject(self, level, reason):
         """Reject payment request at any level."""
+        self._check_role(["Accounts User", "Accounts Manager", "System Manager"])
         valid_levels = {
             "review": ("Pending Review", "reviewer"),
             "budget": ("Pending Budget Approval", "budget"),
@@ -475,6 +490,7 @@ class BEIPaymentRequest(Document):
         3. Updates status to Paid
         4. Updates BEI Invoice payment tracking
         """
+        self._check_role(["Accounts Manager", "System Manager"])
         if self.status != "Approved":
             frappe.throw(_("Only approved requests can be marked as paid"))
 

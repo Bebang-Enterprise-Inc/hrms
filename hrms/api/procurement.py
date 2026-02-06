@@ -13,6 +13,19 @@ from frappe import _
 from frappe.utils import flt, getdate, nowdate, add_days, get_first_day, get_last_day
 
 
+# System fields that must never be set by API callers
+_BLOCKED_FIELDS = frozenset({
+    "doctype", "name", "owner", "creation", "modified", "modified_by",
+    "docstatus", "idx", "parent", "parenttype", "parentfield",
+    "_user_tags", "_comments", "_assign", "_liked_by",
+})
+
+
+def _sanitize_doc_data(data):
+    """Remove system/internal fields from user-supplied data before doc creation."""
+    return {k: v for k, v in data.items() if k not in _BLOCKED_FIELDS}
+
+
 # =============================================================================
 # SUPPLIER ENDPOINTS
 # =============================================================================
@@ -162,7 +175,7 @@ def create_supplier(data):
 
     supplier = frappe.get_doc({
         "doctype": "BEI Supplier",
-        **data
+        **_sanitize_doc_data(data)
     })
     supplier.insert()
 
@@ -181,7 +194,8 @@ def update_supplier(name, data):
 
     supplier = frappe.get_doc("BEI Supplier", name)
 
-    for key, value in data.items():
+    safe_data = _sanitize_doc_data(data)
+    for key, value in safe_data.items():
         if hasattr(supplier, key):
             setattr(supplier, key, value)
 
@@ -294,7 +308,7 @@ def create_purchase_requisition(data):
 
     pr = frappe.get_doc({
         "doctype": "BEI Purchase Requisition",
-        **data
+        **_sanitize_doc_data(data)
     })
     pr.insert()
 
@@ -457,7 +471,7 @@ def create_purchase_order(data):
 
     po = frappe.get_doc({
         "doctype": "BEI Purchase Order",
-        **data
+        **_sanitize_doc_data(data)
     })
     po.insert()
 
@@ -646,7 +660,7 @@ def create_goods_receipt(data):
 
     gr = frappe.get_doc({
         "doctype": "BEI Goods Receipt",
-        **data
+        **_sanitize_doc_data(data)
     })
     gr.insert()
 
@@ -821,7 +835,7 @@ def create_invoice(data):
 
     invoice = frappe.get_doc({
         "doctype": "BEI Invoice",
-        **data
+        **_sanitize_doc_data(data)
     })
     invoice.insert()
 
@@ -1001,7 +1015,7 @@ def create_payment_request(data):
 
     request = frappe.get_doc({
         "doctype": "BEI Payment Request",
-        **data
+        **_sanitize_doc_data(data)
     })
     request.insert()
 
