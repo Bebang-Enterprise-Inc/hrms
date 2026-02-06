@@ -277,8 +277,8 @@ jobs:
               "BACKEND_CONTAINER=$(docker ps --filter name=frappe_backend --format \"{{.Names}}\" | head -1)",
               "if [ -z \"$BACKEND_CONTAINER\" ]; then echo \"❌ Backend container not found\"; exit 1; fi",
               "echo \"Using container: $BACKEND_CONTAINER\"",
-              "docker exec -T $BACKEND_CONTAINER bench --site ${{ env.FRAPPE_SITE }} migrate",
-              "docker exec -T $BACKEND_CONTAINER bench --site ${{ env.FRAPPE_SITE }} clear-cache",
+              "docker exec $BACKEND_CONTAINER bench --site ${{ env.FRAPPE_SITE }} migrate",
+              "docker exec $BACKEND_CONTAINER bench --site ${{ env.FRAPPE_SITE }} clear-cache",
               "echo \"✅ Migration complete!\""
             ]' \
             --output text \
