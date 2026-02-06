@@ -1915,6 +1915,7 @@ def get_ap_aging_report(aging_buckets=None):
         invoice_details.append({
             "invoice": inv.name,
             "supplier": inv.supplier_name,
+            "supplier_id": inv.supplier,
             "invoice_date": str(inv.invoice_date),
             "grand_total": flt(inv.grand_total, 2),
             "amount_paid": flt(inv.amount_paid, 2),
@@ -1950,10 +1951,10 @@ def get_supplier_aging(supplier):
     """
     aging = get_ap_aging_report()
 
-    # Filter invoice details for this supplier
+    # Filter invoice details for this supplier (match by ID or display name)
     supplier_invoices = [
         inv for inv in aging["invoice_details"]
-        if inv["supplier"] == supplier or frappe.db.get_value("BEI Invoice", inv["invoice"], "supplier") == supplier
+        if inv.get("supplier_id") == supplier or inv["supplier"] == supplier
     ]
 
     supplier_total = sum(inv["outstanding"] for inv in supplier_invoices)
@@ -2003,18 +2004,24 @@ def send_billing_statement(name):
 
 
 @frappe.whitelist()
-def get_billing_list(store=None, status=None, billing_period=None):
+def get_billing_list(store=None, status=None, billing_period=None, page=1, page_size=20):
     """
-    Get list of billing schedules with optional filters.
+    Get paginated list of billing schedules with optional filters.
 
     Args:
         store: Filter by store (Department link)
         status: Filter by status (Draft/Sent/Paid/Disputed/Cancelled)
         billing_period: Filter by billing period (YYYY-MM)
+        page: Page number (default 1)
+        page_size: Results per page (default 20, max 100)
 
     Returns:
-        List of billing schedule summaries
+        Dict with billing list and pagination info
     """
+    page = max(1, int(page or 1))
+    page_size = min(100, max(1, int(page_size or 20)))
+    offset = (page - 1) * page_size
+
     conditions = []
     values = {}
 
@@ -2032,6 +2039,11 @@ def get_billing_list(store=None, status=None, billing_period=None):
 
     where_clause = " AND ".join(conditions) if conditions else "1=1"
 
+    total = frappe.db.sql(
+        f"SELECT COUNT(*) FROM `tabBEI Billing Schedule` WHERE {where_clause}",
+        values
+    )[0][0]
+
     billings = frappe.db.sql(f"""
         SELECT
             name, billing_period, store, store_type, status,
@@ -2040,6 +2052,13 @@ def get_billing_list(store=None, status=None, billing_period=None):
         FROM `tabBEI Billing Schedule`
         WHERE {where_clause}
         ORDER BY billing_period DESC, store ASC
-    """, values, as_dict=True)
+        LIMIT %(page_size)s OFFSET %(offset)s
+    """, {**values, "page_size": page_size, "offset": offset}, as_dict=True)
 
-    return billings
+    return {
+        "data": billings,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": -(-total // page_size) if total else 0,
+    }

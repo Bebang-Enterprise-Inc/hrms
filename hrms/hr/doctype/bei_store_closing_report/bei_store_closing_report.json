@@ -142,7 +142,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "\nSubmitted\nReviewed\nVariance Flagged\nVerified\nDiscrepancy\nPOS Down - Pending Review"
+   "options": "\nSubmitted\nReviewed\nVariance Flagged\nInventory Variance\nPending Maintenance Verification\nVerified\nDiscrepancy\nPOS Down - Pending Review"
   },
   {
    "default": "cash",
