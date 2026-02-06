@@ -1836,16 +1836,16 @@ def get_ap_aging_report(aging_buckets=None):
     invoices = frappe.db.sql("""
         SELECT
             name,
-            posting_date,
-            total_amount,
-            paid_amount,
+            invoice_date,
+            grand_total,
+            amount_paid,
             supplier,
             supplier_name,
             status
         FROM `tabBEI Invoice`
-        WHERE status IN ('Pending Payment', 'Partially Paid', 'Verified')
+        WHERE status IN ('Verified', 'Partially Paid')
         AND docstatus != 2
-        ORDER BY posting_date ASC
+        ORDER BY invoice_date ASC
     """, as_dict=True)
 
     # Initialize aging buckets
@@ -1863,13 +1863,13 @@ def get_ap_aging_report(aging_buckets=None):
 
     for inv in invoices:
         # Calculate outstanding
-        outstanding = flt(inv.total_amount, 2) - flt(inv.paid_amount, 2)
+        outstanding = flt(inv.grand_total, 2) - flt(inv.amount_paid, 2)
 
         if outstanding <= 0:
             continue
 
         # Calculate age in days
-        age_days = (today - getdate(inv.posting_date)).days
+        age_days = (today - getdate(inv.invoice_date)).days
 
         # Classify into bucket
         if age_days <= 30:
@@ -1891,7 +1891,7 @@ def get_ap_aging_report(aging_buckets=None):
         aging_summary[bucket]["invoices"].append({
             "invoice": inv.name,
             "supplier": inv.supplier_name,
-            "posting_date": str(inv.posting_date),
+            "invoice_date": str(inv.invoice_date),
             "age_days": age_days,
             "outstanding": flt(outstanding, 2)
         })
@@ -1901,9 +1901,9 @@ def get_ap_aging_report(aging_buckets=None):
         invoice_details.append({
             "invoice": inv.name,
             "supplier": inv.supplier_name,
-            "posting_date": str(inv.posting_date),
-            "total_amount": flt(inv.total_amount, 2),
-            "paid_amount": flt(inv.paid_amount, 2),
+            "invoice_date": str(inv.invoice_date),
+            "grand_total": flt(inv.grand_total, 2),
+            "amount_paid": flt(inv.amount_paid, 2),
             "outstanding": flt(outstanding, 2),
             "age_days": age_days,
             "bucket": bucket,
@@ -1967,3 +1967,65 @@ def get_supplier_aging(supplier):
         "invoices": supplier_invoices,
         "as_of_date": aging["as_of_date"]
     }
+
+
+@frappe.whitelist()
+def send_billing_statement(name):
+    """
+    Send billing statement to store via email.
+
+    Generates an HTML Statement of Account and emails it to the store's
+    department email and Accounts Manager users. Updates billing status
+    to 'Sent' with timestamp.
+
+    Args:
+        name: BEI Billing Schedule document name
+
+    Returns:
+        Dict with success status, message, and recipient list
+    """
+    billing = frappe.get_doc("BEI Billing Schedule", name)
+    return billing.send_to_store()
+
+
+@frappe.whitelist()
+def get_billing_list(store=None, status=None, billing_period=None):
+    """
+    Get list of billing schedules with optional filters.
+
+    Args:
+        store: Filter by store (Department link)
+        status: Filter by status (Draft/Sent/Paid/Disputed/Cancelled)
+        billing_period: Filter by billing period (YYYY-MM)
+
+    Returns:
+        List of billing schedule summaries
+    """
+    conditions = []
+    values = {}
+
+    if store:
+        conditions.append("store = %(store)s")
+        values["store"] = store
+
+    if status:
+        conditions.append("status = %(status)s")
+        values["status"] = status
+
+    if billing_period:
+        conditions.append("billing_period = %(billing_period)s")
+        values["billing_period"] = billing_period
+
+    where_clause = " AND ".join(conditions) if conditions else "1=1"
+
+    billings = frappe.db.sql(f"""
+        SELECT
+            name, billing_period, store, store_type, status,
+            gross_sales, net_sales, total_amount,
+            generated_on, sent_on, paid_on
+        FROM `tabBEI Billing Schedule`
+        WHERE {where_clause}
+        ORDER BY billing_period DESC, store ASC
+    """, values, as_dict=True)
+
+    return billings
