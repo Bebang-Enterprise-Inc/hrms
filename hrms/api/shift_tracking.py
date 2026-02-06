@@ -470,8 +470,6 @@ def bulk_verify_punches(shift_ids, verification_status: str, notes: str = None):
         shift.save(ignore_permissions=True)
         updated_count += 1
 
-    frappe.db.commit()
-
     return {
         "status": "success",
         "updated_count": updated_count,
