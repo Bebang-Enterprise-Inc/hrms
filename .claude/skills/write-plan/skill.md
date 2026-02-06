@@ -254,6 +254,11 @@ Create comprehensive audit report at scratchpad/<feature-name>_plan_audit.md wit
    /feature-branch <feature-name>
    ```
 
+3. **Understand deployment polling** (CRITICAL for autonomous execution):
+   - Skills will NEVER stop at "deployment gates"
+   - Deployments are polled automatically using `scripts/wait_for_deployment.py`
+   - If timeout occurs, verification task is created but work continues
+
 ### During Implementation (Every Task)
 
 **For Python/API changes:**
@@ -273,36 +278,77 @@ Create comprehensive audit report at scratchpad/<feature-name>_plan_audit.md wit
 3. ✅ Follow commit message conventions (feat/fix/refactor)
 4. ✅ Include Co-Authored-By tag
 
+**For Deployments (CRITICAL - Autonomous Execution):**
+
+Deployments are async operations that historically caused work to stop for hours. The solution: **polling**.
+
+**When backend changes require Frappe migration:**
+```python
+# 1. Commit changes that modify DocType JSON
+# 2. Trigger migration via GitHub Actions
+# 3. Poll for completion (DON'T STOP!)
+
+from scripts.wait_for_deployment import wait_for_frappe_migration
+import os
+
+FRAPPE_API_KEY = os.popen('doppler secrets get FRAPPE_API_KEY --project bei-erp --config dev --plain').read().strip()
+FRAPPE_API_SECRET = os.popen('doppler secrets get FRAPPE_API_SECRET --project bei-erp --config dev --plain').read().strip()
+
+success = wait_for_frappe_migration(
+    doctype="BEI Payment Request",
+    field="new_field_name",
+    api_key=FRAPPE_API_KEY,
+    api_secret=FRAPPE_API_SECRET,
+    max_wait_seconds=300,  # 5 minutes
+    poll_interval=30        # Check every 30s
+)
+
+if not success:
+    # Timeout - create verification task
+    TaskCreate({
+        "subject": "[VERIFY] Migration timeout - manual check needed",
+        "description": "Migration did not complete within 5 minutes. Check GitHub Actions logs."
+    })
+    # Continue with other tests anyway
+```
+
+**When frontend changes deploy to Vercel:**
+```python
+# After git push to main (auto-triggers Vercel build)
+
+from scripts.wait_for_deployment import wait_for_vercel_deployment
+
+success = wait_for_vercel_deployment(
+    url="https://my.bebang.ph/dashboard/feature",
+    max_wait_seconds=120,  # 2 minutes
+    poll_interval=15        # Check every 15s
+)
+
+if not success:
+    # Timeout - create verification task
+    TaskCreate({
+        "subject": "[VERIFY] Vercel deployment timeout",
+        "description": "Build did not go live within 2 minutes. Check Vercel dashboard."
+    })
+```
+
+**Deployment Timeouts:**
+| Type | Max Wait | Poll Interval | What Happens on Timeout |
+|------|----------|---------------|-------------------------|
+| Frappe Migration | 300s (5 min) | 30s | Create [VERIFY] task, continue |
+| Vercel Build | 120s (2 min) | 15s | Create [VERIFY] task, continue |
+| Docker Build | 600s (10 min) | 60s | Create [VERIFY] task, continue |
+
+**MANDATORY RULES:**
+1. ✅ **ALWAYS poll** - Never stop at "deployment gate"
+2. ✅ **Continue on timeout** - Create verification task but keep going
+3. ❌ **NEVER output "⏸️ PAUSED PENDING DEPLOYMENT"**
+4. ❌ **NEVER wait for user to say "continue"**
+
 **When Issues Found:**
 1. ✅ **Create subtasks immediately** with `/tasks add "Fix [issue]"`
 2. ✅ **Don't stop to ask** - operate autonomously
 3. ✅ Fix issues inline, mark subtasks complete
-
-**When Deployments Required:**
-1. ✅ **NEVER stop at "deployment gate"** - use polling instead
-2. ✅ **Use `wait_for_deployment.py`** to poll for completion:
-   ```python
-   from scripts.wait_for_deployment import wait_for_frappe_migration, wait_for_vercel_deployment
-
-   # After Frappe migration triggered
-   success = wait_for_frappe_migration(
-       doctype="BEI Payment Request",
-       field="new_field",
-       api_key=FRAPPE_API_KEY,
-       api_secret=FRAPPE_API_SECRET,
-       max_wait_seconds=300,  # 5 minutes
-       poll_interval=30
-   )
-
-   # After Vercel deployment triggered
-   success = wait_for_vercel_deployment(
-       url="https://my.bebang.ph/dashboard/feature",
-       max_wait_seconds=120,  # 2 minutes
-       poll_interval=15
-   )
-   ```
-3. ✅ **If timeout:** Create verification task but continue with other work
-4. ❌ **NEVER output "⏸️ PAUSED PENDING DEPLOYMENT"** - keep working!
 
 ### Phase Completion (After All Tasks Done)
 
@@ -325,11 +371,22 @@ Create comprehensive audit report at scratchpad/<feature-name>_plan_audit.md wit
 
 ### Autonomous Operation Rules
 
+**Core Principles:**
+- ✅ **Never stop at deployment gates** - always poll until complete
 - ✅ **Fix issues without stopping** - create subtasks for unexpected work
 - ✅ **Use existing patterns** - don't reinvent (see audit findings)
 - ✅ **Test before commit** - use `/local-frappe` for all Python changes
 - ✅ **Deploy via PR** - never push to production directly
 - ❌ **Don't duplicate** - extend existing features (per audit report)
+
+**Forbidden Patterns:**
+- ❌ "⏸️ PAUSED PENDING DEPLOYMENT" (use polling!)
+- ❌ "I'll stop here and let you know..."
+- ❌ "Would you like me to continue?"
+- ❌ Waiting for user to say "continue"
+
+**Deployment Polling is Mandatory:**
+Every plan MUST use `scripts/wait_for_deployment.py` for all async operations. This is not optional - it's what makes autonomous execution work.
 
 ### Quick Reference Commands
 
