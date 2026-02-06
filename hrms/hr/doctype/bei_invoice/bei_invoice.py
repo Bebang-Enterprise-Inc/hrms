@@ -33,9 +33,9 @@ class BEIInvoice(Document):
         self.balance_due = flt(self.grand_total, 2) - flt(self.amount_paid, 2)
 
         # Update payment status
-        if self.amount_paid >= self.grand_total:
+        if flt(self.amount_paid, 2) >= flt(self.grand_total, 2):
             self.payment_status = "Paid"
-        elif self.amount_paid > 0:
+        elif flt(self.amount_paid, 2) > 0:
             self.payment_status = "Partially Paid"
         else:
             self.payment_status = "Unpaid"
@@ -43,12 +43,14 @@ class BEIInvoice(Document):
     def load_reference_amounts(self):
         """Load PO and GR amounts for 3-way match."""
         if self.purchase_order:
-            po = frappe.get_doc("BEI Purchase Order", self.purchase_order)
-            self.po_amount = po.grand_total
+            self.po_amount = flt(frappe.db.get_value(
+                "BEI Purchase Order", self.purchase_order, "grand_total"
+            ))
 
         if self.goods_receipt:
-            gr = frappe.get_doc("BEI Goods Receipt", self.goods_receipt)
-            self.gr_amount = gr.total_amount
+            self.gr_amount = flt(frappe.db.get_value(
+                "BEI Goods Receipt", self.goods_receipt, "total_amount"
+            ))
 
     def perform_three_way_match(self):
         """Perform 3-way match between PO, GR, and Invoice."""

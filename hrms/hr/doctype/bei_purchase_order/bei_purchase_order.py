@@ -29,7 +29,7 @@ class BEIPurchaseOrder(Document):
 
         for item in self.items:
             item_subtotal = flt(item.qty, 2) * flt(item.unit_cost, 2)
-            item_vat = item_subtotal * flt(item.vat_rate or 12, 2) / 100
+            item_vat = item_subtotal * flt(item.vat_rate if item.vat_rate is not None else 12, 2) / 100
 
             item.vat_amount = item_vat
             item.amount = item_subtotal + item_vat

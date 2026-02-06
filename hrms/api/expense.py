@@ -262,7 +262,7 @@ def calculate_match_score(expense):
             ocr_dt = datetime.strptime(str(expense.internal_ocr_date), "%Y-%m-%d")
             days_diff = abs((manual_dt - ocr_dt).days)
             scores["date"] = 100 if days_diff == 0 else (90 if days_diff <= 1 else 50)
-        except:
+        except (ValueError, TypeError):
             scores["date"] = 50
     else:
         scores["date"] = 50

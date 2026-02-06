@@ -44,8 +44,8 @@ class BEIPaymentRequest(Document):
 
         # CEO required for new suppliers (first PO within 6 months)
         if self.supplier:
-            supplier = frappe.get_doc("BEI Supplier", self.supplier)
-            if supplier.is_new_supplier:
+            is_new = frappe.db.get_value("BEI Supplier", self.supplier, "is_new_supplier")
+            if is_new:
                 self.ceo_required = 1
                 return
 
@@ -54,10 +54,15 @@ class BEIPaymentRequest(Document):
     def load_supplier_bank_info(self):
         """Load supplier bank information for payment."""
         if self.supplier:
-            supplier = frappe.get_doc("BEI Supplier", self.supplier)
-            self.supplier_bank_name = supplier.bank_name
-            self.supplier_bank_account = supplier.bank_account_number
-            self.supplier_account_name = supplier.bank_account_name
+            bank_info = frappe.db.get_value(
+                "BEI Supplier", self.supplier,
+                ["bank_name", "bank_account_number", "bank_account_name"],
+                as_dict=True
+            )
+            if bank_info:
+                self.supplier_bank_name = bank_info.bank_name
+                self.supplier_bank_account = bank_info.bank_account_number
+                self.supplier_account_name = bank_info.bank_account_name
 
     def auto_assign_gl_account(self):
         """
@@ -253,7 +258,7 @@ class BEIPaymentRequest(Document):
 
         Returns: Frappe Payment Entry name or None
         """
-        if hasattr(self, 'frappe_payment_entry') and self.frappe_payment_entry:
+        if self.get("frappe_payment_entry"):
             frappe.msgprint(
                 _("Already linked to Frappe Payment Entry: {0}").format(
                     self.frappe_payment_entry
