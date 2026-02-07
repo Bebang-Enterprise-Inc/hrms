@@ -430,8 +430,8 @@ def get_purchase_order(name):
 def get_purchase_order_items(name):
     """Get items for a specific PO."""
     return frappe.db.sql("""
-        SELECT name, item_code, item_name, description, qty, rate, amount, uom,
-               received_qty, unit_cost
+        SELECT name, item_code, item_name, description, qty, unit_cost, unit_cost as rate, amount, uom,
+               received_qty
         FROM `tabBEI PO Item`
         WHERE parent = %s
         ORDER BY idx
