@@ -13,7 +13,7 @@ import json
 
 
 @frappe.whitelist()
-def submit_cycle_count(store, items):
+def submit_cycle_count(store, items, count_date=None):
     """Submit inventory cycle count."""
     if not store:
         frappe.throw(_("Store is required"))
@@ -21,9 +21,15 @@ def submit_cycle_count(store, items):
     if isinstance(items, str):
         items = json.loads(items)
 
+    # Validate no negative quantities
+    for item in items:
+        if flt(item.get("counted_qty", 0)) < 0:
+            frappe.throw(_("Counted quantity cannot be negative for item {0}").format(
+                item.get("item_code", "unknown")))
+
     doc = frappe.new_doc("BEI Cycle Count")
     doc.store = store
-    doc.count_date = nowdate()
+    doc.count_date = count_date or nowdate()
     doc.counted_by = frappe.session.user
 
     total_variance = 0
