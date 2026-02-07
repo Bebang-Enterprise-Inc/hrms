@@ -3056,10 +3056,11 @@ def update_bom(bom_name, materials=None, quantity=None, remarks=None):
     if old_bom.docstatus != 1:
         return {"success": False, "error": "Can only amend submitted BOMs"}
 
-    # Cancel old BOM
-    old_bom.is_active = 0
-    old_bom.is_default = 0
-    old_bom.save()
+    # Deactivate old BOM (use db.set_value since doc is submitted)
+    frappe.db.set_value("BOM", bom_name, {
+        "is_active": 0,
+        "is_default": 0,
+    })
 
     # Create new BOM
     new_bom = frappe.new_doc("BOM")
