@@ -495,8 +495,11 @@ def submit_closing_report(store, report_time, checklist_items, pos_total_sales,
     if isinstance(checklist_items, str):
         checklist_items = json.loads(checklist_items)
 
+    # Resolve branch name to warehouse name
+    warehouse = resolve_warehouse(store)
+
     doc = frappe.new_doc("BEI Store Closing Report")
-    doc.store = store
+    doc.store = warehouse
     doc.report_date = nowdate()
     doc.report_time = report_time
     doc.submitted_by = frappe.session.user
@@ -1030,14 +1033,14 @@ def get_or_create_closing_report(store):
     doc.store = store
     doc.report_date = today
     doc.submitted_by = frappe.session.user
-    doc.stage_completed = "Cash"
+    doc.stage_completed = "cash"
     doc.insert()
 
     return {
         "success": True,
         "name": doc.name,
         "is_new": True,
-        "stage_completed": "Cash",
+        "stage_completed": "cash",
         "status": "Draft",
         "data": doc.as_dict()
     }
@@ -1068,7 +1071,7 @@ def submit_closing_stage1_cash(report_name, petty_cash_fund=0, delivery_fund=0,
         doc.pos_down_transaction_count = int(pos_down_transaction_count or 0)
         doc.pos_down_notes = pos_down_notes
 
-    doc.stage_completed = "Checklist"
+    doc.stage_completed = "checklist"
     doc.save()
 
     return {
@@ -1132,7 +1135,7 @@ def submit_closing_stage2_checklist(report_name, inventory_items, checklist_item
     doc.production_signoff = 1 if production_signoff else 0
     doc.supervisor_signoff = 1 if supervisor_signoff else 0
 
-    doc.stage_completed = "Photos"
+    doc.stage_completed = "photos"
     doc.save()
 
     return {
@@ -1197,7 +1200,7 @@ def submit_closing_stage3_photos(report_name, x_reading_opening_photo, x_reading
 
     doc.notes = notes
     doc.report_time = now_datetime().strftime("%H:%M:%S")
-    doc.stage_completed = "Complete"
+    doc.stage_completed = "complete"
     doc.save()
 
     return {
@@ -1344,7 +1347,7 @@ def submit_maintenance_request(store, priority, description,
         issue_category: Category (Equipment, Plumbing, etc.) - backend param name
         category: Category - frontend param name (alias for issue_category)
         equipment_area: Specific equipment/area affected (optional)
-        impact_on_operations: Can Operate, Partial Impact, Cannot Operate (optional)
+        impact_on_operations: Can Operate, Limited Operations, Cannot Operate (optional)
         title: Issue title (optional, prepended to description)
         before_photos: Single photo (deprecated, for backward compatibility)
         photos: JSON array of photo objects [{photo: url, caption: text}, ...]
@@ -1374,7 +1377,10 @@ def submit_maintenance_request(store, priority, description,
     doc.equipment_area = equipment_area or "Other"
     doc.priority = priority
     doc.description = full_description
-    doc.impact_on_operations = impact_on_operations or "Can Operate"
+    # Normalize impact_on_operations (frontend may send "Partial Impact" for "Limited Operations")
+    impact_map = {"Partial Impact": "Limited Operations"}
+    normalized_impact = impact_map.get(impact_on_operations, impact_on_operations) or "Can Operate"
+    doc.impact_on_operations = normalized_impact
     doc.reported_by = frappe.session.user
     doc.status = "Open"
 
