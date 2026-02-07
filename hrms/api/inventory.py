@@ -63,6 +63,7 @@ def submit_cycle_count(store, items, count_date=None):
 @frappe.whitelist()
 def get_cycle_counts(store=None, date_from=None, date_to=None, status=None, limit=20):
     """Get cycle count history."""
+    limit = min(int(limit or 20), 500)
     filters = {}
     if store:
         filters["store"] = store
@@ -90,6 +91,10 @@ def get_cycle_counts(store=None, date_from=None, date_to=None, status=None, limi
 @frappe.whitelist()
 def reject_cycle_count(count_name, rejection_reason):
     """Reject a submitted cycle count with a reason."""
+    allowed_roles = ["Area Supervisor", "Store Supervisor", "System Manager"]
+    if not any(r in frappe.get_roles(frappe.session.user) for r in allowed_roles):
+        frappe.throw(_("Not authorized to reject cycle counts"), frappe.PermissionError)
+
     if not rejection_reason:
         frappe.throw(_("Rejection reason is required"))
 
@@ -190,6 +195,7 @@ def report_variance(store, item_code, system_qty, actual_qty, variance_type, exp
 @frappe.whitelist()
 def get_variances(store=None, status=None, limit=20):
     """Get inventory variances."""
+    limit = min(int(limit or 20), 500)
     filters = {}
     if store:
         filters["store"] = store
@@ -235,6 +241,10 @@ def request_shelf_extension(store, item_code, original_expiry, requested_expiry,
 @frappe.whitelist()
 def approve_shelf_extension(extension_name, approved_expiry=None, rejection_reason=None, approve=True):
     """Approve or reject shelf life extension."""
+    allowed_roles = ["Area Supervisor", "Store Supervisor", "System Manager"]
+    if not any(r in frappe.get_roles(frappe.session.user) for r in allowed_roles):
+        frappe.throw(_("Not authorized to approve shelf life extensions"), frappe.PermissionError)
+
     doc = frappe.get_doc("BEI Shelf Life Extension", extension_name)
 
     if approve:
@@ -327,6 +337,10 @@ def submit_return_request(store, items, photo=None):
     Submit a return request to commissary.
     Items should be a list of {item_code, quantity, reason, notes}
     """
+    allowed_roles = ["Store Supervisor", "Store Staff", "Area Supervisor", "System Manager"]
+    if not any(r in frappe.get_roles(frappe.session.user) for r in allowed_roles):
+        frappe.throw(_("Not authorized to submit return requests"), frappe.PermissionError)
+
     if not store:
         frappe.throw(_("Store is required"))
 
@@ -383,6 +397,7 @@ def submit_return_request(store, items, photo=None):
 @frappe.whitelist()
 def get_return_requests(store=None, status=None, limit=20):
     """Get return request history for a store."""
+    limit = min(int(limit or 20), 500)
     filters = {"custom_return_request": 1}
 
     if store:

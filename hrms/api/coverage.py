@@ -104,6 +104,10 @@ def request_coverage(store, coverage_date, shift, reason, absent_employee, notes
 @frappe.whitelist()
 def approve_coverage(request_name, assigned_employee):
     """Approve coverage request and assign replacement."""
+    allowed_roles = ["Area Supervisor", "Store Supervisor", "HR Manager", "System Manager"]
+    if not any(r in frappe.get_roles(frappe.session.user) for r in allowed_roles):
+        frappe.throw(_("Not authorized to approve coverage requests"), frappe.PermissionError)
+
     if not assigned_employee:
         frappe.throw(_("Assigned employee is required"))
 
@@ -118,6 +122,7 @@ def approve_coverage(request_name, assigned_employee):
 @frappe.whitelist()
 def get_coverage_requests(store=None, status=None, date_from=None, date_to=None, limit=20):
     """Get coverage requests."""
+    limit = min(int(limit or 20), 500)
     filters = {}
     if store:
         filters["store"] = store
