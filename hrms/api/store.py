@@ -1164,12 +1164,13 @@ def get_or_create_closing_report(store):
 def submit_closing_stage1_cash(report_name, petty_cash_fund=0, delivery_fund=0,
                                 change_fund=0, cash_notes=None, pos_down=False,
                                 pos_down_estimated_sales=None, pos_down_transaction_count=None,
-                                pos_down_notes=None):
+                                pos_down_notes=None, **kwargs):
     """
     Submit Stage 1: Cash Count
 
     Note: Cash Sales Fund stays in POS only - not entered here.
     Only Petty Cash, Delivery Fund, and Change Fund are entered in this stage.
+    Denomination breakdown and voucher amounts are passed via kwargs.
     """
     doc = frappe.get_doc("BEI Store Closing Report", report_name)
 
@@ -1184,6 +1185,14 @@ def submit_closing_stage1_cash(report_name, petty_cash_fund=0, delivery_fund=0,
         doc.pos_down_estimated_sales = float(pos_down_estimated_sales or 0)
         doc.pos_down_transaction_count = int(pos_down_transaction_count or 0)
         doc.pos_down_notes = pos_down_notes
+
+    # Save denomination breakdown and voucher amounts
+    denom_prefixes = ("pcf_denom_", "del_denom_", "chg_denom_")
+    voucher_fields = ("pcf_voucher_amount", "delivery_voucher_amount")
+    for key, value in kwargs.items():
+        if key.startswith(denom_prefixes) or key in voucher_fields:
+            if doc.meta.has_field(key):
+                doc.set(key, float(value or 0))
 
     doc.stage_completed = "checklist"
     doc.save()
