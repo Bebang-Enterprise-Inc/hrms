@@ -1,6 +1,6 @@
 # Procurement Module - Consolidated Plan
 
-**Status:** BUGFIX IN PROGRESS (7 bugs from Feb 7 audit)
+**Status:** COMPLETE (6 bugs fixed, 1 false positive - Feb 7, 2026)
 **Module URL:** https://my.bebang.ph/dashboard/procurement
 **Last Updated:** 2026-02-07
 **Bugfix Spec:** `specs/procurement-bugfix/`
@@ -505,13 +505,13 @@ curl -s "https://hq.bebang.ph/api/method/hrms.api.procurement.get_dashboard_kpis
 
 | # | Bug | Severity | Status | Fix |
 |---|-----|----------|--------|-----|
-| BUG-1 | Invoice PO link -> `/purchase-orders/undefined` | CRITICAL | OPEN | Add `purchase_order` to `get_invoices()` SELECT |
-| BUG-2 | Payment supplier links -> `/suppliers/null` | CRITICAL | OPEN | Add `supplier` to `get_payment_requests()` response |
-| BUG-3 | `get_received_value_for_po` returns 500 | CRITICAL | OPEN | Fix table/field names in SQL query |
-| BUG-4 | Supplier list shows "PHP NaN" | MEDIUM | OPEN | Align field name (`total_po_value` → `total_amount`) |
-| BUG-5 | Sidebar badges show "0" (ambiguous) | MEDIUM | OPEN | Add "pending" label to badge counts |
-| BUG-6 | Goods Receipt Log missing "Coming Soon" | LOW | OPEN | Add `comingSoon` flag to report entry |
-| BUG-7 | PO Detail shows "0 line items" | LOW | OPEN | Add items subquery to `get_purchase_order()` |
+| BUG-1 | Invoice PO link -> `/purchase-orders/undefined` | CRITICAL | **FIXED** | Added `purchase_order` to `get_invoices()` SELECT |
+| BUG-2 | Payment supplier links -> `/suppliers/null` | CRITICAL | **FIXED** | LEFT JOIN to `tabBEI Invoice` + COALESCE for supplier |
+| BUG-3 | `get_received_value_for_po` returns 500 | CRITICAL | **FIXED** | Fixed table `tabBEI GR Item` + field `received_qty` |
+| BUG-4 | Supplier list shows "PHP NaN" | MEDIUM | **FIXED** | Added `total_po_value as total_amount` alias |
+| BUG-5 | Sidebar badges show "0" (ambiguous) | MEDIUM | **FIXED** | Hide badge when count is 0 (layout.tsx) |
+| BUG-6 | Goods Receipt Log missing "Coming Soon" | LOW | **FALSE POSITIVE** | Already correctly shows "Coming Soon" badge |
+| BUG-7 | PO Detail shows "0 line items" | LOW | **FIXED** | Fallback SQL query from `tabBEI PO Item` |
 
 ### 13.3 Fix Plan
 
