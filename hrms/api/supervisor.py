@@ -421,7 +421,7 @@ def get_unified_approval_queue(approver=None, store=None):
 
     # 3. Coverage Requests pending
     try:
-        coverage_filters = {"status": "Open"}
+        coverage_filters = {"status": "Pending"}
         if store:
             coverage_filters["store"] = store
 

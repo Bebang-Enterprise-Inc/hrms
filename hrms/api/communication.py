@@ -22,7 +22,10 @@ def submit_ceo_complaint(category, subject, description, is_anonymous=False):
     """Submit a complaint to the CEO."""
     doc = frappe.new_doc("BEI CEO Complaint")
     doc.submitted_by = frappe.session.user
-    doc.employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+    if not employee:
+        frappe.throw(_("No employee record found for your user account"))
+    doc.employee = employee
     doc.category = category
     doc.subject = subject
     doc.description = description
