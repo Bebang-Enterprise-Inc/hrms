@@ -427,6 +427,31 @@ def get_purchase_order(name):
 
 
 @frappe.whitelist()
+def get_purchase_order_items(name):
+    """Get items for a specific PO."""
+    return frappe.db.sql("""
+        SELECT name, item_code, item_name, description, qty, rate, amount, uom,
+               received_qty, unit_cost
+        FROM `tabBEI PO Item`
+        WHERE parent = %s
+        ORDER BY idx
+    """, (name,), as_dict=True)
+
+
+@frappe.whitelist()
+def get_goods_receipt_items(name):
+    """Get items for a specific GR."""
+    return frappe.db.sql("""
+        SELECT name, item_code, item_name, description,
+               ordered_qty, received_qty, rejected_qty, accepted_qty,
+               uom, unit_cost, amount
+        FROM `tabBEI GR Item`
+        WHERE parent = %s
+        ORDER BY idx
+    """, (name,), as_dict=True)
+
+
+@frappe.whitelist()
 def create_purchase_order(data):
     """Create new PO.
 
@@ -599,8 +624,10 @@ def get_goods_receipts(filters=None, page=1, page_size=20, search=None):
 
     grs = frappe.db.sql(f"""
         SELECT
-            name, gr_no, receipt_date, status, purchase_order,
-            supplier, supplier_name, total_received_qty, total_amount
+            name, gr_no, gr_no as gr_number, receipt_date, status,
+            purchase_order, purchase_order as po_number,
+            supplier, supplier_name,
+            total_ordered_qty, total_received_qty, total_amount
         FROM `tabBEI Goods Receipt`
         WHERE {where_clause}
         ORDER BY receipt_date DESC
@@ -620,7 +647,37 @@ def get_goods_receipts(filters=None, page=1, page_size=20, search=None):
 def get_goods_receipt(name):
     """Get single GR with items."""
     gr = frappe.get_doc("BEI Goods Receipt", name)
-    return gr.as_dict()
+    data = gr.as_dict()
+    data["gr_number"] = data.get("gr_no")
+    data["po_number"] = data.get("purchase_order")
+    return data
+
+
+@frappe.whitelist()
+def get_goods_receipts_for_po(name):
+    """Get goods receipts linked to a specific PO."""
+    return frappe.db.sql("""
+        SELECT name, gr_no, gr_no as gr_number, receipt_date, status,
+            purchase_order, purchase_order as po_number,
+            supplier, supplier_name,
+            total_ordered_qty, total_received_qty, total_amount
+        FROM `tabBEI Goods Receipt`
+        WHERE purchase_order = %s
+        ORDER BY receipt_date DESC
+    """, (name,), as_dict=True)
+
+
+@frappe.whitelist()
+def get_invoices_for_po(name):
+    """Get invoices linked to a specific PO."""
+    return frappe.db.sql("""
+        SELECT name, invoice_no, invoice_date, due_date, status,
+            supplier, supplier_name, purchase_order,
+            grand_total, balance_due, payment_status, match_status
+        FROM `tabBEI Invoice`
+        WHERE purchase_order = %s
+        ORDER BY invoice_date DESC
+    """, (name,), as_dict=True)
 
 
 @frappe.whitelist()
@@ -695,8 +752,10 @@ def submit_goods_receipt(name):
 
 
 @frappe.whitelist()
-def complete_gr_inspection(name, passed=True, notes=None):
+def complete_gr_inspection(name, passed=True, result=None, notes=None):
     """Complete quality inspection on GR."""
+    if result is not None:
+        passed = result == "pass"
     gr = frappe.get_doc("BEI Goods Receipt", name)
     return gr.complete_inspection(passed, notes)
 
