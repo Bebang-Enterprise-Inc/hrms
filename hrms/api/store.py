@@ -623,22 +623,23 @@ def submit_closing_report(store, report_time, checklist_items, pos_total_sales,
     doc.variance_explanation = variance_explanation
     doc.notes = notes
 
-    # Photos
-    doc.photo_xread_opening = photo_xread_opening
-    doc.photo_xread_closing = photo_xread_closing
-    doc.photo_zread = photo_zread
-    doc.photo_closing_reports = photo_closing_reports
-    doc.photo_dashboard_report = photo_dashboard_report
-    doc.photo_logo_signage = photo_logo_signage
-    doc.photo_hygrometer = photo_hygrometer
-    doc.photo_water_meter = photo_water_meter
-    doc.photo_backup_area_clean = photo_backup_area_clean
-    doc.photo_frozen_milk_clean = photo_frozen_milk_clean
-    doc.photo_toppings_clean = photo_toppings_clean
-    doc.photo_dispatch_clean = photo_dispatch_clean
-    doc.photo_cold_storage_close = photo_cold_storage_close
-    doc.photo_cashier_clean = photo_cashier_clean
-    doc.photo_rollup_closed = photo_rollup_closed
+    # Photos - convert base64 to file URLs if needed
+    doctype_name = "BEI Store Closing Report"
+    doc.photo_xread_opening = save_base64_image(photo_xread_opening, doctype_name, fieldname="photo_xread_opening")
+    doc.photo_xread_closing = save_base64_image(photo_xread_closing, doctype_name, fieldname="photo_xread_closing")
+    doc.photo_zread = save_base64_image(photo_zread, doctype_name, fieldname="photo_zread")
+    doc.photo_closing_reports = save_base64_image(photo_closing_reports, doctype_name, fieldname="photo_closing_reports")
+    doc.photo_dashboard_report = save_base64_image(photo_dashboard_report, doctype_name, fieldname="photo_dashboard_report")
+    doc.photo_logo_signage = save_base64_image(photo_logo_signage, doctype_name, fieldname="photo_logo_signage")
+    doc.photo_hygrometer = save_base64_image(photo_hygrometer, doctype_name, fieldname="photo_hygrometer")
+    doc.photo_water_meter = save_base64_image(photo_water_meter, doctype_name, fieldname="photo_water_meter")
+    doc.photo_backup_area_clean = save_base64_image(photo_backup_area_clean, doctype_name, fieldname="photo_backup_area_clean")
+    doc.photo_frozen_milk_clean = save_base64_image(photo_frozen_milk_clean, doctype_name, fieldname="photo_frozen_milk_clean")
+    doc.photo_toppings_clean = save_base64_image(photo_toppings_clean, doctype_name, fieldname="photo_toppings_clean")
+    doc.photo_dispatch_clean = save_base64_image(photo_dispatch_clean, doctype_name, fieldname="photo_dispatch_clean")
+    doc.photo_cold_storage_close = save_base64_image(photo_cold_storage_close, doctype_name, fieldname="photo_cold_storage_close")
+    doc.photo_cashier_clean = save_base64_image(photo_cashier_clean, doctype_name, fieldname="photo_cashier_clean")
+    doc.photo_rollup_closed = save_base64_image(photo_rollup_closed, doctype_name, fieldname="photo_rollup_closed")
 
     for item in checklist_items:
         doc.append("checklist_items", item)
