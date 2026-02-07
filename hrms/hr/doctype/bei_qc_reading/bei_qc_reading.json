@@ -1,0 +1,72 @@
+{
+  "actions": [],
+  "creation": "2026-02-06 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "parameter",
+    "value",
+    "unit",
+    "column_break_1",
+    "min_range",
+    "max_range",
+    "status"
+  ],
+  "fields": [
+    {
+      "fieldname": "parameter",
+      "fieldtype": "Data",
+      "label": "Parameter",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "value",
+      "fieldtype": "Data",
+      "label": "Value",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "unit",
+      "fieldtype": "Data",
+      "label": "Unit",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "min_range",
+      "fieldtype": "Float",
+      "label": "Min Range"
+    },
+    {
+      "fieldname": "max_range",
+      "fieldtype": "Float",
+      "label": "Max Range"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "\nPass\nFail\nWarning",
+      "in_list_view": 1
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 1,
+  "links": [],
+  "modified": "2026-02-06 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI QC Reading",
+  "naming_rule": "Random",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

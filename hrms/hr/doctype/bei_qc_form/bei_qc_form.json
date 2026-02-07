@@ -1,0 +1,160 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "autoname": "naming_series:",
+  "creation": "2026-02-06 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "form_type",
+    "form_date",
+    "column_break_1",
+    "shift",
+    "area",
+    "status",
+    "section_break_readings",
+    "readings",
+    "section_break_details",
+    "checked_by",
+    "verified_by",
+    "column_break_2",
+    "remarks",
+    "photo_evidence"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "QCF-.YYYY.-",
+      "default": "QCF-.YYYY.-",
+      "reqd": 1,
+      "set_only_once": 1
+    },
+    {
+      "fieldname": "form_type",
+      "fieldtype": "Select",
+      "label": "Form Type",
+      "options": "GMP Checklist\nArea Temperature Verification\nStorage Temperature Monitoring\nCooking Verification\nMixing Monitoring\nPackaging Monitoring Report\nDisposition\nSupplier Feedback",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "form_date",
+      "fieldtype": "Date",
+      "label": "Date",
+      "reqd": 1,
+      "default": "Today",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "shift",
+      "fieldtype": "Select",
+      "label": "Shift",
+      "options": "\nAM (5:00-14:00)\nPM (16:00-01:00)\nDispatch (04:00)",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "area",
+      "fieldtype": "Select",
+      "label": "Area",
+      "options": "\nMain Warehouse (Dry)\nChiller 1\nFreezer 1\nProduction Floor\nPacking Area\nDispatch Area"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nSubmitted\nVerified",
+      "default": "Draft",
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "section_break_readings",
+      "fieldtype": "Section Break",
+      "label": "Readings"
+    },
+    {
+      "fieldname": "readings",
+      "fieldtype": "Table",
+      "label": "Readings",
+      "options": "BEI QC Reading"
+    },
+    {
+      "fieldname": "section_break_details",
+      "fieldtype": "Section Break",
+      "label": "Details"
+    },
+    {
+      "fieldname": "checked_by",
+      "fieldtype": "Link",
+      "label": "Checked By",
+      "options": "User"
+    },
+    {
+      "fieldname": "verified_by",
+      "fieldtype": "Link",
+      "label": "Verified By",
+      "options": "User"
+    },
+    {
+      "fieldname": "column_break_2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    },
+    {
+      "fieldname": "photo_evidence",
+      "fieldtype": "Attach Image",
+      "label": "Photo Evidence"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "is_submittable": 0,
+  "links": [],
+  "modified": "2026-02-06 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI QC Form",
+  "naming_rule": "By \"Naming Series\" field",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "HR Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
