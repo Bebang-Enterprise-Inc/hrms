@@ -114,7 +114,8 @@
   {
    "create": 1,
    "read": 1,
-   "role": "Employee"
+   "role": "Employee",
+   "write": 1
   }
  ],
  "sort_field": "creation",
