@@ -65,7 +65,7 @@ def get_suppliers(filters=None, page=1, page_size=20, search=None):
             name, supplier_code, supplier_name, status,
             email, contact_person, contact_number, address,
             tin, bank_name, bank_account_number, payment_terms,
-            total_po_count, total_po_value, total_outstanding,
+            total_po_count, total_po_value, total_po_value as total_amount, total_outstanding,
             avg_delivery_days, on_time_rate,
             bir_2307, sec_certificate, business_permit,
             CASE WHEN creation >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END as is_new_supplier
@@ -411,7 +411,19 @@ def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
 def get_purchase_order(name):
     """Get single PO with items."""
     po = frappe.get_doc("BEI Purchase Order", name)
-    return po.as_dict()
+    data = po.as_dict()
+
+    # Ensure items are always present (even if child table was added after PO creation)
+    if not data.get("items"):
+        items = frappe.db.sql("""
+            SELECT name, item_code, item_name, description, qty, rate, amount, uom
+            FROM `tabBEI PO Item`
+            WHERE parent = %s
+            ORDER BY idx
+        """, (name,), as_dict=True)
+        data["items"] = items
+
+    return data
 
 
 @frappe.whitelist()
@@ -762,8 +774,8 @@ def get_invoices(filters=None, page=1, page_size=20, search=None):
     invoices = frappe.db.sql(f"""
         SELECT
             name, invoice_no, supplier_invoice_no, invoice_date, due_date,
-            status, supplier, supplier_name, grand_total, balance_due,
-            payment_status, match_status
+            status, supplier, supplier_name, purchase_order, grand_total,
+            balance_due, payment_status, match_status
         FROM `tabBEI Invoice`
         WHERE {where_clause}
         ORDER BY due_date ASC
@@ -882,7 +894,7 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
 
     if search:
         conditions.append(
-            "(payment_request_no LIKE %(search)s OR supplier_name LIKE %(search)s)"
+            "(pr.payment_request_no LIKE %(search)s OR pr.supplier_name LIKE %(search)s)"
         )
         values["search"] = f"%{search}%"
 
@@ -891,16 +903,16 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
             filters = frappe.parse_json(filters)
 
         if filters.get("status"):
-            conditions.append("status = %(status)s")
+            conditions.append("pr.status = %(status)s")
             values["status"] = filters["status"]
 
         if filters.get("supplier"):
-            conditions.append("supplier = %(supplier)s")
+            conditions.append("pr.supplier = %(supplier)s")
             values["supplier"] = filters["supplier"]
 
         if filters.get("pending_approval"):
             conditions.append(
-                "status IN ('Pending Review', 'Pending Budget Approval', "
+                "pr.status IN ('Pending Review', 'Pending Budget Approval', "
                 "'Pending CFO Approval', 'Pending CEO Approval')"
             )
 
@@ -908,18 +920,21 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
     offset = (int(page) - 1) * int(page_size)
 
     total = frappe.db.sql(
-        f"SELECT COUNT(*) FROM `tabBEI Payment Request` WHERE {where_clause}",
+        f"SELECT COUNT(*) FROM `tabBEI Payment Request` pr WHERE {where_clause}",
         values
     )[0][0]
 
     requests = frappe.db.sql(f"""
         SELECT
-            name, payment_request_no, request_date, status, supplier,
-            supplier_name, payment_amount, payment_mode, invoice,
-            ceo_required, payment_date
-        FROM `tabBEI Payment Request`
+            pr.name, pr.payment_request_no, pr.request_date, pr.status,
+            COALESCE(pr.supplier, inv.supplier) as supplier,
+            COALESCE(pr.supplier_name, inv.supplier_name) as supplier_name,
+            pr.payment_amount, pr.payment_mode, pr.invoice,
+            pr.ceo_required, pr.payment_date
+        FROM `tabBEI Payment Request` pr
+        LEFT JOIN `tabBEI Invoice` inv ON pr.invoice = inv.name
         WHERE {where_clause}
-        ORDER BY request_date DESC
+        ORDER BY pr.request_date DESC
         LIMIT %(page_size)s OFFSET %(offset)s
     """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
 
@@ -976,8 +991,8 @@ def create_payment_request(data):
 
             # AUDIT CONTROL 2.3: Payment limited to received value
             received_value = frappe.db.sql("""
-                SELECT COALESCE(SUM(gri.quantity * gri.unit_cost), 0)
-                FROM `tabBEI Goods Receipt Item` gri
+                SELECT COALESCE(SUM(gri.received_qty * gri.unit_cost), 0)
+                FROM `tabBEI GR Item` gri
                 JOIN `tabBEI Goods Receipt` gr ON gri.parent = gr.name
                 WHERE gr.purchase_order = %s
                 AND gr.status IN ('Submitted', 'Approved', 'Inspected')
@@ -1659,10 +1674,10 @@ def get_received_value_for_po(purchase_order):
         SELECT
             gri.item_code,
             gri.item_name,
-            SUM(gri.quantity) as received_qty,
+            SUM(gri.received_qty) as received_qty,
             gri.unit_cost,
-            SUM(gri.quantity * gri.unit_cost) as received_value
-        FROM `tabBEI Goods Receipt Item` gri
+            SUM(gri.received_qty * gri.unit_cost) as received_value
+        FROM `tabBEI GR Item` gri
         JOIN `tabBEI Goods Receipt` gr ON gri.parent = gr.name
         WHERE gr.purchase_order = %s
         AND gr.status IN ('Submitted', 'Approved', 'Inspected')
