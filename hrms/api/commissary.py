@@ -246,35 +246,63 @@ def submit_production_output(items, batch_no=None, remarks=None):
 
     commissary_warehouse = get_commissary_warehouse()
 
-    # Create Stock Entry for production output (Material Receipt for now)
-    # Note: True Manufacture type requires BOM setup
     se = frappe.new_doc("Stock Entry")
-    se.stock_entry_type = "Material Receipt"  # Use Material Receipt since we don't have BOM
     se.company = "Bebang Enterprise Inc."
     se.posting_date = today()
     se.posting_time = frappe.utils.nowtime()
     se.to_warehouse = commissary_warehouse
     se.remarks = remarks or f"Production batch: {batch_no or 'No batch'}"
 
-    for item_data in items:
-        item = frappe.get_doc("Item", item_data["item_code"])
+    # Try Manufacture type if BOM exists (auto-deducts raw materials)
+    # Fall back to Material Receipt if no BOM available
+    first_item_code = items[0]["item_code"] if items else None
+    bom = None
+    if first_item_code:
+        bom = frappe.db.get_value(
+            "BOM",
+            {"item": first_item_code, "is_active": 1, "is_default": 1, "docstatus": 1},
+            ["name", "quantity"],
+            as_dict=True
+        )
 
-        item_row = {
-            "item_code": item_data["item_code"],
-            "item_name": item.item_name,
-            "description": item.description,
-            "qty": flt(item_data["qty"]),
-            "uom": item_data.get("uom") or item.stock_uom,
-            "stock_uom": item.stock_uom,
-            "conversion_factor": 1,
-            "t_warehouse": commissary_warehouse,
-        }
-        # Auto-create batch if it doesn't exist (only for batch-tracked items)
+    if bom:
+        # Use Manufacture type - auto-deducts RM from BOM
+        se.stock_entry_type = "Manufacture"
+        se.from_bom = 1
+        se.bom_no = bom.name
+        se.fg_completed_qty = sum(flt(i["qty"]) for i in items)
+        se.from_warehouse = commissary_warehouse  # RM source
+        se.get_items()
+
+        # Override batch on FG items if provided
         if batch_no and batch_no.strip():
-            valid_batch = get_or_create_batch(batch_no, item_data["item_code"])
-            if valid_batch:
-                item_row["batch_no"] = valid_batch
-        se.append("items", item_row)
+            for se_item in se.items:
+                if se_item.is_finished_item:
+                    valid_batch = get_or_create_batch(batch_no, se_item.item_code)
+                    if valid_batch:
+                        se_item.batch_no = valid_batch
+    else:
+        # Fallback: Material Receipt (no RM deduction)
+        se.stock_entry_type = "Material Receipt"
+
+        for item_data in items:
+            item = frappe.get_doc("Item", item_data["item_code"])
+
+            item_row = {
+                "item_code": item_data["item_code"],
+                "item_name": item.item_name,
+                "description": item.description,
+                "qty": flt(item_data["qty"]),
+                "uom": item_data.get("uom") or item.stock_uom,
+                "stock_uom": item.stock_uom,
+                "conversion_factor": 1,
+                "t_warehouse": commissary_warehouse,
+            }
+            if batch_no and batch_no.strip():
+                valid_batch = get_or_create_batch(batch_no, item_data["item_code"])
+                if valid_batch:
+                    item_row["batch_no"] = valid_batch
+            se.append("items", item_row)
 
     se.insert()
     se.submit()
@@ -641,6 +669,9 @@ def get_returns_pending():
 @frappe.whitelist()
 def create_dispatch_transfer(target_warehouse, items, mr_name=None, remarks=None):
     """
+    DEPRECATED: Use fulfill_store_order() instead.
+    Kept for backward compatibility with existing frontend calls.
+
     Create Stock Entry (Material Transfer) for dispatch from commissary.
 
     Args:
@@ -901,7 +932,7 @@ PRODUCT_THRESHOLDS = {
     "FG007": {"shelf_life": 14, "target_di": 7, "yellow_alert": 10, "red_alert": 12, "storage_temp": "0-4C"},  # Coconut Syrup
     "FG009": {"shelf_life": 21, "target_di": 10, "yellow_alert": 14, "red_alert": 18, "storage_temp": "0-4C"},  # Sago
     "FG012": {"shelf_life": 21, "target_di": 10, "yellow_alert": 14, "red_alert": 18, "storage_temp": "0-4C"},  # Melted Ube
-    "FG015": {"shelf_life": 30, "target_di": 14, "yellow_alert": 20, "red_alert": 25, "storage_temp": "0-4C"},  # BP Sauce
+    # FG015 BP Sauce - DISCONTINUED (no longer produced in commissary as of Feb 2026)
     # Long shelf life products
     "FG003": {"shelf_life": 180, "target_di": 30, "yellow_alert": 45, "red_alert": 60, "storage_temp": "20-25C"},  # Rice Crispies
     "FG014": {"shelf_life": 60, "target_di": 14, "yellow_alert": 21, "red_alert": 30, "storage_temp": "20-25C"},  # Pistachio Mix
@@ -2161,9 +2192,12 @@ def get_pending_inspections():
 
 
 @frappe.whitelist()
-def create_quality_inspection(stock_entry_name, item_code, inspected_by=None, readings=None, status="Accepted"):
+def create_quality_inspection(stock_entry_name, item_code, inspected_by=None,
+                              readings=None, status="Accepted",
+                              rejection_disposition=None):
     """
     Create a quality inspection record for a production batch.
+    If rejected with disposition "Scrap", auto-creates wastage entry.
 
     Args:
         stock_entry_name: Reference Stock Entry
@@ -2171,6 +2205,7 @@ def create_quality_inspection(stock_entry_name, item_code, inspected_by=None, re
         inspected_by: Inspector name (defaults to current user)
         readings: Dict of {specification: reading_value}
         status: "Accepted" or "Rejected"
+        rejection_disposition: "Scrap", "Rework", or "Hold" (only used when status=Rejected)
     """
     if isinstance(readings, str):
         readings = json.loads(readings)
@@ -2226,11 +2261,28 @@ def create_quality_inspection(stock_entry_name, item_code, inspected_by=None, re
     qi.insert()
     qi.submit()
 
-    return {
+    result = {
         "success": True,
         "message": f"Quality Inspection {qi.name} created",
         "data": {"name": qi.name, "status": qi.status}
     }
+
+    # Auto-scrap on rejection with "Scrap" disposition
+    if status == "Rejected" and rejection_disposition == "Scrap":
+        wastage_result = log_wastage(
+            item_code=item_code,
+            qty=sed.qty,
+            reason_code="quality_fail",
+            batch_no=sed.batch_no,
+            remarks=f"Auto-scrapped from QI {qi.name}"
+        )
+        result["data"]["wastage_entry"] = wastage_result.get("data", {}).get("name")
+        result["data"]["rejection_disposition"] = "Scrap"
+        result["message"] += f" | Wastage logged: {wastage_result.get('data', {}).get('name')}"
+    elif status == "Rejected":
+        result["data"]["rejection_disposition"] = rejection_disposition or "Hold"
+
+    return result
 
 
 @frappe.whitelist()
@@ -2897,4 +2949,491 @@ def enable_batch_tracking_for_fg():
         "success": True,
         "message": f"Enabled batch tracking for {updated} Finished Goods items",
         "updated": updated
+    }
+
+
+# ============================================================
+# 13. BOM MANAGEMENT
+# ============================================================
+
+@frappe.whitelist()
+def create_bom(item_code, materials, quantity=1, uom=None, remarks=None):
+    """
+    Create a Bill of Materials for a Finished Good item.
+
+    Args:
+        item_code: FG item code (e.g. FG007)
+        materials: JSON array of {item_code, qty, uom}
+        quantity: Yield quantity for this BOM (default 1)
+        uom: Unit of measure for yield (defaults to item's stock_uom)
+        remarks: Optional notes
+    """
+    if isinstance(materials, str):
+        materials = json.loads(materials)
+
+    if not materials:
+        frappe.throw(_("BOM must have at least one material"))
+
+    item = frappe.db.get_value("Item", item_code, ["item_name", "stock_uom"], as_dict=True)
+    if not item:
+        return {"success": False, "error": f"Item {item_code} not found"}
+
+    # Check if active BOM already exists
+    existing = frappe.db.get_value(
+        "BOM",
+        {"item": item_code, "is_active": 1, "is_default": 1, "docstatus": 1},
+        "name"
+    )
+    if existing:
+        return {
+            "success": False,
+            "error": f"Active default BOM already exists: {existing}. Use update_bom() or deactivate first."
+        }
+
+    bom = frappe.new_doc("BOM")
+    bom.item = item_code
+    bom.quantity = flt(quantity) or 1
+    bom.uom = uom or item.stock_uom
+    bom.is_active = 1
+    bom.is_default = 1
+    bom.company = "Bebang Enterprise Inc."
+    bom.with_operations = 0
+
+    if remarks:
+        bom.remarks = remarks
+
+    for mat in materials:
+        mat_item = frappe.db.get_value(
+            "Item", mat["item_code"],
+            ["item_name", "stock_uom"],
+            as_dict=True
+        )
+        if not mat_item:
+            return {"success": False, "error": f"Material {mat['item_code']} not found in Item master"}
+
+        bom.append("items", {
+            "item_code": mat["item_code"],
+            "item_name": mat_item.item_name,
+            "qty": flt(mat["qty"]),
+            "uom": mat.get("uom") or mat_item.stock_uom,
+            "stock_uom": mat_item.stock_uom,
+            "rate": frappe.db.get_value("Item", mat["item_code"], "valuation_rate") or 0,
+        })
+
+    bom.insert()
+    bom.submit()
+
+    return {
+        "success": True,
+        "message": f"BOM {bom.name} created for {item_code}",
+        "data": {
+            "name": bom.name,
+            "item": bom.item,
+            "quantity": bom.quantity,
+            "materials_count": len(bom.items),
+            "is_default": bom.is_default
+        }
+    }
+
+
+@frappe.whitelist()
+def update_bom(bom_name, materials=None, quantity=None, remarks=None):
+    """
+    Update a BOM by creating a new version (amend).
+    Frappe BOMs are immutable once submitted - amendments create new versions.
+
+    Args:
+        bom_name: Existing BOM name to amend
+        materials: New materials list (optional, keeps existing if not provided)
+        quantity: New yield quantity (optional)
+        remarks: Optional notes
+    """
+    if materials and isinstance(materials, str):
+        materials = json.loads(materials)
+
+    old_bom = frappe.get_doc("BOM", bom_name)
+
+    if old_bom.docstatus != 1:
+        return {"success": False, "error": "Can only amend submitted BOMs"}
+
+    # Deactivate old BOM (use db.set_value since doc is submitted)
+    frappe.db.set_value("BOM", bom_name, {
+        "is_active": 0,
+        "is_default": 0,
+    })
+
+    # Create new BOM
+    new_bom = frappe.new_doc("BOM")
+    new_bom.item = old_bom.item
+    new_bom.quantity = flt(quantity) or old_bom.quantity
+    new_bom.uom = old_bom.uom
+    new_bom.is_active = 1
+    new_bom.is_default = 1
+    new_bom.company = old_bom.company
+    new_bom.with_operations = 0
+    new_bom.amended_from = old_bom.name
+
+    if remarks:
+        new_bom.remarks = remarks
+
+    if materials:
+        for mat in materials:
+            mat_item = frappe.db.get_value(
+                "Item", mat["item_code"],
+                ["item_name", "stock_uom"],
+                as_dict=True
+            )
+            if not mat_item:
+                return {"success": False, "error": f"Material {mat['item_code']} not found"}
+
+            new_bom.append("items", {
+                "item_code": mat["item_code"],
+                "item_name": mat_item.item_name,
+                "qty": flt(mat["qty"]),
+                "uom": mat.get("uom") or mat_item.stock_uom,
+                "stock_uom": mat_item.stock_uom,
+                "rate": frappe.db.get_value("Item", mat["item_code"], "valuation_rate") or 0,
+            })
+    else:
+        # Copy materials from old BOM
+        for old_item in old_bom.items:
+            new_bom.append("items", {
+                "item_code": old_item.item_code,
+                "item_name": old_item.item_name,
+                "qty": old_item.qty,
+                "uom": old_item.uom,
+                "stock_uom": old_item.stock_uom,
+                "rate": old_item.rate,
+            })
+
+    new_bom.insert()
+    new_bom.submit()
+
+    return {
+        "success": True,
+        "message": f"BOM updated: {old_bom.name} -> {new_bom.name}",
+        "data": {
+            "old_bom": old_bom.name,
+            "new_bom": new_bom.name,
+            "item": new_bom.item,
+            "quantity": new_bom.quantity,
+            "materials_count": len(new_bom.items)
+        }
+    }
+
+
+@frappe.whitelist()
+def get_bom_detail(item_code):
+    """
+    Get the default active BOM for an item with full materials breakdown.
+
+    Args:
+        item_code: Item to look up BOM for
+    """
+    bom = frappe.db.get_value(
+        "BOM",
+        {"item": item_code, "is_active": 1, "is_default": 1, "docstatus": 1},
+        ["name", "quantity", "uom", "total_cost", "operating_cost", "raw_material_cost"],
+        as_dict=True
+    )
+
+    if not bom:
+        return {"success": False, "error": f"No active default BOM for {item_code}"}
+
+    bom_doc = frappe.get_doc("BOM", bom.name)
+
+    materials = []
+    for item in bom_doc.items:
+        materials.append({
+            "item_code": item.item_code,
+            "item_name": item.item_name,
+            "qty": item.qty,
+            "uom": item.uom,
+            "rate": item.rate,
+            "amount": item.amount,
+            "stock_qty": item.stock_qty,
+            "stock_uom": item.stock_uom,
+        })
+
+    return {
+        "success": True,
+        "data": {
+            "name": bom.name,
+            "item_code": item_code,
+            "quantity": bom.quantity,
+            "uom": bom.uom,
+            "total_cost": bom.total_cost,
+            "raw_material_cost": bom.raw_material_cost,
+            "materials": materials,
+            "materials_count": len(materials)
+        }
+    }
+
+
+# ============================================================
+# 14. PRODUCTION FEASIBILITY CHECK
+# ============================================================
+
+@frappe.whitelist()
+def check_production_feasibility(item_code, qty):
+    """
+    Check if we can produce a given quantity of an FG item.
+    Validates raw material availability against BOM requirements.
+
+    Args:
+        item_code: FG item to check
+        qty: Desired production quantity
+    """
+    qty = flt(qty)
+    if qty <= 0:
+        return {"success": False, "error": "Quantity must be greater than 0"}
+
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Get default BOM
+    bom = frappe.db.get_value(
+        "BOM",
+        {"item": item_code, "is_active": 1, "is_default": 1, "docstatus": 1},
+        ["name", "quantity"],
+        as_dict=True
+    )
+
+    if not bom:
+        return {"success": False, "error": f"No active BOM for {item_code}. Cannot check feasibility."}
+
+    # Get BOM materials
+    bom_items = frappe.get_all(
+        "BOM Item",
+        filters={"parent": bom.name},
+        fields=["item_code", "item_name", "qty", "stock_uom"]
+    )
+
+    # Calculate required quantities (scale by production qty / BOM yield)
+    scale_factor = qty / flt(bom.quantity)
+    shortfall = []
+    max_batches = float('inf')
+
+    for mat in bom_items:
+        required_qty = flt(mat.qty) * scale_factor
+        available_qty = flt(frappe.db.get_value(
+            "Bin",
+            {"item_code": mat.item_code, "warehouse": commissary_warehouse},
+            "actual_qty"
+        )) or 0
+
+        deficit = required_qty - available_qty
+
+        # How many batches can this material support?
+        if mat.qty > 0:
+            batches_possible = available_qty / (flt(mat.qty) * (qty / flt(bom.quantity)) / qty) if qty > 0 else 0
+            # Simpler: how many times can we make the BOM yield?
+            batches_possible = (available_qty / flt(mat.qty)) * flt(bom.quantity)
+            max_batches = min(max_batches, batches_possible)
+
+        if deficit > 0:
+            shortfall.append({
+                "item_code": mat.item_code,
+                "item_name": mat.item_name,
+                "required_qty": round(required_qty, 3),
+                "available_qty": round(available_qty, 3),
+                "deficit": round(deficit, 3),
+                "uom": mat.stock_uom
+            })
+
+    can_produce = len(shortfall) == 0
+    max_producible = round(max_batches, 2) if max_batches != float('inf') else 0
+
+    return {
+        "success": True,
+        "data": {
+            "item_code": item_code,
+            "requested_qty": qty,
+            "can_produce": can_produce,
+            "max_producible_qty": max_producible,
+            "bom_name": bom.name,
+            "bom_yield": bom.quantity,
+            "shortfall": shortfall,
+            "shortfall_count": len(shortfall)
+        }
+    }
+
+
+# ============================================================
+# 15. QC FORM MANAGEMENT
+# ============================================================
+
+# QC form templates with expected parameters per form type
+QC_FORM_TEMPLATES = {
+    "Area Temperature Verification": [
+        {"parameter": "Area Temperature", "unit": "°C", "min_range": None, "max_range": None},
+        {"parameter": "Humidity", "unit": "%RH", "min_range": None, "max_range": None},
+    ],
+    "Storage Temperature Monitoring": [
+        {"parameter": "Chiller 1 Temperature", "unit": "°C", "min_range": 0, "max_range": 4},
+        {"parameter": "Freezer 1 Temperature", "unit": "°C", "min_range": -22, "max_range": -18},
+        {"parameter": "Dry Storage Temperature", "unit": "°C", "min_range": 20, "max_range": 35},
+    ],
+    "Cooking Verification": [
+        {"parameter": "Cooking Temperature", "unit": "°C", "min_range": None, "max_range": None},
+        {"parameter": "Cooking Time", "unit": "min", "min_range": None, "max_range": None},
+        {"parameter": "Product Temperature (post-cook)", "unit": "°C", "min_range": None, "max_range": None},
+    ],
+    "Mixing Monitoring": [
+        {"parameter": "Mixing Time", "unit": "min", "min_range": None, "max_range": None},
+        {"parameter": "Mixing Speed", "unit": "RPM", "min_range": None, "max_range": None},
+        {"parameter": "Product Temperature", "unit": "°C", "min_range": None, "max_range": None},
+    ],
+    "Packaging Monitoring Report": [
+        {"parameter": "Seal Integrity", "unit": "", "min_range": None, "max_range": None},
+        {"parameter": "Label Accuracy", "unit": "", "min_range": None, "max_range": None},
+        {"parameter": "Weight Check", "unit": "g", "min_range": None, "max_range": None},
+    ],
+    "GMP Checklist": [
+        {"parameter": "Personal Hygiene", "unit": "", "min_range": None, "max_range": None},
+        {"parameter": "Area Cleanliness", "unit": "", "min_range": None, "max_range": None},
+        {"parameter": "Equipment Sanitation", "unit": "", "min_range": None, "max_range": None},
+        {"parameter": "Waste Disposal", "unit": "", "min_range": None, "max_range": None},
+        {"parameter": "Pest Control", "unit": "", "min_range": None, "max_range": None},
+    ],
+}
+
+
+@frappe.whitelist()
+def submit_qc_form(form_type, readings=None, shift=None, area=None,
+                    remarks=None, photo_evidence=None):
+    """
+    Submit a QC form with readings.
+
+    Args:
+        form_type: One of the 8 QC form types
+        readings: JSON array of {parameter, value, unit, min_range, max_range}
+        shift: "AM (5:00-14:00)" or "PM (16:00-01:00)" or "Dispatch (04:00)"
+        area: Storage/production area
+        remarks: Optional notes
+        photo_evidence: Optional attached photo URL
+    """
+    if isinstance(readings, str):
+        readings = json.loads(readings)
+
+    qc = frappe.new_doc("BEI QC Form")
+    qc.form_type = form_type
+    qc.form_date = today()
+    qc.shift = shift
+    qc.area = area
+    qc.checked_by = frappe.session.user
+    qc.status = "Submitted"
+    qc.remarks = remarks
+    qc.photo_evidence = photo_evidence
+
+    if readings:
+        for r in readings:
+            status = ""
+            val = flt(r.get("value")) if r.get("value") else None
+            if val is not None and r.get("min_range") is not None and r.get("max_range") is not None:
+                if flt(r["min_range"]) <= val <= flt(r["max_range"]):
+                    status = "Pass"
+                else:
+                    status = "Fail"
+
+            qc.append("readings", {
+                "parameter": r.get("parameter"),
+                "value": str(r.get("value", "")),
+                "unit": r.get("unit", ""),
+                "min_range": r.get("min_range"),
+                "max_range": r.get("max_range"),
+                "status": status
+            })
+
+    qc.insert(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "message": f"QC Form {qc.name} submitted",
+        "data": {
+            "name": qc.name,
+            "form_type": qc.form_type,
+            "readings_count": len(qc.readings),
+            "has_failures": any(r.status == "Fail" for r in qc.readings)
+        }
+    }
+
+
+@frappe.whitelist()
+def get_qc_forms(form_type=None, date_from=None, date_to=None, limit=50):
+    """
+    List QC forms with optional filters.
+
+    Args:
+        form_type: Filter by form type
+        date_from: Start date
+        date_to: End date
+        limit: Max results (default 50)
+    """
+    filters = {}
+    if form_type:
+        filters["form_type"] = form_type
+    if date_from and date_to:
+        filters["form_date"] = ["between", [date_from, date_to]]
+    elif date_from:
+        filters["form_date"] = [">=", date_from]
+    elif date_to:
+        filters["form_date"] = ["<=", date_to]
+
+    forms = frappe.get_all(
+        "BEI QC Form",
+        filters=filters,
+        fields=[
+            "name", "form_type", "form_date", "shift", "area",
+            "status", "checked_by", "verified_by"
+        ],
+        order_by="form_date desc, creation desc",
+        limit=int(limit)
+    )
+
+    return {
+        "success": True,
+        "data": forms,
+        "total": len(forms)
+    }
+
+
+@frappe.whitelist()
+def get_qc_form_detail(form_name):
+    """Get a single QC form with all readings."""
+    qc = frappe.get_doc("BEI QC Form", form_name)
+
+    return {
+        "success": True,
+        "data": {
+            "name": qc.name,
+            "form_type": qc.form_type,
+            "form_date": str(qc.form_date),
+            "shift": qc.shift,
+            "area": qc.area,
+            "status": qc.status,
+            "checked_by": qc.checked_by,
+            "verified_by": qc.verified_by,
+            "remarks": qc.remarks,
+            "photo_evidence": qc.photo_evidence,
+            "readings": [
+                {
+                    "parameter": r.parameter,
+                    "value": r.value,
+                    "unit": r.unit,
+                    "min_range": r.min_range,
+                    "max_range": r.max_range,
+                    "status": r.status
+                }
+                for r in qc.readings
+            ]
+        }
+    }
+
+
+@frappe.whitelist()
+def get_qc_form_templates():
+    """Return expected readings per form type with ranges."""
+    return {
+        "success": True,
+        "data": QC_FORM_TEMPLATES
     }

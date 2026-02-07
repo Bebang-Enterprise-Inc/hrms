@@ -1,0 +1,244 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "autoname": "naming_series:",
+  "creation": "2026-02-06 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "item_code",
+    "item_name",
+    "batch_no",
+    "column_break_1",
+    "production_date",
+    "shift",
+    "formula_variant",
+    "section_break_qty",
+    "qty_planned",
+    "qty_produced",
+    "qty_rejected",
+    "column_break_qty",
+    "yield_pct",
+    "defect_count",
+    "batch_status",
+    "section_break_timing",
+    "start_time",
+    "end_time",
+    "column_break_timing",
+    "producer",
+    "section_break_refs",
+    "bom_no",
+    "work_order",
+    "stock_entry",
+    "section_break_notes",
+    "remarks"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "PROD-.YYYY.-",
+      "default": "PROD-.YYYY.-",
+      "reqd": 1,
+      "set_only_once": 1
+    },
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "label": "Item Name",
+      "fetch_from": "item_code.item_name",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "batch_no",
+      "fieldtype": "Link",
+      "label": "Batch",
+      "options": "Batch"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "production_date",
+      "fieldtype": "Date",
+      "label": "Production Date",
+      "reqd": 1,
+      "default": "Today",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "shift",
+      "fieldtype": "Select",
+      "label": "Shift",
+      "options": "\nAM\nPM",
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "formula_variant",
+      "fieldtype": "Select",
+      "label": "Formula Variant",
+      "options": "\nOriginal\nGriffith\nN/A",
+      "default": "N/A"
+    },
+    {
+      "fieldname": "section_break_qty",
+      "fieldtype": "Section Break",
+      "label": "Production Output"
+    },
+    {
+      "fieldname": "qty_planned",
+      "fieldtype": "Float",
+      "label": "Planned Qty (kg)",
+      "precision": 3
+    },
+    {
+      "fieldname": "qty_produced",
+      "fieldtype": "Float",
+      "label": "Produced Qty (kg)",
+      "precision": 3,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "qty_rejected",
+      "fieldtype": "Float",
+      "label": "Rejected Qty (kg)",
+      "precision": 3
+    },
+    {
+      "fieldname": "column_break_qty",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "yield_pct",
+      "fieldtype": "Percent",
+      "label": "Yield %",
+      "read_only": 1
+    },
+    {
+      "fieldname": "defect_count",
+      "fieldtype": "Int",
+      "label": "Defect Count",
+      "default": 0
+    },
+    {
+      "fieldname": "batch_status",
+      "fieldtype": "Select",
+      "label": "Batch Status",
+      "options": "In Progress\nCompleted\nQC Hold\nRejected",
+      "default": "In Progress",
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "section_break_timing",
+      "fieldtype": "Section Break",
+      "label": "Timing"
+    },
+    {
+      "fieldname": "start_time",
+      "fieldtype": "Datetime",
+      "label": "Start Time"
+    },
+    {
+      "fieldname": "end_time",
+      "fieldtype": "Datetime",
+      "label": "End Time"
+    },
+    {
+      "fieldname": "column_break_timing",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "producer",
+      "fieldtype": "Link",
+      "label": "Producer",
+      "options": "User"
+    },
+    {
+      "fieldname": "section_break_refs",
+      "fieldtype": "Section Break",
+      "label": "References"
+    },
+    {
+      "fieldname": "bom_no",
+      "fieldtype": "Link",
+      "label": "BOM",
+      "options": "BOM"
+    },
+    {
+      "fieldname": "work_order",
+      "fieldtype": "Link",
+      "label": "Work Order",
+      "options": "Work Order"
+    },
+    {
+      "fieldname": "stock_entry",
+      "fieldtype": "Link",
+      "label": "Stock Entry",
+      "options": "Stock Entry"
+    },
+    {
+      "fieldname": "section_break_notes",
+      "fieldtype": "Section Break",
+      "label": "Notes"
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "is_submittable": 0,
+  "links": [],
+  "modified": "2026-02-06 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Production",
+  "naming_rule": "By \"Naming Series\" field",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "HR Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
