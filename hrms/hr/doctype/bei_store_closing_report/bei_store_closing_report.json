@@ -47,6 +47,40 @@
   "denom_20",
   "denom_coins",
   "denom_total",
+  "section_pcf_denomination",
+  "pcf_denom_1000",
+  "pcf_denom_500",
+  "pcf_denom_200",
+  "pcf_denom_100",
+  "column_break_pcf_denom",
+  "pcf_denom_50",
+  "pcf_denom_20",
+  "pcf_denom_coins",
+  "pcf_denom_total",
+  "section_del_denomination",
+  "del_denom_1000",
+  "del_denom_500",
+  "del_denom_200",
+  "del_denom_100",
+  "column_break_del_denom",
+  "del_denom_50",
+  "del_denom_20",
+  "del_denom_coins",
+  "del_denom_total",
+  "section_chg_denomination",
+  "chg_denom_1000",
+  "chg_denom_500",
+  "chg_denom_200",
+  "chg_denom_100",
+  "column_break_chg_denom",
+  "chg_denom_50",
+  "chg_denom_20",
+  "chg_denom_coins",
+  "chg_denom_total",
+  "section_vouchers",
+  "pcf_voucher_amount",
+  "column_break_vouchers",
+  "delivery_voucher_amount",
   "section_cash",
   "pos_total_sales",
   "actual_cash_count",
@@ -378,6 +412,206 @@
    "fieldtype": "Currency",
    "label": "Denomination Total",
    "read_only": 1
+  },
+  {
+   "description": "Petty Cash Fund denomination breakdown",
+   "fieldname": "section_pcf_denomination",
+   "fieldtype": "Section Break",
+   "label": "PCF Denomination Breakdown"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_1000",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 1000"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_500",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 500"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_200",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 200"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_100",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 100"
+  },
+  {
+   "fieldname": "column_break_pcf_denom",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_50",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 50"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_20",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 20"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_coins",
+   "fieldtype": "Currency",
+   "label": "PCF - Coins"
+  },
+  {
+   "description": "Auto-calculated: Sum of PCF denominations",
+   "fieldname": "pcf_denom_total",
+   "fieldtype": "Currency",
+   "label": "PCF Denomination Total",
+   "read_only": 1
+  },
+  {
+   "description": "Delivery Fund denomination breakdown",
+   "fieldname": "section_del_denomination",
+   "fieldtype": "Section Break",
+   "label": "Delivery Fund Denomination Breakdown"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_1000",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 1000"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_500",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 500"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_200",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 200"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_100",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 100"
+  },
+  {
+   "fieldname": "column_break_del_denom",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_50",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 50"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_20",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 20"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_coins",
+   "fieldtype": "Currency",
+   "label": "Delivery - Coins"
+  },
+  {
+   "description": "Auto-calculated: Sum of Delivery denominations",
+   "fieldname": "del_denom_total",
+   "fieldtype": "Currency",
+   "label": "Delivery Denomination Total",
+   "read_only": 1
+  },
+  {
+   "description": "Change Fund denomination breakdown",
+   "fieldname": "section_chg_denomination",
+   "fieldtype": "Section Break",
+   "label": "Change Fund Denomination Breakdown"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_1000",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 1000"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_500",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 500"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_200",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 200"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_100",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 100"
+  },
+  {
+   "fieldname": "column_break_chg_denom",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_50",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 50"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_20",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 20"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_coins",
+   "fieldtype": "Currency",
+   "label": "Change Fund - Coins"
+  },
+  {
+   "description": "Auto-calculated: Sum of Change Fund denominations",
+   "fieldname": "chg_denom_total",
+   "fieldtype": "Currency",
+   "label": "Change Fund Denomination Total",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_vouchers",
+   "fieldtype": "Section Break",
+   "label": "Voucher Amounts"
+  },
+  {
+   "default": "0",
+   "description": "Total PCF voucher amount for the day",
+   "fieldname": "pcf_voucher_amount",
+   "fieldtype": "Currency",
+   "label": "PCF Voucher Amount"
+  },
+  {
+   "fieldname": "column_break_vouchers",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Total delivery voucher amount for the day",
+   "fieldname": "delivery_voucher_amount",
+   "fieldtype": "Currency",
+   "label": "Delivery Voucher Amount"
   },
   {
    "fieldname": "section_cash",

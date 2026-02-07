@@ -88,6 +88,7 @@ def request_coverage(store, coverage_date, shift, reason, absent_employee, notes
         doc.absent_employee = employee_id
         doc.requested_by = frappe.session.user
         doc.notes = notes
+        doc.status = "Open"
         doc.insert()
 
         return {"success": True, "name": doc.name}

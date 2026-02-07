@@ -103,11 +103,102 @@ def resolve_warehouse(store_or_branch):
     frappe.throw(_("Could not find Store: {0}").format(store_or_branch))
 
 
+def _get_area_supervisor_for_store(warehouse):
+    """Get the area supervisor user for a given warehouse/store."""
+    # Check custom_area_supervisor field on Warehouse
+    supervisor = frappe.db.get_value("Warehouse", warehouse, "custom_area_supervisor")
+    if supervisor:
+        return supervisor
+
+    # Fallback: check parent warehouse
+    parent = frappe.db.get_value("Warehouse", warehouse, "parent_warehouse")
+    if parent:
+        supervisor = frappe.db.get_value("Warehouse", parent, "custom_area_supervisor")
+        if supervisor:
+            return supervisor
+
+    return None
+
+
+@frappe.whitelist()
+def get_user_store():
+    """
+    Resolve the current user's store(s) based on their role.
+
+    Store Staff / Store Supervisor: Returns store from Employee.branch
+    Area Supervisor: Returns all stores where Warehouse.custom_area_supervisor = user
+
+    Returns:
+        {
+            "stores": [{"name": "Store Name - BEI", "warehouse_name": "Store Name"}],
+            "default_store": "Store Name - BEI",
+            "is_multi_store": false,
+            "role": "Store Staff"
+        }
+    """
+    user = frappe.session.user
+    user_roles = frappe.get_roles(user)
+
+    stores = []
+    role = None
+
+    if "Area Supervisor" in user_roles:
+        # Area supervisors see all stores assigned to them
+        role = "Area Supervisor"
+        area_stores = frappe.get_all(
+            "Warehouse",
+            filters={
+                "custom_area_supervisor": user,
+                "is_group": 0
+            },
+            fields=["name", "warehouse_name"],
+            order_by="warehouse_name"
+        )
+        stores = area_stores
+
+    if not stores and ("Store Supervisor" in user_roles or "Store Staff" in user_roles
+                        or "Employee" in user_roles):
+        # Store staff/supervisors get their branch from Employee record
+        role = "Store Supervisor" if "Store Supervisor" in user_roles else "Store Staff"
+        employee = frappe.db.get_value(
+            "Employee",
+            {"user_id": user, "status": "Active"},
+            ["branch", "employee_name"],
+            as_dict=True
+        )
+        if employee and employee.branch:
+            warehouse = resolve_warehouse(employee.branch)
+            if warehouse:
+                warehouse_name = frappe.db.get_value("Warehouse", warehouse, "warehouse_name") or warehouse
+                stores = [{"name": warehouse, "warehouse_name": warehouse_name}]
+
+    # System Manager / HR User fallback - return all stores
+    if not stores and ("System Manager" in user_roles or "HR User" in user_roles):
+        role = "HR User"
+        stores = frappe.get_all(
+            "Warehouse",
+            filters={"is_group": 0, "disabled": 0},
+            fields=["name", "warehouse_name"],
+            order_by="warehouse_name",
+            limit=50
+        )
+
+    default_store = stores[0]["name"] if stores else None
+
+    return {
+        "stores": stores,
+        "default_store": default_store,
+        "is_multi_store": len(stores) > 1,
+        "role": role
+    }
+
+
 @frappe.whitelist()
 def get_orderable_items(store):
     """
     Get items available for ordering by this store.
-    Returns items filtered by warehouse/store with last order quantity.
+    Returns items sorted by order frequency (most ordered first),
+    with stock_uom and last order quantity.
     """
     if not store:
         frappe.throw(_("Store is required"))
@@ -115,17 +206,22 @@ def get_orderable_items(store):
     # Resolve branch name to warehouse name
     warehouse = resolve_warehouse(store)
 
-    # Get items that can be ordered by this store
-    # For now, return all stock items - can be filtered later by store config
-    items = frappe.get_all(
-        "Item",
-        filters={
-            "is_stock_item": 1,
-            "disabled": 0
-        },
-        fields=["name", "item_name", "item_group", "stock_uom", "image"],
-        order_by="item_group, item_name"
-    )
+    # Get items with order frequency for this store, sorted by most ordered first
+    items = frappe.db.sql("""
+        SELECT
+            i.name, i.item_name, i.item_group, i.stock_uom, i.image,
+            COALESCE(freq.order_count, 0) as order_count
+        FROM `tabItem` i
+        LEFT JOIN (
+            SELECT soi.item_code, COUNT(DISTINCT soi.parent) as order_count
+            FROM `tabBEI Store Order Item` soi
+            JOIN `tabBEI Store Order` so ON so.name = soi.parent
+            WHERE so.store = %s AND so.status != 'Draft'
+            GROUP BY soi.item_code
+        ) freq ON freq.item_code = i.name
+        WHERE i.is_stock_item = 1 AND i.disabled = 0
+        ORDER BY COALESCE(freq.order_count, 0) DESC, i.item_group, i.item_name
+    """, warehouse, as_dict=True)
 
     # Get last order quantities for each item
     for item in items:
@@ -181,6 +277,23 @@ def submit_order(store, items):
         })
 
     order.insert()
+
+    # Create approval queue entry routed to area supervisor
+    try:
+        approver = _get_area_supervisor_for_store(warehouse)
+        if approver:
+            queue_entry = frappe.new_doc("BEI Approval Queue")
+            queue_entry.reference_doctype = "BEI Store Order"
+            queue_entry.reference_name = order.name
+            queue_entry.assigned_approver = approver
+            queue_entry.status = "Pending"
+            queue_entry.insert(ignore_permissions=True)
+    except Exception:
+        # Don't block order creation if approval queue fails
+        frappe.log_error(
+            f"Failed to create approval queue for order {order.name}",
+            "Approval Queue Error"
+        )
 
     return {
         "success": True,

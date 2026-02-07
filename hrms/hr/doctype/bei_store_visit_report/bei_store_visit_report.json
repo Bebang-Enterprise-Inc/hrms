@@ -214,6 +214,16 @@
    "role": "HR User",
    "share": 1,
    "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Area Supervisor",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Employee"
   }
  ],
  "sort_field": "creation",
