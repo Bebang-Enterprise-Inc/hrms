@@ -100,7 +100,7 @@ def approve_cycle_count(count_name):
     if doc.status not in ["Submitted", "Resubmitted"]:
         frappe.throw(_("Only submitted cycle counts can be approved"))
 
-    doc.status = "Approved"
+    doc.status = "Verified"
     doc.approved_by = frappe.session.user
     doc.approved_at = nowdate()
     doc.save()
@@ -418,9 +418,11 @@ def submit_return_request(store, items, photo=None):
 def get_return_requests(store=None, status=None, limit=20):
     """Get return request history for a store."""
     limit = min(int(limit or 20), 500)
-    filters = {"custom_return_request": 1}
+    filters = {}
 
-    # Bug fix C8: Check if custom_return_from_store column exists before filtering
+    # Bug fix C8: Check if custom columns exist before filtering
+    if frappe.db.has_column("Stock Entry", "custom_return_request"):
+        filters["custom_return_request"] = 1
     if store:
         warehouse = _resolve_warehouse(store)
         if warehouse and frappe.db.has_column("Stock Entry", "custom_return_from_store"):
