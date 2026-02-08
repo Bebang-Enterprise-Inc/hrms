@@ -29,7 +29,8 @@ test.describe.serial("Cross-Role: Store Order → Warehouse Delivery", () => {
 
   test("CR-ORDER-001: Staff navigates to store ordering page", async () => {
     await staffPage.goto(`${PORTAL_URL}/dashboard/inventory/ordering`);
-    await staffPage.waitForLoadState("networkidle");
+    await staffPage.waitForLoadState("domcontentloaded");
+    await staffPage.waitForTimeout(2000);
     await staffPage.waitForTimeout(2000);
 
     // Verify ordering page loaded
@@ -101,7 +102,8 @@ test.describe.serial("Cross-Role: Store Order → Warehouse Delivery", () => {
 
   test("CR-ORDER-003: Warehouse sees pending order", async () => {
     await whPage.goto(`${PORTAL_URL}/dashboard/warehouse/approve`);
-    await whPage.waitForLoadState("networkidle");
+    await whPage.waitForLoadState("domcontentloaded");
+    await whPage.waitForTimeout(2000);
     await whPage.waitForTimeout(2000);
 
     // Verify warehouse approve page loaded
@@ -123,7 +125,8 @@ test.describe.serial("Cross-Role: Store Order → Warehouse Delivery", () => {
     const firstItem = whPage.locator("[class*='card'] a, [class*='Card'] a, a[href*='approve']").first();
     if (await firstItem.isVisible({ timeout: 5000 }).catch(() => false)) {
       await firstItem.click();
-      await whPage.waitForLoadState("networkidle");
+      await whPage.waitForLoadState("domcontentloaded");
+    await whPage.waitForTimeout(2000);
       await whPage.waitForTimeout(2000);
     }
 
@@ -150,7 +153,8 @@ test.describe.serial("Cross-Role: Store Order → Warehouse Delivery", () => {
   test("CR-ORDER-005: Both roles see updated status", async () => {
     // Staff checks order history
     await staffPage.goto(`${PORTAL_URL}/dashboard/inventory/ordering`);
-    await staffPage.waitForLoadState("networkidle");
+    await staffPage.waitForLoadState("domcontentloaded");
+    await staffPage.waitForTimeout(2000);
     await staffPage.waitForTimeout(2000);
 
     const staffBody = await staffPage.locator("body").textContent() || "";
@@ -158,7 +162,8 @@ test.describe.serial("Cross-Role: Store Order → Warehouse Delivery", () => {
 
     // Warehouse checks dashboard
     await whPage.goto(`${PORTAL_URL}/dashboard/warehouse`);
-    await whPage.waitForLoadState("networkidle");
+    await whPage.waitForLoadState("domcontentloaded");
+    await whPage.waitForTimeout(2000);
     await whPage.waitForTimeout(2000);
 
     const whBody = await whPage.locator("body").textContent() || "";

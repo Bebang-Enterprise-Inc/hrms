@@ -28,7 +28,8 @@ test.describe.serial("Cross-Role: Supervisor Escalation → Area Resolution", ()
   test("CR-ESC-001: Supervisor escalates an issue via queue", async () => {
     // Supervisor goes to queue
     await supPage.goto(`${PORTAL_URL}/dashboard/queue`);
-    await supPage.waitForLoadState("networkidle");
+    await supPage.waitForLoadState("domcontentloaded");
+    await supPage.waitForTimeout(2000);
     await supPage.waitForTimeout(2000);
 
     const bodyText = await supPage.locator("body").textContent() || "";
@@ -69,7 +70,8 @@ test.describe.serial("Cross-Role: Supervisor Escalation → Area Resolution", ()
 
   test("CR-ESC-002: Area supervisor sees escalation", async () => {
     await areaPage.goto(`${PORTAL_URL}/dashboard/queue`);
-    await areaPage.waitForLoadState("networkidle");
+    await areaPage.waitForLoadState("domcontentloaded");
+    await areaPage.waitForTimeout(2000);
     await areaPage.waitForTimeout(3000);
 
     const bodyText = await areaPage.locator("body").textContent() || "";

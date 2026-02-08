@@ -26,7 +26,8 @@ test.describe.serial("Inventory & Store Ordering", () => {
   // TC-INV-001: View Item Catalog
   test("TC-INV-001: View item catalog sorted by order frequency", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/ordering`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -110,7 +111,8 @@ test.describe.serial("Inventory & Store Ordering", () => {
   // TC-INV-004: Submit Cycle Count
   test("TC-INV-004: Submit cycle count with variances", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/counts`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -153,7 +155,8 @@ test.describe.serial("Inventory & Store Ordering", () => {
   // TC-INV-005: Report Variance
   test("TC-INV-005: Report inventory variance", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/variances`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -192,7 +195,8 @@ test.describe.serial("Inventory & Store Ordering", () => {
   // TC-INV-006: Submit Return
   test("TC-INV-006: Submit inventory return", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/returns`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -224,7 +228,8 @@ test.describe.serial("Inventory & Store Ordering", () => {
   // TC-INV-007: View Returns History
   test("TC-INV-007: View returns history list", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/returns`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -245,7 +250,8 @@ test.describe.serial("Inventory & Store Ordering", () => {
   // TC-INV-008: Shelf Life Items
   test("TC-INV-008: View shelf life items and request extension", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/shelf-life`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -268,7 +274,8 @@ test.describe.serial("Inventory & Store Ordering", () => {
   // TC-INV-009: Negative Qty Validation
   test("TC-INV-009: Negative quantity shows error", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/counts`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Fill a negative quantity
@@ -298,7 +305,8 @@ test.describe.serial("Inventory & Store Ordering", () => {
   // TC-INV-010: Return Reasons Dropdown
   test("TC-INV-010: Return reasons dropdown shows all options", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/returns`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Navigate to create form

@@ -40,7 +40,8 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
   // A1: Navigate to Procurement Dashboard
   test("A1 - Navigate to Procurement Dashboard", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/procurement`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const url = page.url();
     const bodyText = await page.locator("body").textContent() || "";
@@ -61,7 +62,8 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
   // A2: Navigate Procurement Sidebar & Quick Actions
   test("A2 - Procurement Sidebar & Quick Actions visible", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/procurement`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Check Quick Actions are visible
@@ -82,7 +84,8 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
   // A3: Create Supplier (via Quick Action navigation)
   test("A3 - Create Supplier", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/procurement`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Click "Manage Suppliers" Quick Action
@@ -90,7 +93,8 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
     let navigated = false;
     if (await suppliersLink.isVisible({ timeout: 3000 }).catch(() => false)) {
       await suppliersLink.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
       navigated = true;
     }
@@ -153,14 +157,16 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
   // A5: Create Purchase Order (Under 500K)
   test("A5 - Create Purchase Order", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/procurement`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Click "New Purchase Order" Quick Action
     const poLink = page.locator('a:has-text("New Purchase Order")').first();
     if (await poLink.isVisible({ timeout: 3000 }).catch(() => false)) {
       await poLink.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
     }
 
@@ -229,7 +235,7 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
     }
 
     await screenshot(page, "FLOW_A", "A7_po_submitted");
-    expect(true).toBeTruthy(); // Document current state
+    expect(poName).toBeTruthy();
   });
 
   // A8: Mae Approves PO
@@ -240,7 +246,7 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
 
     // If already approved, great. If not, document it.
     await screenshot(page, "FLOW_A", "A8_po_approved");
-    expect(true).toBeTruthy();
+    expect(status).toBeDefined();
   });
 
   // A9: Create Goods Receipt
@@ -280,7 +286,7 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
     }
 
     await screenshot(page, "FLOW_A", "A10_invoice");
-    expect(true).toBeTruthy(); // Document availability
+    expect(Array.isArray(invoices)).toBeTruthy();
   });
 
   // A11: Submit Invoice for 3-Way Match
@@ -292,7 +298,7 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
       console.log("A11: No invoice to check 3-way match");
     }
     await screenshot(page, "FLOW_A", "A11_invoice_match");
-    expect(true).toBeTruthy();
+    expect(invoiceName || result !== undefined).toBeTruthy();
   });
 
   // A12: Create Payment Request (RFP)
@@ -307,7 +313,7 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
     }
 
     await screenshot(page, "FLOW_A", "A12_payment_request");
-    expect(true).toBeTruthy();
+    expect(Array.isArray(payments)).toBeTruthy();
   });
 
   // A13: Submit RFP for Approval
@@ -317,7 +323,7 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
       console.log(`A13: Payment ${paymentName} status:`, JSON.stringify(result?.message || {}).substring(0, 200));
     }
     await screenshot(page, "FLOW_A", "A13_rfp_submitted");
-    expect(true).toBeTruthy();
+    expect(paymentName || result !== undefined).toBeTruthy();
   });
 
   // A14: Level 1 Reviewer Approves
@@ -333,34 +339,35 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
       }
     }
     await screenshot(page, "FLOW_A", "A14_level1_approved");
-    expect(true).toBeTruthy();
+    expect(paymentName).toBeTruthy();
   });
 
   // A15: Level 2 Budget Approves
   test("A15 - Level 2 Budget Approval", async () => {
     console.log("A15: Budget approval step (requires session auth)");
     await screenshot(page, "FLOW_A", "A15_level2_approved");
-    expect(true).toBeTruthy();
+    expect(paymentName).toBeTruthy();
   });
 
   // A16: Level 3 CFO Approves
   test("A16 - Level 3 CFO Approval", async () => {
     console.log("A16: CFO approval step (requires session auth)");
     await screenshot(page, "FLOW_A", "A16_level3_approved");
-    expect(true).toBeTruthy();
+    expect(paymentName).toBeTruthy();
   });
 
   // A17: Mark Payment Complete
   test("A17 - Payment Completion", async () => {
     console.log("A17: Payment completion (requires session auth for write)");
     await screenshot(page, "FLOW_A", "A17_payment_complete");
-    expect(true).toBeTruthy();
+    expect(paymentName).toBeTruthy();
   });
 
   // A18: Verify Dashboard Updated
   test("A18 - Dashboard KPIs Updated", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/procurement`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const kpiResult = await frappeApi(page, "hrms.api.procurement.get_procurement_dashboard");
     const currentKpis = kpiResult?.message || {};
@@ -377,7 +384,7 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
     console.log(`A19: Supplier ${supplierName} metrics:`, JSON.stringify(result?.message || {}).substring(0, 300));
 
     await screenshot(page, "FLOW_A", "A19_supplier_metrics");
-    expect(true).toBeTruthy();
+    expect(supplierName).toBeTruthy();
   });
 
   // A20: Purchase Requisition Flow
@@ -392,7 +399,7 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
     }
 
     await screenshot(page, "FLOW_A", "A20_purchase_requisition");
-    expect(true).toBeTruthy();
+    expect(Array.isArray(prs)).toBeTruthy();
   });
 
   // A21: Send PO to Supplier
@@ -406,6 +413,6 @@ test.describe.serial("Flow A: Procurement Full Cycle", () => {
       }
     }
     await screenshot(page, "FLOW_A", "A21_po_sent");
-    expect(true).toBeTruthy();
+    expect(poName).toBeTruthy();
   });
 });

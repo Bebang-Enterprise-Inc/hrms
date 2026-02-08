@@ -11,7 +11,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
   test("B1 - Commissary Dashboard", async ({ page }) => {
     await login(page, "commissary");
     await page.goto(`${PORTAL_URL}/dashboard/commissary`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
 
@@ -40,7 +41,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
   test("B2 - View Production Items", async ({ page }) => {
     await login(page, "commissary");
     await page.goto(`${PORTAL_URL}/dashboard/commissary/production`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const hasItems = /fg|item|product/i.test(bodyText);
@@ -58,7 +60,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
   test("B3 - Log Commissary Production", async ({ page }) => {
     await login(page, "commissary");
     await page.goto(`${PORTAL_URL}/dashboard/commissary/production`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     // Try to find FG020 item in the production grid
     const itemButton = page.locator(':text("FG020")').first();
@@ -101,7 +104,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
   test("B4 - Verify Commissary Inventory Updated", async ({ page }) => {
     await login(page, "commissary");
     await page.goto(`${PORTAL_URL}/dashboard/commissary/inventory`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
 
@@ -119,7 +123,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
   test("B5 - View Low Stock Alerts", async ({ page }) => {
     await login(page, "commissary");
     await page.goto(`${PORTAL_URL}/dashboard/commissary/inventory`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     // Look for low stock filter/toggle
     const toggle = page.locator('button:has-text("Low Stock"), label:has-text("Low")').first();
@@ -139,7 +144,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
   test("B6 - Store Places Order (Material Request)", async ({ page }) => {
     await login(page, "store_staff");
     await page.goto(`${PORTAL_URL}/dashboard/inventory/ordering`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const hasSearch = (await page.locator('input[type="search"], input[placeholder*="search" i]').count()) > 0;
@@ -185,7 +191,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
   test("B7 - Warehouse Sees Pending Order", async ({ page }) => {
     await login(page, "warehouse");
     await page.goto(`${PORTAL_URL}/dashboard/warehouse/approve`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const hasMR = /pending|material request|mr-|approve/i.test(bodyText);
@@ -212,7 +219,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
     } else {
       await page.goto(`${PORTAL_URL}/dashboard/warehouse/approve`);
     }
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     // Try approve button in UI
     const approveBtn = page.locator('button:has-text("Approve"), button:has-text("Approve All")').first();
@@ -236,7 +244,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
   test("B9 - Warehouse Creates Stock Transfer (Dispatch)", async ({ page }) => {
     await login(page, "warehouse");
     await page.goto(`${PORTAL_URL}/dashboard/warehouse/dispatch`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const hasDispatch = /dispatch|transfer|ready/i.test(bodyText);
@@ -263,7 +272,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
   test("B10 - Verify Stock Moved (Commissary Side)", async ({ page }) => {
     await login(page, "commissary");
     await page.goto(`${PORTAL_URL}/dashboard/commissary/inventory`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const apiResp = await frappeApi(page, "hrms.api.commissary.get_inventory_levels");
     const items = apiResp?.message || [];
@@ -278,7 +288,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
   test("B11 - Distribution Trip (Dispatch Page)", async ({ page }) => {
     await login(page, "warehouse");
     await page.goto(`${PORTAL_URL}/dashboard/warehouse/dispatch`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
 
@@ -317,7 +328,8 @@ test.describe.serial("Flow B: Commissary to Store Delivery", () => {
     let foundPage = false;
     for (const route of routes) {
       await page.goto(`${PORTAL_URL}${route}`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       const bodyText = await page.locator("body").textContent() || "";
       if (!bodyText.includes("404") && !bodyText.includes("Page not found")) {
         foundPage = true;

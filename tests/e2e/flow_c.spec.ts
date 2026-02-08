@@ -13,7 +13,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
   test("C1 - Submit Cycle Count", async ({ page }) => {
     await login(page, "store_staff");
     await page.goto(`${PORTAL_URL}/dashboard/inventory/counts`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const pageLoaded = !bodyText.includes("404");
@@ -45,7 +46,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
     // Try navigating to new count page
     if (!hasNewBtn) {
       await page.goto(`${PORTAL_URL}/dashboard/inventory/counts/new`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     }
 
     // API attempt
@@ -68,7 +70,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
   test("C2 - View Cycle Count History", async ({ page }) => {
     await login(page, "store_staff");
     await page.goto(`${PORTAL_URL}/dashboard/inventory/counts`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const hasCounts = /count|cycle|submitted|variance/i.test(bodyText);
@@ -90,7 +93,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
   test("C3 - Supervisor Rejects Cycle Count", async ({ page }) => {
     await login(page, "store_supervisor");
     await page.goto(`${PORTAL_URL}/dashboard/inventory/counts`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const hasCounts = /count|cycle|review|pending/i.test(bodyText);
@@ -130,7 +134,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
   test("C4 - Staff Resubmits Cycle Count", async ({ page }) => {
     await login(page, "store_staff");
     await page.goto(`${PORTAL_URL}/dashboard/inventory/counts`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     // Look for resubmit button or create new count
     const resubmitBtn = page.locator('button:has-text("Resubmit"), button:has-text("Recount"), button:has-text("New Count")').first();
@@ -167,7 +172,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
   test("C5 - Supervisor Accepts Recount", async ({ page }) => {
     await login(page, "store_supervisor");
     await page.goto(`${PORTAL_URL}/dashboard/inventory/counts`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     // Look for accept/approve button
     const acceptBtn = page.locator('button:has-text("Accept"), button:has-text("Approve")').first();
@@ -188,7 +194,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
   test("C6 - Report Inventory Variance", async ({ page }) => {
     await login(page, "store_staff");
     await page.goto(`${PORTAL_URL}/dashboard/inventory/variances`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const pageLoaded = !bodyText.includes("404");
@@ -228,7 +235,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
   test("C7 - View Variances List", async ({ page }) => {
     await login(page, "store_staff");
     await page.goto(`${PORTAL_URL}/dashboard/inventory/variances`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const hasVariances = /variance|discrepancy|shortage/i.test(bodyText);
@@ -244,7 +252,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
   test("C8 - Submit Return Request", async ({ page }) => {
     await login(page, "store_staff");
     await page.goto(`${PORTAL_URL}/dashboard/inventory/returns`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const pageLoaded = !bodyText.includes("404");
@@ -279,7 +288,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
   test("C9 - Request Shelf Life Extension", async ({ page }) => {
     await login(page, "store_staff");
     await page.goto(`${PORTAL_URL}/dashboard/inventory/shelf-life`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const pageLoaded = !bodyText.includes("404");
@@ -318,7 +328,8 @@ test.describe.serial("Flow C: Store Inventory Management", () => {
 
     // Try shelf life page or approval queue
     await page.goto(`${PORTAL_URL}/dashboard/inventory/shelf-life`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
     const hasExtensions = /shelf|extension|expiry|approve/i.test(bodyText);

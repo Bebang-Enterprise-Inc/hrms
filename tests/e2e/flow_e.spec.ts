@@ -127,7 +127,8 @@ test.describe("Flow E: Document Flow Validation", () => {
 
       // Navigate to new invoice page
       await page.goto(`${PORTAL_URL}/dashboard/procurement/invoices/new`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
 
       // Try selecting the PO - look for PO selection field
@@ -358,7 +359,8 @@ test.describe("Flow E: Variance Detection", () => {
         await page.goto(
           `${PORTAL_URL}/dashboard/procurement/invoices/${invResult.message.name}`
         );
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
         await page.waitForTimeout(2000);
 
         const body = await page.locator("body").textContent();
@@ -512,7 +514,8 @@ test.describe("Flow E: Empty Form Validation", () => {
   }) => {
     await login(page, "hq_user");
     await page.goto(`${PORTAL_URL}/dashboard/procurement/suppliers/new`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Try to submit empty form
@@ -542,7 +545,8 @@ test.describe("Flow E: Empty Form Validation", () => {
   }) => {
     await login(page, "hq_user");
     await page.goto(`${PORTAL_URL}/dashboard/procurement/purchase-orders/new`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const submitBtn = page.locator(
@@ -561,7 +565,8 @@ test.describe("Flow E: Empty Form Validation", () => {
   }) => {
     await login(page, "hq_user");
     await page.goto(`${PORTAL_URL}/dashboard/procurement/invoices/new`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const submitBtn = page.locator(
@@ -586,7 +591,8 @@ test.describe("Flow E: Empty Form Validation", () => {
   }) => {
     await login(page, "hq_user");
     await page.goto(`${PORTAL_URL}/dashboard/procurement/payments/new`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const submitBtn = page.locator(
@@ -612,7 +618,8 @@ test.describe("Flow E: Empty Form Validation", () => {
     await page.goto(
       `${PORTAL_URL}/dashboard/procurement/goods-receipts/new`
     );
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const submitBtn = page.locator(
@@ -638,7 +645,8 @@ test.describe("Flow E: Empty Form Validation", () => {
     await page.goto(
       `${PORTAL_URL}/dashboard/procurement/purchase-requisitions/new`
     );
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const submitBtn = page.locator(
@@ -689,7 +697,8 @@ test.describe("Flow E: Duplicate Supplier Detection", () => {
 
     // Also try via UI
     await page.goto(`${PORTAL_URL}/dashboard/procurement/suppliers/new`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     await screenshot(page, "FLOW_E", "E14_duplicate_phone");
@@ -901,7 +910,8 @@ test.describe("Flow E: Material Request Rejection", () => {
     if (mrName) {
       // Navigate to warehouse approve page
       await page.goto(`${PORTAL_URL}/dashboard/warehouse/approve`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
 
       // Try rejecting via API
@@ -946,7 +956,8 @@ test.describe("Flow E: Supplier Edit", () => {
       await page.goto(
         `${PORTAL_URL}/dashboard/procurement/suppliers/${encodeURIComponent(supplierName)}/edit`
       );
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
 
       // Try to update via API
@@ -974,12 +985,14 @@ test.describe("Flow E: Supplier Edit", () => {
       await page.goto(
         `${PORTAL_URL}/dashboard/procurement/suppliers/${encodeURIComponent(supplierName)}`
       );
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
     } else {
       // No suppliers found - document it
       await page.goto(`${PORTAL_URL}/dashboard/procurement/suppliers`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
     }
 

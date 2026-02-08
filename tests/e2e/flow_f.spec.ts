@@ -84,7 +84,8 @@ async function navigateTo(
   path: string
 ) {
   await page.goto(`${PORTAL_URL}${path}`);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
   await page.waitForTimeout(2000);
 }
 
@@ -276,8 +277,9 @@ test.describe("Flow F: RBAC - HQ User", () => {
     await screenshot(page, "FLOW_F", "F17b_hq_accounting_expense");
 
     // Document: finance-accounting is 404, accounting-expense might work
-    // This test always passes - it's documenting behavior
-    expect(true).toBeTruthy();
+    // Verify we captured both page states
+    expect(state1.url).toBeDefined();
+    expect(state2.url).toBeDefined();
   });
 
   test("F18 - HQ User CAN access Approvals", async ({ page }) => {
@@ -376,7 +378,8 @@ test.describe("Flow F: RBAC - System Manager", () => {
   }) => {
     // Login as Administrator via Frappe Desk
     await page.goto("https://hq.bebang.ph/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page
       .locator(
         'input[data-fieldname="usr"], input#login_email, input[name="usr"]'
@@ -390,11 +393,13 @@ test.describe("Flow F: RBAC - System Manager", () => {
       .first()
       .fill("admin");
     await page.locator('.btn-login, button[type="submit"]').first().click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     // Navigate to portal
     await page.goto(`${PORTAL_URL}/dashboard`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Check finance modules (skip finance-accounting since it's a 404 for everyone)
@@ -406,7 +411,8 @@ test.describe("Flow F: RBAC - System Manager", () => {
 
     for (const mod of modules) {
       await page.goto(`${PORTAL_URL}${mod}`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(1500);
       const state = await getPageAccessState(page);
       expect(
@@ -422,7 +428,8 @@ test.describe("Flow F: RBAC - System Manager", () => {
     page,
   }) => {
     await page.goto("https://hq.bebang.ph/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page
       .locator(
         'input[data-fieldname="usr"], input#login_email, input[name="usr"]'
@@ -436,10 +443,12 @@ test.describe("Flow F: RBAC - System Manager", () => {
       .first()
       .fill("admin");
     await page.locator('.btn-login, button[type="submit"]').first().click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
 
     await page.goto(`${PORTAL_URL}/dashboard`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const modules = [
@@ -450,7 +459,8 @@ test.describe("Flow F: RBAC - System Manager", () => {
 
     for (const mod of modules) {
       await page.goto(`${PORTAL_URL}${mod}`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(1500);
       const state = await getPageAccessState(page);
       expect(

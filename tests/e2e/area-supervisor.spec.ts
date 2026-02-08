@@ -25,7 +25,8 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
   // TC-AREA-001: Area Dashboard with KPIs
   test("TC-AREA-001: Area dashboard loads with KPI cards", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/analytics/area`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(3000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -34,7 +35,8 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
     // If area dashboard doesn't exist as separate route, check main dashboard
     if (url.includes("/login") || bodyText.includes("404")) {
       await page.goto(`${PORTAL_URL}/dashboard`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
     }
 
@@ -56,7 +58,8 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
   test("TC-AREA-002: Compliance summary shows per-store status", async () => {
     // Navigate to reports or analytics section
     await page.goto(`${PORTAL_URL}/dashboard/reports`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -76,7 +79,8 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
   // TC-AREA-003: Approve Store Order
   test("TC-AREA-003: Approve store order with qty adjustments", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/queue`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Look for store order items in queue
@@ -118,13 +122,15 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
   test("TC-AREA-004: Store visit report with scoring", async () => {
     // Navigate to store visit page
     await page.goto(`${PORTAL_URL}/dashboard/visits`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     let url = page.url();
     if (url.includes("/login")) {
       await page.goto(`${PORTAL_URL}/dashboard/store-ops/visit`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
     }
 
@@ -162,7 +168,8 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
   // TC-AREA-005: View Variance Reports
   test("TC-AREA-005: View variance reports with filtering", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/variances`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -182,13 +189,15 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
   test("TC-AREA-006: Create action plan from visit", async () => {
     // Navigate to action plans page
     await page.goto(`${PORTAL_URL}/dashboard/action-plans`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     let url = page.url();
     if (url.includes("/login")) {
       await page.goto(`${PORTAL_URL}/dashboard/visits/action-plan`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
     }
 
@@ -243,13 +252,15 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
   // TC-AREA-008: Create Coaching Log
   test("TC-AREA-008: Create coaching log", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/coaching`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     let url = page.url();
     if (url.includes("/login")) {
       await page.goto(`${PORTAL_URL}/dashboard/visits/coaching`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
       await page.waitForTimeout(2000);
     }
 
@@ -285,7 +296,8 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
   // TC-AREA-009: Multi-Store Reports Feed
   test("TC-AREA-009: Multi-store reports feed with filters", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/reports`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -311,7 +323,8 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
   // TC-AREA-010: Approve Labor Plan
   test("TC-AREA-010: Approve labor plan", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/queue`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Look for labor plan items in queue
@@ -343,7 +356,8 @@ test.describe.serial("Area Supervisor - Analytics & Multi-Store", () => {
       // Session expired - re-login and verify dashboard accessible
       await login(page, "area_supervisor");
       await page.goto(`${PORTAL_URL}/dashboard`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     }
     const finalUrl = page.url();
     expect(finalUrl).not.toContain("/login");

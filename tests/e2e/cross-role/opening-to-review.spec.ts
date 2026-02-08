@@ -31,7 +31,8 @@ test.describe.serial("Cross-Role: Opening Report → Supervisor Review", () => {
 
   test("CR-OPEN-001: Staff navigates to opening report form", async () => {
     await staffPage.goto(`${PORTAL_URL}/dashboard/store-ops/opening`);
-    await staffPage.waitForLoadState("networkidle");
+    await staffPage.waitForLoadState("domcontentloaded");
+    await staffPage.waitForTimeout(2000);
     await staffPage.waitForTimeout(2000);
 
     // Verify opening report page loaded
@@ -96,7 +97,8 @@ test.describe.serial("Cross-Role: Opening Report → Supervisor Review", () => {
 
   test("CR-OPEN-003: Supervisor sees report in approval queue", async () => {
     await supPage.goto(`${PORTAL_URL}/dashboard/queue`);
-    await supPage.waitForLoadState("networkidle");
+    await supPage.waitForLoadState("domcontentloaded");
+    await supPage.waitForTimeout(2000);
     await supPage.waitForTimeout(3000);
 
     // Verify queue page loaded

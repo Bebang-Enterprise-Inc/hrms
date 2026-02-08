@@ -28,7 +28,8 @@ test.describe.serial("Cross-Role: Leave Request → Supervisor Approval", () => 
   test("CR-LEAVE-001: Staff requests leave", async () => {
     // Navigate to leave request page
     await staffPage.goto(`${PORTAL_URL}/dashboard/leave`);
-    await staffPage.waitForLoadState("networkidle");
+    await staffPage.waitForLoadState("domcontentloaded");
+    await staffPage.waitForTimeout(2000);
     await staffPage.waitForTimeout(2000);
 
     // Check if leave page exists - might be under different route
@@ -36,7 +37,8 @@ test.describe.serial("Cross-Role: Leave Request → Supervisor Approval", () => 
     if (url.includes("/login") || url.includes("404")) {
       // Try alternative routes
       await staffPage.goto(`${PORTAL_URL}/dashboard/hr/leave`);
-      await staffPage.waitForLoadState("networkidle");
+      await staffPage.waitForLoadState("domcontentloaded");
+    await staffPage.waitForTimeout(2000);
       await staffPage.waitForTimeout(2000);
       url = staffPage.url();
     }
@@ -82,7 +84,8 @@ test.describe.serial("Cross-Role: Leave Request → Supervisor Approval", () => 
 
   test("CR-LEAVE-002: Supervisor sees leave request in queue", async () => {
     await supPage.goto(`${PORTAL_URL}/dashboard/queue`);
-    await supPage.waitForLoadState("networkidle");
+    await supPage.waitForLoadState("domcontentloaded");
+    await supPage.waitForTimeout(2000);
     await supPage.waitForTimeout(3000);
 
     const bodyText = await supPage.locator("body").textContent() || "";
@@ -122,7 +125,8 @@ test.describe.serial("Cross-Role: Leave Request → Supervisor Approval", () => 
 
     // Staff checks leave status
     await staffPage.goto(`${PORTAL_URL}/dashboard/leave`);
-    await staffPage.waitForLoadState("networkidle");
+    await staffPage.waitForLoadState("domcontentloaded");
+    await staffPage.waitForTimeout(2000);
     await staffPage.waitForTimeout(2000);
 
     await staffPage.screenshot({ path: `${SCREENSHOT_DIR}/CR-LEAVE-003_staff_status.png`, fullPage: true });

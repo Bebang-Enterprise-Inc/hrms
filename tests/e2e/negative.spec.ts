@@ -25,7 +25,8 @@ test.describe.serial("Negative: Opening Report Validation", () => {
 
   test("NEG-OPEN-001: Submit disabled without store selected", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/opening`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Don't select a store - check submit button state
@@ -277,7 +278,8 @@ test.describe.serial("Negative: Mid-Day Operations Validation", () => {
 
   test("NEG-MID-001: Midshift time window enforcement (TC-VAL-008)", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/midshift`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -298,7 +300,8 @@ test.describe.serial("Negative: Mid-Day Operations Validation", () => {
 
   test("NEG-MID-002: Same cashier in handover rejected (TC-VAL-009)", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/handover`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Fill both cashier fields with same name
@@ -330,7 +333,8 @@ test.describe.serial("Negative: Mid-Day Operations Validation", () => {
 
   test("NEG-MID-003: Handover variance > PHP 50 requires explanation (TC-AUDIT-003)", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/handover`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Fill different cashiers
@@ -370,7 +374,8 @@ test.describe.serial("Negative: Mid-Day Operations Validation", () => {
     if (url.includes("/login")) {
       await login(page, "store_staff");
       await page.goto(`${PORTAL_URL}/dashboard`);
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     }
     expect(page.url()).not.toContain("/login");
   });
@@ -392,7 +397,8 @@ test.describe.serial("Negative: Ordering & Inventory Validation", () => {
 
   test("NEG-ORD-001: Empty store order rejected (TC-VAL-005)", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/ordering`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Try to submit without adding any items
@@ -422,7 +428,8 @@ test.describe.serial("Negative: Ordering & Inventory Validation", () => {
 
   test("NEG-ORD-002: Negative cycle count quantity (TC-INV-009)", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/counts`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const qtyInputs = page.locator("input[type='number']");
@@ -449,7 +456,8 @@ test.describe.serial("Negative: Ordering & Inventory Validation", () => {
 
   test("NEG-ORD-003: Return without reason selected", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/returns`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Navigate to create form
@@ -471,7 +479,8 @@ test.describe.serial("Negative: Ordering & Inventory Validation", () => {
 
   test("NEG-ORD-004: 12 PM ordering cutoff (TC-AUDIT-013)", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/inventory/ordering`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const bodyText = await page.locator("body").textContent() || "";
@@ -503,7 +512,8 @@ test.describe.serial("Negative: Maintenance & Deposit Validation", () => {
 
   test("NEG-MAINT-001: Maintenance without category (TC-VAL-006)", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/maintenance`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Look for "New" button to create a request
@@ -564,7 +574,8 @@ test.describe.serial("Negative: Maintenance & Deposit Validation", () => {
 
   test("NEG-DEP-001: Bank deposit missing entry and photo (TC-VAL-007)", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/deposit`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Don't fill any entries or upload photos
@@ -579,7 +590,8 @@ test.describe.serial("Negative: Maintenance & Deposit Validation", () => {
 
   test("NEG-POS-001: POS upload missing required files", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/pos`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Don't upload any files - check if submit is disabled or enabled
@@ -598,7 +610,8 @@ test.describe.serial("Negative: Maintenance & Deposit Validation", () => {
 
   test("NEG-DEP-002: Bank deposit requires at least one photo", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/deposit`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Fill entry fields but don't upload any photo
@@ -638,7 +651,8 @@ test.describe.serial("Negative: Queue & Approval Validation", () => {
 
   test("NEG-QUEUE-001: Flag report without revision notes (TC-VAL-010)", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/queue`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Expand first queue item
@@ -729,7 +743,8 @@ test.describe.serial("Negative: General Form Validation", () => {
 
   test("NEG-GEN-001: XSS in text fields sanitized", async () => {
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/opening`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Inject XSS payload in notes
@@ -786,7 +801,8 @@ test.describe.serial("Negative: General Form Validation", () => {
   test("NEG-GEN-004: Navigation back preserves no stale data", async () => {
     // Go to opening report, partially fill, go back, return
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/opening`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     const notesField = page.locator("textarea").first();
@@ -796,12 +812,14 @@ test.describe.serial("Negative: General Form Validation", () => {
 
     // Navigate away
     await page.goto(`${PORTAL_URL}/dashboard/store-ops`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(1000);
 
     // Navigate back
     await page.goto(`${PORTAL_URL}/dashboard/store-ops/opening`);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(2000);
     await page.waitForTimeout(2000);
 
     // Check if notes field is clean
