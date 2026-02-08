@@ -111,9 +111,12 @@ class BEIStoreClosingReport(Document):
 			total_variance = 0
 			variance_count = 0
 			for item in self.inventory_spot_check:
-				if item.variance is not None:
-					total_variance += item.variance
-					if item.variance != 0:
+				# Compute variance inline (child before_save hasn't run yet during validate)
+				if item.expected_count is not None and item.actual_count is not None:
+					variance = float(item.actual_count) - float(item.expected_count)
+					item.variance = variance
+					total_variance += variance
+					if variance != 0:
 						variance_count += 1
 			self.inventory_variance_total = total_variance
 			self.inventory_variance_count = variance_count

@@ -2547,8 +2547,9 @@ def start_work_order(work_order_name):
 
     if wo.docstatus == 0:
         wo.submit()
+        wo.reload()
 
-    if wo.status == "Submitted":
+    if wo.status in ("Submitted", "Not Started"):
         # Create Stock Entry for Material Transfer for Manufacture
         se = frappe.new_doc("Stock Entry")
         se.stock_entry_type = "Material Transfer for Manufacture"
@@ -2580,7 +2581,7 @@ def complete_work_order(work_order_name, qty_produced=None):
     """Complete a work order by creating manufacture stock entry."""
     wo = frappe.get_doc("Work Order", work_order_name)
 
-    if wo.status not in ["Submitted", "In Process"]:
+    if wo.status not in ["Submitted", "Not Started", "In Process"]:
         return {
             "success": False,
             "error": f"Work Order is in status {wo.status}, cannot complete"
@@ -2905,7 +2906,7 @@ def get_expiring_batches(days=7, item_group=None):
             END as urgency
         FROM `tabBatch` b
         JOIN `tabItem` i ON i.name = b.item
-        LEFT JOIN `tabBin` bin ON bin.item_code = b.item AND bin.batch_no = b.name
+        LEFT JOIN `tabBin` bin ON bin.item_code = b.item AND bin.warehouse = %(warehouse)s
         {filters}
         ORDER BY b.expiry_date ASC
     """, params, as_dict=True)

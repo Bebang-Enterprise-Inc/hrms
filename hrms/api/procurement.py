@@ -874,9 +874,10 @@ def create_invoice(data):
     purchase_order = data.get("purchase_order")
     if purchase_order:
         # AUDIT CONTROL 2.1: Check GR exists for this PO
+        # Note: GR status can be "Accepted" after the receive+inspect workflow
         gr_exists = frappe.db.exists("BEI Goods Receipt", {
             "purchase_order": purchase_order,
-            "status": ["in", ["Submitted", "Approved", "Inspected"]]
+            "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted"]]
         })
         if not gr_exists:
             frappe.throw(
@@ -1040,9 +1041,10 @@ def create_payment_request(data):
             po = frappe.get_doc("BEI Purchase Order", purchase_order)
 
             # AUDIT CONTROL 2.1: Check GR exists for this PO
+            # Note: GR status can be "Accepted" after the receive+inspect workflow
             gr_exists = frappe.db.exists("BEI Goods Receipt", {
                 "purchase_order": purchase_order,
-                "status": ["in", ["Submitted", "Approved", "Inspected"]]
+                "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted"]]
             })
             if not gr_exists:
                 frappe.throw(
@@ -1057,7 +1059,7 @@ def create_payment_request(data):
                 FROM `tabBEI GR Item` gri
                 JOIN `tabBEI Goods Receipt` gr ON gri.parent = gr.name
                 WHERE gr.purchase_order = %s
-                AND gr.status IN ('Submitted', 'Approved', 'Inspected')
+                AND gr.status IN ('Submitted', 'Approved', 'Inspected', 'Accepted')
             """, (purchase_order,))[0][0] or 0
 
             payment_amount = flt(data.get("payment_amount") or invoice.balance_due)
@@ -1402,7 +1404,7 @@ def get_open_po_aging():
             gr.name as gr_name
         FROM `tabBEI Purchase Order` po
         LEFT JOIN `tabBEI Goods Receipt` gr ON gr.purchase_order = po.name
-            AND gr.status IN ('Submitted', 'Approved', 'Inspected')
+            AND gr.status IN ('Submitted', 'Approved', 'Inspected', 'Accepted')
         WHERE po.status NOT IN ('Draft', 'Cancelled', 'Closed')
         ORDER BY
             CASE WHEN gr.name IS NULL THEN 0 ELSE 1 END,
@@ -1742,7 +1744,7 @@ def get_received_value_for_po(purchase_order):
         FROM `tabBEI GR Item` gri
         JOIN `tabBEI Goods Receipt` gr ON gri.parent = gr.name
         WHERE gr.purchase_order = %s
-        AND gr.status IN ('Submitted', 'Approved', 'Inspected')
+        AND gr.status IN ('Submitted', 'Approved', 'Inspected', 'Accepted')
         GROUP BY gri.item_code, gri.item_name, gri.unit_cost
     """, (purchase_order,), as_dict=True)
 

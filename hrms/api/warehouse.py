@@ -391,15 +391,33 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
     if isinstance(items, str):
         items = json.loads(items)
 
-    # Bug fix B9-001: Load MR to map items correctly if mr_name provided
+    # AUDIT CONTROL: Require approved Material Request before dispatch
+    if not mr_name:
+        frappe.throw(
+            _("Cannot create stock transfer without an approved Material Request. "
+              "Please provide mr_name parameter."),
+            title=_("Material Request Required")
+        )
+
+    # Load and validate MR
     mr_items_map = {}
-    if mr_name:
-        try:
-            mr = frappe.get_doc("Material Request", mr_name)
-            for mr_item in mr.items:
-                mr_items_map[mr_item.item_code] = mr_item.name
-        except Exception:
-            pass  # MR not found, continue without MR link
+    try:
+        mr = frappe.get_doc("Material Request", mr_name)
+        # Only allow dispatch for MRs that have been approved/ordered
+        if mr.status not in ("Ordered", "Partially Ordered", "Transferred"):
+            frappe.throw(
+                _("Material Request {0} has status '{1}'. Only approved MRs can be dispatched.").format(
+                    mr_name, mr.status
+                ),
+                title=_("Invalid Material Request Status")
+            )
+        for mr_item in mr.items:
+            mr_items_map[mr_item.item_code] = mr_item.name
+    except frappe.DoesNotExistError:
+        frappe.throw(
+            _("Material Request {0} not found.").format(mr_name),
+            title=_("Material Request Not Found")
+        )
 
     # Create Stock Entry
     se = frappe.new_doc("Stock Entry")
