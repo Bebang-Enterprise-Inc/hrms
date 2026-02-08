@@ -278,10 +278,13 @@ class BEISupplier(Document):
             address.insert(ignore_permissions=True)
 
         except Exception as e:
+            # Address creation is optional - log and continue
+            # Common error: No default Address Template configured in ERPNext
             frappe.log_error(
                 f"Failed to create address for supplier {supplier_name}: {e}",
                 "BEI Supplier Address Error"
             )
+            # Don't raise - PO approval should succeed even if address creation fails
 
     @frappe.whitelist()
     def get_or_create_frappe_supplier(self):

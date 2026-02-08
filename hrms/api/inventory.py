@@ -89,6 +89,26 @@ def get_cycle_counts(store=None, date_from=None, date_to=None, status=None, limi
 
 
 @frappe.whitelist()
+def approve_cycle_count(count_name):
+    """Approve a submitted cycle count."""
+    allowed_roles = ["Area Supervisor", "Store Supervisor", "System Manager"]
+    if not any(r in frappe.get_roles(frappe.session.user) for r in allowed_roles):
+        frappe.throw(_("Not authorized to approve cycle counts"), frappe.PermissionError)
+
+    doc = frappe.get_doc("BEI Cycle Count", count_name)
+
+    if doc.status not in ["Submitted", "Resubmitted"]:
+        frappe.throw(_("Only submitted cycle counts can be approved"))
+
+    doc.status = "Approved"
+    doc.approved_by = frappe.session.user
+    doc.approved_at = nowdate()
+    doc.save()
+
+    return {"success": True, "message": _("Cycle count approved")}
+
+
+@frappe.whitelist()
 def reject_cycle_count(count_name, rejection_reason):
     """Reject a submitted cycle count with a reason."""
     allowed_roles = ["Area Supervisor", "Store Supervisor", "System Manager"]
@@ -400,21 +420,24 @@ def get_return_requests(store=None, status=None, limit=20):
     limit = min(int(limit or 20), 500)
     filters = {"custom_return_request": 1}
 
+    # Bug fix C8: Check if custom_return_from_store column exists before filtering
     if store:
         warehouse = _resolve_warehouse(store)
-        if warehouse:
+        if warehouse and frappe.db.has_column("Stock Entry", "custom_return_from_store"):
             filters["custom_return_from_store"] = warehouse
 
     if status:
         filters["docstatus"] = 1 if status == "submitted" else 0
 
+    # Get safe fields list based on column existence
+    fields = ["name", "posting_date", "docstatus", "remarks", "total_outgoing_value as value"]
+    if frappe.db.has_column("Stock Entry", "custom_return_from_store"):
+        fields.insert(2, "custom_return_from_store as store")
+
     returns = frappe.get_all(
         "Stock Entry",
         filters=filters,
-        fields=[
-            "name", "posting_date", "custom_return_from_store as store",
-            "docstatus", "remarks", "total_outgoing_value as value"
-        ],
+        fields=fields,
         order_by="posting_date desc",
         limit=int(limit)
     )

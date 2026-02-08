@@ -278,7 +278,7 @@ def submit_order(store, items):
 
     order.insert()
 
-    # Create approval queue entry routed to area supervisor
+    # Bug fix B6: Create approval queue entry routed to area supervisor with required fields
     try:
         approver = _get_area_supervisor_for_store(warehouse)
         if approver:
@@ -287,6 +287,10 @@ def submit_order(store, items):
             queue_entry.reference_name = order.name
             queue_entry.assigned_approver = approver
             queue_entry.status = "Pending"
+            # Set required fields
+            queue_entry.store = warehouse
+            queue_entry.submitted_by = frappe.session.user
+            queue_entry.submitted_at = frappe.utils.now()
             queue_entry.insert(ignore_permissions=True)
     except Exception:
         # Don't block order creation if approval queue fails
