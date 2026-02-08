@@ -2636,6 +2636,9 @@ def complete_work_order(work_order_name, qty_produced=None):
     se.bom_no = wo.bom_no
     se.fg_completed_qty = qty
     se.company = wo.company
+    # Set warehouses before get_items() so ERPNext populates items correctly
+    se.from_warehouse = wo.wip_warehouse or commissary_warehouse
+    se.to_warehouse = wo.fg_warehouse or commissary_warehouse
 
     se.get_items()
 
