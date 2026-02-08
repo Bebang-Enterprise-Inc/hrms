@@ -274,13 +274,27 @@ def submit_production_output(items, batch_no=None, remarks=None):
         se.from_warehouse = commissary_warehouse  # RM source
         se.get_items()
 
-        # Override batch on FG items if provided
+        # Add finished good item explicitly (required by ERPNext validation)
+        # get_items() only adds raw materials, not the finished good output
+        item = frappe.get_doc("Item", first_item_code)
+        fg_row = se.append("items", {
+            "item_code": first_item_code,
+            "item_name": item.item_name,
+            "description": item.description,
+            "qty": se.fg_completed_qty,
+            "uom": item.stock_uom,
+            "stock_uom": item.stock_uom,
+            "conversion_factor": 1,
+            "t_warehouse": commissary_warehouse,
+            "is_finished_item": 1,
+            "is_scrap_item": 0,
+        })
+
+        # Override batch on FG if provided
         if batch_no and batch_no.strip():
-            for se_item in se.items:
-                if se_item.is_finished_item:
-                    valid_batch = get_or_create_batch(batch_no, se_item.item_code)
-                    if valid_batch:
-                        se_item.batch_no = valid_batch
+            valid_batch = get_or_create_batch(batch_no, first_item_code)
+            if valid_batch:
+                fg_row.batch_no = valid_batch
     else:
         # Fallback: Material Receipt (no RM deduction)
         se.stock_entry_type = "Material Receipt"

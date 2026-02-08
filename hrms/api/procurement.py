@@ -2121,6 +2121,8 @@ def get_billing_list(store=None, status=None, billing_period=None, page=1, page_
         values
     )[0][0]
 
+    # Bug fix D7: Use frappe.db.sql() instead of frappe.get_all() to bypass field permission checks
+    # The royalty_amount field exists but may not have proper read permissions for API users
     billings = frappe.db.sql(f"""
         SELECT
             name, billing_period, store, store_type, status,

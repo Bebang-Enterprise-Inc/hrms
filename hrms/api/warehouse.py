@@ -381,7 +381,7 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
     Args:
         source_warehouse: From warehouse (e.g., "Commissary - BEI")
         target_warehouse: To warehouse (e.g., "SM-CALOOCAN - BEI")
-        items: JSON array of {item_code, qty, uom}
+        items: JSON array of {item_code, qty, uom, batch_no (optional), mr_item_name (optional)}
         mr_name: Optional Material Request reference
         remarks: Optional notes
 
@@ -390,6 +390,16 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
     """
     if isinstance(items, str):
         items = json.loads(items)
+
+    # Bug fix B9-001: Load MR to map items correctly if mr_name provided
+    mr_items_map = {}
+    if mr_name:
+        try:
+            mr = frappe.get_doc("Material Request", mr_name)
+            for mr_item in mr.items:
+                mr_items_map[mr_item.item_code] = mr_item.name
+        except Exception:
+            pass  # MR not found, continue without MR link
 
     # Create Stock Entry
     se = frappe.new_doc("Stock Entry")
@@ -406,6 +416,26 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
         # Get item details
         item = frappe.get_doc("Item", item_data["item_code"])
 
+        # Bug fix B9-002: Handle batch_no for batch-tracked items
+        batch_no = item_data.get("batch_no")
+        if item.has_batch_no and not batch_no:
+            # Auto-select oldest batch with sufficient stock
+            oldest_batch = frappe.db.get_value(
+                "Batch",
+                {
+                    "item": item_data["item_code"],
+                    "batch_qty": [">", 0]
+                },
+                "name",
+                order_by="creation asc"
+            )
+            batch_no = oldest_batch
+
+        # Bug fix B9-001: Set material_request and material_request_item properly
+        mr_item_ref = item_data.get("mr_item_name")
+        if not mr_item_ref and mr_name:
+            mr_item_ref = mr_items_map.get(item_data["item_code"])
+
         se.append("items", {
             "item_code": item_data["item_code"],
             "item_name": item.item_name,
@@ -416,8 +446,9 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
             "conversion_factor": 1,
             "s_warehouse": source_warehouse,
             "t_warehouse": target_warehouse,
-            "material_request": mr_name,
-            "material_request_item": item_data.get("mr_item_name")
+            "batch_no": batch_no,
+            "material_request": mr_name if mr_item_ref else None,
+            "material_request_item": mr_item_ref
         })
 
     if not se.items:
