@@ -2143,3 +2143,24 @@ def get_billing_list(store=None, status=None, billing_period=None, page=1, page_
         "page_size": page_size,
         "total_pages": -(-total // page_size) if total else 0,
     }
+
+
+# =============================================================================
+# FINANCE ANALYTICS ALIASES
+# =============================================================================
+
+@frappe.whitelist()
+def get_po_trends(months=6):
+    """Alias for get_monthly_po_trend (frontend compatibility)."""
+    return get_monthly_po_trend(months)
+
+
+@frappe.whitelist()
+def get_finance_analytics():
+    """Aggregated finance dashboard data for my.bebang.ph."""
+    return {
+        "kpis": get_dashboard_kpis(),
+        "ap_aging": get_ap_aging_report(),
+        "po_trend": get_monthly_po_trend(months=6),
+        "suppliers": get_supplier_performance()
+    }
