@@ -2589,15 +2589,20 @@ def start_work_order(work_order_name):
         se.bom_no = wo.bom_no
         se.fg_completed_qty = wo.qty
         se.company = wo.company
+        # Set warehouses so get_items() can populate correctly
+        default_source = wo.source_warehouse or commissary_warehouse or "Stores - BEI"
+        se.from_warehouse = default_source
+        se.to_warehouse = wo.wip_warehouse or commissary_warehouse
 
         # Get items from BOM
         se.get_items()
 
-        # Set default source warehouse if BOM items don't specify one
-        default_source = wo.source_warehouse or commissary_warehouse or "Stores - BEI"
+        # Ensure all items have source and target warehouses
         for item in se.items:
             if not item.s_warehouse:
                 item.s_warehouse = default_source
+            if not item.t_warehouse:
+                item.t_warehouse = wo.wip_warehouse or commissary_warehouse
 
         se.insert()
         se.submit()
@@ -2642,11 +2647,28 @@ def complete_work_order(work_order_name, qty_produced=None):
 
     se.get_items()
 
-    # Set default source warehouse if BOM items don't specify one
-    default_source = wo.source_warehouse or commissary_warehouse or "Stores - BEI"
+    # Set default source warehouse for raw materials
+    default_source = wo.wip_warehouse or commissary_warehouse or "Stores - BEI"
     for item in se.items:
         if not item.s_warehouse and item.item_code != wo.production_item:
             item.s_warehouse = default_source
+
+    # Ensure finished good item exists in the stock entry
+    has_fg = any(item.item_code == wo.production_item for item in se.items)
+    if not has_fg:
+        fg_warehouse = wo.fg_warehouse or commissary_warehouse
+        bom = frappe.get_doc("BOM", wo.bom_no)
+        se.append("items", {
+            "item_code": wo.production_item,
+            "item_name": frappe.db.get_value("Item", wo.production_item, "item_name"),
+            "qty": qty,
+            "t_warehouse": fg_warehouse,
+            "is_finished_item": 1,
+            "uom": bom.uom or frappe.db.get_value("Item", wo.production_item, "stock_uom"),
+            "stock_uom": frappe.db.get_value("Item", wo.production_item, "stock_uom"),
+            "conversion_factor": 1.0,
+            "basic_rate": bom.total_cost / flt(bom.quantity or 1),
+        })
 
     se.insert()
     se.submit()
