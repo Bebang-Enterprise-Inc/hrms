@@ -2462,6 +2462,36 @@ def create_work_order(item_code, qty, planned_start_date=None, remarks=None):
     if not bom:
         return {"success": False, "error": f"No active BOM found for item {item_code}"}
 
+    # Check material availability against BOM
+    shortages = []
+    bom_items = frappe.get_all(
+        "BOM Item",
+        filters={"parent": bom.name},
+        fields=["item_code", "item_name", "qty"]
+    )
+    for bi in bom_items:
+        required_qty = flt(bi.qty) * flt(qty) / flt(bom.quantity or 1)
+        available = flt(frappe.db.get_value(
+            "Bin",
+            {"item_code": bi.item_code, "warehouse": commissary_warehouse},
+            "actual_qty"
+        ))
+        if available < required_qty:
+            shortages.append({
+                "item_code": bi.item_code,
+                "item_name": bi.item_name,
+                "required": required_qty,
+                "available": available,
+                "short": required_qty - available
+            })
+
+    if shortages:
+        return {
+            "success": False,
+            "error": "Insufficient materials for production",
+            "shortages": shortages
+        }
+
     # Create Work Order
     wo = frappe.new_doc("Work Order")
     wo.production_item = item_code

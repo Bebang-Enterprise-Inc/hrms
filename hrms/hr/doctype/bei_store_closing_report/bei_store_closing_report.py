@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import now_datetime
+from frappe.utils import now_datetime, flt
 
 
 class BEIStoreClosingReport(Document):
@@ -24,6 +24,7 @@ class BEIStoreClosingReport(Document):
 		self.update_status()
 
 	def validate(self):
+		self.validate_photo_fields()
 		self.validate_variance_explanation()
 		self.validate_pos_down_mode()
 		self.validate_maintenance_fields()
@@ -111,14 +112,14 @@ class BEIStoreClosingReport(Document):
 			total_variance = 0
 			variance_count = 0
 			for item in self.inventory_spot_check:
-				# Compute variance inline (child before_save hasn't run yet during validate)
-				if item.expected_count is not None and item.actual_count is not None:
-					variance = float(item.actual_count) - float(item.expected_count)
-					item.variance = variance
-					total_variance += variance
-					if variance != 0:
-						variance_count += 1
-			self.inventory_variance_total = total_variance
+				actual = flt(item.actual_count)
+				expected = flt(item.expected_count)
+				variance = actual - expected
+				item.variance = variance
+				total_variance += variance
+				if abs(variance) > 0.001:
+					variance_count += 1
+			self.inventory_variance_total = flt(total_variance, 2)
 			self.inventory_variance_count = variance_count
 
 	def update_signoff_timestamps(self):
@@ -138,18 +139,19 @@ class BEIStoreClosingReport(Document):
 		)
 
 		# Check Stage 2: Checklist (inventory spot check + signoffs)
+		# Item count enforced at frontend (12 items); backend requires at least 1
 		stage2_complete = bool(
 			self.inventory_spot_check and
-			len(self.inventory_spot_check) >= 12 and
+			len(self.inventory_spot_check) >= 1 and
 			self.cashier_signoff and
 			self.production_signoff
 		)
 
-		# Check Stage 3: Photos & Files (required photos from DocType)
+		# Check Stage 3: Photos & Files (reject empty/whitespace-only strings)
 		stage3_complete = bool(
-			self.photo_zread and
-			self.photo_xread_opening and
-			self.photo_xread_closing
+			(self.photo_zread or "").strip() and
+			(self.photo_xread_opening or "").strip() and
+			(self.photo_xread_closing or "").strip()
 		)
 
 		# Set stage_completed based on progress (lowercase to match DocType options)
@@ -187,6 +189,20 @@ class BEIStoreClosingReport(Document):
 		# All good
 		if self.stage_completed == "complete":
 			self.status = "Submitted"
+
+	def validate_photo_fields(self):
+		"""Reject empty or whitespace-only photo strings."""
+		photo_fields = {
+			"photo_zread": "Z-Reading",
+			"photo_xread_opening": "X-Reading Opening",
+			"photo_xread_closing": "X-Reading Closing"
+		}
+		for field, label in photo_fields.items():
+			value = self.get(field)
+			if value is not None and isinstance(value, str) and not value.strip():
+				frappe.throw(
+					_("{0} photo cannot be empty. Please upload a valid photo.").format(label)
+				)
 
 	def validate_variance_explanation(self):
 		"""Require explanation if variance exceeds threshold."""
