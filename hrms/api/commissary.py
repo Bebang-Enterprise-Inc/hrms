@@ -2573,6 +2573,7 @@ def get_work_orders(status=None, days=7):
 @frappe.whitelist()
 def start_work_order(work_order_name):
     """Start a work order (submit if draft, begin manufacturing)."""
+    commissary_warehouse = get_commissary_warehouse()
     wo = frappe.get_doc("Work Order", work_order_name)
 
     if wo.docstatus == 0:
@@ -2591,6 +2592,13 @@ def start_work_order(work_order_name):
 
         # Get items from BOM
         se.get_items()
+
+        # Set default source warehouse if BOM items don't specify one
+        default_source = wo.source_warehouse or commissary_warehouse or "Stores - BEI"
+        for item in se.items:
+            if not item.s_warehouse:
+                item.s_warehouse = default_source
+
         se.insert()
         se.submit()
 
@@ -2609,6 +2617,7 @@ def start_work_order(work_order_name):
 @frappe.whitelist()
 def complete_work_order(work_order_name, qty_produced=None):
     """Complete a work order by creating manufacture stock entry."""
+    commissary_warehouse = get_commissary_warehouse()
     wo = frappe.get_doc("Work Order", work_order_name)
 
     if wo.status not in ["Submitted", "Not Started", "In Process"]:
@@ -2629,6 +2638,13 @@ def complete_work_order(work_order_name, qty_produced=None):
     se.company = wo.company
 
     se.get_items()
+
+    # Set default source warehouse if BOM items don't specify one
+    default_source = wo.source_warehouse or commissary_warehouse or "Stores - BEI"
+    for item in se.items:
+        if not item.s_warehouse and item.item_code != wo.production_item:
+            item.s_warehouse = default_source
+
     se.insert()
     se.submit()
 
