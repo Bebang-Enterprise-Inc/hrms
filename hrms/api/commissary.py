@@ -2590,6 +2590,7 @@ def start_work_order(work_order_name):
         # Use ERPNext's native make_stock_entry for proper WO linking and tracking
         se_dict = make_stock_entry(work_order_name, "Material Transfer for Manufacture", wo.qty)
         se = frappe.get_doc(se_dict)
+        se.stock_entry_type = "Material Transfer for Manufacture"
 
         # Ensure all items have source and target warehouses (BOM items may not specify)
         default_source = wo.source_warehouse or commissary_warehouse or "Stores - BEI"
@@ -2634,6 +2635,7 @@ def complete_work_order(work_order_name, qty_produced=None):
     # Use ERPNext's native make_stock_entry for proper WO linking, FG item, and tracking
     se_dict = make_stock_entry(work_order_name, "Manufacture", qty)
     se = frappe.get_doc(se_dict)
+    se.stock_entry_type = "Manufacture"
 
     # Ensure raw materials have source warehouse
     default_source = wo.wip_warehouse or commissary_warehouse or "Stores - BEI"
