@@ -103,10 +103,16 @@ class BEIInvoice(Document):
             self.verified_date = now_datetime()
             self.save()
 
-            # Create Frappe Purchase Invoice
-            self.create_frappe_purchase_invoice()
+            # Create Frappe Purchase Invoice (best-effort - don't block verification)
+            pi_message = ""
+            try:
+                self.create_frappe_purchase_invoice()
+                pi_message = " Frappe Purchase Invoice created."
+            except Exception as e:
+                frappe.log_error(title="PI Creation Failed", message=str(e))
+                pi_message = f" Note: Frappe PI creation deferred ({str(e)[:100]})"
 
-            return {"success": True, "message": _("Invoice verified - 3-way match passed")}
+            return {"success": True, "message": _("Invoice verified - 3-way match passed") + pi_message}
 
         elif self.match_status == "Variance Detected":
             self.status = "Variance Pending Approval"
@@ -137,10 +143,16 @@ class BEIInvoice(Document):
         self.verified_date = now_datetime()
         self.save()
 
-        # Create Frappe Purchase Invoice
-        self.create_frappe_purchase_invoice()
+        # Create Frappe Purchase Invoice (best-effort - don't block variance approval)
+        pi_message = ""
+        try:
+            self.create_frappe_purchase_invoice()
+            pi_message = " Frappe Purchase Invoice created."
+        except Exception as e:
+            frappe.log_error(title="PI Creation Failed", message=str(e))
+            pi_message = f" Note: Frappe PI creation deferred ({str(e)[:100]})"
 
-        return {"success": True, "message": _("Variance approved - Invoice verified")}
+        return {"success": True, "message": _("Variance approved - Invoice verified") + pi_message}
 
     @frappe.whitelist()
     def reject_variance(self, reason):
