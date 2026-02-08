@@ -244,7 +244,20 @@ def create_trip(trip_date, route_name, stops):
             "status": "Pending"
         })
 
-    trip.insert()
+    try:
+        trip.insert()
+    except frappe.DuplicateEntryError:
+        # Naming series counter out of sync - fix and retry
+        frappe.db.sql(
+            """UPDATE `tabSeries` SET current = (
+                SELECT IFNULL(MAX(CAST(SUBSTRING_INDEX(name, '-', -1) AS UNSIGNED)), 0)
+                FROM `tabBEI Distribution Trip`
+            ) WHERE name = %s""",
+            (trip.naming_series.replace('.YYYY.', str(nowdate()[:4])).replace('.#####', ''),)
+        )
+        frappe.db.commit()
+        trip.name = None
+        trip.insert()
 
     return {
         "success": True,
