@@ -1151,7 +1151,7 @@ def get_or_create_closing_report(store):
     doc.store = store
     doc.report_date = today
     doc.submitted_by = frappe.session.user
-    doc.stage_completed = "cash"
+    # stage_completed is auto-computed by DocType's update_stage_completed() during insert
     doc.insert()
 
     return {
@@ -1198,7 +1198,7 @@ def submit_closing_stage1_cash(report_name, petty_cash_fund=0, delivery_fund=0,
             if doc.meta.has_field(key):
                 doc.set(key, float(value or 0))
 
-    doc.stage_completed = "checklist"
+    # stage_completed is auto-computed by DocType's update_stage_completed() during save
     doc.save()
 
     return {
@@ -1262,7 +1262,7 @@ def submit_closing_stage2_checklist(report_name, inventory_items, checklist_item
     doc.production_signoff = 1 if production_signoff else 0
     doc.supervisor_signoff = 1 if supervisor_signoff else 0
 
-    doc.stage_completed = "photos"
+    # stage_completed is auto-computed by DocType's update_stage_completed() during save
     doc.save()
 
     return {
@@ -1292,9 +1292,16 @@ def submit_closing_stage3_photos(report_name, x_reading_opening_photo, x_reading
     doc = frappe.get_doc("BEI Store Closing Report", report_name)
 
     # Document scanner photos (required)
-    doc.x_reading_opening_photo = x_reading_opening_photo
-    doc.x_reading_closing_photo = x_reading_closing_photo
-    doc.z_reading_photo = z_reading_photo
+    if not x_reading_opening_photo or not str(x_reading_opening_photo).strip():
+        frappe.throw(_("X-Reading Opening photo is required"), title=_("Missing Photo"))
+    if not x_reading_closing_photo or not str(x_reading_closing_photo).strip():
+        frappe.throw(_("X-Reading Closing photo is required"), title=_("Missing Photo"))
+    if not z_reading_photo or not str(z_reading_photo).strip():
+        frappe.throw(_("Z-Reading photo is required"), title=_("Missing Photo"))
+
+    doc.photo_xread_opening = str(x_reading_opening_photo).strip()
+    doc.photo_xread_closing = str(x_reading_closing_photo).strip()
+    doc.photo_zread = str(z_reading_photo).strip()
 
     # POS files (5 required)
     if pos_files:
@@ -1327,7 +1334,7 @@ def submit_closing_stage3_photos(report_name, x_reading_opening_photo, x_reading
 
     doc.notes = notes
     doc.report_time = now_datetime().strftime("%H:%M:%S")
-    doc.stage_completed = "complete"
+    # stage_completed is auto-computed by DocType's update_stage_completed() during save
     doc.save()
 
     return {
