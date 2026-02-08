@@ -58,6 +58,10 @@ class BEIInvoice(Document):
             self.match_status = "Pending"
             return
 
+        # Preserve approved variance status - don't recalculate after approval
+        if self.match_status == "Approved with Variance":
+            return
+
         # Calculate variances
         self.po_gr_variance = flt(self.po_amount, 2) - flt(self.gr_amount, 2)
         self.gr_inv_variance = flt(self.gr_amount, 2) - flt(self.grand_total, 2)
