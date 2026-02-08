@@ -247,7 +247,7 @@ def create_trip(trip_date, route_name, stops):
     try:
         trip.insert()
     except frappe.DuplicateEntryError:
-        # Naming series counter out of sync - fix and retry
+        # Naming series counter out of sync - fix and retry with fresh doc
         frappe.db.sql(
             """UPDATE `tabSeries` SET current = (
                 SELECT IFNULL(MAX(CAST(SUBSTRING_INDEX(name, '-', -1) AS UNSIGNED)), 0)
@@ -256,7 +256,18 @@ def create_trip(trip_date, route_name, stops):
             (trip.naming_series.replace('.YYYY.', str(nowdate()[:4])).replace('.#####', ''),)
         )
         frappe.db.commit()
-        trip.name = None
+        # Rebuild doc from scratch (child rows need fresh parent reference)
+        trip = frappe.new_doc("BEI Distribution Trip")
+        trip.trip_date = trip_date or nowdate()
+        trip.route_name = route_name
+        trip.status = "Preparing"
+        for idx, stop_data in enumerate(stops, 1):
+            trip.append("stops", {
+                "store": stop_data.get("store"),
+                "stop_order": idx,
+                "items_count": stop_data.get("items_count", 0),
+                "status": "Pending"
+            })
         trip.insert()
 
     return {
