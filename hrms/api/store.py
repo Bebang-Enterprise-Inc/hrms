@@ -8,7 +8,7 @@ Handles store ordering, receiving, and FQI reports for my.bebang.ph
 
 import frappe
 from frappe import _
-from frappe.utils import nowdate, add_days, now_datetime
+from frappe.utils import nowdate, add_days, now_datetime, flt
 import json
 import base64
 import hashlib
@@ -262,6 +262,17 @@ def submit_order(store, items):
 
     if not items:
         frappe.throw(_("At least one item is required"))
+
+    # Validate quantities - prevent unreasonable orders
+    MAX_ORDER_QTY = 10000
+    for item_data in items:
+        qty = flt(item_data.get("qty_requested", 0))
+        if qty <= 0:
+            frappe.throw(_("Quantity must be greater than zero for item {0}").format(
+                item_data.get("item_code")))
+        if qty > MAX_ORDER_QTY:
+            frappe.throw(_("Order quantity {0} exceeds maximum allowed ({1}) for item {2}").format(
+                qty, MAX_ORDER_QTY, item_data.get("item_code")))
 
     order = frappe.new_doc("BEI Store Order")
     order.store = warehouse
