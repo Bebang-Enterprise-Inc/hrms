@@ -2573,36 +2573,31 @@ def get_work_orders(status=None, days=7):
 @frappe.whitelist()
 def start_work_order(work_order_name):
     """Start a work order (submit if draft, begin manufacturing)."""
+    from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
+
     commissary_warehouse = get_commissary_warehouse()
     wo = frappe.get_doc("Work Order", work_order_name)
 
     if wo.docstatus == 0:
+        # Ensure WO has source_warehouse before submitting (needed for material transfer)
+        if not wo.source_warehouse:
+            wo.source_warehouse = commissary_warehouse or "Stores - BEI"
+            wo.save()
         wo.submit()
         wo.reload()
 
     if wo.status in ("Submitted", "Not Started"):
-        # Create Stock Entry for Material Transfer for Manufacture
-        se = frappe.new_doc("Stock Entry")
-        se.stock_entry_type = "Material Transfer for Manufacture"
-        se.work_order = wo.name
-        se.from_bom = 1
-        se.bom_no = wo.bom_no
-        se.fg_completed_qty = wo.qty
-        se.company = wo.company
-        # Set warehouses so get_items() can populate correctly
+        # Use ERPNext's native make_stock_entry for proper WO linking and tracking
+        se = make_stock_entry(work_order_name, "Material Transfer for Manufacture", wo.qty)
+
+        # Ensure all items have source and target warehouses (BOM items may not specify)
         default_source = wo.source_warehouse or commissary_warehouse or "Stores - BEI"
-        se.from_warehouse = default_source
-        se.to_warehouse = wo.wip_warehouse or commissary_warehouse
-
-        # Get items from BOM
-        se.get_items()
-
-        # Ensure all items have source and target warehouses
+        default_wip = wo.wip_warehouse or commissary_warehouse
         for item in se.items:
             if not item.s_warehouse:
                 item.s_warehouse = default_source
             if not item.t_warehouse:
-                item.t_warehouse = wo.wip_warehouse or commissary_warehouse
+                item.t_warehouse = default_wip
 
         se.insert()
         se.submit()
@@ -2622,6 +2617,8 @@ def start_work_order(work_order_name):
 @frappe.whitelist()
 def complete_work_order(work_order_name, qty_produced=None):
     """Complete a work order by creating manufacture stock entry."""
+    from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
+
     commissary_warehouse = get_commissary_warehouse()
     wo = frappe.get_doc("Work Order", work_order_name)
 
@@ -2633,42 +2630,14 @@ def complete_work_order(work_order_name, qty_produced=None):
 
     qty = flt(qty_produced) or wo.qty - wo.produced_qty
 
-    # Create Stock Entry for Manufacture
-    se = frappe.new_doc("Stock Entry")
-    se.stock_entry_type = "Manufacture"
-    se.work_order = wo.name
-    se.from_bom = 1
-    se.bom_no = wo.bom_no
-    se.fg_completed_qty = qty
-    se.company = wo.company
-    # Set warehouses before get_items() so ERPNext populates items correctly
-    se.from_warehouse = wo.wip_warehouse or commissary_warehouse
-    se.to_warehouse = wo.fg_warehouse or commissary_warehouse
+    # Use ERPNext's native make_stock_entry for proper WO linking, FG item, and tracking
+    se = make_stock_entry(work_order_name, "Manufacture", qty)
 
-    se.get_items()
-
-    # Set default source warehouse for raw materials
+    # Ensure raw materials have source warehouse
     default_source = wo.wip_warehouse or commissary_warehouse or "Stores - BEI"
     for item in se.items:
-        if not item.s_warehouse and item.item_code != wo.production_item:
+        if not item.s_warehouse and not item.is_finished_item:
             item.s_warehouse = default_source
-
-    # Ensure finished good item exists in the stock entry
-    has_fg = any(item.item_code == wo.production_item for item in se.items)
-    if not has_fg:
-        fg_warehouse = wo.fg_warehouse or commissary_warehouse
-        bom = frappe.get_doc("BOM", wo.bom_no)
-        se.append("items", {
-            "item_code": wo.production_item,
-            "item_name": frappe.db.get_value("Item", wo.production_item, "item_name"),
-            "qty": qty,
-            "t_warehouse": fg_warehouse,
-            "is_finished_item": 1,
-            "uom": bom.uom or frappe.db.get_value("Item", wo.production_item, "stock_uom"),
-            "stock_uom": frappe.db.get_value("Item", wo.production_item, "stock_uom"),
-            "conversion_factor": 1.0,
-            "basic_rate": bom.total_cost / flt(bom.quantity or 1),
-        })
 
     se.insert()
     se.submit()
