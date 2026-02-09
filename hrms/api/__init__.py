@@ -1023,3 +1023,9 @@ import hrms.api.commissary  # noqa: E402, F401
 import hrms.api.procurement  # noqa: E402, F401
 import hrms.api.official_business  # noqa: E402, F401
 import hrms.api.shift_tracking  # noqa: E402, F401
+import hrms.api.payroll  # noqa: E402, F401
+import hrms.api.performance  # noqa: E402, F401
+import hrms.api.disciplinary  # noqa: E402, F401
+import hrms.api.recruitment  # noqa: E402, F401
+import hrms.api.hr_reports  # noqa: E402, F401
+import hrms.api.transfers  # noqa: E402, F401

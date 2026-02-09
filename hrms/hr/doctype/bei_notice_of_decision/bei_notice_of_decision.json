@@ -1,0 +1,173 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-02-09 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "decided_by",
+  "decided_by_name",
+  "notice_to_explain",
+  "column_break_1",
+  "status",
+  "decision_date",
+  "penalty",
+  "suspension_days",
+  "employee_acknowledged",
+  "section_break_findings",
+  "findings",
+  "section_break_rationale",
+  "decision_rationale"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "BEI-NOD-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "decided_by",
+   "fieldtype": "Link",
+   "label": "Decided By",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "decided_by.employee_name",
+   "fieldname": "decided_by_name",
+   "fieldtype": "Data",
+   "label": "Decided By Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notice_to_explain",
+   "fieldtype": "Link",
+   "label": "Notice to Explain",
+   "options": "BEI Notice to Explain",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nIssued\nAcknowledged\nAppealed\nFinal",
+   "reqd": 1
+  },
+  {
+   "fieldname": "decision_date",
+   "fieldtype": "Date",
+   "label": "Decision Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "penalty",
+   "fieldtype": "Select",
+   "label": "Penalty",
+   "options": "Verbal Warning\nWritten Warning\nFinal Written Warning\nSuspension\nDismissal\nExonerated",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.penalty == 'Suspension'",
+   "fieldname": "suspension_days",
+   "fieldtype": "Int",
+   "label": "Suspension Days"
+  },
+  {
+   "default": "0",
+   "fieldname": "employee_acknowledged",
+   "fieldtype": "Check",
+   "label": "Employee Acknowledged"
+  },
+  {
+   "fieldname": "section_break_findings",
+   "fieldtype": "Section Break",
+   "label": "Findings"
+  },
+  {
+   "fieldname": "findings",
+   "fieldtype": "Text Editor",
+   "label": "Findings",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_rationale",
+   "fieldtype": "Section Break",
+   "label": "Decision Rationale"
+  },
+  {
+   "fieldname": "decision_rationale",
+   "fieldtype": "Text Editor",
+   "label": "Decision Rationale",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-09 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Notice of Decision",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Employee"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
