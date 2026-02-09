@@ -123,14 +123,9 @@ def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: 
         "verification_status": "Pending",
     })
 
-    # Insert shift record FIRST so we have a name for file attachment
-    shift_doc.insert(ignore_permissions=True)
-
-    # Save selfie as private file AFTER insert (attached_to_name requires doc name)
+    # Save selfie as standalone private file first (no attachment link yet)
     file_doc = frappe.get_doc({
         "doctype": "File",
-        "attached_to_doctype": "BEI Shift Record",
-        "attached_to_name": shift_doc.name,
         "file_name": (
             f"punch_in_{employee}_{now_datetime().strftime('%Y%m%d_%H%M%S')}"
             f"_{frappe.generate_hash(length=6)}.jpg"
@@ -139,8 +134,15 @@ def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: 
         "content": img_data,
     })
     file_doc.save(ignore_permissions=True)
+
+    # Set photo URL on shift doc and insert (punch_in_photo is mandatory)
     shift_doc.punch_in_photo = file_doc.file_url
-    shift_doc.save(ignore_permissions=True)
+    shift_doc.insert(ignore_permissions=True)
+
+    # Now link the file to the shift record
+    file_doc.attached_to_doctype = "BEI Shift Record"
+    file_doc.attached_to_name = shift_doc.name
+    file_doc.save(ignore_permissions=True)
 
     return {
         "name": shift_doc.name,
