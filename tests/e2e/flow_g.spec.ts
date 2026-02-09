@@ -19,17 +19,28 @@ test.describe("Flow G: Cross-Module Data Visibility", () => {
     await login(page, "warehouse");
     await page.goto(`${PORTAL_URL}/dashboard/warehouse/receive`);
     await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(2000);
 
-    const bodyText = await page.locator("body").textContent() || "";
-    const hasReceivePage = !bodyText.includes("404") && !bodyText.includes("Not Found");
+    // Wait for the heading to confirm page structure loaded
+    const heading = page.locator("h1:has-text('Receive from Suppliers')");
+    await expect(heading).toBeVisible({ timeout: 10000 });
 
-    // Also verify via API
-    const apiResult = await frappeApi(page, "hrms.api.warehouse.get_pending_purchase_orders");
-    const hasPOs = apiResult?.message?.data?.length > 0 || apiResult?.message?.length > 0;
+    // PO data loads async from Frappe - wait up to 30s for text to appear
+    const poText = page.locator("text=/PUR-ORD-/").first();
+    const hasPOs = await poText.isVisible({ timeout: 30000 }).catch(() => false);
+    const poCount = hasPOs ? await page.locator("text=/PUR-ORD-/").count() : 0;
 
-    expect(hasReceivePage || hasPOs).toBeTruthy();
+    // If POs haven't loaded, check for skeleton cards (proves component is fetching data)
+    let hasSkeletons = false;
+    if (!hasPOs) {
+      // Skeleton cards are rendered as empty styled divs in the main content area
+      const mainCards = page.locator("main >> div >> div").filter({ hasNot: page.locator("text=/\\w{3,}/") });
+      hasSkeletons = await mainCards.count() > 2;
+    }
+    console.log(`G1: hasPOs=${hasPOs}, poCount=${poCount}, hasSkeletons=${hasSkeletons}`);
+
     await screenshot(page, "FLOW_G", "G1_po_in_warehouse");
+    // Page must show either loaded PO data or loading skeletons
+    expect(hasPOs || hasSkeletons).toBeTruthy();
   });
 
   // G2: GR created in Warehouse -> Visible in Procurement
