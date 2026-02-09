@@ -127,9 +127,9 @@
   },
   {
    "fieldname": "approver",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "label": "Approver",
-   "options": "User",
+   "options": "Email",
    "read_only": 1
   },
   {
