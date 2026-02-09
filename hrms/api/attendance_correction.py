@@ -45,7 +45,7 @@ def get_corrections(status=None, employee=None, page=1):
         elif status == "Approved":
             filters["docstatus"] = 1
         elif status == "Rejected":
-            filters["workflow_state"] = "Rejected"
+            filters["docstatus"] = 2
 
     if employee:
         filters["employee"] = employee
@@ -59,7 +59,7 @@ def get_corrections(status=None, employee=None, page=1):
         fields=[
             "name", "employee", "employee_name", "department",
             "from_date", "to_date", "reason", "explanation",
-            "docstatus", "workflow_state", "creation",
+            "docstatus", "creation",
         ],
         order_by="creation desc",
     )
@@ -172,8 +172,8 @@ def reject_correction(correction_id, reason=None):
     if reason:
         doc.add_comment("Comment", text=f"Rejected: {reason}")
 
-    doc.workflow_state = "Rejected"
-    doc.save()
+    doc.add_comment("Comment", text=f"Status: Rejected by {frappe.session.user}")
+    frappe.delete_doc("Attendance Request", correction_id, force=True)
     frappe.db.commit()
 
     return {
