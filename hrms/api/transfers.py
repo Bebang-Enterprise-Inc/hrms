@@ -1,13 +1,13 @@
 """BEI Employee Transfer API endpoints.
 
-Handles employee transfers between stores/branches with biometric
-re-registration tracking.
+Handles employee transfers between stores/branches.
+Uses standard Employee Transfer DocType with transfer_details child table.
 """
 
 import frappe
 from frappe import _
 from frappe.rate_limiter import rate_limit
-from frappe.utils import getdate, today
+from frappe.utils import getdate
 from hrms.utils.api_helpers import (
     _get_employee_or_throw,
     _check_hr_permission,
@@ -17,16 +17,18 @@ from hrms.utils.api_helpers import (
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
-def create_transfer(employee, new_store, new_shift, reason, effective_date, new_supervisor=None):
+def create_transfer(employee, new_branch, transfer_date, reason,
+                    new_department=None, new_designation=None, new_reports_to=None):
     """Initiate employee transfer.
 
     Args:
         employee: Employee ID
-        new_store: New warehouse/branch (Link: Warehouse)
-        new_shift: New shift type (Link: Shift Type)
-        reason: Transfer reason (Performance-based/Operational Need/Employee Request/Promotion)
-        effective_date: Transfer effective date
-        new_supervisor: New reporting manager (optional)
+        new_branch: New branch/store (Link: Branch)
+        transfer_date: Transfer effective date
+        reason: Transfer reason
+        new_department: New department (optional)
+        new_designation: New designation (optional)
+        new_reports_to: New reporting manager (optional)
 
     Returns:
         Created transfer name
@@ -35,51 +37,63 @@ def create_transfer(employee, new_store, new_shift, reason, effective_date, new_
     """
     _check_hr_permission()
 
-    # Validate required fields
-    if not all([employee, new_store, new_shift, reason, effective_date]):
-        frappe.throw(_("All fields are required: employee, new_store, new_shift, reason, effective_date"))
+    if not all([employee, new_branch, transfer_date, reason]):
+        frappe.throw(_("Required: employee, new_branch, transfer_date, reason"))
 
-    # Validate employee exists
     if not frappe.db.exists("Employee", employee):
         frappe.throw(_("Employee not found"), frappe.DoesNotExistError)
 
-    # Validate new store exists
-    if not frappe.db.exists("Warehouse", new_store):
-        frappe.throw(_("Store/branch not found"), frappe.DoesNotExistError)
-
-    # Validate shift exists
-    if not frappe.db.exists("Shift Type", new_shift):
-        frappe.throw(_("Shift type not found"), frappe.DoesNotExistError)
-
-    # Get employee current details
     emp_doc = frappe.get_doc("Employee", employee)
-    old_store = emp_doc.branch
-    old_supervisor = emp_doc.reports_to
 
-    # Create Employee Transfer document
+    # Build transfer_details rows for each property change
+    transfer_details = []
+
+    # Branch change (always included)
+    transfer_details.append({
+        "property": "Branch",
+        "current": emp_doc.branch or "",
+        "new": new_branch,
+    })
+
+    # Department change (optional)
+    if new_department and new_department != emp_doc.department:
+        transfer_details.append({
+            "property": "Department",
+            "current": emp_doc.department or "",
+            "new": new_department,
+        })
+
+    # Designation change (optional)
+    if new_designation and new_designation != emp_doc.designation:
+        transfer_details.append({
+            "property": "Designation",
+            "current": emp_doc.designation or "",
+            "new": new_designation,
+        })
+
+    # Reports To change (optional)
+    if new_reports_to and new_reports_to != emp_doc.reports_to:
+        transfer_details.append({
+            "property": "Reports To",
+            "current": emp_doc.reports_to or "",
+            "new": new_reports_to,
+        })
+
     transfer = frappe.get_doc({
         "doctype": "Employee Transfer",
         "employee": employee,
-        "transfer_date": getdate(effective_date),
+        "transfer_date": getdate(transfer_date),
         "company": emp_doc.company,
-        # Standard fields
-        "new_company": emp_doc.company,  # Internal transfer, same company
-        # Custom fields (assumes these exist on Employee Transfer)
-        "bei_transfer_reason": reason,
-        "bei_new_store": new_store,
-        "bei_new_shift": new_shift,
-        "bei_effective_date": getdate(effective_date),
-        "bei_old_store": old_store,
-        "bei_old_supervisor": old_supervisor,
-        "bei_new_supervisor": new_supervisor,
-        "bei_biometric_reregistered": 0,
+        "new_company": emp_doc.company,
+        "transfer_details": transfer_details,
     })
 
     transfer.insert(ignore_permissions=True)
-    frappe.db.commit()
 
-    # Notify relevant parties
-    _notify_transfer_created(transfer, emp_doc)
+    # Store reason as comment
+    transfer.add_comment("Comment", text=f"Transfer Reason: {reason}")
+
+    frappe.db.commit()
 
     return {
         "message": _("Transfer initiated successfully"),
@@ -87,61 +101,18 @@ def create_transfer(employee, new_store, new_shift, reason, effective_date, new_
     }
 
 
-def _notify_transfer_created(transfer, emp_doc):
-    """Notify employee, old/new supervisors, and HR of transfer."""
-    recipients = []
-
-    # Add employee
-    if emp_doc.user_id:
-        recipients.append(emp_doc.user_id)
-
-    # Add old supervisor
-    if transfer.bei_old_supervisor:
-        old_sup_email = frappe.db.get_value("Employee", transfer.bei_old_supervisor, "user_id")
-        if old_sup_email:
-            recipients.append(old_sup_email)
-
-    # Add new supervisor
-    if transfer.bei_new_supervisor:
-        new_sup_email = frappe.db.get_value("Employee", transfer.bei_new_supervisor, "user_id")
-        if new_sup_email:
-            recipients.append(new_sup_email)
-
-    new_store_name = frappe.db.get_value("Warehouse", transfer.bei_new_store, "warehouse_name")
-
-    if recipients:
-        frappe.sendmail(
-            recipients=list(set(recipients)),  # Deduplicate
-            subject=_("Employee Transfer: {0}").format(emp_doc.employee_name),
-            message=_("""
-            An employee transfer has been initiated:<br><br>
-            <strong>Employee:</strong> {employee_name} ({employee})<br>
-            <strong>Reason:</strong> {reason}<br>
-            <strong>New Store:</strong> {new_store}<br>
-            <strong>Effective Date:</strong> {effective_date}<br>
-            <strong>Transfer ID:</strong> {transfer_id}<br><br>
-            This transfer is pending approval.
-            """).format(
-                employee_name=emp_doc.employee_name,
-                employee=emp_doc.name,
-                reason=transfer.bei_transfer_reason,
-                new_store=new_store_name,
-                effective_date=frappe.format_date(transfer.bei_effective_date),
-                transfer_id=transfer.name,
-            ),
-            reference_doctype="Employee Transfer",
-            reference_name=transfer.name,
-        )
-
-
 @frappe.whitelist()
-def get_transfer_list(status=None, department=None, page=1):
+def get_transfer_list(status=None, department=None, from_date=None, to_date=None,
+                      page=1, page_size=20):
     """List employee transfers.
 
     Args:
         status: Filter by status (Draft/Submitted/Approved/Cancelled)
         department: Filter by department
+        from_date: Filter transfers from this date
+        to_date: Filter transfers until this date
         page: Page number
+        page_size: Items per page
 
     Returns:
         Paginated list of transfers
@@ -152,17 +123,32 @@ def get_transfer_list(status=None, department=None, page=1):
 
     page = int(page) if page else 1
 
-    # Build filters
-    filters = {}
+    # Build WHERE clauses
+    conditions = ["1=1"]
+    values = {}
+
     if status:
         if status == "Draft":
-            filters["docstatus"] = 0
-        elif status == "Submitted":
-            filters["docstatus"] = 1
+            conditions.append("et.docstatus = 0")
+        elif status in ("Submitted", "Approved"):
+            conditions.append("et.docstatus = 1")
         elif status == "Cancelled":
-            filters["docstatus"] = 2
+            conditions.append("et.docstatus = 2")
 
-    # Get transfers
+    if department:
+        conditions.append("e.department = %(department)s")
+        values["department"] = department
+
+    if from_date:
+        conditions.append("et.transfer_date >= %(from_date)s")
+        values["from_date"] = from_date
+
+    if to_date:
+        conditions.append("et.transfer_date <= %(to_date)s")
+        values["to_date"] = to_date
+
+    where_clause = " AND ".join(conditions)
+
     transfers = frappe.db.sql("""
         SELECT
             et.name,
@@ -170,11 +156,8 @@ def get_transfer_list(status=None, department=None, page=1):
             e.employee_name,
             e.designation,
             e.department,
+            e.branch as from_branch,
             et.transfer_date,
-            et.bei_transfer_reason as reason,
-            et.bei_old_store as old_store,
-            et.bei_new_store as new_store,
-            et.bei_biometric_reregistered as biometric_done,
             et.docstatus,
             et.creation
         FROM
@@ -182,25 +165,45 @@ def get_transfer_list(status=None, department=None, page=1):
         INNER JOIN
             `tabEmployee` e ON et.employee = e.name
         WHERE
-            1=1
-            {department_filter}
-            {status_filter}
+            {where_clause}
         ORDER BY
             et.creation DESC
-    """.format(
-        department_filter="AND e.department = %(department)s" if department else "",
-        status_filter="AND et.docstatus = %(docstatus)s" if status else "",
-    ), {
-        "department": department,
-        "docstatus": filters.get("docstatus"),
-    }, as_dict=True)
+    """.format(where_clause=where_clause), values, as_dict=True)
 
-    # Enrich with store names
+    # Enrich with transfer details (branch changes, reason)
     for transfer in transfers:
-        if transfer.old_store:
-            transfer["old_store_name"] = frappe.db.get_value("Warehouse", transfer.old_store, "warehouse_name")
-        if transfer.new_store:
-            transfer["new_store_name"] = frappe.db.get_value("Warehouse", transfer.new_store, "warehouse_name")
+        # Get branch change from transfer_details child table
+        details = frappe.get_all(
+            "Employee Property History",
+            filters={"parent": transfer.name, "parenttype": "Employee Transfer"},
+            fields=["property", "current", "new"],
+        )
+
+        transfer["to_branch"] = transfer.get("from_branch", "")
+        transfer["new_branch"] = ""
+        transfer["new_department"] = ""
+        transfer["new_designation"] = ""
+        transfer["reason"] = ""
+
+        for detail in details:
+            if detail.property == "Branch":
+                transfer["from_branch"] = detail.current
+                transfer["to_branch"] = detail.new
+                transfer["new_branch"] = detail.new
+            elif detail.property == "Department":
+                transfer["new_department"] = detail.new
+            elif detail.property == "Designation":
+                transfer["new_designation"] = detail.new
+
+        # Get reason from comments
+        reason_comment = frappe.db.get_value(
+            "Comment",
+            {"reference_doctype": "Employee Transfer", "reference_name": transfer.name,
+             "content": ["like", "%Transfer Reason:%"]},
+            "content",
+        )
+        if reason_comment:
+            transfer["reason"] = reason_comment.replace("Transfer Reason: ", "")
 
         # Map docstatus to readable status
         if transfer.docstatus == 0:
@@ -210,227 +213,172 @@ def get_transfer_list(status=None, department=None, page=1):
         elif transfer.docstatus == 2:
             transfer["status"] = "Cancelled"
 
-    return _paginate(transfers, page=page, page_size=20)
+    return _paginate(transfers, page=page, page_size=int(page_size))
 
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
-def approve_transfer(transfer_name, action, notes=None):
+def approve_transfer(transfer_id, action, remarks=None):
     """Approve or reject transfer.
 
     Args:
-        transfer_name: Employee Transfer document name
+        transfer_id: Employee Transfer document name
         action: "approve" or "reject"
-        notes: Approval/rejection notes (optional)
+        remarks: Approval/rejection notes (optional)
 
     Returns:
         Success message
 
     Access: Manager, HR
     """
-    if not frappe.db.exists("Employee Transfer", transfer_name):
+    if not frappe.db.exists("Employee Transfer", transfer_id):
         frappe.throw(_("Transfer not found"), frappe.DoesNotExistError)
 
-    transfer = frappe.get_doc("Employee Transfer", transfer_name)
+    transfer = frappe.get_doc("Employee Transfer", transfer_id)
 
     # Permission check
     current_employee = _get_employee_or_throw()
     roles = frappe.get_roles(frappe.session.user)
-    is_hr = any(r in roles for r in ["HR Manager", "System Manager"])
+    is_hr = any(r in roles for r in ["HR Manager", "HR User", "System Manager"])
 
-    # Must be HR or old/new supervisor
-    is_old_supervisor = transfer.bei_old_supervisor == current_employee
-    is_new_supervisor = transfer.bei_new_supervisor == current_employee
-
-    if not (is_hr or is_old_supervisor or is_new_supervisor):
-        frappe.throw(_("Permission denied. You are not authorized to approve this transfer."), frappe.PermissionError)
+    # Must be HR to approve/reject
+    if not is_hr:
+        frappe.throw(_("Permission denied. Only HR can approve transfers."), frappe.PermissionError)
 
     if action == "approve":
-        # Submit the transfer
+        if transfer.docstatus != 0:
+            frappe.throw(_("Only draft transfers can be approved"))
+
         transfer.submit()
+
+        if remarks:
+            transfer.add_comment("Comment", f"Approval Notes: {remarks}")
+
         frappe.db.commit()
-
-        # Apply transfer changes to Employee record
-        _apply_transfer(transfer)
-
-        # Log notes if provided
-        if notes:
-            transfer.add_comment("Comment", f"Approval Notes: {notes}")
-
-        # Notify parties
-        _notify_transfer_approved(transfer)
 
         return {
             "message": _("Transfer approved successfully"),
+            "name": transfer.name,
         }
 
     elif action == "reject":
-        # Cancel the transfer
-        transfer.cancel()
+        if transfer.docstatus == 0:
+            # Cancel draft
+            transfer.docstatus = 2
+            transfer.save()
+        elif transfer.docstatus == 1:
+            # Amend submitted
+            transfer.cancel()
+
+        if remarks:
+            transfer.add_comment("Comment", f"Rejection Reason: {remarks}")
+
         frappe.db.commit()
-
-        # Log notes
-        if notes:
-            transfer.add_comment("Comment", f"Rejection Reason: {notes}")
-
-        # Notify parties
-        _notify_transfer_rejected(transfer, notes)
 
         return {
             "message": _("Transfer rejected"),
+            "name": transfer.name,
         }
 
     else:
         frappe.throw(_("Invalid action. Use 'approve' or 'reject'."))
 
 
-def _apply_transfer(transfer):
-    """Apply approved transfer to Employee record.
-
-    Updates: branch, reports_to, shift assignment
-    """
-    employee = frappe.get_doc("Employee", transfer.employee)
-
-    # Update branch (store)
-    employee.branch = transfer.bei_new_store
-
-    # Update supervisor if provided
-    if transfer.bei_new_supervisor:
-        employee.reports_to = transfer.bei_new_supervisor
-
-    employee.save(ignore_permissions=True)
-
-    # Create new shift assignment
-    if transfer.bei_new_shift:
-        # End current shift assignments
-        current_shifts = frappe.get_all(
-            "Shift Assignment",
-            filters={
-                "employee": transfer.employee,
-                "docstatus": 1,
-                "status": "Active",
-            },
-            fields=["name"],
-        )
-
-        for shift in current_shifts:
-            shift_doc = frappe.get_doc("Shift Assignment", shift.name)
-            shift_doc.status = "Inactive"
-            shift_doc.end_date = transfer.bei_effective_date
-            shift_doc.save(ignore_permissions=True)
-
-        # Create new shift assignment
-        new_shift = frappe.get_doc({
-            "doctype": "Shift Assignment",
-            "employee": transfer.employee,
-            "shift_type": transfer.bei_new_shift,
-            "start_date": transfer.bei_effective_date,
-            "status": "Active",
-            "company": employee.company,
-        })
-        new_shift.insert(ignore_permissions=True)
-        new_shift.submit()
-
-    frappe.db.commit()
-
-
-def _notify_transfer_approved(transfer):
-    """Notify employee and supervisors of approved transfer."""
-    emp_doc = frappe.get_doc("Employee", transfer.employee)
-    new_store_name = frappe.db.get_value("Warehouse", transfer.bei_new_store, "warehouse_name")
-
-    recipients = []
-    if emp_doc.user_id:
-        recipients.append(emp_doc.user_id)
-
-    if recipients:
-        frappe.sendmail(
-            recipients=recipients,
-            subject=_("Transfer Approved: {0}").format(emp_doc.employee_name),
-            message=_("""
-            Your transfer has been approved:<br><br>
-            <strong>New Store:</strong> {new_store}<br>
-            <strong>Effective Date:</strong> {effective_date}<br>
-            <strong>New Shift:</strong> {new_shift}<br><br>
-            <strong>Important:</strong> You must re-register your biometric attendance
-            at the new location. Contact your new supervisor or HR for assistance.
-            """).format(
-                new_store=new_store_name,
-                effective_date=frappe.format_date(transfer.bei_effective_date),
-                new_shift=transfer.bei_new_shift,
-            ),
-            reference_doctype="Employee Transfer",
-            reference_name=transfer.name,
-        )
-
-
-def _notify_transfer_rejected(transfer, notes):
-    """Notify employee of rejected transfer."""
-    emp_doc = frappe.get_doc("Employee", transfer.employee)
-
-    if emp_doc.user_id:
-        frappe.sendmail(
-            recipients=[emp_doc.user_id],
-            subject=_("Transfer Not Approved"),
-            message=_("""
-            Your transfer request has been declined.<br><br>
-            <strong>Reason:</strong> {notes}<br><br>
-            Please contact HR if you have questions.
-            """).format(
-                notes=notes or "Not specified",
-            ),
-            reference_doctype="Employee Transfer",
-            reference_name=transfer.name,
-        )
-
-
 @frappe.whitelist()
-def get_transfer_detail(transfer_name):
+def get_transfer_detail(transfer_id):
     """Get full transfer details.
 
     Args:
-        transfer_name: Employee Transfer document name
+        transfer_id: Employee Transfer document name
 
     Returns:
-        Full transfer details
+        Full transfer details with timeline
 
     Access: HR
     """
     _check_hr_permission()
 
-    if not frappe.db.exists("Employee Transfer", transfer_name):
+    if not frappe.db.exists("Employee Transfer", transfer_id):
         frappe.throw(_("Transfer not found"), frappe.DoesNotExistError)
 
-    transfer = frappe.get_doc("Employee Transfer", transfer_name)
-
-    # Get employee details
+    transfer = frappe.get_doc("Employee Transfer", transfer_id)
     emp_doc = frappe.get_doc("Employee", transfer.employee)
 
-    # Get store names
-    old_store_name = None
-    if transfer.bei_old_store:
-        old_store_name = frappe.db.get_value("Warehouse", transfer.bei_old_store, "warehouse_name")
+    # Extract property changes
+    from_branch = emp_doc.branch
+    to_branch = emp_doc.branch
+    new_department = None
+    new_designation = None
+    new_reports_to = None
 
-    new_store_name = None
-    if transfer.bei_new_store:
-        new_store_name = frappe.db.get_value("Warehouse", transfer.bei_new_store, "warehouse_name")
+    for detail in transfer.transfer_details:
+        if detail.property == "Branch":
+            from_branch = detail.current
+            to_branch = detail.new
+        elif detail.property == "Department":
+            new_department = detail.new
+        elif detail.property == "Designation":
+            new_designation = detail.new
+        elif detail.property == "Reports To":
+            new_reports_to = detail.new
 
-    # Get supervisor names
-    old_supervisor_name = None
-    if transfer.bei_old_supervisor:
-        old_supervisor_name = frappe.db.get_value("Employee", transfer.bei_old_supervisor, "employee_name")
-
-    new_supervisor_name = None
-    if transfer.bei_new_supervisor:
-        new_supervisor_name = frappe.db.get_value("Employee", transfer.bei_new_supervisor, "employee_name")
+    # Get reason from comments
+    reason = ""
+    reason_comment = frappe.db.get_value(
+        "Comment",
+        {"reference_doctype": "Employee Transfer", "reference_name": transfer.name,
+         "content": ["like", "%Transfer Reason:%"]},
+        "content",
+    )
+    if reason_comment:
+        reason = reason_comment.replace("Transfer Reason: ", "")
 
     # Map docstatus
-    if transfer.docstatus == 0:
-        status = "Draft"
-    elif transfer.docstatus == 1:
-        status = "Approved"
+    status_map = {0: "Draft", 1: "Approved", 2: "Cancelled"}
+    status = status_map.get(transfer.docstatus, "Unknown")
+
+    # Build timeline from comments and status changes
+    timeline = []
+    comments = frappe.get_all(
+        "Comment",
+        filters={
+            "reference_doctype": "Employee Transfer",
+            "reference_name": transfer.name,
+        },
+        fields=["comment_type", "content", "creation", "comment_by"],
+        order_by="creation asc",
+    )
+
+    timeline.append({
+        "stage": "Created",
+        "date": str(transfer.creation),
+        "status": "Draft",
+        "user": transfer.owner,
+    })
+
+    for comment in comments:
+        timeline.append({
+            "stage": "Comment",
+            "date": str(comment.creation),
+            "status": status,
+            "user": comment.comment_by,
+            "remarks": comment.content,
+        })
+
+    if transfer.docstatus == 1:
+        timeline.append({
+            "stage": "Approved",
+            "date": str(transfer.modified),
+            "status": "Approved",
+            "user": transfer.modified_by,
+        })
     elif transfer.docstatus == 2:
-        status = "Cancelled"
+        timeline.append({
+            "stage": "Cancelled",
+            "date": str(transfer.modified),
+            "status": "Cancelled",
+            "user": transfer.modified_by,
+        })
 
     return {
         "name": transfer.name,
@@ -438,20 +386,17 @@ def get_transfer_detail(transfer_name):
         "employee_name": emp_doc.employee_name,
         "designation": emp_doc.designation,
         "department": emp_doc.department,
-        "transfer_reason": transfer.bei_transfer_reason,
-        "effective_date": transfer.bei_effective_date,
-        "old_store": transfer.bei_old_store,
-        "old_store_name": old_store_name,
-        "new_store": transfer.bei_new_store,
-        "new_store_name": new_store_name,
-        "old_supervisor": transfer.bei_old_supervisor,
-        "old_supervisor_name": old_supervisor_name,
-        "new_supervisor": transfer.bei_new_supervisor,
-        "new_supervisor_name": new_supervisor_name,
-        "new_shift": transfer.bei_new_shift,
-        "biometric_reregistered": transfer.bei_biometric_reregistered,
+        "from_branch": from_branch,
+        "to_branch": to_branch,
+        "new_branch": to_branch,
+        "new_department": new_department,
+        "new_designation": new_designation,
+        "new_reports_to": new_reports_to,
+        "transfer_date": str(transfer.transfer_date),
+        "reason": reason,
         "status": status,
         "docstatus": transfer.docstatus,
-        "creation": transfer.creation,
-        "modified": transfer.modified,
+        "creation": str(transfer.creation),
+        "modified": str(transfer.modified),
+        "timeline": timeline,
     }
