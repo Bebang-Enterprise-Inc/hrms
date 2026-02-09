@@ -277,6 +277,8 @@ jobs:
               "BACKEND_CONTAINER=$(docker ps --filter name=frappe_backend --format \"{{.Names}}\" | head -1)",
               "if [ -z \"$BACKEND_CONTAINER\" ]; then echo \"❌ Backend container not found\"; exit 1; fi",
               "echo \"Using container: $BACKEND_CONTAINER\"",
+              "echo \"📦 Pinning setuptools<71 (fixes pkg_resources removal in 82.0)...\"",
+              "docker exec $BACKEND_CONTAINER /home/frappe/frappe-bench/env/bin/pip install -q \"setuptools<71\"",
               "docker exec $BACKEND_CONTAINER bench --site ${{ env.FRAPPE_SITE }} migrate",
               "docker exec $BACKEND_CONTAINER bench --site ${{ env.FRAPPE_SITE }} clear-cache",
               "echo \"✅ Migration complete!\""
