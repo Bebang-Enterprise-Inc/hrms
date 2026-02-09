@@ -128,22 +128,10 @@ def checkout(
         "status": "Out"
     })
 
-    # Save selfie
+    # Validate selfie before insert (security check)
+    img_data = None
     if selfie_base64:
-        # Validate and decode image (security check + decode in one step)
         img_data = validate_image_upload(selfie_base64)
-
-        # Save as file
-        file_doc = frappe.get_doc({
-            "doctype": "File",
-            "attached_to_doctype": "BEI Official Business",
-            "file_name": f"checkout_selfie_{employee}_{now_datetime().strftime('%Y%m%d_%H%M%S')}_{frappe.generate_hash(length=6)}.jpg",
-            "is_private": 1,
-            "content": img_data
-        })
-        file_doc.save(ignore_permissions=True)
-
-        ob_doc.checkout_selfie = file_doc.file_url
 
     # Add nearest location info
     if nearest:
@@ -152,6 +140,21 @@ def checkout(
         ob_doc.checkout_within_geofence = nearest['within_geofence']
 
     ob_doc.insert(ignore_permissions=True)
+
+    # Save selfie AFTER insert so ob_doc.name is available for attached_to_name
+    if img_data:
+        file_doc = frappe.get_doc({
+            "doctype": "File",
+            "attached_to_doctype": "BEI Official Business",
+            "attached_to_name": ob_doc.name,
+            "file_name": f"checkout_selfie_{employee}_{now_datetime().strftime('%Y%m%d_%H%M%S')}_{frappe.generate_hash(length=6)}.jpg",
+            "is_private": 1,
+            "content": img_data
+        })
+        file_doc.save(ignore_permissions=True)
+
+        ob_doc.checkout_selfie = file_doc.file_url
+        ob_doc.save(ignore_permissions=True)
 
     return {
         "name": ob_doc.name,
@@ -282,7 +285,7 @@ def get_active_ob():
     active = frappe.db.get_value(
         "BEI Official Business",
         filters={"employee": employee, "status": "Out"},
-        fieldname=["name", "destination", "checkout_datetime", "expected_return"],
+        fieldname=["name", "destination", "purpose", "checkout_datetime", "checkout_address", "expected_return"],
         as_dict=True
     )
 
