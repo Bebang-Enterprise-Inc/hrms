@@ -28,6 +28,7 @@
     "column_break_bank",
     "bank_account_number",
     "payment_terms",
+    "payment_terms_days",
     "metrics_section",
     "total_po_count",
     "total_po_value",
@@ -162,6 +163,13 @@
       "fieldtype": "Link",
       "label": "Default Payment Terms",
       "options": "Payment Terms Template"
+    },
+    {
+      "default": "30",
+      "description": "Number of days supplier typically takes to provide Official Receipt after payment",
+      "fieldname": "payment_terms_days",
+      "fieldtype": "Int",
+      "label": "Payment Terms (Days)"
     },
     {
       "collapsible": 1,

@@ -261,6 +261,7 @@ scheduler_events = {
 		"hrms.hr.doctype.interview.interview.send_daily_feedback_reminder",
 		"hrms.hr.doctype.job_opening.job_opening.close_expired_job_openings",
 		"hrms.api.pcf.check_month_end_auto_submit",
+		"hrms.api.procurement.check_overdue_or",
 	],
 	"daily_long": [
 		"hrms.hr.doctype.leave_ledger_entry.leave_ledger_entry.process_expired_allocation",
