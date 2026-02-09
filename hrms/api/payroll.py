@@ -217,9 +217,9 @@ def get_attendance_summary(from_date, to_date, employee=None):
             SUM(CASE WHEN a.status = 'Present' THEN 1 ELSE 0 END) as present_days,
             SUM(CASE WHEN a.status = 'Absent' THEN 1 ELSE 0 END) as absent_days,
             SUM(CASE WHEN a.status = 'On Leave' THEN 1 ELSE 0 END) as leave_days,
-            SUM(COALESCE(a.tardiness_minutes, 0)) as late_minutes,
-            SUM(COALESCE(a.undertime_minutes, 0)) as undertime_minutes,
-            SUM(COALESCE(a.ot_hours, 0)) as ot_hours
+            SUM(CASE WHEN a.late_entry = 1 THEN 1 ELSE 0 END) as late_days,
+            SUM(CASE WHEN a.early_exit = 1 THEN 1 ELSE 0 END) as early_exit_days,
+            SUM(GREATEST(COALESCE(a.working_hours, 0) - 8, 0)) as ot_hours
         FROM `tabAttendance` a
         LEFT JOIN `tabEmployee` e ON e.name = a.employee
         WHERE a.docstatus = 1
@@ -325,16 +325,16 @@ def get_government_remittance(month, year, remittance_type):
 
         # Calculate employer share
         if remittance_type == "sss":
-            _, employer_share, ec = get_sss_contribution(base)
+            _ee_share, employer_share, ec = get_sss_contribution(base)
             row["employer_contribution"] = flt(employer_share, 2)
             row["ec_contribution"] = flt(ec, 2)
             row["total_remittance"] = flt(row.employee_contribution + employer_share + ec, 2)
         elif remittance_type == "philhealth":
-            _, employer_share = get_philhealth_contribution(base)
+            _ee_share, employer_share = get_philhealth_contribution(base)
             row["employer_contribution"] = flt(employer_share, 2)
             row["total_remittance"] = flt(row.employee_contribution + employer_share, 2)
         elif remittance_type == "pagibig":
-            _, employer_share = get_pagibig_contribution(base)
+            _ee_share, employer_share = get_pagibig_contribution(base)
             row["employer_contribution"] = flt(employer_share, 2)
             row["total_remittance"] = flt(row.employee_contribution + employer_share, 2)
 
