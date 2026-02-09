@@ -1029,3 +1029,4 @@ import hrms.api.disciplinary  # noqa: E402, F401
 import hrms.api.recruitment  # noqa: E402, F401
 import hrms.api.hr_reports  # noqa: E402, F401
 import hrms.api.transfers  # noqa: E402, F401
+import hrms.api.attendance_correction  # noqa: E402, F401
