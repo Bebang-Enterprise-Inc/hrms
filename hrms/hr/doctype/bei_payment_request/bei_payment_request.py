@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, now_datetime
+from frappe.utils import flt, now_datetime, nowdate, add_days
 
 
 # CEO approval threshold
@@ -503,46 +503,56 @@ class BEIPaymentRequest(Document):
         self.save()
 
         # Create Frappe Payment Entry
+        pe_name = None
+        pe_warning = None
         try:
             pe_name = self.create_frappe_payment_entry()
-
-            if pe_name:
-                # Update status to Paid
-                self.status = "Paid"
-                self.save()
-
-                return {
-                    "success": True,
-                    "message": _("Payment completed. Frappe Payment Entry: {0}").format(pe_name),
-                    "payment_entry": pe_name
-                }
-            else:
-                # PE creation didn't return name, but might have succeeded
-                self.status = "Paid"
-                self.save()
-
-                return {
-                    "success": True,
-                    "message": _("Payment marked as completed")
-                }
-
         except Exception as e:
             # Log error but don't fail - payment was made in reality
             frappe.log_error(
                 f"Payment Entry creation failed for {self.name}: {e}",
                 "BEI Payment Entry Error"
             )
+            pe_warning = str(e)
 
-            # Still mark as paid since the actual payment happened
-            self.status = "Paid"
-            self.save()
+        # Route based on OR requirement
+        self._route_after_payment()
+        self.save()
 
-            return {
-                "success": True,
-                "message": _("Payment marked as completed. Note: Frappe Payment Entry "
-                           "creation failed - manual entry may be required."),
-                "warning": str(e)
-            }
+        msg = _("Payment completed")
+        if pe_name:
+            msg = _("Payment completed. Frappe Payment Entry: {0}").format(pe_name)
+
+        result = {
+            "success": True,
+            "message": msg,
+            "status": self.status,
+            "or_status": self.or_status,
+        }
+        if pe_name:
+            result["payment_entry"] = pe_name
+        if pe_warning:
+            result["warning"] = _("Frappe Payment Entry creation failed - "
+                                  "manual entry may be required. {0}").format(pe_warning)
+        return result
+
+    def _route_after_payment(self):
+        """Route payment to OR tracking or close based on or_required flag."""
+        if self.or_required:
+            self.status = "Paid - Awaiting OR"
+            self.or_status = "Awaiting OR"
+            # Calculate OR due date from supplier's payment terms
+            payment_terms_days = 30  # default
+            if self.supplier:
+                supplier_terms = frappe.db.get_value(
+                    "BEI Supplier", self.supplier, "payment_terms_days"
+                )
+                if supplier_terms:
+                    payment_terms_days = int(supplier_terms)
+            self.or_due_date = add_days(nowdate(), payment_terms_days)
+        else:
+            self.status = "Closed"
+            self.or_status = "Not Required"
 
     @frappe.whitelist()
     def get_approval_status(self):

@@ -2164,3 +2164,395 @@ def get_finance_analytics():
         "po_trend": get_monthly_po_trend(months=6),
         "suppliers": get_supplier_performance()
     }
+
+
+# =============================================================================
+# Official Receipt (OR) Tracking (Feature B)
+# =============================================================================
+
+@frappe.whitelist()
+def upload_official_receipt(name, or_number, or_date, or_amount, or_attachment=None):
+    """Upload OR for a payment request. Closes the transaction if amount matches within 5%.
+    If mismatch > 5%, still accepts but flags for review.
+
+    Args:
+        name: BEI Payment Request name (e.g. PAY-2026-00001)
+        or_number: Official Receipt number from supplier
+        or_date: Date on the OR
+        or_amount: Amount on the OR
+        or_attachment: Attach field value (file URL)
+
+    Returns:
+        dict with success, message, amount_match, variance_pct
+    """
+    from frappe.utils import now_datetime as _now_dt
+
+    pay_req = frappe.get_doc("BEI Payment Request", name)
+
+    if pay_req.status not in ("Paid - Awaiting OR", "Paid"):
+        frappe.throw(
+            _("Cannot upload OR for payment with status '{0}'. "
+              "Expected 'Paid - Awaiting OR'.").format(pay_req.status)
+        )
+
+    if pay_req.or_status == "OR Received":
+        frappe.throw(_("OR has already been uploaded for this payment request"))
+
+    or_amount = flt(or_amount, 2)
+    payment_amount = flt(pay_req.payment_amount, 2)
+
+    # Calculate variance
+    variance_pct = 0
+    amount_match = True
+    if payment_amount > 0:
+        variance_pct = abs(or_amount - payment_amount) / payment_amount * 100
+        amount_match = variance_pct <= 5
+
+    # Update OR fields
+    pay_req.or_number = or_number
+    pay_req.or_date = or_date
+    pay_req.or_amount = or_amount
+    pay_req.or_attachment = or_attachment
+    pay_req.or_uploaded_by = frappe.session.user
+    pay_req.or_uploaded_date = _now_dt()
+    pay_req.or_status = "OR Received"
+    pay_req.status = "Closed"
+    pay_req.save(ignore_permissions=True)
+
+    msg = _("Official Receipt uploaded successfully. Transaction closed.")
+    if not amount_match:
+        msg = _(
+            "Official Receipt uploaded. Amount mismatch of {0:.1f}% detected "
+            "(Payment: {1:,.2f}, OR: {2:,.2f}). Transaction closed but flagged for review."
+        ).format(variance_pct, payment_amount, or_amount)
+
+    return {
+        "success": True,
+        "message": msg,
+        "amount_match": amount_match,
+        "variance_pct": round(variance_pct, 2),
+        "status": pay_req.status,
+        "or_status": pay_req.or_status,
+    }
+
+
+@frappe.whitelist()
+def get_awaiting_or_list(page=1, page_size=20, status=None, supplier=None, overdue_only=False):
+    """Get list of payments awaiting OR. Used by Butch's OR dashboard.
+
+    Args:
+        page: Page number (1-indexed)
+        page_size: Items per page
+        status: Filter by or_status (e.g. "Awaiting OR", "Overdue")
+        supplier: Filter by supplier name
+        overdue_only: If true, only show overdue items
+
+    Returns:
+        dict with data list, total count, pagination info
+    """
+    from frappe.utils import getdate as _getdate, date_diff
+
+    page = int(page)
+    page_size = min(int(page_size), 100)
+    offset = (page - 1) * page_size
+
+    conditions = ["pr.status = 'Paid - Awaiting OR'"]
+    params = {}
+
+    if status:
+        conditions.append("pr.or_status = %(or_status)s")
+        params["or_status"] = status
+
+    if supplier:
+        conditions.append("pr.supplier = %(supplier)s")
+        params["supplier"] = supplier
+
+    if overdue_only == "true" or overdue_only is True:
+        conditions.append("pr.or_status = 'Overdue'")
+
+    where = " AND ".join(conditions)
+
+    total = frappe.db.sql(
+        f"SELECT COUNT(*) FROM `tabBEI Payment Request` pr WHERE {where}",
+        params
+    )[0][0]
+
+    data = frappe.db.sql(
+        f"""SELECT
+            pr.name,
+            pr.payment_request_no,
+            pr.supplier,
+            pr.supplier_name,
+            pr.payment_amount,
+            pr.payment_date,
+            pr.or_status,
+            pr.or_due_date,
+            pr.or_follow_up_count,
+            pr.or_last_follow_up,
+            pr.purchase_order,
+            pr.invoice
+        FROM `tabBEI Payment Request` pr
+        WHERE {where}
+        ORDER BY pr.or_due_date ASC, pr.payment_date ASC
+        LIMIT %(limit)s OFFSET %(offset)s""",
+        {**params, "limit": page_size, "offset": offset},
+        as_dict=True,
+    )
+
+    today = _getdate()
+    for row in data:
+        paid_date = _getdate(row.payment_date) if row.payment_date else today
+        row["days_waiting"] = date_diff(today, paid_date)
+
+    return {
+        "data": data,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": -(-total // page_size) if total else 0,
+    }
+
+
+@frappe.whitelist()
+def get_or_aging_summary():
+    """Get OR aging summary by bracket.
+
+    Returns:
+        dict with counts for: 0-7d, 8-14d, 15-30d, 31-60d, 60+d
+        Also returns total_awaiting, total_overdue, avg_days_outstanding
+    """
+    from frappe.utils import getdate as _getdate, date_diff
+
+    today = _getdate()
+
+    rows = frappe.db.sql(
+        """SELECT
+            pr.name,
+            pr.payment_date,
+            pr.payment_amount,
+            pr.or_status,
+            pr.or_due_date
+        FROM `tabBEI Payment Request` pr
+        WHERE pr.status = 'Paid - Awaiting OR'""",
+        as_dict=True,
+    )
+
+    brackets = {
+        "0_7_days": {"count": 0, "amount": 0},
+        "8_14_days": {"count": 0, "amount": 0},
+        "15_30_days": {"count": 0, "amount": 0},
+        "31_60_days": {"count": 0, "amount": 0},
+        "over_60_days": {"count": 0, "amount": 0},
+    }
+
+    total_awaiting = 0
+    total_overdue = 0
+    total_days = 0
+    total_amount_awaiting = 0
+    total_amount_overdue = 0
+
+    for row in rows:
+        paid_date = _getdate(row.payment_date) if row.payment_date else today
+        days = date_diff(today, paid_date)
+        amount = flt(row.payment_amount, 2)
+
+        total_awaiting += 1
+        total_amount_awaiting += amount
+        total_days += days
+
+        if row.or_status == "Overdue":
+            total_overdue += 1
+            total_amount_overdue += amount
+
+        if days <= 7:
+            brackets["0_7_days"]["count"] += 1
+            brackets["0_7_days"]["amount"] += amount
+        elif days <= 14:
+            brackets["8_14_days"]["count"] += 1
+            brackets["8_14_days"]["amount"] += amount
+        elif days <= 30:
+            brackets["15_30_days"]["count"] += 1
+            brackets["15_30_days"]["amount"] += amount
+        elif days <= 60:
+            brackets["31_60_days"]["count"] += 1
+            brackets["31_60_days"]["amount"] += amount
+        else:
+            brackets["over_60_days"]["count"] += 1
+            brackets["over_60_days"]["amount"] += amount
+
+    avg_days = round(total_days / total_awaiting, 1) if total_awaiting else 0
+
+    return {
+        "brackets": brackets,
+        "total_awaiting": total_awaiting,
+        "total_amount_awaiting": total_amount_awaiting,
+        "total_overdue": total_overdue,
+        "total_amount_overdue": total_amount_overdue,
+        "avg_days_outstanding": avg_days,
+    }
+
+
+@frappe.whitelist()
+def mark_or_not_required(name, reason=None):
+    """Mark a payment as not requiring OR. Sets status to Closed.
+    Requires reason for audit trail.
+
+    Args:
+        name: BEI Payment Request name
+        reason: Reason why OR is not required (mandatory)
+
+    Returns:
+        dict with success, message
+    """
+    if not reason:
+        frappe.throw(_("Please provide a reason for marking OR as not required"))
+
+    pay_req = frappe.get_doc("BEI Payment Request", name)
+
+    if pay_req.status not in ("Paid - Awaiting OR", "Paid"):
+        frappe.throw(
+            _("Cannot modify OR status for payment with status '{0}'").format(pay_req.status)
+        )
+
+    pay_req.or_required = 0
+    pay_req.or_status = "Not Required"
+    pay_req.status = "Closed"
+    pay_req.save(ignore_permissions=True)
+
+    # Add comment for audit trail
+    frappe.get_doc({
+        "doctype": "Comment",
+        "comment_type": "Info",
+        "reference_doctype": "BEI Payment Request",
+        "reference_name": name,
+        "content": _("OR marked as not required by {0}. Reason: {1}").format(
+            frappe.session.user, reason
+        ),
+    }).insert(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "message": _("OR marked as not required. Transaction closed."),
+        "status": pay_req.status,
+        "or_status": pay_req.or_status,
+    }
+
+
+@frappe.whitelist()
+def send_or_follow_up(name):
+    """Send follow-up to supplier for missing OR.
+    Increments follow_up_count, records last_follow_up timestamp.
+
+    Args:
+        name: BEI Payment Request name
+
+    Returns:
+        dict with success, message, follow_up_count
+    """
+    from frappe.utils import now_datetime as _now_dt
+
+    pay_req = frappe.get_doc("BEI Payment Request", name)
+
+    if pay_req.status != "Paid - Awaiting OR":
+        frappe.throw(
+            _("Cannot send follow-up for payment with status '{0}'").format(pay_req.status)
+        )
+
+    pay_req.or_follow_up_count = (pay_req.or_follow_up_count or 0) + 1
+    pay_req.or_last_follow_up = _now_dt()
+    pay_req.save(ignore_permissions=True)
+
+    # Add comment for audit trail
+    frappe.get_doc({
+        "doctype": "Comment",
+        "comment_type": "Info",
+        "reference_doctype": "BEI Payment Request",
+        "reference_name": name,
+        "content": _("OR follow-up #{0} sent by {1}").format(
+            pay_req.or_follow_up_count, frappe.session.user
+        ),
+    }).insert(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "message": _("Follow-up #{0} recorded for {1}").format(
+            pay_req.or_follow_up_count, pay_req.supplier_name or pay_req.supplier
+        ),
+        "follow_up_count": pay_req.or_follow_up_count,
+    }
+
+
+def check_overdue_or():
+    """Daily scheduler: check for overdue OR and escalate.
+    7 days past due: or_status -> 'Overdue', nudge procurement user
+    14 days past due: escalate to Mae (CPO) via notification
+    30 days past due: escalate to Butch (CFO) via notification
+    """
+    from frappe.utils import getdate as _getdate, date_diff
+
+    today = _getdate()
+
+    overdue_payments = frappe.db.sql(
+        """SELECT name, supplier_name, payment_amount, or_due_date,
+                  or_follow_up_count, or_status
+        FROM `tabBEI Payment Request`
+        WHERE status = 'Paid - Awaiting OR'
+          AND or_due_date IS NOT NULL
+          AND or_due_date < %(today)s""",
+        {"today": today},
+        as_dict=True,
+    )
+
+    for pay in overdue_payments:
+        days_overdue = date_diff(today, _getdate(pay.or_due_date))
+
+        # Mark as Overdue if not already
+        if pay.or_status != "Overdue":
+            frappe.db.set_value(
+                "BEI Payment Request", pay.name, "or_status", "Overdue",
+                update_modified=False
+            )
+
+        # Escalation tiers
+        if days_overdue >= 30:
+            # Escalate to CFO (Butch)
+            _create_or_escalation_notification(
+                pay, "CFO", "butch@bebang.ph", days_overdue
+            )
+        elif days_overdue >= 14:
+            # Escalate to CPO (Mae)
+            _create_or_escalation_notification(
+                pay, "CPO", "mae@bebang.ph", days_overdue
+            )
+
+    frappe.db.commit()
+
+
+def _create_or_escalation_notification(payment, role_label, recipient, days_overdue):
+    """Create a system notification for OR escalation.
+
+    Args:
+        payment: dict with name, supplier_name, payment_amount
+        role_label: "CPO" or "CFO"
+        recipient: email of the recipient
+        days_overdue: number of days past OR due date
+    """
+    subject = _("OR Overdue ({0} days): {1} - PHP {2:,.2f}").format(
+        days_overdue, payment.supplier_name, flt(payment.payment_amount, 2)
+    )
+
+    try:
+        notification = frappe.get_doc({
+            "doctype": "Notification Log",
+            "for_user": recipient,
+            "type": "Alert",
+            "document_type": "BEI Payment Request",
+            "document_name": payment.name,
+            "subject": subject,
+        })
+        notification.insert(ignore_permissions=True)
+    except Exception:
+        frappe.log_error(
+            f"Failed to create OR escalation notification for {payment.name}",
+            "OR Escalation Error"
+        )

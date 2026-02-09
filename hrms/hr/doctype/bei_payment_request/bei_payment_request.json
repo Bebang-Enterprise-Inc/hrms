@@ -70,7 +70,23 @@
     "transaction_reference",
     "payment_proof",
     "integration_section",
-    "frappe_payment_entry"
+    "frappe_payment_entry",
+    "or_tracking_section",
+    "or_status",
+    "or_required",
+    "or_due_date",
+    "column_break_or1",
+    "or_number",
+    "or_date",
+    "or_amount",
+    "or_attachment_section",
+    "or_attachment",
+    "or_uploaded_by",
+    "column_break_or2",
+    "or_uploaded_date",
+    "or_follow_up_section",
+    "or_follow_up_count",
+    "or_last_follow_up"
   ],
   "fields": [
     {
@@ -100,7 +116,7 @@
       "in_list_view": 1,
       "in_standard_filter": 1,
       "label": "Status",
-      "options": "Draft\nPending Review\nPending Budget Approval\nPending CFO Approval\nPending CEO Approval\nApproved\nProcessing\nPaid\nRejected\nCancelled"
+      "options": "Draft\nPending Review\nPending Budget Approval\nPending CFO Approval\nPending CEO Approval\nApproved\nProcessing\nPaid\nPaid - Awaiting OR\nClosed\nRejected\nCancelled"
     },
     {
       "fieldname": "column_break_header",
@@ -474,6 +490,98 @@
       "fieldtype": "Link",
       "label": "Frappe Payment Entry",
       "options": "Payment Entry",
+      "read_only": 1
+    },
+    {
+      "fieldname": "or_tracking_section",
+      "fieldtype": "Section Break",
+      "label": "Official Receipt Tracking"
+    },
+    {
+      "default": "Not Required",
+      "fieldname": "or_status",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "OR Status",
+      "options": "Not Required\nAwaiting OR\nOR Received\nOverdue",
+      "read_only": 1
+    },
+    {
+      "default": "1",
+      "description": "Most payments require an Official Receipt from the supplier",
+      "fieldname": "or_required",
+      "fieldtype": "Check",
+      "label": "OR Required"
+    },
+    {
+      "description": "Expected date for OR (payment date + supplier payment terms)",
+      "fieldname": "or_due_date",
+      "fieldtype": "Date",
+      "label": "OR Due Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_or1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "or_number",
+      "fieldtype": "Data",
+      "label": "OR Number"
+    },
+    {
+      "fieldname": "or_date",
+      "fieldtype": "Date",
+      "label": "OR Date"
+    },
+    {
+      "fieldname": "or_amount",
+      "fieldtype": "Currency",
+      "label": "OR Amount"
+    },
+    {
+      "fieldname": "or_attachment_section",
+      "fieldtype": "Section Break",
+      "label": "OR Document"
+    },
+    {
+      "fieldname": "or_attachment",
+      "fieldtype": "Attach",
+      "label": "OR Attachment"
+    },
+    {
+      "fieldname": "or_uploaded_by",
+      "fieldtype": "Data",
+      "label": "OR Uploaded By",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_or2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "or_uploaded_date",
+      "fieldtype": "Datetime",
+      "label": "OR Uploaded Date",
+      "read_only": 1
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "or_follow_up_section",
+      "fieldtype": "Section Break",
+      "label": "OR Follow-Up"
+    },
+    {
+      "default": "0",
+      "fieldname": "or_follow_up_count",
+      "fieldtype": "Int",
+      "label": "Follow-Up Count",
+      "read_only": 1
+    },
+    {
+      "fieldname": "or_last_follow_up",
+      "fieldtype": "Datetime",
+      "label": "Last Follow-Up",
       "read_only": 1
     }
   ],
