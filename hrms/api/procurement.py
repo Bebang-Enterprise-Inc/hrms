@@ -880,11 +880,23 @@ def create_invoice(data):
             "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted"]]
         })
         if not gr_exists:
-            frappe.throw(
-                _("Cannot create Invoice: No Goods Receipt found for PO {0}. "
-                  "Create a GR first to confirm delivery.").format(purchase_order),
-                title=_("Three-Way Match Required")
-            )
+            # Check if an approved match exception exists for this PO
+            approved_exception = frappe.db.exists("BEI Match Exception", {
+                "purchase_order": purchase_order,
+                "status": "Approved",
+            })
+            if not approved_exception:
+                return {
+                    "success": False,
+                    "requires_exception": True,
+                    "purchase_order": purchase_order,
+                    "po_amount": flt(
+                        frappe.db.get_value("BEI Purchase Order", purchase_order, "grand_total")
+                    ),
+                    "message": _("No Goods Receipt found for PO {0}. "
+                                 "An exception approval is required to proceed.").format(purchase_order),
+                }
+            # Exception approved — allow invoice creation without GR
 
         # AUDIT CONTROL 2.2: Invoice date >= PO date
         po = frappe.get_doc("BEI Purchase Order", purchase_order)
@@ -1047,30 +1059,46 @@ def create_payment_request(data):
                 "status": ["in", ["Submitted", "Approved", "Inspected", "Accepted"]]
             })
             if not gr_exists:
-                frappe.throw(
-                    _("Cannot create Payment Request: No Goods Receipt found for PO {0}. "
-                      "Delivery must be confirmed before payment.").format(purchase_order),
-                    title=_("Three-Way Match Required")
+                # Check if an approved match exception exists for this PO
+                approved_exception = frappe.db.get_value(
+                    "BEI Match Exception",
+                    {"purchase_order": purchase_order, "status": "Approved"},
+                    ["name", "exception_type"],
+                    as_dict=True,
                 )
+                if not approved_exception:
+                    return {
+                        "success": False,
+                        "requires_exception": True,
+                        "purchase_order": purchase_order,
+                        "po_amount": flt(po.grand_total),
+                        "message": _("No Goods Receipt found for PO {0}. "
+                                     "An exception approval is required to proceed.").format(purchase_order),
+                    }
+                # Exception approved — allow payment request without GR
+                # If advance payment type, flag the data so the Payment Request is marked accordingly
+                if approved_exception.exception_type == "Advance Payment":
+                    data["is_advance_payment"] = 1
+            else:
+                # AUDIT CONTROL 2.3: Payment limited to received value
+                # (only applies when GR exists — exception-approved payments skip this)
+                received_value = frappe.db.sql("""
+                    SELECT COALESCE(SUM(gri.received_qty * gri.unit_cost), 0)
+                    FROM `tabBEI GR Item` gri
+                    JOIN `tabBEI Goods Receipt` gr ON gri.parent = gr.name
+                    WHERE gr.purchase_order = %s
+                    AND gr.status IN ('Submitted', 'Approved', 'Inspected', 'Accepted')
+                """, (purchase_order,))[0][0] or 0
 
-            # AUDIT CONTROL 2.3: Payment limited to received value
-            received_value = frappe.db.sql("""
-                SELECT COALESCE(SUM(gri.received_qty * gri.unit_cost), 0)
-                FROM `tabBEI GR Item` gri
-                JOIN `tabBEI Goods Receipt` gr ON gri.parent = gr.name
-                WHERE gr.purchase_order = %s
-                AND gr.status IN ('Submitted', 'Approved', 'Inspected', 'Accepted')
-            """, (purchase_order,))[0][0] or 0
-
-            payment_amount = flt(data.get("payment_amount") or invoice.balance_due)
-            if payment_amount > received_value:
-                frappe.throw(
-                    _("Payment amount (₱{0:,.2f}) exceeds received value (₱{1:,.2f}). "
-                      "You can only pay for goods actually received.").format(
-                        payment_amount, received_value
-                    ),
-                    title=_("Partial Delivery Control")
-                )
+                payment_amount = flt(data.get("payment_amount") or invoice.balance_due)
+                if payment_amount > received_value:
+                    frappe.throw(
+                        _("Payment amount (₱{0:,.2f}) exceeds received value (₱{1:,.2f}). "
+                          "You can only pay for goods actually received.").format(
+                            payment_amount, received_value
+                        ),
+                        title=_("Partial Delivery Control")
+                    )
 
             # AUDIT CONTROL 2.4: Check PO approval for >₱500K
             if flt(po.grand_total) > 500000:
@@ -2163,4 +2191,248 @@ def get_finance_analytics():
         "ap_aging": get_ap_aging_report(),
         "po_trend": get_monthly_po_trend(months=6),
         "suppliers": get_supplier_performance()
+    }
+
+
+# =============================================================================
+# 3-WAY MATCH EXCEPTION BYPASS (Feature A)
+# =============================================================================
+
+def _send_ceo_exception_notification(exception_doc):
+    """Send Google Chat notification to CEO about an approved exception.
+
+    Uses the service account pattern from hrms.api.google_chat.
+    Sends to ERP Automation Committee space (spaces/AAQA3NVVR6c).
+    """
+    try:
+        from hrms.api.google_chat import send_message_to_space
+
+        po_no = frappe.db.get_value("BEI Purchase Order", exception_doc.purchase_order, "po_no") or exception_doc.purchase_order
+        supplier_name = frappe.db.get_value("BEI Purchase Order", exception_doc.purchase_order, "supplier_name") or ""
+
+        message = (
+            f"*3-Way Match Exception Approved*\n\n"
+            f"*PO:* {po_no} -- {supplier_name}\n"
+            f"*Amount:* PHP {flt(exception_doc.po_amount):,.2f}\n"
+            f"*Tier:* {exception_doc.approval_tier}\n"
+            f"*Type:* {exception_doc.exception_type}\n"
+            f"*Reason:* {exception_doc.reason}\n\n"
+            f"Approved by: {exception_doc.approver} on {exception_doc.approver_date}\n\n"
+            f"No Goods Receipt exists for this PO. Payment will proceed without delivery confirmation."
+        )
+
+        send_message_to_space("spaces/AAQA3NVVR6c", message)
+        return True
+    except Exception as e:
+        frappe.log_error(
+            title="Exception CEO Notification Failed",
+            message=f"Exception: {exception_doc.name}, Error: {str(e)}"
+        )
+        return False
+
+
+@frappe.whitelist()
+def request_match_exception(data):
+    """Create a 3-way match exception request.
+
+    Auto-routes to the correct approver based on PO amount:
+      < 500K -> CPO (Mae)
+      500K to < 1M -> CFO (Butch)
+      >= 1M -> CEO (Sam)
+    """
+    if isinstance(data, str):
+        data = frappe.parse_json(data)
+
+    purchase_order = data.get("purchase_order")
+    if not purchase_order:
+        frappe.throw(_("Purchase Order is required"))
+
+    if not frappe.db.exists("BEI Purchase Order", purchase_order):
+        frappe.throw(_("Purchase Order {0} not found").format(purchase_order))
+
+    reason = data.get("reason")
+    if not reason:
+        frappe.throw(_("Reason is required for exception requests"))
+
+    exception_type = data.get("exception_type")
+    if not exception_type:
+        frappe.throw(_("Exception type is required"))
+
+    # Check if a pending or approved exception already exists for this PO
+    existing = frappe.db.exists("BEI Match Exception", {
+        "purchase_order": purchase_order,
+        "status": ["in", ["Pending CPO", "Pending CFO", "Pending CEO", "Approved"]],
+    })
+    if existing:
+        frappe.throw(
+            _("An exception request already exists for PO {0}: {1}").format(purchase_order, existing)
+        )
+
+    exception = frappe.get_doc({
+        "doctype": "BEI Match Exception",
+        "reference_type": data.get("reference_type", "BEI Invoice"),
+        "reference_name": data.get("reference_name"),
+        "purchase_order": purchase_order,
+        "reason": reason,
+        "exception_type": exception_type,
+    })
+    exception.insert()
+
+    return {
+        "success": True,
+        "name": exception.name,
+        "approval_tier": exception.approval_tier,
+        "approver": exception.approver,
+        "status": exception.status,
+        "message": _("Exception request created. Awaiting {0} approval from {1}.").format(
+            exception.approval_tier, exception.approver
+        ),
+    }
+
+
+@frappe.whitelist()
+def approve_match_exception(name, comment=None):
+    """Approve a match exception.
+
+    Validates that the current user is the designated approver for the tier.
+    On approval, sends Google Chat notification to CEO (for all tiers).
+    """
+    from frappe.utils import now_datetime
+
+    exception = frappe.get_doc("BEI Match Exception", name)
+
+    if exception.status == "Approved":
+        frappe.throw(_("This exception has already been approved"))
+
+    if exception.status == "Rejected":
+        frappe.throw(_("This exception has been rejected and cannot be approved"))
+
+    # Validate the current user is the designated approver
+    current_user = frappe.session.user
+    if current_user != exception.approver and current_user != "Administrator":
+        frappe.throw(
+            _("Only {0} ({1} tier) can approve this exception. You are logged in as {2}.").format(
+                exception.approver, exception.approval_tier, current_user
+            )
+        )
+
+    exception.approver_status = "Approved"
+    exception.approver_date = now_datetime()
+    exception.approver_comment = comment or ""
+    exception.status = "Approved"
+    exception.save()
+
+    # Send CEO notification for all approved exceptions (any tier)
+    notified = _send_ceo_exception_notification(exception)
+    if notified:
+        exception.ceo_notified = 1
+        exception.ceo_notification_date = now_datetime()
+        exception.save()
+
+    return {
+        "success": True,
+        "name": exception.name,
+        "status": "Approved",
+        "message": _("Exception approved by {0}").format(current_user),
+    }
+
+
+@frappe.whitelist()
+def reject_match_exception(name, reason=None):
+    """Reject a match exception."""
+    from frappe.utils import now_datetime
+
+    exception = frappe.get_doc("BEI Match Exception", name)
+
+    if exception.status == "Approved":
+        frappe.throw(_("This exception has already been approved and cannot be rejected"))
+
+    if exception.status == "Rejected":
+        frappe.throw(_("This exception has already been rejected"))
+
+    # Validate the current user is the designated approver
+    current_user = frappe.session.user
+    if current_user != exception.approver and current_user != "Administrator":
+        frappe.throw(
+            _("Only {0} ({1} tier) can reject this exception. You are logged in as {2}.").format(
+                exception.approver, exception.approval_tier, current_user
+            )
+        )
+
+    exception.approver_status = "Rejected"
+    exception.approver_date = now_datetime()
+    exception.approver_comment = reason or ""
+    exception.status = "Rejected"
+    exception.save()
+
+    return {
+        "success": True,
+        "name": exception.name,
+        "status": "Rejected",
+        "message": _("Exception rejected by {0}").format(current_user),
+    }
+
+
+@frappe.whitelist()
+def get_match_exceptions(filters=None, page=1, page_size=20):
+    """List match exceptions with optional filtering.
+
+    Filters:
+      - status: "Pending CPO", "Pending CFO", "Pending CEO", "Approved", "Rejected"
+      - approval_tier: "CPO", "CFO", "CEO"
+      - purchase_order: specific PO name
+      - approver: filter by approver email (useful for showing "my pending approvals")
+    """
+    conditions = []
+    values = {}
+
+    if filters:
+        if isinstance(filters, str):
+            filters = frappe.parse_json(filters)
+
+        if filters.get("status"):
+            conditions.append("exc.status = %(status)s")
+            values["status"] = filters["status"]
+
+        if filters.get("approval_tier"):
+            conditions.append("exc.approval_tier = %(approval_tier)s")
+            values["approval_tier"] = filters["approval_tier"]
+
+        if filters.get("purchase_order"):
+            conditions.append("exc.purchase_order = %(purchase_order)s")
+            values["purchase_order"] = filters["purchase_order"]
+
+        if filters.get("approver"):
+            conditions.append("exc.approver = %(approver)s")
+            values["approver"] = filters["approver"]
+
+    where_clause = " AND ".join(conditions) if conditions else "1=1"
+    offset = (int(page) - 1) * int(page_size)
+
+    total = frappe.db.sql(
+        f"SELECT COUNT(*) FROM `tabBEI Match Exception` exc WHERE {where_clause}",
+        values,
+    )[0][0]
+
+    exceptions = frappe.db.sql(f"""
+        SELECT
+            exc.name, exc.purchase_order, exc.po_amount, exc.approval_tier,
+            exc.status, exc.exception_type, exc.reason, exc.approver,
+            exc.approver_status, exc.approver_date, exc.approver_comment,
+            exc.requested_by, exc.requested_date, exc.ceo_notified,
+            exc.reference_type, exc.reference_name,
+            po.po_no, po.supplier_name
+        FROM `tabBEI Match Exception` exc
+        LEFT JOIN `tabBEI Purchase Order` po ON exc.purchase_order = po.name
+        WHERE {where_clause}
+        ORDER BY exc.creation DESC
+        LIMIT %(page_size)s OFFSET %(offset)s
+    """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+
+    return {
+        "data": exceptions,
+        "total": total,
+        "page": int(page),
+        "page_size": int(page_size),
+        "total_pages": -(-total // page_size) if total else 0,
     }

@@ -1,0 +1,221 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "BEI-EXC-.YYYY.-.#####",
+ "creation": "2026-02-09 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "reference_type",
+  "reference_name",
+  "purchase_order",
+  "column_break_basic",
+  "po_amount",
+  "approval_tier",
+  "status",
+  "section_reason",
+  "reason",
+  "exception_type",
+  "section_requested",
+  "requested_by",
+  "requested_date",
+  "section_approver",
+  "approver",
+  "approver_status",
+  "approver_date",
+  "column_break_approver",
+  "approver_comment",
+  "section_ceo_notification",
+  "ceo_notified",
+  "ceo_notification_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "reference_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Reference Type",
+   "options": "BEI Invoice\nBEI Payment Request",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reference_name",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Reference Name",
+   "options": "reference_type"
+  },
+  {
+   "fieldname": "purchase_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Purchase Order",
+   "options": "BEI Purchase Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_basic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "po_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "PO Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approval_tier",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Approval Tier",
+   "options": "\nCPO\nCFO\nCEO",
+   "read_only": 1
+  },
+  {
+   "default": "Pending CPO",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending CPO\nPending CFO\nPending CEO\nApproved\nRejected"
+  },
+  {
+   "fieldname": "section_reason",
+   "fieldtype": "Section Break",
+   "label": "Exception Details"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason",
+   "reqd": 1
+  },
+  {
+   "fieldname": "exception_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Exception Type",
+   "options": "Service PO\nAdvance Payment\nEmergency\nUtility\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_requested",
+   "fieldtype": "Section Break",
+   "label": "Request Details"
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "requested_date",
+   "fieldtype": "Datetime",
+   "label": "Requested Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_approver",
+   "fieldtype": "Section Break",
+   "label": "Approval Details"
+  },
+  {
+   "fieldname": "approver",
+   "fieldtype": "Link",
+   "label": "Approver",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approver_status",
+   "fieldtype": "Select",
+   "label": "Approver Status",
+   "options": "\nPending\nApproved\nRejected"
+  },
+  {
+   "fieldname": "approver_date",
+   "fieldtype": "Datetime",
+   "label": "Approver Date"
+  },
+  {
+   "fieldname": "column_break_approver",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approver_comment",
+   "fieldtype": "Small Text",
+   "label": "Approver Comment"
+  },
+  {
+   "fieldname": "section_ceo_notification",
+   "fieldtype": "Section Break",
+   "label": "CEO Notification"
+  },
+  {
+   "default": "0",
+   "fieldname": "ceo_notified",
+   "fieldtype": "Check",
+   "label": "CEO Notified",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ceo_notification_date",
+   "fieldtype": "Datetime",
+   "label": "CEO Notification Date",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-09 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Match Exception",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
