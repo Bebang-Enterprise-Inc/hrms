@@ -1,0 +1,163 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-02-09 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "notice_of_decision",
+  "appeal_date",
+  "column_break_1",
+  "status",
+  "reviewed_by",
+  "reviewed_by_name",
+  "review_decision",
+  "section_break_grounds",
+  "appeal_grounds",
+  "appeal_evidence",
+  "section_break_review",
+  "review_notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "BEI-APPEAL-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notice_of_decision",
+   "fieldtype": "Link",
+   "label": "Notice of Decision",
+   "options": "BEI Notice of Decision",
+   "reqd": 1
+  },
+  {
+   "fieldname": "appeal_date",
+   "fieldtype": "Date",
+   "label": "Appeal Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Submitted",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Submitted\nUnder Review\nDecision Made",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reviewed_by",
+   "fieldtype": "Link",
+   "label": "Reviewed By",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "reviewed_by.employee_name",
+   "fieldname": "reviewed_by_name",
+   "fieldtype": "Data",
+   "label": "Reviewed By Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "review_decision",
+   "fieldtype": "Select",
+   "label": "Review Decision",
+   "options": "Upheld\nModified\nOverturned"
+  },
+  {
+   "fieldname": "section_break_grounds",
+   "fieldtype": "Section Break",
+   "label": "Appeal Grounds"
+  },
+  {
+   "fieldname": "appeal_grounds",
+   "fieldtype": "Text Editor",
+   "label": "Appeal Grounds",
+   "reqd": 1
+  },
+  {
+   "fieldname": "appeal_evidence",
+   "fieldtype": "Attach",
+   "label": "Appeal Evidence"
+  },
+  {
+   "fieldname": "section_break_review",
+   "fieldtype": "Section Break",
+   "label": "Review"
+  },
+  {
+   "fieldname": "review_notes",
+   "fieldtype": "Text Editor",
+   "label": "Review Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-09 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Employee Appeal",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Employee",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
