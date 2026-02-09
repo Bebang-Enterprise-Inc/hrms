@@ -8,6 +8,17 @@ from frappe.query_builder import DocType
 from hrms.utils.aws_location import AWSLocationService
 
 
+NO_EMPLOYEE_MSG = "Your account is not linked to an employee record. Please contact HR to set up your employee profile."
+
+
+def _get_employee_or_throw():
+    """Get Employee ID for current user, or throw a user-friendly error."""
+    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+    if not employee:
+        frappe.throw(_(NO_EMPLOYEE_MSG), title=_("Employee Record Not Found"))
+    return employee
+
+
 def validate_image_upload(base64_data: str, max_size_mb: int = 5) -> bytes:
     """Validate image upload for security and return decoded data
 
@@ -79,10 +90,7 @@ def checkout(
         Dict with OB record name and status
     """
     # Get current employee
-    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
-
-    if not employee:
-        frappe.throw(_("No employee record found for current user"))
+    employee = _get_employee_or_throw()
 
     # Enforce selfie requirement
     if not selfie_base64:
@@ -189,7 +197,7 @@ def checkin(
     ob_doc = frappe.get_doc("BEI Official Business", ob_name)
 
     # Verify ownership
-    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+    employee = _get_employee_or_throw()
     if ob_doc.employee != employee:
         frappe.throw(_("You can only check in to your own OB records"))
 
@@ -250,10 +258,7 @@ def get_my_ob_records(limit: int = 20):
     Returns:
         List of OB records
     """
-    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
-
-    if not employee:
-        return []
+    employee = _get_employee_or_throw()
 
     records = frappe.get_all(
         "BEI Official Business",
@@ -277,10 +282,7 @@ def get_active_ob():
     Returns:
         Active OB record or None
     """
-    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
-
-    if not employee:
-        return None
+    employee = _get_employee_or_throw()
 
     active = frappe.db.get_value(
         "BEI Official Business",
@@ -301,10 +303,7 @@ def get_pending_review():
         List of records awaiting review
     """
     # Get employees reporting to current user
-    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
-
-    if not employee:
-        return []
+    employee = _get_employee_or_throw()
 
     records = frappe.get_all(
         "BEI Official Business",
@@ -349,7 +348,7 @@ def review_ob(
     ob_doc = frappe.get_doc("BEI Official Business", ob_name)
 
     # Verify supervisor
-    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+    employee = _get_employee_or_throw()
     if ob_doc.supervisor != employee:
         frappe.throw(_("You are not the supervisor for this employee"))
 
@@ -380,7 +379,7 @@ def cancel_ob(ob_name: str):
     ob_doc = frappe.get_doc("BEI Official Business", ob_name)
 
     # Verify ownership
-    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+    employee = _get_employee_or_throw()
     if ob_doc.employee != employee:
         frappe.throw(_("You can only cancel your own OB records"))
 
