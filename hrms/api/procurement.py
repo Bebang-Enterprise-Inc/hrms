@@ -2506,6 +2506,9 @@ def get_match_exceptions(filters=None, page=1, page_size=20):
         "page_size": int(page_size),
         "total_pages": -(-total // page_size) if total else 0,
     }
+
+
+@frappe.whitelist()
 def get_awaiting_or_list(page=1, page_size=20, status=None, supplier=None, overdue_only=False):
     """Get list of payments awaiting OR. Used by Butch's OR dashboard.
 
