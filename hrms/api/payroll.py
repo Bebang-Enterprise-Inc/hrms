@@ -262,6 +262,7 @@ def get_government_remittance(month, year, remittance_type):
     if month < 1 or month > 12:
         frappe.throw(_("Month must be between 1 and 12"))
 
+    remittance_type = remittance_type.lower() if remittance_type else ""
     if remittance_type not in ["sss", "philhealth", "pagibig"]:
         frappe.throw(_("Invalid remittance type. Must be 'sss', 'philhealth', or 'pagibig'"))
 
