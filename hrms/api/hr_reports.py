@@ -443,7 +443,7 @@ def get_attendance_summary_report(
             SUM(CASE WHEN a.late_entry = 1 THEN 1 ELSE 0 END) as late_days,
             SUM(CASE WHEN a.early_exit = 1 THEN 1 ELSE 0 END) as early_exit_days,
             SUM(COALESCE(a.working_hours, 0)) as total_working_hours,
-            SUM(COALESCE(a.overtime_hours, 0)) as total_ot_hours
+            SUM(GREATEST(COALESCE(a.working_hours, 0) - 8, 0)) as total_ot_hours
         FROM `tabAttendance` a
         INNER JOIN `tabEmployee` e ON a.employee = e.name
         WHERE {where_clause}
@@ -501,8 +501,8 @@ def get_overtime_report(from_date, to_date, department=None, page=1, page_size=5
             e.department,
             e.designation,
             e.branch,
-            SUM(COALESCE(a.overtime_hours, 0)) as total_ot_hours,
-            COUNT(CASE WHEN a.overtime_hours > 0 THEN 1 END) as ot_days
+            SUM(GREATEST(COALESCE(a.working_hours, 0) - 8, 0)) as total_ot_hours,
+            COUNT(CASE WHEN a.working_hours > 8 THEN 1 END) as ot_days
         FROM `tabAttendance` a
         INNER JOIN `tabEmployee` e ON a.employee = e.name
         WHERE {where_clause}
@@ -514,20 +514,23 @@ def get_overtime_report(from_date, to_date, department=None, page=1, page_size=5
         as_dict=True,
     )
 
-    # Get approved OT Slip records for breakdown
+    # Get approved OT Slip records for breakdown (if DocType exists)
     for row in results:
-        ot_slip_hours = frappe.db.sql(
-            """
-            SELECT
-                SUM(COALESCE(total_hours, 0)) as approved_ot_hours
-            FROM `tabOvertime Slip`
-            WHERE employee = %s
-            AND from_date >= %s
-            AND to_date <= %s
-            AND docstatus = 1
-        """,
-            (row["employee"], from_date, to_date),
-        )
-        row["approved_ot_slip_hours"] = ot_slip_hours[0][0] if ot_slip_hours else 0
+        try:
+            ot_slip_hours = frappe.db.sql(
+                """
+                SELECT
+                    SUM(COALESCE(total_hours, 0)) as approved_ot_hours
+                FROM `tabOvertime Slip`
+                WHERE employee = %s
+                AND from_date >= %s
+                AND to_date <= %s
+                AND docstatus = 1
+            """,
+                (row["employee"], from_date, to_date),
+            )
+            row["approved_ot_slip_hours"] = ot_slip_hours[0][0] if ot_slip_hours else 0
+        except Exception:
+            row["approved_ot_slip_hours"] = 0
 
     return _paginate(results, page=int(page), page_size=int(page_size))
