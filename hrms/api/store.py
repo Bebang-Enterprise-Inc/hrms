@@ -78,6 +78,23 @@ def save_base64_image(base64_data, doctype, docname=None, fieldname="photo"):
     return file_doc.file_url
 
 
+STORE_OPS_ALLOWED_ROLES = [
+    "Store Staff", "Store Supervisor", "Area Supervisor",
+    "System Manager", "Administrator"
+]
+
+
+def validate_store_ops_role():
+    """Validate that current user has a store operations role.
+    Raises PermissionError if user lacks required role."""
+    user_roles = frappe.get_roles(frappe.session.user)
+    if not any(role in user_roles for role in STORE_OPS_ALLOWED_ROLES):
+        frappe.throw(
+            _("You do not have permission for store operations"),
+            frappe.PermissionError
+        )
+
+
 def resolve_warehouse(store_or_branch):
     """
     Resolve a branch name or partial warehouse name to the full warehouse name.
@@ -543,6 +560,7 @@ def submit_opening_report(store, report_time, checklist_items, notes=None,
                           photo_cold_storage_temp=None):
     """Submit daily opening report with 5 required photos."""
     try:
+        validate_store_ops_role()
         if not store:
             frappe.throw(_("Store is required"))
 
@@ -692,6 +710,7 @@ def submit_midshift_check(store, shift, temperature_readings, cleanliness_status
                           issues_found=None, corrective_action=None, photo_evidence=None,
                           late_reason=None):
     """Submit mid-shift temperature and cleanliness check with time window validation."""
+    validate_store_ops_role()
     if not store:
         frappe.throw(_("Store is required"))
 
@@ -798,6 +817,8 @@ def upload_pos_data(store, pos_date, pos_system, discount_report, transaction_re
         notes: Optional notes
         skip_date_validation: Skip date validation (for back-dated uploads with supervisor approval)
     """
+    validate_store_ops_role()
+
     if not store:
         frappe.throw(_("Store is required"))
 
@@ -906,6 +927,8 @@ def submit_bank_deposit(store, deposit_date, bank, deposits, total_amount,
         photos: List of deposit slip photo URLs/base64
         notes: Optional notes
     """
+    validate_store_ops_role()
+
     if not store:
         frappe.throw(_("Store is required"))
 
@@ -1133,6 +1156,7 @@ def get_or_create_closing_report(store):
     Get existing closing report for today or create a new one.
     Returns the report document with current stage status.
     """
+    validate_store_ops_role()
     if not store:
         frappe.throw(_("Store is required"))
 
@@ -1187,6 +1211,7 @@ def submit_closing_stage1_cash(report_name, petty_cash_fund=0, delivery_fund=0,
     Only Petty Cash, Delivery Fund, and Change Fund are entered in this stage.
     Denomination breakdown and voucher amounts are passed via kwargs.
     """
+    validate_store_ops_role()
     doc = frappe.get_doc("BEI Store Closing Report", report_name)
 
     doc.petty_cash_fund = float(petty_cash_fund or 0)
@@ -1233,6 +1258,7 @@ def submit_closing_stage2_checklist(report_name, inventory_items, checklist_item
 
     checklist_items: General end-of-day tasks
     """
+    validate_store_ops_role()
     doc = frappe.get_doc("BEI Store Closing Report", report_name)
 
     if isinstance(inventory_items, str):
@@ -1300,6 +1326,7 @@ def submit_closing_stage3_photos(report_name, x_reading_opening_photo, x_reading
     pos_files: List of 5 POS export files
     store_photos: Dict of store area photos (logo_signage, hygrometer, etc.)
     """
+    validate_store_ops_role()
     doc = frappe.get_doc("BEI Store Closing Report", report_name)
 
     # Document scanner photos (required)
@@ -1407,6 +1434,7 @@ def submit_mid_shift_handover(store, outgoing_cashier, incoming_cashier,
     Submit mid-shift handover when cashiers switch shifts.
     Identifies shortage/overage per cashier shift.
     """
+    validate_store_ops_role()
     if not store:
         frappe.throw(_("Store is required"))
 
@@ -1447,6 +1475,8 @@ def submit_mid_shift_handover(store, outgoing_cashier, incoming_cashier,
 @frappe.whitelist()
 def get_mid_shift_handovers(store, date=None, limit=10):
     """Get mid-shift handovers for a store on a specific date."""
+    validate_store_ops_role()
+
     if not date:
         date = nowdate()
 
@@ -1497,6 +1527,8 @@ def submit_maintenance_request(store, priority, description,
         before_photos: Single photo (deprecated, for backward compatibility)
         photos: JSON array of photo objects [{photo: url, caption: text}, ...]
     """
+    validate_store_ops_role()
+
     import json
 
     if not store:
