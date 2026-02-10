@@ -139,10 +139,12 @@ def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: 
     shift_doc.punch_in_photo = file_doc.file_url
     shift_doc.insert(ignore_permissions=True)
 
-    # Now link the file to the shift record
-    file_doc.attached_to_doctype = "BEI Shift Record"
-    file_doc.attached_to_name = shift_doc.name
-    file_doc.save(ignore_permissions=True)
+    # Now link the file to the shift record (use set_value to avoid
+    # TimestampMismatchError — Frappe File hooks update modified between saves)
+    frappe.db.set_value("File", file_doc.name, {
+        "attached_to_doctype": "BEI Shift Record",
+        "attached_to_name": shift_doc.name,
+    })
 
     return {
         "name": shift_doc.name,

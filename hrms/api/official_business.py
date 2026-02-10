@@ -161,8 +161,10 @@ def checkout(
         })
         file_doc.save(ignore_permissions=True)
 
-        ob_doc.checkout_selfie = file_doc.file_url
-        ob_doc.save(ignore_permissions=True)
+        # Use set_value to avoid TimestampMismatchError — File save hooks
+        # may update ob_doc.modified between insert and this save
+        frappe.db.set_value("BEI Official Business", ob_doc.name,
+                           "checkout_selfie", file_doc.file_url)
 
     return {
         "name": ob_doc.name,
