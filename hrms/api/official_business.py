@@ -110,10 +110,11 @@ def checkout(
         frappe.throw(_("GPS accuracy too low ({0}m). Please move to an open area with clear sky view for better signal.".format(int(float(accuracy)))))
 
     # Validate adjusted position is within 300m of raw GPS (anti-spoofing)
+    # 305m server tolerance for floating-point diff between frontend/backend Haversine
     adjustment_distance = calculate_haversine_distance(
         raw_gps_lat, raw_gps_lng, float(latitude), float(longitude)
     )
-    if adjustment_distance > 300:
+    if adjustment_distance > 305:
         frappe.throw(
             _("Adjusted location is {0}m from GPS position. Maximum 300m allowed.").format(
                 int(adjustment_distance)
