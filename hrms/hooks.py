@@ -130,6 +130,11 @@ after_app_install = "hrms.setup.after_app_install"
 before_app_uninstall = "hrms.setup.before_app_uninstall"
 # after_app_uninstall = "hrms.utils.after_app_uninstall"
 
+# Sentry Observability
+# --------------------
+before_request = "hrms.utils.sentry.add_request_breadcrumb"
+after_exception = "hrms.utils.sentry.capture_exception"
+
 # Desk Notifications
 # ------------------
 # See frappe.core.notifications.get_notification_config
