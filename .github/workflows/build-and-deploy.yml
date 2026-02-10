@@ -177,6 +177,33 @@ jobs:
             --query '[Status, StandardOutputContent, StandardErrorContent]' \
             --output text
 
+      - name: Set Sentry DSN on services
+        run: |
+          echo "📊 Setting Sentry DSN environment variable on Frappe services..."
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "if [ -n \"${{ secrets.SENTRY_DSN }}\" ]; then",
+              "  docker service update --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_backend --detach",
+              "  docker service update --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-short --detach",
+              "  docker service update --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-long --detach",
+              "  docker service update --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_scheduler --detach",
+              "  echo \"✅ Sentry DSN set on all backend services\"",
+              "else",
+              "  echo \"⚠️ SENTRY_DSN not set, skipping\"",
+              "fi"
+            ]' \
+            --output text \
+            --query 'Command.CommandId')
+
+          echo "📋 Sentry DSN Command ID: $COMMAND_ID"
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
+
       - name: Fix nginx site header
         run: |
           echo "🔧 Fixing nginx X-Frappe-Site-Name header..."
