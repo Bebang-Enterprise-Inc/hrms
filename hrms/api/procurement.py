@@ -2947,8 +2947,6 @@ def tag_advance_to_gr(advance_payment, goods_receipt, amount_to_clear):
             "credit_in_account_currency": 0,
             "party_type": "Supplier",
             "party": party_name,
-            "reference_type": "BEI Payment Request",
-            "reference_name": advance_payment,
             "cost_center": "Main - BEI",
         })
 
@@ -2959,8 +2957,6 @@ def tag_advance_to_gr(advance_payment, goods_receipt, amount_to_clear):
             "credit_in_account_currency": amount_to_clear,
             "party_type": "Supplier",
             "party": party_name,
-            "reference_type": "BEI Payment Request",
-            "reference_name": advance_payment,
             "cost_center": "Main - BEI",
         })
 
@@ -3077,7 +3073,14 @@ def mark_advance_undeliverable(advance_payment, amount, reason):
             )
         )
 
-    supplier_name = advance.supplier_name or advance.supplier
+    # Resolve to Frappe Supplier for GL party (BUG-011 fix)
+    party_name = ""
+    if advance.supplier:
+        bei_supplier = frappe.get_doc("BEI Supplier", advance.supplier)
+        frappe_supplier = bei_supplier.get_or_create_frappe_supplier()
+        party_name = frappe_supplier or bei_supplier.supplier_name
+    else:
+        party_name = advance.supplier_name or advance.supplier
 
     sp = frappe.db.savepoint("reclass_advance")
     try:
@@ -3093,17 +3096,13 @@ def mark_advance_undeliverable(advance_payment, amount, reason):
             "account": "1103102 - ACCOUNTS RECEIVABLE-OTHERS - BEI",
             "debit_in_account_currency": amount,
             "party_type": "Supplier",
-            "party": supplier_name,
-            "reference_type": "BEI Payment Request",
-            "reference_name": advance_payment,
+            "party": party_name,
         })
         jv.append("accounts", {
             "account": "1105203 - ADVANCES TO SUPPLIERS - BEI",
             "credit_in_account_currency": amount,
             "party_type": "Supplier",
-            "party": supplier_name,
-            "reference_type": "BEI Payment Request",
-            "reference_name": advance_payment,
+            "party": party_name,
         })
         jv.insert(ignore_permissions=True)
         jv.submit()
