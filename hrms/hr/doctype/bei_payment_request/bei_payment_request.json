@@ -71,6 +71,18 @@
     "payment_proof",
     "integration_section",
     "frappe_payment_entry",
+    "advance_payment_section",
+    "is_advance_payment",
+    "advance_status",
+    "column_break_advance1",
+    "advance_amount",
+    "advance_cleared_amount",
+    "advance_outstanding",
+    "advance_gl_section",
+    "advance_gl_account",
+    "ewt_rate",
+    "column_break_advance2",
+    "ewt_amount",
     "or_tracking_section",
     "or_status",
     "or_required",
@@ -490,6 +502,81 @@
       "fieldtype": "Link",
       "label": "Frappe Payment Entry",
       "options": "Payment Entry",
+      "read_only": 1
+    },
+    {
+      "fieldname": "advance_payment_section",
+      "fieldtype": "Section Break",
+      "label": "Advance Payment",
+      "collapsible": 1,
+      "depends_on": "eval:doc.is_advance_payment"
+    },
+    {
+      "default": "0",
+      "description": "Check if this is an advance payment to supplier before goods delivery",
+      "fieldname": "is_advance_payment",
+      "fieldtype": "Check",
+      "label": "Is Advance Payment"
+    },
+    {
+      "default": "N/A",
+      "fieldname": "advance_status",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "Advance Status",
+      "options": "N/A\nOutstanding\nPartially Cleared\nFully Cleared\nReclassified",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_advance1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "advance_amount",
+      "fieldtype": "Currency",
+      "label": "Advance Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "advance_cleared_amount",
+      "fieldtype": "Currency",
+      "label": "Cleared Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "advance_outstanding",
+      "fieldtype": "Currency",
+      "label": "Outstanding Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "advance_gl_section",
+      "fieldtype": "Section Break",
+      "label": "Advance GL & Tax",
+      "collapsible": 1,
+      "depends_on": "eval:doc.is_advance_payment"
+    },
+    {
+      "default": "1105203 - ADVANCES TO SUPPLIERS - BEI",
+      "fieldname": "advance_gl_account",
+      "fieldtype": "Data",
+      "label": "Advance GL Account",
+      "read_only": 1
+    },
+    {
+      "description": "EWT rate applied to this advance (1% goods, 2% services, 5% professional)",
+      "fieldname": "ewt_rate",
+      "fieldtype": "Percent",
+      "label": "EWT Rate"
+    },
+    {
+      "fieldname": "column_break_advance2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "ewt_amount",
+      "fieldtype": "Currency",
+      "label": "EWT Amount",
       "read_only": 1
     },
     {

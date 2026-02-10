@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, now_datetime, nowdate, add_days
+from frappe.utils import flt, now_datetime, nowdate, add_days, cint
 
 
 # CEO approval threshold
@@ -487,8 +487,9 @@ class BEIPaymentRequest(Document):
         This is the final step in the payment workflow:
         1. Updates status to Processing
         2. Creates Frappe Payment Entry (with GL postings)
-        3. Updates status to Paid
-        4. Updates BEI Invoice payment tracking
+        3. For advance payments: routes to 1105203 with EWT handling
+        4. Updates status to Paid
+        5. Updates BEI Invoice payment tracking
         """
         self._check_role(["Accounts Manager", "System Manager"])
         if self.status != "Approved":
@@ -502,18 +503,29 @@ class BEIPaymentRequest(Document):
         self.status = "Processing"
         self.save()
 
-        # Create Frappe Payment Entry
         pe_name = None
         pe_warning = None
-        try:
-            pe_name = self.create_frappe_payment_entry()
-        except Exception as e:
-            # Log error but don't fail - payment was made in reality
-            frappe.log_error(
-                f"Payment Entry creation failed for {self.name}: {e}",
-                "BEI Payment Entry Error"
-            )
-            pe_warning = str(e)
+
+        if cint(self.is_advance_payment):
+            # Advance payment: custom GL routing to 1105203
+            try:
+                pe_name = self._create_advance_payment_entry()
+            except Exception as e:
+                frappe.log_error(
+                    f"Advance Payment Entry creation failed for {self.name}: {e}",
+                    "BEI Advance Payment Error"
+                )
+                pe_warning = str(e)
+        else:
+            # Standard payment: create Frappe Payment Entry
+            try:
+                pe_name = self.create_frappe_payment_entry()
+            except Exception as e:
+                frappe.log_error(
+                    f"Payment Entry creation failed for {self.name}: {e}",
+                    "BEI Payment Entry Error"
+                )
+                pe_warning = str(e)
 
         # Route based on OR requirement
         self._route_after_payment()
@@ -535,6 +547,111 @@ class BEIPaymentRequest(Document):
             result["warning"] = _("Frappe Payment Entry creation failed - "
                                   "manual entry may be required. {0}").format(pe_warning)
         return result
+
+    def _create_advance_payment_entry(self):
+        """
+        Create Payment Entry for advance payment with GL to 1105203.
+
+        GL entries when NO EWT:
+          Dr 1105203 - ADVANCES TO SUPPLIERS (gross amount)
+          Cr Bank Account (gross amount)
+
+        GL entries when EWT applicable:
+          Dr 1105203 - ADVANCES TO SUPPLIERS (gross amount)
+          Cr Bank Account (net = gross - ewt)
+          Cr 2102202 - EWT PAYABLE (ewt amount)
+
+        NO VAT at advance payment time (EOPT Law: VAT recognized on delivery date).
+        All GL rows include party_type + party per DM-1.
+        Uses savepoint per DM-2.
+        """
+        gross_amount = flt(self.payment_amount, 2)
+        ewt_amount = 0.0
+
+        # Check supplier EWT
+        if self.supplier:
+            supplier_doc = frappe.get_doc("BEI Supplier", self.supplier)
+            if cint(supplier_doc.ewt_applicable) and flt(self.ewt_rate):
+                ewt_amount = flt(gross_amount * flt(self.ewt_rate) / 100, 2)
+
+        net_amount = flt(gross_amount - ewt_amount, 2)
+
+        # Determine bank account
+        paid_from, mode_of_payment = self._get_payment_accounts()
+
+        # Get supplier name for party field
+        supplier_name = frappe.db.get_value(
+            "BEI Supplier", self.supplier, "supplier_name"
+        ) if self.supplier else ""
+
+        # Get or create Frappe Supplier for party
+        frappe_supplier = None
+        if self.supplier:
+            bei_supplier = frappe.get_doc("BEI Supplier", self.supplier)
+            frappe_supplier = bei_supplier.get_or_create_frappe_supplier()
+
+        party_name = frappe_supplier or supplier_name
+
+        reference_no = self.transaction_reference or self.check_number or ""
+
+        sp = frappe.db.savepoint("advance_payment")
+        try:
+            # Create Payment Entry
+            pe = frappe.get_doc({
+                "doctype": "Payment Entry",
+                "payment_type": "Pay",
+                "posting_date": self.payment_date or nowdate(),
+                "company": "Bebang Enterprise Inc.",
+                "party_type": "Supplier",
+                "party": party_name,
+                "paid_from": paid_from,
+                "paid_to": "1105203 - ADVANCES TO SUPPLIERS - BEI",
+                "paid_amount": gross_amount,
+                "received_amount": gross_amount,
+                "source_exchange_rate": 1,
+                "target_exchange_rate": 1,
+                "mode_of_payment": mode_of_payment,
+                "reference_no": reference_no,
+                "reference_date": self.payment_date or nowdate(),
+                "bei_payment_request": self.name,
+                "remarks": _("Advance payment to {0} against PO {1}").format(
+                    supplier_name, self.purchase_order or "N/A"
+                ),
+            })
+
+            # If EWT, add deduction row
+            if ewt_amount > 0:
+                pe.append("deductions", {
+                    "account": "2102202 - EWT PAYABLE - BEI",
+                    "cost_center": "Main - BEI",
+                    "amount": ewt_amount,
+                })
+                # Adjust paid amount to net
+                pe.paid_amount = net_amount
+                pe.received_amount = gross_amount
+
+            pe.insert(ignore_permissions=True)
+            pe.submit()
+
+            # Update advance tracking fields
+            self.ewt_amount = ewt_amount
+            self.advance_amount = gross_amount
+            self.advance_cleared_amount = 0
+            self.advance_outstanding = gross_amount
+            self.advance_status = "Outstanding"
+            self.advance_gl_account = "1105203 - ADVANCES TO SUPPLIERS - BEI"
+            self.db_set("frappe_payment_entry", pe.name, update_modified=False)
+
+            frappe.msgprint(
+                _("Advance Payment Entry created: {0}").format(pe.name),
+                indicator="green"
+            )
+
+            return pe.name
+
+        except Exception:
+            frappe.db.rollback(save_point=sp)
+            raise
 
     def _route_after_payment(self):
         """Route payment to OR tracking or close based on or_required flag."""
