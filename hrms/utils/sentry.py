@@ -15,9 +15,35 @@ import threading
 
 import frappe
 
+# Test accounts whose errors should NOT be sent to Sentry.
+# These generate hundreds of expected validation errors during E2E testing.
+_TEST_USERS = frozenset({
+	"Administrator",
+	"test.area@bebang.ph",
+	"test.supervisor@bebang.ph",
+	"test.staff@bebang.ph",
+	"test.crew1@bebang.ph",
+	"test.hr@bebang.ph",
+	"test.projects@bebang.ph",
+	"test.projects.staff@bebang.ph",
+	"test.commissary@bebang.ph",
+	"test.warehouse@bebang.ph",
+})
+
 _sentry_initialized = False
 _log_error_patched = False
 _handle_exception_patched = False
+
+
+def _is_test_user():
+	"""Return True if the current session user is a test/admin account."""
+	try:
+		user = getattr(frappe.session, "user", None) if hasattr(frappe, "session") and frappe.session else None
+		return user in _TEST_USERS
+	except Exception:
+		return False
+
+
 _init_lock = threading.Lock()
 _patch_lock = threading.Lock()
 _exc_patch_lock = threading.Lock()
@@ -97,6 +123,9 @@ def _patch_log_error():
 			result = _original_log_error(*args, **kwargs)
 
 			try:
+				if _is_test_user():
+					return result
+
 				import sentry_sdk
 
 				title = kwargs.get("title", args[1] if len(args) > 1 else "Frappe Error")
@@ -114,8 +143,11 @@ def _patch_log_error():
 				if exc_info[0] is not None:
 					sentry_sdk.capture_exception(exc_info)
 				else:
+					# Include actual error content instead of generic "New Exception"
+					msg_str = str(message)[:1000] if message else ""
+					title_str = str(title) if title else "Frappe Error"
 					sentry_sdk.capture_message(
-						f"{title}: {str(message)[:500]}",
+						f"{title_str}\n{msg_str}" if msg_str else title_str,
 						level="error",
 					)
 			except Exception:
@@ -153,7 +185,18 @@ def _patch_handle_exception():
 
 			def patched_handle_exception(e):
 				try:
+					if _is_test_user():
+						return _original_handle_exception(e)
+
 					import sentry_sdk
+
+					http_status = getattr(e, "http_status_code", 500)
+
+					# Only capture server errors (5xx), not client validation (4xx).
+					# 4xx errors (ValidationError, PermissionError, etc.) are expected
+					# user-facing errors, not bugs.
+					if http_status < 500:
+						return _original_handle_exception(e)
 
 					if hasattr(frappe, "session") and frappe.session and frappe.session.user:
 						sentry_sdk.set_user(
@@ -167,12 +210,7 @@ def _patch_handle_exception():
 						sentry_sdk.set_tag("endpoint", frappe.request.path or "unknown")
 						sentry_sdk.set_tag("method", frappe.request.method or "unknown")
 
-					http_status = getattr(e, "http_status_code", 500)
-					if http_status >= 500:
-						sentry_sdk.capture_exception(e)
-					else:
-						sentry_sdk.set_tag("http_status", str(http_status))
-						sentry_sdk.capture_exception(e)
+					sentry_sdk.capture_exception(e)
 				except Exception:
 					pass
 
