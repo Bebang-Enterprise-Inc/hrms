@@ -16,6 +16,9 @@
   "checkout_latitude",
   "checkout_longitude",
   "checkout_accuracy",
+  "checkout_gps_latitude",
+  "checkout_gps_longitude",
+  "checkout_adjustment_distance",
   "checkout_address",
   "checkout_selfie",
   "column_break_checkout",
@@ -112,6 +115,29 @@
    "fieldtype": "Float",
    "label": "GPS Accuracy (meters)",
    "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_gps_latitude",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "GPS Raw Latitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_gps_longitude",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "GPS Raw Longitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_adjustment_distance",
+   "fieldtype": "Float",
+   "label": "Pin Adjustment (meters)",
+   "precision": "1",
    "read_only": 1
   },
   {
@@ -275,7 +301,7 @@
   }
  ],
  "is_submittable": 0,
- "modified": "2026-02-05 12:00:00.000000",
+ "modified": "2026-02-10 18:00:00.000000",
  "module": "HR",
  "name": "BEI Official Business",
  "permissions": [
