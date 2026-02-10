@@ -1039,10 +1039,46 @@ def create_payment_request(data):
     AUDIT CONTROL 2.2: Payment date cannot be earlier than Invoice date
     AUDIT CONTROL 2.3: Payment limited to received value (partial delivery control)
     AUDIT CONTROL 2.4: Block payment without complete PO approval for >₱500K
+    AUDIT CONTROL 2.5: Double-payment guard for advances
     Ref: Internal Audit Jan 30, 2026 - PO-2025320 paid ₱848,800 for partial delivery
     """
     if isinstance(data, str):
         data = frappe.parse_json(data)
+
+    # AUDIT CONTROL 2.5: Double-payment guard — block if PO fully covered by advance
+    _po_for_guard = data.get("purchase_order")
+    if not _po_for_guard and data.get("invoice"):
+        _po_for_guard = frappe.db.get_value("BEI Invoice", data["invoice"], "purchase_order")
+    if _po_for_guard:
+        advance_outstanding = frappe.db.sql(
+            """SELECT COALESCE(SUM(advance_outstanding), 0)
+            FROM `tabBEI Payment Request`
+            WHERE is_advance_payment = 1
+              AND advance_status IN ('Outstanding', 'Partially Cleared')
+              AND purchase_order = %s""",
+            (_po_for_guard,),
+        )
+        total_advance_outstanding = flt(advance_outstanding[0][0]) if advance_outstanding else 0
+        if total_advance_outstanding > 0:
+            po_total = flt(
+                frappe.db.get_value("BEI Purchase Order", _po_for_guard, "grand_total")
+            )
+            if total_advance_outstanding >= po_total:
+                frappe.throw(
+                    _("This PO is fully covered by an outstanding advance payment of PHP {0:,.2f}. "
+                      "Cannot create duplicate payment.").format(total_advance_outstanding),
+                    title=_("Duplicate Payment Blocked"),
+                )
+            else:
+                remaining = po_total - total_advance_outstanding
+                frappe.msgprint(
+                    _("Note: PO {0} has outstanding advance(s) of PHP {1:,.2f}. "
+                      "Remaining payable: PHP {2:,.2f}.").format(
+                        _po_for_guard, total_advance_outstanding, remaining
+                    ),
+                    alert=True,
+                )
+                data["_remaining_payable"] = remaining
 
     invoice_name = data.get("invoice")
     if invoice_name:
@@ -2998,4 +3034,474 @@ def check_advance_for_po(purchase_order):
         "has_advance": len(advances) > 0,
         "advances": advances,
         "total_outstanding": flt(total_outstanding, 2),
+    }
+
+
+# =============================================================================
+# ADVANCE PAYMENT: RECLASSIFICATION, DASHBOARD, SUBSIDIARY LEDGER, FORM 2307
+# =============================================================================
+
+@frappe.whitelist()
+def mark_advance_undeliverable(advance_payment, amount, reason):
+    """Reclassify an undeliverable advance payment to AR-Others.
+
+    Creates a Journal Entry:
+        Dr 1103102 - ACCOUNTS RECEIVABLE-OTHERS - BEI  (amount)
+        Cr 1105203 - ADVANCES TO SUPPLIERS - BEI       (amount)
+
+    DM-1: All JV rows include party_type + party.
+    DM-2: Uses savepoint for multi-doc safety.
+    Auto-submits JV per CFO directive (Q17).
+
+    Args:
+        advance_payment: BEI Payment Request name
+        amount: Amount to reclassify
+        reason: Business reason for reclassification
+    """
+    amount = flt(amount)
+    if amount <= 0:
+        frappe.throw(_("Reclassification amount must be greater than zero."))
+
+    if not reason or not reason.strip():
+        frappe.throw(_("A reason is required for reclassification."))
+
+    advance = frappe.get_doc("BEI Payment Request", advance_payment)
+    if not advance.is_advance_payment:
+        frappe.throw(_("{0} is not an advance payment.").format(advance_payment))
+
+    outstanding = flt(advance.advance_outstanding)
+    if amount > outstanding:
+        frappe.throw(
+            _("Reclassification amount (PHP {0:,.2f}) exceeds outstanding balance (PHP {1:,.2f}).").format(
+                amount, outstanding
+            )
+        )
+
+    supplier_name = advance.supplier_name or advance.supplier
+
+    sp = frappe.db.savepoint("reclass_advance")
+    try:
+        # Create reclassification Journal Entry
+        jv = frappe.new_doc("Journal Entry")
+        jv.voucher_type = "Journal Entry"
+        jv.posting_date = nowdate()
+        jv.company = "Bebang Enterprise Inc."
+        jv.user_remark = "Reclassification of undeliverable advance: {0}. Reason: {1}".format(
+            advance_payment, reason.strip()
+        )
+        jv.append("accounts", {
+            "account": "1103102 - ACCOUNTS RECEIVABLE-OTHERS - BEI",
+            "debit_in_account_currency": amount,
+            "party_type": "Supplier",
+            "party": supplier_name,
+            "reference_type": "BEI Payment Request",
+            "reference_name": advance_payment,
+        })
+        jv.append("accounts", {
+            "account": "1105203 - ADVANCES TO SUPPLIERS - BEI",
+            "credit_in_account_currency": amount,
+            "party_type": "Supplier",
+            "party": supplier_name,
+            "reference_type": "BEI Payment Request",
+            "reference_name": advance_payment,
+        })
+        jv.insert(ignore_permissions=True)
+        jv.submit()
+
+        # Update advance balances
+        new_cleared = flt(advance.advance_cleared_amount) + amount
+        new_outstanding = flt(advance.advance_amount) - new_cleared
+        updates = {
+            "advance_cleared_amount": new_cleared,
+            "advance_outstanding": new_outstanding,
+        }
+        if new_outstanding <= 0:
+            updates["advance_status"] = "Reclassified"
+
+        for field, value in updates.items():
+            frappe.db.set_value(
+                "BEI Payment Request", advance_payment, field, value,
+                update_modified=False,
+            )
+
+        # Audit trail comment
+        frappe.get_doc({
+            "doctype": "Comment",
+            "comment_type": "Info",
+            "reference_doctype": "BEI Payment Request",
+            "reference_name": advance_payment,
+            "content": "Reclassified PHP {0:,.2f} to AR-Others (JV: {1}). Reason: {2}".format(
+                amount, jv.name, reason.strip()
+            ),
+        }).insert(ignore_permissions=True)
+
+    except Exception:
+        frappe.db.rollback(save_point=sp)
+        raise
+
+    return {
+        "success": True,
+        "journal_entry": jv.name,
+        "new_outstanding": new_outstanding,
+        "new_status": updates.get("advance_status", advance.advance_status),
+        "message": _("Reclassified PHP {0:,.2f} to AR-Others.").format(amount),
+    }
+
+
+@frappe.whitelist(allow_guest=False)
+def get_outstanding_advances(page=1, page_size=20, group_by=None, supplier=None, status=None):
+    """Get outstanding advance payments with optional grouping.
+
+    Args:
+        page: Page number (1-indexed)
+        page_size: Results per page
+        group_by: None or "supplier" for aggregated view
+        supplier: Filter by supplier name
+        status: Filter by advance_status
+    """
+    page = int(page)
+    page_size = int(page_size)
+    conditions = ["pr.is_advance_payment = 1", "pr.advance_status IN ('Outstanding', 'Partially Cleared')"]
+    values = {}
+
+    if supplier:
+        conditions.append("pr.supplier_name = %(supplier)s")
+        values["supplier"] = supplier
+
+    if status:
+        conditions.append("pr.advance_status = %(status)s")
+        values["status"] = status
+
+    where = " AND ".join(conditions)
+
+    if group_by == "supplier":
+        data = frappe.db.sql(
+            """SELECT
+                pr.supplier, pr.supplier_name,
+                COUNT(*) as advance_count,
+                SUM(pr.advance_amount) as total_advance_amount,
+                SUM(pr.advance_cleared_amount) as total_cleared,
+                SUM(pr.advance_outstanding) as total_outstanding,
+                MIN(pr.payment_date) as earliest_payment,
+                MAX(DATEDIFF(NOW(), pr.payment_date)) as max_days_outstanding
+            FROM `tabBEI Payment Request` pr
+            WHERE {where}
+            GROUP BY pr.supplier, pr.supplier_name
+            ORDER BY total_outstanding DESC""".format(where=where),
+            values,
+            as_dict=True,
+        )
+        return {"data": data, "total": len(data), "grouped_by": "supplier"}
+
+    offset = (page - 1) * page_size
+    values["limit"] = page_size
+    values["offset"] = offset
+
+    total = frappe.db.sql(
+        "SELECT COUNT(*) FROM `tabBEI Payment Request` pr WHERE {where}".format(where=where),
+        values,
+    )[0][0]
+
+    data = frappe.db.sql(
+        """SELECT
+            pr.name, pr.supplier, pr.supplier_name, pr.purchase_order,
+            pr.advance_amount, pr.advance_cleared_amount, pr.advance_outstanding,
+            pr.advance_status, pr.payment_date,
+            DATEDIFF(NOW(), pr.payment_date) as days_outstanding
+        FROM `tabBEI Payment Request` pr
+        WHERE {where}
+        ORDER BY pr.payment_date ASC
+        LIMIT %(limit)s OFFSET %(offset)s""".format(where=where),
+        values,
+        as_dict=True,
+    )
+
+    return {
+        "data": data,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size,
+    }
+
+
+@frappe.whitelist(allow_guest=False)
+def get_advance_aging_summary():
+    """Get advance payment aging in standard buckets.
+
+    Returns counts and totals for: 0-7, 8-14, 15-30, 31-60, >60 days.
+    """
+    rows = frappe.db.sql(
+        """SELECT
+            pr.advance_outstanding,
+            DATEDIFF(NOW(), pr.payment_date) as days_outstanding
+        FROM `tabBEI Payment Request` pr
+        WHERE pr.is_advance_payment = 1
+          AND pr.advance_status IN ('Outstanding', 'Partially Cleared')""",
+        as_dict=True,
+    )
+
+    buckets = {
+        "0_7_days": {"count": 0, "amount": 0},
+        "8_14_days": {"count": 0, "amount": 0},
+        "15_30_days": {"count": 0, "amount": 0},
+        "31_60_days": {"count": 0, "amount": 0},
+        "over_60_days": {"count": 0, "amount": 0},
+    }
+    total_count = 0
+    total_amount = 0
+
+    for row in rows:
+        days = row.days_outstanding or 0
+        amt = flt(row.advance_outstanding)
+        total_count += 1
+        total_amount += amt
+
+        if days <= 7:
+            key = "0_7_days"
+        elif days <= 14:
+            key = "8_14_days"
+        elif days <= 30:
+            key = "15_30_days"
+        elif days <= 60:
+            key = "31_60_days"
+        else:
+            key = "over_60_days"
+
+        buckets[key]["count"] += 1
+        buckets[key]["amount"] += amt
+
+    # Round amounts
+    for bucket in buckets.values():
+        bucket["amount"] = flt(bucket["amount"], 2)
+
+    return {
+        "buckets": buckets,
+        "total_count": total_count,
+        "total_amount": flt(total_amount, 2),
+    }
+
+
+@frappe.whitelist(allow_guest=False)
+def get_advance_subsidiary_ledger(supplier, from_date=None, to_date=None):
+    """Get chronological subsidiary ledger for a supplier's advances.
+
+    Entries: advances (debit), clearings (credit), reclassifications (credit).
+    Returns entries with running balance.
+
+    Args:
+        supplier: Supplier name
+        from_date: Optional start date filter
+        to_date: Optional end date filter
+    """
+    if not supplier:
+        frappe.throw(_("Supplier is required."))
+
+    date_filter = ""
+    values = {"supplier": supplier}
+    if from_date:
+        date_filter += " AND posting_date >= %(from_date)s"
+        values["from_date"] = getdate(from_date)
+    if to_date:
+        date_filter += " AND posting_date <= %(to_date)s"
+        values["to_date"] = getdate(to_date)
+
+    # 1. Advance payments (debit to 1105203)
+    advances = frappe.db.sql(
+        """SELECT
+            pr.name as reference_name, 'BEI Payment Request' as reference_type,
+            pr.payment_date as posting_date,
+            'Advance Payment' as entry_type,
+            pr.advance_amount as debit, 0 as credit,
+            pr.purchase_order as remarks
+        FROM `tabBEI Payment Request` pr
+        WHERE pr.is_advance_payment = 1
+          AND pr.supplier_name = %(supplier)s
+          {date_filter}""".format(date_filter=date_filter.replace("posting_date", "pr.payment_date")),
+        values,
+        as_dict=True,
+    )
+
+    # 2. Journal Entries touching 1105203 for this supplier (clearings + reclassifications)
+    je_date_filter = date_filter  # uses posting_date directly
+    journal_entries = frappe.db.sql(
+        """SELECT
+            je.name as reference_name, 'Journal Entry' as reference_type,
+            je.posting_date,
+            CASE
+                WHEN jea.account LIKE '1103102%%' THEN 'Reclassification'
+                ELSE 'Advance Clearing'
+            END as entry_type,
+            jea.debit_in_account_currency as debit,
+            jea.credit_in_account_currency as credit,
+            je.user_remark as remarks
+        FROM `tabJournal Entry Account` jea
+        JOIN `tabJournal Entry` je ON jea.parent = je.name
+        WHERE jea.account LIKE '1105203%%'
+          AND jea.party_type = 'Supplier'
+          AND jea.party = %(supplier)s
+          AND je.docstatus = 1
+          {date_filter}
+        ORDER BY je.posting_date""".format(date_filter=je_date_filter.replace("posting_date", "je.posting_date")),
+        values,
+        as_dict=True,
+    )
+
+    # Combine and sort chronologically
+    entries = advances + journal_entries
+    entries.sort(key=lambda e: (getdate(e["posting_date"]), e.get("reference_name", "")))
+
+    # Calculate running balance
+    running_balance = 0
+    for entry in entries:
+        running_balance += flt(entry["debit"]) - flt(entry["credit"])
+        entry["balance"] = flt(running_balance, 2)
+        entry["debit"] = flt(entry["debit"], 2)
+        entry["credit"] = flt(entry["credit"], 2)
+
+    return {
+        "supplier": supplier,
+        "entries": entries,
+        "closing_balance": flt(running_balance, 2),
+        "from_date": str(from_date) if from_date else None,
+        "to_date": str(to_date) if to_date else None,
+    }
+
+
+@frappe.whitelist(allow_guest=False)
+def generate_form_2307_entry(payment_request):
+    """Generate/update Form 2307 (EWT certificate) data for a payment request.
+
+    Stores: supplier TIN, name, tax period, ATC code, gross amount, EWT rate, EWT amount.
+    Data-only — no PDF generation this sprint.
+
+    Args:
+        payment_request: BEI Payment Request name
+    """
+    pay_req = frappe.get_doc("BEI Payment Request", payment_request)
+
+    if not pay_req.supplier:
+        frappe.throw(_("Payment request has no supplier."))
+
+    # Get supplier TIN
+    supplier_tin = frappe.db.get_value("BEI Supplier", pay_req.supplier, "tin") or ""
+    supplier_name = pay_req.supplier_name or pay_req.supplier
+
+    # Determine tax period (month/year of payment)
+    payment_date = getdate(pay_req.payment_date or pay_req.request_date or nowdate())
+    tax_period = payment_date.strftime("%Y-%m")
+
+    # EWT calculation — default ATC WI100 (goods) at 1% for trade
+    gross_amount = flt(pay_req.payment_amount)
+    ewt_rate = flt(pay_req.ewt_rate) if hasattr(pay_req, "ewt_rate") and pay_req.ewt_rate else 1.0
+    ewt_amount = flt(gross_amount * ewt_rate / 100, 2)
+    atc_code = "WI100"  # Default: Income payments to suppliers of goods
+
+    import json as _json
+
+    form_2307_data = {
+        "supplier_tin": supplier_tin,
+        "supplier_name": supplier_name,
+        "tax_period": tax_period,
+        "atc_code": atc_code,
+        "gross_amount": gross_amount,
+        "ewt_rate": ewt_rate,
+        "ewt_amount": ewt_amount,
+        "payment_request": payment_request,
+        "generated_by": frappe.session.user,
+        "generated_on": nowdate(),
+    }
+
+    # Store as JSON in a custom field or comment for retrieval
+    # Using comment-based storage until a dedicated DocType is created
+    existing = frappe.db.sql(
+        """SELECT name FROM `tabComment`
+        WHERE reference_doctype = 'BEI Payment Request'
+          AND reference_name = %s
+          AND comment_type = 'Info'
+          AND content LIKE '%%FORM_2307_DATA%%'""",
+        (payment_request,),
+    )
+
+    content = "FORM_2307_DATA:" + _json.dumps(form_2307_data)
+
+    if existing:
+        frappe.db.set_value("Comment", existing[0][0], "content", content)
+    else:
+        frappe.get_doc({
+            "doctype": "Comment",
+            "comment_type": "Info",
+            "reference_doctype": "BEI Payment Request",
+            "reference_name": payment_request,
+            "content": content,
+        }).insert(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "data": form_2307_data,
+        "message": _("Form 2307 data generated for {0}.").format(supplier_name),
+    }
+
+
+@frappe.whitelist(allow_guest=False)
+def get_form_2307_data(supplier=None, tax_period=None):
+    """Retrieve Form 2307 entries filtered by supplier and/or tax period.
+
+    Args:
+        supplier: Optional supplier name filter
+        tax_period: Optional tax period filter (YYYY-MM)
+    """
+    import json as _json
+
+    comments = frappe.db.sql(
+        """SELECT c.content, c.reference_name, c.modified
+        FROM `tabComment` c
+        WHERE c.reference_doctype = 'BEI Payment Request'
+          AND c.comment_type = 'Info'
+          AND c.content LIKE '%%FORM_2307_DATA%%'
+        ORDER BY c.modified DESC""",
+        as_dict=True,
+    )
+
+    entries = []
+    for comment in comments:
+        try:
+            json_str = comment.content.split("FORM_2307_DATA:", 1)[1]
+            data = _json.loads(json_str)
+
+            if supplier and data.get("supplier_name") != supplier:
+                continue
+            if tax_period and data.get("tax_period") != tax_period:
+                continue
+
+            data["_modified"] = str(comment.modified)
+            entries.append(data)
+        except (IndexError, _json.JSONDecodeError):
+            continue
+
+    # Aggregate by supplier + tax_period
+    summary = {}
+    for entry in entries:
+        key = "{0}|{1}".format(entry.get("supplier_name", ""), entry.get("tax_period", ""))
+        if key not in summary:
+            summary[key] = {
+                "supplier_tin": entry.get("supplier_tin"),
+                "supplier_name": entry.get("supplier_name"),
+                "tax_period": entry.get("tax_period"),
+                "total_gross": 0,
+                "total_ewt": 0,
+                "transaction_count": 0,
+            }
+        summary[key]["total_gross"] += flt(entry.get("gross_amount"))
+        summary[key]["total_ewt"] += flt(entry.get("ewt_amount"))
+        summary[key]["transaction_count"] += 1
+
+    for v in summary.values():
+        v["total_gross"] = flt(v["total_gross"], 2)
+        v["total_ewt"] = flt(v["total_ewt"], 2)
+
+    return {
+        "entries": entries,
+        "summary": list(summary.values()),
+        "filters": {"supplier": supplier, "tax_period": tax_period},
     }
