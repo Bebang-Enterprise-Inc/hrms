@@ -506,6 +506,15 @@ def create_purchase_order(data):
                 )
             )
 
+    # Map 'rate' to 'unit_cost' in items if needed (frontend sends 'rate')
+    if "items" in data:
+        for item in data["items"]:
+            if "rate" in item and "unit_cost" not in item:
+                item["unit_cost"] = item.pop("rate")
+            # Strip invalid UOM to avoid LinkValidationError
+            if item.get("uom") and not frappe.db.exists("UOM", item["uom"]):
+                item.pop("uom")
+
     po = frappe.get_doc({
         "doctype": "BEI Purchase Order",
         **_sanitize_doc_data(data)
