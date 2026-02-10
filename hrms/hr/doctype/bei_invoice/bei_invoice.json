@@ -148,7 +148,7 @@
       "fieldtype": "Link",
       "label": "Goods Receipt",
       "options": "BEI Goods Receipt",
-      "reqd": 1
+      "reqd": 0
     },
     {
       "fieldname": "gr_amount",

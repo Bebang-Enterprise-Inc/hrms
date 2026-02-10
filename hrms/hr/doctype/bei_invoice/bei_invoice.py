@@ -10,9 +10,29 @@ from frappe.utils import flt, now_datetime, getdate, add_days
 class BEIInvoice(Document):
     def validate(self):
         self.set_invoice_no()
+        self.validate_goods_receipt()
         self.calculate_totals()
         self.load_reference_amounts()
         self.perform_three_way_match()
+
+    def validate_goods_receipt(self):
+        """Require goods_receipt unless an approved match exception exists for this PO."""
+        if self.goods_receipt:
+            return
+
+        if not self.purchase_order:
+            frappe.throw(_("Either Goods Receipt or Purchase Order is required"))
+            return
+
+        approved_exception = frappe.db.exists("BEI Match Exception", {
+            "purchase_order": self.purchase_order,
+            "status": "Approved",
+        })
+        if not approved_exception:
+            frappe.throw(
+                _("Goods Receipt is required unless a match exception is approved. "
+                  "Request an exception via the procurement flow.")
+            )
 
     def set_invoice_no(self):
         """Set invoice number from name if not already set."""
