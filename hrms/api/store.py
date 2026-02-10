@@ -708,7 +708,7 @@ def get_closing_reports(store=None, date_from=None, date_to=None, limit=20):
 @frappe.whitelist()
 def submit_midshift_check(store, shift, temperature_readings, cleanliness_status,
                           issues_found=None, corrective_action=None, photo_evidence=None,
-                          late_reason=None):
+                          late_reason=None, equipment=None):
     """Submit mid-shift temperature and cleanliness check with time window validation."""
     validate_store_ops_role()
     if not store:
@@ -752,6 +752,7 @@ def submit_midshift_check(store, shift, temperature_readings, cleanliness_status
     doc.issues_found = issues_found
     doc.corrective_action = corrective_action
     doc.photo_evidence = photo_evidence
+    doc.equipment = equipment or "General"
 
     # Time window fields
     doc.window_start = window_start

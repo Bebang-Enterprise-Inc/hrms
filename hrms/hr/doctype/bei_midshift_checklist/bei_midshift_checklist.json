@@ -12,6 +12,7 @@
   "column_break_1",
   "shift",
   "shift_template",
+  "equipment",
   "cleanliness_status",
   "section_time_window",
   "window_start",
@@ -70,6 +71,13 @@
    "fieldtype": "Link",
    "label": "Shift Template",
    "options": "BEI Shift Template"
+  },
+  {
+   "default": "General",
+   "fieldname": "equipment",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Equipment"
   },
   {
    "fieldname": "cleanliness_status",
@@ -153,7 +161,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-25 10:00:00.000000",
+ "modified": "2026-02-10 21:00:00.000000",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "BEI Midshift Checklist",
