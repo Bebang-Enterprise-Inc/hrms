@@ -457,8 +457,8 @@ def update_maintenance_status(request_id, status, notes=None):
         "Open": ["Assigned", "Cancelled"],
         "Assigned": ["In Progress", "Open", "Cancelled"],
         "In Progress": ["Completed", "Assigned", "Cancelled"],
-        "Completed": ["Verified", "In Progress"],  # Verified usually via store
-        "Verified": [],  # Terminal state
+        "Completed": ["Verified", "In Progress", "Open"],  # Verified via store, Open for reopen
+        "Verified": ["Open"],  # Can reopen verified requests
         "Cancelled": ["Open"]  # Can reopen cancelled requests
     }
 
@@ -759,6 +759,7 @@ def get_maintenance_dashboard_stats(date_from=None, date_to=None, store=None):
         "urgent_count": urgent_count,
         "by_category": by_category,
         "by_store": by_store,
+        "by_status": dict(status_map),
         "avg_resolution_days": round(avg_resolution_days, 1),
         "total_cost_mtd": total_cost_mtd
     }
