@@ -186,10 +186,16 @@ def approve_mrf(mrf_name, action, notes=None):
     if current_status == "Pending Hiring Manager":
         # Hiring Manager or HR can approve
         if not any(r in roles for r in ["HR Manager", "System Manager"]):
-            # Check if user is a department head/hiring manager
-            emp_designation = frappe.db.get_value("Employee", current_emp, "designation")
-            if "Manager" not in emp_designation and "Head" not in emp_designation:
-                frappe.throw(_("Only Hiring Managers can approve at this stage"))
+            # Verify user is the actual department head for the requesting department
+            dept_head = frappe.db.get_value(
+                "Department", mrf.department, "department_head"
+            )
+            if current_emp != dept_head:
+                frappe.throw(
+                    _("Only the department head of {0} can approve at this stage").format(
+                        mrf.department
+                    )
+                )
     elif current_status == "Pending HR Manager":
         # HR Manager only
         if "HR Manager" not in roles and "System Manager" not in roles:

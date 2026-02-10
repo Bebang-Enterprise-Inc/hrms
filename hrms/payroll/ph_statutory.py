@@ -154,23 +154,20 @@ def get_pagibig_contribution(basic_monthly_salary):
     Returns:
         tuple: (employee_share, employer_share)
 
-    Based on Pag-IBIG Circular 460 (effective Jan 1, 2025):
-    - Employee rate: 1% if salary <= P1,500, 2% if > P1,500
-    - Employer rate: 2% always
-    - Ceiling: P10,000 base (max contribution: P200 employee, P200 employer)
+    Based on Pag-IBIG Circular (effective Feb 2024, current through 2025):
+    - Employee rate: 2% for all salary levels
+    - Employer rate: 2% for all salary levels
+    - Ceiling: P10,000 MFS (max contribution: P200 employee, P200 employer)
     """
     basic = flt(basic_monthly_salary)
 
-    # Apply ceiling (max base for computation is P10,000)
+    # Apply ceiling — Maximum Fund Salary (MFS) is P10,000 (updated Feb 2024)
     computation_base = min(basic, 10000)
 
-    # Employee contribution: 1% if <= P1,500, 2% if > P1,500
-    if basic <= 1500:
-        employee_rate = 0.01
-    else:
-        employee_rate = 0.02
+    # Employee contribution: flat 2% for all salary levels (updated Feb 2024)
+    employee_rate = 0.02
 
-    # Employer contribution: always 2%
+    # Employer contribution: flat 2% for all salary levels
     employer_rate = 0.02
 
     employee_share = computation_base * employee_rate

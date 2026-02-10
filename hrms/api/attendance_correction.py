@@ -173,7 +173,7 @@ def reject_correction(correction_id, reason=None):
         doc.add_comment("Comment", text=f"Rejected: {reason}")
 
     doc.add_comment("Comment", text=f"Status: Rejected by {frappe.session.user}")
-    frappe.delete_doc("Attendance Request", correction_id, force=True)
+    doc.db_set("status", "Rejected")
     frappe.db.commit()
 
     return {
