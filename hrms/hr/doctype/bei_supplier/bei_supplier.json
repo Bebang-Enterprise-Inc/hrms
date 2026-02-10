@@ -18,10 +18,14 @@
     "legal_section",
     "tin",
     "sec_registration",
+    "vat_status",
     "column_break_legal",
     "bir_2307",
     "sec_certificate",
     "business_permit",
+    "ewt_section",
+    "ewt_applicable",
+    "default_ewt_rate",
     "bank_section",
     "bank_name",
     "bank_account_name",
@@ -116,6 +120,13 @@
       "label": "SEC Registration No"
     },
     {
+      "default": "VAT Registered",
+      "fieldname": "vat_status",
+      "fieldtype": "Select",
+      "label": "VAT Status",
+      "options": "VAT Registered\nNon-VAT\nExempt"
+    },
+    {
       "fieldname": "column_break_legal",
       "fieldtype": "Column Break"
     },
@@ -133,6 +144,25 @@
       "fieldname": "business_permit",
       "fieldtype": "Attach",
       "label": "Business Permit"
+    },
+    {
+      "fieldname": "ewt_section",
+      "fieldtype": "Section Break",
+      "label": "Expanded Withholding Tax (EWT)"
+    },
+    {
+      "default": "0",
+      "description": "Check if this supplier is subject to Expanded Withholding Tax",
+      "fieldname": "ewt_applicable",
+      "fieldtype": "Check",
+      "label": "EWT Applicable"
+    },
+    {
+      "depends_on": "eval:doc.ewt_applicable",
+      "description": "Default EWT rate: 1% goods, 2% services, 5% professional fees",
+      "fieldname": "default_ewt_rate",
+      "fieldtype": "Percent",
+      "label": "Default EWT Rate"
     },
     {
       "fieldname": "bank_section",

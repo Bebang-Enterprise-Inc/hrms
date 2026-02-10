@@ -10,7 +10,7 @@ All endpoints use @frappe.whitelist() for external access.
 
 import frappe
 from frappe import _
-from frappe.utils import flt, getdate, nowdate, add_days, get_first_day, get_last_day
+from frappe.utils import flt, cint, getdate, nowdate, add_days, get_first_day, get_last_day
 
 
 # System fields that must never be set by API callers
@@ -2828,3 +2828,174 @@ def _create_or_escalation_notification(payment, role_label, recipient, days_over
             f"Failed to create OR escalation notification for {payment.name}",
             "OR Escalation Error"
         )
+
+
+# ============================================================
+# Advance Payment Functions
+# ============================================================
+
+
+@frappe.whitelist()
+def tag_advance_to_gr(advance_payment, goods_receipt, amount_to_clear):
+    """
+    Clear (partially or fully) an advance payment against a Goods Receipt.
+
+    Creates a Journal Entry:
+      Dr 1104002 - INVENTORY/CLEARING (amount_to_clear)
+      Cr 1105203 - ADVANCES TO SUPPLIERS (amount_to_clear)
+
+    All JV rows include party_type + party per DM-1.
+    Uses savepoint per DM-2.
+    Auto-submits JV per CFO Q17.
+
+    Args:
+        advance_payment: BEI Payment Request name (the advance)
+        goods_receipt: BEI Goods Receipt name
+        amount_to_clear: Amount to clear from this advance
+
+    Returns: dict with success, jv_name, advance_status
+    """
+    amount_to_clear = flt(amount_to_clear, 2)
+    if amount_to_clear <= 0:
+        frappe.throw(_("Amount to clear must be greater than zero"))
+
+    advance = frappe.get_doc("BEI Payment Request", advance_payment)
+
+    if not cint(advance.is_advance_payment):
+        frappe.throw(_("{0} is not an advance payment").format(advance_payment))
+
+    if advance.advance_status not in ("Outstanding", "Partially Cleared"):
+        frappe.throw(
+            _("Advance {0} cannot be cleared - current status: {1}").format(
+                advance_payment, advance.advance_status
+            )
+        )
+
+    outstanding = flt(advance.advance_outstanding, 2)
+    if amount_to_clear > outstanding:
+        frappe.throw(
+            _("Amount to clear ({0:,.2f}) exceeds outstanding balance ({1:,.2f})").format(
+                amount_to_clear, outstanding
+            )
+        )
+
+    # Get supplier info for party fields
+    supplier_name = ""
+    frappe_supplier = None
+    if advance.supplier:
+        bei_supplier = frappe.get_doc("BEI Supplier", advance.supplier)
+        supplier_name = bei_supplier.supplier_name
+        frappe_supplier = bei_supplier.get_or_create_frappe_supplier()
+
+    party_name = frappe_supplier or supplier_name
+
+    # Validate GR exists
+    if not frappe.db.exists("BEI Goods Receipt", goods_receipt):
+        frappe.throw(_("Goods Receipt {0} not found").format(goods_receipt))
+
+    sp = frappe.db.savepoint("advance_clearing")
+    try:
+        # Create Journal Entry for clearing
+        jv = frappe.new_doc("Journal Entry")
+        jv.voucher_type = "Journal Entry"
+        jv.posting_date = nowdate()
+        jv.company = "Bebang Enterprise Inc."
+        jv.user_remark = _("Clearing advance payment {0} against GR {1} - Amount: {2:,.2f}").format(
+            advance_payment, goods_receipt, amount_to_clear
+        )
+
+        # Debit: Inventory/Clearing account (recognize the expense/asset)
+        jv.append("accounts", {
+            "account": "1104002 - INVENTORY - WAREHOUSE - BEI",
+            "debit_in_account_currency": amount_to_clear,
+            "credit_in_account_currency": 0,
+            "party_type": "Supplier",
+            "party": party_name,
+            "reference_type": "BEI Payment Request",
+            "reference_name": advance_payment,
+            "cost_center": "Main - BEI",
+        })
+
+        # Credit: Advances to Suppliers (reduce the advance)
+        jv.append("accounts", {
+            "account": "1105203 - ADVANCES TO SUPPLIERS - BEI",
+            "debit_in_account_currency": 0,
+            "credit_in_account_currency": amount_to_clear,
+            "party_type": "Supplier",
+            "party": party_name,
+            "reference_type": "BEI Payment Request",
+            "reference_name": advance_payment,
+            "cost_center": "Main - BEI",
+        })
+
+        jv.insert(ignore_permissions=True)
+        jv.submit()
+
+        # Update advance tracking
+        new_cleared = flt(advance.advance_cleared_amount, 2) + amount_to_clear
+        new_outstanding = flt(advance.advance_amount, 2) - new_cleared
+
+        advance.advance_cleared_amount = new_cleared
+        advance.advance_outstanding = flt(new_outstanding, 2)
+
+        if flt(new_outstanding, 2) <= 0:
+            advance.advance_status = "Fully Cleared"
+        else:
+            advance.advance_status = "Partially Cleared"
+
+        advance.save(ignore_permissions=True)
+
+        frappe.msgprint(
+            _("Advance clearing JV created: {0}").format(jv.name),
+            indicator="green"
+        )
+
+        return {
+            "success": True,
+            "jv_name": jv.name,
+            "advance_status": advance.advance_status,
+            "advance_outstanding": advance.advance_outstanding,
+        }
+
+    except Exception:
+        frappe.db.rollback(save_point=sp)
+        raise
+
+
+@frappe.whitelist(allow_guest=False)
+def check_advance_for_po(purchase_order):
+    """
+    Check if there are outstanding advance payments for a Purchase Order.
+
+    Used by frontend to show advance balance when creating GR or Invoice.
+
+    Args:
+        purchase_order: BEI Purchase Order name
+
+    Returns: dict with has_advance, advances list, total_outstanding
+    """
+    if not purchase_order:
+        return {"has_advance": False, "advances": [], "total_outstanding": 0}
+
+    advances = frappe.get_all(
+        "BEI Payment Request",
+        filters={
+            "is_advance_payment": 1,
+            "purchase_order": purchase_order,
+            "advance_status": ["in", ["Outstanding", "Partially Cleared"]],
+        },
+        fields=[
+            "name", "payment_amount", "advance_amount",
+            "advance_cleared_amount", "advance_outstanding",
+            "advance_status", "payment_date", "supplier_name",
+        ],
+        order_by="creation asc",
+    )
+
+    total_outstanding = sum(flt(a.advance_outstanding, 2) for a in advances)
+
+    return {
+        "has_advance": len(advances) > 0,
+        "advances": advances,
+        "total_outstanding": flt(total_outstanding, 2),
+    }
