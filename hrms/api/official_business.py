@@ -6,6 +6,7 @@ from frappe.utils import now_datetime
 from frappe.rate_limiter import rate_limit
 from frappe.query_builder import DocType
 from hrms.utils.aws_location import AWSLocationService
+from hrms.utils.geo import calculate_haversine_distance
 
 
 NO_EMPLOYEE_MSG = "Your account is not linked to an employee record. Please contact HR to set up your employee profile."
@@ -73,24 +74,32 @@ def checkout(
     longitude: float,
     accuracy: float,
     selfie_base64: str,
-    expected_return: str = None
+    expected_return: str = None,
+    gps_latitude: float = None,
+    gps_longitude: float = None
 ):
     """Create OB checkout record
 
     Args:
         destination: Where employee is going
         purpose: Reason for OB
-        latitude: GPS latitude
-        longitude: GPS longitude
+        latitude: Submitted latitude (adjusted pin position, or raw GPS if no map)
+        longitude: Submitted longitude (adjusted pin position, or raw GPS if no map)
         accuracy: GPS accuracy in meters
         selfie_base64: Base64-encoded selfie image
         expected_return: Optional expected return time
+        gps_latitude: Raw GPS latitude from device (optional, for audit trail)
+        gps_longitude: Raw GPS longitude from device (optional, for audit trail)
 
     Returns:
         Dict with OB record name and status
     """
     # Get current employee
     employee = _get_employee_or_throw()
+
+    # Raw GPS coordinates: use provided values or fall back to submitted coords
+    raw_gps_lat = float(gps_latitude) if gps_latitude is not None else float(latitude)
+    raw_gps_lng = float(gps_longitude) if gps_longitude is not None else float(longitude)
 
     # Enforce selfie requirement
     if not selfie_base64:
@@ -99,6 +108,17 @@ def checkout(
     # Reject poor GPS signal
     if float(accuracy) > 100:
         frappe.throw(_("GPS accuracy too low ({0}m). Please move to an open area with clear sky view for better signal.".format(int(float(accuracy)))))
+
+    # Validate adjusted position is within 300m of raw GPS (anti-spoofing)
+    adjustment_distance = calculate_haversine_distance(
+        raw_gps_lat, raw_gps_lng, float(latitude), float(longitude)
+    )
+    if adjustment_distance > 300:
+        frappe.throw(
+            _("Adjusted location is {0}m from GPS position. Maximum 300m allowed.").format(
+                int(adjustment_distance)
+            )
+        )
 
     # Check if employee already has active OB (with row-level lock to prevent race condition)
     BEIOfficialBusiness = DocType("BEI Official Business")
@@ -121,7 +141,7 @@ def checkout(
     # Find nearest OB location
     nearest = aws_location.find_nearest_ob_location(float(latitude), float(longitude))
 
-    # Create OB record
+    # Create OB record (stores both raw GPS and adjusted pin position)
     ob_doc = frappe.get_doc({
         "doctype": "BEI Official Business",
         "employee": employee,
@@ -131,6 +151,9 @@ def checkout(
         "checkout_latitude": float(latitude),
         "checkout_longitude": float(longitude),
         "checkout_accuracy": float(accuracy),
+        "checkout_gps_latitude": raw_gps_lat,
+        "checkout_gps_longitude": raw_gps_lng,
+        "checkout_adjustment_distance": round(adjustment_distance, 1),
         "checkout_address": address or f"{latitude}, {longitude}",
         "expected_return": expected_return,
         "status": "Out"

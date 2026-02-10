@@ -19,6 +19,7 @@ from frappe.utils import now_datetime, cint
 
 from hrms.api.official_business import validate_image_upload
 from hrms.utils.aws_location import AWSLocationService
+from hrms.utils.geo import calculate_haversine_distance
 
 
 # ---------------------------------------------------------------------------
@@ -60,14 +61,17 @@ def _get_subordinates(manager_employee_id: str) -> list[str]:
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
-def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: str):
+def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: str,
+             gps_latitude: float = None, gps_longitude: float = None):
     """Punch in with GPS + selfie. Uses row-level lock to prevent duplicate punches.
 
     Args:
-        latitude:  GPS latitude  (degrees)
-        longitude: GPS longitude (degrees)
-        accuracy:  GPS accuracy  (meters)
+        latitude:      Submitted latitude (adjusted pin position, or raw GPS if no map)
+        longitude:     Submitted longitude (adjusted pin position, or raw GPS if no map)
+        accuracy:      GPS accuracy (meters)
         selfie_base64: Base64-encoded selfie image (data URL or raw)
+        gps_latitude:  Raw GPS latitude from device (optional, for audit trail)
+        gps_longitude: Raw GPS longitude from device (optional, for audit trail)
 
     Returns:
         dict with shift record name, address, status
@@ -78,11 +82,26 @@ def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: 
     longitude = float(longitude)
     accuracy = float(accuracy)
 
+    # Raw GPS coordinates: use provided values or fall back to submitted coords
+    raw_gps_lat = float(gps_latitude) if gps_latitude is not None else latitude
+    raw_gps_lng = float(gps_longitude) if gps_longitude is not None else longitude
+
     # Reject poor GPS signal
     if accuracy > 100:
         frappe.throw(_("GPS accuracy too low ({0}m). Please move to an open area.").format(
             int(accuracy)
         ))
+
+    # Validate adjusted position is within 300m of raw GPS (anti-spoofing)
+    adjustment_distance = calculate_haversine_distance(
+        raw_gps_lat, raw_gps_lng, latitude, longitude
+    )
+    if adjustment_distance > 300:
+        frappe.throw(
+            _("Adjusted location is {0}m from GPS position. Maximum 300m allowed.").format(
+                int(adjustment_distance)
+            )
+        )
 
     # ---- Row-level lock: prevent duplicate punch-in (race condition guard) ----
     active_shift = frappe.db.sql(
@@ -110,7 +129,7 @@ def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: 
     aws_location = AWSLocationService()
     address = aws_location.reverse_geocode(latitude, longitude)
 
-    # Create shift record
+    # Create shift record (stores both raw GPS and adjusted pin position)
     shift_doc = frappe.get_doc({
         "doctype": "BEI Shift Record",
         "employee": employee,
@@ -118,6 +137,9 @@ def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: 
         "punch_in_latitude": latitude,
         "punch_in_longitude": longitude,
         "punch_in_accuracy": accuracy,
+        "punch_in_gps_latitude": raw_gps_lat,
+        "punch_in_gps_longitude": raw_gps_lng,
+        "punch_in_adjustment_distance": round(adjustment_distance, 1),
         "punch_in_address": address or f"{latitude}, {longitude}",
         "status": "In Progress",
         "verification_status": "Pending",
@@ -482,3 +504,28 @@ def bulk_verify_punches(shift_ids, verification_status: str, notes: str = None):
         "updated_count": updated_count,
         "message": _("{0} punches {1}").format(updated_count, verification_status.lower()),
     }
+
+
+# ---------------------------------------------------------------------------
+# 8. Reverse Geocode Location
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()  # Requires login (no allow_guest)
+@rate_limit(limit=20, seconds=60)
+def reverse_geocode_location(latitude, longitude):
+    """Return human-readable address for given coordinates.
+
+    Used by the LocationMap component to show live address as the user
+    drags the pin. Rate limited to 20 calls/min per user to prevent
+    AWS Location Service cost abuse.
+
+    Args:
+        latitude:  GPS latitude (degrees)
+        longitude: GPS longitude (degrees)
+
+    Returns:
+        dict with address string
+    """
+    aws_location = AWSLocationService()
+    address = aws_location.reverse_geocode(float(latitude), float(longitude))
+    return {"address": address or "Unknown location"}

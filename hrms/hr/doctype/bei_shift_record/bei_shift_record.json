@@ -15,6 +15,9 @@
   "punch_in_latitude",
   "punch_in_longitude",
   "punch_in_accuracy",
+  "punch_in_gps_latitude",
+  "punch_in_gps_longitude",
+  "punch_in_adjustment_distance",
   "column_break_punch_in",
   "punch_in_address",
   "punch_in_photo",
@@ -110,6 +113,29 @@
    "fieldtype": "Float",
    "label": "GPS Accuracy (meters)",
    "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "punch_in_gps_latitude",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "GPS Raw Latitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "punch_in_gps_longitude",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "GPS Raw Longitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "punch_in_adjustment_distance",
+   "fieldtype": "Float",
+   "label": "Pin Adjustment (meters)",
+   "precision": "1",
    "read_only": 1
   },
   {
@@ -278,7 +304,7 @@
  ],
  "is_submittable": 0,
  "links": [],
- "modified": "2026-02-06 12:00:00.000000",
+ "modified": "2026-02-10 18:00:00.000000",
  "module": "HR",
  "name": "BEI Shift Record",
  "naming_rule": "Expression",
