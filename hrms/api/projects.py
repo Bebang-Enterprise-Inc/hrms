@@ -8,7 +8,7 @@ Handles maintenance request management for the Projects team dashboard at my.beb
 
 import frappe
 from frappe import _
-from frappe.utils import nowdate, now_datetime, getdate, date_diff, flt
+from frappe.utils import nowdate, now_datetime, getdate, date_diff, flt, sbool
 import json
 import math
 
@@ -442,7 +442,7 @@ def update_maintenance_status(request_id, status, notes=None):
     if not status:
         frappe.throw(_("Status is required"))
 
-    valid_statuses = ["Open", "Assigned", "In Progress", "Completed", "Verified", "Cancelled"]
+    valid_statuses = ["Open", "Assigned", "In Progress", "Pending Parts", "Completed", "Verified", "Cancelled"]
     if status not in valid_statuses:
         frappe.throw(_("Invalid status: {0}").format(status))
 
@@ -455,8 +455,9 @@ def update_maintenance_status(request_id, status, notes=None):
     # Define valid transitions
     valid_transitions = {
         "Open": ["Assigned", "Cancelled"],
-        "Assigned": ["In Progress", "Open", "Cancelled"],
-        "In Progress": ["Completed", "Assigned", "Cancelled"],
+        "Assigned": ["In Progress", "Pending Parts", "Open", "Cancelled"],
+        "In Progress": ["Completed", "Pending Parts", "Assigned", "Cancelled"],
+        "Pending Parts": ["In Progress", "Assigned", "Cancelled"],
         "Completed": ["Verified", "In Progress", "Open"],  # Verified via store, Open for reopen
         "Verified": ["Open"],  # Can reopen verified requests
         "Cancelled": ["Open"]  # Can reopen cancelled requests
@@ -469,9 +470,12 @@ def update_maintenance_status(request_id, status, notes=None):
 
     doc.status = status
 
-    # Set resolved date when completing
-    if status == "Completed" and old_status != "Completed":
+    # Set resolved date when completing (only if not already set)
+    if status == "Completed" and not doc.resolved_date:
         doc.resolved_date = nowdate()
+    # Clear resolved date when reopening
+    if status in ["Open", "Assigned", "In Progress", "Pending Parts"]:
+        doc.resolved_date = None
 
     # Add notes as comment if provided
     if notes:
@@ -537,6 +541,9 @@ def record_maintenance_completion(
     if not completion_date:
         frappe.throw(_("Completion date is required"))
 
+    if getdate(completion_date) > getdate(nowdate()):
+        frappe.throw(_("Completion date cannot be in the future"))
+
     if not technician_name:
         frappe.throw(_("Technician name is required"))
 
@@ -549,7 +556,8 @@ def record_maintenance_completion(
             ", ".join(valid_resolution_statuses)
         ))
 
-    if follow_up_needed and not follow_up_notes:
+    follow_up_needed = sbool(follow_up_needed)
+    if follow_up_needed and not (follow_up_notes and follow_up_notes.strip()):
         frappe.throw(_("Follow-up notes are required when follow-up is needed"))
 
     # TODO: Re-enable photo requirement once frontend has upload capability
@@ -1101,7 +1109,10 @@ def add_maintenance_materials(request_id, materials):
         frappe.throw(_("Maintenance request {0} not found").format(request_id))
 
     if isinstance(materials, str):
-        materials = json.loads(materials)
+        try:
+            materials = json.loads(materials)
+        except (json.JSONDecodeError, ValueError):
+            frappe.throw(_("Invalid materials format: must be valid JSON"))
 
     if not materials or not isinstance(materials, list):
         frappe.throw(_("Materials must be a non-empty list"))
@@ -1112,6 +1123,12 @@ def add_maintenance_materials(request_id, materials):
     for mat in materials:
         quantity = flt(mat.get("quantity", 1))
         unit_cost = flt(mat.get("unit_cost", 0))
+
+        if quantity <= 0:
+            frappe.throw(_("Material quantity must be positive"))
+        if unit_cost < 0:
+            frappe.throw(_("Material unit cost cannot be negative"))
+
         total_cost = quantity * unit_cost
         total_materials_cost += total_cost
 
@@ -1123,8 +1140,8 @@ def add_maintenance_materials(request_id, materials):
             "total_cost": total_cost
         })
 
-    doc.materials_cost = total_materials_cost
-    doc.total_cost = total_materials_cost + flt(doc.labor_cost or 0)
+    doc.materials_cost = flt(doc.materials_cost or 0) + total_materials_cost
+    doc.total_cost = flt(doc.materials_cost) + flt(doc.labor_cost or 0)
     doc.save()
 
     return {
