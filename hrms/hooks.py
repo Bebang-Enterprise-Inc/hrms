@@ -132,8 +132,9 @@ before_app_uninstall = "hrms.setup.before_app_uninstall"
 
 # Sentry Observability
 # --------------------
+# NOTE: after_exception is NOT a valid Frappe hook. Exception capture is done
+# by monkey-patching frappe.app.handle_exception in sentry.py init.
 before_request = "hrms.utils.sentry.add_request_breadcrumb"
-after_exception = "hrms.utils.sentry.capture_exception"
 
 # Desk Notifications
 # ------------------

@@ -3,6 +3,10 @@
 All Sentry initialization happens here, triggered by Frappe hooks.
 This ensures frappe.conf is available (not the case at module import time).
 Thread-safe: uses locks to handle multiple gunicorn workers.
+
+Hooks used (registered in hooks.py):
+  - before_request: init + breadcrumbs
+  - before_request_end: capture exceptions from Frappe's error handler
 """
 
 import os
@@ -13,9 +17,12 @@ import frappe
 
 _sentry_initialized = False
 _log_error_patched = False
+_handle_exception_patched = False
 _init_lock = threading.Lock()
 _patch_lock = threading.Lock()
+_exc_patch_lock = threading.Lock()
 _original_log_error = None
+_original_handle_exception = None
 
 
 def init_sentry():
@@ -23,6 +30,9 @@ def init_sentry():
 
 	Thread-safe: uses lock + flag to ensure single initialization
 	even with multiple gunicorn workers.
+
+	CRITICAL: Flag is only set True AFTER successful init, so failures
+	can be retried on the next request.
 	"""
 	global _sentry_initialized
 
@@ -32,35 +42,36 @@ def init_sentry():
 	with _init_lock:
 		if _sentry_initialized:
 			return
-		_sentry_initialized = True
 
-	try:
-		import sentry_sdk
+		try:
+			import sentry_sdk
 
-		dsn = os.environ.get("SENTRY_DSN") or frappe.conf.get("sentry_dsn")
-		if not dsn:
-			return
+			dsn = os.environ.get("SENTRY_DSN") or frappe.conf.get("sentry_dsn")
+			if not dsn:
+				_sentry_initialized = True
+				return
 
-		from hrms import __version__
+			from hrms import __version__
 
-		sentry_sdk.init(
-			dsn=dsn,
-			environment=(
-				"development"
-				if getattr(frappe.conf, "developer_mode", 0)
-				else "production"
-			),
-			release=f"bei-hrms@{__version__}",
-			traces_sample_rate=0.1,
-			profiles_sample_rate=0.1,
-			enable_tracing=True,
-			integrations=[],
-		)
+			sentry_sdk.init(
+				dsn=dsn,
+				environment=(
+					"development"
+					if getattr(frappe.conf, "developer_mode", 0)
+					else "production"
+				),
+				release=f"bei-hrms@{__version__}",
+				traces_sample_rate=0.1,
+				profiles_sample_rate=0.1,
+				enable_tracing=True,
+			)
 
-		_patch_log_error()
+			_patch_log_error()
+			_patch_handle_exception()
+			_sentry_initialized = True
 
-	except Exception:
-		pass
+		except Exception:
+			pass
 
 
 def _patch_log_error():
@@ -116,30 +127,62 @@ def _patch_log_error():
 		_log_error_patched = True
 
 
-def capture_exception():
-	"""Hook called by Frappe after any unhandled exception."""
-	try:
-		import sentry_sdk
+def _patch_handle_exception():
+	"""Monkey-patch frappe.app.handle_exception to capture all web exceptions.
 
-		exc_info = sys.exc_info()
-		if exc_info[0] is None:
+	Frappe does NOT have an after_exception hook. All web exceptions are
+	caught by handle_exception() in frappe/app.py. This patch ensures
+	every unhandled web error reaches Sentry.
+	"""
+	global _handle_exception_patched, _original_handle_exception
+
+	if _handle_exception_patched:
+		return
+
+	with _exc_patch_lock:
+		if _handle_exception_patched:
 			return
 
-		if hasattr(frappe, "session") and frappe.session and frappe.session.user:
-			sentry_sdk.set_user(
-				{
-					"email": frappe.session.user,
-					"id": frappe.session.user,
-				}
-			)
+		try:
+			from frappe import app as frappe_app
 
-		if hasattr(frappe, "request") and frappe.request:
-			sentry_sdk.set_tag("endpoint", frappe.request.path or "unknown")
-			sentry_sdk.set_tag("method", frappe.request.method or "unknown")
+			if not hasattr(frappe_app, "handle_exception"):
+				return
 
-		sentry_sdk.capture_exception(exc_info)
-	except Exception:
-		pass
+			_original_handle_exception = frappe_app.handle_exception
+
+			def patched_handle_exception(e):
+				try:
+					import sentry_sdk
+
+					if hasattr(frappe, "session") and frappe.session and frappe.session.user:
+						sentry_sdk.set_user(
+							{
+								"email": frappe.session.user,
+								"id": frappe.session.user,
+							}
+						)
+
+					if hasattr(frappe, "request") and frappe.request:
+						sentry_sdk.set_tag("endpoint", frappe.request.path or "unknown")
+						sentry_sdk.set_tag("method", frappe.request.method or "unknown")
+
+					http_status = getattr(e, "http_status_code", 500)
+					if http_status >= 500:
+						sentry_sdk.capture_exception(e)
+					else:
+						sentry_sdk.set_tag("http_status", str(http_status))
+						sentry_sdk.capture_exception(e)
+				except Exception:
+					pass
+
+				return _original_handle_exception(e)
+
+			frappe_app.handle_exception = patched_handle_exception
+			_handle_exception_patched = True
+
+		except Exception:
+			pass
 
 
 def add_request_breadcrumb():
@@ -152,13 +195,13 @@ def add_request_breadcrumb():
 	try:
 		import sentry_sdk
 
-		if frappe.form_dict:
+		if hasattr(frappe, "request") and frappe.request:
 			sentry_sdk.add_breadcrumb(
 				category="frappe.request",
 				message=f"Request to {frappe.request.path}",
 				data={
-					"doctype": frappe.form_dict.get("doctype", ""),
-					"method": frappe.form_dict.get("cmd", ""),
+					"doctype": frappe.form_dict.get("doctype", "") if frappe.form_dict else "",
+					"method": frappe.form_dict.get("cmd", "") if frappe.form_dict else "",
 				},
 				level="info",
 			)
