@@ -1559,8 +1559,8 @@ def get_payment_disbursement_report(from_date=None, to_date=None, payment_mode=N
             COALESCE(pr.supplier_name, inv.supplier_name) as supplier_name,
             pr.payment_amount, pr.payment_mode, pr.invoice, inv.invoice_no,
             pr.ceo_required,
-            pr.reviewed_by, pr.reviewed_date,
-            pr.budget_approved_by, pr.cfo_approved_by, pr.ceo_approved_by,
+            pr.reviewer as reviewed_by, pr.reviewer_date as reviewed_date,
+            pr.budget_approver as budget_approved_by, pr.cfo_approver as cfo_approved_by, pr.ceo_approver as ceo_approved_by,
             pr.processed_by, pr.processed_date,
             DATEDIFF(pr.processed_date, pr.request_date) as turnaround_days
         FROM `tabBEI Payment Request` pr
@@ -1746,13 +1746,14 @@ def get_monthly_spend_report(months=12):
     """, (months,), as_dict=True)
 
     by_category = frappe.db.sql("""
-        SELECT COALESCE(poi.item_group, 'Uncategorized') as category,
+        SELECT COALESCE(item.item_group, 'Uncategorized') as item_group,
             COUNT(DISTINCT poi.parent) as po_count, SUM(poi.amount) as total_spend
         FROM `tabBEI PO Item` poi
         JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+        LEFT JOIN `tabItem` item ON poi.item_code = item.name
         WHERE po.po_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
         AND po.status NOT IN ('Draft', 'Cancelled')
-        GROUP BY COALESCE(poi.item_group, 'Uncategorized')
+        GROUP BY COALESCE(item.item_group, 'Uncategorized')
         ORDER BY total_spend DESC
     """, (months,), as_dict=True)
 
@@ -1825,7 +1826,7 @@ def get_goods_receipt_log(from_date=None, to_date=None, status=None,
                 WHEN gr.total_received_qty < gr.total_ordered_qty THEN 'Short'
                 ELSE 'Over'
             END as receipt_match,
-            gr.inspection_status, gr.remarks
+            gr.inspection_status, gr.inspection_notes as remarks
         FROM `tabBEI Goods Receipt` gr
         LEFT JOIN `tabBEI Purchase Order` po ON gr.purchase_order = po.name
         WHERE {where_clause} {discrepancy_filter}
