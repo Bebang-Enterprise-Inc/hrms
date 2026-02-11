@@ -40,6 +40,27 @@ def login(page: Page, email: str, password: str) -> bool:
     return "bei_auth" in cookies or "sid" in cookies
 
 
+def ensure_logged_in(page: Page) -> bool:
+    """Re-authenticate if the session was lost (redirected to /login).
+
+    On GitHub Actions, auth cookies can be dropped between page.goto() calls.
+    This detects the redirect and re-runs login transparently, then navigates
+    back to /dashboard so the calling flow can proceed with sidebar clicks.
+    """
+    if "/login" in page.url:
+        print("  [!] Session lost — re-authenticating...")
+        success = login(page, STAFF_EMAIL, STAFF_PASSWORD)
+        if not success:
+            print("  [!] Re-login FAILED")
+            return False
+        print("  [!] Re-login OK, navigating to dashboard")
+        page.goto(f"{BASE_URL}/dashboard")
+        page.wait_for_load_state("networkidle")
+        time.sleep(2)
+        return True
+    return True
+
+
 def check_no_404(page: Page) -> bool:
     """Check page is not showing a 404."""
     content = page.content()[:3000].lower()
@@ -98,6 +119,7 @@ def flow_punch(page: Page, sd: str) -> list:
     page.goto(f"{BASE_URL}/dashboard")
     page.wait_for_load_state("networkidle")
     time.sleep(2)
+    ensure_logged_in(page)
 
     clicked = click_sidebar_item(page, "Remote Punch")
     page.screenshot(path=f"{sd}/CP_punch_01_sidebar.png")
@@ -138,6 +160,7 @@ def flow_ob(page: Page, sd: str) -> list:
     page.goto(f"{BASE_URL}/dashboard")
     page.wait_for_load_state("networkidle")
     time.sleep(2)
+    ensure_logged_in(page)
 
     clicked = click_sidebar_item(page, "Official Business")
     page.screenshot(path=f"{sd}/CP_ob_01_sidebar.png")
@@ -156,6 +179,7 @@ def flow_leave(page: Page, sd: str) -> list:
     page.goto(f"{BASE_URL}/dashboard")
     page.wait_for_load_state("networkidle")
     time.sleep(2)
+    ensure_logged_in(page)
 
     clicked = click_sidebar_item(page, "Leave")
     page.screenshot(path=f"{sd}/CP_leave_01_sidebar.png")
