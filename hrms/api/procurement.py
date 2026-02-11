@@ -27,6 +27,35 @@ def _sanitize_doc_data(data):
 
 
 # =============================================================================
+# PROCUREMENT REPORT HELPERS
+# =============================================================================
+
+def _check_procurement_report_access():
+    """Shared permission check for all report endpoints."""
+    if not frappe.has_permission("BEI Purchase Order", "read"):
+        frappe.throw(_("You do not have access to procurement reports"), frappe.PermissionError)
+
+
+SUPPLIER_SORT_COLUMNS = {
+    "supplier_name": "s.supplier_name",
+    "total_value": "s.total_po_value",
+    "po_count": "s.total_po_count",
+    "on_time_rate": "s.on_time_rate",
+    "quality_score": "quality_score",
+    "outstanding": "s.total_outstanding",
+    "avg_delivery_days": "s.avg_delivery_days",
+}
+ALLOWED_SORT_DIRS = {"asc": "ASC", "desc": "DESC"}
+
+
+def _safe_sort(sort_by, sort_order, allowed_columns, default_col):
+    """Whitelist-based sort to prevent SQL injection."""
+    col = allowed_columns.get(sort_by, default_col)
+    direction = ALLOWED_SORT_DIRS.get((sort_order or "").lower(), "DESC")
+    return col, direction
+
+
+# =============================================================================
 # SUPPLIER ENDPOINTS
 # =============================================================================
 
@@ -1431,22 +1460,402 @@ def get_payment_schedule():
 
 @frappe.whitelist()
 def get_supplier_performance():
-    """Get supplier performance metrics."""
+    """Legacy endpoint - returns top 10 for dashboard. Use get_supplier_performance_report() for full report."""
+    result = get_supplier_performance_report(months=6, sort_by="total_value", sort_order="desc")
+    return result["data"][:10]
+
+
+# =============================================================================
+# PROCUREMENT REPORT ENDPOINTS
+# =============================================================================
+
+@frappe.whitelist()
+def get_supplier_performance_report(months=6, sort_by="total_value", sort_order="desc"):
+    """Full supplier performance report with computed metrics."""
+    _check_procurement_report_access()
+
+    months = cint(months) or 6
+    sort_col, sort_dir = _safe_sort(sort_by, sort_order, SUPPLIER_SORT_COLUMNS, "s.total_po_value")
+
     data = frappe.db.sql("""
         SELECT
-            s.name as supplier,
-            s.supplier_name,
+            s.name as supplier, s.supplier_name, s.status,
             s.total_po_count as po_count,
             s.total_po_value as total_value,
             ROUND(s.total_po_value / NULLIF(s.total_po_count, 0), 2) as avg_order_value,
-            COALESCE(s.on_time_rate, 0) as on_time_delivery_rate
+            s.total_outstanding as outstanding,
+            s.avg_delivery_days,
+            COALESCE(s.on_time_rate, 0) as on_time_rate,
+            COALESCE(gr_stats.gr_count, 0) as gr_count,
+            COALESCE(gr_stats.total_received, 0) as total_received,
+            COALESCE(gr_stats.rejection_count, 0) as rejection_count,
+            ROUND(
+                (1 - COALESCE(gr_stats.rejection_count, 0)
+                     / NULLIF(COALESCE(gr_stats.gr_count, 0), 0)) * 100, 1
+            ) as quality_score
         FROM `tabBEI Supplier` s
+        LEFT JOIN (
+            SELECT gr.supplier, COUNT(*) as gr_count,
+                SUM(gr.total_received_qty) as total_received,
+                SUM(CASE WHEN gr.status = 'Rejected' THEN 1 ELSE 0 END) as rejection_count
+            FROM `tabBEI Goods Receipt` gr
+            WHERE gr.receipt_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
+            GROUP BY gr.supplier
+        ) gr_stats ON gr_stats.supplier = s.name
         WHERE s.status = 'Active'
-        ORDER BY s.total_po_value DESC
-        LIMIT 10
-    """, as_dict=True)
+        ORDER BY {sort_col} {sort_dir}
+    """.format(sort_col=sort_col, sort_dir=sort_dir), (months,), as_dict=True)
 
-    return data
+    total_suppliers = len(data)
+    avg_on_time = sum(flt(d.on_time_rate) for d in data) / max(total_suppliers, 1)
+    avg_quality = sum(flt(d.quality_score) for d in data) / max(total_suppliers, 1)
+
+    return {
+        "data": data,
+        "summary": {
+            "total_suppliers": total_suppliers,
+            "avg_on_time_rate": round(avg_on_time, 1),
+            "avg_quality_score": round(avg_quality, 1),
+            "total_spend": flt(sum(flt(d.total_value) for d in data), 2)
+        }
+    }
+
+
+@frappe.whitelist()
+def get_payment_disbursement_report(from_date=None, to_date=None, payment_mode=None,
+                                      supplier=None, page=1, page_size=50):
+    """Payment disbursement report with mode breakdown and approval chain."""
+    _check_procurement_report_access()
+
+    page = cint(page) or 1
+    page_size = min(cint(page_size) or 50, 100)
+
+    if from_date and to_date and getdate(from_date) > getdate(to_date):
+        frappe.throw(_("From Date cannot be after To Date"))
+
+    conditions = ["pr.status NOT IN ('Draft', 'Cancelled')"]
+    values = {}
+
+    if from_date:
+        conditions.append("pr.request_date >= %(from_date)s")
+        values["from_date"] = from_date
+    if to_date:
+        conditions.append("pr.request_date <= %(to_date)s")
+        values["to_date"] = to_date
+    if payment_mode:
+        conditions.append("pr.payment_mode = %(payment_mode)s")
+        values["payment_mode"] = payment_mode
+    if supplier:
+        conditions.append("COALESCE(pr.supplier, inv.supplier) = %(supplier)s")
+        values["supplier"] = supplier
+
+    where_clause = " AND ".join(conditions)
+    offset = (page - 1) * page_size
+
+    data = frappe.db.sql("""
+        SELECT
+            pr.name, pr.payment_request_no, pr.request_date, pr.payment_date, pr.status,
+            COALESCE(pr.supplier, inv.supplier) as supplier,
+            COALESCE(pr.supplier_name, inv.supplier_name) as supplier_name,
+            pr.payment_amount, pr.payment_mode, pr.invoice, inv.invoice_no,
+            pr.ceo_required,
+            pr.reviewed_by, pr.reviewed_date,
+            pr.budget_approved_by, pr.cfo_approved_by, pr.ceo_approved_by,
+            pr.processed_by, pr.processed_date,
+            DATEDIFF(pr.processed_date, pr.request_date) as turnaround_days
+        FROM `tabBEI Payment Request` pr
+        LEFT JOIN `tabBEI Invoice` inv ON pr.invoice = inv.name
+        WHERE {where_clause}
+        ORDER BY pr.request_date DESC
+        LIMIT %(page_size)s OFFSET %(offset)s
+    """.format(where_clause=where_clause), {**values, "page_size": page_size, "offset": offset}, as_dict=True)
+
+    mode_summary = frappe.db.sql("""
+        SELECT pr.payment_mode, COUNT(*) as count,
+            SUM(pr.payment_amount) as total_amount,
+            AVG(DATEDIFF(pr.processed_date, pr.request_date)) as avg_turnaround
+        FROM `tabBEI Payment Request` pr
+        LEFT JOIN `tabBEI Invoice` inv ON pr.invoice = inv.name
+        WHERE {where_clause}
+        GROUP BY pr.payment_mode
+    """.format(where_clause=where_clause), values, as_dict=True)
+
+    total = frappe.db.sql(
+        """SELECT COUNT(*) FROM `tabBEI Payment Request` pr
+            LEFT JOIN `tabBEI Invoice` inv ON pr.invoice = inv.name
+            WHERE {where_clause}""".format(where_clause=where_clause), values
+    )[0][0]
+
+    return {
+        "data": data,
+        "mode_summary": mode_summary,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size
+    }
+
+
+@frappe.whitelist()
+def get_three_way_match_report(from_date=None, to_date=None, supplier=None,
+                                 variance_only=False, page=1, page_size=50):
+    """Three-way match: PO vs GR vs Invoice variance analysis."""
+    _check_procurement_report_access()
+
+    # AUDIT-2: Coerce boolean from HTTP string
+    variance_only = variance_only == "true" or variance_only is True
+    page = cint(page) or 1
+    page_size = min(cint(page_size) or 50, 100)
+
+    if from_date and to_date and getdate(from_date) > getdate(to_date):
+        frappe.throw(_("From Date cannot be after To Date"))
+
+    conditions = ["po.status NOT IN ('Draft', 'Cancelled')"]
+    values = {}
+
+    if from_date:
+        conditions.append("po.po_date >= %(from_date)s")
+        values["from_date"] = from_date
+    if to_date:
+        conditions.append("po.po_date <= %(to_date)s")
+        values["to_date"] = to_date
+    if supplier:
+        conditions.append("po.supplier = %(supplier)s")
+        values["supplier"] = supplier
+
+    where_clause = " AND ".join(conditions)
+    offset = (page - 1) * page_size
+
+    # Variance filter uses full expression (not column alias) for portability
+    variance_having = """
+        HAVING ABS(ROUND(COALESCE(gr_agg.gr_total, 0) - po.grand_total, 2)) > 0.01
+            OR ABS(ROUND(COALESCE(inv_agg.inv_total, 0) - COALESCE(gr_agg.gr_total, 0), 2)) > 0.01
+            OR ABS(ROUND(COALESCE(inv_agg.inv_total, 0) - po.grand_total, 2)) > 0.01
+    """ if variance_only else ""
+
+    # GR/Invoice subqueries include date filter for performance at scale
+    gr_date_filter = "AND receipt_date >= %(from_date)s" if from_date else ""
+    inv_date_filter = "AND invoice_date >= %(from_date)s" if from_date else ""
+
+    data = frappe.db.sql("""
+        SELECT
+            po.name as po_name, po.po_no, po.po_date, po.supplier_name,
+            po.grand_total as po_total, po.status as po_status,
+            COALESCE(gr_agg.gr_count, 0) as gr_count,
+            COALESCE(gr_agg.gr_total, 0) as gr_total,
+            COALESCE(gr_agg.total_received_qty, 0) as received_qty,
+            COALESCE(inv_agg.inv_count, 0) as inv_count,
+            COALESCE(inv_agg.inv_total, 0) as inv_total,
+            COALESCE(inv_agg.paid_total, 0) as paid_total,
+            ROUND(COALESCE(gr_agg.gr_total, 0) - po.grand_total, 2) as po_gr_variance,
+            ROUND(COALESCE(inv_agg.inv_total, 0) - COALESCE(gr_agg.gr_total, 0), 2) as gr_inv_variance,
+            ROUND(COALESCE(inv_agg.inv_total, 0) - po.grand_total, 2) as po_inv_variance,
+            CASE WHEN po.grand_total > 0
+                THEN ROUND((COALESCE(gr_agg.gr_total, 0) - po.grand_total) / po.grand_total * 100, 1)
+                ELSE 0 END as po_gr_variance_pct,
+            CASE WHEN po.grand_total > 0
+                THEN ROUND((COALESCE(inv_agg.inv_total, 0) - po.grand_total) / po.grand_total * 100, 1)
+                ELSE 0 END as po_inv_variance_pct
+        FROM `tabBEI Purchase Order` po
+        LEFT JOIN (
+            SELECT purchase_order, COUNT(*) as gr_count,
+                SUM(total_amount) as gr_total, SUM(total_received_qty) as total_received_qty
+            FROM `tabBEI Goods Receipt`
+            WHERE status NOT IN ('Draft', 'Cancelled', 'Rejected') {gr_date_filter}
+            GROUP BY purchase_order
+        ) gr_agg ON gr_agg.purchase_order = po.name
+        LEFT JOIN (
+            SELECT purchase_order, COUNT(*) as inv_count,
+                SUM(grand_total) as inv_total,
+                SUM(CASE WHEN payment_status = 'Paid' THEN grand_total ELSE 0 END) as paid_total
+            FROM `tabBEI Invoice`
+            WHERE status NOT IN ('Draft', 'Cancelled') {inv_date_filter}
+            GROUP BY purchase_order
+        ) inv_agg ON inv_agg.purchase_order = po.name
+        WHERE {where_clause}
+        {variance_having}
+        ORDER BY po.po_date DESC
+        LIMIT %(page_size)s OFFSET %(offset)s
+    """.format(
+        gr_date_filter=gr_date_filter,
+        inv_date_filter=inv_date_filter,
+        where_clause=where_clause,
+        variance_having=variance_having,
+    ), {**values, "page_size": page_size, "offset": offset}, as_dict=True)
+
+    # Summary counts (single pass, no duplicate JOINs)
+    summary = frappe.db.sql("""
+        SELECT
+            COUNT(*) as total_pos,
+            SUM(CASE WHEN gr_agg.gr_count IS NULL OR gr_agg.gr_count = 0 THEN 1 ELSE 0 END) as pos_without_gr,
+            SUM(CASE WHEN inv_agg.inv_count IS NULL OR inv_agg.inv_count = 0 THEN 1 ELSE 0 END) as pos_without_inv,
+            SUM(CASE WHEN ABS(COALESCE(gr_agg.gr_total, 0) - po.grand_total) > 0.01
+                      OR ABS(COALESCE(inv_agg.inv_total, 0) - po.grand_total) > 0.01
+                 THEN 1 ELSE 0 END) as pos_with_variance
+        FROM `tabBEI Purchase Order` po
+        LEFT JOIN (SELECT purchase_order, COUNT(*) as gr_count, SUM(total_amount) as gr_total
+                   FROM `tabBEI Goods Receipt` WHERE status NOT IN ('Draft','Cancelled','Rejected') {gr_date_filter}
+                   GROUP BY purchase_order) gr_agg ON gr_agg.purchase_order = po.name
+        LEFT JOIN (SELECT purchase_order, COUNT(*) as inv_count, SUM(grand_total) as inv_total
+                   FROM `tabBEI Invoice` WHERE status NOT IN ('Draft','Cancelled') {inv_date_filter}
+                   GROUP BY purchase_order) inv_agg ON inv_agg.purchase_order = po.name
+        WHERE {where_clause}
+    """.format(
+        gr_date_filter=gr_date_filter,
+        inv_date_filter=inv_date_filter,
+        where_clause=where_clause,
+    ), values, as_dict=True)
+
+    total = summary[0].total_pos if summary else 0
+
+    return {
+        "data": data,
+        "summary": summary[0] if summary else {},
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size
+    }
+
+
+@frappe.whitelist()
+def get_monthly_spend_report(months=12):
+    """Monthly spend analysis with category/supplier breakdown."""
+    _check_procurement_report_access()
+    months = cint(months) or 12
+
+    monthly = frappe.db.sql("""
+        SELECT DATE_FORMAT(po.po_date, '%%Y-%%m') as month,
+            COUNT(*) as po_count, SUM(po.grand_total) as total_spend,
+            AVG(po.grand_total) as avg_po_value,
+            COUNT(DISTINCT po.supplier) as unique_suppliers
+        FROM `tabBEI Purchase Order` po
+        WHERE po.po_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
+        AND po.status NOT IN ('Draft', 'Cancelled')
+        GROUP BY DATE_FORMAT(po.po_date, '%%Y-%%m')
+        ORDER BY month ASC
+    """, (months,), as_dict=True)
+
+    by_supplier = frappe.db.sql("""
+        SELECT po.supplier_name, COUNT(*) as po_count, SUM(po.grand_total) as total_spend
+        FROM `tabBEI Purchase Order` po
+        WHERE po.po_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
+        AND po.status NOT IN ('Draft', 'Cancelled')
+        GROUP BY po.supplier, po.supplier_name
+        ORDER BY total_spend DESC LIMIT 15
+    """, (months,), as_dict=True)
+
+    by_category = frappe.db.sql("""
+        SELECT COALESCE(poi.item_group, 'Uncategorized') as category,
+            COUNT(DISTINCT poi.parent) as po_count, SUM(poi.amount) as total_spend
+        FROM `tabBEI PO Item` poi
+        JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+        WHERE po.po_date >= DATE_SUB(CURDATE(), INTERVAL %s MONTH)
+        AND po.status NOT IN ('Draft', 'Cancelled')
+        GROUP BY COALESCE(poi.item_group, 'Uncategorized')
+        ORDER BY total_spend DESC
+    """, (months,), as_dict=True)
+
+    total_spend = sum(flt(m.total_spend) for m in monthly)
+    total_pos = sum(cint(m.po_count) for m in monthly)
+
+    return {
+        "monthly": monthly,
+        "by_supplier": by_supplier,
+        "by_category": by_category,
+        "summary": {
+            "total_spend": flt(total_spend, 2),
+            "total_pos": total_pos,
+            "avg_monthly_spend": flt(total_spend / max(len(monthly), 1), 2),
+            "months_analyzed": len(monthly)
+        }
+    }
+
+
+@frappe.whitelist()
+def get_goods_receipt_log(from_date=None, to_date=None, status=None,
+                           supplier=None, discrepancy_only=False, page=1, page_size=50):
+    """Goods receipt log with delivery timelines and discrepancy tracking."""
+    _check_procurement_report_access()
+
+    # AUDIT-2: Coerce boolean from HTTP string
+    discrepancy_only = discrepancy_only == "true" or discrepancy_only is True
+    page = cint(page) or 1
+    page_size = min(cint(page_size) or 50, 100)
+
+    if from_date and to_date and getdate(from_date) > getdate(to_date):
+        frappe.throw(_("From Date cannot be after To Date"))
+
+    conditions = ["1=1"]
+    values = {}
+    if from_date:
+        conditions.append("gr.receipt_date >= %(from_date)s")
+        values["from_date"] = from_date
+    if to_date:
+        conditions.append("gr.receipt_date <= %(to_date)s")
+        values["to_date"] = to_date
+    if status:
+        conditions.append("gr.status = %(status)s")
+        values["status"] = status
+    if supplier:
+        conditions.append("gr.supplier = %(supplier)s")
+        values["supplier"] = supplier
+
+    where_clause = " AND ".join(conditions)
+    discrepancy_filter = "AND (gr.total_received_qty != gr.total_ordered_qty OR gr.receipt_date > po.delivery_date)" if discrepancy_only else ""
+    offset = (page - 1) * page_size
+
+    data = frappe.db.sql("""
+        SELECT
+            gr.name, gr.gr_no, gr.receipt_date, gr.status,
+            gr.purchase_order, po.po_no, po.po_date,
+            po.delivery_date as promised_date,
+            gr.supplier, gr.supplier_name,
+            gr.total_ordered_qty, gr.total_received_qty, gr.total_amount,
+            COALESCE(DATEDIFF(gr.receipt_date, po.delivery_date), NULL) as delivery_variance_days,
+            CASE
+                WHEN po.delivery_date IS NULL THEN NULL
+                WHEN gr.receipt_date <= po.delivery_date THEN 'On Time'
+                WHEN gr.receipt_date <= DATE_ADD(po.delivery_date, INTERVAL 3 DAY) THEN 'Slight Delay'
+                ELSE 'Late'
+            END as delivery_status,
+            ROUND(gr.total_received_qty - gr.total_ordered_qty, 2) as qty_discrepancy,
+            CASE
+                WHEN gr.total_received_qty = gr.total_ordered_qty THEN 'Full'
+                WHEN gr.total_received_qty < gr.total_ordered_qty THEN 'Short'
+                ELSE 'Over'
+            END as receipt_match,
+            gr.inspection_status, gr.remarks
+        FROM `tabBEI Goods Receipt` gr
+        LEFT JOIN `tabBEI Purchase Order` po ON gr.purchase_order = po.name
+        WHERE {where_clause} {discrepancy_filter}
+        ORDER BY gr.receipt_date DESC
+        LIMIT %(page_size)s OFFSET %(offset)s
+    """.format(where_clause=where_clause, discrepancy_filter=discrepancy_filter),
+    {**values, "page_size": page_size, "offset": offset}, as_dict=True)
+
+    summary = frappe.db.sql("""
+        SELECT
+            COUNT(*) as total_grs,
+            SUM(CASE WHEN po.delivery_date IS NOT NULL AND gr.receipt_date <= po.delivery_date THEN 1 ELSE 0 END) as on_time_count,
+            SUM(CASE WHEN gr.total_received_qty < gr.total_ordered_qty THEN 1 ELSE 0 END) as short_delivery_count,
+            SUM(CASE WHEN gr.total_received_qty > gr.total_ordered_qty THEN 1 ELSE 0 END) as over_delivery_count,
+            AVG(DATEDIFF(gr.receipt_date, po.delivery_date)) as avg_delivery_variance
+        FROM `tabBEI Goods Receipt` gr
+        LEFT JOIN `tabBEI Purchase Order` po ON gr.purchase_order = po.name
+        WHERE {where_clause} {discrepancy_filter}
+    """.format(where_clause=where_clause, discrepancy_filter=discrepancy_filter), values, as_dict=True)
+
+    total = summary[0].total_grs if summary else 0
+
+    return {
+        "data": data,
+        "summary": summary[0] if summary else {},
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size
+    }
 
 
 # =============================================================================
