@@ -10,6 +10,7 @@ from frappe import _
 from frappe.utils import today, now_datetime, flt, nowdate, getdate
 from calendar import monthrange
 from datetime import datetime
+from hrms.api.store import save_base64_image
 
 
 # ============================================================
@@ -85,7 +86,7 @@ def add_expense_to_pending(
     expense.manual_description = manual_description
     expense.manual_amount = flt(manual_amount)
     expense.manual_date = manual_date
-    expense.receipt_photo = receipt_photo
+    expense.receipt_photo = save_base64_image(receipt_photo, "BEI Expense Request", fieldname="receipt_photo")
     expense.status = "Pending"
     expense.added_to_pending_at = now_datetime()
 
@@ -224,7 +225,7 @@ def edit_pending_expense(
     if manual_date is not None:
         expense.manual_date = manual_date
     if receipt_photo is not None:
-        expense.receipt_photo = receipt_photo
+        expense.receipt_photo = save_base64_image(receipt_photo, "BEI Expense Request", fieldname="receipt_photo")
 
     expense.save(ignore_permissions=True)
     frappe.db.commit()

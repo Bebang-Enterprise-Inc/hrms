@@ -110,6 +110,7 @@ def get_pending_reviews(page=1):
 
         if review_type:
             pending_reviews.append({
+                "name": emp.name,
                 "employee": emp.name,
                 "employee_name": emp.employee_name,
                 "designation": emp.designation,

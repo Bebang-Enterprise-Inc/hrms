@@ -2,7 +2,80 @@
 
 ## Purpose
 
-Execute **autonomous end-to-end QA testing** for any Frappe-backed feature using Chrome DevTools MCP. This agent has a **built-in loop mechanism** that continues until all tests pass.
+Execute **autonomous end-to-end QA testing** for any Frappe-backed feature using **Playwright CLI** (`/playwright` skill). This agent has a **built-in loop mechanism** that continues until all tests pass.
+
+---
+
+## ⚠️ HARD RULES - LEARNED FROM REAL FAILURES (2026-02-11) ⚠️
+
+These rules exist because our E2E tests gave **false confidence** (87% pass rate) while real testers found **31 bugs in one day**. Every rule below was earned the hard way.
+
+### RULE 1: SUBMIT + VERIFY (No "Page Loads" Tests)
+```
+A test that proves a page LOADS is worthless.
+A test must prove the feature WORKS.
+```
+- Every form test MUST: fill → submit → **verify the backend state changed**
+- After submit, call the Frappe API to confirm the record was created/updated
+- If the API returns an error, the test FAILS. Period.
+- A toast saying "success" is NOT sufficient — verify the actual database state
+
+### RULE 2: BACKEND ERROR = FAIL (The "FINDING" Rule Is DEAD)
+```
+╔══════════════════════════════════════════════════════════════╗
+║  THE OLD RULE "backend errors = FINDING not FAIL" IS DEAD   ║
+║  It was KILLED on 2026-02-11 after suppressing 4 real bugs  ║
+╚══════════════════════════════════════════════════════════════╝
+```
+- If the UI shows an error toast → FAIL
+- If the backend returns 500 → FAIL
+- If the backend returns 4xx (except 403 on RBAC tests) → FAIL
+- If Sentry logs an exception → FAIL
+- NO exceptions. NO "findings". NO "expected behavior". **FAIL and create a [BUG] task.**
+
+### RULE 3: PHOTO UPLOAD IS MANDATORY
+- If a form has a photo/file upload field, the test MUST upload a real file
+- Use `scratchpad/test_photos/test_receipt.png` (or create one: 100x100 red square)
+- After upload, verify the photo URL is accessible (fetch it, check 200)
+- Common DB bug: photo columns set to VARCHAR instead of LONGTEXT → catches DataError 1406
+
+### RULE 4: POST-ACTION STATE VERIFICATION
+- After approving a leave → verify status changed to "Approved" (not still "Pending")
+- After submitting a form → verify the record appears in the list view
+- After deleting → verify the record is gone
+- **The leave approval bug (BUG-015) existed for weeks because we never checked state after action**
+
+### RULE 5: ALL ROLES MUST BE TESTED
+```
+Minimum role coverage per test run:
+- Store Staff (test.crew1@bebang.ph)      → Store ops, forms, submissions
+- Store Supervisor (test.supervisor@bebang.ph) → Approvals, team management
+- Area Supervisor (test.area@bebang.ph)    → Multi-store oversight
+- HR User (test.hr@bebang.ph)             → HR management
+- Projects Head (test.projects@bebang.ph)  → Maintenance queue, projects
+- Projects Staff (test.projects.staff@bebang.ph) → Assigned tasks
+- Commissary (test.commissary@bebang.ph)   → Commissary operations
+- Warehouse (test.warehouse@bebang.ph)     → Warehouse operations
+```
+- If a role is skipped, document WHY and create a [TEST] task for it
+- RBAC tests: verify unauthorized users get "Access Restricted", NOT a working page
+
+### RULE 6: SKIP = FAIL + RETRY
+- If a test cannot run (empty data, session expired, selector not found): **FAIL**
+- Create a [BUG] task explaining why
+- Retry with: fresh login, test data seeding, corrected selector
+- NEVER classify as "finding" or "expected" — either fix it or mark it as a real failure
+
+### RULE 7: SIDEBAR-FIRST NAVIGATION
+- Tests MUST navigate via sidebar clicks, NOT `page.goto()` URLs
+- Only exception: the initial login page
+- This catches RBAC sidebar visibility bugs that URL-direct tests miss
+
+### RULE 8: ONE-SHOT FIXING
+- Read the FULL function before fixing a bug
+- Identify ALL issues (not just the one in the error message)
+- Test the fix with a real user session (not API token)
+- Deploy ONE TIME with all fixes, not fix→deploy→find-bug→deploy→repeat
 
 ---
 
@@ -255,17 +328,28 @@ NEW_ITERATION=$((CURRENT_ITERATION + 1))
 
 ### 2.1 Page Discovery
 
-Navigate to the feature and discover all pages:
+Navigate to the feature and discover all pages using Playwright:
 
-```javascript
-mcp__chrome-devtools__navigate_page({ url: "https://my.bebang.ph" + featurePath })
-mcp__chrome-devtools__wait_for({ timeout: 10000 })
-mcp__chrome-devtools__take_snapshot()
+```python
+# Using /playwright skill (Playwright CLI)
+# Login first
+page = browser.new_page()
+page.goto("https://my.bebang.ph/login")
+page.fill('input[name="email"]', 'test.crew1@bebang.ph')
+page.fill('input[name="password"]', 'BeiTest2026!')
+page.click('button:has-text("Sign in")')
+page.wait_for_url("**/dashboard**")
 
-// From snapshot, identify:
-// - Navigation links (sidebar, tabs)
-// - Sub-pages reachable from this page
-// - URL patterns
+# Navigate via sidebar (RULE 7)
+page.click('nav >> text="Store Operations"')
+page.click('a:has-text("Opening Report")')
+page.wait_for_load_state("networkidle")
+page.screenshot(path="scratchpad/qa/discovery_opening.png")
+
+# From page, identify:
+# - Sidebar links (visible for this role)
+# - Forms, buttons, interactive elements
+# - Sub-pages reachable from this page
 ```
 
 ### 2.2 Element Discovery
@@ -388,18 +472,71 @@ if (testPassed) {
 // Check for next task and continue
 ```
 
-### 3.2 Frappe Backend Verification
+### 3.2 Frappe Backend Verification (RULE 1: SUBMIT + VERIFY)
 
-After any form submission, verify in Frappe:
+**MANDATORY after every form submission.** A UI success toast is NOT enough.
 
-```bash
-# Get credentials
-FRAPPE_KEY=$(doppler secrets get FRAPPE_API_KEY --project bei-erp --config dev --plain)
-FRAPPE_SECRET=$(doppler secrets get FRAPPE_API_SECRET --project bei-erp --config dev --plain)
+```python
+# Option A: Via Playwright (same browser session - preferred)
+result = page.evaluate("""
+    async () => {
+        const res = await fetch('https://hq.bebang.ph/api/resource/BEI Leave Application?order_by=creation%20desc&limit_page_length=1', {
+            credentials: 'include'
+        });
+        return await res.json();
+    }
+""")
+# Verify the record exists and has expected values
+assert result['data'][0]['status'] == 'Open', f"Expected 'Open', got '{result['data'][0]['status']}'"
 
-# Query for created record
-curl -s "https://hq.bebang.ph/api/resource/DOCTYPE?order_by=creation%20desc&limit=1" \
-  -H "Authorization: token $FRAPPE_KEY:$FRAPPE_SECRET"
+# Option B: Via API token (for admin-level verification)
+FRAPPE_KEY = doppler_get("FRAPPE_API_KEY")
+FRAPPE_SECRET = doppler_get("FRAPPE_API_SECRET")
+
+import requests
+resp = requests.get(
+    "https://hq.bebang.ph/api/resource/DOCTYPE?order_by=creation%20desc&limit=1",
+    headers={"Authorization": f"token {FRAPPE_KEY}:{FRAPPE_SECRET}"}
+)
+assert resp.status_code == 200, f"Backend verification failed: {resp.status_code}"
+```
+
+### 3.3 Photo Upload Verification (RULE 3)
+
+**MANDATORY for any form with file/photo fields:**
+
+```python
+# Upload a test photo
+page.set_input_files('input[type="file"]', 'scratchpad/test_photos/test_receipt.png')
+page.wait_for_timeout(2000)  # Wait for upload
+
+# After form submission, verify photo is accessible
+photo_url = result['data'][0].get('photo') or result['data'][0].get('receipt_photo')
+if photo_url:
+    photo_resp = requests.get(f"https://hq.bebang.ph{photo_url}")
+    assert photo_resp.status_code == 200, f"Photo not accessible: {photo_url}"
+```
+
+### 3.4 Post-Action State Check (RULE 4)
+
+**MANDATORY after any status-changing action (approve, reject, submit):**
+
+```python
+# After supervisor approves a leave:
+page.click('button:has-text("Approve")')
+page.wait_for_timeout(2000)
+
+# Verify status ACTUALLY changed (don't trust the UI alone)
+result = page.evaluate("""
+    async () => {
+        const res = await fetch('/api/resource/BEI Leave Application/LEAVE-ID', {
+            credentials: 'include'
+        });
+        return await res.json();
+    }
+""")
+assert result['data']['status'] == 'Approved', \
+    f"BUG: Leave still '{result['data']['status']}' after approval action"
 ```
 
 ---
@@ -571,32 +708,21 @@ https://hq.bebang.ph/login
 
 ### Login Procedure
 
-**To switch users during testing:**
+**To switch users during testing (Playwright):**
 
-```javascript
-// 1. Navigate to Frappe backend login (NOT my.bebang.ph OAuth)
-mcp__chrome-devtools__navigate_page({ url: "https://hq.bebang.ph/login" })
+```python
+# Login via my.bebang.ph direct login (email + password)
+page.goto("https://my.bebang.ph/login")
+page.wait_for_load_state("networkidle")
 
-// 2. Wait for login form
-mcp__chrome-devtools__wait_for({ text: "Login", timeout: 10000 })
+# Fill credentials
+page.fill('input[name="email"], input[type="email"]', "test.supervisor@bebang.ph")
+page.fill('input[name="password"], input[type="password"]', "BeiTest2026!")
+page.click('button:has-text("Sign in")')
 
-// 3. Take snapshot to find email and password fields
-mcp__chrome-devtools__take_snapshot()
-
-// 4. Fill email field
-mcp__chrome-devtools__fill({ uid: "EMAIL_FIELD_UID", value: "test.supervisor@bebang.ph" })
-
-// 5. Fill password field
-mcp__chrome-devtools__fill({ uid: "PASSWORD_FIELD_UID", value: "BeiTest2026!" })
-
-// 6. Click login button
-mcp__chrome-devtools__click({ uid: "LOGIN_BUTTON_UID" })
-
-// 7. Wait for redirect to desk
-mcp__chrome-devtools__wait_for({ timeout: 10000 })
-
-// 8. Navigate to my.bebang.ph - session will be shared
-mcp__chrome-devtools__navigate_page({ url: "https://my.bebang.ph/dashboard" })
+# Wait for dashboard
+page.wait_for_url("**/dashboard**", timeout=15000)
+page.screenshot(path="scratchpad/qa/login_success.png")
 ```
 
 ### Why Direct Login?
@@ -629,24 +755,35 @@ curl -X POST "https://hq.bebang.ph/api/resource/User" \
 
 ---
 
-## Chrome MCP Reference
+## Playwright CLI Reference
 
-```javascript
-// Navigate
-mcp__chrome-devtools__navigate_page({ url: "..." })
-mcp__chrome-devtools__wait_for({ text: "...", timeout: 10000 })
+Use the `/playwright` skill for all browser automation. Chrome DevTools MCP is deprecated.
 
-// Discover
-mcp__chrome-devtools__take_snapshot()
+```python
+# Navigate
+page.goto("https://my.bebang.ph/login")
+page.wait_for_load_state("networkidle")
 
-// Interact
-mcp__chrome-devtools__click({ uid: "..." })
-mcp__chrome-devtools__fill({ uid: "...", value: "..." })
-mcp__chrome-devtools__press_key({ key: "Enter" })
+# Discover
+page.content()  # Full HTML
+page.query_selector_all("button")  # All buttons
+page.query_selector_all("input")  # All inputs
 
-// Evidence
-mcp__chrome-devtools__take_screenshot({ filePath: "..." })
-mcp__chrome-devtools__list_console_messages()
+# Interact
+page.click('button:has-text("Submit")')
+page.fill('input[name="title"]', "Test value")
+page.press('input[name="title"]', "Enter")
+page.set_input_files('input[type="file"]', 'path/to/file.png')
+
+# Evidence (MANDATORY for every test)
+page.screenshot(path="scratchpad/qa/test_XXX.png")
+
+# Console errors (check after every action)
+console_errors = []
+page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
+
+# Network errors (RULE 2: backend error = FAIL)
+page.on("response", lambda resp: assert resp.status < 500, f"Backend error: {resp.url} {resp.status}")
 ```
 
 ---

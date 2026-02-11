@@ -19,19 +19,36 @@ import json
 
 @frappe.whitelist()
 def submit_ceo_complaint(category, subject, description, is_anonymous=False):
-    """Submit a complaint to the CEO."""
-    doc = frappe.new_doc("BEI CEO Complaint")
-    doc.submitted_by = frappe.session.user
-    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
-    if not employee:
-        frappe.throw(_("No employee record found for your user account"))
-    doc.employee = employee
-    doc.category = category
-    doc.subject = subject
-    doc.description = description
-    doc.is_anonymous = 1 if is_anonymous else 0
-    doc.insert()
-    return {"success": True, "name": doc.name}
+    """Submit a complaint to the CEO.
+
+    Bug fix (C12):
+    - Employee lookup fallback without status filter
+    - insert with ignore_permissions=True
+    - Returns user-friendly error instead of raw traceback
+    """
+    try:
+        doc = frappe.new_doc("BEI CEO Complaint")
+        doc.submitted_by = frappe.session.user
+        employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
+        if not employee:
+            # Fallback: try without status filter
+            employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+        if not employee:
+            frappe.throw(_("No employee record found for your user account"))
+        doc.employee = employee
+        doc.category = category
+        doc.subject = subject
+        doc.description = description
+        doc.is_anonymous = 1 if is_anonymous else 0
+        doc.insert(ignore_permissions=True)
+        return {"success": True, "name": doc.name}
+
+    except Exception as e:
+        frappe.log_error(
+            f"CEO Complaint Error: {str(e)}\n\n{frappe.get_traceback()}",
+            "CEO Complaint Submission Error"
+        )
+        return {"success": False, "error": _("Failed to submit complaint. Please try again or contact support.")}
 
 
 @frappe.whitelist()
@@ -108,21 +125,52 @@ def get_unread_announcements():
 
 @frappe.whitelist()
 def send_kudos(to_employee, category, message, is_public=True):
-    """Send kudos to another employee."""
-    from_employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
-    if not from_employee:
-        frappe.throw(_("You must be an employee to send kudos"))
-    if from_employee == to_employee:
-        frappe.throw(_("You cannot send kudos to yourself"))
+    """Send kudos to another employee.
 
-    doc = frappe.new_doc("BEI Kudos")
-    doc.from_employee = from_employee
-    doc.to_employee = to_employee
-    doc.category = category
-    doc.message = message
-    doc.is_public = 1 if is_public else 0
-    doc.insert()
-    return {"success": True, "name": doc.name}
+    Bug fix (C11):
+    - Resolve to_employee from name/email if not an Employee ID
+    - insert with ignore_permissions=True (Employee role has create but may fail on save)
+    - Returns user-friendly error instead of raw traceback
+    """
+    try:
+        from_employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
+        if not from_employee:
+            # Fallback: try without status filter
+            from_employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+        if not from_employee:
+            frappe.throw(_("You must be an employee to send kudos"))
+
+        # Resolve to_employee - frontend may send employee name or email
+        resolved_to = to_employee
+        if not frappe.db.exists("Employee", to_employee):
+            # Try by employee_name
+            emp = frappe.db.get_value("Employee", {"employee_name": to_employee, "status": "Active"}, "name")
+            if emp:
+                resolved_to = emp
+            else:
+                # Try by user_id (email)
+                emp = frappe.db.get_value("Employee", {"user_id": to_employee, "status": "Active"}, "name")
+                if emp:
+                    resolved_to = emp
+
+        if from_employee == resolved_to:
+            frappe.throw(_("You cannot send kudos to yourself"))
+
+        doc = frappe.new_doc("BEI Kudos")
+        doc.from_employee = from_employee
+        doc.to_employee = resolved_to
+        doc.category = category
+        doc.message = message
+        doc.is_public = 1 if is_public else 0
+        doc.insert(ignore_permissions=True)
+        return {"success": True, "name": doc.name}
+
+    except Exception as e:
+        frappe.log_error(
+            f"Kudos Error: {str(e)}\n\n{frappe.get_traceback()}",
+            "Kudos Submission Error"
+        )
+        return {"success": False, "error": _("Failed to send kudos. Please try again or contact support.")}
 
 
 @frappe.whitelist()

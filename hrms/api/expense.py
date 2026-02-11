@@ -9,6 +9,7 @@ import frappe
 from frappe import _
 import json
 from frappe.utils import today, now_datetime, flt, get_url
+from hrms.api.store import save_base64_image
 # Lazy imports - only when OCR/classification is needed
 # This prevents module load failures if dependencies are missing
 def _get_classifier():
@@ -95,11 +96,11 @@ def submit_expense(
     expense.manual_description = manual_description
     expense.manual_amount = flt(manual_amount)
     expense.manual_date = manual_date
-    expense.receipt_photo = receipt_photo
+    expense.receipt_photo = save_base64_image(receipt_photo, "BEI Expense Request", fieldname="receipt_photo")
 
     expense.status = "Submitted"
 
-    expense.insert()
+    expense.insert(ignore_permissions=True)
 
     # Trigger background processing (OCR, matching, classification)
     frappe.enqueue(

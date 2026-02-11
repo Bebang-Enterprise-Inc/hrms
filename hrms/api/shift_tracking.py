@@ -126,9 +126,13 @@ def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: 
         frappe.throw(_("Selfie is required for punch-in"))
     img_data = validate_image_upload(selfie_base64)
 
-    # Reverse geocode
-    aws_location = AWSLocationService()
-    address = aws_location.reverse_geocode(latitude, longitude)
+    # Reverse geocode (non-critical — punch-in succeeds even if address lookup fails)
+    address = None
+    try:
+        aws_location = AWSLocationService()
+        address = aws_location.reverse_geocode(latitude, longitude)
+    except Exception as e:
+        frappe.log_error(f"Reverse geocode failed for punch_in: {str(e)}", "Punch-In Geocode Error")
 
     # Create shift record (stores both raw GPS and adjusted pin position)
     shift_doc = frappe.get_doc({

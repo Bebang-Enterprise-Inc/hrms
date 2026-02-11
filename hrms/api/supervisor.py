@@ -911,13 +911,13 @@ def get_area_store_reports(report_type, report_date=None, status=None):
             deposit_photos = frappe.get_all(
                 "BEI Bank Deposit Photo",
                 filters={"parent": report["name"]},
-                fields=["photo", "description"]
+                fields=["photo", "photo_number"]
             )
             for idx, dp in enumerate(deposit_photos):
                 if dp.get("photo"):
                     photos.append({
                         "field": f"deposit_photo_{idx}",
-                        "label": dp.get("description") or f"Deposit Slip {idx + 1}",
+                        "label": f"Deposit Slip {dp.get('photo_number') or idx + 1}",
                         "url": dp.get("photo")
                     })
 

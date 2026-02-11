@@ -14,50 +14,70 @@ import json
 
 @frappe.whitelist()
 def submit_cycle_count(store, items, count_date=None):
-    """Submit inventory cycle count."""
-    if not store:
-        frappe.throw(_("Store is required"))
+    """Submit inventory cycle count.
 
-    if isinstance(items, str):
-        items = json.loads(items)
+    Bug fixes (C7):
+    - Resolve store to warehouse (frontend sends branch code)
+    - Use resolved warehouse for Bin lookup
+    - insert with ignore_permissions=True (Store Staff needs to submit)
+    - Returns user-friendly error instead of raw traceback
+    """
+    try:
+        if not store:
+            frappe.throw(_("Store is required"))
 
-    # Validate no negative quantities
-    for item in items:
-        if flt(item.get("counted_qty", 0)) < 0:
-            frappe.throw(_("Counted quantity cannot be negative for item {0}").format(
-                item.get("item_code", "unknown")))
+        if isinstance(items, str):
+            items = json.loads(items)
 
-    doc = frappe.new_doc("BEI Cycle Count")
-    doc.store = store
-    doc.count_date = count_date or nowdate()
-    doc.counted_by = frappe.session.user
+        # Resolve branch name to warehouse name
+        warehouse = _resolve_warehouse(store)
+        if not warehouse:
+            frappe.throw(_("Could not find Store: {0}").format(store))
 
-    total_variance = 0
-    for item in items:
-        # Get system qty from stock ledger
-        system_qty = frappe.db.get_value(
-            "Bin",
-            {"warehouse": store, "item_code": item["item_code"]},
-            "actual_qty"
-        ) or 0
+        # Validate no negative quantities
+        for item in items:
+            if flt(item.get("counted_qty", 0)) < 0:
+                frappe.throw(_("Counted quantity cannot be negative for item {0}").format(
+                    item.get("item_code", "unknown")))
 
-        row = doc.append("items", {
-            "item_code": item["item_code"],
-            "system_qty": system_qty,
-            "counted_qty": flt(item["counted_qty"]),
-            "variance_qty": flt(item["counted_qty"]) - system_qty,
-            "remarks": item.get("remarks")
-        })
+        doc = frappe.new_doc("BEI Cycle Count")
+        doc.store = warehouse
+        doc.count_date = count_date or nowdate()
+        doc.counted_by = frappe.session.user
 
-        # Calculate variance value
-        item_price = frappe.db.get_value("Item", item["item_code"], "valuation_rate") or 0
-        row.variance_value = row.variance_qty * item_price
-        total_variance += row.variance_value
+        total_variance = 0
+        for item in items:
+            # Get system qty from stock ledger - use resolved warehouse
+            system_qty = frappe.db.get_value(
+                "Bin",
+                {"warehouse": warehouse, "item_code": item["item_code"]},
+                "actual_qty"
+            ) or 0
 
-    doc.total_variance_value = total_variance
-    doc.status = "Submitted"
-    doc.insert()
-    return {"success": True, "name": doc.name, "total_variance": total_variance}
+            row = doc.append("items", {
+                "item_code": item["item_code"],
+                "system_qty": system_qty,
+                "counted_qty": flt(item["counted_qty"]),
+                "variance_qty": flt(item["counted_qty"]) - system_qty,
+                "remarks": item.get("remarks")
+            })
+
+            # Calculate variance value
+            item_price = frappe.db.get_value("Item", item["item_code"], "valuation_rate") or 0
+            row.variance_value = row.variance_qty * item_price
+            total_variance += row.variance_value
+
+        doc.total_variance_value = total_variance
+        doc.status = "Submitted"
+        doc.insert(ignore_permissions=True)
+        return {"success": True, "name": doc.name, "total_variance": total_variance}
+
+    except Exception as e:
+        frappe.log_error(
+            f"Cycle Count Error for store {store}: {str(e)}\n\n{frappe.get_traceback()}",
+            "Cycle Count Submission Error"
+        )
+        return {"success": False, "error": _("Failed to submit cycle count. Please try again or contact support.")}
 
 
 @frappe.whitelist()
@@ -188,28 +208,57 @@ def resubmit_cycle_count(count_name, items):
 
 
 @frappe.whitelist()
-def report_variance(store, item_code, system_qty, actual_qty, variance_type, explanation, photo=None):
-    """Report inventory variance."""
-    if not store or not item_code:
-        frappe.throw(_("Store and item are required"))
+def report_variance(store, item_code, system_qty=0, actual_qty=0,
+                    variance_type=None, explanation=None, photo=None):
+    """Report inventory variance.
 
-    doc = frappe.new_doc("BEI Inventory Variance")
-    doc.store = store
-    doc.variance_date = nowdate()
-    doc.item_code = item_code
-    doc.system_qty = flt(system_qty)
-    doc.actual_qty = flt(actual_qty)
-    doc.variance_qty = flt(actual_qty) - flt(system_qty)
+    Bug fixes (C8):
+    - Resolve store to warehouse
+    - system_qty/actual_qty default to 0
+    - variance_type defaults to 'Shortage' if not provided
+    - photo converted via save_base64_image
+    - insert with ignore_permissions=True
+    - Returns user-friendly error
+    """
+    try:
+        if not store or not item_code:
+            frappe.throw(_("Store and item are required"))
 
-    item_price = frappe.db.get_value("Item", item_code, "valuation_rate") or 0
-    doc.variance_value = doc.variance_qty * item_price
+        # Resolve branch name to warehouse name
+        warehouse = _resolve_warehouse(store)
+        if not warehouse:
+            frappe.throw(_("Could not find Store: {0}").format(store))
 
-    doc.variance_type = variance_type
-    doc.explanation = explanation
-    doc.reported_by = frappe.session.user
-    doc.photo_evidence = photo
-    doc.insert()
-    return {"success": True, "name": doc.name}
+        # Handle photo base64
+        photo_url = None
+        if photo:
+            from hrms.api.store import save_base64_image
+            photo_url = save_base64_image(photo, "BEI Inventory Variance", fieldname="photo_evidence")
+
+        doc = frappe.new_doc("BEI Inventory Variance")
+        doc.store = warehouse
+        doc.variance_date = nowdate()
+        doc.item_code = item_code
+        doc.system_qty = flt(system_qty)
+        doc.actual_qty = flt(actual_qty)
+        doc.variance_qty = flt(actual_qty) - flt(system_qty)
+
+        item_price = frappe.db.get_value("Item", item_code, "valuation_rate") or 0
+        doc.variance_value = doc.variance_qty * item_price
+
+        doc.variance_type = variance_type or ("Shortage" if doc.variance_qty < 0 else "Overage")
+        doc.explanation = explanation or ""
+        doc.reported_by = frappe.session.user
+        doc.photo_evidence = photo_url
+        doc.insert(ignore_permissions=True)
+        return {"success": True, "name": doc.name}
+
+    except Exception as e:
+        frappe.log_error(
+            f"Variance Report Error for store {store}: {str(e)}\n\n{frappe.get_traceback()}",
+            "Variance Report Submission Error"
+        )
+        return {"success": False, "error": _("Failed to submit variance report. Please try again or contact support.")}
 
 
 @frappe.whitelist()
@@ -238,24 +287,51 @@ def get_variances(store=None, status=None, limit=20):
 @frappe.whitelist()
 def request_shelf_extension(store, item_code, original_expiry, requested_expiry,
                             quantity, reason, batch_no=None, photo=None):
-    """Request shelf life extension for an item."""
-    if not store or not item_code:
-        frappe.throw(_("Store and item are required"))
+    """Request shelf life extension for an item.
 
-    doc = frappe.new_doc("BEI Shelf Life Extension")
-    doc.store = store
-    doc.request_date = nowdate()
-    doc.item_code = item_code
-    doc.batch_no = batch_no
-    doc.original_expiry = original_expiry
-    doc.requested_expiry = requested_expiry
-    doc.quantity = flt(quantity)
-    doc.reason = reason
-    doc.requested_by = frappe.session.user
-    doc.photo_evidence = photo
-    doc.insert()
+    Bug fix (C9): Store OIC/Staff get permission error because BEI Shelf Life Extension
+    DocType only allows System Manager and Stock User roles. Fix: use ignore_permissions=True
+    since the API already has @frappe.whitelist() protection, and resolve store to warehouse.
+    Also convert photo base64 to file URL.
+    """
+    try:
+        if not store or not item_code:
+            frappe.throw(_("Store and item are required"))
 
-    return {"success": True, "name": doc.name}
+        # Resolve branch name to warehouse name
+        warehouse = _resolve_warehouse(store)
+        if not warehouse:
+            frappe.throw(_("Could not find Store: {0}").format(store))
+
+        # Handle photo base64
+        photo_url = None
+        if photo:
+            from hrms.api.store import save_base64_image
+            photo_url = save_base64_image(photo, "BEI Shelf Life Extension", fieldname="photo_evidence")
+
+        doc = frappe.new_doc("BEI Shelf Life Extension")
+        doc.store = warehouse
+        doc.request_date = nowdate()
+        doc.item_code = item_code
+        doc.batch_no = batch_no
+        doc.original_expiry = original_expiry
+        doc.requested_expiry = requested_expiry
+        doc.quantity = flt(quantity)
+        doc.reason = reason
+        doc.requested_by = frappe.session.user
+        doc.photo_evidence = photo_url
+        # C9 fix: ignore_permissions because DocType only allows Stock User/System Manager
+        # but Store Staff/OIC need to submit shelf life checks
+        doc.insert(ignore_permissions=True)
+
+        return {"success": True, "name": doc.name}
+
+    except Exception as e:
+        frappe.log_error(
+            f"Shelf Life Extension Error for store {store}: {str(e)}\n\n{frappe.get_traceback()}",
+            "Shelf Life Extension Error"
+        )
+        return {"success": False, "error": _("Failed to submit shelf life check. Please try again or contact support.")}
 
 
 @frappe.whitelist()

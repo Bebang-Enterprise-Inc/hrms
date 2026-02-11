@@ -67,7 +67,15 @@ def resolve_employee(employee_name_or_id):
 
 @frappe.whitelist()
 def request_coverage(store, coverage_date, shift, reason, absent_employee, notes=None):
-    """Request staff coverage."""
+    """Request staff coverage.
+
+    Bug fix (C13):
+    - Status set to "Pending" (not "Open" which is not in DocType allowed values)
+    - DocType allows: Pending, Assigned, Cancelled
+    - Shift normalized to match DocType options: Opening, Mid, Closing
+    - insert with ignore_permissions=True
+    - Returns user-friendly error instead of raw traceback
+    """
     try:
         if not store:
             frappe.throw(_("Store is required"))
@@ -79,17 +87,29 @@ def request_coverage(store, coverage_date, shift, reason, absent_employee, notes
         warehouse = resolve_warehouse(store)
         employee_id = resolve_employee(absent_employee)
 
+        # Normalize shift to match DocType options: Opening, Mid, Closing
+        shift_map = {
+            "morning": "Opening", "opening": "Opening",
+            "mid": "Mid", "midshift": "Mid", "afternoon": "Mid",
+            "closing": "Closing", "evening": "Closing"
+        }
+        normalized_shift = shift_map.get((shift or "").lower(), shift.title() if shift else "Opening")
+        # Validate against allowed options
+        if normalized_shift not in ("Opening", "Mid", "Closing"):
+            normalized_shift = "Opening"
+
         doc = frappe.new_doc("BEI Staff Coverage Request")
         doc.store = warehouse
         doc.request_date = nowdate()
-        doc.coverage_date = coverage_date
-        doc.shift = shift
+        doc.coverage_date = coverage_date or nowdate()
+        doc.shift = normalized_shift
         doc.reason = reason
         doc.absent_employee = employee_id
         doc.requested_by = frappe.session.user
         doc.notes = notes
-        doc.status = "Open"
-        doc.insert()
+        # C13 fix: "Open" is not a valid status. DocType allows: Pending, Assigned, Cancelled
+        doc.status = "Pending"
+        doc.insert(ignore_permissions=True)
 
         return {"success": True, "name": doc.name}
 
@@ -98,7 +118,7 @@ def request_coverage(store, coverage_date, shift, reason, absent_employee, notes
             f"Coverage Request Error for store {store}, employee {absent_employee}: {str(e)}\n\n{frappe.get_traceback()}",
             "Coverage Request Error"
         )
-        raise
+        return {"success": False, "error": _("Failed to submit coverage request. Please try again or contact support.")}
 
 
 @frappe.whitelist()
