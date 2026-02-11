@@ -436,6 +436,12 @@ def update_maintenance_status(request_id, status, notes=None):
             "request": {...}
         }
     """
+    # BUG-001 fix: Enforce role-based access control
+    user_roles = frappe.get_roles(frappe.session.user)
+    allowed_roles = ["Projects User", "Projects Manager", "System Manager", "Administrator"]
+    if not any(role in user_roles for role in allowed_roles):
+        frappe.throw(_("You do not have permission to update maintenance request status"), frappe.PermissionError)
+
     if not request_id:
         frappe.throw(_("Request ID is required"))
 
@@ -588,23 +594,50 @@ def record_maintenance_completion(
         completion.follow_up_notes = follow_up_notes
 
     # Handle after photos (single or multiple)
+    # Photos may arrive as base64 data URLs from camera capture — save as File attachments
+    from hrms.api.store import save_base64_image
+
     if isinstance(after_photos, str):
         try:
             after_photos = json.loads(after_photos)
         except json.JSONDecodeError:
-            # It's a single URL string
+            # It's a single URL/base64 string
             pass
 
     if isinstance(after_photos, list):
         # Take first photo for the main field (TODO: add child table for multiple)
-        completion.after_photos = after_photos[0] if after_photos else None
+        photo_data = after_photos[0] if after_photos else None
     else:
-        completion.after_photos = after_photos
+        photo_data = after_photos
+
+    if photo_data:
+        # save_base64_image handles both base64 data URLs and plain URLs
+        # Returns a short file URL like /files/bei_maintenance_completion_abc123.jpg
+        completion.after_photos = save_base64_image(
+            photo_data,
+            "BEI Maintenance Completion",
+            fieldname="after_photos"
+        )
+    else:
+        completion.after_photos = None
 
     completion.submitted_by = frappe.session.user
     completion.submitted_at = now_datetime()
 
     completion.insert()
+
+    # Link photo file to the newly created completion doc
+    if completion.after_photos:
+        file_doc = frappe.db.get_value(
+            "File", {"file_url": completion.after_photos, "attached_to_name": ("is", "not set")},
+            "name"
+        )
+        if file_doc:
+            frappe.db.set_value("File", file_doc, {
+                "attached_to_doctype": "BEI Maintenance Completion",
+                "attached_to_name": completion.name,
+                "attached_to_field": "after_photos"
+            })
 
     # Reload request to get latest modified timestamp (avoids version conflict)
     request_doc.reload()
