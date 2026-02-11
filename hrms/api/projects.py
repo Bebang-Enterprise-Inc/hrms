@@ -448,7 +448,7 @@ def update_maintenance_status(request_id, status, notes=None):
     if not status:
         frappe.throw(_("Status is required"))
 
-    valid_statuses = ["Open", "Assigned", "In Progress", "Pending Parts", "Completed", "Verified", "Cancelled"]
+    valid_statuses = ["Open", "Assigned", "In Progress", "Pending Acknowledgement", "Completed", "Verified", "Cancelled"]
     if status not in valid_statuses:
         frappe.throw(_("Invalid status: {0}").format(status))
 
@@ -461,9 +461,9 @@ def update_maintenance_status(request_id, status, notes=None):
     # Define valid transitions
     valid_transitions = {
         "Open": ["Assigned", "Cancelled"],
-        "Assigned": ["In Progress", "Pending Parts", "Open", "Cancelled"],
-        "In Progress": ["Completed", "Pending Parts", "Assigned", "Cancelled"],
-        "Pending Parts": ["In Progress", "Assigned", "Cancelled"],
+        "Assigned": ["In Progress", "Pending Acknowledgement", "Open", "Cancelled"],
+        "In Progress": ["Completed", "Pending Acknowledgement", "Assigned", "Cancelled"],
+        "Pending Acknowledgement": ["In Progress", "Assigned", "Cancelled"],
         "Completed": ["Verified", "In Progress", "Open"],  # Verified via store, Open for reopen
         "Verified": ["Open"],  # Can reopen verified requests
         "Cancelled": ["Open"]  # Can reopen cancelled requests
@@ -480,7 +480,7 @@ def update_maintenance_status(request_id, status, notes=None):
     if status == "Completed" and not doc.resolved_date:
         doc.resolved_date = nowdate()
     # Clear resolved date when reopening
-    if status in ["Open", "Assigned", "In Progress", "Pending Parts"]:
+    if status in ["Open", "Assigned", "In Progress", "Pending Acknowledgement"]:
         doc.resolved_date = None
 
     # Add notes as comment if provided
@@ -609,6 +609,11 @@ def record_maintenance_completion(
         photo_data = after_photos[0] if after_photos else None
     else:
         photo_data = after_photos
+
+    # photo_data may be a dict like {"photo": "data:image/png;base64,...", "caption": "..."}
+    # Extract the actual image data string before passing to save_base64_image
+    if isinstance(photo_data, dict):
+        photo_data = photo_data.get('photo', '') or photo_data.get('url', '')
 
     if photo_data:
         # save_base64_image handles both base64 data URLs and plain URLs
