@@ -51,17 +51,23 @@ def check_no_404(page: Page) -> bool:
 
 
 def click_sidebar_item(page: Page, text: str) -> bool:
-    """Click a sidebar menu item by visible text."""
+    """Click a sidebar menu item by visible text.
+
+    The sidebar on mobile opens as a Sheet overlay. After opening, we must
+    wait for role-based navigation sections to render (useEmployee() hook
+    resolves asynchronously — can take 5-10s on CI).
+    """
     try:
         sidebar_toggle = page.locator(
             '[data-testid="sidebar-toggle"], button:has(svg.lucide-panel-left)'
         ).first
         if sidebar_toggle.is_visible():
             sidebar_toggle.click()
-            time.sleep(0.5)
+            time.sleep(1)  # sidebar Sheet animation
 
+        # Wait up to 15s for the item — roles load async from Frappe API
         item = page.locator(f'a:has-text("{text}"), button:has-text("{text}")').first
-        if item.is_visible(timeout=3000):
+        if item.is_visible(timeout=15000):
             item.click()
             time.sleep(3)
             page.wait_for_load_state("networkidle")
@@ -84,7 +90,8 @@ def flow_punch(page: Page, sd: str) -> list:
     """Sidebar → Remote Punch → Punch In form."""
     results = []
     page.goto(f"{BASE_URL}/dashboard")
-    time.sleep(3)
+    page.wait_for_load_state("networkidle")
+    time.sleep(2)
 
     clicked = click_sidebar_item(page, "Remote Punch")
     page.screenshot(path=f"{sd}/CP_punch_01_sidebar.png")
@@ -120,7 +127,8 @@ def flow_ob(page: Page, sd: str) -> list:
     """Sidebar → Official Business."""
     results = []
     page.goto(f"{BASE_URL}/dashboard")
-    time.sleep(3)
+    page.wait_for_load_state("networkidle")
+    time.sleep(2)
 
     clicked = click_sidebar_item(page, "Official Business")
     page.screenshot(path=f"{sd}/CP_ob_01_sidebar.png")
@@ -137,7 +145,8 @@ def flow_leave(page: Page, sd: str) -> list:
     """Sidebar → Leave → Apply button."""
     results = []
     page.goto(f"{BASE_URL}/dashboard")
-    time.sleep(3)
+    page.wait_for_load_state("networkidle")
+    time.sleep(2)
 
     clicked = click_sidebar_item(page, "Leave")
     page.screenshot(path=f"{sd}/CP_leave_01_sidebar.png")
