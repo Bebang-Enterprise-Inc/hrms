@@ -192,10 +192,20 @@ def _patch_handle_exception():
 
 					http_status = getattr(e, "http_status_code", 500)
 
-					# Only capture server errors (5xx), not client validation (4xx).
-					# 4xx errors (ValidationError, PermissionError, etc.) are expected
-					# user-facing errors, not bugs.
-					if http_status < 500:
+					# Determine if this is a custom API endpoint (hrms.api.*)
+					# vs a Desk form submission. Errors from our API endpoints
+					# indicate real bugs (bad data, missing references, etc.)
+					# even if they're 4xx. Desk form validation (4xx) is expected.
+					endpoint = ""
+					if hasattr(frappe, "request") and frappe.request:
+						endpoint = frappe.request.path or ""
+					cmd = ""
+					if frappe.form_dict:
+						cmd = frappe.form_dict.get("cmd", "")
+
+					is_custom_api = cmd.startswith("hrms.api.") or "hrms.api." in endpoint
+
+					if http_status < 500 and not is_custom_api:
 						return _original_handle_exception(e)
 
 					if hasattr(frappe, "session") and frappe.session and frappe.session.user:
@@ -209,6 +219,13 @@ def _patch_handle_exception():
 					if hasattr(frappe, "request") and frappe.request:
 						sentry_sdk.set_tag("endpoint", frappe.request.path or "unknown")
 						sentry_sdk.set_tag("method", frappe.request.method or "unknown")
+
+					# Tag API validation errors distinctly so they can be filtered
+					if is_custom_api and http_status < 500:
+						sentry_sdk.set_tag("error_source", "api_validation")
+						sentry_sdk.set_level("warning")
+					else:
+						sentry_sdk.set_tag("error_source", "server_error")
 
 					sentry_sdk.capture_exception(e)
 				except Exception:
