@@ -56,31 +56,37 @@ def click_sidebar_item(page: Page, text: str) -> bool:
     The sidebar on mobile opens as a Sheet overlay. After opening, we must
     wait for role-based navigation sections to render (useEmployee() hook
     resolves asynchronously — can take 5-10s on CI).
+
+    IMPORTANT: locator.is_visible(timeout=X) is DEPRECATED in Playwright —
+    the timeout param is silently ignored and returns immediately.
+    Use locator.wait_for(state="visible", timeout=X) to actually wait.
     """
     try:
+        # Open sidebar — use data-sidebar="trigger" from Shadcn SidebarTrigger
         sidebar_toggle = page.locator(
-            '[data-testid="sidebar-toggle"], button:has(svg.lucide-panel-left)'
+            '[data-sidebar="trigger"], button:has(svg.lucide-panel-left)'
         ).first
-        if sidebar_toggle.is_visible():
-            sidebar_toggle.click()
-            time.sleep(1)  # sidebar Sheet animation
+        sidebar_toggle.wait_for(state="visible", timeout=5000)
+        sidebar_toggle.click()
+        time.sleep(1)  # sidebar Sheet animation
 
-        # Wait up to 15s for the item — roles load async from Frappe API
+        # Wait up to 20s for the item — roles load async from Frappe API
+        # (GH Actions → Vercel → Frappe/AWS roundtrip can take 5-10s)
         item = page.locator(f'a:has-text("{text}"), button:has-text("{text}")').first
-        if item.is_visible(timeout=15000):
-            item.click()
-            time.sleep(3)
-            page.wait_for_load_state("networkidle")
+        item.wait_for(state="visible", timeout=20000)
+        item.click()
+        time.sleep(3)
+        page.wait_for_load_state("networkidle")
 
-            try:
-                overlay = page.locator('[data-state="open"][data-sidebar="sidebar"]')
-                if overlay.is_visible(timeout=1000):
-                    page.keyboard.press("Escape")
-                    time.sleep(0.5)
-            except Exception:
-                pass
+        try:
+            overlay = page.locator('[data-state="open"][data-sidebar="sidebar"]')
+            if overlay.is_visible():
+                page.keyboard.press("Escape")
+                time.sleep(0.5)
+        except Exception:
+            pass
 
-            return True
+        return True
     except Exception:
         pass
     return False
@@ -106,9 +112,12 @@ def flow_punch(page: Page, sd: str) -> list:
         return results
 
     punch_btn = page.locator('button:has-text("Punch In"), a:has-text("Punch In")').first
-    btn_visible = punch_btn.is_visible(timeout=5000) if punch_btn else False
-    if btn_visible:
+    try:
+        punch_btn.wait_for(state="visible", timeout=10000)
+        btn_visible = True
         punch_btn.click(timeout=10000)
+    except Exception:
+        btn_visible = False
         time.sleep(3)
         page.wait_for_load_state("networkidle")
 
