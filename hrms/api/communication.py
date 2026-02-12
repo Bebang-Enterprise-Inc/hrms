@@ -18,7 +18,7 @@ import json
 
 
 @frappe.whitelist()
-def submit_ceo_complaint(category, subject, description, is_anonymous=False):
+def submit_ceo_complaint(category=None, subject=None, description=None, is_anonymous=False):
     """Submit a complaint to the CEO.
 
     Bug fix (C12):
@@ -26,6 +26,9 @@ def submit_ceo_complaint(category, subject, description, is_anonymous=False):
     - insert with ignore_permissions=True
     - Returns user-friendly error instead of raw traceback
     """
+    if not category or not subject or not description:
+        frappe.throw(_("Category, subject, and description are required"))
+
     try:
         doc = frappe.new_doc("BEI CEO Complaint")
         doc.submitted_by = frappe.session.user
@@ -124,7 +127,7 @@ def get_unread_announcements():
 
 
 @frappe.whitelist()
-def send_kudos(to_employee, category, message, is_public=True):
+def send_kudos(to_employee=None, category=None, message=None, is_public=True):
     """Send kudos to another employee.
 
     Bug fix (C11):
@@ -132,6 +135,9 @@ def send_kudos(to_employee, category, message, is_public=True):
     - insert with ignore_permissions=True (Employee role has create but may fail on save)
     - Returns user-friendly error instead of raw traceback
     """
+    if not to_employee or not category or not message:
+        frappe.throw(_("Recipient, category, and message are required"))
+
     try:
         from_employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
         if not from_employee:
@@ -247,8 +253,11 @@ def get_kudos_leaderboard(period="month"):
 
 
 @frappe.whitelist()
-def create_support_ticket(category, subject, description, priority="Medium"):
+def create_support_ticket(category=None, subject=None, description=None, priority="Medium"):
     """Create a support ticket."""
+    if not category or not subject or not description:
+        frappe.throw(_("Category, subject, and description are required"))
+
     doc = frappe.new_doc("BEI Support Ticket")
     doc.submitted_by = frappe.session.user
     doc.category = category

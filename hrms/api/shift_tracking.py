@@ -61,8 +61,8 @@ def _get_subordinates(manager_employee_id: str) -> list[str]:
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
-def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: str,
-             gps_latitude: float = None, gps_longitude: float = None):
+def punch_in(latitude=None, longitude=None, accuracy=None, selfie_base64=None,
+             gps_latitude=None, gps_longitude=None):
     """Punch in with GPS + selfie. Uses row-level lock to prevent duplicate punches.
 
     Args:
@@ -76,6 +76,9 @@ def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: 
     Returns:
         dict with shift record name, address, status
     """
+    if latitude is None or longitude is None or accuracy is None or not selfie_base64:
+        frappe.throw(_("Latitude, longitude, accuracy, and selfie are required"))
+
     employee = _get_current_employee()
 
     latitude = float(latitude)
@@ -188,7 +191,7 @@ def punch_in(latitude: float, longitude: float, accuracy: float, selfie_base64: 
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
-def punch_out(latitude: float, longitude: float, accuracy: float, notes: str = None):
+def punch_out(latitude=None, longitude=None, accuracy=None, notes=None):
     """Punch out with GPS (no selfie required).
 
     Args:
@@ -200,6 +203,9 @@ def punch_out(latitude: float, longitude: float, accuracy: float, notes: str = N
     Returns:
         dict with shift name, total hours, status
     """
+    if latitude is None or longitude is None or accuracy is None:
+        frappe.throw(_("Latitude, longitude, and accuracy are required"))
+
     employee = _get_current_employee()
 
     latitude = float(latitude)

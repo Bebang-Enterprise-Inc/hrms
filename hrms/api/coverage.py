@@ -66,7 +66,7 @@ def resolve_employee(employee_name_or_id):
 
 
 @frappe.whitelist()
-def request_coverage(store, coverage_date, shift, reason, absent_employee, notes=None):
+def request_coverage(store=None, coverage_date=None, shift=None, reason=None, absent_employee=None, notes=None):
     """Request staff coverage.
 
     Bug fix (C13):

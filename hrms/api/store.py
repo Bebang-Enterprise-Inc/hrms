@@ -792,9 +792,9 @@ def get_midshift_checks(store=None, date=None, limit=20):
 
 
 @frappe.whitelist()
-def upload_pos_data(store, pos_date, pos_system, discount_report, transaction_report,
-                    product_mix, daily_sales_revenue, sales_summary, notes=None,
-                    skip_date_validation=False):
+def upload_pos_data(store=None, pos_date=None, pos_system=None, discount_report=None,
+                    transaction_report=None, product_mix=None, daily_sales_revenue=None,
+                    sales_summary=None, notes=None, skip_date_validation=False):
     """
     Upload daily POS data with 5 required report files.
 
@@ -915,7 +915,7 @@ def get_pos_uploads(store=None, date_from=None, date_to=None, limit=20):
 
 
 @frappe.whitelist()
-def submit_bank_deposit(store, deposit_date=None, bank=None, deposits=None,
+def submit_bank_deposit(store=None, deposit_date=None, bank=None, deposits=None,
                         total_amount=0, photos=None, notes=None, deposit_type=None):
     """
     Submit bank deposit record with deposit slip photos.

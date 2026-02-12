@@ -326,7 +326,7 @@ def get_maintenance_request_detail(request_id):
 
 @frappe.whitelist()
 def assign_maintenance_request(
-    request_id,
+    request_id=None,
     assigned_to=None,
     vendor=None,
     scheduled_date=None,
@@ -420,7 +420,7 @@ def assign_maintenance_request(
 
 
 @frappe.whitelist()
-def update_maintenance_status(request_id, status, notes=None):
+def update_maintenance_status(request_id=None, status=None, notes=None):
     """
     Update maintenance request status.
 
@@ -511,11 +511,11 @@ def update_maintenance_status(request_id, status, notes=None):
 
 @frappe.whitelist()
 def record_maintenance_completion(
-    request_id,
-    completion_date,
-    technician_name,
-    work_description,
-    resolution_status,
+    request_id=None,
+    completion_date=None,
+    technician_name=None,
+    work_description=None,
+    resolution_status=None,
     actual_cost=None,
     follow_up_needed=False,
     follow_up_notes=None,

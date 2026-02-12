@@ -27,11 +27,11 @@ def _get_ocr():
 
 @frappe.whitelist()
 def submit_expense(
-    manual_vendor: str,
-    manual_description: str,
-    manual_amount: float,
-    manual_date: str,
-    receipt_photo: str
+    manual_vendor=None,
+    manual_description=None,
+    manual_amount=None,
+    manual_date=None,
+    receipt_photo=None
 ):
     """
     Submit a new expense request.
