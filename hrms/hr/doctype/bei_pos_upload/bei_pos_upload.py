@@ -13,7 +13,14 @@ class BEIPOSUpload(Document):
 
     def after_insert(self):
         """Auto-extract data from uploaded POS files."""
-        self.extract_pos_data()
+        try:
+            self.extract_pos_data()
+        except Exception as e:
+            # Never let extraction errors block the upload itself
+            frappe.log_error(
+                message=f"POS extraction failed for {self.name}: {str(e)[:500]}",
+                title=f"POS Extract: {self.name}"[:140]
+            )
 
     def on_update(self):
         """Re-extract if files changed."""
@@ -23,7 +30,13 @@ class BEIPOSUpload(Document):
            self.has_value_changed("discount_report") or \
            self.has_value_changed("daily_sales_revenue") or \
            self.has_value_changed("product_mix"):
-            self.extract_pos_data()
+            try:
+                self.extract_pos_data()
+            except Exception as e:
+                frappe.log_error(
+                    message=f"POS re-extraction failed for {self.name}: {str(e)[:500]}",
+                    title=f"POS Extract: {self.name}"[:140]
+                )
 
     def extract_pos_data(self):
         """Extract data from uploaded POS files and populate fields."""
@@ -82,14 +95,14 @@ class BEIPOSUpload(Document):
                 errors = result.get("errors", [])
                 if errors:
                     frappe.log_error(
-                        f"POS extraction errors: {errors}",
-                        "BEI POS Upload"
+                        message=f"POS extraction errors: {str(errors)[:1000]}",
+                        title=f"POS Extract: {self.name}"[:140]
                     )
 
         except Exception as e:
             frappe.log_error(
-                f"POS extraction failed for {self.name}: {str(e)}",
-                "BEI POS Upload"
+                message=f"POS extraction failed for {self.name}: {str(e)[:500]}",
+                title=f"POS Extract: {self.name}"[:140]
             )
 
     def get_file_content(self, file_url):
