@@ -640,84 +640,6 @@ def get_opening_reports(store=None, date_from=None, date_to=None, limit=20):
 
 
 @frappe.whitelist()
-def submit_closing_report(store, checklist_items=None, report_time=None,
-                          pos_total_sales=0, actual_cash_count=0,
-                          card_payments=0, gcash_total=0,
-                          variance_explanation=None, notes=None,
-                          photo_xread_opening=None, photo_xread_closing=None,
-                          photo_zread=None, photo_closing_reports=None,
-                          photo_dashboard_report=None, photo_logo_signage=None,
-                          photo_hygrometer=None, photo_water_meter=None,
-                          photo_backup_area_clean=None, photo_frozen_milk_clean=None,
-                          photo_toppings_clean=None, photo_dispatch_clean=None,
-                          photo_cold_storage_close=None, photo_cashier_clean=None,
-                          photo_rollup_closed=None):
-    """Submit daily closing report with cash reconciliation and 15 required photos.
-
-    Bug fixes (C2):
-    - report_time made optional (defaults to current time)
-    - checklist_items made optional (allows partial submission)
-    - Cash fields default to 0 to avoid float(None) errors
-    - insert with ignore_permissions=True for Employee Self Service role
-    - Returns user-friendly error instead of raw traceback
-    """
-    try:
-        if not store:
-            frappe.throw(_("Store is required"))
-
-        if isinstance(checklist_items, str):
-            checklist_items = json.loads(checklist_items)
-
-        # Resolve branch name to warehouse name
-        warehouse = resolve_warehouse(store)
-
-        doc = frappe.new_doc("BEI Store Closing Report")
-        doc.store = warehouse
-        doc.report_date = nowdate()
-        doc.report_time = report_time or now_datetime().strftime("%H:%M:%S")
-        doc.submitted_by = frappe.session.user
-        doc.pos_total_sales = float(pos_total_sales or 0)
-        doc.actual_cash_count = float(actual_cash_count or 0)
-        doc.card_payments = float(card_payments or 0)
-        doc.gcash_total = float(gcash_total or 0)
-        doc.variance_explanation = variance_explanation
-        doc.notes = notes
-
-        # Photos - convert base64 to file URLs if needed
-        doctype_name = "BEI Store Closing Report"
-        doc.photo_xread_opening = save_base64_image(photo_xread_opening, doctype_name, fieldname="photo_xread_opening")
-        doc.photo_xread_closing = save_base64_image(photo_xread_closing, doctype_name, fieldname="photo_xread_closing")
-        doc.photo_zread = save_base64_image(photo_zread, doctype_name, fieldname="photo_zread")
-        doc.photo_closing_reports = save_base64_image(photo_closing_reports, doctype_name, fieldname="photo_closing_reports")
-        doc.photo_dashboard_report = save_base64_image(photo_dashboard_report, doctype_name, fieldname="photo_dashboard_report")
-        doc.photo_logo_signage = save_base64_image(photo_logo_signage, doctype_name, fieldname="photo_logo_signage")
-        doc.photo_hygrometer = save_base64_image(photo_hygrometer, doctype_name, fieldname="photo_hygrometer")
-        doc.photo_water_meter = save_base64_image(photo_water_meter, doctype_name, fieldname="photo_water_meter")
-        doc.photo_backup_area_clean = save_base64_image(photo_backup_area_clean, doctype_name, fieldname="photo_backup_area_clean")
-        doc.photo_frozen_milk_clean = save_base64_image(photo_frozen_milk_clean, doctype_name, fieldname="photo_frozen_milk_clean")
-        doc.photo_toppings_clean = save_base64_image(photo_toppings_clean, doctype_name, fieldname="photo_toppings_clean")
-        doc.photo_dispatch_clean = save_base64_image(photo_dispatch_clean, doctype_name, fieldname="photo_dispatch_clean")
-        doc.photo_cold_storage_close = save_base64_image(photo_cold_storage_close, doctype_name, fieldname="photo_cold_storage_close")
-        doc.photo_cashier_clean = save_base64_image(photo_cashier_clean, doctype_name, fieldname="photo_cashier_clean")
-        doc.photo_rollup_closed = save_base64_image(photo_rollup_closed, doctype_name, fieldname="photo_rollup_closed")
-
-        if checklist_items:
-            for item in checklist_items:
-                doc.append("checklist_items", item)
-
-        doc.flags.ignore_mandatory = True
-        doc.insert(ignore_permissions=True)
-        return {"success": True, "name": doc.name, "variance": doc.cash_variance}
-
-    except Exception as e:
-        frappe.log_error(
-            f"Closing Report Error for store {store}: {str(e)}\n\n{frappe.get_traceback()}",
-            "Closing Report Submission Error"
-        )
-        return {"success": False, "error": _("Failed to submit closing report. Please try again or contact support.")}
-
-
-@frappe.whitelist()
 def get_closing_reports(store=None, date_from=None, date_to=None, limit=20):
     """Get closing report history."""
     filters = {}
@@ -937,18 +859,26 @@ def upload_pos_data(store, pos_date, pos_system, discount_report, transaction_re
     # Resolve branch name to warehouse name (C6 fix)
     warehouse = resolve_warehouse(store)
 
+    # Case-insensitive POS system matching (e.g., "Mosaic" -> "MOSAIC")
+    if pos_system:
+        pos_system = pos_system.strip().upper()
+
     doc = frappe.new_doc("BEI POS Upload")
     doc.store = warehouse
     doc.pos_date = pos_date
     doc.uploaded_by = frappe.session.user
     doc.pos_system = pos_system
-    doc.discount_report = discount_report
-    doc.transaction_report = transaction_report
-    doc.product_mix = product_mix
-    doc.daily_sales_revenue = daily_sales_revenue
-    doc.sales_summary = sales_summary
     doc.notes = notes
     doc.insert()
+
+    # Save report files as Frappe File records (not raw base64)
+    doctype_name = "BEI POS Upload"
+    doc.discount_report = save_base64_image(discount_report, doctype_name, docname=doc.name, fieldname="discount_report")
+    doc.transaction_report = save_base64_image(transaction_report, doctype_name, docname=doc.name, fieldname="transaction_report")
+    doc.product_mix = save_base64_image(product_mix, doctype_name, docname=doc.name, fieldname="product_mix")
+    doc.daily_sales_revenue = save_base64_image(daily_sales_revenue, doctype_name, docname=doc.name, fieldname="daily_sales_revenue")
+    doc.sales_summary = save_base64_image(sales_summary, doctype_name, docname=doc.name, fieldname="sales_summary")
+    doc.save()
 
     result = {"success": True, "name": doc.name}
     if date_mismatch_warning:
@@ -1307,13 +1237,16 @@ def get_or_create_closing_report(store):
 def submit_closing_stage1_cash(report_name, petty_cash_fund=0, delivery_fund=0,
                                 change_fund=0, cash_notes=None, pos_down=False,
                                 pos_down_estimated_sales=None, pos_down_transaction_count=None,
-                                pos_down_notes=None, **kwargs):
+                                pos_down_notes=None, variance_explanation=None,
+                                actual_cash_count=0, **kwargs):
     """
-    Submit Stage 1: Cash Count
+    Submit Stage 1: Cash Count & Reconciliation
 
     Note: Cash Sales Fund stays in POS only - not entered here.
     Only Petty Cash, Delivery Fund, and Change Fund are entered in this stage.
     Denomination breakdown and voucher amounts are passed via kwargs.
+    actual_cash_count: Physical cash count by crew.
+    variance_explanation: Required when cash_variance > ±50 (explain while you see the number).
     """
     validate_store_ops_role()
     doc = frappe.get_doc("BEI Store Closing Report", report_name)
@@ -1322,6 +1255,8 @@ def submit_closing_stage1_cash(report_name, petty_cash_fund=0, delivery_fund=0,
     doc.delivery_fund = float(delivery_fund or 0)
     doc.change_fund = float(change_fund or 0)
     doc.cash_notes = cash_notes
+    doc.actual_cash_count = float(actual_cash_count or 0)
+    doc.variance_explanation = variance_explanation
 
     # POS Down mode
     doc.pos_down = 1 if pos_down else 0
@@ -1345,22 +1280,26 @@ def submit_closing_stage1_cash(report_name, petty_cash_fund=0, delivery_fund=0,
         "success": True,
         "name": doc.name,
         "stage_completed": doc.stage_completed,
-        "total_funds": doc.total_funds
+        "total_funds": doc.total_funds,
+        "cash_variance": doc.cash_variance
     }
 
 
 @frappe.whitelist()
 def submit_closing_stage2_checklist(report_name, inventory_items, checklist_items=None,
                                      cashier_signoff=False, production_signoff=False,
-                                     supervisor_signoff=False, equipment_status=None):
+                                     supervisor_signoff=False):
     """
     Submit Stage 2: Checklist & Inventory Spot Check
 
     inventory_items: List of {item_name, expected_count, actual_count}
     - 12 specific items categorized by: Highest Cost, Single Count Variances,
       Shortest Shelf Life, Most Used Items
+    - Accepts both item_name and item_description keys (frontend compatibility)
 
     checklist_items: General end-of-day tasks
+
+    Note: equipment_status moved to Stage 3 (entered alongside equipment photos).
     """
     validate_store_ops_role()
     doc = frappe.get_doc("BEI Store Closing Report", report_name)
@@ -1371,16 +1310,13 @@ def submit_closing_stage2_checklist(report_name, inventory_items, checklist_item
     if isinstance(checklist_items, str):
         checklist_items = json.loads(checklist_items)
 
-    if isinstance(equipment_status, str):
-        equipment_status = json.loads(equipment_status)
-
     # Clear existing inventory items
     doc.inventory_spot_check = []
 
     # Add inventory spot check items (12 items)
     for item in inventory_items:
         doc.append("inventory_spot_check", {
-            "item_name": item.get("item_name"),
+            "item_name": item.get("item_name") or item.get("item_description") or item.get("name", ""),
             "category": item.get("category"),
             "expected_count": float(item.get("expected_count", 0)),
             "actual_count": float(item.get("actual_count", 0))
@@ -1391,12 +1327,6 @@ def submit_closing_stage2_checklist(report_name, inventory_items, checklist_item
         doc.checklist_items = []
         for item in checklist_items:
             doc.append("checklist_items", item)
-
-    # Equipment status
-    if equipment_status:
-        doc.freezer_temp = equipment_status.get("freezer_temp")
-        doc.chiller_temp = equipment_status.get("chiller_temp")
-        doc.pos_closed_properly = equipment_status.get("pos_closed_properly", 0)
 
     # Staff signoffs
     doc.cashier_signoff = 1 if cashier_signoff else 0
@@ -1417,23 +1347,28 @@ def submit_closing_stage2_checklist(report_name, inventory_items, checklist_item
 
 @frappe.whitelist()
 def submit_closing_stage3_photos(report_name, x_reading_opening_photo, x_reading_closing_photo,
-                                  z_reading_photo, pos_files=None, store_photos=None,
-                                  variance_explanation=None, notes=None):
+                                  z_reading_photo, store_photos=None,
+                                  equipment_status=None, notes=None):
     """
-    Submit Stage 3: Photos & Files
+    Submit Stage 3: Photos & Equipment
 
     Document Scanner Photos (with edge detection):
     - x_reading_opening_photo: X-Reading from opening shift
     - x_reading_closing_photo: X-Reading from closing shift
     - z_reading_photo: Z-Reading (end of day)
 
-    pos_files: List of 5 POS export files
-    store_photos: Dict of store area photos (logo_signage, hygrometer, etc.)
+    store_photos: Dict of store area photos (accepts both photo_* and short key formats)
+    equipment_status: Dict with freezer_temp, chiller_temp, pos_closed_properly
+                      (moved from Stage 2 — entered alongside equipment photos)
+
+    Removed: pos_files (handled by separate BEI POS Upload endpoint),
+             variance_explanation (moved to Stage 1 — explain when you see the number)
     """
     validate_store_ops_role()
     doc = frappe.get_doc("BEI Store Closing Report", report_name)
+    doctype_name = "BEI Store Closing Report"
 
-    # Document scanner photos (required)
+    # Document scanner photos (required) — save as files, not raw base64
     if not x_reading_opening_photo or not str(x_reading_opening_photo).strip():
         frappe.throw(_("X-Reading Opening photo is required"), title=_("Missing Photo"))
     if not x_reading_closing_photo or not str(x_reading_closing_photo).strip():
@@ -1441,38 +1376,54 @@ def submit_closing_stage3_photos(report_name, x_reading_opening_photo, x_reading
     if not z_reading_photo or not str(z_reading_photo).strip():
         frappe.throw(_("Z-Reading photo is required"), title=_("Missing Photo"))
 
-    doc.photo_xread_opening = str(x_reading_opening_photo).strip()
-    doc.photo_xread_closing = str(x_reading_closing_photo).strip()
-    doc.photo_zread = str(z_reading_photo).strip()
+    doc.photo_xread_opening = save_base64_image(
+        str(x_reading_opening_photo).strip(), doctype_name,
+        docname=doc.name, fieldname="photo_xread_opening"
+    )
+    doc.photo_xread_closing = save_base64_image(
+        str(x_reading_closing_photo).strip(), doctype_name,
+        docname=doc.name, fieldname="photo_xread_closing"
+    )
+    doc.photo_zread = save_base64_image(
+        str(z_reading_photo).strip(), doctype_name,
+        docname=doc.name, fieldname="photo_zread"
+    )
 
-    # POS files (5 required)
-    if pos_files:
-        if isinstance(pos_files, str):
-            pos_files = json.loads(pos_files)
-        doc.pos_discount_report = pos_files.get("discount_report")
-        doc.pos_transaction_report = pos_files.get("transaction_report")
-        doc.pos_product_mix = pos_files.get("product_mix")
-        doc.pos_daily_sales_revenue = pos_files.get("daily_sales_revenue")
-        doc.pos_sales_summary = pos_files.get("sales_summary")
-
-    # Store area photos (standard camera)
+    # Store area photos — normalize keys (accept both photo_* and short format)
     if store_photos:
         if isinstance(store_photos, str):
             store_photos = json.loads(store_photos)
-        doc.photo_logo_signage = store_photos.get("logo_signage")
-        doc.photo_hygrometer = store_photos.get("hygrometer")
-        doc.photo_water_meter = store_photos.get("water_meter")
-        doc.photo_backup_area_clean = store_photos.get("backup_area")
-        doc.photo_frozen_milk_clean = store_photos.get("frozen_milk")
-        doc.photo_toppings_clean = store_photos.get("toppings")
-        doc.photo_dispatch_clean = store_photos.get("dispatch")
-        doc.photo_cold_storage_close = store_photos.get("cold_storage")
-        doc.photo_cashier_clean = store_photos.get("cashier")
-        doc.photo_rollup_closed = store_photos.get("rollup_door")
+        if isinstance(store_photos, list):
+            store_photos = {p.get("field", ""): p.get("data", p.get("url", "")) for p in store_photos if isinstance(p, dict)}
 
-    # Variance explanation (required if variance > ±50)
-    if variance_explanation:
-        doc.variance_explanation = variance_explanation
+        photo_map = {
+            "photo_logo_signage": ["photo_logo_signage", "logo_signage"],
+            "photo_hygrometer": ["photo_hygrometer", "hygrometer"],
+            "photo_water_meter": ["photo_water_meter", "water_meter"],
+            "photo_backup_area_clean": ["photo_backup_area_clean", "backup_area"],
+            "photo_frozen_milk_clean": ["photo_frozen_milk_clean", "frozen_milk"],
+            "photo_toppings_clean": ["photo_toppings_clean", "toppings"],
+            "photo_dispatch_clean": ["photo_dispatch_clean", "dispatch"],
+            "photo_cold_storage_close": ["photo_cold_storage_close", "cold_storage"],
+            "photo_cashier_clean": ["photo_cashier_clean", "cashier"],
+            "photo_rollup_closed": ["photo_rollup_closed", "rollup_door"],
+        }
+        for doc_field, accepted_keys in photo_map.items():
+            for key in accepted_keys:
+                value = store_photos.get(key)
+                if value:
+                    saved_url = save_base64_image(value, doctype_name, docname=doc.name, fieldname=doc_field)
+                    if saved_url:
+                        doc.set(doc_field, saved_url)
+                    break
+
+    # Equipment readings (moved from Stage 2 — entered alongside equipment photos)
+    if equipment_status:
+        if isinstance(equipment_status, str):
+            equipment_status = json.loads(equipment_status)
+        doc.freezer_temp = equipment_status.get("freezer_temp")
+        doc.chiller_temp = equipment_status.get("chiller_temp")
+        doc.pos_closed_properly = equipment_status.get("pos_closed_properly", 0)
 
     doc.notes = notes
     doc.report_time = now_datetime().strftime("%H:%M:%S")

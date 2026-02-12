@@ -530,6 +530,32 @@ def get_salary_slip_list(from_date, to_date, department=None, page=1, page_size=
 
 
 @frappe.whitelist()
+def get_my_payslips(limit=12):
+    """Get current employee's own salary slips (self-service).
+
+    No HR permission check needed — returns only the logged-in user's payslips.
+
+    Args:
+        limit: Max number of slips to return (default 12 = 1 year)
+
+    Returns:
+        dict: {success, payslips} or {success, error}
+    """
+    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+    if not employee:
+        return {"success": False, "error": "No employee record found for your account"}
+
+    slips = frappe.get_all("Salary Slip",
+        filters={"employee": employee, "docstatus": 1},
+        fields=["name", "posting_date", "start_date", "end_date",
+                "gross_pay", "total_deduction", "net_pay", "status"],
+        order_by="posting_date desc",
+        limit=int(limit)
+    )
+    return {"success": True, "payslips": slips}
+
+
+@frappe.whitelist()
 def get_payroll_dashboard(from_date=None, to_date=None):
     """Get combined payroll dashboard data.
 
