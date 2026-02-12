@@ -352,6 +352,12 @@ def assign_maintenance_request(
             "request": {...}
         }
     """
+    # RBAC: Only Projects User/Manager can assign requests
+    user_roles = frappe.get_roles(frappe.session.user)
+    allowed_roles = ["Projects User", "Projects Manager", "System Manager", "Administrator"]
+    if not any(role in user_roles for role in allowed_roles):
+        frappe.throw(_("You do not have permission to assign maintenance requests"), frappe.PermissionError)
+
     if not request_id:
         frappe.throw(_("Request ID is required"))
 
@@ -537,6 +543,12 @@ def record_maintenance_completion(
             "completion": {...}
         }
     """
+    # RBAC: Only Projects User/Manager can record completions
+    user_roles = frappe.get_roles(frappe.session.user)
+    allowed_roles = ["Projects User", "Projects Manager", "System Manager", "Administrator"]
+    if not any(role in user_roles for role in allowed_roles):
+        frappe.throw(_("You do not have permission to record maintenance completions"), frappe.PermissionError)
+
     if not request_id:
         frappe.throw(_("Request ID is required"))
 
