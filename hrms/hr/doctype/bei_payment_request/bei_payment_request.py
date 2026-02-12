@@ -10,6 +10,23 @@ from frappe.utils import flt, now_datetime, nowdate, add_days, cint
 # CEO approval threshold
 CEO_APPROVAL_THRESHOLD = 1000000  # 1 Million PHP
 
+DEFAULT_COMPANY = "Bebang Enterprise Inc."
+
+
+def _get_account_by_code(account_number, company=None):
+    """Get full Frappe account name from account number.
+
+    Frappe Account names are full strings like "1113000 - Petty Cash Fund - BEI",
+    not bare codes. This helper looks up by account_number field.
+
+    Returns the full account name or None if not found.
+    """
+    return frappe.db.get_value(
+        "Account",
+        {"account_number": account_number, "company": company or DEFAULT_COMPANY},
+        "name",
+    )
+
 
 class BEIPaymentRequest(Document):
     """
@@ -68,45 +85,45 @@ class BEIPaymentRequest(Document):
         """
         Auto-assign GL account code based on RFP type.
 
-        Account Code Mapping (from Finance & Accounting Module):
-        - PCF Replenishment → 1113000 (Petty Cash Fund)
-        - Delivery Fund → 1115000 (Delivery Fund)
-        - Vendor Invoice → Uses supplier's default expense account
-        - Other types → Manual assignment required
+        Uses account_number lookup (not bare codes) because Frappe Account
+        names are full strings like "1113000 - Petty Cash Fund - BEI".
 
         Priority #5 from Automation List: Automatic Account Titles
         """
         if not self.rfp_type or self.account_code:
-            # Skip if no RFP type or account already assigned
             return
 
-        # Account code mapping
+        # Account number mapping (looked up via _get_account_by_code)
         rfp_account_map = {
-            "PCF Replenishment": "1113000",  # Petty Cash Fund
-            "Delivery Fund": "1115000",      # Delivery Fund
-            "Transpo Allowance": "5300",     # Transportation Expense (to be created)
-            "Rentals": "5400",               # Rent Expense (to be created)
-            "Vendor Invoice": None,          # Use supplier default
-            "Cash Advance": "1200",          # Advances/Prepayments (to be created)
-            "Reimbursement": "2100",         # Accounts Payable - Reimbursements
-            "Credit Card Transaction": "2110" # Credit Card Payable
+            "PCF Replenishment": "1113000",       # Petty Cash Fund
+            "Delivery Fund": "1115000",            # Delivery Fund
+            "Transpo Allowance": "5300",           # Transportation Expense
+            "Rentals": "5400",                     # Rent Expense
+            "Vendor Invoice": None,                # Item-based mapping
+            "Cash Advance": "1200",                # Advances/Prepayments
+            "Reimbursement": "2100",               # AP - Reimbursements
+            "Credit Card Transaction": "2110",     # Credit Card Payable
         }
 
-        account_code = rfp_account_map.get(self.rfp_type)
+        account_number = rfp_account_map.get(self.rfp_type)
 
-        if account_code:
-            # Verify account exists
-            if frappe.db.exists("Account", account_code):
-                self.account_code = account_code
+        if account_number:
+            account_name = _get_account_by_code(account_number)
+            if account_name:
+                self.account_code = account_name
             else:
+                frappe.log_error(
+                    f"GL account {account_number} not found for RFP type '{self.rfp_type}'",
+                    "GL Account Mapping Warning",
+                )
                 frappe.msgprint(
-                    _("GL Account {0} for RFP type '{1}' does not exist. "
-                      "Please assign account manually.").format(account_code, self.rfp_type),
-                    indicator="orange"
+                    _("GL Account {0} for RFP type '{1}' not found. "
+                      "Please assign account manually.").format(account_number, self.rfp_type),
+                    indicator="orange",
                 )
         elif self.rfp_type == "Vendor Invoice" and self.supplier:
-            # For vendor invoices, could use supplier's default expense account
-            # For now, leave for manual assignment
+            # For vendor invoices, use item-based expense account mapping
+            # (handled by bei_invoice._get_expense_account at invoice level)
             pass
 
     def _check_role(self, allowed_roles):

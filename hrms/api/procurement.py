@@ -3923,3 +3923,286 @@ def get_form_2307_data(supplier=None, tax_period=None):
         "summary": list(summary.values()),
         "filters": {"supplier": supplier, "tax_period": tax_period},
     }
+
+
+# =============================================================================
+# FRANCHISE BILLING & PAYMENT AUTOMATION
+# Plan: Finance & Accounting v2.1 — Tasks 2, 3, 4
+# =============================================================================
+
+
+@frappe.whitelist()
+def generate_acknowledgement_receipt(billing_name):
+    """Generate an internal Acknowledgement Receipt (AR) for a billing payment.
+
+    This is an INTERNAL document — NOT a BIR Official Receipt.
+    Per EOPT Law, the primary BIR document is the Invoice.
+
+    Args:
+        billing_name: Name of the BEI Billing Schedule
+
+    Returns:
+        dict with ar_name
+    """
+    if not frappe.has_permission("BEI Acknowledgement Receipt", "create"):
+        frappe.throw(_("Insufficient permissions to generate AR"), frappe.PermissionError)
+
+    billing = frappe.get_doc("BEI Billing Schedule", billing_name)
+
+    ar = frappe.get_doc({
+        "doctype": "BEI Acknowledgement Receipt",
+        "billing_schedule": billing.name,
+        "store": billing.store,
+        "amount": billing.amount_paid or billing.total_amount,
+        "payment_date": billing.paid_on or nowdate(),
+        "payment_reference": billing.payment_reference or "",
+        "status": "Generated",
+    })
+    ar.insert(ignore_permissions=True)
+
+    # Notify Accounting Private space via Google Chat (non-blocking)
+    try:
+        _send_ar_chat_notification(ar, billing)
+    except Exception as e:
+        frappe.log_error(
+            f"Failed to send AR notification for {ar.name}: {e}",
+            "AR Chat Notification Error",
+        )
+
+    return {"ar_name": ar.name}
+
+
+def _send_ar_chat_notification(ar, billing):
+    """Send AR notification to Accounting Private Google Chat space."""
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
+
+    creds = service_account.Credentials.from_service_account_file(
+        "credentials/task-manager-service.json",
+        scopes=["https://www.googleapis.com/auth/chat.bot"],
+    )
+    chat = build("chat", "v1", credentials=creds)
+
+    message = (
+        f"*Acknowledgement Receipt Generated*\n"
+        f"AR: {ar.name}\n"
+        f"Store: {billing.store}\n"
+        f"Amount: PHP {flt(ar.amount):,.2f}\n"
+        f"Period: {billing.billing_period}\n"
+        f"Payment Ref: {ar.payment_reference or 'N/A'}"
+    )
+
+    chat.spaces().messages().create(
+        parent="spaces/AAAA9RN0JZQ",  # Accounting Private
+        body={"text": message},
+    ).execute()
+
+
+@frappe.whitelist()
+def apply_franchise_payment(
+    billing_name, amount_paid, payment_date, payment_reference, payment_proof=None
+):
+    """Apply a franchise payment to a billing schedule.
+
+    Accumulates payments (never overwrites). Generates AR on completion.
+    Uses savepoint for atomicity — no explicit commit (Frappe auto-commits).
+
+    Args:
+        billing_name: BEI Billing Schedule name
+        amount_paid: Payment amount (Currency)
+        payment_date: Date of payment
+        payment_reference: Transaction reference string
+        payment_proof: Optional base64 image of payment proof
+
+    Returns:
+        dict with success, ar_number, new_balance
+    """
+    if not frappe.has_permission("BEI Billing Schedule", "write"):
+        frappe.throw(_("Insufficient permissions to apply payments"), frappe.PermissionError)
+
+    amount_paid = flt(amount_paid, 2)
+    if amount_paid <= 0:
+        frappe.throw(_("Payment amount must be greater than zero"))
+
+    sp = frappe.db.savepoint("apply_payment")
+    try:
+        billing = frappe.get_doc("BEI Billing Schedule", billing_name)
+
+        if billing.status not in ("Sent", "Partially Paid"):
+            frappe.throw(
+                _("Cannot apply payment to billing with status '{0}'").format(billing.status)
+            )
+
+        # Save payment_proof attachment if provided
+        if payment_proof:
+            from hrms.api.store import save_base64_image
+
+            file_url = save_base64_image(
+                payment_proof, "BEI Billing Schedule", billing.name, "payment_proof"
+            )
+            billing.payment_proof = file_url
+
+        # Accumulate payment (NEVER overwrite)
+        new_total_paid = flt(billing.amount_paid or 0) + amount_paid
+
+        # Overpayment validation
+        total_amount = flt(billing.total_amount)
+        if new_total_paid > total_amount:
+            frappe.throw(
+                _("Payment of {0} would exceed balance due. Max: {1}").format(
+                    amount_paid, flt(total_amount - flt(billing.amount_paid or 0), 2)
+                )
+            )
+
+        billing.amount_paid = new_total_paid
+        billing.balance_due = flt(total_amount - new_total_paid, 2)
+        billing.paid_on = payment_date
+        billing.payment_reference = payment_reference
+
+        if new_total_paid >= total_amount:
+            billing.status = "Paid"
+        else:
+            billing.status = "Partially Paid"
+
+        billing.save()
+
+        # Apply to linked invoices FIFO (oldest first)
+        remaining = amount_paid
+        linked_invoices = frappe.get_all(
+            "BEI Invoice",
+            filters={"billing_schedule": billing.name, "status": ["!=", "Paid"]},
+            fields=["name", "outstanding_amount", "posting_date"],
+            order_by="posting_date ASC",
+        )
+        for inv in linked_invoices:
+            if remaining <= 0:
+                break
+            apply_amount = min(remaining, flt(inv.outstanding_amount))
+            if apply_amount > 0:
+                inv_doc = frappe.get_doc("BEI Invoice", inv.name)
+                inv_doc.record_payment(apply_amount, payment_date, payment_reference)
+                remaining -= apply_amount
+
+        # Auto-generate Acknowledgement Receipt
+        ar_result = generate_acknowledgement_receipt(billing.name)
+
+        frappe.db.release_savepoint("apply_payment")
+        # NO frappe.db.commit() — Frappe auto-commits on successful API request
+
+        return {
+            "success": True,
+            "ar_number": ar_result.get("ar_name"),
+            "new_balance": billing.balance_due,
+            "status": billing.status,
+        }
+
+    except Exception:
+        frappe.db.rollback(save_point=sp)
+        raise
+
+
+@frappe.whitelist()
+def generate_monthly_billing(billing_period, store=None):
+    """Auto-generate monthly billing for franchise stores.
+
+    Creates BEI Billing Schedule documents for each billable store
+    based on POS data from BEI Store Closing Reports.
+
+    Args:
+        billing_period: Format "YYYY-MM" (e.g., "2026-02")
+        store: Optional single store name; if None, generates for all stores
+
+    Returns:
+        dict with generated count, skipped count, errors list
+    """
+    if not frappe.has_permission("BEI Billing Schedule", "create"):
+        frappe.throw(_("Insufficient permissions to generate billing"), frappe.PermissionError)
+
+    # Parse period to date range
+    try:
+        period_start = get_first_day(billing_period + "-01")
+        period_end = get_last_day(billing_period + "-01")
+    except Exception:
+        frappe.throw(_("Invalid billing period format. Use YYYY-MM (e.g., 2026-02)"))
+
+    # Get billable stores
+    if store:
+        stores = frappe.get_all(
+            "BEI Store Type",
+            filters={"store": store},
+            fields=["store", "store_type"],
+        )
+    else:
+        stores = frappe.get_all(
+            "BEI Store Type",
+            fields=["store", "store_type"],
+        )
+
+    generated = 0
+    skipped = 0
+    errors = []
+
+    for store_rec in stores:
+        sp = frappe.db.savepoint("billing_{0}".format(store_rec.store))
+        try:
+            # Duplicate check: skip if billing exists for period+store (exclude Cancelled)
+            existing = frappe.db.exists("BEI Billing Schedule", {
+                "store": store_rec.store,
+                "billing_period": billing_period,
+                "status": ["not in", ["Cancelled"]],
+            })
+            if existing:
+                skipped += 1
+                frappe.db.release_savepoint(sp)
+                continue
+
+            # Aggregate sales from submitted Store Closing Reports
+            sales_data = frappe.db.sql("""
+                SELECT
+                    COALESCE(SUM(gross_sales), 0) as gross_sales,
+                    COALESCE(SUM(net_sales), 0) as net_sales,
+                    COALESCE(SUM(online_sales), 0) as online_sales
+                FROM `tabBEI Store Closing Report`
+                WHERE store = %s
+                  AND closing_date BETWEEN %s AND %s
+                  AND docstatus = 1
+            """, (store_rec.store, period_start, period_end), as_dict=True)[0]
+
+            # Skip stores with no POS data
+            if not sales_data.gross_sales and not sales_data.net_sales:
+                skipped += 1
+                frappe.log_error(
+                    "No POS data for {0} period {1}".format(store_rec.store, billing_period),
+                    "Monthly Billing: Missing POS Data",
+                )
+                frappe.db.release_savepoint(sp)
+                continue
+
+            # Create billing (validate() auto-calculates fees)
+            billing = frappe.get_doc({
+                "doctype": "BEI Billing Schedule",
+                "billing_period": billing_period,
+                "store": store_rec.store,
+                "store_type": store_rec.store_type,
+                "gross_sales": sales_data.gross_sales,
+                "net_sales": sales_data.net_sales,
+                "online_sales": sales_data.online_sales,
+                "status": "Draft",
+            })
+            billing.insert()
+            generated += 1
+            frappe.db.release_savepoint(sp)
+
+        except Exception as e:
+            frappe.db.rollback(save_point=sp)
+            errors.append({"store": store_rec.store, "error": str(e)})
+
+    # NO frappe.db.commit() — Frappe auto-commits on successful API request
+
+    return {
+        "success": True,
+        "generated": generated,
+        "skipped": skipped,
+        "errors": errors,
+        "billing_period": billing_period,
+    }
