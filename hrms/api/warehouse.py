@@ -260,7 +260,7 @@ def get_material_request_items(mr_name):
 
 
 @frappe.whitelist()
-def approve_material_request(mr_name, approved_items):
+def approve_material_request(mr_name=None, approved_items=None):
     """
     Approve Material Request with optional quantity adjustments.
 
@@ -268,6 +268,8 @@ def approve_material_request(mr_name, approved_items):
         mr_name: Material Request name
         approved_items: JSON array of {item_code, approved_qty}
     """
+    if not mr_name or not approved_items:
+        frappe.throw(_("Missing required parameters: mr_name, approved_items"), frappe.ValidationError)
     if isinstance(approved_items, str):
         approved_items = json.loads(approved_items)
 
@@ -296,10 +298,12 @@ def approve_material_request(mr_name, approved_items):
 
 
 @frappe.whitelist()
-def reject_material_request(mr_name, reason):
+def reject_material_request(mr_name=None, reason=None):
     """
     Reject/cancel a Material Request.
     """
+    if not mr_name or not reason:
+        frappe.throw(_("Missing required parameters: mr_name, reason"), frappe.ValidationError)
     if not frappe.db.exists("Material Request", mr_name):
         frappe.throw(_("Material Request not found"))
 

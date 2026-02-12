@@ -13,7 +13,7 @@ import json
 
 
 @frappe.whitelist()
-def submit_cycle_count(store, items, count_date=None):
+def submit_cycle_count(store=None, items=None, count_date=None):
     """Submit inventory cycle count.
 
     Bug fixes (C7):

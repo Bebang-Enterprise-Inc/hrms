@@ -8,6 +8,8 @@ Supports: Suppliers, PR, PO, GR, Invoice, Payment Request, Dashboard
 All endpoints use @frappe.whitelist() for external access.
 """
 
+import re
+
 import frappe
 from frappe import _
 from frappe.utils import flt, cint, getdate, nowdate, add_days, get_first_day, get_last_day
@@ -330,8 +332,10 @@ def get_purchase_requisition(name):
 
 
 @frappe.whitelist()
-def create_purchase_requisition(data):
+def create_purchase_requisition(data=None):
     """Create new PR."""
+    if not data:
+        frappe.throw(_("Missing required parameter: data"), frappe.ValidationError)
     if isinstance(data, str):
         data = frappe.parse_json(data)
 
@@ -481,13 +485,15 @@ def get_goods_receipt_items(name):
 
 
 @frappe.whitelist()
-def create_purchase_order(data):
+def create_purchase_order(data=None):
     """Create new PO.
 
     AUDIT CONTROL 2.8: Supplier master data quality checks
     - Mandatory TIN for suppliers with >₱250K annual purchases
     Ref: Internal Audit Jan 30, 2026 - Max's Bakeshop ₱10M not in master list
     """
+    if not data:
+        frappe.throw(_("Missing required parameter: data"), frappe.ValidationError)
     if isinstance(data, str):
         data = frappe.parse_json(data)
 
@@ -719,12 +725,14 @@ def get_invoices_for_po(name):
 
 
 @frappe.whitelist()
-def create_goods_receipt(data):
+def create_goods_receipt(data=None):
     """Create new GR.
 
     AUDIT CONTROL 2.4: Block GR creation for >₱500K POs without complete approval
     Ref: Internal Audit Jan 30, 2026 - CFO "Pending" but payment released
     """
+    if not data:
+        frappe.throw(_("Missing required parameter: data"), frappe.ValidationError)
     if isinstance(data, str):
         data = frappe.parse_json(data)
 
@@ -3932,7 +3940,7 @@ def get_form_2307_data(supplier=None, tax_period=None):
 
 
 @frappe.whitelist()
-def generate_acknowledgement_receipt(billing_name):
+def generate_acknowledgement_receipt(billing_name=None):
     """Generate an internal Acknowledgement Receipt (AR) for a billing payment.
 
     This is an INTERNAL document — NOT a BIR Official Receipt.
@@ -3944,6 +3952,9 @@ def generate_acknowledgement_receipt(billing_name):
     Returns:
         dict with ar_name
     """
+    if not billing_name:
+        frappe.throw(_("Missing required parameter: billing_name"), frappe.ValidationError)
+
     if not frappe.has_permission("BEI Acknowledgement Receipt", "create"):
         frappe.throw(_("Insufficient permissions to generate AR"), frappe.PermissionError)
 
@@ -4000,7 +4011,7 @@ def _send_ar_chat_notification(ar, billing):
 
 @frappe.whitelist()
 def apply_franchise_payment(
-    billing_name, amount_paid, payment_date, payment_reference, payment_proof=None
+    billing_name=None, amount_paid=None, payment_date=None, payment_reference=None, payment_proof=None
 ):
     """Apply a franchise payment to a billing schedule.
 
@@ -4017,6 +4028,12 @@ def apply_franchise_payment(
     Returns:
         dict with success, ar_number, new_balance
     """
+    if not all([billing_name, amount_paid, payment_date, payment_reference]):
+        frappe.throw(
+            _("Missing required parameters: billing_name, amount_paid, payment_date, payment_reference"),
+            frappe.ValidationError,
+        )
+
     if not frappe.has_permission("BEI Billing Schedule", "write"):
         frappe.throw(_("Insufficient permissions to apply payments"), frappe.PermissionError)
 
@@ -4106,7 +4123,7 @@ def apply_franchise_payment(
 
 
 @frappe.whitelist()
-def generate_monthly_billing(billing_period, store=None):
+def generate_monthly_billing(billing_period=None, store=None):
     """Auto-generate monthly billing for franchise stores.
 
     Creates BEI Billing Schedule documents for each billable store
@@ -4119,6 +4136,9 @@ def generate_monthly_billing(billing_period, store=None):
     Returns:
         dict with generated count, skipped count, errors list
     """
+    if not billing_period:
+        frappe.throw(_("Missing required parameter: billing_period"), frappe.ValidationError)
+
     if not frappe.has_permission("BEI Billing Schedule", "create"):
         frappe.throw(_("Insufficient permissions to generate billing"), frappe.PermissionError)
 
@@ -4147,7 +4167,8 @@ def generate_monthly_billing(billing_period, store=None):
     errors = []
 
     for store_rec in stores:
-        sp = frappe.db.savepoint("billing_{0}".format(store_rec.store))
+        sp_name = "billing_" + re.sub(r'[^a-zA-Z0-9_]', '_', store_rec.store)
+        sp = frappe.db.savepoint(sp_name)
         try:
             # Duplicate check: skip if billing exists for period+store (exclude Cancelled)
             existing = frappe.db.exists("BEI Billing Schedule", {
