@@ -130,6 +130,7 @@ class BEIBillingSchedule(Document):
 
 		self.vat_amount = vat_amount
 		self.total_amount = self.subtotal + self.vat_amount
+		self.balance_due = flt(self.total_amount - flt(self.amount_paid or 0), 2)
 
 	def send_to_store(self):
 		"""Generate and send Statement of Account to store via email."""
