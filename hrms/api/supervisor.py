@@ -859,8 +859,9 @@ def get_area_store_reports(report_type, report_date=None, status=None):
     if frappe.db.has_column(doctype, "status"):
         base_fields.append("status")
 
-    # Fetch reports
+    # Fetch reports — validate fields exist on DocType to avoid "Unknown column" errors
     all_fields = list(set(base_fields + extra_fields + photo_fields))
+    all_fields = [f for f in all_fields if frappe.db.has_column(doctype, f)]
     reports = frappe.get_all(
         doctype,
         filters=filters,

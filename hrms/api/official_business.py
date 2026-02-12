@@ -68,15 +68,15 @@ def validate_image_upload(base64_data: str, max_size_mb: int = 5) -> bytes:
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)  # 10 requests per minute (AWS geocoding costs)
 def checkout(
-    destination: str,
-    purpose: str,
-    latitude: float,
-    longitude: float,
-    accuracy: float,
-    selfie_base64: str,
-    expected_return: str = None,
-    gps_latitude: float = None,
-    gps_longitude: float = None
+    destination=None,
+    purpose=None,
+    latitude=None,
+    longitude=None,
+    accuracy=None,
+    selfie_base64=None,
+    expected_return=None,
+    gps_latitude=None,
+    gps_longitude=None
 ):
     """Create OB checkout record
 
@@ -94,6 +94,16 @@ def checkout(
     Returns:
         Dict with OB record name and status
     """
+    # Validate required params (all have None defaults for graceful error handling)
+    if not destination:
+        frappe.throw(_("Destination is required"))
+    if not purpose:
+        frappe.throw(_("Purpose is required"))
+    if latitude is None or longitude is None:
+        frappe.throw(_("GPS coordinates are required"))
+    if accuracy is None:
+        frappe.throw(_("GPS accuracy is required"))
+
     # Get current employee
     employee = _get_employee_or_throw()
 

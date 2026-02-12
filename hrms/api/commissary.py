@@ -2778,7 +2778,7 @@ def get_wastage_history(days=30, item_code=None):
         filters += " AND sed.item_code = %(item_code)s"
         params["item_code"] = item_code
 
-    wastage = frappe.db.sql(f"""
+    wastage = frappe.db.sql("""
         SELECT
             se.name,
             se.posting_date,
@@ -2791,7 +2791,7 @@ def get_wastage_history(days=30, item_code=None):
             se.owner as logged_by
         FROM `tabStock Entry` se
         JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
-        {filters}
+        """ + filters + """
         ORDER BY se.posting_date DESC
     """, params, as_dict=True)
 

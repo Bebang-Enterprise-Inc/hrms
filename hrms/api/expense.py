@@ -96,7 +96,10 @@ def submit_expense(
     expense.manual_description = manual_description
     expense.manual_amount = flt(manual_amount)
     expense.manual_date = manual_date
-    expense.receipt_photo = save_base64_image(receipt_photo, "BEI Expense Request", fieldname="receipt_photo")
+    receipt_url = save_base64_image(receipt_photo, "BEI Expense Request", fieldname="receipt_photo")
+    if not receipt_url:
+        frappe.throw(_("Failed to save receipt photo. Please try again."))
+    expense.receipt_photo = receipt_url
 
     expense.status = "Submitted"
 

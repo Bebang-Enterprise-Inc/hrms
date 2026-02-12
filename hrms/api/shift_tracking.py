@@ -231,9 +231,13 @@ def punch_out(latitude: float, longitude: float, accuracy: float, notes: str = N
 
     shift_doc = frappe.get_doc("BEI Shift Record", active[0].name)
 
-    # Reverse geocode
-    aws_location = AWSLocationService()
-    address = aws_location.reverse_geocode(latitude, longitude)
+    # Reverse geocode (non-critical — punch-out succeeds even if address lookup fails)
+    address = None
+    try:
+        aws_location = AWSLocationService()
+        address = aws_location.reverse_geocode(latitude, longitude)
+    except Exception as e:
+        frappe.log_error(f"Reverse geocode failed for punch_out: {str(e)}", "Punch-Out Geocode Error")
 
     # Update punch-out fields
     shift_doc.punch_out_time = now_datetime()
@@ -531,6 +535,10 @@ def reverse_geocode_location(latitude, longitude):
     Returns:
         dict with address string
     """
-    aws_location = AWSLocationService()
-    address = aws_location.reverse_geocode(float(latitude), float(longitude))
-    return {"address": address or "Unknown location"}
+    try:
+        aws_location = AWSLocationService()
+        address = aws_location.reverse_geocode(float(latitude), float(longitude))
+        return {"address": address or "Unknown location"}
+    except Exception as e:
+        frappe.log_error(f"Reverse geocode failed: {str(e)}", "Reverse Geocode Error")
+        return {"address": f"{latitude}, {longitude}"}

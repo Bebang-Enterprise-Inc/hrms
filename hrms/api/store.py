@@ -1489,11 +1489,13 @@ def submit_closing_stage3_photos(report_name, x_reading_opening_photo, x_reading
 
 
 @frappe.whitelist()
-def get_closing_report_status(store, date=None):
+def get_closing_report_status(store=None, date=None):
     """
     Get closing report status for a store on a specific date.
     Returns stage progress and completion status.
     """
+    if not store:
+        frappe.throw(_("Store is required"))
     if not date:
         date = nowdate()
 

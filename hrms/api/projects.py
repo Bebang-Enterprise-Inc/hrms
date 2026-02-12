@@ -612,10 +612,13 @@ def record_maintenance_completion(
 
     # photo_data may be a dict like {"photo": "data:image/png;base64,...", "caption": "..."}
     # Extract the actual image data string before passing to save_base64_image
+    # Handle nested dicts: {"photo": {"photo": "data:..."}} or missing keys
     if isinstance(photo_data, dict):
-        photo_data = photo_data.get('photo', '') or photo_data.get('url', '')
+        photo_data = photo_data.get('photo', '') or photo_data.get('url', '') or ''
+        if isinstance(photo_data, dict):
+            photo_data = photo_data.get('photo', '') or photo_data.get('url', '') or ''
 
-    if photo_data:
+    if photo_data and isinstance(photo_data, str):
         # save_base64_image handles both base64 data URLs and plain URLs
         # Returns a short file URL like /files/bei_maintenance_completion_abc123.jpg
         completion.after_photos = save_base64_image(
