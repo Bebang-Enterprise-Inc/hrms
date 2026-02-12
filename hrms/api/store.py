@@ -557,7 +557,7 @@ def get_fqi_reports(store=None, status=None, limit=20):
 
 
 @frappe.whitelist()
-def submit_opening_report(store, checklist_items, report_time=None, notes=None,
+def submit_opening_report(store, checklist_items=None, report_time=None, notes=None,
                           photo_backup_area=None, photo_frozen_milk=None,
                           photo_toppings_area=None, photo_dispatch_area=None,
                           photo_cold_storage_temp=None):

@@ -950,6 +950,99 @@ def get_area_store_reports(report_type, report_date=None, status=None):
 
 
 @frappe.whitelist()
+def get_reports_feed(report_date=None, limit=50):
+    """
+    Get a chronological feed of all store reports for today (or specified date).
+    Returns opening, closing, midshift, POS upload, and bank deposit reports
+    across all stores under the supervisor's area, sorted newest first.
+
+    Args:
+        report_date: Date to filter (defaults to today)
+        limit: Max items to return (default 50)
+
+    Returns:
+        {reports: [{type, name, store, submitted_by, submitted_at, status, ...}]}
+    """
+    if not report_date:
+        report_date = nowdate()
+
+    stores = _get_area_supervisor_stores()
+    store_names = [s.name for s in stores]
+
+    if not store_names:
+        return {"reports": []}
+
+    feed = []
+
+    # Opening reports
+    opening = frappe.get_all("BEI Store Opening Report",
+        filters={"store": ["in", store_names], "report_date": report_date},
+        fields=["name", "store", "submitted_by", "report_time", "status", "creation"],
+        order_by="creation desc", limit=int(limit)
+    )
+    for r in opening:
+        r["report_type"] = "opening"
+        r["submitted_at"] = str(r.get("report_time") or r.get("creation") or "")
+        feed.append(r)
+
+    # Closing reports
+    closing = frappe.get_all("BEI Store Closing Report",
+        filters={"store": ["in", store_names], "report_date": report_date},
+        fields=["name", "store", "submitted_by", "report_time", "status",
+                "cash_variance", "stage_completed", "creation"],
+        order_by="creation desc", limit=int(limit)
+    )
+    for r in closing:
+        r["report_type"] = "closing"
+        r["submitted_at"] = str(r.get("report_time") or r.get("creation") or "")
+        feed.append(r)
+
+    # Midshift checklists
+    midshift = frappe.get_all("BEI Midshift Checklist",
+        filters={
+            "store": ["in", store_names],
+            "check_datetime": ["between", [f"{report_date} 00:00:00", f"{report_date} 23:59:59"]]
+        },
+        fields=["name", "store", "submitted_by", "shift", "cleanliness_status",
+                "check_datetime as submitted_at", "creation"],
+        order_by="creation desc", limit=int(limit)
+    )
+    for r in midshift:
+        r["report_type"] = "midshift"
+        r["status"] = r.get("cleanliness_status", "")
+        feed.append(r)
+
+    # POS uploads
+    pos = frappe.get_all("BEI POS Upload",
+        filters={"store": ["in", store_names], "pos_date": report_date},
+        fields=["name", "store", "uploaded_by as submitted_by", "pos_system",
+                "gross_sales", "net_sales", "status", "creation"],
+        order_by="creation desc", limit=int(limit)
+    )
+    for r in pos:
+        r["report_type"] = "pos_upload"
+        r["submitted_at"] = str(r.get("creation") or "")
+        feed.append(r)
+
+    # Bank deposits
+    deposits = frappe.get_all("BEI Bank Deposit",
+        filters={"store": ["in", store_names], "deposit_date": report_date},
+        fields=["name", "store", "submitted_by", "bank", "total_amount",
+                "status", "creation"],
+        order_by="creation desc", limit=int(limit)
+    )
+    for r in deposits:
+        r["report_type"] = "bank_deposit"
+        r["submitted_at"] = str(r.get("creation") or "")
+        feed.append(r)
+
+    # Sort combined feed by creation time (newest first)
+    feed.sort(key=lambda x: str(x.get("creation", "")), reverse=True)
+
+    return {"reports": feed[:int(limit)]}
+
+
+@frappe.whitelist()
 def request_report_revision(report_name, doctype, revision_notes):
     """
     Flag a report for revision and notify the submitter via Google Chat.

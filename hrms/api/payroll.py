@@ -556,6 +556,149 @@ def get_my_payslips(limit=12):
 
 
 @frappe.whitelist()
+def get_my_attendance(from_date=None, to_date=None):
+    """Get current employee's own attendance records (self-service).
+
+    No HR permission check — returns only the logged-in user's attendance.
+
+    Args:
+        from_date: Start date (defaults to 30 days ago)
+        to_date: End date (defaults to today)
+
+    Returns:
+        dict: {success, attendance} or {success, error}
+    """
+    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+    if not employee:
+        return {"success": False, "error": "No employee record found for your account"}
+
+    if not to_date:
+        to_date = nowdate()
+    if not from_date:
+        from_date = str(add_months(getdate(to_date), -1))
+
+    records = frappe.get_all("Attendance",
+        filters={
+            "employee": employee,
+            "docstatus": 1,
+            "attendance_date": ["between", [from_date, to_date]]
+        },
+        fields=["name", "attendance_date", "status", "shift", "working_hours",
+                "late_entry", "early_exit", "leave_type"],
+        order_by="attendance_date desc"
+    )
+
+    # Summary counts
+    present = sum(1 for r in records if r.get("status") == "Present")
+    absent = sum(1 for r in records if r.get("status") == "Absent")
+    on_leave = sum(1 for r in records if r.get("status") == "On Leave")
+    late = sum(1 for r in records if r.get("late_entry"))
+
+    return {
+        "success": True,
+        "attendance": records,
+        "summary": {
+            "total_days": len(records),
+            "present": present,
+            "absent": absent,
+            "on_leave": on_leave,
+            "late": late
+        }
+    }
+
+
+@frappe.whitelist()
+def submit_leave_application(leave_type, from_date, to_date, reason=None, half_day=0):
+    """Submit a leave application for the current employee (self-service).
+
+    Creates a Leave Application document for the logged-in user.
+
+    Args:
+        leave_type: Type of leave (e.g., "Casual Leave", "Sick Leave")
+        from_date: Leave start date
+        to_date: Leave end date
+        reason: Optional reason for the leave
+        half_day: 1 for half-day leave, 0 for full day (default 0)
+
+    Returns:
+        dict: {success, name, status} or {success, error}
+    """
+    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user},
+                                    ["name", "employee_name", "company", "leave_approver"],
+                                    as_dict=True)
+    if not employee:
+        return {"success": False, "error": "No employee record found for your account"}
+
+    try:
+        doc = frappe.new_doc("Leave Application")
+        doc.employee = employee.name
+        doc.leave_type = leave_type
+        doc.from_date = from_date
+        doc.to_date = to_date
+        doc.description = reason or ""
+        doc.half_day = int(half_day)
+        doc.company = employee.company
+        if employee.leave_approver:
+            doc.leave_approver = employee.leave_approver
+        doc.status = "Open"
+        doc.insert(ignore_permissions=True)
+
+        return {"success": True, "name": doc.name, "status": doc.status}
+
+    except frappe.exceptions.ValidationError as e:
+        return {"success": False, "error": str(e)}
+    except Exception as e:
+        frappe.log_error(
+            message=f"Leave application failed for {employee.name}: {str(e)[:500]}",
+            title="Leave Application Error"
+        )
+        return {"success": False, "error": "Failed to submit leave application. Please try again."}
+
+
+@frappe.whitelist()
+def get_my_schedule(from_date=None, to_date=None):
+    """Get current employee's shift schedule (self-service).
+
+    No HR permission check — returns only the logged-in user's schedule.
+
+    Args:
+        from_date: Start date (defaults to today)
+        to_date: End date (defaults to 14 days from now)
+
+    Returns:
+        dict: {success, schedule} or {success, error}
+    """
+    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+    if not employee:
+        return {"success": False, "error": "No employee record found for your account"}
+
+    if not from_date:
+        from_date = nowdate()
+    if not to_date:
+        to_date = str(getdate(from_date) + __import__('datetime').timedelta(days=14))
+
+    # Get shift assignments
+    shifts = frappe.get_all("Shift Assignment",
+        filters={
+            "employee": employee,
+            "docstatus": 1,
+            "start_date": ["<=", to_date],
+        },
+        fields=["name", "shift_type", "start_date", "end_date", "status"],
+        order_by="start_date asc"
+    )
+
+    # Filter to date range (end_date can be null = ongoing)
+    schedule = []
+    for s in shifts:
+        if s.get("end_date") and str(s["end_date"]) < from_date:
+            continue
+        schedule.append(s)
+
+    return {"success": True, "schedule": schedule}
+
+
+@frappe.whitelist()
 def get_payroll_dashboard(from_date=None, to_date=None):
     """Get combined payroll dashboard data.
 
