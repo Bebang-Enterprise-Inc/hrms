@@ -1862,17 +1862,19 @@ def get_rm_reorder_alerts():
     today_date = today()
     date_7_days_ago = add_days(today_date, -7)
 
-    # Get all raw material items (item_group contains 'Raw' or item_code starts with RM)
+    # Get all raw material items with reorder levels from Item Reorder child table
+    # (ERPNext v15 stores reorder levels in tabItem Reorder, not on tabItem)
     rm_items = frappe.db.sql("""
         SELECT
             i.name as item_code,
             i.item_name,
             i.item_group,
             i.stock_uom as uom,
-            i.reorder_level,
-            i.safety_stock,
+            IFNULL(ir.warehouse_reorder_level, 0) as reorder_level,
+            IFNULL(ir.warehouse_reorder_qty, 0) as safety_stock,
             IFNULL(b.actual_qty, 0) as current_qty
         FROM `tabItem` i
+        LEFT JOIN `tabItem Reorder` ir ON ir.parent = i.name AND ir.warehouse = %s
         LEFT JOIN `tabBin` b ON b.item_code = i.name AND b.warehouse = %s
         WHERE i.disabled = 0
         AND i.is_stock_item = 1
@@ -1882,7 +1884,7 @@ def get_rm_reorder_alerts():
             OR i.item_group = 'Raw Materials'
         )
         ORDER BY i.item_name
-    """, commissary_warehouse, as_dict=True)
+    """, (commissary_warehouse, commissary_warehouse), as_dict=True)
 
     alerts = []
     for item in rm_items:
