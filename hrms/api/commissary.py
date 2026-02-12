@@ -1968,7 +1968,7 @@ def get_rm_reorder_alerts():
 # ============================================================
 
 @frappe.whitelist()
-def create_rm_requisition(items, required_by_date=None, remarks=None):
+def create_rm_requisition(items=None, required_by_date=None, remarks=None):
     """
     Create Material Request for raw materials from Commissary.
 
@@ -1980,6 +1980,8 @@ def create_rm_requisition(items, required_by_date=None, remarks=None):
     Returns:
         Material Request name and details
     """
+    if not items:
+        frappe.throw(_("Missing required parameter: items"), frappe.ValidationError)
     if isinstance(items, str):
         items = json.loads(items)
 
