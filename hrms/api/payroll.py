@@ -643,6 +643,33 @@ def submit_leave_application(leave_type, from_date, to_date, reason=None, half_d
         doc.status = "Open"
         doc.insert(ignore_permissions=True)
 
+        # Create approval queue entry so leave appears in supervisor's pending approvals
+        if employee.leave_approver:
+            try:
+                store = None
+                branch = frappe.db.get_value("Employee", employee.name, "branch")
+                if branch:
+                    from hrms.api.store import resolve_warehouse
+                    try:
+                        store = resolve_warehouse(branch)
+                    except Exception:
+                        store = None
+                if store:
+                    queue_entry = frappe.new_doc("BEI Approval Queue")
+                    queue_entry.reference_doctype = "Leave Application"
+                    queue_entry.reference_name = doc.name
+                    queue_entry.assigned_approver = employee.leave_approver
+                    queue_entry.status = "Pending"
+                    queue_entry.store = store
+                    queue_entry.submitted_by = frappe.session.user
+                    queue_entry.submitted_at = frappe.utils.now()
+                    queue_entry.insert(ignore_permissions=True)
+            except Exception:
+                frappe.log_error(
+                    f"Failed to create approval queue for leave {doc.name}",
+                    "Approval Queue Error"
+                )
+
         return {"success": True, "name": doc.name, "status": doc.status}
 
     except frappe.exceptions.ValidationError as e:
