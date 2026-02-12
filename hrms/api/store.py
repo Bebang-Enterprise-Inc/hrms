@@ -863,22 +863,20 @@ def upload_pos_data(store, pos_date, pos_system, discount_report, transaction_re
     if pos_system:
         pos_system = pos_system.strip().upper()
 
+    # Save report files as Frappe File records BEFORE insert (fields are mandatory)
+    doctype_name = "BEI POS Upload"
     doc = frappe.new_doc("BEI POS Upload")
     doc.store = warehouse
     doc.pos_date = pos_date
     doc.uploaded_by = frappe.session.user
     doc.pos_system = pos_system
     doc.notes = notes
+    doc.discount_report = save_base64_image(discount_report, doctype_name, fieldname="discount_report")
+    doc.transaction_report = save_base64_image(transaction_report, doctype_name, fieldname="transaction_report")
+    doc.product_mix = save_base64_image(product_mix, doctype_name, fieldname="product_mix")
+    doc.daily_sales_revenue = save_base64_image(daily_sales_revenue, doctype_name, fieldname="daily_sales_revenue")
+    doc.sales_summary = save_base64_image(sales_summary, doctype_name, fieldname="sales_summary")
     doc.insert()
-
-    # Save report files as Frappe File records (not raw base64)
-    doctype_name = "BEI POS Upload"
-    doc.discount_report = save_base64_image(discount_report, doctype_name, docname=doc.name, fieldname="discount_report")
-    doc.transaction_report = save_base64_image(transaction_report, doctype_name, docname=doc.name, fieldname="transaction_report")
-    doc.product_mix = save_base64_image(product_mix, doctype_name, docname=doc.name, fieldname="product_mix")
-    doc.daily_sales_revenue = save_base64_image(daily_sales_revenue, doctype_name, docname=doc.name, fieldname="daily_sales_revenue")
-    doc.sales_summary = save_base64_image(sales_summary, doctype_name, docname=doc.name, fieldname="sales_summary")
-    doc.save()
 
     result = {"success": True, "name": doc.name}
     if date_mismatch_warning:
