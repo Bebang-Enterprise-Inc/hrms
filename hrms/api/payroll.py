@@ -608,7 +608,7 @@ def get_my_attendance(from_date=None, to_date=None):
 
 
 @frappe.whitelist()
-def submit_leave_application(leave_type, from_date, to_date, reason=None, half_day=0):
+def submit_leave_application(leave_type=None, from_date=None, to_date=None, reason=None, half_day=0):
     """Submit a leave application for the current employee (self-service).
 
     Creates a Leave Application document for the logged-in user.
@@ -623,6 +623,9 @@ def submit_leave_application(leave_type, from_date, to_date, reason=None, half_d
     Returns:
         dict: {success, name, status} or {success, error}
     """
+    if not leave_type or not from_date or not to_date:
+        frappe.throw(_("Leave type, from date, and to date are required"))
+
     employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user},
                                     ["name", "employee_name", "company", "leave_approver"],
                                     as_dict=True)

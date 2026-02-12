@@ -399,7 +399,7 @@ def get_store_pending_summary(store: str):
 
 
 @frappe.whitelist()
-def get_pcf_custodians(store: str):
+def get_pcf_custodians(store=None):
     """
     Get custodians for a store.
 
@@ -409,6 +409,9 @@ def get_pcf_custodians(store: str):
     Returns:
         List of custodians
     """
+    if not store:
+        frappe.throw(_("Store is required"))
+
     pcf = frappe.db.get_value(
         "BEI Petty Cash Fund",
         {"store": store},
