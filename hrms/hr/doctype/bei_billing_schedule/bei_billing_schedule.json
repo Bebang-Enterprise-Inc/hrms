@@ -39,7 +39,13 @@
   "subtotal",
   "vat_amount",
   "column_break_totals",
-  "total_amount"
+  "total_amount",
+  "payment_section",
+  "amount_paid",
+  "balance_due",
+  "column_break_payment",
+  "payment_reference",
+  "payment_proof"
  ],
  "fields": [
   {
@@ -80,7 +86,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Status",
-   "options": "Draft\nSent\nPaid\nDisputed\nCancelled"
+   "options": "Draft\nSent\nPartially Paid\nPaid\nDisputed\nCancelled"
   },
   {
    "default": "Now",
@@ -268,9 +274,44 @@
    "label": "Total Amount Due",
    "precision": "2",
    "read_only": 1
+  },
+  {
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment Tracking"
+  },
+  {
+   "default": "0",
+   "fieldname": "amount_paid",
+   "fieldtype": "Currency",
+   "label": "Amount Paid",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "description": "total_amount - amount_paid",
+   "fieldname": "balance_due",
+   "fieldtype": "Currency",
+   "label": "Balance Due",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_payment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payment_reference",
+   "fieldtype": "Data",
+   "label": "Payment Reference"
+  },
+  {
+   "fieldname": "payment_proof",
+   "fieldtype": "Attach",
+   "label": "Payment Proof"
   }
  ],
- "modified": "2026-02-06 14:00:00.000000",
+ "modified": "2026-02-12 14:00:00.000000",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "BEI Billing Schedule",
