@@ -4066,22 +4066,26 @@ def apply_franchise_payment(
 
         billing.save()
 
-        # Apply to linked invoices FIFO (oldest first)
-        remaining = amount_paid
-        linked_invoices = frappe.get_all(
-            "BEI Invoice",
-            filters={"billing_schedule": billing.name, "status": ["!=", "Paid"]},
-            fields=["name", "outstanding_amount", "posting_date"],
-            order_by="posting_date ASC",
-        )
-        for inv in linked_invoices:
-            if remaining <= 0:
-                break
-            apply_amount = min(remaining, flt(inv.outstanding_amount))
-            if apply_amount > 0:
-                inv_doc = frappe.get_doc("BEI Invoice", inv.name)
-                inv_doc.record_payment(apply_amount, payment_date, payment_reference)
-                remaining -= apply_amount
+        # Apply to linked invoices FIFO (oldest first) — gracefully skip if no link exists
+        try:
+            remaining = amount_paid
+            linked_invoices = frappe.get_all(
+                "BEI Invoice",
+                filters={"billing_schedule": billing.name, "payment_status": ["!=", "Paid"]},
+                fields=["name", "balance_due", "posting_date"],
+                order_by="posting_date ASC",
+            )
+            for inv in linked_invoices:
+                if remaining <= 0:
+                    break
+                apply_amount = min(remaining, flt(inv.balance_due))
+                if apply_amount > 0:
+                    inv_doc = frappe.get_doc("BEI Invoice", inv.name)
+                    inv_doc.record_payment(apply_amount, payment_date, payment_reference)
+                    remaining -= apply_amount
+        except Exception as e:
+            # billing_schedule field may not exist on BEI Invoice yet — non-blocking
+            frappe.log_error(f"Invoice FIFO application skipped: {e}", "Payment Application")
 
         # Auto-generate Acknowledgement Receipt
         ar_result = generate_acknowledgement_receipt(billing.name)
