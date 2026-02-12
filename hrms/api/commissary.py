@@ -2059,7 +2059,7 @@ def get_my_requisitions(status=None, limit=50):
         filters=filters,
         fields=[
             "name", "transaction_date", "schedule_date",
-            "status", "owner", "remarks", "docstatus"
+            "status", "owner", "docstatus"
         ],
         order_by="transaction_date desc",
         limit=int(limit)
