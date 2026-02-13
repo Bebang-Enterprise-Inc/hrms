@@ -2768,14 +2768,15 @@ def get_wastage_history(days=30, item_code=None):
     filters = """
         WHERE se.stock_entry_type = 'Material Issue'
         AND se.docstatus = 1
-        AND se.remarks LIKE 'WASTAGE:%%'
+        AND se.remarks LIKE %(wastage_pattern)s
         AND sed.s_warehouse = %(warehouse)s
         AND se.posting_date >= DATE_SUB(CURDATE(), INTERVAL %(days)s DAY)
     """
 
     params = {
         "warehouse": commissary_warehouse,
-        "days": int(days)
+        "days": int(days),
+        "wastage_pattern": "WASTAGE:%"
     }
 
     if item_code:
