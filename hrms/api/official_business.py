@@ -212,11 +212,11 @@ def checkout(
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)  # 10 requests per minute (AWS geocoding costs)
 def checkin(
-    ob_name: str,
-    latitude: float,
-    longitude: float,
-    accuracy: float,
-    selfie_base64: str
+    ob_name=None,
+    latitude=None,
+    longitude=None,
+    accuracy=None,
+    selfie_base64=None
 ):
     """Update OB record with check-in data
 
@@ -230,6 +230,16 @@ def checkin(
     Returns:
         Dict with status and total hours
     """
+    # Validate required params
+    if not ob_name:
+        frappe.throw(_("OB record name is required"))
+    if latitude is None or longitude is None:
+        frappe.throw(_("GPS coordinates are required"))
+    if accuracy is None:
+        frappe.throw(_("GPS accuracy is required"))
+    if not selfie_base64:
+        frappe.throw(_("Selfie is required for check-in"))
+
     ob_doc = frappe.get_doc("BEI Official Business", ob_name)
 
     # Verify ownership

@@ -949,10 +949,16 @@ def submit_bank_deposit(store=None, deposit_date=None, bank=None, deposits=None,
         warehouse = resolve_warehouse(store)
 
         if isinstance(deposits, str):
-            deposits = json.loads(deposits)
+            try:
+                deposits = json.loads(deposits)
+            except (json.JSONDecodeError, ValueError):
+                frappe.throw(_("Invalid deposits format. Please submit the form again."))
 
         if isinstance(photos, str):
-            photos = json.loads(photos)
+            try:
+                photos = json.loads(photos)
+            except (json.JSONDecodeError, ValueError):
+                photos = [photos]
 
         if not deposits:
             deposits = []
