@@ -254,6 +254,14 @@ scheduler_events = {
 		"0 6,10,14,18,22 * * *": [
 			"hrms.utils.weather_service.collect_all_weather",
 		],
+		# Biometric monitoring: refresh cache every 6 hours (midnight, 6AM, noon, 6PM UTC)
+		"0 0,6,12,18 * * *": [
+			"hrms.utils.adms_monitor.refresh_biometric_status",
+		],
+		# Biometric daily digest: 7 AM PHT = 23:00 UTC (previous day)
+		"0 23 * * *": [
+			"hrms.utils.biometric_alerts.send_daily_digest",
+		],
 	},
 	"hourly_long": [
 		"hrms.hr.doctype.shift_type.shift_type.update_last_sync_of_checkin",
