@@ -465,16 +465,18 @@ def submit_return_request(store, items, photo=None):
     remarks_parts = []
     for item in items:
         item_name = frappe.db.get_value("Item", item["item_code"], "item_name") or item["item_code"]
-        remarks_parts.append(f"{item_name}: {item['quantity']} ({item['reason']})")
+        qty = item.get('quantity') or item.get('qty')
+        remarks_parts.append(f"{item_name}: {qty} ({item['reason']})")
         if item.get("notes"):
             remarks_parts.append(f"  Notes: {item['notes']}")
 
     doc.remarks = "Store Return Request:\n" + "\n".join(remarks_parts)
 
     for item in items:
+        qty = item.get('quantity') or item.get('qty')
         doc.append("items", {
             "item_code": item["item_code"],
-            "qty": flt(item["quantity"]),
+            "qty": flt(qty),
             "s_warehouse": warehouse,
             "custom_return_reason": item["reason"],
             "custom_return_notes": item.get("notes")
