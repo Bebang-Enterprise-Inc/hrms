@@ -1613,7 +1613,7 @@ def get_mid_shift_handovers(store, date=None, limit=10):
 
 
 @frappe.whitelist()
-def submit_maintenance_request(store, priority, description,
+def submit_maintenance_request(store=None, priority=None, description=None,
                                 issue_category=None, category=None,
                                 equipment_area=None, impact_on_operations=None,
                                 title=None, before_photos=None, photos=None):
@@ -1639,6 +1639,9 @@ def submit_maintenance_request(store, priority, description,
 
     if not store:
         frappe.throw(_("Store is required"))
+
+    if not priority or not description:
+        frappe.throw(_("Priority and description are required"))
 
     # Support both parameter names (frontend sends 'category', backend expects 'issue_category')
     final_category = issue_category or category
@@ -1672,7 +1675,15 @@ def submit_maintenance_request(store, priority, description,
     if photos:
         # Parse JSON if string
         if isinstance(photos, str):
-            photos = json.loads(photos)
+            try:
+                photos = json.loads(photos)
+            except (json.JSONDecodeError, ValueError):
+                # Not valid JSON — treat as a single photo URL/base64 string
+                photos = [photos]
+
+        # Ensure iterable (single dict becomes a list)
+        if isinstance(photos, dict):
+            photos = [photos]
 
         # Add each photo to the child table
         for photo_data in photos:
