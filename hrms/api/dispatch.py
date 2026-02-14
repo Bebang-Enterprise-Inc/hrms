@@ -8,7 +8,7 @@ Handles warehouse dispatch, route tracking, and delivery confirmation for my.beb
 
 import frappe
 from frappe import _
-from frappe.utils import nowdate, now_datetime
+from frappe.utils import nowdate, now_datetime, flt
 import json
 
 
@@ -133,6 +133,17 @@ def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
     stop.arrival_time = now_datetime()
     stop.signature = signature
     stop.signed_by = signed_by
+
+    # Auto-generate delivery billing (async, feature-flagged)
+    if frappe.db.get_single_value("BEI Settings", "billing_auto_create_on_delivery"):
+        stop.billing_creation_status = "Pending"
+        frappe.enqueue(
+            "hrms.api.dispatch._create_delivery_billing",
+            queue="default",
+            trip_name=trip.name,
+            stop_idx=stop.idx,
+            enqueue_after_commit=True
+        )
 
     # Update trip status
     delivered = sum(1 for s in trip.stops if s.status == "Delivered")
@@ -275,3 +286,127 @@ def create_trip(trip_date, route_name, stops):
         "trip": trip.name,
         "message": f"Trip {trip.name} created with {len(stops)} stops"
     }
+
+
+def _create_delivery_billing(trip_name, stop_idx):
+    """Create a BEI Billing Schedule for a delivery stop. Runs async via enqueue."""
+    trip = frappe.get_doc("BEI Distribution Trip", trip_name)
+    stop = trip.stops[int(stop_idx) - 1]
+
+    try:
+        sp = frappe.db.savepoint("delivery_billing")
+
+        # I-04 fix: Duplicate check before creating billing
+        existing = frappe.db.exists("BEI Billing Schedule", {
+            "trip_reference": trip.name,
+            "trip_stop_idx": stop.idx,
+            "billing_type": "Delivery",
+            "status": ["not in", ["Cancelled"]],
+        })
+        if existing:
+            stop.billing_reference = existing
+            stop.billing_creation_status = "Success"
+            trip.save(ignore_permissions=True)
+            frappe.db.release_savepoint(sp)
+            return
+
+        # 1. Resolve store department via mapping table
+        dept = frappe.db.get_value("BEI Warehouse Department Mapping",
+            {"warehouse": stop.store, "is_active": 1}, "department")
+        if not dept:
+            frappe.log_error(
+                f"No warehouse→department mapping for {stop.store}",
+                "Billing: Missing Mapping"
+            )
+            stop.billing_creation_status = "Failed"
+            trip.save(ignore_permissions=True)
+            frappe.db.release_savepoint(sp)
+            return
+
+        # 2. Get store type for markup calculation
+        store_type = frappe.db.get_value("BEI Store Type", {"store": dept}, "store_type")
+
+        # 3. Get active delivery rate for store + cargo type
+        rate = frappe.db.get_value("BEI Delivery Rate",
+            {"store": dept, "cargo_type": trip.cargo_type, "status": "Active"},
+            ["delivery_fee", "logistics_fee"], as_dict=True)
+        if not rate:
+            frappe.log_error(
+                f"No active {trip.cargo_type} rate for {dept}",
+                "Billing: Missing Rate"
+            )
+            stop.billing_creation_status = "Failed"
+            trip.save(ignore_permissions=True)
+            frappe.db.release_savepoint(sp)
+            _notify_missing_rate(dept, trip.cargo_type)
+            return
+
+        # 4. Calculate goods value from store order
+        goods_value = 0
+        if stop.store_order:
+            result = frappe.db.sql("""
+                SELECT COALESCE(SUM(qty * unit_price), 0)
+                FROM `tabBEI Store Order Item`
+                WHERE parent = %s
+            """, stop.store_order)
+            goods_value = result[0][0] if result else 0
+
+        # 5. Apply 8% markup for franchise stores
+        is_franchise = store_type in ("Full Franchise", "Managed Franchise")
+        markup = 1.08 if is_franchise else 1.0
+
+        delivery_fee = flt(rate.delivery_fee * markup, 2)
+        logistics_fee = flt(rate.logistics_fee * markup, 2)
+        handling_fee = flt(goods_value * 0.08, 2) if is_franchise else 0
+
+        # 6. Create billing record
+        billing = frappe.new_doc("BEI Billing Schedule")
+        billing.billing_type = "Delivery"
+        billing.store = dept
+        billing.store_type = store_type or ""
+        billing.trip_reference = trip.name
+        billing.trip_stop_idx = stop.idx
+        billing.cargo_type = trip.cargo_type
+        billing.delivery_fee = delivery_fee
+        billing.logistics_fee = logistics_fee
+        billing.goods_value = goods_value
+        billing.handling_fee = handling_fee
+        billing.status = "Pending"
+        billing.insert(ignore_permissions=True)
+
+        # 7. Update stop with billing reference
+        stop.billing_reference = billing.name
+        stop.delivery_value = goods_value
+        stop.billing_creation_status = "Success"
+        trip.save(ignore_permissions=True)
+
+        # C-06 fix: No explicit commit inside enqueued job — Frappe
+        # auto-commits when the enqueued function returns successfully.
+        frappe.db.release_savepoint(sp)
+
+    except Exception as e:
+        frappe.db.rollback_to_savepoint(sp)
+        frappe.log_error(
+            f"Failed to create billing for {trip_name} stop {stop_idx}: {str(e)}",
+            "Billing Creation Error"
+        )
+        # Mark stop as failed
+        try:
+            trip.reload()
+            stop = trip.stops[int(stop_idx) - 1]
+            stop.billing_creation_status = "Failed"
+            trip.save(ignore_permissions=True)
+        except Exception:
+            pass
+
+
+def _notify_missing_rate(store, cargo_type):
+    """Notify Finance and Supply Chain about missing delivery rate."""
+    try:
+        frappe.log_error(
+            f"Billing blocked: No active {cargo_type} rate for store {store}. "
+            "Please set rates via the Rate Management Panel.",
+            "Missing Delivery Rate"
+        )
+    except Exception:
+        pass

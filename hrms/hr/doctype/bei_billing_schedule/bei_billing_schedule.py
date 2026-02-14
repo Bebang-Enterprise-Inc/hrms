@@ -4,20 +4,134 @@
 import frappe
 from frappe.model.document import Document
 from frappe import _
-from frappe.utils import flt
+from frappe.utils import flt, nowdate
 from markupsafe import escape as html_escape
 
 
 class BEIBillingSchedule(Document):
 	def validate(self):
 		"""Calculate all fees based on store type."""
+		# Set naming series based on billing type
+		if self.billing_type == "Delivery":
+			self.naming_series = "BILL-DL-.YYYY.-.#####"
+		else:
+			self.naming_series = "BILL-MF-.YYYY.-.#####"
+
 		self.calculate_fees()
 		self.calculate_line_items()
 		self.calculate_totals()
 
-	def calculate_fees(self):
-		"""Calculate fees based on store type and sales data."""
+	def before_save(self):
+		"""Create GL entries when billing transitions to Approved status."""
+		if self.status == "Approved" and self.get_doc_before_save():
+			old_status = self.get_doc_before_save().status
+			if old_status != "Approved":
+				self._create_gl_entries()
+
+	def _create_gl_entries(self):
+		"""Create a Journal Entry to record billing in General Ledger.
+
+		Triggered when status changes to Approved (C-01 fix: use before_save
+		instead of on_submit since DocType is not submittable).
+		"""
+		je = frappe.new_doc("Journal Entry")
+		je.posting_date = nowdate()
+		je.voucher_type = "Journal Entry"
+		je.company = frappe.db.get_default("company") or "Bebang Enterprise Inc."
+		je.user_remark = f"Auto-generated from {self.name}"
+
+		total_revenue = 0
+		total_vat = 0
 		VAT_RATE = 0.12
+
+		# GL account mapping
+		FEE_TO_ACCOUNT = {
+			"royalty_fee": "4000301 - ROYALTIES INCOME - BEI",
+			"marketing_fee": "4000302 - MARKETING FEE INCOME - BEI",
+			"management_fee": "4000303 - MANAGEMENT FEE INCOME - BEI",
+			"ecommerce_fee": "4000304 - ECOMMERCE FEE INCOME - BEI",
+			"delivery_fee": "4000305 - DELIVERY INCOME - BEI",
+			"logistics_fee": "4000306 - LOGISTICS INCOME - BEI",
+		}
+
+		AR_ACCOUNT = "1103101 - ACCOUNTS RECEIVABLE - BEI"
+		VAT_ACCOUNT = "2102205 - OUTPUT VAT PAYABLE - BEI"
+
+		# Add credit entries for each fee type
+		for fee_field, account in FEE_TO_ACCOUNT.items():
+			amount = flt(getattr(self, fee_field, 0))
+			if amount > 0:
+				# For fees that include VAT (royalty, management), separate the VAT
+				if fee_field in ("royalty_fee", "management_fee"):
+					base_amount = flt(amount / (1 + VAT_RATE), 2)
+					vat_amount = flt(amount - base_amount, 2)
+					total_vat += vat_amount
+					total_revenue += base_amount
+					je.append("accounts", {
+						"account": account,
+						"credit_in_account_currency": base_amount,
+						"reference_type": "BEI Billing Schedule",
+						"reference_name": self.name,
+					})
+				else:
+					total_revenue += amount
+					je.append("accounts", {
+						"account": account,
+						"credit_in_account_currency": amount,
+						"reference_type": "BEI Billing Schedule",
+						"reference_name": self.name,
+					})
+
+		# Add handling_fee for delivery billings (franchise markup)
+		if self.billing_type == "Delivery" and flt(self.handling_fee) > 0:
+			total_revenue += flt(self.handling_fee)
+			je.append("accounts", {
+				"account": "4000300 - FRANCHISE INCOME - BEI",
+				"credit_in_account_currency": flt(self.handling_fee),
+				"reference_type": "BEI Billing Schedule",
+				"reference_name": self.name,
+			})
+
+		# Credit VAT
+		if total_vat > 0:
+			je.append("accounts", {
+				"account": VAT_ACCOUNT,
+				"credit_in_account_currency": total_vat,
+			})
+
+		# Debit AR for total (C-02 fix: removed invalid party_type "Department")
+		total_debit = total_revenue + total_vat
+		if total_debit > 0:
+			je.append("accounts", {
+				"account": AR_ACCOUNT,
+				"debit_in_account_currency": total_debit,
+				"against_voucher_type": "BEI Billing Schedule",
+				"against_voucher": self.name,
+				"user_remark": f"AR for {self.store}",
+			})
+
+		if je.accounts:
+			# C-03 fix: re-raise on failure to prevent billing without GL
+			je.insert(ignore_permissions=True)
+			je.submit()
+			self.add_comment("Info", f"GL Entry created: {je.name}")
+
+	def calculate_fees(self):
+		"""Calculate all fees based on store type and billing type."""
+		# Delivery billings have fees set by _create_delivery_billing()
+		if getattr(self, 'billing_type', '') == 'Delivery':
+			# For delivery billing, totals are pre-calculated
+			# Just ensure goods_value + handling_fee are in total
+			return
+
+		VAT_RATE = 0.12
+
+		# C-04/C-05 fix: Monthly fees should NOT include delivery/logistics
+		# Those are billed per-delivery via Stream B
+		self.delivery_fee = 0
+		self.logistics_fee = 0
+		self.goods_value = 0
+		self.handling_fee = 0
 
 		# Get store type from BEI Store Type master if not set
 		if not self.store_type and self.store:
@@ -38,16 +152,8 @@ class BEIBillingSchedule(Document):
 			# Marketing: 5% of NET sales (not gross!)
 			self.marketing_fee = self.net_sales * 0.05 if self.net_sales else 0
 
-			# eCommerce: 5% of online sales
-			self.ecommerce_fee = self.online_sales * 0.05 if self.online_sales else 0
-
-			# Deliveries: Cost + 12% VAT (no 8% markup for JV)
-			if self.delivery_cost:
-				self.delivery_fee = self.delivery_cost * (1 + VAT_RATE)
-
-			# Logistics: Cost + 12% VAT (no 8% markup for JV)
-			if self.logistics_cost:
-				self.logistics_fee = self.logistics_cost * (1 + VAT_RATE)
+			# eCommerce: 4% of website sales
+			self.ecommerce_fee = flt(self.website_sales) * 0.04 if self.website_sales else 0
 
 		elif self.store_type == "Managed Franchise":
 			# Managed Franchise
@@ -60,18 +166,8 @@ class BEIBillingSchedule(Document):
 			# Marketing: 5% gross
 			self.marketing_fee = self.gross_sales * 0.05 if self.gross_sales else 0
 
-			# eCommerce: 5% online
-			self.ecommerce_fee = self.online_sales * 0.05 if self.online_sales else 0
-
-			# Deliveries: (Cost + 12% VAT) + 8%
-			if self.delivery_cost:
-				base_delivery = self.delivery_cost * (1 + VAT_RATE)
-				self.delivery_fee = base_delivery * 1.08
-
-			# Logistics: (Cost + 12% VAT) + 8%
-			if self.logistics_cost:
-				base_logistics = self.logistics_cost * (1 + VAT_RATE)
-				self.logistics_fee = base_logistics * 1.08
+			# eCommerce: 4% of website sales
+			self.ecommerce_fee = flt(self.website_sales) * 0.04 if self.website_sales else 0
 
 		elif self.store_type == "Full Franchise":
 			# Full Franchise
@@ -84,18 +180,8 @@ class BEIBillingSchedule(Document):
 			# Marketing: 5% gross
 			self.marketing_fee = self.gross_sales * 0.05 if self.gross_sales else 0
 
-			# eCommerce: 5% online
-			self.ecommerce_fee = self.online_sales * 0.05 if self.online_sales else 0
-
-			# Deliveries: (Cost + 12% VAT) + 8%
-			if self.delivery_cost:
-				base_delivery = self.delivery_cost * (1 + VAT_RATE)
-				self.delivery_fee = base_delivery * 1.08
-
-			# Logistics: (Cost + 12% VAT) + 8%
-			if self.logistics_cost:
-				base_logistics = self.logistics_cost * (1 + VAT_RATE)
-				self.logistics_fee = base_logistics * 1.08
+			# eCommerce: 4% of website sales
+			self.ecommerce_fee = flt(self.website_sales) * 0.04 if self.website_sales else 0
 
 	def calculate_line_items(self):
 		"""Update line item amounts."""
@@ -113,7 +199,9 @@ class BEIBillingSchedule(Document):
 			self.delivery_fee or 0,
 			self.logistics_fee or 0,
 			self.repairs_maintenance or 0,
-			self.preventive_maintenance or 0
+			self.preventive_maintenance or 0,
+			self.goods_value or 0,
+			self.handling_fee or 0,
 		]
 
 		# Add line items

@@ -12,7 +12,11 @@
     "signed_by",
     "signature",
     "exception_reason",
-    "exception_photo"
+    "exception_photo",
+    "store_order",
+    "delivery_value",
+    "billing_reference",
+    "billing_creation_status"
   ],
   "fields": [
     {
@@ -67,6 +71,33 @@
       "fieldname": "exception_photo",
       "fieldtype": "Attach Image",
       "label": "Exception Photo"
+    },
+    {
+      "fieldname": "store_order",
+      "fieldtype": "Link",
+      "label": "Store Order",
+      "options": "BEI Store Order"
+    },
+    {
+      "fieldname": "delivery_value",
+      "fieldtype": "Currency",
+      "label": "Delivery Value",
+      "read_only": 1,
+      "precision": "2"
+    },
+    {
+      "fieldname": "billing_reference",
+      "fieldtype": "Link",
+      "label": "Billing Reference",
+      "options": "BEI Billing Schedule",
+      "read_only": 1
+    },
+    {
+      "fieldname": "billing_creation_status",
+      "fieldtype": "Select",
+      "label": "Billing Status",
+      "options": "\nPending\nSuccess\nFailed",
+      "read_only": 1
     }
   ],
   "istable": 1,
