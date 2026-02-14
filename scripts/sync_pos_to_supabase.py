@@ -20,7 +20,7 @@ import os
 import signal
 import sys
 import time
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -604,6 +604,8 @@ MATERIALIZED_VIEWS = [
     "daily_revenue",
     "discount_summary",
     "payment_reconciliation",
+    "store_daily_closing",
+    "store_daily_report",
 ]
 
 
@@ -694,8 +696,9 @@ def main():
     parser = build_parser()
     args = parser.parse_args()
 
-    # Resolve date range
-    yesterday = date.today() - timedelta(days=1)
+    # Resolve date range — use PHT (UTC+8) so GH Actions runners (UTC) get the correct "yesterday"
+    PHT = timezone(timedelta(hours=8))
+    yesterday = datetime.now(PHT).date() - timedelta(days=1)
     if args.daily:
         start_date = yesterday
         end_date = yesterday

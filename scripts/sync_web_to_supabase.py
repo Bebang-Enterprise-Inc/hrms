@@ -19,7 +19,7 @@ import os
 import subprocess
 import sys
 import time
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
@@ -485,12 +485,16 @@ def main():
                         help="Fetch and map but don't write to Supabase")
     args = parser.parse_args()
 
+    # Use PHT (UTC+8) so GH Actions runners (UTC) get the correct Philippine business date
+    PHT = timezone(timedelta(hours=8))
+    today_pht = datetime.now(PHT).date()
+
     if args.daily:
-        start = date.today() - timedelta(days=1)
-        end = date.today()
+        start = today_pht - timedelta(days=1)
+        end = today_pht
     else:
         start = date.fromisoformat(args.start_date)
-        end = date.fromisoformat(args.end_date) if args.end_date else date.today()
+        end = date.fromisoformat(args.end_date) if args.end_date else today_pht
 
     # Clear log file for fresh run
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)

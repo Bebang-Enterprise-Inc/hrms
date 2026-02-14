@@ -1,0 +1,55 @@
+name: Daily POS Anomaly Report (9 AM)
+
+# Runs at 9 AM PHT = 01:00 UTC, 9 hours after the midnight sync.
+# Re-verifies anomalies detected at midnight — only sends Chat alert
+# for anomalies that persist after self-healing checks.
+#
+# Flow:
+#   1. Midnight sync (daily-pos-sync.yml) fetches data + detects anomalies + writes to DB (--no-chat)
+#   2. This workflow re-runs detection at 9 AM, which:
+#      - Re-checks actual order counts (data may have arrived late)
+#      - Self-heals any anomalies where data has since appeared
+#      - Only sends Chat alert for anomalies still unresolved
+
+on:
+  schedule:
+    # 09:00 PHT = 01:00 UTC
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: "Override check date (YYYY-MM-DD). Leave blank for yesterday."
+        required: false
+        type: string
+
+env:
+  SUPABASE_URL: "https://csnniykjrychgajfrgua.supabase.co"
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+jobs:
+  anomaly-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests google-auth google-api-python-client
+
+      - name: Setup Google credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
+
+      - name: Run anomaly detection with Chat alert
+        run: |
+          if [ -n "${{ inputs.target_date }}" ]; then
+            python scripts/detect_anomalies.py --date "${{ inputs.target_date }}"
+          else
+            python scripts/detect_anomalies.py
+          fi

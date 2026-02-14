@@ -122,12 +122,12 @@ jobs:
           mkdir -p credentials
           echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
 
-      - name: Run anomaly detection
+      - name: Run anomaly detection (log to DB only, 9 AM report sends Chat)
         run: |
           if [ -n "${{ inputs.target_date }}" ]; then
-            python scripts/detect_anomalies.py --date "${{ inputs.target_date }}"
+            python scripts/detect_anomalies.py --date "${{ inputs.target_date }}" --no-chat
           else
-            python scripts/detect_anomalies.py
+            python scripts/detect_anomalies.py --no-chat
           fi
 
   # ── Workflow-level failure notification ─────────────────────────────────────
