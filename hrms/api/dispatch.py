@@ -9,20 +9,12 @@ Handles warehouse dispatch, route tracking, and delivery confirmation for my.beb
 import frappe
 from frappe import _
 from frappe.utils import nowdate, now_datetime, flt
-import json
 
 
 @frappe.whitelist()
 def get_trips(date=None, status=None):
-    """
-    Get dispatch trips for a date.
-    Defaults to today if no date specified.
-    """
-    filters = {}
-    if date:
-        filters["trip_date"] = date
-    else:
-        filters["trip_date"] = nowdate()
+    """Get dispatch trips for a date. Defaults to today if no date specified."""
+    filters = {"trip_date": date or nowdate()}
 
     if status:
         filters["status"] = status
@@ -113,22 +105,44 @@ def confirm_departure(trip_name, driver=None, vehicle=None, vehicle_plate=None, 
     }
 
 
+def _get_stop(trip, stop_idx):
+    """Validate and return a trip stop by 1-based index."""
+    stop_idx = int(stop_idx)
+    if stop_idx < 1 or stop_idx > len(trip.stops):
+        frappe.throw(_("Invalid stop index"))
+    return trip.stops[stop_idx - 1]
+
+
+def _update_trip_status(trip, require_all_processed=False):
+    """Recalculate trip status based on stop statuses.
+
+    Args:
+        require_all_processed: If True, only update status when all stops are processed.
+            Used by report_exception to preserve "In Transit" until all stops are visited.
+
+    Returns (delivered_count, total_count) for use in response payloads.
+    """
+    total = len(trip.stops)
+    delivered = sum(1 for s in trip.stops if s.status == "Delivered")
+    processed = sum(1 for s in trip.stops if s.status != "Pending")
+
+    if processed == total:
+        trip.status = "Completed" if delivered == total else "Partial"
+    elif not require_all_processed and (delivered > 0 or processed > 0):
+        trip.status = "Partial"
+
+    return delivered, total
+
+
 @frappe.whitelist()
 def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
-    """
-    Confirm delivery at a specific stop.
-    stop_idx is the row index (1-based) in the stops table.
-    """
+    """Confirm delivery at a specific stop. stop_idx is 1-based."""
     trip = frappe.get_doc("BEI Distribution Trip", trip_name)
 
     if trip.status not in ["In Transit", "Partial"]:
         frappe.throw(_("Trip is not in transit"))
 
-    stop_idx = int(stop_idx)
-    if stop_idx < 1 or stop_idx > len(trip.stops):
-        frappe.throw(_("Invalid stop index"))
-
-    stop = trip.stops[stop_idx - 1]
+    stop = _get_stop(trip, stop_idx)
     stop.status = "Delivered"
     stop.arrival_time = now_datetime()
     stop.signature = signature
@@ -145,13 +159,7 @@ def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
             enqueue_after_commit=True
         )
 
-    # Update trip status
-    delivered = sum(1 for s in trip.stops if s.status == "Delivered")
-    if delivered == len(trip.stops):
-        trip.status = "Completed"
-    else:
-        trip.status = "Partial"
-
+    delivered, total = _update_trip_status(trip)
     trip.save()
 
     return {
@@ -159,36 +167,23 @@ def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
         "message": f"Delivery to {stop.store} confirmed",
         "trip_status": trip.status,
         "delivered": delivered,
-        "total": len(trip.stops)
+        "total": total
     }
 
 
 @frappe.whitelist()
 def report_exception(trip_name, stop_idx, exception_type, reason=None, photo=None):
-    """
-    Report an exception at a stop (store closed, refused, etc).
-    exception_type: 'Store Closed' or 'Refused'
-    """
+    """Report an exception at a stop (store closed, refused, etc)."""
     trip = frappe.get_doc("BEI Distribution Trip", trip_name)
 
-    stop_idx = int(stop_idx)
-    if stop_idx < 1 or stop_idx > len(trip.stops):
-        frappe.throw(_("Invalid stop index"))
-
-    stop = trip.stops[stop_idx - 1]
+    stop = _get_stop(trip, stop_idx)
     stop.status = exception_type
     stop.arrival_time = now_datetime()
     stop.exception_reason = reason
     if photo:
         stop.exception_photo = photo
 
-    # Update trip status
-    non_pending = sum(1 for s in trip.stops if s.status != "Pending")
-    if non_pending == len(trip.stops):
-        # All stops processed (delivered or exception)
-        delivered = sum(1 for s in trip.stops if s.status == "Delivered")
-        trip.status = "Completed" if delivered == len(trip.stops) else "Partial"
-
+    _update_trip_status(trip, require_all_processed=True)
     trip.save()
 
     return {
@@ -230,18 +225,8 @@ def get_route_progress(trip_name):
     }
 
 
-@frappe.whitelist()
-def create_trip(trip_date, route_name, stops):
-    """
-    Create a new distribution trip.
-    stops: list of {store, items_count}
-    """
-    if isinstance(stops, str):
-        stops = json.loads(stops)
-
-    if not stops:
-        frappe.throw(_("At least one stop is required"))
-
+def _build_trip_doc(trip_date, route_name, stops):
+    """Build a BEI Distribution Trip document with stops (not yet inserted)."""
     trip = frappe.new_doc("BEI Distribution Trip")
     trip.trip_date = trip_date or nowdate()
     trip.route_name = route_name
@@ -255,6 +240,20 @@ def create_trip(trip_date, route_name, stops):
             "status": "Pending"
         })
 
+    return trip
+
+
+@frappe.whitelist()
+def create_trip(trip_date, route_name, stops):
+    """Create a new distribution trip. stops: list of {store, items_count}."""
+    if isinstance(stops, str):
+        stops = frappe.parse_json(stops)
+
+    if not stops:
+        frappe.throw(_("At least one stop is required"))
+
+    trip = _build_trip_doc(trip_date, route_name, stops)
+
     try:
         trip.insert()
     except frappe.DuplicateEntryError:
@@ -267,18 +266,7 @@ def create_trip(trip_date, route_name, stops):
             (trip.naming_series.replace('.YYYY.', str(nowdate()[:4])).replace('.#####', ''),)
         )
         frappe.db.commit()
-        # Rebuild doc from scratch (child rows need fresh parent reference)
-        trip = frappe.new_doc("BEI Distribution Trip")
-        trip.trip_date = trip_date or nowdate()
-        trip.route_name = route_name
-        trip.status = "Preparing"
-        for idx, stop_data in enumerate(stops, 1):
-            trip.append("stops", {
-                "store": stop_data.get("store"),
-                "stop_order": idx,
-                "items_count": stop_data.get("items_count", 0),
-                "status": "Pending"
-            })
+        trip = _build_trip_doc(trip_date, route_name, stops)
         trip.insert()
 
     return {
@@ -286,6 +274,10 @@ def create_trip(trip_date, route_name, stops):
         "trip": trip.name,
         "message": f"Trip {trip.name} created with {len(stops)} stops"
     }
+
+
+FRANCHISE_STORE_TYPES = ("Full Franchise", "Managed Franchise")
+FRANCHISE_MARKUP = 1.08
 
 
 def _create_delivery_billing(trip_name, stop_idx):
@@ -310,77 +302,59 @@ def _create_delivery_billing(trip_name, stop_idx):
             frappe.db.release_savepoint(sp)
             return
 
-        # 1. Resolve store department via mapping table
-        dept = frappe.db.get_value("BEI Warehouse Department Mapping",
-            {"warehouse": stop.store, "is_active": 1}, "department")
+        # Resolve store department, store type, and active rate -- bail on missing data
+        dept = frappe.db.get_value(
+            "BEI Warehouse Department Mapping",
+            {"warehouse": stop.store, "is_active": 1},
+            "department",
+        )
         if not dept:
-            frappe.log_error(
-                f"No warehouse→department mapping for {stop.store}",
-                "Billing: Missing Mapping"
-            )
-            stop.billing_creation_status = "Failed"
-            trip.save(ignore_permissions=True)
-            frappe.db.release_savepoint(sp)
+            _fail_stop(trip, stop, sp, f"No warehouse->department mapping for {stop.store}", title="Missing Department Mapping")
             return
 
-        # 2. Get store type for markup calculation
         store_type = frappe.db.get_value("BEI Store Type", {"store": dept}, "store_type")
 
-        # 3. Get active delivery rate for store + cargo type
-        rate = frappe.db.get_value("BEI Delivery Rate",
+        rate = frappe.db.get_value(
+            "BEI Delivery Rate",
             {"store": dept, "cargo_type": trip.cargo_type, "status": "Active"},
-            ["delivery_fee", "logistics_fee"], as_dict=True)
+            ["delivery_fee", "logistics_fee"],
+            as_dict=True,
+        )
         if not rate:
-            frappe.log_error(
-                f"No active {trip.cargo_type} rate for {dept}",
-                "Billing: Missing Rate"
-            )
-            stop.billing_creation_status = "Failed"
-            trip.save(ignore_permissions=True)
-            frappe.db.release_savepoint(sp)
-            _notify_missing_rate(dept, trip.cargo_type)
+            _fail_stop(trip, stop, sp, f"No active {trip.cargo_type} rate for {dept}")
             return
 
-        # 4. Calculate goods value from store order
-        goods_value = 0
-        if stop.store_order:
-            result = frappe.db.sql("""
-                SELECT COALESCE(SUM(qty * unit_price), 0)
-                FROM `tabBEI Store Order Item`
-                WHERE parent = %s
-            """, stop.store_order)
-            goods_value = result[0][0] if result else 0
+        # Calculate goods value from store order
+        goods_value = _get_order_goods_value(stop.store_order)
 
-        # 5. Apply 8% markup for franchise stores
-        is_franchise = store_type in ("Full Franchise", "Managed Franchise")
-        markup = 1.08 if is_franchise else 1.0
+        # Apply 8% markup for franchise stores
+        is_franchise = store_type in FRANCHISE_STORE_TYPES
+        markup = FRANCHISE_MARKUP if is_franchise else 1.0
 
-        delivery_fee = flt(rate.delivery_fee * markup, 2)
-        logistics_fee = flt(rate.logistics_fee * markup, 2)
-        handling_fee = flt(goods_value * 0.08, 2) if is_franchise else 0
-
-        # 6. Create billing record
+        # Create billing record
         billing = frappe.new_doc("BEI Billing Schedule")
-        billing.billing_type = "Delivery"
-        billing.store = dept
-        billing.store_type = store_type or ""
-        billing.trip_reference = trip.name
-        billing.trip_stop_idx = stop.idx
-        billing.cargo_type = trip.cargo_type
-        billing.delivery_fee = delivery_fee
-        billing.logistics_fee = logistics_fee
-        billing.goods_value = goods_value
-        billing.handling_fee = handling_fee
-        billing.status = "Pending"
+        billing.update({
+            "billing_type": "Delivery",
+            "store": dept,
+            "store_type": store_type or "",
+            "trip_reference": trip.name,
+            "trip_stop_idx": stop.idx,
+            "cargo_type": trip.cargo_type,
+            "delivery_fee": flt(rate.delivery_fee * markup, 2),
+            "logistics_fee": flt(rate.logistics_fee * markup, 2),
+            "goods_value": goods_value,
+            "handling_fee": flt(goods_value * 0.08, 2) if is_franchise else 0,
+            "status": "Pending",
+        })
         billing.insert(ignore_permissions=True)
 
-        # 7. Update stop with billing reference
+        # Update stop with billing reference
         stop.billing_reference = billing.name
         stop.delivery_value = goods_value
         stop.billing_creation_status = "Success"
         trip.save(ignore_permissions=True)
 
-        # C-06 fix: No explicit commit inside enqueued job — Frappe
+        # C-06 fix: No explicit commit inside enqueued job -- Frappe
         # auto-commits when the enqueued function returns successfully.
         frappe.db.release_savepoint(sp)
 
@@ -390,23 +364,29 @@ def _create_delivery_billing(trip_name, stop_idx):
             f"Failed to create billing for {trip_name} stop {stop_idx}: {str(e)}",
             "Billing Creation Error"
         )
-        # Mark stop as failed
         try:
             trip.reload()
-            stop = trip.stops[int(stop_idx) - 1]
-            stop.billing_creation_status = "Failed"
+            trip.stops[int(stop_idx) - 1].billing_creation_status = "Failed"
             trip.save(ignore_permissions=True)
         except Exception:
             pass
 
 
-def _notify_missing_rate(store, cargo_type):
-    """Notify Finance and Supply Chain about missing delivery rate."""
-    try:
-        frappe.log_error(
-            f"Billing blocked: No active {cargo_type} rate for store {store}. "
-            "Please set rates via the Rate Management Panel.",
-            "Missing Delivery Rate"
-        )
-    except Exception:
-        pass
+def _fail_stop(trip, stop, savepoint, error_message, title="Missing Delivery Rate"):
+    """Mark a stop as failed and log the error. Used during billing creation."""
+    frappe.log_error(error_message, title)
+    stop.billing_creation_status = "Failed"
+    trip.save(ignore_permissions=True)
+    frappe.db.release_savepoint(savepoint)
+
+
+def _get_order_goods_value(store_order):
+    """Calculate the total goods value from a store order's line items."""
+    if not store_order:
+        return 0
+    result = frappe.db.sql("""
+        SELECT COALESCE(SUM(qty * unit_price), 0)
+        FROM `tabBEI Store Order Item`
+        WHERE parent = %s
+    """, store_order)
+    return result[0][0] if result else 0

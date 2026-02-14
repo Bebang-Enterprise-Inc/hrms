@@ -7,26 +7,44 @@ from frappe import _
 from frappe.utils import flt, nowdate
 from markupsafe import escape as html_escape
 
+VAT_RATE = 0.12
+
+# GL account mapping
+FEE_TO_ACCOUNT = {
+	"royalty_fee": "4000301 - ROYALTIES INCOME - BEI",
+	"marketing_fee": "4000302 - MARKETING FEE INCOME - BEI",
+	"management_fee": "4000303 - MANAGEMENT FEE INCOME - BEI",
+	"ecommerce_fee": "4000304 - ECOMMERCE FEE INCOME - BEI",
+	"delivery_fee": "4000305 - DELIVERY INCOME - BEI",
+	"logistics_fee": "4000306 - LOGISTICS INCOME - BEI",
+}
+
+# Fees where VAT is included in the amount and must be separated for GL posting
+VAT_INCLUSIVE_FEES = {"royalty_fee", "management_fee"}
+
+AR_ACCOUNT = "1103101 - ACCOUNTS RECEIVABLE - BEI"
+VAT_ACCOUNT = "2102205 - OUTPUT VAT PAYABLE - BEI"
+FRANCHISE_INCOME_ACCOUNT = "4000300 - FRANCHISE INCOME - BEI"
+
+NAMING_SERIES = {
+	"Delivery": "BILL-DL-.YYYY.-.#####",
+}
+DEFAULT_NAMING_SERIES = "BILL-MF-.YYYY.-.#####"
+
 
 class BEIBillingSchedule(Document):
 	def validate(self):
 		"""Calculate all fees based on store type."""
-		# Set naming series based on billing type
-		if self.billing_type == "Delivery":
-			self.naming_series = "BILL-DL-.YYYY.-.#####"
-		else:
-			self.naming_series = "BILL-MF-.YYYY.-.#####"
-
+		self.naming_series = NAMING_SERIES.get(self.billing_type, DEFAULT_NAMING_SERIES)
 		self.calculate_fees()
 		self.calculate_line_items()
 		self.calculate_totals()
 
 	def before_save(self):
 		"""Create GL entries when billing transitions to Approved status."""
-		if self.status == "Approved" and self.get_doc_before_save():
-			old_status = self.get_doc_before_save().status
-			if old_status != "Approved":
-				self._create_gl_entries()
+		prev = self.get_doc_before_save()
+		if self.status == "Approved" and prev and prev.status != "Approved":
+			self._create_gl_entries()
 
 	def _create_gl_entries(self):
 		"""Create a Journal Entry to record billing in General Ledger.
@@ -42,57 +60,38 @@ class BEIBillingSchedule(Document):
 
 		total_revenue = 0
 		total_vat = 0
-		VAT_RATE = 0.12
 
-		# GL account mapping
-		FEE_TO_ACCOUNT = {
-			"royalty_fee": "4000301 - ROYALTIES INCOME - BEI",
-			"marketing_fee": "4000302 - MARKETING FEE INCOME - BEI",
-			"management_fee": "4000303 - MANAGEMENT FEE INCOME - BEI",
-			"ecommerce_fee": "4000304 - ECOMMERCE FEE INCOME - BEI",
-			"delivery_fee": "4000305 - DELIVERY INCOME - BEI",
-			"logistics_fee": "4000306 - LOGISTICS INCOME - BEI",
-		}
-
-		AR_ACCOUNT = "1103101 - ACCOUNTS RECEIVABLE - BEI"
-		VAT_ACCOUNT = "2102205 - OUTPUT VAT PAYABLE - BEI"
-
-		# Add credit entries for each fee type
 		for fee_field, account in FEE_TO_ACCOUNT.items():
 			amount = flt(getattr(self, fee_field, 0))
-			if amount > 0:
-				# For fees that include VAT (royalty, management), separate the VAT
-				if fee_field in ("royalty_fee", "management_fee"):
-					base_amount = flt(amount / (1 + VAT_RATE), 2)
-					vat_amount = flt(amount - base_amount, 2)
-					total_vat += vat_amount
-					total_revenue += base_amount
-					je.append("accounts", {
-						"account": account,
-						"credit_in_account_currency": base_amount,
-						"reference_type": "BEI Billing Schedule",
-						"reference_name": self.name,
-					})
-				else:
-					total_revenue += amount
-					je.append("accounts", {
-						"account": account,
-						"credit_in_account_currency": amount,
-						"reference_type": "BEI Billing Schedule",
-						"reference_name": self.name,
-					})
+			if amount <= 0:
+				continue
+
+			if fee_field in VAT_INCLUSIVE_FEES:
+				base_amount = flt(amount / (1 + VAT_RATE), 2)
+				vat_amount = flt(amount - base_amount, 2)
+				total_vat += vat_amount
+				credit_amount = base_amount
+			else:
+				credit_amount = amount
+
+			total_revenue += credit_amount
+			je.append("accounts", {
+				"account": account,
+				"credit_in_account_currency": credit_amount,
+				"reference_type": "BEI Billing Schedule",
+				"reference_name": self.name,
+			})
 
 		# Add handling_fee for delivery billings (franchise markup)
 		if self.billing_type == "Delivery" and flt(self.handling_fee) > 0:
 			total_revenue += flt(self.handling_fee)
 			je.append("accounts", {
-				"account": "4000300 - FRANCHISE INCOME - BEI",
+				"account": FRANCHISE_INCOME_ACCOUNT,
 				"credit_in_account_currency": flt(self.handling_fee),
 				"reference_type": "BEI Billing Schedule",
 				"reference_name": self.name,
 			})
 
-		# Credit VAT
 		if total_vat > 0:
 			je.append("accounts", {
 				"account": VAT_ACCOUNT,
@@ -119,12 +118,8 @@ class BEIBillingSchedule(Document):
 	def calculate_fees(self):
 		"""Calculate all fees based on store type and billing type."""
 		# Delivery billings have fees set by _create_delivery_billing()
-		if getattr(self, 'billing_type', '') == 'Delivery':
-			# For delivery billing, totals are pre-calculated
-			# Just ensure goods_value + handling_fee are in total
+		if self.billing_type == "Delivery":
 			return
-
-		VAT_RATE = 0.12
 
 		# C-04/C-05 fix: Monthly fees should NOT include delivery/logistics
 		# Those are billed per-delivery via Stream B
@@ -135,53 +130,31 @@ class BEIBillingSchedule(Document):
 
 		# Get store type from BEI Store Type master if not set
 		if not self.store_type and self.store:
-			store_type_doc = frappe.db.get_value(
-				"BEI Store Type",
-				{"store": self.store},
-				"store_type"
-			)
-			if store_type_doc:
-				self.store_type = store_type_doc
+			self.store_type = frappe.db.get_value(
+				"BEI Store Type", {"store": self.store}, "store_type"
+			) or self.store_type
 
-		# Billing matrix by store type
+		gross = flt(self.gross_sales)
+		net = flt(self.net_sales)
+		web = flt(self.website_sales)
+
+		# eCommerce fee: 4% of website sales (same for all store types)
+		self.ecommerce_fee = web * 0.04
+
 		if self.store_type == "JV":
-			# JV Stores
 			self.royalty_fee = 0
 			self.management_fee = 0
-
-			# Marketing: 5% of NET sales (not gross!)
-			self.marketing_fee = self.net_sales * 0.05 if self.net_sales else 0
-
-			# eCommerce: 4% of website sales
-			self.ecommerce_fee = flt(self.website_sales) * 0.04 if self.website_sales else 0
+			self.marketing_fee = net * 0.05  # JV uses NET sales
 
 		elif self.store_type == "Managed Franchise":
-			# Managed Franchise
-			# Royalty: 7% gross + 12% VAT
-			self.royalty_fee = self.gross_sales * 0.07 * (1 + VAT_RATE) if self.gross_sales else 0
-
-			# Management: 2.5% gross + 12% VAT
-			self.management_fee = self.gross_sales * 0.025 * (1 + VAT_RATE) if self.gross_sales else 0
-
-			# Marketing: 5% gross
-			self.marketing_fee = self.gross_sales * 0.05 if self.gross_sales else 0
-
-			# eCommerce: 4% of website sales
-			self.ecommerce_fee = flt(self.website_sales) * 0.04 if self.website_sales else 0
+			self.royalty_fee = gross * 0.07 * (1 + VAT_RATE)
+			self.management_fee = gross * 0.025 * (1 + VAT_RATE)
+			self.marketing_fee = gross * 0.05
 
 		elif self.store_type == "Full Franchise":
-			# Full Franchise
-			# Royalty: 7% gross + 12% VAT
-			self.royalty_fee = self.gross_sales * 0.07 * (1 + VAT_RATE) if self.gross_sales else 0
-
-			# Management: N/A
+			self.royalty_fee = gross * 0.07 * (1 + VAT_RATE)
 			self.management_fee = 0
-
-			# Marketing: 5% gross
-			self.marketing_fee = self.gross_sales * 0.05 if self.gross_sales else 0
-
-			# eCommerce: 4% of website sales
-			self.ecommerce_fee = flt(self.website_sales) * 0.04 if self.website_sales else 0
+			self.marketing_fee = gross * 0.05
 
 	def calculate_line_items(self):
 		"""Update line item amounts."""
@@ -226,23 +199,21 @@ class BEIBillingSchedule(Document):
 			frappe.throw(_("Can only send billing statements with Draft or Sent status"))
 
 		# Build the billing breakdown HTML
-		rows = []
-		if self.royalty_fee:
-			rows.append(("Royalty Fee", self.royalty_fee))
-		if self.management_fee:
-			rows.append(("Management Fee", self.management_fee))
-		if self.marketing_fee:
-			rows.append(("Marketing Fee", self.marketing_fee))
-		if self.ecommerce_fee:
-			rows.append(("eCommerce Fee", self.ecommerce_fee))
-		if self.delivery_fee:
-			rows.append(("Delivery Fee", self.delivery_fee))
-		if self.logistics_fee:
-			rows.append(("Logistics Fee", self.logistics_fee))
-		if self.repairs_maintenance:
-			rows.append(("Repairs & Maintenance", self.repairs_maintenance))
-		if self.preventive_maintenance:
-			rows.append(("Preventive Maintenance", self.preventive_maintenance))
+		fee_labels = [
+			("royalty_fee", "Royalty Fee"),
+			("management_fee", "Management Fee"),
+			("marketing_fee", "Marketing Fee"),
+			("ecommerce_fee", "eCommerce Fee"),
+			("delivery_fee", "Delivery Fee"),
+			("logistics_fee", "Logistics Fee"),
+			("repairs_maintenance", "Repairs & Maintenance"),
+			("preventive_maintenance", "Preventive Maintenance"),
+		]
+		rows = [
+			(label, getattr(self, field))
+			for field, label in fee_labels
+			if getattr(self, field)
+		]
 
 		for item in self.line_items:
 			if item.amount:

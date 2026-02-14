@@ -7,10 +7,22 @@ This module centralizes all billing operations for the BEI ERP system:
 - Phase 4: Monthly billing generation (migrated from procurement.py)
 """
 
+import re
+
 import frappe
 from frappe import _
-from frappe.utils import flt, nowdate, now_datetime, get_first_day, get_last_day
-import re
+from frappe.utils import flt, now_datetime, get_first_day, get_last_day
+
+RATE_MANAGEMENT_ROLES = {"Accounts Manager", "Supply Chain Manager", "System Manager"}
+
+
+def _check_rate_permission():
+    """Verify the caller has Finance or Supply Chain manager role."""
+    if not RATE_MANAGEMENT_ROLES.intersection(set(frappe.get_roles())):
+        frappe.throw(
+            _("Only Finance or Supply Chain managers can manage delivery rates"),
+            frappe.PermissionError,
+        )
 
 
 # ================================
@@ -41,10 +53,7 @@ def get_delivery_rates(store=None, cargo_type=None, status=None):
 @frappe.whitelist()
 def set_delivery_rate(store, cargo_type, delivery_fee, logistics_fee, effective_from, notes=None):
     """Create or update a delivery rate. Auto-detects caller role."""
-    # I-02 fix: Permission check
-    allowed_roles = {"Accounts Manager", "Supply Chain Manager", "System Manager"}
-    if not allowed_roles.intersection(set(frappe.get_roles())):
-        frappe.throw(_("Only Finance or Supply Chain managers can set delivery rates"), frappe.PermissionError)
+    _check_rate_permission()
 
     rate = frappe.new_doc("BEI Delivery Rate")
     rate.store = store
@@ -72,11 +81,8 @@ def submit_rate_for_review(rate_name):
 
 @frappe.whitelist()
 def approve_rate(rate_name):
-    """Approve a rate: Pending Review → Active. Expires any existing active rate."""
-    # I-02 fix: Permission check
-    allowed_roles = {"Accounts Manager", "Supply Chain Manager", "System Manager"}
-    if not allowed_roles.intersection(set(frappe.get_roles())):
-        frappe.throw(_("Only Finance or Supply Chain managers can approve rates"), frappe.PermissionError)
+    """Approve a rate: Pending Review -> Active. Expires any existing active rate."""
+    _check_rate_permission()
 
     rate = frappe.get_doc("BEI Delivery Rate", rate_name)
     if rate.status != "Pending Review":
@@ -111,16 +117,12 @@ def get_stores_without_rates():
     # All stores from BEI Store Type
     all_stores = frappe.get_all("BEI Store Type", fields=["store", "store_type"])
 
-    # Stores with active rates
+    # Build set of (store, cargo_type) with active rates
     stores_with_rates = frappe.db.sql("""
         SELECT DISTINCT store, cargo_type FROM `tabBEI Delivery Rate`
         WHERE status = 'Active'
     """, as_dict=True)
-
-    # Build set of (store, cargo_type) with active rates
-    active_set = set()
-    for r in stores_with_rates:
-        active_set.add((r.store, r.cargo_type))
+    active_set = {(r.store, r.cargo_type) for r in stores_with_rates}
 
     missing = []
     for st in all_stores:
@@ -233,13 +235,8 @@ def generate_monthly_billing(billing_period=None, store=None):
     except Exception:
         frappe.throw(_("Invalid billing period format. Use YYYY-MM"))
 
-    if store:
-        stores = frappe.get_all("BEI Store Type",
-            filters={"store": store},
-            fields=["store", "store_type"])
-    else:
-        stores = frappe.get_all("BEI Store Type",
-            fields=["store", "store_type"])
+    store_filters = {"store": store} if store else {}
+    stores = frappe.get_all("BEI Store Type", filters=store_filters, fields=["store", "store_type"])
 
     generated = 0
     skipped = 0
@@ -311,9 +308,9 @@ def scheduled_monthly_billing():
 
     Called by hooks.py cron (6 AM on 1st of each month).
     """
-    from frappe.utils import add_months, getdate, today
+    from frappe.utils import add_months, getdate, today as frappe_today
 
-    prev_month = add_months(today(), -1)
+    prev_month = add_months(frappe_today(), -1)
     billing_period = getdate(prev_month).strftime("%Y-%m")
 
     result = generate_monthly_billing(billing_period=billing_period)
