@@ -305,6 +305,215 @@ def generate_monthly_billing(billing_period=None, store=None):
     }
 
 
+# ================================
+# PHASE 5 — BILLING LIST, DETAIL, SUMMARY, PAYMENT, SOA, CANCEL
+# ================================
+
+@frappe.whitelist()
+def get_billing_list(status=None, billing_type=None, store=None, billing_period=None,
+                     limit_page_length=20, limit_start=0, order_by="modified desc"):
+    """List billings with flexible filters."""
+    filters = {}
+    if status:
+        filters["status"] = status
+    if billing_type:
+        filters["billing_type"] = billing_type
+    if store:
+        filters["store"] = store
+    if billing_period:
+        filters["billing_period"] = billing_period
+
+    return frappe.get_all("BEI Billing Schedule",
+        filters=filters,
+        fields=["name", "billing_type", "billing_period", "store", "store_type",
+                "status", "total_amount", "amount_paid", "balance_due",
+                "generated_on", "sent_on", "paid_on"],
+        order_by=order_by,
+        limit_page_length=int(limit_page_length),
+        limit_start=int(limit_start),
+    )
+
+
+@frappe.whitelist()
+def get_billing_detail(name):
+    """Get full billing details including line items and payment info."""
+    billing = frappe.get_doc("BEI Billing Schedule", name)
+    return {
+        "name": billing.name,
+        "billing_type": billing.billing_type,
+        "billing_period": billing.billing_period,
+        "store": billing.store,
+        "store_type": billing.store_type,
+        "status": billing.status,
+        # Sales data
+        "gross_sales": billing.gross_sales,
+        "net_sales": billing.net_sales,
+        "online_sales": billing.online_sales,
+        "website_sales": billing.website_sales,
+        # Fee breakdown
+        "royalty_fee": billing.royalty_fee,
+        "management_fee": billing.management_fee,
+        "marketing_fee": billing.marketing_fee,
+        "ecommerce_fee": billing.ecommerce_fee,
+        "delivery_fee": billing.delivery_fee,
+        "logistics_fee": billing.logistics_fee,
+        "repairs_maintenance": billing.repairs_maintenance,
+        "preventive_maintenance": billing.preventive_maintenance,
+        # Totals
+        "subtotal": billing.subtotal,
+        "vat_amount": billing.vat_amount,
+        "total_amount": billing.total_amount,
+        "amount_paid": billing.amount_paid,
+        "balance_due": billing.balance_due,
+        # Payment info
+        "payment_reference": billing.payment_reference,
+        "payment_proof": billing.payment_proof,
+        # Delivery-specific
+        "trip_reference": billing.trip_reference,
+        "cargo_type": billing.cargo_type,
+        "goods_value": billing.goods_value,
+        "handling_fee": billing.handling_fee,
+        "delivery_cost": billing.delivery_cost,
+        "logistics_cost": billing.logistics_cost,
+        # Timestamps
+        "generated_on": billing.generated_on,
+        "sent_on": billing.sent_on,
+        "paid_on": billing.paid_on,
+        # Line items
+        "line_items": [
+            {"fee_type": li.fee_type, "description": li.description,
+             "rate": li.rate, "amount": li.amount}
+            for li in (billing.line_items or [])
+        ],
+    }
+
+
+@frappe.whitelist()
+def get_billing_summary(billing_period=None, store=None):
+    """Get aggregated billing summary by status."""
+    conditions = ["1=1"]
+    params = []
+    if billing_period:
+        conditions.append("billing_period = %s")
+        params.append(billing_period)
+    if store:
+        conditions.append("store = %s")
+        params.append(store)
+
+    where = " AND ".join(conditions)
+
+    summary = frappe.db.sql(f"""
+        SELECT
+            status,
+            COUNT(*) as count,
+            COALESCE(SUM(total_amount), 0) as total_amount,
+            COALESCE(SUM(amount_paid), 0) as total_paid,
+            COALESCE(SUM(balance_due), 0) as total_balance
+        FROM `tabBEI Billing Schedule`
+        WHERE {where}
+        GROUP BY status
+    """, params, as_dict=True)
+
+    totals = frappe.db.sql(f"""
+        SELECT
+            COUNT(*) as total_billings,
+            COALESCE(SUM(total_amount), 0) as grand_total,
+            COALESCE(SUM(amount_paid), 0) as total_collected,
+            COALESCE(SUM(balance_due), 0) as total_outstanding
+        FROM `tabBEI Billing Schedule`
+        WHERE {where}
+    """, params, as_dict=True)[0]
+
+    return {
+        "by_status": summary,
+        "totals": totals,
+        "billing_period": billing_period,
+        "store": store,
+    }
+
+
+@frappe.whitelist()
+def record_payment(name, amount, payment_reference=None, payment_proof=None):
+    """Record a payment against a billing."""
+    if not amount or flt(amount) <= 0:
+        frappe.throw(_("Payment amount must be greater than zero"), frappe.ValidationError)
+
+    billing = frappe.get_doc("BEI Billing Schedule", name)
+    if billing.status not in ("Sent", "Approved"):
+        frappe.throw(_("Payments can only be recorded for Sent or Approved billings"))
+
+    new_paid = flt(billing.amount_paid) + flt(amount)
+    if new_paid > flt(billing.total_amount):
+        frappe.throw(_("Payment of {0} would exceed total amount of {1}").format(
+            frappe.format_value(flt(amount), "Currency"),
+            frappe.format_value(billing.total_amount, "Currency"),
+        ))
+
+    billing.amount_paid = new_paid
+    billing.balance_due = flt(billing.total_amount) - new_paid
+    if payment_reference:
+        billing.payment_reference = payment_reference
+    if payment_proof:
+        billing.payment_proof = payment_proof
+
+    # Auto-transition to Paid when fully paid
+    if flt(billing.balance_due) <= 0:
+        billing.status = "Paid"
+        billing.paid_on = now_datetime()
+
+    billing.save()
+    return {
+        "success": True,
+        "amount_paid": billing.amount_paid,
+        "balance_due": billing.balance_due,
+        "status": billing.status,
+    }
+
+
+@frappe.whitelist()
+def get_soa(name):
+    """Generate Statement of Account for a billing."""
+    billing = frappe.get_doc("BEI Billing Schedule", name)
+
+    return {
+        "billing_name": billing.name,
+        "store": billing.store,
+        "store_type": billing.store_type,
+        "billing_period": billing.billing_period,
+        "billing_type": billing.billing_type,
+        "status": billing.status,
+        # Fee breakdown
+        "line_items": [
+            {"fee_type": li.fee_type, "description": li.description,
+             "rate": li.rate, "amount": li.amount}
+            for li in (billing.line_items or [])
+        ],
+        "subtotal": billing.subtotal,
+        "vat_amount": billing.vat_amount,
+        "total_amount": billing.total_amount,
+        "amount_paid": billing.amount_paid,
+        "balance_due": billing.balance_due,
+        "payment_reference": billing.payment_reference,
+        "generated_on": str(billing.generated_on) if billing.generated_on else None,
+        "sent_on": str(billing.sent_on) if billing.sent_on else None,
+        "paid_on": str(billing.paid_on) if billing.paid_on else None,
+    }
+
+
+@frappe.whitelist()
+def cancel_billing(name, reason=None):
+    """Cancel a billing. Only Draft, Pending, or Sent billings can be cancelled."""
+    billing = frappe.get_doc("BEI Billing Schedule", name)
+    if billing.status in ("Cancelled", "Paid"):
+        frappe.throw(_("Cannot cancel a {0} billing").format(billing.status))
+
+    billing.status = "Cancelled"
+    if reason:
+        billing.add_comment("Comment", f"Cancelled: {reason}")
+    billing.save()
+    return {"success": True, "status": "Cancelled"}
+
+
 def scheduled_monthly_billing():
     """Scheduled job: auto-generate monthly billing for the previous month.
 
