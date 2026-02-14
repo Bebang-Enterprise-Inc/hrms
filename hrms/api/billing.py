@@ -263,10 +263,11 @@ def generate_monthly_billing(billing_period=None, store=None):
                 SELECT
                     COALESCE(SUM(gross_sales), 0) as gross_sales,
                     COALESCE(SUM(net_sales), 0) as net_sales,
-                    COALESCE(SUM(online_sales), 0) as online_sales
+                    COALESCE(SUM(online_sales), 0) as online_sales,
+                    COALESCE(SUM(website_sales), 0) as website_sales
                 FROM `tabBEI Store Closing Report`
                 WHERE store = %s
-                  AND closing_date BETWEEN %s AND %s
+                  AND report_date BETWEEN %s AND %s
                   AND docstatus = 1
             """, (store_rec.store, period_start, period_end), as_dict=True)[0]
 
@@ -284,6 +285,7 @@ def generate_monthly_billing(billing_period=None, store=None):
                 "gross_sales": sales_data.gross_sales,
                 "net_sales": sales_data.net_sales,
                 "online_sales": sales_data.online_sales,
+                "website_sales": sales_data.website_sales,
                 "status": "Draft",
             })
             billing.insert()

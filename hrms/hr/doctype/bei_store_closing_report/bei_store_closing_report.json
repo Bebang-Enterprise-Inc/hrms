@@ -81,6 +81,12 @@
   "pcf_voucher_amount",
   "column_break_vouchers",
   "delivery_voucher_amount",
+  "section_sales_billing",
+  "gross_sales",
+  "net_sales",
+  "column_break_sales_billing",
+  "online_sales",
+  "website_sales",
   "section_cash",
   "pos_total_sales",
   "actual_cash_count",
@@ -612,6 +618,43 @@
    "fieldname": "delivery_voucher_amount",
    "fieldtype": "Currency",
    "label": "Delivery Voucher Amount"
+  },
+  {
+   "fieldname": "section_sales_billing",
+   "fieldtype": "Section Break",
+   "label": "Sales Data (for Billing)"
+  },
+  {
+   "description": "Total sales including VAT",
+   "fieldname": "gross_sales",
+   "fieldtype": "Currency",
+   "label": "Gross Sales",
+   "precision": "2"
+  },
+  {
+   "description": "Sales net of VAT",
+   "fieldname": "net_sales",
+   "fieldtype": "Currency",
+   "label": "Net Sales",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_sales_billing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Online aggregator sales (GrabFood, FoodPanda)",
+   "fieldname": "online_sales",
+   "fieldtype": "Currency",
+   "label": "Online Sales",
+   "precision": "2"
+  },
+  {
+   "description": "Website direct order sales",
+   "fieldname": "website_sales",
+   "fieldtype": "Currency",
+   "label": "Website Sales",
+   "precision": "2"
   },
   {
    "fieldname": "section_cash",
