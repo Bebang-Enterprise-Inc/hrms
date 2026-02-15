@@ -389,6 +389,9 @@ def main():
                         help="Print alert but don't send to Chat or write to DB")
     parser.add_argument("--no-chat", action="store_true",
                         help="Write to DB but skip Chat alert")
+    parser.add_argument("--verify-only", action="store_true",
+                        help="Only re-check previously logged anomalies. "
+                             "Resolves recovered stores, alerts only on persistent failures.")
     args = parser.parse_args()
 
     # Determine target date
@@ -403,18 +406,11 @@ def main():
     py_dow = target_dt.weekday()  # Monday=0
     pg_dow = (py_dow + 1) % 7     # Convert to PostgreSQL DOW (Sunday=0)
 
-    log.info("Anomaly detection for %s (DOW=%d)", target_date, pg_dow)
+    log.info("Anomaly detection for %s (DOW=%d)%s", target_date, pg_dow,
+             " [VERIFY-ONLY]" if args.verify_only else "")
 
     # Fetch Supabase key
     key = get_supabase_key()
-
-    # Fetch data
-    log.info("Fetching baselines for DOW %d...", pg_dow)
-    baselines = fetch_baselines(key, pg_dow)
-    log.info("Got %d store baselines", len(baselines))
-
-    chain_median = fetch_chain_median(key, pg_dow)
-    log.info("Chain-wide median for DOW %d: %.1f", pg_dow, chain_median)
 
     store_names = fetch_active_stores(key)
     log.info("Active stores: %d", len(store_names))
@@ -422,6 +418,85 @@ def main():
     log.info("Fetching actual orders for %s...", target_date)
     actuals = fetch_daily_actuals(key, target_date)
     log.info("Got actuals for %d stores", len(actuals))
+
+    if args.verify_only:
+        # ── VERIFY-ONLY MODE ──────────────────────────────────────────
+        # Only re-check previously logged anomalies. Resolve recovered
+        # stores, alert only on persistent failures. No fresh detection.
+        log.info("Verify-only: checking previously logged anomalies...")
+        resolved = self_heal(key, actuals, target_date) if not args.dry_run else []
+        log.info("Resolved %d previously anomalous stores", len(resolved))
+
+        # Fetch what's STILL unresolved after self-healing
+        still_unresolved = [
+            a for a in fetch_unresolved_anomalies(key)
+            if a.get("business_date") == target_date
+        ]
+        log.info("Still unresolved: %d stores", len(still_unresolved))
+
+        if not still_unresolved:
+            # Everything recovered — send all-clear or nothing
+            if resolved:
+                alert_msg = (
+                    f"POS Data Recovery -- {datetime.strptime(target_date, '%Y-%m-%d').strftime('%b %d, %Y')}\n\n"
+                    f"All {len(resolved)} previously flagged stores have recovered.\n"
+                    "No action needed."
+                )
+                log.info("All anomalies resolved, sending recovery notice")
+            else:
+                alert_msg = None
+                log.info("No anomalies to verify, nothing to send")
+        else:
+            # Some stores still broken — build a focused alert
+            lines = [
+                f"POS Data Anomaly Report -- {datetime.strptime(target_date, '%Y-%m-%d').strftime('%b %d, %Y')}",
+                f"(Verified at 9 AM, {len(still_unresolved)} stores still missing data)",
+                "",
+                "PERSISTENT ISSUES (IT action needed):",
+            ]
+            for a in still_unresolved:
+                name = store_names.get(a["location_id"], f"Store {a['location_id']}")
+                lines.append(f"  {name} -- {a.get('order_count', 0)} orders (type: {a['anomaly_type']})")
+            lines.append("")
+
+            if resolved:
+                lines.append(f"RECOVERED since midnight ({len(resolved)} stores):")
+                for r in resolved:
+                    name = store_names.get(r["location_id"], f"Store {r['location_id']}")
+                    lines.append(f"  {name} -- data recovered ({r['new_count']} orders now)")
+                lines.append("")
+
+            alert_msg = "\n".join(lines)
+
+        if alert_msg:
+            print("\n" + "=" * 60)
+            print(alert_msg)
+            print("=" * 60 + "\n")
+
+            if args.dry_run:
+                log.info("DRY RUN: Alert not sent")
+            elif args.no_chat:
+                log.info("--no-chat: Skipping Chat")
+            else:
+                send_google_chat(alert_msg)
+
+        summary = {
+            "date": target_date,
+            "mode": "verify-only",
+            "still_unresolved": len(still_unresolved),
+            "resolved_count": len(resolved),
+            "alert_sent": alert_msg is not None and not args.dry_run and not args.no_chat,
+        }
+        log.info("Summary: %s", json.dumps(summary, indent=2))
+        return summary
+
+    # ── FULL DETECTION MODE (midnight) ────────────────────────────────
+    log.info("Fetching baselines for DOW %d...", pg_dow)
+    baselines = fetch_baselines(key, pg_dow)
+    log.info("Got %d store baselines", len(baselines))
+
+    chain_median = fetch_chain_median(key, pg_dow)
+    log.info("Chain-wide median for DOW %d: %.1f", pg_dow, chain_median)
 
     # Layer 1+2: Classify anomalies per store
     anomalies = []
@@ -488,6 +563,7 @@ def main():
     # Summary
     summary = {
         "date": target_date,
+        "mode": "full",
         "stores_checked": len(store_names),
         "anomalies_found": len(anomalies),
         "cross_store_class": cross_store,

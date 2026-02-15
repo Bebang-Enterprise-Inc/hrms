@@ -46,10 +46,10 @@ jobs:
           mkdir -p credentials
           echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
 
-      - name: Run anomaly detection with Chat alert
+      - name: Verify anomalies and alert only on persistent failures
         run: |
           if [ -n "${{ inputs.target_date }}" ]; then
-            python scripts/detect_anomalies.py --date "${{ inputs.target_date }}"
+            python scripts/detect_anomalies.py --date "${{ inputs.target_date }}" --verify-only
           else
-            python scripts/detect_anomalies.py
+            python scripts/detect_anomalies.py --verify-only
           fi
