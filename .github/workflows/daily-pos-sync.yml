@@ -100,11 +100,40 @@ jobs:
             python scripts/sync_web_to_supabase.py --daily
           fi
 
-  # ── Step 3: Anomaly detection (AFTER both syncs complete) ──────────────────
+  # ── Step 3: FoodPanda orders from Google Sheet (parallel with POS & Web) ───
+  foodpanda-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests google-auth google-api-python-client pytz
+
+      - name: Setup Google credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
+
+      - name: Run FoodPanda sync
+        run: |
+          if [ -n "${{ inputs.target_date }}" ]; then
+            python scripts/sync_foodpanda_to_supabase.py \
+              --date "${{ inputs.target_date }}"
+          else
+            python scripts/sync_foodpanda_to_supabase.py --daily
+          fi
+
+  # ── Step 4: Anomaly detection (AFTER all syncs complete) ─────────────────
   anomaly-detection:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [pos-sync, web-sync]
+    needs: [pos-sync, web-sync, foodpanda-sync]
     if: ${{ !inputs.skip_anomaly }}
 
     steps:
@@ -134,7 +163,7 @@ jobs:
   notify-failure:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [pos-sync, web-sync, anomaly-detection]
+    needs: [pos-sync, web-sync, foodpanda-sync, anomaly-detection]
     if: ${{ always() && contains(needs.*.result, 'failure') }}
 
     steps:
@@ -169,6 +198,7 @@ jobs:
               'One or more sync jobs failed.\n'
               'POS sync: ${{ needs.pos-sync.result }}\n'
               'Web sync: ${{ needs.web-sync.result }}\n'
+              'FoodPanda sync: ${{ needs.foodpanda-sync.result }}\n'
               'Anomaly detection: ${{ needs.anomaly-detection.result }}\n\n'
               'Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
           )
