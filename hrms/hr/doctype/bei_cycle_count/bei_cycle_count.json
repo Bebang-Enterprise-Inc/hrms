@@ -8,11 +8,17 @@
  "field_order": [
   "store",
   "count_date",
+  "count_type",
   "counted_by",
   "column_break_1",
   "verified_by",
+  "external_auditor",
   "status",
   "total_variance_value",
+  "section_export",
+  "photo_evidence",
+  "exported_to_cos_recon",
+  "export_date",
   "section_rejection",
   "rejection_reason",
   "resubmission_count",
@@ -41,6 +47,12 @@
    "reqd": 1
   },
   {
+   "fieldname": "count_type",
+   "fieldtype": "Select",
+   "label": "Count Type",
+   "options": "Store Monthly\nWarehouse Monthly\nSpot Check\nExternal Audit"
+  },
+  {
    "fieldname": "counted_by",
    "fieldtype": "Link",
    "label": "Counted By",
@@ -58,6 +70,12 @@
    "options": "User"
   },
   {
+   "fieldname": "external_auditor",
+   "fieldtype": "Link",
+   "label": "External Auditor",
+   "options": "User"
+  },
+  {
    "default": "Draft",
    "fieldname": "status",
    "fieldtype": "Select",
@@ -71,6 +89,29 @@
    "fieldtype": "Currency",
    "in_list_view": 1,
    "label": "Total Variance Value",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_export",
+   "fieldtype": "Section Break",
+   "label": "COS RECON Export"
+  },
+  {
+   "fieldname": "photo_evidence",
+   "fieldtype": "Attach Image",
+   "label": "Photo Evidence"
+  },
+  {
+   "default": "0",
+   "fieldname": "exported_to_cos_recon",
+   "fieldtype": "Check",
+   "label": "Exported to COS RECON"
+  },
+  {
+   "fieldname": "export_date",
+   "fieldtype": "Date",
+   "label": "Export Date",
    "read_only": 1
   },
   {
@@ -170,6 +211,14 @@
    "read": 1,
    "write": 1,
    "role": "Employee"
+  },
+  {
+   "create": 1,
+   "if_owner": 1,
+   "read": 1,
+   "role": "External Auditor",
+   "submit": 1,
+   "write": 1
   }
  ],
  "sort_field": "creation",

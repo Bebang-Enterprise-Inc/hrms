@@ -7,6 +7,10 @@
   "item_code",
   "system_qty",
   "counted_qty",
+  "counted_qty_whole",
+  "counted_qty_loose",
+  "conversion_factor",
+  "unit_cost",
   "variance_qty",
   "variance_value",
   "uom",
@@ -34,6 +38,31 @@
    "in_list_view": 1,
    "label": "Counted Qty",
    "reqd": 1
+  },
+  {
+   "fieldname": "counted_qty_whole",
+   "fieldtype": "Int",
+   "label": "Counted Qty (Whole)",
+   "description": "Whole packages counted"
+  },
+  {
+   "fieldname": "counted_qty_loose",
+   "fieldtype": "Float",
+   "label": "Counted Qty (Loose)",
+   "description": "Partial/grams counted"
+  },
+  {
+   "default": "1.0",
+   "fieldname": "conversion_factor",
+   "fieldtype": "Float",
+   "label": "Conversion Factor",
+   "read_only": 1
+  },
+  {
+   "fieldname": "unit_cost",
+   "fieldtype": "Currency",
+   "label": "Unit Cost",
+   "read_only": 1
   },
   {
    "fieldname": "variance_qty",
