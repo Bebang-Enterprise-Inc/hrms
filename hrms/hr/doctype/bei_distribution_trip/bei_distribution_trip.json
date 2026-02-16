@@ -10,6 +10,7 @@
     "naming_series",
     "trip_date",
     "route_name",
+    "route",
     "status",
     "column_break_1",
     "driver",
@@ -47,6 +48,12 @@
       "in_list_view": 1
     },
     {
+      "fieldname": "route",
+      "fieldtype": "Link",
+      "label": "Route",
+      "options": "BEI Route"
+    },
+    {
       "fieldname": "status",
       "fieldtype": "Select",
       "label": "Status",
@@ -81,11 +88,11 @@
       "fieldname": "cargo_type",
       "fieldtype": "Select",
       "label": "Cargo Type",
-      "options": "Dry Goods\nFrozen Goods",
+      "options": "FC\nDRY\nFM\nMixed",
       "reqd": 1,
       "in_list_view": 1,
       "in_standard_filter": 1,
-      "description": "Type of goods determines delivery rate"
+      "description": "FC=Fresh/Chilled, DRY=Dry Goods, FM=Frozen Meat"
     },
     {
       "fieldname": "section_break_departure",
@@ -121,7 +128,7 @@
     }
   ],
   "links": [],
-  "modified": "2026-01-24 00:00:00.000000",
+  "modified": "2026-02-16 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "HR",
   "name": "BEI Distribution Trip",

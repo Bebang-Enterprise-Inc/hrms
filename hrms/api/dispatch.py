@@ -657,3 +657,275 @@ def get_my_delivery(date=None):
             }
 
     return {"ok": False, "message": "No delivery scheduled"}
+
+
+# ============================================================================
+# PHASE 1C: ROUTE MANAGEMENT & TRIP CREATION
+# ============================================================================
+
+@frappe.whitelist()
+def get_routes(cargo_type=None, active_only=True):
+    """Get all route masters, optionally filtered."""
+    filters = {}
+    if cargo_type:
+        filters["cargo_type"] = cargo_type
+    if active_only:
+        filters["active"] = 1
+
+    routes = frappe.get_all(
+        "BEI Route",
+        filters=filters,
+        fields=["name", "route_name", "cargo_type", "source_warehouse", "default_vehicle", "default_driver", "estimated_duration_hrs", "active"],
+        order_by="route_name"
+    )
+
+    for route in routes:
+        stops = frappe.get_all(
+            "BEI Route Stop",
+            filters={"parent": route.name},
+            fields=["store", "stop_order", "estimated_minutes"],
+            order_by="stop_order"
+        )
+        route["stops"] = stops
+        route["stop_count"] = len(stops)
+
+    return {"routes": routes}
+
+
+@frappe.whitelist()
+def get_route_detail(route_name):
+    """Get full route details including all stops."""
+    route = frappe.get_doc("BEI Route", route_name)
+    return {
+        "route": {
+            "name": route.name,
+            "route_name": route.route_name,
+            "cargo_type": route.cargo_type,
+            "source_warehouse": route.source_warehouse,
+            "default_vehicle": route.default_vehicle,
+            "default_driver": route.default_driver,
+            "estimated_duration_hrs": route.estimated_duration_hrs,
+            "active": route.active,
+            "notes": route.notes,
+            "stops": [
+                {
+                    "idx": s.idx,
+                    "store": s.store,
+                    "stop_order": s.stop_order,
+                    "estimated_minutes": s.estimated_minutes,
+                    "special_instructions": s.special_instructions,
+                    "mall_permit_required": s.mall_permit_required
+                }
+                for s in route.stops
+            ]
+        }
+    }
+
+
+@frappe.whitelist()
+def create_route(route_name, cargo_type, source_warehouse, stops=None, default_vehicle=None, default_driver=None, notes=None):
+    """Create a new route master."""
+    if isinstance(stops, str):
+        stops = frappe.parse_json(stops)
+
+    route = frappe.new_doc("BEI Route")
+    route.route_name = route_name
+    route.cargo_type = cargo_type
+    route.source_warehouse = source_warehouse
+    route.default_vehicle = default_vehicle
+    route.default_driver = default_driver
+    route.notes = notes
+    route.active = 1
+
+    if stops:
+        for idx, stop_data in enumerate(stops, 1):
+            route.append("stops", {
+                "store": stop_data.get("store"),
+                "stop_order": idx,
+                "estimated_minutes": stop_data.get("estimated_minutes", 20),
+                "special_instructions": stop_data.get("special_instructions", ""),
+                "mall_permit_required": stop_data.get("mall_permit_required", 0)
+            })
+
+    route.insert()
+    return {"success": True, "route": route.name}
+
+
+@frappe.whitelist()
+def update_route(route_name, updates=None):
+    """Update a route master. Accepts partial updates."""
+    if isinstance(updates, str):
+        updates = frappe.parse_json(updates)
+
+    route = frappe.get_doc("BEI Route", route_name)
+
+    simple_fields = ["route_name", "cargo_type", "source_warehouse", "default_vehicle", "default_driver", "estimated_duration_hrs", "notes", "active"]
+    for field in simple_fields:
+        if field in updates:
+            setattr(route, field, updates[field])
+
+    if "stops" in updates:
+        route.stops = []
+        for idx, stop_data in enumerate(updates["stops"], 1):
+            route.append("stops", {
+                "store": stop_data.get("store"),
+                "stop_order": idx,
+                "estimated_minutes": stop_data.get("estimated_minutes", 20),
+                "special_instructions": stop_data.get("special_instructions", ""),
+                "mall_permit_required": stop_data.get("mall_permit_required", 0)
+            })
+
+    route.save()
+    return {"success": True, "route": route.name}
+
+
+@frappe.whitelist()
+def delete_route(route_name):
+    """Soft-delete a route (set active=0)."""
+    route = frappe.get_doc("BEI Route", route_name)
+    route.active = 0
+    route.save()
+    return {"success": True, "message": f"Route {route_name} deactivated"}
+
+
+@frappe.whitelist()
+def get_vehicles(status=None, owner_type=None):
+    """List vehicles with optional filters."""
+    filters = {}
+    if status:
+        filters["status"] = status
+    if owner_type:
+        filters["owner_type"] = owner_type
+
+    vehicles = frappe.get_all(
+        "BEI Vehicle",
+        filters=filters,
+        fields=["name", "vehicle_plate", "vehicle_type", "capacity_kg", "capacity_cbm", "owner_type", "threepl_partner", "status"],
+        order_by="vehicle_plate"
+    )
+    return {"vehicles": vehicles}
+
+
+@frappe.whitelist()
+def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None):
+    """One-click trip creation from a route template.
+
+    1. Loads route + stops
+    2. Creates BEI Distribution Trip
+    3. Copies stops, links approved store orders
+    4. Returns trip name
+    """
+    route = frappe.get_doc("BEI Route", route_name)
+
+    if not route.active:
+        frappe.throw(_("Route is not active"))
+
+    trip_date = trip_date or nowdate()
+
+    # Resolve vehicle details
+    vehicle_plate = None
+    if vehicle:
+        vehicle_plate = frappe.db.get_value("BEI Vehicle", vehicle, "vehicle_plate")
+    elif route.default_vehicle:
+        vehicle = route.default_vehicle
+        vehicle_plate = frappe.db.get_value("BEI Vehicle", route.default_vehicle, "vehicle_plate")
+
+    stops = []
+    for route_stop in route.stops:
+        # Find today's approved order for this store
+        store_order = frappe.db.get_value(
+            "BEI Store Order",
+            {"store": route_stop.store, "delivery_date": trip_date, "status": "Approved"},
+            "name"
+        )
+        items_count = 0
+        if store_order:
+            items_count = frappe.db.count("BEI Store Order Item", {"parent": store_order})
+
+        stops.append({
+            "store": route_stop.store,
+            "items_count": items_count,
+            "store_order": store_order or ""
+        })
+
+    # Use existing trip creation logic
+    trip = _build_trip_doc(trip_date, route.route_name, stops)
+    trip.driver = driver or route.default_driver
+    trip.vehicle = vehicle
+    trip.vehicle_plate = vehicle_plate
+    trip.cargo_type = route.cargo_type
+
+    # Link store orders to stops
+    for idx, stop_data in enumerate(stops):
+        if stop_data.get("store_order"):
+            trip.stops[idx].store_order = stop_data["store_order"]
+
+    trip.insert()
+
+    return {
+        "success": True,
+        "trip": trip.name,
+        "message": f"Trip {trip.name} created from route {route.route_name} with {len(stops)} stops"
+    }
+
+
+@frappe.whitelist()
+def duplicate_route(route_name, new_name):
+    """Clone a route with a new name."""
+    source = frappe.get_doc("BEI Route", route_name)
+
+    new_route = frappe.new_doc("BEI Route")
+    new_route.route_name = new_name
+    new_route.cargo_type = source.cargo_type
+    new_route.source_warehouse = source.source_warehouse
+    new_route.default_vehicle = source.default_vehicle
+    new_route.default_driver = source.default_driver
+    new_route.estimated_duration_hrs = source.estimated_duration_hrs
+    new_route.notes = source.notes
+    new_route.active = 1
+
+    for stop in source.stops:
+        new_route.append("stops", {
+            "store": stop.store,
+            "stop_order": stop.stop_order,
+            "estimated_minutes": stop.estimated_minutes,
+            "special_instructions": stop.special_instructions,
+            "mall_permit_required": stop.mall_permit_required
+        })
+
+    new_route.insert()
+    return {"success": True, "route": new_route.name}
+
+
+@frappe.whitelist()
+def reorder_stops(route_name, stop_order_map):
+    """Reorder stops in a route. stop_order_map: {store: new_order}"""
+    if isinstance(stop_order_map, str):
+        stop_order_map = frappe.parse_json(stop_order_map)
+
+    route = frappe.get_doc("BEI Route", route_name)
+
+    for stop in route.stops:
+        if stop.store in stop_order_map:
+            stop.stop_order = int(stop_order_map[stop.store])
+
+    # Re-sort stops by new order
+    route.stops.sort(key=lambda s: s.stop_order)
+    for idx, stop in enumerate(route.stops, 1):
+        stop.idx = idx
+        stop.stop_order = idx
+
+    route.save()
+    return {"success": True, "route": route.name}
+
+
+@frappe.whitelist()
+def get_driver_list():
+    """Get list of available drivers (employees with driver designation)."""
+    drivers = frappe.get_all(
+        "Employee",
+        filters={"status": "Active", "designation": ["in", ["Driver", "Delivery Driver", "Truck Driver"]]},
+        fields=["name", "employee_name", "cell_phone"],
+        order_by="employee_name"
+    )
+    return {"drivers": drivers}
