@@ -81,14 +81,19 @@ def submit_cycle_count(store=None, items=None, count_date=None):
 
 
 @frappe.whitelist()
-def get_cycle_counts(store=None, date_from=None, date_to=None, status=None, limit=20):
-    """Get cycle count history."""
+def get_cycle_counts(store=None, date_from=None, date_to=None, status=None,
+                     count_type=None, external_auditor=None, limit=20):
+    """Get cycle count history with filtering."""
     limit = min(int(limit or 20), 500)
     filters = {}
     if store:
         filters["store"] = store
     if status:
         filters["status"] = status
+    if count_type:
+        filters["count_type"] = count_type
+    if external_auditor:
+        filters["external_auditor"] = external_auditor
     if date_from:
         filters["count_date"] = [">=", date_from]
     if date_to:
@@ -97,15 +102,73 @@ def get_cycle_counts(store=None, date_from=None, date_to=None, status=None, limi
         else:
             filters["count_date"] = ["<=", date_to]
 
+    # External Auditors can only see their own counts
+    if "External Auditor" in frappe.get_roles() and not external_auditor:
+        filters["counted_by"] = frappe.session.user
+
     counts = frappe.get_all(
         "BEI Cycle Count",
         filters=filters,
         fields=["name", "store", "count_date", "status", "total_variance_value", "counted_by",
+                "count_type", "external_auditor", "photo_evidence",
+                "exported_to_cos_recon", "export_date",
                 "rejection_reason", "resubmission_count"],
         order_by="count_date desc",
         limit=int(limit)
     )
     return {"counts": counts}
+
+
+@frappe.whitelist()
+def get_cycle_count(name):
+    """Get single cycle count with items."""
+    doc = frappe.get_doc("BEI Cycle Count", name)
+    doc.check_permission("read")
+
+    # External Auditors can only see their own counts
+    if "External Auditor" in frappe.get_roles() and doc.counted_by != frappe.session.user:
+        frappe.throw(_("You can only view your own cycle counts"), frappe.PermissionError)
+
+    items = []
+    for item in doc.items:
+        item_meta = frappe.db.get_value("Item", item.item_code, ["item_name", "item_group"], as_dict=True) or {}
+        items.append({
+            "name": item.name,
+            "item_code": item.item_code,
+            "item_name": item_meta.get("item_name", ""),
+            "item_group": item_meta.get("item_group", ""),
+            "uom": item.uom,
+            "system_qty": item.system_qty,
+            "counted_qty": item.counted_qty,
+            "counted_qty_whole": item.counted_qty_whole,
+            "counted_qty_loose": item.counted_qty_loose,
+            "conversion_factor": item.conversion_factor,
+            "unit_cost": item.unit_cost,
+            "variance_qty": item.variance_qty,
+            "variance_value": item.variance_value,
+            "remarks": item.remarks,
+        })
+
+    return {
+        "name": doc.name,
+        "store": doc.store,
+        "count_date": str(doc.count_date),
+        "count_type": doc.count_type,
+        "status": doc.status,
+        "counted_by": doc.counted_by,
+        "verified_by": doc.verified_by,
+        "external_auditor": doc.external_auditor,
+        "photo_evidence": doc.photo_evidence,
+        "exported_to_cos_recon": doc.exported_to_cos_recon,
+        "export_date": str(doc.export_date) if doc.export_date else None,
+        "total_variance_value": doc.total_variance_value,
+        "rejection_reason": doc.rejection_reason,
+        "resubmission_count": doc.resubmission_count,
+        "items": items,
+        "docstatus": doc.docstatus,
+        "creation": str(doc.creation),
+        "modified": str(doc.modified),
+    }
 
 
 @frappe.whitelist()
@@ -544,15 +607,31 @@ def _map_item_group(item_group):
 
 
 def _check_store_access(store):
-    """Verify External Auditor has access to this store."""
-    # This will be implemented in Phase 2 with BEI External Auditor Store Access DocType
-    # For now, just a placeholder
-    pass
+    """Verify External Auditor has access to this store via BEI External Auditor Store Access."""
+    if "External Auditor" not in frappe.get_roles():
+        return  # Only check for External Auditors
+
+    warehouse = _resolve_warehouse(store)
+    if not warehouse:
+        frappe.throw(_("Could not find Store: {0}").format(store))
+
+    access = frappe.db.exists("BEI External Auditor Store Access", {
+        "user": frappe.session.user,
+        "warehouse": warehouse
+    })
+    if not access:
+        frappe.throw(
+            _("You do not have access to count at store {0}").format(store),
+            frappe.PermissionError
+        )
 
 
 @frappe.whitelist()
 def get_items_for_count(store, count_type=None):
     """Return items with recent stock movement, grouped by category."""
+    # External Auditors: verify store access
+    _check_store_access(store)
+
     warehouse = _resolve_warehouse(store)
     if not warehouse:
         frappe.throw(f"No warehouse found for store {store}")
@@ -651,41 +730,104 @@ def submit_cycle_count_v2(store, count_date, items, count_type="Store Monthly", 
 
 
 @frappe.whitelist()
+def save_cycle_count_draft(store, count_date, items, count_type="Store Monthly", photo=None, name=None):
+    """Save cycle count as draft (not submitted). Supports create and update."""
+    if "External Auditor" in frappe.get_roles():
+        _check_store_access(store)
+
+    if isinstance(items, str):
+        items = json.loads(items)
+
+    warehouse = _resolve_warehouse(store)
+    if not warehouse:
+        frappe.throw(_("Could not find Store: {0}").format(store))
+
+    if name:
+        # Update existing draft
+        doc = frappe.get_doc("BEI Cycle Count", name)
+        if doc.docstatus != 0:
+            frappe.throw(_("Cannot update a submitted cycle count"))
+        doc.items = []
+    else:
+        doc = frappe.new_doc("BEI Cycle Count")
+
+    doc.store = warehouse
+    doc.count_date = count_date
+    doc.count_type = count_type
+    doc.counted_by = frappe.session.user
+    doc.status = "Draft"
+
+    if "External Auditor" in frappe.get_roles():
+        doc.external_auditor = frappe.session.user
+
+    if photo:
+        from hrms.api.store import save_base64_image
+        photo_url = save_base64_image(photo, "BEI Cycle Count", fieldname="photo_evidence")
+        doc.photo_evidence = photo_url
+
+    for item_data in items:
+        doc.append("items", {
+            "item_code": item_data["item_code"],
+            "counted_qty_whole": item_data.get("counted_qty_whole", 0),
+            "counted_qty_loose": item_data.get("counted_qty_loose", 0.0),
+        })
+
+    doc.save()
+    return {"name": doc.name, "status": "Draft", "items_count": len(doc.items)}
+
+
+@frappe.whitelist()
 def export_count_to_cos_recon(cycle_count_name):
     """Generate COS RECON Excel and attach to cycle count record."""
     import openpyxl
     from frappe.utils.file_manager import save_file
+    from hrms.utils.cos_recon_schema import ACTIVE_VERSION
 
     doc = frappe.get_doc("BEI Cycle Count", cycle_count_name)
     doc.check_permission("read")
+
+    filename = f"COS_RECON_{doc.store}_{doc.count_date}.xlsx"
 
     # Idempotency: return existing export if already done
     if doc.exported_to_cos_recon and doc.export_date:
         existing = frappe.get_all("File", {"attached_to_name": doc.name, "file_name": ["like", "COS_RECON%"]}, ["file_url"])
         if existing:
-            return {"file_url": existing[0].file_url, "already_exported": True}
+            return {"file_url": existing[0].file_url, "filename": filename, "already_exported": True}
+
+    # Prefetch all item data in one query (fixes N+1)
+    item_codes = [item.item_code for item in doc.items]
+    item_data = {}
+    if item_codes:
+        for d in frappe.get_all("Item",
+            filters={"name": ["in", item_codes]},
+            fields=["name", "item_name", "item_group", "description"]):
+            item_data[d.name] = d
 
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = doc.store
 
-    # COS RECON column layout (C-K)
-    headers = {3: "Item Code", 4: "Item Name", 5: "Description", 6: "Grams",
-               7: "UOM", 8: "QTY Whole", 9: "QTY Loose", 10: "Unit Cost", 11: "Total Cost"}
-    for col, header in headers.items():
-        ws.cell(row=1, column=col, value=header)
+    # Write headers from versioned schema
+    col_map = {}
+    for col_def in ACTIVE_VERSION["columns"]:
+        col_idx = ord(col_def["col"]) - ord("A") + 1  # C=3, D=4, etc.
+        ws.cell(row=1, column=col_idx, value=col_def["header"])
+        col_map[col_def["field"]] = col_idx
 
-    # Write items grouped by category
+    # Write items sorted by category
     row = 2
     for item in sorted(doc.items, key=lambda x: _map_item_group(
-            frappe.db.get_value("Item", x.item_code, "item_group") or "")):
-        ws.cell(row=row, column=3, value=item.item_code)
-        ws.cell(row=row, column=4, value=frappe.db.get_value("Item", item.item_code, "item_name"))
-        ws.cell(row=row, column=7, value=item.uom)
-        ws.cell(row=row, column=8, value=item.counted_qty_whole or 0)
-        ws.cell(row=row, column=9, value=item.counted_qty_loose or 0.0)
-        ws.cell(row=row, column=10, value=item.unit_cost or 0.0)
-        ws.cell(row=row, column=11, value=(item.counted_qty or 0) * (item.unit_cost or 0))
+            (item_data.get(x.item_code) or {}).get("item_group", ""))):
+        meta = item_data.get(item.item_code) or {}
+        ws.cell(row=row, column=col_map["item_code"], value=item.item_code)
+        ws.cell(row=row, column=col_map["item_name"], value=meta.get("item_name", ""))
+        ws.cell(row=row, column=col_map["description"], value=meta.get("description", ""))
+        ws.cell(row=row, column=col_map["grams"], value=0)  # TODO: populate from item properties when available
+        ws.cell(row=row, column=col_map["uom"], value=item.uom)
+        ws.cell(row=row, column=col_map["counted_qty_whole"], value=item.counted_qty_whole or 0)
+        ws.cell(row=row, column=col_map["counted_qty_loose"], value=item.counted_qty_loose or 0.0)
+        ws.cell(row=row, column=col_map["unit_cost"], value=item.unit_cost or 0.0)
+        ws.cell(row=row, column=col_map["total_cost"], value=(item.counted_qty or 0) * (item.unit_cost or 0))
         row += 1
 
     # Save to bytes and attach via File DocType
@@ -694,7 +836,6 @@ def export_count_to_cos_recon(cycle_count_name):
     wb.save(buffer)
     buffer.seek(0)
 
-    filename = f"COS_RECON_{doc.store}_{doc.count_date}.xlsx"
     file_doc = save_file(filename, buffer.read(), "BEI Cycle Count", doc.name, is_private=1)
 
     # Update flags atomically

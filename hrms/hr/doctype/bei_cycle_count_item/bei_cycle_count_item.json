@@ -36,8 +36,7 @@
    "fieldname": "counted_qty",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "Counted Qty",
-   "reqd": 1
+   "label": "Counted Qty"
   },
   {
    "fieldname": "counted_qty_whole",
