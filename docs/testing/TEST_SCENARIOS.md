@@ -877,3 +877,855 @@ Payload: {
 **Assert:**
 - Response: `success=True`
 - DB: Payment applied, status updated
+
+---
+
+## Biometric Monitoring Module (14 scenarios)
+
+### BIO-001: Dashboard Summary (Happy Path)
+- **Type:** happy
+- **Role:** test.hr@bebang.ph (HR Officer)
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_dashboard_summary`
+- **Payload:** None (GET request)
+- **Assert:**
+  - Response: `ok == true`
+  - Data contains: `total_employees` (int > 0), `punching_employees` (int), `enrollment_pct` (float 0-100), `devices_online` (int), `devices_total` (int), `issues_count` (int >= 0), `days_to_deadline` (int), `last_refreshed` (ISO datetime string)
+  - `enrollment_pct == round(punching_employees / total_employees * 100, 1)`
+  - `devices_total == 46`
+
+### BIO-002: Device Status List (Happy Path)
+- **Type:** happy
+- **Role:** test.hr@bebang.ph
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_device_status`
+- **Payload:** None
+- **Assert:**
+  - Response: `ok == true`, `devices` is array with length == 46
+  - Each device has: `sn` (string), `store` (string), `status` (one of: "online", "recent", "offline", "never_connected"), `last_activity` (ISO datetime or null), `total_punches` (int >= 0), `employee_count` (int >= 0)
+  - At least 40 devices have `status == "online"` (realistic baseline)
+
+### BIO-003: Not Punching >48h List
+- **Type:** happy
+- **Role:** test.hr@bebang.ph
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_not_punching`
+- **Payload:** `{"hours": 48}`
+- **Assert:**
+  - Response: `ok == true`, `employees` is array
+  - Each employee has: `employee_id` (string), `employee_name` (string), `bio_id` (string matching `^9\d{6}$`), `store` (string), `last_punch` (ISO datetime or null), `hours_since_punch` (float > 48), `supervisor` (string or null)
+  - No employee appears with `hours_since_punch < 48`
+
+### BIO-004: Not Punching Custom Hours Parameter
+- **Type:** edge
+- **Role:** test.hr@bebang.ph
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_not_punching`
+- **Payload:** `{"hours": 24}`
+- **Assert:**
+  - Response: `ok == true`, `employees` is array
+  - Every employee in list has `hours_since_punch > 24`
+  - Result set is >= the 48h result (more employees appear at lower threshold)
+
+### BIO-005: Wrong Device Detection
+- **Type:** happy
+- **Role:** test.hr@bebang.ph
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_wrong_device`
+- **Payload:** None
+- **Assert:**
+  - Response: `ok == true`, `employees` is array
+  - Each entry has: `employee_id`, `employee_name`, `bio_id`, `assigned_store`, `punching_store`, `assigned_device_sn`, `punching_device_sn`, `punch_count_wrong_device` (int > 0)
+  - `assigned_store != punching_store` for every entry
+
+### BIO-006: Ghost Punchers (Unknown Bio IDs)
+- **Type:** happy
+- **Role:** test.hr@bebang.ph
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_ghost_punchers`
+- **Payload:** None
+- **Assert:**
+  - Response: `ok == true`, `unknowns` is array
+  - Each entry has: `bio_id` (string), `device_sn` (string), `store` (string), `punch_count` (int > 0), `last_punch` (ISO datetime)
+  - No `bio_id` in the list exists in Employee Master (`data/_FINAL/EMPLOYEE_MASTER.csv` `new_attendance_device_id` column)
+
+### BIO-007: Store Leaderboard
+- **Type:** happy
+- **Role:** test.hr@bebang.ph
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_store_leaderboard`
+- **Payload:** None
+- **Assert:**
+  - Response: `ok == true`, `stores` is array sorted by `compliance_pct` descending
+  - Each store has: `store_name` (string), `total_employees` (int > 0), `punching_employees` (int), `compliance_pct` (float 0-100), `rank` (int)
+  - Sum of all `total_employees` across stores == `total_employees` from BIO-001
+
+### BIO-008: Not Enrolled (Never Punched)
+- **Type:** happy
+- **Role:** test.hr@bebang.ph
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_not_enrolled`
+- **Payload:** None
+- **Assert:**
+  - Response: `ok == true`, `employees` is array
+  - Each entry has: `employee_id`, `employee_name`, `bio_id`, `store`, `designation`, `supervisor`
+  - None of these employees appear in `adms_attlog_raw` since Feb 3
+
+### BIO-009: RBAC — Store Staff DENIED Access
+- **Type:** rbac
+- **Role:** test.staff@bebang.ph (Store OIC — NOT HR/System Manager)
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_dashboard_summary`
+- **Payload:** None
+- **Assert:**
+  - Response: HTTP 403 or `frappe.PermissionError`
+  - Error message contains "do not have access" or "Insufficient Permissions"
+  - No biometric data returned
+
+### BIO-010: RBAC — Crew DENIED Access
+- **Type:** rbac
+- **Role:** test.crew1@bebang.ph (Crew — lowest role)
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_device_status`
+- **Payload:** None
+- **Assert:**
+  - Response: HTTP 403 or `frappe.PermissionError`
+  - No device data returned
+
+### BIO-011: Manual Cache Refresh
+- **Type:** happy
+- **Role:** test.hr@bebang.ph
+- **Call:** `POST /api/method/hrms.api.biometric_monitoring.refresh_biometric_cache`
+- **Payload:** None
+- **Assert:**
+  - Response: `ok == true`, `refreshed == true`, `duration_seconds` (float > 0)
+  - Subsequent `get_dashboard_summary` call returns `last_refreshed` timestamp >= the refresh time
+  - Response time < 120s (SSM queries + processing)
+
+### BIO-012: Cache Refresh — Non-Admin DENIED
+- **Type:** rbac
+- **Role:** test.hr@bebang.ph (HR Officer — can view but NOT refresh)
+- **Call:** `POST /api/method/hrms.api.biometric_monitoring.refresh_biometric_cache`
+- **Payload:** None
+- **Assert:**
+  - Response: HTTP 403 or `frappe.PermissionError`
+  - Cache NOT refreshed (only System Manager / Administrator can refresh)
+- **Note:** If HR Officer should be able to refresh, change this to a happy-path test. Decision point for user.
+
+### BIO-013: SSM Failure Graceful Degradation
+- **Type:** edge
+- **Role:** test.hr@bebang.ph
+- **Precondition:** Cache populated from previous successful refresh
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_dashboard_summary`
+- **Simulate:** (Cannot directly simulate SSM failure in L3 test — verify at code level)
+- **Assert:**
+  - When cache exists, dashboard returns stale data with `stale == true` flag
+  - `last_refreshed` timestamp is older than 6 hours
+  - No error thrown to user — graceful degradation
+
+### BIO-014: Dashboard Response Performance
+- **Type:** edge
+- **Role:** test.hr@bebang.ph
+- **Call:** `GET /api/method/hrms.api.biometric_monitoring.get_dashboard_summary`
+- **Assert:**
+  - Response time < 2000ms (reads from cache, never hits SSM)
+  - Response body size < 50KB (summary data only, not raw punch logs)
+
+---
+
+## Billing Module (17 scenarios)
+
+**Added:** 2026-02-14 | **Origin:** Billing Redesign Plan v1.6 audit (AUDIT-6)
+
+**Context:** BEI has 3 billing streams:
+- **Stream A:** Monthly franchise fees (royalty, management, marketing, eCommerce) — triggered monthly, pulls POS data from Supabase
+- **Stream B:** Delivery billing (delivery_fee + logistics_fee + goods_value + handling_fee) — triggered on `confirm_delivery()`, real-time per stop
+- **Stream C:** Other charges (R&M, PM, payroll, taxes) — monthly, deferred
+
+**Key Business Rules:**
+- JV stores: NO royalty, NO management, YES marketing (5%), YES eCommerce (4%)
+- Full Franchise: ALL fees, emailed billings, 8% handling markup on delivery
+- Managed Franchise: ALL fees, internal only, 8% handling markup on delivery
+- eCommerce fee = `website_sales × 4%` (excludes Foodpanda/Grab)
+- Delivery rate per store, per cargo type (Dry/Frozen), set in BEI Delivery Rate DocType
+- Billing BLOCKED if no active rate for store+cargo_type
+- Bidirectional rate approval (Finance ↔ Supply Chain)
+
+**Test Data Requirements:**
+- Test stores: TEST-STORE-BGC (Full Franchise), TEST-STORE-MEGAMALL (JV), TEST-STORE-EASTWOOD (Managed Franchise)
+- Delivery rates: Dry = ₱1,500 delivery + ₱800 logistics, Frozen = ₱2,500 delivery + ₱1,200 logistics
+- Store orders: At least 3 items per order, goods_value = ₱15,000
+- Photos: Use `PHOTO_DATA_URL` fixture (150KB+ PNG) for any attachment fields
+
+### BILL-001: Delivery Billing — JV Store (No Markup)
+- **Type:** happy
+- **Role:** test.staff@bebang.ph (Store OIC or Supply Chain role)
+- **Precondition:**
+  - BEI Distribution Trip exists with cargo_type="Dry Goods", status="In Transit"
+  - BEI Trip Stop exists for TEST-STORE-MEGAMALL (JV store) with store_order containing goods_value=15000
+  - Active BEI Delivery Rate for TEST-STORE-MEGAMALL + Dry Goods (delivery_fee=1500, logistics_fee=800)
+- **Call:** `POST hrms.api.dispatch.confirm_delivery`
+- **Payload:**
+  ```json
+  {
+    "stop_id": "<trip_stop_name>",
+    "delivered_by": "TEST-DRIVER-001",
+    "photos": "[{\"photo\": \"<PHOTO_DATA_URL>\", \"caption\": \"Delivery confirmation photo\"}]"
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`, `message` contains "Delivery confirmed"
+  - DB: `BEI Trip Stop.status == "Delivered"`
+  - DB: `BEI Billing Schedule` created with `billing_type == "Delivery"`, `store == "TEST-STORE-MEGAMALL"`
+  - DB: `BEI Billing Schedule.delivery_fee == 1500`
+  - DB: `BEI Billing Schedule.logistics_fee == 800`
+  - DB: `BEI Billing Schedule.goods_value == 15000`
+  - DB: `BEI Billing Schedule.handling_fee == 0` (JV stores get NO markup)
+  - DB: `BEI Billing Schedule.total_amount == 17300` (1500 + 800 + 15000 + 0)
+
+### BILL-002: Delivery Billing — Full Franchise (8% Markup)
+- **Type:** happy
+- **Role:** test.staff@bebang.ph
+- **Precondition:**
+  - BEI Distribution Trip with cargo_type="Dry Goods"
+  - BEI Trip Stop for TEST-STORE-BGC (Full Franchise) with goods_value=15000
+  - Active BEI Delivery Rate for TEST-STORE-BGC + Dry Goods (delivery_fee=1500, logistics_fee=800)
+- **Call:** `POST hrms.api.dispatch.confirm_delivery`
+- **Payload:**
+  ```json
+  {
+    "stop_id": "<trip_stop_name>",
+    "delivered_by": "TEST-DRIVER-001",
+    "photos": "[{\"photo\": \"<PHOTO_DATA_URL>\", \"caption\": \"Delivery confirmation\"}]"
+  }
+  ```
+- **Assert:**
+  - DB: `BEI Billing Schedule.delivery_fee == 1500`
+  - DB: `BEI Billing Schedule.logistics_fee == 800`
+  - DB: `BEI Billing Schedule.goods_value == 15000`
+  - DB: `BEI Billing Schedule.handling_fee == 1200` (15000 × 0.08)
+  - DB: `BEI Billing Schedule.total_amount == 18500` (1500 + 800 + 15000 + 1200)
+  - DB: Billing record has `email_sent == 1` (Full Franchise gets emailed)
+
+### BILL-003: Monthly Billing — JV Store (Marketing + eCommerce Only)
+- **Type:** happy
+- **Role:** test.hr@bebang.ph (Accounts Manager)
+- **Precondition:**
+  - BEI Store Type for TEST-STORE-MEGAMALL with `store_type == "Joint Venture"`
+  - POS data in Supabase for TEST-STORE-MEGAMALL with `gross_sales = 500000`, `website_sales = 100000`, `online_sales = 150000` (includes Foodpanda/Grab)
+- **Call:** `POST hrms.api.procurement.generate_monthly_billing`
+- **Payload:**
+  ```json
+  {
+    "billing_period": "2026-02",
+    "store": "TEST-STORE-MEGAMALL"
+  }
+  ```
+- **Assert:**
+  - Response: `generated == 1`, `skipped == 0`, `errors == []`
+  - DB: `BEI Billing Schedule.billing_type == "Monthly Fees"`
+  - DB: `BEI Billing Schedule.royalty_fee == 0` (JV stores exempt)
+  - DB: `BEI Billing Schedule.management_fee == 0` (JV stores exempt)
+  - DB: `BEI Billing Schedule.marketing_fee == 25000` (500000 × 0.05)
+  - DB: `BEI Billing Schedule.ecommerce_fee == 4000` (100000 × 0.04, uses website_sales NOT online_sales)
+  - DB: `BEI Billing Schedule.total_amount == 29000` (0 + 0 + 25000 + 4000)
+
+### BILL-004: Monthly Billing — Full Franchise (All Fees)
+- **Type:** happy
+- **Role:** test.hr@bebang.ph
+- **Precondition:**
+  - BEI Store Type for TEST-STORE-BGC with `store_type == "Full Franchise"`
+  - POS data: `gross_sales = 1000000`, `website_sales = 200000`
+- **Call:** `POST hrms.api.procurement.generate_monthly_billing`
+- **Payload:**
+  ```json
+  {
+    "billing_period": "2026-02",
+    "store": "TEST-STORE-BGC"
+  }
+  ```
+- **Assert:**
+  - DB: `BEI Billing Schedule.royalty_fee == 120000` (1000000 × 0.12)
+  - DB: `BEI Billing Schedule.management_fee == 30000` (1000000 × 0.03)
+  - DB: `BEI Billing Schedule.marketing_fee == 50000` (1000000 × 0.05)
+  - DB: `BEI Billing Schedule.ecommerce_fee == 8000` (200000 × 0.04)
+  - DB: `BEI Billing Schedule.total_amount == 208000` (120000 + 30000 + 50000 + 8000)
+
+### BILL-005: Delivery Billing — No Active Rate (Error)
+- **Type:** edge
+- **Role:** test.staff@bebang.ph
+- **Precondition:**
+  - BEI Distribution Trip with cargo_type="Frozen Goods"
+  - BEI Trip Stop for TEST-STORE-BGC
+  - NO active BEI Delivery Rate for TEST-STORE-BGC + Frozen Goods (status is Draft or Expired)
+- **Call:** `POST hrms.api.dispatch.confirm_delivery`
+- **Payload:**
+  ```json
+  {
+    "stop_id": "<trip_stop_name>",
+    "delivered_by": "TEST-DRIVER-001",
+    "photos": "[{\"photo\": \"<PHOTO_DATA_URL>\", \"caption\": \"Delivery\"}]"
+  }
+  ```
+- **Assert:**
+  - Response: `ok == false`, error message contains "No active delivery rate found"
+  - DB: `BEI Trip Stop.status == "In Transit"` (delivery NOT confirmed)
+  - DB: NO `BEI Billing Schedule` created for this stop
+  - Frappe Error Log: Contains "Delivery rate missing for store + cargo type"
+
+### BILL-006: eCommerce Fee Uses website_sales Only (Edge)
+- **Type:** edge | **Origin:** Billing Redesign v1.6 specification clarification
+- **Role:** test.hr@bebang.ph
+- **Precondition:**
+  - POS data: `gross_sales = 300000`, `website_sales = 50000` (website only), `online_sales = 150000` (includes Foodpanda/Grab = 100000 + website 50000)
+- **Call:** `POST hrms.api.procurement.generate_monthly_billing`
+- **Payload:**
+  ```json
+  {
+    "billing_period": "2026-02",
+    "store": "TEST-STORE-BGC"
+  }
+  ```
+- **Assert:**
+  - DB: `BEI Billing Schedule.ecommerce_fee == 2000` (50000 × 0.04)
+  - DB: eCommerce fee does NOT use `online_sales` (which would be 150000 × 0.04 = 6000 — WRONG)
+  - Verify calculation excludes Foodpanda/Grab (100000 should NOT be in ecommerce_fee base)
+
+### BILL-007: eCommerce Fee Formula Regression Test
+- **Type:** regression | **Origin:** AUDIT-6 (Plan v1.6 audit found formula typo)
+- **Role:** test.hr@bebang.ph
+- **Precondition:**
+  - POS data: `website_sales = 100000`
+- **Call:** `POST hrms.api.procurement.generate_monthly_billing`
+- **Payload:**
+  ```json
+  {
+    "billing_period": "2026-02",
+    "store": "TEST-STORE-BGC"
+  }
+  ```
+- **Assert:**
+  - DB: `BEI Billing Schedule.ecommerce_fee == 4000` (100000 × 0.04, NOT 100000 × 0.05)
+  - Verify formula is `website_sales × 0.04` not accidentally using 5% from marketing fee
+
+### BILL-008: Rate Management — Finance Creates, Supply Chain Approves
+- **Type:** happy
+- **Role:** test.hr@bebang.ph (Finance role)
+- **Step 1:** `POST hrms.api.billing.set_delivery_rate`
+- **Payload:**
+  ```json
+  {
+    "store": "TEST-STORE-BGC",
+    "cargo_type": "Dry Goods",
+    "delivery_fee": 1500,
+    "logistics_fee": 800,
+    "effective_from": "2026-02-15"
+  }
+  ```
+- **Assert Step 1:**
+  - Response: `ok == true`, `rate_name` returned
+  - DB: `BEI Delivery Rate.status == "Draft"`, `created_by == "test.hr@bebang.ph"`, `approver == null`
+- **Step 2:** Finance submits for review: `POST hrms.api.billing.submit_rate_for_review` with `{"rate_id": "<rate_name>"}`
+- **Assert Step 2:** DB: `BEI Delivery Rate.status == "Pending Review"`, `submitted_for_review == 1`
+- **Step 3:** test.warehouse@bebang.ph (Supply Chain) calls `POST hrms.api.billing.approve_rate` with `{"rate_id": "<rate_name>"}`
+- **Assert Step 3:**
+  - DB: `BEI Delivery Rate.status == "Active"`
+  - DB: `approved_by == "test.warehouse@bebang.ph"`
+  - DB: Previous active rate for same store+cargo_type now has `status == "Expired"`
+
+### BILL-009: Rate Management — Supply Chain Creates, Finance Approves
+- **Type:** happy
+- **Role:** test.warehouse@bebang.ph (Supply Chain role)
+- **Step 1:** Create rate via `POST hrms.api.billing.set_delivery_rate`
+- **Payload:**
+  ```json
+  {
+    "store": "TEST-STORE-MEGAMALL",
+    "cargo_type": "Frozen Goods",
+    "delivery_fee": 2500,
+    "logistics_fee": 1200,
+    "effective_from": "2026-02-20"
+  }
+  ```
+- **Step 2:** Submit for review: `POST hrms.api.billing.submit_rate_for_review`
+- **Step 3:** test.hr@bebang.ph (Finance) approves: `POST hrms.api.billing.approve_rate`
+- **Assert:**
+  - DB: Final status == "Active"
+  - DB: `created_by == "test.warehouse@bebang.ph"`, `approved_by == "test.hr@bebang.ph"`
+  - Old rate for TEST-STORE-MEGAMALL + Frozen Goods has `status == "Expired"`
+
+### BILL-010: Rate Management — Cannot Approve Own Rate (Edge)
+- **Type:** edge
+- **Role:** test.hr@bebang.ph
+- **Precondition:** test.hr creates a rate, submits for review (status="Pending Review")
+- **Call:** `POST hrms.api.billing.approve_rate`
+- **Payload:** `{"rate_id": "<rate_name>"}`
+- **Assert:**
+  - Response: `ok == false`, error contains "Cannot approve your own rate" or "Must be approved by other department"
+  - DB: `BEI Delivery Rate.status == "Pending Review"` (unchanged)
+
+### BILL-011: RBAC — Crew Cannot Access Rate Management
+- **Type:** rbac
+- **Role:** test.crew1@bebang.ph
+- **Call:** `GET hrms.api.billing.get_delivery_rates`
+- **Assert:**
+  - Response: HTTP 403 or `frappe.PermissionError`
+  - Error message contains "Insufficient Permissions" or "do not have access"
+
+### BILL-012: SOA Generation — Consolidate Multiple Billings
+- **Type:** happy
+- **Role:** test.hr@bebang.ph
+- **Precondition:**
+  - TEST-STORE-BGC (Full Franchise) has:
+    - 3 delivery billings (from BILL-002) totaling ₱55,500
+    - 1 monthly billing (from BILL-004) = ₱208,000
+  - All billings in status "Sent" or "Partially Paid"
+- **Call:** `POST hrms.api.billing.generate_soa`
+- **Payload:**
+  ```json
+  {
+    "store": "TEST-STORE-BGC",
+    "billing_period": "2026-02"
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`, `soa_name` returned
+  - DB: `BEI Statement of Account.total_billings == 4`
+  - DB: `BEI Statement of Account.total_amount == 263500` (55500 + 208000)
+  - DB: SOA Child Table contains all 4 billing references
+  - DB: SOA has `email_sent == 1` (Full Franchise gets emailed)
+
+### BILL-013: Delivery Billing — Frozen Cargo Uses Frozen Rates
+- **Type:** edge
+- **Role:** test.staff@bebang.ph
+- **Precondition:**
+  - BEI Distribution Trip with cargo_type="Frozen Goods"
+  - Active BEI Delivery Rate for TEST-STORE-BGC + Frozen Goods (delivery_fee=2500, logistics_fee=1200)
+- **Call:** `POST hrms.api.dispatch.confirm_delivery`
+- **Payload:**
+  ```json
+  {
+    "stop_id": "<trip_stop_frozen>",
+    "delivered_by": "TEST-DRIVER-001",
+    "photos": "[{\"photo\": \"<PHOTO_DATA_URL>\", \"caption\": \"Frozen delivery\"}]"
+  }
+  ```
+- **Assert:**
+  - DB: `BEI Billing Schedule.delivery_fee == 2500` (NOT 1500 from Dry Goods rate)
+  - DB: `BEI Billing Schedule.logistics_fee == 1200` (NOT 800 from Dry Goods rate)
+  - Verify rate lookup uses BOTH store AND cargo_type
+
+### BILL-014: Concurrent Delivery Confirmations — No Duplicate Billing
+- **Type:** adversarial
+- **Role:** test.staff@bebang.ph (simulated concurrent API calls)
+- **Precondition:**
+  - BEI Distribution Trip with 2 stops for same store (TEST-STORE-BGC)
+- **Simulate:** Call `confirm_delivery` for BOTH stops within 500ms (use threading or async)
+- **Assert:**
+  - DB: EXACTLY 2 `BEI Billing Schedule` records created (one per stop)
+  - DB: NO duplicate billings with identical `billing_reference` (stop_id must be unique)
+  - Verify atomicity: each stop gets exactly ONE billing, even under race condition
+
+### BILL-015: Monthly Billing — Zero Gross Sales (Edge)
+- **Type:** edge
+- **Role:** test.hr@bebang.ph
+- **Precondition:**
+  - POS data: `gross_sales = 0`, `website_sales = 0` (store closed for renovation)
+- **Call:** `POST hrms.api.procurement.generate_monthly_billing`
+- **Payload:**
+  ```json
+  {
+    "billing_period": "2026-02",
+    "store": "TEST-STORE-BGC"
+  }
+  ```
+- **Assert (Option A — No billing created):**
+  - Response: `generated == 0`, `skipped == 1`, message contains "No sales data"
+  - DB: NO `BEI Billing Schedule` created
+- **Assert (Option B — Billing with ₱0 fees):**
+  - Response: `generated == 1`
+  - DB: `BEI Billing Schedule.total_amount == 0`, all fee fields == 0
+  - (Implementation decision: confirm with stakeholder)
+
+### BILL-016: Managed Franchise — Markup Applied, No Email
+- **Type:** regression | **Origin:** AUDIT-6 (Managed Franchise business rule)
+- **Role:** test.staff@bebang.ph
+- **Precondition:**
+  - BEI Store Type for TEST-STORE-EASTWOOD with `store_type == "Managed Franchise"`
+  - Delivery with goods_value=15000
+- **Call:** `POST hrms.api.dispatch.confirm_delivery`
+- **Payload:**
+  ```json
+  {
+    "stop_id": "<managed_franchise_stop>",
+    "delivered_by": "TEST-DRIVER-001",
+    "photos": "[{\"photo\": \"<PHOTO_DATA_URL>\", \"caption\": \"Delivery\"}]"
+  }
+  ```
+- **Assert:**
+  - DB: `BEI Billing Schedule.handling_fee == 1200` (8% markup applied)
+  - DB: `BEI Billing Schedule.email_sent == 0` (Managed Franchise is internal, no email)
+  - DB: `total_amount == 18500` (same as Full Franchise calculation)
+
+### BILL-017: Rate with Future effective_from — Not Used Today
+- **Type:** edge
+- **Role:** test.staff@bebang.ph
+- **Precondition:**
+  - BEI Delivery Rate for TEST-STORE-BGC + Dry Goods with `effective_from = "2026-03-01"` (future), `status = "Active"`
+  - OLD rate with `effective_from = "2026-01-01"`, `status = "Active"`
+- **Call:** `POST hrms.api.dispatch.confirm_delivery` (today is 2026-02-14)
+- **Payload:**
+  ```json
+  {
+    "stop_id": "<trip_stop_name>",
+    "delivered_by": "TEST-DRIVER-001",
+    "photos": "[{\"photo\": \"<PHOTO_DATA_URL>\", \"caption\": \"Delivery\"}]"
+  }
+  ```
+- **Assert:**
+  - DB: Billing uses OLD rate (effective_from=2026-01-01), NOT the future rate
+  - DB: Rate selection query filters `effective_from <= today()`
+  - Verify future rates don't affect current billings
+
+---
+
+## SCM & Logistics Module (14 scenarios)
+
+### SCM-001: Store Places Order with Suggested Qty (No Edits) → Auto-Approve
+- **Type:** happy
+- **Origin:** Plan Phase 1B (auto-approval for no deviations)
+- **Role:** test.staff@bebang.ph (Store OIC)
+- **Call:** `POST hrms.api.store_orders.submit_store_order`
+- **Payload:**
+  ```json
+  {
+    "store": "TEST-STORE-BGC - BEI",
+    "delivery_date": "2026-02-18",
+    "items": [
+      {
+        "item_code": "SKU-001",
+        "item_name": "Cooking Oil 1L",
+        "suggested_qty": 10,
+        "qty": 10
+      },
+      {
+        "item_code": "SKU-002",
+        "item_name": "Sugar 1kg",
+        "suggested_qty": 5,
+        "qty": 5
+      },
+      {
+        "item_code": "SKU-003",
+        "item_name": "Rice 25kg",
+        "suggested_qty": 8,
+        "qty": 8
+      }
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`, `status == "Approved"`
+  - DB verify: `status == "Approved"`, all items `deviation_pct == 0`, `approved_by IS NULL` (auto-approved, no manual approval needed)
+
+### SCM-002: Store Increases Qty by 50% → Flags for Area Supervisor Approval
+- **Type:** edge
+- **Origin:** Plan Phase 1B deviation approval workflow
+- **Role:** test.staff@bebang.ph
+- **Call:** `POST hrms.api.store_orders.submit_store_order`
+- **Payload:**
+  ```json
+  {
+    "store": "TEST-STORE-BGC - BEI",
+    "delivery_date": "2026-02-18",
+    "items": [
+      {
+        "item_code": "SKU-001",
+        "item_name": "Cooking Oil 1L",
+        "suggested_qty": 10,
+        "qty": 15
+      }
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`, `status == "Pending Approval"`
+  - DB verify: `status == "Pending Approval"`, item `deviation_pct == 50`, `workflow_state == "Area Supervisor Review"`
+
+### SCM-003: Store Orders OOS Item → Blocked with Error Message
+- **Type:** edge
+- **Origin:** Plan Phase 1B inventory check
+- **Role:** test.staff@bebang.ph
+- **Precondition:**
+  - Item SKU-999 exists in system with `stock_available = 0` in Central Warehouse
+- **Call:** `POST hrms.api.store_orders.submit_store_order`
+- **Payload:**
+  ```json
+  {
+    "store": "TEST-STORE-BGC - BEI",
+    "delivery_date": "2026-02-18",
+    "items": [
+      {
+        "item_code": "SKU-999",
+        "item_name": "Out of Stock Item",
+        "suggested_qty": 10,
+        "qty": 10
+      }
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == false`, `message` contains "out of stock" or "insufficient stock"
+  - DB verify: No order created
+
+### SCM-004: Order Submitted After Cutoff Time → Rejected
+- **Type:** edge
+- **Origin:** Plan Phase 1B schedule gate
+- **Role:** test.staff@bebang.ph
+- **Precondition:**
+  - Current time is after 12:00 PM cutoff for next-day delivery
+- **Call:** `POST hrms.api.store_orders.submit_store_order`
+- **Payload:**
+  ```json
+  {
+    "store": "TEST-STORE-BGC - BEI",
+    "delivery_date": "2026-02-17",
+    "items": [
+      {
+        "item_code": "SKU-001",
+        "item_name": "Cooking Oil 1L",
+        "suggested_qty": 10,
+        "qty": 10
+      }
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == false`, `message` contains "cutoff" or "too late"
+  - DB verify: No order created
+
+### SCM-005: Emergency Order (Bypass Schedule) → Requires Area Supervisor Approval
+- **Type:** edge
+- **Origin:** GAP-1 (emergency order exception handling)
+- **Role:** test.staff@bebang.ph
+- **Precondition:**
+  - Today is a non-delivery day for TEST-STORE-BGC
+- **Call:** `POST hrms.api.store_orders.submit_store_order`
+- **Payload:**
+  ```json
+  {
+    "store": "TEST-STORE-BGC - BEI",
+    "delivery_date": "2026-02-17",
+    "is_emergency": true,
+    "emergency_reason": "Critical shortage of cooking oil due to unexpected weekend rush. Store will run out by tomorrow morning.",
+    "items": [
+      {
+        "item_code": "SKU-001",
+        "item_name": "Cooking Oil 1L",
+        "suggested_qty": 10,
+        "qty": 20
+      }
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`, `status == "Pending Approval"`
+  - DB verify: `status == "Pending Approval"`, `is_emergency == 1`, `workflow_state == "Area Supervisor Review"`
+
+### SCM-006: Driver Confirms Departure → ETA Calculated for All Stops
+- **Type:** happy
+- **Origin:** Plan Phase 1A (route optimization with ETA calculation)
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - Delivery Trip exists with 5 stops, status = "Ready for Dispatch"
+  - Trip stops: BGC → Makati → Ortigas → Pasig → Quezon City
+- **Call:** `POST hrms.api.dispatch.confirm_departure`
+- **Payload:**
+  ```json
+  {
+    "trip_id": "<trip_name>",
+    "driver": "TEST-DRIVER-001",
+    "vehicle_plate": "ABC-1234",
+    "departure_time": "2026-02-17 06:00:00"
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`, `status == "In Transit"`
+  - DB verify: Each stop has `eta_minutes` calculated (stop_order × 20 min), stop 1 = 20, stop 2 = 40, stop 3 = 60, stop 4 = 80, stop 5 = 100
+  - DB verify: Trip `status == "In Transit"`, `actual_departure_time` is set
+
+### SCM-007: Stop N Delivered → Stop N+1 Store Gets GChat Notification
+- **Type:** happy
+- **Origin:** Plan Phase 1A GChat notification for next stop
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - Trip "In Transit" with 5 stops, currently on stop 2
+  - Stop 3 is TEST-STORE-MAKATI
+- **Call:** `POST hrms.api.dispatch.confirm_delivery`
+- **Payload:**
+  ```json
+  {
+    "stop_id": "<trip_stop_2_name>",
+    "delivered_by": "TEST-DRIVER-001",
+    "photos": "[{\"photo\": \"<PHOTO_DATA_URL>\", \"caption\": \"Delivery to BGC\"}]"
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: Stop 2 `status == "Delivered"`, `delivered_at` is set
+  - GChat API called for TEST-STORE-MAKATI staff, message contains "1 stop away" or "ETA" or "arriving soon"
+  - **Note:** GChat failure MUST NOT block delivery confirmation (try/except, log error)
+
+### SCM-008: Store Closed Exception → Trip Stays "In Transit" Until All Stops Processed
+- **Type:** edge
+- **Origin:** Plan Phase 1A exception handling (store closed, refused delivery, address issues)
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - Trip "In Transit" with 5 stops, currently on stop 3
+  - Stop 4 and 5 still pending
+- **Call:** `POST hrms.api.dispatch.report_exception`
+- **Payload:**
+  ```json
+  {
+    "stop_id": "<trip_stop_3_name>",
+    "exception_type": "Store Closed",
+    "notes": "Store closed for emergency repairs. Staff confirmed via phone they cannot receive delivery today.",
+    "photos": "[{\"photo\": \"<PHOTO_DATA_URL>\", \"caption\": \"Closed store gate\"}]"
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: Stop 3 `status == "Store Closed"` or "Exception", `exception_type == "Store Closed"`
+  - DB verify: Trip `status == "In Transit"` (NOT "Completed"), stops 4 and 5 still `status == "Pending"`
+  - DB verify: Exception logged, photo attached
+
+### SCM-009: Delivery Confirmed → Stock Entry Created (Company-Owned Store)
+- **Type:** happy
+- **Origin:** BLOCKER-1 resolution (Stock Entry, NOT Sales Invoice for company-owned stores)
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - Trip "In Transit" with stop to TEST-STORE-BGC (company-owned)
+  - DR has 3 items with quantities
+- **Call:** `POST hrms.api.dispatch.confirm_delivery`
+- **Payload:**
+  ```json
+  {
+    "stop_id": "<company_owned_stop>",
+    "delivered_by": "TEST-DRIVER-001",
+    "photos": "[{\"photo\": \"<PHOTO_DATA_URL>\", \"caption\": \"Delivery confirmed\"}]"
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: **Stock Entry** (Material Transfer) created, NOT Sales Invoice
+  - DB verify: Stock Entry debits "BGC - Warehouse Inventory", credits "Central Warehouse - BEI"
+  - DB verify: NO revenue recognition (no GL Entry with Income Account)
+  - DB verify: DR `status == "Delivered"`, linked to Stock Entry
+
+### SCM-010: Area Supervisor Approves Deviation → Order Status Changes
+- **Type:** happy
+- **Origin:** Plan Phase 1B approval workflow
+- **Role:** test.area@bebang.ph (Area Supervisor)
+- **Precondition:**
+  - Store order from SCM-002 exists with `status == "Pending Approval"`, deviation_pct = 50
+- **Call:** `POST hrms.api.store_orders.approve_order_deviation`
+- **Payload:**
+  ```json
+  {
+    "order_id": "<order_name_from_scm_002>",
+    "approval_notes": "Approved due to upcoming long weekend and anticipated demand surge."
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`, `status == "Approved"`
+  - DB verify: `status == "Approved"`, `approved_by == "test.area@bebang.ph"`, `approved_at` is set, `approval_notes` saved
+
+### SCM-011: 3PL Billing Comparison → Flags Discrepancies with EWT
+- **Type:** happy
+- **Origin:** Plan Phase 4B (3PL billing validation) + BLOCKER-2 (EWT calculation)
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - 3 delivery trips completed:
+    - Trip A: actual delivery value = 5000 PHP
+    - Trip B: actual delivery value = 8000 PHP
+    - Trip C: actual delivery value = 6000 PHP
+- **Call:** `POST hrms.api.dispatch.validate_3pl_billing`
+- **Payload:**
+  ```json
+  {
+    "billing_period": "2026-02-01 to 2026-02-15",
+    "3pl_invoices": [
+      {"trip_id": "TRIP-A", "billed_amount": 5000, "invoice_ref": "3PL-001"},
+      {"trip_id": "TRIP-B", "billed_amount": 8500, "invoice_ref": "3PL-002"},
+      {"trip_id": "TRIP-C", "billed_amount": 5800, "invoice_ref": "3PL-003"}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`, `discrepancies.length == 2` (Trip B overcharged by 500, Trip C undercharged by 200)
+  - DB verify: Discrepancy report created with 2 flagged invoices
+  - DB verify: EWT 2% calculated on gross billing (total = 19300 PHP, EWT = 386 PHP)
+  - DB verify: Form 2307 reference generated for EWT withholding
+
+### SCM-012: Ian Approves Order with Qty Adjustment → DR Auto-Generated
+- **Type:** happy
+- **Origin:** Plan Phase 1B Ian review queue
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - Approved order exists from SCM-001 with 3 items
+- **Call:** `POST hrms.api.store_orders.generate_dr`
+- **Payload:**
+  ```json
+  {
+    "order_id": "<order_name_from_scm_001>",
+    "reviewed_by": "ian@bebang.ph",
+    "qty_adjustments": [
+      {"item_code": "SKU-001", "adjusted_qty": 9, "reason": "Stock allocation adjustment"}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`, `dr_number` starts with "DR-"
+  - DB verify: Delivery Receipt created with SKU-001 qty = 9 (adjusted), SKU-002 and SKU-003 unchanged
+  - DB verify: Order `status == "Converted to DR"`, `dr_number` saved
+  - GChat notification sent to TEST-STORE-BGC staff with DR number and adjusted items
+
+### SCM-013: GR Completed → Low Stock Alert Sent via GChat
+- **Type:** happy
+- **Origin:** Plan Phase 2A low stock alerts
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - Item SKU-001 has reorder level = 20 units in Central Warehouse
+  - Current stock = 25 units
+- **Call:** `POST hrms.api.warehouse.complete_goods_receipt`
+- **Payload:**
+  ```json
+  {
+    "gr_number": "GR-2026-001",
+    "items": [
+      {
+        "item_code": "SKU-001",
+        "qty": -10,
+        "warehouse": "Central Warehouse - BEI",
+        "notes": "Issued to production"
+      }
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: Stock balance for SKU-001 = 15 units (below reorder level of 20)
+  - GChat alert sent to ian@bebang.ph (or designated SCM manager), message contains:
+    - Item name "Cooking Oil 1L"
+    - Warehouse "Central Warehouse - BEI"
+    - Qty remaining "15 units"
+    - Reorder threshold "20 units"
+
+### SCM-014: RBAC — Store OIC Cannot Access Other Store's Orders
+- **Type:** rbac
+- **Origin:** BLOCKER-5 (store data isolation for RBAC)
+- **Role:** test.staff@bebang.ph (Store OIC for TEST-STORE-BGC)
+- **Precondition:**
+  - Orders exist for TEST-STORE-BGC (2 orders)
+  - Orders exist for TEST-STORE-MAKATI (3 orders)
+- **Call:** `GET hrms.api.store_orders.get_my_orders`
+- **Payload:**
+  ```json
+  {}
+  ```
+- **Assert:**
+  - Response: `ok == true`, returns ONLY 2 orders for TEST-STORE-BGC
+  - Response does NOT include any orders for TEST-STORE-MAKATI
+- **Additional Test:** Call `GET hrms.api.store_orders.get_my_orders?store=TEST-STORE-MAKATI`
+  - Assert: `ok == false`, permission denied OR empty result (no cross-store access)
+
+---

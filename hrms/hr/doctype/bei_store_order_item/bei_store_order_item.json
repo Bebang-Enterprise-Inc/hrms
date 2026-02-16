@@ -7,10 +7,12 @@
     "item_code",
     "item_name",
     "uom",
+    "unit_price",
     "qty_requested",
     "qty_approved",
     "qty_delivered",
-    "last_order_qty"
+    "last_order_qty",
+    "amount"
   ],
   "fields": [
     {
@@ -38,6 +40,12 @@
       "in_list_view": 1
     },
     {
+      "fieldname": "unit_price",
+      "fieldtype": "Currency",
+      "label": "Unit Price",
+      "in_list_view": 1
+    },
+    {
       "fieldname": "qty_requested",
       "fieldtype": "Float",
       "label": "Qty Requested",
@@ -61,6 +69,13 @@
       "fieldtype": "Float",
       "label": "Last Order Qty",
       "read_only": 1
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "label": "Amount",
+      "read_only": 1,
+      "in_list_view": 1
     }
   ],
   "istable": 1,

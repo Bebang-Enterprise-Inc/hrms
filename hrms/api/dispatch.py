@@ -162,6 +162,33 @@ def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
     delivered, total = _update_trip_status(trip)
     trip.save()
 
+    # PHASE 1A: Send "1 stop away" notification to next stop
+    # This runs AFTER save so delivery is confirmed even if notification fails
+    try:
+        current_stop_order = int(stop_idx)
+        next_stop = None
+        for s in trip.stops:
+            if s.stop_order == current_stop_order + 1 and s.status == "Pending":
+                next_stop = s
+                break
+
+        if next_stop and trip.departure_time:
+            from frappe.utils import add_to_date, format_time, get_datetime
+            # Calculate ETA for next stop
+            departure_dt = get_datetime(trip.departure_time)
+            scheduled_arrival = add_to_date(departure_dt, minutes=next_stop.stop_order * 20)
+            window_start = add_to_date(scheduled_arrival, minutes=-15)
+            window_end = add_to_date(scheduled_arrival, minutes=15)
+            eta_range = f"{format_time(window_start)} - {format_time(window_end)}"
+
+            _send_delivery_notification(trip.driver or "Driver", next_stop.store, eta_range)
+    except Exception as e:
+        # CRITICAL: Notification failures must not block delivery confirmation
+        frappe.log_error(
+            title="Next Stop Notification Failed",
+            message=f"Failed to notify next stop for {trip_name}: {str(e)}"
+        )
+
     return {
         "success": True,
         "message": f"Delivery to {stop.store} confirmed",
@@ -390,3 +417,243 @@ def _get_order_goods_value(store_order):
         WHERE parent = %s
     """, store_order)
     return result[0][0] if result else 0
+
+
+# ============================================================================
+# PHASE 1A: DELIVERY TRIP TRACKING ENHANCEMENTS
+# ============================================================================
+
+
+def _get_user_warehouse():
+    """
+    Get the warehouse/store for the current user.
+    Returns warehouse name or None if user has no assigned store.
+    """
+    user = frappe.session.user
+
+    # Get warehouse from Employee.branch
+    employee = frappe.db.get_value(
+        "Employee",
+        {"user_id": user, "status": "Active"},
+        ["branch"],
+        as_dict=True
+    )
+
+    if not employee or not employee.branch:
+        return None
+
+    # Resolve branch to full warehouse name
+    branch = employee.branch
+
+    # Check if the exact warehouse exists
+    if frappe.db.exists("Warehouse", branch):
+        return branch
+
+    # Try appending company abbreviation
+    warehouse_with_company = f"{branch} - BEI"
+    if frappe.db.exists("Warehouse", warehouse_with_company):
+        return warehouse_with_company
+
+    # Try to find warehouse by warehouse_name
+    warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": branch}, "name")
+    return warehouse
+
+
+def _calculate_eta(trip, my_stop_order):
+    """
+    Calculate ETA for a delivery stop.
+
+    Returns:
+        dict: {
+            "eta_minutes": int or None,
+            "eta_window": {"min": "HH:MM", "max": "HH:MM"} or None
+        }
+    """
+    from frappe.utils import get_datetime, add_to_date, format_time
+
+    if not trip.departure_time:
+        return {"eta_minutes": None, "eta_window": None}
+
+    # Find last delivered stop
+    last_delivered = 0
+    for stop in trip.stops:
+        if stop.status == "Delivered" and stop.stop_order > last_delivered:
+            last_delivered = stop.stop_order
+
+    # Calculate stops remaining
+    stops_remaining = my_stop_order - last_delivered
+    if stops_remaining < 0:
+        stops_remaining = 0
+
+    # ETA = 20 minutes per stop
+    eta_minutes = stops_remaining * 20
+
+    # Calculate arrival window (±15 minutes from scheduled time)
+    departure_dt = get_datetime(trip.departure_time)
+    scheduled_arrival = add_to_date(departure_dt, minutes=(my_stop_order - 1) * 20)
+    window_start = add_to_date(scheduled_arrival, minutes=-15)
+    window_end = add_to_date(scheduled_arrival, minutes=15)
+
+    return {
+        "eta_minutes": eta_minutes,
+        "eta_window": {
+            "min": format_time(window_start),
+            "max": format_time(window_end)
+        }
+    }
+
+
+def _get_items_preview(store_order):
+    """
+    Get preview of items from a store order.
+    Returns list of up to 10 items, with overflow indicator.
+    """
+    if not store_order:
+        return []
+
+    items = frappe.get_all(
+        "BEI Store Order Item",
+        filters={"parent": store_order},
+        fields=["item_code", "item_name", "qty_requested as qty", "uom"],
+        order_by="idx",
+        limit=11  # Get 11 to check if there's overflow
+    )
+
+    if len(items) > 10:
+        overflow_count = len(frappe.get_all(
+            "BEI Store Order Item",
+            filters={"parent": store_order}
+        )) - 10
+        items = items[:10]
+        items.append({
+            "item_code": "MORE",
+            "item_name": f"... and {overflow_count} more items",
+            "qty": 0,
+            "uom": ""
+        })
+
+    return items
+
+
+def _send_delivery_notification(driver, store, eta_range):
+    """
+    Send Google Chat notification for "1 stop away" alert.
+    MUST NOT block delivery confirmation if it fails.
+    """
+    try:
+        # Import here to avoid circular dependency
+        from hrms.api.google_chat import get_user_chat_spaces
+
+        message = (
+            f"🚚 *Delivery Update*\n\n"
+            f"Driver *{driver}* is 1 stop away from *{store}*.\n"
+            f"ETA: {eta_range}\n\n"
+            f"Please prepare receiving area."
+        )
+
+        # TODO: Implement actual Google Chat send once we have space mapping
+        # For now, just log the notification
+        frappe.log_error(
+            title="Delivery Notification (Mock)",
+            message=f"Would send to {store}: {message}"
+        )
+
+    except Exception as e:
+        # CRITICAL: Never throw - this must not block delivery confirmation
+        frappe.log_error(
+            title="Delivery Notification Failed",
+            message=f"Failed to send notification to {store}: {str(e)}"
+        )
+
+
+@frappe.whitelist()
+def get_my_delivery(date=None):
+    """
+    Get delivery trip for the current user's store.
+
+    Args:
+        date: Trip date (defaults to today)
+
+    Returns:
+        {
+            "ok": true,
+            "trip": {
+                "name": "TRIP-001",
+                "driver": "Juan Dela Cruz",
+                "vehicle_plate": "ABC 123",
+                "departure_time": "2026-02-16 08:00:00",
+                "status": "In Transit",
+                "my_stop": {
+                    "stop_order": 3,
+                    "eta_minutes": 40,
+                    "eta_window": {"min": "09:25", "max": "09:55"},
+                    "items_preview": [...],
+                    "status": "Pending"
+                }
+            },
+            "cs_phone": "0917-123-4567"
+        }
+
+        OR {"ok": false, "message": "No delivery scheduled"} if no trip found
+    """
+    from frappe.utils import today
+
+    # RBAC: Only store staff, supervisors, area supervisors, and warehouse users
+    allowed_roles = {"Store Staff", "Store Supervisor", "Area Supervisor", "Warehouse User", "System Manager"}
+    user_roles = set(frappe.get_roles(frappe.session.user))
+    if not user_roles.intersection(allowed_roles):
+        frappe.throw("You do not have permission to view delivery information", frappe.PermissionError)
+
+    trip_date = date or today()
+    user_warehouse = _get_user_warehouse()
+
+    if not user_warehouse:
+        return {"ok": False, "message": "No store assigned to your account"}
+
+    # Find trip with a stop at user's warehouse
+    trips = frappe.get_all(
+        "BEI Distribution Trip",
+        filters={"trip_date": trip_date, "status": ["in", ["Preparing", "In Transit", "Partial"]]},
+        fields=["name"]
+    )
+
+    for trip_name in trips:
+        trip = frappe.get_doc("BEI Distribution Trip", trip_name.name)
+
+        # Find my stop
+        my_stop = None
+        for stop in trip.stops:
+            if stop.store == user_warehouse:
+                my_stop = stop
+                break
+
+        if my_stop:
+            # Calculate ETA
+            eta_data = _calculate_eta(trip, my_stop.stop_order)
+
+            # Get items preview
+            items_preview = _get_items_preview(my_stop.store_order)
+
+            # Get customer service phone
+            cs_phone = frappe.db.get_single_value("BEI Settings", "customer_service_phone") or ""
+
+            return {
+                "ok": True,
+                "trip": {
+                    "name": trip.name,
+                    "driver": trip.driver or "TBA",
+                    "vehicle_plate": trip.vehicle_plate or "TBA",
+                    "departure_time": str(trip.departure_time) if trip.departure_time else None,
+                    "status": trip.status,
+                    "my_stop": {
+                        "stop_order": my_stop.stop_order,
+                        "eta_minutes": eta_data["eta_minutes"],
+                        "eta_window": eta_data["eta_window"],
+                        "items_preview": items_preview,
+                        "status": my_stop.status
+                    }
+                },
+                "cs_phone": cs_phone
+            }
+
+    return {"ok": False, "message": "No delivery scheduled"}
