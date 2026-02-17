@@ -7,20 +7,6 @@ import sqlite3
 
 log = logging.getLogger("sentinel.metrics")
 
-# system_metrics table DDL (added to db.py schema too)
-METRICS_TABLE_SQL = """
-CREATE TABLE IF NOT EXISTS system_metrics (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    timestamp TEXT NOT NULL DEFAULT (datetime('now')),
-    job_name TEXT NOT NULL,
-    duration_ms INTEGER,
-    messages_processed INTEGER DEFAULT 0,
-    errors INTEGER DEFAULT 0,
-    api_calls_used INTEGER DEFAULT 0,
-    notes TEXT
-);
-"""
-
 
 @contextmanager
 def track_job(conn: sqlite3.Connection, job_name: str):

@@ -191,12 +191,7 @@ def _refresh_token(doc) -> str:
         )
     
     client_id = social_login.client_id
-    # Be defensive across Frappe versions.
-    client_secret = None
-    try:
-        client_secret = social_login.get_password("client_secret")
-    except Exception:
-        client_secret = _get_pw("Social Login Key", social_login.name, "client_secret")
+    client_secret = social_login.get_password("client_secret")
     
     if not client_id or not client_secret:
         frappe.throw(

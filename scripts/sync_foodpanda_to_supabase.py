@@ -35,7 +35,7 @@ IMPERSONATE_USER = 'sam@bebang.ph'
 
 SUPABASE_PROJECT_ID = 'csnniykjrychgajfrgua'
 SUPABASE_API_URL = f'https://api.supabase.com/v1/projects/{SUPABASE_PROJECT_ID}/database/query'
-SUPABASE_MANAGEMENT_TOKEN = os.environ.get('SUPABASE_MGMT_TOKEN', 'sbp_538c95ab61a1d7f6e3c58285ac419d98cfd86516')
+SUPABASE_MANAGEMENT_TOKEN = os.environ['SUPABASE_MGMT_TOKEN']
 
 MANILA_TZ = pytz.timezone('Asia/Manila')
 
@@ -171,21 +171,31 @@ def fetch_store_mapping() -> Dict[str, int]:
     print(f"✅ Loaded {len(mapping)} store mappings from SUMMARY sheet")
     return mapping
 
-def parse_datetime(dt_str: Optional[str]) -> Optional[datetime]:
-    """Parse datetime string in 'YYYY-MM-DD HH:MM' format to datetime object."""
-    if not dt_str or not isinstance(dt_str, str):
+EXCEL_EPOCH = datetime(1899, 12, 30)
+
+def parse_datetime(value) -> Optional[datetime]:
+    """Parse datetime from text string or Excel serial number."""
+    if value is None or value == '':
+        return None
+    # Handle Excel serial numbers (float/int)
+    if isinstance(value, (int, float)):
+        try:
+            naive_dt = EXCEL_EPOCH + timedelta(days=float(value))
+            return MANILA_TZ.localize(naive_dt)
+        except Exception:
+            return None
+    if not isinstance(value, str):
         return None
     try:
-        # Handle both "YYYY-MM-DD HH:MM" and "YYYY-MM-DD HH:MM:SS"
         for fmt in ['%Y-%m-%d %H:%M', '%Y-%m-%d %H:%M:%S']:
             try:
-                naive_dt = datetime.strptime(dt_str, fmt)
+                naive_dt = datetime.strptime(value, fmt)
                 return MANILA_TZ.localize(naive_dt)
             except ValueError:
                 continue
         return None
     except Exception as e:
-        print(f"⚠️ Failed to parse datetime '{dt_str}': {e}")
+        print(f"⚠️ Failed to parse datetime '{value}': {e}")
         return None
 
 def parse_bool(value: Optional[str]) -> bool:

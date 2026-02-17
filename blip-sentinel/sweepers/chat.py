@@ -178,12 +178,6 @@ def discover_spaces(conn: sqlite3.Connection) -> int:
         return new_count
 
 
-def is_dnd_window() -> bool:
-    """Check if current time is in DND window (11 PM - 7 AM PHT)."""
-    now_pht = datetime.now(config.PHT)
-    hour = now_pht.hour
-    return hour >= config.DND_START_HOUR or hour < config.DND_END_HOUR
-
 
 def sweep_chat(conn: sqlite3.Connection):
     """

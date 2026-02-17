@@ -8,7 +8,6 @@ Protects against quota exhaustion and cascading failures.
 import time
 import logging
 from enum import Enum
-from typing import Callable, Any, Optional
 from collections import deque
 
 logger = logging.getLogger("sentinel.rate_limiter")
@@ -201,59 +200,3 @@ class CircuitBreaker:
         elif self._failure_count >= self.failure_threshold:
             logger.error(f"CircuitBreaker '{self.name}': CLOSED -> OPEN (threshold reached)")
             self._state = CircuitState.OPEN
-
-
-def rate_limited_call(
-    func: Callable,
-    *args,
-    rate_limiter: Optional[TokenBucket] = None,
-    circuit_breaker: Optional[CircuitBreaker] = None,
-    **kwargs
-) -> Any:
-    """
-    Execute a function with rate limiting and circuit breaker protection.
-
-    Args:
-        func: Function to call
-        *args: Positional arguments for func
-        rate_limiter: Optional TokenBucket instance
-        circuit_breaker: Optional CircuitBreaker instance
-        **kwargs: Keyword arguments for func
-
-    Returns:
-        Result of func(*args, **kwargs)
-
-    Raises:
-        RuntimeError: If circuit breaker is OPEN
-        TimeoutError: If rate limiter cannot acquire token
-        Exception: Any exception raised by func
-
-    Example:
-        >>> limiter = TokenBucket(rate=10, per=60)
-        >>> breaker = CircuitBreaker("api")
-        >>> result = rate_limited_call(api_func, arg1, arg2, rate_limiter=limiter, circuit_breaker=breaker)
-    """
-    # Check circuit breaker
-    if circuit_breaker and not circuit_breaker.can_execute():
-        raise RuntimeError(f"Circuit breaker '{circuit_breaker.name}' is OPEN")
-
-    # Check rate limiter
-    if rate_limiter:
-        if not rate_limiter.wait_for_token(tokens=1, max_wait=30.0):
-            raise TimeoutError("Rate limiter timeout: could not acquire token")
-
-    # Execute function
-    try:
-        result = func(*args, **kwargs)
-
-        if circuit_breaker:
-            circuit_breaker.record_success()
-
-        return result
-
-    except Exception as e:
-        if circuit_breaker:
-            circuit_breaker.record_failure()
-
-        logger.error(f"rate_limited_call failed: {e}")
-        raise

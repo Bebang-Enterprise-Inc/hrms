@@ -186,10 +186,10 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
               "if [ -n \"${{ secrets.SENTRY_DSN }}\" ]; then",
-              "  docker service update --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_backend --detach",
-              "  docker service update --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-short --detach",
-              "  docker service update --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-long --detach",
-              "  docker service update --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_scheduler --detach",
+              "  docker service update --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_backend --detach",
+              "  docker service update --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-short --detach",
+              "  docker service update --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-long --detach",
+              "  docker service update --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_scheduler --detach",
               "  echo \"✅ Sentry DSN set on all backend services\"",
               "else",
               "  echo \"⚠️ SENTRY_DSN not set, skipping\"",
