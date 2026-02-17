@@ -188,7 +188,17 @@ def approve_cycle_count(count_name):
     doc.approved_at = nowdate()
     doc.save()
 
-    return {"success": True, "message": _("Cycle count approved")}
+    # Auto-export COS RECON on approval (BL-11-3)
+    try:
+        export_result = export_count_to_cos_recon(count_name)
+        return {
+            "success": True,
+            "message": _("Cycle count approved and COS RECON exported"),
+            "cos_recon": export_result
+        }
+    except Exception as e:
+        frappe.log_error(f"COS RECON auto-export failed for {count_name}: {e}", "COS RECON Auto-Export")
+        return {"success": True, "message": _("Cycle count approved (COS RECON export failed — please export manually)")}
 
 
 @frappe.whitelist()
@@ -1132,40 +1142,11 @@ def notify_gr_completion(gr_name):
 
 def _send_warehouse_gchat_notification(text):
     """
-    Send a Google Chat message via Domain-Wide Delegation.
-    Service account: credentials/task-manager-service.json
-    Impersonates: sam@bebang.ph
+    Send a Google Chat message for warehouse/inventory alerts.
+    Delegates to shared send_message_to_space() utility.
     """
-    import os
-    try:
-        from google.oauth2 import service_account
-        from googleapiclient.discovery import build
-    except ImportError:
-        frappe.log_error("google-auth package not installed — GR notification skipped", "Inventory GChat")
-        return
+    from hrms.api.google_chat import send_message_to_space
 
-    app_path = frappe.get_app_path("hrms")
-    cred_path = os.path.join(
-        os.path.dirname(os.path.dirname(app_path)),
-        "credentials",
-        "task-manager-service.json"
-    )
-
-    if not os.path.exists(cred_path):
-        frappe.log_error(
-            "GR notification skipped — service account missing: {0}".format(cred_path),
-            "Inventory GChat"
-        )
-        return
-
-    scopes = ["https://www.googleapis.com/auth/chat.bot"]
-    credentials = service_account.Credentials.from_service_account_file(
-        cred_path, scopes=scopes
-    ).with_subject("sam@bebang.ph")
-
-    service = build("chat", "v1", credentials=credentials)
-
-    # Use BEI Settings space if configured, fall back to Blip space
     space = "spaces/AAQABiNmpBg"
     try:
         configured = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
@@ -1174,10 +1155,7 @@ def _send_warehouse_gchat_notification(text):
     except Exception:
         pass
 
-    service.spaces().messages().create(
-        parent=space,
-        body={"text": text}
-    ).execute()
+    send_message_to_space(space, text)
 
 
 def send_low_stock_daily_alert():
@@ -1231,3 +1209,158 @@ def send_low_stock_daily_alert():
 
     except Exception:
         frappe.log_error(frappe.get_traceback(), "Low Stock Daily Alert Failed")
+
+
+# ================================
+# VARIANCE INVESTIGATION WORKFLOW
+# ================================
+
+@frappe.whitelist()
+def get_open_variances(store=None):
+    """Get open inventory variances for a store (or all stores).
+
+    Used by store dashboard to show count of unresolved variances.
+
+    Args:
+        store: Optional warehouse name. If None, returns all open variances.
+
+    Returns:
+        dict: {variances, count}
+    """
+    filters = {"status": ["in", ["Open", "Investigating"]]}
+    if store:
+        filters["store"] = store
+
+    variances = frappe.get_all("BEI Inventory Variance",
+        filters=filters,
+        fields=["name", "store", "variance_date", "item_code", "variance_type",
+                "status", "variance_qty", "variance_value", "reported_by"],
+        order_by="variance_date desc"
+    )
+
+    return {
+        "variances": variances,
+        "count": len(variances),
+        "store": store,
+    }
+
+
+@frappe.whitelist()
+def start_variance_investigation(variance_name):
+    """Transition a variance from Open to Investigating.
+
+    Args:
+        variance_name: BEI Inventory Variance name
+
+    Returns:
+        dict: {success, status}
+    """
+    doc = frappe.get_doc("BEI Inventory Variance", variance_name)
+
+    if doc.status != "Open":
+        frappe.throw(_("Only 'Open' variances can be moved to Investigating"))
+
+    doc.status = "Investigating"
+    doc.save(ignore_permissions=True)
+
+    return {"success": True, "name": variance_name, "status": doc.status}
+
+
+@frappe.whitelist()
+def resolve_variance(variance_name, resolution_type, resolution_notes, adjustment_qty=None):
+    """Resolve a variance and optionally create a Stock Entry for write-offs.
+
+    Resolution types:
+      - "Write-Off": Creates Stock Entry (Material Issue) to remove stock
+      - "Recount Corrected": Creates Stock Reconciliation
+      - "Theft", "Damage", "System Error": Records resolution, no stock entry
+
+    Args:
+        variance_name: BEI Inventory Variance name
+        resolution_type: One of Write-Off / Recount Corrected / Theft / Damage / System Error
+        resolution_notes: Required explanation
+        adjustment_qty: Override quantity for stock adjustment (defaults to variance_qty)
+
+    Returns:
+        dict: {success, status, stock_entry} (stock_entry may be None)
+    """
+    valid_types = {"Write-Off", "Recount Corrected", "Theft", "Damage", "System Error"}
+    if resolution_type not in valid_types:
+        frappe.throw(_("Invalid resolution type. Must be one of: {0}").format(", ".join(valid_types)))
+
+    if not resolution_notes:
+        frappe.throw(_("Resolution notes are required"))
+
+    doc = frappe.get_doc("BEI Inventory Variance", variance_name)
+
+    if doc.status not in ("Open", "Investigating"):
+        frappe.throw(_("Cannot resolve a variance with status '{0}'").format(doc.status))
+
+    if not doc.item_code:
+        frappe.throw(_("Variance has no item code — cannot create stock entry"))
+
+    stock_entry_name = None
+    qty = flt(adjustment_qty) if adjustment_qty else flt(doc.variance_qty)
+
+    sp = frappe.db.savepoint(f"resolve_variance_{variance_name.replace('-', '_')}")
+    try:
+        # Create Stock Entry for Write-Off (removes stock from store)
+        if resolution_type == "Write-Off" and qty and qty > 0:
+            company = frappe.defaults.get_defaults().get("company") or "Bebang Enterprise Inc."
+            se = frappe.new_doc("Stock Entry")
+            se.stock_entry_type = "Material Issue"
+            se.company = company
+            se.posting_date = nowdate()
+            se.remarks = f"Variance write-off: {variance_name} — {resolution_notes}"
+
+            se.append("items", {
+                "item_code": doc.item_code,
+                "s_warehouse": doc.store,
+                "qty": qty,
+                "uom": frappe.db.get_value("Item", doc.item_code, "stock_uom") or "Nos",
+            })
+
+            se.insert(ignore_permissions=True)
+            stock_entry_name = se.name
+            doc.status = "Written Off"
+
+        elif resolution_type == "Recount Corrected" and qty is not None:
+            # Stock Reconciliation to set system qty to actual
+            company = frappe.defaults.get_defaults().get("company") or "Bebang Enterprise Inc."
+            sr = frappe.new_doc("Stock Reconciliation")
+            sr.company = company
+            sr.posting_date = nowdate()
+            sr.purpose = "Stock Reconciliation"
+            sr.remarks = f"Variance recount correction: {variance_name} — {resolution_notes}"
+
+            sr.append("items", {
+                "item_code": doc.item_code,
+                "warehouse": doc.store,
+                "qty": flt(doc.actual_qty) if doc.actual_qty else (flt(doc.system_qty) - qty),
+            })
+
+            sr.insert(ignore_permissions=True)
+            stock_entry_name = sr.name
+            doc.status = "Resolved"
+
+        else:
+            doc.status = "Resolved"
+
+        # Record resolution on the variance doc
+        doc.resolution = f"[{resolution_type}] {resolution_notes}"
+        doc.save(ignore_permissions=True)
+
+        frappe.db.release_savepoint(sp)
+
+    except Exception as e:
+        frappe.db.rollback(save_point=sp)
+        frappe.log_error(frappe.get_traceback(), f"resolve_variance failed for {variance_name}")
+        frappe.throw(_("Failed to resolve variance: {0}").format(str(e)))
+
+    return {
+        "success": True,
+        "name": variance_name,
+        "status": doc.status,
+        "resolution_type": resolution_type,
+        "stock_entry": stock_entry_name,
+    }

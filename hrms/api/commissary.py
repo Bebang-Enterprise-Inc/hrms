@@ -870,6 +870,9 @@ def fulfill_store_order(mr_name, items):
     se.insert()
     se.submit()
 
+    # Update linked BEI Store Order status based on fulfillment completeness
+    _update_store_order_status_after_fulfillment(mr_name, items)
+
     return {
         "success": True,
         "data": {
@@ -880,6 +883,68 @@ def fulfill_store_order(mr_name, items):
         },
         "message": f"Order fulfilled: {se.name}"
     }
+
+
+def _update_store_order_status_after_fulfillment(mr_name, fulfilled_items):
+    """
+    After commissary fulfills a Material Request, update the linked BEI Store Order status.
+    - All items fulfilled → "Ready for Dispatch"
+    - Partial fulfillment → "Partially Fulfilled"
+    """
+    try:
+        # Find the BEI Store Order linked to this Material Request.
+        # Check via custom_store_order field first, then fall back to warehouse + date match.
+        store_order_name = frappe.db.get_value(
+            "Material Request", mr_name, "custom_store_order"
+        )
+        if not store_order_name:
+            # Fallback: find approved store order for the same target warehouse
+            mr_warehouse = frappe.db.get_value("Material Request", mr_name, "set_warehouse")
+            if mr_warehouse:
+                store_order_name = frappe.db.get_value(
+                    "BEI Store Order",
+                    {"store": mr_warehouse, "status": "Approved"},
+                    "name",
+                    order_by="order_date desc"
+                )
+        if not store_order_name:
+            return
+
+        store_order = frappe.get_doc("BEI Store Order", store_order_name)
+
+        # Build map of fulfilled quantities from input
+        fulfilled_map = {}
+        if isinstance(fulfilled_items, str):
+            import json as _json
+            fulfilled_items = _json.loads(fulfilled_items)
+        for item in fulfilled_items:
+            qty = flt(item.get("qty_to_fulfill") or item.get("fulfilled_qty") or item.get("qty") or 0)
+            if qty > 0:
+                fulfilled_map[item.get("item_code")] = fulfilled_map.get(item.get("item_code"), 0) + qty
+
+        # Check if all items are fully fulfilled
+        all_fulfilled = True
+        any_fulfilled = False
+        for order_item in store_order.items:
+            fulfilled_qty = fulfilled_map.get(order_item.item_code, 0)
+            if fulfilled_qty > 0:
+                any_fulfilled = True
+            if fulfilled_qty < flt(order_item.qty):
+                all_fulfilled = False
+
+        if all_fulfilled and any_fulfilled:
+            store_order.status = "Ready for Dispatch"
+        elif any_fulfilled:
+            store_order.status = "Partially Fulfilled"
+
+        if any_fulfilled:
+            store_order.save(ignore_permissions=True)
+
+    except Exception as e:
+        frappe.log_error(
+            title="Store Order Status Update Failed",
+            message=f"Failed to update store order status for MR {mr_name}: {str(e)}"
+        )
 
 
 @frappe.whitelist()

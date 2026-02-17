@@ -1,5 +1,5 @@
 import frappe
-from frappe.utils import add_days, now_datetime, get_datetime
+from frappe.utils import add_days, now_datetime, get_datetime, nowdate
 
 
 def auto_punch_out_stale_shifts():
@@ -115,3 +115,76 @@ def _notify_auto_punch_out(shift, shift_data):
 				<p><a href="/app/bei-shift-record/{shift.name}">Review Shift Record</a></p>
 				""",
 			)
+
+
+def send_overdue_action_plan_reminders():
+	"""
+	Scheduled task: Send Google Chat reminders for overdue BEI Action Plans.
+	Runs: Daily via scheduler_events["daily"]
+
+	Logic:
+	1. Query all BEI Action Plans where due_date < today AND status != "Completed"
+	2. Group by assigned_to supervisor
+	3. Send a single consolidated reminder per supervisor to the configured GChat space
+	4. Never throws — graceful skip if space not configured
+	"""
+	try:
+		today = nowdate()
+
+		overdue_plans = frappe.get_all(
+			"BEI Action Plan",
+			filters={
+				"due_date": ["<", today],
+				"status": ["not in", ["Completed", "Cancelled"]],
+			},
+			fields=["name", "store", "issue_description", "due_date", "assigned_to", "priority", "status"],
+			order_by="due_date asc",
+		)
+
+		if not overdue_plans:
+			return
+
+		space = None
+		try:
+			space = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
+		except Exception:
+			pass
+		if not space:
+			space = "spaces/AAQABiNmpBg"
+
+		from hrms.api.google_chat import send_message_to_space
+
+		# Group by assigned_to for a consolidated message per supervisor
+		by_assignee: dict = {}
+		for plan in overdue_plans:
+			key = plan.assigned_to or "unassigned"
+			by_assignee.setdefault(key, []).append(plan)
+
+		# Also send a single summary to the notification space
+		total = len(overdue_plans)
+		stores = list({p.store for p in overdue_plans if p.store})
+		store_list = ", ".join(stores[:5]) + (f" +{len(stores) - 5} more" if len(stores) > 5 else "")
+
+		lines = [f"*Overdue Action Plans — {today}*", f"\n{total} action plan(s) past due date.\n"]
+		for plan in overdue_plans[:10]:
+			days_overdue = (
+				frappe.utils.date_diff(today, plan.due_date)
+				if plan.due_date else "?"
+			)
+			lines.append(f"• [{plan.store}] {plan.issue_description or plan.name} — {days_overdue}d overdue ({plan.status})")
+		if total > 10:
+			lines.append(f"... and {total - 10} more.")
+		lines.append(f"\nStores affected: {store_list}")
+
+		send_message_to_space(space, "\n".join(lines))
+
+		frappe.log_error(
+			title="Overdue Action Plan Reminders Sent",
+			message=f"{total} overdue plans across {len(stores)} stores notified to {space}",
+		)
+
+	except Exception:
+		frappe.log_error(
+			title="Overdue Action Plan Reminder Error",
+			message=frappe.get_traceback(),
+		)

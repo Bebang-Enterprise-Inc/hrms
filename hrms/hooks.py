@@ -235,6 +235,18 @@ doc_events = {
 		"validate": "hrms.api.pcf.validate_pcf_batch",
 		"on_update": "hrms.api.pcf.on_batch_update",
 	},
+	"BEI Approval Queue": {
+		"after_insert": "hrms.api.google_chat.on_approval_queue_insert",
+	},
+	"BEI Store Order": {
+		"on_update": "hrms.api.google_chat.on_store_order_update",
+	},
+	"Employee Separation": {
+		# Notify dept heads when clearance items assigned (SEP-01)
+		"after_insert": "hrms.api.employee_clearance.on_separation_created",
+		# Notify Finance when all clearance items completed (SEP-02)
+		"on_update": "hrms.api.employee_clearance.on_separation_updated",
+	},
 }
 
 # Scheduled Tasks
@@ -282,6 +294,8 @@ scheduler_events = {
 		"hrms.api.procurement.check_overdue_or",
 		"hrms.api.inventory.send_low_stock_daily_alert",
 		"hrms.api.permits.check_permit_expiry",
+		"hrms.tasks.send_overdue_action_plan_reminders",
+		"hrms.api.overtime.scheduled_overtime_detection",
 	],
 	"daily_long": [
 		"hrms.hr.doctype.leave_ledger_entry.leave_ledger_entry.process_expired_allocation",

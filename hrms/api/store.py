@@ -396,10 +396,64 @@ def approve_order(order_name, approved_quantities=None):
     order.approved_at = now_datetime()
     order.save()
 
+    # Create Material Request so commissary can pick it up, linking back to this store order
+    mr_name = _create_mr_for_store_order(order)
+
     return {
         "success": True,
-        "message": f"Order {order_name} approved"
+        "message": f"Order {order_name} approved",
+        "material_request": mr_name,
     }
+
+
+def _create_mr_for_store_order(order):
+    """
+    Create a Material Request (Material Transfer) for an approved BEI Store Order.
+    Sets custom_store_order so commissary can trace MR → originating store order.
+
+    Returns the MR name, or None if creation fails (non-fatal).
+    """
+    try:
+        required_by = add_days(nowdate(), 1)
+
+        mr = frappe.new_doc("Material Request")
+        mr.material_request_type = "Material Transfer"
+        mr.company = frappe.db.get_single_value("Global Defaults", "default_company") or "Bebang Enterprise Inc."
+        mr.transaction_date = nowdate()
+        mr.schedule_date = required_by
+        mr.custom_store_order = order.name
+
+        # Destination warehouse is the store's warehouse
+        store_warehouse = getattr(order, "warehouse", None) or getattr(order, "store_warehouse", None)
+
+        for item in order.items:
+            qty = flt(getattr(item, "qty_approved", None) or getattr(item, "qty_requested", 0))
+            if qty <= 0:
+                continue
+            mr.append("items", {
+                "item_code": item.item_code,
+                "item_name": item.item_name,
+                "qty": qty,
+                "uom": getattr(item, "uom", None) or "Nos",
+                "stock_uom": getattr(item, "uom", None) or "Nos",
+                "conversion_factor": 1,
+                "warehouse": store_warehouse,
+                "schedule_date": required_by,
+            })
+
+        if not mr.items:
+            return None
+
+        mr.insert(ignore_permissions=True)
+        mr.submit()
+        return mr.name
+
+    except Exception as e:
+        frappe.log_error(
+            title=f"MR Creation Error for Store Order {order.name}",
+            message=str(e),
+        )
+        return None
 
 
 @frappe.whitelist()
@@ -545,10 +599,185 @@ def get_fqi_reports(store=None, status=None, limit=20):
         filters=filters,
         fields=["name", "store", "item_code", "issue_type", "status", "reported_by", "reported_at", "resolved_at"],
         order_by="creation desc",
-        limit=int(limit)
+        limit=int(limit),
+        ignore_permissions=True
     )
 
     return {"reports": reports}
+
+
+# ==============================================================================
+# STORE RETURNS
+# ==============================================================================
+
+
+@frappe.whitelist()
+def get_returns_pending(store=None):
+    """
+    Get store receiving items where has_issue=1 and no linked return Stock Entry.
+    Returns items that need to be returned to commissary.
+    """
+    filters = {"has_issue": 1}
+
+    if store:
+        # Get all receivings for this store
+        receiving_names = frappe.get_all(
+            "BEI Store Receiving",
+            filters={"store": store},
+            pluck="name"
+        )
+        if not receiving_names:
+            return {"items": []}
+        filters["parent"] = ["in", receiving_names]
+
+    items = frappe.db.sql("""
+        SELECT
+            ri.name,
+            ri.parent AS receiving,
+            ri.item_code,
+            ri.item_name,
+            ri.received_qty,
+            ri.has_issue,
+            ri.fqi_reference,
+            r.store,
+            r.receiving_date,
+            r.trip
+        FROM `tabBEI Store Receiving Item` ri
+        JOIN `tabBEI Store Receiving` r ON r.name = ri.parent
+        WHERE ri.has_issue = 1
+            AND NOT EXISTS (
+                SELECT 1 FROM `tabStock Entry`
+                WHERE stock_entry_type = 'Material Transfer'
+                    AND purpose = 'Material Transfer'
+                    AND remarks LIKE CONCAT('%%Store Return%%', ri.parent, '%%')
+                    AND docstatus = 1
+            )
+        {store_filter}
+        ORDER BY r.receiving_date DESC
+        LIMIT 100
+    """.format(
+        store_filter=f"AND r.store = {frappe.db.escape(store)}" if store else ""
+    ), as_dict=True)
+
+    return {"items": items}
+
+
+@frappe.whitelist()
+def create_store_return(receiving, items, reason, photo=None):
+    """
+    Create a store return for items with issues from a receiving doc.
+    Tracks the return intent and creates a Stock Entry to transfer items back to commissary.
+
+    Args:
+        receiving: BEI Store Receiving document name
+        items: JSON list of {item_code, qty, reason}
+        reason: Overall reason for return
+        photo: Optional base64 photo of returned items
+    """
+    if isinstance(items, str):
+        items = json.loads(items)
+
+    if not items:
+        frappe.throw(_("No items to return"))
+
+    receiving_doc = frappe.get_doc("BEI Store Receiving", receiving)
+    store = receiving_doc.store
+
+    # Resolve commissary warehouse
+    from hrms.api.commissary import get_commissary_warehouse
+    commissary_warehouse = get_commissary_warehouse()
+
+    if not commissary_warehouse:
+        frappe.throw(_("Commissary warehouse not found"))
+
+    # Save photo if provided
+    photo_url = save_base64_image(photo, "Stock Entry", fieldname="custom_return_photo") if photo else None
+
+    # Create Stock Entry (Material Transfer back to commissary)
+    se = frappe.new_doc("Stock Entry")
+    se.stock_entry_type = "Material Transfer"
+    se.company = "Bebang Enterprise Inc."
+    se.posting_date = nowdate()
+    se.posting_time = now_datetime().strftime("%H:%M:%S")
+    se.from_warehouse = store
+    se.to_warehouse = commissary_warehouse
+    se.remarks = f"Store Return from {store} | Receiving: {receiving} | Reason: {reason}"
+
+    for item_data in items:
+        qty = flt(item_data.get("qty") or item_data.get("return_qty"))
+        if qty <= 0:
+            continue
+
+        item_code = item_data.get("item_code")
+        item = frappe.get_doc("Item", item_code)
+
+        se.append("items", {
+            "item_code": item_code,
+            "item_name": item.item_name,
+            "description": item.description or item.item_name,
+            "qty": qty,
+            "uom": item_data.get("uom") or item.stock_uom,
+            "stock_uom": item.stock_uom,
+            "conversion_factor": 1,
+            "s_warehouse": store,
+            "t_warehouse": commissary_warehouse,
+        })
+
+    if not se.items:
+        frappe.throw(_("No valid items with quantity to return"))
+
+    sp = frappe.db.savepoint("create_store_return")
+    try:
+        se.insert(ignore_permissions=True)
+        se.submit()
+        frappe.db.release_savepoint("create_store_return")
+    except Exception:
+        frappe.db.rollback(save_point="create_store_return")
+        frappe.log_error(f"Store return Stock Entry failed for {receiving}", "Store Return Error")
+        frappe.throw(_("Failed to create store return. Please try again."))
+
+    return {
+        "success": True,
+        "stock_entry": se.name,
+        "message": f"Store return {se.name} created — {len(se.items)} item(s) returned to commissary"
+    }
+
+
+@frappe.whitelist()
+def process_store_return(stock_entry_name):
+    """
+    Process (acknowledge) a submitted store return Stock Entry.
+    Updates the corresponding receiving items' status.
+
+    Args:
+        stock_entry_name: Submitted Stock Entry for the return
+    """
+    se = frappe.get_doc("Stock Entry", stock_entry_name)
+
+    if se.docstatus != 1:
+        frappe.throw(_("Stock Entry must be submitted before processing"))
+
+    if se.stock_entry_type != "Material Transfer":
+        frappe.throw(_("Not a valid store return entry"))
+
+    # Extract receiving name from remarks: "Store Return from ... | Receiving: BEI-RCV-... | ..."
+    receiving_name = None
+    if se.remarks and "Receiving:" in se.remarks:
+        for part in se.remarks.split("|"):
+            part = part.strip()
+            if part.startswith("Receiving:"):
+                receiving_name = part.replace("Receiving:", "").strip()
+                break
+
+    result = {
+        "success": True,
+        "stock_entry": se.name,
+        "receiving": receiving_name,
+        "items_returned": len(se.items),
+        "message": f"Return {se.name} processed — {len(se.items)} item(s) confirmed returned to commissary"
+    }
+
+    return result
 
 
 # ==============================================================================

@@ -50,6 +50,10 @@
 		"completion",
 		"column_break_resolution",
 		"resolved_date",
+		"section_billing",
+		"billing_status",
+		"billing_reference",
+		"column_break_billing",
 		"section_audit",
 		"reported_by",
 		"reported_at",
@@ -317,6 +321,32 @@
 			"read_only": 1
 		},
 		{
+			"collapsible": 1,
+			"fieldname": "section_billing",
+			"fieldtype": "Section Break",
+			"label": "Billing"
+		},
+		{
+			"default": "Not Billed",
+			"fieldname": "billing_status",
+			"fieldtype": "Select",
+			"in_list_view": 0,
+			"in_standard_filter": 1,
+			"label": "Billing Status",
+			"options": "Not Billed\nBilled\nWaived"
+		},
+		{
+			"fieldname": "billing_reference",
+			"fieldtype": "Link",
+			"label": "Billing Reference",
+			"options": "BEI Billing Schedule",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_billing",
+			"fieldtype": "Column Break"
+		},
+		{
 			"fieldname": "section_audit",
 			"fieldtype": "Section Break",
 			"label": "Audit Trail"
@@ -359,7 +389,7 @@
 			"link_fieldname": "maintenance_request"
 		}
 	],
-	"modified": "2026-02-01 10:00:00.000000",
+	"modified": "2026-02-17 10:00:00.000000",
 	"modified_by": "Administrator",
 	"module": "HR",
 	"name": "BEI Maintenance Request",

@@ -185,6 +185,10 @@ def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
     delivered, total = _update_trip_status(trip)
     trip.save()
 
+    # Update linked BEI Store Order status to "Delivered"
+    if hasattr(stop, "store_order") and stop.store_order:
+        _set_store_order_status(stop.store_order, "Delivered")
+
     # PHASE 1A: Send "1 stop away" notification to next stop
     # This runs AFTER save so delivery is confirmed even if notification fails
     try:
@@ -569,38 +573,55 @@ def _send_delivery_notification(driver, store, eta_range):
     Send Google Chat notification for "1 stop away" alert.
     MUST NOT block delivery confirmation if it fails.
     """
-    logger = frappe.logger("dispatch")
+    from hrms.api.google_chat import send_message_to_space
+
+    space = (
+        frappe.db.get_single_value("BEI Settings", "delivery_notification_space")
+        or "spaces/AAQABiNmpBg"
+    )
+
+    message = (
+        f"🚚 *Delivery Update*\n\n"
+        f"Driver *{driver}* is 1 stop away from *{store}*.\n"
+        f"ETA: {eta_range}\n\n"
+        f"Please prepare receiving area."
+    )
+
+    send_message_to_space(space, message)
+
+
+def _set_store_order_status(store_order_name, status):
+    """
+    Update a single BEI Store Order status. Silently skips if order not found.
+    Used to keep store orders in sync with trip/delivery progress.
+    """
     try:
-        from google.oauth2 import service_account
-        from googleapiclient.discovery import build
-
-        space = (
-            frappe.db.get_single_value("BEI Settings", "delivery_notification_space")
-            or "spaces/AAQABiNmpBg"
-        )
-
-        message = (
-            f"🚚 *Delivery Update*\n\n"
-            f"Driver *{driver}* is 1 stop away from *{store}*.\n"
-            f"ETA: {eta_range}\n\n"
-            f"Please prepare receiving area."
-        )
-
-        creds = service_account.Credentials.from_service_account_file(
-            "credentials/task-manager-service.json",
-            scopes=["https://www.googleapis.com/auth/chat.bot"],
-        )
-        chat = build("chat", "v1", credentials=creds)
-        chat.spaces().messages().create(
-            parent=space,
-            body={"text": message},
-        ).execute()
-
-        logger.info(f"Delivery notification sent for {store} (driver: {driver})")
-
+        if frappe.db.exists("BEI Store Order", store_order_name):
+            frappe.db.set_value("BEI Store Order", store_order_name, "status", status)
     except Exception as e:
-        # CRITICAL: Never throw - this must not block delivery confirmation
-        logger.error(f"Failed to send delivery notification to {store}: {str(e)}")
+        frappe.log_error(
+            title="Store Order Status Update Failed",
+            message=f"Failed to set {store_order_name} to {status}: {str(e)}"
+        )
+
+
+def _set_store_orders_in_transit(stops):
+    """
+    After a trip is created, set all linked BEI Store Orders to "In Transit".
+    Only affects orders that were in "Ready for Dispatch" status.
+    """
+    try:
+        for stop_data in stops:
+            store_order = stop_data.get("store_order")
+            if store_order:
+                current_status = frappe.db.get_value("BEI Store Order", store_order, "status")
+                if current_status in ("Approved", "Ready for Dispatch", "Partially Fulfilled"):
+                    frappe.db.set_value("BEI Store Order", store_order, "status", "In Transit")
+    except Exception as e:
+        frappe.log_error(
+            title="Store Orders In Transit Update Failed",
+            message=f"Failed to set store orders to In Transit: {str(e)}"
+        )
 
 
 @frappe.whitelist()
@@ -939,6 +960,9 @@ def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None
             trip.stops[idx].store_order = stop_data["store_order"]
 
     trip.insert()
+
+    # Update linked BEI Store Orders to "In Transit"
+    _set_store_orders_in_transit(stops)
 
     return {
         "success": True,

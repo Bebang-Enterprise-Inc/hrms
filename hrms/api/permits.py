@@ -324,36 +324,9 @@ def check_permit_expiry():
 def _send_permit_gchat_notification(text):
     """
     Send a Google Chat message for permit alerts.
-    Uses Domain-Wide Delegation via task-manager-service.json.
+    Delegates to shared send_message_to_space() utility.
     """
-    import os
-    try:
-        from google.oauth2 import service_account
-        from googleapiclient.discovery import build
-    except ImportError:
-        frappe.log_error("google-auth package not installed — permit notification skipped", "Permit GChat")
-        return
-
-    app_path = frappe.get_app_path("hrms")
-    cred_path = os.path.join(
-        os.path.dirname(os.path.dirname(app_path)),
-        "credentials",
-        "task-manager-service.json",
-    )
-
-    if not os.path.exists(cred_path):
-        frappe.log_error(
-            "Permit notification skipped — service account missing: {0}".format(cred_path),
-            "Permit GChat",
-        )
-        return
-
-    scopes = ["https://www.googleapis.com/auth/chat.bot"]
-    credentials = service_account.Credentials.from_service_account_file(
-        cred_path, scopes=scopes
-    ).with_subject("sam@bebang.ph")
-
-    service = build("chat", "v1", credentials=credentials)
+    from hrms.api.google_chat import send_message_to_space
 
     space = "spaces/AAQABiNmpBg"
     try:
@@ -363,13 +336,4 @@ def _send_permit_gchat_notification(text):
     except Exception:
         pass
 
-    try:
-        service.spaces().messages().create(
-            parent=space,
-            body={"text": text},
-        ).execute()
-    except Exception as e:
-        frappe.log_error(
-            "Failed to send permit GChat notification: {0}".format(str(e)),
-            "Permit GChat",
-        )
+    send_message_to_space(space, text)

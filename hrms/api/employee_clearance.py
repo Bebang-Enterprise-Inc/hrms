@@ -683,6 +683,110 @@ def get_my_separation():
 # ============================================================================
 
 
+# ============================================================================
+# SEPARATION NOTIFICATION HOOKS (called from hooks.py doc_events)
+# ============================================================================
+
+
+def on_separation_created(doc, method=None):
+    """After Employee Separation is created: notify department heads about clearance items.
+
+    Sends Google Chat notification (via shared send_message_to_space).
+    Falls back silently if Chat not configured.
+
+    Called by hooks.py: Employee Separation → after_insert
+    """
+    try:
+        from hrms.api.google_chat import send_message_to_space
+
+        employee_name = doc.employee_name or doc.employee
+        dept = getattr(doc, "department", "") or ""
+        sep_type = getattr(doc, "custom_separation_type", "") or "Separation"
+        begins_on = str(getattr(doc, "boarding_begins_on", "") or frappe.utils.today())
+
+        message = (
+            f"*Employee Separation Created*\n"
+            f"*Employee:* {employee_name}\n"
+            f"*Department:* {dept}\n"
+            f"*Type:* {sep_type}\n"
+            f"*Clearance begins:* {begins_on}\n"
+            f"*Action required:* Complete your department's clearance items for this employee.\n"
+            f"View in ERP: {frappe.utils.get_url()}/app/employee-separation/{doc.name}"
+        )
+
+        # Get notification space from BEI Settings (HR notification channel)
+        space = None
+        try:
+            space = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
+        except Exception:
+            pass
+
+        if space:
+            send_message_to_space(space, message)
+        else:
+            frappe.log_error(
+                f"Separation created for {employee_name} but gchat_notification_space not configured",
+                "Separation Notification"
+            )
+
+    except Exception:
+        # Notifications must never crash the main flow
+        frappe.log_error(frappe.get_traceback(), "Separation Created Notification Failed")
+
+
+def on_separation_updated(doc, method=None):
+    """On Employee Separation update: check if all clearance items are completed.
+
+    If complete → notify Finance to proceed with final pay.
+
+    Called by hooks.py: Employee Separation → on_update
+    """
+    try:
+        # Check if all DOLE compliance items are Completed or Not Applicable
+        compliance_items = getattr(doc, "custom_dole_compliance", []) or []
+
+        if not compliance_items:
+            return
+
+        all_done = all(
+            item.status in ("Completed", "Not Applicable")
+            for item in compliance_items
+        )
+
+        if not all_done:
+            return
+
+        # Only notify once (check boarding_status hasn't already been set to Completed)
+        if getattr(doc, "boarding_status", "") == "Completed":
+            return
+
+        from hrms.api.google_chat import send_message_to_space
+
+        employee_name = doc.employee_name or doc.employee
+
+        message = (
+            f"*Clearance Complete — Final Pay Pending*\n"
+            f"*Employee:* {employee_name}\n"
+            f"*Separation:* {doc.name}\n"
+            f"All clearance items have been completed.\n"
+            f"*Finance:* Please proceed with final pay computation.\n"
+            f"*HR:* Please update employee status to 'Left'.\n"
+            f"View: {frappe.utils.get_url()}/app/employee-separation/{doc.name}"
+        )
+
+        space = None
+        try:
+            space = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
+        except Exception:
+            pass
+
+        if space:
+            send_message_to_space(space, message)
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Separation Updated Notification Failed")
+
+
 @frappe.whitelist(allow_guest=False)
 def generate_coe(employee: str):
 	"""

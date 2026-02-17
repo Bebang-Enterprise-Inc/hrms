@@ -288,7 +288,48 @@ def generate_monthly_billing(billing_period=None, store=None):
                 "website_sales": sales_data.website_sales,
                 "status": "Draft",
             })
+
+            # Aggregate maintenance charges for franchise stores only
+            maintenance_charges = 0.0
+            maintenance_request_names = []
+            if store_rec.store_type in ("Full Franchise", "Semi-Franchise"):
+                maint_rows = frappe.db.sql("""
+                    SELECT name, total_cost
+                    FROM `tabBEI Maintenance Request`
+                    WHERE store = %s
+                      AND status = 'Completed'
+                      AND (billing_status IS NULL OR billing_status = 'Not Billed')
+                      AND charge_to_store = 1
+                      AND resolved_date BETWEEN %s AND %s
+                """, (store_rec.store, period_start, period_end), as_dict=True)
+
+                for row in maint_rows:
+                    maintenance_charges += flt(row.total_cost)
+                    maintenance_request_names.append(row.name)
+
+            if maintenance_charges > 0:
+                billing.repairs_maintenance = maintenance_charges
+                billing.append("line_items", {
+                    "fee_type": "Maintenance",
+                    "description": f"Maintenance charges - {billing_period}",
+                    "rate": maintenance_charges,
+                    "amount": maintenance_charges,
+                })
+
             billing.insert()
+
+            # Mark maintenance requests as Billed
+            if maintenance_request_names:
+                for mr_name in maintenance_request_names:
+                    frappe.db.set_value(
+                        "BEI Maintenance Request",
+                        mr_name,
+                        {
+                            "billing_status": "Billed",
+                            "billing_reference": billing.name,
+                        }
+                    )
+
             generated += 1
             frappe.db.release_savepoint(sp)
 

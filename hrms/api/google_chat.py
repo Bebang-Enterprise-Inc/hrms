@@ -162,6 +162,72 @@ def _derive_space_label(space_type: str, memberships: list[dict], fallback: str)
     return ", ".join(names[:3]) + f" +{len(names) - 3}"
 
 
+def send_message_to_space(space_name: str, message: str) -> bool:
+    """
+    Send a Google Chat message to a space using the bot service account.
+    Uses credentials/task-manager-service.json with chat.bot scope.
+
+    This is an INTERNAL utility function — NOT a whitelist API endpoint.
+    Multiple modules import this to avoid duplicating service account auth logic.
+
+    Args:
+        space_name: Google Chat space identifier, e.g. "spaces/AAQA3NVVR6c"
+        message: Plain text message to send
+
+    Returns:
+        True if message was sent successfully, False otherwise (never throws).
+    """
+    logger = frappe.logger("google_chat")
+    try:
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+    except ImportError:
+        logger.warning("google-auth package not installed — GChat notification skipped")
+        return False
+
+    if not space_name:
+        logger.warning("send_message_to_space: space_name is empty, skipping")
+        return False
+
+    try:
+        import os
+
+        app_path = frappe.get_app_path("hrms")
+        cred_path = os.path.join(
+            os.path.dirname(os.path.dirname(app_path)),
+            "credentials",
+            "task-manager-service.json",
+        )
+
+        if not os.path.exists(cred_path):
+            logger.warning(
+                f"send_message_to_space: service account file missing at {cred_path}, skipping"
+            )
+            return False
+
+        creds = service_account.Credentials.from_service_account_file(
+            cred_path,
+            scopes=["https://www.googleapis.com/auth/chat.bot"],
+        )
+        chat = build("chat", "v1", credentials=creds)
+        chat.spaces().messages().create(
+            parent=space_name,
+            body={"text": message},
+        ).execute()
+
+        logger.info(f"GChat message sent to {space_name}")
+        return True
+
+    except Exception as e:
+        # CRITICAL: Never throw — callers must not be blocked by notification failures
+        logger.error(f"send_message_to_space failed for {space_name}: {str(e)}")
+        frappe.log_error(
+            title="Google Chat Send Error",
+            message=f"space={space_name}, error={str(e)[:500]}",
+        )
+        return False
+
+
 @frappe.whitelist()
 def get_user_chat_spaces():
     """
@@ -363,16 +429,84 @@ def get_user_chat_spaces():
 def check_chat_connection():
     """
     Check if current user has Google Chat connected.
-    
+
     Returns:
         dict: {"connected": True/False, "user": "email"}
     """
     user = frappe.session.user
-    
+
     if user == "Guest":
         return {"connected": False, "user": None}
-    
+
     return {
         "connected": has_valid_token(user),
         "user": user
     }
+
+
+# ---------------------------------------------------------------------------
+# Doc Event Handlers (wired via hooks.py doc_events)
+# ---------------------------------------------------------------------------
+
+def on_approval_queue_insert(doc, method=None):
+    """
+    Notify relevant space when a new BEI Approval Queue item is created.
+    Fires via doc_events: BEI Approval Queue → after_insert.
+    """
+    try:
+        space = (
+            frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
+            or "spaces/AAQABiNmpBg"
+        )
+        subject = getattr(doc, "subject", None) or getattr(doc, "name", "Unknown")
+        queue_type = getattr(doc, "approval_type", None) or getattr(doc, "doctype", "Item")
+        message = f"*New Approval Needed*\n\n{queue_type}: *{subject}*\nPlease review and approve."
+        send_message_to_space(space, message)
+    except Exception as e:
+        frappe.log_error(
+            title="Approval Queue Notification Error",
+            message=f"doc={doc.name}, error={str(e)[:300]}",
+        )
+
+
+def on_store_order_update(doc, method=None):
+    """
+    Notify store's Google Chat space when a BEI Store Order status changes.
+    Fires via doc_events: BEI Store Order → on_update.
+    Notifies on: Approved, Cancelled.
+    """
+    _NOTIFY_STATUSES = {"Approved", "Cancelled"}
+    status = getattr(doc, "status", None)
+    if status not in _NOTIFY_STATUSES:
+        return
+
+    # Only notify on actual status transitions, not re-saves
+    if not doc.is_new() and not doc.has_value_changed("status"):
+        return
+
+    try:
+        # Prefer per-store space from linked Warehouse, fall back to global setting
+        space = None
+        store_warehouse = getattr(doc, "warehouse", None) or getattr(doc, "store_warehouse", None)
+        if store_warehouse:
+            space = frappe.db.get_value("Warehouse", store_warehouse, "custom_gchat_space")
+
+        if not space:
+            space = (
+                frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
+                or "spaces/AAQABiNmpBg"
+            )
+
+        if status == "Approved":
+            message = f"*Store Order Approved*\n\nOrder *{doc.name}* has been approved and is being prepared."
+        else:
+            reason = getattr(doc, "cancellation_reason", None) or ""
+            reason_text = f"\nReason: {reason}" if reason else ""
+            message = f"*Store Order Cancelled*\n\nOrder *{doc.name}* was cancelled.{reason_text}"
+
+        send_message_to_space(space, message)
+    except Exception as e:
+        frappe.log_error(
+            title="Store Order Notification Error",
+            message=f"doc={doc.name}, status={status}, error={str(e)[:300]}",
+        )
