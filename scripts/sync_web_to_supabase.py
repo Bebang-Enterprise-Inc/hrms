@@ -140,10 +140,11 @@ def map_order(order, tenant_map):
             business_date = str(date.today())
 
     # Financial fields
-    subtotal = float(order.get("subtotal") or 0)
+    subtotal_raw = float(order.get("subtotal") or 0)
     amount = float(order.get("amount") or 0)
     discount = float(order.get("discount") or 0)
     delivery_fee = float(order.get("deliver_rate") or 0)
+    cod_fee = float(order.get("cod") or 0)
     senior_discount = float(order.get("senior_discount") or 0)
     pwd_discount = float(order.get("pwd_discount") or 0)
     partner_discount = float(order.get("partner_discount") or 0)
@@ -156,8 +157,12 @@ def map_order(order, tenant_map):
 
     total_discounts = discount + senior_discount + pwd_discount + partner_discount + coupon_value
 
-    # VAT calculation (12% standard, from gross)
-    gross_sales = amount
+    # gross_sales = subtotal (food/drink items only, pre-discount, excludes delivery & COD fee)
+    # This is the correct sales figure — delivery fee and COD fee are NOT revenue.
+    # Dashboard uses amount - deliver_rate - cod which equals subtotal - discount (post-coupon).
+    # We store subtotal as gross_sales because discounts are tracked separately.
+    gross_sales = subtotal_raw
+    dashboard_sale = amount - delivery_fee - cod_fee  # For reference: what dashboard reports
     net_sales = gross_sales / 1.12 if gross_sales > 0 else 0
     vat_amount = gross_sales - net_sales
     vatable_sales = net_sales
@@ -166,21 +171,41 @@ def map_order(order, tenant_map):
     # Platform
     platform = classify_platform(order)
 
-    # Payment gateway
-    payment_mode = order.get("payment_mode") or ""
+    # Payment type: the REAL payment method lives in order_payment.payment_type
+    # NOT in payment_mode (which is always "Production" = PayMongo environment mode)
+    order_payment = order.get("order_payment") or {}
+    if isinstance(order_payment, dict):
+        payment_type = order_payment.get("payment_type") or ""
+    else:
+        payment_type = ""
+
+    # Map payment_gateway from the actual payment type
     payment_gateway = None
-    if "paymongo" in payment_mode.lower():
-        payment_gateway = "PayMongo"
-    elif "cod" in payment_mode.lower() or "cash" in payment_mode.lower():
+    if payment_type.upper() == "COD":
         payment_gateway = "COD"
-    elif "gcash" in payment_mode.lower():
+    elif payment_type.lower() == "gcash":
         payment_gateway = "GCash"
-    elif payment_mode:
-        payment_gateway = payment_mode
+    elif payment_type.lower() in ("card", "credit_card", "debit_card"):
+        payment_gateway = "Card"
+    elif payment_type.upper() == "QRPH":
+        payment_gateway = "QRPH"
+    elif payment_type:
+        payment_gateway = payment_type
+    else:
+        # Fallback: use payment_mode if order_payment is missing
+        payment_mode_val = order.get("payment_mode") or ""
+        payment_gateway = payment_mode_val if payment_mode_val else None
 
     # Map payment status
     order_status = (order.get("order_status") or "").lower()
+    order_status_raw = order.get("order_status") or ""
+    payment_mode_raw = order.get("payment_mode") or ""
     payment_status_raw = (order.get("payment_status") or "").lower()
+
+    # Skip orders with no order_status (incomplete/ghost orders)
+    if not order_status_raw:
+        return None, f"Order {order.get('id')} missing order_status (incomplete order)"
+
     if payment_status_raw == "paid" and order_status not in ("cancelled", "canceled"):
         payment_status = "PAID"
     elif order_status in ("cancelled", "canceled"):
@@ -198,8 +223,8 @@ def map_order(order, tenant_map):
         "platform": platform,
         "reference_id": str(ref_order_id)[:100],
         "aggregator_order_id": order.get("order_id"),
-        "original_gross_sales": gross_sales,
-        "gross_sales": gross_sales,
+        "original_gross_sales": amount,  # Full amount customer paid (incl delivery+COD)
+        "gross_sales": gross_sales,      # Subtotal = food/drink items only (excl delivery & COD fee)
         "net_sales": round(net_sales, 2),
         "vatable_sales": round(vatable_sales, 2),
         "vat_amount": round(vat_amount, 2),
@@ -207,6 +232,10 @@ def map_order(order, tenant_map):
         "zero_rated_sales": 0,
         "total_discounts": round(total_discounts, 2),
         "delivery_fee": delivery_fee,
+        "cod": cod_fee,
+        "subtotal": subtotal_raw,
+        "order_status_raw": order_status_raw,
+        "payment_mode": payment_mode_raw,
         "payment_status": payment_status,
         "payment_gateway": payment_gateway,
         "order_datetime": created_at,
