@@ -8,10 +8,12 @@ This module centralizes all billing operations for the BEI ERP system:
 """
 
 import re
+import calendar
+from decimal import Decimal
 
 import frappe
 from frappe import _
-from frappe.utils import flt, now_datetime, get_first_day, get_last_day
+from frappe.utils import flt, now_datetime, get_first_day, get_last_day, nowdate
 
 RATE_MANAGEMENT_ROLES = {"Accounts Manager", "Supply Chain Manager", "System Manager"}
 
@@ -581,8 +583,6 @@ def scheduled_monthly_billing():
 # Partners: RCS, 3MD/COOLITZ, PINNACLE
 # Billing is per-trip flat rate (NOT per-km or per-kg)
 # BIR RR 2-98: 2% EWT on hauling/freight services
-
-import calendar
 
 SCM_BILLING_ROLES = {"Warehouse Manager", "Logistics Coordinator", "HR Manager", "System Manager"}
 
