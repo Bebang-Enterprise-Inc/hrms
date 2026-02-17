@@ -1013,3 +1013,251 @@ def get_driver_list():
         order_by="employee_name"
     )
     return {"drivers": drivers}
+
+
+# ============================================================================
+# PHASE 3B: DRIVER SCHEDULING ENDPOINTS
+# ============================================================================
+
+DRIVER_DESIGNATIONS = ["Driver", "Helper", "Relief Driver", "Delivery Driver", "Truck Driver"]
+
+
+@frappe.whitelist()
+def get_available_drivers(date=None):
+    """
+    Get all drivers with their assignment status for a given date.
+
+    Returns each driver with:
+      - status: "Available" | "Assigned" | "Off-Duty"
+      - trip: trip details if assigned (trip_name, route_name, departure_time, vehicle_plate)
+
+    Args:
+        date: ISO date string (defaults to today)
+
+    Returns:
+        {"drivers": [DriverStatus, ...]}
+    """
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view available drivers")
+
+    trip_date = date or nowdate()
+
+    # All active employees with driver designations
+    all_drivers = frappe.get_all(
+        "Employee",
+        filters={"status": "Active", "designation": ["in", DRIVER_DESIGNATIONS]},
+        fields=["name", "employee_name", "designation", "cell_phone", "status"],
+        order_by="employee_name"
+    )
+
+    # Build a map of employee -> trip for the date
+    trips_on_date = frappe.get_all(
+        "BEI Distribution Trip",
+        filters={"trip_date": trip_date},
+        fields=["name", "driver", "route_name", "departure_time", "vehicle_plate", "status"]
+    )
+
+    assigned_map = {}
+    for trip in trips_on_date:
+        if trip.driver:
+            assigned_map[trip.driver] = trip
+
+    result = []
+    for driver in all_drivers:
+        assigned_trip = assigned_map.get(driver.name)
+        driver_status = "Assigned" if assigned_trip else "Available"
+
+        entry = {
+            "employee": driver.name,
+            "employee_name": driver.employee_name,
+            "designation": driver.designation,
+            "cell_phone": driver.cell_phone or "",
+            "status": driver_status,
+            "trip": None,
+        }
+
+        if assigned_trip:
+            entry["trip"] = {
+                "name": assigned_trip.name,
+                "route_name": assigned_trip.route_name,
+                "departure_time": str(assigned_trip.departure_time) if assigned_trip.departure_time else None,
+                "vehicle_plate": assigned_trip.vehicle_plate or "",
+                "status": assigned_trip.status,
+            }
+
+        result.append(entry)
+
+    # Count summary
+    available_count = sum(1 for d in result if d["status"] == "Available")
+    assigned_count = sum(1 for d in result if d["status"] == "Assigned")
+
+    return {
+        "drivers": result,
+        "summary": {
+            "total": len(result),
+            "available": available_count,
+            "assigned": assigned_count,
+        }
+    }
+
+
+@frappe.whitelist()
+def assign_driver(trip_name, employee, vehicle=None):
+    """
+    Assign a driver (or helper) to an existing trip.
+    Only valid for trips in "Preparing" status.
+
+    Args:
+        trip_name: BEI Distribution Trip name
+        employee:  Employee name (Link field)
+        vehicle:   Optional BEI Vehicle name — updates vehicle_plate automatically
+
+    Returns:
+        {"success": True, "trip": trip_name, "driver": employee_name}
+    """
+    _check_scm_permission(SCM_DISPATCH_ROLES, "assign drivers to trips")
+
+    # Validate employee exists and has a driver designation
+    emp = frappe.db.get_value(
+        "Employee",
+        {"name": employee, "status": "Active"},
+        ["name", "employee_name", "designation"],
+        as_dict=True
+    )
+    if not emp:
+        frappe.throw(_("Employee {0} not found or not active").format(employee))
+
+    if emp.designation not in DRIVER_DESIGNATIONS:
+        frappe.throw(
+            _("Employee {0} does not have a driver designation ({1})").format(
+                emp.employee_name, emp.designation
+            )
+        )
+
+    trip = frappe.get_doc("BEI Distribution Trip", trip_name)
+
+    if trip.status not in ("Preparing", "In Transit"):
+        frappe.throw(
+            _("Cannot reassign driver: trip {0} is in status '{1}'").format(trip_name, trip.status)
+        )
+
+    trip.driver = employee
+
+    if vehicle:
+        vehicle_plate = frappe.db.get_value("BEI Vehicle", vehicle, "vehicle_plate")
+        trip.vehicle = vehicle
+        trip.vehicle_plate = vehicle_plate or ""
+
+    trip.save()
+
+    return {
+        "success": True,
+        "trip": trip.name,
+        "driver": emp.employee_name,
+        "vehicle_plate": trip.vehicle_plate or "",
+    }
+
+
+@frappe.whitelist()
+def get_driver_schedule(employee, date_from=None, date_to=None):
+    """
+    Get a specific driver's schedule over a date range.
+
+    Args:
+        employee:  Employee name
+        date_from: Start date (defaults to Monday of current week)
+        date_to:   End date (defaults to Sunday of current week)
+
+    Returns:
+        {
+            "employee": {...},
+            "days": [
+                {
+                    "date": "2026-02-17",
+                    "status": "Available" | "Assigned" | "Off-Duty",
+                    "trip": {...} or null
+                },
+                ...
+            ]
+        }
+    """
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view driver schedules")
+
+    from frappe.utils import getdate, add_days, get_first_day_of_week
+
+    today = getdate(nowdate())
+
+    if date_from:
+        start = getdate(date_from)
+    else:
+        # Default to Monday of current week
+        weekday = today.weekday()  # Monday=0
+        start = add_days(today, -weekday)
+
+    if date_to:
+        end = getdate(date_to)
+    else:
+        # Default to Sunday of current week
+        end = add_days(start, 6)
+
+    # Validate employee
+    emp = frappe.db.get_value(
+        "Employee",
+        employee,
+        ["name", "employee_name", "designation", "status", "cell_phone"],
+        as_dict=True
+    )
+    if not emp:
+        frappe.throw(_("Employee {0} not found").format(employee))
+
+    # Get all trips assigned to this driver in range
+    trips = frappe.get_all(
+        "BEI Distribution Trip",
+        filters={
+            "driver": employee,
+            "trip_date": ["between", [str(start), str(end)]]
+        },
+        fields=["name", "trip_date", "route_name", "departure_time", "vehicle_plate", "status"]
+    )
+
+    trip_by_date = {str(t.trip_date): t for t in trips}
+
+    # Build day-by-day schedule
+    days = []
+    current = start
+    while current <= end:
+        date_str = str(current)
+        trip = trip_by_date.get(date_str)
+
+        if emp.status != "Active":
+            day_status = "Off-Duty"
+        elif trip:
+            day_status = "Assigned"
+        else:
+            day_status = "Available"
+
+        day_entry = {
+            "date": date_str,
+            "status": day_status,
+            "trip": {
+                "name": trip.name,
+                "route_name": trip.route_name,
+                "departure_time": str(trip.departure_time) if trip.departure_time else None,
+                "vehicle_plate": trip.vehicle_plate or "",
+                "status": trip.status,
+            } if trip else None
+        }
+        days.append(day_entry)
+        current = add_days(current, 1)
+
+    return {
+        "employee": {
+            "name": emp.name,
+            "employee_name": emp.employee_name,
+            "designation": emp.designation,
+            "status": emp.status,
+            "cell_phone": emp.cell_phone or "",
+        },
+        "date_from": str(start),
+        "date_to": str(end),
+        "days": days,
+    }

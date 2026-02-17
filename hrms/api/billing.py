@@ -532,3 +532,449 @@ def scheduled_monthly_billing():
         f"{len(result.get('errors', []))} errors",
         "Scheduled Monthly Billing"
     )
+
+
+# ================================
+# PHASE 4B — 3PL BILLING RECONCILIATION
+# ================================
+# Partners: RCS, 3MD/COOLITZ, PINNACLE
+# Billing is per-trip flat rate (NOT per-km or per-kg)
+# BIR RR 2-98: 2% EWT on hauling/freight services
+
+import calendar
+
+SCM_BILLING_ROLES = {"Warehouse Manager", "Logistics Coordinator", "HR Manager", "System Manager"}
+
+# GL accounts for 3PL logistics costs and payment
+GL_LOGISTICS_COMMISSARY = "6003001"   # Logistics Cost - Commissary
+GL_LOGISTICS_PCF        = "6003002"   # Logistics Cost - PCF
+GL_LOGISTICS_WAREHOUSE  = "6003003"   # Logistics Cost - Warehouse
+GL_CWT                  = "1105101"   # Creditable Withholding Tax (2% EWT)
+GL_BDO_HO               = "1101103"   # BDO H.O. (cash/bank payment)
+
+EWT_RATE = 0.02  # BIR RR 2-98: 2% on hauling services
+
+
+def _check_billing_permission(action="access billing records"):
+    """Check if current user has any of the allowed 3PL billing roles."""
+    user_roles = set(frappe.get_roles(frappe.session.user))
+    if not user_roles.intersection(SCM_BILLING_ROLES):
+        frappe.throw(
+            _("You do not have permission to {0}").format(action),
+            frappe.PermissionError
+        )
+
+
+def _get_month_date_range(month, year):
+    """Return (start_date, end_date) strings for a given month/year."""
+    month = int(month)
+    year = int(year)
+    last_day = calendar.monthrange(year, month)[1]
+    start_date = f"{year:04d}-{month:02d}-01"
+    end_date = f"{year:04d}-{month:02d}-{last_day:02d}"
+    return start_date, end_date
+
+
+def _get_gl_account_for_partner(partner):
+    """Map 3PL partner to appropriate GL logistics cost account."""
+    mapping = {
+        "RCS":      GL_LOGISTICS_COMMISSARY,
+        "3MD":      GL_LOGISTICS_COMMISSARY,
+        "COOLITZ":  GL_LOGISTICS_PCF,
+        "PINNACLE": GL_LOGISTICS_WAREHOUSE,
+    }
+    return mapping.get(partner, GL_LOGISTICS_COMMISSARY)
+
+
+@frappe.whitelist()
+def get_3pl_rates(partner=None, cargo_type=None):
+    """
+    GET active 3PL rate master lookup.
+    Returns rates where effective_to is null or >= today.
+    Filter by partner and/or cargo_type.
+    """
+    _check_billing_permission("view 3PL rates")
+
+    today = nowdate()
+    conditions = ["(effective_to IS NULL OR effective_to = '' OR effective_to >= %(today)s)"]
+    params = {"today": today}
+
+    if partner:
+        conditions.append("threepl_partner = %(partner)s")
+        params["partner"] = partner
+
+    if cargo_type:
+        conditions.append("cargo_type = %(cargo_type)s")
+        params["cargo_type"] = cargo_type
+
+    conditions.append("effective_from <= %(today)s")
+
+    where_clause = " AND ".join(conditions)
+
+    rates = frappe.db.sql(
+        f"""
+        SELECT
+            name, rate_name, threepl_partner, cargo_type, zone,
+            rate_per_trip, overtime_rate, surcharge_rate,
+            effective_from, effective_to, notes
+        FROM `tabBEI 3PL Rate`
+        WHERE {where_clause}
+        ORDER BY threepl_partner, cargo_type, effective_from DESC
+        """,
+        params,
+        as_dict=True
+    )
+
+    return {"rates": rates, "count": len(rates)}
+
+
+@frappe.whitelist()
+def generate_3pl_reconciliation(month, year, partner):
+    """
+    POST: Generate monthly 3PL reconciliation report.
+    Steps:
+      a. Get all BEI Distribution Trips for the month using a 3PL vehicle
+      b. Match each trip to BEI 3PL Rate by zone + cargo_type + partner
+      c. Calculate expected cost = rate_per_trip * trip_count + overtime + surcharges
+      d. Return structured reconciliation data
+    """
+    _check_billing_permission("generate 3PL reconciliation")
+
+    month = int(month)
+    year = int(year)
+    start_date, end_date = _get_month_date_range(month, year)
+
+    # Fetch 3PL trips for the month (vehicle_owner matches the 3PL partner)
+    trips_raw = frappe.db.sql(
+        """
+        SELECT
+            dt.name AS trip_name,
+            dt.trip_date AS date,
+            dt.route AS zone,
+            dt.cargo_type,
+            dt.vehicle_owner,
+            dt.overtime_hours,
+            dt.is_holiday_trip,
+            dt.is_weekend_trip,
+            GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
+        FROM `tabBEI Distribution Trip` dt
+        LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
+        WHERE dt.trip_date BETWEEN %(start_date)s AND %(end_date)s
+          AND dt.vehicle_owner = %(partner)s
+          AND dt.docstatus = 1
+        GROUP BY dt.name
+        ORDER BY dt.trip_date ASC
+        """,
+        {"start_date": start_date, "end_date": end_date, "partner": partner},
+        as_dict=True
+    )
+
+    # Fetch applicable rates for this partner active during the month
+    rates = frappe.db.sql(
+        """
+        SELECT name, cargo_type, zone, rate_per_trip, overtime_rate, surcharge_rate
+        FROM `tabBEI 3PL Rate`
+        WHERE threepl_partner = %(partner)s
+          AND effective_from <= %(end_date)s
+          AND (effective_to IS NULL OR effective_to = '' OR effective_to >= %(start_date)s)
+        ORDER BY effective_from DESC
+        """,
+        {"partner": partner, "start_date": start_date, "end_date": end_date},
+        as_dict=True
+    )
+
+    # Build rate lookup: (zone, cargo_type) -> rate (most-recent per key)
+    rate_lookup = {}
+    for r in rates:
+        key = (r.get("zone") or "", r.get("cargo_type") or "")
+        if key not in rate_lookup:
+            rate_lookup[key] = r
+
+    trip_lines = []
+    total_expected = 0.0
+    discrepancies = []
+
+    for trip in trips_raw:
+        zone = trip.get("zone") or ""
+        cargo = trip.get("cargo_type") or ""
+
+        # Try exact match, then zone-only, cargo-only, then wildcard
+        rate = (
+            rate_lookup.get((zone, cargo))
+            or rate_lookup.get((zone, ""))
+            or rate_lookup.get(("", cargo))
+            or rate_lookup.get(("", ""))
+        )
+
+        if not rate:
+            discrepancies.append({
+                "trip_name": trip.trip_name,
+                "date": str(trip.date),
+                "reason": f"No matching rate for partner={partner}, zone={zone}, cargo_type={cargo}",
+                "amount": 0
+            })
+            trip_lines.append({
+                "trip_name": trip.trip_name,
+                "date": str(trip.date),
+                "zone": zone,
+                "stores": trip.get("stores") or "",
+                "cargo_type": cargo,
+                "rate_name": None,
+                "rate_per_trip": 0,
+                "overtime_cost": 0,
+                "surcharge_cost": 0,
+                "cost": 0,
+                "has_discrepancy": True
+            })
+            continue
+
+        base_cost = flt(rate.rate_per_trip)
+        overtime_hours = flt(trip.get("overtime_hours") or 0)
+        overtime_cost = overtime_hours * flt(rate.get("overtime_rate") or 0)
+        surcharge_cost = 0.0
+        if trip.get("is_holiday_trip") or trip.get("is_weekend_trip"):
+            surcharge_cost = flt(rate.get("surcharge_rate") or 0)
+
+        trip_cost = base_cost + overtime_cost + surcharge_cost
+        total_expected += trip_cost
+
+        trip_lines.append({
+            "trip_name": trip.trip_name,
+            "date": str(trip.date),
+            "zone": zone,
+            "stores": trip.get("stores") or "",
+            "cargo_type": cargo,
+            "rate_name": rate.get("name"),
+            "rate_per_trip": base_cost,
+            "overtime_cost": overtime_cost,
+            "surcharge_cost": surcharge_cost,
+            "cost": trip_cost,
+            "has_discrepancy": False
+        })
+
+    return {
+        "partner": partner,
+        "month": month,
+        "year": year,
+        "period": f"{year:04d}-{month:02d}",
+        "trip_count": len(trips_raw),
+        "trips": trip_lines,
+        "total_expected": round(total_expected, 2),
+        "discrepancies": discrepancies
+    }
+
+
+@frappe.whitelist()
+def create_3pl_payment_request(month, year, partner, invoice_amount):
+    """
+    POST: Create a Journal Entry payment request for a 3PL invoice.
+    - Gross = invoice_amount
+    - EWT = gross * 0.02 (BIR RR 2-98: 2% on hauling services)
+    - Net payable = gross * 0.98
+    - GL: DR logistics cost, CR CWT (2%), CR BDO H.O. (98%)
+    - DM-1: ALL GL rows have party + party_type
+    - DM-2: frappe.db.savepoint() wraps multi-doc operation
+    """
+    _check_billing_permission("create 3PL payment requests")
+
+    invoice_amount = flt(invoice_amount)
+    if invoice_amount <= 0:
+        frappe.throw(_("Invoice amount must be greater than zero"))
+
+    gross = invoice_amount
+    ewt_amount = round(gross * EWT_RATE, 2)
+    net_payable = round(gross - ewt_amount, 2)
+
+    gl_debit_account = _get_gl_account_for_partner(partner)
+    period_label = f"{int(year):04d}-{int(month):02d}"
+    remarks = f"3PL Hauling - {partner} - {period_label}"
+
+    company = frappe.defaults.get_defaults().get("company") or "Bebang Enterprise Inc."
+
+    sp_name = f"3pl_payment_{partner}_{period_label}".replace("-", "_")
+    frappe.db.savepoint(sp_name)
+
+    try:
+        je = frappe.new_doc("Journal Entry")
+        je.voucher_type = "Journal Entry"
+        je.company = company
+        je.posting_date = nowdate()
+        je.user_remark = remarks
+        je.cheque_no = f"3PL-{partner}-{period_label}"
+        je.cheque_date = nowdate()
+
+        # DR: Logistics Cost (full gross amount) — DM-1: party on all rows
+        je.append("accounts", {
+            "account": gl_debit_account,
+            "debit_in_account_currency": gross,
+            "credit_in_account_currency": 0,
+            "party_type": "Supplier",
+            "party": partner,
+            "user_remark": remarks
+        })
+
+        # CR: Creditable Withholding Tax (2% EWT)
+        je.append("accounts", {
+            "account": GL_CWT,
+            "debit_in_account_currency": 0,
+            "credit_in_account_currency": ewt_amount,
+            "party_type": "Supplier",
+            "party": partner,
+            "user_remark": f"EWT 2% - {remarks}"
+        })
+
+        # CR: BDO H.O. (net cash payment, 98%)
+        je.append("accounts", {
+            "account": GL_BDO_HO,
+            "debit_in_account_currency": 0,
+            "credit_in_account_currency": net_payable,
+            "party_type": "Supplier",
+            "party": partner,
+            "user_remark": f"Net payment - {remarks}"
+        })
+
+        je.insert(ignore_permissions=True)
+
+        return {
+            "success": True,
+            "journal_entry": je.name,
+            "partner": partner,
+            "period": period_label,
+            "gross": gross,
+            "ewt_amount": ewt_amount,
+            "net_payable": net_payable,
+            "gl_entries": [
+                {"account": gl_debit_account, "debit": gross, "credit": 0},
+                {"account": GL_CWT, "debit": 0, "credit": ewt_amount},
+                {"account": GL_BDO_HO, "debit": 0, "credit": net_payable},
+            ]
+        }
+
+    except Exception as e:
+        frappe.db.rollback(save_point=sp_name)
+        frappe.log_error(frappe.get_traceback(), "3PL Payment Request Creation Failed")
+        frappe.throw(_("Failed to create payment request: {0}").format(str(e)))
+
+
+@frappe.whitelist()
+def get_reconciliation_summary(month, year):
+    """
+    GET: Summary across all 3PL partners for a given month.
+    Returns: [{partner, trip_count, expected_cost, invoice_amount, variance, variance_pct}]
+    """
+    _check_billing_permission("view reconciliation summary")
+
+    month = int(month)
+    year = int(year)
+    start_date, end_date = _get_month_date_range(month, year)
+    period_label = f"{year:04d}-{month:02d}"
+
+    partners = ["RCS", "3MD", "COOLITZ", "PINNACLE"]
+    summary = []
+
+    for partner in partners:
+        trip_count = frappe.db.count(
+            "BEI Distribution Trip",
+            filters={
+                "trip_date": ["between", [start_date, end_date]],
+                "vehicle_owner": partner,
+                "docstatus": 1
+            }
+        )
+
+        if trip_count == 0:
+            continue
+
+        recon = generate_3pl_reconciliation(month, year, partner)
+        expected_cost = flt(recon.get("total_expected") or 0)
+
+        # Check for any Journal Entry already created for this period+partner
+        invoice_amount = 0.0
+        existing_je = frappe.db.get_value(
+            "Journal Entry",
+            {"cheque_no": f"3PL-{partner}-{period_label}", "docstatus": ["!=", 2]},
+            "total_debit"
+        )
+        if existing_je:
+            invoice_amount = flt(existing_je)
+
+        variance = invoice_amount - expected_cost
+        variance_pct = round((variance / expected_cost * 100), 2) if expected_cost else 0
+
+        summary.append({
+            "partner": partner,
+            "period": period_label,
+            "trip_count": trip_count,
+            "expected_cost": round(expected_cost, 2),
+            "invoice_amount": round(invoice_amount, 2),
+            "variance": round(variance, 2),
+            "variance_pct": variance_pct,
+            "discrepancy_count": len(recon.get("discrepancies") or [])
+        })
+
+    return {
+        "month": month,
+        "year": year,
+        "period": period_label,
+        "partners": summary,
+        "total_expected": round(sum(r["expected_cost"] for r in summary), 2),
+        "total_invoiced": round(sum(r["invoice_amount"] for r in summary), 2)
+    }
+
+
+@frappe.whitelist()
+def flag_discrepancy(trip_name, reason, amount):
+    """
+    POST: Flag a specific trip as discrepant.
+    Reasons: extra_trip, wrong_rate, missing_pod, duplicate, other.
+    Stores a comment on the BEI Distribution Trip document.
+    """
+    _check_billing_permission("flag trip discrepancies")
+
+    if not trip_name:
+        frappe.throw(_("trip_name is required"))
+    if not reason:
+        frappe.throw(_("reason is required"))
+
+    amount = flt(amount)
+
+    if not frappe.db.exists("BEI Distribution Trip", trip_name):
+        frappe.throw(_("Trip {0} not found").format(trip_name), frappe.DoesNotExistError)
+
+    comment = frappe.new_doc("Comment")
+    comment.comment_type = "Comment"
+    comment.reference_doctype = "BEI Distribution Trip"
+    comment.reference_name = trip_name
+    comment.content = (
+        f"<b>3PL Billing Discrepancy Flagged</b><br>"
+        f"Reason: {reason}<br>"
+        f"Disputed Amount: {amount:,.2f}<br>"
+        f"Flagged by: {frappe.session.user}"
+    )
+    comment.insert(ignore_permissions=True)
+
+    # Update discrepancy fields on the trip if they exist
+    try:
+        frappe.db.set_value(
+            "BEI Distribution Trip",
+            trip_name,
+            {
+                "billing_discrepancy": 1,
+                "discrepancy_reason": reason,
+                "discrepancy_amount": amount
+            }
+        )
+    except Exception as e:
+        frappe.log_error(
+            f"Could not update discrepancy fields on {trip_name}: {e}",
+            "3PL Billing Discrepancy"
+        )
+
+    return {
+        "success": True,
+        "trip_name": trip_name,
+        "reason": reason,
+        "amount": amount,
+        "flagged_by": frappe.session.user,
+        "comment_name": comment.name
+    }

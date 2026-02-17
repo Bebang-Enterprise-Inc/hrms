@@ -280,6 +280,8 @@ scheduler_events = {
 		"hrms.hr.doctype.job_opening.job_opening.close_expired_job_openings",
 		"hrms.api.pcf.check_month_end_auto_submit",
 		"hrms.api.procurement.check_overdue_or",
+		"hrms.api.inventory.send_low_stock_daily_alert",
+		"hrms.api.permits.check_permit_expiry",
 	],
 	"daily_long": [
 		"hrms.hr.doctype.leave_ledger_entry.leave_ledger_entry.process_expired_allocation",

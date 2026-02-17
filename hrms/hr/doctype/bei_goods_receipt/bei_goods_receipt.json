@@ -22,6 +22,8 @@
     "warehouse",
     "items_section",
     "items",
+    "supplier_invoice_section",
+    "supplier_invoice_photo",
     "totals_section",
     "total_ordered_qty",
     "total_received_qty",
@@ -147,6 +149,18 @@
       "label": "Items",
       "options": "BEI GR Item",
       "reqd": 1
+    },
+    {
+      "fieldname": "supplier_invoice_section",
+      "fieldtype": "Section Break",
+      "label": "Supplier Invoice"
+    },
+    {
+      "fieldname": "supplier_invoice_photo",
+      "fieldtype": "Attach Image",
+      "label": "Supplier Invoice Photo",
+      "reqd": 1,
+      "description": "Photo of the supplier's delivery receipt or invoice (required before accepting goods)"
     },
     {
       "fieldname": "totals_section",

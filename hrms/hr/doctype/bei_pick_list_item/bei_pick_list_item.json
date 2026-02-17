@@ -1,0 +1,95 @@
+{
+  "actions": [],
+  "creation": "2026-02-17 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "store",
+    "item_code",
+    "item_name",
+    "column_break_item",
+    "qty_ordered",
+    "qty_picked",
+    "uom",
+    "column_break_pick",
+    "bin_location",
+    "picked"
+  ],
+  "fields": [
+    {
+      "fieldname": "store",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Store (Destination)",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Item Code",
+      "options": "Item",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "item_code.item_name",
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Item Name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_item",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "qty_ordered",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Qty Ordered",
+      "precision": "2",
+      "read_only": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "qty_picked",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Qty Picked",
+      "precision": "2"
+    },
+    {
+      "fieldname": "uom",
+      "fieldtype": "Data",
+      "label": "UOM"
+    },
+    {
+      "fieldname": "column_break_pick",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "bin_location",
+      "fieldtype": "Data",
+      "label": "Bin Location"
+    },
+    {
+      "default": "0",
+      "fieldname": "picked",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Picked"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "istable": 1,
+  "links": [],
+  "modified": "2026-02-17 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Pick List Item",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC"
+}

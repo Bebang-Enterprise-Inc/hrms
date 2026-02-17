@@ -8,7 +8,7 @@ Handles cycle counts, variances, and shelf life extensions
 
 import frappe
 from frappe import _
-from frappe.utils import nowdate, flt
+from frappe.utils import nowdate, flt, add_days, now_datetime
 import json
 
 
@@ -845,3 +845,389 @@ def export_count_to_cos_recon(cycle_count_name):
     })
 
     return {"file_url": file_doc.file_url, "filename": filename}
+
+
+# ============ PHASE 2A: REAL-TIME WAREHOUSE STOCK APIs ============
+# Gives Ian real-time stock visibility across 6 BEI warehouses:
+# 3MD Cold, 3MD Dry, JENTEC, RCS, PINNACLE, SHAW
+
+SCM_INVENTORY_ROLES = {"Warehouse Manager", "Warehouse Staff", "Logistics Coordinator", "System Manager"}
+SCM_STOCK_UPDATE_ROLES = {"Warehouse Manager", "Warehouse Staff", "System Manager"}
+
+
+def _check_warehouse_permission(allowed_roles, action="access this resource"):
+    """Check if current user has any of the allowed roles."""
+    user_roles = set(frappe.get_roles(frappe.session.user))
+    if not user_roles.intersection(allowed_roles):
+        frappe.throw(
+            _("You do not have permission to {0}").format(action),
+            frappe.PermissionError
+        )
+
+
+@frappe.whitelist()
+def get_warehouse_stock(warehouse=None, item_group=None):
+    """
+    GET stock levels across warehouses.
+    If warehouse is specified, filter to that warehouse only.
+
+    Returns: [{item_code, item_name, item_group, warehouse, actual_qty,
+                reserved_qty, available_qty, reorder_point, is_low_stock}]
+    """
+    _check_warehouse_permission(SCM_INVENTORY_ROLES, "view warehouse stock")
+
+    conditions = ["(b.actual_qty > 0 OR b.reserved_qty > 0)"]
+    values = {}
+
+    if warehouse:
+        conditions.append("b.warehouse = %(warehouse)s")
+        values["warehouse"] = warehouse
+
+    if item_group:
+        conditions.append("i.item_group = %(item_group)s")
+        values["item_group"] = item_group
+
+    where_clause = " AND ".join(conditions)
+
+    stock = frappe.db.sql("""
+        SELECT
+            b.item_code,
+            i.item_name,
+            i.item_group,
+            b.warehouse,
+            b.actual_qty,
+            b.reserved_qty,
+            (b.actual_qty - b.reserved_qty) AS available_qty,
+            COALESCE(ir.warehouse_reorder_level, 0) AS reorder_point,
+            CASE
+                WHEN ir.warehouse_reorder_level > 0
+                     AND b.actual_qty <= ir.warehouse_reorder_level THEN 1
+                ELSE 0
+            END AS is_low_stock
+        FROM `tabBin` b
+        INNER JOIN `tabItem` i ON i.name = b.item_code
+        LEFT JOIN `tabItem Reorder` ir
+            ON ir.parent = b.item_code
+            AND ir.warehouse = b.warehouse
+        WHERE {where_clause}
+        ORDER BY b.warehouse, i.item_name
+    """.format(where_clause=where_clause), values, as_dict=True)
+
+    return stock
+
+
+@frappe.whitelist()
+def daily_stock_update(warehouse, items):
+    """
+    POST daily SOH (Stock on Hand) update for a warehouse.
+    Creates a Stock Reconciliation entry in Frappe.
+
+    Args:
+        warehouse (str): Target warehouse name
+        items (list|str): [{item_code, qty}]
+
+    Returns: {name, status, warehouse, item_count}
+    """
+    _check_warehouse_permission(SCM_STOCK_UPDATE_ROLES, "submit daily stock update")
+
+    if isinstance(items, str):
+        items = json.loads(items)
+
+    if not items:
+        frappe.throw(_("No items provided for stock update"))
+
+    if not warehouse:
+        frappe.throw(_("Warehouse is required"))
+
+    frappe.db.savepoint("daily_stock_update_start")
+
+    try:
+        sr = frappe.new_doc("Stock Reconciliation")
+        sr.purpose = "Stock Reconciliation"
+        sr.posting_date = nowdate()
+        sr.posting_time = now_datetime().strftime("%H:%M:%S")
+        sr.company = frappe.defaults.get_global_default("company")
+        sr.remarks = "BEI Daily SOH Update — Warehouse: {0} — Submitted via my.bebang.ph".format(warehouse)
+
+        for row in items:
+            item_code = row.get("item_code")
+            qty = flt(row.get("qty", 0))
+            if not item_code:
+                continue
+            sr.append("items", {
+                "item_code": item_code,
+                "warehouse": warehouse,
+                "qty": qty,
+            })
+
+        if not sr.items:
+            frappe.throw(_("No valid items to reconcile"))
+
+        sr.insert(ignore_permissions=True)
+        sr.submit()
+
+        return {"name": sr.name, "status": "Submitted", "warehouse": warehouse, "item_count": len(sr.items)}
+
+    except Exception:
+        frappe.db.rollback(save_point="daily_stock_update_start")
+        raise
+
+
+@frappe.whitelist()
+def get_low_stock_alerts(warehouse=None):
+    """
+    GET items currently below their reorder point.
+
+    Returns: [{item_code, item_name, item_group, warehouse, actual_qty,
+                reorder_point, shortage, suggested_order_qty}]
+    """
+    _check_warehouse_permission(SCM_INVENTORY_ROLES, "view low stock alerts")
+
+    conditions = ["ir.warehouse_reorder_level > 0", "b.actual_qty <= ir.warehouse_reorder_level"]
+    values = {}
+
+    if warehouse:
+        conditions.append("b.warehouse = %(warehouse)s")
+        values["warehouse"] = warehouse
+
+    where_clause = " AND ".join(conditions)
+
+    alerts = frappe.db.sql("""
+        SELECT
+            b.item_code,
+            i.item_name,
+            i.item_group,
+            b.warehouse,
+            b.actual_qty,
+            ir.warehouse_reorder_level AS reorder_point,
+            (ir.warehouse_reorder_level - b.actual_qty) AS shortage,
+            ir.warehouse_reorder_qty AS suggested_order_qty
+        FROM `tabBin` b
+        INNER JOIN `tabItem` i ON i.name = b.item_code
+        INNER JOIN `tabItem Reorder` ir
+            ON ir.parent = b.item_code
+            AND ir.warehouse = b.warehouse
+        WHERE {where_clause}
+        ORDER BY shortage DESC, b.warehouse, i.item_name
+    """.format(where_clause=where_clause), values, as_dict=True)
+
+    return alerts
+
+
+@frappe.whitelist()
+def get_multi_warehouse_summary():
+    """
+    GET summary across all 6 BEI warehouses for the inventory dashboard.
+
+    Returns: [{warehouse, total_items, low_stock_count, last_updated}]
+    """
+    _check_warehouse_permission(SCM_INVENTORY_ROLES, "view warehouse summary")
+
+    summary = frappe.db.sql("""
+        SELECT
+            b.warehouse,
+            COUNT(DISTINCT b.item_code) AS total_items,
+            SUM(
+                CASE
+                    WHEN ir.warehouse_reorder_level > 0
+                         AND b.actual_qty <= ir.warehouse_reorder_level THEN 1
+                    ELSE 0
+                END
+            ) AS low_stock_count,
+            MAX(sle.posting_datetime) AS last_updated
+        FROM `tabBin` b
+        LEFT JOIN `tabItem Reorder` ir
+            ON ir.parent = b.item_code
+            AND ir.warehouse = b.warehouse
+        LEFT JOIN `tabStock Ledger Entry` sle
+            ON sle.item_code = b.item_code
+            AND sle.warehouse = b.warehouse
+            AND sle.is_cancelled = 0
+        WHERE b.actual_qty > 0
+        GROUP BY b.warehouse
+        ORDER BY b.warehouse
+    """, as_dict=True)
+
+    return summary
+
+
+@frappe.whitelist()
+def get_item_stock_history(item_code, warehouse=None, days=30):
+    """
+    GET stock movement history for an item from Stock Ledger Entry.
+
+    Args:
+        item_code (str): Item code to query
+        warehouse (str, optional): Filter to a specific warehouse
+        days (int): Days back to query (default: 30, max: 365)
+
+    Returns: [{date, posting_datetime, warehouse, voucher_type, voucher_no,
+                actual_qty, qty_after_transaction, stock_value_difference}]
+    """
+    _check_warehouse_permission(SCM_INVENTORY_ROLES, "view stock history")
+
+    days = min(int(days), 365)
+    from_date = add_days(nowdate(), -days)
+
+    conditions = [
+        "sle.item_code = %(item_code)s",
+        "sle.posting_date >= %(from_date)s",
+        "sle.is_cancelled = 0",
+    ]
+    values = {"item_code": item_code, "from_date": from_date}
+
+    if warehouse:
+        conditions.append("sle.warehouse = %(warehouse)s")
+        values["warehouse"] = warehouse
+
+    where_clause = " AND ".join(conditions)
+
+    history = frappe.db.sql("""
+        SELECT
+            sle.posting_date AS `date`,
+            sle.posting_datetime,
+            sle.warehouse,
+            sle.voucher_type,
+            sle.voucher_no,
+            sle.actual_qty,
+            sle.qty_after_transaction,
+            sle.stock_value_difference
+        FROM `tabStock Ledger Entry` sle
+        WHERE {where_clause}
+        ORDER BY sle.posting_datetime DESC
+        LIMIT 500
+    """.format(where_clause=where_clause), values, as_dict=True)
+
+    return history
+
+
+@frappe.whitelist()
+def notify_gr_completion(gr_name):
+    """
+    POST hook: called after a BEI Goods Receipt is submitted.
+    Sends a Google Chat notification to Ian's and Jay's spaces.
+    """
+    _check_warehouse_permission(SCM_INVENTORY_ROLES, "trigger GR notifications")
+
+    gr = frappe.get_doc("BEI Goods Receipt", gr_name)
+
+    lines = [
+        "*Goods Receipt Submitted* :white_check_mark:",
+        "",
+        "*GR No:* {0}".format(gr.gr_no or gr.name),
+        "*Supplier:* {0}".format(gr.supplier_name or gr.supplier or "N/A"),
+        "*Warehouse:* {0}".format(gr.warehouse or "N/A"),
+        "*Receipt Date:* {0}".format(gr.receipt_date),
+        "*PO Reference:* {0}".format(gr.purchase_order or "N/A"),
+        "*Total Amount:* \u20b1{:,.2f}".format(flt(gr.total_amount)),
+        "*Total Received Qty:* {0}".format(flt(gr.total_received_qty)),
+        "",
+        "Submitted by: {0}".format(frappe.session.user),
+    ]
+
+    _send_warehouse_gchat_notification("\n".join(lines))
+
+    return {"status": "notified", "gr": gr_name}
+
+
+def _send_warehouse_gchat_notification(text):
+    """
+    Send a Google Chat message via Domain-Wide Delegation.
+    Service account: credentials/task-manager-service.json
+    Impersonates: sam@bebang.ph
+    """
+    import os
+    try:
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+    except ImportError:
+        frappe.log_error("google-auth package not installed — GR notification skipped", "Inventory GChat")
+        return
+
+    app_path = frappe.get_app_path("hrms")
+    cred_path = os.path.join(
+        os.path.dirname(os.path.dirname(app_path)),
+        "credentials",
+        "task-manager-service.json"
+    )
+
+    if not os.path.exists(cred_path):
+        frappe.log_error(
+            "GR notification skipped — service account missing: {0}".format(cred_path),
+            "Inventory GChat"
+        )
+        return
+
+    scopes = ["https://www.googleapis.com/auth/chat.bot"]
+    credentials = service_account.Credentials.from_service_account_file(
+        cred_path, scopes=scopes
+    ).with_subject("sam@bebang.ph")
+
+    service = build("chat", "v1", credentials=credentials)
+
+    # Use BEI Settings space if configured, fall back to Blip space
+    space = "spaces/AAQABiNmpBg"
+    try:
+        configured = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
+        if configured:
+            space = configured
+    except Exception:
+        pass
+
+    service.spaces().messages().create(
+        parent=space,
+        body={"text": text}
+    ).execute()
+
+
+def send_low_stock_daily_alert():
+    """
+    Daily scheduler job: check all warehouses for items below reorder point
+    and send a GChat summary alert if any are found.
+
+    Registered in hooks.py under scheduler_events["daily"].
+    """
+    try:
+        alerts = frappe.db.sql("""
+            SELECT
+                b.item_code,
+                i.item_name,
+                b.warehouse,
+                b.actual_qty,
+                ir.warehouse_reorder_level AS reorder_point,
+                (ir.warehouse_reorder_level - b.actual_qty) AS shortage
+            FROM `tabBin` b
+            INNER JOIN `tabItem` i ON i.name = b.item_code
+            INNER JOIN `tabItem Reorder` ir
+                ON ir.parent = b.item_code
+                AND ir.warehouse = b.warehouse
+            WHERE ir.warehouse_reorder_level > 0
+              AND b.actual_qty <= ir.warehouse_reorder_level
+            ORDER BY shortage DESC
+            LIMIT 50
+        """, as_dict=True)
+
+        if not alerts:
+            return
+
+        lines = [
+            "*Daily Low Stock Alert* :warning:",
+            "*Date:* {0}".format(nowdate()),
+            "*Items below reorder point:* {0}".format(len(alerts)),
+            "",
+        ]
+
+        for a in alerts[:20]:
+            lines.append(
+                "\u2022 *{item_name}* ({item_code}) @ {warehouse} \u2014 "
+                "Stock: {actual_qty}, Reorder at: {reorder_point}, "
+                "Short by: {shortage}".format(**a)
+            )
+
+        if len(alerts) > 20:
+            lines.append("... and {0} more items".format(len(alerts) - 20))
+
+        _send_warehouse_gchat_notification("\n".join(lines))
+
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "Low Stock Daily Alert Failed")
