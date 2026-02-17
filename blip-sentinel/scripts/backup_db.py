@@ -14,7 +14,7 @@ S3_PREFIX = os.environ.get("BACKUP_S3_PREFIX", "blip-sentinel")
 
 def backup():
     """Backup SQLite database to S3."""
-    print(f"[{datetime.utcnow().isoformat()}] Starting backup of {DB_PATH}")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] Starting backup of {DB_PATH}")
 
     # 1. WAL checkpoint
     print("Step 1/4: WAL checkpoint")
@@ -23,7 +23,7 @@ def backup():
     conn.close()
 
     # 2. SQLite .backup to temp file
-    timestamp = datetime.utcnow().strftime('%Y%m%d-%H%M%S')
+    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')
     backup_path = f"/tmp/sentinel-backup-{timestamp}.db"
     print(f"Step 2/4: Creating backup at {backup_path}")
 
@@ -35,7 +35,7 @@ def backup():
     conn.close()
 
     # 3. Upload to S3
-    date_str = datetime.utcnow().strftime('%Y-%m-%d')
+    date_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     s3_key = f"s3://{S3_BUCKET}/{S3_PREFIX}/sentinel-{date_str}.db"
     print(f"Step 3/4: Uploading to {s3_key}")
 
@@ -56,11 +56,11 @@ def backup():
     os.remove(backup_path)
 
     # 5. Weekly restore drill (Sunday only)
-    if datetime.utcnow().weekday() == 6:
+    if datetime.now(timezone.utc).weekday() == 6:
         print("Sunday detected — running restore drill")
         restore_drill(s3_key)
 
-    print(f"[{datetime.utcnow().isoformat()}] Backup completed successfully")
+    print(f"[{datetime.now(timezone.utc).isoformat()}] Backup completed successfully")
 
 
 def restore_drill(s3_key: str):

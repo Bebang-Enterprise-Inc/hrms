@@ -35,6 +35,10 @@ const props = defineProps({
 	doc: {
 		type: Object,
 	},
+	workflowStateField: {
+		type: String,
+		default: "",
+	},
 })
 
 const status = computed(() => {

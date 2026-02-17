@@ -100,8 +100,4 @@ const claimDates = computed(() => {
 })
 
 const currency = computed(() => getCompanyCurrency(props.doc.company))
-
-const approvalStatus = computed(() => {
-	return props.doc.approval_status === "Draft" ? "Pending" : props.doc.approval_status
-})
 </script>

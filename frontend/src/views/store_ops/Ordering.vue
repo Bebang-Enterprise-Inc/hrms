@@ -124,7 +124,6 @@ const store = computed(() => employee.data?.branch || "")
 const orders = createResource({
 	url: "hrms.api.store.get_order_history",
 	params: { store: store.value, limit: 20 },
-	auto: true,
 	onSuccess(data) {
 		// Calculate stats
 		if (data?.orders) {

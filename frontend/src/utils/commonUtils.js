@@ -42,8 +42,8 @@ export function useDownloadPDF() {
 			})
 			.catch((error) => {
 				toast({
-					title: __("Error"),
-					text: __("Error downloading PDF", [__(error)]),
+					title: "Error",
+					text: "Error downloading PDF",
 					icon: "alert-circle",
 					position: "bottom-center",
 					iconClasses: "text-red-500",

@@ -72,7 +72,6 @@ export const translationsPlugin = {
 	},
 	install(/** @type {import('vue').App} */ app, options) {
 		const __ = translate;
-		// app.mixin({ methods: { __ } })
 		app.config.globalProperties.__ = __;
 		app.provide("$translate", __);
 	},

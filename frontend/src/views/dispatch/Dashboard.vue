@@ -84,7 +84,7 @@ import {
 } from "@ionic/vue"
 import { carOutline } from "ionicons/icons"
 import { createResource } from "frappe-ui"
-import { ref, computed, inject, onMounted } from "vue"
+import { ref, computed, inject } from "vue"
 import { useRouter } from "vue-router"
 import EmptyState from "@/components/EmptyState.vue"
 
@@ -141,7 +141,4 @@ function getTripIconColor(status) {
 	return colors[status] || "text-gray-400"
 }
 
-onMounted(() => {
-	loadTrips()
-})
 </script>

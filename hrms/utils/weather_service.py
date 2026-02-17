@@ -221,9 +221,8 @@ def collect_all_weather():
         if collect_weather_for_zone(zone_name):
             collected += 1
 
-    frappe.log_error(
-        f"Weather collection completed: {collected}/{len(zones)} zones",
-        "Weather Service Info"
+    frappe.logger("weather_service").info(
+        f"Weather collection completed: {collected}/{len(zones)} zones"
     )
 
 

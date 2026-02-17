@@ -24,7 +24,7 @@
 <script setup>
 import { useRoute } from "vue-router"
 
-import { IonTabBar, IonTabButton, IonLabel } from "@ionic/vue"
+import { IonTabBar, IonTabButton } from "@ionic/vue"
 
 import HomeIcon from "@/components/icons/HomeIcon.vue"
 import LeaveIcon from "@/components/icons/LeaveIcon.vue"

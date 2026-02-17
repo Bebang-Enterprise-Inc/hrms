@@ -545,7 +545,6 @@ const docList = createListResource({
 				position: "bottom-center",
 				iconClasses: "text-red-500",
 			})
-			console.log(`Error creating ${props.doctype}`)
 		},
 	},
 })
@@ -572,7 +571,6 @@ const documentResource = createDocumentResource({
 				position: "bottom-center",
 				iconClasses: "text-red-500",
 			})
-			console.log(`Error updating ${props.doctype}`)
 		},
 	},
 	delete: {
@@ -594,7 +592,6 @@ const documentResource = createDocumentResource({
 				position: "bottom-center",
 				iconClasses: "text-red-500",
 			})
-			console.log(`Error deleting ${props.doctype}`)
 		},
 	},
 })

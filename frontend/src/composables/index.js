@@ -33,7 +33,6 @@ export class FileAttachment {
 			})
 
 			reader.onload = () => {
-				console.log("Loaded successfully ✅")
 				this.fileContents = reader.result.toString().split(",")[1]
 
 				uploader.submit({
@@ -52,7 +51,6 @@ export class FileAttachment {
 		return createResource({
 			url: "hrms.api.delete_attachment",
 			onSuccess: () => {
-				console.log("Deleted successfully ✅")
 			},
 			onError: (error) => {
 				toast({
