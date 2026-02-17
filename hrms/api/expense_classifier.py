@@ -540,23 +540,18 @@ def train_model():
 
     try:
         # Locate training data file
-        training_file = frappe.get_site_path(
-            '..', '..', '..',
-            'data/RFP_Store_Samples/runs/2026-01-27_liezel_reviewed/LIEZEL_REVIEWED_FINAL.csv'
-        )
+        csv_rel = 'data/RFP_Store_Samples/runs/2026-01-27_liezel_reviewed/LIEZEL_REVIEWED_FINAL.csv'
+        training_file = os.path.abspath(frappe.get_site_path('..', '..', '..', csv_rel))
 
         if not os.path.exists(training_file):
-            # Try alternate path for local development
-            alt_path = os.path.join(
-                os.path.dirname(__file__), '..', '..', '..',
-                'data/RFP_Store_Samples/runs/2026-01-27_liezel_reviewed/LIEZEL_REVIEWED_FINAL.csv'
-            )
+            # Try absolute Docker path (uploaded via SSM)
+            alt_path = os.path.join('/home/data/RFP_Store_Samples/runs/2026-01-27_liezel_reviewed', 'LIEZEL_REVIEWED_FINAL.csv')
             if os.path.exists(alt_path):
                 training_file = alt_path
             else:
                 return {
                     "success": False,
-                    "error": f"Training data not found at {training_file}"
+                    "error": f"Training data not found at {training_file} or {alt_path}"
                 }
 
         # Load training data
