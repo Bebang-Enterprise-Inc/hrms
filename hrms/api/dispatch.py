@@ -11,9 +11,26 @@ from frappe import _
 from frappe.utils import nowdate, now_datetime, flt
 
 
+# RBAC roles for SCM module
+SCM_ADMIN_ROLES = {"HR Manager", "Warehouse Manager", "System Manager"}
+SCM_DISPATCH_ROLES = {"HR Manager", "Warehouse Manager", "Logistics Coordinator", "System Manager"}
+SCM_STORE_ROLES = {"Store Staff", "Store Supervisor", "Area Supervisor", "Warehouse User", "System Manager"}
+
+def _check_scm_permission(allowed_roles, action="access this resource"):
+    """Check if current user has any of the allowed roles."""
+    user_roles = set(frappe.get_roles(frappe.session.user))
+    if not user_roles.intersection(allowed_roles):
+        frappe.throw(
+            _("You do not have permission to {0}").format(action),
+            frappe.PermissionError
+        )
+
+
 @frappe.whitelist()
 def get_trips(date=None, status=None):
     """Get dispatch trips for a date. Defaults to today if no date specified."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view dispatch trips")
+
     filters = {"trip_date": date or nowdate()}
 
     if status:
@@ -42,6 +59,8 @@ def get_trips(date=None, status=None):
 @frappe.whitelist()
 def get_trip_detail(trip_name):
     """Get full trip details including all stops."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view trip details")
+
     trip = frappe.get_doc("BEI Distribution Trip", trip_name)
 
     return {
@@ -79,6 +98,8 @@ def confirm_departure(trip_name, driver=None, vehicle=None, vehicle_plate=None, 
     Confirm trip departure with checklist.
     Updates trip with departure details and sets status to In Transit.
     """
+    _check_scm_permission(SCM_DISPATCH_ROLES, "confirm departure")
+
     trip = frappe.get_doc("BEI Distribution Trip", trip_name)
 
     if trip.status != "Preparing":
@@ -137,6 +158,8 @@ def _update_trip_status(trip, require_all_processed=False):
 @frappe.whitelist()
 def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
     """Confirm delivery at a specific stop. stop_idx is 1-based."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "confirm delivery")
+
     trip = frappe.get_doc("BEI Distribution Trip", trip_name)
 
     if trip.status not in ["In Transit", "Partial"]:
@@ -201,6 +224,8 @@ def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
 @frappe.whitelist()
 def report_exception(trip_name, stop_idx, exception_type, reason=None, photo=None):
     """Report an exception at a stop (store closed, refused, etc)."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "report exceptions")
+
     trip = frappe.get_doc("BEI Distribution Trip", trip_name)
 
     stop = _get_stop(trip, stop_idx)
@@ -222,6 +247,8 @@ def report_exception(trip_name, stop_idx, exception_type, reason=None, photo=Non
 @frappe.whitelist()
 def get_route_progress(trip_name):
     """Get current progress of a trip."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view route progress")
+
     trip = frappe.get_doc("BEI Distribution Trip", trip_name)
 
     stops = []
@@ -273,6 +300,8 @@ def _build_trip_doc(trip_date, route_name, stops):
 @frappe.whitelist()
 def create_trip(trip_date, route_name, stops):
     """Create a new distribution trip. stops: list of {store, items_count}."""
+    _check_scm_permission(SCM_ADMIN_ROLES, "create trips")
+
     if isinstance(stops, str):
         stops = frappe.parse_json(stops)
 
@@ -540,9 +569,15 @@ def _send_delivery_notification(driver, store, eta_range):
     Send Google Chat notification for "1 stop away" alert.
     MUST NOT block delivery confirmation if it fails.
     """
+    logger = frappe.logger("dispatch")
     try:
-        # Import here to avoid circular dependency
-        from hrms.api.google_chat import get_user_chat_spaces
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+
+        space = (
+            frappe.db.get_single_value("BEI Settings", "delivery_notification_space")
+            or "spaces/AAQABiNmpBg"
+        )
 
         message = (
             f"🚚 *Delivery Update*\n\n"
@@ -551,19 +586,21 @@ def _send_delivery_notification(driver, store, eta_range):
             f"Please prepare receiving area."
         )
 
-        # TODO: Implement actual Google Chat send once we have space mapping
-        # For now, just log the notification
-        frappe.log_error(
-            title="Delivery Notification (Mock)",
-            message=f"Would send to {store}: {message}"
+        creds = service_account.Credentials.from_service_account_file(
+            "credentials/task-manager-service.json",
+            scopes=["https://www.googleapis.com/auth/chat.bot"],
         )
+        chat = build("chat", "v1", credentials=creds)
+        chat.spaces().messages().create(
+            parent=space,
+            body={"text": message},
+        ).execute()
+
+        logger.info(f"Delivery notification sent for {store} (driver: {driver})")
 
     except Exception as e:
         # CRITICAL: Never throw - this must not block delivery confirmation
-        frappe.log_error(
-            title="Delivery Notification Failed",
-            message=f"Failed to send notification to {store}: {str(e)}"
-        )
+        logger.error(f"Failed to send delivery notification to {store}: {str(e)}")
 
 
 @frappe.whitelist()
@@ -666,6 +703,8 @@ def get_my_delivery(date=None):
 @frappe.whitelist()
 def get_routes(cargo_type=None, active_only=True):
     """Get all route masters, optionally filtered."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view routes")
+
     filters = {}
     if cargo_type:
         filters["cargo_type"] = cargo_type
@@ -695,6 +734,8 @@ def get_routes(cargo_type=None, active_only=True):
 @frappe.whitelist()
 def get_route_detail(route_name):
     """Get full route details including all stops."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view route details")
+
     route = frappe.get_doc("BEI Route", route_name)
     return {
         "route": {
@@ -725,6 +766,8 @@ def get_route_detail(route_name):
 @frappe.whitelist()
 def create_route(route_name, cargo_type, source_warehouse, stops=None, default_vehicle=None, default_driver=None, notes=None):
     """Create a new route master."""
+    _check_scm_permission(SCM_ADMIN_ROLES, "create routes")
+
     if isinstance(stops, str):
         stops = frappe.parse_json(stops)
 
@@ -754,6 +797,8 @@ def create_route(route_name, cargo_type, source_warehouse, stops=None, default_v
 @frappe.whitelist()
 def update_route(route_name, updates=None):
     """Update a route master. Accepts partial updates."""
+    _check_scm_permission(SCM_ADMIN_ROLES, "update routes")
+
     if isinstance(updates, str):
         updates = frappe.parse_json(updates)
 
@@ -782,6 +827,8 @@ def update_route(route_name, updates=None):
 @frappe.whitelist()
 def delete_route(route_name):
     """Soft-delete a route (set active=0)."""
+    _check_scm_permission(SCM_ADMIN_ROLES, "delete routes")
+
     route = frappe.get_doc("BEI Route", route_name)
     route.active = 0
     route.save()
@@ -791,6 +838,8 @@ def delete_route(route_name):
 @frappe.whitelist()
 def get_vehicles(status=None, owner_type=None):
     """List vehicles with optional filters."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view vehicles")
+
     filters = {}
     if status:
         filters["status"] = status
@@ -807,7 +856,7 @@ def get_vehicles(status=None, owner_type=None):
 
 
 @frappe.whitelist()
-def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None):
+def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None, selected_stops=None):
     """One-click trip creation from a route template.
 
     1. Loads route + stops
@@ -815,6 +864,8 @@ def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None
     3. Copies stops, links approved store orders
     4. Returns trip name
     """
+    _check_scm_permission(SCM_DISPATCH_ROLES, "create trips from routes")
+
     route = frappe.get_doc("BEI Route", route_name)
 
     if not route.active:
@@ -830,23 +881,50 @@ def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None
         vehicle = route.default_vehicle
         vehicle_plate = frappe.db.get_value("BEI Vehicle", route.default_vehicle, "vehicle_plate")
 
-    stops = []
-    for route_stop in route.stops:
-        # Find today's approved order for this store
-        store_order = frappe.db.get_value(
-            "BEI Store Order",
-            {"store": route_stop.store, "delivery_date": trip_date, "status": "Approved"},
-            "name"
-        )
-        items_count = 0
-        if store_order:
-            items_count = frappe.db.count("BEI Store Order Item", {"parent": store_order})
+    if selected_stops:
+        if isinstance(selected_stops, str):
+            selected_stops = frappe.parse_json(selected_stops)
 
-        stops.append({
-            "store": route_stop.store,
-            "items_count": items_count,
-            "store_order": store_order or ""
-        })
+        # Validate all selected stores exist in route's zone pool
+        zone_stores = {s.store for s in route.stops}
+        for sel in selected_stops:
+            if sel.get("store") not in zone_stores:
+                frappe.throw(_(f"Store {sel.get('store')} is not in zone {route.route_name}"))
+
+        # Build stops from selection
+        stops = []
+        for idx, sel in enumerate(selected_stops, 1):
+            store = sel.get("store")
+            store_order = frappe.db.get_value(
+                "BEI Store Order",
+                {"store": store, "delivery_date": trip_date, "status": "Approved"},
+                "name"
+            )
+            items_count = 0
+            if store_order:
+                items_count = frappe.db.count("BEI Store Order Item", {"parent": store_order})
+            stops.append({
+                "store": store,
+                "items_count": items_count,
+                "store_order": store_order or ""
+            })
+    else:
+        # Original behavior: use all route stops
+        stops = []
+        for route_stop in route.stops:
+            store_order = frappe.db.get_value(
+                "BEI Store Order",
+                {"store": route_stop.store, "delivery_date": trip_date, "status": "Approved"},
+                "name"
+            )
+            items_count = 0
+            if store_order:
+                items_count = frappe.db.count("BEI Store Order Item", {"parent": store_order})
+            stops.append({
+                "store": route_stop.store,
+                "items_count": items_count,
+                "store_order": store_order or ""
+            })
 
     # Use existing trip creation logic
     trip = _build_trip_doc(trip_date, route.route_name, stops)
@@ -872,6 +950,8 @@ def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None
 @frappe.whitelist()
 def duplicate_route(route_name, new_name):
     """Clone a route with a new name."""
+    _check_scm_permission(SCM_ADMIN_ROLES, "duplicate routes")
+
     source = frappe.get_doc("BEI Route", route_name)
 
     new_route = frappe.new_doc("BEI Route")
@@ -900,6 +980,8 @@ def duplicate_route(route_name, new_name):
 @frappe.whitelist()
 def reorder_stops(route_name, stop_order_map):
     """Reorder stops in a route. stop_order_map: {store: new_order}"""
+    _check_scm_permission(SCM_ADMIN_ROLES, "reorder stops")
+
     if isinstance(stop_order_map, str):
         stop_order_map = frappe.parse_json(stop_order_map)
 
@@ -922,6 +1004,8 @@ def reorder_stops(route_name, stop_order_map):
 @frappe.whitelist()
 def get_driver_list():
     """Get list of available drivers (employees with driver designation)."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view driver list")
+
     drivers = frappe.get_all(
         "Employee",
         filters={"status": "Active", "designation": ["in", ["Driver", "Delivery Driver", "Truck Driver"]]},

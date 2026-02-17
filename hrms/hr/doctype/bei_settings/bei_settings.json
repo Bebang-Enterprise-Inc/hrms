@@ -7,7 +7,10 @@
  "engine": "InnoDB",
  "field_order": [
   "billing_settings_section",
-  "billing_auto_create_on_delivery"
+  "billing_auto_create_on_delivery",
+  "notifications_section",
+  "delivery_notification_space",
+  "customer_service_phone"
  ],
  "fields": [
   {
@@ -21,6 +24,23 @@
    "fieldname": "billing_auto_create_on_delivery",
    "fieldtype": "Check",
    "label": "Auto-create billing on delivery confirmation"
+  },
+  {
+   "fieldname": "notifications_section",
+   "fieldtype": "Section Break",
+   "label": "Notification Settings"
+  },
+  {
+   "description": "Google Chat space ID for delivery 1-stop-away alerts (e.g. spaces/AAQABiNmpBg). Leave blank to use default.",
+   "fieldname": "delivery_notification_space",
+   "fieldtype": "Data",
+   "label": "Delivery Notification Space"
+  },
+  {
+   "description": "Customer service phone number shown in store-facing communications",
+   "fieldname": "customer_service_phone",
+   "fieldtype": "Data",
+   "label": "Customer Service Phone"
   }
  ],
  "index_web_pages_for_search": 1,

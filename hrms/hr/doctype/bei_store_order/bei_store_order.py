@@ -14,6 +14,8 @@ class BEIStoreOrder(Document):
 
     def validate(self):
         self.validate_items()
+        self.compute_deviations()
+        self.set_approval_status()
 
     def validate_items(self):
         if not self.items:
@@ -22,6 +24,38 @@ class BEIStoreOrder(Document):
             if item.qty_requested <= 0:
                 frappe.throw(f"Quantity for {item.item_code} must be greater than 0")
 
+    def compute_deviations(self):
+        for item in self.items:
+            if item.suggested_qty and item.suggested_qty > 0:
+                item.deviation_pct = round(
+                    ((item.qty_requested - item.suggested_qty) / item.suggested_qty) * 100, 1
+                )
+            else:
+                item.deviation_pct = 0.0
+
+    def set_approval_status(self):
+        # Only auto-set status when document is in Draft or Pending Approval
+        if self.status not in ("Draft", "Pending Approval"):
+            return
+
+        # Bulk orders always require manual approval
+        if self.is_bulk_order:
+            self.status = "Pending Approval"
+            return
+
+        # If any item deviates from suggested qty, requires approval
+        has_deviation = any(
+            item.deviation_pct != 0.0
+            for item in self.items
+            if item.suggested_qty and item.suggested_qty > 0
+        )
+
+        if has_deviation:
+            self.status = "Pending Approval"
+        else:
+            self.status = "Approved"
+
     def on_submit(self):
         self.submitted_by = frappe.session.user
-        self.status = "Pending Approval"
+        if self.status == "Draft":
+            self.status = "Pending Approval"

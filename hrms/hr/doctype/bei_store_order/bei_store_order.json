@@ -17,7 +17,14 @@
     "approved_by",
     "approved_at",
     "section_break_items",
-    "items"
+    "items",
+    "section_break_order_details",
+    "is_bulk_order",
+    "is_emergency",
+    "cargo_category",
+    "delivery_schedule_day",
+    "column_break_order_details_2",
+    "notes"
   ],
   "fields": [
     {
@@ -95,10 +102,50 @@
       "label": "Items",
       "options": "BEI Store Order Item",
       "reqd": 1
+    },
+    {
+      "fieldname": "section_break_order_details",
+      "fieldtype": "Section Break",
+      "label": "Order Details"
+    },
+    {
+      "fieldname": "is_bulk_order",
+      "fieldtype": "Check",
+      "label": "Bulk Order",
+      "default": 0,
+      "description": "Requires manager approval"
+    },
+    {
+      "fieldname": "is_emergency",
+      "fieldtype": "Check",
+      "label": "Emergency Order",
+      "default": 0
+    },
+    {
+      "fieldname": "cargo_category",
+      "fieldtype": "Select",
+      "label": "Cargo Category",
+      "options": "\nFC\nDRY\nFM",
+      "reqd": 1
+    },
+    {
+      "fieldname": "delivery_schedule_day",
+      "fieldtype": "Select",
+      "label": "Delivery Day",
+      "options": "\nMonday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday"
+    },
+    {
+      "fieldname": "column_break_order_details_2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Text",
+      "label": "Notes"
     }
   ],
   "links": [],
-  "modified": "2026-01-24 00:00:00.000000",
+  "modified": "2026-02-17 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "HR",
   "name": "BEI Store Order",

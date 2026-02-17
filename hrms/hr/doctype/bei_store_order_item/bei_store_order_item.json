@@ -12,7 +12,10 @@
     "qty_approved",
     "qty_delivered",
     "last_order_qty",
-    "amount"
+    "amount",
+    "suggested_qty",
+    "deviation_pct",
+    "deviation_reason"
   ],
   "fields": [
     {
@@ -76,11 +79,30 @@
       "label": "Amount",
       "read_only": 1,
       "in_list_view": 1
+    },
+    {
+      "fieldname": "suggested_qty",
+      "fieldtype": "Float",
+      "label": "Suggested Qty",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "deviation_pct",
+      "fieldtype": "Float",
+      "label": "Deviation %",
+      "read_only": 1,
+      "precision": 1
+    },
+    {
+      "fieldname": "deviation_reason",
+      "fieldtype": "Small Text",
+      "label": "Deviation Reason"
     }
   ],
   "istable": 1,
   "links": [],
-  "modified": "2026-01-24 00:00:00.000000",
+  "modified": "2026-02-17 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "HR",
   "name": "BEI Store Order Item",
