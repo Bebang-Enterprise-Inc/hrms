@@ -190,14 +190,9 @@ def send_message_to_space(space_name: str, message: str) -> bool:
         return False
 
     try:
-        import os
+        from hrms.utils.bei_config import get_service_account_path
 
-        app_path = frappe.get_app_path("hrms")
-        cred_path = os.path.join(
-            os.path.dirname(os.path.dirname(app_path)),
-            "credentials",
-            "task-manager-service.json",
-        )
+        cred_path = get_service_account_path()
 
         if not os.path.exists(cred_path):
             logger.warning(
@@ -454,10 +449,8 @@ def on_approval_queue_insert(doc, method=None):
     Fires via doc_events: BEI Approval Queue → after_insert.
     """
     try:
-        space = (
-            frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
-            or "spaces/AAQABiNmpBg"
-        )
+        from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+        space = get_chat_space(SPACE_NOTIFICATIONS)
         subject = getattr(doc, "subject", None) or getattr(doc, "name", "Unknown")
         queue_type = getattr(doc, "approval_type", None) or getattr(doc, "doctype", "Item")
         message = f"*New Approval Needed*\n\n{queue_type}: *{subject}*\nPlease review and approve."
@@ -492,10 +485,8 @@ def on_store_order_update(doc, method=None):
             space = frappe.db.get_value("Warehouse", store_warehouse, "custom_gchat_space")
 
         if not space:
-            space = (
-                frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
-                or "spaces/AAQABiNmpBg"
-            )
+            from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+            space = get_chat_space(SPACE_NOTIFICATIONS)
 
         if status == "Approved":
             message = f"*Store Order Approved*\n\nOrder *{doc.name}* has been approved and is being prepared."

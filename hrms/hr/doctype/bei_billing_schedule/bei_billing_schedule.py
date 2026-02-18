@@ -6,6 +6,7 @@ from frappe.model.document import Document
 from frappe import _
 from frappe.utils import flt, nowdate
 from markupsafe import escape as html_escape
+from hrms.utils.bei_config import get_company
 
 VAT_RATE = 0.12
 
@@ -55,7 +56,7 @@ class BEIBillingSchedule(Document):
 		je = frappe.new_doc("Journal Entry")
 		je.posting_date = nowdate()
 		je.voucher_type = "Journal Entry"
-		je.company = frappe.db.get_default("company") or "Bebang Enterprise Inc."
+		je.company = get_company()
 		je.user_remark = f"Auto-generated from {self.name}"
 
 		total_revenue = 0

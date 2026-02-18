@@ -7,6 +7,7 @@ Handles store ordering, receiving, and FQI reports for my.bebang.ph
 """
 
 import frappe
+from hrms.utils.bei_config import get_company
 from frappe import _
 from frappe.utils import nowdate, add_days, now_datetime, flt
 import json
@@ -418,7 +419,7 @@ def _create_mr_for_store_order(order):
 
         mr = frappe.new_doc("Material Request")
         mr.material_request_type = "Material Transfer"
-        mr.company = frappe.db.get_single_value("Global Defaults", "default_company") or "Bebang Enterprise Inc."
+        mr.company = get_company()
         mr.transaction_date = nowdate()
         mr.schedule_date = required_by
         mr.custom_store_order = order.name
@@ -696,7 +697,7 @@ def create_store_return(receiving, items, reason, photo=None):
     # Create Stock Entry (Material Transfer back to commissary)
     se = frappe.new_doc("Stock Entry")
     se.stock_entry_type = "Material Transfer"
-    se.company = "Bebang Enterprise Inc."
+    se.company = get_company()
     se.posting_date = nowdate()
     se.posting_time = now_datetime().strftime("%H:%M:%S")
     se.from_warehouse = store

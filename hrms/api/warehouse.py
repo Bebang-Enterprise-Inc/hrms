@@ -8,6 +8,7 @@ Handles PO receiving, Material Request approval, and stock transfers for Ian.
 Author: Claude Code
 Date: 2026-02-02
 """
+from hrms.utils.bei_config import get_company
 
 import frappe
 from frappe import _
@@ -426,7 +427,7 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
     # Create Stock Entry
     se = frappe.new_doc("Stock Entry")
     se.stock_entry_type = "Material Transfer"
-    se.company = "Bebang Enterprise Inc."
+    se.company = get_company()
     se.posting_date = frappe.utils.today()
     se.posting_time = frappe.utils.nowtime()
     se.from_warehouse = source_warehouse

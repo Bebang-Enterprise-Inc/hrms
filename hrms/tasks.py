@@ -144,13 +144,8 @@ def send_overdue_action_plan_reminders():
 		if not overdue_plans:
 			return
 
-		space = None
-		try:
-			space = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
-		except Exception:
-			pass
-		if not space:
-			space = "spaces/AAQABiNmpBg"
+		from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+		space = get_chat_space(SPACE_NOTIFICATIONS)
 
 		from hrms.api.google_chat import send_message_to_space
 

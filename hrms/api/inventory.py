@@ -8,6 +8,7 @@ Handles cycle counts, variances, and shelf life extensions
 
 import frappe
 from frappe import _
+from hrms.utils.bei_config import get_company
 from frappe.utils import nowdate, flt, add_days, now_datetime
 import json
 
@@ -526,7 +527,7 @@ def submit_return_request(store, items, photo=None):
     # Create Stock Entry for Material Transfer (store -> commissary/scrap)
     doc = frappe.new_doc("Stock Entry")
     doc.stock_entry_type = "Material Issue"  # Issue from store
-    doc.company = "Bebang Enterprise Inc."
+    doc.company = get_company()
     doc.custom_return_request = 1  # Custom flag to identify returns
     doc.custom_return_from_store = warehouse
     doc.custom_return_photo = photo
@@ -1147,15 +1148,8 @@ def _send_warehouse_gchat_notification(text):
     """
     from hrms.api.google_chat import send_message_to_space
 
-    space = "spaces/AAQABiNmpBg"
-    try:
-        configured = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
-        if configured:
-            space = configured
-    except Exception:
-        pass
-
-    send_message_to_space(space, text)
+    from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+    send_message_to_space(get_chat_space(SPACE_NOTIFICATIONS), text)
 
 
 def send_low_stock_daily_alert():
@@ -1306,7 +1300,7 @@ def resolve_variance(variance_name, resolution_type, resolution_notes, adjustmen
     try:
         # Create Stock Entry for Write-Off (removes stock from store)
         if resolution_type == "Write-Off" and qty and qty > 0:
-            company = frappe.defaults.get_defaults().get("company") or "Bebang Enterprise Inc."
+            company = get_company()
             se = frappe.new_doc("Stock Entry")
             se.stock_entry_type = "Material Issue"
             se.company = company
@@ -1326,7 +1320,7 @@ def resolve_variance(variance_name, resolution_type, resolution_notes, adjustmen
 
         elif resolution_type == "Recount Corrected" and qty is not None:
             # Stock Reconciliation to set system qty to actual
-            company = frappe.defaults.get_defaults().get("company") or "Bebang Enterprise Inc."
+            company = get_company()
             sr = frappe.new_doc("Stock Reconciliation")
             sr.company = company
             sr.posting_date = nowdate()

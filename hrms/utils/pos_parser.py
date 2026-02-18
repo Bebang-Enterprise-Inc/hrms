@@ -82,7 +82,7 @@ def _parse_date(value) -> Optional[str]:
             except ValueError:
                 continue
 
-    return str(value) if value else None
+    return None
 
 
 def _safe_float(value, default: float = 0.0) -> float:
@@ -165,45 +165,37 @@ def parse_sales_summary(file_content: bytes) -> Dict[str, Any]:
         df = pd.read_excel(io.BytesIO(file_content), header=None)
         metadata = _extract_metadata(df)
 
-        # Find header row (row 9 in standard format)
-        header_row = 9
-        data_row = 10
+        # Read with header row 9 so we can access columns by name
+        data_df = pd.read_excel(io.BytesIO(file_content), header=9)
+        data_df.columns = data_df.columns.str.strip()
 
-        # Map column names
-        # Standard columns: Date, MIN, Invoice Number From, Invoice Number To,
-        # Beginning Balance, Ending Balance, Net Sales, Gross Sales, VATABLE Sales,
-        # VAT, VAT Exempt Sales, Zero Rated Sales, Delivery Fee, Other Income,
-        # Gc Excess, Discount Pwd, Discount Senior, Discount Other, Vat Adjustment,
-        # Sales Overrun Amount, Returns, Void, EOD Counter, Remarks
-
-        # Get data row
-        if len(df) > data_row:
-            row = df.iloc[data_row]
+        if len(data_df) > 0:
+            row = data_df.iloc[0]
 
             summary = {
-                "date": _parse_date(row.iloc[0]),
-                "min": str(row.iloc[1]) if pd.notna(row.iloc[1]) else None,
-                "beginning_si": _safe_int(row.iloc[2]),
-                "ending_si": _safe_int(row.iloc[3]),
-                "beginning_balance": _safe_float(row.iloc[4]),
-                "ending_balance": _safe_float(row.iloc[5]),
-                "net_sales": _safe_float(row.iloc[6]),
-                "gross_sales": _safe_float(row.iloc[7]),
-                "vatable_sales": _safe_float(row.iloc[8]),
-                "vat": _safe_float(row.iloc[9]),
-                "vat_exempt_sales": _safe_float(row.iloc[10]),
-                "zero_rated_sales": _safe_float(row.iloc[11]),
-                "delivery_fee": _safe_float(row.iloc[12]),
-                "other_income": _safe_float(row.iloc[13]),
-                "gc_excess": _safe_float(row.iloc[14]),
-                "discount_pwd": _safe_float(row.iloc[15]),
-                "discount_senior": _safe_float(row.iloc[16]),
-                "discount_other": _safe_float(row.iloc[17]),
-                "vat_adjustment": _safe_float(row.iloc[18]),
-                "sales_overrun": _safe_float(row.iloc[19]),
-                "returns": _safe_float(row.iloc[20]),
-                "void_count": _safe_int(row.iloc[21]),
-                "eod_counter": _safe_int(row.iloc[22]),
+                "date": _parse_date(row.get("Date")),
+                "min": str(row.get("MIN", "")) if pd.notna(row.get("MIN")) else None,
+                "beginning_si": _safe_int(row.get("Invoice Number From")),
+                "ending_si": _safe_int(row.get("Invoice Number To")),
+                "beginning_balance": _safe_float(row.get("Beginning Balance")),
+                "ending_balance": _safe_float(row.get("Ending Balance")),
+                "net_sales": _safe_float(row.get("Net Sales")),
+                "gross_sales": _safe_float(row.get("Gross Sales")),
+                "vatable_sales": _safe_float(row.get("VATABLE Sales")),
+                "vat": _safe_float(row.get("VAT")),
+                "vat_exempt_sales": _safe_float(row.get("VAT Exempt Sales")),
+                "zero_rated_sales": _safe_float(row.get("Zero Rated Sales")),
+                "delivery_fee": _safe_float(row.get("Delivery Fee")),
+                "other_income": _safe_float(row.get("Other Income")),
+                "gc_excess": _safe_float(row.get("Gc Excess")),
+                "discount_pwd": _safe_float(row.get("Discount Pwd")),
+                "discount_senior": _safe_float(row.get("Discount Senior")),
+                "discount_other": _safe_float(row.get("Discount Other")),
+                "vat_adjustment": _safe_float(row.get("Vat Adjustment")),
+                "sales_overrun": _safe_float(row.get("Sales Overrun Amount")),
+                "returns": _safe_float(row.get("Returns")),
+                "void_count": _safe_int(row.get("Void")),
+                "eod_counter": _safe_int(row.get("EOD Counter")),
             }
 
             # Calculate transaction count

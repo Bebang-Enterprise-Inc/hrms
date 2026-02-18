@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime, flt
+from hrms.utils.bei_config import get_company
 
 
 # Approval threshold - PO above this needs both Mae AND Butch
@@ -239,7 +240,7 @@ class BEIPurchaseOrder(Document):
             "supplier": frappe_supplier,
             "transaction_date": self.po_date,
             "schedule_date": self.delivery_date,
-            "company": "Bebang Enterprise Inc.",
+            "company": get_company(),
             "currency": "PHP",
             "buying_price_list": "Standard Buying",
             "price_list_currency": "PHP",

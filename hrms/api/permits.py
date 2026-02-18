@@ -328,12 +328,5 @@ def _send_permit_gchat_notification(text):
     """
     from hrms.api.google_chat import send_message_to_space
 
-    space = "spaces/AAQABiNmpBg"
-    try:
-        configured = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
-        if configured:
-            space = configured
-    except Exception:
-        pass
-
-    send_message_to_space(space, text)
+    from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+    send_message_to_space(get_chat_space(SPACE_NOTIFICATIONS), text)

@@ -3,6 +3,7 @@
 import frappe
 from frappe import _
 from frappe.rate_limiter import rate_limit
+from hrms.utils.bei_config import get_company
 from frappe.utils import getdate, date_diff, flt, today, nowdate
 from hrms.utils.api_helpers import (
     _get_employee_or_throw,
@@ -267,7 +268,7 @@ def _create_job_opening_from_mrf(mrf):
             "job_title": mrf.position_title,
             "designation": mrf.designation,
             "department": mrf.department,
-            "company": frappe.defaults.get_defaults().get("company", "Bebang Enterprise Inc."),
+            "company": get_company(),
             "status": "Open",
             "planned_vacancies": mrf.number_of_vacancies,
             "description": mrf.job_description,

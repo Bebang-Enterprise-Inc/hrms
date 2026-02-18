@@ -898,7 +898,8 @@ Review at: https://my.bebang.ph/dashboard/hr/enrichment-tracker"""
         )
 
         # Send to HR space (ERP Automation Committee)
-        send_message_to_space("spaces/AAQA3NVVR6c", message)
+        from hrms.utils.bei_config import get_chat_space, SPACE_ERP_AUTOMATION
+        send_message_to_space(get_chat_space(SPACE_ERP_AUTOMATION), message)
     except Exception:
         # Don't fail if chat notification fails
         pass

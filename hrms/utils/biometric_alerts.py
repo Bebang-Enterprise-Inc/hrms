@@ -9,14 +9,16 @@ import csv
 import io
 
 
-BIOMETRIC_ALERT_SPACE = "spaces/AAAAjVg-2Kc"  # Admin/IT space
+from hrms.utils.bei_config import SPACE_ADMIN_IT, get_chat_space, get_service_account_path
+
+BIOMETRIC_ALERT_SPACE = SPACE_ADMIN_IT
 
 
 def _send_chat_alert(message):
 	"""Send alert to Google Chat space using service account (bot identity)."""
 	try:
 		creds = service_account.Credentials.from_service_account_file(
-			"credentials/task-manager-service.json",
+			get_service_account_path(),
 			scopes=["https://www.googleapis.com/auth/chat.bot"],
 		)
 		chat = build("chat", "v1", credentials=creds)
@@ -138,7 +140,7 @@ def _upload_to_drive(csv_rows, filename):
 	"""Upload CSV to Google Drive using service account delegation."""
 	try:
 		creds = service_account.Credentials.from_service_account_file(
-			"credentials/task-manager-service.json",
+			get_service_account_path(),
 			scopes=["https://www.googleapis.com/auth/drive.file"],
 		).with_subject("sam@bebang.ph")  # Domain-wide delegation
 

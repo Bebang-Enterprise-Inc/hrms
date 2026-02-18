@@ -11,6 +11,7 @@ All endpoints use @frappe.whitelist() for external access.
 import re
 
 import frappe
+from hrms.utils.bei_config import get_company
 from frappe import _
 from frappe.utils import flt, cint, getdate, nowdate, add_days, get_first_day, get_last_day
 
@@ -2684,7 +2685,8 @@ def _send_ceo_exception_notification(exception_doc):
             f"No Goods Receipt exists for this PO. Payment will proceed without delivery confirmation."
         )
 
-        send_message_to_space("spaces/AAQA3NVVR6c", message)
+        from hrms.utils.bei_config import get_chat_space, SPACE_ERP_AUTOMATION
+        send_message_to_space(get_chat_space(SPACE_ERP_AUTOMATION), message)
         return True
     except Exception as e:
         frappe.log_error(
@@ -3362,7 +3364,7 @@ def tag_advance_to_gr(advance_payment, goods_receipt, amount_to_clear):
         jv = frappe.new_doc("Journal Entry")
         jv.voucher_type = "Journal Entry"
         jv.posting_date = nowdate()
-        jv.company = "Bebang Enterprise Inc."
+        jv.company = get_company()
         jv.user_remark = _("Clearing advance payment {0} against GR {1} - Amount: {2:,.2f}").format(
             advance_payment, goods_receipt, amount_to_clear
         )
@@ -3515,7 +3517,7 @@ def mark_advance_undeliverable(advance_payment, amount, reason):
         jv = frappe.new_doc("Journal Entry")
         jv.voucher_type = "Journal Entry"
         jv.posting_date = nowdate()
-        jv.company = "Bebang Enterprise Inc."
+        jv.company = get_company()
         jv.user_remark = "Reclassification of undeliverable advance: {0}. Reason: {1}".format(
             advance_payment, reason.strip()
         )
@@ -3988,8 +3990,9 @@ def _send_ar_chat_notification(ar, billing):
     from google.oauth2 import service_account
     from googleapiclient.discovery import build
 
+    from hrms.utils.bei_config import get_service_account_path
     creds = service_account.Credentials.from_service_account_file(
-        "credentials/task-manager-service.json",
+        get_service_account_path(),
         scopes=["https://www.googleapis.com/auth/chat.bot"],
     )
     chat = build("chat", "v1", credentials=creds)
@@ -4003,8 +4006,9 @@ def _send_ar_chat_notification(ar, billing):
         f"Payment Ref: {ar.payment_reference or 'N/A'}"
     )
 
+    from hrms.utils.bei_config import get_chat_space, SPACE_ACCOUNTING
     chat.spaces().messages().create(
-        parent="spaces/AAAA9RN0JZQ",  # Accounting Private
+        parent=get_chat_space(SPACE_ACCOUNTING),
         body={"text": message},
     ).execute()
 

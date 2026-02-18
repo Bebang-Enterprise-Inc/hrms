@@ -105,7 +105,12 @@ const router = useRouter()
 const employee = inject("$employee")
 
 const selectedCategory = ref("All")
-const categories = ref(["All", "Frozen", "Chilled", "Dry", "Packaging"])
+const categories = computed(() => {
+	if (!items.data) return ["All"]
+	const groups = [...new Set(items.data.map(i => i.item_group).filter(Boolean))]
+	groups.sort()
+	return ["All", ...groups]
+})
 const orderItems = ref({})
 const showReviewModal = ref(false)
 const submitting = ref(false)

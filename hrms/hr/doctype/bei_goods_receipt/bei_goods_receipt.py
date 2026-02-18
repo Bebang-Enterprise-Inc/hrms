@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime
+from hrms.utils.bei_config import get_company
 
 
 class BEIGoodsReceipt(Document):
@@ -263,7 +264,7 @@ class BEIGoodsReceipt(Document):
             "supplier": frappe_supplier,
             "posting_date": self.receipt_date,
             "posting_time": frappe.utils.nowtime(),
-            "company": "Bebang Enterprise Inc.",
+            "company": get_company(),
             "currency": "PHP",
             "buying_price_list": "Standard Buying",
             "set_warehouse": self.warehouse or "Stores - BEI",

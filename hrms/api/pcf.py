@@ -8,6 +8,7 @@ Date: 2026-02-03
 import frappe
 from frappe import _
 from frappe.utils import today, now_datetime, flt, nowdate, getdate
+from hrms.utils.bei_config import get_company
 from calendar import monthrange
 from datetime import datetime
 from hrms.api.store import save_base64_image
@@ -769,7 +770,7 @@ def create_pcf_fund(
     # Create PCF
     pcf = frappe.new_doc("BEI Petty Cash Fund")
     pcf.store = store
-    pcf.company = "Bebang Enterprise Inc."
+    pcf.company = get_company()
     pcf.fund_amount = flt(fund_amount)
     pcf.threshold_percentage = flt(threshold_percentage)
     pcf.custodian = custodian
@@ -1066,7 +1067,8 @@ Ready for batch submission."""
 
         from hrms.api.google_chat import send_message_to_space
 
-        send_message_to_space("spaces/AAQA3NVVR6c", message)
+        from hrms.utils.bei_config import get_chat_space, SPACE_ERP_AUTOMATION
+        send_message_to_space(get_chat_space(SPACE_ERP_AUTOMATION), message)
     except Exception as e:
         frappe.log_error(f"Failed to send threshold notification: {e}", "PCF Notification")
 
@@ -1089,7 +1091,7 @@ def _get_store_for_employee(employee):
         return store
 
     # Try with company suffix
-    company = employee.company or "Bebang Enterprise Inc."
+    company = employee.company or get_company()
     store = frappe.db.exists("Warehouse", f"{employee.branch} - {company}")
     if store:
         return store
@@ -1112,7 +1114,7 @@ def _resolve_store_name(store_or_branch: str) -> str:
         return store_or_branch
 
     # Try with common company suffixes
-    for suffix in ["Bebang Enterprise Inc.", "BEI"]:
+    for suffix in [get_company(), "BEI"]:
         full_name = f"{store_or_branch} - {suffix}"
         if frappe.db.exists("Warehouse", full_name):
             return full_name

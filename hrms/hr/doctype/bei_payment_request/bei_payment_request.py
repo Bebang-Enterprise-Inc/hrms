@@ -5,12 +5,11 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime, nowdate, add_days, cint
+from hrms.utils.bei_config import get_company
 
 
 # CEO approval threshold
 CEO_APPROVAL_THRESHOLD = 1000000  # 1 Million PHP
-
-DEFAULT_COMPANY = "Bebang Enterprise Inc."
 
 
 def _get_account_by_code(account_number, company=None):
@@ -23,7 +22,7 @@ def _get_account_by_code(account_number, company=None):
     """
     return frappe.db.get_value(
         "Account",
-        {"account_number": account_number, "company": company or DEFAULT_COMPANY},
+        {"account_number": account_number, "company": company or get_company()},
         "name",
     )
 
@@ -350,7 +349,7 @@ class BEIPaymentRequest(Document):
             "doctype": "Payment Entry",
             "payment_type": "Pay",
             "posting_date": self.payment_date or frappe.utils.nowdate(),
-            "company": "Bebang Enterprise Inc.",
+            "company": get_company(),
             "party_type": "Supplier",
             "party": frappe_supplier,
             "party_name": bei_supplier.supplier_name,
@@ -408,7 +407,7 @@ class BEIPaymentRequest(Document):
 
         Returns: (paid_from_account, mode_of_payment)
         """
-        company = "Bebang Enterprise Inc."
+        company = get_company()
 
         if self.payment_mode == "Bank Transfer":
             # Get bank account
@@ -618,7 +617,7 @@ class BEIPaymentRequest(Document):
                 "doctype": "Payment Entry",
                 "payment_type": "Pay",
                 "posting_date": self.payment_date or nowdate(),
-                "company": "Bebang Enterprise Inc.",
+                "company": get_company(),
                 "party_type": "Supplier",
                 "party": party_name,
                 "paid_from": paid_from,

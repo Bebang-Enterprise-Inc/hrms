@@ -7,6 +7,8 @@ This module centralizes all billing operations for the BEI ERP system:
 - Phase 4: Monthly billing generation (migrated from procurement.py)
 """
 
+from hrms.utils.bei_config import get_company
+
 import re
 import calendar
 from decimal import Decimal
@@ -830,7 +832,7 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
     period_label = f"{int(year):04d}-{int(month):02d}"
     remarks = f"3PL Hauling - {partner} - {period_label}"
 
-    company = frappe.defaults.get_defaults().get("company") or "Bebang Enterprise Inc."
+    company = get_company()
 
     sp_name = f"3pl_payment_{partner}_{period_label}".replace("-", "_")
     frappe.db.savepoint(sp_name)

@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime, getdate, add_days
+from hrms.utils.bei_config import get_company
 
 
 class BEIInvoice(Document):
@@ -314,7 +315,7 @@ class BEIInvoice(Document):
             "due_date": self.due_date,
             "bill_no": self.supplier_invoice_no,
             "bill_date": self.invoice_date,
-            "company": "Bebang Enterprise Inc.",
+            "company": get_company(),
             "currency": "PHP",
             "buying_price_list": "Standard Buying",
             "update_stock": 0,  # Stock already updated via PR
@@ -402,7 +403,7 @@ class BEIInvoice(Document):
         if not frappe.db.exists("Account", account):
             default_expense = frappe.db.get_value(
                 "Company",
-                "Bebang Enterprise Inc.",
+                get_company(),
                 "default_expense_account"
             )
             return default_expense or "5100 - Cost of Goods Sold - BEI"
@@ -427,7 +428,7 @@ class BEIInvoice(Document):
             # Try to find any withholding account
             ewt_account = frappe.db.get_value(
                 "Account",
-                {"account_name": ["like", "%Withholding%"], "company": "Bebang Enterprise Inc."},
+                {"account_name": ["like", "%Withholding%"], "company": get_company()},
                 "name"
             )
 

@@ -5,6 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import nowdate, now_datetime, getdate
+from hrms.utils.bei_config import get_company
 
 
 class BEIPCFBatch(Document):
@@ -144,7 +145,7 @@ def create_batch_from_pending(store, submission_type):
     # Create the batch
     batch = frappe.new_doc("BEI PCF Batch")
     batch.store = store
-    batch.company = "Bebang Enterprise Inc."
+    batch.company = get_company()
     batch.batch_date = nowdate()
     batch.status = "Submitted"
     batch.submission_type = submission_type
@@ -203,6 +204,7 @@ def send_batch_notification(batch, event):
         message = messages.get(event)
         if message:
             # Send to ERP Automation Committee
-            send_message_to_space("spaces/AAQA3NVVR6c", message)
+            from hrms.utils.bei_config import get_chat_space, SPACE_ERP_AUTOMATION
+            send_message_to_space(get_chat_space(SPACE_ERP_AUTOMATION), message)
     except Exception as e:
         frappe.log_error(f"Failed to send PCF batch notification: {e}", "PCF Notification")

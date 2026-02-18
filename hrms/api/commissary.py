@@ -9,6 +9,7 @@ Author: Claude Code
 Date: 2026-02-02
 """
 import frappe
+from hrms.utils.bei_config import get_company
 from frappe import _
 import json
 from frappe.utils import today, add_days, flt
@@ -247,7 +248,7 @@ def submit_production_output(items, batch_no=None, remarks=None):
     commissary_warehouse = get_commissary_warehouse()
 
     se = frappe.new_doc("Stock Entry")
-    se.company = "Bebang Enterprise Inc."
+    se.company = get_company()
     se.posting_date = today()
     se.posting_time = frappe.utils.nowtime()
     se.to_warehouse = commissary_warehouse
@@ -705,7 +706,7 @@ def create_dispatch_transfer(target_warehouse, items, mr_name=None, remarks=None
     # Create Stock Entry
     se = frappe.new_doc("Stock Entry")
     se.stock_entry_type = "Material Transfer"
-    se.company = "Bebang Enterprise Inc."
+    se.company = get_company()
     se.posting_date = today()
     se.posting_time = frappe.utils.nowtime()
     se.from_warehouse = commissary_warehouse
@@ -832,7 +833,7 @@ def fulfill_store_order(mr_name, items):
     # Create Stock Entry
     se = frappe.new_doc("Stock Entry")
     se.stock_entry_type = "Material Transfer"
-    se.company = "Bebang Enterprise Inc."
+    se.company = get_company()
     se.posting_date = today()
     se.posting_time = frappe.utils.nowtime()
     se.from_warehouse = commissary_warehouse
@@ -1773,7 +1774,7 @@ def create_hub_transfer(destination_hub, items, remarks=None):
     # Create Stock Entry
     se = frappe.new_doc("Stock Entry")
     se.stock_entry_type = "Material Transfer"
-    se.company = "Bebang Enterprise Inc."
+    se.company = get_company()
     se.posting_date = today()
     se.posting_time = frappe.utils.nowtime()
     se.from_warehouse = commissary_warehouse
@@ -2062,7 +2063,7 @@ def create_rm_requisition(items=None, required_by_date=None, remarks=None):
     # Create Material Request
     mr = frappe.new_doc("Material Request")
     mr.material_request_type = "Purchase"
-    mr.company = "Bebang Enterprise Inc."
+    mr.company = get_company()
     mr.transaction_date = today()
     mr.schedule_date = required_by_date
     mr.set_warehouse = commissary_warehouse
@@ -2568,7 +2569,7 @@ def create_work_order(item_code, qty, planned_start_date=None, remarks=None):
     wo.qty = flt(qty)
     wo.fg_warehouse = commissary_warehouse
     wo.wip_warehouse = commissary_warehouse  # Same warehouse for simplicity
-    wo.company = "Bebang Enterprise Inc."
+    wo.company = get_company()
     wo.planned_start_date = planned_start_date or today()
     wo.expected_delivery_date = planned_start_date or today()
 
@@ -2780,7 +2781,7 @@ def log_wastage(item_code, qty, reason_code, batch_no=None, remarks=None):
     # Create Stock Entry for Material Issue (Wastage)
     se = frappe.new_doc("Stock Entry")
     se.stock_entry_type = "Material Issue"
-    se.company = "Bebang Enterprise Inc."
+    se.company = get_company()
     se.purpose = "Material Issue"
 
     # Build remarks with reason
@@ -3125,7 +3126,7 @@ def create_bom(item_code, materials, quantity=1, uom=None, remarks=None):
     bom.uom = uom or item.stock_uom
     bom.is_active = 1
     bom.is_default = 1
-    bom.company = "Bebang Enterprise Inc."
+    bom.company = get_company()
     bom.with_operations = 0
 
     if remarks:

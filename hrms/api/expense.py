@@ -8,6 +8,7 @@ Date: 2026-02-02
 import frappe
 from frappe import _
 import json
+from hrms.utils.bei_config import get_company
 from frappe.utils import today, now_datetime, flt, get_url
 from hrms.api.store import save_base64_image
 # Lazy imports - only when OCR/classification is needed
@@ -72,7 +73,7 @@ def submit_expense(
         store = frappe.db.exists("Warehouse", employee.branch)
         if not store:
             # Try with company suffix
-            company = employee.company or "Bebang Enterprise Inc."
+            company = employee.company or get_company()
             store = frappe.db.exists("Warehouse", f"{employee.branch} - {company}")
         if not store:
             # Try partial match (warehouse name starts with branch)
@@ -208,7 +209,8 @@ def _notify_if_needs_review(expense):
 <https://my.bebang.ph/dashboard/accounting/expenses/{expense.name}|Review in Dashboard>"""
 
             # Send to ERP Automation Committee
-            send_message_to_space("spaces/AAQA3NVVR6c", message)
+            from hrms.utils.bei_config import get_chat_space, SPACE_ERP_AUTOMATION
+            send_message_to_space(get_chat_space(SPACE_ERP_AUTOMATION), message)
 
     except Exception as e:
         # Don't fail the main process if notification fails

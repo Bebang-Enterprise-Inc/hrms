@@ -7,6 +7,7 @@ Handles warehouse picking workflow: order approved -> items picked -> loaded -> 
 """
 
 import frappe
+from hrms.utils.bei_config import get_company
 from frappe import _
 from frappe.utils import nowdate, now_datetime, flt
 
@@ -281,7 +282,7 @@ def confirm_loaded(pick_list_name):
             "from_warehouse": pick_list.warehouse,
             "posting_date": nowdate(),
             "posting_time": frappe.utils.nowtime(),
-            "company": frappe.defaults.get_global_default("company") or "Bebang Enterprise Inc.",
+            "company": get_company(),
             "remarks": _("Pick List {0} - Trip {1}").format(pick_list_name, pick_list.trip),
             "items": [
                 {

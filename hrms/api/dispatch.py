@@ -575,10 +575,8 @@ def _send_delivery_notification(driver, store, eta_range):
     """
     from hrms.api.google_chat import send_message_to_space
 
-    space = (
-        frappe.db.get_single_value("BEI Settings", "delivery_notification_space")
-        or "spaces/AAQABiNmpBg"
-    )
+    from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+    space = get_chat_space(SPACE_NOTIFICATIONS)
 
     message = (
         f"🚚 *Delivery Update*\n\n"
