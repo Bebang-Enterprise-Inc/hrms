@@ -24,9 +24,10 @@
   "fields": [
     {
       "fieldname": "item_code",
-      "fieldtype": "Data",
+      "fieldtype": "Link",
       "in_list_view": 1,
       "label": "Item Code",
+      "options": "Item",
       "reqd": 1
     },
     {

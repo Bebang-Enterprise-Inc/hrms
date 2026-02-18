@@ -1728,4 +1728,370 @@ Payload: {
 - **Additional Test:** Call `GET hrms.api.store_orders.get_my_orders?store=TEST-STORE-MAKATI`
   - Assert: `ok == false`, permission denied OR empty result (no cross-store access)
 
+### SCM-015 [PENDING-v4.1]: Create Trip from Zone with Selected Stores → Only Selected Stores in Trip
+- **Type:** happy
+- **Origin:** v4.1 dynamic routing
+- **Role:** test.warehouse@bebang.ph (Warehouse Manager role required)
+- **Precondition:**
+  - BEI Route "Cold Zone North" exists with 5 stores
+  - 2 of those stores (Store A, Store C) have approved orders for today
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-17",
+    "selected_stops": [
+      {"store": "Store A - BEI", "stop_order": 1},
+      {"store": "Store C - BEI", "stop_order": 2}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`, trip created with exactly 2 stops
+  - DB verify: `stop_order` matches payload order (Store A = 1, Store C = 2)
+  - DB verify: Stores B, D, E are excluded from the trip
+  - Trip contains ONLY the 2 selected stores
+
+### SCM-016 [PENDING-v4.1]: Create Trip from Zone with No Selected Stops → All Zone Stores Included (Backward Compat)
+- **Type:** happy
+- **Origin:** v4.1 backward compatibility
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - BEI Route "Cold Zone North" exists with 5 stores
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-17"
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: Trip created with ALL 5 stores in original route order
+  - Backward compatibility: When `selected_stops` parameter is omitted, all zone stores are included
+
+### SCM-017 [PENDING-v4.1]: Create Trip with Reordered Stops → Stop Order Matches User Sequence
+- **Type:** happy
+- **Origin:** v4.1 drag-to-reorder
+- **Role:** test.warehouse@bebang.ph
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-17",
+    "selected_stops": [
+      {"store": "Store C - BEI", "stop_order": 1},
+      {"store": "Store B - BEI", "stop_order": 2},
+      {"store": "Store A - BEI", "stop_order": 3}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: `stop_order` matches exactly: Store C = 1, Store B = 2, Store A = 3
+  - Stops are created in the exact sequence provided (reverse of original route order)
+
+### SCM-018 [PENDING-v4.1]: Create Trip with Store NOT in Zone → Error
+- **Type:** negative
+- **Origin:** v4.1 zone validation
+- **Role:** test.warehouse@bebang.ph
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-17",
+    "selected_stops": [
+      {"store": "FAKE-STORE - BEI", "stop_order": 1}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == false`, error message contains "not in zone" or "not found in route"
+  - DB verify: NO trip created
+  - Validation prevents creating trips with stores not belonging to the specified route
+
+### SCM-019 [PENDING-v4.1]: Create Trip from Zone with Zero Pending Orders → Trip Created with 0 Items
+- **Type:** edge
+- **Origin:** v4.1 (drivers sometimes deliver empty runs for returns pickup)
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - BEI Route "Cold Zone North" exists
+  - Selected stores have NO approved orders (all orders are pending or no orders exist)
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-17",
+    "selected_stops": [
+      {"store": "Store A - BEI", "stop_order": 1},
+      {"store": "Store B - BEI", "stop_order": 2}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: Trip created, all stops have `items_count == 0`
+  - DB verify: `store_order` field is empty string (no delivery receipts to attach)
+  - Edge case: Empty trips are allowed (e.g., for returns pickup)
+
+### SCM-020 [PENDING-v4.1]: RBAC — Crew Cannot Create Trips
+- **Type:** rbac
+- **Origin:** v4.1 RBAC enforcement
+- **Role:** test.crew1@bebang.ph (Crew role, no Warehouse Manager)
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-17",
+    "selected_stops": [
+      {"store": "Store A - BEI", "stop_order": 1}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: HTTP 403 or `frappe.PermissionError`
+  - Error message contains "Insufficient Permissions" or "do not have access"
+  - DB verify: NO trip created
+
+### SCM-021 [PENDING-v4.1]: RBAC — Store Staff Cannot Modify Routes
+- **Type:** rbac
+- **Origin:** v4.1 RBAC enforcement
+- **Role:** test.staff@bebang.ph (Store OIC)
+- **Call:** `POST hrms.api.dispatch.update_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "updates": {
+      "route_name": "Hacked Route"
+    }
+  }
+  ```
+- **Assert:**
+  - Response: HTTP 403 or `frappe.PermissionError`
+  - DB verify: Route unchanged (still named "Cold Zone North")
+
+### SCM-022 [PENDING-v4.1]: Trip Created with Driver as Employee Link → driver_name Auto-Fetched
+- **Type:** happy
+- **Origin:** v4.1 schema fix (driver = Link:Employee)
+- **Role:** test.warehouse@bebang.ph
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-17",
+    "driver": "TEST-SUPERVISOR-001",
+    "selected_stops": [
+      {"store": "Store A - BEI", "stop_order": 1}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: Trip `driver == "TEST-SUPERVISOR-001"` (Employee ID, not User ID)
+  - DB verify: Trip linked to Employee doctype (driver field is Link:Employee)
+  - Driver name auto-resolved from Employee Master
+
+### SCM-023 [PENDING-v4.1]: Trip Created with Vehicle as BEI Vehicle Link → vehicle_plate Auto-Resolved
+- **Type:** happy
+- **Origin:** v4.1 schema fix (vehicle = Link:BEI Vehicle)
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - BEI Vehicle "VH-001" exists with `vehicle_plate = "ABC 123"`
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-17",
+    "vehicle": "VH-001",
+    "selected_stops": [
+      {"store": "Store A - BEI", "stop_order": 1}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: Trip `vehicle == "VH-001"`
+  - DB verify: Trip `vehicle_plate == "ABC 123"` (auto-resolved from BEI Vehicle doctype)
+
+### SCM-024 [PENDING-v4.1]: Zone Stores Show Delivery Window in Trip Wizard → UI Displays Time Hints
+- **Type:** happy (L2 - page check)
+- **Origin:** v4.1 delivery window fields
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - BEI Route Stop for "Store A - BEI" has `delivery_window_start = "06:00"`, `delivery_window_end = "09:00"`
+- **Call:** Navigate to `/dashboard/warehouse/trips/create`, select route "Cold Zone North", proceed to Step 3 (store selection)
+- **Assert:**
+  - UI displays "06:00–09:00" next to Store A in the store pool
+  - Delivery window is visible as time hint for scheduling
+  - (L2 test: verify DOM contains time range text)
+
+### SCM-025 [PENDING-v4.1]: Select All Stores Then Deselect One → Trip Created Without Deselected Store
+- **Type:** edge
+- **Origin:** v4.1 store pool interaction
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - BEI Route "Cold Zone North" has 5 stores (Store A, B, C, D, E)
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-17",
+    "selected_stops": [
+      {"store": "Store A - BEI", "stop_order": 1},
+      {"store": "Store B - BEI", "stop_order": 2},
+      {"store": "Store C - BEI", "stop_order": 3},
+      {"store": "Store E - BEI", "stop_order": 4}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: Trip created with 4 stops (N-1 stores)
+  - DB verify: Store D is NOT in the trip stops
+  - Verify selective inclusion: all zone stores except Store D
+
+### SCM-026 [READY]: Regression — cargo_type Billing Lookup
+- **Type:** regression
+- **Origin:** BUG-v45-1 (cargo_type missing from BEI Delivery Rate lookup, billing schedule always fell back to default rate)
+- **Role:** test.warehouse@bebang.ph (Warehouse Manager role required)
+- **Precondition:**
+  - BEI Delivery Rate exists with `cargo_type = "FC"` and `rate_per_km = 35.00`
+  - BEI Route "Cold Zone FC" exists with `cargo_type = "FC"` and at least 2 stops
+  - Trip created from "Cold Zone FC", status = "Ready for Dispatch"
+- **Call (Step 1):** `POST hrms.api.dispatch.confirm_departure`
+- **Payload:**
+  ```json
+  {
+    "trip_id": "<trip_name>",
+    "departure_time": "2026-02-18 06:00:00"
+  }
+  ```
+- **Call (Step 2):** `POST hrms.api.dispatch.confirm_delivery`
+- **Payload:**
+  ```json
+  {
+    "stop_id": "<first_stop_name>",
+    "delivered_by": "TEST-WAREHOUSE-001",
+    "photos": "[{\"photo\": \"<PHOTO_DATA_URL>\", \"caption\": \"Delivered to Store A\"}]"
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: BEI Billing Schedule created with `cargo_type == "FC"`
+  - DB verify: `rate_applied` matches the BEI Delivery Rate for `cargo_type = "FC"` (not the default rate)
+  - DB verify: No `KeyError` or fallback to generic rate — billing schedule references correct rate row
+  - **Regression guard:** Before fix, `cargo_type` was missing from the rate lookup filter causing all FC trips to bill at wrong rate
+
+### SCM-027 [READY]: Regression — Vehicle Dropdown Renders Plate Numbers
+- **Type:** regression
+- **Origin:** BUG-v45-2 (get_vehicles() returned dict objects; frontend rendered "[object Object]" in dropdown)
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - At least 1 BEI Vehicle record exists with `vehicle_plate = "ABC 123"` and `name = "VH-001"`
+- **Call:** `GET hrms.api.dispatch.get_vehicles`
+- **Payload:** (no body required — GET endpoint)
+- **Assert:**
+  - Response is a JSON array (not an array of dicts with nested keys)
+  - Each element has at minimum a `"name"` field that is a plain string (e.g., `"VH-001"`)
+  - `response[0].name` is a string like `"VH-001"`, NOT `"[object Object]"`
+  - `response[0].vehicle_plate` is `"ABC 123"` (string, not nested object)
+  - **Regression guard:** Before fix, the endpoint returned raw Frappe document dicts; frontend `v.name` rendered as `[object Object]`. After fix, each item is a flat object with string fields.
+
+### SCM-028 [READY]: Regression — Route Default Driver Inherits to Trip
+- **Type:** regression
+- **Origin:** BUG-v45-3 (default_driver on BEI Route was a Data field; Link:Employee not enforced so driver_name never populated)
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - BEI Route "Cold Zone North" exists with `default_driver = "TEST-SUPERVISOR-001"` (valid Employee ID)
+  - Employee TEST-SUPERVISOR-001 exists with `employee_name = "Test Supervisor"`
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-18",
+    "selected_stops": [
+      {"store": "Store A - BEI", "stop_order": 1}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: `trip.driver == "TEST-SUPERVISOR-001"` (inherited from route `default_driver`)
+  - DB verify: `trip.driver_name == "Test Supervisor"` (auto-fetched from Employee Master)
+  - DB verify: `trip.driver` field is a valid Link to Employee doctype (not a freetext string)
+  - **Regression guard:** Before fix, `default_driver` was stored as raw text so `driver_name` was always blank and Frappe link validation failed silently
+
+### SCM-029 [READY]: Regression — 3PL Trip Accepts threepl_driver_name
+- **Type:** regression
+- **Origin:** BUG-v45-5 (3PL trips had no field for external driver name; trips showed blank driver on billing reports)
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - BEI Vehicle "VH-3PL-001" exists with `owner_type = "3PL"` and `vehicle_plate = "XYZ 999"`
+- **Call:** `POST hrms.api.dispatch.create_trip_from_route`
+- **Payload:**
+  ```json
+  {
+    "route_name": "Cold Zone North",
+    "trip_date": "2026-02-18",
+    "vehicle": "VH-3PL-001",
+    "threepl_driver_name": "Juan Cruz",
+    "selected_stops": [
+      {"store": "Store A - BEI", "stop_order": 1}
+    ]
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true`
+  - DB verify: `trip.threepl_driver_name == "Juan Cruz"` (external driver name stored correctly)
+  - DB verify: `trip.driver` is null or empty string (no Employee Link required for 3PL)
+  - DB verify: `trip.vehicle == "VH-3PL-001"`, `trip.vehicle_plate == "XYZ 999"`
+  - **Regression guard:** Before fix, submitting a 3PL trip with `threepl_driver_name` caused a field-not-found error; after fix the field exists on BEI Delivery Trip and persists correctly
+
+### SCM-030 [READY]: Regression — ETA Uses Route Stop Estimated Minutes
+- **Type:** regression
+- **Origin:** BUG-v45-6 (confirm_departure() hardcoded 20 min per stop; actual `estimated_minutes` on BEI Route Stop was ignored)
+- **Role:** test.warehouse@bebang.ph
+- **Precondition:**
+  - BEI Route "ETA Test Route" exists with exactly 4 stops:
+    - Stop 1 (Store A): `estimated_minutes = 15`
+    - Stop 2 (Store B): `estimated_minutes = 25`
+    - Stop 3 (Store C): `estimated_minutes = 20`
+    - Stop 4 (Store D): `estimated_minutes = 30`
+  - Trip created from "ETA Test Route", status = "Ready for Dispatch"
+- **Call (Step 1):** `POST hrms.api.dispatch.confirm_departure`
+- **Payload:**
+  ```json
+  {
+    "trip_id": "<trip_name>",
+    "departure_time": "2026-02-18 06:00:00"
+  }
+  ```
+- **Call (Step 2):** `GET hrms.api.dispatch.get_route_progress`
+- **Payload:**
+  ```json
+  {
+    "trip_id": "<trip_name>"
+  }
+  ```
+- **Assert:**
+  - Response: `ok == true` on departure confirmation
+  - DB verify (cumulative ETAs from 06:00 departure):
+    - Stop 1 ETA = `06:15` (0 + 15 min)
+    - Stop 2 ETA = `06:40` (15 + 25 min)
+    - Stop 3 ETA = `07:00` (40 + 20 min)
+    - Stop 4 ETA = `07:30` (60 + 30 min)
+  - `get_route_progress` response contains ETA timestamps matching above values
+  - **Regression guard:** Before fix, all stops had ETA = stop_order × 20 min (hardcoded), so Stop 1 = 06:20, Stop 2 = 06:40, Stop 3 = 07:00, Stop 4 = 07:20 — wrong for non-uniform routes
+
 ---

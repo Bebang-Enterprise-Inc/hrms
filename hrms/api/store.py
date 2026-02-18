@@ -263,12 +263,79 @@ def get_orderable_items(store):
     return {"items": items}
 
 
+def _get_order_cutoff():
+    """Read order cutoff hour from BEI Settings.
+
+    Returns (cutoff_hour, cutoff_time) where cutoff_hour is the integer hour
+    (default 12) and cutoff_time is the display string (e.g. "11:59").
+    """
+    try:
+        raw = frappe.db.get_single_value("BEI Settings", "order_cutoff_hour")
+        cutoff_hour = int(raw) if raw else 12
+    except Exception:
+        cutoff_hour = 12
+    cutoff_time = "{:02d}:59".format(cutoff_hour - 1)
+    return cutoff_hour, cutoff_time
+
+
+def _validate_order_cutoff(store, is_emergency=False):
+    """
+    Validate that order submission is within the allowed cutoff time.
+    Default cutoff: 11:59 AM (from Ian questionnaire 2026-02-17, same for all stores).
+    Configurable via BEI Settings.order_cutoff_hour.
+    Emergency orders bypass the cutoff but are logged.
+    """
+    cutoff_hour, cutoff_time = _get_order_cutoff()
+
+    if now_datetime().hour >= cutoff_hour:
+        if is_emergency:
+            frappe.log_error(
+                "Emergency order submitted after cutoff {0} by {1} for store {2}".format(
+                    cutoff_time, frappe.session.user, store
+                ),
+                "Emergency Order After Cutoff"
+            )
+            return
+        frappe.throw(_(
+            "Order submission closed. Daily cutoff is {0}. "
+            "Contact your Area Supervisor for emergency orders."
+        ).format(cutoff_time))
+
+
 @frappe.whitelist()
-def submit_order(store, items):
+def validate_order_schedule(store):
+    """
+    Check if order submission is currently allowed for the given store.
+    Frontend can call this before showing the order form.
+    Returns {allowed: true/false, cutoff_time: "11:59", message: "..."}
+    """
+    if not store:
+        frappe.throw(_("Store is required"))
+
+    cutoff_hour, cutoff_time = _get_order_cutoff()
+    allowed = now_datetime().hour < cutoff_hour
+
+    return {
+        "allowed": allowed,
+        "cutoff_time": cutoff_time,
+        "message": (
+            "Ordering is open until {0}".format(cutoff_time)
+            if allowed
+            else "Ordering closed at {0}. Contact your Area Supervisor for emergency orders.".format(cutoff_time)
+        )
+    }
+
+
+@frappe.whitelist()
+def submit_order(store, items, is_emergency=False):
     """
     Submit a new store order.
     Items should be a list of {item_code, qty_requested}
+    is_emergency: if True, bypasses cutoff gate (logs but allows)
     """
+    # Validate ordering schedule cutoff
+    _validate_order_cutoff(store, is_emergency=frappe.utils.cint(is_emergency))
+
     if not store:
         frappe.throw(_("Store is required"))
 

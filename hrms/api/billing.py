@@ -130,7 +130,7 @@ def get_stores_without_rates():
 
     missing = []
     for st in all_stores:
-        for cargo in ["Dry Goods", "Frozen Goods"]:
+        for cargo in ["FC", "DRY", "FM", "Mixed"]:
             if (st.store, cargo) not in active_set:
                 missing.append({
                     "store": st.store,

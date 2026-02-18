@@ -42,7 +42,7 @@
    "fieldname": "cargo_type",
    "fieldtype": "Select",
    "label": "Cargo Type",
-   "options": "Dry Goods\nFrozen Goods",
+   "options": "FC\nDRY\nFM\nMixed",
    "reqd": 1,
    "in_list_view": 1
   },

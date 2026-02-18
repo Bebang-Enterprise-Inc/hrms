@@ -162,7 +162,7 @@
    "fieldname": "cargo_type",
    "fieldtype": "Select",
    "label": "Cargo Type",
-   "options": "\nDry Goods\nFrozen Goods",
+   "options": "\nFC\nDRY\nFM\nMixed",
    "depends_on": "eval:doc.billing_type=='Delivery'"
   },
   {

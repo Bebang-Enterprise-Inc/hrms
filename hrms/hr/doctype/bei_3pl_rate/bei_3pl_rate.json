@@ -42,9 +42,9 @@
   },
   {
    "fieldname": "threepl_partner",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "3PL Partner",
-   "options": "RCS\n3MD\nCOOLITZ\nPINNACLE",
+   "options": "Supplier",
    "reqd": 1,
    "in_list_view": 1,
    "in_standard_filter": 1

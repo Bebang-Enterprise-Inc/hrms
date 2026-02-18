@@ -65,8 +65,9 @@
     },
     {
       "fieldname": "default_driver",
-      "fieldtype": "Data",
-      "label": "Default Driver"
+      "fieldtype": "Link",
+      "label": "Default Driver",
+      "options": "Employee"
     },
     {
       "fieldname": "estimated_duration_hrs",
