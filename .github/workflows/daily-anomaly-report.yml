@@ -12,9 +12,15 @@ name: Daily POS Anomaly Report (9 AM)
 #      - Only sends Chat alert for anomalies still unresolved
 
 on:
-  schedule:
-    # 09:00 PHT = 01:00 UTC
-    - cron: "0 1 * * *"
+  # DISABLED 2026-02-17: False alarms — race condition between POS sync and
+  # anomaly detection causes all stores to appear OFFLINE_ALL_DAY.
+  # The midnight detection logs to DB with --no-chat, but the 9 AM verify
+  # finds stale unresolved anomalies and sends useless alerts.
+  # Re-enable once baselines are calibrated and race condition is fixed.
+  #
+  # schedule:
+  #   # 09:00 PHT = 01:00 UTC
+  #   - cron: "0 1 * * *"
   workflow_dispatch:
     inputs:
       target_date:
