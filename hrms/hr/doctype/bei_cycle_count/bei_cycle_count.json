@@ -50,6 +50,7 @@
    "reqd": 1
   },
   {
+   "default": "Store Monthly",
    "fieldname": "count_type",
    "fieldtype": "Select",
    "label": "Count Type",
