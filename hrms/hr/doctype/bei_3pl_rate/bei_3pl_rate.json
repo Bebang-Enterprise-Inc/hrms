@@ -16,6 +16,10 @@
   "overtime_rate",
   "column_break_rate",
   "surcharge_rate",
+  "ewt_section",
+  "ewt_atc",
+  "column_break_ewt",
+  "ewt_rate",
   "effective_period_section",
   "effective_from",
   "effective_to",
@@ -98,6 +102,29 @@
    "label": "Holiday / Weekend Surcharge",
    "precision": "2",
    "description": "Additional charge for holiday or weekend trips"
+  },
+  {
+   "fieldname": "ewt_section",
+   "fieldtype": "Section Break",
+   "label": "EWT / Withholding Tax"
+  },
+  {
+   "fieldname": "ewt_atc",
+   "fieldtype": "Data",
+   "label": "EWT ATC Code",
+   "default": "WC110",
+   "description": "BIR ATC for withholding tax (WC110 = 1% for corporate freight/hauling)"
+  },
+  {
+   "fieldname": "column_break_ewt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ewt_rate",
+   "fieldtype": "Percent",
+   "label": "EWT Rate %",
+   "default": "1.0",
+   "description": "Withholding tax rate applied on net payable"
   },
   {
    "fieldname": "effective_period_section",

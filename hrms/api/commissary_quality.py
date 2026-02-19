@@ -416,6 +416,188 @@ def get_wastage_reasons():
     }
 
 
+@frappe.whitelist()
+def get_wastage_trends(days=30, group_by="reason"):
+    """
+    Aggregate wastage data for trend analysis.
+
+    Args:
+        days: Number of days to look back (default 30)
+        group_by: Dimension to group by — 'reason' | 'item' | 'shift' | 'daily'
+
+    Returns:
+        data: Aggregated records for the requested dimension
+        daily_trend: Day-by-day qty + value for the period (always included)
+        summary: {total_qty, total_value, avg_daily, top_reason, trend_pct}
+    """
+    days = int(days)
+    commissary_warehouse = get_commissary_warehouse()
+
+    # Base wastage query — Material Issue entries with WASTAGE: prefix
+    base_sql = """
+        SELECT
+            se.name,
+            se.posting_date,
+            se.posting_time,
+            sed.item_code,
+            sed.item_name,
+            sed.qty,
+            sed.basic_amount as wastage_value,
+            se.remarks
+        FROM `tabStock Entry` se
+        JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
+        WHERE se.stock_entry_type = 'Material Issue'
+        AND se.docstatus = 1
+        AND se.remarks LIKE %(wastage_pattern)s
+        AND sed.s_warehouse = %(warehouse)s
+        AND se.posting_date >= DATE_SUB(CURDATE(), INTERVAL %(days)s DAY)
+        ORDER BY se.posting_date ASC
+    """
+
+    params = {
+        "warehouse": commissary_warehouse,
+        "days": days,
+        "wastage_pattern": "WASTAGE:%"
+    }
+
+    rows = frappe.db.sql(base_sql, params, as_dict=True)
+
+    # ---- daily trend (always computed) ----
+    daily_map = {}
+    for r in rows:
+        d = str(r.posting_date)
+        if d not in daily_map:
+            daily_map[d] = {"date": d, "qty": 0.0, "value": 0.0}
+        daily_map[d]["qty"] = flt(daily_map[d]["qty"] + r.qty, 3)
+        daily_map[d]["value"] = flt(daily_map[d]["value"] + (r.wastage_value or 0), 2)
+    daily_trend = sorted(daily_map.values(), key=lambda x: x["date"])
+
+    # ---- summary totals ----
+    total_qty = flt(sum(r.qty for r in rows), 3)
+    total_value = flt(sum(r.wastage_value or 0 for r in rows), 2)
+    avg_daily = flt(total_qty / days, 3)
+
+    def _extract_reason_code(remarks):
+        """Pull reason code from 'WASTAGE: <label> - remarks' format."""
+        if not remarks:
+            return "other"
+        # Map label back to code
+        stripped = remarks.replace("WASTAGE: ", "").split(" - ")[0].strip()
+        for code, label in WASTAGE_REASONS.items():
+            if label == stripped:
+                return code
+        return stripped
+
+    def _shift_from_time(posting_time):
+        """Classify AM / PM / Dispatch based on posting_time."""
+        if not posting_time:
+            return "Unknown"
+        try:
+            # posting_time can be "HH:MM:SS" string or timedelta
+            if hasattr(posting_time, "seconds"):
+                hour = posting_time.seconds // 3600
+            else:
+                hour = int(str(posting_time).split(":")[0])
+        except Exception:
+            return "Unknown"
+        if 4 <= hour < 5:
+            return "Dispatch (04:00)"
+        elif 5 <= hour < 14:
+            return "AM (5:00-14:00)"
+        elif 16 <= hour or hour < 1:
+            return "PM (16:00-01:00)"
+        else:
+            return "Between Shifts"
+
+    # ---- group_by dimension ----
+    agg = {}
+
+    if group_by == "reason":
+        for r in rows:
+            code = _extract_reason_code(r.remarks)
+            label = WASTAGE_REASONS.get(code, code)
+            key = code
+            if key not in agg:
+                agg[key] = {"reason_code": code, "reason_label": label, "count": 0, "qty": 0.0, "value": 0.0}
+            agg[key]["count"] += 1
+            agg[key]["qty"] = flt(agg[key]["qty"] + r.qty, 3)
+            agg[key]["value"] = flt(agg[key]["value"] + (r.wastage_value or 0), 2)
+        data = sorted(agg.values(), key=lambda x: x["qty"], reverse=True)
+        top_reason = data[0]["reason_label"] if data else "N/A"
+
+    elif group_by == "item":
+        for r in rows:
+            key = r.item_code
+            if key not in agg:
+                agg[key] = {"item_code": r.item_code, "item_name": r.item_name, "count": 0, "qty": 0.0, "value": 0.0}
+            agg[key]["count"] += 1
+            agg[key]["qty"] = flt(agg[key]["qty"] + r.qty, 3)
+            agg[key]["value"] = flt(agg[key]["value"] + (r.wastage_value or 0), 2)
+        data = sorted(agg.values(), key=lambda x: x["value"], reverse=True)[:10]
+        top_reason = data[0]["item_name"] if data else "N/A"
+
+    elif group_by == "shift":
+        for r in rows:
+            shift = _shift_from_time(r.posting_time)
+            if shift not in agg:
+                agg[shift] = {"shift": shift, "count": 0, "qty": 0.0, "value": 0.0}
+            agg[shift]["count"] += 1
+            agg[shift]["qty"] = flt(agg[shift]["qty"] + r.qty, 3)
+            agg[shift]["value"] = flt(agg[shift]["value"] + (r.wastage_value or 0), 2)
+        data = sorted(agg.values(), key=lambda x: x["qty"], reverse=True)
+        top_reason = data[0]["shift"] if data else "N/A"
+
+    elif group_by == "daily":
+        data = daily_trend  # already computed
+        top_reason = max(daily_trend, key=lambda x: x["qty"])["date"] if daily_trend else "N/A"
+
+    else:
+        data = []
+        top_reason = "N/A"
+
+    # ---- trend_pct: current period vs prior period ----
+    prior_params = {
+        "warehouse": commissary_warehouse,
+        "days_start": days * 2,
+        "days_end": days,
+        "wastage_pattern": "WASTAGE:%"
+    }
+    prior_sql = """
+        SELECT IFNULL(SUM(sed.qty), 0) as prior_qty
+        FROM `tabStock Entry` se
+        JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
+        WHERE se.stock_entry_type = 'Material Issue'
+        AND se.docstatus = 1
+        AND se.remarks LIKE %(wastage_pattern)s
+        AND sed.s_warehouse = %(warehouse)s
+        AND se.posting_date >= DATE_SUB(CURDATE(), INTERVAL %(days_start)s DAY)
+        AND se.posting_date < DATE_SUB(CURDATE(), INTERVAL %(days_end)s DAY)
+    """
+    prior_qty = flt(frappe.db.sql(prior_sql, prior_params)[0][0] or 0, 3)
+    if prior_qty > 0:
+        trend_pct = flt(((total_qty - prior_qty) / prior_qty) * 100, 1)
+    else:
+        trend_pct = 0.0
+
+    trend_direction = "up" if trend_pct > 5 else ("down" if trend_pct < -5 else "stable")
+
+    return {
+        "success": True,
+        "data": data,
+        "daily_trend": daily_trend,
+        "summary": {
+            "total_qty": total_qty,
+            "total_value": total_value,
+            "avg_daily": avg_daily,
+            "top_reason": top_reason,
+            "trend_pct": trend_pct,
+            "trend_direction": trend_direction,
+            "period_days": days,
+            "total_entries": len(rows),
+        }
+    }
+
+
 # ============================================================
 # FEFO PICKING HELPER
 # ============================================================

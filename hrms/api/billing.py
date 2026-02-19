@@ -584,14 +584,10 @@ def scheduled_monthly_billing():
 # BIR RR 2-98: 2% EWT on hauling/freight services
 
 # GL accounts for 3PL logistics costs and payment
+# DM-1: party_type/party ONLY on AP row (2101101), NEVER on EWT Payable (2102202)
 GL_LOGISTICS_COMMISSARY = "6003001"   # Logistics Cost - Commissary
 GL_LOGISTICS_PCF        = "6003002"   # Logistics Cost - PCF
 GL_LOGISTICS_WAREHOUSE  = "6003003"   # Logistics Cost - Warehouse
-GL_CWT                  = "1105101"   # Creditable Withholding Tax (2% EWT)
-GL_BDO_HO               = "1101103"   # BDO H.O. (cash/bank payment)
-
-EWT_RATE = 0.02  # BIR RR 2-98: 2% on hauling services
-
 
 def _check_billing_permission(action="access billing records"):
     """Check if current user has any of the allowed 3PL billing roles."""
@@ -705,7 +701,9 @@ def generate_3pl_reconciliation(month, year, partner):
     # Fetch applicable rates for this partner active during the month
     rates = frappe.db.sql(
         """
-        SELECT name, cargo_type, zone, rate_per_trip, overtime_rate, surcharge_rate
+        SELECT name, cargo_type, zone, rate_per_trip, overtime_rate, surcharge_rate,
+               COALESCE(ewt_atc, 'WC110') AS ewt_atc,
+               COALESCE(ewt_rate, 1.0) AS ewt_rate
         FROM `tabBEI 3PL Rate`
         WHERE threepl_partner = %(partner)s
           AND effective_from <= %(end_date)s
@@ -771,6 +769,11 @@ def generate_3pl_reconciliation(month, year, partner):
         trip_cost = base_cost + overtime_cost + surcharge_cost
         total_expected += trip_cost
 
+        ewt_atc = rate.get("ewt_atc") or "WC110"
+        ewt_rate_pct = flt(rate.get("ewt_rate") or 1.0)
+        ewt_amount = round(trip_cost * (ewt_rate_pct / 100), 2)
+        net_payment = round(trip_cost - ewt_amount, 2)
+
         trip_lines.append({
             "trip_name": trip.trip_name,
             "date": str(trip.date),
@@ -782,8 +785,22 @@ def generate_3pl_reconciliation(month, year, partner):
             "overtime_cost": overtime_cost,
             "surcharge_cost": surcharge_cost,
             "cost": trip_cost,
+            "ewt_atc": ewt_atc,
+            "ewt_rate": ewt_rate_pct,
+            "ewt_amount": ewt_amount,
+            "net_payment": net_payment,
             "has_discrepancy": False
         })
+
+    total_ewt = round(sum(t["ewt_amount"] for t in trip_lines if not t["has_discrepancy"]), 2)
+    total_net = round(total_expected - total_ewt, 2)
+
+    # Determine dominant EWT ATC for this partner (most recent rate)
+    dominant_ewt_atc = "WC110"
+    dominant_ewt_rate = 1.0
+    if rates:
+        dominant_ewt_atc = rates[0].get("ewt_atc") or "WC110"
+        dominant_ewt_rate = flt(rates[0].get("ewt_rate") or 1.0)
 
     return {
         "partner": partner,
@@ -793,6 +810,10 @@ def generate_3pl_reconciliation(month, year, partner):
         "trip_count": len(trips_raw),
         "trips": trip_lines,
         "total_expected": round(total_expected, 2),
+        "total_ewt": total_ewt,
+        "total_net": total_net,
+        "ewt_atc": dominant_ewt_atc,
+        "ewt_rate": dominant_ewt_rate,
         "discrepancies": discrepancies
     }
 
@@ -814,8 +835,26 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
     if invoice_amount <= 0:
         frappe.throw(_("Invoice amount must be greater than zero"))
 
+    # Fetch EWT rate from active BEI 3PL Rate record for this partner
+    today = nowdate()
+    rate_doc = frappe.db.sql(
+        """
+        SELECT ewt_atc, ewt_rate
+        FROM `tabBEI 3PL Rate`
+        WHERE threepl_partner = %(partner)s
+          AND effective_from <= %(today)s
+          AND (effective_to IS NULL OR effective_to = '' OR effective_to >= %(today)s)
+        ORDER BY effective_from DESC
+        LIMIT 1
+        """,
+        {"partner": partner, "today": today},
+        as_dict=True
+    )
+    ewt_atc = (rate_doc[0].get("ewt_atc") or "WC110") if rate_doc else "WC110"
+    ewt_rate_pct = flt((rate_doc[0].get("ewt_rate") or 1.0)) if rate_doc else 1.0
+
     gross = invoice_amount
-    ewt_amount = round(gross * EWT_RATE, 2)
+    ewt_amount = round(gross * (ewt_rate_pct / 100), 2)
     net_payable = round(gross - ewt_amount, 2)
 
     gl_debit_account = _get_gl_account_for_partner(partner)
@@ -836,34 +875,30 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
         je.cheque_no = f"3PL-{partner}-{period_label}"
         je.cheque_date = nowdate()
 
-        # DR: Logistics Cost (full gross amount) — DM-1: party on all rows
+        # DR: Logistics Expense (full gross) — NO party (expense account)
         je.append("accounts", {
-            "account": gl_debit_account,
+            "account": "5200101 - LOGISTICS EXPENSE - BEI",
             "debit_in_account_currency": gross,
             "credit_in_account_currency": 0,
-            "party_type": "Supplier",
-            "party": partner,
             "user_remark": remarks
         })
 
-        # CR: Creditable Withholding Tax (2% EWT)
+        # CR: Accounts Payable - Trade (net payment) — DM-1: party ONLY on AP row
         je.append("accounts", {
-            "account": GL_CWT,
-            "debit_in_account_currency": 0,
-            "credit_in_account_currency": ewt_amount,
-            "party_type": "Supplier",
-            "party": partner,
-            "user_remark": f"EWT 2% - {remarks}"
-        })
-
-        # CR: BDO H.O. (net cash payment, 98%)
-        je.append("accounts", {
-            "account": GL_BDO_HO,
+            "account": "2101101 - ACCOUNTS PAYABLE - TRADE - BEI",
             "debit_in_account_currency": 0,
             "credit_in_account_currency": net_payable,
             "party_type": "Supplier",
             "party": partner,
-            "user_remark": f"Net payment - {remarks}"
+            "user_remark": f"Net payable after EWT {ewt_atc} {ewt_rate_pct}% - {remarks}"
+        })
+
+        # CR: EWT Payable (ATC per rate record) — DM-1: NO party on EWT row
+        je.append("accounts", {
+            "account": "2102202 - EWT PAYABLE - BEI",
+            "debit_in_account_currency": 0,
+            "credit_in_account_currency": ewt_amount,
+            "user_remark": f"EWT {ewt_atc} {ewt_rate_pct}% - {remarks}"
         })
 
         je.insert(ignore_permissions=True)
@@ -874,12 +909,14 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
             "partner": partner,
             "period": period_label,
             "gross": gross,
+            "ewt_atc": ewt_atc,
+            "ewt_rate": ewt_rate_pct,
             "ewt_amount": ewt_amount,
             "net_payable": net_payable,
             "gl_entries": [
-                {"account": gl_debit_account, "debit": gross, "credit": 0},
-                {"account": GL_CWT, "debit": 0, "credit": ewt_amount},
-                {"account": GL_BDO_HO, "debit": 0, "credit": net_payable},
+                {"account": "5200101 - LOGISTICS EXPENSE - BEI", "debit": gross, "credit": 0},
+                {"account": "2101101 - ACCOUNTS PAYABLE - TRADE - BEI", "debit": 0, "credit": net_payable},
+                {"account": "2102202 - EWT PAYABLE - BEI", "debit": 0, "credit": ewt_amount},
             ]
         }
 

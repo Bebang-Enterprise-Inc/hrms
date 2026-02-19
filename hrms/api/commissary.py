@@ -67,6 +67,7 @@ from hrms.api.commissary_quality import (  # noqa: F401
     log_wastage,
     get_wastage_history,
     get_wastage_reasons,
+    get_wastage_trends,
     get_fefo_picking_list,
     get_expiring_batches,
     enable_batch_tracking_for_fg,
