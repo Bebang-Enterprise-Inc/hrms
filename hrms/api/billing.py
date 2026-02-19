@@ -163,6 +163,7 @@ def get_pending_billings(store=None, billing_type=None):
 @frappe.whitelist()
 def approve_billing(billing_name):
     """Finance approves a pending billing. Pending → Approved."""
+    _check_billing_permission("approve billings")
     billing = frappe.get_doc("BEI Billing Schedule", billing_name)
     if billing.status != "Pending":
         frappe.throw(_("Only Pending billings can be approved"))
@@ -175,6 +176,7 @@ def approve_billing(billing_name):
 @frappe.whitelist()
 def reject_billing(billing_name, reason=None):
     """Finance rejects a pending billing."""
+    _check_billing_permission("reject billings")
     billing = frappe.get_doc("BEI Billing Schedule", billing_name)
     if billing.status != "Pending":
         frappe.throw(_("Only Pending billings can be rejected"))
@@ -189,6 +191,7 @@ def reject_billing(billing_name, reason=None):
 @frappe.whitelist()
 def send_billing_to_store(billing_name):
     """Send approved billing to store (Full Franchise only)."""
+    _check_billing_permission("send billings to store")
     billing = frappe.get_doc("BEI Billing Schedule", billing_name)
     # I-08 fix: Only Approved or already-Sent billings can be sent
     if billing.status not in ("Approved", "Sent"):
@@ -545,6 +548,7 @@ def get_soa(name):
 @frappe.whitelist()
 def cancel_billing(name, reason=None):
     """Cancel a billing. Only Draft, Pending, or Sent billings can be cancelled."""
+    _check_billing_permission("cancel billings")
     billing = frappe.get_doc("BEI Billing Schedule", name)
     if billing.status in ("Cancelled", "Paid"):
         frappe.throw(_("Cannot cancel a {0} billing").format(billing.status))
@@ -823,10 +827,10 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
     """
     POST: Create a Journal Entry payment request for a 3PL invoice.
     - Gross = invoice_amount
-    - EWT = gross * 0.02 (BIR RR 2-98: 2% on hauling services)
-    - Net payable = gross * 0.98
-    - GL: DR logistics cost, CR CWT (2%), CR BDO H.O. (98%)
-    - DM-1: ALL GL rows have party + party_type
+    - EWT = gross * ewt_rate% (default WC110 1% per BEI 3PL Rate record)
+    - Net payable = gross - EWT
+    - GL: DR logistics cost (per partner), CR AP-Trade (net, with party), CR EWT Payable
+    - DM-1: party ONLY on AP row, NOT on expense or EWT rows
     - DM-2: frappe.db.savepoint() wraps multi-doc operation
     """
     _check_billing_permission("create 3PL payment requests")
@@ -853,6 +857,10 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
     ewt_atc = (rate_doc[0].get("ewt_atc") or "WC110") if rate_doc else "WC110"
     ewt_rate_pct = flt((rate_doc[0].get("ewt_rate") or 1.0)) if rate_doc else 1.0
 
+    # Validate EWT rate is within sane range (0.5% to 15%)
+    if ewt_rate_pct < 0.5 or ewt_rate_pct > 15:
+        frappe.throw(_("EWT rate {0}% is outside valid range (0.5-15%). Check BEI 3PL Rate record.").format(ewt_rate_pct))
+
     gross = invoice_amount
     ewt_amount = round(gross * (ewt_rate_pct / 100), 2)
     net_payable = round(gross - ewt_amount, 2)
@@ -875,9 +883,9 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
         je.cheque_no = f"3PL-{partner}-{period_label}"
         je.cheque_date = nowdate()
 
-        # DR: Logistics Expense (full gross) — NO party (expense account)
+        # DR: Logistics Cost (full gross) — NO party (expense account per DM-1)
         je.append("accounts", {
-            "account": "5200101 - LOGISTICS EXPENSE - BEI",
+            "account": gl_debit_account,
             "debit_in_account_currency": gross,
             "credit_in_account_currency": 0,
             "user_remark": remarks
@@ -902,6 +910,9 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
         })
 
         je.insert(ignore_permissions=True)
+        je.submit()
+
+        frappe.db.release_savepoint(sp_name)
 
         return {
             "success": True,
@@ -914,7 +925,7 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
             "ewt_amount": ewt_amount,
             "net_payable": net_payable,
             "gl_entries": [
-                {"account": "5200101 - LOGISTICS EXPENSE - BEI", "debit": gross, "credit": 0},
+                {"account": gl_debit_account, "debit": gross, "credit": 0},
                 {"account": "2101101 - ACCOUNTS PAYABLE - TRADE - BEI", "debit": 0, "credit": net_payable},
                 {"account": "2102202 - EWT PAYABLE - BEI", "debit": 0, "credit": ewt_amount},
             ]
