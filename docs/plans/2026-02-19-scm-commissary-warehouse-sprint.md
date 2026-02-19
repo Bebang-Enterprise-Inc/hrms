@@ -1,7 +1,7 @@
 # SCM Sprint Plan: Commissary + Warehouse
 **Date:** 2026-02-19
-**Status:** IN PROGRESS — Phases 0-3 COMPLETE, code reviewed + deployed, Phase 4 next
-**Version:** v1.5 (deployed 2026-02-19, 18 code review fixes applied)
+**Status:** COMPLETE (except G-046 blocker) — All 4 phases done + deployed
+**Version:** v1.6 (Phase 4 deployed 2026-02-19)
 **Priority:** Dept 1 (highest priority in Master Gap Closure Roadmap)
 **Parent:** `docs/plans/2026-02-19-master-gap-closure-roadmap.md`
 
@@ -26,7 +26,7 @@
 | Phase 2 Frontend | COMPLETE | trips/page.tsx (881L), my-delivery/page.tsx (575L), dispatch API proxy routes, hooks added. Existing pages already built. |
 | Phase 3 Frontend | COMPLETE | Commissary pages already existed. Added `approveRequisition` + `checkFeasibility` hooks + API proxy actions. |
 | Code Review | COMPLETE | 3 parallel reviewers (backend, frontend, API contracts). 18 fixes applied (7 P0, 8 P1, 3 P2). |
-| Phase 4 SHOULD-HAVE | NOT STARTED | Enhancements (wastage trends, route mgmt, 3PL billing) |
+| Phase 4 SHOULD-HAVE | COMPLETE | G-050 wastage trends, G-012 route CRUD, G-122 3PL billing + EWT |
 
 ### Deployment Log
 
@@ -34,6 +34,8 @@
 |------|------|--------|------|
 | 2026-02-19 | BEI-ERP | `0bcd260` | Phase 0-3 backend: commissary split, RBAC, credit notes, 9 review fixes |
 | 2026-02-19 | bei-tasks | `6461ed7` | Phase 2-3 frontend: trips, my-delivery pages, API proxies, 9 review fixes |
+| 2026-02-19 | BEI-ERP | `5329529` | Phase 4 backend: wastage trends endpoint, 3PL EWT fields + DM-1 compliant JEs |
+| 2026-02-19 | bei-tasks | `42e159f` | Phase 4 frontend: wastage trends page, route CRUD, 3PL billing reconciliation UI |
 
 ### Code Review Findings (Resolved)
 
