@@ -11,19 +11,11 @@ from frappe import _
 from frappe.utils import nowdate, now_datetime, flt
 
 
-# RBAC roles for SCM module
-SCM_ADMIN_ROLES = {"HR Manager", "Warehouse Manager", "System Manager"}
-SCM_DISPATCH_ROLES = {"HR Manager", "Warehouse Manager", "Logistics Coordinator", "System Manager"}
-SCM_STORE_ROLES = {"Store Staff", "Store Supervisor", "Area Supervisor", "Warehouse User", "System Manager"}
-
-def _check_scm_permission(allowed_roles, action="access this resource"):
-    """Check if current user has any of the allowed roles."""
-    user_roles = set(frappe.get_roles(frappe.session.user))
-    if not user_roles.intersection(allowed_roles):
-        frappe.throw(
-            _("You do not have permission to {0}").format(action),
-            frappe.PermissionError
-        )
+# P0-10: Import centralized RBAC role sets
+from hrms.utils.scm_roles import (
+    SCM_ADMIN_ROLES, SCM_DISPATCH_ROLES, SCM_STORE_ROLES,
+    check_scm_permission as _check_scm_permission
+)
 
 
 @frappe.whitelist()
@@ -268,17 +260,31 @@ def get_route_progress(trip_name):
             "exception_reason": stop.exception_reason
         })
 
+    total = len(trip.stops)
     delivered = sum(1 for s in trip.stops if s.status == "Delivered")
     exceptions = sum(1 for s in trip.stops if s.status in ["Store Closed", "Refused"])
+    progress_pct = round((delivered / total * 100), 1) if total > 0 else 0
+
+    current_stop = None
+    next_stop = None
+    for i, stop in enumerate(stops):
+        if stop.get("status") not in ("Delivered", "Store Closed", "Refused"):
+            current_stop = stop.get("store") or stop.get("warehouse")
+            if i + 1 < total:
+                next_stop = stops[i + 1].get("store") or stops[i + 1].get("warehouse")
+            break
 
     return {
         "trip_name": trip.name,
         "status": trip.status,
         "departure_time": str(trip.departure_time) if trip.departure_time else None,
-        "total_stops": len(trip.stops),
+        "total_stops": total,
         "delivered": delivered,
         "exceptions": exceptions,
-        "pending": len(trip.stops) - delivered - exceptions,
+        "pending": total - delivered - exceptions,
+        "progress_pct": progress_pct,
+        "current_stop": current_stop,
+        "next_stop": next_stop,
         "stops": stops
     }
 
@@ -342,6 +348,12 @@ FRANCHISE_MARKUP = 1.08
 
 def _create_delivery_billing(trip_name, stop_idx):
     """Create a BEI Billing Schedule for a delivery stop. Runs async via enqueue."""
+    # G-067: Feature flag — billing is enabled by default.
+    # Set BEI Settings.enable_delivery_billing = 0 to disable.
+    billing_enabled = frappe.db.get_single_value("BEI Settings", "enable_delivery_billing")
+    if billing_enabled is not None and not billing_enabled:
+        return
+
     trip = frappe.get_doc("BEI Distribution Trip", trip_name)
     stop = trip.stops[int(stop_idx) - 1]
 
@@ -419,7 +431,7 @@ def _create_delivery_billing(trip_name, stop_idx):
         frappe.db.release_savepoint(sp)
 
     except Exception as e:
-        frappe.db.rollback_to_savepoint(sp)
+        frappe.db.rollback(save_point=sp)
         frappe.log_error(
             f"Failed to create billing for {trip_name} stop {stop_idx}: {str(e)}",
             "Billing Creation Error"
@@ -430,6 +442,17 @@ def _create_delivery_billing(trip_name, stop_idx):
             trip.save(ignore_permissions=True)
         except Exception:
             pass
+
+        # G-101: Send Chat alert on billing failure
+        try:
+            from hrms.api.google_chat import send_message_to_space
+            from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+            send_message_to_space(
+                get_chat_space(SPACE_NOTIFICATIONS),
+                f"*Billing Creation Failed*\nTrip: {trip_name}\nStop: {stop_idx}\nError: {str(e)[:200]}"
+            )
+        except Exception:
+            pass  # notification failure must not cascade
 
 
 def _fail_stop(trip, stop, savepoint, error_message, title="Missing Delivery Rate"):
@@ -518,12 +541,20 @@ def _calculate_eta(trip, my_stop_order):
     if stops_remaining < 0:
         stops_remaining = 0
 
-    # ETA = 20 minutes per stop
-    eta_minutes = stops_remaining * 20
+    # G-003/G-073: Use per-stop estimated_minutes if available, fallback to 20 min/stop
+    DEFAULT_MINUTES_PER_STOP = 20
+    eta_minutes = 0
+    cumulative_minutes = 0  # for scheduled arrival calculation
+    for stop in sorted(trip.stops, key=lambda s: s.stop_order):
+        stop_time = getattr(stop, "estimated_minutes", None) or DEFAULT_MINUTES_PER_STOP
+        if stop.stop_order > last_delivered and stop.stop_order <= my_stop_order:
+            eta_minutes += stop_time
+        if stop.stop_order <= my_stop_order:
+            cumulative_minutes += stop_time
 
     # Calculate arrival window (±15 minutes from scheduled time)
     departure_dt = get_datetime(trip.departure_time)
-    scheduled_arrival = add_to_date(departure_dt, minutes=(my_stop_order - 1) * 20)
+    scheduled_arrival = add_to_date(departure_dt, minutes=cumulative_minutes)
     window_start = add_to_date(scheduled_arrival, minutes=-15)
     window_end = add_to_date(scheduled_arrival, minutes=15)
 
@@ -571,15 +602,18 @@ def _get_items_preview(store_order):
 def _send_delivery_notification(driver, store, eta_range):
     """
     Send Google Chat notification for "1 stop away" alert.
+    G-003: Routes to per-store Chat space first, falls back to global.
     MUST NOT block delivery confirmation if it fails.
     """
     from hrms.api.google_chat import send_message_to_space
-
     from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
-    space = get_chat_space(SPACE_NOTIFICATIONS)
+
+    # G-003: Try per-store Chat space first, fall back to global
+    store_space = frappe.db.get_value("Warehouse", store, "custom_gchat_space")
+    space = store_space or get_chat_space(SPACE_NOTIFICATIONS)
 
     message = (
-        f"🚚 *Delivery Update*\n\n"
+        f"*Delivery Update*\n\n"
         f"Driver *{driver}* is 1 stop away from *{store}*.\n"
         f"ETA: {eta_range}\n\n"
         f"Please prepare receiving area."
@@ -891,6 +925,19 @@ def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None
         frappe.throw(_("Route is not active"))
 
     trip_date = trip_date or nowdate()
+
+    # G-069: UX pre-check for duplicate trip (DB constraint is the real guard)
+    existing_trip = frappe.db.get_value(
+        "BEI Distribution Trip",
+        {"route_name": route_name, "trip_date": trip_date},
+        "name"
+    )
+    if existing_trip:
+        frappe.throw(
+            _("A trip already exists for route '{0}' on {1}: {2}").format(
+                route_name, trip_date, existing_trip
+            )
+        )
 
     # Resolve vehicle details
     vehicle_plate = None

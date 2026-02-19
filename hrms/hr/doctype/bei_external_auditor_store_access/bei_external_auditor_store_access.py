@@ -10,4 +10,7 @@ class BEIExternalAuditorStoreAccess(Document):
 	Defines which warehouses/stores an External Auditor can access.
 	Used by inventory.py APIs to filter accessible stores.
 	"""
-	pass
+	def validate(self):
+		if frappe.db.exists("BEI External Auditor Store Access",
+			{"user": self.user, "warehouse": self.warehouse, "name": ["!=", self.name]}):
+			frappe.throw(f"Access already granted for {self.user} to {self.warehouse}")

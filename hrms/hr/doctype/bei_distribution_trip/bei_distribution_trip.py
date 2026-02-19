@@ -8,8 +8,24 @@ from frappe.utils import now_datetime
 
 class BEIDistributionTrip(Document):
     def validate(self):
+        self.validate_unique_route_date()
         self.validate_stops()
         self.update_status()
+
+    def validate_unique_route_date(self):
+        """G-069: Prevent duplicate trips for the same route + date."""
+        if not self.route_name or not self.trip_date:
+            return
+        existing = frappe.db.get_value(
+            "BEI Distribution Trip",
+            {"route_name": self.route_name, "trip_date": self.trip_date, "name": ["!=", self.name]},
+            "name"
+        )
+        if existing:
+            frappe.throw(
+                f"A trip already exists for route '{self.route_name}' on {self.trip_date}: {existing}",
+                frappe.DuplicateEntryError
+            )
 
     def validate_stops(self):
         if not self.stops:

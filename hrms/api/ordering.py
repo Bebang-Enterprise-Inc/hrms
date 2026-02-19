@@ -11,20 +11,11 @@ from frappe import _
 from frappe.utils import today, now, getdate, get_time, nowdate, now_datetime
 
 
-# RBAC role groups (match dispatch.py pattern)
-ORDERING_STORE_ROLES = {"Store Staff", "Store Supervisor", "Store OIC", "System Manager"}
-ORDERING_WAREHOUSE_ROLES = {"HR Manager", "Warehouse Manager", "System Manager"}
-ORDERING_APPROVAL_ROLES = {"Area Supervisor", "HR Manager", "Warehouse Manager", "System Manager"}
-
-
-def _check_ordering_permission(allowed_roles, action="access this resource"):
-    """Check if current user has any of the allowed roles."""
-    user_roles = set(frappe.get_roles(frappe.session.user))
-    if not user_roles.intersection(allowed_roles):
-        frappe.throw(
-            _("You do not have permission to {0}").format(action),
-            frappe.PermissionError
-        )
+# P0-10: Import centralized RBAC role sets
+from hrms.utils.scm_roles import (
+    ORDERING_STORE_ROLES, ORDERING_WAREHOUSE_ROLES, ORDERING_APPROVAL_ROLES,
+    check_scm_permission as _check_ordering_permission
+)
 
 
 def _get_suggested_qty(store, item_code):
@@ -263,6 +254,52 @@ def submit_order(store, items, cargo_category, delivery_date=None, is_emergency=
     }
 
 
+def _generate_dr_internal(order_name, order=None):
+    """
+    Internal DR generation without permission check.
+    Called from approve_order() which already verified permissions.
+    """
+    if not order:
+        order = frappe.get_doc("BEI Store Order", order_name)
+
+    # Generate DR number: DR + 7-digit auto-increment
+    try:
+        result = frappe.db.sql(
+            "SELECT MAX(CAST(SUBSTRING(name, 3) AS UNSIGNED)) FROM `tabBEI Delivery Receipt`"
+        )
+        last_num = result[0][0] if result and result[0][0] else 0
+    except Exception:
+        last_num = 0
+
+    dr_number = "DR{:07d}".format(last_num + 1)
+
+    # Log the DR generation as a comment on the order
+    frappe.get_doc({
+        "doctype": "Comment",
+        "comment_type": "Info",
+        "reference_doctype": "BEI Store Order",
+        "reference_name": order_name,
+        "content": _("Delivery Receipt generated: {0}").format(dr_number),
+    }).insert(ignore_permissions=True)
+
+    # Send GChat notification to store (pattern from dispatch.py)
+    try:
+        _send_order_notification(
+            store=order.store,
+            message=_("Delivery Receipt {0} has been generated for your order {1}. "
+                      "Delivery scheduled for {2}.").format(
+                dr_number, order_name, order.delivery_date or "TBD"
+            )
+        )
+    except Exception as e:
+        frappe.log_error(f"GChat notification failed for DR {dr_number}: {e}", "Ordering API")
+
+    return {
+        "dr_number": dr_number,
+        "items_count": len(order.items),
+    }
+
+
 @frappe.whitelist()
 def generate_dr(order_name):
     """
@@ -285,67 +322,7 @@ def generate_dr(order_name):
             )
         )
 
-    # Generate DR number: DR + 7-digit auto-increment
-    try:
-        result = frappe.db.sql(
-            "SELECT MAX(CAST(SUBSTRING(name, 3) AS UNSIGNED)) FROM `tabBEI Delivery Receipt`"
-        )
-        last_num = result[0][0] if result and result[0][0] else 0
-    except Exception:
-        # BEI Delivery Receipt DocType may not exist yet — start from 1
-        last_num = 0
-
-    dr_number = "DR{:07d}".format(last_num + 1)
-
-    # Log the DR generation as a comment on the order
-    frappe.get_doc({
-        "doctype": "Comment",
-        "comment_type": "Info",
-        "reference_doctype": "BEI Store Order",
-        "reference_name": order_name,
-        "content": _("Delivery Receipt generated: {0}").format(dr_number),
-    }).insert(ignore_permissions=True)
-
-    # Build DR data payload (PDF generation is a Phase 1B later task)
-    dr_data = {
-        "dr_number": dr_number,
-        "order_name": order_name,
-        "store": order.store,
-        "order_date": str(order.order_date),
-        "delivery_date": str(order.delivery_date) if order.delivery_date else "",
-        "cargo_category": order.cargo_category,
-        "approved_by": order.approved_by,
-        "approved_at": str(order.approved_at) if order.approved_at else "",
-        "items": [
-            {
-                "item_code": item.item_code,
-                "item_name": item.item_name,
-                "uom": item.uom,
-                "qty_approved": item.qty_approved or item.qty_requested,
-                "unit_price": item.unit_price,
-                "amount": item.amount,
-            }
-            for item in order.items
-        ],
-        "items_count": len(order.items),
-    }
-
-    # Send GChat notification to store (pattern from dispatch.py)
-    try:
-        _send_order_notification(
-            store=order.store,
-            message=_("Delivery Receipt {0} has been generated for your order {1}. "
-                      "Delivery scheduled for {2}.").format(
-                dr_number, order_name, order.delivery_date or "TBD"
-            )
-        )
-    except Exception as e:
-        frappe.log_error(f"GChat notification failed for DR {dr_number}: {e}", "Ordering API")
-
-    return {
-        "dr_number": dr_number,
-        "items_count": len(order.items),
-    }
+    return _generate_dr_internal(order_name, order)
 
 
 @frappe.whitelist()
@@ -443,8 +420,9 @@ def approve_order(order_name, adjustments=None):
     order.approved_at = now()
     order.save(ignore_permissions=True)
 
-    # Auto-trigger DR generation after approval
-    dr_result = generate_dr(order_name)
+    # Auto-trigger DR generation after approval (using internal function
+    # to avoid permission conflict — approve_order already checked permissions)
+    dr_result = _generate_dr_internal(order_name, order)
 
     return {
         "status": "Approved",

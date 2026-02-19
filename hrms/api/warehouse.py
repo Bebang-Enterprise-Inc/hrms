@@ -9,6 +9,7 @@ Author: Claude Code
 Date: 2026-02-02
 """
 from hrms.utils.bei_config import get_company
+from hrms.utils.scm_roles import check_scm_permission, SCM_APPROVAL_ROLES
 
 import frappe
 from frappe import _
@@ -23,7 +24,8 @@ import json
 def get_pending_purchase_orders():
     """
     Get POs pending receipt at warehouse.
-    Returns POs with status='To Receive and Bill' or 'To Receive'
+    Returns POs with status='To Receive and Bill' or 'To Receive'.
+    P0-12 fix: Batch items fetch into single query (was N+1).
     """
     pos = frappe.get_all(
         "Purchase Order",
@@ -39,13 +41,24 @@ def get_pending_purchase_orders():
         limit=50
     )
 
-    # Add item summary for each PO
+    if not pos:
+        return {"success": True, "data": []}
+
+    # P0-12: Batch-fetch all items for all POs in a single query
+    po_names = [po.name for po in pos]
+    all_items = frappe.get_all(
+        "Purchase Order Item",
+        filters={"parent": ["in", po_names]},
+        fields=["parent", "item_code", "item_name", "qty", "received_qty", "uom"]
+    )
+
+    # Group items by PO
+    items_by_po = {}
+    for item in all_items:
+        items_by_po.setdefault(item.parent, []).append(item)
+
     for po in pos:
-        items = frappe.get_all(
-            "Purchase Order Item",
-            filters={"parent": po.name},
-            fields=["item_code", "item_name", "qty", "received_qty", "uom"]
-        )
+        items = items_by_po.get(po.name, [])
         po["items"] = items
         po["items_count"] = len(items)
         po["pending_items"] = sum(1 for i in items if i.qty > i.received_qty)
@@ -269,6 +282,8 @@ def approve_material_request(mr_name=None, approved_items=None):
         mr_name: Material Request name
         approved_items: JSON array of {item_code, approved_qty}
     """
+    check_scm_permission(SCM_APPROVAL_ROLES, "approve material requests")
+
     if not mr_name or not approved_items:
         frappe.throw(_("Missing required parameters: mr_name, approved_items"), frappe.ValidationError)
     if isinstance(approved_items, str):
@@ -276,6 +291,14 @@ def approve_material_request(mr_name=None, approved_items=None):
 
     if not frappe.db.exists("Material Request", mr_name):
         frappe.throw(_("Material Request not found"))
+
+    # G-102: Row lock to prevent double-approval race condition
+    current_status = frappe.db.sql(
+        "SELECT status FROM `tabMaterial Request` WHERE name = %s FOR UPDATE",
+        mr_name
+    )[0][0]
+    if current_status == "Ordered":
+        frappe.throw(_("Material Request {0} has already been approved").format(mr_name))
 
     mr = frappe.get_doc("Material Request", mr_name)
 
@@ -292,6 +315,12 @@ def approve_material_request(mr_name=None, approved_items=None):
         "content": f"Approved by {frappe.session.user}. Quantities: " + ", ".join(approval_summary)
     }).insert(ignore_permissions=True)
 
+    # P0-3 fix: Actually update MR status (previously only added comment)
+    frappe.db.set_value("Material Request", mr_name, {
+        "status": "Ordered",
+        "per_ordered": 100
+    })
+
     return {
         "success": True,
         "message": f"Material Request {mr_name} approved"
@@ -303,6 +332,8 @@ def reject_material_request(mr_name=None, reason=None):
     """
     Reject/cancel a Material Request.
     """
+    check_scm_permission(SCM_APPROVAL_ROLES, "reject material requests")
+
     if not mr_name or not reason:
         frappe.throw(_("Missing required parameters: mr_name, reason"), frappe.ValidationError)
     if not frappe.db.exists("Material Request", mr_name):

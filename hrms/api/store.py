@@ -8,6 +8,7 @@ Handles store ordering, receiving, and FQI reports for my.bebang.ph
 
 import frappe
 from hrms.utils.bei_config import get_company
+from hrms.utils.scm_roles import check_scm_permission, SCM_APPROVAL_ROLES
 from frappe import _
 from frappe.utils import nowdate, add_days, now_datetime, flt
 import json
@@ -751,6 +752,15 @@ def create_store_return(receiving, items, reason, photo=None):
     receiving_doc = frappe.get_doc("BEI Store Receiving", receiving)
     store = receiving_doc.store
 
+    # G-100: Idempotency — check if a return Stock Entry already exists for this receiving
+    existing_return = frappe.db.exists("Stock Entry", {
+        "stock_entry_type": "Material Transfer",
+        "remarks": ["like", f"%Receiving: {receiving}%"],
+        "docstatus": ["<", 2]
+    })
+    if existing_return:
+        frappe.throw(_("A return already exists for receiving {0}: {1}").format(receiving, existing_return))
+
     # Resolve commissary warehouse
     from hrms.api.commissary import get_commissary_warehouse
     commissary_warehouse = get_commissary_warehouse()
@@ -804,6 +814,18 @@ def create_store_return(receiving, items, reason, photo=None):
         frappe.log_error(f"Store return Stock Entry failed for {receiving}", "Store Return Error")
         frappe.throw(_("Failed to create store return. Please try again."))
 
+    # G-002 Task 2D: Notify commissary of new return request
+    try:
+        from hrms.api.google_chat import send_message_to_space, get_chat_space, SPACE_NOTIFICATIONS
+        store_name = store.replace(" - BEI", "") if store else "Unknown"
+        msg = f"New Store Return Request: {se.name}\n"
+        msg += f"Store: {store_name} | Items: {len(se.items)}\n"
+        msg += f"Reason: {reason}"
+        space = get_chat_space(SPACE_NOTIFICATIONS)
+        send_message_to_space(space, msg)
+    except Exception:
+        frappe.log_error(f"Return notification failed for {se.name}", "Store Return Notification Error")
+
     return {
         "success": True,
         "stock_entry": se.name,
@@ -814,12 +836,15 @@ def create_store_return(receiving, items, reason, photo=None):
 @frappe.whitelist()
 def process_store_return(stock_entry_name):
     """
-    Process (acknowledge) a submitted store return Stock Entry.
-    Updates the corresponding receiving items' status.
+    Process a submitted store return Stock Entry.
+    G-002: Creates credit note (BEI Billing Schedule) + GL Journal Entry
+    to reverse pro-rata franchise fees on returned items.
 
     Args:
         stock_entry_name: Submitted Stock Entry for the return
     """
+    check_scm_permission(SCM_APPROVAL_ROLES, "process store returns")
+
     se = frappe.get_doc("Stock Entry", stock_entry_name)
 
     if se.docstatus != 1:
@@ -828,24 +853,199 @@ def process_store_return(stock_entry_name):
     if se.stock_entry_type != "Material Transfer":
         frappe.throw(_("Not a valid store return entry"))
 
-    # Extract receiving name from remarks: "Store Return from ... | Receiving: BEI-RCV-... | ..."
+    # Extract receiving name and store from remarks
     receiving_name = None
-    if se.remarks and "Receiving:" in se.remarks:
+    store = se.from_warehouse
+    reason = ""
+    if se.remarks:
         for part in se.remarks.split("|"):
             part = part.strip()
             if part.startswith("Receiving:"):
                 receiving_name = part.replace("Receiving:", "").strip()
-                break
+            elif part.startswith("Reason:"):
+                reason = part.replace("Reason:", "").strip()
+
+    # G-002 Task 2B: Create credit note with GL JE
+    credit_note_name = None
+    jv_name = None
+
+    # Find the most recent billing for this store to calculate pro-rata reversal
+    original_billing = _find_original_billing(store)
+
+    if original_billing:
+        # DM-2: Atomicity via savepoint
+        frappe.db.savepoint("store_return_credit")
+        try:
+            # Calculate return value ratio (value/value = dimensionless, not qty/currency)
+            return_value = flt(se.total_outgoing_value or 0)
+            billed_value = flt(original_billing.get("total_billed_value")) or 1
+            ratio = min(return_value / billed_value, 1.0) if billed_value > 0 else 0
+
+            # Pro-rata fee reversal
+            royalty_rev = round(flt(original_billing.get("royalty_fee", 0)) * ratio, 2)
+            mgmt_rev = round(flt(original_billing.get("management_fee", 0)) * ratio, 2)
+            marketing_rev = round(flt(original_billing.get("marketing_fee", 0)) * ratio, 2)
+            ecomm_rev = round(flt(original_billing.get("ecommerce_fee", 0)) * ratio, 2)
+            total_credit = royalty_rev + mgmt_rev + marketing_rev + ecomm_rev
+
+            if total_credit > 0:
+                # Step 2: Create BEI Billing Schedule (credit note record)
+                cn = frappe.new_doc("BEI Billing Schedule")
+                cn.billing_type = "Credit Note"
+                cn.naming_series = "BILL-CN-.YYYY.-.#####"
+                cn.store = original_billing.get("store")
+                cn.billing_period_start = nowdate()
+                cn.billing_period_end = nowdate()
+                cn.status = "Unpaid"
+                cn.royalty_fee = -royalty_rev
+                cn.management_fee = -mgmt_rev
+                cn.marketing_fee = -marketing_rev
+                cn.ecommerce_fee = -ecomm_rev
+                cn.subtotal = -total_credit
+                cn.vat_amount = 0
+                cn.total_amount = -total_credit
+                cn.remarks = f"Credit Note for Store Return {se.name} | {store} | {reason}"
+                cn.flags.ignore_mandatory = True
+                cn.insert(ignore_permissions=True)
+                credit_note_name = cn.name
+
+                # Step 3: Post GL Journal Entry (DM-1 compliant)
+                store_cost_center = _get_store_cost_center(store)
+                store_customer = _get_store_customer(store)
+
+                jv_accounts = []
+                # Debit fee income accounts (reversing revenue)
+                if royalty_rev > 0:
+                    jv_accounts.append({
+                        "account": "4000301 - ROYALTY FEE INCOME - BEI",
+                        "debit_in_account_currency": royalty_rev,
+                        "cost_center": store_cost_center,
+                    })
+                if mgmt_rev > 0:
+                    jv_accounts.append({
+                        "account": "4000302 - MANAGEMENT FEE INCOME - BEI",
+                        "debit_in_account_currency": mgmt_rev,
+                        "cost_center": store_cost_center,
+                    })
+                if marketing_rev > 0:
+                    jv_accounts.append({
+                        "account": "4000303 - MARKETING FEE INCOME - BEI",
+                        "debit_in_account_currency": marketing_rev,
+                        "cost_center": store_cost_center,
+                    })
+                if ecomm_rev > 0:
+                    jv_accounts.append({
+                        "account": "4000304 - ECOMMERCE FEE INCOME - BEI",
+                        "debit_in_account_currency": ecomm_rev,
+                        "cost_center": store_cost_center,
+                    })
+
+                # Credit AR — DM-1: party ONLY on this AR row
+                jv_accounts.append({
+                    "account": "1103101 - ACCOUNTS RECEIVABLE - TRADE - BEI",
+                    "credit_in_account_currency": total_credit,
+                    "party_type": "Customer",
+                    "party": store_customer,
+                    "cost_center": store_cost_center,
+                })
+
+                jv = frappe.get_doc({
+                    "doctype": "Journal Entry",
+                    "voucher_type": "Credit Note",
+                    "posting_date": nowdate(),
+                    "company": get_company(),
+                    "user_remark": f"Credit Note for Store Return {se.name} | {store} | {reason}",
+                    "cheque_no": stock_entry_name,
+                    "cheque_date": frappe.utils.today(),
+                    "accounts": jv_accounts,
+                })
+                jv.insert(ignore_permissions=True)
+                jv.submit()
+                jv_name = jv.name
+
+            frappe.db.release_savepoint("store_return_credit")
+        except Exception:
+            frappe.db.rollback(save_point="store_return_credit")
+            frappe.log_error(f"Credit note creation failed for return {se.name}", "Store Return Credit Note Error")
+            frappe.throw(_("Failed to create credit note for store return. Please try again."))
+
+    # G-002 Task 2D: Notification OUTSIDE savepoint — failure must NOT roll back
+    try:
+        _notify_return_processed(se, store, reason, credit_note_name)
+    except Exception:
+        frappe.log_error(f"Return notification failed for {se.name}", "Store Return Notification Error")
 
     result = {
         "success": True,
         "stock_entry": se.name,
         "receiving": receiving_name,
         "items_returned": len(se.items),
-        "message": f"Return {se.name} processed — {len(se.items)} item(s) confirmed returned to commissary"
+        "credit_note": credit_note_name,
+        "journal_entry": jv_name,
+        "message": f"Return {se.name} processed — {len(se.items)} item(s) returned, credit note: {credit_note_name or 'N/A'}"
     }
 
     return result
+
+
+def _find_original_billing(store):
+    """Find the most recent billing for a store to calculate pro-rata fee reversal."""
+    billing = frappe.db.sql("""
+        SELECT name, store, royalty_fee, management_fee, marketing_fee,
+               ecommerce_fee, subtotal, total_amount
+        FROM `tabBEI Billing Schedule`
+        WHERE store = %s
+        AND billing_type IN ('Monthly Fees', 'Delivery')
+        AND docstatus < 2
+        ORDER BY billing_period_end DESC
+        LIMIT 1
+    """, store, as_dict=True)
+
+    if not billing:
+        return None
+
+    result = billing[0]
+    # total_billed_value is the PHP value used for pro-rata ratio (value / value = dimensionless)
+    result["total_billed_value"] = flt(result.get("total_amount", 0)) or 1
+    return result
+
+
+def _get_store_cost_center(store):
+    """Get cost center for a store warehouse."""
+    cost_center = frappe.db.get_value("Warehouse", store, "custom_cost_center")
+    if not cost_center:
+        cost_center = frappe.db.get_value("Company", get_company(), "cost_center")
+    return cost_center
+
+
+def _get_store_customer(store):
+    """Get the Customer linked to a store for AR party field (DM-1)."""
+    # Try to find a Customer with the same name as the warehouse
+    store_name = store.replace(" - BEI", "") if store else ""
+    customer = frappe.db.get_value("Customer", {"customer_name": ["like", f"%{store_name}%"]}, "name")
+    if not customer:
+        frappe.throw(_(f"No Customer record found for store '{store_name}'. Create a Customer first."))
+    return customer
+
+
+def _notify_return_processed(se, store, reason, credit_note_name):
+    """G-002 Task 2D: Send Google Chat notification when return is processed."""
+    try:
+        from hrms.api.google_chat import send_message_to_space, get_chat_space, SPACE_NOTIFICATIONS
+        store_name = store.replace(" - BEI", "") if store else "Unknown"
+        items_count = len(se.items)
+        msg = f"Store Return Processed: {se.name}\n"
+        msg += f"Store: {store_name} | Items: {items_count}\n"
+        if reason:
+            msg += f"Reason: {reason}\n"
+        if credit_note_name:
+            msg += f"Credit Note: {credit_note_name}"
+
+        # Notify commissary space
+        space = get_chat_space(SPACE_NOTIFICATIONS)
+        send_message_to_space(space, msg)
+    except ImportError:
+        pass
 
 
 # ==============================================================================

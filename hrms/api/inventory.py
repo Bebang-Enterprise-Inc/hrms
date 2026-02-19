@@ -85,6 +85,10 @@ def submit_cycle_count(store=None, items=None, count_date=None):
 def get_cycle_counts(store=None, date_from=None, date_to=None, status=None,
                      count_type=None, external_auditor=None, limit=20):
     """Get cycle count history with filtering."""
+    # External Auditors: verify store access when filtering by store
+    if store and "External Auditor" in frappe.get_roles():
+        _check_store_access(store)
+
     limit = min(int(limit or 20), 500)
     filters = {}
     if store:
@@ -173,55 +177,59 @@ def get_cycle_count(name):
 
 
 @frappe.whitelist()
-def approve_cycle_count(count_name):
-    """Approve a submitted cycle count."""
-    allowed_roles = ["Area Supervisor", "Store Supervisor", "System Manager"]
-    if not any(r in frappe.get_roles(frappe.session.user) for r in allowed_roles):
-        frappe.throw(_("Not authorized to approve cycle counts"), frappe.PermissionError)
+def approve_cycle_count(cycle_count_name, action, comment=None):
+    """Approve or reject a submitted cycle count.
 
-    doc = frappe.get_doc("BEI Cycle Count", count_name)
+    Args:
+        action: "Approve" or "Reject"
+        comment: Mandatory for rejection
+    """
+    if isinstance(action, str) and action not in ("Approve", "Reject"):
+        frappe.throw(_("Invalid action. Must be 'Approve' or 'Reject'."))
 
-    if doc.status not in ["Submitted", "Resubmitted"]:
-        frappe.throw(_("Only submitted cycle counts can be approved"))
+    doc = frappe.get_doc("BEI Cycle Count", cycle_count_name)
+    doc.check_permission("write")
 
-    doc.status = "Verified"
-    doc.approved_by = frappe.session.user
-    doc.approved_at = nowdate()
-    doc.save()
+    # C-2 fix: Guard against approving non-submitted docs
+    if doc.docstatus != 1:
+        frappe.throw(_("Only submitted cycle counts can be approved/rejected."))
+    if doc.status not in ("Submitted", "Resubmitted"):
+        frappe.throw(_("This cycle count has already been {0}.").format(doc.status))
 
-    # Auto-export COS RECON on approval (BL-11-3)
-    try:
-        export_result = export_count_to_cos_recon(count_name)
-        return {
-            "success": True,
-            "message": _("Cycle count approved and COS RECON exported"),
-            "cos_recon": export_result
-        }
-    except Exception as e:
-        frappe.log_error(f"COS RECON auto-export failed for {count_name}: {e}", "COS RECON Auto-Export")
-        return {"success": True, "message": _("Cycle count approved (COS RECON export failed — please export manually)")}
+    # AUDIT-10: Role gate — only supervisors and above can approve/reject
+    allowed_roles = {"Store Supervisor", "Area Supervisor", "System Manager", "Administrator"}
+    user_roles = set(frappe.get_roles())
+    if not user_roles.intersection(allowed_roles):
+        frappe.throw(_("You do not have permission to approve/reject cycle counts."), frappe.PermissionError)
+
+    # AUDIT-10: Self-approval prevention
+    if doc.counted_by == frappe.session.user:
+        frappe.throw(_("You cannot approve your own cycle count."))
+
+    if action == "Reject":
+        if not comment:
+            frappe.throw(_("A comment is mandatory when rejecting a cycle count."))
+        doc.status = "Rejected"
+        doc.rejection_reason = comment
+        doc.save()
+        doc.add_comment("Comment", comment)
+    else:
+        doc.status = "Approved"
+        doc.approved_by = frappe.session.user
+        doc.approved_at = now_datetime()
+        doc.save()
+
+    return {"status": doc.status, "approved_by": doc.approved_by}
 
 
 @frappe.whitelist()
 def reject_cycle_count(count_name, rejection_reason):
-    """Reject a submitted cycle count with a reason."""
-    allowed_roles = ["Area Supervisor", "Store Supervisor", "System Manager"]
-    if not any(r in frappe.get_roles(frappe.session.user) for r in allowed_roles):
-        frappe.throw(_("Not authorized to reject cycle counts"), frappe.PermissionError)
+    """Reject a submitted cycle count with a reason.
 
-    if not rejection_reason:
-        frappe.throw(_("Rejection reason is required"))
-
-    doc = frappe.get_doc("BEI Cycle Count", count_name)
-
-    if doc.status not in ["Submitted", "Resubmitted"]:
-        frappe.throw(_("Only submitted cycle counts can be rejected"))
-
-    doc.status = "Rejected"
-    doc.rejection_reason = rejection_reason
-    doc.save()
-
-    return {"success": True, "message": _("Cycle count rejected")}
+    DEPRECATED: Use approve_cycle_count(cycle_count_name, action="Reject", comment=rejection_reason) instead.
+    Kept for backward compatibility with existing frontend calls.
+    """
+    return approve_cycle_count(count_name, action="Reject", comment=rejection_reason)
 
 
 @frappe.whitelist()
@@ -640,61 +648,70 @@ def _check_store_access(store):
 @frappe.whitelist()
 def get_items_for_count(store, count_type=None):
     """Return items with recent stock movement, grouped by category."""
-    # External Auditors: verify store access
-    _check_store_access(store)
+    try:
+        # External Auditors: verify store access
+        _check_store_access(store)
 
-    warehouse = _resolve_warehouse(store)
-    if not warehouse:
-        frappe.throw(f"No warehouse found for store {store}")
+        warehouse = _resolve_warehouse(store)
+        if not warehouse:
+            frappe.throw(_("No warehouse found for store {0}").format(store))
 
-    # Single batch query — avoids N+1 (161 queries → 1)
-    items = frappe.db.sql("""
-        SELECT DISTINCT
-            i.name as item_code, i.item_name, i.item_group,
-            i.stock_uom as uom, i.valuation_rate as unit_cost,
-            COALESCE(bin.actual_qty, 0) as system_qty,
-            COALESCE(ucd.conversion_factor, 1.0) as conversion_factor
-        FROM `tabStock Ledger Entry` sle
-        JOIN `tabItem` i ON i.name = sle.item_code
-        LEFT JOIN `tabBin` bin ON bin.item_code = i.name AND bin.warehouse = %(warehouse)s
-        LEFT JOIN `tabUOM Conversion Detail` ucd ON ucd.parent = i.name AND ucd.uom = i.stock_uom
-        WHERE sle.warehouse = %(warehouse)s
-          AND sle.posting_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
-          AND i.is_stock_item = 1
-        ORDER BY i.item_group, i.item_name
-    """, {"warehouse": warehouse}, as_dict=1)
-
-    # Fallback: if SLE is empty (pre-cutover or new store), return all stock items
-    if not items:
+        # Single batch query — avoids N+1 (161 queries → 1)
         items = frappe.db.sql("""
-            SELECT i.name as item_code, i.item_name, i.item_group,
-                   i.stock_uom as uom, i.valuation_rate as unit_cost,
-                   0 as system_qty, 1.0 as conversion_factor
-            FROM `tabItem` i
-            WHERE i.is_stock_item = 1
-              AND i.item_group IN ('Raw Materials', 'Finished Goods', 'Packaging Materials', 'Consumables')
+            SELECT DISTINCT
+                i.name as item_code, i.item_name, i.item_group,
+                i.stock_uom as uom, i.valuation_rate as unit_cost,
+                COALESCE(bin.actual_qty, 0) as system_qty,
+                COALESCE(ucd.conversion_factor, 1.0) as conversion_factor
+            FROM `tabStock Ledger Entry` sle
+            JOIN `tabItem` i ON i.name = sle.item_code
+            LEFT JOIN `tabBin` bin ON bin.item_code = i.name AND bin.warehouse = %(warehouse)s
+            LEFT JOIN `tabUOM Conversion Detail` ucd ON ucd.parent = i.name AND ucd.uom = i.stock_uom
+            WHERE sle.warehouse = %(warehouse)s
+              AND sle.posting_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
+              AND i.is_stock_item = 1
             ORDER BY i.item_group, i.item_name
-        """, as_dict=1)
+        """, {"warehouse": warehouse}, as_dict=1)
 
-    # Group by category for frontend display
-    grouped = {}
-    for item in items:
-        group = _map_item_group(item.item_group)
-        grouped.setdefault(group, []).append(item)
+        # Fallback: if SLE is empty (pre-cutover or new store), return all stock items
+        if not items:
+            items = frappe.db.sql("""
+                SELECT i.name as item_code, i.item_name, i.item_group,
+                       i.stock_uom as uom, i.valuation_rate as unit_cost,
+                       0 as system_qty, 1.0 as conversion_factor
+                FROM `tabItem` i
+                WHERE i.is_stock_item = 1
+                  AND i.item_group IN ('Raw Materials', 'Finished Goods', 'Packaging Materials', 'Consumables')
+                ORDER BY i.item_group, i.item_name
+            """, as_dict=1)
 
-    return {"items": items, "grouped": grouped, "warehouse": warehouse, "count": len(items)}
+        # Group by category for frontend display
+        grouped = {}
+        for item in items:
+            group = _map_item_group(item.item_group)
+            grouped.setdefault(group, []).append(item)
+
+        return {"items": items, "grouped": grouped, "warehouse": warehouse, "count": len(items)}
+    except frappe.PermissionError:
+        raise
+    except frappe.ValidationError:
+        raise
+    except Exception as e:
+        frappe.log_error(f"get_items_for_count failed for store={store}: {e}")
+        frappe.throw(_("Failed to load items for counting. Please try again."))
 
 
 @frappe.whitelist()
-def submit_cycle_count_v2(store, count_date, items, count_type="Store Monthly", photo=None):
+def submit_cycle_count_v2(store, count_date, items, count_type="Store Monthly", photo_url=None):
     """Create cycle count with WHOLE + LOOSE quantities.
 
     Args:
         items: list of {item_code, counted_qty_whole, counted_qty_loose}
+        photo_url: File URL from prior upload via /api/method/upload_file (AUDIT-6)
     """
     # Permission check
     if "External Auditor" in frappe.get_roles():
-        _check_store_access(store)  # Verify auditor assigned to this store
+        _check_store_access(store)
 
     if isinstance(items, str):
         items = json.loads(items)
@@ -704,44 +721,58 @@ def submit_cycle_count_v2(store, count_date, items, count_type="Store Monthly", 
     if not warehouse:
         frappe.throw(_("Could not find Store: {0}").format(store))
 
-    # Duplicate detection: block if same store+date+type already submitted
+    # AUDIT-8: Duplicate detection — catch BOTH Draft and Submitted records
     existing = frappe.db.exists("BEI Cycle Count", {
         "store": warehouse, "count_date": count_date,
-        "count_type": count_type, "docstatus": 1
+        "count_type": count_type, "docstatus": ["in", [0, 1]]
     })
     if existing:
-        frappe.throw(f"Cycle count already submitted for {store} on {count_date} ({count_type})")
+        frappe.throw(f"A cycle count already exists for {store} on {count_date} ({count_type}). "
+                     f"Please use the existing record: {existing}")
 
-    doc = frappe.new_doc("BEI Cycle Count")
-    doc.store = warehouse
-    doc.count_date = count_date
-    doc.count_type = count_type
-    doc.counted_by = frappe.session.user
+    try:
+        # AUDIT-3: DM-2 compliance — savepoint around insert+submit
+        frappe.db.savepoint("cycle_count_submit")
 
-    if "External Auditor" in frappe.get_roles():
-        doc.external_auditor = frappe.session.user
+        doc = frappe.new_doc("BEI Cycle Count")
+        doc.store = warehouse
+        doc.count_date = count_date
+        doc.count_type = count_type
+        doc.counted_by = frappe.session.user
 
-    # Handle photo upload (base64 data URL from frontend photo-capture component)
-    if photo:
-        from hrms.api.store import save_base64_image
-        photo_url = save_base64_image(photo, "BEI Cycle Count", fieldname="photo_evidence")
-        doc.photo_evidence = photo_url
+        if "External Auditor" in frappe.get_roles():
+            doc.external_auditor = frappe.session.user
 
-    for item_data in items:
-        doc.append("items", {
-            "item_code": item_data["item_code"],
-            "counted_qty_whole": item_data.get("counted_qty_whole", 0),
-            "counted_qty_loose": item_data.get("counted_qty_loose", 0.0),
-        })
-    # validate() computes counted_qty, unit_cost, variance automatically
+        # AUDIT-6: Photo is referenced by URL (uploaded separately via multipart/form-data)
+        if photo_url:
+            doc.photo_evidence = photo_url
 
-    doc.insert()
-    doc.submit()
+        for item_data in items:
+            uom = frappe.db.get_value("Item", item_data["item_code"], "stock_uom") or ""
+            doc.append("items", {
+                "item_code": item_data["item_code"],
+                "uom": uom,
+                "counted_qty_whole": item_data.get("counted_qty_whole", 0),
+                "counted_qty_loose": item_data.get("counted_qty_loose", 0.0),
+            })
+        # validate() computes counted_qty, unit_cost, variance automatically
+
+        doc.insert()
+        doc.submit()
+
+        # Link orphan photo file to newly created doc (two-step upload pattern)
+        if photo_url:
+            frappe.db.set_value("File", {"file_url": photo_url, "attached_to_name": ["is", "not set"]},
+                {"attached_to_doctype": "BEI Cycle Count", "attached_to_name": doc.name})
+    except Exception:
+        frappe.db.rollback(save_point="cycle_count_submit")
+        raise
+
     return {"name": doc.name, "status": "Submitted", "items_count": len(doc.items)}
 
 
 @frappe.whitelist()
-def save_cycle_count_draft(store, count_date, items, count_type="Store Monthly", photo=None, name=None):
+def save_cycle_count_draft(store, count_date, items, count_type="Store Monthly", photo_url=None, name=None):
     """Save cycle count as draft (not submitted). Supports create and update."""
     if "External Auditor" in frappe.get_roles():
         _check_store_access(store)
@@ -771,9 +802,7 @@ def save_cycle_count_draft(store, count_date, items, count_type="Store Monthly",
     if "External Auditor" in frappe.get_roles():
         doc.external_auditor = frappe.session.user
 
-    if photo:
-        from hrms.api.store import save_base64_image
-        photo_url = save_base64_image(photo, "BEI Cycle Count", fieldname="photo_evidence")
+    if photo_url:
         doc.photo_evidence = photo_url
 
     for item_data in items:
@@ -796,6 +825,10 @@ def export_count_to_cos_recon(cycle_count_name):
 
     doc = frappe.get_doc("BEI Cycle Count", cycle_count_name)
     doc.check_permission("read")
+
+    # External Auditors: verify store access
+    if "External Auditor" in frappe.get_roles():
+        _check_store_access(doc.store)
 
     filename = f"COS_RECON_{doc.store}_{doc.count_date}.xlsx"
 
@@ -862,18 +895,11 @@ def export_count_to_cos_recon(cycle_count_name):
 # Gives Ian real-time stock visibility across 6 BEI warehouses:
 # 3MD Cold, 3MD Dry, JENTEC, RCS, PINNACLE, SHAW
 
-SCM_INVENTORY_ROLES = {"Warehouse Manager", "Warehouse Staff", "Logistics Coordinator", "System Manager"}
-SCM_STOCK_UPDATE_ROLES = {"Warehouse Manager", "Warehouse Staff", "System Manager"}
-
-
-def _check_warehouse_permission(allowed_roles, action="access this resource"):
-    """Check if current user has any of the allowed roles."""
-    user_roles = set(frappe.get_roles(frappe.session.user))
-    if not user_roles.intersection(allowed_roles):
-        frappe.throw(
-            _("You do not have permission to {0}").format(action),
-            frappe.PermissionError
-        )
+# P0-10: Import centralized RBAC role sets
+from hrms.utils.scm_roles import (
+    SCM_INVENTORY_ROLES, SCM_STOCK_UPDATE_ROLES,
+    check_scm_permission as _check_warehouse_permission
+)
 
 
 @frappe.whitelist()

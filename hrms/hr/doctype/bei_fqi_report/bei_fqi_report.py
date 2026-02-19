@@ -26,5 +26,19 @@ class BEIFQIReport(Document):
             self.notify_stakeholders()
 
     def notify_stakeholders(self):
-        # TODO: Send notifications to QA, SCM, AS, RM
-        pass
+        """Send Google Chat notification when a new FQI report is created."""
+        try:
+            from hrms.api.google_chat import send_message_to_space
+            from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+
+            message = (
+                f"*FQI Report #{self.name}*\n"
+                f"Issue: {self.issue_type or 'Not specified'}\n"
+                f"Store: {self.store or 'N/A'}\n"
+                f"Item: {self.item_code or 'N/A'}\n"
+                f"Status: {self.status}\n"
+                f"Reported by: {self.reported_by or frappe.session.user}"
+            )
+            send_message_to_space(get_chat_space(SPACE_NOTIFICATIONS), message)
+        except Exception:
+            frappe.log_error("FQI notification failed", "BEI FQI Report")

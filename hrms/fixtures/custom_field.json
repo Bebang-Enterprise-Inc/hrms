@@ -143,5 +143,16 @@
         "label": "Enrichment Complete Date",
         "insert_after": "custom_enrichment_submitted_date",
         "read_only": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Material Request-custom_store_order",
+        "dt": "Material Request",
+        "fieldname": "custom_store_order",
+        "fieldtype": "Link",
+        "options": "BEI Store Order",
+        "label": "Store Order",
+        "insert_after": "schedule_date",
+        "description": "G-070: Link to the BEI Store Order that generated this Material Request"
     }
 ]

@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -29,12 +30,22 @@ class BEICycleCount(Document):
 			item.unit_cost = frappe.db.get_value("Item", item.item_code, "valuation_rate") or 0.0
 
 			# Compute variance
+			item.counted_qty = item.counted_qty or 0
 			item.variance_qty = item.counted_qty - (item.system_qty or 0)
 			item.variance_value = item.variance_qty * item.unit_cost
 
 	def before_insert(self):
 		if not self.counted_by:
 			self.counted_by = frappe.session.user
+
+	def before_submit(self):
+		"""AUDIT-8: Enforce unique constraint at submit time (TOCTOU race protection)."""
+		existing = frappe.db.exists("BEI Cycle Count", {
+			"store": self.store, "count_date": self.count_date,
+			"count_type": self.count_type, "docstatus": 1
+		})
+		if existing and existing != self.name:
+			frappe.throw(_("Cycle count already submitted for this store/date/type"))
 
 	def before_save(self):
 		# Calculate total variance value

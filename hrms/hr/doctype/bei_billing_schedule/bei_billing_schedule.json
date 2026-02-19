@@ -67,7 +67,7 @@
    "fieldname": "naming_series",
    "fieldtype": "Select",
    "label": "Naming Series",
-   "options": "BILL-MF-.YYYY.-.#####\nBILL-DL-.YYYY.-.#####",
+   "options": "BILL-MF-.YYYY.-.#####\nBILL-DL-.YYYY.-.#####\nBILL-CN-.YYYY.-.#####\nBILL-ADJ-.YYYY.-.#####",
    "default": "BILL-MF-.YYYY.-.#####",
    "reqd": 1,
    "set_only_once": 1
@@ -76,7 +76,7 @@
    "fieldname": "billing_type",
    "fieldtype": "Select",
    "label": "Billing Type",
-   "options": "Monthly Fees\nDelivery",
+   "options": "Monthly Fees\nDelivery\nCredit Note\nAdjustment",
    "default": "Monthly Fees",
    "reqd": 1,
    "in_list_view": 1,

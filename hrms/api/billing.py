@@ -17,16 +17,13 @@ import frappe
 from frappe import _
 from frappe.utils import flt, now_datetime, get_first_day, get_last_day, nowdate
 
-RATE_MANAGEMENT_ROLES = {"Accounts Manager", "Supply Chain Manager", "System Manager"}
+# P0-10: Import centralized RBAC role sets
+from hrms.utils.scm_roles import RATE_MANAGEMENT_ROLES, SCM_BILLING_ROLES, check_scm_permission
 
 
 def _check_rate_permission():
     """Verify the caller has Finance or Supply Chain manager role."""
-    if not RATE_MANAGEMENT_ROLES.intersection(set(frappe.get_roles())):
-        frappe.throw(
-            _("Only Finance or Supply Chain managers can manage delivery rates"),
-            frappe.PermissionError,
-        )
+    check_scm_permission(RATE_MANAGEMENT_ROLES, "manage delivery rates")
 
 
 # ================================
@@ -296,7 +293,7 @@ def generate_monthly_billing(billing_period=None, store=None):
             # Aggregate maintenance charges for franchise stores only
             maintenance_charges = 0.0
             maintenance_request_names = []
-            if store_rec.store_type in ("Full Franchise", "Semi-Franchise"):
+            if store_rec.store_type in ("Full Franchise", "Managed Franchise"):
                 maint_rows = frappe.db.sql("""
                     SELECT name, total_cost
                     FROM `tabBEI Maintenance Request`
@@ -586,8 +583,6 @@ def scheduled_monthly_billing():
 # Billing is per-trip flat rate (NOT per-km or per-kg)
 # BIR RR 2-98: 2% EWT on hauling/freight services
 
-SCM_BILLING_ROLES = {"Warehouse Manager", "Logistics Coordinator", "HR Manager", "System Manager"}
-
 # GL accounts for 3PL logistics costs and payment
 GL_LOGISTICS_COMMISSARY = "6003001"   # Logistics Cost - Commissary
 GL_LOGISTICS_PCF        = "6003002"   # Logistics Cost - PCF
@@ -600,12 +595,7 @@ EWT_RATE = 0.02  # BIR RR 2-98: 2% on hauling services
 
 def _check_billing_permission(action="access billing records"):
     """Check if current user has any of the allowed 3PL billing roles."""
-    user_roles = set(frappe.get_roles(frappe.session.user))
-    if not user_roles.intersection(SCM_BILLING_ROLES):
-        frappe.throw(
-            _("You do not have permission to {0}").format(action),
-            frappe.PermissionError
-        )
+    check_scm_permission(SCM_BILLING_ROLES, action)
 
 
 def _get_month_date_range(month, year):

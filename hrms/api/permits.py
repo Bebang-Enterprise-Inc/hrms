@@ -11,18 +11,13 @@ from frappe import _
 from frappe.utils import getdate, nowdate, date_diff, add_days
 
 
-# RBAC roles for permit management
-SCM_PERMIT_ROLES = {"Warehouse Manager", "Logistics Coordinator", "HR Manager", "System Manager"}
+# P0-10: Import centralized RBAC role sets
+from hrms.utils.scm_roles import SCM_PERMIT_ROLES, check_scm_permission
 
 
 def _check_permit_permission(action="access permit records"):
     """Check if current user has any of the allowed roles."""
-    user_roles = set(frappe.get_roles(frappe.session.user))
-    if not user_roles.intersection(SCM_PERMIT_ROLES):
-        frappe.throw(
-            _("You do not have permission to {0}").format(action),
-            frappe.PermissionError
-        )
+    check_scm_permission(SCM_PERMIT_ROLES, action)
 
 
 @frappe.whitelist()

@@ -12,18 +12,8 @@ from frappe import _
 from frappe.utils import nowdate, now_datetime, flt
 
 
-# RBAC roles for picking module
-SCM_PICKING_ROLES = {"Warehouse Manager", "Warehouse Staff", "Logistics Coordinator", "System Manager"}
-
-
-def _check_picking_permission(allowed_roles, action="access this resource"):
-    """Check if current user has any of the allowed roles."""
-    user_roles = set(frappe.get_roles(frappe.session.user))
-    if not user_roles.intersection(allowed_roles):
-        frappe.throw(
-            _("You do not have permission to {0}").format(action),
-            frappe.PermissionError
-        )
+# P0-10: Import centralized RBAC role sets
+from hrms.utils.scm_roles import SCM_PICKING_ROLES, check_scm_permission as _check_picking_permission
 
 
 @frappe.whitelist()
@@ -256,8 +246,9 @@ def complete_picking(pick_list_name):
 def confirm_loaded(pick_list_name):
     """
     Mark pick list as Loaded (driver confirms items on truck).
-    Creates a Frappe Stock Entry (Material Issue) to deduct inventory.
-    Uses savepoint to safely wrap stock deduction.
+    P0-1 fix: Creates one Material Transfer Stock Entry PER STOP (not per pick list),
+    because each stop has a different target warehouse. Previously used Material Issue
+    which permanently removed items from inventory with no destination.
     """
     _check_picking_permission(SCM_PICKING_ROLES, "confirm loaded")
 
@@ -273,34 +264,53 @@ def confirm_loaded(pick_list_name):
     if not pick_list.warehouse:
         frappe.throw(_("Pick list has no source warehouse set"))
 
-    frappe.db.savepoint("confirm_loaded")
-    try:
-        # Create Material Issue Stock Entry to deduct from source warehouse
-        stock_entry = frappe.get_doc({
-            "doctype": "Stock Entry",
-            "stock_entry_type": "Material Issue",
-            "from_warehouse": pick_list.warehouse,
-            "posting_date": nowdate(),
-            "posting_time": frappe.utils.nowtime(),
-            "company": get_company(),
-            "remarks": _("Pick List {0} - Trip {1}").format(pick_list_name, pick_list.trip),
-            "items": [
-                {
-                    "item_code": item.item_code,
-                    "qty": flt(item.qty_picked, 3),
-                    "s_warehouse": pick_list.warehouse,
-                    "uom": item.uom or frappe.db.get_value("Item", item.item_code, "stock_uom") or "Nos"
-                }
-                for item in pick_list.items
-                if flt(item.qty_picked, 3) > 0
-            ]
+    # Group picked items by store (target warehouse) for per-stop Stock Entries
+    items_by_store = {}
+    for item in pick_list.items:
+        qty = flt(item.qty_picked, 3)
+        if qty <= 0:
+            continue
+        store = item.store or ""
+        if store not in items_by_store:
+            items_by_store[store] = []
+        items_by_store[store].append({
+            "item_code": item.item_code,
+            "qty": qty,
+            "s_warehouse": pick_list.warehouse,
+            "t_warehouse": store,
+            "uom": item.uom or frappe.db.get_value("Item", item.item_code, "stock_uom") or "Nos"
         })
 
-        if not stock_entry.items:
-            frappe.throw(_("No items with picked quantity > 0 to issue from stock"))
+    if not items_by_store:
+        frappe.throw(_("No items with picked quantity > 0 to transfer"))
 
-        stock_entry.insert(ignore_permissions=True)
-        stock_entry.submit()
+    frappe.db.savepoint("confirm_loaded")
+    try:
+        stock_entries = []
+        for target_warehouse, se_items in items_by_store.items():
+            if not target_warehouse:
+                frappe.throw(
+                    _("Pick list item(s) missing store/destination warehouse. "
+                      "Ensure all items have the 'store' field set.")
+                )
+
+            stock_entry = frappe.get_doc({
+                "doctype": "Stock Entry",
+                "stock_entry_type": "Material Transfer",
+                "from_warehouse": pick_list.warehouse,
+                "to_warehouse": target_warehouse,
+                "posting_date": nowdate(),
+                "posting_time": frappe.utils.nowtime(),
+                "company": get_company(),
+                "remarks": _("Pick List {0} - Trip {1} - Store {2}").format(
+                    pick_list_name, pick_list.trip, target_warehouse
+                ),
+                "items": se_items
+            })
+
+            stock_entry.insert(ignore_permissions=True)
+            stock_entry.submit()
+            stock_entries.append(stock_entry.name)
 
         pick_list.status = "Loaded"
         pick_list.loaded_at = now_datetime()
@@ -310,9 +320,10 @@ def confirm_loaded(pick_list_name):
             "success": True,
             "status": "Loaded",
             "loaded_at": str(pick_list.loaded_at),
-            "stock_entry": stock_entry.name,
-            "message": _("Pick list {0} confirmed as Loaded. Stock Entry {1} created.").format(
-                pick_list_name, stock_entry.name
+            "stock_entries": stock_entries,
+            "stock_entry": stock_entries[0] if stock_entries else None,
+            "message": _("Pick list {0} confirmed as Loaded. {1} Stock Entry(s) created.").format(
+                pick_list_name, len(stock_entries)
             )
         }
 

@@ -18,6 +18,7 @@
     "approved_at",
     "section_break_items",
     "items",
+    "trip",
     "section_break_order_details",
     "is_bulk_order",
     "is_emergency",
@@ -61,7 +62,7 @@
       "fieldname": "status",
       "fieldtype": "Select",
       "label": "Status",
-      "options": "Draft\nPending Approval\nApproved\nPartial\nDelivered\nCancelled",
+      "options": "Draft\nPending Approval\nApproved\nReady for Dispatch\nPartially Fulfilled\nPartial\nDelivered\nCancelled",
       "default": "Draft",
       "reqd": 1,
       "in_list_view": 1,
@@ -102,6 +103,13 @@
       "label": "Items",
       "options": "BEI Store Order Item",
       "reqd": 1
+    },
+    {
+      "fieldname": "trip",
+      "fieldtype": "Link",
+      "label": "Trip",
+      "options": "BEI Distribution Trip",
+      "description": "Distribution trip this order is assigned to"
     },
     {
       "fieldname": "section_break_order_details",
