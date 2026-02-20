@@ -1,0 +1,200 @@
+{
+  "test_suite": "L3 Maintenance Tests -- Full Suite (no skips)",
+  "target": "https://hq.bebang.ph",
+  "executed_at": "2026-02-20T14:20:56.099452+00:00",
+  "total": 24,
+  "passed": 24,
+  "failed": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "test_id": "MAINT-001",
+      "title": "Submit Request (Happy Path)",
+      "status": "PASS",
+      "details": "Created MR-TEST-STORE-BGC-0509, starts_with_MR=True",
+      "timestamp": "2026-02-20T14:15:47.137499+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-002",
+      "title": "Submit Request WITH Photo",
+      "status": "PASS",
+      "details": "Created MR-TEST-STORE-BGC-0510, photo attached",
+      "timestamp": "2026-02-20T14:15:47.393976+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-003",
+      "title": "Assign Request",
+      "status": "PASS",
+      "details": "status=Assigned, assigned_to=test.projects.staff@bebang.ph",
+      "timestamp": "2026-02-20T14:15:47.620014+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-004",
+      "title": "Status -> In Progress",
+      "status": "PASS",
+      "details": "status=In Progress",
+      "timestamp": "2026-02-20T14:15:47.834586+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-005",
+      "title": "Status -> Pending Acknowledgement",
+      "status": "PASS",
+      "details": "status=Pending Acknowledgement",
+      "timestamp": "2026-02-20T14:15:48.093247+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-006",
+      "title": "Status -> Back to In Progress",
+      "status": "PASS",
+      "details": "status=In Progress",
+      "timestamp": "2026-02-20T14:15:48.324310+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-007",
+      "title": "Record Completion WITH Photo (BUG-1 regression)",
+      "status": "PASS",
+      "details": "status=Completed, resolved_date=2026-02-20",
+      "timestamp": "2026-02-20T14:15:48.765794+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-008",
+      "title": "Supervisor Verification",
+      "status": "PASS",
+      "details": "status=Verified",
+      "timestamp": "2026-02-20T14:15:49.006324+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-009",
+      "title": "Projects Staff Sees Assigned Tasks",
+      "status": "PASS",
+      "details": "Found 20 assigned requests",
+      "timestamp": "2026-02-20T14:15:49.114839+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-010",
+      "title": "Staff Sees Own Submitted Requests",
+      "status": "PASS",
+      "details": "MR-TEST-STORE-BGC-0512 found_in_list=True, total=20",
+      "timestamp": "2026-02-20T14:15:49.552013+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-011",
+      "title": "RBAC -- Staff Blocked from Admin",
+      "status": "PASS",
+      "details": "HTTP 403 (expected 403)",
+      "timestamp": "2026-02-20T14:15:49.622431+00:00",
+      "response_status": 403
+    },
+    {
+      "test_id": "MAINT-012",
+      "title": "RBAC -- Crew Blocked from Admin",
+      "status": "PASS",
+      "details": "HTTP 403 (expected 403)",
+      "timestamp": "2026-02-20T14:15:49.693943+00:00",
+      "response_status": 403
+    },
+    {
+      "test_id": "MAINT-013",
+      "title": "Invalid Status Transition Rejected",
+      "status": "PASS",
+      "details": "HTTP 417, ok=False (expected rejection)",
+      "timestamp": "2026-02-20T14:15:49.876383+00:00",
+      "response_status": 417
+    },
+    {
+      "test_id": "MAINT-014",
+      "title": "Invalid Status Name Rejected",
+      "status": "PASS",
+      "details": "HTTP 417, ok=False (expected rejection)",
+      "timestamp": "2026-02-20T14:15:49.951526+00:00",
+      "response_status": 417
+    },
+    {
+      "test_id": "MAINT-015",
+      "title": "Dashboard Stats Return Valid Data",
+      "status": "PASS",
+      "details": "open=75, assigned=11, in_progress=11",
+      "timestamp": "2026-02-20T14:15:50.033038+00:00",
+      "response_status": 200
+    },
+    {
+      "test_id": "MAINT-016",
+      "title": "Submit Request with Invalid Store",
+      "status": "PASS",
+      "details": "HTTP 417, ok=False (expected rejection)",
+      "timestamp": "2026-02-20T14:15:50.109810+00:00",
+      "response_status": 417
+    },
+    {
+      "test_id": "MAINT-017",
+      "title": "Assess Without Projects Role",
+      "status": "PASS",
+      "details": "HTTP 403 (expected 403)",
+      "timestamp": "2026-02-20T14:15:50.182323+00:00",
+      "response_status": 403
+    },
+    {
+      "test_id": "MAINT-018",
+      "title": "Set Charge with Negative Amount",
+      "status": "PASS",
+      "details": "HTTP 417, ok=False (expected rejection)",
+      "timestamp": "2026-02-20T14:15:50.261328+00:00",
+      "response_status": 417
+    },
+    {
+      "test_id": "MAINT-019",
+      "title": "Acknowledge Charge for Different Store (BLOCKER-10)",
+      "status": "PASS",
+      "details": "HTTP 403 (expected 403). Supervisor(BGC) tried Makati MR MR-MAKATI-XTEST-001.",
+      "response_status": 403
+    },
+    {
+      "test_id": "MAINT-020",
+      "title": "Complete with Missing Required Fields",
+      "status": "PASS",
+      "details": "HTTP 417, ok=False (expected rejection)",
+      "timestamp": "2026-02-20T14:15:50.762446+00:00",
+      "response_status": 417
+    },
+    {
+      "test_id": "MAINT-021",
+      "title": "Double-Submit Same Request",
+      "status": "PASS",
+      "details": "HTTP 417, ok=False (expected rejection of duplicate)",
+      "timestamp": "2026-02-20T14:15:50.871952+00:00",
+      "response_status": 417
+    },
+    {
+      "test_id": "MAINT-022",
+      "title": "SLA Breach Notification (bench execute)",
+      "status": "PASS",
+      "details": "SSM=Success, no_traceback=True. Output: ",
+      "response_status": null
+    },
+    {
+      "test_id": "MAINT-023",
+      "title": "Orphan Cleanup -- Non-existent MR",
+      "status": "PASS",
+      "details": "HTTP 417, ok=False (expected rejection)",
+      "timestamp": "2026-02-20T14:16:09.711799+00:00",
+      "response_status": 417
+    },
+    {
+      "test_id": "MAINT-024",
+      "title": "Concurrent Charge Updates",
+      "status": "PASS",
+      "details": "A=200, B=200, final_charge=7000, no_500=True. DB: charge_amount\tcharging_reason\n7000.00\tCall B\n",
+      "response_status": null
+    }
+  ]
+}
