@@ -223,6 +223,11 @@
   },
   {
    "read": 1,
+   "role": "Store Supervisor",
+   "write": 1
+  },
+  {
+   "read": 1,
    "role": "Employee"
   }
  ],

@@ -282,9 +282,26 @@ def update_weekly_plan(plan_name, shifts):
 @frappe.whitelist()
 def approve_weekly_plan(plan_name):
     """Approve a weekly labor plan."""
+    if not frappe.has_role(frappe.session.user, "Area Supervisor"):
+        frappe.throw(_("Only Area Supervisors can approve labor plans"), frappe.PermissionError)
     doc = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
     doc.status = "Approved"
     doc.approved_by = frappe.session.user
+    doc.save()
+    return {"success": True}
+
+
+@frappe.whitelist()
+def reject_weekly_plan(plan_name, reason):
+    """Reject a weekly labor plan with mandatory reason."""
+    if not frappe.has_role(frappe.session.user, "Area Supervisor"):
+        frappe.throw(_("Only Area Supervisors can reject labor plans"), frappe.PermissionError)
+    if not reason:
+        frappe.throw(_("Rejection reason is required"))
+    doc = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
+    doc.status = "Rejected"
+    doc.rejection_reason = reason
+    doc.rejected_by = frappe.session.user
     doc.save()
     return {"success": True}
 
@@ -664,11 +681,11 @@ def get_area_dashboard():
 
     # Count action plans
     try:
-        stats["open_action_plans"] = frappe.db.count("BEI Store Action Plan", {
+        stats["open_action_plans"] = frappe.db.count("BEI Action Plan", {
             "store": ["in", store_names],
             "status": ["in", ["Open", "In Progress"]]
         })
-        stats["overdue_action_plans"] = frappe.db.count("BEI Store Action Plan", {
+        stats["overdue_action_plans"] = frappe.db.count("BEI Action Plan", {
             "store": ["in", store_names],
             "status": ["in", ["Open", "In Progress"]],
             "due_date": ["<", today]
@@ -701,12 +718,12 @@ def get_area_dashboard():
         recent_visits = frappe.get_all(
             "BEI Store Visit Report",
             filters={"store": ["in", store_names]},
-            fields=["total_score"],
+            fields=["overall_score"],
             limit=20,
             order_by="visit_date desc"
         )
         if recent_visits:
-            scores = [v.total_score for v in recent_visits if v.total_score]
+            scores = [v.overall_score for v in recent_visits if v.overall_score]
             if scores:
                 stats["avg_store_score"] = round(sum(scores) / len(scores), 1)
     except Exception:
