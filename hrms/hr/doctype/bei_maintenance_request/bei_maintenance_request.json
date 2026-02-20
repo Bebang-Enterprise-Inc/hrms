@@ -417,9 +417,9 @@
 			"write": 0
 		},
 		{
-			"create": 1,
+			"create": 0,
 			"read": 1,
-			"write": 1,
+			"write": 0,
 			"role": "Employee Self Service"
 		},
 		{

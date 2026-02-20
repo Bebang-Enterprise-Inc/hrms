@@ -1396,6 +1396,9 @@ def get_project_dashboard():
             "summary": {"total_active": int, "total_budget": float}
         }
     """
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
+
     stages = ["Pre-Design", "Design", "Bidding", "Pre-Construction",
               "Construction", "Post-Construction", "Completed"]
 
@@ -1463,6 +1466,9 @@ def get_project_detail(project):
             "punchlist_count": int
         }
     """
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
+
     if not project:
         frappe.throw(_("Project name is required"))
 
@@ -1782,6 +1788,8 @@ def get_bid_comparison(project):
             "awarded_bid": {...} or None
         }
     """
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
     if not frappe.db.exists("BEI Project", project):
         frappe.throw(_("Project {0} not found").format(project))
 
@@ -2106,6 +2114,9 @@ def get_punchlist(project, status=None, category=None, severity=None, page=1, pa
             "summary": {...}
         }
     """
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
+
     if not frappe.db.exists("BEI Project", project):
         frappe.throw(_("Project {0} not found").format(project))
 
@@ -2360,6 +2371,9 @@ def get_permit_checklist(project):
             "summary": {"total": int, "approved": int, "pending": int}
         }
     """
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
+
     if not frappe.db.exists("BEI Project", project):
         frappe.throw(_("Project {0} not found").format(project))
 
@@ -2454,7 +2468,6 @@ def update_permit_status(permit_id, status, permit_number=None, approval_date=No
         "permit": doc.as_dict()
     }
 
-@frappe.whitelist()
 def check_sla_violations():
     """Scheduled: check for SLA breaches on maintenance requests, send Google Chat alerts."""
     from hrms.api.google_chat import send_message_to_space
