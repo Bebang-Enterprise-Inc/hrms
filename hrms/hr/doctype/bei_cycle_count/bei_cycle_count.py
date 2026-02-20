@@ -38,6 +38,10 @@ class BEICycleCount(Document):
 		if not self.counted_by:
 			self.counted_by = frappe.session.user
 
+	def on_submit(self):
+		"""Set custom status field to 'Submitted' when Frappe docstatus changes to 1."""
+		self.db_set("status", "Submitted")
+
 	def before_submit(self):
 		"""AUDIT-8: Enforce unique constraint at submit time (TOCTOU race protection)."""
 		existing = frappe.db.exists("BEI Cycle Count", {
