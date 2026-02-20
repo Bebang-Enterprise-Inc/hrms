@@ -94,7 +94,7 @@ def get_cycle_counts(store=None, date_from=None, date_to=None, status=None,
         _check_store_access(store)
 
     limit = min(int(limit or 20), 500)
-    filters = {}
+    filters = {"docstatus": ["in", [0, 1]]}  # Exclude cancelled (docstatus=2)
     if store:
         filters["store"] = store
     if status:
