@@ -51,12 +51,17 @@ class BEICycleCount(Document):
 		self.db_set("status", "Submitted")
 
 	def before_submit(self):
-		"""AUDIT-8: Enforce unique constraint at submit time (TOCTOU race protection)."""
-		existing = frappe.db.exists("BEI Cycle Count", {
-			"store": self.store, "count_date": self.count_date,
-			"count_type": self.count_type, "docstatus": 1
-		})
-		if existing and existing != self.name:
+		"""AUDIT-8: Enforce unique constraint at submit time (TOCTOU race protection).
+		Excludes Rejected and Resubmitted records — resubmissions must be allowed."""
+		existing = frappe.db.sql("""
+			SELECT name FROM `tabBEI Cycle Count`
+			WHERE store = %s AND count_date = %s AND count_type = %s
+			  AND docstatus = 1
+			  AND status NOT IN ('Rejected', 'Resubmitted')
+			  AND name != %s
+			LIMIT 1
+		""", (self.store, self.count_date, self.count_type, self.name))
+		if existing:
 			frappe.throw(_("Cycle count already submitted for this store/date/type"))
 
 	def before_save(self):

@@ -845,14 +845,17 @@ def submit_cycle_count_v2(store, count_date, items, count_type="Store Monthly", 
             doc.flags.ignore_permissions = True
             doc.submit()
         else:
-            # AUDIT-8: Duplicate detection — only check submitted records (not drafts)
-            existing = frappe.db.exists("BEI Cycle Count", {
-                "store": warehouse, "count_date": count_date,
-                "count_type": count_type, "docstatus": 1
-            })
+            # AUDIT-8: Duplicate detection — exclude Rejected/Resubmitted (resubmissions allowed)
+            existing = frappe.db.sql("""
+                SELECT name FROM `tabBEI Cycle Count`
+                WHERE store = %s AND count_date = %s AND count_type = %s
+                  AND docstatus = 1
+                  AND status NOT IN ('Rejected', 'Resubmitted')
+                LIMIT 1
+            """, (warehouse, count_date, count_type))
             if existing:
                 frappe.throw(f"A cycle count already exists for {store} on {count_date} ({count_type}). "
-                             f"Please use the existing record: {existing}")
+                             f"Please use the existing record: {existing[0][0]}")
 
             doc = frappe.new_doc("BEI Cycle Count")
             doc.store = warehouse
