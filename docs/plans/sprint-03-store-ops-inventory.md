@@ -1,7 +1,7 @@
 # Store Ops + Inventory Sprint Plan
 **Date:** 2026-02-19
-**Status:** COMPLETE — all tasks implemented, code reviewed, warnings fixed (v3.0)
-**Version:** v3.0 (sprint executed, code reviewed + simplified, 2026-02-20)
+**Status:** DEPLOYED + AUDITED — all 14 tasks verified in production (v3.1)
+**Version:** v3.1 (post-deploy audit passed, nav fix deployed, 2026-02-20)
 **Priority:** Dept 3 (third priority in Master Gap Closure Roadmap)
 **Parent:** `docs/plans/2026-02-19-master-gap-closure-roadmap.md`
 
@@ -733,6 +733,7 @@ All 10 audit blockers have been resolved. Code verified against actual source fi
 | v2.0 | 2026-02-20 | Second full audit (v2): 6 domain agents + code verifier. 21 findings verified against source code: 18 confirmed, 2 stale (false positives), 1 new gap. 6 must-fix blockers, 6 sprint-fix items. |
 | v2.1 | 2026-02-20 | 4/6 blockers fixed in code: V-05 (cycle count v1 submit), V-06 (approval queue warning), V-14 (N+1 batch query), NG-01 (theft/damage stock entry). 2 remaining are frontend (V-09 POS cancel button, V-10 route conflict) — to fix in bei-tasks repo during sprint. Status: GO. |
 | v3.0 | 2026-02-20 | **SPRINT EXECUTED.** All 7 tasks implemented by agent team (5 Wave-1 parallel + 2 Wave-2 parallel). Code review found 2 CRITs + 5 WARNs; all fixed. Code simplifier applied 3 improvements. **Changes:** Backend: store.py (A-2 date tag, D-1 auto-link, B-4/B-5 GChat + _notify_store_ops helper), inventory.py (F-1 mark_cycle_count_reconciled + 4 DocType fields), ordering.py (deprecated log_error→logger.warning). Legacy FE: ReceivingForm.vue (C-1 food quality + C-2 payload fix). React/bei-tasks: POS cancel button with orphan doc delete (CRIT-2), order approvals page with RBAC fix (WARN-4), variance management page at /variance-management (V-10), cycle count reconcile button, approve_order payload dict fix (CRIT-1), useOrderDetail via frappe.client.get (WARN-5). Test scenarios: 2 photo E2E scenarios + 2 regression entries. Status: COMPLETE — ready for deploy. |
+| v3.1 | 2026-02-20 | **DEPLOYED + AUDITED.** Backend deployed via GitHub Actions (Docker build + EC2 migrate — commit `3fbf659`). Frontend deployed via Vercel (commits `97f4aad`, `5926c41`). Post-deploy audit: 4 parallel auditors verified all 14 tasks against live code with line-number evidence. Results: audit-store 7/7 PASS, audit-inventory 5/5 PASS, audit-react 25/25 PASS, audit-completeness 14/14 PASS. One post-audit fix: sidebar nav "Variances" link corrected from `INVENTORY_VARIANCES` to `INVENTORY_VARIANCE_MANAGEMENT` route. **Status: DEPLOYED + AUDITED — sprint complete.** |
 
 ---
 
