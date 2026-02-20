@@ -758,7 +758,8 @@ def submit_cycle_count_v2(store, count_date, items, count_type="Store Monthly", 
         # validate() computes counted_qty, unit_cost, variance automatically
 
         doc.insert(ignore_permissions=True)
-        doc.submit(ignore_permissions=True)
+        doc.flags.ignore_permissions = True
+        doc.submit()
 
         # Link orphan photo file to newly created doc (two-step upload pattern)
         if photo_url:
