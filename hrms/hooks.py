@@ -216,7 +216,10 @@ doc_events = {
 	},
 	"Loan": {"validate": "hrms.hr.utils.validate_loan_repay_from_salary"},
 	"Employee": {
-		"validate": "hrms.overrides.employee_master.validate_onboarding_process",
+		"validate": [
+			"hrms.overrides.employee_master.validate_onboarding_process",
+			"hrms.utils.bio_id_validation.validate_employee_bio_id",
+		],
 		"on_update": [
 			"hrms.overrides.employee_master.update_approver_role",
 			"hrms.overrides.employee_master.publish_update",
@@ -260,6 +263,7 @@ scheduler_events = {
 		"hrms.hr.doctype.daily_work_summary_group.daily_work_summary_group.trigger_emails",
 		"hrms.api.pcf.check_threshold_and_auto_submit",
 		"hrms.tasks.auto_punch_out_stale_shifts",
+		"hrms.api.projects.check_sla_violations",
 	],
 	"cron": {
 		# Weather collection 5x daily: 6AM, 10AM, 2PM, 6PM, 10PM

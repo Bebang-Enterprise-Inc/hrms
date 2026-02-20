@@ -12,6 +12,19 @@ from frappe.utils import nowdate, now_datetime, getdate, date_diff, flt, sbool
 import json
 import math
 
+# RBAC AUDIT 2026-02-20: All endpoints reviewed. See G-031 in sprint-04-maintenance.md.
+# Maintenance endpoints: MAINTENANCE_STAFF_ROLES for write, authenticated-only for read
+# Project endpoints: Projects Manager for all write operations
+# Charging endpoints: Store roles for acknowledgement, Projects roles for assessment
+# SQL injection safety: get_maintenance_queue uses allowlist for sort_by (G-104 CLOSED)
+
+# PHOTO PAYLOAD STANDARD (G-082, 2026-02-19):
+# - Single photo: pass as string (data:image/xxx;base64,... OR /files/... URL)
+# - Multiple photos (before_photos on request): pass as JSON array [{photo: string, caption: string}]
+# - after_photos on completion: pass as single string (first/only camera capture)
+# - Backend saves via save_base64_image() -- returns /files/... URL
+# - Nested dicts like {"photo": {"photo": "data:..."}} are legacy -- frontend must NOT send these
+
 
 # ==============================================================================
 # MAINTENANCE QUEUE
@@ -59,6 +72,10 @@ def get_maintenance_queue(
             "pages": int
         }
     """
+    # Auth guard: reject unauthenticated requests
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
+
     # Build filters
     filters = []
 
@@ -182,7 +199,13 @@ def get_maintenance_queue(
             mr.reported_by,
             mr.reported_at,
             (SELECT COUNT(*) FROM `tabBEI Maintenance Request Photo` WHERE parent = mr.name) as photo_count,
-            DATEDIFF(CURDATE(), mr.request_date) as age_days
+            DATEDIFF(CURDATE(), mr.request_date) as age_days,
+            CASE
+                WHEN mr.priority = 'Urgent' AND TIMESTAMPDIFF(HOUR, mr.creation, NOW()) > 4 THEN 1
+                WHEN mr.priority = 'High' AND TIMESTAMPDIFF(HOUR, mr.creation, NOW()) > 24 THEN 1
+                WHEN mr.priority = 'Normal' AND TIMESTAMPDIFF(HOUR, mr.creation, NOW()) > 72 THEN 1
+                ELSE 0
+            END as sla_breached
         FROM `tabBEI Maintenance Request` mr
         WHERE 1=1 {where_clause} {search_condition}
         ORDER BY mr.{sort_by} {sort_order}
@@ -228,6 +251,10 @@ def get_maintenance_request_detail(request_id):
             "history": [...] (status changes)
         }
     """
+    # Auth guard: reject unauthenticated requests
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
+
     if not request_id:
         frappe.throw(_("Request ID is required"))
 
@@ -397,6 +424,7 @@ def assign_maintenance_request(
     if notes:
         doc.add_comment("Comment", notes)
 
+    doc.flags.ignore_permissions = True
     doc.save()
 
     # Get assignee name for response
@@ -493,6 +521,7 @@ def update_maintenance_status(request_id=None, status=None, notes=None):
     if notes:
         doc.add_comment("Comment", f"Status changed to {status}: {notes}")
 
+    doc.flags.ignore_permissions = True
     doc.save()
 
     return {
@@ -578,9 +607,8 @@ def record_maintenance_completion(
     if follow_up_needed and not (follow_up_notes and follow_up_notes.strip()):
         frappe.throw(_("Follow-up notes are required when follow-up is needed"))
 
-    # TODO: Re-enable photo requirement once frontend has upload capability
-    # if not after_photos:
-    #     frappe.throw(_("At least one after photo is required as proof of completion"))
+    if not after_photos:
+        frappe.throw(_("At least one after photo is required as proof of completion"))
 
     request_doc = frappe.get_doc("BEI Maintenance Request", request_id)
 
@@ -626,9 +654,14 @@ def record_maintenance_completion(
     # Extract the actual image data string before passing to save_base64_image
     # Handle nested dicts: {"photo": {"photo": "data:..."}} or missing keys
     if isinstance(photo_data, dict):
-        photo_data = photo_data.get('photo', '') or photo_data.get('url', '') or ''
-        if isinstance(photo_data, dict):
-            photo_data = photo_data.get('photo', '') or photo_data.get('url', '') or ''
+        inner = photo_data.get('photo', '') or photo_data.get('url', '') or ''
+        if isinstance(inner, dict):
+            frappe.log_error(
+                f"Nested photo dict received -- frontend sending wrong format: {photo_data}",
+                "Photo Payload Warning"
+            )
+            inner = inner.get('photo', '') or inner.get('url', '') or ''
+        photo_data = inner
 
     if photo_data and isinstance(photo_data, str):
         # save_base64_image handles both base64 data URLs and plain URLs
@@ -644,29 +677,38 @@ def record_maintenance_completion(
     completion.submitted_by = frappe.session.user
     completion.submitted_at = now_datetime()
 
-    completion.insert()
+    try:
+        sp = frappe.db.savepoint("maintenance_completion")
 
-    # Link photo file to the newly created completion doc
-    if completion.after_photos:
-        file_doc = frappe.db.get_value(
-            "File", {"file_url": completion.after_photos, "attached_to_name": ("is", "not set")},
-            "name"
-        )
-        if file_doc:
-            frappe.db.set_value("File", file_doc, {
-                "attached_to_doctype": "BEI Maintenance Completion",
-                "attached_to_name": completion.name,
-                "attached_to_field": "after_photos"
-            })
+        completion.flags.ignore_permissions = True
+        completion.insert()
 
-    # Reload request to get latest modified timestamp (avoids version conflict)
-    request_doc.reload()
+        # Link photo file to the newly created completion doc
+        if completion.after_photos:
+            file_doc = frappe.db.get_value(
+                "File", {"file_url": completion.after_photos, "attached_to_name": ("is", "not set")},
+                "name"
+            )
+            if file_doc:
+                frappe.db.set_value("File", file_doc, {
+                    "attached_to_doctype": "BEI Maintenance Completion",
+                    "attached_to_name": completion.name,
+                    "attached_to_field": "after_photos"
+                })
 
-    # Update request with completion link and status
-    request_doc.completion = completion.name
-    request_doc.status = "Completed"
-    request_doc.resolved_date = completion_date
-    request_doc.save()
+        # Reload request to get latest modified timestamp (avoids version conflict)
+        request_doc.reload()
+
+        # Update request with completion link and status
+        request_doc.completion = completion.name
+        request_doc.status = "Completed"
+        request_doc.resolved_date = completion_date
+        request_doc.flags.ignore_permissions = True
+        request_doc.save()
+
+    except Exception:
+        frappe.db.rollback(save_point="maintenance_completion")
+        raise
 
     return {
         "success": True,
@@ -703,6 +745,10 @@ def get_maintenance_dashboard_stats(date_from=None, date_to=None, store=None):
             "total_cost_mtd": float
         }
     """
+    # Auth guard: reject unauthenticated requests
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
+
     # Build filter conditions
     conditions = []
     values = {}
@@ -852,6 +898,9 @@ def export_maintenance_requests(
     Returns:
         {"file_url": "..."} - URL to download the file
     """
+    # RBAC: Only Projects Manager and above can export
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     # Get filtered requests
     result = get_maintenance_queue(
         status=status,
@@ -934,6 +983,10 @@ def get_projects_team_users():
     Returns:
         {"users": [{"name": "user@email.com", "full_name": "User Name"}, ...]}
     """
+    # Auth guard: reject unauthenticated requests
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
+
     users = frappe.db.sql("""
         SELECT DISTINCT u.name, u.full_name
         FROM `tabUser` u
@@ -954,6 +1007,10 @@ def get_stores_list():
     Returns:
         {"stores": [{"name": "WH-BGC - BEI", "store_code": "BGC"}, ...]}
     """
+    # Auth guard: reject unauthenticated requests
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
+
     stores = frappe.get_all(
         "Warehouse",
         filters={"is_group": 0, "disabled": 0},
@@ -982,6 +1039,12 @@ def assess_maintenance_request(request_id, concern_type, notes=None):
     Returns:
         {"success": True, "message": "...", "request": {...}}
     """
+    # RBAC: Only Projects User/Manager can assess requests
+    user_roles = frappe.get_roles(frappe.session.user)
+    allowed_roles = ["Projects User", "Projects Manager", "System Manager"]
+    if not any(role in user_roles for role in allowed_roles):
+        frappe.throw(_("You do not have permission to assess maintenance requests"), frappe.PermissionError)
+
     if not request_id:
         frappe.throw(_("Request ID is required"))
 
@@ -998,6 +1061,7 @@ def assess_maintenance_request(request_id, concern_type, notes=None):
     if notes:
         doc.add_comment("Comment", f"Assessment: {notes}")
 
+    doc.flags.ignore_permissions = True
     doc.save()
 
     return {
@@ -1020,6 +1084,12 @@ def set_maintenance_charge(request_id, charge_amount, charging_reason):
     Returns:
         {"success": True, "message": "...", "request": {...}}
     """
+    # RBAC: Only Projects User/Manager can set charges
+    user_roles = frappe.get_roles(frappe.session.user)
+    allowed_roles = ["Projects User", "Projects Manager", "System Manager"]
+    if not any(role in user_roles for role in allowed_roles):
+        frappe.throw(_("You do not have permission to set maintenance charges"), frappe.PermissionError)
+
     if not request_id:
         frappe.throw(_("Request ID is required"))
 
@@ -1037,6 +1107,7 @@ def set_maintenance_charge(request_id, charge_amount, charging_reason):
     doc.charge_amount = flt(charge_amount)
     doc.charging_reason = charging_reason
     doc.status = "Pending Acknowledgement"
+    doc.flags.ignore_permissions = True
     doc.save()
 
     return {
@@ -1059,11 +1130,27 @@ def acknowledge_maintenance_charge(request_id):
     Returns:
         {"success": True, "message": "..."}
     """
+    # RBAC: Projects users/managers and store roles can acknowledge charges
+    user_roles = frappe.get_roles(frappe.session.user)
+    allowed_roles = ["Projects User", "Projects Manager", "Store Supervisor", "Store OIC", "System Manager"]
+    if not any(role in user_roles for role in allowed_roles):
+        frappe.throw(_("You do not have permission to acknowledge maintenance charges"), frappe.PermissionError)
+
     if not request_id:
         frappe.throw(_("Request ID is required"))
 
     if not frappe.db.exists("BEI Maintenance Request", request_id):
         frappe.throw(_("Maintenance request {0} not found").format(request_id))
+
+    # B-10: Store-binding check — store roles can only acknowledge their own store's charges
+    bypass_roles = ["System Manager", "Projects Manager"]
+    if not any(role in user_roles for role in bypass_roles):
+        user_employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+        if user_employee:
+            user_branch = frappe.db.get_value("Employee", user_employee, "branch")
+            doc_store = frappe.db.get_value("BEI Maintenance Request", request_id, "store")
+            if user_branch and doc_store and user_branch != doc_store:
+                frappe.throw(_("You can only acknowledge charges for your own store"), frappe.PermissionError)
 
     doc = frappe.get_doc("BEI Maintenance Request", request_id)
 
@@ -1077,6 +1164,7 @@ def acknowledge_maintenance_charge(request_id):
     doc.acknowledged_by = frappe.session.user
     doc.acknowledgement_date = nowdate()
     doc.status = "Verified"
+    doc.flags.ignore_permissions = True
     doc.save()
 
     return {
@@ -1103,6 +1191,12 @@ def get_pending_charges(store=None, page=1, page_size=20):
             "page_size": int
         }
     """
+    # RBAC: Projects and store management roles can view pending charges
+    user_roles = frappe.get_roles(frappe.session.user)
+    allowed_roles = ["Projects User", "Projects Manager", "Store Supervisor", "Store OIC", "Area Supervisor", "System Manager"]
+    if not any(role in user_roles for role in allowed_roles):
+        frappe.throw(_("You do not have permission to view pending charges"), frappe.PermissionError)
+
     filters = {
         "charge_to_store": 1,
         "store_acknowledged": 0,
@@ -1155,6 +1249,12 @@ def add_maintenance_materials(request_id, materials):
     Returns:
         {"success": True, "message": "...", "request": {...}}
     """
+    # RBAC: Only Projects User/Manager can add materials
+    user_roles = frappe.get_roles(frappe.session.user)
+    allowed_roles = ["Projects User", "Projects Manager", "System Manager"]
+    if not any(role in user_roles for role in allowed_roles):
+        frappe.throw(_("You do not have permission to add maintenance materials"), frappe.PermissionError)
+
     if not request_id:
         frappe.throw(_("Request ID is required"))
 
@@ -1194,7 +1294,8 @@ def add_maintenance_materials(request_id, materials):
         })
 
     doc.materials_cost = flt(doc.materials_cost or 0) + total_materials_cost
-    doc.total_cost = flt(doc.materials_cost) + flt(doc.labor_cost or 0)
+    doc.total_cost = flt(doc.materials_cost) + flt(doc.labor_cost or 0) + flt(doc.vendor_cost or 0)
+    doc.flags.ignore_permissions = True
     doc.save()
 
     return {
@@ -1205,7 +1306,7 @@ def add_maintenance_materials(request_id, materials):
 
 
 @frappe.whitelist()
-def update_maintenance_costs(request_id, labor_hours=None, labor_cost=None):
+def update_maintenance_costs(request_id, labor_hours=None, labor_cost=None, vendor_cost=None):
     """
     Update labor costs for a maintenance request.
 
@@ -1213,10 +1314,17 @@ def update_maintenance_costs(request_id, labor_hours=None, labor_cost=None):
         request_id: The maintenance request name
         labor_hours: Hours of labor
         labor_cost: Cost of labor
+        vendor_cost: External contractor invoice amount
 
     Returns:
         {"success": True, "message": "...", "request": {...}}
     """
+    # RBAC: Only Projects User/Manager can update maintenance costs
+    user_roles = frappe.get_roles(frappe.session.user)
+    allowed_roles = ["Projects User", "Projects Manager", "System Manager"]
+    if not any(role in user_roles for role in allowed_roles):
+        frappe.throw(_("You do not have permission to update maintenance costs"), frappe.PermissionError)
+
     if not request_id:
         frappe.throw(_("Request ID is required"))
 
@@ -1231,8 +1339,12 @@ def update_maintenance_costs(request_id, labor_hours=None, labor_cost=None):
     if labor_cost is not None:
         doc.labor_cost = flt(labor_cost)
 
+    if vendor_cost is not None:
+        doc.vendor_cost = flt(vendor_cost)
+
     # Recalculate total cost
-    doc.total_cost = flt(doc.materials_cost or 0) + flt(doc.labor_cost or 0)
+    doc.total_cost = flt(doc.materials_cost or 0) + flt(doc.labor_cost or 0) + flt(doc.vendor_cost or 0)
+    doc.flags.ignore_permissions = True
     doc.save()
 
     return {
@@ -1250,6 +1362,10 @@ def get_maintenance_categories():
     Returns:
         {"categories": ["Electrical", "Plumbing", ...]}
     """
+    # Auth guard: reject unauthenticated requests
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"), frappe.AuthenticationError)
+
     # Get categories from DocType options
     meta = frappe.get_meta("BEI Maintenance Request")
     field = meta.get_field("issue_category")
@@ -1449,6 +1565,9 @@ def advance_project_stage(project, new_stage, notes=None):
     Returns:
         {"success": True, "message": "...", "project": {...}}
     """
+    # RBAC: Only Projects Manager and above can advance project stages
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     valid_stages = ["Pre-Design", "Design", "Bidding", "Pre-Construction",
                     "Construction", "Post-Construction", "Completed",
                     "On Hold", "Cancelled"]
@@ -1501,6 +1620,9 @@ def update_project_progress(project, progress_percent, notes=None):
     Returns:
         {"success": True, "message": "...", "project": {...}}
     """
+    # RBAC: Only Projects Manager and above can update project progress
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not frappe.db.exists("BEI Project", project):
         frappe.throw(_("Project {0} not found").format(project))
 
@@ -1540,6 +1662,9 @@ def submit_site_inspection(inspection_id):
     Returns:
         {"success": True, "message": "...", "inspection": {...}}
     """
+    # RBAC: Only Projects Manager and above can submit site inspections
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not frappe.db.exists("BEI Site Inspection", inspection_id):
         frappe.throw(_("Site inspection {0} not found").format(inspection_id))
 
@@ -1572,6 +1697,9 @@ def approve_site_inspection(inspection_id, approval_notes=None):
     Returns:
         {"success": True, "message": "...", "inspection": {...}}
     """
+    # RBAC: Only Projects Manager and above can approve site inspections
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not frappe.db.exists("BEI Site Inspection", inspection_id):
         frappe.throw(_("Site inspection {0} not found").format(inspection_id))
 
@@ -1608,6 +1736,9 @@ def reject_site_inspection(inspection_id, rejection_reason):
     Returns:
         {"success": True, "message": "...", "inspection": {...}}
     """
+    # RBAC: Only Projects Manager and above can reject site inspections
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not rejection_reason:
         frappe.throw(_("Rejection reason is required"))
 
@@ -1698,6 +1829,9 @@ def evaluate_bid(bid_id, technical_score, financial_score, evaluation_notes=None
     Returns:
         {"success": True, "message": "...", "bid": {...}}
     """
+    # RBAC: Only Projects Manager and above can evaluate bids
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not frappe.db.exists("BEI Project Bid", bid_id):
         frappe.throw(_("Bid {0} not found").format(bid_id))
 
@@ -1740,6 +1874,9 @@ def award_bid(bid_id, final_amount=None, award_notes=None):
     Returns:
         {"success": True, "message": "...", "bid": {...}}
     """
+    # RBAC: Only Projects Manager and above can award bids
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not frappe.db.exists("BEI Project Bid", bid_id):
         frappe.throw(_("Bid {0} not found").format(bid_id))
 
@@ -1808,6 +1945,9 @@ def complete_milestone(milestone_id, actual_date=None, notes=None):
     Returns:
         {"success": True, "message": "...", "milestone": {...}}
     """
+    # RBAC: Only Projects Manager and above can complete milestones
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not frappe.db.exists("BEI Project Milestone", milestone_id):
         frappe.throw(_("Milestone {0} not found").format(milestone_id))
 
@@ -1844,6 +1984,9 @@ def verify_milestone(milestone_id, verification_notes=None):
     Returns:
         {"success": True, "message": "...", "milestone": {...}}
     """
+    # RBAC: Only Projects Manager and above can verify milestones
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not frappe.db.exists("BEI Project Milestone", milestone_id):
         frappe.throw(_("Milestone {0} not found").format(milestone_id))
 
@@ -1880,6 +2023,9 @@ def create_milestone_billing(milestone_id):
     Returns:
         {"success": True, "message": "...", "milestone": {...}, "payment_request": {...}}
     """
+    # RBAC: Only Projects Manager and above can create milestone billing
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not frappe.db.exists("BEI Project Milestone", milestone_id):
         frappe.throw(_("Milestone {0} not found").format(milestone_id))
 
@@ -2039,6 +2185,9 @@ def add_punchlist_item(
     Returns:
         {"success": True, "message": "...", "item": {...}}
     """
+    # RBAC: Only Projects Manager and above can add punchlist items
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not frappe.db.exists("BEI Project", project):
         frappe.throw(_("Project {0} not found").format(project))
 
@@ -2086,6 +2235,9 @@ def resolve_punchlist_item(item_id, resolution_notes, after_photo=None):
     Returns:
         {"success": True, "message": "...", "item": {...}}
     """
+    # RBAC: Only Projects Manager and above can resolve punchlist items
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not resolution_notes:
         frappe.throw(_("Resolution notes are required"))
 
@@ -2125,6 +2277,9 @@ def close_punchlist_item(item_id):
     Returns:
         {"success": True, "message": "...", "item": {...}}
     """
+    # RBAC: Only Projects Manager and above can close punchlist items
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not frappe.db.exists("BEI Punchlist Item", item_id):
         frappe.throw(_("Punchlist item {0} not found").format(item_id))
 
@@ -2158,6 +2313,9 @@ def waive_punchlist_item(item_id, reason):
     Returns:
         {"success": True, "message": "...", "item": {...}}
     """
+    # RBAC: Only Projects Manager and above can waive punchlist items
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     if not reason:
         frappe.throw(_("Waiver reason is required"))
 
@@ -2255,6 +2413,9 @@ def update_permit_status(permit_id, status, permit_number=None, approval_date=No
     Returns:
         {"success": True, "message": "...", "permit": {...}}
     """
+    # RBAC: Only Projects Manager and above can update permit status
+    frappe.only_for(["Projects Manager", "System Manager", "Administrator"])
+
     valid_statuses = ["Not Started", "In Progress", "Pending Requirements",
                       "Submitted", "Approved", "Rejected", "Expired", "Renewed"]
 
@@ -2292,3 +2453,38 @@ def update_permit_status(permit_id, status, permit_number=None, approval_date=No
         ),
         "permit": doc.as_dict()
     }
+
+@frappe.whitelist()
+def check_sla_violations():
+    """Scheduled: check for SLA breaches on maintenance requests, send Google Chat alerts."""
+    from hrms.api.google_chat import send_message_to_space
+    from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+    from datetime import timedelta
+
+    SLA_HOURS = {"Urgent": 4, "High": 24, "Normal": 72}
+    now = now_datetime()
+
+    for priority, hours in SLA_HOURS.items():
+        threshold_dt = now - timedelta(hours=hours)
+        breached = frappe.get_all(
+            "BEI Maintenance Request",
+            filters={
+                "priority": priority,
+                "status": ["in", ["Open", "Assigned"]],
+                "creation": ["<", threshold_dt]
+            },
+            fields=["name", "store", "priority", "issue_category", "description", "creation"]
+        )
+
+        if breached:
+            lines = [f"*SLA BREACH — {priority} ({hours}hr SLA)*"]
+            for req in breached:
+                age_hrs = round((now - req.creation).total_seconds() / 3600, 1)
+                lines.append(f"• {req.name} — {req.store} | {req.issue_category} | Age: {age_hrs}h")
+            message = "\n".join(lines)
+            try:
+                space = get_chat_space(SPACE_NOTIFICATIONS)
+                send_message_to_space(space, message)
+            except Exception:
+                frappe.log_error("SLA alert failed", "Maintenance SLA")
+

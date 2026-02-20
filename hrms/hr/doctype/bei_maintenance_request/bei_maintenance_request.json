@@ -45,6 +45,7 @@
 		"column_break_costs",
 		"labor_hours",
 		"labor_cost",
+		"vendor_cost",
 		"total_cost",
 		"section_resolution",
 		"completion",
@@ -292,6 +293,13 @@
 			"precision": "2"
 		},
 		{
+			"fieldname": "vendor_cost",
+			"fieldtype": "Currency",
+			"label": "Vendor Cost",
+			"description": "External contractor invoice amount",
+			"precision": "2"
+		},
+		{
 			"fieldname": "total_cost",
 			"fieldtype": "Currency",
 			"label": "Total Cost",
@@ -397,7 +405,7 @@
 	"owner": "Administrator",
 	"permissions": [
 		{
-			"create": 1,
+			"create": 0,
 			"delete": 0,
 			"email": 1,
 			"export": 1,
@@ -406,7 +414,7 @@
 			"report": 1,
 			"role": "Employee",
 			"share": 1,
-			"write": 1
+			"write": 0
 		},
 		{
 			"create": 1,
@@ -435,6 +443,18 @@
 			"read": 1,
 			"report": 1,
 			"role": "Projects User",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects Manager",
 			"share": 1,
 			"write": 1
 		}
