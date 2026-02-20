@@ -903,3 +903,155 @@ Review at: https://my.bebang.ph/dashboard/hr/enrichment-tracker"""
     except Exception:
         # Don't fail if chat notification fails
         pass
+
+
+# ============================================================================
+# Bulk Government ID Import (G-055)
+# ============================================================================
+
+import csv
+import io
+import re
+
+
+# Government ID format validators
+GOV_ID_VALIDATORS = {
+    "ctc_tin": {
+        "label": "TIN",
+        "pattern": r"^\d{3}-\d{3}-\d{3}-\d{3}$",
+        "example": "123-456-789-000",
+    },
+    "ctc_sss": {
+        "label": "SSS",
+        "pattern": r"^\d{2}-\d{7}-\d$",
+        "example": "12-3456789-0",
+    },
+    "ctc_philhealth": {
+        "label": "PhilHealth",
+        "pattern": r"^\d{2}-\d{9}-\d$",
+        "example": "12-345678901-2",
+    },
+    "ctc_pagibig": {
+        "label": "Pag-IBIG",
+        "pattern": r"^\d{4}-\d{4}-\d{4}$",
+        "example": "1234-5678-9012",
+    },
+}
+
+
+@frappe.whitelist()
+def bulk_import_gov_ids(csv_content=None, file_url=None):
+    """Bulk import government IDs from CSV.
+
+    CSV columns: employee_id, tin, sss_number, philhealth_number, pagibig_number
+    All ID columns are optional — only non-empty values are updated.
+
+    Returns: {"updated": int, "skipped": int, "errors": [...]}
+    """
+    frappe.only_for(["HR Manager", "System Manager", "Administrator"])
+
+    if not csv_content and not file_url:
+        frappe.throw(_("Either csv_content or file_url is required"))
+
+    # If file_url provided, read from Frappe file system
+    if file_url and not csv_content:
+        file_doc = frappe.get_doc("File", {"file_url": file_url})
+        file_path = file_doc.get_full_path()
+        with open(file_path, "r", encoding="utf-8-sig") as f:
+            csv_content = f.read()
+
+    if not csv_content or not csv_content.strip():
+        frappe.throw(_("CSV content is empty"))
+
+    # Parse CSV
+    reader = csv.DictReader(io.StringIO(csv_content.strip()))
+
+    # Validate headers
+    required_header = "employee_id"
+    if required_header not in (reader.fieldnames or []):
+        frappe.throw(
+            _("CSV must have 'employee_id' column. Found: {0}").format(
+                ", ".join(reader.fieldnames or [])
+            )
+        )
+
+    # Column name mapping (flexible)
+    col_map = {
+        "tin": "ctc_tin",
+        "ctc_tin": "ctc_tin",
+        "sss": "ctc_sss",
+        "sss_number": "ctc_sss",
+        "ctc_sss": "ctc_sss",
+        "philhealth": "ctc_philhealth",
+        "philhealth_number": "ctc_philhealth",
+        "ctc_philhealth": "ctc_philhealth",
+        "pagibig": "ctc_pagibig",
+        "pagibig_number": "ctc_pagibig",
+        "ctc_pagibig": "ctc_pagibig",
+    }
+
+    updated = 0
+    skipped = 0
+    errors = []
+
+    for row_num, row in enumerate(reader, start=2):  # start=2 because row 1 is header
+        employee_id = (row.get("employee_id") or "").strip()
+        if not employee_id:
+            skipped += 1
+            continue
+
+        # Find employee by name (Employee ID) or employee_number
+        emp_name = None
+        if frappe.db.exists("Employee", employee_id):
+            emp_name = employee_id
+        else:
+            emp_name = frappe.db.get_value(
+                "Employee",
+                {"employee_number": employee_id},
+                "name",
+            )
+
+        if not emp_name:
+            errors.append({"row": row_num, "employee_id": employee_id, "error": "Employee not found"})
+            continue
+
+        # Collect valid updates for this row
+        updates = {}
+        row_errors = []
+
+        for csv_col, frappe_field in col_map.items():
+            value = (row.get(csv_col) or "").strip()
+            if not value:
+                continue
+
+            validator = GOV_ID_VALIDATORS.get(frappe_field)
+            if validator and not re.match(validator["pattern"], value):
+                row_errors.append(
+                    f"{validator['label']} '{value}' invalid (expected: {validator['example']})"
+                )
+                continue
+
+            updates[frappe_field] = value
+
+        if row_errors:
+            errors.append({"row": row_num, "employee_id": employee_id, "error": "; ".join(row_errors)})
+            if not updates:
+                continue  # skip if ALL fields invalid
+
+        # Apply updates using frappe.db.set_value (avoids ORM validation traps)
+        if updates:
+            for field, value in updates.items():
+                frappe.db.set_value("Employee", emp_name, field, value, update_modified=True)
+            updated += 1
+        else:
+            skipped += 1
+
+    frappe.db.commit()
+
+    return {
+        "updated": updated,
+        "skipped": skipped,
+        "error_count": len(errors),
+        "errors": errors[:50],  # Cap at 50 errors to avoid huge response
+        "total_rows": updated + skipped + len(errors),
+    }
