@@ -241,6 +241,143 @@ Use `PHOTO_DATA_URL` everywhere a photo field is tested.
   - Has keys: `total_open`, `total_assigned`, `total_in_progress`
   - All counts are integers >= 0
 
+### MAINT-016: Submit Request with Invalid Store — Expect Validation Error
+- **Type:** rbac | **Origin:** Sprint-04 audit B-07
+- **Role:** test.crew1@bebang.ph
+- **Call:** `POST hrms.api.store.submit_maintenance_request`
+- **Payload:**
+  ```json
+  {
+    "store": "NON-EXISTENT-STORE-XYZ - BEI",
+    "title": "Testing invalid store rejection",
+    "description": "This should fail because the store does not exist in the system.",
+    "category": "Electrical",
+    "priority": "Normal",
+    "equipment_area": "Lights"
+  }
+  ```
+- **Assert:** Response: `ok == false`, error message references invalid store or 403/400 HTTP status. DB: no new `BEI Maintenance Request` record created.
+
+### MAINT-017: Assess Request Without Projects Role — Expect 403
+- **Type:** rbac | **Origin:** Sprint-04 audit B-07
+- **Role:** test.staff@bebang.ph (Store OIC — no Projects role)
+- **Setup:** Use any valid MR name (e.g. from MAINT-001 run)
+- **Call:** `POST hrms.api.projects.assess_maintenance_request`
+- **Payload:**
+  ```json
+  {
+    "request_id": "<any valid MR>",
+    "concern_type": "Wear & Tear",
+    "notes": "Unauthorized assessment attempt"
+  }
+  ```
+- **Assert:** Response: `ok == false`, HTTP 403 PermissionError. DB: `concern_type` on the MR remains unchanged.
+
+### MAINT-018: Set Charge with Negative Amount — Expect Validation Error
+- **Type:** adversarial | **Origin:** Sprint-04 audit B-07
+- **Role:** test.projects@bebang.ph (Projects Head)
+- **Setup:** Use any valid MR name
+- **Call:** `POST hrms.api.projects.set_maintenance_charge`
+- **Payload:**
+  ```json
+  {
+    "request_id": "<any valid MR>",
+    "charge_amount": -5000,
+    "charging_reason": "Attempting to credit store — should fail"
+  }
+  ```
+- **Assert:** Response: `ok == false`, validation error about negative or invalid charge amount. DB: `charge_amount` on MR remains unchanged (not set to -5000).
+
+### MAINT-019: Acknowledge Charge for Different Store — Expect 403
+- **Type:** rbac | **Origin:** Sprint-04 audit B-07 / BLOCKER-10
+- **Role:** test.supervisor@bebang.ph (Store Supervisor — bound to TEST-STORE-BGC branch)
+- **Setup:** Create an MR for a DIFFERENT store (e.g. TEST-STORE-MM), set `charge_to_store=1` on it
+- **Call:** `POST hrms.api.projects.acknowledge_maintenance_charge`
+- **Payload:**
+  ```json
+  {
+    "request_id": "<MR for different store>"
+  }
+  ```
+- **Assert:** Response: `ok == false`, HTTP 403. DB: `store_acknowledged` remains `0`. This tests BLOCKER-10 (cross-store charge acknowledgement guard).
+- **Note:** This test will FAIL until BLOCKER-10 (store-binding check in `acknowledge_maintenance_charge`) is implemented.
+
+### MAINT-020: Complete Maintenance with Missing Required Fields — Expect Error
+- **Type:** adversarial | **Origin:** Sprint-04 audit B-07
+- **Role:** test.projects@bebang.ph
+- **Setup:** Use a MR in `In Progress` status
+- **Call:** `POST hrms.api.projects.record_maintenance_completion`
+- **Payload (missing technician_name and work_description):**
+  ```json
+  {
+    "request_id": "<MR in In Progress>",
+    "completion_date": "2026-02-20",
+    "resolution_status": "Fully Resolved"
+  }
+  ```
+- **Assert:** Response: `ok == false`, validation error referencing missing required fields. DB: no `BEI Maintenance Completion` record created.
+
+### MAINT-021: Double-Submit Same Request — Expect Idempotent or Error
+- **Type:** adversarial | **Origin:** Sprint-04 audit B-07
+- **Role:** test.projects@bebang.ph
+- **Setup:** Use a MR that is already `Completed` (e.g. from MAINT-007)
+- **Call:** `POST hrms.api.projects.record_maintenance_completion`
+- **Payload:**
+  ```json
+  {
+    "request_id": "<already Completed MR>",
+    "completion_date": "2026-02-20",
+    "technician_name": "Second Technician",
+    "work_description": "Second completion attempt on already closed request.",
+    "resolution_status": "Fully Resolved",
+    "after_photos": "<PHOTO_DATA_URL>"
+  }
+  ```
+- **Assert:** Either (a) Response `ok == false` with error "already completed" / invalid status transition, OR (b) If idempotent: `ok == true` but DB shows only ONE completion record (no duplicate). Either outcome is acceptable; silent creation of a second completion record is NOT acceptable.
+
+### MAINT-022: SLA Breach Notification Fires After Threshold
+- **Type:** edge | **Origin:** Sprint-04 audit B-07 / Gap G-077
+- **Role:** System (scheduled job trigger)
+- **Setup:**
+  1. Create an Urgent MR via `hrms.api.store.submit_maintenance_request`
+  2. Manually set `creation` to 5 hours ago: `UPDATE \`tabBEI Maintenance Request\` SET creation = DATE_SUB(NOW(), INTERVAL 5 HOUR) WHERE name = '<MR>'`
+  3. Confirm `status` is still `Open`
+- **Call:** Trigger directly via bench console: `frappe.get_doc("BEI Maintenance Request", "<MR>")` then `from hrms.api.projects import check_sla_violations; check_sla_violations()`
+- **Assert:**
+  - No Python exception raised
+  - Frappe Chat space (SPACE_NOTIFICATIONS) receives a message containing `SLA BREACH` and the MR name
+  - Check Frappe Error Log for any "SLA alert failed" entries — there should be none
+
+### MAINT-023: Orphan Cleanup — Completion Without Valid Request
+- **Type:** adversarial | **Origin:** Sprint-04 audit B-07
+- **Role:** test.projects@bebang.ph
+- **Call:** `POST hrms.api.projects.record_maintenance_completion`
+- **Payload:**
+  ```json
+  {
+    "request_id": "MR-DOES-NOT-EXIST-99999",
+    "completion_date": "2026-02-20",
+    "technician_name": "Ghost Technician",
+    "work_description": "Trying to complete a non-existent maintenance request.",
+    "resolution_status": "Fully Resolved",
+    "after_photos": "<PHOTO_DATA_URL>"
+  }
+  ```
+- **Assert:** Response: `ok == false`, error referencing record not found (404/DoesNotExist). DB: no orphaned `BEI Maintenance Completion` record created.
+
+### MAINT-024: Concurrent Charge Updates on Same Request
+- **Type:** adversarial | **Origin:** Sprint-04 audit B-07
+- **Role:** Two simultaneous calls as test.projects@bebang.ph
+- **Setup:** Use a valid MR in `Assigned` or `In Progress` state
+- **Step 1:** Send two near-simultaneous POST requests to `hrms.api.projects.set_maintenance_charge` with different amounts:
+  - Request A: `charge_amount = 3000, charging_reason = "Call A"`
+  - Request B: `charge_amount = 7000, charging_reason = "Call B"`
+- **Assert:**
+  - Only ONE charge amount wins (no intermediate state with both amounts)
+  - DB: `charge_amount` is either 3000 or 7000 — not null, not a sum, not 0
+  - No 500 error returned from either call
+  - Frappe error log has no uncaught exceptions from this operation
+
 ---
 
 ## Store Operations Module (10 scenarios)
@@ -2095,3 +2232,796 @@ Payload: {
   - **Regression guard:** Before fix, all stops had ETA = stop_order × 20 min (hardcoded), so Stop 1 = 06:20, Stop 2 = 06:40, Stop 3 = 07:00, Stop 4 = 07:20 — wrong for non-uniform routes
 
 ---
+
+
+## Store Ops + Inventory Sprint Scenarios (21 scenarios)
+
+**Added:** 2026-02-20 | **Origin:** Store Ops + Inventory Sprint — pre-written before execution per E2E_RULES.md Rule 9
+
+**Context:** Covers the Store Order flow (SORDER), POS date mismatch detection (POSDATE), Food Quality Check receiving fields (FQI), Variance Investigation lifecycle (VAR), Cycle Count Reconciliation (CCRECON), GChat notification resilience (GCHAT), RBAC gates (RBAC), and Stage 3 POS auto-link (STAGE3).
+
+**API Base:** `https://hq.bebang.ph/api/method/hrms.api`
+
+**Key Business Rules:**
+- Store orders require an Approval Queue entry when submitted — `assigned_approver` must be populated
+- Material Request items MUST have `warehouse` set after approval (regression: BLOCKER 1)
+- POS upload date mismatch is non-blocking but must set `has_date_mismatch = 1` on the document
+- Variance resolution via Write-Off creates a **Submitted** Stock Entry (docstatus=1, NOT Draft)
+- Variance resolution via Recount Corrected creates a **Submitted** Stock Reconciliation (docstatus=1)
+- GChat failures are always non-blocking — orders and approvals succeed regardless
+- Only Verified cycle counts can be reconciled (CCRECON guard)
+- Crew role is blocked from all inventory investigation and variance resolution endpoints
+
+---
+
+### SORDER-001: Submit store order via store.submit_order
+
+**Level:** L3
+**Type:** happy
+**Login:** test.staff@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- Store "Market Market - BK" exists in Frappe
+- Item code "CHICKEN-JOY-2PC" exists with stock available in Central Warehouse
+- test.staff@bebang.ph has Store OIC role and is linked to "Market Market - BK"
+
+**Steps:**
+1. POST `hrms.api.store.submit_order` with payload:
+   ```json
+   {
+     "store": "Market Market - BK",
+     "items": [
+       {
+         "item_code": "CHICKEN-JOY-2PC",
+         "qty": 50,
+         "uom": "Nos"
+       }
+     ],
+     "cargo_category": "FC",
+     "is_emergency": false
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true`
+- [ ] `result.order` is not null and starts with a recognizable prefix (e.g., "BEI-SO-" or "SO-")
+- [ ] DB: `BEI Store Order.<result.order>.status == "Pending Approval"`
+- [ ] DB: `BEI Approval Queue` entry exists with `reference_doctype == "BEI Store Order"` and `reference_name == result.order`
+- [ ] DB: `BEI Approval Queue.<entry>.assigned_approver` is not null and not empty string
+
+---
+
+### SORDER-002: Area Supervisor approves order — Material Request created with correct warehouse
+
+**Level:** L3
+**Type:** happy + regression
+**Login:** test.area@bebang.ph / BeiTest2026!
+**Origin:** Regression for BLOCKER 1 (warehouse was null on Material Request Item after approval)
+
+**Prerequisites:**
+- SORDER-001 completed; use `order_name` from SORDER-001 result
+- test.area@bebang.ph has Area Supervisor role and is the assigned_approver for the queue entry
+
+**Steps:**
+1. POST `hrms.api.store.approve_order` with payload:
+   ```json
+   {
+     "order_name": "<order_name from SORDER-001>",
+     "approved_quantities": [
+       {
+         "item_code": "CHICKEN-JOY-2PC",
+         "qty_approved": 45
+       }
+     ]
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true`
+- [ ] DB: `BEI Store Order.<order_name>.status == "Approved"`
+- [ ] DB: A `Material Request` document was created (discoverable via `frappe.db.get_value("Material Request", {"store_order": order_name}, "name")`)
+- [ ] DB: `Material Request Item` for CHICKEN-JOY-2PC has `warehouse` field that is NOT null and NOT empty string
+- [ ] DB: `Material Request Item.qty == 45` (approved qty, not the original 50)
+
+---
+
+### SORDER-003: Regression — Material Request warehouse field is never null after order approval
+
+**Level:** L3
+**Type:** regression
+**Login:** test.area@bebang.ph / BeiTest2026!
+**Origin:** BLOCKER 1 — Material Request Item.warehouse was null causing downstream Stock Entry failures
+
+**Prerequisites:**
+- A BEI Store Order in "Pending Approval" status (use SORDER-001 or create a fresh one)
+
+**Steps:**
+1. POST `hrms.api.store.approve_order` with payload:
+   ```json
+   {
+     "order_name": "<order_name>",
+     "approved_quantities": [
+       {
+         "item_code": "CHICKEN-JOY-2PC",
+         "qty_approved": 45
+       }
+     ]
+   }
+   ```
+2. Fetch the resulting Material Request name via bench console or API
+3. Fetch warehouse from DB: `frappe.db.get_value("Material Request Item", {"parent": mr_name}, "warehouse")`
+
+**Expected Results:**
+- [ ] `warehouse` is not None
+- [ ] `warehouse` is not an empty string `""`
+- [ ] `warehouse` resolves to a valid Frappe Warehouse (e.g., "Market Market - BK Warehouse - BEI" or the configured default)
+- [ ] **Regression guard:** Before the fix, this value was always `None`, causing all downstream Stock Entries to fail with "Warehouse is mandatory"
+
+---
+
+### POSDATE-001: Upload POS with mismatched date returns date_mismatch flag
+
+**Level:** L3
+**Type:** edge
+**Login:** test.staff@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- test.staff@bebang.ph is linked to store "Market Market - BK"
+- Use today as `pos_date` and yesterday as the CSV internal date
+
+**Steps:**
+1. Prepare a POS CSV where the internal date column contains yesterday's date (e.g., 2026-02-19)
+2. POST `hrms.api.store.upload_pos_data` with payload:
+   ```json
+   {
+     "store": "Market Market - BK",
+     "pos_date": "2026-02-20",
+     "pos_system": "Mosaic",
+     "pos_file_content": "<base64-encoded CSV with 2026-02-19 internal date>",
+     "discount_report": "<PHOTO_DATA_URL>",
+     "transaction_report": "<PHOTO_DATA_URL>",
+     "product_mix": "<PHOTO_DATA_URL>",
+     "daily_sales_revenue": "<PHOTO_DATA_URL>",
+     "sales_summary": "<PHOTO_DATA_URL>"
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true` (upload is NOT blocked — mismatch is a warning, not an error)
+- [ ] `result.date_mismatch == true`
+- [ ] `result.warning` or `result.message` contains both dates: the submitted `pos_date` AND the date found inside the CSV
+- [ ] DB: BEI POS Upload document is created and persisted (name accessible)
+
+---
+
+### POSDATE-002: has_date_mismatch field is persisted on the POS Upload document
+
+**Level:** L3
+**Type:** regression
+**Login:** test.staff@bebang.ph / BeiTest2026!
+**Origin:** BLOCKER 6 — `has_date_mismatch` field on BEI POS Upload was not being set even when mismatch was detected
+
+**Prerequisites:**
+- POSDATE-001 completed; POS Upload document name available
+
+**Steps:**
+1. Complete POSDATE-001 to obtain `doc_name`
+2. Fetch the field directly: `frappe.db.get_value("BEI POS Upload", doc_name, "has_date_mismatch")`
+
+**Expected Results:**
+- [ ] `has_date_mismatch == 1` (integer 1, truthy)
+- [ ] Field is persisted on the document after upload (not just returned in the API response)
+- [ ] **Regression guard:** Before the fix, this field was always 0 even when dates clearly differed, making audit queries for mismatch uploads impossible
+
+---
+
+### FQI-001: complete_receiving with all 5 quality checks saves all fields
+
+**Level:** L3
+**Type:** happy
+**Login:** test.staff@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- A `BEI Store Receiving` document exists in status "Pending Receiving" linked to "Market Market - BK"
+- The receiving has at least one item
+
+**Steps:**
+1. POST `hrms.api.store.complete_receiving` with payload:
+   ```json
+   {
+     "receiving_name": "<BEI Store Receiving name>",
+     "check_temperature": 1,
+     "check_packaging": 1,
+     "check_quantity": 1,
+     "check_expiry": 1,
+     "check_food_quality": 1,
+     "receiving_notes": "All 5 quality checks passed. Items received in good condition at 06:45 AM."
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true`
+- [ ] DB: `BEI Store Receiving Item.check_temperature == 1`
+- [ ] DB: `BEI Store Receiving Item.check_packaging == 1`
+- [ ] DB: `BEI Store Receiving Item.check_quantity == 1`
+- [ ] DB: `BEI Store Receiving Item.check_expiry == 1`
+- [ ] DB: `BEI Store Receiving Item.check_food_quality == 1`
+- [ ] DB: `BEI Store Receiving.status == "Received"` (or equivalent completion status)
+- [ ] No validation error thrown for any of the 5 fields
+
+---
+
+### FQI-002: complete_receiving with check_food_quality=0 is allowed (not mandatory)
+
+**Level:** L3
+**Type:** edge
+**Login:** test.staff@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- A fresh `BEI Store Receiving` in "Pending Receiving" status (separate from FQI-001)
+
+**Steps:**
+1. POST `hrms.api.store.complete_receiving` with payload:
+   ```json
+   {
+     "receiving_name": "<BEI Store Receiving name>",
+     "check_temperature": 1,
+     "check_packaging": 1,
+     "check_quantity": 1,
+     "check_expiry": 1,
+     "check_food_quality": 0,
+     "receiving_notes": "4 checks passed. Food quality check not applicable for dry goods."
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true` (no error — `check_food_quality` is NOT mandatory)
+- [ ] DB: `BEI Store Receiving Item.check_food_quality == 0`
+- [ ] DB: All other 4 check fields saved correctly as 1
+- [ ] DB: `BEI Store Receiving.status` reflects completion (not stuck in "Pending Receiving")
+
+---
+
+### VAR-001: start_variance_investigation transitions Open to Investigating
+
+**Level:** L3
+**Type:** happy
+**Login:** test.supervisor@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- A `BEI Stock Variance` document exists with `status == "Open"` for the supervisor's store
+- test.supervisor@bebang.ph has Store Supervisor role
+
+**Steps:**
+1. POST `hrms.api.inventory.start_variance_investigation` with payload:
+   ```json
+   {
+     "variance_name": "<BEI Stock Variance name>",
+     "investigation_notes": "Beginning investigation — counted shelf stock manually, checking delivery records."
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true`
+- [ ] DB: `BEI Stock Variance.<variance_name>.status == "Investigating"`
+- [ ] DB: `investigated_by` is set (supervisor user or employee ID)
+- [ ] DB: `investigation_started_at` is set (datetime, not null)
+
+---
+
+### VAR-002: resolve_variance Write-Off creates a SUBMITTED Stock Entry
+
+**Level:** L3
+**Type:** happy
+**Login:** test.supervisor@bebang.ph / BeiTest2026!
+**Origin:** Regression prevention — Stock Entry must be docstatus=1, NOT Draft
+
+**Prerequisites:**
+- A `BEI Stock Variance` in status "Investigating" (use VAR-001 output or create fresh)
+- The variance item has sufficient stock for write-off
+
+**Steps:**
+1. POST `hrms.api.inventory.resolve_variance` with payload:
+   ```json
+   {
+     "variance_name": "<BEI Stock Variance name>",
+     "resolution_type": "Write-Off",
+     "resolution_notes": "Spoilage confirmed during investigation. Items disposed of per food safety protocol. Write-off approved by area supervisor."
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true`
+- [ ] `result.stock_entry` is not null (Stock Entry name returned)
+- [ ] DB: `Stock Entry.<result.stock_entry>.docstatus == 1` (Submitted — NOT 0/Draft, NOT 2/Cancelled)
+- [ ] DB: `Stock Entry.<result.stock_entry>.stock_entry_type == "Material Issue"` (or equivalent write-off type)
+- [ ] DB: `BEI Stock Variance.<variance_name>.status == "Resolved"`
+- [ ] DB: `BEI Stock Variance.<variance_name>.resolution_type == "Write-Off"`
+
+---
+
+### VAR-003: resolve_variance Recount Corrected creates a SUBMITTED Stock Reconciliation
+
+**Level:** L3
+**Type:** happy
+**Login:** test.supervisor@bebang.ph / BeiTest2026!
+**Origin:** Regression prevention — Stock Reconciliation must be docstatus=1
+
+**Prerequisites:**
+- A `BEI Stock Variance` in status "Investigating"
+- The variance item has stock to reconcile
+
+**Steps:**
+1. POST `hrms.api.inventory.resolve_variance` with payload:
+   ```json
+   {
+     "variance_name": "<BEI Stock Variance name>",
+     "resolution_type": "Recount Corrected",
+     "adjustment_qty": 5,
+     "resolution_notes": "Recount confirmed actual qty is 5 units higher than system. Initial count was done during rush hour — miscounted. Corrected via stock reconciliation."
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true`
+- [ ] `result.stock_reconciliation` is not null (Stock Reconciliation name returned)
+- [ ] DB: `Stock Reconciliation.<result.stock_reconciliation>.docstatus == 1` (Submitted — NOT 0/Draft)
+- [ ] DB: Stock Reconciliation items reflect `adjustment_qty` = 5
+- [ ] DB: `BEI Stock Variance.<variance_name>.status == "Resolved"`
+- [ ] DB: `BEI Stock Variance.<variance_name>.resolution_type == "Recount Corrected"`
+
+---
+
+### VAR-004: resolve_variance from "Open" status (skip Investigating) is allowed
+
+**Level:** L3
+**Type:** edge
+**Login:** test.supervisor@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- A `BEI Stock Variance` in status "Open" (NOT "Investigating" — freshly created or reset)
+
+**Steps:**
+1. POST `hrms.api.inventory.resolve_variance` with payload:
+   ```json
+   {
+     "variance_name": "<BEI Stock Variance in Open status>",
+     "resolution_type": "Write-Off",
+     "resolution_notes": "Quick resolution — variance confirmed as spoilage, no extended investigation needed. Resolved directly from Open."
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true` (code allows resolution from both Open and Investigating)
+- [ ] DB: `BEI Stock Variance.status == "Resolved"`
+- [ ] DB: Stock Entry or Stock Reconciliation created with `docstatus == 1`
+- [ ] No error like "Variance must be in Investigating status to resolve"
+
+---
+
+### VAR-005: RBAC — Crew member CANNOT call start_variance_investigation
+
+**Level:** L3
+**Type:** rbac
+**Login:** test.crew1@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- Any `BEI Stock Variance` in "Open" status exists
+
+**Steps:**
+1. POST `hrms.api.inventory.start_variance_investigation` with payload:
+   ```json
+   {
+     "variance_name": "<any Open BEI Stock Variance>",
+     "investigation_notes": "Crew attempting to start investigation."
+   }
+   ```
+
+**Expected Results:**
+- [ ] Response is HTTP 403 OR Frappe PermissionError
+- [ ] Error message contains "Insufficient Permissions", "do not have access", or equivalent
+- [ ] DB: `BEI Stock Variance.status` unchanged (still "Open")
+- [ ] Crew role is strictly blocked from variance investigation workflow
+
+---
+
+### VAR-006: RBAC — Crew member CANNOT call resolve_variance
+
+**Level:** L3
+**Type:** rbac
+**Login:** test.crew1@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- Any `BEI Stock Variance` in "Investigating" or "Open" status exists
+
+**Steps:**
+1. POST `hrms.api.inventory.resolve_variance` with payload:
+   ```json
+   {
+     "variance_name": "<any BEI Stock Variance>",
+     "resolution_type": "Write-Off",
+     "resolution_notes": "Crew attempting to resolve variance."
+   }
+   ```
+
+**Expected Results:**
+- [ ] Response is HTTP 403 OR Frappe PermissionError
+- [ ] Error message contains "Insufficient Permissions" or equivalent
+- [ ] DB: `BEI Stock Variance.status` unchanged
+- [ ] No Stock Entry or Stock Reconciliation created
+
+---
+
+### VAR-007: Variance list loads successfully for Area Supervisor
+
+**Level:** L3
+**Type:** happy
+**Login:** test.area@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- At least one `BEI Stock Variance` exists in any status
+
+**Steps:**
+1. GET `hrms.api.inventory.get_variances` (no body required)
+
+**Expected Results:**
+- [ ] `result.success == true` OR response is a valid list (no PermissionError, no 500)
+- [ ] Response contains a list (may be empty if no variances in scope, but must not error)
+- [ ] Area Supervisor role is NOT blocked from viewing variances
+- [ ] Each item in the list has at minimum: `name`, `status`, and `store` or `warehouse` fields
+
+---
+
+### CCRECON-001: mark_cycle_count_reconciled transitions Verified to Reconciled
+
+**Level:** L3
+**Type:** happy
+**Login:** test.supervisor@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- A `BEI Cycle Count` document exists with `status == "Verified"` linked to the supervisor's store
+- test.supervisor@bebang.ph has Store Supervisor role
+
+**Steps:**
+1. POST `hrms.api.inventory.mark_cycle_count_reconciled` with payload:
+   ```json
+   {
+     "cycle_count_name": "<BEI Cycle Count in Verified status>",
+     "reconciliation_notes": "Reconciliation complete. All variances resolved. Stock entries submitted and GL impact confirmed."
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true`
+- [ ] DB: `BEI Cycle Count.<cycle_count_name>.status == "Reconciled"`
+- [ ] DB: `reconciled_by` is set (supervisor user or employee)
+- [ ] DB: `reconciled_at` is set (datetime, not null)
+
+---
+
+### CCRECON-002: Cannot reconcile a Cycle Count that is not in Verified status
+
+**Level:** L3
+**Type:** adversarial
+**Login:** test.supervisor@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- A `BEI Cycle Count` in status "Submitted" (approved/submitted but NOT yet verified — skipping the Verified step)
+
+**Steps:**
+1. POST `hrms.api.inventory.mark_cycle_count_reconciled` with payload:
+   ```json
+   {
+     "cycle_count_name": "<BEI Cycle Count in Submitted status>",
+     "reconciliation_notes": "Attempting premature reconciliation."
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == false` OR Frappe ValidationError thrown
+- [ ] Error message contains "Only Verified cycle counts can be marked as Reconciled" or equivalent guard message
+- [ ] DB: `BEI Cycle Count.status` unchanged (still "Submitted")
+- [ ] Status guard enforced — cannot skip the Verified step
+
+---
+
+### GCHAT-001: submit_order succeeds even when GChat notification is unavailable
+
+**Level:** L3
+**Type:** edge (non-blocking notification)
+**Login:** test.staff@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- "Market Market - BK" store exists
+- CHICKEN-JOY-2PC item exists
+
+**Steps:**
+1. POST `hrms.api.store.submit_order` with payload:
+   ```json
+   {
+     "store": "Market Market - BK",
+     "items": [
+       {
+         "item_code": "CHICKEN-JOY-2PC",
+         "qty": 10,
+         "uom": "Nos"
+       }
+     ],
+     "cargo_category": "FC",
+     "is_emergency": false
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true` (order created regardless of GChat state)
+- [ ] DB: `BEI Store Order` created with status "Pending Approval"
+- [ ] DB: Approval Queue entry created with `assigned_approver` set
+- [ ] If GChat notification failed: error is logged in Frappe Error Log but NOT propagated to the API response
+- [ ] No `frappe.throw()` triggered by a GChat failure in the submit_order code path
+
+---
+
+### GCHAT-002: approve_order succeeds even when GChat notification is unavailable
+
+**Level:** L3
+**Type:** edge (non-blocking notification)
+**Login:** test.area@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- A BEI Store Order in "Pending Approval" status exists (use GCHAT-001 or SORDER-001 output)
+
+**Steps:**
+1. POST `hrms.api.store.approve_order` with payload:
+   ```json
+   {
+     "order_name": "<order in Pending Approval>",
+     "approved_quantities": [
+       {
+         "item_code": "CHICKEN-JOY-2PC",
+         "qty_approved": 10
+       }
+     ]
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true`
+- [ ] DB: `BEI Store Order.status == "Approved"`
+- [ ] DB: Material Request created with `warehouse` populated (regression guard from SORDER-003)
+- [ ] If GChat notification for "order approved" failed: logged in Frappe Error Log, NOT thrown as an exception
+- [ ] Approval workflow completes fully even if GChat is unreachable
+
+---
+
+### GCHAT-003: GChat failure does NOT block order submission — code-level verification
+
+**Level:** L3
+**Type:** regression
+**Login:** test.staff@bebang.ph / BeiTest2026!
+**Origin:** Pattern from SCM-007 — GChat must be wrapped in try/except in submit_order
+
+**Prerequisites:**
+- Access to source code at `hrms/api/store.py` (or equivalent path)
+
+**Steps:**
+1. Open `hrms/api/store.py` and inspect the `submit_order` function:
+   - Locate the GChat notification call (look for `google_chat`, `send_message`, or similar)
+   - Verify it is wrapped in a `try/except` block
+   - Verify the `except` clause calls `frappe.log_error(...)` and does NOT re-raise or call `frappe.throw()`
+2. Submit a fresh order via the API (same payload as GCHAT-001)
+
+**Expected Results:**
+- [ ] Code review: GChat call is inside `try/except` block
+- [ ] Code review: `except` block calls `frappe.log_error(...)` not `raise` or `frappe.throw()`
+- [ ] API: `result.success == true` (order created)
+- [ ] Frappe Error Log: if GChat was unreachable, an error entry exists with a message like "GChat notification failed" or "submit_order notification error"
+- [ ] **Regression guard:** Any future change that moves the GChat call outside try/except will break this test
+
+---
+
+### RBAC-001: Store Crew CANNOT call store.approve_order
+
+**Level:** L3
+**Type:** rbac
+**Login:** test.crew1@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- Any `BEI Store Order` in "Pending Approval" status exists
+
+**Steps:**
+1. POST `hrms.api.store.approve_order` with payload:
+   ```json
+   {
+     "order_name": "<any Pending Approval order>",
+     "approved_quantities": [
+       {
+         "item_code": "CHICKEN-JOY-2PC",
+         "qty_approved": 5
+       }
+     ]
+   }
+   ```
+
+**Expected Results:**
+- [ ] Response is HTTP 403 OR Frappe PermissionError
+- [ ] Error message contains "Insufficient Permissions", "do not have access", or equivalent
+- [ ] DB: `BEI Store Order.status` unchanged (still "Pending Approval")
+- [ ] Crew role cannot bypass the approval gate
+
+---
+
+### RBAC-002: Area Supervisor CAN call store.approve_order (positive RBAC check)
+
+**Level:** L3
+**Type:** rbac (positive assertion)
+**Login:** test.area@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- A `BEI Store Order` in "Pending Approval" status where test.area@bebang.ph is the assigned_approver
+
+**Steps:**
+1. POST `hrms.api.store.approve_order` with payload:
+   ```json
+   {
+     "order_name": "<Pending Approval order with area supervisor as approver>",
+     "approved_quantities": [
+       {
+         "item_code": "CHICKEN-JOY-2PC",
+         "qty_approved": 45
+       }
+     ]
+   }
+   ```
+
+**Expected Results:**
+- [ ] HTTP 200 (no permission error)
+- [ ] `result.success == true`
+- [ ] DB: `BEI Store Order.status == "Approved"`
+- [ ] Area Supervisor role has approve_order permission confirmed
+
+---
+
+### STAGE3-001: submit_closing_stage3_photos auto-links today's POS upload
+
+**Level:** L3
+**Type:** happy + regression
+**Login:** test.staff@bebang.ph / BeiTest2026!
+**Origin:** Stage 3 auto-link requirement — closing report must auto-attach today's POS upload without manual input
+
+**Prerequisites:**
+- A `BEI POS Upload` exists for today's date AND for "Market Market - BK" (in submitted/complete status)
+- A `BEI Store Closing Report` exists in draft or stage-2-complete status for "Market Market - BK" today
+
+**Steps:**
+1. POST `hrms.api.store.submit_closing_stage3_photos` with payload:
+   ```json
+   {
+     "report_name": "<BEI Store Closing Report name>",
+     "x_reading_opening_photo": "<PHOTO_DATA_URL>",
+     "x_reading_closing_photo": "<PHOTO_DATA_URL>",
+     "z_reading_photo": "<PHOTO_DATA_URL>"
+   }
+   ```
+
+**Expected Results:**
+- [ ] `result.success == true`
+- [ ] DB: `BEI Store Closing Report.<report_name>.pos_upload` is NOT null and NOT empty string
+- [ ] DB: `BEI Store Closing Report.<report_name>.pos_upload` equals the name of the POS Upload for today and this store
+- [ ] DB: The linked POS Upload has `pos_date` matching today and `store == "Market Market - BK"`
+- [ ] Auto-link happens server-side — the caller does NOT need to pass `pos_upload` in the payload
+- [ ] If no POS Upload exists for today: `pos_upload` field is left null and no error is thrown (graceful degradation)
+
+---
+
+### VAR-PHOTO-001: Variance Report with Photo Evidence
+
+**Level:** L3
+**Type:** edge
+**Login:** test.staff@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- test.staff@bebang.ph is linked to store "Market Market - BK" (Store OIC role)
+- Item "CHICKEN-JOY-2PC" exists in Frappe
+- Photo fixture: generate `PHOTO_DATA_URL` using the 200x200 PNG generator from the Data Requirements section (~151KB base64). NEVER use a 1x1 pixel PNG.
+
+**Steps:**
+1. Generate `PHOTO_DATA_URL` using the photo fixture script in the "Photo Test Fixture" section above.
+2. POST `hrms.api.inventory.report_variance` with payload:
+   ```json
+   {
+     "store": "Market Market - BK",
+     "item_code": "CHICKEN-JOY-2PC",
+     "system_qty": 20,
+     "actual_qty": 17,
+     "variance_type": "Shortage",
+     "explanation": "Counted shelf stock manually — 3 units missing. Checked delivery records and no unrecorded issues. Possible pilferage during morning rush.",
+     "photo": "<PHOTO_DATA_URL>"
+   }
+   ```
+3. Capture `result.name` (the BEI Inventory Variance document name).
+4. Fetch the document via bench console or Frappe API: `frappe.get_doc("BEI Inventory Variance", result.name)`
+5. Fetch the File record: `frappe.db.get_value("File", {"attached_to_name": result.name, "attached_to_doctype": "BEI Inventory Variance"}, ["name", "file_url", "attached_to_doctype"])`
+6. Verify the photo URL is accessible: `requests.get("https://hq.bebang.ph" + doc.photo_evidence)` — should return HTTP 200.
+
+**Expected Results:**
+- [ ] `result.success == true`
+- [ ] `result.name` starts with "BEI-VAR-" or similar variance prefix (not null)
+- [ ] DB: `BEI Inventory Variance.<result.name>.photo_evidence` is a `/files/` URL string (NOT a base64 string, NOT null)
+- [ ] DB: `BEI Inventory Variance.<result.name>.photo_evidence` does NOT contain `data:image` (base64 prefix must be stripped)
+- [ ] DB: Frappe `File` DocType record exists where `attached_to_doctype == "BEI Inventory Variance"` AND `attached_to_name == result.name`
+- [ ] File URL returns HTTP 200 when fetched (photo is accessible, not broken link)
+- [ ] DB: `BEI Inventory Variance.<result.name>.variance_qty == -3` (17 - 20)
+- [ ] DB: `BEI Inventory Variance.<result.name>.variance_type == "Shortage"`
+- [ ] **Key assertion:** `photo_evidence` is a server-side `/files/` URL, proving `save_base64_image()` ran correctly and the base64 was NOT stored raw in the DB column
+
+---
+
+### CC-PHOTO-001: Cycle Count with Photo Evidence
+
+**Level:** L3
+**Type:** edge
+**Login:** test.staff@bebang.ph / BeiTest2026!
+
+**Prerequisites:**
+- test.staff@bebang.ph is linked to store "Market Market - BK" (Store OIC role)
+- Item "CHICKEN-JOY-2PC" exists with a stock UOM set in Frappe
+- A photo file has been uploaded to Frappe via multipart/form-data and a `photo_url` (e.g., `/files/cycle_count_photo.png`) is available OR use the two-step approach described below.
+- Photo fixture: generate `PHOTO_DATA_URL` (~151KB base64, 200x200 PNG). NEVER use a 1x1 pixel PNG.
+
+**Two-Step Upload Pattern (required for submit_cycle_count_v2):**
+`submit_cycle_count_v2` accepts a `photo_url` parameter (a server-side `/files/` path), NOT raw base64. Upload the photo first:
+1. Upload photo file via `POST /api/method/upload_file` (multipart/form-data, `is_private=0`), get `file_url` from response.
+2. Pass that `file_url` as `photo_url` in the cycle count payload.
+
+**Steps:**
+1. Generate `PHOTO_DATA_URL` using the photo fixture script. Decode from base64 to raw bytes for the file upload.
+2. Upload the photo via `POST https://hq.bebang.ph/api/method/upload_file` (multipart/form-data):
+   - Field `file`: the PNG bytes, filename `cycle_count_evidence.png`
+   - Field `is_private`: `0`
+   - Capture `response.message.file_url` (e.g., `/files/cycle_count_evidence.png`)
+3. POST `hrms.api.inventory.submit_cycle_count_v2` with payload:
+   ```json
+   {
+     "store": "Market Market - BK",
+     "count_date": "2026-02-20",
+     "count_type": "Store Monthly",
+     "photo_url": "<file_url from step 2>",
+     "items": [
+       {
+         "item_code": "CHICKEN-JOY-2PC",
+         "counted_qty_whole": 18,
+         "counted_qty_loose": 0.0
+       }
+     ]
+   }
+   ```
+4. Capture `result.name` (BEI Cycle Count document name).
+5. Fetch the document: `frappe.get_doc("BEI Cycle Count", result.name)`
+6. Fetch the linked File record: `frappe.db.get_value("File", {"attached_to_name": result.name, "attached_to_doctype": "BEI Cycle Count"}, ["name", "file_url", "attached_to_doctype"])`
+7. Verify photo accessibility: `requests.get("https://hq.bebang.ph" + doc.photo_evidence)` — should return HTTP 200.
+
+**Expected Results:**
+- [ ] Upload step: `file_url` returned is a `/files/` path (not null, not empty string)
+- [ ] `result.name` is a BEI Cycle Count document name (not null)
+- [ ] `result.status == "Submitted"`
+- [ ] DB: `BEI Cycle Count.<result.name>.photo_evidence` equals the `file_url` from the upload step
+- [ ] DB: `BEI Cycle Count.<result.name>.photo_evidence` is a `/files/` URL (NOT null, NOT base64 string)
+- [ ] DB: Frappe `File` DocType record exists where `attached_to_doctype == "BEI Cycle Count"` AND `attached_to_name == result.name`
+- [ ] DB: The File record's `attached_to_name` was set by the two-step linkage in `submit_cycle_count_v2` (not left as orphan)
+- [ ] File URL returns HTTP 200 when fetched (photo is accessible)
+- [ ] DB: `BEI Cycle Count.<result.name>.docstatus == 1` (submitted, not draft)
+- [ ] **Key assertion:** File DocType `attached_to_name` is populated — the orphan-link step (`frappe.db.set_value("File", ...)`) ran correctly after doc insert
+
+---
+
+## Regression Bank Updates (Store Ops + Inventory Sprint)
+
+| ID | Date | Origin | Test |
+|----|------|--------|------|
+| REG-010 | 2026-02-20 | BLOCKER 1: Material Request Item.warehouse null after approval | SORDER-002, SORDER-003 |
+| REG-011 | 2026-02-20 | BLOCKER 6: has_date_mismatch not persisted on BEI POS Upload | POSDATE-002 |
+| REG-012 | 2026-02-20 | VAR resolution creates Draft Stock Entry/Reconciliation (must be Submitted, docstatus=1) | VAR-002, VAR-003 |
+| REG-013 | 2026-02-20 | GChat failure propagated as frappe.throw() blocking order submission | GCHAT-003 |
+| REG-014 | 2026-02-20 | Stage 3 closing report does not auto-link today's POS upload | STAGE3-001 |
+| REG-015 | 2026-02-20 | Variance photo stored as raw base64 in DB column instead of /files/ URL | VAR-PHOTO-001 |
+| REG-016 | 2026-02-20 | Cycle count photo File record left as orphan (attached_to_name not set) | CC-PHOTO-001 |

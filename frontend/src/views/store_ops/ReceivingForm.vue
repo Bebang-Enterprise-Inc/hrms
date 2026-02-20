@@ -58,6 +58,9 @@
 								<ion-checkbox v-model="item.check_temperature" label-placement="end">
 									Temperature OK
 								</ion-checkbox>
+								<ion-checkbox v-model="item.check_food_quality" label-placement="end">
+									Food Quality OK
+								</ion-checkbox>
 							</div>
 
 							<!-- Report Issue Button -->
@@ -135,7 +138,8 @@ function hasIssue(item) {
 		!item.check_condition ||
 		!item.check_packaging ||
 		!item.check_expiry ||
-		!item.check_temperature
+		!item.check_temperature ||
+		!item.check_food_quality
 }
 
 function reportFQI(item) {
@@ -155,8 +159,8 @@ async function loadTripItems() {
 	try {
 		// For now, create mock items - in production this would come from the trip
 		receivingItems.value = [
-			{ item_code: "SKU-001", expected_qty: 10, received_qty: 10, check_condition: true, check_packaging: true, check_expiry: true, check_temperature: true },
-			{ item_code: "SKU-002", expected_qty: 5, received_qty: 5, check_condition: true, check_packaging: true, check_expiry: true, check_temperature: true },
+			{ item_code: "SKU-001", expected_qty: 10, received_qty: 10, check_condition: true, check_packaging: true, check_expiry: true, check_temperature: true, check_food_quality: true },
+			{ item_code: "SKU-002", expected_qty: 5, received_qty: 5, check_condition: true, check_packaging: true, check_expiry: true, check_temperature: true, check_food_quality: true },
 		]
 	} catch (error) {
 		console.error("Failed to load trip items:", error)
@@ -176,13 +180,17 @@ async function submitReceiving() {
 			check_packaging: item.check_packaging ? 1 : 0,
 			check_expiry: item.check_expiry ? 1 : 0,
 			check_temperature: item.check_temperature ? 1 : 0,
+			check_food_quality: item.check_food_quality ? 1 : 0,
 			has_issue: hasIssue(item) ? 1 : 0
 		}))
 
 		const result = await call("hrms.api.store.complete_receiving", {
 			store: store.value,
 			trip: props.trip,
-			items: JSON.stringify(items)
+			items: JSON.stringify(items),
+			receiver_1_signature: "",
+			receiver_2_signature: "",
+			driver_signature: ""
 		})
 
 		if (result?.success) {

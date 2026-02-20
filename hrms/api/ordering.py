@@ -59,199 +59,29 @@ def _get_last_order_qty(store, item_code):
 
 @frappe.whitelist()
 def get_orderable_items(store, date=None):
-    """
-    Get item catalog for the store.
-
-    Args:
-        store (str): Warehouse name (store)
-        date (str, optional): Order date (defaults to today)
-
-    Returns:
-        dict: {"items": [...], "store": str, "date": str}
-    """
-    _check_ordering_permission(ORDERING_STORE_ROLES, "view orderable items")
-
-    order_date = date or today()
-
-    # Get all active items that can be ordered (items with item_group set)
-    items = frappe.db.sql("""
-        SELECT
-            i.name as item_code,
-            i.item_name,
-            i.stock_uom as uom,
-            i.description as packaging_description,
-            i.item_group as cargo_category
-        FROM `tabItem` i
-        WHERE i.disabled = 0
-          AND i.is_stock_item = 1
-        ORDER BY i.item_group, i.item_name
-    """, as_dict=True)
-
-    # Source warehouse for stock check (commissary/main warehouse)
-    source_warehouse = frappe.db.get_single_value("Stock Settings", "default_warehouse") or "Main Warehouse - BK"
-
-    enriched = []
-    for item in items:
-        available_stock = frappe.db.get_value(
-            "Bin",
-            {"item_code": item.item_code, "warehouse": source_warehouse},
-            "actual_qty"
-        ) or 0.0
-
-        suggested_qty = _get_suggested_qty(store, item.item_code)
-        last_order_qty = _get_last_order_qty(store, item.item_code)
-
-        enriched.append({
-            "item_code": item.item_code,
-            "item_name": item.item_name,
-            "uom": item.uom,
-            "packaging_description": item.packaging_description or "",
-            "cargo_category": item.cargo_category or "",
-            "suggested_qty": suggested_qty,
-            "available_stock": available_stock,
-            "is_oos": available_stock <= 0,
-            "last_order_qty": last_order_qty,
-        })
-
-    return {
-        "items": enriched,
-        "store": store,
-        "date": order_date,
-    }
+    """DEPRECATED: Use hrms.api.store.get_orderable_items instead."""
+    frappe.logger("ordering").warning("ordering.get_orderable_items is deprecated. Use store.get_orderable_items.")
+    from hrms.api.store import get_orderable_items as canonical_get_orderable_items
+    return canonical_get_orderable_items(store=store)
 
 
 @frappe.whitelist()
 def validate_order_schedule(store, date=None):
-    """
-    Validate whether ordering is allowed for the store and date.
-
-    Args:
-        store (str): Warehouse name (store)
-        date (str, optional): Order date (defaults to today)
-
-    Returns:
-        dict: {"allowed": bool, "reason": str, "next_delivery_day": str}
-    """
-    _check_ordering_permission(ORDERING_STORE_ROLES, "validate order schedule")
-
-    order_date = date or today()
-
-    # Check cutoff time: orders must be submitted before 11:59 AM
-    current_time = get_time(now_datetime().strftime("%H:%M:%S"))
-    cutoff_time = get_time("11:59:00")
-
-    # If ordering for today and past cutoff, disallow
-    if getdate(order_date) == getdate(today()) and current_time > cutoff_time:
-        return {
-            "allowed": False,
-            "reason": "Ordering cutoff was 11:59 AM",
-            "next_delivery_day": "",
-        }
-
-    # Delivery schedule matrix will be added later — always allow for now
-    return {
-        "allowed": True,
-        "reason": "",
-        "next_delivery_day": "",
-    }
+    """DEPRECATED: Use hrms.api.store.validate_order_schedule instead."""
+    frappe.logger("ordering").warning("ordering.validate_order_schedule is deprecated. Use store.validate_order_schedule.")
+    from hrms.api.store import validate_order_schedule as canonical_validate
+    return canonical_validate(store=store)
 
 
 @frappe.whitelist()
-def submit_order(store, items, cargo_category, delivery_date=None, is_emergency=0, notes=""):
-    """
-    Submit a store order.
-
-    Args:
-        store (str): Warehouse name (store)
-        items (list): [{item_code, qty_requested, deviation_reason?}]
-        cargo_category (str): FC | DRY | FM
-        delivery_date (str, optional): Requested delivery date
-        is_emergency (int): 1 if emergency order (bypasses cutoff check)
-        notes (str): Optional order notes
-
-    Returns:
-        dict: {"name": order_name, "status": status}
-    """
-    _check_ordering_permission(ORDERING_STORE_ROLES, "submit an order")
-
-    # Parse items if passed as JSON string
-    if isinstance(items, str):
-        import json
-        items = json.loads(items)
-
-    order_date = today()
-
-    # Cutoff check (skip for emergency orders)
-    if not int(is_emergency):
-        schedule = validate_order_schedule(store, order_date)
-        if not schedule.get("allowed"):
-            frappe.throw(schedule.get("reason", "Ordering is not allowed at this time"))
-
-    # Duplicate check: no existing non-cancelled order for store + date + category
-    existing = frappe.db.exists("BEI Store Order", {
-        "store": store,
-        "order_date": order_date,
-        "cargo_category": cargo_category,
-        "status": ["not in", ["Cancelled"]],
-    })
-    if existing:
-        frappe.throw(
-            _("An order already exists for {0} on {1} for category {2}: {3}").format(
-                store, order_date, cargo_category, existing
-            )
-        )
-
-    # Determine is_bulk_order: bulk if total qty_requested > threshold or >10 items
-    is_bulk_order = 1 if len(items) > 10 else 0
-
-    doc = frappe.get_doc({
-        "doctype": "BEI Store Order",
-        "naming_series": "BEI-ORD-.YYYY.-.#####",
-        "store": store,
-        "order_date": order_date,
-        "delivery_date": delivery_date,
-        "cargo_category": cargo_category,
-        "is_emergency": int(is_emergency),
-        "is_bulk_order": is_bulk_order,
-        "notes": notes,
-        "status": "Draft",
-        "submitted_by": frappe.session.user,
-        "items": [],
-    })
-
-    for item_data in items:
-        item_code = item_data.get("item_code")
-        qty_requested = float(item_data.get("qty_requested", 0))
-
-        if not item_code or qty_requested <= 0:
-            frappe.throw(_("Invalid item or quantity for item: {0}").format(item_code))
-
-        suggested_qty = _get_suggested_qty(store, item_code)
-        last_order_qty = _get_last_order_qty(store, item_code)
-
-        # Get item details
-        item_name, uom, unit_price = frappe.db.get_value(
-            "Item", item_code, ["item_name", "stock_uom", "standard_rate"]
-        ) or (item_code, "Nos", 0.0)
-
-        doc.append("items", {
-            "item_code": item_code,
-            "item_name": item_name,
-            "uom": uom,
-            "unit_price": unit_price or 0.0,
-            "qty_requested": qty_requested,
-            "suggested_qty": suggested_qty,
-            "last_order_qty": last_order_qty,
-            "deviation_reason": item_data.get("deviation_reason", ""),
-        })
-
-    # insert() triggers validate() → compute_deviations() + set_approval_status()
-    doc.insert(ignore_permissions=True)
-
-    return {
-        "name": doc.name,
-        "status": doc.status,
-    }
+def submit_order(store, items, cargo_category=None, delivery_date=None, is_emergency=0, notes=""):
+    """DEPRECATED: Use hrms.api.store.submit_order instead."""
+    frappe.logger("ordering").warning("ordering.submit_order is deprecated. Use store.submit_order.")
+    from hrms.api.store import submit_order as canonical_submit
+    return canonical_submit(
+        store=store, items=items, cargo_category=cargo_category,
+        delivery_date=delivery_date, is_emergency=is_emergency, notes=notes
+    )
 
 
 def _generate_dr_internal(order_name, order=None):
@@ -382,52 +212,10 @@ def get_order_review_queue(date=None, status=None):
 
 @frappe.whitelist()
 def approve_order(order_name, adjustments=None):
-    """
-    Approve a pending store order, optionally adjusting quantities.
-
-    Args:
-        order_name (str): BEI Store Order name
-        adjustments (list, optional): [{item_code, qty_approved}]
-
-    Returns:
-        dict: {"status": "Approved", "dr_number": str}
-    """
-    _check_ordering_permission(ORDERING_APPROVAL_ROLES, "approve orders")
-
-    # Parse adjustments if passed as JSON string
-    if isinstance(adjustments, str):
-        import json
-        adjustments = json.loads(adjustments)
-
-    order = frappe.get_doc("BEI Store Order", order_name)
-
-    if order.status != "Pending Approval":
-        frappe.throw(
-            _("Cannot approve order {0} — status is '{1}', must be 'Pending Approval'").format(
-                order_name, order.status
-            )
-        )
-
-    # Apply quantity adjustments if provided
-    if adjustments:
-        adjustment_map = {adj["item_code"]: float(adj["qty_approved"]) for adj in adjustments}
-        for item in order.items:
-            if item.item_code in adjustment_map:
-                item.qty_approved = adjustment_map[item.item_code]
-
-    order.status = "Approved"
-    order.approved_by = frappe.session.user
-    order.approved_at = now()
-    order.save(ignore_permissions=True)
-
-    # Auto-trigger DR generation after approval (using internal function
-    # to avoid permission conflict — approve_order already checked permissions)
-    dr_result = _generate_dr_internal(order_name, order)
-
-    return {
-        "status": "Approved",
-        "dr_number": dr_result.get("dr_number"),
-    }
+    """DEPRECATED: Use hrms.api.store.approve_order instead."""
+    frappe.logger("ordering").warning("ordering.approve_order is deprecated. Use store.approve_order.")
+    from hrms.api.store import approve_order as canonical_approve
+    return canonical_approve(order_name=order_name, approved_quantities=adjustments)
 
 
 @frappe.whitelist()
@@ -499,4 +287,4 @@ def _send_order_notification(store, message):
         # Google Chat module not available — log and skip
         frappe.log_error(f"GChat not configured. Skipped notification for store {store}", "Ordering API")
     except Exception as e:
-        raise e
+        frappe.log_error(str(e), "Order Notification Error")

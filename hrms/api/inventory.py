@@ -71,6 +71,10 @@ def submit_cycle_count(store=None, items=None, count_date=None):
         doc.total_variance_value = total_variance
         doc.status = "Submitted"
         doc.insert(ignore_permissions=True)
+        # V-05 fix: submit() to set docstatus=1 — matches submit_cycle_count_v2 behavior.
+        # Without this, approve_cycle_count rejects these records (requires docstatus=1).
+        doc.flags.ignore_permissions = True
+        doc.submit()
         return {"success": True, "name": doc.name, "total_variance": total_variance}
 
     except Exception as e:
@@ -230,6 +234,51 @@ def reject_cycle_count(count_name, rejection_reason):
     Kept for backward compatibility with existing frontend calls.
     """
     return approve_cycle_count(count_name, action="Reject", comment=rejection_reason)
+
+
+@frappe.whitelist()
+def mark_cycle_count_reconciled(count_name, stock_reconciliation_name=None, notes=None):
+    """Mark a Verified cycle count as Reconciled.
+
+    Called after Finance reconciles the count against the stock reconciliation document.
+
+    Args:
+        count_name: BEI Cycle Count name
+        stock_reconciliation_name: Optional link to Stock Reconciliation doc
+        notes: Optional reconciliation notes
+
+    Returns:
+        dict: {status, reconciled_by, reconciled_at}
+    """
+    allowed_roles = {"Area Supervisor", "Store Supervisor", "System Manager"}
+    user_roles = set(frappe.get_roles())
+    if not user_roles.intersection(allowed_roles):
+        frappe.throw(_("You do not have permission to mark cycle counts as reconciled."), frappe.PermissionError)
+
+    doc = frappe.get_doc("BEI Cycle Count", count_name)
+
+    if doc.status != "Verified":
+        frappe.throw(_("Only 'Verified' cycle counts can be marked as Reconciled. Current status: {0}").format(doc.status))
+
+    doc.status = "Reconciled"
+    doc.reconciled_by = frappe.session.user
+    doc.reconciled_at = now_datetime()
+
+    if stock_reconciliation_name:
+        doc.stock_reconciliation = stock_reconciliation_name
+
+    if notes:
+        doc.reconciliation_notes = notes
+
+    doc.save(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "name": count_name,
+        "status": doc.status,
+        "reconciled_by": doc.reconciled_by,
+        "reconciled_at": str(doc.reconciled_at),
+    }
 
 
 @frappe.whitelist()
@@ -1276,6 +1325,10 @@ def start_variance_investigation(variance_name):
     Returns:
         dict: {success, status}
     """
+    allowed_roles = {"Store Supervisor", "Area Supervisor", "Warehouse User", "System Manager"}
+    if not set(frappe.get_roles()).intersection(allowed_roles):
+        frappe.throw(_("You do not have permission to manage variance investigations"), frappe.PermissionError)
+
     doc = frappe.get_doc("BEI Inventory Variance", variance_name)
 
     if doc.status != "Open":
@@ -1305,6 +1358,10 @@ def resolve_variance(variance_name, resolution_type, resolution_notes, adjustmen
     Returns:
         dict: {success, status, stock_entry} (stock_entry may be None)
     """
+    allowed_roles = {"Store Supervisor", "Area Supervisor", "Warehouse User", "System Manager"}
+    if not set(frappe.get_roles()).intersection(allowed_roles):
+        frappe.throw(_("You do not have permission to manage variance investigations"), frappe.PermissionError)
+
     valid_types = {"Write-Off", "Recount Corrected", "Theft", "Damage", "System Error"}
     if resolution_type not in valid_types:
         frappe.throw(_("Invalid resolution type. Must be one of: {0}").format(", ".join(valid_types)))
@@ -1342,6 +1399,8 @@ def resolve_variance(variance_name, resolution_type, resolution_notes, adjustmen
             })
 
             se.insert(ignore_permissions=True)
+            se.flags.ignore_permissions = True
+            se.submit()
             stock_entry_name = se.name
             doc.status = "Written Off"
 
@@ -1361,17 +1420,41 @@ def resolve_variance(variance_name, resolution_type, resolution_notes, adjustmen
             })
 
             sr.insert(ignore_permissions=True)
+            sr.flags.ignore_permissions = True
+            sr.submit()
             stock_entry_name = sr.name
             doc.status = "Resolved"
 
+        elif resolution_type in ("Theft", "Damage"):
+            # NG-01 fix: Theft/Damage must create Material Issue to remove phantom inventory.
+            # Without this, stock ledger retains quantity that no longer physically exists.
+            company = get_company()
+            se = frappe.new_doc("Stock Entry")
+            se.stock_entry_type = "Material Issue"
+            se.company = company
+            se.posting_date = nowdate()
+            se.remarks = f"Variance {resolution_type.lower()}: {variance_name} — {resolution_notes}"
+
+            se.append("items", {
+                "item_code": doc.item_code,
+                "s_warehouse": doc.store,
+                "qty": qty if qty and qty > 0 else abs(flt(doc.variance_qty)),
+                "uom": frappe.db.get_value("Item", doc.item_code, "stock_uom") or "Nos",
+            })
+
+            se.insert(ignore_permissions=True)
+            se.flags.ignore_permissions = True
+            se.submit()
+            stock_entry_name = se.name
+            doc.status = "Resolved"
+
         else:
+            # System Error — no stock adjustment, just mark resolved
             doc.status = "Resolved"
 
         # Record resolution on the variance doc
         doc.resolution = f"[{resolution_type}] {resolution_notes}"
         doc.save(ignore_permissions=True)
-
-        frappe.db.release_savepoint(sp)
 
     except Exception as e:
         frappe.db.rollback(save_point=sp)

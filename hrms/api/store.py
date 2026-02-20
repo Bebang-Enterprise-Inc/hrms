@@ -16,6 +16,16 @@ import base64
 import hashlib
 
 
+def _notify_store_ops(msg):
+    """Send a non-blocking GChat notification to the Store Ops notifications space."""
+    try:
+        from hrms.api.google_chat import send_message_to_space
+        from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+        send_message_to_space(get_chat_space(SPACE_NOTIFICATIONS), msg)
+    except Exception:
+        pass
+
+
 def save_base64_image(base64_data, doctype, docname=None, fieldname="photo"):
     """
     Save a base64-encoded image as a Frappe file attachment.
@@ -81,7 +91,7 @@ def save_base64_image(base64_data, doctype, docname=None, fieldname="photo"):
 
 
 STORE_OPS_ALLOWED_ROLES = [
-    "Store Staff", "Store Supervisor", "Area Supervisor",
+    "Store Staff", "Store OIC", "Store Supervisor", "Area Supervisor",
     "System Manager", "Administrator"
 ]
 
@@ -242,24 +252,27 @@ def get_orderable_items(store):
         ORDER BY COALESCE(freq.order_count, 0) DESC, i.item_group, i.item_name
     """, warehouse, as_dict=True)
 
-    # Get last order quantities for each item
+    # V-14 fix: Batch query for last order quantities (was N+1: 2 queries per item).
+    # Gets the most recent non-Draft order qty for each item in a single SQL query.
+    last_qty_map = {}
+    last_qty_rows = frappe.db.sql("""
+        SELECT oi.item_code, oi.qty_requested
+        FROM `tabBEI Store Order Item` oi
+        INNER JOIN `tabBEI Store Order` o ON o.name = oi.parent
+        WHERE o.store = %(warehouse)s AND o.status != 'Draft'
+            AND oi.creation = (
+                SELECT MAX(oi2.creation)
+                FROM `tabBEI Store Order Item` oi2
+                INNER JOIN `tabBEI Store Order` o2 ON o2.name = oi2.parent
+                WHERE o2.store = %(warehouse)s AND o2.status != 'Draft'
+                    AND oi2.item_code = oi.item_code
+            )
+    """, {"warehouse": warehouse}, as_dict=True)
+    for row in last_qty_rows:
+        last_qty_map[row.item_code] = row.qty_requested
+
     for item in items:
-        last_order = frappe.get_all(
-            "BEI Store Order Item",
-            filters={
-                "item_code": item.name,
-                "parent": ["in", frappe.get_all(
-                    "BEI Store Order",
-                    filters={"store": warehouse, "status": ["!=", "Draft"]},
-                    pluck="name",
-                    limit=1
-                )]
-            },
-            fields=["qty_requested"],
-            order_by="creation desc",
-            limit=1
-        )
-        item["last_order_qty"] = last_order[0].qty_requested if last_order else 0
+        item["last_order_qty"] = last_qty_map.get(item.name, 0)
 
     return {"items": items}
 
@@ -328,17 +341,26 @@ def validate_order_schedule(store):
 
 
 @frappe.whitelist()
-def submit_order(store, items, is_emergency=False):
+def submit_order(store, items, cargo_category=None, delivery_date=None, is_emergency=False, notes=""):
     """
     Submit a new store order.
-    Items should be a list of {item_code, qty_requested}
-    is_emergency: if True, bypasses cutoff gate (logs but allows)
-    """
-    # Validate ordering schedule cutoff
-    _validate_order_cutoff(store, is_emergency=frappe.utils.cint(is_emergency))
 
+    Args:
+        store (str): Warehouse name or branch code for the store
+        items (list): [{item_code, qty_requested, deviation_reason?}]
+        cargo_category (str): FC | DRY | FM (required — BEI Store Order has reqd: 1)
+        delivery_date (str, optional): Requested delivery date (defaults to tomorrow)
+        is_emergency (bool/int): If True, bypasses cutoff gate (logs but allows)
+        notes (str): Optional order notes
+    """
     if not store:
         frappe.throw(_("Store is required"))
+
+    if not cargo_category:
+        frappe.throw(_("Cargo category is required (FC, DRY, or FM)"))
+
+    # Validate ordering schedule cutoff
+    _validate_order_cutoff(store, is_emergency=frappe.utils.cint(is_emergency))
 
     # Resolve branch name to warehouse name
     warehouse = resolve_warehouse(store)
@@ -348,6 +370,22 @@ def submit_order(store, items, is_emergency=False):
 
     if not items:
         frappe.throw(_("At least one item is required"))
+
+    order_date = nowdate()
+
+    # Duplicate check: no existing non-cancelled order for same store + date + category
+    existing = frappe.db.exists("BEI Store Order", {
+        "store": warehouse,
+        "order_date": order_date,
+        "cargo_category": cargo_category,
+        "status": ["not in", ["Cancelled"]],
+    })
+    if existing:
+        frappe.throw(
+            _("An order already exists for {0} on {1} for category {2}: {3}").format(
+                warehouse, order_date, cargo_category, existing
+            )
+        )
 
     # Validate quantities - prevent unreasonable orders
     MAX_ORDER_QTY = 10000
@@ -360,22 +398,33 @@ def submit_order(store, items, is_emergency=False):
             frappe.throw(_("Order quantity {0} exceeds maximum allowed ({1}) for item {2}").format(
                 qty, MAX_ORDER_QTY, item_data.get("item_code")))
 
+    # Determine is_bulk_order: bulk if more than 10 line items
+    is_bulk_order = 1 if len(items) > 10 else 0
+
     order = frappe.new_doc("BEI Store Order")
     order.store = warehouse
-    order.order_date = nowdate()
-    order.delivery_date = add_days(nowdate(), 1)
+    order.order_date = order_date
+    order.delivery_date = delivery_date or add_days(nowdate(), 1)
+    order.cargo_category = cargo_category
+    order.is_emergency = frappe.utils.cint(is_emergency)
+    order.is_bulk_order = is_bulk_order
+    order.notes = notes
     order.status = "Pending Approval"
     order.submitted_by = frappe.session.user
 
     for item_data in items:
         order.append("items", {
             "item_code": item_data.get("item_code"),
-            "qty_requested": item_data.get("qty_requested", 0)
+            "qty_requested": item_data.get("qty_requested", 0),
+            "deviation_reason": item_data.get("deviation_reason", ""),
         })
 
-    order.insert()
+    order.insert(ignore_permissions=True)
 
-    # Bug fix B6: Create approval queue entry routed to area supervisor with required fields
+    _notify_store_ops(f"New store order {order.name} from {warehouse} -- {len(items)} items. Review: my.bebang.ph/dashboard/store-ops/order-approvals")
+
+    # Route to area supervisor approval queue (non-fatal if it fails)
+    warning = None
     try:
         approver = _get_area_supervisor_for_store(warehouse)
         if approver:
@@ -384,23 +433,23 @@ def submit_order(store, items, is_emergency=False):
             queue_entry.reference_name = order.name
             queue_entry.assigned_approver = approver
             queue_entry.status = "Pending"
-            # Set required fields
             queue_entry.store = warehouse
             queue_entry.submitted_by = frappe.session.user
             queue_entry.submitted_at = frappe.utils.now()
             queue_entry.insert(ignore_permissions=True)
     except Exception:
-        # Don't block order creation if approval queue fails
-        frappe.log_error(
-            f"Failed to create approval queue for order {order.name}",
-            "Approval Queue Error"
-        )
+        frappe.log_error(f"Failed to create approval queue for order {order.name}", "Approval Queue Error")
+        warning = "Order created but approval routing failed. Please notify your Area Supervisor manually."
 
-    return {
+    result = {
         "success": True,
-        "order": order.name,
-        "message": f"Order {order.name} submitted successfully"
+        "name": order.name,
+        "status": order.status,
+        "message": f"Order {order.name} submitted successfully",
     }
+    if warning:
+        result["warning"] = warning
+    return result
 
 
 @frappe.whitelist()
@@ -463,7 +512,9 @@ def approve_order(order_name, approved_quantities=None):
     order.status = "Approved"
     order.approved_by = frappe.session.user
     order.approved_at = now_datetime()
-    order.save()
+    order.save(ignore_permissions=True)
+
+    _notify_store_ops(f"Store order {order_name} approved by {frappe.session.user}. Check my.bebang.ph/dashboard/store-ops/order-approvals for details.")
 
     # Create Material Request so commissary can pick it up, linking back to this store order
     mr_name = _create_mr_for_store_order(order)
@@ -492,8 +543,11 @@ def _create_mr_for_store_order(order):
         mr.schedule_date = required_by
         mr.custom_store_order = order.name
 
-        # Destination warehouse is the store's warehouse
-        store_warehouse = getattr(order, "warehouse", None) or getattr(order, "store_warehouse", None)
+        # Destination warehouse is the store's warehouse (field name is "store" on BEI Store Order)
+        store_warehouse = order.store
+        if not store_warehouse:
+            frappe.log_error(f"No store warehouse found on order {order.name}", "Store Ordering")
+            return None
 
         for item in order.items:
             qty = flt(getattr(item, "qty_approved", None) or getattr(item, "qty_requested", 0))
@@ -1379,6 +1433,8 @@ def upload_pos_data(store=None, pos_date=None, pos_system=None, discount_report=
     if date_mismatch_warning:
         result["warning"] = date_mismatch_warning
         result["date_mismatch"] = True
+        # Tag the document so Finance can filter mismatched uploads in reconciliation view
+        frappe.db.set_value("BEI POS Upload", doc.name, "has_date_mismatch", 1)
     return result
 
 
@@ -1928,8 +1984,19 @@ def submit_closing_stage3_photos(report_name, x_reading_opening_photo, x_reading
 
     doc.notes = notes
     doc.report_time = now_datetime().strftime("%H:%M:%S")
+
+    # Auto-link today's POS upload if not already linked (D-1)
+    if not doc.pos_upload:
+        today_upload = frappe.db.get_value(
+            "BEI POS Upload",
+            {"store": doc.store, "pos_date": doc.report_date},
+            "name"
+        )
+        if today_upload:
+            doc.pos_upload = today_upload
+
     # stage_completed is auto-computed by DocType's update_stage_completed() during save
-    doc.save()
+    doc.save(ignore_permissions=True)
 
     return {
         "success": True,

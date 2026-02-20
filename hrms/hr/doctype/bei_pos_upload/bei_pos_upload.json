@@ -43,7 +43,8 @@
   "section_raw_data",
   "extracted_data",
   "section_notes",
-  "notes"
+  "notes",
+  "has_date_mismatch"
  ],
  "fields": [
   {
@@ -276,11 +277,20 @@
    "fieldname": "notes",
    "fieldtype": "Text",
    "label": "Notes"
+  },
+  {
+   "fieldname": "has_date_mismatch",
+   "fieldtype": "Check",
+   "label": "Has Date Mismatch",
+   "default": "0",
+   "read_only": 1,
+   "hidden": 1,
+   "description": "Set automatically when POS file date does not match claimed upload date"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-31 10:00:00.000000",
+ "modified": "2026-02-20 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "BEI POS Upload",

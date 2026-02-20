@@ -29,7 +29,12 @@
   "section_items",
   "items",
   "section_notes",
-  "notes"
+  "notes",
+  "section_reconciliation",
+  "stock_reconciliation",
+  "reconciliation_notes",
+  "reconciled_by",
+  "reconciled_at"
  ],
  "fields": [
   {
@@ -188,6 +193,44 @@
    "fieldname": "notes",
    "fieldtype": "Text",
    "label": "Notes"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.status=='Reconciled'",
+   "depends_on": "eval:doc.status=='Reconciled' || doc.stock_reconciliation",
+   "fieldname": "section_reconciliation",
+   "fieldtype": "Section Break",
+   "label": "Reconciliation"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "stock_reconciliation",
+   "fieldtype": "Link",
+   "label": "Stock Reconciliation",
+   "options": "Stock Reconciliation",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reconciliation_notes",
+   "fieldtype": "Text",
+   "label": "Reconciliation Notes",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reconciled_by",
+   "fieldtype": "Link",
+   "label": "Reconciled By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reconciled_at",
+   "fieldtype": "Datetime",
+   "label": "Reconciled At",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
