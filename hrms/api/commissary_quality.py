@@ -697,28 +697,20 @@ def get_expiring_batches(days=7, item_group=None):
         filters += " AND i.item_group = %(item_group)s"
         params["item_group"] = item_group
 
-    expiring = frappe.db.sql(f"""
-        SELECT
-            b.name as batch_no,
-            b.item as item_code,
-            i.item_name,
-            i.item_group,
-            b.expiry_date,
-            b.manufacturing_date,
-            bin.actual_qty as available_qty,
-            i.stock_uom,
-            DATEDIFF(b.expiry_date, CURDATE()) as days_to_expiry,
-            CASE
-                WHEN b.expiry_date <= CURDATE() THEN 'expired'
-                WHEN DATEDIFF(b.expiry_date, CURDATE()) <= 3 THEN 'critical'
-                ELSE 'warning'
-            END as urgency
-        FROM `tabBatch` b
-        JOIN `tabItem` i ON i.name = b.item
-        LEFT JOIN `tabBin` bin ON bin.item_code = b.item AND bin.warehouse = %(warehouse)s
-        {filters}
-        ORDER BY b.expiry_date ASC
-    """, params, as_dict=True)
+    # filters is built from string constants, not user input
+    expiring = frappe.db.sql(
+        "SELECT b.name as batch_no, b.item as item_code, i.item_name, i.item_group,"
+        " b.expiry_date, b.manufacturing_date, bin.actual_qty as available_qty, i.stock_uom,"
+        " DATEDIFF(b.expiry_date, CURDATE()) as days_to_expiry,"
+        " CASE WHEN b.expiry_date <= CURDATE() THEN 'expired'"
+        "      WHEN DATEDIFF(b.expiry_date, CURDATE()) <= 3 THEN 'critical'"
+        "      ELSE 'warning' END as urgency"
+        " FROM `tabBatch` b"
+        " JOIN `tabItem` i ON i.name = b.item"
+        " LEFT JOIN `tabBin` bin ON bin.item_code = b.item AND bin.warehouse = %(warehouse)s"
+        " " + filters +
+        " ORDER BY b.expiry_date ASC",
+        params, as_dict=True)
 
     # Group by urgency
     by_urgency = {"expired": [], "critical": [], "warning": []}

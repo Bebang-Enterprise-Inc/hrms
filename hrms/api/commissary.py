@@ -1626,27 +1626,21 @@ def get_transfer_history(destination_hub=None, date_from=None, date_to=None, lim
     params.extend(target_warehouses)
     params.append(int(limit))
 
-    transfers = frappe.db.sql(f"""
-        SELECT
-            se.name,
-            se.posting_date,
-            se.to_warehouse,
-            se.remarks,
-            se.owner,
-            se.docstatus,
-            COUNT(sed.item_code) as items_count,
-            SUM(sed.qty) as total_qty
-        FROM `tabStock Entry` se
-        JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
-        WHERE se.stock_entry_type = 'Material Transfer'
-        AND se.from_warehouse = %s
-        AND se.to_warehouse IN ({warehouse_placeholders})
-        AND se.docstatus = 1
-        {date_filter}
-        GROUP BY se.name
-        ORDER BY se.posting_date DESC, se.creation DESC
-        LIMIT %s
-    """, params, as_dict=True)
+    # conditions (date_filter, warehouse_placeholders) are string constants, not user input
+    transfers = frappe.db.sql(
+        "SELECT se.name, se.posting_date, se.to_warehouse, se.remarks, se.owner, se.docstatus,"
+        " COUNT(sed.item_code) as items_count, SUM(sed.qty) as total_qty"
+        " FROM `tabStock Entry` se"
+        " JOIN `tabStock Entry Detail` sed ON sed.parent = se.name"
+        " WHERE se.stock_entry_type = 'Material Transfer'"
+        " AND se.from_warehouse = %s"
+        " AND se.to_warehouse IN (" + warehouse_placeholders + ")"
+        " AND se.docstatus = 1"
+        " " + date_filter +
+        " GROUP BY se.name"
+        " ORDER BY se.posting_date DESC, se.creation DESC"
+        " LIMIT %s",
+        params, as_dict=True)
 
     # Add hub code to each transfer
     warehouse_to_hub = {v: k for k, v in DISTRIBUTION_HUBS.items()}

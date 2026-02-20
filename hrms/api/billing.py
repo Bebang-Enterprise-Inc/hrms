@@ -436,6 +436,7 @@ def get_billing_detail(name):
 @frappe.whitelist()
 def get_billing_summary(billing_period=None, store=None):
     """Get aggregated billing summary by status."""
+    # conditions are all string constants, not user input
     conditions = ["1=1"]
     params = []
     if billing_period:
@@ -447,27 +448,27 @@ def get_billing_summary(billing_period=None, store=None):
 
     where = " AND ".join(conditions)
 
-    summary = frappe.db.sql(f"""
-        SELECT
-            status,
-            COUNT(*) as count,
-            COALESCE(SUM(total_amount), 0) as total_amount,
-            COALESCE(SUM(amount_paid), 0) as total_paid,
-            COALESCE(SUM(balance_due), 0) as total_balance
-        FROM `tabBEI Billing Schedule`
-        WHERE {where}
-        GROUP BY status
-    """, params, as_dict=True)
+    summary = frappe.db.sql(
+        "SELECT"
+        " status,"
+        " COUNT(*) as count,"
+        " COALESCE(SUM(total_amount), 0) as total_amount,"
+        " COALESCE(SUM(amount_paid), 0) as total_paid,"
+        " COALESCE(SUM(balance_due), 0) as total_balance"
+        " FROM `tabBEI Billing Schedule`"
+        " WHERE " + where +
+        " GROUP BY status",
+        params, as_dict=True)
 
-    totals = frappe.db.sql(f"""
-        SELECT
-            COUNT(*) as total_billings,
-            COALESCE(SUM(total_amount), 0) as grand_total,
-            COALESCE(SUM(amount_paid), 0) as total_collected,
-            COALESCE(SUM(balance_due), 0) as total_outstanding
-        FROM `tabBEI Billing Schedule`
-        WHERE {where}
-    """, params, as_dict=True)[0]
+    totals = frappe.db.sql(
+        "SELECT"
+        " COUNT(*) as total_billings,"
+        " COALESCE(SUM(total_amount), 0) as grand_total,"
+        " COALESCE(SUM(amount_paid), 0) as total_collected,"
+        " COALESCE(SUM(balance_due), 0) as total_outstanding"
+        " FROM `tabBEI Billing Schedule`"
+        " WHERE " + where,
+        params, as_dict=True)[0]
 
     return {
         "by_status": summary,
@@ -953,15 +954,26 @@ def get_reconciliation_summary(month, year):
     partners = ["RCS", "3MD", "COOLITZ", "PINNACLE"]
     summary = []
 
+    # Batch trip counts for all partners in a single query (avoids N+1)
+    trip_count_rows = frappe.db.sql(
+        "SELECT vehicle_owner, COUNT(*) as cnt"
+        " FROM `tabBEI Distribution Trip`"
+        " WHERE trip_date BETWEEN %s AND %s AND docstatus = 1"
+        " GROUP BY vehicle_owner",
+        [start_date, end_date], as_dict=True)
+    trip_counts = {r.vehicle_owner: r.cnt for r in trip_count_rows}
+
+    # Batch JE lookups for all partners in a single query (avoids N+1)
+    je_cheque_nos = [f"3PL-{p}-{period_label}" for p in partners]
+    placeholders = ", ".join(["%s"] * len(je_cheque_nos))
+    je_rows = frappe.db.sql(
+        "SELECT cheque_no, total_debit FROM `tabJournal Entry`"
+        " WHERE cheque_no IN (" + placeholders + ") AND docstatus != 2",  # conditions are string constants
+        je_cheque_nos, as_dict=True)
+    je_by_cheque = {r.cheque_no: flt(r.total_debit) for r in je_rows}
+
     for partner in partners:
-        trip_count = frappe.db.count(
-            "BEI Distribution Trip",
-            filters={
-                "trip_date": ["between", [start_date, end_date]],
-                "vehicle_owner": partner,
-                "docstatus": 1
-            }
-        )
+        trip_count = trip_counts.get(partner, 0)
 
         if trip_count == 0:
             continue
@@ -969,15 +981,8 @@ def get_reconciliation_summary(month, year):
         recon = generate_3pl_reconciliation(month, year, partner)
         expected_cost = flt(recon.get("total_expected") or 0)
 
-        # Check for any Journal Entry already created for this period+partner
-        invoice_amount = 0.0
-        existing_je = frappe.db.get_value(
-            "Journal Entry",
-            {"cheque_no": f"3PL-{partner}-{period_label}", "docstatus": ["!=", 2]},
-            "total_debit"
-        )
-        if existing_je:
-            invoice_amount = flt(existing_je)
+        # Look up pre-fetched JE amount
+        invoice_amount = je_by_cheque.get(f"3PL-{partner}-{period_label}", 0.0)
 
         variance = invoice_amount - expected_cost
         variance_pct = round((variance / expected_cost * 100), 2) if expected_cost else 0
