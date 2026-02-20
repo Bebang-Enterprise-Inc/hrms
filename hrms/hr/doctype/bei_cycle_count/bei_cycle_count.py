@@ -8,7 +8,7 @@ from frappe.model.document import Document
 
 class BEICycleCount(Document):
 	def validate(self):
-		"""Compute counted_qty from WHOLE + LOOSE, fetch unit_cost, compute variance."""
+		"""Compute counted_qty from WHOLE + LOOSE, populate system_qty from Bin, compute variance."""
 		for item in self.items:
 			# Fetch conversion_factor from UOM Conversion Detail (defaults to 1.0 if not set)
 			cf = frappe.db.get_value(
@@ -26,12 +26,20 @@ class BEICycleCount(Document):
 				loose = item.counted_qty_loose or 0.0
 				item.counted_qty = whole + (loose / item.conversion_factor)
 
-			# Fetch unit_cost from Item.valuation_rate (read-only, never from frontend)
-			item.unit_cost = frappe.db.get_value("Item", item.item_code, "valuation_rate") or 0.0
+			# B-6: Populate system_qty and unit_cost from Bin in a single query
+			bin_data = frappe.db.get_value(
+				"Bin", {"item_code": item.item_code, "warehouse": self.store},
+				["actual_qty", "valuation_rate"], as_dict=True
+			) or {}
+			item.system_qty = bin_data.get("actual_qty") or 0
+			bin_rate = bin_data.get("valuation_rate")
+			item.unit_cost = bin_rate if bin_rate else (
+				frappe.db.get_value("Item", item.item_code, "valuation_rate") or 0.0
+			)
 
 			# Compute variance
 			item.counted_qty = item.counted_qty or 0
-			item.variance_qty = item.counted_qty - (item.system_qty or 0)
+			item.variance_qty = item.counted_qty - item.system_qty
 			item.variance_value = item.variance_qty * item.unit_cost
 
 	def before_insert(self):
