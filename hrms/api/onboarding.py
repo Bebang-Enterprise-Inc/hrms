@@ -285,6 +285,142 @@ def submit_request(
         return {"success": False, "error": "Failed to submit request", "code": "SUBMIT_FAILED"}
 
 
+def _flatten_requested_changes(changes: Dict[str, Any]) -> Dict[str, Any]:
+    """Flattens nested dicts from enrichment wizard structure."""
+    flat = {}
+    for key, value in changes.items():
+        if isinstance(value, dict):
+            flat.update(value)
+        else:
+            flat[key] = value
+    return flat
+
+def _create_employee_from_new_hire_request(req) -> Dict[str, Any]:
+    """
+    Auto-creates an Employee record directly via SQL INSERT.
+    Extracts all mapping from requested_changes
+    """
+    import json, re
+
+    changes = _as_dict(req.requested_changes)
+
+    # Flatten nested structure from enrichment wizard (safe_map handling for new hires)
+    flat_changes = _flatten_requested_changes(changes)
+
+    # ── Required fields ──────────────────────────────────────────────────────────
+    required = ['first_name', 'last_name', 'branch', 'department', 'designation',
+                'date_of_joining', 'new_attendance_device_id']
+    missing = [f for f in required if not flat_changes.get(f)]
+    if missing:
+        frappe.throw(f"Cannot create Employee — missing required fields: {', '.join(missing)}")
+
+    # ── Bio ID validation ────────────────────────────────────────────────────────
+    bio_id = flat_changes['new_attendance_device_id']
+    if not re.match(r'^9\d{6}$', str(bio_id)):
+        frappe.throw(
+            f"Invalid Bio ID format: '{bio_id}'. Must match ^9\\d{{6}}$ (e.g., 9001812). "
+            f"Last assigned: 9001811."
+        )
+
+    # Check uniqueness
+    existing = frappe.db.get_value("Employee", {"attendance_device_id": bio_id}, "name")
+    if existing:
+        frappe.throw(f"Bio ID {bio_id} is already assigned to Employee {existing}")
+
+    # ── Generate Employee ID ─────────────────────────────────────────────────────
+    # BEI naming series: BEI-EMP-YYYY-NNNNN (e.g., BEI-EMP-2026-00637)
+    year = frappe.utils.nowdate()[:4]
+    last_emp = frappe.db.sql("""
+        SELECT name FROM tabEmployee
+        WHERE name LIKE %s
+        ORDER BY name DESC LIMIT 1 FOR UPDATE
+    """, (f"BEI-EMP-{year}-%",), as_dict=True)
+
+    if last_emp:
+        last_num = int(last_emp[0]['name'].split('-')[-1])
+        new_num = last_num + 1
+    else:
+        # First employee for this year
+        new_num = frappe.db.count("Employee") + 1
+
+    employee_id = f"BEI-EMP-{year}-{new_num:05d}"
+
+    # ── Build full name ──────────────────────────────────────────────────────────
+    first  = (flat_changes.get('first_name', '') or '').strip()
+    middle = (flat_changes.get('middle_name', '') or '').strip()
+    last   = (flat_changes.get('last_name', '') or '').strip()
+    employee_name = f"{first} {middle} {last}".replace('  ', ' ').strip()       
+
+        # ── Safe Creation via ORM ────────────────────────────────────────────────────────
+        now = now_datetime()
+        company = frappe.db.get_single_value("Global Defaults", "default_company") or "Bebang Enterprise Inc."
+    
+        employee_doc = frappe.get_doc({
+            "doctype": "Employee",
+            "employee": employee_id,
+            "employee_name": employee_name,
+            "first_name": first,
+            "middle_name": middle or '',
+            "last_name": last,
+            "gender": flat_changes.get('gender', 'Male'),
+            "date_of_birth": flat_changes.get('date_of_birth') or None,
+            "date_of_joining": flat_changes['date_of_joining'],
+            "branch": flat_changes['branch'],
+            "department": flat_changes['department'],
+            "designation": flat_changes['designation'],
+            "company": company,
+            "status": 'Active',
+            "attendance_device_id": bio_id,
+            "new_attendance_device_id": bio_id,
+            "personal_email": flat_changes.get('personal_email', ''),
+            "cell_number": flat_changes.get('cell_number', ''),
+            "current_address": flat_changes.get('current_address', ''),
+            "permanent_address": flat_changes.get('permanent_address', ''),
+            "person_to_be_contacted": flat_changes.get('emergency_contact_name', ''),
+            "emergency_phone_number": flat_changes.get('emergency_phone', '') or flat_changes.get('emergency_phone_number', ''),
+            "relation": flat_changes.get('emergency_relationship', ''),
+            "tin_number": flat_changes.get('tin_number', '') or flat_changes.get('custom_tin', ''),
+            "sss_number": flat_changes.get('sss_number', '') or flat_changes.get('custom_sss', ''),
+            "philhealth_number": flat_changes.get('philhealth_number', '') or flat_changes.get('custom_philhealth', ''),
+            "pagibig_number": flat_changes.get('pagibig_number', '') or flat_changes.get('custom_pagibig', ''),
+            "reports_to": flat_changes.get('reports_to', ''),
+            "image": req.selfie_file_url or ''
+        })
+        
+        # Bypass user permission to save properly during system approval action
+        employee_doc.flags.ignore_permissions = True
+        employee_doc.insert()
+    return {'employee_id': employee_id, 'employee_name': employee_name}
+
+
+def _notify_new_employee_created(employee_id: str, employee_name: str, req) -> None:
+    """Notify HR team when a new employee record is created via onboarding approval."""
+    try:
+        from hrms.api.google_chat import send_message_to_space
+        from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS   
+        space = get_chat_space(SPACE_NOTIFICATIONS)
+        changes = _as_dict(req.requested_changes)
+        
+        flat_changes = _flatten_requested_changes(changes)
+
+        branch = flat_changes.get('branch', 'Unknown Branch')
+        designation = flat_changes.get('designation', 'Unknown Designation')
+        bio_id = flat_changes.get('new_attendance_device_id', 'TBD')
+        message = (
+            f"*New Employee Created*\n"
+            f"Name: {employee_name}\n"
+            f"Employee ID: {employee_id}\n"
+            f"Bio ID: {bio_id}\n"
+            f"Branch: {branch}\n"
+            f"Designation: {designation}\n"
+            f"Approved by: {req.approver_email}\n"
+            f"Onboarding Request: {req.name}"
+        )
+        send_message_to_space(space, message)
+    except Exception:
+        pass  # Notification failure must NEVER block employee creation
+
+
 @frappe.whitelist()
 def approve_and_apply(
     request_name: str,
@@ -398,6 +534,27 @@ def approve_and_apply(
         except Exception as e:
             frappe.log_error(title="BEI Onboarding apply failed", message=str(e))
             return {"success": False, "error": "Approved but failed to apply changes", "code": "APPLY_FAILED"}
+
+    elif req.request_type == "new_hire":
+        try:
+            result = _create_employee_from_new_hire_request(req)
+            req.status = "Applied"
+            req.applied_at = now_datetime()
+            req.applied_by = frappe.session.user
+            req.approver_notes = (req.approver_notes or '') + f"\nEmployee created: {result['employee_id']}"
+            req.save(ignore_permissions=True)
+            frappe.db.commit()
+
+            _notify_new_employee_created(result['employee_id'], result['employee_name'], req)
+
+        except frappe.ValidationError as e:
+            frappe.db.rollback()
+            frappe.log_error(title="BEI New Hire Employee Creation Failed", message=str(e))
+            return {"success": False, "error": str(e), "code": "EMPLOYEE_CREATE_FAILED"}
+        except Exception as e:
+            frappe.db.rollback()
+            frappe.log_error(title="BEI New Hire Employee Creation Failed", message=str(e))
+            return {"success": False, "error": "Failed to create employee record", "code": "EMPLOYEE_CREATE_FAILED"}
 
     frappe.db.commit()
     return {"success": True, "data": {"status": req.status}}

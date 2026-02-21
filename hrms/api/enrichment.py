@@ -940,7 +940,7 @@ GOV_ID_VALIDATORS = {
 
 
 @frappe.whitelist()
-def bulk_import_gov_ids(csv_content=None, file_url=None):
+def bulk_import_gov_ids(csv_content=None, csv_file_url=None):
     """Bulk import government IDs from CSV.
 
     CSV columns: employee_id, tin, sss_number, philhealth_number, pagibig_number
@@ -950,12 +950,12 @@ def bulk_import_gov_ids(csv_content=None, file_url=None):
     """
     frappe.only_for(["HR Manager", "System Manager", "Administrator"])
 
-    if not csv_content and not file_url:
-        frappe.throw(_("Either csv_content or file_url is required"))
+    if not csv_content and not csv_file_url:
+        frappe.throw(_("Either csv_content or csv_file_url is required"))
 
-    # If file_url provided, read from Frappe file system
-    if file_url and not csv_content:
-        file_doc = frappe.get_doc("File", {"file_url": file_url})
+    # If csv_file_url provided, read from Frappe file system
+    if csv_file_url and not csv_content:
+        file_doc = frappe.get_doc("File", {"file_url": csv_file_url})
         file_path = file_doc.get_full_path()
         with open(file_path, "r", encoding="utf-8-sig") as f:
             csv_content = f.read()

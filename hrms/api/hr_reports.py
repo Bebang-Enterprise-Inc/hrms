@@ -534,3 +534,36 @@ def get_overtime_report(from_date, to_date, department=None, page=1, page_size=5
             row["approved_ot_slip_hours"] = 0
 
     return _paginate(results, page=int(page), page_size=int(page_size))
+
+
+def get_employee_permission_query_conditions(user):
+    return "(`tabEmployee`.name NOT LIKE 'TEST-%')"
+
+
+@frappe.whitelist()
+def get_training_completion_by_store(training_event_type: str = None) -> dict:
+    """
+    Return training completion % per store branch.
+    Groups Training Result records by branch.
+    """
+    # Query Training Result joined with Employee for branch
+    results = frappe.db.sql("""
+        SELECT
+            e.branch,
+            COUNT(DISTINCT tr.employee) as completed,
+            COUNT(DISTINCT e2.name) as total_active
+        FROM `tabTraining Result` tr
+        JOIN `tabEmployee` e ON tr.employee = e.name
+        JOIN `tabEmployee` e2 ON e2.branch = e.branch AND e2.status = 'Active'  
+        WHERE tr.docstatus = 1
+        {type_filter}
+        GROUP BY e.branch
+        ORDER BY e.branch
+    """.format(
+        type_filter=f"AND tr.training_event = %(event_type)s" if training_event_type else ""
+    ),
+    {"event_type": training_event_type} if training_event_type else {},
+    as_dict=True)
+
+    return {"success": True, "data": results}
+

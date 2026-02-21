@@ -821,15 +821,18 @@ def generate_coe(employee: str):
 	}
 
 	# Mark COE as generated if separation exists
+	pdf_url = ""
 	if separation:
 		sep_doc = frappe.get_doc("Employee Separation", separation[0].name)
 		sep_doc.custom_coe_generated = 1
 		sep_doc.save()
+		pdf_url = f"/api/method/frappe.utils.print_format.download_pdf?doctype=Employee+Separation&name={separation[0].name}&format=Standard&no_letterhead=0"
+	else:
+		pdf_url = f"/api/method/frappe.utils.print_format.download_pdf?doctype=Employee&name={employee}&format=Standard&no_letterhead=0"
 
 	return {
 		"success": True,
 		"message": _("COE generated successfully"),
 		"coe_data": coe_data,
-		# TODO: Generate actual PDF and return URL
-		# "pdf_url": "/api/method/hrms.api.employee_clearance.download_coe?employee=" + employee,
+		"pdf_url": pdf_url,
 	}
