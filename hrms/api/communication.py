@@ -11,6 +11,13 @@ from frappe import _
 from frappe.utils import nowdate, now_datetime
 import json
 
+def _get_current_employee():
+    """Helper to get the active or fallback employee record for the current session user."""
+    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
+    if not employee:
+        employee = _get_current_employee()
+    return employee
+
 
 # ==============================================================================
 # CEO COMPLAINTS
@@ -30,20 +37,20 @@ def submit_ceo_complaint(category=None, subject=None, description=None, is_anony
         frappe.throw(_("Category, subject, and description are required"))
 
     try:
-        doc = frappe.new_doc("BEI CEO Complaint")
-        doc.submitted_by = frappe.session.user
-        employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
-        if not employee:
-            # Fallback: try without status filter
-            employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+        employee = _get_current_employee()
         if not employee:
             frappe.throw(_("No employee record found for your user account"))
-        doc.employee = employee
-        doc.category = category
-        doc.subject = subject
-        doc.description = description
-        doc.is_anonymous = 1 if is_anonymous else 0
-        doc.insert(ignore_permissions=True)
+            
+        doc = frappe.get_doc({
+            "doctype": "BEI CEO Complaint",
+            "submitted_by": frappe.session.user,
+            "employee": employee,
+            "category": category,
+            "subject": subject,
+            "description": description,
+            "is_anonymous": int(is_anonymous)
+        }).insert(ignore_permissions=True)
+        
         return {"success": True, "name": doc.name}
 
     except Exception as e:
@@ -76,6 +83,36 @@ def get_complaint_status(complaint_name):
         "response": doc.ceo_response if doc.status in ["Resolved", "Closed"] else None,
         "resolved_date": doc.resolved_date
     }
+
+
+@frappe.whitelist()
+def attach_complaint_evidence(complaint_name, file_url):
+    """Attach a file to a CEO complaint. Called after file is uploaded via Frappe's upload API."""
+    doc = frappe.get_doc("BEI CEO Complaint", complaint_name)
+
+    # Verify the complaint belongs to the current user
+    if doc.submitted_by != frappe.session.user:
+        frappe.throw(_("You can only attach files to your own complaints"))    
+
+    # Validate file format and size based on URL/extension
+    allowed_exts = [".jpg", ".jpeg", ".png", ".pdf", ".doc", ".docx"]
+    if not any(file_url.lower().endswith(ext) for ext in allowed_exts):
+        frappe.throw(_("Invalid file type. Only Image, PDF, and DOC files are allowed."))
+    
+    file_doc = frappe.get_doc("File", {"file_url": file_url})
+    if file_doc.file_size and file_doc.file_size > 10 * 1024 * 1024:
+        frappe.throw(_("File size exceeds 10MB limit."))
+
+    # Add attachment via Frappe's native mechanism
+    frappe.attach_file(
+        dt="BEI CEO Complaint",
+        dn=complaint_name,
+        filedata=None,  # File already uploaded separately
+        fname=None,
+        ftype=None,
+        file_url=file_url
+    )
+    return {"success": True}
 
 
 # ==============================================================================
@@ -121,6 +158,87 @@ def get_unread_announcements():
     return {"count": count}
 
 
+@frappe.whitelist()
+def acknowledge_announcement(announcement_name):
+    """Record that the current user has acknowledged an announcement."""       
+    employee = _get_current_employee()
+    if not employee:
+        frappe.throw(_("No employee record found"))
+
+    # Idempotent - checking using get_value directly as advised by the audit
+    ack = frappe.db.get_value("BEI Announcement Read Receipt", {
+        "announcement": announcement_name,
+        "employee": employee
+    }, "name")
+    
+    if ack:
+        return {"success": True, "already_acknowledged": True}
+
+    doc = frappe.new_doc("BEI Announcement Read Receipt")
+    doc.announcement = announcement_name
+    doc.employee = employee
+    doc.read_date = now_datetime()
+    doc.insert(ignore_permissions=True)
+    return {"success": True, "already_acknowledged": False}
+
+
+@frappe.whitelist()
+def get_acknowledgment_status(announcement_name):
+    """Check if current user has acknowledged the announcement."""
+    employee = _get_current_employee()
+    if not employee:
+        return {"acknowledged": False}
+
+    ack = frappe.db.get_value(
+        "BEI Announcement Read Receipt",
+        {"announcement": announcement_name, "employee": employee},
+        ["name", "read_date"],
+        as_dict=True
+    )
+    return {"acknowledged": bool(ack), "read_date": ack.read_date if ack else None}
+
+
+@frappe.whitelist()
+def create_announcement(title, announcement_type, content, priority="Normal",  
+                        target_audience="All", requires_acknowledgment=0,      
+                        expiry_date=None):
+    """Create a published announcement. HR Manager role required."""
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Authentication required"))
+
+    # Role check
+    if not frappe.has_permission("BEI Announcement", "create"):
+        frappe.throw(_("You do not have permission to create announcements"))  
+
+    doc = frappe.get_doc({
+        "doctype": "BEI Announcement",
+        "title": title,
+        "announcement_type": announcement_type,
+        "priority": priority,
+        "status": "Published",
+        "publish_date": now_datetime(),
+        "expiry_date": expiry_date,
+        "content": content,
+        "target_audience": target_audience,
+        "published_by": frappe.session.user,
+        "requires_acknowledgment": int(requires_acknowledgment)
+    }).insert(ignore_permissions=True)
+
+    # Optional: notify all employees via Google Chat
+    # Only if a global notification space exists
+    try:
+        from hrms.api.google_chat import send_message_to_space
+        from hrms.utils.bei_config import SPACE_NOTIFICATIONS
+        send_message_to_space(
+            SPACE_NOTIFICATIONS,
+            f"*New Announcement: {title}*\nType: {announcement_type} | Priority: {priority}\nLog in to my.bebang.ph to read."
+        )
+    except Exception:
+        pass  # Never block announcement creation on notification failure      
+
+    return {"success": True, "name": doc.name}
+
+
 # ==============================================================================
 # KUDOS
 # ==============================================================================
@@ -139,10 +257,7 @@ def send_kudos(to_employee=None, category=None, message=None, is_public=True):
         frappe.throw(_("Recipient, category, and message are required"))
 
     try:
-        from_employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
-        if not from_employee:
-            # Fallback: try without status filter
-            from_employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+        from_employee = _get_current_employee()
         if not from_employee:
             frappe.throw(_("You must be an employee to send kudos"))
 
@@ -162,13 +277,15 @@ def send_kudos(to_employee=None, category=None, message=None, is_public=True):
         if from_employee == resolved_to:
             frappe.throw(_("You cannot send kudos to yourself"))
 
-        doc = frappe.new_doc("BEI Kudos")
-        doc.from_employee = from_employee
-        doc.to_employee = resolved_to
-        doc.category = category
-        doc.message = message
-        doc.is_public = 1 if is_public else 0
-        doc.insert(ignore_permissions=True)
+        doc = frappe.get_doc({
+            "doctype": "BEI Kudos",
+            "from_employee": from_employee,
+            "to_employee": resolved_to,
+            "category": category,
+            "message": message,
+            "is_public": int(is_public)
+        }).insert(ignore_permissions=True)
+        
         return {"success": True, "name": doc.name}
 
     except Exception as e:
@@ -183,7 +300,7 @@ def send_kudos(to_employee=None, category=None, message=None, is_public=True):
 def get_received_kudos(employee=None, limit=20):
     """Get kudos received by an employee."""
     if not employee:
-        employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+        employee = _get_current_employee()
 
     if not employee:
         return {"kudos": []}
@@ -207,7 +324,7 @@ def get_received_kudos(employee=None, limit=20):
 def get_sent_kudos(employee=None, limit=20):
     """Get kudos sent by an employee."""
     if not employee:
-        employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+        employee = _get_current_employee()
 
     if not employee:
         return {"kudos": []}
@@ -258,13 +375,15 @@ def create_support_ticket(category=None, subject=None, description=None, priorit
     if not category or not subject or not description:
         frappe.throw(_("Category, subject, and description are required"))
 
-    doc = frappe.new_doc("BEI Support Ticket")
-    doc.submitted_by = frappe.session.user
-    doc.category = category
-    doc.subject = subject
-    doc.description = description
-    doc.priority = priority
-    doc.insert()
+    doc = frappe.get_doc({
+        "doctype": "BEI Support Ticket",
+        "submitted_by": frappe.session.user,
+        "category": category,
+        "subject": subject,
+        "description": description,
+        "priority": priority
+    }).insert()
+    
     return {"success": True, "name": doc.name}
 
 
