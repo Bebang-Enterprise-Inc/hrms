@@ -15,7 +15,7 @@ def _get_current_employee():
     """Helper to get the active or fallback employee record for the current session user."""
     employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
     if not employee:
-        employee = _get_current_employee()
+        employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
     return employee
 
 
