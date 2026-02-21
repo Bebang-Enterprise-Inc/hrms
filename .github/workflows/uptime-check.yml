@@ -1,9 +1,9 @@
 name: Uptime Check
 
 on:
-  schedule:
+  # schedule:
     # Every 5 minutes during business hours (PHT 6AM-10PM = UTC 22:00-14:00)
-    - cron: "*/5 22-23,0-14 * * *"
+    # - cron: "*/5 22-23,0-14 * * *"
   workflow_dispatch: {}
 
 jobs:
