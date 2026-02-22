@@ -321,6 +321,17 @@ def approve_expense(
 
     expense.save(ignore_permissions=True)
 
+    # Wire record_correction (Task 19A)
+    try:
+        from hrms.api.expense_classifier import record_correction
+        if expense.internal_suggested_coa and final_coa != expense.internal_suggested_coa:
+            record_correction(expense.name, expense.internal_suggested_coa, final_coa)
+    except ImportError:
+        pass
+
+    # Auto-generate PCF JV (Task F03A)
+    _create_pcf_jv(expense)
+
     # Notify employee
     _notify_employee(expense, "approved")
 

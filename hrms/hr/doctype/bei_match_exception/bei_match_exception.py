@@ -9,6 +9,8 @@ from frappe.utils import flt, now_datetime
 # Configurable approver mapping by tier
 EXCEPTION_APPROVERS = {
     "CPO": "mae@bebang.ph",
+    "CPO+CFO": "mae@bebang.ph",
+    "CPO+CEO": "mae@bebang.ph",
     "CFO": "butch@bebang.ph",
     "CEO": "sam@bebang.ph",
 }
@@ -25,16 +27,16 @@ def get_approval_tier(po_amount):
     """Determine approval tier based on PO amount.
 
     < 500K -> CPO (Mae)
-    500K to < 1M -> CFO (Butch)
-    >= 1M -> CEO (Sam)
+    500K to < 1M -> CPO+CFO
+    >= 1M -> CPO+CEO
     """
     amount = flt(po_amount)
     if amount < TIER_THRESHOLDS["CPO"]:
         return "CPO"
     elif amount < TIER_THRESHOLDS["CFO"]:
-        return "CFO"
+        return "CPO+CFO"
     else:
-        return "CEO"
+        return "CPO+CEO"
 
 
 def get_tier_status(tier):

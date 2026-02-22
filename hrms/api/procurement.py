@@ -2851,9 +2851,30 @@ def approve_match_exception(name, comment=None):
             )
         )
 
+    if exception.approval_tier == "CPO+CFO" and exception.approver == "mae@bebang.ph":
+        exception.approver = "butch@bebang.ph"
+        exception.status = "Pending CFO"
+        exception.approver_status = "Pending"
+        exception.approver_comment = (exception.approver_comment or "") + f"\nCPO Approved: {comment}"
+        exception.save()
+        return {
+            "success": True,
+            "message": "Exception approved by CPO, escalated to CFO."
+        }
+    elif exception.approval_tier == "CPO+CEO" and exception.approver == "mae@bebang.ph":
+        exception.approver = "sam@bebang.ph"
+        exception.status = "Pending CEO"
+        exception.approver_status = "Pending"
+        exception.approver_comment = (exception.approver_comment or "") + f"\nCPO Approved: {comment}"
+        exception.save()
+        return {
+            "success": True,
+            "message": "Exception approved by CPO, escalated to CEO."
+        }
+
     exception.approver_status = "Approved"
     exception.approver_date = now_datetime()
-    exception.approver_comment = comment or ""
+    exception.approver_comment = (exception.approver_comment or "") + f"\nFinal Approval: {comment}"
     exception.status = "Approved"
     exception.save()
 
@@ -3369,17 +3390,32 @@ def tag_advance_to_gr(advance_payment, goods_receipt, amount_to_clear):
             advance_payment, goods_receipt, amount_to_clear
         )
 
-        # Debit: Inventory/Clearing account (recognize the expense/asset)
+        # Calculate VAT split
+        # Amount to clear is VAT-inclusive. Base = amount / 1.12, VAT = amount - base
+        base_amount = flt(amount_to_clear / 1.12, 2)
+        vat_amount = flt(amount_to_clear - base_amount, 2)
+
+        # Debit: GR/IR Clearing (Base Amount)
         jv.append("accounts", {
-            "account": "1104002 - INVENTORY - WAREHOUSE - BEI",
-            "debit_in_account_currency": amount_to_clear,
+            "account": "1104005 - GR/IR CLEARING - BEI",
+            "debit_in_account_currency": base_amount,
             "credit_in_account_currency": 0,
             "party_type": "Supplier",
             "party": party_name,
             "cost_center": "Main - BEI",
         })
 
-        # Credit: Advances to Suppliers (reduce the advance)
+        # Debit: Input VAT (VAT Amount)
+        jv.append("accounts", {
+            "account": "1105103 - INPUT VAT-GOODS - BEI",
+            "debit_in_account_currency": vat_amount,
+            "credit_in_account_currency": 0,
+            "party_type": "Supplier",
+            "party": party_name,
+            "cost_center": "Main - BEI",
+        })
+
+        # Credit: Advances to Suppliers (Total Amount)
         jv.append("accounts", {
             "account": "1105203 - ADVANCES TO SUPPLIERS - BEI",
             "debit_in_account_currency": 0,
