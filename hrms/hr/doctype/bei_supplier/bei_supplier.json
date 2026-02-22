@@ -25,6 +25,7 @@
     "business_permit",
     "ewt_section",
     "ewt_applicable",
+    "ewt_exempt",
     "default_ewt_rate",
     "bank_section",
     "bank_name",
@@ -156,6 +157,13 @@
       "fieldname": "ewt_applicable",
       "fieldtype": "Check",
       "label": "EWT Applicable"
+    },
+    {
+      "fieldname": "ewt_exempt",
+      "fieldtype": "Check",
+      "label": "EWT Exempt",
+      "default": "0",
+      "description": "Check if this supplier is exempt from Expanded Withholding Tax"
     },
     {
       "depends_on": "eval:doc.ewt_applicable",
