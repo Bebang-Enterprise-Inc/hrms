@@ -1257,8 +1257,42 @@ def reject_payment_request(name, level, reason):
 @frappe.whitelist()
 def mark_payment_complete(name, transaction_reference=None, payment_proof=None):
     """Mark payment as complete."""
+    from frappe.utils import nowdate, flt
     request = frappe.get_doc("BEI Payment Request", name)
-    return request.mark_as_paid(transaction_reference, payment_proof)
+    result = request.mark_as_paid(transaction_reference, payment_proof)
+
+    # Task T14A: Auto-Generate EWT JV at Payment
+    if not request.is_advance_payment and flt(request.ewt_amount) > 0:
+        party_name = request.supplier_name or request.supplier
+        if request.supplier:
+            bei_sup = frappe.get_doc("BEI Supplier", request.supplier)
+            party_name = bei_sup.get_or_create_frappe_supplier() or party_name
+
+        jv = frappe.new_doc("Journal Entry")
+        jv.voucher_type = "Journal Entry"
+        jv.posting_date = nowdate()
+        jv.company = "Bebang Enterprise Inc."
+        jv.user_remark = f"EWT Withheld for {name}"
+        
+        jv.append("accounts", {
+            "account": "2101001 - ACCOUNTS PAYABLE-OTHERS - BEI", # Generic AP
+            "debit_in_account_currency": request.ewt_amount,
+            "party_type": "Supplier",
+            "party": party_name,
+        })
+        jv.append("accounts", {
+            "account": "2102202 - EWT PAYABLE - BEI",
+            "credit_in_account_currency": request.ewt_amount,
+            "party_type": "Supplier",
+            "party": party_name,
+        })
+        try:
+            jv.insert(ignore_permissions=True)
+            jv.submit()
+        except Exception as e:
+            frappe.log_error(f"EWT JV generation failed for {name}: {e}")
+
+    return result
 
 
 @frappe.whitelist()
@@ -2207,12 +2241,14 @@ def check_price_variance(item_code, supplier, new_price):
 
     return {
         "has_variance": variance_pct > 5,
+        "is_blocked": variance_pct > 10,
         "new_price": new_price,
         "avg_price": flt(avg_price, 2),
         "variance_pct": flt(variance_pct, 1),
-        "threshold_pct": 5,
-        "message": _("Price ₱{0:,.2f} is {1:.1f}% different from 90-day average ₱{2:,.2f}").format(
-            new_price, variance_pct, avg_price
+        "warning_threshold": 5,
+        "block_threshold": 10,
+        "message": _("Price ₱{0:,.2f} is {1:.1f}% different from 90-day average ₱{2:,.2f}{3}").format(
+            new_price, variance_pct, avg_price, " (>10% override required)" if variance_pct > 10 else ""
         ) if variance_pct > 5 else None
     }
 
@@ -4167,3 +4203,30 @@ def generate_monthly_billing(billing_period=None, store=None):
     """DEPRECATED: Use hrms.api.billing.generate_monthly_billing instead."""
     from hrms.api.billing import generate_monthly_billing as _generate
     return _generate(billing_period=billing_period, store=store)
+
+@frappe.whitelist()
+def check_overdue_invoices():
+    """Daily check for missing BEI Invoices > 5 days after payment."""
+    from frappe.utils import nowdate, add_days
+    from hrms.api.google_chat import send_notification_to_user
+
+    # Find paid online payments without an invoice > 5 days ago
+    overdue_date = add_days(nowdate(), -5)
+    payments = frappe.db.sql("""
+        SELECT name, supplier_name, payment_amount, processed_date, processed_by
+        FROM `tabBEI Payment Request`
+        WHERE status = 'Paid'
+          AND payment_mode IN ('Bank Transfer', 'GCash')
+          AND (invoice_reference IS NULL OR invoice_reference = '')
+          AND is_advance_payment = 0
+          AND DATE(processed_date) <= %s
+    """, (overdue_date,), as_dict=True)
+
+    if not payments:
+        return
+
+    for pay in payments:
+        msg = f"*Missing Invoice Alert*\\nPayment {pay.name} to {pay.supplier_name} for PHP {pay.payment_amount:,.2f} is missing a BEI Invoice. Paid on {pay.processed_date}. Please collect the invoice immediately to comply with EOPT."
+        if pay.processed_by:
+            send_notification_to_user(pay.processed_by, msg)
+

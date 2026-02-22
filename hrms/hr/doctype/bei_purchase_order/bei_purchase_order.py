@@ -17,6 +17,30 @@ class BEIPurchaseOrder(Document):
         self.calculate_totals()
         self.set_po_no()
         self.check_dual_approval_requirement()
+        self.check_price_variance_blocks()
+
+
+    def check_price_variance_blocks(self):
+        """Audit Control 2.6: Block PO if price variance >10% without override reason."""
+        from frappe.utils import flt, now_datetime
+        for item in self.items:
+            avg_price = frappe.db.sql("""
+                SELECT AVG(poi.unit_cost)
+                FROM `tabBEI PO Item` poi
+                JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+                WHERE poi.item_code = %s AND po.supplier = %s AND po.status NOT IN ('Draft', 'Cancelled')
+                AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
+            """, (item.item_code, self.supplier))
+            
+            avg_price = flt(avg_price[0][0]) if avg_price and avg_price[0][0] else 0
+            if avg_price > 0:
+                variance_pct = abs(flt(item.unit_cost) - avg_price) / avg_price * 100
+                if variance_pct > 10.0:
+                    if not item.price_variance_override:
+                        frappe.throw(f"Price for item {item.item_code} exceeds 10% variance from historical average. An override reason is required.")
+                    if not item.price_variance_override_by:
+                        item.price_variance_override_by = frappe.session.user
+                        item.price_variance_override_date = now_datetime()
 
     def set_po_no(self):
         """Set PO number from name if not already set."""

@@ -53,7 +53,7 @@ import {
   useMonthlyPOTrend,
   usePaymentSchedule,
   usePendingPOApprovals,
-  usePendingPaymentApprovals,\n  usePurchaseRequisitionStats,
+  usePendingPaymentApprovals,\n  useORAgingAnalysis,\n  usePurchaseRequisitionStats,
 } from '@/hooks/use-procurement';
 
 // Currency formatter
@@ -264,6 +264,56 @@ function PendingApprovalsWidget() {
             </ScrollArea>
           </TabsContent>
         </Tabs>
+      </CardContent>
+    </Card>
+  );
+}
+
+// OR Aging Chart
+function ORAgingChart() {
+  const { data: aging, isLoading } = useORAgingAnalysis();
+
+  if (isLoading) {
+    return <Skeleton className="h-[300px] w-full" />;
+  }
+
+  const chartData = [
+    { name: 'Current (0-7d)', value: aging?.days_0_7 ?? 0, color: '#22c55e' },
+    { name: '8-14 Days', value: aging?.days_8_14 ?? 0, color: '#eab308' },
+    { name: '15-30 Days', value: aging?.days_15_30 ?? 0, color: '#f97316' },
+    { name: 'Over 30 Days', value: aging?.over_30 ?? 0, color: '#ef4444' },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">OR Aging Analysis</CardTitle>
+        <CardDescription>Awaiting Official Receipts by age</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[250px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={2}
+                dataKey="value"
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                labelLine={false}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: number) => formatCurrency(value)} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );
