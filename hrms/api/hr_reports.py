@@ -567,3 +567,204 @@ def get_training_completion_by_store(training_event_type: str = None) -> dict:
 
     return {"success": True, "data": results}
 
+
+
+import frappe
+from frappe.utils import today, getdate, add_days
+
+ALLOWED_ROLES = ["HR Manager", "System Manager", "HR User", "Area Supervisor"]
+
+@frappe.whitelist()
+def get_leave_overview(date_range=None, branch=None, department=None):
+    frappe.only_for(ALLOWED_ROLES)
+    
+    current_date = today()
+    seven_days_from_now = add_days(current_date, 7)
+    
+    # Base conditions
+    emp_conditions = "e.status = 'Active'"
+    emp_values = {}
+    
+    if branch:
+        emp_conditions += " AND e.branch = %(branch)s"
+        emp_values["branch"] = branch
+    if department:
+        emp_conditions += " AND e.department = %(department)s"
+        emp_values["department"] = department
+        
+    # Get total active employees matching criteria (for reference)
+    total_employees = frappe.db.sql(f"""
+        SELECT count(name) 
+        FROM `tabEmployee` e 
+        WHERE {emp_conditions}
+    """, emp_values)[0][0]
+
+    # Leaves today
+    on_leave_today_query = f"""
+        SELECT count(la.name)
+        FROM `tabLeave Application` la
+        JOIN `tabEmployee` e ON la.employee = e.name
+        WHERE la.status = 'Approved' 
+        AND la.docstatus = 1
+        AND %(today)s BETWEEN la.from_date AND la.to_date
+        AND {emp_conditions}
+    """
+    values_today = {"today": current_date}
+    values_today.update(emp_values)
+    on_leave_today = frappe.db.sql(on_leave_today_query, values_today)[0][0]
+    
+    # Pending approvals
+    pending_query = f"""
+        SELECT count(la.name)
+        FROM `tabLeave Application` la
+        JOIN `tabEmployee` e ON la.employee = e.name
+        WHERE la.status = 'Open' 
+        AND la.docstatus = 0
+        AND {emp_conditions}
+    """
+    pending_count = frappe.db.sql(pending_query, emp_values)[0][0]
+    
+    # Upcoming (next 7 days)
+    upcoming_query = f"""
+        SELECT count(la.name)
+        FROM `tabLeave Application` la
+        JOIN `tabEmployee` e ON la.employee = e.name
+        WHERE la.status = 'Approved' 
+        AND la.docstatus = 1
+        AND la.from_date > %(today)s AND la.from_date <= %(next_7)s
+        AND {emp_conditions}
+    """
+    values_upcoming = {"today": current_date, "next_7": seven_days_from_now}
+    values_upcoming.update(emp_values)
+    upcoming_count = frappe.db.sql(upcoming_query, values_upcoming)[0][0]
+    
+    return {
+        "on_leave_today": on_leave_today,
+        "pending_count": pending_count,
+        "upcoming_count": upcoming_count,
+        "total_employees": total_employees
+    }
+
+@frappe.whitelist()
+def get_all_leaves(status=None, branch=None, from_date=None, to_date=None):
+    frappe.only_for(ALLOWED_ROLES)
+    
+    conditions = "1=1"
+    values = {}
+    
+    if status:
+        conditions += " AND la.status = %(status)s"
+        values["status"] = status
+    if branch:
+        conditions += " AND e.branch = %(branch)s"
+        values["branch"] = branch
+    if from_date:
+        conditions += " AND la.to_date >= %(from_date)s"
+        values["from_date"] = from_date
+    if to_date:
+        conditions += " AND la.from_date <= %(to_date)s"
+        values["to_date"] = to_date
+        
+    query = f"""
+        SELECT 
+            la.name, la.employee, la.employee_name, la.leave_type, 
+            la.from_date, la.to_date, la.total_leave_days, la.status, la.description,
+            e.branch, e.department, e.image as employee_image, e.designation
+        FROM `tabLeave Application` la
+        JOIN `tabEmployee` e ON la.employee = e.name
+        WHERE {conditions}
+        ORDER BY la.from_date DESC
+    """
+    
+    leaves = frappe.db.sql(query, values, as_dict=True)
+    return leaves
+
+@frappe.whitelist()
+def check_leave_conflicts(employee, from_date, to_date):
+    """
+    Checks if there are overlapping approved leaves for the employee's branch/department.
+    """
+    frappe.only_for(ALLOWED_ROLES)
+    
+    # Get employee details
+    emp_details = frappe.db.get_value("Employee", employee, ["branch", "department", "employee_name"], as_dict=True)
+    if not emp_details:
+        return []
+        
+    branch = emp_details.get("branch")
+    department = emp_details.get("department")
+    
+    if not branch or not department:
+        return []
+        
+    # Find overlapping leaves in the same branch/department (excluding this employee)
+    query = """
+        SELECT 
+            la.name as leave_id, 
+            la.employee_name, 
+            la.from_date, 
+            la.to_date, 
+            la.leave_type
+        FROM `tabLeave Application` la
+        JOIN `tabEmployee` e ON la.employee = e.name
+        WHERE la.status = 'Approved' 
+        AND la.docstatus = 1
+        AND la.employee != %(employee)s
+        AND e.branch = %(branch)s
+        AND e.department = %(department)s
+        AND la.from_date <= %(to_date)s
+        AND la.to_date >= %(from_date)s
+    """
+    
+    values = {
+        "employee": employee,
+        "branch": branch,
+        "department": department,
+        "from_date": from_date,
+        "to_date": to_date
+    }
+    
+    conflicts = frappe.db.sql(query, values, as_dict=True)
+    return conflicts
+
+@frappe.whitelist()
+def bulk_update_leave_status(leave_ids, status, remarks=None):
+    frappe.only_for(ALLOWED_ROLES)
+    
+    import json
+    if isinstance(leave_ids, str):
+        leave_ids = json.loads(leave_ids)
+        
+    if status not in ["Approved", "Rejected"]:
+        frappe.throw("Status must be Approved or Rejected")
+        
+    results = {"success": [], "failed": []}
+    
+    for leave_id in leave_ids:
+        try:
+            doc = frappe.get_doc("Leave Application", leave_id)
+            if doc.status == "Open":
+                doc.status = status
+                if remarks:
+                    # In Frappe, there's no native remarks field on Leave Application by default, 
+                    # but maybe leave_approver_name or a custom field. We can add to workflow comments or just set status.
+                    # doc.leave_approver = frappe.session.user
+                    pass
+                
+                if status == "Approved":
+                    # Approve submits the document if it's draft
+                    if doc.docstatus == 0:
+                        doc.submit()
+                    else:
+                        doc.db_set("status", "Approved")
+                elif status == "Rejected":
+                    doc.db_set("status", "Rejected")
+                    
+                results["success"].append(leave_id)
+            else:
+                results["failed"].append({"id": leave_id, "error": f"Leave is already {doc.status}"})
+        except Exception as e:
+            results["failed"].append({"id": leave_id, "error": str(e)})
+            
+    return results
+
