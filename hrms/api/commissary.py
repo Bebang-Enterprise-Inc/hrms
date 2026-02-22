@@ -19,6 +19,7 @@ from hrms.utils.bei_config import get_company
 from frappe import _
 import json
 from frappe.utils import today, add_days, flt
+from hrms.api.store import _get_store_customer
 
 
 # ============================================================
@@ -610,6 +611,18 @@ def fulfill_store_order(mr_name, items):
     se.insert()
     se.submit()
 
+    # G-046: Create inter-company invoices for hub transfers (commissary to store)
+    try:
+        store_info = _get_store_type_and_customer(target_warehouse)
+        frappe.enqueue(
+            "hrms.api.commissary._create_intercompany_invoices_async",
+            queue="short",
+            stock_entry_name=se.name,
+            store_info=store_info
+        )
+    except Exception as e:
+        frappe.log_error(f"G-046: Failed to enqueue inter-company invoices for SE {se.name}: {frappe.get_traceback()}", "Intercompany Invoice Error")
+
     # Update linked BEI Store Order status based on fulfillment completeness
     _update_store_order_status_after_fulfillment(mr_name, items)
 
@@ -686,6 +699,110 @@ def _update_store_order_status_after_fulfillment(mr_name, fulfilled_items):
             message=f"Failed to update store order status for MR {mr_name}: {str(e)}"
         )
 
+
+def _get_store_type_and_customer(warehouse_name):
+    """
+    Retrieves the BEI Store Type and linked Customer for a given warehouse.
+    """
+    # 1. Get Department from BEI Warehouse Department Mapping
+    department = frappe.db.get_value(
+        "BEI Warehouse Department Mapping",
+        {"warehouse": warehouse_name},
+        "department"
+    )
+    if not department:
+        frappe.throw(_(f"No Department mapping found for Warehouse: {warehouse_name}"))
+
+    # 2. Get BEI Store Type from Department
+    bei_store_type_doc = frappe.get_doc("BEI Store Type", {"store": department})
+    if not bei_store_type_doc:
+        frappe.throw(_(f"No BEI Store Type found for Department: {department}"))
+
+    store_type = bei_store_type_doc.store_type
+
+    # 3. Get Customer for the store
+    customer = _get_store_customer(warehouse_name)
+
+    return {
+        "store_type": store_type,
+        "department": department,
+        "customer": customer,
+        "warehouse_name": warehouse_name
+    }
+
+
+def _create_intercompany_invoices_async(stock_entry_name, store_info):
+    """
+    Creates inter-company Sales Invoice (BKI) for a given Stock Entry related to a store transfer.
+    Runs async via enqueue to not block fulfillment.
+    """
+    try:
+        stock_entry_doc = frappe.get_doc("Stock Entry", stock_entry_name)
+    except frappe.DoesNotExistError:
+        return
+
+    frappe.log_error(f"G-046: Creating inter-company invoices for SE: {stock_entry_name}", "Intercompany Invoice Log")
+
+    bki_company = "Bebang Kitchen Inc."
+    bei_company = get_company()
+
+    if not frappe.db.exists("Company", bki_company):
+        frappe.log_error(f"G-046: Company {bki_company} not found.", "Intercompany Invoice Error")
+        return
+
+    # Determine markup based on store type
+    markup_rate = 0.0
+    if store_info["store_type"] == "JV":
+        markup_rate = 0.0275 # 2.75%
+    elif store_info["store_type"] in ["Managed Franchise", "Full Franchise"]:
+        markup_rate = 0.08 # 8%
+
+    try:
+        sales_invoice = frappe.new_doc("Sales Invoice")
+        sales_invoice.company = bki_company
+        sales_invoice.customer = store_info["customer"]
+        sales_invoice.posting_date = stock_entry_doc.posting_date
+        sales_invoice.set_posting_time = 1
+        sales_invoice.currency = frappe.db.get_value("Company", bki_company, "default_currency") or "PHP"
+        sales_invoice.is_internal_customer = 1
+        sales_invoice.custom_stock_entry = stock_entry_doc.name
+        sales_invoice.remarks = f"Inter-company Sales Invoice for Hub Transfer SE: {stock_entry_doc.name}"
+
+        for se_item in stock_entry_doc.items:
+            # Use basic_rate (cost) from the Stock Entry item
+            base_price = flt(se_item.basic_rate)
+            if not base_price:
+                # Fallback to item valuation rate if basic_rate is 0
+                base_price = flt(frappe.db.get_value("Item", se_item.item_code, "valuation_rate"))
+            
+            selling_price_per_unit = base_price * (1 + markup_rate)
+            
+            sales_invoice.append("items", {
+                "item_code": se_item.item_code,
+                "qty": se_item.qty,
+                "rate": selling_price_per_unit,
+                "warehouse": stock_entry_doc.to_warehouse,
+                "cost_center": frappe.db.get_value("Company", bki_company, "cost_center"),
+            })
+
+        sales_invoice.insert(ignore_permissions=True)
+        sales_invoice.submit()
+
+        frappe.log_error(f"G-046: Created Sales Invoice {sales_invoice.name} for {stock_entry_doc.name}", "Intercompany Invoice Log")
+
+        # Let Frappe auto-create the Purchase Invoice if the internal supplier is mapped correctly.
+        # If not mapped, we could call make_inter_company_purchase_invoice(sales_invoice.name) here.
+        from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_company_purchase_invoice
+        try:
+            purchase_invoice = make_inter_company_purchase_invoice(sales_invoice.name)
+            purchase_invoice.insert(ignore_permissions=True)
+            purchase_invoice.submit()
+            frappe.log_error(f"G-046: Created Purchase Invoice {purchase_invoice.name} for {stock_entry_doc.name}", "Intercompany Invoice Log")
+        except Exception as e:
+            frappe.log_error(f"G-046: Failed to auto-create Purchase Invoice for SI {sales_invoice.name}: {frappe.get_traceback()}", "Intercompany Invoice Error")
+
+    except Exception as e:
+        frappe.log_error(f"G-046: Failed to create invoices for SE {stock_entry_name}: {frappe.get_traceback()}", "Intercompany Invoice Error")
 
 @frappe.whitelist()
 def get_ready_for_pickup():
