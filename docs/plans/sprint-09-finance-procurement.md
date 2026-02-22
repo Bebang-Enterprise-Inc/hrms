@@ -518,59 +518,59 @@ The `get_purchase_requisitions` API already supports `filters: { pending_approva
 ### Phase 1 — Immediate Blockers (Days 1-3)
 
 **Day 1: Schema Fixes & Runbooks (Blockers 1, 8, 6, 9, 10)**
-1. Task B1: Create `BEI Expense Training Data` DocType
-2. Task B8: Update `bei_match_exception.approver` to Link field
-3. Task B6: Create `BEI Form 2307` DocType
-4. Task B9: Add Rollback Runbook documentation
-5. Task B10: Write L4 Scenarios T-PROC-003 and T-PROC-004
-6. Backend deploy: DocType changes require `bench migrate`
+1. ✅ [DONE] Task B1: Create `BEI Expense Training Data` DocType
+2. ✅ [DONE] Task B8: Update `bei_match_exception.approver` to Link field
+3. ✅ [DONE] Task B6: Create `BEI Form 2307` DocType
+4. ✅ [DONE] Task B9: Add Rollback Runbook documentation
+5. ✅ [DONE] Task B10: Write L4 Scenarios T-PROC-003 and T-PROC-004
+6. ✅ [DONE] Backend deploy: DocType changes require `bench migrate`
 
 **Day 2: Backend Logic Fixes (Blockers 4, 5) & G-019/G-027/FIN-G03 Backend**
-7. Task B4/B5: Update `tag_advance_to_gr` to use `1104005` and split Input VAT
-8. Task 19A: Wire `record_correction` into `approve_expense`
-8b. Task F03A: Auto-Generate PCF JV (Dr Expense, Cr 1113000) inside `approve_expense` per PAP-005
-9. Task 27A: Wire exception request backend + Update routing logic to CPO (<500K) and CPO+CFO (>=500K) per PAP-001
-10. Backend deploy: Full Docker build (`skip_build=false`, `no_cache=true`)
+7. ✅ [DONE] Task B4/B5: Update `tag_advance_to_gr` to use `1104005` and split Input VAT
+8. ✅ [DONE] Task 19A: Wire `record_correction` into `approve_expense`
+8b. ✅ [DONE] Task F03A: Auto-Generate PCF JV (Dr Expense, Cr 1113000) inside `approve_expense` per PAP-005
+9. ✅ [DONE] Task 27A: Wire exception request backend + Update routing logic to CPO (<500K) and CPO+CFO (>=500K) per PAP-001
+10. ✅ [DONE] Backend deploy: Full Docker build (`skip_build=false`, `no_cache=true`)
 
 **Day 3: Frontend Wiring (G-027, G-065)**
-11. Task 27B: Add "Request Exception" modal to PO detail page (reusing existing modal)
-12. Task 65A: Add PR Approval card to approvals page
+11. ✅ [DONE] Task 27B: Add "Request Exception" modal to PO detail page (reusing existing modal)
+12. ✅ [DONE] Task 65A: Add PR Approval card to approvals page
 13. Deploy frontend: `vercel.cmd --prod --force`
 
 ### Phase 2 — Core Finance Tools (Days 4-14)
 
 **Days 4-5: G-020 ML Training**
-7. Task 20A: SSH/SSM to EC2, run `bench execute hrms.api.expense_classifier.train_model`
-8. Add weekly scheduler entry to `hooks.py`
-9. Full backend deploy
+7. ⏳ [PENDING] Task 20A: SSH/SSM to EC2, run `bench execute hrms.api.expense_classifier.train_model`
+8. ✅ [DONE] Add weekly scheduler entry to `hooks.py`
+9. ✅ [DONE] Full backend deploy
 
 **Days 6-8: G-028/G-096 Advance Clearing**
-10. Task 28A: Add "Clear Advance" and "Mark Undeliverable" actions to outstanding advances page
-11. Frontend deploy
+10. ⏳ [PENDING] Task 28A: Add "Clear Advance" and "Mark Undeliverable" actions to outstanding advances page
+11. ⏳ [PENDING] Frontend deploy
 
 **Days 9-11: G-023 SOA Pages**
-12. Task 23A: Build SOA list page
-13. Task 23B: Build SOA detail + send page
-14. Frontend deploy
+12. ⏳ [PENDING] Task 23A: Build SOA list page
+13. ⏳ [PENDING] Task 23B: Build SOA detail + send page
+14. ⏳ [PENDING] Frontend deploy
 
 **Days 12-14: G-024 Delivery Rate Approval**
-15. Task 24A: Verify/wire rate approval actions in billing/rates/
+15. ⏳ [PENDING] Task 24A: Verify/wire rate approval actions in billing/rates/
 
 ### Phase 3 — Efficiency Wins & Compliance (Days 15-25)
 
 **Days 15-17: G-060 Price Variance (Updated per PAP-008/009)**
-16. Task 60A: Wire price variance check into PO create form
-17. Task 60B: Implement 10% hard block and mandatory reason logging for overrides
+16. ✅ [DONE] Task 60A: Wire price variance check into PO create form
+17. ✅ [DONE] Task 60B: Implement 10% hard block and mandatory reason logging for overrides
 
 **Days 18-19: BIR Compliance (TAX-006, TAX-014)**
-17b. Task T06A: Add Missing Invoice Escalation Scheduler
-17c. Task T14A: Auto-Generate EWT Journal Entry at Payment
+17b. ✅ [DONE] Task T06A: Add Missing Invoice Escalation Scheduler
+17c. ✅ [DONE] Task T14A: Auto-Generate EWT Journal Entry at Payment
 
 **Day 20: G-093 OR Aging Widget**
-18. Task 93A: Add OR aging card to accounting dashboard
+18. ✅ [DONE] Task 93A: Add OR aging card to accounting dashboard
 
 **Days 21-25: G-094 Inline Exception (depends on G-027)**
-19. Task 94A: Inline exception request on invoice creation
+19. ✅ [DONE] Task 94A: Inline exception request on invoice creation
 
 ---
 
@@ -578,21 +578,21 @@ The `get_purchase_requisitions` API already supports `filters: { pending_approva
 
 ### Backend Verification
 
-- [ ] `POST /api/procurement/exceptions/request` → `request_match_exception` returns success
-- [ ] `approve_expense` with corrected COA calls `record_correction` → verify in expense_classifier DB
-- [ ] `check_overdue_or()` logs escalation notifications at 7/14/30 days (check scheduler logs)
-- [ ] `check_price_variance` returns block signal for >10% variance, and warning for 5-10%
+- [x] `POST /api/procurement/exceptions/request` → `request_match_exception` returns success
+- [x] `approve_expense` with corrected COA calls `record_correction` → verify in expense_classifier DB
+- [x] `check_overdue_or()` logs escalation notifications at 7/14/30 days (check scheduler logs)
+- [x] `check_price_variance` returns block signal for >10% variance, and warning for 5-10%
 - [ ] `tag_advance_to_gr` clears advance correctly — verify `advance_outstanding` field updates
 - [ ] `train_model` completes without error and creates `expense_classifier.joblib`
-- [ ] BEI Supplier correctly accepts `vat_status`, `ewt_exempt` flags
+- [x] BEI Supplier correctly accepts `vat_status`, `ewt_exempt` flags
 
 ### Frontend Verification
 
 - [ ] `/dashboard/procurement/purchase-orders/[id]` shows "Request Match Exception" button
-- [ ] Exception modal: exception_type Select + reason Textarea + Submit — calls API correctly
+- [x] Exception modal: exception_type Select + reason Textarea + Submit — calls API correctly
 - [ ] Exception request appears in `/dashboard/accounting/exceptions` queue immediately
 - [ ] Finance user can approve/reject from exceptions queue
-- [ ] `/dashboard/procurement/approvals` shows PR Approval card with pending count badge
+- [x] `/dashboard/procurement/approvals` shows PR Approval card with pending count badge
 - [ ] PR Approval card links to pre-filtered PR list
 - [ ] `/dashboard/accounting/outstanding-advances` shows "Clear Advance" button on Outstanding advances
 - [ ] Clear Advance modal: GR selector + amount + submit
