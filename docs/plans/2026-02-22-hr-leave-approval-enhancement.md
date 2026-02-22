@@ -1,6 +1,6 @@
 # Plan: HR Leave Approval Enhancement (Command Center)
 **Date:** 2026-02-22
-**Status:** NO-GO (Pending Audit Blockers)
+**Status:** Complete
 **Objective:** Replace the duplicate self-service leave page under "HR Management" with a dedicated, top-of-the-line HR Leave Command Center. This new module will allow HR and Supervisors to monitor company-wide leaves, approve/reject requests centrally, view a coverage calendar, and automatically detect staffing conflicts (overlapping approved leaves in the same branch).
 
 ## 1. Problem Statement
@@ -95,9 +95,20 @@ Specialized domain agents (Backend, Frontend) audited this plan in parallel, and
 
 ### Pre-Flight Checks: Audit Additions
 
-- [ ] **AUDIT-1:** `hrms/api/leave_dashboard.py` endpoints are protected by `frappe.only_for(["HR Manager", "HR User"])` or explicit `frappe.has_permission()` checks.
-- [ ] **AUDIT-2:** `bei-tasks/hooks/use-leave-dashboard.ts` is created and utilizes TanStack Query for data fetching and optimistic mutations.
+- [x] **AUDIT-1:** `hrms/api/leave_dashboard.py` endpoints are protected by `frappe.only_for(["HR Manager", "HR User"])` or explicit `frappe.has_permission()` checks.
+- [x] **AUDIT-2:** `bei-tasks/hooks/use-leave-dashboard.ts` is created and utilizes TanStack Query for data fetching and optimistic mutations.
 
 ### GO / NO-GO Gate (Updated)
 
 **Execution is NO-GO until AUDIT-1 and AUDIT-2 are all checked.**
+---
+
+## Post-Deployment Amendments (v1.2) — 2026-02-22
+
+### Issue 1: Next.js API Proxy Catch-All Bug
+**Problem:** The TanStack Query hook was calling /api/frappe?method=hrms..., which failed because the Next.js API proxy (pp/api/frappe/[...path]/route.ts) requires a path-based URL structure, resulting in a silent 404 and empty KPIs.
+**Fix:** Updated use-leave-dashboard.ts to call the correct proxy structure: /api/frappe/api/method/hrms.api.hr_reports....
+
+### Issue 2: Action Queue "Vanish" (Over-Aggressive Optimistic Update)
+**Problem:** When a user clicked "Reject", the optimistic update immediately invalidated the cache and re-fetched the list of "Open" leaves. The rejected leave was correctly processed by the backend but instantly vanished from the frontend UI, destroying the visual audit trail and confusing the user.
+**Fix:** Rewrote the optimistic update logic in use-leave-dashboard.ts to disable immediate cache invalidation upon action. Updated the React UI (page.tsx) to conditionally render a solid "Approved" or "Rejected" badge instead of the action buttons once processed, ensuring the row remains visible in the Action Queue until the session is refreshed.
