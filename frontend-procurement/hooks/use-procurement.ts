@@ -1150,3 +1150,63 @@ export function useORAgingAnalysis() {
     }>('/purchase-orders/or-aging-summary'), // Endpoint in procurement.py
   });
 }
+
+// Phase 2 Hooks
+
+export function useClearAdvanceMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { advance_payment: string; goods_receipt: string; amount_to_clear: number }) =>
+      fetchAPI('/advances/clear', { method: 'POST', body: JSON.stringify(data) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['advances'] }),
+  });
+}
+
+export function useUndeliverableAdvanceMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { advance_payment: string; amount: number; reason: string }) =>
+      fetchAPI('/advances/undeliverable', { method: 'POST', body: JSON.stringify(data) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['advances'] }),
+  });
+}
+
+export function useSOAList(params?: any) {
+  return useQuery({
+    queryKey: ['soa-list', params],
+    queryFn: () => fetchAPI<any>('/soa'),
+  });
+}
+
+export function useSOA(name: string) {
+  return useQuery({
+    queryKey: ['soa', name],
+    queryFn: () => fetchAPI<any>(`/soa/detail?name=${name}`),
+    enabled: !!name,
+  });
+}
+
+export function useSendSOAMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { soa_name: string }) =>
+      fetchAPI('/soa/send', { method: 'POST', body: JSON.stringify(data) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['soa'] }),
+  });
+}
+
+export function useBillingRates() {
+  return useQuery({
+    queryKey: ['billing-rates'],
+    queryFn: () => fetchAPI<any>('/billing/rates'),
+  });
+}
+
+export function useApproveRateMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { rate_id: string }) =>
+      fetchAPI('/billing/rates/approve', { method: 'POST', body: JSON.stringify(data) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['billing-rates'] }),
+  });
+}

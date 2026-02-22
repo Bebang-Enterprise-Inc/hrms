@@ -540,21 +540,21 @@ The `get_purchase_requisitions` API already supports `filters: { pending_approva
 ### Phase 2 — Core Finance Tools (Days 4-14)
 
 **Days 4-5: G-020 ML Training**
-7. ⏳ [PENDING] Task 20A: SSH/SSM to EC2, run `bench execute hrms.api.expense_classifier.train_model`
+7. ✅ [DONE] Task 20A: SSH/SSM to EC2, run `bench execute hrms.api.expense_classifier.train_model`
 8. ✅ [DONE] Add weekly scheduler entry to `hooks.py`
 9. ✅ [DONE] Full backend deploy
 
 **Days 6-8: G-028/G-096 Advance Clearing**
-10. ⏳ [PENDING] Task 28A: Add "Clear Advance" and "Mark Undeliverable" actions to outstanding advances page
-11. ⏳ [PENDING] Frontend deploy
+10. ✅ [DONE] Task 28A: Add "Clear Advance" and "Mark Undeliverable" actions to outstanding advances page
+11. ✅ [DONE] Frontend deploy
 
 **Days 9-11: G-023 SOA Pages**
-12. ⏳ [PENDING] Task 23A: Build SOA list page
-13. ⏳ [PENDING] Task 23B: Build SOA detail + send page
-14. ⏳ [PENDING] Frontend deploy
+12. ✅ [DONE] Task 23A: Build SOA list page
+13. ✅ [DONE] Task 23B: Build SOA detail + send page
+14. ✅ [DONE] Frontend deploy
 
 **Days 12-14: G-024 Delivery Rate Approval**
-15. ⏳ [PENDING] Task 24A: Verify/wire rate approval actions in billing/rates/
+15. ✅ [DONE] Task 24A: Verify/wire rate approval actions in billing/rates/
 
 ### Phase 3 — Efficiency Wins & Compliance (Days 15-25)
 

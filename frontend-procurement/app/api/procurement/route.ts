@@ -58,6 +58,15 @@ const ROUTE_MAP: Record<string, string> = {
   'POST /payment-requests/:id/reject': 'hrms.api.procurement.reject_payment_request',
   'POST /payment-requests/:id/complete': 'hrms.api.procurement.mark_payment_complete',
 
+  
+  // Phase 2 Endpoints
+  'POST /advances/clear': 'hrms.api.procurement.tag_advance_to_gr',
+  'POST /advances/undeliverable': 'hrms.api.procurement.mark_advance_undeliverable',
+  'GET /soa': 'hrms.api.soa.get_soa_list',
+  'GET /soa/detail': 'hrms.api.soa.get_soa',
+  'POST /soa/send': 'hrms.api.soa.send_soa_to_store',
+  'GET /billing/rates': 'hrms.api.billing.get_rates_for_approval',
+  'POST /billing/rates/approve': 'hrms.api.billing.approve_rate',
   // Dashboard
   'GET /dashboard/kpis': 'hrms.api.procurement.get_dashboard_kpis',
   'GET /dashboard/outstanding-by-supplier': 'hrms.api.procurement.get_outstanding_by_supplier',
