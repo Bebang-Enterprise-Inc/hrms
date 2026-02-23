@@ -340,56 +340,55 @@ def _create_employee_from_new_hire_request(req) -> Dict[str, Any]:
         last_num = int(last_emp[0]['name'].split('-')[-1])
         new_num = last_num + 1
     else:
-        # First employee for this year
-        new_num = frappe.db.count("Employee") + 1
+        new_num = 1
 
     employee_id = f"BEI-EMP-{year}-{new_num:05d}"
 
     # ── Build full name ──────────────────────────────────────────────────────────
-    first  = (flat_changes.get('first_name', '') or '').strip()
+    first = (flat_changes.get('first_name', '') or '').strip()
     middle = (flat_changes.get('middle_name', '') or '').strip()
-    last   = (flat_changes.get('last_name', '') or '').strip()
-    employee_name = f"{first} {middle} {last}".replace('  ', ' ').strip()       
+    last = (flat_changes.get('last_name', '') or '').strip()
+    employee_name = f"{first} {middle} {last}".replace('  ', ' ').strip()
 
-        # ── Safe Creation via ORM ────────────────────────────────────────────────────────
-        now = now_datetime()
-        company = frappe.db.get_single_value("Global Defaults", "default_company") or "Bebang Enterprise Inc."
-    
-        employee_doc = frappe.get_doc({
-            "doctype": "Employee",
-            "employee": employee_id,
-            "employee_name": employee_name,
-            "first_name": first,
-            "middle_name": middle or '',
-            "last_name": last,
-            "gender": flat_changes.get('gender', 'Male'),
-            "date_of_birth": flat_changes.get('date_of_birth') or None,
-            "date_of_joining": flat_changes['date_of_joining'],
-            "branch": flat_changes['branch'],
-            "department": flat_changes['department'],
-            "designation": flat_changes['designation'],
-            "company": company,
-            "status": 'Active',
-            "attendance_device_id": bio_id,
-            "new_attendance_device_id": bio_id,
-            "personal_email": flat_changes.get('personal_email', ''),
-            "cell_number": flat_changes.get('cell_number', ''),
-            "current_address": flat_changes.get('current_address', ''),
-            "permanent_address": flat_changes.get('permanent_address', ''),
-            "person_to_be_contacted": flat_changes.get('emergency_contact_name', ''),
-            "emergency_phone_number": flat_changes.get('emergency_phone', '') or flat_changes.get('emergency_phone_number', ''),
-            "relation": flat_changes.get('emergency_relationship', ''),
-            "tin_number": flat_changes.get('tin_number', '') or flat_changes.get('custom_tin', ''),
-            "sss_number": flat_changes.get('sss_number', '') or flat_changes.get('custom_sss', ''),
-            "philhealth_number": flat_changes.get('philhealth_number', '') or flat_changes.get('custom_philhealth', ''),
-            "pagibig_number": flat_changes.get('pagibig_number', '') or flat_changes.get('custom_pagibig', ''),
-            "reports_to": flat_changes.get('reports_to', ''),
-            "image": req.selfie_file_url or ''
-        })
-        
-        # Bypass user permission to save properly during system approval action
-        employee_doc.flags.ignore_permissions = True
-        employee_doc.insert()
+    # ── Safe Creation via ORM ────────────────────────────────────────────────────────
+    now = now_datetime()
+    company = frappe.db.get_single_value("Global Defaults", "default_company") or "Bebang Enterprise Inc."
+
+    employee_doc = frappe.get_doc({
+        "doctype": "Employee",
+        "employee": employee_id,
+        "employee_name": employee_name,
+        "first_name": first,
+        "middle_name": middle or '',
+        "last_name": last,
+        "gender": flat_changes.get('gender', 'Male'),
+        "date_of_birth": flat_changes.get('date_of_birth') or None,
+        "date_of_joining": flat_changes['date_of_joining'],
+        "branch": flat_changes['branch'],
+        "department": flat_changes['department'],
+        "designation": flat_changes['designation'],
+        "company": company,
+        "status": 'Active',
+        "attendance_device_id": bio_id,
+        "new_attendance_device_id": bio_id,
+        "personal_email": flat_changes.get('personal_email', ''),
+        "cell_number": flat_changes.get('cell_number', ''),
+        "current_address": flat_changes.get('current_address', ''),
+        "permanent_address": flat_changes.get('permanent_address', ''),
+        "person_to_be_contacted": flat_changes.get('emergency_contact_name', ''),
+        "emergency_phone_number": flat_changes.get('emergency_phone', '') or flat_changes.get('emergency_phone_number', ''),
+        "relation": flat_changes.get('emergency_relationship', ''),
+        "tin_number": flat_changes.get('tin_number', '') or flat_changes.get('custom_tin', ''),
+        "sss_number": flat_changes.get('sss_number', '') or flat_changes.get('custom_sss', ''),
+        "philhealth_number": flat_changes.get('philhealth_number', '') or flat_changes.get('custom_philhealth', ''),
+        "pagibig_number": flat_changes.get('pagibig_number', '') or flat_changes.get('custom_pagibig', ''),
+        "reports_to": flat_changes.get('reports_to', ''),
+        "image": req.selfie_file_url or ''
+    })
+
+    # Bypass user permission to save properly during system approval action
+    employee_doc.flags.ignore_permissions = True
+    employee_doc.insert()
     return {'employee_id': employee_id, 'employee_name': employee_name}
 
 

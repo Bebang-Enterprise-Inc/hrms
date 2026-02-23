@@ -18,7 +18,6 @@ class BEIShiftRecord(Document):
 			self._check_velocity()
 
 	def _calculate_total_hours(self):
-		"""Calculate total hours worked from punch-in to punch-out"""
 		if self.punch_in_time and self.punch_out_time:
 			punch_in_dt = get_datetime(self.punch_in_time)
 			punch_out_dt = get_datetime(self.punch_out_time)
@@ -29,7 +28,6 @@ class BEIShiftRecord(Document):
 			self.total_hours = time_diff_in_hours(punch_out_dt, punch_in_dt)
 
 	def _check_overtime(self):
-		"""Flag shifts exceeding 8 hours as potential overtime"""
 		if self.total_hours and self.total_hours > 8:
 			self.overtime_flag = 1
 		elif self.punch_out_time:
@@ -37,7 +35,6 @@ class BEIShiftRecord(Document):
 			self.overtime_flag = 0
 
 	def _check_cross_day(self):
-		"""Flag shifts that span midnight"""
 		if self.punch_in_time and self.punch_out_time:
 			if getdate(get_datetime(self.punch_in_time)) != getdate(get_datetime(self.punch_out_time)):
 				self.cross_day_flag = 1
@@ -45,7 +42,6 @@ class BEIShiftRecord(Document):
 				self.cross_day_flag = 0
 
 	def _update_status(self):
-		"""Set status based on whether punch-out has been recorded"""
 		if self.punch_out_time:
 			self.status = "Completed"
 		else:
@@ -79,7 +75,6 @@ class BEIShiftRecord(Document):
 		if not last.punch_out_latitude or not last.punch_out_longitude:
 			return
 
-		# Use shared Haversine utility
 		from hrms.utils.geo import calculate_haversine_distance
 
 		distance_km = calculate_haversine_distance(
@@ -89,12 +84,88 @@ class BEIShiftRecord(Document):
 			self.punch_in_longitude,
 		) / 1000
 
-		# Calculate time difference in hours
 		time_hours = time_diff_in_hours(
 			get_datetime(self.punch_in_time),
 			get_datetime(last.punch_out_time),
 		)
 
-		# Flag if speed > 200 km/h (impossible without flying)
 		if time_hours > 0 and distance_km / time_hours > 200:
 			self.velocity_flag = 1
+
+	def on_update(self):
+		"""Post-save hook: bridge to Attendance when status transitions to Completed."""
+		if self.status == "Completed" and self.has_value_changed("status"):
+			self.create_attendance_from_shift()
+
+	def create_attendance_from_shift(self):
+		"""Bridge: create/update Attendance record from completed shift record."""
+		att_date = getdate(self.punch_in_time)
+
+		# Cap auto-punched-out shifts at 8h to prevent phantom overtime
+		if getattr(self, "auto_punched_out", 0):
+			working_hours = 8.0
+			att_status = "Present"
+			needs_review = True
+		else:
+			working_hours = self.total_hours or 0
+			att_status = "Present" if (self.total_hours or 0) >= 4 else "Half Day"
+			needs_review = False
+
+		# Guard: don't duplicate — update if exists
+		existing = frappe.db.exists("Attendance", {
+			"employee": self.employee,
+			"attendance_date": att_date
+		})
+
+		if existing:
+			update_fields = {
+				"working_hours": working_hours,
+				"status": att_status,
+			}
+			frappe.db.set_value("Attendance", existing, update_fields)
+			return
+
+		# Create new Attendance via raw SQL (avoids ORM validation cascade)
+		att_name = f"ATT-{self.employee}-{att_date}"
+		company = frappe.db.get_value("Employee", self.employee, "company")
+
+		try:
+			frappe.db.sql("""
+				INSERT INTO `tabAttendance` (
+					name, employee, employee_name, attendance_date,
+					status, working_hours, docstatus,
+					company, creation, modified, modified_by, owner
+				) VALUES (
+					%(name)s, %(employee)s, %(employee_name)s, %(date)s,
+					%(status)s, %(hours)s, 1,
+					%(company)s, NOW(), NOW(), %(user)s, %(user)s
+				)
+			""", {
+				"name": att_name,
+				"employee": self.employee,
+				"employee_name": self.employee_name,
+				"date": att_date,
+				"status": att_status,
+				"hours": working_hours,
+				"company": company,
+				"user": frappe.session.user,
+			})
+		except Exception:
+			# Name collision with non-standard naming — fallback to update
+			frappe.db.sql("""
+				UPDATE `tabAttendance`
+				SET working_hours = %(hours)s, status = %(status)s, modified = NOW()
+				WHERE employee = %(employee)s AND attendance_date = %(date)s
+				LIMIT 1
+			""", {
+				"employee": self.employee,
+				"date": att_date,
+				"status": att_status,
+				"hours": working_hours,
+			})
+
+		if needs_review:
+			frappe.logger().warning(
+				f"Auto-punched-out shift {self.name} for {self.employee} capped at 8h. "
+				f"Original total_hours was {self.total_hours}. Needs manager review."
+			)

@@ -715,11 +715,10 @@ def on_separation_created(doc, method=None):
         )
 
         # Get notification space from BEI Settings (HR notification channel)
-        space = None
         try:
             space = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
         except Exception:
-            pass
+            space = None
 
         if space:
             send_message_to_space(space, message)
@@ -774,14 +773,14 @@ def on_separation_updated(doc, method=None):
             f"View: {frappe.utils.get_url()}/app/employee-separation/{doc.name}"
         )
 
-        space = None
         try:
             space = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
         except Exception:
-            pass
+            space = None
 
         if space:
             send_message_to_space(space, message)
+            frappe.db.set_value("Employee Separation", doc.name, "boarding_status", "Completed")
 
     except Exception:
         frappe.log_error(frappe.get_traceback(), "Separation Updated Notification Failed")

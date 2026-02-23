@@ -15,6 +15,25 @@ from hrms.utils.api_helpers import (
 )
 
 
+# BEI ↔ Frappe stage vocabulary mapping
+BEI_TO_FRAPPE_STAGE = {
+    "Applied": "Open",
+    "Screening": "Replied",
+    "Interview": "Replied",
+    "Offer": "Replied",
+    "Hired": "Accepted",
+    "Rejected": "Rejected",
+    "On Hold": "Hold",
+}
+FRAPPE_TO_BEI_STAGE = {
+    "Open": "Applied",
+    "Replied": "Screening",
+    "Hold": "On Hold",
+    "Accepted": "Hired",
+    "Rejected": "Rejected",
+}
+
+
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
 def create_mrf(data):
@@ -308,7 +327,6 @@ def get_recruitment_pipeline(status=None, department=None):
     if status:
         filters["status"] = status
 
-    # Get all applicants
     applicants = frappe.get_all(
         "Job Applicant",
         filters=filters,
@@ -325,26 +343,25 @@ def get_recruitment_pipeline(status=None, department=None):
         order_by="creation desc",
     )
 
-    # Filter by department if specified
     if department:
         job_openings = frappe.get_all(
             "Job Opening", filters={"department": department}, pluck="name"
         )
         applicants = [a for a in applicants if a.get("job_title") in job_openings]
 
-    # Group by status
     pipeline = {
-        "Open": [],
-        "Replied": [],
-        "Hold": [],
-        "Accepted": [],
+        "Applied": [],
+        "Screening": [],
+        "On Hold": [],
+        "Hired": [],
         "Rejected": [],
     }
 
     for applicant in applicants:
-        stage = applicant.get("status", "Open")
-        if stage in pipeline:
-            pipeline[stage].append(applicant)
+        frappe_status = applicant.get("status", "Open")
+        bei_stage = FRAPPE_TO_BEI_STAGE.get(frappe_status, frappe_status)
+        if bei_stage in pipeline:
+            pipeline[bei_stage].append(applicant)
 
     # Add counts
     result = {
@@ -372,23 +389,29 @@ def update_applicant_stage(applicant_name, stage, notes=None):
     _check_hr_permission()
 
     valid_stages = ["Open", "Replied", "Hold", "Accepted", "Rejected"]
-    if stage not in valid_stages:
-        frappe.throw(_(f"Invalid stage. Must be one of: {', '.join(valid_stages)}"))
+
+    frappe_stage = BEI_TO_FRAPPE_STAGE.get(stage, stage)
+    bei_label = stage if stage in BEI_TO_FRAPPE_STAGE else FRAPPE_TO_BEI_STAGE.get(stage, stage)
+
+    if frappe_stage not in valid_stages:
+        all_valid = valid_stages + list(BEI_TO_FRAPPE_STAGE.keys())
+        frappe.throw(_(f"Invalid stage. Must be one of: {', '.join(all_valid)}"))
 
     applicant = frappe.get_doc("Job Applicant", applicant_name)
-    applicant.db_set("status", stage)
+    applicant.db_set("status", frappe_stage)
 
     # Add comment with notes
     if notes:
         applicant.add_comment(
             "Comment",
-            text=f"Stage changed to {stage} by {frappe.session.user}: {notes}",
+            text=f"Stage changed to {bei_label} by {frappe.session.user}: {notes}",
         )
 
     return {
         "name": applicant.name,
-        "status": applicant.status,
-        "message": _(f"Applicant moved to {stage}"),
+        "status": frappe_stage,
+        "bei_stage": bei_label,
+        "message": _(f"Applicant moved to {bei_label}"),
     }
 
 
@@ -449,13 +472,11 @@ def create_job_offer(applicant_name, data):
     """
     _check_hr_permission()
 
-    # Parse data
-    if isinstance(data, str):
-        import json
+    import json
 
+    if isinstance(data, str):
         data = json.loads(data)
 
-    # Validate required fields
     required_fields = ["designation", "company", "offer_date", "offer_terms"]
     for field in required_fields:
         if not data.get(field):
@@ -463,7 +484,6 @@ def create_job_offer(applicant_name, data):
 
     applicant = frappe.get_doc("Job Applicant", applicant_name)
 
-    # Create Job Offer
     job_offer = frappe.get_doc(
         {
             "doctype": "Job Offer",
@@ -478,8 +498,8 @@ def create_job_offer(applicant_name, data):
     )
     job_offer.insert()
 
-    # Update applicant status
-    applicant.db_set("status", "Accepted")
+    # Update applicant status to Replied (offer stage, not yet hired)
+    applicant.db_set("status", "Replied")
 
     return {
         "name": job_offer.name,

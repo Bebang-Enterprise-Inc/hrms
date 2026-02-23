@@ -1268,29 +1268,58 @@ def mark_payment_complete(name, transaction_reference=None, payment_proof=None):
             bei_sup = frappe.get_doc("BEI Supplier", request.supplier)
             party_name = bei_sup.get_or_create_frappe_supplier() or party_name
 
-        jv = frappe.new_doc("Journal Entry")
-        jv.voucher_type = "Journal Entry"
-        jv.posting_date = nowdate()
-        jv.company = "Bebang Enterprise Inc."
-        jv.user_remark = f"EWT Withheld for {name}"
-        
-        jv.append("accounts", {
-            "account": "2101001 - ACCOUNTS PAYABLE-OTHERS - BEI", # Generic AP
-            "debit_in_account_currency": request.ewt_amount,
-            "party_type": "Supplier",
-            "party": party_name,
-        })
-        jv.append("accounts", {
-            "account": "2102202 - EWT PAYABLE - BEI",
-            "credit_in_account_currency": request.ewt_amount,
-            "party_type": "Supplier",
-            "party": party_name,
-        })
+        # Get context from linked Purchase Invoice
+        pi_name = request.reference_name
+        credit_to_account = frappe.db.get_value("Purchase Invoice", pi_name, "credit_to") if pi_name else None
+        if not credit_to_account:
+            credit_to_account = "2101000 - ACCOUNTS PAYABLE - TRADE - BEI"
+
+        supplier_tin = frappe.db.get_value("Supplier", party_name, "tax_id") or "NO-TIN"
+        company = request.company or frappe.db.get_single_value("Global Defaults", "default_company")
+
+        # Savepoint: if JV fails, don't leave payment in paid-but-no-JV state
+        frappe.db.savepoint("ewt_jv_creation")
         try:
+            jv = frappe.new_doc("Journal Entry")
+            jv.voucher_type = "Journal Entry"
+            jv.posting_date = nowdate()
+            jv.company = company
+            jv.user_remark = (
+                f"EWT Withheld: {request.ewt_amount:.2f} | "
+                f"Supplier: {party_name} (TIN: {supplier_tin}) | "
+                f"ATC: WC100 | Gross: {flt(request.grand_total):.2f} | "
+                f"PI: {pi_name or 'N/A'} | PR: {request.name}"
+            )
+
+            # Debit leg — reduce trade AP (same account as PI credit_to)
+            jv.append("accounts", {
+                "account": credit_to_account,
+                "debit_in_account_currency": request.ewt_amount,
+                "party_type": "Supplier",
+                "party": party_name,
+                "reference_type": "BEI Payment Request",
+                "reference_name": request.name,
+                "cost_center": getattr(request, "cost_center", "") or "",
+            })
+
+            # Credit leg — EWT payable to BIR (NO party — government liability)
+            jv.append("accounts", {
+                "account": "2102202 - EWT PAYABLE - BEI",
+                "credit_in_account_currency": request.ewt_amount,
+                # No party_type, no party — owed to BIR, not supplier
+                "reference_type": "BEI Payment Request",
+                "reference_name": request.name,
+                "cost_center": getattr(request, "cost_center", "") or "",
+            })
+
             jv.insert(ignore_permissions=True)
             jv.submit()
+            frappe.db.release_savepoint("ewt_jv_creation")
+
         except Exception as e:
-            frappe.log_error(f"EWT JV generation failed for {name}: {e}")
+            frappe.db.rollback_to_savepoint("ewt_jv_creation")
+            frappe.log_error(f"EWT JV generation failed for {request.name}: {e}")
+            frappe.throw(f"Payment recorded but EWT JV could not be created: {e}")
 
     return result
 

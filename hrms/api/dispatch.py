@@ -908,6 +908,51 @@ def get_vehicles(status=None, owner_type=None):
     return {"vehicles": vehicles}
 
 
+def _build_stop_preview(route, trip_date):
+    """Shared helper: build stop list with pending order info using bulk queries."""
+    store_list = [s.store for s in route.stops]
+
+    orders = frappe.db.get_all("BEI Store Order",
+        filters={"store": ["in", store_list], "delivery_date": trip_date, "status": "Approved"},
+        fields=["name", "store"])
+    order_map = {o.store: o.name for o in orders}
+
+    order_names = [o.name for o in orders]
+    item_counts = {}
+    if order_names:
+        counts = frappe.db.sql("""
+            SELECT parent, COUNT(*) as cnt FROM `tabBEI Store Order Item`
+            WHERE parent IN %(names)s GROUP BY parent
+        """, {"names": order_names}, as_dict=True)
+        item_counts = {c.parent: c.cnt for c in counts}
+
+    stops = []
+    for s in route.stops:
+        order = order_map.get(s.store)
+        stops.append({
+            "store": s.store,
+            "stop_order": getattr(s, "stop_order", 0),
+            "estimated_minutes": getattr(s, "estimated_minutes", 0),
+            "store_order": order or "",
+            "items_count": item_counts.get(order, 0) if order else 0,
+        })
+    return stops
+
+
+@frappe.whitelist()
+def preview_trip_stops(route_name, trip_date=None):
+    """Preview stops and pending store orders for a proposed trip."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "preview trip stops")
+    route = frappe.get_doc("BEI Route", route_name)
+
+    if not route.active:
+        frappe.throw(_("Route is not active"))
+
+    trip_date = trip_date or nowdate()
+    stops = _build_stop_preview(route, trip_date)
+    return {"route_name": route_name, "trip_date": trip_date, "stops": stops}
+
+
 @frappe.whitelist()
 def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None, selected_stops=None):
     """One-click trip creation from a route template.
@@ -957,40 +1002,34 @@ def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None
             if sel.get("store") not in zone_stores:
                 frappe.throw(_(f"Store {sel.get('store')} is not in zone {route.route_name}"))
 
-        # Build stops from selection
+        # Build stops from selection using bulk queries
+        sel_stores = [sel.get("store") for sel in selected_stops]
+        orders = frappe.db.get_all("BEI Store Order",
+            filters={"store": ["in", sel_stores], "delivery_date": trip_date, "status": "Approved"},
+            fields=["name", "store"])
+        order_map = {o.store: o.name for o in orders}
+
+        order_names = [o.name for o in orders]
+        item_counts = {}
+        if order_names:
+            counts = frappe.db.sql("""
+                SELECT parent, COUNT(*) as cnt FROM `tabBEI Store Order Item`
+                WHERE parent IN %(names)s GROUP BY parent
+            """, {"names": order_names}, as_dict=True)
+            item_counts = {c.parent: c.cnt for c in counts}
+
         stops = []
-        for idx, sel in enumerate(selected_stops, 1):
+        for sel in selected_stops:
             store = sel.get("store")
-            store_order = frappe.db.get_value(
-                "BEI Store Order",
-                {"store": store, "delivery_date": trip_date, "status": "Approved"},
-                "name"
-            )
-            items_count = 0
-            if store_order:
-                items_count = frappe.db.count("BEI Store Order Item", {"parent": store_order})
+            order = order_map.get(store)
             stops.append({
                 "store": store,
-                "items_count": items_count,
-                "store_order": store_order or ""
+                "items_count": item_counts.get(order, 0) if order else 0,
+                "store_order": order or ""
             })
     else:
-        # Original behavior: use all route stops
-        stops = []
-        for route_stop in route.stops:
-            store_order = frappe.db.get_value(
-                "BEI Store Order",
-                {"store": route_stop.store, "delivery_date": trip_date, "status": "Approved"},
-                "name"
-            )
-            items_count = 0
-            if store_order:
-                items_count = frappe.db.count("BEI Store Order Item", {"parent": store_order})
-            stops.append({
-                "store": route_stop.store,
-                "items_count": items_count,
-                "store_order": store_order or ""
-            })
+        # Original behavior: use all route stops (via shared helper)
+        stops = _build_stop_preview(route, trip_date)
 
     # Use existing trip creation logic
     trip = _build_trip_doc(trip_date, route.route_name, stops)

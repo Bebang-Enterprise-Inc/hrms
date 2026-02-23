@@ -272,8 +272,18 @@ def generate_monthly_billing(billing_period=None, store=None):
                 FROM `tabBEI Store Closing Report`
                 WHERE store = %s
                   AND report_date BETWEEN %s AND %s
-                  AND docstatus = 1
+                  AND docstatus IN (0, 1)
             """, (store_rec.store, period_start, period_end), as_dict=True)[0]
+
+            draft_count = frappe.db.count("BEI Store Closing Report", {
+                "store": store_rec.store,
+                "report_date": ["between", [period_start, period_end]],
+                "docstatus": 0
+            })
+            if draft_count:
+                frappe.logger().warning(
+                    f"Billing for {store_rec.store}: {draft_count} DRAFT closing report(s) included in period {period_start} to {period_end}"
+                )
 
             if not sales_data.gross_sales and not sales_data.net_sales:
                 skipped += 1
