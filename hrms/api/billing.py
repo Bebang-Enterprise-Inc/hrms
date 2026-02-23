@@ -920,6 +920,7 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
             "user_remark": f"EWT {ewt_atc} {ewt_rate_pct}% - {remarks}"
         })
 
+        je.flags.ignore_permissions = True
         je.insert(ignore_permissions=True)
         je.submit()
 

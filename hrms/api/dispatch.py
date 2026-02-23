@@ -1369,3 +1369,26 @@ def get_driver_schedule(employee, date_from=None, date_to=None):
         "date_to": str(end),
         "days": days,
     }
+
+
+@frappe.whitelist()
+def get_warehouses():
+    """Get warehouses that have active department mappings (valid for trip stops)."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view warehouses")
+    return frappe.get_all(
+        "BEI Warehouse Department Mapping",
+        filters={"is_active": 1},
+        fields=["warehouse as name", "warehouse as warehouse_name", "department"],
+        order_by="warehouse"
+    )
+
+
+@frappe.whitelist()
+def get_stores():
+    """Get list of stores for route stop selection."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view stores")
+    return frappe.get_all(
+        "BEI Store Type",
+        fields=["store as name", "store", "store_type"],
+        order_by="store"
+    )
