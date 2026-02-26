@@ -234,3 +234,99 @@ git -C F:/Dropbox/Projects/BEI-ERP-orchestrator status --porcelain
 pwsh -File scripts/git/no_loss_worktree_snapshot.ps1
 gh run list --repo Bebang-Enterprise-Inc/hrms --workflow build-and-deploy.yml --limit 20 --json databaseId,status,conclusion,headBranch,createdAt,event
 ```
+
+## 8) Context-Rot Guardrail Addendum (2026-02-26)
+
+This section is the anti-drift checkpoint while cleanup and feature work run in parallel.
+
+### 8.1 Authoritative Worktree Ownership (Transfer Lane)
+
+1. Root repo remains read-only context:
+   - `F:/Dropbox/Projects/BEI-ERP`
+2. Authoritative transfer worktree:
+   - Path: `F:/Dropbox/Projects/BEI-ERP-agent-transfer`
+   - Branch: `agent/transfer-e2e-complete-20260226`
+   - Upstream base: `origin/integration/cleanup-20260226`
+   - Publish target: `origin/agent/transfer-e2e-complete-20260226`
+3. Non-authoritative transfer worktrees (do not use for active edits):
+   - `F:/Dropbox/Projects/BEI-ERP-transfer-lane`
+   - `F:/Dropbox/Projects/BEI-ERP__transfer_cleanroom`
+
+### 8.2 Mandatory Checkpoint Cadence
+
+Run this checkpoint before starting work, before handoff, and at least every 2 hours:
+
+```powershell
+git -C F:/Dropbox/Projects/BEI-ERP-agent-transfer status --porcelain
+git -C F:/Dropbox/Projects/BEI-ERP-agent-transfer branch --show-current
+git -C F:/Dropbox/Projects/BEI-ERP-agent-transfer rev-parse --abbrev-ref --symbolic-full-name "@{u}"
+git -C F:/Dropbox/Projects/BEI-ERP worktree list
+gh run list --repo Bebang-Enterprise-Inc/hrms --workflow build-and-deploy.yml --limit 10 --json databaseId,status,headBranch,createdAt
+```
+
+Checkpoint exit gate:
+
+1. Working tree dirty count understood and intentional
+2. Branch is correct (`agent/transfer-e2e-complete-20260226`)
+3. Upstream is correct (`origin/agent/transfer-e2e-complete-20260226`)
+4. No unintended deploy run is active
+
+## 9) Employee Transfer Continuation Addendum (No-Deploy Test Model)
+
+This addendum defines how transfer work proceeds during cleanup without waiting for production deploy.
+
+### 9.1 Branch and PR Policy
+
+1. Implement transfer fixes only in:
+   - `agent/transfer-e2e-complete-20260226`
+2. Push scoped commits continuously to:
+   - `origin/agent/transfer-e2e-complete-20260226`
+3. PR target for transfer lane:
+   - `integration/cleanup-20260226`
+4. Explicitly forbidden during this stage:
+   - `workflow_dispatch`
+   - merge to `production`
+
+### 9.2 L1-L3 Testing Without Production Deploy
+
+Use a two-runtime strategy:
+
+1. Runtime A (branch code, no deploy): Local Frappe + local bei-tasks
+2. Runtime B (deployed baseline): `hq.bebang.ph` + `my.bebang.ph` for regression/reference only
+
+Required sequence per scoped change:
+
+1. **T0 Static gate (worktree local)**
+   - `python -m py_compile` on changed Python modules
+   - targeted unit tests that do not require full Frappe runtime
+2. **T1 Branch-live API gate (Local Frappe runtime)**
+   - Start local stack (`docker-dev/dev.bat start`, `dev.bat sync`, `dev.bat migrate`)
+   - Run L1 API checks against local host (`http://localhost:8000`)
+3. **T2 Branch-live UI gate (Local bei-tasks runtime)**
+   - Run local bei-tasks (`npm run dev`), point to local Frappe
+   - Execute L2 page checks and L3 submit+verify flows in browser against local URLs
+4. **T3 Integration baseline smoke (optional sanity)**
+   - Minimal smoke against currently deployed `hq/my` to ensure no regression assumptions
+   - Treat as baseline verification, not proof of new branch behavior
+
+### 9.3 Critical Test Harness Constraint
+
+Current Playwright helpers in `tests/e2e/helpers.ts` use hardcoded production URLs.
+Before relying on local L2/L3 as gate for transfer changes, convert test base URLs to env-driven values.
+
+Minimum requirement:
+
+1. `PORTAL_URL` and `HQ_URL` must be configurable via environment variables
+2. Default may remain production-safe, but local runs must be first-class
+3. Record the chosen URL mode (local vs production baseline) in each test evidence report
+
+### 9.4 Transfer-Specific Integrity Rule
+
+For transfer module validation in clean-room phase:
+
+1. `hrms/api/transfer_requests.py` + transfer DocTypes must compile
+2. No uncommitted transfer code remains stranded in root/handoff worktree
+3. Any transfer change merged to integration must include:
+   - route/API evidence
+   - role-path evidence (Requester -> Area -> HR -> IT)
+   - ADMS command audit evidence (or explicit environment blocker note)
