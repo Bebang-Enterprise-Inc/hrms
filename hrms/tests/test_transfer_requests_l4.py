@@ -61,6 +61,9 @@ class TestTransferRequestsL4(unittest.TestCase):
 			"frappe.db.exists", return_value=True
 		), patch(
 			"frappe.get_doc", side_effect=_fake_get_doc
+		), patch(
+			"hrms.api.transfer_requests._validate_store_warehouse_for_transfer",
+			return_value={"warehouse": "BRITTANY OFFICE - BEI", "branch": "BRITTANY OFFICE", "company": "Bebang Enterprise Inc."},
 		):
 			result = transfer_requests.create_transfer_request(
 				employee="EMP-0001",
@@ -73,6 +76,45 @@ class TestTransferRequestsL4(unittest.TestCase):
 		self.assertTrue(result["success"])
 		self.assertEqual(result["current_stage"], transfer_requests.STAGE_PENDING_AREA)
 		self.assertEqual(insert_holder["doc"].store_warehouse, "BRITTANY OFFICE - BEI")
+		self.assertEqual(insert_holder["doc"].to_branch, "BRITTANY OFFICE")
+
+	def test_create_transfer_request_derives_to_branch_from_warehouse_when_missing(self):
+		employee_doc = _FakeEmployeeDoc(
+			name="EMP-0009",
+			branch="SM MOA",
+			department="Operations - BEI",
+			designation="Store Supervisor",
+			reports_to="EMP-AREA-001",
+		)
+		insert_holder = {}
+
+		def _fake_get_doc(*args, **kwargs):
+			if len(args) == 2 and args[0] == "Employee":
+				return employee_doc
+			if args and isinstance(args[0], dict):
+				doc = _FakeInsertDoc(**args[0])
+				insert_holder["doc"] = doc
+				return doc
+			raise AssertionError(f"Unexpected get_doc call: args={args}, kwargs={kwargs}")
+
+		with patch.object(frappe, "session", SimpleNamespace(user="test.supervisor@bebang.ph")), patch(
+			"hrms.api.transfer_requests._require_any_role"
+		), patch("hrms.api.transfer_requests._notify_transfer_event"), patch(
+			"frappe.db.exists", return_value=True
+		), patch(
+			"frappe.get_doc", side_effect=_fake_get_doc
+		), patch(
+			"hrms.api.transfer_requests._validate_store_warehouse_for_transfer",
+			return_value={"warehouse": "BRITTANY OFFICE - BEI", "branch": "BRITTANY OFFICE", "company": "Bebang Enterprise Inc."},
+		):
+			result = transfer_requests.create_transfer_request(
+				employee="EMP-0009",
+				effective_date=nowdate(),
+				reason="Warehouse-driven branch derive",
+				store_warehouse="BRITTANY OFFICE - BEI",
+			)
+
+		self.assertTrue(result["success"])
 		self.assertEqual(insert_holder["doc"].to_branch, "BRITTANY OFFICE")
 
 	def test_approve_transfer_stage_moves_hr_to_it_and_creates_employee_transfer(self):
@@ -253,3 +295,24 @@ class TestTransferRequestsL4(unittest.TestCase):
 		self.assertEqual(result["ok"], 1)
 		self.assertEqual(result["blocked"], 1)
 		self.assertIn("UNKNOWN STORE - BEI", result["missing_warehouse"])
+
+	def test_get_transfer_form_options_returns_filtered_warehouse_rows(self):
+		expected = [
+			{
+				"warehouse": "AYALA EVO - BEI",
+				"warehouse_label": "AYALA EVO",
+				"branch": "AYALA EVO",
+				"company": "Bebang Enterprise Inc.",
+			}
+		]
+
+		with patch.object(frappe, "session", SimpleNamespace(user="test.supervisor@bebang.ph")), patch(
+			"hrms.api.transfer_requests._require_any_role"
+		), patch(
+			"hrms.api.transfer_requests._list_transfer_store_warehouse_options",
+			return_value=expected,
+		):
+			result = transfer_requests.get_transfer_form_options(search_text="ayala", limit=20)
+
+		self.assertEqual(result["total"], 1)
+		self.assertEqual(result["warehouses"][0]["branch"], "AYALA EVO")
