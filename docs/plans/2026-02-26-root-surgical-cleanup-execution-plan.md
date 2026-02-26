@@ -360,8 +360,8 @@ git commit -m "docs(cleanup): execute root surgical cleanup with allowlist contr
 ### Current Gate
 
 1. `tracked changes`: `0` (PASS)
-2. `untracked residuals`: `112` (TRIAGE PENDING)
-3. gate status: `PARTIAL_PASS`
+2. `untracked residuals`: `0` (PASS)
+3. gate status: `PASS`
 
 Reference:
 - `output/agent-runs/root-cleanup-20260226/lock-check.md`
@@ -370,8 +370,19 @@ Reference:
 
 ### Remaining
 
-1. Triage the 112 untracked residuals into:
-   - `promote_to_git`
-   - `keep_local_ignored`
-   - `archive_and_remove`
-2. Run post-triage snapshot (`snapshot-after`) and finalize GO/NO-GO.
+1. Monitor new root changes using strict clean-room protocol:
+   - one agent = one worktree = one branch
+   - root stays read-only context unless explicitly doing surgical maintenance
+2. Optional hardening:
+   - add automated preflight script to enforce clean gate before agent start
+   - schedule periodic stale-local-ignore audit
+
+### Clean-Room Preservation Result
+
+1. Residual `promote_to_git` candidates were preserved in a sanitized recovery archive and pushed to:
+   - branch: `integration/cleanup-20260226`
+   - commit: `6df315004`
+   - path: `archive/worktree-recovery/root-cleanup-20260226/promote-candidates-sanitized-v2/`
+2. Secret-bearing files were intentionally excluded from pushed archive:
+   - `scripts/check_ssm.ps1`
+   - `scripts/run_ssm.ps1`
