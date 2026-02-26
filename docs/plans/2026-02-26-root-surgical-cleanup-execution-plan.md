@@ -333,3 +333,45 @@ git commit -m "docs(cleanup): execute root surgical cleanup with allowlist contr
 6. `output/agent-runs/root-cleanup-20260226/integration-log.md`
 7. `output/agent-runs/root-cleanup-20260226/release-gate.md`
 8. `output/agent-runs/root-cleanup-20260226/deploy-report.md`
+
+## 12) Execution Update (2026-02-26)
+
+### Completed
+
+1. Startup lock checks confirmed:
+   - root branch: `handoff/rajat-sad-2026-02-26`
+   - orchestrator branch: `integration/cleanup-20260226`
+2. Fresh no-loss snapshot captured:
+   - `output/worktree-snapshots/20260226_194947/manifest.json`
+   - `output/worktree-snapshots/20260226_194947/all-refs.bundle`
+3. Tracked drift neutralized safely in root:
+   - tracked dirty: `548 -> 0`
+   - tracked diffs preserved in snapshot:
+     - `root_tracked_worktree.diff`
+     - `root_tracked_staged.diff`
+4. Surgical transient cleanup executed (explicit allowlist only):
+   - allowlist: `output/agent-runs/root-cleanup-20260226/delete-allowlist.txt`
+   - execution log: `output/agent-runs/root-cleanup-20260226/delete-execution-log.md`
+5. Protected path checks passed:
+   - `data/**`
+   - `data/Audits/**`
+   - `output/worktree-snapshots/**`
+
+### Current Gate
+
+1. `tracked changes`: `0` (PASS)
+2. `untracked residuals`: `112` (TRIAGE PENDING)
+3. gate status: `PARTIAL_PASS`
+
+Reference:
+- `output/agent-runs/root-cleanup-20260226/lock-check.md`
+- `output/agent-runs/root-cleanup-20260226/snapshot-proof.md`
+- `output/agent-runs/root-cleanup-20260226/root-clean-gate.md`
+
+### Remaining
+
+1. Triage the 112 untracked residuals into:
+   - `promote_to_git`
+   - `keep_local_ignored`
+   - `archive_and_remove`
+2. Run post-triage snapshot (`snapshot-after`) and finalize GO/NO-GO.
