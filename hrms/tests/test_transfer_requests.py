@@ -1,6 +1,7 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_days, getdate, now_datetime, nowdate
+from unittest.mock import patch
 
 from hrms.api import transfer_requests
 
@@ -102,6 +103,32 @@ class TestTransferRequests(FrappeTestCase):
 			transfer_requests._normalize_store_key("SM MOA"),
 			"SMMOA",
 		)
+
+	def test_contains_blocked_warehouse_term_detects_3pl_terms(self):
+		self.assertTrue(transfer_requests._contains_blocked_warehouse_term("3PL Mega Hub"))
+		self.assertTrue(transfer_requests._contains_blocked_warehouse_term("3MD Warehouse"))
+		self.assertFalse(transfer_requests._contains_blocked_warehouse_term("Brittany Office - BEI"))
+
+	def test_resolve_branch_from_store_warehouse_uses_normalized_branch_index(self):
+		with patch("frappe.db.exists", return_value=False):
+			branch = transfer_requests._resolve_branch_from_store_warehouse(
+				"Ayala Evo - Bebang Enterprise Inc.",
+				branch_index={"AYALAEVO": "AYALA EVO"},
+			)
+		self.assertEqual(branch, "AYALA EVO")
+
+	def test_validate_store_warehouse_for_transfer_blocks_non_bei_company(self):
+		class _FakeWarehouse:
+			company = "Other Company"
+			is_group = 0
+			warehouse_name = "AYALA EVO"
+			branch = "AYALA EVO"
+
+		with patch("frappe.db.exists", side_effect=lambda doctype, name: True), patch(
+			"frappe.get_doc", return_value=_FakeWarehouse()
+		), patch("hrms.api.transfer_requests._get_branch_index", return_value={"AYALAEVO": "AYALA EVO"}):
+			with self.assertRaises(frappe.ValidationError):
+				transfer_requests._validate_store_warehouse_for_transfer("AYALA EVO - BEI")
 
 	def test_compute_transfer_device_plan_for_roving_employee_targets_all_devices(self):
 		doc = frappe._dict(
