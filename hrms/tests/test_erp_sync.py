@@ -47,7 +47,7 @@ def _install_fake_frappe():
 	frappe.defaults = types.SimpleNamespace(get_global_default=lambda key: None)
 	frappe.__dict__["session"] = types.SimpleNamespace(user="Administrator")
 	frappe.get_roles = lambda user=None: ["System Manager"] if user and user != "Guest" else []
-	frappe.request = types.SimpleNamespace(headers={}, data=b"")
+	frappe.__dict__["request"] = types.SimpleNamespace(headers={}, data=b"")
 	frappe.__dict__["db"] = types.SimpleNamespace(
 		exists=lambda *args, **kwargs: None,
 		get_value=lambda *args, **kwargs: None,
