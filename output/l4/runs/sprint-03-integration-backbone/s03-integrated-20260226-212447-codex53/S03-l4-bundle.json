@@ -1,0 +1,30 @@
+{
+  "expected": [
+    "S03-RBAC-allow-deny.json",
+    "S03-006-ar-aging.json",
+    "S03-007-inventory.json",
+    "S03-008-coa.json",
+    "S03-009-ap-supplier-soa.json",
+    "S03-025-bank-sync.json",
+    "S03-idempotency-replay.json",
+    "S03-rollback-probe.json",
+    "S03-092-pre-delivery-billing.json",
+    "S03-046-alert-proof.json",
+    "S03-rollback-drill.json"
+  ],
+  "present": [
+    "S03-006-ar-aging.json",
+    "S03-007-inventory.json",
+    "S03-008-coa.json",
+    "S03-009-ap-supplier-soa.json",
+    "S03-025-bank-sync.json",
+    "S03-046-alert-proof.json",
+    "S03-092-pre-delivery-billing.json",
+    "S03-RBAC-allow-deny.json",
+    "S03-idempotency-replay.json",
+    "S03-rollback-drill.json",
+    "S03-rollback-probe.json"
+  ],
+  "missing": [],
+  "pass": true
+}

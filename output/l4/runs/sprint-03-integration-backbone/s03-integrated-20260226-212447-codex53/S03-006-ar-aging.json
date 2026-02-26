@@ -1,0 +1,62 @@
+{
+  "sheet": "S03 AR s03-integrated-20260226-212447-codex53",
+  "checksum": "s03-integrated-20260226-212447-codex53-ar",
+  "before": [
+    {
+      "name": "ACC-SINV-OPENING-98",
+      "outstanding_amount": 103693.49,
+      "due_date": null,
+      "modified": "2026-02-22 23:10:57"
+    }
+  ],
+  "first": {
+    "status_code": 200,
+    "ok": true,
+    "body": {
+      "message": {
+        "rows_processed": 1,
+        "rows_created": 0,
+        "rows_updated": 1,
+        "rows_failed": 0,
+        "errors": []
+      }
+    }
+  },
+  "first_stats": {
+    "rows_processed": 1,
+    "rows_created": 0,
+    "rows_updated": 1,
+    "rows_failed": 0,
+    "errors": []
+  },
+  "replay": {
+    "status_code": 200,
+    "ok": true,
+    "body": {
+      "message": {
+        "rows_processed": 1,
+        "rows_created": 0,
+        "rows_updated": 1,
+        "rows_failed": 0,
+        "errors": []
+      }
+    }
+  },
+  "replay_stats": {
+    "rows_processed": 1,
+    "rows_created": 0,
+    "rows_updated": 1,
+    "rows_failed": 0,
+    "errors": []
+  },
+  "after": [
+    {
+      "name": "ACC-SINV-OPENING-98",
+      "outstanding_amount": 103693.49,
+      "due_date": null,
+      "modified": "2026-02-22 23:10:57"
+    }
+  ],
+  "field_constraint": "custom_ar_sync_ref is not queryable via frappe.client.get_list for this token",
+  "pass": true
+}

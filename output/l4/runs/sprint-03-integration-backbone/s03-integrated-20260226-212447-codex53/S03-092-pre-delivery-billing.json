@@ -1,0 +1,32 @@
+{
+  "trip_name": "BEI-TRIP-2026-00002",
+  "stop_idx": 1,
+  "blocked_without_exception": {
+    "status_code": 417,
+    "ok": false,
+    "body": {
+      "exception": "frappe.exceptions.ValidationError: Failed to get method for command hrms.api.dispatch.create_pre_delivery_billing with module 'hrms.api.dispatch' has no attribute 'create_pre_delivery_billing'",
+      "exc_type": "ValidationError",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 75, in execute_cmd\\n    method = get_attr(cmd)\\n             ^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 293, in get_attr\\n    method = frappe.get_attr(cmd)\\n             ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 1748, in get_attr\\n    return getattr(get_module(modulename), methodname)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\nAttributeError: module 'hrms.api.dispatch' has no attribute 'create_pre_delivery_billing'\\n\\nDuring handling of the above exception, another exception occurred:\\n\\nTraceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 120, in application\\n    response = frappe.api.handle(request)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/__init__.py\\\", line 52, in handle\\n    data = endpoint(**arguments)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/v1.py\\\", line 40, in handle_rpc_call\\n    return frappe.handler.handle()\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 53, in handle\\n    data = execute_cmd(cmd)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 77, in execute_cmd\\n    frappe.throw(_(\\\"Failed to get method for command {0} with {1}\\\").format(cmd, e))\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 613, in throw\\n    msgprint(\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 578, in msgprint\\n    _raise_exception()\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 529, in _raise_exception\\n    raise exc\\nfrappe.exceptions.ValidationError: Failed to get method for command hrms.api.dispatch.create_pre_delivery_billing with module 'hrms.api.dispatch' has no attribute 'create_pre_delivery_billing'\\n\"]",
+      "_server_messages": "[\"{\\\"message\\\": \\\"Failed to get method for command hrms.api.dispatch.create_pre_delivery_billing with module 'hrms.api.dispatch' has no attribute 'create_pre_delivery_billing'\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"f5d5005ab207a46b190ee40c985aab10fec2dab367a11e71a2d7f4d9\\\"}\"]"
+    }
+  },
+  "request_exception": {
+    "status_code": 417,
+    "ok": false,
+    "body": {
+      "exception": "frappe.exceptions.ValidationError: Failed to get method for command hrms.api.dispatch.request_pre_delivery_billing_exception with module 'hrms.api.dispatch' has no attribute 'request_pre_delivery_billing_exception'",
+      "exc_type": "ValidationError",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 75, in execute_cmd\\n    method = get_attr(cmd)\\n             ^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 293, in get_attr\\n    method = frappe.get_attr(cmd)\\n             ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 1748, in get_attr\\n    return getattr(get_module(modulename), methodname)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\nAttributeError: module 'hrms.api.dispatch' has no attribute 'request_pre_delivery_billing_exception'\\n\\nDuring handling of the above exception, another exception occurred:\\n\\nTraceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 120, in application\\n    response = frappe.api.handle(request)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/__init__.py\\\", line 52, in handle\\n    data = endpoint(**arguments)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/v1.py\\\", line 40, in handle_rpc_call\\n    return frappe.handler.handle()\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 53, in handle\\n    data = execute_cmd(cmd)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 77, in execute_cmd\\n    frappe.throw(_(\\\"Failed to get method for command {0} with {1}\\\").format(cmd, e))\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 613, in throw\\n    msgprint(\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 578, in msgprint\\n    _raise_exception()\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 529, in _raise_exception\\n    raise exc\\nfrappe.exceptions.ValidationError: Failed to get method for command hrms.api.dispatch.request_pre_delivery_billing_exception with module 'hrms.api.dispatch' has no attribute 'request_pre_delivery_billing_exception'\\n\"]",
+      "_server_messages": "[\"{\\\"message\\\": \\\"Failed to get method for command hrms.api.dispatch.request_pre_delivery_billing_exception with module 'hrms.api.dispatch' has no attribute 'request_pre_delivery_billing_exception'\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"131f8ed16e3258347bd60353912da6e29c36e315016fa66915c2ae27\\\"}\"]"
+    }
+  },
+  "exception_name": null,
+  "blocked_pending": null,
+  "approve_step1": null,
+  "approve_step2": null,
+  "approved_create": null,
+  "billing_reference": null,
+  "billing_doc": [],
+  "pass": false
+}

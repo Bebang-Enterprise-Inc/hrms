@@ -1,0 +1,26 @@
+{
+  "allow": {
+    "status_code": 200,
+    "ok": true,
+    "body": {
+      "message": {
+        "rows_processed": 1,
+        "rows_created": 0,
+        "rows_updated": 0,
+        "rows_failed": 0,
+        "errors": []
+      }
+    }
+  },
+  "deny": {
+    "status_code": 403,
+    "ok": false,
+    "body": {
+      "exception": "frappe.exceptions.PermissionError: <details><summary>You are not permitted to access this resource. Login to access</summary>Function <strong>hrms.api.erp_sync.sync_coa</strong> is not whitelisted.</details>",
+      "exc_type": "PermissionError",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 120, in application\\n    response = frappe.api.handle(request)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/__init__.py\\\", line 52, in handle\\n    data = endpoint(**arguments)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/v1.py\\\", line 40, in handle_rpc_call\\n    return frappe.handler.handle()\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 53, in handle\\n    data = execute_cmd(cmd)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 83, in execute_cmd\\n    is_whitelisted(method)\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 874, in is_whitelisted\\n    throw(msg, PermissionError, title=_(\\\"Method Not Allowed\\\"))\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 613, in throw\\n    msgprint(\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 578, in msgprint\\n    _raise_exception()\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 529, in _raise_exception\\n    raise exc\\nfrappe.exceptions.PermissionError: <details><summary>You are not permitted to access this resource. Login to access</summary>Function <strong>hrms.api.erp_sync.sync_coa</strong> is not whitelisted.</details>\\n\"]",
+      "_server_messages": "[\"{\\\"message\\\": \\\"<details><summary>You are not permitted to access this resource. Login to access</summary>Function <strong>hrms.api.erp_sync.sync_coa</strong> is not whitelisted.</details>\\\", \\\"title\\\": \\\"Method Not Allowed\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"0dbc6f0bb010995310ec5115309915182baea02f11b482c5927fd3c2\\\"}\"]"
+    }
+  },
+  "pass": true
+}

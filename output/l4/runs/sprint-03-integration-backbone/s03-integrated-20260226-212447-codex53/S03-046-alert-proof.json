@@ -1,0 +1,12 @@
+{
+  "message_id": "spaces/AAQAnNWwb0I/messages/BG86pMzH5Xk.BG86pMzH5Xk",
+  "space": "spaces/AAQAnNWwb0I",
+  "context": {
+    "detected_at": "2026-02-26T13:27:42.971977+00:00",
+    "checksum": "s03-integrated-20260226-212447-codex53-g046",
+    "escalation_stage": "L1-OPS",
+    "escalation_owner": "dave@bebang.ph, edlice@bebang.ph"
+  },
+  "cleanup_deleted": true,
+  "pass": true
+}
