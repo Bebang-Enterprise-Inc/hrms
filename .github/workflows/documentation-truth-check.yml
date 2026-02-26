@@ -1,0 +1,62 @@
+name: Documentation Truth Check
+
+on:
+  pull_request:
+    paths:
+      - "docs/00_START_HERE.md"
+      - "docs/architecture/**"
+      - "docs/testing/**"
+      - "docs/plans/system-flow-gaps-v3.md"
+      - "docs/plans/system-flow-gaps-v3-full-route-map.md"
+      - "scripts/docs/documentation_truth_check.py"
+      - ".github/workflows/documentation-truth-check.yml"
+  push:
+    branches:
+      - production
+      - develop
+    paths:
+      - "docs/00_START_HERE.md"
+      - "docs/architecture/**"
+      - "docs/testing/**"
+      - "docs/plans/system-flow-gaps-v3.md"
+      - "docs/plans/system-flow-gaps-v3-full-route-map.md"
+      - "scripts/docs/documentation_truth_check.py"
+      - ".github/workflows/documentation-truth-check.yml"
+  schedule:
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+
+jobs:
+  documentation-truth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout BEI-ERP
+        uses: actions/checkout@v4
+
+      - name: Checkout BEI-Tasks (frontend metrics source)
+        uses: actions/checkout@v4
+        with:
+          repository: Bebang-Enterprise-Inc/BEI-Tasks
+          path: bei-tasks
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install checker dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml requests
+
+      - name: Run truth check (metrics + metadata + links + markdown lint)
+        if: github.event_name != 'schedule'
+        run: |
+          python scripts/docs/documentation_truth_check.py --frontend-path bei-tasks --max-age-days 7
+
+      - name: Run truth check (scheduled strict network + doc quality gates)
+        if: github.event_name == 'schedule'
+        run: |
+          python scripts/docs/documentation_truth_check.py --frontend-path bei-tasks --max-age-days 7 --strict-network

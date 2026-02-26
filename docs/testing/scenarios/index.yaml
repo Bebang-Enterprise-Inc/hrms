@@ -1,0 +1,174 @@
+version: 2
+last_updated: "2026-02-26"
+
+source:
+  legacy_registry: docs/testing/TEST_SCENARIOS.md
+  generator: scripts/testing/build_l3_scenario_catalog.py
+
+common:
+  - docs/testing/scenarios/COMMON.md
+
+modules:
+  - key: maintenance
+    label: Maintenance
+    status: ready
+    command: maintenance
+    scenario_files:
+      - docs/testing/scenarios/modules/maintenance.md
+    prefixes: [MAINT]
+    plan_domains: [store]
+
+  - key: store-ops
+    label: Store Operations and Inventory Sprint
+    status: ready
+    command: store-ops
+    scenario_files:
+      - docs/testing/scenarios/modules/store-operations.md
+      - docs/testing/scenarios/modules/store-ops-inventory-sprint.md
+    prefixes: [STORE, SORDER, POSDATE, FQI, VAR, VAR-PHOTO, CCRECON, CC-PHOTO, GCHAT, RBAC, STAGE3]
+    plan_domains: [store, inventory]
+
+  - key: hr
+    label: HR Self Service
+    status: ready
+    command: hr
+    scenario_files:
+      - docs/testing/scenarios/modules/hr-self-service.md
+    prefixes: [HR, BUG]
+    plan_domains: [payroll]
+
+  - key: expense
+    label: Expense
+    status: ready
+    command: expense
+    scenario_files:
+      - docs/testing/scenarios/modules/expense.md
+    prefixes: [EXP]
+    plan_domains: []
+
+  - key: communication
+    label: Communication
+    status: ready
+    command: communication
+    scenario_files:
+      - docs/testing/scenarios/modules/communication.md
+    prefixes: [COMM]
+    plan_domains: []
+
+  - key: biometric
+    label: Biometric Monitoring
+    status: ready
+    command: biometric
+    scenario_files:
+      - docs/testing/scenarios/modules/biometric-monitoring.md
+    prefixes: [BIO]
+    plan_domains: []
+
+  - key: finance
+    label: Finance and Billing
+    status: ready
+    command: finance
+    scenario_files:
+      - docs/testing/scenarios/modules/finance-and-billing.md
+    prefixes: [FIN, FIN-NEG, FIN-RBAC]
+    plan_domains: [procurement, billing]
+
+  - key: billing
+    label: Billing
+    status: ready
+    command: billing
+    scenario_files:
+      - docs/testing/scenarios/modules/billing.md
+    prefixes: [BILL]
+    plan_domains: [billing, dispatch]
+
+  - key: scm
+    label: SCM and Logistics
+    status: ready
+    command: scm
+    scenario_files:
+      - docs/testing/scenarios/modules/scm-logistics.md
+    prefixes: [SCM]
+    plan_domains: [dispatch, warehouse, inventory]
+
+  - key: stock-counting
+    label: Stock Counting
+    status: ready
+    command: stock-counting
+    scenario_files:
+      - docs/testing/scenarios/stock-counting.md
+    prefixes: [SC]
+    plan_domains: [inventory]
+
+flows:
+  - key: procure-to-pay
+    label: Procure To Pay
+    status: ready
+    command: flow-procure-pay
+    scenario_files:
+      - docs/testing/scenarios/flows/procure-to-pay.md
+    prefixes: [T-PROC]
+    plan_domains: [procurement, billing]
+
+  - key: dispatch-warehouse-commissary
+    label: Dispatch Warehouse Commissary
+    status: ready
+    command: flow-dispatch-warehouse
+    scenario_files:
+      - docs/testing/scenarios/flows/dispatch-warehouse-commissary.md
+    prefixes: [DWC]
+    plan_domains: [dispatch, warehouse, commissary]
+
+  - key: hire-to-onboard
+    label: Hire To Onboard
+    status: ready
+    command: flow-hire-onboard
+    scenario_files:
+      - docs/testing/scenarios/flows/hire-to-onboard.md
+    prefixes: [HTO]
+    plan_domains: [recruitment, onboarding, employee_clearance]
+
+regressions:
+  - docs/testing/scenarios/regressions/regression-bank.md
+  - docs/testing/scenarios/regressions/regression-bank-store-ops-inventory.md
+
+commands:
+  - maintenance
+  - store-ops
+  - hr
+  - expense
+  - communication
+  - biometric
+  - finance
+  - billing
+  - scm
+  - flow-procure-pay
+  - flow-dispatch-warehouse
+  - flow-hire-onboard
+  - stock-counting
+  - all
+
+coverage:
+  compare_plan: docs/plans/2026-02-23-full-system-flow-gaps-v2.md
+  required_domains:
+    - procurement
+    - billing
+    - inventory
+    - dispatch
+    - warehouse
+    - commissary
+    - recruitment
+    - onboarding
+    - payroll
+    - employee_clearance
+  domain_prefix_requirements:
+    procurement: [T-PROC, FIN, FIN-NEG, FIN-RBAC]
+    billing: [BILL, FIN]
+    inventory: [SCM, VAR, CCRECON, FQI]
+    dispatch: [SCM, DWC]
+    warehouse: [SCM, DWC]
+    payroll: [HR]
+    commissary: [DWC]
+    recruitment: [HTO]
+    onboarding: [HTO]
+    employee_clearance: [HTO]
