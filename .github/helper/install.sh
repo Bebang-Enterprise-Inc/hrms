@@ -74,4 +74,8 @@ CI=Yes bench build --app frappe &
 bench --site test_site reinstall --yes
 
 bench --verbose --site test_site install-app lending
+# On some upstream branch combinations, ERPNext seeds "Employee Self Service" as standard.
+# HRMS user-type setup expects a custom role, so align this before hrms install in CI.
+bench --site test_site execute "frappe.db.sql" --kwargs "{'query': \"UPDATE \`tabRole\` SET is_custom = 1 WHERE name = 'Employee Self Service'\"}" || true
+bench --site test_site execute "frappe.db.commit" || true
 bench --verbose --site test_site install-app hrms
