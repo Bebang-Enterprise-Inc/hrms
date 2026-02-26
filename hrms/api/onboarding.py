@@ -295,101 +295,221 @@ def _flatten_requested_changes(changes: Dict[str, Any]) -> Dict[str, Any]:
             flat[key] = value
     return flat
 
+def _ensure_new_hire_master_data(
+    branch: str,
+    department: str,
+    designation: str,
+    employment_type: str,
+    company: str,
+) -> None:
+    """Best-effort ensure linked master records exist before SQL employee insert."""
+    owner = frappe.session.user or "Administrator"
+
+    if branch:
+        frappe.db.sql(
+            """
+            INSERT IGNORE INTO tabBranch
+            (name, branch, creation, modified, modified_by, owner, docstatus, idx)
+            VALUES (%s, %s, NOW(), NOW(), %s, %s, 0, 0)
+            """,
+            (branch, branch, owner, owner),
+        )
+
+    if department:
+        department_name = department.replace(" - BEI", "").strip() or department
+        frappe.db.sql(
+            """
+            INSERT IGNORE INTO tabDepartment
+            (name, department_name, company, creation, modified, modified_by, owner, docstatus, idx, lft, rgt, old_parent, is_group, disabled, parent_department)
+            VALUES (%s, %s, %s, NOW(), NOW(), %s, %s, 0, 0, 0, 0, '', 0, 0, '')
+            """,
+            (department, department_name, company, owner, owner),
+        )
+
+    if designation:
+        frappe.db.sql(
+            """
+            INSERT IGNORE INTO tabDesignation
+            (name, designation_name, creation, modified, modified_by, owner, docstatus, idx)
+            VALUES (%s, %s, NOW(), NOW(), %s, %s, 0, 0)
+            """,
+            (designation, designation, owner, owner),
+        )
+
+    if employment_type:
+        frappe.db.sql(
+            """
+            INSERT IGNORE INTO `tabEmployment Type`
+            (name, employee_type_name, creation, modified, modified_by, owner, docstatus, idx)
+            VALUES (%s, %s, NOW(), NOW(), %s, %s, 0, 0)
+            """,
+            (employment_type, employment_type, owner, owner),
+        )
+
+
 def _create_employee_from_new_hire_request(req) -> Dict[str, Any]:
     """
-    Auto-creates an Employee record directly via SQL INSERT.
-    Extracts all mapping from requested_changes
+    Auto-create Employee via direct SQL insert.
+    This avoids ORM validation traps seen in onboarding automation.
     """
-    import json, re
+    import re
 
     changes = _as_dict(req.requested_changes)
-
-    # Flatten nested structure from enrichment wizard (safe_map handling for new hires)
     flat_changes = _flatten_requested_changes(changes)
 
-    # ── Required fields ──────────────────────────────────────────────────────────
-    required = ['first_name', 'last_name', 'branch', 'department', 'designation',
-                'date_of_joining', 'new_attendance_device_id']
-    missing = [f for f in required if not flat_changes.get(f)]
+    required = [
+        "first_name",
+        "last_name",
+        "branch",
+        "department",
+        "designation",
+        "date_of_joining",
+        "new_attendance_device_id",
+    ]
+    missing = [field for field in required if not flat_changes.get(field)]
     if missing:
         frappe.throw(f"Cannot create Employee — missing required fields: {', '.join(missing)}")
 
-    # ── Bio ID validation ────────────────────────────────────────────────────────
-    bio_id = flat_changes['new_attendance_device_id']
-    if not re.match(r'^9\d{6}$', str(bio_id)):
+    bio_id = str(flat_changes["new_attendance_device_id"]).strip()
+    if not re.match(r"^9\d{6}$", bio_id):
         frappe.throw(
             f"Invalid Bio ID format: '{bio_id}'. Must match ^9\\d{{6}}$ (e.g., 9001812). "
             f"Last assigned: 9001811."
         )
 
-    # Check uniqueness
     existing = frappe.db.get_value("Employee", {"attendance_device_id": bio_id}, "name")
     if existing:
         frappe.throw(f"Bio ID {bio_id} is already assigned to Employee {existing}")
 
-    # ── Generate Employee ID ─────────────────────────────────────────────────────
-    # BEI naming series: BEI-EMP-YYYY-NNNNN (e.g., BEI-EMP-2026-00637)
     year = frappe.utils.nowdate()[:4]
-    last_emp = frappe.db.sql("""
-        SELECT name FROM tabEmployee
+    last_emp = frappe.db.sql(
+        """
+        SELECT name
+        FROM tabEmployee
         WHERE name LIKE %s
-        ORDER BY name DESC LIMIT 1 FOR UPDATE
-    """, (f"BEI-EMP-{year}-%",), as_dict=True)
-
+        ORDER BY name DESC
+        LIMIT 1
+        FOR UPDATE
+        """,
+        (f"BEI-EMP-{year}-%",),
+        as_dict=True,
+    )
     if last_emp:
-        last_num = int(last_emp[0]['name'].split('-')[-1])
+        last_num = int(last_emp[0]["name"].split("-")[-1])
         new_num = last_num + 1
     else:
         new_num = 1
-
     employee_id = f"BEI-EMP-{year}-{new_num:05d}"
 
-    # ── Build full name ──────────────────────────────────────────────────────────
-    first = (flat_changes.get('first_name', '') or '').strip()
-    middle = (flat_changes.get('middle_name', '') or '').strip()
-    last = (flat_changes.get('last_name', '') or '').strip()
-    employee_name = f"{first} {middle} {last}".replace('  ', ' ').strip()
+    first = (flat_changes.get("first_name") or "").strip()
+    middle = (flat_changes.get("middle_name") or "").strip()
+    last = (flat_changes.get("last_name") or "").strip()
+    employee_name = " ".join([part for part in [first, middle, last] if part]).strip()
 
-    # ── Safe Creation via ORM ────────────────────────────────────────────────────────
     now = now_datetime()
-    company = frappe.db.get_single_value("Global Defaults", "default_company") or "Bebang Enterprise Inc."
+    owner = frappe.session.user or "Administrator"
+    company = (
+        frappe.db.get_single_value("Global Defaults", "default_company")
+        or "Bebang Enterprise Inc."
+    )
+    department = (flat_changes.get("department") or "").strip()
+    designation = (flat_changes.get("designation") or "").strip()
+    branch = (flat_changes.get("branch") or "").strip()
+    employment_type = (flat_changes.get("employment_type") or "Regular").strip()
 
-    employee_doc = frappe.get_doc({
-        "doctype": "Employee",
+    _ensure_new_hire_master_data(
+        branch=branch,
+        department=department,
+        designation=designation,
+        employment_type=employment_type,
+        company=company,
+    )
+
+    employee_values = {
+        "name": employee_id,
         "employee": employee_id,
+        "employee_number": employee_id,
         "employee_name": employee_name,
         "first_name": first,
-        "middle_name": middle or '',
+        "middle_name": middle or "",
         "last_name": last,
-        "gender": flat_changes.get('gender', 'Male'),
-        "date_of_birth": flat_changes.get('date_of_birth') or None,
-        "date_of_joining": flat_changes['date_of_joining'],
-        "branch": flat_changes['branch'],
-        "department": flat_changes['department'],
-        "designation": flat_changes['designation'],
+        "gender": (flat_changes.get("gender") or "Male").strip() or "Male",
+        "date_of_birth": flat_changes.get("date_of_birth") or None,
+        "date_of_joining": flat_changes["date_of_joining"],
+        "branch": branch,
+        "department": department,
+        "designation": designation,
+        "employment_type": employment_type,
         "company": company,
-        "status": 'Active',
+        "status": "Active",
         "attendance_device_id": bio_id,
         "new_attendance_device_id": bio_id,
-        "personal_email": flat_changes.get('personal_email', ''),
-        "cell_number": flat_changes.get('cell_number', ''),
-        "current_address": flat_changes.get('current_address', ''),
-        "permanent_address": flat_changes.get('permanent_address', ''),
-        "person_to_be_contacted": flat_changes.get('emergency_contact_name', ''),
-        "emergency_phone_number": flat_changes.get('emergency_phone', '') or flat_changes.get('emergency_phone_number', ''),
-        "relation": flat_changes.get('emergency_relationship', ''),
-        "tin_number": flat_changes.get('tin_number', '') or flat_changes.get('custom_tin', ''),
-        "sss_number": flat_changes.get('sss_number', '') or flat_changes.get('custom_sss', ''),
-        "philhealth_number": flat_changes.get('philhealth_number', '') or flat_changes.get('custom_philhealth', ''),
-        "pagibig_number": flat_changes.get('pagibig_number', '') or flat_changes.get('custom_pagibig', ''),
-        "reports_to": flat_changes.get('reports_to', ''),
-        "image": req.selfie_file_url or ''
-    })
+        "personal_email": (flat_changes.get("personal_email") or "").strip(),
+        "cell_number": (flat_changes.get("cell_number") or "").strip(),
+        "current_address": (flat_changes.get("current_address") or "").strip(),
+        "permanent_address": (flat_changes.get("permanent_address") or "").strip(),
+        "person_to_be_contacted": (
+            flat_changes.get("emergency_contact_name")
+            or flat_changes.get("emergency_contact_person")
+            or ""
+        ).strip(),
+        "emergency_phone_number": (
+            flat_changes.get("emergency_phone")
+            or flat_changes.get("emergency_phone_number")
+            or flat_changes.get("emergency_contact_number")
+            or ""
+        ).strip(),
+        "relation": (flat_changes.get("emergency_relationship") or "").strip(),
+        "tin_number": (
+            flat_changes.get("tin_number")
+            or flat_changes.get("custom_tin")
+            or ""
+        ).strip(),
+        "sss_number": (
+            flat_changes.get("sss_number")
+            or flat_changes.get("custom_sss")
+            or ""
+        ).strip(),
+        "philhealth_number": (
+            flat_changes.get("philhealth_number")
+            or flat_changes.get("custom_philhealth")
+            or ""
+        ).strip(),
+        "pagibig_number": (
+            flat_changes.get("pagibig_number")
+            or flat_changes.get("custom_pagibig")
+            or ""
+        ).strip(),
+        "reports_to": (flat_changes.get("reports_to") or "").strip(),
+        "image": (req.selfie_file_url or "").strip(),
+        "naming_series": "HR-EMP-",
+        "creation": now,
+        "modified": now,
+        "owner": owner,
+        "modified_by": owner,
+        "docstatus": 0,
+        "idx": 0,
+        "lft": 0,
+        "rgt": 0,
+        "old_parent": "",
+    }
 
-    # Bypass user permission to save properly during system approval action
-    employee_doc.flags.ignore_permissions = True
-    employee_doc.insert()
-    return {'employee_id': employee_id, 'employee_name': employee_name}
+    columns = [
+        column for column in employee_values if frappe.db.has_column("Employee", column)
+    ]
+    if not columns:
+        frappe.throw("Employee insert failed: no matching columns resolved")
+
+    placeholders = ", ".join(["%s"] * len(columns))
+    columns_sql = ", ".join(f"`{column}`" for column in columns)
+    values = tuple(employee_values[column] for column in columns)
+
+    frappe.db.sql(
+        f"INSERT INTO `tabEmployee` ({columns_sql}) VALUES ({placeholders})",
+        values,
+    )
+
+    return {"employee_id": employee_id, "employee_name": employee_name}
 
 
 def _notify_new_employee_created(employee_id: str, employee_name: str, req) -> None:

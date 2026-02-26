@@ -32,11 +32,21 @@ FRAPPE_TO_BEI_STAGE = {
     "Accepted": "Hired",
     "Rejected": "Rejected",
 }
+CEO_APPROVER_EMAILS = {"sam@bebang.ph"}
+
+
+def _is_ceo_approver(user: str, roles: list[str]) -> bool:
+    """Return True only for explicit CEO approvers (prevents System Manager bypass)."""
+    if not user:
+        return False
+    if user in CEO_APPROVER_EMAILS:
+        return True
+    return "CEO" in roles
 
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
-def create_mrf(data):
+def create_mrf(data=None, **kwargs):
     """Submit new Manpower Request Form.
 
     Args:
@@ -64,11 +74,18 @@ def create_mrf(data):
     current_employee = _get_employee_or_throw()
     emp_details = _get_employee_details()
 
-    # Parse data
+    # Parse data (supports both {"data": {...}} and direct kwargs payloads)
+    if data is None:
+        data = kwargs
     if isinstance(data, str):
         import json
 
         data = json.loads(data)
+    elif not isinstance(data, dict):
+        data = {}
+
+    if not data and kwargs:
+        data = kwargs
 
     # Validate required fields
     required_fields = [
@@ -177,7 +194,7 @@ def get_mrf_list(status=None, department=None, page=1, page_size=50):
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
-def approve_mrf(mrf_name, action, notes=None):
+def approve_mrf(mrf_name=None, action=None, notes=None, mrf_id=None, remarks=None):
     """Approve or reject MRF at current approval level.
 
     Approval flow:
@@ -193,6 +210,13 @@ def approve_mrf(mrf_name, action, notes=None):
     Returns:
         dict: Updated MRF status
     """
+    mrf_name = mrf_name or mrf_id
+    if notes is None and remarks is not None:
+        notes = remarks
+
+    if not mrf_name:
+        frappe.throw(_("Missing required field: mrf_name"))
+
     if action not in ["approve", "reject"]:
         frappe.throw(_("Invalid action. Must be 'approve' or 'reject'"))
 
@@ -221,9 +245,8 @@ def approve_mrf(mrf_name, action, notes=None):
         if "HR Manager" not in roles and "System Manager" not in roles:
             frappe.throw(_("Only HR Managers can approve at this stage"))
     elif current_status == "Pending CEO":
-        # CEO/System Manager only
-        if "System Manager" not in roles:
-            # Additional check for CEO role if needed
+        # CEO-only path (explicit approver, no System Manager bypass)
+        if not _is_ceo_approver(frappe.session.user, roles):
             frappe.throw(_("Only CEO can approve at this stage"))
     else:
         frappe.throw(_(f"MRF cannot be approved in status: {current_status}"))
@@ -334,6 +357,7 @@ def get_recruitment_pipeline(status=None, department=None):
             "name",
             "applicant_name",
             "email_id",
+            "phone_number",
             "job_title",
             "status",
             "source",
@@ -349,33 +373,117 @@ def get_recruitment_pipeline(status=None, department=None):
         )
         applicants = [a for a in applicants if a.get("job_title") in job_openings]
 
-    pipeline = {
-        "Applied": [],
-        "Screening": [],
-        "On Hold": [],
-        "Hired": [],
-        "Rejected": [],
-    }
+    job_openings = {}
+    job_opening_names = sorted(
+        {
+            applicant.get("job_title")
+            for applicant in applicants
+            if applicant.get("job_title")
+        }
+    )
+    if job_opening_names:
+        opening_rows = frappe.get_all(
+            "Job Opening",
+            filters={"name": ["in", job_opening_names]},
+            fields=["name", "designation", "department"],
+        )
+        job_openings = {row.get("name"): row for row in opening_rows}
+
+    applicant_names = [a.get("name") for a in applicants if a.get("name")]
+
+    offers_by_applicant = {}
+    if applicant_names:
+        offer_rows = frappe.get_all(
+            "Job Offer",
+            filters={"job_applicant": ["in", applicant_names]},
+            fields=["name", "job_applicant", "status", "offer_date", "creation"],
+            order_by="creation desc",
+        )
+        for offer in offer_rows:
+            applicant_name = offer.get("job_applicant")
+            if applicant_name and applicant_name not in offers_by_applicant:
+                offers_by_applicant[applicant_name] = offer
+
+    interviewed_applicants = set()
+    if applicant_names and frappe.db.exists("DocType", "Interview"):
+        interview_rows = frappe.get_all(
+            "Interview",
+            filters={"job_applicant": ["in", applicant_names]},
+            fields=["job_applicant"],
+            limit_page_length=10000,
+        )
+        interviewed_applicants = {
+            row.get("job_applicant") for row in interview_rows if row.get("job_applicant")
+        }
+
+    stage_order = ["Applied", "Screening", "Interview", "Offer", "Hired", "Rejected", "On Hold"]
+    stage_map = {stage: [] for stage in stage_order}
 
     for applicant in applicants:
+        applicant_name = applicant.get("name")
         frappe_status = applicant.get("status", "Open")
         bei_stage = FRAPPE_TO_BEI_STAGE.get(frappe_status, frappe_status)
-        if bei_stage in pipeline:
-            pipeline[bei_stage].append(applicant)
 
-    # Add counts
-    result = {
-        "stages": pipeline,
-        "counts": {stage: len(apps) for stage, apps in pipeline.items()},
+        if frappe_status == "Replied":
+            latest_offer = offers_by_applicant.get(applicant_name)
+            if latest_offer:
+                offer_status = (latest_offer.get("status") or "").strip()
+                if offer_status == "Accepted":
+                    bei_stage = "Hired"
+                elif offer_status in {"Rejected", "Declined"}:
+                    bei_stage = "Rejected"
+                else:
+                    bei_stage = "Offer"
+            elif applicant_name in interviewed_applicants:
+                bei_stage = "Interview"
+            else:
+                bei_stage = "Screening"
+
+        opening = job_openings.get(applicant.get("job_title"))
+        payload = {
+            "name": applicant_name,
+            "applicant_name": applicant.get("applicant_name"),
+            "email": applicant.get("email_id"),
+            "email_id": applicant.get("email_id"),
+            "phone": applicant.get("phone_number"),
+            "phone_number": applicant.get("phone_number"),
+            "job_title": applicant.get("job_title"),
+            "designation": (opening or {}).get("designation") or "",
+            "department": (opening or {}).get("department") or "",
+            "status": frappe_status,
+            "stage": bei_stage,
+            "source": applicant.get("source"),
+            "application_date": applicant.get("creation"),
+            "creation": applicant.get("creation"),
+            "modified": applicant.get("modified"),
+        }
+
+        if bei_stage not in stage_map:
+            stage_map[bei_stage] = []
+        stage_map[bei_stage].append(payload)
+
+    stage_list = [
+        {"stage": stage, "count": len(stage_map.get(stage, [])), "applicants": stage_map.get(stage, [])}
+        for stage in stage_order
+    ]
+
+    return {
+        "stages": stage_list,
+        "stage_map": stage_map,
+        "counts": {stage: len(stage_map.get(stage, [])) for stage in stage_order},
         "total": len(applicants),
     }
-
-    return result
 
 
 @frappe.whitelist()
 @rate_limit(limit=20, seconds=60)
-def update_applicant_stage(applicant_name, stage, notes=None):
+def update_applicant_stage(
+    applicant_name=None,
+    stage=None,
+    notes=None,
+    applicant_id=None,
+    new_stage=None,
+):
     """Move applicant through pipeline stages.
 
     Args:
@@ -387,6 +495,14 @@ def update_applicant_stage(applicant_name, stage, notes=None):
         dict: Updated applicant status
     """
     _check_hr_permission()
+
+    applicant_name = applicant_name or applicant_id
+    stage = stage or new_stage
+
+    if not applicant_name:
+        frappe.throw(_("Missing required field: applicant_name"))
+    if not stage:
+        frappe.throw(_("Missing required field: stage"))
 
     valid_stages = ["Open", "Replied", "Hold", "Accepted", "Rejected"]
 
