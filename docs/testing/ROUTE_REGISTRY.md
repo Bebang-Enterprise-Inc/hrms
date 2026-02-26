@@ -51,7 +51,10 @@ Agents MUST consult this registry instead of guessing URLs.
 | Report Detail | `/dashboard/hr/reports/[reportId]` | (not mapped) | - | module-level | module-level (map assertions per route) | yes |
 | Schedule | `/dashboard/hr/schedule` | test.crew1 | `hrms.api.roster.get_my_schedule` | module-level | module-level (map assertions per route) | yes |
 | Training | `/dashboard/hr/training` | (not mapped) | - | module-level | module-level (map assertions per route) | yes |
-| Transfers | `/dashboard/hr/transfers` | (not mapped) | - | module-level | module-level (map assertions per route) | yes |
+| Transfers | `/dashboard/hr/transfers` | test.supervisor | `hrms.api.transfer_requests.list_transfer_requests` | module-level | module-level (map assertions per route) | yes |
+| Create Transfer Request | `/dashboard/hr/transfers` | test.supervisor | `hrms.api.transfer_requests.create_transfer_request` | module-level | module-level (map assertions per route) | yes |
+| Transfer Form Options | `/dashboard/hr/transfers` | test.supervisor | `hrms.api.transfer_requests.get_transfer_form_options` | module-level | module-level (map assertions per route) | yes |
+| Transfer Stage Approval | `/dashboard/hr/transfers` | test.area | `hrms.api.transfer_requests.approve_transfer_stage` | module-level | module-level (map assertions per route) | yes |
 | Leave Command Center | `/hr-admin/leaves` | (not mapped) | - | module-level | module-level (map assertions per route) | yes |
 
 ## Expenses

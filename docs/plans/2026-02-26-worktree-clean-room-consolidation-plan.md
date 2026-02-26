@@ -330,3 +330,33 @@ For transfer module validation in clean-room phase:
    - route/API evidence
    - role-path evidence (Requester -> Area -> HR -> IT)
    - ADMS command audit evidence (or explicit environment blocker note)
+
+## 10) Transfer Lane Execution Log (2026-02-26)
+
+Scope: `agent/transfer-e2e-complete-20260226` in `F:/Dropbox/Projects/BEI-ERP-agent-transfer`
+
+Completed safely in clean-room lane:
+
+1. Added warehouse-to-branch consolidation in transfer API:
+   - `create_transfer_request` now accepts warehouse-driven branch derivation (no mandatory duplicate input)
+   - branch/warehouse mismatch is validated and blocked
+2. Added transfer warehouse safety filters:
+   - blocked keywords (`3PL`, `3MD`, `3rd party`, `third party`)
+   - non-BEI company warehouses rejected for transfer routing
+3. Added transfer form options API for frontend:
+   - `hrms.api.transfer_requests.get_transfer_form_options`
+   - returns filtered BEI store warehouses with derived branch metadata
+4. Expanded transfer test coverage:
+   - Added transfer unit tests for blocked warehouse filtering, branch derivation, and options API
+5. Added L1/L2/L3 catalog coverage hooks:
+   - Route registry now maps `/dashboard/hr/transfers` to transfer API endpoints
+   - Added new flow scenario file: `docs/testing/scenarios/flows/employee-transfer.md`
+   - Added flow command mapping: `flow-employee-transfer` in scenario index
+6. Enabled no-deploy local L2/L3 harness configuration:
+   - `tests/e2e/helpers.ts` now supports env-driven `HQ_URL` and `PORTAL_URL`
+   - defaults remain production-safe when env vars are unset
+
+Current blocker to full local execution gate:
+
+1. Frappe runtime is not active in current shell (`ModuleNotFoundError: frappe` during pytest collection).
+2. Docker daemon is currently unavailable on this machine context.
