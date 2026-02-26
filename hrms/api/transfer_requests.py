@@ -28,6 +28,7 @@ from hrms.utils.roving_employees import is_roving
 
 DOCTYPE_TRANSFER_REQUEST = "BEI Transfer Request"
 DOCTYPE_TRANSFER_DEVICE_COMMAND = "BEI Transfer Device Command"
+BEI_COMPANY_NAME = "Bebang Enterprise Inc."
 
 STAGE_PENDING_AREA = "Pending Area Approval"
 STAGE_PENDING_HR = "Pending HR Approval"
@@ -60,6 +61,14 @@ AREA_APPROVER_ROLES = {"Area Supervisor", "System Manager"}
 HR_APPROVER_ROLES = {"HR User", "HR Manager", "System Manager"}
 IT_APPROVER_ROLES = {"System Manager"}
 READ_ALL_ROLES = AREA_APPROVER_ROLES.union(HR_APPROVER_ROLES).union(IT_APPROVER_ROLES)
+TRANSFER_READ_ROLES = REQUESTER_ROLES.union(READ_ALL_ROLES)
+
+BLOCKED_WAREHOUSE_TERMS = (
+	"3PL",
+	"3RD PARTY",
+	"THIRD PARTY",
+	"3MD",
+)
 
 
 def _has_any_role(roles: set[str], user: str | None = None) -> bool:
@@ -124,8 +133,12 @@ def _notify_transfer_event(doc, event_title: str, details: str | None = None):
 def _require_store_warehouse_mapping(doc):
 	if not doc.store_warehouse:
 		frappe.throw(_("Missing Warehouse Mapping for target store"))
-	if not frappe.db.exists("Warehouse", doc.store_warehouse):
-		frappe.throw(_("Missing Warehouse Mapping for target store: {0}").format(doc.store_warehouse))
+	resolved = _validate_store_warehouse_for_transfer(
+		doc.store_warehouse,
+		expected_branch=getattr(doc, "to_branch", None),
+	)
+	if not getattr(doc, "to_branch", None):
+		doc.to_branch = resolved["branch"]
 
 
 def _split_roles(raw_roles: str | None) -> list[str]:
@@ -321,6 +334,159 @@ def _normalize_store_key(value: str | None) -> str:
 	v = v.replace("&", "AND")
 	v = re.sub(r"[^A-Z0-9]+", "", v)
 	return v
+
+
+def _contains_blocked_warehouse_term(value: str | None) -> bool:
+	if not value:
+		return False
+	upper_value = str(value).upper()
+	return any(term in upper_value for term in BLOCKED_WAREHOUSE_TERMS)
+
+
+def _get_branch_index() -> dict[str, str]:
+	rows = frappe.get_all("Branch", fields=["name"], limit_page_length=0)
+	index: dict[str, str] = {}
+	for row in rows:
+		branch_name = (row.get("name") or "").strip()
+		if not branch_name:
+			continue
+		index[_normalize_store_key(branch_name)] = branch_name
+	return index
+
+
+def _resolve_branch_from_store_warehouse(store_warehouse: str | None, branch_index: dict[str, str] | None = None) -> str | None:
+	if not store_warehouse:
+		return None
+
+	candidates = [str(store_warehouse).strip()]
+	if " - " in candidates[0]:
+		candidates.append(candidates[0].split(" - ", 1)[0].strip())
+
+	for candidate in candidates:
+		if candidate and frappe.db.exists("Branch", candidate):
+			return candidate
+
+	normalized_index = branch_index or _get_branch_index()
+	for candidate in candidates:
+		norm = _normalize_store_key(candidate)
+		if norm and norm in normalized_index:
+			return normalized_index[norm]
+
+	return None
+
+
+def _validate_store_warehouse_for_transfer(store_warehouse: str | None, expected_branch: str | None = None) -> dict[str, Any]:
+	warehouse_name = (store_warehouse or "").strip()
+	if not warehouse_name:
+		frappe.throw(_("Missing Warehouse Mapping for target store"))
+	if not frappe.db.exists("Warehouse", warehouse_name):
+		frappe.throw(_("Invalid warehouse mapping: {0}").format(warehouse_name))
+
+	if _contains_blocked_warehouse_term(warehouse_name):
+		frappe.throw(_("Warehouse is blocked for employee transfer routing: {0}").format(warehouse_name))
+
+	warehouse_doc = frappe.get_doc("Warehouse", warehouse_name)
+	warehouse_company = (getattr(warehouse_doc, "company", None) or "").strip()
+	if warehouse_company and warehouse_company != BEI_COMPANY_NAME:
+		frappe.throw(
+			_("Warehouse company mismatch. Expected {0}, got {1}").format(BEI_COMPANY_NAME, warehouse_company)
+		)
+
+	if cint(getattr(warehouse_doc, "is_group", 0)):
+		frappe.throw(_("Warehouse cannot be a group node for transfer routing: {0}").format(warehouse_name))
+
+	warehouse_label = (getattr(warehouse_doc, "warehouse_name", None) or warehouse_name).strip()
+	if _contains_blocked_warehouse_term(warehouse_label):
+		frappe.throw(_("Warehouse is blocked for employee transfer routing: {0}").format(warehouse_name))
+
+	branch_index = _get_branch_index()
+	branch_name = (getattr(warehouse_doc, "branch", None) or "").strip()
+	if branch_name and not frappe.db.exists("Branch", branch_name):
+		branch_name = ""
+
+	if not branch_name:
+		branch_name = _resolve_branch_from_store_warehouse(warehouse_name, branch_index=branch_index) or ""
+
+	if not branch_name:
+		frappe.throw(_("Unable to derive target branch from warehouse {0}").format(warehouse_name))
+
+	if expected_branch:
+		expected_key = _normalize_store_key(expected_branch)
+		branch_key = _normalize_store_key(branch_name)
+		if expected_key and branch_key and expected_key != branch_key:
+			frappe.throw(
+				_(
+					"Target branch {0} does not match warehouse {1} (derived branch: {2})"
+				).format(expected_branch, warehouse_name, branch_name)
+			)
+
+	return {
+		"warehouse": warehouse_name,
+		"branch": branch_name,
+		"company": warehouse_company or BEI_COMPANY_NAME,
+		"warehouse_label": warehouse_label,
+	}
+
+
+def _list_transfer_store_warehouse_options(search_text: str | None = None, limit: int = 100) -> list[dict[str, str]]:
+	branch_index = _get_branch_index()
+	search_lower = (search_text or "").strip().lower()
+	limit = max(1, min(500, cint(limit) or 100))
+
+	filters: dict[str, Any] = {}
+	warehouse_meta = frappe.get_meta("Warehouse")
+	fields = ["name"]
+	for field in ("warehouse_name", "company", "is_group", "disabled", "branch"):
+		if warehouse_meta.has_field(field):
+			fields.append(field)
+
+	if warehouse_meta.has_field("is_group"):
+		filters["is_group"] = 0
+	if warehouse_meta.has_field("disabled"):
+		filters["disabled"] = 0
+	if warehouse_meta.has_field("company"):
+		filters["company"] = BEI_COMPANY_NAME
+
+	rows = frappe.get_all(
+		"Warehouse",
+		filters=filters,
+		fields=fields,
+		order_by="name asc",
+		limit_page_length=max(limit * 5, 200),
+	)
+
+	options: list[dict[str, str]] = []
+	for row in rows:
+		warehouse_name = (row.get("name") or "").strip()
+		warehouse_label = (row.get("warehouse_name") or warehouse_name).strip()
+		if not warehouse_name:
+			continue
+		if _contains_blocked_warehouse_term(warehouse_name) or _contains_blocked_warehouse_term(warehouse_label):
+			continue
+
+		branch_name = (row.get("branch") or "").strip()
+		if branch_name and not frappe.db.exists("Branch", branch_name):
+			branch_name = ""
+		if not branch_name:
+			branch_name = _resolve_branch_from_store_warehouse(warehouse_name, branch_index=branch_index) or ""
+		if not branch_name:
+			continue
+
+		if search_lower:
+			haystack = f"{warehouse_name} {warehouse_label} {branch_name}".lower()
+			if search_lower not in haystack:
+				continue
+
+		options.append(
+			{
+				"warehouse": warehouse_name,
+				"warehouse_label": warehouse_label,
+				"branch": branch_name,
+				"company": (row.get("company") or BEI_COMPANY_NAME).strip(),
+			}
+		)
+
+	return options[:limit]
 
 
 def _get_employee_bio_id(employee_id: str) -> str:
@@ -877,7 +1043,7 @@ def create_transfer_request(
 	employee,
 	effective_date,
 	reason,
-	to_branch,
+	to_branch=None,
 	to_department=None,
 	to_designation=None,
 	to_reports_to=None,
@@ -885,12 +1051,15 @@ def create_transfer_request(
 ):
 	_require_any_role(REQUESTER_ROLES, "You do not have permission to create transfer requests")
 
-	if not all([employee, effective_date, reason, to_branch, store_warehouse]):
-		frappe.throw(_("Required fields: employee, effective_date, reason, to_branch, store_warehouse"))
+	if not all([employee, effective_date, reason, store_warehouse]):
+		frappe.throw(_("Required fields: employee, effective_date, reason, store_warehouse"))
 	if not frappe.db.exists("Employee", employee):
 		frappe.throw(_("Employee not found"), frappe.DoesNotExistError)
-	if not frappe.db.exists("Warehouse", store_warehouse):
-		frappe.throw(_("Invalid warehouse mapping: {0}").format(store_warehouse))
+	warehouse_meta = _validate_store_warehouse_for_transfer(
+		store_warehouse,
+		expected_branch=to_branch,
+	)
+	to_branch = to_branch or warehouse_meta["branch"]
 
 	employee_doc = frappe.get_doc("Employee", employee)
 	doc = frappe.get_doc(
@@ -922,6 +1091,17 @@ def create_transfer_request(
 		"success": True,
 		"name": doc.name,
 		"current_stage": doc.current_stage,
+	}
+
+
+@frappe.whitelist()
+def get_transfer_form_options(search_text=None, limit=100):
+	"""Return filtered BEI store-warehouse options for transfer request forms."""
+	_require_any_role(TRANSFER_READ_ROLES, "You do not have permission to view transfer form options")
+	options = _list_transfer_store_warehouse_options(search_text=search_text, limit=limit)
+	return {
+		"warehouses": options,
+		"total": len(options),
 	}
 
 

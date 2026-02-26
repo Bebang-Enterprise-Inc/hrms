@@ -128,6 +128,15 @@ flows:
     prefixes: [HTO]
     plan_domains: [recruitment, onboarding, employee_clearance]
 
+  - key: employee-transfer
+    label: Employee Transfer
+    status: ready
+    command: flow-employee-transfer
+    scenario_files:
+      - docs/testing/scenarios/flows/employee-transfer.md
+    prefixes: [TRF]
+    plan_domains: [employee_clearance]
+
 regressions:
   - docs/testing/scenarios/regressions/regression-bank.md
   - docs/testing/scenarios/regressions/regression-bank-store-ops-inventory.md
@@ -145,6 +154,7 @@ commands:
   - flow-procure-pay
   - flow-dispatch-warehouse
   - flow-hire-onboard
+  - flow-employee-transfer
   - stock-counting
   - all
 
