@@ -705,6 +705,13 @@ def create_user_type(user_type, data):
 
 	append_docperms_to_user_type(docperms, doc)
 
+	# Compatibility guard: some upstream branches seed ESS as standard role.
+	# User Type validation requires a custom role, so normalize before save.
+	if doc.role and frappe.db.exists("Role", doc.role):
+		is_custom = frappe.db.get_value("Role", doc.role, "is_custom")
+		if not int(is_custom or 0):
+			frappe.db.set_value("Role", doc.role, "is_custom", 1, update_modified=False)
+
 	doc.flags.ignore_links = True
 	doc.save(ignore_permissions=True)
 
