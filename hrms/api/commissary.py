@@ -15,11 +15,33 @@ Modules:
     commissary_bom.py       — BOM CRUD + production feasibility
 """
 import frappe
-from hrms.utils.bei_config import get_company
+from hrms.utils.bei_config import get_company, get_chat_space, SPACE_ERP_AUTOMATION
 from frappe import _
 import json
 from frappe.utils import today, add_days, flt
-from hrms.api.store import _get_store_customer
+from hrms.api.g046_alerting import (
+    build_failure_alert_payload,
+    emit_failure_alert,
+    get_force_failure_stage,
+    maybe_raise_forced_failure,
+)
+
+
+def _emit_g046_failure_alert(payload):
+    """Emit GAP-046 failure context to logs and Google Chat (non-blocking)."""
+    try:
+        from hrms.api.google_chat import send_message_to_space
+
+        emit_failure_alert(
+            payload,
+            log_error=frappe.log_error,
+            send_chat_message=lambda message: send_message_to_space(
+                get_chat_space(SPACE_ERP_AUTOMATION), message
+            ),
+        )
+    except Exception:
+        # Notification failure must never cascade into business logic failures.
+        pass
 
 
 # ============================================================
@@ -704,6 +726,8 @@ def _get_store_type_and_customer(warehouse_name):
     """
     Retrieves the BEI Store Type and linked Customer for a given warehouse.
     """
+    from hrms.api.store import _get_store_customer
+
     # 1. Get Department from BEI Warehouse Department Mapping
     department = frappe.db.get_value(
         "BEI Warehouse Department Mapping",
@@ -736,31 +760,41 @@ def _create_intercompany_invoices_async(stock_entry_name, store_info):
     Creates inter-company Sales Invoice (BKI) for a given Stock Entry related to a store transfer.
     Runs async via enqueue to not block fulfillment.
     """
+    force_failure_stage = get_force_failure_stage(store_info)
+    sales_invoice_name = ""
+    purchase_invoice_name = ""
+    current_stage = "preflight"
+
     try:
         stock_entry_doc = frappe.get_doc("Stock Entry", stock_entry_name)
     except frappe.DoesNotExistError:
         return
 
-    frappe.log_error(f"G-046: Creating inter-company invoices for SE: {stock_entry_name}", "Intercompany Invoice Log")
-
     bki_company = "Bebang Kitchen Inc."
-    bei_company = get_company()
-
-    if not frappe.db.exists("Company", bki_company):
-        frappe.log_error(f"G-046: Company {bki_company} not found.", "Intercompany Invoice Error")
-        return
-
-    # Determine markup based on store type
-    markup_rate = 0.0
-    if store_info["store_type"] == "JV":
-        markup_rate = 0.0275 # 2.75%
-    elif store_info["store_type"] in ["Managed Franchise", "Full Franchise"]:
-        markup_rate = 0.08 # 8%
+    logger = frappe.logger("commissary")
 
     try:
+        maybe_raise_forced_failure(force_failure_stage, current_stage)
+
+        logger.info(f"G-046: Creating inter-company invoices for SE: {stock_entry_name}")
+
+        if not frappe.db.exists("Company", bki_company):
+            raise RuntimeError(f"G-046: Company {bki_company} not found.")
+
+        # Determine markup based on store type
+        store_type = (store_info or {}).get("store_type")
+        markup_rate = 0.0
+        if store_type == "JV":
+            markup_rate = 0.0275  # 2.75%
+        elif store_type in ["Managed Franchise", "Full Franchise"]:
+            markup_rate = 0.08  # 8%
+
+        current_stage = "sales_invoice_create"
+        maybe_raise_forced_failure(force_failure_stage, current_stage)
+
         sales_invoice = frappe.new_doc("Sales Invoice")
         sales_invoice.company = bki_company
-        sales_invoice.customer = store_info["customer"]
+        sales_invoice.customer = (store_info or {}).get("customer")
         sales_invoice.posting_date = stock_entry_doc.posting_date
         sales_invoice.set_posting_time = 1
         sales_invoice.currency = frappe.db.get_value("Company", bki_company, "default_currency") or "PHP"
@@ -774,9 +808,9 @@ def _create_intercompany_invoices_async(stock_entry_name, store_info):
             if not base_price:
                 # Fallback to item valuation rate if basic_rate is 0
                 base_price = flt(frappe.db.get_value("Item", se_item.item_code, "valuation_rate"))
-            
+
             selling_price_per_unit = base_price * (1 + markup_rate)
-            
+
             sales_invoice.append("items", {
                 "item_code": se_item.item_code,
                 "qty": se_item.qty,
@@ -787,22 +821,39 @@ def _create_intercompany_invoices_async(stock_entry_name, store_info):
 
         sales_invoice.insert(ignore_permissions=True)
         sales_invoice.submit()
+        sales_invoice_name = sales_invoice.name
 
-        frappe.log_error(f"G-046: Created Sales Invoice {sales_invoice.name} for {stock_entry_doc.name}", "Intercompany Invoice Log")
+        logger.info(f"G-046: Created Sales Invoice {sales_invoice.name} for {stock_entry_doc.name}")
 
         # Let Frappe auto-create the Purchase Invoice if the internal supplier is mapped correctly.
         # If not mapped, we could call make_inter_company_purchase_invoice(sales_invoice.name) here.
         from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_company_purchase_invoice
-        try:
-            purchase_invoice = make_inter_company_purchase_invoice(sales_invoice.name)
-            purchase_invoice.insert(ignore_permissions=True)
-            purchase_invoice.submit()
-            frappe.log_error(f"G-046: Created Purchase Invoice {purchase_invoice.name} for {stock_entry_doc.name}", "Intercompany Invoice Log")
-        except Exception as e:
-            frappe.log_error(f"G-046: Failed to auto-create Purchase Invoice for SI {sales_invoice.name}: {frappe.get_traceback()}", "Intercompany Invoice Error")
+
+        current_stage = "purchase_invoice_create"
+        maybe_raise_forced_failure(force_failure_stage, current_stage)
+
+        purchase_invoice = make_inter_company_purchase_invoice(sales_invoice.name)
+        purchase_invoice.insert(ignore_permissions=True)
+        purchase_invoice.submit()
+        purchase_invoice_name = purchase_invoice.name
+        logger.info(f"G-046: Created Purchase Invoice {purchase_invoice.name} for {stock_entry_doc.name}")
 
     except Exception as e:
-        frappe.log_error(f"G-046: Failed to create invoices for SE {stock_entry_name}: {frappe.get_traceback()}", "Intercompany Invoice Error")
+        frappe.log_error(
+            f"G-046: Failed to create invoices for SE {stock_entry_name}: {frappe.get_traceback()}",
+            "Intercompany Invoice Error",
+        )
+        payload = build_failure_alert_payload(
+            stock_entry_name=stock_entry_name,
+            stage=current_stage,
+            error=e,
+            store_info=store_info,
+            sales_invoice_name=sales_invoice_name,
+            purchase_invoice_name=purchase_invoice_name,
+            forced_failure_stage=force_failure_stage,
+            target_company=get_company(),
+        )
+        _emit_g046_failure_alert(payload)
 
 @frappe.whitelist()
 def get_ready_for_pickup():
