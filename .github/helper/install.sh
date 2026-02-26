@@ -78,4 +78,9 @@ bench --verbose --site test_site install-app lending
 # HRMS user-type setup expects a custom role, so align this before hrms install in CI.
 bench --site test_site execute "frappe.db.sql" --kwargs "{'query': \"UPDATE \`tabRole\` SET is_custom = 1 WHERE name = 'Employee Self Service'\"}" || true
 bench --site test_site execute "frappe.db.commit" || true
+# Newer Frappe builds enforce permission dependency rules more strictly.
+# Normalize legacy permission rows to avoid amend-without-create validation errors in CI.
+bench --site test_site execute "frappe.db.sql" --kwargs "{'query': \"UPDATE \`tabDocPerm\` SET \`create\` = 1 WHERE \`amend\` = 1 AND \`create\` = 0\"}" || true
+bench --site test_site execute "frappe.db.sql" --kwargs "{'query': \"UPDATE \`tabCustom DocPerm\` SET \`create\` = 1 WHERE \`amend\` = 1 AND \`create\` = 0\"}" || true
+bench --site test_site execute "frappe.db.commit" || true
 bench --verbose --site test_site install-app hrms
