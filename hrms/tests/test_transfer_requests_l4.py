@@ -61,6 +61,9 @@ class TestTransferRequestsL4(unittest.TestCase):
 			"frappe.db.exists", return_value=True
 		), patch(
 			"frappe.get_doc", side_effect=_fake_get_doc
+		), patch(
+			"hrms.api.transfer_requests._validate_store_warehouse_for_transfer",
+			return_value={"warehouse": "BRITTANY OFFICE - BEI", "branch": "BRITTANY OFFICE", "company": "Bebang Enterprise Inc."},
 		):
 			result = transfer_requests.create_transfer_request(
 				employee="EMP-0001",
