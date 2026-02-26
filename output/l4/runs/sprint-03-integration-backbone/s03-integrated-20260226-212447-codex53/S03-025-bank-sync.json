@@ -1,0 +1,46 @@
+{
+  "sheet": "S03 BANK s03-integrated-20260226-212447-codex53",
+  "checksum": "s03-integrated-20260226-212447-codex53-bank",
+  "first": {
+    "status_code": 200,
+    "ok": true,
+    "body": {
+      "message": {
+        "rows_processed": 1,
+        "rows_created": 1,
+        "rows_updated": 0,
+        "rows_failed": 0,
+        "errors": []
+      }
+    }
+  },
+  "first_stats": {
+    "rows_processed": 1,
+    "rows_created": 1,
+    "rows_updated": 0,
+    "rows_failed": 0,
+    "errors": []
+  },
+  "replay": {
+    "status_code": 200,
+    "ok": true,
+    "body": {
+      "message": {
+        "rows_processed": 1,
+        "rows_created": 1,
+        "rows_updated": 0,
+        "rows_failed": 0,
+        "errors": []
+      }
+    }
+  },
+  "replay_stats": {
+    "rows_processed": 1,
+    "rows_created": 1,
+    "rows_updated": 0,
+    "rows_failed": 0,
+    "errors": []
+  },
+  "docs": [],
+  "pass": false
+}

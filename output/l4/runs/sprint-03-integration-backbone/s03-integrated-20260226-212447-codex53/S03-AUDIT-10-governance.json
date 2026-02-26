@@ -1,0 +1,13 @@
+{
+  "required_markers": [
+    "### 6.1 Cleanroom Worktree + Commit Protocol",
+    "PR target must be `integration/cleanup-20260226`",
+    "One agent = one branch = one worktree",
+    "Protected paths",
+    "Commit hygiene"
+  ],
+  "missing_markers": [],
+  "worktree": "F:\\Dropbox\\Projects\\BEI-ERP-agent-codex53",
+  "branch": "agent/codex53-audit-followup-20260226",
+  "pass": true
+}

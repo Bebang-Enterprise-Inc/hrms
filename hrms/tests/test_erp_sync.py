@@ -29,22 +29,33 @@ def _install_fake_frappe():
     class DuplicateEntryError(Exception):
         pass
 
-    def _throw(message):
+    class PermissionError(Exception):
+        pass
+
+    def _throw(message, exc=None):
+        if isinstance(exc, type) and issubclass(exc, Exception):
+            raise exc(message)
         raise Exception(message)
 
     frappe.whitelist = whitelist
     frappe._ = lambda text: text
     frappe.throw = _throw
     frappe.DuplicateEntryError = DuplicateEntryError
+    frappe.PermissionError = PermissionError
     frappe.log_error = lambda *args, **kwargs: None
     frappe.logger = lambda: types.SimpleNamespace(info=lambda *args, **kwargs: None)
     frappe.get_traceback = lambda: "traceback"
     frappe.defaults = types.SimpleNamespace(get_global_default=lambda key: None)
+    frappe.session = types.SimpleNamespace(user="Administrator")
+    frappe.get_roles = lambda user=None: ["System Manager"] if user and user != "Guest" else []
     frappe.request = types.SimpleNamespace(headers={}, data=b"")
     frappe.db = types.SimpleNamespace(
         exists=lambda *args, **kwargs: None,
         get_value=lambda *args, **kwargs: None,
         set_value=lambda *args, **kwargs: None,
+        savepoint=lambda *args, **kwargs: None,
+        release_savepoint=lambda *args, **kwargs: None,
+        rollback=lambda *args, **kwargs: None,
     )
     frappe.get_all = lambda *args, **kwargs: []
     frappe.get_meta = lambda *args, **kwargs: types.SimpleNamespace(has_field=lambda *_: True)
@@ -103,6 +114,11 @@ class _FakeDoc:
 class TestErpSync(unittest.TestCase):
     def setUp(self):
         erp_sync._FIELD_CACHE.clear()
+        erp_sync.frappe.session = types.SimpleNamespace(user="Administrator")
+        erp_sync.frappe.get_roles = MagicMock(return_value=["System Manager"])
+        erp_sync.frappe.db.savepoint = MagicMock(return_value=None)
+        erp_sync.frappe.db.release_savepoint = MagicMock()
+        erp_sync.frappe.db.rollback = MagicMock()
 
     def test_sync_ar_aging_writes_sales_invoice_fields(self):
         erp_sync.frappe.db.exists = MagicMock(return_value="SINV-0001")
@@ -326,6 +342,63 @@ class TestErpSync(unittest.TestCase):
         self.assertEqual(second["rows_updated"], 1)
         self.assertEqual(len(created_docs), 1)
         erp_sync.frappe.db.set_value.assert_called_once()
+
+    def test_sync_supplier_soa_aliases_sync_ap_opening(self):
+        rows = [{"supplier": "Acme Supply", "invoice_no": "INV-001"}]
+        expected = {"rows_processed": 1, "rows_created": 1, "rows_updated": 0, "rows_failed": 0, "errors": []}
+        with patch.object(erp_sync, "sync_ap_opening", return_value=expected) as sync_ap_opening:
+            result = erp_sync.sync_supplier_soa("Supplier SOA", rows, "chk-supplier-1")
+
+        sync_ap_opening.assert_called_once_with(
+            sheet_name="Supplier SOA",
+            data=rows,
+            checksum="chk-supplier-1",
+        )
+        self.assertEqual(result, expected)
+
+    def test_sync_authorization_blocks_guest(self):
+        erp_sync.frappe.session.user = "Guest"
+        erp_sync.frappe.get_roles = MagicMock(return_value=[])
+
+        with self.assertRaises(erp_sync.frappe.PermissionError):
+            erp_sync._assert_sync_authorized()
+
+    def test_sync_authorization_blocks_unscoped_role(self):
+        erp_sync.frappe.session.user = "viewer@bebang.ph"
+        erp_sync.frappe.get_roles = MagicMock(return_value=["Employee"])
+
+        with self.assertRaises(erp_sync.frappe.PermissionError):
+            erp_sync._assert_sync_authorized()
+
+    def test_sync_authorization_allows_scoped_role(self):
+        erp_sync.frappe.session.user = "finance@bebang.ph"
+        erp_sync.frappe.get_roles = MagicMock(return_value=["Accounts Manager"])
+
+        # Should not raise
+        erp_sync._assert_sync_authorized()
+
+    def test_sync_ar_aging_rolls_back_on_row_error(self):
+        captured_savepoints = []
+
+        def _capture_savepoint(name):
+            captured_savepoints.append(name)
+            return None
+
+        erp_sync.frappe.db.savepoint = MagicMock(side_effect=_capture_savepoint)
+        erp_sync.frappe.db.rollback = MagicMock()
+        erp_sync.frappe.db.release_savepoint = MagicMock()
+        erp_sync.frappe.db.exists = MagicMock(side_effect=RuntimeError("db offline"))
+        erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+        result = erp_sync.sync_ar_aging(
+            sheet_name="AR Aging",
+            data=[{"invoice_no": "SINV-ERR", "outstanding": 100}],
+            checksum="chk-ar-rollback",
+        )
+
+        self.assertEqual(result["rows_failed"], 1)
+        self.assertEqual(len(captured_savepoints), 1)
+        erp_sync.frappe.db.rollback.assert_called_once_with(save_point=captured_savepoints[0])
 
 
 if __name__ == "__main__":

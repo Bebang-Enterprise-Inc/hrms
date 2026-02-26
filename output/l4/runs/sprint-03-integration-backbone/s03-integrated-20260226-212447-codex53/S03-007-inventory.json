@@ -1,0 +1,49 @@
+{
+  "sheet": "S03 INV s03-integrated-20260226-212447-codex53",
+  "checksum": "s03-integrated-20260226-212447-codex53-inv",
+  "first": {
+    "status_code": 200,
+    "ok": true,
+    "body": {
+      "message": {
+        "rows_processed": 2,
+        "rows_created": 0,
+        "rows_updated": 2,
+        "rows_failed": 0,
+        "errors": []
+      }
+    }
+  },
+  "first_stats": {
+    "rows_processed": 2,
+    "rows_created": 0,
+    "rows_updated": 2,
+    "rows_failed": 0,
+    "errors": []
+  },
+  "replay": {
+    "status_code": 200,
+    "ok": true,
+    "body": {
+      "message": {
+        "rows_processed": 2,
+        "rows_created": 0,
+        "rows_updated": 2,
+        "rows_failed": 0,
+        "errors": []
+      }
+    }
+  },
+  "replay_stats": {
+    "rows_processed": 2,
+    "rows_created": 0,
+    "rows_updated": 2,
+    "rows_failed": 0,
+    "errors": []
+  },
+  "run_window_start": "2026-02-26 13:27:38",
+  "stock_reconciliation_docs_in_window": [],
+  "sync_ref": "INV:e58082b128dccab2",
+  "field_constraint": "Stock Reconciliation.remarks is not queryable via frappe.client.get_list for this token",
+  "pass": false
+}

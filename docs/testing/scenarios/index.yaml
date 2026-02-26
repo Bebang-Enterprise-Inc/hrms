@@ -137,6 +137,15 @@ flows:
     prefixes: [TRF]
     plan_domains: [employee_clearance]
 
+  - key: sprint-03-integration-backbone
+    label: Sprint 03 Integration Backbone
+    status: ready
+    command: flow-sprint-03
+    scenario_files:
+      - docs/testing/scenarios/flows/sprint-03-integration-backbone.md
+    prefixes: [S03]
+    plan_domains: [dispatch, billing, procurement, inventory]
+
 regressions:
   - docs/testing/scenarios/regressions/regression-bank.md
   - docs/testing/scenarios/regressions/regression-bank-store-ops-inventory.md
@@ -155,6 +164,7 @@ commands:
   - flow-dispatch-warehouse
   - flow-hire-onboard
   - flow-employee-transfer
+  - flow-sprint-03
   - stock-counting
   - all
 

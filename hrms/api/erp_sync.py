@@ -7,7 +7,7 @@ and sync it to ERPNext DocTypes.
 
 import hashlib
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 import frappe
 from frappe import _
@@ -17,6 +17,12 @@ from frappe.utils import cint, flt, getdate, now_datetime, nowdate
 _FIELD_CACHE: Dict[tuple, bool] = {}
 ROOT_TYPES = {"Asset", "Liability", "Equity", "Income", "Expense"}
 AP_OPENING_ITEM_CODE = "ERP-SYNC-AP-OPENING"
+SYNC_ALLOWED_ROLES = {
+    "System Manager",
+    "Accounts Manager",
+    "Accounts User",
+    "HR Manager",
+}
 
 
 def _parse_rows(data: Any) -> List[Dict[str, Any]]:
@@ -69,6 +75,34 @@ def _is_duplicate_error(exc: Exception) -> bool:
 def _sync_ref(prefix: str, sheet_name: str, checksum: str, row_key: str) -> str:
     digest = hashlib.sha1(f"{sheet_name}|{checksum}|{row_key}".encode("utf-8")).hexdigest()[:16]
     return f"{prefix}:{digest}"
+
+
+def _make_savepoint(prefix: str, row_key: str) -> str:
+    digest = hashlib.sha1(f"{prefix}|{row_key}".encode("utf-8")).hexdigest()[:12]
+    return f"{prefix}_{digest}"
+
+
+def _release_savepoint(name: str) -> None:
+    try:
+        frappe.db.release_savepoint(name)
+    except Exception:
+        # Savepoint release availability differs by backend/version; rollback still works.
+        pass
+
+
+def _assert_sync_authorized() -> None:
+    user = frappe.session.user or "Guest"
+    if user == "Guest":
+        frappe.throw(_("Authentication is required for ERP sync endpoints"), frappe.PermissionError)
+
+    if user == "Administrator":
+        return
+
+    user_roles = set(frappe.get_roles(user))
+    if user_roles.intersection(SYNC_ALLOWED_ROLES):
+        return
+
+    frappe.throw(_("You are not allowed to execute ERP sync endpoints"), frappe.PermissionError)
 
 
 def _doctype_has_field(doctype: str, fieldname: str) -> bool:
@@ -315,8 +349,10 @@ def sync_ar_aging(sheet_name: str, data: List[Dict], checksum: str, **kwargs) ->
 
     Creates/updates Sales Invoice outstanding amounts.
     """
+    _assert_sync_authorized()
     rows = _parse_rows(data)
     results = _init_results(len(rows))
+    seen_invoice_keys: Set[str] = set()
 
     outstanding_field = _first_available_field(
         "Sales Invoice",
@@ -343,8 +379,16 @@ def sync_ar_aging(sheet_name: str, data: List[Dict], checksum: str, **kwargs) ->
     )
 
     for row in rows:
+        invoice_no = str(_first_non_empty(row, "invoice_no", "invoice_number", "name") or "").strip()
+        if invoice_no and invoice_no in seen_invoice_keys:
+            results["rows_updated"] += 1
+            continue
+        if invoice_no:
+            seen_invoice_keys.add(invoice_no)
+
+        savepoint = _make_savepoint("sync_ar", f"{sheet_name}|{checksum}|{invoice_no or 'unknown'}")
+        frappe.db.savepoint(savepoint)
         try:
-            invoice_no = _first_non_empty(row, "invoice_no", "invoice_number", "name")
             outstanding = flt(_first_non_empty(row, "outstanding", "balance", "outstanding_amount") or 0)
             due_date = _safe_date(_first_non_empty(row, "due_date"))
             days_overdue = cint(_first_non_empty(row, "days_overdue", "overdue_days") or 0)
@@ -352,6 +396,7 @@ def sync_ar_aging(sheet_name: str, data: List[Dict], checksum: str, **kwargs) ->
             if not invoice_no:
                 results["rows_failed"] += 1
                 results["errors"].append("Missing invoice_no in AR row")
+                _release_savepoint(savepoint)
                 continue
 
             invoice_name = frappe.db.exists("Sales Invoice", invoice_no)
@@ -361,6 +406,7 @@ def sync_ar_aging(sheet_name: str, data: List[Dict], checksum: str, **kwargs) ->
             if not invoice_name:
                 results["rows_failed"] += 1
                 results["errors"].append(f"Invoice not found: {invoice_no}")
+                _release_savepoint(savepoint)
                 continue
 
             updates: Dict[str, Any] = {}
@@ -382,14 +428,22 @@ def sync_ar_aging(sheet_name: str, data: List[Dict], checksum: str, **kwargs) ->
                 ["custom_ar_sync_ref", "custom_last_sync_checksum"],
             )
             if sync_token_field:
-                updates[sync_token_field] = _sync_ref("AR", sheet_name, checksum, str(invoice_no))
+                sync_ref = _sync_ref("AR", sheet_name, checksum, str(invoice_no))
+                existing_sync_ref = frappe.db.get_value("Sales Invoice", invoice_name, sync_token_field)
+                if existing_sync_ref == sync_ref:
+                    results["rows_updated"] += 1
+                    _release_savepoint(savepoint)
+                    continue
+                updates[sync_token_field] = sync_ref
 
             if updates:
                 frappe.db.set_value("Sales Invoice", invoice_name, updates, update_modified=False)
 
             results["rows_updated"] += 1
+            _release_savepoint(savepoint)
 
         except Exception as e:
+            frappe.db.rollback(save_point=savepoint)
             results["errors"].append(f"{row.get('invoice_no', 'unknown')}: {str(e)}")
             results["rows_failed"] += 1
 
@@ -404,10 +458,11 @@ def sync_inventory(sheet_name: str, data: List[Dict], checksum: str, **kwargs) -
 
     Updates stock levels via Stock Reconciliation.
     """
+    _assert_sync_authorized()
     rows = _parse_rows(data)
     results = _init_results(len(rows))
 
-    items_by_warehouse: Dict[str, List[Dict[str, Any]]] = {}
+    items_by_warehouse: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
     for row in rows:
         try:
@@ -431,22 +486,24 @@ def sync_inventory(sheet_name: str, data: List[Dict], checksum: str, **kwargs) -
                 continue
 
             if warehouse not in items_by_warehouse:
-                items_by_warehouse[warehouse] = []
+                items_by_warehouse[warehouse] = {}
 
-            items_by_warehouse[warehouse].append(
-                {
-                    "item_code": item_code,
-                    "warehouse": warehouse,
-                    "qty": qty,
-                }
-            )
+            # Last row wins for repeated item+warehouse rows in same payload.
+            items_by_warehouse[warehouse][item_code] = {
+                "item_code": item_code,
+                "warehouse": warehouse,
+                "qty": qty,
+            }
 
         except Exception as e:
             results["errors"].append(str(e))
             results["rows_failed"] += 1
 
-    for warehouse, items in items_by_warehouse.items():
+    for warehouse, items_map in items_by_warehouse.items():
+        items = list(items_map.values())
         sync_ref = _sync_ref("INV", sheet_name, checksum, warehouse)
+        savepoint = _make_savepoint("sync_inv", f"{sheet_name}|{checksum}|{warehouse}")
+        frappe.db.savepoint(savepoint)
         try:
             existing = frappe.db.get_value(
                 "Stock Reconciliation",
@@ -456,6 +513,7 @@ def sync_inventory(sheet_name: str, data: List[Dict], checksum: str, **kwargs) -
 
             if existing:
                 results["rows_updated"] += len(items)
+                _release_savepoint(savepoint)
                 continue
 
             sr = frappe.new_doc("Stock Reconciliation")
@@ -481,8 +539,10 @@ def sync_inventory(sheet_name: str, data: List[Dict], checksum: str, **kwargs) -
             sr.insert(ignore_permissions=True)
             sr.submit()
             results["rows_created"] += len(items)
+            _release_savepoint(savepoint)
 
         except Exception as exc:
+            frappe.db.rollback(save_point=savepoint)
             if _is_duplicate_error(exc):
                 existing = frappe.db.get_value(
                     "Stock Reconciliation",
@@ -505,15 +565,28 @@ def sync_coa(sheet_name: str, data: List[Dict], checksum: str, **kwargs) -> Dict
 
     Creates/updates Account DocType.
     """
+    _assert_sync_authorized()
     rows = _parse_rows(data)
     results = _init_results(len(rows))
+    seen_account_keys: Set[str] = set()
 
     for row in rows:
+        savepoint: Optional[str] = None
         try:
             gl_code = _first_non_empty(row, "gl_code", "account_code")
             account_name = _first_non_empty(row, "gl_description", "account_name")
             account_type = _first_non_empty(row, "accounttype", "account_type")
             company = _normalize_company(_first_non_empty(row, "company"))
+            dedupe_key = f"{company}|{gl_code}"
+            if gl_code and dedupe_key in seen_account_keys:
+                results["rows_updated"] += 1
+                continue
+            if gl_code:
+                seen_account_keys.add(dedupe_key)
+
+            savepoint = _make_savepoint("sync_coa", f"{sheet_name}|{checksum}|{dedupe_key}")
+            frappe.db.savepoint(savepoint)
+
             root_type = _resolve_root_type(str(account_type or ""), str(gl_code or ""), row)
             parent_account = _resolve_parent_account(row, company, root_type)
             report_type = _report_type_for(root_type)
@@ -522,6 +595,7 @@ def sync_coa(sheet_name: str, data: List[Dict], checksum: str, **kwargs) -> Dict
             if not gl_code or not account_name:
                 results["rows_failed"] += 1
                 results["errors"].append("Missing gl_code or account_name in COA row")
+                _release_savepoint(savepoint)
                 continue
 
             existing = frappe.db.get_value(
@@ -531,6 +605,15 @@ def sync_coa(sheet_name: str, data: List[Dict], checksum: str, **kwargs) -> Dict
             )
 
             if existing:
+                sync_token_field = _first_available_field("Account", ["custom_sync_ref", "custom_last_sync_checksum"])
+                sync_ref = _sync_ref("COA", sheet_name, checksum, str(gl_code))
+                if sync_token_field:
+                    existing_sync_ref = frappe.db.get_value("Account", existing, sync_token_field)
+                    if existing_sync_ref == sync_ref:
+                        results["rows_updated"] += 1
+                        _release_savepoint(savepoint)
+                        continue
+
                 updates: Dict[str, Any] = {
                     "account_name": account_name,
                     "root_type": root_type,
@@ -541,8 +624,11 @@ def sync_coa(sheet_name: str, data: List[Dict], checksum: str, **kwargs) -> Dict
                     updates["account_type"] = account_type
                 if parent_account:
                     updates["parent_account"] = parent_account
+                if sync_token_field:
+                    updates[sync_token_field] = sync_ref
                 frappe.db.set_value("Account", existing, updates, update_modified=False)
                 results["rows_updated"] += 1
+                _release_savepoint(savepoint)
             else:
                 if not parent_account:
                     raise ValueError(f"Unable to resolve parent account for {gl_code}")
@@ -557,17 +643,24 @@ def sync_coa(sheet_name: str, data: List[Dict], checksum: str, **kwargs) -> Dict
                 account.is_group = is_group
                 if account_type and _doctype_has_field("Account", "account_type"):
                     account.account_type = account_type
+                sync_token_field = _first_available_field("Account", ["custom_sync_ref", "custom_last_sync_checksum"])
+                if sync_token_field:
+                    setattr(account, sync_token_field, _sync_ref("COA", sheet_name, checksum, str(gl_code)))
 
                 try:
                     account.insert(ignore_permissions=True)
                     results["rows_created"] += 1
+                    _release_savepoint(savepoint)
                 except Exception as exc:
                     if _is_duplicate_error(exc):
                         results["rows_updated"] += 1
+                        _release_savepoint(savepoint)
                     else:
                         raise
 
         except Exception as e:
+            if savepoint:
+                frappe.db.rollback(save_point=savepoint)
             results["errors"].append(f"{row.get('gl_code', 'unknown')}: {str(e)}")
             results["rows_failed"] += 1
 
@@ -581,10 +674,13 @@ def sync_bank_accounts(sheet_name: str, data: List[Dict], checksum: str, **kwarg
 
     Creates/updates Bank Account DocType.
     """
+    _assert_sync_authorized()
     rows = _parse_rows(data)
     results = _init_results(len(rows))
+    seen_account_numbers: Set[str] = set()
 
     for row in rows:
+        savepoint: Optional[str] = None
         try:
             account_number = _first_non_empty(row, "account_number", "account_no", "bank_account_no")
             account_name = _first_non_empty(row, "account_name", "account_holder")
@@ -598,6 +694,15 @@ def sync_bank_accounts(sheet_name: str, data: List[Dict], checksum: str, **kwarg
                 results["rows_failed"] += 1
                 results["errors"].append("Missing account_number in bank directory row")
                 continue
+
+            account_number = str(account_number).strip()
+            if account_number in seen_account_numbers:
+                results["rows_updated"] += 1
+                continue
+            seen_account_numbers.add(account_number)
+
+            savepoint = _make_savepoint("sync_bank", f"{sheet_name}|{checksum}|{account_number}")
+            frappe.db.savepoint(savepoint)
 
             if gl_code:
                 linked_account = frappe.db.get_value(
@@ -616,6 +721,17 @@ def sync_bank_accounts(sheet_name: str, data: List[Dict], checksum: str, **kwarg
 
             if existing:
                 updates: Dict[str, Any] = {}
+                sync_token_field = _first_available_field(
+                    "Bank Account",
+                    ["custom_sync_ref", "custom_last_sync_checksum"],
+                )
+                sync_ref = _sync_ref("BANK", sheet_name, checksum, account_number)
+                if sync_token_field:
+                    existing_sync_ref = frappe.db.get_value("Bank Account", existing, sync_token_field)
+                    if existing_sync_ref == sync_ref:
+                        results["rows_updated"] += 1
+                        _release_savepoint(savepoint)
+                        continue
                 if account_name:
                     updates["account_name"] = account_name
                 if bank:
@@ -633,12 +749,15 @@ def sync_bank_accounts(sheet_name: str, data: List[Dict], checksum: str, **kwarg
                     updates["party_type"] = "Company"
                 if _doctype_has_field("Bank Account", "party"):
                     updates["party"] = company
+                if sync_token_field:
+                    updates[sync_token_field] = sync_ref
                 if updates:
                     frappe.db.set_value("Bank Account", existing, updates, update_modified=False)
                 results["rows_updated"] += 1
+                _release_savepoint(savepoint)
             else:
                 bank_account = frappe.new_doc("Bank Account")
-                bank_account.bank_account_no = str(account_number)
+                bank_account.bank_account_no = account_number
                 bank_account.account_name = str(account_name or account_number)
                 if bank:
                     bank_account.bank = bank
@@ -655,17 +774,27 @@ def sync_bank_accounts(sheet_name: str, data: List[Dict], checksum: str, **kwarg
                     bank_account.party = company
                 if linked_account and _doctype_has_field("Bank Account", "account"):
                     bank_account.account = linked_account
+                sync_token_field = _first_available_field(
+                    "Bank Account",
+                    ["custom_sync_ref", "custom_last_sync_checksum"],
+                )
+                if sync_token_field:
+                    setattr(bank_account, sync_token_field, _sync_ref("BANK", sheet_name, checksum, account_number))
 
                 try:
                     bank_account.insert(ignore_permissions=True)
                     results["rows_created"] += 1
+                    _release_savepoint(savepoint)
                 except Exception as exc:
                     if _is_duplicate_error(exc):
                         results["rows_updated"] += 1
+                        _release_savepoint(savepoint)
                     else:
                         raise
 
         except Exception as e:
+            if savepoint:
+                frappe.db.rollback(save_point=savepoint)
             results["errors"].append(f"{row.get('account_number', 'unknown')}: {str(e)}")
             results["rows_failed"] += 1
 
@@ -679,22 +808,36 @@ def sync_ap_opening(sheet_name: str, data: List[Dict], checksum: str, **kwargs) 
 
     Creates/updates Purchase Invoice entries for opening balances.
     """
+    _assert_sync_authorized()
     rows = _parse_rows(data)
     results = _init_results(len(rows))
     opening_item = _ensure_ap_opening_item()
+    seen_supplier_invoice_keys: Set[str] = set()
 
     for row in rows:
+        savepoint: Optional[str] = None
         try:
             supplier_input = _first_non_empty(row, "supplier", "supplier_name")
             invoice_no = _first_non_empty(row, "invoice_no", "reference", "bill_no")
             amount = flt(_first_non_empty(row, "amount", "balance", "outstanding") or 0)
             company = _normalize_company(_first_non_empty(row, "company"))
+            dedupe_key = f"{company}|{supplier_input}|{invoice_no}"
+            if supplier_input and invoice_no and dedupe_key in seen_supplier_invoice_keys:
+                results["rows_updated"] += 1
+                continue
+            if supplier_input and invoice_no:
+                seen_supplier_invoice_keys.add(dedupe_key)
+
+            savepoint = _make_savepoint("sync_ap", f"{sheet_name}|{checksum}|{dedupe_key}")
+            frappe.db.savepoint(savepoint)
+
             posting_date = _safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date")) or nowdate()
             due_date = _safe_date(_first_non_empty(row, "due_date")) or posting_date
 
             if not supplier_input or not invoice_no:
                 results["rows_failed"] += 1
                 results["errors"].append("Missing supplier or invoice_no in AP opening row")
+                _release_savepoint(savepoint)
                 continue
 
             supplier = _ensure_supplier(str(supplier_input))
@@ -724,6 +867,7 @@ def sync_ap_opening(sheet_name: str, data: List[Dict], checksum: str, **kwargs) 
                 if updates:
                     frappe.db.set_value("Purchase Invoice", existing, updates, update_modified=False)
                 results["rows_updated"] += 1
+                _release_savepoint(savepoint)
                 continue
 
             expense_account = _first_non_empty(row, "expense_account") or _default_expense_account(company)
@@ -772,17 +916,31 @@ def sync_ap_opening(sheet_name: str, data: List[Dict], checksum: str, **kwargs) 
                         title="AP Opening Sync Submit Warning",
                     )
                 results["rows_created"] += 1
+                _release_savepoint(savepoint)
             except Exception as exc:
                 if _is_duplicate_error(exc):
                     results["rows_updated"] += 1
+                    _release_savepoint(savepoint)
                 else:
                     raise
 
         except Exception as e:
+            if savepoint:
+                frappe.db.rollback(save_point=savepoint)
             results["errors"].append(str(e))
             results["rows_failed"] += 1
 
     return results
+
+
+@frappe.whitelist()
+def sync_supplier_soa(sheet_name: str, data: List[Dict], checksum: str, **kwargs) -> Dict:
+    """
+    Backward-compatible alias for supplier_soa route.
+
+    Source config still points to this method name.
+    """
+    return sync_ap_opening(sheet_name=sheet_name, data=data, checksum=checksum, **kwargs)
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
@@ -826,6 +984,7 @@ def webhook():
 @frappe.whitelist()
 def get_sync_status():
     """Get sync status from Sheets Receiver service."""
+    _assert_sync_authorized()
     import requests
 
     try:
@@ -838,6 +997,7 @@ def get_sync_status():
 @frappe.whitelist()
 def trigger_sync(sheet_key: str = None, force: bool = False):
     """Trigger manual sync via Sheets Receiver service."""
+    _assert_sync_authorized()
     import requests
 
     try:

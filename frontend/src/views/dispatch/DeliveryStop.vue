@@ -35,6 +35,64 @@
 					</div>
 				</div>
 
+				<!-- GAP-092: Pre-delivery billing exception workflow -->
+				<div class="mb-6 border border-amber-200 bg-amber-50 rounded-lg p-4">
+					<h3 class="font-medium mb-2">Pre-Delivery Billing (Dual Approval)</h3>
+					<p class="text-xs text-gray-700 mb-3">
+						Use only for approved exception cases. Requires Daymae/CPO + Butch/CFO approval before billing can be created.
+					</p>
+
+					<div class="mb-3">
+						<ion-label class="text-sm text-gray-600 mb-1 block">Exception Reason *</ion-label>
+						<ion-textarea
+							v-model="preDelivery.reason"
+							placeholder="Explain why billing is needed before delivery confirmation..."
+							:rows="3"
+						/>
+					</div>
+
+					<div class="space-y-2">
+						<ion-button
+							expand="block"
+							fill="outline"
+							color="warning"
+							@click="requestPreDeliveryException"
+							:disabled="!preDelivery.reason || submitting"
+						>
+							<ion-spinner v-if="submitting && actionType === 'request-pre-billing'" slot="start" />
+							Request Dual-Approval Exception
+						</ion-button>
+
+						<ion-button
+							expand="block"
+							fill="outline"
+							color="medium"
+							@click="refreshPreDeliveryStatus"
+							:disabled="submitting"
+						>
+							<ion-spinner v-if="submitting && actionType === 'refresh-pre-billing'" slot="start" />
+							Refresh Exception Status
+						</ion-button>
+
+						<ion-button
+							expand="block"
+							color="tertiary"
+							@click="createPreDeliveryBilling"
+							:disabled="!canCreatePreDeliveryBilling || submitting"
+						>
+							<ion-spinner v-if="submitting && actionType === 'create-pre-billing'" slot="start" />
+							Create Pre-Delivery Billing
+						</ion-button>
+					</div>
+
+					<div v-if="preDelivery.statusText" class="text-xs text-gray-700 mt-3">
+						Status: {{ preDelivery.statusText }}
+					</div>
+					<div v-if="preDelivery.billingReference" class="text-xs text-green-700 mt-1">
+						Billing Created: {{ preDelivery.billingReference }}
+					</div>
+				</div>
+
 				<!-- Action Buttons -->
 				<div class="space-y-3">
 					<ion-button expand="block" @click="confirmDelivery" :disabled="!delivery.signed_by || submitting">
@@ -88,7 +146,7 @@ import {
 	IonBackButton, IonButton, IonInput, IonLabel, IonModal,
 	IonSpinner, IonSelect, IonSelectOption, IonTextarea
 } from "@ionic/vue"
-import { ref } from "vue"
+import { computed, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
 import { call } from "frappe-ui"
 
@@ -112,12 +170,33 @@ const exception = ref({
 	type: "",
 	reason: ""
 })
+const preDelivery = ref({
+	reason: "",
+	latestException: null,
+	statusText: "",
+	billingReference: ""
+})
+const canCreatePreDeliveryBilling = computed(() => {
+	return Boolean(preDelivery.value.latestException?.name) &&
+		preDelivery.value.latestException?.status === "Approved" &&
+		!preDelivery.value.billingReference
+})
+
+function _normalizeError(error) {
+	if (typeof error === "string") return error
+	if (error?.messages && Array.isArray(error.messages)) return error.messages.join("; ")
+	return error?.message || "Operation failed"
+}
+
+function _setBusy(type) {
+	submitting.value = true
+	actionType.value = type
+}
 
 async function confirmDelivery() {
 	if (!delivery.value.signed_by) return
 
-	submitting.value = true
-	actionType.value = "deliver"
+	_setBusy("deliver")
 	try {
 		const result = await call("hrms.api.dispatch.confirm_delivery", {
 			trip_name: props.id,
@@ -139,8 +218,7 @@ async function confirmDelivery() {
 async function reportException() {
 	if (!exception.value.type) return
 
-	submitting.value = true
-	actionType.value = "exception"
+	_setBusy("exception")
 	try {
 		const result = await call("hrms.api.dispatch.report_exception", {
 			trip_name: props.id,
@@ -159,4 +237,72 @@ async function reportException() {
 		submitting.value = false
 	}
 }
+
+async function refreshPreDeliveryStatus() {
+	_setBusy("refresh-pre-billing")
+	try {
+		const result = await call("hrms.api.dispatch.get_pre_delivery_billing_exception_status", {
+			trip_name: props.id,
+			stop_idx: props.stopIdx
+		})
+		preDelivery.value.latestException = result?.latest || null
+		const latest = preDelivery.value.latestException
+		if (!latest) {
+			preDelivery.value.statusText = "No exception request found yet."
+			return
+		}
+		preDelivery.value.statusText = `${latest.status || "Pending"} (${latest.name})`
+	} catch (error) {
+		preDelivery.value.statusText = _normalizeError(error)
+	} finally {
+		submitting.value = false
+	}
+}
+
+async function requestPreDeliveryException() {
+	if (!preDelivery.value.reason) return
+
+	_setBusy("request-pre-billing")
+	try {
+		await call("hrms.api.dispatch.request_pre_delivery_billing_exception", {
+			trip_name: props.id,
+			stop_idx: props.stopIdx,
+			reason: preDelivery.value.reason
+		})
+		preDelivery.value.statusText = "Exception request submitted."
+	} catch (error) {
+		preDelivery.value.statusText = _normalizeError(error)
+	} finally {
+		submitting.value = false
+	}
+
+	await refreshPreDeliveryStatus()
+}
+
+async function createPreDeliveryBilling() {
+	const exceptionName = preDelivery.value.latestException?.name
+	if (!exceptionName) {
+		preDelivery.value.statusText = "Approved exception is required before creating pre-delivery billing."
+		return
+	}
+
+	_setBusy("create-pre-billing")
+	try {
+		const result = await call("hrms.api.dispatch.create_pre_delivery_billing", {
+			trip_name: props.id,
+			stop_idx: props.stopIdx,
+			pre_delivery_exception: exceptionName
+		})
+		preDelivery.value.billingReference = result?.billing_reference || ""
+		preDelivery.value.statusText = `Pre-delivery billing created (${result?.billing_reference || "no reference"})`
+	} catch (error) {
+		preDelivery.value.statusText = _normalizeError(error)
+	} finally {
+		submitting.value = false
+	}
+}
+
+onMounted(() => {
+	refreshPreDeliveryStatus()
+})
 </script>

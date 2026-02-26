@@ -125,8 +125,35 @@ class FileProcessor:
                 error=error_msg
             )
 
-            # Real-time notifications disabled - only daily summary is sent
-            # See notifications.send_daily_summary() scheduled at 23:00 UTC (7 AM PHT)
+            detected_at = queue_entry.get("detected_at", datetime.utcnow().isoformat())
+            notification_id = None
+            message_type = "processing_failure"
+            try:
+                if file_name.lower().endswith(".xls") and not file_name.lower().endswith(".xlsx"):
+                    message_type = "wrong_format"
+                    notification_id = notifications.send_wrong_format_alert(
+                        store_code=store_code,
+                        file_name=file_name,
+                        detected_at=detected_at,
+                    )
+                else:
+                    notification_id = notifications.send_processing_failure_alert(
+                        store_code=store_code,
+                        file_name=file_name,
+                        error_message=error_msg,
+                        detected_at=detected_at,
+                    )
+
+                if notification_id:
+                    logger.info(
+                        "Real-time failure notification sent: type=%s store=%s file=%s message_id=%s",
+                        message_type,
+                        store_code,
+                        file_name,
+                        notification_id,
+                    )
+            except Exception as notify_error:
+                logger.error(f"Failed to send real-time failure notification: {notify_error}")
 
             return {
                 'status': 'failed',

@@ -3163,3 +3163,21 @@ Payload: {
      - Error Message contains: "Invoice rate (600) exceeds Purchase Order rate (500) beyond allowed tolerance."
      - DB: `Purchase Invoice.docstatus == 0` (Draft) or Not Created.
 
+---
+
+## Sprint 03 Integration Backbone Coverage
+
+Use the dedicated flow scenario file for GAP-specific coverage of Sprint 03:
+
+- `docs/testing/scenarios/flows/sprint-03-integration-backbone.md`
+
+Registered IDs:
+
+- `S03-006` AR Aging sync write/idempotency
+- `S03-007` Inventory sync write/idempotency
+- `S03-008` COA sync upsert/idempotency
+- `S03-009` AP opening + supplier SOA route parity
+- `S03-025` Bank account sync upsert/idempotency
+- `S03-046` Critical alert dispatch and escalation metadata
+- `S03-092` Pre-delivery billing exception enforcement (dual approval)
+

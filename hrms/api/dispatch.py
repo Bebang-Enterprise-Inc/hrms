@@ -8,8 +8,12 @@ Handles warehouse dispatch, route tracking, and delivery confirmation for my.beb
 
 import frappe
 from frappe import _
-from frappe.utils import nowdate, now_datetime, flt
-from hrms.utils.delivery_billing_policy import should_auto_create_billing_on_delivery
+from frappe.utils import nowdate, now_datetime, flt, cint
+from hrms.utils.delivery_billing_policy import (
+    DeliveryBillingPolicyError,
+    get_pre_delivery_exception_trace,
+    should_auto_create_billing_on_delivery,
+)
 
 
 # P0-10: Import centralized RBAC role sets
@@ -244,6 +248,117 @@ def report_exception(trip_name, stop_idx, exception_type, reason=None, photo=Non
 
 
 @frappe.whitelist()
+def request_pre_delivery_billing_exception(trip_name, stop_idx, reason, exception_type="Delivery Pre-Billing"):
+    """
+    Create a dual-approval exception request for pre-delivery billing.
+
+    GAP-092: routed through BEI Match Exception with CPO+CFO tier.
+    """
+    _check_scm_permission(SCM_DISPATCH_ROLES, "request pre-delivery billing exception")
+
+    if not trip_name:
+        frappe.throw(_("Trip name is required"))
+    stop_idx = cint(stop_idx)
+    if stop_idx <= 0:
+        frappe.throw(_("Stop index must be greater than 0"))
+    if not reason:
+        frappe.throw(_("Reason is required"))
+
+    from hrms.api.procurement import request_match_exception
+
+    return request_match_exception(
+        {
+            "reference_type": "BEI Distribution Trip",
+            "reference_name": trip_name,
+            "delivery_trip_reference": trip_name,
+            "delivery_stop_idx": stop_idx,
+            "reason": reason,
+            "exception_type": exception_type,
+        }
+    )
+
+
+@frappe.whitelist()
+def get_pre_delivery_billing_exception_status(trip_name, stop_idx):
+    """Return latest pre-delivery billing exception status for one trip stop."""
+    _check_scm_permission(SCM_DISPATCH_ROLES, "view pre-delivery billing exception status")
+
+    if not trip_name:
+        frappe.throw(_("Trip name is required"))
+    stop_idx = cint(stop_idx)
+    if stop_idx <= 0:
+        frappe.throw(_("Stop index must be greater than 0"))
+
+    exceptions = frappe.get_all(
+        "BEI Match Exception",
+        filters={
+            "reference_type": "BEI Distribution Trip",
+            "delivery_trip_reference": trip_name,
+            "delivery_stop_idx": stop_idx,
+        },
+        fields=[
+            "name",
+            "status",
+            "approval_tier",
+            "approver",
+            "approver_status",
+            "cpo_approved_by",
+            "cpo_approved_at",
+            "cfo_approved_by",
+            "cfo_approved_at",
+            "modified",
+        ],
+        order_by="modified desc",
+        limit_page_length=5,
+    )
+
+    return {
+        "trip_name": trip_name,
+        "stop_idx": stop_idx,
+        "latest": exceptions[0] if exceptions else None,
+        "exceptions": exceptions,
+    }
+
+
+@frappe.whitelist()
+def create_pre_delivery_billing(trip_name, stop_idx, pre_delivery_exception):
+    """
+    Create delivery billing before stop delivery only when dual approval exists.
+
+    Enforced by BEI Billing Schedule policy + exception trace validation.
+    """
+    _check_scm_permission(SCM_ADMIN_ROLES, "create pre-delivery billing")
+
+    if not pre_delivery_exception:
+        frappe.throw(
+            _("Pre-delivery billing requires an approved exception (Daymae/CPO + Butch/CFO).")
+        )
+
+    _create_delivery_billing(
+        trip_name=trip_name,
+        stop_idx=stop_idx,
+        pre_delivery_exception=pre_delivery_exception,
+        require_pre_delivery_exception=True,
+    )
+
+    trip = frappe.get_doc("BEI Distribution Trip", trip_name)
+    stop = _get_stop(trip, stop_idx)
+    if not stop.billing_reference:
+        frappe.throw(
+            _("Pre-delivery billing did not create a billing reference. Check trip stop status and exception trace.")
+        )
+
+    return {
+        "success": True,
+        "trip_name": trip_name,
+        "stop_idx": cint(stop_idx),
+        "billing_reference": stop.billing_reference,
+        "billing_creation_status": stop.billing_creation_status,
+        "pre_delivery_exception": pre_delivery_exception,
+    }
+
+
+@frappe.whitelist()
 def get_route_progress(trip_name):
     """Get current progress of a trip."""
     _check_scm_permission(SCM_DISPATCH_ROLES, "view route progress")
@@ -349,8 +464,13 @@ FRANCHISE_STORE_TYPES = ("Full Franchise", "Managed Franchise")
 FRANCHISE_MARKUP = 1.08
 
 
-def _create_delivery_billing(trip_name, stop_idx):
-    """Create a BEI Billing Schedule for a delivery stop. Runs async via enqueue."""
+def _create_delivery_billing(
+    trip_name,
+    stop_idx,
+    pre_delivery_exception=None,
+    require_pre_delivery_exception=False,
+):
+    """Create a BEI Billing Schedule for a delivery stop."""
     # G-067: Feature flag — billing is enabled by default.
     # Set BEI Settings.enable_delivery_billing = 0 to disable.
     billing_enabled = frappe.db.get_single_value("BEI Settings", "enable_delivery_billing")
@@ -376,6 +496,24 @@ def _create_delivery_billing(trip_name, stop_idx):
             trip.save(ignore_permissions=True)
             frappe.db.release_savepoint(sp)
             return
+
+        exception_trace = None
+        if stop.status != "Delivered":
+            if not pre_delivery_exception:
+                if require_pre_delivery_exception:
+                    raise DeliveryBillingPolicyError(
+                        "Pre-delivery billing is blocked without approved dual-approval exception."
+                    )
+                raise DeliveryBillingPolicyError(
+                    "Trip stop is not delivered. Confirm delivery first or provide approved dual-approval exception."
+                )
+
+            exception_doc = frappe.get_doc("BEI Match Exception", pre_delivery_exception)
+            exception_trace = get_pre_delivery_exception_trace(
+                exception_doc,
+                trip_reference=trip.name,
+                trip_stop_idx=stop.idx,
+            )
 
         # Resolve store department, store type, and active rate -- bail on missing data
         dept = frappe.db.get_value(
@@ -421,6 +559,14 @@ def _create_delivery_billing(trip_name, stop_idx):
             "handling_fee": flt(goods_value * 0.08, 2) if is_franchise else 0,
             "status": "Pending",
         })
+        if pre_delivery_exception:
+            billing.pre_delivery_exception = pre_delivery_exception
+        if exception_trace:
+            billing.exception_cpo_approved_by = exception_trace.get("cpo_approved_by")
+            billing.exception_cpo_approved_at = exception_trace.get("cpo_approved_at")
+            billing.exception_cfo_approved_by = exception_trace.get("cfo_approved_by")
+            billing.exception_cfo_approved_at = exception_trace.get("cfo_approved_at")
+            billing.exception_approval_audit_log = exception_trace.get("approval_audit_log")
         billing.insert(ignore_permissions=True)
 
         # Update stop with billing reference

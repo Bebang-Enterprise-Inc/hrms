@@ -33,6 +33,9 @@ OPS_SPACE = "spaces/AAAAvDZdY-o"  # Ops space
 DAVE_USER_ID = "115256205642350673118"  # dave@bebang.ph
 EDLICE_USER_ID = "104403881698162312500"  # edlice@bebang.ph
 
+# G-046: alerting metadata for critical escalations
+G046_RUNBOOK_URL = "https://docs.google.com/spreadsheets/d/1odzIdRNdgNvvXM5FL0TpMif3Cm2kIK5qFgVRQu5bIEc"
+
 
 def get_chat_service():
     """Get Google Chat service with bot credentials."""
@@ -46,6 +49,90 @@ def get_chat_service():
 def format_store_name(store_code: str) -> str:
     """Convert store_code to readable name."""
     return store_code.replace('_', ' ').title()
+
+
+def _format_detected_at(detected_at: Optional[str]) -> str:
+    if not detected_at:
+        return datetime.utcnow().strftime("%Y-%m-%d %H:%M")
+    try:
+        dt = datetime.fromisoformat(str(detected_at).replace('Z', '+00:00'))
+        return dt.strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return str(detected_at)[:16]
+
+
+def _log_notification_safe(
+    message_id: Optional[str],
+    message_type: str,
+    message_preview: str,
+    file_id: Optional[str] = None,
+    store_code: Optional[str] = None,
+):
+    if not message_id:
+        return
+    try:
+        db = get_db()
+        db.log_notification(
+            message_id=message_id,
+            message_type=message_type,
+            message_preview=message_preview,
+            file_id=file_id,
+            store_code=store_code,
+        )
+    except Exception as log_error:
+        logger.warning(f"Failed to log notification to database: {log_error}")
+
+
+def send_critical_sheet_alert(
+    spreadsheet_name: str,
+    sheet_name: str,
+    alert_message: str,
+    trigger: str = "change_tracker",
+    severity: str = "CRITICAL",
+    context: Optional[Dict[str, Any]] = None,
+) -> Optional[str]:
+    """
+    Send real-time critical alert for sheets receiver anomalies (G-046).
+
+    Includes escalation metadata so responders can triage quickly.
+    """
+    context = context or {}
+    detected_at = _format_detected_at(context.get("detected_at"))
+    checksum = context.get("checksum") or "n/a"
+    escalation_stage = context.get("escalation_stage") or "L1-OPS"
+    escalation_owner = context.get("escalation_owner") or "dave@bebang.ph, edlice@bebang.ph"
+
+    try:
+        chat = get_chat_service()
+        message = (
+            f"*G-046 Critical Sheets Alert*\n\n"
+            f"*Severity:* {severity}\n"
+            f"*Trigger:* {trigger}\n"
+            f"*Spreadsheet:* {spreadsheet_name}\n"
+            f"*Sheet:* {sheet_name}\n"
+            f"*Detected:* {detected_at}\n"
+            f"*Checksum:* `{checksum}`\n"
+            f"*Escalation Stage:* {escalation_stage}\n"
+            f"*Escalation Owner:* {escalation_owner}\n"
+            f"*Runbook:* {G046_RUNBOOK_URL}\n\n"
+            f"*Signal:* {alert_message}\n\n"
+            f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"
+        )
+        result = chat.spaces().messages().create(
+            parent=OPS_SPACE,
+            body={'text': message}
+        ).execute()
+        message_id = result.get("name")
+        _log_notification_safe(
+            message_id=message_id,
+            message_type="critical_sheet_alert",
+            message_preview=message,
+        )
+        logger.info(f"Sent critical sheet alert for {spreadsheet_name}/{sheet_name}")
+        return message_id
+    except Exception as e:
+        logger.error(f"Failed to send critical sheet alert: {e}")
+        return None
 
 
 def send_wrong_format_alert(
@@ -66,13 +153,7 @@ def send_wrong_format_alert(
     """
     try:
         chat = get_chat_service()
-
-        # Parse date
-        try:
-            dt = datetime.fromisoformat(detected_at.replace('Z', '+00:00'))
-            date_str = dt.strftime("%Y-%m-%d %H:%M")
-        except:
-            date_str = detected_at[:16] if detected_at else "Unknown"
+        date_str = _format_detected_at(detected_at)
 
         store_name = format_store_name(store_code)
 
@@ -82,6 +163,8 @@ def send_wrong_format_alert(
             f"*File:* `{file_name}`\n"
             f"*Date:* {date_str}\n\n"
             f"Store uploaded XLS format. Please re-export as *XLSX*.\n\n"
+            f"*Escalation:* L1-OPS\n"
+            f"*Runbook:* {G046_RUNBOOK_URL}\n\n"
             f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"
         )
 
@@ -90,8 +173,15 @@ def send_wrong_format_alert(
             body={'text': message}
         ).execute()
 
+        message_id = result.get('name')
+        _log_notification_safe(
+            message_id=message_id,
+            message_type="wrong_format",
+            message_preview=message,
+            store_code=store_code,
+        )
         logger.info(f"Sent wrong format alert for {store_name}: {file_name}")
-        return result.get('name')
+        return message_id
 
     except Exception as e:
         logger.error(f"Failed to send wrong format alert: {e}")
@@ -118,13 +208,7 @@ def send_processing_failure_alert(
     """
     try:
         chat = get_chat_service()
-
-        # Parse date
-        try:
-            dt = datetime.fromisoformat(detected_at.replace('Z', '+00:00'))
-            date_str = dt.strftime("%Y-%m-%d %H:%M")
-        except:
-            date_str = detected_at[:16] if detected_at else "Unknown"
+        date_str = _format_detected_at(detected_at)
 
         store_name = format_store_name(store_code)
 
@@ -151,7 +235,10 @@ def send_processing_failure_alert(
             f"*File:* `{file_name}`\n"
             f"*Date:* {date_str}\n"
             f"*Error:* {error_type}\n"
+            f"*Error Detail:* `{error_short}`\n"
             f"*Action:* {action}\n\n"
+            f"*Escalation:* L1-OPS\n"
+            f"*Runbook:* {G046_RUNBOOK_URL}\n\n"
             f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"
         )
 
@@ -160,8 +247,15 @@ def send_processing_failure_alert(
             body={'text': message}
         ).execute()
 
+        message_id = result.get('name')
+        _log_notification_safe(
+            message_id=message_id,
+            message_type="processing_failure",
+            message_preview=message,
+            store_code=store_code,
+        )
         logger.info(f"Sent processing failure alert for {store_name}: {file_name}")
-        return result.get('name')
+        return message_id
 
     except Exception as e:
         logger.error(f"Failed to send processing failure alert: {e}")
@@ -365,6 +459,8 @@ def send_batch_failure_alert(
         message += (
             f"\n*Stores Affected:*\n"
             f"{chr(10).join(store_lines)}\n\n"
+            f"*Escalation:* L1-OPS\n"
+            f"*Runbook:* {G046_RUNBOOK_URL}\n\n"
             f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"
         )
 
@@ -373,8 +469,14 @@ def send_batch_failure_alert(
             body={'text': message}
         ).execute()
 
+        message_id = result.get('name')
+        _log_notification_safe(
+            message_id=message_id,
+            message_type="batch_failure",
+            message_preview=message,
+        )
         logger.info(f"Sent batch failure alert for {len(failures)} files")
-        return result.get('name')
+        return message_id
 
     except Exception as e:
         logger.error(f"Failed to send batch failure alert: {e}")

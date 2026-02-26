@@ -20,6 +20,7 @@ from .models import SyncLog, get_db
 from .sheets_client import get_sheets_client
 from .frappe_client import get_frappe_client, SyncResult
 from .change_tracker import ChangeTracker, ChangeReport, ChangeType
+from . import notifications
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,17 @@ class ChangeProcessor:
 
         # Thread pool for parallel processing
         self._executor = ThreadPoolExecutor(max_workers=4)
+
+    @staticmethod
+    def _is_critical_alert(alert_text: str) -> bool:
+        alert_upper = (alert_text or "").upper()
+        critical_markers = (
+            "MASS EDIT",
+            "DELETION",
+            "FINANCIAL DATA MODIFIED",
+            "UNUSUAL PATTERN",
+        )
+        return any(marker in alert_upper for marker in critical_markers)
 
     def process_webhook(
         self,
@@ -150,7 +162,20 @@ class ChangeProcessor:
             # Log any alerts (suspicious patterns)
             for alert in change_report.alerts:
                 logger.warning(f"ALERT: {alert}")
-                # TODO: Send to Google Chat if critical
+                if self._is_critical_alert(alert):
+                    notifications.send_critical_sheet_alert(
+                        spreadsheet_name=sheet_config.name,
+                        sheet_name=sheet_config.sheet_name,
+                        alert_message=alert,
+                        trigger=trigger,
+                        severity="CRITICAL",
+                        context={
+                            "checksum": checksum,
+                            "detected_at": datetime.utcnow().isoformat(),
+                            "escalation_stage": "L1-OPS",
+                            "escalation_owner": "dave@bebang.ph, edlice@bebang.ph",
+                        },
+                    )
 
             # Sync to Frappe
             result = self.frappe.sync_sheet_data(sheet_config, data, checksum)
@@ -161,6 +186,20 @@ class ChangeProcessor:
             log.rows_failed = result.rows_failed
             if result.errors:
                 log.error_message = '; '.join(result.errors[:5])  # First 5 errors
+                if result.rows_failed > 0:
+                    notifications.send_critical_sheet_alert(
+                        spreadsheet_name=sheet_config.name,
+                        sheet_name=sheet_config.sheet_name,
+                        alert_message=f"Sync returned failed rows={result.rows_failed}; errors={log.error_message}",
+                        trigger=trigger,
+                        severity="CRITICAL",
+                        context={
+                            "checksum": checksum,
+                            "detected_at": datetime.utcnow().isoformat(),
+                            "escalation_stage": "L1-OPS",
+                            "escalation_owner": "dave@bebang.ph, edlice@bebang.ph",
+                        },
+                    )
 
             # Update checksum on success
             if result.success:
@@ -181,6 +220,18 @@ class ChangeProcessor:
             log.status = 'failed'
             log.error_message = str(e)
             logger.error(f"Failed to sync {sheet_config.name}: {e}")
+            notifications.send_critical_sheet_alert(
+                spreadsheet_name=sheet_config.name,
+                sheet_name=sheet_config.sheet_name,
+                alert_message=f"Sync exception: {str(e)}",
+                trigger=trigger,
+                severity="CRITICAL",
+                context={
+                    "detected_at": datetime.utcnow().isoformat(),
+                    "escalation_stage": "L1-OPS",
+                    "escalation_owner": "dave@bebang.ph, edlice@bebang.ph",
+                },
+            )
 
         finally:
             log.duration_seconds = time.time() - start_time
