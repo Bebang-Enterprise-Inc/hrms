@@ -128,3 +128,63 @@ class TestTransferRequests(FrappeTestCase):
 		self.assertFalse(plan["is_roving"])
 		self.assertIn("UDP3251600245", plan["target_devices"])
 		self.assertIn("UDP3251400192", plan["remove_devices"])
+
+	def test_reconcile_updates_failed_row_when_adms_reports_late_ack(self):
+		class _FakeCommandDoc:
+			def __init__(self):
+				self.name = "CMD-1"
+				self.adms_command_id = 123
+				self.status = transfer_requests.ADMS_STATUS_FAILED
+				self.last_error = "timeout_waiting_for_device_callback"
+				self.sent_at = None
+				self.acked_at = None
+				self.creation = now_datetime()
+				self.last_polled_at = None
+				self.saved = False
+
+			def save(self, ignore_permissions=True):
+				self.saved = True
+
+		fake_cmd = _FakeCommandDoc()
+		original_get_rows = transfer_requests._get_command_rows
+		original_fetch = transfer_requests._fetch_adms_commands
+		original_get_doc = transfer_requests.frappe.get_doc
+
+		try:
+			transfer_requests._get_command_rows = lambda name, statuses=None: [
+				{"name": "CMD-1", "device_sn": "UDP3252900302"}
+			]
+			transfer_requests._fetch_adms_commands = lambda device_sn, config, limit=200: {
+				"success": True,
+				"rows": [
+					{
+						"id": 123,
+						"status": transfer_requests.ADMS_STATUS_ACKED,
+						"last_error": None,
+						"sent_at": "2026-02-26T06:05:25",
+						"acked_at": "2026-02-26T06:05:28",
+					}
+				],
+			}
+
+			def _fake_get_doc(doctype, name):
+				if doctype == transfer_requests.DOCTYPE_TRANSFER_DEVICE_COMMAND and name == "CMD-1":
+					return fake_cmd
+				return original_get_doc(doctype, name)
+
+			transfer_requests.frappe.get_doc = _fake_get_doc
+
+			result = transfer_requests._sync_command_statuses_from_adms(
+				frappe._dict({"name": "BEI-TRF-TEST-00001"}),
+				config={"stale_timeout_minutes": 30, "base_url": "http://adms.local", "admin_token": "x"},
+			)
+		finally:
+			transfer_requests._get_command_rows = original_get_rows
+			transfer_requests._fetch_adms_commands = original_fetch
+			transfer_requests.frappe.get_doc = original_get_doc
+
+		self.assertEqual(result["updated"], 1)
+		self.assertEqual(fake_cmd.status, transfer_requests.ADMS_STATUS_ACKED)
+		self.assertIsNone(fake_cmd.last_error)
+		self.assertIsNotNone(fake_cmd.acked_at)
+		self.assertTrue(fake_cmd.saved)

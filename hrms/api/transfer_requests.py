@@ -603,8 +603,8 @@ def _refresh_transfer_stage_from_commands(doc):
 
 
 def _sync_command_statuses_from_adms(doc, config: dict[str, Any]) -> dict[str, Any]:
-	pending_rows = _get_command_rows(doc.name, [ADMS_STATUS_PENDING, ADMS_STATUS_SENT])
-	if not pending_rows:
+	poll_rows = _get_command_rows(doc.name, [ADMS_STATUS_PENDING, ADMS_STATUS_SENT, ADMS_STATUS_FAILED])
+	if not poll_rows:
 		return {"updated": 0, "errors": []}
 
 	updated = 0
@@ -612,7 +612,7 @@ def _sync_command_statuses_from_adms(doc, config: dict[str, Any]) -> dict[str, A
 	stale_cutoff = add_to_date(now_datetime(), minutes=-cint(config["stale_timeout_minutes"]))
 
 	rows_by_device: dict[str, list[dict]] = {}
-	for row in pending_rows:
+	for row in poll_rows:
 		rows_by_device.setdefault(row.get("device_sn"), []).append(row)
 
 	for device_sn, rows in rows_by_device.items():
