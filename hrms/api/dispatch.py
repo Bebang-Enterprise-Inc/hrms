@@ -1373,22 +1373,100 @@ def get_driver_schedule(employee, date_from=None, date_to=None):
 
 @frappe.whitelist()
 def get_warehouses():
-    """Get warehouses that have active department mappings (valid for trip stops)."""
+    """Get warehouses valid for trip routes/stops.
+
+    Primary source: active `BEI Warehouse Department Mapping`.
+    Fallback: leaf warehouses in `Warehouse` when mapping data is incomplete.
+    """
     _check_scm_permission(SCM_DISPATCH_ROLES, "view warehouses")
-    return frappe.get_all(
+    mapped = frappe.get_all(
         "BEI Warehouse Department Mapping",
         filters={"is_active": 1},
         fields=["warehouse as name", "warehouse as warehouse_name", "department"],
         order_by="warehouse"
     )
 
+    if mapped:
+        return mapped
+
+    fallback = frappe.get_all(
+        "Warehouse",
+        filters={"is_group": 0},
+        fields=["name", "warehouse_name"],
+        order_by="name"
+    )
+    return [
+        {
+            "name": row.name,
+            "warehouse_name": row.warehouse_name or row.name,
+            "department": None,
+        }
+        for row in fallback
+    ]
+
+
+def _resolve_store_to_warehouse_name(store_name):
+    """Resolve a store label from BEI Store Type to a valid Warehouse name."""
+    if not store_name:
+        return None
+
+    # 1) exact warehouse docname
+    if frappe.db.exists("Warehouse", store_name):
+        return store_name
+
+    # 2) common BEI suffix
+    with_bei = f"{store_name} - BEI"
+    if frappe.db.exists("Warehouse", with_bei):
+        return with_bei
+
+    # 3) warehouse_name match (covers suffix variants like - BK)
+    return frappe.db.get_value(
+        "Warehouse",
+        {"warehouse_name": store_name, "is_group": 0},
+        "name"
+    )
+
 
 @frappe.whitelist()
 def get_stores():
-    """Get list of stores for route stop selection."""
+    """Get route-stop candidates as valid Warehouse link values.
+
+    `BEI Route Stop.store` links to `Warehouse`. `BEI Store Type.store` is a
+    Department-style label, so we resolve each entry to an actual warehouse docname.
+    """
     _check_scm_permission(SCM_DISPATCH_ROLES, "view stores")
-    return frappe.get_all(
+    rows = frappe.get_all(
         "BEI Store Type",
-        fields=["store as name", "store", "store_type"],
+        fields=["store", "store_type"],
         order_by="store"
     )
+
+    stores = []
+    seen = set()
+    for row in rows:
+        warehouse_name = _resolve_store_to_warehouse_name(row.store)
+        if not warehouse_name or warehouse_name in seen:
+            continue
+        seen.add(warehouse_name)
+        stores.append(
+            {
+                "name": warehouse_name,
+                "store": warehouse_name,
+                "store_type": row.store_type,
+                "store_label": row.store,
+            }
+        )
+
+    if stores:
+        return stores
+
+    # Hard fallback to avoid empty selector when Store Type to Warehouse mapping is stale.
+    return [
+        {
+            "name": row["name"],
+            "store": row["name"],
+            "store_type": "Unknown",
+            "store_label": row.get("warehouse_name") or row["name"],
+        }
+        for row in get_warehouses()
+    ]
