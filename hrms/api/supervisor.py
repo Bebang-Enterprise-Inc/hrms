@@ -11,6 +11,8 @@ from frappe import _
 from frappe.utils import nowdate, now_datetime, add_days, get_time
 import json
 
+TRANSFER_REQUEST_DOCTYPE = "BEI Transfer Request"
+
 
 # ==============================================================================
 # APPROVAL QUEUE
@@ -39,6 +41,12 @@ def get_pending_approvals(approver=None):
 def approve_item(queue_name, notes=None):
     """Approve an item in the queue."""
     doc = frappe.get_doc("BEI Approval Queue", queue_name)
+    if doc.reference_doctype == TRANSFER_REQUEST_DOCTYPE:
+        frappe.throw(
+            _("Transfer requests must be approved via transfer stage APIs, not generic queue mutators."),
+            frappe.ValidationError,
+        )
+
     doc.status = "Approved"
     doc.approved_by = frappe.session.user
     doc.approved_at = now_datetime()
@@ -67,6 +75,12 @@ def reject_item(queue_name, reason):
         frappe.throw(_("Rejection reason is required"))
 
     doc = frappe.get_doc("BEI Approval Queue", queue_name)
+    if doc.reference_doctype == TRANSFER_REQUEST_DOCTYPE:
+        frappe.throw(
+            _("Transfer requests must be rejected via transfer stage APIs, not generic queue mutators."),
+            frappe.ValidationError,
+        )
+
     doc.status = "Rejected"
     doc.approved_by = frappe.session.user
     doc.approved_at = now_datetime()
@@ -510,7 +524,64 @@ def get_unified_approval_queue(approver=None, store=None):
     except Exception:
         pass
 
-    # 6. Opening/Closing Reports (for area supervisors)
+    # 6. Transfer Requests (stage-aware routing)
+    try:
+        import hrms.api.transfer_requests as transfer_api
+
+        user_roles = set(frappe.get_roles(approver))
+        stage_filters = []
+        if user_roles.intersection(transfer_api.AREA_APPROVER_ROLES):
+            stage_filters.append(transfer_api.STAGE_PENDING_AREA)
+        if user_roles.intersection(transfer_api.HR_APPROVER_ROLES):
+            stage_filters.extend([
+                transfer_api.STAGE_PENDING_HR,
+                transfer_api.STAGE_WAITING_EFFECTIVE,
+            ])
+        if user_roles.intersection(transfer_api.IT_APPROVER_ROLES):
+            stage_filters.append(transfer_api.STAGE_PENDING_IT)
+
+        if stage_filters:
+            filters = {"current_stage": ["in", list(dict.fromkeys(stage_filters))]}
+            if store:
+                filters["store_warehouse"] = store
+
+            transfers = frappe.get_all(
+                TRANSFER_REQUEST_DOCTYPE,
+                filters=filters,
+                fields=[
+                    "name",
+                    "employee",
+                    "employee_name",
+                    "requested_by",
+                    "requested_on",
+                    "effective_date",
+                    "current_stage",
+                    "to_branch",
+                    "store_warehouse",
+                ],
+                order_by="requested_on desc",
+            )
+            for req in transfers:
+                effective_label = str(req.effective_date) if req.effective_date else "N/A"
+                items.append({
+                    "type": "transfer_request",
+                    "name": req.name,
+                    "employee": req.employee,
+                    "employee_name": req.employee_name,
+                    "stage": req.current_stage,
+                    "store": req.store_warehouse,
+                    "store_warehouse": req.store_warehouse,
+                    "to_branch": req.to_branch,
+                    "effective_date": effective_label,
+                    "submitted_by": req.requested_by,
+                    "submitted_at": str(req.requested_on) if req.requested_on else None,
+                    "title": f"Transfer: {req.employee_name or req.employee}",
+                    "description": f"{req.current_stage} - Effective {effective_label}",
+                })
+    except Exception:
+        pass
+
+    # 7. Opening/Closing Reports (for area supervisors)
     try:
         # Get stores under this area supervisor
         supervisor_stores = _get_area_supervisor_stores(approver)

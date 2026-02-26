@@ -1,0 +1,200 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-TRCMD-.YYYY.-.#####",
+ "creation": "2026-02-26 13:40:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_ref",
+  "transfer_request",
+  "employee",
+  "employee_name",
+  "effective_date",
+  "column_break_ref_1",
+  "device_sn",
+  "command_type",
+  "status",
+  "is_required",
+  "section_command",
+  "command_text",
+  "adms_command_id",
+  "attempts",
+  "last_error",
+  "column_break_command_1",
+  "sent_at",
+  "acked_at",
+  "last_polled_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_ref",
+   "fieldtype": "Section Break",
+   "label": "References"
+  },
+  {
+   "fieldname": "transfer_request",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Transfer Request",
+   "options": "BEI Transfer Request",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "label": "Effective Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ref_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "device_sn",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Device SN",
+   "reqd": 1
+  },
+  {
+   "fieldname": "command_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Command Type",
+   "options": "UPDATE_USERINFO\nDELETE_USERINFO",
+   "reqd": 1
+  },
+  {
+   "default": "PENDING",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "PENDING\nSENT\nACKED\nFAILED",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "is_required",
+   "fieldtype": "Check",
+   "label": "Is Required"
+  },
+  {
+   "fieldname": "section_command",
+   "fieldtype": "Section Break",
+   "label": "Command Payload"
+  },
+  {
+   "fieldname": "command_text",
+   "fieldtype": "Small Text",
+   "label": "Command Text",
+   "reqd": 1
+  },
+  {
+   "fieldname": "adms_command_id",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "ADMS Command ID",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "attempts",
+   "fieldtype": "Int",
+   "label": "Attempts",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_error",
+   "fieldtype": "Small Text",
+   "label": "Last Error",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_command_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sent_at",
+   "fieldtype": "Datetime",
+   "label": "Sent At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "acked_at",
+   "fieldtype": "Datetime",
+   "label": "Acked At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_polled_at",
+   "fieldtype": "Datetime",
+   "label": "Last Polled At",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-26 13:40:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Transfer Device Command",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
+

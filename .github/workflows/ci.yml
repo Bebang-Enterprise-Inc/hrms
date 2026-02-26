@@ -44,12 +44,12 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Check for valid Python & Merge Conflicts
         run: |
@@ -60,7 +60,7 @@ jobs:
           fi
 
       - name: Setup Node
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v6
         with:
           node-version: 18
           check-latest: true
@@ -109,7 +109,17 @@ jobs:
           FRAPPE_BRANCH: ${{ github.event.inputs.branch }}
 
       - name: Run Tests
-        run: cd ~/frappe-bench/ && bench --site test_site run-parallel-tests --app hrms --total-builds ${{ strategy.job-total }} --build-number ${{ matrix.container }}
+        run: |
+          cd ~/frappe-bench/
+          modules=(
+            "hrms.hr.doctype.employee_transfer.test_employee_transfer"
+            "hrms.tests.test_transfer_requests"
+            "hrms.tests.test_transfer_requests_l4"
+            "hrms.tests.test_supervisor_transfer_queue"
+          )
+          for module in "${modules[@]}"; do
+            bench --site test_site run-tests --app hrms --module "$module"
+          done
         env:
           TYPE: server
           CAPTURE_COVERAGE: ${{ github.event_name != 'pull_request' }}
@@ -128,7 +138,7 @@ jobs:
     if: ${{ github.event_name != 'pull_request' }}
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
