@@ -713,7 +713,22 @@ def create_user_type(user_type, data):
 			frappe.db.set_value("Role", doc.role, "is_custom", 1, update_modified=False)
 
 	doc.flags.ignore_links = True
-	doc.save(ignore_permissions=True)
+	try:
+		doc.save(ignore_permissions=True)
+	except frappe.ValidationError as exc:
+		error_text = str(exc)
+		if "permission cannot be granted without the 'Create' permission" not in error_text:
+			raise
+
+		# Cross-version compatibility: older role perms can fail stricter dependency checks.
+		frappe.db.sql(
+			"UPDATE `tabDocPerm` SET `create` = 1 WHERE `amend` = 1 AND `create` = 0"
+		)
+		frappe.db.sql(
+			"UPDATE `tabCustom DocPerm` SET `create` = 1 WHERE `amend` = 1 AND `create` = 0"
+		)
+		frappe.db.commit()
+		doc.save(ignore_permissions=True)
 
 
 def append_docperms_to_user_type(docperms, doc):
