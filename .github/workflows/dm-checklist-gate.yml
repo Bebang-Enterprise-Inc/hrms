@@ -68,12 +68,16 @@ jobs:
               "_This comment is auto-generated. A reviewer must check all boxes before merging._",
             ].join("\\n");
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+            } catch (error) {
+              core.warning(`Unable to post DM checklist comment: ${error.message}`);
+            }
 
       - name: Fail if GL patterns found (manual confirmation required)
         if: steps.detect.outputs.gl_detected == 'true'
