@@ -264,6 +264,9 @@ scheduler_events = {
 		"hrms.api.pcf.check_threshold_and_auto_submit",
 		"hrms.tasks.auto_punch_out_stale_shifts",
 		"hrms.api.projects.check_sla_violations",
+		"hrms.api.transfer_requests.run_due_transfer_submissions",
+		"hrms.api.transfer_requests.run_ready_transfer_sync",
+		"hrms.api.transfer_requests.reconcile_transfer_sync_status",
 	],
 	"cron": {
 		# Weather collection 5x daily: 6AM, 10AM, 2PM, 6PM, 10PM
