@@ -9,6 +9,7 @@ Handles warehouse dispatch, route tracking, and delivery confirmation for my.beb
 import frappe
 from frappe import _
 from frappe.utils import nowdate, now_datetime, flt
+from hrms.utils.delivery_billing_policy import should_auto_create_billing_on_delivery
 
 
 # P0-10: Import centralized RBAC role sets
@@ -163,8 +164,10 @@ def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
     stop.signature = signature
     stop.signed_by = signed_by
 
-    # Auto-generate delivery billing (async, feature-flagged)
-    if frappe.db.get_single_value("BEI Settings", "billing_auto_create_on_delivery"):
+    # Auto-generate delivery billing (async, feature-flagged).
+    # GAP-092 policy: missing setting defaults to enabled.
+    auto_create_setting = frappe.db.get_single_value("BEI Settings", "billing_auto_create_on_delivery")
+    if should_auto_create_billing_on_delivery(auto_create_setting):
         stop.billing_creation_status = "Pending"
         frappe.enqueue(
             "hrms.api.dispatch._create_delivery_billing",

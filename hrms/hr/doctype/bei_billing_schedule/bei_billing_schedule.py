@@ -7,6 +7,10 @@ from frappe import _
 from frappe.utils import flt, nowdate
 from markupsafe import escape as html_escape
 from hrms.utils.bei_config import get_company
+from hrms.utils.delivery_billing_policy import (
+	DeliveryBillingPolicyError,
+	get_pre_delivery_exception_trace,
+)
 
 VAT_RATE = 0.12
 
@@ -37,6 +41,7 @@ class BEIBillingSchedule(Document):
 	def validate(self):
 		"""Calculate all fees based on store type."""
 		self.naming_series = NAMING_SERIES.get(self.billing_type, DEFAULT_NAMING_SERIES)
+		self._enforce_delivery_billing_policy()
 		self.calculate_fees()
 		self.calculate_line_items()
 		self.calculate_totals()
@@ -46,6 +51,66 @@ class BEIBillingSchedule(Document):
 		prev = self.get_doc_before_save()
 		if self.status == "Approved" and prev and prev.status != "Approved":
 			self._create_gl_entries()
+
+	def _enforce_delivery_billing_policy(self):
+		"""GAP-092: block pre-delivery billing unless dual approval exists."""
+		if self.billing_type != "Delivery":
+			return
+
+		if not self.trip_reference or not self.trip_stop_idx:
+			frappe.throw(
+				_("Delivery billing requires both Trip Reference and Trip Stop Index."),
+				title=_("Missing Delivery Context"),
+			)
+
+		trip = frappe.get_doc("BEI Distribution Trip", self.trip_reference)
+		try:
+			target_stop_idx = int(self.trip_stop_idx)
+		except (TypeError, ValueError):
+			frappe.throw(_("Trip Stop Index must be a valid integer."))
+
+		stop = None
+		for trip_stop in trip.stops:
+			if int(trip_stop.idx) == target_stop_idx:
+				stop = trip_stop
+				break
+
+		if not stop:
+			frappe.throw(
+				_("Trip stop {0} was not found on trip {1}.").format(target_stop_idx, self.trip_reference),
+				title=_("Invalid Trip Stop"),
+			)
+
+		if stop.status == "Delivered":
+			return
+
+		if not self.pre_delivery_exception:
+			frappe.throw(
+				_("Pre-delivery billing is blocked. Confirm delivery first, or provide an approved dual-approval exception (Daymae/CPO + Butch/CFO)."),
+				title=_("Delivery Confirmation Required"),
+			)
+
+		exception = frappe.get_doc("BEI Match Exception", self.pre_delivery_exception)
+		try:
+			trace = get_pre_delivery_exception_trace(exception, self.trip_reference, target_stop_idx)
+		except DeliveryBillingPolicyError as policy_error:
+			frappe.throw(str(policy_error), title=_("Exception Approval Required"))
+
+		self.exception_cpo_approved_by = trace["cpo_approved_by"]
+		self.exception_cpo_approved_at = trace["cpo_approved_at"]
+		self.exception_cfo_approved_by = trace["cfo_approved_by"]
+		self.exception_cfo_approved_at = trace["cfo_approved_at"]
+		self.exception_approval_audit_log = trace.get("approval_audit_log")
+
+		frappe.logger("delivery_billing_policy").info(
+			"Pre-delivery billing exception applied: billing=%s trip=%s stop=%s exception=%s cpo=%s cfo=%s",
+			self.name or "(new)",
+			self.trip_reference,
+			target_stop_idx,
+			trace.get("exception_name"),
+			trace["cpo_approved_by"],
+			trace["cfo_approved_by"],
+		)
 
 	def _create_gl_entries(self):
 		"""Create a Journal Entry to record billing in General Ledger.

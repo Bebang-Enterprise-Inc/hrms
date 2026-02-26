@@ -19,7 +19,7 @@
    "label": "Billing Settings"
   },
   {
-   "default": "0",
+   "default": "1",
    "description": "When enabled, delivery confirmation will automatically create a billing record",
    "fieldname": "billing_auto_create_on_delivery",
    "fieldtype": "Check",

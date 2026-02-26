@@ -1,0 +1,45 @@
+{
+  "worker": "BILLING",
+  "sprint": "03",
+  "gap_id": "GAP-092",
+  "timestamp": "2026-02-26T17:07:56.4481781+08:00",
+  "status": "completed",
+  "mission_outcomes": {
+    "delivery_to_billing_policy_hardened": true,
+    "exception_audit_trace_added": true,
+    "tests_added_or_updated": true,
+    "relevant_tests_executed": true,
+    "ledger_row_updated": true
+  },
+  "artifacts": {
+    "report": "output/sprint-03-agent-billing/report.md",
+    "ledger_file": "docs/plans/sprint-03-integration-backbone.md"
+  },
+  "tests": [
+    {
+      "command": "python hrms/tests/test_delivery_billing_policy.py",
+      "result": "pass",
+      "summary": "Ran 3 tests in 0.000s"
+    },
+    {
+      "command": "python hrms/hr/doctype/bei_match_exception/test_bei_match_exception.py",
+      "result": "pass",
+      "summary": "Ran 5 tests in 0.000s"
+    }
+  ],
+  "changed_files": [
+    "hrms/utils/delivery_billing_policy.py",
+    "hrms/api/dispatch.py",
+    "hrms/hr/doctype/bei_settings/bei_settings.json",
+    "hrms/hr/doctype/bei_billing_schedule/bei_billing_schedule.py",
+    "hrms/hr/doctype/bei_billing_schedule/bei_billing_schedule.json",
+    "hrms/hr/doctype/bei_match_exception/bei_match_exception.py",
+    "hrms/hr/doctype/bei_match_exception/bei_match_exception.json",
+    "hrms/api/procurement.py",
+    "hrms/tests/test_delivery_billing_policy.py",
+    "hrms/hr/doctype/bei_match_exception/test_bei_match_exception.py",
+    "docs/plans/sprint-03-integration-backbone.md",
+    "output/sprint-03-agent-billing/report.md",
+    "output/sprint-03-agent-billing/checkpoint.json"
+  ]
+}

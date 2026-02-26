@@ -9,6 +9,8 @@
   "reference_type",
   "reference_name",
   "purchase_order",
+  "delivery_trip_reference",
+  "delivery_stop_idx",
   "column_break_basic",
   "po_amount",
   "approval_tier",
@@ -25,6 +27,13 @@
   "approver_date",
   "column_break_approver",
   "approver_comment",
+  "cpo_approved_by",
+  "cpo_approved_at",
+  "cpo_approval_comment",
+  "cfo_approved_by",
+  "cfo_approved_at",
+  "cfo_approval_comment",
+  "approval_audit_log",
   "section_ceo_notification",
   "ceo_notified",
   "ceo_notification_date"
@@ -35,7 +44,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Reference Type",
-   "options": "BEI Invoice\nBEI Payment Request",
+   "options": "BEI Invoice\nBEI Payment Request\nBEI Distribution Trip",
    "reqd": 1
   },
   {
@@ -48,11 +57,24 @@
   {
    "fieldname": "purchase_order",
    "fieldtype": "Link",
+   "depends_on": "eval:doc.reference_type!='BEI Distribution Trip'",
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Purchase Order",
-   "options": "BEI Purchase Order",
-   "reqd": 1
+   "options": "BEI Purchase Order"
+  },
+  {
+   "fieldname": "delivery_trip_reference",
+   "fieldtype": "Link",
+   "depends_on": "eval:doc.reference_type=='BEI Distribution Trip'",
+   "label": "Delivery Trip Reference",
+   "options": "BEI Distribution Trip"
+  },
+  {
+   "fieldname": "delivery_stop_idx",
+   "fieldtype": "Int",
+   "depends_on": "eval:doc.reference_type=='BEI Distribution Trip'",
+   "label": "Delivery Stop Index"
   },
   {
    "fieldname": "column_break_basic",
@@ -71,7 +93,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Approval Tier",
-   "options": "\nCPO\nCFO\nCEO",
+   "options": "\nCPO\nCPO+CFO\nCFO\nCPO+CEO\nCEO",
    "read_only": 1
   },
   {
@@ -151,6 +173,50 @@
    "fieldname": "approver_comment",
    "fieldtype": "Small Text",
    "label": "Approver Comment"
+  },
+  {
+   "fieldname": "cpo_approved_by",
+   "fieldtype": "Link",
+   "label": "CPO Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cpo_approved_at",
+   "fieldtype": "Datetime",
+   "label": "CPO Approved At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cpo_approval_comment",
+   "fieldtype": "Small Text",
+   "label": "CPO Approval Comment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cfo_approved_by",
+   "fieldtype": "Link",
+   "label": "CFO Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cfo_approved_at",
+   "fieldtype": "Datetime",
+   "label": "CFO Approved At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cfo_approval_comment",
+   "fieldtype": "Small Text",
+   "label": "CFO Approval Comment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approval_audit_log",
+   "fieldtype": "Text",
+   "label": "Approval Audit Log",
+   "read_only": 1
   },
   {
    "fieldname": "section_ceo_notification",

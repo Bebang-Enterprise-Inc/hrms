@@ -41,12 +41,25 @@ def get_approval_tier(po_amount):
 
 def get_tier_status(tier):
     """Return the pending status string for a given tier."""
+    if tier in ("CPO+CFO", "CPO+CEO"):
+        return "Pending CPO"
     return f"Pending {tier}"
 
 
 class BEIMatchException(Document):
     def before_insert(self):
-        # Auto-set tier and approver based on PO amount
+        # Delivery pre-billing exceptions are always dual-approved (CPO + CFO)
+        if self.reference_type == "BEI Distribution Trip":
+            if not self.delivery_trip_reference:
+                self.delivery_trip_reference = self.reference_name
+            if not self.reference_name:
+                self.reference_name = self.delivery_trip_reference
+            if not self.approval_tier:
+                self.approval_tier = "CPO+CFO"
+            if not self.delivery_stop_idx:
+                frappe.throw("Delivery Stop Index is required for trip-based exceptions")
+
+        # Auto-set tier and approver for PO-based exceptions
         if self.purchase_order and not self.approval_tier:
             po_amount = frappe.db.get_value(
                 "BEI Purchase Order", self.purchase_order, "grand_total"

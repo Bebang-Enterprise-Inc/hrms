@@ -12,6 +12,7 @@ import re
 
 import frappe
 from hrms.utils.bei_config import get_company
+from hrms.utils.delivery_billing_policy import append_approval_audit_log
 from frappe import _
 from frappe.utils import flt, cint, getdate, nowdate, add_days, get_first_day, get_last_day
 
@@ -2736,19 +2737,36 @@ def _send_ceo_exception_notification(exception_doc):
     try:
         from hrms.api.google_chat import send_message_to_space
 
-        po_no = frappe.db.get_value("BEI Purchase Order", exception_doc.purchase_order, "po_no") or exception_doc.purchase_order
-        supplier_name = frappe.db.get_value("BEI Purchase Order", exception_doc.purchase_order, "supplier_name") or ""
+        if exception_doc.reference_type == "BEI Distribution Trip":
+            message = (
+                f"*Delivery Billing Exception Approved*\n\n"
+                f"*Trip:* {exception_doc.delivery_trip_reference}\n"
+                f"*Stop:* {exception_doc.delivery_stop_idx}\n"
+                f"*Tier:* {exception_doc.approval_tier}\n"
+                f"*Type:* {exception_doc.exception_type}\n"
+                f"*Reason:* {exception_doc.reason}\n\n"
+                f"CPO: {exception_doc.cpo_approved_by} on {exception_doc.cpo_approved_at}\n"
+                f"CFO: {exception_doc.cfo_approved_by} on {exception_doc.cfo_approved_at}\n\n"
+                f"Pre-delivery billing exception is now fully approved."
+            )
+        else:
+            po_no = frappe.db.get_value(
+                "BEI Purchase Order", exception_doc.purchase_order, "po_no"
+            ) or exception_doc.purchase_order
+            supplier_name = frappe.db.get_value(
+                "BEI Purchase Order", exception_doc.purchase_order, "supplier_name"
+            ) or ""
 
-        message = (
-            f"*3-Way Match Exception Approved*\n\n"
-            f"*PO:* {po_no} -- {supplier_name}\n"
-            f"*Amount:* PHP {flt(exception_doc.po_amount):,.2f}\n"
-            f"*Tier:* {exception_doc.approval_tier}\n"
-            f"*Type:* {exception_doc.exception_type}\n"
-            f"*Reason:* {exception_doc.reason}\n\n"
-            f"Approved by: {exception_doc.approver} on {exception_doc.approver_date}\n\n"
-            f"No Goods Receipt exists for this PO. Payment will proceed without delivery confirmation."
-        )
+            message = (
+                f"*3-Way Match Exception Approved*\n\n"
+                f"*PO:* {po_no} -- {supplier_name}\n"
+                f"*Amount:* PHP {flt(exception_doc.po_amount):,.2f}\n"
+                f"*Tier:* {exception_doc.approval_tier}\n"
+                f"*Type:* {exception_doc.exception_type}\n"
+                f"*Reason:* {exception_doc.reason}\n\n"
+                f"Approved by: {exception_doc.approver} on {exception_doc.approver_date}\n\n"
+                f"No Goods Receipt exists for this PO. Payment will proceed without delivery confirmation."
+            )
 
         from hrms.utils.bei_config import get_chat_space, SPACE_ERP_AUTOMATION
         send_message_to_space(get_chat_space(SPACE_ERP_AUTOMATION), message)
@@ -2761,24 +2779,26 @@ def _send_ceo_exception_notification(exception_doc):
         return False
 
 
+def _append_exception_approval_log(exception_doc, action, approver, approved_at, comment=None):
+    exception_doc.approval_audit_log = append_approval_audit_log(
+        exception_doc.approval_audit_log,
+        action=action,
+        approver=approver,
+        approved_at=approved_at,
+        comment=comment,
+    )
+
+
 @frappe.whitelist()
 def request_match_exception(data):
     """Create a 3-way match exception request.
 
-    Auto-routes to the correct approver based on PO amount:
-      < 500K -> CPO (Mae)
-      500K to < 1M -> CFO (Butch)
-      >= 1M -> CEO (Sam)
+    Supports:
+      1) PO-based 3-way match bypass requests
+      2) Delivery pre-billing exceptions (trip stop, always CPO+CFO)
     """
     if isinstance(data, str):
         data = frappe.parse_json(data)
-
-    purchase_order = data.get("purchase_order")
-    if not purchase_order:
-        frappe.throw(_("Purchase Order is required"))
-
-    if not frappe.db.exists("BEI Purchase Order", purchase_order):
-        frappe.throw(_("Purchase Order {0} not found").format(purchase_order))
 
     reason = data.get("reason")
     if not reason:
@@ -2788,24 +2808,68 @@ def request_match_exception(data):
     if not exception_type:
         frappe.throw(_("Exception type is required"))
 
-    # Check if a pending or approved exception already exists for this PO
-    existing = frappe.db.exists("BEI Match Exception", {
-        "purchase_order": purchase_order,
-        "status": ["in", ["Pending CPO", "Pending CFO", "Pending CEO", "Approved"]],
-    })
-    if existing:
-        frappe.throw(
-            _("An exception request already exists for PO {0}: {1}").format(purchase_order, existing)
-        )
+    reference_type = data.get("reference_type", "BEI Invoice")
 
-    exception = frappe.get_doc({
-        "doctype": "BEI Match Exception",
-        "reference_type": data.get("reference_type", "BEI Invoice"),
-        "reference_name": data.get("reference_name"),
-        "purchase_order": purchase_order,
-        "reason": reason,
-        "exception_type": exception_type,
-    })
+    if reference_type == "BEI Distribution Trip":
+        trip_name = data.get("delivery_trip_reference") or data.get("reference_name")
+        stop_idx = cint(data.get("delivery_stop_idx"))
+        if not trip_name:
+            frappe.throw(_("Delivery Trip Reference is required"))
+        if stop_idx <= 0:
+            frappe.throw(_("Delivery Stop Index must be greater than 0"))
+        if not frappe.db.exists("BEI Distribution Trip", trip_name):
+            frappe.throw(_("Distribution Trip {0} not found").format(trip_name))
+
+        existing = frappe.db.exists("BEI Match Exception", {
+            "reference_type": "BEI Distribution Trip",
+            "delivery_trip_reference": trip_name,
+            "delivery_stop_idx": stop_idx,
+            "status": ["in", ["Pending CPO", "Pending CFO", "Approved"]],
+        })
+        if existing:
+            frappe.throw(
+                _("An exception request already exists for Trip {0} stop {1}: {2}").format(
+                    trip_name, stop_idx, existing
+                )
+            )
+
+        exception = frappe.get_doc({
+            "doctype": "BEI Match Exception",
+            "reference_type": "BEI Distribution Trip",
+            "reference_name": trip_name,
+            "delivery_trip_reference": trip_name,
+            "delivery_stop_idx": stop_idx,
+            "approval_tier": "CPO+CFO",
+            "reason": reason,
+            "exception_type": exception_type,
+        })
+    else:
+        purchase_order = data.get("purchase_order")
+        if not purchase_order:
+            frappe.throw(_("Purchase Order is required"))
+
+        if not frappe.db.exists("BEI Purchase Order", purchase_order):
+            frappe.throw(_("Purchase Order {0} not found").format(purchase_order))
+
+        # Check if a pending or approved exception already exists for this PO
+        existing = frappe.db.exists("BEI Match Exception", {
+            "purchase_order": purchase_order,
+            "status": ["in", ["Pending CPO", "Pending CFO", "Pending CEO", "Approved"]],
+        })
+        if existing:
+            frappe.throw(
+                _("An exception request already exists for PO {0}: {1}").format(purchase_order, existing)
+            )
+
+        exception = frappe.get_doc({
+            "doctype": "BEI Match Exception",
+            "reference_type": reference_type,
+            "reference_name": data.get("reference_name"),
+            "purchase_order": purchase_order,
+            "reason": reason,
+            "exception_type": exception_type,
+        })
+
     exception.insert()
 
     return {
@@ -2916,17 +2980,37 @@ def approve_match_exception(name, comment=None):
             )
         )
 
+    approval_ts = now_datetime()
+
     if exception.approval_tier == "CPO+CFO" and exception.approver == "mae@bebang.ph":
+        exception.cpo_approved_by = current_user
+        exception.cpo_approved_at = approval_ts
+        exception.cpo_approval_comment = comment
+        _append_exception_approval_log(
+            exception, "CPO Approval (Step 1/2)", current_user, approval_ts, comment
+        )
         exception.approver = "butch@bebang.ph"
         exception.status = "Pending CFO"
         exception.approver_status = "Pending"
         exception.approver_comment = (exception.approver_comment or "") + f"\nCPO Approved: {comment}"
         exception.save()
+        frappe.logger("delivery_billing_policy").info(
+            "Exception %s escalated to CFO after CPO approval by %s", exception.name, current_user
+        )
         return {
             "success": True,
+            "name": exception.name,
+            "status": exception.status,
             "message": "Exception approved by CPO, escalated to CFO."
         }
-    elif exception.approval_tier == "CPO+CEO" and exception.approver == "mae@bebang.ph":
+
+    if exception.approval_tier == "CPO+CEO" and exception.approver == "mae@bebang.ph":
+        exception.cpo_approved_by = current_user
+        exception.cpo_approved_at = approval_ts
+        exception.cpo_approval_comment = comment
+        _append_exception_approval_log(
+            exception, "CPO Approval (Step 1/2)", current_user, approval_ts, comment
+        )
         exception.approver = "sam@bebang.ph"
         exception.status = "Pending CEO"
         exception.approver_status = "Pending"
@@ -2934,11 +3018,29 @@ def approve_match_exception(name, comment=None):
         exception.save()
         return {
             "success": True,
+            "name": exception.name,
+            "status": exception.status,
             "message": "Exception approved by CPO, escalated to CEO."
         }
 
+    if exception.approval_tier in ("CPO+CFO", "CFO") and current_user == "butch@bebang.ph":
+        exception.cfo_approved_by = current_user
+        exception.cfo_approved_at = approval_ts
+        exception.cfo_approval_comment = comment
+        _append_exception_approval_log(
+            exception, "CFO Final Approval", current_user, approval_ts, comment
+        )
+    elif exception.approval_tier in ("CPO+CEO", "CEO") and current_user == "sam@bebang.ph":
+        _append_exception_approval_log(
+            exception, "CEO Final Approval", current_user, approval_ts, comment
+        )
+    else:
+        _append_exception_approval_log(
+            exception, "Final Approval", current_user, approval_ts, comment
+        )
+
     exception.approver_status = "Approved"
-    exception.approver_date = now_datetime()
+    exception.approver_date = approval_ts
     exception.approver_comment = (exception.approver_comment or "") + f"\nFinal Approval: {comment}"
     exception.status = "Approved"
     exception.save()
@@ -2947,7 +3049,7 @@ def approve_match_exception(name, comment=None):
     notified = _send_ceo_exception_notification(exception)
     if notified:
         exception.ceo_notified = 1
-        exception.ceo_notification_date = now_datetime()
+        exception.ceo_notification_date = approval_ts
         exception.save()
 
     return {
@@ -2983,6 +3085,9 @@ def reject_match_exception(name, reason=None):
     exception.approver_status = "Rejected"
     exception.approver_date = now_datetime()
     exception.approver_comment = reason or ""
+    _append_exception_approval_log(
+        exception, "Rejected", current_user, exception.approver_date, reason
+    )
     exception.status = "Rejected"
     exception.save()
 
@@ -3000,7 +3105,7 @@ def get_match_exceptions(filters=None, page=1, page_size=20):
 
     Filters:
       - status: "Pending CPO", "Pending CFO", "Pending CEO", "Approved", "Rejected"
-      - approval_tier: "CPO", "CFO", "CEO"
+      - approval_tier: "CPO", "CPO+CFO", "CFO", "CPO+CEO", "CEO"
       - purchase_order: specific PO name
       - approver: filter by approver email (useful for showing "my pending approvals")
     """
@@ -3040,8 +3145,10 @@ def get_match_exceptions(filters=None, page=1, page_size=20):
             exc.name, exc.purchase_order, exc.po_amount, exc.approval_tier,
             exc.status, exc.exception_type, exc.reason, exc.approver,
             exc.approver_status, exc.approver_date, exc.approver_comment,
-            exc.requested_by, exc.requested_date, exc.ceo_notified,
-            exc.reference_type, exc.reference_name,
+            exc.cpo_approved_by, exc.cpo_approved_at, exc.cpo_approval_comment,
+            exc.cfo_approved_by, exc.cfo_approved_at, exc.cfo_approval_comment,
+            exc.approval_audit_log, exc.requested_by, exc.requested_date, exc.ceo_notified,
+            exc.reference_type, exc.reference_name, exc.delivery_trip_reference, exc.delivery_stop_idx,
             po.po_no, po.supplier_name
         FROM `tabBEI Match Exception` exc
         LEFT JOIN `tabBEI Purchase Order` po ON exc.purchase_order = po.name
