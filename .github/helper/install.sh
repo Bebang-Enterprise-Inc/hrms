@@ -12,11 +12,11 @@ pip install frappe-bench
 
 githubbranch=${GITHUB_BASE_REF:-${GITHUB_REF##*/}}
 frappeuser=${FRAPPE_USER:-"frappe"}
-defaultstablebranch=${DEFAULT_STABLE_BRANCH:-"develop"}
+defaultstablebranch=${DEFAULT_STABLE_BRANCH:-"version-15"}
 frappebranchcandidate=${FRAPPE_BRANCH:-$githubbranch}
 erpnextbranchcandidate=${ERPNEXT_BRANCH:-$githubbranch}
 paymentsbranchcandidate=${PAYMENTS_BRANCH:-${githubbranch%"-hotfix"}}
-lendingbranch="develop"
+lendingbranchcandidate=${LENDING_BRANCH:-$githubbranch}
 
 resolve_branch() {
 	repo="$1"
@@ -32,9 +32,41 @@ resolve_branch() {
 frappebranch=$(resolve_branch "frappe" "$frappebranchcandidate")
 erpnextbranch=$(resolve_branch "erpnext" "$erpnextbranchcandidate")
 paymentsbranch=$(resolve_branch "payments" "$paymentsbranchcandidate")
+lendingbranch=$(resolve_branch "lending" "$lendingbranchcandidate")
 
 git clone "https://github.com/${frappeuser}/frappe" --branch "${frappebranch}" --depth 1
 bench init --skip-assets --frappe-path ~/frappe --python "$(which python)" frappe-bench
+
+# Compatibility shim for older Frappe branches where these symbols are not exported
+# from frappe.tests directly (HRMS tests import them from frappe.tests).
+python - <<'PY'
+from pathlib import Path
+
+tests_init = Path.home() / "frappe-bench" / "apps" / "frappe" / "frappe" / "tests" / "__init__.py"
+if not tests_init.exists():
+    raise SystemExit(0)
+
+content = tests_init.read_text(encoding="utf-8")
+marker = "# hrms ci compatibility exports"
+if marker not in content:
+    shim = """
+
+# hrms ci compatibility exports
+try:
+    from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
+except Exception:
+    pass
+try:
+    from frappe.tests.utils import FrappeTestCase as UnitTestCase
+except Exception:
+    pass
+try:
+    from frappe.tests.utils import change_settings
+except Exception:
+    pass
+"""
+    tests_init.write_text(content + shim, encoding="utf-8")
+PY
 
 mkdir ~/frappe-bench/sites/test_site
 cp -r "${GITHUB_WORKSPACE}/.github/helper/site_config.json" ~/frappe-bench/sites/test_site/
