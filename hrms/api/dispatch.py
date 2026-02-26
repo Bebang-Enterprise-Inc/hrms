@@ -1386,8 +1386,23 @@ def get_warehouses():
         order_by="warehouse"
     )
 
-    if mapped:
-        return mapped
+    resolved_mapped = []
+    seen = set()
+    for row in mapped:
+        resolved_name = _resolve_store_to_warehouse_name(row.name)
+        if not resolved_name or resolved_name in seen:
+            continue
+        seen.add(resolved_name)
+        resolved_mapped.append(
+            {
+                "name": resolved_name,
+                "warehouse_name": frappe.db.get_value("Warehouse", resolved_name, "warehouse_name") or resolved_name,
+                "department": row.department,
+            }
+        )
+
+    if resolved_mapped:
+        return resolved_mapped
 
     fallback = frappe.get_all(
         "Warehouse",
@@ -1405,21 +1420,112 @@ def get_warehouses():
     ]
 
 
+def _canonical_store_key(value):
+    """Normalize store labels for resilient matching across naming variants."""
+    if not value:
+        return ""
+    return "".join(ch for ch in str(value).strip().lower() if ch.isalnum())
+
+
+def _strip_legacy_company_suffix(store_name):
+    """Strip common company suffixes from legacy store labels."""
+    if not store_name:
+        return ""
+    text = str(store_name).strip()
+    upper = text.upper()
+    suffixes = (
+        " - BEI",
+        "- BEI",
+        " - BK",
+        "- BK",
+        " - BEBANG ENTERPRISE INC.",
+        "- BEBANG ENTERPRISE INC.",
+        " - BEBANG KITCHEN INC.",
+        "- BEBANG KITCHEN INC.",
+    )
+    for suffix in suffixes:
+        if upper.endswith(suffix):
+            return text[: len(text) - len(suffix)].strip(" -")
+    return text
+
+
 def _resolve_store_to_warehouse_name(store_name):
     """Resolve a store label from BEI Store Type to a valid Warehouse name."""
     if not store_name:
         return None
 
+    raw = str(store_name).strip()
+
     # 1) exact warehouse docname
+    if frappe.db.exists("Warehouse", raw):
+        return raw
+
+    # 2) exact docname, case-insensitive
+    exact_ci = frappe.db.sql(
+        """
+        SELECT name
+        FROM `tabWarehouse`
+        WHERE LOWER(name) = LOWER(%s)
+        LIMIT 1
+        """,
+        (raw,),
+        as_dict=True,
+    )
+    if exact_ci:
+        return exact_ci[0].name
+
+    # 3) common explicit suffix candidates based on stripped base label
+    base = _strip_legacy_company_suffix(raw)
+    candidates = (
+        base,
+        f"{base} - BEI" if base else "",
+        f"{base} - BK" if base else "",
+        f"{base} - Bebang Enterprise Inc." if base else "",
+        f"{base} - Bebang Kitchen Inc." if base else "",
+    )
+    for candidate in candidates:
+        if candidate and frappe.db.exists("Warehouse", candidate):
+            return candidate
+
+    # 4) warehouse_name exact/case-insensitive match
+    by_warehouse_name = frappe.db.sql(
+        """
+        SELECT name
+        FROM `tabWarehouse`
+        WHERE is_group = 0
+          AND LOWER(warehouse_name) = LOWER(%s)
+        LIMIT 1
+        """,
+        (base or raw,),
+        as_dict=True,
+    )
+    if by_warehouse_name:
+        return by_warehouse_name[0].name
+
+    # 5) canonical fallback (handles punctuation/case/suffix differences)
+    target_keys = {k for k in (_canonical_store_key(raw), _canonical_store_key(base)) if k}
+    if target_keys:
+        for row in frappe.get_all(
+            "Warehouse",
+            filters={"is_group": 0},
+            fields=["name", "warehouse_name"],
+            order_by="name",
+        ):
+            if _canonical_store_key(row.name) in target_keys:
+                return row.name
+            if _canonical_store_key(row.warehouse_name or "") in target_keys:
+                return row.name
+
+    # 6) legacy fallback for old behavior
     if frappe.db.exists("Warehouse", store_name):
         return store_name
 
-    # 2) common BEI suffix
+    # common BEI suffix
     with_bei = f"{store_name} - BEI"
     if frappe.db.exists("Warehouse", with_bei):
         return with_bei
 
-    # 3) warehouse_name match (covers suffix variants like - BK)
+    # warehouse_name match
     return frappe.db.get_value(
         "Warehouse",
         {"warehouse_name": store_name, "is_group": 0},
