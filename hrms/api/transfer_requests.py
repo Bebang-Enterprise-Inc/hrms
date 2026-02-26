@@ -314,6 +314,10 @@ def _normalize_store_key(value: str | None) -> str:
 		return ""
 	v = value.strip().upper()
 	v = re.sub(r"\s*-\s*BEI$", "", v)
+	v = re.sub(r"\s*-\s*BEBANG\s+ENTERPRISE(?:\s+INC\.?)?$", "", v)
+	# Warehouse labels often follow "<store> - <company>".
+	if " - " in v:
+		v = v.split(" - ", 1)[0].strip()
 	v = v.replace("&", "AND")
 	v = re.sub(r"[^A-Z0-9]+", "", v)
 	return v

@@ -95,6 +95,10 @@ class TestTransferRequests(FrappeTestCase):
 			"BRITTANYOFFICE",
 		)
 		self.assertEqual(
+			transfer_requests._normalize_store_key("SM Grand Central - Bebang Enterprise Inc."),
+			"SMGRANDCENTRAL",
+		)
+		self.assertEqual(
 			transfer_requests._normalize_store_key("SM MOA"),
 			"SMMOA",
 		)
@@ -115,7 +119,7 @@ class TestTransferRequests(FrappeTestCase):
 	def test_compute_transfer_device_plan_for_standard_employee_targets_new_store(self):
 		doc = frappe._dict(
 			{
-				"store_warehouse": "BRITTANY OFFICE - BEI",
+				"store_warehouse": "Brittany Office - Bebang Enterprise Inc.",
 				"to_branch": "BRITTANY OFFICE",
 				"from_branch": "SM MOA",
 			}
