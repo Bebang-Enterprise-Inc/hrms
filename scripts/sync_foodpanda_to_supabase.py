@@ -228,8 +228,8 @@ def extract_foodpanda_orders(target_date: Optional[date] = None) -> List[Dict[st
     store_mapping = fetch_store_mapping()
 
     # Read all data from FP SUMMARY sheet (row 2 = headers, row 3+ = data)
-    # Extend range to handle large datasets (up to row 10000)
-    range_name = "'FP SUMMARY'!A2:Z10000"
+    # Use open-ended range to avoid truncating newly appended rows
+    range_name = "'FP SUMMARY'!A2:Z"
 
     result = service.spreadsheets().values().get(
         spreadsheetId=SPREADSHEET_ID,
