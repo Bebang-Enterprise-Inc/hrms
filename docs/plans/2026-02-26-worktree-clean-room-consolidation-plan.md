@@ -1,0 +1,236 @@
+# Worktree Clean-Room Consolidation Plan
+
+**Date:** 2026-02-26  
+**Status:** ACTIVE  
+**Scope:** Recover and consolidate multi-agent work safely with zero data/code loss
+
+## 1) Goal
+
+Stabilize the repository after parallel-agent collisions, preserve all useful work, and move to a strict clean-room execution model:
+
+1. No work loss
+2. No direct deploys from feature/handoff branches
+3. One merge path through a clean integration branch
+4. Reproducible evidence for every salvage/merge decision
+
+## 2) Known Baseline (Already Done)
+
+Based on latest cleanup evidence:
+
+1. Clean orchestrator worktree exists:
+   - `F:/Dropbox/Projects/BEI-ERP-orchestrator`
+   - Branch: `integration/cleanup-20260226`
+2. Recovery artifacts exist:
+   - `archive/worktree-recovery/20260226-170207/SUMMARY.json`
+   - `output/worktree-snapshots/20260226_170535/CLEANUP_REPORT.md`
+   - `output/worktree-snapshots/20260226_170535/manifest.json`
+3. Recovery tags exist:
+   - `recovery/20260226-170207/*`
+
+## 3) Non-Negotiable Guardrails
+
+1. Root repo `F:/Dropbox/Projects/BEI-ERP` is read-only context while cleanup is active.
+2. All active development/merges happen only in `F:/Dropbox/Projects/BEI-ERP-orchestrator`.
+3. One agent = one worktree = one branch.
+4. No branch/worktree deletion until snapshot + classification is recorded.
+5. No production deploy from non-production branch.
+6. Every merge candidate must pass L1/L2/L3 gates for affected scope.
+
+## 4) Execution Stages
+
+## Stage 00 - Freeze and Safety Lock
+
+Checklist:
+
+1. Stop spawning agents in root repo path.
+2. Confirm no active direct deploy from handoff/feature branches.
+3. Confirm orchestrator worktree is clean.
+
+Commands:
+
+```powershell
+git -C F:/Dropbox/Projects/BEI-ERP-orchestrator status --porcelain
+gh run list --repo Bebang-Enterprise-Inc/hrms --workflow build-and-deploy.yml --limit 20 --json databaseId,status,conclusion,headBranch,createdAt,event
+```
+
+Exit gate: orchestrator dirty count is `0`, and no in-flight unsafe deploy run remains.
+
+## Stage 01 - Fresh No-Loss Snapshot
+
+Checklist:
+
+1. Create fresh all-refs bundle.
+2. Capture per-worktree dirty/untracked/upstream status.
+3. Save snapshot manifest path in this plan.
+
+Command:
+
+```powershell
+pwsh -File scripts/git/no_loss_worktree_snapshot.ps1
+```
+
+Output to log:
+
+1. `output/worktree-snapshots/<timestamp>/manifest.json`
+2. `output/worktree-snapshots/<timestamp>/all-refs.bundle`
+
+Exit gate: snapshot artifacts exist and are readable.
+
+## Stage 02 - Deterministic Worktree Classification
+
+Classify each worktree/branch into exactly one bucket:
+
+1. `READY_MERGE`: clean, has unique commits, upstream valid
+2. `SALVAGE_UNCOMMITTED`: dirty/untracked changes exist
+3. `SALVAGE_UPSTREAM_GONE`: upstream missing or branch orphaned
+4. `DROP_SAFE`: no unique commits and no relevant uncommitted work
+5. `HOLD_MANUAL`: ambiguous ownership or high conflict risk
+
+Required checks per worktree:
+
+```powershell
+git -C <worktree> status --porcelain
+git -C <worktree> rev-parse --abbrev-ref HEAD
+git -C <worktree> rev-list --left-right --count @{u}...HEAD
+git -C <worktree> diff --name-only
+git -C <worktree> ls-files --others --exclude-standard
+```
+
+Exit gate: every worktree is bucketed and recorded.
+
+## Stage 03 - Salvage Before Any Prune
+
+For `SALVAGE_UNCOMMITTED` and `SALVAGE_UPSTREAM_GONE`:
+
+1. Export patch and untracked file list to `archive/worktree-recovery/<timestamp>/`.
+2. Commit salvage on the same branch if coherent.
+3. Push salvage branch if upstream is gone (create new remote branch).
+
+Minimum evidence per salvaged branch:
+
+1. Patch file path
+2. Commit hash (if committed)
+3. Remote branch name (if pushed)
+
+Exit gate: no unsaved local-only work remains in branches targeted for cleanup.
+
+## Stage 04 - Conflict Audit and Merge Queue Build
+
+Build queue from lowest risk to highest risk:
+
+1. Hotfix branches with narrow file scope
+2. Sprint/runtime branches
+3. Cross-cutting integration branches
+4. High-churn or overlapping branches last
+
+Conflict scoring inputs:
+
+1. File overlap against already-queued branches
+2. Touches to deployment/workflow files
+3. Touches to shared API routes and role maps
+
+Queue output file:
+
+1. `output/worktree-snapshots/<timestamp>/MERGE_QUEUE.md`
+
+Exit gate: queue finalized with explicit order and risk notes.
+
+## Stage 05 - Controlled Integration (Orchestrator Only)
+
+For each queued branch:
+
+1. Merge/cherry-pick into `integration/cleanup-20260226`.
+2. Resolve conflicts immediately.
+3. Run targeted validation for affected modules.
+
+Validation minimum:
+
+1. L1 API checks (affected modules)
+2. L2 page checks (affected routes)
+3. L3 real-user workflow checks (affected flows)
+
+Exit gate: branch is either `MERGED_WITH_PROOF` or `REJECTED_WITH_REASON`.
+
+## Stage 06 - Release Gate
+
+Before PR to production:
+
+1. Re-run full impacted test matrix.
+2. Verify no unsafe workflow/deploy changes slipped in.
+3. Generate final consolidation report.
+
+Required artifacts:
+
+1. `output/worktree-snapshots/<timestamp>/CONSOLIDATION_REPORT.md`
+2. Test evidence links under `docs/testing/reports/`
+
+Exit gate: PR from `integration/cleanup-20260226` to `origin/production` is ready.
+
+## Stage 07 - Post-Merge Cleanup
+
+After production merge and successful deploy:
+
+1. Delete merged feature branches.
+2. Remove merged worktrees.
+3. Keep recovery tags and bundle for rollback window.
+4. Record final closure in this plan.
+
+Exit gate: only active branches/worktrees remain, and rollback artifacts are preserved.
+
+## 5) Progress Tracker
+
+| Stage | Status | Evidence |
+|---|---|---|
+| Stage 00 - Freeze and Safety Lock | DONE | `output/worktree-snapshots/20260226_173448/STAGE00_SAFETY_LOCK.md` |
+| Stage 01 - Fresh No-Loss Snapshot | DONE | `output/worktree-snapshots/20260226_173448/manifest.json`, `output/worktree-snapshots/20260226_173448/all-refs.bundle` |
+| Stage 02 - Deterministic Classification | DONE | `output/worktree-snapshots/20260226_173448/WORKTREE_CLASSIFICATION.md` |
+| Stage 03 - Salvage Before Prune | IN_PROGRESS | `output/worktree-snapshots/20260226_173448/STAGE03_SALVAGE_INVENTORY.md`, `output/worktree-snapshots/20260226_173448/STAGE03_EXECUTION_LOG.md`, `output/worktree-snapshots/20260226_173448/HANDOFF_SALVAGE_STRATEGY.md` |
+| Stage 04 - Conflict Audit + Merge Queue | DONE | `output/worktree-snapshots/20260226_173448/MERGE_QUEUE.md`, `output/worktree-snapshots/20260226_173448/WORKTREE_OVERLAPS.json` |
+| Stage 05 - Controlled Integration | IN_PROGRESS | `output/worktree-snapshots/20260226_173448/STAGE05_INTEGRATION_LOG.md` |
+| Stage 06 - Release Gate | TODO | - |
+| Stage 07 - Post-Merge Cleanup | TODO | - |
+
+## 6) Execution Log (2026-02-26)
+
+Completed:
+
+1. Created fresh no-loss snapshot set at `output/worktree-snapshots/20260226_173448/`.
+2. Reclassified all worktrees after salvage actions:
+   - `READY_MERGE`: 7
+   - `SALVAGE_UNCOMMITTED`: 1
+3. Published upstream branches to prevent local-only loss:
+   - `origin/feat/advance-payment-c2`
+   - `origin/feature/s03-g046-alerting`
+   - `origin/feature/s03-gap092-billing-hardening`
+   - `origin/feature/s03-sync-backbone`
+   - `origin/integration/cleanup-20260226`
+4. Captured branch overlap and merge order evidence:
+   - `output/worktree-snapshots/20260226_173448/MERGE_QUEUE.md`
+5. Started controlled integration in orchestrator using scoped cherry-picks:
+   - `32f4dec07 -> e855fb2a1`
+   - `bee3e3f26 -> 5114626c0`
+   - `c873b1a5c -> b979d03a3`
+   - `526cbd7f3 -> 105802a31`
+   - `559124b1d -> 1f666b462`
+   - `a36ed0e87 -> e54cf4a29`
+   - Evidence: `output/worktree-snapshots/20260226_173448/STAGE05_INTEGRATION_LOG.md`
+6. Rejected one scoped integration with proof:
+   - `82856c5c5` cherry-pick aborted due `hrms/api/procurement.py` conflict against current integration state.
+7. Ran preliminary unit test command for new integrated test files:
+   - `python -m pytest hrms/tests/test_erp_sync.py hrms/tests/test_delivery_billing_policy.py tests/unit/test_gap046_alerting.py -q`
+   - Result: `5 passed, 8 errors` due missing local Frappe runtime package (`frappe.model` import failure).
+
+Still open in Stage 03:
+
+1. `handoff/rajat-sad-2026-02-26` remains high-risk with large mixed local state and requires manual split/scope salvage before integration.
+2. Path-batched salvage runbook prepared: `output/worktree-snapshots/20260226_173448/HANDOFF_SALVAGE_STRATEGY.md`.
+
+## 7) Immediate Execution Commands
+
+Run these first, in order:
+
+```powershell
+git -C F:/Dropbox/Projects/BEI-ERP-orchestrator status --porcelain
+pwsh -File scripts/git/no_loss_worktree_snapshot.ps1
+gh run list --repo Bebang-Enterprise-Inc/hrms --workflow build-and-deploy.yml --limit 20 --json databaseId,status,conclusion,headBranch,createdAt,event
+```
