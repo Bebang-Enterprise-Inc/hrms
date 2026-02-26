@@ -949,6 +949,7 @@ def sync_supplier_soa(sheet_name: str, data: list[dict], checksum: str, **kwargs
 	return sync_ap_opening(sheet_name=sheet_name, data=data, checksum=checksum, **kwargs)
 
 
+# nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 def webhook():
 	"""

@@ -6,6 +6,8 @@ Dispatch Tracker API
 Handles warehouse dispatch, route tracking, and delivery confirmation for my.bebang.ph
 """
 
+from typing import Any
+
 import frappe
 from frappe import _
 from frappe.utils import cint, flt, now_datetime, nowdate
@@ -22,7 +24,7 @@ from hrms.utils.scm_roles import check_scm_permission as _check_scm_permission
 
 
 @frappe.whitelist()
-def get_trips(date=None, status=None):
+def get_trips(date: str | None = None, status: str | None = None):
 	"""Get dispatch trips for a date. Defaults to today if no date specified."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view dispatch trips")
 
@@ -57,7 +59,7 @@ def get_trips(date=None, status=None):
 
 
 @frappe.whitelist()
-def get_trip_detail(trip_name):
+def get_trip_detail(trip_name: str):
 	"""Get full trip details including all stops."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view trip details")
 
@@ -94,7 +96,12 @@ def get_trip_detail(trip_name):
 
 @frappe.whitelist()
 def confirm_departure(
-	trip_name, driver=None, vehicle=None, vehicle_plate=None, temperature=None, seal_number=None
+	trip_name: str,
+	driver: str | None = None,
+	vehicle: str | None = None,
+	vehicle_plate: str | None = None,
+	temperature: float | str | None = None,
+	seal_number: str | None = None,
 ):
 	"""
 	Confirm trip departure with checklist.
@@ -125,7 +132,7 @@ def confirm_departure(
 	return {"success": True, "message": f"Trip {trip_name} departed at {trip.departure_time}"}
 
 
-def _get_stop(trip, stop_idx):
+def _get_stop(trip: Any, stop_idx: int | str):
 	"""Validate and return a trip stop by 1-based index."""
 	stop_idx = int(stop_idx)
 	if stop_idx < 1 or stop_idx > len(trip.stops):
@@ -133,7 +140,7 @@ def _get_stop(trip, stop_idx):
 	return trip.stops[stop_idx - 1]
 
 
-def _update_trip_status(trip, require_all_processed=False):
+def _update_trip_status(trip: Any, require_all_processed: bool = False):
 	"""Recalculate trip status based on stop statuses.
 
 	Args:
@@ -155,7 +162,9 @@ def _update_trip_status(trip, require_all_processed=False):
 
 
 @frappe.whitelist()
-def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
+def confirm_delivery(
+	trip_name: str, stop_idx: int | str, signature: str | None = None, signed_by: str | None = None
+):
 	"""Confirm delivery at a specific stop. stop_idx is 1-based."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "confirm delivery")
 
@@ -228,7 +237,13 @@ def confirm_delivery(trip_name, stop_idx, signature=None, signed_by=None):
 
 
 @frappe.whitelist()
-def report_exception(trip_name, stop_idx, exception_type, reason=None, photo=None):
+def report_exception(
+	trip_name: str,
+	stop_idx: int | str,
+	exception_type: str,
+	reason: str | None = None,
+	photo: str | None = None,
+):
 	"""Report an exception at a stop (store closed, refused, etc)."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "report exceptions")
 
@@ -249,7 +264,7 @@ def report_exception(trip_name, stop_idx, exception_type, reason=None, photo=Non
 
 @frappe.whitelist()
 def request_pre_delivery_billing_exception(
-	trip_name, stop_idx, reason, exception_type="Delivery Pre-Billing"
+	trip_name: str, stop_idx: int | str, reason: str, exception_type: str = "Delivery Pre-Billing"
 ):
 	"""
 	Create a dual-approval exception request for pre-delivery billing.
@@ -281,7 +296,7 @@ def request_pre_delivery_billing_exception(
 
 
 @frappe.whitelist()
-def get_pre_delivery_billing_exception_status(trip_name, stop_idx):
+def get_pre_delivery_billing_exception_status(trip_name: str, stop_idx: int | str):
 	"""Return latest pre-delivery billing exception status for one trip stop."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view pre-delivery billing exception status")
 
@@ -323,7 +338,7 @@ def get_pre_delivery_billing_exception_status(trip_name, stop_idx):
 
 
 @frappe.whitelist()
-def create_pre_delivery_billing(trip_name, stop_idx, pre_delivery_exception):
+def create_pre_delivery_billing(trip_name: str, stop_idx: int | str, pre_delivery_exception: str):
 	"""
 	Create delivery billing before stop delivery only when dual approval exists.
 
@@ -361,7 +376,7 @@ def create_pre_delivery_billing(trip_name, stop_idx, pre_delivery_exception):
 
 
 @frappe.whitelist()
-def get_route_progress(trip_name):
+def get_route_progress(trip_name: str):
 	"""Get current progress of a trip."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view route progress")
 
@@ -411,7 +426,7 @@ def get_route_progress(trip_name):
 	}
 
 
-def _build_trip_doc(trip_date, route_name, stops):
+def _build_trip_doc(trip_date: str | None, route_name: str, stops: list[dict[str, Any]]):
 	"""Build a BEI Distribution Trip document with stops (not yet inserted)."""
 	trip = frappe.new_doc("BEI Distribution Trip")
 	trip.trip_date = trip_date or nowdate()
@@ -433,7 +448,7 @@ def _build_trip_doc(trip_date, route_name, stops):
 
 
 @frappe.whitelist()
-def create_trip(trip_date, route_name, stops):
+def create_trip(trip_date: str | None, route_name: str, stops: list[dict[str, Any]] | str):
 	"""Create a new distribution trip. stops: list of {store, items_count}."""
 	_check_scm_permission(SCM_ADMIN_ROLES, "create trips")
 
@@ -472,10 +487,10 @@ FRANCHISE_MARKUP = 1.08
 
 
 def _create_delivery_billing(
-	trip_name,
-	stop_idx,
-	pre_delivery_exception=None,
-	require_pre_delivery_exception=False,
+	trip_name: str,
+	stop_idx: int | str,
+	pre_delivery_exception: str | None = None,
+	require_pre_delivery_exception: bool = False,
 ):
 	"""Create a BEI Billing Schedule for a delivery stop."""
 	# G-067: Feature flag — billing is enabled by default.
@@ -622,7 +637,9 @@ def _create_delivery_billing(
 			pass  # notification failure must not cascade
 
 
-def _fail_stop(trip, stop, savepoint, error_message, title="Missing Delivery Rate"):
+def _fail_stop(
+	trip: Any, stop: Any, savepoint: Any, error_message: str, title: str = "Missing Delivery Rate"
+):
 	"""Mark a stop as failed and log the error. Used during billing creation."""
 	frappe.log_error(error_message, title)
 	stop.billing_creation_status = "Failed"
@@ -630,7 +647,7 @@ def _fail_stop(trip, stop, savepoint, error_message, title="Missing Delivery Rat
 	frappe.db.release_savepoint(savepoint)
 
 
-def _get_order_goods_value(store_order):
+def _get_order_goods_value(store_order: str | None):
 	"""Calculate the total goods value from a store order's line items."""
 	if not store_order:
 		return 0
@@ -682,7 +699,7 @@ def _get_user_warehouse():
 	return warehouse
 
 
-def _calculate_eta(trip, my_stop_order):
+def _calculate_eta(trip: Any, my_stop_order: int):
 	"""
 	Calculate ETA for a delivery stop.
 
@@ -731,7 +748,7 @@ def _calculate_eta(trip, my_stop_order):
 	}
 
 
-def _get_items_preview(store_order):
+def _get_items_preview(store_order: str | None):
 	"""
 	Get preview of items from a store order.
 	Returns list of up to 10 items, with overflow indicator.
@@ -757,7 +774,7 @@ def _get_items_preview(store_order):
 	return items
 
 
-def _send_delivery_notification(driver, store, eta_range):
+def _send_delivery_notification(driver: str, store: str, eta_range: str):
 	"""
 	Send Google Chat notification for "1 stop away" alert.
 	G-003: Routes to per-store Chat space first, falls back to global.
@@ -780,7 +797,7 @@ def _send_delivery_notification(driver, store, eta_range):
 	send_message_to_space(space, message)
 
 
-def _set_store_order_status(store_order_name, status):
+def _set_store_order_status(store_order_name: str, status: str):
 	"""
 	Update a single BEI Store Order status. Silently skips if order not found.
 	Used to keep store orders in sync with trip/delivery progress.
@@ -795,7 +812,7 @@ def _set_store_order_status(store_order_name, status):
 		)
 
 
-def _set_store_orders_in_transit(stops):
+def _set_store_orders_in_transit(stops: list[dict[str, Any]]):
 	"""
 	After a trip is created, set all linked BEI Store Orders to "In Transit".
 	Only affects orders that were in "Ready for Dispatch" status.
@@ -815,7 +832,7 @@ def _set_store_orders_in_transit(stops):
 
 
 @frappe.whitelist()
-def get_my_delivery(date=None):
+def get_my_delivery(date: str | None = None):
 	"""
 	Get delivery trip for the current user's store.
 
@@ -913,7 +930,7 @@ def get_my_delivery(date=None):
 
 
 @frappe.whitelist()
-def get_routes(cargo_type=None, active_only=True):
+def get_routes(cargo_type: str | None = None, active_only: bool = True):
 	"""Get all route masters, optionally filtered."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view routes")
 
@@ -953,7 +970,7 @@ def get_routes(cargo_type=None, active_only=True):
 
 
 @frappe.whitelist()
-def get_route_detail(route_name):
+def get_route_detail(route_name: str):
 	"""Get full route details including all stops."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view route details")
 
@@ -986,13 +1003,13 @@ def get_route_detail(route_name):
 
 @frappe.whitelist()
 def create_route(
-	route_name,
-	cargo_type,
-	source_warehouse,
-	stops=None,
-	default_vehicle=None,
-	default_driver=None,
-	notes=None,
+	route_name: str,
+	cargo_type: str,
+	source_warehouse: str,
+	stops: list[dict[str, Any]] | str | None = None,
+	default_vehicle: str | None = None,
+	default_driver: str | None = None,
+	notes: str | None = None,
 ):
 	"""Create a new route master."""
 	_check_scm_permission(SCM_ADMIN_ROLES, "create routes")
@@ -1027,7 +1044,7 @@ def create_route(
 
 
 @frappe.whitelist()
-def update_route(route_name, updates=None):
+def update_route(route_name: str, updates: dict[str, Any] | str | None = None):
 	"""Update a route master. Accepts partial updates."""
 	_check_scm_permission(SCM_ADMIN_ROLES, "update routes")
 
@@ -1069,7 +1086,7 @@ def update_route(route_name, updates=None):
 
 
 @frappe.whitelist()
-def delete_route(route_name):
+def delete_route(route_name: str):
 	"""Soft-delete a route (set active=0)."""
 	_check_scm_permission(SCM_ADMIN_ROLES, "delete routes")
 
@@ -1080,7 +1097,7 @@ def delete_route(route_name):
 
 
 @frappe.whitelist()
-def get_vehicles(status=None, owner_type=None):
+def get_vehicles(status: str | None = None, owner_type: str | None = None):
 	"""List vehicles with optional filters."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view vehicles")
 
@@ -1108,7 +1125,7 @@ def get_vehicles(status=None, owner_type=None):
 	return {"vehicles": vehicles}
 
 
-def _build_stop_preview(route, trip_date):
+def _build_stop_preview(route: Any, trip_date: str):
 	"""Shared helper: build stop list with pending order info using bulk queries."""
 	store_list = [s.store for s in route.stops]
 
@@ -1148,7 +1165,7 @@ def _build_stop_preview(route, trip_date):
 
 
 @frappe.whitelist()
-def preview_trip_stops(route_name, trip_date=None):
+def preview_trip_stops(route_name: str, trip_date: str | None = None):
 	"""Preview stops and pending store orders for a proposed trip."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "preview trip stops")
 	route = frappe.get_doc("BEI Route", route_name)
@@ -1162,7 +1179,13 @@ def preview_trip_stops(route_name, trip_date=None):
 
 
 @frappe.whitelist()
-def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None, selected_stops=None):
+def create_trip_from_route(
+	route_name: str,
+	trip_date: str | None = None,
+	vehicle: str | None = None,
+	driver: str | None = None,
+	selected_stops: list[dict[str, Any]] | str | None = None,
+):
 	"""One-click trip creation from a route template.
 
 	1. Loads route + stops
@@ -1270,7 +1293,7 @@ def create_trip_from_route(route_name, trip_date=None, vehicle=None, driver=None
 
 
 @frappe.whitelist()
-def duplicate_route(route_name, new_name):
+def duplicate_route(route_name: str, new_name: str):
 	"""Clone a route with a new name."""
 	_check_scm_permission(SCM_ADMIN_ROLES, "duplicate routes")
 
@@ -1303,7 +1326,7 @@ def duplicate_route(route_name, new_name):
 
 
 @frappe.whitelist()
-def reorder_stops(route_name, stop_order_map):
+def reorder_stops(route_name: str, stop_order_map: dict[str, int] | str):
 	"""Reorder stops in a route. stop_order_map: {store: new_order}"""
 	_check_scm_permission(SCM_ADMIN_ROLES, "reorder stops")
 
@@ -1348,7 +1371,7 @@ DRIVER_DESIGNATIONS = ["Driver", "Helper", "Relief Driver", "Delivery Driver", "
 
 
 @frappe.whitelist()
-def get_available_drivers(date=None):
+def get_available_drivers(date: str | None = None):
 	"""
 	Get all drivers with their assignment status for a given date.
 
@@ -1426,7 +1449,7 @@ def get_available_drivers(date=None):
 
 
 @frappe.whitelist()
-def assign_driver(trip_name, employee, vehicle=None):
+def assign_driver(trip_name: str, employee: str, vehicle: str | None = None):
 	"""
 	Assign a driver (or helper) to an existing trip.
 	Only valid for trips in "Preparing" status.
@@ -1481,7 +1504,7 @@ def assign_driver(trip_name, employee, vehicle=None):
 
 
 @frappe.whitelist()
-def get_driver_schedule(employee, date_from=None, date_to=None):
+def get_driver_schedule(employee: str, date_from: str | None = None, date_to: str | None = None):
 	"""
 	Get a specific driver's schedule over a date range.
 
@@ -1629,14 +1652,14 @@ def get_warehouses():
 	]
 
 
-def _canonical_store_key(value):
+def _canonical_store_key(value: Any):
 	"""Normalize store labels for resilient matching across naming variants."""
 	if not value:
 		return ""
 	return "".join(ch for ch in str(value).strip().lower() if ch.isalnum())
 
 
-def _strip_legacy_company_suffix(store_name):
+def _strip_legacy_company_suffix(store_name: str | None):
 	"""Strip common company suffixes from legacy store labels."""
 	if not store_name:
 		return ""
@@ -1658,7 +1681,7 @@ def _strip_legacy_company_suffix(store_name):
 	return text
 
 
-def _resolve_store_to_warehouse_name(store_name):
+def _resolve_store_to_warehouse_name(store_name: str | None):
 	"""Resolve a store label from BEI Store Type to a valid Warehouse name."""
 	if not store_name:
 		return None

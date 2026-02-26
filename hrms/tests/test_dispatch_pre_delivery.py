@@ -38,9 +38,9 @@ def _install_fake_frappe_and_dependencies():
 		frappe.get_traceback = lambda: "traceback"
 		frappe.enqueue = lambda *args, **kwargs: None
 		frappe.parse_json = json.loads
-		frappe.session = types.SimpleNamespace(user="Administrator")
+		frappe.__dict__["session"] = types.SimpleNamespace(user="Administrator")
 
-		frappe.db = types.SimpleNamespace(
+		frappe.__dict__["db"] = types.SimpleNamespace(
 			get_single_value=lambda *args, **kwargs: 1,
 			exists=lambda *args, **kwargs: None,
 			get_value=lambda *args, **kwargs: None,

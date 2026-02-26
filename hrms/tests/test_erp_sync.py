@@ -45,10 +45,10 @@ def _install_fake_frappe():
 	frappe.logger = lambda: types.SimpleNamespace(info=lambda *args, **kwargs: None)
 	frappe.get_traceback = lambda: "traceback"
 	frappe.defaults = types.SimpleNamespace(get_global_default=lambda key: None)
-	frappe.session = types.SimpleNamespace(user="Administrator")
+	frappe.__dict__["session"] = types.SimpleNamespace(user="Administrator")
 	frappe.get_roles = lambda user=None: ["System Manager"] if user and user != "Guest" else []
 	frappe.request = types.SimpleNamespace(headers={}, data=b"")
-	frappe.db = types.SimpleNamespace(
+	frappe.__dict__["db"] = types.SimpleNamespace(
 		exists=lambda *args, **kwargs: None,
 		get_value=lambda *args, **kwargs: None,
 		set_value=lambda *args, **kwargs: None,
@@ -115,7 +115,7 @@ class _FakeDoc:
 class TestErpSync(unittest.TestCase):
 	def setUp(self):
 		erp_sync._FIELD_CACHE.clear()
-		erp_sync.frappe.session = types.SimpleNamespace(user="Administrator")
+		erp_sync.frappe.__dict__["session"] = types.SimpleNamespace(user="Administrator")
 		erp_sync.frappe.get_roles = MagicMock(return_value=["System Manager"])
 		erp_sync.frappe.db.savepoint = MagicMock(return_value=None)
 		erp_sync.frappe.db.release_savepoint = MagicMock()
