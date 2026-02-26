@@ -12,7 +12,7 @@ pip install frappe-bench
 
 githubbranch=${GITHUB_BASE_REF:-${GITHUB_REF##*/}}
 frappeuser=${FRAPPE_USER:-"frappe"}
-defaultstablebranch=${DEFAULT_STABLE_BRANCH:-"version-15"}
+defaultstablebranch=${DEFAULT_STABLE_BRANCH:-"develop"}
 frappebranchcandidate=${FRAPPE_BRANCH:-$githubbranch}
 erpnextbranchcandidate=${ERPNEXT_BRANCH:-$githubbranch}
 paymentsbranchcandidate=${PAYMENTS_BRANCH:-${githubbranch%"-hotfix"}}
