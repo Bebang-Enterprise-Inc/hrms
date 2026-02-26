@@ -16,6 +16,16 @@
 - `orchestrator repo`: `F:/Dropbox/Projects/BEI-ERP-orchestrator`
 - `read-only context repo`: `F:/Dropbox/Projects/BEI-ERP`
 
+### Backup Checkpoint (Completed)
+
+- `status`: `COMPLETED`
+- `backup destination`: `F:/BEI-ERP-BACKUPS/BEI-ERP_full_local_20260226_192709`
+- `method`: `robocopy full copy + incremental pass`
+- `log pass 1`: `F:/BEI-ERP-BACKUPS/logs/robocopy_20260226_192709.log`
+- `log pass 2`: `F:/BEI-ERP-BACKUPS/logs/robocopy_20260226_192709_pass2.log`
+- `backup report`: `F:/BEI-ERP-BACKUPS/BEI-ERP_full_local_20260226_192709_BACKUP_REPORT.md`
+- `validation`: destination byte total matches source after pass 2.
+
 ## 2) Safety Rules (Non-Negotiable)
 
 1. Never run `git clean -fdx` in root.
@@ -298,18 +308,20 @@ git commit -m "docs(cleanup): execute root surgical cleanup with allowlist contr
 
 **GO only if all are true:**
 
-1. Root `git status --porcelain` is empty or explicitly approved residuals documented.
-2. `data/**` and `data/Audits/**` verified present after cleanup.
-3. Clean-room branch contains all preservation commits.
-4. Deploy history shows no non-production unsafe deployment.
-5. Snapshot-before and snapshot-after artifacts both exist.
+1. Local backup checkpoint in this plan exists and is verified.
+2. Root `git status --porcelain` is empty or explicitly approved residuals documented.
+3. `data/**` and `data/Audits/**` verified present after cleanup.
+4. Clean-room branch contains all preservation commits.
+5. Deploy history shows no non-production unsafe deployment.
+6. Snapshot-before and snapshot-after artifacts both exist.
 
 **NO-GO if any are true:**
 
-1. Any `git clean -fdx` usage in logs.
-2. Any missing protected path after cleanup.
-3. Any packet missing handoff fields.
-4. Any out-of-scope packet change accepted.
+1. Backup destination is missing or unreadable.
+2. Any `git clean -fdx` usage in logs.
+3. Any missing protected path after cleanup.
+4. Any packet missing handoff fields.
+5. Any out-of-scope packet change accepted.
 
 ## 11) Required Output Files
 
