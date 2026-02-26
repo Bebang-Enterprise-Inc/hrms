@@ -1,0 +1,14 @@
+{
+  "source": "spec",
+  "name": "commissary-completion-testing",
+  "basePath": "./specs/commissary-completion-testing",
+  "phase": "requirements",
+  "taskIndex": 0,
+  "totalTasks": 25,
+  "taskIteration": 1,
+  "maxTaskIterations": 5,
+  "globalIteration": 1,
+  "maxGlobalIterations": 100,
+  "commitSpec": true,
+  "awaitingApproval": true
+}
