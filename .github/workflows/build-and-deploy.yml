@@ -40,10 +40,27 @@ env:
   FRAPPE_SITE: hrms.bebang.ph
 
 jobs:
+  guard:
+    name: Guard Production Branch
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate branch for deployment
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref:   ${{ github.ref_name }}"
+          if [ "${{ github.ref_name }}" != "production" ]; then
+            echo "❌ Ref '${{ github.ref_name }}' is not allowed for this workflow."
+            echo "   This workflow only deploys production and cannot run from feature branches."
+            exit 1
+          fi
+          echo "✅ Branch guard passed."
+
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.skip_build != 'true' }}
+    needs: [guard]
+    if: ${{ needs.guard.result == 'success' && github.event.inputs.skip_build != 'true' }}
 
     steps:
       - name: Checkout code
@@ -116,7 +133,7 @@ jobs:
   deploy:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [guard, build]
     if: always() && (needs.build.result == 'success' || github.event.inputs.skip_build == 'true')
 
     steps:
