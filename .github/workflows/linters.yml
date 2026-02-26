@@ -38,6 +38,8 @@ jobs:
 
       - name: Install and Run Pre-commit
         uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}
 
       - name: Download Semgrep rules
         run: git clone --depth 1 https://github.com/frappe/semgrep-rules.git frappe-semgrep-rules

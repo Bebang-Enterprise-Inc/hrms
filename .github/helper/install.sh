@@ -12,10 +12,26 @@ pip install frappe-bench
 
 githubbranch=${GITHUB_BASE_REF:-${GITHUB_REF##*/}}
 frappeuser=${FRAPPE_USER:-"frappe"}
-frappebranch=${FRAPPE_BRANCH:-$githubbranch}
-erpnextbranch=${ERPNEXT_BRANCH:-$githubbranch}
-paymentsbranch=${PAYMENTS_BRANCH:-${githubbranch%"-hotfix"}}
+defaultstablebranch=${DEFAULT_STABLE_BRANCH:-"version-15"}
+frappebranchcandidate=${FRAPPE_BRANCH:-$githubbranch}
+erpnextbranchcandidate=${ERPNEXT_BRANCH:-$githubbranch}
+paymentsbranchcandidate=${PAYMENTS_BRANCH:-${githubbranch%"-hotfix"}}
 lendingbranch="develop"
+
+resolve_branch() {
+	repo="$1"
+	branch="$2"
+	if git ls-remote --exit-code --heads "https://github.com/${frappeuser}/${repo}" "${branch}" > /dev/null 2>&1; then
+		echo "$branch"
+	else
+		echo "WARNING: Branch '${branch}' not found in ${frappeuser}/${repo}. Falling back to '${defaultstablebranch}'." >&2
+		echo "$defaultstablebranch"
+	fi
+}
+
+frappebranch=$(resolve_branch "frappe" "$frappebranchcandidate")
+erpnextbranch=$(resolve_branch "erpnext" "$erpnextbranchcandidate")
+paymentsbranch=$(resolve_branch "payments" "$paymentsbranchcandidate")
 
 git clone "https://github.com/${frappeuser}/frappe" --branch "${frappebranch}" --depth 1
 bench init --skip-assets --frappe-path ~/frappe --python "$(which python)" frappe-bench
