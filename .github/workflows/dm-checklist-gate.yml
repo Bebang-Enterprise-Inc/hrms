@@ -51,20 +51,22 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const body = `## ⚠️ Frappe Deadly Mistakes (DM) Checklist Required
-
-            This PR modifies GL/payment-related code. Before merging, confirm each item:
-
-            - [ ] **DM-1:** All GL entries on receivable/payable accounts have `party_type` + `party` fields
-            - [ ] **DM-2:** Any function touching 2+ docs uses `frappe.db.savepoint()` for atomicity
-            - [ ] **DM-3:** EWT (1%/2%/5%) and VAT (12%) treatment is documented in the PR description
-            - [ ] **DM-4:** All reference fields use `Link` type, not `Data`
-            - [ ] **DM-5:** Computed values are fetched in `validate()`, not stored from frontend input
-            - [ ] **DM-6:** Reclassification JVs include `user_remark`, `party_type`+`party` on both rows, and `reference_type`+`reference_name`    
-
-            **Source:** `.claude/rules/frappe-development.md`
-
-            _This comment is auto-generated. A reviewer must check all boxes before merging._`;
+            const body = [
+              "## ⚠️ Frappe Deadly Mistakes (DM) Checklist Required",
+              "",
+              "This PR modifies GL/payment-related code. Before merging, confirm each item:",
+              "",
+              "- [ ] **DM-1:** All GL entries on receivable/payable accounts have `party_type` + `party` fields",
+              "- [ ] **DM-2:** Any function touching 2+ docs uses `frappe.db.savepoint()` for atomicity",
+              "- [ ] **DM-3:** EWT (1%/2%/5%) and VAT (12%) treatment is documented in the PR description",
+              "- [ ] **DM-4:** All reference fields use `Link` type, not `Data`",
+              "- [ ] **DM-5:** Computed values are fetched in `validate()`, not stored from frontend input",
+              "- [ ] **DM-6:** Reclassification JVs include `user_remark`, `party_type`+`party` on both rows, and `reference_type`+`reference_name`",
+              "",
+              "**Source:** `.claude/rules/frappe-development.md`",
+              "",
+              "_This comment is auto-generated. A reviewer must check all boxes before merging._",
+            ].join("\\n");
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
