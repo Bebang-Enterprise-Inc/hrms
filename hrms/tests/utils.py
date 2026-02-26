@@ -1,6 +1,65 @@
 import frappe
 
-from erpnext.tests.utils import ERPNextTestSuite
+try:
+	from erpnext.tests.utils import ERPNextTestSuite
+except ImportError:
+	from frappe.tests import IntegrationTestCase
+
+	class ERPNextTestSuite(IntegrationTestCase):
+		"""Compatibility fallback for ERPNext branches without ERPNextTestSuite."""
+
+		@classmethod
+		def setUpClass(cls):
+			super().setUpClass()
+
+		@classmethod
+		def make_employees(cls):
+			records = [
+				{
+					"company": "_Test Company",
+					"date_of_birth": "1980-01-01",
+					"date_of_joining": "2010-01-01",
+					"department": "_Test Department - _TC",
+					"doctype": "Employee",
+					"first_name": "_Test Employee",
+					"gender": "Female",
+					"naming_series": "_T-Employee-",
+					"status": "Active",
+					"user_id": "test@example.com",
+				},
+				{
+					"company": "_Test Company",
+					"date_of_birth": "1980-01-01",
+					"date_of_joining": "2010-01-01",
+					"department": "_Test Department 1 - _TC",
+					"doctype": "Employee",
+					"first_name": "_Test Employee 1",
+					"gender": "Male",
+					"naming_series": "_T-Employee-",
+					"status": "Active",
+					"user_id": "test1@example.com",
+				},
+				{
+					"company": "_Test Company",
+					"date_of_birth": "1980-01-01",
+					"date_of_joining": "2010-01-01",
+					"department": "_Test Department 1 - _TC",
+					"doctype": "Employee",
+					"first_name": "_Test Employee 2",
+					"gender": "Male",
+					"naming_series": "_T-Employee-",
+					"status": "Active",
+					"user_id": "test2@example.com",
+				},
+			]
+			cls.employees = []
+			for record in records:
+				if not frappe.db.exists("Employee", {"first_name": record.get("first_name")}):
+					cls.employees.append(frappe.get_doc(record).insert())
+				else:
+					cls.employees.append(
+						frappe.get_doc("Employee", {"first_name": record.get("first_name")})
+					)
 
 
 class HRMSTestSuite(ERPNextTestSuite):
