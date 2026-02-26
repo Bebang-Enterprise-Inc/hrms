@@ -1,8 +1,11 @@
 import { Page, expect } from "@playwright/test";
 
-export const HQ_URL = "https://hq.bebang.ph";
-export const PORTAL_URL = "https://my.bebang.ph";
-export const SCREENSHOT_DIR = "scratchpad/e2e_run2_2026-02-08";
+const DEFAULT_HQ_URL = "https://hq.bebang.ph";
+const DEFAULT_PORTAL_URL = "https://my.bebang.ph";
+
+export const HQ_URL = process.env.HQ_URL || process.env.TEST_HQ_URL || DEFAULT_HQ_URL;
+export const PORTAL_URL = process.env.PORTAL_URL || process.env.TEST_PORTAL_URL || DEFAULT_PORTAL_URL;
+export const SCREENSHOT_DIR = process.env.E2E_SCREENSHOT_DIR || "scratchpad/e2e_run2_2026-02-08";
 
 export const ACCOUNTS = {
   hq_user: { email: "test.hr@bebang.ph", password: "BeiTest2026!" },
