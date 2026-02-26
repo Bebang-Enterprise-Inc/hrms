@@ -1,0 +1,219 @@
+{
+  "request_name": "BEI-TRF-2026-00006",
+  "request_doc": {
+    "name": "BEI-TRF-2026-00006",
+    "owner": "test.supervisor@bebang.ph",
+    "creation": "2026-02-26 20:20:50.034461",
+    "modified": "2026-02-26 20:21:04.058071",
+    "modified_by": "Administrator",
+    "docstatus": 0,
+    "idx": 0,
+    "employee": "HR-EMP-00028",
+    "employee_name": "Test TransferE2E",
+    "requested_by": "test.supervisor@bebang.ph",
+    "requested_on": "2026-02-26 20:20:50.003016",
+    "effective_date": "2026-02-26",
+    "reason": "Automated E2E transfer validation",
+    "current_stage": "Synced",
+    "stage_status": "Approved",
+    "store_warehouse": "Ayala Evo - Bebang Enterprise Inc.",
+    "employee_transfer_ref": "HR-EMP-TRN-2026-00012",
+    "sync_batch_id": "tr-sync-20260226202052",
+    "from_branch": "ARANETA GATEWAY",
+    "to_branch": "AYALA EVO",
+    "from_department": "Operations - BEI",
+    "to_department": "All Departments - BEI",
+    "from_designation": "Store Supervisor",
+    "emergency_override_requested": 0,
+    "last_action_by": "Administrator",
+    "last_action_at": "2026-02-26 20:21:04.057930",
+    "doctype": "BEI Transfer Request"
+  },
+  "final_stage": "Synced",
+  "detail_snapshot": {
+    "name": "BEI-TRF-2026-00006",
+    "owner": "test.supervisor@bebang.ph",
+    "creation": "2026-02-26 20:20:50.034461",
+    "modified": "2026-02-26 20:21:04.058071",
+    "modified_by": "Administrator",
+    "docstatus": 0,
+    "idx": 0,
+    "employee": "HR-EMP-00028",
+    "employee_name": "Test TransferE2E",
+    "requested_by": "test.supervisor@bebang.ph",
+    "requested_on": "2026-02-26 20:20:50.003016",
+    "effective_date": "2026-02-26",
+    "reason": "Automated E2E transfer validation",
+    "current_stage": "Synced",
+    "stage_status": "Approved",
+    "store_warehouse": "Ayala Evo - Bebang Enterprise Inc.",
+    "employee_transfer_ref": "HR-EMP-TRN-2026-00012",
+    "sync_batch_id": "tr-sync-20260226202052",
+    "from_branch": "ARANETA GATEWAY",
+    "to_branch": "AYALA EVO",
+    "from_department": "Operations - BEI",
+    "to_department": "All Departments - BEI",
+    "from_designation": "Store Supervisor",
+    "to_designation": null,
+    "from_reports_to": null,
+    "to_reports_to": null,
+    "emergency_override_requested": 0,
+    "emergency_override_reason": null,
+    "emergency_override_hr_approved_by": null,
+    "emergency_override_system_approved_by": null,
+    "emergency_override_approved_at": null,
+    "rejection_reason": null,
+    "last_action_by": "Administrator",
+    "last_action_at": "2026-02-26 20:21:04.057930",
+    "doctype": "BEI Transfer Request",
+    "timeline": [
+      {
+        "comment_type": "Comment",
+        "content": "Transfer request submitted by test.supervisor@bebang.ph",
+        "creation": "2026-02-26 20:20:50.119746",
+        "comment_by": null
+      },
+      {
+        "comment_type": "Comment",
+        "content": "Approved stage transition: Pending Area Approval -&gt; Pending HR Approval. Notes: Area approval via API E2E",
+        "creation": "2026-02-26 20:20:50.309762",
+        "comment_by": null
+      },
+      {
+        "comment_type": "Comment",
+        "content": "Approved stage transition: Pending HR Approval -&gt; Pending IT Approval. Notes: HR approval via API E2E",
+        "creation": "2026-02-26 20:20:51.649746",
+        "comment_by": null
+      },
+      {
+        "comment_type": "Comment",
+        "content": "Approved stage transition: Pending IT Approval -&gt; Ready for Sync. Notes: IT approval via API token E2E",
+        "creation": "2026-02-26 20:20:52.251869",
+        "comment_by": null
+      },
+      {
+        "comment_type": "Comment",
+        "content": "Transfer sync stage updated: Sync In Progress -&gt; Synced",
+        "creation": "2026-02-26 20:21:04.093545",
+        "comment_by": null
+      }
+    ],
+    "device_commands": [
+      {
+        "name": "BEI-TRCMD-2026-00003",
+        "device_sn": "UDP3252300333",
+        "command_type": "UPDATE_USERINFO",
+        "adms_command_id": 9180,
+        "status": "ACKED",
+        "attempts": 1,
+        "last_error": null,
+        "sent_at": "2026-02-26 12:21:01.695443",
+        "acked_at": "2026-02-26 12:21:01.952490"
+      },
+      {
+        "name": "BEI-TRCMD-2026-00004",
+        "device_sn": "UDP3252900302",
+        "command_type": "DELETE_USERINFO",
+        "adms_command_id": 9181,
+        "status": "ACKED",
+        "attempts": 1,
+        "last_error": null,
+        "sent_at": "2026-02-26 12:21:01.188303",
+        "acked_at": "2026-02-26 12:21:01.909998"
+      }
+    ]
+  },
+  "device_command_counts": {
+    "ACKED": 2
+  },
+  "device_commands": [
+    {
+      "name": "BEI-TRCMD-2026-00003",
+      "transfer_request": "BEI-TRF-2026-00006",
+      "device_sn": "UDP3252300333",
+      "command_type": "UPDATE_USERINFO",
+      "status": "ACKED",
+      "adms_command_id": 9180,
+      "attempts": 1,
+      "last_error": null,
+      "sent_at": "2026-02-26 12:21:01.695443",
+      "acked_at": "2026-02-26 12:21:01.952490"
+    },
+    {
+      "name": "BEI-TRCMD-2026-00004",
+      "transfer_request": "BEI-TRF-2026-00006",
+      "device_sn": "UDP3252900302",
+      "command_type": "DELETE_USERINFO",
+      "status": "ACKED",
+      "adms_command_id": 9181,
+      "attempts": 1,
+      "last_error": null,
+      "sent_at": "2026-02-26 12:21:01.188303",
+      "acked_at": "2026-02-26 12:21:01.909998"
+    }
+  ],
+  "employee_transfer_ref": "HR-EMP-TRN-2026-00012",
+  "employee_transfer_doc": {
+    "name": "HR-EMP-TRN-2026-00012",
+    "owner": "test.hr@bebang.ph",
+    "creation": "2026-02-26 20:20:50.485290",
+    "modified": "2026-02-26 20:20:50.524807",
+    "modified_by": "test.hr@bebang.ph",
+    "docstatus": 1,
+    "idx": 0,
+    "employee": "HR-EMP-00028",
+    "employee_name": "Test TransferE2E",
+    "transfer_date": "2026-02-26",
+    "company": "Bebang Enterprise Inc.",
+    "new_company": "Bebang Enterprise Inc.",
+    "department": "Operations - BEI",
+    "reallocate_leaves": 0,
+    "create_new_employee_id": 0,
+    "doctype": "Employee Transfer",
+    "transfer_details": [
+      {
+        "name": "iiprghhrvg",
+        "owner": "test.hr@bebang.ph",
+        "creation": "2026-02-26 20:20:50.485290",
+        "modified": "2026-02-26 20:20:50.524807",
+        "modified_by": "test.hr@bebang.ph",
+        "docstatus": 1,
+        "idx": 1,
+        "property": "Branch",
+        "current": "ARANETA GATEWAY",
+        "new": "AYALA EVO",
+        "fieldname": "branch",
+        "parent": "HR-EMP-TRN-2026-00012",
+        "parentfield": "transfer_details",
+        "parenttype": "Employee Transfer",
+        "doctype": "Employee Property History"
+      },
+      {
+        "name": "iipiur7obr",
+        "owner": "test.hr@bebang.ph",
+        "creation": "2026-02-26 20:20:50.485290",
+        "modified": "2026-02-26 20:20:50.524807",
+        "modified_by": "test.hr@bebang.ph",
+        "docstatus": 1,
+        "idx": 2,
+        "property": "Department",
+        "current": "Operations - BEI",
+        "new": "All Departments - BEI",
+        "fieldname": "department",
+        "parent": "HR-EMP-TRN-2026-00012",
+        "parentfield": "transfer_details",
+        "parenttype": "Employee Transfer",
+        "doctype": "Employee Property History"
+      }
+    ]
+  },
+  "employee_after": {
+    "name": "HR-EMP-00028",
+    "employee_name": "Test TransferE2E",
+    "branch": "AYALA EVO",
+    "department": "All Departments - BEI",
+    "designation": "Store Supervisor",
+    "attendance_device_id": "9558894",
+    "new_attendance_device_id": null
+  }
+}
