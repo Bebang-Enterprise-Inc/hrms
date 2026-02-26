@@ -1,0 +1,43 @@
+{
+  "worker": "SYNC",
+  "sprint": "03",
+  "generated_on": "2026-02-26",
+  "gaps": {
+    "GAP-006": {
+      "status": "completed",
+      "endpoint": "hrms.api.erp_sync.sync_ar_aging",
+      "persistence": "updates Sales Invoice fields via frappe.db.set_value",
+      "idempotency": "update-by-invoice key (no create path)",
+      "test": "test_sync_ar_aging_writes_sales_invoice_fields"
+    },
+    "GAP-007": {
+      "status": "completed",
+      "endpoint": "hrms.api.erp_sync.sync_inventory",
+      "persistence": "creates/submits Stock Reconciliation documents",
+      "idempotency": "sync reference in remarks (sheet+checksum+warehouse)",
+      "test": "test_sync_inventory_is_idempotent_by_sync_reference"
+    },
+    "GAP-008": {
+      "status": "completed",
+      "endpoint": "hrms.api.erp_sync.sync_coa",
+      "persistence": "upserts Account records",
+      "idempotency": "lookup by company+account_number with duplicate fallback",
+      "test": "test_sync_coa_creates_then_updates_same_account"
+    },
+    "GAP-009": {
+      "status": "completed",
+      "endpoint": "hrms.api.erp_sync.sync_ap_opening",
+      "persistence": "upserts Purchase Invoice opening records",
+      "idempotency": "lookup by supplier+bill_no+company",
+      "test": "test_sync_ap_opening_creates_then_updates_existing_invoice"
+    },
+    "GAP-025": {
+      "status": "completed",
+      "endpoint": "hrms.api.erp_sync.sync_bank_accounts",
+      "persistence": "upserts Bank Account records and ensures Bank master",
+      "idempotency": "lookup by bank_account_no",
+      "test": "test_sync_bank_accounts_creates_then_updates_by_account_number"
+    }
+  },
+  "blockers": []
+}
