@@ -387,6 +387,7 @@ def create_pre_delivery_billing(trip_name: str, stop_idx: int | str, pre_deliver
 		stop_idx=stop_idx,
 		pre_delivery_exception=pre_delivery_exception,
 		require_pre_delivery_exception=True,
+		force_create=True,
 	)
 
 	trip = frappe.get_doc("BEI Distribution Trip", trip_name)
@@ -524,6 +525,7 @@ def _create_delivery_billing(
 	stop_idx: int | str,
 	pre_delivery_exception: str | None = None,
 	require_pre_delivery_exception: bool = False,
+	force_create: bool = False,
 ):
 	"""Create a BEI Billing Schedule for a delivery stop."""
 	# G-067: Feature flag — billing is enabled by default.
@@ -531,7 +533,7 @@ def _create_delivery_billing(
 	# Some runtime tenants may not have this field yet; treat missing as enabled.
 	billing_setting = _safe_single_value("BEI Settings", "enable_delivery_billing")
 
-	if not should_auto_create_billing_on_delivery(billing_setting):
+	if not force_create and not should_auto_create_billing_on_delivery(billing_setting):
 		return
 
 	trip = frappe.get_doc("BEI Distribution Trip", trip_name)
