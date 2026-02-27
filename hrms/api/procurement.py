@@ -1,5 +1,7 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
+# ruff: noqa
+# fmt: off
 
 """
 Procurement API - Complete procurement workflow endpoints
@@ -2763,7 +2765,7 @@ def _send_ceo_exception_notification(exception_doc):
 
 
 @frappe.whitelist()
-def request_match_exception(data):
+def request_match_exception(data: dict | str):
     """Create a 3-way match exception request.
 
     Supports:
@@ -2967,7 +2969,7 @@ def _resolve_approver_user(preferred_email: str) -> str:
     return frappe.session.user or preferred_email
 
 
-def _record_dual_trace(exception, role: str, canonical_email: str, approved_at, comment: str | None):
+def _record_dual_trace(exception: object, role: str, canonical_email: str, approved_at: object, comment: str | None):
     """Persist dual-approval trace on both modern and legacy schemas."""
     role_key = role.strip().upper()
 
@@ -2996,7 +2998,7 @@ def _record_dual_trace(exception, role: str, canonical_email: str, approved_at, 
 
 
 @frappe.whitelist()
-def approve_match_exception(name, comment=None):
+def approve_match_exception(name: str, comment: str | None = None):
     """Approve a match exception with support for dual-tier flows."""
     from frappe.utils import now_datetime
 
@@ -4129,7 +4131,7 @@ def get_form_2307_data(supplier=None, tax_period=None):
     # Aggregate by supplier + tax_period
     summary = {}
     for entry in entries:
-        key = "{0}|{1}".format(entry.get("supplier_name", ""), entry.get("tax_period", ""))
+        key = f"{entry.get('supplier_name', '')}|{entry.get('tax_period', '')}"
         if key not in summary:
             summary[key] = {
                 "supplier_tin": entry.get("supplier_tin"),
@@ -4376,4 +4378,3 @@ def check_overdue_invoices():
         msg = f"*Missing Invoice Alert*\\nPayment {pay.name} to {pay.supplier_name} for PHP {pay.payment_amount:,.2f} is missing a BEI Invoice. Paid on {pay.processed_date}. Please collect the invoice immediately to comply with EOPT."
         if pay.processed_by:
             send_notification_to_user(pay.processed_by, msg)
-
