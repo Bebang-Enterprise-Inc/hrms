@@ -1109,6 +1109,7 @@ def set_maintenance_charge(request_id, charge_amount, charging_reason):
     doc.status = "Pending Acknowledgement"
     doc.flags.ignore_permissions = True
     doc.save()
+    _notify_maintenance_charge_pending_ack(doc)
 
     return {
         "success": True,
@@ -1117,6 +1118,43 @@ def set_maintenance_charge(request_id, charge_amount, charging_reason):
         ),
         "request": doc.as_dict()
     }
+
+
+def _notify_maintenance_charge_pending_ack(doc):
+    """Notify store and ops channels when a maintenance charge awaits acknowledgement."""
+    try:
+        from hrms.api.google_chat import send_message_to_space
+        from hrms.utils.bei_config import SPACE_NOTIFICATIONS, get_chat_space
+
+        spaces = []
+        if getattr(doc, "store", None):
+            store_space = frappe.db.get_value("Warehouse", doc.store, "custom_gchat_space")
+            if store_space:
+                spaces.append(store_space)
+
+        fallback_space = get_chat_space(SPACE_NOTIFICATIONS)
+        if fallback_space:
+            spaces.append(fallback_space)
+
+        if not spaces:
+            return
+
+        message = (
+            "*Maintenance Charge Pending Acknowledgement*\n\n"
+            f"*Request:* {doc.name}\n"
+            f"*Store:* {doc.store or '-'}\n"
+            f"*Amount:* PHP {flt(doc.charge_amount or 0):,.2f}\n"
+            f"*Reason:* {doc.charging_reason or '-'}\n"
+            f"*Set By:* {frappe.session.user}"
+        )
+
+        for space in dict.fromkeys(spaces):
+            send_message_to_space(space, message)
+    except Exception as exc:
+        frappe.log_error(
+            title="Maintenance Charge Notification Error",
+            message=f"request={getattr(doc, 'name', None)}, error={str(exc)[:300]}",
+        )
 
 
 @frappe.whitelist()
