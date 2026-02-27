@@ -2795,6 +2795,16 @@ def request_match_exception(data: dict | str):
             frappe.throw(_("Delivery Stop Index must be greater than 0"))
         if not frappe.db.exists("BEI Distribution Trip", trip_name):
             frappe.throw(_("Distribution Trip {0} not found").format(trip_name))
+        if not trip_purchase_order:
+            try:
+                trip_doc = frappe.get_doc("BEI Distribution Trip", trip_name)
+                if stop_idx <= len(trip_doc.stops):
+                    stop_doc = trip_doc.stops[stop_idx - 1]
+                    candidate_po = getattr(stop_doc, "store_order", None)
+                    if candidate_po and frappe.db.exists("BEI Purchase Order", candidate_po):
+                        trip_purchase_order = candidate_po
+            except Exception:
+                pass
 
         existing = frappe.db.exists("BEI Match Exception", {
             "reference_type": "BEI Distribution Trip",
@@ -2806,15 +2816,32 @@ def request_match_exception(data: dict | str):
             existing_doc = frappe.db.get_value(
                 "BEI Match Exception",
                 existing,
-                ["name", "approval_tier", "approver", "status"],
+                ["name", "approval_tier", "approver", "status", "purchase_order"],
                 as_dict=True,
             ) or {}
+            if (
+                not existing_doc.get("purchase_order")
+                and trip_purchase_order
+                and frappe.db.exists("BEI Purchase Order", trip_purchase_order)
+            ):
+                try:
+                    frappe.db.set_value(
+                        "BEI Match Exception",
+                        existing,
+                        "purchase_order",
+                        trip_purchase_order,
+                        update_modified=False,
+                    )
+                    existing_doc["purchase_order"] = trip_purchase_order
+                except Exception:
+                    pass
             return {
                 "success": True,
                 "name": existing_doc.get("name", existing),
                 "approval_tier": existing_doc.get("approval_tier"),
                 "approver": existing_doc.get("approver"),
                 "status": existing_doc.get("status"),
+                "purchase_order": existing_doc.get("purchase_order"),
                 "message": _(
                     "An exception request already exists for Trip {0} stop {1}: {2}"
                 ).format(trip_name, stop_idx, existing),
@@ -2969,6 +2996,47 @@ def _resolve_approver_user(preferred_email: str) -> str:
     return frappe.session.user or preferred_email
 
 
+def _resolve_trip_exception_purchase_order(exception: object) -> str | None:
+    """Resolve PO link for trip-based exceptions when available."""
+    purchase_order = getattr(exception, "purchase_order", None)
+    if purchase_order and frappe.db.exists("BEI Purchase Order", purchase_order):
+        return purchase_order
+
+    trip_name = getattr(exception, "delivery_trip_reference", None) or getattr(exception, "reference_name", None)
+    stop_idx = cint(getattr(exception, "delivery_stop_idx", 0) or 0)
+    if not trip_name or stop_idx <= 0:
+        return None
+    if not frappe.db.exists("BEI Distribution Trip", trip_name):
+        return None
+
+    try:
+        trip_doc = frappe.get_doc("BEI Distribution Trip", trip_name)
+        if stop_idx > len(trip_doc.stops):
+            return None
+        stop_doc = trip_doc.stops[stop_idx - 1]
+        candidate = getattr(stop_doc, "store_order", None)
+        if candidate and frappe.db.exists("BEI Purchase Order", candidate):
+            return candidate
+    except Exception:
+        return None
+
+    return None
+
+
+def _prepare_trip_exception_for_approval(exception: object) -> None:
+    """Ensure trip exceptions can progress approval even when legacy PO is blank."""
+    if getattr(exception, "reference_type", None) != "BEI Distribution Trip":
+        return
+
+    resolved_po = _resolve_trip_exception_purchase_order(exception)
+    if resolved_po:
+        exception.purchase_order = resolved_po
+        return
+
+    # Legacy trip exceptions may intentionally have no PO; bypass mandatory PO in approval save.
+    exception.flags.ignore_mandatory = True
+
+
 def _record_dual_trace(exception: object, role: str, canonical_email: str, approved_at: object, comment: str | None):
     """Persist dual-approval trace on both modern and legacy schemas."""
     role_key = role.strip().upper()
@@ -3019,6 +3087,7 @@ def approve_match_exception(name: str, comment: str | None = None):
             )
         )
 
+    _prepare_trip_exception_for_approval(exception)
     approved_at = now_datetime()
 
     # First stage for dual approvals
