@@ -59,6 +59,13 @@ def _install_fake_frappe():
         utils.getdate = lambda value=None: value
         sys.modules["frappe.utils"] = utils
 
+    frappe = sys.modules["frappe"]
+    utils = sys.modules["frappe.utils"]
+    if not hasattr(frappe, "conf"):
+        frappe.conf = {}
+    if not hasattr(utils, "getdate"):
+        utils.getdate = lambda value=None: value
+
     if "hrms" not in sys.modules:
         hrms_pkg = types.ModuleType("hrms")
         hrms_pkg.__path__ = []
