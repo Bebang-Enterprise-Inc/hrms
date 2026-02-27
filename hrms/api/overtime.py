@@ -15,6 +15,8 @@ import frappe
 from frappe import _
 from frappe.utils import flt, nowdate, now_datetime, getdate, add_days
 
+from hrms.utils.api_helpers import _paginate
+
 
 OT_THRESHOLD_HOURS = 8.0  # Hours beyond which overtime kicks in
 
@@ -107,7 +109,7 @@ def detect_overtime_for_date(attendance_date=None):
 # ================================
 
 @frappe.whitelist()
-def approve_overtime(overtime_request_name, notes=None):
+def approve_overtime(overtime_request_name=None, notes=None, name=None, approval_notes=None):
     """Supervisor approves an overtime request.
     Status: Pending Approval → Approved
 
@@ -119,6 +121,12 @@ def approve_overtime(overtime_request_name, notes=None):
         dict: {success, status, overtime_hours}
     """
     _check_ot_approver_role()
+
+    overtime_request_name = overtime_request_name or name
+    if not overtime_request_name:
+        frappe.throw(_("Overtime request name is required"))
+
+    notes = notes if notes is not None else approval_notes
 
     doc = frappe.get_doc("BEI Overtime Request", overtime_request_name)
     if doc.overtime_status != "Pending Approval":
@@ -141,7 +149,7 @@ def approve_overtime(overtime_request_name, notes=None):
 
 
 @frappe.whitelist()
-def reject_overtime(overtime_request_name, reason=None):
+def reject_overtime(overtime_request_name=None, reason=None, name=None, rejection_reason=None):
     """Supervisor rejects an overtime request.
     Status: Pending Approval → Rejected
     Effect: Employee paid for regular hours only (no OT pay in payroll).
@@ -155,6 +163,11 @@ def reject_overtime(overtime_request_name, reason=None):
     """
     _check_ot_approver_role()
 
+    overtime_request_name = overtime_request_name or name
+    if not overtime_request_name:
+        frappe.throw(_("Overtime request name is required"))
+
+    reason = reason if reason is not None else rejection_reason
     if not reason:
         frappe.throw(_("Rejection reason is required"))
 
@@ -232,6 +245,136 @@ def get_pending_overtime(store=None, employee=None, from_date=None, to_date=None
         WHERE {where}
         ORDER BY ot.attendance_date DESC
     """, params, as_dict=True)
+
+
+@frappe.whitelist()
+def get_overtime_requests(
+    status=None,
+    store=None,
+    employee=None,
+    from_date=None,
+    to_date=None,
+    page=1,
+    page_size=20,
+):
+    """Portal contract for overtime requests list with pagination."""
+    _check_ot_approver_role()
+
+    conditions = []
+    params = {}
+
+    if status:
+        conditions.append("ot.overtime_status = %(status)s")
+        params["status"] = status
+
+    if employee:
+        conditions.append("ot.employee = %(employee)s")
+        params["employee"] = employee
+
+    if from_date:
+        conditions.append("ot.attendance_date >= %(from_date)s")
+        params["from_date"] = from_date
+
+    if to_date:
+        conditions.append("ot.attendance_date <= %(to_date)s")
+        params["to_date"] = to_date
+
+    if store:
+        conditions.append("emp.branch = %(store)s")
+        params["store"] = store
+
+    where_sql = "WHERE " + " AND ".join(conditions) if conditions else ""
+
+    rows = frappe.db.sql(
+        f"""
+        SELECT
+            ot.name,
+            ot.employee,
+            ot.attendance_date,
+            ot.shift,
+            ot.regular_hours,
+            ot.overtime_hours,
+            ot.total_hours,
+            ot.overtime_status,
+            ot.supervisor,
+            ot.reviewed_by,
+            ot.reviewed_at,
+            ot.approval_notes,
+            ot.rejection_reason,
+            emp.employee_name,
+            emp.branch
+        FROM `tabBEI Overtime Request` ot
+        LEFT JOIN `tabEmployee` emp ON emp.name = ot.employee
+        {where_sql}
+        ORDER BY ot.attendance_date DESC, ot.creation DESC
+    """,
+        params,
+        as_dict=True,
+    )
+
+    return _paginate(rows, page=int(page or 1), page_size=int(page_size or 20))
+
+
+@frappe.whitelist()
+def get_overtime_summary(store=None, from_date=None, to_date=None):
+    """Portal contract for overtime summary cards/tables."""
+    _check_ot_approver_role()
+
+    conditions = []
+    params = {}
+
+    if from_date:
+        conditions.append("ot.attendance_date >= %(from_date)s")
+        params["from_date"] = from_date
+
+    if to_date:
+        conditions.append("ot.attendance_date <= %(to_date)s")
+        params["to_date"] = to_date
+
+    if store:
+        conditions.append("emp.branch = %(store)s")
+        params["store"] = store
+
+    where_sql = "WHERE " + " AND ".join(conditions) if conditions else ""
+
+    summary = frappe.db.sql(
+        f"""
+        SELECT
+            COALESCE(emp.department, 'Unassigned') AS department,
+            COALESCE(emp.branch, 'Unassigned') AS store,
+            COUNT(*) AS total_requests,
+            COALESCE(SUM(ot.overtime_hours), 0) AS total_hours,
+            COALESCE(SUM(CASE WHEN ot.overtime_status = 'Approved' THEN ot.overtime_hours ELSE 0 END), 0) AS approved_hours,
+            COALESCE(SUM(CASE WHEN ot.overtime_status = 'Pending Approval' THEN ot.overtime_hours ELSE 0 END), 0) AS pending_hours,
+            COALESCE(SUM(CASE WHEN ot.overtime_status = 'Rejected' THEN ot.overtime_hours ELSE 0 END), 0) AS rejected_hours,
+            COALESCE(SUM(CASE WHEN ot.overtime_status = 'Approved' THEN 1 ELSE 0 END), 0) AS approved_count,
+            COALESCE(SUM(CASE WHEN ot.overtime_status = 'Pending Approval' THEN 1 ELSE 0 END), 0) AS pending_count,
+            COALESCE(SUM(CASE WHEN ot.overtime_status = 'Rejected' THEN 1 ELSE 0 END), 0) AS rejected_count
+        FROM `tabBEI Overtime Request` ot
+        LEFT JOIN `tabEmployee` emp ON emp.name = ot.employee
+        {where_sql}
+        GROUP BY COALESCE(emp.department, 'Unassigned'), COALESCE(emp.branch, 'Unassigned')
+        ORDER BY store ASC, department ASC
+    """,
+        params,
+        as_dict=True,
+    )
+
+    totals = {
+        "total_requests": 0,
+        "total_hours": 0.0,
+        "approved_hours": 0.0,
+        "pending_hours": 0.0,
+        "rejected_hours": 0.0,
+    }
+    for row in summary:
+        totals["total_requests"] += int(row.get("total_requests") or 0)
+        totals["total_hours"] += flt(row.get("total_hours"))
+        totals["approved_hours"] += flt(row.get("approved_hours"))
+        totals["pending_hours"] += flt(row.get("pending_hours"))
+        totals["rejected_hours"] += flt(row.get("rejected_hours"))
+
+    return {"summary": summary, "totals": totals}
 
 
 @frappe.whitelist()
