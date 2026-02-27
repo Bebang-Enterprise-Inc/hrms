@@ -310,6 +310,28 @@ def _default_cost_center(company: str) -> str | None:
 
 def _ensure_ap_opening_item() -> str:
 	if frappe.db.exists("Item", AP_OPENING_ITEM_CODE):
+		# Keep legacy item definitions safe for AP opening inserts.
+		updates: dict[str, Any] = {}
+		if _doctype_has_field("Item", "is_stock_item"):
+			is_stock_item = cint(frappe.db.get_value("Item", AP_OPENING_ITEM_CODE, "is_stock_item") or 0)
+			if is_stock_item:
+				updates["is_stock_item"] = 0
+		if _doctype_has_field("Item", "is_purchase_item"):
+			is_purchase_item = cint(
+				frappe.db.get_value("Item", AP_OPENING_ITEM_CODE, "is_purchase_item") or 0
+			)
+			if not is_purchase_item:
+				updates["is_purchase_item"] = 1
+		if _doctype_has_field("Item", "is_sales_item"):
+			is_sales_item = cint(frappe.db.get_value("Item", AP_OPENING_ITEM_CODE, "is_sales_item") or 0)
+			if is_sales_item:
+				updates["is_sales_item"] = 0
+		if _doctype_has_field("Item", "stock_uom"):
+			stock_uom = frappe.db.get_value("Item", AP_OPENING_ITEM_CODE, "stock_uom")
+			if not stock_uom:
+				updates["stock_uom"] = "Nos"
+		if updates:
+			frappe.db.set_value("Item", AP_OPENING_ITEM_CODE, updates, update_modified=False)
 		return AP_OPENING_ITEM_CODE
 
 	item_group = frappe.db.get_value("Item Group", {"is_group": 0}, "name") or "All Item Groups"
@@ -499,11 +521,22 @@ def sync_inventory(sheet_name: str, data: list[dict], checksum: str, **kwargs) -
 		savepoint = _make_savepoint("sync_inv", f"{sheet_name}|{checksum}|{warehouse}")
 		frappe.db.savepoint(savepoint)
 		try:
-			existing = frappe.db.get_value(
+			has_remarks = _doctype_has_field("Stock Reconciliation", "remarks")
+			token_field = _first_available_field(
 				"Stock Reconciliation",
-				{"remarks": ["like", f"%{sync_ref}%"], "docstatus": ["<", 2]},
-				"name",
+				["custom_sync_ref", "custom_last_sync_checksum"],
 			)
+			lookup_filters: dict[str, Any] = {"docstatus": ["<", 2]}
+			if has_remarks:
+				lookup_filters["remarks"] = ["like", f"%{sync_ref}%"]
+			elif token_field:
+				lookup_filters[token_field] = sync_ref
+			else:
+				lookup_filters = {}
+
+			existing = None
+			if lookup_filters:
+				existing = frappe.db.get_value("Stock Reconciliation", lookup_filters, "name")
 
 			if existing:
 				results["rows_updated"] += len(items)
@@ -515,10 +548,13 @@ def sync_inventory(sheet_name: str, data: list[dict], checksum: str, **kwargs) -
 			sr.posting_date = nowdate()
 			sr.posting_time = now_datetime().strftime("%H:%M:%S")
 			sr.company = _normalize_company()
-			sr.remarks = (
-				f"ERP Inventory Sync ({sync_ref}) "
-				f"sheet={sheet_name} warehouse={warehouse} rows={len(items)}"
-			)
+			if has_remarks:
+				sr.remarks = (
+					f"ERP Inventory Sync ({sync_ref}) "
+					f"sheet={sheet_name} warehouse={warehouse} rows={len(items)}"
+				)
+			elif token_field:
+				setattr(sr, token_field, sync_ref)
 
 			for item in items:
 				sr.append(
@@ -538,11 +574,9 @@ def sync_inventory(sheet_name: str, data: list[dict], checksum: str, **kwargs) -
 		except Exception as exc:
 			frappe.db.rollback(save_point=savepoint)
 			if _is_duplicate_error(exc):
-				existing = frappe.db.get_value(
-					"Stock Reconciliation",
-					{"remarks": ["like", f"%{sync_ref}%"]},
-					"name",
-				)
+				existing = None
+				if lookup_filters:
+					existing = frappe.db.get_value("Stock Reconciliation", lookup_filters, "name")
 				if existing:
 					results["rows_updated"] += len(items)
 					continue
@@ -618,11 +652,18 @@ def sync_coa(sheet_name: str, data: list[dict], checksum: str, **kwargs) -> dict
 				}
 				if account_type and _doctype_has_field("Account", "account_type"):
 					updates["account_type"] = account_type
-				if parent_account:
+				if parent_account and parent_account != existing:
 					updates["parent_account"] = parent_account
 				if sync_token_field:
 					updates[sync_token_field] = sync_ref
-				frappe.db.set_value("Account", existing, updates, update_modified=False)
+				try:
+					frappe.db.set_value("Account", existing, updates, update_modified=False)
+				except Exception as exc:
+					if "descendants" in str(exc).lower() and "parent_account" in updates:
+						updates.pop("parent_account", None)
+						frappe.db.set_value("Account", existing, updates, update_modified=False)
+					else:
+						raise
 				results["rows_updated"] += 1
 				_release_savepoint(savepoint)
 			else:
@@ -652,6 +693,18 @@ def sync_coa(sheet_name: str, data: list[dict], checksum: str, **kwargs) -> dict
 				except Exception as exc:
 					if _is_duplicate_error(exc):
 						results["rows_updated"] += 1
+						_release_savepoint(savepoint)
+					elif "descendants" in str(exc).lower():
+						fallback_parent = frappe.db.get_value(
+							"Account",
+							{"company": company, "root_type": root_type, "is_group": 1},
+							"name",
+						)
+						if not fallback_parent:
+							raise
+						account.parent_account = fallback_parent
+						account.insert(ignore_permissions=True)
+						results["rows_created"] += 1
 						_release_savepoint(savepoint)
 					else:
 						raise
@@ -747,6 +800,8 @@ def sync_bank_accounts(sheet_name: str, data: list[dict], checksum: str, **kwarg
 					updates["party_type"] = "Company"
 				if _doctype_has_field("Bank Account", "party"):
 					updates["party"] = company
+				if _doctype_has_field("Bank Account", "company"):
+					updates["company"] = company
 				if sync_token_field:
 					updates[sync_token_field] = sync_ref
 				if updates:
@@ -770,6 +825,8 @@ def sync_bank_accounts(sheet_name: str, data: list[dict], checksum: str, **kwarg
 					bank_account.party_type = "Company"
 				if _doctype_has_field("Bank Account", "party"):
 					bank_account.party = company
+				if _doctype_has_field("Bank Account", "company"):
+					bank_account.company = company
 				if linked_account and _doctype_has_field("Bank Account", "account"):
 					bank_account.account = linked_account
 				sync_token_field = _first_available_field(

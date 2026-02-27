@@ -283,16 +283,24 @@ def request_pre_delivery_billing_exception(
 
 	from hrms.api.procurement import request_match_exception
 
-	return request_match_exception(
-		{
-			"reference_type": "BEI Distribution Trip",
-			"reference_name": trip_name,
-			"delivery_trip_reference": trip_name,
-			"delivery_stop_idx": stop_idx,
-			"reason": reason,
-			"exception_type": exception_type,
-		}
-	)
+	payload = {
+		"reference_type": "BEI Distribution Trip",
+		"reference_name": trip_name,
+		"delivery_trip_reference": trip_name,
+		"delivery_stop_idx": stop_idx,
+		"reason": reason,
+		"exception_type": exception_type,
+	}
+	# Backward-compatible hint for runtimes that still enforce PO context.
+	try:
+		trip = frappe.get_doc("BEI Distribution Trip", trip_name)
+		stop = _get_stop(trip, stop_idx)
+		if getattr(stop, "store_order", None):
+			payload["purchase_order"] = stop.store_order
+	except Exception:
+		pass
+
+	return request_match_exception(payload)
 
 
 @frappe.whitelist()
