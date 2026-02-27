@@ -13,7 +13,7 @@ class BEITransferDeviceCommand(Document):
 		self._sync_from_transfer_request()
 
 	def _validate_command_type(self):
-		allowed = {"UPDATE_USERINFO", "DELETE_USERINFO"}
+		allowed = {"UPDATE_USERINFO", "DELETE_USERINFO", "RELIEVER_DELETE_USERINFO"}
 		if self.command_type not in allowed:
 			frappe.throw(_("Invalid command type: {0}").format(self.command_type))
 
