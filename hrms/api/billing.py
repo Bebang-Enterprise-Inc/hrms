@@ -399,6 +399,24 @@ def generate_monthly_billing(billing_period=None, store=None):
     }
 
 
+@frappe.whitelist()
+def trigger_monthly_billing_service(billing_period=None, store=None):
+    """Manual service endpoint used by portal trigger surfaces.
+
+    This wraps generate_monthly_billing with explicit service metadata so UI
+    and automation can consume a stable response contract.
+    """
+    result = generate_monthly_billing(billing_period=billing_period, store=store)
+    return {
+        "success": bool(result.get("success")),
+        "service": "monthly_billing_trigger",
+        "billing_period": result.get("billing_period"),
+        "generated": result.get("generated", 0),
+        "skipped": result.get("skipped", 0),
+        "errors": result.get("errors", []),
+    }
+
+
 # ================================
 # PHASE 5 — BILLING LIST, DETAIL, SUMMARY, PAYMENT, SOA, CANCEL
 # ================================

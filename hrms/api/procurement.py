@@ -3685,13 +3685,62 @@ def send_or_follow_up(name):
         ),
     }).insert(ignore_permissions=True)
 
+    notification_state = _dispatch_or_follow_up_notification(pay_req)
+
     return {
         "success": True,
         "message": _("Follow-up #{0} recorded for {1}").format(
             pay_req.or_follow_up_count, pay_req.supplier_name or pay_req.supplier
         ),
         "follow_up_count": pay_req.or_follow_up_count,
+        "notification_sent": notification_state.get("any_sent", False),
+        "notification_channels": notification_state.get("channels", []),
     }
+
+
+def _dispatch_or_follow_up_notification(pay_req):
+    """Send actual OR follow-up notifications for GAP-048 closure.
+
+    Non-blocking by design: failures are logged but never break the workflow.
+    """
+    channels = []
+    supplier_name = pay_req.supplier_name or pay_req.supplier or "Supplier"
+    message = (
+        f"OR follow-up #{pay_req.or_follow_up_count}: payment {pay_req.name} "
+        f"for {supplier_name} (PHP {flt(pay_req.payment_amount):,.2f}) is still awaiting OR."
+    )
+
+    # 1) Email notification to supplier contact when available.
+    try:
+        recipient = None
+        for field in ("contact_email", "email", "supplier_email"):
+            if _table_has_column("tabBEI Supplier", field):
+                recipient = frappe.db.get_value("BEI Supplier", pay_req.supplier, field)
+                if recipient:
+                    break
+        if recipient:
+            frappe.sendmail(
+                recipients=[recipient],
+                subject=_("OR Follow-Up: {0}").format(pay_req.name),
+                message=_(
+                    "Good day. This is a reminder to provide the Official Receipt for payment {0}."
+                ).format(pay_req.name),
+            )
+            channels.append("email")
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "OR Follow-Up Email Failed")
+
+    # 2) Internal Google Chat notification for auditability.
+    try:
+        from hrms.api.google_chat import send_message_to_space
+        from hrms.utils.bei_config import get_chat_space, SPACE_ERP_AUTOMATION
+
+        if send_message_to_space(get_chat_space(SPACE_ERP_AUTOMATION), message):
+            channels.append("google_chat")
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "OR Follow-Up Chat Failed")
+
+    return {"channels": channels, "any_sent": bool(channels)}
 
 
 def check_overdue_or():

@@ -202,3 +202,51 @@ def send_soa_to_store(soa_name):
     soa.save()
 
     return {"success": True, "status": "Sent", "emailed": bool(recipients)}
+
+
+@frappe.whitelist()
+def get_monthly_billing_service_snapshot(period, store=None):
+    """Service snapshot for monthly billing + OR follow-up surfaces."""
+    if not period:
+        frappe.throw(_("Period is required (YYYY-MM)"), frappe.ValidationError)
+
+    conditions = ["bs.billing_period = %(period)s", "bs.status != 'Cancelled'"]
+    params = {"period": period}
+    if store:
+        conditions.append("bs.store = %(store)s")
+        params["store"] = store
+
+    where_clause = " AND ".join(conditions)
+
+    billing_stats = frappe.db.sql(
+        f"""
+        SELECT
+            COUNT(*) AS billing_count,
+            COALESCE(SUM(bs.total_amount), 0) AS total_billed,
+            COALESCE(SUM(bs.balance_due), 0) AS total_outstanding
+        FROM `tabBEI Billing Schedule` bs
+        WHERE {where_clause}
+        """,
+        params,
+        as_dict=True,
+    )[0]
+
+    followup_stats = frappe.db.sql(
+        """
+        SELECT
+            COUNT(*) AS overdue_or_count,
+            COALESCE(SUM(payment_amount), 0) AS overdue_or_amount
+        FROM `tabBEI Payment Request`
+        WHERE status = 'Paid - Awaiting OR'
+          AND or_status = 'Overdue'
+        """,
+        as_dict=True,
+    )[0]
+
+    return {
+        "success": True,
+        "period": period,
+        "store": store,
+        "billing": billing_stats,
+        "or_follow_up": followup_stats,
+    }
