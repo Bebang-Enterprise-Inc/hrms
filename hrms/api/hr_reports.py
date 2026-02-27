@@ -758,7 +758,7 @@ def bulk_update_leave_status(leave_ids, status, remarks=None):
                     else:
                         doc.db_set("status", "Approved")
                 elif status == "Rejected":
-                    doc.db_set("status", "Rejected")
+                    _reject_leave_application(doc)
                     
                 results["success"].append(leave_id)
             else:
@@ -767,4 +767,31 @@ def bulk_update_leave_status(leave_ids, status, remarks=None):
             results["failed"].append({"id": leave_id, "error": str(e)})
             
     return results
+
+
+def _reject_leave_application(doc):
+    """Reject leave requests without forcing raw status writes on submitted docs.
+
+    Submitted leave applications should be cancelled through document lifecycle,
+    while draft applications can be marked rejected and saved.
+    """
+    if getattr(doc, "docstatus", 0) == 1 and callable(getattr(doc, "cancel", None)):
+        doc.cancel()
+        return
+
+    doc.status = "Rejected"
+
+    save_method = getattr(doc, "save", None)
+    if callable(save_method):
+        try:
+            save_method(ignore_permissions=True)
+            return
+        except TypeError:
+            save_method()
+            return
+
+    # Fallback for lightweight test doubles without save()
+    db_set = getattr(doc, "db_set", None)
+    if callable(db_set):
+        db_set("status", "Rejected")
 
