@@ -263,13 +263,16 @@ class TestProcurementSprint02(unittest.TestCase):
 
 	def test_get_g046_intercompany_summary_returns_counters(self):
 		procurement.frappe.db.sql = MagicMock(
-			return_value=[
-				{
-					"total_sales_invoices": 3,
-					"mirrored_count": 2,
-					"missing_purchase_invoice_count": 1,
-					"total_sales_value": 4500,
-				}
+			side_effect=[
+				[(1,)],  # information_schema custom_stock_entry exists
+				[
+					{
+						"total_sales_invoices": 3,
+						"mirrored_count": 2,
+						"missing_purchase_invoice_count": 1,
+						"total_sales_value": 4500,
+					}
+				],
 			]
 		)
 
@@ -283,6 +286,7 @@ class TestProcurementSprint02(unittest.TestCase):
 	def test_get_g046_intercompany_transactions_paginates(self):
 		procurement.frappe.db.sql = MagicMock(
 			side_effect=[
+				[(1,)],  # information_schema custom_stock_entry exists
 				[(2,)],
 				[
 					{
@@ -308,6 +312,43 @@ class TestProcurementSprint02(unittest.TestCase):
 		self.assertEqual(result["page"], 1)
 		self.assertEqual(len(result["data"]), 1)
 		self.assertEqual(result["data"][0]["mirror_status"], "Mirrored")
+
+	def test_get_g046_intercompany_transactions_fallback_when_stock_entry_column_missing(self):
+		queries = []
+
+		def _db_sql(query, values=None, as_dict=False):
+			queries.append(query)
+			if "information_schema.COLUMNS" in query:
+				return []
+			if "SELECT COUNT(*)" in query:
+				return [(1,)]
+			return [
+				{
+					"sales_invoice": "SINV-0009",
+					"posting_date": "2026-02-27",
+					"customer": "Store B",
+					"stock_entry": "MAT-STE-0099",
+					"target_warehouse": "Store B - BEI",
+					"sales_invoice_total": 800,
+					"sales_invoice_status": "Paid",
+					"purchase_invoice": None,
+					"purchase_invoice_total": None,
+					"purchase_invoice_status": None,
+					"mirror_status": "Sales Only",
+				}
+			]
+
+		procurement.frappe.db.sql = MagicMock(side_effect=_db_sql)
+
+		result = procurement.get_g046_intercompany_transactions(page=1, page_size=10, search="MAT-STE-0099")
+
+		self.assertEqual(result["total"], 1)
+		self.assertEqual(len(result["data"]), 1)
+		self.assertEqual(result["data"][0]["mirror_status"], "Sales Only")
+
+		joined_sql = " ".join(queries[1:])
+		self.assertNotIn("IFNULL(si.custom_stock_entry, '') !=", joined_sql)
+		self.assertIn("Inter-company Sales Invoice for Hub Transfer SE:%", joined_sql)
 
 	def test_bei_purchase_order_doctype_is_submittable(self):
 		doctype_path = (

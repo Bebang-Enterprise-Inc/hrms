@@ -59,6 +59,45 @@ def _resolve_supplier_identity(supplier: str) -> tuple[str, str]:
     )
 
 
+def _table_has_column(table_name: str, column_name: str) -> bool:
+    """Return True when a physical table column exists in the current site schema."""
+    rows = frappe.db.sql(
+        """
+        SELECT 1
+        FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = %(table_name)s
+          AND COLUMN_NAME = %(column_name)s
+        LIMIT 1
+        """,
+        {"table_name": table_name, "column_name": column_name},
+    )
+    return bool(rows)
+
+
+def _get_g046_sql_parts():
+    """Build schema-compatible SQL fragments for G-046 visibility queries."""
+    has_stock_entry_column = _table_has_column("tabSales Invoice", "custom_stock_entry")
+
+    if has_stock_entry_column:
+        stock_entry_expr = "si.custom_stock_entry"
+        base_conditions = ["si.docstatus != 2", "IFNULL(si.custom_stock_entry, '') != ''"]
+    else:
+        stock_entry_expr = (
+            "CASE "
+            "WHEN LOCATE('SE:', IFNULL(si.remarks, '')) > 0 "
+            "THEN TRIM(SUBSTRING_INDEX(si.remarks, 'SE:', -1)) "
+            "ELSE NULL END"
+        )
+        base_conditions = [
+            "si.docstatus != 2",
+            "(pi.name IS NOT NULL OR si.remarks LIKE 'Inter-company Sales Invoice for Hub Transfer SE:%')",
+        ]
+
+    stock_entry_join = f"LEFT JOIN `tabStock Entry` se ON se.name = {stock_entry_expr}"
+    return stock_entry_expr, stock_entry_join, base_conditions
+
+
 # =============================================================================
 # PROCUREMENT REPORT HELPERS
 # =============================================================================
@@ -2776,7 +2815,7 @@ def get_g046_intercompany_transactions(
     page_size = min(max(1, cint(page_size)), 200)
     offset = (page - 1) * page_size
 
-    conditions = ["si.docstatus != 2", "IFNULL(si.custom_stock_entry, '') != ''"]
+    stock_entry_expr, stock_entry_join, conditions = _get_g046_sql_parts()
     values = {}
 
     if from_date:
@@ -2794,7 +2833,7 @@ def get_g046_intercompany_transactions(
     if search:
         conditions.append(
             "(si.name LIKE %(search)s OR si.customer LIKE %(search)s "
-            "OR si.custom_stock_entry LIKE %(search)s OR IFNULL(se.to_warehouse, '') LIKE %(search)s)"
+            f"OR IFNULL({stock_entry_expr}, '') LIKE %(search)s OR IFNULL(se.to_warehouse, '') LIKE %(search)s)"
         )
         values["search"] = f"%{search}%"
 
@@ -2811,7 +2850,7 @@ def get_g046_intercompany_transactions(
         f"""
         SELECT COUNT(*)
         FROM `tabSales Invoice` si
-        LEFT JOIN `tabStock Entry` se ON se.name = si.custom_stock_entry
+        {stock_entry_join}
         LEFT JOIN `tabPurchase Invoice` pi
           ON pi.inter_company_invoice_reference = si.name
          AND pi.docstatus != 2
@@ -2826,7 +2865,7 @@ def get_g046_intercompany_transactions(
             si.name AS sales_invoice,
             si.posting_date,
             si.customer,
-            si.custom_stock_entry AS stock_entry,
+            {stock_entry_expr} AS stock_entry,
             IFNULL(se.to_warehouse, '') AS target_warehouse,
             si.grand_total AS sales_invoice_total,
             si.status AS sales_invoice_status,
@@ -2835,7 +2874,7 @@ def get_g046_intercompany_transactions(
             pi.status AS purchase_invoice_status,
             CASE WHEN pi.name IS NULL THEN 'Sales Only' ELSE 'Mirrored' END AS mirror_status
         FROM `tabSales Invoice` si
-        LEFT JOIN `tabStock Entry` se ON se.name = si.custom_stock_entry
+        {stock_entry_join}
         LEFT JOIN `tabPurchase Invoice` pi
           ON pi.inter_company_invoice_reference = si.name
          AND pi.docstatus != 2
@@ -2859,8 +2898,11 @@ def get_g046_intercompany_transactions(
 @frappe.whitelist()
 def get_g046_intercompany_summary():
     """Return high-level G-046 visibility counters for procurement dashboard widgets."""
+    _stock_entry_expr, _stock_entry_join, conditions = _get_g046_sql_parts()
+    where_clause = " AND ".join(conditions)
+
     row = frappe.db.sql(
-        """
+        f"""
         SELECT
             COUNT(*) AS total_sales_invoices,
             SUM(CASE WHEN pi.name IS NOT NULL THEN 1 ELSE 0 END) AS mirrored_count,
@@ -2870,8 +2912,7 @@ def get_g046_intercompany_summary():
         LEFT JOIN `tabPurchase Invoice` pi
           ON pi.inter_company_invoice_reference = si.name
          AND pi.docstatus != 2
-        WHERE si.docstatus != 2
-          AND IFNULL(si.custom_stock_entry, '') != ''
+        WHERE {where_clause}
         """,
         as_dict=True,
     )
