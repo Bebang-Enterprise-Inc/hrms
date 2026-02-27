@@ -2765,20 +2765,12 @@ def _send_ceo_exception_notification(exception_doc):
 def request_match_exception(data):
     """Create a 3-way match exception request.
 
-    Auto-routes to the correct approver based on PO amount:
-      < 500K -> CPO (Mae)
-      500K to < 1M -> CFO (Butch)
-      >= 1M -> CEO (Sam)
+    Supports:
+      1) PO-based 3-way match bypass requests
+      2) Delivery pre-billing exceptions (trip stop, always CPO+CFO)
     """
     if isinstance(data, str):
         data = frappe.parse_json(data)
-
-    purchase_order = data.get("purchase_order")
-    if not purchase_order:
-        frappe.throw(_("Purchase Order is required"))
-
-    if not frappe.db.exists("BEI Purchase Order", purchase_order):
-        frappe.throw(_("Purchase Order {0} not found").format(purchase_order))
 
     reason = data.get("reason")
     if not reason:
@@ -2788,24 +2780,67 @@ def request_match_exception(data):
     if not exception_type:
         frappe.throw(_("Exception type is required"))
 
-    # Check if a pending or approved exception already exists for this PO
-    existing = frappe.db.exists("BEI Match Exception", {
-        "purchase_order": purchase_order,
-        "status": ["in", ["Pending CPO", "Pending CFO", "Pending CEO", "Approved"]],
-    })
-    if existing:
-        frappe.throw(
-            _("An exception request already exists for PO {0}: {1}").format(purchase_order, existing)
-        )
+    reference_type = data.get("reference_type", "BEI Invoice")
 
-    exception = frappe.get_doc({
-        "doctype": "BEI Match Exception",
-        "reference_type": data.get("reference_type", "BEI Invoice"),
-        "reference_name": data.get("reference_name"),
-        "purchase_order": purchase_order,
-        "reason": reason,
-        "exception_type": exception_type,
-    })
+    if reference_type == "BEI Distribution Trip":
+        trip_name = data.get("delivery_trip_reference") or data.get("reference_name")
+        stop_idx = cint(data.get("delivery_stop_idx"))
+        if not trip_name:
+            frappe.throw(_("Delivery Trip Reference is required"))
+        if stop_idx <= 0:
+            frappe.throw(_("Delivery Stop Index must be greater than 0"))
+        if not frappe.db.exists("BEI Distribution Trip", trip_name):
+            frappe.throw(_("Distribution Trip {0} not found").format(trip_name))
+
+        existing = frappe.db.exists("BEI Match Exception", {
+            "reference_type": "BEI Distribution Trip",
+            "delivery_trip_reference": trip_name,
+            "delivery_stop_idx": stop_idx,
+            "status": ["in", ["Pending CPO", "Pending CFO", "Approved"]],
+        })
+        if existing:
+            frappe.throw(
+                _("An exception request already exists for Trip {0} stop {1}: {2}").format(
+                    trip_name, stop_idx, existing
+                )
+            )
+
+        exception = frappe.get_doc({
+            "doctype": "BEI Match Exception",
+            "reference_type": "BEI Distribution Trip",
+            "reference_name": trip_name,
+            "delivery_trip_reference": trip_name,
+            "delivery_stop_idx": stop_idx,
+            "approval_tier": "CPO+CFO",
+            "reason": reason,
+            "exception_type": exception_type,
+        })
+    else:
+        purchase_order = data.get("purchase_order")
+        if not purchase_order:
+            frappe.throw(_("Purchase Order is required"))
+
+        if not frappe.db.exists("BEI Purchase Order", purchase_order):
+            frappe.throw(_("Purchase Order {0} not found").format(purchase_order))
+
+        # Check if a pending or approved exception already exists for this PO
+        existing = frappe.db.exists("BEI Match Exception", {
+            "purchase_order": purchase_order,
+            "status": ["in", ["Pending CPO", "Pending CFO", "Pending CEO", "Approved"]],
+        })
+        if existing:
+            frappe.throw(
+                _("An exception request already exists for PO {0}: {1}").format(purchase_order, existing)
+            )
+
+        exception = frappe.get_doc({
+            "doctype": "BEI Match Exception",
+            "reference_type": reference_type,
+            "reference_name": data.get("reference_name"),
+            "purchase_order": purchase_order,
+            "reason": reason,
+            "exception_type": exception_type,
+        })
     exception.insert()
 
     return {
