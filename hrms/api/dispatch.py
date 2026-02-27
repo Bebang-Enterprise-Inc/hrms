@@ -538,9 +538,10 @@ def _create_delivery_billing(
 
 	trip = frappe.get_doc("BEI Distribution Trip", trip_name)
 	stop = trip.stops[int(stop_idx) - 1]
+	savepoint_name = "delivery_billing"
 
 	try:
-		sp = frappe.db.savepoint("delivery_billing")
+		frappe.db.savepoint(savepoint_name)
 
 		# I-04 fix: Duplicate check before creating billing
 		existing = frappe.db.exists(
@@ -556,7 +557,7 @@ def _create_delivery_billing(
 			stop.billing_reference = existing
 			stop.billing_creation_status = "Success"
 			trip.save(ignore_permissions=True)
-			frappe.db.release_savepoint(sp)
+			frappe.db.release_savepoint(savepoint_name)
 			return
 
 		exception_trace = None
@@ -587,7 +588,7 @@ def _create_delivery_billing(
 			_fail_stop(
 				trip,
 				stop,
-				sp,
+				savepoint_name,
 				f"No warehouse->department mapping for {stop.store}",
 				title="Missing Department Mapping",
 			)
@@ -602,7 +603,7 @@ def _create_delivery_billing(
 			as_dict=True,
 		)
 		if not rate:
-			_fail_stop(trip, stop, sp, f"No active {trip.cargo_type} rate for {dept}")
+			_fail_stop(trip, stop, savepoint_name, f"No active {trip.cargo_type} rate for {dept}")
 			return
 
 		# Calculate goods value from store order
@@ -647,10 +648,13 @@ def _create_delivery_billing(
 
 		# C-06 fix: No explicit commit inside enqueued job -- Frappe
 		# auto-commits when the enqueued function returns successfully.
-		frappe.db.release_savepoint(sp)
+		frappe.db.release_savepoint(savepoint_name)
 
 	except Exception as e:
-		frappe.db.rollback(save_point=sp)
+		try:
+			frappe.db.rollback(save_point=savepoint_name)
+		except Exception:
+			pass
 		frappe.log_error(
 			f"Failed to create billing for {trip_name} stop {stop_idx}: {e!s}", "Billing Creation Error"
 		)
