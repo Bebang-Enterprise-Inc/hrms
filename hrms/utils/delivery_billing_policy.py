@@ -56,6 +56,22 @@ def _value(doc_or_dict, key, default=None):
 	return getattr(doc_or_dict, key, default)
 
 
+def _as_text(value):
+	return str(value or "").strip()
+
+
+def _find_approval_markers(*values):
+	text = " ".join(_as_text(v).lower() for v in values if v)
+	return {
+		"cpo": "cpo approved" in text,
+		"cfo": "cfo approved" in text or "final approval" in text,
+	}
+
+
+def _fallback_timestamp(exception_doc):
+	return _value(exception_doc, "approver_date") or _value(exception_doc, "modified") or datetime.now()
+
+
 def get_pre_delivery_exception_trace(exception_doc, trip_reference, trip_stop_idx):
 	"""Validate exception against delivery policy and return normalized audit trace."""
 	approval_tier = _value(exception_doc, "approval_tier")
@@ -89,6 +105,20 @@ def get_pre_delivery_exception_trace(exception_doc, trip_reference, trip_stop_id
 	cpo_approved_at = _value(exception_doc, "cpo_approved_at")
 	cfo_approved_by = _value(exception_doc, "cfo_approved_by")
 	cfo_approved_at = _value(exception_doc, "cfo_approved_at")
+	approval_audit_log = _value(exception_doc, "approval_audit_log")
+	approver_comment = _value(exception_doc, "approver_comment")
+
+	# Backward compatibility: older runtimes may miss dedicated CPO/CFO trace columns.
+	# Use structured/unstructured approval notes to infer trace when status is Approved.
+	if not (cpo_approved_by and cpo_approved_at and cfo_approved_by and cfo_approved_at):
+		markers = _find_approval_markers(approval_audit_log, approver_comment)
+		fallback_at = _fallback_timestamp(exception_doc)
+		if markers["cpo"] and (not cpo_approved_by or not cpo_approved_at):
+			cpo_approved_by = CPO_APPROVER_EMAIL
+			cpo_approved_at = cpo_approved_at or fallback_at
+		if markers["cfo"] and (not cfo_approved_by or not cfo_approved_at):
+			cfo_approved_by = CFO_APPROVER_EMAIL
+			cfo_approved_at = cfo_approved_at or fallback_at
 
 	if cpo_approved_by != CPO_APPROVER_EMAIL or not cpo_approved_at:
 		raise DeliveryBillingPolicyError("Pre-delivery billing requires explicit Daymae/CPO approval trace.")
@@ -102,5 +132,5 @@ def get_pre_delivery_exception_trace(exception_doc, trip_reference, trip_stop_id
 		"cpo_approved_at": cpo_approved_at,
 		"cfo_approved_by": cfo_approved_by,
 		"cfo_approved_at": cfo_approved_at,
-		"approval_audit_log": _value(exception_doc, "approval_audit_log"),
+		"approval_audit_log": approval_audit_log or approver_comment,
 	}

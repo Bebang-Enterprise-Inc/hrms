@@ -37,6 +37,8 @@ def get_chat_space(default_space: str) -> str:
     field = _SETTINGS_FIELD_MAP.get(default_space)
     if field:
         try:
+            if not frappe.db.has_column("BEI Settings", field):
+                return default_space
             configured = frappe.db.get_single_value("BEI Settings", field)
             if configured:
                 return configured
