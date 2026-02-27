@@ -33,7 +33,9 @@ def _install_fake_modules():
 		frappe.PermissionError = type("PermissionError", (Exception,), {})
 		frappe.parse_json = lambda x: x
 		frappe.has_permission = lambda *_args, **_kwargs: True
-		frappe.db = types.SimpleNamespace(sql=lambda *args, **kwargs: [])
+		local_db = types.SimpleNamespace(sql=lambda *args, **kwargs: [])
+		frappe.local = types.SimpleNamespace(db=local_db)
+		frappe.__dict__["db"] = frappe.local.db
 
 		utils.flt = lambda value, precision=None: round(float(value or 0), precision or 2)
 		utils.cint = lambda value: int(float(value or 0))

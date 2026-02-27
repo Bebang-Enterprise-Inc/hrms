@@ -37,12 +37,14 @@ def _install_fake_frappe():
 	frappe.PermissionError = PermissionError
 	frappe.__dict__["session"] = types.SimpleNamespace(user="Administrator")
 	frappe.get_roles = lambda user=None: ["System Manager"] if user and user != "Guest" else []
-	frappe.db = types.SimpleNamespace(
+	local_db = types.SimpleNamespace(
 		sql=lambda *args, **kwargs: [],
 		exists=lambda *args, **kwargs: None,
 		set_value=lambda *args, **kwargs: None,
 		get_value=lambda *args, **kwargs: None,
 	)
+	frappe.local = types.SimpleNamespace(db=local_db)
+	frappe.__dict__["db"] = frappe.local.db
 	frappe.get_doc = lambda *args, **kwargs: types.SimpleNamespace()
 
 	utils.cint = lambda value: int(float(value or 0))

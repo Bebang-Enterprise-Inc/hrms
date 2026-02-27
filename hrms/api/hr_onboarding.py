@@ -28,37 +28,38 @@ def _as_int(value: Any, default: int) -> int:
 
 
 @frappe.whitelist()
-def get_job_offers(status=None, department=None, page=1, page_size=20):
+def get_job_offers(
+	status: str | None = None,
+	department: str | None = None,
+	page: int = 1,
+	page_size: int = 20,
+) -> dict[str, Any]:
 	_check_hr_permission()
 
 	page = _as_int(page, 1)
 	page_size = min(_as_int(page_size, 20), 100)
 	start = (page - 1) * page_size
 
-	where = []
-	values: dict[str, Any] = {"start": start, "page_size": page_size}
-
-	if status:
-		where.append("jo.status = %(status)s")
-		values["status"] = status
-	if department:
-		where.append("ja.department = %(department)s")
-		values["department"] = department
-
-	where_sql = f"WHERE {' AND '.join(where)}" if where else ""
+	values: dict[str, Any] = {
+		"status": status or None,
+		"department": department or None,
+		"start": start,
+		"page_size": page_size,
+	}
 
 	total = frappe.db.sql(
-		f"""
+		"""
         SELECT COUNT(*)
         FROM `tabJob Offer` jo
         LEFT JOIN `tabJob Applicant` ja ON ja.name = jo.job_applicant
-        {where_sql}
+        WHERE (%(status)s IS NULL OR jo.status = %(status)s)
+          AND (%(department)s IS NULL OR ja.department = %(department)s)
         """,
 		values,
 	)[0][0]
 
 	rows = frappe.db.sql(
-		f"""
+		"""
         SELECT
             jo.name,
             jo.applicant_name,
@@ -70,7 +71,8 @@ def get_job_offers(status=None, department=None, page=1, page_size=20):
             COALESCE(ja.department, '') AS department
         FROM `tabJob Offer` jo
         LEFT JOIN `tabJob Applicant` ja ON ja.name = jo.job_applicant
-        {where_sql}
+        WHERE (%(status)s IS NULL OR jo.status = %(status)s)
+          AND (%(department)s IS NULL OR ja.department = %(department)s)
         ORDER BY jo.creation DESC
         LIMIT %(start)s, %(page_size)s
         """,
@@ -87,7 +89,7 @@ def get_job_offers(status=None, department=None, page=1, page_size=20):
 
 
 @frappe.whitelist()
-def update_job_offer_status(name: str, status: str, notes: str | None = None):
+def update_job_offer_status(name: str, status: str, notes: str | None = None) -> dict[str, Any]:
 	_check_hr_permission()
 
 	if not name:
@@ -110,7 +112,7 @@ def update_job_offer_status(name: str, status: str, notes: str | None = None):
 
 
 @frappe.whitelist()
-def create_onboarding_from_offer(job_offer: str):
+def create_onboarding_from_offer(job_offer: str) -> dict[str, Any]:
 	_check_hr_permission()
 
 	if not job_offer:
@@ -159,7 +161,7 @@ def _is_task_completed(task_name: str | None) -> bool:
 
 
 @frappe.whitelist()
-def get_onboarding_checklist(employee_onboarding: str):
+def get_onboarding_checklist(employee_onboarding: str) -> dict[str, Any]:
 	_check_hr_permission()
 
 	if not employee_onboarding:
