@@ -78,7 +78,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Command Type",
-   "options": "UPDATE_USERINFO\nDELETE_USERINFO",
+   "options": "UPDATE_USERINFO\nDELETE_USERINFO\nRELIEVER_DELETE_USERINFO",
    "reqd": 1
   },
   {
