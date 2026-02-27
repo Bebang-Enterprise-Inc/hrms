@@ -278,6 +278,193 @@ def get_employee_separations(employee: str = None, status: str = None):
 	return separations
 
 
+@frappe.whitelist(allow_guest=False)
+def create_exit_interview(employee: str, separation_date: str = None, resignation_letter: str = None):
+	"""Create (or reuse) exit interview for an employee."""
+	existing = frappe.get_all(
+		"Exit Interview",
+		filters={"employee": employee, "docstatus": ["<", 2]},
+		fields=["name", "status"],
+		order_by="creation desc",
+		limit=1,
+	)
+	if existing:
+		return {
+			"name": existing[0].name,
+			"employee": employee,
+			"status": existing[0].status,
+			"reused": True,
+		}
+
+	employee_name = frappe.db.get_value("Employee", employee, "employee_name") or employee
+	interview = frappe.get_doc(
+		{
+			"doctype": "Exit Interview",
+			"employee": employee,
+			"employee_name": employee_name,
+			"interview_date": separation_date or frappe.utils.today(),
+			"status": "Draft",
+		}
+	)
+	interview.insert(ignore_permissions=True)
+
+	if resignation_letter:
+		try:
+			interview.add_comment("Comment", text=f"Resignation letter note: {resignation_letter}")
+		except Exception:
+			pass
+
+	return {
+		"name": interview.name,
+		"employee": employee,
+		"status": interview.status,
+		"reused": False,
+	}
+
+
+@frappe.whitelist(allow_guest=False)
+def get_team_separations():
+	"""Return separation rows formatted for portal team separations grid."""
+	separations = frappe.get_all(
+		"Employee Separation",
+		fields=[
+			"name",
+			"employee",
+			"employee_name",
+			"boarding_begins_on",
+			"boarding_status",
+			"custom_exit_interview_completed",
+		],
+		order_by="creation desc",
+		limit=200,
+	)
+
+	rows = []
+	for sep in separations:
+		interview = frappe.get_all(
+			"Exit Interview",
+			filters={"employee": sep.employee, "docstatus": ["<", 2]},
+			fields=["name", "status"],
+			order_by="creation desc",
+			limit=1,
+		)
+		interview_name = interview[0].name if interview else None
+		interview_status = interview[0].status if interview else ""
+
+		boarding_status = (sep.boarding_status or "Pending").strip()
+		normalized_status = "In Progress" if boarding_status in ("In Process", "In Progress") else boarding_status
+
+		if not interview_name:
+			exit_status = "Not Started"
+		elif interview_status in ("Submitted", "Completed"):
+			exit_status = "Submitted"
+		else:
+			exit_status = "In Progress"
+
+		compliance_items = frappe.get_all(
+			"BEI DOLE Compliance Checklist",
+			filters={"parent": sep.name, "parenttype": "Employee Separation"},
+			fields=["status"],
+		)
+		total_items = len(compliance_items)
+		completed_items = sum(1 for item in compliance_items if item.status == "Completed")
+		clearance_progress = round((completed_items / total_items) * 100, 1) if total_items > 0 else 0
+
+		store = frappe.db.get_value("Employee", sep.employee, "branch") or ""
+
+		rows.append(
+			{
+				"employee": sep.employee,
+				"employee_name": sep.employee_name,
+				"separation_date": sep.boarding_begins_on,
+				"status": normalized_status or "Pending",
+				"exit_interview_status": exit_status,
+				"exit_interview_name": interview_name,
+				"clearance_progress": clearance_progress,
+				"store": store,
+				"store_name": store,
+			}
+		)
+
+	return rows
+
+
+@frappe.whitelist(allow_guest=False)
+def get_exit_interview_analytics(date_from: str = None, date_to: str = None):
+	"""Return analytics payload for exit interview dashboard."""
+	date_to = date_to or frappe.utils.today()
+	date_from = date_from or frappe.utils.add_days(date_to, -90)
+
+	separations = frappe.get_all(
+		"Employee Separation",
+		filters={"boarding_begins_on": ["between", [date_from, date_to]]},
+		fields=["name", "department", "custom_separation_type", "boarding_begins_on"],
+	)
+	interviews = frappe.get_all(
+		"Exit Interview",
+		filters={"creation": ["between", [date_from, date_to]], "docstatus": ["<", 2]},
+		fields=["name"],
+	)
+
+	total_separations = len(separations)
+	total_interviews = len(interviews)
+	response_rate = round((total_interviews / total_separations) * 100, 2) if total_separations > 0 else 0
+
+	reason_counts = {}
+	for sep in separations:
+		reason = sep.get("custom_separation_type") or "Unspecified"
+		reason_counts[reason] = reason_counts.get(reason, 0) + 1
+
+	reasons_for_leaving = []
+	for reason, count in reason_counts.items():
+		reasons_for_leaving.append(
+			{
+				"reason": reason,
+				"count": count,
+				"percentage": round((count / total_separations) * 100, 2) if total_separations > 0 else 0,
+			}
+		)
+
+	dept_counts = {}
+	for sep in separations:
+		dept = sep.get("department") or "Unassigned"
+		dept_counts[dept] = dept_counts.get(dept, 0) + 1
+
+	department_breakdown = []
+	for department, count in dept_counts.items():
+		department_breakdown.append(
+			{
+				"department": department,
+				"count": count,
+				"percentage": round((count / total_separations) * 100, 2) if total_separations > 0 else 0,
+			}
+		)
+
+	attrition_trend = frappe.db.sql(
+		"""
+		SELECT DATE_FORMAT(boarding_begins_on, '%%Y-%%m') AS month, COUNT(*) AS count
+		FROM `tabEmployee Separation`
+		WHERE boarding_begins_on BETWEEN %(date_from)s AND %(date_to)s
+		GROUP BY DATE_FORMAT(boarding_begins_on, '%%Y-%%m')
+		ORDER BY month
+		""",
+		{"date_from": date_from, "date_to": date_to},
+		as_dict=True,
+	)
+
+	return {
+		"date_from": date_from,
+		"date_to": date_to,
+		"total_separations": total_separations,
+		"total_interviews": total_interviews,
+		"response_rate": response_rate,
+		"reasons_for_leaving": reasons_for_leaving,
+		"attrition_trend": attrition_trend,
+		"department_breakdown": department_breakdown,
+		"avg_tenure_months": 0,
+	}
+
+
 # ============================================================================
 # DOLE COMPLIANCE
 # ============================================================================
