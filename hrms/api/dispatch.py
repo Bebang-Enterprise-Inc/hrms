@@ -503,8 +503,13 @@ def _create_delivery_billing(
 	"""Create a BEI Billing Schedule for a delivery stop."""
 	# G-067: Feature flag — billing is enabled by default.
 	# Set BEI Settings.enable_delivery_billing = 0 to disable.
-	billing_enabled = frappe.db.get_single_value("BEI Settings", "enable_delivery_billing")
-	if billing_enabled is not None and not billing_enabled:
+	# Some runtime tenants may not have this field yet; treat missing as enabled.
+	try:
+		billing_setting = frappe.db.get_single_value("BEI Settings", "enable_delivery_billing")
+	except Exception:
+		billing_setting = None
+
+	if not should_auto_create_billing_on_delivery(billing_setting):
 		return
 
 	trip = frappe.get_doc("BEI Distribution Trip", trip_name)
