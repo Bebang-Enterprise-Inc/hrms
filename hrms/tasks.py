@@ -183,3 +183,16 @@ def send_overdue_action_plan_reminders():
 			title="Overdue Action Plan Reminder Error",
 			message=frappe.get_traceback(),
 		)
+
+
+def run_transfer_reliever_cleanup():
+	"""Scheduled wrapper for reliever cleanup dispatch."""
+	try:
+		from hrms.api.transfer_requests import run_due_reliever_cleanup
+
+		run_due_reliever_cleanup(limit=200)
+	except Exception:
+		frappe.log_error(
+			title="Reliever Cleanup Scheduler Error",
+			message=frappe.get_traceback(),
+		)

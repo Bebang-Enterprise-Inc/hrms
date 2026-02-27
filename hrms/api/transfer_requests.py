@@ -59,7 +59,8 @@ ADMS_STATUS_FAILED = "FAILED"
 REQUESTER_ROLES = {"Store Supervisor", "Area Supervisor", "HR User", "HR Manager", "System Manager"}
 AREA_APPROVER_ROLES = {"Area Supervisor", "System Manager"}
 HR_APPROVER_ROLES = {"HR User", "HR Manager", "System Manager"}
-IT_APPROVER_ROLES = {"System Manager"}
+IT_APPROVER_ROLES = {"System Manager", "IT User"}
+HR_ORG_CHANGE_ROLES = {"HR User", "HR Manager"}
 READ_ALL_ROLES = AREA_APPROVER_ROLES.union(HR_APPROVER_ROLES).union(IT_APPROVER_ROLES)
 TRANSFER_READ_ROLES = REQUESTER_ROLES.union(READ_ALL_ROLES)
 
@@ -70,6 +71,8 @@ BLOCKED_WAREHOUSE_TERMS = (
 	"3MD",
 )
 
+RELIEVER_CLEANUP_COMMAND_TYPE = "RELIEVER_DELETE_USERINFO"
+
 
 def _has_any_role(roles: set[str], user: str | None = None) -> bool:
 	active_user = user or frappe.session.user
@@ -79,6 +82,98 @@ def _has_any_role(roles: set[str], user: str | None = None) -> bool:
 def _require_any_role(roles: set[str], message: str):
 	if not _has_any_role(roles):
 		frappe.throw(_(message), frappe.PermissionError)
+
+
+def _can_manage_org_changes(user: str | None = None) -> bool:
+	active_user = user or frappe.session.user
+	if active_user == "Administrator":
+		return True
+	return bool(set(frappe.get_roles(active_user)).intersection(HR_ORG_CHANGE_ROLES))
+
+
+def _normalize_optional_value(value: Any) -> str | None:
+	if value is None:
+		return None
+	text = str(value).strip()
+	return text or None
+
+
+def _coerce_bool(value: Any) -> int:
+	return 1 if cint(value) else 0
+
+
+def _coerce_positive_int(value: Any, *, field_label: str) -> int | None:
+	if value is None or str(value).strip() == "":
+		return None
+	parsed = cint(value)
+	if parsed <= 0:
+		frappe.throw(_("{0} must be greater than zero").format(field_label))
+	return parsed
+
+
+def _enforce_org_change_field_guard(*, to_department: str | None, to_designation: str | None):
+	if _can_manage_org_changes():
+		return
+	if to_department or to_designation:
+		frappe.throw(
+			_("Only HR users can set Department or Designation in transfer requests"),
+			frappe.PermissionError,
+		)
+
+
+def _compute_reliever_window(effective_date: Any, reliever_days: int | None) -> tuple[Any | None, Any | None]:
+	if not reliever_days:
+		return None, None
+	start_date = getdate(effective_date)
+	end_date = getdate(add_to_date(start_date, days=reliever_days))
+	return start_date, end_date
+
+
+def _build_branch_reports_to_defaults(options: list[dict[str, str]]) -> dict[str, dict[str, Any]]:
+	branches = sorted({(option.get("branch") or "").strip() for option in options if option.get("branch")})
+	if not branches:
+		return {}
+
+	employees = frappe.get_all(
+		"Employee",
+		filters={"status": "Active", "branch": ["in", branches]},
+		fields=["name", "employee_name", "designation", "branch"],
+		order_by="branch asc, designation asc, employee_name asc",
+		limit_page_length=2000,
+	)
+
+	by_branch: dict[str, dict[str, Any]] = {}
+	for row in employees:
+		branch_name = (row.get("branch") or "").strip()
+		if not branch_name:
+			continue
+
+		bucket = by_branch.setdefault(
+			branch_name,
+			{
+				"area_manager": None,
+				"store_oic": None,
+				"default_reports_to": None,
+			},
+		)
+		designation = (row.get("designation") or "").upper()
+		candidate = {
+			"employee": row.get("name"),
+			"employee_name": row.get("employee_name"),
+			"designation": row.get("designation"),
+		}
+
+		if not bucket["area_manager"] and ("AREA MANAGER" in designation or "AREA SUPERVISOR" in designation):
+			bucket["area_manager"] = candidate
+		if not bucket["store_oic"] and ("OIC" in designation or "STORE SUPERVISOR" in designation):
+			bucket["store_oic"] = candidate
+
+	for branch_name, leadership in by_branch.items():
+		default_candidate = leadership.get("area_manager") or leadership.get("store_oic")
+		if default_candidate:
+			leadership["default_reports_to"] = default_candidate.get("employee")
+
+	return by_branch
 
 
 def _require_stage_approver(stage: str):
@@ -231,11 +326,12 @@ def _serialize_request(doc, include_comments: bool = False):
 
 
 def _build_transfer_details(doc) -> list[dict]:
+	if cint(getattr(doc, "is_reliever", 0)):
+		return []
+
 	details = []
 	candidate_rows = [
 		("Branch", "branch", doc.from_branch, doc.to_branch),
-		("Department", "department", doc.from_department, doc.to_department),
-		("Designation", "designation", doc.from_designation, doc.to_designation),
 		("Reports To", "reports_to", doc.from_reports_to, doc.to_reports_to),
 	]
 	for property_name, fieldname, current_value, new_value in candidate_rows:
@@ -253,6 +349,10 @@ def _build_transfer_details(doc) -> list[dict]:
 
 def _ensure_employee_transfer(doc, submit_now: bool):
 	"""Create (or submit) Employee Transfer linked to a transfer request."""
+	if cint(getattr(doc, "is_reliever", 0)):
+		# Reliever routing is temporary device enrollment and must not mutate Employee Master.
+		return None
+
 	employee = frappe.get_doc("Employee", doc.employee)
 
 	if doc.employee_transfer_ref and frappe.db.exists("Employee Transfer", doc.employee_transfer_ref):
@@ -428,7 +528,7 @@ def _validate_store_warehouse_for_transfer(store_warehouse: str | None, expected
 	}
 
 
-def _list_transfer_store_warehouse_options(search_text: str | None = None, limit: int = 100) -> list[dict[str, str]]:
+def _list_transfer_store_warehouse_options(search_text: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
 	branch_index = _get_branch_index()
 	search_lower = (search_text or "").strip().lower()
 	limit = max(1, min(500, cint(limit) or 100))
@@ -486,7 +586,26 @@ def _list_transfer_store_warehouse_options(search_text: str | None = None, limit
 			}
 		)
 
-	return options[:limit]
+	options = options[:limit]
+	leadership_defaults = _build_branch_reports_to_defaults(options)
+
+	for option in options:
+		leadership = leadership_defaults.get(option.get("branch") or "", {})
+		area_manager = leadership.get("area_manager")
+		store_oic = leadership.get("store_oic")
+		default_reports_to = leadership.get("default_reports_to")
+
+		option["default_reports_to"] = default_reports_to
+		option["default_reports_to_name"] = (
+			(area_manager or store_oic or {}).get("employee_name") if default_reports_to else None
+		)
+		option["default_reports_to_designation"] = (
+			(area_manager or store_oic or {}).get("designation") if default_reports_to else None
+		)
+		option["area_manager"] = area_manager
+		option["store_oic"] = store_oic
+
+	return options
 
 
 def _get_employee_bio_id(employee_id: str) -> str:
@@ -507,12 +626,14 @@ def _compute_transfer_device_plan(doc, bio_id: str) -> dict[str, Any]:
 		frappe.throw(_("Unable to resolve target store mapping for transfer sync"))
 
 	device_pairs = list(DEVICE_TO_STORE.items())
+	is_reliever = bool(cint(getattr(doc, "is_reliever", 0)))
 	if is_roving(bio_id):
 		target_devices = sorted({sn for sn, _ in device_pairs})
 		return {
 			"target_devices": target_devices,
 			"remove_devices": [],
 			"is_roving": True,
+			"is_reliever": is_reliever,
 			"target_store_key": store_key,
 			"source_store_key": _normalize_store_key(doc.from_branch),
 		}
@@ -522,6 +643,16 @@ def _compute_transfer_device_plan(doc, bio_id: str) -> dict[str, Any]:
 		frappe.throw(
 			_("No biometric devices mapped for target store warehouse {0}").format(doc.store_warehouse or doc.to_branch)
 		)
+
+	if is_reliever:
+		return {
+			"target_devices": sorted(set(target_devices)),
+			"remove_devices": [],
+			"is_roving": False,
+			"is_reliever": True,
+			"target_store_key": store_key,
+			"source_store_key": _normalize_store_key(doc.from_branch),
+		}
 
 	source_key = _normalize_store_key(doc.from_branch)
 	remove_devices = []
@@ -536,6 +667,7 @@ def _compute_transfer_device_plan(doc, bio_id: str) -> dict[str, Any]:
 		"target_devices": sorted(set(target_devices)),
 		"remove_devices": sorted(set(remove_devices)),
 		"is_roving": False,
+		"is_reliever": False,
 		"target_store_key": store_key,
 		"source_store_key": source_key,
 	}
@@ -733,10 +865,38 @@ def _summarize_command_statuses(transfer_request_name: str) -> dict[str, int]:
 	return summary
 
 
+def _refresh_reliever_cleanup_status(doc) -> bool:
+	if not cint(getattr(doc, "is_reliever", 0)):
+		return False
+
+	rows = _get_command_rows(doc.name)
+	cleanup_rows = [row for row in rows if row.get("command_type") == RELIEVER_CLEANUP_COMMAND_TYPE]
+	if not cleanup_rows:
+		return False
+
+	statuses = {(row.get("status") or "").upper() for row in cleanup_rows}
+	current_status = (getattr(doc, "reliever_cleanup_status", None) or "").strip()
+	if statuses == {ADMS_STATUS_ACKED}:
+		next_status = "Completed"
+	elif ADMS_STATUS_PENDING in statuses or ADMS_STATUS_SENT in statuses:
+		next_status = "Queued"
+	elif ADMS_STATUS_FAILED in statuses:
+		next_status = "Failed"
+	else:
+		next_status = current_status or "Pending"
+
+	if next_status != current_status:
+		doc.reliever_cleanup_status = next_status
+		doc.save(ignore_permissions=True)
+		return True
+	return False
+
+
 def _refresh_transfer_stage_from_commands(doc):
+	reliever_cleanup_changed = _refresh_reliever_cleanup_status(doc)
 	rows = _get_command_rows(doc.name)
 	if not rows:
-		return False
+		return reliever_cleanup_changed
 
 	required_rows = [r for r in rows if cint(r.get("is_required"))]
 	if not required_rows:
@@ -755,7 +915,7 @@ def _refresh_transfer_stage_from_commands(doc):
 	elif has_failed:
 		_set_stage(doc, STAGE_SYNC_FAILED, status="Rejected")
 	else:
-		return False
+		return reliever_cleanup_changed
 
 	if doc.current_stage != stage_before:
 		doc.save(ignore_permissions=True)
@@ -765,7 +925,7 @@ def _refresh_transfer_stage_from_commands(doc):
 		)
 		_notify_transfer_event(doc, "Transfer Sync Stage Updated", details=f"{stage_before} -> {doc.current_stage}")
 		return True
-	return False
+	return reliever_cleanup_changed
 
 
 def _sync_command_statuses_from_adms(doc, config: dict[str, Any]) -> dict[str, Any]:
@@ -958,6 +1118,7 @@ def _dispatch_transfer_sync(doc, *, force_retry_failed: bool = False, remarks: s
 			"target_devices": target_devices,
 			"remove_devices": remove_devices,
 			"is_roving": plan["is_roving"],
+			"is_reliever": plan.get("is_reliever"),
 		},
 	}
 
@@ -1048,6 +1209,8 @@ def create_transfer_request(
 	to_designation=None,
 	to_reports_to=None,
 	store_warehouse=None,
+	is_reliever=0,
+	reliever_days=None,
 ):
 	_require_any_role(REQUESTER_ROLES, "You do not have permission to create transfer requests")
 
@@ -1055,6 +1218,23 @@ def create_transfer_request(
 		frappe.throw(_("Required fields: employee, effective_date, reason, store_warehouse"))
 	if not frappe.db.exists("Employee", employee):
 		frappe.throw(_("Employee not found"), frappe.DoesNotExistError)
+	to_department = _normalize_optional_value(to_department)
+	to_designation = _normalize_optional_value(to_designation)
+	to_reports_to = _normalize_optional_value(to_reports_to)
+	reason = (reason or "").strip()
+	if not reason:
+		frappe.throw(_("Reason is required"))
+	reliever_flag = _coerce_bool(is_reliever)
+	reliever_days_value = _coerce_positive_int(reliever_days, field_label="Reliever days")
+	_enforce_org_change_field_guard(to_department=to_department, to_designation=to_designation)
+
+	if reliever_flag and not reliever_days_value:
+		frappe.throw(_("Reliever days is required when reliever mode is enabled"))
+	if not reliever_flag:
+		reliever_days_value = None
+
+	reliever_start_date, reliever_end_date = _compute_reliever_window(effective_date, reliever_days_value)
+
 	warehouse_meta = _validate_store_warehouse_for_transfer(
 		store_warehouse,
 		expected_branch=to_branch,
@@ -1079,6 +1259,11 @@ def create_transfer_request(
 			"from_reports_to": employee_doc.reports_to,
 			"to_reports_to": to_reports_to,
 			"store_warehouse": store_warehouse,
+			"is_reliever": reliever_flag,
+			"reliever_days": reliever_days_value,
+			"reliever_start_date": reliever_start_date,
+			"reliever_end_date": reliever_end_date,
+			"reliever_cleanup_status": "Pending" if reliever_flag else None,
 			"current_stage": STAGE_PENDING_AREA,
 			"stage_status": "Pending",
 		}
@@ -1096,7 +1281,7 @@ def create_transfer_request(
 
 @frappe.whitelist()
 def get_transfer_form_options(search_text=None, limit=100):
-	"""Return filtered BEI store-warehouse options for transfer request forms."""
+	"""Return filtered BEI store-warehouse options + branch leadership defaults for transfer forms."""
 	_require_any_role(TRANSFER_READ_ROLES, "You do not have permission to view transfer form options")
 	options = _list_transfer_store_warehouse_options(search_text=search_text, limit=limit)
 	return {
@@ -1156,6 +1341,10 @@ def list_transfer_requests(current_stage=None, employee=None, my_requests=0, pen
 			"from_branch",
 			"to_branch",
 			"store_warehouse",
+			"is_reliever",
+			"reliever_days",
+			"reliever_end_date",
+			"reliever_cleanup_status",
 			"current_stage",
 			"stage_status",
 			"employee_transfer_ref",
@@ -1204,21 +1393,17 @@ def approve_transfer_stage(
 	stage_before = doc.current_stage
 	_require_stage_approver(stage_before)
 	_require_store_warehouse_mapping(doc)
-	role_sync_result = None
 
 	if stage_before == STAGE_PENDING_AREA:
 		_set_stage(doc, STAGE_PENDING_HR, status="Pending")
 	elif stage_before == STAGE_PENDING_HR:
 		is_due_now = getdate(doc.effective_date) <= getdate(nowdate())
 		_ensure_employee_transfer(doc, submit_now=is_due_now)
-		if is_due_now:
-			role_sync_result = _sync_designation_roles(doc.employee, designation_hint=doc.to_designation)
 		_set_stage(doc, STAGE_PENDING_IT if is_due_now else STAGE_WAITING_EFFECTIVE, status="Pending")
 	elif stage_before == STAGE_WAITING_EFFECTIVE:
 		if getdate(doc.effective_date) > getdate(nowdate()):
 			frappe.throw(_("Cannot advance before effective date"))
 		_ensure_employee_transfer(doc, submit_now=True)
-		role_sync_result = _sync_designation_roles(doc.employee, designation_hint=doc.to_designation)
 		_set_stage(doc, STAGE_PENDING_IT, status="Pending")
 	elif stage_before == STAGE_PENDING_IT:
 		_enforce_effective_date_dispatch_guard(
@@ -1236,13 +1421,6 @@ def approve_transfer_stage(
 	log_text = _("Approved stage transition: {0} -> {1}").format(stage_before, doc.current_stage)
 	if remarks:
 		log_text += _(". Notes: {0}").format(remarks)
-	if role_sync_result:
-		log_text += _(
-			". Role Sync: added [{0}] removed [{1}]"
-		).format(
-			", ".join(role_sync_result.get("added", [])) or "-",
-			", ".join(role_sync_result.get("removed", [])) or "-",
-		)
 	_append_timeline_comment(doc, log_text)
 	_notify_transfer_event(doc, "Transfer Stage Approved", details=f"{stage_before} -> {doc.current_stage}")
 
@@ -1374,7 +1552,7 @@ def reconcile_transfer_sync_status(transfer_request_name=None, limit=100):
 	else:
 		targets = frappe.get_all(
 			DOCTYPE_TRANSFER_REQUEST,
-			filters={"current_stage": ["in", [STAGE_READY_SYNC, STAGE_SYNC_IN_PROGRESS, STAGE_SYNC_FAILED]]},
+			filters={"current_stage": ["in", [STAGE_READY_SYNC, STAGE_SYNC_IN_PROGRESS, STAGE_SYNC_FAILED, STAGE_SYNCED]]},
 			fields=["name"],
 			limit=min(max(cint(limit) or 100, 1), 500),
 			order_by="modified asc",
@@ -1430,6 +1608,9 @@ def get_transfer_sync_dashboard(status=None, page=1, page_size=50):
 			"effective_date",
 			"to_branch",
 			"store_warehouse",
+			"is_reliever",
+			"reliever_end_date",
+			"reliever_cleanup_status",
 			"current_stage",
 			"stage_status",
 			"sync_batch_id",
@@ -1484,17 +1665,9 @@ def run_due_transfer_submissions(limit=100):
 			doc = frappe.get_doc(DOCTYPE_TRANSFER_REQUEST, row.name)
 			_require_store_warehouse_mapping(doc)
 			_ensure_employee_transfer(doc, submit_now=True)
-			role_sync_result = _sync_designation_roles(doc.employee, designation_hint=doc.to_designation)
 			_set_stage(doc, STAGE_PENDING_IT, status="Pending")
 			doc.save(ignore_permissions=True)
 			log_text = _("Effective date reached. Moved to Pending IT Approval")
-			if role_sync_result:
-				log_text += _(
-					". Role Sync: added [{0}] removed [{1}]"
-				).format(
-					", ".join(role_sync_result.get("added", [])) or "-",
-					", ".join(role_sync_result.get("removed", [])) or "-",
-				)
 			_append_timeline_comment(doc, log_text)
 			_notify_transfer_event(doc, "Transfer Effective Date Reached", details=log_text)
 			processed += 1
@@ -1504,6 +1677,115 @@ def run_due_transfer_submissions(limit=100):
 				frappe.get_traceback(),
 				"Transfer Request Due Submission Failure",
 			)
+
+	return {"processed": processed, "errors": errors}
+
+
+def _dispatch_reliever_cleanup(doc) -> dict[str, Any]:
+	config = _get_adms_config()
+	_require_adms_config(config)
+
+	bio_id = _get_employee_bio_id(doc.employee)
+	validate_employee_bio_id(bio_id)
+	plan = _compute_transfer_device_plan(doc, bio_id=bio_id)
+	if plan.get("is_roving"):
+		doc.reliever_cleanup_status = "Skipped (Roving)"
+		doc.save(ignore_permissions=True)
+		return {"queued": 0, "failed": 0, "skipped": len(plan.get("target_devices") or []), "errors": []}
+
+	cleanup_devices = sorted(set(plan.get("target_devices") or []))
+	queued = 0
+	failed = 0
+	skipped = 0
+	errors: list[dict[str, str]] = []
+
+	for device_sn in cleanup_devices:
+		result = _queue_adms_command(device_sn, _build_delete_command(bio_id), config=config)
+		if result.get("success"):
+			_upsert_command_row(
+				doc,
+				device_sn,
+				RELIEVER_CLEANUP_COMMAND_TYPE,
+				_build_delete_command(bio_id),
+				status=(result.get("status") or ADMS_STATUS_PENDING),
+				is_required=0,
+				adms_command_id=cint(result.get("command_id")) if result.get("command_id") else None,
+				increment_attempt=True,
+				last_error=None,
+			)
+			queued += 1
+		else:
+			error_text = result.get("error") or "Failed to queue reliever cleanup command"
+			_upsert_command_row(
+				doc,
+				device_sn,
+				RELIEVER_CLEANUP_COMMAND_TYPE,
+				_build_delete_command(bio_id),
+				status=ADMS_STATUS_FAILED,
+				is_required=0,
+				increment_attempt=True,
+				last_error=error_text,
+			)
+			failed += 1
+			errors.append({"device_sn": device_sn, "error": error_text})
+
+	if not cleanup_devices:
+		skipped = 1
+
+	doc.reliever_cleanup_status = "Failed" if failed > 0 else ("Queued" if queued > 0 else "Skipped")
+	doc.save(ignore_permissions=True)
+
+	log_text = _("Reliever cleanup dispatch executed. queued={0}, failed={1}, skipped={2}").format(
+		queued,
+		failed,
+		skipped,
+	)
+	_append_timeline_comment(doc, log_text)
+	_notify_transfer_event(doc, "Reliever Cleanup Dispatch", details=log_text)
+
+	return {
+		"queued": queued,
+		"failed": failed,
+		"skipped": skipped,
+		"errors": errors,
+	}
+
+
+@frappe.whitelist()
+def run_due_reliever_cleanup(limit=100):
+	"""Scheduler helper: remove reliever from temporary store devices after reliever window ends."""
+	if frappe.session.user != "Administrator":
+		_require_any_role(
+			IT_APPROVER_ROLES.union(HR_APPROVER_ROLES),
+			"You do not have permission to run reliever cleanup",
+		)
+
+	due = frappe.get_all(
+		DOCTYPE_TRANSFER_REQUEST,
+		filters={
+			"is_reliever": 1,
+			"reliever_end_date": ["<=", getdate(nowdate())],
+			"current_stage": ["in", [STAGE_SYNC_IN_PROGRESS, STAGE_SYNCED, STAGE_SYNC_FAILED]],
+		},
+		fields=["name"],
+		limit=min(max(cint(limit) or 100, 1), 500),
+		order_by="reliever_end_date asc",
+	)
+
+	processed = 0
+	errors: list[dict[str, str]] = []
+	for row in due:
+		try:
+			doc = frappe.get_doc(DOCTYPE_TRANSFER_REQUEST, row.name)
+			current_cleanup_status = (getattr(doc, "reliever_cleanup_status", None) or "").strip().lower()
+			if current_cleanup_status == "completed":
+				continue
+
+			_dispatch_reliever_cleanup(doc)
+			processed += 1
+		except Exception as exc:
+			errors.append({"name": row.name, "error": str(exc)})
+			frappe.log_error(frappe.get_traceback(), "Reliever Cleanup Dispatch Failure")
 
 	return {"processed": processed, "errors": errors}
 

@@ -267,6 +267,7 @@ scheduler_events = {
 		"hrms.api.transfer_requests.run_due_transfer_submissions",
 		"hrms.api.transfer_requests.run_ready_transfer_sync",
 		"hrms.api.transfer_requests.reconcile_transfer_sync_status",
+		"hrms.tasks.run_transfer_reliever_cleanup",
 	],
 	"cron": {
 		# Weather collection 5x daily: 6AM, 10AM, 2PM, 6PM, 10PM

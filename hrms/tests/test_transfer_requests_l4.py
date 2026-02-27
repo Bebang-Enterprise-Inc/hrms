@@ -278,6 +278,34 @@ class TestTransferRequestsL4(unittest.TestCase):
 		self.assertEqual(len(dispatch_calls), 1)
 		self.assertFalse(dispatch_calls[0]["force_retry_failed"])
 
+	def test_run_due_reliever_cleanup_dispatches_expired_reliever_rows(self):
+		doc = _FakeTransferDoc(
+			name="BEI-TRF-2026-REL-0001",
+			employee="EMP-REL-001",
+			current_stage=transfer_requests.STAGE_SYNCED,
+			store_warehouse="BRITTANY OFFICE - BEI",
+			is_reliever=1,
+			reliever_end_date=add_days(getdate(nowdate()), -1),
+			reliever_cleanup_status="Pending",
+		)
+		dispatch_calls = []
+
+		def _fake_dispatch(doc_arg):
+			dispatch_calls.append(doc_arg.name)
+			return {"queued": 1, "failed": 0, "skipped": 0, "errors": []}
+
+		with patch.object(frappe, "session", SimpleNamespace(user="Administrator")), patch(
+			"frappe.get_all", return_value=[frappe._dict({"name": doc.name})]
+		), patch(
+			"frappe.get_doc", return_value=doc
+		), patch(
+			"hrms.api.transfer_requests._dispatch_reliever_cleanup", side_effect=_fake_dispatch
+		):
+			result = transfer_requests.run_due_reliever_cleanup(limit=10)
+
+		self.assertEqual(result["processed"], 1)
+		self.assertEqual(dispatch_calls, [doc.name])
+
 	def test_audit_transfer_store_mappings_reports_blocked_rows(self):
 		def _fake_exists(doctype, value):
 			if doctype == "Warehouse":

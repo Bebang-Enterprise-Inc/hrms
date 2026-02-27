@@ -1,0 +1,301 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-HRPA-.YYYY.-.#####",
+ "creation": "2026-02-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_request",
+  "employee",
+  "employee_name",
+  "column_break_request_1",
+  "requested_by",
+  "requested_on",
+  "effective_date",
+  "action_type",
+  "reason",
+  "section_current",
+  "from_branch",
+  "from_department",
+  "column_break_current_1",
+  "from_designation",
+  "from_reports_to",
+  "salary_old",
+  "section_target",
+  "to_branch",
+  "to_department",
+  "column_break_target_1",
+  "to_designation",
+  "to_reports_to",
+  "salary_new",
+  "section_compensation",
+  "compensation_changes",
+  "total_compensation_old",
+  "total_compensation_new",
+  "section_workflow",
+  "status",
+  "approved_by",
+  "approved_on",
+  "rejected_by",
+  "rejected_on",
+  "rejection_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_request",
+   "fieldtype": "Section Break",
+   "label": "Request Details"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_request_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "requested_on",
+   "fieldtype": "Datetime",
+   "label": "Requested On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Effective Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "action_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Action Type",
+   "options": "Promotion\nInter-Department Transfer\nPromotion + Transfer\nCompensation Adjustment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_current",
+   "fieldtype": "Section Break",
+   "label": "Current Assignment"
+  },
+  {
+   "fieldname": "from_branch",
+   "fieldtype": "Link",
+   "label": "From Branch",
+   "options": "Branch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_department",
+   "fieldtype": "Link",
+   "label": "From Department",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_current_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "from_designation",
+   "fieldtype": "Link",
+   "label": "From Designation",
+   "options": "Designation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "from_reports_to",
+   "fieldtype": "Link",
+   "label": "From Reports To",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "salary_old",
+   "fieldtype": "Currency",
+   "label": "Current Salary"
+  },
+  {
+   "fieldname": "section_target",
+   "fieldtype": "Section Break",
+   "label": "Target Assignment"
+  },
+  {
+   "fieldname": "to_branch",
+   "fieldtype": "Link",
+   "label": "To Branch",
+   "options": "Branch"
+  },
+  {
+   "fieldname": "to_department",
+   "fieldtype": "Link",
+   "label": "To Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "column_break_target_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "to_designation",
+   "fieldtype": "Link",
+   "label": "To Designation",
+   "options": "Designation"
+  },
+  {
+   "fieldname": "to_reports_to",
+   "fieldtype": "Link",
+   "label": "To Reports To",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "salary_new",
+   "fieldtype": "Currency",
+   "label": "Proposed Salary"
+  },
+  {
+   "fieldname": "section_compensation",
+   "fieldtype": "Section Break",
+   "label": "Compensation Changes"
+  },
+  {
+   "fieldname": "compensation_changes",
+   "fieldtype": "Table",
+   "label": "Compensation Breakdown",
+   "options": "BEI HR Personnel Action Compensation"
+  },
+  {
+   "fieldname": "total_compensation_old",
+   "fieldtype": "Currency",
+   "label": "Current Total Compensation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_compensation_new",
+   "fieldtype": "Currency",
+   "label": "Proposed Total Compensation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_workflow",
+   "fieldtype": "Section Break",
+   "label": "Workflow"
+  },
+  {
+   "default": "Pending HR Approval",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nPending HR Approval\nApproved\nRejected\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_on",
+   "fieldtype": "Datetime",
+   "label": "Approved On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rejected_by",
+   "fieldtype": "Link",
+   "label": "Rejected By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rejected_on",
+   "fieldtype": "Datetime",
+   "label": "Rejected On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rejection_reason",
+   "fieldtype": "Small Text",
+   "label": "Rejection Reason",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI HR Personnel Action",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -2,6 +2,7 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_days, getdate, now_datetime, nowdate
 from unittest.mock import patch
+from types import SimpleNamespace
 
 from hrms.api import transfer_requests
 
@@ -215,3 +216,137 @@ class TestTransferRequests(FrappeTestCase):
 		self.assertIsNone(fake_cmd.last_error)
 		self.assertIsNotNone(fake_cmd.acked_at)
 		self.assertTrue(fake_cmd.saved)
+
+	def test_it_approver_roles_include_it_user(self):
+		self.assertIn("IT User", transfer_requests.IT_APPROVER_ROLES)
+
+	def test_non_hr_designation_department_block(self):
+		with patch("hrms.api.transfer_requests._can_manage_org_changes", return_value=False):
+			with self.assertRaises(frappe.PermissionError):
+				transfer_requests._enforce_org_change_field_guard(
+					to_department="Operations - BEI",
+					to_designation=None,
+				)
+
+	def test_build_transfer_details_excludes_department_and_designation(self):
+		doc = frappe._dict(
+			{
+				"is_reliever": 0,
+				"from_branch": "SM MOA",
+				"to_branch": "AYALA EVO",
+				"from_department": "Ops",
+				"to_department": "Finance",
+				"from_designation": "Crew",
+				"to_designation": "Supervisor",
+				"from_reports_to": "EMP-OLD",
+				"to_reports_to": "EMP-NEW",
+			}
+		)
+		rows = transfer_requests._build_transfer_details(doc)
+		fieldnames = {row["fieldname"] for row in rows}
+		self.assertEqual(fieldnames, {"branch", "reports_to"})
+
+	def test_build_transfer_details_skips_reliever(self):
+		doc = frappe._dict(
+			{
+				"is_reliever": 1,
+				"from_branch": "SM MOA",
+				"to_branch": "AYALA EVO",
+				"from_reports_to": "EMP-OLD",
+				"to_reports_to": "EMP-NEW",
+			}
+		)
+		self.assertEqual(transfer_requests._build_transfer_details(doc), [])
+
+	def test_compute_transfer_device_plan_for_reliever_keeps_source_device_access(self):
+		doc = frappe._dict(
+			{
+				"store_warehouse": "Brittany Office - Bebang Enterprise Inc.",
+				"to_branch": "BRITTANY OFFICE",
+				"from_branch": "SM MOA",
+				"is_reliever": 1,
+			}
+		)
+		plan = transfer_requests._compute_transfer_device_plan(doc, bio_id="9001999")
+		self.assertTrue(plan["is_reliever"])
+		self.assertIn("UDP3251600245", plan["target_devices"])
+		self.assertEqual(plan["remove_devices"], [])
+
+	def test_build_branch_reports_to_defaults_prefers_area_manager(self):
+		options = [{"branch": "AYALA EVO"}]
+		with patch("frappe.get_all", return_value=[
+			{
+				"name": "EMP-AREA-001",
+				"employee_name": "Area Leader",
+				"designation": "Area Supervisor",
+				"branch": "AYALA EVO",
+			},
+			{
+				"name": "EMP-OIC-001",
+				"employee_name": "Store OIC",
+				"designation": "Store OIC",
+				"branch": "AYALA EVO",
+			},
+		]):
+			defaults = transfer_requests._build_branch_reports_to_defaults(options)
+		self.assertEqual(defaults["AYALA EVO"]["default_reports_to"], "EMP-AREA-001")
+
+	def test_list_transfer_store_options_includes_reports_to_defaults(self):
+		warehouse_rows = [
+			{
+				"name": "AYALA EVO - Bebang Enterprise Inc.",
+				"warehouse_name": "Ayala Evo",
+				"company": "Bebang Enterprise Inc.",
+				"is_group": 0,
+				"disabled": 0,
+				"branch": "AYALA EVO",
+			}
+		]
+		with patch("frappe.get_meta") as mock_meta, patch("frappe.get_all", return_value=warehouse_rows), patch(
+			"frappe.db.exists", return_value=True
+		), patch(
+			"hrms.api.transfer_requests._build_branch_reports_to_defaults",
+			return_value={
+				"AYALA EVO": {
+					"area_manager": {
+						"employee": "EMP-AREA-001",
+						"employee_name": "Area Leader",
+						"designation": "Area Supervisor",
+					},
+					"store_oic": None,
+					"default_reports_to": "EMP-AREA-001",
+				}
+			},
+		):
+			mock_meta.return_value = SimpleNamespace(has_field=lambda field: True)
+			options = transfer_requests._list_transfer_store_warehouse_options(limit=10)
+		self.assertEqual(len(options), 1)
+		self.assertEqual(options[0]["default_reports_to"], "EMP-AREA-001")
+
+	def test_create_transfer_request_requires_reliever_days(self):
+		employee_doc = frappe._dict(
+			{
+				"name": "EMP-001",
+				"branch": "SM MOA",
+				"department": "Operations",
+				"designation": "Crew",
+				"reports_to": "EMP-AREA-001",
+			}
+		)
+
+		with patch.object(frappe, "session", SimpleNamespace(user="test.supervisor@bebang.ph")), patch(
+			"hrms.api.transfer_requests._require_any_role"
+		), patch("frappe.db.exists", return_value=True), patch(
+			"frappe.get_doc", return_value=employee_doc
+		), patch(
+			"hrms.api.transfer_requests._validate_store_warehouse_for_transfer",
+			return_value={"warehouse": "BRITTANY OFFICE - BEI", "branch": "BRITTANY OFFICE", "company": "Bebang Enterprise Inc."},
+		):
+			with self.assertRaises(frappe.ValidationError):
+				transfer_requests.create_transfer_request(
+					employee="EMP-001",
+					effective_date=nowdate(),
+					reason="Reliever coverage",
+					store_warehouse="BRITTANY OFFICE - BEI",
+					is_reliever=1,
+				)

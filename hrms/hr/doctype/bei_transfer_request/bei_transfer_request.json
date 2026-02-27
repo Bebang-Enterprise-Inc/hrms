@@ -19,6 +19,11 @@
   "stage_status",
   "column_break_workflow_1",
   "store_warehouse",
+  "is_reliever",
+  "reliever_days",
+  "reliever_start_date",
+  "reliever_end_date",
+  "reliever_cleanup_status",
   "employee_transfer_ref",
   "sync_batch_id",
   "section_movement",
@@ -132,6 +137,40 @@
    "label": "Store Warehouse",
    "options": "Warehouse",
    "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_reliever",
+   "fieldtype": "Check",
+   "label": "Reliever Assignment"
+  },
+  {
+   "depends_on": "eval:doc.is_reliever==1",
+   "fieldname": "reliever_days",
+   "fieldtype": "Int",
+   "label": "Reliever Days"
+  },
+  {
+   "depends_on": "eval:doc.is_reliever==1",
+   "fieldname": "reliever_start_date",
+   "fieldtype": "Date",
+   "label": "Reliever Start Date",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.is_reliever==1",
+   "fieldname": "reliever_end_date",
+   "fieldtype": "Date",
+   "label": "Reliever End Date",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.is_reliever==1",
+   "fieldname": "reliever_cleanup_status",
+   "fieldtype": "Select",
+   "label": "Reliever Cleanup Status",
+   "options": "\nPending\nQueued\nCompleted\nFailed\nSkipped\nSkipped (Roving)",
+   "read_only": 1
   },
   {
    "fieldname": "employee_transfer_ref",

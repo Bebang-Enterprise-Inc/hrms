@@ -40,6 +40,11 @@ def create_transfer(employee, new_branch, transfer_date, reason,
     if not all([employee, new_branch, transfer_date, reason]):
         frappe.throw(_("Required: employee, new_branch, transfer_date, reason"))
 
+    if new_department or new_designation:
+        frappe.throw(
+            _("Department/Designation updates are handled in HR Personnel Action, not Transfer API")
+        )
+
     if not frappe.db.exists("Employee", employee):
         frappe.throw(_("Employee not found"), frappe.DoesNotExistError)
 
@@ -54,22 +59,6 @@ def create_transfer(employee, new_branch, transfer_date, reason,
         "current": emp_doc.branch or "",
         "new": new_branch,
     })
-
-    # Department change (optional)
-    if new_department and new_department != emp_doc.department:
-        transfer_details.append({
-            "property": "Department",
-            "current": emp_doc.department or "",
-            "new": new_department,
-        })
-
-    # Designation change (optional)
-    if new_designation and new_designation != emp_doc.designation:
-        transfer_details.append({
-            "property": "Designation",
-            "current": emp_doc.designation or "",
-            "new": new_designation,
-        })
 
     # Reports To change (optional)
     if new_reports_to and new_reports_to != emp_doc.reports_to:
