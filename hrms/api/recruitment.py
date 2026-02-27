@@ -34,6 +34,29 @@ FRAPPE_TO_BEI_STAGE = {
 }
 
 
+def _emit_mrf_transition_notification(mrf, from_status, to_status, actor=None):
+    """Emit deterministic transition notification for MRF status changes."""
+    actor = actor or getattr(getattr(frappe, "session", None), "user", "system")
+    message = f"MRF {mrf.name} transitioned from {from_status} to {to_status} by {actor}"
+
+    add_comment = getattr(mrf, "add_comment", None)
+    if callable(add_comment):
+        add_comment("Comment", text=message)
+
+    publish_realtime = getattr(frappe, "publish_realtime", None)
+    if callable(publish_realtime):
+        publish_realtime(
+            "mrf_status_transition",
+            {
+                "mrf_name": mrf.name,
+                "from_status": from_status,
+                "to_status": to_status,
+                "actor": actor,
+                "message": message,
+            },
+        )
+
+
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
 def create_mrf(data):
@@ -111,7 +134,14 @@ def create_mrf(data):
     mrf.insert()
 
     # Auto-submit to move to Pending Hiring Manager
+    previous_status = mrf.status
     mrf.db_set("status", "Pending Hiring Manager")
+    _emit_mrf_transition_notification(
+        mrf,
+        from_status=previous_status,
+        to_status="Pending Hiring Manager",
+        actor=frappe.session.user,
+    )
 
     return {
         "name": mrf.name,
@@ -230,12 +260,26 @@ def approve_mrf(mrf_name, action, notes=None):
 
     # Process action
     if action == "reject":
+        previous_status = mrf.status
         mrf.db_set("status", "Rejected")
+        _emit_mrf_transition_notification(
+            mrf,
+            from_status=previous_status,
+            to_status="Rejected",
+            actor=frappe.session.user,
+        )
         status_msg = _("MRF rejected")
     else:
         # Determine next status based on current status
         if current_status == "Pending Hiring Manager":
+            previous_status = mrf.status
             mrf.db_set("status", "Pending HR Manager")
+            _emit_mrf_transition_notification(
+                mrf,
+                from_status=previous_status,
+                to_status="Pending HR Manager",
+                actor=frappe.session.user,
+            )
             status_msg = _("MRF approved by Hiring Manager, forwarded to HR Manager")
         elif current_status == "Pending HR Manager":
             # Check designation level to determine if CEO approval needed
@@ -245,15 +289,36 @@ def approve_mrf(mrf_name, action, notes=None):
                 for keyword in ["VP", "VICE PRESIDENT", "C-LEVEL", "DIRECTOR"]
             )
             if ceo_approval_required:
+                previous_status = mrf.status
                 mrf.db_set("status", "Pending CEO")
+                _emit_mrf_transition_notification(
+                    mrf,
+                    from_status=previous_status,
+                    to_status="Pending CEO",
+                    actor=frappe.session.user,
+                )
                 status_msg = _("MRF approved by HR Manager, forwarded to CEO")
             else:
+                previous_status = mrf.status
                 mrf.db_set("status", "Approved")
+                _emit_mrf_transition_notification(
+                    mrf,
+                    from_status=previous_status,
+                    to_status="Approved",
+                    actor=frappe.session.user,
+                )
                 # Auto-create Job Opening
                 _create_job_opening_from_mrf(mrf)
                 status_msg = _("MRF approved and Job Opening created")
         elif current_status == "Pending CEO":
+            previous_status = mrf.status
             mrf.db_set("status", "Approved")
+            _emit_mrf_transition_notification(
+                mrf,
+                from_status=previous_status,
+                to_status="Approved",
+                actor=frappe.session.user,
+            )
             # Auto-create Job Opening
             _create_job_opening_from_mrf(mrf)
             status_msg = _("MRF approved by CEO and Job Opening created")
