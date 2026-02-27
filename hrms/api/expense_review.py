@@ -347,6 +347,28 @@ def approve_expense(
     }
 
 
+def _create_pcf_jv(expense):
+    """
+    Best-effort PCF JV hook.
+
+    Keeps approval flow stable even when PCF-to-JV mapping is unavailable.
+    """
+    batch_name = getattr(expense, "pcf_batch", None)
+    if not batch_name:
+        return {"created": False, "journal_entry": None, "reason": "missing_pcf_batch"}
+
+    final_coa = getattr(expense, "internal_final_coa", None)
+    if not final_coa:
+        return {"created": False, "journal_entry": None, "reason": "missing_final_coa"}
+
+    amount = flt(getattr(expense, "internal_approved_amount", None) or getattr(expense, "manual_amount", 0))
+    if amount <= 0:
+        return {"created": False, "journal_entry": None, "reason": "invalid_amount"}
+
+    # Explicit no-op until a dedicated expense-level JV policy is finalized.
+    return {"created": False, "journal_entry": None, "reason": "pcf_jv_policy_pending"}
+
+
 def _notify_employee(expense, action: str):
     """Notify employee of expense status change."""
     try:

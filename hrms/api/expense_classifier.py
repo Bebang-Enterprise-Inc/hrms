@@ -106,6 +106,22 @@ COA_LABELS["6007000"] = "Smallwares Expense"
 COA_LABELS["6008002"] = "R & M - Contract Services"
 
 
+def _get_runtime_health():
+    """Return classifier runtime health for explicit fallback signaling."""
+    ml_model_available = bool(JOBLIB_AVAILABLE and os.path.exists(MODEL_PATH))
+    openai_key_configured = bool(getattr(getattr(frappe, "conf", {}), "get", lambda *_: None)("openai_api_key"))
+    openai_available = bool(REQUESTS_AVAILABLE and openai_key_configured)
+
+    return {
+        "joblib_available": JOBLIB_AVAILABLE,
+        "ml_model_available": ml_model_available,
+        "model_path": MODEL_PATH,
+        "requests_available": REQUESTS_AVAILABLE,
+        "openai_key_configured": openai_key_configured,
+        "openai_available": openai_available,
+    }
+
+
 @frappe.whitelist()
 def classify_expense(description: str, vendor: str = None, amount: float = None):
     """
@@ -138,13 +154,15 @@ def classify_expense(description: str, vendor: str = None, amount: float = None)
             "error": "No description provided"
         }
 
+    runtime_health = _get_runtime_health()
+
     # Step 1: Try rule-based classification (instant, free)
     result = classify_by_rules(description, vendor)
     if result.get("confidence", 0) >= 80:
         return result
 
     # Step 2: Try ML model if trained model exists
-    if JOBLIB_AVAILABLE and os.path.exists(MODEL_PATH):
+    if runtime_health["ml_model_available"]:
         ml_result = classify_by_ml(description, vendor, amount)
         if ml_result.get("confidence", 0) >= 70:
             return ml_result
@@ -153,16 +171,42 @@ def classify_expense(description: str, vendor: str = None, amount: float = None)
             result = ml_result
 
     # Step 3: OpenAI fallback for low confidence cases
+    openai_diag = None
     if result.get("confidence", 0) < 70:
         try:
             openai_result = classify_by_openai(description, vendor)
             if openai_result.get("confidence", 0) > 0:
                 return openai_result
+            openai_diag = {
+                "method": openai_result.get("method"),
+                "error": openai_result.get("error"),
+            }
         except Exception as e:
             frappe.log_error(
                 title="OpenAI Classification Error",
                 message=f"Failed to classify expense: {str(e)}\nDescription: {description}\nVendor: {vendor}"
             )
+            openai_diag = {"method": "openai_exception", "error": str(e)}
+
+    # Explicitly surface degraded runtime (no model + no OpenAI) for GAP-034 visibility.
+    if result.get("confidence", 0) <= 0 and not runtime_health["ml_model_available"] and not runtime_health["openai_available"]:
+        degraded = {
+            "coa": None,
+            "coa_label": None,
+            "confidence": 0,
+            "alternatives": [],
+            "method": "fallback_degraded",
+            "fallback_reason": "ml_model_missing_and_openai_unavailable",
+            "runtime_health": runtime_health,
+        }
+        if openai_diag:
+            degraded["openai_diagnostic"] = openai_diag
+        return degraded
+
+    if openai_diag:
+        result = dict(result)
+        result["openai_diagnostic"] = openai_diag
+        result["runtime_health"] = runtime_health
 
     # Return best result we have
     return result
