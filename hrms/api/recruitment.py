@@ -1,5 +1,7 @@
 """Recruitment API endpoints for MRF → Job Opening → Applicant → Job Offer pipeline"""
 
+from typing import Any
+
 import frappe
 from frappe import _
 from frappe.rate_limiter import rate_limit
@@ -33,7 +35,9 @@ FRAPPE_TO_BEI_STAGE = {
 }
 
 
-def _emit_mrf_transition_notification(mrf, from_status, to_status, actor=None):
+def _emit_mrf_transition_notification(
+	mrf: Any, from_status: str, to_status: str, actor: str | None = None
+) -> None:
 	"""Emit deterministic transition notification for MRF status changes."""
 	actor = actor or getattr(getattr(frappe, "session", None), "user", "system")
 	message = f"MRF {mrf.name} transitioned from {from_status} to {to_status} by {actor}"
@@ -58,7 +62,7 @@ def _emit_mrf_transition_notification(mrf, from_status, to_status, actor=None):
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
-def create_mrf(data):
+def create_mrf(data: dict | str):
 	"""Submit new Manpower Request Form.
 
 	Args:
@@ -149,7 +153,12 @@ def create_mrf(data):
 
 
 @frappe.whitelist()
-def get_mrf_list(status=None, department=None, page=1, page_size=50):
+def get_mrf_list(
+	status: str | None = None,
+	department: str | None = None,
+	page: int = 1,
+	page_size: int = 50,
+):
 	"""List MRFs with filters.
 
 	HR users see all MRFs. Department heads see only their department's MRFs.
@@ -205,7 +214,7 @@ def get_mrf_list(status=None, department=None, page=1, page_size=50):
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
-def approve_mrf(mrf_name, action, notes=None):
+def approve_mrf(mrf_name: str, action: str, notes: str | None = None):
 	"""Approve or reject MRF at current approval level.
 
 	Approval flow:
@@ -330,7 +339,7 @@ def approve_mrf(mrf_name, action, notes=None):
 	}
 
 
-def _create_job_opening_from_mrf(mrf):
+def _create_job_opening_from_mrf(mrf: Any) -> None:
 	"""Create Job Opening from approved MRF.
 
 	Args:
@@ -367,7 +376,7 @@ def _create_job_opening_from_mrf(mrf):
 
 
 @frappe.whitelist()
-def get_recruitment_pipeline(status=None, department=None):
+def get_recruitment_pipeline(status: str | None = None, department: str | None = None):
 	"""Get recruitment pipeline kanban data.
 
 	Stages: Applied → Screening → Interview → Offer → Hired
@@ -431,7 +440,7 @@ def get_recruitment_pipeline(status=None, department=None):
 
 @frappe.whitelist()
 @rate_limit(limit=20, seconds=60)
-def update_applicant_stage(applicant_name, stage, notes=None):
+def update_applicant_stage(applicant_name: str, stage: str, notes: str | None = None):
 	"""Move applicant through pipeline stages.
 
 	Args:
@@ -472,7 +481,7 @@ def update_applicant_stage(applicant_name, stage, notes=None):
 
 
 @frappe.whitelist()
-def get_applicant_detail(applicant_name):
+def get_applicant_detail(applicant_name: str):
 	"""Get full applicant profile with stage history.
 
 	Args:
@@ -512,7 +521,7 @@ def get_applicant_detail(applicant_name):
 
 @frappe.whitelist()
 @rate_limit(limit=5, seconds=60)
-def create_job_offer(applicant_name, data):
+def create_job_offer(applicant_name: str, data: dict | str):
 	"""Generate job offer for applicant.
 
 	Args:
@@ -565,7 +574,7 @@ def create_job_offer(applicant_name, data):
 
 
 @frappe.whitelist()
-def get_recruitment_metrics(from_date=None, to_date=None):
+def get_recruitment_metrics(from_date: str | None = None, to_date: str | None = None):
 	"""Get recruitment metrics and KPIs.
 
 	Metrics:

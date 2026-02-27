@@ -16,6 +16,12 @@ def _install_fake_frappe():
 
 	frappe = types.ModuleType("frappe")
 	utils = types.ModuleType("frappe.utils")
+	frappe.local = types.SimpleNamespace()
+
+	def _module_getattr(name):
+		if name in {"db", "session"} and hasattr(frappe.local, name):
+			return getattr(frappe.local, name)
+		raise AttributeError(name)
 
 	def whitelist(*args, **kwargs):
 		def decorator(fn):
@@ -71,9 +77,10 @@ def _install_fake_frappe():
 	frappe._ = lambda text: text
 	frappe.PermissionError = Exception
 	frappe.get_roles = lambda user=None: ["HR Manager"]
-	frappe.session = types.SimpleNamespace(user="test.hr@bebang.ph")
+	frappe.local.session = types.SimpleNamespace(user="test.hr@bebang.ph")
 	frappe.get_doc = lambda *args, **kwargs: None
-	frappe.db = types.SimpleNamespace(sql=_sql, exists=lambda *args, **kwargs: False)
+	frappe.local.db = types.SimpleNamespace(sql=_sql, exists=lambda *args, **kwargs: False)
+	frappe.__getattr__ = _module_getattr
 	frappe.logger = lambda *args, **kwargs: types.SimpleNamespace(info=lambda *a, **k: None)
 
 	utils.flt = lambda value, precision=None: float(value or 0)

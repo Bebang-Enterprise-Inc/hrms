@@ -15,6 +15,12 @@ def _install_fake_frappe():
 		return
 
 	frappe = types.ModuleType("frappe")
+	frappe.local = types.SimpleNamespace()
+
+	def _module_getattr(name):
+		if name in {"db", "session"} and hasattr(frappe.local, name):
+			return getattr(frappe.local, name)
+		raise AttributeError(name)
 
 	def whitelist(*args, **kwargs):
 		def decorator(fn):
@@ -67,7 +73,7 @@ def _install_fake_frappe():
 	frappe._ = lambda text: text
 	frappe.get_all = fake_get_all
 	frappe.get_doc = lambda payload, name=None: FakeInterviewDoc()
-	frappe.db = types.SimpleNamespace(
+	frappe.local.db = types.SimpleNamespace(
 		get_value=lambda doctype, name, field=None: "Test Employee"
 		if field == "employee_name"
 		else "ARANETA",
@@ -77,7 +83,8 @@ def _install_fake_frappe():
 		today=lambda: "2026-02-27",
 		add_days=lambda date, days: "2025-11-29",
 	)
-	frappe.session = types.SimpleNamespace(user="test.hr@bebang.ph")
+	frappe.local.session = types.SimpleNamespace(user="test.hr@bebang.ph")
+	frappe.__getattr__ = _module_getattr
 
 	sys.modules["frappe"] = frappe
 

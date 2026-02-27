@@ -37,7 +37,7 @@ def _check_ot_approver_role():
 # ================================
 
 
-def detect_overtime_for_date(attendance_date=None):
+def detect_overtime_for_date(attendance_date: str | None = None):
 	"""Scan Attendance records for a given date and create BEI Overtime Request
 	for any employee whose working_hours exceeds 8.
 
@@ -112,7 +112,12 @@ def detect_overtime_for_date(attendance_date=None):
 
 
 @frappe.whitelist()
-def approve_overtime(overtime_request_name=None, notes=None, name=None, approval_notes=None):
+def approve_overtime(
+	overtime_request_name: str | None = None,
+	notes: str | None = None,
+	name: str | None = None,
+	approval_notes: str | None = None,
+):
 	"""Supervisor approves an overtime request.
 	Status: Pending Approval → Approved
 
@@ -152,7 +157,12 @@ def approve_overtime(overtime_request_name=None, notes=None, name=None, approval
 
 
 @frappe.whitelist()
-def reject_overtime(overtime_request_name=None, reason=None, name=None, rejection_reason=None):
+def reject_overtime(
+	overtime_request_name: str | None = None,
+	reason: str | None = None,
+	name: str | None = None,
+	rejection_reason: str | None = None,
+):
 	"""Supervisor rejects an overtime request.
 	Status: Pending Approval → Rejected
 	Effect: Employee paid for regular hours only (no OT pay in payroll).
@@ -193,7 +203,12 @@ def reject_overtime(overtime_request_name=None, reason=None, name=None, rejectio
 
 
 @frappe.whitelist()
-def get_pending_overtime(store=None, employee=None, from_date=None, to_date=None):
+def get_pending_overtime(
+	store: str | None = None,
+	employee: str | None = None,
+	from_date: str | None = None,
+	to_date: str | None = None,
+):
 	"""Get overtime requests pending supervisor approval.
 
 	Args:
@@ -207,31 +222,15 @@ def get_pending_overtime(store=None, employee=None, from_date=None, to_date=None
 	"""
 	_check_ot_approver_role()
 
-	conditions = ["ot.overtime_status = 'Pending Approval'"]
-	params = {}
-
-	if employee:
-		conditions.append("ot.employee = %(employee)s")
-		params["employee"] = employee
-
-	if from_date:
-		conditions.append("ot.attendance_date >= %(from_date)s")
-		params["from_date"] = from_date
-
-	if to_date:
-		conditions.append("ot.attendance_date <= %(to_date)s")
-		params["to_date"] = to_date
-
-	store_join = ""
-	if store:
-		store_join = "LEFT JOIN `tabEmployee` e ON e.name = ot.employee"
-		conditions.append("e.branch = %(store)s")
-		params["store"] = store
-
-	where = " AND ".join(conditions)
+	params = {
+		"employee": employee,
+		"from_date": from_date,
+		"to_date": to_date,
+		"store": store,
+	}
 
 	return frappe.db.sql(
-		f"""
+		"""
         SELECT
             ot.name,
             ot.employee,
@@ -245,8 +244,11 @@ def get_pending_overtime(store=None, employee=None, from_date=None, to_date=None
             emp.branch
         FROM `tabBEI Overtime Request` ot
         LEFT JOIN `tabEmployee` emp ON emp.name = ot.employee
-        {store_join}
-        WHERE {where}
+        WHERE ot.overtime_status = 'Pending Approval'
+          AND (%(employee)s IS NULL OR ot.employee = %(employee)s)
+          AND (%(from_date)s IS NULL OR ot.attendance_date >= %(from_date)s)
+          AND (%(to_date)s IS NULL OR ot.attendance_date <= %(to_date)s)
+          AND (%(store)s IS NULL OR emp.branch = %(store)s)
         ORDER BY ot.attendance_date DESC
     """,
 		params,
@@ -256,44 +258,27 @@ def get_pending_overtime(store=None, employee=None, from_date=None, to_date=None
 
 @frappe.whitelist()
 def get_overtime_requests(
-	status=None,
-	store=None,
-	employee=None,
-	from_date=None,
-	to_date=None,
-	page=1,
-	page_size=20,
+	status: str | None = None,
+	store: str | None = None,
+	employee: str | None = None,
+	from_date: str | None = None,
+	to_date: str | None = None,
+	page: int = 1,
+	page_size: int = 20,
 ):
 	"""Portal contract for overtime requests list with pagination."""
 	_check_ot_approver_role()
 
-	conditions = []
-	params = {}
-
-	if status:
-		conditions.append("ot.overtime_status = %(status)s")
-		params["status"] = status
-
-	if employee:
-		conditions.append("ot.employee = %(employee)s")
-		params["employee"] = employee
-
-	if from_date:
-		conditions.append("ot.attendance_date >= %(from_date)s")
-		params["from_date"] = from_date
-
-	if to_date:
-		conditions.append("ot.attendance_date <= %(to_date)s")
-		params["to_date"] = to_date
-
-	if store:
-		conditions.append("emp.branch = %(store)s")
-		params["store"] = store
-
-	where_sql = "WHERE " + " AND ".join(conditions) if conditions else ""
+	params = {
+		"status": status,
+		"employee": employee,
+		"from_date": from_date,
+		"to_date": to_date,
+		"store": store,
+	}
 
 	rows = frappe.db.sql(
-		f"""
+		"""
         SELECT
             ot.name,
             ot.employee,
@@ -312,7 +297,11 @@ def get_overtime_requests(
             emp.branch
         FROM `tabBEI Overtime Request` ot
         LEFT JOIN `tabEmployee` emp ON emp.name = ot.employee
-        {where_sql}
+        WHERE (%(status)s IS NULL OR ot.overtime_status = %(status)s)
+          AND (%(employee)s IS NULL OR ot.employee = %(employee)s)
+          AND (%(from_date)s IS NULL OR ot.attendance_date >= %(from_date)s)
+          AND (%(to_date)s IS NULL OR ot.attendance_date <= %(to_date)s)
+          AND (%(store)s IS NULL OR emp.branch = %(store)s)
         ORDER BY ot.attendance_date DESC, ot.creation DESC
     """,
 		params,
@@ -323,29 +312,22 @@ def get_overtime_requests(
 
 
 @frappe.whitelist()
-def get_overtime_summary(store=None, from_date=None, to_date=None):
+def get_overtime_summary(
+	store: str | None = None,
+	from_date: str | None = None,
+	to_date: str | None = None,
+):
 	"""Portal contract for overtime summary cards/tables."""
 	_check_ot_approver_role()
 
-	conditions = []
-	params = {}
-
-	if from_date:
-		conditions.append("ot.attendance_date >= %(from_date)s")
-		params["from_date"] = from_date
-
-	if to_date:
-		conditions.append("ot.attendance_date <= %(to_date)s")
-		params["to_date"] = to_date
-
-	if store:
-		conditions.append("emp.branch = %(store)s")
-		params["store"] = store
-
-	where_sql = "WHERE " + " AND ".join(conditions) if conditions else ""
+	params = {
+		"from_date": from_date,
+		"to_date": to_date,
+		"store": store,
+	}
 
 	summary = frappe.db.sql(
-		f"""
+		"""
         SELECT
             COALESCE(emp.department, 'Unassigned') AS department,
             COALESCE(emp.branch, 'Unassigned') AS store,
@@ -359,7 +341,9 @@ def get_overtime_summary(store=None, from_date=None, to_date=None):
             COALESCE(SUM(CASE WHEN ot.overtime_status = 'Rejected' THEN 1 ELSE 0 END), 0) AS rejected_count
         FROM `tabBEI Overtime Request` ot
         LEFT JOIN `tabEmployee` emp ON emp.name = ot.employee
-        {where_sql}
+        WHERE (%(from_date)s IS NULL OR ot.attendance_date >= %(from_date)s)
+          AND (%(to_date)s IS NULL OR ot.attendance_date <= %(to_date)s)
+          AND (%(store)s IS NULL OR emp.branch = %(store)s)
         GROUP BY COALESCE(emp.department, 'Unassigned'), COALESCE(emp.branch, 'Unassigned')
         ORDER BY store ASC, department ASC
     """,
@@ -385,7 +369,7 @@ def get_overtime_summary(store=None, from_date=None, to_date=None):
 
 
 @frappe.whitelist()
-def get_approved_overtime_hours(employee, from_date, to_date):
+def get_approved_overtime_hours(employee: str, from_date: str, to_date: str):
 	"""Get total approved overtime hours for an employee in a date range.
 
 	Used by payroll processing to calculate OT pay — only approved hours included.

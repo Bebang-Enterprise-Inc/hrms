@@ -17,6 +17,12 @@ def _install_fake_frappe():
 
 	frappe = types.ModuleType("frappe")
 	utils = types.ModuleType("frappe.utils")
+	frappe.local = types.SimpleNamespace()
+
+	def _module_getattr(name):
+		if name in {"db", "session"} and hasattr(frappe.local, name):
+			return getattr(frappe.local, name)
+		raise AttributeError(name)
 
 	def whitelist(*args, **kwargs):
 		def decorator(fn):
@@ -34,7 +40,8 @@ def _install_fake_frappe():
 	frappe.throw = _throw
 	frappe.only_for = lambda *args, **kwargs: None
 	frappe.get_doc = lambda *args, **kwargs: None
-	frappe.db = types.SimpleNamespace(sql=lambda *args, **kwargs: [], count=lambda *args, **kwargs: 0)
+	frappe.local.db = types.SimpleNamespace(sql=lambda *args, **kwargs: [], count=lambda *args, **kwargs: 0)
+	frappe.__getattr__ = _module_getattr
 
 	utils.getdate = lambda value=None: datetime.date.today()
 	utils.date_diff = lambda to_date, from_date: 0

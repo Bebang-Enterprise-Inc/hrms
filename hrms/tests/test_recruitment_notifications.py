@@ -19,6 +19,12 @@ def _install_fake_frappe():
 	frappe = types.ModuleType("frappe")
 	utils = types.ModuleType("frappe.utils")
 	rate_limiter = types.ModuleType("frappe.rate_limiter")
+	frappe.local = types.SimpleNamespace()
+
+	def _module_getattr(name):
+		if name in {"db", "session"} and hasattr(frappe.local, name):
+			return getattr(frappe.local, name)
+		raise AttributeError(name)
 
 	def whitelist(*args, **kwargs):
 		def decorator(fn):
@@ -43,13 +49,14 @@ def _install_fake_frappe():
 	frappe.get_doc = lambda *args, **kwargs: None
 	frappe.get_all = lambda *args, **kwargs: []
 	frappe.get_roles = lambda user=None: ["HR Manager"]
-	frappe.session = types.SimpleNamespace(user="test.hr@bebang.ph")
+	frappe.local.session = types.SimpleNamespace(user="test.hr@bebang.ph")
 	frappe.publish_realtime = MagicMock()
-	frappe.db = types.SimpleNamespace(
+	frappe.local.db = types.SimpleNamespace(
 		get_value=lambda *args, **kwargs: "STORE SUPERVISOR",
 		count=lambda *args, **kwargs: 0,
 		sql=lambda *args, **kwargs: [],
 	)
+	frappe.__getattr__ = _module_getattr
 
 	utils.getdate = lambda value=None: datetime.date.today()
 	utils.date_diff = lambda to_date, from_date: 0
