@@ -45,6 +45,20 @@ class _ChargeDoc:
 			"status": self.status,
 		}
 
+class _AckDoc:
+	def __init__(self):
+		self.name = "MR-S06-ACK-0001"
+		self.charge_to_store = 1
+		self.store_acknowledged = 0
+		self.acknowledged_by = None
+		self.acknowledgement_date = None
+		self.status = "Pending Acknowledgement"
+		self.flags = types.SimpleNamespace(ignore_permissions=False)
+		self.saved = False
+
+	def save(self):
+		self.saved = True
+
 
 class TestProjectsNotificationsS06(unittest.TestCase):
 	def test_new_request_notification_dispatches_event(self):
@@ -90,3 +104,55 @@ class TestProjectsNotificationsS06(unittest.TestCase):
 		self.assertEqual(doc.status, "Pending Acknowledgement")
 		self.assertEqual(doc.charge_amount, 1250)
 		notify_mock.assert_called_once_with(doc)
+
+	def test_acknowledge_charge_allows_store_staff(self):
+		doc = _AckDoc()
+
+		def _db_get_value(doctype, filters_or_name=None, fieldname=None):
+			if doctype == "Employee" and isinstance(filters_or_name, dict):
+				return "HR-EMP-TEST-0001"
+			if doctype == "Employee" and filters_or_name == "HR-EMP-TEST-0001" and fieldname == "branch":
+				return "AYALA EVO - BEI"
+			if doctype == "BEI Maintenance Request" and fieldname == "store":
+				return "AYALA EVO - BEI"
+			return None
+
+		with patch("frappe.get_roles", return_value=["Store Staff"]), patch(
+			"frappe.db.exists", return_value=True
+		), patch("frappe.db.get_value", side_effect=_db_get_value), patch(
+			"frappe.get_doc", return_value=doc
+		):
+			result = projects.acknowledge_maintenance_charge(request_id=doc.name)
+
+		self.assertTrue(result["success"])
+		self.assertTrue(doc.saved)
+		self.assertEqual(doc.status, "Verified")
+		self.assertEqual(doc.store_acknowledged, 1)
+
+	def test_get_pending_charges_allows_store_staff(self):
+		rows = [
+			{
+				"name": "MR-S06-ACK-0002",
+				"store": "AYALA EVO - BEI",
+				"store_code": "AYALA EVO",
+				"request_date": "2026-02-27",
+				"issue_category": "Electrical",
+				"description": "Pending ack sample",
+				"charge_amount": 750.0,
+				"charging_reason": "Wire replacement",
+				"concern_type": "Wear & Tear",
+				"priority": "High",
+				"status": "Pending Acknowledgement",
+			}
+		]
+
+		with patch("frappe.get_roles", return_value=["Store Staff"]), patch(
+			"frappe.db.count", return_value=1
+		), patch("frappe.get_all", return_value=rows), patch(
+			"frappe.db.get_value", return_value="Ayala Evo"
+		):
+			result = projects.get_pending_charges(page=1, page_size=20)
+
+		self.assertEqual(result["total"], 1)
+		self.assertEqual(len(result["requests"]), 1)
+		self.assertEqual(result["requests"][0]["name"], "MR-S06-ACK-0002")

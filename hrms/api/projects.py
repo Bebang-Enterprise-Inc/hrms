@@ -1170,7 +1170,14 @@ def acknowledge_maintenance_charge(request_id):
     """
     # RBAC: Projects users/managers and store roles can acknowledge charges
     user_roles = frappe.get_roles(frappe.session.user)
-    allowed_roles = ["Projects User", "Projects Manager", "Store Supervisor", "Store OIC", "System Manager"]
+    allowed_roles = [
+        "Projects User",
+        "Projects Manager",
+        "Store Supervisor",
+        "Store Staff",
+        "Store OIC",
+        "System Manager",
+    ]
     if not any(role in user_roles for role in allowed_roles):
         frappe.throw(_("You do not have permission to acknowledge maintenance charges"), frappe.PermissionError)
 
@@ -1231,7 +1238,15 @@ def get_pending_charges(store=None, page=1, page_size=20):
     """
     # RBAC: Projects and store management roles can view pending charges
     user_roles = frappe.get_roles(frappe.session.user)
-    allowed_roles = ["Projects User", "Projects Manager", "Store Supervisor", "Store OIC", "Area Supervisor", "System Manager"]
+    allowed_roles = [
+        "Projects User",
+        "Projects Manager",
+        "Store Supervisor",
+        "Store Staff",
+        "Store OIC",
+        "Area Supervisor",
+        "System Manager",
+    ]
     if not any(role in user_roles for role in allowed_roles):
         frappe.throw(_("You do not have permission to view pending charges"), frappe.PermissionError)
 
