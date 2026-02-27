@@ -12,6 +12,7 @@ import re
 
 import frappe
 from hrms.utils.bei_config import get_company
+from hrms.utils.delivery_billing_policy import CPO_APPROVER_EMAIL, CFO_APPROVER_EMAIL, append_approval_audit_log
 from frappe import _
 from frappe.utils import flt, cint, getdate, nowdate, add_days, get_first_day, get_last_day
 
@@ -2800,11 +2801,22 @@ def request_match_exception(data):
             "status": ["in", ["Pending CPO", "Pending CFO", "Approved"]],
         })
         if existing:
-            frappe.throw(
-                _("An exception request already exists for Trip {0} stop {1}: {2}").format(
-                    trip_name, stop_idx, existing
-                )
-            )
+            existing_doc = frappe.db.get_value(
+                "BEI Match Exception",
+                existing,
+                ["name", "approval_tier", "approver", "status"],
+                as_dict=True,
+            ) or {}
+            return {
+                "success": True,
+                "name": existing_doc.get("name", existing),
+                "approval_tier": existing_doc.get("approval_tier"),
+                "approver": existing_doc.get("approver"),
+                "status": existing_doc.get("status"),
+                "message": _(
+                    "An exception request already exists for Trip {0} stop {1}: {2}"
+                ).format(trip_name, stop_idx, existing),
+            }
 
         exception_payload = {
             "doctype": "BEI Match Exception",
@@ -2932,13 +2944,60 @@ def upload_official_receipt(name, or_number, or_date, or_amount, or_attachment=N
     }
 
 
+def _has_doctype_column(doctype: str, fieldname: str) -> bool:
+    try:
+        return bool(frappe.db.has_column(doctype, fieldname))
+    except Exception:
+        return False
+
+
+def _append_comment(existing: str | None, prefix: str, comment: str | None) -> str:
+    text = f"{prefix}: {(comment or '').strip()}".rstrip()
+    if not existing:
+        return text
+    return f"{existing}\n{text}"
+
+
+def _resolve_approver_user(preferred_email: str) -> str:
+    """Return a valid User link target; fallback keeps approval flow unblocked."""
+    if preferred_email and frappe.db.exists("User", preferred_email):
+        return preferred_email
+    if frappe.db.exists("User", "Administrator"):
+        return "Administrator"
+    return frappe.session.user or preferred_email
+
+
+def _record_dual_trace(exception, role: str, canonical_email: str, approved_at, comment: str | None):
+    """Persist dual-approval trace on both modern and legacy schemas."""
+    role_key = role.strip().upper()
+
+    if role_key == "CPO":
+        if _has_doctype_column("BEI Match Exception", "cpo_approved_by"):
+            exception.cpo_approved_by = canonical_email
+        if _has_doctype_column("BEI Match Exception", "cpo_approved_at"):
+            exception.cpo_approved_at = approved_at
+    elif role_key == "CFO":
+        if _has_doctype_column("BEI Match Exception", "cfo_approved_by"):
+            exception.cfo_approved_by = canonical_email
+        if _has_doctype_column("BEI Match Exception", "cfo_approved_at"):
+            exception.cfo_approved_at = approved_at
+
+    audit_line = append_approval_audit_log(
+        getattr(exception, "approval_audit_log", None),
+        f"{role_key} Approved",
+        canonical_email,
+        approved_at,
+        comment=comment,
+    )
+    if _has_doctype_column("BEI Match Exception", "approval_audit_log"):
+        exception.approval_audit_log = audit_line
+
+    exception.approver_comment = _append_comment(exception.approver_comment, f"{role_key} Approved", comment)
+
+
 @frappe.whitelist()
 def approve_match_exception(name, comment=None):
-    """Approve a match exception.
-
-    Validates that the current user is the designated approver for the tier.
-    On approval, sends Google Chat notification to CEO (for all tiers).
-    """
+    """Approve a match exception with support for dual-tier flows."""
     from frappe.utils import now_datetime
 
     exception = frappe.get_doc("BEI Match Exception", name)
@@ -2958,39 +3017,56 @@ def approve_match_exception(name, comment=None):
             )
         )
 
-    if exception.approval_tier == "CPO+CFO" and exception.approver == "mae@bebang.ph":
-        exception.approver = "butch@bebang.ph"
+    approved_at = now_datetime()
+
+    # First stage for dual approvals
+    if exception.approval_tier == "CPO+CFO" and exception.status == "Pending CPO":
+        _record_dual_trace(exception, "CPO", CPO_APPROVER_EMAIL, approved_at, comment)
+        exception.approver = _resolve_approver_user(CFO_APPROVER_EMAIL)
         exception.status = "Pending CFO"
         exception.approver_status = "Pending"
-        exception.approver_comment = (exception.approver_comment or "") + f"\nCPO Approved: {comment}"
-        exception.save()
+        exception.save(ignore_permissions=True)
         return {
             "success": True,
-            "message": "Exception approved by CPO, escalated to CFO."
-        }
-    elif exception.approval_tier == "CPO+CEO" and exception.approver == "mae@bebang.ph":
-        exception.approver = "sam@bebang.ph"
-        exception.status = "Pending CEO"
-        exception.approver_status = "Pending"
-        exception.approver_comment = (exception.approver_comment or "") + f"\nCPO Approved: {comment}"
-        exception.save()
-        return {
-            "success": True,
-            "message": "Exception approved by CPO, escalated to CEO."
+            "name": exception.name,
+            "status": exception.status,
+            "next_approver": exception.approver,
+            "message": "Exception approved by CPO, escalated to CFO.",
         }
 
+    if exception.approval_tier == "CPO+CEO" and exception.status == "Pending CPO":
+        _record_dual_trace(exception, "CPO", CPO_APPROVER_EMAIL, approved_at, comment)
+        exception.approver = _resolve_approver_user("sam@bebang.ph")
+        exception.status = "Pending CEO"
+        exception.approver_status = "Pending"
+        exception.save(ignore_permissions=True)
+        return {
+            "success": True,
+            "name": exception.name,
+            "status": exception.status,
+            "next_approver": exception.approver,
+            "message": "Exception approved by CPO, escalated to CEO.",
+        }
+
+    # Final stage
+    if exception.approval_tier == "CPO+CFO" and exception.status == "Pending CFO":
+        _record_dual_trace(exception, "CFO", CFO_APPROVER_EMAIL, approved_at, comment)
+    elif exception.approval_tier == "CPO+CEO" and exception.status == "Pending CEO":
+        exception.approver_comment = _append_comment(exception.approver_comment, "CEO Approved", comment)
+    else:
+        exception.approver_comment = _append_comment(exception.approver_comment, "Final Approval", comment)
+
     exception.approver_status = "Approved"
-    exception.approver_date = now_datetime()
-    exception.approver_comment = (exception.approver_comment or "") + f"\nFinal Approval: {comment}"
+    exception.approver_date = approved_at
     exception.status = "Approved"
-    exception.save()
+    exception.save(ignore_permissions=True)
 
     # Send CEO notification for all approved exceptions (any tier)
     notified = _send_ceo_exception_notification(exception)
     if notified:
         exception.ceo_notified = 1
         exception.ceo_notification_date = now_datetime()
-        exception.save()
+        exception.save(ignore_permissions=True)
 
     return {
         "success": True,
