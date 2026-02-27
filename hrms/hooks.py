@@ -238,6 +238,10 @@ doc_events = {
 		"validate": "hrms.api.pcf.validate_pcf_batch",
 		"on_update": "hrms.api.pcf.on_batch_update",
 	},
+	"BEI Billing Schedule": {
+		"validate": "hrms.api.billing.on_billing_schedule_validate",
+		"on_update": "hrms.api.billing.on_billing_schedule_update",
+	},
 	"BEI Approval Queue": {
 		"after_insert": "hrms.api.google_chat.on_approval_queue_insert",
 	},
