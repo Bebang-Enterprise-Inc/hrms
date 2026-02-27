@@ -37,6 +37,49 @@ class ChangeProcessor:
         # Thread pool for parallel processing
         self._executor = ThreadPoolExecutor(max_workers=4)
 
+    @staticmethod
+    def _is_critical_change_alert(alert: str) -> bool:
+        """Return True when a change alert should trigger immediate escalation."""
+        alert_text = (alert or "").upper()
+        critical_markers = (
+            "MASS EDIT",
+            "DELETION",
+            "FINANCIAL DATA MODIFIED",
+            "UNUSUAL PATTERN",
+        )
+        return any(marker in alert_text for marker in critical_markers)
+
+    def _send_critical_sync_alert(
+        self,
+        *,
+        sheet_config: SheetConfig,
+        trigger: str,
+        reasons: List[str],
+        rows_processed: int,
+        rows_failed: int,
+        errors: Optional[List[str]] = None,
+        critical_alerts: Optional[List[str]] = None,
+    ) -> None:
+        """Send critical sync alerts to Google Chat (non-blocking)."""
+        if not (reasons or rows_failed or errors or critical_alerts):
+            return
+
+        try:
+            from .notifications import send_sheets_sync_critical_alert
+
+            send_sheets_sync_critical_alert(
+                spreadsheet_name=sheet_config.name,
+                sheet_name=sheet_config.sheet_name,
+                trigger=trigger,
+                reasons=reasons,
+                rows_processed=rows_processed,
+                rows_failed=rows_failed,
+                errors=errors or [],
+                alerts=critical_alerts or [],
+            )
+        except Exception as e:
+            logger.error(f"Failed to dispatch critical sync alert for {sheet_config.name}: {e}")
+
     def process_webhook(
         self,
         spreadsheet_id: str,
@@ -104,6 +147,8 @@ class ChangeProcessor:
         )
 
         change_report = None
+        critical_alerts: List[str] = []
+        critical_reasons: List[str] = []
 
         try:
             # Fetch data from Google Sheets
@@ -150,7 +195,8 @@ class ChangeProcessor:
             # Log any alerts (suspicious patterns)
             for alert in change_report.alerts:
                 logger.warning(f"ALERT: {alert}")
-                # TODO: Send to Google Chat if critical
+                if self._is_critical_change_alert(alert):
+                    critical_alerts.append(alert)
 
             # Sync to Frappe
             result = self.frappe.sync_sheet_data(sheet_config, data, checksum)
@@ -161,6 +207,24 @@ class ChangeProcessor:
             log.rows_failed = result.rows_failed
             if result.errors:
                 log.error_message = '; '.join(result.errors[:5])  # First 5 errors
+
+            if not result.success:
+                critical_reasons.append("sync_result_failed")
+            if log.rows_failed > 0:
+                critical_reasons.append("rows_failed")
+            if result.errors:
+                critical_reasons.append("sync_errors_reported")
+
+            if critical_alerts or critical_reasons:
+                self._send_critical_sync_alert(
+                    sheet_config=sheet_config,
+                    trigger=trigger,
+                    reasons=sorted(set(critical_reasons + (["suspicious_change_alert"] if critical_alerts else []))),
+                    rows_processed=log.rows_processed,
+                    rows_failed=log.rows_failed,
+                    errors=result.errors,
+                    critical_alerts=critical_alerts,
+                )
 
             # Update checksum on success
             if result.success:
@@ -181,6 +245,15 @@ class ChangeProcessor:
             log.status = 'failed'
             log.error_message = str(e)
             logger.error(f"Failed to sync {sheet_config.name}: {e}")
+            self._send_critical_sync_alert(
+                sheet_config=sheet_config,
+                trigger=trigger,
+                reasons=["sync_exception"],
+                rows_processed=log.rows_processed,
+                rows_failed=max(log.rows_failed, 1),
+                errors=[str(e)],
+                critical_alerts=critical_alerts,
+            )
 
         finally:
             log.duration_seconds = time.time() - start_time

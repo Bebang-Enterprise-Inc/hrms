@@ -1,0 +1,213 @@
+import datetime
+import importlib.util
+import sys
+import types
+import unittest
+from pathlib import Path
+from unittest.mock import MagicMock
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+	sys.path.insert(0, str(ROOT))
+
+
+def _install_fake_sheets_receiver_dependencies():
+	if "hrms" not in sys.modules:
+		hrms_pkg = types.ModuleType("hrms")
+		hrms_pkg.__path__ = []
+		sys.modules["hrms"] = hrms_pkg
+
+	if "hrms.services" not in sys.modules:
+		services_pkg = types.ModuleType("hrms.services")
+		services_pkg.__path__ = []
+		sys.modules["hrms.services"] = services_pkg
+
+	if "hrms.services.sheets_receiver" not in sys.modules:
+		sheets_pkg = types.ModuleType("hrms.services.sheets_receiver")
+		sheets_pkg.__path__ = []
+		sys.modules["hrms.services.sheets_receiver"] = sheets_pkg
+
+	config_mod = types.ModuleType("hrms.services.sheets_receiver.config")
+	config_mod.SheetConfig = types.SimpleNamespace
+	config_mod.get_config = lambda: types.SimpleNamespace()
+	config_mod.get_sheet_by_spreadsheet_id = lambda *_args, **_kwargs: None
+	config_mod.get_watched_sheets = lambda: {}
+	sys.modules["hrms.services.sheets_receiver.config"] = config_mod
+
+	models_mod = types.ModuleType("hrms.services.sheets_receiver.models")
+
+	class SyncLog:
+		def __init__(self, **kwargs):
+			self.id = kwargs.get("id")
+			self.spreadsheet_id = kwargs.get("spreadsheet_id")
+			self.spreadsheet_name = kwargs.get("spreadsheet_name")
+			self.sheet_name = kwargs.get("sheet_name")
+			self.trigger = kwargs.get("trigger")
+			self.status = kwargs.get("status")
+			self.rows_processed = kwargs.get("rows_processed", 0)
+			self.rows_created = kwargs.get("rows_created", 0)
+			self.rows_updated = kwargs.get("rows_updated", 0)
+			self.rows_failed = kwargs.get("rows_failed", 0)
+			self.error_message = kwargs.get("error_message")
+			self.duration_seconds = kwargs.get("duration_seconds", 0)
+			self.data_checksum = kwargs.get("data_checksum")
+			self.created_at = kwargs.get("created_at", datetime.datetime.utcnow())
+
+	models_mod.SyncLog = SyncLog
+	models_mod.get_db = lambda: types.SimpleNamespace()
+	sys.modules["hrms.services.sheets_receiver.models"] = models_mod
+
+	sheets_client_mod = types.ModuleType("hrms.services.sheets_receiver.sheets_client")
+	sheets_client_mod.get_sheets_client = lambda: types.SimpleNamespace()
+	sys.modules["hrms.services.sheets_receiver.sheets_client"] = sheets_client_mod
+
+	frappe_client_mod = types.ModuleType("hrms.services.sheets_receiver.frappe_client")
+
+	class SyncResult:
+		def __init__(
+			self,
+			success: bool,
+			rows_processed: int = 0,
+			rows_created: int = 0,
+			rows_updated: int = 0,
+			rows_failed: int = 0,
+			errors=None,
+		):
+			self.success = success
+			self.rows_processed = rows_processed
+			self.rows_created = rows_created
+			self.rows_updated = rows_updated
+			self.rows_failed = rows_failed
+			self.errors = errors or []
+
+	frappe_client_mod.SyncResult = SyncResult
+	frappe_client_mod.get_frappe_client = lambda: types.SimpleNamespace()
+	sys.modules["hrms.services.sheets_receiver.frappe_client"] = frappe_client_mod
+
+	change_tracker_mod = types.ModuleType("hrms.services.sheets_receiver.change_tracker")
+	change_tracker_mod.ChangeTracker = lambda _db: types.SimpleNamespace()
+	change_tracker_mod.ChangeReport = types.SimpleNamespace
+	change_tracker_mod.ChangeType = types.SimpleNamespace
+	sys.modules["hrms.services.sheets_receiver.change_tracker"] = change_tracker_mod
+
+
+_install_fake_sheets_receiver_dependencies()
+processor_spec = importlib.util.spec_from_file_location(
+	"hrms.services.sheets_receiver.processor_under_test",
+	ROOT / "hrms" / "services" / "sheets_receiver" / "processor.py",
+)
+processor_mod = importlib.util.module_from_spec(processor_spec)
+processor_spec.loader.exec_module(processor_mod)
+ChangeProcessor = processor_mod.ChangeProcessor
+SyncResult = processor_mod.SyncResult
+
+
+class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
+	def _make_sheet_config(self):
+		return types.SimpleNamespace(
+			name="AR Aging",
+			spreadsheet_id="sheet-001",
+			sheet_name="AR",
+			range="A:Z",
+			key_column="invoice_no",
+		)
+
+	def _make_processor(self):
+		processor = ChangeProcessor.__new__(ChangeProcessor)
+		processor.db = types.SimpleNamespace(
+			has_changed=MagicMock(return_value=True),
+			save_checksum=MagicMock(),
+			log_sync=MagicMock(),
+		)
+		processor.sheets = types.SimpleNamespace(
+			fetch_sheet_data=MagicMock(
+				return_value=([{"invoice_no": "SINV-0001", "outstanding": 1200}], "chk-001")
+			)
+		)
+		processor.frappe = types.SimpleNamespace(
+			sync_sheet_data=MagicMock(
+				return_value=SyncResult(
+					success=True,
+					rows_processed=1,
+					rows_created=0,
+					rows_updated=1,
+					rows_failed=0,
+					errors=[],
+				)
+			)
+		)
+		processor.change_tracker = types.SimpleNamespace(
+			compute_changes=MagicMock(
+				return_value=types.SimpleNamespace(
+					rows_added=0,
+					rows_modified=0,
+					rows_deleted=0,
+					rows_unchanged=1,
+					alerts=[],
+				)
+			)
+		)
+		processor._send_critical_sync_alert = MagicMock()
+		return processor
+
+	def test_sync_sheet_emits_alert_for_critical_change_pattern(self):
+		processor = self._make_processor()
+		sheet_config = self._make_sheet_config()
+		alert = (
+			"⚠️ MASS EDIT: 12 rows (24%) modified in AR Aging/AR. "
+			"Expected new rows, but existing data was changed."
+		)
+		processor.change_tracker.compute_changes.return_value = types.SimpleNamespace(
+			rows_added=0,
+			rows_modified=12,
+			rows_deleted=0,
+			rows_unchanged=1,
+			alerts=[alert],
+		)
+
+		log = processor.sync_sheet(sheet_config, trigger="webhook")
+
+		self.assertEqual(log.status, "success")
+		processor._send_critical_sync_alert.assert_called_once()
+		call = processor._send_critical_sync_alert.call_args
+		self.assertIn("suspicious_change_alert", call.kwargs["reasons"])
+		self.assertIn(alert, call.kwargs["critical_alerts"])
+
+	def test_sync_sheet_emits_alert_when_rows_fail(self):
+		processor = self._make_processor()
+		sheet_config = self._make_sheet_config()
+		processor.frappe.sync_sheet_data.return_value = SyncResult(
+			success=True,
+			rows_processed=2,
+			rows_created=1,
+			rows_updated=0,
+			rows_failed=1,
+			errors=["Missing supplier on row 2"],
+		)
+
+		log = processor.sync_sheet(sheet_config, trigger="scheduled")
+
+		self.assertEqual(log.status, "success")
+		processor._send_critical_sync_alert.assert_called_once()
+		call = processor._send_critical_sync_alert.call_args
+		self.assertIn("rows_failed", call.kwargs["reasons"])
+		self.assertIn("sync_errors_reported", call.kwargs["reasons"])
+
+	def test_sync_sheet_emits_alert_when_exception_occurs(self):
+		processor = self._make_processor()
+		sheet_config = self._make_sheet_config()
+		processor.sheets.fetch_sheet_data.side_effect = RuntimeError("receiver timeout")
+
+		log = processor.sync_sheet(sheet_config, trigger="manual")
+
+		self.assertEqual(log.status, "failed")
+		self.assertIn("receiver timeout", log.error_message or "")
+		processor._send_critical_sync_alert.assert_called_once()
+		call = processor._send_critical_sync_alert.call_args
+		self.assertEqual(call.kwargs["reasons"], ["sync_exception"])
+		self.assertIn("receiver timeout", call.kwargs["errors"][0])
+		processor.db.log_sync.assert_called_once()
+
+
+if __name__ == "__main__":
+	unittest.main()
