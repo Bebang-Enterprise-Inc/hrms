@@ -205,6 +205,7 @@ class TestDispatchPreDelivery(unittest.TestCase):
 			stop_idx=1,
 			pre_delivery_exception="BEI-EXC-0003",
 			require_pre_delivery_exception=True,
+			force_create=True,
 		)
 		self.assertEqual(result["billing_reference"], "BILL-0001")
 
