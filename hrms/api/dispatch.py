@@ -23,6 +23,31 @@ from hrms.utils.scm_roles import SCM_ADMIN_ROLES, SCM_DISPATCH_ROLES, SCM_STORE_
 from hrms.utils.scm_roles import check_scm_permission as _check_scm_permission
 
 
+def _has_column(doctype: str, fieldname: str) -> bool:
+	"""Return True only when the runtime table really has the column."""
+	try:
+		return bool(frappe.db.has_column(doctype, fieldname))
+	except Exception:
+		return False
+
+
+def _safe_single_value(doctype: str, fieldname: str):
+	"""Read singleton field only when the runtime column exists."""
+	if not _has_column(doctype, fieldname):
+		return None
+	try:
+		return frappe.db.get_single_value(doctype, fieldname)
+	except Exception:
+		return None
+
+
+def _set_if_column(doc: Any, fieldname: str, value: Any):
+	"""Set document field only when the backing DB column exists."""
+	doctype = getattr(doc, "doctype", None)
+	if doctype and _has_column(doctype, fieldname):
+		setattr(doc, fieldname, value)
+
+
 @frappe.whitelist()
 def get_trips(date: str | None = None, status: str | None = None):
 	"""Get dispatch trips for a date. Defaults to today if no date specified."""
@@ -314,6 +339,17 @@ def get_pre_delivery_billing_exception_status(trip_name: str, stop_idx: int | st
 	if stop_idx <= 0:
 		frappe.throw(_("Stop index must be greater than 0"))
 
+	fields = ["name", "status", "approval_tier", "approver", "approver_status", "modified"]
+	for optional_field in (
+		"cpo_approved_by",
+		"cpo_approved_at",
+		"cfo_approved_by",
+		"cfo_approved_at",
+		"approval_audit_log",
+	):
+		if _has_column("BEI Match Exception", optional_field):
+			fields.append(optional_field)
+
 	exceptions = frappe.get_all(
 		"BEI Match Exception",
 		filters={
@@ -321,18 +357,7 @@ def get_pre_delivery_billing_exception_status(trip_name: str, stop_idx: int | st
 			"delivery_trip_reference": trip_name,
 			"delivery_stop_idx": stop_idx,
 		},
-		fields=[
-			"name",
-			"status",
-			"approval_tier",
-			"approver",
-			"approver_status",
-			"cpo_approved_by",
-			"cpo_approved_at",
-			"cfo_approved_by",
-			"cfo_approved_at",
-			"modified",
-		],
+		fields=fields,
 		order_by="modified desc",
 		limit_page_length=5,
 	)
@@ -504,10 +529,7 @@ def _create_delivery_billing(
 	# G-067: Feature flag — billing is enabled by default.
 	# Set BEI Settings.enable_delivery_billing = 0 to disable.
 	# Some runtime tenants may not have this field yet; treat missing as enabled.
-	try:
-		billing_setting = frappe.db.get_single_value("BEI Settings", "enable_delivery_billing")
-	except Exception:
-		billing_setting = None
+	billing_setting = _safe_single_value("BEI Settings", "enable_delivery_billing")
 
 	if not should_auto_create_billing_on_delivery(billing_setting):
 		return
@@ -605,14 +627,14 @@ def _create_delivery_billing(
 				"status": "Pending",
 			}
 		)
-		if pre_delivery_exception:
+		if pre_delivery_exception and _has_column("BEI Billing Schedule", "pre_delivery_exception"):
 			billing.pre_delivery_exception = pre_delivery_exception
 		if exception_trace:
-			billing.exception_cpo_approved_by = exception_trace.get("cpo_approved_by")
-			billing.exception_cpo_approved_at = exception_trace.get("cpo_approved_at")
-			billing.exception_cfo_approved_by = exception_trace.get("cfo_approved_by")
-			billing.exception_cfo_approved_at = exception_trace.get("cfo_approved_at")
-			billing.exception_approval_audit_log = exception_trace.get("approval_audit_log")
+			_set_if_column(billing, "exception_cpo_approved_by", exception_trace.get("cpo_approved_by"))
+			_set_if_column(billing, "exception_cpo_approved_at", exception_trace.get("cpo_approved_at"))
+			_set_if_column(billing, "exception_cfo_approved_by", exception_trace.get("cfo_approved_by"))
+			_set_if_column(billing, "exception_cfo_approved_at", exception_trace.get("cfo_approved_at"))
+			_set_if_column(billing, "exception_approval_audit_log", exception_trace.get("approval_audit_log"))
 		billing.insert(ignore_permissions=True)
 
 		# Update stop with billing reference
