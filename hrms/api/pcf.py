@@ -1023,8 +1023,19 @@ def validate_pcf_batch(doc, method):
     Called when BEI PCF Batch is validated.
     Ensures proper computation and validation.
     """
-    # Computed in DocType validate method
-    pass
+    if not getattr(doc, "items", None):
+        frappe.throw(_("Cannot create batch with no expense items"), frappe.ValidationError)
+
+    # Keep batch aggregates in sync even when batch records are touched outside
+    # the standard doctype flow.
+    valid_items = [item for item in doc.items if getattr(item, "expense_request", None)]
+    doc.expense_count = len(valid_items)
+    doc.total_amount = sum(flt(getattr(item, "amount", 0)) for item in valid_items)
+
+    dates = [getdate(item.expense_date) for item in valid_items if getattr(item, "expense_date", None)]
+    if dates:
+        doc.period_start = min(dates)
+        doc.period_end = max(dates)
 
 
 def on_batch_update(doc, method):
@@ -1032,8 +1043,31 @@ def on_batch_update(doc, method):
     Called when BEI PCF Batch is updated.
     Handles status change notifications and expense updates.
     """
-    # Handled in DocType on_update method
-    pass
+    status_map = {
+        "Submitted": "Submitted",
+        "Under Review": "Submitted",
+        "Approved": "Approved",
+        "Rejected": "Rejected",
+    }
+    target_status = status_map.get(getattr(doc, "status", None))
+    if not target_status:
+        return
+
+    # Idempotent status sync for linked expenses. Safe to run multiple times.
+    for item in getattr(doc, "items", []) or []:
+        expense_request = getattr(item, "expense_request", None)
+        if not expense_request:
+            continue
+        frappe.db.set_value("BEI Expense Request", expense_request, "status", target_status)
+
+    # Keep PCF aggregates fresh for dashboard and threshold logic.
+    try:
+        from hrms.hr.doctype.bei_petty_cash_fund.bei_petty_cash_fund import update_pcf_totals
+
+        if getattr(doc, "store", None):
+            update_pcf_totals(doc.store)
+    except Exception:
+        frappe.log_error(frappe.get_traceback(), "PCF Hook Update Totals Failed")
 
 
 # ============================================================

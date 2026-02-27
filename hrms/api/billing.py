@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import frappe
 from frappe import _
-from frappe.utils import flt, now_datetime, get_first_day, get_last_day, nowdate
+from frappe.utils import flt, now_datetime, get_first_day, get_last_day, nowdate, getdate
 
 # P0-10: Import centralized RBAC role sets
 from hrms.utils.scm_roles import RATE_MANAGEMENT_ROLES, SCM_BILLING_ROLES, check_scm_permission
@@ -24,6 +24,45 @@ from hrms.utils.scm_roles import RATE_MANAGEMENT_ROLES, SCM_BILLING_ROLES, check
 def _check_rate_permission():
     """Verify the caller has Finance or Supply Chain manager role."""
     check_scm_permission(RATE_MANAGEMENT_ROLES, "manage delivery rates")
+
+
+def on_billing_schedule_validate(doc, method=None):
+    """Doc-event hardening for BEI Billing Schedule validation.
+
+    Backstops monthly records so automation always has a billing_period key.
+    """
+    if getattr(doc, "billing_type", None) != "Monthly Fees":
+        return
+    if getattr(doc, "billing_period", None):
+        return
+
+    source_date = getattr(doc, "generated_on", None) or nowdate()
+    doc.billing_period = getdate(source_date).strftime("%Y-%m")
+
+
+def on_billing_schedule_update(doc, method=None):
+    """Doc-event hardening for update lifecycle.
+
+    Ensures sent_on is populated when status is moved to Sent by custom flows.
+    """
+    if getattr(doc, "status", None) != "Sent":
+        return
+    if getattr(doc, "sent_on", None):
+        return
+    if not getattr(doc, "name", None):
+        return
+
+    frappe.db.set_value("BEI Billing Schedule", doc.name, "sent_on", now_datetime())
+
+
+def _find_existing_3pl_journal_entry(partner, period_label):
+    cheque_no = f"3PL-{partner}-{period_label}"
+    return frappe.db.get_value(
+        "Journal Entry",
+        {"cheque_no": cheque_no, "docstatus": ["!=", 2]},
+        ["name", "total_debit", "docstatus"],
+        as_dict=True,
+    )
 
 
 # ================================
@@ -357,6 +396,24 @@ def generate_monthly_billing(billing_period=None, store=None):
         "skipped": skipped,
         "errors": errors,
         "billing_period": billing_period,
+    }
+
+
+@frappe.whitelist()
+def trigger_monthly_billing_service(billing_period=None, store=None):
+    """Manual service endpoint used by portal trigger surfaces.
+
+    This wraps generate_monthly_billing with explicit service metadata so UI
+    and automation can consume a stable response contract.
+    """
+    result = generate_monthly_billing(billing_period=billing_period, store=store)
+    return {
+        "success": bool(result.get("success")),
+        "service": "monthly_billing_trigger",
+        "billing_period": result.get("billing_period"),
+        "generated": result.get("generated", 0),
+        "skipped": result.get("skipped", 0),
+        "errors": result.get("errors", []),
     }
 
 
@@ -881,6 +938,38 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
     remarks = f"3PL Hauling - {partner} - {period_label}"
 
     company = get_company()
+
+    # GAP-089: strong idempotency guard to prevent duplicate JEs for the same
+    # partner/month. The cheque_no key is deterministic: 3PL-{partner}-{period}.
+    existing = _find_existing_3pl_journal_entry(partner, period_label)
+    if existing:
+        existing_total = flt(existing.get("total_debit"))
+        if abs(existing_total - gross) > 0.01:
+            frappe.throw(
+                _(
+                    "Existing 3PL Journal Entry {0} already exists for {1} with amount {2}. "
+                    "Cancel or adjust it before creating a new request."
+                ).format(
+                    existing.get("name"),
+                    period_label,
+                    frappe.format_value(existing_total, "Currency"),
+                ),
+                frappe.ValidationError,
+            )
+
+        return {
+            "success": True,
+            "journal_entry": existing.get("name"),
+            "partner": partner,
+            "period": period_label,
+            "gross": existing_total,
+            "ewt_atc": ewt_atc,
+            "ewt_rate": ewt_rate_pct,
+            "ewt_amount": ewt_amount,
+            "net_payable": net_payable,
+            "idempotent": True,
+            "message": _("Existing 3PL payment request reused; duplicate JE prevented."),
+        }
 
     sp_name = f"3pl_payment_{partner}_{period_label}".replace("-", "_")
     frappe.db.savepoint(sp_name)
