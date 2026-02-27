@@ -28,17 +28,39 @@ class BEIMaintenanceRequest(Document):
 			self.send_status_notification()
 
 	def send_notification(self):
-		"""Send notification to Projects team for new requests."""
-		# TODO: Implement notification to Daniel and Projects team
-		# Based on priority:
-		# - Urgent: Push + SMS to Daniel + Area Supervisor
-		# - High/Normal: Push + Email to Daniel
-		pass
+		"""Send notification to projects/ops channels for new maintenance requests."""
+		lines = [
+			f"*Store:* {self.store or '-'}",
+			f"*Priority:* {self.priority or '-'}",
+			f"*Category:* {self.issue_category or '-'}",
+			f"*Impact:* {self.impact_on_operations or '-'}",
+		]
+		if self.description:
+			lines.append(f"*Issue:* {self.description}")
+		_notify_maintenance_event(
+			title=f"*New Maintenance Request*\\n{self.name}",
+			lines=lines,
+			store=self.store,
+		)
 
 	def send_status_notification(self):
-		"""Send notification when status changes."""
-		# Notify store manager when work is assigned or completed
-		pass
+		"""Send notification when request status changes."""
+		lines = [
+			f"*Store:* {self.store or '-'}",
+			f"*Priority:* {self.priority or '-'}",
+			f"*Status:* {self.status or '-'}",
+		]
+		if self.assigned_to:
+			lines.append(f"*Assigned To:* {self.assigned_to}")
+		if self.vendor:
+			lines.append(f"*Vendor:* {self.vendor}")
+		if self.scheduled_date:
+			lines.append(f"*Scheduled Date:* {self.scheduled_date}")
+		_notify_maintenance_event(
+			title=f"*Maintenance Status Updated*\\n{self.name}",
+			lines=lines,
+			store=self.store,
+		)
 
 	@frappe.whitelist()
 	def assign_to_user(self, user, scheduled_date=None, estimated_cost=None):
@@ -104,3 +126,44 @@ def get_scheduled_maintenance_today(store):
 			"status": ["in", ["Assigned", "In Progress"]]
 		}
 	)
+
+
+def _notify_maintenance_event(title, lines, store=None):
+	"""Best-effort Google Chat notification for maintenance lifecycle events."""
+	try:
+		from hrms.api.google_chat import send_message_to_space
+		from hrms.utils.bei_config import SPACE_NOTIFICATIONS, get_chat_space
+
+		spaces = []
+		store_space = _resolve_store_chat_space(store)
+		if store_space:
+			spaces.append(store_space)
+
+		default_space = get_chat_space(SPACE_NOTIFICATIONS)
+		if default_space:
+			spaces.append(default_space)
+
+		if not spaces:
+			return
+
+		message = title
+		if lines:
+			message = f"{title}\\n\\n" + "\\n".join(lines)
+
+		for space in dict.fromkeys(spaces):
+			send_message_to_space(space, message)
+	except Exception as e:
+		frappe.log_error(
+			title="Maintenance Notification Error",
+			message=f"store={store}, title={title}, error={str(e)[:300]}",
+		)
+
+
+def _resolve_store_chat_space(store):
+	"""Resolve per-store Google Chat space from Warehouse custom field."""
+	if not store:
+		return None
+	try:
+		return frappe.db.get_value("Warehouse", store, "custom_gchat_space")
+	except Exception:
+		return None
