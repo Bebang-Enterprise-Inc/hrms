@@ -132,19 +132,34 @@ dispatch_spec.loader.exec_module(dispatch)
 
 
 class _Stop:
-	def __init__(self, idx=1, status="Pending", billing_reference=None, billing_creation_status=None):
+	def __init__(
+		self,
+		idx=1,
+		status="Pending",
+		billing_reference=None,
+		billing_creation_status=None,
+		store="AYALA EVO - BEI",
+		store_order="SO-0001",
+	):
 		self.idx = idx
 		self.status = status
 		self.billing_reference = billing_reference
 		self.billing_creation_status = billing_creation_status
+		self.store = store
+		self.store_order = store_order
+		self.delivery_value = 0
 
 
 class _Trip:
 	def __init__(self, stop):
 		self.name = "TRIP-0001"
 		self.stops = [stop]
+		self.cargo_type = "Frozen"
 
 	def save(self, **kwargs):
+		return None
+
+	def reload(self):
 		return None
 
 
@@ -208,6 +223,28 @@ class TestDispatchPreDelivery(unittest.TestCase):
 			force_create=True,
 		)
 		self.assertEqual(result["billing_reference"], "BILL-0001")
+
+	def test_internal_create_billing_blocks_pre_delivery_without_exception(self):
+		stop = _Stop(idx=1, status="Pending")
+		trip = _Trip(stop)
+
+		dispatch.frappe.get_doc = MagicMock(return_value=trip)
+		dispatch.frappe.db.exists = MagicMock(return_value=None)
+		dispatch.frappe.db.savepoint = MagicMock(return_value="delivery_billing")
+		dispatch.frappe.db.rollback = MagicMock(return_value=None)
+		dispatch.frappe.db.release_savepoint = MagicMock(return_value=None)
+		dispatch.frappe.log_error = MagicMock()
+
+		dispatch._create_delivery_billing(
+			trip_name="TRIP-0001",
+			stop_idx=1,
+			pre_delivery_exception=None,
+			require_pre_delivery_exception=True,
+			force_create=True,
+		)
+
+		dispatch.frappe.db.rollback.assert_called_once()
+		self.assertEqual(stop.billing_creation_status, "Failed")
 
 
 if __name__ == "__main__":
