@@ -2785,6 +2785,7 @@ def request_match_exception(data):
     if reference_type == "BEI Distribution Trip":
         trip_name = data.get("delivery_trip_reference") or data.get("reference_name")
         stop_idx = cint(data.get("delivery_stop_idx"))
+        trip_purchase_order = data.get("purchase_order")
         if not trip_name:
             frappe.throw(_("Delivery Trip Reference is required"))
         if stop_idx <= 0:
@@ -2805,7 +2806,7 @@ def request_match_exception(data):
                 )
             )
 
-        exception = frappe.get_doc({
+        exception_payload = {
             "doctype": "BEI Match Exception",
             "reference_type": "BEI Distribution Trip",
             "reference_name": trip_name,
@@ -2814,7 +2815,13 @@ def request_match_exception(data):
             "approval_tier": "CPO+CFO",
             "reason": reason,
             "exception_type": exception_type,
-        })
+        }
+        # Keep backward compatibility: attach PO only when valid, otherwise bypass mandatory PO on trip flow.
+        if trip_purchase_order and frappe.db.exists("BEI Purchase Order", trip_purchase_order):
+            exception_payload["purchase_order"] = trip_purchase_order
+        exception = frappe.get_doc(exception_payload)
+        if "purchase_order" not in exception_payload:
+            exception.flags.ignore_mandatory = True
     else:
         purchase_order = data.get("purchase_order")
         if not purchase_order:
