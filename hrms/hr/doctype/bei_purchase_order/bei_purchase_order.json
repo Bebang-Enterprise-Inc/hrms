@@ -298,6 +298,7 @@
     }
   ],
   "index_web_pages_for_search": 1,
+  "is_submittable": 1,
   "links": [],
   "modified": "2026-02-03 00:00:00.000000",
   "modified_by": "Administrator",
@@ -319,6 +320,7 @@
       "write": 1
     },
     {
+      "cancel": 1,
       "create": 1,
       "delete": 1,
       "email": 1,
@@ -328,9 +330,11 @@
       "report": 1,
       "role": "Procurement Manager",
       "share": 1,
+      "submit": 1,
       "write": 1
     },
     {
+      "cancel": 1,
       "create": 1,
       "delete": 1,
       "email": 1,
@@ -340,6 +344,7 @@
       "report": 1,
       "role": "System Manager",
       "share": 1,
+      "submit": 1,
       "write": 1
     },
     {

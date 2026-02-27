@@ -19,6 +19,83 @@ class BEIPurchaseOrder(Document):
         self.check_dual_approval_requirement()
         self.check_price_variance_blocks()
 
+    def before_submit(self):
+        """Only fully approved POs can be submitted."""
+        if self.status != "Approved":
+            frappe.throw(
+                _("Only Approved POs can be submitted. Current status: {0}").format(self.status)
+            )
+
+        if self.mae_approval != "Approved":
+            frappe.throw(_("Mae approval is required before PO submission"))
+
+        if self.requires_dual_approval and self.butch_approval != "Approved":
+            frappe.throw(_("CFO approval is required before PO submission"))
+
+    def on_submit(self):
+        """Lock PO lifecycle and create downstream ERP artifacts."""
+        self.on_fully_approved()
+
+    def validate_update_after_submit(self):
+        """Freeze commercial fields after submit; only operational status can move."""
+        previous = self.get_doc_before_save()
+        if not previous:
+            return
+
+        immutable_fields = [
+            "po_date",
+            "supplier",
+            "supplier_name",
+            "supplier_email",
+            "supplier_contact",
+            "delivery_date",
+            "ship_to",
+            "payment_terms",
+            "subtotal",
+            "discount_amount",
+            "delivery_fee",
+            "vat_amount",
+            "grand_total",
+            "requires_dual_approval",
+            "mae_approval",
+            "mae_comment",
+            "mae_approval_date",
+            "butch_approval",
+            "butch_comment",
+            "butch_approval_date",
+            "pr_reference",
+        ]
+
+        changed = [
+            fieldname
+            for fieldname in immutable_fields
+            if self.get(fieldname) != previous.get(fieldname)
+        ]
+
+        if self._snapshot_items_for_lock(self.items) != self._snapshot_items_for_lock(previous.items):
+            changed.append("items")
+
+        if changed:
+            frappe.throw(
+                _("Submitted PO is immutable. Disallowed updates: {0}").format(", ".join(changed))
+            )
+
+    @staticmethod
+    def _snapshot_items_for_lock(items):
+        """Normalize item rows for immutability comparison."""
+        return [
+            {
+                "item_code": row.item_code,
+                "qty": flt(row.qty, 4),
+                "unit_cost": flt(row.unit_cost, 4),
+                "amount": flt(row.amount, 4),
+                "vat_rate": flt(row.vat_rate, 4),
+                "vat_amount": flt(row.vat_amount, 4),
+                "delivery_schedule": str(row.delivery_schedule) if row.delivery_schedule else None,
+            }
+            for row in items
+        ]
+
 
     def check_price_variance_blocks(self):
         """Audit Control 2.6: Block PO if price variance >10% without override reason."""
@@ -129,7 +206,8 @@ class BEIPurchaseOrder(Document):
             # Single approval sufficient
             self.status = "Approved"
             self.save()
-            self.on_fully_approved()
+            if self.docstatus == 0:
+                self.submit()
             return {"success": True, "message": _("PO approved by Mae")}
 
     @frappe.whitelist()
@@ -146,8 +224,8 @@ class BEIPurchaseOrder(Document):
         self.butch_approval_date = now_datetime()
         self.status = "Approved"
         self.save()
-
-        self.on_fully_approved()
+        if self.docstatus == 0:
+            self.submit()
 
         return {"success": True, "message": _("PO approved by Butch (CFO)")}
 
@@ -416,19 +494,36 @@ class BEIPurchaseOrder(Document):
         # Send email
         # frappe.sendmail(...)
 
-        self.sent_to_supplier_date = now_datetime()
+        sent_at = now_datetime()
+        self.db_set("sent_to_supplier_date", sent_at, update_modified=False)
+        self.db_set("sent_by", frappe.session.user, update_modified=False)
+        self.db_set("status", "Sent to Supplier", update_modified=False)
+        self.sent_to_supplier_date = sent_at
         self.sent_by = frappe.session.user
         self.status = "Sent to Supplier"
-        self.save()
 
         return {"success": True, "message": _("PO sent to supplier")}
 
     @frappe.whitelist()
     def update_received_qty(self, item_code, received_qty):
         """Update received quantity for an item (called from GR)."""
+        found = False
         for item in self.items:
             if item.item_code == item_code:
-                item.received_qty = flt(item.received_qty, 2) + flt(received_qty, 2)
+                found = True
+                new_received_qty = flt(item.received_qty, 2) + flt(received_qty, 2)
+                item.received_qty = new_received_qty
+                if item.name:
+                    frappe.db.set_value(
+                        "BEI PO Item",
+                        item.name,
+                        "received_qty",
+                        new_received_qty,
+                        update_modified=False,
+                    )
+
+        if not found:
+            frappe.throw(_("Item {0} not found in PO").format(item_code))
 
         # Check if fully received
         fully_received = all(
@@ -436,14 +531,20 @@ class BEIPurchaseOrder(Document):
             for item in self.items
         )
 
+        new_status = self.status
         if fully_received:
-            self.status = "Fully Received"
+            new_status = "Fully Received"
         else:
             partially_received = any(
                 flt(item.received_qty, 2) > 0
                 for item in self.items
             )
             if partially_received:
-                self.status = "Partially Received"
+                new_status = "Partially Received"
 
-        self.save()
+        if new_status != self.status:
+            self.status = new_status
+            if self.docstatus == 1:
+                self.db_set("status", new_status, update_modified=False)
+            else:
+                self.save()

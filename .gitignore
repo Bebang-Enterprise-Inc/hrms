@@ -57,3 +57,21 @@ credentials/
 
 # ADMS Receiver (has its own repo: Bebang-Enterprise-Inc/adms-receiver)
 adms_receiver/
+
+# Local investigation scratch files (root only)
+/investigate_deep.json
+/investigate_suppliers.py
+/investigate_suppliers_deep.py
+/investigation_results.json
+
+# Local analysis scratch files (root only)
+/analysis_data.json
+/analyze_inventory.py
+/calc_dtl.py
+/fetch_cold_inv.py
+/inventory_cold.json
+/summarize.py
+
+# Python local cache artifacts
+**/__pycache__/
+*.py[cod]

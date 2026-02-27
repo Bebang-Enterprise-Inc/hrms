@@ -10,6 +10,7 @@ Supports: Suppliers, PR, PO, GR, Invoice, Payment Request, Dashboard
 All endpoints use @frappe.whitelist() for external access.
 """
 
+import json
 import re
 
 import frappe
@@ -30,6 +31,32 @@ _BLOCKED_FIELDS = frozenset({
 def _sanitize_doc_data(data):
     """Remove system/internal fields from user-supplied data before doc creation."""
     return {k: v for k, v in data.items() if k not in _BLOCKED_FIELDS}
+
+
+def _resolve_supplier_identity(supplier: str) -> tuple[str, str]:
+    """Resolve supplier input (ID or display name) into canonical BEI Supplier values."""
+    supplier = (supplier or "").strip()
+    if not supplier:
+        frappe.throw(_("Supplier is required."))
+
+    if frappe.db.exists("BEI Supplier", supplier):
+        supplier_id = supplier
+        supplier_name = frappe.db.get_value("BEI Supplier", supplier_id, "supplier_name") or supplier_id
+        return supplier_id, supplier_name
+
+    supplier_id = frappe.db.get_value("BEI Supplier", {"supplier_name": supplier}, "name")
+    if supplier_id:
+        return supplier_id, supplier
+
+    supplier_id = frappe.db.get_value("BEI Supplier", {"supplier_name": ["like", supplier]}, "name")
+    if supplier_id:
+        supplier_name = frappe.db.get_value("BEI Supplier", supplier_id, "supplier_name") or supplier
+        return supplier_id, supplier_name
+
+    frappe.throw(
+        _("Supplier '{0}' not found. Use supplier ID or exact supplier name.").format(supplier),
+        frappe.ValidationError,
+    )
 
 
 # =============================================================================
@@ -2588,12 +2615,14 @@ def get_supplier_aging(supplier):
     Returns:
         Dict with supplier aging details
     """
+    supplier_id, supplier_name = _resolve_supplier_identity(supplier)
     aging = get_ap_aging_report()
 
-    # Filter invoice details for this supplier (match by ID or display name)
+    # Filter invoice details for this supplier using canonical ID + display name.
     supplier_invoices = [
         inv for inv in aging["invoice_details"]
-        if inv.get("supplier_id") == supplier or inv["supplier"] == supplier
+        if inv.get("supplier_id") == supplier_id
+        or str(inv.get("supplier", "")).strip() == supplier_name
     ]
 
     supplier_total = sum(inv["outstanding"] for inv in supplier_invoices)
@@ -2614,7 +2643,8 @@ def get_supplier_aging(supplier):
         supplier_aging[bucket]["amount"] = flt(supplier_aging[bucket]["amount"], 2) + inv["outstanding"]
 
     return {
-        "supplier": supplier,
+        "supplier": supplier_id,
+        "supplier_name": supplier_name,
         "aging_summary": supplier_aging,
         "total_outstanding": flt(supplier_total, 2),
         "invoice_count": len(supplier_invoices),
@@ -2722,7 +2752,136 @@ def get_finance_analytics():
         "kpis": get_dashboard_kpis(),
         "ap_aging": get_ap_aging_report(),
         "po_trend": get_monthly_po_trend(months=6),
-        "suppliers": get_supplier_performance()
+        "suppliers": get_supplier_performance(),
+        "g046_intercompany": get_g046_intercompany_summary(),
+    }
+
+
+# =============================================================================
+# G-046 PROCUREMENT VISIBILITY
+# =============================================================================
+
+@frappe.whitelist()
+def get_g046_intercompany_transactions(
+    page=1,
+    page_size=20,
+    from_date=None,
+    to_date=None,
+    warehouse=None,
+    status=None,
+    search=None,
+):
+    """Expose G-046 inter-company transactions in procurement-facing APIs."""
+    page = max(1, cint(page))
+    page_size = min(max(1, cint(page_size)), 200)
+    offset = (page - 1) * page_size
+
+    conditions = ["si.docstatus != 2", "IFNULL(si.custom_stock_entry, '') != ''"]
+    values = {}
+
+    if from_date:
+        conditions.append("si.posting_date >= %(from_date)s")
+        values["from_date"] = getdate(from_date)
+
+    if to_date:
+        conditions.append("si.posting_date <= %(to_date)s")
+        values["to_date"] = getdate(to_date)
+
+    if warehouse:
+        conditions.append("se.to_warehouse = %(warehouse)s")
+        values["warehouse"] = warehouse
+
+    if search:
+        conditions.append(
+            "(si.name LIKE %(search)s OR si.customer LIKE %(search)s "
+            "OR si.custom_stock_entry LIKE %(search)s OR IFNULL(se.to_warehouse, '') LIKE %(search)s)"
+        )
+        values["search"] = f"%{search}%"
+
+    if status:
+        normalized_status = str(status).strip().lower()
+        if normalized_status in {"mirrored", "complete"}:
+            conditions.append("pi.name IS NOT NULL")
+        elif normalized_status in {"sales_only", "missing_purchase_invoice", "missing"}:
+            conditions.append("pi.name IS NULL")
+
+    where_clause = " AND ".join(conditions)
+
+    total = frappe.db.sql(
+        f"""
+        SELECT COUNT(*)
+        FROM `tabSales Invoice` si
+        LEFT JOIN `tabStock Entry` se ON se.name = si.custom_stock_entry
+        LEFT JOIN `tabPurchase Invoice` pi
+          ON pi.inter_company_invoice_reference = si.name
+         AND pi.docstatus != 2
+        WHERE {where_clause}
+        """,
+        values,
+    )[0][0]
+
+    rows = frappe.db.sql(
+        f"""
+        SELECT
+            si.name AS sales_invoice,
+            si.posting_date,
+            si.customer,
+            si.custom_stock_entry AS stock_entry,
+            IFNULL(se.to_warehouse, '') AS target_warehouse,
+            si.grand_total AS sales_invoice_total,
+            si.status AS sales_invoice_status,
+            pi.name AS purchase_invoice,
+            pi.grand_total AS purchase_invoice_total,
+            pi.status AS purchase_invoice_status,
+            CASE WHEN pi.name IS NULL THEN 'Sales Only' ELSE 'Mirrored' END AS mirror_status
+        FROM `tabSales Invoice` si
+        LEFT JOIN `tabStock Entry` se ON se.name = si.custom_stock_entry
+        LEFT JOIN `tabPurchase Invoice` pi
+          ON pi.inter_company_invoice_reference = si.name
+         AND pi.docstatus != 2
+        WHERE {where_clause}
+        ORDER BY si.posting_date DESC, si.name DESC
+        LIMIT %(page_size)s OFFSET %(offset)s
+        """,
+        {**values, "page_size": page_size, "offset": offset},
+        as_dict=True,
+    )
+
+    return {
+        "data": rows,
+        "total": cint(total),
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (cint(total) + page_size - 1) // page_size if total else 0,
+    }
+
+
+@frappe.whitelist()
+def get_g046_intercompany_summary():
+    """Return high-level G-046 visibility counters for procurement dashboard widgets."""
+    row = frappe.db.sql(
+        """
+        SELECT
+            COUNT(*) AS total_sales_invoices,
+            SUM(CASE WHEN pi.name IS NOT NULL THEN 1 ELSE 0 END) AS mirrored_count,
+            SUM(CASE WHEN pi.name IS NULL THEN 1 ELSE 0 END) AS missing_purchase_invoice_count,
+            COALESCE(SUM(si.grand_total), 0) AS total_sales_value
+        FROM `tabSales Invoice` si
+        LEFT JOIN `tabPurchase Invoice` pi
+          ON pi.inter_company_invoice_reference = si.name
+         AND pi.docstatus != 2
+        WHERE si.docstatus != 2
+          AND IFNULL(si.custom_stock_entry, '') != ''
+        """,
+        as_dict=True,
+    )
+
+    data = row[0] if row else {}
+    return {
+        "total_sales_invoices": cint(data.get("total_sales_invoices")),
+        "mirrored_count": cint(data.get("mirrored_count")),
+        "missing_purchase_invoice_count": cint(data.get("missing_purchase_invoice_count")),
+        "total_sales_value": flt(data.get("total_sales_value")),
     }
 
 
@@ -4012,11 +4171,10 @@ def get_advance_subsidiary_ledger(supplier, from_date=None, to_date=None):
         from_date: Optional start date filter
         to_date: Optional end date filter
     """
-    if not supplier:
-        frappe.throw(_("Supplier is required."))
+    supplier_id, supplier_name = _resolve_supplier_identity(supplier)
 
     date_filter = ""
-    values = {"supplier": supplier}
+    values = {"supplier_id": supplier_id, "supplier_name": supplier_name}
     if from_date:
         date_filter += " AND posting_date >= %(from_date)s"
         values["from_date"] = getdate(from_date)
@@ -4034,7 +4192,7 @@ def get_advance_subsidiary_ledger(supplier, from_date=None, to_date=None):
             pr.purchase_order as remarks
         FROM `tabBEI Payment Request` pr
         WHERE pr.is_advance_payment = 1
-          AND pr.supplier_name = %(supplier)s
+          AND (pr.supplier = %(supplier_id)s OR pr.supplier_name = %(supplier_name)s)
           {date_filter}""".format(date_filter=date_filter.replace("posting_date", "pr.payment_date")),
         values,
         as_dict=True,
@@ -4057,7 +4215,7 @@ def get_advance_subsidiary_ledger(supplier, from_date=None, to_date=None):
         JOIN `tabJournal Entry` je ON jea.parent = je.name
         WHERE jea.account LIKE '1105203%%'
           AND jea.party_type = 'Supplier'
-          AND jea.party = %(supplier)s
+          AND jea.party = %(supplier_id)s
           AND je.docstatus = 1
           {date_filter}
         ORDER BY je.posting_date""".format(date_filter=je_date_filter.replace("posting_date", "je.posting_date")),
@@ -4078,7 +4236,8 @@ def get_advance_subsidiary_ledger(supplier, from_date=None, to_date=None):
         entry["credit"] = flt(entry["credit"], 2)
 
     return {
-        "supplier": supplier,
+        "supplier": supplier_id,
+        "supplier_name": supplier_name,
         "entries": entries,
         "closing_balance": flt(running_balance, 2),
         "from_date": str(from_date) if from_date else None,
@@ -4088,14 +4247,7 @@ def get_advance_subsidiary_ledger(supplier, from_date=None, to_date=None):
 
 @frappe.whitelist(allow_guest=False)
 def generate_form_2307_entry(payment_request):
-    """Generate/update Form 2307 (EWT certificate) data for a payment request.
-
-    Stores: supplier TIN, name, tax period, ATC code, gross amount, EWT rate, EWT amount.
-    Data-only — no PDF generation this sprint.
-
-    Args:
-        payment_request: BEI Payment Request name
-    """
+    """Generate or update a structured BEI Form 2307 record for a payment request."""
     pay_req = frappe.get_doc("BEI Payment Request", payment_request)
 
     if not pay_req.supplier:
@@ -4115,8 +4267,6 @@ def generate_form_2307_entry(payment_request):
     ewt_amount = flt(gross_amount * ewt_rate / 100, 2)
     atc_code = "WI100"  # Default: Income payments to suppliers of goods
 
-    import json as _json
-
     form_2307_data = {
         "supplier_tin": supplier_tin,
         "supplier_name": supplier_name,
@@ -4125,77 +4275,144 @@ def generate_form_2307_entry(payment_request):
         "gross_amount": gross_amount,
         "ewt_rate": ewt_rate,
         "ewt_amount": ewt_amount,
-        "payment_request": payment_request,
+        "payment_request_link": payment_request,
         "generated_by": frappe.session.user,
         "generated_on": nowdate(),
     }
 
-    # Store as JSON in a custom field or comment for retrieval
-    # Using comment-based storage until a dedicated DocType is created
-    existing = frappe.db.sql(
-        """SELECT name FROM `tabComment`
-        WHERE reference_doctype = 'BEI Payment Request'
-          AND reference_name = %s
-          AND comment_type = 'Info'
-          AND content LIKE '%%FORM_2307_DATA%%'""",
-        (payment_request,),
+    existing_name = frappe.db.get_value(
+        "BEI Form 2307", {"payment_request_link": payment_request}, "name"
     )
 
-    content = "FORM_2307_DATA:" + _json.dumps(form_2307_data)
-
-    if existing:
-        frappe.db.set_value("Comment", existing[0][0], "content", content)
+    if existing_name:
+        form_doc = frappe.get_doc("BEI Form 2307", existing_name)
+        for fieldname in (
+            "supplier_tin",
+            "supplier_name",
+            "tax_period",
+            "atc_code",
+            "gross_amount",
+            "ewt_rate",
+            "ewt_amount",
+            "payment_request_link",
+        ):
+            setattr(form_doc, fieldname, form_2307_data[fieldname])
+        form_doc.save(ignore_permissions=True)
+        action = "updated"
     else:
-        frappe.get_doc({
-            "doctype": "Comment",
-            "comment_type": "Info",
-            "reference_doctype": "BEI Payment Request",
-            "reference_name": payment_request,
-            "content": content,
-        }).insert(ignore_permissions=True)
+        form_doc = frappe.get_doc({
+            "doctype": "BEI Form 2307",
+            "supplier_tin": form_2307_data["supplier_tin"],
+            "supplier_name": form_2307_data["supplier_name"],
+            "tax_period": form_2307_data["tax_period"],
+            "atc_code": form_2307_data["atc_code"],
+            "gross_amount": form_2307_data["gross_amount"],
+            "ewt_rate": form_2307_data["ewt_rate"],
+            "ewt_amount": form_2307_data["ewt_amount"],
+            "payment_request_link": form_2307_data["payment_request_link"],
+        })
+        form_doc.insert(ignore_permissions=True)
+        action = "created"
 
     return {
         "success": True,
-        "data": form_2307_data,
-        "message": _("Form 2307 data generated for {0}.").format(supplier_name),
+        "data": {
+            **form_2307_data,
+            "name": form_doc.name,
+        },
+        "message": _("Form 2307 record {0} for {1}.").format(action, supplier_name),
     }
 
 
 @frappe.whitelist(allow_guest=False)
-def get_form_2307_data(supplier: str | None = None, tax_period: str | None = None):
+def get_form_2307_data(
+    supplier: str | None = None,
+    tax_period: str | None = None,
+    include_legacy: int | str = 0,
+):
     """Retrieve Form 2307 entries filtered by supplier and/or tax period.
 
     Args:
-        supplier: Optional supplier name filter
+        supplier: Optional supplier name or ID filter
         tax_period: Optional tax period filter (YYYY-MM)
+        include_legacy: Include legacy comment-based records in response (default: 0)
     """
-    import json as _json
+    entries = []
+    filters = {}
+    supplier_name_filter = None
+    if supplier:
+        try:
+            _supplier_id, supplier_name = _resolve_supplier_identity(supplier)
+            supplier_name_filter = supplier_name
+        except Exception:
+            supplier_name_filter = str(supplier).strip()
+        filters["supplier_name"] = supplier_name_filter
+    if tax_period:
+        filters["tax_period"] = tax_period
 
-    comments = frappe.db.sql(
-        """SELECT c.content, c.reference_name, c.modified
-        FROM `tabComment` c
-        WHERE c.reference_doctype = 'BEI Payment Request'
-          AND c.comment_type = 'Info'
-          AND c.content LIKE '%%FORM_2307_DATA%%'
-        ORDER BY c.modified DESC""",
-        as_dict=True,
+    records = frappe.get_all(
+        "BEI Form 2307",
+        filters=filters,
+        fields=[
+            "name",
+            "supplier_tin",
+            "supplier_name",
+            "tax_period",
+            "atc_code",
+            "gross_amount",
+            "ewt_rate",
+            "ewt_amount",
+            "payment_request_link",
+            "modified",
+        ],
+        order_by="modified desc",
     )
 
-    entries = []
-    for comment in comments:
-        try:
-            json_str = comment.content.split("FORM_2307_DATA:", 1)[1]
-            data = _json.loads(json_str)
+    for row in records:
+        entries.append(
+            {
+                "name": row.get("name"),
+                "supplier_tin": row.get("supplier_tin"),
+                "supplier_name": row.get("supplier_name"),
+                "tax_period": row.get("tax_period"),
+                "atc_code": row.get("atc_code"),
+                "gross_amount": flt(row.get("gross_amount")),
+                "ewt_rate": flt(row.get("ewt_rate")),
+                "ewt_amount": flt(row.get("ewt_amount")),
+                "payment_request": row.get("payment_request_link"),
+                "_modified": str(row.get("modified")),
+                "_source": "BEI Form 2307",
+            }
+        )
 
-            if supplier and data.get("supplier_name") != supplier:
+    legacy_entries = []
+    if cint(include_legacy):
+        legacy_rows = frappe.db.sql(
+            """SELECT c.content, c.reference_name, c.modified
+            FROM `tabComment` c
+            WHERE c.reference_doctype = 'BEI Payment Request'
+              AND c.comment_type = 'Info'
+              AND c.content LIKE '%%FORM_2307_DATA%%'
+            ORDER BY c.modified DESC""",
+            as_dict=True,
+        )
+        for row in legacy_rows:
+            try:
+                json_str = row.content.split("FORM_2307_DATA:", 1)[1]
+                data = json.loads(json_str)
+            except (IndexError, json.JSONDecodeError, TypeError):
+                continue
+
+            if supplier_name_filter and data.get("supplier_name") != supplier_name_filter:
                 continue
             if tax_period and data.get("tax_period") != tax_period:
                 continue
 
-            data["_modified"] = str(comment.modified)
-            entries.append(data)
-        except (IndexError, _json.JSONDecodeError):
-            continue
+            data["_modified"] = str(row.modified)
+            data["_source"] = "Legacy Comment"
+            legacy_entries.append(data)
+
+        entries.extend(legacy_entries)
 
     # Aggregate by supplier + tax_period
     summary = {}
@@ -4222,6 +4439,7 @@ def get_form_2307_data(supplier: str | None = None, tax_period: str | None = Non
         "entries": entries,
         "summary": list(summary.values()),
         "filters": {"supplier": supplier, "tax_period": tax_period},
+        "legacy_count": len(legacy_entries),
     }
 
 
