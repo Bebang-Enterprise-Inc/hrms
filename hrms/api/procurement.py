@@ -4093,7 +4093,7 @@ def generate_form_2307_entry(payment_request):
 
 
 @frappe.whitelist(allow_guest=False)
-def get_form_2307_data(supplier=None, tax_period=None):
+def get_form_2307_data(supplier: str | None = None, tax_period: str | None = None):
     """Retrieve Form 2307 entries filtered by supplier and/or tax period.
 
     Args:
