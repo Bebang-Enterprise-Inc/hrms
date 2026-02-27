@@ -1024,7 +1024,7 @@ def _dispatch_transfer_sync(
 	remove_devices = plan["remove_devices"]
 	all_devices = sorted(set(target_devices + remove_devices))
 
-	_, invalid_devices = validate_device_batch(all_devices)
+	valid_devices, invalid_devices = validate_device_batch(all_devices)
 	if invalid_devices:
 		frappe.throw(_("Invalid device mapping: {0}").format(", ".join(invalid_devices)))
 
