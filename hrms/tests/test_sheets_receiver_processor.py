@@ -51,7 +51,7 @@ def _install_fake_sheets_receiver_dependencies():
 			self.error_message = kwargs.get("error_message")
 			self.duration_seconds = kwargs.get("duration_seconds", 0)
 			self.data_checksum = kwargs.get("data_checksum")
-			self.created_at = kwargs.get("created_at", datetime.datetime.utcnow())
+			self.created_at = kwargs.get("created_at", datetime.datetime.now(datetime.UTC))
 
 	models_mod.SyncLog = SyncLog
 	models_mod.get_db = lambda: types.SimpleNamespace()
