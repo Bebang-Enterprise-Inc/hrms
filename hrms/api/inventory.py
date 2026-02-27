@@ -1548,3 +1548,15 @@ def resolve_variance(variance_name, resolution_type, resolution_notes, adjustmen
         "resolution_type": resolution_type,
         "stock_entry": stock_entry_name,
     }
+
+
+@frappe.whitelist()
+def get_variance_resolution_contract():
+    """Expose supported variance-resolution contract for frontend wiring."""
+    return {
+        "success": True,
+        "action": "resolve_variance",
+        "required_fields": ["variance_name", "resolution_type", "resolution_notes"],
+        "optional_fields": ["adjustment_qty"],
+        "resolution_types": ["Write-off", "Recount Corrected", "Theft", "Damage", "System Error"],
+    }

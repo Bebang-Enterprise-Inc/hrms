@@ -1163,7 +1163,12 @@ def get_vehicles(status: str | None = None, owner_type: str | None = None):
 		],
 		order_by="vehicle_plate",
 	)
-	return {"vehicles": vehicles}
+	# GAP-029 compatibility contract:
+	# - Keep legacy object payload (`vehicles`) used by current pages.
+	# - Also provide a flat name list to avoid dropdown fallback-to-text
+	#   when callers expect a simple string array.
+	vehicle_names = [v.get("name") for v in vehicles if v.get("name")]
+	return {"vehicles": vehicles, "vehicle_names": vehicle_names, "data": vehicle_names}
 
 
 def _build_stop_preview(route: Any, trip_date: str):
