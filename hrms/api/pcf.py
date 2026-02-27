@@ -717,9 +717,21 @@ def request_replenishment(batch_name: str, amount: float = None):
     if batch.status != "Approved":
         frappe.throw(_("Only approved batches can request replenishment"))
 
+    replenishment_amount = flt(amount) if amount else batch.total_amount
     batch.replenishment_requested = 1
-    batch.replenishment_amount = flt(amount) if amount else batch.total_amount
+    batch.replenishment_amount = replenishment_amount
     batch.replenishment_date = nowdate()
+
+    journal_entry_name, journal_entry_error = _create_replenishment_journal_entry(
+        batch=batch, replenishment_amount=replenishment_amount
+    )
+
+    if journal_entry_name:
+        line = f"[{nowdate()}] Replenishment JE: {journal_entry_name}"
+        batch.review_notes = f"{(batch.review_notes or '').strip()}\n{line}".strip()
+    elif journal_entry_error:
+        line = f"[{nowdate()}] Replenishment JE skipped: {journal_entry_error}"
+        batch.review_notes = f"{(batch.review_notes or '').strip()}\n{line}".strip()
 
     batch.save(ignore_permissions=True)
     frappe.db.commit()
@@ -735,7 +747,97 @@ def request_replenishment(batch_name: str, amount: float = None):
     return {
         "success": True,
         "message": f"Replenishment requested for PHP {batch.replenishment_amount:,.2f}",
+        "journal_entry": journal_entry_name,
+        "journal_entry_status": "created" if journal_entry_name else "skipped",
+        "journal_entry_error": journal_entry_error,
     }
+
+
+def _create_replenishment_journal_entry(batch, replenishment_amount: float):
+    """Create replenishment ledger entry when accounts are available.
+
+    Accounting contract:
+    - Dr PCF cash account (1113000 if mapped in chart)
+    - Cr replenishment source account (BEI setting override, else company default cash account)
+    """
+    company = get_company()
+    pcf_account = _get_account_by_number(company, "1113000")
+    source_account = _get_replenishment_source_account(company)
+
+    if not pcf_account or not source_account:
+        missing = []
+        if not pcf_account:
+            missing.append("pcf_account_1113000")
+        if not source_account:
+            missing.append("source_account")
+        return None, f"missing_account_mapping:{','.join(missing)}"
+
+    if pcf_account == source_account:
+        return None, "invalid_mapping_same_account"
+
+    cost_center = frappe.db.get_value("Warehouse", batch.store, "cost_center")
+    je = frappe.new_doc("Journal Entry")
+    je.company = company
+    je.posting_date = nowdate()
+    je.voucher_type = "Journal Entry"
+    je.user_remark = f"PCF replenishment request for {batch.name} ({batch.store})"
+
+    je.append(
+        "accounts",
+        {
+            "account": pcf_account,
+            "debit_in_account_currency": flt(replenishment_amount),
+            "cost_center": cost_center,
+            "reference_type": "BEI PCF Batch",
+            "reference_name": batch.name,
+        },
+    )
+    je.append(
+        "accounts",
+        {
+            "account": source_account,
+            "credit_in_account_currency": flt(replenishment_amount),
+            "cost_center": cost_center,
+            "reference_type": "BEI PCF Batch",
+            "reference_name": batch.name,
+        },
+    )
+
+    je.insert(ignore_permissions=True)
+    je.flags.ignore_permissions = True
+    je.submit()
+    return je.name, None
+
+
+def _get_account_by_number(company: str, account_number: str):
+    account = frappe.db.get_value(
+        "Account",
+        {"company": company, "account_number": account_number, "is_group": 0},
+        "name",
+    )
+    if account:
+        return account
+
+    # Fallback for charts without account_number populated consistently.
+    return frappe.db.get_value(
+        "Account",
+        {"company": company, "name": ["like", f"{account_number} -%"], "is_group": 0},
+        "name",
+    )
+
+
+def _get_replenishment_source_account(company: str):
+    if frappe.db.has_column("tabBEI Settings", "pcf_replenishment_source_account"):
+        source = frappe.db.get_single_value("BEI Settings", "pcf_replenishment_source_account")
+        if source:
+            return source
+
+    if frappe.db.has_column("tabCompany", "default_cash_account"):
+        source = frappe.db.get_value("Company", company, "default_cash_account")
+        if source:
+            return source
+
+    return None
 
 
 # ============================================================
