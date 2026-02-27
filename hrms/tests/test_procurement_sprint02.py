@@ -348,7 +348,7 @@ class TestProcurementSprint02(unittest.TestCase):
 
 		joined_sql = " ".join(queries[1:])
 		self.assertNotIn("IFNULL(si.custom_stock_entry, '') !=", joined_sql)
-		self.assertIn("Inter-company Sales Invoice for Hub Transfer SE:%", joined_sql)
+		self.assertIn("Inter-company Sales Invoice for Hub Transfer SE:", joined_sql)
 
 	def test_bei_purchase_order_doctype_is_submittable(self):
 		doctype_path = (

@@ -91,7 +91,7 @@ def _get_g046_sql_parts():
         )
         base_conditions = [
             "si.docstatus != 2",
-            "(pi.name IS NOT NULL OR si.remarks LIKE 'Inter-company Sales Invoice for Hub Transfer SE:%')",
+            "(pi.name IS NOT NULL OR si.remarks LIKE 'Inter-company Sales Invoice for Hub Transfer SE:%%')",
         ]
 
     stock_entry_join = f"LEFT JOIN `tabStock Entry` se ON se.name = {stock_entry_expr}"
