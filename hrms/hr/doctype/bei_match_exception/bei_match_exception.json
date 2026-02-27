@@ -13,6 +13,13 @@
   "po_amount",
   "approval_tier",
   "status",
+  "delivery_trip_reference",
+  "delivery_stop_idx",
+  "cpo_approved_by",
+  "cpo_approved_at",
+  "cfo_approved_by",
+  "cfo_approved_at",
+  "approval_audit_log",
   "section_reason",
   "reason",
   "exception_type",
@@ -35,7 +42,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Reference Type",
-   "options": "BEI Invoice\nBEI Payment Request",
+   "options": "BEI Invoice\nBEI Payment Request\nBEI Distribution Trip",
    "reqd": 1
   },
   {
@@ -71,7 +78,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Approval Tier",
-   "options": "\nCPO\nCFO\nCEO",
+   "options": "\nCPO\nCPO+CFO\nCPO+CEO\nCFO\nCEO",
    "read_only": 1
   },
   {
@@ -82,6 +89,56 @@
    "in_standard_filter": 1,
    "label": "Status",
    "options": "Pending CPO\nPending CFO\nPending CEO\nApproved\nRejected"
+  },
+  {
+   "fieldname": "delivery_trip_reference",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Delivery Trip Reference",
+   "options": "BEI Distribution Trip",
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivery_stop_idx",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Delivery Stop Index",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cpo_approved_by",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "CPO Approved By",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cpo_approved_at",
+   "fieldtype": "Datetime",
+   "hidden": 1,
+   "label": "CPO Approved At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cfo_approved_by",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "CFO Approved By",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cfo_approved_at",
+   "fieldtype": "Datetime",
+   "hidden": 1,
+   "label": "CFO Approved At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approval_audit_log",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Approval Audit Log",
+   "read_only": 1
   },
   {
    "fieldname": "section_reason",
@@ -99,7 +156,7 @@
    "fieldtype": "Select",
    "in_standard_filter": 1,
    "label": "Exception Type",
-   "options": "Service PO\nAdvance Payment\nEmergency\nUtility\nOther",
+   "options": "Service PO\nAdvance Payment\nEmergency\nUtility\nDelivery Pre-Billing\nOther",
    "reqd": 1
   },
   {

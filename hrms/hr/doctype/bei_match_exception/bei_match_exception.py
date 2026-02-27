@@ -41,6 +41,9 @@ def get_approval_tier(po_amount):
 
 def get_tier_status(tier):
     """Return the pending status string for a given tier."""
+    # Dual-tier flows always start with CPO review before escalation.
+    if tier in {"CPO+CFO", "CPO+CEO"}:
+        return "Pending CPO"
     return f"Pending {tier}"
 
 
