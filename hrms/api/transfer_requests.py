@@ -1170,7 +1170,9 @@ def get_transfer_sync_config_status():
 
 
 @frappe.whitelist()
-def audit_transfer_store_mappings(pilot_warehouses=None):
+def audit_transfer_store_mappings(
+	pilot_warehouses: str | list[str] | tuple[str, ...] | None = None,
+) -> dict[str, Any]:
 	"""AUDIT-2 utility: verify warehouse/device mapping coverage for pilot stores."""
 	_require_any_role(READ_ALL_ROLES, "You do not have permission to audit transfer mappings")
 
@@ -1330,8 +1332,13 @@ def _pending_stages_for_user() -> list[str]:
 
 @frappe.whitelist()
 def list_transfer_requests(
-	current_stage=None, employee=None, my_requests=0, pending_for_me=0, page=1, page_size=20
-):
+	current_stage: str | None = None,
+	employee: str | None = None,
+	my_requests: int = 0,
+	pending_for_me: int = 0,
+	page: int = 1,
+	page_size: int = 20,
+) -> dict[str, Any]:
 	_require_any_role(
 		REQUESTER_ROLES.union(AREA_APPROVER_ROLES).union(HR_APPROVER_ROLES).union(IT_APPROVER_ROLES),
 		"You do not have permission to view transfer requests",
@@ -1504,7 +1511,10 @@ def reject_transfer_stage(transfer_request_name, reason):
 
 @frappe.whitelist()
 @rate_limit(limit=20, seconds=60)
-def cancel_transfer_request(transfer_request_name, reason=None):
+def cancel_transfer_request(
+	transfer_request_name: str,
+	reason: str | None = None,
+) -> dict[str, Any]:
 	if not frappe.db.exists(DOCTYPE_TRANSFER_REQUEST, transfer_request_name):
 		frappe.throw(_("Transfer request not found"), frappe.DoesNotExistError)
 
@@ -1568,7 +1578,10 @@ def retry_transfer_sync(transfer_request_name, remarks=None):
 
 
 @frappe.whitelist()
-def reconcile_transfer_sync_status(transfer_request_name=None, limit=100):
+def reconcile_transfer_sync_status(
+	transfer_request_name: str | None = None,
+	limit: int = 100,
+) -> dict[str, Any]:
 	"""Poll ADMS command rows and reconcile transfer sync stages."""
 	if frappe.session.user != "Administrator":
 		_require_any_role(IT_APPROVER_ROLES, "You do not have permission to reconcile transfer sync status")
@@ -1619,7 +1632,11 @@ def reconcile_transfer_sync_status(transfer_request_name=None, limit=100):
 
 
 @frappe.whitelist()
-def get_transfer_sync_dashboard(status=None, page=1, page_size=50):
+def get_transfer_sync_dashboard(
+	status: str | None = None,
+	page: int = 1,
+	page_size: int = 50,
+) -> dict[str, Any]:
 	_require_any_role(READ_ALL_ROLES, "You do not have permission to view transfer sync dashboard")
 
 	page = max(1, cint(page) or 1)

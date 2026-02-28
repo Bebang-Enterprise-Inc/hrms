@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.utils import add_to_date, cint, getdate, now_datetime
 
@@ -41,7 +42,7 @@ class BEITransferRequest(Document):
 		if self.is_new():
 			if current_department or current_designation:
 				frappe.throw(
-					"Only HR users can set Department or Designation in transfer requests",
+					_("Only HR users can set Department or Designation in transfer requests"),
 					frappe.PermissionError,
 				)
 			return
@@ -53,7 +54,7 @@ class BEITransferRequest(Document):
 		previous_designation = self._normalize_optional(previous.to_designation)
 		if current_department != previous_department or current_designation != previous_designation:
 			frappe.throw(
-				"Only HR users can set or change Department or Designation in transfer requests",
+				_("Only HR users can set or change Department or Designation in transfer requests"),
 				frappe.PermissionError,
 			)
 
@@ -84,7 +85,7 @@ class BEITransferRequest(Document):
 
 		reliever_days = cint(self.reliever_days)
 		if reliever_days <= 0:
-			frappe.throw("Reliever days is required when reliever mode is enabled")
+			frappe.throw(_("Reliever days is required when reliever mode is enabled"))
 
 		start_date = getdate(self.effective_date)
 		self.reliever_start_date = start_date
