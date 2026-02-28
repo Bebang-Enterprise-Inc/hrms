@@ -1,8 +1,8 @@
-import unittest
-from pathlib import Path
 import importlib.util
 import sys
 import types
+import unittest
+from pathlib import Path
 
 
 def _install_frappe_stubs():
@@ -33,7 +33,9 @@ def _load_production_module():
 	sys.modules.setdefault("hrms.api", types.ModuleType("hrms.api"))
 	sys.modules.setdefault("hrms.hr", types.ModuleType("hrms.hr"))
 	sys.modules.setdefault("hrms.hr.doctype", types.ModuleType("hrms.hr.doctype"))
-	sys.modules.setdefault("hrms.hr.doctype.bei_production", types.ModuleType("hrms.hr.doctype.bei_production"))
+	sys.modules.setdefault(
+		"hrms.hr.doctype.bei_production", types.ModuleType("hrms.hr.doctype.bei_production")
+	)
 
 	fake_commissary = types.ModuleType("hrms.api.commissary")
 	fake_commissary.resolve_outsourced_item_flag = lambda item_code=None, item_name=None, item_meta=None: {
@@ -42,7 +44,9 @@ def _load_production_module():
 	}
 	sys.modules["hrms.api.commissary"] = fake_commissary
 
-	module_path = Path(__file__).resolve().parents[1] / "hr" / "doctype" / "bei_production" / "bei_production.py"
+	module_path = (
+		Path(__file__).resolve().parents[1] / "hr" / "doctype" / "bei_production" / "bei_production.py"
+	)
 	spec = importlib.util.spec_from_file_location("bei_production_under_test", module_path)
 	module = importlib.util.module_from_spec(spec)
 	assert spec and spec.loader

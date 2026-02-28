@@ -1,8 +1,8 @@
-import unittest
-from pathlib import Path
 import importlib.util
 import sys
 import types
+import unittest
+from pathlib import Path
 
 
 def _install_frappe_stubs():
@@ -18,7 +18,9 @@ def _install_frappe_stubs():
 	fake_frappe.whitelist = _whitelist
 	fake_frappe._ = lambda msg: msg
 	fake_frappe.throw = lambda msg: (_ for _ in ()).throw(ValueError(msg))
-	fake_frappe.db = types.SimpleNamespace(exists=lambda *a, **k: False, count=lambda *a, **k: 0, sql=lambda *a, **k: [])
+	fake_frappe.db = types.SimpleNamespace(
+		exists=lambda *a, **k: False, count=lambda *a, **k: 0, sql=lambda *a, **k: []
+	)
 	fake_frappe.get_doc = lambda *a, **k: None
 	sys.modules["frappe"] = fake_frappe
 
@@ -91,7 +93,9 @@ class TestCommissaryLogisticsArchitecture(unittest.TestCase):
 			def architecture_hint(self):
 				return "Direct store dispatch mode: transfers bypass external hubs."
 
-		commissary_dashboard.frappe.db.exists = lambda doctype, name: doctype == "BEI Route" and name == "ROUTE-001"
+		commissary_dashboard.frappe.db.exists = (
+			lambda doctype, name: doctype == "BEI Route" and name == "ROUTE-001"
+		)
 		commissary_dashboard.frappe.get_doc = lambda doctype, name: _RouteDoc()
 
 		result = commissary_dashboard.get_logistics_architecture_mode("ROUTE-001")

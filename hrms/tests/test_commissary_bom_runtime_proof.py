@@ -1,7 +1,7 @@
-import unittest
-from unittest.mock import patch
-from pathlib import Path
 import importlib.util
+import unittest
+from pathlib import Path
+from unittest.mock import patch
 
 try:
 	import frappe
@@ -74,9 +74,11 @@ class TestCommissaryBOMRuntimeProof(unittest.TestCase):
 				return 0
 			return None
 
-		with patch("frappe.db.get_value", side_effect=_fake_get_value), patch(
-			"frappe.get_all", return_value=bom_items
-		), patch.object(commissary_bom, "get_commissary_warehouse", return_value="Commissary - BEI"):
+		with (
+			patch("frappe.db.get_value", side_effect=_fake_get_value),
+			patch("frappe.get_all", return_value=bom_items),
+			patch.object(commissary_bom, "get_commissary_warehouse", return_value="Commissary - BEI"),
+		):
 			result = commissary_bom.get_bom_runtime_deduction_proof("FG001", 20)
 
 		self.assertTrue(result["success"])

@@ -1,7 +1,7 @@
-import unittest
-from unittest.mock import patch
-from pathlib import Path
 import importlib.util
+import unittest
+from pathlib import Path
+from unittest.mock import patch
 
 try:
 	import frappe
@@ -27,7 +27,9 @@ except ModuleNotFoundError:
 	fake_utils = types.ModuleType("frappe.utils")
 	fake_utils.flt = float
 	fake_utils.today = lambda: datetime.utcnow().strftime("%Y-%m-%d")
-	fake_utils.add_days = lambda d, n: (datetime.strptime(d, "%Y-%m-%d") + timedelta(days=n)).strftime("%Y-%m-%d")
+	fake_utils.add_days = lambda d, n: (datetime.strptime(d, "%Y-%m-%d") + timedelta(days=n)).strftime(
+		"%Y-%m-%d"
+	)
 	sys.modules["frappe.utils"] = fake_utils
 
 	import frappe
@@ -57,7 +59,9 @@ def _load_module(module_name, rel_path):
 	return module
 
 
-commissary_dashboard = _load_module("commissary_dashboard_under_test", Path("api") / "commissary_dashboard.py")
+commissary_dashboard = _load_module(
+	"commissary_dashboard_under_test", Path("api") / "commissary_dashboard.py"
+)
 
 
 class TestCommissaryCostingAPI(unittest.TestCase):

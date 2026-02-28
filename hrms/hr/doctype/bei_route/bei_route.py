@@ -4,7 +4,6 @@
 import frappe
 from frappe.model.document import Document
 
-
 VALID_ARCHITECTURE_MODES = {"hub", "direct"}
 
 
