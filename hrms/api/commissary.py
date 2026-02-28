@@ -54,6 +54,47 @@ def get_production_cost_per_batch(limit=20, item_code=None):
     return _dashboard_costing(limit=limit, item_code=item_code)
 
 
+OUTSOURCED_CODE_PREFIXES = ("OUT-", "OS-", "3P-", "OUTSOURCED")
+
+
+def resolve_outsourced_item_flag(item_code=None, item_name=None, item_meta=None):
+    """
+    Classify if a production item is outsourced.
+
+    Deterministic order:
+    1) Explicit metadata flags
+    2) Supplier metadata
+    3) Item code/name conventions
+    """
+    item_meta = item_meta or {}
+
+    explicit_flag = item_meta.get("is_outsourced_item")
+    if explicit_flag in (1, "1", True, "true", "True", "YES", "yes"):
+        return {"is_outsourced_item": True, "reason": "meta:is_outsourced_item"}
+
+    supplier = item_meta.get("outsourced_supplier") or item_meta.get("default_supplier")
+    if supplier:
+        return {"is_outsourced_item": True, "reason": f"meta:supplier:{supplier}"}
+
+    code_name = f"{item_code or ''} {item_name or ''}".upper().strip()
+    for prefix in OUTSOURCED_CODE_PREFIXES:
+        if code_name.startswith(prefix):
+            return {"is_outsourced_item": True, "reason": f"prefix:{prefix.rstrip('-')}"}
+
+    return {"is_outsourced_item": False, "reason": "none"}
+
+
+@frappe.whitelist()
+def get_outsourced_item_flag(item_code, item_name=None):
+    """
+    Public API for UI/audit checks.
+    """
+    return {
+        "success": True,
+        "data": resolve_outsourced_item_flag(item_code=item_code, item_name=item_name)
+    }
+
+
 # ============================================================
 # P0-11: Re-exports for backwards compatibility
 # Frontend calls hrms.api.commissary.<fn> — these imports ensure
