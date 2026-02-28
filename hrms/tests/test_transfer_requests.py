@@ -1,8 +1,9 @@
+from types import SimpleNamespace
+from unittest.mock import patch
+
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import add_days, getdate, now_datetime, nowdate
-from unittest.mock import patch
-from types import SimpleNamespace
 
 from hrms.api import transfer_requests
 
@@ -25,7 +26,9 @@ class TestTransferRequests(FrappeTestCase):
 		doc = frappe._dict({"store_warehouse": "UNKNOWN-WH"})
 		original_exists = frappe.db.exists
 		try:
-			frappe.db.exists = lambda doctype, name: False if doctype == "Warehouse" else original_exists(doctype, name)
+			frappe.db.exists = (
+				lambda doctype, name: False if doctype == "Warehouse" else original_exists(doctype, name)
+			)
 			with self.assertRaises(frappe.ValidationError):
 				transfer_requests._require_store_warehouse_mapping(doc)
 		finally:
@@ -53,7 +56,9 @@ class TestTransferRequests(FrappeTestCase):
 
 		try:
 			transfer_requests._has_any_role = lambda roles, user=None: True
-			frappe.db.exists = lambda doctype, name: True if doctype == "User" else original_exists(doctype, name)
+			frappe.db.exists = (
+				lambda doctype, name: True if doctype == "User" else original_exists(doctype, name)
+			)
 			frappe.get_roles = lambda user=None: ["HR Manager"]
 
 			transfer_requests._enforce_effective_date_dispatch_guard(
@@ -125,9 +130,11 @@ class TestTransferRequests(FrappeTestCase):
 			warehouse_name = "AYALA EVO"
 			branch = "AYALA EVO"
 
-		with patch("frappe.db.exists", side_effect=lambda doctype, name: True), patch(
-			"frappe.get_doc", return_value=_FakeWarehouse()
-		), patch("hrms.api.transfer_requests._get_branch_index", return_value={"AYALAEVO": "AYALA EVO"}):
+		with (
+			patch("frappe.db.exists", side_effect=lambda doctype, name: True),
+			patch("frappe.get_doc", return_value=_FakeWarehouse()),
+			patch("hrms.api.transfer_requests._get_branch_index", return_value={"AYALAEVO": "AYALA EVO"}),
+		):
 			with self.assertRaises(frappe.ValidationError):
 				transfer_requests._validate_store_warehouse_for_transfer("AYALA EVO - BEI")
 
@@ -274,20 +281,23 @@ class TestTransferRequests(FrappeTestCase):
 
 	def test_build_branch_reports_to_defaults_prefers_area_manager(self):
 		options = [{"branch": "AYALA EVO"}]
-		with patch("frappe.get_all", return_value=[
-			{
-				"name": "EMP-AREA-001",
-				"employee_name": "Area Leader",
-				"designation": "Area Supervisor",
-				"branch": "AYALA EVO",
-			},
-			{
-				"name": "EMP-OIC-001",
-				"employee_name": "Store OIC",
-				"designation": "Store OIC",
-				"branch": "AYALA EVO",
-			},
-		]):
+		with patch(
+			"frappe.get_all",
+			return_value=[
+				{
+					"name": "EMP-AREA-001",
+					"employee_name": "Area Leader",
+					"designation": "Area Supervisor",
+					"branch": "AYALA EVO",
+				},
+				{
+					"name": "EMP-OIC-001",
+					"employee_name": "Store OIC",
+					"designation": "Store OIC",
+					"branch": "AYALA EVO",
+				},
+			],
+		):
 			defaults = transfer_requests._build_branch_reports_to_defaults(options)
 		self.assertEqual(defaults["AYALA EVO"]["default_reports_to"], "EMP-AREA-001")
 
@@ -302,21 +312,24 @@ class TestTransferRequests(FrappeTestCase):
 				"branch": "AYALA EVO",
 			}
 		]
-		with patch("frappe.get_meta") as mock_meta, patch("frappe.get_all", return_value=warehouse_rows), patch(
-			"frappe.db.exists", return_value=True
-		), patch(
-			"hrms.api.transfer_requests._build_branch_reports_to_defaults",
-			return_value={
-				"AYALA EVO": {
-					"area_manager": {
-						"employee": "EMP-AREA-001",
-						"employee_name": "Area Leader",
-						"designation": "Area Supervisor",
-					},
-					"store_oic": None,
-					"default_reports_to": "EMP-AREA-001",
-				}
-			},
+		with (
+			patch("frappe.get_meta") as mock_meta,
+			patch("frappe.get_all", return_value=warehouse_rows),
+			patch("frappe.db.exists", return_value=True),
+			patch(
+				"hrms.api.transfer_requests._build_branch_reports_to_defaults",
+				return_value={
+					"AYALA EVO": {
+						"area_manager": {
+							"employee": "EMP-AREA-001",
+							"employee_name": "Area Leader",
+							"designation": "Area Supervisor",
+						},
+						"store_oic": None,
+						"default_reports_to": "EMP-AREA-001",
+					}
+				},
+			),
 		):
 			mock_meta.return_value = SimpleNamespace(has_field=lambda field: True)
 			options = transfer_requests._list_transfer_store_warehouse_options(limit=10)
@@ -334,13 +347,19 @@ class TestTransferRequests(FrappeTestCase):
 			}
 		)
 
-		with patch.object(frappe, "session", SimpleNamespace(user="test.supervisor@bebang.ph")), patch(
-			"hrms.api.transfer_requests._require_any_role"
-		), patch("frappe.db.exists", return_value=True), patch(
-			"frappe.get_doc", return_value=employee_doc
-		), patch(
-			"hrms.api.transfer_requests._validate_store_warehouse_for_transfer",
-			return_value={"warehouse": "BRITTANY OFFICE - BEI", "branch": "BRITTANY OFFICE", "company": "Bebang Enterprise Inc."},
+		with (
+			patch.object(frappe, "session", SimpleNamespace(user="test.supervisor@bebang.ph")),
+			patch("hrms.api.transfer_requests._require_any_role"),
+			patch("frappe.db.exists", return_value=True),
+			patch("frappe.get_doc", return_value=employee_doc),
+			patch(
+				"hrms.api.transfer_requests._validate_store_warehouse_for_transfer",
+				return_value={
+					"warehouse": "BRITTANY OFFICE - BEI",
+					"branch": "BRITTANY OFFICE",
+					"company": "Bebang Enterprise Inc.",
+				},
+			),
 		):
 			with self.assertRaises(frappe.ValidationError):
 				transfer_requests.create_transfer_request(
@@ -360,8 +379,9 @@ class TestTransferRequests(FrappeTestCase):
 					"to_designation": "Store Supervisor",
 				}
 
-		with patch("hrms.api.transfer_requests._can_manage_org_changes", return_value=False), patch(
-			"frappe.db.exists", return_value=False
+		with (
+			patch("hrms.api.transfer_requests._can_manage_org_changes", return_value=False),
+			patch("frappe.db.exists", return_value=False),
 		):
 			payload = transfer_requests._serialize_request(_Doc())
 
@@ -377,8 +397,9 @@ class TestTransferRequests(FrappeTestCase):
 					"to_designation": "Store Supervisor",
 				}
 
-		with patch("hrms.api.transfer_requests._can_manage_org_changes", return_value=True), patch(
-			"frappe.db.exists", return_value=False
+		with (
+			patch("hrms.api.transfer_requests._can_manage_org_changes", return_value=True),
+			patch("frappe.db.exists", return_value=False),
 		):
 			payload = transfer_requests._serialize_request(_Doc())
 

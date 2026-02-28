@@ -25,7 +25,6 @@ from hrms.utils.adms_validation import (
 from hrms.utils.device_mapping import DEVICE_TO_STORE
 from hrms.utils.roving_employees import is_roving
 
-
 DOCTYPE_TRANSFER_REQUEST = "BEI Transfer Request"
 DOCTYPE_TRANSFER_DEVICE_COMMAND = "BEI Transfer Device Command"
 BEI_COMPANY_NAME = "Bebang Enterprise Inc."
@@ -112,13 +111,14 @@ def _coerce_positive_int(value: Any, *, field_label: str) -> int | None:
 
 
 def _enforce_org_change_field_guard(*, to_department: str | None, to_designation: str | None):
+	if not to_department and not to_designation:
+		return
 	if _can_manage_org_changes():
 		return
-	if to_department or to_designation:
-		frappe.throw(
-			_("Only HR users can set Department or Designation in transfer requests"),
-			frappe.PermissionError,
-		)
+	frappe.throw(
+		_("Only HR users can set Department or Designation in transfer requests"),
+		frappe.PermissionError,
+	)
 
 
 def _compute_reliever_window(effective_date: Any, reliever_days: int | None) -> tuple[Any | None, Any | None]:
@@ -168,7 +168,7 @@ def _build_branch_reports_to_defaults(options: list[dict[str, str]]) -> dict[str
 		if not bucket["store_oic"] and ("OIC" in designation or "STORE SUPERVISOR" in designation):
 			bucket["store_oic"] = candidate
 
-	for branch_name, leadership in by_branch.items():
+	for leadership in by_branch.values():
 		default_candidate = leadership.get("area_manager") or leadership.get("store_oic")
 		if default_candidate:
 			leadership["default_reports_to"] = default_candidate.get("employee")
@@ -209,8 +209,16 @@ def _notify_transfer_event(doc, event_title: str, details: str | None = None):
 		from hrms.api.google_chat import send_message_to_space
 		from hrms.utils.bei_config import SPACE_ADMIN_IT, SPACE_NOTIFICATIONS, get_chat_space
 
-		technical_stages = {STAGE_PENDING_IT, STAGE_READY_SYNC, STAGE_SYNC_IN_PROGRESS, STAGE_SYNC_FAILED, STAGE_SYNCED}
-		target_space = get_chat_space(SPACE_ADMIN_IT if doc.current_stage in technical_stages else SPACE_NOTIFICATIONS)
+		technical_stages = {
+			STAGE_PENDING_IT,
+			STAGE_READY_SYNC,
+			STAGE_SYNC_IN_PROGRESS,
+			STAGE_SYNC_FAILED,
+			STAGE_SYNCED,
+		}
+		target_space = get_chat_space(
+			SPACE_ADMIN_IT if doc.current_stage in technical_stages else SPACE_NOTIFICATIONS
+		)
 		message_lines = [
 			f"*{event_title}*",
 			f"Request: {doc.name}",
@@ -457,7 +465,9 @@ def _get_branch_index() -> dict[str, str]:
 	return index
 
 
-def _resolve_branch_from_store_warehouse(store_warehouse: str | None, branch_index: dict[str, str] | None = None) -> str | None:
+def _resolve_branch_from_store_warehouse(
+	store_warehouse: str | None, branch_index: dict[str, str] | None = None
+) -> str | None:
 	if not store_warehouse:
 		return None
 
@@ -478,7 +488,9 @@ def _resolve_branch_from_store_warehouse(store_warehouse: str | None, branch_ind
 	return None
 
 
-def _validate_store_warehouse_for_transfer(store_warehouse: str | None, expected_branch: str | None = None) -> dict[str, Any]:
+def _validate_store_warehouse_for_transfer(
+	store_warehouse: str | None, expected_branch: str | None = None
+) -> dict[str, Any]:
 	warehouse_name = (store_warehouse or "").strip()
 	if not warehouse_name:
 		frappe.throw(_("Missing Warehouse Mapping for target store"))
@@ -518,9 +530,9 @@ def _validate_store_warehouse_for_transfer(store_warehouse: str | None, expected
 		branch_key = _normalize_store_key(branch_name)
 		if expected_key and branch_key and expected_key != branch_key:
 			frappe.throw(
-				_(
-					"Target branch {0} does not match warehouse {1} (derived branch: {2})"
-				).format(expected_branch, warehouse_name, branch_name)
+				_("Target branch {0} does not match warehouse {1} (derived branch: {2})").format(
+					expected_branch, warehouse_name, branch_name
+				)
 			)
 
 	return {
@@ -531,7 +543,9 @@ def _validate_store_warehouse_for_transfer(store_warehouse: str | None, expected
 	}
 
 
-def _list_transfer_store_warehouse_options(search_text: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+def _list_transfer_store_warehouse_options(
+	search_text: str | None = None, limit: int = 100
+) -> list[dict[str, Any]]:
 	branch_index = _get_branch_index()
 	search_lower = (search_text or "").strip().lower()
 	limit = max(1, min(500, cint(limit) or 100))
@@ -564,14 +578,18 @@ def _list_transfer_store_warehouse_options(search_text: str | None = None, limit
 		warehouse_label = (row.get("warehouse_name") or warehouse_name).strip()
 		if not warehouse_name:
 			continue
-		if _contains_blocked_warehouse_term(warehouse_name) or _contains_blocked_warehouse_term(warehouse_label):
+		if _contains_blocked_warehouse_term(warehouse_name) or _contains_blocked_warehouse_term(
+			warehouse_label
+		):
 			continue
 
 		branch_name = (row.get("branch") or "").strip()
 		if branch_name and not frappe.db.exists("Branch", branch_name):
 			branch_name = ""
 		if not branch_name:
-			branch_name = _resolve_branch_from_store_warehouse(warehouse_name, branch_index=branch_index) or ""
+			branch_name = (
+				_resolve_branch_from_store_warehouse(warehouse_name, branch_index=branch_index) or ""
+			)
 		if not branch_name:
 			continue
 
@@ -613,10 +631,9 @@ def _list_transfer_store_warehouse_options(search_text: str | None = None, limit
 
 def _get_employee_bio_id(employee_id: str) -> str:
 	employee = frappe.get_doc("Employee", employee_id)
-	bio_id = (
-		(getattr(employee, "attendance_device_id", None) or "").strip()
-		or (getattr(employee, "new_attendance_device_id", None) or "").strip()
-	)
+	bio_id = (getattr(employee, "attendance_device_id", None) or "").strip() or (
+		getattr(employee, "new_attendance_device_id", None) or ""
+	).strip()
 	if not bio_id:
 		frappe.throw(_("Employee {0} has no biometric ID assigned").format(employee_id))
 	return bio_id
@@ -644,7 +661,9 @@ def _compute_transfer_device_plan(doc, bio_id: str) -> dict[str, Any]:
 	target_devices = [sn for sn, store_name in device_pairs if _normalize_store_key(store_name) == store_key]
 	if not target_devices:
 		frappe.throw(
-			_("No biometric devices mapped for target store warehouse {0}").format(doc.store_warehouse or doc.to_branch)
+			_("No biometric devices mapped for target store warehouse {0}").format(
+				doc.store_warehouse or doc.to_branch
+			)
 		)
 
 	if is_reliever:
@@ -683,9 +702,8 @@ def _get_adms_config() -> dict[str, Any]:
 		or "http://localhost:8080"
 	)
 	token = (
-		(frappe.conf.get("adms_admin_token") if getattr(frappe, "conf", None) else None)
-		or os.environ.get("ADMS_ADMIN_TOKEN")
-	)
+		frappe.conf.get("adms_admin_token") if getattr(frappe, "conf", None) else None
+	) or os.environ.get("ADMS_ADMIN_TOKEN")
 	timeout_seconds = cint(
 		(frappe.conf.get("adms_request_timeout_seconds") if getattr(frappe, "conf", None) else None)
 		or os.environ.get("ADMS_REQUEST_TIMEOUT_SECONDS")
@@ -926,7 +944,9 @@ def _refresh_transfer_stage_from_commands(doc):
 			doc,
 			_("Transfer sync stage updated: {0} -> {1}").format(stage_before, doc.current_stage),
 		)
-		_notify_transfer_event(doc, "Transfer Sync Stage Updated", details=f"{stage_before} -> {doc.current_stage}")
+		_notify_transfer_event(
+			doc, "Transfer Sync Stage Updated", details=f"{stage_before} -> {doc.current_stage}"
+		)
 		return True
 	return reliever_cleanup_changed
 
@@ -961,7 +981,12 @@ def _sync_command_statuses_from_adms(doc, config: dict[str, Any]) -> dict[str, A
 			remote = remote_by_id.get(cint(cmd_doc.adms_command_id))
 			if remote:
 				remote_status = (remote.get("status") or "").upper()
-				if remote_status in {ADMS_STATUS_PENDING, ADMS_STATUS_SENT, ADMS_STATUS_ACKED, ADMS_STATUS_FAILED}:
+				if remote_status in {
+					ADMS_STATUS_PENDING,
+					ADMS_STATUS_SENT,
+					ADMS_STATUS_ACKED,
+					ADMS_STATUS_FAILED,
+				}:
 					cmd_doc.status = remote_status
 				cmd_doc.last_error = remote.get("last_error")
 				cmd_doc.sent_at = _coerce_datetime(remote.get("sent_at")) or cmd_doc.sent_at
@@ -981,7 +1006,9 @@ def _sync_command_statuses_from_adms(doc, config: dict[str, Any]) -> dict[str, A
 	return {"updated": updated, "errors": errors}
 
 
-def _dispatch_transfer_sync(doc, *, force_retry_failed: bool = False, remarks: str | None = None) -> dict[str, Any]:
+def _dispatch_transfer_sync(
+	doc, *, force_retry_failed: bool = False, remarks: str | None = None
+) -> dict[str, Any]:
 	_require_store_warehouse_mapping(doc)
 	_enforce_effective_date_dispatch_guard(doc)
 
@@ -1007,7 +1034,9 @@ def _dispatch_transfer_sync(doc, *, force_retry_failed: bool = False, remarks: s
 	)
 	if not preflight.get("can_proceed"):
 		frappe.throw(
-			_("ADMS preflight failed: {0}").format(preflight.get("error_message") or "Unknown validation error")
+			_("ADMS preflight failed: {0}").format(
+				preflight.get("error_message") or "Unknown validation error"
+			)
 		)
 
 	dispatch_plan = []
@@ -1099,9 +1128,9 @@ def _dispatch_transfer_sync(doc, *, force_retry_failed: bool = False, remarks: s
 	doc.sync_batch_id = f"tr-sync-{now_datetime().strftime('%Y%m%d%H%M%S')}"
 	doc.save(ignore_permissions=True)
 
-	log_text = _(
-		"Transfer sync dispatch executed. queued={0}, failed={1}, skipped={2}, active={3}"
-	).format(queued, failed, skipped, already_active)
+	log_text = _("Transfer sync dispatch executed. queued={0}, failed={1}, skipped={2}, active={3}").format(
+		queued, failed, skipped, already_active
+	)
 	if remarks:
 		log_text += _(". Notes: {0}").format(remarks)
 	_append_timeline_comment(doc, log_text)
@@ -1151,16 +1180,12 @@ def audit_transfer_store_mappings(pilot_warehouses=None):
 			for part in re.split(r"[\n,]+", pilot_warehouses):
 				if part and part.strip():
 					targets.append(part.strip())
-		elif isinstance(pilot_warehouses, (list, tuple)):
+		elif isinstance(pilot_warehouses, list | tuple):
 			targets = [str(v).strip() for v in pilot_warehouses if str(v).strip()]
 
 	if not targets:
 		targets = sorted(
-			{
-				store_name
-				for store_name in DEVICE_TO_STORE.values()
-				if store_name and str(store_name).strip()
-			}
+			{store_name for store_name in DEVICE_TO_STORE.values() if store_name and str(store_name).strip()}
 		)
 
 	rows = []
@@ -1170,9 +1195,7 @@ def audit_transfer_store_mappings(pilot_warehouses=None):
 		store_key = _normalize_store_key(target)
 		warehouse_exists = bool(frappe.db.exists("Warehouse", target))
 		devices = [
-			sn
-			for sn, store_name in DEVICE_TO_STORE.items()
-			if _normalize_store_key(store_name) == store_key
+			sn for sn, store_name in DEVICE_TO_STORE.items() if _normalize_store_key(store_name) == store_key
 		]
 		has_devices = len(devices) > 0
 
@@ -1200,6 +1223,7 @@ def audit_transfer_store_mappings(pilot_warehouses=None):
 		"missing_device_mapping": sorted(set(missing_device_mapping)),
 		"rows": rows,
 	}
+
 
 @frappe.whitelist()
 @rate_limit(limit=20, seconds=60)
@@ -1305,7 +1329,9 @@ def _pending_stages_for_user() -> list[str]:
 
 
 @frappe.whitelist()
-def list_transfer_requests(current_stage=None, employee=None, my_requests=0, pending_for_me=0, page=1, page_size=20):
+def list_transfer_requests(
+	current_stage=None, employee=None, my_requests=0, pending_for_me=0, page=1, page_size=20
+):
 	_require_any_role(
 		REQUESTER_ROLES.union(AREA_APPROVER_ROLES).union(HR_APPROVER_ROLES).union(IT_APPROVER_ROLES),
 		"You do not have permission to view transfer requests",
@@ -1499,7 +1525,9 @@ def cancel_transfer_request(transfer_request_name, reason=None):
 		doc,
 		_("Cancelled request from stage {0}. Reason: {1}").format(stage_before, reason or "-"),
 	)
-	_notify_transfer_event(doc, "Transfer Request Cancelled", details=f"{stage_before}. Reason: {reason or '-'}")
+	_notify_transfer_event(
+		doc, "Transfer Request Cancelled", details=f"{stage_before}. Reason: {reason or '-'}"
+	)
 
 	return {"success": True, "name": doc.name, "current_stage": doc.current_stage}
 
@@ -1555,7 +1583,12 @@ def reconcile_transfer_sync_status(transfer_request_name=None, limit=100):
 	else:
 		targets = frappe.get_all(
 			DOCTYPE_TRANSFER_REQUEST,
-			filters={"current_stage": ["in", [STAGE_READY_SYNC, STAGE_SYNC_IN_PROGRESS, STAGE_SYNC_FAILED, STAGE_SYNCED]]},
+			filters={
+				"current_stage": [
+					"in",
+					[STAGE_READY_SYNC, STAGE_SYNC_IN_PROGRESS, STAGE_SYNC_FAILED, STAGE_SYNCED],
+				]
+			},
 			fields=["name"],
 			limit=min(max(cint(limit) or 100, 1), 500),
 			order_by="modified asc",
@@ -1593,10 +1626,21 @@ def get_transfer_sync_dashboard(status=None, page=1, page_size=50):
 	page_size = min(200, max(1, cint(page_size) or 50))
 
 	stage_counts = {}
-	for stage in [STAGE_PENDING_IT, STAGE_READY_SYNC, STAGE_SYNC_IN_PROGRESS, STAGE_SYNCED, STAGE_SYNC_FAILED]:
+	for stage in [
+		STAGE_PENDING_IT,
+		STAGE_READY_SYNC,
+		STAGE_SYNC_IN_PROGRESS,
+		STAGE_SYNCED,
+		STAGE_SYNC_FAILED,
+	]:
 		stage_counts[stage] = frappe.db.count(DOCTYPE_TRANSFER_REQUEST, filters={"current_stage": stage})
 
-	transfer_filters = {"current_stage": ["in", [STAGE_PENDING_IT, STAGE_READY_SYNC, STAGE_SYNC_IN_PROGRESS, STAGE_SYNCED, STAGE_SYNC_FAILED]]}
+	transfer_filters = {
+		"current_stage": [
+			"in",
+			[STAGE_PENDING_IT, STAGE_READY_SYNC, STAGE_SYNC_IN_PROGRESS, STAGE_SYNCED, STAGE_SYNC_FAILED],
+		]
+	}
 	if status:
 		transfer_filters["current_stage"] = status
 

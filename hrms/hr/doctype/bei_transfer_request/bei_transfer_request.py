@@ -91,4 +91,3 @@ class BEITransferRequest(Document):
 		self.reliever_end_date = getdate(add_to_date(start_date, days=reliever_days))
 		if not self.reliever_cleanup_status:
 			self.reliever_cleanup_status = "Pending"
-
