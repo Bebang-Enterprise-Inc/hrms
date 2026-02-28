@@ -12,11 +12,14 @@ if str(ROOT) not in sys.path:
 
 
 def _install_fake_frappe():
-    if "frappe" in sys.modules:
-        return
-
-    frappe = types.ModuleType("frappe")
-    utils = types.ModuleType("frappe.utils")
+    frappe = sys.modules.get("frappe")
+    if frappe is None:
+        frappe = types.ModuleType("frappe")
+        sys.modules["frappe"] = frappe
+    utils = sys.modules.get("frappe.utils")
+    if utils is None:
+        utils = types.ModuleType("frappe.utils")
+        sys.modules["frappe.utils"] = utils
 
     class ValidationError(Exception):
         pass
@@ -68,8 +71,7 @@ def _install_fake_frappe():
     utils.get_last_day = lambda value: datetime.date.fromisoformat(str(value)[:10]).replace(day=28)
     utils.getdate = _getdate
 
-    sys.modules["frappe"] = frappe
-    sys.modules["frappe.utils"] = utils
+    frappe.utils = utils
 
 
 def _install_stub_dependencies():

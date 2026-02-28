@@ -717,6 +717,8 @@ def get_3pl_rates(partner=None, cargo_type=None):
         SELECT
             name, rate_name, threepl_partner, cargo_type, zone,
             rate_per_trip, overtime_rate, surcharge_rate,
+            COALESCE(ewt_atc, 'WC110') AS ewt_atc,
+            COALESCE(ewt_rate, 1.0) AS ewt_rate,
             effective_from, effective_to, notes
         FROM `tabBEI 3PL Rate`
         WHERE {where_clause}
@@ -725,6 +727,12 @@ def get_3pl_rates(partner=None, cargo_type=None):
         params,
         as_dict=True
     )
+
+    # Contract hardening for portal billing pages:
+    # always include EWT fields even if legacy rows/migrations omit them.
+    for rate in rates:
+        rate["ewt_atc"] = rate.get("ewt_atc") or "WC110"
+        rate["ewt_rate"] = flt(rate.get("ewt_rate") or 1.0)
 
     return {"rates": rates, "count": len(rates)}
 

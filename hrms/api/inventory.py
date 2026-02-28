@@ -629,10 +629,20 @@ def submit_return_request(store, items, photo=None):
     doc.insert()
     doc.submit()
 
+    total_qty = sum(flt(i.get("quantity") or i.get("qty") or 0) for i in items)
+    items_count = len(items)
+
     return {
         "success": True,
         "name": doc.name,
-        "message": _("Return request submitted successfully")
+        "message": _("Return request submitted successfully"),
+        "data": {
+            "name": doc.name,
+            "items_count": items_count,
+            "total_qty": total_qty,
+            "movement_type": "Material Issue",
+            "source_warehouse": warehouse,
+        },
     }
 
 
