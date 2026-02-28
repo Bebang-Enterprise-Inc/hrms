@@ -69,6 +69,7 @@ def _install_frappe_stub() -> None:
     frappe_utils.get_first_day = lambda value: value
     frappe_utils.get_last_day = lambda value: value
     frappe_utils.nowdate = lambda: "2026-01-01"
+    frappe_utils.getdate = lambda value: value
 
     frappe_model = types.ModuleType("frappe.model")
     frappe_model_document = types.ModuleType("frappe.model.document")
