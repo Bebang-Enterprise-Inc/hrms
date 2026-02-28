@@ -482,3 +482,37 @@ def get_production_cost_per_batch(limit=20, item_code=None):
             "total_cost": sum(d["total_cost"] for d in data),
         },
     }
+
+
+@frappe.whitelist()
+def get_logistics_architecture_mode(route_name=None):
+    """
+    Return current logistics architecture mode (`hub` or `direct`).
+
+    If route_name is provided and exists, mode is resolved from that BEI Route.
+    Fallback mode is `hub`.
+    """
+    mode = "hub"
+    route_hint = "Hub-and-spoke mode: transfers route through designated hubs."
+
+    if route_name and frappe.db.exists("BEI Route", route_name):
+        route = frappe.get_doc("BEI Route", route_name)
+        if hasattr(route, "resolve_architecture_mode"):
+            mode = route.resolve_architecture_mode()
+        else:
+            notes = (getattr(route, "notes", "") or "").lower()
+            mode = "direct" if "mode:direct" in notes else "hub"
+        if hasattr(route, "architecture_hint"):
+            route_hint = route.architecture_hint()
+        elif mode == "direct":
+            route_hint = "Direct store dispatch mode: transfers bypass external hubs."
+
+    return {
+        "success": True,
+        "data": {
+            "architecture_mode": mode,
+            "available_modes": ["hub", "direct"],
+            "hint": route_hint,
+            "route_name": route_name,
+        },
+    }
