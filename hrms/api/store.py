@@ -6,237 +6,234 @@ Store Operations API
 Handles store ordering, receiving, and FQI reports for my.bebang.ph
 """
 
-import frappe
-from hrms.utils.bei_config import get_company
-from hrms.utils.scm_roles import check_scm_permission, SCM_APPROVAL_ROLES
-from frappe import _
-from frappe.utils import nowdate, add_days, now_datetime, flt
-import json
 import base64
 import hashlib
+import json
+
+import frappe
+from frappe import _
+from frappe.utils import add_days, flt, now_datetime, nowdate
+
+from hrms.utils.bei_config import get_company
+from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
 
 
 def _notify_store_ops(msg):
-    """Send a non-blocking GChat notification to the Store Ops notifications space."""
-    try:
-        from hrms.api.google_chat import send_message_to_space
-        from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
-        send_message_to_space(get_chat_space(SPACE_NOTIFICATIONS), msg)
-    except Exception:
-        pass
+	"""Send a non-blocking GChat notification to the Store Ops notifications space."""
+	try:
+		from hrms.api.google_chat import send_message_to_space
+		from hrms.utils.bei_config import SPACE_NOTIFICATIONS, get_chat_space
+
+		send_message_to_space(get_chat_space(SPACE_NOTIFICATIONS), msg)
+	except Exception:
+		pass
 
 
 def save_base64_image(base64_data, doctype, docname=None, fieldname="photo"):
-    """
-    Save a base64-encoded image as a Frappe file attachment.
-    Returns the file URL that can be stored in Attach Image fields.
+	"""
+	Save a base64-encoded image as a Frappe file attachment.
+	Returns the file URL that can be stored in Attach Image fields.
 
-    Args:
-        base64_data: Base64 string (with or without data:image/... prefix)
-        doctype: DocType to attach the file to
-        docname: Document name (optional, can attach later)
-        fieldname: Field name for the attachment
+	Args:
+	    base64_data: Base64 string (with or without data:image/... prefix)
+	    doctype: DocType to attach the file to
+	    docname: Document name (optional, can attach later)
+	    fieldname: Field name for the attachment
 
-    Returns:
-        str: File URL (e.g., /files/maintenance_photo_abc123.jpg)
-    """
-    if not base64_data:
-        return None
+	Returns:
+	    str: File URL (e.g., /files/maintenance_photo_abc123.jpg)
+	"""
+	if not base64_data:
+		return None
 
-    # Check if it's already a URL (not base64)
-    if base64_data.startswith(('/files/', '/private/', 'http://', 'https://')):
-        return base64_data
+	# Check if it's already a URL (not base64)
+	if base64_data.startswith(("/files/", "/private/", "http://", "https://")):
+		return base64_data
 
-    # Extract the actual base64 content and determine file type
-    if ',' in base64_data:
-        # Format: data:image/jpeg;base64,/9j/4AAQ...
-        header, content = base64_data.split(',', 1)
-        if 'png' in header.lower():
-            ext = 'png'
-        elif 'gif' in header.lower():
-            ext = 'gif'
-        elif 'webp' in header.lower():
-            ext = 'webp'
-        else:
-            ext = 'jpg'
-    else:
-        # Raw base64 without header, assume JPEG
-        content = base64_data
-        ext = 'jpg'
+	# Extract the actual base64 content and determine file type
+	if "," in base64_data:
+		# Format: data:image/jpeg;base64,/9j/4AAQ...
+		header, content = base64_data.split(",", 1)
+		if "png" in header.lower():
+			ext = "png"
+		elif "gif" in header.lower():
+			ext = "gif"
+		elif "webp" in header.lower():
+			ext = "webp"
+		else:
+			ext = "jpg"
+	else:
+		# Raw base64 without header, assume JPEG
+		content = base64_data
+		ext = "jpg"
 
-    # Decode base64
-    try:
-        file_content = base64.b64decode(content)
-    except Exception as e:
-        frappe.log_error(f"Failed to decode base64 image: {str(e)}", "Base64 Decode Error")
-        frappe.throw(_("Invalid image data"))
+	# Decode base64
+	try:
+		file_content = base64.b64decode(content)
+	except Exception as e:
+		frappe.log_error(f"Failed to decode base64 image: {e!s}", "Base64 Decode Error")
+		frappe.throw(_("Invalid image data"))
 
-    # Generate unique filename using hash
-    file_hash = hashlib.md5(file_content).hexdigest()[:12]
-    filename = f"{doctype.lower().replace(' ', '_')}_{file_hash}.{ext}"
+	# Generate unique filename using hash
+	file_hash = hashlib.md5(file_content).hexdigest()[:12]
+	filename = f"{doctype.lower().replace(' ', '_')}_{file_hash}.{ext}"
 
-    # Save using Frappe's file handler
-    file_doc = frappe.get_doc({
-        "doctype": "File",
-        "file_name": filename,
-        "content": file_content,
-        "attached_to_doctype": doctype if docname else None,
-        "attached_to_name": docname,
-        "attached_to_field": fieldname,
-        "is_private": 0
-    })
-    file_doc.save(ignore_permissions=True)
+	# Save using Frappe's file handler
+	file_doc = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": filename,
+			"content": file_content,
+			"attached_to_doctype": doctype if docname else None,
+			"attached_to_name": docname,
+			"attached_to_field": fieldname,
+			"is_private": 0,
+		}
+	)
+	file_doc.save(ignore_permissions=True)
 
-    return file_doc.file_url
+	return file_doc.file_url
 
 
 STORE_OPS_ALLOWED_ROLES = [
-    "Store Staff", "Store OIC", "Store Supervisor", "Area Supervisor",
-    "System Manager", "Administrator"
+	"Store Staff",
+	"Store OIC",
+	"Store Supervisor",
+	"Area Supervisor",
+	"System Manager",
+	"Administrator",
 ]
 
 
 def validate_store_ops_role():
-    """Validate that current user has a store operations role.
-    Raises PermissionError if user lacks required role."""
-    user_roles = frappe.get_roles(frappe.session.user)
-    if not any(role in user_roles for role in STORE_OPS_ALLOWED_ROLES):
-        frappe.throw(
-            _("You do not have permission for store operations"),
-            frappe.PermissionError
-        )
+	"""Validate that current user has a store operations role.
+	Raises PermissionError if user lacks required role."""
+	user_roles = frappe.get_roles(frappe.session.user)
+	if not any(role in user_roles for role in STORE_OPS_ALLOWED_ROLES):
+		frappe.throw(_("You do not have permission for store operations"), frappe.PermissionError)
 
 
 def resolve_warehouse(store_or_branch):
-    """
-    Resolve a branch name or partial warehouse name to the full warehouse name.
-    Branch names like 'TEST-STORE-BGC' need to be converted to warehouse names 'TEST-STORE-BGC - BEI'.
-    """
-    if not store_or_branch:
-        return None
+	"""
+	Resolve a branch name or partial warehouse name to the full warehouse name.
+	Branch names like 'TEST-STORE-BGC' need to be converted to warehouse names 'TEST-STORE-BGC - BEI'.
+	"""
+	if not store_or_branch:
+		return None
 
-    # First check if the exact warehouse exists
-    if frappe.db.exists("Warehouse", store_or_branch):
-        return store_or_branch
+	# First check if the exact warehouse exists
+	if frappe.db.exists("Warehouse", store_or_branch):
+		return store_or_branch
 
-    # Try appending company abbreviation (BEI is the default company)
-    warehouse_with_company = f"{store_or_branch} - BEI"
-    if frappe.db.exists("Warehouse", warehouse_with_company):
-        return warehouse_with_company
+	# Try appending company abbreviation (BEI is the default company)
+	warehouse_with_company = f"{store_or_branch} - BEI"
+	if frappe.db.exists("Warehouse", warehouse_with_company):
+		return warehouse_with_company
 
-    # Try to find warehouse by warehouse_name (without company suffix)
-    warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": store_or_branch}, "name")
-    if warehouse:
-        return warehouse
+	# Try to find warehouse by warehouse_name (without company suffix)
+	warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": store_or_branch}, "name")
+	if warehouse:
+		return warehouse
 
-    frappe.throw(_("Could not find Store: {0}").format(store_or_branch))
+	frappe.throw(_("Could not find Store: {0}").format(store_or_branch))
 
 
 def _get_area_supervisor_for_store(warehouse):
-    """Get the area supervisor user for a given warehouse/store."""
-    # Check custom_area_supervisor field on Warehouse
-    supervisor = frappe.db.get_value("Warehouse", warehouse, "custom_area_supervisor")
-    if supervisor:
-        return supervisor
+	"""Get the area supervisor user for a given warehouse/store."""
+	# Check custom_area_supervisor field on Warehouse
+	supervisor = frappe.db.get_value("Warehouse", warehouse, "custom_area_supervisor")
+	if supervisor:
+		return supervisor
 
-    # Fallback: check parent warehouse
-    parent = frappe.db.get_value("Warehouse", warehouse, "parent_warehouse")
-    if parent:
-        supervisor = frappe.db.get_value("Warehouse", parent, "custom_area_supervisor")
-        if supervisor:
-            return supervisor
+	# Fallback: check parent warehouse
+	parent = frappe.db.get_value("Warehouse", warehouse, "parent_warehouse")
+	if parent:
+		supervisor = frappe.db.get_value("Warehouse", parent, "custom_area_supervisor")
+		if supervisor:
+			return supervisor
 
-    return None
+	return None
 
 
 @frappe.whitelist()
 def get_user_store():
-    """
-    Resolve the current user's store(s) based on their role.
+	"""
+	Resolve the current user's store(s) based on their role.
 
-    Store Staff / Store Supervisor: Returns store from Employee.branch
-    Area Supervisor: Returns all stores where Warehouse.custom_area_supervisor = user
+	Store Staff / Store Supervisor: Returns store from Employee.branch
+	Area Supervisor: Returns all stores where Warehouse.custom_area_supervisor = user
 
-    Returns:
-        {
-            "stores": [{"name": "Store Name - BEI", "warehouse_name": "Store Name"}],
-            "default_store": "Store Name - BEI",
-            "is_multi_store": false,
-            "role": "Store Staff"
-        }
-    """
-    user = frappe.session.user
-    user_roles = frappe.get_roles(user)
+	Returns:
+	    {
+	        "stores": [{"name": "Store Name - BEI", "warehouse_name": "Store Name"}],
+	        "default_store": "Store Name - BEI",
+	        "is_multi_store": false,
+	        "role": "Store Staff"
+	    }
+	"""
+	user = frappe.session.user
+	user_roles = frappe.get_roles(user)
 
-    stores = []
-    role = None
+	stores = []
+	role = None
 
-    if "Area Supervisor" in user_roles:
-        # Area supervisors see all stores assigned to them
-        role = "Area Supervisor"
-        area_stores = frappe.get_all(
-            "Warehouse",
-            filters={
-                "custom_area_supervisor": user,
-                "is_group": 0
-            },
-            fields=["name", "warehouse_name"],
-            order_by="warehouse_name"
-        )
-        stores = area_stores
+	if "Area Supervisor" in user_roles:
+		# Area supervisors see all stores assigned to them
+		role = "Area Supervisor"
+		area_stores = frappe.get_all(
+			"Warehouse",
+			filters={"custom_area_supervisor": user, "is_group": 0},
+			fields=["name", "warehouse_name"],
+			order_by="warehouse_name",
+		)
+		stores = area_stores
 
-    if not stores and ("Store Supervisor" in user_roles or "Store Staff" in user_roles
-                        or "Employee" in user_roles):
-        # Store staff/supervisors get their branch from Employee record
-        role = "Store Supervisor" if "Store Supervisor" in user_roles else "Store Staff"
-        employee = frappe.db.get_value(
-            "Employee",
-            {"user_id": user, "status": "Active"},
-            ["branch", "employee_name"],
-            as_dict=True
-        )
-        if employee and employee.branch:
-            warehouse = resolve_warehouse(employee.branch)
-            if warehouse:
-                warehouse_name = frappe.db.get_value("Warehouse", warehouse, "warehouse_name") or warehouse
-                stores = [{"name": warehouse, "warehouse_name": warehouse_name}]
+	if not stores and (
+		"Store Supervisor" in user_roles or "Store Staff" in user_roles or "Employee" in user_roles
+	):
+		# Store staff/supervisors get their branch from Employee record
+		role = "Store Supervisor" if "Store Supervisor" in user_roles else "Store Staff"
+		employee = frappe.db.get_value(
+			"Employee", {"user_id": user, "status": "Active"}, ["branch", "employee_name"], as_dict=True
+		)
+		if employee and employee.branch:
+			warehouse = resolve_warehouse(employee.branch)
+			if warehouse:
+				warehouse_name = frappe.db.get_value("Warehouse", warehouse, "warehouse_name") or warehouse
+				stores = [{"name": warehouse, "warehouse_name": warehouse_name}]
 
-    # System Manager / HR User fallback - return all stores
-    if not stores and ("System Manager" in user_roles or "HR User" in user_roles):
-        role = "HR User"
-        stores = frappe.get_all(
-            "Warehouse",
-            filters={"is_group": 0, "disabled": 0},
-            fields=["name", "warehouse_name"],
-            order_by="warehouse_name",
-            limit=50
-        )
+	# System Manager / HR User fallback - return all stores
+	if not stores and ("System Manager" in user_roles or "HR User" in user_roles):
+		role = "HR User"
+		stores = frappe.get_all(
+			"Warehouse",
+			filters={"is_group": 0, "disabled": 0},
+			fields=["name", "warehouse_name"],
+			order_by="warehouse_name",
+			limit=50,
+		)
 
-    default_store = stores[0]["name"] if stores else None
+	default_store = stores[0]["name"] if stores else None
 
-    return {
-        "stores": stores,
-        "default_store": default_store,
-        "is_multi_store": len(stores) > 1,
-        "role": role
-    }
+	return {"stores": stores, "default_store": default_store, "is_multi_store": len(stores) > 1, "role": role}
 
 
 @frappe.whitelist()
 def get_orderable_items(store):
-    """
-    Get items available for ordering by this store.
-    Returns items sorted by order frequency (most ordered first),
-    with stock_uom and last order quantity.
-    """
-    if not store:
-        frappe.throw(_("Store is required"))
+	"""
+	Get items available for ordering by this store.
+	Returns items sorted by order frequency (most ordered first),
+	with stock_uom and last order quantity.
+	"""
+	if not store:
+		frappe.throw(_("Store is required"))
 
-    # Resolve branch name to warehouse name
-    warehouse = resolve_warehouse(store)
+	# Resolve branch name to warehouse name
+	warehouse = resolve_warehouse(store)
 
-    # Get items with order frequency for this store, sorted by most ordered first
-    items = frappe.db.sql("""
+	# Get items with order frequency for this store, sorted by most ordered first
+	items = frappe.db.sql(
+		"""
         SELECT
             i.name, i.item_name, i.item_group, i.stock_uom, i.image,
             COALESCE(freq.order_count, 0) as order_count
@@ -250,12 +247,16 @@ def get_orderable_items(store):
         ) freq ON freq.item_code = i.name
         WHERE i.is_stock_item = 1 AND i.disabled = 0
         ORDER BY COALESCE(freq.order_count, 0) DESC, i.item_group, i.item_name
-    """, warehouse, as_dict=True)
+    """,
+		warehouse,
+		as_dict=True,
+	)
 
-    # V-14 fix: Batch query for last order quantities (was N+1: 2 queries per item).
-    # Gets the most recent non-Draft order qty for each item in a single SQL query.
-    last_qty_map = {}
-    last_qty_rows = frappe.db.sql("""
+	# V-14 fix: Batch query for last order quantities (was N+1: 2 queries per item).
+	# Gets the most recent non-Draft order qty for each item in a single SQL query.
+	last_qty_map = {}
+	last_qty_rows = frappe.db.sql(
+		"""
         SELECT oi.item_code, oi.qty_requested
         FROM `tabBEI Store Order Item` oi
         INNER JOIN `tabBEI Store Order` o ON o.name = oi.parent
@@ -267,337 +268,355 @@ def get_orderable_items(store):
                 WHERE o2.store = %(warehouse)s AND o2.status != 'Draft'
                     AND oi2.item_code = oi.item_code
             )
-    """, {"warehouse": warehouse}, as_dict=True)
-    for row in last_qty_rows:
-        last_qty_map[row.item_code] = row.qty_requested
+    """,
+		{"warehouse": warehouse},
+		as_dict=True,
+	)
+	for row in last_qty_rows:
+		last_qty_map[row.item_code] = row.qty_requested
 
-    for item in items:
-        item["last_order_qty"] = last_qty_map.get(item.name, 0)
+	for item in items:
+		item["last_order_qty"] = last_qty_map.get(item.name, 0)
 
-    return {"items": items}
+	return {"items": items}
 
 
 def _get_order_cutoff():
-    """Read order cutoff hour from BEI Settings.
+	"""Read order cutoff hour from BEI Settings.
 
-    Returns (cutoff_hour, cutoff_time) where cutoff_hour is the integer hour
-    (default 12) and cutoff_time is the display string (e.g. "11:59").
-    """
-    try:
-        raw = frappe.db.get_single_value("BEI Settings", "order_cutoff_hour")
-        cutoff_hour = int(raw) if raw else 12
-    except Exception:
-        cutoff_hour = 12
-    cutoff_time = "{:02d}:59".format(cutoff_hour - 1)
-    return cutoff_hour, cutoff_time
+	Returns (cutoff_hour, cutoff_time) where cutoff_hour is the integer hour
+	(default 12) and cutoff_time is the display string (e.g. "11:59").
+	"""
+	try:
+		raw = frappe.db.get_single_value("BEI Settings", "order_cutoff_hour")
+		cutoff_hour = int(raw) if raw else 12
+	except Exception:
+		cutoff_hour = 12
+	cutoff_time = f"{cutoff_hour - 1:02d}:59"
+	return cutoff_hour, cutoff_time
 
 
 def _validate_order_cutoff(store, is_emergency=False):
-    """
-    Validate that order submission is within the allowed cutoff time.
-    Default cutoff: 11:59 AM (from Ian questionnaire 2026-02-17, same for all stores).
-    Configurable via BEI Settings.order_cutoff_hour.
-    Emergency orders bypass the cutoff but are logged.
-    """
-    cutoff_hour, cutoff_time = _get_order_cutoff()
+	"""
+	Validate that order submission is within the allowed cutoff time.
+	Default cutoff: 11:59 AM (from Ian questionnaire 2026-02-17, same for all stores).
+	Configurable via BEI Settings.order_cutoff_hour.
+	Emergency orders bypass the cutoff but are logged.
+	"""
+	cutoff_hour, cutoff_time = _get_order_cutoff()
 
-    if now_datetime().hour >= cutoff_hour:
-        if is_emergency:
-            frappe.log_error(
-                "Emergency order submitted after cutoff {0} by {1} for store {2}".format(
-                    cutoff_time, frappe.session.user, store
-                ),
-                "Emergency Order After Cutoff"
-            )
-            return
-        frappe.throw(_(
-            "Order submission closed. Daily cutoff is {0}. "
-            "Contact your Area Supervisor for emergency orders."
-        ).format(cutoff_time))
+	if now_datetime().hour >= cutoff_hour:
+		if is_emergency:
+			frappe.log_error(
+				f"Emergency order submitted after cutoff {cutoff_time} by {frappe.session.user} for store {store}",
+				"Emergency Order After Cutoff",
+			)
+			return
+		frappe.throw(
+			_(
+				"Order submission closed. Daily cutoff is {0}. "
+				"Contact your Area Supervisor for emergency orders."
+			).format(cutoff_time)
+		)
 
 
 @frappe.whitelist()
 def validate_order_schedule(store):
-    """
-    Check if order submission is currently allowed for the given store.
-    Frontend can call this before showing the order form.
-    Returns {allowed: true/false, cutoff_time: "11:59", message: "..."}
-    """
-    if not store:
-        frappe.throw(_("Store is required"))
+	"""
+	Check if order submission is currently allowed for the given store.
+	Frontend can call this before showing the order form.
+	Returns {allowed: true/false, cutoff_time: "11:59", message: "..."}
+	"""
+	if not store:
+		frappe.throw(_("Store is required"))
 
-    cutoff_hour, cutoff_time = _get_order_cutoff()
-    allowed = now_datetime().hour < cutoff_hour
+	cutoff_hour, cutoff_time = _get_order_cutoff()
+	allowed = now_datetime().hour < cutoff_hour
 
-    return {
-        "allowed": allowed,
-        "cutoff_time": cutoff_time,
-        "message": (
-            "Ordering is open until {0}".format(cutoff_time)
-            if allowed
-            else "Ordering closed at {0}. Contact your Area Supervisor for emergency orders.".format(cutoff_time)
-        )
-    }
+	return {
+		"allowed": allowed,
+		"cutoff_time": cutoff_time,
+		"message": (
+			f"Ordering is open until {cutoff_time}"
+			if allowed
+			else f"Ordering closed at {cutoff_time}. Contact your Area Supervisor for emergency orders."
+		),
+	}
 
 
 @frappe.whitelist()
 def submit_order(store, items, cargo_category=None, delivery_date=None, is_emergency=False, notes=""):
-    """
-    Submit a new store order.
+	"""
+	Submit a new store order.
 
-    Args:
-        store (str): Warehouse name or branch code for the store
-        items (list): [{item_code, qty_requested, deviation_reason?}]
-        cargo_category (str): FC | DRY | FM (required — BEI Store Order has reqd: 1)
-        delivery_date (str, optional): Requested delivery date (defaults to tomorrow)
-        is_emergency (bool/int): If True, bypasses cutoff gate (logs but allows)
-        notes (str): Optional order notes
-    """
-    if not store:
-        frappe.throw(_("Store is required"))
+	Args:
+	    store (str): Warehouse name or branch code for the store
+	    items (list): [{item_code, qty_requested, deviation_reason?}]
+	    cargo_category (str): FC | DRY | FM (required — BEI Store Order has reqd: 1)
+	    delivery_date (str, optional): Requested delivery date (defaults to tomorrow)
+	    is_emergency (bool/int): If True, bypasses cutoff gate (logs but allows)
+	    notes (str): Optional order notes
+	"""
+	if not store:
+		frappe.throw(_("Store is required"))
 
-    if not cargo_category:
-        frappe.throw(_("Cargo category is required (FC, DRY, or FM)"))
+	if not cargo_category:
+		frappe.throw(_("Cargo category is required (FC, DRY, or FM)"))
 
-    # Validate ordering schedule cutoff
-    _validate_order_cutoff(store, is_emergency=frappe.utils.cint(is_emergency))
+	# Validate ordering schedule cutoff
+	_validate_order_cutoff(store, is_emergency=frappe.utils.cint(is_emergency))
 
-    # Resolve branch name to warehouse name
-    warehouse = resolve_warehouse(store)
+	# Resolve branch name to warehouse name
+	warehouse = resolve_warehouse(store)
 
-    if isinstance(items, str):
-        items = json.loads(items)
+	if isinstance(items, str):
+		items = json.loads(items)
 
-    if not items:
-        frappe.throw(_("At least one item is required"))
+	if not items:
+		frappe.throw(_("At least one item is required"))
 
-    order_date = nowdate()
+	order_date = nowdate()
 
-    # Duplicate check: no existing non-cancelled order for same store + date + category
-    existing = frappe.db.exists("BEI Store Order", {
-        "store": warehouse,
-        "order_date": order_date,
-        "cargo_category": cargo_category,
-        "status": ["not in", ["Cancelled"]],
-    })
-    if existing:
-        frappe.throw(
-            _("An order already exists for {0} on {1} for category {2}: {3}").format(
-                warehouse, order_date, cargo_category, existing
-            )
-        )
+	# Duplicate check: no existing non-cancelled order for same store + date + category
+	existing = frappe.db.exists(
+		"BEI Store Order",
+		{
+			"store": warehouse,
+			"order_date": order_date,
+			"cargo_category": cargo_category,
+			"status": ["not in", ["Cancelled"]],
+		},
+	)
+	if existing:
+		frappe.throw(
+			_("An order already exists for {0} on {1} for category {2}: {3}").format(
+				warehouse, order_date, cargo_category, existing
+			)
+		)
 
-    # Validate quantities - prevent unreasonable orders
-    MAX_ORDER_QTY = 10000
-    for item_data in items:
-        qty = flt(item_data.get("qty_requested", 0))
-        if qty <= 0:
-            frappe.throw(_("Quantity must be greater than zero for item {0}").format(
-                item_data.get("item_code")))
-        if qty > MAX_ORDER_QTY:
-            frappe.throw(_("Order quantity {0} exceeds maximum allowed ({1}) for item {2}").format(
-                qty, MAX_ORDER_QTY, item_data.get("item_code")))
+	# Validate quantities - prevent unreasonable orders
+	MAX_ORDER_QTY = 10000
+	for item_data in items:
+		qty = flt(item_data.get("qty_requested", 0))
+		if qty <= 0:
+			frappe.throw(
+				_("Quantity must be greater than zero for item {0}").format(item_data.get("item_code"))
+			)
+		if qty > MAX_ORDER_QTY:
+			frappe.throw(
+				_("Order quantity {0} exceeds maximum allowed ({1}) for item {2}").format(
+					qty, MAX_ORDER_QTY, item_data.get("item_code")
+				)
+			)
 
-    # Determine is_bulk_order: bulk if more than 10 line items
-    is_bulk_order = 1 if len(items) > 10 else 0
+	# Determine is_bulk_order: bulk if more than 10 line items
+	is_bulk_order = 1 if len(items) > 10 else 0
 
-    order = frappe.new_doc("BEI Store Order")
-    order.store = warehouse
-    order.order_date = order_date
-    order.delivery_date = delivery_date or add_days(nowdate(), 1)
-    order.cargo_category = cargo_category
-    order.is_emergency = frappe.utils.cint(is_emergency)
-    order.is_bulk_order = is_bulk_order
-    order.notes = notes
-    order.status = "Pending Approval"
-    order.submitted_by = frappe.session.user
+	order = frappe.new_doc("BEI Store Order")
+	order.store = warehouse
+	order.order_date = order_date
+	order.delivery_date = delivery_date or add_days(nowdate(), 1)
+	order.cargo_category = cargo_category
+	order.is_emergency = frappe.utils.cint(is_emergency)
+	order.is_bulk_order = is_bulk_order
+	order.notes = notes
+	order.status = "Pending Approval"
+	order.submitted_by = frappe.session.user
 
-    for item_data in items:
-        order.append("items", {
-            "item_code": item_data.get("item_code"),
-            "qty_requested": item_data.get("qty_requested", 0),
-            "deviation_reason": item_data.get("deviation_reason", ""),
-        })
+	for item_data in items:
+		order.append(
+			"items",
+			{
+				"item_code": item_data.get("item_code"),
+				"qty_requested": item_data.get("qty_requested", 0),
+				"deviation_reason": item_data.get("deviation_reason", ""),
+			},
+		)
 
-    order.insert(ignore_permissions=True)
+	order.insert(ignore_permissions=True)
 
-    _notify_store_ops(f"New store order {order.name} from {warehouse} -- {len(items)} items. Review: my.bebang.ph/dashboard/store-ops/order-approvals")
+	_notify_store_ops(
+		f"New store order {order.name} from {warehouse} -- {len(items)} items. Review: my.bebang.ph/dashboard/store-ops/order-approvals"
+	)
 
-    # Route to area supervisor approval queue (non-fatal if it fails)
-    warning = None
-    queue_status = "queued"
-    try:
-        approver = _get_area_supervisor_for_store(warehouse)
-        if approver:
-            queue_entry = frappe.new_doc("BEI Approval Queue")
-            queue_entry.reference_doctype = "BEI Store Order"
-            queue_entry.reference_name = order.name
-            queue_entry.assigned_approver = approver
-            queue_entry.status = "Pending"
-            queue_entry.store = warehouse
-            queue_entry.submitted_by = frappe.session.user
-            queue_entry.submitted_at = frappe.utils.now()
-            queue_entry.insert(ignore_permissions=True)
-        else:
-            queue_status = "unmapped"
-            warning = "Order created but no Area Supervisor mapping was found for this store."
-    except Exception:
-        frappe.log_error(f"Failed to create approval queue for order {order.name}", "Approval Queue Error")
-        queue_status = "failed"
-        warning = "Order created but approval routing failed. Please notify your Area Supervisor manually."
+	# Route to area supervisor approval queue (non-fatal if it fails)
+	warning = None
+	queue_status = "queued"
+	try:
+		approver = _get_area_supervisor_for_store(warehouse)
+		if approver:
+			queue_entry = frappe.new_doc("BEI Approval Queue")
+			queue_entry.reference_doctype = "BEI Store Order"
+			queue_entry.reference_name = order.name
+			queue_entry.assigned_approver = approver
+			queue_entry.status = "Pending"
+			queue_entry.store = warehouse
+			queue_entry.submitted_by = frappe.session.user
+			queue_entry.submitted_at = frappe.utils.now()
+			queue_entry.insert(ignore_permissions=True)
+		else:
+			queue_status = "unmapped"
+			warning = "Order created but no Area Supervisor mapping was found for this store."
+	except Exception:
+		frappe.log_error(f"Failed to create approval queue for order {order.name}", "Approval Queue Error")
+		queue_status = "failed"
+		warning = "Order created but approval routing failed. Please notify your Area Supervisor manually."
 
-    result = {
-        "success": True,
-        "name": order.name,
-        "status": order.status,
-        "message": f"Order {order.name} submitted successfully",
-        "approval_queue_status": queue_status,
-    }
-    if warning:
-        result["warning"] = warning
-    return result
+	result = {
+		"success": True,
+		"name": order.name,
+		"status": order.status,
+		"message": f"Order {order.name} submitted successfully",
+		"approval_queue_status": queue_status,
+	}
+	if warning:
+		result["warning"] = warning
+	return result
 
 
 @frappe.whitelist()
 def get_order_history(store=None, limit=20):
-    """Get past orders for a store."""
-    if not store:
-        return {"orders": []}
+	"""Get past orders for a store."""
+	if not store:
+		return {"orders": []}
 
-    # Resolve branch name to warehouse name
-    warehouse = resolve_warehouse(store)
+	# Resolve branch name to warehouse name
+	warehouse = resolve_warehouse(store)
 
-    orders = frappe.get_all(
-        "BEI Store Order",
-        filters={"store": warehouse},
-        fields=["name", "order_date", "delivery_date", "status", "submitted_by", "approved_by"],
-        order_by="creation desc",
-        limit=int(limit)
-    )
+	orders = frappe.get_all(
+		"BEI Store Order",
+		filters={"store": warehouse},
+		fields=["name", "order_date", "delivery_date", "status", "submitted_by", "approved_by"],
+		order_by="creation desc",
+		limit=int(limit),
+	)
 
-    # Get item counts for each order
-    for order in orders:
-        order["item_count"] = frappe.db.count(
-            "BEI Store Order Item",
-            {"parent": order.name}
-        )
+	# Get item counts for each order
+	for order in orders:
+		order["item_count"] = frappe.db.count("BEI Store Order Item", {"parent": order.name})
 
-    return {"orders": orders}
+	return {"orders": orders}
 
 
 @frappe.whitelist()
 def approve_order(order_name, approved_quantities=None):
-    """
-    Approve a store order. Optionally adjust quantities.
-    Only Area Supervisors can approve orders.
+	"""
+	Approve a store order. Optionally adjust quantities.
+	Only Area Supervisors can approve orders.
 
-    approved_quantities: {item_code: qty_approved}
-    """
-    # Verify user has Area Supervisor role
-    user_roles = frappe.get_roles(frappe.session.user)
-    if "Area Supervisor" not in user_roles and "System Manager" not in user_roles:
-        frappe.throw(_("Only Area Supervisors can approve store orders"))
+	approved_quantities: {item_code: qty_approved}
+	"""
+	# Verify user has Area Supervisor role
+	user_roles = frappe.get_roles(frappe.session.user)
+	if "Area Supervisor" not in user_roles and "System Manager" not in user_roles:
+		frappe.throw(_("Only Area Supervisors can approve store orders"))
 
-    order = frappe.get_doc("BEI Store Order", order_name)
+	order = frappe.get_doc("BEI Store Order", order_name)
 
-    if order.status != "Pending Approval":
-        frappe.throw(_("Order is not pending approval"))
+	if order.status != "Pending Approval":
+		frappe.throw(_("Order is not pending approval"))
 
-    if approved_quantities:
-        if isinstance(approved_quantities, str):
-            approved_quantities = json.loads(approved_quantities)
-        for item in order.items:
-            if item.item_code in approved_quantities:
-                item.qty_approved = approved_quantities[item.item_code]
-            else:
-                item.qty_approved = item.qty_requested
-    else:
-        for item in order.items:
-            item.qty_approved = item.qty_requested
+	if approved_quantities:
+		if isinstance(approved_quantities, str):
+			approved_quantities = json.loads(approved_quantities)
+		for item in order.items:
+			if item.item_code in approved_quantities:
+				item.qty_approved = approved_quantities[item.item_code]
+			else:
+				item.qty_approved = item.qty_requested
+	else:
+		for item in order.items:
+			item.qty_approved = item.qty_requested
 
-    order.status = "Approved"
-    order.approved_by = frappe.session.user
-    order.approved_at = now_datetime()
-    order.save(ignore_permissions=True)
+	order.status = "Approved"
+	order.approved_by = frappe.session.user
+	order.approved_at = now_datetime()
+	order.save(ignore_permissions=True)
 
-    _notify_store_ops(f"Store order {order_name} approved by {frappe.session.user}. Check my.bebang.ph/dashboard/store-ops/order-approvals for details.")
+	_notify_store_ops(
+		f"Store order {order_name} approved by {frappe.session.user}. Check my.bebang.ph/dashboard/store-ops/order-approvals for details."
+	)
 
-    # Create Material Request so commissary can pick it up, linking back to this store order
-    mr_name = _create_mr_for_store_order(order)
+	# Create Material Request so commissary can pick it up, linking back to this store order
+	mr_name = _create_mr_for_store_order(order)
 
-    return {
-        "success": True,
-        "message": f"Order {order_name} approved",
-        "material_request": mr_name,
-    }
+	return {
+		"success": True,
+		"message": f"Order {order_name} approved",
+		"material_request": mr_name,
+	}
 
 
 def _create_mr_for_store_order(order):
-    """
-    Create a Material Request (Material Transfer) for an approved BEI Store Order.
-    Sets custom_store_order so commissary can trace MR → originating store order.
+	"""
+	Create a Material Request (Material Transfer) for an approved BEI Store Order.
+	Sets custom_store_order so commissary can trace MR → originating store order.
 
-    Returns the MR name, or None if creation fails (non-fatal).
-    """
-    try:
-        required_by = add_days(nowdate(), 1)
+	Returns the MR name, or None if creation fails (non-fatal).
+	"""
+	try:
+		required_by = add_days(nowdate(), 1)
 
-        mr = frappe.new_doc("Material Request")
-        mr.material_request_type = "Material Transfer"
-        mr.company = get_company()
-        mr.transaction_date = nowdate()
-        mr.schedule_date = required_by
-        mr.custom_store_order = order.name
+		mr = frappe.new_doc("Material Request")
+		mr.material_request_type = "Material Transfer"
+		mr.company = get_company()
+		mr.transaction_date = nowdate()
+		mr.schedule_date = required_by
+		mr.custom_store_order = order.name
 
-        # Destination warehouse is the store's warehouse (field name is "store" on BEI Store Order)
-        store_warehouse = order.store
-        if not store_warehouse:
-            frappe.log_error(f"No store warehouse found on order {order.name}", "Store Ordering")
-            return None
+		# Destination warehouse is the store's warehouse (field name is "store" on BEI Store Order)
+		store_warehouse = order.store
+		if not store_warehouse:
+			frappe.log_error(f"No store warehouse found on order {order.name}", "Store Ordering")
+			return None
 
-        for item in order.items:
-            qty = flt(getattr(item, "qty_approved", None) or getattr(item, "qty_requested", 0))
-            if qty <= 0:
-                continue
-            mr.append("items", {
-                "item_code": item.item_code,
-                "item_name": item.item_name,
-                "qty": qty,
-                "uom": getattr(item, "uom", None) or "Nos",
-                "stock_uom": getattr(item, "uom", None) or "Nos",
-                "conversion_factor": 1,
-                "warehouse": store_warehouse,
-                "schedule_date": required_by,
-            })
+		for item in order.items:
+			qty = flt(getattr(item, "qty_approved", None) or getattr(item, "qty_requested", 0))
+			if qty <= 0:
+				continue
+			mr.append(
+				"items",
+				{
+					"item_code": item.item_code,
+					"item_name": item.item_name,
+					"qty": qty,
+					"uom": getattr(item, "uom", None) or "Nos",
+					"stock_uom": getattr(item, "uom", None) or "Nos",
+					"conversion_factor": 1,
+					"warehouse": store_warehouse,
+					"schedule_date": required_by,
+				},
+			)
 
-        if not mr.items:
-            return None
+		if not mr.items:
+			return None
 
-        mr.insert(ignore_permissions=True)
-        mr.submit()
-        return mr.name
+		mr.insert(ignore_permissions=True)
+		mr.submit()
+		return mr.name
 
-    except Exception as e:
-        frappe.log_error(
-            title=f"MR Creation Error for Store Order {order.name}",
-            message=str(e),
-        )
-        return None
+	except Exception as e:
+		frappe.log_error(
+			title=f"MR Creation Error for Store Order {order.name}",
+			message=str(e),
+		)
+		return None
 
 
 @frappe.whitelist()
 def get_expected_deliveries(store=None):
-    """
-    Get trips expected to deliver to this store today.
-    Returns distribution trips with this store as a stop.
-    """
-    if not store:
-        return {"deliveries": []}
+	"""
+	Get trips expected to deliver to this store today.
+	Returns distribution trips with this store as a stop.
+	"""
+	if not store:
+		return {"deliveries": []}
 
-    today = nowdate()
+	today = nowdate()
 
-    # Find trips with this store as a stop
-    trips = frappe.db.sql("""
+	# Find trips with this store as a stop
+	trips = frappe.db.sql(
+		"""
         SELECT DISTINCT
             t.name, t.trip_date, t.route_name, t.driver, t.vehicle,
             t.status, t.departure_time,
@@ -608,131 +627,153 @@ def get_expected_deliveries(store=None):
         AND t.trip_date = %s
         AND t.status IN ('Preparing', 'In Transit')
         ORDER BY t.trip_date, s.stop_order
-    """, (store, today), as_dict=True)
+    """,
+		(store, today),
+		as_dict=True,
+	)
 
-    return {"deliveries": trips}
-
-
-@frappe.whitelist()
-def complete_receiving(store, trip, items, receiver_1_signature=None, receiver_2_signature=None, driver_signature=None):
-    """
-    Complete receiving for a delivery.
-    Items: list of {item_code, expected_qty, received_qty, checks, has_issue}
-    """
-    if not store:
-        frappe.throw(_("Store is required"))
-
-    if isinstance(items, str):
-        items = json.loads(items)
-
-    receiving = frappe.new_doc("BEI Store Receiving")
-    receiving.store = store
-    receiving.trip = trip
-    receiving.receiving_date = now_datetime()
-    receiving.receiver_1 = frappe.session.user
-    receiving.receiver_1_signature = receiver_1_signature
-    receiving.receiver_2_signature = receiver_2_signature
-    receiving.driver_signature = driver_signature
-
-    has_issues = False
-    for item_data in items:
-        row = receiving.append("items", {
-            "item_code": item_data.get("item_code"),
-            "expected_qty": item_data.get("expected_qty"),
-            "received_qty": item_data.get("received_qty"),
-            "check_condition": item_data.get("check_condition", 0),
-            "check_packaging": item_data.get("check_packaging", 0),
-            "check_expiry": item_data.get("check_expiry", 0),
-            "check_temperature": item_data.get("check_temperature", 0),
-            "check_food_quality": item_data.get("check_food_quality", 0),
-            "expiry_date": item_data.get("expiry_date"),
-            "temperature_reading": item_data.get("temperature_reading"),
-            "has_issue": item_data.get("has_issue", 0)
-        })
-        if row.has_issue:
-            has_issues = True
-
-    receiving.status = "With Issues" if has_issues else "Completed"
-    receiving.insert()
-
-    return {
-        "success": True,
-        "receiving": receiving.name,
-        "message": f"Receiving {receiving.name} completed"
-    }
+	return {"deliveries": trips}
 
 
 @frappe.whitelist()
-def create_fqi_report(store, receiving=None, item_code=None, issue_type=None, description=None, photo=None, expected_qty=None, actual_qty=None):
-    """
-    Create a Food Quality Incident report.
-    """
-    if not store:
-        frappe.throw(_("Store is required"))
+def complete_receiving(
+	store, trip, items, receiver_1_signature=None, receiver_2_signature=None, driver_signature=None
+):
+	"""
+	Complete receiving for a delivery.
+	Items: list of {item_code, expected_qty, received_qty, checks, has_issue}
+	"""
+	if not store:
+		frappe.throw(_("Store is required"))
 
-    if not issue_type:
-        frappe.throw(_("Issue type is required"))
+	if isinstance(items, str):
+		items = json.loads(items)
 
-    # Resolve store name to valid warehouse (handles branch codes like TEST-STORE-BGC)
-    try:
-        warehouse = resolve_warehouse(store)
-    except Exception:
-        # Provide helpful suggestions for common typos
-        similar_stores = frappe.db.sql("""
+	receiving = frappe.new_doc("BEI Store Receiving")
+	receiving.store = store
+	receiving.trip = trip
+	receiving.receiving_date = now_datetime()
+	receiving.receiver_1 = frappe.session.user
+	receiving.receiver_1_signature = receiver_1_signature
+	receiving.receiver_2_signature = receiver_2_signature
+	receiving.driver_signature = driver_signature
+
+	has_issues = False
+	for item_data in items:
+		row = receiving.append(
+			"items",
+			{
+				"item_code": item_data.get("item_code"),
+				"expected_qty": item_data.get("expected_qty"),
+				"received_qty": item_data.get("received_qty"),
+				"check_condition": item_data.get("check_condition", 0),
+				"check_packaging": item_data.get("check_packaging", 0),
+				"check_expiry": item_data.get("check_expiry", 0),
+				"check_temperature": item_data.get("check_temperature", 0),
+				"check_food_quality": item_data.get("check_food_quality", 0),
+				"expiry_date": item_data.get("expiry_date"),
+				"temperature_reading": item_data.get("temperature_reading"),
+				"has_issue": item_data.get("has_issue", 0),
+			},
+		)
+		if row.has_issue:
+			has_issues = True
+
+	receiving.status = "With Issues" if has_issues else "Completed"
+	receiving.insert()
+
+	return {"success": True, "receiving": receiving.name, "message": f"Receiving {receiving.name} completed"}
+
+
+@frappe.whitelist()
+def create_fqi_report(
+	store,
+	receiving=None,
+	item_code=None,
+	issue_type=None,
+	description=None,
+	photo=None,
+	expected_qty=None,
+	actual_qty=None,
+):
+	"""
+	Create a Food Quality Incident report.
+	"""
+	if not store:
+		frappe.throw(_("Store is required"))
+
+	if not issue_type:
+		frappe.throw(_("Issue type is required"))
+
+	# Resolve store name to valid warehouse (handles branch codes like TEST-STORE-BGC)
+	try:
+		warehouse = resolve_warehouse(store)
+	except Exception:
+		# Provide helpful suggestions for common typos
+		similar_stores = frappe.db.sql(
+			"""
             SELECT name FROM tabWarehouse
             WHERE name LIKE %s OR warehouse_name LIKE %s
             LIMIT 5
-        """, (f"%{store[:10]}%", f"%{store[:10]}%"), as_dict=True)
+        """,
+			(f"%{store[:10]}%", f"%{store[:10]}%"),
+			as_dict=True,
+		)
 
-        suggestions = [s.name for s in similar_stores] if similar_stores else []
-        msg = _("Store '{0}' not found.").format(store)
-        if suggestions:
-            msg += _(" Did you mean: {0}?").format(", ".join(suggestions))
-        frappe.throw(msg)
+		suggestions = [s.name for s in similar_stores] if similar_stores else []
+		msg = _("Store '{0}' not found.").format(store)
+		if suggestions:
+			msg += _(" Did you mean: {0}?").format(", ".join(suggestions))
+		frappe.throw(msg)
 
-    # Convert base64 photo to file URL to avoid DataError (1406) on Attach Image column (C10 fix)
-    photo_url = save_base64_image(photo, "BEI FQI Report", fieldname="photo") if photo else None
+	# Convert base64 photo to file URL to avoid DataError (1406) on Attach Image column (C10 fix)
+	photo_url = save_base64_image(photo, "BEI FQI Report", fieldname="photo") if photo else None
 
-    fqi = frappe.new_doc("BEI FQI Report")
-    fqi.store = warehouse
-    fqi.receiving = receiving
-    fqi.item_code = item_code
-    fqi.issue_type = issue_type
-    fqi.description = description
-    fqi.photo = photo_url
-    fqi.expected_qty = expected_qty
-    fqi.actual_qty = actual_qty
-    fqi.reported_by = frappe.session.user
-    fqi.reported_at = now_datetime()
-    fqi.status = "Open"
-    fqi.insert(ignore_permissions=True)
+	fqi = frappe.new_doc("BEI FQI Report")
+	fqi.store = warehouse
+	fqi.receiving = receiving
+	fqi.item_code = item_code
+	fqi.issue_type = issue_type
+	fqi.description = description
+	fqi.photo = photo_url
+	fqi.expected_qty = expected_qty
+	fqi.actual_qty = actual_qty
+	fqi.reported_by = frappe.session.user
+	fqi.reported_at = now_datetime()
+	fqi.status = "Open"
+	fqi.insert(ignore_permissions=True)
 
-    return {
-        "success": True,
-        "fqi": fqi.name,
-        "message": f"FQI Report {fqi.name} created"
-    }
+	return {"success": True, "fqi": fqi.name, "message": f"FQI Report {fqi.name} created"}
 
 
 @frappe.whitelist()
 def get_fqi_reports(store=None, status=None, limit=20):
-    """Get FQI reports optionally filtered by store and status."""
-    filters = {}
-    if store:
-        filters["store"] = store
-    if status:
-        filters["status"] = status
+	"""Get FQI reports optionally filtered by store and status."""
+	filters = {}
+	if store:
+		filters["store"] = store
+	if status:
+		filters["status"] = status
 
-    reports = frappe.get_all(
-        "BEI FQI Report",
-        filters=filters,
-        fields=["name", "store", "item_code", "issue_type", "status", "reported_by", "reported_at", "resolved_at"],
-        order_by="creation desc",
-        limit=int(limit),
-        ignore_permissions=True
-    )
+	reports = frappe.get_all(
+		"BEI FQI Report",
+		filters=filters,
+		fields=[
+			"name",
+			"store",
+			"item_code",
+			"issue_type",
+			"status",
+			"reported_by",
+			"reported_at",
+			"resolved_at",
+		],
+		order_by="creation desc",
+		limit=int(limit),
+		ignore_permissions=True,
+	)
 
-    return {"reports": reports}
+	return {"reports": reports}
 
 
 # ==============================================================================
@@ -742,24 +783,21 @@ def get_fqi_reports(store=None, status=None, limit=20):
 
 @frappe.whitelist()
 def get_returns_pending(store=None):
-    """
-    Get store receiving items where has_issue=1 and no linked return Stock Entry.
-    Returns items that need to be returned to commissary.
-    """
-    filters = {"has_issue": 1}
+	"""
+	Get store receiving items where has_issue=1 and no linked return Stock Entry.
+	Returns items that need to be returned to commissary.
+	"""
+	filters = {"has_issue": 1}
 
-    if store:
-        # Get all receivings for this store
-        receiving_names = frappe.get_all(
-            "BEI Store Receiving",
-            filters={"store": store},
-            pluck="name"
-        )
-        if not receiving_names:
-            return {"items": []}
-        filters["parent"] = ["in", receiving_names]
+	if store:
+		# Get all receivings for this store
+		receiving_names = frappe.get_all("BEI Store Receiving", filters={"store": store}, pluck="name")
+		if not receiving_names:
+			return {"items": []}
+		filters["parent"] = ["in", receiving_names]
 
-    items = frappe.db.sql("""
+	items = frappe.db.sql(
+		"""
         SELECT
             ri.name,
             ri.parent AS receiving,
@@ -784,273 +822,297 @@ def get_returns_pending(store=None):
         {store_filter}
         ORDER BY r.receiving_date DESC
         LIMIT 100
-    """.format(
-        store_filter=f"AND r.store = {frappe.db.escape(store)}" if store else ""
-    ), as_dict=True)
+    """.format(store_filter=f"AND r.store = {frappe.db.escape(store)}" if store else ""),
+		as_dict=True,
+	)
 
-    return {"items": items}
+	return {"items": items}
 
 
 @frappe.whitelist()
 def create_store_return(receiving, items, reason, photo=None):
-    """
-    Create a store return for items with issues from a receiving doc.
-    Tracks the return intent and creates a Stock Entry to transfer items back to commissary.
+	"""
+	Create a store return for items with issues from a receiving doc.
+	Tracks the return intent and creates a Stock Entry to transfer items back to commissary.
 
-    Args:
-        receiving: BEI Store Receiving document name
-        items: JSON list of {item_code, qty, reason}
-        reason: Overall reason for return
-        photo: Optional base64 photo of returned items
-    """
-    if isinstance(items, str):
-        items = json.loads(items)
+	Args:
+	    receiving: BEI Store Receiving document name
+	    items: JSON list of {item_code, qty, reason}
+	    reason: Overall reason for return
+	    photo: Optional base64 photo of returned items
+	"""
+	if isinstance(items, str):
+		items = json.loads(items)
 
-    if not items:
-        frappe.throw(_("No items to return"))
+	if not items:
+		frappe.throw(_("No items to return"))
 
-    receiving_doc = frappe.get_doc("BEI Store Receiving", receiving)
-    store = receiving_doc.store
+	receiving_doc = frappe.get_doc("BEI Store Receiving", receiving)
+	store = receiving_doc.store
 
-    # G-100: Idempotency — check if a return Stock Entry already exists for this receiving
-    existing_return = frappe.db.exists("Stock Entry", {
-        "stock_entry_type": "Material Transfer",
-        "remarks": ["like", f"%Receiving: {receiving}%"],
-        "docstatus": ["<", 2]
-    })
-    if existing_return:
-        frappe.throw(_("A return already exists for receiving {0}: {1}").format(receiving, existing_return))
+	# G-100: Idempotency — check if a return Stock Entry already exists for this receiving
+	existing_return = frappe.db.exists(
+		"Stock Entry",
+		{
+			"stock_entry_type": "Material Transfer",
+			"remarks": ["like", f"%Receiving: {receiving}%"],
+			"docstatus": ["<", 2],
+		},
+	)
+	if existing_return:
+		frappe.throw(_("A return already exists for receiving {0}: {1}").format(receiving, existing_return))
 
-    # Resolve commissary warehouse
-    from hrms.api.commissary import get_commissary_warehouse
-    commissary_warehouse = get_commissary_warehouse()
+	# Resolve commissary warehouse
+	from hrms.api.commissary import get_commissary_warehouse
 
-    if not commissary_warehouse:
-        frappe.throw(_("Commissary warehouse not found"))
+	commissary_warehouse = get_commissary_warehouse()
 
-    # Save photo if provided
-    photo_url = save_base64_image(photo, "Stock Entry", fieldname="custom_return_photo") if photo else None
+	if not commissary_warehouse:
+		frappe.throw(_("Commissary warehouse not found"))
 
-    # Create Stock Entry (Material Transfer back to commissary)
-    se = frappe.new_doc("Stock Entry")
-    se.stock_entry_type = "Material Transfer"
-    se.company = get_company()
-    se.posting_date = nowdate()
-    se.posting_time = now_datetime().strftime("%H:%M:%S")
-    se.from_warehouse = store
-    se.to_warehouse = commissary_warehouse
-    se.remarks = f"Store Return from {store} | Receiving: {receiving} | Reason: {reason}"
+	# Save photo if provided
+	if photo:
+		save_base64_image(photo, "Stock Entry", fieldname="custom_return_photo")
 
-    for item_data in items:
-        qty = flt(item_data.get("qty") or item_data.get("return_qty"))
-        if qty <= 0:
-            continue
+	# Create Stock Entry (Material Transfer back to commissary)
+	se = frappe.new_doc("Stock Entry")
+	se.stock_entry_type = "Material Transfer"
+	se.company = get_company()
+	se.posting_date = nowdate()
+	se.posting_time = now_datetime().strftime("%H:%M:%S")
+	se.from_warehouse = store
+	se.to_warehouse = commissary_warehouse
+	se.remarks = f"Store Return from {store} | Receiving: {receiving} | Reason: {reason}"
 
-        item_code = item_data.get("item_code")
-        item = frappe.get_doc("Item", item_code)
+	for item_data in items:
+		qty = flt(item_data.get("qty") or item_data.get("return_qty"))
+		if qty <= 0:
+			continue
 
-        se.append("items", {
-            "item_code": item_code,
-            "item_name": item.item_name,
-            "description": item.description or item.item_name,
-            "qty": qty,
-            "uom": item_data.get("uom") or item.stock_uom,
-            "stock_uom": item.stock_uom,
-            "conversion_factor": 1,
-            "s_warehouse": store,
-            "t_warehouse": commissary_warehouse,
-        })
+		item_code = item_data.get("item_code")
+		item = frappe.get_doc("Item", item_code)
 
-    if not se.items:
-        frappe.throw(_("No valid items with quantity to return"))
+		se.append(
+			"items",
+			{
+				"item_code": item_code,
+				"item_name": item.item_name,
+				"description": item.description or item.item_name,
+				"qty": qty,
+				"uom": item_data.get("uom") or item.stock_uom,
+				"stock_uom": item.stock_uom,
+				"conversion_factor": 1,
+				"s_warehouse": store,
+				"t_warehouse": commissary_warehouse,
+			},
+		)
 
-    sp = frappe.db.savepoint("create_store_return")
-    try:
-        se.insert(ignore_permissions=True)
-        se.submit()
-        frappe.db.release_savepoint("create_store_return")
-    except Exception:
-        frappe.db.rollback(save_point="create_store_return")
-        frappe.log_error(f"Store return Stock Entry failed for {receiving}", "Store Return Error")
-        frappe.throw(_("Failed to create store return. Please try again."))
+	if not se.items:
+		frappe.throw(_("No valid items with quantity to return"))
 
-    # G-002 Task 2D: Notify commissary of new return request
-    try:
-        from hrms.api.google_chat import send_message_to_space, get_chat_space, SPACE_NOTIFICATIONS
-        store_name = store.replace(" - BEI", "") if store else "Unknown"
-        msg = f"New Store Return Request: {se.name}\n"
-        msg += f"Store: {store_name} | Items: {len(se.items)}\n"
-        msg += f"Reason: {reason}"
-        space = get_chat_space(SPACE_NOTIFICATIONS)
-        send_message_to_space(space, msg)
-    except Exception:
-        frappe.log_error(f"Return notification failed for {se.name}", "Store Return Notification Error")
+	frappe.db.savepoint("create_store_return")
+	try:
+		se.insert(ignore_permissions=True)
+		se.submit()
+		frappe.db.release_savepoint("create_store_return")
+	except Exception:
+		frappe.db.rollback(save_point="create_store_return")
+		frappe.log_error(f"Store return Stock Entry failed for {receiving}", "Store Return Error")
+		frappe.throw(_("Failed to create store return. Please try again."))
 
-    return {
-        "success": True,
-        "stock_entry": se.name,
-        "message": f"Store return {se.name} created — {len(se.items)} item(s) returned to commissary"
-    }
+	# G-002 Task 2D: Notify commissary of new return request
+	try:
+		from hrms.api.google_chat import SPACE_NOTIFICATIONS, get_chat_space, send_message_to_space
+
+		store_name = store.replace(" - BEI", "") if store else "Unknown"
+		msg = f"New Store Return Request: {se.name}\n"
+		msg += f"Store: {store_name} | Items: {len(se.items)}\n"
+		msg += f"Reason: {reason}"
+		space = get_chat_space(SPACE_NOTIFICATIONS)
+		send_message_to_space(space, msg)
+	except Exception:
+		frappe.log_error(f"Return notification failed for {se.name}", "Store Return Notification Error")
+
+	return {
+		"success": True,
+		"stock_entry": se.name,
+		"message": f"Store return {se.name} created — {len(se.items)} item(s) returned to commissary",
+	}
 
 
 @frappe.whitelist()
 def process_store_return(stock_entry_name):
-    """
-    Process a submitted store return Stock Entry.
-    G-002: Creates credit note (BEI Billing Schedule) + GL Journal Entry
-    to reverse pro-rata franchise fees on returned items.
+	"""
+	Process a submitted store return Stock Entry.
+	G-002: Creates credit note (BEI Billing Schedule) + GL Journal Entry
+	to reverse pro-rata franchise fees on returned items.
 
-    Args:
-        stock_entry_name: Submitted Stock Entry for the return
-    """
-    check_scm_permission(SCM_APPROVAL_ROLES, "process store returns")
+	Args:
+	    stock_entry_name: Submitted Stock Entry for the return
+	"""
+	check_scm_permission(SCM_APPROVAL_ROLES, "process store returns")
 
-    se = frappe.get_doc("Stock Entry", stock_entry_name)
+	se = frappe.get_doc("Stock Entry", stock_entry_name)
 
-    if se.docstatus != 1:
-        frappe.throw(_("Stock Entry must be submitted before processing"))
+	if se.docstatus != 1:
+		frappe.throw(_("Stock Entry must be submitted before processing"))
 
-    if se.stock_entry_type != "Material Transfer":
-        frappe.throw(_("Not a valid store return entry"))
+	if se.stock_entry_type != "Material Transfer":
+		frappe.throw(_("Not a valid store return entry"))
 
-    # Extract receiving name and store from remarks
-    receiving_name = None
-    store = se.from_warehouse
-    reason = ""
-    if se.remarks:
-        for part in se.remarks.split("|"):
-            part = part.strip()
-            if part.startswith("Receiving:"):
-                receiving_name = part.replace("Receiving:", "").strip()
-            elif part.startswith("Reason:"):
-                reason = part.replace("Reason:", "").strip()
+	# Extract receiving name and store from remarks
+	receiving_name = None
+	store = se.from_warehouse
+	reason = ""
+	if se.remarks:
+		for part in se.remarks.split("|"):
+			part = part.strip()
+			if part.startswith("Receiving:"):
+				receiving_name = part.replace("Receiving:", "").strip()
+			elif part.startswith("Reason:"):
+				reason = part.replace("Reason:", "").strip()
 
-    # G-002 Task 2B: Create credit note with GL JE
-    credit_note_name = None
-    jv_name = None
+	# G-002 Task 2B: Create credit note with GL JE
+	credit_note_name = None
+	jv_name = None
 
-    # Find the most recent billing for this store to calculate pro-rata reversal
-    original_billing = _find_original_billing(store)
+	# Find the most recent billing for this store to calculate pro-rata reversal
+	original_billing = _find_original_billing(store)
 
-    if original_billing:
-        # DM-2: Atomicity via savepoint
-        frappe.db.savepoint("store_return_credit")
-        try:
-            # Calculate return value ratio (value/value = dimensionless, not qty/currency)
-            return_value = flt(se.total_outgoing_value or 0)
-            billed_value = flt(original_billing.get("total_billed_value")) or 1
-            ratio = min(return_value / billed_value, 1.0) if billed_value > 0 else 0
+	if original_billing:
+		# DM-2: Atomicity via savepoint
+		frappe.db.savepoint("store_return_credit")
+		try:
+			# Calculate return value ratio (value/value = dimensionless, not qty/currency)
+			return_value = flt(se.total_outgoing_value or 0)
+			billed_value = flt(original_billing.get("total_billed_value")) or 1
+			ratio = min(return_value / billed_value, 1.0) if billed_value > 0 else 0
 
-            # Pro-rata fee reversal
-            royalty_rev = round(flt(original_billing.get("royalty_fee", 0)) * ratio, 2)
-            mgmt_rev = round(flt(original_billing.get("management_fee", 0)) * ratio, 2)
-            marketing_rev = round(flt(original_billing.get("marketing_fee", 0)) * ratio, 2)
-            ecomm_rev = round(flt(original_billing.get("ecommerce_fee", 0)) * ratio, 2)
-            total_credit = royalty_rev + mgmt_rev + marketing_rev + ecomm_rev
+			# Pro-rata fee reversal
+			royalty_rev = round(flt(original_billing.get("royalty_fee", 0)) * ratio, 2)
+			mgmt_rev = round(flt(original_billing.get("management_fee", 0)) * ratio, 2)
+			marketing_rev = round(flt(original_billing.get("marketing_fee", 0)) * ratio, 2)
+			ecomm_rev = round(flt(original_billing.get("ecommerce_fee", 0)) * ratio, 2)
+			total_credit = royalty_rev + mgmt_rev + marketing_rev + ecomm_rev
 
-            if total_credit > 0:
-                # Step 2: Create BEI Billing Schedule (credit note record)
-                cn = frappe.new_doc("BEI Billing Schedule")
-                cn.billing_type = "Credit Note"
-                cn.naming_series = "BILL-CN-.YYYY.-.#####"
-                cn.store = original_billing.get("store")
-                cn.billing_period_start = nowdate()
-                cn.billing_period_end = nowdate()
-                cn.status = "Unpaid"
-                cn.royalty_fee = -royalty_rev
-                cn.management_fee = -mgmt_rev
-                cn.marketing_fee = -marketing_rev
-                cn.ecommerce_fee = -ecomm_rev
-                cn.subtotal = -total_credit
-                cn.vat_amount = 0
-                cn.total_amount = -total_credit
-                cn.remarks = f"Credit Note for Store Return {se.name} | {store} | {reason}"
-                cn.flags.ignore_mandatory = True
-                cn.insert(ignore_permissions=True)
-                credit_note_name = cn.name
+			if total_credit > 0:
+				# Step 2: Create BEI Billing Schedule (credit note record)
+				cn = frappe.new_doc("BEI Billing Schedule")
+				cn.billing_type = "Credit Note"
+				cn.naming_series = "BILL-CN-.YYYY.-.#####"
+				cn.store = original_billing.get("store")
+				cn.billing_period_start = nowdate()
+				cn.billing_period_end = nowdate()
+				cn.status = "Unpaid"
+				cn.royalty_fee = -royalty_rev
+				cn.management_fee = -mgmt_rev
+				cn.marketing_fee = -marketing_rev
+				cn.ecommerce_fee = -ecomm_rev
+				cn.subtotal = -total_credit
+				cn.vat_amount = 0
+				cn.total_amount = -total_credit
+				cn.remarks = f"Credit Note for Store Return {se.name} | {store} | {reason}"
+				cn.flags.ignore_mandatory = True
+				cn.insert(ignore_permissions=True)
+				credit_note_name = cn.name
 
-                # Step 3: Post GL Journal Entry (DM-1 compliant)
-                store_cost_center = _get_store_cost_center(store)
-                store_customer = _get_store_customer(store)
+				# Step 3: Post GL Journal Entry (DM-1 compliant)
+				store_cost_center = _get_store_cost_center(store)
+				store_customer = _get_store_customer(store)
 
-                jv_accounts = []
-                # Debit fee income accounts (reversing revenue)
-                if royalty_rev > 0:
-                    jv_accounts.append({
-                        "account": "4000301 - ROYALTY FEE INCOME - BEI",
-                        "debit_in_account_currency": royalty_rev,
-                        "cost_center": store_cost_center,
-                    })
-                if mgmt_rev > 0:
-                    jv_accounts.append({
-                        "account": "4000302 - MANAGEMENT FEE INCOME - BEI",
-                        "debit_in_account_currency": mgmt_rev,
-                        "cost_center": store_cost_center,
-                    })
-                if marketing_rev > 0:
-                    jv_accounts.append({
-                        "account": "4000303 - MARKETING FEE INCOME - BEI",
-                        "debit_in_account_currency": marketing_rev,
-                        "cost_center": store_cost_center,
-                    })
-                if ecomm_rev > 0:
-                    jv_accounts.append({
-                        "account": "4000304 - ECOMMERCE FEE INCOME - BEI",
-                        "debit_in_account_currency": ecomm_rev,
-                        "cost_center": store_cost_center,
-                    })
+				jv_accounts = []
+				# Debit fee income accounts (reversing revenue)
+				if royalty_rev > 0:
+					jv_accounts.append(
+						{
+							"account": "4000301 - ROYALTY FEE INCOME - BEI",
+							"debit_in_account_currency": royalty_rev,
+							"cost_center": store_cost_center,
+						}
+					)
+				if mgmt_rev > 0:
+					jv_accounts.append(
+						{
+							"account": "4000302 - MANAGEMENT FEE INCOME - BEI",
+							"debit_in_account_currency": mgmt_rev,
+							"cost_center": store_cost_center,
+						}
+					)
+				if marketing_rev > 0:
+					jv_accounts.append(
+						{
+							"account": "4000303 - MARKETING FEE INCOME - BEI",
+							"debit_in_account_currency": marketing_rev,
+							"cost_center": store_cost_center,
+						}
+					)
+				if ecomm_rev > 0:
+					jv_accounts.append(
+						{
+							"account": "4000304 - ECOMMERCE FEE INCOME - BEI",
+							"debit_in_account_currency": ecomm_rev,
+							"cost_center": store_cost_center,
+						}
+					)
 
-                # Credit AR — DM-1: party ONLY on this AR row
-                jv_accounts.append({
-                    "account": "1103101 - ACCOUNTS RECEIVABLE - TRADE - BEI",
-                    "credit_in_account_currency": total_credit,
-                    "party_type": "Customer",
-                    "party": store_customer,
-                    "cost_center": store_cost_center,
-                })
+				# Credit AR — DM-1: party ONLY on this AR row
+				jv_accounts.append(
+					{
+						"account": "1103101 - ACCOUNTS RECEIVABLE - TRADE - BEI",
+						"credit_in_account_currency": total_credit,
+						"party_type": "Customer",
+						"party": store_customer,
+						"cost_center": store_cost_center,
+					}
+				)
 
-                jv = frappe.get_doc({
-                    "doctype": "Journal Entry",
-                    "voucher_type": "Credit Note",
-                    "posting_date": nowdate(),
-                    "company": get_company(),
-                    "user_remark": f"Credit Note for Store Return {se.name} | {store} | {reason}",
-                    "cheque_no": stock_entry_name,
-                    "cheque_date": frappe.utils.today(),
-                    "accounts": jv_accounts,
-                })
-                jv.insert(ignore_permissions=True)
-                jv.submit()
-                jv_name = jv.name
+				jv = frappe.get_doc(
+					{
+						"doctype": "Journal Entry",
+						"voucher_type": "Credit Note",
+						"posting_date": nowdate(),
+						"company": get_company(),
+						"user_remark": f"Credit Note for Store Return {se.name} | {store} | {reason}",
+						"cheque_no": stock_entry_name,
+						"cheque_date": frappe.utils.today(),
+						"accounts": jv_accounts,
+					}
+				)
+				jv.insert(ignore_permissions=True)
+				jv.submit()
+				jv_name = jv.name
 
-            frappe.db.release_savepoint("store_return_credit")
-        except Exception:
-            frappe.db.rollback(save_point="store_return_credit")
-            frappe.log_error(f"Credit note creation failed for return {se.name}", "Store Return Credit Note Error")
-            frappe.throw(_("Failed to create credit note for store return. Please try again."))
+			frappe.db.release_savepoint("store_return_credit")
+		except Exception:
+			frappe.db.rollback(save_point="store_return_credit")
+			frappe.log_error(
+				f"Credit note creation failed for return {se.name}", "Store Return Credit Note Error"
+			)
+			frappe.throw(_("Failed to create credit note for store return. Please try again."))
 
-    # G-002 Task 2D: Notification OUTSIDE savepoint — failure must NOT roll back
-    try:
-        _notify_return_processed(se, store, reason, credit_note_name)
-    except Exception:
-        frappe.log_error(f"Return notification failed for {se.name}", "Store Return Notification Error")
+	# G-002 Task 2D: Notification OUTSIDE savepoint — failure must NOT roll back
+	try:
+		_notify_return_processed(se, store, reason, credit_note_name)
+	except Exception:
+		frappe.log_error(f"Return notification failed for {se.name}", "Store Return Notification Error")
 
-    result = {
-        "success": True,
-        "stock_entry": se.name,
-        "receiving": receiving_name,
-        "items_returned": len(se.items),
-        "credit_note": credit_note_name,
-        "journal_entry": jv_name,
-        "message": f"Return {se.name} processed — {len(se.items)} item(s) returned, credit note: {credit_note_name or 'N/A'}"
-    }
+	result = {
+		"success": True,
+		"stock_entry": se.name,
+		"receiving": receiving_name,
+		"items_returned": len(se.items),
+		"credit_note": credit_note_name,
+		"journal_entry": jv_name,
+		"message": f"Return {se.name} processed — {len(se.items)} item(s) returned, credit note: {credit_note_name or 'N/A'}",
+	}
 
-    return result
+	return result
 
 
 def _find_original_billing(store):
-    """Find the most recent billing for a store to calculate pro-rata fee reversal."""
-    billing = frappe.db.sql("""
+	"""Find the most recent billing for a store to calculate pro-rata fee reversal."""
+	billing = frappe.db.sql(
+		"""
         SELECT name, store, royalty_fee, management_fee, marketing_fee,
                ecommerce_fee, subtotal, total_amount
         FROM `tabBEI Billing Schedule`
@@ -1059,53 +1121,57 @@ def _find_original_billing(store):
         AND docstatus < 2
         ORDER BY billing_period_end DESC
         LIMIT 1
-    """, store, as_dict=True)
+    """,
+		store,
+		as_dict=True,
+	)
 
-    if not billing:
-        return None
+	if not billing:
+		return None
 
-    result = billing[0]
-    # total_billed_value is the PHP value used for pro-rata ratio (value / value = dimensionless)
-    result["total_billed_value"] = flt(result.get("total_amount", 0)) or 1
-    return result
+	result = billing[0]
+	# total_billed_value is the PHP value used for pro-rata ratio (value / value = dimensionless)
+	result["total_billed_value"] = flt(result.get("total_amount", 0)) or 1
+	return result
 
 
 def _get_store_cost_center(store):
-    """Get cost center for a store warehouse."""
-    cost_center = frappe.db.get_value("Warehouse", store, "custom_cost_center")
-    if not cost_center:
-        cost_center = frappe.db.get_value("Company", get_company(), "cost_center")
-    return cost_center
+	"""Get cost center for a store warehouse."""
+	cost_center = frappe.db.get_value("Warehouse", store, "custom_cost_center")
+	if not cost_center:
+		cost_center = frappe.db.get_value("Company", get_company(), "cost_center")
+	return cost_center
 
 
 def _get_store_customer(store):
-    """Get the Customer linked to a store for AR party field (DM-1)."""
-    # Try to find a Customer with the same name as the warehouse
-    store_name = store.replace(" - BEI", "") if store else ""
-    customer = frappe.db.get_value("Customer", {"customer_name": ["like", f"%{store_name}%"]}, "name")
-    if not customer:
-        frappe.throw(_(f"No Customer record found for store '{store_name}'. Create a Customer first."))
-    return customer
+	"""Get the Customer linked to a store for AR party field (DM-1)."""
+	# Try to find a Customer with the same name as the warehouse
+	store_name = store.replace(" - BEI", "") if store else ""
+	customer = frappe.db.get_value("Customer", {"customer_name": ["like", f"%{store_name}%"]}, "name")
+	if not customer:
+		frappe.throw(_(f"No Customer record found for store '{store_name}'. Create a Customer first."))
+	return customer
 
 
 def _notify_return_processed(se, store, reason, credit_note_name):
-    """G-002 Task 2D: Send Google Chat notification when return is processed."""
-    try:
-        from hrms.api.google_chat import send_message_to_space, get_chat_space, SPACE_NOTIFICATIONS
-        store_name = store.replace(" - BEI", "") if store else "Unknown"
-        items_count = len(se.items)
-        msg = f"Store Return Processed: {se.name}\n"
-        msg += f"Store: {store_name} | Items: {items_count}\n"
-        if reason:
-            msg += f"Reason: {reason}\n"
-        if credit_note_name:
-            msg += f"Credit Note: {credit_note_name}"
+	"""G-002 Task 2D: Send Google Chat notification when return is processed."""
+	try:
+		from hrms.api.google_chat import SPACE_NOTIFICATIONS, get_chat_space, send_message_to_space
 
-        # Notify commissary space
-        space = get_chat_space(SPACE_NOTIFICATIONS)
-        send_message_to_space(space, msg)
-    except ImportError:
-        pass
+		store_name = store.replace(" - BEI", "") if store else "Unknown"
+		items_count = len(se.items)
+		msg = f"Store Return Processed: {se.name}\n"
+		msg += f"Store: {store_name} | Items: {items_count}\n"
+		if reason:
+			msg += f"Reason: {reason}\n"
+		if credit_note_name:
+			msg += f"Credit Note: {credit_note_name}"
+
+		# Notify commissary space
+		space = get_chat_space(SPACE_NOTIFICATIONS)
+		send_message_to_space(space, msg)
+	except ImportError:
+		pass
 
 
 # ==============================================================================
@@ -1114,358 +1180,417 @@ def _notify_return_processed(se, store, reason, credit_note_name):
 
 
 @frappe.whitelist()
-def submit_opening_report(store, checklist_items=None, report_time=None, notes=None,
-                          photo_backup_area=None, photo_frozen_milk=None,
-                          photo_toppings_area=None, photo_dispatch_area=None,
-                          photo_cold_storage_temp=None):
-    """Submit daily opening report with 5 required photos.
+def submit_opening_report(
+	store,
+	checklist_items=None,
+	report_time=None,
+	notes=None,
+	photo_backup_area=None,
+	photo_frozen_milk=None,
+	photo_toppings_area=None,
+	photo_dispatch_area=None,
+	photo_cold_storage_temp=None,
+):
+	"""Submit daily opening report with 5 required photos.
 
-    Bug fixes (C1):
-    - report_time made optional (defaults to current time) since frontend may not send it
-    - Photos saved via save_base64_image to avoid DataError on Attach Image fields
-    - checklist_items can be empty list (allows incomplete submission per REQ-007)
-    - Wrapped in try/except returning user-friendly error instead of raw traceback
-    """
-    try:
-        validate_store_ops_role()
-        if not store:
-            frappe.throw(_("Store is required"))
+	Bug fixes (C1):
+	- report_time made optional (defaults to current time) since frontend may not send it
+	- Photos saved via save_base64_image to avoid DataError on Attach Image fields
+	- checklist_items can be empty list (allows incomplete submission per REQ-007)
+	- Wrapped in try/except returning user-friendly error instead of raw traceback
+	"""
+	try:
+		validate_store_ops_role()
+		if not store:
+			frappe.throw(_("Store is required"))
 
-        # Resolve store name to valid warehouse
-        warehouse = resolve_warehouse(store)
+		# Resolve store name to valid warehouse
+		warehouse = resolve_warehouse(store)
 
-        if isinstance(checklist_items, str):
-            checklist_items = json.loads(checklist_items)
+		if isinstance(checklist_items, str):
+			checklist_items = json.loads(checklist_items)
 
-        doc = frappe.new_doc("BEI Store Opening Report")
-        doc.store = warehouse
-        doc.report_date = nowdate()
-        doc.report_time = report_time or now_datetime().strftime("%H:%M:%S")
-        doc.submitted_by = frappe.session.user
-        doc.notes = notes
+		doc = frappe.new_doc("BEI Store Opening Report")
+		doc.store = warehouse
+		doc.report_date = nowdate()
+		doc.report_time = report_time or now_datetime().strftime("%H:%M:%S")
+		doc.submitted_by = frappe.session.user
+		doc.notes = notes
 
-        # Handle photos - convert base64 to file URLs if needed
-        # This MUST happen before insert to avoid DataError (1406) on Attach Image columns
-        doc.photo_backup_area = save_base64_image(photo_backup_area, "BEI Store Opening Report", fieldname="photo_backup_area")
-        doc.photo_frozen_milk = save_base64_image(photo_frozen_milk, "BEI Store Opening Report", fieldname="photo_frozen_milk")
-        doc.photo_toppings_area = save_base64_image(photo_toppings_area, "BEI Store Opening Report", fieldname="photo_toppings_area")
-        doc.photo_dispatch_area = save_base64_image(photo_dispatch_area, "BEI Store Opening Report", fieldname="photo_dispatch_area")
-        doc.photo_cold_storage_temp = save_base64_image(photo_cold_storage_temp, "BEI Store Opening Report", fieldname="photo_cold_storage_temp")
+		# Handle photos - convert base64 to file URLs if needed
+		# This MUST happen before insert to avoid DataError (1406) on Attach Image columns
+		doc.photo_backup_area = save_base64_image(
+			photo_backup_area, "BEI Store Opening Report", fieldname="photo_backup_area"
+		)
+		doc.photo_frozen_milk = save_base64_image(
+			photo_frozen_milk, "BEI Store Opening Report", fieldname="photo_frozen_milk"
+		)
+		doc.photo_toppings_area = save_base64_image(
+			photo_toppings_area, "BEI Store Opening Report", fieldname="photo_toppings_area"
+		)
+		doc.photo_dispatch_area = save_base64_image(
+			photo_dispatch_area, "BEI Store Opening Report", fieldname="photo_dispatch_area"
+		)
+		doc.photo_cold_storage_temp = save_base64_image(
+			photo_cold_storage_temp, "BEI Store Opening Report", fieldname="photo_cold_storage_temp"
+		)
 
-        # Allow empty checklist (incomplete submission per REQ-007)
-        if checklist_items:
-            for item in checklist_items:
-                doc.append("checklist_items", item)
+		# Allow empty checklist (incomplete submission per REQ-007)
+		if checklist_items:
+			for item in checklist_items:
+				doc.append("checklist_items", item)
 
-        doc.flags.ignore_mandatory = True
-        doc.insert(ignore_permissions=True)
-        return {"success": True, "name": doc.name}
+		doc.flags.ignore_mandatory = True
+		doc.insert(ignore_permissions=True)
+		return {"success": True, "name": doc.name}
 
-    except frappe.exceptions.LinkValidationError as e:
-        frappe.log_error(f"Opening Report LinkValidation: {str(e)}", "Opening Report Submission Error")
-        return {"success": False, "error": str(e)}
-    except Exception as e:
-        frappe.log_error(
-            f"Opening Report Error for store {store}: {str(e)}\n\n{frappe.get_traceback()}",
-            "Opening Report Submission Error"
-        )
-        return {"success": False, "error": _("Failed to submit opening report. Please try again or contact support.")}
+	except frappe.exceptions.LinkValidationError as e:
+		frappe.log_error(f"Opening Report LinkValidation: {e!s}", "Opening Report Submission Error")
+		return {"success": False, "error": str(e)}
+	except Exception as e:
+		frappe.log_error(
+			f"Opening Report Error for store {store}: {e!s}\n\n{frappe.get_traceback()}",
+			"Opening Report Submission Error",
+		)
+		return {
+			"success": False,
+			"error": _("Failed to submit opening report. Please try again or contact support."),
+		}
 
 
 @frappe.whitelist()
 def get_opening_reports(store=None, date_from=None, date_to=None, limit=20):
-    """Get opening report history."""
-    filters = {}
-    if store:
-        filters["store"] = store
-    if date_from:
-        filters["report_date"] = [">=", date_from]
-    if date_to:
-        if "report_date" in filters:
-            filters["report_date"] = ["between", [date_from, date_to]]
-        else:
-            filters["report_date"] = ["<=", date_to]
+	"""Get opening report history."""
+	filters = {}
+	if store:
+		filters["store"] = store
+	if date_from:
+		filters["report_date"] = [">=", date_from]
+	if date_to:
+		if "report_date" in filters:
+			filters["report_date"] = ["between", [date_from, date_to]]
+		else:
+			filters["report_date"] = ["<=", date_to]
 
-    reports = frappe.get_all(
-        "BEI Store Opening Report",
-        filters=filters,
-        fields=["name", "store", "report_date", "report_time", "status", "submitted_by"],
-        order_by="report_date desc",
-        limit=int(limit)
-    )
-    return {"reports": reports}
+	reports = frappe.get_all(
+		"BEI Store Opening Report",
+		filters=filters,
+		fields=["name", "store", "report_date", "report_time", "status", "submitted_by"],
+		order_by="report_date desc",
+		limit=int(limit),
+	)
+	return {"reports": reports}
 
 
 @frappe.whitelist()
 def get_closing_reports(store=None, date_from=None, date_to=None, limit=20):
-    """Get closing report history."""
-    filters = {}
-    if store:
-        filters["store"] = store
-    if date_from:
-        filters["report_date"] = [">=", date_from]
-    if date_to:
-        if "report_date" in filters:
-            filters["report_date"] = ["between", [date_from, date_to]]
-        else:
-            filters["report_date"] = ["<=", date_to]
+	"""Get closing report history."""
+	filters = {}
+	if store:
+		filters["store"] = store
+	if date_from:
+		filters["report_date"] = [">=", date_from]
+	if date_to:
+		if "report_date" in filters:
+			filters["report_date"] = ["between", [date_from, date_to]]
+		else:
+			filters["report_date"] = ["<=", date_to]
 
-    reports = frappe.get_all(
-        "BEI Store Closing Report",
-        filters=filters,
-        fields=["name", "store", "report_date", "status", "cash_variance"],
-        order_by="report_date desc",
-        limit=int(limit)
-    )
-    return {"reports": reports}
+	reports = frappe.get_all(
+		"BEI Store Closing Report",
+		filters=filters,
+		fields=["name", "store", "report_date", "status", "cash_variance"],
+		order_by="report_date desc",
+		limit=int(limit),
+	)
+	return {"reports": reports}
 
 
 @frappe.whitelist()
-def submit_midshift_check(store, shift=None, temperature_readings=None,
-                          cleanliness_status=None, checklist_items=None,
-                          issues_found=None, corrective_action=None, photo_evidence=None,
-                          late_reason=None, equipment=None, notes=None):
-    """Submit mid-shift temperature and cleanliness check with time window validation.
+def submit_midshift_check(
+	store,
+	shift=None,
+	temperature_readings=None,
+	cleanliness_status=None,
+	checklist_items=None,
+	issues_found=None,
+	corrective_action=None,
+	photo_evidence=None,
+	late_reason=None,
+	equipment=None,
+	notes=None,
+):
+	"""Submit mid-shift temperature and cleanliness check with time window validation.
 
-    Bug fixes (C3):
-    - shift defaults to auto-detected based on current time
-    - temperature_readings and checklist_items both accepted (frontend may send either)
-    - cleanliness_status made optional (defaults to 'Good')
-    - photo_evidence saved via save_base64_image to avoid DataError
-    - Time window validation relaxed: logs warning but allows submission with auto-populated late_reason
-    - insert with ignore_permissions=True for Employee Self Service role
-    """
-    try:
-        validate_store_ops_role()
-        if not store:
-            frappe.throw(_("Store is required"))
+	Bug fixes (C3):
+	- shift defaults to auto-detected based on current time
+	- temperature_readings and checklist_items both accepted (frontend may send either)
+	- cleanliness_status made optional (defaults to 'Good')
+	- photo_evidence saved via save_base64_image to avoid DataError
+	- Time window validation relaxed: logs warning but allows submission with auto-populated late_reason
+	- insert with ignore_permissions=True for Employee Self Service role
+	"""
+	try:
+		validate_store_ops_role()
+		if not store:
+			frappe.throw(_("Store is required"))
 
-        # Resolve branch name to warehouse name
-        warehouse = resolve_warehouse(store)
+		# Resolve branch name to warehouse name
+		warehouse = resolve_warehouse(store)
 
-        if isinstance(temperature_readings, str):
-            temperature_readings = json.loads(temperature_readings)
-        if isinstance(checklist_items, str):
-            checklist_items = json.loads(checklist_items)
+		if isinstance(temperature_readings, str):
+			temperature_readings = json.loads(temperature_readings)
+		if isinstance(checklist_items, str):
+			checklist_items = json.loads(checklist_items)
 
-        # Auto-detect shift based on current time if not provided
-        current_time = now_datetime()
-        current_time_str = current_time.strftime("%H:%M:%S")
-        if not shift:
-            hour = current_time.hour
-            if hour < 12:
-                shift = "Morning"
-            elif hour < 17:
-                shift = "Afternoon"
-            else:
-                shift = "Evening"
+		# Auto-detect shift based on current time if not provided
+		current_time = now_datetime()
+		current_time_str = current_time.strftime("%H:%M:%S")
+		if not shift:
+			hour = current_time.hour
+			if hour < 12:
+				shift = "Morning"
+			elif hour < 17:
+				shift = "Afternoon"
+			else:
+				shift = "Evening"
 
-        # Normalize shift and cleanliness values to title case (Frappe Select field expects exact match)
-        shift_map = {"morning": "Morning", "afternoon": "Afternoon", "evening": "Evening"}
-        normalized_shift = shift_map.get(shift.lower(), shift.title()) if shift else "Afternoon"
+		# Normalize shift and cleanliness values to title case (Frappe Select field expects exact match)
+		shift_map = {"morning": "Morning", "afternoon": "Afternoon", "evening": "Evening"}
+		normalized_shift = shift_map.get(shift.lower(), shift.title()) if shift else "Afternoon"
 
-        cleanliness_map = {"excellent": "Excellent", "good": "Good", "needs attention": "Needs Attention", "critical": "Critical"}
-        normalized_cleanliness = cleanliness_map.get((cleanliness_status or "good").lower(), (cleanliness_status or "Good").title()) if cleanliness_status else "Good"
+		cleanliness_map = {
+			"excellent": "Excellent",
+			"good": "Good",
+			"needs attention": "Needs Attention",
+			"critical": "Critical",
+		}
+		normalized_cleanliness = (
+			cleanliness_map.get(
+				(cleanliness_status or "good").lower(), (cleanliness_status or "Good").title()
+			)
+			if cleanliness_status
+			else "Good"
+		)
 
-        # Define time windows per shift (can be moved to BEI Shift Template later)
-        shift_windows = {
-            "Morning": ("10:00:00", "11:00:00"),
-            "Afternoon": ("14:00:00", "15:00:00"),
-            "Evening": ("18:00:00", "19:00:00")
-        }
+		# Define time windows per shift (can be moved to BEI Shift Template later)
+		shift_windows = {
+			"Morning": ("10:00:00", "11:00:00"),
+			"Afternoon": ("14:00:00", "15:00:00"),
+			"Evening": ("18:00:00", "19:00:00"),
+		}
 
-        # Get time window for this shift
-        window_start, window_end = shift_windows.get(normalized_shift, ("00:00:00", "23:59:59"))
+		# Get time window for this shift
+		window_start, window_end = shift_windows.get(normalized_shift, ("00:00:00", "23:59:59"))
 
-        # Check if submission is on time
-        is_on_time = window_start <= current_time_str <= window_end
+		# Check if submission is on time
+		is_on_time = window_start <= current_time_str <= window_end
 
-        # Handle photo evidence - convert base64 to file URL
-        photo_url = save_base64_image(photo_evidence, "BEI Midshift Checklist", fieldname="photo_evidence") if photo_evidence else None
+		# Handle photo evidence - convert base64 to file URL
+		photo_url = (
+			save_base64_image(photo_evidence, "BEI Midshift Checklist", fieldname="photo_evidence")
+			if photo_evidence
+			else None
+		)
 
-        doc = frappe.new_doc("BEI Midshift Checklist")
-        doc.store = warehouse
-        doc.check_datetime = current_time
-        doc.submitted_by = frappe.session.user
-        doc.shift = normalized_shift
-        doc.cleanliness_status = normalized_cleanliness
-        doc.issues_found = issues_found
-        doc.corrective_action = corrective_action
-        doc.photo_evidence = photo_url
-        doc.equipment = equipment or "General"
+		doc = frappe.new_doc("BEI Midshift Checklist")
+		doc.store = warehouse
+		doc.check_datetime = current_time
+		doc.submitted_by = frappe.session.user
+		doc.shift = normalized_shift
+		doc.cleanliness_status = normalized_cleanliness
+		doc.issues_found = issues_found
+		doc.corrective_action = corrective_action
+		doc.photo_evidence = photo_url
+		doc.equipment = equipment or "General"
 
-        # Time window fields
-        doc.window_start = window_start
-        doc.window_end = window_end
-        doc.is_on_time = 1 if is_on_time else 0
-        # Auto-populate late_reason instead of blocking submission
-        if not is_on_time:
-            doc.late_reason = late_reason or f"Submitted at {current_time_str} (outside {window_start}-{window_end} window)"
+		# Time window fields
+		doc.window_start = window_start
+		doc.window_end = window_end
+		doc.is_on_time = 1 if is_on_time else 0
+		# Auto-populate late_reason instead of blocking submission
+		if not is_on_time:
+			doc.late_reason = (
+				late_reason or f"Submitted at {current_time_str} (outside {window_start}-{window_end} window)"
+			)
 
-        if temperature_readings:
-            for reading in temperature_readings:
-                doc.append("temperature_readings", reading)
+		if temperature_readings:
+			for reading in temperature_readings:
+				doc.append("temperature_readings", reading)
 
-        # Also accept checklist_items (frontend may send this instead of temperature_readings)
-        if checklist_items and hasattr(doc, 'checklist_items'):
-            for item in checklist_items:
-                doc.append("checklist_items", item)
+		# Also accept checklist_items (frontend may send this instead of temperature_readings)
+		if checklist_items and hasattr(doc, "checklist_items"):
+			for item in checklist_items:
+				doc.append("checklist_items", item)
 
-        doc.flags.ignore_mandatory = True
-        doc.insert(ignore_permissions=True)
-        return {
-            "success": True,
-            "name": doc.name,
-            "is_on_time": is_on_time,
-            "window_start": window_start,
-            "window_end": window_end
-        }
+		doc.flags.ignore_mandatory = True
+		doc.insert(ignore_permissions=True)
+		return {
+			"success": True,
+			"name": doc.name,
+			"is_on_time": is_on_time,
+			"window_start": window_start,
+			"window_end": window_end,
+		}
 
-    except Exception as e:
-        frappe.log_error(
-            f"Midshift Check Error for store {store}: {str(e)}\n\n{frappe.get_traceback()}",
-            "Midshift Check Submission Error"
-        )
-        return {"success": False, "error": _("Failed to submit midshift report. Please try again or contact support.")}
+	except Exception as e:
+		frappe.log_error(
+			f"Midshift Check Error for store {store}: {e!s}\n\n{frappe.get_traceback()}",
+			"Midshift Check Submission Error",
+		)
+		return {
+			"success": False,
+			"error": _("Failed to submit midshift report. Please try again or contact support."),
+		}
 
 
 @frappe.whitelist()
 def get_midshift_checks(store=None, date=None, limit=20):
-    """Get mid-shift check history."""
-    filters = {}
-    if store:
-        filters["store"] = store
-    if date:
-        filters["check_datetime"] = ["like", f"{date}%"]
+	"""Get mid-shift check history."""
+	filters = {}
+	if store:
+		filters["store"] = store
+	if date:
+		filters["check_datetime"] = ["like", f"{date}%"]
 
-    checks = frappe.get_all(
-        "BEI Midshift Checklist",
-        filters=filters,
-        fields=["name", "store", "check_datetime", "shift", "cleanliness_status"],
-        order_by="check_datetime desc",
-        limit=int(limit)
-    )
-    return {"checks": checks}
+	checks = frappe.get_all(
+		"BEI Midshift Checklist",
+		filters=filters,
+		fields=["name", "store", "check_datetime", "shift", "cleanliness_status"],
+		order_by="check_datetime desc",
+		limit=int(limit),
+	)
+	return {"checks": checks}
 
 
 @frappe.whitelist()
-def upload_pos_data(store=None, pos_date=None, pos_system=None, discount_report=None,
-                    transaction_report=None, product_mix=None, daily_sales_revenue=None,
-                    sales_summary=None, notes=None, skip_date_validation=False):
-    """
-    Upload daily POS data with 5 required report files.
+def upload_pos_data(
+	store=None,
+	pos_date=None,
+	pos_system=None,
+	discount_report=None,
+	transaction_report=None,
+	product_mix=None,
+	daily_sales_revenue=None,
+	sales_summary=None,
+	notes=None,
+	skip_date_validation=False,
+):
+	"""
+	Upload daily POS data with 5 required report files.
 
-    Args:
-        store: Store/branch name
-        pos_date: Date of POS data
-        pos_system: POS system used (MOSAIC)
-        discount_report: Discount Report file (base64)
-        transaction_report: Transaction Report file (base64)
-        product_mix: Product Mix file (base64)
-        daily_sales_revenue: Daily Sales Revenue - Summary file (base64)
-        sales_summary: Sales Summary file (base64)
-        notes: Optional notes
-        skip_date_validation: Skip date validation (for back-dated uploads with supervisor approval)
-    """
-    validate_store_ops_role()
+	Args:
+	    store: Store/branch name
+	    pos_date: Date of POS data
+	    pos_system: POS system used (MOSAIC)
+	    discount_report: Discount Report file (base64)
+	    transaction_report: Transaction Report file (base64)
+	    product_mix: Product Mix file (base64)
+	    daily_sales_revenue: Daily Sales Revenue - Summary file (base64)
+	    sales_summary: Sales Summary file (base64)
+	    notes: Optional notes
+	    skip_date_validation: Skip date validation (for back-dated uploads with supervisor approval)
+	"""
+	validate_store_ops_role()
 
-    if not store:
-        frappe.throw(_("Store is required"))
+	if not store:
+		frappe.throw(_("Store is required"))
 
-    if not all([discount_report, transaction_report, product_mix,
-                daily_sales_revenue, sales_summary]):
-        frappe.throw(_("All 5 POS report files are required"))
+	if not all([discount_report, transaction_report, product_mix, daily_sales_revenue, sales_summary]):
+		frappe.throw(_("All 5 POS report files are required"))
 
-    # Date validation: Extract date from sales_summary and validate it matches pos_date
-    date_mismatch_warning = None
-    if not skip_date_validation:
-        try:
-            from hrms.utils.pos_parser import parse_sales_summary
-            import base64
+	# Date validation: Extract date from sales_summary and validate it matches pos_date
+	date_mismatch_warning = None
+	if not skip_date_validation:
+		try:
+			import base64
 
-            # Decode sales_summary if it's base64
-            if isinstance(sales_summary, str) and not sales_summary.startswith('/files/'):
-                try:
-                    content = base64.b64decode(sales_summary)
-                except Exception:
-                    content = sales_summary.encode() if isinstance(sales_summary, str) else sales_summary
-            else:
-                content = None
+			from hrms.utils.pos_parser import parse_sales_summary
 
-            if content:
-                summary_data = parse_sales_summary(content)
-                file_date = summary_data.get("metadata", {}).get("from_date")
+			# Decode sales_summary if it's base64
+			if isinstance(sales_summary, str) and not sales_summary.startswith("/files/"):
+				try:
+					content = base64.b64decode(sales_summary)
+				except Exception:
+					content = sales_summary.encode() if isinstance(sales_summary, str) else sales_summary
+			else:
+				content = None
 
-                if file_date and str(file_date) != str(pos_date):
-                    date_mismatch_warning = _(
-                        "Warning: POS file date ({0}) does not match claimed date ({1}). "
-                        "Please verify the correct date before submitting."
-                    ).format(file_date, pos_date)
-                    # Log the mismatch but allow upload (with warning returned)
-                    frappe.log_error(
-                        f"POS date mismatch - Store: {store}, File date: {file_date}, Claimed date: {pos_date}",
-                        "POS Upload Date Mismatch"
-                    )
-        except Exception as e:
-            # Don't block upload if date validation fails, just log it
-            frappe.log_error(
-                f"POS date validation error: {str(e)}",
-                "POS Upload Date Validation Error"
-            )
+			if content:
+				summary_data = parse_sales_summary(content)
+				file_date = summary_data.get("metadata", {}).get("from_date")
 
-    # Resolve branch name to warehouse name (C6 fix)
-    warehouse = resolve_warehouse(store)
+				if file_date and str(file_date) != str(pos_date):
+					date_mismatch_warning = _(
+						"Warning: POS file date ({0}) does not match claimed date ({1}). "
+						"Please verify the correct date before submitting."
+					).format(file_date, pos_date)
+					# Log the mismatch but allow upload (with warning returned)
+					frappe.log_error(
+						f"POS date mismatch - Store: {store}, File date: {file_date}, Claimed date: {pos_date}",
+						"POS Upload Date Mismatch",
+					)
+		except Exception as e:
+			# Don't block upload if date validation fails, just log it
+			frappe.log_error(f"POS date validation error: {e!s}", "POS Upload Date Validation Error")
 
-    # Case-insensitive POS system matching (e.g., "Mosaic" -> "MOSAIC")
-    if pos_system:
-        pos_system = pos_system.strip().upper()
+	# Resolve branch name to warehouse name (C6 fix)
+	warehouse = resolve_warehouse(store)
 
-    # Save report files as Frappe File records BEFORE insert (fields are mandatory)
-    doctype_name = "BEI POS Upload"
-    doc = frappe.new_doc("BEI POS Upload")
-    doc.store = warehouse
-    doc.pos_date = pos_date
-    doc.uploaded_by = frappe.session.user
-    doc.pos_system = pos_system
-    doc.notes = notes
-    doc.discount_report = save_base64_image(discount_report, doctype_name, fieldname="discount_report")
-    doc.transaction_report = save_base64_image(transaction_report, doctype_name, fieldname="transaction_report")
-    doc.product_mix = save_base64_image(product_mix, doctype_name, fieldname="product_mix")
-    doc.daily_sales_revenue = save_base64_image(daily_sales_revenue, doctype_name, fieldname="daily_sales_revenue")
-    doc.sales_summary = save_base64_image(sales_summary, doctype_name, fieldname="sales_summary")
-    doc.insert()
+	# Case-insensitive POS system matching (e.g., "Mosaic" -> "MOSAIC")
+	if pos_system:
+		pos_system = pos_system.strip().upper()
 
-    result = {"success": True, "name": doc.name}
-    if date_mismatch_warning:
-        result["warning"] = date_mismatch_warning
-        result["date_mismatch"] = True
-        # Tag the document so Finance can filter mismatched uploads in reconciliation view
-        frappe.db.set_value("BEI POS Upload", doc.name, "has_date_mismatch", 1)
-    return result
+	# Save report files as Frappe File records BEFORE insert (fields are mandatory)
+	doctype_name = "BEI POS Upload"
+	doc = frappe.new_doc("BEI POS Upload")
+	doc.store = warehouse
+	doc.pos_date = pos_date
+	doc.uploaded_by = frappe.session.user
+	doc.pos_system = pos_system
+	doc.notes = notes
+	doc.discount_report = save_base64_image(discount_report, doctype_name, fieldname="discount_report")
+	doc.transaction_report = save_base64_image(
+		transaction_report, doctype_name, fieldname="transaction_report"
+	)
+	doc.product_mix = save_base64_image(product_mix, doctype_name, fieldname="product_mix")
+	doc.daily_sales_revenue = save_base64_image(
+		daily_sales_revenue, doctype_name, fieldname="daily_sales_revenue"
+	)
+	doc.sales_summary = save_base64_image(sales_summary, doctype_name, fieldname="sales_summary")
+	doc.insert()
+
+	result = {"success": True, "name": doc.name}
+	if date_mismatch_warning:
+		result["warning"] = date_mismatch_warning
+		result["date_mismatch"] = True
+		# Tag the document so Finance can filter mismatched uploads in reconciliation view
+		frappe.db.set_value("BEI POS Upload", doc.name, "has_date_mismatch", 1)
+	return result
 
 
 @frappe.whitelist()
 def get_pos_uploads(store=None, date_from=None, date_to=None, limit=20):
-    """Get POS upload history."""
-    filters = {}
-    if store:
-        filters["store"] = store
-    if date_from:
-        filters["pos_date"] = [">=", date_from]
-    if date_to:
-        if "pos_date" in filters:
-            filters["pos_date"] = ["between", [date_from, date_to]]
-        else:
-            filters["pos_date"] = ["<=", date_to]
+	"""Get POS upload history."""
+	filters = {}
+	if store:
+		filters["store"] = store
+	if date_from:
+		filters["pos_date"] = [">=", date_from]
+	if date_to:
+		if "pos_date" in filters:
+			filters["pos_date"] = ["between", [date_from, date_to]]
+		else:
+			filters["pos_date"] = ["<=", date_to]
 
-    uploads = frappe.get_all(
-        "BEI POS Upload",
-        filters=filters,
-        fields=["name", "store", "pos_date", "gross_sales", "net_sales", "status"],
-        order_by="pos_date desc",
-        limit=int(limit)
-    )
-    return {"uploads": uploads}
+	uploads = frappe.get_all(
+		"BEI POS Upload",
+		filters=filters,
+		fields=["name", "store", "pos_date", "gross_sales", "net_sales", "status"],
+		order_by="pos_date desc",
+		limit=int(limit),
+	)
+	return {"uploads": uploads}
 
 
 # ==============================================================================
@@ -1474,121 +1599,134 @@ def get_pos_uploads(store=None, date_from=None, date_to=None, limit=20):
 
 
 @frappe.whitelist()
-def submit_bank_deposit(store=None, deposit_date=None, bank=None, deposits=None,
-                        total_amount=0, photos=None, notes=None, deposit_type=None):
-    """
-    Submit bank deposit record with deposit slip photos.
+def submit_bank_deposit(
+	store=None,
+	deposit_date=None,
+	bank=None,
+	deposits=None,
+	total_amount=0,
+	photos=None,
+	notes=None,
+	deposit_type=None,
+):
+	"""
+	Submit bank deposit record with deposit slip photos.
 
-    Bug fixes (C5):
-    - Resolve store to warehouse (frontend sends branch code)
-    - deposit_date defaults to today
-    - bank defaults to empty string (frontend may not send it for Pickup type)
-    - Photos converted from base64 via save_base64_image
-    - deposit_type accepted (Bank Deposit or Pickup per DocType)
-    - insert with ignore_permissions=True for Employee Self Service role
-    - Returns user-friendly error instead of raw traceback
+	Bug fixes (C5):
+	- Resolve store to warehouse (frontend sends branch code)
+	- deposit_date defaults to today
+	- bank defaults to empty string (frontend may not send it for Pickup type)
+	- Photos converted from base64 via save_base64_image
+	- deposit_type accepted (Bank Deposit or Pickup per DocType)
+	- insert with ignore_permissions=True for Employee Self Service role
+	- Returns user-friendly error instead of raw traceback
 
-    Args:
-        store: Store/branch name
-        deposit_date: Date of deposit (defaults to today)
-        bank: Bank name (BDO, BPI, etc.)
-        deposits: List of {dates_covered, amount} for each deposit entry
-        total_amount: Total deposit amount
-        photos: List of deposit slip photo URLs/base64
-        notes: Optional notes
-        deposit_type: Bank Deposit or Pickup
-    """
-    try:
-        validate_store_ops_role()
+	Args:
+	    store: Store/branch name
+	    deposit_date: Date of deposit (defaults to today)
+	    bank: Bank name (BDO, BPI, etc.)
+	    deposits: List of {dates_covered, amount} for each deposit entry
+	    total_amount: Total deposit amount
+	    photos: List of deposit slip photo URLs/base64
+	    notes: Optional notes
+	    deposit_type: Bank Deposit or Pickup
+	"""
+	try:
+		validate_store_ops_role()
 
-        if not store:
-            frappe.throw(_("Store is required"))
+		if not store:
+			frappe.throw(_("Store is required"))
 
-        # Resolve branch name to warehouse name
-        warehouse = resolve_warehouse(store)
+		# Resolve branch name to warehouse name
+		warehouse = resolve_warehouse(store)
 
-        if isinstance(deposits, str):
-            try:
-                deposits = json.loads(deposits)
-            except (json.JSONDecodeError, ValueError):
-                frappe.throw(_("Invalid deposits format. Please submit the form again."))
+		if isinstance(deposits, str):
+			try:
+				deposits = json.loads(deposits)
+			except (json.JSONDecodeError, ValueError):
+				frappe.throw(_("Invalid deposits format. Please submit the form again."))
 
-        if isinstance(photos, str):
-            try:
-                photos = json.loads(photos)
-            except (json.JSONDecodeError, ValueError):
-                photos = [photos]
+		if isinstance(photos, str):
+			try:
+				photos = json.loads(photos)
+			except (json.JSONDecodeError, ValueError):
+				photos = [photos]
 
-        if not deposits:
-            deposits = []
+		if not deposits:
+			deposits = []
 
-        if not photos:
-            photos = []
+		if not photos:
+			photos = []
 
-        doc = frappe.new_doc("BEI Bank Deposit")
-        doc.store = warehouse
-        doc.deposit_date = deposit_date or nowdate()
-        doc.bank = bank or ""
-        doc.total_amount = float(total_amount or 0)
-        doc.submitted_by = frappe.session.user
-        doc.notes = notes
-        if deposit_type:
-            doc.deposit_type = deposit_type
+		doc = frappe.new_doc("BEI Bank Deposit")
+		doc.store = warehouse
+		doc.deposit_date = deposit_date or nowdate()
+		doc.bank = bank or ""
+		doc.total_amount = float(total_amount or 0)
+		doc.submitted_by = frappe.session.user
+		doc.notes = notes
+		if deposit_type:
+			doc.deposit_type = deposit_type
 
-        # Add deposit entries
-        for entry in deposits:
-            doc.append("deposit_entries", {
-                "dates_covered": entry.get("dates_covered") or entry.get("date") or nowdate(),
-                "amount": float(entry.get("amount", 0))
-            })
+		# Add deposit entries
+		for entry in deposits:
+			doc.append(
+				"deposit_entries",
+				{
+					"dates_covered": entry.get("dates_covered") or entry.get("date") or nowdate(),
+					"amount": float(entry.get("amount", 0)),
+				},
+			)
 
-        # Add photos - convert base64 to file URLs
-        for i, photo in enumerate(photos):
-            photo_data = photo
-            if isinstance(photo, dict):
-                photo_data = photo.get("photo") or photo.get("url") or photo.get("data")
+		# Add photos - convert base64 to file URLs
+		for i, photo in enumerate(photos):
+			photo_data = photo
+			if isinstance(photo, dict):
+				photo_data = photo.get("photo") or photo.get("url") or photo.get("data")
 
-            photo_url = save_base64_image(photo_data, "BEI Bank Deposit", fieldname="photo") if photo_data else None
-            if photo_url:
-                doc.append("deposit_photos", {
-                    "photo": photo_url,
-                    "photo_number": i + 1
-                })
+			photo_url = (
+				save_base64_image(photo_data, "BEI Bank Deposit", fieldname="photo") if photo_data else None
+			)
+			if photo_url:
+				doc.append("deposit_photos", {"photo": photo_url, "photo_number": i + 1})
 
-        doc.flags.ignore_mandatory = True
-        doc.insert(ignore_permissions=True)
-        return {"success": True, "name": doc.name}
+		doc.flags.ignore_mandatory = True
+		doc.insert(ignore_permissions=True)
+		return {"success": True, "name": doc.name}
 
-    except Exception as e:
-        frappe.log_error(
-            f"Bank Deposit Error for store {store}: {str(e)}\n\n{frappe.get_traceback()}",
-            "Bank Deposit Submission Error"
-        )
-        return {"success": False, "error": _("Failed to submit bank deposit. Please try again or contact support.")}
+	except Exception as e:
+		frappe.log_error(
+			f"Bank Deposit Error for store {store}: {e!s}\n\n{frappe.get_traceback()}",
+			"Bank Deposit Submission Error",
+		)
+		return {
+			"success": False,
+			"error": _("Failed to submit bank deposit. Please try again or contact support."),
+		}
 
 
 @frappe.whitelist()
 def get_bank_deposits(store=None, date_from=None, date_to=None, limit=20):
-    """Get bank deposit history."""
-    filters = {}
-    if store:
-        filters["store"] = store
-    if date_from:
-        filters["deposit_date"] = [">=", date_from]
-    if date_to:
-        if "deposit_date" in filters:
-            filters["deposit_date"] = ["between", [date_from, date_to]]
-        else:
-            filters["deposit_date"] = ["<=", date_to]
+	"""Get bank deposit history."""
+	filters = {}
+	if store:
+		filters["store"] = store
+	if date_from:
+		filters["deposit_date"] = [">=", date_from]
+	if date_to:
+		if "deposit_date" in filters:
+			filters["deposit_date"] = ["between", [date_from, date_to]]
+		else:
+			filters["deposit_date"] = ["<=", date_to]
 
-    deposits = frappe.get_all(
-        "BEI Bank Deposit",
-        filters=filters,
-        fields=["name", "store", "deposit_date", "bank", "total_amount", "submitted_by"],
-        order_by="deposit_date desc",
-        limit=int(limit)
-    )
-    return {"deposits": deposits}
+	deposits = frappe.get_all(
+		"BEI Bank Deposit",
+		filters=filters,
+		fields=["name", "store", "deposit_date", "bank", "total_amount", "submitted_by"],
+		order_by="deposit_date desc",
+		limit=int(limit),
+	)
+	return {"deposits": deposits}
 
 
 # ==============================================================================
@@ -1597,146 +1735,145 @@ def get_bank_deposits(store=None, date_from=None, date_to=None, limit=20):
 
 
 @frappe.whitelist()
-def extract_pos_data(sales_summary=None, transaction_report=None, discount_report=None,
-                     daily_sales_revenue=None, product_mix=None):
-    """
-    Extract and parse data from MOSAIC POS export files.
+def extract_pos_data(
+	sales_summary=None,
+	transaction_report=None,
+	discount_report=None,
+	daily_sales_revenue=None,
+	product_mix=None,
+):
+	"""
+	Extract and parse data from MOSAIC POS export files.
 
-    Accepts file content in multiple formats:
-    - File URL (stored in Frappe File)
-    - Base64 encoded string
-    - Direct file content
+	Accepts file content in multiple formats:
+	- File URL (stored in Frappe File)
+	- Base64 encoded string
+	- Direct file content
 
-    Args:
-        sales_summary: Sales Summary file
-        transaction_report: Transaction Report file
-        discount_report: Discount Report file
-        daily_sales_revenue: Daily Sales Revenue file
-        product_mix: Product Mix file
+	Args:
+	    sales_summary: Sales Summary file
+	    transaction_report: Transaction Report file
+	    discount_report: Discount Report file
+	    daily_sales_revenue: Daily Sales Revenue file
+	    product_mix: Product Mix file
 
-    Returns:
-        Consolidated extracted data for frontend display:
-        {
-            "success": True,
-            "data": {
-                "date": "2026-01-30",
-                "gross_sales": 65474.00,
-                "net_sales": 55587.24,
-                "vat": 5575.73,
-                "beginning_si": 16526,
-                "ending_si": 16735,
-                "transaction_count": 209,
-                "eod_counter": 76,
-                "discount_pwd": 1056.85,
-                "discount_senior": 1223.28,
-                "by_payment_type": {
-                    "Cash": 38970.00,
-                    "MosaicPay QRPH": 26504.00
-                },
-                "total_items_sold": 357,
-                ...
-            }
-        }
-    """
-    from hrms.utils.pos_parser import extract_all_pos_data
-    import base64
+	Returns:
+	    Consolidated extracted data for frontend display:
+	    {
+	        "success": True,
+	        "data": {
+	            "date": "2026-01-30",
+	            "gross_sales": 65474.00,
+	            "net_sales": 55587.24,
+	            "vat": 5575.73,
+	            "beginning_si": 16526,
+	            "ending_si": 16735,
+	            "transaction_count": 209,
+	            "eod_counter": 76,
+	            "discount_pwd": 1056.85,
+	            "discount_senior": 1223.28,
+	            "by_payment_type": {
+	                "Cash": 38970.00,
+	                "MosaicPay QRPH": 26504.00
+	            },
+	            "total_items_sold": 357,
+	            ...
+	        }
+	    }
+	"""
+	import base64
 
-    def get_file_content(file_input):
-        """Get file content from various input formats."""
-        if not file_input:
-            return None
+	from hrms.utils.pos_parser import extract_all_pos_data
 
-        # If it's a Frappe file URL
-        if isinstance(file_input, str) and file_input.startswith("/files/"):
-            file_doc = frappe.get_doc("File", {"file_url": file_input})
-            return file_doc.get_content()
+	def get_file_content(file_input):
+		"""Get file content from various input formats."""
+		if not file_input:
+			return None
 
-        # If it's base64 encoded
-        if isinstance(file_input, str):
-            try:
-                # Try to decode base64
-                return base64.b64decode(file_input)
-            except Exception:
-                pass
+		# If it's a Frappe file URL
+		if isinstance(file_input, str) and file_input.startswith("/files/"):
+			file_doc = frappe.get_doc("File", {"file_url": file_input})
+			return file_doc.get_content()
 
-        # If it's already bytes
-        if isinstance(file_input, bytes):
-            return file_input
+		# If it's base64 encoded
+		if isinstance(file_input, str):
+			try:
+				# Try to decode base64
+				return base64.b64decode(file_input)
+			except Exception:
+				pass
 
-        return None
+		# If it's already bytes
+		if isinstance(file_input, bytes):
+			return file_input
 
-    try:
-        result = extract_all_pos_data(
-            sales_summary_content=get_file_content(sales_summary),
-            transaction_report_content=get_file_content(transaction_report),
-            discount_report_content=get_file_content(discount_report),
-            daily_sales_revenue_content=get_file_content(daily_sales_revenue),
-            product_mix_content=get_file_content(product_mix)
-        )
+		return None
 
-        return {
-            "success": result.get("success", False),
-            "data": result.get("consolidated", {}),
-            "sales_summary": result.get("sales_summary"),
-            "transaction_report": result.get("transaction_report"),
-            "discount_report": result.get("discount_report"),
-            "daily_sales_revenue": result.get("daily_sales_revenue"),
-            "product_mix": result.get("product_mix"),
-            "errors": result.get("errors", [])
-        }
+	try:
+		result = extract_all_pos_data(
+			sales_summary_content=get_file_content(sales_summary),
+			transaction_report_content=get_file_content(transaction_report),
+			discount_report_content=get_file_content(discount_report),
+			daily_sales_revenue_content=get_file_content(daily_sales_revenue),
+			product_mix_content=get_file_content(product_mix),
+		)
 
-    except Exception as e:
-        frappe.log_error(f"POS extraction error: {str(e)}", "POS Extraction")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+		return {
+			"success": result.get("success", False),
+			"data": result.get("consolidated", {}),
+			"sales_summary": result.get("sales_summary"),
+			"transaction_report": result.get("transaction_report"),
+			"discount_report": result.get("discount_report"),
+			"daily_sales_revenue": result.get("daily_sales_revenue"),
+			"product_mix": result.get("product_mix"),
+			"errors": result.get("errors", []),
+		}
+
+	except Exception as e:
+		frappe.log_error(f"POS extraction error: {e!s}", "POS Extraction")
+		return {"success": False, "error": str(e)}
 
 
 @frappe.whitelist()
 def get_extracted_pos_data(pos_upload_name):
-    """
-    Get extracted data for a POS Upload document.
+	"""
+	Get extracted data for a POS Upload document.
 
-    If extraction hasn't been done yet, perform it now.
-    Stores extracted data in the document for caching.
+	If extraction hasn't been done yet, perform it now.
+	Stores extracted data in the document for caching.
 
-    Args:
-        pos_upload_name: Name of BEI POS Upload document
+	Args:
+	    pos_upload_name: Name of BEI POS Upload document
 
-    Returns:
-        Extracted POS data
-    """
-    doc = frappe.get_doc("BEI POS Upload", pos_upload_name)
+	Returns:
+	    Extracted POS data
+	"""
+	doc = frappe.get_doc("BEI POS Upload", pos_upload_name)
 
-    # Check if already extracted
-    if doc.extracted_data:
-        try:
-            return {
-                "success": True,
-                "data": json.loads(doc.extracted_data),
-                "cached": True
-            }
-        except Exception:
-            pass
+	# Check if already extracted
+	if doc.extracted_data:
+		try:
+			return {"success": True, "data": json.loads(doc.extracted_data), "cached": True}
+		except Exception:
+			pass
 
-    # Extract data from uploaded files
-    result = extract_pos_data(
-        sales_summary=doc.sales_summary,
-        transaction_report=doc.transaction_report,
-        discount_report=doc.discount_report,
-        daily_sales_revenue=doc.daily_sales_revenue,
-        product_mix=doc.product_mix
-    )
+	# Extract data from uploaded files
+	result = extract_pos_data(
+		sales_summary=doc.sales_summary,
+		transaction_report=doc.transaction_report,
+		discount_report=doc.discount_report,
+		daily_sales_revenue=doc.daily_sales_revenue,
+		product_mix=doc.product_mix,
+	)
 
-    # Cache the result if successful
-    if result.get("success") and result.get("data"):
-        doc.db_set("extracted_data", json.dumps(result["data"]))
-        doc.db_set("gross_sales", result["data"].get("gross_sales", 0))
-        doc.db_set("net_sales", result["data"].get("net_sales", 0))
-        doc.db_set("status", "Extracted")
+	# Cache the result if successful
+	if result.get("success") and result.get("data"):
+		doc.db_set("extracted_data", json.dumps(result["data"]))
+		doc.db_set("gross_sales", result["data"].get("gross_sales", 0))
+		doc.db_set("net_sales", result["data"].get("net_sales", 0))
+		doc.db_set("status", "Extracted")
 
-    return result
+	return result
 
 
 # ==============================================================================
@@ -1746,310 +1883,336 @@ def get_extracted_pos_data(pos_upload_name):
 
 @frappe.whitelist()
 def get_or_create_closing_report(store):
-    """
-    Get existing closing report for today or create a new one.
-    Returns the report document with current stage status.
-    """
-    validate_store_ops_role()
-    if not store:
-        frappe.throw(_("Store is required"))
+	"""
+	Get existing closing report for today or create a new one.
+	Returns the report document with current stage status.
+	"""
+	validate_store_ops_role()
+	if not store:
+		frappe.throw(_("Store is required"))
 
-    # Resolve store to warehouse (C2 fix for get_or_create_closing_report)
-    store = resolve_warehouse(store)
+	# Resolve store to warehouse (C2 fix for get_or_create_closing_report)
+	store = resolve_warehouse(store)
 
-    today = nowdate()
+	today = nowdate()
 
-    # Check for existing report
-    existing = frappe.db.get_value(
-        "BEI Store Closing Report",
-        {"store": store, "report_date": today},
-        ["name", "stage_completed", "status"],
-        as_dict=True
-    )
+	# Check for existing report
+	existing = frappe.db.get_value(
+		"BEI Store Closing Report",
+		{"store": store, "report_date": today},
+		["name", "stage_completed", "status"],
+		as_dict=True,
+	)
 
-    if existing:
-        doc = frappe.get_doc("BEI Store Closing Report", existing.name)
-        return {
-            "success": True,
-            "name": doc.name,
-            "is_new": False,
-            "stage_completed": doc.stage_completed,
-            "status": doc.status,
-            "data": doc.as_dict()
-        }
+	if existing:
+		doc = frappe.get_doc("BEI Store Closing Report", existing.name)
+		return {
+			"success": True,
+			"name": doc.name,
+			"is_new": False,
+			"stage_completed": doc.stage_completed,
+			"status": doc.status,
+			"data": doc.as_dict(),
+		}
 
-    # Create new report
-    doc = frappe.new_doc("BEI Store Closing Report")
-    doc.store = store
-    doc.report_date = today
-    doc.submitted_by = frappe.session.user
-    # stage_completed is auto-computed by DocType's update_stage_completed() during insert
-    doc.insert()
+	# Create new report
+	doc = frappe.new_doc("BEI Store Closing Report")
+	doc.store = store
+	doc.report_date = today
+	doc.submitted_by = frappe.session.user
+	# stage_completed is auto-computed by DocType's update_stage_completed() during insert
+	doc.insert()
 
-    return {
-        "success": True,
-        "name": doc.name,
-        "is_new": True,
-        "stage_completed": "cash",
-        "status": "Draft",
-        "data": doc.as_dict()
-    }
-
-
-@frappe.whitelist()
-def submit_closing_stage1_cash(report_name, petty_cash_fund=0, delivery_fund=0,
-                                change_fund=0, cash_notes=None, pos_down=False,
-                                pos_down_estimated_sales=None, pos_down_transaction_count=None,
-                                pos_down_notes=None, variance_explanation=None,
-                                actual_cash_count=0, **kwargs):
-    """
-    Submit Stage 1: Cash Count & Reconciliation
-
-    Note: Cash Sales Fund stays in POS only - not entered here.
-    Only Petty Cash, Delivery Fund, and Change Fund are entered in this stage.
-    Denomination breakdown and voucher amounts are passed via kwargs.
-    actual_cash_count: Physical cash count by crew.
-    variance_explanation: Required when cash_variance > ±50 (explain while you see the number).
-    """
-    validate_store_ops_role()
-    doc = frappe.get_doc("BEI Store Closing Report", report_name)
-
-    doc.petty_cash_fund = float(petty_cash_fund or 0)
-    doc.delivery_fund = float(delivery_fund or 0)
-    doc.change_fund = float(change_fund or 0)
-    doc.cash_notes = cash_notes
-    doc.actual_cash_count = float(actual_cash_count or 0)
-    doc.variance_explanation = variance_explanation
-
-    # POS Down mode
-    doc.pos_down = 1 if pos_down else 0
-    if pos_down:
-        doc.pos_down_estimated_sales = float(pos_down_estimated_sales or 0)
-        doc.pos_down_transaction_count = int(pos_down_transaction_count or 0)
-        doc.pos_down_notes = pos_down_notes
-
-    # Save denomination breakdown and voucher amounts
-    denom_prefixes = ("pcf_denom_", "del_denom_", "chg_denom_")
-    voucher_fields = ("pcf_voucher_amount", "delivery_voucher_amount")
-    for key, value in kwargs.items():
-        if key.startswith(denom_prefixes) or key in voucher_fields:
-            if doc.meta.has_field(key):
-                doc.set(key, float(value or 0))
-
-    # stage_completed is auto-computed by DocType's update_stage_completed() during save
-    doc.save()
-
-    return {
-        "success": True,
-        "name": doc.name,
-        "stage_completed": doc.stage_completed,
-        "total_funds": doc.total_funds,
-        "cash_variance": doc.cash_variance
-    }
+	return {
+		"success": True,
+		"name": doc.name,
+		"is_new": True,
+		"stage_completed": "cash",
+		"status": "Draft",
+		"data": doc.as_dict(),
+	}
 
 
 @frappe.whitelist()
-def submit_closing_stage2_checklist(report_name, inventory_items, checklist_items=None,
-                                     cashier_signoff=False, production_signoff=False,
-                                     supervisor_signoff=False):
-    """
-    Submit Stage 2: Checklist & Inventory Spot Check
+def submit_closing_stage1_cash(
+	report_name,
+	petty_cash_fund=0,
+	delivery_fund=0,
+	change_fund=0,
+	cash_notes=None,
+	pos_down=False,
+	pos_down_estimated_sales=None,
+	pos_down_transaction_count=None,
+	pos_down_notes=None,
+	variance_explanation=None,
+	actual_cash_count=0,
+	**kwargs,
+):
+	"""
+	Submit Stage 1: Cash Count & Reconciliation
 
-    inventory_items: List of {item_name, expected_count, actual_count}
-    - 12 specific items categorized by: Highest Cost, Single Count Variances,
-      Shortest Shelf Life, Most Used Items
-    - Accepts both item_name and item_description keys (frontend compatibility)
+	Note: Cash Sales Fund stays in POS only - not entered here.
+	Only Petty Cash, Delivery Fund, and Change Fund are entered in this stage.
+	Denomination breakdown and voucher amounts are passed via kwargs.
+	actual_cash_count: Physical cash count by crew.
+	variance_explanation: Required when cash_variance > ±50 (explain while you see the number).
+	"""
+	validate_store_ops_role()
+	doc = frappe.get_doc("BEI Store Closing Report", report_name)
 
-    checklist_items: General end-of-day tasks
+	doc.petty_cash_fund = float(petty_cash_fund or 0)
+	doc.delivery_fund = float(delivery_fund or 0)
+	doc.change_fund = float(change_fund or 0)
+	doc.cash_notes = cash_notes
+	doc.actual_cash_count = float(actual_cash_count or 0)
+	doc.variance_explanation = variance_explanation
 
-    Note: equipment_status moved to Stage 3 (entered alongside equipment photos).
-    """
-    validate_store_ops_role()
-    doc = frappe.get_doc("BEI Store Closing Report", report_name)
+	# POS Down mode
+	doc.pos_down = 1 if pos_down else 0
+	if pos_down:
+		doc.pos_down_estimated_sales = float(pos_down_estimated_sales or 0)
+		doc.pos_down_transaction_count = int(pos_down_transaction_count or 0)
+		doc.pos_down_notes = pos_down_notes
 
-    if isinstance(inventory_items, str):
-        inventory_items = json.loads(inventory_items)
+	# Save denomination breakdown and voucher amounts
+	denom_prefixes = ("pcf_denom_", "del_denom_", "chg_denom_")
+	voucher_fields = ("pcf_voucher_amount", "delivery_voucher_amount")
+	for key, value in kwargs.items():
+		if key.startswith(denom_prefixes) or key in voucher_fields:
+			if doc.meta.has_field(key):
+				doc.set(key, float(value or 0))
 
-    if isinstance(checklist_items, str):
-        checklist_items = json.loads(checklist_items)
+	# stage_completed is auto-computed by DocType's update_stage_completed() during save
+	doc.save()
 
-    # Clear existing inventory items
-    doc.inventory_spot_check = []
-
-    # Add inventory spot check items (12 items)
-    for item in inventory_items:
-        doc.append("inventory_spot_check", {
-            "item_name": item.get("item_name") or item.get("item_description") or item.get("name", ""),
-            "category": item.get("category"),
-            "expected_count": float(item.get("expected_count", 0)),
-            "actual_count": float(item.get("actual_count", 0))
-        })
-
-    # Add checklist items if provided
-    if checklist_items:
-        doc.checklist_items = []
-        for item in checklist_items:
-            doc.append("checklist_items", item)
-
-    # Staff signoffs
-    doc.cashier_signoff = 1 if cashier_signoff else 0
-    doc.production_signoff = 1 if production_signoff else 0
-    doc.supervisor_signoff = 1 if supervisor_signoff else 0
-
-    # stage_completed is auto-computed by DocType's update_stage_completed() during save
-    doc.save()
-
-    return {
-        "success": True,
-        "name": doc.name,
-        "stage_completed": doc.stage_completed,
-        "inventory_variance_total": doc.inventory_variance_total,
-        "inventory_variance_count": doc.inventory_variance_count
-    }
+	return {
+		"success": True,
+		"name": doc.name,
+		"stage_completed": doc.stage_completed,
+		"total_funds": doc.total_funds,
+		"cash_variance": doc.cash_variance,
+	}
 
 
 @frappe.whitelist()
-def submit_closing_stage3_photos(report_name, x_reading_opening_photo, x_reading_closing_photo,
-                                  z_reading_photo, store_photos=None,
-                                  equipment_status=None, notes=None):
-    """
-    Submit Stage 3: Photos & Equipment
+def submit_closing_stage2_checklist(
+	report_name,
+	inventory_items,
+	checklist_items=None,
+	cashier_signoff=False,
+	production_signoff=False,
+	supervisor_signoff=False,
+):
+	"""
+	Submit Stage 2: Checklist & Inventory Spot Check
 
-    Document Scanner Photos (with edge detection):
-    - x_reading_opening_photo: X-Reading from opening shift
-    - x_reading_closing_photo: X-Reading from closing shift
-    - z_reading_photo: Z-Reading (end of day)
+	inventory_items: List of {item_name, expected_count, actual_count}
+	- 12 specific items categorized by: Highest Cost, Single Count Variances,
+	  Shortest Shelf Life, Most Used Items
+	- Accepts both item_name and item_description keys (frontend compatibility)
 
-    store_photos: Dict of store area photos (accepts both photo_* and short key formats)
-    equipment_status: Dict with freezer_temp, chiller_temp, pos_closed_properly
-                      (moved from Stage 2 — entered alongside equipment photos)
+	checklist_items: General end-of-day tasks
 
-    Removed: pos_files (handled by separate BEI POS Upload endpoint),
-             variance_explanation (moved to Stage 1 — explain when you see the number)
-    """
-    validate_store_ops_role()
-    doc = frappe.get_doc("BEI Store Closing Report", report_name)
-    doctype_name = "BEI Store Closing Report"
+	Note: equipment_status moved to Stage 3 (entered alongside equipment photos).
+	"""
+	validate_store_ops_role()
+	doc = frappe.get_doc("BEI Store Closing Report", report_name)
 
-    # Document scanner photos (required) — save as files, not raw base64
-    if not x_reading_opening_photo or not str(x_reading_opening_photo).strip():
-        frappe.throw(_("X-Reading Opening photo is required"), title=_("Missing Photo"))
-    if not x_reading_closing_photo or not str(x_reading_closing_photo).strip():
-        frappe.throw(_("X-Reading Closing photo is required"), title=_("Missing Photo"))
-    if not z_reading_photo or not str(z_reading_photo).strip():
-        frappe.throw(_("Z-Reading photo is required"), title=_("Missing Photo"))
+	if isinstance(inventory_items, str):
+		inventory_items = json.loads(inventory_items)
 
-    doc.photo_xread_opening = save_base64_image(
-        str(x_reading_opening_photo).strip(), doctype_name,
-        docname=doc.name, fieldname="photo_xread_opening"
-    )
-    doc.photo_xread_closing = save_base64_image(
-        str(x_reading_closing_photo).strip(), doctype_name,
-        docname=doc.name, fieldname="photo_xread_closing"
-    )
-    doc.photo_zread = save_base64_image(
-        str(z_reading_photo).strip(), doctype_name,
-        docname=doc.name, fieldname="photo_zread"
-    )
+	if isinstance(checklist_items, str):
+		checklist_items = json.loads(checklist_items)
 
-    # Store area photos — normalize keys (accept both photo_* and short format)
-    if store_photos:
-        if isinstance(store_photos, str):
-            store_photos = json.loads(store_photos)
-        if isinstance(store_photos, list):
-            store_photos = {p.get("field", ""): p.get("data", p.get("url", "")) for p in store_photos if isinstance(p, dict)}
+	# Clear existing inventory items
+	doc.inventory_spot_check = []
 
-        photo_map = {
-            "photo_logo_signage": ["photo_logo_signage", "logo_signage"],
-            "photo_hygrometer": ["photo_hygrometer", "hygrometer"],
-            "photo_water_meter": ["photo_water_meter", "water_meter"],
-            "photo_backup_area_clean": ["photo_backup_area_clean", "backup_area"],
-            "photo_frozen_milk_clean": ["photo_frozen_milk_clean", "frozen_milk"],
-            "photo_toppings_clean": ["photo_toppings_clean", "toppings"],
-            "photo_dispatch_clean": ["photo_dispatch_clean", "dispatch"],
-            "photo_cold_storage_close": ["photo_cold_storage_close", "cold_storage"],
-            "photo_cashier_clean": ["photo_cashier_clean", "cashier"],
-            "photo_rollup_closed": ["photo_rollup_closed", "rollup_door"],
-        }
-        for doc_field, accepted_keys in photo_map.items():
-            for key in accepted_keys:
-                value = store_photos.get(key)
-                if value:
-                    saved_url = save_base64_image(value, doctype_name, docname=doc.name, fieldname=doc_field)
-                    if saved_url:
-                        doc.set(doc_field, saved_url)
-                    break
+	# Add inventory spot check items (12 items)
+	for item in inventory_items:
+		doc.append(
+			"inventory_spot_check",
+			{
+				"item_name": item.get("item_name") or item.get("item_description") or item.get("name", ""),
+				"category": item.get("category"),
+				"expected_count": float(item.get("expected_count", 0)),
+				"actual_count": float(item.get("actual_count", 0)),
+			},
+		)
 
-    # Equipment readings (moved from Stage 2 — entered alongside equipment photos)
-    if equipment_status:
-        if isinstance(equipment_status, str):
-            equipment_status = json.loads(equipment_status)
-        doc.freezer_temp = equipment_status.get("freezer_temp")
-        doc.chiller_temp = equipment_status.get("chiller_temp")
-        doc.pos_closed_properly = equipment_status.get("pos_closed_properly", 0)
+	# Add checklist items if provided
+	if checklist_items:
+		doc.checklist_items = []
+		for item in checklist_items:
+			doc.append("checklist_items", item)
 
-    doc.notes = notes
-    doc.report_time = now_datetime().strftime("%H:%M:%S")
+	# Staff signoffs
+	doc.cashier_signoff = 1 if cashier_signoff else 0
+	doc.production_signoff = 1 if production_signoff else 0
+	doc.supervisor_signoff = 1 if supervisor_signoff else 0
 
-    # Auto-link today's POS upload if not already linked (D-1)
-    if not doc.pos_upload:
-        today_upload = frappe.db.get_value(
-            "BEI POS Upload",
-            {"store": doc.store, "pos_date": doc.report_date},
-            "name"
-        )
-        if today_upload:
-            doc.pos_upload = today_upload
+	# stage_completed is auto-computed by DocType's update_stage_completed() during save
+	doc.save()
 
-    # stage_completed is auto-computed by DocType's update_stage_completed() during save
-    doc.save(ignore_permissions=True)
+	return {
+		"success": True,
+		"name": doc.name,
+		"stage_completed": doc.stage_completed,
+		"inventory_variance_total": doc.inventory_variance_total,
+		"inventory_variance_count": doc.inventory_variance_count,
+	}
 
-    return {
-        "success": True,
-        "name": doc.name,
-        "stage_completed": doc.stage_completed,
-        "status": doc.status,
-        "cash_variance": doc.cash_variance
-    }
+
+@frappe.whitelist()
+def submit_closing_stage3_photos(
+	report_name,
+	x_reading_opening_photo,
+	x_reading_closing_photo,
+	z_reading_photo,
+	store_photos=None,
+	equipment_status=None,
+	notes=None,
+):
+	"""
+	Submit Stage 3: Photos & Equipment
+
+	Document Scanner Photos (with edge detection):
+	- x_reading_opening_photo: X-Reading from opening shift
+	- x_reading_closing_photo: X-Reading from closing shift
+	- z_reading_photo: Z-Reading (end of day)
+
+	store_photos: Dict of store area photos (accepts both photo_* and short key formats)
+	equipment_status: Dict with freezer_temp, chiller_temp, pos_closed_properly
+	                  (moved from Stage 2 — entered alongside equipment photos)
+
+	Removed: pos_files (handled by separate BEI POS Upload endpoint),
+	         variance_explanation (moved to Stage 1 — explain when you see the number)
+	"""
+	validate_store_ops_role()
+	doc = frappe.get_doc("BEI Store Closing Report", report_name)
+	doctype_name = "BEI Store Closing Report"
+
+	# Document scanner photos (required) — save as files, not raw base64
+	if not x_reading_opening_photo or not str(x_reading_opening_photo).strip():
+		frappe.throw(_("X-Reading Opening photo is required"), title=_("Missing Photo"))
+	if not x_reading_closing_photo or not str(x_reading_closing_photo).strip():
+		frappe.throw(_("X-Reading Closing photo is required"), title=_("Missing Photo"))
+	if not z_reading_photo or not str(z_reading_photo).strip():
+		frappe.throw(_("Z-Reading photo is required"), title=_("Missing Photo"))
+
+	doc.photo_xread_opening = save_base64_image(
+		str(x_reading_opening_photo).strip(), doctype_name, docname=doc.name, fieldname="photo_xread_opening"
+	)
+	doc.photo_xread_closing = save_base64_image(
+		str(x_reading_closing_photo).strip(), doctype_name, docname=doc.name, fieldname="photo_xread_closing"
+	)
+	doc.photo_zread = save_base64_image(
+		str(z_reading_photo).strip(), doctype_name, docname=doc.name, fieldname="photo_zread"
+	)
+
+	# Store area photos — normalize keys (accept both photo_* and short format)
+	if store_photos:
+		if isinstance(store_photos, str):
+			store_photos = json.loads(store_photos)
+		if isinstance(store_photos, list):
+			store_photos = {
+				p.get("field", ""): p.get("data", p.get("url", ""))
+				for p in store_photos
+				if isinstance(p, dict)
+			}
+
+		photo_map = {
+			"photo_logo_signage": ["photo_logo_signage", "logo_signage"],
+			"photo_hygrometer": ["photo_hygrometer", "hygrometer"],
+			"photo_water_meter": ["photo_water_meter", "water_meter"],
+			"photo_backup_area_clean": ["photo_backup_area_clean", "backup_area"],
+			"photo_frozen_milk_clean": ["photo_frozen_milk_clean", "frozen_milk"],
+			"photo_toppings_clean": ["photo_toppings_clean", "toppings"],
+			"photo_dispatch_clean": ["photo_dispatch_clean", "dispatch"],
+			"photo_cold_storage_close": ["photo_cold_storage_close", "cold_storage"],
+			"photo_cashier_clean": ["photo_cashier_clean", "cashier"],
+			"photo_rollup_closed": ["photo_rollup_closed", "rollup_door"],
+		}
+		for doc_field, accepted_keys in photo_map.items():
+			for key in accepted_keys:
+				value = store_photos.get(key)
+				if value:
+					saved_url = save_base64_image(value, doctype_name, docname=doc.name, fieldname=doc_field)
+					if saved_url:
+						doc.set(doc_field, saved_url)
+					break
+
+	# Equipment readings (moved from Stage 2 — entered alongside equipment photos)
+	if equipment_status:
+		if isinstance(equipment_status, str):
+			equipment_status = json.loads(equipment_status)
+		doc.freezer_temp = equipment_status.get("freezer_temp")
+		doc.chiller_temp = equipment_status.get("chiller_temp")
+		doc.pos_closed_properly = equipment_status.get("pos_closed_properly", 0)
+
+	doc.notes = notes
+	doc.report_time = now_datetime().strftime("%H:%M:%S")
+
+	# Auto-link today's POS upload if not already linked (D-1)
+	if not doc.pos_upload:
+		today_upload = frappe.db.get_value(
+			"BEI POS Upload", {"store": doc.store, "pos_date": doc.report_date}, "name"
+		)
+		if today_upload:
+			doc.pos_upload = today_upload
+
+	# stage_completed is auto-computed by DocType's update_stage_completed() during save
+	doc.save(ignore_permissions=True)
+
+	return {
+		"success": True,
+		"name": doc.name,
+		"stage_completed": doc.stage_completed,
+		"status": doc.status,
+		"cash_variance": doc.cash_variance,
+	}
 
 
 @frappe.whitelist()
 def get_closing_report_status(store=None, date=None):
-    """
-    Get closing report status for a store on a specific date.
-    Returns stage progress and completion status.
-    """
-    if not store:
-        frappe.throw(_("Store is required"))
-    if not date:
-        date = nowdate()
+	"""
+	Get closing report status for a store on a specific date.
+	Returns stage progress and completion status.
+	"""
+	if not store:
+		frappe.throw(_("Store is required"))
+	if not date:
+		date = nowdate()
 
-    report = frappe.db.get_value(
-        "BEI Store Closing Report",
-        {"store": store, "report_date": date},
-        ["name", "stage_completed", "status", "pos_down", "cash_variance",
-         "inventory_variance_total", "cashier_signoff", "production_signoff"],
-        as_dict=True
-    )
+	report = frappe.db.get_value(
+		"BEI Store Closing Report",
+		{"store": store, "report_date": date},
+		[
+			"name",
+			"stage_completed",
+			"status",
+			"pos_down",
+			"cash_variance",
+			"inventory_variance_total",
+			"cashier_signoff",
+			"production_signoff",
+		],
+		as_dict=True,
+	)
 
-    if not report:
-        return {
-            "exists": False,
-            "stage_completed": None,
-            "status": None
-        }
+	if not report:
+		return {"exists": False, "stage_completed": None, "status": None}
 
-    return {
-        "exists": True,
-        "name": report.name,
-        "stage_completed": report.stage_completed,
-        "status": report.status,
-        "pos_down": report.pos_down,
-        "cash_variance": report.cash_variance,
-        "inventory_variance_total": report.inventory_variance_total,
-        "cashier_signoff": report.cashier_signoff,
-        "production_signoff": report.production_signoff
-    }
+	return {
+		"exists": True,
+		"name": report.name,
+		"stage_completed": report.stage_completed,
+		"status": report.status,
+		"pos_down": report.pos_down,
+		"cash_variance": report.cash_variance,
+		"inventory_variance_total": report.inventory_variance_total,
+		"cashier_signoff": report.cashier_signoff,
+		"production_signoff": report.production_signoff,
+	}
 
 
 # ==============================================================================
@@ -2058,129 +2221,151 @@ def get_closing_report_status(store=None, date=None):
 
 
 @frappe.whitelist()
-def submit_mid_shift_handover(store, outgoing_cashier=None, incoming_cashier=None,
-                               x_reading_photo=None, cash_count=0, expected_cash=0,
-                               variance_explanation=None, x_reading_cash=None,
-                               sales_cash_deposit=None):
-    """
-    Submit mid-shift handover when cashiers switch shifts.
-    Identifies shortage/overage per cashier shift.
+def submit_mid_shift_handover(
+	store,
+	outgoing_cashier=None,
+	incoming_cashier=None,
+	x_reading_photo=None,
+	cash_count=0,
+	expected_cash=0,
+	variance_explanation=None,
+	x_reading_cash=None,
+	sales_cash_deposit=None,
+):
+	"""
+	Submit mid-shift handover when cashiers switch shifts.
+	Identifies shortage/overage per cashier shift.
 
-    Bug fixes (C4):
-    - Resolve employee IDs from names/emails (frontend may send either)
-    - x_reading_photo converted via save_base64_image
-    - cash_count/expected_cash default to 0 to avoid float(None) errors
-    - Accept renamed frontend field aliases (x_reading_cash, sales_cash_deposit)
-    - Auto-populate outgoing/incoming cashier from session user if not provided
-    - insert with ignore_permissions=True for Store Staff role
-    """
-    try:
-        validate_store_ops_role()
-        if not store:
-            frappe.throw(_("Store is required"))
+	Bug fixes (C4):
+	- Resolve employee IDs from names/emails (frontend may send either)
+	- x_reading_photo converted via save_base64_image
+	- cash_count/expected_cash default to 0 to avoid float(None) errors
+	- Accept renamed frontend field aliases (x_reading_cash, sales_cash_deposit)
+	- Auto-populate outgoing/incoming cashier from session user if not provided
+	- insert with ignore_permissions=True for Store Staff role
+	"""
+	try:
+		validate_store_ops_role()
+		if not store:
+			frappe.throw(_("Store is required"))
 
-        # Resolve store
-        warehouse = resolve_warehouse(store)
+		# Resolve store
+		warehouse = resolve_warehouse(store)
 
-        # Resolve employee references - frontend may send email, name, or employee ID
-        def resolve_employee_ref(ref):
-            if not ref:
-                return None
-            # Check if it's already an Employee ID
-            if frappe.db.exists("Employee", ref):
-                return ref
-            # Check by user_id (email)
-            emp = frappe.db.get_value("Employee", {"user_id": ref, "status": "Active"}, "name")
-            if emp:
-                return emp
-            # Check by employee_name
-            emp = frappe.db.get_value("Employee", {"employee_name": ref, "status": "Active"}, "name")
-            if emp:
-                return emp
-            return ref  # Return as-is, let Frappe validation handle it
+		# Resolve employee references - frontend may send email, name, or employee ID
+		def resolve_employee_ref(ref):
+			if not ref:
+				return None
+			# Check if it's already an Employee ID
+			if frappe.db.exists("Employee", ref):
+				return ref
+			# Check by user_id (email)
+			emp = frappe.db.get_value("Employee", {"user_id": ref, "status": "Active"}, "name")
+			if emp:
+				return emp
+			# Check by employee_name
+			emp = frappe.db.get_value("Employee", {"employee_name": ref, "status": "Active"}, "name")
+			if emp:
+				return emp
+			return ref  # Return as-is, let Frappe validation handle it
 
-        resolved_outgoing = resolve_employee_ref(outgoing_cashier)
-        resolved_incoming = resolve_employee_ref(incoming_cashier)
+		resolved_outgoing = resolve_employee_ref(outgoing_cashier)
+		resolved_incoming = resolve_employee_ref(incoming_cashier)
 
-        # Auto-populate from session user if not provided
-        if not resolved_outgoing:
-            resolved_outgoing = frappe.db.get_value("Employee", {"user_id": frappe.session.user, "status": "Active"}, "name")
-        if not resolved_incoming:
-            resolved_incoming = resolved_outgoing  # Same person if not specified
+		# Auto-populate from session user if not provided
+		if not resolved_outgoing:
+			resolved_outgoing = frappe.db.get_value(
+				"Employee", {"user_id": frappe.session.user, "status": "Active"}, "name"
+			)
+		if not resolved_incoming:
+			resolved_incoming = resolved_outgoing  # Same person if not specified
 
-        # Handle x_reading_photo base64
-        photo_url = save_base64_image(x_reading_photo, "BEI Mid-Shift Handover", fieldname="x_reading_photo") if x_reading_photo else None
+		# Handle x_reading_photo base64
+		photo_url = (
+			save_base64_image(x_reading_photo, "BEI Mid-Shift Handover", fieldname="x_reading_photo")
+			if x_reading_photo
+			else None
+		)
 
-        # Support renamed fields from frontend
-        final_cash_count = float(sales_cash_deposit or cash_count or 0)
-        final_expected_cash = float(x_reading_cash or expected_cash or 0)
+		# Support renamed fields from frontend
+		final_cash_count = float(sales_cash_deposit or cash_count or 0)
+		final_expected_cash = float(x_reading_cash or expected_cash or 0)
 
-        doc = frappe.new_doc("BEI Mid-Shift Handover")
-        doc.store = warehouse
-        doc.report_date = nowdate()
-        doc.handover_time = now_datetime().strftime("%H:%M:%S")
-        doc.outgoing_cashier = resolved_outgoing
-        doc.incoming_cashier = resolved_incoming
-        doc.x_reading_photo = photo_url
-        doc.cash_count = final_cash_count
-        doc.expected_cash = final_expected_cash
-        doc.variance_explanation = variance_explanation
-        doc.submitted_by = frappe.session.user
+		doc = frappe.new_doc("BEI Mid-Shift Handover")
+		doc.store = warehouse
+		doc.report_date = nowdate()
+		doc.handover_time = now_datetime().strftime("%H:%M:%S")
+		doc.outgoing_cashier = resolved_outgoing
+		doc.incoming_cashier = resolved_incoming
+		doc.x_reading_photo = photo_url
+		doc.cash_count = final_cash_count
+		doc.expected_cash = final_expected_cash
+		doc.variance_explanation = variance_explanation
+		doc.submitted_by = frappe.session.user
 
-        doc.flags.ignore_mandatory = True
-        doc.insert(ignore_permissions=True)
+		doc.flags.ignore_mandatory = True
+		doc.insert(ignore_permissions=True)
 
-        # Link to closing report if exists
-        closing_report = frappe.db.get_value(
-            "BEI Store Closing Report",
-            {"store": warehouse, "report_date": nowdate()},
-            "name"
-        )
-        if closing_report:
-            doc.db_set("closing_report", closing_report)
+		# Link to closing report if exists
+		closing_report = frappe.db.get_value(
+			"BEI Store Closing Report", {"store": warehouse, "report_date": nowdate()}, "name"
+		)
+		if closing_report:
+			doc.db_set("closing_report", closing_report)
 
-        return {
-            "success": True,
-            "name": doc.name,
-            "variance": getattr(doc, 'variance', 0),
-            "status": getattr(doc, 'status', 'Submitted')
-        }
+		return {
+			"success": True,
+			"name": doc.name,
+			"variance": getattr(doc, "variance", 0),
+			"status": getattr(doc, "status", "Submitted"),
+		}
 
-    except Exception as e:
-        frappe.log_error(
-            f"Handover Error for store {store}: {str(e)}\n\n{frappe.get_traceback()}",
-            "Handover Submission Error"
-        )
-        return {"success": False, "error": _("Failed to submit handover report. Please try again or contact support.")}
+	except Exception as e:
+		frappe.log_error(
+			f"Handover Error for store {store}: {e!s}\n\n{frappe.get_traceback()}",
+			"Handover Submission Error",
+		)
+		return {
+			"success": False,
+			"error": _("Failed to submit handover report. Please try again or contact support."),
+		}
 
 
 @frappe.whitelist()
 def get_mid_shift_handovers(store, date=None, limit=10):
-    """Get mid-shift handovers for a store on a specific date."""
-    validate_store_ops_role()
+	"""Get mid-shift handovers for a store on a specific date."""
+	validate_store_ops_role()
 
-    if not date:
-        date = nowdate()
+	if not date:
+		date = nowdate()
 
-    handovers = frappe.get_all(
-        "BEI Mid-Shift Handover",
-        filters={"store": store, "report_date": date},
-        fields=["name", "handover_time", "outgoing_cashier", "incoming_cashier",
-                "cash_count", "expected_cash", "variance", "status"],
-        order_by="handover_time desc",
-        limit=int(limit)
-    )
+	handovers = frappe.get_all(
+		"BEI Mid-Shift Handover",
+		filters={"store": store, "report_date": date},
+		fields=[
+			"name",
+			"handover_time",
+			"outgoing_cashier",
+			"incoming_cashier",
+			"cash_count",
+			"expected_cash",
+			"variance",
+			"status",
+		],
+		order_by="handover_time desc",
+		limit=int(limit),
+	)
 
-    # Get employee names
-    for h in handovers:
-        h["outgoing_cashier_name"] = frappe.db.get_value(
-            "Employee", h["outgoing_cashier"], "employee_name"
-        ) or h["outgoing_cashier"]
-        h["incoming_cashier_name"] = frappe.db.get_value(
-            "Employee", h["incoming_cashier"], "employee_name"
-        ) or h["incoming_cashier"]
+	# Get employee names
+	for h in handovers:
+		h["outgoing_cashier_name"] = (
+			frappe.db.get_value("Employee", h["outgoing_cashier"], "employee_name") or h["outgoing_cashier"]
+		)
+		h["incoming_cashier_name"] = (
+			frappe.db.get_value("Employee", h["incoming_cashier"], "employee_name") or h["incoming_cashier"]
+		)
 
-    return {"handovers": handovers}
+	return {"handovers": handovers}
 
 
 # ==============================================================================
@@ -2189,208 +2374,231 @@ def get_mid_shift_handovers(store, date=None, limit=10):
 
 
 @frappe.whitelist()
-def submit_maintenance_request(store=None, priority=None, description=None,
-                                issue_category=None, category=None,
-                                equipment_area=None, impact_on_operations=None,
-                                title=None, before_photos=None, photos=None):
-    """
-    Submit a maintenance request from store staff.
-    Notifies Projects team (Daniel) for assessment and assignment.
+def submit_maintenance_request(
+	store=None,
+	priority=None,
+	description=None,
+	issue_category=None,
+	category=None,
+	equipment_area=None,
+	impact_on_operations=None,
+	title=None,
+	before_photos=None,
+	photos=None,
+):
+	"""
+	Submit a maintenance request from store staff.
+	Notifies Projects team (Daniel) for assessment and assignment.
 
-    Args:
-        store: Store/branch name
-        priority: Urgent, High, Normal
-        description: Issue description
-        issue_category: Category (Equipment, Plumbing, etc.) - backend param name
-        category: Category - frontend param name (alias for issue_category)
-        equipment_area: Specific equipment/area affected (optional)
-        impact_on_operations: Can Operate, Limited Operations, Cannot Operate (optional)
-        title: Issue title (optional, prepended to description)
-        before_photos: Single photo (deprecated, for backward compatibility)
-        photos: JSON array of photo objects [{photo: url, caption: text}, ...]
-    """
-    validate_store_ops_role()
+	Args:
+	    store: Store/branch name
+	    priority: Urgent, High, Normal
+	    description: Issue description
+	    issue_category: Category (Equipment, Plumbing, etc.) - backend param name
+	    category: Category - frontend param name (alias for issue_category)
+	    equipment_area: Specific equipment/area affected (optional)
+	    impact_on_operations: Can Operate, Limited Operations, Cannot Operate (optional)
+	    title: Issue title (optional, prepended to description)
+	    before_photos: Single photo (deprecated, for backward compatibility)
+	    photos: JSON array of photo objects [{photo: url, caption: text}, ...]
+	"""
+	validate_store_ops_role()
 
-    import json
+	import json
 
-    if not store:
-        frappe.throw(_("Store is required"))
+	if not store:
+		frappe.throw(_("Store is required"))
 
-    if not priority or not description:
-        frappe.throw(_("Priority and description are required"))
+	if not priority or not description:
+		frappe.throw(_("Priority and description are required"))
 
-    # Support both parameter names (frontend sends 'category', backend expects 'issue_category')
-    final_category = issue_category or category
-    if not final_category:
-        frappe.throw(_("Issue category is required"))
+	# Support both parameter names (frontend sends 'category', backend expects 'issue_category')
+	final_category = issue_category or category
+	if not final_category:
+		frappe.throw(_("Issue category is required"))
 
-    # Resolve branch name to warehouse name
-    warehouse = resolve_warehouse(store)
+	# Resolve branch name to warehouse name
+	warehouse = resolve_warehouse(store)
 
-    # Build full description from title + description
-    full_description = description
-    if title:
-        full_description = f"{title}\n\n{description}"
+	# Build full description from title + description
+	full_description = description
+	if title:
+		full_description = f"{title}\n\n{description}"
 
-    doc = frappe.new_doc("BEI Maintenance Request")
-    doc.store = warehouse
-    doc.request_date = nowdate()
-    doc.issue_category = final_category
-    doc.equipment_area = equipment_area or "Other"
-    doc.priority = priority
-    doc.description = full_description
-    # Normalize impact_on_operations (frontend may send "Partial Impact" for "Limited Operations")
-    impact_map = {"Partial Impact": "Limited Operations"}
-    normalized_impact = impact_map.get(impact_on_operations, impact_on_operations) or "Can Operate"
-    doc.impact_on_operations = normalized_impact
-    doc.reported_by = frappe.session.user
-    doc.status = "Open"
+	doc = frappe.new_doc("BEI Maintenance Request")
+	doc.store = warehouse
+	doc.request_date = nowdate()
+	doc.issue_category = final_category
+	doc.equipment_area = equipment_area or "Other"
+	doc.priority = priority
+	doc.description = full_description
+	# Normalize impact_on_operations (frontend may send "Partial Impact" for "Limited Operations")
+	impact_map = {"Partial Impact": "Limited Operations"}
+	normalized_impact = impact_map.get(impact_on_operations, impact_on_operations) or "Can Operate"
+	doc.impact_on_operations = normalized_impact
+	doc.reported_by = frappe.session.user
+	doc.status = "Open"
 
-    # Handle photos - support both old single photo and new array format
-    # Also handles base64 data by saving to file system first
-    if photos:
-        # Parse JSON if string
-        if isinstance(photos, str):
-            try:
-                photos = json.loads(photos)
-            except (json.JSONDecodeError, ValueError):
-                # Not valid JSON — treat as a single photo URL/base64 string
-                photos = [photos]
+	# Handle photos - support both old single photo and new array format
+	# Also handles base64 data by saving to file system first
+	if photos:
+		# Parse JSON if string
+		if isinstance(photos, str):
+			try:
+				photos = json.loads(photos)
+			except (json.JSONDecodeError, ValueError):
+				# Not valid JSON — treat as a single photo URL/base64 string
+				photos = [photos]
 
-        # Ensure iterable (single dict becomes a list)
-        if isinstance(photos, dict):
-            photos = [photos]
+		# Ensure iterable (single dict becomes a list)
+		if isinstance(photos, dict):
+			photos = [photos]
 
-        # Add each photo to the child table
-        for photo_data in photos:
-            photo_url = None
-            caption = ""
+		# Add each photo to the child table
+		for photo_data in photos:
+			photo_url = None
+			caption = ""
 
-            if isinstance(photo_data, str):
-                # Simple string - could be URL or base64
-                photo_url = save_base64_image(photo_data, "BEI Maintenance Request", fieldname="photo")
-            elif isinstance(photo_data, dict):
-                # Object with photo and optional caption
-                raw_photo = photo_data.get("photo") or photo_data.get("url")
-                photo_url = save_base64_image(raw_photo, "BEI Maintenance Request", fieldname="photo")
-                caption = photo_data.get("caption", "")
+			if isinstance(photo_data, str):
+				# Simple string - could be URL or base64
+				photo_url = save_base64_image(photo_data, "BEI Maintenance Request", fieldname="photo")
+			elif isinstance(photo_data, dict):
+				# Object with photo and optional caption
+				raw_photo = photo_data.get("photo") or photo_data.get("url")
+				photo_url = save_base64_image(raw_photo, "BEI Maintenance Request", fieldname="photo")
+				caption = photo_data.get("caption", "")
 
-            if photo_url:
-                doc.append("photos", {
-                    "photo": photo_url,
-                    "caption": caption
-                })
-    elif before_photos:
-        # Backward compatibility: convert single photo to child table entry
-        photo_url = save_base64_image(before_photos, "BEI Maintenance Request", fieldname="photo")
-        if photo_url:
-            doc.append("photos", {"photo": photo_url})
+			if photo_url:
+				doc.append("photos", {"photo": photo_url, "caption": caption})
+	elif before_photos:
+		# Backward compatibility: convert single photo to child table entry
+		photo_url = save_base64_image(before_photos, "BEI Maintenance Request", fieldname="photo")
+		if photo_url:
+			doc.append("photos", {"photo": photo_url})
 
-    doc.insert(ignore_permissions=True)
+	doc.insert(ignore_permissions=True)
 
-    return {
-        "success": True,
-        "name": doc.name,
-        "message": _("Maintenance request {0} submitted. Projects team will be notified.").format(doc.name)
-    }
+	return {
+		"success": True,
+		"name": doc.name,
+		"message": _("Maintenance request {0} submitted. Projects team will be notified.").format(doc.name),
+	}
 
 
 @frappe.whitelist()
 def get_maintenance_requests(store=None, status=None, limit=20, my_requests=False):
-    """Get maintenance requests optionally filtered by store and status.
+	"""Get maintenance requests optionally filtered by store and status.
 
-    Bug fix (C14): Added my_requests parameter to filter by current user's reported_by.
-    This is the fix for "request not visible after submit" - the frontend was calling
-    get_maintenance_requests without filtering by user, so it showed requests from
-    all stores (or none if store filter didn't match).
-    """
-    filters = {}
+	Bug fix (C14): Added my_requests parameter to filter by current user's reported_by.
+	This is the fix for "request not visible after submit" - the frontend was calling
+	get_maintenance_requests without filtering by user, so it showed requests from
+	all stores (or none if store filter didn't match).
+	"""
+	filters = {}
 
-    # C14 fix: When my_requests=True, filter by current user
-    if my_requests or (not store and not status):
-        filters["reported_by"] = frappe.session.user
-    else:
-        if store:
-            # Resolve store name for consistent matching
-            try:
-                warehouse = resolve_warehouse(store)
-                filters["store"] = warehouse
-            except Exception:
-                filters["store"] = store
-        if status:
-            if isinstance(status, str):
-                filters["status"] = status
-            else:
-                filters["status"] = ["in", status]
+	# C14 fix: When my_requests=True, filter by current user
+	if my_requests or (not store and not status):
+		filters["reported_by"] = frappe.session.user
+	else:
+		if store:
+			# Resolve store name for consistent matching
+			try:
+				warehouse = resolve_warehouse(store)
+				filters["store"] = warehouse
+			except Exception:
+				filters["store"] = store
+		if status:
+			if isinstance(status, str):
+				filters["status"] = status
+			else:
+				filters["status"] = ["in", status]
 
-    requests = frappe.get_all(
-        "BEI Maintenance Request",
-        filters=filters,
-        fields=["name", "store", "store_code", "issue_category", "equipment_area",
-                "priority", "status", "scheduled_date", "request_date",
-                "reported_by", "description"],
-        order_by="request_date desc",
-        limit=int(limit)
-    )
+	requests = frappe.get_all(
+		"BEI Maintenance Request",
+		filters=filters,
+		fields=[
+			"name",
+			"store",
+			"store_code",
+			"issue_category",
+			"equipment_area",
+			"priority",
+			"status",
+			"scheduled_date",
+			"request_date",
+			"reported_by",
+			"description",
+		],
+		order_by="request_date desc",
+		limit=int(limit),
+	)
 
-    return {"requests": requests}
+	return {"requests": requests}
 
 
 @frappe.whitelist()
 def get_my_maintenance_requests(status=None, limit=20):
-    """Get maintenance requests submitted by current user.
+	"""Get maintenance requests submitted by current user.
 
-    Bug fix (C14): Dedicated endpoint for "View My Requests" functionality.
-    Filters by reported_by = current user so submitted requests always appear.
-    """
-    filters = {"reported_by": frappe.session.user}
-    if status:
-        if isinstance(status, str):
-            filters["status"] = status
-        else:
-            filters["status"] = ["in", status]
+	Bug fix (C14): Dedicated endpoint for "View My Requests" functionality.
+	Filters by reported_by = current user so submitted requests always appear.
+	"""
+	filters = {"reported_by": frappe.session.user}
+	if status:
+		if isinstance(status, str):
+			filters["status"] = status
+		else:
+			filters["status"] = ["in", status]
 
-    requests = frappe.get_all(
-        "BEI Maintenance Request",
-        filters=filters,
-        fields=["name", "store", "store_code", "issue_category", "equipment_area",
-                "priority", "status", "scheduled_date", "request_date",
-                "description"],
-        order_by="request_date desc",
-        limit=int(limit)
-    )
+	requests = frappe.get_all(
+		"BEI Maintenance Request",
+		filters=filters,
+		fields=[
+			"name",
+			"store",
+			"store_code",
+			"issue_category",
+			"equipment_area",
+			"priority",
+			"status",
+			"scheduled_date",
+			"request_date",
+			"description",
+		],
+		order_by="request_date desc",
+		limit=int(limit),
+	)
 
-    return {"requests": requests}
+	return {"requests": requests}
 
 
 @frappe.whitelist()
 def check_maintenance_for_closing(store, date=None):
-    """
-    Check if there's maintenance scheduled or completed today that needs verification.
-    Used to show dynamic maintenance section in closing report.
-    """
-    if not date:
-        date = nowdate()
+	"""
+	Check if there's maintenance scheduled or completed today that needs verification.
+	Used to show dynamic maintenance section in closing report.
+	"""
+	if not date:
+		date = nowdate()
 
-    # Get completed maintenance that needs verification
-    from hrms.hr.doctype.bei_maintenance_completion.bei_maintenance_completion import (
-        check_maintenance_for_closing_report
-    )
+	# Get completed maintenance that needs verification
+	from hrms.hr.doctype.bei_maintenance_completion.bei_maintenance_completion import (
+		check_maintenance_for_closing_report,
+	)
 
-    return check_maintenance_for_closing_report(store, date)
+	return check_maintenance_for_closing_report(store, date)
 
 
 @frappe.whitelist()
-def verify_maintenance_from_closing(maintenance_completion, verified=True,
-                                     verification_notes=None):
-    """
-    Verify or reject maintenance completion from closing report.
-    """
-    doc = frappe.get_doc("BEI Maintenance Completion", maintenance_completion)
+def verify_maintenance_from_closing(maintenance_completion, verified=True, verification_notes=None):
+	"""
+	Verify or reject maintenance completion from closing report.
+	"""
+	doc = frappe.get_doc("BEI Maintenance Completion", maintenance_completion)
 
-    if verified:
-        return doc.verify_completion(notes=verification_notes)
-    else:
-        if not verification_notes:
-            frappe.throw(_("Rejection reason is required"))
-        return doc.reject_completion(notes=verification_notes)
+	if verified:
+		return doc.verify_completion(notes=verification_notes)
+	else:
+		if not verification_notes:
+			frappe.throw(_("Rejection reason is required"))
+		return doc.reject_completion(notes=verification_notes)

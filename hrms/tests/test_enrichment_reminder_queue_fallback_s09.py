@@ -6,7 +6,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
@@ -114,8 +113,13 @@ store = _load_module("store_under_test", "hrms/api/store.py")
 
 class TestEnrichmentReminderQueueFallbackS09(unittest.TestCase):
 	def test_queue_enrichment_reminders_falls_back_to_sync_when_enqueue_fails(self):
-		with patch.object(enrichment.frappe, "enqueue", side_effect=RuntimeError("queue down")), patch.object(
-			enrichment, "send_enrichment_reminders", return_value={"status": "success", "sent_count": 3, "failed_count": 0}
+		with (
+			patch.object(enrichment.frappe, "enqueue", side_effect=RuntimeError("queue down")),
+			patch.object(
+				enrichment,
+				"send_enrichment_reminders",
+				return_value={"status": "success", "sent_count": 3, "failed_count": 0},
+			),
 		):
 			result = enrichment.queue_enrichment_reminders(method="email")
 
@@ -124,20 +128,26 @@ class TestEnrichmentReminderQueueFallbackS09(unittest.TestCase):
 		self.assertEqual(result["sent_count"], 3)
 
 	def test_tasks_wrapper_runs_enrichment_queue(self):
-		with patch("hrms.api.enrichment.queue_enrichment_reminders", return_value={"status": "queued", "mode": "async"}):
+		with patch(
+			"hrms.api.enrichment.queue_enrichment_reminders",
+			return_value={"status": "queued", "mode": "async"},
+		):
 			result = tasks.run_enrichment_reminder_queue()
 		self.assertEqual(result["status"], "queued")
 
 	def test_submit_order_reports_unmapped_approval_queue(self):
 		store.frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
-		order_doc = _FakeOrderDoc()
-		store.frappe.new_doc = lambda doctype: _FakeOrderDoc() if doctype == "BEI Store Order" else _FakeOrderDoc("APQ-0001")
+		store.frappe.new_doc = (
+			lambda doctype: _FakeOrderDoc() if doctype == "BEI Store Order" else _FakeOrderDoc("APQ-0001")
+		)
 
-		with patch.object(store, "_validate_order_cutoff", return_value=None), patch.object(
-			store, "resolve_warehouse", return_value="AYALA EVO - BEI"
-		), patch.object(store, "_notify_store_ops", return_value=None), patch.object(
-			store, "_get_area_supervisor_for_store", return_value=None
-		), patch.object(store.frappe.db, "exists", return_value=None):
+		with (
+			patch.object(store, "_validate_order_cutoff", return_value=None),
+			patch.object(store, "resolve_warehouse", return_value="AYALA EVO - BEI"),
+			patch.object(store, "_notify_store_ops", return_value=None),
+			patch.object(store, "_get_area_supervisor_for_store", return_value=None),
+			patch.object(store.frappe.db, "exists", return_value=None),
+		):
 			result = store.submit_order(
 				store="AYALA EVO",
 				items=[{"item_code": "ITM-001", "qty_requested": 2}],
