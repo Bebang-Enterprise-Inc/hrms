@@ -6,7 +6,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
@@ -111,8 +110,9 @@ class TestHrSelfServiceOpenFirstS09(unittest.TestCase):
 	def test_cancel_ob_marks_out_record_as_cancelled(self):
 		ob_doc = _FakeDoc(employee="EMP-001", status="Out")
 
-		with patch.object(official_business, "_get_employee_or_throw", return_value="EMP-001"), patch.object(
-			official_business.frappe, "get_doc", return_value=ob_doc
+		with (
+			patch.object(official_business, "_get_employee_or_throw", return_value="EMP-001"),
+			patch.object(official_business.frappe, "get_doc", return_value=ob_doc),
 		):
 			result = official_business.cancel_ob("OB-0001")
 
@@ -124,9 +124,11 @@ class TestHrSelfServiceOpenFirstS09(unittest.TestCase):
 		request_doc = _FakeDoc(status="Pending")
 		coverage.frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
 
-		with patch.object(coverage.frappe, "get_roles", return_value=["Store Supervisor"]), patch.object(
-			coverage, "resolve_employee", return_value="EMP-777"
-		), patch.object(coverage.frappe, "get_doc", return_value=request_doc):
+		with (
+			patch.object(coverage.frappe, "get_roles", return_value=["Store Supervisor"]),
+			patch.object(coverage, "resolve_employee", return_value="EMP-777"),
+			patch.object(coverage.frappe, "get_doc", return_value=request_doc),
+		):
 			result = coverage.approve_coverage("COV-0001", "John Doe")
 
 		self.assertTrue(result["success"])
@@ -140,8 +142,9 @@ class TestHrSelfServiceOpenFirstS09(unittest.TestCase):
 		request_doc = _FakeDoc(status="Assigned")
 		coverage.frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
 
-		with patch.object(coverage.frappe, "get_roles", return_value=["Store Supervisor"]), patch.object(
-			coverage.frappe, "get_doc", return_value=request_doc
+		with (
+			patch.object(coverage.frappe, "get_roles", return_value=["Store Supervisor"]),
+			patch.object(coverage.frappe, "get_doc", return_value=request_doc),
 		):
 			with self.assertRaises(Exception):
 				coverage.approve_coverage("COV-0002", "EMP-123")
