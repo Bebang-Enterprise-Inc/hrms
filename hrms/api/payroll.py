@@ -6,6 +6,8 @@ Stock REST API handles CRUD operations on Salary Slip and Payroll Entry.
 All endpoints require HR permission check.
 """
 
+import json
+
 import frappe
 from frappe import _
 from frappe.utils import flt, getdate, nowdate, add_months, get_first_day, get_last_day
@@ -431,22 +433,20 @@ def generate_bank_file(payroll_entry):
 
 
 @frappe.whitelist()
-def get_payroll_comparison(from_date, to_date):
+def get_payroll_comparison(from_date, to_date, apex_results=None):
     """Compare Frappe payroll vs APEX payroll results.
-
-    Temporary endpoint for migration validation phase.
 
     Args:
         from_date: Start date (string)
         to_date: End date (string)
+        apex_results: Optional list/JSON payload for APEX payroll rows
 
     Returns:
-        list of dict: Per-employee variance
+        dict: Per-employee comparison and summary variance
     """
     _check_hr_permission()
     _validate_date_range(from_date, to_date)
 
-    # Get Frappe salary slips
     frappe_slips = frappe.db.sql("""
         SELECT
             ss.employee,
@@ -464,16 +464,130 @@ def get_payroll_comparison(from_date, to_date):
         "to_date": to_date
     }, as_dict=True)
 
-    # TODO: Get APEX results from extracted CSV/Excel
-    # For now, return Frappe results only
-    # When APEX data is available, join on employee ID and calculate variance
+    apex_rows = _parse_apex_rows(apex_results)
+    frappe_rows = [dict(row) for row in frappe_slips]
+
+    if not apex_rows:
+        comparison = []
+        for row in frappe_rows:
+            row["apex_gross"] = None
+            row["apex_deductions"] = None
+            row["apex_net"] = None
+            row["variance_net"] = None
+            comparison.append(row)
+
+        return {
+            "from_date": from_date,
+            "to_date": to_date,
+            "mode": "frappe_only",
+            "comparison": comparison,
+            "summary": {
+                "frappe_count": len(frappe_rows),
+                "apex_count": 0,
+                "matched_count": 0,
+                "variance_net_total": 0.0,
+            },
+            "note": "APEX dataset not supplied for this request.",
+        }
+
+    frappe_map = {row.get("employee"): row for row in frappe_rows if row.get("employee")}
+    apex_map = {}
+    for row in apex_rows:
+        employee = row["employee"]
+        if employee not in apex_map:
+            apex_map[employee] = {
+                "employee": employee,
+                "employee_name": row.get("employee_name"),
+                "apex_gross": 0.0,
+                "apex_deductions": 0.0,
+                "apex_net": 0.0,
+            }
+        apex_map[employee]["apex_gross"] += flt(row.get("apex_gross"))
+        apex_map[employee]["apex_deductions"] += flt(row.get("apex_deductions"))
+        apex_map[employee]["apex_net"] += flt(row.get("apex_net"))
+        if row.get("employee_name") and not apex_map[employee].get("employee_name"):
+            apex_map[employee]["employee_name"] = row["employee_name"]
+
+    comparison = []
+    matched_count = 0
+    variance_net_total = 0.0
+    all_employees = sorted(set(frappe_map.keys()) | set(apex_map.keys()))
+    for employee in all_employees:
+        frappe_row = frappe_map.get(employee)
+        apex_row = apex_map.get(employee)
+        frappe_net = flt(frappe_row.get("frappe_net")) if frappe_row else None
+        apex_net = flt(apex_row.get("apex_net")) if apex_row else None
+        variance = None
+        if frappe_net is not None and apex_net is not None:
+            variance = flt(frappe_net - apex_net, 2)
+            matched_count += 1
+            variance_net_total += variance
+
+        comparison.append({
+            "employee": employee,
+            "employee_name": (
+                frappe_row.get("employee_name")
+                if frappe_row else apex_row.get("employee_name")
+            ),
+            "frappe_gross": flt(frappe_row.get("frappe_gross")) if frappe_row else None,
+            "frappe_deductions": flt(frappe_row.get("frappe_deductions")) if frappe_row else None,
+            "frappe_net": frappe_net,
+            "apex_gross": flt(apex_row.get("apex_gross")) if apex_row else None,
+            "apex_deductions": flt(apex_row.get("apex_deductions")) if apex_row else None,
+            "apex_net": apex_net,
+            "variance_net": variance,
+        })
 
     return {
         "from_date": from_date,
         "to_date": to_date,
-        "comparison": frappe_slips,
-        "note": "APEX comparison not yet implemented. Showing Frappe results only."
+        "mode": "with_apex",
+        "comparison": comparison,
+        "summary": {
+            "frappe_count": len(frappe_rows),
+            "apex_count": len(apex_map),
+            "matched_count": matched_count,
+            "variance_net_total": flt(variance_net_total, 2),
+        },
+        "note": "Comparison includes provided APEX rows.",
     }
+
+
+def _parse_apex_rows(apex_results):
+    if not apex_results:
+        return []
+
+    rows = apex_results
+    if isinstance(rows, str):
+        try:
+            rows = json.loads(rows)
+        except Exception:
+            rows = frappe.parse_json(rows)
+
+    if isinstance(rows, dict):
+        rows = rows.get("rows") or rows.get("data") or []
+
+    if not isinstance(rows, list):
+        return []
+
+    parsed = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        employee = row.get("employee") or row.get("employee_id")
+        if not employee:
+            continue
+        parsed.append({
+            "employee": employee,
+            "employee_name": row.get("employee_name"),
+            "apex_gross": flt(row.get("apex_gross") or row.get("gross_pay") or row.get("gross")),
+            "apex_deductions": flt(
+                row.get("apex_deductions") or row.get("total_deduction") or row.get("deductions")
+            ),
+            "apex_net": flt(row.get("apex_net") or row.get("net_pay") or row.get("net")),
+        })
+
+    return parsed
 
 
 @frappe.whitelist()

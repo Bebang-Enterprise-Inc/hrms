@@ -575,10 +575,9 @@ def get_employee_permission_query_conditions(user: str) -> str:
 @frappe.whitelist()
 def get_training_completion_by_store(training_event_type: str | None = None) -> dict:
 	"""
-	Return training completion % per store branch.
-	Groups Training Result records by branch.
+	Return training compliance metrics per store branch.
+	Provides a stable response shape for the HR training dashboard.
 	"""
-	# Query Training Result joined with Employee for branch
 	results = frappe.db.sql(
 		"""
         SELECT
@@ -597,7 +596,24 @@ def get_training_completion_by_store(training_event_type: str | None = None) -> 
 		as_dict=True,
 	)
 
-	return {"success": True, "data": results}
+	normalized = []
+	for row in results:
+		total_active = int(row.get("total_active") or 0)
+		completed = int(row.get("completed") or 0)
+		compliance_rate = flt((completed / total_active * 100) if total_active else 0, 2)
+		normalized.append(
+			{
+				"branch": row.get("branch"),
+				"department": row.get("branch") or "Unassigned",
+				"required_trainings": total_active,
+				"completed": completed,
+				"compliance_rate": compliance_rate,
+				"overdue": max(total_active - completed, 0),
+				"total_active": total_active,
+			}
+		)
+
+	return {"success": True, "data": normalized}
 
 
 import frappe
