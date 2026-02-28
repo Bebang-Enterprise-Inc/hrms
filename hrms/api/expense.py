@@ -8,6 +8,7 @@ Date: 2026-02-02
 import frappe
 from frappe import _
 import json
+import os
 from hrms.utils.bei_config import get_company
 from frappe.utils import today, now_datetime, flt, get_url
 from hrms.api.store import save_base64_image
@@ -20,6 +21,33 @@ def _get_classifier():
 def _get_ocr():
     from hrms.api.expense_ocr import extract_receipt_data
     return extract_receipt_data
+
+
+@frappe.whitelist()
+def get_classification_runtime_health():
+    """Expose classifier runtime availability for admin/runtime monitoring.
+
+    GAP-034 hardening: detect when ML model is absent and external fallback
+    is unavailable, so review queue issues are explicit instead of silent.
+    """
+    from hrms.api import expense_classifier
+
+    ml_available = bool(expense_classifier.JOBLIB_AVAILABLE and os.path.exists(expense_classifier.MODEL_PATH))
+    openai_available = bool(frappe.conf.get("openai_api_key"))
+
+    if ml_available or openai_available:
+        status = "degraded" if not ml_available else "healthy"
+    else:
+        status = "critical"
+
+    return {
+        "success": True,
+        "status": status,
+        "ml_model_available": ml_available,
+        "ml_model_path": expense_classifier.MODEL_PATH,
+        "openai_available": openai_available,
+        "review_queue_risk": "high" if status == "critical" else "normal",
+    }
 
 
 # ============================================================
