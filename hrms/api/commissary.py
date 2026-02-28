@@ -60,6 +60,18 @@ def get_production_cost_per_batch(limit=20, item_code=None):
 	return _dashboard_costing(limit=limit, item_code=item_code)
 
 
+@frappe.whitelist()
+def get_logistics_architecture_mode(route_name=None):
+	"""
+	Compatibility wrapper for logistics architecture mode endpoint.
+	"""
+	from hrms.api.commissary_dashboard import (
+		get_logistics_architecture_mode as _dashboard_logistics_architecture_mode,
+	)
+
+	return _dashboard_logistics_architecture_mode(route_name=route_name)
+
+
 OUTSOURCED_CODE_PREFIXES = ("OUT-", "OS-", "3P-", "OUTSOURCED")
 
 
