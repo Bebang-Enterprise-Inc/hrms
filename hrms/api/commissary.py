@@ -44,6 +44,16 @@ def get_commissary_warehouse():
     return prod_commissary
 
 
+@frappe.whitelist()
+def get_production_cost_per_batch(limit=20, item_code=None):
+    """
+    Compatibility wrapper for dashboard production costing endpoint.
+    """
+    from hrms.api.commissary_dashboard import get_production_cost_per_batch as _dashboard_costing
+
+    return _dashboard_costing(limit=limit, item_code=item_code)
+
+
 # ============================================================
 # P0-11: Re-exports for backwards compatibility
 # Frontend calls hrms.api.commissary.<fn> — these imports ensure

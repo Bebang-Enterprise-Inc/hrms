@@ -407,3 +407,78 @@ def get_production_history(date_from=None, date_to=None, limit=20):
         entry["items_count"] = len(items)
 
     return {"success": True, "data": entries}
+
+
+@frappe.whitelist()
+def get_production_cost_per_batch(limit=20, item_code=None):
+    """
+    Return production cost per batch from submitted Manufacture entries.
+
+    Current costing model:
+    - material_cost: Stock Entry total_outgoing_value
+    - labor_cost: 0 (placeholder for future payroll integration)
+    - overhead_cost: 0 (placeholder for future allocation model)
+    """
+    try:
+        limit_value = max(1, int(limit))
+    except (TypeError, ValueError):
+        limit_value = 20
+
+    params = []
+    item_filter_sql = ""
+    if item_code:
+        item_filter_sql = "AND sed.item_code = %s"
+        params.append(item_code)
+
+    params.append(limit_value)
+
+    rows = frappe.db.sql(
+        """
+        SELECT
+            se.name as batch_id,
+            se.posting_date,
+            IFNULL(MAX(CASE WHEN sed.is_finished_item = 1 THEN sed.item_code END), "") as item_code,
+            IFNULL(MAX(CASE WHEN sed.is_finished_item = 1 THEN sed.item_name END), "") as item_name,
+            ABS(IFNULL(se.total_outgoing_value, 0)) as material_cost,
+            0 as labor_cost,
+            0 as overhead_cost
+        FROM `tabStock Entry` se
+        LEFT JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
+        WHERE se.docstatus = 1
+          AND se.stock_entry_type = 'Manufacture'
+          {item_filter_sql}
+        GROUP BY se.name, se.posting_date, se.total_outgoing_value
+        ORDER BY se.posting_date DESC, se.creation DESC
+        LIMIT %s
+        """.format(item_filter_sql=item_filter_sql),
+        tuple(params),
+        as_dict=True,
+    )
+
+    data = []
+    for row in rows:
+        material_cost = flt(row.get("material_cost") or 0)
+        labor_cost = flt(row.get("labor_cost") or 0)
+        overhead_cost = flt(row.get("overhead_cost") or 0)
+        total_cost = material_cost + labor_cost + overhead_cost
+
+        data.append({
+            "batch_id": row.get("batch_id"),
+            "posting_date": row.get("posting_date"),
+            "item_code": row.get("item_code"),
+            "item_name": row.get("item_name"),
+            "material_cost": material_cost,
+            "labor_cost": labor_cost,
+            "overhead_cost": overhead_cost,
+            "total_cost": total_cost,
+        })
+
+    return {
+        "success": True,
+        "data": data,
+        "summary": {
+            "batches": len(data),
+            "total_material_cost": sum(d["material_cost"] for d in data),
+            "total_cost": sum(d["total_cost"] for d in data),
+        },
+    }
