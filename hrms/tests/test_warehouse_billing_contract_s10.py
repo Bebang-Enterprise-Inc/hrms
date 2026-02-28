@@ -46,6 +46,53 @@ def _install_fake_modules():
 		sys.modules["frappe"] = frappe
 		sys.modules["frappe.utils"] = utils
 
+	frappe = sys.modules["frappe"]
+	utils = sys.modules.get("frappe.utils")
+	if utils is None:
+		utils = types.ModuleType("frappe.utils")
+		sys.modules["frappe.utils"] = utils
+	frappe.utils = utils
+
+	if not hasattr(frappe, "whitelist"):
+		def whitelist(*args, **kwargs):
+			def decorator(fn):
+				return fn
+			return decorator
+		frappe.whitelist = whitelist
+	if not hasattr(frappe, "_"):
+		frappe._ = lambda text: text
+	if not hasattr(frappe, "throw"):
+		frappe.throw = lambda message, *args, **kwargs: (_ for _ in ()).throw(Exception(message))
+	if not hasattr(frappe, "log_error"):
+		frappe.log_error = lambda *args, **kwargs: None
+	if not hasattr(frappe, "PermissionError"):
+		frappe.PermissionError = type("PermissionError", (Exception,), {})
+	if not hasattr(frappe, "ValidationError"):
+		frappe.ValidationError = type("ValidationError", (Exception,), {})
+	if not hasattr(frappe, "DoesNotExistError"):
+		frappe.DoesNotExistError = type("DoesNotExistError", (Exception,), {})
+	if not hasattr(frappe, "session"):
+		frappe.session = types.SimpleNamespace(user="finance@bebang.ph")
+	if not hasattr(frappe, "db"):
+		frappe.db = types.SimpleNamespace(sql=lambda *args, **kwargs: [])
+
+	if not hasattr(utils, "flt"):
+		utils.flt = lambda value, precision=None: float(value or 0)
+	if not hasattr(utils, "now_datetime"):
+		utils.now_datetime = lambda: "2026-02-28 10:00:00"
+	if not hasattr(utils, "get_first_day"):
+		utils.get_first_day = lambda value: value
+	if not hasattr(utils, "get_last_day"):
+		utils.get_last_day = lambda value: value
+	if not hasattr(utils, "nowdate"):
+		utils.nowdate = lambda: "2026-02-28"
+	if not hasattr(utils, "getdate"):
+		def _getdate(value):
+			if isinstance(value, (datetime.date, datetime.datetime)):
+				return value
+			return datetime.datetime.fromisoformat(str(value))
+		utils.getdate = _getdate
+
 	if "hrms" not in sys.modules:
 		hrms_pkg = types.ModuleType("hrms")
 		hrms_pkg.__path__ = []
@@ -68,10 +115,24 @@ def _install_fake_modules():
 
 	if "hrms.utils.scm_roles" not in sys.modules:
 		scm_roles_mod = types.ModuleType("hrms.utils.scm_roles")
-		scm_roles_mod.RATE_MANAGEMENT_ROLES = ["System Manager"]
-		scm_roles_mod.SCM_BILLING_ROLES = ["System Manager"]
-		scm_roles_mod.check_scm_permission = lambda roles, action: None
 		sys.modules["hrms.utils.scm_roles"] = scm_roles_mod
+
+	scm_roles_mod = sys.modules["hrms.utils.scm_roles"]
+	scm_roles_mod.RATE_MANAGEMENT_ROLES = getattr(
+		scm_roles_mod,
+		"RATE_MANAGEMENT_ROLES",
+		["System Manager"],
+	)
+	scm_roles_mod.SCM_BILLING_ROLES = getattr(
+		scm_roles_mod,
+		"SCM_BILLING_ROLES",
+		["System Manager"],
+	)
+	scm_roles_mod.check_scm_permission = getattr(
+		scm_roles_mod,
+		"check_scm_permission",
+		lambda roles, action: None,
+	)
 
 
 _install_fake_modules()

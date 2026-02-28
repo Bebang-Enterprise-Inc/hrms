@@ -85,6 +85,69 @@ def _install_fake_modules():
 		sys.modules["frappe"] = frappe
 		sys.modules["frappe.utils"] = utils
 
+	frappe = sys.modules["frappe"]
+	utils = sys.modules.get("frappe.utils")
+	if utils is None:
+		utils = types.ModuleType("frappe.utils")
+		sys.modules["frappe.utils"] = utils
+	frappe.utils = utils
+
+	if not hasattr(frappe, "whitelist"):
+		def whitelist(*args, **kwargs):
+			def decorator(fn):
+				return fn
+			return decorator
+		frappe.whitelist = whitelist
+	if not hasattr(frappe, "_"):
+		frappe._ = lambda text: text
+	if not hasattr(frappe, "throw"):
+		def _throw(message, exc=None, title=None):
+			if isinstance(exc, type) and issubclass(exc, Exception):
+				raise exc(message)
+			raise Exception(message)
+		frappe.throw = _throw
+	if not hasattr(frappe, "PermissionError"):
+		frappe.PermissionError = type("PermissionError", (Exception,), {})
+	if not hasattr(frappe, "DoesNotExistError"):
+		frappe.DoesNotExistError = type("DoesNotExistError", (Exception,), {})
+	if not hasattr(frappe, "parse_json"):
+		frappe.parse_json = json.loads
+	if not hasattr(frappe, "session"):
+		frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
+	if not hasattr(frappe, "get_roles"):
+		frappe.get_roles = lambda user=None: ["Store Supervisor"]
+	if not hasattr(frappe, "db"):
+		frappe.db = types.SimpleNamespace(
+			exists=lambda doctype, value: bool(value),
+			get_value=lambda doctype, filters, fieldname=None, order_by=None: None,
+			sql=lambda *args, **kwargs: [],
+			get_all=lambda *args, **kwargs: [],
+			set_value=lambda *args, **kwargs: None,
+		)
+	if not hasattr(frappe, "new_doc"):
+		frappe.new_doc = lambda doctype: _FakeStockEntry()
+	if not hasattr(frappe, "get_doc"):
+		frappe.get_doc = lambda doctype, name=None: None
+	if not hasattr(frappe, "get_all"):
+		frappe.get_all = lambda *args, **kwargs: []
+	if not hasattr(frappe, "log_error"):
+		frappe.log_error = lambda *args, **kwargs: None
+	if not hasattr(frappe, "get_traceback"):
+		frappe.get_traceback = lambda: "traceback"
+
+	if not hasattr(utils, "today"):
+		utils.today = lambda: "2026-02-28"
+	if not hasattr(utils, "nowtime"):
+		utils.nowtime = lambda: "10:00:00"
+	if not hasattr(utils, "nowdate"):
+		utils.nowdate = lambda: "2026-02-28"
+	if not hasattr(utils, "now_datetime"):
+		utils.now_datetime = lambda: "2026-02-28 10:00:00"
+	if not hasattr(utils, "flt"):
+		utils.flt = lambda value, precision=None: float(value or 0)
+	if not hasattr(utils, "add_days"):
+		utils.add_days = lambda date, days: date
+
 	if "hrms" not in sys.modules:
 		hrms_pkg = types.ModuleType("hrms")
 		hrms_pkg.__path__ = []
@@ -107,14 +170,20 @@ def _install_fake_modules():
 
 	if "hrms.utils.scm_roles" not in sys.modules:
 		scm_roles_mod = types.ModuleType("hrms.utils.scm_roles")
-		scm_roles_mod.SCM_APPROVAL_ROLES = ["System Manager"]
-		scm_roles_mod.SCM_INVENTORY_ROLES = ["System Manager"]
-		scm_roles_mod.SCM_COMPLIANCE_ROLES = ["System Manager"]
-		scm_roles_mod.SCM_STOCK_UPDATE_ROLES = ["System Manager"]
-		scm_roles_mod.SCM_STORE_ROLES = ["Store Supervisor"]
-		scm_roles_mod.SCM_DISPATCH_ROLES = ["System Manager"]
-		scm_roles_mod.check_scm_permission = lambda roles, action: None
 		sys.modules["hrms.utils.scm_roles"] = scm_roles_mod
+
+	scm_roles_mod = sys.modules["hrms.utils.scm_roles"]
+	scm_roles_mod.SCM_APPROVAL_ROLES = getattr(scm_roles_mod, "SCM_APPROVAL_ROLES", ["System Manager"])
+	scm_roles_mod.SCM_INVENTORY_ROLES = getattr(scm_roles_mod, "SCM_INVENTORY_ROLES", ["System Manager"])
+	scm_roles_mod.SCM_COMPLIANCE_ROLES = getattr(scm_roles_mod, "SCM_COMPLIANCE_ROLES", ["System Manager"])
+	scm_roles_mod.SCM_STOCK_UPDATE_ROLES = getattr(scm_roles_mod, "SCM_STOCK_UPDATE_ROLES", ["System Manager"])
+	scm_roles_mod.SCM_STORE_ROLES = getattr(scm_roles_mod, "SCM_STORE_ROLES", ["Store Supervisor"])
+	scm_roles_mod.SCM_DISPATCH_ROLES = getattr(scm_roles_mod, "SCM_DISPATCH_ROLES", ["System Manager"])
+	scm_roles_mod.check_scm_permission = getattr(
+		scm_roles_mod,
+		"check_scm_permission",
+		lambda roles, action: None,
+	)
 
 
 _install_fake_modules()
