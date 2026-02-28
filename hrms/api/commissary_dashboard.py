@@ -172,6 +172,22 @@ def get_production_items():
     return {"success": True, "data": items}
 
 
+@frappe.whitelist()
+def get_runtime_deduction_proof(item_code, qty, warehouse=None):
+    """
+    Dashboard proxy for BOM runtime deduction proof.
+
+    Kept in dashboard API surface so UI and evidence tooling can call a stable path.
+    """
+    from hrms.api.commissary_bom import get_bom_runtime_deduction_proof
+
+    return get_bom_runtime_deduction_proof(
+        item_code=item_code,
+        produced_qty=qty,
+        warehouse=warehouse
+    )
+
+
 def get_or_create_batch(batch_id, item_code):
     """
     Get existing batch or create a new one.

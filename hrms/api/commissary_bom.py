@@ -319,3 +319,67 @@ def check_production_feasibility(item_code, qty):
             "shortfall_count": len(shortfall)
         }
     }
+
+
+@frappe.whitelist()
+def get_bom_runtime_deduction_proof(item_code, produced_qty, warehouse=None):
+    """
+    Return line-level runtime proof for BOM raw-material deduction.
+
+    This endpoint is read-only proof data used by execute/evidence gates.
+    """
+    produced_qty = flt(produced_qty)
+    if produced_qty <= 0:
+        return {"success": False, "error": "produced_qty must be greater than 0"}
+
+    target_warehouse = warehouse or get_commissary_warehouse()
+    bom = frappe.db.get_value(
+        "BOM",
+        {"item": item_code, "is_active": 1, "is_default": 1, "docstatus": 1},
+        ["name", "quantity"],
+        as_dict=True
+    )
+    if not bom:
+        return {"success": False, "error": f"No active default BOM for {item_code}"}
+
+    bom_yield = flt(bom.quantity) or 1
+    scale_factor = produced_qty / bom_yield
+
+    bom_items = frappe.get_all(
+        "BOM Item",
+        filters={"parent": bom.name},
+        fields=["item_code", "item_name", "qty", "stock_uom"]
+    )
+
+    proof_lines = []
+    for bom_item in bom_items:
+        qty_before = flt(frappe.db.get_value(
+            "Bin",
+            {"item_code": bom_item.item_code, "warehouse": target_warehouse},
+            "actual_qty"
+        )) or 0
+        qty_required = flt(bom_item.qty) * scale_factor
+        qty_after = qty_before - qty_required
+
+        proof_lines.append({
+            "item_code": bom_item.item_code,
+            "item_name": bom_item.item_name,
+            "uom": bom_item.stock_uom,
+            "qty_required": round(qty_required, 3),
+            "qty_before": round(qty_before, 3),
+            "qty_after": round(qty_after, 3),
+            "delta": round(qty_after - qty_before, 3),
+        })
+
+    return {
+        "success": True,
+        "data": {
+            "item_code": item_code,
+            "produced_qty": produced_qty,
+            "warehouse": target_warehouse,
+            "bom_name": bom.name,
+            "bom_yield": bom_yield,
+            "proof_lines": proof_lines,
+            "proof_line_count": len(proof_lines),
+        }
+    }
