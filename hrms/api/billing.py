@@ -17,6 +17,8 @@ import frappe
 from frappe import _
 from frappe.utils import flt, now_datetime, get_first_day, get_last_day, nowdate, getdate
 
+from hrms.hr.doctype.bei_store_type.bei_store_type import resolve_store_type
+
 # P0-10: Import centralized RBAC role sets
 from hrms.utils.scm_roles import RATE_MANAGEMENT_ROLES, SCM_BILLING_ROLES, check_scm_permission
 
@@ -65,6 +67,57 @@ def _find_existing_3pl_journal_entry(partner, period_label):
     )
 
 
+def _get_record_value(record, fieldname):
+    """Read field from dict-like or object record."""
+    if isinstance(record, dict):
+        return record.get(fieldname)
+    return getattr(record, fieldname, None)
+
+
+def _set_record_value(record, fieldname, value):
+    """Write field to dict-like or object record."""
+    if isinstance(record, dict):
+        record[fieldname] = value
+    else:
+        setattr(record, fieldname, value)
+
+
+def _normalized_store_type(store_type=None, legacy_store_type_category=None):
+    """Return canonical store_type from canonical or legacy value."""
+    return resolve_store_type(
+        store_type=store_type,
+        store_type_category=legacy_store_type_category,
+    )
+
+
+def _normalize_store_type_records(records):
+    """Normalize store_type field in list responses."""
+    for record in records or []:
+        canonical = _normalized_store_type(
+            store_type=_get_record_value(record, "store_type"),
+            legacy_store_type_category=_get_record_value(record, "store_type_category"),
+        )
+        _set_record_value(record, "store_type", canonical)
+    return records
+
+
+def _get_store_type_records(store_filters=None):
+    """Fetch BEI Store Type rows with schema-safe canonical store_type normalization."""
+    columns = set(frappe.db.get_table_columns("tabBEI Store Type") or [])
+    has_store_type = "store_type" in columns
+    has_legacy_store_type = "store_type_category" in columns
+
+    if not has_store_type and not has_legacy_store_type:
+        return []
+
+    fields = ["store"]
+    if has_store_type:
+        fields.append("store_type")
+    if has_legacy_store_type:
+        fields.append("store_type_category")
+
+    rows = frappe.get_all("BEI Store Type", filters=store_filters or {}, fields=fields)
+    return _normalize_store_type_records(rows)
 # ================================
 # PHASE 2a — RATE MANAGEMENT
 # ================================
@@ -155,7 +208,7 @@ def approve_rate(rate_name):
 def get_stores_without_rates():
     """Get stores that are missing active delivery rates."""
     # All stores from BEI Store Type
-    all_stores = frappe.get_all("BEI Store Type", fields=["store", "store_type"])
+    all_stores = _get_store_type_records()
 
     # Build set of (store, cargo_type) with active rates
     stores_with_rates = frappe.db.sql("""
@@ -170,7 +223,7 @@ def get_stores_without_rates():
             if (st.store, cargo) not in active_set:
                 missing.append({
                     "store": st.store,
-                    "store_type": st.store_type,
+                    "store_type": _normalized_store_type(st.store_type),
                     "cargo_type": cargo
                 })
 
@@ -190,13 +243,14 @@ def get_pending_billings(store=None, billing_type=None):
     if billing_type:
         filters["billing_type"] = billing_type
 
-    return frappe.get_all("BEI Billing Schedule",
+    billings = frappe.get_all("BEI Billing Schedule",
         filters=filters,
         fields=["name", "billing_type", "store", "store_type", "total_amount",
                 "trip_reference", "cargo_type", "goods_value", "handling_fee",
                 "delivery_fee", "logistics_fee", "generated_on"],
         order_by="generated_on asc"
     )
+    return _normalize_store_type_records(billings)
 
 
 @frappe.whitelist()
@@ -232,12 +286,16 @@ def send_billing_to_store(billing_name):
     """Send approved billing to store (Full Franchise only)."""
     _check_billing_permission("send billings to store")
     billing = frappe.get_doc("BEI Billing Schedule", billing_name)
+    billing_store_type = _normalized_store_type(billing.store_type)
+    if billing_store_type and billing_store_type != billing.store_type:
+        billing.store_type = billing_store_type
+
     # I-08 fix: Only Approved or already-Sent billings can be sent
     if billing.status not in ("Approved", "Sent"):
         frappe.throw(_("Billing must be Approved before sending"))
 
     # Only email Full Franchise stores
-    if billing.store_type == "Full Franchise":
+    if billing_store_type == "Full Franchise":
         billing.send_to_store()  # Uses existing method
     else:
         # Internal billing — just mark as Sent without email
@@ -279,19 +337,25 @@ def generate_monthly_billing(billing_period=None, store=None):
         frappe.throw(_("Invalid billing period format. Use YYYY-MM"))
 
     store_filters = {"store": store} if store else {}
-    stores = frappe.get_all("BEI Store Type", filters=store_filters, fields=["store", "store_type"])
+    stores = _get_store_type_records(store_filters=store_filters)
 
     generated = 0
     skipped = 0
     errors = []
 
     for store_rec in stores:
-        sp_name = "billing_" + re.sub(r'[^a-zA-Z0-9_]', '_', store_rec.store)
+        store_name = _get_record_value(store_rec, "store")
+        store_type = _normalized_store_type(
+            store_type=_get_record_value(store_rec, "store_type"),
+            legacy_store_type_category=_get_record_value(store_rec, "store_type_category"),
+        )
+
+        sp_name = "billing_" + re.sub(r'[^a-zA-Z0-9_]', '_', store_name)
         frappe.db.savepoint(sp_name)
         try:
             # Duplicate check
             existing = frappe.db.exists("BEI Billing Schedule", {
-                "store": store_rec.store,
+                "store": store_name,
                 "billing_period": billing_period,
                 "billing_type": "Monthly Fees",
                 "status": ["not in", ["Cancelled"]],
@@ -312,16 +376,16 @@ def generate_monthly_billing(billing_period=None, store=None):
                 WHERE store = %s
                   AND report_date BETWEEN %s AND %s
                   AND docstatus IN (0, 1)
-            """, (store_rec.store, period_start, period_end), as_dict=True)[0]
+            """, (store_name, period_start, period_end), as_dict=True)[0]
 
             draft_count = frappe.db.count("BEI Store Closing Report", {
-                "store": store_rec.store,
+                "store": store_name,
                 "report_date": ["between", [period_start, period_end]],
                 "docstatus": 0
             })
             if draft_count:
                 frappe.logger().warning(
-                    f"Billing for {store_rec.store}: {draft_count} DRAFT closing report(s) included in period {period_start} to {period_end}"
+                    f"Billing for {store_name}: {draft_count} DRAFT closing report(s) included in period {period_start} to {period_end}"
                 )
 
             if not sales_data.gross_sales and not sales_data.net_sales:
@@ -333,8 +397,8 @@ def generate_monthly_billing(billing_period=None, store=None):
                 "doctype": "BEI Billing Schedule",
                 "billing_type": "Monthly Fees",
                 "billing_period": billing_period,
-                "store": store_rec.store,
-                "store_type": store_rec.store_type,
+                "store": store_name,
+                "store_type": store_type,
                 "gross_sales": sales_data.gross_sales,
                 "net_sales": sales_data.net_sales,
                 "online_sales": sales_data.online_sales,
@@ -345,7 +409,7 @@ def generate_monthly_billing(billing_period=None, store=None):
             # Aggregate maintenance charges for franchise stores only
             maintenance_charges = 0.0
             maintenance_request_names = []
-            if store_rec.store_type in ("Full Franchise", "Managed Franchise"):
+            if store_type in ("Full Franchise", "Managed Franchise"):
                 maint_rows = frappe.db.sql("""
                     SELECT name, total_cost
                     FROM `tabBEI Maintenance Request`
@@ -354,7 +418,7 @@ def generate_monthly_billing(billing_period=None, store=None):
                       AND (billing_status IS NULL OR billing_status = 'Not Billed')
                       AND charge_to_store = 1
                       AND resolved_date BETWEEN %s AND %s
-                """, (store_rec.store, period_start, period_end), as_dict=True)
+                """, (store_name, period_start, period_end), as_dict=True)
 
                 for row in maint_rows:
                     maintenance_charges += flt(row.total_cost)
@@ -388,7 +452,7 @@ def generate_monthly_billing(billing_period=None, store=None):
 
         except Exception as e:
             frappe.db.rollback(save_point=sp_name)
-            errors.append({"store": store_rec.store, "error": str(e)})
+            errors.append({"store": store_name, "error": str(e)})
 
     return {
         "success": True,
@@ -435,7 +499,7 @@ def get_billing_list(status=None, billing_type=None, store=None, billing_period=
     if billing_period:
         filters["billing_period"] = billing_period
 
-    return frappe.get_all("BEI Billing Schedule",
+    billings = frappe.get_all("BEI Billing Schedule",
         filters=filters,
         fields=["name", "billing_type", "billing_period", "store", "store_type",
                 "status", "total_amount", "amount_paid", "balance_due",
@@ -444,6 +508,7 @@ def get_billing_list(status=None, billing_type=None, store=None, billing_period=
         limit_page_length=int(limit_page_length),
         limit_start=int(limit_start),
     )
+    return _normalize_store_type_records(billings)
 
 
 @frappe.whitelist()
@@ -455,7 +520,7 @@ def get_billing_detail(name):
         "billing_type": billing.billing_type,
         "billing_period": billing.billing_period,
         "store": billing.store,
-        "store_type": billing.store_type,
+        "store_type": _normalized_store_type(billing.store_type),
         "status": billing.status,
         # Sales data
         "gross_sales": billing.gross_sales,
@@ -591,7 +656,7 @@ def get_soa(name):
     return {
         "billing_name": billing.name,
         "store": billing.store,
-        "store_type": billing.store_type,
+        "store_type": _normalized_store_type(billing.store_type),
         "billing_period": billing.billing_period,
         "billing_type": billing.billing_type,
         "status": billing.status,
