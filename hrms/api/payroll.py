@@ -6,8 +6,6 @@ Stock REST API handles CRUD operations on Salary Slip and Payroll Entry.
 All endpoints require HR permission check.
 """
 
-import json
-
 import frappe
 from frappe import _
 from frappe.rate_limiter import rate_limit
@@ -411,7 +409,7 @@ def generate_bank_file(payroll_entry):
 
 
 @frappe.whitelist()
-def get_payroll_comparison(from_date, to_date, apex_results=None):
+def get_payroll_comparison(from_date: str, to_date: str, apex_results: list | str | None = None) -> dict:
 	"""Compare Frappe payroll vs APEX payroll results.
 
 	Args:
@@ -425,6 +423,7 @@ def get_payroll_comparison(from_date, to_date, apex_results=None):
 	_check_hr_permission()
 	_validate_date_range(from_date, to_date)
 
+	# Get Frappe salary slips
 	frappe_slips = frappe.db.sql(
 		"""
         SELECT
@@ -529,47 +528,43 @@ def get_payroll_comparison(from_date, to_date, apex_results=None):
 			"matched_count": matched_count,
 			"variance_net_total": flt(variance_net_total, 2),
 		},
-		"note": "Comparison includes provided APEX rows.",
 	}
 
 
-def _parse_apex_rows(apex_results):
+def _parse_apex_rows(apex_results: list | str | None) -> list[dict]:
 	if not apex_results:
 		return []
+	if isinstance(apex_results, str):
+		apex_results = frappe.parse_json(apex_results)
 
-	rows = apex_results
-	if isinstance(rows, str):
-		try:
-			rows = json.loads(rows)
-		except Exception:
-			rows = frappe.parse_json(rows)
+	if not isinstance(apex_results, list):
+		frappe.throw(_("apex_results must be a list of payroll rows"))
 
-	if isinstance(rows, dict):
-		rows = rows.get("rows") or rows.get("data") or []
+	parsed_rows = []
+	for idx, raw in enumerate(apex_results):
+		if not isinstance(raw, dict):
+			frappe.throw(_("Invalid apex_results row at index {0}: expected object").format(idx))
 
-	if not isinstance(rows, list):
-		return []
-
-	parsed = []
-	for row in rows:
-		if not isinstance(row, dict):
-			continue
-		employee = row.get("employee") or row.get("employee_id")
+		employee = (
+			raw.get("employee") or raw.get("employee_id") or raw.get("employee_code") or raw.get("name")
+		)
 		if not employee:
 			continue
-		parsed.append(
+		employee = str(employee).strip()
+		if not employee:
+			continue
+
+		parsed_rows.append(
 			{
 				"employee": employee,
-				"employee_name": row.get("employee_name"),
-				"apex_gross": flt(row.get("apex_gross") or row.get("gross_pay") or row.get("gross")),
-				"apex_deductions": flt(
-					row.get("apex_deductions") or row.get("total_deduction") or row.get("deductions")
-				),
-				"apex_net": flt(row.get("apex_net") or row.get("net_pay") or row.get("net")),
+				"employee_name": raw.get("employee_name"),
+				"apex_gross": flt(raw.get("apex_gross", raw.get("gross_pay"))),
+				"apex_deductions": flt(raw.get("apex_deductions", raw.get("deductions"))),
+				"apex_net": flt(raw.get("apex_net", raw.get("net_pay"))),
 			}
 		)
 
-	return parsed
+	return parsed_rows
 
 
 @frappe.whitelist()

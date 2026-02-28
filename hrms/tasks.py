@@ -196,15 +196,14 @@ def run_transfer_reliever_cleanup():
 
 
 def run_enrichment_reminder_queue():
-	"""Queue enrichment reminders with guaranteed fallback execution."""
+	"""Scheduled wrapper for enrichment reminder queue."""
 	try:
 		from hrms.api.enrichment import queue_enrichment_reminders
 
-		result = queue_enrichment_reminders(method="email")
-		return result
+		return queue_enrichment_reminders(method="email")
 	except Exception:
 		frappe.log_error(
-			title="Enrichment Reminder Scheduler Error",
+			title="Enrichment Reminder Queue Scheduler Error",
 			message=frappe.get_traceback(),
 		)
 		return {"status": "failed"}

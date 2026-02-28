@@ -852,11 +852,7 @@ def queue_enrichment_reminders(
 	branch: str | None = None,
 	method: str = "email",
 ) -> dict:
-	"""Queue enrichment reminders with direct-call fallback.
-
-	Returns async status when enqueue succeeds. If background queue is unavailable,
-	falls back to synchronous send to avoid dropped reminders.
-	"""
+	"""Queue enrichment reminders with direct-call fallback."""
 	try:
 		frappe.enqueue(
 			"hrms.api.enrichment.send_enrichment_reminders",

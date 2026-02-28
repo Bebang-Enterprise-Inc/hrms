@@ -12,7 +12,15 @@ if str(ROOT) not in sys.path:
 
 
 def _install_fake_runtime():
-	frappe = types.ModuleType("frappe")
+	class _FrappeModule(types.ModuleType):
+		def __getattr__(self, name):
+			if name == "db":
+				return self.local.db
+			if name == "session":
+				return self.local.session
+			raise AttributeError(name)
+
+	frappe = _FrappeModule("frappe")
 	frappe_utils = types.ModuleType("frappe.utils")
 
 	def whitelist(*args, **kwargs):
@@ -38,13 +46,15 @@ def _install_fake_runtime():
 	frappe.enqueue = lambda *args, **kwargs: None
 	frappe.get_roles = lambda *args, **kwargs: ["HR User", "System Manager"]
 	frappe.parse_json = lambda value: __import__("json").loads(value)
-	frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
-	frappe.db = types.SimpleNamespace(
-		get_value=lambda *args, **kwargs: None,
-		exists=lambda *args, **kwargs: None,
-		count=lambda *args, **kwargs: 0,
-		sql=lambda *args, **kwargs: [],
-		set_value=lambda *args, **kwargs: None,
+	frappe.local = types.SimpleNamespace(
+		session=types.SimpleNamespace(user="test.supervisor@bebang.ph"),
+		db=types.SimpleNamespace(
+			get_value=lambda *args, **kwargs: None,
+			exists=lambda *args, **kwargs: None,
+			count=lambda *args, **kwargs: 0,
+			sql=lambda *args, **kwargs: [],
+			set_value=lambda *args, **kwargs: None,
+		),
 	)
 	frappe.get_all = lambda *args, **kwargs: []
 
@@ -136,7 +146,7 @@ class TestEnrichmentReminderQueueFallbackS09(unittest.TestCase):
 		self.assertEqual(result["status"], "queued")
 
 	def test_submit_order_reports_unmapped_approval_queue(self):
-		store.frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
+		store.frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
 		store.frappe.new_doc = (
 			lambda doctype: _FakeOrderDoc() if doctype == "BEI Store Order" else _FakeOrderDoc("APQ-0001")
 		)

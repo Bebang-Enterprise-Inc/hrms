@@ -575,9 +575,10 @@ def get_employee_permission_query_conditions(user: str) -> str:
 @frappe.whitelist()
 def get_training_completion_by_store(training_event_type: str | None = None) -> dict:
 	"""
-	Return training compliance metrics per store branch.
-	Provides a stable response shape for the HR training dashboard.
+	Return training completion % per store branch.
+	Groups Training Result records by branch.
 	"""
+	# Query Training Result joined with Employee for branch
 	results = frappe.db.sql(
 		"""
         SELECT
@@ -585,10 +586,7 @@ def get_training_completion_by_store(training_event_type: str | None = None) -> 
             COUNT(DISTINCT tre.employee) as completed,
             COUNT(DISTINCT e2.name) as total_active
         FROM `tabTraining Result` tr
-        JOIN `tabTraining Result Employee` tre
-          ON tre.parent = tr.name
-         AND tre.parenttype = 'Training Result'
-         AND tre.parentfield = 'employees'
+        JOIN `tabTraining Result Employee` tre ON tre.parent = tr.name
         JOIN `tabEmployee` e ON tre.employee = e.name
         JOIN `tabEmployee` e2 ON e2.branch = e.branch AND e2.status = 'Active'
         WHERE tr.docstatus = 1
@@ -600,24 +598,23 @@ def get_training_completion_by_store(training_event_type: str | None = None) -> 
 		as_dict=True,
 	)
 
-	normalized = []
+	data = []
 	for row in results:
-		total_active = int(row.get("total_active") or 0)
-		completed = int(row.get("completed") or 0)
-		compliance_rate = flt((completed / total_active * 100) if total_active else 0, 2)
-		normalized.append(
+		completed = flt(row.get("completed"))
+		total_active = flt(row.get("total_active"))
+		overdue = max(total_active - completed, 0)
+		compliance_rate = 0.0 if total_active <= 0 else round((completed / total_active) * 100, 2)
+		data.append(
 			{
-				"branch": row.get("branch"),
-				"department": row.get("branch") or "Unassigned",
-				"required_trainings": total_active,
-				"completed": completed,
+				"department": row.get("branch"),
+				"completed": int(completed),
+				"required_trainings": int(total_active),
+				"overdue": int(overdue),
 				"compliance_rate": compliance_rate,
-				"overdue": max(total_active - completed, 0),
-				"total_active": total_active,
 			}
 		)
 
-	return {"success": True, "data": normalized}
+	return {"success": True, "data": data}
 
 
 import frappe
