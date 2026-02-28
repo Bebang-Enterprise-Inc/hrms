@@ -350,3 +350,37 @@ class TestTransferRequests(FrappeTestCase):
 					store_warehouse="BRITTANY OFFICE - BEI",
 					is_reliever=1,
 				)
+
+	def test_serialize_request_redacts_org_change_targets_for_non_hr_viewers(self):
+		class _Doc:
+			def as_dict(self):
+				return {
+					"name": "BEI-TRF-0001",
+					"to_department": "Operations - BEI",
+					"to_designation": "Store Supervisor",
+				}
+
+		with patch("hrms.api.transfer_requests._can_manage_org_changes", return_value=False), patch(
+			"frappe.db.exists", return_value=False
+		):
+			payload = transfer_requests._serialize_request(_Doc())
+
+		self.assertIsNone(payload["to_department"])
+		self.assertIsNone(payload["to_designation"])
+
+	def test_serialize_request_keeps_org_change_targets_for_hr_viewers(self):
+		class _Doc:
+			def as_dict(self):
+				return {
+					"name": "BEI-TRF-0002",
+					"to_department": "Operations - BEI",
+					"to_designation": "Store Supervisor",
+				}
+
+		with patch("hrms.api.transfer_requests._can_manage_org_changes", return_value=True), patch(
+			"frappe.db.exists", return_value=False
+		):
+			payload = transfer_requests._serialize_request(_Doc())
+
+		self.assertEqual(payload["to_department"], "Operations - BEI")
+		self.assertEqual(payload["to_designation"], "Store Supervisor")

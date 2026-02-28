@@ -292,6 +292,9 @@ def _sync_designation_roles(employee_id: str, designation_hint: str | None = Non
 
 def _serialize_request(doc, include_comments: bool = False):
 	payload = doc.as_dict()
+	if not _can_manage_org_changes():
+		payload["to_department"] = None
+		payload["to_designation"] = None
 
 	if include_comments:
 		payload["timeline"] = frappe.get_all(
