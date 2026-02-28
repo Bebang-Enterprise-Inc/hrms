@@ -583,10 +583,11 @@ def get_training_completion_by_store(training_event_type: str | None = None) -> 
 		"""
         SELECT
             e.branch,
-            COUNT(DISTINCT tr.employee) as completed,
+            COUNT(DISTINCT tre.employee) as completed,
             COUNT(DISTINCT e2.name) as total_active
         FROM `tabTraining Result` tr
-        JOIN `tabEmployee` e ON tr.employee = e.name
+        JOIN `tabTraining Result Employee` tre ON tre.parent = tr.name
+        JOIN `tabEmployee` e ON tre.employee = e.name
         JOIN `tabEmployee` e2 ON e2.branch = e.branch AND e2.status = 'Active'
         WHERE tr.docstatus = 1
           AND (%(event_type)s IS NULL OR tr.training_event = %(event_type)s)
@@ -597,7 +598,23 @@ def get_training_completion_by_store(training_event_type: str | None = None) -> 
 		as_dict=True,
 	)
 
-	return {"success": True, "data": results}
+	data = []
+	for row in results:
+		completed = flt(row.get("completed"))
+		total_active = flt(row.get("total_active"))
+		overdue = max(total_active - completed, 0)
+		compliance_rate = 0.0 if total_active <= 0 else round((completed / total_active) * 100, 2)
+		data.append(
+			{
+				"department": row.get("branch"),
+				"completed": int(completed),
+				"required_trainings": int(total_active),
+				"overdue": int(overdue),
+				"compliance_rate": compliance_rate,
+			}
+		)
+
+	return {"success": True, "data": data}
 
 
 import frappe

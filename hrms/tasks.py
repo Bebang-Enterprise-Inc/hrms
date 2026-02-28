@@ -1,5 +1,5 @@
 import frappe
-from frappe.utils import add_days, now_datetime, get_datetime, nowdate
+from frappe.utils import add_days, get_datetime, now_datetime, nowdate
 
 
 def auto_punch_out_stale_shifts():
@@ -54,10 +54,7 @@ def auto_punch_out_stale_shifts():
 				shift.auto_punched_out = 1
 				shift.status = "Completed"
 				shift.verification_status = "Flagged"
-				shift.notes = (
-					"AUTO: Punched out after 24 hours. "
-					"Manager please verify actual shift end."
-				)
+				shift.notes = "AUTO: Punched out after 24 hours. " "Manager please verify actual shift end."
 
 				# Calculate total (will be 24 hours)
 				shift.total_hours = 24.0
@@ -144,7 +141,8 @@ def send_overdue_action_plan_reminders():
 		if not overdue_plans:
 			return
 
-		from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+		from hrms.utils.bei_config import SPACE_NOTIFICATIONS, get_chat_space
+
 		space = get_chat_space(SPACE_NOTIFICATIONS)
 
 		from hrms.api.google_chat import send_message_to_space
@@ -162,11 +160,10 @@ def send_overdue_action_plan_reminders():
 
 		lines = [f"*Overdue Action Plans — {today}*", f"\n{total} action plan(s) past due date.\n"]
 		for plan in overdue_plans[:10]:
-			days_overdue = (
-				frappe.utils.date_diff(today, plan.due_date)
-				if plan.due_date else "?"
+			days_overdue = frappe.utils.date_diff(today, plan.due_date) if plan.due_date else "?"
+			lines.append(
+				f"• [{plan.store}] {plan.issue_description or plan.name} — {days_overdue}d overdue ({plan.status})"
 			)
-			lines.append(f"• [{plan.store}] {plan.issue_description or plan.name} — {days_overdue}d overdue ({plan.status})")
 		if total > 10:
 			lines.append(f"... and {total - 10} more.")
 		lines.append(f"\nStores affected: {store_list}")
@@ -196,3 +193,17 @@ def run_transfer_reliever_cleanup():
 			title="Reliever Cleanup Scheduler Error",
 			message=frappe.get_traceback(),
 		)
+
+
+def run_enrichment_reminder_queue():
+	"""Scheduled wrapper for enrichment reminder queue."""
+	try:
+		from hrms.api.enrichment import queue_enrichment_reminders
+
+		return queue_enrichment_reminders(method="email")
+	except Exception:
+		frappe.log_error(
+			title="Enrichment Reminder Queue Scheduler Error",
+			message=frappe.get_traceback(),
+		)
+		return {"status": "failed"}
