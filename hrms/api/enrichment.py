@@ -206,15 +206,13 @@ def report_employee_issue(employee: str, issue_type: str, description: str) -> d
 		frappe.sendmail(
 			recipients=[hr_email],
 			subject=_("Employee Data Issue: {0}").format(emp.employee_name),
-			message=_(
-				"""
-                <p><strong>Issue Reported</strong></p>
-                <p><strong>Employee:</strong> {employee_name}</p>
-                <p><strong>Branch:</strong> {branch}</p>
-                <p><strong>Issue Type:</strong> {issue_type}</p>
-                <p><strong>Description:</strong> {description}</p>
-                <p><strong>Reported By:</strong> {reported_by}</p>
-                """
+			message=(
+				"<p><strong>Issue Reported</strong></p>"
+				"<p><strong>Employee:</strong> {employee_name}</p>"
+				"<p><strong>Branch:</strong> {branch}</p>"
+				"<p><strong>Issue Type:</strong> {issue_type}</p>"
+				"<p><strong>Description:</strong> {description}</p>"
+				"<p><strong>Reported By:</strong> {reported_by}</p>"
 			).format(
 				employee_name=emp.employee_name,
 				branch=emp.branch or "N/A",
@@ -813,21 +811,19 @@ def send_enrichment_reminders(
 				frappe.sendmail(
 					recipients=[emp["user_id"]],
 					subject=_("Action Required: Complete Your Profile Data"),
-					message=_(
-						"""
-                        <p>Hi {name},</p>
-                        <p>You haven't completed your data enrichment in my.bebang.ph yet.</p>
-                        <p>Please log in and verify/update your information:</p>
-                        <ul>
-                            <li>Personal contact details</li>
-                            <li>Emergency contact</li>
-                            <li>Government ID numbers</li>
-                            <li>Nickname (so your supervisor can find you!)</li>
-                        </ul>
-                        <p><a href="https://my.bebang.ph">Login now</a></p>
-                        <p>This helps ensure you receive correct payroll, benefits, and communications.</p>
-                        <p>Thanks,<br>BEI HR Team</p>
-                        """
+					message=(
+						"<p>Hi {name},</p>"
+						"<p>You haven't completed your data enrichment in my.bebang.ph yet.</p>"
+						"<p>Please log in and verify/update your information:</p>"
+						"<ul>"
+						"<li>Personal contact details</li>"
+						"<li>Emergency contact</li>"
+						"<li>Government ID numbers</li>"
+						"<li>Nickname (so your supervisor can find you!)</li>"
+						"</ul>"
+						'<p><a href="https://my.bebang.ph">Login now</a></p>'
+						"<p>This helps ensure you receive correct payroll, benefits, and communications.</p>"
+						"<p>Thanks,<br>BEI HR Team</p>"
 					).format(name=emp["employee_name"]),
 				)
 				sent_count += 1
@@ -917,17 +913,14 @@ def _notify_hr_new_request(doc):
 		# Import Google Chat notification function if available
 		from hrms.api.google_chat import send_message_to_space
 
-		message = _(
-			"""*Edit Request Submitted*
-
-Employee: {employee_name}
-Branch: {branch}
-Field: {field_label}
-Change: "{current}" → "{requested}"
-
-{photo_note}
-
-Review at: https://my.bebang.ph/dashboard/hr/enrichment-tracker"""
+		message = (
+			"*Edit Request Submitted*\n\n"
+			"Employee: {employee_name}\n"
+			"Branch: {branch}\n"
+			"Field: {field_label}\n"
+			'Change: "{current}" -> "{requested}"\n\n'
+			"{photo_note}\n\n"
+			"Review at: https://my.bebang.ph/dashboard/hr/enrichment-tracker"
 		).format(
 			employee_name=doc.employee_name,
 			branch=doc.branch or "N/A",
@@ -980,7 +973,7 @@ GOV_ID_VALIDATORS = {
 
 
 @frappe.whitelist()
-def bulk_import_gov_ids(csv_content=None, csv_file_url=None):
+def bulk_import_gov_ids(csv_content: str | None = None, csv_file_url: str | None = None) -> dict:
 	"""Bulk import government IDs from CSV.
 
 	CSV columns: employee_id, tin, sss_number, philhealth_number, pagibig_number
@@ -996,9 +989,11 @@ def bulk_import_gov_ids(csv_content=None, csv_file_url=None):
 	# If csv_file_url provided, read from Frappe file system
 	if csv_file_url and not csv_content:
 		file_doc = frappe.get_doc("File", {"file_url": csv_file_url})
-		file_path = file_doc.get_full_path()
-		with open(file_path, encoding="utf-8-sig") as f:
-			csv_content = f.read()
+		file_content = file_doc.get_content()
+		if isinstance(file_content, bytes):
+			csv_content = file_content.decode("utf-8-sig")
+		else:
+			csv_content = str(file_content or "")
 
 	if not csv_content or not csv_content.strip():
 		frappe.throw(_("CSV content is empty"))
@@ -1084,7 +1079,7 @@ def bulk_import_gov_ids(csv_content=None, csv_file_url=None):
 		else:
 			skipped += 1
 
-	frappe.db.commit()
+			frappe.db.commit()  # nosemgrep: frappe-manual-commit required to avoid long-transaction lockups
 
 	return {
 		"updated": updated,

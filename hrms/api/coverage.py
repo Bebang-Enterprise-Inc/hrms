@@ -75,8 +75,13 @@ def resolve_employee(employee_name_or_id):
 
 @frappe.whitelist()
 def request_coverage(
-	store=None, coverage_date=None, shift=None, reason=None, absent_employee=None, notes=None
-):
+	store: str | None = None,
+	coverage_date: str | None = None,
+	shift: str | None = None,
+	reason: str | None = None,
+	absent_employee: str | None = None,
+	notes: str | None = None,
+) -> dict:
 	"""Request staff coverage.
 
 	Bug fix (C13):
@@ -139,7 +144,7 @@ def request_coverage(
 
 
 @frappe.whitelist()
-def approve_coverage(request_name, assigned_employee):
+def approve_coverage(request_name: str, assigned_employee: str) -> dict:
 	"""Approve coverage request and assign replacement."""
 	allowed_roles = ["Area Supervisor", "Store Supervisor", "HR Manager", "System Manager"]
 	if not any(r in frappe.get_roles(frappe.session.user) for r in allowed_roles):
@@ -161,7 +166,13 @@ def approve_coverage(request_name, assigned_employee):
 
 
 @frappe.whitelist()
-def get_coverage_requests(store=None, status=None, date_from=None, date_to=None, limit=20):
+def get_coverage_requests(
+	store: str | None = None,
+	status: str | None = None,
+	date_from: str | None = None,
+	date_to: str | None = None,
+	limit: int | str = 20,
+) -> dict:
 	"""Get coverage requests."""
 	limit = min(int(limit or 20), 500)
 	filters = {}

@@ -20,7 +20,12 @@ from hrms.utils.api_helpers import _check_hr_permission, _paginate, _validate_da
 
 
 @frappe.whitelist()
-def get_payroll_summary(from_date, to_date, department=None, store=None):
+def get_payroll_summary(
+	from_date: str,
+	to_date: str,
+	department: str | None = None,
+	store: str | None = None,
+) -> dict:
 	"""Get payroll summary for a cutoff period.
 
 	Returns total gross, total deductions, total net grouped by department/store if specified.
@@ -45,8 +50,8 @@ def get_payroll_summary(from_date, to_date, department=None, store=None):
 		filters["branch"] = store
 
 	# Get summary totals
-	result = frappe.db.sql(
-		"""
+	params = {"from_date": from_date, "to_date": to_date}
+	summary_query = """
         SELECT
             COUNT(DISTINCT ss.name) as total_employees,
             SUM(ss.gross_pay) as total_gross,
@@ -56,23 +61,22 @@ def get_payroll_summary(from_date, to_date, department=None, store=None):
         WHERE ss.docstatus = 1
           AND ss.start_date >= %(from_date)s
           AND ss.end_date <= %(to_date)s
-          {department_filter}
-          {store_filter}
-    """.format(
-			department_filter="AND ss.department = %(department)s" if department else "",
-			store_filter="AND ss.branch = %(store)s" if store else "",
-		),
-		{"from_date": from_date, "to_date": to_date, "department": department, "store": store},
-		as_dict=True,
-	)
+    """
+	if department:
+		summary_query += "\n          AND ss.department = %(department)s"
+		params["department"] = department
+	if store:
+		summary_query += "\n          AND ss.branch = %(store)s"
+		params["store"] = store
+
+	result = frappe.db.sql(summary_query, params, as_dict=True)
 
 	summary = result[0] if result else {}
 
 	# Get breakdown by department if no department filter
 	breakdown = []
 	if not department:
-		breakdown = frappe.db.sql(
-			"""
+		breakdown_query = """
             SELECT
                 ss.department,
                 COUNT(DISTINCT ss.name) as employee_count,
@@ -83,13 +87,14 @@ def get_payroll_summary(from_date, to_date, department=None, store=None):
             WHERE ss.docstatus = 1
               AND ss.start_date >= %(from_date)s
               AND ss.end_date <= %(to_date)s
-              {store_filter}
-            GROUP BY ss.department
-            ORDER BY ss.department
-        """.format(store_filter="AND ss.branch = %(store)s" if store else ""),
-			{"from_date": from_date, "to_date": to_date, "store": store},
-			as_dict=True,
-		)
+        """
+		breakdown_params = {"from_date": from_date, "to_date": to_date}
+		if store:
+			breakdown_query += "\n              AND ss.branch = %(store)s"
+			breakdown_params["store"] = store
+
+		breakdown_query += "\n            GROUP BY ss.department\n            ORDER BY ss.department"
+		breakdown = frappe.db.sql(breakdown_query, breakdown_params, as_dict=True)
 
 	return {
 		"from_date": from_date,
@@ -107,7 +112,7 @@ def get_payroll_summary(from_date, to_date, department=None, store=None):
 
 
 @frappe.whitelist()
-def get_payroll_processing_status(payroll_entry=None):
+def get_payroll_processing_status(payroll_entry: str | None = None) -> dict:
 	"""Get status of payroll processing.
 
 	Shows counts of total employees, processed, pending for a Payroll Entry.
@@ -164,7 +169,7 @@ def get_payroll_processing_status(payroll_entry=None):
 
 
 @frappe.whitelist()
-def get_attendance_summary(from_date, to_date, employee=None):
+def get_attendance_summary(from_date: str, to_date: str, employee: str | None = None) -> list[dict]:
 	"""Get attendance summary per employee.
 
 	Returns present days, absent days, leave days, tardiness, undertime, OT hours.
@@ -180,11 +185,8 @@ def get_attendance_summary(from_date, to_date, employee=None):
 	_check_hr_permission()
 	_validate_date_range(from_date, to_date)
 
-	employee_filter = "AND a.employee = %(employee)s" if employee else ""
-
 	# Query attendance with custom fields
-	results = frappe.db.sql(
-		f"""
+	attendance_query = """
         SELECT
             a.employee,
             e.employee_name,
@@ -200,19 +202,21 @@ def get_attendance_summary(from_date, to_date, employee=None):
         LEFT JOIN `tabEmployee` e ON e.name = a.employee
         WHERE a.docstatus = 1
           AND a.attendance_date BETWEEN %(from_date)s AND %(to_date)s
-          {employee_filter}
         GROUP BY a.employee, e.employee_name, e.department, e.branch
         ORDER BY e.employee_name
-    """,
-		{"from_date": from_date, "to_date": to_date, "employee": employee},
-		as_dict=True,
-	)
+    """
+	attendance_params = {"from_date": from_date, "to_date": to_date}
+	if employee:
+		attendance_query += "\n          AND a.employee = %(employee)s"
+		attendance_params["employee"] = employee
+
+	results = frappe.db.sql(attendance_query, attendance_params, as_dict=True)
 
 	return results
 
 
 @frappe.whitelist()
-def get_government_remittance(month, year, remittance_type):
+def get_government_remittance(month: int | str, year: int | str, remittance_type: str) -> dict:
 	"""Get government remittance report for a month.
 
 	Returns per-employee contributions for SSS, PhilHealth, or Pag-IBIG.
@@ -331,7 +335,7 @@ def get_government_remittance(month, year, remittance_type):
 
 @frappe.whitelist()
 @rate_limit(limit=5, seconds=60)
-def generate_bank_file(payroll_entry):
+def generate_bank_file(payroll_entry: str) -> dict:
 	"""Generate BPI bank transfer file for payroll disbursement.
 
 	Args:
@@ -568,7 +572,13 @@ def _parse_apex_rows(apex_results: list | str | None) -> list[dict]:
 
 
 @frappe.whitelist()
-def get_salary_slip_list(from_date, to_date, department=None, page=1, page_size=20):
+def get_salary_slip_list(
+	from_date: str,
+	to_date: str,
+	department: str | None = None,
+	page: int | str = 1,
+	page_size: int | str = 20,
+) -> dict:
 	"""Get paginated salary slip list.
 
 	Args:
@@ -617,7 +627,7 @@ def get_salary_slip_list(from_date, to_date, department=None, page=1, page_size=
 
 
 @frappe.whitelist()
-def get_my_payslips(limit=12):
+def get_my_payslips(limit: int | str = 12) -> dict:
 	"""Get current employee's own salary slips (self-service).
 
 	No HR permission check needed — returns only the logged-in user's payslips.
@@ -652,7 +662,7 @@ def get_my_payslips(limit=12):
 
 
 @frappe.whitelist()
-def get_my_attendance(from_date=None, to_date=None):
+def get_my_attendance(from_date: str | None = None, to_date: str | None = None) -> dict:
 	"""Get current employee's own attendance records (self-service).
 
 	No HR permission check — returns only the logged-in user's attendance.
@@ -709,7 +719,13 @@ def get_my_attendance(from_date=None, to_date=None):
 
 
 @frappe.whitelist()
-def submit_leave_application(leave_type=None, from_date=None, to_date=None, reason=None, half_day=0):
+def submit_leave_application(
+	leave_type: str | None = None,
+	from_date: str | None = None,
+	to_date: str | None = None,
+	reason: str | None = None,
+	half_day: int | str = 0,
+) -> dict:
 	"""Submit a leave application for the current employee (self-service).
 
 	Creates a Leave Application document for the logged-in user.
@@ -790,7 +806,7 @@ def submit_leave_application(leave_type=None, from_date=None, to_date=None, reas
 
 
 @frappe.whitelist()
-def get_my_schedule(from_date=None, to_date=None):
+def get_my_schedule(from_date: str | None = None, to_date: str | None = None) -> dict:
 	"""Get current employee's shift schedule (self-service).
 
 	No HR permission check — returns only the logged-in user's schedule.
@@ -834,7 +850,7 @@ def get_my_schedule(from_date=None, to_date=None):
 
 
 @frappe.whitelist()
-def get_payroll_dashboard(from_date=None, to_date=None):
+def get_payroll_dashboard(from_date: str | None = None, to_date: str | None = None) -> dict:
 	"""Get combined payroll dashboard data.
 
 	Combines processing status + summary + recent entries for dashboard view.

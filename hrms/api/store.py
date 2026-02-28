@@ -219,7 +219,7 @@ def get_user_store():
 
 
 @frappe.whitelist()
-def get_orderable_items(store):
+def get_orderable_items(store: str) -> dict:
 	"""
 	Get items available for ordering by this store.
 	Returns items sorted by order frequency (most ordered first),
@@ -321,7 +321,7 @@ def _validate_order_cutoff(store, is_emergency=False):
 
 
 @frappe.whitelist()
-def validate_order_schedule(store):
+def validate_order_schedule(store: str) -> dict:
 	"""
 	Check if order submission is currently allowed for the given store.
 	Frontend can call this before showing the order form.
@@ -345,7 +345,14 @@ def validate_order_schedule(store):
 
 
 @frappe.whitelist()
-def submit_order(store, items, cargo_category=None, delivery_date=None, is_emergency=False, notes=""):
+def submit_order(
+	store: str,
+	items: list | str,
+	cargo_category: str | None = None,
+	delivery_date: str | None = None,
+	is_emergency: bool | int | str = False,
+	notes: str = "",
+) -> dict:
 	"""
 	Submit a new store order.
 
@@ -476,7 +483,7 @@ def submit_order(store, items, cargo_category=None, delivery_date=None, is_emerg
 
 
 @frappe.whitelist()
-def get_order_history(store=None, limit=20):
+def get_order_history(store: str | None = None, limit: int | str = 20) -> dict:
 	"""Get past orders for a store."""
 	if not store:
 		return {"orders": []}
@@ -500,7 +507,7 @@ def get_order_history(store=None, limit=20):
 
 
 @frappe.whitelist()
-def approve_order(order_name, approved_quantities=None):
+def approve_order(order_name: str, approved_quantities: list | str | None = None) -> dict:
 	"""
 	Approve a store order. Optionally adjust quantities.
 	Only Area Supervisors can approve orders.
@@ -605,7 +612,7 @@ def _create_mr_for_store_order(order):
 
 
 @frappe.whitelist()
-def get_expected_deliveries(store=None):
+def get_expected_deliveries(store: str | None = None) -> dict:
 	"""
 	Get trips expected to deliver to this store today.
 	Returns distribution trips with this store as a stop.
@@ -638,8 +645,13 @@ def get_expected_deliveries(store=None):
 
 @frappe.whitelist()
 def complete_receiving(
-	store, trip, items, receiver_1_signature=None, receiver_2_signature=None, driver_signature=None
-):
+	store: str,
+	trip: str,
+	items: list | str,
+	receiver_1_signature: str | None = None,
+	receiver_2_signature: str | None = None,
+	driver_signature: str | None = None,
+) -> dict:
 	"""
 	Complete receiving for a delivery.
 	Items: list of {item_code, expected_qty, received_qty, checks, has_issue}
@@ -688,15 +700,15 @@ def complete_receiving(
 
 @frappe.whitelist()
 def create_fqi_report(
-	store,
-	receiving=None,
-	item_code=None,
-	issue_type=None,
-	description=None,
-	photo=None,
-	expected_qty=None,
-	actual_qty=None,
-):
+	store: str,
+	receiving: str | None = None,
+	item_code: str | None = None,
+	issue_type: str | None = None,
+	description: str | None = None,
+	photo: str | None = None,
+	expected_qty: int | float | str | None = None,
+	actual_qty: int | float | str | None = None,
+) -> dict:
 	"""
 	Create a Food Quality Incident report.
 	"""
@@ -724,7 +736,7 @@ def create_fqi_report(
 		suggestions = [s.name for s in similar_stores] if similar_stores else []
 		msg = _("Store '{0}' not found.").format(store)
 		if suggestions:
-			msg += _(" Did you mean: {0}?").format(", ".join(suggestions))
+			msg += " " + _("Did you mean: {0}?").format(", ".join(suggestions))
 		frappe.throw(msg)
 
 	# Convert base64 photo to file URL to avoid DataError (1406) on Attach Image column (C10 fix)
@@ -748,7 +760,11 @@ def create_fqi_report(
 
 
 @frappe.whitelist()
-def get_fqi_reports(store=None, status=None, limit=20):
+def get_fqi_reports(
+	store: str | None = None,
+	status: str | None = None,
+	limit: int | str = 20,
+) -> dict:
 	"""Get FQI reports optionally filtered by store and status."""
 	filters = {}
 	if store:
@@ -783,7 +799,7 @@ def get_fqi_reports(store=None, status=None, limit=20):
 
 
 @frappe.whitelist()
-def get_returns_pending(store=None):
+def get_returns_pending(store: str | None = None) -> dict:
 	"""
 	Get store receiving items where has_issue=1 and no linked return Stock Entry.
 	Returns items that need to be returned to commissary.
@@ -797,8 +813,7 @@ def get_returns_pending(store=None):
 			return {"items": []}
 		filters["parent"] = ["in", receiving_names]
 
-	items = frappe.db.sql(
-		"""
+	query = """
         SELECT
             ri.name,
             ri.parent AS receiving,
@@ -820,18 +835,25 @@ def get_returns_pending(store=None):
                     AND remarks LIKE CONCAT('%%Store Return%%', ri.parent, '%%')
                     AND docstatus = 1
             )
-        {store_filter}
-        ORDER BY r.receiving_date DESC
-        LIMIT 100
-    """.format(store_filter=f"AND r.store = {frappe.db.escape(store)}" if store else ""),
-		as_dict=True,
-	)
+    """
+	params = {}
+	if store:
+		query += "\n        AND r.store = %(store)s"
+		params["store"] = store
+	query += "\n        ORDER BY r.receiving_date DESC\n        LIMIT 100"
+
+	items = frappe.db.sql(query, params, as_dict=True)
 
 	return {"items": items}
 
 
 @frappe.whitelist()
-def create_store_return(receiving, items, reason, photo=None):
+def create_store_return(
+	receiving: str,
+	items: list | str,
+	reason: str,
+	photo: str | None = None,
+) -> dict:
 	"""
 	Create a store return for items with issues from a receiving doc.
 	Tracks the return intent and creates a Stock Entry to transfer items back to commissary.
@@ -942,7 +964,7 @@ def create_store_return(receiving, items, reason, photo=None):
 
 
 @frappe.whitelist()
-def process_store_return(stock_entry_name):
+def process_store_return(stock_entry_name: str) -> dict:
 	"""
 	Process a submitted store return Stock Entry.
 	G-002: Creates credit note (BEI Billing Schedule) + GL Journal Entry
@@ -1182,16 +1204,16 @@ def _notify_return_processed(se, store, reason, credit_note_name):
 
 @frappe.whitelist()
 def submit_opening_report(
-	store,
-	checklist_items=None,
-	report_time=None,
-	notes=None,
-	photo_backup_area=None,
-	photo_frozen_milk=None,
-	photo_toppings_area=None,
-	photo_dispatch_area=None,
-	photo_cold_storage_temp=None,
-):
+	store: str,
+	checklist_items: list | str | None = None,
+	report_time: str | None = None,
+	notes: str | None = None,
+	photo_backup_area: str | None = None,
+	photo_frozen_milk: str | None = None,
+	photo_toppings_area: str | None = None,
+	photo_dispatch_area: str | None = None,
+	photo_cold_storage_temp: str | None = None,
+) -> dict:
 	"""Submit daily opening report with 5 required photos.
 
 	Bug fixes (C1):
@@ -1260,7 +1282,12 @@ def submit_opening_report(
 
 
 @frappe.whitelist()
-def get_opening_reports(store=None, date_from=None, date_to=None, limit=20):
+def get_opening_reports(
+	store: str | None = None,
+	date_from: str | None = None,
+	date_to: str | None = None,
+	limit: int | str = 20,
+) -> dict:
 	"""Get opening report history."""
 	filters = {}
 	if store:
@@ -1284,7 +1311,12 @@ def get_opening_reports(store=None, date_from=None, date_to=None, limit=20):
 
 
 @frappe.whitelist()
-def get_closing_reports(store=None, date_from=None, date_to=None, limit=20):
+def get_closing_reports(
+	store: str | None = None,
+	date_from: str | None = None,
+	date_to: str | None = None,
+	limit: int | str = 20,
+) -> dict:
 	"""Get closing report history."""
 	filters = {}
 	if store:
@@ -1309,18 +1341,18 @@ def get_closing_reports(store=None, date_from=None, date_to=None, limit=20):
 
 @frappe.whitelist()
 def submit_midshift_check(
-	store,
-	shift=None,
-	temperature_readings=None,
-	cleanliness_status=None,
-	checklist_items=None,
-	issues_found=None,
-	corrective_action=None,
-	photo_evidence=None,
-	late_reason=None,
-	equipment=None,
-	notes=None,
-):
+	store: str,
+	shift: str | None = None,
+	temperature_readings: list | str | None = None,
+	cleanliness_status: str | None = None,
+	checklist_items: list | str | None = None,
+	issues_found: str | None = None,
+	corrective_action: str | None = None,
+	photo_evidence: str | list | None = None,
+	late_reason: str | None = None,
+	equipment: str | list | None = None,
+	notes: str | None = None,
+) -> dict:
 	"""Submit mid-shift temperature and cleanliness check with time window validation.
 
 	Bug fixes (C3):
@@ -1446,7 +1478,11 @@ def submit_midshift_check(
 
 
 @frappe.whitelist()
-def get_midshift_checks(store=None, date=None, limit=20):
+def get_midshift_checks(
+	store: str | None = None,
+	date: str | None = None,
+	limit: int | str = 20,
+) -> dict:
 	"""Get mid-shift check history."""
 	filters = {}
 	if store:
@@ -1466,17 +1502,17 @@ def get_midshift_checks(store=None, date=None, limit=20):
 
 @frappe.whitelist()
 def upload_pos_data(
-	store=None,
-	pos_date=None,
-	pos_system=None,
-	discount_report=None,
-	transaction_report=None,
-	product_mix=None,
-	daily_sales_revenue=None,
-	sales_summary=None,
-	notes=None,
-	skip_date_validation=False,
-):
+	store: str | None = None,
+	pos_date: str | None = None,
+	pos_system: str | None = None,
+	discount_report: str | None = None,
+	transaction_report: str | None = None,
+	product_mix: str | None = None,
+	daily_sales_revenue: str | None = None,
+	sales_summary: str | None = None,
+	notes: str | None = None,
+	skip_date_validation: bool | int | str = False,
+) -> dict:
 	"""
 	Upload daily POS data with 5 required report files.
 
@@ -1571,7 +1607,12 @@ def upload_pos_data(
 
 
 @frappe.whitelist()
-def get_pos_uploads(store=None, date_from=None, date_to=None, limit=20):
+def get_pos_uploads(
+	store: str | None = None,
+	date_from: str | None = None,
+	date_to: str | None = None,
+	limit: int | str = 20,
+) -> dict:
 	"""Get POS upload history."""
 	filters = {}
 	if store:
@@ -1601,15 +1642,15 @@ def get_pos_uploads(store=None, date_from=None, date_to=None, limit=20):
 
 @frappe.whitelist()
 def submit_bank_deposit(
-	store=None,
-	deposit_date=None,
-	bank=None,
-	deposits=None,
-	total_amount=0,
-	photos=None,
-	notes=None,
-	deposit_type=None,
-):
+	store: str | None = None,
+	deposit_date: str | None = None,
+	bank: str | None = None,
+	deposits: list | str | None = None,
+	total_amount: int | float | str = 0,
+	photos: list | str | None = None,
+	notes: str | None = None,
+	deposit_type: str | None = None,
+) -> dict:
 	"""
 	Submit bank deposit record with deposit slip photos.
 
@@ -1707,7 +1748,12 @@ def submit_bank_deposit(
 
 
 @frappe.whitelist()
-def get_bank_deposits(store=None, date_from=None, date_to=None, limit=20):
+def get_bank_deposits(
+	store: str | None = None,
+	date_from: str | None = None,
+	date_to: str | None = None,
+	limit: int | str = 20,
+) -> dict:
 	"""Get bank deposit history."""
 	filters = {}
 	if store:
@@ -1737,12 +1783,12 @@ def get_bank_deposits(store=None, date_from=None, date_to=None, limit=20):
 
 @frappe.whitelist()
 def extract_pos_data(
-	sales_summary=None,
-	transaction_report=None,
-	discount_report=None,
-	daily_sales_revenue=None,
-	product_mix=None,
-):
+	sales_summary: str | None = None,
+	transaction_report: str | None = None,
+	discount_report: str | None = None,
+	daily_sales_revenue: str | None = None,
+	product_mix: str | None = None,
+) -> dict:
 	"""
 	Extract and parse data from MOSAIC POS export files.
 
@@ -1836,7 +1882,7 @@ def extract_pos_data(
 
 
 @frappe.whitelist()
-def get_extracted_pos_data(pos_upload_name):
+def get_extracted_pos_data(pos_upload_name: str) -> dict:
 	"""
 	Get extracted data for a POS Upload document.
 
@@ -1883,7 +1929,7 @@ def get_extracted_pos_data(pos_upload_name):
 
 
 @frappe.whitelist()
-def get_or_create_closing_report(store):
+def get_or_create_closing_report(store: str) -> dict:
 	"""
 	Get existing closing report for today or create a new one.
 	Returns the report document with current stage status.
@@ -1936,19 +1982,19 @@ def get_or_create_closing_report(store):
 
 @frappe.whitelist()
 def submit_closing_stage1_cash(
-	report_name,
-	petty_cash_fund=0,
-	delivery_fund=0,
-	change_fund=0,
-	cash_notes=None,
-	pos_down=False,
-	pos_down_estimated_sales=None,
-	pos_down_transaction_count=None,
-	pos_down_notes=None,
-	variance_explanation=None,
-	actual_cash_count=0,
-	**kwargs,
-):
+	report_name: str,
+	petty_cash_fund: int | float | str = 0,
+	delivery_fund: int | float | str = 0,
+	change_fund: int | float | str = 0,
+	cash_notes: str | None = None,
+	pos_down: bool | int | str = False,
+	pos_down_estimated_sales: int | float | str | None = None,
+	pos_down_transaction_count: int | str | None = None,
+	pos_down_notes: str | None = None,
+	variance_explanation: str | None = None,
+	actual_cash_count: int | float | str = 0,
+	**kwargs: object,
+) -> dict:
 	"""
 	Submit Stage 1: Cash Count & Reconciliation
 
@@ -1997,13 +2043,13 @@ def submit_closing_stage1_cash(
 
 @frappe.whitelist()
 def submit_closing_stage2_checklist(
-	report_name,
-	inventory_items,
-	checklist_items=None,
-	cashier_signoff=False,
-	production_signoff=False,
-	supervisor_signoff=False,
-):
+	report_name: str,
+	inventory_items: list | str,
+	checklist_items: list | str | None = None,
+	cashier_signoff: bool | int | str = False,
+	production_signoff: bool | int | str = False,
+	supervisor_signoff: bool | int | str = False,
+) -> dict:
 	"""
 	Submit Stage 2: Checklist & Inventory Spot Check
 
@@ -2065,14 +2111,14 @@ def submit_closing_stage2_checklist(
 
 @frappe.whitelist()
 def submit_closing_stage3_photos(
-	report_name,
-	x_reading_opening_photo,
-	x_reading_closing_photo,
-	z_reading_photo,
-	store_photos=None,
-	equipment_status=None,
-	notes=None,
-):
+	report_name: str,
+	x_reading_opening_photo: str,
+	x_reading_closing_photo: str,
+	z_reading_photo: str,
+	store_photos: list | str | None = None,
+	equipment_status: str | None = None,
+	notes: str | None = None,
+) -> dict:
 	"""
 	Submit Stage 3: Photos & Equipment
 
@@ -2174,7 +2220,7 @@ def submit_closing_stage3_photos(
 
 
 @frappe.whitelist()
-def get_closing_report_status(store=None, date=None):
+def get_closing_report_status(store: str | None = None, date: str | None = None) -> dict:
 	"""
 	Get closing report status for a store on a specific date.
 	Returns stage progress and completion status.
@@ -2223,16 +2269,16 @@ def get_closing_report_status(store=None, date=None):
 
 @frappe.whitelist()
 def submit_mid_shift_handover(
-	store,
-	outgoing_cashier=None,
-	incoming_cashier=None,
-	x_reading_photo=None,
-	cash_count=0,
-	expected_cash=0,
-	variance_explanation=None,
-	x_reading_cash=None,
-	sales_cash_deposit=None,
-):
+	store: str,
+	outgoing_cashier: str | None = None,
+	incoming_cashier: str | None = None,
+	x_reading_photo: str | None = None,
+	cash_count: int | float | str = 0,
+	expected_cash: int | float | str = 0,
+	variance_explanation: str | None = None,
+	x_reading_cash: int | float | str | None = None,
+	sales_cash_deposit: int | float | str | None = None,
+) -> dict:
 	"""
 	Submit mid-shift handover when cashiers switch shifts.
 	Identifies shortage/overage per cashier shift.
@@ -2333,7 +2379,11 @@ def submit_mid_shift_handover(
 
 
 @frappe.whitelist()
-def get_mid_shift_handovers(store, date=None, limit=10):
+def get_mid_shift_handovers(
+	store: str,
+	date: str | None = None,
+	limit: int | str = 10,
+) -> dict:
 	"""Get mid-shift handovers for a store on a specific date."""
 	validate_store_ops_role()
 
@@ -2376,17 +2426,17 @@ def get_mid_shift_handovers(store, date=None, limit=10):
 
 @frappe.whitelist()
 def submit_maintenance_request(
-	store=None,
-	priority=None,
-	description=None,
-	issue_category=None,
-	category=None,
-	equipment_area=None,
-	impact_on_operations=None,
-	title=None,
-	before_photos=None,
-	photos=None,
-):
+	store: str | None = None,
+	priority: str | None = None,
+	description: str | None = None,
+	issue_category: str | None = None,
+	category: str | None = None,
+	equipment_area: str | None = None,
+	impact_on_operations: str | None = None,
+	title: str | None = None,
+	before_photos: list | str | None = None,
+	photos: list | str | None = None,
+) -> dict:
 	"""
 	Submit a maintenance request from store staff.
 	Notifies Projects team (Daniel) for assessment and assignment.
@@ -2487,7 +2537,12 @@ def submit_maintenance_request(
 
 
 @frappe.whitelist()
-def get_maintenance_requests(store=None, status=None, limit=20, my_requests=False):
+def get_maintenance_requests(
+	store: str | None = None,
+	status: str | None = None,
+	limit: int | str = 20,
+	my_requests: bool | int | str = False,
+) -> dict:
 	"""Get maintenance requests optionally filtered by store and status.
 
 	Bug fix (C14): Added my_requests parameter to filter by current user's reported_by.
@@ -2538,7 +2593,7 @@ def get_maintenance_requests(store=None, status=None, limit=20, my_requests=Fals
 
 
 @frappe.whitelist()
-def get_my_maintenance_requests(status=None, limit=20):
+def get_my_maintenance_requests(status: str | None = None, limit: int | str = 20) -> dict:
 	"""Get maintenance requests submitted by current user.
 
 	Bug fix (C14): Dedicated endpoint for "View My Requests" functionality.
@@ -2574,7 +2629,7 @@ def get_my_maintenance_requests(status=None, limit=20):
 
 
 @frappe.whitelist()
-def check_maintenance_for_closing(store, date=None):
+def check_maintenance_for_closing(store: str, date: str | None = None) -> dict:
 	"""
 	Check if there's maintenance scheduled or completed today that needs verification.
 	Used to show dynamic maintenance section in closing report.
@@ -2591,7 +2646,11 @@ def check_maintenance_for_closing(store, date=None):
 
 
 @frappe.whitelist()
-def verify_maintenance_from_closing(maintenance_completion, verified=True, verification_notes=None):
+def verify_maintenance_from_closing(
+	maintenance_completion: str,
+	verified: bool | int | str = True,
+	verification_notes: str | None = None,
+) -> dict:
 	"""
 	Verify or reject maintenance completion from closing report.
 	"""
