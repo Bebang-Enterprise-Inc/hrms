@@ -10,27 +10,53 @@ from hrms.utils.bei_config import get_company
 
 VAT_RATE = 0.12
 
-# GL account mapping
-FEE_TO_ACCOUNT = {
-	"royalty_fee": "4000301 - ROYALTIES INCOME - BEI",
-	"marketing_fee": "4000302 - MARKETING FEE INCOME - BEI",
-	"management_fee": "4000303 - MANAGEMENT FEE INCOME - BEI",
-	"ecommerce_fee": "4000304 - ECOMMERCE FEE INCOME - BEI",
-	"delivery_fee": "4000305 - DELIVERY INCOME - BEI",
-	"logistics_fee": "4000306 - LOGISTICS INCOME - BEI",
+# GL account mapping by account_number (canonical first, legacy fallback second)
+FEE_TO_ACCOUNT_NUMBERS = {
+	"royalty_fee": ("4000003", "4000301"),
+	"marketing_fee": ("4000006", "4000302"),
+	"management_fee": ("4000004", "4000303"),
+	"ecommerce_fee": ("4000304",),
+	"delivery_fee": ("4000305",),
+	"logistics_fee": ("4000306",),
 }
 
 # Fees where VAT is included in the amount and must be separated for GL posting
 VAT_INCLUSIVE_FEES = {"royalty_fee", "management_fee"}
 
-AR_ACCOUNT = "1103101 - ACCOUNTS RECEIVABLE - BEI"
-VAT_ACCOUNT = "2102205 - OUTPUT VAT PAYABLE - BEI"
-FRANCHISE_INCOME_ACCOUNT = "4000300 - FRANCHISE INCOME - BEI"
+AR_ACCOUNT_NUMBERS = ("1103101",)
+VAT_ACCOUNT_NUMBERS = ("2102205",)
+FRANCHISE_INCOME_ACCOUNT_NUMBERS = ("4000300",)
 
 NAMING_SERIES = {
 	"Delivery": "BILL-DL-.YYYY.-.#####",
 }
 DEFAULT_NAMING_SERIES = "BILL-MF-.YYYY.-.#####"
+
+
+def _get_account_by_number(account_number, company=None):
+	"""Get full Frappe account name from account_number."""
+	return frappe.db.get_value(
+		"Account",
+		{"account_number": str(account_number), "company": company or get_company()},
+		"name",
+	)
+
+
+def _resolve_account_name(account_numbers, label, company=None):
+	"""Resolve an account_name from canonical/legacy account numbers."""
+	company_name = company or get_company()
+	for account_number in account_numbers:
+		account_name = _get_account_by_number(account_number, company=company_name)
+		if account_name:
+			return account_name
+
+	expected_codes = ", ".join(str(code) for code in account_numbers)
+	frappe.throw(
+		_(
+			"Missing GL Account for {0}. Configure Account.account_number in company {1}: {2}"
+		).format(label, company_name, expected_codes),
+		frappe.ValidationError,
+	)
 
 
 class BEIBillingSchedule(Document):
@@ -62,10 +88,16 @@ class BEIBillingSchedule(Document):
 		total_revenue = 0
 		total_vat = 0
 
-		for fee_field, account in FEE_TO_ACCOUNT.items():
+		for fee_field, account_numbers in FEE_TO_ACCOUNT_NUMBERS.items():
 			amount = flt(getattr(self, fee_field, 0))
 			if amount <= 0:
 				continue
+
+			account = _resolve_account_name(
+				account_numbers,
+				label=fee_field,
+				company=je.company,
+			)
 
 			if fee_field in VAT_INCLUSIVE_FEES:
 				base_amount = flt(amount / (1 + VAT_RATE), 2)
@@ -85,25 +117,40 @@ class BEIBillingSchedule(Document):
 
 		# Add handling_fee for delivery billings (franchise markup)
 		if self.billing_type == "Delivery" and flt(self.handling_fee) > 0:
+			franchise_income_account = _resolve_account_name(
+				FRANCHISE_INCOME_ACCOUNT_NUMBERS,
+				label="franchise_income",
+				company=je.company,
+			)
 			total_revenue += flt(self.handling_fee)
 			je.append("accounts", {
-				"account": FRANCHISE_INCOME_ACCOUNT,
+				"account": franchise_income_account,
 				"credit_in_account_currency": flt(self.handling_fee),
 				"reference_type": "BEI Billing Schedule",
 				"reference_name": self.name,
 			})
 
 		if total_vat > 0:
+			vat_account = _resolve_account_name(
+				VAT_ACCOUNT_NUMBERS,
+				label="output_vat",
+				company=je.company,
+			)
 			je.append("accounts", {
-				"account": VAT_ACCOUNT,
+				"account": vat_account,
 				"credit_in_account_currency": total_vat,
 			})
 
 		# Debit AR for total (C-02 fix: removed invalid party_type "Department")
 		total_debit = total_revenue + total_vat
 		if total_debit > 0:
+			ar_account = _resolve_account_name(
+				AR_ACCOUNT_NUMBERS,
+				label="accounts_receivable",
+				company=je.company,
+			)
 			je.append("accounts", {
-				"account": AR_ACCOUNT,
+				"account": ar_account,
 				"debit_in_account_currency": total_debit,
 				"against_voucher_type": "BEI Billing Schedule",
 				"against_voucher": self.name,

@@ -20,11 +20,27 @@ def _get_account_by_code(account_number, company=None):
 
     Returns the full account name or None if not found.
     """
+    if account_number is None:
+        return None
+
+    account_number = str(account_number).strip()
+    if not account_number:
+        return None
+
     return frappe.db.get_value(
         "Account",
         {"account_number": account_number, "company": company or get_company()},
         "name",
     )
+
+
+def _resolve_account_by_codes(account_numbers, company=None):
+    """Resolve first available account by account_number."""
+    for account_number in account_numbers:
+        account_name = _get_account_by_code(account_number, company=company)
+        if account_name:
+            return account_name
+    return None
 
 
 class BEIPaymentRequest(Document):
@@ -92,32 +108,33 @@ class BEIPaymentRequest(Document):
         if not self.rfp_type or self.account_code:
             return
 
-        # Account number mapping (looked up via _get_account_by_code)
+        # Account number mapping (looked up via _resolve_account_by_codes)
         rfp_account_map = {
-            "PCF Replenishment": "1113000",       # Petty Cash Fund
-            "Delivery Fund": "1115000",            # Delivery Fund
-            "Transpo Allowance": "5300",           # Transportation Expense
-            "Rentals": "5400",                     # Rent Expense
-            "Vendor Invoice": None,                # Item-based mapping
-            "Cash Advance": "1200",                # Advances/Prepayments
-            "Reimbursement": "2100",               # AP - Reimbursements
-            "Credit Card Transaction": "2110",     # Credit Card Payable
+            "PCF Replenishment": ("1113000",),       # Petty Cash Fund
+            "Delivery Fund": ("1115000",),           # Delivery Fund
+            "Transpo Allowance": ("5300",),          # Transportation Expense
+            "Rentals": ("5400",),                    # Rent Expense
+            "Vendor Invoice": None,                  # Item-based mapping
+            "Cash Advance": ("1200",),               # Advances/Prepayments
+            "Reimbursement": ("2100",),              # AP - Reimbursements
+            "Credit Card Transaction": ("2110",),    # Credit Card Payable
         }
 
-        account_number = rfp_account_map.get(self.rfp_type)
+        account_numbers = rfp_account_map.get(self.rfp_type)
 
-        if account_number:
-            account_name = _get_account_by_code(account_number)
+        if account_numbers:
+            account_name = _resolve_account_by_codes(account_numbers)
             if account_name:
                 self.account_code = account_name
             else:
+                account_number_text = ", ".join(account_numbers)
                 frappe.log_error(
-                    f"GL account {account_number} not found for RFP type '{self.rfp_type}'",
+                    f"GL account {account_number_text} not found for RFP type '{self.rfp_type}'",
                     "GL Account Mapping Warning",
                 )
                 frappe.msgprint(
                     _("GL Account {0} for RFP type '{1}' not found. "
-                      "Please assign account manually.").format(account_number, self.rfp_type),
+                      "Please assign account manually.").format(account_number_text, self.rfp_type),
                     indicator="orange",
                 )
         elif self.rfp_type == "Vendor Invoice" and self.supplier:
