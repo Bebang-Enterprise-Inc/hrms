@@ -1,7 +1,5 @@
 """HR Reports API endpoints for employee masterlist, headcount, attrition, attendance, and OT"""
 
-from typing import Any
-
 import frappe
 from frappe import _
 from frappe.utils import add_days, date_diff, flt, getdate, today
@@ -11,6 +9,7 @@ from hrms.utils.api_helpers import (
 	_paginate,
 	_validate_date_range,
 )
+from hrms.api import leave_dashboard as leave_dashboard_api
 
 
 @frappe.whitelist()
@@ -616,10 +615,25 @@ def get_training_completion_by_store(training_event_type: str | None = None) -> 
 
 	return {"success": True, "data": data}
 
-
-import frappe
-
-ALLOWED_ROLES = ["HR Manager", "System Manager", "HR User", "Area Supervisor"]
+@frappe.whitelist()
+def get_dashboard_data(
+	status: str | None = None,
+	branch: str | None = None,
+	department: str | None = None,
+	from_date: str | None = None,
+	to_date: str | None = None,
+	employee: str | None = None,
+	leave_type: str | None = None,
+):
+	return leave_dashboard_api.get_dashboard_data(
+		status=status,
+		branch=branch,
+		department=department,
+		from_date=from_date,
+		to_date=to_date,
+		employee=employee,
+		leave_type=leave_type,
+	)
 
 
 @frappe.whitelist()
@@ -628,76 +642,11 @@ def get_leave_overview(
 	branch: str | None = None,
 	department: str | None = None,
 ):
-	frappe.only_for(ALLOWED_ROLES)
-
-	current_date = today()
-	seven_days_from_now = add_days(current_date, 7)
-
-	emp_values = {"branch": branch, "department": department}
-
-	# Get total active employees matching criteria (for reference)
-	total_employees = frappe.db.sql(
-		"""
-        SELECT count(name)
-        FROM `tabEmployee` e
-        WHERE e.status = 'Active'
-          AND (%(branch)s IS NULL OR e.branch = %(branch)s)
-          AND (%(department)s IS NULL OR e.department = %(department)s)
-    """,
-		emp_values,
-	)[0][0]
-
-	# Leaves today
-	on_leave_today_query = """
-        SELECT count(la.name)
-        FROM `tabLeave Application` la
-        JOIN `tabEmployee` e ON la.employee = e.name
-        WHERE la.status = 'Approved'
-        AND la.docstatus = 1
-        AND %(today)s BETWEEN la.from_date AND la.to_date
-        AND e.status = 'Active'
-        AND (%(branch)s IS NULL OR e.branch = %(branch)s)
-        AND (%(department)s IS NULL OR e.department = %(department)s)
-    """
-	values_today = {"today": current_date}
-	values_today.update(emp_values)
-	on_leave_today = frappe.db.sql(on_leave_today_query, values_today)[0][0]
-
-	# Pending approvals
-	pending_query = """
-        SELECT count(la.name)
-        FROM `tabLeave Application` la
-        JOIN `tabEmployee` e ON la.employee = e.name
-        WHERE la.status = 'Open'
-        AND la.docstatus = 0
-        AND e.status = 'Active'
-        AND (%(branch)s IS NULL OR e.branch = %(branch)s)
-        AND (%(department)s IS NULL OR e.department = %(department)s)
-    """
-	pending_count = frappe.db.sql(pending_query, emp_values)[0][0]
-
-	# Upcoming (next 7 days)
-	upcoming_query = """
-        SELECT count(la.name)
-        FROM `tabLeave Application` la
-        JOIN `tabEmployee` e ON la.employee = e.name
-        WHERE la.status = 'Approved'
-        AND la.docstatus = 1
-        AND la.from_date > %(today)s AND la.from_date <= %(next_7)s
-        AND e.status = 'Active'
-        AND (%(branch)s IS NULL OR e.branch = %(branch)s)
-        AND (%(department)s IS NULL OR e.department = %(department)s)
-    """
-	values_upcoming = {"today": current_date, "next_7": seven_days_from_now}
-	values_upcoming.update(emp_values)
-	upcoming_count = frappe.db.sql(upcoming_query, values_upcoming)[0][0]
-
-	return {
-		"on_leave_today": on_leave_today,
-		"pending_count": pending_count,
-		"upcoming_count": upcoming_count,
-		"total_employees": total_employees,
-	}
+	_ = date_range  # Backward compatibility.
+	return leave_dashboard_api.get_leave_overview(
+		branch=branch,
+		department=department,
+	)
 
 
 @frappe.whitelist()
@@ -706,83 +655,28 @@ def get_all_leaves(
 	branch: str | None = None,
 	from_date: str | None = None,
 	to_date: str | None = None,
+	department: str | None = None,
+	employee: str | None = None,
+	leave_type: str | None = None,
 ):
-	frappe.only_for(ALLOWED_ROLES)
-
-	values = {
-		"status": status,
-		"branch": branch,
-		"from_date": from_date,
-		"to_date": to_date,
-	}
-
-	query = """
-        SELECT
-            la.name, la.employee, la.employee_name, la.leave_type,
-            la.from_date, la.to_date, la.total_leave_days, la.status, la.description,
-            e.branch, e.department, e.image as employee_image, e.designation
-        FROM `tabLeave Application` la
-        JOIN `tabEmployee` e ON la.employee = e.name
-        WHERE (%(status)s IS NULL OR la.status = %(status)s)
-          AND (%(branch)s IS NULL OR e.branch = %(branch)s)
-          AND (%(from_date)s IS NULL OR la.to_date >= %(from_date)s)
-          AND (%(to_date)s IS NULL OR la.from_date <= %(to_date)s)
-        ORDER BY la.from_date DESC
-    """
-
-	leaves = frappe.db.sql(query, values, as_dict=True)
-	return leaves
+	return leave_dashboard_api.get_all_leaves(
+		status=status,
+		branch=branch,
+		department=department,
+		from_date=from_date,
+		to_date=to_date,
+		employee=employee,
+		leave_type=leave_type,
+	)
 
 
 @frappe.whitelist()
 def check_leave_conflicts(employee: str, from_date: str, to_date: str):
-	"""
-	Checks if there are overlapping approved leaves for the employee's branch/department.
-	"""
-	frappe.only_for(ALLOWED_ROLES)
-
-	# Get employee details
-	emp_details = frappe.db.get_value(
-		"Employee", employee, ["branch", "department", "employee_name"], as_dict=True
+	return leave_dashboard_api.check_leave_conflicts(
+		employee=employee,
+		from_date=from_date,
+		to_date=to_date,
 	)
-	if not emp_details:
-		return []
-
-	branch = emp_details.get("branch")
-	department = emp_details.get("department")
-
-	if not branch or not department:
-		return []
-
-	# Find overlapping leaves in the same branch/department (excluding this employee)
-	query = """
-        SELECT
-            la.name as leave_id,
-            la.employee_name,
-            la.from_date,
-            la.to_date,
-            la.leave_type
-        FROM `tabLeave Application` la
-        JOIN `tabEmployee` e ON la.employee = e.name
-        WHERE la.status = 'Approved'
-        AND la.docstatus = 1
-        AND la.employee != %(employee)s
-        AND e.branch = %(branch)s
-        AND e.department = %(department)s
-        AND la.from_date <= %(to_date)s
-        AND la.to_date >= %(from_date)s
-    """
-
-	values = {
-		"employee": employee,
-		"branch": branch,
-		"department": department,
-		"from_date": from_date,
-		"to_date": to_date,
-	}
-
-	conflicts = frappe.db.sql(query, values, as_dict=True)
-	return conflicts
 
 
 @frappe.whitelist()
@@ -791,69 +685,8 @@ def bulk_update_leave_status(
 	status: str,
 	remarks: str | None = None,
 ):
-	frappe.only_for(ALLOWED_ROLES)
-
-	import json
-
-	if isinstance(leave_ids, str):
-		leave_ids = json.loads(leave_ids)
-
-	if status not in ["Approved", "Rejected"]:
-		frappe.throw(_("Status must be Approved or Rejected"))
-
-	results = {"success": [], "failed": []}
-
-	for leave_id in leave_ids:
-		try:
-			doc = frappe.get_doc("Leave Application", leave_id)
-			if doc.status == "Open":
-				doc.status = status
-				if remarks:
-					# In Frappe, there's no native remarks field on Leave Application by default,
-					# but maybe leave_approver_name or a custom field. We can add to workflow comments or just set status.
-					# doc.leave_approver = frappe.session.user
-					pass
-
-				if status == "Approved":
-					# Approve submits the document if it's draft
-					if doc.docstatus == 0:
-						doc.submit()
-					else:
-						doc.db_set("status", "Approved")
-				elif status == "Rejected":
-					_reject_leave_application(doc)
-
-				results["success"].append(leave_id)
-			else:
-				results["failed"].append({"id": leave_id, "error": f"Leave is already {doc.status}"})
-		except Exception as e:
-			results["failed"].append({"id": leave_id, "error": str(e)})
-
-	return results
-
-
-def _reject_leave_application(doc: Any) -> None:
-	"""Reject leave requests without forcing raw status writes on submitted docs.
-
-	Submitted leave applications should be cancelled through document lifecycle,
-	while draft applications can be marked rejected and saved.
-	"""
-	if getattr(doc, "docstatus", 0) == 1 and callable(getattr(doc, "cancel", None)):
-		doc.cancel()
-		return
-
-	doc.status = "Rejected"
-
-	save_method = getattr(doc, "save", None)
-	if callable(save_method):
-		try:
-			save_method(ignore_permissions=True)
-			return
-		except TypeError:
-			save_method()
-			return
-
-	# Fallback for lightweight test doubles without save()
-	db_set = getattr(doc, "db_set", None)
-	if callable(db_set):
-		db_set("status", "Rejected")
+	return leave_dashboard_api.bulk_action(
+		leave_ids=leave_ids,
+		status=status,
+		remarks=remarks,
+	)
