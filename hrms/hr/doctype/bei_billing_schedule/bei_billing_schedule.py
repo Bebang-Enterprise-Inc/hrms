@@ -1,11 +1,13 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-import frappe
-from frappe.model.document import Document
-from frappe import _
-from frappe.utils import flt, nowdate
 from markupsafe import escape as html_escape
+
+import frappe
+from frappe import _
+from frappe.model.document import Document
+from frappe.utils import flt, nowdate
+
 from hrms.utils.bei_config import get_company
 
 VAT_RATE = 0.12
@@ -52,9 +54,9 @@ def _resolve_account_name(account_numbers, label, company=None):
 
 	expected_codes = ", ".join(str(code) for code in account_numbers)
 	frappe.throw(
-		_(
-			"Missing GL Account for {0}. Configure Account.account_number in company {1}: {2}"
-		).format(label, company_name, expected_codes),
+		_("Missing GL Account for {0}. Configure Account.account_number in company {1}: {2}").format(
+			label, company_name, expected_codes
+		),
 		frappe.ValidationError,
 	)
 
@@ -108,12 +110,15 @@ class BEIBillingSchedule(Document):
 				credit_amount = amount
 
 			total_revenue += credit_amount
-			je.append("accounts", {
-				"account": account,
-				"credit_in_account_currency": credit_amount,
-				"reference_type": "BEI Billing Schedule",
-				"reference_name": self.name,
-			})
+			je.append(
+				"accounts",
+				{
+					"account": account,
+					"credit_in_account_currency": credit_amount,
+					"reference_type": "BEI Billing Schedule",
+					"reference_name": self.name,
+				},
+			)
 
 		# Add handling_fee for delivery billings (franchise markup)
 		if self.billing_type == "Delivery" and flt(self.handling_fee) > 0:
@@ -123,12 +128,15 @@ class BEIBillingSchedule(Document):
 				company=je.company,
 			)
 			total_revenue += flt(self.handling_fee)
-			je.append("accounts", {
-				"account": franchise_income_account,
-				"credit_in_account_currency": flt(self.handling_fee),
-				"reference_type": "BEI Billing Schedule",
-				"reference_name": self.name,
-			})
+			je.append(
+				"accounts",
+				{
+					"account": franchise_income_account,
+					"credit_in_account_currency": flt(self.handling_fee),
+					"reference_type": "BEI Billing Schedule",
+					"reference_name": self.name,
+				},
+			)
 
 		if total_vat > 0:
 			vat_account = _resolve_account_name(
@@ -136,10 +144,13 @@ class BEIBillingSchedule(Document):
 				label="output_vat",
 				company=je.company,
 			)
-			je.append("accounts", {
-				"account": vat_account,
-				"credit_in_account_currency": total_vat,
-			})
+			je.append(
+				"accounts",
+				{
+					"account": vat_account,
+					"credit_in_account_currency": total_vat,
+				},
+			)
 
 		# Debit AR for total (C-02 fix: removed invalid party_type "Department")
 		total_debit = total_revenue + total_vat
@@ -149,13 +160,16 @@ class BEIBillingSchedule(Document):
 				label="accounts_receivable",
 				company=je.company,
 			)
-			je.append("accounts", {
-				"account": ar_account,
-				"debit_in_account_currency": total_debit,
-				"against_voucher_type": "BEI Billing Schedule",
-				"against_voucher": self.name,
-				"user_remark": f"AR for {self.store}",
-			})
+			je.append(
+				"accounts",
+				{
+					"account": ar_account,
+					"debit_in_account_currency": total_debit,
+					"against_voucher_type": "BEI Billing Schedule",
+					"against_voucher": self.name,
+					"user_remark": f"AR for {self.store}",
+				},
+			)
 
 		if je.accounts:
 			# C-03 fix: re-raise on failure to prevent billing without GL
@@ -178,9 +192,9 @@ class BEIBillingSchedule(Document):
 
 		# Get store type from BEI Store Type master if not set
 		if not self.store_type and self.store:
-			self.store_type = frappe.db.get_value(
-				"BEI Store Type", {"store": self.store}, "store_type"
-			) or self.store_type
+			self.store_type = (
+				frappe.db.get_value("BEI Store Type", {"store": self.store}, "store_type") or self.store_type
+			)
 
 		gross = flt(self.gross_sales)
 		net = flt(self.net_sales)
@@ -257,11 +271,7 @@ class BEIBillingSchedule(Document):
 			("repairs_maintenance", "Repairs & Maintenance"),
 			("preventive_maintenance", "Preventive Maintenance"),
 		]
-		rows = [
-			(label, getattr(self, field))
-			for field, label in fee_labels
-			if getattr(self, field)
-		]
+		rows = [(label, getattr(self, field)) for field, label in fee_labels if getattr(self, field)]
 
 		for item in self.line_items:
 			if item.amount:
@@ -318,9 +328,7 @@ class BEIBillingSchedule(Document):
 			try:
 				frappe.sendmail(
 					recipients=recipients,
-					subject=_("Billing Statement: {0} - {1}").format(
-						self.store, self.billing_period
-					),
+					subject=_("Billing Statement: {0} - {1}").format(self.store, self.billing_period),
 					message=message,
 				)
 			except Exception:

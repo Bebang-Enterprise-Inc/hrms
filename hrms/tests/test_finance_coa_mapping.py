@@ -5,7 +5,6 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
@@ -64,7 +63,11 @@ def _install_fake_frappe():
 	frappe.get_doc = lambda *args, **kwargs: None
 	frappe.get_all = lambda *args, **kwargs: []
 
-	utils.flt = lambda value, precision=None: round(float(value or 0), precision) if precision is not None else float(value or 0)
+	utils.flt = (
+		lambda value, precision=None: round(float(value or 0), precision)
+		if precision is not None
+		else float(value or 0)
+	)
 	utils.nowdate = lambda: "2026-02-28"
 	utils.now_datetime = lambda: "2026-02-28 08:00:00"
 	utils.add_days = lambda value, days: value
