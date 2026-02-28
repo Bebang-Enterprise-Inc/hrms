@@ -287,7 +287,7 @@ def generate_monthly_billing(billing_period=None, store=None):
 
     for store_rec in stores:
         sp_name = "billing_" + re.sub(r'[^a-zA-Z0-9_]', '_', store_rec.store)
-        sp = frappe.db.savepoint(sp_name)
+        frappe.db.savepoint(sp_name)
         try:
             # Duplicate check
             existing = frappe.db.exists("BEI Billing Schedule", {
@@ -298,7 +298,7 @@ def generate_monthly_billing(billing_period=None, store=None):
             })
             if existing:
                 skipped += 1
-                frappe.db.release_savepoint(sp)
+                frappe.db.release_savepoint(sp_name)
                 continue
 
             # Aggregate sales from Store Closing Reports
@@ -326,7 +326,7 @@ def generate_monthly_billing(billing_period=None, store=None):
 
             if not sales_data.gross_sales and not sales_data.net_sales:
                 skipped += 1
-                frappe.db.release_savepoint(sp)
+                frappe.db.release_savepoint(sp_name)
                 continue
 
             billing = frappe.get_doc({
@@ -384,10 +384,10 @@ def generate_monthly_billing(billing_period=None, store=None):
                     )
 
             generated += 1
-            frappe.db.release_savepoint(sp)
+            frappe.db.release_savepoint(sp_name)
 
         except Exception as e:
-            frappe.db.rollback(save_point=sp)
+            frappe.db.rollback(save_point=sp_name)
             errors.append({"store": store_rec.store, "error": str(e)})
 
     return {
