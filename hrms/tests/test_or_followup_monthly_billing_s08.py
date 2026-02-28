@@ -4,6 +4,7 @@ import sys
 import types
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -209,6 +210,29 @@ class TestOrFollowupMonthlyBillingSprint08(unittest.TestCase):
         self.assertTrue(result["notification_sent"])
         self.assertEqual(result["notification_channels"], ["google_chat"])
         self.assertEqual(result["follow_up_count"], 1)
+
+    def test_generate_monthly_billing_uses_named_savepoint_for_release(self):
+        billing.frappe.has_permission = lambda *args, **kwargs: True
+        billing.frappe.get_all = MagicMock(
+            return_value=[SimpleNamespace(store="TEST STORE", store_type="Full Franchise")]
+        )
+
+        savepoint = MagicMock(return_value=None)
+        release_savepoint = MagicMock()
+        rollback = MagicMock()
+
+        billing.frappe.db.savepoint = savepoint
+        billing.frappe.db.release_savepoint = release_savepoint
+        billing.frappe.db.rollback = rollback
+        billing.frappe.db.exists = MagicMock(return_value="BILL-EXISTING")
+
+        result = billing.generate_monthly_billing("2099-01")
+
+        self.assertTrue(result["success"])
+        self.assertEqual(result["skipped"], 1)
+        savepoint.assert_called_once_with("billing_TEST_STORE")
+        release_savepoint.assert_called_once_with("billing_TEST_STORE")
+        rollback.assert_not_called()
 
 
 if __name__ == "__main__":
