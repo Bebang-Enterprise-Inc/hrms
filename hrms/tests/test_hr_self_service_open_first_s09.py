@@ -12,7 +12,15 @@ if str(ROOT) not in sys.path:
 
 
 def _install_fake_runtime():
-	frappe = types.ModuleType("frappe")
+	class _FrappeModule(types.ModuleType):
+		def __getattr__(self, name):
+			if name == "db":
+				return self.local.db
+			if name == "session":
+				return self.local.session
+			raise AttributeError(name)
+
+	frappe = _FrappeModule("frappe")
 	frappe_utils = types.ModuleType("frappe.utils")
 	frappe_rate_limiter = types.ModuleType("frappe.rate_limiter")
 	frappe_query_builder = types.ModuleType("frappe.query_builder")
@@ -47,12 +55,14 @@ def _install_fake_runtime():
 	frappe.get_roles = lambda *args, **kwargs: ["System Manager"]
 	frappe.get_doc = lambda *args, **kwargs: None
 	frappe.new_doc = lambda *args, **kwargs: None
-	frappe.db = types.SimpleNamespace(
-		get_value=lambda *args, **kwargs: None,
-		exists=lambda *args, **kwargs: None,
-		sql=lambda *args, **kwargs: [],
+	frappe.local = types.SimpleNamespace(
+		db=types.SimpleNamespace(
+			get_value=lambda *args, **kwargs: None,
+			exists=lambda *args, **kwargs: None,
+			sql=lambda *args, **kwargs: [],
+		),
+		session=types.SimpleNamespace(user="test.staff@bebang.ph"),
 	)
-	frappe.session = types.SimpleNamespace(user="test.staff@bebang.ph")
 
 	frappe_utils.now_datetime = lambda: datetime.datetime(2026, 2, 28, 9, 0, 0)
 	frappe_utils.nowdate = lambda: "2026-02-28"
@@ -122,7 +132,7 @@ class TestHrSelfServiceOpenFirstS09(unittest.TestCase):
 
 	def test_approve_coverage_assigns_only_pending_records(self):
 		request_doc = _FakeDoc(status="Pending")
-		coverage.frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
+		coverage.frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
 
 		with (
 			patch.object(coverage.frappe, "get_roles", return_value=["Store Supervisor"]),
@@ -140,7 +150,7 @@ class TestHrSelfServiceOpenFirstS09(unittest.TestCase):
 
 	def test_approve_coverage_rejects_non_pending_records(self):
 		request_doc = _FakeDoc(status="Assigned")
-		coverage.frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
+		coverage.frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
 
 		with (
 			patch.object(coverage.frappe, "get_roles", return_value=["Store Supervisor"]),
