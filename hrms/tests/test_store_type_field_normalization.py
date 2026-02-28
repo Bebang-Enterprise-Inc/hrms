@@ -46,9 +46,11 @@ def _install_frappe_stub() -> None:
 
 	frappe._ = _translate
 	frappe.whitelist = _whitelist
-	frappe.db = types.SimpleNamespace()
+	frappe.local = types.SimpleNamespace(
+		db=types.SimpleNamespace(),
+		session=types.SimpleNamespace(user="pytest@example.com"),
+	)
 	frappe.get_all = lambda *args, **kwargs: []
-	frappe.session = types.SimpleNamespace(user="pytest@example.com")
 	frappe.get_roles = lambda *args, **kwargs: []
 	frappe.throw = lambda message, *args, **kwargs: (_ for _ in ()).throw(Exception(message))
 	frappe.log_error = lambda *args, **kwargs: None
@@ -58,6 +60,15 @@ def _install_frappe_stub() -> None:
 	frappe.get_doc = lambda *args, **kwargs: types.SimpleNamespace()
 	frappe.publish_realtime = lambda *args, **kwargs: None
 	frappe.get_traceback = lambda: ""
+
+	def _frappe_getattr(name):
+		if name == "session":
+			return frappe.local.session
+		if name == "db":
+			return frappe.local.db
+		raise AttributeError(name)
+
+	frappe.__getattr__ = _frappe_getattr
 
 	frappe.ValidationError = type("ValidationError", (Exception,), {})
 	frappe.PermissionError = type("PermissionError", (Exception,), {})

@@ -43,19 +43,30 @@ def _install_frappe_stub() -> None:
 	frappe.new_doc = lambda *args, **kwargs: types.SimpleNamespace()
 	frappe.publish_realtime = lambda *args, **kwargs: None
 	frappe.defaults = types.SimpleNamespace(get_global_default=lambda *args, **kwargs: None)
-	frappe.session = types.SimpleNamespace(user="pytest@example.com")
-	frappe.db = types.SimpleNamespace(
-		get_value=lambda *args, **kwargs: None,
-		exists=lambda *args, **kwargs: None,
-		savepoint=lambda *args, **kwargs: None,
-		rollback=lambda *args, **kwargs: None,
-		release_savepoint=lambda *args, **kwargs: None,
-		set_value=lambda *args, **kwargs: None,
-		get_table_columns=lambda *args, **kwargs: [],
-		table_exists=lambda *args, **kwargs: False,
-		sql=lambda *args, **kwargs: [],
-		commit=lambda *args, **kwargs: None,
+	frappe.local = types.SimpleNamespace(
+		session=types.SimpleNamespace(user="pytest@example.com"),
+		db=types.SimpleNamespace(
+			get_value=lambda *args, **kwargs: None,
+			exists=lambda *args, **kwargs: None,
+			savepoint=lambda *args, **kwargs: None,
+			rollback=lambda *args, **kwargs: None,
+			release_savepoint=lambda *args, **kwargs: None,
+			set_value=lambda *args, **kwargs: None,
+			get_table_columns=lambda *args, **kwargs: [],
+			table_exists=lambda *args, **kwargs: False,
+			sql=lambda *args, **kwargs: [],
+			commit=lambda *args, **kwargs: None,
+		),
 	)
+
+	def _frappe_getattr(name):
+		if name == "session":
+			return frappe.local.session
+		if name == "db":
+			return frappe.local.db
+		raise AttributeError(name)
+
+	frappe.__getattr__ = _frappe_getattr
 
 	frappe_utils = types.ModuleType("frappe.utils")
 	frappe_utils.flt = lambda value=0, precision=None: (

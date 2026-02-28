@@ -32,7 +32,10 @@ def _normalize_table_store_type(doctype, table_name):
 		fields.append("store_type_category")
 
 	select_fields = ", ".join(f"`{field}`" for field in fields)
-	rows = frappe.db.sql(f"SELECT {select_fields} FROM `{table_name}`", as_dict=True)
+	rows = frappe.db.sql(  # nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection
+		f"SELECT {select_fields} FROM `{table_name}`",
+		as_dict=True,
+	)
 
 	updated_rows = 0
 	for row in rows:

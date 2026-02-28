@@ -10,6 +10,7 @@ This module centralizes all billing operations for the BEI ERP system:
 import calendar
 import re
 from decimal import Decimal
+from typing import Any
 
 import frappe
 from frappe import _
@@ -125,7 +126,11 @@ def _get_store_type_records(store_filters=None):
 
 
 @frappe.whitelist()
-def get_delivery_rates(store=None, cargo_type=None, status=None):
+def get_delivery_rates(
+	store: str | None = None,
+	cargo_type: str | None = None,
+	status: str | None = None,
+):
 	"""List delivery rates with optional filters."""
 	filters = {}
 	if store:
@@ -158,7 +163,14 @@ def get_delivery_rates(store=None, cargo_type=None, status=None):
 
 
 @frappe.whitelist()
-def set_delivery_rate(store, cargo_type, delivery_fee, logistics_fee, effective_from, notes=None):
+def set_delivery_rate(
+	store: str,
+	cargo_type: str,
+	delivery_fee: Any,
+	logistics_fee: Any,
+	effective_from: str,
+	notes: str | None = None,
+):
 	"""Create or update a delivery rate. Auto-detects caller role."""
 	_check_rate_permission()
 
@@ -176,7 +188,7 @@ def set_delivery_rate(store, cargo_type, delivery_fee, logistics_fee, effective_
 
 
 @frappe.whitelist()
-def submit_rate_for_review(rate_name):
+def submit_rate_for_review(rate_name: str):
 	"""Move rate from Draft to Pending Review."""
 	rate = frappe.get_doc("BEI Delivery Rate", rate_name)
 	if rate.status != "Draft":
@@ -187,7 +199,7 @@ def submit_rate_for_review(rate_name):
 
 
 @frappe.whitelist()
-def approve_rate(rate_name):
+def approve_rate(rate_name: str):
 	"""Approve a rate: Pending Review -> Active. Expires any existing active rate."""
 	_check_rate_permission()
 
@@ -258,7 +270,7 @@ def get_stores_without_rates():
 
 
 @frappe.whitelist()
-def get_pending_billings(store=None, billing_type=None):
+def get_pending_billings(store: str | None = None, billing_type: str | None = None):
 	"""List billings pending Finance approval."""
 	filters = {"status": "Pending"}
 	if store:
@@ -289,7 +301,7 @@ def get_pending_billings(store=None, billing_type=None):
 
 
 @frappe.whitelist()
-def approve_billing(billing_name):
+def approve_billing(billing_name: str):
 	"""Finance approves a pending billing. Pending → Approved."""
 	_check_billing_permission("approve billings")
 	billing = frappe.get_doc("BEI Billing Schedule", billing_name)
@@ -302,7 +314,7 @@ def approve_billing(billing_name):
 
 
 @frappe.whitelist()
-def reject_billing(billing_name, reason=None):
+def reject_billing(billing_name: str, reason: str | None = None):
 	"""Finance rejects a pending billing."""
 	_check_billing_permission("reject billings")
 	billing = frappe.get_doc("BEI Billing Schedule", billing_name)
@@ -317,7 +329,7 @@ def reject_billing(billing_name, reason=None):
 
 
 @frappe.whitelist()
-def send_billing_to_store(billing_name):
+def send_billing_to_store(billing_name: str):
 	"""Send approved billing to store (Full Franchise only)."""
 	_check_billing_permission("send billings to store")
 	billing = frappe.get_doc("BEI Billing Schedule", billing_name)
@@ -347,7 +359,7 @@ def send_billing_to_store(billing_name):
 
 
 @frappe.whitelist()
-def generate_monthly_billing(billing_period=None, store=None):
+def generate_monthly_billing(billing_period: str | None = None, store: str | None = None):
 	"""Generate monthly franchise fee billing for all stores.
 
 	Creates BEI Billing Schedule with billing_type='Monthly Fees'.
@@ -515,7 +527,7 @@ def generate_monthly_billing(billing_period=None, store=None):
 
 
 @frappe.whitelist()
-def trigger_monthly_billing_service(billing_period=None, store=None):
+def trigger_monthly_billing_service(billing_period: str | None = None, store: str | None = None):
 	"""Manual service endpoint used by portal trigger surfaces.
 
 	This wraps generate_monthly_billing with explicit service metadata so UI
@@ -539,13 +551,13 @@ def trigger_monthly_billing_service(billing_period=None, store=None):
 
 @frappe.whitelist()
 def get_billing_list(
-	status=None,
-	billing_type=None,
-	store=None,
-	billing_period=None,
-	limit_page_length=20,
-	limit_start=0,
-	order_by="modified desc",
+	status: str | None = None,
+	billing_type: str | None = None,
+	store: str | None = None,
+	billing_period: str | None = None,
+	limit_page_length: int = 20,
+	limit_start: int = 0,
+	order_by: str = "modified desc",
 ):
 	"""List billings with flexible filters."""
 	filters = {}
@@ -583,7 +595,7 @@ def get_billing_list(
 
 
 @frappe.whitelist()
-def get_billing_detail(name):
+def get_billing_detail(name: str):
 	"""Get full billing details including line items and payment info."""
 	billing = frappe.get_doc("BEI Billing Schedule", name)
 	return {
@@ -636,7 +648,7 @@ def get_billing_detail(name):
 
 
 @frappe.whitelist()
-def get_billing_summary(billing_period=None, store=None):
+def get_billing_summary(billing_period: str | None = None, store: str | None = None):
 	"""Get aggregated billing summary by status."""
 	# conditions are all string constants, not user input
 	conditions = ["1=1"]
@@ -684,7 +696,12 @@ def get_billing_summary(billing_period=None, store=None):
 
 
 @frappe.whitelist()
-def record_payment(name, amount, payment_reference=None, payment_proof=None):
+def record_payment(
+	name: str,
+	amount: Any,
+	payment_reference: str | None = None,
+	payment_proof: str | None = None,
+):
 	"""Record a payment against a billing."""
 	if not amount or flt(amount) <= 0:
 		frappe.throw(_("Payment amount must be greater than zero"), frappe.ValidationError)
@@ -724,7 +741,7 @@ def record_payment(name, amount, payment_reference=None, payment_proof=None):
 
 
 @frappe.whitelist()
-def get_soa(name):
+def get_soa(name: str):
 	"""Generate Statement of Account for a billing."""
 	billing = frappe.get_doc("BEI Billing Schedule", name)
 
@@ -753,7 +770,7 @@ def get_soa(name):
 
 
 @frappe.whitelist()
-def cancel_billing(name, reason=None):
+def cancel_billing(name: str, reason: str | None = None):
 	"""Cancel a billing. Only Draft, Pending, or Sent billings can be cancelled."""
 	_check_billing_permission("cancel billings")
 	billing = frappe.get_doc("BEI Billing Schedule", name)
@@ -829,7 +846,7 @@ def _get_gl_account_for_partner(partner):
 
 
 @frappe.whitelist()
-def get_3pl_rates(partner=None, cargo_type=None):
+def get_3pl_rates(partner: str | None = None, cargo_type: str | None = None):
 	"""
 	GET active 3PL rate master lookup.
 	Returns rates where effective_to is null or >= today.
@@ -853,7 +870,8 @@ def get_3pl_rates(partner=None, cargo_type=None):
 
 	where_clause = " AND ".join(conditions)
 
-	rates = frappe.db.sql(
+	# where_clause is assembled from fixed query fragments; all user values are bound via `params`.
+	rates = frappe.db.sql(  # nosemgrep: frappe-semgrep-rules.rules.security.frappe-sql-format-injection
 		f"""
         SELECT
             name, rate_name, threepl_partner, cargo_type, zone,
@@ -879,7 +897,7 @@ def get_3pl_rates(partner=None, cargo_type=None):
 
 
 @frappe.whitelist()
-def generate_3pl_reconciliation(month, year, partner):
+def generate_3pl_reconciliation(month: int | str, year: int | str, partner: str):
 	"""
 	POST: Generate monthly 3PL reconciliation report.
 	Steps:
@@ -1046,7 +1064,7 @@ def generate_3pl_reconciliation(month, year, partner):
 
 
 @frappe.whitelist()
-def create_3pl_payment_request(month, year, partner, invoice_amount):
+def create_3pl_payment_request(month: int | str, year: int | str, partner: str, invoice_amount: Any):
 	"""
 	POST: Create a Journal Entry payment request for a 3PL invoice.
 	- Gross = invoice_amount
@@ -1207,7 +1225,7 @@ def create_3pl_payment_request(month, year, partner, invoice_amount):
 
 
 @frappe.whitelist()
-def get_reconciliation_summary(month, year):
+def get_reconciliation_summary(month: int | str, year: int | str):
 	"""
 	GET: Summary across all 3PL partners for a given month.
 	Returns: [{partner, trip_count, expected_cost, invoice_amount, variance, variance_pct}]
@@ -1283,7 +1301,7 @@ def get_reconciliation_summary(month, year):
 
 
 @frappe.whitelist()
-def flag_discrepancy(trip_name, reason, amount):
+def flag_discrepancy(trip_name: str, reason: str, amount: Any):
 	"""
 	POST: Flag a specific trip as discrepant.
 	Reasons: extra_trip, wrong_rate, missing_pod, duplicate, other.

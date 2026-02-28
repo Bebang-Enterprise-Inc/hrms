@@ -182,7 +182,7 @@ class BEIPaymentRequest(Document):
 		return {"success": True, "message": _("Payment request submitted for review")}
 
 	@frappe.whitelist()
-	def approve_review(self, comment=None):
+	def approve_review(self, comment: str | None = None):
 		"""Level 1: Reviewer approves."""
 		self._check_role(["Accounts User", "Accounts Manager", "System Manager"])
 		if self.status != "Pending Review":
@@ -202,7 +202,7 @@ class BEIPaymentRequest(Document):
 		return {"success": True, "message": _("Review approved - pending budget approval")}
 
 	@frappe.whitelist()
-	def approve_budget(self, comment=None):
+	def approve_budget(self, comment: str | None = None):
 		"""Level 2: Budget approver approves."""
 		self._check_role(["Accounts Manager", "System Manager"])
 		if self.status != "Pending Budget Approval":
@@ -222,7 +222,7 @@ class BEIPaymentRequest(Document):
 		return {"success": True, "message": _("Budget approved - pending CFO approval")}
 
 	@frappe.whitelist()
-	def approve_cfo(self, comment=None):
+	def approve_cfo(self, comment: str | None = None):
 		"""Level 3: CFO (Butch) approves."""
 		self._check_role(["Accounts Manager", "System Manager"])
 		if self.status != "Pending CFO Approval":
@@ -250,7 +250,7 @@ class BEIPaymentRequest(Document):
 			return {"success": True, "message": _("Payment request fully approved")}
 
 	@frappe.whitelist()
-	def approve_ceo(self, comment=None):
+	def approve_ceo(self, comment: str | None = None):
 		"""Level 4: CEO approves (only for new suppliers or >1M)."""
 		self._check_role(["Accounts Manager", "System Manager"])
 		if self.status != "Pending CEO Approval":
@@ -467,7 +467,7 @@ class BEIPaymentRequest(Document):
 		return paid_from, mode_of_payment
 
 	@frappe.whitelist()
-	def reject(self, level, reason):
+	def reject(self, level: str, reason: str):
 		"""Reject payment request at any level."""
 		self._check_role(["Accounts User", "Accounts Manager", "System Manager"])
 		valid_levels = {
@@ -513,7 +513,11 @@ class BEIPaymentRequest(Document):
 		return {"success": True, "message": _("Payment request rejected")}
 
 	@frappe.whitelist()
-	def mark_as_paid(self, transaction_reference=None, payment_proof=None):
+	def mark_as_paid(
+		self,
+		transaction_reference: str | None = None,
+		payment_proof: str | None = None,
+	):
 		"""
 		Mark payment as processed/paid and create Frappe Payment Entry.
 

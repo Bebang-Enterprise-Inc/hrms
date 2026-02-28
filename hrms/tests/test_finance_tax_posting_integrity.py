@@ -47,15 +47,26 @@ def _install_fake_frappe():
 	frappe.log_error = lambda *args, **kwargs: None
 	frappe.msgprint = lambda *args, **kwargs: None
 	frappe.get_roles = lambda user=None: ["System Manager"]
-	frappe.session = types.SimpleNamespace(user="Administrator")
 	frappe.defaults = types.SimpleNamespace(get_global_default=lambda key: "Bebang Enterprise Inc.")
-	frappe.db = types.SimpleNamespace(
-		get_value=lambda *args, **kwargs: None,
-		exists=lambda *args, **kwargs: None,
-		savepoint=lambda *args, **kwargs: "sp",
-		rollback=lambda *args, **kwargs: None,
-		release_savepoint=lambda *args, **kwargs: None,
+	frappe.local = types.SimpleNamespace(
+		session=types.SimpleNamespace(user="Administrator"),
+		db=types.SimpleNamespace(
+			get_value=lambda *args, **kwargs: None,
+			exists=lambda *args, **kwargs: None,
+			savepoint=lambda *args, **kwargs: "sp",
+			rollback=lambda *args, **kwargs: None,
+			release_savepoint=lambda *args, **kwargs: None,
+		),
 	)
+
+	def _frappe_getattr(name):
+		if name == "session":
+			return frappe.local.session
+		if name == "db":
+			return frappe.local.db
+		raise AttributeError(name)
+
+	frappe.__getattr__ = _frappe_getattr
 	frappe.new_doc = lambda *args, **kwargs: None
 	frappe.get_doc = lambda *args, **kwargs: None
 	frappe.get_all = lambda *args, **kwargs: []

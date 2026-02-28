@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import py_compile
 import re
 import sys
@@ -60,8 +61,8 @@ def read_text(path: Path) -> str:
 
 def compile_python(path: Path) -> tuple[bool, str]:
 	try:
-		with tempfile.NamedTemporaryFile(prefix="finance_runtime_", suffix=".pyc", delete=False) as tmp:
-			cfile = tmp.name
+		fd, cfile = tempfile.mkstemp(prefix="finance_runtime_", suffix=".pyc")
+		os.close(fd)
 		py_compile.compile(str(path), cfile=cfile, doraise=True)
 		Path(cfile).unlink(missing_ok=True)
 		return True, "syntax_ok"
