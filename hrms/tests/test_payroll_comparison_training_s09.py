@@ -161,6 +161,11 @@ class TestPayrollComparisonTrainingS09(unittest.TestCase):
 		self.assertEqual(result["data"][0]["compliance_rate"], 80.0)
 		self.assertEqual(result["data"][1]["compliance_rate"], 100.0)
 
+		sql_query = hr_reports.frappe.db.sql.call_args[0][0]
+		self.assertIn("tabTraining Result Employee", sql_query)
+		self.assertIn("COUNT(DISTINCT tre.employee)", sql_query)
+		self.assertNotIn("COUNT(DISTINCT tr.employee)", sql_query)
+
 
 if __name__ == "__main__":
 	unittest.main()

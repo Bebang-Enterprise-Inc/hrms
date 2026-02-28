@@ -582,10 +582,14 @@ def get_training_completion_by_store(training_event_type: str | None = None) -> 
 		"""
         SELECT
             e.branch,
-            COUNT(DISTINCT tr.employee) as completed,
+            COUNT(DISTINCT tre.employee) as completed,
             COUNT(DISTINCT e2.name) as total_active
         FROM `tabTraining Result` tr
-        JOIN `tabEmployee` e ON tr.employee = e.name
+        JOIN `tabTraining Result Employee` tre
+          ON tre.parent = tr.name
+         AND tre.parenttype = 'Training Result'
+         AND tre.parentfield = 'employees'
+        JOIN `tabEmployee` e ON tre.employee = e.name
         JOIN `tabEmployee` e2 ON e2.branch = e.branch AND e2.status = 'Active'
         WHERE tr.docstatus = 1
           AND (%(event_type)s IS NULL OR tr.training_event = %(event_type)s)
