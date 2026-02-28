@@ -40,6 +40,7 @@ hrms.patches.v16_0.add_employee_enrichment_fields #2026-01-16
 hrms.patches.v16_0.seed_bei_separation_data #2026-01-22
 hrms.patches.v16_0.migrate_paid_to_awaiting_or #2026-02-09
 hrms.patches.v16_0.backfill_billing_type
+hrms.patches.v16_0.normalize_store_type_category_to_store_type #2026-02-28
 hrms.patches.v16_0.seed_warehouse_department_mapping
 hrms.patches.v16_0.add_cycle_count_unique_index #2026-02-19
 hrms.patches.v16_0.drop_cycle_count_unique_index #2026-02-20

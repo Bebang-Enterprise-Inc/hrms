@@ -5,6 +5,48 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+CANONICAL_STORE_TYPE_VALUES = ("JV", "Managed Franchise", "Full Franchise")
+
+STORE_TYPE_ALIASES = {
+	"jv": "JV",
+	"jv store": "JV",
+	"jv stores": "JV",
+	"joint venture": "JV",
+	"joint venture store": "JV",
+	"joint venture stores": "JV",
+	"managed franchise": "Managed Franchise",
+	"managed-franchise": "Managed Franchise",
+	"managed_franchise": "Managed Franchise",
+	"full franchise": "Full Franchise",
+	"full-franchise": "Full Franchise",
+	"full_franchise": "Full Franchise",
+}
+
+
+def normalize_store_type(value):
+	"""Normalize any store type variant to its canonical value when possible."""
+	if value is None:
+		return ""
+
+	raw_value = " ".join(str(value).strip().split())
+	if not raw_value:
+		return ""
+
+	normalized_key = raw_value.lower().replace("_", " ").replace("-", " ")
+	normalized_key = " ".join(normalized_key.split())
+
+	return STORE_TYPE_ALIASES.get(normalized_key, raw_value)
+
+
+def resolve_store_type(store_type=None, store_type_category=None):
+	"""Resolve canonical store type from canonical or legacy field."""
+	return normalize_store_type(store_type or store_type_category)
+
+
+def is_canonical_store_type(value):
+	"""Return True if value is one of the canonical store_type values."""
+	return normalize_store_type(value) in CANONICAL_STORE_TYPE_VALUES
+
 
 class BEIStoreType(Document):
 	"""
@@ -20,9 +62,29 @@ class BEIStoreType(Document):
 
 	def validate(self):
 		"""Validate store type configuration."""
+		self.normalize_store_type_fields()
+		self.validate_store_type_contract()
 		self.validate_store_exists()
 		self.validate_store_uniqueness()
 		self.set_default_rates()
+
+	def normalize_store_type_fields(self):
+		"""Normalize store type values from canonical or legacy fields."""
+		self.store_type = resolve_store_type(
+			store_type=getattr(self, "store_type", None),
+			store_type_category=getattr(self, "store_type_category", None),
+		)
+
+	def validate_store_type_contract(self):
+		"""Enforce canonical store_type contract."""
+		if not self.store_type:
+			frappe.throw(_("Store Type is required"))
+
+		if self.store_type not in CANONICAL_STORE_TYPE_VALUES:
+			allowed_values = ", ".join(CANONICAL_STORE_TYPE_VALUES)
+			frappe.throw(
+				_("Invalid store type '{0}'. Allowed values: {1}").format(self.store_type, allowed_values)
+			)
 
 	def validate_store_exists(self):
 		"""Ensure store (Department) exists."""
