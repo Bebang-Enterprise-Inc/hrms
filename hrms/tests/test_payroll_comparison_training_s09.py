@@ -12,7 +12,15 @@ if str(ROOT) not in sys.path:
 
 
 def _install_fake_runtime():
-	frappe = types.ModuleType("frappe")
+	class _FrappeModule(types.ModuleType):
+		def __getattr__(self, name):
+			if name == "db":
+				return self.local.db
+			if name == "session":
+				return self.local.session
+			raise AttributeError(name)
+
+	frappe = _FrappeModule("frappe")
 	frappe_utils = types.ModuleType("frappe.utils")
 	frappe_rate_limiter = types.ModuleType("frappe.rate_limiter")
 
@@ -43,10 +51,12 @@ def _install_fake_runtime():
 	frappe.log_error = lambda *args, **kwargs: None
 	frappe.parse_json = lambda value: __import__("json").loads(value)
 	frappe.get_roles = lambda *args, **kwargs: ["HR User"]
-	frappe.session = types.SimpleNamespace(user="test.hr@bebang.ph")
-	frappe.db = types.SimpleNamespace(
-		sql=lambda *args, **kwargs: [],
-		count=lambda *args, **kwargs: 0,
+	frappe.local = types.SimpleNamespace(
+		session=types.SimpleNamespace(user="test.hr@bebang.ph"),
+		db=types.SimpleNamespace(
+			sql=lambda *args, **kwargs: [],
+			count=lambda *args, **kwargs: 0,
+		),
 	)
 
 	frappe_utils.flt = lambda value, precision=None: float(value or 0)
