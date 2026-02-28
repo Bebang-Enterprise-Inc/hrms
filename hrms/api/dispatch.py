@@ -1273,6 +1273,7 @@ def create_trip_from_route(
 
 		# Validate all selected stores exist in route's zone pool
 		zone_stores = {s.store for s in route.stops}
+		route_stop_map = {s.store: s for s in route.stops}
 		for sel in selected_stops:
 			if sel.get("store") not in zone_stores:
 				frappe.throw(_(f"Store {sel.get('store')} is not in zone {route.route_name}"))
@@ -1303,9 +1304,14 @@ def create_trip_from_route(
 		for sel in selected_stops:
 			store = sel.get("store")
 			order = order_map.get(store)
+			route_stop = route_stop_map.get(store)
+			estimated_minutes = getattr(route_stop, "estimated_minutes", 20) if route_stop else 20
+			selected_stop_order = cint(sel.get("stop_order")) or (len(stops) + 1)
 			stops.append(
 				{
 					"store": store,
+					"stop_order": selected_stop_order,
+					"estimated_minutes": estimated_minutes,
 					"items_count": item_counts.get(order, 0) if order else 0,
 					"store_order": order or "",
 				}

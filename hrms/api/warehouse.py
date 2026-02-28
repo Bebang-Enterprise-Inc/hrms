@@ -13,6 +13,7 @@ from hrms.utils.scm_roles import check_scm_permission, SCM_APPROVAL_ROLES
 
 import frappe
 from frappe import _
+from frappe.utils import flt
 import json
 
 
@@ -466,7 +467,17 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
     se.remarks = remarks or f"Transfer to {target_warehouse}"
 
     # Add items
+    normalized_items = []
     for item_data in items:
+        qty_value = item_data.get("qty", item_data.get("quantity"))
+        if qty_value is None:
+            frappe.throw(
+                _("Missing quantity for item {0}").format(item_data.get("item_code", "unknown"))
+            )
+        item_data["qty"] = flt(qty_value)
+        normalized_items.append(item_data)
+
+    for item_data in normalized_items:
         # Get item details
         item = frappe.get_doc("Item", item_data["item_code"])
 
@@ -516,7 +527,10 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
         "data": {
             "name": se.name,
             "total_qty": sum(i.qty for i in se.items),
-            "items_count": len(se.items)
+            "items_count": len(se.items),
+            "movement_type": "Material Transfer",
+            "source_warehouse": source_warehouse,
+            "target_warehouse": target_warehouse,
         },
         "message": f"Stock Transfer {se.name} created successfully"
     }
