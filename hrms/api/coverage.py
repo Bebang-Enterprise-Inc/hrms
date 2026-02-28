@@ -132,11 +132,15 @@ def approve_coverage(request_name, assigned_employee):
         frappe.throw(_("Assigned employee is required"))
 
     doc = frappe.get_doc("BEI Staff Coverage Request", request_name)
+    if doc.status not in ("Pending", "Open"):
+        frappe.throw(_("Only pending coverage requests can be assigned"))
+
+    assigned_employee_id = resolve_employee(assigned_employee)
     doc.status = "Assigned"
-    doc.assigned_employee = assigned_employee
+    doc.assigned_employee = assigned_employee_id
     doc.assigned_by = frappe.session.user
-    doc.save()
-    return {"success": True}
+    doc.save(ignore_permissions=True)
+    return {"success": True, "assigned_employee": assigned_employee_id}
 
 
 @frappe.whitelist()
