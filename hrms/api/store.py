@@ -425,6 +425,7 @@ def submit_order(store, items, cargo_category=None, delivery_date=None, is_emerg
 
     # Route to area supervisor approval queue (non-fatal if it fails)
     warning = None
+    queue_status = "queued"
     try:
         approver = _get_area_supervisor_for_store(warehouse)
         if approver:
@@ -437,8 +438,12 @@ def submit_order(store, items, cargo_category=None, delivery_date=None, is_emerg
             queue_entry.submitted_by = frappe.session.user
             queue_entry.submitted_at = frappe.utils.now()
             queue_entry.insert(ignore_permissions=True)
+        else:
+            queue_status = "unmapped"
+            warning = "Order created but no Area Supervisor mapping was found for this store."
     except Exception:
         frappe.log_error(f"Failed to create approval queue for order {order.name}", "Approval Queue Error")
+        queue_status = "failed"
         warning = "Order created but approval routing failed. Please notify your Area Supervisor manually."
 
     result = {
@@ -446,6 +451,7 @@ def submit_order(store, items, cargo_category=None, delivery_date=None, is_emerg
         "name": order.name,
         "status": order.status,
         "message": f"Order {order.name} submitted successfully",
+        "approval_queue_status": queue_status,
     }
     if warning:
         result["warning"] = warning

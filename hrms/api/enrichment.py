@@ -843,6 +843,46 @@ def send_enrichment_reminders(
 
 
 @frappe.whitelist()
+def queue_enrichment_reminders(
+    employees: list = None,
+    branch: str = None,
+    method: str = "email",
+) -> dict:
+    """Queue enrichment reminders with direct-call fallback.
+
+    Returns async status when enqueue succeeds. If background queue is unavailable,
+    falls back to synchronous send to avoid dropped reminders.
+    """
+    try:
+        frappe.enqueue(
+            "hrms.api.enrichment.send_enrichment_reminders",
+            queue="short",
+            employees=employees,
+            branch=branch,
+            method=method,
+            enqueue_after_commit=True,
+        )
+        return {
+            "status": "queued",
+            "mode": "async",
+            "message": _("Enrichment reminders queued successfully."),
+        }
+    except Exception:
+        frappe.log_error(
+            frappe.get_traceback(),
+            "Enrichment Reminder Queue Fallback",
+        )
+        result = send_enrichment_reminders(
+            employees=employees,
+            branch=branch,
+            method=method,
+        )
+        result["status"] = "queued_fallback"
+        result["mode"] = "sync_fallback"
+        return result
+
+
+@frappe.whitelist()
 def mark_enrichment_complete(employee: str) -> dict:
     """Mark an employee's enrichment as complete (HR only).
 
