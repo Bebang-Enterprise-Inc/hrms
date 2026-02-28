@@ -1,6 +1,144 @@
-import hrms.api.billing as billing_api
-import hrms.patches.v16_0.normalize_store_type_category_to_store_type as store_type_patch
-from hrms.hr.doctype.bei_store_type.bei_store_type import resolve_store_type, normalize_store_type
+from __future__ import annotations
+
+import importlib.util
+import sys
+import types
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _ensure_package(name: str) -> types.ModuleType:
+    module = sys.modules.get(name)
+    if module is None:
+        module = types.ModuleType(name)
+        module.__path__ = []
+        sys.modules[name] = module
+        if "." in name:
+            parent_name, child_name = name.rsplit(".", 1)
+            parent = _ensure_package(parent_name)
+            setattr(parent, child_name, module)
+    return module
+
+
+def _register_module(name: str, module: types.ModuleType) -> None:
+    sys.modules[name] = module
+    if "." in name:
+        parent_name, child_name = name.rsplit(".", 1)
+        parent = _ensure_package(parent_name)
+        setattr(parent, child_name, module)
+
+
+def _install_frappe_stub() -> None:
+    frappe = types.ModuleType("frappe")
+
+    def _translate(value):
+        return value
+
+    def _whitelist(*args, **kwargs):
+        if args and callable(args[0]) and len(args) == 1 and not kwargs:
+            return args[0]
+
+        def decorator(function):
+            return function
+
+        return decorator
+
+    frappe._ = _translate
+    frappe.whitelist = _whitelist
+    frappe.db = types.SimpleNamespace()
+    frappe.get_all = lambda *args, **kwargs: []
+    frappe.session = types.SimpleNamespace(user="pytest@example.com")
+    frappe.get_roles = lambda *args, **kwargs: []
+    frappe.throw = lambda message, *args, **kwargs: (_ for _ in ()).throw(Exception(message))
+    frappe.log_error = lambda *args, **kwargs: None
+    frappe.logger = lambda: types.SimpleNamespace(warning=lambda *args, **kwargs: None)
+    frappe.has_permission = lambda *args, **kwargs: True
+    frappe.new_doc = lambda *args, **kwargs: types.SimpleNamespace()
+    frappe.get_doc = lambda *args, **kwargs: types.SimpleNamespace()
+    frappe.publish_realtime = lambda *args, **kwargs: None
+    frappe.get_traceback = lambda: ""
+
+    frappe.ValidationError = type("ValidationError", (Exception,), {})
+    frappe.PermissionError = type("PermissionError", (Exception,), {})
+    frappe.DoesNotExistError = type("DoesNotExistError", (Exception,), {})
+
+    frappe_utils = types.ModuleType("frappe.utils")
+    frappe_utils.flt = lambda value=0, *args, **kwargs: float(value or 0)
+    frappe_utils.now_datetime = lambda: None
+    frappe_utils.get_first_day = lambda value: value
+    frappe_utils.get_last_day = lambda value: value
+    frappe_utils.nowdate = lambda: "2026-01-01"
+
+    frappe_model = types.ModuleType("frappe.model")
+    frappe_model_document = types.ModuleType("frappe.model.document")
+
+    class Document:
+        pass
+
+    frappe_model_document.Document = Document
+
+    frappe.utils = frappe_utils
+    frappe.model = frappe_model
+    frappe_model.document = frappe_model_document
+
+    _register_module("frappe", frappe)
+    _register_module("frappe.utils", frappe_utils)
+    _register_module("frappe.model", frappe_model)
+    _register_module("frappe.model.document", frappe_model_document)
+
+
+def _install_hrms_support_stubs() -> None:
+    for package_name in (
+        "hrms",
+        "hrms.utils",
+        "hrms.api",
+        "hrms.hr",
+        "hrms.hr.doctype",
+        "hrms.hr.doctype.bei_store_type",
+        "hrms.patches",
+        "hrms.patches.v16_0",
+    ):
+        _ensure_package(package_name)
+
+    bei_config = types.ModuleType("hrms.utils.bei_config")
+    bei_config.get_company = lambda: "Test Company"
+    _register_module("hrms.utils.bei_config", bei_config)
+
+    scm_roles = types.ModuleType("hrms.utils.scm_roles")
+    scm_roles.RATE_MANAGEMENT_ROLES = ()
+    scm_roles.SCM_BILLING_ROLES = ()
+    scm_roles.check_scm_permission = lambda *args, **kwargs: None
+    _register_module("hrms.utils.scm_roles", scm_roles)
+
+
+def _load_module_from_path(module_name: str, relative_path: str):
+    module_path = REPO_ROOT / relative_path
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load module spec for {module_name} at {module_path}")
+
+    module = importlib.util.module_from_spec(spec)
+    _register_module(module_name, module)
+    spec.loader.exec_module(module)
+    return module
+
+
+_install_frappe_stub()
+_install_hrms_support_stubs()
+
+store_type_module = _load_module_from_path(
+    "hrms.hr.doctype.bei_store_type.bei_store_type",
+    "hrms/hr/doctype/bei_store_type/bei_store_type.py",
+)
+billing_api = _load_module_from_path("hrms.api.billing", "hrms/api/billing.py")
+store_type_patch = _load_module_from_path(
+    "hrms.patches.v16_0.normalize_store_type_category_to_store_type",
+    "hrms/patches/v16_0/normalize_store_type_category_to_store_type.py",
+)
+
+normalize_store_type = store_type_module.normalize_store_type
+resolve_store_type = store_type_module.resolve_store_type
 
 
 def test_normalize_store_type_contract_aliases():
