@@ -1353,6 +1353,13 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
 | Vercel deploys | 3 (bei-tasks #6, #7, follow-up #21753626825) |
 | E2E pass rate | 100% (10/10 PASS after follow-up fixes deployed and verified) |
 
+#### Sprint A Evidence Status (2026-02-28)
+- [x] Runtime checker script added: `scripts/finance/check_finance_runtime.py`
+- [x] Restore drill verifier script added: `scripts/finance/verify_restore_drill.py`
+- [x] Runtime evidence artifact generated: `output/agent-runs/20260228-finance-config-a/runtime-frappe-checks-finance.json`
+- [x] Restore drill report generated: `output/agent-runs/20260228-finance-config-a/DB_RESTORE_DRILL_REPORT.json`
+- [ ] Backup manifest present in this worktree at run time: `output/agent-runs/20260228-finance-config-a/PRE_DEPLOY_DEPENDENCY_CHECK.json`
+
 ---
 ---
 
