@@ -174,34 +174,77 @@ def get_soa_detail(soa_name: str) -> dict[str, Any]:
 	if not soa_name:
 		frappe.throw(_("SOA name is required"))
 
-	soa = frappe.get_doc("BEI Statement of Account", soa_name)
-	if not frappe.has_permission("BEI Statement of Account", "read", doc=soa):
+	if not frappe.has_permission("BEI Statement of Account", "read"):
 		frappe.throw(_("Not permitted to read this SOA"), frappe.PermissionError)
 
-	line_items = []
-	for item in soa.get("line_items", []):
-		line_items.append(
-			{
-				"name": item.get("name"),
-				"billing_reference": item.get("billing_reference"),
-				"billing_type": item.get("billing_type"),
-				"billing_date": item.get("billing_date"),
-				"description": item.get("description"),
-				"amount": flt(item.get("amount")),
-			}
+	soa = frappe.db.get_value(
+		"BEI Statement of Account",
+		soa_name,
+		[
+			"name",
+			"store",
+			"store_type",
+			"soa_period",
+			"status",
+			"total_billings",
+			"total_payments",
+			"balance_due",
+			"generated_on",
+			"sent_on",
+		],
+		as_dict=True,
+	)
+	if not soa:
+		frappe.throw(_("SOA {0} not found").format(soa_name), frappe.DoesNotExistError)
+
+	line_items: list[dict[str, Any]] = []
+	child_doctype = frappe.db.get_value(
+		"DocField",
+		{
+			"parent": "BEI Statement of Account",
+			"parenttype": "DocType",
+			"fieldname": "line_items",
+			"fieldtype": "Table",
+		},
+		"options",
+	)
+	if child_doctype:
+		rows = frappe.get_all(
+			child_doctype,
+			filters={"parent": soa_name, "parenttype": "BEI Statement of Account"},
+			fields=[
+				"name",
+				"billing_reference",
+				"billing_type",
+				"billing_date",
+				"description",
+				"amount",
+			],
+			order_by="idx asc",
 		)
+		for item in rows:
+			line_items.append(
+				{
+					"name": item.get("name"),
+					"billing_reference": item.get("billing_reference"),
+					"billing_type": item.get("billing_type"),
+					"billing_date": item.get("billing_date"),
+					"description": item.get("description"),
+					"amount": flt(item.get("amount")),
+				}
+			)
 
 	return {
-		"name": soa.name,
-		"store": soa.store,
-		"store_type": soa.store_type,
-		"soa_period": soa.soa_period,
-		"status": soa.status,
-		"total_billings": flt(soa.total_billings),
-		"total_payments": flt(soa.total_payments),
-		"balance_due": flt(soa.balance_due),
-		"generated_on": soa.generated_on,
-		"sent_on": soa.sent_on,
+		"name": soa.get("name"),
+		"store": soa.get("store"),
+		"store_type": soa.get("store_type"),
+		"soa_period": soa.get("soa_period"),
+		"status": soa.get("status"),
+		"total_billings": flt(soa.get("total_billings")),
+		"total_payments": flt(soa.get("total_payments")),
+		"balance_due": flt(soa.get("balance_due")),
+		"generated_on": soa.get("generated_on"),
+		"sent_on": soa.get("sent_on"),
 		"line_items": line_items,
 	}
 
