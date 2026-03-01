@@ -96,7 +96,7 @@ def _install_fake_frappe(allow_access: bool = True):
 	frappe.throw = throw
 	frappe.ValidationError = ValidationError
 	frappe.PermissionError = PermissionError
-	frappe.db = types.SimpleNamespace(sql=sql)
+	frappe.__dict__["db"] = types.SimpleNamespace(sql=sql)
 	frappe.get_all = get_all
 	frappe._ = lambda value: value
 

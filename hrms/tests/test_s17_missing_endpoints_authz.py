@@ -50,7 +50,7 @@ def _install_fake_frappe(allow_access: bool):
 	frappe.ValidationError = ValidationError
 	frappe.PermissionError = PermissionError
 	frappe._ = lambda value: value
-	frappe.db = types.SimpleNamespace(sql=lambda *args, **kwargs: [])
+	frappe.__dict__["db"] = types.SimpleNamespace(sql=lambda *args, **kwargs: [])
 	frappe.get_all = lambda *args, **kwargs: []
 
 	utils.today = lambda: "2026-03-01"
