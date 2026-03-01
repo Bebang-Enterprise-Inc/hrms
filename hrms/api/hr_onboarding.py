@@ -1,204 +1,309 @@
-# Copyright (c) 2026, Bebang Enterprise Inc.
-# For license information, please see license.txt
+"""
+HR onboarding bridge API for the my.bebang.ph portal.
+
+This module intentionally stays orchestration-focused:
+- Recruitment offer queue operations
+- Offer status transitions
+- Offer -> Employee Onboarding bridge
+- Checklist read model for onboarding detail page
+"""
 
 from __future__ import annotations
-
-import json
-from typing import Any
 
 import frappe
 from frappe import _
 from frappe.utils import cint, nowdate
 
-HR_ONBOARDING_ALLOWED_ROLES = {"System Manager", "HR Manager", "HR User"}
+
+HR_ONBOARDING_ROLES = {"HR Manager", "HR User", "System Manager"}
+VALID_OFFER_STATUSES = {"Accepted", "Rejected"}
 
 
-def _check_hr_permission() -> None:
-	roles = set(frappe.get_roles(frappe.session.user))
-	if not roles.intersection(HR_ONBOARDING_ALLOWED_ROLES):
-		frappe.throw(_("You don't have permission to access HR onboarding actions."), frappe.PermissionError)
+def _check_hr_onboarding_access():
+    roles = set(frappe.get_roles(frappe.session.user))
+    if not roles.intersection(HR_ONBOARDING_ROLES):
+        frappe.throw(_("Only HR users can access recruitment onboarding endpoints."), frappe.PermissionError)
 
 
-def _as_int(value: Any, default: int) -> int:
-	try:
-		parsed = int(value)
-	except Exception:
-		return default
-	return parsed if parsed > 0 else default
+def _normalize_page(page, page_size):
+    page = cint(page) if page else 1
+    page_size = cint(page_size) if page_size else 20
+
+    if page < 1:
+        page = 1
+    if page_size < 1:
+        page_size = 20
+    if page_size > 100:
+        page_size = 100
+
+    return page, page_size, (page - 1) * page_size
+
+
+def _resolve_template(company=None, department=None, designation=None):
+    if not frappe.db.exists("DocType", "Employee Onboarding Template"):
+        return None
+
+    strict_filters = {}
+    if company:
+        strict_filters["company"] = company
+    if department:
+        strict_filters["department"] = department
+    if designation:
+        strict_filters["designation"] = designation
+
+    if strict_filters:
+        strict_match = frappe.db.get_value("Employee Onboarding Template", strict_filters, "name")
+        if strict_match:
+            return strict_match
+
+    if company:
+        company_match = frappe.db.get_value(
+            "Employee Onboarding Template",
+            {"company": company},
+            "name",
+            order_by="modified desc",
+        )
+        if company_match:
+            return company_match
+
+    return frappe.db.get_value("Employee Onboarding Template", {}, "name", order_by="modified desc")
 
 
 @frappe.whitelist()
-def get_job_offers(
-	status: str | None = None,
-	department: str | None = None,
-	page: int = 1,
-	page_size: int = 20,
-) -> dict[str, Any]:
-	_check_hr_permission()
+def get_job_offers(status=None, department=None, page=1, page_size=20):
+    """Paginated job-offer list for HR recruitment offers page."""
+    _check_hr_onboarding_access()
+    page, page_size, offset = _normalize_page(page, page_size)
 
-	page = _as_int(page, 1)
-	page_size = min(_as_int(page_size, 20), 100)
-	start = (page - 1) * page_size
+    conditions = ["1=1"]
+    params = {"limit": page_size, "offset": offset}
 
-	values: dict[str, Any] = {
-		"status": status or None,
-		"department": department or None,
-		"start": start,
-		"page_size": page_size,
-	}
+    if status:
+        conditions.append("jo.status = %(status)s")
+        params["status"] = status
 
-	total = frappe.db.sql(
-		"""
-        SELECT COUNT(*)
-        FROM `tabJob Offer` jo
-        LEFT JOIN `tabJob Applicant` ja ON ja.name = jo.job_applicant
-        WHERE (%(status)s IS NULL OR jo.status = %(status)s)
-          AND (%(department)s IS NULL OR ja.department = %(department)s)
-        """,
-		values,
-	)[0][0]
+    if department:
+        conditions.append("opening.department = %(department)s")
+        params["department"] = department
 
-	rows = frappe.db.sql(
-		"""
+    where = " AND ".join(conditions)
+
+    rows = frappe.db.sql(
+        f"""
         SELECT
             jo.name,
             jo.applicant_name,
             jo.designation,
+            COALESCE(opening.department, '') AS department,
             jo.company,
             jo.offer_date,
             jo.status,
-            jo.job_applicant,
-            COALESCE(ja.department, '') AS department
+            jo.job_applicant
         FROM `tabJob Offer` jo
         LEFT JOIN `tabJob Applicant` ja ON ja.name = jo.job_applicant
-        WHERE (%(status)s IS NULL OR jo.status = %(status)s)
-          AND (%(department)s IS NULL OR ja.department = %(department)s)
-        ORDER BY jo.creation DESC
-        LIMIT %(start)s, %(page_size)s
+        LEFT JOIN `tabJob Opening` opening ON opening.name = ja.job_title
+        WHERE {where}
+        ORDER BY jo.offer_date DESC, jo.creation DESC
+        LIMIT %(limit)s OFFSET %(offset)s
         """,
-		values,
-		as_dict=True,
-	)
+        params,
+        as_dict=True,
+    )
 
-	return {
-		"data": rows,
-		"total": cint(total),
-		"page": page,
-		"page_size": page_size,
-	}
+    total = frappe.db.sql(
+        f"""
+        SELECT COUNT(jo.name) AS total
+        FROM `tabJob Offer` jo
+        LEFT JOIN `tabJob Applicant` ja ON ja.name = jo.job_applicant
+        LEFT JOIN `tabJob Opening` opening ON opening.name = ja.job_title
+        WHERE {where}
+        """,
+        params,
+        as_dict=True,
+    )[0].total
 
-
-@frappe.whitelist()
-def update_job_offer_status(name: str, status: str, notes: str | None = None) -> dict[str, Any]:
-	_check_hr_permission()
-
-	if not name:
-		frappe.throw(_("Job Offer is required."))
-	if status not in {"Accepted", "Rejected"}:
-		frappe.throw(_("Status must be either Accepted or Rejected."))
-
-	offer = frappe.get_doc("Job Offer", name)
-	offer.status = status
-	offer.save(ignore_permissions=True)
-
-	if notes:
-		offer.add_comment("Comment", _("Offer status note: {0}").format(notes))
-
-	if offer.job_applicant:
-		applicant_status = "Accepted" if status == "Accepted" else "Rejected"
-		frappe.db.set_value("Job Applicant", offer.job_applicant, "status", applicant_status)
-
-	return {"success": True, "name": offer.name, "status": offer.status}
+    return {
+        "data": rows,
+        "total": cint(total),
+        "page": page,
+        "page_size": page_size,
+    }
 
 
 @frappe.whitelist()
-def create_onboarding_from_offer(job_offer: str) -> dict[str, Any]:
-	_check_hr_permission()
+def get_onboarding_checklist(employee_onboarding=None, job_offer=None):
+    """Return onboarding checklist read model for detail page."""
+    _check_hr_onboarding_access()
 
-	if not job_offer:
-		frappe.throw(_("Job Offer is required."))
+    onboarding_name = None
+    if employee_onboarding:
+        onboarding_name = frappe.db.get_value("Employee Onboarding", employee_onboarding, "name")
+    elif job_offer:
+        onboarding_name = frappe.db.get_value(
+            "Employee Onboarding",
+            {"job_offer": job_offer, "docstatus": ["!=", 2]},
+            "name",
+            order_by="creation desc",
+        )
 
-	offer = frappe.get_doc("Job Offer", job_offer)
-	if offer.status != "Accepted":
-		frappe.throw(_("Only accepted offers can create onboarding checklists."))
+    if not onboarding_name:
+        frappe.throw(_("Employee onboarding record not found."))
 
-	existing = frappe.db.exists(
-		"Employee Onboarding",
-		{"job_offer": offer.name, "docstatus": ("!=", 2)},
-	)
-	if existing:
-		return {"success": True, "onboarding_name": existing, "already_exists": True}
+    onboarding_doc = frappe.get_doc("Employee Onboarding", onboarding_name)
+    job_offer_name = onboarding_doc.job_offer or job_offer
 
-	onboarding = frappe.get_doc(
-		{
-			"doctype": "Employee Onboarding",
-			"job_applicant": offer.job_applicant,
-			"job_offer": offer.name,
-			"employee_name": offer.applicant_name,
-			"company": offer.company,
-			"designation": offer.designation,
-			"date_of_joining": nowdate(),
-			"boarding_begins_on": nowdate(),
-			"boarding_status": "Pending",
-		}
-	)
-	onboarding.insert(ignore_permissions=True)
+    offer_meta = {}
+    if job_offer_name and frappe.db.exists("Job Offer", job_offer_name):
+        offer_meta = frappe.db.get_value(
+            "Job Offer",
+            job_offer_name,
+            ["applicant_name", "designation", "company"],
+            as_dict=True,
+        ) or {}
 
-	return {"success": True, "onboarding_name": onboarding.name, "already_exists": False}
+    activities = []
+    completed_activities = 0
+    total_activities = len(onboarding_doc.get("activities", []))
 
+    for row in onboarding_doc.get("activities", []):
+        task_name = row.get("task")
+        completed = False
+        if task_name and frappe.db.exists("Task", task_name):
+            completed = frappe.db.get_value("Task", task_name, "status") == "Completed"
+        elif onboarding_doc.boarding_status == "Completed":
+            completed = True
 
-def _normalize_boarding_status(value: str | None) -> str:
-	if value == "In Process":
-		return "In Progress"
-	return value or "Pending"
+        if completed:
+            completed_activities += 1
 
+        activities.append(
+            {
+                "activity_name": row.get("activity_name") or "",
+                "required": bool(row.get("required_for_employee_creation")),
+                "completed": completed,
+                "task": task_name or "",
+                "description": row.get("description") or "",
+                "assigned_to": row.get("user") or row.get("role") or "",
+            }
+        )
 
-def _is_task_completed(task_name: str | None) -> bool:
-	if not task_name:
-		return False
-	status = frappe.db.get_value("Task", task_name, "status")
-	return status in {"Completed", "Cancelled"}
+    if total_activities:
+        progress = round((completed_activities / total_activities) * 100, 1)
+    else:
+        progress = 100.0 if onboarding_doc.boarding_status == "Completed" else 0.0
+
+    return {
+        "name": onboarding_doc.name,
+        "applicant_name": onboarding_doc.employee_name or offer_meta.get("applicant_name") or "",
+        "designation": onboarding_doc.designation or offer_meta.get("designation") or "",
+        "department": onboarding_doc.department or "",
+        "company": onboarding_doc.company or offer_meta.get("company") or "",
+        "boarding_status": onboarding_doc.boarding_status or "Pending",
+        "job_offer": onboarding_doc.job_offer or "",
+        "progress": progress,
+        "total_activities": total_activities,
+        "completed_activities": completed_activities,
+        "activities": activities,
+    }
 
 
 @frappe.whitelist()
-def get_onboarding_checklist(employee_onboarding: str) -> dict[str, Any]:
-	_check_hr_permission()
+def update_job_offer_status(name=None, status=None, notes=None):
+    """Update job-offer status and mirror applicant stage."""
+    _check_hr_onboarding_access()
 
-	if not employee_onboarding:
-		frappe.throw(_("employee_onboarding is required."))
+    if not name:
+        frappe.throw(_("Job Offer name is required."))
+    if status not in VALID_OFFER_STATUSES:
+        frappe.throw(_("Invalid status. Allowed statuses: Accepted, Rejected."))
 
-	onboarding = frappe.get_doc("Employee Onboarding", employee_onboarding)
-	activities = []
-	completed_count = 0
+    offer = frappe.get_doc("Job Offer", name)
+    offer.status = status
+    offer.save(ignore_permissions=True)
 
-	for row in onboarding.activities or []:
-		completed = _is_task_completed(getattr(row, "task", None))
-		if completed:
-			completed_count += 1
-		activities.append(
-			{
-				"activity_name": getattr(row, "activity_name", ""),
-				"required": cint(getattr(row, "required_for_employee_creation", 0)) == 1,
-				"completed": completed,
-				"task": getattr(row, "task", ""),
-				"description": getattr(row, "description", "") or "",
-				"assigned_to": getattr(row, "user", "") or getattr(row, "role", "") or "",
-			}
-		)
+    applicant_status = "Accepted" if status == "Accepted" else "Rejected"
+    if offer.job_applicant and frappe.db.exists("Job Applicant", offer.job_applicant):
+        frappe.db.set_value("Job Applicant", offer.job_applicant, "status", applicant_status)
 
-	total = len(activities)
-	progress = round((completed_count / total) * 100, 2) if total else 0
+    if notes:
+        offer.add_comment("Comment", text=f"{status} by {frappe.session.user}: {notes}")
 
-	return {
-		"name": onboarding.name,
-		"applicant_name": onboarding.employee_name,
-		"designation": onboarding.designation,
-		"department": onboarding.department,
-		"company": onboarding.company,
-		"boarding_status": _normalize_boarding_status(onboarding.boarding_status),
-		"job_offer": onboarding.job_offer,
-		"progress": progress,
-		"total_activities": total,
-		"completed_activities": completed_count,
-		"activities": activities,
-	}
+    return {"success": True, "name": offer.name, "status": offer.status}
+
+
+@frappe.whitelist()
+def create_onboarding_from_offer(job_offer=None):
+    """Create Employee Onboarding from an accepted Job Offer (idempotent)."""
+    _check_hr_onboarding_access()
+
+    if not job_offer:
+        frappe.throw(_("job_offer is required."))
+    if not frappe.db.exists("Job Offer", job_offer):
+        frappe.throw(_("Job Offer not found."))
+
+    existing = frappe.db.get_value(
+        "Employee Onboarding",
+        {"job_offer": job_offer, "docstatus": ["!=", 2]},
+        "name",
+        order_by="creation desc",
+    )
+    if existing:
+        return {"success": True, "onboarding_name": existing, "already_exists": True}
+
+    offer_doc = frappe.get_doc("Job Offer", job_offer)
+    if offer_doc.status != "Accepted":
+        frappe.throw(_("Only accepted job offers can be converted to onboarding."))
+
+    if not offer_doc.job_applicant:
+        frappe.throw(_("Job Offer has no linked Job Applicant."))
+    if not frappe.db.exists("Job Applicant", offer_doc.job_applicant):
+        frappe.throw(_("Linked Job Applicant does not exist."))
+
+    applicant_doc = frappe.get_doc("Job Applicant", offer_doc.job_applicant)
+    opening_meta = {}
+    if applicant_doc.job_title and frappe.db.exists("Job Opening", applicant_doc.job_title):
+        opening_meta = frappe.db.get_value(
+            "Job Opening",
+            applicant_doc.job_title,
+            ["department", "designation"],
+            as_dict=True,
+        ) or {}
+
+    designation = offer_doc.designation or opening_meta.get("designation") or applicant_doc.designation or ""
+    department = opening_meta.get("department") or ""
+    template_name = _resolve_template(
+        company=offer_doc.company,
+        department=department,
+        designation=designation,
+    )
+    holiday_list = (
+        frappe.db.get_value("Employee Onboarding Template", template_name, "holiday_list")
+        if template_name
+        else None
+    )
+
+    start_date = offer_doc.offer_date or nowdate()
+    payload = {
+        "doctype": "Employee Onboarding",
+        "job_applicant": offer_doc.job_applicant,
+        "job_offer": offer_doc.name,
+        "employee_name": offer_doc.applicant_name or applicant_doc.applicant_name,
+        "company": offer_doc.company,
+        "department": department,
+        "designation": designation,
+        "date_of_joining": start_date,
+        "boarding_begins_on": start_date,
+    }
+    if template_name:
+        payload["employee_onboarding_template"] = template_name
+    if holiday_list:
+        payload["holiday_list"] = holiday_list
+
+    onboarding_doc = frappe.get_doc(payload)
+    onboarding_doc.insert(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "onboarding_name": onboarding_doc.name,
+        "already_exists": False,
+    }

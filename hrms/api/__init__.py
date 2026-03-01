@@ -820,7 +820,7 @@ from frappe.utils import today
 
 
 @frappe.whitelist()
-def get_enrichment_dashboard(store: str | None = None) -> dict:
+def get_enrichment_dashboard(store: str = None) -> dict:
 	"""Get dashboard data for enrichment campaign."""
 	filters = {"status": "Active"}
 	if store:
@@ -898,7 +898,7 @@ def get_employee_details(employee: str) -> dict:
 
 
 @frappe.whitelist()
-def mark_employee_verified(employee: str, notes: str | None = None) -> dict:
+def mark_employee_verified(employee: str, notes: str = None) -> dict:
 	"""Mark an employee as verified."""
 	emp = frappe.get_doc("Employee", employee)
 	emp.custom_verification_status = "Verified"
@@ -982,9 +982,7 @@ def get_enrichment_summary() -> dict:
 	"""
 	result = frappe.db.sql(sql, as_dict=True)[0]
 
-	result["progress_pct"] = (
-		round(result["verified"] / result["total"] * 100, 1) if result["total"] > 0 else 0
-	)
+	result["progress_pct"] = round(result["verified"] / result["total"] * 100, 1) if result["total"] > 0 else 0
 
 	top_stores = frappe.db.sql(
 		"""
@@ -1003,9 +1001,7 @@ def get_enrichment_summary() -> dict:
 	)
 
 	for store in top_stores:
-		store["progress_pct"] = (
-			round(store["verified"] / store["total"] * 100, 1) if store["total"] > 0 else 0
-		)
+		store["progress_pct"] = round(store["verified"] / store["total"] * 100, 1) if store["total"] > 0 else 0
 
 	result["top_stores"] = top_stores
 
@@ -1013,26 +1009,28 @@ def get_enrichment_summary() -> dict:
 
 
 # Import all API modules to register whitelisted methods
-import hrms.api.attendance_correction
-import hrms.api.commissary
-import hrms.api.communication
-import hrms.api.compliance
-import hrms.api.coverage
-import hrms.api.dashboard
-import hrms.api.disciplinary
-import hrms.api.employee_clearance
-import hrms.api.hr_reports
-import hrms.api.image_utils
-import hrms.api.inventory
-import hrms.api.official_business
-import hrms.api.payroll
-import hrms.api.performance
-import hrms.api.procurement
-import hrms.api.projects
-import hrms.api.recruitment
-import hrms.api.shift_tracking
-import hrms.api.store
-import hrms.api.supervisor
-import hrms.api.transfer_requests
-import hrms.api.transfers
-import hrms.api.warehouse
+import hrms.api.employee_clearance  # noqa: E402, F401
+import hrms.api.store  # noqa: E402, F401
+import hrms.api.supervisor  # noqa: E402, F401
+import hrms.api.communication  # noqa: E402, F401
+import hrms.api.dashboard  # noqa: E402, F401
+import hrms.api.inventory  # noqa: E402, F401
+import hrms.api.coverage  # noqa: E402, F401
+import hrms.api.image_utils  # noqa: E402, F401
+import hrms.api.projects  # noqa: E402, F401
+import hrms.api.warehouse  # noqa: E402, F401
+import hrms.api.commissary  # noqa: E402, F401
+import hrms.api.procurement  # noqa: E402, F401
+import hrms.api.official_business  # noqa: E402, F401
+import hrms.api.shift_tracking  # noqa: E402, F401
+import hrms.api.payroll  # noqa: E402, F401
+import hrms.api.performance  # noqa: E402, F401
+import hrms.api.disciplinary  # noqa: E402, F401
+import hrms.api.recruitment  # noqa: E402, F401
+import hrms.api.overtime  # noqa: E402, F401
+import hrms.api.hr_onboarding  # noqa: E402, F401
+import hrms.api.store_dashboard  # noqa: E402, F401
+import hrms.api.hr_reports  # noqa: E402, F401
+import hrms.api.transfers  # noqa: E402, F401
+import hrms.api.transfer_requests  # noqa: E402, F401
+import hrms.api.attendance_correction  # noqa: E402, F401
