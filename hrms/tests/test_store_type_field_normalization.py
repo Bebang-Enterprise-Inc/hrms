@@ -167,9 +167,12 @@ def test_resolve_store_type_prefers_canonical_then_legacy():
 
 
 def test_billing_store_type_reader_supports_legacy_column(monkeypatch):
+	lookup_calls = []
+
 	class FakeDB:
 		def get_table_columns(self, table_name):
-			assert table_name == "tabBEI Store Type"
+			lookup_calls.append(table_name)
+			assert table_name == "BEI Store Type"
 			return ["name", "store", "store_type_category"]
 
 	sample_rows = [
@@ -186,8 +189,95 @@ def test_billing_store_type_reader_supports_legacy_column(monkeypatch):
 
 	normalized_rows = billing_api._get_store_type_records()
 
+	assert lookup_calls == ["BEI Store Type"]
 	assert normalized_rows[0]["store_type"] == "JV"
 	assert normalized_rows[1]["store_type"] == "Managed Franchise"
+
+
+def test_billing_store_type_reader_falls_back_to_tab_table_lookup(monkeypatch):
+	lookup_calls = []
+
+	class FakeDB:
+		def get_table_columns(self, table_name):
+			lookup_calls.append(table_name)
+			if table_name == "BEI Store Type":
+				raise Exception("doctype signature unsupported")
+			if table_name == "tabBEI Store Type":
+				return ["name", "store", "store_type_category"]
+			return []
+
+	sample_rows = [{"store": "Store A", "store_type_category": "joint venture"}]
+
+	monkeypatch.setattr(billing_api.frappe, "db", FakeDB())
+	monkeypatch.setattr(
+		billing_api.frappe,
+		"get_all",
+		lambda *args, **kwargs: [dict(row) for row in sample_rows],
+	)
+
+	normalized_rows = billing_api._get_store_type_records()
+
+	assert lookup_calls == ["BEI Store Type", "tabBEI Store Type"]
+	assert normalized_rows[0]["store_type"] == "JV"
+
+
+def test_billing_store_type_reader_returns_empty_on_schema_lookup_failure(monkeypatch):
+	class FakeDB:
+		def get_table_columns(self, table_name):
+			raise Exception(f"missing schema for {table_name}")
+
+	monkeypatch.setattr(billing_api.frappe, "db", FakeDB())
+	monkeypatch.setattr(
+		billing_api.frappe,
+		"get_all",
+		lambda *args, **kwargs: (_ for _ in ()).throw(
+			AssertionError("get_all must not run when schema lookup fails")
+		),
+	)
+
+	assert billing_api._get_store_type_records() == []
+
+
+def test_get_stores_without_rates_degrades_gracefully_on_schema_lookup_failure(monkeypatch):
+	class FakeDB:
+		def get_table_columns(self, table_name):
+			raise Exception(f"missing schema for {table_name}")
+
+		def sql(self, *args, **kwargs):
+			return []
+
+	monkeypatch.setattr(billing_api.frappe, "db", FakeDB())
+	monkeypatch.setattr(
+		billing_api.frappe,
+		"get_all",
+		lambda *args, **kwargs: (_ for _ in ()).throw(
+			AssertionError("get_all must not run when schema lookup fails")
+		),
+	)
+
+	assert billing_api.get_stores_without_rates() == []
+
+
+def test_generate_monthly_billing_degrades_gracefully_on_schema_lookup_failure(monkeypatch):
+	class FakeDB:
+		def get_table_columns(self, table_name):
+			raise Exception(f"missing schema for {table_name}")
+
+	monkeypatch.setattr(billing_api.frappe, "db", FakeDB())
+	monkeypatch.setattr(
+		billing_api.frappe,
+		"get_all",
+		lambda *args, **kwargs: (_ for _ in ()).throw(
+			AssertionError("get_all must not run when schema lookup fails")
+		),
+	)
+
+	result = billing_api.generate_monthly_billing("2026-02")
+
+	assert result["success"] is True
+	assert result["generated"] == 0
+	assert result["skipped"] == 0
+	assert result["errors"] == []
 
 
 def test_store_type_patch_is_idempotent_and_schema_safe(monkeypatch):
