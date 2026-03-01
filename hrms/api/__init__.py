@@ -1032,6 +1032,7 @@ import hrms.api.projects
 import hrms.api.recruitment
 import hrms.api.shift_tracking
 import hrms.api.store
+import hrms.api.store_dashboard
 import hrms.api.supervisor
 import hrms.api.transfer_requests
 import hrms.api.transfers
