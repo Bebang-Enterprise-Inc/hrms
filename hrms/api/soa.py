@@ -198,16 +198,20 @@ def get_soa_detail(soa_name: str) -> dict[str, Any]:
 		frappe.throw(_("SOA {0} not found").format(soa_name), frappe.DoesNotExistError)
 
 	line_items: list[dict[str, Any]] = []
-	child_doctype = frappe.db.get_value(
-		"DocField",
-		{
-			"parent": "BEI Statement of Account",
-			"parenttype": "DocType",
-			"fieldname": "line_items",
-			"fieldtype": "Table",
-		},
-		"options",
+	child_field_rows = frappe.db.sql(
+		"""
+		SELECT options
+		FROM `tabDocField`
+		WHERE parent = %(parent)s
+		  AND parenttype = 'DocType'
+		  AND fieldname = %(fieldname)s
+		  AND fieldtype = 'Table'
+		LIMIT 1
+		""",
+		{"parent": "BEI Statement of Account", "fieldname": "line_items"},
+		as_dict=True,
 	)
+	child_doctype = child_field_rows[0].get("options") if child_field_rows else None
 	if child_doctype:
 		rows = frappe.get_all(
 			child_doctype,
