@@ -8,6 +8,20 @@ import frappe
 from frappe import _
 from frappe.utils import flt, get_first_day, get_last_day, now_datetime
 
+SOA_READ_ROLES = {
+	"Accounts Manager",
+	"Accounts User",
+	"HQ User",
+	"System Manager",
+	"Administrator",
+}
+
+
+def _check_soa_read_access() -> None:
+	roles = set(frappe.get_roles(frappe.session.user))
+	if not roles.intersection(SOA_READ_ROLES):
+		frappe.throw(_("Only finance roles can access SOA details."), frappe.PermissionError)
+
 
 @frappe.whitelist()
 def generate_soa(store: str, period: str) -> dict[str, Any]:
@@ -174,8 +188,7 @@ def get_soa_detail(soa_name: str) -> dict[str, Any]:
 	if not soa_name:
 		frappe.throw(_("SOA name is required"))
 
-	if not frappe.has_permission("BEI Statement of Account", "read"):
-		frappe.throw(_("Not permitted to read this SOA"), frappe.PermissionError)
+	_check_soa_read_access()
 
 	soa = frappe.db.get_value(
 		"BEI Statement of Account",
