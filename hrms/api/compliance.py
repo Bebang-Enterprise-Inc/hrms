@@ -8,7 +8,6 @@ from typing import Any
 import frappe
 from frappe import _
 
-
 ALLOWED_ROLES = ["HR Manager", "System Manager", "HR User", "Area Supervisor"]
 
 
@@ -20,7 +19,7 @@ def _require_access() -> None:
 def _coerce_year(year: Any) -> int:
 	try:
 		value = int(year)
-	except (TypeError, ValueError) as exc:
+	except (TypeError, ValueError):
 		frappe.throw(_("Invalid year parameter."), exc=frappe.ValidationError)
 	if value < 2000 or value > 2100:
 		frappe.throw(_("Year must be between 2000 and 2100."), exc=frappe.ValidationError)
@@ -30,7 +29,7 @@ def _coerce_year(year: Any) -> int:
 def _coerce_month(month: Any) -> int:
 	try:
 		value = int(month)
-	except (TypeError, ValueError) as exc:
+	except (TypeError, ValueError):
 		frappe.throw(_("Invalid month parameter."), exc=frappe.ValidationError)
 	if value < 1 or value > 12:
 		frappe.throw(_("Month must be between 1 and 12."), exc=frappe.ValidationError)

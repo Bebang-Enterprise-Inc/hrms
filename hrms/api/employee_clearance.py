@@ -71,6 +71,7 @@ def submit_exit_interview_responses(exit_interview: str, responses: list):
 	"""
 	if isinstance(responses, str):
 		import json
+
 		responses = json.loads(responses)
 
 	doc = frappe.get_doc("Exit Interview", exit_interview)
@@ -80,12 +81,15 @@ def submit_exit_interview_responses(exit_interview: str, responses: list):
 
 	# Add new responses
 	for resp in responses:
-		doc.append("custom_questionnaire_responses", {
-			"question": resp.get("question"),
-			"response_scale": resp.get("response_scale"),
-			"response_yesno": resp.get("response_yesno"),
-			"response_text": resp.get("response_text"),
-		})
+		doc.append(
+			"custom_questionnaire_responses",
+			{
+				"question": resp.get("question"),
+				"response_scale": resp.get("response_scale"),
+				"response_yesno": resp.get("response_yesno"),
+				"response_text": resp.get("response_text"),
+			},
+		)
 
 	doc.save()
 
@@ -112,15 +116,17 @@ def get_exit_interview_responses(exit_interview: str):
 	responses = []
 	for resp in doc.custom_questionnaire_responses:
 		question_doc = frappe.get_doc("BEI Exit Interview Question", resp.question)
-		responses.append({
-			"question": resp.question,
-			"question_text": question_doc.question_text,
-			"category": question_doc.category,
-			"response_type": question_doc.response_type,
-			"response_scale": resp.response_scale,
-			"response_yesno": resp.response_yesno,
-			"response_text": resp.response_text,
-		})
+		responses.append(
+			{
+				"question": resp.question,
+				"question_text": question_doc.question_text,
+				"category": question_doc.category,
+				"response_type": question_doc.response_type,
+				"response_scale": resp.response_scale,
+				"response_yesno": resp.response_yesno,
+				"response_text": resp.response_text,
+			}
+		)
 
 	return {
 		"exit_interview": doc.name,
@@ -134,7 +140,9 @@ def get_exit_interview_responses(exit_interview: str):
 
 
 @frappe.whitelist(allow_guest=False)
-def create_exit_interview(employee: str, separation_date: str = None, resignation_letter: str = None):
+def create_exit_interview(
+	employee: str, separation_date: str | None = None, resignation_letter: str | None = None
+):
 	"""
 	Create or return an Exit Interview linked to an employee.
 
@@ -180,7 +188,7 @@ def create_exit_interview(employee: str, separation_date: str = None, resignatio
 
 
 @frappe.whitelist(allow_guest=False)
-def get_exit_interview_analytics(date_from: str = None, date_to: str = None):
+def get_exit_interview_analytics(date_from: str | None = None, date_to: str | None = None):
 	"""
 	Return exit interview summary metrics and row-level records.
 
@@ -281,8 +289,8 @@ def get_separation_types():
 def create_employee_separation(
 	employee: str,
 	separation_type: str,
-	separation_reason: str = None,
-	boarding_begins_on: str = None,
+	separation_reason: str | None = None,
+	boarding_begins_on: str | None = None,
 ):
 	"""
 	Create a new Employee Separation document.
@@ -340,19 +348,21 @@ def get_employee_separation(name: str):
 	compliance_items = []
 	for item in doc.custom_dole_compliance:
 		compliance_doc = frappe.get_doc("BEI DOLE Compliance Item", item.compliance_item)
-		compliance_items.append({
-			"name": item.name,
-			"compliance_item": item.compliance_item,
-			"item_code": compliance_doc.item_code,
-			"description": compliance_doc.description,
-			"sla_days": compliance_doc.sla_days,
-			"dole_reference": compliance_doc.dole_reference,
-			"status": item.status,
-			"completed_date": item.completed_date,
-			"completed_by": item.completed_by,
-			"document": item.document,
-			"notes": item.notes,
-		})
+		compliance_items.append(
+			{
+				"name": item.name,
+				"compliance_item": item.compliance_item,
+				"item_code": compliance_doc.item_code,
+				"description": compliance_doc.description,
+				"sla_days": compliance_doc.sla_days,
+				"dole_reference": compliance_doc.dole_reference,
+				"status": item.status,
+				"completed_date": item.completed_date,
+				"completed_by": item.completed_by,
+				"document": item.document,
+				"notes": item.notes,
+			}
+		)
 
 	return {
 		"name": doc.name,
@@ -374,7 +384,7 @@ def get_employee_separation(name: str):
 
 
 @frappe.whitelist(allow_guest=False)
-def get_employee_separations(employee: str = None, status: str = None):
+def get_employee_separations(employee: str | None = None, status: str | None = None):
 	"""
 	List employee separations with optional filters.
 
@@ -395,9 +405,17 @@ def get_employee_separations(employee: str = None, status: str = None):
 		"Employee Separation",
 		filters=filters,
 		fields=[
-			"name", "employee", "employee_name", "department", "designation",
-			"custom_separation_type", "boarding_status", "boarding_begins_on",
-			"custom_exit_interview_completed", "custom_final_pay_approved", "custom_coe_generated",
+			"name",
+			"employee",
+			"employee_name",
+			"department",
+			"designation",
+			"custom_separation_type",
+			"boarding_status",
+			"boarding_begins_on",
+			"custom_exit_interview_completed",
+			"custom_final_pay_approved",
+			"custom_coe_generated",
 		],
 		order_by="creation desc",
 	)
@@ -440,10 +458,13 @@ def populate_dole_compliance(separation_name: str, separation_type: str):
 	# Clear existing and add applicable items
 	doc.custom_dole_compliance = []
 	for item in compliance_items:
-		doc.append("custom_dole_compliance", {
-			"compliance_item": item.name,
-			"status": "Pending",
-		})
+		doc.append(
+			"custom_dole_compliance",
+			{
+				"compliance_item": item.name,
+				"status": "Pending",
+			},
+		)
 
 	doc.save()
 
@@ -459,8 +480,8 @@ def update_compliance_status(
 	separation_name: str,
 	compliance_row_name: str,
 	status: str,
-	notes: str = None,
-	document: str = None,
+	notes: str | None = None,
+	document: str | None = None,
 ):
 	"""
 	Update status of a DOLE compliance item.
@@ -577,7 +598,9 @@ def get_clearance_status(employee: str):
 		"activity_progress": {
 			"total": total_activities,
 			"completed": completed_activities,
-			"percentage": round((completed_activities / total_activities * 100) if total_activities > 0 else 0, 1),
+			"percentage": round(
+				(completed_activities / total_activities * 100) if total_activities > 0 else 0, 1
+			),
 		},
 		"milestones": {
 			"exit_interview_completed": sep_doc.custom_exit_interview_completed,
@@ -596,7 +619,7 @@ ADMS_BASE_URL = "http://localhost:8080"  # ADMS receiver on same EC2 instance
 
 
 @frappe.whitelist(allow_guest=False)
-def disable_bio_id(employee: str, removal_reason: str = None):
+def disable_bio_id(employee: str, removal_reason: str | None = None):
 	"""
 	Disable employee's Bio ID on all enrolled biometric devices.
 	Called when IT Clearance activity is completed during separation.
@@ -636,15 +659,17 @@ def disable_bio_id(employee: str, removal_reason: str = None):
 		result = response.json()
 
 		# Log the action as a comment on the Employee record
-		frappe.get_doc({
-			"doctype": "Comment",
-			"comment_type": "Info",
-			"reference_doctype": "Employee",
-			"reference_name": employee,
-			"content": _("Bio ID {0} disabled: {1} devices queued for deletion").format(
-				bio_id, result.get("devices_queued", 0)
-			),
-		}).insert(ignore_permissions=True)
+		frappe.get_doc(
+			{
+				"doctype": "Comment",
+				"comment_type": "Info",
+				"reference_doctype": "Employee",
+				"reference_name": employee,
+				"content": _("Bio ID {0} disabled: {1} devices queued for deletion").format(
+					bio_id, result.get("devices_queued", 0)
+				),
+			}
+		).insert(ignore_permissions=True)
 
 		return {
 			"success": True,
@@ -764,10 +789,19 @@ def get_my_separation():
 		"Employee Separation",
 		filters={"employee": employee},
 		fields=[
-			"name", "employee", "employee_name", "department", "designation",
-			"custom_separation_type", "custom_separation_reason", "boarding_status",
-			"boarding_begins_on", "custom_exit_interview_completed",
-			"custom_final_pay_approved", "custom_coe_generated", "custom_rehire_eligible",
+			"name",
+			"employee",
+			"employee_name",
+			"department",
+			"designation",
+			"custom_separation_type",
+			"custom_separation_reason",
+			"boarding_status",
+			"boarding_begins_on",
+			"custom_exit_interview_completed",
+			"custom_final_pay_approved",
+			"custom_coe_generated",
+			"custom_rehire_eligible",
 		],
 		order_by="creation desc",
 		limit=1,
@@ -816,101 +850,98 @@ def get_my_separation():
 
 
 def on_separation_created(doc, method=None):
-    """After Employee Separation is created: notify department heads about clearance items.
+	"""After Employee Separation is created: notify department heads about clearance items.
 
-    Sends Google Chat notification (via shared send_message_to_space).
-    Falls back silently if Chat not configured.
+	Sends Google Chat notification (via shared send_message_to_space).
+	Falls back silently if Chat not configured.
 
-    Called by hooks.py: Employee Separation → after_insert
-    """
-    try:
-        from hrms.api.google_chat import send_message_to_space
+	Called by hooks.py: Employee Separation → after_insert
+	"""
+	try:
+		from hrms.api.google_chat import send_message_to_space
 
-        employee_name = doc.employee_name or doc.employee
-        dept = getattr(doc, "department", "") or ""
-        sep_type = getattr(doc, "custom_separation_type", "") or "Separation"
-        begins_on = str(getattr(doc, "boarding_begins_on", "") or frappe.utils.today())
+		employee_name = doc.employee_name or doc.employee
+		dept = getattr(doc, "department", "") or ""
+		sep_type = getattr(doc, "custom_separation_type", "") or "Separation"
+		begins_on = str(getattr(doc, "boarding_begins_on", "") or frappe.utils.today())
 
-        message = (
-            f"*Employee Separation Created*\n"
-            f"*Employee:* {employee_name}\n"
-            f"*Department:* {dept}\n"
-            f"*Type:* {sep_type}\n"
-            f"*Clearance begins:* {begins_on}\n"
-            f"*Action required:* Complete your department's clearance items for this employee.\n"
-            f"View in ERP: {frappe.utils.get_url()}/app/employee-separation/{doc.name}"
-        )
+		message = (
+			f"*Employee Separation Created*\n"
+			f"*Employee:* {employee_name}\n"
+			f"*Department:* {dept}\n"
+			f"*Type:* {sep_type}\n"
+			f"*Clearance begins:* {begins_on}\n"
+			f"*Action required:* Complete your department's clearance items for this employee.\n"
+			f"View in ERP: {frappe.utils.get_url()}/app/employee-separation/{doc.name}"
+		)
 
-        # Get notification space from BEI Settings (HR notification channel)
-        try:
-            space = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
-        except Exception:
-            space = None
+		# Get notification space from BEI Settings (HR notification channel)
+		try:
+			space = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
+		except Exception:
+			space = None
 
-        if space:
-            send_message_to_space(space, message)
-        else:
-            frappe.log_error(
-                f"Separation created for {employee_name} but gchat_notification_space not configured",
-                "Separation Notification"
-            )
+		if space:
+			send_message_to_space(space, message)
+		else:
+			frappe.log_error(
+				f"Separation created for {employee_name} but gchat_notification_space not configured",
+				"Separation Notification",
+			)
 
-    except Exception:
-        # Notifications must never crash the main flow
-        frappe.log_error(frappe.get_traceback(), "Separation Created Notification Failed")
+	except Exception:
+		# Notifications must never crash the main flow
+		frappe.log_error(frappe.get_traceback(), "Separation Created Notification Failed")
 
 
 def on_separation_updated(doc, method=None):
-    """On Employee Separation update: check if all clearance items are completed.
+	"""On Employee Separation update: check if all clearance items are completed.
 
-    If complete → notify Finance to proceed with final pay.
+	If complete → notify Finance to proceed with final pay.
 
-    Called by hooks.py: Employee Separation → on_update
-    """
-    try:
-        # Check if all DOLE compliance items are Completed or Not Applicable
-        compliance_items = getattr(doc, "custom_dole_compliance", []) or []
+	Called by hooks.py: Employee Separation → on_update
+	"""
+	try:
+		# Check if all DOLE compliance items are Completed or Not Applicable
+		compliance_items = getattr(doc, "custom_dole_compliance", []) or []
 
-        if not compliance_items:
-            return
+		if not compliance_items:
+			return
 
-        all_done = all(
-            item.status in ("Completed", "Not Applicable")
-            for item in compliance_items
-        )
+		all_done = all(item.status in ("Completed", "Not Applicable") for item in compliance_items)
 
-        if not all_done:
-            return
+		if not all_done:
+			return
 
-        # Only notify once (check boarding_status hasn't already been set to Completed)
-        if getattr(doc, "boarding_status", "") == "Completed":
-            return
+		# Only notify once (check boarding_status hasn't already been set to Completed)
+		if getattr(doc, "boarding_status", "") == "Completed":
+			return
 
-        from hrms.api.google_chat import send_message_to_space
+		from hrms.api.google_chat import send_message_to_space
 
-        employee_name = doc.employee_name or doc.employee
+		employee_name = doc.employee_name or doc.employee
 
-        message = (
-            f"*Clearance Complete — Final Pay Pending*\n"
-            f"*Employee:* {employee_name}\n"
-            f"*Separation:* {doc.name}\n"
-            f"All clearance items have been completed.\n"
-            f"*Finance:* Please proceed with final pay computation.\n"
-            f"*HR:* Please update employee status to 'Left'.\n"
-            f"View: {frappe.utils.get_url()}/app/employee-separation/{doc.name}"
-        )
+		message = (
+			f"*Clearance Complete — Final Pay Pending*\n"
+			f"*Employee:* {employee_name}\n"
+			f"*Separation:* {doc.name}\n"
+			f"All clearance items have been completed.\n"
+			f"*Finance:* Please proceed with final pay computation.\n"
+			f"*HR:* Please update employee status to 'Left'.\n"
+			f"View: {frappe.utils.get_url()}/app/employee-separation/{doc.name}"
+		)
 
-        try:
-            space = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
-        except Exception:
-            space = None
+		try:
+			space = frappe.db.get_single_value("BEI Settings", "gchat_notification_space")
+		except Exception:
+			space = None
 
-        if space:
-            send_message_to_space(space, message)
-            frappe.db.set_value("Employee Separation", doc.name, "boarding_status", "Completed")
+		if space:
+			send_message_to_space(space, message)
+			frappe.db.set_value("Employee Separation", doc.name, "boarding_status", "Completed")
 
-    except Exception:
-        frappe.log_error(frappe.get_traceback(), "Separation Updated Notification Failed")
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "Separation Updated Notification Failed")
 
 
 @frappe.whitelist(allow_guest=False)
