@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any
+
 from markupsafe import escape as html_escape
 
 import frappe
@@ -6,7 +10,7 @@ from frappe.utils import flt, get_first_day, get_last_day, now_datetime
 
 
 @frappe.whitelist()
-def generate_soa(store, period):
+def generate_soa(store: str, period: str) -> dict[str, Any]:
 	"""Generate Statement of Account for a store and period.
 
 	Aggregates all non-cancelled billings for the store in the given period.
@@ -133,7 +137,9 @@ def generate_soa(store, period):
 
 
 @frappe.whitelist()
-def get_soa_list(store=None, period=None, status=None):
+def get_soa_list(
+	store: str | None = None, period: str | None = None, status: str | None = None
+) -> list[dict[str, Any]]:
 	"""List Statements of Account with optional filters."""
 	filters = {}
 	if store:
@@ -163,7 +169,7 @@ def get_soa_list(store=None, period=None, status=None):
 
 
 @frappe.whitelist()
-def get_soa_detail(soa_name):
+def get_soa_detail(soa_name: str) -> dict[str, Any]:
 	"""Get SOA header and line-items detail for a single record."""
 	if not soa_name:
 		frappe.throw(_("SOA name is required"))
@@ -201,7 +207,7 @@ def get_soa_detail(soa_name):
 
 
 @frappe.whitelist()
-def send_soa_to_store(soa_name):
+def send_soa_to_store(soa_name: str) -> dict[str, Any]:
 	"""Send SOA to store via email (Full Franchise only)."""
 	soa = frappe.get_doc("BEI Statement of Account", soa_name)
 
@@ -282,31 +288,42 @@ def send_soa_to_store(soa_name):
 
 
 @frappe.whitelist()
-def get_monthly_billing_service_snapshot(period, store=None):
+def get_monthly_billing_service_snapshot(period: str, store: str | None = None) -> dict[str, Any]:
 	"""Service snapshot for monthly billing + OR follow-up surfaces."""
 	if not period:
 		frappe.throw(_("Period is required (YYYY-MM)"), frappe.ValidationError)
 
-	conditions = ["bs.billing_period = %(period)s", "bs.status != 'Cancelled'"]
-	params = {"period": period}
+	params: dict[str, Any] = {"period": period}
 	if store:
-		conditions.append("bs.store = %(store)s")
 		params["store"] = store
-
-	where_clause = " AND ".join(conditions)
-
-	billing_stats = frappe.db.sql(
-		f"""
-        SELECT
-            COUNT(*) AS billing_count,
-            COALESCE(SUM(bs.total_amount), 0) AS total_billed,
-            COALESCE(SUM(bs.balance_due), 0) AS total_outstanding
-        FROM `tabBEI Billing Schedule` bs
-        WHERE {where_clause}
-        """,
-		params,
-		as_dict=True,
-	)[0]
+		billing_stats = frappe.db.sql(
+			"""
+			SELECT
+				COUNT(*) AS billing_count,
+				COALESCE(SUM(bs.total_amount), 0) AS total_billed,
+				COALESCE(SUM(bs.balance_due), 0) AS total_outstanding
+			FROM `tabBEI Billing Schedule` bs
+			WHERE bs.billing_period = %(period)s
+			  AND bs.status != 'Cancelled'
+			  AND bs.store = %(store)s
+			""",
+			params,
+			as_dict=True,
+		)[0]
+	else:
+		billing_stats = frappe.db.sql(
+			"""
+			SELECT
+				COUNT(*) AS billing_count,
+				COALESCE(SUM(bs.total_amount), 0) AS total_billed,
+				COALESCE(SUM(bs.balance_due), 0) AS total_outstanding
+			FROM `tabBEI Billing Schedule` bs
+			WHERE bs.billing_period = %(period)s
+			  AND bs.status != 'Cancelled'
+			""",
+			params,
+			as_dict=True,
+		)[0]
 
 	followup_stats = frappe.db.sql(
 		"""

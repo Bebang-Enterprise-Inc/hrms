@@ -4,6 +4,8 @@ Supervisor dashboard aggregation endpoints for my.bebang.ph.
 
 from __future__ import annotations
 
+from typing import Any
+
 import frappe
 from frappe import _
 from frappe.utils import add_days, cint, date_diff, getdate, nowdate
@@ -16,13 +18,13 @@ SUPERVISOR_DASHBOARD_ROLES = {
 }
 
 
-def _check_dashboard_access():
+def _check_dashboard_access() -> None:
 	roles = set(frappe.get_roles(frappe.session.user))
 	if not roles.intersection(SUPERVISOR_DASHBOARD_ROLES):
 		frappe.throw(_("Only supervisor roles can access store dashboard endpoints."), frappe.PermissionError)
 
 
-def _period_window(period):
+def _period_window(period: str | None) -> tuple[str, Any, Any]:
 	period = (period or "today").strip().lower()
 	if period not in {"today", "week"}:
 		frappe.throw(_("Invalid period. Allowed values: today, week."))
@@ -35,7 +37,7 @@ def _period_window(period):
 	return period, week_start, today
 
 
-def _get_store_scope():
+def _get_store_scope() -> list[str]:
 	try:
 		from hrms.api import supervisor as supervisor_api
 
@@ -69,14 +71,14 @@ def _get_store_scope():
 	return [branch]
 
 
-def _safe_count(doctype, filters):
+def _safe_count(doctype: str, filters: dict[str, Any]) -> int:
 	try:
 		return cint(frappe.db.count(doctype, filters=filters))
 	except Exception:
 		return 0
 
 
-def _count_pending_overtime(store_names, start_date, end_date):
+def _count_pending_overtime(store_names: list[str], start_date: Any, end_date: Any) -> int:
 	if not store_names:
 		return 0
 
@@ -100,7 +102,7 @@ def _count_pending_overtime(store_names, start_date, end_date):
 	return cint(row[0].total if row else 0)
 
 
-def _iter_dates(start_date, end_date):
+def _iter_dates(start_date: Any, end_date: Any):
 	current = start_date
 	while current <= end_date:
 		yield current
@@ -108,7 +110,7 @@ def _iter_dates(start_date, end_date):
 
 
 @frappe.whitelist()
-def get_supervisor_dashboard_summary(period="today"):
+def get_supervisor_dashboard_summary(period: str = "today") -> dict[str, Any]:
 	"""Return KPI summary payload expected by portal supervisor dashboard."""
 	_check_dashboard_access()
 	_period, start_date, end_date = _period_window(period)
@@ -164,7 +166,9 @@ def get_supervisor_dashboard_summary(period="today"):
 
 
 @frappe.whitelist()
-def get_pending_reports(period="today", status="Missing", sort="store"):
+def get_pending_reports(
+	period: str = "today", status: str = "Missing", sort: str = "store"
+) -> dict[str, list[dict[str, str]]]:
 	"""Return list of missing opening/closing reports for supervised stores."""
 	_check_dashboard_access()
 	_period, start_date, end_date = _period_window(period)
