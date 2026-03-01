@@ -103,7 +103,23 @@ def _normalize_store_type_records(records):
 
 def _get_store_type_records(store_filters=None):
 	"""Fetch BEI Store Type rows with schema-safe canonical store_type normalization."""
-	columns = set(frappe.db.get_table_columns("tabBEI Store Type") or [])
+	columns = set()
+	column_lookup_candidates = ("BEI Store Type", "tabBEI Store Type")
+	for table_name in column_lookup_candidates:
+		try:
+			candidate_columns = set(frappe.db.get_table_columns(table_name) or [])
+		except Exception:
+			continue
+		if candidate_columns:
+			columns = candidate_columns
+			break
+
+	if not columns:
+		frappe.logger().warning(
+			"Billing store-type schema lookup failed; skipping BEI Store Type scan"
+		)
+		return []
+
 	has_store_type = "store_type" in columns
 	has_legacy_store_type = "store_type_category" in columns
 
