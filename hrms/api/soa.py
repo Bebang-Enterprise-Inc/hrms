@@ -198,45 +198,53 @@ def get_soa_detail(soa_name: str) -> dict[str, Any]:
 		frappe.throw(_("SOA {0} not found").format(soa_name), frappe.DoesNotExistError)
 
 	line_items: list[dict[str, Any]] = []
-	child_field_rows = frappe.db.sql(
-		"""
-		SELECT options
-		FROM `tabDocField`
-		WHERE parent = %(parent)s
-		  AND parenttype = 'DocType'
-		  AND fieldname = %(fieldname)s
-		  AND fieldtype = 'Table'
-		LIMIT 1
-		""",
-		{"parent": "BEI Statement of Account", "fieldname": "line_items"},
-		as_dict=True,
-	)
-	child_doctype = child_field_rows[0].get("options") if child_field_rows else None
-	if child_doctype:
-		rows = frappe.get_all(
-			child_doctype,
-			filters={"parent": soa_name, "parenttype": "BEI Statement of Account"},
-			fields=[
-				"name",
-				"billing_reference",
-				"billing_type",
-				"billing_date",
-				"description",
-				"amount",
-			],
-			order_by="idx asc",
+	child_doctype = None
+	try:
+		child_field_rows = frappe.db.sql(
+			"""
+			SELECT options
+			FROM `tabDocField`
+			WHERE parent = %(parent)s
+			  AND parenttype = 'DocType'
+			  AND fieldname = %(fieldname)s
+			  AND fieldtype = 'Table'
+			LIMIT 1
+			""",
+			{"parent": "BEI Statement of Account", "fieldname": "line_items"},
+			as_dict=True,
 		)
-		for item in rows:
-			line_items.append(
-				{
-					"name": item.get("name"),
-					"billing_reference": item.get("billing_reference"),
-					"billing_type": item.get("billing_type"),
-					"billing_date": item.get("billing_date"),
-					"description": item.get("description"),
-					"amount": flt(item.get("amount")),
-				}
+		child_doctype = child_field_rows[0].get("options") if child_field_rows else None
+	except Exception:
+		child_doctype = None
+
+	if child_doctype and child_doctype != "DocType":
+		try:
+			rows = frappe.get_all(
+				child_doctype,
+				filters={"parent": soa_name, "parenttype": "BEI Statement of Account"},
+				fields=[
+					"name",
+					"billing_reference",
+					"billing_type",
+					"billing_date",
+					"description",
+					"amount",
+				],
+				order_by="idx asc",
 			)
+			for item in rows:
+				line_items.append(
+					{
+						"name": item.get("name"),
+						"billing_reference": item.get("billing_reference"),
+						"billing_type": item.get("billing_type"),
+						"billing_date": item.get("billing_date"),
+						"description": item.get("description"),
+						"amount": flt(item.get("amount")),
+					}
+				)
+		except Exception:
+			line_items = []
 
 	return {
 		"name": soa.get("name"),
