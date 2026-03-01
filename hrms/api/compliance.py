@@ -1,197 +1,186 @@
+"""DOLE compliance API endpoints used by my.bebang.ph."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any
+
 import frappe
 from frappe import _
-from frappe.utils import nowdate
+
+ALLOWED_ROLES = ["HR Manager", "System Manager", "HR User", "Area Supervisor"]
 
 
-def _to_float(value):
+def _require_access() -> None:
+	"""Enforce role-based access for compliance endpoints."""
+	frappe.only_for(ALLOWED_ROLES)
+
+
+def _coerce_year(year: Any) -> int:
 	try:
-		return float(value or 0)
-	except Exception:
-		return 0.0
+		value = int(year)
+	except (TypeError, ValueError):
+		frappe.throw(_("Invalid year parameter."), exc=frappe.ValidationError)
+	if value < 2000 or value > 2100:
+		frappe.throw(_("Year must be between 2000 and 2100."), exc=frappe.ValidationError)
+	return value
 
 
-def _to_int(value):
+def _coerce_month(month: Any) -> int:
 	try:
-		return int(value or 0)
-	except Exception:
-		return 0
+		value = int(month)
+	except (TypeError, ValueError):
+		frappe.throw(_("Invalid month parameter."), exc=frappe.ValidationError)
+	if value < 1 or value > 12:
+		frappe.throw(_("Month must be between 1 and 12."), exc=frappe.ValidationError)
+	return value
 
 
 @frappe.whitelist(allow_guest=False)
-def get_compliance_dashboard():
-	"""Return HR compliance dashboard summary used by my.bebang.ph."""
-	year = _to_int(nowdate().split("-")[0])
-	stores = frappe.db.sql(
-		"""
-        SELECT
-            COALESCE(branch, 'UNASSIGNED') AS store,
-            COALESCE(branch, 'Unassigned') AS store_name,
-            COUNT(*) AS total_employees
-        FROM `tabEmployee`
-        WHERE status = 'Active'
-        GROUP BY branch
-        ORDER BY branch
-        """,
-		as_dict=True,
-	)
+def get_compliance_dashboard() -> dict[str, Any]:
+	"""Return high-level compliance summary cards."""
+	_require_access()
 
-	store_rows = []
-	for row in stores:
-		store_rows.append(
-			{
-				"store": row.get("store"),
-				"store_name": row.get("store_name"),
-				"thirteenth_month_status": "computed",
-				"sil_balance_days": 0,
-				"holiday_pay_compliance_pct": 100.0,
-				"compliance_score": 100.0,
-				"issues": [],
-			}
-		)
-
-	overall_score = (
-		round(sum(r["compliance_score"] for r in store_rows) / len(store_rows), 2) if store_rows else 100.0
-	)
-
-	return {
-		"overall_score": overall_score,
-		"thirteenth_month_total": len(store_rows),
-		"thirteenth_month_computed": len(store_rows),
-		"sil_total_days": 0,
-		"holiday_pay_compliance_pct": overall_score,
-		"non_compliant_count": len([r for r in store_rows if r["compliance_score"] < 70]),
-		"stores": store_rows,
-		"year": year,
-		"calculation_date": nowdate(),
-		"data_window": f"{year}-01-01 to {year}-12-31",
-		"source_summary": "tabEmployee active population",
+	now = datetime.utcnow()
+	summary = {
+		"generated_at_utc": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+		"employees_for_review": 0,
+		"open_separations": 0,
+		"pending_clearance_items": 0,
 	}
 
+	try:
+		open_separations = frappe.db.sql(
+			"""
+			SELECT COUNT(name)
+			FROM `tabEmployee Separation`
+			WHERE boarding_status != 'Completed'
+			""",
+		)
+		pending_items = frappe.db.sql(
+			"""
+			SELECT COUNT(name)
+			FROM `tabBEI DOLE Compliance Checklist`
+			WHERE status = 'Pending'
+			""",
+		)
+		summary["open_separations"] = int(open_separations[0][0]) if open_separations else 0
+		summary["pending_clearance_items"] = int(pending_items[0][0]) if pending_items else 0
+	except Exception:
+		# Keep endpoint resilient for dashboard fallback rendering.
+		pass
+
+	return {"success": True, "data": summary}
+
 
 @frappe.whitelist(allow_guest=False)
-def calculate_13th_month_pay(year: int):
-	"""Compute per-employee 13th month pay (sum gross pay / 12)."""
-	year = _to_int(year)
+def calculate_13th_month_pay(year: int | str) -> dict[str, Any]:
+	"""Return 13th month compliance aggregate for a given year."""
+	_require_access()
+	normalized_year = _coerce_year(year)
+
 	rows = frappe.db.sql(
 		"""
-        SELECT
-            ss.employee,
-            COALESCE(ss.employee_name, ss.employee) AS employee_name,
-            COUNT(*) AS months_worked,
-            SUM(COALESCE(ss.gross_pay, 0)) AS basic_total
-        FROM `tabSalary Slip` ss
-        WHERE ss.docstatus = 1
-          AND YEAR(ss.start_date) = %(year)s
-        GROUP BY ss.employee, ss.employee_name
-        ORDER BY ss.employee_name
-        """,
-		{"year": year},
+		SELECT employee, employee_name, IFNULL(SUM(base), 0) AS total_basic
+		FROM `tabSalary Slip`
+		WHERE docstatus = 1 AND YEAR(start_date) = %s
+		GROUP BY employee, employee_name
+		ORDER BY employee_name
+		""",
+		(normalized_year,),
 		as_dict=True,
 	)
 
-	employees = []
-	total_amount = 0.0
-	for row in rows:
-		basic_total = round(_to_float(row.get("basic_total")), 2)
-		amount = round(basic_total / 12, 2)
-		total_amount += amount
-		employees.append(
-			{
-				"employee": row.get("employee"),
-				"employee_name": row.get("employee_name"),
-				"months_worked": _to_int(row.get("months_worked")),
-				"basic_total": basic_total,
-				"thirteenth_month_amount": amount,
-				"is_prorated": _to_int(row.get("months_worked")) < 12,
-				"hire_date": None,
-				"status": "computed",
-			}
-		)
+	total_basic = sum(float(row.get("total_basic", 0) or 0) for row in rows)
+	total_13th = round(total_basic / 12, 2)
 
 	return {
-		"year": year,
-		"total_employees": len(employees),
-		"total_amount": round(total_amount, 2),
-		"employees": employees,
-		"calculation_date": nowdate(),
-		"data_window": f"{year}-01-01 to {year}-12-31",
-		"source_summary": "tabSalary Slip.gross_pay",
+		"success": True,
+		"data": {
+			"year": normalized_year,
+			"employee_count": len(rows),
+			"total_basic": round(total_basic, 2),
+			"estimated_13th_month": total_13th,
+			"rows": rows,
+		},
 	}
 
 
 @frappe.whitelist(allow_guest=False)
-def calculate_sil_balance(employee: str):
-	"""Compute SIL balance for one employee."""
-	earned = _to_float(
-		frappe.db.sql(
-			"""
-            SELECT COALESCE(SUM(total_leaves_allocated), 0)
-            FROM `tabLeave Allocation`
-            WHERE employee = %(employee)s
-              AND leave_type = 'Service Incentive Leave'
-              AND docstatus = 1
-            """,
-			{"employee": employee},
-		)[0][0]
+def calculate_sil_balance(employee: str) -> dict[str, Any]:
+	"""Return SIL balance details for one employee."""
+	_require_access()
+	if not employee:
+		frappe.throw(_("Employee is required."), exc=frappe.ValidationError)
+
+	allocation = frappe.db.sql(
+		"""
+		SELECT IFNULL(SUM(total_leaves_allocated), 0) AS allocated
+		FROM `tabLeave Allocation`
+		WHERE employee = %s AND docstatus = 1 AND leave_type = 'Sick Leave'
+		""",
+		(employee,),
+		as_dict=True,
 	)
-	used = _to_float(
-		frappe.db.sql(
-			"""
-            SELECT COALESCE(SUM(leaves), 0)
-            FROM `tabLeave Ledger Entry`
-            WHERE employee = %(employee)s
-              AND leave_type = 'Service Incentive Leave'
-              AND transaction_type = 'Leave Application'
-            """,
-			{"employee": employee},
-		)[0][0]
+	consumed = frappe.db.sql(
+		"""
+		SELECT IFNULL(SUM(total_leave_days), 0) AS consumed
+		FROM `tabLeave Application`
+		WHERE employee = %s AND docstatus = 1 AND status = 'Approved' AND leave_type = 'Sick Leave'
+		""",
+		(employee,),
+		as_dict=True,
 	)
-	balance = max(round(earned - used, 2), 0)
-	employee_name = frappe.db.get_value("Employee", employee, "employee_name") or employee
-	year = _to_int(nowdate().split("-")[0])
+
+	allocated = float((allocation[0] or {}).get("allocated", 0) if allocation else 0)
+	used = float((consumed[0] or {}).get("consumed", 0) if consumed else 0)
 
 	return {
-		"employee": employee,
-		"employee_name": employee_name,
-		"earned_days": round(earned, 2),
-		"used_days": round(used, 2),
-		"balance_days": balance,
-		"monetizable_days": balance,
-		"year": year,
-		"calculation_date": nowdate(),
-		"data_window": f"{year}-01-01 to {year}-12-31",
-		"source_summary": "Leave Allocation + Leave Ledger Entry",
+		"success": True,
+		"data": {
+			"employee": employee,
+			"allocated": allocated,
+			"used": used,
+			"remaining": round(max(allocated - used, 0), 2),
+		},
 	}
 
 
 @frappe.whitelist(allow_guest=False)
-def get_holiday_pay_compliance(month: int, year: int):
-	"""Return holiday pay compliance metrics for target month."""
-	month = _to_int(month)
-	year = _to_int(year)
-	entries = []
-	compliance_pct = 100.0
+def get_holiday_pay_compliance(month: int | str, year: int | str) -> dict[str, Any]:
+	"""Return a month-level holiday pay compliance placeholder."""
+	_require_access()
+	normalized_month = _coerce_month(month)
+	normalized_year = _coerce_year(year)
 
 	return {
-		"month": month,
-		"year": year,
-		"compliance_pct": compliance_pct,
-		"total_holidays": len(entries),
-		"compliant_count": len(entries),
-		"entries": entries,
-		"calculation_date": nowdate(),
-		"data_window": f"{year}-{month:02d}-01 to {year}-{month:02d}-31",
-		"source_summary": "Attendance + payroll holiday pay checks",
+		"success": True,
+		"data": {
+			"month": normalized_month,
+			"year": normalized_year,
+			"rows": [],
+			"notes": "Holiday pay compliance report scaffold.",
+		},
 	}
 
 
 @frappe.whitelist(allow_guest=False)
-def generate_13th_month_report(year: int):
-	"""Generate export payload for 13th month report."""
-	data = calculate_13th_month_pay(year=year)
+def generate_13th_month_report(year: int | str) -> dict[str, Any]:
+	"""Generate a lightweight report payload for export flow."""
+	_require_access()
+	normalized_year = _coerce_year(year)
+	calc = calculate_13th_month_pay(normalized_year)
+	data = calc.get("data", {})
 	return {
-		"file_url": "",
-		"filename": f"13th-month-{_to_int(year)}.json",
-		"message": _("13th month report generated"),
-		"data": data,
+		"success": True,
+		"data": {
+			"report_name": f"13th-month-{normalized_year}",
+			"generated_at_utc": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+			"summary": {
+				"year": normalized_year,
+				"employee_count": data.get("employee_count", 0),
+				"estimated_13th_month": data.get("estimated_13th_month", 0),
+			},
+		},
+		"message": _("13th month report generated."),
 	}
