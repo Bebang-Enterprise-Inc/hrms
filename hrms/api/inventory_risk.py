@@ -11,6 +11,8 @@ from frappe.utils import add_to_date, cint, flt, now_datetime
 
 _TEST_RISK_ROWS: list[dict] = []
 _TEST_INCIDENTS: list[dict] = []
+_TEST_INCIDENT_EVENTS: dict[str, list[dict]] = {}
+_TEST_EXPOSURE_MAP: dict[str, list[dict]] = {}
 
 
 def set_test_risk_rows(rows: list[dict]) -> None:
@@ -23,6 +25,12 @@ def set_test_incidents(rows: list[dict]) -> None:
     """Inject deterministic incident rows for tests."""
     global _TEST_INCIDENTS
     _TEST_INCIDENTS = [deepcopy(row) for row in rows]
+
+
+def set_test_exposure_map(exposure_map: dict[str, list[dict]]) -> None:
+    """Inject deterministic exposure payloads keyed by parent item."""
+    global _TEST_EXPOSURE_MAP
+    _TEST_EXPOSURE_MAP = {key: [deepcopy(row) for row in rows] for key, rows in exposure_map.items()}
 
 
 def _risk_level_from_score(risk_score: float) -> str:
@@ -138,14 +146,154 @@ def get_risk_dashboard(horizon_hours: int = 72):
     }
 
 
+def build_ingredient_exposure(
+    parent_item_code: str,
+    demand_qty: float,
+    bom_rows: list[dict],
+    stock_map: dict[str, float],
+) -> list[dict]:
+    exposure_rows: list[dict] = []
+    for row in bom_rows:
+        ingredient = row.get("ingredient_item_code") or row.get("item_code")
+        qty_per_unit = max(0.0, flt(row.get("qty_per_unit") or row.get("qty")))
+        required_qty = round(max(0.0, flt(demand_qty)) * qty_per_unit, 2)
+        available_qty = max(0.0, flt(stock_map.get(ingredient, 0)))
+        shortage_qty = round(max(0.0, required_qty - available_qty), 2)
+        daily_requirement = max(0.0, flt(demand_qty) * qty_per_unit)
+        days_cover = 999.0 if daily_requirement <= 0 else round(available_qty / daily_requirement, 2)
+
+        if shortage_qty > 0 and available_qty <= 0:
+            exposure_status = "Critical"
+        elif shortage_qty > 0:
+            exposure_status = "Watch"
+        else:
+            exposure_status = "Normal"
+
+        exposure_rows.append(
+            {
+                "parent_item_code": parent_item_code,
+                "ingredient_item_code": ingredient,
+                "required_qty": required_qty,
+                "available_qty": available_qty,
+                "shortage_qty": shortage_qty,
+                "days_cover": days_cover,
+                "exposure_status": exposure_status,
+            }
+        )
+    return exposure_rows
+
+
 @frappe.whitelist()
 def get_item_exposure(item_code: str):
     if not item_code:
         frappe.throw(_("item_code is required"))
+
+    exposure_rows = [deepcopy(row) for row in _TEST_EXPOSURE_MAP.get(item_code, [])]
     return {
         "item_code": item_code,
-        "exposure": [],
+        "exposure": exposure_rows,
     }
+
+
+def _next_incident_name() -> str:
+    return f"S20-INC-{len(_TEST_INCIDENTS) + 1:04d}"
+
+
+def _append_incident_event(incident_name: str, event_type: str, details: str | None = None) -> dict:
+    event = {
+        "incident": incident_name,
+        "event_type": event_type,
+        "details": details or "",
+        "event_at": add_to_date(now_datetime(), days=0, as_string=True),
+        "event_by": getattr(frappe.session, "user", "Administrator"),
+    }
+    _TEST_INCIDENT_EVENTS.setdefault(incident_name, []).append(event)
+    return event
+
+
+def create_stockout_incident(
+    item_code: str,
+    warehouse: str,
+    incident_title: str | None = None,
+    owner_user: str | None = None,
+) -> dict:
+    if not item_code:
+        frappe.throw(_("item_code is required"))
+    if not warehouse:
+        frappe.throw(_("warehouse is required"))
+
+    incident = {
+        "name": _next_incident_name(),
+        "incident_title": incident_title or f"Stockout risk on {item_code}",
+        "item_code": item_code,
+        "warehouse": warehouse,
+        "status": "Open",
+        "owner_user": owner_user,
+        "detected_on": add_to_date(now_datetime(), days=0, as_string=True),
+        "resolution_notes": "",
+    }
+    _TEST_INCIDENTS.append(incident)
+    _append_incident_event(incident["name"], "Detected", "Incident created")
+    return deepcopy(incident)
+
+
+_STATUS_EVENT_MAP = {
+    "Mitigating": "Assigned",
+    "Blocked": "Blocked",
+    "Resolved": "Resolved",
+}
+
+
+def update_stockout_incident_status(
+    incident_name: str,
+    new_status: str,
+    note: str | None = None,
+    resolution_notes: str | None = None,
+    owner_user: str | None = None,
+) -> dict:
+    if not incident_name:
+        frappe.throw(_("incident_name is required"))
+    if not new_status:
+        frappe.throw(_("new_status is required"))
+
+    allowed_status = {"Open", "Mitigating", "Blocked", "Resolved"}
+    if new_status not in allowed_status:
+        frappe.throw(_("Invalid status"))
+
+    incident = next((row for row in _TEST_INCIDENTS if row.get("name") == incident_name), None)
+    if incident is None:
+        incident = {
+            "name": incident_name,
+            "incident_title": incident_name,
+            "item_code": None,
+            "warehouse": None,
+            "status": "Open",
+            "owner_user": None,
+            "detected_on": add_to_date(now_datetime(), days=0, as_string=True),
+            "resolution_notes": "",
+        }
+        _TEST_INCIDENTS.append(incident)
+
+    if new_status == "Resolved":
+        final_notes = (resolution_notes or note or "").strip()
+        if not final_notes:
+            frappe.throw(_("resolution_notes is required for Resolved status"))
+        incident["resolution_notes"] = final_notes
+
+    if owner_user:
+        incident["owner_user"] = owner_user
+
+    incident["status"] = new_status
+    event_type = _STATUS_EVENT_MAP.get(new_status, "Updated")
+    _append_incident_event(incident_name, event_type, note)
+    return deepcopy(incident)
+
+
+@frappe.whitelist()
+def get_incident_events(incident_name: str):
+    if not incident_name:
+        frappe.throw(_("incident_name is required"))
+    return [deepcopy(row) for row in _TEST_INCIDENT_EVENTS.get(incident_name, [])]
 
 
 @frappe.whitelist()
@@ -161,23 +309,8 @@ def get_stockout_incidents(status: str | None = None):
 
 @frappe.whitelist()
 def update_stockout_incident(incident_name: str, new_status: str, note: str | None = None):
-    if not incident_name:
-        frappe.throw(_("incident_name is required"))
-    if not new_status:
-        frappe.throw(_("new_status is required"))
-
-    for row in _TEST_INCIDENTS:
-        if row.get("name") == incident_name:
-            row["status"] = new_status
-            row["note"] = note or ""
-            return {
-                "name": incident_name,
-                "status": new_status,
-                "note": note or "",
-            }
-
-    return {
-        "name": incident_name,
-        "status": new_status,
-        "note": note or "",
-    }
+    return update_stockout_incident_status(
+        incident_name=incident_name,
+        new_status=new_status,
+        note=note,
+    )
