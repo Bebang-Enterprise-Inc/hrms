@@ -450,11 +450,64 @@ def convert_pr_to_po(name, supplier):
 # PURCHASE ORDER ENDPOINTS
 # =============================================================================
 
+def _clean_optional_filter(value):
+    return (value or "").strip() if isinstance(value, str) else value
+
+
+def build_purchase_order_operational_filters(filters=None):
+    """Build exact item_code + warehouse filter clauses for PO drilldowns."""
+    filters = filters or {}
+    clauses = []
+    values = {}
+
+    item_code = _clean_optional_filter(filters.get("item_code"))
+    warehouse = _clean_optional_filter(filters.get("warehouse"))
+
+    if item_code:
+        clauses.append(
+            "EXISTS (SELECT 1 FROM `tabBEI PO Item` poi WHERE poi.parent = name AND poi.item_code = %(item_code)s)"
+        )
+        values["item_code"] = item_code
+
+    if warehouse:
+        clauses.append(
+            "EXISTS (SELECT 1 FROM `tabBEI PO Item` poi WHERE poi.parent = name AND poi.warehouse = %(warehouse)s)"
+        )
+        values["warehouse"] = warehouse
+
+    return clauses, values
+
+
+def build_payment_request_operational_filters(filters=None):
+    """Build exact item_code + warehouse filter clauses for finance drilldowns."""
+    filters = filters or {}
+    clauses = []
+    values = {}
+
+    item_code = _clean_optional_filter(filters.get("item_code"))
+    warehouse = _clean_optional_filter(filters.get("warehouse"))
+
+    if item_code:
+        clauses.append(
+            "EXISTS (SELECT 1 FROM `tabBEI PO Item` poi WHERE poi.parent = inv.purchase_order AND poi.item_code = %(item_code)s)"
+        )
+        values["item_code"] = item_code
+
+    if warehouse:
+        clauses.append(
+            "EXISTS (SELECT 1 FROM `tabBEI PO Item` poi WHERE poi.parent = inv.purchase_order AND poi.warehouse = %(warehouse)s)"
+        )
+        values["warehouse"] = warehouse
+
+    return clauses, values
+
+
 @frappe.whitelist()
 def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
     """Get paginated list of POs."""
     conditions = []
     values = {}
+    applied_filters = {}
 
     if search:
         conditions.append(
@@ -465,6 +518,7 @@ def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
     if filters:
         if isinstance(filters, str):
             filters = frappe.parse_json(filters)
+        applied_filters = dict(filters)
 
         if filters.get("status"):
             conditions.append("status = %(status)s")
@@ -481,6 +535,10 @@ def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
             conditions.append(
                 "status IN ('Pending Mae Approval', 'Pending Butch Approval')"
             )
+
+        operational_clauses, operational_values = build_purchase_order_operational_filters(filters)
+        conditions.extend(operational_clauses)
+        values.update(operational_values)
 
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
@@ -500,6 +558,13 @@ def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
         ORDER BY po_date DESC
         LIMIT %(page_size)s OFFSET %(offset)s
     """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+
+    if _clean_optional_filter(applied_filters.get("item_code")):
+        for row in pos:
+            row["has_item_match"] = True
+    if _clean_optional_filter(applied_filters.get("warehouse")):
+        for row in pos:
+            row["has_warehouse_match"] = True
 
     return {
         "data": pos,
@@ -1082,6 +1147,7 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
     """Get paginated list of payment requests."""
     conditions = []
     values = {}
+    applied_filters = {}
 
     if search:
         conditions.append(
@@ -1092,6 +1158,7 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
     if filters:
         if isinstance(filters, str):
             filters = frappe.parse_json(filters)
+        applied_filters = dict(filters)
 
         if filters.get("status"):
             conditions.append("pr.status = %(status)s")
@@ -1106,6 +1173,10 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
                 "pr.status IN ('Pending Review', 'Pending Budget Approval', "
                 "'Pending CFO Approval', 'Pending CEO Approval')"
             )
+
+        operational_clauses, operational_values = build_payment_request_operational_filters(filters)
+        conditions.extend(operational_clauses)
+        values.update(operational_values)
 
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
@@ -1128,6 +1199,13 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
         ORDER BY pr.request_date DESC
         LIMIT %(page_size)s OFFSET %(offset)s
     """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+
+    if _clean_optional_filter(applied_filters.get("item_code")):
+        for row in requests:
+            row["has_item_match"] = True
+    if _clean_optional_filter(applied_filters.get("warehouse")):
+        for row in requests:
+            row["has_warehouse_match"] = True
 
     return {
         "data": requests,

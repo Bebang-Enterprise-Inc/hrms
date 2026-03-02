@@ -21,13 +21,22 @@ import json
 # 1. SUPPLIER RECEIVING
 # ============================================================
 
+def _row_value(row, key, default=None):
+    if isinstance(row, dict):
+        return row.get(key, default)
+    return getattr(row, key, default)
+
+
 @frappe.whitelist()
-def get_pending_purchase_orders():
+def get_pending_purchase_orders(item_code=None, warehouse=None):
     """
     Get POs pending receipt at warehouse.
     Returns POs with status='To Receive and Bill' or 'To Receive'.
     P0-12 fix: Batch items fetch into single query (was N+1).
     """
+    item_code_filter = (item_code or "").strip()
+    warehouse_filter = (warehouse or "").strip()
+
     pos = frappe.get_all(
         "Purchase Order",
         filters={
@@ -46,25 +55,48 @@ def get_pending_purchase_orders():
         return {"success": True, "data": []}
 
     # P0-12: Batch-fetch all items for all POs in a single query
-    po_names = [po.name for po in pos]
+    po_names = [_row_value(po, "name") for po in pos]
     all_items = frappe.get_all(
         "Purchase Order Item",
         filters={"parent": ["in", po_names]},
-        fields=["parent", "item_code", "item_name", "qty", "received_qty", "uom"]
+        fields=["parent", "item_code", "item_name", "qty", "received_qty", "uom", "warehouse"]
     )
 
     # Group items by PO
     items_by_po = {}
     for item in all_items:
-        items_by_po.setdefault(item.parent, []).append(item)
+        items_by_po.setdefault(_row_value(item, "parent"), []).append(item)
 
+    filtered_pos = []
     for po in pos:
-        items = items_by_po.get(po.name, [])
-        po["items"] = items
-        po["items_count"] = len(items)
-        po["pending_items"] = sum(1 for i in items if i.qty > i.received_qty)
+        po_name = _row_value(po, "name")
+        items = items_by_po.get(po_name, [])
 
-    return {"success": True, "data": pos}
+        has_item_match = True if not item_code_filter else any(
+            _row_value(i, "item_code") == item_code_filter for i in items
+        )
+        has_warehouse_match = True if not warehouse_filter else any(
+            _row_value(i, "warehouse") == warehouse_filter for i in items
+        )
+        if not (has_item_match and has_warehouse_match):
+            continue
+
+        visible_items = items
+        if item_code_filter:
+            visible_items = [i for i in visible_items if _row_value(i, "item_code") == item_code_filter]
+        if warehouse_filter:
+            visible_items = [i for i in visible_items if _row_value(i, "warehouse") == warehouse_filter]
+
+        po["has_item_match"] = has_item_match
+        po["has_warehouse_match"] = has_warehouse_match
+        po["items"] = visible_items
+        po["items_count"] = len(visible_items)
+        po["pending_items"] = sum(
+            1 for i in visible_items if flt(_row_value(i, "qty")) > flt(_row_value(i, "received_qty"))
+        )
+        filtered_pos.append(po)
+
+    return {"success": True, "data": filtered_pos}
 
 
 @frappe.whitelist()

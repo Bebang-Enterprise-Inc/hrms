@@ -792,6 +792,71 @@ def get_finance_risk_impact(item_code: str, warehouse: str, horizon_hours: int =
     return _finance_payload_from_row(row)
 
 
+def _build_finance_queue_rows(row: dict, pending_pos: list[dict]) -> list[dict]:
+    unit_cost = max(0.0, flt(row.get("unit_cost") or row.get("latest_cost") or 0))
+    item_code = row.get("item_code")
+    warehouse = row.get("warehouse")
+
+    queue_rows: list[dict] = []
+    for idx, po_row in enumerate(pending_pos, start=1):
+        supplier = po_row.get("supplier") or f"test-supplier-{idx:02d}"
+        ordered_qty = max(0.0, flt(po_row.get("ordered_qty")))
+        amount_due = round(ordered_qty * unit_cost, 2)
+        po_number = po_row.get("po_number") or f"PO-{item_code}-{idx:02d}"
+        expected_eta = po_row.get("expected_eta")
+
+        queue_rows.append(
+            {
+                "payment_reference": f"PAYQ-{po_number}",
+                "supplier": supplier,
+                "po_number": po_number,
+                "item_code": item_code,
+                "warehouse": warehouse,
+                "amount_due": amount_due,
+                "currency": "PHP",
+                "status": "Pending Payment",
+                "due_date": expected_eta,
+                "source_doctype": po_row.get("source_doctype") or "Purchase Order",
+                "source_name": po_row.get("source_name") or po_number,
+                "link_route": po_row.get("link_route") or f"/app/purchase-order/{po_number}",
+            }
+        )
+
+    return queue_rows
+
+
+@frappe.whitelist()
+def get_item_finance_queue(item_code: str, warehouse: str, horizon_hours: int = 72):
+    if not item_code:
+        frappe.throw(_("item_code is required"))
+    if not warehouse:
+        frappe.throw(_("warehouse is required"))
+
+    row = _find_risk_row(item_code=item_code, warehouse=warehouse, horizon_hours=horizon_hours)
+    pipeline = _build_pipeline_details_from_row(row)
+    pending_pos = pipeline.get("pending_pos", [])
+    pending_payments = _build_finance_queue_rows(row, pending_pos)
+
+    supplier_list = sorted({entry.get("supplier") for entry in pending_payments if entry.get("supplier")})
+    total_amount = round(sum(flt(entry.get("amount_due")) for entry in pending_payments), 2)
+
+    return {
+        "item_code": item_code,
+        "warehouse": warehouse,
+        "horizon_hours": cint(horizon_hours or 72),
+        "suppliers": supplier_list,
+        "totals": {
+            "pending_payment_count": len(pending_payments),
+            "pending_payment_amount": total_amount,
+            "value_at_risk": flt(row.get("value_at_risk")),
+            "margin_at_risk": flt(row.get("margin_at_risk")),
+            "payable_urgency": row.get("payable_urgency") or "Low",
+            "urgent_payment_required": bool(row.get("urgent_payment_required")),
+        },
+        "pending_payments": pending_payments,
+    }
+
+
 @frappe.whitelist()
 def get_item_pending_pos(item_code: str, warehouse: str, horizon_hours: int = 72):
     if not item_code:
