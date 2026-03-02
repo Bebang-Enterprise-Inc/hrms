@@ -800,10 +800,17 @@ def submit_order(
 	item_codes = [row.get("item_code") for row in items if row.get("item_code")]
 	item_meta = {}
 	if item_codes:
+		item_fields = ["name", "item_group", "item_name"]
+		try:
+			if frappe.get_meta("Item").has_field("cargo_category"):
+				item_fields.append("cargo_category")
+		except Exception:
+			pass
+
 		for row in frappe.get_all(
 			"Item",
 			filters={"name": ["in", item_codes]},
-			fields=["name", "item_group", "item_name", "cargo_category"],
+			fields=item_fields,
 			limit_page_length=max(200, len(item_codes)),
 		):
 			item_meta[row.name] = row
