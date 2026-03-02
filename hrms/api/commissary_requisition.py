@@ -638,3 +638,69 @@ def complete_work_order(work_order_name, qty_produced=None):
             "status": wo.status
         }
     }
+
+
+# ---------------------------------------------------------------------------
+# COMPATIBILITY WRAPPERS FOR CANONICAL CONTRACT MODULE
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def submit_production_output(items, batch_no=None, remarks=None):
+    """Bridge requisition route mapping to dashboard production submit API."""
+    from hrms.api.commissary_dashboard import submit_production_output as dashboard_submit
+
+    return dashboard_submit(items=items, batch_no=batch_no, remarks=remarks)
+
+
+@frappe.whitelist()
+def create_dispatch_transfer(target_warehouse, items, mr_name=None, remarks=None):
+    """Legacy wrapper kept for Sprint 18 route compatibility."""
+    from hrms.api.commissary import create_dispatch_transfer as legacy_create_dispatch_transfer
+
+    return legacy_create_dispatch_transfer(
+        target_warehouse=target_warehouse,
+        items=items,
+        mr_name=mr_name,
+        remarks=remarks,
+    )
+
+
+@frappe.whitelist()
+def create_hub_transfer(destination_hub, items, remarks=None):
+    """Legacy wrapper kept for Sprint 18 route compatibility."""
+    from hrms.api.commissary import create_hub_transfer as legacy_create_hub_transfer
+
+    return legacy_create_hub_transfer(
+        destination_hub=destination_hub,
+        items=items,
+        remarks=remarks,
+    )
+
+
+@frappe.whitelist()
+def fulfill_store_order(mr_name, items):
+    """Legacy wrapper kept for Sprint 18 route compatibility."""
+    from hrms.api.commissary import fulfill_store_order as legacy_fulfill_store_order
+
+    return legacy_fulfill_store_order(mr_name=mr_name, items=items)
+
+
+@frappe.whitelist()
+def update_hub_inventory(hub_code, item_code, qty, uom=None):
+    """Legacy wrapper kept for Sprint 18 route compatibility."""
+    from hrms.api.commissary import update_hub_inventory as legacy_update_hub_inventory
+
+    return legacy_update_hub_inventory(
+        hub_code=hub_code,
+        item_code=item_code,
+        qty=qty,
+        uom=uom,
+    )
+
+
+@frappe.whitelist()
+def check_production_feasibility(item_code, qty):
+    """Expose production feasibility on canonical requisition module path."""
+    from hrms.api.commissary_bom import check_production_feasibility as bom_feasibility
+
+    return bom_feasibility(item_code=item_code, qty=qty)
