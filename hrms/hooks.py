@@ -306,6 +306,7 @@ scheduler_events = {
 		"hrms.api.procurement.check_overdue_or",
 		"hrms.api.procurement.check_overdue_invoices",
 		"hrms.api.inventory.send_low_stock_daily_alert",
+		"hrms.api.inventory_risk.recompute_risk_snapshots",
 		"hrms.api.permits.check_permit_expiry",
 		"hrms.tasks.send_overdue_action_plan_reminders",
 		"hrms.api.overtime.scheduled_overtime_detection",
@@ -448,3 +449,4 @@ ignore_translatable_strings_from = ["frappe", "erpnext"]
 # Fixtures
 # --------
 fixtures = ["Custom Field"]
+
