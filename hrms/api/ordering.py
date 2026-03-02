@@ -192,7 +192,8 @@ def get_order_review_queue(date=None, status=None):
     Returns:
         dict: {"orders": [...], "total": int}
     """
-    _check_ordering_permission(ORDERING_WAREHOUSE_ROLES, "view order review queue")
+    # Queue review is an approval workflow and must allow Area Supervisors.
+    _check_ordering_permission(ORDERING_APPROVAL_ROLES, "view order review queue")
 
     filter_date = date or today()
 
