@@ -1089,13 +1089,34 @@ def _resolve_session_user() -> str:
     return "Administrator"
 
 
-def _append_incident_event(incident_name: str, event_type: str, details: str | None = None) -> dict:
+def _build_action_context(
+    department: str | None = None,
+    source_page: str | None = None,
+    action_id: str | None = None,
+) -> dict:
+    context: dict[str, str] = {}
+    if department:
+        context["department"] = str(department)
+    if source_page:
+        context["source_page"] = str(source_page)
+    if action_id:
+        context["action_id"] = str(action_id)
+    return context
+
+
+def _append_incident_event(
+    incident_name: str,
+    event_type: str,
+    details: str | None = None,
+    action_context: dict | None = None,
+) -> dict:
     event = {
         "incident": incident_name,
         "event_type": event_type,
         "details": details or "",
         "event_at": add_to_date(now_datetime(), days=0, as_string=True),
         "event_by": _resolve_session_user(),
+        "action_context": deepcopy(action_context or {}),
     }
     _TEST_INCIDENT_EVENTS.setdefault(incident_name, []).append(event)
     return event
@@ -1195,7 +1216,14 @@ def update_stockout_incident_status(
 
 
 @frappe.whitelist()
-def assign_incident_owner(incident_name: str, owner_user: str, note: str | None = None):
+def assign_incident_owner(
+    incident_name: str,
+    owner_user: str,
+    note: str | None = None,
+    department: str | None = None,
+    source_page: str | None = None,
+    action_id: str | None = None,
+):
     if not incident_name:
         frappe.throw(_("incident_name is required"))
     if not owner_user:
@@ -1203,12 +1231,24 @@ def assign_incident_owner(incident_name: str, owner_user: str, note: str | None 
 
     incident = _get_or_create_incident(incident_name)
     incident["owner_user"] = owner_user
-    _append_incident_event(incident_name, "Assigned", note or f"Owner set to {owner_user}")
+    _append_incident_event(
+        incident_name,
+        "Assigned",
+        note or f"Owner set to {owner_user}",
+        action_context=_build_action_context(department, source_page, action_id),
+    )
     return deepcopy(incident)
 
 
 @frappe.whitelist()
-def set_incident_sla(incident_name: str, target_resolution_at: str, note: str | None = None):
+def set_incident_sla(
+    incident_name: str,
+    target_resolution_at: str,
+    note: str | None = None,
+    department: str | None = None,
+    source_page: str | None = None,
+    action_id: str | None = None,
+):
     if not incident_name:
         frappe.throw(_("incident_name is required"))
     if not target_resolution_at:
@@ -1220,12 +1260,20 @@ def set_incident_sla(incident_name: str, target_resolution_at: str, note: str | 
         incident_name,
         "Updated",
         note or f"SLA set to {target_resolution_at}",
+        action_context=_build_action_context(department, source_page, action_id),
     )
     return deepcopy(incident)
 
 
 @frappe.whitelist()
-def escalate_stockout_incident(incident_name: str, escalation_level: str, note: str | None = None):
+def escalate_stockout_incident(
+    incident_name: str,
+    escalation_level: str,
+    note: str | None = None,
+    department: str | None = None,
+    source_page: str | None = None,
+    action_id: str | None = None,
+):
     if not incident_name:
         frappe.throw(_("incident_name is required"))
     if not escalation_level:
@@ -1238,6 +1286,7 @@ def escalate_stockout_incident(incident_name: str, escalation_level: str, note: 
         incident_name,
         "Escalated",
         note or f"Escalated to {escalation_level}",
+        action_context=_build_action_context(department, source_page, action_id),
     )
     return deepcopy(incident)
 
@@ -1248,6 +1297,9 @@ def add_incident_mitigation_action(
     action_owner: str,
     action_text: str,
     due_at: str | None = None,
+    department: str | None = None,
+    source_page: str | None = None,
+    action_id: str | None = None,
 ):
     if not incident_name:
         frappe.throw(_("incident_name is required"))
@@ -1263,12 +1315,16 @@ def add_incident_mitigation_action(
 
     existing = (incident.get("mitigation_plan") or "").strip()
     incident["mitigation_plan"] = f"{existing}\n{action_line}".strip()
-    _append_incident_event(
+    event = _append_incident_event(
         incident_name,
         "Mitigation Added",
         action_line,
+        action_context=_build_action_context(department, source_page, action_id),
     )
-    return deepcopy(incident)
+    response = deepcopy(incident)
+    response["action_context"] = deepcopy(event.get("action_context") or {})
+    response["event"] = deepcopy(event)
+    return response
 
 
 @frappe.whitelist()
