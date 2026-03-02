@@ -105,7 +105,8 @@ STORE_OPS_ALLOWED_ROLES = [
 	"Administrator",
 ]
 AREA_SUPERVISOR_ROLE = "Area Supervisor"
-DEFAULT_AREA_SUPERVISOR_EMAIL = "sam@bebang.ph"
+REGIONAL_MANAGER_ROLE = "Regional Manager"
+REGIONAL_MANAGER_FALLBACK_EMAIL = "edlice@bebang.ph"
 
 
 def validate_store_ops_role():
@@ -236,15 +237,11 @@ def _choose_preferred_area_supervisor(candidates, prefer_test=False):
 	non_test_users = [user for user in users if user not in test_users]
 
 	if prefer_test and test_users:
-		return DEFAULT_AREA_SUPERVISOR_EMAIL if DEFAULT_AREA_SUPERVISOR_EMAIL in test_users else test_users[0]
+		return test_users[0]
 
-	if DEFAULT_AREA_SUPERVISOR_EMAIL in non_test_users:
-		return DEFAULT_AREA_SUPERVISOR_EMAIL
 	if non_test_users:
 		return non_test_users[0]
 
-	if DEFAULT_AREA_SUPERVISOR_EMAIL in users:
-		return DEFAULT_AREA_SUPERVISOR_EMAIL
 	return users[0]
 
 
@@ -289,7 +286,60 @@ def _get_default_area_supervisor(role_cache=None, branch_keys=None):
 		return None
 
 	prefer_test = any("TEST" in str(key or "").upper() for key in (branch_keys or set()))
-	return _choose_preferred_area_supervisor(valid_candidates, prefer_test=prefer_test)
+	if prefer_test:
+		return _choose_preferred_area_supervisor(valid_candidates, prefer_test=True)
+	return None
+
+
+def _is_enabled_user(user_id):
+	user = str(user_id or "").strip()
+	if not user:
+		return False
+	try:
+		rows = frappe.get_all(
+			"User",
+			filters={"name": user, "enabled": 1},
+			fields=["name"],
+			limit_page_length=1,
+		)
+	except Exception:
+		return False
+	return bool(rows)
+
+
+def _get_regional_manager_fallback_user():
+	user = str(REGIONAL_MANAGER_FALLBACK_EMAIL or "").strip()
+	if not user:
+		return None
+	if not _is_enabled_user(user):
+		frappe.log_error(
+			f"Regional manager fallback user {user} is missing or disabled.",
+			"Store Order Approver Fallback",
+		)
+		return None
+	try:
+		roles = set(frappe.get_roles(user))
+	except Exception:
+		roles = set()
+	if not roles.intersection({AREA_SUPERVISOR_ROLE, REGIONAL_MANAGER_ROLE, "System Manager"}):
+		frappe.log_error(
+			f"Regional manager fallback user {user} has no approval role.",
+			"Store Order Approver Fallback",
+		)
+		return None
+	return user
+
+
+def _resolve_review_approver_for_store(warehouse):
+	area_supervisor = _get_area_supervisor_for_store(warehouse)
+	if area_supervisor:
+		return area_supervisor, "area_supervisor"
+
+	regional_manager = _get_regional_manager_fallback_user()
+	if regional_manager:
+		return regional_manager, "regional_manager_fallback"
+
+	return None, "unmapped"
 
 
 def _infer_area_supervisor_for_store(warehouse, role_cache=None):
@@ -1175,13 +1225,17 @@ def submit_order(
 		order.append("items", normalized)
 
 	requires_manual_approval = bool(is_bulk_order or edited_lines_count > 0)
-	approver = _get_area_supervisor_for_store(warehouse) if requires_manual_approval else None
+	approver = None
+	approver_source = "not_required"
+	if requires_manual_approval:
+		approver, approver_source = _resolve_review_approver_for_store(warehouse)
 	if requires_manual_approval and not approver:
 		frappe.throw(
 			_(
-				"Order requires Area Supervisor approval but no valid Area Supervisor mapping is configured for {0}. "
-				"Please update Warehouse.custom_area_supervisor before submitting."
-			).format(warehouse)
+				"Order requires Area Supervisor approval but no valid Area Supervisor mapping was found for {0}, "
+				"and Regional Manager fallback {1} is unavailable. Please update Warehouse.custom_area_supervisor "
+				"or provision fallback approver access before submitting."
+			).format(warehouse, REGIONAL_MANAGER_FALLBACK_EMAIL)
 		)
 
 	order.insert(ignore_permissions=True)
@@ -1227,6 +1281,7 @@ def submit_order(
 		"edited_lines_count": edited_lines_count,
 		"message": f"Order {order.name} submitted successfully",
 		"approval_queue_status": queue_status,
+		"approval_approver_source": approver_source,
 		"cargo_category": normalized_cargo_category,
 		"dropped_invalid_lines": len(dropped_items),
 	}
@@ -1267,10 +1322,15 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 
 	approved_quantities: {item_code: qty_approved}
 	"""
-	# Verify user has Area Supervisor role
+	# Verify user has an approver role
 	user_roles = frappe.get_roles(frappe.session.user)
-	if "Area Supervisor" not in user_roles and "System Manager" not in user_roles:
-		frappe.throw(_("Only Area Supervisors can approve store orders"))
+	if (
+		AREA_SUPERVISOR_ROLE not in user_roles
+		and REGIONAL_MANAGER_ROLE not in user_roles
+		and "System Manager" not in user_roles
+		and frappe.session.user != REGIONAL_MANAGER_FALLBACK_EMAIL
+	):
+		frappe.throw(_("Only Area Supervisors or Regional Managers can approve store orders"))
 
 	order = frappe.get_doc("BEI Store Order", order_name)
 

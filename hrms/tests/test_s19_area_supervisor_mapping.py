@@ -61,17 +61,16 @@ def _install_stubs():
 	role_map = {
 		"store.supervisor@bebang.ph": ["Store Supervisor"],
 		"area.supervisor@bebang.ph": ["Area Supervisor"],
-		"sam@bebang.ph": ["Area Supervisor"],
+		"edlice@bebang.ph": ["Regional Manager"],
 		"test.area@bebang.ph": ["Area Supervisor"],
 	}
 	role_rows = [
 		{"parent": "area.supervisor@bebang.ph", "role": "Area Supervisor"},
-		{"parent": "sam@bebang.ph", "role": "Area Supervisor"},
 		{"parent": "test.area@bebang.ph", "role": "Area Supervisor"},
 	]
 	user_rows = {
 		"area.supervisor@bebang.ph": {"name": "area.supervisor@bebang.ph", "enabled": 1},
-		"sam@bebang.ph": {"name": "sam@bebang.ph", "enabled": 1},
+		"edlice@bebang.ph": {"name": "edlice@bebang.ph", "enabled": 1},
 		"test.area@bebang.ph": {"name": "test.area@bebang.ph", "enabled": 1},
 	}
 
@@ -208,24 +207,31 @@ def test_unmapped_store_returns_none_when_no_area_supervisor_can_be_inferred():
 	assert approver is None
 
 
-def test_unmapped_store_uses_default_area_supervisor_fallback():
+def test_unmapped_store_uses_regional_manager_fallback_when_area_supervisor_missing():
 	store_mod, _db, _rows = _load_store_module()
 
-	# Remove branch-linked employee signals; fallback should use default Area Supervisor role mapping.
+	# Remove branch-linked employee and role signals; fallback should route to Regional Manager approver.
 	store_mod.frappe.get_all = (
 		lambda doctype, **kwargs: []
 		if doctype == "Employee"
 		else (
 			[
 				{"parent": "test.area@bebang.ph", "role": "Area Supervisor"},
-				{"parent": "sam@bebang.ph", "role": "Area Supervisor"},
 			]
 			if doctype == "Has Role"
-			else [{"name": "test.area@bebang.ph"}, {"name": "sam@bebang.ph"}]
+			else [{"name": "test.area@bebang.ph"}, {"name": "edlice@bebang.ph"}]
 			if doctype == "User"
 			else []
 		)
 	)
+	store_mod.frappe.get_roles = (
+		lambda user=None: {
+			"test.supervisor@bebang.ph": ["Store Supervisor"],
+			"test.area@bebang.ph": ["Area Supervisor"],
+			"edlice@bebang.ph": ["Regional Manager"],
+		}.get(user or "test.supervisor@bebang.ph", [])
+	)
 
-	approver = store_mod._get_area_supervisor_for_store("UNMAPPED - BEI")
-	assert approver == "sam@bebang.ph"
+	approver, source = store_mod._resolve_review_approver_for_store("UNMAPPED - BEI")
+	assert approver == "edlice@bebang.ph"
+	assert source == "regional_manager_fallback"
