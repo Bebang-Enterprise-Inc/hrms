@@ -19,4 +19,3 @@ def execute():
 		)
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "Store Area Supervisor Mapping Backfill Failed")
-
