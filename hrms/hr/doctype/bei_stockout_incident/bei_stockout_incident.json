@@ -13,6 +13,10 @@
   "owner_user",
   "detected_on",
   "target_resolution_at",
+  "root_cause",
+  "escalation_level",
+  "last_escalated_at",
+  "mitigation_plan",
   "resolution_notes"
  ],
  "fields": [
@@ -24,6 +28,10 @@
   {"fieldname": "owner_user", "fieldtype": "Link", "label": "Owner User", "options": "User"},
   {"fieldname": "detected_on", "fieldtype": "Datetime", "label": "Detected On"},
   {"fieldname": "target_resolution_at", "fieldtype": "Datetime", "label": "Target Resolution At"},
+  {"fieldname": "root_cause", "fieldtype": "Select", "label": "Root Cause", "options": "Supplier Delay\nDemand Spike\nWarehouse Variance\nQuality Hold\nPayment Hold"},
+  {"default": "Level 1", "fieldname": "escalation_level", "fieldtype": "Select", "label": "Escalation Level", "options": "Level 1\nLevel 2\nLevel 3\nExecutive"},
+  {"fieldname": "last_escalated_at", "fieldtype": "Datetime", "label": "Last Escalated At"},
+  {"fieldname": "mitigation_plan", "fieldtype": "Text", "label": "Mitigation Plan"},
   {"fieldname": "resolution_notes", "fieldtype": "Text", "label": "Resolution Notes"}
  ],
  "index_web_pages_for_search": 1,

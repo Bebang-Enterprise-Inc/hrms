@@ -7,21 +7,25 @@
  "field_order": [
   "snapshot",
   "parent_item_code",
+  "warehouse",
   "ingredient_item_code",
   "required_qty",
   "available_qty",
   "shortage_qty",
   "days_cover",
+  "recovery_eta",
   "exposure_status"
  ],
  "fields": [
   {"fieldname": "snapshot", "fieldtype": "Link", "label": "Risk Snapshot", "options": "BEI Inventory Risk Snapshot"},
   {"fieldname": "parent_item_code", "fieldtype": "Link", "label": "Parent Item", "options": "Item", "reqd": 1},
+  {"fieldname": "warehouse", "fieldtype": "Link", "label": "Warehouse", "options": "Warehouse"},
   {"fieldname": "ingredient_item_code", "fieldtype": "Link", "label": "Ingredient Item", "options": "Item", "reqd": 1},
   {"fieldname": "required_qty", "fieldtype": "Float", "label": "Required Qty"},
   {"fieldname": "available_qty", "fieldtype": "Float", "label": "Available Qty"},
   {"fieldname": "shortage_qty", "fieldtype": "Float", "label": "Shortage Qty"},
   {"fieldname": "days_cover", "fieldtype": "Float", "label": "Days Cover"},
+  {"fieldname": "recovery_eta", "fieldtype": "Datetime", "label": "Recovery ETA"},
   {"fieldname": "exposure_status", "fieldtype": "Select", "label": "Exposure Status", "options": "Normal\nWatch\nCritical", "in_list_view": 1}
  ],
  "index_web_pages_for_search": 1,

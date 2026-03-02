@@ -13,7 +13,7 @@
  ],
  "fields": [
   {"fieldname": "incident", "fieldtype": "Link", "label": "Stockout Incident", "options": "BEI Stockout Incident", "reqd": 1},
-  {"fieldname": "event_type", "fieldtype": "Select", "label": "Event Type", "options": "Detected\nAssigned\nBlocked\nResolved\nUpdated", "in_list_view": 1, "reqd": 1},
+  {"fieldname": "event_type", "fieldtype": "Select", "label": "Event Type", "options": "Detected\nAssigned\nBlocked\nResolved\nUpdated\nEscalated\nMitigation Added", "in_list_view": 1, "reqd": 1},
   {"fieldname": "event_at", "fieldtype": "Datetime", "label": "Event At", "reqd": 1},
   {"fieldname": "event_by", "fieldtype": "Link", "label": "Event By", "options": "User"},
   {"fieldname": "details", "fieldtype": "Text", "label": "Details"}
