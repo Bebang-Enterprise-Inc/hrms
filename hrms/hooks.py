@@ -287,9 +287,7 @@ scheduler_events = {
 			"hrms.utils.biometric_alerts.send_daily_digest",
 		],
 		# Monthly billing generation: 6 AM on 1st of each month
-		"0 6 1 * *": [
-			"hrms.api.billing.scheduled_monthly_billing"
-		],
+		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
 	},
 	"hourly_long": [
 		"hrms.hr.doctype.shift_type.shift_type.update_last_sync_of_checkin",
@@ -449,4 +447,3 @@ ignore_translatable_strings_from = ["frappe", "erpnext"]
 # Fixtures
 # --------
 fixtures = ["Custom Field"]
-
