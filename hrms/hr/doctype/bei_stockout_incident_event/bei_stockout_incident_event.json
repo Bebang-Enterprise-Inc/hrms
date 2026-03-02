@@ -1,0 +1,35 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-STOCKOUT-EVENT-.YYYY.-.#####",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "incident",
+  "event_type",
+  "event_at",
+  "event_by",
+  "details"
+ ],
+ "fields": [
+  {"fieldname": "incident", "fieldtype": "Link", "label": "Stockout Incident", "options": "BEI Stockout Incident", "reqd": 1},
+  {"fieldname": "event_type", "fieldtype": "Select", "label": "Event Type", "options": "Detected\nAssigned\nBlocked\nResolved\nUpdated", "in_list_view": 1, "reqd": 1},
+  {"fieldname": "event_at", "fieldtype": "Datetime", "label": "Event At", "reqd": 1},
+  {"fieldname": "event_by", "fieldtype": "Link", "label": "Event By", "options": "User"},
+  {"fieldname": "details", "fieldtype": "Text", "label": "Details"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "HR",
+ "name": "BEI Stockout Incident Event",
+ "naming_rule": "Expression",
+ "permissions": [
+  {"create": 1, "read": 1, "write": 1, "delete": 1, "role": "System Manager"},
+  {"create": 1, "read": 1, "write": 1, "role": "Warehouse User"},
+  {"read": 1, "role": "HQ User"}
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

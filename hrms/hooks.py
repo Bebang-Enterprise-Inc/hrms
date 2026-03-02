@@ -287,9 +287,7 @@ scheduler_events = {
 			"hrms.utils.biometric_alerts.send_daily_digest",
 		],
 		# Monthly billing generation: 6 AM on 1st of each month
-		"0 6 1 * *": [
-			"hrms.api.billing.scheduled_monthly_billing"
-		],
+		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
 	},
 	"hourly_long": [
 		"hrms.hr.doctype.shift_type.shift_type.update_last_sync_of_checkin",
@@ -306,6 +304,7 @@ scheduler_events = {
 		"hrms.api.procurement.check_overdue_or",
 		"hrms.api.procurement.check_overdue_invoices",
 		"hrms.api.inventory.send_low_stock_daily_alert",
+		"hrms.api.inventory_risk.recompute_risk_snapshots",
 		"hrms.api.permits.check_permit_expiry",
 		"hrms.tasks.send_overdue_action_plan_reminders",
 		"hrms.api.overtime.scheduled_overtime_detection",

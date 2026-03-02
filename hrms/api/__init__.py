@@ -1025,6 +1025,7 @@ import hrms.api.finance
 import hrms.api.hr_reports
 import hrms.api.image_utils
 import hrms.api.inventory
+import hrms.api.inventory_risk
 import hrms.api.official_business
 import hrms.api.payroll
 import hrms.api.performance

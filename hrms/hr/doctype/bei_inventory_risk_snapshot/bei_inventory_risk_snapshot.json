@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-RISK-SNAP-.YYYY.-.#####",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "snapshot_date",
+  "item_code",
+  "warehouse",
+  "available_qty",
+  "avg_daily_demand",
+  "days_to_stockout",
+  "projected_stockout_at",
+  "risk_score",
+  "risk_level",
+  "source_reference"
+ ],
+ "fields": [
+  {"default": "Today", "fieldname": "snapshot_date", "fieldtype": "Date", "label": "Snapshot Date", "reqd": 1},
+  {"fieldname": "item_code", "fieldtype": "Link", "label": "Item Code", "options": "Item", "reqd": 1},
+  {"fieldname": "warehouse", "fieldtype": "Link", "label": "Warehouse", "options": "Warehouse", "reqd": 1},
+  {"fieldname": "available_qty", "fieldtype": "Float", "label": "Available Qty"},
+  {"fieldname": "avg_daily_demand", "fieldtype": "Float", "label": "Avg Daily Demand"},
+  {"fieldname": "days_to_stockout", "fieldtype": "Float", "label": "Days to Stockout"},
+  {"fieldname": "projected_stockout_at", "fieldtype": "Datetime", "label": "Projected Stockout At"},
+  {"fieldname": "risk_score", "fieldtype": "Float", "label": "Risk Score"},
+  {"fieldname": "risk_level", "fieldtype": "Select", "label": "Risk Level", "options": "Low\nModerate\nHigh\nCritical", "in_list_view": 1},
+  {"fieldname": "source_reference", "fieldtype": "Data", "label": "Source Reference"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "HR",
+ "name": "BEI Inventory Risk Snapshot",
+ "naming_rule": "Expression",
+ "permissions": [
+  {"create": 1, "read": 1, "write": 1, "delete": 1, "role": "System Manager"},
+  {"create": 1, "read": 1, "write": 1, "role": "Warehouse User"},
+  {"read": 1, "role": "HQ User"}
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
