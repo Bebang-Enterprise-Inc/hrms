@@ -105,6 +105,7 @@ STORE_OPS_ALLOWED_ROLES = [
 	"Administrator",
 ]
 AREA_SUPERVISOR_ROLE = "Area Supervisor"
+DEFAULT_AREA_SUPERVISOR_EMAIL = "sam@bebang.ph"
 
 
 def validate_store_ops_role():
@@ -147,6 +148,11 @@ def _normalize_store_key(value):
 def _designation_is_store_lead(designation):
 	label = str(designation or "").upper()
 	return "STORE SUPERVISOR" in label or "STORE OIC" in label or " OIC" in label or label == "OIC"
+
+
+def _is_test_user(user_id):
+	local_part = str(user_id or "").strip().split("@", 1)[0].lower()
+	return local_part.startswith(("test", "e2e", "qa"))
 
 
 def _is_area_supervisor_user(user_id, role_cache=None):
@@ -221,6 +227,71 @@ def _resolve_valid_area_supervisor(candidate, warehouse, source, role_cache=None
 	return None
 
 
+def _choose_preferred_area_supervisor(candidates, prefer_test=False):
+	users = sorted({str(user or "").strip() for user in candidates if str(user or "").strip()})
+	if not users:
+		return None
+
+	test_users = [user for user in users if _is_test_user(user)]
+	non_test_users = [user for user in users if user not in test_users]
+
+	if prefer_test and test_users:
+		return DEFAULT_AREA_SUPERVISOR_EMAIL if DEFAULT_AREA_SUPERVISOR_EMAIL in test_users else test_users[0]
+
+	if DEFAULT_AREA_SUPERVISOR_EMAIL in non_test_users:
+		return DEFAULT_AREA_SUPERVISOR_EMAIL
+	if non_test_users:
+		return non_test_users[0]
+
+	if DEFAULT_AREA_SUPERVISOR_EMAIL in users:
+		return DEFAULT_AREA_SUPERVISOR_EMAIL
+	return users[0]
+
+
+def _get_default_area_supervisor(role_cache=None, branch_keys=None):
+	try:
+		role_rows = frappe.get_all(
+			"Has Role",
+			filters={"role": AREA_SUPERVISOR_ROLE},
+			fields=["parent"],
+			limit_page_length=500,
+		)
+	except Exception:
+		return None
+
+	candidates = sorted(
+		{
+			str(row.get("parent")).strip()
+			for row in role_rows
+			if row and str(row.get("parent") or "").strip()
+		}
+	)
+	if not candidates:
+		return None
+
+	try:
+		enabled_rows = frappe.get_all(
+			"User",
+			filters={"name": ["in", candidates], "enabled": 1},
+			fields=["name"],
+			limit_page_length=max(200, len(candidates)),
+		)
+		enabled_users = {str(row.get("name")).strip() for row in enabled_rows if row.get("name")}
+	except Exception:
+		enabled_users = set(candidates)
+
+	valid_candidates = [
+		user
+		for user in candidates
+		if user in enabled_users and _is_area_supervisor_user(user, role_cache=role_cache)
+	]
+	if not valid_candidates:
+		return None
+
+	prefer_test = any("TEST" in str(key or "").upper() for key in (branch_keys or set()))
+	return _choose_preferred_area_supervisor(valid_candidates, prefer_test=prefer_test)
+
+
 def _infer_area_supervisor_for_store(warehouse, role_cache=None):
 	branch_candidates = _warehouse_branch_candidates(warehouse)
 	branch_keys = {_normalize_store_key(candidate) for candidate in branch_candidates if candidate}
@@ -234,7 +305,7 @@ def _infer_area_supervisor_for_store(warehouse, role_cache=None):
 		limit_page_length=5000,
 	)
 	if not employees:
-		return None
+		return _get_default_area_supervisor(role_cache=role_cache, branch_keys=branch_keys)
 
 	branch_employees = [row for row in employees if _normalize_store_key(row.get("branch")) in branch_keys]
 
@@ -245,8 +316,6 @@ def _infer_area_supervisor_for_store(warehouse, role_cache=None):
 			if row.get("user_id") and _is_area_supervisor_user(row.get("user_id"), role_cache=role_cache)
 		}
 	)
-	if len(direct_area_users) == 1:
-		return direct_area_users[0]
 
 	store_lead_reports_to = sorted(
 		{
@@ -255,31 +324,36 @@ def _infer_area_supervisor_for_store(warehouse, role_cache=None):
 			if row.get("reports_to") and _designation_is_store_lead(row.get("designation"))
 		}
 	)
-	if not store_lead_reports_to:
-		return None
 
-	reporting_managers = frappe.get_all(
-		"Employee",
-		filters={"name": ["in", store_lead_reports_to], "status": "Active"},
-		fields=["name", "user_id", "designation", "branch"],
-		limit_page_length=max(200, len(store_lead_reports_to)),
-	)
-	manager_area_users = sorted(
-		{
-			str(row.get("user_id")).strip()
-			for row in reporting_managers
-			if row.get("user_id") and _is_area_supervisor_user(row.get("user_id"), role_cache=role_cache)
-		}
-	)
-	if len(manager_area_users) == 1:
-		return manager_area_users[0]
+	manager_area_users = []
+	if store_lead_reports_to:
+		reporting_managers = frappe.get_all(
+			"Employee",
+			filters={"name": ["in", store_lead_reports_to], "status": "Active"},
+			fields=["name", "user_id", "designation", "branch"],
+			limit_page_length=max(200, len(store_lead_reports_to)),
+		)
+		manager_area_users = sorted(
+			{
+				str(row.get("user_id")).strip()
+				for row in reporting_managers
+				if row.get("user_id") and _is_area_supervisor_user(row.get("user_id"), role_cache=role_cache)
+			}
+		)
 
+	prefer_test_store = any("TEST" in key for key in branch_keys)
 	if manager_area_users and direct_area_users:
 		intersection = sorted(set(manager_area_users).intersection(set(direct_area_users)))
-		if len(intersection) == 1:
-			return intersection[0]
+		if intersection:
+			return _choose_preferred_area_supervisor(intersection, prefer_test=prefer_test_store)
 
-	return None
+	if manager_area_users:
+		return _choose_preferred_area_supervisor(manager_area_users, prefer_test=prefer_test_store)
+
+	if direct_area_users:
+		return _choose_preferred_area_supervisor(direct_area_users, prefer_test=prefer_test_store)
+
+	return _get_default_area_supervisor(role_cache=role_cache, branch_keys=branch_keys)
 
 
 def _collect_store_area_supervisor_mapping(apply_fixes=False, include_disabled=False, max_rows=200):

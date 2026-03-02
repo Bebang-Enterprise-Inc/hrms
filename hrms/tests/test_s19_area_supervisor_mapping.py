@@ -61,6 +61,18 @@ def _install_stubs():
 	role_map = {
 		"store.supervisor@bebang.ph": ["Store Supervisor"],
 		"area.supervisor@bebang.ph": ["Area Supervisor"],
+		"sam@bebang.ph": ["Area Supervisor"],
+		"test.area@bebang.ph": ["Area Supervisor"],
+	}
+	role_rows = [
+		{"parent": "area.supervisor@bebang.ph", "role": "Area Supervisor"},
+		{"parent": "sam@bebang.ph", "role": "Area Supervisor"},
+		{"parent": "test.area@bebang.ph", "role": "Area Supervisor"},
+	]
+	user_rows = {
+		"area.supervisor@bebang.ph": {"name": "area.supervisor@bebang.ph", "enabled": 1},
+		"sam@bebang.ph": {"name": "sam@bebang.ph", "enabled": 1},
+		"test.area@bebang.ph": {"name": "test.area@bebang.ph", "enabled": 1},
 	}
 
 	employees = [
@@ -94,7 +106,36 @@ def _install_stubs():
 	frappe.parse_json = lambda payload: payload
 	frappe.get_meta = lambda _doctype: types.SimpleNamespace(has_field=lambda _field: False)
 	frappe.get_roles = lambda user=None: role_map.get(user or "test.supervisor@bebang.ph", [])
-	frappe.get_all = lambda doctype, **kwargs: employees if doctype == "Employee" else []
+	def _get_all(doctype, **kwargs):
+		if doctype == "Employee":
+			return employees
+		if doctype == "Has Role":
+			filters = kwargs.get("filters") or {}
+			role = filters.get("role")
+			if role:
+				return [row for row in role_rows if row.get("role") == role]
+			return list(role_rows)
+		if doctype == "User":
+			filters = kwargs.get("filters") or {}
+			names_filter = filters.get("name")
+			names = []
+			if isinstance(names_filter, list) and len(names_filter) == 2 and names_filter[0] == "in":
+				names = names_filter[1]
+			elif isinstance(names_filter, str):
+				names = [names_filter]
+			enabled_required = filters.get("enabled")
+			result = []
+			for name in names:
+				row = user_rows.get(name)
+				if not row:
+					continue
+				if enabled_required is not None and int(row.get("enabled", 0)) != int(enabled_required):
+					continue
+				result.append({"name": row["name"]})
+			return result
+		return []
+
+	frappe.get_all = _get_all
 	frappe.whitelist = lambda fn=None, **kwargs: fn if fn else (lambda inner: inner)
 
 	def _new_doc(_doctype):
@@ -159,7 +200,32 @@ def test_unmapped_store_returns_none_when_no_area_supervisor_can_be_inferred():
 	store_mod, _db, _rows = _load_store_module()
 
 	# Remove branch-linked area supervisor signals so inference cannot resolve.
-	store_mod.frappe.get_all = lambda doctype, **kwargs: [] if doctype == "Employee" else []
+	store_mod.frappe.get_all = (
+		lambda doctype, **kwargs: [] if doctype in {"Employee", "Has Role", "User"} else []
+	)
 
 	approver = store_mod._get_area_supervisor_for_store("UNMAPPED - BEI")
 	assert approver is None
+
+
+def test_unmapped_store_uses_default_area_supervisor_fallback():
+	store_mod, _db, _rows = _load_store_module()
+
+	# Remove branch-linked employee signals; fallback should use default Area Supervisor role mapping.
+	store_mod.frappe.get_all = (
+		lambda doctype, **kwargs: []
+		if doctype == "Employee"
+		else (
+			[
+				{"parent": "test.area@bebang.ph", "role": "Area Supervisor"},
+				{"parent": "sam@bebang.ph", "role": "Area Supervisor"},
+			]
+			if doctype == "Has Role"
+			else [{"name": "test.area@bebang.ph"}, {"name": "sam@bebang.ph"}]
+			if doctype == "User"
+			else []
+		)
+	)
+
+	approver = store_mod._get_area_supervisor_for_store("UNMAPPED - BEI")
+	assert approver == "sam@bebang.ph"
