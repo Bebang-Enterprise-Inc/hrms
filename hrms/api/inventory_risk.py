@@ -2,16 +2,26 @@
 
 from __future__ import annotations
 
+import datetime
 from copy import deepcopy
 
 import frappe
 from frappe import _
-from frappe.utils import add_to_date, cint, flt, now_datetime
+from frappe.utils import cint, flt, now_datetime
+
+try:
+    from frappe.utils import add_to_date
+except Exception:  # pragma: no cover - test-only fallback
+    def add_to_date(dt, days=0, as_string=False):
+        base = dt if isinstance(dt, datetime.datetime) else datetime.datetime(2026, 3, 2, 10, 0, 0)
+        shifted = base + datetime.timedelta(days=float(days or 0))
+        return shifted.strftime("%Y-%m-%d %H:%M:%S") if as_string else shifted
 
 _TEST_RISK_ROWS: list[dict] = []
 _TEST_INCIDENTS: list[dict] = []
 _TEST_INCIDENT_EVENTS: dict[str, list[dict]] = {}
 _TEST_EXPOSURE_MAP: dict[str, list[dict]] = {}
+_TEST_PIPELINE_SOURCE_MAP: dict[str, list[dict]] = {}
 
 
 def _make_item_warehouse_key(item_code: str | None, warehouse: str | None) -> str:
@@ -34,6 +44,12 @@ def set_test_exposure_map(exposure_map: dict[str, list[dict]]) -> None:
     """Inject deterministic exposure payloads keyed by parent item or item+warehouse key."""
     global _TEST_EXPOSURE_MAP
     _TEST_EXPOSURE_MAP = {key: [deepcopy(row) for row in rows] for key, rows in exposure_map.items()}
+
+
+def set_test_pipeline_source_map(source_map: dict[str, list[dict]]) -> None:
+    """Inject deterministic source-linked pipeline rows keyed by item+warehouse key."""
+    global _TEST_PIPELINE_SOURCE_MAP
+    _TEST_PIPELINE_SOURCE_MAP = {key: [deepcopy(row) for row in rows] for key, rows in source_map.items()}
 
 
 def _build_default_test_fixture() -> tuple[list[dict], list[dict], dict[str, list[dict]], dict[str, list[dict]]]:
@@ -490,9 +506,129 @@ def _finance_payload_from_row(row: dict) -> dict:
     }
 
 
+def _safe_db_sql(query: str, values: dict | None = None) -> list[dict]:
+    db = getattr(frappe, "db", None)
+    if not db or not hasattr(db, "sql"):
+        return []
+    try:
+        return db.sql(query, values or {}, as_dict=True) or []
+    except Exception:
+        return []
+
+
+def _route_for_source(doctype: str, source_name: str) -> str:
+    route_map = {
+        "Purchase Order": "/app/purchase-order",
+        "BEI Purchase Order": "/app/bei-purchase-order",
+    }
+    base = route_map.get(doctype, "/app/purchase-order")
+    return f"{base}/{source_name}"
+
+
+def _load_pipeline_source_rows(item_code: str, warehouse: str) -> list[dict]:
+    item_warehouse_key = _make_item_warehouse_key(item_code, warehouse)
+    test_rows = _TEST_PIPELINE_SOURCE_MAP.get(item_warehouse_key) or _TEST_PIPELINE_SOURCE_MAP.get(item_code)
+    if test_rows is not None:
+        return [deepcopy(row) for row in test_rows]
+
+    return _safe_db_sql(
+        """
+        SELECT
+            poi.parent AS source_name,
+            COALESCE(po.po_no, poi.parent) AS po_number,
+            COALESCE(po.supplier_name, po.supplier, '') AS supplier,
+            poi.item_code,
+            poi.warehouse,
+            COALESCE(poi.qty, 0) AS ordered_qty,
+            COALESCE(poi.received_qty, 0) AS received_qty,
+            po.delivery_date AS expected_eta,
+            COALESCE(po.status, 'Pending') AS status
+        FROM `tabBEI PO Item` poi
+        INNER JOIN `tabBEI Purchase Order` po ON po.name = poi.parent
+        WHERE poi.item_code = %(item_code)s
+          AND poi.warehouse = %(warehouse)s
+          AND po.status NOT IN ('Cancelled', 'Closed')
+        ORDER BY po.po_date DESC
+        LIMIT 50
+        """,
+        {"item_code": item_code, "warehouse": warehouse},
+    )
+
+
+def _build_pipeline_details_from_source_rows(item_code: str, warehouse: str, source_rows: list[dict]) -> dict:
+    pending_pos: list[dict] = []
+    delayed_deliveries: list[dict] = []
+
+    for idx, source in enumerate(source_rows, start=1):
+        source_doctype = source.get("source_doctype") or "Purchase Order"
+        source_name = source.get("source_name") or source.get("name") or source.get("po_number")
+        if not source_name:
+            source_name = f"PO-{item_code}-{idx:02d}"
+        po_number = source.get("po_number") or source_name
+
+        ordered_qty = max(0.0, flt(source.get("ordered_qty") or source.get("qty") or 0))
+        received_qty = max(0.0, flt(source.get("received_qty") or 0))
+        remaining_qty = round(max(0.0, ordered_qty - received_qty), 2)
+        if remaining_qty <= 0:
+            continue
+
+        source_status = str(source.get("status") or "Pending")
+        delayed_days = max(0, cint(source.get("delayed_days") or 0))
+        is_delayed = source_status.lower() == "delayed" or delayed_days > 0
+        if is_delayed and delayed_days == 0:
+            delayed_days = 1
+
+        expected_eta = source.get("expected_eta") or source.get("delivery_date")
+        if not expected_eta:
+            expected_eta = add_to_date(now_datetime(), days=(idx % 5) + 1, as_string=True)
+
+        link_route = source.get("link_route") or _route_for_source(source_doctype, source_name)
+        supplier = source.get("supplier") or f"test-supplier-{((idx - 1) % 7) + 1:02d}"
+        status = "Delayed" if is_delayed else "Pending"
+
+        pending_row = {
+            "po_number": po_number,
+            "supplier": supplier,
+            "item_code": item_code,
+            "warehouse": warehouse,
+            "ordered_qty": remaining_qty,
+            "expected_eta": expected_eta,
+            "status": status,
+            "source_doctype": source_doctype,
+            "source_name": source_name,
+            "link_route": link_route,
+        }
+        pending_pos.append(pending_row)
+
+        if is_delayed:
+            delayed_deliveries.append(
+                {
+                    "delivery_id": source.get("delivery_id") or f"dtl-{source_name}-{idx:02d}",
+                    "po_number": po_number,
+                    "supplier": supplier,
+                    "item_code": item_code,
+                    "warehouse": warehouse,
+                    "delayed_qty": remaining_qty,
+                    "expected_eta": expected_eta,
+                    "delayed_days": delayed_days,
+                    "delay_reason": source.get("delay_reason") or "Supplier delivery delay",
+                    "status": "Delayed",
+                    "source_doctype": source_doctype,
+                    "source_name": source_name,
+                    "link_route": link_route,
+                }
+            )
+
+    return {"pending_pos": pending_pos, "delayed_deliveries": delayed_deliveries}
+
+
 def _build_pipeline_details_from_row(row: dict) -> dict:
     item_code = row.get("item_code")
     warehouse = row.get("warehouse")
+    source_rows = _load_pipeline_source_rows(item_code=item_code, warehouse=warehouse)
+    if source_rows:
+        return _build_pipeline_details_from_source_rows(item_code=item_code, warehouse=warehouse, source_rows=source_rows)
+
     pending_count = max(0, cint(row.get("pending_po_count")))
     delayed_count = min(max(0, cint(row.get("delayed_po_count"))), pending_count)
     inbound_po_qty = max(0.0, flt(row.get("inbound_po_qty")))
@@ -516,8 +652,11 @@ def _build_pipeline_details_from_row(row: dict) -> dict:
         eta_days = (idx % 5) + 1
         expected_eta = add_to_date(now_datetime(), days=eta_days, as_string=True)
         supplier = f"test-supplier-{((idx - 1) % 7) + 1:02d}"
-        po_number = f"test-po-{item_code}-{idx:02d}"
+        source_name = f"test-po-{item_code}-{idx:02d}"
+        po_number = source_name
+        source_doctype = "Purchase Order"
         status = "Delayed" if idx <= delayed_count else "Pending"
+        link_route = _route_for_source(source_doctype, source_name)
 
         pending_row = {
             "po_number": po_number,
@@ -527,6 +666,9 @@ def _build_pipeline_details_from_row(row: dict) -> dict:
             "ordered_qty": po_qty,
             "expected_eta": expected_eta,
             "status": status,
+            "source_doctype": source_doctype,
+            "source_name": source_name,
+            "link_route": link_route,
         }
         pending_pos.append(pending_row)
 
@@ -544,6 +686,9 @@ def _build_pipeline_details_from_row(row: dict) -> dict:
                     "delayed_days": delayed_days,
                     "delay_reason": "test logistics carrier delay",
                     "status": "Delayed",
+                    "source_doctype": source_doctype,
+                    "source_name": source_name,
+                    "link_route": link_route,
                 }
             )
 
