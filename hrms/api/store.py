@@ -9,6 +9,7 @@ Handles store ordering, receiving, and FQI reports for my.bebang.ph
 import base64
 import hashlib
 import json
+import re
 
 import frappe
 from frappe import _
@@ -155,13 +156,96 @@ def _get_area_supervisor_for_store(warehouse):
 	return None
 
 
+FROZEN_TOKENS = {
+	"frozen",
+	"chilled",
+	"cold",
+	"ice",
+	"icecream",
+	"meat",
+	"chicken",
+	"pork",
+	"beef",
+	"fc",
+}
+FRESH_MARKET_TOKENS = {
+	"fresh",
+	"produce",
+	"vegetable",
+	"vegetables",
+	"fruit",
+	"fruits",
+	"seafood",
+	"fish",
+	"eggs",
+	"fm",
+}
+DRY_TOKENS = {
+	"dry",
+	"shelf",
+	"stable",
+	"canned",
+	"rice",
+	"flour",
+	"sugar",
+	"powder",
+	"spice",
+	"spices",
+	"drygoods",
+}
+
+
+def _tokenize_metadata(*parts):
+	text = " ".join(str(part or "") for part in parts).lower()
+	return set(re.findall(r"[a-z0-9]+", text))
+
+
+def _normalize_cargo_category(value):
+	raw = str(value or "").strip().upper().replace("-", " ").replace("_", " ")
+	raw = " ".join(raw.split())
+	if raw in {"FC", "FROZEN", "FROZEN CHILLED", "CHILLED"}:
+		return "FC"
+	if raw in {"FM", "FRESH", "FRESH MARKET", "FRESHMARKET"}:
+		return "FM"
+	if raw in {"DRY", "DRY GOODS", "DRYGOODS"}:
+		return "DRY"
+	return ""
+
+
+def _lane_to_cargo_category(lane):
+	if lane == "Frozen":
+		return "FC"
+	if lane == "Fresh Market":
+		return "FM"
+	return "DRY"
+
+
 def _resolve_delivery_lane(item_doc):
-    """Infer lane from item metadata. Defaults to Dry when unknown."""
-    item_group = (item_doc.get("item_group") or "").lower()
-    cargo_category = (item_doc.get("cargo_category") or "").lower()
-    combined = f"{item_group} {cargo_category}"
-    frozen_keywords = ("frozen", "chilled", "cold", "ice", "meat", "fc")
-    return "Frozen" if any(k in combined for k in frozen_keywords) else "Dry"
+	"""Infer lane from explicit category first, then tokenized metadata."""
+	explicit_category = _normalize_cargo_category(
+		item_doc.get("cargo_category") or item_doc.get("lane")
+	)
+	if explicit_category == "FC":
+		return "Frozen"
+	if explicit_category == "FM":
+		return "Fresh Market"
+
+	tokens = _tokenize_metadata(
+		item_doc.get("item_name"),
+		item_doc.get("item_group"),
+		item_doc.get("cargo_category"),
+		item_doc.get("lane"),
+	)
+
+	if tokens.intersection(FROZEN_TOKENS):
+		return "Frozen"
+	if tokens.intersection(FRESH_MARKET_TOKENS):
+		return "Fresh Market"
+	if explicit_category == "DRY":
+		return "Dry"
+	if tokens.intersection(DRY_TOKENS):
+		return "Dry"
+	return "Dry"
 
 
 def _compose_signal_modifiers(is_salary_week=False, is_holiday=False, is_weather_risk=False):
@@ -248,11 +332,20 @@ def _build_recommendation_contract(
     lane,
     order_count=0,
     signal_multiplier=1.0,
+    projected_sales=0.0,
+    bom_consumption=0.0,
+    coverage_window_days=1,
 ):
     baseline = flt(last_order_qty)
     if baseline <= 0:
         baseline = max(1.0, flt(order_count) * 0.5)
-    forecast_demand = flt(baseline * flt(signal_multiplier), 2)
+    projected_sales = flt(projected_sales or (baseline * 0.60), 2)
+    bom_consumption = flt(bom_consumption or (baseline * 0.40), 2)
+    coverage_window_days = max(1.0, flt(coverage_window_days))
+    forecast_demand = flt(
+        (projected_sales + bom_consumption) * flt(signal_multiplier) * coverage_window_days,
+        2,
+    )
     safety_buffer = flt(max(1.0, forecast_demand * 0.15), 2)
     recommended_qty = flt(
         max(0.0, forecast_demand + safety_buffer - flt(available_to_promise)),
@@ -261,6 +354,9 @@ def _build_recommendation_contract(
     return {
         "lane": lane,
         "available_to_promise": flt(available_to_promise, 2),
+        "coverage_window_days": coverage_window_days,
+        "projected_sales": projected_sales,
+        "bom_consumption": bom_consumption,
         "forecast_demand": forecast_demand,
         "safety_buffer": safety_buffer,
         "recommended_qty": recommended_qty,
@@ -268,6 +364,61 @@ def _build_recommendation_contract(
         "suggested_qty": recommended_qty,
         "risk_rank": _risk_rank(order_count, recommended_qty, available_to_promise),
     }
+
+
+def _coverage_window_days_for_lane(lane):
+	if lane == "Frozen":
+		return 2
+	if lane == "Fresh Market":
+		return 1
+	return 3
+
+
+def _estimate_projected_sales_and_bom(last_order_qty, order_count, lane):
+	baseline = max(1.0, flt(last_order_qty), flt(order_count) * 0.75)
+	projected_sales = flt(baseline * 0.65, 2)
+	bom_factor = 0.35 if lane in {"Frozen", "Fresh Market"} else 0.25
+	bom_consumption = flt(max(0.5, baseline * bom_factor), 2)
+	return projected_sales, bom_consumption
+
+
+def _get_adaptive_delta(warehouse):
+	"""Estimate adaptive tuning delta from recent ordering behavior."""
+	try:
+		since_date = add_days(nowdate(), -28)
+		rows = frappe.db.sql(
+			"""
+            SELECT
+                soi.qty_requested,
+                COALESCE(NULLIF(soi.recommended_qty, 0), soi.suggested_qty, 0) AS baseline_qty
+            FROM `tabBEI Store Order Item` soi
+            INNER JOIN `tabBEI Store Order` so ON so.name = soi.parent
+            WHERE so.store = %(warehouse)s
+              AND so.status NOT IN ('Draft', 'Cancelled')
+              AND so.order_date >= %(since_date)s
+            ORDER BY so.order_date DESC
+            LIMIT 400
+        """,
+			{"warehouse": warehouse, "since_date": since_date},
+			as_dict=True,
+		)
+	except Exception:
+		return 0.0
+
+	ratios = []
+	for row in rows or []:
+		baseline_qty = flt(row.get("baseline_qty"))
+		if baseline_qty <= 0:
+			continue
+		qty_requested = flt(row.get("qty_requested"))
+		ratios.append((qty_requested - baseline_qty) / baseline_qty)
+
+	if not ratios:
+		return 0.0
+
+	avg_ratio = sum(ratios) / len(ratios)
+	# Keep adaptive effect conservative.
+	return flt(min(max(avg_ratio * 0.10, -0.08), 0.08), 4)
 
 
 def _normalize_order_line(item_data, lane="Dry"):
@@ -294,6 +445,33 @@ def _normalize_order_line(item_data, lane="Dry"):
         "is_edited": is_edited,
         "deviation_reason": deviation_reason,
     }
+
+
+def _sanitize_submitted_items(items):
+    """Keep only rows with valid item code and positive qty."""
+    sanitized = []
+    dropped = []
+    for row in items or []:
+        if not isinstance(row, dict):
+            dropped.append({"item_code": "", "reason": "invalid_row_type"})
+            continue
+
+        item_code = str(row.get("item_code") or "").strip()
+        qty_requested = flt(row.get("qty_requested", 0))
+
+        if not item_code:
+            dropped.append({"item_code": "", "reason": "missing_item_code"})
+            continue
+        if qty_requested <= 0:
+            dropped.append({"item_code": item_code, "reason": "non_positive_qty"})
+            continue
+
+        normalized = dict(row)
+        normalized["item_code"] = item_code
+        normalized["qty_requested"] = qty_requested
+        sanitized.append(normalized)
+
+    return sanitized, dropped
 
 
 @frappe.whitelist()
@@ -360,7 +538,7 @@ def get_user_store():
 
 
 @frappe.whitelist()
-def get_orderable_items(store: str) -> dict:
+def get_orderable_items(store: str, date: str | None = None) -> dict:
 	"""
 	Get items available for ordering by this store.
 	Returns lane-aware recommendation fields while preserving `suggested_qty`
@@ -429,28 +607,39 @@ def get_orderable_items(store: str) -> dict:
 		for row in stock_rows:
 			stock_map[row.item_code] = flt(stock_map.get(row.item_code, 0)) + flt(row.actual_qty)
 
-	signal_flags = _get_signal_flags(warehouse)
+	target_date = getdate(date or nowdate())
+	signal_flags = _get_signal_flags(warehouse, for_date=target_date)
 	signal_modifiers = _compose_signal_modifiers(**signal_flags)
-	tuned_multiplier = _apply_adaptive_tuning(signal_modifiers["composite_multiplier"], 0)
+	adaptive_delta = _get_adaptive_delta(warehouse)
+	tuned_multiplier = _apply_adaptive_tuning(
+		signal_modifiers["composite_multiplier"], adaptive_delta
+	)
 
 	for item in items:
 		item_code = item.name
 		last_order_qty = flt(last_qty_map.get(item_code, 0))
 		available_to_promise = flt(stock_map.get(item_code, 0), 2)
 		lane = _resolve_delivery_lane(item)
+		coverage_window_days = _coverage_window_days_for_lane(lane)
+		projected_sales, bom_consumption = _estimate_projected_sales_and_bom(
+			last_order_qty, flt(item.order_count), lane
+		)
 		contract = _build_recommendation_contract(
 			last_order_qty=last_order_qty,
 			available_to_promise=available_to_promise,
 			lane=lane,
 			order_count=flt(item.order_count),
 			signal_multiplier=tuned_multiplier,
+			projected_sales=projected_sales,
+			bom_consumption=bom_consumption,
+			coverage_window_days=coverage_window_days,
 		)
 		item["item_code"] = item_code
 		item["uom"] = item.get("stock_uom")
 		item["last_order_qty"] = last_order_qty
 		item["available_stock"] = available_to_promise
 		item["is_oos"] = 1 if available_to_promise <= 0 else 0
-		item["cargo_category"] = "FC" if lane == "Frozen" else "DRY"
+		item["cargo_category"] = _lane_to_cargo_category(lane)
 		item["packaging_description"] = item.get("stock_uom") or ""
 		item["signal_multiplier"] = tuned_multiplier
 		item.update(contract)
@@ -508,26 +697,32 @@ def _validate_order_cutoff(store, is_emergency=False):
 
 
 @frappe.whitelist()
-def validate_order_schedule(store: str) -> dict:
+def validate_order_schedule(store: str, date: str | None = None) -> dict:
 	"""
 	Check if order submission is currently allowed for the given store.
 	Frontend can call this before showing the order form.
-	Returns {allowed: true/false, cutoff_time: "11:59", message: "..."}
+	Returns {allowed: true/false, cutoff_time: "11:59", reason/message: "...", next_delivery_day: "..."}
 	"""
 	if not store:
 		frappe.throw(_("Store is required"))
 
 	cutoff_hour, cutoff_time = _get_order_cutoff()
 	allowed = now_datetime().hour < cutoff_hour
+	requested_date = getdate(date or nowdate())
+	next_delivery_date = add_days(str(requested_date), 1)
+	next_delivery_day = getdate(next_delivery_date).strftime("%A, %Y-%m-%d")
+	reason = (
+		f"Ordering is open until {cutoff_time}"
+		if allowed
+		else f"Ordering closed at {cutoff_time}. Contact your Area Supervisor for emergency orders."
+	)
 
 	return {
 		"allowed": allowed,
 		"cutoff_time": cutoff_time,
-		"message": (
-			f"Ordering is open until {cutoff_time}"
-			if allowed
-			else f"Ordering closed at {cutoff_time}. Contact your Area Supervisor for emergency orders."
-		),
+		"reason": reason,
+		"message": reason,
+		"next_delivery_day": next_delivery_day,
 	}
 
 
@@ -554,7 +749,8 @@ def submit_order(
 	if not store:
 		frappe.throw(_("Store is required"))
 
-	if not cargo_category:
+	normalized_cargo_category = _normalize_cargo_category(cargo_category)
+	if not normalized_cargo_category:
 		frappe.throw(_("Cargo category is required (FC, DRY, or FM)"))
 
 	# Validate ordering schedule cutoff
@@ -566,8 +762,15 @@ def submit_order(
 	if isinstance(items, str):
 		items = json.loads(items)
 
-	if not items:
-		frappe.throw(_("At least one item is required"))
+	sanitized_items, dropped_items = _sanitize_submitted_items(items)
+	if not sanitized_items:
+		frappe.throw(_("At least one item with quantity greater than zero is required"))
+	if dropped_items:
+		frappe.log_error(
+			json.dumps(dropped_items),
+			f"Store order payload had dropped lines ({warehouse})",
+		)
+	items = sanitized_items
 
 	order_date = nowdate()
 
@@ -577,14 +780,14 @@ def submit_order(
 		{
 			"store": warehouse,
 			"order_date": order_date,
-			"cargo_category": cargo_category,
+			"cargo_category": normalized_cargo_category,
 			"status": ["not in", ["Cancelled"]],
 		},
 	)
 	if existing:
 		frappe.throw(
 			_("An order already exists for {0} on {1} for category {2}: {3}").format(
-				warehouse, order_date, cargo_category, existing
+				warehouse, order_date, normalized_cargo_category, existing
 			)
 		)
 
@@ -592,10 +795,6 @@ def submit_order(
 	MAX_ORDER_QTY = 10000
 	for item_data in items:
 		qty = flt(item_data.get("qty_requested", 0))
-		if qty <= 0:
-			frappe.throw(
-				_("Quantity must be greater than zero for item {0}").format(item_data.get("item_code"))
-			)
 		if qty > MAX_ORDER_QTY:
 			frappe.throw(
 				_("Order quantity {0} exceeds maximum allowed ({1}) for item {2}").format(
@@ -609,7 +808,7 @@ def submit_order(
 		for row in frappe.get_all(
 			"Item",
 			filters={"name": ["in", item_codes]},
-			fields=["name", "item_group"],
+			fields=["name", "item_group", "item_name", "cargo_category"],
 			limit_page_length=max(200, len(item_codes)),
 		):
 			item_meta[row.name] = row
@@ -621,7 +820,7 @@ def submit_order(
 	order.store = warehouse
 	order.order_date = order_date
 	order.delivery_date = delivery_date or add_days(nowdate(), 1)
-	order.cargo_category = cargo_category
+	order.cargo_category = normalized_cargo_category
 	order.is_emergency = frappe.utils.cint(is_emergency)
 	order.is_bulk_order = is_bulk_order
 	order.notes = notes
@@ -631,7 +830,19 @@ def submit_order(
 	edited_lines_count = 0
 	for item_data in items:
 		item_code = item_data.get("item_code")
-		lane = _resolve_delivery_lane(item_meta.get(item_code, {}))
+		meta = dict(item_meta.get(item_code, {}) or {})
+		meta["lane"] = item_data.get("lane")
+		if item_data.get("cargo_category"):
+			meta["cargo_category"] = item_data.get("cargo_category")
+		lane = _resolve_delivery_lane(meta)
+		expected_category = _lane_to_cargo_category(lane)
+		if expected_category != normalized_cargo_category:
+			frappe.throw(
+				_(
+					"Item {0} resolves to lane {1} ({2}) but order category is {3}. "
+					"Submit each lane separately."
+				).format(item_code, lane, expected_category, normalized_cargo_category)
+			)
 		normalized = _normalize_order_line(item_data, lane=lane)
 		if normalized["is_edited"]:
 			edited_lines_count += 1
@@ -645,27 +856,29 @@ def submit_order(
 
 	# Route to area supervisor approval queue (non-fatal if it fails)
 	warning = None
-	queue_status = "pending"
-	try:
-		approver = _get_area_supervisor_for_store(warehouse)
-		if approver:
-			queue_entry = frappe.new_doc("BEI Approval Queue")
-			queue_entry.reference_doctype = "BEI Store Order"
-			queue_entry.reference_name = order.name
-			queue_entry.assigned_approver = approver
-			queue_entry.status = "Pending"
-			queue_entry.store = warehouse
-			queue_entry.submitted_by = frappe.session.user
-			queue_entry.submitted_at = frappe.utils.now()
-			queue_entry.insert(ignore_permissions=True)
-			queue_status = "created"
-		else:
-			queue_status = "unmapped"
-			warning = "Order created but no Area Supervisor mapping was found for this store."
-	except Exception:
-		frappe.log_error(f"Failed to create approval queue for order {order.name}", "Approval Queue Error")
-		warning = "Order created but approval routing failed. Please notify your Area Supervisor manually."
-		queue_status = "failed"
+	queue_status = "skipped_auto_approved"
+	if order.status == "Pending Approval":
+		queue_status = "pending"
+		try:
+			approver = _get_area_supervisor_for_store(warehouse)
+			if approver:
+				queue_entry = frappe.new_doc("BEI Approval Queue")
+				queue_entry.reference_doctype = "BEI Store Order"
+				queue_entry.reference_name = order.name
+				queue_entry.assigned_approver = approver
+				queue_entry.status = "Pending"
+				queue_entry.store = warehouse
+				queue_entry.submitted_by = frappe.session.user
+				queue_entry.submitted_at = frappe.utils.now()
+				queue_entry.insert(ignore_permissions=True)
+				queue_status = "created"
+			else:
+				queue_status = "unmapped"
+				warning = "Order created but no Area Supervisor mapping was found for this store."
+		except Exception:
+			frappe.log_error(f"Failed to create approval queue for order {order.name}", "Approval Queue Error")
+			warning = "Order created but approval routing failed. Please notify your Area Supervisor manually."
+			queue_status = "failed"
 
 	result = {
 		"success": True,
@@ -675,6 +888,8 @@ def submit_order(
 		"edited_lines_count": edited_lines_count,
 		"message": f"Order {order.name} submitted successfully",
 		"approval_queue_status": queue_status,
+		"cargo_category": normalized_cargo_category,
+		"dropped_invalid_lines": len(dropped_items),
 	}
 	if warning:
 		result["warning"] = warning
@@ -751,6 +966,7 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		"success": True,
 		"message": f"Order {order_name} approved",
 		"material_request": mr_name,
+		"dr_number": mr_name,
 	}
 
 

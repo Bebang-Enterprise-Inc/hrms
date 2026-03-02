@@ -115,8 +115,11 @@ def test_orderable_items_contract_includes_recommendation_fields():
     assert "recommended_qty" in contract
     assert "suggested_qty" in contract
     assert "available_to_promise" in contract
+    assert "coverage_window_days" in contract
+    assert "projected_sales" in contract
+    assert "bom_consumption" in contract
     assert contract["suggested_qty"] == contract["recommended_qty"]
-    assert contract["lane"] in {"Frozen", "Dry"}
+    assert contract["lane"] in {"Frozen", "Dry", "Fresh Market"}
 
 
 def test_delivery_lane_resolution_defaults_to_dry():
@@ -124,3 +127,21 @@ def test_delivery_lane_resolution_defaults_to_dry():
 
     assert store_mod._resolve_delivery_lane({"item_group": "Frozen Meat"}) == "Frozen"
     assert store_mod._resolve_delivery_lane({"item_group": "Staples"}) == "Dry"
+    assert (
+        store_mod._resolve_delivery_lane({"item_name": "FROZEN ICE MILK (GRIFFITH POWDER)"})
+        == "Frozen"
+    )
+    assert store_mod._resolve_delivery_lane({"item_name": "ALUMINUM PIZZA SPICE"}) == "Dry"
+    assert store_mod._resolve_delivery_lane({"cargo_category": "FM"}) == "Fresh Market"
+    assert (
+        store_mod._resolve_delivery_lane(
+            {"item_name": "FROZEN ICE MILK", "cargo_category": "DRY"}
+        )
+        == "Frozen"
+    )
+    assert (
+        store_mod._resolve_delivery_lane(
+            {"item_name": "FRESH LETTUCE", "cargo_category": "DRY"}
+        )
+        == "Fresh Market"
+    )

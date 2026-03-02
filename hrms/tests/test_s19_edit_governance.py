@@ -136,3 +136,23 @@ def test_reason_alias_normalization_accepts_reason_for_edit():
 
     assert line["deviation_reason"] == "promo week"
     assert line["recommended_qty"] == 5
+
+
+def test_sanitize_submitted_items_drops_zero_qty_and_missing_item_code():
+    store_mod = _load_store_module()
+
+    sanitized, dropped = store_mod._sanitize_submitted_items(
+        [
+            {"item_code": "ITEM-001", "qty_requested": 2},
+            {"item_code": "ITEM-002", "qty_requested": 0},
+            {"item_code": "", "qty_requested": 3},
+            {"item_code": "ITEM-003", "qty_requested": -1},
+        ]
+    )
+
+    assert len(sanitized) == 1
+    assert sanitized[0]["item_code"] == "ITEM-001"
+    assert sanitized[0]["qty_requested"] == 2
+    dropped_reasons = {row["reason"] for row in dropped}
+    assert "non_positive_qty" in dropped_reasons
+    assert "missing_item_code" in dropped_reasons

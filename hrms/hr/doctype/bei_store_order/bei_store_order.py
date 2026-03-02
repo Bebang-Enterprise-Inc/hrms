@@ -26,7 +26,12 @@ class BEIStoreOrder(Document):
 
     def compute_deviations(self):
         for item in self.items:
-            baseline = item.recommended_qty or item.suggested_qty
+            baseline = (
+                item.recommended_qty
+                if item.recommended_qty is not None
+                else item.suggested_qty
+            )
+            baseline = float(baseline or 0)
             if baseline and baseline > 0:
                 item.deviation_pct = round(
                     ((item.qty_requested - baseline) / baseline) * 100, 1
@@ -45,11 +50,10 @@ class BEIStoreOrder(Document):
             self.status = "Pending Approval"
             return
 
-        # If any item deviates from suggested qty, requires approval
+        # If any line was edited from recommendation baseline (including 0 -> >0), require approval.
         has_deviation = any(
             item.is_edited == 1 or item.deviation_pct != 0.0
             for item in self.items
-            if (item.recommended_qty or item.suggested_qty) and (item.recommended_qty or item.suggested_qty) > 0
         )
 
         if has_deviation:

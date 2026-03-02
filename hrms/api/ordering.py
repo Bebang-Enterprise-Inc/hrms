@@ -86,7 +86,7 @@ def get_orderable_items(store, date=None):
     """DEPRECATED: Use hrms.api.store.get_orderable_items instead."""
     frappe.logger("ordering").warning("ordering.get_orderable_items is deprecated. Use store.get_orderable_items.")
     from hrms.api.store import get_orderable_items as canonical_get_orderable_items
-    return canonical_get_orderable_items(store=store)
+    return canonical_get_orderable_items(store=store, date=date)
 
 
 @frappe.whitelist()
@@ -94,7 +94,7 @@ def validate_order_schedule(store, date=None):
     """DEPRECATED: Use hrms.api.store.validate_order_schedule instead."""
     frappe.logger("ordering").warning("ordering.validate_order_schedule is deprecated. Use store.validate_order_schedule.")
     from hrms.api.store import validate_order_schedule as canonical_validate
-    return canonical_validate(store=store)
+    return canonical_validate(store=store, date=date)
 
 
 @frappe.whitelist()
@@ -220,7 +220,13 @@ def get_order_review_queue(date=None, status=None):
             so.submitted_by,
             COUNT(soi.name) as items_count,
             SUM(soi.amount) as total_amount,
-            SUM(CASE WHEN soi.deviation_pct != 0 THEN 1 ELSE 0 END) as deviation_count
+            SUM(
+                CASE
+                    WHEN COALESCE(soi.is_edited, 0) = 1 OR COALESCE(soi.deviation_pct, 0) != 0
+                    THEN 1
+                    ELSE 0
+                END
+            ) as deviation_count
         FROM `tabBEI Store Order` so
         LEFT JOIN `tabBEI Store Order Item` soi ON soi.parent = so.name
         WHERE {where_clause}
