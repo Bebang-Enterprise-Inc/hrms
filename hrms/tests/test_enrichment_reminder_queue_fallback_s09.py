@@ -63,6 +63,7 @@ def _install_fake_runtime():
 	frappe_utils.now = lambda: "2026-02-28 10:00:00"
 	frappe_utils.now_datetime = lambda: datetime.datetime(2026, 2, 28, 10, 0, 0)
 	frappe_utils.get_datetime = lambda value=None: datetime.datetime(2026, 2, 28, 10, 0, 0)
+	frappe_utils.getdate = lambda value=None: value or "2026-02-28"
 	frappe_utils.add_days = lambda date_value, days: date_value
 	frappe_utils.flt = lambda value, precision=None: float(value or 0)
 	frappe_utils.cint = lambda value: int(float(value or 0))
@@ -145,7 +146,7 @@ class TestEnrichmentReminderQueueFallbackS09(unittest.TestCase):
 			result = tasks.run_enrichment_reminder_queue()
 		self.assertEqual(result["status"], "queued")
 
-	def test_submit_order_reports_unmapped_approval_queue(self):
+	def test_submit_order_requires_valid_area_supervisor_mapping_for_edited_lines(self):
 		store.frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
 		store.frappe.new_doc = (
 			lambda doctype: _FakeOrderDoc() if doctype == "BEI Store Order" else _FakeOrderDoc("APQ-0001")
@@ -158,15 +159,14 @@ class TestEnrichmentReminderQueueFallbackS09(unittest.TestCase):
 			patch.object(store, "_get_area_supervisor_for_store", return_value=None),
 			patch.object(store.frappe.db, "exists", return_value=None),
 		):
-			result = store.submit_order(
-				store="AYALA EVO",
-				items=[{"item_code": "ITM-001", "qty_requested": 2}],
-				cargo_category="DRY",
-			)
+			with self.assertRaises(Exception) as ctx:
+				store.submit_order(
+					store="AYALA EVO",
+					items=[{"item_code": "ITM-001", "qty_requested": 2}],
+					cargo_category="DRY",
+				)
 
-		self.assertTrue(result["success"])
-		self.assertEqual(result["approval_queue_status"], "unmapped")
-		self.assertIn("no Area Supervisor mapping", result.get("warning", ""))
+		self.assertIn("requires Area Supervisor approval", str(ctx.exception))
 
 
 if __name__ == "__main__":

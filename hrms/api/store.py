@@ -104,6 +104,7 @@ STORE_OPS_ALLOWED_ROLES = [
 	"System Manager",
 	"Administrator",
 ]
+AREA_SUPERVISOR_ROLE = "Area Supervisor"
 
 
 def validate_store_ops_role():
@@ -139,21 +140,243 @@ def resolve_warehouse(store_or_branch):
 	frappe.throw(_("Could not find Store: {0}").format(store_or_branch))
 
 
-def _get_area_supervisor_for_store(warehouse):
-	"""Get the area supervisor user for a given warehouse/store."""
-	# Check custom_area_supervisor field on Warehouse
-	supervisor = frappe.db.get_value("Warehouse", warehouse, "custom_area_supervisor")
+def _normalize_store_key(value):
+	return re.sub(r"[^A-Z0-9]", "", str(value or "").upper())
+
+
+def _designation_is_store_lead(designation):
+	label = str(designation or "").upper()
+	return "STORE SUPERVISOR" in label or "STORE OIC" in label or " OIC" in label or label == "OIC"
+
+
+def _is_area_supervisor_user(user_id, role_cache=None):
+	user = str(user_id or "").strip()
+	if not user:
+		return False
+	cache = role_cache if role_cache is not None else {}
+	if user in cache:
+		return cache[user]
+	try:
+		roles = set(frappe.get_roles(user))
+	except Exception:
+		roles = set()
+	cache[user] = AREA_SUPERVISOR_ROLE in roles
+	return cache[user]
+
+
+def _clean_warehouse_branch_candidates(*values):
+	seen = set()
+	candidates = []
+	for raw in values:
+		text = str(raw or "").strip()
+		if not text:
+			continue
+		variants = [text]
+		without_company = re.sub(r"\s*-\s*BEI$", "", text, flags=re.IGNORECASE).strip()
+		if without_company:
+			variants.append(without_company)
+		if " - " in text:
+			variants.append(text.split(" - ", 1)[0].strip())
+		for variant in variants:
+			key = _normalize_store_key(variant)
+			if key and key not in seen:
+				seen.add(key)
+				candidates.append(variant)
+	return candidates
+
+
+def _warehouse_branch_candidates(warehouse):
+	warehouse_doc = (
+		frappe.db.get_value(
+			"Warehouse",
+			warehouse,
+			["name", "warehouse_name", "parent_warehouse"],
+			as_dict=True,
+		)
+		or {}
+	)
+	parent_name = None
+	if warehouse_doc.get("parent_warehouse"):
+		parent_name = frappe.db.get_value("Warehouse", warehouse_doc.get("parent_warehouse"), "warehouse_name")
+	return _clean_warehouse_branch_candidates(
+		warehouse_doc.get("warehouse_name"),
+		warehouse_doc.get("name"),
+		warehouse,
+		parent_name,
+	)
+
+
+def _resolve_valid_area_supervisor(candidate, warehouse, source, role_cache=None):
+	user = str(candidate or "").strip()
+	if not user:
+		return None
+	if _is_area_supervisor_user(user, role_cache=role_cache):
+		return user
+	frappe.log_error(
+		f"Warehouse {warehouse} has invalid {source} mapping '{user}' (missing Area Supervisor role).",
+		"Store Area Supervisor Mapping",
+	)
+	return None
+
+
+def _infer_area_supervisor_for_store(warehouse, role_cache=None):
+	branch_candidates = _warehouse_branch_candidates(warehouse)
+	branch_keys = {_normalize_store_key(candidate) for candidate in branch_candidates if candidate}
+	if not branch_keys:
+		return None
+
+	employees = frappe.get_all(
+		"Employee",
+		filters={"status": "Active"},
+		fields=["name", "user_id", "designation", "branch", "reports_to"],
+		limit_page_length=5000,
+	)
+	if not employees:
+		return None
+
+	branch_employees = [
+		row for row in employees if _normalize_store_key(row.get("branch")) in branch_keys
+	]
+
+	direct_area_users = sorted(
+		{
+			str(row.get("user_id")).strip()
+			for row in branch_employees
+			if row.get("user_id") and _is_area_supervisor_user(row.get("user_id"), role_cache=role_cache)
+		}
+	)
+	if len(direct_area_users) == 1:
+		return direct_area_users[0]
+
+	store_lead_reports_to = sorted(
+		{
+			str(row.get("reports_to")).strip()
+			for row in branch_employees
+			if row.get("reports_to") and _designation_is_store_lead(row.get("designation"))
+		}
+	)
+	if not store_lead_reports_to:
+		return None
+
+	reporting_managers = frappe.get_all(
+		"Employee",
+		filters={"name": ["in", store_lead_reports_to], "status": "Active"},
+		fields=["name", "user_id", "designation", "branch"],
+		limit_page_length=max(200, len(store_lead_reports_to)),
+	)
+	manager_area_users = sorted(
+		{
+			str(row.get("user_id")).strip()
+			for row in reporting_managers
+			if row.get("user_id") and _is_area_supervisor_user(row.get("user_id"), role_cache=role_cache)
+		}
+	)
+	if len(manager_area_users) == 1:
+		return manager_area_users[0]
+
+	if manager_area_users and direct_area_users:
+		intersection = sorted(set(manager_area_users).intersection(set(direct_area_users)))
+		if len(intersection) == 1:
+			return intersection[0]
+
+	return None
+
+
+def _collect_store_area_supervisor_mapping(apply_fixes=False, include_disabled=False, max_rows=200):
+	warehouses = frappe.get_all(
+		"Warehouse",
+		filters={"is_group": 0, "disabled": 0 if not include_disabled else ["in", [0, 1]]},
+		fields=["name", "warehouse_name", "custom_area_supervisor", "disabled"],
+		order_by="warehouse_name asc",
+		limit_page_length=5000,
+	)
+
+	role_cache = {}
+	rows = []
+	updated = 0
+	invalid = 0
+	unmapped = 0
+
+	for warehouse in warehouses:
+		name = warehouse.get("name")
+		current = str(warehouse.get("custom_area_supervisor") or "").strip()
+		current_valid = _is_area_supervisor_user(current, role_cache=role_cache) if current else False
+		resolved = current if current_valid else _infer_area_supervisor_for_store(name, role_cache=role_cache)
+		updated_now = False
+
+		if current and not current_valid:
+			invalid += 1
+		if not resolved:
+			unmapped += 1
+
+		if apply_fixes and resolved and current != resolved:
+			frappe.db.set_value("Warehouse", name, "custom_area_supervisor", resolved, update_modified=False)
+			updated += 1
+			updated_now = True
+
+		status = "mapped" if current_valid else "unmapped"
+		if current and not current_valid:
+			status = "mapped_invalid_role"
+		if resolved and not current_valid:
+			status = "resolved_by_inference"
+
+		rows.append(
+			{
+				"warehouse": name,
+				"warehouse_name": warehouse.get("warehouse_name"),
+				"current_mapping": current or None,
+				"resolved_mapping": resolved or None,
+				"status": status,
+				"updated": updated_now,
+			}
+		)
+
+	if max_rows and max_rows > 0:
+		rows = rows[:max_rows]
+
+	return {
+		"total_stores": len(warehouses),
+		"updated_mappings": updated,
+		"invalid_role_mappings": invalid,
+		"unmapped_after_resolution": unmapped,
+		"rows": rows,
+	}
+
+
+def _get_area_supervisor_for_store(warehouse, persist_inferred=True):
+	"""Resolve area supervisor for a warehouse, validating role and inferring fallback mapping."""
+	role_cache = {}
+
+	supervisor = _resolve_valid_area_supervisor(
+		frappe.db.get_value("Warehouse", warehouse, "custom_area_supervisor"),
+		warehouse=warehouse,
+		source="Warehouse.custom_area_supervisor",
+		role_cache=role_cache,
+	)
 	if supervisor:
 		return supervisor
 
-	# Fallback: check parent warehouse
 	parent = frappe.db.get_value("Warehouse", warehouse, "parent_warehouse")
 	if parent:
-		supervisor = frappe.db.get_value("Warehouse", parent, "custom_area_supervisor")
-		if supervisor:
-			return supervisor
+		parent_supervisor = _resolve_valid_area_supervisor(
+			frappe.db.get_value("Warehouse", parent, "custom_area_supervisor"),
+			warehouse=warehouse,
+			source=f"Parent Warehouse.custom_area_supervisor ({parent})",
+			role_cache=role_cache,
+		)
+		if parent_supervisor:
+			return parent_supervisor
 
-	return None
+	inferred = _infer_area_supervisor_for_store(warehouse, role_cache=role_cache)
+	if inferred and persist_inferred:
+		try:
+			frappe.db.set_value("Warehouse", warehouse, "custom_area_supervisor", inferred, update_modified=False)
+		except Exception:
+			frappe.log_error(
+				f"Failed to persist inferred area supervisor '{inferred}' for warehouse {warehouse}.",
+				"Store Area Supervisor Mapping",
+			)
+	return inferred
 
 
 FROZEN_TOKENS = {
@@ -525,6 +748,28 @@ def get_user_store():
 
 
 @frappe.whitelist()
+def audit_store_area_supervisor_mapping(
+	apply_fixes: int | str = 0, include_disabled: int | str = 0, max_rows: int | str = 200
+):
+	"""Audit and optionally fix store-to-area-supervisor mappings.
+
+	Only System Manager / HR Manager / Administrator may execute this operation.
+	"""
+	user_roles = set(frappe.get_roles(frappe.session.user))
+	if not user_roles.intersection({"System Manager", "HR Manager", "Administrator"}):
+		frappe.throw(
+			_("Only System Manager, HR Manager, or Administrator can audit supervisor mappings."),
+			frappe.PermissionError,
+		)
+
+	return _collect_store_area_supervisor_mapping(
+		apply_fixes=bool(cint(apply_fixes)),
+		include_disabled=bool(cint(include_disabled)),
+		max_rows=cint(max_rows) or 0,
+	)
+
+
+@frappe.whitelist()
 def get_orderable_items(store: str, date: str | None = None) -> dict:
 	"""
 	Get items available for ordering by this store.
@@ -853,6 +1098,16 @@ def submit_order(
 			edited_lines_count += 1
 		order.append("items", normalized)
 
+	requires_manual_approval = bool(is_bulk_order or edited_lines_count > 0)
+	approver = _get_area_supervisor_for_store(warehouse) if requires_manual_approval else None
+	if requires_manual_approval and not approver:
+		frappe.throw(
+			_(
+				"Order requires Area Supervisor approval but no valid Area Supervisor mapping is configured for {0}. "
+				"Please update Warehouse.custom_area_supervisor before submitting."
+			).format(warehouse)
+		)
+
 	order.insert(ignore_permissions=True)
 
 	_notify_store_ops(
@@ -865,7 +1120,6 @@ def submit_order(
 	if order.status == "Pending Approval":
 		queue_status = "pending"
 		try:
-			approver = _get_area_supervisor_for_store(warehouse)
 			if approver:
 				queue_entry = frappe.new_doc("BEI Approval Queue")
 				queue_entry.reference_doctype = "BEI Store Order"
