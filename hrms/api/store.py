@@ -197,7 +197,9 @@ def _warehouse_branch_candidates(warehouse):
 	)
 	parent_name = None
 	if warehouse_doc.get("parent_warehouse"):
-		parent_name = frappe.db.get_value("Warehouse", warehouse_doc.get("parent_warehouse"), "warehouse_name")
+		parent_name = frappe.db.get_value(
+			"Warehouse", warehouse_doc.get("parent_warehouse"), "warehouse_name"
+		)
 	return _clean_warehouse_branch_candidates(
 		warehouse_doc.get("warehouse_name"),
 		warehouse_doc.get("name"),
@@ -234,9 +236,7 @@ def _infer_area_supervisor_for_store(warehouse, role_cache=None):
 	if not employees:
 		return None
 
-	branch_employees = [
-		row for row in employees if _normalize_store_key(row.get("branch")) in branch_keys
-	]
+	branch_employees = [row for row in employees if _normalize_store_key(row.get("branch")) in branch_keys]
 
 	direct_area_users = sorted(
 		{
@@ -370,7 +370,9 @@ def _get_area_supervisor_for_store(warehouse, persist_inferred=True):
 	inferred = _infer_area_supervisor_for_store(warehouse, role_cache=role_cache)
 	if inferred and persist_inferred:
 		try:
-			frappe.db.set_value("Warehouse", warehouse, "custom_area_supervisor", inferred, update_modified=False)
+			frappe.db.set_value(
+				"Warehouse", warehouse, "custom_area_supervisor", inferred, update_modified=False
+			)
 		except Exception:
 			frappe.log_error(
 				f"Failed to persist inferred area supervisor '{inferred}' for warehouse {warehouse}.",

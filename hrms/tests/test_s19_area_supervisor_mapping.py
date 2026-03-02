@@ -29,7 +29,7 @@ class _FakeDB:
 		else:
 			key = filters_or_name
 		row = self.warehouse_rows.get(key) or {}
-		if isinstance(fieldname, (list, tuple)):
+		if isinstance(fieldname, list | tuple):
 			payload = {field: row.get(field) for field in fieldname}
 			return payload if as_dict else payload
 		return row.get(fieldname)
