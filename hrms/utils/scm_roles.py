@@ -26,8 +26,20 @@ SCM_PICKING_ROLES = {"Warehouse Manager", "Warehouse Staff", "Logistics Coordina
 
 # Ordering (ordering.py)
 ORDERING_STORE_ROLES = {"Store Staff", "Store Supervisor", "Store OIC", "System Manager"}
-ORDERING_WAREHOUSE_ROLES = {"HR Manager", "Warehouse Manager", "System Manager"}
-ORDERING_APPROVAL_ROLES = {"Area Supervisor", "HR Manager", "Warehouse Manager", "System Manager"}
+ORDERING_WAREHOUSE_ROLES = {
+	"Area Supervisor",
+	"Regional Manager",
+	"HR Manager",
+	"Warehouse Manager",
+	"System Manager",
+}
+ORDERING_APPROVAL_ROLES = {
+	"Area Supervisor",
+	"Regional Manager",
+	"HR Manager",
+	"Warehouse Manager",
+	"System Manager",
+}
 
 # Billing (billing.py)
 RATE_MANAGEMENT_ROLES = {"Accounts Manager", "Supply Chain Manager", "System Manager"}

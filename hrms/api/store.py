@@ -10,10 +10,13 @@ import frappe
 from hrms.utils.bei_config import get_company
 from hrms.utils.scm_roles import check_scm_permission, SCM_APPROVAL_ROLES
 from frappe import _
-from frappe.utils import nowdate, add_days, now_datetime, flt
+from frappe.utils import nowdate, add_days, now_datetime, flt, get_datetime
 import json
 import base64
 import hashlib
+
+DEFAULT_REGIONAL_MANAGER_EMAIL = "edlice@bebang.ph"
+SYSTEM_APPROVER_ROLES = {"System Manager", "Administrator"}
 
 
 def _notify_store_ops(msg):
@@ -24,6 +27,187 @@ def _notify_store_ops(msg):
         send_message_to_space(get_chat_space(SPACE_NOTIFICATIONS), msg)
     except Exception:
         pass
+
+
+def _safe_get_value(doctype, filters_or_name, fieldname, as_dict=False):
+    """Best-effort wrapper for frappe.db.get_value that never raises."""
+    try:
+        return frappe.db.get_value(doctype, filters_or_name, fieldname, as_dict=as_dict)
+    except Exception:
+        return None
+
+
+def _safe_get_single_value(doctype, fieldname):
+    """Best-effort wrapper for frappe.db.get_single_value that never raises."""
+    try:
+        return frappe.db.get_single_value(doctype, fieldname)
+    except Exception:
+        return None
+
+
+def _is_system_approver(user):
+    try:
+        user_roles = set(frappe.get_roles(user))
+    except Exception:
+        user_roles = set()
+    return bool(user_roles.intersection(SYSTEM_APPROVER_ROLES))
+
+
+def _assign_order_for_approval(order_name, assigned_to, description):
+    """
+    Create assignment + notification for approver.
+    Uses Frappe's assign_to API so Notification Log + ToDo are created consistently.
+    """
+    if not assigned_to:
+        return False
+    try:
+        from frappe.desk.form.assign_to import add as add_assignment
+
+        add_assignment({
+            "assign_to": [assigned_to],
+            "doctype": "BEI Store Order",
+            "name": order_name,
+            "description": description,
+            "notify": 1,
+            "assigned_by": frappe.session.user,
+            "priority": "High",
+        })
+        _create_order_notification_log(
+            order_name=order_name,
+            for_user=assigned_to,
+            subject=description,
+        )
+        return True
+    except Exception:
+        try:
+            todo = frappe.get_doc({
+                "doctype": "ToDo",
+                "allocated_to": assigned_to,
+                "reference_type": "BEI Store Order",
+                "reference_name": order_name,
+                "description": description,
+                "priority": "High",
+                "status": "Open",
+            })
+            todo.insert(ignore_permissions=True)
+            _create_order_notification_log(
+                order_name=order_name,
+                for_user=assigned_to,
+                subject=description,
+            )
+            return True
+        except Exception:
+            frappe.log_error(
+                f"Failed to assign BEI Store Order {order_name} to {assigned_to}",
+                "Store Order Assignment Error",
+            )
+            return False
+
+
+def _create_order_notification_log(order_name, for_user, subject):
+    """Best-effort notification log creation for assignment visibility/audit."""
+    if not for_user:
+        return
+    try:
+        frappe.get_doc({
+            "doctype": "Notification Log",
+            "for_user": for_user,
+            "type": "Alert",
+            "document_type": "BEI Store Order",
+            "document_name": order_name,
+            "subject": subject or f"Store order {order_name} requires approval.",
+            "email_content": subject or f"Store order {order_name} requires approval.",
+        }).insert(ignore_permissions=True)
+    except Exception:
+        # Keep non-blocking to avoid breaking order submission/approval.
+        pass
+
+
+def _close_order_assignments(order_name, allocated_to=None):
+    """Close open ToDo assignments for this order."""
+    try:
+        filters = {
+            "reference_type": "BEI Store Order",
+            "reference_name": order_name,
+            "status": "Open",
+        }
+        if allocated_to:
+            filters["allocated_to"] = allocated_to
+
+        todos = frappe.get_all("ToDo", filters=filters, fields=["name"])
+        for row in todos:
+            todo = frappe.get_doc("ToDo", row.name)
+            todo.status = "Closed"
+            todo.save(ignore_permissions=True)
+    except Exception:
+        frappe.log_error(
+            f"Failed to close ToDo assignments for BEI Store Order {order_name}",
+            "Store Order Assignment Close Error",
+        )
+
+
+def _append_order_comment(order_name, content):
+    """Attach an info comment to the BEI Store Order timeline."""
+    try:
+        frappe.get_doc({
+            "doctype": "Comment",
+            "comment_type": "Info",
+            "reference_doctype": "BEI Store Order",
+            "reference_name": order_name,
+            "content": content,
+        }).insert(ignore_permissions=True)
+    except Exception:
+        frappe.log_error(
+            f"Failed to add comment on BEI Store Order {order_name}: {content}",
+            "Store Order Comment Error",
+        )
+
+
+def _create_approval_queue_entry(order, approver, priority="Normal"):
+    """Create a BEI Approval Queue row for a store order."""
+    if not approver:
+        return None
+
+    queue_entry = frappe.new_doc("BEI Approval Queue")
+    queue_entry.reference_doctype = "BEI Store Order"
+    queue_entry.reference_name = order.name
+    queue_entry.assigned_approver = approver
+    queue_entry.status = "Pending"
+    queue_entry.priority = priority
+    queue_entry.store = order.store
+    queue_entry.submitted_by = order.submitted_by or frappe.session.user
+    queue_entry.submitted_at = frappe.utils.now()
+    queue_entry.insert(ignore_permissions=True)
+    return queue_entry
+
+
+def _get_pending_approval_entries(order_name):
+    return frappe.get_all(
+        "BEI Approval Queue",
+        filters={
+            "reference_doctype": "BEI Store Order",
+            "reference_name": order_name,
+            "status": "Pending",
+        },
+        fields=["name", "assigned_approver", "priority", "submitted_at", "creation"],
+        order_by="creation asc",
+    )
+
+
+def _has_approved_stage_entry(order_name, approver):
+    if not approver:
+        return False
+    return bool(
+        frappe.db.exists(
+            "BEI Approval Queue",
+            {
+                "reference_doctype": "BEI Store Order",
+                "reference_name": order_name,
+                "assigned_approver": approver,
+                "status": "Approved",
+            },
+        )
+    )
 
 
 def save_base64_image(base64_data, doctype, docname=None, fieldname="photo"):
@@ -91,7 +275,7 @@ def save_base64_image(base64_data, doctype, docname=None, fieldname="photo"):
 
 
 STORE_OPS_ALLOWED_ROLES = [
-    "Store Staff", "Store OIC", "Store Supervisor", "Area Supervisor",
+    "Store Staff", "Store OIC", "Store Supervisor", "Area Supervisor", "Regional Manager",
     "System Manager", "Administrator"
 ]
 
@@ -135,18 +319,140 @@ def resolve_warehouse(store_or_branch):
 def _get_area_supervisor_for_store(warehouse):
     """Get the area supervisor user for a given warehouse/store."""
     # Check custom_area_supervisor field on Warehouse
-    supervisor = frappe.db.get_value("Warehouse", warehouse, "custom_area_supervisor")
+    supervisor = _safe_get_value("Warehouse", warehouse, "custom_area_supervisor")
     if supervisor:
         return supervisor
 
     # Fallback: check parent warehouse
-    parent = frappe.db.get_value("Warehouse", warehouse, "parent_warehouse")
+    parent = _safe_get_value("Warehouse", warehouse, "parent_warehouse")
     if parent:
-        supervisor = frappe.db.get_value("Warehouse", parent, "custom_area_supervisor")
+        supervisor = _safe_get_value("Warehouse", parent, "custom_area_supervisor")
         if supervisor:
             return supervisor
 
     return None
+
+
+def _get_regional_manager_for_store(warehouse, area_supervisor=None):
+    """
+    Resolve regional manager for store-order approvals.
+
+    Resolution order:
+    1) Warehouse custom field (if present) on warehouse, then parent warehouse
+    2) Area supervisor's Employee.reports_to user
+    3) BEI Settings configured regional manager fields (if present)
+    4) Default fallback email (edlice@bebang.ph) if User exists
+    5) Any active user with role 'Regional Manager'
+    6) Any active user with role 'HR Manager'
+    """
+    field_candidates = [
+        "custom_regional_manager",
+        "custom_regional_supervisor",
+        "custom_regional_approver",
+    ]
+
+    warehouse_chain = [warehouse]
+    parent = _safe_get_value("Warehouse", warehouse, "parent_warehouse")
+    if parent:
+        warehouse_chain.append(parent)
+
+    for wh in warehouse_chain:
+        for fieldname in field_candidates:
+            candidate = _safe_get_value("Warehouse", wh, fieldname)
+            if candidate and frappe.db.exists("User", candidate):
+                return candidate, f"warehouse.{fieldname}"
+
+    if area_supervisor:
+        area_employee = _safe_get_value(
+            "Employee",
+            {"user_id": area_supervisor, "status": "Active"},
+            ["name", "reports_to"],
+            as_dict=True,
+        )
+        reports_to = area_employee.get("reports_to") if area_employee else None
+        if reports_to:
+            manager_user = _safe_get_value("Employee", reports_to, "user_id")
+            if manager_user and frappe.db.exists("User", manager_user):
+                return manager_user, "employee.reports_to"
+
+    settings_fields = [
+        "store_order_regional_manager",
+        "custom_store_order_regional_manager",
+        "regional_manager_user",
+        "custom_regional_manager",
+    ]
+    for fieldname in settings_fields:
+        candidate = _safe_get_single_value("BEI Settings", fieldname)
+        if candidate and frappe.db.exists("User", candidate):
+            return candidate, f"bei_settings.{fieldname}"
+
+    if frappe.db.exists("User", DEFAULT_REGIONAL_MANAGER_EMAIL):
+        return DEFAULT_REGIONAL_MANAGER_EMAIL, "default_regional_manager"
+
+    for role_name, source in [("Regional Manager", "regional_manager_role"), ("HR Manager", "hr_manager_role")]:
+        users = frappe.db.sql(
+            """
+            SELECT DISTINCT hr.parent AS user
+            FROM `tabHas Role` hr
+            INNER JOIN `tabUser` u ON u.name = hr.parent
+            WHERE hr.role = %s
+              AND IFNULL(u.enabled, 1) = 1
+            ORDER BY u.creation ASC
+            LIMIT 1
+            """,
+            (role_name,),
+            as_dict=True,
+        )
+        if users and users[0].get("user"):
+            return users[0]["user"], source
+
+    return None, "unmapped"
+
+
+def _resolve_order_approval_routing(warehouse, is_emergency, submitted_after_cutoff):
+    """
+    Decide first approver and whether a second-stage regional approval is required.
+    """
+    area_approver = _get_area_supervisor_for_store(warehouse)
+    regional_approver, regional_source = _get_regional_manager_for_store(
+        warehouse, area_supervisor=area_approver
+    )
+
+    # Outside cutoff emergency orders require Area + Regional when both can be resolved.
+    requires_regional_after_area = bool(
+        frappe.utils.cint(is_emergency)
+        and submitted_after_cutoff
+        and area_approver
+        and regional_approver
+        and regional_approver != area_approver
+    )
+
+    if area_approver:
+        return {
+            "first_approver": area_approver,
+            "first_source": "area_supervisor",
+            "requires_regional_after_area": requires_regional_after_area,
+            "regional_approver": regional_approver,
+            "regional_source": regional_source,
+        }
+
+    if regional_approver:
+        # Fallback behavior when Area Supervisor mapping is missing.
+        return {
+            "first_approver": regional_approver,
+            "first_source": "regional_manager_fallback",
+            "requires_regional_after_area": False,
+            "regional_approver": regional_approver,
+            "regional_source": regional_source,
+        }
+
+    return {
+        "first_approver": None,
+        "first_source": "unmapped",
+        "requires_regional_after_area": False,
+        "regional_approver": None,
+        "regional_source": "unmapped",
+    }
 
 
 @frappe.whitelist()
@@ -201,9 +507,14 @@ def get_user_store():
                 warehouse_name = frappe.db.get_value("Warehouse", warehouse, "warehouse_name") or warehouse
                 stores = [{"name": warehouse, "warehouse_name": warehouse_name}]
 
-    # System Manager / HR User fallback - return all stores
-    if not stores and ("System Manager" in user_roles or "HR User" in user_roles):
-        role = "HR User"
+    # System / HR / Regional fallback - return all stores
+    if not stores and (
+        "System Manager" in user_roles
+        or "HR User" in user_roles
+        or "HR Manager" in user_roles
+        or "Regional Manager" in user_roles
+    ):
+        role = "Regional Manager" if "Regional Manager" in user_roles else "HR User"
         stores = frappe.get_all(
             "Warehouse",
             filters={"is_group": 0, "disabled": 0},
@@ -359,8 +670,12 @@ def submit_order(store, items, cargo_category=None, delivery_date=None, is_emerg
     if not cargo_category:
         frappe.throw(_("Cargo category is required (FC, DRY, or FM)"))
 
+    cutoff_hour, cutoff_time = _get_order_cutoff()
+    submitted_after_cutoff = now_datetime().hour >= cutoff_hour
+
     # Validate ordering schedule cutoff
-    _validate_order_cutoff(store, is_emergency=frappe.utils.cint(is_emergency))
+    emergency_flag = frappe.utils.cint(is_emergency)
+    _validate_order_cutoff(store, is_emergency=emergency_flag)
 
     # Resolve branch name to warehouse name
     warehouse = resolve_warehouse(store)
@@ -406,7 +721,7 @@ def submit_order(store, items, cargo_category=None, delivery_date=None, is_emerg
     order.order_date = order_date
     order.delivery_date = delivery_date or add_days(nowdate(), 1)
     order.cargo_category = cargo_category
-    order.is_emergency = frappe.utils.cint(is_emergency)
+    order.is_emergency = emergency_flag
     order.is_bulk_order = is_bulk_order
     order.notes = notes
     order.status = "Pending Approval"
@@ -421,31 +736,91 @@ def submit_order(store, items, cargo_category=None, delivery_date=None, is_emerg
 
     order.insert(ignore_permissions=True)
 
-    _notify_store_ops(f"New store order {order.name} from {warehouse} -- {len(items)} items. Review: my.bebang.ph/dashboard/store-ops/order-approvals")
+    _notify_store_ops(
+        f"New store order {order.name} from {warehouse} -- {len(items)} items. "
+        "Review: my.bebang.ph/dashboard/store-ops/order-approvals"
+    )
 
-    # Route to area supervisor approval queue (non-fatal if it fails)
+    routing = _resolve_order_approval_routing(
+        warehouse=warehouse,
+        is_emergency=emergency_flag,
+        submitted_after_cutoff=submitted_after_cutoff,
+    )
+
     warning = None
-    try:
-        approver = _get_area_supervisor_for_store(warehouse)
-        if approver:
-            queue_entry = frappe.new_doc("BEI Approval Queue")
-            queue_entry.reference_doctype = "BEI Store Order"
-            queue_entry.reference_name = order.name
-            queue_entry.assigned_approver = approver
-            queue_entry.status = "Pending"
-            queue_entry.store = warehouse
-            queue_entry.submitted_by = frappe.session.user
-            queue_entry.submitted_at = frappe.utils.now()
-            queue_entry.insert(ignore_permissions=True)
-    except Exception:
-        frappe.log_error(f"Failed to create approval queue for order {order.name}", "Approval Queue Error")
-        warning = "Order created but approval routing failed. Please notify your Area Supervisor manually."
+    queue_status = "unmapped"
+    queue_name = None
+    first_approver = routing["first_approver"]
+    first_source = routing["first_source"]
+    requires_regional_after_area = bool(routing["requires_regional_after_area"])
+    regional_approver = routing["regional_approver"]
+    regional_source = routing["regional_source"]
+
+    if first_approver:
+        try:
+            queue_priority = "Urgent" if emergency_flag and submitted_after_cutoff else "Normal"
+            queue_entry = _create_approval_queue_entry(
+                order=order,
+                approver=first_approver,
+                priority=queue_priority,
+            )
+            if queue_entry:
+                queue_status = "created"
+                queue_name = queue_entry.name
+                _assign_order_for_approval(
+                    order_name=order.name,
+                    assigned_to=first_approver,
+                    description=(
+                        f"Store order {order.name} requires your approval."
+                        if not requires_regional_after_area
+                        else f"Store order {order.name} requires your Stage 1 approval before regional sign-off."
+                    ),
+                )
+            else:
+                queue_status = "failed"
+                warning = "Order created but approval queue was not created."
+        except Exception:
+            frappe.log_error(f"Failed to create approval queue for order {order.name}", "Approval Queue Error")
+            queue_status = "failed"
+            warning = "Order created but approval routing failed. Please notify your approver manually."
+    else:
+        warning = (
+            "Order created but no approver mapping was found. "
+            "Please map Warehouse.custom_area_supervisor or regional manager settings."
+        )
+
+    if requires_regional_after_area and regional_approver:
+        _append_order_comment(
+            order.name,
+            _(
+                "Emergency order submitted after cutoff {0}. Approval chain: Area Supervisor -> Regional Manager ({1})."
+            ).format(cutoff_time, regional_approver),
+        )
+    elif first_source == "regional_manager_fallback" and first_approver:
+        _append_order_comment(
+            order.name,
+            _("Area Supervisor mapping missing; routed directly to Regional Manager ({0}).").format(first_approver),
+        )
 
     result = {
         "success": True,
         "name": order.name,
         "status": order.status,
-        "message": f"Order {order.name} submitted successfully",
+        "message": (
+            f"Order {order.name} submitted successfully and routed to {first_approver}."
+            if first_approver
+            else f"Order {order.name} submitted successfully"
+        ),
+        "submitted_after_cutoff": bool(submitted_after_cutoff),
+        "is_emergency": bool(emergency_flag),
+        "requires_area_supervisor_review": bool(first_source == "area_supervisor"),
+        "requires_regional_manager_review": bool(requires_regional_after_area),
+        "approval_approver_source": first_source,
+        "approval_assigned_approver": first_approver,
+        "approval_queue_status": queue_status,
+        "approval_queue_name": queue_name,
+        "regional_approver": regional_approver,
+        "regional_approver_source": regional_source,
     }
     if warning:
         result["warning"] = warning
@@ -482,47 +857,193 @@ def get_order_history(store=None, limit=20):
 @frappe.whitelist()
 def approve_order(order_name, approved_quantities=None):
     """
-    Approve a store order. Optionally adjust quantities.
-    Only Area Supervisors can approve orders.
-
-    approved_quantities: {item_code: qty_approved}
+    Approve a store order with staged routing support:
+    - Regular orders: single-step approval (Area/Sys/assigned approver)
+    - Emergency orders after cutoff: Area Supervisor -> Regional Manager
     """
-    # Verify user has Area Supervisor role
-    user_roles = frappe.get_roles(frappe.session.user)
-    if "Area Supervisor" not in user_roles and "System Manager" not in user_roles:
-        frappe.throw(_("Only Area Supervisors can approve store orders"))
-
+    user = frappe.session.user
     order = frappe.get_doc("BEI Store Order", order_name)
 
     if order.status != "Pending Approval":
         frappe.throw(_("Order is not pending approval"))
 
-    if approved_quantities:
-        if isinstance(approved_quantities, str):
-            approved_quantities = json.loads(approved_quantities)
-        for item in order.items:
-            if item.item_code in approved_quantities:
-                item.qty_approved = approved_quantities[item.item_code]
-            else:
-                item.qty_approved = item.qty_requested
+    pending_entries = _get_pending_approval_entries(order_name)
+    active_entry = pending_entries[0] if pending_entries else None
+    assigned_approver = active_entry.get("assigned_approver") if active_entry else None
+
+    is_system_user = _is_system_approver(user)
+    if assigned_approver:
+        if assigned_approver != user and not is_system_user:
+            frappe.throw(
+                _("Order {0} is currently assigned to {1}.").format(order_name, assigned_approver),
+                frappe.PermissionError,
+            )
     else:
-        for item in order.items:
+        # Legacy fallback path: when queue row is missing, still enforce approver roles.
+        user_roles = set(frappe.get_roles(user))
+        allowed_roles = {"Area Supervisor", "Regional Manager"}.union(SYSTEM_APPROVER_ROLES)
+        if not user_roles.intersection(allowed_roles):
+            frappe.throw(
+                _("Only assigned approvers, Area Supervisors, Regional Managers, or System Managers can approve."),
+                frappe.PermissionError,
+            )
+
+    # Normalize payload formats:
+    # 1) [{"item_code": "...", "qty_approved": 1}, ...]
+    # 2) {"ITEM-001": 1, ...}
+    # 3) JSON-encoded string of #1 or #2
+    approved_qty_map = {}
+    if approved_quantities:
+        parsed = approved_quantities
+        if isinstance(parsed, str):
+            parsed = json.loads(parsed)
+
+        if isinstance(parsed, list):
+            for row in parsed:
+                item_code = (row or {}).get("item_code")
+                if not item_code:
+                    continue
+                approved_qty_map[item_code] = flt((row or {}).get("qty_approved", 0))
+        elif isinstance(parsed, dict):
+            for item_code, qty in parsed.items():
+                approved_qty_map[item_code] = flt(qty)
+
+    for item in order.items:
+        if item.item_code in approved_qty_map:
+            item.qty_approved = approved_qty_map[item.item_code]
+        elif not flt(getattr(item, "qty_approved", 0)):
             item.qty_approved = item.qty_requested
 
+    area_approver = _get_area_supervisor_for_store(order.store)
+    regional_approver, _regional_source = _get_regional_manager_for_store(
+        order.store, area_supervisor=area_approver
+    )
+    cutoff_hour, _cutoff_time = _get_order_cutoff()
+    order_created_dt = get_datetime(order.creation) if getattr(order, "creation", None) else now_datetime()
+    submitted_after_cutoff = order_created_dt.hour >= cutoff_hour
+    requires_dual_stage = bool(
+        frappe.utils.cint(order.is_emergency)
+        and submitted_after_cutoff
+        and area_approver
+        and regional_approver
+        and regional_approver != area_approver
+    )
+
+    current_stage = "single_step"
+    if assigned_approver and assigned_approver == area_approver:
+        current_stage = "area_supervisor"
+    elif assigned_approver and assigned_approver == regional_approver:
+        current_stage = "regional_manager"
+    elif requires_dual_stage:
+        # Legacy fallback when queue row is missing but approver identity is known.
+        if user == area_approver:
+            current_stage = "area_supervisor"
+        elif user == regional_approver:
+            current_stage = "regional_manager"
+
+    if requires_dual_stage and current_stage == "regional_manager":
+        if not _has_approved_stage_entry(order_name, area_approver):
+            frappe.throw(
+                _("Area Supervisor approval is required before Regional Manager final approval."),
+                frappe.PermissionError,
+            )
+
+    if requires_dual_stage and current_stage == "single_step" and not is_system_user:
+        frappe.throw(
+            _("Dual-stage approval is configured, but current approval stage could not be resolved."),
+            frappe.PermissionError,
+        )
+
+    if active_entry:
+        queue_doc = frappe.get_doc("BEI Approval Queue", active_entry["name"])
+        queue_doc.status = "Approved"
+        queue_doc.approved_by = user
+        queue_doc.approved_at = now_datetime()
+        queue_doc.save(ignore_permissions=True)
+        _close_order_assignments(order_name, allocated_to=assigned_approver)
+
+    is_area_stage_approval = current_stage == "area_supervisor"
+    should_forward_to_regional = bool(
+        requires_dual_stage
+        and is_area_stage_approval
+        and regional_approver
+        and regional_approver != user
+    )
+
+    if should_forward_to_regional:
+        # Stage 1 done. Keep order pending until regional sign-off.
+        order.status = "Pending Approval"
+        order.save(ignore_permissions=True)
+
+        queue_entry = None
+        try:
+            queue_entry = _create_approval_queue_entry(
+                order=order,
+                approver=regional_approver,
+                priority="Urgent",
+            )
+        except Exception:
+            frappe.log_error(
+                f"Failed to create regional approval queue for order {order_name}",
+                "Store Order Regional Queue Error",
+            )
+        if queue_entry:
+            _assign_order_for_approval(
+                order_name=order_name,
+                assigned_to=regional_approver,
+                description=(
+                    f"Store order {order_name} completed Area Supervisor approval. "
+                    "Regional Manager final approval required."
+                ),
+            )
+            _append_order_comment(
+                order_name,
+                _(
+                    "Area Supervisor approval completed by {0}. Routed to Regional Manager ({1}) for final sign-off."
+                ).format(user, regional_approver),
+            )
+
+        _notify_store_ops(
+            f"Store order {order_name} approved by Area Supervisor {user} and routed to Regional Manager {regional_approver}."
+        )
+        return {
+            "success": True,
+            "status": order.status,
+            "stage": "area_supervisor",
+            "message": f"Area Supervisor approval captured. Routed to Regional Manager ({regional_approver}).",
+            "requires_regional_manager_review": True,
+            "approval_approver_source": "regional_manager",
+            "approval_assigned_approver": regional_approver,
+            "approval_queue_status": "created" if queue_entry else "failed",
+            "material_request": None,
+            "dr_number": "",
+        }
+
     order.status = "Approved"
-    order.approved_by = frappe.session.user
+    order.approved_by = user
     order.approved_at = now_datetime()
     order.save(ignore_permissions=True)
+    _close_order_assignments(order_name)
 
-    _notify_store_ops(f"Store order {order_name} approved by {frappe.session.user}. Check my.bebang.ph/dashboard/store-ops/order-approvals for details.")
+    _notify_store_ops(
+        f"Store order {order_name} approved by {user}. "
+        "Check my.bebang.ph/dashboard/store-ops/order-approvals for details."
+    )
 
     # Create Material Request so commissary can pick it up, linking back to this store order
     mr_name = _create_mr_for_store_order(order)
+    final_stage = "regional_manager" if requires_dual_stage else current_stage
 
     return {
         "success": True,
         "message": f"Order {order_name} approved",
+        "status": order.status,
+        "stage": final_stage,
+        "approval_queue_status": "completed",
+        "requires_regional_manager_review": False,
+        "approval_approver_source": final_stage,
         "material_request": mr_name,
+        "dr_number": mr_name or "",
     }
 
 
