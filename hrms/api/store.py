@@ -748,8 +748,10 @@ def submit_order(
 	if not normalized_cargo_category:
 		frappe.throw(_("Cargo category is required (FC, DRY, or FM)"))
 
+	is_emergency_flag = frappe.utils.cint(is_emergency)
+
 	# Validate ordering schedule cutoff
-	_validate_order_cutoff(store, is_emergency=frappe.utils.cint(is_emergency))
+	_validate_order_cutoff(store, is_emergency=is_emergency_flag)
 
 	# Resolve branch name to warehouse name
 	warehouse = resolve_warehouse(store)
@@ -770,21 +772,22 @@ def submit_order(
 	order_date = nowdate()
 
 	# Duplicate check: no existing non-cancelled order for same store + date + category
-	existing = frappe.db.exists(
-		"BEI Store Order",
-		{
-			"store": warehouse,
-			"order_date": order_date,
-			"cargo_category": normalized_cargo_category,
-			"status": ["not in", ["Cancelled"]],
-		},
-	)
-	if existing:
-		frappe.throw(
-			_("An order already exists for {0} on {1} for category {2}: {3}").format(
-				warehouse, order_date, normalized_cargo_category, existing
-			)
+	if not is_emergency_flag:
+		existing = frappe.db.exists(
+			"BEI Store Order",
+			{
+				"store": warehouse,
+				"order_date": order_date,
+				"cargo_category": normalized_cargo_category,
+				"status": ["not in", ["Cancelled"]],
+			},
 		)
+		if existing:
+			frappe.throw(
+				_("An order already exists for {0} on {1} for category {2}: {3}").format(
+					warehouse, order_date, normalized_cargo_category, existing
+				)
+			)
 
 	# Validate quantities - prevent unreasonable orders
 	MAX_ORDER_QTY = 10000
@@ -823,7 +826,7 @@ def submit_order(
 	order.order_date = order_date
 	order.delivery_date = delivery_date or add_days(nowdate(), 1)
 	order.cargo_category = normalized_cargo_category
-	order.is_emergency = frappe.utils.cint(is_emergency)
+	order.is_emergency = is_emergency_flag
 	order.is_bulk_order = is_bulk_order
 	order.notes = notes
 	order.status = "Pending Approval"
