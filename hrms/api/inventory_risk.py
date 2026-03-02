@@ -36,6 +36,205 @@ def set_test_exposure_map(exposure_map: dict[str, list[dict]]) -> None:
     _TEST_EXPOSURE_MAP = {key: [deepcopy(row) for row in rows] for key, rows in exposure_map.items()}
 
 
+def _build_default_test_fixture() -> tuple[list[dict], list[dict], dict[str, list[dict]], dict[str, list[dict]]]:
+    warehouses = [
+        "test-warehouse-main",
+        "test-warehouse-north",
+        "test-warehouse-south",
+        "test-warehouse-east",
+        "test-warehouse-west",
+    ]
+    now_str = add_to_date(now_datetime(), days=0, as_string=True)
+    risk_rows: list[dict] = []
+    exposure_map: dict[str, list[dict]] = {}
+    incidents: list[dict] = []
+    incident_events: dict[str, list[dict]] = {}
+
+    for idx in range(1, 51):
+        item_code = f"test-item-{idx:03d}"
+        warehouse = warehouses[(idx - 1) % len(warehouses)]
+        daily_demand = round(7.0 + ((idx * 3) % 11), 2)
+        profile = idx % 5
+
+        if profile == 0:
+            available_qty = round(daily_demand * 0.55, 2)
+            inbound_po_qty = round(daily_demand * 0.65, 2)
+            in_transit_qty = round(daily_demand * 0.20, 2)
+            delayed_po_count = 2
+            pending_po_count = 3
+            lead_time_days = 8
+            supplier_reliability = 55
+        elif profile == 1:
+            available_qty = round(daily_demand * 1.2, 2)
+            inbound_po_qty = round(daily_demand * 0.8, 2)
+            in_transit_qty = round(daily_demand * 0.45, 2)
+            delayed_po_count = 1
+            pending_po_count = 2
+            lead_time_days = 6
+            supplier_reliability = 66
+        elif profile == 2:
+            available_qty = round(daily_demand * 2.2, 2)
+            inbound_po_qty = round(daily_demand * 0.7, 2)
+            in_transit_qty = round(daily_demand * 0.6, 2)
+            delayed_po_count = 0
+            pending_po_count = 1
+            lead_time_days = 4
+            supplier_reliability = 75
+        elif profile == 3:
+            available_qty = round(daily_demand * 4.8, 2)
+            inbound_po_qty = round(daily_demand * 0.5, 2)
+            in_transit_qty = round(daily_demand * 0.5, 2)
+            delayed_po_count = 0
+            pending_po_count = 1
+            lead_time_days = 3
+            supplier_reliability = 88
+        else:
+            available_qty = round(daily_demand * 3.0, 2)
+            inbound_po_qty = round(daily_demand * 0.75, 2)
+            in_transit_qty = round(daily_demand * 0.4, 2)
+            delayed_po_count = 1
+            pending_po_count = 2
+            lead_time_days = 5
+            supplier_reliability = 72
+
+        unit_cost = round(25.0 + ((idx * 13) % 17), 2)
+        selling_price = round(unit_cost * (1.35 + ((idx % 3) * 0.05)), 2)
+
+        risk_rows.append(
+            {
+                "item_code": item_code,
+                "warehouse": warehouse,
+                "available_qty": available_qty,
+                "avg_daily_demand": daily_demand,
+                "lead_time_days": lead_time_days,
+                "supplier_reliability_score": supplier_reliability,
+                "supplier_on_time_rate": supplier_reliability,
+                "pending_po_count": pending_po_count,
+                "inbound_po_qty": inbound_po_qty,
+                "delayed_po_count": delayed_po_count,
+                "in_transit_qty": in_transit_qty,
+                "next_eta": add_to_date(now_datetime(), days=(idx % 6) + 1, as_string=True),
+                "unit_cost": unit_cost,
+                "selling_price": selling_price,
+            }
+        )
+
+        req_1 = round(daily_demand * (1.4 + ((idx + 1) % 2) * 0.3), 2)
+        req_2 = round(daily_demand * (1.1 + ((idx + 2) % 3) * 0.2), 2)
+        if profile == 0:
+            avail_1 = round(req_1 * 0.25, 2)
+            avail_2 = round(req_2 * 0.10, 2)
+        elif profile == 1:
+            avail_1 = round(req_1 * 0.65, 2)
+            avail_2 = round(req_2 * 0.55, 2)
+        elif profile == 2:
+            avail_1 = round(req_1 * 0.95, 2)
+            avail_2 = round(req_2 * 0.85, 2)
+        else:
+            avail_1 = round(req_1 * 1.2, 2)
+            avail_2 = round(req_2 * 1.1, 2)
+
+        short_1 = round(max(0.0, req_1 - avail_1), 2)
+        short_2 = round(max(0.0, req_2 - avail_2), 2)
+        status_1 = "Critical" if short_1 > (req_1 * 0.6) else "Watch" if short_1 > 0 else "Normal"
+        status_2 = "Critical" if short_2 > (req_2 * 0.6) else "Watch" if short_2 > 0 else "Normal"
+
+        exposure_map[item_code] = [
+            {
+                "parent_item_code": item_code,
+                "ingredient_item_code": f"test-ingredient-{idx:03d}-01",
+                "required_qty": req_1,
+                "available_qty": avail_1,
+                "shortage_qty": short_1,
+                "days_cover": round((avail_1 / req_1), 2) if req_1 > 0 else 999,
+                "exposure_status": status_1,
+            },
+            {
+                "parent_item_code": item_code,
+                "ingredient_item_code": f"test-ingredient-{idx:03d}-02",
+                "required_qty": req_2,
+                "available_qty": avail_2,
+                "shortage_qty": short_2,
+                "days_cover": round((avail_2 / req_2), 2) if req_2 > 0 else 999,
+                "exposure_status": status_2,
+            },
+        ]
+        exposure_map[_make_item_warehouse_key(item_code, warehouse)] = deepcopy(exposure_map[item_code])
+
+    incident_statuses = ["Open", "Mitigating", "Blocked", "Resolved"]
+    for idx in range(1, 21):
+        row = risk_rows[(idx - 1) % len(risk_rows)]
+        incident_name = f"test-inc-{idx:04d}"
+        status = incident_statuses[(idx - 1) % len(incident_statuses)]
+        incident = {
+            "name": incident_name,
+            "incident_title": f"test-incident on {row['item_code']}",
+            "item_code": row["item_code"],
+            "warehouse": row["warehouse"],
+            "status": status,
+            "owner_user": f"test.owner{((idx - 1) % 5) + 1}@bebang.ph",
+            "detected_on": now_str,
+            "target_resolution_at": add_to_date(now_datetime(), days=(idx % 4) + 1, as_string=True),
+            "root_cause": "test-supplier-delay",
+            "escalation_level": f"Level {((idx - 1) % 3) + 1}",
+            "mitigation_plan": f"test-mitigation-plan-{idx:02d}",
+            "resolution_notes": "test-resolved" if status == "Resolved" else "",
+        }
+        incidents.append(incident)
+        incident_events[incident_name] = [
+            {
+                "incident": incident_name,
+                "event_type": "Detected",
+                "details": "test incident seeded",
+                "event_at": now_str,
+                "event_by": "test.system@bebang.ph",
+            }
+        ]
+        if status == "Mitigating":
+            incident_events[incident_name].append(
+                {
+                    "incident": incident_name,
+                    "event_type": "Assigned",
+                    "details": "test owner assigned",
+                    "event_at": now_str,
+                    "event_by": "test.system@bebang.ph",
+                }
+            )
+        elif status == "Blocked":
+            incident_events[incident_name].append(
+                {
+                    "incident": incident_name,
+                    "event_type": "Blocked",
+                    "details": "test supplier on hold",
+                    "event_at": now_str,
+                    "event_by": "test.system@bebang.ph",
+                }
+            )
+        elif status == "Resolved":
+            incident_events[incident_name].append(
+                {
+                    "incident": incident_name,
+                    "event_type": "Resolved",
+                    "details": "test fallback allocation completed",
+                    "event_at": now_str,
+                    "event_by": "test.system@bebang.ph",
+                }
+            )
+
+    return risk_rows, incidents, incident_events, exposure_map
+
+
+def _ensure_default_test_fixture() -> None:
+    global _TEST_RISK_ROWS, _TEST_INCIDENTS, _TEST_INCIDENT_EVENTS, _TEST_EXPOSURE_MAP
+    if _TEST_RISK_ROWS or _TEST_INCIDENTS or _TEST_INCIDENT_EVENTS or _TEST_EXPOSURE_MAP:
+        return
+    risk_rows, incidents, incident_events, exposure_map = _build_default_test_fixture()
+    _TEST_RISK_ROWS = risk_rows
+    _TEST_INCIDENTS = incidents
+    _TEST_INCIDENT_EVENTS = incident_events
+    _TEST_EXPOSURE_MAP = exposure_map
+
+
 def _risk_level_from_score(risk_score: float) -> str:
     if risk_score >= 80:
         return "Critical"
@@ -143,12 +342,14 @@ def build_risk_snapshot_row(source: dict, horizon_hours: int = 72) -> dict:
 
 
 def _load_risk_inputs() -> list[dict]:
+    _ensure_default_test_fixture()
     if _TEST_RISK_ROWS:
         return [deepcopy(row) for row in _TEST_RISK_ROWS]
     return []
 
 
 def _load_open_incidents() -> list[dict]:
+    _ensure_default_test_fixture()
     if not _TEST_INCIDENTS:
         return []
     rows = [deepcopy(row) for row in _TEST_INCIDENTS]
@@ -156,6 +357,7 @@ def _load_open_incidents() -> list[dict]:
 
 
 def _resolve_exposure_rows(item_code: str, warehouse: str | None = None) -> list[dict]:
+    _ensure_default_test_fixture()
     keys = [item_code]
     if warehouse:
         keys.insert(0, _make_item_warehouse_key(item_code, warehouse))
@@ -383,7 +585,7 @@ def get_finance_risk_impact(item_code: str, warehouse: str, horizon_hours: int =
 
 
 def _next_incident_name() -> str:
-    return f"S20-INC-{len(_TEST_INCIDENTS) + 1:04d}"
+    return f"test-inc-{len(_TEST_INCIDENTS) + 1:04d}"
 
 
 def _resolve_session_user() -> str:
