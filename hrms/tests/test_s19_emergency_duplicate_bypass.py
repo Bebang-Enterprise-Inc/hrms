@@ -56,10 +56,12 @@ def _install_stubs():
 	def _throw(msg, *args, **kwargs):
 		raise RuntimeError(msg)
 
-	frappe.db = _DB()
-	frappe.local = types.SimpleNamespace(db=frappe.db)
+	frappe.local = types.SimpleNamespace(
+		db=_DB(),
+		session=types.SimpleNamespace(user="test.supervisor@bebang.ph"),
+	)
 	frappe.__dict__["db"] = frappe.local.db
-	frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
+	frappe.__dict__["session"] = frappe.local.session
 	frappe.PermissionError = RuntimeError
 	frappe.log_error = lambda *args, **kwargs: None
 	frappe.get_roles = lambda *args, **kwargs: ["Store Supervisor"]
