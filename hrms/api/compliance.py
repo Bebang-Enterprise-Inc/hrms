@@ -81,7 +81,7 @@ def calculate_13th_month_pay(year: int | str) -> dict[str, Any]:
 
 	rows = frappe.db.sql(
 		"""
-		SELECT employee, employee_name, IFNULL(SUM(base), 0) AS total_basic
+		SELECT employee, employee_name, IFNULL(SUM(base_gross_pay), 0) AS total_basic
 		FROM `tabSalary Slip`
 		WHERE docstatus = 1 AND YEAR(start_date) = %s
 		GROUP BY employee, employee_name

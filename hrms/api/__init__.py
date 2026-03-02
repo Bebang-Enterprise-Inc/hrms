@@ -1021,6 +1021,7 @@ import hrms.api.coverage
 import hrms.api.dashboard
 import hrms.api.disciplinary
 import hrms.api.employee_clearance
+import hrms.api.finance
 import hrms.api.hr_reports
 import hrms.api.image_utils
 import hrms.api.inventory
