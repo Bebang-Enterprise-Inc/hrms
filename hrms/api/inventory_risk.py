@@ -735,6 +735,178 @@ def _recommended_actions_from_row(row: dict) -> list[dict]:
     return actions
 
 
+_DEPARTMENT_ACTION_CATALOG: dict[str, list[dict]] = {
+    "Procurement": [
+        {
+            "action_id": "open_pending_pos",
+            "label": "Open Pending POs",
+            "mode": "navigate",
+            "target_route": "/dashboard/procurement/purchase-orders",
+        },
+        {
+            "action_id": "open_supplier_profile",
+            "label": "Open Supplier Profile",
+            "mode": "navigate",
+            "target_route": "/dashboard/procurement/suppliers",
+        },
+        {
+            "action_id": "open_goods_receipt_log",
+            "label": "Open Goods Receipt Log",
+            "mode": "navigate",
+            "target_route": "/dashboard/procurement/goods-receipt-log",
+        },
+        {
+            "action_id": "create_expedite_followup",
+            "label": "Create Expedite Follow-Up",
+            "mode": "execute",
+            "target_route": "/dashboard/procurement/or-follow-up",
+            "command": "create_expedite_followup",
+        },
+    ],
+    "Finance": [
+        {
+            "action_id": "open_pending_payments",
+            "label": "Open Pending Payments",
+            "mode": "navigate",
+            "target_route": "/dashboard/accounting/pending-payments",
+        },
+        {
+            "action_id": "open_supplier_ledger",
+            "label": "Open Supplier Ledger",
+            "mode": "navigate",
+            "target_route": "/dashboard/procurement/suppliers",
+        },
+        {
+            "action_id": "open_or_followup",
+            "label": "Open OR Follow-Up",
+            "mode": "navigate",
+            "target_route": "/dashboard/procurement/or-follow-up",
+        },
+        {
+            "action_id": "raise_payment_priority",
+            "label": "Raise Payment Priority",
+            "mode": "execute",
+            "target_route": "/dashboard/accounting/pending-payments",
+            "command": "raise_payment_priority",
+        },
+    ],
+    "SCM": [
+        {
+            "action_id": "open_delayed_deliveries",
+            "label": "Open Delayed Deliveries",
+            "mode": "navigate",
+            "target_route": "/dashboard/scm/delayed-deliveries",
+        },
+        {
+            "action_id": "open_in_transit_view",
+            "label": "Open In-Transit View",
+            "mode": "navigate",
+            "target_route": "/dashboard/scm/in-transit",
+        },
+        {
+            "action_id": "escalate_supplier_delay",
+            "label": "Escalate Supplier Delay",
+            "mode": "execute",
+            "target_route": "/dashboard/scm/delayed-deliveries",
+            "command": "escalate_supplier_delay",
+        },
+        {
+            "action_id": "create_reallocation_task",
+            "label": "Create Reallocation Task",
+            "mode": "execute",
+            "target_route": "/dashboard/scm/reallocation",
+            "command": "create_reallocation_task",
+        },
+    ],
+    "Warehouse": [
+        {
+            "action_id": "open_receiving_queue",
+            "label": "Open Receiving Queue",
+            "mode": "navigate",
+            "target_route": "/dashboard/warehouse/receive",
+        },
+        {
+            "action_id": "open_grn_queue",
+            "label": "Open GRN Queue",
+            "mode": "navigate",
+            "target_route": "/dashboard/procurement/goods-receipts",
+        },
+        {
+            "action_id": "open_transfer_queue",
+            "label": "Open Transfer Queue",
+            "mode": "navigate",
+            "target_route": "/dashboard/warehouse/dispatch",
+        },
+        {
+            "action_id": "create_mitigation_allocation",
+            "label": "Create Mitigation Allocation",
+            "mode": "execute",
+            "target_route": "/dashboard/warehouse/receive",
+            "command": "create_mitigation_allocation",
+        },
+    ],
+}
+
+
+def _normalize_department_name(department: str) -> str:
+    normalized = (department or "").strip().lower()
+    if normalized == "procurement":
+        return "Procurement"
+    if normalized == "finance":
+        return "Finance"
+    if normalized == "scm":
+        return "SCM"
+    if normalized == "warehouse":
+        return "Warehouse"
+    frappe.throw(_("department must be one of Procurement, Finance, SCM, Warehouse"))
+    return "Procurement"
+
+
+def _action_contract_with_filters(action: dict, filters: dict) -> dict:
+    payload = deepcopy(action)
+    payload["filters"] = deepcopy(filters)
+    payload["context_key"] = _make_item_warehouse_key(filters.get("item_code"), filters.get("warehouse"))
+    return payload
+
+
+@frappe.whitelist()
+def get_item_control_actions(item_code: str, warehouse: str, department: str, horizon_hours: int = 72):
+    if not item_code:
+        frappe.throw(_("item_code is required"))
+    if not warehouse:
+        frappe.throw(_("warehouse is required"))
+    if not department:
+        frappe.throw(_("department is required"))
+
+    canonical_department = _normalize_department_name(department)
+    action_templates = _DEPARTMENT_ACTION_CATALOG.get(canonical_department, [])
+    if not action_templates:
+        frappe.throw(_("No actions configured for selected department"))
+
+    row = _find_risk_row(item_code=item_code, warehouse=warehouse, horizon_hours=horizon_hours)
+    filters = {
+        "item_code": item_code,
+        "warehouse": warehouse,
+        "horizon_hours": cint(horizon_hours or 72),
+    }
+    actions = [_action_contract_with_filters(action, filters) for action in action_templates]
+
+    return {
+        "department": canonical_department,
+        "item_code": item_code,
+        "warehouse": warehouse,
+        "horizon_hours": cint(horizon_hours or 72),
+        "context": {
+            "risk_level": row.get("risk_level"),
+            "risk_score": flt(row.get("risk_score")),
+            "days_to_stockout": flt(row.get("days_to_stockout")),
+        },
+        "primary_action": actions[0],
+        "more_actions": actions[1:],
+        "all_actions": actions,
+    }
+
+
 @frappe.whitelist()
 def get_item_decision_cockpit(item_code: str, warehouse: str, horizon_hours: int = 72):
     if not item_code:
