@@ -6,6 +6,8 @@ BEI Store Ordering API
 Handles store order submission, approval, and delivery receipt generation for my.bebang.ph
 """
 
+from typing import Any
+
 import frappe
 from frappe import _
 from frappe.utils import get_time, getdate, now, now_datetime, nowdate, today
@@ -15,7 +17,7 @@ from hrms.utils.scm_roles import ORDERING_APPROVAL_ROLES, ORDERING_STORE_ROLES, 
 from hrms.utils.scm_roles import check_scm_permission as _check_ordering_permission
 
 
-def _normalize_submit_items(items):
+def _normalize_submit_items(items: Any) -> list[dict[str, Any]]:
 	"""S019 compatibility: accept reason_for_edit alias and recommended_qty payloads."""
 	if isinstance(items, str):
 		items = frappe.parse_json(items)
@@ -39,7 +41,7 @@ def _normalize_submit_items(items):
 	return normalized
 
 
-def _get_suggested_qty(store, item_code):
+def _get_suggested_qty(store: str, item_code: str) -> float:
 	"""
 	Compute suggested qty: AVG(qty_requested) from last 3 BEI Store Orders
 	for this store+item, multiplied by 1.2 safety factor.
@@ -66,7 +68,7 @@ def _get_suggested_qty(store, item_code):
 	return 0.0
 
 
-def _get_last_order_qty(store, item_code):
+def _get_last_order_qty(store: str, item_code: str) -> float:
 	"""Get qty_requested from the most recent order for this store+item."""
 	result = frappe.db.sql(
 		"""
@@ -87,7 +89,7 @@ def _get_last_order_qty(store, item_code):
 
 
 @frappe.whitelist()
-def get_orderable_items(store, date=None):
+def get_orderable_items(store: str, date: str | None = None) -> dict[str, Any]:
 	"""DEPRECATED: Use hrms.api.store.get_orderable_items instead."""
 	frappe.logger("ordering").warning(
 		"ordering.get_orderable_items is deprecated. Use store.get_orderable_items."
@@ -98,7 +100,7 @@ def get_orderable_items(store, date=None):
 
 
 @frappe.whitelist()
-def validate_order_schedule(store, date=None):
+def validate_order_schedule(store: str, date: str | None = None) -> dict[str, Any]:
 	"""DEPRECATED: Use hrms.api.store.validate_order_schedule instead."""
 	frappe.logger("ordering").warning(
 		"ordering.validate_order_schedule is deprecated. Use store.validate_order_schedule."
@@ -109,7 +111,14 @@ def validate_order_schedule(store, date=None):
 
 
 @frappe.whitelist()
-def submit_order(store, items, cargo_category=None, delivery_date=None, is_emergency=0, notes=""):
+def submit_order(
+	store: str,
+	items: Any,
+	cargo_category: str | None = None,
+	delivery_date: str | None = None,
+	is_emergency: int = 0,
+	notes: str = "",
+) -> dict[str, Any]:
 	"""DEPRECATED: Use hrms.api.store.submit_order instead."""
 	frappe.logger("ordering").warning("ordering.submit_order is deprecated. Use store.submit_order.")
 	from hrms.api.store import submit_order as canonical_submit
@@ -125,7 +134,7 @@ def submit_order(store, items, cargo_category=None, delivery_date=None, is_emerg
 	)
 
 
-def _generate_dr_internal(order_name, order=None):
+def _generate_dr_internal(order_name: str, order: Any = None) -> dict[str, Any]:
 	"""
 	Internal DR generation without permission check.
 	Called from approve_order() which already verified permissions.
@@ -173,7 +182,7 @@ def _generate_dr_internal(order_name, order=None):
 
 
 @frappe.whitelist()
-def generate_dr(order_name):
+def generate_dr(order_name: str) -> dict[str, Any]:
 	"""
 	Generate a Delivery Receipt for an approved order.
 
@@ -198,7 +207,7 @@ def generate_dr(order_name):
 
 
 @frappe.whitelist()
-def get_order_review_queue(date=None, status=None):
+def get_order_review_queue(date: str | None = None, status: str | None = None) -> dict[str, Any]:
 	"""
 	Get all BEI Store Orders for review, optionally filtered by date and status.
 
@@ -214,18 +223,12 @@ def get_order_review_queue(date=None, status=None):
 
 	filter_date = date or today()
 
-	# Build WHERE clause
-	conditions = ["so.order_date = %(date)s", "so.docstatus < 2"]
 	params = {"date": filter_date}
 
 	if status:
-		conditions.append("so.status = %(status)s")
 		params["status"] = status
 
-	where_clause = " AND ".join(conditions)
-
-	orders = frappe.db.sql(
-		f"""
+	query = """
         SELECT
             so.name,
             so.store,
@@ -247,15 +250,21 @@ def get_order_review_queue(date=None, status=None):
             ) as deviation_count
         FROM `tabBEI Store Order` so
         LEFT JOIN `tabBEI Store Order Item` soi ON soi.parent = so.name
-        WHERE {where_clause}
+        WHERE so.order_date = %(date)s
+          AND so.docstatus < 2
+    """
+
+	if status:
+		query += " AND so.status = %(status)s"
+
+	query += """
         GROUP BY so.name
         ORDER BY
             CASE so.status WHEN 'Pending Approval' THEN 0 ELSE 1 END,
             so.store ASC
-    """,
-		params,
-		as_dict=True,
-	)
+    """
+
+	orders = frappe.db.sql(query, params, as_dict=True)
 
 	return {
 		"orders": orders,
@@ -264,7 +273,7 @@ def get_order_review_queue(date=None, status=None):
 
 
 @frappe.whitelist()
-def approve_order(order_name, adjustments=None):
+def approve_order(order_name: str, adjustments: Any = None) -> dict[str, Any]:
 	"""DEPRECATED: Use hrms.api.store.approve_order instead."""
 	frappe.logger("ordering").warning("ordering.approve_order is deprecated. Use store.approve_order.")
 	from hrms.api.store import approve_order as canonical_approve
@@ -273,7 +282,7 @@ def approve_order(order_name, adjustments=None):
 
 
 @frappe.whitelist()
-def reject_order(order_name, reason):
+def reject_order(order_name: str, reason: str) -> dict[str, str]:
 	"""
 	Reject a pending store order.
 
@@ -324,7 +333,7 @@ def reject_order(order_name, reason):
 	return {"status": "Cancelled"}
 
 
-def _send_order_notification(store, message):
+def _send_order_notification(store: str, message: str) -> None:
 	"""
 	Send a GChat notification to the store.
 	Pattern follows dispatch.py _send_delivery_notification.

@@ -17,7 +17,8 @@ def _install_stubs(query_capture):
 			query_capture.append(str(query))
 			return []
 
-	frappe.db = _DB()
+	frappe.local = types.SimpleNamespace(db=_DB())
+	frappe.__dict__["db"] = frappe.local.db
 
 	utils = types.ModuleType("frappe.utils")
 	utils.today = lambda: "2026-03-02"

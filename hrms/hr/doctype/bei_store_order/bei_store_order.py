@@ -52,7 +52,7 @@ class BEIStoreOrder(Document):
 		else:
 			self.status = "Approved"
 
-	def on_submit(self):
+	def before_submit(self):
 		self.submitted_by = frappe.session.user
 		if self.status == "Draft":
 			self.status = "Pending Approval"
