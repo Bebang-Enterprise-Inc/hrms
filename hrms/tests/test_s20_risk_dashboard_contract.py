@@ -36,7 +36,7 @@ def _install_fake_frappe():
 	frappe.whitelist = whitelist
 	frappe._ = lambda text: text
 	frappe.throw = throw
-	frappe.session = types.SimpleNamespace(user="Administrator")
+	frappe.local = types.SimpleNamespace(session=types.SimpleNamespace(user="Administrator"))
 
 	utils.flt = lambda value: float(value or 0)
 	utils.cint = lambda value: int(float(value or 0))

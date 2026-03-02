@@ -196,13 +196,25 @@ def _next_incident_name() -> str:
 	return f"S20-INC-{len(_TEST_INCIDENTS) + 1:04d}"
 
 
+def _resolve_session_user() -> str:
+	local_session = getattr(getattr(frappe, "local", None), "session", None)
+	if local_session and getattr(local_session, "user", None):
+		return str(local_session.user)
+
+	session = getattr(frappe, "session", None)
+	if session and getattr(session, "user", None):
+		return str(session.user)
+
+	return "Administrator"
+
+
 def _append_incident_event(incident_name: str, event_type: str, details: str | None = None) -> dict:
 	event = {
 		"incident": incident_name,
 		"event_type": event_type,
 		"details": details or "",
 		"event_at": add_to_date(now_datetime(), days=0, as_string=True),
-		"event_by": getattr(frappe.session, "user", "Administrator"),
+		"event_by": _resolve_session_user(),
 	}
 	_TEST_INCIDENT_EVENTS.setdefault(incident_name, []).append(event)
 	return event
