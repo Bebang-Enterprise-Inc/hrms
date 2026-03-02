@@ -218,53 +218,78 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 	Returns:
 	    dict: {"orders": [...], "total": int}
 	"""
-	# Queue review is an approval workflow and must allow Area Supervisors.
-	_check_ordering_permission(ORDERING_APPROVAL_ROLES, "view order review queue")
+	_check_ordering_permission(ORDERING_WAREHOUSE_ROLES, "view order review queue")
 
 	filter_date = date or today()
+	current_user = frappe.session.user
+	current_roles = set(frappe.get_roles(current_user))
 
-	params = {"date": filter_date}
+	conditions = ["so.order_date = %(date)s", "so.docstatus < 2"]
+	params = {"date": filter_date, "current_user": current_user}
 
 	if status:
+		conditions.append("so.status = %(status)s")
 		params["status"] = status
 
-	query = """
-        SELECT
-            so.name,
-            so.store,
-            so.order_date,
-            so.delivery_date,
-            so.cargo_category,
-            so.status,
-            so.is_bulk_order,
-            so.is_emergency,
-            so.submitted_by,
-            COUNT(soi.name) as items_count,
-            SUM(soi.amount) as total_amount,
-            SUM(
-                CASE
-                    WHEN COALESCE(soi.is_edited, 0) = 1 OR COALESCE(soi.deviation_pct, 0) != 0
-                    THEN 1
-                    ELSE 0
-                END
-            ) as deviation_count
-        FROM `tabBEI Store Order` so
-        LEFT JOIN `tabBEI Store Order Item` soi ON soi.parent = so.name
-        WHERE so.order_date = %(date)s
-          AND so.docstatus < 2
-    """
+	admin_viewer_roles = {"System Manager", "Administrator", "HR Manager", "Warehouse Manager"}
+	is_admin_viewer = bool(current_roles.intersection(admin_viewer_roles))
+	if not is_admin_viewer:
+		conditions.append(
+			"(so.status != 'Pending Approval' OR pending_queue.assigned_approver = %(current_user)s)"
+		)
 
-	if status:
-		query += " AND so.status = %(status)s"
+	where_clause = " AND ".join(conditions)
 
-	query += """
-        GROUP BY so.name
-        ORDER BY
-            CASE so.status WHEN 'Pending Approval' THEN 0 ELSE 1 END,
-            so.store ASC
-    """
-
-	orders = frappe.db.sql(query, params, as_dict=True)
+	orders = frappe.db.sql(
+		f"""
+		SELECT
+			so.name,
+			so.store,
+			so.order_date,
+			so.delivery_date,
+			so.cargo_category,
+			so.status,
+			so.is_bulk_order,
+			so.is_emergency,
+			so.submitted_by,
+			pending_queue.queue_name AS approval_queue_name,
+			pending_queue.assigned_approver AS current_approver,
+			pending_queue.pending_since AS pending_since,
+			CASE
+				WHEN so.is_emergency = 1
+					AND pending_queue.assigned_approver IS NOT NULL
+					AND pending_queue.assigned_approver != COALESCE(wh.custom_area_supervisor, wh_parent.custom_area_supervisor)
+					THEN 'Regional Manager Review'
+				ELSE 'Area Supervisor Review'
+			END AS approval_stage,
+			COUNT(soi.name) as items_count,
+			SUM(soi.amount) as total_amount,
+			SUM(CASE WHEN COALESCE(soi.is_edited, 0) = 1 OR COALESCE(soi.deviation_pct, 0) != 0 THEN 1 ELSE 0 END) as deviation_count
+		FROM `tabBEI Store Order` so
+		LEFT JOIN (
+			SELECT
+				q.reference_name,
+				SUBSTRING_INDEX(GROUP_CONCAT(q.name ORDER BY q.creation ASC), ',', 1) AS queue_name,
+				SUBSTRING_INDEX(GROUP_CONCAT(q.assigned_approver ORDER BY q.creation ASC), ',', 1) AS assigned_approver,
+				MIN(q.submitted_at) AS pending_since
+			FROM `tabBEI Approval Queue` q
+			WHERE q.reference_doctype = 'BEI Store Order'
+			  AND q.status = 'Pending'
+			GROUP BY q.reference_name
+		) pending_queue ON pending_queue.reference_name = so.name
+		LEFT JOIN `tabWarehouse` wh ON wh.name = so.store
+		LEFT JOIN `tabWarehouse` wh_parent ON wh_parent.name = wh.parent_warehouse
+		LEFT JOIN `tabBEI Store Order Item` soi ON soi.parent = so.name
+		WHERE {where_clause}
+		GROUP BY so.name
+		ORDER BY
+			CASE so.status WHEN 'Pending Approval' THEN 0 ELSE 1 END,
+			COALESCE(pending_queue.pending_since, so.creation) ASC,
+			so.store ASC
+		""",
+		params,
+		as_dict=True,
+	)
 
 	return {
 		"orders": orders,
@@ -309,6 +334,43 @@ def reject_order(order_name: str, reason: str) -> dict[str, str]:
 
 	order.status = "Cancelled"
 	order.save(ignore_permissions=True)
+
+	pending_queue_rows = frappe.get_all(
+		"BEI Approval Queue",
+		filters={
+			"reference_doctype": "BEI Store Order",
+			"reference_name": order_name,
+			"status": "Pending",
+		},
+		fields=["name", "assigned_approver"],
+	)
+	for row in pending_queue_rows:
+		queue_doc = frappe.get_doc("BEI Approval Queue", row.name)
+		queue_doc.status = "Rejected"
+		queue_doc.approved_by = frappe.session.user
+		queue_doc.approved_at = now_datetime()
+		queue_doc.rejection_reason = reason
+		queue_doc.save(ignore_permissions=True)
+
+	try:
+		todo_rows = frappe.get_all(
+			"ToDo",
+			filters={
+				"reference_type": "BEI Store Order",
+				"reference_name": order_name,
+				"status": "Open",
+			},
+			fields=["name"],
+		)
+		for row in todo_rows:
+			todo_doc = frappe.get_doc("ToDo", row.name)
+			todo_doc.status = "Closed"
+			todo_doc.save(ignore_permissions=True)
+	except Exception:
+		frappe.log_error(
+			f"Failed to close ToDo assignments for cancelled order {order_name}",
+			"Store Ordering Reject ToDo Close Error",
+		)
 
 	# Add comment with rejection reason
 	frappe.get_doc(
