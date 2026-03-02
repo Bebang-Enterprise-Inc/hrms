@@ -490,6 +490,69 @@ def _finance_payload_from_row(row: dict) -> dict:
     }
 
 
+def _build_pipeline_details_from_row(row: dict) -> dict:
+    item_code = row.get("item_code")
+    warehouse = row.get("warehouse")
+    pending_count = max(0, cint(row.get("pending_po_count")))
+    delayed_count = min(max(0, cint(row.get("delayed_po_count"))), pending_count)
+    inbound_po_qty = max(0.0, flt(row.get("inbound_po_qty")))
+
+    pending_pos: list[dict] = []
+    delayed_deliveries: list[dict] = []
+
+    if pending_count <= 0:
+        return {
+            "pending_pos": pending_pos,
+            "delayed_deliveries": delayed_deliveries,
+        }
+
+    qty_base = round(inbound_po_qty / pending_count, 2) if pending_count else 0.0
+    assigned_qty = 0.0
+    for idx in range(1, pending_count + 1):
+        is_last = idx == pending_count
+        po_qty = round(max(0.0, inbound_po_qty - assigned_qty), 2) if is_last else qty_base
+        assigned_qty = round(assigned_qty + po_qty, 2)
+
+        eta_days = (idx % 5) + 1
+        expected_eta = add_to_date(now_datetime(), days=eta_days, as_string=True)
+        supplier = f"test-supplier-{((idx - 1) % 7) + 1:02d}"
+        po_number = f"test-po-{item_code}-{idx:02d}"
+        status = "Delayed" if idx <= delayed_count else "Pending"
+
+        pending_row = {
+            "po_number": po_number,
+            "supplier": supplier,
+            "item_code": item_code,
+            "warehouse": warehouse,
+            "ordered_qty": po_qty,
+            "expected_eta": expected_eta,
+            "status": status,
+        }
+        pending_pos.append(pending_row)
+
+        if status == "Delayed":
+            delayed_days = delayed_count - idx + 1
+            delayed_deliveries.append(
+                {
+                    "delivery_id": f"test-dtl-{item_code}-{idx:02d}",
+                    "po_number": po_number,
+                    "supplier": supplier,
+                    "item_code": item_code,
+                    "warehouse": warehouse,
+                    "delayed_qty": po_qty,
+                    "expected_eta": expected_eta,
+                    "delayed_days": delayed_days,
+                    "delay_reason": "test logistics carrier delay",
+                    "status": "Delayed",
+                }
+            )
+
+    return {
+        "pending_pos": pending_pos,
+        "delayed_deliveries": delayed_deliveries,
+    }
+
+
 def _recommended_actions_from_row(row: dict) -> list[dict]:
     actions: list[dict] = []
     if flt(row.get("days_to_stockout")) <= 2:
@@ -582,6 +645,50 @@ def get_finance_risk_impact(item_code: str, warehouse: str, horizon_hours: int =
 
     row = _find_risk_row(item_code=item_code, warehouse=warehouse, horizon_hours=horizon_hours)
     return _finance_payload_from_row(row)
+
+
+@frappe.whitelist()
+def get_item_pending_pos(item_code: str, warehouse: str, horizon_hours: int = 72):
+    if not item_code:
+        frappe.throw(_("item_code is required"))
+    if not warehouse:
+        frappe.throw(_("warehouse is required"))
+
+    row = _find_risk_row(item_code=item_code, warehouse=warehouse, horizon_hours=horizon_hours)
+    pipeline = _build_pipeline_details_from_row(row)
+    pending_pos = pipeline["pending_pos"]
+
+    return {
+        "item_code": item_code,
+        "warehouse": warehouse,
+        "totals": {
+            "pending_po_count": len(pending_pos),
+            "pending_po_qty": round(sum(flt(entry.get("ordered_qty")) for entry in pending_pos), 2),
+        },
+        "pending_pos": pending_pos,
+    }
+
+
+@frappe.whitelist()
+def get_item_delayed_deliveries(item_code: str, warehouse: str, horizon_hours: int = 72):
+    if not item_code:
+        frappe.throw(_("item_code is required"))
+    if not warehouse:
+        frappe.throw(_("warehouse is required"))
+
+    row = _find_risk_row(item_code=item_code, warehouse=warehouse, horizon_hours=horizon_hours)
+    pipeline = _build_pipeline_details_from_row(row)
+    delayed = pipeline["delayed_deliveries"]
+
+    return {
+        "item_code": item_code,
+        "warehouse": warehouse,
+        "totals": {
+            "delayed_delivery_count": len(delayed),
+            "delayed_qty": round(sum(flt(entry.get("delayed_qty")) for entry in delayed), 2),
+        },
+        "delayed_deliveries": delayed,
+    }
 
 
 def _next_incident_name() -> str:
