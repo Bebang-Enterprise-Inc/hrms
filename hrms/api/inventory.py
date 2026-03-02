@@ -13,6 +13,49 @@ from frappe.utils import nowdate, flt, add_days, now_datetime
 import json
 
 
+def _clamp_multiplier(value, floor=0.70, ceiling=1.50):
+    return flt(min(max(flt(value), flt(floor)), flt(ceiling)), 4)
+
+
+def get_signal_modifiers(is_salary_week=False, is_holiday=False, is_weather_risk=False):
+    """Deterministic S019 demand modifiers used by ordering recommendation tuning."""
+    salary_week_multiplier = 1.10 if is_salary_week else 1.0
+    holiday_multiplier = 1.12 if is_holiday else 1.0
+    overlap_multiplier = 1.08 if (is_salary_week and is_holiday) else 1.0
+    weather_multiplier = 1.06 if is_weather_risk else 1.0
+    composite_multiplier = (
+        salary_week_multiplier
+        * holiday_multiplier
+        * overlap_multiplier
+        * weather_multiplier
+    )
+    return {
+        "salary_week_multiplier": flt(salary_week_multiplier, 4),
+        "holiday_multiplier": flt(holiday_multiplier, 4),
+        "overlap_multiplier": flt(overlap_multiplier, 4),
+        "weather_multiplier": flt(weather_multiplier, 4),
+        "composite_multiplier": _clamp_multiplier(composite_multiplier),
+    }
+
+
+def apply_adaptive_tuning(current_multiplier, adjustment_delta, floor=0.70, ceiling=1.50):
+    """Clamp weekly tuning updates to agreed S019 guardrails."""
+    return _clamp_multiplier(
+        flt(current_multiplier) + flt(adjustment_delta),
+        floor=floor,
+        ceiling=ceiling,
+    )
+
+
+@frappe.whitelist()
+def preview_adaptive_multiplier(current_multiplier=1.0, adjustment_delta=0.0):
+    return {
+        "multiplier_before": flt(current_multiplier, 4),
+        "adjustment_delta": flt(adjustment_delta, 4),
+        "multiplier_after": apply_adaptive_tuning(current_multiplier, adjustment_delta),
+    }
+
+
 @frappe.whitelist()
 def submit_cycle_count(store=None, items=None, count_date=None):
     """DEPRECATED: Use submit_cycle_count_v2 instead.

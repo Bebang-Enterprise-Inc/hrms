@@ -14,6 +14,13 @@
     "last_order_qty",
     "amount",
     "suggested_qty",
+    "recommended_qty",
+    "lane",
+    "available_to_promise",
+    "forecast_demand",
+    "safety_buffer",
+    "risk_rank",
+    "is_edited",
     "deviation_pct",
     "deviation_reason"
   ],
@@ -86,6 +93,52 @@
       "label": "Suggested Qty",
       "read_only": 1,
       "precision": 3
+    },
+    {
+      "fieldname": "recommended_qty",
+      "fieldtype": "Float",
+      "label": "Recommended Qty",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "lane",
+      "fieldtype": "Data",
+      "label": "Lane",
+      "read_only": 1
+    },
+    {
+      "fieldname": "available_to_promise",
+      "fieldtype": "Float",
+      "label": "Available to Promise",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "forecast_demand",
+      "fieldtype": "Float",
+      "label": "Forecast Demand",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "safety_buffer",
+      "fieldtype": "Float",
+      "label": "Safety Buffer",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "risk_rank",
+      "fieldtype": "Int",
+      "label": "Risk Rank",
+      "read_only": 1
+    },
+    {
+      "fieldname": "is_edited",
+      "fieldtype": "Check",
+      "label": "Is Edited",
+      "read_only": 1
     },
     {
       "fieldname": "deviation_pct",

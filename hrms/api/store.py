@@ -12,7 +12,7 @@ import json
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, flt, now_datetime, nowdate
+from frappe.utils import add_days, cint, flt, getdate, now_datetime, nowdate
 
 from hrms.utils.bei_config import get_company
 from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
@@ -155,6 +155,147 @@ def _get_area_supervisor_for_store(warehouse):
 	return None
 
 
+def _resolve_delivery_lane(item_doc):
+    """Infer lane from item metadata. Defaults to Dry when unknown."""
+    item_group = (item_doc.get("item_group") or "").lower()
+    cargo_category = (item_doc.get("cargo_category") or "").lower()
+    combined = f"{item_group} {cargo_category}"
+    frozen_keywords = ("frozen", "chilled", "cold", "ice", "meat", "fc")
+    return "Frozen" if any(k in combined for k in frozen_keywords) else "Dry"
+
+
+def _compose_signal_modifiers(is_salary_week=False, is_holiday=False, is_weather_risk=False):
+    """Build deterministic signal multipliers for demand modulation."""
+    salary_week_multiplier = 1.10 if is_salary_week else 1.0
+    holiday_multiplier = 1.12 if is_holiday else 1.0
+    overlap_multiplier = 1.08 if (is_salary_week and is_holiday) else 1.0
+    weather_multiplier = 1.06 if is_weather_risk else 1.0
+    composite_multiplier = (
+        salary_week_multiplier
+        * holiday_multiplier
+        * overlap_multiplier
+        * weather_multiplier
+    )
+    return {
+        "salary_week_multiplier": flt(salary_week_multiplier, 4),
+        "holiday_multiplier": flt(holiday_multiplier, 4),
+        "overlap_multiplier": flt(overlap_multiplier, 4),
+        "weather_multiplier": flt(weather_multiplier, 4),
+        "composite_multiplier": flt(composite_multiplier, 4),
+    }
+
+
+def _is_salary_week(target_date):
+    return target_date.day <= 7 or 13 <= target_date.day <= 16
+
+
+def _is_holiday(target_date):
+    try:
+        return bool(
+            frappe.db.exists("Holiday", {"holiday_date": str(target_date)})
+        )
+    except Exception:
+        return False
+
+
+def _is_weather_risk(warehouse):
+    """Graceful weather risk probe; no hard dependency on custom weather doctypes."""
+    for doctype in ("BEI Weather Alert", "Weather Alert"):
+        try:
+            if frappe.db.exists(
+                doctype,
+                {
+                    "store": warehouse,
+                    "severity": ["in", ["Severe", "High", "Typhoon", "Heavy Rain"]],
+                    "status": ["not in", ["Resolved", "Closed"]],
+                },
+            ):
+                return True
+        except Exception:
+            continue
+    return False
+
+
+def _get_signal_flags(warehouse, for_date=None):
+    date_obj = getdate(for_date or nowdate())
+    return {
+        "is_salary_week": _is_salary_week(date_obj),
+        "is_holiday": _is_holiday(date_obj),
+        "is_weather_risk": _is_weather_risk(warehouse),
+    }
+
+
+def _apply_adaptive_tuning(current_multiplier, delta, floor=0.70, ceiling=1.50):
+    new_multiplier = flt(current_multiplier) + flt(delta)
+    return flt(min(max(new_multiplier, floor), ceiling), 4)
+
+
+def _risk_rank(order_count, recommended_qty, available_to_promise):
+    """Lower rank means higher urgency."""
+    shortage_gap = max(0, flt(recommended_qty) - flt(available_to_promise))
+    if shortage_gap >= 20:
+        return 1
+    if shortage_gap > 0:
+        return 2
+    if flt(order_count) >= 8:
+        return 3
+    return 4
+
+
+def _build_recommendation_contract(
+    last_order_qty,
+    available_to_promise,
+    lane,
+    order_count=0,
+    signal_multiplier=1.0,
+):
+    baseline = flt(last_order_qty)
+    if baseline <= 0:
+        baseline = max(1.0, flt(order_count) * 0.5)
+    forecast_demand = flt(baseline * flt(signal_multiplier), 2)
+    safety_buffer = flt(max(1.0, forecast_demand * 0.15), 2)
+    recommended_qty = flt(
+        max(0.0, forecast_demand + safety_buffer - flt(available_to_promise)),
+        2,
+    )
+    return {
+        "lane": lane,
+        "available_to_promise": flt(available_to_promise, 2),
+        "forecast_demand": forecast_demand,
+        "safety_buffer": safety_buffer,
+        "recommended_qty": recommended_qty,
+        # S019 compatibility: suggested_qty remains canonical persistence field.
+        "suggested_qty": recommended_qty,
+        "risk_rank": _risk_rank(order_count, recommended_qty, available_to_promise),
+    }
+
+
+def _normalize_order_line(item_data, lane="Dry"):
+    recommended_qty = flt(
+        item_data.get("recommended_qty", item_data.get("suggested_qty", 0))
+    )
+    qty_requested = flt(item_data.get("qty_requested", 0))
+    is_edited = 1 if qty_requested != recommended_qty else 0
+    deviation_reason = (
+        item_data.get("deviation_reason")
+        or item_data.get("reason_for_edit")
+        or ""
+    )
+    return {
+        "item_code": item_data.get("item_code"),
+        "qty_requested": qty_requested,
+        "suggested_qty": recommended_qty,
+        "recommended_qty": recommended_qty,
+        "lane": lane,
+        "available_to_promise": flt(item_data.get("available_to_promise", 0)),
+        "forecast_demand": flt(item_data.get("forecast_demand", 0)),
+        "safety_buffer": flt(item_data.get("safety_buffer", 0)),
+        "risk_rank": cint(item_data.get("risk_rank", 4)),
+        "is_edited": is_edited,
+        "deviation_reason": deviation_reason,
+    }
+
+
 @frappe.whitelist()
 def get_user_store():
 	"""
@@ -222,8 +363,8 @@ def get_user_store():
 def get_orderable_items(store: str) -> dict:
 	"""
 	Get items available for ordering by this store.
-	Returns items sorted by order frequency (most ordered first),
-	with stock_uom and last order quantity.
+	Returns lane-aware recommendation fields while preserving `suggested_qty`
+	as canonical persisted field for S019 compatibility.
 	"""
 	if not store:
 		frappe.throw(_("Store is required"))
@@ -275,8 +416,54 @@ def get_orderable_items(store: str) -> dict:
 	for row in last_qty_rows:
 		last_qty_map[row.item_code] = row.qty_requested
 
+	# Batch stock quantities (available-to-promise approximation)
+	stock_map = {}
+	item_codes = [row.name for row in items]
+	if item_codes:
+		stock_rows = frappe.get_all(
+			"Bin",
+			filters={"warehouse": warehouse, "item_code": ["in", item_codes]},
+			fields=["item_code", "actual_qty"],
+			limit_page_length=max(200, len(item_codes) * 3),
+		)
+		for row in stock_rows:
+			stock_map[row.item_code] = flt(stock_map.get(row.item_code, 0)) + flt(row.actual_qty)
+
+	signal_flags = _get_signal_flags(warehouse)
+	signal_modifiers = _compose_signal_modifiers(**signal_flags)
+	tuned_multiplier = _apply_adaptive_tuning(signal_modifiers["composite_multiplier"], 0)
+
 	for item in items:
-		item["last_order_qty"] = last_qty_map.get(item.name, 0)
+		item_code = item.name
+		last_order_qty = flt(last_qty_map.get(item_code, 0))
+		available_to_promise = flt(stock_map.get(item_code, 0), 2)
+		lane = _resolve_delivery_lane(item)
+		contract = _build_recommendation_contract(
+			last_order_qty=last_order_qty,
+			available_to_promise=available_to_promise,
+			lane=lane,
+			order_count=flt(item.order_count),
+			signal_multiplier=tuned_multiplier,
+		)
+		item["item_code"] = item_code
+		item["uom"] = item.get("stock_uom")
+		item["last_order_qty"] = last_order_qty
+		item["available_stock"] = available_to_promise
+		item["is_oos"] = 1 if available_to_promise <= 0 else 0
+		item["cargo_category"] = "FC" if lane == "Frozen" else "DRY"
+		item["packaging_description"] = item.get("stock_uom") or ""
+		item["signal_multiplier"] = tuned_multiplier
+		item.update(contract)
+
+	items = sorted(
+		items,
+		key=lambda row: (
+			cint(row.get("risk_rank", 4)),
+			-flt(row.get("order_count", 0)),
+			row.get("item_group") or "",
+			row.get("item_name") or "",
+		),
+	)
 
 	return {"items": items}
 
@@ -416,6 +603,17 @@ def submit_order(
 				)
 			)
 
+	item_codes = [row.get("item_code") for row in items if row.get("item_code")]
+	item_meta = {}
+	if item_codes:
+		for row in frappe.get_all(
+			"Item",
+			filters={"name": ["in", item_codes]},
+			fields=["name", "item_group"],
+			limit_page_length=max(200, len(item_codes)),
+		):
+			item_meta[row.name] = row
+
 	# Determine is_bulk_order: bulk if more than 10 line items
 	is_bulk_order = 1 if len(items) > 10 else 0
 
@@ -430,15 +628,14 @@ def submit_order(
 	order.status = "Pending Approval"
 	order.submitted_by = frappe.session.user
 
+	edited_lines_count = 0
 	for item_data in items:
-		order.append(
-			"items",
-			{
-				"item_code": item_data.get("item_code"),
-				"qty_requested": item_data.get("qty_requested", 0),
-				"deviation_reason": item_data.get("deviation_reason", ""),
-			},
-		)
+		item_code = item_data.get("item_code")
+		lane = _resolve_delivery_lane(item_meta.get(item_code, {}))
+		normalized = _normalize_order_line(item_data, lane=lane)
+		if normalized["is_edited"]:
+			edited_lines_count += 1
+		order.append("items", normalized)
 
 	order.insert(ignore_permissions=True)
 
@@ -474,6 +671,8 @@ def submit_order(
 		"success": True,
 		"name": order.name,
 		"status": order.status,
+		"requires_area_supervisor_review": 1 if edited_lines_count > 0 else 0,
+		"edited_lines_count": edited_lines_count,
 		"message": f"Order {order.name} submitted successfully",
 		"approval_queue_status": queue_status,
 	}

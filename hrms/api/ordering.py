@@ -18,6 +18,30 @@ from hrms.utils.scm_roles import (
 )
 
 
+def _normalize_submit_items(items):
+    """S019 compatibility: accept reason_for_edit alias and recommended_qty payloads."""
+    if isinstance(items, str):
+        items = frappe.parse_json(items)
+    normalized = []
+    for row in (items or []):
+        normalized.append(
+            {
+                "item_code": row.get("item_code"),
+                "qty_requested": row.get("qty_requested", 0),
+                "recommended_qty": row.get("recommended_qty", row.get("suggested_qty", 0)),
+                "suggested_qty": row.get("suggested_qty", row.get("recommended_qty", 0)),
+                "deviation_reason": row.get("deviation_reason") or row.get("reason_for_edit") or "",
+                "reason_for_edit": row.get("reason_for_edit") or row.get("deviation_reason") or "",
+                "available_to_promise": row.get("available_to_promise", 0),
+                "forecast_demand": row.get("forecast_demand", 0),
+                "safety_buffer": row.get("safety_buffer", 0),
+                "risk_rank": row.get("risk_rank", 4),
+                "lane": row.get("lane"),
+            }
+        )
+    return normalized
+
+
 def _get_suggested_qty(store, item_code):
     """
     Compute suggested qty: AVG(qty_requested) from last 3 BEI Store Orders
@@ -78,8 +102,9 @@ def submit_order(store, items, cargo_category=None, delivery_date=None, is_emerg
     """DEPRECATED: Use hrms.api.store.submit_order instead."""
     frappe.logger("ordering").warning("ordering.submit_order is deprecated. Use store.submit_order.")
     from hrms.api.store import submit_order as canonical_submit
+    normalized_items = _normalize_submit_items(items)
     return canonical_submit(
-        store=store, items=items, cargo_category=cargo_category,
+        store=store, items=normalized_items, cargo_category=cargo_category,
         delivery_date=delivery_date, is_emergency=is_emergency, notes=notes
     )
 
