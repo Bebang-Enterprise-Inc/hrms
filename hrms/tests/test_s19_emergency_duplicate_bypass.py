@@ -127,7 +127,15 @@ def test_non_emergency_duplicate_still_blocked():
 	with pytest.raises(RuntimeError, match="An order already exists"):
 		store_mod.submit_order(
 			store="TEST-STORE-BGC",
-			items=[{"item_code": "ITEM-001", "qty_requested": 1, "lane": "Dry"}],
+			items=[
+				{
+					"item_code": "ITEM-001",
+					"qty_requested": 1,
+					"recommended_qty": 1,
+					"suggested_qty": 1,
+					"lane": "Dry",
+				}
+			],
 			cargo_category="DRY",
 			is_emergency=0,
 		)
@@ -138,7 +146,15 @@ def test_emergency_duplicate_bypasses_duplicate_gate():
 
 	result = store_mod.submit_order(
 		store="TEST-STORE-BGC",
-		items=[{"item_code": "ITEM-001", "qty_requested": 1, "lane": "Dry"}],
+		items=[
+			{
+				"item_code": "ITEM-001",
+				"qty_requested": 1,
+				"recommended_qty": 1,
+				"suggested_qty": 1,
+				"lane": "Dry",
+			}
+		],
 		cargo_category="DRY",
 		is_emergency=1,
 		notes="Emergency replenishment",
