@@ -648,11 +648,21 @@ def _get_order_cutoff():
 	Returns (cutoff_hour, cutoff_time) where cutoff_hour is the integer hour
 	(default 12) and cutoff_time is the display string (e.g. "11:59").
 	"""
+	cutoff_hour = 12
 	try:
-		raw = frappe.db.get_single_value("BEI Settings", "order_cutoff_hour")
-		cutoff_hour = int(raw) if raw else 12
+		meta = frappe.get_meta("BEI Settings")
+		cutoff_field = None
+		for candidate in ("order_cutoff_hour", "ordering_cutoff_hour"):
+			if meta.has_field(candidate):
+				cutoff_field = candidate
+				break
+		if cutoff_field:
+			raw = frappe.db.get_single_value("BEI Settings", cutoff_field)
+			cutoff_hour = int(raw) if raw else 12
 	except Exception:
+		# Missing/legacy settings fields should not block order submission.
 		cutoff_hour = 12
+	cutoff_hour = max(1, min(cutoff_hour, 23))
 	cutoff_time = f"{cutoff_hour - 1:02d}:59"
 	return cutoff_hour, cutoff_time
 

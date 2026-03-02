@@ -11,6 +11,9 @@ def _install_common_stubs():
 	class _DB:
 		@staticmethod
 		def exists(*args, **kwargs):
+			if args and args[0] == "Item":
+				item_code = args[1] if len(args) > 1 else ""
+				return bool(item_code)
 			return False
 
 		@staticmethod
@@ -45,6 +48,7 @@ def _install_common_stubs():
 	frappe.log_error = lambda *args, **kwargs: None
 	frappe.get_roles = lambda *args, **kwargs: []
 	frappe.get_all = lambda *args, **kwargs: []
+	frappe.get_meta = lambda _doctype: types.SimpleNamespace(has_field=lambda _field: False)
 	frappe.parse_json = lambda payload: payload
 
 	def _whitelist(fn=None, **kwargs):
@@ -156,3 +160,12 @@ def test_sanitize_submitted_items_drops_zero_qty_and_missing_item_code():
 	dropped_reasons = {row["reason"] for row in dropped}
 	assert "non_positive_qty" in dropped_reasons
 	assert "missing_item_code" in dropped_reasons
+
+
+def test_get_order_cutoff_defaults_when_settings_field_missing():
+	store_mod = _load_store_module()
+
+	cutoff_hour, cutoff_time = store_mod._get_order_cutoff()
+
+	assert cutoff_hour == 12
+	assert cutoff_time == "11:59"
