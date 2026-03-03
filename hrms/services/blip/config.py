@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     GOOGLE_SERVICE_ACCOUNT_FILE: Optional[str] = None
     GOOGLE_SERVICE_ACCOUNT_JSON: Optional[str] = None  # Base64-encoded JSON
 
+    # BEI Brain (Supabase) - for /remember command
+    SUPABASE_URL: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
+
     # Admin users (full access) - comma-separated in env var
     ADMIN_EMAILS: str = "sam@bebang.ph"
 

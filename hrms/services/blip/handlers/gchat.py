@@ -9,8 +9,11 @@ Supports both:
 - Google Workspace Add-ons format (chat/commonEventObject structure)
 """
 
+import json
 import logging
 from typing import Any, Tuple
+from urllib.request import Request as UrlRequest, urlopen
+from urllib.error import HTTPError
 
 from config import settings
 
@@ -178,6 +181,60 @@ def handle_added_to_space(event: dict) -> dict:
         }
 
 
+async def handle_remember(thought: str, user_email: str) -> dict:
+    """
+    Handle /remember command — store a thought in BEI Brain via process-memory Edge Function.
+
+    Only sam@bebang.ph can use this. The thought is embedded and classified by the
+    Edge Function, then stored in the memories table.
+
+    Returns:
+        Response dict with confirmation text for Google Chat.
+    """
+    supabase_url = settings.SUPABASE_URL
+    supabase_key = settings.SUPABASE_SERVICE_ROLE_KEY
+
+    if not supabase_url or not supabase_key:
+        logger.error("BEI Brain: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not configured")
+        return {"text": "Brain not configured. Missing Supabase credentials."}
+
+    payload = json.dumps({
+        "content": thought,
+        "source": "google_chat",
+        "user_email": user_email,
+    }).encode()
+
+    req = UrlRequest(
+        f"{supabase_url}/functions/v1/process-memory",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {supabase_key}",
+            "Content-Type": "application/json",
+        },
+    )
+
+    try:
+        resp = urlopen(req, timeout=15)
+        result = json.loads(resp.read())
+        logger.info(f"BEI Brain: Memory stored for {user_email}: {thought[:80]}...")
+
+        # Build confirmation
+        metadata = result.get("metadata", {})
+        topics = metadata.get("topics", [])
+        importance = metadata.get("importance", result.get("importance_score", "?"))
+        topic_str = ", ".join(topics) if topics else "general"
+
+        return {"text": f"Remembered. Topics: {topic_str}. Importance: {importance}/10."}
+
+    except HTTPError as e:
+        body = e.read().decode()[:200]
+        logger.error(f"BEI Brain: Edge Function error {e.code}: {body}")
+        return {"text": f"Failed to store memory (HTTP {e.code}). Try again."}
+    except Exception as e:
+        logger.error(f"BEI Brain: Unexpected error: {e}")
+        return {"text": "Failed to store memory. Check logs."}
+
+
 async def handle_message(
     event: dict,
     blip_agent: Any,
@@ -190,11 +247,12 @@ async def handle_message(
 
     Flow:
     1. Check if user is in beta whitelist
-    2. Extract user info and get conversation history
-    3. Build user context (permissions, store, roles)
-    4. Run the agentic loop (Claude decides what tools to use)
-    5. Store messages in history
-    6. Return response
+    2. Intercept /remember command → store in BEI Brain
+    3. Extract user info and get conversation history
+    4. Build user context (permissions, store, roles)
+    5. Run the agentic loop (Claude decides what tools to use)
+    6. Store messages in history
+    7. Return response
     """
     user = event.get("user", {})
     user_email = user.get("email", "").lower()
@@ -213,6 +271,13 @@ async def handle_message(
 
     if not message_text:
         return {"text": "I didn't catch that. What would you like to know?"}
+
+    # /remember command — store thought in BEI Brain (sam@bebang.ph only)
+    if message_text.lower().startswith("/remember"):
+        thought = message_text[len("/remember"):].strip()
+        if not thought:
+            return {"text": "Usage: /remember <your thought or decision to store>"}
+        return await handle_remember(thought, user_email)
 
     logger.info(f"Processing message from {user_email}: {message_text[:100]}...")
 
