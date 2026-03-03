@@ -561,7 +561,8 @@ def _build_pipeline_details_from_source_rows(item_code: str, warehouse: str, sou
 
     for idx, source in enumerate(source_rows, start=1):
         source_doctype = source.get("source_doctype") or "Purchase Order"
-        source_name = source.get("source_name") or source.get("name") or source.get("po_number")
+        raw_source_name = source.get("source_name") or source.get("name") or source.get("po_number")
+        source_name = raw_source_name
         if not source_name:
             source_name = f"PO-{item_code}-{idx:02d}"
         po_number = source.get("po_number") or source_name
@@ -578,13 +579,17 @@ def _build_pipeline_details_from_source_rows(item_code: str, warehouse: str, sou
         if is_delayed and delayed_days == 0:
             delayed_days = 1
 
-        expected_eta = source.get("expected_eta") or source.get("delivery_date")
+        raw_expected_eta = source.get("expected_eta") or source.get("delivery_date")
+        expected_eta = raw_expected_eta
         if not expected_eta:
             expected_eta = add_to_date(now_datetime(), days=(idx % 5) + 1, as_string=True)
 
-        link_route = source.get("link_route") or _route_for_source(source_doctype, source_name)
-        supplier = source.get("supplier") or f"test-supplier-{((idx - 1) % 7) + 1:02d}"
+        raw_link_route = source.get("link_route")
+        link_route = raw_link_route or _route_for_source(source_doctype, source_name)
+        raw_supplier = source.get("supplier")
+        supplier = raw_supplier or f"test-supplier-{((idx - 1) % 7) + 1:02d}"
         status = "Delayed" if is_delayed else "Pending"
+        is_pending_fallback = bool(not raw_source_name or not raw_expected_eta or not raw_link_route or not raw_supplier)
 
         pending_row = {
             "po_number": po_number,
@@ -594,6 +599,7 @@ def _build_pipeline_details_from_source_rows(item_code: str, warehouse: str, sou
             "ordered_qty": remaining_qty,
             "expected_eta": expected_eta,
             "status": status,
+            "is_synthetic_fallback": is_pending_fallback,
             "source_doctype": source_doctype,
             "source_name": source_name,
             "link_route": link_route,
@@ -601,9 +607,11 @@ def _build_pipeline_details_from_source_rows(item_code: str, warehouse: str, sou
         pending_pos.append(pending_row)
 
         if is_delayed:
+            raw_delivery_id = source.get("delivery_id")
+            raw_delay_reason = source.get("delay_reason")
             delayed_deliveries.append(
                 {
-                    "delivery_id": source.get("delivery_id") or f"dtl-{source_name}-{idx:02d}",
+                    "delivery_id": raw_delivery_id or f"dtl-{source_name}-{idx:02d}",
                     "po_number": po_number,
                     "supplier": supplier,
                     "item_code": item_code,
@@ -611,8 +619,9 @@ def _build_pipeline_details_from_source_rows(item_code: str, warehouse: str, sou
                     "delayed_qty": remaining_qty,
                     "expected_eta": expected_eta,
                     "delayed_days": delayed_days,
-                    "delay_reason": source.get("delay_reason") or "Supplier delivery delay",
+                    "delay_reason": raw_delay_reason or "Supplier delivery delay",
                     "status": "Delayed",
+                    "is_synthetic_fallback": bool(is_pending_fallback or not raw_delivery_id or not raw_delay_reason),
                     "source_doctype": source_doctype,
                     "source_name": source_name,
                     "link_route": link_route,
@@ -666,6 +675,7 @@ def _build_pipeline_details_from_row(row: dict) -> dict:
             "ordered_qty": po_qty,
             "expected_eta": expected_eta,
             "status": status,
+            "is_synthetic_fallback": True,
             "source_doctype": source_doctype,
             "source_name": source_name,
             "link_route": link_route,
@@ -686,6 +696,7 @@ def _build_pipeline_details_from_row(row: dict) -> dict:
                     "delayed_days": delayed_days,
                     "delay_reason": "test logistics carrier delay",
                     "status": "Delayed",
+                    "is_synthetic_fallback": True,
                     "source_doctype": source_doctype,
                     "source_name": source_name,
                     "link_route": link_route,
@@ -1046,6 +1057,7 @@ def get_item_pending_pos(item_code: str, warehouse: str, horizon_hours: int = 72
         "totals": {
             "pending_po_count": len(pending_pos),
             "pending_po_qty": round(sum(flt(entry.get("ordered_qty")) for entry in pending_pos), 2),
+            "synthetic_fallback_count": sum(1 for entry in pending_pos if entry.get("is_synthetic_fallback")),
         },
         "pending_pos": pending_pos,
     }
@@ -1068,6 +1080,7 @@ def get_item_delayed_deliveries(item_code: str, warehouse: str, horizon_hours: i
         "totals": {
             "delayed_delivery_count": len(delayed),
             "delayed_qty": round(sum(flt(entry.get("delayed_qty")) for entry in delayed), 2),
+            "synthetic_fallback_count": sum(1 for entry in delayed if entry.get("is_synthetic_fallback")),
         },
         "delayed_deliveries": delayed,
     }

@@ -117,13 +117,16 @@ class TestS22PipelineDrilldownRealContract(unittest.TestCase):
     def test_pending_pos_returns_source_docs_for_item_warehouse(self):
         payload = inventory_risk.get_item_pending_pos("test-item-005", "test-warehouse-west", 72)
         self.assertEqual(payload["totals"]["pending_po_count"], 2)
+        self.assertEqual(payload["totals"]["synthetic_fallback_count"], 0)
         self.assertEqual(payload["pending_pos"][0]["source_doctype"], "Purchase Order")
         self.assertTrue(payload["pending_pos"][0]["source_name"])
         self.assertTrue(payload["pending_pos"][0]["link_route"])
+        self.assertFalse(payload["pending_pos"][0]["is_synthetic_fallback"])
 
     def test_delayed_deliveries_include_traceability_contract(self):
         payload = inventory_risk.get_item_delayed_deliveries("test-item-005", "test-warehouse-west", 72)
         self.assertEqual(payload["totals"]["delayed_delivery_count"], 1)
+        self.assertEqual(payload["totals"]["synthetic_fallback_count"], 0)
         line = payload["delayed_deliveries"][0]
         self.assertEqual(line["delivery_id"], "DTL-TEST-0001")
         self.assertIn("po_number", line)
@@ -137,6 +140,7 @@ class TestS22PipelineDrilldownRealContract(unittest.TestCase):
         self.assertIn("source_doctype", line)
         self.assertIn("source_name", line)
         self.assertIn("link_route", line)
+        self.assertFalse(line["is_synthetic_fallback"])
 
 
 if __name__ == "__main__":
