@@ -309,6 +309,14 @@ def _is_enabled_user(user_id):
 	return bool(rows)
 
 
+def _doctype_has_field(doctype, fieldname):
+	try:
+		meta = frappe.get_meta(doctype)
+		return bool(meta and meta.has_field(fieldname))
+	except Exception:
+		return False
+
+
 def _get_regional_manager_fallback_user():
 	user = str(REGIONAL_MANAGER_FALLBACK_EMAIL or "").strip()
 	if not user:
@@ -371,6 +379,7 @@ def _create_order_notification_log(order_name, for_user, subject):
 			{
 				"doctype": "Notification Log",
 				"for_user": for_user,
+				"from_user": frappe.session.user,
 				"type": "Alert",
 				"document_type": "BEI Store Order",
 				"document_name": order_name,
@@ -530,6 +539,8 @@ def _get_regional_manager_for_store(warehouse, area_supervisor=None):
 
 	for wh in warehouse_chain:
 		for fieldname in field_candidates:
+			if not _doctype_has_field("Warehouse", fieldname):
+				continue
 			candidate = frappe.db.get_value("Warehouse", wh, fieldname)
 			if candidate and _is_enabled_user(candidate) and _is_regional_manager_user(candidate):
 				return candidate, f"warehouse.{fieldname}"
@@ -554,11 +565,26 @@ def _get_regional_manager_for_store(warehouse, area_supervisor=None):
 	return None, "unmapped"
 
 
+def _get_regional_manager_fallback_excluding(exclude_user):
+	candidate = _get_regional_manager_fallback_user()
+	if candidate and candidate != exclude_user:
+		return candidate, "regional_manager_fallback"
+	return None, "unmapped"
+
+
 def _resolve_order_approval_routing(warehouse, is_emergency, submitted_after_cutoff):
 	area_approver = _get_area_supervisor_for_store(warehouse)
 	regional_approver, regional_source = _get_regional_manager_for_store(
 		warehouse, area_supervisor=area_approver
 	)
+
+	if area_approver and regional_approver and regional_approver == area_approver:
+		fallback_regional, fallback_source = _get_regional_manager_fallback_excluding(
+			exclude_user=area_approver
+		)
+		if fallback_regional:
+			regional_approver = fallback_regional
+			regional_source = fallback_source
 
 	requires_regional_after_area = bool(
 		cint(is_emergency)
@@ -1530,7 +1556,7 @@ def submit_order(
 					priority=queue_priority,
 				)
 				queue_name = queue_entry.name if queue_entry else None
-				_assign_order_for_approval(
+				assigned = _assign_order_for_approval(
 					order_name=order.name,
 					assigned_to=first_approver,
 					description=(
@@ -1539,7 +1565,11 @@ def submit_order(
 						else f"Store order {order.name} requires your Stage 1 approval before regional sign-off."
 					),
 				)
-				queue_status = "created"
+				queue_status = "created" if assigned else "failed"
+				if not assigned:
+					warning = (
+						f"Order {order.name} created, but approver assignment to {first_approver} failed."
+					)
 			else:
 				queue_status = "unmapped"
 				warning = "Order created but no approver mapping was found for this store."
@@ -1669,20 +1699,17 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		elif not flt(getattr(item, "qty_approved", 0)):
 			item.qty_approved = item.qty_requested
 
-	area_approver = _get_area_supervisor_for_store(order.store)
-	regional_approver, _regional_source = _get_regional_manager_for_store(
-		order.store, area_supervisor=area_approver
-	)
 	cutoff_hour, _cutoff_time = _get_order_cutoff()
 	order_created_dt = get_datetime(order.creation) if getattr(order, "creation", None) else now_datetime()
 	submitted_after_cutoff = order_created_dt.hour >= cutoff_hour
-	requires_dual_stage = bool(
-		cint(order.is_emergency)
-		and submitted_after_cutoff
-		and area_approver
-		and regional_approver
-		and regional_approver != area_approver
+	routing = _resolve_order_approval_routing(
+		warehouse=order.store,
+		is_emergency=order.is_emergency,
+		submitted_after_cutoff=submitted_after_cutoff,
 	)
+	area_approver = _get_area_supervisor_for_store(order.store)
+	regional_approver = routing.get("regional_approver")
+	requires_dual_stage = bool(routing.get("requires_regional_after_area"))
 
 	current_stage = "single_step"
 	if assigned_approver and assigned_approver == area_approver:
@@ -1740,8 +1767,9 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 				f"Failed to create regional approval queue for order {order_name}",
 				"Store Order Regional Queue Error",
 			)
+		assigned_ok = False
 		if queue_entry:
-			_assign_order_for_approval(
+			assigned_ok = _assign_order_for_approval(
 				order_name=order_name,
 				assigned_to=regional_approver,
 				description=(
@@ -1767,7 +1795,7 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 			"requires_regional_manager_review": True,
 			"approval_approver_source": "regional_manager",
 			"approval_assigned_approver": regional_approver,
-			"approval_queue_status": "created" if queue_entry else "failed",
+			"approval_queue_status": "created" if queue_entry and assigned_ok else "failed",
 			"material_request": None,
 			"dr_number": "",
 		}
