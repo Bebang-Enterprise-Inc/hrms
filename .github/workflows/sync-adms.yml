@@ -1,9 +1,8 @@
-name: Hourly ADMS Attendance Sync
+name: ADMS Attendance Sync (every 5 min)
 
 on:
   schedule:
-    # Every hour at :05 (PHT = UTC+8, so 00:05 UTC = 08:05 PHT)
-    - cron: "5 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       from_date:
