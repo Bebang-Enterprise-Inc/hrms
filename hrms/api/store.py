@@ -1646,6 +1646,14 @@ def get_order_history(store: str | None = None, limit: int | str = 20) -> dict:
 
 
 @frappe.whitelist()
+def get_order_review_queue(date: str | None = None, status: str | None = None) -> dict:
+	"""Canonical store namespace wrapper for order review queue."""
+	from hrms.api.ordering import get_order_review_queue as ordering_queue
+
+	return ordering_queue(date=date, status=status)
+
+
+@frappe.whitelist()
 def approve_order(order_name: str, approved_quantities: list | str | None = None) -> dict:
 	"""
 	Approve a store order with staged routing support.
@@ -1825,6 +1833,14 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		"material_request": mr_name,
 		"dr_number": mr_name or "",
 	}
+
+
+@frappe.whitelist()
+def reject_order(order_name: str, reason: str) -> dict:
+	"""Canonical store namespace wrapper for rejecting pending orders."""
+	from hrms.api.ordering import reject_order as ordering_reject
+
+	return ordering_reject(order_name=order_name, reason=reason)
 
 
 def _create_mr_for_store_order(order):
