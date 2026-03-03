@@ -252,6 +252,58 @@ doc_events = {
 	},
 }
 
+# ============================================================
+# BEI Brain S023B: Register brain_sync hook for all configured DocTypes
+# This adds on_event handler to doc_events for each DocType in
+# hrms.utils.brain_sync.DOCTYPE_MAP without overwriting existing hooks.
+# ============================================================
+_BRAIN_SYNC_HANDLER = "hrms.utils.brain_sync.on_event"
+_BRAIN_SYNC_EVENTS = [
+	"on_submit", "on_update_after_submit", "on_cancel", "after_insert",
+]
+_BRAIN_SYNC_DOCTYPES = [
+	# D01 - Procurement & Billing
+	"BEI Purchase Order", "BEI Purchase Requisition", "BEI Goods Receipt",
+	"BEI Invoice", "BEI Payment Request", "BEI Statement of Account",
+	"Expense Claim", "Employee Advance",
+	# D02 - Inventory & Warehouse
+	"BEI Cycle Count", "BEI Store Order", "BEI Store Receiving",
+	"BEI FQI Report", "BEI Pick List",
+	# D03 - Commissary & Production
+	"BEI Production", "BEI QC Form", "BEI Distribution Trip",
+	# D04 - HR Core & Workforce
+	"Attendance", "Attendance Request", "Leave Application", "Leave Allocation",
+	"BEI Overtime Request", "Shift Assignment", "Shift Request", "Overtime Slip",
+	"BEI Official Business", "Salary Slip", "Payroll Entry",
+	"Employee Separation", "Employee Transfer", "Employee Promotion",
+	"BEI Transfer Request", "BEI HR Personnel Action",
+	"BEI Incident Report", "BEI Notice to Explain", "BEI Notice of Decision",
+	"Job Applicant", "Job Offer", "Employee Onboarding", "Appraisal",
+	"BEI Expense Request", "BEI Petty Cash Fund",
+	# D05 - Projects & Maintenance
+	"BEI Maintenance Request", "BEI Maintenance Completion",
+	"BEI Project", "BEI Site Inspection",
+	# D06 - Integrations & Platform
+	"BEI Announcement", "BEI POS Upload",
+	# D07 - Finance & Analytics
+	"BEI Store Opening Report", "BEI Store Closing Report",
+	"BEI Bank Deposit", "BEI Store Visit Report", "BEI Mid-Shift Handover",
+]
+
+for _dt in _BRAIN_SYNC_DOCTYPES:
+	if _dt not in doc_events:
+		doc_events[_dt] = {}
+	for _evt in _BRAIN_SYNC_EVENTS:
+		existing = doc_events[_dt].get(_evt)
+		if existing is None:
+			doc_events[_dt][_evt] = _BRAIN_SYNC_HANDLER
+		elif isinstance(existing, str):
+			if existing != _BRAIN_SYNC_HANDLER:
+				doc_events[_dt][_evt] = [existing, _BRAIN_SYNC_HANDLER]
+		elif isinstance(existing, list):
+			if _BRAIN_SYNC_HANDLER not in existing:
+				existing.append(_BRAIN_SYNC_HANDLER)
+
 # Scheduled Tasks
 # ---------------
 
