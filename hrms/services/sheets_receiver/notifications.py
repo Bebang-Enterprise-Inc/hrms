@@ -438,6 +438,87 @@ def send_sheets_sync_critical_alert(
 		return None
 
 
+def send_sheets_sync_critical_alert(
+    spreadsheet_name: str,
+    sheet_name: str,
+    trigger: str,
+    reasons: List[str],
+    rows_processed: int,
+    rows_failed: int,
+    errors: Optional[List[str]] = None,
+    alerts: Optional[List[str]] = None,
+) -> Optional[str]:
+    """
+    Send critical alert for Sheets sync failures and suspicious change patterns.
+
+    This path is used by the sheet sync pipeline to escalate operational issues
+    that can impact finance/store reporting.
+    """
+    errors = errors or []
+    alerts = alerts or []
+
+    if not (reasons or rows_failed or errors or alerts):
+        return None
+
+    reason_map = {
+        "sync_exception": "Sync process exception",
+        "sync_result_failed": "Frappe sync returned failed status",
+        "rows_failed": "One or more rows failed during sync",
+        "sync_errors_reported": "Sync result returned error details",
+        "suspicious_change_alert": "Suspicious data-change pattern detected",
+    }
+
+    try:
+        chat = get_chat_service()
+        reason_lines = [
+            f"  - {reason_map.get(reason, reason)}"
+            for reason in sorted(set(reasons))
+        ]
+        error_lines = [f"  - {err}" for err in errors[:3]]
+        alert_lines = [f"  - {msg}" for msg in alerts[:3]]
+
+        message_parts = [
+            "*SHEETS SYNC CRITICAL ALERT*",
+            "",
+            f"*Sheet:* {spreadsheet_name} / {sheet_name}",
+            f"*Trigger:* {trigger}",
+            f"*Rows:* processed={rows_processed}, failed={rows_failed}",
+        ]
+
+        if reason_lines:
+            message_parts.extend(["", "*Reasons:*", *reason_lines])
+        if error_lines:
+            message_parts.extend(["", "*Top Errors:*", *error_lines])
+        if alert_lines:
+            message_parts.extend(["", "*Change Alerts:*", *alert_lines])
+
+        message_parts.extend(["", f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"])
+        message = "\n".join(message_parts)
+
+        result = chat.spaces().messages().create(
+            parent=OPS_SPACE,
+            body={"text": message},
+        ).execute()
+        message_id = result.get("name")
+
+        # Best-effort audit trail; never block sync path.
+        try:
+            db = get_db()
+            db.log_notification(
+                message_id=message_id,
+                message_type="sheets_sync_critical",
+                message_preview=message[:100],
+            )
+        except Exception as log_error:
+            logger.warning(f"Failed to log critical sync alert to database: {log_error}")
+
+        logger.info(f"Sent sheets sync critical alert for {spreadsheet_name}/{sheet_name}")
+        return message_id
+    except Exception as e:
+        logger.error(f"Failed to send sheets sync critical alert: {e}")
+        return None
+
+
 def delete_notification(message_id: str) -> bool:
 	"""
 	Delete a notification message from Google Chat.
