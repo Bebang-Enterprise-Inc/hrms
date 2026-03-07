@@ -28,8 +28,9 @@ def _load_hr_reports_module():
 			return "'" + str(value).replace("\\", "\\\\").replace("'", "\\'") + "'"
 
 	frappe.whitelist = whitelist
-	frappe.db = _DB()
 	frappe._ = lambda text: text
+	frappe.local = types.SimpleNamespace(db=_DB())
+	frappe.__dict__["db"] = frappe.local.db
 
 	utils.add_days = lambda value, _days: value
 	utils.date_diff = lambda *_args, **_kwargs: 0
