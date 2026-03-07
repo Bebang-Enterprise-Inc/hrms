@@ -4,12 +4,12 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, date_diff, flt, getdate, today
 
+from hrms.api import leave_dashboard as leave_dashboard_api
 from hrms.utils.api_helpers import (
 	_check_hr_permission,
 	_paginate,
 	_validate_date_range,
 )
-from hrms.api import leave_dashboard as leave_dashboard_api
 
 
 @frappe.whitelist()
@@ -568,7 +568,14 @@ def get_overtime_report(
 
 
 def get_employee_permission_query_conditions(user: str) -> str:
-	return "(`tabEmployee`.name NOT LIKE 'TEST-%')"
+	base_condition = "(`tabEmployee`.name NOT LIKE 'TEST-%')"
+	if not user or user == "Guest":
+		return base_condition
+
+	# Keep demo employees hidden from general list views, but allow a user to
+	# resolve their own linked test employee record for self-service flows.
+	escaped_user = frappe.db.escape(user)
+	return f"({base_condition} OR `tabEmployee`.user_id = {escaped_user})"
 
 
 @frappe.whitelist()
@@ -614,6 +621,7 @@ def get_training_completion_by_store(training_event_type: str | None = None) -> 
 		)
 
 	return {"success": True, "data": data}
+
 
 @frappe.whitelist()
 def get_dashboard_data(
