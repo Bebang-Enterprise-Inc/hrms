@@ -263,35 +263,71 @@ doc_events = {
 # ============================================================
 _BRAIN_SYNC_HANDLER = "hrms.utils.brain_sync.on_event"
 _BRAIN_SYNC_EVENTS = [
-	"on_submit", "on_update_after_submit", "on_cancel", "after_insert",
+	"on_submit",
+	"on_update_after_submit",
+	"on_cancel",
+	"after_insert",
 ]
 _BRAIN_SYNC_DOCTYPES = [
 	# D01 - Procurement & Billing
-	"BEI Purchase Order", "BEI Purchase Requisition", "BEI Goods Receipt",
-	"BEI Invoice", "BEI Payment Request", "BEI Statement of Account",
-	"Expense Claim", "Employee Advance",
+	"BEI Purchase Order",
+	"BEI Purchase Requisition",
+	"BEI Goods Receipt",
+	"BEI Invoice",
+	"BEI Payment Request",
+	"BEI Statement of Account",
+	"Expense Claim",
+	"Employee Advance",
 	# D02 - Inventory & Warehouse
-	"BEI Cycle Count", "BEI Store Order", "BEI Store Receiving",
-	"BEI FQI Report", "BEI Pick List",
+	"BEI Cycle Count",
+	"BEI Store Order",
+	"BEI Store Receiving",
+	"BEI FQI Report",
+	"BEI Pick List",
 	# D03 - Commissary & Production
-	"BEI Production", "BEI QC Form", "BEI Distribution Trip",
+	"BEI Production",
+	"BEI QC Form",
+	"BEI Distribution Trip",
 	# D04 - HR Core & Workforce
-	"Attendance", "Attendance Request", "Leave Application", "Leave Allocation",
-	"BEI Overtime Request", "Shift Assignment", "Shift Request", "Overtime Slip",
-	"BEI Official Business", "Salary Slip", "Payroll Entry",
-	"Employee Separation", "Employee Transfer", "Employee Promotion",
-	"BEI Transfer Request", "BEI HR Personnel Action",
-	"BEI Incident Report", "BEI Notice to Explain", "BEI Notice of Decision",
-	"Job Applicant", "Job Offer", "Employee Onboarding", "Appraisal",
-	"BEI Expense Request", "BEI Petty Cash Fund",
+	"Attendance",
+	"Attendance Request",
+	"Leave Application",
+	"Leave Allocation",
+	"BEI Overtime Request",
+	"Shift Assignment",
+	"Shift Request",
+	"Overtime Slip",
+	"BEI Official Business",
+	"Salary Slip",
+	"Payroll Entry",
+	"Employee Separation",
+	"Employee Transfer",
+	"Employee Promotion",
+	"BEI Transfer Request",
+	"BEI HR Personnel Action",
+	"BEI Incident Report",
+	"BEI Notice to Explain",
+	"BEI Notice of Decision",
+	"Job Applicant",
+	"Job Offer",
+	"Employee Onboarding",
+	"Appraisal",
+	"BEI Expense Request",
+	"BEI Petty Cash Fund",
 	# D05 - Projects & Maintenance
-	"BEI Maintenance Request", "BEI Maintenance Completion",
-	"BEI Project", "BEI Site Inspection",
+	"BEI Maintenance Request",
+	"BEI Maintenance Completion",
+	"BEI Project",
+	"BEI Site Inspection",
 	# D06 - Integrations & Platform
-	"BEI Announcement", "BEI POS Upload",
+	"BEI Announcement",
+	"BEI POS Upload",
 	# D07 - Finance & Analytics
-	"BEI Store Opening Report", "BEI Store Closing Report",
-	"BEI Bank Deposit", "BEI Store Visit Report", "BEI Mid-Shift Handover",
+	"BEI Store Opening Report",
+	"BEI Store Closing Report",
+	"BEI Bank Deposit",
+	"BEI Store Visit Report",
+	"BEI Mid-Shift Handover",
 ]
 
 for _dt in _BRAIN_SYNC_DOCTYPES:
@@ -340,6 +376,10 @@ scheduler_events = {
 		],
 		# Monthly billing generation: 6 AM on 1st of each month
 		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
+		# Discount audit workbook: 12:50 AM PHT after Supabase alert refresh at 12:35 AM PHT
+		"50 16 * * *": ["hrms.api.discount_abuse.scheduled_generate_daily_discount_audit_report"],
+		# Discount alert notifications: 1:05 AM PHT after workbook generation
+		"5 17 * * *": ["hrms.api.discount_abuse.scheduled_send_critical_discount_alert_notifications"],
 	},
 	"hourly_long": [
 		"hrms.hr.doctype.shift_type.shift_type.update_last_sync_of_checkin",
