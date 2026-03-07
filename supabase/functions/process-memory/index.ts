@@ -101,7 +101,12 @@ Thought: "${text}"`,
       throw new Error(`Anthropic ${resp.status}: ${await resp.text()}`);
     }
     const data = await resp.json();
-    const parsed = JSON.parse(data.content[0].text);
+    // Strip markdown code blocks if present (Haiku sometimes wraps in ```json...```)
+    let rawText = data.content[0].text.trim();
+    if (rawText.startsWith("```")) {
+      rawText = rawText.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+    }
+    const parsed = JSON.parse(rawText);
     // Validate structure
     return {
       people: Array.isArray(parsed.people) ? parsed.people : [],
@@ -221,8 +226,9 @@ serve(async (req: Request) => {
     );
   } catch (e) {
     console.error("process-memory error:", e);
+    const errMsg = e instanceof Error ? e.message : JSON.stringify(e);
     return new Response(
-      JSON.stringify({ error: String(e) }),
+      JSON.stringify({ error: errMsg }),
       { status: 500 }
     );
   }

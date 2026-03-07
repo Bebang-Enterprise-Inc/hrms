@@ -1,3 +1,8 @@
+---
+name: test-full-cycle
+description: Use when running autonomous end-to-end QA loops that test full workflows, verify backend state, and iterate until pass.
+---
+
 # E2E Full Cycle Testing - Autonomous QA Agent
 
 ## Purpose

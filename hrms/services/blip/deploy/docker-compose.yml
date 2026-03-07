@@ -36,6 +36,10 @@ services:
       # Google Chat verification (optional)
       GOOGLE_CHAT_PROJECT_NUMBER: ${GOOGLE_CHAT_PROJECT_NUMBER:-}
 
+      # BEI Brain (Supabase) - for /remember command
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+
     volumes:
       # Logs
       - ./logs:/app/logs

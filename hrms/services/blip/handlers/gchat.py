@@ -198,10 +198,13 @@ async def handle_remember(thought: str, user_email: str) -> dict:
         logger.error("BEI Brain: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not configured")
         return {"text": "Brain not configured. Missing Supabase credentials."}
 
+    # user_id must be UUID (memories table constraint); pass email in metadata
+    SYSTEM_USER_ID = "00000000-0000-0000-0000-000000000001"
     payload = json.dumps({
         "content": thought,
         "source": "google_chat",
-        "user_email": user_email,
+        "user_id": SYSTEM_USER_ID,
+        "tags": [f"author:{user_email}"],
     }).encode()
 
     req = UrlRequest(
