@@ -38,6 +38,7 @@ env:
   DOCKER_IMAGE: samkarazi/bebang-erpnext-hrms
   DOCKER_TAG: v15
   FRAPPE_SITE: hrms.bebang.ph
+  SUPABASE_URL: https://csnniykjrychgajfrgua.supabase.co
 
 jobs:
   guard:
@@ -226,6 +227,39 @@ jobs:
           aws ssm wait command-executed \
             --command-id "$COMMAND_ID" \
             --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
+
+      - name: Set Supabase runtime env on services
+        run: |
+          echo "🗄️ Setting Supabase runtime environment variables on Frappe services..."
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "if [ -n \"${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}\" ]; then",
+              "  for SERVICE in frappe_backend frappe_queue-short frappe_queue-long frappe_scheduler; do",
+              "    docker service update --env-rm SUPABASE_URL --env-rm SUPABASE_SERVICE_ROLE_KEY --env-add SUPABASE_URL=${{ env.SUPABASE_URL }} --env-add SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }} $SERVICE --detach",
+              "  done",
+              "  echo \"✅ Supabase runtime env set on backend services\"",
+              "else",
+              "  echo \"❌ SUPABASE_SERVICE_ROLE_KEY not set, failing deployment\"",
+              "  exit 1",
+              "fi"
+            ]' \
+            --output text \
+            --query 'Command.CommandId')
+
+          echo "📋 Supabase Env Command ID: $COMMAND_ID"
+
+          aws ssm wait command-executed \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}"
+
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
+            --query '[Status, StandardOutputContent, StandardErrorContent]' \
+            --output text
 
       - name: Fix nginx site header
         run: |
