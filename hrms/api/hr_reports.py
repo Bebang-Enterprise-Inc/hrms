@@ -568,7 +568,14 @@ def get_overtime_report(
 
 
 def get_employee_permission_query_conditions(user: str) -> str:
-	return "(`tabEmployee`.name NOT LIKE 'TEST-%')"
+	base_condition = "(`tabEmployee`.name NOT LIKE 'TEST-%')"
+	if not user or user == "Guest":
+		return base_condition
+
+	# Keep demo employees hidden from general list views, but allow a user to
+	# resolve their own linked test employee record for self-service flows.
+	escaped_user = frappe.db.escape(user)
+	return f"({base_condition} OR `tabEmployee`.user_id = {escaped_user})"
 
 
 @frappe.whitelist()
