@@ -1,11 +1,11 @@
 FROM python:3.12-slim
 
-# Install system dependencies (curl needed for Claude CLI and supercronic)
-RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+# Install system dependencies (curl + bash needed for Claude CLI, supercronic)
+RUN apt-get update && apt-get install -y --no-install-recommends curl bash && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Claude CLI
-RUN curl -fsSL https://claude.ai/install.sh | sh
+# Install Claude CLI (install script requires bash, not sh)
+RUN curl -fsSL https://claude.ai/install.sh | bash
 
 # Install supercronic (Docker-native cron)
 RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v0.2.33/supercronic-linux-amd64 && \
