@@ -7,11 +7,15 @@ Contains:
 Uses service account with Chat Bot scope (NOT DWD).
 """
 
+import os
+
 from claude_agent_sdk import tool
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
-CREDENTIALS_PATH = "F:/Dropbox/Projects/BEI-ERP/credentials/task-manager-service.json"
+CREDENTIALS_PATH = os.environ.get(
+    "GOOGLE_CREDENTIALS_PATH", "credentials/task-manager-service.json"
+)
 BOT_SCOPES = ["https://www.googleapis.com/auth/chat.bot"]
 NOTIFICATION_SPACE = "spaces/AAQABiNmpBg"
 

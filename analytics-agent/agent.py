@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import platform
 import subprocess
 import sys
 from datetime import datetime
@@ -62,10 +63,13 @@ async def main():
     try:
         # 1. Refresh Supabase data
         print("Syncing Meta Ads data to Supabase...")
+        subprocess_kwargs: dict = {}
+        if platform.system() == "Windows":
+            subprocess_kwargs["creationflags"] = 0x08000000  # CREATE_NO_WINDOW
         result = subprocess.run(
             [sys.executable, str(Path(__file__).parent.parent / "scripts" / "sync_meta_ads_to_supabase.py")],
             capture_output=True, text=True, check=True,
-            creationflags=0x08000000,  # CREATE_NO_WINDOW (Windows)
+            **subprocess_kwargs,
         )
         if "failed" in result.stdout.lower():
             run_log["errors"].append(f"Sync partial failure: {result.stdout[-500:]}")

@@ -9,6 +9,8 @@ gate is the only line of defence.
 from __future__ import annotations
 
 import json
+import os
+import platform
 import subprocess
 import urllib.error
 import urllib.parse
@@ -36,11 +38,18 @@ _supabase_url: str | None = None
 _service_role_key: str | None = None
 
 
-def _get_doppler_secret(name: str) -> str:
-    """Fetch a single secret from Doppler (bei-erp / dev)."""
+def _get_secret(name: str) -> str:
+    """Get a secret from env var (Docker .env) or Doppler CLI fallback (local dev)."""
+    val = os.environ.get(name)
+    if val:
+        return val
+    # Fallback: Doppler CLI (local Windows dev)
+    subprocess_kwargs: dict = {}
+    if platform.system() == "Windows":
+        subprocess_kwargs["creationflags"] = 0x08000000  # CREATE_NO_WINDOW
     result = subprocess.run(
         [
-            "C:/Users/Sam/bin/doppler.exe",
+            "doppler",
             "secrets",
             "get",
             name,
@@ -53,7 +62,7 @@ def _get_doppler_secret(name: str) -> str:
         capture_output=True,
         text=True,
         check=True,
-        creationflags=0x08000000,  # CREATE_NO_WINDOW
+        **subprocess_kwargs,
     )
     return result.stdout.strip()
 
@@ -63,9 +72,9 @@ def _ensure_secrets() -> tuple[str, str]:
     global _supabase_url, _service_role_key  # noqa: PLW0603
 
     if _supabase_url is None:
-        _supabase_url = _get_doppler_secret("SUPABASE_URL")
+        _supabase_url = _get_secret("SUPABASE_URL")
     if _service_role_key is None:
-        _service_role_key = _get_doppler_secret("SUPABASE_SERVICE_ROLE_KEY")
+        _service_role_key = _get_secret("SUPABASE_SERVICE_ROLE_KEY")
 
     return _supabase_url, _service_role_key
 

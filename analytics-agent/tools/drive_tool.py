@@ -12,7 +12,9 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-CREDENTIALS_PATH = "F:/Dropbox/Projects/BEI-ERP/credentials/task-manager-service.json"
+CREDENTIALS_PATH = os.environ.get(
+    "GOOGLE_CREDENTIALS_PATH", "credentials/task-manager-service.json"
+)
 DELEGATED_USER = "sam@bebang.ph"
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 

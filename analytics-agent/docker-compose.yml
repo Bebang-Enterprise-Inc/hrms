@@ -1,0 +1,17 @@
+services:
+  analytics-agent:
+    build: .
+    container_name: bei-analytics-agent
+    env_file: .env
+    volumes:
+      - ./credentials:/app/credentials:ro
+      - ./runs:/app/analytics-agent/runs
+      - ./claude-auth:/root/.claude
+      - ../scripts/sync_meta_ads_to_supabase.py:/app/scripts/sync_meta_ads_to_supabase.py:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/analytics-agent/runs/cron.log"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

@@ -1,0 +1,3 @@
+# BEI Analytics Agent — Weekly Meta Ads Intelligence Report
+# Sunday 11:00 UTC = 7:00 PM PHT
+0 11 * * 0 cd /app && python analytics-agent/agent.py >> /app/analytics-agent/runs/cron.log 2>&1
