@@ -53,6 +53,7 @@ DEVICE_TO_STORE = {
     'UDP3252900302': 'ARANETA GATEWAY',
     'UDP3252900305': 'VISTA MALL TAGUIG',
     'UDP3252900163': 'MYTOWN',
+    'UDP3252900251': 'GREENHILLS',
 }
 
 def get_store_name(serial_number: str) -> str:
