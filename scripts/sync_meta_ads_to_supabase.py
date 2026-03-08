@@ -35,11 +35,19 @@ SUPABASE_PROJECT = 'bei-erp'
 
 
 def get_secret(name):
-    """Fetch secret from Doppler."""
+    """Get secret from env var (Docker .env) or Doppler CLI fallback (local dev)."""
+    import os, platform
+    val = os.environ.get(name)
+    if val:
+        return val
+    subprocess_kwargs = {}
+    if platform.system() == "Windows":
+        subprocess_kwargs["creationflags"] = 0x08000000  # CREATE_NO_WINDOW
     result = subprocess.run(
-        ['C:/Users/Sam/bin/doppler.exe', 'secrets', 'get', name,
+        ['doppler', 'secrets', 'get', name,
          '--project', 'bei-erp', '--config', 'dev', '--plain'],
-        capture_output=True, text=True
+        capture_output=True, text=True,
+        **subprocess_kwargs,
     )
     return result.stdout.strip()
 
