@@ -155,6 +155,64 @@ def resolve_warehouse(store_or_branch):
 	frappe.throw(_("Could not find Store: {0}").format(store_or_branch))
 
 
+def resolve_employee_store_context(employee):
+	"""Resolve a warehouse for an employee, falling back to the reporting chain.
+
+	This keeps store-scoped workflows usable when a store employee is linked to a
+	reporting manager with a branch but the employee record itself is still missing
+	its direct branch assignment.
+	"""
+	employee_row = dict(employee or {})
+	visited = set()
+	manager_name = str(employee_row.get("reports_to") or "").strip()
+	branch = str(employee_row.get("branch") or "").strip()
+	resolved_via = "employee_branch" if branch else None
+	resolved_manager = None
+
+	while not branch and manager_name and manager_name not in visited:
+		visited.add(manager_name)
+		manager = frappe.db.get_value(
+			"Employee", manager_name, ["name", "branch", "reports_to"], as_dict=True
+		)
+		if not manager:
+			break
+		manager_branch = str(manager.get("branch") or "").strip()
+		if manager_branch:
+			branch = manager_branch
+			resolved_via = "reports_to_branch"
+			resolved_manager = manager.get("name")
+			break
+		manager_name = str(manager.get("reports_to") or "").strip()
+
+	if not branch:
+		return {
+			"branch": None,
+			"warehouse": None,
+			"warehouse_name": None,
+			"resolved_via": resolved_via or "unresolved",
+			"resolved_manager": resolved_manager,
+		}
+
+	try:
+		warehouse = resolve_warehouse(branch)
+	except Exception:
+		return {
+			"branch": branch,
+			"warehouse": None,
+			"warehouse_name": None,
+			"resolved_via": resolved_via or "employee_branch",
+			"resolved_manager": resolved_manager,
+		}
+
+	return {
+		"branch": branch,
+		"warehouse": warehouse,
+		"warehouse_name": frappe.db.get_value("Warehouse", warehouse, "warehouse_name") or warehouse,
+		"resolved_via": resolved_via or "employee_branch",
+		"resolved_manager": resolved_manager,
+	}
+
+
 def _normalize_store_key(value):
 	return re.sub(r"[^A-Z0-9]", "", str(value or "").upper())
 
@@ -1135,13 +1193,20 @@ def get_user_store():
 		# Store staff/supervisors get their branch from Employee record
 		role = "Store Supervisor" if "Store Supervisor" in user_roles else "Store Staff"
 		employee = frappe.db.get_value(
-			"Employee", {"user_id": user, "status": "Active"}, ["branch", "employee_name"], as_dict=True
+			"Employee",
+			{"user_id": user, "status": "Active"},
+			["name", "branch", "employee_name", "reports_to"],
+			as_dict=True,
 		)
-		if employee and employee.branch:
-			warehouse = resolve_warehouse(employee.branch)
-			if warehouse:
-				warehouse_name = frappe.db.get_value("Warehouse", warehouse, "warehouse_name") or warehouse
-				stores = [{"name": warehouse, "warehouse_name": warehouse_name}]
+		if employee:
+			store_context = resolve_employee_store_context(employee)
+			if store_context.get("warehouse"):
+				stores = [
+					{
+						"name": store_context["warehouse"],
+						"warehouse_name": store_context["warehouse_name"],
+					}
+				]
 
 	# System / HR / Regional fallback - return all stores
 	if not stores and (
