@@ -149,8 +149,6 @@ def test_get_assigned_stores_returns_count_type_metadata_for_store_staff():
 
 	result = inventory.get_assigned_stores()
 
-	assert result["stores"] == [
-		{"store": "TEST-STORE-BGC - BEI", "store_name": "TEST-STORE-BGC"}
-	]
+	assert result["stores"] == [{"store": "TEST-STORE-BGC - BEI", "store_name": "TEST-STORE-BGC"}]
 	assert result["allowed_count_types"] == [inventory.COUNT_TYPE_STORE_MONTHLY]
 	assert result["default_count_type"] == inventory.COUNT_TYPE_STORE_MONTHLY
