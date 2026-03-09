@@ -6,11 +6,13 @@ Projects API
 Handles maintenance request management for the Projects team dashboard at my.bebang.ph
 """
 
+import json
+import math
+import re
+
 import frappe
 from frappe import _
 from frappe.utils import nowdate, now_datetime, getdate, date_diff, flt, sbool
-import json
-import math
 
 # RBAC AUDIT 2026-02-20: All endpoints reviewed. See G-031 in sprint-04-maintenance.md.
 # Maintenance endpoints: MAINTENANCE_STAFF_ROLES for write, authenticated-only for read
@@ -24,6 +26,14 @@ import math
 # - after_photos on completion: pass as single string (first/only camera capture)
 # - Backend saves via save_base64_image() -- returns /files/... URL
 # - Nested dicts like {"photo": {"photo": "data:..."}} are legacy -- frontend must NOT send these
+
+
+def _normalize_store_identity(value):
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    text = re.sub(r"\s*-\s*(BEI|Bebang Enterprise Inc\.?)\s*$", "", text, flags=re.IGNORECASE)
+    return re.sub(r"[^A-Z0-9]", "", text.upper())
 
 
 # ==============================================================================
@@ -1187,17 +1197,25 @@ def acknowledge_maintenance_charge(request_id):
     if not frappe.db.exists("BEI Maintenance Request", request_id):
         frappe.throw(_("Maintenance request {0} not found").format(request_id))
 
+    doc = frappe.get_doc("BEI Maintenance Request", request_id)
+
     # B-10: Store-binding check — store roles can only acknowledge their own store's charges
     bypass_roles = ["System Manager", "Projects Manager"]
     if not any(role in user_roles for role in bypass_roles):
         user_employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
         if user_employee:
             user_branch = frappe.db.get_value("Employee", user_employee, "branch")
-            doc_store = frappe.db.get_value("BEI Maintenance Request", request_id, "store")
-            if user_branch and doc_store and user_branch != doc_store:
+            user_branch_key = _normalize_store_identity(user_branch)
+            doc_store_keys = {
+                key
+                for key in (
+                    _normalize_store_identity(getattr(doc, "store", None)),
+                    _normalize_store_identity(getattr(doc, "store_code", None)),
+                )
+                if key
+            }
+            if user_branch_key and doc_store_keys and user_branch_key not in doc_store_keys:
                 frappe.throw(_("You can only acknowledge charges for your own store"), frappe.PermissionError)
-
-    doc = frappe.get_doc("BEI Maintenance Request", request_id)
 
     if not doc.charge_to_store:
         frappe.throw(_("This request has no charge to acknowledge"))
