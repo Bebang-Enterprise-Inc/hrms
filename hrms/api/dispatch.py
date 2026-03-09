@@ -48,6 +48,31 @@ def _set_if_column(doc: Any, fieldname: str, value: Any):
 		setattr(doc, fieldname, value)
 
 
+def _get_record_value(record: Any, fieldname: str) -> Any:
+	"""Read a field from dict-like or object records."""
+	if not fieldname:
+		return None
+	if isinstance(record, dict):
+		return record.get(fieldname)
+	return getattr(record, fieldname, None)
+
+
+def _get_employee_phone_field() -> str | None:
+	"""Return the live employee mobile-number column across schema revisions."""
+	for fieldname in ("cell_number", "cell_phone"):
+		if _has_column("Employee", fieldname):
+			return fieldname
+	return None
+
+
+def _get_employee_phone(record: Any) -> str:
+	"""Expose the portal contract as cell_phone regardless of backend field name."""
+	phone_field = _get_employee_phone_field()
+	if not phone_field:
+		return ""
+	return str(_get_record_value(record, phone_field) or "")
+
+
 @frappe.whitelist()
 def get_trips(date: str | None = None, status: str | None = None):
 	"""Get dispatch trips for a date. Defaults to today if no date specified."""
@@ -1405,13 +1430,25 @@ def reorder_stops(route_name: str, stop_order_map: dict[str, int] | str):
 def get_driver_list():
 	"""Get list of available drivers (employees with driver designation)."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view driver list")
+	phone_field = _get_employee_phone_field()
+	fields = ["name", "employee_name"]
+	if phone_field:
+		fields.append(phone_field)
 
-	drivers = frappe.get_all(
+	driver_rows = frappe.get_all(
 		"Employee",
 		filters={"status": "Active", "designation": ["in", ["Driver", "Delivery Driver", "Truck Driver"]]},
-		fields=["name", "employee_name", "cell_phone"],
+		fields=fields,
 		order_by="employee_name",
 	)
+	drivers = [
+		{
+			"name": row.name,
+			"employee_name": row.employee_name,
+			"cell_phone": _get_employee_phone(row),
+		}
+		for row in driver_rows
+	]
 	return {"drivers": drivers}
 
 
@@ -1440,12 +1477,16 @@ def get_available_drivers(date: str | None = None):
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view available drivers")
 
 	trip_date = date or nowdate()
+	phone_field = _get_employee_phone_field()
+	driver_fields = ["name", "employee_name", "designation", "status"]
+	if phone_field:
+		driver_fields.append(phone_field)
 
 	# All active employees with driver designations
 	all_drivers = frappe.get_all(
 		"Employee",
 		filters={"status": "Active", "designation": ["in", DRIVER_DESIGNATIONS]},
-		fields=["name", "employee_name", "designation", "cell_phone", "status"],
+		fields=driver_fields,
 		order_by="employee_name",
 	)
 
@@ -1470,7 +1511,7 @@ def get_available_drivers(date: str | None = None):
 			"employee": driver.name,
 			"employee_name": driver.employee_name,
 			"designation": driver.designation,
-			"cell_phone": driver.cell_phone or "",
+			"cell_phone": _get_employee_phone(driver),
 			"status": driver_status,
 			"trip": None,
 		}
@@ -1596,10 +1637,14 @@ def get_driver_schedule(employee: str, date_from: str | None = None, date_to: st
 	else:
 		# Default to Sunday of current week
 		end = add_days(start, 6)
+	phone_field = _get_employee_phone_field()
+	employee_fields = ["name", "employee_name", "designation", "status"]
+	if phone_field:
+		employee_fields.append(phone_field)
 
 	# Validate employee
 	emp = frappe.db.get_value(
-		"Employee", employee, ["name", "employee_name", "designation", "status", "cell_phone"], as_dict=True
+		"Employee", employee, employee_fields, as_dict=True
 	)
 	if not emp:
 		frappe.throw(_("Employee {0} not found").format(employee))
@@ -1649,7 +1694,7 @@ def get_driver_schedule(employee: str, date_from: str | None = None, date_to: st
 			"employee_name": emp.employee_name,
 			"designation": emp.designation,
 			"status": emp.status,
-			"cell_phone": emp.cell_phone or "",
+			"cell_phone": _get_employee_phone(emp),
 		},
 		"date_from": str(start),
 		"date_to": str(end),

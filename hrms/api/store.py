@@ -111,6 +111,17 @@ REGIONAL_MANAGER_FALLBACK_EMAIL = "edlice@bebang.ph"
 SYSTEM_APPROVER_ROLES = {"System Manager", "Administrator"}
 
 
+def _has_column(doctype: str, fieldname: str) -> bool:
+	"""Return True when the runtime table includes the requested column."""
+	has_column = getattr(frappe.db, "has_column", None)
+	if not callable(has_column):
+		return False
+	try:
+		return bool(has_column(doctype, fieldname))
+	except Exception:
+		return False
+
+
 def validate_store_ops_role():
 	"""Validate that current user has a store operations role.
 	Raises PermissionError if user lacks required role."""
@@ -3517,20 +3528,17 @@ def get_closing_report_status(store: str | None = None, date: str | None = None)
 		frappe.throw(_("Store is required"))
 	if not date:
 		date = nowdate()
+	required_fields = ["name", "stage_completed", "status", "pos_down", "cash_variance"]
+	optional_fields = [
+		fieldname
+		for fieldname in ("inventory_variance_total", "cashier_signoff", "production_signoff")
+		if _has_column("BEI Store Closing Report", fieldname)
+	]
 
 	report = frappe.db.get_value(
 		"BEI Store Closing Report",
 		{"store": store, "report_date": date},
-		[
-			"name",
-			"stage_completed",
-			"status",
-			"pos_down",
-			"cash_variance",
-			"inventory_variance_total",
-			"cashier_signoff",
-			"production_signoff",
-		],
+		required_fields + optional_fields,
 		as_dict=True,
 	)
 
@@ -3539,14 +3547,14 @@ def get_closing_report_status(store: str | None = None, date: str | None = None)
 
 	return {
 		"exists": True,
-		"name": report.name,
-		"stage_completed": report.stage_completed,
-		"status": report.status,
-		"pos_down": report.pos_down,
-		"cash_variance": report.cash_variance,
-		"inventory_variance_total": report.inventory_variance_total,
-		"cashier_signoff": report.cashier_signoff,
-		"production_signoff": report.production_signoff,
+		"name": report.get("name"),
+		"stage_completed": report.get("stage_completed"),
+		"status": report.get("status"),
+		"pos_down": report.get("pos_down"),
+		"cash_variance": report.get("cash_variance"),
+		"inventory_variance_total": flt(report.get("inventory_variance_total") or 0),
+		"cashier_signoff": cint(report.get("cashier_signoff") or 0),
+		"production_signoff": cint(report.get("production_signoff") or 0),
 	}
 
 

@@ -82,6 +82,31 @@ def _set_record_value(record, fieldname, value):
 		setattr(record, fieldname, value)
 
 
+def _has_column(doctype: str, fieldname: str) -> bool:
+	"""Return True when the runtime table really has the requested column."""
+	has_column = getattr(frappe.db, "has_column", None)
+	if not callable(has_column):
+		return False
+	try:
+		return bool(has_column(doctype, fieldname))
+	except Exception:
+		return False
+
+
+def _trip_partner_field_sql(trip_alias: str = "dt", vehicle_alias: str = "veh") -> str:
+	"""Resolve the live 3PL partner field across legacy and current trip schemas."""
+	if _has_column("BEI Distribution Trip", "vehicle_owner"):
+		return f"{trip_alias}.vehicle_owner"
+	return f"{vehicle_alias}.threepl_partner"
+
+
+def _trip_vehicle_join_sql(trip_alias: str = "dt", vehicle_alias: str = "veh") -> str:
+	"""Join BEI Vehicle only when partner data moved off the trip record."""
+	if _has_column("BEI Distribution Trip", "vehicle_owner"):
+		return ""
+	return f" LEFT JOIN `tabBEI Vehicle` {vehicle_alias} ON {vehicle_alias}.name = {trip_alias}.vehicle"
+
+
 def _normalized_store_type(store_type=None, legacy_store_type_category=None):
 	"""Return canonical store_type from canonical or legacy value."""
 	return resolve_store_type(
@@ -927,24 +952,28 @@ def generate_3pl_reconciliation(month: int | str, year: int | str, partner: str)
 	month = int(month)
 	year = int(year)
 	start_date, end_date = _get_month_date_range(month, year)
+	partner_field = _trip_partner_field_sql()
+	vehicle_join = _trip_vehicle_join_sql()
 
-	# Fetch 3PL trips for the month (vehicle_owner matches the 3PL partner)
+	# Fetch 3PL trips for the month. Older builds stored the partner directly on
+	# the trip; current builds resolve it via the linked BEI Vehicle record.
 	trips_raw = frappe.db.sql(
-		"""
+		f"""
         SELECT
             dt.name AS trip_name,
             dt.trip_date AS date,
             dt.route AS zone,
             dt.cargo_type,
-            dt.vehicle_owner,
+            {partner_field} AS partner,
             dt.overtime_hours,
             dt.is_holiday_trip,
             dt.is_weekend_trip,
             GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
         FROM `tabBEI Distribution Trip` dt
+        {vehicle_join}
         LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
         WHERE dt.trip_date BETWEEN %(start_date)s AND %(end_date)s
-          AND dt.vehicle_owner = %(partner)s
+          AND COALESCE({partner_field}, '') = %(partner)s
           AND dt.docstatus = 1
         GROUP BY dt.name
         ORDER BY dt.trip_date ASC
@@ -1255,17 +1284,21 @@ def get_reconciliation_summary(month: int | str, year: int | str):
 
 	partners = ["RCS", "3MD", "COOLITZ", "PINNACLE"]
 	summary = []
+	partner_field = _trip_partner_field_sql()
+	vehicle_join = _trip_vehicle_join_sql()
 
 	# Batch trip counts for all partners in a single query (avoids N+1)
 	trip_count_rows = frappe.db.sql(
-		"SELECT vehicle_owner, COUNT(*) as cnt"
-		" FROM `tabBEI Distribution Trip`"
-		" WHERE trip_date BETWEEN %s AND %s AND docstatus = 1"
-		" GROUP BY vehicle_owner",
+		f"SELECT {partner_field} AS partner, COUNT(*) as cnt"
+		" FROM `tabBEI Distribution Trip` dt"
+		f"{vehicle_join}"
+		" WHERE dt.trip_date BETWEEN %s AND %s AND dt.docstatus = 1"
+		f"   AND COALESCE({partner_field}, '') != ''"
+		f" GROUP BY {partner_field}",
 		[start_date, end_date],
 		as_dict=True,
 	)
-	trip_counts = {r.vehicle_owner: r.cnt for r in trip_count_rows}
+	trip_counts = {r.partner: r.cnt for r in trip_count_rows}
 
 	# Batch JE lookups for all partners in a single query (avoids N+1)
 	je_cheque_nos = [f"3PL-{p}-{period_label}" for p in partners]
