@@ -35,12 +35,15 @@ def _install_base_frappe():
 	frappe.PermissionError = type("PermissionError", (Exception,), {})
 	frappe.ValidationError = type("ValidationError", (Exception,), {})
 	frappe.DoesNotExistError = type("DoesNotExistError", (Exception,), {})
-	frappe.session = types.SimpleNamespace(user="tester@bebang.ph")
-	frappe.db = types.SimpleNamespace(
-		has_column=lambda *args, **kwargs: False,
-		get_value=lambda *args, **kwargs: None,
-		sql=lambda *args, **kwargs: [],
+	frappe.local = types.SimpleNamespace(
+		session=types.SimpleNamespace(user="tester@bebang.ph"),
+		db=types.SimpleNamespace(
+			has_column=lambda *args, **kwargs: False,
+			get_value=lambda *args, **kwargs: None,
+			sql=lambda *args, **kwargs: [],
+		),
 	)
+	frappe.__getattr__ = lambda name: getattr(frappe.local, name)
 	frappe.get_all = lambda *args, **kwargs: []
 	frappe.get_roles = lambda user=None: ["System Manager"]
 	frappe.get_doc = lambda *args, **kwargs: None
