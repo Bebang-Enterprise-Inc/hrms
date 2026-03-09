@@ -833,6 +833,70 @@ class TestDiscountAbuseApiS12(unittest.TestCase):
 		mock_replace_day.assert_called_once()
 		mock_replace_month.assert_called_once()
 
+	def test_build_store_day_snapshot_rows_keeps_postgrest_row_keys_consistent(self):
+		with (
+			patch.object(
+				discount_abuse,
+				"_get_store_catalog",
+				return_value={
+					1: {"store_name": "SM North EDSA", "legal_entity": "BEI", "store_type": "mall"}
+				},
+			),
+			patch.object(
+				discount_abuse,
+				"_query_store_daily_closing_rows",
+				return_value=[
+					{
+						"location_id": 1,
+						"store_name": "SM North EDSA",
+						"legal_entity": "BEI",
+						"store_type": "mall",
+						"business_date": "2026-02-13",
+						"pos_orders": 2,
+						"pos_original_gross": 1000,
+						"pos_after_discount": 900,
+						"pos_net_of_vat": 803.57,
+						"pos_discounts": 80,
+						"pos_vat": 96.43,
+						"pos_vat_exempt": 0,
+					}
+				],
+			),
+			patch.object(
+				discount_abuse,
+				"_query_all_channel_daily_rows",
+				return_value=[
+					{
+						"business_date": "2026-02-13",
+						"total_orders": 5,
+						"total_gross_sales": 1500,
+					}
+				],
+			),
+			patch.object(
+				discount_abuse,
+				"_query_paid_orders_for_range",
+				return_value=[
+					{
+						"id": 10,
+						"location_id": 1,
+						"business_date": "2026-02-13",
+						"original_gross_sales": 1000,
+						"gross_sales": 900,
+						"total_discounts": 80,
+					}
+				],
+			),
+			patch.object(discount_abuse, "_query_discount_item_rows_for_orders", return_value=[]),
+			patch.object(discount_abuse, "_query_same_day_rows_range", return_value=[]),
+			patch.object(discount_abuse, "_cluster_queue_rows", return_value=[]),
+		):
+			rows = discount_abuse._build_store_day_snapshot_rows(date(2026, 2, 13))
+
+		self.assertEqual(len(rows), 2)
+		key_sets = {tuple(sorted(row.keys())) for row in rows}
+		self.assertEqual(len(key_sets), 1)
+
 
 if __name__ == "__main__":
 	unittest.main()

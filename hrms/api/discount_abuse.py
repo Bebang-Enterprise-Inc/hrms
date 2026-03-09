@@ -2153,6 +2153,7 @@ def _base_snapshot_row(
 		row[_category_field(category, "high_confidence_same_day_incidents")] = 0
 		row[_category_field(category, "same_day_flagged_discount_total")] = 0.0
 		row[_category_field(category, "weighted_risk_score")] = 0.0
+		row[_category_field(category, "weighted_risk_rate")] = 0.0
 	return row
 
 
