@@ -37,6 +37,17 @@ def _is_stale(data):
 	return (datetime.now() - refreshed) > timedelta(hours=6)
 
 
+def _matches_not_punching_threshold(employee, hours):
+	"""Guard against null cache values and keep never-punched rows in the result set."""
+	value = employee.get("hours_since_punch")
+	if value is None:
+		return True
+	try:
+		return float(value) >= hours
+	except (TypeError, ValueError):
+		return True
+
+
 @frappe.whitelist()
 def get_dashboard_summary():
 	"""Get dashboard KPIs: enrollment %, devices online, issues count."""
@@ -80,8 +91,7 @@ def get_not_punching(hours=48):
 	# Filter by hours if we have timestamp data
 	employees = data.get("employees", [])
 	if hours != 48 and employees:
-		# Filter employees based on hours_since_punch if available
-		employees = [e for e in employees if e.get("hours_since_punch", 0) >= hours]
+		employees = [e for e in employees if _matches_not_punching_threshold(e, hours)]
 
 	return {"ok": True, "stale": _is_stale(data), "employees": employees}
 
