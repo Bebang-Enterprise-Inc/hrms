@@ -8,14 +8,7 @@ import mimetypes
 import os
 from typing import Any
 
-try:
-    from claude_agent_sdk import tool
-except ImportError:
-    def tool(name, description, schema):
-        def decorator(fn):
-            fn.name = name
-            return fn
-        return decorator
+from claude_agent_sdk import tool
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -117,8 +110,3 @@ async def upload_to_drive(args: dict[str, Any]) -> dict[str, Any]:
             "content": [{"type": "text", "text": f"Error uploading to Drive: {e}"}],
             "is_error": True,
         }
-
-
-async def upload_to_drive_impl(args: dict[str, Any]) -> dict[str, Any]:
-    """Plain async function for the direct Anthropic API agentic loop."""
-    return await upload_to_drive(args)

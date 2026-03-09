@@ -10,14 +10,7 @@ Uses service account with Chat Bot scope (NOT DWD).
 import os
 from typing import Any
 
-try:
-    from claude_agent_sdk import tool
-except ImportError:
-    def tool(name, description, schema):
-        def decorator(fn):
-            fn.name = name
-            return fn
-        return decorator
+from claude_agent_sdk import tool
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
@@ -74,11 +67,6 @@ async def send_gchat(args: dict[str, Any]) -> dict[str, Any]:
             "content": [{"type": "text", "text": f"Error sending message: {e}"}],
             "is_error": True,
         }
-
-
-async def send_gchat_impl(args: dict[str, Any]) -> dict[str, Any]:
-    """Plain async function for the direct Anthropic API agentic loop."""
-    return await send_gchat(args)
 
 
 def send_failure_alert(error_message: str) -> bool:

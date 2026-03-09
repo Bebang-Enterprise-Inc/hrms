@@ -17,15 +17,7 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
-try:
-    from claude_agent_sdk import tool
-except ImportError:
-    # Fallback: define a no-op decorator when Agent SDK is not installed
-    def tool(name, description, schema):
-        def decorator(fn):
-            fn.name = name
-            return fn
-        return decorator
+from claude_agent_sdk import tool
 
 # ---------------------------------------------------------------------------
 # View allowlist — ONLY these views may be queried
@@ -179,9 +171,3 @@ async def query_supabase(args: dict[str, Any]) -> dict[str, Any]:
         return {"content": [{"type": "text", "text": f"Error: Invalid JSON response: {exc}"}], "is_error": True}
     except Exception as exc:
         return {"content": [{"type": "text", "text": f"Error: {exc}"}], "is_error": True}
-
-
-# Direct implementation alias (no @tool decorator needed for Anthropic API usage)
-async def query_supabase_impl(args: dict[str, Any]) -> dict[str, Any]:
-    """Plain async function for the direct Anthropic API agentic loop."""
-    return await query_supabase(args)

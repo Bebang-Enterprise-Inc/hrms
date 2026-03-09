@@ -12,14 +12,7 @@ import sys
 from datetime import datetime
 from typing import Any
 
-try:
-    from claude_agent_sdk import tool
-except ImportError:
-    def tool(name, description, schema):
-        def decorator(fn):
-            fn.name = name
-            return fn
-        return decorator
+from claude_agent_sdk import tool
 
 # Add parent directory so we can import the template module
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -69,8 +62,3 @@ async def generate_report(args: dict[str, Any]) -> dict[str, Any]:
     except Exception as e:
         print(f"[generate_report] ERROR: {e}")
         return {"content": [{"type": "text", "text": f"Error generating report: {e}"}], "is_error": True}
-
-
-async def generate_report_impl(args: dict[str, Any]) -> dict[str, Any]:
-    """Plain async function for the direct Anthropic API agentic loop."""
-    return await generate_report(args)
