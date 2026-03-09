@@ -7,7 +7,13 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from claude_agent_sdk import query, ClaudeAgentOptions, create_sdk_mcp_server
+from claude_agent_sdk import (
+    query,
+    ClaudeAgentOptions,
+    create_sdk_mcp_server,
+    PermissionResultAllow,
+    PermissionResultDeny,
+)
 
 from tools.supabase_tool import query_supabase
 from tools.drive_tool import upload_to_drive
@@ -54,6 +60,24 @@ def check_token_ceiling():
             "Aborting to prevent runaway usage."
         )
 
+# Tool gating: only allow our 4 MCP tools, deny all built-in tools
+ALLOWED_TOOL_NAMES = {
+    "mcp__bei__query_supabase",
+    "mcp__bei__upload_to_drive",
+    "mcp__bei__send_gchat",
+    "mcp__bei__generate_report",
+}
+
+async def tool_gate(tool_name, tool_input, context):
+    """Approve MCP tools, deny everything else (Write, Bash, Edit, etc.)."""
+    if tool_name in ALLOWED_TOOL_NAMES:
+        print(f"  [ALLOW] {tool_name}")
+        return PermissionResultAllow()
+    print(f"  [DENY] {tool_name}")
+    return PermissionResultDeny(
+        message=f"Tool '{tool_name}' is not available. Use only: query_supabase, generate_report, upload_to_drive, send_gchat"
+    )
+
 async def main():
     run_log = {
         "timestamp": datetime.now().isoformat(),
@@ -93,12 +117,7 @@ async def main():
                 "mcp__bei__send_gchat",
                 "mcp__bei__generate_report",
             ],
-            disallowed_tools=[
-                "Write", "Edit", "MultiEdit", "Bash",
-                "Agent", "Task",
-                "NotebookEdit",
-            ],
-            permission_mode="bypassPermissions",
+            can_use_tool=tool_gate,
             model="opus",
             max_turns=20,
             stderr=lambda line: print(f"[CLI] {line}"),
