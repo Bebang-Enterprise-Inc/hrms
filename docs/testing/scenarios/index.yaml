@@ -1,0 +1,18 @@
+commands:
+  - all
+  - discount-monitoring
+
+modules:
+  - key: discount-monitoring
+    status: ready
+    command: discount-monitoring
+    prefixes:
+      - DISCMON
+    scenario_files:
+      - docs/testing/scenarios/modules/discount-monitoring.md
+
+flows: []
+
+coverage:
+  required_domains: []
+  domain_prefix_requirements: {}
