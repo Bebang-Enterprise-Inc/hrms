@@ -170,6 +170,53 @@ class TestDiscountAbuseApiS12(unittest.TestCase):
 			["Overview", "SameDay_All", "SameDay_Critical", "Rolling30D_All", "Rolling30D_High"],
 		)
 
+	def test_query_discount_item_rows_for_orders_uses_order_chunks_without_join(self):
+		paid_order_rows = [
+			{
+				"id": 1001,
+				"location_id": 12,
+				"store_name": "SM North EDSA",
+				"business_date": "2026-02-13",
+				"bill_number": "61540",
+				"receipt_number": "61540",
+				"billed_at": "2026-02-13T11:44:10+08:00",
+				"paid_at": "2026-02-13T11:44:20+08:00",
+				"original_gross_sales": 1000,
+				"gross_sales": 900,
+				"net_sales": 800,
+				"total_discounts": 70.72,
+			}
+		]
+		item_rows = [
+			{
+				"order_id": 1001,
+				"line_number": 1,
+				"product_name": "Combo",
+				"quantity": 1,
+				"discount_amount": 70.72,
+				"discount_name": "Senior Citizen Discount",
+				"discount_name_normalized": "SENIOR CITIZEN DISCOUNT",
+				"discount_bir_category": "SC",
+				"discount_customer_full_name": "Helen Paglingayen",
+				"discount_customer_full_name_normalized": "HELEN PAGLINGAYEN",
+				"discount_reference_number": "25402",
+				"discount_reference_number_normalized": "25402",
+			}
+		]
+
+		with patch.object(discount_abuse, "_supabase_get_all", return_value=item_rows) as mock_get:
+			rows = discount_abuse._query_discount_item_rows_for_orders(paid_order_rows, {"SC"})
+
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(rows[0]["store_name"], "SM North EDSA")
+		self.assertEqual(rows[0]["bill_number"], "61540")
+		self.assertEqual(rows[0]["discount_reference_number_normalized"], "25402")
+		call_resource, call_params = mock_get.call_args.args
+		self.assertEqual(call_resource, "pos_order_items")
+		self.assertIn(("order_id", "in.(1001)"), call_params)
+		self.assertIn(("discount_bir_category", "in.(SC)"), call_params)
+		self.assertFalse(any(key.startswith("pos_orders.") for key, _ in call_params))
+
 	def test_build_investigation_summary_payload_aggregates_store_metrics(self):
 		same_day_rows = [
 			{

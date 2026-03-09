@@ -574,7 +574,7 @@ def _query_paid_orders_for_range(
 	params: list[tuple[str, Any]] = [
 		(
 			"select",
-			"id,location_id,business_date,original_gross_sales,gross_sales,net_sales,total_discounts",
+			"id,location_id,business_date,bill_number,receipt_number,billed_at,paid_at,payment_status,original_gross_sales,gross_sales,net_sales,total_discounts",
 		),
 		("business_date", f"gte.{start_day.isoformat()}"),
 		("business_date", f"lte.{end_day.isoformat()}"),
@@ -585,16 +585,26 @@ def _query_paid_orders_for_range(
 	return _supabase_get_all("pos_orders", params)
 
 
-def _query_discount_item_rows_for_range(
-	start_day: date,
-	end_day: date,
-	location_ids: list[int],
+def _chunk_values(values: list[int], size: int = 200) -> list[list[int]]:
+	if not values:
+		return []
+	return [values[index : index + size] for index in range(0, len(values), size)]
+
+
+def _query_discount_item_rows_for_orders(
+	paid_order_rows: list[dict[str, Any]],
 	categories: set[str] | None = None,
 ) -> list[dict[str, Any]]:
-	if not location_ids:
+	if not paid_order_rows:
 		return []
-	location_list = ",".join(str(location_id) for location_id in location_ids)
-	store_map = _get_store_directory()
+	order_lookup: dict[int, dict[str, Any]] = {}
+	for row in paid_order_rows:
+		order_id = int(row.get("id") or 0)
+		if order_id:
+			order_lookup[order_id] = row
+	order_ids = sorted(order_lookup)
+	if not order_ids:
+		return []
 	select_fields = ",".join(
 		[
 			"order_id",
@@ -609,64 +619,67 @@ def _query_discount_item_rows_for_range(
 			"discount_customer_full_name_normalized",
 			"discount_reference_number",
 			"discount_reference_number_normalized",
-			"pos_orders!inner(id,location_id,business_date,bill_number,receipt_number,billed_at,paid_at,payment_status,original_gross_sales,gross_sales,net_sales,total_discounts)",
 		]
 	)
-	params: list[tuple[str, Any]] = [
-		("select", select_fields),
-		("discount_amount", "gt.0"),
-		("pos_orders.business_date", f"gte.{start_day.isoformat()}"),
-		("pos_orders.business_date", f"lte.{end_day.isoformat()}"),
-		("pos_orders.location_id", f"in.({location_list})"),
-		("pos_orders.payment_status", "eq.PAID"),
-		("order", "order_id.asc,line_number.asc"),
-	]
-	rows = _supabase_get_all("pos_order_items", params)
 	result: list[dict[str, Any]] = []
-	for row in rows:
-		order = row.get("pos_orders") or {}
-		location_id = int(order.get("location_id") or 0)
-		category = _canonical_discount_category(
-			row.get("discount_bir_category"),
-			row.get("discount_name_normalized"),
-			row.get("discount_name"),
-		)
-		if not category:
-			continue
-		if categories and category not in categories:
-			continue
-		result.append(
-			{
-				"location_id": location_id,
-				"store_name": store_map.get(location_id, str(location_id)),
-				"business_date": str(order.get("business_date") or ""),
-				"order_id": int(order.get("id") or row.get("order_id") or 0),
-				"bill_number": str(order.get("bill_number") or ""),
-				"receipt_number": str(order.get("receipt_number") or ""),
-				"billed_at": order.get("billed_at"),
-				"paid_at": order.get("paid_at"),
-				"order_gross_sales": _to_number(order.get("original_gross_sales")),
-				"order_net_sales_w_vat": _to_number(order.get("gross_sales")),
-				"order_net_sales_wo_vat": _to_number(order.get("net_sales")),
-				"order_total_discounts": _to_number(order.get("total_discounts")),
-				"line_number": int(row.get("line_number") or 0),
-				"product_name": str(row.get("product_name") or ""),
-				"quantity": int(row.get("quantity") or 0),
-				"discount_amount": _to_number(row.get("discount_amount")),
-				"discount_name": str(row.get("discount_name") or ""),
-				"discount_name_normalized": str(row.get("discount_name_normalized") or ""),
-				"discount_bir_category": category,
-				"discount_customer_full_name": str(row.get("discount_customer_full_name") or ""),
-				"discount_customer_full_name_normalized": _normalize_text(
-					row.get("discount_customer_full_name_normalized")
-					or row.get("discount_customer_full_name")
-				),
-				"discount_reference_number": str(row.get("discount_reference_number") or ""),
-				"discount_reference_number_normalized": _normalize_text(
-					row.get("discount_reference_number_normalized") or row.get("discount_reference_number")
-				),
-			}
-		)
+	for chunk in _chunk_values(order_ids):
+		params: list[tuple[str, Any]] = [
+			("select", select_fields),
+			("discount_amount", "gt.0"),
+			("order_id", f"in.({','.join(str(order_id) for order_id in chunk)})"),
+			("order", "order_id.asc,line_number.asc"),
+		]
+		if categories:
+			params.append(("discount_bir_category", f"in.({','.join(sorted(categories))})"))
+		rows = _supabase_get_all("pos_order_items", params)
+		for row in rows:
+			order_id = int(row.get("order_id") or 0)
+			order = order_lookup.get(order_id)
+			if not order:
+				continue
+			location_id = int(order.get("location_id") or 0)
+			category = _canonical_discount_category(
+				row.get("discount_bir_category"),
+				row.get("discount_name_normalized"),
+				row.get("discount_name"),
+			)
+			if not category:
+				continue
+			if categories and category not in categories:
+				continue
+			result.append(
+				{
+					"location_id": location_id,
+					"store_name": str(order.get("store_name") or location_id),
+					"business_date": str(order.get("business_date") or ""),
+					"order_id": order_id,
+					"bill_number": str(order.get("bill_number") or ""),
+					"receipt_number": str(order.get("receipt_number") or ""),
+					"billed_at": order.get("billed_at"),
+					"paid_at": order.get("paid_at"),
+					"order_gross_sales": _to_number(order.get("original_gross_sales")),
+					"order_net_sales_w_vat": _to_number(order.get("gross_sales")),
+					"order_net_sales_wo_vat": _to_number(order.get("net_sales")),
+					"order_total_discounts": _to_number(order.get("total_discounts")),
+					"line_number": int(row.get("line_number") or 0),
+					"product_name": str(row.get("product_name") or ""),
+					"quantity": int(row.get("quantity") or 0),
+					"discount_amount": _to_number(row.get("discount_amount")),
+					"discount_name": str(row.get("discount_name") or ""),
+					"discount_name_normalized": str(row.get("discount_name_normalized") or ""),
+					"discount_bir_category": category,
+					"discount_customer_full_name": str(row.get("discount_customer_full_name") or ""),
+					"discount_customer_full_name_normalized": _normalize_text(
+						row.get("discount_customer_full_name_normalized")
+						or row.get("discount_customer_full_name")
+					),
+					"discount_reference_number": str(row.get("discount_reference_number") or ""),
+					"discount_reference_number_normalized": _normalize_text(
+						row.get("discount_reference_number_normalized")
+						or row.get("discount_reference_number")
+					),
+				}
+			)
 	return result
 
 
@@ -1330,12 +1343,12 @@ def _get_investigation_payload(
 	if not resolved_store_names:
 		return start_day, end_day, [], selected_categories, [], [], []
 	same_day_rows = _query_same_day_rows_range(start_day, end_day, selected_categories)
-	item_rows = _query_discount_item_rows_for_range(start_day, end_day, location_ids, selected_categories)
 	paid_order_rows = _query_paid_orders_for_range(start_day, end_day, location_ids)
 	store_map = {location_id: store_name for location_id, store_name in selected_store_map.items()}
 	for row in paid_order_rows:
 		location_id = int(row.get("location_id") or 0)
 		row["store_name"] = store_map.get(location_id, str(location_id))
+	item_rows = _query_discount_item_rows_for_orders(paid_order_rows, selected_categories)
 	return (
 		start_day,
 		end_day,
