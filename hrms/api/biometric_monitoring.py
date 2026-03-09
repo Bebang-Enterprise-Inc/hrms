@@ -6,10 +6,10 @@ Biometric Monitoring API
 Provides dashboard and monitoring endpoints for ADMS biometric system
 """
 
-import frappe
-from frappe import _
 from datetime import datetime, timedelta
 
+import frappe
+from frappe import _
 
 BIOMETRIC_ROLES = {"HR Manager", "HR User", "System Manager", "Administrator"}
 BIOMETRIC_ADMIN_ROLES = {"System Manager", "Administrator"}
@@ -180,18 +180,11 @@ def refresh_biometric_cache():
 			"ok": True,
 			"refreshed": True,
 			"duration_seconds": duration,
-			"message": f"Cache refreshed successfully in {duration:.1f}s"
+			"message": f"Cache refreshed successfully in {duration:.1f}s",
 		}
 	except Exception as e:
-		frappe.log_error(
-			title="Manual Biometric Refresh Failed",
-			message=f"Error: {str(e)}"
-		)
-		return {
-			"ok": False,
-			"refreshed": False,
-			"message": f"Refresh failed: {str(e)}"
-		}
+		frappe.log_error(title="Manual Biometric Refresh Failed", message=f"Error: {e!s}")
+		return {"ok": False, "refreshed": False, "message": f"Refresh failed: {e!s}"}
 
 
 @frappe.whitelist()
