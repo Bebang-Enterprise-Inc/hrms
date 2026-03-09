@@ -129,7 +129,12 @@ async def main():
         print(f"Prompt length: {len(WEEKLY_PROMPT)} chars")
 
         async def prompt_stream():
-            yield {"role": "user", "content": WEEKLY_PROMPT}
+            yield {
+                "type": "user",
+                "session_id": "",
+                "message": {"role": "user", "content": WEEKLY_PROMPT},
+                "parent_tool_use_id": None,
+            }
 
         msg_count = 0
         async for msg in query(prompt=prompt_stream(), options=options):
