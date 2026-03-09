@@ -34,6 +34,8 @@ SAME_DAY_QUEUE_ORDER = (
 ROLLING_QUEUE_ORDER = (
 	"severity.asc,order_count.desc,active_day_count.desc,distinct_counterparty_count.desc,store_name.asc"
 )
+SEVERITY_RANK = {"critical": 1, "high": 2, "medium": 3, "review": 4}
+QUEUE_BUCKET_RANK = {"same_day": 1, "rolling_30d": 2}
 
 
 def _conf_get(key: str, default: Any = None) -> Any:
@@ -267,6 +269,19 @@ def _dedupe_preserve_order(values: list[str]) -> list[str]:
 	return result
 
 
+def _dedupe_preserve_display(values: list[str]) -> list[str]:
+	seen: set[str] = set()
+	result: list[str] = []
+	for value in values:
+		text = str(value).strip()
+		key = _normalize_text(text)
+		if not key or key in seen:
+			continue
+		seen.add(key)
+		result.append(text)
+	return result
+
+
 def _canonical_discount_category(
 	category: Any,
 	discount_name_normalized: Any = None,
@@ -326,11 +341,10 @@ def _normalize_queue_row(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _sort_same_day_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-	severity_rank = {"critical": 1, "high": 2, "medium": 3, "review": 4}
 	return sorted(
 		rows,
 		key=lambda row: (
-			severity_rank.get(str(row.get("severity") or ""), 9),
+			SEVERITY_RANK.get(str(row.get("severity") or ""), 9),
 			0 if row.get("rapid_within_4h") else 1,
 			row.get("min_gap_minutes") if row.get("min_gap_minutes") is not None else 999999,
 			-_to_number(row.get("discount_amount_total")),
@@ -342,11 +356,10 @@ def _sort_same_day_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _sort_rolling_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-	severity_rank = {"high": 1, "review": 2}
 	return sorted(
 		rows,
 		key=lambda row: (
-			severity_rank.get(str(row.get("severity") or ""), 9),
+			SEVERITY_RANK.get(str(row.get("severity") or ""), 9),
 			-(int(row.get("order_count") or 0)),
 			-(int(row.get("active_day_count") or 0)),
 			-(int(row.get("distinct_counterparty_count") or 0)),
@@ -486,6 +499,284 @@ def _make_summary(same_day_rows: list[dict[str, Any]], rolling_rows: list[dict[s
 		"rolling_high": int(rolling_counts.get("high", 0)),
 		"rolling_review": int(rolling_counts.get("review", 0)),
 	}
+
+
+def _canonical_bundle(values: list[str]) -> str:
+	return " | ".join(sorted({_normalize_text(value) for value in values if _normalize_text(value)}))
+
+
+def _extract_alert_store_names(row: dict[str, Any]) -> list[str]:
+	details = _safe_json(row.get("details"))
+	return _dedupe_preserve_display(
+		_split_pipe_values(row.get("store_name")) + _split_pipe_values(details.get("store_names"))
+	)
+
+
+def _extract_alert_order_ids(row: dict[str, Any]) -> list[str]:
+	details = _safe_json(row.get("details"))
+	return _dedupe_preserve_display(_split_pipe_values(details.get("order_ids")))
+
+
+def _resolve_identity_fallback(
+	row: dict[str, Any], names: list[str], references: list[str]
+) -> tuple[list[str], list[str]]:
+	identity_type = _normalize_text(row.get("identity_type"))
+	identity_key = _normalize_text(row.get("identity_key"))
+	resolved_names = list(names)
+	resolved_references = list(references)
+	if identity_key and identity_type == "CUSTOMER_NAME" and not resolved_names:
+		resolved_names = [identity_key]
+	if identity_key and identity_type == "REFERENCE_NUMBER" and not resolved_references:
+		resolved_references = [identity_key]
+	return resolved_names, resolved_references
+
+
+def _build_resolution_target(row: dict[str, Any]) -> dict[str, Any]:
+	return {
+		"event_date": str(row.get("event_date") or ""),
+		"scope": str(row.get("scope") or ""),
+		"scope_key": int(row.get("scope_key") or 0),
+		"discount_bir_category": str(row.get("discount_bir_category") or ""),
+		"identity_type": str(row.get("identity_type") or ""),
+		"identity_key": str(row.get("identity_key") or ""),
+		"detection_type": str(row.get("detection_type") or ""),
+	}
+
+
+def _resolution_target_key(target: dict[str, Any]) -> str:
+	return "::".join(
+		[
+			str(target.get("event_date") or ""),
+			str(target.get("scope") or ""),
+			str(target.get("scope_key") or ""),
+			str(target.get("discount_bir_category") or ""),
+			str(target.get("identity_type") or ""),
+			str(target.get("identity_key") or ""),
+			str(target.get("detection_type") or ""),
+		]
+	)
+
+
+def _build_incident_cluster_key(row: dict[str, Any]) -> str:
+	queue_bucket = str(row.get("queue_bucket") or "same_day")
+	associations = _extract_alert_associations(row)
+	store_names = _extract_alert_store_names(row)
+	names, references = _resolve_identity_fallback(row, associations["names"], associations["references"])
+	bills = associations["bill_numbers"]
+	if queue_bucket == "rolling_30d":
+		return "::".join(
+			[
+				queue_bucket,
+				str(row.get("window_start") or ""),
+				str(row.get("window_end") or ""),
+				str(row.get("scope") or ""),
+				str(int(row.get("scope_key") or 0)),
+				_canonical_bundle(store_names),
+				str(row.get("discount_bir_category") or ""),
+				str(row.get("identity_type") or ""),
+				_canonical_bundle(names),
+				_canonical_bundle(references),
+			]
+		)
+	return "::".join(
+		[
+			queue_bucket,
+			str(row.get("event_date") or ""),
+			str(row.get("scope") or ""),
+			str(int(row.get("scope_key") or 0)),
+			_canonical_bundle(store_names),
+			str(row.get("discount_bir_category") or ""),
+			_canonical_bundle(bills),
+			_canonical_bundle(names),
+			_canonical_bundle(references),
+		]
+	)
+
+
+def _pick_cluster_identity_key(names: list[str], references: list[str], fallback: str) -> str:
+	if references:
+		return " | ".join(references)
+	if names:
+		return " | ".join(names)
+	return fallback
+
+
+def _cluster_queue_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+	clusters: dict[str, dict[str, Any]] = {}
+	for row in rows:
+		cluster_key = _build_incident_cluster_key(row)
+		associations = _extract_alert_associations(row)
+		names, references = _resolve_identity_fallback(row, associations["names"], associations["references"])
+		store_names = _extract_alert_store_names(row)
+		bill_numbers = associations["bill_numbers"]
+		business_dates = associations["business_dates"] or [str(row.get("event_date") or "")]
+		order_ids = _extract_alert_order_ids(row)
+		cluster = clusters.setdefault(
+			cluster_key,
+			{
+				"cluster_id": cluster_key,
+				"cluster_key": cluster_key,
+				"queue_bucket": str(row.get("queue_bucket") or "same_day"),
+				"queue_bucket_rank": QUEUE_BUCKET_RANK.get(str(row.get("queue_bucket") or "same_day"), 9),
+				"event_date": str(row.get("event_date") or ""),
+				"window_start": str(row.get("window_start") or ""),
+				"window_end": str(row.get("window_end") or ""),
+				"scope": str(row.get("scope") or ""),
+				"scope_key": int(row.get("scope_key") or 0),
+				"location_id": int(row.get("location_id") or 0)
+				if row.get("location_id") not in (None, "")
+				else None,
+				"discount_name": row.get("discount_name"),
+				"discount_bir_category": str(row.get("discount_bir_category") or ""),
+				"severity": str(row.get("severity") or "review"),
+				"rapid_within_4h": False,
+				"min_gap_minutes": None,
+				"discount_amount_total": 0.0,
+				"order_count": 0,
+				"store_count": 0,
+				"active_day_count": 0,
+				"distinct_counterparty_count": 0,
+				"detection_types": [],
+				"identity_types": [],
+				"store_names": [],
+				"customer_names": [],
+				"reference_numbers": [],
+				"bill_numbers": [],
+				"business_dates": [],
+				"order_ids": [],
+				"resolution_targets": [],
+				"resolve_scope_policy": "all_underlying_rows",
+				"raw_row_count": 0,
+				"resolved": False,
+				"notified_at": None,
+				"created_at": row.get("created_at"),
+				"updated_at": row.get("updated_at"),
+			},
+		)
+		cluster["raw_row_count"] += 1
+		cluster["rapid_within_4h"] = bool(cluster["rapid_within_4h"] or row.get("rapid_within_4h"))
+		row_min_gap = row.get("min_gap_minutes")
+		if row_min_gap is not None:
+			cluster["min_gap_minutes"] = (
+				row_min_gap
+				if cluster["min_gap_minutes"] is None
+				else min(float(cluster["min_gap_minutes"]), float(row_min_gap))
+			)
+		cluster["discount_amount_total"] = max(
+			float(cluster["discount_amount_total"]),
+			_to_number(row.get("discount_amount_total")),
+		)
+		cluster["order_count"] = max(int(cluster["order_count"]), int(row.get("order_count") or 0))
+		cluster["store_count"] = max(int(cluster["store_count"]), int(row.get("store_count") or 0))
+		cluster["active_day_count"] = max(
+			int(cluster["active_day_count"]), int(row.get("active_day_count") or 0)
+		)
+		cluster["distinct_counterparty_count"] = max(
+			int(cluster["distinct_counterparty_count"]),
+			int(row.get("distinct_counterparty_count") or 0),
+		)
+		if SEVERITY_RANK.get(str(row.get("severity") or ""), 9) < SEVERITY_RANK.get(
+			str(cluster["severity"] or ""), 9
+		):
+			cluster["severity"] = str(row.get("severity") or "review")
+		cluster["detection_types"] = _dedupe_preserve_display(
+			cluster["detection_types"] + _split_pipe_values(row.get("detection_type"))
+		)
+		cluster["identity_types"] = _dedupe_preserve_display(
+			cluster["identity_types"] + _split_pipe_values(row.get("identity_type"))
+		)
+		cluster["store_names"] = _dedupe_preserve_display(cluster["store_names"] + store_names)
+		cluster["customer_names"] = _dedupe_preserve_order(cluster["customer_names"] + names)
+		cluster["reference_numbers"] = _dedupe_preserve_order(cluster["reference_numbers"] + references)
+		cluster["bill_numbers"] = _dedupe_preserve_display(cluster["bill_numbers"] + bill_numbers)
+		cluster["business_dates"] = _dedupe_preserve_display(cluster["business_dates"] + business_dates)
+		cluster["order_ids"] = _dedupe_preserve_display(cluster["order_ids"] + order_ids)
+		target = _build_resolution_target(row)
+		target_keys = {_resolution_target_key(entry) for entry in cluster["resolution_targets"]}
+		target_key = _resolution_target_key(target)
+		if target_key not in target_keys:
+			cluster["resolution_targets"].append(target)
+
+	final_rows: list[dict[str, Any]] = []
+	for cluster in clusters.values():
+		identity_key = _pick_cluster_identity_key(
+			cluster["customer_names"],
+			cluster["reference_numbers"],
+			str(cluster.get("identity_key") or ""),
+		)
+		cluster["store_name"] = " | ".join(cluster["store_names"])
+		cluster["customer_name"] = cluster["customer_names"][0] if cluster["customer_names"] else None
+		cluster["reference_number"] = (
+			cluster["reference_numbers"][0] if cluster["reference_numbers"] else None
+		)
+		cluster["customer_names_display"] = " | ".join(cluster["customer_names"])
+		cluster["reference_numbers_display"] = " | ".join(cluster["reference_numbers"])
+		cluster["bill_numbers_display"] = " | ".join(cluster["bill_numbers"])
+		cluster["business_dates_display"] = " | ".join(cluster["business_dates"])
+		cluster["identity_key"] = identity_key
+		cluster["identity_type"] = (
+			cluster["identity_types"][0] if len(cluster["identity_types"]) == 1 else "mixed"
+		)
+		cluster["detection_type"] = (
+			cluster["detection_types"][0] if cluster["detection_types"] else "incident_cluster"
+		)
+		cluster["details"] = {
+			"order_ids": cluster["order_ids"],
+			"store_names": cluster["store_names"],
+			"customer_names": cluster["customer_names"],
+			"reference_numbers": cluster["reference_numbers"],
+			"bill_numbers": cluster["bill_numbers"],
+			"business_dates": cluster["business_dates"],
+			"raw_detection_types": cluster["detection_types"],
+			"raw_identity_types": cluster["identity_types"],
+			"raw_row_count": cluster["raw_row_count"],
+			"distinct_name_count": len(cluster["customer_names"]),
+			"distinct_reference_count": len(cluster["reference_numbers"]),
+		}
+		final_rows.append(cluster)
+	if any(row.get("queue_bucket") == "rolling_30d" for row in final_rows):
+		same_day_rows = [row for row in final_rows if row.get("queue_bucket") == "same_day"]
+		rolling_rows = [row for row in final_rows if row.get("queue_bucket") == "rolling_30d"]
+		return _sort_same_day_rows(same_day_rows) + _sort_rolling_rows(rolling_rows)
+	return _sort_same_day_rows(final_rows)
+
+
+def _filter_incident_clusters(
+	rows: list[dict[str, Any]],
+	search: str | None = None,
+	severity: str | None = None,
+	store_name: str | None = None,
+	category: str | None = None,
+) -> list[dict[str, Any]]:
+	filtered = list(rows)
+	if severity and severity != "all":
+		filtered = [row for row in filtered if str(row.get("severity") or "") == severity]
+	if category and category != "all":
+		needle = _normalize_text(category)
+		filtered = [row for row in filtered if _normalize_text(row.get("discount_bir_category")) == needle]
+	if store_name:
+		filtered = [row for row in filtered if _row_mentions_store(row, store_name)]
+	if search:
+		needle = search.strip().lower()
+		filtered = [
+			row
+			for row in filtered
+			if needle
+			in " | ".join(
+				[
+					str(row.get("store_name") or ""),
+					str(row.get("identity_key") or ""),
+					str(row.get("customer_names_display") or ""),
+					str(row.get("reference_numbers_display") or ""),
+					str(row.get("bill_numbers_display") or ""),
+					" | ".join(_split_pipe_values(row.get("detection_type")))
+					if row.get("detection_type")
+					else "",
+					" | ".join(row.get("detection_types") or []),
+				]
+			).lower()
+		]
+	return filtered
 
 
 def _format_display_window(start_day: date, end_day: date) -> str:
@@ -739,6 +1030,12 @@ def _build_store_sales_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
 	}
 
 
+def _rate_per_1000(count: int | float, denominator: int | float) -> float:
+	if not denominator:
+		return 0.0
+	return round((float(count) / float(denominator)) * 1000, 2)
+
+
 def _build_store_item_summary(
 	rows: list[dict[str, Any]],
 	selected_categories: set[str] | None,
@@ -933,6 +1230,7 @@ def _build_investigation_summary_payload(
 	total_same_ref_diff_name = 0
 	total_rapid_repeat_name = 0
 	total_multi_name_receipts = 0
+	total_paid_orders = 0
 	for store_name in selected_store_names:
 		store_order_rows = [
 			row
@@ -951,6 +1249,22 @@ def _build_investigation_summary_payload(
 		total_same_ref_diff_name += same_day_metrics["same_reference_different_name_findings"]
 		total_rapid_repeat_name += same_day_metrics["rapid_repeat_name_findings_4h"]
 		total_multi_name_receipts += contextual_metrics["multi_name_receipts"]
+		total_paid_orders += int(sales_summary["paid_orders"])
+		rates_per_1000 = {
+			"repeat_name_findings": _rate_per_1000(
+				same_day_metrics["repeat_name_findings"], sales_summary["paid_orders"]
+			),
+			"same_reference_different_name_findings": _rate_per_1000(
+				same_day_metrics["same_reference_different_name_findings"],
+				sales_summary["paid_orders"],
+			),
+			"rapid_repeat_name_findings_4h": _rate_per_1000(
+				same_day_metrics["rapid_repeat_name_findings_4h"], sales_summary["paid_orders"]
+			),
+			"contextual_multi_name_receipts": _rate_per_1000(
+				contextual_metrics["multi_name_receipts"], sales_summary["paid_orders"]
+			),
+		}
 		store_summaries.append(
 			{
 				"location_id": location_id,
@@ -960,6 +1274,7 @@ def _build_investigation_summary_payload(
 				"same_day_metrics": same_day_metrics,
 				"chain_metrics": chain_metrics,
 				"contextual_metrics": contextual_metrics,
+				"rates_per_1000_paid_orders": rates_per_1000,
 			}
 		)
 
@@ -973,12 +1288,26 @@ def _build_investigation_summary_payload(
 		"methodology_notes": [
 			"Same-day metrics are alert-derived from validated discount identity alerts.",
 			"Multi-name receipt metrics are contextual receipt-level review metrics, not incident counts.",
+			"Rates are normalized per 1,000 paid orders so stores with different sales volume remain comparable.",
 		],
 		"totals": {
 			"same_day_repeat_name_findings": total_repeat_name,
 			"same_day_same_reference_different_name_findings": total_same_ref_diff_name,
 			"same_day_rapid_repeat_name_findings_4h": total_rapid_repeat_name,
 			"contextual_multi_name_receipts": total_multi_name_receipts,
+			"paid_orders": total_paid_orders,
+			"rates_per_1000_paid_orders": {
+				"same_day_repeat_name_findings": _rate_per_1000(total_repeat_name, total_paid_orders),
+				"same_day_same_reference_different_name_findings": _rate_per_1000(
+					total_same_ref_diff_name, total_paid_orders
+				),
+				"same_day_rapid_repeat_name_findings_4h": _rate_per_1000(
+					total_rapid_repeat_name, total_paid_orders
+				),
+				"contextual_multi_name_receipts": _rate_per_1000(
+					total_multi_name_receipts, total_paid_orders
+				),
+			},
 		},
 		"stores": store_summaries,
 	}
@@ -990,18 +1319,21 @@ def _build_investigation_case_rows(
 	item_rows: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
 	case_rows: list[dict[str, Any]] = []
-	for row in same_day_rows:
+	for row in _cluster_queue_rows(same_day_rows):
 		if not any(_row_mentions_store(row, store_name) for store_name in selected_store_names):
 			continue
-		associations = _extract_alert_associations(row)
+		associations = {
+			"names": list(row.get("customer_names") or []),
+			"references": list(row.get("reference_numbers") or []),
+			"bill_numbers": list(row.get("bill_numbers") or []),
+			"business_dates": list(row.get("business_dates") or []),
+		}
 		case_rows.append(
 			{
-				"case_id": (
-					f"alert:{row.get('event_date')}:{row.get('scope')}:{row.get('scope_key')}:"
-					f"{row.get('identity_key')}:{row.get('detection_type')}"
-				),
+				"case_id": f"incident:{row.get('cluster_id')}",
 				"case_bucket": "same_day_alert",
 				"detection_type": row.get("detection_type"),
+				"detection_types": row.get("detection_types") or [row.get("detection_type")],
 				"scope": row.get("scope"),
 				"store_name": row.get("store_name"),
 				"business_date": row.get("event_date"),
@@ -1016,6 +1348,7 @@ def _build_investigation_case_rows(
 				"discount_amount_total": round(_to_number(row.get("discount_amount_total")), 2),
 				"rapid_within_4h": bool(row.get("rapid_within_4h")),
 				"min_gap_minutes": row.get("min_gap_minutes"),
+				"raw_row_count": int(row.get("raw_row_count") or 0),
 				"context_note": "",
 			}
 		)
@@ -1037,6 +1370,7 @@ def _build_investigation_case_rows(
 					"case_id": f"context:{receipt['business_date']}:{receipt['order_id']}",
 					"case_bucket": "contextual_receipt",
 					"detection_type": "context_multi_name_receipt",
+					"detection_types": ["context_multi_name_receipt"],
 					"scope": "store",
 					"store_name": store_name,
 					"business_date": receipt["business_date"],
@@ -1053,17 +1387,18 @@ def _build_investigation_case_rows(
 					"discount_amount_total": receipt["discount_amount_total"],
 					"rapid_within_4h": False,
 					"min_gap_minutes": None,
+					"raw_row_count": 1,
 					"context_note": "Contextual receipt metric - multiple distinct names on one discounted receipt.",
 				}
 			)
 
-	severity_rank = {"critical": 1, "high": 2, "medium": 3, "review": 4}
 	case_rows.sort(
 		key=lambda row: (
-			severity_rank.get(str(row.get("severity") or ""), 9),
+			SEVERITY_RANK.get(str(row.get("severity") or ""), 9),
+			0 if row.get("case_bucket") == "same_day_alert" else 1,
 			str(row.get("business_date") or ""),
 			str(row.get("store_name") or ""),
-			str(row.get("detection_type") or ""),
+			str("|".join(row.get("detection_types") or [str(row.get("detection_type") or "")])),
 			str(row.get("identity_key") or ""),
 		)
 	)
@@ -1262,17 +1597,27 @@ def get_discount_audit_dashboard(business_date: str | None = None) -> dict[str, 
 	target_day = _coerce_date(business_date, default=_default_business_date())
 	same_day_rows = _query_same_day_rows(target_day)
 	rolling_rows = _query_rolling_rows(target_day)
-	summary = _make_summary(same_day_rows, rolling_rows)
+	same_day_clusters = _cluster_queue_rows(same_day_rows)
+	rolling_clusters = _cluster_queue_rows(rolling_rows)
+	summary = _make_summary(same_day_clusters, rolling_clusters)
+	raw_summary = _make_summary(same_day_rows, rolling_rows)
 	return {
 		"success": True,
 		"data": {
 			"business_date": target_day.isoformat(),
 			"display_business_date": _format_display_date(target_day),
 			"summary": summary,
-			"same_day_total": len(same_day_rows),
-			"rolling_total": len(rolling_rows),
+			"raw_summary": raw_summary,
+			"same_day_total": len(same_day_clusters),
+			"rolling_total": len(rolling_clusters),
+			"same_day_raw_total": len(same_day_rows),
+			"rolling_raw_total": len(rolling_rows),
 			"critical_same_day_rows": same_day_rows[:10],
 			"top_rolling_rows": rolling_rows[:10],
+			"critical_same_day_clusters": [
+				row for row in same_day_clusters if str(row.get("severity") or "") == "critical"
+			][:10],
+			"top_rolling_clusters": rolling_clusters[:10],
 			"notifications_enabled": _notifications_enabled_for_day(target_day),
 			"notification_go_live_date": _get_notification_go_live_date().isoformat(),
 			"latest_reports": list_discount_audit_reports(limit=5).get("data", []),
@@ -1319,6 +1664,57 @@ def get_discount_audit_queue(
 			"business_date": target_day.isoformat(),
 			"rows": data,
 			"summary": _make_summary(same_day_rows, rolling_rows),
+			"stores": stores,
+		},
+	}
+
+
+@frappe.whitelist()
+def get_discount_audit_incident_queue(
+	business_date: str | None = None,
+	queue_bucket: str | None = None,
+	severity: str | None = None,
+	search: str | None = None,
+	store_name: str | None = None,
+	discount_bir_category: str | None = None,
+) -> dict[str, Any]:
+	_check_discount_audit_role()
+	target_day = _coerce_date(business_date, default=_default_business_date())
+	bucket = (queue_bucket or "all").strip()
+
+	same_day_rows = _query_same_day_rows(target_day) if bucket in ("all", "same_day") else []
+	rolling_rows = _query_rolling_rows(target_day) if bucket in ("all", "rolling_30d") else []
+	same_day_clusters = _cluster_queue_rows(same_day_rows)
+	rolling_clusters = _cluster_queue_rows(rolling_rows)
+	same_day_clusters = _filter_incident_clusters(
+		_sort_same_day_rows(same_day_clusters),
+		search=search,
+		severity=severity if bucket != "rolling_30d" else None,
+		store_name=store_name,
+		category=discount_bir_category,
+	)
+	rolling_clusters = _filter_incident_clusters(
+		_sort_rolling_rows(rolling_clusters),
+		search=search,
+		severity=severity if bucket != "same_day" else None,
+		store_name=store_name,
+		category=discount_bir_category,
+	)
+	cluster_rows = same_day_clusters + rolling_clusters
+	stores = sorted(_get_store_directory().values())
+	return {
+		"success": True,
+		"data": {
+			"business_date": target_day.isoformat(),
+			"rows": cluster_rows,
+			"summary": _make_summary(same_day_clusters, rolling_clusters),
+			"raw_summary": _make_summary(same_day_rows, rolling_rows),
+			"parity": {
+				"same_day_raw_rows": len(same_day_rows),
+				"same_day_clusters": len(_cluster_queue_rows(same_day_rows)),
+				"rolling_raw_rows": len(rolling_rows),
+				"rolling_clusters": len(_cluster_queue_rows(rolling_rows)),
+			},
 			"stores": stores,
 		},
 	}
@@ -1457,19 +1853,27 @@ def get_discount_investigation_cases(
 				"same_day_alert_cases": sum(1 for row in case_rows if row["case_bucket"] == "same_day_alert"),
 				"contextual_cases": sum(1 for row in case_rows if row["case_bucket"] == "contextual_receipt"),
 			},
+			"sections": {
+				"selected_store_incidents": [
+					row
+					for row in case_rows
+					if row["case_bucket"] == "same_day_alert" and _normalize_text(row.get("scope")) == "STORE"
+				],
+				"cross_store_overlaps": [
+					row
+					for row in case_rows
+					if row["case_bucket"] == "same_day_alert" and _normalize_text(row.get("scope")) != "STORE"
+				],
+				"contextual_receipt_review": [
+					row for row in case_rows if row["case_bucket"] == "contextual_receipt"
+				],
+			},
 			"rows": case_rows,
 		},
 	}
 
 
-@frappe.whitelist()
-def resolve_discount_audit_alert(
-	alert: str | dict[str, Any],
-	resolution_code: str,
-	resolution_note: str | None = None,
-) -> dict[str, Any]:
-	_check_discount_audit_role()
-	payload = _safe_json(alert) if not isinstance(alert, dict) else alert
+def _validate_alert_resolution_payload(payload: dict[str, Any]) -> None:
 	required_keys = [
 		"event_date",
 		"scope",
@@ -1483,6 +1887,12 @@ def resolve_discount_audit_alert(
 	if missing:
 		frappe.throw(frappe._("Missing alert identity fields: {0}").format(", ".join(missing)))
 
+
+def _resolve_discount_alert_payload(
+	payload: dict[str, Any],
+	resolution_code: str,
+	resolution_note: str | None = None,
+) -> dict[str, Any] | None:
 	existing_rows = _supabase_get(
 		"discount_abuse_alerts",
 		{
@@ -1511,10 +1921,63 @@ def resolve_discount_audit_alert(
 			"details": merged_details,
 		},
 	)
+	return updated[0] if updated else None
+
+
+@frappe.whitelist()
+def resolve_discount_audit_alert(
+	alert: str | dict[str, Any],
+	resolution_code: str,
+	resolution_note: str | None = None,
+) -> dict[str, Any]:
+	_check_discount_audit_role()
+	payload = _safe_json(alert) if not isinstance(alert, dict) else alert
+	_validate_alert_resolution_payload(payload)
+	updated = _resolve_discount_alert_payload(payload, resolution_code, resolution_note)
 	return {
 		"success": True,
-		"data": updated[0] if updated else None,
+		"data": updated,
 		"message": "Alert resolved",
+	}
+
+
+@frappe.whitelist()
+def resolve_discount_audit_incident(
+	incident: str | dict[str, Any],
+	resolution_code: str,
+	resolution_note: str | None = None,
+) -> dict[str, Any]:
+	_check_discount_audit_role()
+	payload = _safe_json(incident) if not isinstance(incident, dict) else incident
+	resolution_targets = payload.get("resolution_targets")
+	if not isinstance(resolution_targets, list) or not resolution_targets:
+		frappe.throw(frappe._("Incident is missing resolution_targets."))
+	if payload.get("resolve_scope_policy") not in (None, "", "all_underlying_rows"):
+		frappe.throw(frappe._("Unsupported resolve_scope_policy for incident resolution."))
+
+	seen_target_keys: set[str] = set()
+	updated_rows: list[dict[str, Any]] = []
+	for target in resolution_targets:
+		if not isinstance(target, dict):
+			continue
+		_validate_alert_resolution_payload(target)
+		target_key = _resolution_target_key(target)
+		if target_key in seen_target_keys:
+			continue
+		seen_target_keys.add(target_key)
+		updated = _resolve_discount_alert_payload(target, resolution_code, resolution_note)
+		if updated:
+			updated_rows.append(updated)
+
+	return {
+		"success": True,
+		"data": {
+			"cluster_id": payload.get("cluster_id"),
+			"resolved_count": len(updated_rows),
+			"target_count": len(seen_target_keys),
+			"rows": updated_rows,
+		},
+		"message": "Incident resolved",
 	}
 
 
