@@ -6,10 +6,11 @@ Biometric Monitoring API
 Provides dashboard and monitoring endpoints for ADMS biometric system
 """
 
+from datetime import datetime, timedelta
+from typing import Any
+
 import frappe
 from frappe import _
-from datetime import datetime, timedelta
-
 
 BIOMETRIC_ROLES = {"HR Manager", "HR User", "System Manager", "Administrator"}
 BIOMETRIC_ADMIN_ROLES = {"System Manager", "Administrator"}
@@ -29,12 +30,23 @@ def _check_biometric_admin():
 		frappe.throw(_("Only administrators can refresh biometric cache"), frappe.PermissionError)
 
 
-def _is_stale(data):
+def _is_stale(data: dict[str, Any] | None) -> bool:
 	"""Check if cached data is older than 6 hours."""
 	if not data or "last_refreshed" not in data:
 		return True
 	refreshed = datetime.fromisoformat(data["last_refreshed"])
 	return (datetime.now() - refreshed) > timedelta(hours=6)
+
+
+def _matches_not_punching_threshold(employee: dict[str, Any], hours: int) -> bool:
+	"""Guard against null cache values and keep never-punched rows in the result set."""
+	value = employee.get("hours_since_punch")
+	if value is None:
+		return True
+	try:
+		return float(value) >= hours
+	except (TypeError, ValueError):
+		return True
 
 
 @frappe.whitelist()
@@ -60,7 +72,7 @@ def get_device_status():
 
 
 @frappe.whitelist()
-def get_not_punching(hours=48):
+def get_not_punching(hours: int | str = 48):
 	"""Get employees not punching for X hours."""
 	_check_biometric_access()
 	cache = frappe.cache()
@@ -80,8 +92,7 @@ def get_not_punching(hours=48):
 	# Filter by hours if we have timestamp data
 	employees = data.get("employees", [])
 	if hours != 48 and employees:
-		# Filter employees based on hours_since_punch if available
-		employees = [e for e in employees if e.get("hours_since_punch", 0) >= hours]
+		employees = [e for e in employees if _matches_not_punching_threshold(e, hours)]
 
 	return {"ok": True, "stale": _is_stale(data), "employees": employees}
 
@@ -170,18 +181,11 @@ def refresh_biometric_cache():
 			"ok": True,
 			"refreshed": True,
 			"duration_seconds": duration,
-			"message": f"Cache refreshed successfully in {duration:.1f}s"
+			"message": f"Cache refreshed successfully in {duration:.1f}s",
 		}
 	except Exception as e:
-		frappe.log_error(
-			title="Manual Biometric Refresh Failed",
-			message=f"Error: {str(e)}"
-		)
-		return {
-			"ok": False,
-			"refreshed": False,
-			"message": f"Refresh failed: {str(e)}"
-		}
+		frappe.log_error(title="Manual Biometric Refresh Failed", message=f"Error: {e!s}")
+		return {"ok": False, "refreshed": False, "message": f"Refresh failed: {e!s}"}
 
 
 @frappe.whitelist()
