@@ -7,6 +7,7 @@ Provides dashboard and monitoring endpoints for ADMS biometric system
 """
 
 from datetime import datetime, timedelta
+from typing import Any
 
 import frappe
 from frappe import _
@@ -29,7 +30,7 @@ def _check_biometric_admin():
 		frappe.throw(_("Only administrators can refresh biometric cache"), frappe.PermissionError)
 
 
-def _is_stale(data):
+def _is_stale(data: dict[str, Any] | None) -> bool:
 	"""Check if cached data is older than 6 hours."""
 	if not data or "last_refreshed" not in data:
 		return True
@@ -37,7 +38,7 @@ def _is_stale(data):
 	return (datetime.now() - refreshed) > timedelta(hours=6)
 
 
-def _matches_not_punching_threshold(employee, hours):
+def _matches_not_punching_threshold(employee: dict[str, Any], hours: int) -> bool:
 	"""Guard against null cache values and keep never-punched rows in the result set."""
 	value = employee.get("hours_since_punch")
 	if value is None:
@@ -71,7 +72,7 @@ def get_device_status():
 
 
 @frappe.whitelist()
-def get_not_punching(hours=48):
+def get_not_punching(hours: int | str = 48):
 	"""Get employees not punching for X hours."""
 	_check_biometric_access()
 	cache = frappe.cache()
