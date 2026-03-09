@@ -986,6 +986,82 @@ def _query_store_daily_closing_rows(start_day: date, end_day: date) -> list[dict
 
 
 def _query_all_channel_daily_rows(start_day: date, end_day: date) -> list[dict[str, Any]]:
+	system_params: list[tuple[str, Any]] = [
+		(
+			"select",
+			",".join(
+				[
+					"business_date",
+					"pos_order_count",
+					"pos_gross_sales",
+					"total_orders",
+					"total_gross_sales",
+					"web_order_count",
+					"web_gross_sales",
+				]
+			),
+		),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("order", "business_date.asc"),
+	]
+	system_rows = _supabase_get_all("v_system_daily_totals", system_params)
+	foodpanda_params: list[tuple[str, Any]] = [
+		("select", "business_date,subtotal,order_status"),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("order_status", "ilike.delivered"),
+		("order", "business_date.asc"),
+	]
+	foodpanda_rows = _supabase_get_all("foodpanda_orders", foodpanda_params)
+	foodpanda_by_day: dict[str, dict[str, float | int]] = {}
+	for row in foodpanda_rows:
+		day_key = str(row.get("business_date") or "")
+		if not day_key:
+			continue
+		day_bucket = foodpanda_by_day.setdefault(day_key, {"fp_orders": 0, "fp_gross_sales": 0.0})
+		day_bucket["fp_orders"] = int(day_bucket["fp_orders"]) + 1
+		day_bucket["fp_gross_sales"] = _to_number(day_bucket["fp_gross_sales"]) + _to_number(
+			row.get("subtotal")
+		)
+
+	results: list[dict[str, Any]] = []
+	for row in system_rows:
+		day_key = str(row.get("business_date") or "")
+		foodpanda = foodpanda_by_day.get(day_key, {"fp_orders": 0, "fp_gross_sales": 0.0})
+		pos_orders = int(row.get("pos_order_count") or 0)
+		web_orders = int(row.get("web_order_count") or 0)
+		fp_orders = int(foodpanda["fp_orders"])
+		pos_gross_sales = _to_number(row.get("pos_gross_sales"))
+		web_gross_sales = _to_number(row.get("web_gross_sales"))
+		fp_gross_sales = _to_number(foodpanda["fp_gross_sales"])
+		results.append(
+			{
+				"business_date": day_key,
+				"pos_orders": pos_orders,
+				"pos_gross_sales": pos_gross_sales,
+				"web_orders": web_orders,
+				"web_gross_sales": web_gross_sales,
+				"fp_orders": fp_orders,
+				"fp_gross_sales": fp_gross_sales,
+				"total_orders": pos_orders + web_orders + fp_orders,
+				"total_gross_sales": _round_metric(pos_gross_sales + web_gross_sales + fp_gross_sales, 6),
+				"channel_count": sum(1 for count in (pos_orders, web_orders, fp_orders) if count > 0),
+				"data_sources": " | ".join(
+					source
+					for source, count in (
+						("POS", pos_orders),
+						("Web", web_orders),
+						("FoodPanda", fp_orders),
+					)
+					if count > 0
+				),
+			}
+		)
+	return results
+
+
+def _query_all_channel_daily_rows_legacy(start_day: date, end_day: date) -> list[dict[str, Any]]:
 	params: list[tuple[str, Any]] = [
 		(
 			"select",
