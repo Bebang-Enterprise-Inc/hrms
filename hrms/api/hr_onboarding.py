@@ -27,6 +27,31 @@ def _as_int(value: Any, default: int) -> int:
 	return parsed if parsed > 0 else default
 
 
+def _optional_link_value(doctype: str, value: str | None) -> str | None:
+	if not value:
+		return None
+	return value if frappe.db.exists(doctype, value) else None
+
+
+def _resolve_job_applicant(value: str | None, applicant_name: str | None = None) -> str:
+	if not value:
+		frappe.throw(_("Job Applicant is required."))
+
+	if frappe.db.exists("Job Applicant", value):
+		return value
+
+	resolved = frappe.db.get_value("Job Applicant", {"email_id": value}, "name")
+	if resolved:
+		return resolved
+
+	if applicant_name:
+		resolved = frappe.db.get_value("Job Applicant", {"applicant_name": applicant_name}, "name")
+		if resolved:
+			return resolved
+
+	frappe.throw(_("Could not resolve Job Applicant for job offer {0}.").format(value))
+
+
 @frappe.whitelist()
 def get_job_offers(
 	status: str | None = None,
@@ -131,14 +156,17 @@ def create_onboarding_from_offer(job_offer: str) -> dict[str, Any]:
 	if existing:
 		return {"success": True, "onboarding_name": existing, "already_exists": True}
 
+	job_applicant = _resolve_job_applicant(offer.job_applicant, offer.applicant_name)
+	designation = _optional_link_value("Designation", offer.designation)
+
 	onboarding = frappe.get_doc(
 		{
 			"doctype": "Employee Onboarding",
-			"job_applicant": offer.job_applicant,
+			"job_applicant": job_applicant,
 			"job_offer": offer.name,
 			"employee_name": offer.applicant_name,
 			"company": offer.company,
-			"designation": offer.designation,
+			"designation": designation,
 			"date_of_joining": nowdate(),
 			"boarding_begins_on": nowdate(),
 			"boarding_status": "Pending",

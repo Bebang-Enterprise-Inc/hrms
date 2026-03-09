@@ -173,22 +173,69 @@ class TestHrOnboardingBridge(unittest.TestCase):
 	def test_create_onboarding_from_offer_creates_new_doc(self):
 		offer = _Offer(status="Accepted")
 		draft = _OnboardingDraft()
+		captured_payload = {}
 
 		def _get_doc(arg1, arg2=None):
 			if arg1 == "Job Offer":
 				return offer
 			if isinstance(arg1, dict):
+				captured_payload.update(arg1)
 				return draft
 			raise AssertionError("unexpected get_doc call")
 
 		hr_onboarding.frappe.get_doc = MagicMock(side_effect=_get_doc)
-		hr_onboarding.frappe.db.exists = MagicMock(return_value=None)
+		hr_onboarding.frappe.db.exists = MagicMock(
+			side_effect=lambda doctype, filters=None, *args, **kwargs: None
+			if doctype == "Employee Onboarding"
+			else doctype in {"Job Applicant", "Designation"}
+		)
 
 		result = hr_onboarding.create_onboarding_from_offer("OFF-0001")
 
 		self.assertTrue(draft.inserted)
 		self.assertFalse(result["already_exists"])
 		self.assertEqual(result["onboarding_name"], "ONB-0001")
+		self.assertEqual(captured_payload["job_applicant"], "APP-001")
+		self.assertEqual(captured_payload["designation"], "Store OIC")
+
+	def test_create_onboarding_from_offer_resolves_email_job_applicant_and_skips_invalid_designation(self):
+		offer = _Offer(status="Accepted", job_applicant="juan@example.com")
+		offer.designation = "Crew"
+		draft = _OnboardingDraft()
+		captured_payload = {}
+
+		def _get_doc(arg1, arg2=None):
+			if arg1 == "Job Offer":
+				return offer
+			if isinstance(arg1, dict):
+				captured_payload.update(arg1)
+				return draft
+			raise AssertionError("unexpected get_doc call")
+
+		def _exists(doctype, filters=None, *args, **kwargs):
+			if doctype == "Employee Onboarding":
+				return None
+			if doctype == "Designation":
+				return False
+			if doctype == "Job Applicant":
+				return False
+			return None
+
+		def _get_value(doctype, filters=None, fieldname=None, *args, **kwargs):
+			if doctype == "Job Applicant" and filters == {"email_id": "juan@example.com"}:
+				return "HR-APP-2026-00001"
+			return None
+
+		hr_onboarding.frappe.get_doc = MagicMock(side_effect=_get_doc)
+		hr_onboarding.frappe.db.exists = MagicMock(side_effect=_exists)
+		hr_onboarding.frappe.db.get_value = MagicMock(side_effect=_get_value)
+
+		result = hr_onboarding.create_onboarding_from_offer("OFF-0001")
+
+		self.assertTrue(draft.inserted)
+		self.assertFalse(result["already_exists"])
+		self.assertEqual(captured_payload["job_applicant"], "HR-APP-2026-00001")
+		self.assertIsNone(captured_payload["designation"])
 
 	def test_get_onboarding_checklist_computes_progress(self):
 		onboarding = types.SimpleNamespace(
