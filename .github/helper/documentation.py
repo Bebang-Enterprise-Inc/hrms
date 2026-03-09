@@ -1,3 +1,4 @@
+import os
 import sys
 import requests
 from urllib.parse import urlparse
@@ -23,7 +24,8 @@ def docs_link_exists(body):
 
 if __name__ == "__main__":
 	pr = sys.argv[1]
-	response = requests.get("https://api.github.com/repos/frappe/hrms/pulls/{}".format(pr))
+	repository = os.environ.get("GITHUB_REPOSITORY", "frappe/hrms")
+	response = requests.get("https://api.github.com/repos/{}/pulls/{}".format(repository, pr))
 
 	if response.ok:
 		payload = response.json()

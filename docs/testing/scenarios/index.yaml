@@ -123,7 +123,7 @@ modules:
   - key: discount-monitoring
     status: ready
     command: discount-monitoring
-    scenario_count: 4
+    scenario_count: 10
     route_count_hint: 21
     prefixes:
       - DISCMON
@@ -405,7 +405,7 @@ flows:
       - docs/testing/scenarios/regressions/regression-bank-store-ops-inventory.md
 
 coverage:
-  generated_at_utc: 2026-03-09T02:48:01.921084+00:00
+  generated_at_utc: 2026-03-09T08:46:37.710496+00:00
   baseline_route_count: 214
   live_route_count: 244
   required_domains:
