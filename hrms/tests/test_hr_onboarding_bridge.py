@@ -185,11 +185,9 @@ class TestHrOnboardingBridge(unittest.TestCase):
 
 		hr_onboarding.frappe.get_doc = MagicMock(side_effect=_get_doc)
 		hr_onboarding.frappe.db.exists = MagicMock(
-			side_effect=lambda doctype, filters=None, *args, **kwargs: (
-				None
-				if doctype == "Employee Onboarding"
-				else doctype in {"Job Applicant", "Designation"}
-			)
+			side_effect=lambda doctype, filters=None, *args, **kwargs: None
+			if doctype == "Employee Onboarding"
+			else doctype in {"Job Applicant", "Designation"}
 		)
 
 		result = hr_onboarding.create_onboarding_from_offer("OFF-0001")
