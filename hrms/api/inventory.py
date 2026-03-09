@@ -1,7 +1,5 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
-# ruff: noqa: UP032
-
 """
 Inventory API
 Handles cycle counts, variances, and shelf life extensions
@@ -72,11 +70,15 @@ def _validate_cycle_count_type(
     return normalized
 
 
-def _clamp_multiplier(value, floor=0.70, ceiling=1.50):
+def _clamp_multiplier(value: float | int, floor: float = 0.70, ceiling: float = 1.50):
     return flt(min(max(flt(value), flt(floor)), flt(ceiling)), 4)
 
 
-def get_signal_modifiers(is_salary_week=False, is_holiday=False, is_weather_risk=False):
+def get_signal_modifiers(
+    is_salary_week: bool = False,
+    is_holiday: bool = False,
+    is_weather_risk: bool = False,
+):
     """Deterministic S019 demand modifiers used by ordering recommendation tuning."""
     salary_week_multiplier = 1.10 if is_salary_week else 1.0
     holiday_multiplier = 1.12 if is_holiday else 1.0
@@ -97,7 +99,12 @@ def get_signal_modifiers(is_salary_week=False, is_holiday=False, is_weather_risk
     }
 
 
-def apply_adaptive_tuning(current_multiplier, adjustment_delta, floor=0.70, ceiling=1.50):
+def apply_adaptive_tuning(
+    current_multiplier: float | int,
+    adjustment_delta: float | int,
+    floor: float = 0.70,
+    ceiling: float = 1.50,
+):
     """Clamp weekly tuning updates to agreed S019 guardrails."""
     return _clamp_multiplier(
         flt(current_multiplier) + flt(adjustment_delta),
@@ -107,7 +114,10 @@ def apply_adaptive_tuning(current_multiplier, adjustment_delta, floor=0.70, ceil
 
 
 @frappe.whitelist()
-def preview_adaptive_multiplier(current_multiplier=1.0, adjustment_delta=0.0):
+def preview_adaptive_multiplier(
+    current_multiplier: float | int = 1.0,
+    adjustment_delta: float | int = 0.0,
+):
     return {
         "multiplier_before": flt(current_multiplier, 4),
         "adjustment_delta": flt(adjustment_delta, 4),
@@ -116,7 +126,11 @@ def preview_adaptive_multiplier(current_multiplier=1.0, adjustment_delta=0.0):
 
 
 @frappe.whitelist()
-def submit_cycle_count(store=None, items=None, count_date=None):
+def submit_cycle_count(
+    store: str | None = None,
+    items: list[dict] | str | None = None,
+    count_date: str | None = None,
+):
     """DEPRECATED: Use submit_cycle_count_v2 instead.
 
     B-7: This v1 endpoint bypasses duplicate check and doesn't set count_type.
@@ -187,8 +201,15 @@ def submit_cycle_count(store=None, items=None, count_date=None):
 
 
 @frappe.whitelist()
-def get_cycle_counts(store=None, date_from=None, date_to=None, status=None,
-                     count_type=None, external_auditor=None, limit=20):
+def get_cycle_counts(
+    store: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    status: str | None = None,
+    count_type: str | None = None,
+    external_auditor: str | None = None,
+    limit: int = 20,
+):
     """Get cycle count history with filtering."""
     # External Auditors: verify store access when filtering by store
     if store and "External Auditor" in frappe.get_roles():
@@ -230,7 +251,7 @@ def get_cycle_counts(store=None, date_from=None, date_to=None, status=None,
 
 
 @frappe.whitelist()
-def get_cycle_count(name):
+def get_cycle_count(name: str):
     """Get single cycle count with items."""
     doc = frappe.get_doc("BEI Cycle Count", name)
     doc.check_permission("read")
@@ -282,7 +303,7 @@ def get_cycle_count(name):
 
 
 @frappe.whitelist()
-def approve_cycle_count(cycle_count_name, action, comment=None):
+def approve_cycle_count(cycle_count_name: str, action: str, comment: str | None = None):
     """Approve or reject a submitted cycle count.
 
     Args:
@@ -330,7 +351,7 @@ def approve_cycle_count(cycle_count_name, action, comment=None):
 
 
 @frappe.whitelist()
-def reject_cycle_count(count_name, rejection_reason):
+def reject_cycle_count(count_name: str, rejection_reason: str):
     """Reject a submitted cycle count with a reason.
 
     DEPRECATED: Use approve_cycle_count(cycle_count_name, action="Reject", comment=rejection_reason) instead.
@@ -340,7 +361,11 @@ def reject_cycle_count(count_name, rejection_reason):
 
 
 @frappe.whitelist()
-def mark_cycle_count_reconciled(count_name, stock_reconciliation_name=None, notes=None):
+def mark_cycle_count_reconciled(
+    count_name: str,
+    stock_reconciliation_name: str | None = None,
+    notes: str | None = None,
+):
     """Mark a Verified cycle count as Reconciled.
 
     Called after Finance reconciles the count against the stock reconciliation document.
@@ -385,7 +410,7 @@ def mark_cycle_count_reconciled(count_name, stock_reconciliation_name=None, note
 
 
 @frappe.whitelist()
-def resubmit_cycle_count(count_name, items):
+def resubmit_cycle_count(count_name: str, items: list[dict] | str):
     """
     Resubmit a rejected cycle count with corrected counts.
     Creates a new cycle count document linked to the original.
@@ -449,8 +474,15 @@ def resubmit_cycle_count(count_name, items):
 
 
 @frappe.whitelist()
-def report_variance(store, item_code, system_qty=0, actual_qty=0,
-                    variance_type=None, explanation=None, photo=None):
+def report_variance(
+    store: str,
+    item_code: str,
+    system_qty: float | int = 0,
+    actual_qty: float | int = 0,
+    variance_type: str | None = None,
+    explanation: str | None = None,
+    photo: str | None = None,
+):
     """Report inventory variance.
 
     Bug fixes (C8):
@@ -503,7 +535,7 @@ def report_variance(store, item_code, system_qty=0, actual_qty=0,
 
 
 @frappe.whitelist()
-def get_variances(store=None, status=None, limit=20):
+def get_variances(store: str | None = None, status: str | None = None, limit: int = 20):
     """Get inventory variances."""
     limit = min(int(limit or 20), 500)
     filters = {}
@@ -526,8 +558,16 @@ def get_variances(store=None, status=None, limit=20):
 
 
 @frappe.whitelist()
-def request_shelf_extension(store, item_code, original_expiry, requested_expiry,
-                            quantity, reason, batch_no=None, photo=None):
+def request_shelf_extension(
+    store: str,
+    item_code: str,
+    original_expiry: str,
+    requested_expiry: str,
+    quantity: float | int,
+    reason: str,
+    batch_no: str | None = None,
+    photo: str | None = None,
+):
     """Request shelf life extension for an item.
 
     Bug fix (C9): Store OIC/Staff get permission error because BEI Shelf Life Extension
@@ -576,7 +616,12 @@ def request_shelf_extension(store, item_code, original_expiry, requested_expiry,
 
 
 @frappe.whitelist()
-def approve_shelf_extension(extension_name, approved_expiry=None, rejection_reason=None, approve=True):
+def approve_shelf_extension(
+    extension_name: str,
+    approved_expiry: str | None = None,
+    rejection_reason: str | None = None,
+    approve: bool = True,
+):
     """Approve or reject shelf life extension."""
     allowed_roles = ["Area Supervisor", "Store Supervisor", "System Manager"]
     if not any(r in frappe.get_roles(frappe.session.user) for r in allowed_roles):
@@ -599,7 +644,7 @@ def approve_shelf_extension(extension_name, approved_expiry=None, rejection_reas
 
 # ============ RETURNS APIs ============
 
-def _resolve_warehouse(store_or_branch):
+def _resolve_warehouse(store_or_branch: str):
     """Resolve a branch name to full warehouse name."""
     if not store_or_branch:
         return None
@@ -624,7 +669,7 @@ def _resolve_warehouse(store_or_branch):
 
 
 @frappe.whitelist()
-def get_returnable_items(store=None):
+def get_returnable_items(store: str | None = None):
     """
     Get items that can be returned from a store.
     Returns items with current stock in the store's warehouse.
@@ -674,7 +719,7 @@ def get_return_reasons():
 
 
 @frappe.whitelist()
-def submit_return_request(store, items, photo=None):
+def submit_return_request(store: str, items: list[dict] | str, photo: str | None = None):
     """
     Submit a return request to commissary.
     Items should be a list of {item_code, quantity, reason, notes}
@@ -749,7 +794,7 @@ def submit_return_request(store, items, photo=None):
 
 
 @frappe.whitelist()
-def get_return_requests(store=None, status=None, limit=20):
+def get_return_requests(store: str | None = None, status: str | None = None, limit: int = 20):
     """Get return request history for a store."""
     limit = min(int(limit or 20), 500)
     filters = {}
@@ -788,7 +833,7 @@ def get_return_requests(store=None, status=None, limit=20):
 
 # ============ STOCK COUNTING APIs (Phase 1) ============
 
-def _map_item_group(item_group):
+def _map_item_group(item_group: str | None):
     """Map Frappe Item Group hierarchy to COS RECON categories."""
     mapping = {
         "Finished Goods": "FG",
@@ -799,7 +844,7 @@ def _map_item_group(item_group):
     return mapping.get(item_group, "Other")
 
 
-def _check_store_access(store):
+def _check_store_access(store: str):
     """Verify External Auditor has access to this store via BEI External Auditor Store Access."""
     if "External Auditor" not in frappe.get_roles():
         return  # Only check for External Auditors
@@ -1088,7 +1133,7 @@ def save_cycle_count_draft(
 
 
 @frappe.whitelist()
-def export_count_to_cos_recon(cycle_count_name):
+def export_count_to_cos_recon(cycle_count_name: str):
     """Generate COS RECON Excel and attach to cycle count record."""
     import openpyxl
 
@@ -1175,7 +1220,7 @@ def export_count_to_cos_recon(cycle_count_name):
 # 3MD Cold, 3MD Dry, JENTEC, RCS, PINNACLE, SHAW
 
 @frappe.whitelist()
-def get_warehouse_stock(warehouse=None, item_group=None):
+def get_warehouse_stock(warehouse: str | None = None, item_group: str | None = None):
     """
     GET stock levels across warehouses.
     If warehouse is specified, filter to that warehouse only.
@@ -1198,7 +1243,8 @@ def get_warehouse_stock(warehouse=None, item_group=None):
 
     where_clause = " AND ".join(conditions)
 
-    stock = frappe.db.sql("""
+    query = (
+        """
         SELECT
             b.item_code,
             i.item_name,
@@ -1218,15 +1264,19 @@ def get_warehouse_stock(warehouse=None, item_group=None):
         LEFT JOIN `tabItem Reorder` ir
             ON ir.parent = b.item_code
             AND ir.warehouse = b.warehouse
-        WHERE {where_clause}
+        WHERE """
+        + where_clause
+        + """
         ORDER BY b.warehouse, i.item_name
-    """.format(where_clause=where_clause), values, as_dict=True)
+    """
+    )
+    stock = frappe.db.sql(query, values, as_dict=True)
 
     return stock
 
 
 @frappe.whitelist()
-def daily_stock_update(warehouse, items):
+def daily_stock_update(warehouse: str, items: list[dict] | str):
     """
     POST daily SOH (Stock on Hand) update for a warehouse.
     Creates a Stock Reconciliation entry in Frappe.
@@ -1283,7 +1333,7 @@ def daily_stock_update(warehouse, items):
 
 
 @frappe.whitelist()
-def get_low_stock_alerts(warehouse=None):
+def get_low_stock_alerts(warehouse: str | None = None):
     """
     GET items currently below their reorder point.
 
@@ -1301,7 +1351,8 @@ def get_low_stock_alerts(warehouse=None):
 
     where_clause = " AND ".join(conditions)
 
-    alerts = frappe.db.sql("""
+    query = (
+        """
         SELECT
             b.item_code,
             i.item_name,
@@ -1316,9 +1367,13 @@ def get_low_stock_alerts(warehouse=None):
         INNER JOIN `tabItem Reorder` ir
             ON ir.parent = b.item_code
             AND ir.warehouse = b.warehouse
-        WHERE {where_clause}
+        WHERE """
+        + where_clause
+        + """
         ORDER BY shortage DESC, b.warehouse, i.item_name
-    """.format(where_clause=where_clause), values, as_dict=True)
+    """
+    )
+    alerts = frappe.db.sql(query, values, as_dict=True)
 
     return alerts
 
@@ -1361,7 +1416,7 @@ def get_multi_warehouse_summary():
 
 
 @frappe.whitelist()
-def get_item_stock_history(item_code, warehouse=None, days=30):
+def get_item_stock_history(item_code: str, warehouse: str | None = None, days: int = 30):
     """
     GET stock movement history for an item from Stock Ledger Entry.
 
@@ -1391,7 +1446,8 @@ def get_item_stock_history(item_code, warehouse=None, days=30):
 
     where_clause = " AND ".join(conditions)
 
-    history = frappe.db.sql("""
+    query = (
+        """
         SELECT
             sle.posting_date AS `date`,
             sle.posting_datetime,
@@ -1402,16 +1458,20 @@ def get_item_stock_history(item_code, warehouse=None, days=30):
             sle.qty_after_transaction,
             sle.stock_value_difference
         FROM `tabStock Ledger Entry` sle
-        WHERE {where_clause}
+        WHERE """
+        + where_clause
+        + """
         ORDER BY sle.posting_datetime DESC
         LIMIT 500
-    """.format(where_clause=where_clause), values, as_dict=True)
+    """
+    )
+    history = frappe.db.sql(query, values, as_dict=True)
 
     return history
 
 
 @frappe.whitelist()
-def notify_gr_completion(gr_name):
+def notify_gr_completion(gr_name: str):
     """
     POST hook: called after a BEI Goods Receipt is submitted.
     Sends a Google Chat notification to Ian's and Jay's spaces.
@@ -1439,7 +1499,7 @@ def notify_gr_completion(gr_name):
     return {"status": "notified", "gr": gr_name}
 
 
-def _send_warehouse_gchat_notification(text):
+def _send_warehouse_gchat_notification(text: str):
     """
     Send a Google Chat message for warehouse/inventory alerts.
     Delegates to shared send_message_to_space() utility.
@@ -1507,7 +1567,7 @@ def send_low_stock_daily_alert():
 # ================================
 
 @frappe.whitelist()
-def get_open_variances(store=None):
+def get_open_variances(store: str | None = None):
     """Get open inventory variances for a store (or all stores).
 
     Used by store dashboard to show count of unresolved variances.
@@ -1537,7 +1597,7 @@ def get_open_variances(store=None):
 
 
 @frappe.whitelist()
-def start_variance_investigation(variance_name):
+def start_variance_investigation(variance_name: str):
     """Transition a variance from Open to Investigating.
 
     Args:
@@ -1562,7 +1622,12 @@ def start_variance_investigation(variance_name):
 
 
 @frappe.whitelist()
-def resolve_variance(variance_name, resolution_type, resolution_notes, adjustment_qty=None):
+def resolve_variance(
+    variance_name: str,
+    resolution_type: str,
+    resolution_notes: str,
+    adjustment_qty: float | int | None = None,
+):
     """Resolve a variance and optionally create a Stock Entry for write-offs.
 
     Resolution types:
