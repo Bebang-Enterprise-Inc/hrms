@@ -13,6 +13,8 @@ from frappe import _
 from frappe.utils import add_days, flt, now_datetime, nowdate
 
 from hrms.utils.bei_config import get_company
+from hrms.utils.scm_roles import SCM_INVENTORY_ROLES, SCM_STOCK_UPDATE_ROLES
+from hrms.utils.scm_roles import check_scm_permission as _check_warehouse_permission
 
 COUNT_TYPE_STORE_MONTHLY = "Store Monthly"
 COUNT_TYPE_WAREHOUSE_MONTHLY = "Warehouse Monthly"
@@ -1237,10 +1239,6 @@ def export_count_to_cos_recon(cycle_count_name):
 # ============ PHASE 2A: REAL-TIME WAREHOUSE STOCK APIs ============
 # Gives Ian real-time stock visibility across 6 BEI warehouses:
 # 3MD Cold, 3MD Dry, JENTEC, RCS, PINNACLE, SHAW
-
-# P0-10: Import centralized RBAC role sets
-from hrms.utils.scm_roles import SCM_INVENTORY_ROLES, SCM_STOCK_UPDATE_ROLES
-from hrms.utils.scm_roles import check_scm_permission as _check_warehouse_permission
 
 
 @frappe.whitelist()
