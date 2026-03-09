@@ -2944,9 +2944,7 @@ def upload_pos_data(
 			# Decode sales_summary if it's base64/data-url
 			if isinstance(sales_summary, str) and not sales_summary.startswith("/files/"):
 				try:
-					content, _decoded_ext = _decode_base64_attachment(
-						sales_summary, default_ext="xlsx"
-					)
+					content, _decoded_ext = _decode_base64_attachment(sales_summary, default_ext="xlsx")
 				except Exception:
 					content = sales_summary.encode() if isinstance(sales_summary, str) else sales_summary
 			else:
@@ -2991,9 +2989,7 @@ def upload_pos_data(
 	doc.transaction_report = save_base64_file(
 		transaction_report, doctype_name, fieldname="transaction_report", default_ext="xlsx"
 	)
-	doc.product_mix = save_base64_file(
-		product_mix, doctype_name, fieldname="product_mix", default_ext="xlsx"
-	)
+	doc.product_mix = save_base64_file(product_mix, doctype_name, fieldname="product_mix", default_ext="xlsx")
 	doc.daily_sales_revenue = save_base64_file(
 		daily_sales_revenue, doctype_name, fieldname="daily_sales_revenue", default_ext="xlsx"
 	)

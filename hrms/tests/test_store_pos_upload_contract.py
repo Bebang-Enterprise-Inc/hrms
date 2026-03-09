@@ -123,16 +123,11 @@ class TestStorePosUploadContract(unittest.TestCase):
 		store.validate_store_ops_role = lambda: None
 		store.resolve_warehouse = lambda value: value
 		store.frappe.new_doc = lambda doctype: doc
-		store.frappe.db.set_value = (
-			lambda doctype, name, fieldname, value: set_value_calls.append(
-				(doctype, name, fieldname, value)
-			)
+		store.frappe.db.set_value = lambda doctype, name, fieldname, value: set_value_calls.append(
+			(doctype, name, fieldname, value)
 		)
-		store.save_base64_file = (
-			lambda _data, _doctype, fieldname="attachment", default_ext="bin": saved_fields.append(
-				(fieldname, default_ext)
-			)
-			or f"/files/{fieldname}.{default_ext}"
+		store.save_base64_file = lambda _data, _doctype, fieldname="attachment", default_ext="bin": (
+			saved_fields.append((fieldname, default_ext)) or f"/files/{fieldname}.{default_ext}"
 		)
 
 		result = store.upload_pos_data(
