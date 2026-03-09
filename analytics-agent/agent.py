@@ -89,7 +89,7 @@ async def main():
                 "mcp__bei__upload_to_drive",
                 "mcp__bei__send_gchat",
                 "mcp__bei__generate_report",
-                "Read", "Write", "Edit", "Glob", "Grep",
+                "Read",
             ],
             permission_mode="bypassPermissions",
             model="opus",

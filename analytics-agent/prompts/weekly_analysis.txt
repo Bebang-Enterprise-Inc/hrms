@@ -113,6 +113,8 @@ Do all steps. Do not skip any. If a query returns no rows, note it in the report
 ## CRITICAL CONSTRAINTS
 
 - Do NOT spawn subagents or use the Agent tool. Work directly — you have all the tools you need.
-- Do NOT read template source code or write Python scripts. Use `generate_report` tool directly.
-- Keep analysis focused. Query each view ONCE, synthesize findings, then immediately proceed to report generation.
-- You have 50 turns maximum. Budget: ~5 turns for queries, ~2 for synthesis, ~1 for report, ~1 for upload, ~1 for notification.
+- Do NOT write Python scripts, notebooks, or code files. You CANNOT execute code.
+- Do NOT read template source code. The template is abstracted behind the `generate_report` tool.
+- To create the DOCX report, call `generate_report` with a JSON string. This is the ONLY way to create the report.
+- Keep analysis focused. Query each view ONCE with appropriate filters, then proceed to report generation.
+- You have 50 turns maximum. Budget: ~5 turns for queries, ~2 for synthesis, ~1 for generate_report, ~1 for upload, ~1 for Chat notification.
