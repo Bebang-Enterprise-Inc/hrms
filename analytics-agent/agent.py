@@ -21,10 +21,9 @@ WEEKLY_PROMPT = PROMPT_PATH.read_text(encoding="utf-8")
 # System prompt enforces tool-only behavior
 SYSTEM_PROMPT = (
     "You are a data analyst that works EXCLUSIVELY through MCP tool calls. "
-    "You have exactly 4 tools available: query_supabase, generate_report, upload_to_drive, send_gchat. "
+    "You have exactly 4 tools: query_supabase, generate_report, upload_to_drive, send_gchat. "
     "You MUST use these tools to complete your work. "
     "You CANNOT write files, create scripts, use Bash, or execute code. "
-    "If you try to use Write, Edit, Bash, or any tool other than your 4 MCP tools, it will fail. "
     "After querying data, you MUST call generate_report with the data as a JSON string. "
     "Do not attempt any alternative approach to report generation."
 )
@@ -104,17 +103,22 @@ async def main():
                 "mcp__bei__send_gchat",
                 "mcp__bei__generate_report",
             ],
+            disallowed_tools=[
+                "Write", "Edit", "MultiEdit", "Bash",
+                "Agent", "Task", "NotebookEdit",
+            ],
             system_prompt=SYSTEM_PROMPT,
             permission_mode="bypassPermissions",
+            allow_dangerously_skip_permissions=True,
             model="opus",
-            max_turns=30,
+            max_turns=25,
         )
 
         print(f"Starting analyst agent with options: model={options.model}, max_turns={options.max_turns}")
         print(f"MCP servers: {list(options.mcp_servers.keys())}")
         print(f"Allowed tools: {options.allowed_tools}")
-        print(f"System prompt length: {len(SYSTEM_PROMPT)} chars")
-        print(f"User prompt length: {len(WEEKLY_PROMPT)} chars")
+        print(f"Disallowed tools: {options.disallowed_tools}")
+        print(f"Prompt length: {len(WEEKLY_PROMPT)} chars")
 
         msg_count = 0
         async for msg in query(prompt=WEEKLY_PROMPT, options=options):
@@ -134,8 +138,6 @@ async def main():
         else:
             run_log["errors"].append("No DOCX report found in runs/ after agent completed")
             print("WARNING: No DOCX report generated")
-        # Note: upload and notify are verified by agent tool call success
-        # but we can't check from here — mark them as attempted
         completed.extend(["upload_attempted", "notify_attempted"])
         run_log["sections"] = completed
         print("Agent completed successfully.")
@@ -143,7 +145,6 @@ async def main():
     except Exception as e:
         run_log["errors"].append(str(e))
         print(f"ERROR: {e}")
-        # Send failure notification via Google Chat (direct API, not agent)
         try:
             send_failure_alert(f"BEI Analytics Agent FAILED: {e}")
         except Exception as alert_err:

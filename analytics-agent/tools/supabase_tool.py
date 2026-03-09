@@ -92,30 +92,31 @@ def _ensure_secrets() -> tuple[str, str]:
         "limit": int,    # optional: row limit, default 100
     },
 )
-def query_supabase(
-    view: str,
-    filters: str = "",
-    select: str = "*",
-    limit: int = 100,
-) -> dict[str, Any] | list[dict[str, Any]]:
+async def query_supabase(args: dict[str, Any]) -> dict[str, Any]:
     """Query an allowed Supabase analytics view and return its rows."""
+    view = args["view"]
+    filters = args.get("filters", "")
+    select = args.get("select", "*")
+    limit = args.get("limit", 100)
 
     # ---- Allowlist gate ----
     if view not in ALLOWED_VIEWS:
         return {
-            "error": (
-                f"View '{view}' is not in the allowlist. "
-                f"Allowed views: {', '.join(sorted(ALLOWED_VIEWS))}"
-            ),
-            "rows": [],
+            "content": [
+                {
+                    "type": "text",
+                    "text": f"Error: View '{view}' is not in the allowlist. Allowed views: {', '.join(sorted(ALLOWED_VIEWS))}",
+                }
+            ],
+            "is_error": True,
         }
 
     try:
         base_url, key = _ensure_secrets()
     except subprocess.CalledProcessError as exc:
         return {
-            "error": f"Failed to fetch Doppler secrets: {exc.stderr or str(exc)}",
-            "rows": [],
+            "content": [{"type": "text", "text": f"Error: Failed to fetch Doppler secrets: {exc.stderr or str(exc)}"}],
+            "is_error": True,
         }
 
     # ---- Build URL ----
@@ -142,7 +143,15 @@ def query_supabase(
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             body = resp.read().decode("utf-8")
-            return json.loads(body)
+            rows = json.loads(body)
+            return {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": json.dumps(rows, indent=2),
+                    }
+                ]
+            }
     except urllib.error.HTTPError as exc:
         error_body = ""
         try:
@@ -150,12 +159,12 @@ def query_supabase(
         except Exception:
             pass
         return {
-            "error": f"HTTP {exc.code}: {exc.reason} — {error_body}",
-            "rows": [],
+            "content": [{"type": "text", "text": f"Error: HTTP {exc.code}: {exc.reason} — {error_body}"}],
+            "is_error": True,
         }
     except urllib.error.URLError as exc:
-        return {"error": f"URL error: {exc.reason}", "rows": []}
+        return {"content": [{"type": "text", "text": f"Error: URL error: {exc.reason}"}], "is_error": True}
     except json.JSONDecodeError as exc:
-        return {"error": f"Invalid JSON response: {exc}", "rows": []}
+        return {"content": [{"type": "text", "text": f"Error: Invalid JSON response: {exc}"}], "is_error": True}
     except Exception as exc:
-        return {"error": str(exc), "rows": []}
+        return {"content": [{"type": "text", "text": f"Error: {exc}"}], "is_error": True}

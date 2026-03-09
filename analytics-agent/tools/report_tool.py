@@ -26,22 +26,16 @@ from templates.weekly_report import generate_weekly_report
         "data_json": str,
     },
 )
-def generate_report(
-    data_json: str,
-) -> dict[str, Any]:
-    """Generate the weekly DOCX report from a JSON data string.
-
-    The data_json must contain: week_ending, ai_analysis, total_spend,
-    total_purchases, avg_cpa, campaigns, flagged_ads, boost_candidates,
-    weekly_trend, recommendations.
-    """
+async def generate_report(args: dict[str, Any]) -> dict[str, Any]:
+    """Generate the weekly DOCX report from a JSON data string."""
+    data_json = args["data_json"]
     print(f"[generate_report] CALLED with {len(data_json)} chars")
 
     try:
         data = json.loads(data_json)
     except json.JSONDecodeError as e:
         print(f"[generate_report] JSON parse error: {e}")
-        return {"error": f"Invalid JSON: {e}", "status": "failed"}
+        return {"content": [{"type": "text", "text": f"Error: Invalid JSON: {e}"}], "is_error": True}
 
     # Build output path
     we = data.get("week_ending", datetime.now().strftime("%Y-%m-%d"))
@@ -58,11 +52,13 @@ def generate_report(
         file_size = os.path.getsize(result_path)
         print(f"[generate_report] SUCCESS: {result_path} ({file_size} bytes)")
         return {
-            "output_path": result_path,
-            "filename": output_filename,
-            "file_size_bytes": file_size,
-            "status": "success",
+            "content": [
+                {
+                    "type": "text",
+                    "text": f"Report generated successfully: {result_path} ({file_size} bytes). Use this path with upload_to_drive.",
+                }
+            ]
         }
     except Exception as e:
         print(f"[generate_report] ERROR: {e}")
-        return {"error": str(e), "status": "failed"}
+        return {"content": [{"type": "text", "text": f"Error generating report: {e}"}], "is_error": True}

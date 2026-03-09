@@ -6,6 +6,7 @@ to Google Drive as sam@bebang.ph.
 
 import mimetypes
 import os
+from typing import Any
 
 from claude_agent_sdk import tool
 from google.oauth2 import service_account
@@ -37,23 +38,17 @@ def _get_drive_service():
         "filename": str,
     },
 )
-def upload_to_drive(
-    file_path: str,
-    folder_id: str = "",
-    filename: str = "",
-) -> dict:
-    """Upload a local file to Google Drive and share it (anyone with link).
+async def upload_to_drive(args: dict[str, Any]) -> dict[str, Any]:
+    """Upload a local file to Google Drive and share it (anyone with link)."""
+    file_path = args["file_path"]
+    folder_id = args.get("folder_id", "")
+    filename = args.get("filename", "")
 
-    Args:
-        file_path: Local path to the file to upload.
-        folder_id: Google Drive folder ID. Empty string means root.
-        filename: Name for the file in Drive. Defaults to the local filename.
-
-    Returns:
-        Dict with file_id, web_view_link, and filename.
-    """
     if not os.path.isfile(file_path):
-        raise FileNotFoundError(f"File not found: {file_path}")
+        return {
+            "content": [{"type": "text", "text": f"Error: File not found: {file_path}"}],
+            "is_error": True,
+        }
 
     if not filename:
         filename = os.path.basename(file_path)
@@ -63,46 +58,55 @@ def upload_to_drive(
     if mime_type is None:
         mime_type = "application/octet-stream"
 
-    service = _get_drive_service()
+    try:
+        service = _get_drive_service()
 
-    # Build file metadata
-    file_metadata: dict = {"name": filename}
-    if folder_id:
-        file_metadata["parents"] = [folder_id]
+        # Build file metadata
+        file_metadata: dict = {"name": filename}
+        if folder_id:
+            file_metadata["parents"] = [folder_id]
 
-    # Upload
-    media = MediaFileUpload(file_path, mimetype=mime_type, resumable=True)
-    created = (
-        service.files()
-        .create(
-            body=file_metadata,
-            media_body=media,
-            fields="id, webViewLink",
-        )
-        .execute()
-    )
-
-    file_id = created["id"]
-    web_view_link = created.get("webViewLink", "")
-
-    # Share: anyone with the link can view
-    service.permissions().create(
-        fileId=file_id,
-        body={"type": "anyone", "role": "reader"},
-        fields="id",
-    ).execute()
-
-    # Re-fetch link in case it wasn't populated before sharing
-    if not web_view_link:
-        updated = (
+        # Upload
+        media = MediaFileUpload(file_path, mimetype=mime_type, resumable=True)
+        created = (
             service.files()
-            .get(fileId=file_id, fields="webViewLink")
+            .create(
+                body=file_metadata,
+                media_body=media,
+                fields="id, webViewLink",
+            )
             .execute()
         )
-        web_view_link = updated.get("webViewLink", "")
 
-    return {
-        "file_id": file_id,
-        "web_view_link": web_view_link,
-        "filename": filename,
-    }
+        file_id = created["id"]
+        web_view_link = created.get("webViewLink", "")
+
+        # Share: anyone with the link can view
+        service.permissions().create(
+            fileId=file_id,
+            body={"type": "anyone", "role": "reader"},
+            fields="id",
+        ).execute()
+
+        # Re-fetch link in case it wasn't populated before sharing
+        if not web_view_link:
+            updated = (
+                service.files()
+                .get(fileId=file_id, fields="webViewLink")
+                .execute()
+            )
+            web_view_link = updated.get("webViewLink", "")
+
+        return {
+            "content": [
+                {
+                    "type": "text",
+                    "text": f"Uploaded to Google Drive: {filename} (ID: {file_id})\nLink: {web_view_link}",
+                }
+            ]
+        }
+    except Exception as e:
+        return {
+            "content": [{"type": "text", "text": f"Error uploading to Drive: {e}"}],
+            "is_error": True,
+        }

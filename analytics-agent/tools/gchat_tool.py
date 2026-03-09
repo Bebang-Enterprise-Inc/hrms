@@ -8,6 +8,7 @@ Uses service account with Chat Bot scope (NOT DWD).
 """
 
 import os
+from typing import Any
 
 from claude_agent_sdk import tool
 from google.oauth2 import service_account
@@ -35,31 +36,37 @@ def _get_chat_service():
         "message": str,
     },
 )
-def send_gchat(message: str) -> dict:
-    """Send a message to the BEI notification space in Google Chat.
+async def send_gchat(args: dict[str, Any]) -> dict[str, Any]:
+    """Send a message to the BEI notification space in Google Chat."""
+    message = args["message"]
 
-    Args:
-        message: Google Chat formatted text to send.
+    try:
+        service = _get_chat_service()
 
-    Returns:
-        Dict with message_id and sent status.
-    """
-    service = _get_chat_service()
-
-    response = (
-        service.spaces()
-        .messages()
-        .create(
-            parent=NOTIFICATION_SPACE,
-            body={"text": message},
+        response = (
+            service.spaces()
+            .messages()
+            .create(
+                parent=NOTIFICATION_SPACE,
+                body={"text": message},
+            )
+            .execute()
         )
-        .execute()
-    )
 
-    return {
-        "message_id": response.get("name", ""),
-        "sent": True,
-    }
+        message_id = response.get("name", "")
+        return {
+            "content": [
+                {
+                    "type": "text",
+                    "text": f"Message sent to Google Chat (ID: {message_id})",
+                }
+            ]
+        }
+    except Exception as e:
+        return {
+            "content": [{"type": "text", "text": f"Error sending message: {e}"}],
+            "is_error": True,
+        }
 
 
 def send_failure_alert(error_message: str) -> bool:
@@ -67,12 +74,6 @@ def send_failure_alert(error_message: str) -> bool:
 
     This is a standalone function (NOT a @tool) meant to be called directly
     by agent.py when the agent crashes. It must work without the agent being alive.
-
-    Args:
-        error_message: Description of the failure.
-
-    Returns:
-        True if the alert was sent, False otherwise.
     """
     try:
         service = _get_chat_service()
