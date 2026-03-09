@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime
 from hrms.utils.bei_config import get_company
+from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 
 
 class BEIGoodsReceipt(Document):
@@ -271,6 +272,7 @@ class BEIGoodsReceipt(Document):
             "bei_goods_receipt": self.name,  # Reference back to BEI GR
             "items": pr_items
         })
+        apply_standard_buying_context(pr, store_label=self.warehouse or bei_po.ship_to)
 
         # Add rejected warehouse if there are rejections
         if self.total_rejected_qty > 0:
