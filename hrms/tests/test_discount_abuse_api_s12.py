@@ -170,6 +170,168 @@ class TestDiscountAbuseApiS12(unittest.TestCase):
 			["Overview", "SameDay_All", "SameDay_Critical", "Rolling30D_All", "Rolling30D_High"],
 		)
 
+	def test_build_investigation_summary_payload_aggregates_store_metrics(self):
+		same_day_rows = [
+			{
+				"scope": "store",
+				"store_name": "SM North EDSA",
+				"severity": "critical",
+				"detection_type": "same_name_same_day_same_store",
+				"rapid_within_4h": True,
+			},
+			{
+				"scope": "store",
+				"store_name": "SM North EDSA",
+				"severity": "critical",
+				"detection_type": "same_reference_diff_name_same_day_same_store",
+				"rapid_within_4h": False,
+			},
+			{
+				"scope": "chain",
+				"store_name": "SM North EDSA | SM Megamall",
+				"severity": "high",
+				"detection_type": "same_reference_same_day_multi_store",
+				"rapid_within_4h": True,
+			},
+		]
+		item_rows = [
+			{
+				"location_id": 1,
+				"store_name": "SM North EDSA",
+				"business_date": "2026-02-13",
+				"order_id": 1001,
+				"bill_number": "61540",
+				"discount_amount": 20.25,
+				"discount_bir_category": "SC",
+				"discount_customer_full_name_normalized": "HELEN PAGLINGAYEN",
+				"discount_reference_number_normalized": "25402",
+			},
+			{
+				"location_id": 1,
+				"store_name": "SM North EDSA",
+				"business_date": "2026-02-13",
+				"order_id": 1001,
+				"bill_number": "61540",
+				"discount_amount": 25.10,
+				"discount_bir_category": "SC",
+				"discount_customer_full_name_normalized": "PETRONA REYES",
+				"discount_reference_number_normalized": "25402",
+			},
+			{
+				"location_id": 1,
+				"store_name": "SM North EDSA",
+				"business_date": "2026-02-13",
+				"order_id": 1001,
+				"bill_number": "61540",
+				"discount_amount": 25.37,
+				"discount_bir_category": "SC",
+				"discount_customer_full_name_normalized": "MARIA VIDAR",
+				"discount_reference_number_normalized": "3594",
+			},
+		]
+		paid_order_rows = [
+			{
+				"id": 1001,
+				"location_id": 1,
+				"store_name": "SM North EDSA",
+				"business_date": "2026-02-13",
+				"original_gross_sales": 1000,
+				"gross_sales": 900,
+				"net_sales": 800,
+				"total_discounts": 70.72,
+			}
+		]
+
+		payload = discount_abuse._build_investigation_summary_payload(
+			date(2026, 2, 1),
+			date(2026, 2, 28),
+			["SM North EDSA"],
+			{"SC"},
+			same_day_rows,
+			item_rows,
+			paid_order_rows,
+		)
+
+		self.assertEqual(payload["totals"]["same_day_repeat_name_findings"], 1)
+		self.assertEqual(payload["totals"]["same_day_same_reference_different_name_findings"], 1)
+		self.assertEqual(payload["totals"]["same_day_rapid_repeat_name_findings_4h"], 1)
+		self.assertEqual(payload["totals"]["contextual_multi_name_receipts"], 1)
+		self.assertEqual(payload["stores"][0]["same_day_metrics"]["repeat_name_findings"], 1)
+		self.assertEqual(
+			payload["stores"][0]["same_day_metrics"]["same_reference_different_name_findings"],
+			1,
+		)
+		self.assertEqual(payload["stores"][0]["chain_metrics"]["same_day_chain_rows"], 1)
+		self.assertEqual(payload["stores"][0]["contextual_metrics"]["multi_name_receipts"], 1)
+
+	def test_build_investigation_case_rows_includes_alert_and_context_receipt_cases(self):
+		same_day_rows = [
+			{
+				"event_date": "2026-02-13",
+				"scope": "store",
+				"scope_key": 12,
+				"store_name": "SM North EDSA",
+				"severity": "critical",
+				"detection_type": "same_reference_diff_name_same_day_same_store",
+				"identity_key": "25402",
+				"customer_names": "HELEN PAGLINGAYEN | PETRONA REYES",
+				"reference_numbers": "25402",
+				"bill_numbers": "61540 | 61613",
+				"business_dates": "2026-02-13",
+				"order_count": 2,
+				"store_count": 1,
+				"discount_amount_total": "70.72",
+				"rapid_within_4h": True,
+				"min_gap_minutes": 25,
+				"details": {},
+			}
+		]
+		item_rows = [
+			{
+				"location_id": 1,
+				"store_name": "SM North EDSA",
+				"business_date": "2026-02-20",
+				"order_id": 2001,
+				"bill_number": "63255",
+				"discount_amount": 15,
+				"discount_customer_full_name_normalized": "GLORIA FRANCISCO",
+				"discount_reference_number_normalized": "1625",
+			},
+			{
+				"location_id": 1,
+				"store_name": "SM North EDSA",
+				"business_date": "2026-02-20",
+				"order_id": 2001,
+				"bill_number": "63255",
+				"discount_amount": 15,
+				"discount_customer_full_name_normalized": "EMILIA VICENTE",
+				"discount_reference_number_normalized": "6277",
+			},
+			{
+				"location_id": 1,
+				"store_name": "SM North EDSA",
+				"business_date": "2026-02-20",
+				"order_id": 2001,
+				"bill_number": "63255",
+				"discount_amount": 15,
+				"discount_customer_full_name_normalized": "ROLLIE PIOQUID",
+				"discount_reference_number_normalized": "3594",
+			},
+		]
+
+		rows = discount_abuse._build_investigation_case_rows(
+			["SM North EDSA"],
+			same_day_rows,
+			item_rows,
+		)
+
+		self.assertEqual(len(rows), 2)
+		self.assertEqual(rows[0]["case_bucket"], "same_day_alert")
+		self.assertEqual(rows[0]["names"], ["HELEN PAGLINGAYEN", "PETRONA REYES"])
+		self.assertEqual(rows[1]["case_bucket"], "contextual_receipt")
+		self.assertEqual(rows[1]["detection_type"], "context_multi_name_receipt")
+		self.assertEqual(rows[1]["bill_numbers"], ["63255"])
+
 
 if __name__ == "__main__":
 	unittest.main()

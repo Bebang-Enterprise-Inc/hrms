@@ -7,6 +7,7 @@ import json
 import os
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
+from itertools import pairwise
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -111,7 +112,10 @@ def _supabase_headers() -> dict[str, str]:
 	}
 
 
-def _supabase_get(resource: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def _supabase_get(
+	resource: str,
+	params: dict[str, Any] | list[tuple[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
 	response = requests.get(
 		f"{_get_supabase_url()}/rest/v1/{resource}",
 		headers=_supabase_headers(),
@@ -126,6 +130,42 @@ def _supabase_get(resource: str, params: dict[str, Any] | None = None) -> list[d
 	if isinstance(payload, list):
 		return payload
 	raise RuntimeError(f"Unexpected Supabase payload for {resource}")
+
+
+def _supabase_merge_params(
+	params: dict[str, Any] | list[tuple[str, Any]] | None,
+	extra: list[tuple[str, Any]],
+) -> dict[str, Any] | list[tuple[str, Any]]:
+	if params is None:
+		return list(extra)
+	if isinstance(params, dict):
+		merged = dict(params)
+		for key, value in extra:
+			merged[key] = value
+		return merged
+	merged = [(key, value) for key, value in params if key not in {"limit", "offset"}]
+	merged.extend(extra)
+	return merged
+
+
+def _supabase_get_all(
+	resource: str,
+	params: dict[str, Any] | list[tuple[str, Any]] | None = None,
+	page_size: int = 1000,
+) -> list[dict[str, Any]]:
+	all_rows: list[dict[str, Any]] = []
+	offset = 0
+	while True:
+		page_params = _supabase_merge_params(
+			params,
+			[("limit", str(page_size)), ("offset", str(offset))],
+		)
+		rows = _supabase_get(resource, page_params)
+		all_rows.extend(rows)
+		if len(rows) < page_size:
+			break
+		offset += page_size
+	return all_rows
 
 
 def _supabase_patch(
@@ -193,6 +233,66 @@ def _to_number(value: Any) -> float:
 		return float(value)
 	except (TypeError, ValueError):
 		return 0.0
+
+
+def _normalize_text(value: Any) -> str:
+	if value is None:
+		return ""
+	return " ".join(str(value).strip().upper().split())
+
+
+def _split_pipe_values(value: Any) -> list[str]:
+	if value is None:
+		return []
+	if isinstance(value, list | tuple | set):
+		values: list[str] = []
+		for entry in value:
+			values.extend(_split_pipe_values(entry))
+		return values
+	text = str(value).strip()
+	if not text:
+		return []
+	return [part.strip() for part in text.split("|") if part.strip()]
+
+
+def _dedupe_preserve_order(values: list[str]) -> list[str]:
+	seen: set[str] = set()
+	result: list[str] = []
+	for value in values:
+		key = _normalize_text(value)
+		if not key or key in seen:
+			continue
+		seen.add(key)
+		result.append(key)
+	return result
+
+
+def _canonical_discount_category(
+	category: Any,
+	discount_name_normalized: Any = None,
+	discount_name: Any = None,
+) -> str:
+	category_text = _normalize_text(category)
+	if category_text in {"SC", "PWD"}:
+		return category_text
+	name_text = _normalize_text(discount_name_normalized or discount_name)
+	if "PWD" in name_text:
+		return "PWD"
+	if "SENIOR" in name_text or "SC" == name_text:
+		return "SC"
+	return ""
+
+
+def _parse_iso_datetime(value: Any) -> datetime | None:
+	if not value:
+		return None
+	text = str(value).strip()
+	if not text:
+		return None
+	try:
+		return datetime.fromisoformat(text.replace("Z", "+00:00"))
+	except ValueError:
+		return None
 
 
 def _safe_json(value: Any) -> dict[str, Any]:
@@ -386,6 +486,575 @@ def _make_summary(same_day_rows: list[dict[str, Any]], rolling_rows: list[dict[s
 		"rolling_high": int(rolling_counts.get("high", 0)),
 		"rolling_review": int(rolling_counts.get("review", 0)),
 	}
+
+
+def _format_display_window(start_day: date, end_day: date) -> str:
+	if start_day == end_day:
+		return _format_display_date(start_day)
+	return f"{_format_display_date(start_day)} to {_format_display_date(end_day)}"
+
+
+def _parse_store_names(value: str | None) -> list[str]:
+	if not value:
+		return []
+	return [part.strip() for part in str(value).split(",") if part.strip()]
+
+
+def _parse_category_filter(value: str | None) -> set[str] | None:
+	text = _normalize_text(value)
+	if not text or text == "ALL":
+		return None
+	return {part.strip() for part in text.split(",") if part.strip() in {"SC", "PWD"}}
+
+
+def _get_store_directory() -> dict[int, str]:
+	rows = _supabase_get_all(
+		"stores",
+		{
+			"select": "location_id,store_name",
+			"order": "store_name.asc",
+		},
+		page_size=200,
+	)
+	return {int(row["location_id"]): str(row["store_name"]) for row in rows if row.get("location_id")}
+
+
+def _resolve_selected_stores(store_names: list[str]) -> tuple[list[int], dict[int, str]]:
+	store_directory = _get_store_directory()
+	if not store_names:
+		return [], {}
+	normalized_to_id = {
+		_normalize_text(store_name): location_id for location_id, store_name in store_directory.items()
+	}
+	selected_location_ids: list[int] = []
+	selected_store_map: dict[int, str] = {}
+	for store_name in store_names:
+		location_id = normalized_to_id.get(_normalize_text(store_name))
+		if location_id is None:
+			continue
+		if location_id in selected_store_map:
+			continue
+		selected_location_ids.append(location_id)
+		selected_store_map[location_id] = store_directory[location_id]
+	return selected_location_ids, selected_store_map
+
+
+def _row_mentions_store(row: dict[str, Any], store_name: str) -> bool:
+	names = _split_pipe_values(row.get("store_name"))
+	if not names and row.get("store_name"):
+		names = [str(row["store_name"])]
+	needle = _normalize_text(store_name)
+	return any(_normalize_text(name) == needle for name in names)
+
+
+def _query_same_day_rows_range(
+	start_day: date,
+	end_day: date,
+	categories: set[str] | None = None,
+) -> list[dict[str, Any]]:
+	params: list[tuple[str, Any]] = [
+		("select", "*"),
+		("queue_bucket", "eq.same_day"),
+		("event_date", f"gte.{start_day.isoformat()}"),
+		("event_date", f"lte.{end_day.isoformat()}"),
+		("order", SAME_DAY_QUEUE_ORDER),
+	]
+	rows = [_normalize_queue_row(row) for row in _supabase_get_all("v_discount_identity_audit_queue", params)]
+	if categories:
+		rows = [row for row in rows if _normalize_text(row.get("discount_bir_category")) in categories]
+	return rows
+
+
+def _query_paid_orders_for_range(
+	start_day: date, end_day: date, location_ids: list[int]
+) -> list[dict[str, Any]]:
+	if not location_ids:
+		return []
+	location_list = ",".join(str(location_id) for location_id in location_ids)
+	params: list[tuple[str, Any]] = [
+		(
+			"select",
+			"id,location_id,business_date,original_gross_sales,gross_sales,net_sales,total_discounts",
+		),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("location_id", f"in.({location_list})"),
+		("payment_status", "eq.PAID"),
+		("order", "business_date.asc,id.asc"),
+	]
+	return _supabase_get_all("pos_orders", params)
+
+
+def _query_discount_item_rows_for_range(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+	categories: set[str] | None = None,
+) -> list[dict[str, Any]]:
+	if not location_ids:
+		return []
+	location_list = ",".join(str(location_id) for location_id in location_ids)
+	store_map = _get_store_directory()
+	select_fields = ",".join(
+		[
+			"order_id",
+			"line_number",
+			"product_name",
+			"quantity",
+			"discount_amount",
+			"discount_name",
+			"discount_name_normalized",
+			"discount_bir_category",
+			"discount_customer_full_name",
+			"discount_customer_full_name_normalized",
+			"discount_reference_number",
+			"discount_reference_number_normalized",
+			"pos_orders!inner(id,location_id,business_date,bill_number,receipt_number,billed_at,paid_at,payment_status,original_gross_sales,gross_sales,net_sales,total_discounts)",
+		]
+	)
+	params: list[tuple[str, Any]] = [
+		("select", select_fields),
+		("discount_amount", "gt.0"),
+		("pos_orders.business_date", f"gte.{start_day.isoformat()}"),
+		("pos_orders.business_date", f"lte.{end_day.isoformat()}"),
+		("pos_orders.location_id", f"in.({location_list})"),
+		("pos_orders.payment_status", "eq.PAID"),
+		("order", "order_id.asc,line_number.asc"),
+	]
+	rows = _supabase_get_all("pos_order_items", params)
+	result: list[dict[str, Any]] = []
+	for row in rows:
+		order = row.get("pos_orders") or {}
+		location_id = int(order.get("location_id") or 0)
+		category = _canonical_discount_category(
+			row.get("discount_bir_category"),
+			row.get("discount_name_normalized"),
+			row.get("discount_name"),
+		)
+		if not category:
+			continue
+		if categories and category not in categories:
+			continue
+		result.append(
+			{
+				"location_id": location_id,
+				"store_name": store_map.get(location_id, str(location_id)),
+				"business_date": str(order.get("business_date") or ""),
+				"order_id": int(order.get("id") or row.get("order_id") or 0),
+				"bill_number": str(order.get("bill_number") or ""),
+				"receipt_number": str(order.get("receipt_number") or ""),
+				"billed_at": order.get("billed_at"),
+				"paid_at": order.get("paid_at"),
+				"order_gross_sales": _to_number(order.get("original_gross_sales")),
+				"order_net_sales_w_vat": _to_number(order.get("gross_sales")),
+				"order_net_sales_wo_vat": _to_number(order.get("net_sales")),
+				"order_total_discounts": _to_number(order.get("total_discounts")),
+				"line_number": int(row.get("line_number") or 0),
+				"product_name": str(row.get("product_name") or ""),
+				"quantity": int(row.get("quantity") or 0),
+				"discount_amount": _to_number(row.get("discount_amount")),
+				"discount_name": str(row.get("discount_name") or ""),
+				"discount_name_normalized": str(row.get("discount_name_normalized") or ""),
+				"discount_bir_category": category,
+				"discount_customer_full_name": str(row.get("discount_customer_full_name") or ""),
+				"discount_customer_full_name_normalized": _normalize_text(
+					row.get("discount_customer_full_name_normalized")
+					or row.get("discount_customer_full_name")
+				),
+				"discount_reference_number": str(row.get("discount_reference_number") or ""),
+				"discount_reference_number_normalized": _normalize_text(
+					row.get("discount_reference_number_normalized") or row.get("discount_reference_number")
+				),
+			}
+		)
+	return result
+
+
+def _min_gap_minutes(rows: list[dict[str, Any]]) -> int | None:
+	timestamps = [
+		_parse_iso_datetime(row.get("billed_at")) or _parse_iso_datetime(row.get("paid_at")) for row in rows
+	]
+	parsed = sorted(ts for ts in timestamps if ts is not None)
+	if len(parsed) < 2:
+		return None
+	return min(int((right - left).total_seconds() // 60) for left, right in pairwise(parsed))
+
+
+def _extract_alert_associations(row: dict[str, Any]) -> dict[str, list[str]]:
+	details = _safe_json(row.get("details"))
+	names = _dedupe_preserve_order(
+		_split_pipe_values(row.get("customer_name"))
+		+ _split_pipe_values(row.get("customer_names"))
+		+ _split_pipe_values(details.get("customer_name"))
+		+ _split_pipe_values(details.get("customer_names"))
+	)
+	references = _dedupe_preserve_order(
+		_split_pipe_values(row.get("reference_number"))
+		+ _split_pipe_values(row.get("reference_numbers"))
+		+ _split_pipe_values(details.get("reference_number"))
+		+ _split_pipe_values(details.get("reference_numbers"))
+	)
+	bills = _dedupe_preserve_order(
+		_split_pipe_values(row.get("bill_numbers")) + _split_pipe_values(details.get("bill_numbers"))
+	)
+	business_dates = _dedupe_preserve_order(
+		_split_pipe_values(row.get("business_dates")) + _split_pipe_values(details.get("business_dates"))
+	)
+	return {
+		"names": names,
+		"references": references,
+		"bill_numbers": bills,
+		"business_dates": business_dates,
+	}
+
+
+def _build_store_sales_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
+	active_days = {str(row.get("business_date") or "") for row in rows if row.get("business_date")}
+	order_count = len(rows)
+	gross_sales = sum(_to_number(row.get("original_gross_sales")) for row in rows)
+	net_sales_w_vat = sum(_to_number(row.get("gross_sales")) for row in rows)
+	net_sales_wo_vat = sum(_to_number(row.get("net_sales")) for row in rows)
+	total_discounts = sum(_to_number(row.get("total_discounts")) for row in rows)
+	return {
+		"paid_orders": order_count,
+		"active_days": len(active_days),
+		"gross_sales": round(gross_sales, 2),
+		"net_sales_w_vat": round(net_sales_w_vat, 2),
+		"net_sales_wo_vat": round(net_sales_wo_vat, 2),
+		"total_discounts": round(total_discounts, 2),
+		"avg_order_gross": round(gross_sales / order_count, 2) if order_count else 0.0,
+	}
+
+
+def _build_store_item_summary(
+	rows: list[dict[str, Any]],
+	selected_categories: set[str] | None,
+) -> dict[str, Any]:
+	order_ids = {int(row["order_id"]) for row in rows if row.get("order_id")}
+	rows_with_name = [
+		row for row in rows if _normalize_text(row.get("discount_customer_full_name_normalized"))
+	]
+	rows_with_reference = [
+		row for row in rows if _normalize_text(row.get("discount_reference_number_normalized"))
+	]
+	breakdown_counter: Counter[str] = Counter(
+		_normalize_text(row.get("discount_bir_category")) for row in rows if row.get("discount_bir_category")
+	)
+	label = "ALL" if selected_categories is None else ",".join(sorted(selected_categories))
+	return {
+		"category_label": label,
+		"item_rows": len(rows),
+		"orders": len(order_ids),
+		"discount_total": round(sum(_to_number(row.get("discount_amount")) for row in rows), 2),
+		"rows_with_name": len(rows_with_name),
+		"rows_with_reference": len(rows_with_reference),
+		"category_breakdown": dict(sorted(breakdown_counter.items())),
+	}
+
+
+def _build_store_contextual_metrics(
+	rows: list[dict[str, Any]],
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+	orders: dict[tuple[str, int], dict[str, Any]] = {}
+	for row in rows:
+		key = (str(row.get("business_date") or ""), int(row.get("order_id") or 0))
+		order_bucket = orders.setdefault(
+			key,
+			{
+				"business_date": key[0],
+				"order_id": key[1],
+				"store_name": row.get("store_name"),
+				"bill_numbers": set(),
+				"names": set(),
+				"references": set(),
+				"discount_amount_total": 0.0,
+			},
+		)
+		if row.get("bill_number"):
+			order_bucket["bill_numbers"].add(str(row["bill_number"]))
+		name = _normalize_text(row.get("discount_customer_full_name_normalized"))
+		ref = _normalize_text(row.get("discount_reference_number_normalized"))
+		if name:
+			order_bucket["names"].add(name)
+		if ref:
+			order_bucket["references"].add(ref)
+		order_bucket["discount_amount_total"] += _to_number(row.get("discount_amount"))
+
+	name_groups: dict[str, dict[str, set[Any]]] = {}
+	ref_groups: dict[str, dict[str, set[Any]]] = {}
+	non_four_digit_reference_rows = 0
+	for row in rows:
+		name = _normalize_text(row.get("discount_customer_full_name_normalized"))
+		ref = _normalize_text(row.get("discount_reference_number_normalized"))
+		order_id = int(row.get("order_id") or 0)
+		if ref and len(ref) != 4:
+			non_four_digit_reference_rows += 1
+		if name:
+			name_bucket = name_groups.setdefault(name, {"references": set(), "orders": set()})
+			if ref:
+				name_bucket["references"].add(ref)
+			name_bucket["orders"].add(order_id)
+		if ref:
+			ref_bucket = ref_groups.setdefault(ref, {"names": set(), "orders": set()})
+			if name:
+				ref_bucket["names"].add(name)
+			ref_bucket["orders"].add(order_id)
+
+	multi_name_receipts: list[dict[str, Any]] = []
+	for order_bucket in orders.values():
+		distinct_names = sorted(order_bucket["names"])
+		distinct_references = sorted(order_bucket["references"])
+		if len(distinct_names) >= 2:
+			multi_name_receipts.append(
+				{
+					"business_date": order_bucket["business_date"],
+					"order_id": order_bucket["order_id"],
+					"store_name": order_bucket["store_name"],
+					"bill_numbers": sorted(order_bucket["bill_numbers"]),
+					"names": distinct_names,
+					"references": distinct_references,
+					"distinct_name_count": len(distinct_names),
+					"discount_amount_total": round(order_bucket["discount_amount_total"], 2),
+				}
+			)
+
+	order_count = len(orders)
+	contextual_metrics = {
+		"multi_name_receipts": len(multi_name_receipts),
+		"multi_name_receipts_3plus": sum(1 for row in multi_name_receipts if row["distinct_name_count"] >= 3),
+		"multi_name_receipts_5plus": sum(1 for row in multi_name_receipts if row["distinct_name_count"] >= 5),
+		"max_names_on_single_receipt": max(
+			(row["distinct_name_count"] for row in multi_name_receipts), default=0
+		),
+		"multi_name_receipts_pct_of_orders": round((len(multi_name_receipts) / order_count) * 100, 2)
+		if order_count
+		else 0.0,
+		"month_name_multiple_reference_findings": sum(
+			1 for bucket in name_groups.values() if len(bucket["references"]) >= 2
+		),
+		"month_reference_multi_name_findings": sum(
+			1 for bucket in ref_groups.values() if len(bucket["names"]) >= 2
+		),
+		"non_four_digit_reference_rows": non_four_digit_reference_rows,
+		"non_four_digit_reference_rate_pct": round((non_four_digit_reference_rows / len(rows)) * 100, 2)
+		if rows
+		else 0.0,
+	}
+	return contextual_metrics, multi_name_receipts
+
+
+def _build_same_day_metrics(
+	store_name: str, rows: list[dict[str, Any]]
+) -> tuple[dict[str, Any], dict[str, Any]]:
+	store_rows = [
+		row
+		for row in rows
+		if _normalize_text(row.get("scope")) == "STORE"
+		and _normalize_text(row.get("store_name")) == _normalize_text(store_name)
+	]
+	chain_rows = [
+		row
+		for row in rows
+		if _normalize_text(row.get("scope")) != "STORE" and _row_mentions_store(row, store_name)
+	]
+	store_severity = Counter(_normalize_text(row.get("severity")) for row in store_rows)
+	chain_severity = Counter(_normalize_text(row.get("severity")) for row in chain_rows)
+	store_metrics = {
+		"repeat_name_findings": sum(
+			1 for row in store_rows if row.get("detection_type") == "same_name_same_day_same_store"
+		),
+		"repeat_reference_findings": sum(
+			1 for row in store_rows if row.get("detection_type") == "same_reference_same_day_same_store"
+		),
+		"same_reference_different_name_findings": sum(
+			1
+			for row in store_rows
+			if row.get("detection_type") == "same_reference_diff_name_same_day_same_store"
+		),
+		"same_name_multiple_reference_findings": sum(
+			1
+			for row in store_rows
+			if row.get("detection_type") == "same_name_diff_reference_same_day_same_store"
+		),
+		"rapid_repeat_name_findings_4h": sum(
+			1
+			for row in store_rows
+			if row.get("detection_type") == "same_name_same_day_same_store" and row.get("rapid_within_4h")
+		),
+		"rapid_repeat_reference_findings_4h": sum(
+			1
+			for row in store_rows
+			if row.get("detection_type") == "same_reference_same_day_same_store"
+			and row.get("rapid_within_4h")
+		),
+		"same_day_rows_by_severity": {
+			"critical": int(store_severity.get("CRITICAL", 0)),
+			"high": int(store_severity.get("HIGH", 0)),
+			"medium": int(store_severity.get("MEDIUM", 0)),
+			"review": int(store_severity.get("REVIEW", 0)),
+		},
+	}
+	chain_metrics = {
+		"same_day_chain_rows": len(chain_rows),
+		"chain_rows_by_severity": {
+			"critical": int(chain_severity.get("CRITICAL", 0)),
+			"high": int(chain_severity.get("HIGH", 0)),
+			"medium": int(chain_severity.get("MEDIUM", 0)),
+			"review": int(chain_severity.get("REVIEW", 0)),
+		},
+	}
+	return store_metrics, chain_metrics
+
+
+def _build_investigation_summary_payload(
+	start_day: date,
+	end_day: date,
+	selected_store_names: list[str],
+	selected_categories: set[str] | None,
+	same_day_rows: list[dict[str, Any]],
+	item_rows: list[dict[str, Any]],
+	paid_order_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+	store_summaries: list[dict[str, Any]] = []
+	total_repeat_name = 0
+	total_same_ref_diff_name = 0
+	total_rapid_repeat_name = 0
+	total_multi_name_receipts = 0
+	for store_name in selected_store_names:
+		store_order_rows = [
+			row
+			for row in paid_order_rows
+			if _normalize_text(row.get("store_name")) == _normalize_text(store_name)
+		]
+		store_item_rows = [
+			row for row in item_rows if _normalize_text(row.get("store_name")) == _normalize_text(store_name)
+		]
+		location_id = int(store_item_rows[0]["location_id"]) if store_item_rows else 0
+		sales_summary = _build_store_sales_summary(store_order_rows)
+		category_summary = _build_store_item_summary(store_item_rows, selected_categories)
+		same_day_metrics, chain_metrics = _build_same_day_metrics(store_name, same_day_rows)
+		contextual_metrics, _ = _build_store_contextual_metrics(store_item_rows)
+		total_repeat_name += same_day_metrics["repeat_name_findings"]
+		total_same_ref_diff_name += same_day_metrics["same_reference_different_name_findings"]
+		total_rapid_repeat_name += same_day_metrics["rapid_repeat_name_findings_4h"]
+		total_multi_name_receipts += contextual_metrics["multi_name_receipts"]
+		store_summaries.append(
+			{
+				"location_id": location_id,
+				"store_name": store_name,
+				"sales": sales_summary,
+				"category_summary": category_summary,
+				"same_day_metrics": same_day_metrics,
+				"chain_metrics": chain_metrics,
+				"contextual_metrics": contextual_metrics,
+			}
+		)
+
+	return {
+		"start_date": start_day.isoformat(),
+		"end_date": end_day.isoformat(),
+		"display_window": _format_display_window(start_day, end_day),
+		"selected_store_names": selected_store_names,
+		"discount_bir_category": ",".join(sorted(selected_categories)) if selected_categories else "ALL",
+		"requires_store_selection": False,
+		"methodology_notes": [
+			"Same-day metrics are alert-derived from validated discount identity alerts.",
+			"Multi-name receipt metrics are contextual receipt-level review metrics, not incident counts.",
+		],
+		"totals": {
+			"same_day_repeat_name_findings": total_repeat_name,
+			"same_day_same_reference_different_name_findings": total_same_ref_diff_name,
+			"same_day_rapid_repeat_name_findings_4h": total_rapid_repeat_name,
+			"contextual_multi_name_receipts": total_multi_name_receipts,
+		},
+		"stores": store_summaries,
+	}
+
+
+def _build_investigation_case_rows(
+	selected_store_names: list[str],
+	same_day_rows: list[dict[str, Any]],
+	item_rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+	case_rows: list[dict[str, Any]] = []
+	for row in same_day_rows:
+		if not any(_row_mentions_store(row, store_name) for store_name in selected_store_names):
+			continue
+		associations = _extract_alert_associations(row)
+		case_rows.append(
+			{
+				"case_id": (
+					f"alert:{row.get('event_date')}:{row.get('scope')}:{row.get('scope_key')}:"
+					f"{row.get('identity_key')}:{row.get('detection_type')}"
+				),
+				"case_bucket": "same_day_alert",
+				"detection_type": row.get("detection_type"),
+				"scope": row.get("scope"),
+				"store_name": row.get("store_name"),
+				"business_date": row.get("event_date"),
+				"severity": row.get("severity"),
+				"identity_key": row.get("identity_key"),
+				"names": associations["names"],
+				"references": associations["references"],
+				"bill_numbers": associations["bill_numbers"],
+				"business_dates": associations["business_dates"] or [str(row.get("event_date") or "")],
+				"order_count": int(row.get("order_count") or 0),
+				"store_count": int(row.get("store_count") or 0),
+				"discount_amount_total": round(_to_number(row.get("discount_amount_total")), 2),
+				"rapid_within_4h": bool(row.get("rapid_within_4h")),
+				"min_gap_minutes": row.get("min_gap_minutes"),
+				"context_note": "",
+			}
+		)
+
+	contextual_metrics_by_store: dict[str, list[dict[str, Any]]] = {}
+	for store_name in selected_store_names:
+		store_item_rows = [
+			row for row in item_rows if _normalize_text(row.get("store_name")) == _normalize_text(store_name)
+		]
+		_, multi_name_receipts = _build_store_contextual_metrics(store_item_rows)
+		contextual_metrics_by_store[store_name] = multi_name_receipts
+
+	for store_name, receipt_rows in contextual_metrics_by_store.items():
+		for receipt in receipt_rows:
+			if receipt["distinct_name_count"] < 3:
+				continue
+			case_rows.append(
+				{
+					"case_id": f"context:{receipt['business_date']}:{receipt['order_id']}",
+					"case_bucket": "contextual_receipt",
+					"detection_type": "context_multi_name_receipt",
+					"scope": "store",
+					"store_name": store_name,
+					"business_date": receipt["business_date"],
+					"severity": "high" if receipt["distinct_name_count"] >= 5 else "review",
+					"identity_key": receipt["bill_numbers"][0]
+					if receipt["bill_numbers"]
+					else str(receipt["order_id"]),
+					"names": receipt["names"],
+					"references": receipt["references"],
+					"bill_numbers": receipt["bill_numbers"],
+					"business_dates": [receipt["business_date"]],
+					"order_count": 1,
+					"store_count": 1,
+					"discount_amount_total": receipt["discount_amount_total"],
+					"rapid_within_4h": False,
+					"min_gap_minutes": None,
+					"context_note": "Contextual receipt metric - multiple distinct names on one discounted receipt.",
+				}
+			)
+
+	severity_rank = {"critical": 1, "high": 2, "medium": 3, "review": 4}
+	case_rows.sort(
+		key=lambda row: (
+			severity_rank.get(str(row.get("severity") or ""), 9),
+			str(row.get("business_date") or ""),
+			str(row.get("store_name") or ""),
+			str(row.get("detection_type") or ""),
+			str(row.get("identity_key") or ""),
+		)
+	)
+	return case_rows
 
 
 def _build_critical_notification_message(
@@ -630,7 +1299,7 @@ def get_discount_audit_queue(
 	)
 
 	data = same_day_rows + rolling_rows
-	stores = sorted({row.get("store_name") for row in data if row.get("store_name")})
+	stores = sorted(_get_store_directory().values())
 	return {
 		"success": True,
 		"data": {
@@ -638,6 +1307,144 @@ def get_discount_audit_queue(
 			"rows": data,
 			"summary": _make_summary(same_day_rows, rolling_rows),
 			"stores": stores,
+		},
+	}
+
+
+def _get_investigation_payload(
+	start_date: str | None,
+	end_date: str | None,
+	store_names: str | None,
+	discount_bir_category: str | None,
+) -> tuple[
+	date, date, list[str], set[str] | None, list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]
+]:
+	start_day = _coerce_date(start_date)
+	end_day = _coerce_date(end_date)
+	if end_day < start_day:
+		frappe.throw(frappe._("End date cannot be earlier than start date."))
+	selected_store_names = _parse_store_names(store_names)
+	selected_categories = _parse_category_filter(discount_bir_category)
+	location_ids, selected_store_map = _resolve_selected_stores(selected_store_names)
+	resolved_store_names = [selected_store_map[location_id] for location_id in location_ids]
+	if not resolved_store_names:
+		return start_day, end_day, [], selected_categories, [], [], []
+	same_day_rows = _query_same_day_rows_range(start_day, end_day, selected_categories)
+	item_rows = _query_discount_item_rows_for_range(start_day, end_day, location_ids, selected_categories)
+	paid_order_rows = _query_paid_orders_for_range(start_day, end_day, location_ids)
+	store_map = {location_id: store_name for location_id, store_name in selected_store_map.items()}
+	for row in paid_order_rows:
+		location_id = int(row.get("location_id") or 0)
+		row["store_name"] = store_map.get(location_id, str(location_id))
+	return (
+		start_day,
+		end_day,
+		resolved_store_names,
+		selected_categories,
+		same_day_rows,
+		item_rows,
+		paid_order_rows,
+	)
+
+
+@frappe.whitelist()
+def get_discount_investigation_summary(
+	start_date: str,
+	end_date: str,
+	store_names: str | None = None,
+	discount_bir_category: str | None = "SC",
+) -> dict[str, Any]:
+	_check_discount_audit_role()
+	(
+		start_day,
+		end_day,
+		resolved_store_names,
+		selected_categories,
+		same_day_rows,
+		item_rows,
+		paid_order_rows,
+	) = _get_investigation_payload(start_date, end_date, store_names, discount_bir_category)
+	if not resolved_store_names:
+		return {
+			"success": True,
+			"data": {
+				"start_date": start_day.isoformat(),
+				"end_date": end_day.isoformat(),
+				"display_window": _format_display_window(start_day, end_day),
+				"discount_bir_category": ",".join(sorted(selected_categories))
+				if selected_categories
+				else "ALL",
+				"selected_store_names": [],
+				"requires_store_selection": True,
+				"totals": {},
+				"stores": [],
+				"methodology_notes": [
+					"Select at least one store to load investigation analytics.",
+				],
+			},
+		}
+	return {
+		"success": True,
+		"data": _build_investigation_summary_payload(
+			start_day,
+			end_day,
+			resolved_store_names,
+			selected_categories,
+			same_day_rows,
+			item_rows,
+			paid_order_rows,
+		),
+	}
+
+
+@frappe.whitelist()
+def get_discount_investigation_cases(
+	start_date: str,
+	end_date: str,
+	store_names: str | None = None,
+	discount_bir_category: str | None = "SC",
+) -> dict[str, Any]:
+	_check_discount_audit_role()
+	(
+		start_day,
+		end_day,
+		resolved_store_names,
+		selected_categories,
+		same_day_rows,
+		item_rows,
+		_paid_order_rows,
+	) = _get_investigation_payload(start_date, end_date, store_names, discount_bir_category)
+	if not resolved_store_names:
+		return {
+			"success": True,
+			"data": {
+				"start_date": start_day.isoformat(),
+				"end_date": end_day.isoformat(),
+				"display_window": _format_display_window(start_day, end_day),
+				"discount_bir_category": ",".join(sorted(selected_categories))
+				if selected_categories
+				else "ALL",
+				"selected_store_names": [],
+				"requires_store_selection": True,
+				"summary": {"same_day_alert_cases": 0, "contextual_cases": 0},
+				"rows": [],
+			},
+		}
+	case_rows = _build_investigation_case_rows(resolved_store_names, same_day_rows, item_rows)
+	return {
+		"success": True,
+		"data": {
+			"start_date": start_day.isoformat(),
+			"end_date": end_day.isoformat(),
+			"display_window": _format_display_window(start_day, end_day),
+			"discount_bir_category": ",".join(sorted(selected_categories)) if selected_categories else "ALL",
+			"selected_store_names": resolved_store_names,
+			"requires_store_selection": False,
+			"summary": {
+				"same_day_alert_cases": sum(1 for row in case_rows if row["case_bucket"] == "same_day_alert"),
+				"contextual_cases": sum(1 for row in case_rows if row["case_bucket"] == "contextual_receipt"),
+			},
+			"rows": case_rows,
 		},
 	}
 
