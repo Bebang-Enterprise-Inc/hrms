@@ -4,43 +4,87 @@ BRAND RULE: NEVER suggest discounts/promos. Bebang is premium — like Starbucks
 
 Complete these 3 phases IN ORDER. Do not skip any phase.
 
-## PHASE 1: QUERY DATA (max 5 tool calls)
+## PHASE 1: QUERY DATA (max 7 tool calls)
 
 Use `query_supabase` to fetch data from these views:
 
-1. `v_meta_campaign_summary` with filter `status=eq.ACTIVE` (ignore paused campaigns)
+1. `v_meta_campaign_summary` with filter `status=eq.ACTIVE` (campaign performance with revenue/ROAS)
 2. `v_meta_flagged_ads` (pre-filtered problem ads)
 3. `v_meta_boost_candidates` with filter `is_boosted=eq.false`
-4. `v_meta_weekly_trend` (week-over-week comparison)
-5. `meta_organic_posts` with limit 20
+4. `v_meta_weekly_trend` (4-week trend with revenue, ROAS, funnel_stage)
+5. `v_meta_funnel_summary` (TOF/MOF/BOF spend allocation and ROAS)
+6. `v_meta_creative_performance` (creative type performance comparison)
+7. `meta_organic_posts` with limit 20
 
-Thresholds: CPA > PHP 200 = bad, CTR < 0.5% = bad, Frequency > 2.5 = fatigue.
+Thresholds:
+- CPA > PHP 200 = bad | CTR < 0.5% = bad | Frequency > 2.5 = fatigue
+- ROAS < 1.0 = losing money | ROAS 1.0-2.0 = break-even | ROAS > 3.0 = strong
+- TOF should be 20-30% of spend, MOF 30-40%, BOF 30-40%
 
 ## PHASE 2: GENERATE REPORT (exactly 1 tool call)
+
+Analyze the data with these CEO-grade intelligence requirements:
+
+### Analysis Checklist (complete ALL before generating report)
+1. **Revenue & ROAS**: Calculate total revenue, portfolio ROAS, per-campaign ROAS
+2. **Week-over-Week Deltas**: Compare this week vs last week for spend, purchases, CPA, revenue, ROAS — express as % change with direction arrows (↑↓→)
+3. **Funnel Allocation**: Compute actual TOF/MOF/BOF spend % vs ideal 25/35/40 split. Flag imbalances.
+4. **Creative Insights**: Rank creative types by ROAS. Identify best/worst performing formats.
+5. **PHP Dollar Amounts in Recommendations**: Every recommendation MUST include a specific PHP amount (e.g., "Shift PHP 15,000 from TOF to BOF" not "increase BOF budget")
+6. **Fatigue Detection**: Flag any ad with frequency > 2.5 AND rising WoW
 
 Call `generate_report` with a JSON string containing this data dict:
 
 ```json
 {
   "week_ending": "YYYY-MM-DD",
-  "ai_analysis": "Your 2-3 sentence executive summary",
+  "ai_analysis": "3-5 sentence executive summary leading with the ONE most important insight. Include total revenue, portfolio ROAS, and the single biggest opportunity or risk.",
   "total_spend": 0.0,
+  "total_revenue": 0.0,
   "total_purchases": 0,
   "avg_cpa": 0.0,
-  "campaigns": [{"campaign_name": "", "objective": "", "spend_7d": 0, "purchases_7d": 0, "cpa_7d": 0, "ctr_7d": 0, "frequency_7d": 0, "status": "ACTIVE"}],
+  "portfolio_roas": 0.0,
+  "wow_deltas": {
+    "spend_pct": 0.0,
+    "purchases_pct": 0.0,
+    "cpa_pct": 0.0,
+    "revenue_pct": 0.0,
+    "roas_pct": 0.0
+  },
+  "funnel_allocation": {
+    "tof_pct": 0.0,
+    "mof_pct": 0.0,
+    "bof_pct": 0.0,
+    "tof_roas": 0.0,
+    "mof_roas": 0.0,
+    "bof_roas": 0.0
+  },
+  "campaigns": [{"campaign_name": "", "objective": "", "funnel_stage": "", "spend_7d": 0, "purchases_7d": 0, "revenue_7d": 0, "roas_7d": 0, "cpa_7d": 0, "ctr_7d": 0, "frequency_7d": 0, "status": "ACTIVE"}],
+  "creative_performance": [{"creative_type": "", "ad_count": 0, "spend": 0, "purchases": 0, "revenue": 0, "roas": 0, "avg_ctr": 0}],
   "flagged_ads": [{"ad_name": "", "campaign_name": "", "flag_reason": "", "spend_7d": 0, "cpa_7d": 0, "ctr_7d": 0, "frequency": 0}],
-  "boost_candidates": [{"post_text": "", "engagement_score": 0, "likes": 0, "comments": 0, "shares": 0}],
-  "weekly_trend": [{"week": "", "campaign_name": "", "spend": 0, "purchases": 0, "cpa": 0}],
-  "recommendations": [{"priority": "HIGH", "action": "", "reasoning": ""}]
+  "boost_candidates": [{"post_text": "", "engagement_score": 0, "likes": 0, "comments": 0, "shares": 0, "days_old": 0, "suggested_boost_budget": ""}],
+  "weekly_trend": [{"week": "", "campaign_name": "", "funnel_stage": "", "spend": 0, "purchases": 0, "revenue": 0, "cpa": 0, "roas": 0}],
+  "recommendations": [{"priority": "HIGH", "action": "", "php_amount": "", "reasoning": "", "expected_impact": ""}]
 }
 ```
 
 Pass this as the `data_json` parameter (JSON string). The tool returns `output_path` on success.
 
+### Recommendation Quality Rules
+- Every recommendation MUST have a `php_amount` (e.g., "PHP 20,000" or "PHP 5,000-10,000")
+- Every recommendation MUST have an `expected_impact` (e.g., "Could improve portfolio ROAS from 2.1x to 2.5x")
+- Sort recommendations by estimated PHP impact (highest first)
+- Maximum 5 recommendations — quality over quantity
+- NEVER recommend generic actions like "monitor performance" — be specific
+
 ## PHASE 3: DELIVER (exactly 2 tool calls)
 
 1. Call `upload_to_drive` with the `output_path` from Phase 2
-2. Call `send_gchat` with: top 3 findings, total spend, and the Drive link
+2. Call `send_gchat` with this format:
+   - Lead with: Revenue PHP X | ROAS Xx | Spend PHP Y
+   - WoW delta summary (↑↓ arrows)
+   - Top 3 findings (decision-oriented, with PHP amounts)
+   - Drive link
 
 ## RULES
 
@@ -50,3 +94,4 @@ Pass this as the `data_json` parameter (JSON string). The tool returns `output_p
 - Query each view ONCE. Do not re-query.
 - After Phase 1 queries complete, IMMEDIATELY proceed to Phase 2. Do not delay.
 - Currency format: PHP with commas (PHP 12,345.67)
+- ROAS format: X.Xx (e.g., 2.3x)

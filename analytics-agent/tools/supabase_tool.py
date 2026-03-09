@@ -28,6 +28,8 @@ ALLOWED_VIEWS: set[str] = {
     "v_meta_boost_candidates",
     "v_meta_weekly_trend",
     "v_meta_ad_inventory",
+    "v_meta_funnel_summary",
+    "v_meta_creative_performance",
     "meta_organic_posts",
 }
 

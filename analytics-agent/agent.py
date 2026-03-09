@@ -29,9 +29,10 @@ from tools.drive_tool import upload_to_drive
 from tools.gchat_tool import send_gchat, send_failure_alert
 from tools.report_tool import generate_report
 
-# Load prompt
-PROMPT_PATH = Path(__file__).parent / "prompts" / "weekly_analysis.txt"
-WEEKLY_PROMPT = PROMPT_PATH.read_text(encoding="utf-8")
+# Load prompts
+PROMPTS_DIR = Path(__file__).parent / "prompts"
+WEEKLY_PROMPT = (PROMPTS_DIR / "weekly_analysis.txt").read_text(encoding="utf-8")
+MIDWEEK_PROMPT = (PROMPTS_DIR / "midweek_alert.txt").read_text(encoding="utf-8")
 
 SYSTEM_PROMPT = (
     "You are a data analyst that works EXCLUSIVELY through tool calls. "
@@ -59,8 +60,13 @@ def write_run_log(run_log: dict):
 
 
 async def main():
+    is_midweek = "--midweek" in sys.argv
+    mode = "midweek" if is_midweek else "weekly"
+    prompt = MIDWEEK_PROMPT if is_midweek else WEEKLY_PROMPT
+
     run_log = {
         "timestamp": datetime.now().isoformat(),
+        "mode": mode,
         "model": "claude-opus-4-6",
         "sdk": "claude-agent-sdk",
         "errors": [],
@@ -106,9 +112,11 @@ async def main():
         )
 
         # 4. Run the agent
-        print(f"Starting analyst agent (model=claude-opus-4-6, max_turns={MAX_TURNS})")
+        turns = 10 if is_midweek else MAX_TURNS
+        options.max_turns = turns
+        print(f"Starting analyst agent (mode={mode}, model=claude-opus-4-6, max_turns={turns})")
         async with ClaudeSDKClient(options=options) as client:
-            await client.query(WEEKLY_PROMPT)
+            await client.query(prompt)
             async for message in client.receive_response():
                 if isinstance(message, AssistantMessage):
                     for block in message.content:
@@ -119,14 +127,17 @@ async def main():
                     print(f"  Result: stop_reason={message.stop_reason}")
                     run_log["sections"].append("agent_complete")
 
-        # 5. Verify DOCX was generated
-        docx_files = globmod.glob(str(RUNS_DIR / "*.docx"))
-        if docx_files:
-            run_log["sections"].append("report_verified")
-            print(f"Report generated: {docx_files}")
+        # 5. Verify DOCX was generated (weekly mode only)
+        if not is_midweek:
+            docx_files = globmod.glob(str(RUNS_DIR / "*.docx"))
+            if docx_files:
+                run_log["sections"].append("report_verified")
+                print(f"Report generated: {docx_files}")
+            else:
+                run_log["errors"].append("No DOCX report found in runs/ after agent completed")
+                print("WARNING: No DOCX report generated")
         else:
-            run_log["errors"].append("No DOCX report found in runs/ after agent completed")
-            print("WARNING: No DOCX report generated")
+            run_log["sections"].append("midweek_alert_sent")
 
         print(f"\nAgent completed. Sections: {run_log['sections']}")
 

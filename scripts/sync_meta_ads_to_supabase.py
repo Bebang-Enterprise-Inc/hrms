@@ -220,6 +220,26 @@ def build_creative_description(ad_name, creative_body, creative_type, call_to_ac
     return ' | '.join(parts) if parts else ad_name
 
 
+FUNNEL_MAP = {
+    'OUTCOME_AWARENESS': 'TOF',
+    'BRAND_AWARENESS': 'TOF',
+    'REACH': 'TOF',
+    'POST_ENGAGEMENT': 'TOF',
+    'VIDEO_VIEWS': 'TOF',
+    'OUTCOME_ENGAGEMENT': 'MOF',
+    'OUTCOME_TRAFFIC': 'MOF',
+    'LINK_CLICKS': 'MOF',
+    'TRAFFIC': 'MOF',
+    'MESSAGES': 'MOF',
+    'LEAD_GENERATION': 'MOF',
+    'OUTCOME_LEADS': 'MOF',
+    'OUTCOME_SALES': 'BOF',
+    'CONVERSIONS': 'BOF',
+    'PRODUCT_CATALOG_SALES': 'BOF',
+    'STORE_VISITS': 'BOF',
+}
+
+
 def sync_campaigns(token, supa_token, supa_url):
     """Sync campaigns to Supabase."""
     print("Syncing campaigns...")
@@ -230,12 +250,15 @@ def sync_campaigns(token, supa_token, supa_url):
 
     rows = []
     for c in campaigns:
+        objective = c.get('objective', '')
+        funnel_stage = FUNNEL_MAP.get(objective, 'UNKNOWN')
         rows.append({
             'id': c['id'],
             'name': c.get('name', ''),
-            'objective': c.get('objective'),
+            'objective': objective,
             'status': c.get('status'),
             'effective_status': c.get('effective_status'),
+            'funnel_stage': funnel_stage,
             'daily_budget': int(c['daily_budget']) if c.get('daily_budget') else None,
             'lifetime_budget': int(c['lifetime_budget']) if c.get('lifetime_budget') else None,
             'created_time': c.get('created_time'),
@@ -353,7 +376,7 @@ def sync_insights(token, supa_token, supa_url, date_preset='last_7d'):
     insights = meta_api_get(f'{AD_ACCOUNT}/insights', {
         'level': 'ad',
         'date_preset': date_preset,
-        'fields': 'ad_id,ad_name,spend,impressions,clicks,ctr,cpc,cpm,frequency,reach,actions,cost_per_action_type',
+        'fields': 'ad_id,ad_name,spend,impressions,clicks,ctr,cpc,cpm,frequency,reach,actions,action_values,cost_per_action_type',
         'limit': '500',
         'time_increment': '1'  # daily breakdown
     }, token)
@@ -388,6 +411,12 @@ def sync_insights(token, supa_token, supa_url, date_preset='last_7d'):
             if c.get('action_type') == 'purchase':
                 cpa = float(c.get('value', 0))
 
+        # Extract purchase revenue from action_values
+        purchase_value = 0
+        for av in row.get('action_values', []):
+            if av.get('action_type') == 'purchase':
+                purchase_value = float(av.get('value', 0))
+
         daily_rows.append({
             'ad_id': ad_id,
             'report_date': report_date,
@@ -400,6 +429,7 @@ def sync_insights(token, supa_token, supa_url, date_preset='last_7d'):
             'frequency': float(row.get('frequency', 0)),
             'reach': int(row.get('reach', 0)) if row.get('reach') else 0,
             'purchases': purchases,
+            'purchase_value': purchase_value,
             'cpa_purchase': cpa,
             'link_clicks': link_clicks,
             'post_engagement': post_engagement,
@@ -411,13 +441,14 @@ def sync_insights(token, supa_token, supa_url, date_preset='last_7d'):
         if ad_id not in ad_totals:
             ad_totals[ad_id] = {
                 'spend': 0, 'impressions': 0, 'clicks': 0,
-                'purchases': 0, 'frequency': 0, 'freq_count': 0
+                'purchases': 0, 'purchase_value': 0, 'frequency': 0, 'freq_count': 0
             }
         t = ad_totals[ad_id]
         t['spend'] += float(row.get('spend', 0))
         t['impressions'] += int(row.get('impressions', 0))
         t['clicks'] += int(row.get('clicks', 0))
         t['purchases'] += purchases
+        t['purchase_value'] += purchase_value
         t['frequency'] = max(t['frequency'], float(row.get('frequency', 0)))
 
     # Upsert daily data
@@ -447,12 +478,16 @@ def sync_insights(token, supa_token, supa_url, date_preset='last_7d'):
             is_flagged = True
             flag_reasons.append('ZERO_PURCHASES')
 
+        roas = round(t['purchase_value'] / t['spend'], 3) if t['spend'] > 0 else 0
+
         update = {
             'id': ad_id,
             f'{prefix}_spend': round(t['spend'], 2),
             f'{prefix}_impressions': t['impressions'],
             f'{prefix}_clicks': t['clicks'],
             f'{prefix}_purchases': t['purchases'],
+            f'{prefix}_purchase_value': round(t['purchase_value'], 2),
+            f'{prefix}_roas': roas,
             f'{prefix}_ctr': round(ctr, 3),
             f'{prefix}_cpa': round(cpa, 2),
             f'{prefix}_frequency': round(t['frequency'], 3),
