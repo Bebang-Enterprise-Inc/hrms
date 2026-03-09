@@ -1002,6 +1002,67 @@ def _coverage_window_days_for_lane(lane):
 	return 3
 
 
+def _parse_snapshot_source_reference(raw_value):
+	if isinstance(raw_value, dict):
+		return raw_value
+	text = str(raw_value or "").strip()
+	if not text:
+		return {}
+	try:
+		parsed = json.loads(text)
+	except Exception:
+		return {}
+	return parsed if isinstance(parsed, dict) else {}
+
+
+def _load_store_item_demand_snapshots(warehouse, item_codes, target_date):
+	"""Load latest snapshot rows per item on or before the target date."""
+	if not warehouse or not item_codes:
+		return {}
+
+	try:
+		rows = frappe.get_all(
+			"BEI Inventory Risk Snapshot",
+			filters={
+				"warehouse": warehouse,
+				"item_code": ["in", item_codes],
+				"snapshot_date": ["<=", str(target_date)],
+			},
+			fields=[
+				"item_code",
+				"warehouse",
+				"snapshot_date",
+				"avg_daily_demand",
+				"available_qty",
+				"source_reference",
+			],
+			order_by="snapshot_date desc, modified desc",
+			limit_page_length=max(200, len(item_codes) * 4),
+		)
+	except Exception:
+		return {}
+
+	snapshots = {}
+	for row in rows or []:
+		item_code = row.get("item_code")
+		if not item_code or item_code in snapshots:
+			continue
+		source_reference = _parse_snapshot_source_reference(row.get("source_reference"))
+		snapshots[item_code] = {
+			"snapshot_date": row.get("snapshot_date"),
+			"avg_daily_demand": flt(row.get("avg_daily_demand"), 4),
+			"available_qty": flt(row.get("available_qty"), 2),
+			"projected_sales": flt(source_reference.get("projected_sales"), 2),
+			"bom_consumption": flt(source_reference.get("bom_consumption"), 2),
+			"coverage_window_days": flt(source_reference.get("coverage_window_days"), 2),
+			"lookback_days": cint(source_reference.get("lookback_days") or 0),
+			"signal_source": source_reference.get("signal_source") or "sales_demand_snapshot",
+			"source_reference": source_reference,
+		}
+
+	return snapshots
+
+
 def _estimate_projected_sales_and_bom(last_order_qty, order_count, lane):
 	baseline = max(1.0, flt(last_order_qty), flt(order_count) * 0.75)
 	projected_sales = flt(baseline * 0.65, 2)
@@ -1261,16 +1322,33 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	signal_modifiers = _compose_signal_modifiers(**signal_flags)
 	adaptive_delta = _get_adaptive_delta(warehouse)
 	tuned_multiplier = _apply_adaptive_tuning(signal_modifiers["composite_multiplier"], adaptive_delta)
+	demand_snapshots = _load_store_item_demand_snapshots(warehouse, item_codes, target_date)
 
 	for item in items:
 		item_code = item.name
 		last_order_qty = flt(last_qty_map.get(item_code, 0))
 		available_to_promise = flt(stock_map.get(item_code, 0), 2)
 		lane = _resolve_delivery_lane(item)
-		coverage_window_days = _coverage_window_days_for_lane(lane)
-		projected_sales, bom_consumption = _estimate_projected_sales_and_bom(
-			last_order_qty, flt(item.order_count), lane
-		)
+		snapshot = demand_snapshots.get(item_code) or {}
+		coverage_window_days = flt(snapshot.get("coverage_window_days") or 0)
+		if coverage_window_days <= 0:
+			coverage_window_days = _coverage_window_days_for_lane(lane)
+
+		projected_sales = flt(snapshot.get("projected_sales"), 2)
+		bom_consumption = flt(snapshot.get("bom_consumption"), 2)
+		if projected_sales > 0 or bom_consumption > 0:
+			recommendation_source = snapshot.get("signal_source") or "sales_demand_snapshot"
+			avg_daily_demand = flt(
+				snapshot.get("avg_daily_demand") or (projected_sales + bom_consumption),
+				4,
+			)
+		else:
+			projected_sales, bom_consumption = _estimate_projected_sales_and_bom(
+				last_order_qty, flt(item.order_count), lane
+			)
+			recommendation_source = "heuristic"
+			avg_daily_demand = flt(projected_sales + bom_consumption, 4)
+
 		contract = _build_recommendation_contract(
 			last_order_qty=last_order_qty,
 			available_to_promise=available_to_promise,
@@ -1289,6 +1367,10 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		item["cargo_category"] = _lane_to_cargo_category(lane)
 		item["packaging_description"] = item.get("stock_uom") or ""
 		item["signal_multiplier"] = tuned_multiplier
+		item["avg_daily_demand"] = avg_daily_demand
+		item["recommendation_source"] = recommendation_source
+		item["demand_snapshot_date"] = snapshot.get("snapshot_date")
+		item["lookback_days"] = cint(snapshot.get("lookback_days") or 0)
 		item.update(contract)
 
 	items = sorted(
@@ -3876,7 +3958,7 @@ def get_maintenance_requests(
 			"reported_by",
 			"description",
 		],
-		order_by="request_date desc",
+		order_by="request_date desc, creation desc",
 		limit=int(limit),
 	)
 
@@ -3912,7 +3994,7 @@ def get_my_maintenance_requests(status: str | None = None, limit: int | str = 20
 			"request_date",
 			"description",
 		],
-		order_by="request_date desc",
+		order_by="request_date desc, creation desc",
 		limit=int(limit),
 	)
 
