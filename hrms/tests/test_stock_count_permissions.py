@@ -64,16 +64,27 @@ def _install_fake_frappe(user_roles: list[str] | None = None):
 		err_cls = exc if isinstance(exc, type) else Exception
 		raise err_cls(message)
 
+	def _proxy_local(name: str):
+		return getattr(frappe.local, name)
+
+	def __getattr__(name: str):
+		if name in {"session", "db"}:
+			return _proxy_local(name)
+		raise AttributeError(name)
+
 	frappe.whitelist = whitelist
 	frappe.throw = throw
 	frappe.ValidationError = ValidationError
 	frappe.PermissionError = PermissionError
 	frappe._ = lambda value: value
-	frappe.session = types.SimpleNamespace(user="pytest@example.com")
+	frappe.__getattr__ = __getattr__
+	frappe.local = types.SimpleNamespace(
+		session=types.SimpleNamespace(user="pytest@example.com"),
+		db=types.SimpleNamespace(get_value=lambda *args, **kwargs: None),
+	)
 	frappe.get_roles = lambda: list(user_roles or [])
 	frappe.get_all = lambda *args, **kwargs: []
 	frappe.log_error = lambda *args, **kwargs: None
-	frappe.db = types.SimpleNamespace(get_value=lambda *args, **kwargs: None)
 
 	utils.nowdate = lambda: "2026-03-10"
 	utils.flt = lambda value=0, *args, **kwargs: float(value or 0)
@@ -142,7 +153,7 @@ def test_get_assigned_stores_returns_count_type_metadata_for_store_staff():
 	_install_fake_frappe(["Store Staff"])
 	inventory = _load_module(ROOT / "hrms" / "api" / "inventory.py", "stock_count_assigned_stores_test")
 
-	inventory.frappe.db = types.SimpleNamespace(
+	inventory.frappe.local.db = types.SimpleNamespace(
 		get_value=lambda doctype, filters, fieldname: "TEST-STORE-BGC"
 	)
 	inventory._resolve_warehouse = lambda branch: f"{branch} - BEI"
