@@ -7,6 +7,7 @@ import json
 import os
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
+from itertools import pairwise
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -523,8 +524,7 @@ def _resolve_selected_stores(store_names: list[str]) -> tuple[list[int], dict[in
 	if not store_names:
 		return [], {}
 	normalized_to_id = {
-		_normalize_text(store_name): location_id
-		for location_id, store_name in store_directory.items()
+		_normalize_text(store_name): location_id for location_id, store_name in store_directory.items()
 	}
 	selected_location_ids: list[int] = []
 	selected_store_map: dict[int, str] = {}
@@ -561,15 +561,13 @@ def _query_same_day_rows_range(
 	]
 	rows = [_normalize_queue_row(row) for row in _supabase_get_all("v_discount_identity_audit_queue", params)]
 	if categories:
-		rows = [
-			row
-			for row in rows
-			if _normalize_text(row.get("discount_bir_category")) in categories
-		]
+		rows = [row for row in rows if _normalize_text(row.get("discount_bir_category")) in categories]
 	return rows
 
 
-def _query_paid_orders_for_range(start_day: date, end_day: date, location_ids: list[int]) -> list[dict[str, Any]]:
+def _query_paid_orders_for_range(
+	start_day: date, end_day: date, location_ids: list[int]
+) -> list[dict[str, Any]]:
 	if not location_ids:
 		return []
 	location_list = ",".join(str(location_id) for location_id in location_ids)
@@ -658,8 +656,7 @@ def _query_discount_item_rows_for_range(
 				),
 				"discount_reference_number": str(row.get("discount_reference_number") or ""),
 				"discount_reference_number_normalized": _normalize_text(
-					row.get("discount_reference_number_normalized")
-					or row.get("discount_reference_number")
+					row.get("discount_reference_number_normalized") or row.get("discount_reference_number")
 				),
 			}
 		)
@@ -668,13 +665,12 @@ def _query_discount_item_rows_for_range(
 
 def _min_gap_minutes(rows: list[dict[str, Any]]) -> int | None:
 	timestamps = [
-		_parse_iso_datetime(row.get("billed_at")) or _parse_iso_datetime(row.get("paid_at"))
-		for row in rows
+		_parse_iso_datetime(row.get("billed_at")) or _parse_iso_datetime(row.get("paid_at")) for row in rows
 	]
 	parsed = sorted(ts for ts in timestamps if ts is not None)
 	if len(parsed) < 2:
 		return None
-	return min(int((right - left).total_seconds() // 60) for left, right in zip(parsed, parsed[1:]))
+	return min(int((right - left).total_seconds() // 60) for left, right in pairwise(parsed))
 
 
 def _extract_alert_associations(row: dict[str, Any]) -> dict[str, list[str]]:
@@ -749,7 +745,9 @@ def _build_store_item_summary(
 	}
 
 
-def _build_store_contextual_metrics(rows: list[dict[str, Any]]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+def _build_store_contextual_metrics(
+	rows: list[dict[str, Any]],
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
 	orders: dict[tuple[str, int], dict[str, Any]] = {}
 	for row in rows:
 		key = (str(row.get("business_date") or ""), int(row.get("order_id") or 0))
@@ -818,7 +816,9 @@ def _build_store_contextual_metrics(rows: list[dict[str, Any]]) -> tuple[dict[st
 		"multi_name_receipts": len(multi_name_receipts),
 		"multi_name_receipts_3plus": sum(1 for row in multi_name_receipts if row["distinct_name_count"] >= 3),
 		"multi_name_receipts_5plus": sum(1 for row in multi_name_receipts if row["distinct_name_count"] >= 5),
-		"max_names_on_single_receipt": max((row["distinct_name_count"] for row in multi_name_receipts), default=0),
+		"max_names_on_single_receipt": max(
+			(row["distinct_name_count"] for row in multi_name_receipts), default=0
+		),
 		"multi_name_receipts_pct_of_orders": round((len(multi_name_receipts) / order_count) * 100, 2)
 		if order_count
 		else 0.0,
@@ -836,7 +836,9 @@ def _build_store_contextual_metrics(rows: list[dict[str, Any]]) -> tuple[dict[st
 	return contextual_metrics, multi_name_receipts
 
 
-def _build_same_day_metrics(store_name: str, rows: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, Any]]:
+def _build_same_day_metrics(
+	store_name: str, rows: list[dict[str, Any]]
+) -> tuple[dict[str, Any], dict[str, Any]]:
 	store_rows = [
 		row
 		for row in rows
@@ -875,7 +877,8 @@ def _build_same_day_metrics(store_name: str, rows: list[dict[str, Any]]) -> tupl
 		"rapid_repeat_reference_findings_4h": sum(
 			1
 			for row in store_rows
-			if row.get("detection_type") == "same_reference_same_day_same_store" and row.get("rapid_within_4h")
+			if row.get("detection_type") == "same_reference_same_day_same_store"
+			and row.get("rapid_within_4h")
 		),
 		"same_day_rows_by_severity": {
 			"critical": int(store_severity.get("CRITICAL", 0)),
@@ -912,7 +915,9 @@ def _build_investigation_summary_payload(
 	total_multi_name_receipts = 0
 	for store_name in selected_store_names:
 		store_order_rows = [
-			row for row in paid_order_rows if _normalize_text(row.get("store_name")) == _normalize_text(store_name)
+			row
+			for row in paid_order_rows
+			if _normalize_text(row.get("store_name")) == _normalize_text(store_name)
 		]
 		store_item_rows = [
 			row for row in item_rows if _normalize_text(row.get("store_name")) == _normalize_text(store_name)
@@ -1016,7 +1021,9 @@ def _build_investigation_case_rows(
 					"store_name": store_name,
 					"business_date": receipt["business_date"],
 					"severity": "high" if receipt["distinct_name_count"] >= 5 else "review",
-					"identity_key": receipt["bill_numbers"][0] if receipt["bill_numbers"] else str(receipt["order_id"]),
+					"identity_key": receipt["bill_numbers"][0]
+					if receipt["bill_numbers"]
+					else str(receipt["order_id"]),
 					"names": receipt["names"],
 					"references": receipt["references"],
 					"bill_numbers": receipt["bill_numbers"],
@@ -1302,7 +1309,9 @@ def _get_investigation_payload(
 	end_date: str | None,
 	store_names: str | None,
 	discount_bir_category: str | None,
-) -> tuple[date, date, list[str], set[str] | None, list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[
+	date, date, list[str], set[str] | None, list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]
+]:
 	start_day = _coerce_date(start_date)
 	end_day = _coerce_date(end_date)
 	if end_day < start_day:
@@ -1320,7 +1329,15 @@ def _get_investigation_payload(
 	for row in paid_order_rows:
 		location_id = int(row.get("location_id") or 0)
 		row["store_name"] = store_map.get(location_id, str(location_id))
-	return start_day, end_day, resolved_store_names, selected_categories, same_day_rows, item_rows, paid_order_rows
+	return (
+		start_day,
+		end_day,
+		resolved_store_names,
+		selected_categories,
+		same_day_rows,
+		item_rows,
+		paid_order_rows,
+	)
 
 
 @frappe.whitelist()
@@ -1331,9 +1348,15 @@ def get_discount_investigation_summary(
 	discount_bir_category: str | None = "SC",
 ) -> dict[str, Any]:
 	_check_discount_audit_role()
-	start_day, end_day, resolved_store_names, selected_categories, same_day_rows, item_rows, paid_order_rows = (
-		_get_investigation_payload(start_date, end_date, store_names, discount_bir_category)
-	)
+	(
+		start_day,
+		end_day,
+		resolved_store_names,
+		selected_categories,
+		same_day_rows,
+		item_rows,
+		paid_order_rows,
+	) = _get_investigation_payload(start_date, end_date, store_names, discount_bir_category)
 	if not resolved_store_names:
 		return {
 			"success": True,
@@ -1341,7 +1364,9 @@ def get_discount_investigation_summary(
 				"start_date": start_day.isoformat(),
 				"end_date": end_day.isoformat(),
 				"display_window": _format_display_window(start_day, end_day),
-				"discount_bir_category": ",".join(sorted(selected_categories)) if selected_categories else "ALL",
+				"discount_bir_category": ",".join(sorted(selected_categories))
+				if selected_categories
+				else "ALL",
 				"selected_store_names": [],
 				"requires_store_selection": True,
 				"totals": {},
@@ -1373,9 +1398,15 @@ def get_discount_investigation_cases(
 	discount_bir_category: str | None = "SC",
 ) -> dict[str, Any]:
 	_check_discount_audit_role()
-	start_day, end_day, resolved_store_names, selected_categories, same_day_rows, item_rows, _paid_order_rows = (
-		_get_investigation_payload(start_date, end_date, store_names, discount_bir_category)
-	)
+	(
+		start_day,
+		end_day,
+		resolved_store_names,
+		selected_categories,
+		same_day_rows,
+		item_rows,
+		_paid_order_rows,
+	) = _get_investigation_payload(start_date, end_date, store_names, discount_bir_category)
 	if not resolved_store_names:
 		return {
 			"success": True,
@@ -1383,7 +1414,9 @@ def get_discount_investigation_cases(
 				"start_date": start_day.isoformat(),
 				"end_date": end_day.isoformat(),
 				"display_window": _format_display_window(start_day, end_day),
-				"discount_bir_category": ",".join(sorted(selected_categories)) if selected_categories else "ALL",
+				"discount_bir_category": ",".join(sorted(selected_categories))
+				if selected_categories
+				else "ALL",
 				"selected_store_names": [],
 				"requires_store_selection": True,
 				"summary": {"same_day_alert_cases": 0, "contextual_cases": 0},
