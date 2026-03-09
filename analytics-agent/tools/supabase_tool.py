@@ -93,7 +93,10 @@ def _ensure_secrets() -> tuple[str, str]:
     },
 )
 async def query_supabase(args: dict[str, Any]) -> dict[str, Any]:
-    """Query an allowed Supabase analytics view and return its rows."""
+    """Query an allowed Supabase analytics view and return its rows.
+
+    Used by both the Agent SDK MCP wrapper and the direct Anthropic API agent.
+    """
     view = args["view"]
     filters = args.get("filters", "")
     select = args.get("select", "*")
@@ -168,3 +171,9 @@ async def query_supabase(args: dict[str, Any]) -> dict[str, Any]:
         return {"content": [{"type": "text", "text": f"Error: Invalid JSON response: {exc}"}], "is_error": True}
     except Exception as exc:
         return {"content": [{"type": "text", "text": f"Error: {exc}"}], "is_error": True}
+
+
+# Direct implementation alias (no @tool decorator needed for Anthropic API usage)
+async def query_supabase_impl(args: dict[str, Any]) -> dict[str, Any]:
+    """Plain async function for the direct Anthropic API agentic loop."""
+    return await query_supabase(args)

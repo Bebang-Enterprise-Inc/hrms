@@ -7,7 +7,6 @@ services:
     volumes:
       - ./credentials:/app/credentials:ro
       - ./runs:/app/analytics-agent/runs
-      - ./claude-auth:/home/agent/.claude
       - ../scripts/sync_meta_ads_to_supabase.py:/app/scripts/sync_meta_ads_to_supabase.py:ro
     restart: unless-stopped
     healthcheck:

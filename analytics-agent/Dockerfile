@@ -1,16 +1,11 @@
 FROM python:3.12-slim
 
-# Install system dependencies (curl + bash needed for Claude CLI, supercronic)
-RUN apt-get update && apt-get install -y --no-install-recommends curl bash && \
+# Install system dependencies (curl for supercronic download)
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Create non-root user (Claude CLI refuses --dangerously-skip-permissions as root)
+# Create non-root user
 RUN useradd -m -s /bin/bash agent
-
-# Install Claude CLI as agent user (install script requires bash, not sh)
-USER agent
-RUN curl -fsSL https://claude.ai/install.sh | bash
-USER root
 
 # Install supercronic (Docker-native cron)
 RUN curl -fsSLO https://github.com/aptible/supercronic/releases/download/v0.2.33/supercronic-linux-amd64 && \

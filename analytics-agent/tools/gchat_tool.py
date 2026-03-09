@@ -69,6 +69,11 @@ async def send_gchat(args: dict[str, Any]) -> dict[str, Any]:
         }
 
 
+async def send_gchat_impl(args: dict[str, Any]) -> dict[str, Any]:
+    """Plain async function for the direct Anthropic API agentic loop."""
+    return await send_gchat(args)
+
+
 def send_failure_alert(error_message: str) -> bool:
     """Send crash notification to Google Chat. Works outside agent context.
 

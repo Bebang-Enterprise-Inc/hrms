@@ -110,3 +110,8 @@ async def upload_to_drive(args: dict[str, Any]) -> dict[str, Any]:
             "content": [{"type": "text", "text": f"Error uploading to Drive: {e}"}],
             "is_error": True,
         }
+
+
+async def upload_to_drive_impl(args: dict[str, Any]) -> dict[str, Any]:
+    """Plain async function for the direct Anthropic API agentic loop."""
+    return await upload_to_drive(args)

@@ -62,3 +62,8 @@ async def generate_report(args: dict[str, Any]) -> dict[str, Any]:
     except Exception as e:
         print(f"[generate_report] ERROR: {e}")
         return {"content": [{"type": "text", "text": f"Error generating report: {e}"}], "is_error": True}
+
+
+async def generate_report_impl(args: dict[str, Any]) -> dict[str, Any]:
+    """Plain async function for the direct Anthropic API agentic loop."""
+    return await generate_report(args)
