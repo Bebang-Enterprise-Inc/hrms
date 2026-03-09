@@ -109,7 +109,6 @@ async def main():
             ],
             system_prompt=SYSTEM_PROMPT,
             permission_mode="bypassPermissions",
-            allow_dangerously_skip_permissions=True,
             model="opus",
             max_turns=25,
         )
