@@ -30,6 +30,39 @@ def _notify_store_ops(msg):
 		pass
 
 
+def _decode_base64_attachment(base64_data, default_ext="bin"):
+	"""Decode a base64 attachment payload and infer a reasonable file extension."""
+	if not base64_data:
+		return None, None
+
+	if "," in base64_data:
+		header, content = base64_data.split(",", 1)
+		header_lower = header.lower()
+		if "sheet" in header_lower:
+			ext = "xlsx"
+		elif "csv" in header_lower:
+			ext = "csv"
+		elif "png" in header_lower:
+			ext = "png"
+		elif "gif" in header_lower:
+			ext = "gif"
+		elif "webp" in header_lower:
+			ext = "webp"
+		elif "jpeg" in header_lower or "jpg" in header_lower:
+			ext = "jpg"
+		else:
+			ext = default_ext
+	else:
+		content = base64_data
+		ext = default_ext
+
+	try:
+		return base64.b64decode(content), ext
+	except Exception as e:
+		frappe.log_error(f"Failed to decode base64 attachment: {e!s}", "Base64 Decode Error")
+		frappe.throw(_("Invalid attachment data"))
+
+
 def save_base64_image(base64_data, doctype, docname=None, fieldname="photo"):
 	"""
 	Save a base64-encoded image as a Frappe file attachment.
@@ -51,35 +84,42 @@ def save_base64_image(base64_data, doctype, docname=None, fieldname="photo"):
 	if base64_data.startswith(("/files/", "/private/", "http://", "https://")):
 		return base64_data
 
-	# Extract the actual base64 content and determine file type
-	if "," in base64_data:
-		# Format: data:image/jpeg;base64,/9j/4AAQ...
-		header, content = base64_data.split(",", 1)
-		if "png" in header.lower():
-			ext = "png"
-		elif "gif" in header.lower():
-			ext = "gif"
-		elif "webp" in header.lower():
-			ext = "webp"
-		else:
-			ext = "jpg"
-	else:
-		# Raw base64 without header, assume JPEG
-		content = base64_data
-		ext = "jpg"
-
-	# Decode base64
-	try:
-		file_content = base64.b64decode(content)
-	except Exception as e:
-		frappe.log_error(f"Failed to decode base64 image: {e!s}", "Base64 Decode Error")
-		frappe.throw(_("Invalid image data"))
+	file_content, ext = _decode_base64_attachment(base64_data, default_ext="jpg")
 
 	# Generate unique filename using hash
 	file_hash = hashlib.md5(file_content).hexdigest()[:12]
 	filename = f"{doctype.lower().replace(' ', '_')}_{file_hash}.{ext}"
 
 	# Save using Frappe's file handler
+	file_doc = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": filename,
+			"content": file_content,
+			"attached_to_doctype": doctype if docname else None,
+			"attached_to_name": docname,
+			"attached_to_field": fieldname,
+			"is_private": 0,
+		}
+	)
+	file_doc.save(ignore_permissions=True)
+
+	return file_doc.file_url
+
+
+def save_base64_file(base64_data, doctype, docname=None, fieldname="attachment", default_ext="bin"):
+	"""Save a base64-encoded non-image file as a Frappe attachment."""
+	if not base64_data:
+		return None
+
+	if base64_data.startswith(("/files/", "/private/", "http://", "https://")):
+		return base64_data
+
+	file_content, ext = _decode_base64_attachment(base64_data, default_ext=default_ext)
+
+	file_hash = hashlib.md5(file_content).hexdigest()[:12]
+	filename = f"{doctype.lower().replace(' ', '_')}_{fieldname}_{file_hash}.{ext}"
+
 	file_doc = frappe.get_doc(
 		{
 			"doctype": "File",
@@ -2899,14 +2939,12 @@ def upload_pos_data(
 	date_mismatch_warning = None
 	if not skip_date_validation:
 		try:
-			import base64
-
 			from hrms.utils.pos_parser import parse_sales_summary
 
-			# Decode sales_summary if it's base64
+			# Decode sales_summary if it's base64/data-url
 			if isinstance(sales_summary, str) and not sales_summary.startswith("/files/"):
 				try:
-					content = base64.b64decode(sales_summary)
+					content, _decoded_ext = _decode_base64_attachment(sales_summary, default_ext="xlsx")
 				except Exception:
 					content = sales_summary.encode() if isinstance(sales_summary, str) else sales_summary
 			else:
@@ -2945,15 +2983,19 @@ def upload_pos_data(
 	doc.uploaded_by = frappe.session.user
 	doc.pos_system = pos_system
 	doc.notes = notes
-	doc.discount_report = save_base64_image(discount_report, doctype_name, fieldname="discount_report")
-	doc.transaction_report = save_base64_image(
-		transaction_report, doctype_name, fieldname="transaction_report"
+	doc.discount_report = save_base64_file(
+		discount_report, doctype_name, fieldname="discount_report", default_ext="xlsx"
 	)
-	doc.product_mix = save_base64_image(product_mix, doctype_name, fieldname="product_mix")
-	doc.daily_sales_revenue = save_base64_image(
-		daily_sales_revenue, doctype_name, fieldname="daily_sales_revenue"
+	doc.transaction_report = save_base64_file(
+		transaction_report, doctype_name, fieldname="transaction_report", default_ext="xlsx"
 	)
-	doc.sales_summary = save_base64_image(sales_summary, doctype_name, fieldname="sales_summary")
+	doc.product_mix = save_base64_file(product_mix, doctype_name, fieldname="product_mix", default_ext="xlsx")
+	doc.daily_sales_revenue = save_base64_file(
+		daily_sales_revenue, doctype_name, fieldname="daily_sales_revenue", default_ext="xlsx"
+	)
+	doc.sales_summary = save_base64_file(
+		sales_summary, doctype_name, fieldname="sales_summary", default_ext="xlsx"
+	)
 	doc.insert()
 
 	result = {"success": True, "name": doc.name}
