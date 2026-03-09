@@ -13,6 +13,22 @@ from frappe.utils import nowdate, flt, add_days, now_datetime
 import json
 
 
+COUNT_TYPE_STORE_MONTHLY = "Store Monthly"
+COUNT_TYPE_WAREHOUSE_MONTHLY = "Warehouse Monthly"
+COUNT_TYPE_SPOT_CHECK = "Spot Check"
+COUNT_TYPE_EXTERNAL_AUDIT = "External Audit"
+
+ALL_CYCLE_COUNT_TYPES = (
+    COUNT_TYPE_STORE_MONTHLY,
+    COUNT_TYPE_WAREHOUSE_MONTHLY,
+    COUNT_TYPE_SPOT_CHECK,
+    COUNT_TYPE_EXTERNAL_AUDIT,
+)
+
+HQ_STOCK_COUNT_ROLES = {"HQ User", "System Manager", "Administrator"}
+SUPERVISOR_STOCK_COUNT_ROLES = {"Store Supervisor", "Area Supervisor"}
+
+
 def _clamp_multiplier(value, floor=0.70, ceiling=1.50):
     return flt(min(max(flt(value), flt(floor)), flt(ceiling)), 4)
 
@@ -760,6 +776,51 @@ def _check_store_access(store):
         )
 
 
+def _get_allowed_cycle_count_types(user_roles=None):
+    """Resolve count-type permissions from the current role set."""
+    roles = set(user_roles or frappe.get_roles())
+
+    # Preserve audit independence for dual-role users.
+    if "External Auditor" in roles:
+        return [COUNT_TYPE_EXTERNAL_AUDIT]
+
+    if roles.intersection(HQ_STOCK_COUNT_ROLES):
+        return list(ALL_CYCLE_COUNT_TYPES)
+
+    if "Warehouse User" in roles:
+        return [COUNT_TYPE_WAREHOUSE_MONTHLY, COUNT_TYPE_SPOT_CHECK]
+
+    if roles.intersection(SUPERVISOR_STOCK_COUNT_ROLES):
+        return [COUNT_TYPE_STORE_MONTHLY, COUNT_TYPE_SPOT_CHECK]
+
+    if "Store Staff" in roles:
+        return [COUNT_TYPE_STORE_MONTHLY]
+
+    return []
+
+
+def _validate_cycle_count_type(count_type, user_roles=None):
+    """Reject unknown or role-forbidden count types at the API boundary."""
+    normalized = (count_type or "").strip()
+    if not normalized:
+        frappe.throw(_("Count type is required"), frappe.ValidationError)
+
+    if normalized not in ALL_CYCLE_COUNT_TYPES:
+        frappe.throw(
+            _("Invalid count type: {0}").format(normalized),
+            frappe.ValidationError,
+        )
+
+    allowed_types = _get_allowed_cycle_count_types(user_roles=user_roles)
+    if normalized not in allowed_types:
+        frappe.throw(
+            _("You are not allowed to access {0} counts.").format(normalized),
+            frappe.PermissionError,
+        )
+
+    return normalized
+
+
 @frappe.whitelist()
 def get_assigned_stores():
     """Return warehouses the current user can count at.
@@ -770,32 +831,50 @@ def get_assigned_stores():
     """
     user = frappe.session.user
     roles = set(frappe.get_roles())
+    allowed_count_types = _get_allowed_cycle_count_types(user_roles=roles)
+    default_count_type = allowed_count_types[0] if allowed_count_types else None
 
     # External Auditor branch checked FIRST — intentional. Dual-role users (Store Staff +
     # External Auditor) see only audit-assigned stores, not their own branch. This preserves
     # audit independence. To let them count their own store, add it to Store Access explicitly.
     if "External Auditor" in roles:
-        return {"stores": frappe.get_all(
+        return {
+            "stores": frappe.get_all(
             "BEI External Auditor Store Access",
             filters={"user": user},
             fields=["warehouse as store", "warehouse_name as store_name"]
-        )}
+            ),
+            "allowed_count_types": allowed_count_types,
+            "default_count_type": default_count_type,
+        }
 
     if "Store Staff" in roles and not roles.intersection({"Store Supervisor", "Area Supervisor", "HQ User", "System Manager", "Administrator"}):
         emp_branch = frappe.db.get_value("Employee", {"user_id": user}, "branch")
         if emp_branch:
             warehouse = _resolve_warehouse(emp_branch)
             if warehouse:
-                return {"stores": [{"store": warehouse, "store_name": emp_branch}]}
-        return {"stores": []}
+                return {
+                    "stores": [{"store": warehouse, "store_name": emp_branch}],
+                    "allowed_count_types": allowed_count_types,
+                    "default_count_type": default_count_type,
+                }
+        return {
+            "stores": [],
+            "allowed_count_types": allowed_count_types,
+            "default_count_type": default_count_type,
+        }
 
     # Supervisors, HQ, Admin — all warehouses
-    return {"stores": frappe.get_all(
-        "Warehouse",
-        filters={"company": get_company(), "is_group": 0},
-        fields=["name as store", "warehouse_name as store_name"],
-        order_by="warehouse_name"
-    )}
+    return {
+        "stores": frappe.get_all(
+            "Warehouse",
+            filters={"company": get_company(), "is_group": 0},
+            fields=["name as store", "warehouse_name as store_name"],
+            order_by="warehouse_name"
+        ),
+        "allowed_count_types": allowed_count_types,
+        "default_count_type": default_count_type,
+    }
 
 
 @frappe.whitelist()
@@ -811,6 +890,7 @@ def get_items_for_count(store, count_type=None):
     try:
         # External Auditors: verify store access
         _check_store_access(store)
+        validated_count_type = _validate_cycle_count_type(count_type)
 
         warehouse = _resolve_warehouse(store)
         if not warehouse:
@@ -837,7 +917,13 @@ def get_items_for_count(store, count_type=None):
             group = _map_item_group(item.item_group)
             grouped.setdefault(group, []).append(item)
 
-        return {"items": items, "grouped": grouped, "warehouse": warehouse, "count": len(items)}
+        return {
+            "items": items,
+            "grouped": grouped,
+            "warehouse": warehouse,
+            "count": len(items),
+            "count_type": validated_count_type,
+        }
     except frappe.PermissionError:
         raise
     except frappe.ValidationError:
@@ -862,6 +948,8 @@ def submit_cycle_count_v2(store, count_date, items, count_type="Store Monthly", 
 
     if isinstance(items, str):
         items = json.loads(items)
+
+    count_type = _validate_cycle_count_type(count_type)
 
     # Resolve warehouse
     warehouse = _resolve_warehouse(store)
@@ -956,6 +1044,8 @@ def save_cycle_count_draft(store, count_date, items, count_type="Store Monthly",
 
     if isinstance(items, str):
         items = json.loads(items)
+
+    count_type = _validate_cycle_count_type(count_type)
 
     warehouse = _resolve_warehouse(store)
     if not warehouse:
