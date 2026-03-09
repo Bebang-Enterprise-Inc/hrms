@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import now_datetime, flt
 from hrms.utils.bei_config import get_company
+from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 
 
 # Approval threshold - PO above this needs both Mae AND Butch
@@ -352,6 +353,7 @@ class BEIPurchaseOrder(Document):
             "bei_purchase_order": self.name,  # Reference back to BEI PO
             "items": po_items
         })
+        apply_standard_buying_context(po, store_label=self.ship_to)
 
         # Apply discount if any
         if flt(self.discount_amount, 2) > 0:

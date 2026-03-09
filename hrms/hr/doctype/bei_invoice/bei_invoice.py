@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime, getdate, add_days
 from hrms.utils.bei_config import get_company
+from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 
 
 class BEIInvoice(Document):
@@ -324,6 +325,10 @@ class BEIInvoice(Document):
             "payment_terms_template": self.payment_terms,
             "items": pi_items
         })
+        apply_standard_buying_context(
+            pi,
+            store_label=bei_gr.warehouse or bei_po.ship_to,
+        )
 
         # Add withholding tax (EWT) if applicable
         if flt(self.withholding_tax, 2) > 0:
