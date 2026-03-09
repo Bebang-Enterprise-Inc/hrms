@@ -95,14 +95,13 @@ async def main():
             ],
             disallowed_tools=[
                 "Write", "Edit", "MultiEdit", "Bash",
-                "Glob", "Grep", "Read",
                 "Agent", "Task",
-                "WebFetch", "WebSearch",
                 "NotebookEdit",
             ],
             permission_mode="bypassPermissions",
             model="opus",
             max_turns=20,
+            stderr=lambda line: print(f"[CLI] {line}"),
         )
 
         print(f"Starting analyst agent with options: model={options.model}, max_turns={options.max_turns}")
