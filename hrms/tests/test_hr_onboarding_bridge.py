@@ -138,6 +138,14 @@ class TestHrOnboardingBridge(unittest.TestCase):
 		self.assertEqual(result["page"], 1)
 		self.assertEqual(result["page_size"], 20)
 		self.assertEqual(len(result["data"]), 2)
+		total_query = hr_onboarding.frappe.db.sql.call_args_list[0].args[0]
+		rows_query = hr_onboarding.frappe.db.sql.call_args_list[1].args[0]
+		self.assertIn("`tabJob Opening`", total_query)
+		self.assertIn("jop.department", total_query)
+		self.assertNotIn("ja.department", total_query)
+		self.assertIn("`tabJob Opening`", rows_query)
+		self.assertIn("COALESCE(jop.department, '') AS department", rows_query)
+		self.assertNotIn("ja.department", rows_query)
 
 	def test_update_job_offer_status_updates_offer_and_applicant(self):
 		offer = _Offer(status="Pending")

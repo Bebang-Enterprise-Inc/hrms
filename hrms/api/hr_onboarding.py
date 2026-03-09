@@ -52,8 +52,9 @@ def get_job_offers(
         SELECT COUNT(*)
         FROM `tabJob Offer` jo
         LEFT JOIN `tabJob Applicant` ja ON ja.name = jo.job_applicant
+        LEFT JOIN `tabJob Opening` jop ON jop.name = ja.job_title
         WHERE (%(status)s IS NULL OR jo.status = %(status)s)
-          AND (%(department)s IS NULL OR ja.department = %(department)s)
+          AND (%(department)s IS NULL OR jop.department = %(department)s)
         """,
 		values,
 	)[0][0]
@@ -68,11 +69,12 @@ def get_job_offers(
             jo.offer_date,
             jo.status,
             jo.job_applicant,
-            COALESCE(ja.department, '') AS department
+            COALESCE(jop.department, '') AS department
         FROM `tabJob Offer` jo
         LEFT JOIN `tabJob Applicant` ja ON ja.name = jo.job_applicant
+        LEFT JOIN `tabJob Opening` jop ON jop.name = ja.job_title
         WHERE (%(status)s IS NULL OR jo.status = %(status)s)
-          AND (%(department)s IS NULL OR ja.department = %(department)s)
+          AND (%(department)s IS NULL OR jop.department = %(department)s)
         ORDER BY jo.creation DESC
         LIMIT %(start)s, %(page_size)s
         """,
