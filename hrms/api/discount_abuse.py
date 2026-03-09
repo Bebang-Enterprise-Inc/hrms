@@ -595,18 +595,25 @@ def _query_discount_item_rows_for_range(
 		return []
 	location_list = ",".join(str(location_id) for location_id in location_ids)
 	store_map = _get_store_directory()
+	select_fields = ",".join(
+		[
+			"order_id",
+			"line_number",
+			"product_name",
+			"quantity",
+			"discount_amount",
+			"discount_name",
+			"discount_name_normalized",
+			"discount_bir_category",
+			"discount_customer_full_name",
+			"discount_customer_full_name_normalized",
+			"discount_reference_number",
+			"discount_reference_number_normalized",
+			"pos_orders!inner(id,location_id,business_date,bill_number,receipt_number,billed_at,paid_at,payment_status,original_gross_sales,gross_sales,net_sales,total_discounts)",
+		]
+	)
 	params: list[tuple[str, Any]] = [
-		(
-			"select",
-			(
-				"order_id,line_number,product_name,quantity,discount_amount,discount_name,"
-				"discount_name_normalized,discount_bir_category,discount_customer_full_name,"
-				"discount_customer_full_name_normalized,discount_reference_number,"
-				"discount_reference_number_normalized,"
-				"pos_orders!inner(id,location_id,business_date,bill_number,receipt_number,billed_at,paid_at,"
-				"payment_status,original_gross_sales,gross_sales,net_sales,total_discounts)"
-			),
-		),
+		("select", select_fields),
 		("discount_amount", "gt.0"),
 		("pos_orders.business_date", f"gte.{start_day.isoformat()}"),
 		("pos_orders.business_date", f"lte.{end_day.isoformat()}"),
@@ -1315,7 +1322,7 @@ def _get_investigation_payload(
 	start_day = _coerce_date(start_date)
 	end_day = _coerce_date(end_date)
 	if end_day < start_day:
-		frappe.throw("End date cannot be earlier than start date.")
+		frappe.throw(frappe._("End date cannot be earlier than start date."))
 	selected_store_names = _parse_store_names(store_names)
 	selected_categories = _parse_category_filter(discount_bir_category)
 	location_ids, selected_store_map = _resolve_selected_stores(selected_store_names)
