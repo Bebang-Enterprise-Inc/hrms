@@ -43,15 +43,25 @@ Posts with high engagement scores are boost candidates. Prioritize shares (viral
 
 ## REPORT GENERATION
 
-Generate a DOCX executive report using the template system:
+Generate a DOCX executive report using the `generate_report` tool:
 
-1. Read the template script at `templates/weekly_report.py` to understand the required data dict structure
-2. Prepare the data dict with ALL required fields based on your analysis
-3. Write the data dict to a temporary Python script that imports and calls the template
-4. Run the script to generate the DOCX file
-5. Verify the output file exists and is non-empty
+1. Prepare a JSON data dict with ALL required fields based on your analysis
+2. Call `generate_report` with the JSON string — it generates a branded BEI DOCX automatically
+3. Verify the tool returns `status: "success"` and note the `output_path`
 
-If the template script fails with an error, read the error, patch the SPECIFIC issue in the template, and retry. Do NOT rewrite the template from scratch.
+**Required data dict keys:**
+- `week_ending` (str): Date string like "2026-03-09"
+- `ai_analysis` (str): Your executive summary paragraph
+- `total_spend` (float): Total PHP spend this week
+- `total_purchases` (int): Total purchase conversions
+- `avg_cpa` (float): Average cost per acquisition
+- `campaigns` (list): Each with campaign_name, objective, spend_7d, purchases_7d, cpa_7d, ctr_7d, frequency_7d, status
+- `flagged_ads` (list): Each with ad_name, campaign_name, flag_reason, spend_7d, cpa_7d, ctr_7d, frequency
+- `boost_candidates` (list): Each with post_text, engagement_score, likes, comments, shares
+- `weekly_trend` (list): Each with week, campaign_name, spend, purchases, cpa
+- `recommendations` (list): Each with priority (HIGH/MEDIUM/LOW), action, reasoning
+
+Pass the data dict as a JSON string in the `data_json` parameter. The tool returns the file path for upload.
 
 ---
 

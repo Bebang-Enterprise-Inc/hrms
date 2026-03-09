@@ -12,6 +12,7 @@ from claude_agent_sdk import query, ClaudeAgentOptions, create_sdk_mcp_server
 from tools.supabase_tool import query_supabase
 from tools.drive_tool import upload_to_drive
 from tools.gchat_tool import send_gchat, send_failure_alert
+from tools.report_tool import generate_report
 
 # Load prompt from file
 PROMPT_PATH = Path(__file__).parent / "prompts" / "weekly_analysis.txt"
@@ -41,7 +42,7 @@ def write_run_log(run_log: dict):
     log_path.write_text(json.dumps(run_log, indent=2, default=str), encoding="utf-8")
     print(f"Run log written: {log_path}")
 
-# Token ceiling guard (~$15 equivalent at Sonnet pricing, ~750K tokens)
+# Token ceiling guard (safety limit for Claude Max, ~750K tokens per run)
 MAX_TOKENS = 750_000
 
 def check_token_ceiling():
@@ -56,7 +57,7 @@ def check_token_ceiling():
 async def main():
     run_log = {
         "timestamp": datetime.now().isoformat(),
-        "model": "sonnet",
+        "model": "opus",
         "errors": [],
         "sections": [],
     }
@@ -78,7 +79,7 @@ async def main():
         # 2. Run the analyst agent
         server = create_sdk_mcp_server(
             name="bei-analytics", version="1.0.0",
-            tools=[query_supabase, upload_to_drive, send_gchat]
+            tools=[query_supabase, upload_to_drive, send_gchat, generate_report]
         )
 
         options = ClaudeAgentOptions(
@@ -87,10 +88,11 @@ async def main():
                 "mcp__bei__query_supabase",
                 "mcp__bei__upload_to_drive",
                 "mcp__bei__send_gchat",
+                "mcp__bei__generate_report",
                 "Read", "Write", "Edit", "Glob", "Grep",
             ],
             permission_mode="bypassPermissions",
-            model="sonnet",
+            model="opus",
             max_turns=30,
         )
 
@@ -112,7 +114,20 @@ async def main():
             check_token_ceiling()
 
         print(f"Agent loop completed. Total messages: {msg_count}, tokens: {_token_counts}")
-        run_log["sections"] = ["sync", "analysis", "report", "upload", "notify"]
+        # Check runs/ for generated DOCX to verify report was actually created
+        import glob as globmod
+        docx_files = globmod.glob(str(RUNS_DIR / "*.docx"))
+        completed = ["sync", "analysis"]
+        if docx_files:
+            completed.append("report")
+            print(f"Report generated: {docx_files}")
+        else:
+            run_log["errors"].append("No DOCX report found in runs/ after agent completed")
+            print("WARNING: No DOCX report generated")
+        # Note: upload and notify are verified by agent tool call success
+        # but we can't check from here — mark them as attempted
+        completed.extend(["upload_attempted", "notify_attempted"])
+        run_log["sections"] = completed
         print("Agent completed successfully.")
 
     except Exception as e:
