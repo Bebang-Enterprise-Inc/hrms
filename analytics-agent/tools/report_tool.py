@@ -21,46 +21,31 @@ from templates.weekly_report import generate_weekly_report
 
 @tool(
     "generate_report",
-    "Generate a branded BEI Weekly Meta Ads DOCX report from a data dictionary",
+    "Generate a branded BEI Weekly Meta Ads DOCX report. Pass ALL data as a single JSON string in the data_json parameter. Returns the file path for upload.",
     {
-        "data_json": str,  # JSON string of the report data dict
-        "output_filename": str,  # optional: filename for the DOCX (default: auto-generated)
+        "data_json": str,
     },
 )
 def generate_report(
     data_json: str,
-    output_filename: str = "",
 ) -> dict[str, Any]:
-    """Generate the weekly DOCX report and return the output path.
+    """Generate the weekly DOCX report from a JSON data string.
 
-    Args:
-        data_json: JSON string containing the report data dictionary.
-            Required keys: week_ending, campaigns, flagged_ads, boost_candidates,
-            weekly_trend, recommendations, ai_analysis, total_spend,
-            total_purchases, avg_cpa.
-        output_filename: Optional filename. Defaults to
-            'BEI_Weekly_Meta_Ads_Report_YYYY-MM-DD.docx'.
-
-    Returns:
-        Dict with output_path, filename, and status.
+    The data_json must contain: week_ending, ai_analysis, total_spend,
+    total_purchases, avg_cpa, campaigns, flagged_ads, boost_candidates,
+    weekly_trend, recommendations.
     """
-    print(f"[generate_report] CALLED with data_json length={len(data_json)}, output_filename={output_filename!r}")
+    print(f"[generate_report] CALLED with {len(data_json)} chars")
+
     try:
         data = json.loads(data_json)
     except json.JSONDecodeError as e:
         print(f"[generate_report] JSON parse error: {e}")
         return {"error": f"Invalid JSON: {e}", "status": "failed"}
 
-    # Validate required keys
-    required = ["week_ending", "ai_analysis", "total_spend", "total_purchases", "avg_cpa"]
-    missing = [k for k in required if k not in data]
-    if missing:
-        return {"error": f"Missing required keys: {missing}", "status": "failed"}
-
     # Build output path
-    if not output_filename:
-        we = data.get("week_ending", datetime.now().strftime("%Y-%m-%d"))
-        output_filename = f"BEI_Weekly_Meta_Ads_Report_{we}.docx"
+    we = data.get("week_ending", datetime.now().strftime("%Y-%m-%d"))
+    output_filename = f"BEI_Weekly_Meta_Ads_Report_{we}.docx"
 
     # Use runs directory for output (writable, persisted via volume mount)
     runs_dir = os.path.join(os.path.dirname(__file__), "..", "runs")

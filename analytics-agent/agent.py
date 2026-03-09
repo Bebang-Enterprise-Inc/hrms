@@ -81,6 +81,9 @@ async def main():
             name="bei-analytics", version="1.0.0",
             tools=[query_supabase, upload_to_drive, send_gchat, generate_report]
         )
+        # Debug: verify tool registration
+        for t in [query_supabase, upload_to_drive, send_gchat, generate_report]:
+            print(f"  Tool registered: {t.name if hasattr(t, 'name') else type(t).__name__}")
 
         options = ClaudeAgentOptions(
             mcp_servers={"bei": server},
