@@ -3876,7 +3876,7 @@ def get_maintenance_requests(
 			"reported_by",
 			"description",
 		],
-		order_by="request_date desc",
+		order_by="request_date desc, creation desc",
 		limit=int(limit),
 	)
 
@@ -3912,7 +3912,7 @@ def get_my_maintenance_requests(status: str | None = None, limit: int | str = 20
 			"request_date",
 			"description",
 		],
-		order_by="request_date desc",
+		order_by="request_date desc, creation desc",
 		limit=int(limit),
 	)
 
