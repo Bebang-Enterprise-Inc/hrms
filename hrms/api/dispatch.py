@@ -1643,9 +1643,7 @@ def get_driver_schedule(employee: str, date_from: str | None = None, date_to: st
 		employee_fields.append(phone_field)
 
 	# Validate employee
-	emp = frappe.db.get_value(
-		"Employee", employee, employee_fields, as_dict=True
-	)
+	emp = frappe.db.get_value("Employee", employee, employee_fields, as_dict=True)
 	if not emp:
 		frappe.throw(_("Employee {0} not found").format(employee))
 

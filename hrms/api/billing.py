@@ -140,9 +140,7 @@ def _get_store_type_records(store_filters=None):
 			break
 
 	if not columns:
-		frappe.logger().warning(
-			"Billing store-type schema lookup failed; skipping BEI Store Type scan"
-		)
+		frappe.logger().warning("Billing store-type schema lookup failed; skipping BEI Store Type scan")
 		return []
 
 	has_store_type = "store_type" in columns

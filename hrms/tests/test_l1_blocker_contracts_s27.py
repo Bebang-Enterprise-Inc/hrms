@@ -25,6 +25,7 @@ def _install_base_frappe():
 	def whitelist(*args, **kwargs):
 		def decorator(fn):
 			return fn
+
 		return decorator
 
 	frappe.whitelist = whitelist
@@ -80,7 +81,9 @@ def _install_billing_deps():
 	_ensure_module("hrms.hr.doctype.bei_store_type")
 	_ensure_module(
 		"hrms.hr.doctype.bei_store_type.bei_store_type",
-		resolve_store_type=lambda store_type=None, store_type_category=None: store_type or store_type_category,
+		resolve_store_type=lambda store_type=None, store_type_category=None: (
+			store_type or store_type_category
+		),
 	)
 	_ensure_module("hrms.utils.bei_config", get_company=lambda: "Bebang Enterprise Inc.")
 	_ensure_module(

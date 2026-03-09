@@ -270,11 +270,7 @@ def _get_default_area_supervisor(role_cache=None, branch_keys=None):
 		return None
 
 	candidates = sorted(
-		{
-			str(row.get("parent")).strip()
-			for row in role_rows
-			if row and str(row.get("parent") or "").strip()
-		}
+		{str(row.get("parent")).strip() for row in role_rows if row and str(row.get("parent") or "").strip()}
 	)
 	if not candidates:
 		return None
@@ -1693,7 +1689,9 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		allowed_roles = {AREA_SUPERVISOR_ROLE, REGIONAL_MANAGER_ROLE}.union(SYSTEM_APPROVER_ROLES)
 		if not user_roles.intersection(allowed_roles):
 			frappe.throw(
-				_("Only assigned approvers, Area Supervisors, Regional Managers, or System Managers can approve."),
+				_(
+					"Only assigned approvers, Area Supervisors, Regional Managers, or System Managers can approve."
+				),
 				frappe.PermissionError,
 			)
 
@@ -1764,10 +1762,7 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 
 	is_area_stage_approval = current_stage == "area_supervisor"
 	should_forward_to_regional = bool(
-		requires_dual_stage
-		and is_area_stage_approval
-		and regional_approver
-		and regional_approver != user
+		requires_dual_stage and is_area_stage_approval and regional_approver and regional_approver != user
 	)
 
 	if should_forward_to_regional:
