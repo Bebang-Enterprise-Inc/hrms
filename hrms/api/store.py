@@ -111,6 +111,17 @@ REGIONAL_MANAGER_FALLBACK_EMAIL = "edlice@bebang.ph"
 SYSTEM_APPROVER_ROLES = {"System Manager", "Administrator"}
 
 
+def _has_column(doctype: str, fieldname: str) -> bool:
+	"""Return True when the runtime table includes the requested column."""
+	has_column = getattr(frappe.db, "has_column", None)
+	if not callable(has_column):
+		return False
+	try:
+		return bool(has_column(doctype, fieldname))
+	except Exception:
+		return False
+
+
 def validate_store_ops_role():
 	"""Validate that current user has a store operations role.
 	Raises PermissionError if user lacks required role."""
@@ -259,11 +270,7 @@ def _get_default_area_supervisor(role_cache=None, branch_keys=None):
 		return None
 
 	candidates = sorted(
-		{
-			str(row.get("parent")).strip()
-			for row in role_rows
-			if row and str(row.get("parent") or "").strip()
-		}
+		{str(row.get("parent")).strip() for row in role_rows if row and str(row.get("parent") or "").strip()}
 	)
 	if not candidates:
 		return None
@@ -1682,7 +1689,9 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		allowed_roles = {AREA_SUPERVISOR_ROLE, REGIONAL_MANAGER_ROLE}.union(SYSTEM_APPROVER_ROLES)
 		if not user_roles.intersection(allowed_roles):
 			frappe.throw(
-				_("Only assigned approvers, Area Supervisors, Regional Managers, or System Managers can approve."),
+				_(
+					"Only assigned approvers, Area Supervisors, Regional Managers, or System Managers can approve."
+				),
 				frappe.PermissionError,
 			)
 
@@ -1753,10 +1762,7 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 
 	is_area_stage_approval = current_stage == "area_supervisor"
 	should_forward_to_regional = bool(
-		requires_dual_stage
-		and is_area_stage_approval
-		and regional_approver
-		and regional_approver != user
+		requires_dual_stage and is_area_stage_approval and regional_approver and regional_approver != user
 	)
 
 	if should_forward_to_regional:
@@ -3517,20 +3523,17 @@ def get_closing_report_status(store: str | None = None, date: str | None = None)
 		frappe.throw(_("Store is required"))
 	if not date:
 		date = nowdate()
+	required_fields = ["name", "stage_completed", "status", "pos_down", "cash_variance"]
+	optional_fields = [
+		fieldname
+		for fieldname in ("inventory_variance_total", "cashier_signoff", "production_signoff")
+		if _has_column("BEI Store Closing Report", fieldname)
+	]
 
 	report = frappe.db.get_value(
 		"BEI Store Closing Report",
 		{"store": store, "report_date": date},
-		[
-			"name",
-			"stage_completed",
-			"status",
-			"pos_down",
-			"cash_variance",
-			"inventory_variance_total",
-			"cashier_signoff",
-			"production_signoff",
-		],
+		required_fields + optional_fields,
 		as_dict=True,
 	)
 
@@ -3539,14 +3542,14 @@ def get_closing_report_status(store: str | None = None, date: str | None = None)
 
 	return {
 		"exists": True,
-		"name": report.name,
-		"stage_completed": report.stage_completed,
-		"status": report.status,
-		"pos_down": report.pos_down,
-		"cash_variance": report.cash_variance,
-		"inventory_variance_total": report.inventory_variance_total,
-		"cashier_signoff": report.cashier_signoff,
-		"production_signoff": report.production_signoff,
+		"name": report.get("name"),
+		"stage_completed": report.get("stage_completed"),
+		"status": report.get("status"),
+		"pos_down": report.get("pos_down"),
+		"cash_variance": report.get("cash_variance"),
+		"inventory_variance_total": flt(report.get("inventory_variance_total") or 0),
+		"cashier_signoff": cint(report.get("cashier_signoff") or 0),
+		"production_signoff": cint(report.get("production_signoff") or 0),
 	}
 
 

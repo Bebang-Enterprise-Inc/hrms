@@ -82,6 +82,99 @@ def _set_record_value(record, fieldname, value):
 		setattr(record, fieldname, value)
 
 
+def _has_column(doctype: str, fieldname: str) -> bool:
+	"""Return True when the runtime table really has the requested column."""
+	has_column = getattr(frappe.db, "has_column", None)
+	if not callable(has_column):
+		return False
+	try:
+		return bool(has_column(doctype, fieldname))
+	except Exception:
+		return False
+
+
+def _trip_partner_field_sql(trip_alias: str = "dt", vehicle_alias: str = "veh") -> str:
+	"""Resolve the live 3PL partner field across legacy and current trip schemas."""
+	if _has_column("BEI Distribution Trip", "vehicle_owner"):
+		return f"{trip_alias}.vehicle_owner"
+	return f"{vehicle_alias}.threepl_partner"
+
+
+def _trip_vehicle_join_sql(trip_alias: str = "dt", vehicle_alias: str = "veh") -> str:
+	"""Join BEI Vehicle only when partner data moved off the trip record."""
+	if _has_column("BEI Distribution Trip", "vehicle_owner"):
+		return ""
+	return f" LEFT JOIN `tabBEI Vehicle` {vehicle_alias} ON {vehicle_alias}.name = {trip_alias}.vehicle"
+
+
+def _get_3pl_trip_query():
+	"""Return a static SQL query matching the runtime trip-partner schema."""
+	if _has_column("BEI Distribution Trip", "vehicle_owner"):
+		return """
+        SELECT
+            dt.name AS trip_name,
+            dt.trip_date AS date,
+            dt.route AS zone,
+            dt.cargo_type,
+            dt.vehicle_owner AS partner,
+            dt.overtime_hours,
+            dt.is_holiday_trip,
+            dt.is_weekend_trip,
+            GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
+        FROM `tabBEI Distribution Trip` dt
+        LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
+        WHERE dt.trip_date BETWEEN %(start_date)s AND %(end_date)s
+          AND COALESCE(dt.vehicle_owner, '') = %(partner)s
+          AND dt.docstatus = 1
+        GROUP BY dt.name
+        ORDER BY dt.trip_date ASC
+        """
+
+	return """
+    SELECT
+        dt.name AS trip_name,
+        dt.trip_date AS date,
+        dt.route AS zone,
+        dt.cargo_type,
+        veh.threepl_partner AS partner,
+        dt.overtime_hours,
+        dt.is_holiday_trip,
+        dt.is_weekend_trip,
+        GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
+    FROM `tabBEI Distribution Trip` dt
+    LEFT JOIN `tabBEI Vehicle` veh ON veh.name = dt.vehicle
+    LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
+    WHERE dt.trip_date BETWEEN %(start_date)s AND %(end_date)s
+      AND COALESCE(veh.threepl_partner, '') = %(partner)s
+      AND dt.docstatus = 1
+    GROUP BY dt.name
+    ORDER BY dt.trip_date ASC
+    """
+
+
+def _get_3pl_trip_count_query():
+	"""Return a static SQL query for partner trip counts across schema variants."""
+	if _has_column("BEI Distribution Trip", "vehicle_owner"):
+		return """
+        SELECT dt.vehicle_owner AS partner, COUNT(*) AS cnt
+        FROM `tabBEI Distribution Trip` dt
+        WHERE dt.trip_date BETWEEN %s AND %s
+          AND dt.docstatus = 1
+          AND COALESCE(dt.vehicle_owner, '') != ''
+        GROUP BY dt.vehicle_owner
+        """
+
+	return """
+    SELECT veh.threepl_partner AS partner, COUNT(*) AS cnt
+    FROM `tabBEI Distribution Trip` dt
+    LEFT JOIN `tabBEI Vehicle` veh ON veh.name = dt.vehicle
+    WHERE dt.trip_date BETWEEN %s AND %s
+      AND dt.docstatus = 1
+      AND COALESCE(veh.threepl_partner, '') != ''
+    GROUP BY veh.threepl_partner
+    """
+
+
 def _normalized_store_type(store_type=None, legacy_store_type_category=None):
 	"""Return canonical store_type from canonical or legacy value."""
 	return resolve_store_type(
@@ -115,9 +208,7 @@ def _get_store_type_records(store_filters=None):
 			break
 
 	if not columns:
-		frappe.logger().warning(
-			"Billing store-type schema lookup failed; skipping BEI Store Type scan"
-		)
+		frappe.logger().warning("Billing store-type schema lookup failed; skipping BEI Store Type scan")
 		return []
 
 	has_store_type = "store_type" in columns
@@ -928,27 +1019,10 @@ def generate_3pl_reconciliation(month: int | str, year: int | str, partner: str)
 	year = int(year)
 	start_date, end_date = _get_month_date_range(month, year)
 
-	# Fetch 3PL trips for the month (vehicle_owner matches the 3PL partner)
+	# Fetch 3PL trips for the month. Older builds stored the partner directly on
+	# the trip; current builds resolve it via the linked BEI Vehicle record.
 	trips_raw = frappe.db.sql(
-		"""
-        SELECT
-            dt.name AS trip_name,
-            dt.trip_date AS date,
-            dt.route AS zone,
-            dt.cargo_type,
-            dt.vehicle_owner,
-            dt.overtime_hours,
-            dt.is_holiday_trip,
-            dt.is_weekend_trip,
-            GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
-        FROM `tabBEI Distribution Trip` dt
-        LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
-        WHERE dt.trip_date BETWEEN %(start_date)s AND %(end_date)s
-          AND dt.vehicle_owner = %(partner)s
-          AND dt.docstatus = 1
-        GROUP BY dt.name
-        ORDER BY dt.trip_date ASC
-        """,
+		_get_3pl_trip_query(),
 		{"start_date": start_date, "end_date": end_date, "partner": partner},
 		as_dict=True,
 	)
@@ -1258,14 +1332,11 @@ def get_reconciliation_summary(month: int | str, year: int | str):
 
 	# Batch trip counts for all partners in a single query (avoids N+1)
 	trip_count_rows = frappe.db.sql(
-		"SELECT vehicle_owner, COUNT(*) as cnt"
-		" FROM `tabBEI Distribution Trip`"
-		" WHERE trip_date BETWEEN %s AND %s AND docstatus = 1"
-		" GROUP BY vehicle_owner",
+		_get_3pl_trip_count_query(),
 		[start_date, end_date],
 		as_dict=True,
 	)
-	trip_counts = {r.vehicle_owner: r.cnt for r in trip_count_rows}
+	trip_counts = {r.partner: r.cnt for r in trip_count_rows}
 
 	# Batch JE lookups for all partners in a single query (avoids N+1)
 	je_cheque_nos = [f"3PL-{p}-{period_label}" for p in partners]

@@ -1766,7 +1766,7 @@ Payload: {
   - Response: `ok == true`, `status == "Approved"`
   - DB verify: `status == "Approved"`, `approved_by == "test.area@bebang.ph"`, `approved_at` is set, `approval_notes` saved
 
-### SCM-011: 3PL Billing Comparison → Flags Discrepancies with EWT
+### SCM-011: 3PL Reconciliation → Flags Discrepancies with EWT Preview
 - **Type:** happy
 - **Origin:** Plan Phase 4B (3PL billing validation) + BLOCKER-2 (EWT calculation)
 - **Role:** test.warehouse@bebang.ph
@@ -1775,23 +1775,19 @@ Payload: {
     - Trip A: actual delivery value = 5000 PHP
     - Trip B: actual delivery value = 8000 PHP
     - Trip C: actual delivery value = 6000 PHP
-- **Call:** `POST hrms.api.dispatch.validate_3pl_billing`
+- **Call:** `POST hrms.api.billing.generate_3pl_reconciliation`
 - **Payload:**
   ```json
   {
-    "billing_period": "2026-02-01 to 2026-02-15",
-    "3pl_invoices": [
-      {"trip_id": "TRIP-A", "billed_amount": 5000, "invoice_ref": "3PL-001"},
-      {"trip_id": "TRIP-B", "billed_amount": 8500, "invoice_ref": "3PL-002"},
-      {"trip_id": "TRIP-C", "billed_amount": 5800, "invoice_ref": "3PL-003"}
-    ]
+    "month": 2,
+    "year": 2026,
+    "partner": "3MD"
   }
   ```
 - **Assert:**
   - Response: `ok == true`, `discrepancies.length == 2` (Trip B overcharged by 500, Trip C undercharged by 200)
-  - DB verify: Discrepancy report created with 2 flagged invoices
-  - DB verify: EWT 2% calculated on gross billing (total = 19300 PHP, EWT = 386 PHP)
-  - DB verify: Form 2307 reference generated for EWT withholding
+  - Response verify: `trip_count == 3`, `total_expected == 19300`, `total_ewt == 386`
+  - Response verify: `ewt_atc` and `ewt_rate` are populated for downstream payment-request creation
 
 ### SCM-012: Ian Approves Order with Qty Adjustment → DR Auto-Generated
 - **Type:** happy
@@ -1847,23 +1843,12 @@ Payload: {
     - Qty remaining "15 units"
     - Reorder threshold "20 units"
 
-### SCM-014: RBAC — Store OIC Cannot Access Other Store's Orders
+### SCM-014 [RETIRED-CONTRACT]: Legacy Store Orders "get_my_orders" endpoint
 - **Type:** rbac
 - **Origin:** BLOCKER-5 (store data isolation for RBAC)
-- **Role:** test.staff@bebang.ph (Store OIC for TEST-STORE-BGC)
-- **Precondition:**
-  - Orders exist for TEST-STORE-BGC (2 orders)
-  - Orders exist for TEST-STORE-MAKATI (3 orders)
-- **Call:** `GET hrms.api.store_orders.get_my_orders`
-- **Payload:**
-  ```json
-  {}
-  ```
-- **Assert:**
-  - Response: `ok == true`, returns ONLY 2 orders for TEST-STORE-BGC
-  - Response does NOT include any orders for TEST-STORE-MAKATI
-- **Additional Test:** Call `GET hrms.api.store_orders.get_my_orders?store=TEST-STORE-MAKATI`
-  - Assert: `ok == false`, permission denied OR empty result (no cross-store access)
+- **Status:** Legacy scenario removed from executable coverage.
+- **Reason:** `hrms.api.store_orders.get_my_orders` is not part of the live runtime surface; current ordering flows use canonical `hrms.api.store.*` endpoints plus portal queue/detail views.
+- **Replacement coverage:** Validate store-order RBAC through canonical ordering/approval routes during L3 and queue-view checks, not through the removed `store_orders` namespace.
 
 ### SCM-015 [PENDING-v4.1]: Create Trip from Zone with Selected Stores → Only Selected Stores in Trip
 - **Type:** happy
