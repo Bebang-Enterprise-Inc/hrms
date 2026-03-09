@@ -30,7 +30,9 @@ def _install_fake_sheets_receiver_dependencies():
 	config_mod = types.ModuleType("hrms.services.sheets_receiver.config")
 	config_mod.SheetConfig = types.SimpleNamespace
 	config_mod.get_config = lambda: types.SimpleNamespace()
+	config_mod.get_all_sheet_configs = lambda: {}
 	config_mod.get_sheet_by_spreadsheet_id = lambda *_args, **_kwargs: None
+	config_mod.get_sheets_by_spreadsheet_id = lambda *_args, **_kwargs: {}
 	config_mod.get_watched_sheets = lambda: {}
 	sys.modules["hrms.services.sheets_receiver.config"] = config_mod
 
@@ -110,6 +112,7 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 			sheet_name="AR",
 			range="A:Z",
 			key_column="invoice_no",
+			related_sheet_keys=[],
 		)
 
 	def _make_processor(self):
@@ -207,6 +210,59 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 		self.assertEqual(call.kwargs["reasons"], ["sync_exception"])
 		self.assertIn("receiver timeout", call.kwargs["errors"][0])
 		processor.db.log_sync.assert_called_once()
+
+	def test_process_webhook_syncs_all_matching_sheet_configs_for_workbook(self):
+		processor = self._make_processor()
+		sheet_a = self._make_sheet_config()
+		sheet_b = types.SimpleNamespace(
+			**{**sheet_a.__dict__, "name": "Supplier SOA", "sheet_name": "SUPPLIERS SOA"}
+		)
+		processor.sync_sheet = MagicMock(side_effect=["log-a", "log-b"])
+
+		processor_mod.get_sheets_by_spreadsheet_id = MagicMock(
+			return_value={"ap_opening_balance": sheet_a, "supplier_soa": sheet_b}
+		)
+
+		result = processor.process_webhook("sheet-001", "change")
+
+		self.assertEqual(result, "log-b")
+		self.assertEqual(processor.sync_sheet.call_count, 2)
+
+	def test_sync_sheet_fetches_related_tabs_and_passes_bundle_payload(self):
+		processor = self._make_processor()
+		sheet_config = types.SimpleNamespace(
+			name="Procurement Requisitions",
+			spreadsheet_id="sheet-002",
+			sheet_name="Purchase Requisitions",
+			range="A:Z",
+			key_column="pr_no",
+			related_sheet_keys=["procurement_pr_items"],
+		)
+		related_config = types.SimpleNamespace(
+			name="Procurement PR Items",
+			spreadsheet_id="sheet-002",
+			sheet_name="PR Items",
+			range="A:Z",
+		)
+		processor.sheets.fetch_sheet_data = MagicMock(
+			side_effect=[
+				([{"pr_no": "PR202510"}], "chk-parent"),
+				([{"pr_no": "PR202510", "item_code": "CM34"}], "chk-child"),
+			]
+		)
+
+		processor_mod.get_all_sheet_configs = MagicMock(return_value={"procurement_pr_items": related_config})
+
+		log = processor.sync_sheet(sheet_config, trigger="manual")
+
+		self.assertEqual(log.status, "success")
+		self.assertNotEqual(log.data_checksum, "chk-parent")
+		call = processor.frappe.sync_sheet_data.call_args
+		self.assertEqual(call.args[0], sheet_config)
+		self.assertEqual(
+			call.kwargs["related_data"],
+			{"procurement_pr_items": [{"pr_no": "PR202510", "item_code": "CM34"}]},
+		)
 
 
 if __name__ == "__main__":

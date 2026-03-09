@@ -1,7 +1,8 @@
 import os
 import sys
-import requests
 from urllib.parse import urlparse
+
+import requests
 
 
 def uri_validator(x):
@@ -9,14 +10,16 @@ def uri_validator(x):
 	return all([result.scheme, result.netloc, result.path])
 
 
-def docs_link_exists(body):
+def docs_link_exists(body, repository):
+	allowed_repos = {"frappe/hrms", repository.lower()}
 	for line in body.splitlines():
 		for word in line.split():
 			if word.startswith("http") and uri_validator(word):
 				parsed_url = urlparse(word)
 				if parsed_url.netloc == "github.com":
 					parts = parsed_url.path.split("/")
-					if len(parts) == 5 and parts[1] == "frappe" and parts[2] == "hrms":
+					repo_path = "/".join(parts[1:3]).lower()
+					if len(parts) == 5 and repo_path in allowed_repos:
 						return True
 				elif parsed_url.netloc == "docs.frappe.io":
 					return True
@@ -34,12 +37,12 @@ if __name__ == "__main__":
 		body = (payload.get("body") or "").lower()
 
 		if title.startswith("feat") and head_sha and "no-docs" not in body and "backport" not in body:
-			if docs_link_exists(body):
-				print("Documentation Link Found. You're Awesome! 🎉")
+			if docs_link_exists(body, repository):
+				print("Documentation Link Found.")
 
 			else:
-				print("Documentation Link Not Found! ⚠️")
+				print("Documentation Link Not Found.")
 				sys.exit(1)
 
 		else:
-			print("Skipping documentation checks... 🏃")
+			print("Skipping documentation checks...")
