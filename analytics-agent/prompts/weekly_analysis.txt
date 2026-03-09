@@ -109,3 +109,10 @@ Pass the data dict as a JSON string in the `data_json` parameter. The tool retur
 9. Send Google Chat notification
 
 Do all steps. Do not skip any. If a query returns no rows, note it in the report and move on.
+
+## CRITICAL CONSTRAINTS
+
+- Do NOT spawn subagents or use the Agent tool. Work directly — you have all the tools you need.
+- Do NOT read template source code or write Python scripts. Use `generate_report` tool directly.
+- Keep analysis focused. Query each view ONCE, synthesize findings, then immediately proceed to report generation.
+- You have 50 turns maximum. Budget: ~5 turns for queries, ~2 for synthesis, ~1 for report, ~1 for upload, ~1 for notification.

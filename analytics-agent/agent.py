@@ -93,7 +93,7 @@ async def main():
             ],
             permission_mode="bypassPermissions",
             model="opus",
-            max_turns=30,
+            max_turns=50,
         )
 
         print(f"Starting analyst agent with options: model={options.model}, max_turns={options.max_turns}")
