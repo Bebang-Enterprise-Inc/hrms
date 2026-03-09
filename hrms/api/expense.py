@@ -9,9 +9,8 @@ import frappe
 from frappe import _
 import json
 import os
-from hrms.utils.bei_config import get_company
-from frappe.utils import today, now_datetime, flt, get_url
-from hrms.api.store import save_base64_image
+from frappe.utils import today, flt
+from hrms.api.store import resolve_employee_store_context, save_base64_image
 # Lazy imports - only when OCR/classification is needed
 # This prevents module load failures if dependencies are missing
 def _get_classifier():
@@ -86,30 +85,15 @@ def submit_expense(
     employee = frappe.db.get_value(
         "Employee",
         {"user_id": frappe.session.user},
-        ["name", "employee_name", "branch", "company"],
+        ["name", "employee_name", "branch", "reports_to", "company"],
         as_dict=True
     )
 
     if not employee:
         frappe.throw(_("Employee record not found for current user"))
 
-    # Look up warehouse for the employee's branch
-    # ERPNext warehouses are named like "Branch - Company"
-    store = None
-    if employee.branch:
-        # Try exact match first
-        store = frappe.db.exists("Warehouse", employee.branch)
-        if not store:
-            # Try with company suffix
-            company = employee.company or get_company()
-            store = frappe.db.exists("Warehouse", f"{employee.branch} - {company}")
-        if not store:
-            # Try partial match (warehouse name starts with branch)
-            store = frappe.db.get_value(
-                "Warehouse",
-                {"name": ["like", f"{employee.branch}%"]},
-                "name"
-            )
+    store_context = resolve_employee_store_context(employee)
+    store = store_context.get("warehouse")
 
     if not store:
         frappe.throw(_("Could not find warehouse for your branch. Please contact HR."))
