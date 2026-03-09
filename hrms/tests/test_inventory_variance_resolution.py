@@ -43,13 +43,16 @@ def _install_fake_runtime():
 		frappe.log_error = lambda *args, **kwargs: None
 		frappe.get_traceback = lambda: "traceback"
 		frappe.get_roles = lambda *_args, **_kwargs: ["Store Supervisor"]
-		frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
-		frappe.set_user = lambda user: setattr(frappe.session, "user", user)
-		frappe.db = types.SimpleNamespace(
+		frappe.local = types.SimpleNamespace()
+		frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
+		frappe.set_user = lambda user: setattr(frappe.local.session, "user", user)
+		frappe.local.db = types.SimpleNamespace(
 			savepoint=lambda *_args, **_kwargs: None,
 			rollback=lambda *_args, **_kwargs: None,
 			get_value=lambda doctype, name, field: "Nos",
 		)
+		frappe.__dict__["session"] = frappe.local.session
+		frappe.__dict__["db"] = frappe.local.db
 		frappe.parse_json = json.loads
 		frappe.logger = lambda *args, **kwargs: types.SimpleNamespace(
 			info=lambda *a, **k: None, warning=lambda *a, **k: None, error=lambda *a, **k: None
@@ -155,7 +158,6 @@ class TestInventoryVarianceResolution(unittest.TestCase):
 		stock_reconciliation = _FakeStockReconciliation(inventory.frappe)
 
 		inventory.frappe.get_roles = lambda *_args, **_kwargs: ["Store Supervisor"]
-		inventory.frappe.set_user = lambda user: setattr(inventory.frappe.session, "user", user)
 		inventory.frappe.get_traceback = lambda: "traceback"
 		inventory.frappe.session.user = "test.supervisor@bebang.ph"
 		inventory.frappe.get_doc = lambda doctype, name: variance_doc

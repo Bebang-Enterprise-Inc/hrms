@@ -35,13 +35,17 @@ SUPERVISOR_STOCK_COUNT_ROLES = {"Store Supervisor", "Area Supervisor"}
 @contextmanager
 def _run_as_system_user(user: str = "Administrator"):
 	"""Temporarily elevate the session user for internal stock adjustments."""
-	original_user = getattr(getattr(frappe, "session", None), "user", None)
+	session = getattr(frappe, "session", None)
+	if session is None:
+		session = getattr(getattr(frappe, "local", None), "session", None)
+	original_user = getattr(session, "user", None)
 	try:
-		frappe.set_user(user)
+		if session and user:
+			session.user = user
 		yield
 	finally:
-		if original_user:
-			frappe.set_user(original_user)
+		if session and original_user:
+			session.user = original_user
 
 
 def _get_allowed_cycle_count_types(user_roles: list[str] | set[str] | None = None) -> list[str]:
