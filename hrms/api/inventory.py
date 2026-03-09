@@ -6,6 +6,7 @@ Handles cycle counts, variances, and shelf life extensions
 """
 
 import json
+from contextlib import contextmanager
 
 import frappe
 from frappe import _
@@ -29,6 +30,18 @@ ALL_CYCLE_COUNT_TYPES = (
 
 HQ_STOCK_COUNT_ROLES = {"HQ User", "System Manager", "Administrator"}
 SUPERVISOR_STOCK_COUNT_ROLES = {"Store Supervisor", "Area Supervisor"}
+
+
+@contextmanager
+def _run_as_system_user(user: str = "Administrator"):
+	"""Temporarily elevate the session user for internal stock adjustments."""
+	original_user = getattr(getattr(frappe, "session", None), "user", None)
+	try:
+		frappe.set_user(user)
+		yield
+	finally:
+		if original_user:
+			frappe.set_user(original_user)
 
 
 def _get_allowed_cycle_count_types(user_roles: list[str] | set[str] | None = None) -> list[str]:
@@ -1785,9 +1798,10 @@ def resolve_variance(
 				},
 			)
 
-			se.insert(ignore_permissions=True)
-			se.flags.ignore_permissions = True
-			se.submit()
+			with _run_as_system_user():
+				se.insert(ignore_permissions=True)
+				se.flags.ignore_permissions = True
+				se.submit()
 			stock_entry_name = se.name
 			doc.status = "Written Off"
 
@@ -1809,9 +1823,10 @@ def resolve_variance(
 				},
 			)
 
-			sr.insert(ignore_permissions=True)
-			sr.flags.ignore_permissions = True
-			sr.submit()
+			with _run_as_system_user():
+				sr.insert(ignore_permissions=True)
+				sr.flags.ignore_permissions = True
+				sr.submit()
 			stock_entry_name = sr.name
 			doc.status = "Resolved"
 
@@ -1835,9 +1850,10 @@ def resolve_variance(
 				},
 			)
 
-			se.insert(ignore_permissions=True)
-			se.flags.ignore_permissions = True
-			se.submit()
+			with _run_as_system_user():
+				se.insert(ignore_permissions=True)
+				se.flags.ignore_permissions = True
+				se.submit()
 			stock_entry_name = se.name
 			doc.status = "Resolved"
 
