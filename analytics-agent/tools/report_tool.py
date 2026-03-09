@@ -44,9 +44,11 @@ def generate_report(
     Returns:
         Dict with output_path, filename, and status.
     """
+    print(f"[generate_report] CALLED with data_json length={len(data_json)}, output_filename={output_filename!r}")
     try:
         data = json.loads(data_json)
     except json.JSONDecodeError as e:
+        print(f"[generate_report] JSON parse error: {e}")
         return {"error": f"Invalid JSON: {e}", "status": "failed"}
 
     # Validate required keys
@@ -66,8 +68,10 @@ def generate_report(
     output_path = os.path.join(runs_dir, output_filename)
 
     try:
+        print(f"[generate_report] Generating DOCX at {output_path}")
         result_path = generate_weekly_report(data, output_path)
         file_size = os.path.getsize(result_path)
+        print(f"[generate_report] SUCCESS: {result_path} ({file_size} bytes)")
         return {
             "output_path": result_path,
             "filename": output_filename,
@@ -75,4 +79,5 @@ def generate_report(
             "status": "success",
         }
     except Exception as e:
+        print(f"[generate_report] ERROR: {e}")
         return {"error": str(e), "status": "failed"}
