@@ -114,7 +114,8 @@ class FrappeClient:
         self,
         sheet_config: SheetConfig,
         data: List[Dict[str, Any]],
-        checksum: str
+        checksum: str,
+        related_data: Optional[Dict[str, List[Dict[str, Any]]]] = None,
     ) -> SyncResult:
         """
         Sync sheet data to Frappe using the configured endpoint.
@@ -129,15 +130,20 @@ class FrappeClient:
         """
         try:
             # Call the sync endpoint with the data
+            payload = {
+                'sheet_name': sheet_config.name,
+                'sheet_tab_name': sheet_config.sheet_name,
+                'data': data,
+                'checksum': checksum,
+                'sync_mode': sheet_config.sync_mode,
+                'key_column': sheet_config.key_column,
+            }
+            if related_data:
+                payload['related_data'] = related_data
+
             result = self.call_method(
                 sheet_config.sync_endpoint.replace('/api/method/', ''),
-                data={
-                    'sheet_name': sheet_config.name,
-                    'data': data,
-                    'checksum': checksum,
-                    'sync_mode': sheet_config.sync_mode,
-                    'key_column': sheet_config.key_column
-                }
+                data=payload
             )
 
             return SyncResult(

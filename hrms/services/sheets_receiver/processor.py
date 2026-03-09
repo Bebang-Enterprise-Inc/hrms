@@ -9,6 +9,8 @@ Handles:
 - Logging all operations
 """
 
+import hashlib
+import json
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -16,7 +18,13 @@ from datetime import datetime
 from typing import Any
 
 from .change_tracker import ChangeReport, ChangeTracker, ChangeType
-from .config import SheetConfig, get_config, get_sheet_by_spreadsheet_id, get_watched_sheets
+from .config import (
+	SheetConfig,
+	get_all_sheet_configs,
+	get_config,
+	get_sheets_by_spreadsheet_id,
+	get_watched_sheets,
+)
 from .frappe_client import SyncResult, get_frappe_client
 from .models import SyncLog, get_db
 from .sheets_client import get_sheets_client
@@ -106,17 +114,57 @@ class ChangeProcessor:
 
 		# Change notification - process it
 		if resource_state == "change":
-			sheet_config = get_sheet_by_spreadsheet_id(spreadsheet_id)
+			matching_sheets = get_sheets_by_spreadsheet_id(spreadsheet_id)
 
-			if not sheet_config:
+			if not matching_sheets:
 				logger.warning(f"Received change for unknown sheet: {spreadsheet_id}")
 				return None
 
-			logger.info(f"Processing change for {sheet_config.name}")
-			return self.sync_sheet(sheet_config, trigger="webhook")
+			last_log = None
+			for _sheet_key, sheet_config in matching_sheets.items():
+				logger.info(f"Processing change for {sheet_config.name}")
+				last_log = self.sync_sheet(sheet_config, trigger="webhook")
+			return last_log
 
 		logger.debug(f"Ignoring resource_state: {resource_state}")
 		return None
+
+	@staticmethod
+	def _build_bundle_checksum(primary_checksum: str, related_checksums: dict[str, str]) -> str:
+		"""Create a stable checksum for sync payloads that include related tabs."""
+		if not related_checksums:
+			return primary_checksum
+
+		payload = {
+			"primary": primary_checksum,
+			"related": related_checksums,
+		}
+		content = json.dumps(payload, sort_keys=True)
+		return hashlib.md5(content.encode()).hexdigest()
+
+	def _fetch_related_sheet_payload(
+		self, sheet_config: SheetConfig
+	) -> tuple[dict[str, list[dict[str, Any]]], dict[str, str]]:
+		"""Fetch related tabs for logical bundle syncs such as PR/PO/GR parent-child data."""
+		related_data: dict[str, list[dict[str, Any]]] = {}
+		related_checksums: dict[str, str] = {}
+		if not sheet_config.related_sheet_keys:
+			return related_data, related_checksums
+
+		all_sheet_configs = get_all_sheet_configs()
+		for related_key in sheet_config.related_sheet_keys:
+			related_config = all_sheet_configs.get(related_key)
+			if not related_config:
+				raise ValueError(f"Missing related sheet config: {related_key}")
+
+			range_name = f"{related_config.sheet_name}!{related_config.range}"
+			related_rows, related_checksum = self.sheets.fetch_sheet_data(
+				related_config.spreadsheet_id, range_name
+			)
+			related_data[related_key] = related_rows
+			related_checksums[related_key] = related_checksum
+
+		return related_data, related_checksums
 
 	def sync_sheet(self, sheet_config: SheetConfig, trigger: str = "manual", force: bool = False) -> SyncLog:
 		"""
@@ -145,7 +193,9 @@ class ChangeProcessor:
 		try:
 			# Fetch data from Google Sheets
 			range_name = f"{sheet_config.sheet_name}!{sheet_config.range}"
-			data, checksum = self.sheets.fetch_sheet_data(sheet_config.spreadsheet_id, range_name)
+			data, primary_checksum = self.sheets.fetch_sheet_data(sheet_config.spreadsheet_id, range_name)
+			related_data, related_checksums = self._fetch_related_sheet_payload(sheet_config)
+			checksum = self._build_bundle_checksum(primary_checksum, related_checksums)
 
 			log.rows_processed = len(data)
 			log.data_checksum = checksum
@@ -186,7 +236,12 @@ class ChangeProcessor:
 					critical_alerts.append(alert)
 
 			# Sync to Frappe
-			result = self.frappe.sync_sheet_data(sheet_config, data, checksum)
+			result = self.frappe.sync_sheet_data(
+				sheet_config,
+				data,
+				checksum,
+				related_data=related_data or None,
+			)
 
 			log.status = "success" if result.success else "failed"
 			log.rows_created = result.rows_created

@@ -37,6 +37,7 @@ class SheetConfig:
     key_column: str = "name"  # Column to use as unique key
     enabled: bool = True
     sync_mode: str = "upsert"  # upsert, replace, append
+    related_sheet_keys: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -113,6 +114,8 @@ class ServiceConfig:
 
 
 # Sheets to watch and sync
+PROCUREMENT_COMPLIANCE_SPREADSHEET_ID = '1QWdoZlT7XWLppfVKpJ2VRXhbMkYtE5TbUwg4lMbO03Q'
+
 WATCHED_SHEETS: Dict[str, SheetConfig] = {
     'ar_aging': SheetConfig(
         name='AR Aging',
@@ -182,6 +185,93 @@ WATCHED_SHEETS: Dict[str, SheetConfig] = {
         sync_mode='upsert',
         enabled=True
     ),
+    'procurement_suppliers': SheetConfig(
+        name='Procurement Suppliers',
+        spreadsheet_id=PROCUREMENT_COMPLIANCE_SPREADSHEET_ID,
+        sheet_name='Suppliers',
+        range='A:Z',
+        owner_email='aldrin@bebang.ph',
+        sync_endpoint='/api/method/hrms.api.erp_sync.sync_procurement_suppliers',
+        doctype='BEI Supplier',
+        key_column='supplier_code',
+        sync_mode='upsert',
+        enabled=True
+    ),
+    'procurement_pr_items': SheetConfig(
+        name='Procurement PR Items',
+        spreadsheet_id=PROCUREMENT_COMPLIANCE_SPREADSHEET_ID,
+        sheet_name='PR Items',
+        range='A:Z',
+        owner_email='aldrin@bebang.ph',
+        sync_endpoint='/api/method/hrms.api.erp_sync.sync_procurement_requisitions',
+        doctype='BEI PR Item',
+        key_column='unique_id',
+        sync_mode='upsert',
+        enabled=False
+    ),
+    'procurement_requisitions': SheetConfig(
+        name='Procurement Requisitions',
+        spreadsheet_id=PROCUREMENT_COMPLIANCE_SPREADSHEET_ID,
+        sheet_name='Purchase Requisitions',
+        range='A:Z',
+        owner_email='aldrin@bebang.ph',
+        sync_endpoint='/api/method/hrms.api.erp_sync.sync_procurement_requisitions',
+        doctype='BEI Purchase Requisition',
+        key_column='pr_no',
+        sync_mode='upsert',
+        enabled=True,
+        related_sheet_keys=['procurement_pr_items']
+    ),
+    'procurement_po_items': SheetConfig(
+        name='Procurement PO Items',
+        spreadsheet_id=PROCUREMENT_COMPLIANCE_SPREADSHEET_ID,
+        sheet_name='PO Items',
+        range='A:Z',
+        owner_email='aldrin@bebang.ph',
+        sync_endpoint='/api/method/hrms.api.erp_sync.sync_procurement_purchase_orders',
+        doctype='BEI PO Item',
+        key_column='uniqueid',
+        sync_mode='upsert',
+        enabled=False
+    ),
+    'procurement_purchase_orders': SheetConfig(
+        name='Procurement Purchase Orders',
+        spreadsheet_id=PROCUREMENT_COMPLIANCE_SPREADSHEET_ID,
+        sheet_name='Purchase Order',
+        range='A:Z',
+        owner_email='aldrin@bebang.ph',
+        sync_endpoint='/api/method/hrms.api.erp_sync.sync_procurement_purchase_orders',
+        doctype='BEI Purchase Order',
+        key_column='po_no',
+        sync_mode='upsert',
+        enabled=True,
+        related_sheet_keys=['procurement_po_items']
+    ),
+    'procurement_gr_items': SheetConfig(
+        name='Procurement GR Items',
+        spreadsheet_id=PROCUREMENT_COMPLIANCE_SPREADSHEET_ID,
+        sheet_name='GR Items',
+        range='A:Z',
+        owner_email='aldrin@bebang.ph',
+        sync_endpoint='/api/method/hrms.api.erp_sync.sync_procurement_goods_receipts',
+        doctype='BEI GR Item',
+        key_column='unique_id',
+        sync_mode='upsert',
+        enabled=False
+    ),
+    'procurement_goods_receipts': SheetConfig(
+        name='Procurement Goods Receipts',
+        spreadsheet_id=PROCUREMENT_COMPLIANCE_SPREADSHEET_ID,
+        sheet_name='Goods Receipts',
+        range='A:Z',
+        owner_email='aldrin@bebang.ph',
+        sync_endpoint='/api/method/hrms.api.erp_sync.sync_procurement_goods_receipts',
+        doctype='BEI Goods Receipt',
+        key_column='gr_no',
+        sync_mode='upsert',
+        enabled=True,
+        related_sheet_keys=['procurement_gr_items']
+    ),
 }
 
 
@@ -190,16 +280,35 @@ def get_config() -> ServiceConfig:
     return ServiceConfig()
 
 
+def get_all_sheet_configs() -> Dict[str, SheetConfig]:
+    """Get all configured sheets, including helper tabs used for bundle sync."""
+    return dict(WATCHED_SHEETS)
+
+
 def get_watched_sheets() -> Dict[str, SheetConfig]:
     """Get all enabled watched sheets."""
     return {k: v for k, v in WATCHED_SHEETS.items() if v.enabled}
 
 
+def get_sheet_config(sheet_key: str) -> Optional[SheetConfig]:
+    """Get a sheet config by key."""
+    return WATCHED_SHEETS.get(sheet_key)
+
+
+def get_sheets_by_spreadsheet_id(spreadsheet_id: str) -> Dict[str, SheetConfig]:
+    """Get all enabled watched sheets for a spreadsheet/workbook."""
+    return {
+        key: sheet
+        for key, sheet in WATCHED_SHEETS.items()
+        if sheet.enabled and sheet.spreadsheet_id == spreadsheet_id
+    }
+
+
 def get_sheet_by_spreadsheet_id(spreadsheet_id: str) -> Optional[SheetConfig]:
     """Look up sheet config by Google spreadsheet ID."""
-    for sheet in WATCHED_SHEETS.values():
-        if sheet.spreadsheet_id == spreadsheet_id:
-            return sheet
+    matching = get_sheets_by_spreadsheet_id(spreadsheet_id)
+    for sheet in matching.values():
+        return sheet
     return None
 
 

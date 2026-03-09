@@ -165,7 +165,23 @@ def _resolve_warehouse(raw_value: str | None) -> str | None:
 		if frappe.db.exists("Warehouse", candidate):
 			return candidate
 
+	warehouse_name_match = frappe.db.get_value("Warehouse", {"warehouse_name": value}, "name")
+	if warehouse_name_match:
+		return warehouse_name_match
+
 	return None
+
+
+def _coerce_metadata_dict(value: Any) -> dict[str, Any]:
+	if isinstance(value, dict):
+		return dict(value)
+	if isinstance(value, str) and value.strip():
+		try:
+			parsed = json.loads(value)
+		except Exception:
+			return {}
+		return parsed if isinstance(parsed, dict) else {}
+	return {}
 
 
 def _resolve_root_type(account_type: str | None, gl_code: str | None, row: dict[str, Any]) -> str:
@@ -582,6 +598,153 @@ def sync_inventory(sheet_name: str, data: list[dict], checksum: str, **kwargs) -
 					continue
 			results["errors"].append(f"{warehouse}: {exc!s}")
 			results["rows_failed"] += len(items)
+
+	return results
+
+
+@frappe.whitelist()
+def sync_store_demand_snapshot(sheet_name: str, data: list[dict], checksum: str, **kwargs) -> dict:
+	"""
+	Sync store-item demand snapshots into BEI Inventory Risk Snapshot.
+
+	Rows are upserted by (snapshot_date, warehouse, item_code). Additional
+	demand metadata is stored as JSON in source_reference.
+	"""
+	_assert_sync_authorized()
+	rows = _parse_rows(data)
+	results = _init_results(len(rows))
+
+	latest_rows: dict[tuple[str, str, str], dict[str, Any]] = {}
+
+	for row in rows:
+		try:
+			item_code = str(_first_non_empty(row, "item_code", "sku") or "").strip()
+			warehouse = _resolve_warehouse(_first_non_empty(row, "warehouse", "store", "location"))
+			snapshot_date = _safe_date(_first_non_empty(row, "snapshot_date", "as_of_date", "date")) or nowdate()
+
+			if not item_code:
+				results["rows_failed"] += 1
+				results["errors"].append("Missing item_code in demand snapshot row")
+				continue
+
+			if not frappe.db.exists("Item", item_code):
+				results["rows_failed"] += 1
+				results["errors"].append(f"Item not found: {item_code}")
+				continue
+
+			if not warehouse:
+				results["rows_failed"] += 1
+				results["errors"].append(f"Warehouse not found for item {item_code}")
+				continue
+
+			row_key = (snapshot_date, warehouse, item_code)
+			latest_rows[row_key] = {
+				"snapshot_date": snapshot_date,
+				"warehouse": warehouse,
+				"item_code": item_code,
+				"available_qty": flt(_first_non_empty(row, "available_qty", "available_stock") or 0),
+				"avg_daily_demand": flt(
+					_first_non_empty(row, "avg_daily_demand", "daily_demand", "bom_consumption") or 0
+				),
+				"inbound_qty": flt(_first_non_empty(row, "inbound_qty") or 0),
+				"pending_po_count": cint(_first_non_empty(row, "pending_po_count") or 0),
+				"delayed_po_count": cint(_first_non_empty(row, "delayed_po_count") or 0),
+				"in_transit_qty": flt(_first_non_empty(row, "in_transit_qty") or 0),
+				"next_eta": _first_non_empty(row, "next_eta"),
+				"days_to_stockout": flt(_first_non_empty(row, "days_to_stockout") or 0),
+				"projected_stockout_at": _first_non_empty(row, "projected_stockout_at"),
+				"supplier_on_time_rate": flt(_first_non_empty(row, "supplier_on_time_rate") or 0),
+				"risk_score": flt(_first_non_empty(row, "risk_score") or 0),
+				"risk_level": _first_non_empty(row, "risk_level"),
+				"value_at_risk": flt(_first_non_empty(row, "value_at_risk") or 0),
+				"margin_at_risk": flt(_first_non_empty(row, "margin_at_risk") or 0),
+				"source_reference": _coerce_metadata_dict(_first_non_empty(row, "source_reference")),
+				"projected_sales": flt(_first_non_empty(row, "projected_sales") or 0),
+				"bom_consumption": flt(_first_non_empty(row, "bom_consumption") or 0),
+				"coverage_window_days": flt(_first_non_empty(row, "coverage_window_days") or 0),
+				"lookback_days": cint(_first_non_empty(row, "lookback_days") or 0),
+				"signal_source": _first_non_empty(row, "signal_source") or "sales_demand_snapshot",
+				"channel_mix": _first_non_empty(row, "channel_mix"),
+			}
+		except Exception as e:
+			results["errors"].append(str(e))
+			results["rows_failed"] += 1
+
+	for snapshot_key, snapshot in latest_rows.items():
+		snapshot_date, warehouse, item_code = snapshot_key
+		sync_ref = _sync_ref("DSNAP", sheet_name, checksum, f"{snapshot_date}|{warehouse}|{item_code}")
+		savepoint = _make_savepoint("sync_dsnap", f"{sheet_name}|{checksum}|{warehouse}|{item_code}")
+		frappe.db.savepoint(savepoint)
+		try:
+			source_reference = dict(snapshot["source_reference"])
+			source_reference.update(
+				{
+					"sync_ref": sync_ref,
+					"source_sheet": sheet_name,
+					"checksum": checksum,
+					"signal_source": snapshot["signal_source"],
+					"lookback_days": snapshot["lookback_days"],
+					"projected_sales": snapshot["projected_sales"],
+					"bom_consumption": snapshot["bom_consumption"],
+					"coverage_window_days": snapshot["coverage_window_days"],
+				}
+			)
+			if snapshot["channel_mix"] not in (None, ""):
+				source_reference["channel_mix"] = snapshot["channel_mix"]
+			source_reference_json = json.dumps(source_reference, sort_keys=True)
+
+			values = {
+				"snapshot_date": snapshot_date,
+				"warehouse": warehouse,
+				"item_code": item_code,
+				"available_qty": snapshot["available_qty"],
+				"avg_daily_demand": snapshot["avg_daily_demand"],
+				"inbound_qty": snapshot["inbound_qty"],
+				"pending_po_count": snapshot["pending_po_count"],
+				"delayed_po_count": snapshot["delayed_po_count"],
+				"in_transit_qty": snapshot["in_transit_qty"],
+				"next_eta": snapshot["next_eta"],
+				"days_to_stockout": snapshot["days_to_stockout"],
+				"projected_stockout_at": snapshot["projected_stockout_at"],
+				"supplier_on_time_rate": snapshot["supplier_on_time_rate"],
+				"risk_score": snapshot["risk_score"],
+				"risk_level": snapshot["risk_level"],
+				"value_at_risk": snapshot["value_at_risk"],
+				"margin_at_risk": snapshot["margin_at_risk"],
+				"source_reference": source_reference_json,
+			}
+			values = {
+				fieldname: value
+				for fieldname, value in values.items()
+				if fieldname in {"snapshot_date", "warehouse", "item_code"} or _doctype_has_field("BEI Inventory Risk Snapshot", fieldname)
+			}
+
+			existing = frappe.db.get_value(
+				"BEI Inventory Risk Snapshot",
+				{
+					"snapshot_date": snapshot_date,
+					"warehouse": warehouse,
+					"item_code": item_code,
+				},
+				"name",
+			)
+
+			if existing:
+				frappe.db.set_value("BEI Inventory Risk Snapshot", existing, values, update_modified=False)
+				results["rows_updated"] += 1
+				_release_savepoint(savepoint)
+				continue
+
+			doc = frappe.new_doc("BEI Inventory Risk Snapshot")
+			for fieldname, value in values.items():
+				setattr(doc, fieldname, value)
+			doc.insert(ignore_permissions=True)
+			results["rows_created"] += 1
+			_release_savepoint(savepoint)
+		except Exception as exc:
+			frappe.db.rollback(save_point=savepoint)
+			results["errors"].append(f"{warehouse}/{item_code}: {exc!s}")
+			results["rows_failed"] += 1
 
 	return results
 
@@ -1004,6 +1167,621 @@ def sync_supplier_soa(sheet_name: str, data: list[dict], checksum: str, **kwargs
 	Source config still points to this method name.
 	"""
 	return sync_ap_opening(sheet_name=sheet_name, data=data, checksum=checksum, **kwargs)
+
+
+_PROCUREMENT_APPROVED_VALUES = {"approved", "approve", "ok", "yes"}
+_PROCUREMENT_REJECTED_VALUES = {"rejected", "reject", "disapproved", "declined", "no", "cancelled", "canceled"}
+_PROCUREMENT_NULL_TOKENS = {"na", "n/a", "none", "null", "nan"}
+
+
+def _normalize_sheet_text(value: Any) -> str | None:
+	if value is None:
+		return None
+	if isinstance(value, str):
+		text = value.strip()
+		if not text:
+			return None
+		if text.lower() in _PROCUREMENT_NULL_TOKENS:
+			return None
+		return text
+
+	text = str(value).strip()
+	if not text or text.lower() in _PROCUREMENT_NULL_TOKENS:
+		return None
+	return text
+
+
+def _safe_float(value: Any) -> float:
+	text = _normalize_sheet_text(value)
+	if text is None:
+		return 0.0
+	try:
+		return flt(str(text).replace(",", ""))
+	except Exception:
+		return 0.0
+
+
+def _sheet_flag(value: Any) -> int:
+	text = (_normalize_sheet_text(value) or "").lower()
+	return 1 if text in {"1", "true", "yes", "y"} else 0
+
+
+def _normalize_approval_state(value: Any) -> str:
+	text = (_normalize_sheet_text(value) or "").lower()
+	if text in _PROCUREMENT_APPROVED_VALUES:
+		return "Approved"
+	if text in _PROCUREMENT_REJECTED_VALUES:
+		return "Rejected"
+	return "Pending"
+
+
+def _parse_related_data(value: Any) -> dict[str, list[dict[str, Any]]]:
+	if isinstance(value, str):
+		try:
+			value = json.loads(value)
+		except Exception:
+			return {}
+
+	if not isinstance(value, dict):
+		return {}
+
+	parsed: dict[str, list[dict[str, Any]]] = {}
+	for key, rows in value.items():
+		parsed[key] = _parse_rows(rows)
+	return parsed
+
+
+def _resolve_user_identity(name_or_email: Any = None, email: Any = None) -> str:
+	email_value = _normalize_sheet_text(email)
+	if email_value and frappe.db.exists("User", email_value):
+		return email_value
+
+	name_value = _normalize_sheet_text(name_or_email)
+	if name_value:
+		if frappe.db.exists("User", name_value):
+			return name_value
+		existing = frappe.db.get_value("User", {"full_name": name_value}, "name")
+		if existing:
+			return existing
+
+	return "Administrator"
+
+
+def _resolve_payment_terms_template(value: Any) -> str | None:
+	text = _normalize_sheet_text(value)
+	if not text:
+		return None
+	if frappe.db.exists("Payment Terms Template", text):
+		return text
+	return frappe.db.get_value("Payment Terms Template", {"template_name": text}, "name")
+
+
+def _find_doc_by_business_key(doctype: str, fieldname: str, value: Any) -> str | None:
+	text = _normalize_sheet_text(value)
+	if not text:
+		return None
+	if frappe.db.exists(doctype, text):
+		return text
+	return frappe.db.get_value(doctype, {fieldname: text}, "name")
+
+
+def _replace_child_rows(doc: Any, table_field: str, rows: list[dict[str, Any]]) -> None:
+	if hasattr(doc, "set"):
+		doc.set(table_field, [])
+	else:
+		setattr(doc, table_field, [])
+	for row in rows:
+		doc.append(table_field, row)
+
+
+def _persist_doc(doc: Any, existing_name: str | None, business_field: str | None = None, business_value: Any = None) -> str:
+	if existing_name:
+		doc.save(ignore_permissions=True)
+		return "updated"
+
+	doc.insert(ignore_permissions=True)
+	if business_field and business_value and getattr(doc, business_field, None) != business_value:
+		if hasattr(doc, "db_set"):
+			doc.db_set(business_field, business_value, update_modified=False)
+		else:
+			frappe.db.set_value(doc.doctype, doc.name, business_field, business_value, update_modified=False)
+		setattr(doc, business_field, business_value)
+	return "created"
+
+
+def _resolve_procurement_supplier(supplier_code: Any, supplier_name: Any) -> str:
+	code = _normalize_sheet_text(supplier_code)
+	name = _normalize_sheet_text(supplier_name)
+
+	if code and frappe.db.exists("BEI Supplier", code):
+		return code
+
+	if name:
+		existing = frappe.db.get_value("BEI Supplier", {"supplier_name": name}, "name")
+		if existing:
+			return existing
+
+	if not code:
+		frappe.throw(_("Supplier code is required to create missing BEI Supplier records"))
+
+	doc = frappe.get_doc(
+		{
+			"doctype": "BEI Supplier",
+			"supplier_code": code,
+			"supplier_name": name or code,
+			"status": "Pending Verification",
+		}
+	)
+	doc.insert(ignore_permissions=True)
+	return doc.name
+
+
+def _resolve_item_code(item_code: Any, item_name: Any = None) -> str | None:
+	code = _normalize_sheet_text(item_code)
+	if not code:
+		return None
+	if frappe.db.exists("Item", code):
+		return code
+	name = _normalize_sheet_text(item_name)
+	if name:
+		matched = frappe.db.get_value("Item", {"item_name": name}, "name")
+		if matched:
+			return matched
+	return code
+
+
+def _resolve_uom(value: Any) -> str | None:
+	text = _normalize_sheet_text(value)
+	if not text:
+		return None
+	if frappe.db.exists("UOM", text):
+		return text
+	return None
+
+
+def _build_pr_status(row: dict[str, Any], items: list[dict[str, Any]]) -> str:
+	if any(_normalize_sheet_text(item.get("po_reference")) for item in items):
+		return "Converted to PO"
+	approval_state = _normalize_approval_state(_first_non_empty(row, "approval"))
+	if approval_state == "Approved":
+		return "Approved"
+	if approval_state == "Rejected":
+		return "Rejected"
+	if _normalize_sheet_text(_first_non_empty(row, "send_for_approval_timestamp")):
+		return "Pending Approval"
+	return "Draft"
+
+
+def _build_po_status(row: dict[str, Any], requires_dual_approval: bool) -> str:
+	mae_state = _normalize_approval_state(_first_non_empty(row, "approval"))
+	butch_state = _normalize_approval_state(_first_non_empty(row, "2nd_approval"))
+	if mae_state == "Rejected" or butch_state == "Rejected":
+		return "Cancelled"
+	if _normalize_sheet_text(_first_non_empty(row, "send_po_to_supplier_timestamp")):
+		return "Sent to Supplier"
+	if mae_state == "Approved":
+		if requires_dual_approval and butch_state != "Approved":
+			return "Pending Butch Approval"
+		return "Approved"
+	if _normalize_sheet_text(_first_non_empty(row, "send_for_approval_timestamp", "reviewer_timestamp")):
+		return "Pending Mae Approval"
+	return "Draft"
+
+
+def _build_gr_status(row: dict[str, Any]) -> str:
+	if _normalize_sheet_text(_first_non_empty(row, "approved_by", "approval_timestamp", "invoice")):
+		return "Accepted"
+	return "Draft"
+
+
+@frappe.whitelist()
+def sync_procurement_suppliers(sheet_name: str, data: list[dict], checksum: str, **kwargs) -> dict:
+	"""Sync AppSheet supplier master rows into BEI Supplier."""
+	_assert_sync_authorized()
+	rows = _parse_rows(data)
+	results = _init_results(len(rows))
+	seen_supplier_codes: set[str] = set()
+
+	for row in rows:
+		supplier_code = _normalize_sheet_text(_first_non_empty(row, "supplier_code"))
+		supplier_name = _normalize_sheet_text(_first_non_empty(row, "supplier_name"))
+		if not supplier_code and not supplier_name:
+			continue
+
+		dedupe_key = supplier_code or supplier_name or "unknown"
+		if dedupe_key in seen_supplier_codes:
+			results["rows_updated"] += 1
+			continue
+		seen_supplier_codes.add(dedupe_key)
+
+		savepoint = _make_savepoint("sync_proc_supplier", f"{sheet_name}|{checksum}|{dedupe_key}")
+		frappe.db.savepoint(savepoint)
+		try:
+			if not supplier_code:
+				raise ValueError(f"Missing supplier_code for supplier '{supplier_name or 'unknown'}'")
+
+			existing_name = _find_doc_by_business_key("BEI Supplier", "supplier_code", supplier_code)
+			if not existing_name and supplier_name:
+				existing_name = frappe.db.get_value("BEI Supplier", {"supplier_name": supplier_name}, "name")
+
+			doc = (
+				frappe.get_doc("BEI Supplier", existing_name)
+				if existing_name
+				else frappe.get_doc({"doctype": "BEI Supplier"})
+			)
+			doc.supplier_code = supplier_code
+			doc.supplier_name = supplier_name or supplier_code
+			doc.contact_number = _normalize_sheet_text(_first_non_empty(row, "contact_no", "contact_number"))
+			doc.contact_person = _normalize_sheet_text(_first_non_empty(row, "contact_person"))
+			doc.email = _normalize_sheet_text(_first_non_empty(row, "email_id", "email"))
+			doc.address = _normalize_sheet_text(_first_non_empty(row, "address"))
+			doc.bank_name = _normalize_sheet_text(_first_non_empty(row, "bank_name"))
+			doc.bank_account_name = _normalize_sheet_text(_first_non_empty(row, "bank_account_name"))
+			doc.bank_account_number = _normalize_sheet_text(
+				_first_non_empty(row, "bank_account_no", "bank_account_number")
+			)
+			if not existing_name and not _normalize_sheet_text(getattr(doc, "status", None)):
+				doc.status = "Pending Verification"
+
+			action = _persist_doc(doc, existing_name, business_field="supplier_code", business_value=supplier_code)
+			results[f"rows_{action}"] += 1
+			_release_savepoint(savepoint)
+		except Exception as exc:
+			frappe.db.rollback(save_point=savepoint)
+			results["rows_failed"] += 1
+			results["errors"].append(f"{dedupe_key}: {exc!s}")
+
+	return results
+
+
+@frappe.whitelist()
+def sync_procurement_requisitions(
+	sheet_name: str,
+	data: list[dict],
+	checksum: str,
+	related_data: Any = None,
+	**kwargs,
+) -> dict:
+	"""Sync AppSheet PR headers with PR item rows into BEI Purchase Requisition."""
+	_assert_sync_authorized()
+	rows = _parse_rows(data)
+	related = _parse_related_data(related_data)
+	results = _init_results(len(rows))
+	seen_pr_numbers: set[str] = set()
+
+	items_by_pr: dict[str, list[dict[str, Any]]] = {}
+	for item_row in related.get("procurement_pr_items", []):
+		pr_no = _normalize_sheet_text(_first_non_empty(item_row, "pr_no"))
+		item_code = _normalize_sheet_text(_first_non_empty(item_row, "item_code"))
+		description = _normalize_sheet_text(_first_non_empty(item_row, "description"))
+		qty = _safe_float(_first_non_empty(item_row, "total_order", "qty"))
+		if not pr_no or not item_code or qty <= 0:
+			continue
+
+		items_by_pr.setdefault(pr_no, []).append(
+			{
+				"item_code": item_code,
+				"item_name": _normalize_sheet_text(_first_non_empty(item_row, "item_name")) or description or item_code,
+				"description": description,
+				"qty": qty,
+				"uom": _normalize_sheet_text(_first_non_empty(item_row, "unit_of_issue", "uom")) or "Pcs",
+				"po_reference": _normalize_sheet_text(_first_non_empty(item_row, "po_reference")),
+				"added_by": _normalize_sheet_text(_first_non_empty(item_row, "added_by")),
+			}
+		)
+
+	for row in rows:
+		pr_no = _normalize_sheet_text(_first_non_empty(row, "pr_no"))
+		if not pr_no:
+			continue
+		if pr_no in seen_pr_numbers:
+			results["rows_updated"] += 1
+			continue
+		seen_pr_numbers.add(pr_no)
+
+		savepoint = _make_savepoint("sync_proc_pr", f"{sheet_name}|{checksum}|{pr_no}")
+		frappe.db.savepoint(savepoint)
+		try:
+			items = items_by_pr.get(pr_no, [])
+			if not items:
+				raise ValueError("No PR items found for requisition")
+
+			existing_name = _find_doc_by_business_key("BEI Purchase Requisition", "pr_no", pr_no)
+			doc = (
+				frappe.get_doc("BEI Purchase Requisition", existing_name)
+				if existing_name
+				else frappe.get_doc({"doctype": "BEI Purchase Requisition"})
+			)
+
+			doc.request_date = _safe_date(_first_non_empty(row, "timestamp")) or nowdate()
+			doc.requested_by = _resolve_user_identity(
+				_first_non_empty(row, "requested_by"),
+				_first_non_empty(row, "requested_by_email"),
+			)
+			doc.delivery_to = _resolve_warehouse(_first_non_empty(row, "delivery_to"))
+			doc.date_required = _safe_date(_first_non_empty(row, "date_required")) or doc.request_date
+			doc.purpose = _normalize_sheet_text(_first_non_empty(row, "purpose")) or "Legacy AppSheet import"
+			doc.recurring = _sheet_flag(_first_non_empty(row, "recurring"))
+			doc.status = _build_pr_status(row, items)
+			doc.approved_by = (
+				_resolve_user_identity(_first_non_empty(row, "approved_by"), _first_non_empty(row, "approved_by_email"))
+				if doc.status in {"Approved", "Rejected", "Converted to PO"}
+				else None
+			)
+			doc.approval_date = _safe_date(_first_non_empty(row, "approval_timestamp"))
+			doc.rejection_reason = (
+				_normalize_sheet_text(_first_non_empty(row, "comment"))
+				if doc.status == "Rejected"
+				else None
+			)
+			_replace_child_rows(doc, "items", items)
+
+			action = _persist_doc(doc, existing_name, business_field="pr_no", business_value=pr_no)
+			results[f"rows_{action}"] += 1
+			_release_savepoint(savepoint)
+		except Exception as exc:
+			frappe.db.rollback(save_point=savepoint)
+			results["rows_failed"] += 1
+			results["errors"].append(f"{pr_no}: {exc!s}")
+
+	return results
+
+
+@frappe.whitelist()
+def sync_procurement_purchase_orders(
+	sheet_name: str,
+	data: list[dict],
+	checksum: str,
+	related_data: Any = None,
+	**kwargs,
+) -> dict:
+	"""Sync AppSheet PO headers with child items into BEI Purchase Order."""
+	_assert_sync_authorized()
+	rows = _parse_rows(data)
+	related = _parse_related_data(related_data)
+	results = _init_results(len(rows))
+	seen_po_numbers: set[str] = set()
+
+	items_by_po: dict[str, list[dict[str, Any]]] = {}
+	for item_row in related.get("procurement_po_items", []):
+		po_no = _normalize_sheet_text(_first_non_empty(item_row, "po_no"))
+		item_code = _normalize_sheet_text(_first_non_empty(item_row, "item_code"))
+		qty = _safe_float(_first_non_empty(item_row, "qty"))
+		unit_cost = _safe_float(_first_non_empty(item_row, "unit_cost"))
+		if not po_no or not item_code or qty <= 0:
+			continue
+
+		vat_per_unit = _safe_float(_first_non_empty(item_row, "vat"))
+		vat_rate = round((vat_per_unit / unit_cost) * 100, 4) if unit_cost > 0 and vat_per_unit > 0 else 12.0
+		items_by_po.setdefault(po_no, []).append(
+			{
+				"item_code": item_code,
+				"item_name": _normalize_sheet_text(_first_non_empty(item_row, "item_name")) or item_code,
+				"description": _normalize_sheet_text(_first_non_empty(item_row, "item_name")) or item_code,
+				"packaging_size": _normalize_sheet_text(_first_non_empty(item_row, "packaging_size")),
+				"qty": qty,
+				"uom": _normalize_sheet_text(_first_non_empty(item_row, "uom")) or "Pcs",
+				"unit_cost": unit_cost,
+				"vat_rate": vat_rate,
+				"delivery_schedule": _safe_date(_first_non_empty(item_row, "delivery_schedule")),
+				"price_variance_override": "Legacy AppSheet sync baseline import",
+			}
+		)
+
+	for row in rows:
+		po_no = _normalize_sheet_text(_first_non_empty(row, "po_no"))
+		if not po_no:
+			continue
+		if po_no in seen_po_numbers:
+			results["rows_updated"] += 1
+			continue
+		seen_po_numbers.add(po_no)
+
+		savepoint = _make_savepoint("sync_proc_po", f"{sheet_name}|{checksum}|{po_no}")
+		frappe.db.savepoint(savepoint)
+		try:
+			items = items_by_po.get(po_no, [])
+			if not items:
+				raise ValueError("No PO items found for purchase order")
+
+			existing_name = _find_doc_by_business_key("BEI Purchase Order", "po_no", po_no)
+			doc = (
+				frappe.get_doc("BEI Purchase Order", existing_name)
+				if existing_name
+				else frappe.get_doc({"doctype": "BEI Purchase Order"})
+			)
+
+			doc.po_date = _safe_date(_first_non_empty(row, "po_date", "timestamp")) or nowdate()
+			doc.pr_reference = _find_doc_by_business_key(
+				"BEI Purchase Requisition", "pr_no", _first_non_empty(row, "pr_no")
+			)
+			doc.supplier = _resolve_procurement_supplier(
+				_first_non_empty(row, "supplier_code"),
+				_first_non_empty(row, "supplier_name"),
+			)
+			doc.delivery_date = _safe_date(_first_non_empty(row, "delivery_date")) or doc.po_date
+			doc.ship_to = _resolve_warehouse(_first_non_empty(row, "ship_to"))
+			doc.payment_terms = _resolve_payment_terms_template(_first_non_empty(row, "terms_of_payment"))
+			doc.discount_amount = _safe_float(_first_non_empty(row, "total_discount"))
+			doc.delivery_fee = _safe_float(_first_non_empty(row, "delivery_fee"))
+			doc.mae_approval = _normalize_approval_state(_first_non_empty(row, "approval"))
+			doc.mae_comment = _normalize_sheet_text(_first_non_empty(row, "comment", "reviewer_comment"))
+			doc.mae_approval_date = _safe_date(_first_non_empty(row, "approval_timestamp"))
+			doc.butch_approval = _normalize_approval_state(_first_non_empty(row, "2nd_approval"))
+			doc.butch_comment = _normalize_sheet_text(_first_non_empty(row, "2nd_comment"))
+			doc.butch_approval_date = _safe_date(_first_non_empty(row, "2nd_approval_timestamp"))
+			doc.sent_to_supplier_date = _safe_date(_first_non_empty(row, "send_po_to_supplier_timestamp"))
+			doc.sent_by = (
+				_resolve_user_identity(_first_non_empty(row, "sent_by"))
+				if _normalize_sheet_text(_first_non_empty(row, "sent_by"))
+				else None
+			)
+			_replace_child_rows(doc, "items", items)
+			estimated_grand_total = sum(
+				_safe_float(item.get("qty"))
+				* _safe_float(item.get("unit_cost"))
+				* (1 + (_safe_float(item.get("vat_rate")) / 100))
+				for item in items
+			)
+			estimated_grand_total = (
+				estimated_grand_total
+				- _safe_float(_first_non_empty(row, "total_discount"))
+				+ _safe_float(_first_non_empty(row, "delivery_fee"))
+			)
+			doc.status = _build_po_status(row, requires_dual_approval=estimated_grand_total > 500000)
+
+			action = _persist_doc(doc, existing_name, business_field="po_no", business_value=po_no)
+			results[f"rows_{action}"] += 1
+			_release_savepoint(savepoint)
+		except Exception as exc:
+			frappe.db.rollback(save_point=savepoint)
+			results["rows_failed"] += 1
+			results["errors"].append(f"{po_no}: {exc!s}")
+
+	return results
+
+
+@frappe.whitelist()
+def sync_procurement_goods_receipts(
+	sheet_name: str,
+	data: list[dict],
+	checksum: str,
+	related_data: Any = None,
+	**kwargs,
+) -> dict:
+	"""Sync AppSheet GR headers and items into BEI Goods Receipt, then reconcile PO receipts."""
+	_assert_sync_authorized()
+	rows = _parse_rows(data)
+	related = _parse_related_data(related_data)
+	results = _init_results(len(rows))
+	seen_gr_numbers: set[str] = set()
+	po_doc_cache: dict[str, Any] = {}
+	po_name_cache: dict[str, str] = {}
+	received_qty_by_po: dict[str, dict[str, float]] = {}
+
+	def get_po_doc(po_no: str) -> Any:
+		if po_no in po_doc_cache:
+			return po_doc_cache[po_no]
+
+		po_name = _find_doc_by_business_key("BEI Purchase Order", "po_no", po_no)
+		if not po_name:
+			raise ValueError(f"Linked purchase order not found: {po_no}")
+
+		po_name_cache[po_no] = po_name
+		po_doc_cache[po_no] = frappe.get_doc("BEI Purchase Order", po_name)
+		return po_doc_cache[po_no]
+
+	items_by_gr: dict[str, list[dict[str, Any]]] = {}
+	for item_row in related.get("procurement_gr_items", []):
+		gr_no = _normalize_sheet_text(_first_non_empty(item_row, "gr_no"))
+		po_no = _normalize_sheet_text(_first_non_empty(item_row, "po_no"))
+		item_code = _normalize_sheet_text(_first_non_empty(item_row, "item_code"))
+		received_qty = _safe_float(_first_non_empty(item_row, "issued_qty", "received_qty"))
+		if not gr_no or not po_no or not item_code or received_qty <= 0:
+			continue
+
+		po_doc = get_po_doc(po_no)
+		po_item_lookup = {po_item.item_code: po_item for po_item in getattr(po_doc, "items", [])}
+		po_item = po_item_lookup.get(item_code)
+		resolved_item_code = _resolve_item_code(item_code, _first_non_empty(item_row, "item_name"))
+		items_by_gr.setdefault(gr_no, []).append(
+			{
+				"item_code": resolved_item_code,
+				"item_name": _normalize_sheet_text(_first_non_empty(item_row, "item_name")) or item_code,
+				"description": _normalize_sheet_text(_first_non_empty(item_row, "item_name")) or item_code,
+				"ordered_qty": flt(getattr(po_item, "qty", received_qty), 2) if po_item else received_qty,
+				"received_qty": received_qty,
+				"uom": _resolve_uom(_first_non_empty(item_row, "uom")),
+				"rejected_qty": 0,
+				"unit_cost": flt(getattr(po_item, "unit_cost", 0), 2) if po_item else 0,
+			}
+		)
+		received_qty_by_po.setdefault(po_no, {})
+		received_qty_by_po[po_no][item_code] = received_qty_by_po[po_no].get(item_code, 0) + received_qty
+
+	for row in rows:
+		gr_no = _normalize_sheet_text(_first_non_empty(row, "gr_no"))
+		po_no = _normalize_sheet_text(_first_non_empty(row, "po_no"))
+		if not gr_no:
+			continue
+		if gr_no in seen_gr_numbers:
+			results["rows_updated"] += 1
+			continue
+		seen_gr_numbers.add(gr_no)
+
+		savepoint = _make_savepoint("sync_proc_gr", f"{sheet_name}|{checksum}|{gr_no}")
+		frappe.db.savepoint(savepoint)
+		try:
+			if not po_no:
+				raise ValueError("Missing linked purchase order reference")
+
+			po_doc = get_po_doc(po_no)
+			items = items_by_gr.get(gr_no, [])
+			if not items:
+				raise ValueError("No GR items found for goods receipt")
+
+			existing_name = _find_doc_by_business_key("BEI Goods Receipt", "gr_no", gr_no)
+			doc = (
+				frappe.get_doc("BEI Goods Receipt", existing_name)
+				if existing_name
+				else frappe.get_doc({"doctype": "BEI Goods Receipt"})
+			)
+
+			doc.purchase_order = po_doc.name
+			doc.receipt_date = _safe_date(_first_non_empty(row, "date", "timestamp")) or nowdate()
+			doc.delivery_date = _safe_date(_first_non_empty(row, "date")) or doc.receipt_date
+			doc.delivery_note_no = _normalize_sheet_text(_first_non_empty(row, "invoice_no")) or gr_no
+			doc.warehouse = _resolve_warehouse(_first_non_empty(row, "issue_to"))
+			doc.supplier_invoice_photo = _normalize_sheet_text(_first_non_empty(row, "invoice"))
+			doc.inspection_required = 0
+			doc.status = _build_gr_status(row)
+			_replace_child_rows(doc, "items", items)
+
+			action = _persist_doc(doc, existing_name, business_field="gr_no", business_value=gr_no)
+			results[f"rows_{action}"] += 1
+			_release_savepoint(savepoint)
+		except Exception as exc:
+			frappe.db.rollback(save_point=savepoint)
+			results["rows_failed"] += 1
+			results["errors"].append(f"{gr_no}: {exc!s}")
+
+	for po_no, item_totals in received_qty_by_po.items():
+		savepoint = _make_savepoint("sync_proc_gr_po", f"{sheet_name}|{checksum}|{po_no}")
+		frappe.db.savepoint(savepoint)
+		try:
+			po_doc = get_po_doc(po_no)
+			changed = False
+			for po_item in getattr(po_doc, "items", []):
+				new_qty = flt(item_totals.get(po_item.item_code, 0), 2)
+				if flt(getattr(po_item, "received_qty", 0), 2) != new_qty:
+					po_item.received_qty = new_qty
+					if getattr(po_item, "name", None):
+						frappe.db.set_value("BEI PO Item", po_item.name, "received_qty", new_qty, update_modified=False)
+					changed = True
+
+			fully_received = bool(getattr(po_doc, "items", [])) and all(
+				flt(getattr(item, "received_qty", 0), 2) >= flt(getattr(item, "qty", 0), 2)
+				for item in po_doc.items
+			)
+			partially_received = any(flt(getattr(item, "received_qty", 0), 2) > 0 for item in getattr(po_doc, "items", []))
+			new_status = po_doc.status
+			if fully_received:
+				new_status = "Fully Received"
+			elif partially_received:
+				new_status = "Partially Received"
+
+			if new_status != po_doc.status:
+				po_doc.status = new_status
+				changed = True
+
+			if changed:
+				po_doc.save(ignore_permissions=True)
+			_release_savepoint(savepoint)
+		except Exception as exc:
+			frappe.db.rollback(save_point=savepoint)
+			results["errors"].append(f"{po_no}: failed to reconcile PO received qty - {exc!s}")
+
+	return results
 
 
 # nosemgrep: frappe-semgrep-rules.rules.security.guest-whitelisted-method
