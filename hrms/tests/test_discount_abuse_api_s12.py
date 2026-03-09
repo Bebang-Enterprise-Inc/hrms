@@ -897,6 +897,36 @@ class TestDiscountAbuseApiS12(unittest.TestCase):
 		key_sets = {tuple(sorted(row.keys())) for row in rows}
 		self.assertEqual(len(key_sets), 1)
 
+	def test_query_all_channel_daily_rows_uses_fast_daily_sources(self):
+		def fake_get_all(resource, params):
+			if resource == "v_system_daily_totals":
+				return [
+					{
+						"business_date": "2026-02-13",
+						"pos_order_count": 10,
+						"pos_gross_sales": 1000,
+						"web_order_count": 2,
+						"web_gross_sales": 200,
+						"total_orders": 12,
+						"total_gross_sales": 1200,
+					}
+				]
+			if resource == "foodpanda_orders":
+				return [
+					{"business_date": "2026-02-13", "subtotal": 150, "order_status": "delivered"},
+					{"business_date": "2026-02-13", "subtotal": 50, "order_status": "delivered"},
+				]
+			raise AssertionError(resource)
+
+		with patch.object(discount_abuse, "_supabase_get_all", side_effect=fake_get_all):
+			rows = discount_abuse._query_all_channel_daily_rows(date(2026, 2, 13), date(2026, 2, 13))
+
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(rows[0]["total_orders"], 14)
+		self.assertEqual(rows[0]["total_gross_sales"], 1400.0)
+		self.assertEqual(rows[0]["fp_orders"], 2)
+		self.assertEqual(rows[0]["fp_gross_sales"], 200.0)
+
 
 if __name__ == "__main__":
 	unittest.main()
