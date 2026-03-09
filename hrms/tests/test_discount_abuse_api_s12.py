@@ -310,6 +310,11 @@ class TestDiscountAbuseApiS12(unittest.TestCase):
 		)
 		self.assertEqual(payload["stores"][0]["chain_metrics"]["same_day_chain_rows"], 1)
 		self.assertEqual(payload["stores"][0]["contextual_metrics"]["multi_name_receipts"], 1)
+		self.assertEqual(payload["stores"][0]["rates_per_1000_paid_orders"]["repeat_name_findings"], 1000.0)
+		self.assertEqual(
+			payload["totals"]["rates_per_1000_paid_orders"]["same_day_repeat_name_findings"],
+			1000.0,
+		)
 
 	def test_build_investigation_case_rows_includes_alert_and_context_receipt_cases(self):
 		same_day_rows = [
@@ -375,9 +380,130 @@ class TestDiscountAbuseApiS12(unittest.TestCase):
 		self.assertEqual(len(rows), 2)
 		self.assertEqual(rows[0]["case_bucket"], "same_day_alert")
 		self.assertEqual(rows[0]["names"], ["HELEN PAGLINGAYEN", "PETRONA REYES"])
+		self.assertEqual(
+			rows[0]["detection_types"],
+			["same_reference_diff_name_same_day_same_store"],
+		)
 		self.assertEqual(rows[1]["case_bucket"], "contextual_receipt")
 		self.assertEqual(rows[1]["detection_type"], "context_multi_name_receipt")
 		self.assertEqual(rows[1]["bill_numbers"], ["63255"])
+
+	def test_cluster_queue_rows_collapses_duplicate_same_day_alert_rows(self):
+		rows = [
+			{
+				"queue_bucket": "same_day",
+				"event_date": "2026-03-08",
+				"window_start": "2026-03-08",
+				"window_end": "2026-03-08",
+				"scope": "chain",
+				"scope_key": 0,
+				"location_id": 0,
+				"store_name": "Robinson Imus | SM North EDSA",
+				"discount_bir_category": "SC",
+				"identity_type": "reference_number",
+				"identity_key": "44228",
+				"detection_type": "same_reference_same_day_multi_store",
+				"severity": "critical",
+				"rapid_within_4h": True,
+				"min_gap_minutes": 1.4,
+				"order_count": 2,
+				"store_count": 2,
+				"discount_amount_total": 102.5,
+				"details": {
+					"order_ids": [47122266, 47122476],
+					"store_names": ["Robinson Imus", "SM North EDSA"],
+					"customer_names": ["Teresita Romero", "Vilma Ingalla"],
+					"reference_numbers": ["44228"],
+					"bill_numbers": ["23116", "66897"],
+				},
+			},
+			{
+				"queue_bucket": "same_day",
+				"event_date": "2026-03-08",
+				"window_start": "2026-03-08",
+				"window_end": "2026-03-08",
+				"scope": "chain",
+				"scope_key": 0,
+				"location_id": 0,
+				"store_name": "Robinson Imus | SM North EDSA",
+				"discount_bir_category": "SC",
+				"identity_type": "reference_number",
+				"identity_key": "44228",
+				"detection_type": "same_reference_diff_name_same_day_multi_store",
+				"severity": "critical",
+				"rapid_within_4h": True,
+				"min_gap_minutes": 1.4,
+				"order_count": 2,
+				"store_count": 2,
+				"discount_amount_total": 102.5,
+				"details": {
+					"order_ids": [47122266, 47122476],
+					"store_names": ["Robinson Imus", "SM North EDSA"],
+					"customer_names": ["Teresita Romero", "Vilma Ingalla"],
+					"reference_numbers": ["44228"],
+					"bill_numbers": ["23116", "66897"],
+				},
+			},
+		]
+
+		clusters = discount_abuse._cluster_queue_rows(rows)
+
+		self.assertEqual(len(clusters), 1)
+		self.assertEqual(clusters[0]["raw_row_count"], 2)
+		self.assertEqual(
+			clusters[0]["detection_types"],
+			[
+				"same_reference_same_day_multi_store",
+				"same_reference_diff_name_same_day_multi_store",
+			],
+		)
+		self.assertEqual(len(clusters[0]["resolution_targets"]), 2)
+		self.assertEqual(clusters[0]["identity_key"], "44228")
+
+	def test_resolve_discount_audit_incident_updates_all_underlying_targets(self):
+		payload = {
+			"cluster_id": "same-day::test",
+			"resolve_scope_policy": "all_underlying_rows",
+			"resolution_targets": [
+				{
+					"event_date": "2026-03-08",
+					"scope": "chain",
+					"scope_key": 0,
+					"discount_bir_category": "SC",
+					"identity_type": "reference_number",
+					"identity_key": "44228",
+					"detection_type": "same_reference_same_day_multi_store",
+				},
+				{
+					"event_date": "2026-03-08",
+					"scope": "chain",
+					"scope_key": 0,
+					"discount_bir_category": "SC",
+					"identity_type": "reference_number",
+					"identity_key": "44228",
+					"detection_type": "same_reference_diff_name_same_day_multi_store",
+				},
+			],
+		}
+
+		with (
+			patch.object(
+				discount_abuse,
+				"_resolve_discount_alert_payload",
+				side_effect=[{"id": 1}, {"id": 2}],
+			) as mock_resolve,
+			patch.object(discount_abuse, "_check_discount_audit_role", return_value=None),
+		):
+			result = discount_abuse.resolve_discount_audit_incident(
+				payload,
+				"under_investigation",
+				"cluster review",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(result["data"]["resolved_count"], 2)
+		self.assertEqual(result["data"]["target_count"], 2)
+		self.assertEqual(mock_resolve.call_count, 2)
 
 
 if __name__ == "__main__":
