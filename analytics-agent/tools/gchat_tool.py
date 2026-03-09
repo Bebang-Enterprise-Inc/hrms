@@ -10,7 +10,14 @@ Uses service account with Chat Bot scope (NOT DWD).
 import os
 from typing import Any
 
-from claude_agent_sdk import tool
+try:
+    from claude_agent_sdk import tool
+except ImportError:
+    def tool(name, description, schema):
+        def decorator(fn):
+            fn.name = name
+            return fn
+        return decorator
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 

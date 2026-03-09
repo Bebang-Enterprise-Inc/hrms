@@ -12,7 +12,14 @@ import sys
 from datetime import datetime
 from typing import Any
 
-from claude_agent_sdk import tool
+try:
+    from claude_agent_sdk import tool
+except ImportError:
+    def tool(name, description, schema):
+        def decorator(fn):
+            fn.name = name
+            return fn
+        return decorator
 
 # Add parent directory so we can import the template module
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))

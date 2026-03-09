@@ -17,7 +17,15 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
-from claude_agent_sdk import tool
+try:
+    from claude_agent_sdk import tool
+except ImportError:
+    # Fallback: define a no-op decorator when Agent SDK is not installed
+    def tool(name, description, schema):
+        def decorator(fn):
+            fn.name = name
+            return fn
+        return decorator
 
 # ---------------------------------------------------------------------------
 # View allowlist — ONLY these views may be queried
