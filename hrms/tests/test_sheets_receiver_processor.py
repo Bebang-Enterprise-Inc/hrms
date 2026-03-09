@@ -214,7 +214,9 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 	def test_process_webhook_syncs_all_matching_sheet_configs_for_workbook(self):
 		processor = self._make_processor()
 		sheet_a = self._make_sheet_config()
-		sheet_b = types.SimpleNamespace(**{**sheet_a.__dict__, "name": "Supplier SOA", "sheet_name": "SUPPLIERS SOA"})
+		sheet_b = types.SimpleNamespace(
+			**{**sheet_a.__dict__, "name": "Supplier SOA", "sheet_name": "SUPPLIERS SOA"}
+		)
 		processor.sync_sheet = MagicMock(side_effect=["log-a", "log-b"])
 
 		processor_mod.get_sheets_by_spreadsheet_id = MagicMock(
@@ -257,7 +259,10 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 		self.assertNotEqual(log.data_checksum, "chk-parent")
 		call = processor.frappe.sync_sheet_data.call_args
 		self.assertEqual(call.args[0], sheet_config)
-		self.assertEqual(call.kwargs["related_data"], {"procurement_pr_items": [{"pr_no": "PR202510", "item_code": "CM34"}]})
+		self.assertEqual(
+			call.kwargs["related_data"],
+			{"procurement_pr_items": [{"pr_no": "PR202510", "item_code": "CM34"}]},
+		)
 
 
 if __name__ == "__main__":

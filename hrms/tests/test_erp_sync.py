@@ -525,7 +525,9 @@ class TestErpSync(unittest.TestCase):
 		updated_row = dict(row, contact_no="09170000000")
 
 		first = erp_sync.sync_procurement_suppliers("Procurement Suppliers", [row], "chk-proc-supplier-1")
-		second = erp_sync.sync_procurement_suppliers("Procurement Suppliers", [updated_row], "chk-proc-supplier-2")
+		second = erp_sync.sync_procurement_suppliers(
+			"Procurement Suppliers", [updated_row], "chk-proc-supplier-2"
+		)
 
 		self.assertEqual(first["rows_created"], 1)
 		self.assertEqual(second["rows_updated"], 1)

@@ -620,7 +620,9 @@ def sync_store_demand_snapshot(sheet_name: str, data: list[dict], checksum: str,
 		try:
 			item_code = str(_first_non_empty(row, "item_code", "sku") or "").strip()
 			warehouse = _resolve_warehouse(_first_non_empty(row, "warehouse", "store", "location"))
-			snapshot_date = _safe_date(_first_non_empty(row, "snapshot_date", "as_of_date", "date")) or nowdate()
+			snapshot_date = (
+				_safe_date(_first_non_empty(row, "snapshot_date", "as_of_date", "date")) or nowdate()
+			)
 
 			if not item_code:
 				results["rows_failed"] += 1
@@ -716,7 +718,8 @@ def sync_store_demand_snapshot(sheet_name: str, data: list[dict], checksum: str,
 			values = {
 				fieldname: value
 				for fieldname, value in values.items()
-				if fieldname in {"snapshot_date", "warehouse", "item_code"} or _doctype_has_field("BEI Inventory Risk Snapshot", fieldname)
+				if fieldname in {"snapshot_date", "warehouse", "item_code"}
+				or _doctype_has_field("BEI Inventory Risk Snapshot", fieldname)
 			}
 
 			existing = frappe.db.get_value(
@@ -1170,7 +1173,15 @@ def sync_supplier_soa(sheet_name: str, data: list[dict], checksum: str, **kwargs
 
 
 _PROCUREMENT_APPROVED_VALUES = {"approved", "approve", "ok", "yes"}
-_PROCUREMENT_REJECTED_VALUES = {"rejected", "reject", "disapproved", "declined", "no", "cancelled", "canceled"}
+_PROCUREMENT_REJECTED_VALUES = {
+	"rejected",
+	"reject",
+	"disapproved",
+	"declined",
+	"no",
+	"cancelled",
+	"canceled",
+}
 _PROCUREMENT_NULL_TOKENS = {"na", "n/a", "none", "null", "nan"}
 
 
@@ -1274,7 +1285,9 @@ def _replace_child_rows(doc: Any, table_field: str, rows: list[dict[str, Any]]) 
 		doc.append(table_field, row)
 
 
-def _persist_doc(doc: Any, existing_name: str | None, business_field: str | None = None, business_value: Any = None) -> str:
+def _persist_doc(
+	doc: Any, existing_name: str | None, business_field: str | None = None, business_value: Any = None
+) -> str:
 	if existing_name:
 		doc.save(ignore_permissions=True)
 		return "updated"
@@ -1423,7 +1436,9 @@ def sync_procurement_suppliers(sheet_name: str, data: list[dict], checksum: str,
 			if not existing_name and not _normalize_sheet_text(getattr(doc, "status", None)):
 				doc.status = "Pending Verification"
 
-			action = _persist_doc(doc, existing_name, business_field="supplier_code", business_value=supplier_code)
+			action = _persist_doc(
+				doc, existing_name, business_field="supplier_code", business_value=supplier_code
+			)
 			results[f"rows_{action}"] += 1
 			_release_savepoint(savepoint)
 		except Exception as exc:
@@ -1461,7 +1476,9 @@ def sync_procurement_requisitions(
 		items_by_pr.setdefault(pr_no, []).append(
 			{
 				"item_code": item_code,
-				"item_name": _normalize_sheet_text(_first_non_empty(item_row, "item_name")) or description or item_code,
+				"item_name": _normalize_sheet_text(_first_non_empty(item_row, "item_name"))
+				or description
+				or item_code,
 				"description": description,
 				"qty": qty,
 				"uom": _normalize_sheet_text(_first_non_empty(item_row, "unit_of_issue", "uom")) or "Pcs",
@@ -1504,15 +1521,15 @@ def sync_procurement_requisitions(
 			doc.recurring = _sheet_flag(_first_non_empty(row, "recurring"))
 			doc.status = _build_pr_status(row, items)
 			doc.approved_by = (
-				_resolve_user_identity(_first_non_empty(row, "approved_by"), _first_non_empty(row, "approved_by_email"))
+				_resolve_user_identity(
+					_first_non_empty(row, "approved_by"), _first_non_empty(row, "approved_by_email")
+				)
 				if doc.status in {"Approved", "Rejected", "Converted to PO"}
 				else None
 			)
 			doc.approval_date = _safe_date(_first_non_empty(row, "approval_timestamp"))
 			doc.rejection_reason = (
-				_normalize_sheet_text(_first_non_empty(row, "comment"))
-				if doc.status == "Rejected"
-				else None
+				_normalize_sheet_text(_first_non_empty(row, "comment")) if doc.status == "Rejected" else None
 			)
 			_replace_child_rows(doc, "items", items)
 
@@ -1756,14 +1773,18 @@ def sync_procurement_goods_receipts(
 				if flt(getattr(po_item, "received_qty", 0), 2) != new_qty:
 					po_item.received_qty = new_qty
 					if getattr(po_item, "name", None):
-						frappe.db.set_value("BEI PO Item", po_item.name, "received_qty", new_qty, update_modified=False)
+						frappe.db.set_value(
+							"BEI PO Item", po_item.name, "received_qty", new_qty, update_modified=False
+						)
 					changed = True
 
 			fully_received = bool(getattr(po_doc, "items", [])) and all(
 				flt(getattr(item, "received_qty", 0), 2) >= flt(getattr(item, "qty", 0), 2)
 				for item in po_doc.items
 			)
-			partially_received = any(flt(getattr(item, "received_qty", 0), 2) > 0 for item in getattr(po_doc, "items", []))
+			partially_received = any(
+				flt(getattr(item, "received_qty", 0), 2) > 0 for item in getattr(po_doc, "items", [])
+			)
 			new_status = po_doc.status
 			if fully_received:
 				new_status = "Fully Received"
