@@ -817,7 +817,9 @@ class TestDiscountAbuseApiS12(unittest.TestCase):
 			patch.object(discount_abuse, "_build_store_day_snapshot_rows", return_value=[day_row, chain_row]),
 			patch.object(discount_abuse, "_replace_store_day_snapshots", return_value=2) as mock_replace_day,
 			patch.object(discount_abuse, "_query_store_day_snapshots", return_value=[day_row, chain_row]),
-			patch.object(discount_abuse, "_replace_store_month_snapshots", return_value=2) as mock_replace_month,
+			patch.object(
+				discount_abuse, "_replace_store_month_snapshots", return_value=2
+			) as mock_replace_month,
 		):
 			result = discount_abuse._refresh_discount_benchmark_snapshots_internal(
 				date(2026, 2, 1),

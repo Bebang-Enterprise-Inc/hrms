@@ -2230,9 +2230,7 @@ def _category_metrics_for_store(
 	order_buckets: dict[int, dict[str, Any]],
 ) -> dict[str, Any]:
 	scoped_same_day_rows = [
-		row
-		for row in same_day_rows
-		if _normalize_text(row.get("discount_bir_category")) == category
+		row for row in same_day_rows if _normalize_text(row.get("discount_bir_category")) == category
 	]
 	same_day_metrics, chain_metrics = _build_same_day_metrics(store_name, scoped_same_day_rows)
 	store_clusters = [
@@ -2253,9 +2251,7 @@ def _category_metrics_for_store(
 		statutory_vat_relief += bucket["vat_relief"][category]
 		effective_statutory_benefit += bucket["effective_benefit"][category]
 	repeat_name_rate = _rate_per_1000(same_day_metrics["repeat_name_findings"], paid_order_count)
-	repeat_reference_rate = _rate_per_1000(
-		same_day_metrics["repeat_reference_findings"], paid_order_count
-	)
+	repeat_reference_rate = _rate_per_1000(same_day_metrics["repeat_reference_findings"], paid_order_count)
 	same_reference_different_name_rate = _rate_per_1000(
 		same_day_metrics["same_reference_different_name_findings"], paid_order_count
 	)
@@ -2269,10 +2265,7 @@ def _category_metrics_for_store(
 			same_day_metrics["same_reference_different_name_findings"]
 			* WEIGHTED_SCORE_WEIGHTS["same_reference_different_name"]
 		)
-		+ (
-			same_day_metrics["rapid_repeat_name_findings_4h"]
-			* WEIGHTED_SCORE_WEIGHTS["rapid_repeat_name"]
-		)
+		+ (same_day_metrics["rapid_repeat_name_findings_4h"] * WEIGHTED_SCORE_WEIGHTS["rapid_repeat_name"])
 		+ (
 			int(chain_metrics["chain_rows_by_severity"].get("critical", 0))
 			* WEIGHTED_SCORE_WEIGHTS["cross_store_overlap_critical"]
@@ -2291,9 +2284,7 @@ def _category_metrics_for_store(
 			same_day_metrics["same_name_multiple_reference_findings"]
 		),
 		"rapid_repeat_name_findings_4h": int(same_day_metrics["rapid_repeat_name_findings_4h"]),
-		"rapid_repeat_reference_findings_4h": int(
-			same_day_metrics["rapid_repeat_reference_findings_4h"]
-		),
+		"rapid_repeat_reference_findings_4h": int(same_day_metrics["rapid_repeat_reference_findings_4h"]),
 		"cross_store_overlap_count": int(chain_metrics["same_day_chain_rows"]),
 		"cross_store_overlap_critical": int(chain_metrics["chain_rows_by_severity"].get("critical", 0)),
 		"cross_store_overlap_high": int(chain_metrics["chain_rows_by_severity"].get("high", 0)),
@@ -2308,10 +2299,7 @@ def _category_metrics_for_store(
 		"weighted_risk_rate": _round_metric(
 			(repeat_name_rate * WEIGHTED_RATE_WEIGHTS["repeat_name"])
 			+ (repeat_reference_rate * WEIGHTED_RATE_WEIGHTS["repeat_reference"])
-			+ (
-				same_reference_different_name_rate
-				* WEIGHTED_RATE_WEIGHTS["same_reference_different_name"]
-			)
+			+ (same_reference_different_name_rate * WEIGHTED_RATE_WEIGHTS["same_reference_different_name"])
 			+ (rapid_repeat_name_rate * WEIGHTED_RATE_WEIGHTS["rapid_repeat_name"]),
 			6,
 		),
@@ -2382,9 +2370,9 @@ def _build_store_day_snapshot_rows(target_day: date) -> list[dict[str, Any]]:
 				str(meta.get("legal_entity") or daily_row.get("legal_entity") or ""),
 			),
 		)
-		row["active_days"] = 1 if (
-			sales_snapshot["paid_orders"] or order_ids_by_location.get(location_id)
-		) else 0
+		row["active_days"] = (
+			1 if (sales_snapshot["paid_orders"] or order_ids_by_location.get(location_id)) else 0
+		)
 		row.update(sales_snapshot)
 		store_order_ids = order_ids_by_location.get(location_id, set())
 		for category in STATUTORY_CATEGORIES:
@@ -2703,8 +2691,12 @@ def _build_metric_row(
 		"pwd_statutory_vat_relief": _to_number(row.get("pwd_statutory_vat_relief")),
 		"effective_denominator_scope": applied_denominator_scope,
 		"denominator_value": denominator_value,
-		"recorded_sc_pct_of_sales": _pct(_to_number(row.get("sc_recorded_discount_amount")), denominator_value),
-		"recorded_pwd_pct_of_sales": _pct(_to_number(row.get("pwd_recorded_discount_amount")), denominator_value),
+		"recorded_sc_pct_of_sales": _pct(
+			_to_number(row.get("sc_recorded_discount_amount")), denominator_value
+		),
+		"recorded_pwd_pct_of_sales": _pct(
+			_to_number(row.get("pwd_recorded_discount_amount")), denominator_value
+		),
 		"selected_recorded_discount_amount": _to_number(selected["recorded_discount_amount"]),
 		"selected_statutory_vat_relief": _to_number(selected["statutory_vat_relief"]),
 		"selected_effective_statutory_benefit": _to_number(selected["effective_statutory_benefit"]),
@@ -2716,13 +2708,9 @@ def _build_metric_row(
 		"same_reference_different_name_findings": int(
 			selected["same_reference_different_name_findings"] or 0
 		),
-		"same_name_multiple_reference_findings": int(
-			selected["same_name_multiple_reference_findings"] or 0
-		),
+		"same_name_multiple_reference_findings": int(selected["same_name_multiple_reference_findings"] or 0),
 		"rapid_repeat_name_findings_4h": int(selected["rapid_repeat_name_findings_4h"] or 0),
-		"rapid_repeat_reference_findings_4h": int(
-			selected["rapid_repeat_reference_findings_4h"] or 0
-		),
+		"rapid_repeat_reference_findings_4h": int(selected["rapid_repeat_reference_findings_4h"] or 0),
 		"cross_store_overlap_count": int(selected["cross_store_overlap_count"] or 0),
 		"cross_store_overlap_critical": int(selected["cross_store_overlap_critical"] or 0),
 		"cross_store_overlap_high": int(selected["cross_store_overlap_high"] or 0),
@@ -2760,24 +2748,36 @@ def _resolve_peer_rows(
 
 	if normalized_mode == "store_type_legal_entity":
 		target_key = _normalize_text(row.get("peer_group_key"))
-		peers = [candidate for candidate in store_rows if _normalize_text(candidate.get("peer_group_key")) == target_key]
+		peers = [
+			candidate
+			for candidate in store_rows
+			if _normalize_text(candidate.get("peer_group_key")) == target_key
+		]
 		return peers, target_key or "CHAINWIDE"
 
 	if normalized_mode == "store_type":
 		target_key = _normalize_text(row.get("store_type"))
-		peers = [candidate for candidate in store_rows if _normalize_text(candidate.get("store_type")) == target_key]
+		peers = [
+			candidate
+			for candidate in store_rows
+			if _normalize_text(candidate.get("store_type")) == target_key
+		]
 		return peers, target_key or "CHAINWIDE"
 
 	primary_key = _normalize_text(row.get("peer_group_key"))
 	primary_peers = [
-		candidate for candidate in store_rows if _normalize_text(candidate.get("peer_group_key")) == primary_key
+		candidate
+		for candidate in store_rows
+		if _normalize_text(candidate.get("peer_group_key")) == primary_key
 	]
 	if primary_key and len(primary_peers) >= MIN_PEER_GROUP_SIZE:
 		return primary_peers, primary_key
 
 	store_type_key = _normalize_text(row.get("store_type"))
 	store_type_peers = [
-		candidate for candidate in store_rows if _normalize_text(candidate.get("store_type")) == store_type_key
+		candidate
+		for candidate in store_rows
+		if _normalize_text(candidate.get("store_type")) == store_type_key
 	]
 	if store_type_key and len(store_type_peers) >= MIN_PEER_GROUP_SIZE:
 		return store_type_peers, store_type_key
@@ -2812,7 +2812,9 @@ def _derive_range_metrics(
 		for source in rows:
 			if _normalize_text(source.get("scope")) != "STORE":
 				continue
-			_sum_count_fields(aggregate_seed, source, ["active_days", "paid_orders", "all_channel_total_orders"])
+			_sum_count_fields(
+				aggregate_seed, source, ["active_days", "paid_orders", "all_channel_total_orders"]
+			)
 			_sum_money_fields(
 				aggregate_seed,
 				source,
@@ -2896,19 +2898,23 @@ def _derive_range_metrics(
 		row["weighted_risk_rank"] = index
 		row["peer_group_effective"] = effective_peer_group
 		row["peer_group_size"] = len(peer_rows)
-		row["peer_percentile"] = _round_metric(
-			(
-				sum(
-					1
-					for candidate in peer_sorted
-					if _to_number(candidate.get("weighted_risk_rate"))
-					<= _to_number(row.get("weighted_risk_rate"))
+		row["peer_percentile"] = (
+			_round_metric(
+				(
+					sum(
+						1
+						for candidate in peer_sorted
+						if _to_number(candidate.get("weighted_risk_rate"))
+						<= _to_number(row.get("weighted_risk_rate"))
+					)
+					/ len(peer_sorted)
 				)
-				/ len(peer_sorted)
+				* 100,
+				2,
 			)
-			* 100,
-			2,
-		) if peer_sorted else 0.0
+			if peer_sorted
+			else 0.0
+		)
 		row["peer_rank"] = next(
 			(
 				position
@@ -2947,11 +2953,14 @@ def _build_control_trend(day_rows: list[dict[str, Any]], denominator_scope: str)
 	for day_key in sorted(grouped):
 		day_group = grouped[day_key]
 		day_chain = next((row for row in day_group if _normalize_text(row.get("scope")) == "CHAIN"), None)
-		source_row = day_chain or _aggregate_snapshot_rows_for_period(
-			day_group,
-			start_day=_coerce_date(day_key),
-			end_day=_coerce_date(day_key),
-		)[0]
+		source_row = (
+			day_chain
+			or _aggregate_snapshot_rows_for_period(
+				day_group,
+				start_day=_coerce_date(day_key),
+				end_day=_coerce_date(day_key),
+			)[0]
+		)
 		metric_row = _build_metric_row(
 			source_row,
 			denominator_scope=denominator_scope,
@@ -3002,9 +3011,7 @@ def _build_executive_summary_payload(
 			_to_number(chain_row.get("effective_statutory_benefit_pct")),
 			2,
 		),
-		"same_day_high_confidence_incidents": int(
-			chain_row.get("high_confidence_same_day_incidents") or 0
-		),
+		"same_day_high_confidence_incidents": int(chain_row.get("high_confidence_same_day_incidents") or 0),
 		"flagged_discount_amount": _round_metric(
 			_to_number(chain_row.get("same_day_flagged_discount_total")),
 			2,
@@ -3021,7 +3028,9 @@ def _build_executive_summary_payload(
 		"display_window": _format_display_window(start_day, end_day),
 		"category_scope": category_scope,
 		"denominator_scope": denominator_scope,
-		"effective_chain_denominator_scope": str(chain_row.get("effective_denominator_scope") or denominator_scope),
+		"effective_chain_denominator_scope": str(
+			chain_row.get("effective_denominator_scope") or denominator_scope
+		),
 		"peer_mode": _normalize_peer_mode(peer_mode),
 		"snapshot_source": snapshot_meta["snapshot_source"],
 		"period_granularity": snapshot_meta["period_granularity"],
@@ -3138,7 +3147,11 @@ def _build_finance_reconciliation_payload(
 			),
 		},
 		"waterfall": [
-			{"key": "original_gross_sales", "label": "Original gross sales", "value": _round_metric(original_gross_sales, 2)},
+			{
+				"key": "original_gross_sales",
+				"label": "Original gross sales",
+				"value": _round_metric(original_gross_sales, 2),
+			},
 			{
 				"key": "recorded_discount_amount",
 				"label": "Recorded statutory discount",
