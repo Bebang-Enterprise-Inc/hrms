@@ -11,7 +11,7 @@ from frappe.utils import today, now_datetime, flt, nowdate, getdate
 from hrms.utils.bei_config import get_company
 from calendar import monthrange
 from datetime import datetime
-from hrms.api.store import save_base64_image
+from hrms.api.store import resolve_employee_store_context, save_base64_image
 
 
 # ============================================================
@@ -271,7 +271,7 @@ def get_pcf_status(store: str = None):
         employee = frappe.db.get_value(
             "Employee",
             {"user_id": frappe.session.user},
-            ["branch", "company"],
+            ["branch", "reports_to", "company"],
             as_dict=True,
         )
         if employee:
@@ -1218,23 +1218,8 @@ def _get_store_for_employee(employee):
     """
     Get the store warehouse for an employee based on their branch.
     """
-    if not employee.branch:
-        return None
-
-    # Try exact match first
-    store = frappe.db.exists("Warehouse", employee.branch)
-    if store:
-        return store
-
-    # Try with company suffix
-    company = employee.company or get_company()
-    store = frappe.db.exists("Warehouse", f"{employee.branch} - {company}")
-    if store:
-        return store
-
-    # Try partial match
-    store = frappe.db.get_value("Warehouse", {"name": ["like", f"{employee.branch}%"]}, "name")
-    return store
+    store_context = resolve_employee_store_context(employee)
+    return store_context.get("warehouse")
 
 
 def _resolve_store_name(store_or_branch: str) -> str:
