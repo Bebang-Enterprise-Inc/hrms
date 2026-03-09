@@ -103,10 +103,6 @@ async def main():
                 "mcp__bei__send_gchat",
                 "mcp__bei__generate_report",
             ],
-            disallowed_tools=[
-                "Write", "Edit", "MultiEdit", "Bash",
-                "Agent", "Task", "NotebookEdit",
-            ],
             system_prompt=SYSTEM_PROMPT,
             permission_mode="bypassPermissions",
             model="opus",
@@ -116,7 +112,6 @@ async def main():
         print(f"Starting analyst agent with options: model={options.model}, max_turns={options.max_turns}")
         print(f"MCP servers: {list(options.mcp_servers.keys())}")
         print(f"Allowed tools: {options.allowed_tools}")
-        print(f"Disallowed tools: {options.disallowed_tools}")
         print(f"Prompt length: {len(WEEKLY_PROMPT)} chars")
 
         msg_count = 0
