@@ -128,8 +128,11 @@ async def main():
         print(f"Allowed tools: {options.allowed_tools}")
         print(f"Prompt length: {len(WEEKLY_PROMPT)} chars")
 
+        async def prompt_stream():
+            yield {"role": "user", "content": WEEKLY_PROMPT}
+
         msg_count = 0
-        async for msg in query(prompt=WEEKLY_PROMPT, options=options):
+        async for msg in query(prompt=prompt_stream(), options=options):
             msg_count += 1
             print(f"Message {msg_count}: type={type(msg).__name__}, has_usage={hasattr(msg, 'usage')}")
             track_tokens(msg)
