@@ -505,6 +505,332 @@ class TestDiscountAbuseApiS12(unittest.TestCase):
 		self.assertEqual(result["data"]["target_count"], 2)
 		self.assertEqual(mock_resolve.call_count, 2)
 
+	def test_build_order_finance_buckets_allocates_statutory_vat_relief_proportionally(self):
+		paid_order_rows = [
+			{
+				"id": 5001,
+				"location_id": 10,
+				"store_name": "SM North EDSA",
+				"business_date": "2026-02-13",
+				"original_gross_sales": 1000,
+				"gross_sales": 820,
+				"total_discounts": 120,
+			}
+		]
+		item_rows = [
+			{
+				"order_id": 5001,
+				"discount_bir_category": "SC",
+				"discount_amount": 60,
+			},
+			{
+				"order_id": 5001,
+				"discount_bir_category": "PWD",
+				"discount_amount": 30,
+			},
+		]
+
+		buckets = discount_abuse._build_order_finance_buckets(paid_order_rows, item_rows)
+
+		self.assertIn(5001, buckets)
+		self.assertAlmostEqual(buckets[5001]["discounts"]["SC"], 60.0)
+		self.assertAlmostEqual(buckets[5001]["discounts"]["PWD"], 30.0)
+		self.assertAlmostEqual(buckets[5001]["vat_relief"]["SC"], 30.0)
+		self.assertAlmostEqual(buckets[5001]["vat_relief"]["PWD"], 15.0)
+		self.assertAlmostEqual(buckets[5001]["effective_benefit"]["SC"], 90.0)
+		self.assertAlmostEqual(buckets[5001]["effective_benefit"]["PWD"], 45.0)
+
+	def test_build_executive_summary_payload_uses_snapshot_rows_and_ranks_outliers(self):
+		snapshot_rows = [
+			{
+				"scope": "store",
+				"location_id": 1,
+				"store_name": "SM North EDSA",
+				"legal_entity": "BEI",
+				"store_type": "mall",
+				"peer_group_key": "MALL::BEI",
+				"business_date": "2026-02-28",
+				"month_start": "2026-02-01",
+				"active_days": 28,
+				"paid_orders": 6187,
+				"pos_original_gross_sales": 2085098,
+				"pos_post_discount_gross_sales": 1915330.72,
+				"pos_net_sales_without_vat": 1753193.46,
+				"pos_total_discounts": 109471.75,
+				"all_channel_total_orders": 0,
+				"all_channel_gross_sales": 0,
+				"sc_recorded_discount_amount": 53159,
+				"pwd_recorded_discount_amount": 20018,
+				"sc_statutory_vat_relief": 8000,
+				"pwd_statutory_vat_relief": 2500,
+				"sc_effective_statutory_benefit": 61159,
+				"pwd_effective_statutory_benefit": 22518,
+				"sc_repeat_name_findings": 10,
+				"sc_repeat_reference_findings": 0,
+				"sc_same_reference_different_name_findings": 2,
+				"sc_same_name_multiple_reference_findings": 2,
+				"sc_rapid_repeat_name_findings_4h": 9,
+				"sc_rapid_repeat_reference_findings_4h": 0,
+				"sc_cross_store_overlap_count": 3,
+				"sc_cross_store_overlap_critical": 1,
+				"sc_cross_store_overlap_high": 1,
+				"sc_same_day_alert_cases": 12,
+				"sc_high_confidence_same_day_incidents": 12,
+				"sc_same_day_flagged_discount_total": 1327.24,
+				"sc_weighted_risk_score": 61.5,
+				"sc_weighted_risk_rate": 15.32,
+				"pwd_repeat_name_findings": 0,
+				"pwd_repeat_reference_findings": 0,
+				"pwd_same_reference_different_name_findings": 0,
+				"pwd_same_name_multiple_reference_findings": 0,
+				"pwd_rapid_repeat_name_findings_4h": 0,
+				"pwd_rapid_repeat_reference_findings_4h": 0,
+				"pwd_cross_store_overlap_count": 0,
+				"pwd_cross_store_overlap_critical": 0,
+				"pwd_cross_store_overlap_high": 0,
+				"pwd_same_day_alert_cases": 0,
+				"pwd_high_confidence_same_day_incidents": 0,
+				"pwd_same_day_flagged_discount_total": 0,
+				"pwd_weighted_risk_score": 0,
+				"pwd_weighted_risk_rate": 0,
+			},
+			{
+				"scope": "store",
+				"location_id": 2,
+				"store_name": "SM Megamall",
+				"legal_entity": "BEI",
+				"store_type": "mall",
+				"peer_group_key": "MALL::BEI",
+				"business_date": "2026-02-28",
+				"month_start": "2026-02-01",
+				"active_days": 28,
+				"paid_orders": 5165,
+				"pos_original_gross_sales": 1979070,
+				"pos_post_discount_gross_sales": 1832336.57,
+				"pos_net_sales_without_vat": 1665716.56,
+				"pos_total_discounts": 105000,
+				"all_channel_total_orders": 0,
+				"all_channel_gross_sales": 0,
+				"sc_recorded_discount_amount": 30000,
+				"pwd_recorded_discount_amount": 15000,
+				"sc_statutory_vat_relief": 5000,
+				"pwd_statutory_vat_relief": 1000,
+				"sc_effective_statutory_benefit": 35000,
+				"pwd_effective_statutory_benefit": 16000,
+				"sc_repeat_name_findings": 1,
+				"sc_repeat_reference_findings": 0,
+				"sc_same_reference_different_name_findings": 0,
+				"sc_same_name_multiple_reference_findings": 1,
+				"sc_rapid_repeat_name_findings_4h": 1,
+				"sc_rapid_repeat_reference_findings_4h": 0,
+				"sc_cross_store_overlap_count": 1,
+				"sc_cross_store_overlap_critical": 0,
+				"sc_cross_store_overlap_high": 1,
+				"sc_same_day_alert_cases": 2,
+				"sc_high_confidence_same_day_incidents": 1,
+				"sc_same_day_flagged_discount_total": 95.12,
+				"sc_weighted_risk_score": 7,
+				"sc_weighted_risk_rate": 1.19,
+				"pwd_repeat_name_findings": 0,
+				"pwd_repeat_reference_findings": 0,
+				"pwd_same_reference_different_name_findings": 0,
+				"pwd_same_name_multiple_reference_findings": 0,
+				"pwd_rapid_repeat_name_findings_4h": 0,
+				"pwd_rapid_repeat_reference_findings_4h": 0,
+				"pwd_cross_store_overlap_count": 0,
+				"pwd_cross_store_overlap_critical": 0,
+				"pwd_cross_store_overlap_high": 0,
+				"pwd_same_day_alert_cases": 0,
+				"pwd_high_confidence_same_day_incidents": 0,
+				"pwd_same_day_flagged_discount_total": 0,
+				"pwd_weighted_risk_score": 0,
+				"pwd_weighted_risk_rate": 0,
+			},
+			{
+				"scope": "chain",
+				"location_id": 0,
+				"store_name": "Chainwide",
+				"legal_entity": "CHAINWIDE",
+				"store_type": "CHAINWIDE",
+				"peer_group_key": "CHAINWIDE",
+				"business_date": "2026-02-28",
+				"month_start": "2026-02-01",
+				"active_days": 28,
+				"paid_orders": 11352,
+				"pos_original_gross_sales": 4064168,
+				"pos_post_discount_gross_sales": 3747667.29,
+				"pos_net_sales_without_vat": 3418910.02,
+				"pos_total_discounts": 214471.75,
+				"all_channel_total_orders": 11352,
+				"all_channel_gross_sales": 5500000,
+				"sc_recorded_discount_amount": 83159,
+				"pwd_recorded_discount_amount": 35018,
+				"sc_statutory_vat_relief": 13000,
+				"pwd_statutory_vat_relief": 3500,
+				"sc_effective_statutory_benefit": 96159,
+				"pwd_effective_statutory_benefit": 38518,
+				"sc_repeat_name_findings": 11,
+				"sc_repeat_reference_findings": 0,
+				"sc_same_reference_different_name_findings": 2,
+				"sc_same_name_multiple_reference_findings": 3,
+				"sc_rapid_repeat_name_findings_4h": 10,
+				"sc_rapid_repeat_reference_findings_4h": 0,
+				"sc_cross_store_overlap_count": 4,
+				"sc_cross_store_overlap_critical": 1,
+				"sc_cross_store_overlap_high": 2,
+				"sc_same_day_alert_cases": 14,
+				"sc_high_confidence_same_day_incidents": 13,
+				"sc_same_day_flagged_discount_total": 1422.36,
+				"sc_weighted_risk_score": 68.5,
+				"sc_weighted_risk_rate": 16.51,
+				"pwd_repeat_name_findings": 0,
+				"pwd_repeat_reference_findings": 0,
+				"pwd_same_reference_different_name_findings": 0,
+				"pwd_same_name_multiple_reference_findings": 0,
+				"pwd_rapid_repeat_name_findings_4h": 0,
+				"pwd_rapid_repeat_reference_findings_4h": 0,
+				"pwd_cross_store_overlap_count": 0,
+				"pwd_cross_store_overlap_critical": 0,
+				"pwd_cross_store_overlap_high": 0,
+				"pwd_same_day_alert_cases": 0,
+				"pwd_high_confidence_same_day_incidents": 0,
+				"pwd_same_day_flagged_discount_total": 0,
+				"pwd_weighted_risk_score": 0,
+				"pwd_weighted_risk_rate": 0,
+			},
+		]
+
+		with (
+			patch.object(
+				discount_abuse,
+				"_select_snapshot_rows_for_window",
+				return_value=(snapshot_rows, {"snapshot_source": "month", "period_granularity": "month"}),
+			),
+			patch.object(discount_abuse, "_query_store_day_snapshots", return_value=[]),
+		):
+			payload = discount_abuse._build_executive_summary_payload(
+				date(2026, 2, 1),
+				date(2026, 2, 28),
+				denominator_scope="pos_original_gross",
+				category_scope="BOTH",
+				peer_mode="auto",
+			)
+
+		self.assertEqual(payload["snapshot_source"], "month")
+		self.assertEqual(payload["cards"]["top_outlier_store"]["store_name"], "SM North EDSA")
+		self.assertEqual(payload["top_weighted_risk_stores"][0]["store_name"], "SM North EDSA")
+		self.assertGreater(payload["cards"]["recorded_sc_pct_of_sales"], 0)
+		self.assertGreaterEqual(len(payload["incident_share_vs_sales_share"]), 2)
+
+	def test_build_finance_reconciliation_payload_breaks_out_other_discount_gap(self):
+		snapshot_rows = [
+			{
+				"scope": "chain",
+				"location_id": 0,
+				"store_name": "Chainwide",
+				"business_date": "2026-02-28",
+				"month_start": "2026-02-01",
+				"paid_orders": 100,
+				"pos_original_gross_sales": 1000,
+				"pos_post_discount_gross_sales": 820,
+				"pos_net_sales_without_vat": 732.14,
+				"pos_total_discounts": 120,
+				"all_channel_total_orders": 100,
+				"all_channel_gross_sales": 1200,
+				"sc_recorded_discount_amount": 60,
+				"pwd_recorded_discount_amount": 30,
+				"sc_statutory_vat_relief": 40,
+				"pwd_statutory_vat_relief": 20,
+				"sc_effective_statutory_benefit": 100,
+				"pwd_effective_statutory_benefit": 50,
+				"sc_repeat_name_findings": 0,
+				"sc_repeat_reference_findings": 0,
+				"sc_same_reference_different_name_findings": 0,
+				"sc_same_name_multiple_reference_findings": 0,
+				"sc_rapid_repeat_name_findings_4h": 0,
+				"sc_rapid_repeat_reference_findings_4h": 0,
+				"sc_cross_store_overlap_count": 0,
+				"sc_cross_store_overlap_critical": 0,
+				"sc_cross_store_overlap_high": 0,
+				"sc_same_day_alert_cases": 0,
+				"sc_high_confidence_same_day_incidents": 0,
+				"sc_same_day_flagged_discount_total": 0,
+				"sc_weighted_risk_score": 0,
+				"sc_weighted_risk_rate": 0,
+				"pwd_repeat_name_findings": 0,
+				"pwd_repeat_reference_findings": 0,
+				"pwd_same_reference_different_name_findings": 0,
+				"pwd_same_name_multiple_reference_findings": 0,
+				"pwd_rapid_repeat_name_findings_4h": 0,
+				"pwd_rapid_repeat_reference_findings_4h": 0,
+				"pwd_cross_store_overlap_count": 0,
+				"pwd_cross_store_overlap_critical": 0,
+				"pwd_cross_store_overlap_high": 0,
+				"pwd_same_day_alert_cases": 0,
+				"pwd_high_confidence_same_day_incidents": 0,
+				"pwd_same_day_flagged_discount_total": 0,
+				"pwd_weighted_risk_score": 0,
+				"pwd_weighted_risk_rate": 0,
+			}
+		]
+
+		with patch.object(
+			discount_abuse,
+			"_select_snapshot_rows_for_window",
+			return_value=(snapshot_rows, {"snapshot_source": "month", "period_granularity": "month"}),
+		):
+			payload = discount_abuse._build_finance_reconciliation_payload(
+				date(2026, 2, 1),
+				date(2026, 2, 28),
+				denominator_scope="pos_original_gross",
+				category_scope="SC",
+			)
+
+		self.assertEqual(payload["totals"]["recorded_discount_amount"], 60.0)
+		self.assertEqual(payload["totals"]["statutory_vat_relief"], 40.0)
+		self.assertEqual(payload["totals"]["effective_statutory_benefit"], 100.0)
+		self.assertEqual(payload["totals"]["gross_gap_before_vat"], 180.0)
+		self.assertEqual(payload["totals"]["other_discount_gap"], 80.0)
+		self.assertEqual(payload["waterfall"][1]["label"], "Recorded statutory discount")
+
+	def test_refresh_discount_benchmark_snapshots_internal_rebuilds_day_and_month_rows(self):
+		day_row = {
+			"scope": "store",
+			"location_id": 1,
+			"store_name": "SM North EDSA",
+			"business_date": "2026-02-01",
+			"month_start": "2026-02-01",
+			"paid_orders": 10,
+			"active_days": 1,
+		}
+		chain_row = {
+			"scope": "chain",
+			"location_id": 0,
+			"store_name": "Chainwide",
+			"business_date": "2026-02-01",
+			"month_start": "2026-02-01",
+			"paid_orders": 10,
+			"active_days": 1,
+		}
+
+		with (
+			patch.object(discount_abuse, "_build_store_day_snapshot_rows", return_value=[day_row, chain_row]),
+			patch.object(discount_abuse, "_replace_store_day_snapshots", return_value=2) as mock_replace_day,
+			patch.object(discount_abuse, "_query_store_day_snapshots", return_value=[day_row, chain_row]),
+			patch.object(discount_abuse, "_replace_store_month_snapshots", return_value=2) as mock_replace_month,
+		):
+			result = discount_abuse._refresh_discount_benchmark_snapshots_internal(
+				date(2026, 2, 1),
+				date(2026, 2, 1),
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(result["store_day_rows_written"], 2)
+		self.assertEqual(result["store_month_rows_written"], 2)
+		self.assertEqual(result["refreshed_days"], ["2026-02-01"])
+		mock_replace_day.assert_called_once()
+		mock_replace_month.assert_called_once()
+
 
 if __name__ == "__main__":
 	unittest.main()

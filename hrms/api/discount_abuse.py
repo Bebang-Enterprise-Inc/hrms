@@ -36,6 +36,37 @@ ROLLING_QUEUE_ORDER = (
 )
 SEVERITY_RANK = {"critical": 1, "high": 2, "medium": 3, "review": 4}
 QUEUE_BUCKET_RANK = {"same_day": 1, "rolling_30d": 2}
+STATUTORY_CATEGORIES = ("SC", "PWD")
+BENCHMARK_DENOMINATOR_SCOPES = {"pos_original_gross", "pos_post_discount_gross", "all_channel_gross"}
+EXECUTIVE_CATEGORY_SCOPES = {"SC", "PWD", "BOTH"}
+STORE_SCOPE = "store"
+CHAIN_SCOPE = "chain"
+CHAIN_LOCATION_ID = 0
+CHAIN_STORE_NAME = "Chainwide"
+CHAIN_PLACEHOLDER = "CHAINWIDE"
+MIN_PEER_GROUP_SIZE = 5
+HIGH_CONFIDENCE_SEVERITIES = {"critical", "high"}
+WEIGHTED_SCORE_WEIGHTS = {
+	"repeat_name": 2.0,
+	"repeat_reference": 2.0,
+	"same_reference_different_name": 7.0,
+	"rapid_repeat_name": 3.0,
+	"cross_store_overlap_critical": 1.5,
+}
+WEIGHTED_RATE_WEIGHTS = {
+	"repeat_name": 2.0,
+	"repeat_reference": 2.0,
+	"same_reference_different_name": 5.0,
+	"rapid_repeat_name": 3.0,
+}
+EXECUTIVE_KPI_CARD_ORDER = (
+	"recorded_sc_pct_of_sales",
+	"recorded_pwd_pct_of_sales",
+	"effective_statutory_benefit_pct",
+	"same_day_high_confidence_incidents",
+	"flagged_discount_amount",
+	"top_outlier_store",
+)
 
 
 def _conf_get(key: str, default: Any = None) -> Any:
@@ -190,6 +221,55 @@ def _supabase_patch(
 		)
 	result = response.json()
 	return result if isinstance(result, list) else []
+
+
+def _supabase_post(
+	resource: str,
+	payload: list[dict[str, Any]] | dict[str, Any],
+	*,
+	on_conflict: str | None = None,
+	return_rows: bool = False,
+) -> list[dict[str, Any]]:
+	headers = _supabase_headers()
+	headers["Prefer"] = (
+		"resolution=merge-duplicates,return=representation"
+		if return_rows
+		else "resolution=merge-duplicates,return=minimal"
+	)
+	url = f"{_get_supabase_url()}/rest/v1/{resource}"
+	params: dict[str, str] = {}
+	if on_conflict:
+		params["on_conflict"] = on_conflict
+	response = requests.post(
+		url,
+		headers=headers,
+		params=params,
+		json=payload,
+		timeout=60,
+	)
+	if not response.ok:
+		raise RuntimeError(
+			f"Supabase POST failed for {resource}: {response.status_code} {response.text[:300]}"
+		)
+	if not return_rows:
+		return []
+	result = response.json()
+	return result if isinstance(result, list) else []
+
+
+def _supabase_delete(resource: str, filters: dict[str, str]) -> None:
+	headers = _supabase_headers()
+	headers["Prefer"] = "return=minimal"
+	response = requests.delete(
+		f"{_get_supabase_url()}/rest/v1/{resource}",
+		headers=headers,
+		params=filters,
+		timeout=60,
+	)
+	if not response.ok:
+		raise RuntimeError(
+			f"Supabase DELETE failed for {resource}: {response.status_code} {response.text[:300]}"
+		)
 
 
 def _parse_email_recipients() -> list[str]:
@@ -799,15 +879,133 @@ def _parse_category_filter(value: str | None) -> set[str] | None:
 
 
 def _get_store_directory() -> dict[int, str]:
+	return {
+		location_id: str(row.get("store_name") or location_id)
+		for location_id, row in _get_store_catalog().items()
+	}
+
+
+def _get_store_catalog() -> dict[int, dict[str, Any]]:
 	rows = _supabase_get_all(
 		"stores",
 		{
-			"select": "location_id,store_name",
+			"select": "location_id,store_name,legal_entity,store_type",
 			"order": "store_name.asc",
 		},
 		page_size=200,
 	)
-	return {int(row["location_id"]): str(row["store_name"]) for row in rows if row.get("location_id")}
+	catalog: dict[int, dict[str, Any]] = {}
+	for row in rows:
+		location_id = int(row.get("location_id") or 0)
+		if not location_id:
+			continue
+		catalog[location_id] = {
+			"location_id": location_id,
+			"store_name": str(row.get("store_name") or location_id),
+			"legal_entity": str(row.get("legal_entity") or ""),
+			"store_type": str(row.get("store_type") or ""),
+		}
+	return catalog
+
+
+def _month_start(value: date) -> date:
+	return value.replace(day=1)
+
+
+def _month_end(value: date) -> date:
+	if value.month == 12:
+		return date(value.year, 12, 31)
+	return date(value.year, value.month + 1, 1) - timedelta(days=1)
+
+
+def _iter_days(start_day: date, end_day: date) -> list[date]:
+	return [start_day + timedelta(days=offset) for offset in range((end_day - start_day).days + 1)]
+
+
+def _normalize_category_scope(value: Any) -> str:
+	text = _normalize_text(value)
+	if text not in EXECUTIVE_CATEGORY_SCOPES:
+		return "BOTH"
+	return text
+
+
+def _normalize_denominator_scope(value: Any) -> str:
+	text = str(value or "pos_original_gross").strip().lower()
+	if text not in BENCHMARK_DENOMINATOR_SCOPES:
+		return "pos_original_gross"
+	return text
+
+
+def _normalize_peer_mode(value: Any) -> str:
+	text = str(value or "auto").strip().lower()
+	if text not in {"auto", "store_type_legal_entity", "store_type", "chainwide"}:
+		return "auto"
+	return text
+
+
+def _round_metric(value: float, digits: int = 2) -> float:
+	return round(float(value or 0), digits)
+
+
+def _safe_divide(numerator: float, denominator: float) -> float:
+	if not denominator:
+		return 0.0
+	return float(numerator) / float(denominator)
+
+
+def _pct(numerator: float, denominator: float) -> float:
+	return _round_metric(_safe_divide(numerator, denominator) * 100, 4)
+
+
+def _query_store_daily_closing_rows(start_day: date, end_day: date) -> list[dict[str, Any]]:
+	params: list[tuple[str, Any]] = [
+		(
+			"select",
+			(
+				"location_id,store_name,legal_entity,store_type,business_date,pos_orders,"
+				"pos_original_gross,pos_after_discount,pos_net_of_vat,pos_discounts,pos_vat,pos_vat_exempt"
+			),
+		),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("order", "business_date.asc,store_name.asc"),
+	]
+	return _supabase_get_all("store_daily_closing", params)
+
+
+def _query_all_channel_daily_rows(start_day: date, end_day: date) -> list[dict[str, Any]]:
+	params: list[tuple[str, Any]] = [
+		(
+			"select",
+			(
+				"business_date,pos_orders,pos_gross_sales,pos_net_sales,web_orders,web_gross_sales,web_net_sales,"
+				"fp_orders,fp_gross_sales,total_orders,total_gross_sales,channel_count,data_sources"
+			),
+		),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("order", "business_date.asc"),
+	]
+	return _supabase_get_all("v_all_channel_daily", params)
+
+
+def _query_store_day_snapshots(start_day: date, end_day: date) -> list[dict[str, Any]]:
+	params: list[tuple[str, Any]] = [
+		("select", "*"),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("order", "business_date.asc,scope.asc,store_name.asc"),
+	]
+	return _supabase_get_all("discount_investigation_store_day", params)
+
+
+def _query_store_month_snapshots(month_start: date) -> list[dict[str, Any]]:
+	params = {
+		"select": "*",
+		"month_start": f"eq.{month_start.isoformat()}",
+		"order": "scope.asc,store_name.asc",
+	}
+	return _supabase_get_all("discount_investigation_store_month", params)
 
 
 def _resolve_selected_stores(store_names: list[str]) -> tuple[list[int], dict[int, str]]:
@@ -1871,6 +2069,1266 @@ def get_discount_investigation_cases(
 			"rows": case_rows,
 		},
 	}
+
+
+def _category_prefix(category: str) -> str:
+	return category.lower()
+
+
+def _category_field(category: str, suffix: str) -> str:
+	return f"{_category_prefix(category)}_{suffix}"
+
+
+def _base_snapshot_row(
+	*,
+	scope: str,
+	location_id: int,
+	store_name: str,
+	business_date: date | None = None,
+	month_start: date | None = None,
+	legal_entity: str = "",
+	store_type: str = "",
+	peer_group_key: str = "",
+) -> dict[str, Any]:
+	row = {
+		"scope": scope,
+		"location_id": int(location_id),
+		"store_name": store_name,
+		"legal_entity": legal_entity,
+		"store_type": store_type,
+		"peer_group_key": peer_group_key,
+		"business_date": business_date.isoformat() if business_date else None,
+		"month_start": month_start.isoformat() if month_start else None,
+		"active_days": 0,
+		"paid_orders": 0,
+		"pos_original_gross_sales": 0.0,
+		"pos_post_discount_gross_sales": 0.0,
+		"pos_net_sales_without_vat": 0.0,
+		"pos_total_discounts": 0.0,
+		"all_channel_total_orders": 0,
+		"all_channel_gross_sales": 0.0,
+		"statutory_recorded_discount_amount": 0.0,
+		"statutory_vat_relief_total": 0.0,
+		"effective_statutory_benefit_total": 0.0,
+	}
+	for category in STATUTORY_CATEGORIES:
+		row[_category_field(category, "recorded_discount_amount")] = 0.0
+		row[_category_field(category, "statutory_vat_relief")] = 0.0
+		row[_category_field(category, "effective_statutory_benefit")] = 0.0
+		row[_category_field(category, "repeat_name_findings")] = 0
+		row[_category_field(category, "repeat_reference_findings")] = 0
+		row[_category_field(category, "same_reference_different_name_findings")] = 0
+		row[_category_field(category, "same_name_multiple_reference_findings")] = 0
+		row[_category_field(category, "rapid_repeat_name_findings_4h")] = 0
+		row[_category_field(category, "rapid_repeat_reference_findings_4h")] = 0
+		row[_category_field(category, "cross_store_overlap_count")] = 0
+		row[_category_field(category, "cross_store_overlap_critical")] = 0
+		row[_category_field(category, "cross_store_overlap_high")] = 0
+		row[_category_field(category, "same_day_alert_cases")] = 0
+		row[_category_field(category, "high_confidence_same_day_incidents")] = 0
+		row[_category_field(category, "same_day_flagged_discount_total")] = 0.0
+		row[_category_field(category, "weighted_risk_score")] = 0.0
+	return row
+
+
+def _peer_group_key_for(store_type: str, legal_entity: str) -> str:
+	normalized_store_type = _normalize_text(store_type)
+	normalized_legal_entity = _normalize_text(legal_entity)
+	if normalized_store_type and normalized_legal_entity:
+		return f"{normalized_store_type}::{normalized_legal_entity}"
+	if normalized_store_type:
+		return normalized_store_type
+	return CHAIN_PLACEHOLDER
+
+
+def _sum_money_fields(target: dict[str, Any], source: dict[str, Any], fields: list[str]) -> None:
+	for field in fields:
+		target[field] = _to_number(target.get(field)) + _to_number(source.get(field))
+
+
+def _sum_count_fields(target: dict[str, Any], source: dict[str, Any], fields: list[str]) -> None:
+	for field in fields:
+		target[field] = int(target.get(field) or 0) + int(source.get(field) or 0)
+
+
+def _build_order_finance_buckets(
+	paid_order_rows: list[dict[str, Any]],
+	item_rows: list[dict[str, Any]],
+) -> dict[int, dict[str, Any]]:
+	buckets: dict[int, dict[str, Any]] = {}
+	for order in paid_order_rows:
+		order_id = int(order.get("id") or 0)
+		if not order_id:
+			continue
+		buckets[order_id] = {
+			"order_id": order_id,
+			"location_id": int(order.get("location_id") or 0),
+			"store_name": str(order.get("store_name") or order.get("location_id") or ""),
+			"business_date": str(order.get("business_date") or ""),
+			"gross_gap_before_vat": max(
+				0.0,
+				_to_number(order.get("original_gross_sales")) - _to_number(order.get("gross_sales")),
+			),
+			"order_total_discounts": _to_number(order.get("total_discounts")),
+			"discounts": {category: 0.0 for category in STATUTORY_CATEGORIES},
+			"vat_relief": {category: 0.0 for category in STATUTORY_CATEGORIES},
+			"effective_benefit": {category: 0.0 for category in STATUTORY_CATEGORIES},
+		}
+	for row in item_rows:
+		order_id = int(row.get("order_id") or 0)
+		category = _canonical_discount_category(
+			row.get("discount_bir_category"),
+			row.get("discount_name_normalized"),
+			row.get("discount_name"),
+		)
+		if not order_id or category not in STATUTORY_CATEGORIES:
+			continue
+		bucket = buckets.get(order_id)
+		if not bucket:
+			continue
+		bucket["discounts"][category] += _to_number(row.get("discount_amount"))
+	for bucket in buckets.values():
+		statutory_discount_total = sum(bucket["discounts"].values())
+		order_total_discounts = max(0.0, _to_number(bucket.get("order_total_discounts")))
+		gross_gap = max(0.0, _to_number(bucket.get("gross_gap_before_vat")))
+		total_vat_relief = max(0.0, gross_gap - order_total_discounts)
+		allocatable_vat_relief = 0.0
+		if statutory_discount_total > 0 and order_total_discounts > 0:
+			allocatable_vat_relief = total_vat_relief * min(
+				1.0,
+				statutory_discount_total / order_total_discounts,
+			)
+		for category in STATUTORY_CATEGORIES:
+			discount_amount = bucket["discounts"][category]
+			share = (discount_amount / statutory_discount_total) if statutory_discount_total else 0.0
+			bucket["vat_relief"][category] = allocatable_vat_relief * share
+			bucket["effective_benefit"][category] = (
+				bucket["discounts"][category] + bucket["vat_relief"][category]
+			)
+	return buckets
+
+
+def _build_sales_snapshot_from_orders(order_rows: list[dict[str, Any]]) -> dict[str, Any]:
+	sales = _build_store_sales_summary(order_rows)
+	return {
+		"paid_orders": int(sales["paid_orders"]),
+		"pos_original_gross_sales": _to_number(sales["gross_sales"]),
+		"pos_post_discount_gross_sales": _to_number(sales["net_sales_w_vat"]),
+		"pos_net_sales_without_vat": _to_number(sales["net_sales_wo_vat"]),
+		"pos_total_discounts": _to_number(sales["total_discounts"]),
+	}
+
+
+def _category_metrics_for_store(
+	*,
+	category: str,
+	store_name: str,
+	paid_order_count: int,
+	store_order_ids: set[int],
+	same_day_rows: list[dict[str, Any]],
+	same_day_clusters: list[dict[str, Any]],
+	order_buckets: dict[int, dict[str, Any]],
+) -> dict[str, Any]:
+	scoped_same_day_rows = [
+		row
+		for row in same_day_rows
+		if _normalize_text(row.get("discount_bir_category")) == category
+	]
+	same_day_metrics, chain_metrics = _build_same_day_metrics(store_name, scoped_same_day_rows)
+	store_clusters = [
+		row
+		for row in same_day_clusters
+		if _normalize_text(row.get("discount_bir_category")) == category
+		and _normalize_text(row.get("scope")) == "STORE"
+		and _row_mentions_store(row, store_name)
+	]
+	recorded_discount_amount = 0.0
+	statutory_vat_relief = 0.0
+	effective_statutory_benefit = 0.0
+	for order_id in store_order_ids:
+		bucket = order_buckets.get(order_id)
+		if not bucket:
+			continue
+		recorded_discount_amount += bucket["discounts"][category]
+		statutory_vat_relief += bucket["vat_relief"][category]
+		effective_statutory_benefit += bucket["effective_benefit"][category]
+	repeat_name_rate = _rate_per_1000(same_day_metrics["repeat_name_findings"], paid_order_count)
+	repeat_reference_rate = _rate_per_1000(
+		same_day_metrics["repeat_reference_findings"], paid_order_count
+	)
+	same_reference_different_name_rate = _rate_per_1000(
+		same_day_metrics["same_reference_different_name_findings"], paid_order_count
+	)
+	rapid_repeat_name_rate = _rate_per_1000(
+		same_day_metrics["rapid_repeat_name_findings_4h"], paid_order_count
+	)
+	weighted_risk_score = (
+		(same_day_metrics["repeat_name_findings"] * WEIGHTED_SCORE_WEIGHTS["repeat_name"])
+		+ (same_day_metrics["repeat_reference_findings"] * WEIGHTED_SCORE_WEIGHTS["repeat_reference"])
+		+ (
+			same_day_metrics["same_reference_different_name_findings"]
+			* WEIGHTED_SCORE_WEIGHTS["same_reference_different_name"]
+		)
+		+ (
+			same_day_metrics["rapid_repeat_name_findings_4h"]
+			* WEIGHTED_SCORE_WEIGHTS["rapid_repeat_name"]
+		)
+		+ (
+			int(chain_metrics["chain_rows_by_severity"].get("critical", 0))
+			* WEIGHTED_SCORE_WEIGHTS["cross_store_overlap_critical"]
+		)
+	)
+	return {
+		"recorded_discount_amount": _round_metric(recorded_discount_amount, 6),
+		"statutory_vat_relief": _round_metric(statutory_vat_relief, 6),
+		"effective_statutory_benefit": _round_metric(effective_statutory_benefit, 6),
+		"repeat_name_findings": int(same_day_metrics["repeat_name_findings"]),
+		"repeat_reference_findings": int(same_day_metrics["repeat_reference_findings"]),
+		"same_reference_different_name_findings": int(
+			same_day_metrics["same_reference_different_name_findings"]
+		),
+		"same_name_multiple_reference_findings": int(
+			same_day_metrics["same_name_multiple_reference_findings"]
+		),
+		"rapid_repeat_name_findings_4h": int(same_day_metrics["rapid_repeat_name_findings_4h"]),
+		"rapid_repeat_reference_findings_4h": int(
+			same_day_metrics["rapid_repeat_reference_findings_4h"]
+		),
+		"cross_store_overlap_count": int(chain_metrics["same_day_chain_rows"]),
+		"cross_store_overlap_critical": int(chain_metrics["chain_rows_by_severity"].get("critical", 0)),
+		"cross_store_overlap_high": int(chain_metrics["chain_rows_by_severity"].get("high", 0)),
+		"same_day_alert_cases": len(store_clusters),
+		"high_confidence_same_day_incidents": sum(
+			1 for row in store_clusters if str(row.get("severity") or "") in HIGH_CONFIDENCE_SEVERITIES
+		),
+		"same_day_flagged_discount_total": _round_metric(
+			sum(_to_number(row.get("discount_amount_total")) for row in store_clusters), 6
+		),
+		"weighted_risk_score": _round_metric(weighted_risk_score, 6),
+		"weighted_risk_rate": _round_metric(
+			(repeat_name_rate * WEIGHTED_RATE_WEIGHTS["repeat_name"])
+			+ (repeat_reference_rate * WEIGHTED_RATE_WEIGHTS["repeat_reference"])
+			+ (
+				same_reference_different_name_rate
+				* WEIGHTED_RATE_WEIGHTS["same_reference_different_name"]
+			)
+			+ (rapid_repeat_name_rate * WEIGHTED_RATE_WEIGHTS["rapid_repeat_name"]),
+			6,
+		),
+	}
+
+
+def _set_category_snapshot_metrics(target: dict[str, Any], category: str, metrics: dict[str, Any]) -> None:
+	for suffix, value in metrics.items():
+		target[_category_field(category, suffix)] = value
+
+
+def _build_store_day_snapshot_rows(target_day: date) -> list[dict[str, Any]]:
+	catalog = _get_store_catalog()
+	location_ids = sorted(catalog)
+	store_daily_rows = _query_store_daily_closing_rows(target_day, target_day)
+	store_daily_map = {
+		int(row.get("location_id") or 0): row for row in store_daily_rows if row.get("location_id")
+	}
+	all_channel_map = {
+		str(row.get("business_date") or ""): row
+		for row in _query_all_channel_daily_rows(target_day, target_day)
+	}
+	paid_order_rows = _query_paid_orders_for_range(target_day, target_day, location_ids)
+	for row in paid_order_rows:
+		location_id = int(row.get("location_id") or 0)
+		row["store_name"] = catalog.get(location_id, {}).get("store_name", str(location_id))
+	item_rows = _query_discount_item_rows_for_orders(paid_order_rows, set(STATUTORY_CATEGORIES))
+	same_day_rows = _query_same_day_rows_range(target_day, target_day, set(STATUTORY_CATEGORIES))
+	same_day_clusters = _cluster_queue_rows(same_day_rows)
+	order_buckets = _build_order_finance_buckets(paid_order_rows, item_rows)
+	order_rows_by_location: dict[int, list[dict[str, Any]]] = {}
+	order_ids_by_location: dict[int, set[int]] = {}
+	for row in paid_order_rows:
+		location_id = int(row.get("location_id") or 0)
+		order_rows_by_location.setdefault(location_id, []).append(row)
+		order_id = int(row.get("id") or 0)
+		if order_id:
+			order_ids_by_location.setdefault(location_id, set()).add(order_id)
+
+	candidate_location_ids = sorted(set(store_daily_map) | set(order_rows_by_location))
+	results: list[dict[str, Any]] = []
+	for location_id in candidate_location_ids:
+		meta = catalog.get(location_id, {})
+		store_name = str(meta.get("store_name") or location_id)
+		daily_row = store_daily_map.get(location_id)
+		order_rows = order_rows_by_location.get(location_id, [])
+		sales_snapshot = (
+			{
+				"paid_orders": int(daily_row.get("pos_orders") or 0),
+				"pos_original_gross_sales": _to_number(daily_row.get("pos_original_gross")),
+				"pos_post_discount_gross_sales": _to_number(daily_row.get("pos_after_discount")),
+				"pos_net_sales_without_vat": _to_number(daily_row.get("pos_net_of_vat")),
+				"pos_total_discounts": _to_number(daily_row.get("pos_discounts")),
+			}
+			if daily_row
+			else _build_sales_snapshot_from_orders(order_rows)
+		)
+		row = _base_snapshot_row(
+			scope=STORE_SCOPE,
+			location_id=location_id,
+			store_name=store_name,
+			business_date=target_day,
+			month_start=_month_start(target_day),
+			legal_entity=str(meta.get("legal_entity") or daily_row.get("legal_entity") or ""),
+			store_type=str(meta.get("store_type") or daily_row.get("store_type") or ""),
+			peer_group_key=_peer_group_key_for(
+				str(meta.get("store_type") or daily_row.get("store_type") or ""),
+				str(meta.get("legal_entity") or daily_row.get("legal_entity") or ""),
+			),
+		)
+		row["active_days"] = 1 if (
+			sales_snapshot["paid_orders"] or order_ids_by_location.get(location_id)
+		) else 0
+		row.update(sales_snapshot)
+		store_order_ids = order_ids_by_location.get(location_id, set())
+		for category in STATUTORY_CATEGORIES:
+			metrics = _category_metrics_for_store(
+				category=category,
+				store_name=store_name,
+				paid_order_count=int(row["paid_orders"]),
+				store_order_ids=store_order_ids,
+				same_day_rows=same_day_rows,
+				same_day_clusters=same_day_clusters,
+				order_buckets=order_buckets,
+			)
+			_set_category_snapshot_metrics(row, category, metrics)
+		row["statutory_recorded_discount_amount"] = _round_metric(
+			_to_number(row["sc_recorded_discount_amount"]) + _to_number(row["pwd_recorded_discount_amount"]),
+			6,
+		)
+		row["statutory_vat_relief_total"] = _round_metric(
+			_to_number(row["sc_statutory_vat_relief"]) + _to_number(row["pwd_statutory_vat_relief"]),
+			6,
+		)
+		row["effective_statutory_benefit_total"] = _round_metric(
+			_to_number(row["sc_effective_statutory_benefit"])
+			+ _to_number(row["pwd_effective_statutory_benefit"]),
+			6,
+		)
+		results.append(row)
+
+	chain_row = _base_snapshot_row(
+		scope=CHAIN_SCOPE,
+		location_id=CHAIN_LOCATION_ID,
+		store_name=CHAIN_STORE_NAME,
+		business_date=target_day,
+		month_start=_month_start(target_day),
+		legal_entity=CHAIN_PLACEHOLDER,
+		store_type=CHAIN_PLACEHOLDER,
+		peer_group_key=CHAIN_PLACEHOLDER,
+	)
+	chain_row["active_days"] = 1 if results else 0
+	for store_row in results:
+		_sum_count_fields(chain_row, store_row, ["paid_orders"])
+		_sum_money_fields(
+			chain_row,
+			store_row,
+			[
+				"pos_original_gross_sales",
+				"pos_post_discount_gross_sales",
+				"pos_net_sales_without_vat",
+				"pos_total_discounts",
+				"statutory_recorded_discount_amount",
+				"statutory_vat_relief_total",
+				"effective_statutory_benefit_total",
+			],
+		)
+		for category in STATUTORY_CATEGORIES:
+			_sum_count_fields(
+				chain_row,
+				store_row,
+				[
+					_category_field(category, "repeat_name_findings"),
+					_category_field(category, "repeat_reference_findings"),
+					_category_field(category, "same_reference_different_name_findings"),
+					_category_field(category, "same_name_multiple_reference_findings"),
+					_category_field(category, "rapid_repeat_name_findings_4h"),
+					_category_field(category, "rapid_repeat_reference_findings_4h"),
+					_category_field(category, "cross_store_overlap_count"),
+					_category_field(category, "cross_store_overlap_critical"),
+					_category_field(category, "cross_store_overlap_high"),
+					_category_field(category, "same_day_alert_cases"),
+					_category_field(category, "high_confidence_same_day_incidents"),
+				],
+			)
+			_sum_money_fields(
+				chain_row,
+				store_row,
+				[
+					_category_field(category, "recorded_discount_amount"),
+					_category_field(category, "statutory_vat_relief"),
+					_category_field(category, "effective_statutory_benefit"),
+					_category_field(category, "same_day_flagged_discount_total"),
+					_category_field(category, "weighted_risk_score"),
+				],
+			)
+	daily_all_channel = all_channel_map.get(target_day.isoformat(), {})
+	chain_row["all_channel_total_orders"] = int(daily_all_channel.get("total_orders") or 0)
+	chain_row["all_channel_gross_sales"] = _to_number(daily_all_channel.get("total_gross_sales"))
+	results.append(chain_row)
+	return results
+
+
+def _aggregate_snapshot_rows_for_period(
+	rows: list[dict[str, Any]],
+	*,
+	start_day: date,
+	end_day: date,
+) -> list[dict[str, Any]]:
+	grouped: dict[tuple[str, int], dict[str, Any]] = {}
+	active_days: dict[tuple[str, int], set[str]] = {}
+	for source in rows:
+		scope = str(source.get("scope") or STORE_SCOPE).lower()
+		location_id = int(source.get("location_id") or 0)
+		key = (scope, location_id)
+		target = grouped.setdefault(
+			key,
+			_base_snapshot_row(
+				scope=scope,
+				location_id=location_id,
+				store_name=str(source.get("store_name") or location_id),
+				month_start=_month_start(start_day),
+				legal_entity=str(source.get("legal_entity") or ""),
+				store_type=str(source.get("store_type") or ""),
+				peer_group_key=str(source.get("peer_group_key") or ""),
+			),
+		)
+		active_days.setdefault(key, set()).add(str(source.get("business_date") or ""))
+		_sum_count_fields(target, source, ["paid_orders", "all_channel_total_orders"])
+		_sum_money_fields(
+			target,
+			source,
+			[
+				"pos_original_gross_sales",
+				"pos_post_discount_gross_sales",
+				"pos_net_sales_without_vat",
+				"pos_total_discounts",
+				"all_channel_gross_sales",
+				"statutory_recorded_discount_amount",
+				"statutory_vat_relief_total",
+				"effective_statutory_benefit_total",
+			],
+		)
+		for category in STATUTORY_CATEGORIES:
+			_sum_count_fields(
+				target,
+				source,
+				[
+					_category_field(category, "repeat_name_findings"),
+					_category_field(category, "repeat_reference_findings"),
+					_category_field(category, "same_reference_different_name_findings"),
+					_category_field(category, "same_name_multiple_reference_findings"),
+					_category_field(category, "rapid_repeat_name_findings_4h"),
+					_category_field(category, "rapid_repeat_reference_findings_4h"),
+					_category_field(category, "cross_store_overlap_count"),
+					_category_field(category, "cross_store_overlap_critical"),
+					_category_field(category, "cross_store_overlap_high"),
+					_category_field(category, "same_day_alert_cases"),
+					_category_field(category, "high_confidence_same_day_incidents"),
+				],
+			)
+			_sum_money_fields(
+				target,
+				source,
+				[
+					_category_field(category, "recorded_discount_amount"),
+					_category_field(category, "statutory_vat_relief"),
+					_category_field(category, "effective_statutory_benefit"),
+					_category_field(category, "same_day_flagged_discount_total"),
+					_category_field(category, "weighted_risk_score"),
+				],
+			)
+		target["business_date"] = end_day.isoformat()
+	for row in grouped.values():
+		key = (str(row.get("scope") or STORE_SCOPE), int(row.get("location_id") or 0))
+		row["active_days"] = len({value for value in active_days.get(key, set()) if value})
+	return list(grouped.values())
+
+
+def _is_single_full_month_window(start_day: date, end_day: date) -> bool:
+	return (
+		start_day.year == end_day.year
+		and start_day.month == end_day.month
+		and start_day == _month_start(start_day)
+		and end_day == _month_end(start_day)
+	)
+
+
+def _select_snapshot_rows_for_window(
+	start_day: date,
+	end_day: date,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+	if _is_single_full_month_window(start_day, end_day):
+		month_rows = _query_store_month_snapshots(_month_start(start_day))
+		if month_rows:
+			return month_rows, {
+				"snapshot_source": "month",
+				"period_granularity": "month",
+			}
+
+	day_rows = _query_store_day_snapshots(start_day, end_day)
+	if not day_rows:
+		return [], {
+			"snapshot_source": "day",
+			"period_granularity": "day",
+		}
+	if start_day == end_day:
+		return day_rows, {
+			"snapshot_source": "day",
+			"period_granularity": "day",
+		}
+	return (
+		_aggregate_snapshot_rows_for_period(day_rows, start_day=start_day, end_day=end_day),
+		{
+			"snapshot_source": "day",
+			"period_granularity": "range",
+		},
+	)
+
+
+def _category_totals_from_row(row: dict[str, Any], category_scope: str) -> dict[str, float | int]:
+	categories = list(STATUTORY_CATEGORIES) if category_scope == "BOTH" else [category_scope]
+	totals: dict[str, float | int] = {
+		"recorded_discount_amount": 0.0,
+		"statutory_vat_relief": 0.0,
+		"effective_statutory_benefit": 0.0,
+		"repeat_name_findings": 0,
+		"repeat_reference_findings": 0,
+		"same_reference_different_name_findings": 0,
+		"same_name_multiple_reference_findings": 0,
+		"rapid_repeat_name_findings_4h": 0,
+		"rapid_repeat_reference_findings_4h": 0,
+		"cross_store_overlap_count": 0,
+		"cross_store_overlap_critical": 0,
+		"cross_store_overlap_high": 0,
+		"same_day_alert_cases": 0,
+		"high_confidence_same_day_incidents": 0,
+		"same_day_flagged_discount_total": 0.0,
+		"weighted_risk_score": 0.0,
+		"weighted_risk_rate": 0.0,
+	}
+	for category in categories:
+		totals["recorded_discount_amount"] = _to_number(totals["recorded_discount_amount"]) + _to_number(
+			row.get(_category_field(category, "recorded_discount_amount"))
+		)
+		totals["statutory_vat_relief"] = _to_number(totals["statutory_vat_relief"]) + _to_number(
+			row.get(_category_field(category, "statutory_vat_relief"))
+		)
+		totals["effective_statutory_benefit"] = _to_number(
+			totals["effective_statutory_benefit"]
+		) + _to_number(row.get(_category_field(category, "effective_statutory_benefit")))
+		for count_suffix in [
+			"repeat_name_findings",
+			"repeat_reference_findings",
+			"same_reference_different_name_findings",
+			"same_name_multiple_reference_findings",
+			"rapid_repeat_name_findings_4h",
+			"rapid_repeat_reference_findings_4h",
+			"cross_store_overlap_count",
+			"cross_store_overlap_critical",
+			"cross_store_overlap_high",
+			"same_day_alert_cases",
+			"high_confidence_same_day_incidents",
+		]:
+			totals[count_suffix] = int(totals[count_suffix] or 0) + int(
+				row.get(_category_field(category, count_suffix)) or 0
+			)
+		totals["same_day_flagged_discount_total"] = _to_number(
+			totals["same_day_flagged_discount_total"]
+		) + _to_number(row.get(_category_field(category, "same_day_flagged_discount_total")))
+		totals["weighted_risk_score"] = _to_number(totals["weighted_risk_score"]) + _to_number(
+			row.get(_category_field(category, "weighted_risk_score"))
+		)
+		totals["weighted_risk_rate"] = _to_number(totals["weighted_risk_rate"]) + _to_number(
+			row.get(_category_field(category, "weighted_risk_rate"))
+		)
+	return totals
+
+
+def _effective_denominator_scope(row: dict[str, Any], denominator_scope: str) -> str:
+	requested = _normalize_denominator_scope(denominator_scope)
+	row_scope = _normalize_text(row.get("scope"))
+	if requested != "all_channel_gross":
+		return requested
+	if row_scope != "CHAIN" or _to_number(row.get("all_channel_gross_sales")) <= 0:
+		return "pos_original_gross"
+	return "all_channel_gross"
+
+
+def _row_denominator_value(row: dict[str, Any], denominator_scope: str) -> float:
+	applied_scope = _effective_denominator_scope(row, denominator_scope)
+	if applied_scope == "pos_post_discount_gross":
+		return _to_number(row.get("pos_post_discount_gross_sales"))
+	if applied_scope == "all_channel_gross":
+		return _to_number(row.get("all_channel_gross_sales"))
+	return _to_number(row.get("pos_original_gross_sales"))
+
+
+def _build_metric_row(
+	row: dict[str, Any],
+	*,
+	denominator_scope: str,
+	category_scope: str,
+) -> dict[str, Any]:
+	selected = _category_totals_from_row(row, category_scope)
+	applied_denominator_scope = _effective_denominator_scope(row, denominator_scope)
+	denominator_value = _row_denominator_value(row, denominator_scope)
+	paid_orders = int(row.get("paid_orders") or 0)
+	return {
+		"scope": str(row.get("scope") or STORE_SCOPE),
+		"location_id": int(row.get("location_id") or 0),
+		"store_name": str(row.get("store_name") or row.get("location_id") or ""),
+		"legal_entity": str(row.get("legal_entity") or ""),
+		"store_type": str(row.get("store_type") or ""),
+		"peer_group_key": str(row.get("peer_group_key") or ""),
+		"business_date": str(row.get("business_date") or ""),
+		"month_start": str(row.get("month_start") or ""),
+		"active_days": int(row.get("active_days") or 0),
+		"paid_orders": paid_orders,
+		"pos_original_gross_sales": _to_number(row.get("pos_original_gross_sales")),
+		"pos_post_discount_gross_sales": _to_number(row.get("pos_post_discount_gross_sales")),
+		"pos_net_sales_without_vat": _to_number(row.get("pos_net_sales_without_vat")),
+		"pos_total_discounts": _to_number(row.get("pos_total_discounts")),
+		"all_channel_total_orders": int(row.get("all_channel_total_orders") or 0),
+		"all_channel_gross_sales": _to_number(row.get("all_channel_gross_sales")),
+		"sc_recorded_discount_amount": _to_number(row.get("sc_recorded_discount_amount")),
+		"pwd_recorded_discount_amount": _to_number(row.get("pwd_recorded_discount_amount")),
+		"sc_statutory_vat_relief": _to_number(row.get("sc_statutory_vat_relief")),
+		"pwd_statutory_vat_relief": _to_number(row.get("pwd_statutory_vat_relief")),
+		"effective_denominator_scope": applied_denominator_scope,
+		"denominator_value": denominator_value,
+		"recorded_sc_pct_of_sales": _pct(_to_number(row.get("sc_recorded_discount_amount")), denominator_value),
+		"recorded_pwd_pct_of_sales": _pct(_to_number(row.get("pwd_recorded_discount_amount")), denominator_value),
+		"selected_recorded_discount_amount": _to_number(selected["recorded_discount_amount"]),
+		"selected_statutory_vat_relief": _to_number(selected["statutory_vat_relief"]),
+		"selected_effective_statutory_benefit": _to_number(selected["effective_statutory_benefit"]),
+		"effective_statutory_benefit_pct": _pct(
+			_to_number(selected["effective_statutory_benefit"]), denominator_value
+		),
+		"repeat_name_findings": int(selected["repeat_name_findings"] or 0),
+		"repeat_reference_findings": int(selected["repeat_reference_findings"] or 0),
+		"same_reference_different_name_findings": int(
+			selected["same_reference_different_name_findings"] or 0
+		),
+		"same_name_multiple_reference_findings": int(
+			selected["same_name_multiple_reference_findings"] or 0
+		),
+		"rapid_repeat_name_findings_4h": int(selected["rapid_repeat_name_findings_4h"] or 0),
+		"rapid_repeat_reference_findings_4h": int(
+			selected["rapid_repeat_reference_findings_4h"] or 0
+		),
+		"cross_store_overlap_count": int(selected["cross_store_overlap_count"] or 0),
+		"cross_store_overlap_critical": int(selected["cross_store_overlap_critical"] or 0),
+		"cross_store_overlap_high": int(selected["cross_store_overlap_high"] or 0),
+		"same_day_alert_cases": int(selected["same_day_alert_cases"] or 0),
+		"high_confidence_same_day_incidents": int(selected["high_confidence_same_day_incidents"] or 0),
+		"same_day_flagged_discount_total": _to_number(selected["same_day_flagged_discount_total"]),
+		"flagged_discount_pct_of_discount_total": _pct(
+			_to_number(selected["same_day_flagged_discount_total"]),
+			_to_number(selected["recorded_discount_amount"]),
+		),
+		"weighted_risk_score": _to_number(selected["weighted_risk_score"]),
+		"weighted_risk_rate": _to_number(selected["weighted_risk_rate"]),
+		"repeat_name_per_1000": _rate_per_1000(int(selected["repeat_name_findings"] or 0), paid_orders),
+		"repeat_reference_per_1000": _rate_per_1000(
+			int(selected["repeat_reference_findings"] or 0), paid_orders
+		),
+		"same_reference_different_name_per_1000": _rate_per_1000(
+			int(selected["same_reference_different_name_findings"] or 0),
+			paid_orders,
+		),
+		"rapid_repeat_name_per_1000": _rate_per_1000(
+			int(selected["rapid_repeat_name_findings_4h"] or 0), paid_orders
+		),
+	}
+
+
+def _resolve_peer_rows(
+	row: dict[str, Any],
+	store_rows: list[dict[str, Any]],
+	peer_mode: str,
+) -> tuple[list[dict[str, Any]], str]:
+	normalized_mode = _normalize_peer_mode(peer_mode)
+	if normalized_mode == "chainwide":
+		return store_rows, "CHAINWIDE"
+
+	if normalized_mode == "store_type_legal_entity":
+		target_key = _normalize_text(row.get("peer_group_key"))
+		peers = [candidate for candidate in store_rows if _normalize_text(candidate.get("peer_group_key")) == target_key]
+		return peers, target_key or "CHAINWIDE"
+
+	if normalized_mode == "store_type":
+		target_key = _normalize_text(row.get("store_type"))
+		peers = [candidate for candidate in store_rows if _normalize_text(candidate.get("store_type")) == target_key]
+		return peers, target_key or "CHAINWIDE"
+
+	primary_key = _normalize_text(row.get("peer_group_key"))
+	primary_peers = [
+		candidate for candidate in store_rows if _normalize_text(candidate.get("peer_group_key")) == primary_key
+	]
+	if primary_key and len(primary_peers) >= MIN_PEER_GROUP_SIZE:
+		return primary_peers, primary_key
+
+	store_type_key = _normalize_text(row.get("store_type"))
+	store_type_peers = [
+		candidate for candidate in store_rows if _normalize_text(candidate.get("store_type")) == store_type_key
+	]
+	if store_type_key and len(store_type_peers) >= MIN_PEER_GROUP_SIZE:
+		return store_type_peers, store_type_key
+
+	return store_rows, "CHAINWIDE"
+
+
+def _derive_range_metrics(
+	rows: list[dict[str, Any]],
+	*,
+	denominator_scope: str,
+	category_scope: str,
+	peer_mode: str,
+) -> dict[str, Any]:
+	metric_rows = [
+		_build_metric_row(
+			row,
+			denominator_scope=denominator_scope,
+			category_scope=category_scope,
+		)
+		for row in rows
+	]
+	store_rows = [row for row in metric_rows if _normalize_text(row.get("scope")) == "STORE"]
+	chain_row = next((row for row in metric_rows if _normalize_text(row.get("scope")) == "CHAIN"), None)
+
+	if chain_row is None:
+		aggregate_seed = _base_snapshot_row(
+			scope=CHAIN_SCOPE,
+			location_id=CHAIN_LOCATION_ID,
+			store_name=CHAIN_STORE_NAME,
+		)
+		for source in rows:
+			if _normalize_text(source.get("scope")) != "STORE":
+				continue
+			_sum_count_fields(aggregate_seed, source, ["active_days", "paid_orders", "all_channel_total_orders"])
+			_sum_money_fields(
+				aggregate_seed,
+				source,
+				[
+					"pos_original_gross_sales",
+					"pos_post_discount_gross_sales",
+					"pos_net_sales_without_vat",
+					"pos_total_discounts",
+					"all_channel_gross_sales",
+					"statutory_recorded_discount_amount",
+					"statutory_vat_relief_total",
+					"effective_statutory_benefit_total",
+				],
+			)
+			for category in STATUTORY_CATEGORIES:
+				_sum_count_fields(
+					aggregate_seed,
+					source,
+					[
+						_category_field(category, "repeat_name_findings"),
+						_category_field(category, "repeat_reference_findings"),
+						_category_field(category, "same_reference_different_name_findings"),
+						_category_field(category, "same_name_multiple_reference_findings"),
+						_category_field(category, "rapid_repeat_name_findings_4h"),
+						_category_field(category, "rapid_repeat_reference_findings_4h"),
+						_category_field(category, "cross_store_overlap_count"),
+						_category_field(category, "cross_store_overlap_critical"),
+						_category_field(category, "cross_store_overlap_high"),
+						_category_field(category, "same_day_alert_cases"),
+						_category_field(category, "high_confidence_same_day_incidents"),
+					],
+				)
+				_sum_money_fields(
+					aggregate_seed,
+					source,
+					[
+						_category_field(category, "recorded_discount_amount"),
+						_category_field(category, "statutory_vat_relief"),
+						_category_field(category, "effective_statutory_benefit"),
+						_category_field(category, "same_day_flagged_discount_total"),
+						_category_field(category, "weighted_risk_score"),
+						_category_field(category, "weighted_risk_rate"),
+					],
+				)
+		chain_row = _build_metric_row(
+			aggregate_seed,
+			denominator_scope=denominator_scope,
+			category_scope=category_scope,
+		)
+
+	chain_denominator_value = _to_number(chain_row.get("denominator_value")) if chain_row else 0.0
+	total_incidents = sum(int(row.get("high_confidence_same_day_incidents") or 0) for row in store_rows)
+
+	sorted_store_rows = sorted(
+		store_rows,
+		key=lambda row: (
+			-_to_number(row.get("weighted_risk_rate")),
+			-_to_number(row.get("weighted_risk_score")),
+			-_to_number(row.get("same_reference_different_name_findings")),
+			str(row.get("store_name") or ""),
+		),
+	)
+	for index, row in enumerate(sorted_store_rows, start=1):
+		peer_rows, effective_peer_group = _resolve_peer_rows(row, store_rows, peer_mode)
+		peer_sorted = sorted(
+			peer_rows,
+			key=lambda entry: (
+				_to_number(entry.get("weighted_risk_rate")),
+				_to_number(entry.get("weighted_risk_score")),
+				str(entry.get("store_name") or ""),
+			),
+		)
+		peer_rank_desc = sorted(
+			peer_rows,
+			key=lambda entry: (
+				-_to_number(entry.get("weighted_risk_rate")),
+				-_to_number(entry.get("weighted_risk_score")),
+				str(entry.get("store_name") or ""),
+			),
+		)
+		row["weighted_risk_rank"] = index
+		row["peer_group_effective"] = effective_peer_group
+		row["peer_group_size"] = len(peer_rows)
+		row["peer_percentile"] = _round_metric(
+			(
+				sum(
+					1
+					for candidate in peer_sorted
+					if _to_number(candidate.get("weighted_risk_rate"))
+					<= _to_number(row.get("weighted_risk_rate"))
+				)
+				/ len(peer_sorted)
+			)
+			* 100,
+			2,
+		) if peer_sorted else 0.0
+		row["peer_rank"] = next(
+			(
+				position
+				for position, candidate in enumerate(peer_rank_desc, start=1)
+				if int(candidate.get("location_id") or 0) == int(row.get("location_id") or 0)
+			),
+			1,
+		)
+		row["sales_share_pct"] = _pct(_to_number(row.get("denominator_value")), chain_denominator_value)
+		row["incident_share_pct"] = _pct(
+			int(row.get("high_confidence_same_day_incidents") or 0),
+			total_incidents,
+		)
+
+	top_outlier = sorted_store_rows[0] if sorted_store_rows else None
+	return {
+		"chain_row": chain_row,
+		"store_rows": sorted_store_rows,
+		"top_outlier": top_outlier,
+		"chain_denominator_value": chain_denominator_value,
+		"total_high_confidence_incidents": total_incidents,
+	}
+
+
+def _build_control_trend(day_rows: list[dict[str, Any]], denominator_scope: str) -> list[dict[str, Any]]:
+	if not day_rows:
+		return []
+	grouped: dict[str, list[dict[str, Any]]] = {}
+	for row in day_rows:
+		day_key = str(row.get("business_date") or "")
+		if not day_key:
+			continue
+		grouped.setdefault(day_key, []).append(row)
+
+	trend: list[dict[str, Any]] = []
+	for day_key in sorted(grouped):
+		day_group = grouped[day_key]
+		day_chain = next((row for row in day_group if _normalize_text(row.get("scope")) == "CHAIN"), None)
+		source_row = day_chain or _aggregate_snapshot_rows_for_period(
+			day_group,
+			start_day=_coerce_date(day_key),
+			end_day=_coerce_date(day_key),
+		)[0]
+		metric_row = _build_metric_row(
+			source_row,
+			denominator_scope=denominator_scope,
+			category_scope="BOTH",
+		)
+		trend.append(
+			{
+				"business_date": day_key,
+				"label": _format_display_date(_coerce_date(day_key)),
+				"recorded_sc_pct_of_sales": metric_row["recorded_sc_pct_of_sales"],
+				"recorded_pwd_pct_of_sales": metric_row["recorded_pwd_pct_of_sales"],
+				"effective_statutory_benefit_pct": metric_row["effective_statutory_benefit_pct"],
+				"same_day_high_confidence_incidents": metric_row["high_confidence_same_day_incidents"],
+				"flagged_discount_amount": metric_row["same_day_flagged_discount_total"],
+			}
+		)
+	return trend
+
+
+def _build_executive_summary_payload(
+	start_day: date,
+	end_day: date,
+	*,
+	denominator_scope: str,
+	category_scope: str,
+	peer_mode: str,
+) -> dict[str, Any]:
+	selected_rows, snapshot_meta = _select_snapshot_rows_for_window(start_day, end_day)
+	day_rows = _query_store_day_snapshots(start_day, end_day)
+	derived = _derive_range_metrics(
+		selected_rows,
+		denominator_scope=denominator_scope,
+		category_scope=category_scope,
+		peer_mode=peer_mode,
+	)
+	chain_row = derived["chain_row"] or {}
+	top_outlier = derived["top_outlier"] or {}
+	cards = {
+		"recorded_sc_pct_of_sales": _round_metric(
+			_to_number(chain_row.get("recorded_sc_pct_of_sales")),
+			2,
+		),
+		"recorded_pwd_pct_of_sales": _round_metric(
+			_to_number(chain_row.get("recorded_pwd_pct_of_sales")),
+			2,
+		),
+		"effective_statutory_benefit_pct": _round_metric(
+			_to_number(chain_row.get("effective_statutory_benefit_pct")),
+			2,
+		),
+		"same_day_high_confidence_incidents": int(
+			chain_row.get("high_confidence_same_day_incidents") or 0
+		),
+		"flagged_discount_amount": _round_metric(
+			_to_number(chain_row.get("same_day_flagged_discount_total")),
+			2,
+		),
+		"top_outlier_store": {
+			"store_name": str(top_outlier.get("store_name") or "-"),
+			"weighted_risk_rate": _round_metric(_to_number(top_outlier.get("weighted_risk_rate")), 2),
+			"weighted_risk_rank": int(top_outlier.get("weighted_risk_rank") or 0),
+		},
+	}
+	return {
+		"start_date": start_day.isoformat(),
+		"end_date": end_day.isoformat(),
+		"display_window": _format_display_window(start_day, end_day),
+		"category_scope": category_scope,
+		"denominator_scope": denominator_scope,
+		"effective_chain_denominator_scope": str(chain_row.get("effective_denominator_scope") or denominator_scope),
+		"peer_mode": _normalize_peer_mode(peer_mode),
+		"snapshot_source": snapshot_meta["snapshot_source"],
+		"period_granularity": snapshot_meta["period_granularity"],
+		"cards": cards,
+		"control_trend": _build_control_trend(day_rows, denominator_scope),
+		"top_weighted_risk_stores": derived["store_rows"][:10],
+		"incident_share_vs_sales_share": sorted(
+			derived["store_rows"],
+			key=lambda row: (
+				-abs(_to_number(row.get("incident_share_pct")) - _to_number(row.get("sales_share_pct"))),
+				-_to_number(row.get("weighted_risk_rate")),
+				str(row.get("store_name") or ""),
+			),
+		)[:10],
+		"methodology_notes": [
+			"Executive analytics read snapshot-backed benchmark facts only.",
+			"Recorded SC and PWD percentages stay separate even when category scope is BOTH.",
+			"All-channel gross is allowed only for chain-level cards; store rows automatically fall back to POS original gross.",
+		],
+	}
+
+
+def _build_store_benchmark_payload(
+	start_day: date,
+	end_day: date,
+	*,
+	denominator_scope: str,
+	category_scope: str,
+	peer_mode: str,
+	store_names: list[str] | None = None,
+) -> dict[str, Any]:
+	selected_rows, snapshot_meta = _select_snapshot_rows_for_window(start_day, end_day)
+	derived = _derive_range_metrics(
+		selected_rows,
+		denominator_scope=denominator_scope,
+		category_scope=category_scope,
+		peer_mode=peer_mode,
+	)
+	rows = derived["store_rows"]
+	selected_store_names = store_names or []
+	if selected_store_names:
+		selected_lookup = {_normalize_text(name) for name in selected_store_names}
+		rows = [row for row in rows if _normalize_text(row.get("store_name")) in selected_lookup]
+	return {
+		"start_date": start_day.isoformat(),
+		"end_date": end_day.isoformat(),
+		"display_window": _format_display_window(start_day, end_day),
+		"category_scope": category_scope,
+		"denominator_scope": denominator_scope,
+		"peer_mode": _normalize_peer_mode(peer_mode),
+		"snapshot_source": snapshot_meta["snapshot_source"],
+		"period_granularity": snapshot_meta["period_granularity"],
+		"selected_store_names": selected_store_names,
+		"rows": rows,
+		"top_outlier_store": derived["top_outlier"],
+		"methodology_notes": [
+			"Weighted risk ranking normalizes same-day store findings against paid order volume.",
+			"Peer percentile automatically falls back from store type + legal entity to store type, then chainwide.",
+		],
+	}
+
+
+def _build_finance_reconciliation_payload(
+	start_day: date,
+	end_day: date,
+	*,
+	denominator_scope: str,
+	category_scope: str,
+) -> dict[str, Any]:
+	selected_rows, snapshot_meta = _select_snapshot_rows_for_window(start_day, end_day)
+	derived = _derive_range_metrics(
+		selected_rows,
+		denominator_scope=denominator_scope,
+		category_scope=category_scope,
+		peer_mode="auto",
+	)
+	chain_row = derived["chain_row"] or {}
+	original_gross_sales = _to_number(chain_row.get("pos_original_gross_sales"))
+	post_discount_gross_sales = _to_number(chain_row.get("pos_post_discount_gross_sales"))
+	net_sales_without_vat = _to_number(chain_row.get("pos_net_sales_without_vat"))
+	recorded_discount_amount = _to_number(chain_row.get("selected_recorded_discount_amount"))
+	statutory_vat_relief = _to_number(chain_row.get("selected_statutory_vat_relief"))
+	effective_statutory_benefit = _to_number(chain_row.get("selected_effective_statutory_benefit"))
+	gross_gap_before_vat = max(0.0, original_gross_sales - post_discount_gross_sales)
+	other_discount_gap = max(0.0, gross_gap_before_vat - effective_statutory_benefit)
+	post_discount_vat_component = max(0.0, post_discount_gross_sales - net_sales_without_vat)
+	return {
+		"start_date": start_day.isoformat(),
+		"end_date": end_day.isoformat(),
+		"display_window": _format_display_window(start_day, end_day),
+		"category_scope": category_scope,
+		"denominator_scope": denominator_scope,
+		"snapshot_source": snapshot_meta["snapshot_source"],
+		"period_granularity": snapshot_meta["period_granularity"],
+		"totals": {
+			"original_gross_sales": _round_metric(original_gross_sales, 2),
+			"post_discount_gross_sales": _round_metric(post_discount_gross_sales, 2),
+			"net_sales_without_vat": _round_metric(net_sales_without_vat, 2),
+			"recorded_discount_amount": _round_metric(recorded_discount_amount, 2),
+			"statutory_vat_relief": _round_metric(statutory_vat_relief, 2),
+			"effective_statutory_benefit": _round_metric(effective_statutory_benefit, 2),
+			"other_discount_gap": _round_metric(other_discount_gap, 2),
+			"post_discount_vat_component": _round_metric(post_discount_vat_component, 2),
+			"gross_gap_before_vat": _round_metric(gross_gap_before_vat, 2),
+		},
+		"ratios": {
+			"recorded_discount_pct_of_sales": _round_metric(
+				_pct(recorded_discount_amount, _row_denominator_value(chain_row, denominator_scope)),
+				2,
+			),
+			"effective_statutory_benefit_pct_of_sales": _round_metric(
+				_pct(effective_statutory_benefit, _row_denominator_value(chain_row, denominator_scope)),
+				2,
+			),
+		},
+		"waterfall": [
+			{"key": "original_gross_sales", "label": "Original gross sales", "value": _round_metric(original_gross_sales, 2)},
+			{
+				"key": "recorded_discount_amount",
+				"label": "Recorded statutory discount",
+				"value": _round_metric(-recorded_discount_amount, 2),
+			},
+			{
+				"key": "statutory_vat_relief",
+				"label": "Statutory VAT relief",
+				"value": _round_metric(-statutory_vat_relief, 2),
+			},
+			{
+				"key": "other_discount_gap",
+				"label": "Other discounts and adjustments",
+				"value": _round_metric(-other_discount_gap, 2),
+			},
+			{
+				"key": "post_discount_gross_sales",
+				"label": "Post-discount gross sales",
+				"value": _round_metric(post_discount_gross_sales, 2),
+				"is_subtotal": True,
+			},
+			{
+				"key": "post_discount_vat_component",
+				"label": "VAT component after discount",
+				"value": _round_metric(-post_discount_vat_component, 2),
+			},
+			{
+				"key": "net_sales_without_vat",
+				"label": "Net sales without VAT",
+				"value": _round_metric(net_sales_without_vat, 2),
+				"is_subtotal": True,
+			},
+		],
+		"formula_notes": [
+			"Recorded discount amount is the statutory-category-filtered discount value stored on discounted POS item lines.",
+			"Statutory VAT relief is allocated per order from the gross gap before VAT after subtracting recorded discounts.",
+			"Other discounts and adjustments capture the remaining gap between original gross and post-discount gross after the selected statutory benefit is removed.",
+		],
+	}
+
+
+def _replace_store_day_snapshots(target_day: date, rows: list[dict[str, Any]]) -> int:
+	_supabase_delete(
+		"discount_investigation_store_day",
+		{"business_date": f"eq.{target_day.isoformat()}"},
+	)
+	if rows:
+		_supabase_post("discount_investigation_store_day", rows)
+	return len(rows)
+
+
+def _replace_store_month_snapshots(target_month_start: date, rows: list[dict[str, Any]]) -> int:
+	_supabase_delete(
+		"discount_investigation_store_month",
+		{"month_start": f"eq.{target_month_start.isoformat()}"},
+	)
+	if rows:
+		_supabase_post("discount_investigation_store_month", rows)
+	return len(rows)
+
+
+def _refresh_discount_benchmark_snapshots_internal(
+	start_day: date,
+	end_day: date,
+) -> dict[str, Any]:
+	if end_day < start_day:
+		frappe.throw(frappe._("End date cannot be earlier than start date."))
+	day_inserted = 0
+	month_inserted = 0
+	refreshed_days: list[str] = []
+	touched_months: set[date] = set()
+	for target_day in _iter_days(start_day, end_day):
+		day_rows = _build_store_day_snapshot_rows(target_day)
+		day_inserted += _replace_store_day_snapshots(target_day, day_rows)
+		refreshed_days.append(target_day.isoformat())
+		touched_months.add(_month_start(target_day))
+
+	for target_month_start in sorted(touched_months):
+		month_day_rows = _query_store_day_snapshots(target_month_start, _month_end(target_month_start))
+		if month_day_rows:
+			last_available_day = max(_coerce_date(row.get("business_date")) for row in month_day_rows)
+			month_rows = _aggregate_snapshot_rows_for_period(
+				month_day_rows,
+				start_day=target_month_start,
+				end_day=last_available_day,
+			)
+			for row in month_rows:
+				row["month_start"] = target_month_start.isoformat()
+				row["business_date"] = last_available_day.isoformat()
+		else:
+			month_rows = []
+		month_inserted += _replace_store_month_snapshots(target_month_start, month_rows)
+
+	return {
+		"success": True,
+		"start_date": start_day.isoformat(),
+		"end_date": end_day.isoformat(),
+		"refreshed_days": refreshed_days,
+		"refreshed_months": [value.isoformat() for value in sorted(touched_months)],
+		"store_day_rows_written": day_inserted,
+		"store_month_rows_written": month_inserted,
+	}
+
+
+@frappe.whitelist()
+def refresh_discount_benchmark_snapshots(
+	start_date: str | None = None,
+	end_date: str | None = None,
+) -> dict[str, Any]:
+	_check_discount_audit_role()
+	start_day = _coerce_date(start_date, default=_default_business_date())
+	end_day = _coerce_date(end_date, default=start_day)
+	return {
+		"success": True,
+		"data": _refresh_discount_benchmark_snapshots_internal(start_day, end_day),
+	}
+
+
+@frappe.whitelist()
+def get_discount_executive_summary(
+	start_date: str,
+	end_date: str,
+	denominator_scope: str | None = None,
+	category_scope: str | None = None,
+	peer_mode: str | None = None,
+) -> dict[str, Any]:
+	_check_discount_audit_role()
+	start_day = _coerce_date(start_date)
+	end_day = _coerce_date(end_date)
+	return {
+		"success": True,
+		"data": _build_executive_summary_payload(
+			start_day,
+			end_day,
+			denominator_scope=_normalize_denominator_scope(denominator_scope),
+			category_scope=_normalize_category_scope(category_scope),
+			peer_mode=_normalize_peer_mode(peer_mode),
+		),
+	}
+
+
+@frappe.whitelist()
+def get_discount_store_benchmark(
+	start_date: str,
+	end_date: str,
+	denominator_scope: str | None = None,
+	category_scope: str | None = None,
+	peer_mode: str | None = None,
+	store_names: str | None = None,
+) -> dict[str, Any]:
+	_check_discount_audit_role()
+	start_day = _coerce_date(start_date)
+	end_day = _coerce_date(end_date)
+	return {
+		"success": True,
+		"data": _build_store_benchmark_payload(
+			start_day,
+			end_day,
+			denominator_scope=_normalize_denominator_scope(denominator_scope),
+			category_scope=_normalize_category_scope(category_scope),
+			peer_mode=_normalize_peer_mode(peer_mode),
+			store_names=_parse_store_names(store_names),
+		),
+	}
+
+
+@frappe.whitelist()
+def get_discount_finance_reconciliation(
+	start_date: str,
+	end_date: str,
+	denominator_scope: str | None = None,
+	category_scope: str | None = None,
+) -> dict[str, Any]:
+	_check_discount_audit_role()
+	start_day = _coerce_date(start_date)
+	end_day = _coerce_date(end_date)
+	return {
+		"success": True,
+		"data": _build_finance_reconciliation_payload(
+			start_day,
+			end_day,
+			denominator_scope=_normalize_denominator_scope(denominator_scope),
+			category_scope=_normalize_category_scope(category_scope),
+		),
+	}
+
+
+def scheduled_refresh_discount_benchmark_snapshots() -> dict[str, Any]:
+	target_day = _default_business_date()
+	return _refresh_discount_benchmark_snapshots_internal(target_day, target_day)
 
 
 def _validate_alert_resolution_payload(payload: dict[str, Any]) -> None:

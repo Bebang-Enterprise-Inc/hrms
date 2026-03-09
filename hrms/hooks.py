@@ -377,6 +377,8 @@ scheduler_events = {
 		# Monthly billing generation: 6 AM on 1st of each month
 		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
 		# Discount audit workbook: 12:50 AM PHT after Supabase alert refresh at 12:35 AM PHT
+		"42 16 * * *": ["hrms.api.discount_abuse.scheduled_refresh_discount_benchmark_snapshots"],
+		# Discount audit workbook: 12:50 AM PHT after benchmark refresh
 		"50 16 * * *": ["hrms.api.discount_abuse.scheduled_generate_daily_discount_audit_report"],
 		# Discount alert notifications: 1:05 AM PHT after workbook generation
 		"5 17 * * *": ["hrms.api.discount_abuse.scheduled_send_critical_discount_alert_notifications"],
