@@ -961,9 +961,21 @@ def _query_store_daily_closing_rows(start_day: date, end_day: date) -> list[dict
 	params: list[tuple[str, Any]] = [
 		(
 			"select",
-			(
-				"location_id,store_name,legal_entity,store_type,business_date,pos_orders,"
-				"pos_original_gross,pos_after_discount,pos_net_of_vat,pos_discounts,pos_vat,pos_vat_exempt"
+			",".join(
+				[
+					"location_id",
+					"store_name",
+					"legal_entity",
+					"store_type",
+					"business_date",
+					"pos_orders",
+					"pos_original_gross",
+					"pos_after_discount",
+					"pos_net_of_vat",
+					"pos_discounts",
+					"pos_vat",
+					"pos_vat_exempt",
+				]
 			),
 		),
 		("business_date", f"gte.{start_day.isoformat()}"),
@@ -977,9 +989,22 @@ def _query_all_channel_daily_rows(start_day: date, end_day: date) -> list[dict[s
 	params: list[tuple[str, Any]] = [
 		(
 			"select",
-			(
-				"business_date,pos_orders,pos_gross_sales,pos_net_sales,web_orders,web_gross_sales,web_net_sales,"
-				"fp_orders,fp_gross_sales,total_orders,total_gross_sales,channel_count,data_sources"
+			",".join(
+				[
+					"business_date",
+					"pos_orders",
+					"pos_gross_sales",
+					"pos_net_sales",
+					"web_orders",
+					"web_gross_sales",
+					"web_net_sales",
+					"fp_orders",
+					"fp_gross_sales",
+					"total_orders",
+					"total_gross_sales",
+					"channel_count",
+					"data_sources",
+				]
 			),
 		),
 		("business_date", f"gte.{start_day.isoformat()}"),
