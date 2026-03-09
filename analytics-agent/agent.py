@@ -96,18 +96,13 @@ async def main():
             max_turns=30,
         )
 
-        # Custom MCP tools require streaming input mode (async generator)
-        async def prompt_generator():
-            print(f"Prompt generator: about to yield {len(WEEKLY_PROMPT)} chars")
-            yield WEEKLY_PROMPT
-            print("Prompt generator: finished")
-
         print(f"Starting analyst agent with options: model={options.model}, max_turns={options.max_turns}")
         print(f"MCP servers: {list(options.mcp_servers.keys())}")
         print(f"Allowed tools: {options.allowed_tools}")
+        print(f"Prompt length: {len(WEEKLY_PROMPT)} chars")
 
         msg_count = 0
-        async for msg in query(prompt=prompt_generator(), options=options):
+        async for msg in query(prompt=WEEKLY_PROMPT, options=options):
             msg_count += 1
             print(f"Message {msg_count}: type={type(msg).__name__}, has_usage={hasattr(msg, 'usage')}")
             track_tokens(msg)
