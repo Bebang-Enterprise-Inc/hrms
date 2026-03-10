@@ -25,12 +25,34 @@ _BLOCKED_FIELDS = frozenset({
     "doctype", "name", "owner", "creation", "modified", "modified_by",
     "docstatus", "idx", "parent", "parenttype", "parentfield",
     "_user_tags", "_comments", "_assign", "_liked_by",
+    "allow_missing_supplier_invoice",
+    "missing_supplier_invoice_reason",
+    "missing_supplier_invoice_effective_date",
+    "missing_supplier_invoice_whitelisted_by",
 })
+_SUPPLIER_INVOICE_EXCEPTION_MANAGER_ROLES = {
+    "System Manager",
+    "Procurement Manager",
+    "Accounts Manager",
+}
 
 
 def _sanitize_doc_data(data):
     """Remove system/internal fields from user-supplied data before doc creation."""
     return {k: v for k, v in data.items() if k not in _BLOCKED_FIELDS}
+
+
+def _require_roles(allowed_roles: set[str], message: str) -> None:
+    """Enforce role-based access for sensitive procurement actions."""
+    user = frappe.session.user or "Guest"
+    if user == "Administrator":
+        return
+
+    user_roles = set(frappe.get_roles(user))
+    if user_roles.intersection(allowed_roles):
+        return
+
+    frappe.throw(message, frappe.PermissionError)
 
 
 def _resolve_supplier_identity(supplier: str) -> tuple[str, str]:
@@ -303,6 +325,38 @@ def update_supplier(name, data):
     supplier.save()
 
     return {"success": True, "message": _("Supplier updated")}
+
+
+@frappe.whitelist()
+def set_supplier_invoice_exception(name, allowed=1, reason=None):
+    """Whitelist a supplier for missing-invoice AP exception handling."""
+    _require_roles(
+        _SUPPLIER_INVOICE_EXCEPTION_MANAGER_ROLES,
+        _("You are not allowed to manage supplier invoice exceptions."),
+    )
+
+    supplier_name, _supplier_display_name = _resolve_supplier_identity(name)
+    supplier = frappe.get_doc("BEI Supplier", supplier_name)
+
+    is_allowed = 1 if cint(allowed) else 0
+    cleaned_reason = (reason or "").strip()
+    effective_date = nowdate() if is_allowed else None
+    whitelisted_by = frappe.session.user if is_allowed else None
+
+    supplier.allow_missing_supplier_invoice = is_allowed
+    supplier.missing_supplier_invoice_reason = cleaned_reason if is_allowed else ""
+    supplier.missing_supplier_invoice_effective_date = effective_date
+    supplier.missing_supplier_invoice_whitelisted_by = whitelisted_by
+    supplier.save(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "name": supplier.name,
+        "allow_missing_supplier_invoice": bool(is_allowed),
+        "missing_supplier_invoice_effective_date": effective_date,
+        "missing_supplier_invoice_whitelisted_by": whitelisted_by,
+        "message": _("Supplier invoice exception updated."),
+    }
 
 
 @frappe.whitelist()

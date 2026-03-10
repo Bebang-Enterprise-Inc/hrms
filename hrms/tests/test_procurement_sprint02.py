@@ -143,6 +143,78 @@ class TestProcurementSprint02(unittest.TestCase):
 		procurement.frappe.get_all = MagicMock(return_value=[])
 		procurement.frappe.get_doc = MagicMock()
 
+	def test_update_supplier_strips_invoice_exception_fields_from_general_update(self):
+		supplier = types.SimpleNamespace(
+			supplier_name="Supplier A",
+			allow_missing_supplier_invoice=0,
+			missing_supplier_invoice_reason="",
+			save=MagicMock(),
+		)
+		procurement.frappe.get_doc = MagicMock(return_value=supplier)
+
+		result = procurement.update_supplier(
+			"SUP-001",
+			{
+				"supplier_name": "Supplier A Updated",
+				"allow_missing_supplier_invoice": 1,
+				"missing_supplier_invoice_reason": "Should be blocked",
+			},
+		)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(supplier.supplier_name, "Supplier A Updated")
+		self.assertEqual(supplier.allow_missing_supplier_invoice, 0)
+		self.assertEqual(supplier.missing_supplier_invoice_reason, "")
+		supplier.save.assert_called_once()
+
+	def test_set_supplier_invoice_exception_requires_privileged_role(self):
+		procurement.frappe.session = types.SimpleNamespace(user="buyer@bebang.ph")
+		procurement.frappe.get_roles = MagicMock(return_value=["Procurement User"])
+
+		with self.assertRaises(procurement.frappe.PermissionError):
+			procurement.set_supplier_invoice_exception("SUP-001", allowed=1, reason="Legacy exception")
+
+	def test_set_supplier_invoice_exception_sets_whitelist_fields(self):
+		supplier = types.SimpleNamespace(
+			name="SUP-001",
+			allow_missing_supplier_invoice=0,
+			missing_supplier_invoice_reason="",
+			missing_supplier_invoice_effective_date=None,
+			missing_supplier_invoice_whitelisted_by=None,
+			save=MagicMock(),
+		)
+
+		def _db_exists(doctype, name=None):
+			if doctype == "BEI Supplier" and name == "SUP-001":
+				return True
+			return None
+
+		def _db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "BEI Supplier" and filters == "SUP-001" and fieldname == "supplier_name":
+				return "Supplier A"
+			return None
+
+		procurement.frappe.session = types.SimpleNamespace(user="accounts@bebang.ph")
+		procurement.frappe.get_roles = MagicMock(return_value=["Accounts Manager"])
+		procurement.frappe.db.exists = MagicMock(side_effect=_db_exists)
+		procurement.frappe.db.get_value = MagicMock(side_effect=_db_get_value)
+		procurement.frappe.get_doc = MagicMock(return_value=supplier)
+
+		result = procurement.set_supplier_invoice_exception(
+			"SUP-001", allowed=1, reason="Approved legacy home-based supplier"
+		)
+
+		self.assertTrue(result["success"])
+		self.assertTrue(result["allow_missing_supplier_invoice"])
+		self.assertEqual(supplier.allow_missing_supplier_invoice, 1)
+		self.assertEqual(
+			supplier.missing_supplier_invoice_reason,
+			"Approved legacy home-based supplier",
+		)
+		self.assertEqual(supplier.missing_supplier_invoice_whitelisted_by, "accounts@bebang.ph")
+		self.assertEqual(supplier.missing_supplier_invoice_effective_date, "2026-02-27")
+		supplier.save.assert_called_once_with(ignore_permissions=True)
+
 	def test_generate_form_2307_entry_uses_structured_doctype(self):
 		pay_req = types.SimpleNamespace(
 			supplier="SUP-001",

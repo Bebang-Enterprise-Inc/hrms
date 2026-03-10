@@ -818,6 +818,122 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(created_docs[0].bill_no, "INV-OPEN")
 		self.assertEqual(created_docs[0].items[0]["rate"], 40)
 
+	def test_sync_ap_opening_generates_internal_ref_for_whitelisted_missing_invoice_supplier(self):
+		created_docs = []
+
+		def db_exists(doctype, name=None):
+			if doctype == "BEI Supplier" and name == "SUPP-EXC":
+				return "SUPP-EXC"
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Purchase Invoice" and isinstance(filters, dict):
+				return None
+			if doctype == "BEI Supplier" and isinstance(filters, dict):
+				if filters.get("frappe_supplier") == "SUP-0001":
+					return "SUPP-EXC"
+				if filters.get("supplier_name") == "HOME SUPPLIER":
+					return "SUPP-EXC"
+			if doctype == "BEI Supplier" and filters == "SUPP-EXC":
+				values = {
+					"allow_missing_supplier_invoice": 1,
+					"missing_supplier_invoice_reason": "Approved home-based supplier",
+				}
+				return values.get(fieldname)
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Purchase Invoice":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"PI-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.db.set_value = MagicMock()
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.log_error = MagicMock()
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		rows = [
+			{
+				"supplier_name": "HOME SUPPLIER",
+				"reference": "PO#12345",
+				"outstanding_balance": 40,
+				"invoice_date": "2026-01-05",
+				"due_date": "2026-01-20",
+				"billed_to": "BEBANG SHAW INC",
+			},
+		]
+
+		with (
+			patch.object(erp_sync, "_ensure_ap_opening_item", return_value="ERP-SYNC-AP-OPENING"),
+			patch.object(erp_sync, "_normalize_company", return_value="BEI"),
+			patch.object(erp_sync, "_ensure_supplier", return_value="SUP-0001"),
+			patch.object(erp_sync, "_default_expense_account", return_value="Expense - BEI"),
+			patch.object(erp_sync, "_default_payable_account", return_value="Payable - BEI"),
+			patch.object(erp_sync, "_default_cost_center", return_value="Main - BEI"),
+			patch.object(erp_sync, "_doctype_has_field", return_value=True),
+		):
+			result = erp_sync.sync_ap_opening("Supplier SOA", rows, "chk-ap-soa-exc-1")
+
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(len(created_docs), 1)
+		self.assertFalse(hasattr(created_docs[0], "bill_no"))
+		self.assertEqual(created_docs[0].custom_missing_supplier_invoice, 1)
+		self.assertEqual(created_docs[0].custom_no_input_vat_support, 1)
+		self.assertEqual(created_docs[0].custom_invoice_exception_reason, "Approved home-based supplier")
+		self.assertEqual(created_docs[0].custom_internal_ap_ref, "XINV-PO-12345")
+		self.assertIn("internal ref XINV-PO-12345", created_docs[0].remarks)
+
+	def test_sync_ap_opening_rejects_missing_invoice_for_non_whitelisted_supplier(self):
+		def db_exists(doctype, name=None):
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "BEI Supplier" and isinstance(filters, dict):
+				return None
+			return None
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.db.set_value = MagicMock()
+		erp_sync.frappe.new_doc = MagicMock()
+		erp_sync.frappe.log_error = MagicMock()
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		rows = [
+			{
+				"supplier_name": "STRICT SUPPLIER",
+				"reference": "PO#67890",
+				"outstanding_balance": 40,
+				"invoice_date": "2026-01-05",
+				"due_date": "2026-01-20",
+				"billed_to": "BEBANG SHAW INC",
+			},
+		]
+
+		with (
+			patch.object(erp_sync, "_ensure_ap_opening_item", return_value="ERP-SYNC-AP-OPENING"),
+			patch.object(erp_sync, "_normalize_company", return_value="BEI"),
+			patch.object(erp_sync, "_ensure_supplier", return_value="SUP-0002"),
+			patch.object(erp_sync, "_default_expense_account", return_value="Expense - BEI"),
+			patch.object(erp_sync, "_default_payable_account", return_value="Payable - BEI"),
+			patch.object(erp_sync, "_default_cost_center", return_value="Main - BEI"),
+			patch.object(erp_sync, "_doctype_has_field", return_value=True),
+		):
+			result = erp_sync.sync_ap_opening("Supplier SOA", rows, "chk-ap-soa-exc-2")
+
+		self.assertEqual(result["rows_created"], 0)
+		self.assertEqual(result["rows_failed"], 1)
+		self.assertIn("Missing supplier or invoice_no in AP opening row", result["errors"])
+		erp_sync.frappe.new_doc.assert_not_called()
+
 	def test_sync_procurement_suppliers_creates_then_updates_by_supplier_code(self):
 		registry = {}
 		counters = {}
