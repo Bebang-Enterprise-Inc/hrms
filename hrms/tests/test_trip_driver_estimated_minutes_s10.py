@@ -200,8 +200,9 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 			]
 		)
 
-		with patch.object(dispatch, "_build_trip_doc", side_effect=_build_trip_doc), patch.object(
-			dispatch, "_set_store_orders_in_transit", return_value=None
+		with (
+			patch.object(dispatch, "_build_trip_doc", side_effect=_build_trip_doc),
+			patch.object(dispatch, "_set_store_orders_in_transit", return_value=None),
 		):
 			result = dispatch.create_trip_from_route(
 				route_name="ROUTE-S10",
