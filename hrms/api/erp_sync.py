@@ -1556,11 +1556,15 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 				results["rows_updated"] += 1
 				continue
 
+			explicit_posting_date = _safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date"))
+			due_date = _safe_date(_first_non_empty(row, "due_date"))
 			posting_date = (
-				_safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date", "date_entry"))
+				explicit_posting_date
+				or due_date
+				or _safe_date(_first_non_empty(row, "date_entry"))
 				or nowdate()
 			)
-			due_date = _safe_date(_first_non_empty(row, "due_date")) or posting_date
+			due_date = due_date or posting_date
 
 			supplier = _ensure_supplier(str(supplier_input))
 			exception_config = _get_bei_supplier_invoice_exception_config(str(supplier_input), supplier)
