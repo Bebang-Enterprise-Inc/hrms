@@ -13,59 +13,63 @@ if str(ROOT) not in sys.path:
 
 
 def _install_fake_frappe_and_dependencies():
-	if "frappe" not in sys.modules:
-		frappe = types.ModuleType("frappe")
-		utils = types.ModuleType("frappe.utils")
+	frappe = sys.modules.get("frappe") or types.ModuleType("frappe")
+	utils = sys.modules.get("frappe.utils") or types.ModuleType("frappe.utils")
 
-		def whitelist(*args, **kwargs):
-			def decorator(fn):
-				return fn
+	def whitelist(*args, **kwargs):
+		def decorator(fn):
+			return fn
 
-			return decorator
+		return decorator
 
-		def _throw(message, exc=None):
-			if isinstance(exc, type) and issubclass(exc, Exception):
-				raise exc(message)
-			raise Exception(message)
+	def _throw(message, exc=None):
+		if isinstance(exc, type) and issubclass(exc, Exception):
+			raise exc(message)
+		raise Exception(message)
 
-		def _to_dt(value):
-			if isinstance(value, datetime.datetime):
-				return value
-			return datetime.datetime.fromisoformat(str(value).replace(" ", "T"))
+	def _to_dt(value):
+		if isinstance(value, datetime.datetime):
+			return value
+		return datetime.datetime.fromisoformat(str(value).replace(" ", "T"))
 
-		def add_to_date(value, minutes=0):
-			return _to_dt(value) + datetime.timedelta(minutes=minutes)
+	def add_to_date(value, minutes=0):
+		return _to_dt(value) + datetime.timedelta(minutes=minutes)
 
-		def format_time(value):
-			return _to_dt(value).strftime("%H:%M")
+	def format_time(value):
+		return _to_dt(value).strftime("%H:%M")
 
-		frappe.whitelist = whitelist
-		frappe._ = lambda text: text
-		frappe.throw = _throw
-		frappe.PermissionError = type("PermissionError", (Exception,), {})
-		frappe.log_error = lambda *args, **kwargs: None
-		frappe.enqueue = lambda *args, **kwargs: None
-		frappe.parse_json = json.loads
-		frappe.__dict__["session"] = types.SimpleNamespace(user="Administrator")
-		frappe.__dict__["db"] = types.SimpleNamespace(
+	frappe.whitelist = getattr(frappe, "whitelist", whitelist)
+	frappe._ = getattr(frappe, "_", lambda text: text)
+	frappe.throw = getattr(frappe, "throw", _throw)
+	frappe.PermissionError = getattr(frappe, "PermissionError", type("PermissionError", (Exception,), {}))
+	frappe.log_error = getattr(frappe, "log_error", lambda *args, **kwargs: None)
+	frappe.enqueue = getattr(frappe, "enqueue", lambda *args, **kwargs: None)
+	frappe.parse_json = getattr(frappe, "parse_json", json.loads)
+	frappe.__dict__["session"] = getattr(frappe, "session", types.SimpleNamespace(user="Administrator"))
+	frappe.__dict__["db"] = getattr(
+		frappe,
+		"db",
+		types.SimpleNamespace(
 			get_value=lambda *args, **kwargs: None,
 			get_all=lambda *args, **kwargs: [],
 			sql=lambda *args, **kwargs: [],
-		)
-		frappe.get_doc = lambda *args, **kwargs: None
-		frappe.get_all = lambda *args, **kwargs: []
-		frappe.new_doc = lambda *args, **kwargs: None
+			get_single_value=lambda *args, **kwargs: None,
+		),
+	)
+	frappe.get_doc = getattr(frappe, "get_doc", lambda *args, **kwargs: None)
+	frappe.get_all = getattr(frappe, "get_all", lambda *args, **kwargs: [])
+	frappe.new_doc = getattr(frappe, "new_doc", lambda *args, **kwargs: None)
 
-		utils.nowdate = lambda: "2026-02-28"
-		utils.now_datetime = lambda: datetime.datetime(2026, 2, 28, 10, 0, 0)
-		utils.flt = lambda value, precision=None: float(value or 0)
-		utils.cint = lambda value: int(float(value or 0))
-		utils.add_to_date = add_to_date
-		utils.format_time = format_time
-		utils.get_datetime = _to_dt
+	utils.nowdate = getattr(utils, "nowdate", lambda: "2026-02-28")
+	utils.now_datetime = getattr(utils, "now_datetime", lambda: datetime.datetime(2026, 2, 28, 10, 0, 0))
+	utils.flt = getattr(utils, "flt", lambda value, precision=None: float(value or 0))
+	utils.cint = getattr(utils, "cint", lambda value: int(float(value or 0)))
+	utils.add_to_date = getattr(utils, "add_to_date", add_to_date)
+	utils.format_time = getattr(utils, "format_time", format_time)
+	utils.get_datetime = getattr(utils, "get_datetime", _to_dt)
 
-		sys.modules["frappe"] = frappe
-		sys.modules["frappe.utils"] = utils
+	sys.modules["frappe"] = frappe
+	sys.modules["frappe.utils"] = utils
 
 	if "hrms" not in sys.modules:
 		hrms_pkg = types.ModuleType("hrms")
@@ -256,6 +260,64 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		self.assertTrue(captured["trip"].flags.ignore_permissions)
 		self.assertTrue(captured["trip"].flags.ignore_user_permissions)
 		self.assertEqual(captured["trip"].insert_kwargs, {"ignore_permissions": True})
+
+	def test_create_trip_from_route_empty_selected_stops_falls_back_to_all_route_stops(self):
+		route = _Route()
+		captured = {}
+
+		def _get_value(doctype, filters=None, fieldname=None):
+			if doctype == "BEI Distribution Trip":
+				return None
+			if doctype == "BEI Vehicle":
+				return "ABC-1234"
+			return None
+
+		def _build_stop_preview(route_doc, trip_date):
+			captured["preview_trip_date"] = trip_date
+			return [
+				{
+					"store": route_doc.stops[0].store,
+					"stop_order": route_doc.stops[0].stop_order,
+					"estimated_minutes": route_doc.stops[0].estimated_minutes,
+					"items_count": 0,
+					"store_order": "",
+				},
+				{
+					"store": route_doc.stops[1].store,
+					"stop_order": route_doc.stops[1].stop_order,
+					"estimated_minutes": route_doc.stops[1].estimated_minutes,
+					"items_count": 0,
+					"store_order": "",
+				},
+			]
+
+		def _build_trip_doc(trip_date, route_name, stops):
+			captured["trip_date"] = trip_date
+			captured["route_name"] = route_name
+			captured["stops"] = stops
+			captured["trip"] = _TripDoc(stops)
+			return captured["trip"]
+
+		dispatch.frappe.get_doc = MagicMock(return_value=route)
+		dispatch.frappe.db.get_value = MagicMock(side_effect=_get_value)
+
+		with (
+			patch.object(dispatch, "_build_stop_preview", side_effect=_build_stop_preview),
+			patch.object(dispatch, "_build_trip_doc", side_effect=_build_trip_doc),
+			patch.object(dispatch, "_set_store_orders_in_transit", return_value=None),
+		):
+			result = dispatch.create_trip_from_route(
+				route_name="ROUTE-S10",
+				trip_date="2026-02-28",
+				selected_stops="[]",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(captured["preview_trip_date"], "2026-02-28")
+		self.assertEqual(captured["route_name"], "S10 Route")
+		self.assertEqual([stop["store"] for stop in captured["stops"]], ["STORE-A - BEI", "STORE-B - BEI"])
+		self.assertTrue(captured["trip"].flags.ignore_permissions)
+		self.assertTrue(captured["trip"].flags.ignore_user_permissions)
 
 	def test_enable_role_gated_write_sets_ignore_user_permissions(self):
 		doc = types.SimpleNamespace(flags=None)
