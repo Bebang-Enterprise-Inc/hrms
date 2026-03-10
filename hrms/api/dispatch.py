@@ -85,19 +85,25 @@ def get_trips(date: str | None = None, status: str | None = None):
 	if status:
 		filters["status"] = status
 
+	fields = [
+		"name",
+		"trip_date",
+		"route_name",
+		"driver",
+		"vehicle",
+		"vehicle_plate",
+		"status",
+		"departure_time",
+	]
+	if _has_column("BEI Distribution Trip", "driver_name"):
+		fields.append("driver_name")
+	if _has_column("BEI Distribution Trip", "threepl_driver_name"):
+		fields.append("threepl_driver_name")
+
 	trips = frappe.get_all(
 		"BEI Distribution Trip",
 		filters=filters,
-		fields=[
-			"name",
-			"trip_date",
-			"route_name",
-			"driver",
-			"vehicle",
-			"vehicle_plate",
-			"status",
-			"departure_time",
-		],
+		fields=fields,
 		order_by="creation",
 	)
 
@@ -106,6 +112,9 @@ def get_trips(date: str | None = None, status: str | None = None):
 		stops = frappe.get_all("BEI Trip Stop", filters={"parent": trip.name}, fields=["status"])
 		trip["total_stops"] = len(stops)
 		trip["delivered_stops"] = sum(1 for s in stops if s.status == "Delivered")
+		trip["driver_display"] = (
+			trip.get("driver_name") or trip.get("threepl_driver_name") or trip.get("driver") or ""
+		)
 
 	return {"trips": trips}
 
@@ -116,6 +125,7 @@ def get_trip_detail(trip_name: str):
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view trip details")
 
 	trip = frappe.get_doc("BEI Distribution Trip", trip_name)
+	driver_name = getattr(trip, "driver_name", "") or getattr(trip, "threepl_driver_name", "") or ""
 
 	return {
 		"trip": {
@@ -123,6 +133,8 @@ def get_trip_detail(trip_name: str):
 			"trip_date": trip.trip_date,
 			"route_name": trip.route_name,
 			"driver": trip.driver,
+			"driver_name": driver_name,
+			"threepl_driver_name": getattr(trip, "threepl_driver_name", ""),
 			"vehicle": trip.vehicle,
 			"vehicle_plate": trip.vehicle_plate,
 			"status": trip.status,
@@ -150,6 +162,7 @@ def get_trip_detail(trip_name: str):
 def confirm_departure(
 	trip_name: str,
 	driver: str | None = None,
+	threepl_driver_name: str | None = None,
 	vehicle: str | None = None,
 	vehicle_plate: str | None = None,
 	temperature: float | str | None = None,
@@ -168,6 +181,7 @@ def confirm_departure(
 
 	if driver:
 		trip.driver = driver
+		trip.driver_name = frappe.db.get_value("Employee", driver, "employee_name") or trip.driver_name
 	if vehicle:
 		trip.vehicle = vehicle
 	if vehicle_plate:
@@ -176,6 +190,18 @@ def confirm_departure(
 		trip.departure_temp = float(temperature)
 	if seal_number:
 		trip.seal_number = seal_number
+
+	is_threepl_vehicle = False
+	if trip.vehicle:
+		is_threepl_vehicle = frappe.db.get_value("BEI Vehicle", trip.vehicle, "owner_type") == "3PL"
+
+	external_driver = (threepl_driver_name or getattr(trip, "threepl_driver_name", "") or "").strip()
+	if is_threepl_vehicle and external_driver:
+		trip.driver = ""
+		trip.driver_name = external_driver
+		_set_if_column(trip, "threepl_driver_name", external_driver)
+	elif not is_threepl_vehicle:
+		_set_if_column(trip, "threepl_driver_name", "")
 
 	trip.departure_time = now_datetime()
 	trip.status = "In Transit"
@@ -264,14 +290,8 @@ def confirm_delivery(
 				break
 
 		if next_stop and trip.departure_time:
-			from frappe.utils import add_to_date, format_time, get_datetime
-
-			# Calculate ETA for next stop
-			departure_dt = get_datetime(trip.departure_time)
-			scheduled_arrival = add_to_date(departure_dt, minutes=next_stop.stop_order * 20)
-			window_start = add_to_date(scheduled_arrival, minutes=-15)
-			window_end = add_to_date(scheduled_arrival, minutes=15)
-			eta_range = f"{format_time(window_start)} - {format_time(window_end)}"
+			eta_window = _calculate_eta(trip, next_stop.stop_order).get("eta_window") or {}
+			eta_range = f"{eta_window.get('min', '')} - {eta_window.get('max', '')}".strip(" -")
 
 			_send_delivery_notification(trip.driver or "Driver", next_stop.store, eta_range)
 	except Exception as e:
@@ -447,9 +467,12 @@ def get_route_progress(trip_name: str):
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view route progress")
 
 	trip = frappe.get_doc("BEI Distribution Trip", trip_name)
+	scheduled_stops = _get_trip_scheduled_arrivals(trip)
 
 	stops = []
 	for stop in trip.stops:
+		eta_data = _calculate_eta(trip, cint(getattr(stop, "stop_order", 0) or 0))
+		scheduled_arrival = scheduled_stops.get(cint(getattr(stop, "stop_order", 0) or 0))
 		stops.append(
 			{
 				"idx": stop.idx,
@@ -457,6 +480,10 @@ def get_route_progress(trip_name: str):
 				"stop_order": stop.stop_order,
 				"items_count": stop.items_count,
 				"status": stop.status,
+				"estimated_minutes": _get_trip_stop_estimated_minutes(trip, stop),
+				"eta_minutes": eta_data.get("eta_minutes"),
+				"eta_window": eta_data.get("eta_window"),
+				"eta_timestamp": str(scheduled_arrival) if scheduled_arrival else None,
 				"arrival_time": str(stop.arrival_time) if stop.arrival_time else None,
 				"signed_by": stop.signed_by,
 				"exception_reason": stop.exception_reason,
@@ -470,11 +497,19 @@ def get_route_progress(trip_name: str):
 
 	current_stop = None
 	next_stop = None
+	current_stop_eta = None
+	current_stop_eta_window = None
+	next_stop_eta = None
+	next_stop_eta_window = None
 	for i, stop in enumerate(stops):
 		if stop.get("status") not in ("Delivered", "Store Closed", "Refused"):
 			current_stop = stop.get("store") or stop.get("warehouse")
+			current_stop_eta = stop.get("eta_timestamp")
+			current_stop_eta_window = stop.get("eta_window")
 			if i + 1 < total:
 				next_stop = stops[i + 1].get("store") or stops[i + 1].get("warehouse")
+				next_stop_eta = stops[i + 1].get("eta_timestamp")
+				next_stop_eta_window = stops[i + 1].get("eta_window")
 			break
 
 	return {
@@ -487,7 +522,11 @@ def get_route_progress(trip_name: str):
 		"pending": total - delivered - exceptions,
 		"progress_pct": progress_pct,
 		"current_stop": current_stop,
+		"current_stop_eta": current_stop_eta,
+		"current_stop_eta_window": current_stop_eta_window,
 		"next_stop": next_stop,
+		"next_stop_eta": next_stop_eta,
+		"next_stop_eta_window": next_stop_eta_window,
 		"stops": stops,
 	}
 
@@ -799,11 +838,10 @@ def _calculate_eta(trip: Any, my_stop_order: int):
 		stops_remaining = 0
 
 	# G-003/G-073: Use per-stop estimated_minutes if available, fallback to 20 min/stop
-	DEFAULT_MINUTES_PER_STOP = 20
 	eta_minutes = 0
 	cumulative_minutes = 0  # for scheduled arrival calculation
 	for stop in sorted(trip.stops, key=lambda s: s.stop_order):
-		stop_time = getattr(stop, "estimated_minutes", None) or DEFAULT_MINUTES_PER_STOP
+		stop_time = _get_trip_stop_estimated_minutes(trip, stop)
 		if stop.stop_order > last_delivered and stop.stop_order <= my_stop_order:
 			eta_minutes += stop_time
 		if stop.stop_order <= my_stop_order:
@@ -819,6 +857,58 @@ def _calculate_eta(trip: Any, my_stop_order: int):
 		"eta_minutes": eta_minutes,
 		"eta_window": {"min": format_time(window_start), "max": format_time(window_end)},
 	}
+
+
+def _get_route_stop_minutes_by_store(route_name: str | None) -> dict[str, int]:
+	"""Resolve route-stop travel minutes keyed by store for ETA calculations."""
+	if not route_name:
+		return {}
+	try:
+		route = frappe.get_doc("BEI Route", route_name)
+	except Exception:
+		return {}
+
+	minutes_by_store: dict[str, int] = {}
+	for stop in getattr(route, "stops", []) or []:
+		store = getattr(stop, "store", "")
+		if not store:
+			continue
+		minutes_by_store[store] = cint(getattr(stop, "estimated_minutes", 0) or 0) or 20
+	return minutes_by_store
+
+
+def _get_trip_stop_estimated_minutes(trip: Any, stop: Any) -> int:
+	"""Get effective stop minutes from trip row or fallback route metadata."""
+	runtime_minutes = cint(getattr(stop, "estimated_minutes", 0) or 0)
+	if runtime_minutes > 0:
+		return runtime_minutes
+
+	cache_name = "_route_stop_minutes_by_store"
+	minutes_by_store = getattr(trip, cache_name, None)
+	if minutes_by_store is None:
+		route_name = getattr(trip, "route", None) or getattr(trip, "route_name", None)
+		minutes_by_store = _get_route_stop_minutes_by_store(route_name)
+		setattr(trip, cache_name, minutes_by_store)
+
+	return cint(minutes_by_store.get(getattr(stop, "store", ""), 0) or 20)
+
+
+def _get_trip_scheduled_arrivals(trip: Any) -> dict[int, Any]:
+	"""Return scheduled arrival datetimes by stop order using effective route minutes."""
+	from frappe.utils import add_to_date, get_datetime
+
+	if not trip.departure_time:
+		return {}
+
+	departure_dt = get_datetime(trip.departure_time)
+	cumulative_minutes = 0
+	scheduled_by_order: dict[int, Any] = {}
+	for stop in sorted(trip.stops, key=lambda s: cint(getattr(s, "stop_order", 0) or 0)):
+		cumulative_minutes += _get_trip_stop_estimated_minutes(trip, stop)
+		scheduled_by_order[cint(getattr(stop, "stop_order", 0) or 0)] = add_to_date(
+			departure_dt, minutes=cumulative_minutes
+		)
+	return scheduled_by_order
 
 
 def _get_items_preview(store_order: str | None):
@@ -1322,6 +1412,7 @@ def create_trip_from_route(
 	trip_date: str | None = None,
 	vehicle: str | None = None,
 	driver: str | None = None,
+	threepl_driver_name: str | None = None,
 	selected_stops: list[dict[str, Any]] | str | None = None,
 ):
 	"""One-click trip creation from a route template.
@@ -1414,10 +1505,25 @@ def create_trip_from_route(
 
 	# Use existing trip creation logic
 	trip = _build_trip_doc(trip_date, route.route_name, stops)
+	trip.route = route.name
 	trip.driver = driver or route.default_driver
 	trip.vehicle = vehicle
 	trip.vehicle_plate = vehicle_plate
 	trip.cargo_type = route.cargo_type
+
+	if trip.driver:
+		trip.driver_name = frappe.db.get_value("Employee", trip.driver, "employee_name") or trip.driver_name
+
+	is_threepl_vehicle = bool(trip.vehicle) and (
+		frappe.db.get_value("BEI Vehicle", trip.vehicle, "owner_type") == "3PL"
+	)
+	external_driver = (threepl_driver_name or "").strip()
+	if is_threepl_vehicle and external_driver:
+		trip.driver = ""
+		trip.driver_name = external_driver
+		_set_if_column(trip, "threepl_driver_name", external_driver)
+	elif not is_threepl_vehicle:
+		_set_if_column(trip, "threepl_driver_name", "")
 
 	# Link store orders to stops
 	for idx, stop_data in enumerate(stops):
