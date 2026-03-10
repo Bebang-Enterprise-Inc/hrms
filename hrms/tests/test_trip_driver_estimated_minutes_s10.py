@@ -140,6 +140,38 @@ class _TripDoc:
 		return None
 
 
+class _TripMutationDoc:
+	def __init__(self, status="Preparing"):
+		self.name = "TRIP-MUTATION-0001"
+		self.status = status
+		self.driver = None
+		self.vehicle = None
+		self.vehicle_plate = None
+		self.departure_temp = None
+		self.seal_number = None
+		self.departure_time = None
+		self.flags = None
+		self.save_kwargs = None
+		self.stops = [
+			types.SimpleNamespace(
+				idx=1,
+				stop_order=1,
+				store="STORE-A - BEI",
+				status="Pending",
+				arrival_time=None,
+				signature=None,
+				signed_by=None,
+				store_order="",
+				exception_reason=None,
+				exception_photo=None,
+			)
+		]
+
+	def save(self, **kwargs):
+		self.save_kwargs = kwargs
+		return None
+
+
 class _Route:
 	def __init__(self):
 		self.route_name = "S10 Route"
@@ -230,6 +262,73 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		dispatch._enable_role_gated_write(doc)
 		self.assertTrue(doc.flags.ignore_permissions)
 		self.assertTrue(doc.flags.ignore_user_permissions)
+
+	def test_confirm_departure_uses_role_gated_save(self):
+		trip = _TripMutationDoc(status="Preparing")
+		dispatch.frappe.get_doc = MagicMock(return_value=trip)
+
+		with patch.object(dispatch, "now_datetime", return_value="2026-02-28 08:00:00"):
+			result = dispatch.confirm_departure(
+				trip_name="TRIP-MUTATION-0001",
+				driver="EMP-DRIVER-001",
+				vehicle="TRK-001",
+				vehicle_plate="ABC-1234",
+				temperature="4.5",
+				seal_number="SEAL-1",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(trip.status, "In Transit")
+		self.assertEqual(trip.driver, "EMP-DRIVER-001")
+		self.assertEqual(trip.vehicle, "TRK-001")
+		self.assertEqual(trip.vehicle_plate, "ABC-1234")
+		self.assertEqual(trip.departure_temp, 4.5)
+		self.assertEqual(trip.seal_number, "SEAL-1")
+		self.assertTrue(trip.flags.ignore_permissions)
+		self.assertTrue(trip.flags.ignore_user_permissions)
+		self.assertEqual(trip.save_kwargs, {"ignore_permissions": True})
+
+	def test_confirm_delivery_uses_role_gated_save(self):
+		trip = _TripMutationDoc(status="In Transit")
+		dispatch.frappe.get_doc = MagicMock(return_value=trip)
+		dispatch.frappe.db.get_single_value = MagicMock(return_value=0)
+
+		with (
+			patch.object(dispatch, "now_datetime", return_value="2026-02-28 09:00:00"),
+			patch.object(dispatch, "_set_store_order_status", return_value=None),
+		):
+			result = dispatch.confirm_delivery(
+				trip_name="TRIP-MUTATION-0001",
+				stop_idx=1,
+				signature="sig",
+				signed_by="Receiver",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(trip.stops[0].status, "Delivered")
+		self.assertTrue(trip.flags.ignore_permissions)
+		self.assertTrue(trip.flags.ignore_user_permissions)
+		self.assertEqual(trip.save_kwargs, {"ignore_permissions": True})
+
+	def test_report_exception_uses_role_gated_save(self):
+		trip = _TripMutationDoc(status="In Transit")
+		dispatch.frappe.get_doc = MagicMock(return_value=trip)
+
+		with patch.object(dispatch, "now_datetime", return_value="2026-02-28 09:15:00"):
+			result = dispatch.report_exception(
+				trip_name="TRIP-MUTATION-0001",
+				stop_idx=1,
+				exception_type="Store Closed",
+				reason="Gate closed",
+				photo="data:image/png;base64,abc",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(trip.stops[0].status, "Store Closed")
+		self.assertEqual(trip.status, "Partial")
+		self.assertTrue(trip.flags.ignore_permissions)
+		self.assertTrue(trip.flags.ignore_user_permissions)
+		self.assertEqual(trip.save_kwargs, {"ignore_permissions": True})
 
 
 if __name__ == "__main__":
