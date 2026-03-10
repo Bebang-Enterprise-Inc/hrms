@@ -5,6 +5,7 @@ Production code should import from this module instead of hardcoding values.
 """
 
 import os
+from pathlib import Path
 
 import frappe
 
@@ -58,14 +59,15 @@ def get_service_account_path() -> str:
 	if env_path and os.path.exists(env_path):
 		return env_path
 
-	# Frappe app-relative fallback
-	app_path = frappe.get_app_path("hrms")
-	default = os.path.join(
-		os.path.dirname(os.path.dirname(app_path)),
-		"credentials",
-		"task-manager-service.json",
-	)
-	return default
+	app_path = Path(frappe.get_app_path("hrms")).resolve()
+	bench_root = None
+	for candidate in (app_path, *app_path.parents):
+		if candidate.name == "apps":
+			bench_root = candidate.parent
+			break
+	if bench_root is None:
+		bench_root = app_path.parent
+	return str(bench_root / "credentials" / "task-manager-service.json")
 
 
 # ── Company Name ──────────────────────────────────────────────────────────
