@@ -163,7 +163,7 @@ WATCHED_SHEETS: dict[str, SheetConfig] = {
 		doctype="Supplier",
 		key_column="invoice_no.",
 		sync_mode="upsert",
-		enabled=True,
+		enabled=False,
 	),
 	"procurement_suppliers": SheetConfig(
 		name="Procurement Suppliers",
