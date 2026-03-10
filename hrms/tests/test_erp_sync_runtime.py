@@ -29,6 +29,12 @@ def _install_fake_hrms():
 	sys.modules["hrms.utils.store_order_demand_snapshot"] = store_snapshot_mod
 	utils_pkg.store_order_demand_snapshot = store_snapshot_mod
 
+	store_inventory_mod = types.ModuleType("hrms.utils.store_inventory_shadow_sync")
+	store_inventory_mod.DEFAULT_OUTPUT_ROOT = ROOT / "tmp"
+	store_inventory_mod.run_shadow_sync = lambda *args, **kwargs: {}
+	sys.modules["hrms.utils.store_inventory_shadow_sync"] = store_inventory_mod
+	utils_pkg.store_inventory_shadow_sync = store_inventory_mod
+
 	standard_buying_bridge_mod = types.ModuleType("hrms.utils.standard_buying_bridge")
 
 	def apply_standard_buying_context(doc, *, store_label=None, legal_entity=None):

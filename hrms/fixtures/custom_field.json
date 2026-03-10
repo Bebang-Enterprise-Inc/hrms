@@ -154,5 +154,58 @@
         "label": "Store Order",
         "insert_after": "schedule_date",
         "description": "G-070: Link to the BEI Store Order that generated this Material Request"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Purchase Invoice-custom_invoice_exception_section",
+        "dt": "Purchase Invoice",
+        "fieldname": "custom_invoice_exception_section",
+        "fieldtype": "Section Break",
+        "label": "Invoice Exception Controls",
+        "insert_after": "bill_no",
+        "collapsible": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Purchase Invoice-custom_missing_supplier_invoice",
+        "dt": "Purchase Invoice",
+        "fieldname": "custom_missing_supplier_invoice",
+        "fieldtype": "Check",
+        "label": "Missing Supplier Invoice",
+        "insert_after": "custom_invoice_exception_section",
+        "read_only": 1,
+        "description": "Checked when BEI approved an exception because the supplier did not issue an invoice number"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Purchase Invoice-custom_internal_ap_ref",
+        "dt": "Purchase Invoice",
+        "fieldname": "custom_internal_ap_ref",
+        "fieldtype": "Data",
+        "label": "Internal AP Reference",
+        "insert_after": "custom_missing_supplier_invoice",
+        "read_only": 1,
+        "description": "System-generated internal reference for approved missing-invoice supplier exceptions"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Purchase Invoice-custom_invoice_exception_reason",
+        "dt": "Purchase Invoice",
+        "fieldname": "custom_invoice_exception_reason",
+        "fieldtype": "Small Text",
+        "label": "Invoice Exception Reason",
+        "insert_after": "custom_internal_ap_ref",
+        "read_only": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Purchase Invoice-custom_no_input_vat_support",
+        "dt": "Purchase Invoice",
+        "fieldname": "custom_no_input_vat_support",
+        "fieldtype": "Check",
+        "label": "No Input VAT Support",
+        "insert_after": "custom_invoice_exception_reason",
+        "read_only": 1,
+        "description": "Checked while the supplier invoice exception remains unresolved"
     }
 ]

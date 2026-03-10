@@ -5,6 +5,18 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+_INVOICE_EXCEPTION_FIELDS = (
+    "allow_missing_supplier_invoice",
+    "missing_supplier_invoice_reason",
+    "missing_supplier_invoice_effective_date",
+    "missing_supplier_invoice_whitelisted_by",
+)
+_INVOICE_EXCEPTION_MANAGER_ROLES = {
+    "System Manager",
+    "Procurement Manager",
+    "Accounts Manager",
+}
+
 
 class BEISupplier(Document):
     """
@@ -17,6 +29,7 @@ class BEISupplier(Document):
     def validate(self):
         self.validate_supplier_code()
         self.validate_required_documents()
+        self.validate_invoice_exception_control()
 
     def validate_supplier_code(self):
         """Ensure supplier code is unique and properly formatted."""
@@ -40,6 +53,36 @@ class BEISupplier(Document):
                     indicator="orange",
                     alert=True
                 )
+
+    def validate_invoice_exception_control(self):
+        """Only privileged roles may change supplier invoice exception controls."""
+        user = frappe.session.user or "Guest"
+        if user == "Administrator":
+            return
+
+        if self.is_new():
+            previous_values = {fieldname: None for fieldname in _INVOICE_EXCEPTION_FIELDS}
+        else:
+            previous_values = {
+                fieldname: frappe.db.get_value("BEI Supplier", self.name, fieldname)
+                for fieldname in _INVOICE_EXCEPTION_FIELDS
+            }
+
+        changed = any(
+            (getattr(self, fieldname, None) or "") != (previous_values.get(fieldname) or "")
+            for fieldname in _INVOICE_EXCEPTION_FIELDS
+        )
+        if not changed:
+            return
+
+        user_roles = set(frappe.get_roles(user))
+        if user_roles.intersection(_INVOICE_EXCEPTION_MANAGER_ROLES):
+            return
+
+        frappe.throw(
+            _("You are not allowed to change supplier invoice exception controls."),
+            frappe.PermissionError,
+        )
 
     def before_save(self):
         self.update_metrics()

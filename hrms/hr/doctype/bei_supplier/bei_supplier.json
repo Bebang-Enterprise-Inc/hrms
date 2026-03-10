@@ -23,6 +23,12 @@
     "bir_2307",
     "sec_certificate",
     "business_permit",
+    "invoice_exception_section",
+    "allow_missing_supplier_invoice",
+    "missing_supplier_invoice_reason",
+    "column_break_invoice_exception",
+    "missing_supplier_invoice_effective_date",
+    "missing_supplier_invoice_whitelisted_by",
     "ewt_section",
     "ewt_applicable",
     "ewt_exempt",
@@ -145,6 +151,43 @@
       "fieldname": "business_permit",
       "fieldtype": "Attach",
       "label": "Business Permit"
+    },
+    {
+      "fieldname": "invoice_exception_section",
+      "fieldtype": "Section Break",
+      "label": "Invoice Exception Controls"
+    },
+    {
+      "default": "0",
+      "description": "Controlled server-side whitelist for suppliers allowed to sync AP rows without a supplier-issued invoice number",
+      "fieldname": "allow_missing_supplier_invoice",
+      "fieldtype": "Check",
+      "label": "Allow Missing Supplier Invoice",
+      "read_only": 1
+    },
+    {
+      "description": "Required business justification for the supplier invoice exception whitelist",
+      "fieldname": "missing_supplier_invoice_reason",
+      "fieldtype": "Small Text",
+      "label": "Invoice Exception Reason",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_invoice_exception",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "missing_supplier_invoice_effective_date",
+      "fieldtype": "Date",
+      "label": "Invoice Exception Effective Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "missing_supplier_invoice_whitelisted_by",
+      "fieldtype": "Link",
+      "label": "Invoice Exception Whitelisted By",
+      "options": "User",
+      "read_only": 1
     },
     {
       "fieldname": "ewt_section",

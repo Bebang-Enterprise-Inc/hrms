@@ -7,6 +7,7 @@ and sync it to ERPNext DocTypes.
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -22,6 +23,7 @@ from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 _FIELD_CACHE: dict[tuple, bool] = {}
 ROOT_TYPES = {"Asset", "Liability", "Equity", "Income", "Expense"}
 AP_OPENING_ITEM_CODE = "ERP-SYNC-AP-OPENING"
+AP_INTERNAL_REF_PREFIX = "XINV"
 SYNC_ALLOWED_ROLES = {
 	"System Manager",
 	"Accounts Manager",
@@ -33,6 +35,7 @@ STORE_DEMAND_SNAPSHOT_AUTO_PREFIX = "scheduled_store_demand_snapshot"
 STORE_INVENTORY_SHADOW_SYNC_SHEET_NAME = "Store Inventory Shadow Sync"
 STORE_INVENTORY_SHADOW_SYNC_AUTO_PREFIX = "scheduled_store_inventory_shadow_sync"
 STORE_INVENTORY_SHADOW_BATCH_PREFIX = "SHADOW"
+PO_REFERENCE_RE = re.compile(r"^\s*(?:PO|PURCHASE\s*ORDER)\s*[-#:/]?\s*[A-Z0-9-]+\s*$", re.IGNORECASE)
 
 
 def _parse_rows(data: Any) -> list[dict[str, Any]]:
@@ -493,6 +496,130 @@ def _ensure_supplier(supplier_name: str) -> str:
 		if _is_duplicate_error(exc):
 			return frappe.db.get_value("Supplier", {"supplier_name": supplier_name}, "name")
 		raise
+
+
+def _get_bei_supplier_invoice_exception_config(
+	supplier_input: str | None, frappe_supplier: str | None = None
+) -> dict[str, Any]:
+	"""Resolve missing-invoice exception controls from BEI Supplier."""
+	supplier_name = (supplier_input or "").strip()
+	bei_supplier_name = None
+
+	if frappe_supplier:
+		bei_supplier_name = frappe.db.get_value("BEI Supplier", {"frappe_supplier": frappe_supplier}, "name")
+
+	if not bei_supplier_name and supplier_name and frappe.db.exists("BEI Supplier", supplier_name):
+		bei_supplier_name = supplier_name
+
+	if not bei_supplier_name and supplier_name:
+		bei_supplier_name = frappe.db.get_value("BEI Supplier", {"supplier_name": supplier_name}, "name")
+
+	if not bei_supplier_name:
+		return {
+			"bei_supplier": None,
+			"allowed": False,
+			"reason": "",
+		}
+
+	return {
+		"bei_supplier": bei_supplier_name,
+		"allowed": bool(
+			cint(frappe.db.get_value("BEI Supplier", bei_supplier_name, "allow_missing_supplier_invoice") or 0)
+		),
+		"reason": frappe.db.get_value("BEI Supplier", bei_supplier_name, "missing_supplier_invoice_reason")
+		or "",
+	}
+
+
+def _looks_like_po_reference(value: Any) -> bool:
+	text = str(value or "").strip()
+	if not text:
+		return False
+	return bool(PO_REFERENCE_RE.match(text))
+
+
+def _normalize_internal_ap_token(value: Any) -> str:
+	text = "".join(ch for ch in str(value or "").upper() if ch.isalnum())
+	return text[:40]
+
+
+def _build_internal_ap_ref(
+	row: dict[str, Any], sheet_name: str, checksum: str, supplier_name: str
+) -> str:
+	raw_reference = _first_non_empty(row, "purchase_order", "po_reference", "po_no", "po_number", "po")
+	if not raw_reference:
+		reference_candidate = _first_non_empty(row, "reference")
+		if _looks_like_po_reference(reference_candidate):
+			raw_reference = reference_candidate
+
+	po_token = _normalize_internal_ap_token(raw_reference)
+	if po_token:
+		if po_token.startswith("PURCHASEORDER"):
+			po_token = po_token[len("PURCHASEORDER") :]
+		elif po_token.startswith("PO") and len(po_token) > 2:
+			po_token = po_token[2:]
+		return f"{AP_INTERNAL_REF_PREFIX}-PO-{po_token}"
+
+	posting_date = (
+		_safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date", "date_entry")) or nowdate()
+	).replace("-", "")
+	amount = _safe_float(_first_non_empty(row, "outstanding_balance", "balance", "outstanding", "amount"))
+	digest = hashlib.sha1(
+		f"{sheet_name}|{checksum}|{supplier_name}|{posting_date}|{amount}".encode()
+	).hexdigest()[:10].upper()
+	return f"{AP_INTERNAL_REF_PREFIX}-SOA-{posting_date}-{digest}"
+
+
+def _purchase_invoice_exception_field_values(
+	*, missing_supplier_invoice: bool, internal_ap_ref: str | None, exception_reason: str | None
+) -> dict[str, Any]:
+	values: dict[str, Any] = {}
+	field_values = {
+		"custom_missing_supplier_invoice": 1 if missing_supplier_invoice else 0,
+		"custom_internal_ap_ref": internal_ap_ref or "",
+		"custom_invoice_exception_reason": exception_reason or "",
+		"custom_no_input_vat_support": 1 if missing_supplier_invoice else 0,
+	}
+	for fieldname, value in field_values.items():
+		if _doctype_has_field("Purchase Invoice", fieldname):
+			values[fieldname] = value
+	return values
+
+
+def _lookup_existing_purchase_invoice(
+	*,
+	supplier: str,
+	company: str,
+	invoice_no: str | None = None,
+	internal_ap_ref: str | None = None,
+) -> str | None:
+	if invoice_no:
+		existing = frappe.db.get_value(
+			"Purchase Invoice",
+			{
+				"supplier": supplier,
+				"bill_no": invoice_no,
+				"company": company,
+				"docstatus": ["<", 2],
+			},
+			"name",
+		)
+		if existing:
+			return existing
+
+	if internal_ap_ref and _doctype_has_field("Purchase Invoice", "custom_internal_ap_ref"):
+		return frappe.db.get_value(
+			"Purchase Invoice",
+			{
+				"supplier": supplier,
+				"custom_internal_ap_ref": internal_ap_ref,
+				"company": company,
+				"docstatus": ["<", 2],
+			},
+			"name",
+		)
+
+	return None
 
 
 def _default_expense_account(company: str) -> str | None:
@@ -1306,8 +1433,11 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 		savepoint: str | None = None
 		try:
 			supplier_input = _first_non_empty(row, "supplier", "supplier_name")
-			invoice_no = _first_non_empty(row, "invoice_no", "invoice_no.", "reference", "bill_no")
-			if not supplier_input or not invoice_no:
+			raw_reference = _first_non_empty(row, "reference")
+			invoice_no = _first_non_empty(row, "invoice_no", "invoice_no.", "bill_no")
+			if not invoice_no and raw_reference and not _looks_like_po_reference(raw_reference):
+				invoice_no = raw_reference
+			if not supplier_input:
 				results["rows_failed"] += 1
 				results["errors"].append("Missing supplier or invoice_no in AP opening row")
 				continue
@@ -1316,19 +1446,9 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 				_first_non_empty(row, "outstanding_balance", "balance", "outstanding", "amount")
 			)
 			company = _normalize_company(_first_non_empty(row, "company", "billed_to"))
-			dedupe_key = f"{company}|{supplier_input}|{invoice_no}"
-			if supplier_input and invoice_no and dedupe_key in seen_supplier_invoice_keys:
-				results["rows_updated"] += 1
-				continue
-			if supplier_input and invoice_no:
-				seen_supplier_invoice_keys.add(dedupe_key)
-
 			if amount <= 0:
 				results["rows_updated"] += 1
 				continue
-
-			savepoint = _make_savepoint("sync_ap", f"{sheet_name}|{checksum}|{dedupe_key}")
-			frappe.db.savepoint(savepoint)
 
 			posting_date = (
 				_safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date", "date_entry"))
@@ -1337,15 +1457,33 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 			due_date = _safe_date(_first_non_empty(row, "due_date")) or posting_date
 
 			supplier = _ensure_supplier(str(supplier_input))
-			existing = frappe.db.get_value(
-				"Purchase Invoice",
-				{
-					"supplier": supplier,
-					"bill_no": invoice_no,
-					"company": company,
-					"docstatus": ["<", 2],
-				},
-				"name",
+			exception_config = _get_bei_supplier_invoice_exception_config(str(supplier_input), supplier)
+			internal_ap_ref = (
+				_build_internal_ap_ref(row, sheet_name, checksum, str(supplier_input))
+				if exception_config["allowed"]
+				else None
+			)
+			missing_supplier_invoice = not bool(invoice_no)
+			if missing_supplier_invoice and not exception_config["allowed"]:
+				results["rows_failed"] += 1
+				results["errors"].append("Missing supplier or invoice_no in AP opening row")
+				continue
+
+			lookup_key = internal_ap_ref if missing_supplier_invoice else invoice_no
+			dedupe_key = f"{company}|{supplier_input}|{lookup_key}"
+			if dedupe_key in seen_supplier_invoice_keys:
+				results["rows_updated"] += 1
+				continue
+			seen_supplier_invoice_keys.add(dedupe_key)
+
+			savepoint = _make_savepoint("sync_ap", f"{sheet_name}|{checksum}|{dedupe_key}")
+			frappe.db.savepoint(savepoint)
+
+			existing = _lookup_existing_purchase_invoice(
+				supplier=supplier,
+				company=company,
+				invoice_no=invoice_no,
+				internal_ap_ref=internal_ap_ref if exception_config["allowed"] else None,
 			)
 
 			if existing:
@@ -1358,11 +1496,22 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 					updates["bei_legal_entity"] = company
 				if _doctype_has_field("Purchase Invoice", "bei_store_label"):
 					updates["bei_store_label"] = _ap_opening_store_label(row) or "Stores - BEI"
-				sync_ref = _sync_ref("AP", sheet_name, checksum, f"{supplier}|{invoice_no}")
+				if invoice_no and _doctype_has_field("Purchase Invoice", "bill_no"):
+					updates["bill_no"] = invoice_no
+				updates.update(
+					_purchase_invoice_exception_field_values(
+						missing_supplier_invoice=missing_supplier_invoice,
+						internal_ap_ref=internal_ap_ref if exception_config["allowed"] else None,
+						exception_reason=exception_config["reason"],
+					)
+				)
+				sync_ref = _sync_ref("AP", sheet_name, checksum, f"{supplier}|{lookup_key}")
 				if _doctype_has_field("Purchase Invoice", "remarks"):
 					current_remarks = frappe.db.get_value("Purchase Invoice", existing, "remarks") or ""
 					if sync_ref not in current_remarks:
 						sync_note = f"[{sync_ref}] amount={amount}"
+						if missing_supplier_invoice and internal_ap_ref:
+							sync_note += f" internal_ref={internal_ap_ref} missing_supplier_invoice=1"
 						updates["remarks"] = f"{current_remarks}\n{sync_note}".strip()
 				if updates:
 					frappe.db.set_value("Purchase Invoice", existing, updates, update_modified=False)
@@ -1381,11 +1530,12 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 			if not payable_account:
 				raise ValueError(f"No payable account available for company {company}")
 
-			sync_ref = _sync_ref("AP", sheet_name, checksum, f"{supplier}|{invoice_no}")
+			sync_ref = _sync_ref("AP", sheet_name, checksum, f"{supplier}|{lookup_key}")
 			pi = frappe.new_doc("Purchase Invoice")
 			pi.company = company
 			pi.supplier = supplier
-			pi.bill_no = invoice_no
+			if invoice_no:
+				pi.bill_no = invoice_no
 			pi.bill_date = posting_date
 			pi.posting_date = posting_date
 			pi.due_date = due_date
@@ -1394,8 +1544,19 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 				pi.is_opening = "Yes"
 			if _doctype_has_field("Purchase Invoice", "credit_to"):
 				pi.credit_to = payable_account
+			for fieldname, value in _purchase_invoice_exception_field_values(
+				missing_supplier_invoice=missing_supplier_invoice,
+				internal_ap_ref=internal_ap_ref if exception_config["allowed"] else None,
+				exception_reason=exception_config["reason"],
+			).items():
+				setattr(pi, fieldname, value)
 			if _doctype_has_field("Purchase Invoice", "remarks"):
 				pi.remarks = f"ERP AP Opening Sync [{sync_ref}]"
+				if missing_supplier_invoice and internal_ap_ref:
+					pi.remarks += (
+						f"\nSupplier invoice missing; internal ref {internal_ap_ref}; "
+						f"reason: {exception_config['reason'] or 'Approved whitelist supplier exception'}"
+					)
 			apply_standard_buying_context(
 				pi,
 				store_label=_ap_opening_store_label(row),
@@ -1407,7 +1568,7 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 				"qty": 1,
 				"rate": amount,
 				"expense_account": expense_account,
-				"description": f"Opening balance sync for {invoice_no}",
+				"description": f"Opening balance sync for {invoice_no or internal_ap_ref}",
 			}
 			if cost_center:
 				item_row["cost_center"] = cost_center
