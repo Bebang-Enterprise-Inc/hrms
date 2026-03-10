@@ -117,6 +117,9 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 
 	def _make_processor(self):
 		processor = ChangeProcessor.__new__(ChangeProcessor)
+		processor.config = types.SimpleNamespace(
+			suppress_critical_alert_triggers=("startup", "manual", "interval_baseline")
+		)
 		processor.db = types.SimpleNamespace(
 			has_changed=MagicMock(return_value=True),
 			save_checksum=MagicMock(),
@@ -152,6 +155,13 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 		)
 		processor._send_critical_sync_alert = MagicMock()
 		return processor
+
+	def test_critical_alerts_suppressed_for_interval_baseline_trigger(self):
+		processor = self._make_processor()
+
+		self.assertTrue(processor._critical_alerts_suppressed_for_trigger("interval_baseline"))
+		self.assertTrue(processor._critical_alerts_suppressed_for_trigger("manual"))
+		self.assertFalse(processor._critical_alerts_suppressed_for_trigger("scheduled"))
 
 	def test_sync_sheet_emits_alert_for_critical_change_pattern(self):
 		processor = self._make_processor()

@@ -57,6 +57,15 @@ class ChangeProcessor:
 		)
 		return any(marker in alert_text for marker in critical_markers)
 
+	def _critical_alerts_suppressed_for_trigger(self, trigger: str) -> bool:
+		"""Return True when the current sync trigger should not emit chat alerts."""
+		suppressed = {
+			str(value).strip()
+			for value in getattr(self.config, "suppress_critical_alert_triggers", ())
+			if str(value).strip()
+		}
+		return trigger in suppressed
+
 	def _send_critical_sync_alert(
 		self,
 		*,
@@ -70,6 +79,14 @@ class ChangeProcessor:
 	) -> None:
 		"""Send critical sync alerts to Google Chat (non-blocking)."""
 		if not (reasons or rows_failed or errors or critical_alerts):
+			return
+		if self._critical_alerts_suppressed_for_trigger(trigger):
+			logger.info(
+				"Critical sync alert suppressed for %s/%s trigger=%s",
+				sheet_config.name,
+				sheet_config.sheet_name,
+				trigger,
+			)
 			return
 
 		try:

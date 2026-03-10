@@ -34,7 +34,11 @@ def _install_fake_sheets_receiver_dependencies():
 		sys.modules["hrms.services.sheets_receiver"] = sheets_pkg
 
 	config_mod = types.ModuleType("hrms.services.sheets_receiver.config")
-	config_mod.get_config = lambda: types.SimpleNamespace()
+	config_mod.get_config = lambda: types.SimpleNamespace(
+		baseline_test_interval_minutes=0,
+		generate_ap_exception_reports=False,
+		ap_exception_report_dir=".",
+	)
 	config_mod.get_watched_sheets = lambda: {}
 	config_mod.get_sheet_config = lambda _sheet_key: None
 	sys.modules["hrms.services.sheets_receiver.config"] = config_mod
@@ -58,6 +62,10 @@ def _install_fake_sheets_receiver_dependencies():
 	file_processor_mod = types.ModuleType("hrms.services.sheets_receiver.file_processor")
 	file_processor_mod.get_file_processor = lambda: types.SimpleNamespace()
 	sys.modules["hrms.services.sheets_receiver.file_processor"] = file_processor_mod
+
+	ap_reports_mod = types.ModuleType("hrms.services.sheets_receiver.ap_exception_reports")
+	ap_reports_mod.generate_ap_exception_report = lambda *args, **kwargs: {}
+	sys.modules["hrms.services.sheets_receiver.ap_exception_reports"] = ap_reports_mod
 
 	folder_watcher_mod = types.ModuleType("hrms.services.sheets_receiver.folder_watcher")
 	folder_watcher_mod.get_folder_watcher = lambda: types.SimpleNamespace()
@@ -166,6 +174,14 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 		main_mod.get_db = MagicMock(return_value=self.db)
 		main_mod.get_processor = MagicMock(return_value=self.processor)
 		main_mod.get_sheet_config = MagicMock(side_effect=lambda sheet_key: self.sheet_configs.get(sheet_key))
+		main_mod.get_config = MagicMock(
+			return_value=types.SimpleNamespace(
+				baseline_test_interval_minutes=0,
+				generate_ap_exception_reports=False,
+				ap_exception_report_dir=".",
+			)
+		)
+		main_mod._maybe_generate_ap_exception_report = MagicMock()
 
 	def test_daily_baseline_sync_skips_before_8am_pht(self):
 		now_utc = datetime(2026, 3, 9, 23, 59, tzinfo=UTC)
@@ -206,6 +222,49 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 
 		self.assertIn(
 			main_mod.run_daily_baseline_sync_if_due,
+			[job["func"] for job in fake_schedule.jobs],
+		)
+
+	def test_daily_baseline_sync_generates_ap_exception_report_when_enabled(self):
+		now_utc = datetime(2026, 3, 10, 0, 5, tzinfo=UTC)
+		main_mod.get_config.return_value = types.SimpleNamespace(
+			baseline_test_interval_minutes=0,
+			generate_ap_exception_reports=True,
+			ap_exception_report_dir=".",
+		)
+
+		results = main_mod.run_daily_baseline_sync_if_due(now_utc=now_utc)
+
+		self.assertEqual(len(results), 6)
+		main_mod._maybe_generate_ap_exception_report.assert_called_once_with("daily_baseline")
+
+	def test_interval_baseline_sync_runs_when_enabled(self):
+		main_mod.get_config.return_value = types.SimpleNamespace(
+			baseline_test_interval_minutes=5,
+			generate_ap_exception_reports=False,
+			ap_exception_report_dir=".",
+		)
+
+		results = main_mod.run_interval_baseline_sync_job()
+
+		self.assertEqual(len(results), 6)
+		self.assertEqual(self.processor.sync_sheet.call_count, 6)
+		for call in self.processor.sync_sheet.call_args_list:
+			self.assertEqual(call.kwargs["trigger"], "interval_baseline")
+			self.assertTrue(call.kwargs["force"])
+
+	def test_configure_scheduled_jobs_registers_interval_baseline_when_enabled(self):
+		fake_schedule = _FakeSchedule()
+		main_mod.get_config.return_value = types.SimpleNamespace(
+			baseline_test_interval_minutes=5,
+			generate_ap_exception_reports=False,
+			ap_exception_report_dir=".",
+		)
+
+		main_mod.configure_scheduled_jobs(schedule_module=fake_schedule)
+
+		self.assertIn(
+			main_mod.run_interval_baseline_sync_job,
 			[job["func"] for job in fake_schedule.jobs],
 		)
 
