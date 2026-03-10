@@ -14,9 +14,16 @@ if str(ROOT) not in sys.path:
 
 
 def _install_fake_frappe():
-	frappe = types.ModuleType("frappe")
+	class _FakeFrappe(types.ModuleType):
+		@property
+		def db(self):
+			return self.local.db
+
+	frappe = _FakeFrappe("frappe")
 	frappe.get_site_path = lambda *parts: str(ROOT / "tmp_test_site" / Path(*parts))
-	frappe.db = types.SimpleNamespace(exists=lambda *args, **kwargs: None, commit=lambda: None)
+	frappe.local = types.SimpleNamespace(
+		db=types.SimpleNamespace(exists=lambda *args, **kwargs: None, commit=lambda: None)
+	)
 	frappe.get_doc = lambda *args, **kwargs: None
 	sys.modules["frappe"] = frappe
 

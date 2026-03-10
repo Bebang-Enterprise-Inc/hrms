@@ -615,9 +615,6 @@ def ensure_required_master_data(
 		doc.insert(ignore_permissions=True)
 		created["items_created"].append(mapping.target_item_code)
 
-	if created["warehouses_created"] or created["items_created"]:
-		frappe.db.commit()
-
 	return created
 
 
