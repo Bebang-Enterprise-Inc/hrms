@@ -603,7 +603,9 @@ def _get_bei_supplier_invoice_exception_config(
 	return {
 		"bei_supplier": bei_supplier_name,
 		"allowed": bool(
-			cint(frappe.db.get_value("BEI Supplier", bei_supplier_name, "allow_missing_supplier_invoice") or 0)
+			cint(
+				frappe.db.get_value("BEI Supplier", bei_supplier_name, "allow_missing_supplier_invoice") or 0
+			)
 		),
 		"reason": frappe.db.get_value("BEI Supplier", bei_supplier_name, "missing_supplier_invoice_reason")
 		or "",
@@ -622,9 +624,7 @@ def _normalize_internal_ap_token(value: Any) -> str:
 	return text[:40]
 
 
-def _build_internal_ap_ref(
-	row: dict[str, Any], sheet_name: str, checksum: str, supplier_name: str
-) -> str:
+def _build_internal_ap_ref(row: dict[str, Any], sheet_name: str, checksum: str, supplier_name: str) -> str:
 	raw_reference = _first_non_empty(row, "purchase_order", "po_reference", "po_no", "po_number", "po")
 	if not raw_reference:
 		reference_candidate = _first_non_empty(row, "reference")
@@ -643,9 +643,11 @@ def _build_internal_ap_ref(
 		_safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date", "date_entry")) or nowdate()
 	).replace("-", "")
 	amount = _safe_float(_first_non_empty(row, "outstanding_balance", "balance", "outstanding", "amount"))
-	digest = hashlib.sha1(
-		f"{sheet_name}|{checksum}|{supplier_name}|{posting_date}|{amount}".encode()
-	).hexdigest()[:10].upper()
+	digest = (
+		hashlib.sha1(f"{sheet_name}|{checksum}|{supplier_name}|{posting_date}|{amount}".encode())
+		.hexdigest()[:10]
+		.upper()
+	)
 	return f"{AP_INTERNAL_REF_PREFIX}-SOA-{posting_date}-{digest}"
 
 
@@ -1015,7 +1017,9 @@ def _sync_inventory_rows(
 			cost_center = _default_cost_center(sr.company)
 			if _doctype_has_field("Stock Reconciliation", "expense_account"):
 				if not expense_account:
-					frappe.throw(_("No stock adjustment expense account configured for company {0}").format(sr.company))
+					frappe.throw(
+						_("No stock adjustment expense account configured for company {0}").format(sr.company)
+					)
 				sr.expense_account = expense_account
 			if _doctype_has_field("Stock Reconciliation", "cost_center") and cost_center:
 				sr.cost_center = cost_center
@@ -1534,9 +1538,9 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 	for row in rows:
 		savepoint: str | None = None
 		try:
-			supplier_input = _first_non_empty(row, "supplier", "supplier_name")
-			raw_reference = _first_non_empty(row, "reference")
-			invoice_no = _first_non_empty(row, "invoice_no", "invoice_no.", "bill_no")
+			supplier_input = _normalize_sheet_text(_first_non_empty(row, "supplier", "supplier_name"))
+			raw_reference = _normalize_sheet_text(_first_non_empty(row, "reference"))
+			invoice_no = _normalize_sheet_text(_first_non_empty(row, "invoice_no", "invoice_no.", "bill_no"))
 			if not invoice_no and raw_reference and not _looks_like_po_reference(raw_reference):
 				invoice_no = raw_reference
 			if not supplier_input:
