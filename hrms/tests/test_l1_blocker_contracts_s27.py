@@ -137,6 +137,19 @@ def _install_store_deps():
 	)
 
 
+def _install_picking_deps():
+	_install_base_frappe()
+	_ensure_module("hrms")
+	_ensure_module("hrms.api")
+	_ensure_module("hrms.utils")
+	_ensure_module("hrms.utils.bei_config", get_company=lambda: "Bebang Enterprise Inc.")
+	_ensure_module(
+		"hrms.utils.scm_roles",
+		SCM_PICKING_ROLES=["System Manager"],
+		check_scm_permission=lambda roles, action: None,
+	)
+
+
 def _load_module(module_name: str, relative_path: str):
 	spec = importlib.util.spec_from_file_location(module_name, ROOT / relative_path)
 	module = importlib.util.module_from_spec(spec)
@@ -260,6 +273,33 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		self.assertEqual(result["inventory_variance_total"], 0)
 		self.assertEqual(result["cashier_signoff"], 1)
 		self.assertEqual(result["production_signoff"], 0)
+
+	def test_picking_resolves_source_warehouse_from_linked_route(self):
+		_install_picking_deps()
+		picking = _load_module("picking_s27_under_test", "hrms/api/picking.py")
+
+		def fake_get_value(doctype, filters, fieldname=None, as_dict=False):
+			if doctype == "BEI Route":
+				if filters == "BEI-ROUTE-0001":
+					return "TEST-COMMISSARY - BEI"
+				if filters == {"route_name": "S027 Pick Route"}:
+					return "TEST-COMMISSARY - BEI"
+			if doctype == "Warehouse":
+				return "UNEXPECTED-WAREHOUSE"
+			return None
+
+		picking.frappe.db.get_value = fake_get_value
+
+		trip = types.SimpleNamespace(
+			warehouse="",
+			source_warehouse="",
+			route="BEI-ROUTE-0001",
+			route_name="S027 Pick Route",
+		)
+		self.assertEqual(picking._resolve_trip_source_warehouse(trip), "TEST-COMMISSARY - BEI")
+
+		trip.route = ""
+		self.assertEqual(picking._resolve_trip_source_warehouse(trip), "TEST-COMMISSARY - BEI")
 
 
 if __name__ == "__main__":
