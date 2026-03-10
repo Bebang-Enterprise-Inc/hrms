@@ -16,6 +16,7 @@ from frappe import _
 from frappe.utils import cint, flt, getdate, now_datetime, nowdate
 
 from hrms.utils import store_order_demand_snapshot as store_demand_snapshot_builder
+from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 
 _FIELD_CACHE: dict[tuple, bool] = {}
 ROOT_TYPES = {"Asset", "Liability", "Equity", "Income", "Expense"}
@@ -75,6 +76,10 @@ def _is_duplicate_error(exc: Exception) -> bool:
 		return True
 	message = str(exc).lower()
 	return "duplicate" in message and "entry" in message
+
+
+def _ap_opening_store_label(row: dict[str, Any]) -> str | None:
+	return _first_non_empty(row, "bei_store_label", "store_label", "warehouse", "store", "branch")
 
 
 def _sync_ref(prefix: str, sheet_name: str, checksum: str, row_key: str) -> str:
@@ -1249,6 +1254,10 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 					updates["due_date"] = due_date
 				if _doctype_has_field("Purchase Invoice", "bill_date"):
 					updates["bill_date"] = posting_date
+				if _doctype_has_field("Purchase Invoice", "bei_legal_entity"):
+					updates["bei_legal_entity"] = company
+				if _doctype_has_field("Purchase Invoice", "bei_store_label"):
+					updates["bei_store_label"] = _ap_opening_store_label(row) or "Stores - BEI"
 				sync_ref = _sync_ref("AP", sheet_name, checksum, f"{supplier}|{invoice_no}")
 				if _doctype_has_field("Purchase Invoice", "remarks"):
 					current_remarks = frappe.db.get_value("Purchase Invoice", existing, "remarks") or ""
@@ -1287,6 +1296,11 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 				pi.credit_to = payable_account
 			if _doctype_has_field("Purchase Invoice", "remarks"):
 				pi.remarks = f"ERP AP Opening Sync [{sync_ref}]"
+			apply_standard_buying_context(
+				pi,
+				store_label=_ap_opening_store_label(row),
+				legal_entity=company,
+			)
 
 			item_row = {
 				"item_code": opening_item,
