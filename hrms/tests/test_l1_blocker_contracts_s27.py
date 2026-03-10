@@ -22,6 +22,12 @@ def _install_base_frappe():
 	else:
 		utils = sys.modules["frappe.utils"]
 
+	if "frappe.exceptions" not in sys.modules:
+		exceptions = types.ModuleType("frappe.exceptions")
+		sys.modules["frappe.exceptions"] = exceptions
+	else:
+		exceptions = sys.modules["frappe.exceptions"]
+
 	def whitelist(*args, **kwargs):
 		def decorator(fn):
 			return fn
@@ -35,6 +41,7 @@ def _install_base_frappe():
 	frappe.PermissionError = type("PermissionError", (Exception,), {})
 	frappe.ValidationError = type("ValidationError", (Exception,), {})
 	frappe.DoesNotExistError = type("DoesNotExistError", (Exception,), {})
+	exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
 	frappe.local = types.SimpleNamespace(
 		session=types.SimpleNamespace(user="tester@bebang.ph"),
 		db=types.SimpleNamespace(
@@ -149,6 +156,18 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		billing.frappe.db.has_column = lambda doctype, fieldname: fieldname == "vehicle_owner"
 		self.assertEqual(billing._trip_partner_field_sql(), "dt.vehicle_owner")
 		self.assertEqual(billing._trip_vehicle_join_sql(), "")
+
+	def test_billing_trip_query_uses_zero_for_missing_optional_trip_columns(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_query_under_test", "hrms/api/billing.py")
+
+		billing.frappe.db.has_column = lambda doctype, fieldname: fieldname == "vehicle_owner"
+		query = billing._get_3pl_trip_query()
+
+		self.assertIn("0 AS overtime_hours", query)
+		self.assertIn("0 AS is_holiday_trip", query)
+		self.assertIn("0 AS is_weekend_trip", query)
+		self.assertNotIn("dt.overtime_hours", query)
 
 	def test_dispatch_maps_cell_number_back_to_cell_phone(self):
 		_install_dispatch_deps()

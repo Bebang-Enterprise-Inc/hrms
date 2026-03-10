@@ -117,19 +117,30 @@ def _trip_vehicle_join_sql(trip_alias: str = "dt", vehicle_alias: str = "veh") -
 	return f" LEFT JOIN `tabBEI Vehicle` {vehicle_alias} ON {vehicle_alias}.name = {trip_alias}.vehicle"
 
 
+def _trip_optional_field_sql(fieldname: str, trip_alias: str = "dt", default: str = "0") -> str:
+	"""Select optional trip columns safely across schema revisions."""
+	if _has_column("BEI Distribution Trip", fieldname):
+		return f"{trip_alias}.{fieldname}"
+	return default
+
+
 def _get_3pl_trip_query():
 	"""Return a static SQL query matching the runtime trip-partner schema."""
+	overtime_sql = _trip_optional_field_sql("overtime_hours")
+	holiday_sql = _trip_optional_field_sql("is_holiday_trip")
+	weekend_sql = _trip_optional_field_sql("is_weekend_trip")
+
 	if _has_column("BEI Distribution Trip", "vehicle_owner"):
-		return """
+		return f"""
         SELECT
             dt.name AS trip_name,
             dt.trip_date AS date,
             dt.route AS zone,
             dt.cargo_type,
             dt.vehicle_owner AS partner,
-            dt.overtime_hours,
-            dt.is_holiday_trip,
-            dt.is_weekend_trip,
+            {overtime_sql} AS overtime_hours,
+            {holiday_sql} AS is_holiday_trip,
+            {weekend_sql} AS is_weekend_trip,
             GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
         FROM `tabBEI Distribution Trip` dt
         LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
@@ -140,16 +151,16 @@ def _get_3pl_trip_query():
         ORDER BY dt.trip_date ASC
         """
 
-	return """
+	return f"""
     SELECT
         dt.name AS trip_name,
         dt.trip_date AS date,
         dt.route AS zone,
         dt.cargo_type,
         veh.threepl_partner AS partner,
-        dt.overtime_hours,
-        dt.is_holiday_trip,
-        dt.is_weekend_trip,
+        {overtime_sql} AS overtime_hours,
+        {holiday_sql} AS is_holiday_trip,
+        {weekend_sql} AS is_weekend_trip,
         GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
     FROM `tabBEI Distribution Trip` dt
     LEFT JOIN `tabBEI Vehicle` veh ON veh.name = dt.vehicle
