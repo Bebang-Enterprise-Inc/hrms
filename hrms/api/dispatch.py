@@ -6,6 +6,8 @@ Dispatch Tracker API
 Handles warehouse dispatch, route tracking, and delivery confirmation for my.bebang.ph
 """
 
+import base64
+import hashlib
 from typing import Any
 
 import frappe
@@ -306,7 +308,9 @@ def report_exception(
 	stop.arrival_time = now_datetime()
 	stop.exception_reason = reason
 	if photo:
-		stop.exception_photo = photo
+		stop.exception_photo = _save_base64_attachment(
+			photo, "BEI Distribution Trip", docname=trip.name, fieldname="exception_photo"
+		)
 
 	_update_trip_status(trip, require_all_processed=True)
 	_enable_role_gated_write(trip)
@@ -1248,6 +1252,54 @@ def _enable_role_gated_write(doc: Any):
 	doc.flags.ignore_permissions = True
 	doc.flags.ignore_user_permissions = True
 	return doc
+
+
+def _save_base64_attachment(
+	base64_data: str | None, doctype: str, docname: str | None = None, fieldname: str = "attachment"
+):
+	"""Persist a base64/data-url attachment and return a file URL for Attach fields."""
+	if not base64_data:
+		return None
+
+	if base64_data.startswith(("/files/", "/private/", "http://", "https://")):
+		return base64_data
+
+	if "," in base64_data:
+		header, content = base64_data.split(",", 1)
+		header_lower = header.lower()
+		if "png" in header_lower:
+			ext = "png"
+		elif "gif" in header_lower:
+			ext = "gif"
+		elif "webp" in header_lower:
+			ext = "webp"
+		else:
+			ext = "jpg"
+	else:
+		content = base64_data
+		ext = "jpg"
+
+	try:
+		file_content = base64.b64decode(content)
+	except Exception as exc:
+		frappe.log_error(f"Failed to decode dispatch attachment: {exc!s}", "Dispatch Attachment Decode")
+		frappe.throw(_("Invalid attachment data"))
+
+	file_hash = hashlib.md5(file_content).hexdigest()[:12]
+	filename = f"{doctype.lower().replace(' ', '_')}_{fieldname}_{file_hash}.{ext}"
+	file_doc = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": filename,
+			"content": file_content,
+			"attached_to_doctype": doctype if docname else None,
+			"attached_to_name": docname,
+			"attached_to_field": fieldname,
+			"is_private": 0,
+		}
+	)
+	file_doc.save(ignore_permissions=True)
+	return file_doc.file_url
 
 
 @frappe.whitelist()
