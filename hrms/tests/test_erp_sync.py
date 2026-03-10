@@ -89,6 +89,7 @@ class _FakeDoc:
 		self.name = None
 		self.items = []
 		self.remarks = ""
+		self.flags = types.SimpleNamespace()
 		self._on_insert = on_insert
 		self.insert_calls = 0
 		self.save_calls = 0
@@ -163,6 +164,7 @@ class TestErpSync(unittest.TestCase):
 		erp_sync.frappe.db.savepoint = MagicMock(return_value=None)
 		erp_sync.frappe.db.release_savepoint = MagicMock()
 		erp_sync.frappe.db.rollback = MagicMock()
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda *_: True))
 
 	def test_sync_ar_aging_writes_sales_invoice_fields(self):
 		erp_sync.frappe.db.exists = MagicMock(return_value="SINV-0001")
@@ -495,6 +497,69 @@ class TestErpSync(unittest.TestCase):
 		)
 		self.assertEqual(result, expected)
 
+	def test_sync_ap_opening_supports_supplier_soa_headers_and_skips_zero_balance_rows(self):
+		created_docs = []
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Purchase Invoice" and isinstance(filters, dict):
+				return None
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Purchase Invoice":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"PI-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.db.set_value = MagicMock()
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.log_error = MagicMock()
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		rows = [
+			{
+				"supplier_name": "1 TO 1 MARKETING INC.",
+				"invoice_no.": "INV-ZERO",
+				"amount": 1200,
+				"outstanding_balance": 0,
+				"invoice_date": "2026-01-05",
+				"due_date": "2026-01-20",
+				"billed_to": "BEBANG SHAW INC",
+			},
+			{
+				"supplier_name": "1 TO 1 MARKETING INC.",
+				"invoice_no.": "INV-OPEN",
+				"amount": 1200,
+				"outstanding_balance": 40,
+				"invoice_date": "2026-01-05",
+				"due_date": "2026-01-20",
+				"billed_to": "BEBANG SHAW INC",
+			},
+		]
+
+		with (
+			patch.object(erp_sync, "_ensure_ap_opening_item", return_value="ERP-SYNC-AP-OPENING"),
+			patch.object(erp_sync, "_normalize_company", return_value="BEI"),
+			patch.object(erp_sync, "_ensure_supplier", return_value="SUP-0001"),
+			patch.object(erp_sync, "_default_expense_account", return_value="Expense - BEI"),
+			patch.object(erp_sync, "_default_payable_account", return_value="Payable - BEI"),
+			patch.object(erp_sync, "_default_cost_center", return_value="Main - BEI"),
+			patch.object(erp_sync, "_doctype_has_field", return_value=True),
+		):
+			result = erp_sync.sync_ap_opening("Supplier SOA", rows, "chk-ap-soa-1")
+
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(result["rows_updated"], 1)
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(len(created_docs), 1)
+		self.assertEqual(created_docs[0].bill_no, "INV-OPEN")
+		self.assertEqual(created_docs[0].items[0]["rate"], 40)
+
 	def test_sync_procurement_suppliers_creates_then_updates_by_supplier_code(self):
 		registry = {}
 		counters = {}
@@ -671,6 +736,71 @@ class TestErpSync(unittest.TestCase):
 		stored = next(iter(registry["BEI Purchase Requisition"].values()))
 		self.assertEqual(stored.status, "Converted to PO")
 		self.assertNotIn("po_reference", stored.items[0])
+
+	def test_sync_procurement_requisitions_truncates_long_po_reference(self):
+		registry = {}
+		counters = {}
+
+		def db_exists(doctype, name=None):
+			if doctype == "BEI Purchase Requisition":
+				return name if name in registry.get("BEI Purchase Requisition", {}) else None
+			if doctype == "User":
+				return bool(name and "@" in str(name))
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "BEI Purchase Requisition" and isinstance(filters, dict):
+				pr_no = filters.get("pr_no")
+				for doc in registry.get("BEI Purchase Requisition", {}).values():
+					if getattr(doc, "pr_no", None) == pr_no:
+						return doc.name
+			return None
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.get_doc = MagicMock(side_effect=_build_fake_get_doc(registry, counters))
+
+		long_po_reference = (
+			"DEC 16 - 3MD / 50K CUP AND LID, DEC 17 - JENTEC / 50K CUP AND LID "
+			"DEC 18 - 3MD / 50K CUP AND LID, DEC 19 - JENTEC / 50K CUP AND LID "
+			"DEC 20 - 3MD / 50K CUP AND LID DEC 22 - 3MD / 50K CUP AND LID"
+		)
+		row = {
+			"pr_no": "PR2025249_12e1548d",
+			"timestamp": "2025-12-14 07:28:55",
+			"delivery_to": "JENTEC WAREHOUSE",
+			"purpose": "Legacy import",
+			"date_required": "2025-12-16",
+			"requested_by": "Ian Dionisio",
+			"requested_by_email": "ian@bebang.ph",
+		}
+		related_data = {
+			"procurement_pr_items": [
+				{
+					"pr_no": "PR2025249_12e1548d",
+					"item_code": "PM001",
+					"description": "16OZ CUP WITH LOGO",
+					"total_order": 600000,
+					"unit_of_issue": "PIECE",
+					"po_reference": long_po_reference,
+					"added_by": "Ian Dionisio",
+				}
+			]
+		}
+
+		with patch.object(erp_sync, "_resolve_warehouse", return_value="Stores - BEI"):
+			result = erp_sync.sync_procurement_requisitions(
+				"Procurement Requisitions",
+				[row],
+				"chk-proc-pr-truncate-1",
+				related_data=related_data,
+			)
+
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(result["rows_failed"], 0)
+		stored = next(iter(registry["BEI Purchase Requisition"].values()))
+		self.assertLessEqual(len(stored.items[0]["po_reference"]), 140)
+		self.assertTrue(stored.items[0]["po_reference"].endswith("..."))
 
 	def test_sync_procurement_purchase_orders_creates_then_updates_status(self):
 		registry = {
@@ -851,6 +981,8 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(stored_gr.status, "Accepted")
 		self.assertEqual(po_doc.items[0].received_qty, 5000)
 		self.assertEqual(po_doc.status, "Fully Received")
+		self.assertEqual(stored_gr.supplier_invoice_photo, "/files/GR202561.Invoice.044645.jpg")
+		self.assertTrue(stored_gr.flags.ignore_mandatory)
 
 	def test_sync_procurement_goods_receipts_skips_supplier_invoice_photo_when_field_missing(self):
 		registry = {

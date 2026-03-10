@@ -7,6 +7,7 @@ and sync it to ERPNext DocTypes.
 
 import hashlib
 import json
+from types import SimpleNamespace
 from typing import Any
 
 import frappe
@@ -1043,9 +1044,16 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 		savepoint: str | None = None
 		try:
 			supplier_input = _first_non_empty(row, "supplier", "supplier_name")
-			invoice_no = _first_non_empty(row, "invoice_no", "reference", "bill_no")
-			amount = flt(_first_non_empty(row, "amount", "balance", "outstanding") or 0)
-			company = _normalize_company(_first_non_empty(row, "company"))
+			invoice_no = _first_non_empty(row, "invoice_no", "invoice_no.", "reference", "bill_no")
+			if not supplier_input or not invoice_no:
+				results["rows_failed"] += 1
+				results["errors"].append("Missing supplier or invoice_no in AP opening row")
+				continue
+
+			amount = _safe_float(
+				_first_non_empty(row, "outstanding_balance", "balance", "outstanding", "amount")
+			)
+			company = _normalize_company(_first_non_empty(row, "company", "billed_to"))
 			dedupe_key = f"{company}|{supplier_input}|{invoice_no}"
 			if supplier_input and invoice_no and dedupe_key in seen_supplier_invoice_keys:
 				results["rows_updated"] += 1
@@ -1053,19 +1061,18 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 			if supplier_input and invoice_no:
 				seen_supplier_invoice_keys.add(dedupe_key)
 
+			if amount <= 0:
+				results["rows_updated"] += 1
+				continue
+
 			savepoint = _make_savepoint("sync_ap", f"{sheet_name}|{checksum}|{dedupe_key}")
 			frappe.db.savepoint(savepoint)
 
 			posting_date = (
-				_safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date")) or nowdate()
+				_safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date", "date_entry"))
+				or nowdate()
 			)
 			due_date = _safe_date(_first_non_empty(row, "due_date")) or posting_date
-
-			if not supplier_input or not invoice_no:
-				results["rows_failed"] += 1
-				results["errors"].append("Missing supplier or invoice_no in AP opening row")
-				_release_savepoint(savepoint)
-				continue
 
 			supplier = _ensure_supplier(str(supplier_input))
 			existing = frappe.db.get_value(
@@ -1200,6 +1207,38 @@ def _normalize_sheet_text(value: Any) -> str | None:
 	if not text or text.lower() in _PROCUREMENT_NULL_TOKENS:
 		return None
 	return text
+
+
+def _truncate_text(value: Any, max_length: int = 140) -> str | None:
+	text = _normalize_sheet_text(value)
+	if text is None or len(text) <= max_length:
+		return text
+	if max_length <= 3:
+		return text[:max_length]
+	return f"{text[: max_length - 3].rstrip()}..."
+
+
+def _normalize_file_url(value: Any) -> str | None:
+	text = _normalize_sheet_text(value)
+	if text is None:
+		return None
+
+	normalized = text.replace("\\", "/").strip()
+	if normalized.startswith(("/files/", "/private/files/")) or "://" in normalized:
+		return normalized
+
+	filename = normalized.rsplit("/", 1)[-1].strip()
+	if not filename:
+		return None
+	return f"/files/{filename}"
+
+
+def _ensure_doc_flags(doc: Any) -> Any:
+	flags = getattr(doc, "flags", None)
+	if flags is None:
+		flags = SimpleNamespace()
+		doc.flags = flags
+	return flags
 
 
 def _safe_float(value: Any) -> float:
@@ -1483,7 +1522,7 @@ def sync_procurement_requisitions(
 				"description": description,
 				"qty": qty,
 				"uom": _normalize_sheet_text(_first_non_empty(item_row, "unit_of_issue", "uom")) or "Pcs",
-				"po_reference": _normalize_sheet_text(_first_non_empty(item_row, "po_reference")),
+				"po_reference": _truncate_text(_first_non_empty(item_row, "po_reference")),
 				"added_by": _normalize_sheet_text(_first_non_empty(item_row, "added_by")),
 			}
 		)
@@ -1756,7 +1795,8 @@ def sync_procurement_goods_receipts(
 			doc.delivery_note_no = _normalize_sheet_text(_first_non_empty(row, "invoice_no")) or gr_no
 			doc.warehouse = _resolve_warehouse(_first_non_empty(row, "issue_to"))
 			if _doctype_has_field("BEI Goods Receipt", "supplier_invoice_photo"):
-				doc.supplier_invoice_photo = _normalize_sheet_text(_first_non_empty(row, "invoice"))
+				doc.supplier_invoice_photo = _normalize_file_url(_first_non_empty(row, "invoice"))
+			_ensure_doc_flags(doc).ignore_mandatory = True
 			doc.inspection_required = 0
 			doc.status = _build_gr_status(row)
 			_replace_child_rows(doc, "items", items)
