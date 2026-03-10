@@ -555,6 +555,7 @@ class TestErpSync(unittest.TestCase):
 			"invoice_no": "INV-001",
 			"amount": 24500.0,
 			"due_date": "2026-02-15",
+			"billed_to": "BEBANG SHAW INC",
 		}
 
 		with (
@@ -572,7 +573,12 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(first["rows_created"], 1)
 		self.assertEqual(second["rows_updated"], 1)
 		self.assertEqual(len(created_docs), 1)
+		self.assertEqual(created_docs[0].bei_legal_entity, "BEI")
+		self.assertEqual(created_docs[0].bei_store_label, "Stores - BEI")
 		erp_sync.frappe.db.set_value.assert_called_once()
+		update_fields = erp_sync.frappe.db.set_value.call_args[0][2]
+		self.assertEqual(update_fields["bei_legal_entity"], "BEI")
+		self.assertEqual(update_fields["bei_store_label"], "Stores - BEI")
 
 	def test_sync_supplier_soa_aliases_sync_ap_opening(self):
 		rows = [{"supplier": "Acme Supply", "invoice_no": "INV-001"}]

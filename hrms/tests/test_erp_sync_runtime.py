@@ -29,6 +29,17 @@ def _install_fake_hrms():
 	sys.modules["hrms.utils.store_order_demand_snapshot"] = store_snapshot_mod
 	utils_pkg.store_order_demand_snapshot = store_snapshot_mod
 
+	standard_buying_bridge_mod = types.ModuleType("hrms.utils.standard_buying_bridge")
+
+	def apply_standard_buying_context(doc, *, store_label=None, legal_entity=None):
+		if legal_entity:
+			doc.set("bei_legal_entity", legal_entity)
+		doc.set("bei_store_label", store_label or "Stores - BEI")
+
+	standard_buying_bridge_mod.apply_standard_buying_context = apply_standard_buying_context
+	sys.modules["hrms.utils.standard_buying_bridge"] = standard_buying_bridge_mod
+	utils_pkg.standard_buying_bridge = standard_buying_bridge_mod
+
 
 def _install_fake_frappe():
 	if "frappe" in sys.modules:
