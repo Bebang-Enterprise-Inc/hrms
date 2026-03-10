@@ -243,6 +243,10 @@ class TestErpSync(unittest.TestCase):
 					if sync_ref in like_value:
 						return "SR-0001"
 				return None
+			if doctype == "Account" and isinstance(filters, dict):
+				return "Stock Adjustment - BEI"
+			if doctype == "Company" and filters == "BEI" and fieldname == "cost_center":
+				return "Main - BEI"
 			return None
 
 		def new_doc(doctype):
@@ -308,6 +312,10 @@ class TestErpSync(unittest.TestCase):
 				return 1
 			if doctype == "Item" and filters == "FG001" and fieldname == "has_serial_no":
 				return 0
+			if doctype == "Account" and isinstance(filters, dict):
+				return "Stock Adjustment - BEI"
+			if doctype == "Company" and filters == "BEI" and fieldname == "cost_center":
+				return "Main - BEI"
 			return None
 
 		def new_doc(doctype):

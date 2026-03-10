@@ -923,6 +923,14 @@ def _sync_inventory_rows(
 			sr.posting_date = nowdate()
 			sr.posting_time = now_datetime().strftime("%H:%M:%S")
 			sr.company = _normalize_company()
+			expense_account = _default_expense_account(sr.company)
+			cost_center = _default_cost_center(sr.company)
+			if _doctype_has_field("Stock Reconciliation", "expense_account"):
+				if not expense_account:
+					frappe.throw(_("No stock adjustment expense account configured for company {0}").format(sr.company))
+				sr.expense_account = expense_account
+			if _doctype_has_field("Stock Reconciliation", "cost_center") and cost_center:
+				sr.cost_center = cost_center
 			if has_remarks:
 				sr.remarks = (
 					f"ERP Inventory Sync ({sync_ref}) "
