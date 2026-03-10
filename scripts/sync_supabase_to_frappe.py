@@ -123,7 +123,11 @@ def post_checkin(client: httpx.Client, pin: str, timestamp: str, device_id: str)
 		},
 		timeout=30,
 	)
-	return {"status_code": r.status_code, "body": r.json() if r.status_code != 500 else r.text[:500]}
+	try:
+		body = r.json()
+	except Exception:
+		body = r.text[:500]
+	return {"status_code": r.status_code, "body": body}
 
 
 # ---------------------------------------------------------------------------
