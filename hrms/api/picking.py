@@ -6,6 +6,8 @@ BEI Pick List API
 Handles warehouse picking workflow: order approved -> items picked -> loaded -> trip departs
 """
 
+from typing import Any
+
 import frappe
 from frappe import _
 from frappe.utils import flt, now_datetime, nowdate
@@ -17,7 +19,7 @@ from hrms.utils.scm_roles import SCM_PICKING_ROLES
 from hrms.utils.scm_roles import check_scm_permission as _check_picking_permission
 
 
-def _resolve_trip_source_warehouse(trip):
+def _resolve_trip_source_warehouse(trip: Any):
 	"""Resolve the source warehouse for a trip across route-linked schema variants."""
 	source_warehouse = getattr(trip, "warehouse", None) or getattr(trip, "source_warehouse", None)
 	if source_warehouse:
@@ -39,7 +41,7 @@ def _resolve_trip_source_warehouse(trip):
 
 
 @frappe.whitelist()
-def generate_pick_list(trip_name):
+def generate_pick_list(trip_name: str):
 	"""
 	Auto-create pick list from trip's approved BEI Store Orders.
 	Groups items by store. Returns existing pick list if already created.
@@ -124,7 +126,7 @@ def generate_pick_list(trip_name):
 
 
 @frappe.whitelist()
-def get_pick_list(trip_name):
+def get_pick_list(trip_name: str):
 	"""Fetch pick list with all items for a given trip."""
 	_check_picking_permission(SCM_PICKING_ROLES, "view pick lists")
 
@@ -171,7 +173,7 @@ def get_pick_list(trip_name):
 
 
 @frappe.whitelist()
-def update_pick_item(pick_list_name, item_idx, qty_picked):
+def update_pick_item(pick_list_name: str, item_idx: int | str, qty_picked: float | str):
 	"""
 	Picker updates the actual qty picked for a specific item.
 	Sets item.picked = 1 when qty_picked >= 0.
@@ -218,7 +220,7 @@ def update_pick_item(pick_list_name, item_idx, qty_picked):
 
 
 @frappe.whitelist()
-def complete_picking(pick_list_name):
+def complete_picking(pick_list_name: str):
 	"""
 	Mark pick list as Packed after all items have been picked.
 	Validates that every item has picked=1 before proceeding.
@@ -252,7 +254,7 @@ def complete_picking(pick_list_name):
 
 
 @frappe.whitelist()
-def confirm_loaded(pick_list_name):
+def confirm_loaded(pick_list_name: str):
 	"""
 	Mark pick list as Loaded (driver confirms items on truck).
 	P0-1 fix: Creates one Material Transfer Stock Entry PER STOP (not per pick list),
