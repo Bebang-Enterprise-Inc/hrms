@@ -1359,9 +1359,10 @@ def create_trip_from_route(
 		vehicle = route.default_vehicle
 		vehicle_plate = frappe.db.get_value("BEI Vehicle", route.default_vehicle, "vehicle_plate")
 
+	if isinstance(selected_stops, str):
+		selected_stops = frappe.parse_json(selected_stops)
+
 	if selected_stops:
-		if isinstance(selected_stops, str):
-			selected_stops = frappe.parse_json(selected_stops)
 
 		# Validate all selected stores exist in route's zone pool
 		zone_stores = {s.store for s in route.stops}
