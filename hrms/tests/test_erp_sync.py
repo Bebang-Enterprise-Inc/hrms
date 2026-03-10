@@ -42,6 +42,7 @@ def _install_fake_frappe():
 	frappe.logger = lambda: types.SimpleNamespace(info=lambda *args, **kwargs: None)
 	frappe.get_traceback = lambda: "traceback"
 	frappe.defaults = types.SimpleNamespace(get_global_default=lambda key: None)
+	frappe.get_site_path = lambda *parts: str(ROOT / "tmp_test_site" / Path(*parts))
 	frappe.__dict__["session"] = types.SimpleNamespace(user="Administrator")
 	frappe.get_roles = lambda user=None: ["System Manager"] if user and user != "Guest" else []
 	frappe.__dict__["request"] = types.SimpleNamespace(headers={}, data=b"")
@@ -52,6 +53,7 @@ def _install_fake_frappe():
 		savepoint=lambda *args, **kwargs: None,
 		release_savepoint=lambda *args, **kwargs: None,
 		rollback=lambda *args, **kwargs: None,
+		commit=lambda *args, **kwargs: None,
 	)
 	frappe.get_all = lambda *args, **kwargs: []
 	frappe.get_meta = lambda *args, **kwargs: types.SimpleNamespace(has_field=lambda *_: True)
@@ -89,14 +91,24 @@ def _install_fake_hrms_utils():
 	)
 	builder_module = importlib.util.module_from_spec(builder_spec)
 	assert builder_spec and builder_spec.loader
+	sys.modules["hrms.utils.store_order_demand_snapshot"] = builder_module
 	builder_spec.loader.exec_module(builder_module)
 
+	store_inventory_spec = importlib.util.spec_from_file_location(
+		"hrms.utils.store_inventory_shadow_sync",
+		ROOT / "hrms" / "utils" / "store_inventory_shadow_sync.py",
+	)
+	store_inventory_module = importlib.util.module_from_spec(store_inventory_spec)
+	assert store_inventory_spec and store_inventory_spec.loader
+	sys.modules["hrms.utils.store_inventory_shadow_sync"] = store_inventory_module
+	store_inventory_spec.loader.exec_module(store_inventory_module)
+
 	utils_pkg.store_order_demand_snapshot = builder_module
+	utils_pkg.store_inventory_shadow_sync = store_inventory_module
 	hrms_pkg.utils = utils_pkg
 
 	sys.modules["hrms"] = hrms_pkg
 	sys.modules["hrms.utils"] = utils_pkg
-	sys.modules["hrms.utils.store_order_demand_snapshot"] = builder_module
 
 
 _install_fake_hrms_utils()
@@ -408,6 +420,53 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(result["snapshot_rows"], 1)
 		self.assertEqual(result["unmapped_products"], 0)
 		self.assertEqual(result["sync_result"]["rows_created"], 1)
+
+	def test_enqueue_scheduled_store_inventory_shadow_sync_queues_daily_job(self):
+		erp_sync.frappe.enqueue = MagicMock()
+
+		result = erp_sync.enqueue_scheduled_store_inventory_shadow_sync(
+			run_date="2026-03-10",
+			force=True,
+		)
+
+		self.assertTrue(result["queued"])
+		self.assertEqual(result["job_id"], "scheduled_store_inventory_shadow_sync:2026-03-10")
+		erp_sync.frappe.enqueue.assert_called_once_with(
+			"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
+			queue="long",
+			job_id="scheduled_store_inventory_shadow_sync:2026-03-10",
+			enqueue_after_commit=True,
+			run_date="2026-03-10",
+			force=True,
+		)
+
+	def test_run_scheduled_store_inventory_shadow_sync_executes_builder(self):
+		builder_module = erp_sync.store_inventory_shadow_sync_builder
+		builder_result = {
+			"run_date": "2026-03-10",
+			"enabled_stores": 46,
+			"imported_stores": 44,
+			"skipped_unchanged": 2,
+			"rows_created": 3200,
+			"rows_updated": 0,
+			"rows_failed": 0,
+			"failed_stores": [],
+		}
+
+		with (
+			patch.object(
+				builder_module, "run_store_inventory_shadow_sync", return_value=builder_result
+			) as run_mock,
+			patch.object(erp_sync.frappe, "log_error", MagicMock()),
+		):
+			result = erp_sync.run_scheduled_store_inventory_shadow_sync(
+				run_date="2026-03-10",
+				force=False,
+			)
+
+		run_mock.assert_called_once_with(run_date="2026-03-10", force=False)
+		self.assertEqual(result["imported_stores"], 44)
+		self.assertEqual(result["rows_created"], 3200)
 
 	def test_resolve_warehouse_accepts_warehouse_name_lookup(self):
 		def db_exists(doctype, name=None):

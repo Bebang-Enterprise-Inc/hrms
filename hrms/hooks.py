@@ -376,8 +376,11 @@ scheduler_events = {
 		],
 		# Monthly billing generation: 6 AM on 1st of each month
 		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
-		# Store demand snapshot sync: 8:00 AM PHT daily (00:00 UTC)
-		"0 0 * * *": ["hrms.api.erp_sync.enqueue_scheduled_store_demand_snapshot_sync"],
+		# Store demand + inventory shadow sync: 8:00 AM PHT daily (00:00 UTC)
+		"0 0 * * *": [
+			"hrms.api.erp_sync.enqueue_scheduled_store_inventory_shadow_sync",
+			"hrms.api.erp_sync.enqueue_scheduled_store_demand_snapshot_sync",
+		],
 		# Discount audit workbook: 12:50 AM PHT after Supabase alert refresh at 12:35 AM PHT
 		"42 16 * * *": ["hrms.api.discount_abuse.scheduled_refresh_discount_benchmark_snapshots"],
 		# Discount audit workbook: 12:50 AM PHT after benchmark refresh
