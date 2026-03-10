@@ -11,12 +11,55 @@ All notifications are tracked in the database for audit trail.
 """
 
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Any
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from hrms.utils.chat_space_lockdown import route_outbound_chat_space
+
+try:
+	from hrms.utils.chat_space_lockdown import route_outbound_chat_space
+except ModuleNotFoundError:
+	_TRUE_VALUES = {"1", "true", "yes", "on"}
+
+	def route_outbound_chat_space(
+		requested_space: str | None,
+		*,
+		logger=None,
+		context: str | None = None,
+	) -> str:
+		requested = (requested_space or "").strip()
+		blip_space = (
+			(os.environ.get("BEI_BLIP_NOTIFICATIONS_SPACE") or "").strip() or "spaces/AAQABiNmpBg"
+		)
+		lockdown_enabled = (os.environ.get("BEI_CHAT_LOCKDOWN_ENABLED") or "true").strip().lower() in _TRUE_VALUES
+		allow_non_blip = (
+			(os.environ.get("BEI_ALLOW_NON_BLIP_CHAT_DESTINATIONS") or "false").strip().lower()
+			in _TRUE_VALUES
+		)
+		allowed_spaces = {
+			space.strip()
+			for space in (os.environ.get("BEI_ALLOWED_CHAT_SPACES") or "").split(",")
+			if space.strip()
+		}
+
+		if not requested:
+			return blip_space
+		if not lockdown_enabled:
+			return requested
+		if requested == blip_space:
+			return requested
+		if allow_non_blip and requested in allowed_spaces:
+			return requested
+		if logger is not None:
+			logger.warning(
+				"Outbound Google Chat destination rerouted to ! Blip Notifications; requested=%s effective=%s context=%s",
+				requested,
+				blip_space,
+				context or "unspecified",
+			)
+		return blip_space
 
 logger = logging.getLogger(__name__)
 
