@@ -247,8 +247,7 @@ def build_team_message(summary: dict[str, Any]) -> list[str]:
 		"",
 		f"There are {summary['live_blocked_rows']} rows that need invoice numbers completed across {summary['affected_suppliers']} suppliers.",
 		(
-			f"The latest AP sync failed on {summary['receiver_rows_failed']} rows, and the current live workbook now shows "
-			f"{summary['live_blocked_rows']} rows missing INVOICE NO."
+			f"The latest AP sync failed on {summary['receiver_rows_failed']} rows, and the current live workbook now shows {summary['live_blocked_rows']} rows missing INVOICE NO."
 			if summary["receiver_rows_failed"] is not None
 			else f"The current live workbook now shows {summary['live_blocked_rows']} rows missing INVOICE NO."
 		),
