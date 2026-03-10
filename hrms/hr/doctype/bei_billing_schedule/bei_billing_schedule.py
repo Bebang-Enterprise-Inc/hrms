@@ -35,6 +35,13 @@ NAMING_SERIES = {
 DEFAULT_NAMING_SERIES = "BILL-MF-.YYYY.-.#####"
 
 
+def _get_department_email(department_name):
+	if not department_name or not frappe.db.has_column("Department", "department_email"):
+		return None
+
+	return frappe.db.get_value("Department", department_name, "department_email")
+
+
 def _get_account_by_number(account_number, company=None):
 	"""Get full Frappe account name from account_number."""
 	return frappe.db.get_value(
@@ -310,7 +317,7 @@ class BEIBillingSchedule(Document):
 
 		# Get store manager email from Department
 		recipients = []
-		dept = frappe.db.get_value("Department", self.store, "department_email")
+		dept = _get_department_email(self.store)
 		if dept:
 			recipients.append(dept)
 
