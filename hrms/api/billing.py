@@ -33,7 +33,7 @@ def _get_rate_actor_role(user: str | None = None) -> str | None:
 	user_roles = set(frappe.get_roles(user or frappe.session.user) or [])
 	if "Accounts Manager" in user_roles:
 		return "Finance"
-	if "Supply Chain Manager" in user_roles:
+	if user_roles.intersection({"Supply Chain Manager", "Warehouse Manager", "Warehouse User"}):
 		return "Supply Chain"
 	return None
 
