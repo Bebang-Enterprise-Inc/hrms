@@ -763,9 +763,24 @@ def _get_order_goods_value(store_order: str | None):
 	"""Calculate the total goods value from a store order's line items."""
 	if not store_order:
 		return 0
+
+	qty_fields = []
+	for fieldname in ("qty", "qty_delivered", "qty_approved", "qty_requested"):
+		if _has_column("BEI Store Order Item", fieldname):
+			qty_fields.append(fieldname)
+
+	if not qty_fields:
+		return 0
+
+	if qty_fields[0] == "qty":
+		qty_expr = "qty"
+	else:
+		non_zero_candidates = [f"NULLIF({fieldname}, 0)" for fieldname in qty_fields[:-1]]
+		qty_expr = f"COALESCE({', '.join(non_zero_candidates + [qty_fields[-1], '0'])})"
+
 	result = frappe.db.sql(
-		"""
-        SELECT COALESCE(SUM(qty * unit_price), 0)
+		f"""
+        SELECT COALESCE(SUM(({qty_expr}) * unit_price), 0)
         FROM `tabBEI Store Order Item`
         WHERE parent = %s
     """,
