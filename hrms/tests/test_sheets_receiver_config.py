@@ -25,6 +25,10 @@ class TestSheetsReceiverConfig(unittest.TestCase):
 		self.assertIsNotNone(supplier_soa_config)
 		self.assertEqual(ap_config.sheet_name, "SUPPLIERS SOA")
 		self.assertEqual(ap_config.sheet_name, supplier_soa_config.sheet_name)
+		self.assertEqual(ap_config.range, "A2:Z")
+		self.assertEqual(supplier_soa_config.range, "A2:Z")
+		self.assertEqual(ap_config.key_column, "invoice_no.")
+		self.assertEqual(supplier_soa_config.key_column, "invoice_no.")
 
 
 if __name__ == "__main__":

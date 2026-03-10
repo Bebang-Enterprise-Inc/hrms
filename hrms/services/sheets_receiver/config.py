@@ -82,6 +82,9 @@ class ServiceConfig:
 	sync_retry_attempts: int = 3
 	sync_retry_delay_seconds: int = 5
 	batch_size: int = 100  # Rows per API call
+	frappe_request_timeout_seconds: int = field(
+		default_factory=lambda: int(os.environ.get("FRAPPE_REQUEST_TIMEOUT_SECONDS", "180"))
+	)
 
 	# Logging
 	log_level: str = field(default_factory=lambda: os.environ.get("LOG_LEVEL", "INFO"))
@@ -142,11 +145,11 @@ WATCHED_SHEETS: dict[str, SheetConfig] = {
 		name="AP Opening Balance",
 		spreadsheet_id="1ZHe2VoAFa94ET4I68C1jWM7nMzTdTCvttwZbICaLtB4",
 		sheet_name="SUPPLIERS SOA",
-		range="A:Z",
+		range="A2:Z",
 		owner_email="alyssa@bebang.ph",
 		sync_endpoint="/api/method/hrms.api.erp_sync.sync_ap_opening",
 		doctype="Purchase Invoice",
-		key_column="invoice_no",
+		key_column="invoice_no.",
 		sync_mode="upsert",
 		enabled=True,
 	),
@@ -154,11 +157,11 @@ WATCHED_SHEETS: dict[str, SheetConfig] = {
 		name="Supplier SOA",
 		spreadsheet_id="1ZHe2VoAFa94ET4I68C1jWM7nMzTdTCvttwZbICaLtB4",
 		sheet_name="SUPPLIERS SOA",
-		range="A:Z",
+		range="A2:Z",
 		owner_email="alyssa@bebang.ph",
 		sync_endpoint="/api/method/hrms.api.erp_sync.sync_supplier_soa",
 		doctype="Supplier",
-		key_column="supplier_name",
+		key_column="invoice_no.",
 		sync_mode="upsert",
 		enabled=True,
 	),
