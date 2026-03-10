@@ -314,7 +314,10 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		trip = _TripMutationDoc(status="In Transit")
 		dispatch.frappe.get_doc = MagicMock(return_value=trip)
 
-		with patch.object(dispatch, "now_datetime", return_value="2026-02-28 09:15:00"):
+		with (
+			patch.object(dispatch, "now_datetime", return_value="2026-02-28 09:15:00"),
+			patch.object(dispatch, "_save_base64_attachment", return_value="/files/dispatch_exception.png"),
+		):
 			result = dispatch.report_exception(
 				trip_name="TRIP-MUTATION-0001",
 				stop_idx=1,
@@ -325,6 +328,7 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 
 		self.assertTrue(result["success"])
 		self.assertEqual(trip.stops[0].status, "Store Closed")
+		self.assertEqual(trip.stops[0].exception_photo, "/files/dispatch_exception.png")
 		self.assertEqual(trip.status, "Partial")
 		self.assertTrue(trip.flags.ignore_permissions)
 		self.assertTrue(trip.flags.ignore_user_permissions)
