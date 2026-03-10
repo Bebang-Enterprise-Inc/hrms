@@ -169,6 +169,7 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		self.assertIn("0 AS is_weekend_trip", query)
 		self.assertNotIn("dt.overtime_hours", query)
 		self.assertIn("GROUP_CONCAT(DISTINCT ds.store SEPARATOR ', ') AS stores", query)
+		self.assertIn("COALESCE(dt.vehicle_owner, '') != ''", query)
 		self.assertIn("dt.docstatus < 2", query)
 		self.assertNotIn("ds.department", query)
 
@@ -180,6 +181,7 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		query = billing._get_3pl_trip_query()
 
 		self.assertIn("GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores", query)
+		self.assertIn("COALESCE(dt.vehicle_owner, '') != ''", query)
 		self.assertIn("dt.docstatus < 2", query)
 		self.assertNotIn("ds.store", query)
 
@@ -191,6 +193,14 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		query = billing._get_3pl_trip_count_query()
 
 		self.assertIn("dt.docstatus < 2", query)
+
+	def test_billing_normalizes_live_partner_aliases(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_partner_alias_under_test", "hrms/api/billing.py")
+
+		self.assertEqual(billing._normalize_3pl_partner_label("Four Coolitz"), "COOLITZ")
+		self.assertEqual(billing._normalize_3pl_partner_label("coolitz"), "COOLITZ")
+		self.assertEqual(billing._normalize_3pl_partner_label("RCS"), "RCS")
 
 	def test_dispatch_maps_cell_number_back_to_cell_phone(self):
 		_install_dispatch_deps()
