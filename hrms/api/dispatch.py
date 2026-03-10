@@ -177,7 +177,8 @@ def confirm_departure(
 
 	trip.departure_time = now_datetime()
 	trip.status = "In Transit"
-	trip.save()
+	_enable_role_gated_write(trip)
+	trip.save(ignore_permissions=True)
 
 	return {"success": True, "message": f"Trip {trip_name} departed at {trip.departure_time}"}
 
@@ -243,7 +244,8 @@ def confirm_delivery(
 		)
 
 	delivered, total = _update_trip_status(trip)
-	trip.save()
+	_enable_role_gated_write(trip)
+	trip.save(ignore_permissions=True)
 
 	# Update linked BEI Store Order status to "Delivered"
 	if hasattr(stop, "store_order") and stop.store_order:
@@ -307,7 +309,8 @@ def report_exception(
 		stop.exception_photo = photo
 
 	_update_trip_status(trip, require_all_processed=True)
-	trip.save()
+	_enable_role_gated_write(trip)
+	trip.save(ignore_permissions=True)
 
 	return {"success": True, "message": f"Exception reported for {stop.store}: {exception_type}"}
 
