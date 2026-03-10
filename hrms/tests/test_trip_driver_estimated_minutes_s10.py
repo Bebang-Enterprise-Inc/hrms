@@ -70,6 +70,10 @@ def _install_fake_frappe_and_dependencies():
 
 	sys.modules["frappe"] = frappe
 	sys.modules["frappe.utils"] = utils
+	if "frappe.exceptions" not in sys.modules:
+		exceptions = types.ModuleType("frappe.exceptions")
+		exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
+		sys.modules["frappe.exceptions"] = exceptions
 
 	if "hrms" not in sys.modules:
 		hrms_pkg = types.ModuleType("hrms")
@@ -132,6 +136,7 @@ class _TripDoc:
 	def __init__(self, stops):
 		self.name = "TRIP-S10-0001"
 		self.driver = None
+		self.driver_name = None
 		self.vehicle = None
 		self.vehicle_plate = None
 		self.cargo_type = None
@@ -149,6 +154,7 @@ class _TripMutationDoc:
 		self.name = "TRIP-MUTATION-0001"
 		self.status = status
 		self.driver = None
+		self.driver_name = None
 		self.vehicle = None
 		self.vehicle_plate = None
 		self.departure_temp = None
@@ -178,6 +184,7 @@ class _TripMutationDoc:
 
 class _Route:
 	def __init__(self):
+		self.name = "ROUTE-S10"
 		self.route_name = "S10 Route"
 		self.default_vehicle = "TRK-001"
 		self.default_driver = "EMP-DRIVER-DEFAULT"
@@ -319,6 +326,26 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		self.assertTrue(captured["trip"].flags.ignore_permissions)
 		self.assertTrue(captured["trip"].flags.ignore_user_permissions)
 
+	def test_create_trip_from_route_does_not_mark_store_orders_in_transit_before_departure(self):
+		route = _Route()
+		dispatch.frappe.get_doc = MagicMock(return_value=route)
+		dispatch.frappe.db.get_value = MagicMock(side_effect=lambda *args, **kwargs: None)
+		dispatch.frappe.db.get_all = MagicMock(return_value=[])
+
+		with (
+			patch.object(dispatch, "_build_stop_preview", return_value=[]),
+			patch.object(dispatch, "_build_trip_doc", return_value=_TripDoc([])),
+			patch.object(dispatch, "_set_store_orders_in_transit") as set_in_transit,
+		):
+			result = dispatch.create_trip_from_route(
+				route_name="ROUTE-S10",
+				trip_date="2026-02-28",
+				selected_stops="[]",
+			)
+
+		self.assertTrue(result["success"])
+		set_in_transit.assert_not_called()
+
 	def test_enable_role_gated_write_sets_ignore_user_permissions(self):
 		doc = types.SimpleNamespace(flags=None)
 		dispatch._enable_role_gated_write(doc)
@@ -327,9 +354,13 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 
 	def test_confirm_departure_uses_role_gated_save(self):
 		trip = _TripMutationDoc(status="Preparing")
+		trip.stops[0].store_order = "SO-001"
 		dispatch.frappe.get_doc = MagicMock(return_value=trip)
 
-		with patch.object(dispatch, "now_datetime", return_value="2026-02-28 08:00:00"):
+		with (
+			patch.object(dispatch, "now_datetime", return_value="2026-02-28 08:00:00"),
+			patch.object(dispatch, "_set_store_orders_in_transit") as set_in_transit,
+		):
 			result = dispatch.confirm_departure(
 				trip_name="TRIP-MUTATION-0001",
 				driver="EMP-DRIVER-001",
@@ -349,6 +380,7 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		self.assertTrue(trip.flags.ignore_permissions)
 		self.assertTrue(trip.flags.ignore_user_permissions)
 		self.assertEqual(trip.save_kwargs, {"ignore_permissions": True})
+		set_in_transit.assert_called_once_with([{"store_order": "SO-001"}])
 
 	def test_confirm_delivery_uses_role_gated_save(self):
 		trip = _TripMutationDoc(status="In Transit")
