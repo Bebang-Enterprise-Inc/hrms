@@ -32,6 +32,7 @@ STORE_DEMAND_SNAPSHOT_SHEET_NAME = "Store Demand Snapshot"
 STORE_DEMAND_SNAPSHOT_AUTO_PREFIX = "scheduled_store_demand_snapshot"
 STORE_INVENTORY_SHADOW_SYNC_SHEET_NAME = "Store Inventory Shadow Sync"
 STORE_INVENTORY_SHADOW_SYNC_AUTO_PREFIX = "scheduled_store_inventory_shadow_sync"
+STORE_INVENTORY_SHADOW_BATCH_PREFIX = "SHADOW"
 
 
 def _parse_rows(data: Any) -> list[dict[str, Any]]:
@@ -210,6 +211,57 @@ def _store_demand_output_root() -> Path:
 
 def _store_demand_output_dir(snapshot_date: str) -> Path:
 	return _store_demand_output_root() / f"{snapshot_date}_store_order_demand_snapshot_auto"
+
+
+def _log_sync_run_summary(title: str, payload: dict[str, Any]) -> None:
+	"""Log a compact sync summary without risking oversized Error Log titles."""
+	try:
+		message = json.dumps(payload, sort_keys=True, default=str)
+	except Exception:
+		message = str(payload)
+
+	try:
+		frappe.log_error(message=message, title=title[:140])
+	except TypeError:
+		frappe.log_error(message, title[:140])
+
+
+def _is_store_inventory_shadow_sync(sheet_name: str) -> bool:
+	return sheet_name.startswith(STORE_INVENTORY_SHADOW_SYNC_SHEET_NAME)
+
+
+def _normalize_batch_token(value: str) -> str:
+	token = "".join(ch if ch.isalnum() else "-" for ch in str(value or "").strip().upper())
+	token = token.strip("-")
+	while "--" in token:
+		token = token.replace("--", "-")
+	return token or "UNKNOWN"
+
+
+def _build_shadow_batch_id(store_key: str, item_code: str) -> str:
+	store_token = _normalize_batch_token(store_key)
+	item_token = _normalize_batch_token(item_code)
+	return f"{STORE_INVENTORY_SHADOW_BATCH_PREFIX}-{store_token}-{item_token}"[:140]
+
+
+def _ensure_batch_exists(batch_id: str, item_code: str) -> str:
+	batch_id = str(batch_id or "").strip()
+	if not batch_id:
+		frappe.throw(_("Batch ID is required for batch-tracked items"))
+
+	if frappe.db.exists("Batch", batch_id):
+		return batch_id
+
+	if not cint(frappe.db.get_value("Item", item_code, "has_batch_no") or 0):
+		frappe.throw(_("Item {0} is not batch-tracked").format(item_code))
+
+	batch = frappe.new_doc("Batch")
+	batch.batch_id = batch_id
+	batch.item = item_code
+	batch.manufacturing_date = nowdate()
+	batch.description = _("Synthetic shadow batch for pre-cutover store inventory mirror")
+	batch.insert(ignore_permissions=True)
+	return batch.name
 
 
 def _persist_store_demand_outputs(
@@ -646,12 +698,16 @@ def _sync_inventory_rows(
 	results = _init_results(len(rows))
 
 	items_by_warehouse: dict[str, dict[str, dict[str, Any]]] = {}
+	is_shadow_sync = _is_store_inventory_shadow_sync(sheet_name)
 
 	for row in rows:
 		try:
-			item_code = _first_non_empty(row, "item_code", "sku")
+			item_code = str(_first_non_empty(row, "item_code", "sku") or "").strip()
 			warehouse = _resolve_warehouse(_first_non_empty(row, "warehouse", "location", "store"))
 			qty = flt(_first_non_empty(row, "qty", "quantity", "stock") or 0)
+			store_code = str(_first_non_empty(row, "store_code") or "").strip()
+			batch_no = str(_first_non_empty(row, "batch_no") or "").strip()
+			serial_no = str(_first_non_empty(row, "serial_no") or "").strip()
 
 			if not item_code:
 				results["rows_failed"] += 1
@@ -668,6 +724,28 @@ def _sync_inventory_rows(
 				results["errors"].append(f"Warehouse not found for item {item_code}")
 				continue
 
+			has_batch_no = cint(frappe.db.get_value("Item", item_code, "has_batch_no") or 0)
+			has_serial_no = cint(frappe.db.get_value("Item", item_code, "has_serial_no") or 0)
+			use_serial_batch_fields = 0
+
+			if has_serial_no and not serial_no:
+				results["rows_failed"] += 1
+				results["errors"].append(
+					f"Serial-tracked item requires serial detail and cannot be mirrored from aggregate stock: {item_code}"
+				)
+				continue
+
+			if has_batch_no:
+				use_serial_batch_fields = 1
+				if not batch_no:
+					if not is_shadow_sync:
+						results["rows_failed"] += 1
+						results["errors"].append(f"Batch-tracked item requires batch_no: {item_code}")
+						continue
+					batch_no = _build_shadow_batch_id(store_code or warehouse, item_code)
+
+				batch_no = _ensure_batch_exists(batch_no, item_code)
+
 			if warehouse not in items_by_warehouse:
 				items_by_warehouse[warehouse] = {}
 
@@ -676,6 +754,9 @@ def _sync_inventory_rows(
 				"item_code": item_code,
 				"warehouse": warehouse,
 				"qty": qty,
+				"batch_no": batch_no,
+				"serial_no": serial_no,
+				"use_serial_batch_fields": use_serial_batch_fields,
 			}
 
 		except Exception as e:
@@ -724,14 +805,18 @@ def _sync_inventory_rows(
 				setattr(sr, token_field, sync_ref)
 
 			for item in items:
-				sr.append(
-					"items",
-					{
-						"item_code": item["item_code"],
-						"warehouse": warehouse,
-						"qty": item["qty"],
-					},
-				)
+				row_payload = {
+					"item_code": item["item_code"],
+					"warehouse": warehouse,
+					"qty": item["qty"],
+				}
+				if item.get("use_serial_batch_fields"):
+					row_payload["use_serial_batch_fields"] = 1
+				if item.get("batch_no"):
+					row_payload["batch_no"] = item["batch_no"]
+				if item.get("serial_no"):
+					row_payload["serial_no"] = item["serial_no"]
+				sr.append("items", row_payload)
 
 			sr.insert(ignore_permissions=True)
 			sr.submit()
@@ -1397,7 +1482,24 @@ def run_scheduled_store_inventory_shadow_sync(
 		run_date=run_date_value,
 		force=bool(cint(force)),
 	)
-	frappe.log_error(json.dumps(result, sort_keys=True), "Scheduled Store Inventory Shadow Sync")
+	_log_sync_run_summary(
+		"Scheduled Store Inventory Shadow Sync",
+		{
+			"run_date": result.get("run_date"),
+			"enabled_stores": result.get("enabled_stores"),
+			"imported_stores": result.get("imported_stores"),
+			"skipped_unchanged": result.get("skipped_unchanged"),
+			"skipped_non_shadow": result.get("skipped_non_shadow"),
+			"skipped_disabled": result.get("skipped_disabled"),
+			"payload_rows": result.get("payload_rows"),
+			"exception_rows": result.get("exception_rows"),
+			"rows_created": result.get("rows_created"),
+			"rows_updated": result.get("rows_updated"),
+			"rows_failed": result.get("rows_failed"),
+			"failed_store_count": len(result.get("failed_stores") or []),
+			"output_dir": result.get("output_dir"),
+		},
+	)
 	return result
 
 
@@ -1472,7 +1574,24 @@ def run_scheduled_store_demand_snapshot_sync(
 		"output_dir": str(output_dir),
 		"sync_result": sync_result,
 	}
-	frappe.log_error(json.dumps(result, sort_keys=True), "Scheduled Store Demand Snapshot Sync")
+	_log_sync_run_summary(
+		"Scheduled Store Demand Snapshot Sync",
+		{
+			"snapshot_date": result.get("snapshot_date"),
+			"lookback_days": result.get("lookback_days"),
+			"product_daily_rows": result.get("product_daily_rows"),
+			"item_daily_rows": result.get("item_daily_rows"),
+			"snapshot_rows": result.get("snapshot_rows"),
+			"mapping_audit_rows": result.get("mapping_audit_rows"),
+			"excluded_products": result.get("excluded_products"),
+			"unmapped_products": result.get("unmapped_products"),
+			"checksum": result.get("checksum"),
+			"output_dir": result.get("output_dir"),
+			"sync_rows_created": (result.get("sync_result") or {}).get("rows_created"),
+			"sync_rows_updated": (result.get("sync_result") or {}).get("rows_updated"),
+			"sync_rows_failed": (result.get("sync_result") or {}).get("rows_failed"),
+		},
+	)
 	return result
 
 

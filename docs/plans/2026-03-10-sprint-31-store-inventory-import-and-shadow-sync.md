@@ -92,6 +92,7 @@ Create a controlled store-inventory bridge that:
 3. **Analytics rule:** preserve the whole workbook plus normalized history in the data refinery for reporting, reconciliation, and migration audit.
 4. **Post-cutover rule:** once a store starts using my.bebang/Frappe for stock updates and counts, stop sheet-based reconciliation for that store to prevent overwriting live ERP activity.
 5. **No silent drops:** any unmapped item, invalid quantity, blank current balance, or formula error must land in an exception report, not disappear during import.
+6. **Shadow batch rule for pre-cutover stores:** when a store sheet only exposes aggregate qty for a batch-tracked item, the bridge may maintain a stable synthetic shadow batch per `store_code + item_code` solely to keep `Bin.actual_qty` correct until cutover.
 
 ## Staleness Note
 
@@ -238,6 +239,7 @@ Required logic:
 2. Group payloads by target warehouse because `sync_inventory` dedupes per checksum + warehouse.
 3. Generate deterministic payload checksums so reruns with unchanged data do not create duplicate `Stock Reconciliation` docs.
 4. Preserve a machine-readable import manifest for audit and rollback.
+5. For batch-tracked items without source batch detail, use an explicit stable shadow batch identifier rather than silently dropping the row.
 
 Exit gate:
 
@@ -265,6 +267,7 @@ Execution sequence:
    - `Stock Reconciliation` created as expected
    - `Bin.actual_qty` matches payload
    - `hrms.api.store.get_orderable_items` shows the expected `available_stock` for sampled items
+   - batch-tracked items reconcile through the documented shadow-batch policy rather than failing on missing serial/batch bundles
 3. Run full-store import only after sample verification passes.
 
 Exit gate:

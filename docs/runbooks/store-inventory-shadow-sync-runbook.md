@@ -46,10 +46,24 @@ The bridge bootstraps missing master data idempotently before syncing:
 
 - missing store warehouses under `Stores - BEI`
 - missing item masters explicitly marked `create_item` in `store_inventory_item_mapping.csv`
+- stable synthetic `Batch` records for batch-tracked items mirrored from aggregate sheet totals
 
 Current expected bootstrap scope:
 - Warehouses: `NAIA T3`, `SM Sta. Rosa`, `SM Taytay`, `Greenhills Ortigas`
 - Items: `FG021`, `FG022`, `RM010-A`
+
+## Shadow Batch Policy
+
+The store inventory sheets do **not** provide real batch-level stock detail. For pre-cutover stores only, the bridge uses one stable synthetic batch per `store_code + item_code` for batch-tracked items so Frappe can maintain correct `Bin.actual_qty`.
+
+Policy:
+- pattern: `SHADOW-<STORE_CODE>-<ITEM_CODE>`
+- example: `SHADOW-AFT-FG001`
+- scope: only `Store Inventory Shadow Sync*` runs
+- purpose: temporary aggregate on-hand mirror until the store cuts over to Frappe/my.bebang
+- stop condition: once a store moves out of `shadow_sync`, the sheet bridge stops updating that store
+
+This is an operational mirror policy, not a claim that the workbook contains true batch lineage.
 
 ## Operator Controls
 

@@ -144,7 +144,10 @@ class _FakeDoc:
 		if self._on_insert:
 			self._on_insert(self)
 		if not self.name:
-			self.name = f"{self.doctype}-0001"
+			if getattr(self, "batch_id", None):
+				self.name = self.batch_id
+			else:
+				self.name = f"{self.doctype}-0001"
 		return self
 
 	def submit(self):
@@ -282,6 +285,100 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(second["rows_updated"], 2)
 		self.assertEqual(len(created_docs), 1)
 
+	def test_sync_inventory_shadow_sync_uses_stable_batch_placeholder(self):
+		created_sync_refs = set()
+		created_docs = []
+		created_batches = set()
+
+		def db_exists(doctype, name=None):
+			if doctype in ("Item", "Warehouse", "Company"):
+				return name or True
+			if doctype == "Batch":
+				return name in created_batches
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Stock Reconciliation" and isinstance(filters, dict) and "remarks" in filters:
+				like_value = filters["remarks"][1]
+				for sync_ref in created_sync_refs:
+					if sync_ref in like_value:
+						return "SR-0001"
+				return None
+			if doctype == "Item" and filters == "FG001" and fieldname == "has_batch_no":
+				return 1
+			if doctype == "Item" and filters == "FG001" and fieldname == "has_serial_no":
+				return 0
+			return None
+
+		def new_doc(doctype):
+			if doctype == "Batch":
+				def on_insert(doc):
+					doc.name = doc.batch_id
+					created_batches.add(doc.batch_id)
+
+				return _FakeDoc(doctype, on_insert=on_insert)
+
+			if doctype != "Stock Reconciliation":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"SR-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+				match = re.search(r"\((INV:[^)]+)\)", doc.remarks or "")
+				if match:
+					created_sync_refs.add(match.group(1))
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
+			result = erp_sync._sync_inventory_rows(
+				sheet_name="Store Inventory Shadow Sync AFT",
+				data=[{"store_code": "AFT", "item_code": "FG001", "warehouse": "Stores - BEI", "qty": 5}],
+				checksum="chk-shadow-1",
+				require_auth=False,
+			)
+
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["rows_created"], 1)
+		self.assertIn("SHADOW-AFT-FG001", created_batches)
+		self.assertEqual(created_docs[0].items[0]["batch_no"], "SHADOW-AFT-FG001")
+		self.assertEqual(created_docs[0].items[0]["use_serial_batch_fields"], 1)
+
+	def test_sync_inventory_requires_batch_no_outside_shadow_sync(self):
+		def db_exists(doctype, name=None):
+			if doctype in ("Item", "Warehouse", "Company"):
+				return name or True
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Item" and filters == "FG001" and fieldname == "has_batch_no":
+				return 1
+			if doctype == "Item" and filters == "FG001" and fieldname == "has_serial_no":
+				return 0
+			return None
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.new_doc = MagicMock(side_effect=lambda doctype: _FakeDoc(doctype))
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
+			result = erp_sync._sync_inventory_rows(
+				sheet_name="Inventory",
+				data=[{"item_code": "FG001", "warehouse": "Stores - BEI", "qty": 5}],
+				checksum="chk-inv-batch",
+				require_auth=False,
+			)
+
+		self.assertEqual(result["rows_created"], 0)
+		self.assertEqual(result["rows_failed"], 1)
+		self.assertIn("Batch-tracked item requires batch_no: FG001", result["errors"])
+
 	def test_sync_store_demand_snapshot_upserts_by_snapshot_date_warehouse_item(self):
 		created_snapshot_rows = {}
 		created_docs = []
@@ -408,7 +505,7 @@ class TestErpSync(unittest.TestCase):
 				"_sync_store_demand_snapshot_rows",
 				return_value={"rows_created": 1, "rows_updated": 0, "rows_failed": 0, "errors": []},
 			) as sync_mock,
-			patch.object(erp_sync.frappe, "log_error", MagicMock()),
+			patch.object(erp_sync.frappe, "log_error", MagicMock()) as log_error_mock,
 		):
 			result = erp_sync.run_scheduled_store_demand_snapshot_sync(
 				snapshot_date="2026-03-10",
@@ -420,6 +517,9 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(result["snapshot_rows"], 1)
 		self.assertEqual(result["unmapped_products"], 0)
 		self.assertEqual(result["sync_result"]["rows_created"], 1)
+		log_error_mock.assert_called_once()
+		self.assertEqual(log_error_mock.call_args.kwargs["title"], "Scheduled Store Demand Snapshot Sync")
+		self.assertIn("\"snapshot_rows\": 1", log_error_mock.call_args.kwargs["message"])
 
 	def test_enqueue_scheduled_store_inventory_shadow_sync_queues_daily_job(self):
 		erp_sync.frappe.enqueue = MagicMock()
@@ -457,7 +557,7 @@ class TestErpSync(unittest.TestCase):
 			patch.object(
 				builder_module, "run_store_inventory_shadow_sync", return_value=builder_result
 			) as run_mock,
-			patch.object(erp_sync.frappe, "log_error", MagicMock()),
+			patch.object(erp_sync.frappe, "log_error", MagicMock()) as log_error_mock,
 		):
 			result = erp_sync.run_scheduled_store_inventory_shadow_sync(
 				run_date="2026-03-10",
@@ -467,6 +567,9 @@ class TestErpSync(unittest.TestCase):
 		run_mock.assert_called_once_with(run_date="2026-03-10", force=False)
 		self.assertEqual(result["imported_stores"], 44)
 		self.assertEqual(result["rows_created"], 3200)
+		log_error_mock.assert_called_once()
+		self.assertEqual(log_error_mock.call_args.kwargs["title"], "Scheduled Store Inventory Shadow Sync")
+		self.assertIn("\"rows_created\": 3200", log_error_mock.call_args.kwargs["message"])
 
 	def test_resolve_warehouse_accepts_warehouse_name_lookup(self):
 		def db_exists(doctype, name=None):
