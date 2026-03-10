@@ -17,6 +17,13 @@ SOA_READ_ROLES = {
 }
 
 
+def _get_department_email(department_name: str | None) -> str | None:
+	if not department_name or not frappe.db.has_column("Department", "department_email"):
+		return None
+
+	return frappe.db.get_value("Department", department_name, "department_email")
+
+
 def _check_soa_read_access() -> None:
 	roles = set(frappe.get_roles(frappe.session.user))
 	if not roles.intersection(SOA_READ_ROLES):
@@ -334,7 +341,7 @@ def send_soa_to_store(soa_name: str) -> dict[str, Any]:
 
 	# Get recipients
 	recipients = []
-	dept_email = frappe.db.get_value("Department", soa.store, "department_email")
+	dept_email = _get_department_email(soa.store)
 	if dept_email:
 		recipients.append(dept_email)
 
