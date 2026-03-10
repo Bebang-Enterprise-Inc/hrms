@@ -698,7 +698,6 @@ class TestErpSync(unittest.TestCase):
 			"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
 			queue="long",
 			job_id="scheduled_store_inventory_shadow_sync:2026-03-10",
-			enqueue_after_commit=True,
 			run_date="2026-03-10",
 			force=True,
 		)

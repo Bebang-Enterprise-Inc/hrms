@@ -1728,7 +1728,6 @@ def enqueue_scheduled_store_inventory_shadow_sync(
 		"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
 		queue="long",
 		job_id=job_id,
-		enqueue_after_commit=True,
 		run_date=run_date_value,
 		force=force_flag,
 	)
