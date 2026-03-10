@@ -18,9 +18,9 @@ class BEIStatementofAccount(Document):
 			self.total_payments = 0
 		self.balance_due = flt(self.total_billings - flt(self.total_payments), 2)
 
-	def on_submit(self):
+	def before_submit(self):
 		"""Mark as Pending Review on submit."""
 		self.status = "Pending Review"
 
-	def on_cancel(self):
+	def before_cancel(self):
 		self.status = "Cancelled"
