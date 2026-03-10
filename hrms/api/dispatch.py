@@ -208,6 +208,9 @@ def confirm_departure(
 	trip.status = "In Transit"
 	_enable_role_gated_write(trip)
 	trip.save(ignore_permissions=True)
+	_set_store_orders_in_transit(
+		[{"store_order": getattr(stop, "store_order", "")} for stop in getattr(trip, "stops", [])]
+	)
 
 	return {"success": True, "message": f"Trip {trip_name} departed at {trip.departure_time}"}
 
@@ -1030,8 +1033,8 @@ def _set_store_order_status(store_order_name: str, status: str):
 
 def _set_store_orders_in_transit(stops: list[dict[str, Any]]):
 	"""
-	After a trip is created, set all linked BEI Store Orders to "In Transit".
-	Only affects orders that were in "Ready for Dispatch" status.
+	After a trip departs, set all linked BEI Store Orders to "In Transit".
+	Only affects orders already allocated to the departing trip.
 	"""
 	try:
 		for stop_data in stops:
@@ -1585,9 +1588,6 @@ def create_trip_from_route(
 
 	_enable_role_gated_write(trip)
 	trip.insert(ignore_permissions=True)
-
-	# Update linked BEI Store Orders to "In Transit"
-	_set_store_orders_in_transit(stops)
 
 	return {
 		"success": True,
