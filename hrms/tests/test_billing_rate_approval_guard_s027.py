@@ -160,6 +160,7 @@ class TestBillingRateApprovalGuardS027(unittest.TestCase):
 		billing.frappe.get_all = MagicMock(return_value=[types.SimpleNamespace(name="RATE-OLD-001")])
 		billing.frappe.local.db.set_value = MagicMock()
 		billing.frappe.get_roles = MagicMock(return_value=["Supply Chain Manager"])
+		billing.check_scm_permission = MagicMock()
 
 	def test_self_approval_is_blocked(self):
 		self.rate.set_by = "approver@bebang.ph"
@@ -211,6 +212,35 @@ class TestBillingRateApprovalGuardS027(unittest.TestCase):
 		self.assertTrue(result["success"])
 		self.assertEqual(result["status"], "Active")
 		self.assertEqual(self.rate.reviewed_by_role, "Supply Chain")
+
+	def test_get_delivery_rates_checks_rate_permission(self):
+		billing.frappe.get_all = MagicMock(return_value=[])
+
+		result = billing.get_delivery_rates()
+
+		self.assertEqual(result, [])
+		billing.check_scm_permission.assert_called_with(
+			billing.RATE_MANAGEMENT_ROLES, "manage delivery rates"
+		)
+
+	def test_get_pending_billings_checks_billing_permission(self):
+		billing.frappe.get_all = MagicMock(return_value=[])
+
+		result = billing.get_pending_billings()
+
+		self.assertEqual(result, [])
+		billing.check_scm_permission.assert_called_with(billing.SCM_BILLING_ROLES, "view pending billings")
+
+	def test_get_stores_without_rates_checks_rate_permission(self):
+		billing._get_store_type_records = MagicMock(return_value=[])
+		billing.frappe.local.db.sql = MagicMock(return_value=[])
+
+		result = billing.get_stores_without_rates()
+
+		self.assertEqual(result, [])
+		billing.check_scm_permission.assert_called_with(
+			billing.RATE_MANAGEMENT_ROLES, "manage delivery rates"
+		)
 
 
 if __name__ == "__main__":
