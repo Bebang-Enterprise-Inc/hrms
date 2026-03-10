@@ -2069,7 +2069,7 @@ def complete_receiving(
 			has_issues = True
 
 	receiving.status = "With Issues" if has_issues else "Completed"
-	receiving.insert()
+	receiving.insert(ignore_permissions=True)
 
 	return {"success": True, "receiving": receiving.name, "message": f"Receiving {receiving.name} completed"}
 
