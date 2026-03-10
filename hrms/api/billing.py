@@ -1083,9 +1083,7 @@ def generate_3pl_reconciliation(month: int | str, year: int | str, partner: str)
 		as_dict=True,
 	)
 	trips_raw = [
-		trip
-		for trip in trips_all
-		if _normalize_3pl_partner_label(trip.get("partner")) == normalized_partner
+		trip for trip in trips_all if _normalize_3pl_partner_label(trip.get("partner")) == normalized_partner
 	]
 
 	# Fetch all applicable rates for the period, then normalize partner aliases in
