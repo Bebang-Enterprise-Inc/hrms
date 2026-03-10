@@ -7,13 +7,37 @@ Handles warehouse picking workflow: order approved -> items picked -> loaded -> 
 """
 
 import frappe
-from hrms.utils.bei_config import get_company
 from frappe import _
-from frappe.utils import nowdate, now_datetime, flt
+from frappe.utils import flt, now_datetime, nowdate
 
+from hrms.utils.bei_config import get_company
 
 # P0-10: Import centralized RBAC role sets
-from hrms.utils.scm_roles import SCM_PICKING_ROLES, check_scm_permission as _check_picking_permission
+from hrms.utils.scm_roles import SCM_PICKING_ROLES
+from hrms.utils.scm_roles import check_scm_permission as _check_picking_permission
+
+
+def _resolve_trip_source_warehouse(trip):
+	"""Resolve the source warehouse for a trip across route-linked schema variants."""
+	source_warehouse = getattr(trip, "warehouse", None) or getattr(trip, "source_warehouse", None)
+	if source_warehouse:
+		return source_warehouse
+
+	linked_route = getattr(trip, "route", None)
+	if linked_route:
+		source_warehouse = frappe.db.get_value("BEI Route", linked_route, "source_warehouse")
+		if source_warehouse:
+			return source_warehouse
+
+	route_name = getattr(trip, "route_name", None)
+	if route_name:
+		source_warehouse = frappe.db.get_value(
+			"BEI Route", {"route_name": route_name}, "source_warehouse"
+		)
+		if source_warehouse:
+			return source_warehouse
+
+	return frappe.db.get_value("Warehouse", {"is_group": 0, "disabled": 0}, "name")
 
 
 @frappe.whitelist()
@@ -76,11 +100,8 @@ def generate_pick_list(trip_name):
     if not item_map:
         frappe.throw(_("No items found in approved Store Orders for trip {0}").format(trip_name))
 
-    # Determine source warehouse from trip
-    source_warehouse = getattr(trip, "warehouse", None) or getattr(trip, "source_warehouse", None)
-    if not source_warehouse:
-        # Fallback: try to get commissary/main warehouse
-        source_warehouse = frappe.db.get_value("Warehouse", {"is_group": 0, "disabled": 0}, "name")
+    # Determine source warehouse from trip or its linked route.
+    source_warehouse = _resolve_trip_source_warehouse(trip)
 
     frappe.db.savepoint("generate_pick_list")
     try:
