@@ -126,7 +126,9 @@ class _FakeSchedule:
 
 class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 	def setUp(self):
-		self.processor = types.SimpleNamespace(sync_sheet=MagicMock(side_effect=lambda *args, **kwargs: kwargs))
+		self.processor = types.SimpleNamespace(
+			sync_sheet=MagicMock(side_effect=lambda *args, **kwargs: kwargs)
+		)
 		self.db = types.SimpleNamespace(has_successful_sync_since=MagicMock(return_value=False))
 		self.sheet_configs = {
 			"ap_opening_balance": types.SimpleNamespace(
@@ -187,8 +189,8 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 
 	def test_daily_baseline_sync_skips_sheets_already_synced_today(self):
 		now_utc = datetime(2026, 3, 10, 0, 5, tzinfo=UTC)
-		self.db.has_successful_sync_since.side_effect = (
-			lambda spreadsheet_id, sheet_name, trigger, since: sheet_name == "SUPPLIERS SOA"
+		self.db.has_successful_sync_since.side_effect = lambda spreadsheet_id, sheet_name, trigger, since: (
+			sheet_name == "SUPPLIERS SOA"
 		)
 
 		results = main_mod.run_daily_baseline_sync_if_due(now_utc=now_utc)

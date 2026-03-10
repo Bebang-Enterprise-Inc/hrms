@@ -74,8 +74,8 @@ def _install_fake_frappe():
 	utils.nowdate = lambda: "2026-01-01"
 	utils.flt = lambda value: float(value or 0)
 	utils.cint = lambda value: int(float(value or 0))
-	utils.getdate = (
-		lambda value=None: datetime.date.fromisoformat(str(value)) if value else datetime.date(2026, 1, 1)
+	utils.getdate = lambda value=None: (
+		datetime.date.fromisoformat(str(value)) if value else datetime.date(2026, 1, 1)
 	)
 
 	sys.modules["frappe"] = frappe
