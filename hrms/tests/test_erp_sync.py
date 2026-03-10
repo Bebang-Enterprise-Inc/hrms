@@ -347,7 +347,9 @@ class TestErpSync(unittest.TestCase):
 	def test_enqueue_scheduled_store_demand_snapshot_sync_queues_daily_job(self):
 		erp_sync.frappe.enqueue = MagicMock()
 
-		result = erp_sync.enqueue_scheduled_store_demand_snapshot_sync(snapshot_date="2026-03-10", lookback_days=28)
+		result = erp_sync.enqueue_scheduled_store_demand_snapshot_sync(
+			snapshot_date="2026-03-10", lookback_days=28
+		)
 
 		self.assertTrue(result["queued"])
 		self.assertEqual(result["job_id"], "scheduled_store_demand_snapshot:2026-03-10")
@@ -406,6 +408,7 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(result["snapshot_rows"], 1)
 		self.assertEqual(result["unmapped_products"], 0)
 		self.assertEqual(result["sync_result"]["rows_created"], 1)
+
 	def test_resolve_warehouse_accepts_warehouse_name_lookup(self):
 		def db_exists(doctype, name=None):
 			if doctype == "Warehouse":

@@ -189,6 +189,7 @@ def _coerce_metadata_dict(value: Any) -> dict[str, Any]:
 		return parsed if isinstance(parsed, dict) else {}
 	return {}
 
+
 def _store_demand_output_root() -> Path:
 	get_site_path = getattr(frappe, "get_site_path", None)
 	if callable(get_site_path):
@@ -203,7 +204,9 @@ def _store_demand_output_dir(snapshot_date: str) -> Path:
 	return _store_demand_output_root() / f"{snapshot_date}_store_order_demand_snapshot_auto"
 
 
-def _persist_store_demand_outputs(output_dir: Path, outputs: dict[str, Any], lookback_days: int, snapshot_date: str) -> None:
+def _persist_store_demand_outputs(
+	output_dir: Path, outputs: dict[str, Any], lookback_days: int, snapshot_date: str
+) -> None:
 	output_dir.mkdir(parents=True, exist_ok=True)
 	store_demand_snapshot_builder.write_csv(
 		output_dir / "store_product_daily_demand.csv",
@@ -320,6 +323,8 @@ def _persist_store_demand_outputs(output_dir: Path, outputs: dict[str, Any], loo
 		"output_dir": str(output_dir),
 	}
 	(output_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+
+
 def _resolve_root_type(account_type: str | None, gl_code: str | None, row: dict[str, Any]) -> str:
 	explicit = _first_non_empty(row, "root_type")
 	if explicit in ROOT_TYPES:
@@ -757,7 +762,9 @@ def _sync_store_demand_snapshot_rows(
 		try:
 			item_code = str(_first_non_empty(row, "item_code", "sku") or "").strip()
 			warehouse = _resolve_warehouse(_first_non_empty(row, "warehouse", "store", "location"))
-			snapshot_date = _safe_date(_first_non_empty(row, "snapshot_date", "as_of_date", "date")) or nowdate()
+			snapshot_date = (
+				_safe_date(_first_non_empty(row, "snapshot_date", "as_of_date", "date")) or nowdate()
+			)
 
 			if not item_code:
 				results["rows_failed"] += 1
@@ -853,7 +860,8 @@ def _sync_store_demand_snapshot_rows(
 			values = {
 				fieldname: value
 				for fieldname, value in values.items()
-				if fieldname in {"snapshot_date", "warehouse", "item_code"} or _doctype_has_field("BEI Inventory Risk Snapshot", fieldname)
+				if fieldname in {"snapshot_date", "warehouse", "item_code"}
+				or _doctype_has_field("BEI Inventory Risk Snapshot", fieldname)
 			}
 
 			existing = frappe.db.get_value(
@@ -900,6 +908,7 @@ def sync_store_demand_snapshot(sheet_name: str, data: list[dict], checksum: str,
 		checksum=checksum,
 		require_auth=True,
 	)
+
 
 @frappe.whitelist()
 def sync_coa(sheet_name: str, data: list[dict], checksum: str, **kwargs) -> dict:
@@ -1327,7 +1336,9 @@ def sync_supplier_soa(sheet_name: str, data: list[dict], checksum: str, **kwargs
 	return sync_ap_opening(sheet_name=sheet_name, data=data, checksum=checksum, **kwargs)
 
 
-def enqueue_scheduled_store_demand_snapshot_sync(snapshot_date: str | None = None, lookback_days: int = 28) -> dict[str, Any]:
+def enqueue_scheduled_store_demand_snapshot_sync(
+	snapshot_date: str | None = None, lookback_days: int = 28
+) -> dict[str, Any]:
 	"""Queue the daily sales-to-BOM demand snapshot sync for store ordering."""
 	snapshot_date_value = _safe_date(snapshot_date) or nowdate()
 	lookback_days = cint(lookback_days) or 28
@@ -1348,7 +1359,9 @@ def enqueue_scheduled_store_demand_snapshot_sync(snapshot_date: str | None = Non
 	}
 
 
-def run_scheduled_store_demand_snapshot_sync(snapshot_date: str | None = None, lookback_days: int = 28) -> dict[str, Any]:
+def run_scheduled_store_demand_snapshot_sync(
+	snapshot_date: str | None = None, lookback_days: int = 28
+) -> dict[str, Any]:
 	"""Build and sync the mapped store demand snapshot into Frappe."""
 	snapshot_date_value = _safe_date(snapshot_date) or nowdate()
 	lookback_days = cint(lookback_days) or 28
