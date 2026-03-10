@@ -487,6 +487,60 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(created_docs[0].items[0]["valuation_rate"], 0)
 		self.assertEqual(created_docs[0].items[0]["allow_zero_valuation_rate"], 1)
 
+	def test_sync_inventory_uses_warehouse_company_for_reconciliation(self):
+		created_docs = []
+
+		def db_exists(doctype, name=None):
+			if doctype == "Company":
+				return name in {"Bebang Enterprise Inc.", "Bebang Kitchen Inc."}
+			if doctype in ("Item", "Warehouse"):
+				return name or True
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Item" and filters == "CM31" and fieldname in {"has_batch_no", "has_serial_no"}:
+				return 0
+			if doctype == "Warehouse" and filters == "Stores - BEI" and fieldname == "company":
+				return "Bebang Enterprise Inc."
+			if doctype == "Account" and isinstance(filters, dict):
+				company = filters.get("company")
+				return f"Stock Adjustment - {company}"
+			if doctype == "Company" and filters == "Bebang Enterprise Inc." and fieldname == "cost_center":
+				return "Main - BEI"
+			if doctype == "Company" and filters == "Bebang Kitchen Inc." and fieldname == "cost_center":
+				return "Main - BKI"
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Stock Reconciliation":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"SR-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.get_all = MagicMock(return_value=[])
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		with patch.object(erp_sync, "_normalize_company", return_value="Bebang Kitchen Inc."):
+			result = erp_sync._sync_inventory_rows(
+				sheet_name="Store Inventory Shadow Sync AFT",
+				data=[{"store_code": "AFT", "item_code": "CM31", "warehouse": "Stores - BEI", "qty": 3}],
+				checksum="chk-shadow-company-1",
+				require_auth=False,
+			)
+
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(created_docs[0].company, "Bebang Enterprise Inc.")
+		self.assertEqual(created_docs[0].expense_account, "Stock Adjustment - Bebang Enterprise Inc.")
+		self.assertEqual(created_docs[0].cost_center, "Main - BEI")
+
 	def test_sync_store_demand_snapshot_upserts_by_snapshot_date_warehouse_item(self):
 		created_snapshot_rows = {}
 		created_docs = []

@@ -89,6 +89,9 @@ Relevant columns:
 - `state`
 - `notes`
 
+Company binding:
+- each `Stock Reconciliation` posts under the target warehouse's owning company, not the global default company
+
 Allowed active state for the bridge:
 - `shadow_sync`
 

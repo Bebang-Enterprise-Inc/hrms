@@ -190,6 +190,15 @@ def _resolve_warehouse(raw_value: str | None) -> str | None:
 	return None
 
 
+def _company_for_warehouse(warehouse: str | None) -> str:
+	warehouse_name = str(warehouse or "").strip()
+	if warehouse_name:
+		warehouse_company = frappe.db.get_value("Warehouse", warehouse_name, "company")
+		if warehouse_company and frappe.db.exists("Company", warehouse_company):
+			return warehouse_company
+	return _normalize_company()
+
+
 def _coerce_metadata_dict(value: Any) -> dict[str, Any]:
 	if isinstance(value, dict):
 		return dict(value)
@@ -1001,7 +1010,7 @@ def _sync_inventory_rows(
 			sr.purpose = "Stock Reconciliation"
 			sr.posting_date = nowdate()
 			sr.posting_time = now_datetime().strftime("%H:%M:%S")
-			sr.company = _normalize_company()
+			sr.company = _company_for_warehouse(warehouse)
 			expense_account = _default_expense_account(sr.company)
 			cost_center = _default_cost_center(sr.company)
 			if _doctype_has_field("Stock Reconciliation", "expense_account"):
