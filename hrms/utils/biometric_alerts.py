@@ -9,7 +9,8 @@ import csv
 import io
 
 
-from hrms.utils.bei_config import SPACE_ADMIN_IT, get_chat_space, get_service_account_path
+from hrms.utils.bei_config import SPACE_ADMIN_IT, get_service_account_path
+from hrms.utils.chat_space_lockdown import route_outbound_chat_space
 
 BIOMETRIC_ALERT_SPACE = SPACE_ADMIN_IT
 
@@ -23,7 +24,10 @@ def _send_chat_alert(message):
 		)
 		chat = build("chat", "v1", credentials=creds)
 		chat.spaces().messages().create(
-			parent=BIOMETRIC_ALERT_SPACE,
+			parent=route_outbound_chat_space(
+				BIOMETRIC_ALERT_SPACE,
+				context="hrms.utils.biometric_alerts._send_chat_alert",
+			),
 			body={"text": message},
 		).execute()
 	except Exception as e:

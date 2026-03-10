@@ -2,7 +2,7 @@
 """POS Data Anomaly Detection with Google Chat Alerting.
 
 Compares daily POS order counts against store baselines and alerts
-the ERP Automation Committee when anomalies are detected.
+the BEI notification space when anomalies are detected.
 
 Usage:
     python scripts/detect_anomalies.py                    # Yesterday, full run
@@ -21,6 +21,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
+
+from hrms.utils.chat_space_lockdown import route_outbound_chat_space
 
 logging.basicConfig(
     level=logging.INFO,
@@ -371,7 +373,11 @@ def send_google_chat(message: str) -> bool:
         )
         chat = build("chat", "v1", credentials=creds)
         result = chat.spaces().messages().create(
-            parent=CHAT_SPACE,
+            parent=route_outbound_chat_space(
+                CHAT_SPACE,
+                logger=log,
+                context="scripts.detect_anomalies.send_google_chat",
+            ),
             body={"text": message},
         ).execute()
         log.info("Chat message sent: %s", result.get("name", "unknown"))

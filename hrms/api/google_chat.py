@@ -17,6 +17,7 @@ import time
 import frappe
 import requests
 
+from hrms.utils.chat_space_lockdown import route_outbound_chat_space
 from hrms.utils.google_oauth import (
     force_refresh_access_token,
     get_valid_access_token,
@@ -193,6 +194,11 @@ def send_message_to_space(space_name: str, message: str) -> bool:
         from hrms.utils.bei_config import get_service_account_path
 
         cred_path = get_service_account_path()
+        target_space = route_outbound_chat_space(
+            space_name,
+            logger=logger,
+            context="hrms.api.google_chat.send_message_to_space",
+        )
 
         if not os.path.exists(cred_path):
             logger.warning(
@@ -206,11 +212,11 @@ def send_message_to_space(space_name: str, message: str) -> bool:
         )
         chat = build("chat", "v1", credentials=creds)
         chat.spaces().messages().create(
-            parent=space_name,
+            parent=target_space,
             body={"text": message},
         ).execute()
 
-        logger.info(f"GChat message sent to {space_name}")
+        logger.info(f"GChat message sent to {target_space}")
         return True
 
     except Exception as e:

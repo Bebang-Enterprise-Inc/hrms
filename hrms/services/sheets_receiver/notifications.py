@@ -1,7 +1,7 @@
 """
 POS File Failure Notifications via Google Chat (Blip Bot)
 
-Sends real-time alerts to Ops space when:
+Sends real-time alerts to the BEI notification space when:
 - Store uploads XLS file (wrong format - should be XLSX)
 - Any file fails to process
 
@@ -16,6 +16,7 @@ from typing import Any
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from hrms.utils.chat_space_lockdown import route_outbound_chat_space
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ except ImportError:
 
 # Google Chat Configuration
 CREDS_FILE = "/app/credentials/task-manager-service.json"
-OPS_SPACE = "spaces/AAAAvDZdY-o"  # Ops space
+OPS_SPACE = "spaces/AAAAvDZdY-o"  # Legacy requested space; outbound lockdown reroutes by default.
 
 # User IDs for mentions
 DAVE_USER_ID = "115256205642350673118"  # dave@bebang.ph
@@ -41,6 +42,14 @@ def get_chat_service():
 		CREDS_FILE, scopes=["https://www.googleapis.com/auth/chat.bot"]
 	)
 	return build("chat", "v1", credentials=creds)
+
+
+def _get_target_space() -> str:
+	return route_outbound_chat_space(
+		OPS_SPACE,
+		logger=logger,
+		context="hrms.services.sheets_receiver.notifications",
+	)
 
 
 def format_store_name(store_code: str) -> str:
@@ -81,7 +90,7 @@ def send_wrong_format_alert(store_code: str, file_name: str, detected_at: str) -
 			f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"
 		)
 
-		result = chat.spaces().messages().create(parent=OPS_SPACE, body={"text": message}).execute()
+		result = chat.spaces().messages().create(parent=_get_target_space(), body={"text": message}).execute()
 
 		logger.info(f"Sent wrong format alert for {store_name}: {file_name}")
 		return result.get("name")
@@ -142,7 +151,7 @@ def send_processing_failure_alert(
 			f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"
 		)
 
-		result = chat.spaces().messages().create(parent=OPS_SPACE, body={"text": message}).execute()
+		result = chat.spaces().messages().create(parent=_get_target_space(), body={"text": message}).execute()
 
 		logger.info(f"Sent processing failure alert for {store_name}: {file_name}")
 		return result.get("name")
@@ -278,7 +287,7 @@ def send_daily_summary(db, report_date: datetime | None = None) -> str | None:
 			message += f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"
 
 		chat = get_chat_service()
-		result = chat.spaces().messages().create(parent=OPS_SPACE, body={"text": message}).execute()
+		result = chat.spaces().messages().create(parent=_get_target_space(), body={"text": message}).execute()
 
 		message_id = result.get("name")
 		logger.info(f"Sent daily summary for {date_str}: {message_id}")
@@ -345,7 +354,7 @@ def send_batch_failure_alert(failures: list[dict[str, Any]]) -> str | None:
 			f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"
 		)
 
-		result = chat.spaces().messages().create(parent=OPS_SPACE, body={"text": message}).execute()
+		result = chat.spaces().messages().create(parent=_get_target_space(), body={"text": message}).execute()
 
 		logger.info(f"Sent batch failure alert for {len(failures)} files")
 		return result.get("name")
@@ -413,7 +422,7 @@ def send_sheets_sync_critical_alert(
 			chat.spaces()
 			.messages()
 			.create(
-				parent=OPS_SPACE,
+				parent=_get_target_space(),
 				body={"text": message},
 			)
 			.execute()

@@ -4663,15 +4663,7 @@ def generate_acknowledgement_receipt(billing_name=None):
 
 def _send_ar_chat_notification(ar, billing):
     """Send AR notification to Accounting Private Google Chat space."""
-    from google.oauth2 import service_account
-    from googleapiclient.discovery import build
-
-    from hrms.utils.bei_config import get_service_account_path
-    creds = service_account.Credentials.from_service_account_file(
-        get_service_account_path(),
-        scopes=["https://www.googleapis.com/auth/chat.bot"],
-    )
-    chat = build("chat", "v1", credentials=creds)
+    from hrms.api.google_chat import send_message_to_space
 
     message = (
         f"*Acknowledgement Receipt Generated*\n"
@@ -4683,10 +4675,7 @@ def _send_ar_chat_notification(ar, billing):
     )
 
     from hrms.utils.bei_config import get_chat_space, SPACE_ACCOUNTING
-    chat.spaces().messages().create(
-        parent=get_chat_space(SPACE_ACCOUNTING),
-        body={"text": message},
-    ).execute()
+    send_message_to_space(get_chat_space(SPACE_ACCOUNTING), message)
 
 
 @frappe.whitelist()

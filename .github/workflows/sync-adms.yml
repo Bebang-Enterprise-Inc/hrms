@@ -108,7 +108,7 @@ jobs:
               'Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
           )
           chat.spaces().messages().create(
-              parent='spaces/AAQA3NVVR6c',
+              parent='spaces/AAQABiNmpBg',
               body={'text': msg},
           ).execute()
           print('Failure alert sent to Google Chat')

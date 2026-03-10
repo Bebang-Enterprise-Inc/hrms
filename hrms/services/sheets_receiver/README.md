@@ -509,7 +509,8 @@ WATCHED_FOLDERS = {
 ## Notifications (Google Chat)
 
 **Bot:** Blip (`users/109500378742787827702`)
-**Target Space:** Ops (`spaces/AAAAvDZdY-o`)
+**Target Space:** `! Blip Notifications` (`spaces/AAQABiNmpBg`)
+Legacy Ops-space references are historical only. Runtime routing is locked to `! Blip Notifications` by default unless explicitly allowlisted.
 **Mentions:** Dave Martinez, Edlice Dela Cruz
 
 ### Daily Summary (7 AM PHT)
@@ -698,7 +699,7 @@ python scratchpad/delete_notification_from_screenshot.py \
 **Via Python:**
 ```python
 from notifications import delete_notification
-delete_notification("spaces/AAAAvDZdY-o/messages/xyz123")
+delete_notification("spaces/AAQABiNmpBg/messages/xyz123")
 ```
 
 ## Support

@@ -40,17 +40,22 @@ def _install_fake_google_modules():
 def _install_fake_package_path():
 	if "hrms" not in sys.modules:
 		hrms_pkg = types.ModuleType("hrms")
-		hrms_pkg.__path__ = []
+		hrms_pkg.__path__ = [str(ROOT / "hrms")]
 		sys.modules["hrms"] = hrms_pkg
+
+	if "hrms.utils" not in sys.modules:
+		utils_pkg = types.ModuleType("hrms.utils")
+		utils_pkg.__path__ = [str(ROOT / "hrms" / "utils")]
+		sys.modules["hrms.utils"] = utils_pkg
 
 	if "hrms.services" not in sys.modules:
 		services_pkg = types.ModuleType("hrms.services")
-		services_pkg.__path__ = []
+		services_pkg.__path__ = [str(ROOT / "hrms" / "services")]
 		sys.modules["hrms.services"] = services_pkg
 
 	if "hrms.services.sheets_receiver" not in sys.modules:
 		sheets_pkg = types.ModuleType("hrms.services.sheets_receiver")
-		sheets_pkg.__path__ = []
+		sheets_pkg.__path__ = [str(ROOT / "hrms" / "services" / "sheets_receiver")]
 		sys.modules["hrms.services.sheets_receiver"] = sheets_pkg
 
 	if "hrms.services.sheets_receiver.models" not in sys.modules:
@@ -109,7 +114,7 @@ class TestSheetsReceiverNotifications(unittest.TestCase):
 			)
 
 		self.assertEqual(message_id, "spaces/AAA/messages/123")
-		self.assertEqual(fake_chat.messages_api.last_parent, notifications.OPS_SPACE)
+		self.assertEqual(fake_chat.messages_api.last_parent, "spaces/AAQABiNmpBg")
 		text = fake_chat.messages_api.last_body.get("text", "")
 		self.assertIn("SHEETS SYNC CRITICAL ALERT", text)
 		self.assertIn("AR Aging / AR", text)
