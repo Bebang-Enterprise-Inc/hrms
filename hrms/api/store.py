@@ -2061,8 +2061,10 @@ def complete_receiving(
 	if isinstance(items, str):
 		items = json.loads(items)
 
+	warehouse = resolve_warehouse(store)
+
 	receiving = frappe.new_doc("BEI Store Receiving")
-	receiving.store = store
+	receiving.store = warehouse
 	receiving.trip = trip
 	receiving.receiving_date = now_datetime()
 	receiving.receiver_1 = frappe.session.user
