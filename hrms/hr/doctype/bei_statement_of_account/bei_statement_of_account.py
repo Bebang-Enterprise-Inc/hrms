@@ -4,7 +4,7 @@ from frappe import _
 from frappe.utils import flt
 
 
-class BEIStatementOfAccount(Document):
+class BEIStatementofAccount(Document):
     def validate(self):
         self.calculate_totals()
         if not self.store_type and self.store:
