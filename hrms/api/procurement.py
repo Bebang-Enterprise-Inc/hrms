@@ -4672,7 +4672,10 @@ def get_form_2307_data(
 
 
 @frappe.whitelist()
-def generate_acknowledgement_receipt(billing_name=None, simulate_chat_failure=0):
+def generate_acknowledgement_receipt(
+    billing_name: str | None = None,
+    simulate_chat_failure: int | bool = 0,
+) -> dict[str, str | bool]:
     """Generate an internal Acknowledgement Receipt (AR) for a billing payment.
 
     This is an INTERNAL document — NOT a BIR Official Receipt.
@@ -4728,7 +4731,7 @@ def generate_acknowledgement_receipt(billing_name=None, simulate_chat_failure=0)
     }
 
 
-def _send_ar_chat_notification(ar, billing, *, simulate_failure=False):
+def _send_ar_chat_notification(ar, billing, *, simulate_failure: bool = False) -> bool:
     """Send AR notification to Accounting Private Google Chat space."""
     from hrms.api.google_chat import send_message_to_space
 
