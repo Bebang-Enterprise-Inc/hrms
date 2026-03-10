@@ -105,7 +105,7 @@ class TestSheetsReceiverNotifications(unittest.TestCase):
 				rows_processed=120,
 				rows_failed=3,
 				errors=["missing supplier", "invalid amount"],
-				alerts=["⚠️ MASS EDIT: 12 rows modified"],
+				alerts=["MASS EDIT: 12 rows modified"],
 			)
 
 		self.assertEqual(message_id, "spaces/AAA/messages/123")

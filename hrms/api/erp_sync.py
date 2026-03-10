@@ -1463,6 +1463,7 @@ def sync_procurement_requisitions(
 	related = _parse_related_data(related_data)
 	results = _init_results(len(rows))
 	seen_pr_numbers: set[str] = set()
+	supports_pr_item_po_reference = _doctype_has_field("BEI PR Item", "po_reference")
 
 	items_by_pr: dict[str, list[dict[str, Any]]] = {}
 	for item_row in related.get("procurement_pr_items", []):
@@ -1531,7 +1532,12 @@ def sync_procurement_requisitions(
 			doc.rejection_reason = (
 				_normalize_sheet_text(_first_non_empty(row, "comment")) if doc.status == "Rejected" else None
 			)
-			_replace_child_rows(doc, "items", items)
+			child_rows = (
+				items
+				if supports_pr_item_po_reference
+				else [{k: v for k, v in item.items() if k != "po_reference"} for item in items]
+			)
+			_replace_child_rows(doc, "items", child_rows)
 
 			action = _persist_doc(doc, existing_name, business_field="pr_no", business_value=pr_no)
 			results[f"rows_{action}"] += 1
@@ -1749,7 +1755,8 @@ def sync_procurement_goods_receipts(
 			doc.delivery_date = _safe_date(_first_non_empty(row, "date")) or doc.receipt_date
 			doc.delivery_note_no = _normalize_sheet_text(_first_non_empty(row, "invoice_no")) or gr_no
 			doc.warehouse = _resolve_warehouse(_first_non_empty(row, "issue_to"))
-			doc.supplier_invoice_photo = _normalize_sheet_text(_first_non_empty(row, "invoice"))
+			if _doctype_has_field("BEI Goods Receipt", "supplier_invoice_photo"):
+				doc.supplier_invoice_photo = _normalize_sheet_text(_first_non_empty(row, "invoice"))
 			doc.inspection_required = 0
 			doc.status = _build_gr_status(row)
 			_replace_child_rows(doc, "items", items)
