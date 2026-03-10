@@ -159,3 +159,33 @@ def test_build_outputs_tracks_explicit_exclusions_separately():
 		"excluded",
 		"mapped",
 	}
+
+
+def test_live_fixture_maps_pop_lamig_to_component_recipe():
+	builder = _load_builder_module()
+
+	policies_by_code, policies_by_name = builder.load_product_policy_catalog()
+	component_recipes_by_key = builder.load_component_recipe_catalog()
+
+	mapping = builder.resolve_product_mapping(
+		product_name="Pop Lamig",
+		product_code="174220",
+		fg_display_by_norm={},
+		crosswalk_by_norm={},
+		policies_by_code=policies_by_code,
+		policies_by_name=policies_by_name,
+		component_recipes_by_key=component_recipes_by_key,
+	)
+
+	assert mapping["status"] == "mapped"
+	assert mapping["target_type"] == "component_recipe"
+	assert mapping["target_key"] == "POP-LAMIG"
+	assert mapping["mapping_method"] == "explicit_component_recipe"
+
+	component_qty_by_code = {
+		row["component_item_code"]: row["qty_per_fg"]
+		for row in mapping["component_rows"]
+	}
+	assert component_qty_by_code["PM100"] == 0.006024
+	assert component_qty_by_code["PM070"] == 0.000333
+	assert component_qty_by_code["RM203"] == 0.026

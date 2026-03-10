@@ -48,8 +48,9 @@
 - **Assert:**
   - Response includes `data.parity.same_day_raw_rows`
   - Response includes `data.parity.same_day_clusters`
-  - `data.parity.same_day_raw_rows == 84`
-  - `data.parity.same_day_clusters == 45`
+  - `data.parity.same_day_raw_rows >= data.parity.same_day_clusters`
+  - `len(data.rows) == data.parity.same_day_clusters`
+  - Current live baseline as of `2026-03-10` is `82 raw rows / 41 clusters`, but the exact unresolved counts may change as analysts resolve incidents
   - At least one incident row contains `detection_types` with more than one detection
   - At least one same-day incident row includes `resolution_targets`
 
@@ -59,9 +60,9 @@
 - **Call:** `POST hrms.api.discount_abuse.generate_daily_discount_audit_report`
 - **Params:** `{"business_date": "2026-03-08"}`
 - **Assert:**
-  - Response includes `file_url`
-  - Response includes `file_name`
-  - `file_name` starts with `Discount_Identity_Audit_Report_`
+  - Response includes `data.file_url`
+  - Response includes `data.filename`
+  - `data.filename` starts with `Discount_Identity_Audit_Report_`
 
 ### DISCMON-007: Cluster resolution resolves every underlying raw target
 - **Type:** regression
@@ -101,7 +102,7 @@
   - `data.totals.recorded_discount_amount >= 0`
   - `data.totals.statutory_vat_relief >= 0`
   - `data.totals.other_discount_gap >= 0`
-  - Waterfall contains rows for `recorded_discount`, `statutory_vat_relief`, and `other_discount_gap`
+  - Waterfall contains rows for `recorded_discount_amount`, `statutory_vat_relief`, and `other_discount_gap`
 
 ### DISCMON-010: Executive portal renders command view and can pivot into investigation for a ranked store
 - **Type:** happy
