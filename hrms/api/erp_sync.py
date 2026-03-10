@@ -7,12 +7,15 @@ and sync it to ERPNext DocTypes.
 
 import hashlib
 import json
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
 import frappe
 from frappe import _
 from frappe.utils import cint, flt, getdate, now_datetime, nowdate
+
+from hrms.utils import store_order_demand_snapshot as store_demand_snapshot_builder
 
 _FIELD_CACHE: dict[tuple, bool] = {}
 ROOT_TYPES = {"Asset", "Liability", "Equity", "Income", "Expense"}
@@ -23,6 +26,8 @@ SYNC_ALLOWED_ROLES = {
 	"Accounts User",
 	"HR Manager",
 }
+STORE_DEMAND_SNAPSHOT_SHEET_NAME = "Store Demand Snapshot"
+STORE_DEMAND_SNAPSHOT_AUTO_PREFIX = "scheduled_store_demand_snapshot"
 
 
 def _parse_rows(data: Any) -> list[dict[str, Any]]:
@@ -183,6 +188,141 @@ def _coerce_metadata_dict(value: Any) -> dict[str, Any]:
 			return {}
 		return parsed if isinstance(parsed, dict) else {}
 	return {}
+
+
+def _store_demand_output_root() -> Path:
+	get_site_path = getattr(frappe, "get_site_path", None)
+	if callable(get_site_path):
+		try:
+			return Path(get_site_path("private", "files", "store_order_demand_snapshot_runs"))
+		except Exception:
+			pass
+	return Path(store_demand_snapshot_builder.DEFAULT_OUTPUT_ROOT)
+
+
+def _store_demand_output_dir(snapshot_date: str) -> Path:
+	return _store_demand_output_root() / f"{snapshot_date}_store_order_demand_snapshot_auto"
+
+
+def _persist_store_demand_outputs(
+	output_dir: Path, outputs: dict[str, Any], lookback_days: int, snapshot_date: str
+) -> None:
+	output_dir.mkdir(parents=True, exist_ok=True)
+	store_demand_snapshot_builder.write_csv(
+		output_dir / "store_product_daily_demand.csv",
+		[
+			"business_date",
+			"channel",
+			"store_name",
+			"store_code",
+			"product_name",
+			"product_code",
+			"fg_name",
+			"component_recipe_key",
+			"target_type",
+			"target_key",
+			"qty_sold",
+			"net_sales_amount",
+			"mapping_method",
+			"mapping_note",
+		],
+		outputs["product_daily_rows"],
+	)
+	store_demand_snapshot_builder.write_csv(
+		output_dir / "store_item_daily_demand.csv",
+		[
+			"business_date",
+			"store_name",
+			"channel",
+			"item_code",
+			"item_name",
+			"demand_qty",
+			"source_targets",
+		],
+		outputs["item_daily_rows"],
+	)
+	store_demand_snapshot_builder.write_csv(
+		output_dir / "store_demand_snapshot.csv",
+		[
+			"snapshot_date",
+			"warehouse",
+			"item_code",
+			"avg_daily_demand",
+			"projected_sales",
+			"bom_consumption",
+			"lookback_days",
+			"signal_source",
+			"channel_mix",
+			"source_reference",
+		],
+		outputs["snapshot_rows"],
+	)
+	store_demand_snapshot_builder.write_csv(
+		output_dir / "store_product_mapping_audit.csv",
+		[
+			"product_name",
+			"product_code",
+			"resolution_status",
+			"target_type",
+			"target_key",
+			"mapping_method",
+			"mapping_note",
+			"row_count",
+			"qty_sold_total",
+			"net_sales_amount_total",
+			"channel_mix",
+			"store_count",
+		],
+		outputs["mapping_audit_rows"],
+	)
+	store_demand_snapshot_builder.write_csv(
+		output_dir / "store_demand_excluded_products.csv",
+		[
+			"business_date",
+			"channel",
+			"store_name",
+			"store_code",
+			"product_name",
+			"product_code",
+			"qty_sold",
+			"net_sales_amount",
+			"mapping_method",
+			"exclusion_reason",
+			"mapping_note",
+		],
+		outputs["excluded_rows"],
+	)
+	store_demand_snapshot_builder.write_csv(
+		output_dir / "store_demand_unmapped_products.csv",
+		[
+			"business_date",
+			"channel",
+			"store_name",
+			"store_code",
+			"product_name",
+			"product_code",
+			"qty_sold",
+			"net_sales_amount",
+			"mapping_method",
+			"mapping_note",
+		],
+		outputs["unmapped_rows"],
+	)
+
+	summary = {
+		"snapshot_date": snapshot_date,
+		"lookback_days": lookback_days,
+		"start_date": outputs["start_date"],
+		"end_date": outputs["end_date"],
+		"product_daily_rows": len(outputs["product_daily_rows"]),
+		"item_daily_rows": len(outputs["item_daily_rows"]),
+		"snapshot_rows": len(outputs["snapshot_rows"]),
+		"mapping_audit_rows": len(outputs["mapping_audit_rows"]),
+		"excluded_products": len(outputs["excluded_rows"]),
+		"unmapped_products": len(outputs["unmapped_rows"]),
+		"output_dir": str(output_dir),
+	}
+	(output_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
 
 def _resolve_root_type(account_type: str | None, gl_code: str | None, row: dict[str, Any]) -> str:
@@ -603,15 +743,16 @@ def sync_inventory(sheet_name: str, data: list[dict], checksum: str, **kwargs) -
 	return results
 
 
-@frappe.whitelist()
-def sync_store_demand_snapshot(sheet_name: str, data: list[dict], checksum: str, **kwargs) -> dict:
-	"""
-	Sync store-item demand snapshots into BEI Inventory Risk Snapshot.
-
-	Rows are upserted by (snapshot_date, warehouse, item_code). Additional
-	demand metadata is stored as JSON in source_reference.
-	"""
-	_assert_sync_authorized()
+def _sync_store_demand_snapshot_rows(
+	sheet_name: str,
+	data: list[dict],
+	checksum: str,
+	*,
+	require_auth: bool,
+) -> dict:
+	"""Internal upsert helper shared by API calls and scheduled jobs."""
+	if require_auth:
+		_assert_sync_authorized()
 	rows = _parse_rows(data)
 	results = _init_results(len(rows))
 
@@ -751,6 +892,22 @@ def sync_store_demand_snapshot(sheet_name: str, data: list[dict], checksum: str,
 			results["rows_failed"] += 1
 
 	return results
+
+
+@frappe.whitelist()
+def sync_store_demand_snapshot(sheet_name: str, data: list[dict], checksum: str, **kwargs) -> dict:
+	"""
+	Sync store-item demand snapshots into BEI Inventory Risk Snapshot.
+
+	Rows are upserted by (snapshot_date, warehouse, item_code). Additional
+	demand metadata is stored as JSON in source_reference.
+	"""
+	return _sync_store_demand_snapshot_rows(
+		sheet_name=sheet_name,
+		data=data,
+		checksum=checksum,
+		require_auth=True,
+	)
 
 
 @frappe.whitelist()
@@ -1177,6 +1334,81 @@ def sync_supplier_soa(sheet_name: str, data: list[dict], checksum: str, **kwargs
 	Source config still points to this method name.
 	"""
 	return sync_ap_opening(sheet_name=sheet_name, data=data, checksum=checksum, **kwargs)
+
+
+def enqueue_scheduled_store_demand_snapshot_sync(
+	snapshot_date: str | None = None, lookback_days: int = 28
+) -> dict[str, Any]:
+	"""Queue the daily sales-to-BOM demand snapshot sync for store ordering."""
+	snapshot_date_value = _safe_date(snapshot_date) or nowdate()
+	lookback_days = cint(lookback_days) or 28
+	job_id = f"{STORE_DEMAND_SNAPSHOT_AUTO_PREFIX}:{snapshot_date_value}"
+	frappe.enqueue(
+		"hrms.api.erp_sync.run_scheduled_store_demand_snapshot_sync",
+		queue="long",
+		job_id=job_id,
+		enqueue_after_commit=True,
+		snapshot_date=snapshot_date_value,
+		lookback_days=lookback_days,
+	)
+	return {
+		"queued": True,
+		"job_id": job_id,
+		"snapshot_date": snapshot_date_value,
+		"lookback_days": lookback_days,
+	}
+
+
+def run_scheduled_store_demand_snapshot_sync(
+	snapshot_date: str | None = None, lookback_days: int = 28
+) -> dict[str, Any]:
+	"""Build and sync the mapped store demand snapshot into Frappe."""
+	snapshot_date_value = _safe_date(snapshot_date) or nowdate()
+	lookback_days = cint(lookback_days) or 28
+	outputs = store_demand_snapshot_builder.build_outputs(
+		snapshot_date=getdate(snapshot_date_value),
+		lookback_days=lookback_days,
+	)
+
+	if outputs["unmapped_rows"]:
+		raise RuntimeError(
+			f"Aborting scheduled store demand sync: {len(outputs['unmapped_rows'])} unmapped product rows remain."
+		)
+
+	output_dir = _store_demand_output_dir(snapshot_date_value)
+	_persist_store_demand_outputs(
+		output_dir=output_dir,
+		outputs=outputs,
+		lookback_days=lookback_days,
+		snapshot_date=snapshot_date_value,
+	)
+
+	checksum = hashlib.sha1(
+		json.dumps(outputs["snapshot_rows"], sort_keys=True, default=str).encode()
+	).hexdigest()
+	sync_result = _sync_store_demand_snapshot_rows(
+		sheet_name=STORE_DEMAND_SNAPSHOT_SHEET_NAME,
+		data=outputs["snapshot_rows"],
+		checksum=checksum,
+		require_auth=False,
+	)
+	result = {
+		"snapshot_date": snapshot_date_value,
+		"lookback_days": lookback_days,
+		"start_date": outputs["start_date"],
+		"end_date": outputs["end_date"],
+		"product_daily_rows": len(outputs["product_daily_rows"]),
+		"item_daily_rows": len(outputs["item_daily_rows"]),
+		"snapshot_rows": len(outputs["snapshot_rows"]),
+		"mapping_audit_rows": len(outputs["mapping_audit_rows"]),
+		"excluded_products": len(outputs["excluded_rows"]),
+		"unmapped_products": len(outputs["unmapped_rows"]),
+		"checksum": checksum,
+		"output_dir": str(output_dir),
+		"sync_result": sync_result,
+	}
+	frappe.log_error(json.dumps(result, sort_keys=True), "Scheduled Store Demand Snapshot Sync")
+	return result
 
 
 _PROCUREMENT_APPROVED_VALUES = {"approved", "approve", "ok", "yes"}
