@@ -642,7 +642,7 @@ def _create_delivery_billing(
 		frappe.db.savepoint(savepoint_name)
 
 		# I-04 fix: Duplicate check before creating billing
-		existing = frappe.db.exists(
+		existing = frappe.db.get_value(
 			"BEI Billing Schedule",
 			{
 				"trip_reference": trip.name,
@@ -650,11 +650,19 @@ def _create_delivery_billing(
 				"billing_type": "Delivery",
 				"status": ["not in", ["Cancelled"]],
 			},
+			["name", "goods_value"],
+			as_dict=True,
 		)
 		if existing:
-			stop.billing_reference = existing
-			stop.billing_creation_status = "Success"
-			trip.save(ignore_permissions=True)
+			frappe.db.set_value(
+				"BEI Trip Stop",
+				stop.name,
+				{
+					"billing_reference": existing.name,
+					"delivery_value": flt(existing.goods_value or 0),
+					"billing_creation_status": "Success",
+				},
+			)
 			frappe.db.release_savepoint(savepoint_name)
 			return
 
@@ -738,11 +746,16 @@ def _create_delivery_billing(
 			_set_if_column(billing, "exception_approval_audit_log", exception_trace.get("approval_audit_log"))
 		billing.insert(ignore_permissions=True)
 
-		# Update stop with billing reference
-		stop.billing_reference = billing.name
-		stop.delivery_value = goods_value
-		stop.billing_creation_status = "Success"
-		trip.save(ignore_permissions=True)
+		# Update stop with billing reference without re-saving the parent trip.
+		frappe.db.set_value(
+			"BEI Trip Stop",
+			stop.name,
+			{
+				"billing_reference": billing.name,
+				"delivery_value": goods_value,
+				"billing_creation_status": "Success",
+			},
+		)
 
 		# C-06 fix: No explicit commit inside enqueued job -- Frappe
 		# auto-commits when the enqueued function returns successfully.
@@ -753,13 +766,12 @@ def _create_delivery_billing(
 			frappe.db.rollback(save_point=savepoint_name)
 		except Exception:
 			pass
-		frappe.log_error(
-			f"Failed to create billing for {trip_name} stop {stop_idx}: {e!s}", "Billing Creation Error"
-		)
+		error_title = f"Failed to create billing for {trip_name} stop {stop_idx}: {e!s}"
+		if len(error_title) > 140:
+			error_title = f"{error_title[:137]}..."
+		frappe.log_error(error_title, "Billing Creation Error")
 		try:
-			trip.reload()
-			trip.stops[int(stop_idx) - 1].billing_creation_status = "Failed"
-			trip.save(ignore_permissions=True)
+			frappe.db.set_value("BEI Trip Stop", stop.name, "billing_creation_status", "Failed")
 		except Exception:
 			pass
 
@@ -781,8 +793,7 @@ def _fail_stop(
 ):
 	"""Mark a stop as failed and log the error. Used during billing creation."""
 	frappe.log_error(error_message, title)
-	stop.billing_creation_status = "Failed"
-	trip.save(ignore_permissions=True)
+	frappe.db.set_value("BEI Trip Stop", stop.name, "billing_creation_status", "Failed")
 	frappe.db.release_savepoint(savepoint)
 
 
