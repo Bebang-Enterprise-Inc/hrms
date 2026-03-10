@@ -42,6 +42,7 @@ class FrappeClient:
 		self.base_url = config.frappe_url.rstrip("/")
 		self.api_key = config.frappe_api_key
 		self.api_secret = config.frappe_api_secret
+		self.request_timeout = config.frappe_request_timeout_seconds
 
 		# Set up session with retry logic
 		self.session = requests.Session()
@@ -68,7 +69,13 @@ class FrappeClient:
 		url = f"{self.base_url}{endpoint}"
 
 		try:
-			response = self.session.request(method=method, url=url, json=data, params=params, timeout=30)
+			response = self.session.request(
+				method=method,
+				url=url,
+				json=data,
+				params=params,
+				timeout=self.request_timeout,
+			)
 			response.raise_for_status()
 			return response.json()
 
