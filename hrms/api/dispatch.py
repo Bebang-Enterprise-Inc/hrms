@@ -817,7 +817,7 @@ def _get_order_goods_value(store_order: str | None):
 		qty_expr = "qty"
 	else:
 		non_zero_candidates = [f"NULLIF({fieldname}, 0)" for fieldname in qty_fields[:-1]]
-		qty_expr = f"COALESCE({', '.join(non_zero_candidates + [qty_fields[-1], '0'])})"
+		qty_expr = f"COALESCE({', '.join([*non_zero_candidates, qty_fields[-1], '0'])})"
 
 	result = frappe.db.sql(
 		f"""

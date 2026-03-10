@@ -70,6 +70,10 @@ def _install_fake_frappe_and_dependencies():
 
 	sys.modules["frappe"] = frappe
 	sys.modules["frappe.utils"] = utils
+	if "frappe.exceptions" not in sys.modules:
+		exceptions = types.ModuleType("frappe.exceptions")
+		exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
+		sys.modules["frappe.exceptions"] = exceptions
 
 	if "hrms" not in sys.modules:
 		hrms_pkg = types.ModuleType("hrms")
