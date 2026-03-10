@@ -607,6 +607,71 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(len(stored.items), 1)
 		self.assertEqual(stored.items[0]["item_code"], "CM34")
 
+	def test_sync_procurement_requisitions_ignores_po_reference_when_child_field_missing(self):
+		registry = {}
+		counters = {}
+
+		def db_exists(doctype, name=None):
+			if doctype == "BEI Purchase Requisition":
+				return name if name in registry.get("BEI Purchase Requisition", {}) else None
+			if doctype == "User":
+				return bool(name and "@" in str(name))
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "BEI Purchase Requisition" and isinstance(filters, dict):
+				pr_no = filters.get("pr_no")
+				for doc in registry.get("BEI Purchase Requisition", {}).values():
+					if getattr(doc, "pr_no", None) == pr_no:
+						return doc.name
+			return None
+
+		def fake_get_meta(doctype):
+			if doctype == "BEI PR Item":
+				return types.SimpleNamespace(has_field=lambda field: field != "po_reference")
+			return types.SimpleNamespace(has_field=lambda _field: True)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.get_doc = MagicMock(side_effect=_build_fake_get_doc(registry, counters))
+		erp_sync.frappe.get_meta = MagicMock(side_effect=fake_get_meta)
+
+		row = {
+			"pr_no": "PR202511",
+			"timestamp": "2025-09-24 12:38:30",
+			"delivery_to": "JENTEC WAREHOUSE",
+			"purpose": "warehouse stock replenishment",
+			"date_required": "2025-09-26",
+			"requested_by": "Ian Dionisio",
+			"requested_by_email": "ian@bebang.ph",
+		}
+		related_data = {
+			"procurement_pr_items": [
+				{
+					"pr_no": "PR202511",
+					"item_code": "CM34",
+					"description": "SANDO ECO BAG LARGE",
+					"total_order": 5000,
+					"unit_of_issue": "PIECE",
+					"po_reference": "PO-20253",
+				}
+			]
+		}
+
+		with patch.object(erp_sync, "_resolve_warehouse", return_value="Stores - BEI"):
+			result = erp_sync.sync_procurement_requisitions(
+				"Procurement Requisitions",
+				[row],
+				"chk-proc-pr-guard-1",
+				related_data=related_data,
+			)
+
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(result["rows_failed"], 0)
+		stored = next(iter(registry["BEI Purchase Requisition"].values()))
+		self.assertEqual(stored.status, "Converted to PO")
+		self.assertNotIn("po_reference", stored.items[0])
+
 	def test_sync_procurement_purchase_orders_creates_then_updates_status(self):
 		registry = {
 			"BEI Supplier": {},
@@ -786,6 +851,100 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(stored_gr.status, "Accepted")
 		self.assertEqual(po_doc.items[0].received_qty, 5000)
 		self.assertEqual(po_doc.status, "Fully Received")
+
+	def test_sync_procurement_goods_receipts_skips_supplier_invoice_photo_when_field_missing(self):
+		registry = {
+			"BEI Purchase Order": {},
+			"BEI Goods Receipt": {},
+		}
+		counters = {}
+
+		po_doc = _FakeDoc("BEI Purchase Order")
+		po_doc.name = "BEI Purchase Order-0002"
+		po_doc.po_no = "PO-20254"
+		po_doc.status = "Sent to Supplier"
+		po_doc.items = [
+			types.SimpleNamespace(
+				name="POITEM-0002",
+				item_code="CM35",
+				qty=100,
+				unit_cost=4.55,
+				received_qty=0,
+			)
+		]
+		registry["BEI Purchase Order"][po_doc.name] = po_doc
+
+		def db_exists(doctype, name=None):
+			if doctype in registry:
+				return name if name in registry.get(doctype, {}) else None
+			if doctype == "Item":
+				return name == "CM35"
+			if doctype == "UOM":
+				return bool(name)
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "BEI Purchase Order" and isinstance(filters, dict):
+				po_no = filters.get("po_no")
+				for doc in registry.get("BEI Purchase Order", {}).values():
+					if getattr(doc, "po_no", None) == po_no:
+						return doc.name
+			if doctype == "BEI Goods Receipt" and isinstance(filters, dict):
+				gr_no = filters.get("gr_no")
+				for doc in registry.get("BEI Goods Receipt", {}).values():
+					if getattr(doc, "gr_no", None) == gr_no:
+						return doc.name
+			return None
+
+		def fake_get_meta(doctype):
+			if doctype == "BEI Goods Receipt":
+				return types.SimpleNamespace(has_field=lambda field: field != "supplier_invoice_photo")
+			return types.SimpleNamespace(has_field=lambda _field: True)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.db.set_value = MagicMock()
+		erp_sync.frappe.get_doc = MagicMock(side_effect=_build_fake_get_doc(registry, counters))
+		erp_sync.frappe.get_meta = MagicMock(side_effect=fake_get_meta)
+
+		row = {
+			"gr_no": "GR202562",
+			"po_no": "PO-20254",
+			"date": "2025-10-20",
+			"issue_to": "JENTEC",
+			"invoice_no": "122953",
+			"invoice": "Supplier Invoices/GR202562.Invoice.044646.jpg",
+			"approved_by": "Ian Dionisio",
+		}
+		related_data = {
+			"procurement_gr_items": [
+				{
+					"gr_no": "GR202562",
+					"po_no": "PO-20254",
+					"item_code": "CM35",
+					"item_name": "SANDO ECO BAG SMALL",
+					"uom": "PIECE",
+					"issued_qty": 100,
+				}
+			]
+		}
+
+		with (
+			patch.object(erp_sync, "_resolve_warehouse", return_value="Stores - BEI"),
+			patch.object(erp_sync, "_resolve_uom", return_value="PIECE"),
+		):
+			result = erp_sync.sync_procurement_goods_receipts(
+				"Procurement Goods Receipts",
+				[row],
+				"chk-proc-gr-guard-1",
+				related_data=related_data,
+			)
+
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(result["rows_failed"], 0)
+		stored_gr = next(iter(registry["BEI Goods Receipt"].values()))
+		self.assertFalse(hasattr(stored_gr, "supplier_invoice_photo"))
+		self.assertEqual(po_doc.items[0].received_qty, 100)
 
 	def test_sync_authorization_blocks_guest(self):
 		erp_sync.frappe.session.user = "Guest"
