@@ -249,6 +249,8 @@ def get_delivery_rates(
 	status: str | None = None,
 ):
 	"""List delivery rates with optional filters."""
+	_check_rate_permission()
+
 	filters = {}
 	if store:
 		filters["store"] = store
@@ -358,6 +360,8 @@ def approve_rate(rate_name: str):
 @frappe.whitelist()
 def get_stores_without_rates():
 	"""Get stores that are missing active delivery rates."""
+	_check_rate_permission()
+
 	# All stores from BEI Store Type
 	all_stores = _get_store_type_records()
 
@@ -394,6 +398,8 @@ def get_stores_without_rates():
 @frappe.whitelist()
 def get_pending_billings(store: str | None = None, billing_type: str | None = None):
 	"""List billings pending Finance approval."""
+	_check_billing_permission("view pending billings")
+
 	filters = {"status": "Pending"}
 	if store:
 		filters["store"] = store
