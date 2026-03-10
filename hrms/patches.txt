@@ -45,3 +45,4 @@ hrms.patches.v16_0.seed_warehouse_department_mapping
 hrms.patches.v16_0.backfill_store_area_supervisor_mapping #2026-03-02
 hrms.patches.v16_0.add_cycle_count_unique_index #2026-02-19
 hrms.patches.v16_0.drop_cycle_count_unique_index #2026-02-20
+hrms.patches.v16_0.ensure_statement_of_account_doctype #2026-03-10
