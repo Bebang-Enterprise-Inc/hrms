@@ -28,6 +28,16 @@ def _check_rate_permission():
 	check_scm_permission(RATE_MANAGEMENT_ROLES, "manage delivery rates")
 
 
+def _get_rate_actor_role(user: str | None = None) -> str | None:
+	"""Map runtime roles to the billing rate workflow department label."""
+	user_roles = set(frappe.get_roles(user or frappe.session.user) or [])
+	if "Accounts Manager" in user_roles:
+		return "Finance"
+	if "Supply Chain Manager" in user_roles:
+		return "Supply Chain"
+	return None
+
+
 def on_billing_schedule_validate(doc, method=None):
 	"""Doc-event hardening for BEI Billing Schedule validation.
 
@@ -314,6 +324,14 @@ def approve_rate(rate_name: str):
 	if rate.status != "Pending Review":
 		frappe.throw(_("Only rates with 'Pending Review' status can be approved"))
 
+	reviewer = frappe.session.user
+	reviewer_role = _get_rate_actor_role(reviewer)
+	if rate.set_by and rate.set_by == reviewer:
+		frappe.throw(_("Cannot approve your own rate"))
+
+	if reviewer_role and rate.set_by_role and reviewer_role == rate.set_by_role:
+		frappe.throw(_("Delivery rates must be approved by the other department"))
+
 	# Expire existing active rate for same store+cargo_type
 	existing_active = frappe.get_all(
 		"BEI Delivery Rate",
@@ -329,12 +347,9 @@ def approve_rate(rate_name: str):
 
 	# Activate new rate
 	rate.status = "Active"
-	rate.reviewed_by = frappe.session.user
-	user_roles = frappe.get_roles(frappe.session.user)
-	if "Accounts Manager" in user_roles:
-		rate.reviewed_by_role = "Finance"
-	elif "Supply Chain Manager" in user_roles:
-		rate.reviewed_by_role = "Supply Chain"
+	rate.reviewed_by = reviewer
+	if reviewer_role:
+		rate.reviewed_by_role = reviewer_role
 	rate.reviewed_at = now_datetime()
 	rate.save()
 	return {"success": True, "status": rate.status}
