@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import pathlib
 import sys
 import types
@@ -176,9 +177,15 @@ def test_orderable_items_prefers_snapshot_backed_demand_over_heuristic():
 					warehouse="Test Store - BEI",
 					snapshot_date="2026-03-02",
 					avg_daily_demand=4.0,
-					source_reference=(
-						'{"signal_source":"sales_bom_snapshot","lookback_days":14,'
-						'"projected_sales":2.5,"bom_consumption":4.0,"coverage_window_days":2}'
+					source_reference=json.dumps(
+						{
+							"signal_source": "sales_bom_snapshot",
+							"lookback_days": 14,
+							"projected_sales": 2.5,
+							"bom_consumption": 4.0,
+							"coverage_window_days": 2,
+						},
+						sort_keys=True,
 					),
 				)
 			]
