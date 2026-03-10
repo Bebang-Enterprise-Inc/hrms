@@ -43,6 +43,7 @@ from zoneinfo import ZoneInfo
 
 import schedule
 
+from .ap_exception_reports import generate_ap_exception_report
 from .config import get_config, get_sheet_config, get_watched_sheets
 from .file_processor import get_file_processor
 from .folder_watcher import get_folder_watcher
@@ -61,6 +62,7 @@ logger = logging.getLogger(__name__)
 
 PHT_TIMEZONE = ZoneInfo("Asia/Manila")
 DAILY_BASELINE_TRIGGER = "daily_baseline"
+INTERVAL_BASELINE_TRIGGER = "interval_baseline"
 DAILY_BASELINE_PHT_TIME = dt_time(hour=8, minute=0)
 DAILY_BASELINE_SHEET_KEYS = (
 	"ap_opening_balance",
@@ -129,6 +131,83 @@ def get_daily_baseline_sheet_keys() -> tuple[str, ...]:
 	return DAILY_BASELINE_SHEET_KEYS
 
 
+def _maybe_generate_ap_exception_report(trigger: str) -> dict | None:
+	"""Generate the current AP exception workbook when enabled."""
+	config = get_config()
+	if not config.generate_ap_exception_reports:
+		return None
+
+	try:
+		report = generate_ap_exception_report(output_dir=config.ap_exception_report_dir)
+		logger.info(
+			"AP exception report generated after %s sync: %s",
+			trigger,
+			report["latest_files"].get("xlsx"),
+		)
+		return report
+	except Exception as e:
+		logger.error(f"AP exception report generation failed after {trigger}: {e}")
+		return None
+
+
+def _run_baseline_sync(
+	*,
+	trigger: str,
+	force: bool,
+	now_utc: datetime | None = None,
+	enforce_daily_gate: bool,
+) -> list:
+	"""Run the AP + Procurement baseline sync set with optional daily gate enforcement."""
+	normalized_now_utc = _normalize_now_utc(now_utc)
+	now_pht = normalized_now_utc.astimezone(PHT_TIMEZONE)
+
+	if enforce_daily_gate and now_pht.time() < DAILY_BASELINE_PHT_TIME:
+		return []
+
+	config = get_config()
+	db = get_db()
+	processor = get_processor()
+	results = []
+
+	pht_day_start = datetime.combine(now_pht.date(), dt_time.min, tzinfo=PHT_TIMEZONE)
+	pht_day_start_utc = pht_day_start.astimezone(UTC)
+
+	for sheet_key in get_daily_baseline_sheet_keys():
+		sheet_config = get_sheet_config(sheet_key)
+		if not sheet_config or not sheet_config.enabled:
+			logger.warning(f"Daily baseline sync skipped missing/disabled sheet config: {sheet_key}")
+			continue
+
+		if enforce_daily_gate:
+			already_synced = db.has_successful_sync_since(
+				sheet_config.spreadsheet_id,
+				sheet_config.sheet_name,
+				DAILY_BASELINE_TRIGGER,
+				pht_day_start_utc,
+			)
+			if already_synced:
+				continue
+
+		logger.info(
+			"Running %s force sync for %s (%s)",
+			trigger,
+			getattr(sheet_config, "name", sheet_key),
+			sheet_key,
+		)
+		results.append(
+			processor.sync_sheet(
+				sheet_config,
+				trigger=trigger,
+				force=force,
+			)
+		)
+
+	if results and config.generate_ap_exception_reports:
+		_maybe_generate_ap_exception_report(trigger)
+
+	return results
+
+
 def run_daily_baseline_sync_if_due(now_utc: datetime | None = None):
 	"""
 	Force-sync AP and Procurement baseline sheets once per PHT day after 8:00 AM.
@@ -137,48 +216,24 @@ def run_daily_baseline_sync_if_due(now_utc: datetime | None = None):
 	sheet already has a successful `daily_baseline` sync logged for the current PHT
 	day and only re-syncs missing sheets.
 	"""
-	normalized_now_utc = _normalize_now_utc(now_utc)
-	now_pht = normalized_now_utc.astimezone(PHT_TIMEZONE)
+	return _run_baseline_sync(
+		trigger=DAILY_BASELINE_TRIGGER,
+		force=True,
+		now_utc=now_utc,
+		enforce_daily_gate=True,
+	)
 
-	if now_pht.time() < DAILY_BASELINE_PHT_TIME:
+
+def run_interval_baseline_sync_job():
+	"""Optional short-interval force sync for migration shadow-run testing."""
+	config = get_config()
+	if config.baseline_test_interval_minutes <= 0:
 		return []
-
-	pht_day_start = datetime.combine(now_pht.date(), dt_time.min, tzinfo=PHT_TIMEZONE)
-	pht_day_start_utc = pht_day_start.astimezone(UTC)
-
-	db = get_db()
-	processor = get_processor()
-	results = []
-
-	for sheet_key in get_daily_baseline_sheet_keys():
-		sheet_config = get_sheet_config(sheet_key)
-		if not sheet_config or not sheet_config.enabled:
-			logger.warning(f"Daily baseline sync skipped missing/disabled sheet config: {sheet_key}")
-			continue
-
-		already_synced = db.has_successful_sync_since(
-			sheet_config.spreadsheet_id,
-			sheet_config.sheet_name,
-			DAILY_BASELINE_TRIGGER,
-			pht_day_start_utc,
-		)
-		if already_synced:
-			continue
-
-		logger.info(
-			"Running daily baseline force sync for %s (%s)",
-			getattr(sheet_config, "name", sheet_key),
-			sheet_key,
-		)
-		results.append(
-			processor.sync_sheet(
-				sheet_config,
-				trigger=DAILY_BASELINE_TRIGGER,
-				force=True,
-			)
-		)
-
-	return results
+	return _run_baseline_sync(
+		trigger=INTERVAL_BASELINE_TRIGGER,
+		force=True,
+		enforce_daily_gate=False,
+	)
 
 
 # =============================================================================
@@ -321,6 +376,7 @@ def daily_summary_job():
 
 def configure_scheduled_jobs(schedule_module=schedule):
 	"""Register all recurring jobs on the provided schedule module."""
+	config = get_config()
 	# ==========================================================================
 	# Sheets Processing (Original)
 	# ==========================================================================
@@ -334,6 +390,10 @@ def configure_scheduled_jobs(schedule_module=schedule):
 	# Deterministic AP + Procurement baseline refresh at 8:00 AM PHT.
 	# Runs through a once-per-day gate so it is safe across restarts.
 	schedule_module.every(1).minutes.do(run_daily_baseline_sync_if_due)
+	if config.baseline_test_interval_minutes > 0:
+		schedule_module.every(config.baseline_test_interval_minutes).minutes.do(
+			run_interval_baseline_sync_job
+		)
 
 	# ==========================================================================
 	# POS File Processing (Automatic - No Manual Intervention)
@@ -362,11 +422,17 @@ def configure_scheduled_jobs(schedule_module=schedule):
 def run_scheduler():
 	"""Run the scheduler in a background thread."""
 	configure_scheduled_jobs()
+	config = get_config()
 
 	logger.info("Scheduler started with jobs:")
 	logger.info("  - Sheet watch renewal: every 1 hour")
 	logger.info("  - Sheet backup sync: every 6 hours")
 	logger.info("  - Daily AP/procurement baseline sync gate: every 1 minute, target 8 AM PHT")
+	if config.baseline_test_interval_minutes > 0:
+		logger.info(
+			"  - Interval AP/procurement baseline sync: every %s minutes (test mode)",
+			config.baseline_test_interval_minutes,
+		)
 	logger.info("  - POS file processing: every 2 minutes")
 	logger.info("  - Failed file retry: every 15 minutes")
 	logger.info("  - Folder scan (backup): every 30 minutes")

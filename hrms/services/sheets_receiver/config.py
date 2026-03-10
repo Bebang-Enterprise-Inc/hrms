@@ -10,6 +10,31 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 
+_TRUE_VALUES = {"1", "true", "yes", "on"}
+
+
+def _env_flag(name: str, default: bool) -> bool:
+	"""Parse a boolean environment variable with a sensible default."""
+	return (os.environ.get(name, str(default)).strip().lower() in _TRUE_VALUES)
+
+
+def _env_int(name: str, default: int) -> int:
+	"""Parse an integer environment variable with fallback."""
+	try:
+		return int(os.environ.get(name, str(default)).strip())
+	except (TypeError, ValueError):
+		return default
+
+
+def _env_csv(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
+	"""Parse a comma-separated environment variable into a normalized tuple."""
+	raw_value = os.environ.get(name)
+	if raw_value is None:
+		return default
+	parsed = [item.strip() for item in raw_value.split(",") if item.strip()]
+	return tuple(parsed) if parsed else default
+
+
 @dataclass
 class FolderConfig:
 	"""Configuration for a watched folder."""
@@ -90,6 +115,23 @@ class ServiceConfig:
 	log_level: str = field(default_factory=lambda: os.environ.get("LOG_LEVEL", "INFO"))
 	log_file: str = field(
 		default_factory=lambda: os.environ.get("SHEETS_RECEIVER_LOG", "/app/logs/sheets_receiver.log")
+	)
+	baseline_test_interval_minutes: int = field(
+		default_factory=lambda: _env_int("BASELINE_TEST_INTERVAL_MINUTES", 0)
+	)
+	generate_ap_exception_reports: bool = field(
+		default_factory=lambda: _env_flag("GENERATE_AP_EXCEPTION_REPORTS", True)
+	)
+	ap_exception_report_dir: str = field(
+		default_factory=lambda: os.environ.get(
+			"AP_EXCEPTION_REPORT_DIR", "/app/data/reports/ap_exception_reports"
+		)
+	)
+	suppress_critical_alert_triggers: tuple[str, ...] = field(
+		default_factory=lambda: _env_csv(
+			"SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS",
+			("startup", "manual", "interval_baseline"),
+		)
 	)
 
 
