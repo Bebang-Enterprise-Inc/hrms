@@ -131,9 +131,12 @@ class _TripDoc:
 		self.vehicle = None
 		self.vehicle_plate = None
 		self.cargo_type = None
+		self.flags = None
+		self.insert_kwargs = None
 		self.stops = [types.SimpleNamespace(store_order="", idx=i + 1) for i, _ in enumerate(stops)]
 
-	def insert(self):
+	def insert(self, **kwargs):
+		self.insert_kwargs = kwargs
 		return None
 
 
@@ -182,7 +185,8 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 			captured["stops"] = stops
 			captured["trip_date"] = trip_date
 			captured["route_name"] = route_name
-			return _TripDoc(stops)
+			captured["trip"] = _TripDoc(stops)
+			return captured["trip"]
 
 		dispatch.frappe.get_doc = MagicMock(return_value=route)
 		dispatch.frappe.db.get_value = MagicMock(side_effect=_get_value)
@@ -216,6 +220,15 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		self.assertEqual(captured["stops"][1]["store"], "STORE-A - BEI")
 		self.assertEqual(captured["stops"][1]["stop_order"], 2)
 		self.assertEqual(captured["stops"][1]["estimated_minutes"], 11)
+		self.assertTrue(captured["trip"].flags.ignore_permissions)
+		self.assertTrue(captured["trip"].flags.ignore_user_permissions)
+		self.assertEqual(captured["trip"].insert_kwargs, {"ignore_permissions": True})
+
+	def test_enable_role_gated_write_sets_ignore_user_permissions(self):
+		doc = types.SimpleNamespace(flags=None)
+		dispatch._enable_role_gated_write(doc)
+		self.assertTrue(doc.flags.ignore_permissions)
+		self.assertTrue(doc.flags.ignore_user_permissions)
 
 
 if __name__ == "__main__":
