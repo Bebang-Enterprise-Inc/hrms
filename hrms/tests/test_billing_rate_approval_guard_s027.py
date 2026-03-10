@@ -11,6 +11,17 @@ if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
 
 
+class _LocalProxy:
+	def __init__(self, getter):
+		object.__setattr__(self, "_getter", getter)
+
+	def __getattr__(self, name):
+		return getattr(object.__getattribute__(self, "_getter")(), name)
+
+	def __setattr__(self, name, value):
+		setattr(object.__getattribute__(self, "_getter")(), name, value)
+
+
 def _install_fake_modules():
 	if "frappe" not in sys.modules:
 		frappe = types.ModuleType("frappe")
@@ -45,12 +56,13 @@ def _install_fake_modules():
 	frappe.whitelist = whitelist
 	frappe._ = lambda text: text
 	frappe.throw = _throw
-	frappe.session = types.SimpleNamespace(user="approver@bebang.ph")
+	frappe.local = types.SimpleNamespace()
+	frappe.local.session = types.SimpleNamespace(user="approver@bebang.ph")
 	frappe.get_roles = lambda user=None: ["System Manager"]
 	frappe.log_error = lambda *args, **kwargs: None
 	frappe.has_permission = lambda *args, **kwargs: True
 	frappe.format_value = lambda value, _type=None: f"{float(value):.2f}"
-	frappe.db = types.SimpleNamespace(
+	frappe.local.db = types.SimpleNamespace(
 		sql=lambda *args, **kwargs: [],
 		get_value=lambda *args, **kwargs: None,
 		set_value=lambda *args, **kwargs: None,
@@ -58,6 +70,8 @@ def _install_fake_modules():
 		release_savepoint=lambda *args, **kwargs: None,
 		rollback=lambda *args, **kwargs: None,
 	)
+	frappe.__dict__["session"] = _LocalProxy(lambda: frappe.local.session)
+	frappe.__dict__["db"] = _LocalProxy(lambda: frappe.local.db)
 
 	utils.flt = lambda value, precision=None: float(value or 0)
 	utils.now_datetime = lambda: datetime.datetime(2026, 3, 10, 10, 0, 0)
@@ -131,10 +145,10 @@ class _RateDoc:
 class TestBillingRateApprovalGuardS027(unittest.TestCase):
 	def setUp(self):
 		self.rate = _RateDoc()
-		billing.frappe.session.user = "approver@bebang.ph"
+		billing.frappe.local.session.user = "approver@bebang.ph"
 		billing.frappe.get_doc = MagicMock(return_value=self.rate)
 		billing.frappe.get_all = MagicMock(return_value=[types.SimpleNamespace(name="RATE-OLD-001")])
-		billing.frappe.db.set_value = MagicMock()
+		billing.frappe.local.db.set_value = MagicMock()
 		billing.frappe.get_roles = MagicMock(return_value=["Supply Chain Manager"])
 
 	def test_self_approval_is_blocked(self):
