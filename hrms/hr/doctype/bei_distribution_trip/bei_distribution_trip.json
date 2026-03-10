@@ -15,6 +15,7 @@
     "column_break_1",
     "driver",
     "driver_name",
+    "threepl_driver_name",
     "vehicle",
     "vehicle_plate",
     "cargo_type",
@@ -81,6 +82,12 @@
       "label": "Driver Name",
       "read_only": 1,
       "fetch_from": "driver.employee_name"
+    },
+    {
+      "fieldname": "threepl_driver_name",
+      "fieldtype": "Data",
+      "label": "3PL Driver Name",
+      "description": "External driver name for third-party logistics trips"
     },
     {
       "fieldname": "vehicle",
