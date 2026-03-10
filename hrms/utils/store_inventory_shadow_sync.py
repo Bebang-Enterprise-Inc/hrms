@@ -102,7 +102,7 @@ def _bool_from_csv(value: str | bool | None) -> bool:
 def _coerce_float(value: Any) -> float | None:
 	if value in (None, ""):
 		return None
-	if isinstance(value, (int, float)):
+	if isinstance(value, int | float):
 		if isinstance(value, float) and math.isnan(value):
 			return None
 		return float(value)
@@ -324,8 +324,8 @@ def _get_service_account_path() -> str:
 
 def _build_google_services() -> tuple[Any, Any]:
 	import httplib2  # type: ignore
-	from google_auth_httplib2 import AuthorizedHttp  # type: ignore
 	from google.oauth2 import service_account  # type: ignore
+	from google_auth_httplib2 import AuthorizedHttp  # type: ignore
 	from googleapiclient.discovery import build  # type: ignore
 
 	credentials = service_account.Credentials.from_service_account_file(
@@ -452,7 +452,10 @@ def detect_inventory_layout(ws) -> InventoryLayout:
 	metadata_cols: dict[str, int] = {}
 
 	for row_idx in range(1, min(ws.max_row, 20) + 1):
-		normalized = [_normalize_header(ws.cell(row_idx, col_idx).value) for col_idx in range(1, min(ws.max_column, 40) + 1)]
+		normalized = [
+			_normalize_header(ws.cell(row_idx, col_idx).value)
+			for col_idx in range(1, min(ws.max_column, 40) + 1)
+		]
 		if {"CODE", "ITEMS", "DESCRIPTION", "UOM"}.issubset(set(normalized)):
 			header_row = row_idx
 			for col_idx, value in enumerate(normalized, start=1):
@@ -552,7 +555,12 @@ def _resolve_current_qty(
 	if whole_qty is not None or loose_qty is not None:
 		return None, "needs_conversion_rule", None, "WHOLE/LOOSE present but no trusted conversion rule"
 
-	return 0.0, "blank_zero_policy", run_date.isoformat(), "No current or historical stock signal; zeroed for deterministic mirror"
+	return (
+		0.0,
+		"blank_zero_policy",
+		run_date.isoformat(),
+		"No current or historical stock signal; zeroed for deterministic mirror",
+	)
 
 
 def ensure_required_master_data(
@@ -675,7 +683,7 @@ def extract_store_inventory_payload(
 		}
 
 		daily_records: list[dict[str, Any]] = []
-		for group_start, inventory_date in zip(layout.group_starts, layout.group_dates):
+		for group_start, inventory_date in zip(layout.group_starts, layout.group_dates, strict=False):
 			daily_records.append(
 				{
 					"inventory_date": inventory_date,
@@ -686,7 +694,9 @@ def extract_store_inventory_payload(
 				}
 			)
 
-		resolved_qty, qty_source, inventory_date, detail = _resolve_current_qty(current_row, daily_records, run_date)
+		resolved_qty, qty_source, inventory_date, detail = _resolve_current_qty(
+			current_row, daily_records, run_date
+		)
 		mapping = item_mapping.get(code)
 		target_item_code = mapping.target_item_code if mapping else ""
 		classification = "ready_to_import"

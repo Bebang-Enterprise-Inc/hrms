@@ -454,7 +454,9 @@ class TestErpSync(unittest.TestCase):
 		}
 
 		with (
-			patch.object(builder_module, "run_store_inventory_shadow_sync", return_value=builder_result) as run_mock,
+			patch.object(
+				builder_module, "run_store_inventory_shadow_sync", return_value=builder_result
+			) as run_mock,
 			patch.object(erp_sync.frappe, "log_error", MagicMock()),
 		):
 			result = erp_sync.run_scheduled_store_inventory_shadow_sync(
