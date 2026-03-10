@@ -11,6 +11,25 @@ if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
 
 
+def _install_fake_hrms():
+	if "hrms" in sys.modules:
+		return
+
+	hrms_pkg = types.ModuleType("hrms")
+	hrms_pkg.__path__ = []
+	sys.modules["hrms"] = hrms_pkg
+
+	utils_pkg = types.ModuleType("hrms.utils")
+	utils_pkg.__path__ = []
+	sys.modules["hrms.utils"] = utils_pkg
+
+	store_snapshot_mod = types.ModuleType("hrms.utils.store_order_demand_snapshot")
+	store_snapshot_mod.DEFAULT_DESTINATION_DIR = ROOT / "tmp"
+	store_snapshot_mod.run_snapshot = lambda *args, **kwargs: {}
+	sys.modules["hrms.utils.store_order_demand_snapshot"] = store_snapshot_mod
+	utils_pkg.store_order_demand_snapshot = store_snapshot_mod
+
+
 def _install_fake_frappe():
 	if "frappe" in sys.modules:
 		return
@@ -55,8 +74,8 @@ def _install_fake_frappe():
 	utils.nowdate = lambda: "2026-01-01"
 	utils.flt = lambda value: float(value or 0)
 	utils.cint = lambda value: int(float(value or 0))
-	utils.getdate = (
-		lambda value=None: datetime.date.fromisoformat(str(value)) if value else datetime.date(2026, 1, 1)
+	utils.getdate = lambda value=None: (
+		datetime.date.fromisoformat(str(value)) if value else datetime.date(2026, 1, 1)
 	)
 
 	sys.modules["frappe"] = frappe
@@ -64,6 +83,7 @@ def _install_fake_frappe():
 
 
 _install_fake_frappe()
+_install_fake_hrms()
 erp_sync_spec = importlib.util.spec_from_file_location(
 	"erp_sync_runtime_under_test",
 	ROOT / "hrms" / "api" / "erp_sync.py",
