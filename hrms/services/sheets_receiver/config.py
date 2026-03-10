@@ -9,13 +9,12 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 
 
 def _env_flag(name: str, default: bool) -> bool:
 	"""Parse a boolean environment variable with a sensible default."""
-	return (os.environ.get(name, str(default)).strip().lower() in _TRUE_VALUES)
+	return os.environ.get(name, str(default)).strip().lower() in _TRUE_VALUES
 
 
 def _env_int(name: str, default: int) -> int:

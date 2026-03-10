@@ -213,7 +213,9 @@ def extract_missing_invoice_rows(raw_values: list[list[Any]]) -> list[dict[str, 
 	return rows
 
 
-def _build_summary(rows: list[dict[str, Any]], latest_sync: SyncLog | None, generated_at: datetime) -> dict[str, Any]:
+def _build_summary(
+	rows: list[dict[str, Any]], latest_sync: SyncLog | None, generated_at: datetime
+) -> dict[str, Any]:
 	total_amount = sum(Decimal(str(row["amount"] or 0)) for row in rows)
 	total_payment = sum(Decimal(str(row["payment"] or 0)) for row in rows)
 	total_outstanding = sum(Decimal(str(row["outstanding_balance"] or 0)) for row in rows)
@@ -310,7 +312,9 @@ def _write_markdown(
 
 
 def _style_cell(cell, *, bold: bool = False, fill_color: str = BEI_CREAM, wrap: bool = False) -> None:
-	cell.font = Font(name="Calibri", size=10, bold=bold, color=TEXT_WHITE if fill_color == BEI_GREEN else TEXT_DARK)
+	cell.font = Font(
+		name="Calibri", size=10, bold=bold, color=TEXT_WHITE if fill_color == BEI_GREEN else TEXT_DARK
+	)
 	cell.fill = PatternFill("solid", fgColor=fill_color)
 	cell.alignment = Alignment(vertical="center", wrap_text=wrap)
 	cell.border = THIN_BORDER
