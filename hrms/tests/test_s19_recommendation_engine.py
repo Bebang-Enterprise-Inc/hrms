@@ -5,6 +5,12 @@ import types
 from datetime import date, datetime
 
 
+class _AttrDict(dict):
+	"""Frappe-style row object with both dict and attribute access."""
+
+	__getattr__ = dict.get
+
+
 def _install_common_stubs():
 	frappe = types.ModuleType("frappe")
 
@@ -67,6 +73,7 @@ def _install_common_stubs():
 	utils.flt = _flt
 	utils.cint = _cint
 	utils.getdate = _getdate
+	utils.get_datetime = lambda value=None: datetime(2026, 3, 2, 9, 0, 0)
 	utils.today = lambda: "2026-03-02"
 	utils.now = lambda: "2026-03-02 09:00:00"
 	utils.get_time = lambda _v=None: None
@@ -138,3 +145,107 @@ def test_delivery_lane_resolution_defaults_to_dry():
 		store_mod._resolve_delivery_lane({"item_name": "FRESH LETTUCE", "cargo_category": "DRY"})
 		== "Fresh Market"
 	)
+
+
+def test_orderable_items_prefers_snapshot_backed_demand_over_heuristic():
+	store_mod = _load_store_module()
+
+	def _sql(query, params=None, as_dict=False):
+		if "FROM `tabItem` i" in query:
+			return [
+				_AttrDict(
+					name="RM-001",
+					item_name="Frozen Milk",
+					item_group="Frozen Goods",
+					stock_uom="Barrel",
+					image=None,
+					order_count=4,
+				)
+			]
+		if "FROM `tabBEI Store Order Item` oi" in query:
+			return [_AttrDict(item_code="RM-001", qty_requested=9)]
+		return []
+
+	def _get_all(doctype, filters=None, fields=None, **kwargs):
+		if doctype == "Bin":
+			return [_AttrDict(item_code="RM-001", actual_qty=1)]
+		if doctype == "BEI Inventory Risk Snapshot":
+			return [
+				_AttrDict(
+					item_code="RM-001",
+					warehouse="Test Store - BEI",
+					snapshot_date="2026-03-02",
+					avg_daily_demand=4.0,
+					source_reference=(
+						'{"signal_source":"sales_bom_snapshot","lookback_days":14,'
+						'"projected_sales":2.5,"bom_consumption":4.0,"coverage_window_days":2}'
+					),
+				)
+			]
+		return []
+
+	store_mod.frappe.db.sql = _sql
+	store_mod.frappe.get_all = _get_all
+	store_mod.resolve_warehouse = lambda store: "Test Store - BEI"
+	store_mod._get_signal_flags = lambda warehouse, for_date=None: {
+		"is_salary_week": False,
+		"is_holiday": False,
+		"is_weather_risk": False,
+	}
+	store_mod._get_adaptive_delta = lambda warehouse: 0.0
+
+	result = store_mod.get_orderable_items("Test Store", "2026-03-02")
+	item = result["items"][0]
+
+	assert item["recommendation_source"] == "sales_bom_snapshot"
+	assert item["avg_daily_demand"] == 4.0
+	assert item["projected_sales"] == 2.5
+	assert item["bom_consumption"] == 4.0
+	assert item["coverage_window_days"] == 2
+	assert item["forecast_demand"] == 13.0
+	assert item["recommended_qty"] == 13.95
+
+
+def test_orderable_items_falls_back_to_heuristic_when_snapshot_missing():
+	store_mod = _load_store_module()
+
+	def _sql(query, params=None, as_dict=False):
+		if "FROM `tabItem` i" in query:
+			return [
+				_AttrDict(
+					name="RM-001",
+					item_name="Sugar Syrup",
+					item_group="Dry Goods",
+					stock_uom="Bottle",
+					image=None,
+					order_count=4,
+				)
+			]
+		if "FROM `tabBEI Store Order Item` oi" in query:
+			return [_AttrDict(item_code="RM-001", qty_requested=9)]
+		return []
+
+	def _get_all(doctype, filters=None, fields=None, **kwargs):
+		if doctype == "Bin":
+			return [_AttrDict(item_code="RM-001", actual_qty=1)]
+		if doctype == "BEI Inventory Risk Snapshot":
+			return []
+		return []
+
+	store_mod.frappe.db.sql = _sql
+	store_mod.frappe.get_all = _get_all
+	store_mod.resolve_warehouse = lambda store: "Test Store - BEI"
+	store_mod._get_signal_flags = lambda warehouse, for_date=None: {
+		"is_salary_week": False,
+		"is_holiday": False,
+		"is_weather_risk": False,
+	}
+	store_mod._get_adaptive_delta = lambda warehouse: 0.0
+
+	result = store_mod.get_orderable_items("Test Store", "2026-03-02")
+	item = result["items"][0]
+
+	assert item["recommendation_source"] == "heuristic"
+	assert item["projected_sales"] == 5.85
+	assert item["bom_consumption"] == 2.25
+	assert item["coverage_window_days"] == 3

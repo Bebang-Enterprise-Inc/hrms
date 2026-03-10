@@ -75,6 +75,31 @@ def _install_fake_frappe():
 
 
 _install_fake_frappe()
+
+
+def _install_fake_hrms_utils():
+	hrms_pkg = types.ModuleType("hrms")
+	hrms_pkg.__path__ = [str(ROOT / "hrms")]
+	utils_pkg = types.ModuleType("hrms.utils")
+	utils_pkg.__path__ = [str(ROOT / "hrms" / "utils")]
+
+	builder_spec = importlib.util.spec_from_file_location(
+		"hrms.utils.store_order_demand_snapshot",
+		ROOT / "hrms" / "utils" / "store_order_demand_snapshot.py",
+	)
+	builder_module = importlib.util.module_from_spec(builder_spec)
+	assert builder_spec and builder_spec.loader
+	builder_spec.loader.exec_module(builder_module)
+
+	utils_pkg.store_order_demand_snapshot = builder_module
+	hrms_pkg.utils = utils_pkg
+
+	sys.modules["hrms"] = hrms_pkg
+	sys.modules["hrms.utils"] = utils_pkg
+	sys.modules["hrms.utils.store_order_demand_snapshot"] = builder_module
+
+
+_install_fake_hrms_utils()
 erp_sync_spec = importlib.util.spec_from_file_location(
 	"erp_sync_under_test",
 	ROOT / "hrms" / "api" / "erp_sync.py",
@@ -319,6 +344,68 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(len(created_docs), 1)
 		erp_sync.frappe.db.set_value.assert_called_once()
 
+	def test_enqueue_scheduled_store_demand_snapshot_sync_queues_daily_job(self):
+		erp_sync.frappe.enqueue = MagicMock()
+
+		result = erp_sync.enqueue_scheduled_store_demand_snapshot_sync(snapshot_date="2026-03-10", lookback_days=28)
+
+		self.assertTrue(result["queued"])
+		self.assertEqual(result["job_id"], "scheduled_store_demand_snapshot:2026-03-10")
+		erp_sync.frappe.enqueue.assert_called_once_with(
+			"hrms.api.erp_sync.run_scheduled_store_demand_snapshot_sync",
+			queue="long",
+			job_id="scheduled_store_demand_snapshot:2026-03-10",
+			enqueue_after_commit=True,
+			snapshot_date="2026-03-10",
+			lookback_days=28,
+		)
+
+	def test_run_scheduled_store_demand_snapshot_sync_builds_and_syncs_rows(self):
+		builder_module = erp_sync.store_demand_snapshot_builder
+		builder_outputs = {
+			"start_date": "2026-02-11",
+			"end_date": "2026-03-09",
+			"product_daily_rows": [],
+			"item_daily_rows": [],
+			"snapshot_rows": [
+				{
+					"snapshot_date": "2026-03-10",
+					"warehouse": "Store A - BEI",
+					"item_code": "RM-001",
+					"avg_daily_demand": 1.25,
+					"projected_sales": 0,
+					"bom_consumption": 1.25,
+					"lookback_days": 28,
+					"signal_source": "sales_bom_snapshot",
+					"channel_mix": "POS,Web",
+					"source_reference": "{}",
+				}
+			],
+			"mapping_audit_rows": [],
+			"excluded_rows": [],
+			"unmapped_rows": [],
+		}
+
+		with (
+			patch.object(builder_module, "build_outputs", return_value=builder_outputs) as build_mock,
+			patch.object(builder_module, "write_csv", MagicMock()),
+			patch.object(
+				erp_sync,
+				"_sync_store_demand_snapshot_rows",
+				return_value={"rows_created": 1, "rows_updated": 0, "rows_failed": 0, "errors": []},
+			) as sync_mock,
+			patch.object(erp_sync.frappe, "log_error", MagicMock()),
+		):
+			result = erp_sync.run_scheduled_store_demand_snapshot_sync(
+				snapshot_date="2026-03-10",
+				lookback_days=28,
+			)
+
+		build_mock.assert_called_once()
+		sync_mock.assert_called_once()
+		self.assertEqual(result["snapshot_rows"], 1)
+		self.assertEqual(result["unmapped_products"], 0)
+		self.assertEqual(result["sync_result"]["rows_created"], 1)
 	def test_resolve_warehouse_accepts_warehouse_name_lookup(self):
 		def db_exists(doctype, name=None):
 			if doctype == "Warehouse":
