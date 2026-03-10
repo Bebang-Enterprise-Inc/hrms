@@ -156,7 +156,7 @@ def _get_3pl_trip_query():
         LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
         WHERE dt.trip_date BETWEEN %(start_date)s AND %(end_date)s
           AND COALESCE(dt.vehicle_owner, '') = %(partner)s
-          AND dt.docstatus = 1
+          AND dt.docstatus < 2
         GROUP BY dt.name
         ORDER BY dt.trip_date ASC
         """
@@ -177,7 +177,7 @@ def _get_3pl_trip_query():
     LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
     WHERE dt.trip_date BETWEEN %(start_date)s AND %(end_date)s
       AND COALESCE(veh.threepl_partner, '') = %(partner)s
-      AND dt.docstatus = 1
+      AND dt.docstatus < 2
     GROUP BY dt.name
     ORDER BY dt.trip_date ASC
     """
@@ -190,7 +190,7 @@ def _get_3pl_trip_count_query():
         SELECT dt.vehicle_owner AS partner, COUNT(*) AS cnt
         FROM `tabBEI Distribution Trip` dt
         WHERE dt.trip_date BETWEEN %s AND %s
-          AND dt.docstatus = 1
+          AND dt.docstatus < 2
           AND COALESCE(dt.vehicle_owner, '') != ''
         GROUP BY dt.vehicle_owner
         """
@@ -200,7 +200,7 @@ def _get_3pl_trip_count_query():
     FROM `tabBEI Distribution Trip` dt
     LEFT JOIN `tabBEI Vehicle` veh ON veh.name = dt.vehicle
     WHERE dt.trip_date BETWEEN %s AND %s
-      AND dt.docstatus = 1
+      AND dt.docstatus < 2
       AND COALESCE(veh.threepl_partner, '') != ''
     GROUP BY veh.threepl_partner
     """
