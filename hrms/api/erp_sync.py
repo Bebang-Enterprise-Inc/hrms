@@ -267,6 +267,76 @@ def _ensure_batch_exists(batch_id: str, item_code: str) -> str:
 	return batch.name
 
 
+def _latest_positive_rate(doctype: str, filters: dict[str, Any], order_by: str) -> float:
+	try:
+		rows = frappe.get_all(
+			doctype,
+			filters=filters,
+			fields=["valuation_rate"],
+			order_by=order_by,
+			limit=5,
+		)
+	except Exception:
+		return 0.0
+
+	for row in rows:
+		rate = _safe_float(row.get("valuation_rate"))
+		if rate > 0:
+			return rate
+	return 0.0
+
+
+def _resolve_inventory_valuation_rate(
+	item_code: str,
+	warehouse: str,
+	row: dict[str, Any],
+	*,
+	is_shadow_sync: bool,
+) -> tuple[float, bool]:
+	explicit_rate = _safe_float(_first_non_empty(row, "valuation_rate", "current_valuation_rate"))
+	explicit_allow_zero = bool(_sheet_flag(_first_non_empty(row, "allow_zero_valuation_rate")))
+	if explicit_rate > 0:
+		return explicit_rate, explicit_allow_zero
+
+	warehouse_bin_rate = _safe_float(
+		frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "valuation_rate")
+	)
+	if warehouse_bin_rate > 0:
+		return warehouse_bin_rate, explicit_allow_zero
+
+	same_warehouse_sle_rate = _latest_positive_rate(
+		"Stock Ledger Entry",
+		{"item_code": item_code, "warehouse": warehouse},
+		"posting_date desc, posting_time desc, creation desc",
+	)
+	if same_warehouse_sle_rate > 0:
+		return same_warehouse_sle_rate, explicit_allow_zero
+
+	any_bin_rate = _latest_positive_rate("Bin", {"item_code": item_code}, "actual_qty desc, warehouse asc")
+	if any_bin_rate > 0:
+		return any_bin_rate, explicit_allow_zero
+
+	any_sle_rate = _latest_positive_rate(
+		"Stock Ledger Entry",
+		{"item_code": item_code},
+		"posting_date desc, posting_time desc, creation desc",
+	)
+	if any_sle_rate > 0:
+		return any_sle_rate, explicit_allow_zero
+
+	item_rate = _safe_float(frappe.db.get_value("Item", item_code, "valuation_rate"))
+	if item_rate > 0:
+		return item_rate, explicit_allow_zero
+
+	if _doctype_has_field("Item", "last_purchase_rate"):
+		last_purchase_rate = _safe_float(frappe.db.get_value("Item", item_code, "last_purchase_rate"))
+		if last_purchase_rate > 0:
+			return last_purchase_rate, explicit_allow_zero
+
+	qty = _safe_float(_first_non_empty(row, "qty", "quantity", "stock"))
+	return 0.0, bool(explicit_allow_zero or (is_shadow_sync and qty > 0))
+
+
 def _persist_store_demand_outputs(
 	output_dir: Path, outputs: dict[str, Any], lookback_days: int, snapshot_date: str
 ) -> None:
@@ -873,6 +943,13 @@ def _sync_inventory_rows(
 
 				batch_no = _ensure_batch_exists(batch_no, item_code)
 
+			valuation_rate, allow_zero_valuation_rate = _resolve_inventory_valuation_rate(
+				item_code,
+				warehouse,
+				row,
+				is_shadow_sync=is_shadow_sync,
+			)
+
 			if warehouse not in items_by_warehouse:
 				items_by_warehouse[warehouse] = {}
 
@@ -881,6 +958,8 @@ def _sync_inventory_rows(
 				"item_code": item_code,
 				"warehouse": warehouse,
 				"qty": qty,
+				"valuation_rate": valuation_rate,
+				"allow_zero_valuation_rate": 1 if allow_zero_valuation_rate else 0,
 				"batch_no": batch_no,
 				"serial_no": serial_no,
 				"use_serial_batch_fields": use_serial_batch_fields,
@@ -945,6 +1024,12 @@ def _sync_inventory_rows(
 					"warehouse": warehouse,
 					"qty": item["qty"],
 				}
+				if item.get("valuation_rate") or item.get("allow_zero_valuation_rate"):
+					row_payload["valuation_rate"] = item.get("valuation_rate") or 0
+				if item.get("allow_zero_valuation_rate") and _doctype_has_field(
+					"Stock Reconciliation Item", "allow_zero_valuation_rate"
+				):
+					row_payload["allow_zero_valuation_rate"] = 1
 				if item.get("use_serial_batch_fields"):
 					row_payload["use_serial_batch_fields"] = 1
 				if item.get("batch_no"):

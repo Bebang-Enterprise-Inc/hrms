@@ -65,6 +65,21 @@ Policy:
 
 This is an operational mirror policy, not a claim that the workbook contains true batch lineage.
 
+## Shadow Valuation Policy
+
+The store sheets do not carry reliable valuation data. For each imported row, the bridge tries valuation in this order:
+
+1. explicit payload `valuation_rate`
+2. existing `Bin.valuation_rate` for the same store warehouse
+3. latest positive `Stock Ledger Entry` valuation for the same store warehouse
+4. any positive `Bin` / `Stock Ledger Entry` valuation for the same item elsewhere in Frappe
+5. `Item.valuation_rate`
+6. `Item.last_purchase_rate`
+
+If none of those produce a positive rate and the row is part of the pre-cutover shadow sync, the bridge sets `allow_zero_valuation_rate = 1` so the operational qty can still mirror into Frappe.
+
+This zero-rate fallback is temporary and operational. It keeps `Bin.actual_qty` correct for ordering, but it is not a substitute for real stock valuation policy.
+
 ## Operator Controls
 
 Edit the runtime registry CSV, not the fixture, to control live behavior.

@@ -387,6 +387,106 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(result["rows_failed"], 1)
 		self.assertIn("Batch-tracked item requires batch_no: FG001", result["errors"])
 
+	def test_sync_inventory_uses_existing_bin_valuation_rate(self):
+		created_docs = []
+
+		def db_exists(doctype, name=None):
+			if doctype in ("Item", "Warehouse", "Company"):
+				return name or True
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Item" and filters == "CM31" and fieldname == "has_batch_no":
+				return 0
+			if doctype == "Item" and filters == "CM31" and fieldname == "has_serial_no":
+				return 0
+			if doctype == "Bin" and filters == {"item_code": "CM31", "warehouse": "Stores - BEI"}:
+				return 12.5
+			if doctype == "Account" and isinstance(filters, dict):
+				return "Stock Adjustment - BEI"
+			if doctype == "Company" and filters == "BEI" and fieldname == "cost_center":
+				return "Main - BEI"
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Stock Reconciliation":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"SR-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.get_all = MagicMock(return_value=[])
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
+			result = erp_sync._sync_inventory_rows(
+				sheet_name="Store Inventory Shadow Sync AFT",
+				data=[{"store_code": "AFT", "item_code": "CM31", "warehouse": "Stores - BEI", "qty": 3}],
+				checksum="chk-shadow-rate-1",
+				require_auth=False,
+			)
+
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(created_docs[0].items[0]["valuation_rate"], 12.5)
+		self.assertNotIn("allow_zero_valuation_rate", created_docs[0].items[0])
+
+	def test_sync_inventory_shadow_sync_allows_zero_valuation_rate_when_no_source_exists(self):
+		created_docs = []
+
+		def db_exists(doctype, name=None):
+			if doctype in ("Item", "Warehouse", "Company"):
+				return name or True
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Item" and filters == "CM31" and fieldname in {"has_batch_no", "has_serial_no"}:
+				return 0
+			if doctype == "Item" and filters == "CM31" and fieldname == "valuation_rate":
+				return 0
+			if doctype == "Item" and filters == "CM31" and fieldname == "last_purchase_rate":
+				return 0
+			if doctype == "Account" and isinstance(filters, dict):
+				return "Stock Adjustment - BEI"
+			if doctype == "Company" and filters == "BEI" and fieldname == "cost_center":
+				return "Main - BEI"
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Stock Reconciliation":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"SR-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.get_all = MagicMock(return_value=[])
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
+			result = erp_sync._sync_inventory_rows(
+				sheet_name="Store Inventory Shadow Sync AFT",
+				data=[{"store_code": "AFT", "item_code": "CM31", "warehouse": "Stores - BEI", "qty": 3}],
+				checksum="chk-shadow-rate-2",
+				require_auth=False,
+			)
+
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(created_docs[0].items[0]["valuation_rate"], 0)
+		self.assertEqual(created_docs[0].items[0]["allow_zero_valuation_rate"], 1)
+
 	def test_sync_store_demand_snapshot_upserts_by_snapshot_date_warehouse_item(self):
 		created_snapshot_rows = {}
 		created_docs = []
