@@ -12,6 +12,7 @@ from typing import Any
 
 import frappe
 from frappe import _
+from frappe.exceptions import TimestampMismatchError
 from frappe.utils import cint, flt, now_datetime, nowdate
 
 from hrms.utils.delivery_billing_policy import (
@@ -247,22 +248,51 @@ def confirm_delivery(
 	"""Confirm delivery at a specific stop. stop_idx is 1-based."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "confirm delivery")
 
-	trip = frappe.get_doc("BEI Distribution Trip", trip_name)
-
-	if trip.status not in ["In Transit", "Partial"]:
-		frappe.throw(_("Trip is not in transit"))
-
-	stop = _get_stop(trip, stop_idx)
-	stop.status = "Delivered"
-	stop.arrival_time = now_datetime()
-	stop.signature = signature
-	stop.signed_by = signed_by
-
 	# Auto-generate delivery billing (async, feature-flagged).
 	# GAP-092 policy: missing setting defaults to enabled.
 	auto_create_setting = frappe.db.get_single_value("BEI Settings", "billing_auto_create_on_delivery")
-	if should_auto_create_billing_on_delivery(auto_create_setting):
-		stop.billing_creation_status = "Pending"
+	auto_create_delivery_billing = should_auto_create_billing_on_delivery(auto_create_setting)
+
+	trip = None
+	stop = None
+	delivered = 0
+	total = 0
+	stop_was_updated = False
+
+	for attempt in range(3):
+		trip = frappe.get_doc("BEI Distribution Trip", trip_name)
+		stop = _get_stop(trip, stop_idx)
+		stop_was_updated = False
+
+		if stop.status == "Delivered":
+			delivered, total = _update_trip_status(trip)
+			break
+
+		if trip.status not in ["In Transit", "Partial"]:
+			frappe.throw(_("Trip is not in transit"))
+
+		stop.status = "Delivered"
+		stop.arrival_time = now_datetime()
+		stop.signature = signature
+		stop.signed_by = signed_by
+		if auto_create_delivery_billing:
+			stop.billing_creation_status = "Pending"
+
+		delivered, total = _update_trip_status(trip)
+		_enable_role_gated_write(trip)
+
+		try:
+			trip.save(ignore_permissions=True)
+			stop_was_updated = True
+			break
+		except TimestampMismatchError:
+			frappe.db.rollback()
+			if attempt == 2:
+				raise
+	else:
+		frappe.throw(_("Unable to confirm delivery right now. Please try again."))
+
+	if auto_create_delivery_billing and stop_was_updated:
 		frappe.enqueue(
 			"hrms.api.dispatch._create_delivery_billing",
 			queue="default",
@@ -271,12 +301,8 @@ def confirm_delivery(
 			enqueue_after_commit=True,
 		)
 
-	delivered, total = _update_trip_status(trip)
-	_enable_role_gated_write(trip)
-	trip.save(ignore_permissions=True)
-
 	# Update linked BEI Store Order status to "Delivered"
-	if hasattr(stop, "store_order") and stop.store_order:
+	if stop_was_updated and hasattr(stop, "store_order") and stop.store_order:
 		_set_store_order_status(stop.store_order, "Delivered")
 
 	# PHASE 1A: Send "1 stop away" notification to next stop
@@ -284,16 +310,17 @@ def confirm_delivery(
 	try:
 		current_stop_order = int(stop_idx)
 		next_stop = None
-		for s in trip.stops:
-			if s.stop_order == current_stop_order + 1 and s.status == "Pending":
-				next_stop = s
-				break
+		if stop_was_updated:
+			for s in trip.stops:
+				if s.stop_order == current_stop_order + 1 and s.status == "Pending":
+					next_stop = s
+					break
 
-		if next_stop and trip.departure_time:
-			eta_window = _calculate_eta(trip, next_stop.stop_order).get("eta_window") or {}
-			eta_range = f"{eta_window.get('min', '')} - {eta_window.get('max', '')}".strip(" -")
+			if next_stop and trip.departure_time:
+				eta_window = _calculate_eta(trip, next_stop.stop_order).get("eta_window") or {}
+				eta_range = f"{eta_window.get('min', '')} - {eta_window.get('max', '')}".strip(" -")
 
-			_send_delivery_notification(trip.driver or "Driver", next_stop.store, eta_range)
+				_send_delivery_notification(trip.driver or "Driver", next_stop.store, eta_range)
 	except Exception as e:
 		# CRITICAL: Notification failures must not block delivery confirmation
 		frappe.log_error(
