@@ -9,7 +9,7 @@ Uses SQLite for persistent storage of:
 
 import sqlite3
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, asdict
@@ -342,6 +342,34 @@ class Database:
                 )
                 for row in rows
             ]
+
+    def has_successful_sync_since(
+        self,
+        spreadsheet_id: str,
+        sheet_name: str,
+        trigger: str,
+        since: datetime,
+    ) -> bool:
+        """Return True when a successful sync exists for the sheet since the given UTC timestamp."""
+        if since.tzinfo is not None:
+            since = since.astimezone(UTC).replace(tzinfo=None)
+
+        with self._connection() as conn:
+            row = conn.execute(
+                """
+                SELECT 1
+                FROM sync_logs
+                WHERE spreadsheet_id = ?
+                  AND sheet_name = ?
+                  AND trigger = ?
+                  AND status = 'success'
+                  AND created_at >= ?
+                LIMIT 1
+                """,
+                (spreadsheet_id, sheet_name, trigger, since.isoformat()),
+            ).fetchone()
+
+            return row is not None
 
     # Checksums
     def get_checksum(self, spreadsheet_id: str, sheet_name: str) -> Optional[str]:

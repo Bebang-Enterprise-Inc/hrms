@@ -37,11 +37,12 @@ import signal
 import sys
 import threading
 import time
-from datetime import datetime
+from datetime import UTC, datetime, time as dt_time
+from zoneinfo import ZoneInfo
 
 import schedule
 
-from .config import get_config, get_watched_sheets
+from .config import get_config, get_sheet_config, get_watched_sheets
 from .models import get_db
 from .sheets_client import get_sheets_client
 from .processor import get_processor
@@ -58,6 +59,18 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+PHT_TIMEZONE = ZoneInfo("Asia/Manila")
+DAILY_BASELINE_TRIGGER = "daily_baseline"
+DAILY_BASELINE_PHT_TIME = dt_time(hour=8, minute=0)
+DAILY_BASELINE_SHEET_KEYS = (
+    "ap_opening_balance",
+    "supplier_soa",
+    "procurement_suppliers",
+    "procurement_requisitions",
+    "procurement_purchase_orders",
+    "procurement_goods_receipts",
+)
 
 
 def setup_file_logging():
@@ -102,6 +115,72 @@ def scheduled_sync_job():
         processor.sync_all_sheets(trigger='scheduled', force=False)
     except Exception as e:
         logger.error(f"Scheduled sync failed: {e}")
+
+
+def _normalize_now_utc(now_utc: datetime | None = None) -> datetime:
+    """Normalize a timestamp to timezone-aware UTC."""
+    if now_utc is None:
+        return datetime.now(UTC)
+    if now_utc.tzinfo is None:
+        return now_utc.replace(tzinfo=UTC)
+    return now_utc.astimezone(UTC)
+
+
+def get_daily_baseline_sheet_keys() -> tuple[str, ...]:
+    """Return the sheet keys that must be force-synced at 8:00 AM PHT."""
+    return DAILY_BASELINE_SHEET_KEYS
+
+
+def run_daily_baseline_sync_if_due(now_utc: datetime | None = None):
+    """
+    Force-sync AP and Procurement baseline sheets once per PHT day after 8:00 AM.
+
+    This does not rely on the host/container timezone. It checks whether each target
+    sheet already has a successful `daily_baseline` sync logged for the current PHT
+    day and only re-syncs missing sheets.
+    """
+    normalized_now_utc = _normalize_now_utc(now_utc)
+    now_pht = normalized_now_utc.astimezone(PHT_TIMEZONE)
+
+    if now_pht.time() < DAILY_BASELINE_PHT_TIME:
+        return []
+
+    pht_day_start = datetime.combine(now_pht.date(), dt_time.min, tzinfo=PHT_TIMEZONE)
+    pht_day_start_utc = pht_day_start.astimezone(UTC)
+
+    db = get_db()
+    processor = get_processor()
+    results = []
+
+    for sheet_key in get_daily_baseline_sheet_keys():
+        sheet_config = get_sheet_config(sheet_key)
+        if not sheet_config or not sheet_config.enabled:
+            logger.warning(f"Daily baseline sync skipped missing/disabled sheet config: {sheet_key}")
+            continue
+
+        already_synced = db.has_successful_sync_since(
+            sheet_config.spreadsheet_id,
+            sheet_config.sheet_name,
+            DAILY_BASELINE_TRIGGER,
+            pht_day_start_utc,
+        )
+        if already_synced:
+            continue
+
+        logger.info(
+            "Running daily baseline force sync for %s (%s)",
+            getattr(sheet_config, "name", sheet_key),
+            sheet_key,
+        )
+        results.append(
+            processor.sync_sheet(
+                sheet_config,
+                trigger=DAILY_BASELINE_TRIGGER,
+                force=True,
+            )
+        )
+
+    return results
 
 
 # =============================================================================
@@ -243,46 +322,54 @@ def daily_summary_job():
         logger.error(f"Daily summary job failed: {e}")
 
 
-def run_scheduler():
-    """Run the scheduler in a background thread."""
-    config = get_config()
-
+def configure_scheduled_jobs(schedule_module=schedule):
+    """Register all recurring jobs on the provided schedule module."""
     # ==========================================================================
     # Sheets Processing (Original)
     # ==========================================================================
 
     # Renew sheet watches every hour (they expire after 24h)
-    schedule.every(1).hour.do(renew_watches_job)
+    schedule_module.every(1).hour.do(renew_watches_job)
 
     # Backup sync every 6 hours (in case webhooks missed)
-    schedule.every(6).hours.do(scheduled_sync_job)
+    schedule_module.every(6).hours.do(scheduled_sync_job)
+
+    # Deterministic AP + Procurement baseline refresh at 8:00 AM PHT.
+    # Runs through a once-per-day gate so it is safe across restarts.
+    schedule_module.every(1).minutes.do(run_daily_baseline_sync_if_due)
 
     # ==========================================================================
     # POS File Processing (Automatic - No Manual Intervention)
     # ==========================================================================
 
     # Process pending files every 2 minutes (fast turnaround)
-    schedule.every(2).minutes.do(process_pending_files_job)
+    schedule_module.every(2).minutes.do(process_pending_files_job)
 
     # Retry failed files every 15 minutes (give time for transient issues)
-    schedule.every(15).minutes.do(retry_failed_files_job)
+    schedule_module.every(15).minutes.do(retry_failed_files_job)
 
     # Scan all folders every 30 minutes (backup to webhooks)
-    schedule.every(30).minutes.do(scan_for_new_files_job)
+    schedule_module.every(30).minutes.do(scan_for_new_files_job)
 
     # Renew folder watches every hour (they expire after 24h)
-    schedule.every(1).hour.do(renew_folder_watches_job)
+    schedule_module.every(1).hour.do(renew_folder_watches_job)
 
     # ==========================================================================
     # Notifications & Reporting
     # ==========================================================================
 
     # Daily summary at 7 AM Philippines time (23:00 UTC)
-    schedule.every().day.at("23:00").do(daily_summary_job)
+    schedule_module.every().day.at("23:00").do(daily_summary_job)
+
+
+def run_scheduler():
+    """Run the scheduler in a background thread."""
+    configure_scheduled_jobs()
 
     logger.info("Scheduler started with jobs:")
     logger.info("  - Sheet watch renewal: every 1 hour")
     logger.info("  - Sheet backup sync: every 6 hours")
+    logger.info("  - Daily AP/procurement baseline sync gate: every 1 minute, target 8 AM PHT")
     logger.info("  - POS file processing: every 2 minutes")
     logger.info("  - Failed file retry: every 15 minutes")
     logger.info("  - Folder scan (backup): every 30 minutes")
@@ -345,6 +432,12 @@ def initial_setup():
         processor.sync_all_sheets(trigger='startup', force=False)
     except Exception as e:
         logger.error(f"Initial sheet sync failed: {e}")
+
+    logger.info("Checking whether daily AP/procurement baseline sync is due...")
+    try:
+        run_daily_baseline_sync_if_due()
+    except Exception as e:
+        logger.error(f"Daily baseline sync check failed: {e}")
 
     # Initial scan for POS files
     logger.info("Performing initial POS folder scan...")
