@@ -124,11 +124,21 @@ def _trip_optional_field_sql(fieldname: str, trip_alias: str = "dt", default: st
 	return default
 
 
+def _trip_stop_store_sql(stop_alias: str = "ds", default: str = "''") -> str:
+	"""Resolve the live trip-stop label column across schema variants."""
+	if _has_column("BEI Trip Stop", "store"):
+		return f"{stop_alias}.store"
+	if _has_column("BEI Trip Stop", "department"):
+		return f"{stop_alias}.department"
+	return default
+
+
 def _get_3pl_trip_query():
 	"""Return a static SQL query matching the runtime trip-partner schema."""
 	overtime_sql = _trip_optional_field_sql("overtime_hours")
 	holiday_sql = _trip_optional_field_sql("is_holiday_trip")
 	weekend_sql = _trip_optional_field_sql("is_weekend_trip")
+	store_sql = _trip_stop_store_sql()
 
 	if _has_column("BEI Distribution Trip", "vehicle_owner"):
 		return f"""
@@ -141,7 +151,7 @@ def _get_3pl_trip_query():
             {overtime_sql} AS overtime_hours,
             {holiday_sql} AS is_holiday_trip,
             {weekend_sql} AS is_weekend_trip,
-            GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
+            GROUP_CONCAT(DISTINCT {store_sql} SEPARATOR ', ') AS stores
         FROM `tabBEI Distribution Trip` dt
         LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
         WHERE dt.trip_date BETWEEN %(start_date)s AND %(end_date)s
@@ -161,7 +171,7 @@ def _get_3pl_trip_query():
         {overtime_sql} AS overtime_hours,
         {holiday_sql} AS is_holiday_trip,
         {weekend_sql} AS is_weekend_trip,
-        GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
+        GROUP_CONCAT(DISTINCT {store_sql} SEPARATOR ', ') AS stores
     FROM `tabBEI Distribution Trip` dt
     LEFT JOIN `tabBEI Vehicle` veh ON veh.name = dt.vehicle
     LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
