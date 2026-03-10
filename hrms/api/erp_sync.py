@@ -15,6 +15,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, flt, getdate, now_datetime, nowdate
 
+from hrms.utils import store_inventory_shadow_sync as store_inventory_shadow_sync_builder
 from hrms.utils import store_order_demand_snapshot as store_demand_snapshot_builder
 from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 
@@ -29,6 +30,8 @@ SYNC_ALLOWED_ROLES = {
 }
 STORE_DEMAND_SNAPSHOT_SHEET_NAME = "Store Demand Snapshot"
 STORE_DEMAND_SNAPSHOT_AUTO_PREFIX = "scheduled_store_demand_snapshot"
+STORE_INVENTORY_SHADOW_SYNC_SHEET_NAME = "Store Inventory Shadow Sync"
+STORE_INVENTORY_SHADOW_SYNC_AUTO_PREFIX = "scheduled_store_inventory_shadow_sync"
 
 
 def _parse_rows(data: Any) -> list[dict[str, Any]]:
@@ -629,14 +632,16 @@ def sync_ar_aging(sheet_name: str, data: list[dict], checksum: str, **kwargs) ->
 	return results
 
 
-@frappe.whitelist()
-def sync_inventory(sheet_name: str, data: list[dict], checksum: str, **kwargs) -> dict:
-	"""
-	Sync Inventory data from Google Sheets.
-
-	Updates stock levels via Stock Reconciliation.
-	"""
-	_assert_sync_authorized()
+def _sync_inventory_rows(
+	sheet_name: str,
+	data: list[dict],
+	checksum: str,
+	*,
+	require_auth: bool,
+) -> dict:
+	"""Internal sync helper shared by API calls and scheduled jobs."""
+	if require_auth:
+		_assert_sync_authorized()
 	rows = _parse_rows(data)
 	results = _init_results(len(rows))
 
@@ -746,6 +751,16 @@ def sync_inventory(sheet_name: str, data: list[dict], checksum: str, **kwargs) -
 			results["rows_failed"] += len(items)
 
 	return results
+
+
+@frappe.whitelist()
+def sync_inventory(sheet_name: str, data: list[dict], checksum: str, **kwargs) -> dict:
+	"""
+	Sync Inventory data from Google Sheets.
+
+	Updates stock levels via Stock Reconciliation.
+	"""
+	return _sync_inventory_rows(sheet_name, data, checksum, require_auth=True)
 
 
 def _sync_store_demand_snapshot_rows(
@@ -1348,6 +1363,42 @@ def sync_supplier_soa(sheet_name: str, data: list[dict], checksum: str, **kwargs
 	Source config still points to this method name.
 	"""
 	return sync_ap_opening(sheet_name=sheet_name, data=data, checksum=checksum, **kwargs)
+
+
+def enqueue_scheduled_store_inventory_shadow_sync(
+	run_date: str | None = None, force: bool = False
+) -> dict[str, Any]:
+	"""Queue the daily store inventory workbook shadow sync."""
+	run_date_value = _safe_date(run_date) or nowdate()
+	force_flag = bool(cint(force))
+	job_id = f"{STORE_INVENTORY_SHADOW_SYNC_AUTO_PREFIX}:{run_date_value}"
+	frappe.enqueue(
+		"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
+		queue="long",
+		job_id=job_id,
+		enqueue_after_commit=True,
+		run_date=run_date_value,
+		force=force_flag,
+	)
+	return {
+		"queued": True,
+		"job_id": job_id,
+		"run_date": run_date_value,
+		"force": force_flag,
+	}
+
+
+def run_scheduled_store_inventory_shadow_sync(
+	run_date: str | None = None, force: bool = False
+) -> dict[str, Any]:
+	"""Mirror store inventory sheets into Frappe using the tracked workbook bridge."""
+	run_date_value = _safe_date(run_date) or nowdate()
+	result = store_inventory_shadow_sync_builder.run_store_inventory_shadow_sync(
+		run_date=run_date_value,
+		force=bool(cint(force)),
+	)
+	frappe.log_error(json.dumps(result, sort_keys=True), "Scheduled Store Inventory Shadow Sync")
+	return result
 
 
 def enqueue_scheduled_store_demand_snapshot_sync(
