@@ -1363,7 +1363,6 @@ def create_trip_from_route(
 		selected_stops = frappe.parse_json(selected_stops)
 
 	if selected_stops:
-
 		# Validate all selected stores exist in route's zone pool
 		zone_stores = {s.store for s in route.stops}
 		route_stop_map = {s.store: s for s in route.stops}
