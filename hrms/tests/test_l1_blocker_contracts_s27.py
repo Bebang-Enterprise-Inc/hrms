@@ -161,9 +161,7 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		_install_billing_deps()
 		billing = _load_module("billing_s27_query_under_test", "hrms/api/billing.py")
 
-		billing.frappe.db.has_column = (
-			lambda doctype, fieldname: fieldname in {"vehicle_owner", "store"}
-		)
+		billing.frappe.db.has_column = lambda doctype, fieldname: fieldname in {"vehicle_owner", "store"}
 		query = billing._get_3pl_trip_query()
 
 		self.assertIn("0 AS overtime_hours", query)
@@ -177,9 +175,7 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		_install_billing_deps()
 		billing = _load_module("billing_s27_trip_stop_under_test", "hrms/api/billing.py")
 
-		billing.frappe.db.has_column = (
-			lambda doctype, fieldname: fieldname in {"vehicle_owner", "department"}
-		)
+		billing.frappe.db.has_column = lambda doctype, fieldname: fieldname in {"vehicle_owner", "department"}
 		query = billing._get_3pl_trip_query()
 
 		self.assertIn("GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores", query)
