@@ -24,6 +24,21 @@ Runtime state file:
 Per-run output directory:
 - `sites/<site>/private/files/store_inventory_shadow_sync_runs/YYYY-MM-DD_store_inventory_shadow_sync/`
 
+## Resumability
+
+The bridge checkpoints progress after each processed store.
+
+What gets checkpointed:
+- runtime registry CSV
+- runtime state JSON
+- `summary.json`
+- `summary.md`
+
+Operational effect:
+- if a deploy or worker restart interrupts the batch, already completed stores keep their updated checksum and success markers
+- the next rerun skips unchanged completed stores instead of starting the whole day from zero
+- workbook exports are written to `.xlsx.part` first and only promoted to `.xlsx` after a successful download, so a killed download does not leave a fake finished workbook
+
 ## Resolution Policy
 
 The bridge resolves quantity in this order:
@@ -130,6 +145,7 @@ Expected healthy outcome:
 - changed stores imported once
 - unchanged stores skipped by checksum
 - only formula-error rows remain in exceptions
+- `summary.json.status = completed`
 
 ## Recovery
 
@@ -153,4 +169,10 @@ If the registry is corrupted:
 1. Back up the runtime CSV
 2. Replace it with the fixture copy
 3. Restore the needed `state` / `sheet_sync_enabled` edits
+
+If the job is interrupted mid-batch by deploy or worker restart:
+
+1. Confirm the last `summary.json` shows `status = in_progress` or stale counters
+2. Rerun the same run date with `force=True`
+3. Expect already checkpointed stores to skip by checksum and the batch to continue from the remaining stores
 

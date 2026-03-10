@@ -94,6 +94,7 @@ Create a controlled store-inventory bridge that:
 5. **No silent drops:** any unmapped item, invalid quantity, blank current balance, or formula error must land in an exception report, not disappear during import.
 6. **Shadow batch rule for pre-cutover stores:** when a store sheet only exposes aggregate qty for a batch-tracked item, the bridge may maintain a stable synthetic shadow batch per `store_code + item_code` solely to keep `Bin.actual_qty` correct until cutover.
 7. **Shadow valuation rule for pre-cutover stores:** when a row carries positive qty but Frappe has no positive valuation signal for that item anywhere, the bridge may submit the row with `allow_zero_valuation_rate = 1` so operational quantities can mirror without inventing a fake cost.
+8. **Interruption tolerance rule:** the shadow sync must checkpoint registry/state/summary after each processed store and use temp-file workbook exports so a production deploy or worker restart can be resumed without redoing already completed stores.
 
 ## Staleness Note
 

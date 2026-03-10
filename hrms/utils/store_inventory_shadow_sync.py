@@ -436,14 +436,25 @@ def _export_workbook_via_sheets_api(sheets: Any, spreadsheet_id: str, dest: Path
 def export_store_workbook(config: StoreSyncConfig, dest_dir: Path, drive: Any, sheets: Any) -> Path:
 	dest_dir.mkdir(parents=True, exist_ok=True)
 	dest = dest_dir / f"{_safe_filename(config.store_code + ' - ' + config.store_name)}.xlsx"
+	temp_dest = dest.with_suffix(".xlsx.part")
 	if dest.exists():
 		dest.unlink()
+	if temp_dest.exists():
+		temp_dest.unlink()
 	try:
-		_export_workbook_via_drive(drive, config.spreadsheet_id, dest)
-	except Exception as exc:
-		if not _export_too_large(exc):
-			raise
-		_export_workbook_via_sheets_api(sheets, config.spreadsheet_id, dest)
+		try:
+			_export_workbook_via_drive(drive, config.spreadsheet_id, temp_dest)
+		except Exception as exc:
+			if not _export_too_large(exc):
+				raise
+			_export_workbook_via_sheets_api(sheets, config.spreadsheet_id, temp_dest)
+		temp_dest.replace(dest)
+	except Exception:
+		if temp_dest.exists():
+			temp_dest.unlink()
+		if dest.exists() and dest.stat().st_size == 0:
+			dest.unlink()
+		raise
 	return dest
 
 
@@ -795,6 +806,7 @@ def _summary_markdown(summary: dict[str, Any]) -> str:
 	lines = [
 		"# Store Inventory Shadow Sync Summary",
 		"",
+		f"- status: `{summary.get('status', 'completed')}`",
 		f"- run_date: `{summary['run_date']}`",
 		f"- generated_at: `{summary['generated_at']}`",
 		f"- enabled_stores: `{summary['enabled_stores']}`",
@@ -824,6 +836,63 @@ def _summary_markdown(summary: dict[str, Any]) -> str:
 		for row in summary["failed_stores"]:
 			lines.append(f"- `{row['store_code']}`: {row['error']}")
 	return "\n".join(lines) + "\n"
+
+
+def _build_shadow_sync_summary(
+	*,
+	run_date: str,
+	registry_file: Path,
+	state_file: Path,
+	run_root: Path,
+	enabled_stores: int,
+	imported_stores: int,
+	skipped_unchanged: int,
+	skipped_non_shadow: int,
+	skipped_disabled: int,
+	payload_rows_all: list[dict[str, Any]],
+	exception_rows_all: list[dict[str, Any]],
+	rows_created: int,
+	rows_updated: int,
+	rows_failed: int,
+	failed_stores: list[dict[str, str]],
+	bootstrap: dict[str, Any],
+	status: str,
+) -> dict[str, Any]:
+	return {
+		"status": status,
+		"run_date": run_date,
+		"generated_at": _now_ts(),
+		"registry_path": str(registry_file),
+		"state_path": str(state_file),
+		"run_root": str(run_root),
+		"enabled_stores": enabled_stores,
+		"imported_stores": imported_stores,
+		"skipped_unchanged": skipped_unchanged,
+		"skipped_non_shadow": skipped_non_shadow,
+		"skipped_disabled": skipped_disabled,
+		"payload_rows": len(payload_rows_all),
+		"exception_rows": len(exception_rows_all),
+		"rows_created": rows_created,
+		"rows_updated": rows_updated,
+		"rows_failed": rows_failed,
+		"failed_stores": failed_stores,
+		"master_data_bootstrap": bootstrap,
+	}
+
+
+def _persist_shadow_sync_progress(
+	*,
+	registry_rows: list[StoreSyncConfig],
+	registry_file: Path,
+	runtime_state: dict[str, Any],
+	state_file: Path,
+	run_root: Path,
+	summary: dict[str, Any],
+) -> None:
+	save_store_registry(registry_rows, registry_file)
+	save_runtime_state(runtime_state, state_file)
+	_write_json(run_root / "summary.json", summary)
+	(run_root / "summary.md").write_text(_summary_markdown(summary), encoding="utf-8")
 
 
 def run_store_inventory_shadow_sync(
@@ -862,12 +931,11 @@ def run_store_inventory_shadow_sync(
 	rows_created = 0
 	rows_updated = 0
 	rows_failed = 0
-	enabled_stores = 0
 
 	from hrms.api import erp_sync
 
 	selected_codes = {code.strip().upper() for code in (store_codes or []) if code and code.strip()}
-
+	eligible_stores: list[StoreSyncConfig] = []
 	for store in store_registry:
 		if selected_codes and store.store_code.upper() not in selected_codes:
 			continue
@@ -877,8 +945,46 @@ def run_store_inventory_shadow_sync(
 		if store.state not in IMPORTABLE_STATES:
 			skipped_non_shadow += 1
 			continue
+		eligible_stores.append(store)
 
-		enabled_stores += 1
+	enabled_stores = len(eligible_stores)
+
+	runtime_state["last_run"] = {
+		"status": "in_progress",
+		"run_date": run_date_value.isoformat(),
+		"generated_at": _now_ts(),
+		"imported_stores": imported_stores,
+		"skipped_unchanged": skipped_unchanged,
+		"failed_stores": len(failed_stores),
+	}
+	_persist_shadow_sync_progress(
+		registry_rows=store_registry,
+		registry_file=registry_file,
+		runtime_state=runtime_state,
+		state_file=state_file,
+		run_root=run_root,
+		summary=_build_shadow_sync_summary(
+			run_date=run_date_value.isoformat(),
+			registry_file=registry_file,
+			state_file=state_file,
+			run_root=run_root,
+			enabled_stores=enabled_stores,
+			imported_stores=imported_stores,
+			skipped_unchanged=skipped_unchanged,
+			skipped_non_shadow=skipped_non_shadow,
+			skipped_disabled=skipped_disabled,
+			payload_rows_all=payload_rows_all,
+			exception_rows_all=exception_rows_all,
+			rows_created=rows_created,
+			rows_updated=rows_updated,
+			rows_failed=rows_failed,
+			failed_stores=failed_stores,
+			bootstrap=bootstrap,
+			status="in_progress",
+		),
+	)
+
+	for store in eligible_stores:
 		try:
 			workbook_path = export_store_workbook(store, downloads_dir, drive, sheets)
 			store_result = extract_store_inventory_payload(store, workbook_path, item_mapping, run_date_value)
@@ -926,16 +1032,48 @@ def run_store_inventory_shadow_sync(
 		except Exception as exc:
 			store.last_error = str(exc)
 			failed_stores.append({"store_code": store.store_code, "error": str(exc)})
+			runtime_state.setdefault("stores", {})[store.store_code] = {
+				"last_checksum": store.last_checksum,
+				"last_success_at": store.last_success_at,
+				"last_import_rows": store.last_import_rows,
+				"last_inventory_date": store.last_inventory_date,
+				"last_error": store.last_error,
+			}
 
-	save_store_registry(store_registry, registry_file)
-	runtime_state["last_run"] = {
-		"run_date": run_date_value.isoformat(),
-		"generated_at": _now_ts(),
-		"imported_stores": imported_stores,
-		"skipped_unchanged": skipped_unchanged,
-		"failed_stores": len(failed_stores),
-	}
-	save_runtime_state(runtime_state, state_file)
+		runtime_state["last_run"] = {
+			"status": "in_progress",
+			"run_date": run_date_value.isoformat(),
+			"generated_at": _now_ts(),
+			"imported_stores": imported_stores,
+			"skipped_unchanged": skipped_unchanged,
+			"failed_stores": len(failed_stores),
+		}
+		_persist_shadow_sync_progress(
+			registry_rows=store_registry,
+			registry_file=registry_file,
+			runtime_state=runtime_state,
+			state_file=state_file,
+			run_root=run_root,
+			summary=_build_shadow_sync_summary(
+				run_date=run_date_value.isoformat(),
+				registry_file=registry_file,
+				state_file=state_file,
+				run_root=run_root,
+				enabled_stores=enabled_stores,
+				imported_stores=imported_stores,
+				skipped_unchanged=skipped_unchanged,
+				skipped_non_shadow=skipped_non_shadow,
+				skipped_disabled=skipped_disabled,
+				payload_rows_all=payload_rows_all,
+				exception_rows_all=exception_rows_all,
+				rows_created=rows_created,
+				rows_updated=rows_updated,
+				rows_failed=rows_failed,
+				failed_stores=failed_stores,
+				bootstrap=bootstrap,
+				status="in_progress",
+			),
+		)
 
 	_write_csv(
 		run_root / "store_inventory_payload.csv",
@@ -998,27 +1136,41 @@ def run_store_inventory_shadow_sync(
 		audit_rows_all,
 	)
 
-	summary = {
+	runtime_state["last_run"] = {
+		"status": "completed",
 		"run_date": run_date_value.isoformat(),
 		"generated_at": _now_ts(),
-		"registry_path": str(registry_file),
-		"state_path": str(state_file),
-		"run_root": str(run_root),
-		"enabled_stores": enabled_stores,
 		"imported_stores": imported_stores,
 		"skipped_unchanged": skipped_unchanged,
-		"skipped_non_shadow": skipped_non_shadow,
-		"skipped_disabled": skipped_disabled,
-		"payload_rows": len(payload_rows_all),
-		"exception_rows": len(exception_rows_all),
-		"rows_created": rows_created,
-		"rows_updated": rows_updated,
-		"rows_failed": rows_failed,
-		"failed_stores": failed_stores,
-		"master_data_bootstrap": bootstrap,
+		"failed_stores": len(failed_stores),
 	}
-	_write_json(run_root / "summary.json", summary)
-	(run_root / "summary.md").write_text(_summary_markdown(summary), encoding="utf-8")
+	summary = _build_shadow_sync_summary(
+		run_date=run_date_value.isoformat(),
+		registry_file=registry_file,
+		state_file=state_file,
+		run_root=run_root,
+		enabled_stores=enabled_stores,
+		imported_stores=imported_stores,
+		skipped_unchanged=skipped_unchanged,
+		skipped_non_shadow=skipped_non_shadow,
+		skipped_disabled=skipped_disabled,
+		payload_rows_all=payload_rows_all,
+		exception_rows_all=exception_rows_all,
+		rows_created=rows_created,
+		rows_updated=rows_updated,
+		rows_failed=rows_failed,
+		failed_stores=failed_stores,
+		bootstrap=bootstrap,
+		status="completed",
+	)
+	_persist_shadow_sync_progress(
+		registry_rows=store_registry,
+		registry_file=registry_file,
+		runtime_state=runtime_state,
+		state_file=state_file,
+		run_root=run_root,
+		summary=summary,
+	)
 	return summary
 
 

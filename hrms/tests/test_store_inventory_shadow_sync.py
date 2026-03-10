@@ -3,7 +3,7 @@ import sys
 import tempfile
 import types
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from datetime import date
 from pathlib import Path
 
@@ -67,8 +67,34 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 		shadow_sync.frappe.local.db.exists = db_exists
 		shadow_sync.frappe.local.db.get_value = db_get_value
 
-		with patch("hrms.api.erp_sync._normalize_company", return_value="Bebang Enterprise Inc."):
+		import hrms
+
+		fake_erp_sync = types.ModuleType("hrms.api.erp_sync")
+		fake_erp_sync._normalize_company = MagicMock(return_value="Bebang Enterprise Inc.")
+		fake_api = types.ModuleType("hrms.api")
+		fake_api.erp_sync = fake_erp_sync
+		original_api = getattr(hrms, "api", None)
+		original_api_module = sys.modules.get("hrms.api")
+		original_erp_sync_module = sys.modules.get("hrms.api.erp_sync")
+		hrms.api = fake_api
+		sys.modules["hrms.api"] = fake_api
+		sys.modules["hrms.api.erp_sync"] = fake_erp_sync
+
+		try:
 			result = shadow_sync.ensure_required_master_data([store], {})
+		finally:
+			if original_api is None:
+				delattr(hrms, "api")
+			else:
+				hrms.api = original_api
+			if original_api_module is None:
+				sys.modules.pop("hrms.api", None)
+			else:
+				sys.modules["hrms.api"] = original_api_module
+			if original_erp_sync_module is None:
+				sys.modules.pop("hrms.api.erp_sync", None)
+			else:
+				sys.modules["hrms.api.erp_sync"] = original_erp_sync_module
 
 		self.assertEqual(store.warehouse_docname, "NAIA T3 - BKI")
 		self.assertEqual(result["warehouses_created"], [])
@@ -230,6 +256,148 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 		self.assertEqual(by_code["RM-BLANK"]["qty_source"], "blank_zero_policy")
 		self.assertEqual(result["exception_rows"][0]["inventory_code"], "RM-ERR")
 		self.assertEqual(result["exception_rows"][0]["classification"], "formula_error")
+
+	def test_export_store_workbook_uses_temp_file_before_promoting(self):
+		config = shadow_sync.StoreSyncConfig(
+			store_code="TST",
+			store_name="Test Store",
+			spreadsheet_id="sheet-1",
+			warehouse_name="Test Store",
+			warehouse_docname="Test Store - BEI",
+		)
+		seen_destinations: list[Path] = []
+
+		def fake_drive_export(_drive, _spreadsheet_id, dest: Path):
+			seen_destinations.append(dest)
+			dest.write_bytes(b"workbook-bytes")
+
+		with tempfile.TemporaryDirectory() as tmp_dir, patch.object(
+			shadow_sync,
+			"_export_workbook_via_drive",
+			side_effect=fake_drive_export,
+		):
+			result = shadow_sync.export_store_workbook(config, Path(tmp_dir), drive=None, sheets=None)
+			self.assertEqual(seen_destinations[0].suffixes[-2:], [".xlsx", ".part"])
+			self.assertEqual(result.read_bytes(), b"workbook-bytes")
+			self.assertFalse(result.with_suffix(".xlsx.part").exists())
+
+	def test_run_store_inventory_shadow_sync_persists_progress_after_each_store(self):
+		store_one = shadow_sync.StoreSyncConfig(
+			store_code="AFT",
+			store_name="Store One",
+			spreadsheet_id="sheet-1",
+			warehouse_name="Store One",
+			warehouse_docname="Store One - BEI",
+		)
+		store_two = shadow_sync.StoreSyncConfig(
+			store_code="AMM",
+			store_name="Store Two",
+			spreadsheet_id="sheet-2",
+			warehouse_name="Store Two",
+			warehouse_docname="Store Two - BEI",
+		)
+		fake_erp_sync = types.ModuleType("hrms.api.erp_sync")
+		fake_erp_sync._sync_inventory_rows = MagicMock(
+			return_value={"rows_created": 1, "rows_updated": 0, "rows_failed": 0, "errors": []}
+		)
+		fake_api = types.ModuleType("hrms.api")
+		fake_api.erp_sync = fake_erp_sync
+
+		import hrms
+
+		original_api = getattr(hrms, "api", None)
+		original_api_module = sys.modules.get("hrms.api")
+		original_erp_sync_module = sys.modules.get("hrms.api.erp_sync")
+		hrms.api = fake_api
+		sys.modules["hrms.api"] = fake_api
+		sys.modules["hrms.api.erp_sync"] = fake_erp_sync
+
+		try:
+			with tempfile.TemporaryDirectory() as tmp_dir:
+				tmp_path = Path(tmp_dir)
+				with (
+					patch.object(shadow_sync, "load_store_registry", return_value=[store_one, store_two]),
+					patch.object(shadow_sync, "load_item_mapping", return_value={}),
+					patch.object(shadow_sync, "ensure_required_master_data", return_value={}),
+					patch.object(shadow_sync, "_build_google_services", return_value=(None, None)),
+					patch.object(
+						shadow_sync,
+						"export_store_workbook",
+						side_effect=[tmp_path / "one.xlsx", tmp_path / "two.xlsx"],
+					),
+					patch.object(
+						shadow_sync,
+						"extract_store_inventory_payload",
+						side_effect=[
+							{
+								"payload_rows": [
+									{
+										"store_code": "AFT",
+										"store_name": "Store One",
+										"warehouse": "Store One - BEI",
+										"item_code": "ITEM-1",
+										"qty": 1,
+										"qty_source": "encode",
+										"inventory_date": "2026-03-10",
+										"spreadsheet_id": "sheet-1",
+										"source_row": 3,
+										"workbook_path": str(tmp_path / "one.xlsx"),
+									}
+								],
+								"exception_rows": [],
+								"audit_rows": [],
+								"checksum": "checksum-1",
+							},
+							{
+								"payload_rows": [
+									{
+										"store_code": "AMM",
+										"store_name": "Store Two",
+										"warehouse": "Store Two - BEI",
+										"item_code": "ITEM-2",
+										"qty": 2,
+										"qty_source": "encode",
+										"inventory_date": "2026-03-10",
+										"spreadsheet_id": "sheet-2",
+										"source_row": 4,
+										"workbook_path": str(tmp_path / "two.xlsx"),
+									}
+								],
+								"exception_rows": [],
+								"audit_rows": [],
+								"checksum": "checksum-2",
+							},
+						],
+					),
+					patch.object(shadow_sync, "_persist_shadow_sync_progress") as persist_mock,
+				):
+					result = shadow_sync.run_store_inventory_shadow_sync(
+						run_date="2026-03-10",
+						force=True,
+						output_dir=str(tmp_path / "run"),
+						registry_path=str(tmp_path / "registry.csv"),
+						state_path=str(tmp_path / "state.json"),
+					)
+		finally:
+			if original_api is None:
+				delattr(hrms, "api")
+			else:
+				hrms.api = original_api
+			if original_api_module is None:
+				sys.modules.pop("hrms.api", None)
+			else:
+				sys.modules["hrms.api"] = original_api_module
+			if original_erp_sync_module is None:
+				sys.modules.pop("hrms.api.erp_sync", None)
+			else:
+				sys.modules["hrms.api.erp_sync"] = original_erp_sync_module
+
+		self.assertEqual(result["status"], "completed")
+		self.assertEqual(result["imported_stores"], 2)
+		self.assertEqual(fake_erp_sync._sync_inventory_rows.call_count, 2)
+		self.assertEqual(persist_mock.call_count, 4)
+		self.assertEqual(persist_mock.call_args_list[0].kwargs["summary"]["status"], "in_progress")
+		self.assertEqual(persist_mock.call_args_list[-1].kwargs["summary"]["status"], "completed")
 
 
 if __name__ == "__main__":
