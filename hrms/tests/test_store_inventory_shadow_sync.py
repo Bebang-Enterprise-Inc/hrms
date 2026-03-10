@@ -3,6 +3,7 @@ import sys
 import tempfile
 import types
 import unittest
+from unittest.mock import patch
 from datetime import date
 from pathlib import Path
 
@@ -40,6 +41,39 @@ spec.loader.exec_module(shadow_sync)
 
 
 class TestStoreInventoryShadowSync(unittest.TestCase):
+	def test_ensure_required_master_data_reuses_existing_warehouse_name_match(self):
+		store = shadow_sync.StoreSyncConfig(
+			store_code="NAIA",
+			store_name="NAIA",
+			spreadsheet_id="sheet-1",
+			warehouse_name="NAIA T3",
+			warehouse_docname="NAIA T3 - Bebang Enterprise Inc.",
+		)
+
+		def db_exists(doctype, name=None):
+			if doctype == "Warehouse":
+				return name == "Stores - BEI"
+			if doctype == "Item":
+				return True
+			if doctype == "Company":
+				return name == "Bebang Enterprise Inc."
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Warehouse" and filters == {"warehouse_name": "NAIA T3"}:
+				return "NAIA T3 - BKI"
+			return None
+
+		shadow_sync.frappe.local.db.exists = db_exists
+		shadow_sync.frappe.local.db.get_value = db_get_value
+
+		with patch("hrms.api.erp_sync._normalize_company", return_value="Bebang Enterprise Inc."):
+			result = shadow_sync.ensure_required_master_data([store], {})
+
+		self.assertEqual(store.warehouse_docname, "NAIA T3 - BKI")
+		self.assertEqual(result["warehouses_created"], [])
+		self.assertEqual(result["items_created"], [])
+
 	def test_resolve_current_qty_prefers_encode_then_history_then_blank_zero(self):
 		qty, source, inventory_date, detail = shadow_sync._resolve_current_qty(
 			{"encode": 7, "total": "", "whole": "", "loose": "", "wt": 1},

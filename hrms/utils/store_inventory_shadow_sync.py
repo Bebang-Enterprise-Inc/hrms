@@ -581,6 +581,14 @@ def ensure_required_master_data(
 	for store in store_registry:
 		if not store.warehouse_docname:
 			continue
+		existing_warehouse = frappe.db.get_value(
+			"Warehouse",
+			{"warehouse_name": store.warehouse_name},
+			"name",
+		)
+		if existing_warehouse:
+			store.warehouse_docname = existing_warehouse
+			continue
 		if frappe.db.exists("Warehouse", store.warehouse_docname):
 			continue
 		doc = frappe.get_doc(

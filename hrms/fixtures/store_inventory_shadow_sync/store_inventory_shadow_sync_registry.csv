@@ -12,7 +12,7 @@ EGC,Ever Gotesco,1foNS2gXZg3fbp-49uOaL559lxQzxqaDSsBdsdp76XuI,Ever Commonwealth,
 FMA,Festival Mall,17NKaUfmfXwwCwi4YrDedmIah0E8pOT-PpvKkI569kl0,Festival Mall Alabang,Festival Mall Alabang - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
 LCT,Chinatown,1HdM8f5rNLFVMgRiMRkf-2TWikp0VbwAP7m4JVvwS-rg,Lucky Chinatown,Lucky Chinatown - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
 MPD,Paseo De Roxas,1HDGA3zbid63IG3eR1xzFcSczitwdjlg-1hQ5NhmFP8M,Megaworld Paseo Center,Megaworld Paseo Center - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
-NAIA,NAIA,1ZHxSirmAwjui9qQ_JBljCVomc2aqczapZjDEf9G5MnI,NAIA T3,NAIA T3 - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,Warehouse bootstrap required on first sync run.
+NAIA,NAIA,1ZHxSirmAwjui9qQ_JBljCVomc2aqczapZjDEf9G5MnI,NAIA T3,NAIA T3 - BKI,shadow_sync,true,,,,0,,Warehouse bootstrap required on first sync run.
 PTX,PITX,1pJ0y-QpKtY5SDL4XlVneXjciBrV04UlCy9hY2wH7LGQ,Megawide PITX,Megawide PITX - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
 ROA,Rob Antipolo,1E_yZkSI7Zlz5SLm10eMp7rE8f7hl6S3Z3XB5jaAQL7E,Robinsons Antipolo,Robinsons Antipolo - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
 ROBGS,Rob Galleria South,1VSqRaYyG-qygQibW3nAtIyxDZogmhM2G4VVYI_A7R90,Robisons Galleria South,Robisons Galleria South - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
@@ -34,8 +34,8 @@ SMNE,SM North,1eGuZF9Xif4tEdsqlgfCX8qhV2fX8PJGERz_kANWbK4Y,SM North EDSA,SM Nort
 SMPUL,SM Pulilan,1fblLNB2rMBVRMYmo764dICz-8Mp3QANzqkYGj8hlV9Y,SM Pulilan,SM Pulilan - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
 SMS,SM Southmall,1ZQY6oPc90WpDOv_-DkYfmOn-x9EztVNk1JiX9DCvcLA,SM Southmall,SM Southmall - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
 SMSDN,SM Sangandaan,1v2chqws-Fn-Gv4Lvww3Vv5HgZ4BrHt1Dg3U9o6_mFxQ,SM Sangandaan,SM Sangandaan - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
-SMSTR,SM Sta. Rosa,1PPvCF2r-6QtSw0us1TEuUgbzPr1ja4KAZvDg6ihbTBk,SM Sta. Rosa,SM Sta. Rosa - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,Warehouse bootstrap required on first sync run.
-SMTAY,SM Taytay,1sNSJ8uJrjDAZAZSY8ihFmUGGuia_SW3MYpTFsGTktns,SM Taytay,SM Taytay - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,Warehouse bootstrap required on first sync run.
+SMSTR,SM Sta. Rosa,1PPvCF2r-6QtSw0us1TEuUgbzPr1ja4KAZvDg6ihbTBk,SM Sta. Rosa,SM Sta. Rosa - BKI,shadow_sync,true,,,,0,,Warehouse bootstrap required on first sync run.
+SMTAY,SM Taytay,1sNSJ8uJrjDAZAZSY8ihFmUGGuia_SW3MYpTFsGTktns,SM Taytay,SM Taytay - BKI,shadow_sync,true,,,,0,,Warehouse bootstrap required on first sync run.
 SMTZ,SM Tanza,1wxMtSqYgSGC_ouGjvuBjwwapB6aanwsAPTyzcHfgq84,SM Tanza,SM Tanza - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
 SMV,SM Valenzuela,1O6dqidsykQrMIxepruD1n8GG4H8pn0zss1K-_pieCWw,SM Valenzuela,SM Valenzuela - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
 TGR,The Grid,1ZTbTXCw4sho6W49NoZCYj27yjmW0o0030YJuq470e6U,The Grid - Rockwell,The Grid - Rockwell - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
@@ -44,4 +44,4 @@ UMBGC,Uptown Mall,1eITKedRkLhKijPPA9x2ERcaH-e8xsOnAyTd3qYdBMUk,Up Town Mall BGC,
 UPTC,UP Town Center,128TInr6x1IK4DYs0VVYCFnslqEXlIvZR-ZhaFyR8_UA,Ayala UPTC,Ayala UPTC - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
 VGC,Venice Grand,1jSvqnzaoBCLjp-c7WSyNf09y9x8ltJ7BQs3SHTg8lk4,Megaworld Venice Grand Canal,Megaworld Venice Grand Canal - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
 VMTAG,Vistamall Taguig,1h18LRjPJ-ApAHqFkYTefI1SSqFUK0YxG_UUEqFqYmgM,Vista Mall Taguig,Vista Mall Taguig - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,
-GHO,Greenhills Ortigas,1M5Muf_SshieMrbGevH6a2NWsS9npiH_X7aCgzkRutIA,Greenhills Ortigas,Greenhills Ortigas - Bebang Enterprise Inc.,shadow_sync,true,,,,0,,Warehouse bootstrap required on first sync run.
+GHO,Greenhills Ortigas,1M5Muf_SshieMrbGevH6a2NWsS9npiH_X7aCgzkRutIA,Greenhills Ortigas,Greenhills Ortigas - BKI,shadow_sync,true,,,,0,,Warehouse bootstrap required on first sync run.
