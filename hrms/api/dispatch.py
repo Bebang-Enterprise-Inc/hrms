@@ -1105,7 +1105,8 @@ def create_route(
 				},
 			)
 
-	route.insert()
+	_enable_role_gated_write(route)
+	route.insert(ignore_permissions=True)
 	return {"success": True, "route": route.name}
 
 
@@ -1147,7 +1148,8 @@ def update_route(route_name: str, updates: dict[str, Any] | str | None = None):
 				},
 			)
 
-	route.save()
+	_enable_role_gated_write(route)
+	route.save(ignore_permissions=True)
 	return {"success": True, "route": route.name}
 
 
@@ -1158,7 +1160,8 @@ def delete_route(route_name: str):
 
 	route = frappe.get_doc("BEI Route", route_name)
 	route.active = 0
-	route.save()
+	_enable_role_gated_write(route)
+	route.save(ignore_permissions=True)
 	return {"success": True, "message": f"Route {route_name} deactivated"}
 
 
@@ -1233,6 +1236,15 @@ def _build_stop_preview(route: Any, trip_date: str):
 			}
 		)
 	return stops
+
+
+def _enable_role_gated_write(doc: Any):
+	"""Use explicit SCM role checks as the write gate for route/trip mutations."""
+	if getattr(doc, "flags", None) is None:
+		doc.flags = type("_DispatchDocFlags", (), {})()
+	doc.flags.ignore_permissions = True
+	doc.flags.ignore_user_permissions = True
+	return doc
 
 
 @frappe.whitelist()
@@ -1357,7 +1369,8 @@ def create_trip_from_route(
 		if stop_data.get("store_order"):
 			trip.stops[idx].store_order = stop_data["store_order"]
 
-	trip.insert()
+	_enable_role_gated_write(trip)
+	trip.insert(ignore_permissions=True)
 
 	# Update linked BEI Store Orders to "In Transit"
 	_set_store_orders_in_transit(stops)
@@ -1398,7 +1411,8 @@ def duplicate_route(route_name: str, new_name: str):
 			},
 		)
 
-	new_route.insert()
+	_enable_role_gated_write(new_route)
+	new_route.insert(ignore_permissions=True)
 	return {"success": True, "route": new_route.name}
 
 
@@ -1422,7 +1436,8 @@ def reorder_stops(route_name: str, stop_order_map: dict[str, int] | str):
 		stop.idx = idx
 		stop.stop_order = idx
 
-	route.save()
+	_enable_role_gated_write(route)
+	route.save(ignore_permissions=True)
 	return {"success": True, "route": route.name}
 
 
