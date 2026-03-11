@@ -89,6 +89,8 @@ class InventoryLayout:
 
 
 def _now_ts() -> str:
+	if frappe and getattr(frappe, "utils", None) and hasattr(frappe.utils, "now_datetime"):
+		return frappe.utils.now_datetime().strftime("%Y-%m-%dT%H:%M:%S")
 	return datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
 
@@ -676,7 +678,7 @@ def extract_store_inventory_payload(
 			continue
 
 		if _classify_section_row(code, items, description, uom):
-			section_name = code if _normalize_header(code) in SECTION_NAMES else code
+			section_name = code
 			continue
 
 		current_row = {
@@ -895,6 +897,32 @@ def _persist_shadow_sync_progress(
 	(run_root / "summary.md").write_text(_summary_markdown(summary), encoding="utf-8")
 
 
+def _set_last_run_state(
+	runtime_state: dict[str, Any],
+	*,
+	status: str,
+	run_date: str,
+	imported_stores: int,
+	skipped_unchanged: int,
+	failed_store_count: int,
+	current_store: StoreSyncConfig | None = None,
+	current_stage: str = "",
+) -> None:
+	runtime_state["last_run"] = {
+		"status": status,
+		"run_date": run_date,
+		"generated_at": _now_ts(),
+		"updated_at": _now_ts(),
+		"imported_stores": imported_stores,
+		"skipped_unchanged": skipped_unchanged,
+		"failed_stores": failed_store_count,
+		"recovery_enqueued_at": "",
+		"current_store_code": current_store.store_code if current_store else "",
+		"current_store_name": current_store.store_name if current_store else "",
+		"current_stage": current_stage,
+	}
+
+
 def run_store_inventory_shadow_sync(
 	*,
 	run_date: str | None = None,
@@ -949,46 +977,51 @@ def run_store_inventory_shadow_sync(
 
 	enabled_stores = len(eligible_stores)
 
-	runtime_state["last_run"] = {
-		"status": "in_progress",
-		"run_date": run_date_value.isoformat(),
-		"generated_at": _now_ts(),
-		"updated_at": _now_ts(),
-		"imported_stores": imported_stores,
-		"skipped_unchanged": skipped_unchanged,
-		"failed_stores": len(failed_stores),
-		"recovery_enqueued_at": "",
-	}
-	_persist_shadow_sync_progress(
-		registry_rows=store_registry,
-		registry_file=registry_file,
-		runtime_state=runtime_state,
-		state_file=state_file,
-		run_root=run_root,
-		summary=_build_shadow_sync_summary(
+	def persist_progress(*, current_store: StoreSyncConfig | None = None, current_stage: str = "") -> None:
+		_set_last_run_state(
+			runtime_state,
+			status="in_progress",
 			run_date=run_date_value.isoformat(),
-			registry_file=registry_file,
-			state_file=state_file,
-			run_root=run_root,
-			enabled_stores=enabled_stores,
 			imported_stores=imported_stores,
 			skipped_unchanged=skipped_unchanged,
-			skipped_non_shadow=skipped_non_shadow,
-			skipped_disabled=skipped_disabled,
-			payload_rows_all=payload_rows_all,
-			exception_rows_all=exception_rows_all,
-			rows_created=rows_created,
-			rows_updated=rows_updated,
-			rows_failed=rows_failed,
-			failed_stores=failed_stores,
-			bootstrap=bootstrap,
-			status="in_progress",
-		),
-	)
+			failed_store_count=len(failed_stores),
+			current_store=current_store,
+			current_stage=current_stage,
+		)
+		_persist_shadow_sync_progress(
+			registry_rows=store_registry,
+			registry_file=registry_file,
+			runtime_state=runtime_state,
+			state_file=state_file,
+			run_root=run_root,
+			summary=_build_shadow_sync_summary(
+				run_date=run_date_value.isoformat(),
+				registry_file=registry_file,
+				state_file=state_file,
+				run_root=run_root,
+				enabled_stores=enabled_stores,
+				imported_stores=imported_stores,
+				skipped_unchanged=skipped_unchanged,
+				skipped_non_shadow=skipped_non_shadow,
+				skipped_disabled=skipped_disabled,
+				payload_rows_all=payload_rows_all,
+				exception_rows_all=exception_rows_all,
+				rows_created=rows_created,
+				rows_updated=rows_updated,
+				rows_failed=rows_failed,
+				failed_stores=failed_stores,
+				bootstrap=bootstrap,
+				status="in_progress",
+			),
+		)
+
+	persist_progress(current_stage="starting")
 
 	for store in eligible_stores:
 		try:
+			persist_progress(current_store=store, current_stage="exporting_workbook")
 			workbook_path = export_store_workbook(store, downloads_dir, drive, sheets)
+			persist_progress(current_store=store, current_stage="extracting_inventory")
 			store_result = extract_store_inventory_payload(store, workbook_path, item_mapping, run_date_value)
 			payload_rows = store_result["payload_rows"]
 			exception_rows = store_result["exception_rows"]
@@ -999,9 +1032,11 @@ def run_store_inventory_shadow_sync(
 
 			if not force and store.last_checksum and store.last_checksum == store_result["checksum"]:
 				skipped_unchanged += 1
+				persist_progress(current_store=store, current_stage="completed_store")
 				continue
 
 			if payload_rows:
+				persist_progress(current_store=store, current_stage="syncing_inventory")
 				sync_result = erp_sync._sync_inventory_rows(
 					sheet_name=f"Store Inventory Shadow Sync {store.store_code}",
 					data=payload_rows,
@@ -1042,42 +1077,7 @@ def run_store_inventory_shadow_sync(
 				"last_error": store.last_error,
 			}
 
-		runtime_state["last_run"] = {
-			"status": "in_progress",
-			"run_date": run_date_value.isoformat(),
-			"generated_at": _now_ts(),
-			"updated_at": _now_ts(),
-			"imported_stores": imported_stores,
-			"skipped_unchanged": skipped_unchanged,
-			"failed_stores": len(failed_stores),
-			"recovery_enqueued_at": "",
-		}
-		_persist_shadow_sync_progress(
-			registry_rows=store_registry,
-			registry_file=registry_file,
-			runtime_state=runtime_state,
-			state_file=state_file,
-			run_root=run_root,
-			summary=_build_shadow_sync_summary(
-				run_date=run_date_value.isoformat(),
-				registry_file=registry_file,
-				state_file=state_file,
-				run_root=run_root,
-				enabled_stores=enabled_stores,
-				imported_stores=imported_stores,
-				skipped_unchanged=skipped_unchanged,
-				skipped_non_shadow=skipped_non_shadow,
-				skipped_disabled=skipped_disabled,
-				payload_rows_all=payload_rows_all,
-				exception_rows_all=exception_rows_all,
-				rows_created=rows_created,
-				rows_updated=rows_updated,
-				rows_failed=rows_failed,
-				failed_stores=failed_stores,
-				bootstrap=bootstrap,
-				status="in_progress",
-			),
-		)
+		persist_progress(current_store=store, current_stage="completed_store")
 
 	_write_csv(
 		run_root / "store_inventory_payload.csv",
@@ -1140,16 +1140,15 @@ def run_store_inventory_shadow_sync(
 		audit_rows_all,
 	)
 
-	runtime_state["last_run"] = {
-		"status": "completed",
-		"run_date": run_date_value.isoformat(),
-		"generated_at": _now_ts(),
-		"updated_at": _now_ts(),
-		"imported_stores": imported_stores,
-		"skipped_unchanged": skipped_unchanged,
-		"failed_stores": len(failed_stores),
-		"recovery_enqueued_at": "",
-	}
+	_set_last_run_state(
+		runtime_state,
+		status="completed",
+		run_date=run_date_value.isoformat(),
+		imported_stores=imported_stores,
+		skipped_unchanged=skipped_unchanged,
+		failed_store_count=len(failed_stores),
+		current_stage="completed",
+	)
 	summary = _build_shadow_sync_summary(
 		run_date=run_date_value.isoformat(),
 		registry_file=registry_file,

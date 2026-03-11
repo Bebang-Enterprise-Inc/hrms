@@ -53,9 +53,6 @@ def _install_fake_hrms():
 
 
 def _install_fake_frappe():
-	if "frappe" in sys.modules:
-		return
-
 	frappe = types.ModuleType("frappe")
 	utils = types.ModuleType("frappe.utils")
 

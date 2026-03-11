@@ -1,9 +1,10 @@
+import copy
 import importlib.util
 import sys
 import tempfile
 import types
 import unittest
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -41,6 +42,19 @@ spec.loader.exec_module(shadow_sync)
 
 
 class TestStoreInventoryShadowSync(unittest.TestCase):
+	def test_now_ts_uses_frappe_site_time_when_available(self):
+		original_utils = getattr(shadow_sync.frappe, "utils", None)
+		shadow_sync.frappe.utils = types.SimpleNamespace(
+			now_datetime=lambda: datetime(2026, 3, 11, 16, 45, 12)
+		)
+		try:
+			self.assertEqual(shadow_sync._now_ts(), "2026-03-11T16:45:12")
+		finally:
+			if original_utils is None:
+				delattr(shadow_sync.frappe, "utils")
+			else:
+				shadow_sync.frappe.utils = original_utils
+
 	def test_ensure_required_master_data_reuses_existing_warehouse_name_match(self):
 		store = shadow_sync.StoreSyncConfig(
 			store_code="NAIA",
@@ -314,6 +328,8 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 		hrms.api = fake_api
 		sys.modules["hrms.api"] = fake_api
 		sys.modules["hrms.api.erp_sync"] = fake_erp_sync
+		captured_last_runs = []
+		captured_summaries = []
 
 		try:
 			with tempfile.TemporaryDirectory() as tmp_dir:
@@ -372,7 +388,14 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 							},
 						],
 					),
-					patch.object(shadow_sync, "_persist_shadow_sync_progress") as persist_mock,
+					patch.object(
+						shadow_sync,
+						"_persist_shadow_sync_progress",
+						side_effect=lambda **kwargs: (
+							captured_last_runs.append(copy.deepcopy(kwargs["runtime_state"]["last_run"])),
+							captured_summaries.append(copy.deepcopy(kwargs["summary"])),
+						),
+					) as persist_mock,
 				):
 					result = shadow_sync.run_store_inventory_shadow_sync(
 						run_date="2026-03-10",
@@ -398,13 +421,29 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 		self.assertEqual(result["status"], "completed")
 		self.assertEqual(result["imported_stores"], 2)
 		self.assertEqual(fake_erp_sync._sync_inventory_rows.call_count, 2)
-		self.assertEqual(persist_mock.call_count, 4)
-		self.assertEqual(persist_mock.call_args_list[0].kwargs["summary"]["status"], "in_progress")
-		self.assertEqual(persist_mock.call_args_list[-1].kwargs["summary"]["status"], "completed")
+		self.assertEqual(persist_mock.call_count, 10)
+		stages = [entry["current_stage"] for entry in captured_last_runs]
 		self.assertEqual(
-			persist_mock.call_args_list[0].kwargs["runtime_state"]["last_run"]["recovery_enqueued_at"], ""
+			stages,
+			[
+				"starting",
+				"exporting_workbook",
+				"extracting_inventory",
+				"syncing_inventory",
+				"completed_store",
+				"exporting_workbook",
+				"extracting_inventory",
+				"syncing_inventory",
+				"completed_store",
+				"completed",
+			],
 		)
-		self.assertIn("updated_at", persist_mock.call_args_list[-1].kwargs["runtime_state"]["last_run"])
+		self.assertEqual(captured_summaries[0]["status"], "in_progress")
+		self.assertEqual(captured_summaries[-1]["status"], "completed")
+		self.assertEqual(captured_last_runs[0]["recovery_enqueued_at"], "")
+		self.assertEqual(captured_last_runs[1]["current_store_code"], "AFT")
+		self.assertEqual(captured_last_runs[5]["current_store_code"], "AMM")
+		self.assertIn("updated_at", captured_last_runs[-1])
 
 
 if __name__ == "__main__":
