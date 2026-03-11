@@ -384,6 +384,7 @@ def _get_work_date(week_start_date: str, day_of_week: str):
 def _get_shift_assignment_conflicts(employee: str, work_date: str, row_key: str, plan_name: str):
 	assignments = frappe.get_all(
 		"Shift Assignment",
+		ignore_permissions=True,
 		filters={
 			"employee": employee,
 			"docstatus": 1,
@@ -605,6 +606,7 @@ def publish_weekly_plan(plan_name: str):
 	current_keys = set()
 	existing_assignments = frappe.get_all(
 		"Shift Assignment",
+		ignore_permissions=True,
 		filters={
 			"custom_bei_schedule_source": SCHEDULE_SOURCE,
 			"custom_bei_weekly_labor_plan": plan.name,
