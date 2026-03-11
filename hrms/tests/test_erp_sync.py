@@ -268,9 +268,7 @@ class TestErpSync(unittest.TestCase):
 		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
 		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
 		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
-		erp_sync.frappe.get_meta = MagicMock(
-			return_value=types.SimpleNamespace(has_field=meta_has_field)
-		)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=meta_has_field))
 
 		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
 			first = erp_sync.sync_inventory(
@@ -304,7 +302,11 @@ class TestErpSync(unittest.TestCase):
 			return None
 
 		def db_get_value(doctype, filters=None, fieldname=None):
-			if doctype == "Stock Reconciliation" and isinstance(filters, dict) and "custom_sync_ref" in filters:
+			if (
+				doctype == "Stock Reconciliation"
+				and isinstance(filters, dict)
+				and "custom_sync_ref" in filters
+			):
 				return "SR-0001" if filters["custom_sync_ref"] in created_sync_refs else None
 			if doctype == "Account" and isinstance(filters, dict):
 				return "Stock Adjustment - BEI"
@@ -330,9 +332,7 @@ class TestErpSync(unittest.TestCase):
 		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
 		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
 		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
-		erp_sync.frappe.get_meta = MagicMock(
-			return_value=types.SimpleNamespace(has_field=meta_has_field)
-		)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=meta_has_field))
 
 		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
 			first = erp_sync.sync_inventory(
@@ -468,9 +468,7 @@ class TestErpSync(unittest.TestCase):
 		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
 			result = erp_sync._sync_inventory_rows(
 				sheet_name="Inventory",
-				data=[
-					{"item_code": "FG001", "warehouse": "3MD Logistics – Camangyanan", "qty": 5}
-				],
+				data=[{"item_code": "FG001", "warehouse": "3MD Logistics – Camangyanan", "qty": 5}],
 				checksum="chk-baseline-batch",
 				require_auth=False,
 			)
