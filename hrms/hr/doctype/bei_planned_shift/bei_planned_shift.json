@@ -5,9 +5,13 @@
  "engine": "InnoDB",
  "field_order": [
   "employee",
+  "employee_name",
   "day_of_week",
+  "shift_type_name",
+  "is_off",
   "shift_start",
   "shift_end",
+  "ends_next_day",
   "shift_type",
   "hours",
   "notes"
@@ -22,6 +26,13 @@
    "reqd": 1
   },
   {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
    "fieldname": "day_of_week",
    "fieldtype": "Select",
    "in_list_view": 1,
@@ -30,25 +41,43 @@
    "reqd": 1
   },
   {
+   "fieldname": "shift_type_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Shift Type Name"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_off",
+   "fieldtype": "Check",
+   "label": "Is Off"
+  },
+  {
    "fieldname": "shift_start",
    "fieldtype": "Time",
    "in_list_view": 1,
    "label": "Shift Start",
-   "reqd": 1
+   "mandatory_depends_on": "eval:!doc.is_off"
   },
   {
    "fieldname": "shift_end",
    "fieldtype": "Time",
    "in_list_view": 1,
    "label": "Shift End",
-   "reqd": 1
+   "mandatory_depends_on": "eval:!doc.is_off"
+  },
+  {
+   "default": "0",
+   "fieldname": "ends_next_day",
+   "fieldtype": "Check",
+   "label": "Ends Next Day"
   },
   {
    "fieldname": "shift_type",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Shift Type",
-   "options": "Opening\nMid\nClosing"
+   "options": "Opening\nMid\nClosing\nOff\nCommissary - Dawn\nCommissary - Morning\nCommissary - Afternoon\nCommissary - Night"
   },
   {
    "fieldname": "hours",
