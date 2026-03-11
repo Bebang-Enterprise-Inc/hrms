@@ -422,6 +422,39 @@ def _cancel_and_delete_shift_assignment(assignment_name: str):
 	frappe.delete_doc("Shift Assignment", assignment_name, ignore_permissions=True)
 
 
+def _normalized_shift_time(value: str | None):
+	if not value:
+		return None
+	return get_time(value)
+
+
+def _ensure_shift_type_for_plan_row(row: Any):
+	shift_type_name = (row.shift_type_name or row.shift_type or "").strip()
+	if not shift_type_name or shift_type_name == "Off":
+		frappe.throw(_("Shift type is required for {0} on {1}.").format(row.employee, row.day_of_week))
+
+	if frappe.db.exists("Shift Type", shift_type_name):
+		return shift_type_name
+
+	start_time = _normalized_shift_time(row.shift_start)
+	end_time = _normalized_shift_time(row.shift_end)
+	if not start_time or not end_time:
+		frappe.throw(
+			_("Shift Type {0} is missing start/end times and cannot be provisioned.").format(shift_type_name)
+		)
+
+	frappe.get_doc(
+		{
+			"doctype": "Shift Type",
+			"name": shift_type_name,
+			"start_time": start_time,
+			"end_time": end_time,
+		}
+	).insert(ignore_permissions=True, ignore_if_duplicate=True)
+
+	return shift_type_name
+
+
 def _create_shift_assignment_from_plan(plan: Any, row: Any, work_date: str, publish_run_id: str):
 	employee = frappe.db.get_value(
 		"Employee",
@@ -432,12 +465,7 @@ def _create_shift_assignment_from_plan(plan: Any, row: Any, work_date: str, publ
 	if not employee or not employee.get("company"):
 		frappe.throw(_("Employee {0} is missing company data.").format(row.employee))
 
-	shift_type_name = row.shift_type_name or row.shift_type
-	if not shift_type_name or shift_type_name == "Off":
-		frappe.throw(_("Shift type is required for {0} on {1}.").format(row.employee, row.day_of_week))
-
-	if not frappe.db.exists("Shift Type", shift_type_name):
-		frappe.throw(_("Shift Type {0} does not exist.").format(shift_type_name))
+	shift_type_name = _ensure_shift_type_for_plan_row(row)
 
 	row_key = f"{row.employee}|{work_date}"
 	assignment = frappe.get_doc(
