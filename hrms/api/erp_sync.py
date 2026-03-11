@@ -35,6 +35,8 @@ STORE_DEMAND_SNAPSHOT_AUTO_PREFIX = "scheduled_store_demand_snapshot"
 STORE_INVENTORY_SHADOW_SYNC_SHEET_NAME = "Store Inventory Shadow Sync"
 STORE_INVENTORY_SHADOW_SYNC_AUTO_PREFIX = "scheduled_store_inventory_shadow_sync"
 STORE_INVENTORY_SHADOW_BATCH_PREFIX = "SHADOW"
+INVENTORY_BASELINE_SHEET_NAME = "Inventory"
+INVENTORY_BASELINE_BATCH_PREFIX = "INVBASE"
 PO_REFERENCE_RE = re.compile(r"^\s*(?:PO|PURCHASE\s*ORDER)\s*[-#:/]?\s*[A-Z0-9-]+\s*$", re.IGNORECASE)
 
 
@@ -242,6 +244,10 @@ def _is_store_inventory_shadow_sync(sheet_name: str) -> bool:
 	return sheet_name.startswith(STORE_INVENTORY_SHADOW_SYNC_SHEET_NAME)
 
 
+def _is_inventory_baseline_sync(sheet_name: str) -> bool:
+	return str(sheet_name or "").strip() == INVENTORY_BASELINE_SHEET_NAME
+
+
 def _normalize_batch_token(value: str) -> str:
 	token = "".join(ch if ch.isalnum() else "-" for ch in str(value or "").strip().upper())
 	token = token.strip("-")
@@ -256,7 +262,13 @@ def _build_shadow_batch_id(store_key: str, item_code: str) -> str:
 	return f"{STORE_INVENTORY_SHADOW_BATCH_PREFIX}-{store_token}-{item_token}"[:140]
 
 
-def _ensure_batch_exists(batch_id: str, item_code: str) -> str:
+def _build_inventory_baseline_batch_id(warehouse: str, item_code: str) -> str:
+	warehouse_token = _normalize_batch_token(warehouse)
+	item_token = _normalize_batch_token(item_code)
+	return f"{INVENTORY_BASELINE_BATCH_PREFIX}-{warehouse_token}-{item_token}"[:140]
+
+
+def _ensure_batch_exists(batch_id: str, item_code: str, *, description: str | None = None) -> str:
 	batch_id = str(batch_id or "").strip()
 	if not batch_id:
 		frappe.throw(_("Batch ID is required for batch-tracked items"))
@@ -271,7 +283,7 @@ def _ensure_batch_exists(batch_id: str, item_code: str) -> str:
 	batch.batch_id = batch_id
 	batch.item = item_code
 	batch.manufacturing_date = nowdate()
-	batch.description = _("Synthetic shadow batch for pre-cutover store inventory mirror")
+	batch.description = description or _("Synthetic shadow batch for pre-cutover store inventory mirror")
 	batch.insert(ignore_permissions=True)
 	return batch.name
 
@@ -953,13 +965,26 @@ def _sync_inventory_rows(
 			if has_batch_no:
 				use_serial_batch_fields = 1
 				if not batch_no:
-					if not is_shadow_sync:
+					if is_shadow_sync:
+						batch_no = _build_shadow_batch_id(store_code or warehouse, item_code)
+						batch_description = _("Synthetic shadow batch for pre-cutover store inventory mirror")
+					elif _is_inventory_baseline_sync(sheet_name):
+						batch_no = _build_inventory_baseline_batch_id(warehouse, item_code)
+						batch_description = _(
+							"Synthetic baseline batch for Ian warehouse inventory aggregate sync"
+						)
+					else:
 						results["rows_failed"] += 1
 						results["errors"].append(f"Batch-tracked item requires batch_no: {item_code}")
 						continue
-					batch_no = _build_shadow_batch_id(store_code or warehouse, item_code)
+				else:
+					batch_description = None
 
-				batch_no = _ensure_batch_exists(batch_no, item_code)
+				batch_no = _ensure_batch_exists(
+					batch_no,
+					item_code,
+					description=batch_description,
+				)
 
 			valuation_rate, allow_zero_valuation_rate = _resolve_inventory_valuation_rate(
 				item_code,

@@ -358,7 +358,71 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(created_docs[0].items[0]["batch_no"], "SHADOW-AFT-FG001")
 		self.assertEqual(created_docs[0].items[0]["use_serial_batch_fields"], 1)
 
-	def test_sync_inventory_requires_batch_no_outside_shadow_sync(self):
+	def test_sync_inventory_baseline_uses_stable_batch_placeholder(self):
+		created_docs = []
+		created_batches = set()
+
+		def db_exists(doctype, name=None):
+			if doctype in ("Item", "Warehouse", "Company"):
+				return name or True
+			if doctype == "Batch":
+				return name in created_batches
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Item" and filters == "FG001" and fieldname == "has_batch_no":
+				return 1
+			if doctype == "Item" and filters == "FG001" and fieldname == "has_serial_no":
+				return 0
+			if doctype == "Account" and isinstance(filters, dict):
+				return "Stock Adjustment - BEI"
+			if doctype == "Company" and filters == "BEI" and fieldname == "cost_center":
+				return "Main - BEI"
+			return None
+
+		def new_doc(doctype):
+			if doctype == "Batch":
+
+				def on_insert(doc):
+					doc.name = doc.batch_id
+					created_batches.add(doc.batch_id)
+
+				return _FakeDoc(doctype, on_insert=on_insert)
+
+			if doctype != "Stock Reconciliation":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"SR-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
+			result = erp_sync._sync_inventory_rows(
+				sheet_name="Inventory",
+				data=[
+					{"item_code": "FG001", "warehouse": "3MD Logistics – Camangyanan", "qty": 5}
+				],
+				checksum="chk-baseline-batch",
+				require_auth=False,
+			)
+
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["rows_created"], 1)
+		self.assertIn("INVBASE-3MD-LOGISTICS-CAMANGYANAN-FG001", created_batches)
+		self.assertEqual(
+			created_docs[0].items[0]["batch_no"],
+			"INVBASE-3MD-LOGISTICS-CAMANGYANAN-FG001",
+		)
+		self.assertEqual(created_docs[0].items[0]["use_serial_batch_fields"], 1)
+
+	def test_sync_inventory_requires_batch_no_outside_shadow_or_baseline_sync(self):
 		def db_exists(doctype, name=None):
 			if doctype in ("Item", "Warehouse", "Company"):
 				return name or True
@@ -378,7 +442,7 @@ class TestErpSync(unittest.TestCase):
 
 		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
 			result = erp_sync._sync_inventory_rows(
-				sheet_name="Inventory",
+				sheet_name="Inventory Manual Upload",
 				data=[{"item_code": "FG001", "warehouse": "Stores - BEI", "qty": 5}],
 				checksum="chk-inv-batch",
 				require_auth=False,

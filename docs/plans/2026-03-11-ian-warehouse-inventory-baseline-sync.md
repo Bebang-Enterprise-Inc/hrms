@@ -48,6 +48,11 @@ This produces warehouse-level `Stock Reconciliation` entries in Frappe using the
 - This rule is intentionally narrow:
   - missing item + zero qty = skip
   - missing item + non-zero qty = fail
+- Batch-tracked items in the Ian warehouse baseline now receive deterministic synthetic
+  `INVBASE-*` batch IDs when the source workbook only has aggregate quantities and no
+  lot detail.
+- This keeps Frappe batch validation satisfied while preserving a clear audit marker
+  that these are baseline placeholder batches, not supplier-origin lot numbers.
 - On 2026-03-11, live reconciliation against `SUMMARY 2026` found only `9` missing
   item codes and all `9` were zero-stock rows, so they are treated as obsolete/no-op
   rows instead of cutover blockers.
