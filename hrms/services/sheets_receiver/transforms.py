@@ -89,8 +89,7 @@ def _discover_inventory_summary_warehouse_columns(header_row: list[Any]) -> dict
 	missing = [code for code in INVENTORY_SUMMARY_WAREHOUSE_MAP if code not in columns]
 	if missing:
 		raise ValueError(
-			"Inventory summary matrix is missing expected warehouse columns: "
-			+ ", ".join(sorted(missing))
+			"Inventory summary matrix is missing expected warehouse columns: " + ", ".join(sorted(missing))
 		)
 
 	return columns
