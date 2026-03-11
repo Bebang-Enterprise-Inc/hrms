@@ -26,15 +26,19 @@ def _install_fake_dependencies():
 		frappe, "throw", lambda message, exc=None: (_ for _ in ()).throw(Exception(message))
 	)
 	frappe.ValidationError = getattr(frappe, "ValidationError", type("ValidationError", (Exception,), {}))
-	frappe.db = getattr(
-		frappe,
-		"db",
-		types.SimpleNamespace(get_value=lambda *args, **kwargs: None, exists=lambda *args, **kwargs: False),
-	)
+	frappe.__dict__.setdefault("local", types.SimpleNamespace())
+	if not getattr(frappe.local, "db", None):
+		frappe.local.db = types.SimpleNamespace(
+			get_value=lambda *args, **kwargs: None,
+			exists=lambda *args, **kwargs: False,
+		)
+	if not getattr(frappe.local, "session", None):
+		frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
+	frappe.__dict__.setdefault("db", frappe.local.db)
 	frappe.get_doc = getattr(frappe, "get_doc", lambda *args, **kwargs: None)
 	frappe.delete_doc = getattr(frappe, "delete_doc", lambda *args, **kwargs: None)
 	frappe.get_all = getattr(frappe, "get_all", lambda *args, **kwargs: [])
-	frappe.session = getattr(frappe, "session", types.SimpleNamespace(user="test.supervisor@bebang.ph"))
+	frappe.__dict__.setdefault("session", frappe.local.session)
 
 	utils.add_days = getattr(utils, "add_days", lambda value, days: value)
 	utils.cint = getattr(utils, "cint", lambda value: int(float(value or 0)))
