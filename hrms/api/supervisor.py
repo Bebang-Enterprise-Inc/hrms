@@ -418,6 +418,8 @@ def _get_shift_assignment_conflicts(employee: str, work_date: str, row_key: str,
 
 def _cancel_and_delete_shift_assignment(assignment_name: str):
 	assignment = frappe.get_doc("Shift Assignment", assignment_name)
+	assignment.flags.ignore_permissions = True
+	assignment.flags.ignore_user_permissions = True
 	if assignment.docstatus == 1:
 		assignment.cancel()
 	frappe.delete_doc("Shift Assignment", assignment_name, ignore_permissions=True)
@@ -484,6 +486,8 @@ def _create_shift_assignment_from_plan(plan: Any, row: Any, work_date: str, publ
 			"custom_bei_publish_run_id": publish_run_id,
 		}
 	)
+	assignment.flags.ignore_permissions = True
+	assignment.flags.ignore_user_permissions = True
 	assignment.insert(ignore_permissions=True)
 	assignment.submit()
 	return assignment
