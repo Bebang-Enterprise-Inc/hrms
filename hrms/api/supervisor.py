@@ -7,6 +7,7 @@ Handles approval queues, store visits, labor planning, and team management
 """
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -25,7 +26,7 @@ SCHEDULE_SOURCE = "BEI_WEEKLY_LABOR_PLAN"
 
 
 @frappe.whitelist()
-def get_pending_approvals(approver=None):
+def get_pending_approvals(approver: str | None = None):
 	"""Get pending items for an approver."""
 	if not approver:
 		approver = frappe.session.user
@@ -48,7 +49,7 @@ def get_pending_approvals(approver=None):
 
 
 @frappe.whitelist()
-def approve_item(queue_name, notes=None):
+def approve_item(queue_name: str, notes: str | None = None):
 	"""Approve an item in the queue."""
 	doc = frappe.get_doc("BEI Approval Queue", queue_name)
 	if doc.reference_doctype == TRANSFER_REQUEST_DOCTYPE:
@@ -79,7 +80,7 @@ def approve_item(queue_name, notes=None):
 
 
 @frappe.whitelist()
-def reject_item(queue_name, reason):
+def reject_item(queue_name: str, reason: str):
 	"""Reject an item in the queue."""
 	if not reason:
 		frappe.throw(_("Rejection reason is required"))
@@ -100,7 +101,7 @@ def reject_item(queue_name, reason):
 
 
 @frappe.whitelist()
-def escalate_item(queue_name, escalate_to):
+def escalate_item(queue_name: str, escalate_to: str):
 	"""Escalate an item to another approver."""
 	doc = frappe.get_doc("BEI Approval Queue", queue_name)
 	doc.status = "Escalated"
@@ -133,19 +134,19 @@ CATEGORY_MAP = {
 
 @frappe.whitelist()
 def create_store_visit(
-	store,
-	visit_type,
-	audit_items,
-	score_funds=None,
-	score_stocks=None,
-	score_organization=None,
-	score_staffing=None,
-	score_coaching=None,
-	critical_findings=None,
-	action_items=None,
-	follow_up_date=None,
-	photos=None,
-	store_supervisor_present=None,
+	store: str,
+	visit_type: str,
+	audit_items: str | list[dict[str, Any]],
+	score_funds: int | str | None = None,
+	score_stocks: int | str | None = None,
+	score_organization: int | str | None = None,
+	score_staffing: int | str | None = None,
+	score_coaching: int | str | None = None,
+	critical_findings: str | None = None,
+	action_items: str | None = None,
+	follow_up_date: str | None = None,
+	photos: str | list[dict[str, Any]] | None = None,
+	store_supervisor_present: bool | int | None = None,
 ):
 	"""Create a store visit report with 100-point scoring."""
 	if not store:
@@ -189,7 +190,13 @@ def create_store_visit(
 
 
 @frappe.whitelist()
-def get_store_visits(store=None, visited_by=None, date_from=None, date_to=None, limit=20):
+def get_store_visits(
+	store: str | None = None,
+	visited_by: str | None = None,
+	date_from: str | None = None,
+	date_to: str | None = None,
+	limit: int | str = 20,
+):
 	"""Get store visit history."""
 	filters = {}
 	if store:
@@ -215,14 +222,14 @@ def get_store_visits(store=None, visited_by=None, date_from=None, date_to=None, 
 
 
 @frappe.whitelist()
-def get_visit_detail(visit_name):
+def get_visit_detail(visit_name: str):
 	"""Get full details of a store visit."""
 	doc = frappe.get_doc("BEI Store Visit Report", visit_name)
 	return {"visit": doc.as_dict()}
 
 
 @frappe.whitelist()
-def acknowledge_visit(visit_name):
+def acknowledge_visit(visit_name: str):
 	"""Acknowledge a store visit report."""
 	doc = frappe.get_doc("BEI Store Visit Report", visit_name)
 	doc.status = "Acknowledged"
@@ -246,11 +253,11 @@ DAY_OFFSETS = {
 }
 
 
-def _normalize_designation(designation):
+def _normalize_designation(designation: str | None):
 	return (designation or "").strip().upper()
 
 
-def _is_store_oic_designation(designation):
+def _is_store_oic_designation(designation: str | None):
 	normalized = _normalize_designation(designation)
 	return (
 		"OIC" in normalized
@@ -259,7 +266,7 @@ def _is_store_oic_designation(designation):
 	)
 
 
-def _resolve_labor_plan_store(store):
+def _resolve_labor_plan_store(store: str):
 	warehouse = resolve_warehouse(store)
 	warehouse_name = frappe.db.get_value("Warehouse", warehouse, "warehouse_name") or warehouse
 	return {"warehouse": warehouse, "warehouse_name": warehouse_name}
@@ -274,7 +281,7 @@ def _get_current_employee():
 	)
 
 
-def _user_can_manage_store_schedule(store):
+def _user_can_manage_store_schedule(store: str):
 	user_roles = set(frappe.get_roles(frappe.session.user))
 	if user_roles.intersection({"System Manager", "Administrator", "HR User", "HR Manager"}):
 		return True
@@ -303,7 +310,7 @@ def _user_can_manage_store_schedule(store):
 	return "Store Staff" in user_roles and _is_store_oic_designation(employee.get("designation"))
 
 
-def _assert_store_schedule_access(store):
+def _assert_store_schedule_access(store: str):
 	if not _user_can_manage_store_schedule(store):
 		frappe.throw(
 			_("You do not have permission to manage schedules for {0}.").format(store),
@@ -311,13 +318,13 @@ def _assert_store_schedule_access(store):
 		)
 
 
-def _coerce_shifts(shifts):
+def _coerce_shifts(shifts: str | list[dict[str, Any]] | None):
 	if isinstance(shifts, str):
 		shifts = json.loads(shifts)
 	return shifts or []
 
 
-def _calculate_shift_hours(shift_start, shift_end, is_off=0):
+def _calculate_shift_hours(shift_start: str | None, shift_end: str | None, is_off: bool | int = 0):
 	if cint(is_off) or not shift_start or not shift_end:
 		return 0
 
@@ -329,17 +336,17 @@ def _calculate_shift_hours(shift_start, shift_end, is_off=0):
 	return hours
 
 
-def _get_shift_type_name(shift):
+def _get_shift_type_name(shift: dict[str, Any]):
 	if cint(shift.get("is_off")):
 		return "Off"
 	return shift.get("shift_type_name") or shift.get("shift_type")
 
 
-def _legacy_shift_type_value(shift_type_name):
+def _legacy_shift_type_value(shift_type_name: str | None):
 	return shift_type_name if shift_type_name in {"Opening", "Mid", "Closing"} else None
 
 
-def _apply_shifts(doc, shifts):
+def _apply_shifts(doc: Any, shifts: list[dict[str, Any]]):
 	doc.shifts = []
 	total_hours = 0
 
@@ -368,13 +375,13 @@ def _apply_shifts(doc, shifts):
 	return total_hours
 
 
-def _get_work_date(week_start_date, day_of_week):
+def _get_work_date(week_start_date: str, day_of_week: str):
 	if day_of_week not in DAY_OFFSETS:
 		frappe.throw(_("Unsupported day of week: {0}").format(day_of_week))
 	return add_days(week_start_date, DAY_OFFSETS[day_of_week])
 
 
-def _get_shift_assignment_conflicts(employee, work_date, row_key, plan_name):
+def _get_shift_assignment_conflicts(employee: str, work_date: str, row_key: str, plan_name: str):
 	assignments = frappe.get_all(
 		"Shift Assignment",
 		filters={
@@ -408,14 +415,14 @@ def _get_shift_assignment_conflicts(employee, work_date, row_key, plan_name):
 	return conflicts
 
 
-def _cancel_and_delete_shift_assignment(assignment_name):
+def _cancel_and_delete_shift_assignment(assignment_name: str):
 	assignment = frappe.get_doc("Shift Assignment", assignment_name)
 	if assignment.docstatus == 1:
 		assignment.cancel()
 	frappe.delete_doc("Shift Assignment", assignment_name, ignore_permissions=True)
 
 
-def _create_shift_assignment_from_plan(plan, row, work_date, publish_run_id):
+def _create_shift_assignment_from_plan(plan: Any, row: Any, work_date: str, publish_run_id: str):
 	employee = frappe.db.get_value(
 		"Employee",
 		row.employee,
@@ -454,7 +461,7 @@ def _create_shift_assignment_from_plan(plan, row, work_date, publish_run_id):
 
 
 @frappe.whitelist()
-def get_labor_plan_bootstrap(store):
+def get_labor_plan_bootstrap(store: str):
 	"""Return store roster and shift options for labor planning."""
 	if not store:
 		frappe.throw(_("Store is required"))
@@ -472,7 +479,7 @@ def get_labor_plan_bootstrap(store):
 		order_by="employee_name asc",
 	)
 
-	def employee_sort_key(row):
+	def employee_sort_key(row: dict[str, Any]):
 		designation = _normalize_designation(row.get("designation"))
 		if "STORE SUPERVISOR" in designation and "ASSISTANT" not in designation:
 			priority = 0
@@ -495,7 +502,12 @@ def get_labor_plan_bootstrap(store):
 
 
 @frappe.whitelist()
-def create_weekly_plan(store, week_start, shifts, labor_budget=None):
+def create_weekly_plan(
+	store: str,
+	week_start: str,
+	shifts: str | list[dict[str, Any]],
+	labor_budget: float | int | str | None = None,
+):
 	"""Create a weekly labor plan."""
 	if not store:
 		frappe.throw(_("Store is required"))
@@ -518,7 +530,7 @@ def create_weekly_plan(store, week_start, shifts, labor_budget=None):
 
 
 @frappe.whitelist()
-def get_weekly_plan(store=None, week_start=None):
+def get_weekly_plan(store: str | None = None, week_start: str | None = None):
 	"""Get weekly labor plan for a store."""
 	if not store or not week_start:
 		return {"plan": None}
@@ -539,7 +551,7 @@ def get_weekly_plan(store=None, week_start=None):
 
 
 @frappe.whitelist()
-def update_weekly_plan(plan_name, shifts):
+def update_weekly_plan(plan_name: str, shifts: str | list[dict[str, Any]]):
 	"""Update shifts in a weekly plan."""
 	shifts = _coerce_shifts(shifts)
 	doc = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
@@ -556,7 +568,7 @@ def update_weekly_plan(plan_name, shifts):
 
 
 @frappe.whitelist()
-def publish_weekly_plan(plan_name):
+def publish_weekly_plan(plan_name: str):
 	"""Publish a weekly labor plan and sync tagged Shift Assignments."""
 	plan = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
 	_assert_store_schedule_access(plan.store)
@@ -681,7 +693,7 @@ def get_my_team():
 
 
 @frappe.whitelist()
-def get_team_attendance(date=None):
+def get_team_attendance(date: str | None = None):
 	"""Get attendance overview for team."""
 	if not date:
 		date = nowdate()
@@ -725,7 +737,7 @@ def get_team_attendance(date=None):
 
 
 @frappe.whitelist()
-def get_unified_approval_queue(approver=None, store=None):
+def get_unified_approval_queue(approver: str | None = None, store: str | None = None):
 	"""Get all pending items requiring approval from various sources."""
 	if not approver:
 		approver = frappe.session.user
@@ -1004,7 +1016,7 @@ def get_unified_approval_queue(approver=None, store=None):
 # ==============================================================================
 
 
-def _get_area_supervisor_stores(user=None):
+def _get_area_supervisor_stores(user: str | None = None):
 	"""Get stores (warehouses) assigned to the area supervisor."""
 	if not user:
 		user = frappe.session.user
@@ -1019,7 +1031,7 @@ def _get_area_supervisor_stores(user=None):
 
 
 @frappe.whitelist()
-def get_my_stores(user=None):
+def get_my_stores(user: str | None = None):
 	"""
 	Get stores (warehouses) assigned to the area supervisor.
 	Used by store dropdowns in Store Visit, Reports, and Action Plans forms.
@@ -1163,7 +1175,9 @@ def get_area_dashboard():
 	return {"stats": stats, "stores": enriched_stores}
 
 
-def _count_reports_by_status(stats, report_key, doctype, store_names, today):
+def _count_reports_by_status(
+	stats: dict[str, Any], report_key: str, doctype: str, store_names: list[str], today: str
+):
 	"""Helper to count reports by status for a given doctype."""
 	total_stores = len(store_names)
 	submitted = reviewed = flagged = 0
@@ -1189,7 +1203,7 @@ def _count_reports_by_status(stats, report_key, doctype, store_names, today):
 
 
 @frappe.whitelist()
-def get_area_store_reports(report_type, report_date=None, status=None):
+def get_area_store_reports(report_type: str, report_date: str | None = None, status: str | None = None):
 	"""
 	Get store reports for all stores under the area supervisor.
 	Returns reports with photo URLs and a list of stores that haven't submitted.
@@ -1421,7 +1435,7 @@ def get_area_store_reports(report_type, report_date=None, status=None):
 
 
 @frappe.whitelist()
-def get_reports_feed(report_date=None, limit=50):
+def get_reports_feed(report_date: str | None = None, limit: int | str = 50):
 	"""
 	Get a chronological feed of all store reports for today (or specified date).
 	Returns opening, closing, midshift, POS upload, and bank deposit reports
@@ -1546,7 +1560,7 @@ def get_reports_feed(report_date=None, limit=50):
 
 
 @frappe.whitelist()
-def request_report_revision(report_name, doctype, revision_notes):
+def request_report_revision(report_name: str, doctype: str, revision_notes: str):
 	"""
 	Flag a report for revision and notify the submitter via Google Chat.
 
@@ -1586,7 +1600,7 @@ Please review and resubmit."""
 
 
 @frappe.whitelist()
-def mark_report_reviewed(report_name, doctype):
+def mark_report_reviewed(report_name: str, doctype: str):
 	"""
 	Mark a report as reviewed by the supervisor.
 
@@ -1603,7 +1617,7 @@ def mark_report_reviewed(report_name, doctype):
 
 
 @frappe.whitelist()
-def get_stores_compliance_summary(report_date=None):
+def get_stores_compliance_summary(report_date: str | None = None):
 	"""
 	Get compliance summary for all stores under the area supervisor.
 	Shows which stores submitted opening/closing reports and which are missing.
@@ -1676,7 +1690,11 @@ def get_stores_compliance_summary(report_date=None):
 
 
 @frappe.whitelist()
-def get_variance_flagged_reports(threshold=100, date_from=None, date_to=None):
+def get_variance_flagged_reports(
+	threshold: float | int | str = 100,
+	date_from: str | None = None,
+	date_to: str | None = None,
+):
 	"""
 	Get closing reports with cash variance exceeding the threshold.
 
@@ -1746,7 +1764,7 @@ def get_variance_flagged_reports(threshold=100, date_from=None, date_to=None):
 
 
 @frappe.whitelist()
-def get_action_plans(store=None, status=None, limit=50):
+def get_action_plans(store: str | None = None, status: str | None = None, limit: int | str = 50):
 	"""
 	Get action plans for stores under the area supervisor.
 
@@ -1813,13 +1831,13 @@ def get_action_plans(store=None, status=None, limit=50):
 
 @frappe.whitelist()
 def create_action_plan(
-	store,
-	issue_description,
-	action_required,
-	due_date,
-	priority="Medium",
-	source_visit=None,
-	assigned_to=None,
+	store: str,
+	issue_description: str,
+	action_required: str,
+	due_date: str,
+	priority: str = "Medium",
+	source_visit: str | None = None,
+	assigned_to: str | None = None,
 ):
 	"""
 	Create a new action plan from a store visit or observation.
@@ -1853,7 +1871,7 @@ def create_action_plan(
 
 
 @frappe.whitelist()
-def update_action_plan_status(plan_name, status, completion_notes=None):
+def update_action_plan_status(plan_name: str, status: str, completion_notes: str | None = None):
 	"""
 	Update the status of an action plan.
 
@@ -1988,7 +2006,7 @@ def get_store_visit_template():
 
 
 @frappe.whitelist()
-def get_coaching_history(store=None, employee=None, limit=20):
+def get_coaching_history(store: str | None = None, employee: str | None = None, limit: int | str = 20):
 	"""
 	Get coaching history for a store or employee.
 
@@ -2047,16 +2065,16 @@ def get_coaching_history(store=None, employee=None, limit=20):
 
 @frappe.whitelist()
 def create_coaching_log(
-	store,
-	topic,
-	coaching_remarks,
-	employee=None,
-	coaching_type="On-the-spot",
-	observations=None,
-	follow_up_required=False,
-	follow_up_date=None,
-	source_visit=None,
-	source_action_plan=None,
+	store: str,
+	topic: str,
+	coaching_remarks: str,
+	employee: str | None = None,
+	coaching_type: str = "On-the-spot",
+	observations: str | None = None,
+	follow_up_required: bool | int = False,
+	follow_up_date: str | None = None,
+	source_visit: str | None = None,
+	source_action_plan: str | None = None,
 ):
 	"""
 	Create a new coaching log entry.
@@ -2097,7 +2115,7 @@ def create_coaching_log(
 
 
 @frappe.whitelist()
-def add_report_comment(report_name, doctype, comment):
+def add_report_comment(report_name: str, doctype: str, comment: str):
 	"""
 	Add a supervisor comment to a store report.
 
@@ -2135,7 +2153,7 @@ def add_report_comment(report_name, doctype, comment):
 
 
 @frappe.whitelist()
-def get_report_comments(report_name, doctype):
+def get_report_comments(report_name: str, doctype: str):
 	"""
 	Get all comments for a store report.
 
