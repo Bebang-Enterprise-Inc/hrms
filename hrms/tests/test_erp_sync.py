@@ -388,6 +388,34 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(result["rows_failed"], 1)
 		self.assertIn("Batch-tracked item requires batch_no: FG001", result["errors"])
 
+	def test_sync_inventory_skips_zero_qty_rows_for_missing_items(self):
+		def db_exists(doctype, name=None):
+			if doctype == "Item":
+				return None
+			if doctype in ("Warehouse", "Company"):
+				return name or True
+			return None
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(return_value=None)
+		erp_sync.frappe.new_doc = MagicMock(side_effect=lambda doctype: _FakeDoc(doctype))
+		logger = types.SimpleNamespace(info=MagicMock())
+		erp_sync.frappe.logger = MagicMock(return_value=logger)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
+			result = erp_sync._sync_inventory_rows(
+				sheet_name="Inventory",
+				data=[{"item_code": "A033-1", "warehouse": "Stores - BEI", "qty": 0}],
+				checksum="chk-zero-missing",
+				require_auth=False,
+			)
+
+		self.assertEqual(result["rows_created"], 0)
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["errors"], [])
+		logger.info.assert_called_once()
+
 	def test_sync_inventory_uses_existing_bin_valuation_rate(self):
 		created_docs = []
 

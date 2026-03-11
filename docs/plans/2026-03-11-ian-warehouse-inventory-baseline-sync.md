@@ -32,12 +32,27 @@ Each transformed row is keyed by `inventory_key = <warehouse_code>::<item_code>`
 - Daily baseline scheduler includes `inventory` at `8:00 AM PHT`
 - Manual force sync endpoint:
   - `POST /api/sync/inventory?force=true`
+- Receiver sends `inventory` in per-warehouse chunks using `warehouse_source_code`
+  so each Frappe request stays below the gateway timeout envelope
 - Payload written to Frappe inventory sync:
   - `item_code`
   - `warehouse`
   - `qty`
 
 This produces warehouse-level `Stock Reconciliation` entries in Frappe using the transformed source rows.
+
+## Production Hardening
+
+- Zero-qty rows for item codes missing from Frappe Item master are skipped instead of
+  failing the whole inventory baseline.
+- This rule is intentionally narrow:
+  - missing item + zero qty = skip
+  - missing item + non-zero qty = fail
+- On 2026-03-11, live reconciliation against `SUMMARY 2026` found only `9` missing
+  item codes and all `9` were zero-stock rows, so they are treated as obsolete/no-op
+  rows instead of cutover blockers.
+- Audit artifact:
+  - `F:\\Dropbox\\Projects\\BEI-ERP\\tmp\\inventory_missing_item_audit_2026-03-11.md`
 
 ## Verification
 
@@ -47,6 +62,7 @@ Local verification used for this change:
 - `python hrms/tests/test_sheets_receiver_main.py`
 - `python hrms/tests/test_sheets_receiver_processor.py`
 - `python hrms/tests/test_sheets_receiver_transforms.py`
+- `python hrms/tests/test_erp_sync.py`
 - `python -m py_compile hrms/services/sheets_receiver/config.py hrms/services/sheets_receiver/main.py hrms/services/sheets_receiver/sheets_client.py hrms/services/sheets_receiver/processor.py hrms/services/sheets_receiver/transforms.py`
 
 Live source parse check on 2026-03-11:

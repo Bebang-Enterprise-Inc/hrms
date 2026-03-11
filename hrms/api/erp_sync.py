@@ -923,6 +923,13 @@ def _sync_inventory_rows(
 				continue
 
 			if not frappe.db.exists("Item", item_code):
+				if not qty:
+					frappe.logger().info(
+						"Skipping zero-qty inventory row for missing item_code=%s sheet=%s",
+						item_code,
+						sheet_name,
+					)
+					continue
 				results["rows_failed"] += 1
 				results["errors"].append(f"Item not found: {item_code}")
 				continue

@@ -184,6 +184,62 @@ class ChangeProcessor:
 
 		return related_data, related_checksums
 
+	@staticmethod
+	def _chunk_sheet_rows(
+		sheet_config: SheetConfig, data: list[dict[str, Any]]
+	) -> list[tuple[str | None, list[dict[str, Any]]]]:
+		"""Split large logical sheets into stable sub-payloads when configured."""
+		chunk_field = getattr(sheet_config, "sync_chunk_field", None)
+		if not chunk_field or not data:
+			return [(None, data)]
+
+		grouped: dict[str, list[dict[str, Any]]] = {}
+		for row in data:
+			group_value = str(row.get(chunk_field) or "").strip() or "__empty__"
+			grouped.setdefault(group_value, []).append(row)
+
+		return [(group_key, grouped[group_key]) for group_key in sorted(grouped)]
+
+	def _sync_sheet_payload(
+		self,
+		sheet_config: SheetConfig,
+		data: list[dict[str, Any]],
+		checksum: str,
+		*,
+		related_data: dict[str, list[dict[str, Any]]] | None = None,
+	) -> SyncResult:
+		"""Sync a sheet payload, optionally chunked into smaller API calls."""
+		chunk_field = getattr(sheet_config, "sync_chunk_field", None)
+		chunks = self._chunk_sheet_rows(sheet_config, data)
+		if len(chunks) == 1 and chunks[0][0] is None:
+			return self.frappe.sync_sheet_data(
+				sheet_config,
+				data,
+				checksum,
+				related_data=related_data or None,
+			)
+
+		aggregate = SyncResult(success=True)
+		for chunk_key, chunk_rows in chunks:
+			chunk_result = self.frappe.sync_sheet_data(
+				sheet_config,
+				chunk_rows,
+				checksum,
+				related_data=related_data or None,
+			)
+			aggregate.success = aggregate.success and chunk_result.success
+			aggregate.rows_processed += chunk_result.rows_processed or len(chunk_rows)
+			aggregate.rows_created += chunk_result.rows_created
+			aggregate.rows_updated += chunk_result.rows_updated
+			aggregate.rows_failed += chunk_result.rows_failed
+			for error in chunk_result.errors or []:
+				if chunk_field and chunk_key is not None:
+					aggregate.errors.append(f"{chunk_field}={chunk_key}: {error}")
+				else:
+					aggregate.errors.append(error)
+
+		return aggregate
+
 	def sync_sheet(self, sheet_config: SheetConfig, trigger: str = "manual", force: bool = False) -> SyncLog:
 		"""
 		Sync a single sheet to Frappe.
@@ -261,7 +317,7 @@ class ChangeProcessor:
 					critical_alerts.append(alert)
 
 			# Sync to Frappe
-			result = self.frappe.sync_sheet_data(
+			result = self._sync_sheet_payload(
 				sheet_config,
 				data,
 				checksum,

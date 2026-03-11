@@ -322,6 +322,61 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 		)
 		self.assertEqual(log.data_checksum, "chk-inventory")
 
+	def test_sync_sheet_chunks_inventory_payload_by_warehouse_source_code(self):
+		processor = self._make_processor()
+		sheet_config = types.SimpleNamespace(
+			name="Inventory",
+			spreadsheet_id="sheet-003",
+			sheet_name="SUMMARY 2026",
+			range="A:Z",
+			key_column="inventory_key",
+			related_sheet_keys=[],
+			sync_chunk_field="warehouse_source_code",
+		)
+		rows = [
+			{
+				"inventory_key": "3MD::PM001",
+				"item_code": "PM001",
+				"warehouse_source_code": "3MD",
+				"qty": 73.0,
+			},
+			{
+				"inventory_key": "JENTEC::PM001",
+				"item_code": "PM001",
+				"warehouse_source_code": "JENTEC",
+				"qty": 12.0,
+			},
+			{
+				"inventory_key": "3MD::RM015",
+				"item_code": "RM015",
+				"warehouse_source_code": "3MD",
+				"qty": 18.0,
+			},
+		]
+		processor.sheets.fetch_sheet_data = MagicMock(return_value=(rows, "chk-inventory"))
+		processor.frappe.sync_sheet_data = MagicMock(
+			side_effect=[
+				processor_mod.SyncResult(success=True, rows_processed=2, rows_created=2),
+				processor_mod.SyncResult(success=True, rows_processed=1, rows_created=1),
+			]
+		)
+
+		log = processor.sync_sheet(sheet_config, trigger="manual")
+
+		self.assertEqual(log.status, "success")
+		self.assertEqual(log.rows_created, 3)
+		self.assertEqual(processor.frappe.sync_sheet_data.call_count, 2)
+		first_call = processor.frappe.sync_sheet_data.call_args_list[0]
+		second_call = processor.frappe.sync_sheet_data.call_args_list[1]
+		self.assertEqual(
+			[row["warehouse_source_code"] for row in first_call.args[1]],
+			["3MD", "3MD"],
+		)
+		self.assertEqual(
+			[row["warehouse_source_code"] for row in second_call.args[1]],
+			["JENTEC"],
+		)
+
 
 if __name__ == "__main__":
 	unittest.main()
