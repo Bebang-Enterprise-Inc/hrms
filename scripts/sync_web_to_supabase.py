@@ -4,6 +4,7 @@ Sync online/web orders from Superadmin API to Supabase web_orders table.
 Usage:
     python scripts/sync_web_to_supabase.py --start-date 2025-10-01 --end-date 2026-02-13
     python scripts/sync_web_to_supabase.py --daily  # yesterday only
+    python scripts/sync_web_to_supabase.py --rolling-days 7
 
 Data flow:
     Superadmin API (GET /api/online-orders) -> Supabase web_orders + web_order_items
@@ -366,6 +367,36 @@ def upsert_web_order_items(supabase_key, items):
     return len(items)
 
 
+def delete_web_order_items(supabase_key, order_ids):
+    """Delete existing item rows for a batch of orders before re-inserting."""
+    if not order_ids:
+        return 0
+
+    headers = {
+        "apikey": supabase_key,
+        "Authorization": f"Bearer {supabase_key}",
+        "Prefer": "return=minimal",
+    }
+    params = {"order_id": f"in.({','.join(str(order_id) for order_id in order_ids)})"}
+
+    try:
+        r = requests.delete(
+            f"{SUPABASE_URL}/rest/v1/web_order_items",
+            headers=headers,
+            params=params,
+            timeout=60,
+        )
+    except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as exc:
+        log(f"    DELETE items failed: {exc}")
+        return 0
+
+    if r.status_code not in (200, 204):
+        log(f"    DELETE items failed: HTTP {r.status_code}: {r.text[:300]}")
+        return 0
+
+    return len(order_ids)
+
+
 # ─── Superadmin API fetch ────────────────────────────────────────────────────
 
 def fetch_online_orders(from_date, to_date, store_id=None, page=1, per_page=100):
@@ -475,6 +506,7 @@ def sync_date_range(start_date, end_date, supabase_key, tenant_map):
                 chunk_orders += inserted
 
             if item_batch:
+                delete_web_order_items(supabase_key, [order["id"] for order in order_batch])
                 inserted_items = upsert_web_order_items(supabase_key, item_batch)
                 chunk_items += inserted_items
 
@@ -510,6 +542,8 @@ def main():
                         help="End date (YYYY-MM-DD, default: today)")
     parser.add_argument("--daily", action="store_true",
                         help="Only sync yesterday's orders")
+    parser.add_argument("--rolling-days", type=int, default=None,
+                        help="Sync an inclusive rolling window ending today in PHT")
     parser.add_argument("--dry-run", action="store_true",
                         help="Fetch and map but don't write to Supabase")
     args = parser.parse_args()
@@ -520,6 +554,12 @@ def main():
 
     if args.daily:
         start = today_pht - timedelta(days=1)
+        end = today_pht
+    elif args.rolling_days:
+        if args.rolling_days < 1:
+            log("ERROR: --rolling-days must be at least 1")
+            sys.exit(1)
+        start = today_pht - timedelta(days=args.rolling_days)
         end = today_pht
     else:
         start = date.fromisoformat(args.start_date)

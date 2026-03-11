@@ -97,7 +97,7 @@ jobs:
               --start-date "${{ inputs.target_date }}" \
               --end-date "${{ inputs.target_date }}"
           else
-            python scripts/sync_web_to_supabase.py --daily
+            python scripts/sync_web_to_supabase.py --rolling-days 7
           fi
 
   # ── Step 3: FoodPanda orders from Google Sheet (parallel with POS & Web) ───
