@@ -33,7 +33,7 @@ def _get_rate_actor_role(user: str | None = None) -> str | None:
 	user_roles = set(frappe.get_roles(user or frappe.session.user) or [])
 	if "Accounts Manager" in user_roles:
 		return "Finance"
-	if "Supply Chain Manager" in user_roles:
+	if user_roles.intersection({"Supply Chain Manager", "Warehouse Manager", "Warehouse User"}):
 		return "Supply Chain"
 	return None
 
@@ -117,46 +117,80 @@ def _trip_vehicle_join_sql(trip_alias: str = "dt", vehicle_alias: str = "veh") -
 	return f" LEFT JOIN `tabBEI Vehicle` {vehicle_alias} ON {vehicle_alias}.name = {trip_alias}.vehicle"
 
 
+def _trip_optional_field_sql(fieldname: str, trip_alias: str = "dt", default: str = "0") -> str:
+	"""Select optional trip columns safely across schema revisions."""
+	if _has_column("BEI Distribution Trip", fieldname):
+		return f"{trip_alias}.{fieldname}"
+	return default
+
+
+def _trip_stop_store_sql(stop_alias: str = "ds", default: str = "''") -> str:
+	"""Resolve the live trip-stop label column across schema variants."""
+	if _has_column("BEI Trip Stop", "store"):
+		return f"{stop_alias}.store"
+	if _has_column("BEI Trip Stop", "department"):
+		return f"{stop_alias}.department"
+	return default
+
+
+def _normalize_3pl_partner_label(partner: str | None) -> str:
+	"""Collapse legacy/live 3PL partner labels into the portal-facing canonical set."""
+	label = (partner or "").strip()
+	if not label:
+		return ""
+
+	canonical = label.upper()
+	aliases = {
+		"FOUR COOLITZ": "COOLITZ",
+	}
+	return aliases.get(canonical, canonical)
+
+
 def _get_3pl_trip_query():
-	"""Return a static SQL query matching the runtime trip-partner schema."""
+	"""Return a static SQL query for all active 3PL-partner-tagged trips in the period."""
+	overtime_sql = _trip_optional_field_sql("overtime_hours")
+	holiday_sql = _trip_optional_field_sql("is_holiday_trip")
+	weekend_sql = _trip_optional_field_sql("is_weekend_trip")
+	store_sql = _trip_stop_store_sql()
+
 	if _has_column("BEI Distribution Trip", "vehicle_owner"):
-		return """
+		return f"""
         SELECT
             dt.name AS trip_name,
             dt.trip_date AS date,
             dt.route AS zone,
             dt.cargo_type,
             dt.vehicle_owner AS partner,
-            dt.overtime_hours,
-            dt.is_holiday_trip,
-            dt.is_weekend_trip,
-            GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
+            {overtime_sql} AS overtime_hours,
+            {holiday_sql} AS is_holiday_trip,
+            {weekend_sql} AS is_weekend_trip,
+            GROUP_CONCAT(DISTINCT {store_sql} SEPARATOR ', ') AS stores
         FROM `tabBEI Distribution Trip` dt
         LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
         WHERE dt.trip_date BETWEEN %(start_date)s AND %(end_date)s
-          AND COALESCE(dt.vehicle_owner, '') = %(partner)s
-          AND dt.docstatus = 1
+          AND COALESCE(dt.vehicle_owner, '') != ''
+          AND dt.docstatus < 2
         GROUP BY dt.name
         ORDER BY dt.trip_date ASC
         """
 
-	return """
+	return f"""
     SELECT
         dt.name AS trip_name,
         dt.trip_date AS date,
         dt.route AS zone,
         dt.cargo_type,
         veh.threepl_partner AS partner,
-        dt.overtime_hours,
-        dt.is_holiday_trip,
-        dt.is_weekend_trip,
-        GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores
+        {overtime_sql} AS overtime_hours,
+        {holiday_sql} AS is_holiday_trip,
+        {weekend_sql} AS is_weekend_trip,
+        GROUP_CONCAT(DISTINCT {store_sql} SEPARATOR ', ') AS stores
     FROM `tabBEI Distribution Trip` dt
     LEFT JOIN `tabBEI Vehicle` veh ON veh.name = dt.vehicle
     LEFT JOIN `tabBEI Trip Stop` ds ON ds.parent = dt.name
     WHERE dt.trip_date BETWEEN %(start_date)s AND %(end_date)s
-      AND COALESCE(veh.threepl_partner, '') = %(partner)s
-      AND dt.docstatus = 1
+      AND COALESCE(veh.threepl_partner, '') != ''
+      AND dt.docstatus < 2
     GROUP BY dt.name
     ORDER BY dt.trip_date ASC
     """
@@ -169,7 +203,7 @@ def _get_3pl_trip_count_query():
         SELECT dt.vehicle_owner AS partner, COUNT(*) AS cnt
         FROM `tabBEI Distribution Trip` dt
         WHERE dt.trip_date BETWEEN %s AND %s
-          AND dt.docstatus = 1
+          AND dt.docstatus < 2
           AND COALESCE(dt.vehicle_owner, '') != ''
         GROUP BY dt.vehicle_owner
         """
@@ -179,7 +213,7 @@ def _get_3pl_trip_count_query():
     FROM `tabBEI Distribution Trip` dt
     LEFT JOIN `tabBEI Vehicle` veh ON veh.name = dt.vehicle
     WHERE dt.trip_date BETWEEN %s AND %s
-      AND dt.docstatus = 1
+      AND dt.docstatus < 2
       AND COALESCE(veh.threepl_partner, '') != ''
     GROUP BY veh.threepl_partner
     """
@@ -249,6 +283,8 @@ def get_delivery_rates(
 	status: str | None = None,
 ):
 	"""List delivery rates with optional filters."""
+	_check_rate_permission()
+
 	filters = {}
 	if store:
 		filters["store"] = store
@@ -358,6 +394,8 @@ def approve_rate(rate_name: str):
 @frappe.whitelist()
 def get_stores_without_rates():
 	"""Get stores that are missing active delivery rates."""
+	_check_rate_permission()
+
 	# All stores from BEI Store Type
 	all_stores = _get_store_type_records()
 
@@ -394,6 +432,8 @@ def get_stores_without_rates():
 @frappe.whitelist()
 def get_pending_billings(store: str | None = None, billing_type: str | None = None):
 	"""List billings pending Finance approval."""
+	_check_billing_permission("view pending billings")
+
 	filters = {"status": "Pending"}
 	if store:
 		filters["store"] = store
@@ -1033,30 +1073,39 @@ def generate_3pl_reconciliation(month: int | str, year: int | str, partner: str)
 	month = int(month)
 	year = int(year)
 	start_date, end_date = _get_month_date_range(month, year)
+	normalized_partner = _normalize_3pl_partner_label(partner)
 
-	# Fetch 3PL trips for the month. Older builds stored the partner directly on
-	# the trip; current builds resolve it via the linked BEI Vehicle record.
-	trips_raw = frappe.db.sql(
+	# Fetch all 3PL-tagged trips for the month, then collapse partner aliases in
+	# Python so the portal's canonical keys still resolve legacy/live labels.
+	trips_all = frappe.db.sql(
 		_get_3pl_trip_query(),
-		{"start_date": start_date, "end_date": end_date, "partner": partner},
+		{"start_date": start_date, "end_date": end_date},
 		as_dict=True,
 	)
+	trips_raw = [
+		trip for trip in trips_all if _normalize_3pl_partner_label(trip.get("partner")) == normalized_partner
+	]
 
-	# Fetch applicable rates for this partner active during the month
-	rates = frappe.db.sql(
+	# Fetch all applicable rates for the period, then normalize partner aliases in
+	# Python because live operational labels do not always match the portal keys.
+	rates_all = frappe.db.sql(
 		"""
-        SELECT name, cargo_type, zone, rate_per_trip, overtime_rate, surcharge_rate,
+        SELECT name, threepl_partner, cargo_type, zone, rate_per_trip, overtime_rate, surcharge_rate,
                COALESCE(ewt_atc, 'WC110') AS ewt_atc,
                COALESCE(ewt_rate, 1.0) AS ewt_rate
         FROM `tabBEI 3PL Rate`
-        WHERE threepl_partner = %(partner)s
-          AND effective_from <= %(end_date)s
+        WHERE effective_from <= %(end_date)s
           AND (effective_to IS NULL OR effective_to = '' OR effective_to >= %(start_date)s)
         ORDER BY effective_from DESC
         """,
-		{"partner": partner, "start_date": start_date, "end_date": end_date},
+		{"start_date": start_date, "end_date": end_date},
 		as_dict=True,
 	)
+	rates = [
+		rate
+		for rate in rates_all
+		if _normalize_3pl_partner_label(rate.get("threepl_partner")) == normalized_partner
+	]
 
 	# Build rate lookup: (zone, cargo_type) -> rate (most-recent per key)
 	rate_lookup = {}
@@ -1351,7 +1400,12 @@ def get_reconciliation_summary(month: int | str, year: int | str):
 		[start_date, end_date],
 		as_dict=True,
 	)
-	trip_counts = {r.partner: r.cnt for r in trip_count_rows}
+	trip_counts = {}
+	for row in trip_count_rows:
+		canonical_partner = _normalize_3pl_partner_label(row.get("partner"))
+		if not canonical_partner:
+			continue
+		trip_counts[canonical_partner] = trip_counts.get(canonical_partner, 0) + row.get("cnt", 0)
 
 	# Batch JE lookups for all partners in a single query (avoids N+1)
 	je_cheque_nos = [f"3PL-{p}-{period_label}" for p in partners]

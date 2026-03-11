@@ -68,8 +68,8 @@ def _install_fake_frappe():
 	utils.nowdate = lambda: "2026-01-01"
 	utils.flt = lambda value, precision=None: round(float(value or 0), precision or 2)
 	utils.cint = lambda value: int(float(value or 0))
-	utils.getdate = (
-		lambda value=None: datetime.date.fromisoformat(str(value)) if value else datetime.date(2026, 1, 1)
+	utils.getdate = lambda value=None: (
+		datetime.date.fromisoformat(str(value)) if value else datetime.date(2026, 1, 1)
 	)
 
 	sys.modules["frappe"] = frappe
@@ -320,6 +320,7 @@ class TestErpSync(unittest.TestCase):
 
 		def new_doc(doctype):
 			if doctype == "Batch":
+
 				def on_insert(doc):
 					doc.name = doc.batch_id
 					created_batches.add(doc.batch_id)
@@ -386,6 +387,160 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(result["rows_created"], 0)
 		self.assertEqual(result["rows_failed"], 1)
 		self.assertIn("Batch-tracked item requires batch_no: FG001", result["errors"])
+
+	def test_sync_inventory_uses_existing_bin_valuation_rate(self):
+		created_docs = []
+
+		def db_exists(doctype, name=None):
+			if doctype in ("Item", "Warehouse", "Company"):
+				return name or True
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Item" and filters == "CM31" and fieldname == "has_batch_no":
+				return 0
+			if doctype == "Item" and filters == "CM31" and fieldname == "has_serial_no":
+				return 0
+			if doctype == "Bin" and filters == {"item_code": "CM31", "warehouse": "Stores - BEI"}:
+				return 12.5
+			if doctype == "Account" and isinstance(filters, dict):
+				return "Stock Adjustment - BEI"
+			if doctype == "Company" and filters == "BEI" and fieldname == "cost_center":
+				return "Main - BEI"
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Stock Reconciliation":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"SR-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.get_all = MagicMock(return_value=[])
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
+			result = erp_sync._sync_inventory_rows(
+				sheet_name="Store Inventory Shadow Sync AFT",
+				data=[{"store_code": "AFT", "item_code": "CM31", "warehouse": "Stores - BEI", "qty": 3}],
+				checksum="chk-shadow-rate-1",
+				require_auth=False,
+			)
+
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(created_docs[0].items[0]["valuation_rate"], 12.5)
+		self.assertNotIn("allow_zero_valuation_rate", created_docs[0].items[0])
+
+	def test_sync_inventory_shadow_sync_allows_zero_valuation_rate_when_no_source_exists(self):
+		created_docs = []
+
+		def db_exists(doctype, name=None):
+			if doctype in ("Item", "Warehouse", "Company"):
+				return name or True
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Item" and filters == "CM31" and fieldname in {"has_batch_no", "has_serial_no"}:
+				return 0
+			if doctype == "Item" and filters == "CM31" and fieldname == "valuation_rate":
+				return 0
+			if doctype == "Item" and filters == "CM31" and fieldname == "last_purchase_rate":
+				return 0
+			if doctype == "Account" and isinstance(filters, dict):
+				return "Stock Adjustment - BEI"
+			if doctype == "Company" and filters == "BEI" and fieldname == "cost_center":
+				return "Main - BEI"
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Stock Reconciliation":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"SR-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.get_all = MagicMock(return_value=[])
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
+			result = erp_sync._sync_inventory_rows(
+				sheet_name="Store Inventory Shadow Sync AFT",
+				data=[{"store_code": "AFT", "item_code": "CM31", "warehouse": "Stores - BEI", "qty": 3}],
+				checksum="chk-shadow-rate-2",
+				require_auth=False,
+			)
+
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(created_docs[0].items[0]["valuation_rate"], 0)
+		self.assertEqual(created_docs[0].items[0]["allow_zero_valuation_rate"], 1)
+
+	def test_sync_inventory_uses_warehouse_company_for_reconciliation(self):
+		created_docs = []
+
+		def db_exists(doctype, name=None):
+			if doctype == "Company":
+				return name in {"Bebang Enterprise Inc.", "Bebang Kitchen Inc."}
+			if doctype in ("Item", "Warehouse"):
+				return name or True
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Item" and filters == "CM31" and fieldname in {"has_batch_no", "has_serial_no"}:
+				return 0
+			if doctype == "Warehouse" and filters == "Stores - BEI" and fieldname == "company":
+				return "Bebang Enterprise Inc."
+			if doctype == "Account" and isinstance(filters, dict):
+				company = filters.get("company")
+				return f"Stock Adjustment - {company}"
+			if doctype == "Company" and filters == "Bebang Enterprise Inc." and fieldname == "cost_center":
+				return "Main - BEI"
+			if doctype == "Company" and filters == "Bebang Kitchen Inc." and fieldname == "cost_center":
+				return "Main - BKI"
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Stock Reconciliation":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"SR-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.get_all = MagicMock(return_value=[])
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		with patch.object(erp_sync, "_normalize_company", return_value="Bebang Kitchen Inc."):
+			result = erp_sync._sync_inventory_rows(
+				sheet_name="Store Inventory Shadow Sync AFT",
+				data=[{"store_code": "AFT", "item_code": "CM31", "warehouse": "Stores - BEI", "qty": 3}],
+				checksum="chk-shadow-company-1",
+				require_auth=False,
+			)
+
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(created_docs[0].company, "Bebang Enterprise Inc.")
+		self.assertEqual(created_docs[0].expense_account, "Stock Adjustment - Bebang Enterprise Inc.")
+		self.assertEqual(created_docs[0].cost_center, "Main - BEI")
 
 	def test_sync_store_demand_snapshot_upserts_by_snapshot_date_warehouse_item(self):
 		created_snapshot_rows = {}
@@ -527,7 +682,7 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(result["sync_result"]["rows_created"], 1)
 		log_error_mock.assert_called_once()
 		self.assertEqual(log_error_mock.call_args.kwargs["title"], "Scheduled Store Demand Snapshot Sync")
-		self.assertIn("\"snapshot_rows\": 1", log_error_mock.call_args.kwargs["message"])
+		self.assertIn('"snapshot_rows": 1', log_error_mock.call_args.kwargs["message"])
 
 	def test_enqueue_scheduled_store_inventory_shadow_sync_queues_daily_job(self):
 		erp_sync.frappe.enqueue = MagicMock()
@@ -543,7 +698,6 @@ class TestErpSync(unittest.TestCase):
 			"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
 			queue="long",
 			job_id="scheduled_store_inventory_shadow_sync:2026-03-10",
-			enqueue_after_commit=True,
 			run_date="2026-03-10",
 			force=True,
 		)
@@ -577,7 +731,7 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(result["rows_created"], 3200)
 		log_error_mock.assert_called_once()
 		self.assertEqual(log_error_mock.call_args.kwargs["title"], "Scheduled Store Inventory Shadow Sync")
-		self.assertIn("\"rows_created\": 3200", log_error_mock.call_args.kwargs["message"])
+		self.assertIn('"rows_created": 3200', log_error_mock.call_args.kwargs["message"])
 
 	def test_resolve_warehouse_accepts_warehouse_name_lookup(self):
 		def db_exists(doctype, name=None):
@@ -898,6 +1052,140 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(created_docs[0].custom_invoice_exception_reason, "Approved home-based supplier")
 		self.assertEqual(created_docs[0].custom_internal_ap_ref, "XINV-PO-12345")
 		self.assertIn("internal ref XINV-PO-12345", created_docs[0].remarks)
+
+	def test_sync_ap_opening_treats_none_invoice_token_as_missing_for_whitelisted_supplier(self):
+		created_docs = []
+
+		def db_exists(doctype, name=None):
+			if doctype == "BEI Supplier" and name == "SUPP-EXC":
+				return "SUPP-EXC"
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Purchase Invoice" and isinstance(filters, dict):
+				return None
+			if doctype == "BEI Supplier" and isinstance(filters, dict):
+				if filters.get("frappe_supplier") == "SUP-0001":
+					return "SUPP-EXC"
+				if filters.get("supplier_name") == "HOME SUPPLIER":
+					return "SUPP-EXC"
+			if doctype == "BEI Supplier" and filters == "SUPP-EXC":
+				values = {
+					"allow_missing_supplier_invoice": 1,
+					"missing_supplier_invoice_reason": "Approved home-based supplier",
+				}
+				return values.get(fieldname)
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Purchase Invoice":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"PI-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.db.set_value = MagicMock()
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.log_error = MagicMock()
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		rows = [
+			{
+				"supplier_name": "HOME SUPPLIER",
+				"invoice_no.": "None",
+				"reference": "PO#12345",
+				"outstanding_balance": 40,
+				"invoice_date": "2026-01-05",
+				"due_date": "2026-01-20",
+				"billed_to": "BEBANG SHAW INC",
+			},
+		]
+
+		with (
+			patch.object(erp_sync, "_ensure_ap_opening_item", return_value="ERP-SYNC-AP-OPENING"),
+			patch.object(erp_sync, "_normalize_company", return_value="BEI"),
+			patch.object(erp_sync, "_ensure_supplier", return_value="SUP-0001"),
+			patch.object(erp_sync, "_default_expense_account", return_value="Expense - BEI"),
+			patch.object(erp_sync, "_default_payable_account", return_value="Payable - BEI"),
+			patch.object(erp_sync, "_default_cost_center", return_value="Main - BEI"),
+			patch.object(erp_sync, "_doctype_has_field", return_value=True),
+		):
+			result = erp_sync.sync_ap_opening("Supplier SOA", rows, "chk-ap-soa-exc-3")
+
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(len(created_docs), 1)
+		self.assertFalse(hasattr(created_docs[0], "bill_no"))
+		self.assertEqual(created_docs[0].custom_missing_supplier_invoice, 1)
+		self.assertEqual(created_docs[0].custom_internal_ap_ref, "XINV-PO-12345")
+		self.assertIn("internal ref XINV-PO-12345", created_docs[0].remarks)
+
+	def test_sync_ap_opening_uses_due_date_when_invoice_date_is_blank(self):
+		created_purchase_invoices = {}
+		created_docs = []
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Purchase Invoice" and isinstance(filters, dict):
+				key = (filters.get("supplier"), filters.get("bill_no"), filters.get("company"))
+				return created_purchase_invoices.get(key)
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Purchase Invoice":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"PINV-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+				created_purchase_invoices[(doc.supplier, doc.bill_no, doc.company)] = doc.name
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.db.set_value = MagicMock()
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.log_error = MagicMock()
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		rows = [
+			{
+				"billed_to": "BEBANG SHAW INC",
+				"supplier_name": "FORWARD DYNAMIC ",
+				"invoice_no.": "16944",
+				"invoice_date": "",
+				"date_entry": "Feb 19, 2026",
+				"due_date": "2026-01-31",
+				"outstanding_balance": 17000,
+				"status": "MANUAL",
+			},
+		]
+
+		with (
+			patch.object(erp_sync, "_ensure_ap_opening_item", return_value="ERP-SYNC-AP-OPENING"),
+			patch.object(erp_sync, "_normalize_company", return_value="BEI"),
+			patch.object(erp_sync, "_ensure_supplier", return_value="FORWARD DYNAMIC"),
+			patch.object(erp_sync, "_default_expense_account", return_value="Expense - BEI"),
+			patch.object(erp_sync, "_default_payable_account", return_value="Payable - BEI"),
+			patch.object(erp_sync, "_default_cost_center", return_value="Main - BEI"),
+			patch.object(
+				erp_sync,
+				"_get_bei_supplier_invoice_exception_config",
+				return_value={"allowed": False, "reason": ""},
+			),
+			patch.object(erp_sync, "_doctype_has_field", return_value=True),
+		):
+			result = erp_sync.sync_ap_opening("Supplier SOA", rows, "chk-ap-soa-date-fallback-1")
+
+		self.assertEqual(result["rows_created"], 1)
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(created_docs[0].bill_date, "2026-01-31")
+		self.assertEqual(created_docs[0].posting_date, "2026-01-31")
+		self.assertEqual(created_docs[0].due_date, "2026-01-31")
 
 	def test_sync_ap_opening_rejects_missing_invoice_for_non_whitelisted_supplier(self):
 		def db_exists(doctype, name=None):

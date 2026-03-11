@@ -22,6 +22,12 @@ def _install_base_frappe():
 	else:
 		utils = sys.modules["frappe.utils"]
 
+	if "frappe.exceptions" not in sys.modules:
+		exceptions = types.ModuleType("frappe.exceptions")
+		sys.modules["frappe.exceptions"] = exceptions
+	else:
+		exceptions = sys.modules["frappe.exceptions"]
+
 	def whitelist(*args, **kwargs):
 		def decorator(fn):
 			return fn
@@ -35,6 +41,7 @@ def _install_base_frappe():
 	frappe.PermissionError = type("PermissionError", (Exception,), {})
 	frappe.ValidationError = type("ValidationError", (Exception,), {})
 	frappe.DoesNotExistError = type("DoesNotExistError", (Exception,), {})
+	exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
 	frappe.local = types.SimpleNamespace(
 		session=types.SimpleNamespace(user="tester@bebang.ph"),
 		db=types.SimpleNamespace(
@@ -130,6 +137,19 @@ def _install_store_deps():
 	)
 
 
+def _install_picking_deps():
+	_install_base_frappe()
+	_ensure_module("hrms")
+	_ensure_module("hrms.api")
+	_ensure_module("hrms.utils")
+	_ensure_module("hrms.utils.bei_config", get_company=lambda: "Bebang Enterprise Inc.")
+	_ensure_module(
+		"hrms.utils.scm_roles",
+		SCM_PICKING_ROLES=["System Manager"],
+		check_scm_permission=lambda roles, action: None,
+	)
+
+
 def _load_module(module_name: str, relative_path: str):
 	spec = importlib.util.spec_from_file_location(module_name, ROOT / relative_path)
 	module = importlib.util.module_from_spec(spec)
@@ -149,6 +169,51 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		billing.frappe.db.has_column = lambda doctype, fieldname: fieldname == "vehicle_owner"
 		self.assertEqual(billing._trip_partner_field_sql(), "dt.vehicle_owner")
 		self.assertEqual(billing._trip_vehicle_join_sql(), "")
+
+	def test_billing_trip_query_uses_zero_for_missing_optional_trip_columns(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_query_under_test", "hrms/api/billing.py")
+
+		billing.frappe.db.has_column = lambda doctype, fieldname: fieldname in {"vehicle_owner", "store"}
+		query = billing._get_3pl_trip_query()
+
+		self.assertIn("0 AS overtime_hours", query)
+		self.assertIn("0 AS is_holiday_trip", query)
+		self.assertIn("0 AS is_weekend_trip", query)
+		self.assertNotIn("dt.overtime_hours", query)
+		self.assertIn("GROUP_CONCAT(DISTINCT ds.store SEPARATOR ', ') AS stores", query)
+		self.assertIn("COALESCE(dt.vehicle_owner, '') != ''", query)
+		self.assertIn("dt.docstatus < 2", query)
+		self.assertNotIn("ds.department", query)
+
+	def test_billing_trip_query_falls_back_to_legacy_trip_stop_department(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_trip_stop_under_test", "hrms/api/billing.py")
+
+		billing.frappe.db.has_column = lambda doctype, fieldname: fieldname in {"vehicle_owner", "department"}
+		query = billing._get_3pl_trip_query()
+
+		self.assertIn("GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores", query)
+		self.assertIn("COALESCE(dt.vehicle_owner, '') != ''", query)
+		self.assertIn("dt.docstatus < 2", query)
+		self.assertNotIn("ds.store", query)
+
+	def test_billing_trip_count_query_includes_non_submittable_trip_rows(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_trip_count_under_test", "hrms/api/billing.py")
+
+		billing.frappe.db.has_column = lambda doctype, fieldname: False
+		query = billing._get_3pl_trip_count_query()
+
+		self.assertIn("dt.docstatus < 2", query)
+
+	def test_billing_normalizes_live_partner_aliases(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_partner_alias_under_test", "hrms/api/billing.py")
+
+		self.assertEqual(billing._normalize_3pl_partner_label("Four Coolitz"), "COOLITZ")
+		self.assertEqual(billing._normalize_3pl_partner_label("coolitz"), "COOLITZ")
+		self.assertEqual(billing._normalize_3pl_partner_label("RCS"), "RCS")
 
 	def test_dispatch_maps_cell_number_back_to_cell_phone(self):
 		_install_dispatch_deps()
@@ -208,6 +273,33 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		self.assertEqual(result["inventory_variance_total"], 0)
 		self.assertEqual(result["cashier_signoff"], 1)
 		self.assertEqual(result["production_signoff"], 0)
+
+	def test_picking_resolves_source_warehouse_from_linked_route(self):
+		_install_picking_deps()
+		picking = _load_module("picking_s27_under_test", "hrms/api/picking.py")
+
+		def fake_get_value(doctype, filters, fieldname=None, as_dict=False):
+			if doctype == "BEI Route":
+				if filters == "BEI-ROUTE-0001":
+					return "TEST-COMMISSARY - BEI"
+				if filters == {"route_name": "S027 Pick Route"}:
+					return "TEST-COMMISSARY - BEI"
+			if doctype == "Warehouse":
+				return "UNEXPECTED-WAREHOUSE"
+			return None
+
+		picking.frappe.db.get_value = fake_get_value
+
+		trip = types.SimpleNamespace(
+			warehouse="",
+			source_warehouse="",
+			route="BEI-ROUTE-0001",
+			route_name="S027 Pick Route",
+		)
+		self.assertEqual(picking._resolve_trip_source_warehouse(trip), "TEST-COMMISSARY - BEI")
+
+		trip.route = ""
+		self.assertEqual(picking._resolve_trip_source_warehouse(trip), "TEST-COMMISSARY - BEI")
 
 
 if __name__ == "__main__":

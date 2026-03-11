@@ -24,6 +24,21 @@ Runtime state file:
 Per-run output directory:
 - `sites/<site>/private/files/store_inventory_shadow_sync_runs/YYYY-MM-DD_store_inventory_shadow_sync/`
 
+## Resumability
+
+The bridge checkpoints progress after each processed store.
+
+What gets checkpointed:
+- runtime registry CSV
+- runtime state JSON
+- `summary.json`
+- `summary.md`
+
+Operational effect:
+- if a deploy or worker restart interrupts the batch, already completed stores keep their updated checksum and success markers
+- the next rerun skips unchanged completed stores instead of starting the whole day from zero
+- workbook exports are written to `.xlsx.part` first and only promoted to `.xlsx` after a successful download, so a killed download does not leave a fake finished workbook
+
 ## Resolution Policy
 
 The bridge resolves quantity in this order:
@@ -65,6 +80,21 @@ Policy:
 
 This is an operational mirror policy, not a claim that the workbook contains true batch lineage.
 
+## Shadow Valuation Policy
+
+The store sheets do not carry reliable valuation data. For each imported row, the bridge tries valuation in this order:
+
+1. explicit payload `valuation_rate`
+2. existing `Bin.valuation_rate` for the same store warehouse
+3. latest positive `Stock Ledger Entry` valuation for the same store warehouse
+4. any positive `Bin` / `Stock Ledger Entry` valuation for the same item elsewhere in Frappe
+5. `Item.valuation_rate`
+6. `Item.last_purchase_rate`
+
+If none of those produce a positive rate and the row is part of the pre-cutover shadow sync, the bridge sets `allow_zero_valuation_rate = 1` so the operational qty can still mirror into Frappe.
+
+This zero-rate fallback is temporary and operational. It keeps `Bin.actual_qty` correct for ordering, but it is not a substitute for real stock valuation policy.
+
 ## Operator Controls
 
 Edit the runtime registry CSV, not the fixture, to control live behavior.
@@ -73,6 +103,9 @@ Relevant columns:
 - `sheet_sync_enabled`
 - `state`
 - `notes`
+
+Company binding:
+- each `Stock Reconciliation` posts under the target warehouse's owning company, not the global default company
 
 Allowed active state for the bridge:
 - `shadow_sync`
@@ -112,6 +145,7 @@ Expected healthy outcome:
 - changed stores imported once
 - unchanged stores skipped by checksum
 - only formula-error rows remain in exceptions
+- `summary.json.status = completed`
 
 ## Recovery
 
@@ -135,4 +169,10 @@ If the registry is corrupted:
 1. Back up the runtime CSV
 2. Replace it with the fixture copy
 3. Restore the needed `state` / `sheet_sync_enabled` edits
+
+If the job is interrupted mid-batch by deploy or worker restart:
+
+1. Confirm the last `summary.json` shows `status = in_progress` or stale counters
+2. Rerun the same run date with `force=True`
+3. Expect already checkpointed stores to skip by checksum and the batch to continue from the remaining stores
 

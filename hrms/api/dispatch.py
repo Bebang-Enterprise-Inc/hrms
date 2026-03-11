@@ -12,6 +12,7 @@ from typing import Any
 
 import frappe
 from frappe import _
+from frappe.exceptions import TimestampMismatchError
 from frappe.utils import cint, flt, now_datetime, nowdate
 
 from hrms.utils.delivery_billing_policy import (
@@ -207,6 +208,9 @@ def confirm_departure(
 	trip.status = "In Transit"
 	_enable_role_gated_write(trip)
 	trip.save(ignore_permissions=True)
+	_set_store_orders_in_transit(
+		[{"store_order": getattr(stop, "store_order", "")} for stop in getattr(trip, "stops", [])]
+	)
 
 	return {"success": True, "message": f"Trip {trip_name} departed at {trip.departure_time}"}
 
@@ -247,22 +251,51 @@ def confirm_delivery(
 	"""Confirm delivery at a specific stop. stop_idx is 1-based."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "confirm delivery")
 
-	trip = frappe.get_doc("BEI Distribution Trip", trip_name)
-
-	if trip.status not in ["In Transit", "Partial"]:
-		frappe.throw(_("Trip is not in transit"))
-
-	stop = _get_stop(trip, stop_idx)
-	stop.status = "Delivered"
-	stop.arrival_time = now_datetime()
-	stop.signature = signature
-	stop.signed_by = signed_by
-
 	# Auto-generate delivery billing (async, feature-flagged).
 	# GAP-092 policy: missing setting defaults to enabled.
 	auto_create_setting = frappe.db.get_single_value("BEI Settings", "billing_auto_create_on_delivery")
-	if should_auto_create_billing_on_delivery(auto_create_setting):
-		stop.billing_creation_status = "Pending"
+	auto_create_delivery_billing = should_auto_create_billing_on_delivery(auto_create_setting)
+
+	trip = None
+	stop = None
+	delivered = 0
+	total = 0
+	stop_was_updated = False
+
+	for attempt in range(3):
+		trip = frappe.get_doc("BEI Distribution Trip", trip_name)
+		stop = _get_stop(trip, stop_idx)
+		stop_was_updated = False
+
+		if stop.status == "Delivered":
+			delivered, total = _update_trip_status(trip)
+			break
+
+		if trip.status not in ["In Transit", "Partial"]:
+			frappe.throw(_("Trip is not in transit"))
+
+		stop.status = "Delivered"
+		stop.arrival_time = now_datetime()
+		stop.signature = signature
+		stop.signed_by = signed_by
+		if auto_create_delivery_billing:
+			stop.billing_creation_status = "Pending"
+
+		delivered, total = _update_trip_status(trip)
+		_enable_role_gated_write(trip)
+
+		try:
+			trip.save(ignore_permissions=True)
+			stop_was_updated = True
+			break
+		except TimestampMismatchError:
+			frappe.db.rollback()
+			if attempt == 2:
+				raise
+	else:
+		frappe.throw(_("Unable to confirm delivery right now. Please try again."))
+
+	if auto_create_delivery_billing and stop_was_updated:
 		frappe.enqueue(
 			"hrms.api.dispatch._create_delivery_billing",
 			queue="default",
@@ -271,12 +304,8 @@ def confirm_delivery(
 			enqueue_after_commit=True,
 		)
 
-	delivered, total = _update_trip_status(trip)
-	_enable_role_gated_write(trip)
-	trip.save(ignore_permissions=True)
-
 	# Update linked BEI Store Order status to "Delivered"
-	if hasattr(stop, "store_order") and stop.store_order:
+	if stop_was_updated and hasattr(stop, "store_order") and stop.store_order:
 		_set_store_order_status(stop.store_order, "Delivered")
 
 	# PHASE 1A: Send "1 stop away" notification to next stop
@@ -284,16 +313,17 @@ def confirm_delivery(
 	try:
 		current_stop_order = int(stop_idx)
 		next_stop = None
-		for s in trip.stops:
-			if s.stop_order == current_stop_order + 1 and s.status == "Pending":
-				next_stop = s
-				break
+		if stop_was_updated:
+			for s in trip.stops:
+				if s.stop_order == current_stop_order + 1 and s.status == "Pending":
+					next_stop = s
+					break
 
-		if next_stop and trip.departure_time:
-			eta_window = _calculate_eta(trip, next_stop.stop_order).get("eta_window") or {}
-			eta_range = f"{eta_window.get('min', '')} - {eta_window.get('max', '')}".strip(" -")
+			if next_stop and trip.departure_time:
+				eta_window = _calculate_eta(trip, next_stop.stop_order).get("eta_window") or {}
+				eta_range = f"{eta_window.get('min', '')} - {eta_window.get('max', '')}".strip(" -")
 
-			_send_delivery_notification(trip.driver or "Driver", next_stop.store, eta_range)
+				_send_delivery_notification(trip.driver or "Driver", next_stop.store, eta_range)
 	except Exception as e:
 		# CRITICAL: Notification failures must not block delivery confirmation
 		frappe.log_error(
@@ -615,7 +645,7 @@ def _create_delivery_billing(
 		frappe.db.savepoint(savepoint_name)
 
 		# I-04 fix: Duplicate check before creating billing
-		existing = frappe.db.exists(
+		existing = frappe.db.get_value(
 			"BEI Billing Schedule",
 			{
 				"trip_reference": trip.name,
@@ -623,11 +653,19 @@ def _create_delivery_billing(
 				"billing_type": "Delivery",
 				"status": ["not in", ["Cancelled"]],
 			},
+			["name", "goods_value"],
+			as_dict=True,
 		)
 		if existing:
-			stop.billing_reference = existing
-			stop.billing_creation_status = "Success"
-			trip.save(ignore_permissions=True)
+			frappe.db.set_value(
+				"BEI Trip Stop",
+				stop.name,
+				{
+					"billing_reference": existing.name,
+					"delivery_value": flt(existing.goods_value or 0),
+					"billing_creation_status": "Success",
+				},
+			)
 			frappe.db.release_savepoint(savepoint_name)
 			return
 
@@ -711,11 +749,16 @@ def _create_delivery_billing(
 			_set_if_column(billing, "exception_approval_audit_log", exception_trace.get("approval_audit_log"))
 		billing.insert(ignore_permissions=True)
 
-		# Update stop with billing reference
-		stop.billing_reference = billing.name
-		stop.delivery_value = goods_value
-		stop.billing_creation_status = "Success"
-		trip.save(ignore_permissions=True)
+		# Update stop with billing reference without re-saving the parent trip.
+		frappe.db.set_value(
+			"BEI Trip Stop",
+			stop.name,
+			{
+				"billing_reference": billing.name,
+				"delivery_value": goods_value,
+				"billing_creation_status": "Success",
+			},
+		)
 
 		# C-06 fix: No explicit commit inside enqueued job -- Frappe
 		# auto-commits when the enqueued function returns successfully.
@@ -726,13 +769,12 @@ def _create_delivery_billing(
 			frappe.db.rollback(save_point=savepoint_name)
 		except Exception:
 			pass
-		frappe.log_error(
-			f"Failed to create billing for {trip_name} stop {stop_idx}: {e!s}", "Billing Creation Error"
-		)
+		error_title = f"Failed to create billing for {trip_name} stop {stop_idx}: {e!s}"
+		if len(error_title) > 140:
+			error_title = f"{error_title[:137]}..."
+		frappe.log_error(error_title, "Billing Creation Error")
 		try:
-			trip.reload()
-			trip.stops[int(stop_idx) - 1].billing_creation_status = "Failed"
-			trip.save(ignore_permissions=True)
+			frappe.db.set_value("BEI Trip Stop", stop.name, "billing_creation_status", "Failed")
 		except Exception:
 			pass
 
@@ -754,8 +796,7 @@ def _fail_stop(
 ):
 	"""Mark a stop as failed and log the error. Used during billing creation."""
 	frappe.log_error(error_message, title)
-	stop.billing_creation_status = "Failed"
-	trip.save(ignore_permissions=True)
+	frappe.db.set_value("BEI Trip Stop", stop.name, "billing_creation_status", "Failed")
 	frappe.db.release_savepoint(savepoint)
 
 
@@ -763,9 +804,24 @@ def _get_order_goods_value(store_order: str | None):
 	"""Calculate the total goods value from a store order's line items."""
 	if not store_order:
 		return 0
+
+	qty_fields = []
+	for fieldname in ("qty", "qty_delivered", "qty_approved", "qty_requested"):
+		if _has_column("BEI Store Order Item", fieldname):
+			qty_fields.append(fieldname)
+
+	if not qty_fields:
+		return 0
+
+	if qty_fields[0] == "qty":
+		qty_expr = "qty"
+	else:
+		non_zero_candidates = [f"NULLIF({fieldname}, 0)" for fieldname in qty_fields[:-1]]
+		qty_expr = f"COALESCE({', '.join([*non_zero_candidates, qty_fields[-1], '0'])})"
+
 	result = frappe.db.sql(
-		"""
-        SELECT COALESCE(SUM(qty * unit_price), 0)
+		f"""
+        SELECT COALESCE(SUM(({qty_expr}) * unit_price), 0)
         FROM `tabBEI Store Order Item`
         WHERE parent = %s
     """,
@@ -977,8 +1033,8 @@ def _set_store_order_status(store_order_name: str, status: str):
 
 def _set_store_orders_in_transit(stops: list[dict[str, Any]]):
 	"""
-	After a trip is created, set all linked BEI Store Orders to "In Transit".
-	Only affects orders that were in "Ready for Dispatch" status.
+	After a trip departs, set all linked BEI Store Orders to "In Transit".
+	Only affects orders already allocated to the departing trip.
 	"""
 	try:
 		for stop_data in stops:
@@ -1532,9 +1588,6 @@ def create_trip_from_route(
 
 	_enable_role_gated_write(trip)
 	trip.insert(ignore_permissions=True)
-
-	# Update linked BEI Store Orders to "In Transit"
-	_set_store_orders_in_transit(stops)
 
 	return {
 		"success": True,

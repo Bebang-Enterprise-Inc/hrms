@@ -4672,7 +4672,10 @@ def get_form_2307_data(
 
 
 @frappe.whitelist()
-def generate_acknowledgement_receipt(billing_name=None):
+def generate_acknowledgement_receipt(
+    billing_name: str | None = None,
+    simulate_chat_failure: int | bool = 0,
+) -> dict[str, str | bool]:
     """Generate an internal Acknowledgement Receipt (AR) for a billing payment.
 
     This is an INTERNAL document — NOT a BIR Official Receipt.
@@ -4680,6 +4683,7 @@ def generate_acknowledgement_receipt(billing_name=None):
 
     Args:
         billing_name: Name of the BEI Billing Schedule
+        simulate_chat_failure: Optional test hook for negative-path validation
 
     Returns:
         dict with ar_name
@@ -4703,21 +4707,36 @@ def generate_acknowledgement_receipt(billing_name=None):
     })
     ar.insert(ignore_permissions=True)
 
+    chat_notification_sent = True
+
     # Notify Accounting Private space via Google Chat (non-blocking)
     try:
-        _send_ar_chat_notification(ar, billing)
+        chat_notification_sent = _send_ar_chat_notification(
+            ar,
+            billing,
+            simulate_failure=bool(cint(simulate_chat_failure)),
+        )
+        if not chat_notification_sent:
+            raise RuntimeError("Google Chat notification returned False")
     except Exception as e:
+        chat_notification_sent = False
         frappe.log_error(
             f"Failed to send AR notification for {ar.name}: {e}",
             "AR Chat Notification Error",
         )
 
-    return {"ar_name": ar.name}
+    return {
+        "ar_name": ar.name,
+        "chat_notification_sent": chat_notification_sent,
+    }
 
 
-def _send_ar_chat_notification(ar, billing):
+def _send_ar_chat_notification(ar, billing, *, simulate_failure: bool = False) -> bool:
     """Send AR notification to Accounting Private Google Chat space."""
     from hrms.api.google_chat import send_message_to_space
+
+    if simulate_failure:
+        raise RuntimeError("Simulated Google Chat failure for acknowledgement receipt")
 
     message = (
         f"*Acknowledgement Receipt Generated*\n"
@@ -4729,7 +4748,7 @@ def _send_ar_chat_notification(ar, billing):
     )
 
     from hrms.utils.bei_config import get_chat_space, SPACE_ACCOUNTING
-    send_message_to_space(get_chat_space(SPACE_ACCOUNTING), message)
+    return send_message_to_space(get_chat_space(SPACE_ACCOUNTING), message)
 
 
 @frappe.whitelist()

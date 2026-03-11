@@ -11,7 +11,6 @@ Usage:
 import frappe
 from frappe import _
 
-
 # ============================================================
 # SCM Role Sets
 # ============================================================
@@ -27,23 +26,39 @@ SCM_PICKING_ROLES = {"Warehouse Manager", "Warehouse Staff", "Logistics Coordina
 # Ordering (ordering.py)
 ORDERING_STORE_ROLES = {"Store Staff", "Store Supervisor", "Store OIC", "System Manager"}
 ORDERING_WAREHOUSE_ROLES = {
-    "Area Supervisor",
-    "Regional Manager",
-    "HR Manager",
-    "Warehouse Manager",
-    "System Manager",
+	"Area Supervisor",
+	"Regional Manager",
+	"HR Manager",
+	"Warehouse Manager",
+	"System Manager",
 }
 ORDERING_APPROVAL_ROLES = {
-    "Area Supervisor",
-    "Regional Manager",
-    "HR Manager",
-    "Warehouse Manager",
-    "System Manager",
+	"Area Supervisor",
+	"Regional Manager",
+	"HR Manager",
+	"Warehouse Manager",
+	"System Manager",
 }
 
 # Billing (billing.py)
-RATE_MANAGEMENT_ROLES = {"Accounts Manager", "Supply Chain Manager", "System Manager"}
-SCM_BILLING_ROLES = {"Warehouse Manager", "Logistics Coordinator", "HR Manager", "System Manager"}
+RATE_MANAGEMENT_ROLES = {
+	"Accounts Manager",
+	"Supply Chain Manager",
+	"Warehouse Manager",
+	"Warehouse User",
+	"System Manager",
+}
+SCM_BILLING_ROLES = {
+	"Accounts Manager",
+	"Supply Chain Manager",
+	"Warehouse Manager",
+	"Warehouse User",
+	"Logistics Coordinator",
+	"HQ User",
+	"HQ Finance",
+	"HR Manager",
+	"System Manager",
+}
 
 # Inventory (inventory.py)
 SCM_INVENTORY_ROLES = {"Warehouse Manager", "Warehouse Staff", "Logistics Coordinator", "System Manager"}
@@ -60,19 +75,17 @@ SCM_APPROVAL_ROLES = {"Warehouse Manager", "Supply Chain Manager", "HR Manager",
 # Shared Permission Check
 # ============================================================
 
+
 def check_scm_permission(allowed_roles, action="access this resource"):
-    """Check if current user has any of the allowed roles.
+	"""Check if current user has any of the allowed roles.
 
-    Args:
-        allowed_roles: Set of role names that grant access
-        action: Description of the action for the error message
+	Args:
+	    allowed_roles: Set of role names that grant access
+	    action: Description of the action for the error message
 
-    Raises:
-        frappe.PermissionError: If user has none of the allowed roles
-    """
-    user_roles = set(frappe.get_roles(frappe.session.user))
-    if not user_roles.intersection(allowed_roles):
-        frappe.throw(
-            _("You do not have permission to {0}").format(action),
-            frappe.PermissionError
-        )
+	Raises:
+	    frappe.PermissionError: If user has none of the allowed roles
+	"""
+	user_roles = set(frappe.get_roles(frappe.session.user))
+	if not user_roles.intersection(allowed_roles):
+		frappe.throw(_("You do not have permission to {0}").format(action), frappe.PermissionError)

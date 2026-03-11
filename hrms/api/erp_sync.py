@@ -190,6 +190,15 @@ def _resolve_warehouse(raw_value: str | None) -> str | None:
 	return None
 
 
+def _company_for_warehouse(warehouse: str | None) -> str:
+	warehouse_name = str(warehouse or "").strip()
+	if warehouse_name:
+		warehouse_company = frappe.db.get_value("Warehouse", warehouse_name, "company")
+		if warehouse_company and frappe.db.exists("Company", warehouse_company):
+			return warehouse_company
+	return _normalize_company()
+
+
 def _coerce_metadata_dict(value: Any) -> dict[str, Any]:
 	if isinstance(value, dict):
 		return dict(value)
@@ -265,6 +274,76 @@ def _ensure_batch_exists(batch_id: str, item_code: str) -> str:
 	batch.description = _("Synthetic shadow batch for pre-cutover store inventory mirror")
 	batch.insert(ignore_permissions=True)
 	return batch.name
+
+
+def _latest_positive_rate(doctype: str, filters: dict[str, Any], order_by: str) -> float:
+	try:
+		rows = frappe.get_all(
+			doctype,
+			filters=filters,
+			fields=["valuation_rate"],
+			order_by=order_by,
+			limit=5,
+		)
+	except Exception:
+		return 0.0
+
+	for row in rows:
+		rate = _safe_float(row.get("valuation_rate"))
+		if rate > 0:
+			return rate
+	return 0.0
+
+
+def _resolve_inventory_valuation_rate(
+	item_code: str,
+	warehouse: str,
+	row: dict[str, Any],
+	*,
+	is_shadow_sync: bool,
+) -> tuple[float, bool]:
+	explicit_rate = _safe_float(_first_non_empty(row, "valuation_rate", "current_valuation_rate"))
+	explicit_allow_zero = bool(_sheet_flag(_first_non_empty(row, "allow_zero_valuation_rate")))
+	if explicit_rate > 0:
+		return explicit_rate, explicit_allow_zero
+
+	warehouse_bin_rate = _safe_float(
+		frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "valuation_rate")
+	)
+	if warehouse_bin_rate > 0:
+		return warehouse_bin_rate, explicit_allow_zero
+
+	same_warehouse_sle_rate = _latest_positive_rate(
+		"Stock Ledger Entry",
+		{"item_code": item_code, "warehouse": warehouse},
+		"posting_date desc, posting_time desc, creation desc",
+	)
+	if same_warehouse_sle_rate > 0:
+		return same_warehouse_sle_rate, explicit_allow_zero
+
+	any_bin_rate = _latest_positive_rate("Bin", {"item_code": item_code}, "actual_qty desc, warehouse asc")
+	if any_bin_rate > 0:
+		return any_bin_rate, explicit_allow_zero
+
+	any_sle_rate = _latest_positive_rate(
+		"Stock Ledger Entry",
+		{"item_code": item_code},
+		"posting_date desc, posting_time desc, creation desc",
+	)
+	if any_sle_rate > 0:
+		return any_sle_rate, explicit_allow_zero
+
+	item_rate = _safe_float(frappe.db.get_value("Item", item_code, "valuation_rate"))
+	if item_rate > 0:
+		return item_rate, explicit_allow_zero
+
+	if _doctype_has_field("Item", "last_purchase_rate"):
+		last_purchase_rate = _safe_float(frappe.db.get_value("Item", item_code, "last_purchase_rate"))
+		if last_purchase_rate > 0:
+			return last_purchase_rate, explicit_allow_zero
+
+	qty = _safe_float(_first_non_empty(row, "qty", "quantity", "stock"))
+	return 0.0, bool(explicit_allow_zero or (is_shadow_sync and qty > 0))
 
 
 def _persist_store_demand_outputs(
@@ -524,7 +603,9 @@ def _get_bei_supplier_invoice_exception_config(
 	return {
 		"bei_supplier": bei_supplier_name,
 		"allowed": bool(
-			cint(frappe.db.get_value("BEI Supplier", bei_supplier_name, "allow_missing_supplier_invoice") or 0)
+			cint(
+				frappe.db.get_value("BEI Supplier", bei_supplier_name, "allow_missing_supplier_invoice") or 0
+			)
 		),
 		"reason": frappe.db.get_value("BEI Supplier", bei_supplier_name, "missing_supplier_invoice_reason")
 		or "",
@@ -543,9 +624,7 @@ def _normalize_internal_ap_token(value: Any) -> str:
 	return text[:40]
 
 
-def _build_internal_ap_ref(
-	row: dict[str, Any], sheet_name: str, checksum: str, supplier_name: str
-) -> str:
+def _build_internal_ap_ref(row: dict[str, Any], sheet_name: str, checksum: str, supplier_name: str) -> str:
 	raw_reference = _first_non_empty(row, "purchase_order", "po_reference", "po_no", "po_number", "po")
 	if not raw_reference:
 		reference_candidate = _first_non_empty(row, "reference")
@@ -564,9 +643,11 @@ def _build_internal_ap_ref(
 		_safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date", "date_entry")) or nowdate()
 	).replace("-", "")
 	amount = _safe_float(_first_non_empty(row, "outstanding_balance", "balance", "outstanding", "amount"))
-	digest = hashlib.sha1(
-		f"{sheet_name}|{checksum}|{supplier_name}|{posting_date}|{amount}".encode()
-	).hexdigest()[:10].upper()
+	digest = (
+		hashlib.sha1(f"{sheet_name}|{checksum}|{supplier_name}|{posting_date}|{amount}".encode())
+		.hexdigest()[:10]
+		.upper()
+	)
 	return f"{AP_INTERNAL_REF_PREFIX}-SOA-{posting_date}-{digest}"
 
 
@@ -873,6 +954,13 @@ def _sync_inventory_rows(
 
 				batch_no = _ensure_batch_exists(batch_no, item_code)
 
+			valuation_rate, allow_zero_valuation_rate = _resolve_inventory_valuation_rate(
+				item_code,
+				warehouse,
+				row,
+				is_shadow_sync=is_shadow_sync,
+			)
+
 			if warehouse not in items_by_warehouse:
 				items_by_warehouse[warehouse] = {}
 
@@ -881,6 +969,8 @@ def _sync_inventory_rows(
 				"item_code": item_code,
 				"warehouse": warehouse,
 				"qty": qty,
+				"valuation_rate": valuation_rate,
+				"allow_zero_valuation_rate": 1 if allow_zero_valuation_rate else 0,
 				"batch_no": batch_no,
 				"serial_no": serial_no,
 				"use_serial_batch_fields": use_serial_batch_fields,
@@ -922,12 +1012,14 @@ def _sync_inventory_rows(
 			sr.purpose = "Stock Reconciliation"
 			sr.posting_date = nowdate()
 			sr.posting_time = now_datetime().strftime("%H:%M:%S")
-			sr.company = _normalize_company()
+			sr.company = _company_for_warehouse(warehouse)
 			expense_account = _default_expense_account(sr.company)
 			cost_center = _default_cost_center(sr.company)
 			if _doctype_has_field("Stock Reconciliation", "expense_account"):
 				if not expense_account:
-					frappe.throw(_("No stock adjustment expense account configured for company {0}").format(sr.company))
+					frappe.throw(
+						_("No stock adjustment expense account configured for company {0}").format(sr.company)
+					)
 				sr.expense_account = expense_account
 			if _doctype_has_field("Stock Reconciliation", "cost_center") and cost_center:
 				sr.cost_center = cost_center
@@ -945,6 +1037,12 @@ def _sync_inventory_rows(
 					"warehouse": warehouse,
 					"qty": item["qty"],
 				}
+				if item.get("valuation_rate") or item.get("allow_zero_valuation_rate"):
+					row_payload["valuation_rate"] = item.get("valuation_rate") or 0
+				if item.get("allow_zero_valuation_rate") and _doctype_has_field(
+					"Stock Reconciliation Item", "allow_zero_valuation_rate"
+				):
+					row_payload["allow_zero_valuation_rate"] = 1
 				if item.get("use_serial_batch_fields"):
 					row_payload["use_serial_batch_fields"] = 1
 				if item.get("batch_no"):
@@ -1440,9 +1538,9 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 	for row in rows:
 		savepoint: str | None = None
 		try:
-			supplier_input = _first_non_empty(row, "supplier", "supplier_name")
-			raw_reference = _first_non_empty(row, "reference")
-			invoice_no = _first_non_empty(row, "invoice_no", "invoice_no.", "bill_no")
+			supplier_input = _normalize_sheet_text(_first_non_empty(row, "supplier", "supplier_name"))
+			raw_reference = _normalize_sheet_text(_first_non_empty(row, "reference"))
+			invoice_no = _normalize_sheet_text(_first_non_empty(row, "invoice_no", "invoice_no.", "bill_no"))
 			if not invoice_no and raw_reference and not _looks_like_po_reference(raw_reference):
 				invoice_no = raw_reference
 			if not supplier_input:
@@ -1458,11 +1556,15 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 				results["rows_updated"] += 1
 				continue
 
+			explicit_posting_date = _safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date"))
+			due_date = _safe_date(_first_non_empty(row, "due_date"))
 			posting_date = (
-				_safe_date(_first_non_empty(row, "posting_date", "invoice_date", "date", "date_entry"))
+				explicit_posting_date
+				or due_date
+				or _safe_date(_first_non_empty(row, "date_entry"))
 				or nowdate()
 			)
-			due_date = _safe_date(_first_non_empty(row, "due_date")) or posting_date
+			due_date = due_date or posting_date
 
 			supplier = _ensure_supplier(str(supplier_input))
 			exception_config = _get_bei_supplier_invoice_exception_config(str(supplier_input), supplier)
@@ -1630,7 +1732,6 @@ def enqueue_scheduled_store_inventory_shadow_sync(
 		"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
 		queue="long",
 		job_id=job_id,
-		enqueue_after_commit=True,
 		run_date=run_date_value,
 		force=force_flag,
 	)
