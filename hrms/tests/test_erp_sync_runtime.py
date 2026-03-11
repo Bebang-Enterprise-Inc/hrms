@@ -35,7 +35,12 @@ def _install_fake_hrms():
 	store_inventory_mod.get_runtime_state_path = lambda: (
 		ROOT / "tmp" / "store_inventory_shadow_sync_state.json"
 	)
+	store_inventory_mod.get_runtime_registry_path = lambda: (
+		ROOT / "tmp" / "store_inventory_shadow_sync_registry.csv"
+	)
 	store_inventory_mod.load_runtime_state = lambda *args, **kwargs: {"stores": {}, "last_run": {}}
+	store_inventory_mod.load_store_registry = lambda *args, **kwargs: []
+	store_inventory_mod.save_store_registry = lambda *args, **kwargs: None
 	store_inventory_mod.save_runtime_state = lambda *args, **kwargs: None
 	sys.modules["hrms.utils.store_inventory_shadow_sync"] = store_inventory_mod
 	utils_pkg.store_inventory_shadow_sync = store_inventory_mod
@@ -222,6 +227,72 @@ class TestErpSyncRuntime(unittest.TestCase):
 		self.assertFalse(result["queued"])
 		self.assertEqual(result["reason"], "not_stale")
 		erp_sync.frappe.enqueue.assert_not_called()
+
+	def test_watch_store_inventory_shadow_sync_health_marks_completed_when_registry_already_synced(self):
+		runtime_state = {
+			"stores": {},
+			"last_run": {
+				"status": "in_progress",
+				"run_date": "2026-01-01",
+				"generated_at": "2026-01-01T07:00:00",
+				"updated_at": "2026-01-01T07:10:00",
+				"recovery_enqueued_at": "2026-01-01T07:20:00",
+			},
+		}
+		registry_rows = [
+			types.SimpleNamespace(
+				store_code="AFT",
+				sheet_sync_enabled=True,
+				state="shadow_sync",
+				last_inventory_date="2026-01-01",
+				last_success_at="2026-01-01T07:30:00",
+			),
+			types.SimpleNamespace(
+				store_code="AMM",
+				sheet_sync_enabled=True,
+				state="shadow_sync",
+				last_inventory_date="2026-01-01",
+				last_success_at="2026-01-01T07:31:00",
+			),
+		]
+		erp_sync.frappe.enqueue = MagicMock()
+
+		with (
+			patch.object(
+				erp_sync.store_inventory_shadow_sync_builder,
+				"load_runtime_state",
+				return_value=runtime_state,
+			),
+			patch.object(
+				erp_sync.store_inventory_shadow_sync_builder,
+				"load_store_registry",
+				return_value=registry_rows,
+			),
+			patch.object(
+				erp_sync.store_inventory_shadow_sync_builder,
+				"save_runtime_state",
+				MagicMock(),
+			) as save_state_mock,
+			patch.object(
+				erp_sync.store_inventory_shadow_sync_builder,
+				"save_store_registry",
+				MagicMock(),
+			) as save_registry_mock,
+		):
+			result = erp_sync.watch_store_inventory_shadow_sync_health(
+				run_date="2026-01-01",
+				stale_after_minutes=20,
+				cooldown_minutes=20,
+			)
+
+		self.assertFalse(result["queued"])
+		self.assertEqual(result["reason"], "already_complete")
+		self.assertEqual(runtime_state["last_run"]["status"], "completed")
+		self.assertEqual(runtime_state["last_run"]["failed_stores"], 0)
+		self.assertEqual(runtime_state["last_run"]["current_stage"], "completed")
+		erp_sync.frappe.enqueue.assert_not_called()
+		save_registry_mock.assert_called_once()
+		save_state_mock.assert_called_once()
 
 
 if __name__ == "__main__":

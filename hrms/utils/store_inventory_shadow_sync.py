@@ -923,6 +923,20 @@ def _set_last_run_state(
 	}
 
 
+def _store_runtime_row(store: StoreSyncConfig) -> dict[str, Any]:
+	return {
+		"last_checksum": store.last_checksum,
+		"last_success_at": store.last_success_at,
+		"last_import_rows": store.last_import_rows,
+		"last_inventory_date": store.last_inventory_date,
+		"last_error": store.last_error,
+	}
+
+
+def _store_completed_for_run_date(store: StoreSyncConfig, run_date_value: date) -> bool:
+	return bool(store.last_success_at) and store.last_inventory_date == run_date_value.isoformat()
+
+
 def run_store_inventory_shadow_sync(
 	*,
 	run_date: str | None = None,
@@ -972,6 +986,12 @@ def run_store_inventory_shadow_sync(
 			continue
 		if store.state not in IMPORTABLE_STATES:
 			skipped_non_shadow += 1
+			continue
+		if not force and _store_completed_for_run_date(store, run_date_value):
+			skipped_unchanged += 1
+			if store.last_error:
+				store.last_error = ""
+			runtime_state.setdefault("stores", {})[store.store_code] = _store_runtime_row(store)
 			continue
 		eligible_stores.append(store)
 
@@ -1058,24 +1078,12 @@ def run_store_inventory_shadow_sync(
 			store.last_success_at = _now_ts()
 			store.last_import_rows = len(payload_rows)
 			store.last_inventory_date = run_date_value.isoformat()
-			runtime_state.setdefault("stores", {})[store.store_code] = {
-				"last_checksum": store.last_checksum,
-				"last_success_at": store.last_success_at,
-				"last_import_rows": store.last_import_rows,
-				"last_inventory_date": store.last_inventory_date,
-				"last_error": store.last_error,
-			}
+			runtime_state.setdefault("stores", {})[store.store_code] = _store_runtime_row(store)
 
 		except Exception as exc:
 			store.last_error = str(exc)
 			failed_stores.append({"store_code": store.store_code, "error": str(exc)})
-			runtime_state.setdefault("stores", {})[store.store_code] = {
-				"last_checksum": store.last_checksum,
-				"last_success_at": store.last_success_at,
-				"last_import_rows": store.last_import_rows,
-				"last_inventory_date": store.last_inventory_date,
-				"last_error": store.last_error,
-			}
+			runtime_state.setdefault("stores", {})[store.store_code] = _store_runtime_row(store)
 
 		persist_progress(current_store=store, current_stage="completed_store")
 
