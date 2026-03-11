@@ -382,26 +382,26 @@ def _get_work_date(week_start_date: str, day_of_week: str):
 
 
 def _get_shift_assignment_conflicts(employee: str, work_date: str, row_key: str, plan_name: str):
-	assignments = frappe.get_all(
-		"Shift Assignment",
-		ignore_permissions=True,
-		filters={
-			"employee": employee,
-			"docstatus": 1,
-			"status": "Active",
-			"start_date": ["<=", work_date],
-		},
-		or_filters=[["end_date", ">=", work_date], ["end_date", "is", "not set"]],
-		fields=[
-			"name",
-			"shift_type",
-			"start_date",
-			"end_date",
-			"custom_bei_schedule_source",
-			"custom_bei_weekly_labor_plan",
-			"custom_bei_weekly_plan_row_key",
-		],
-	)
+	ShiftAssignment = frappe.qb.DocType("Shift Assignment")
+	assignments = (
+		frappe.qb.from_(ShiftAssignment)
+		.select(
+			ShiftAssignment.name,
+			ShiftAssignment.shift_type,
+			ShiftAssignment.start_date,
+			ShiftAssignment.end_date,
+			ShiftAssignment.custom_bei_schedule_source,
+			ShiftAssignment.custom_bei_weekly_labor_plan,
+			ShiftAssignment.custom_bei_weekly_plan_row_key,
+		)
+		.where(
+			(ShiftAssignment.employee == employee)
+			& (ShiftAssignment.docstatus == 1)
+			& (ShiftAssignment.status == "Active")
+			& (ShiftAssignment.start_date <= work_date)
+			& ((ShiftAssignment.end_date >= work_date) | (ShiftAssignment.end_date.isnull()))
+		)
+	).run(as_dict=True)
 
 	conflicts = []
 	for assignment in assignments:
@@ -604,22 +604,22 @@ def publish_weekly_plan(plan_name: str):
 
 	current_rows = []
 	current_keys = set()
-	existing_assignments = frappe.get_all(
-		"Shift Assignment",
-		ignore_permissions=True,
-		filters={
-			"custom_bei_schedule_source": SCHEDULE_SOURCE,
-			"custom_bei_weekly_labor_plan": plan.name,
-		},
-		fields=[
-			"name",
-			"shift_type",
-			"start_date",
-			"end_date",
-			"docstatus",
-			"custom_bei_weekly_plan_row_key",
-		],
-	)
+	ShiftAssignment = frappe.qb.DocType("Shift Assignment")
+	existing_assignments = (
+		frappe.qb.from_(ShiftAssignment)
+		.select(
+			ShiftAssignment.name,
+			ShiftAssignment.shift_type,
+			ShiftAssignment.start_date,
+			ShiftAssignment.end_date,
+			ShiftAssignment.docstatus,
+			ShiftAssignment.custom_bei_weekly_plan_row_key,
+		)
+		.where(
+			(ShiftAssignment.custom_bei_schedule_source == SCHEDULE_SOURCE)
+			& (ShiftAssignment.custom_bei_weekly_labor_plan == plan.name)
+		)
+	).run(as_dict=True)
 	existing_by_key = {
 		assignment.custom_bei_weekly_plan_row_key: assignment
 		for assignment in existing_assignments
