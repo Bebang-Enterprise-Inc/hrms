@@ -53,16 +53,16 @@ class TestSheetsReceiverTransforms(unittest.TestCase):
 
 		self.assertEqual(len(rows), 10)
 		self.assertEqual(rows[0]["inventory_key"], "3MD::PM001")
-		self.assertEqual(rows[0]["warehouse"], "3MD Logistics - Camangyanan - BEI")
+		self.assertEqual(rows[0]["warehouse"], "3MD Logistics – Camangyanan")
 		self.assertEqual(rows[0]["qty"], 73.0)
-		self.assertEqual(rows[1]["warehouse"], "Jentec Storage Inc. - BEI")
+		self.assertEqual(rows[1]["warehouse"], "Jentec Storage Inc.")
 		self.assertEqual(rows[1]["qty"], 0.0)
-		self.assertEqual(rows[3]["warehouse"], "Pinnacle Cold Storage - BEI")
+		self.assertEqual(rows[3]["warehouse"], "Pinnacle Cold Storage Solutions")
 		self.assertEqual(rows[3]["qty"], 23.0)
-		self.assertEqual(rows[4]["warehouse"], "Shaw BLVD - BEI")
+		self.assertEqual(rows[4]["warehouse"], "Shaw BLVD")
 		self.assertEqual(rows[4]["qty"], 0.0)
 		self.assertEqual(rows[5]["inventory_key"], "3MD::RM015")
-		self.assertEqual(rows[7]["warehouse"], "Royal Cold Storage - Taytay - BEI")
+		self.assertEqual(rows[7]["warehouse"], "Royal Cold Storage – Taytay (RCS)")
 		self.assertEqual(rows[7]["qty"], 0.0)
 
 	def test_inventory_summary_matrix_raises_when_expected_warehouses_are_missing(self):

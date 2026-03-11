@@ -13,11 +13,11 @@ from typing import Any
 INVENTORY_SUMMARY_MATRIX_TRANSFORMER = "inventory_summary_matrix"
 
 INVENTORY_SUMMARY_WAREHOUSE_MAP = {
-	"3MD": "3MD Logistics - Camangyanan - BEI",
-	"JENTEC": "Jentec Storage Inc. - BEI",
-	"RCS": "Royal Cold Storage - Taytay - BEI",
-	"PINNACLE": "Pinnacle Cold Storage - BEI",
-	"SHAW": "Shaw BLVD - BEI",
+	"3MD": "3MD Logistics – Camangyanan",
+	"JENTEC": "Jentec Storage Inc.",
+	"RCS": "Royal Cold Storage – Taytay (RCS)",
+	"PINNACLE": "Pinnacle Cold Storage Solutions",
+	"SHAW": "Shaw BLVD",
 }
 
 _INVENTORY_SECTION_MARKERS = {"DRY", "COLD", "FROZEN", "CHILLED"}
