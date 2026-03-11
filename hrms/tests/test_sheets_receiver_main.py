@@ -139,6 +139,11 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 		)
 		self.db = types.SimpleNamespace(has_successful_sync_since=MagicMock(return_value=False))
 		self.sheet_configs = {
+			"inventory": types.SimpleNamespace(
+				spreadsheet_id="inventory-book",
+				sheet_name="SUMMARY 2026",
+				enabled=True,
+			),
 			"ap_opening_balance": types.SimpleNamespace(
 				spreadsheet_id="ap-book",
 				sheet_name="05 - AP Opening Balance (PHP 24.4M)",
@@ -197,8 +202,8 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 
 		results = main_mod.run_daily_baseline_sync_if_due(now_utc=now_utc)
 
-		self.assertEqual(len(results), 6)
-		self.assertEqual(self.processor.sync_sheet.call_count, 6)
+		self.assertEqual(len(results), 7)
+		self.assertEqual(self.processor.sync_sheet.call_count, 7)
 		for call in self.processor.sync_sheet.call_args_list:
 			self.assertEqual(call.kwargs["trigger"], "daily_baseline")
 			self.assertTrue(call.kwargs["force"])
@@ -211,7 +216,7 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 
 		results = main_mod.run_daily_baseline_sync_if_due(now_utc=now_utc)
 
-		self.assertEqual(len(results), 5)
+		self.assertEqual(len(results), 6)
 		synced_sheet_names = [call.args[0].sheet_name for call in self.processor.sync_sheet.call_args_list]
 		self.assertNotIn("SUPPLIERS SOA", synced_sheet_names)
 
@@ -235,7 +240,7 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 
 		results = main_mod.run_daily_baseline_sync_if_due(now_utc=now_utc)
 
-		self.assertEqual(len(results), 6)
+		self.assertEqual(len(results), 7)
 		main_mod._maybe_generate_ap_exception_report.assert_called_once_with("daily_baseline")
 
 	def test_interval_baseline_sync_runs_when_enabled(self):
@@ -247,8 +252,8 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 
 		results = main_mod.run_interval_baseline_sync_job()
 
-		self.assertEqual(len(results), 6)
-		self.assertEqual(self.processor.sync_sheet.call_count, 6)
+		self.assertEqual(len(results), 7)
+		self.assertEqual(self.processor.sync_sheet.call_count, 7)
 		for call in self.processor.sync_sheet.call_args_list:
 			self.assertEqual(call.kwargs["trigger"], "interval_baseline")
 			self.assertTrue(call.kwargs["force"])

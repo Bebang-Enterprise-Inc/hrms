@@ -28,6 +28,7 @@ from .config import (
 from .frappe_client import SyncResult, get_frappe_client
 from .models import SyncLog, get_db
 from .sheets_client import get_sheets_client
+from .transforms import transform_sheet_rows
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +211,12 @@ class ChangeProcessor:
 		try:
 			# Fetch data from Google Sheets
 			range_name = f"{sheet_config.sheet_name}!{sheet_config.range}"
-			data, primary_checksum = self.sheets.fetch_sheet_data(sheet_config.spreadsheet_id, range_name)
+			if getattr(sheet_config, "data_transformer", None):
+				raw_rows, _raw_checksum = self.sheets.fetch_sheet_values(sheet_config.spreadsheet_id, range_name)
+				data = transform_sheet_rows(sheet_config.data_transformer, raw_rows)
+				primary_checksum = self.sheets.compute_checksum(data)
+			else:
+				data, primary_checksum = self.sheets.fetch_sheet_data(sheet_config.spreadsheet_id, range_name)
 			related_data, related_checksums = self._fetch_related_sheet_payload(sheet_config)
 			checksum = self._build_bundle_checksum(primary_checksum, related_checksums)
 

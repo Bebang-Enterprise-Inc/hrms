@@ -1,18 +1,9 @@
-"""
-Google Sheets and Drive API client for Sheets Receiver.
-
-Handles:
-- Fetching sheet data with proper value rendering
-- Setting up Drive push notifications (watches)
-- Stopping watches when no longer needed
-"""
-
+import logging
 import hashlib
 import json
 import uuid
-import logging
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -58,6 +49,23 @@ class SheetsClient:
             self._drive_service = build('drive', 'v3', credentials=self.credentials)
         return self._drive_service
 
+    def fetch_sheet_values(self, spreadsheet_id: str, range_name: str) -> Tuple[List[List[Any]], str]:
+        """Fetch raw sheet values and return them with a checksum."""
+        try:
+            result = self.sheets.spreadsheets().values().get(
+                spreadsheetId=spreadsheet_id,
+                range=range_name,
+                valueRenderOption='UNFORMATTED_VALUE',  # Critical for numbers/dates
+                dateTimeRenderOption='FORMATTED_STRING'
+            ).execute()
+
+            rows = result.get('values', [])
+            return rows, self.compute_checksum(rows)
+
+        except HttpError as e:
+            logger.error(f"Failed to fetch sheet {spreadsheet_id}: {e}")
+            raise
+
     def fetch_sheet_data(
         self,
         spreadsheet_id: str,
@@ -75,34 +83,22 @@ class SheetsClient:
         Returns:
             Tuple of (list of row dicts, data checksum)
         """
-        try:
-            result = self.sheets.spreadsheets().values().get(
-                spreadsheetId=spreadsheet_id,
-                range=range_name,
-                valueRenderOption='UNFORMATTED_VALUE',  # Critical for numbers/dates
-                dateTimeRenderOption='FORMATTED_STRING'
-            ).execute()
+        rows, _raw_checksum = self.fetch_sheet_values(spreadsheet_id, range_name)
+        if not rows:
+            return [], self.compute_checksum([])
 
-            rows = result.get('values', [])
-            if not rows:
-                return [], self._compute_checksum([])
+        if include_headers:
+            headers = [str(h).strip().lower().replace(' ', '_') for h in rows[0]]
+            data = []
+            for row in rows[1:]:
+                # Pad row to match headers length
+                padded = row + [''] * (len(headers) - len(row))
+                data.append(dict(zip(headers, padded)))
+        else:
+            data = [{'col_' + str(i): v for i, v in enumerate(row)} for row in rows]
 
-            if include_headers:
-                headers = [str(h).strip().lower().replace(' ', '_') for h in rows[0]]
-                data = []
-                for row in rows[1:]:
-                    # Pad row to match headers length
-                    padded = row + [''] * (len(headers) - len(row))
-                    data.append(dict(zip(headers, padded)))
-            else:
-                data = [{'col_' + str(i): v for i, v in enumerate(row)} for row in rows]
-
-            checksum = self._compute_checksum(data)
-            return data, checksum
-
-        except HttpError as e:
-            logger.error(f"Failed to fetch sheet {spreadsheet_id}: {e}")
-            raise
+        checksum = self.compute_checksum(data)
+        return data, checksum
 
     def get_spreadsheet_metadata(self, spreadsheet_id: str) -> Dict[str, Any]:
         """Get spreadsheet title and sheet names."""
@@ -251,7 +247,7 @@ class SheetsClient:
 
         return renewed
 
-    def _compute_checksum(self, data: List[Dict[str, Any]]) -> str:
+    def compute_checksum(self, data: Any) -> str:
         """Compute MD5 checksum of data for change detection."""
         content = json.dumps(data, sort_keys=True, default=str)
         return hashlib.md5(content.encode()).hexdigest()

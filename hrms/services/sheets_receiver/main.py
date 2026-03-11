@@ -65,6 +65,7 @@ DAILY_BASELINE_TRIGGER = "daily_baseline"
 INTERVAL_BASELINE_TRIGGER = "interval_baseline"
 DAILY_BASELINE_PHT_TIME = dt_time(hour=8, minute=0)
 DAILY_BASELINE_SHEET_KEYS = (
+	"inventory",
 	"ap_opening_balance",
 	"supplier_soa",
 	"procurement_suppliers",
@@ -210,7 +211,7 @@ def _run_baseline_sync(
 
 def run_daily_baseline_sync_if_due(now_utc: datetime | None = None):
 	"""
-	Force-sync AP and Procurement baseline sheets once per PHT day after 8:00 AM.
+	Force-sync Inventory, AP, and Procurement baseline sheets once per PHT day after 8:00 AM.
 
 	This does not rely on the host/container timezone. It checks whether each target
 	sheet already has a successful `daily_baseline` sync logged for the current PHT
