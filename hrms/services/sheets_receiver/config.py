@@ -63,6 +63,7 @@ class SheetConfig:
 	enabled: bool = True
 	sync_mode: str = "upsert"  # upsert, replace, append
 	related_sheet_keys: list[str] = field(default_factory=list)
+	data_transformer: str | None = None
 
 
 @dataclass
@@ -136,6 +137,7 @@ class ServiceConfig:
 
 # Sheets to watch and sync
 PROCUREMENT_COMPLIANCE_SPREADSHEET_ID = "1QWdoZlT7XWLppfVKpJ2VRXhbMkYtE5TbUwg4lMbO03Q"
+IAN_ACTIVE_INVENTORY_SPREADSHEET_ID = "19Hm25vaj9gD8p6z_M6-4CPWvcXaPzAeOFKlUZ298V4s"
 
 WATCHED_SHEETS: dict[str, SheetConfig] = {
 	"ar_aging": SheetConfig(
@@ -151,14 +153,15 @@ WATCHED_SHEETS: dict[str, SheetConfig] = {
 	),
 	"inventory": SheetConfig(
 		name="Inventory",
-		spreadsheet_id="1Eh_BhDK_LgdOzJ002F7XUYLBsd4EM8ec7sPz43mudGc",
+		spreadsheet_id=IAN_ACTIVE_INVENTORY_SPREADSHEET_ID,
 		sheet_name="SUMMARY 2026",  # Case-sensitive tab name
 		range="A:Z",
 		owner_email="ian@bebang.ph",
 		sync_endpoint="/api/method/hrms.api.erp_sync.sync_inventory",
 		doctype="Stock Reconciliation",
-		key_column="item_code",
+		key_column="inventory_key",
 		sync_mode="replace",
+		data_transformer="inventory_summary_matrix",
 	),
 	"coa": SheetConfig(
 		name="Chart of Accounts",

@@ -86,6 +86,10 @@ def _install_fake_sheets_receiver_dependencies():
 	frappe_client_mod.get_frappe_client = lambda: types.SimpleNamespace()
 	sys.modules["hrms.services.sheets_receiver.frappe_client"] = frappe_client_mod
 
+	transforms_mod = types.ModuleType("hrms.services.sheets_receiver.transforms")
+	transforms_mod.transform_sheet_rows = lambda _name, rows: rows
+	sys.modules["hrms.services.sheets_receiver.transforms"] = transforms_mod
+
 	change_tracker_mod = types.ModuleType("hrms.services.sheets_receiver.change_tracker")
 	change_tracker_mod.ChangeTracker = lambda _db: types.SimpleNamespace()
 	change_tracker_mod.ChangeReport = types.SimpleNamespace
@@ -126,9 +130,11 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 			log_sync=MagicMock(),
 		)
 		processor.sheets = types.SimpleNamespace(
+			fetch_sheet_values=MagicMock(return_value=([["header"], ["row"]], "raw-001")),
+			compute_checksum=MagicMock(return_value="chk-001"),
 			fetch_sheet_data=MagicMock(
 				return_value=([{"invoice_no": "SINV-0001", "outstanding": 1200}], "chk-001")
-			)
+			),
 		)
 		processor.frappe = types.SimpleNamespace(
 			sync_sheet_data=MagicMock(
@@ -273,6 +279,48 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 			call.kwargs["related_data"],
 			{"procurement_pr_items": [{"pr_no": "PR202510", "item_code": "CM34"}]},
 		)
+
+	def test_sync_sheet_uses_data_transformer_before_change_tracking(self):
+		processor = self._make_processor()
+		sheet_config = types.SimpleNamespace(
+			name="Inventory",
+			spreadsheet_id="sheet-003",
+			sheet_name="SUMMARY 2026",
+			range="A:Z",
+			key_column="inventory_key",
+			related_sheet_keys=[],
+			data_transformer="inventory_summary_matrix",
+		)
+		raw_rows = [
+			["SOH AS OF", "3/11"],
+			["CATEGORY", "ITEM DESCRIPTION", "MATERIAL CODE", "UOM", "3MD", "JENTEC"],
+			["", "", "", "", "REMAINING SOH", "REMAINING SOH"],
+			["PACKAGING", "16OZ CUP WITH LOGO", "PM001", "BOX", 73, ""],
+		]
+		transformed_rows = [
+			{
+				"inventory_key": "3MD::PM001",
+				"item_code": "PM001",
+				"warehouse": "3MD Logistics - Camangyanan - BEI",
+				"qty": 73.0,
+			}
+		]
+		processor.sheets.fetch_sheet_values = MagicMock(return_value=(raw_rows, "raw-001"))
+		processor.sheets.compute_checksum = MagicMock(return_value="chk-inventory")
+		processor_mod.transform_sheet_rows = MagicMock(return_value=transformed_rows)
+
+		log = processor.sync_sheet(sheet_config, trigger="manual")
+
+		self.assertEqual(log.status, "success")
+		processor.sheets.fetch_sheet_values.assert_called_once_with("sheet-003", "SUMMARY 2026!A:Z")
+		processor.sheets.fetch_sheet_data.assert_not_called()
+		processor_mod.transform_sheet_rows.assert_called_once_with("inventory_summary_matrix", raw_rows)
+		processor.change_tracker.compute_changes.assert_called_once()
+		self.assertEqual(
+			processor.change_tracker.compute_changes.call_args.kwargs["new_data"],
+			transformed_rows,
+		)
+		self.assertEqual(log.data_checksum, "chk-inventory")
 
 
 if __name__ == "__main__":

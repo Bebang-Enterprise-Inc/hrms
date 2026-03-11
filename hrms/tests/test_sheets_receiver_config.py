@@ -32,6 +32,19 @@ class TestSheetsReceiverConfig(unittest.TestCase):
 		self.assertTrue(ap_config.enabled)
 		self.assertFalse(supplier_soa_config.enabled)
 
+	def test_inventory_uses_active_march_workbook_and_matrix_transformer(self):
+		inventory_config = config.get_sheet_config("inventory")
+
+		self.assertIsNotNone(inventory_config)
+		self.assertEqual(
+			inventory_config.spreadsheet_id,
+			"19Hm25vaj9gD8p6z_M6-4CPWvcXaPzAeOFKlUZ298V4s",
+		)
+		self.assertEqual(inventory_config.sheet_name, "SUMMARY 2026")
+		self.assertEqual(inventory_config.key_column, "inventory_key")
+		self.assertEqual(inventory_config.data_transformer, "inventory_summary_matrix")
+		self.assertEqual(inventory_config.sync_mode, "replace")
+
 
 if __name__ == "__main__":
 	unittest.main()
