@@ -165,7 +165,7 @@ WATCHED_SHEETS: dict[str, SheetConfig] = {
 		sync_mode="replace",
 		data_transformer="inventory_summary_matrix",
 		sync_chunk_field="warehouse_source_code",
-		sync_chunk_max_rows=5,
+		sync_chunk_max_rows=1,
 	),
 	"coa": SheetConfig(
 		name="Chart of Accounts",

@@ -44,7 +44,7 @@ class TestSheetsReceiverConfig(unittest.TestCase):
 		self.assertEqual(inventory_config.key_column, "inventory_key")
 		self.assertEqual(inventory_config.data_transformer, "inventory_summary_matrix")
 		self.assertEqual(inventory_config.sync_chunk_field, "warehouse_source_code")
-		self.assertEqual(inventory_config.sync_chunk_max_rows, 5)
+		self.assertEqual(inventory_config.sync_chunk_max_rows, 1)
 		self.assertEqual(inventory_config.sync_mode, "replace")
 
 

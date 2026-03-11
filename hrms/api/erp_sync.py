@@ -88,7 +88,11 @@ def _is_duplicate_error(exc: Exception) -> bool:
 
 
 def _is_no_stock_ledger_entry_error(exc: Exception) -> bool:
-	return "no stock ledger entries were created" in str(exc).lower()
+	message = str(exc).lower()
+	return (
+		"no stock ledger entries were created" in message
+		or "none of the items have any change in quantity or value" in message
+	)
 
 
 def _ap_opening_store_label(row: dict[str, Any]) -> str | None:
