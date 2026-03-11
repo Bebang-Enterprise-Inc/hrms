@@ -3011,6 +3011,12 @@ def upload_pos_data(
 	    notes: Optional notes
 	    skip_date_validation: Skip date validation (for back-dated uploads with supervisor approval)
 	"""
+	frappe.throw(
+		_(
+			"Manual POS uploads are disabled. Sales now sync automatically via API. "
+			"Use Closing Report for X/Z-reading evidence, cash control, and POS-down exceptions."
+		)
+	)
 	validate_store_ops_role()
 
 	if not store:

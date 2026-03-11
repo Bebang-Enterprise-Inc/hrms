@@ -114,52 +114,34 @@ class TestStorePosUploadContract(unittest.TestCase):
 		self.assertEqual(captured["attached_to_field"], "sales_summary")
 		self.assertEqual(captured["content"], b"spreadsheet-bytes")
 
-	def test_upload_pos_data_sets_mismatch_flag_and_uses_generic_file_saver(self):
-		set_value_calls = []
-		saved_fields = []
-		doc = _FakePosUploadDoc()
+	def test_upload_pos_data_is_hard_disabled(self):
 		payload = base64.b64encode(b"xlsx-bytes").decode()
+		new_doc_calls = []
+		saved_fields = []
 
 		store.validate_store_ops_role = lambda: None
 		store.resolve_warehouse = lambda value: value
-		store.frappe.new_doc = lambda doctype: doc
-		store.frappe.db.set_value = lambda doctype, name, fieldname, value: set_value_calls.append(
-			(doctype, name, fieldname, value)
-		)
+		store.frappe.new_doc = lambda doctype: new_doc_calls.append(doctype) or _FakePosUploadDoc()
 		store.save_base64_file = lambda _data, _doctype, fieldname="attachment", default_ext="bin": (
 			saved_fields.append((fieldname, default_ext)) or f"/files/{fieldname}.{default_ext}"
 		)
 
-		result = store.upload_pos_data(
-			store="Araneta Gateway - Bebang Enterprise Inc.",
-			pos_date="2026-03-10",
-			pos_system="MOSAIC",
-			discount_report=payload,
-			transaction_report=payload,
-			product_mix=payload,
-			daily_sales_revenue=payload,
-			sales_summary=payload,
-			notes="regression test",
-		)
+		with self.assertRaises(Exception) as ctx:
+			store.upload_pos_data(
+				store="Araneta Gateway - Bebang Enterprise Inc.",
+				pos_date="2026-03-10",
+				pos_system="MOSAIC",
+				discount_report=payload,
+				transaction_report=payload,
+				product_mix=payload,
+				daily_sales_revenue=payload,
+				sales_summary=payload,
+				notes="regression test",
+			)
 
-		self.assertTrue(result["success"])
-		self.assertTrue(result["date_mismatch"])
-		self.assertEqual(result["name"], "POS-TEST-0001")
-		self.assertTrue(doc.inserted)
-		self.assertEqual(
-			saved_fields,
-			[
-				("discount_report", "xlsx"),
-				("transaction_report", "xlsx"),
-				("product_mix", "xlsx"),
-				("daily_sales_revenue", "xlsx"),
-				("sales_summary", "xlsx"),
-			],
-		)
-		self.assertEqual(
-			set_value_calls,
-			[("BEI POS Upload", "POS-TEST-0001", "has_date_mismatch", 1)],
-		)
+		self.assertIn("Manual POS uploads are disabled", str(ctx.exception))
+		self.assertEqual(new_doc_calls, [])
+		self.assertEqual(saved_fields, [])
 
 
 if __name__ == "__main__":
