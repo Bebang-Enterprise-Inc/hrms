@@ -953,9 +953,11 @@ def run_store_inventory_shadow_sync(
 		"status": "in_progress",
 		"run_date": run_date_value.isoformat(),
 		"generated_at": _now_ts(),
+		"updated_at": _now_ts(),
 		"imported_stores": imported_stores,
 		"skipped_unchanged": skipped_unchanged,
 		"failed_stores": len(failed_stores),
+		"recovery_enqueued_at": "",
 	}
 	_persist_shadow_sync_progress(
 		registry_rows=store_registry,
@@ -1044,9 +1046,11 @@ def run_store_inventory_shadow_sync(
 			"status": "in_progress",
 			"run_date": run_date_value.isoformat(),
 			"generated_at": _now_ts(),
+			"updated_at": _now_ts(),
 			"imported_stores": imported_stores,
 			"skipped_unchanged": skipped_unchanged,
 			"failed_stores": len(failed_stores),
+			"recovery_enqueued_at": "",
 		}
 		_persist_shadow_sync_progress(
 			registry_rows=store_registry,
@@ -1140,9 +1144,11 @@ def run_store_inventory_shadow_sync(
 		"status": "completed",
 		"run_date": run_date_value.isoformat(),
 		"generated_at": _now_ts(),
+		"updated_at": _now_ts(),
 		"imported_stores": imported_stores,
 		"skipped_unchanged": skipped_unchanged,
 		"failed_stores": len(failed_stores),
+		"recovery_enqueued_at": "",
 	}
 	summary = _build_shadow_sync_summary(
 		run_date=run_date_value.isoformat(),

@@ -3,9 +3,9 @@ import sys
 import tempfile
 import types
 import unittest
-from unittest.mock import MagicMock, patch
 from datetime import date
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from openpyxl import Workbook
 
@@ -271,10 +271,13 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 			seen_destinations.append(dest)
 			dest.write_bytes(b"workbook-bytes")
 
-		with tempfile.TemporaryDirectory() as tmp_dir, patch.object(
-			shadow_sync,
-			"_export_workbook_via_drive",
-			side_effect=fake_drive_export,
+		with (
+			tempfile.TemporaryDirectory() as tmp_dir,
+			patch.object(
+				shadow_sync,
+				"_export_workbook_via_drive",
+				side_effect=fake_drive_export,
+			),
 		):
 			result = shadow_sync.export_store_workbook(config, Path(tmp_dir), drive=None, sheets=None)
 			self.assertEqual(seen_destinations[0].suffixes[-2:], [".xlsx", ".part"])
@@ -398,6 +401,10 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 		self.assertEqual(persist_mock.call_count, 4)
 		self.assertEqual(persist_mock.call_args_list[0].kwargs["summary"]["status"], "in_progress")
 		self.assertEqual(persist_mock.call_args_list[-1].kwargs["summary"]["status"], "completed")
+		self.assertEqual(
+			persist_mock.call_args_list[0].kwargs["runtime_state"]["last_run"]["recovery_enqueued_at"], ""
+		)
+		self.assertIn("updated_at", persist_mock.call_args_list[-1].kwargs["runtime_state"]["last_run"])
 
 
 if __name__ == "__main__":

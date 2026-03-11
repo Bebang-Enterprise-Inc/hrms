@@ -314,6 +314,18 @@ def get_custom_fields():
 				"insert_after": "column_break_3",
 			},
 		],
+		"Stock Reconciliation": [
+			{
+				"fieldname": "custom_sync_ref",
+				"fieldtype": "Data",
+				"label": _("Sync Reference"),
+				"insert_after": "expense_account",
+				"hidden": 1,
+				"read_only": 1,
+				"no_copy": 1,
+				"description": _("Idempotency token for ERP sync retries and shadow sync recovery."),
+			},
+		],
 		"Terms and Conditions": [
 			{
 				"default": "1",
@@ -721,12 +733,8 @@ def create_user_type(user_type, data):
 			raise
 
 		# Cross-version compatibility: older role perms can fail stricter dependency checks.
-		frappe.db.sql(
-			"UPDATE `tabDocPerm` SET `create` = 1 WHERE `amend` = 1 AND `create` = 0"
-		)
-		frappe.db.sql(
-			"UPDATE `tabCustom DocPerm` SET `create` = 1 WHERE `amend` = 1 AND `create` = 0"
-		)
+		frappe.db.sql("UPDATE `tabDocPerm` SET `create` = 1 WHERE `amend` = 1 AND `create` = 0")
+		frappe.db.sql("UPDATE `tabCustom DocPerm` SET `create` = 1 WHERE `amend` = 1 AND `create` = 0")
 		frappe.db.commit()
 		doc.save(ignore_permissions=True)
 
