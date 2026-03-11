@@ -7,11 +7,12 @@ Supports daily incremental sync and full backfill.
 
 Usage:
     python scripts/sync_foodpanda_to_supabase.py --date 2026-02-14  # Daily sync
+    python scripts/sync_foodpanda_to_supabase.py --rolling-days 7    # Rolling catch-up sync
+    python scripts/sync_foodpanda_to_supabase.py --start-date 2026-02-25 --end-date 2026-03-10
     python scripts/sync_foodpanda_to_supabase.py --backfill          # Full backfill
 """
 
 import argparse
-import json
 import os
 import sys
 import requests
@@ -86,6 +87,7 @@ STORE_LOCATION_MAP = {
     'SM San Pablo': 2912,
     'The Grid - Rockwell': 2250,
     'Up Town Mall BGC': 2548,
+    'SM Sta Rosa': 2774,
     # Aliases from FoodPanda SUMMARY sheet (abbreviated names)
     'Fairview Terraces': 2220,
     'UP Town Center': 2425,
@@ -112,6 +114,12 @@ STORE_LOCATION_MAP = {
     'SM MOA': 2219,
     'Rob Antipolo': 2342,
 }
+
+
+def build_date_range(start_date: date, end_date: date) -> List[date]:
+    """Build inclusive date range."""
+    days = (end_date - start_date).days
+    return [start_date + timedelta(days=offset) for offset in range(days + 1)]
 
 def get_sheets_service():
     """Create Google Sheets API service with domain-wide delegation."""
@@ -213,13 +221,13 @@ def parse_decimal(value: Any) -> Optional[float]:
     except (ValueError, TypeError):
         return None
 
-def extract_foodpanda_orders(target_date: Optional[date] = None) -> List[Dict[str, Any]]:
+def extract_foodpanda_orders(target_dates: Optional[set[date]] = None) -> List[Dict[str, Any]]:
     """
     Extract FoodPanda orders from Google Sheet.
 
     Args:
-        target_date: If provided, only extract orders for this date (filters by business_date).
-                     If None, extract all orders.
+        target_dates: If provided, only extract orders matching these business dates.
+                      If None, extract all orders.
 
     Returns:
         List of order dictionaries ready for Supabase upsert.
@@ -289,8 +297,8 @@ def extract_foodpanda_orders(target_date: Optional[date] = None) -> List[Dict[st
             # Calculate business_date (date portion of order_received_at in Manila timezone)
             business_date = order_received_at.date()
 
-            # Filter by target_date if specified
-            if target_date and business_date != target_date:
+            # Filter by business date if specified
+            if target_dates and business_date not in target_dates:
                 skipped_wrong_date += 1
                 continue
 
@@ -334,7 +342,7 @@ def extract_foodpanda_orders(target_date: Optional[date] = None) -> List[Dict[st
     print(f"  ✅ Orders extracted: {len(orders)}")
     print(f"  ⚠️ Skipped (no mapping): {skipped_no_mapping}")
     print(f"  ⚠️ Skipped (no received_at): {skipped_no_received_at}")
-    if target_date:
+    if target_dates:
         print(f"  ⚠️ Skipped (wrong date): {skipped_wrong_date}")
 
     return orders
@@ -472,9 +480,24 @@ def main():
         help='Target date (YYYY-MM-DD) for incremental sync'
     )
     parser.add_argument(
+        '--start-date',
+        type=str,
+        help='Start date (YYYY-MM-DD) for inclusive date range sync'
+    )
+    parser.add_argument(
+        '--end-date',
+        type=str,
+        help='End date (YYYY-MM-DD) for inclusive date range sync'
+    )
+    parser.add_argument(
         '--daily',
         action='store_true',
         help='Sync yesterday\'s orders (for cron/CI usage)'
+    )
+    parser.add_argument(
+        '--rolling-days',
+        type=int,
+        help='Sync an inclusive rolling window ending yesterday (for late-arriving sheet updates)'
     )
     parser.add_argument(
         '--backfill',
@@ -486,39 +509,79 @@ def main():
         action='store_true',
         help='Extract and print summary without upserting to Supabase'
     )
+    parser.add_argument(
+        '--fail-on-empty',
+        action='store_true',
+        help='Exit non-zero if extraction returns zero orders'
+    )
 
     args = parser.parse_args()
 
     # Validate arguments
-    if sum([bool(args.date), args.daily, args.backfill]) > 1:
-        print("Cannot specify more than one of --date, --daily, --backfill")
+    mode_count = sum(
+        [
+            bool(args.date),
+            bool(args.start_date or args.end_date),
+            args.daily,
+            bool(args.rolling_days),
+            args.backfill,
+        ]
+    )
+    if mode_count > 1:
+        print("Cannot combine --date, --start-date/--end-date, --daily, --rolling-days, and --backfill")
+        return 1
+    if bool(args.start_date) != bool(args.end_date):
+        print("Must specify both --start-date and --end-date together")
         return 1
 
-    target_date = None
+    target_dates: Optional[set[date]] = None
     if args.date:
         try:
             target_date = datetime.strptime(args.date, '%Y-%m-%d').date()
+            target_dates = {target_date}
             print(f"Target date: {target_date}")
         except ValueError:
             print(f"Invalid date format: {args.date} (expected YYYY-MM-DD)")
             return 1
+    elif args.start_date and args.end_date:
+        try:
+            start_date = datetime.strptime(args.start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(args.end_date, '%Y-%m-%d').date()
+        except ValueError:
+            print("Invalid start/end date format (expected YYYY-MM-DD)")
+            return 1
+        if start_date > end_date:
+            print(f"Invalid date range: {start_date} is after {end_date}")
+            return 1
+        target_dates = set(build_date_range(start_date, end_date))
+        print(f"Date range mode - syncing {start_date} to {end_date} ({len(target_dates)} day(s))")
     elif args.daily:
         target_date = (datetime.now(MANILA_TZ) - timedelta(days=1)).date()
+        target_dates = {target_date}
         print(f"Daily mode - syncing yesterday: {target_date}")
+    elif args.rolling_days:
+        if args.rolling_days < 1:
+            print("--rolling-days must be at least 1")
+            return 1
+        end_date = (datetime.now(MANILA_TZ) - timedelta(days=1)).date()
+        start_date = end_date - timedelta(days=args.rolling_days - 1)
+        target_dates = set(build_date_range(start_date, end_date))
+        print(f"Rolling window mode - syncing {start_date} to {end_date} ({args.rolling_days} day(s))")
     elif args.backfill:
         print("Full backfill mode (extracting all orders)")
     else:
         # Default: today's date
         target_date = datetime.now(MANILA_TZ).date()
+        target_dates = {target_date}
         print(f"Default target date (today): {target_date}")
 
     # Extract orders
     print(f"\n📥 Extracting FoodPanda orders...")
-    orders = extract_foodpanda_orders(target_date)
+    orders = extract_foodpanda_orders(target_dates)
 
     if not orders:
         print("\n⚠️ No orders extracted")
-        return 0
+        return 1 if args.fail_on_empty else 0
 
     # Print summary
     print_summary(orders)

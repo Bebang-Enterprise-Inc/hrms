@@ -2,8 +2,8 @@ name: Daily POS & Web Orders Sync
 
 on:
   schedule:
-    # 00:00 PHT = 16:00 UTC
-    - cron: "0 16 * * *"
+    # 09:30 PHT = 01:30 UTC
+    - cron: "30 1 * * *"
   workflow_dispatch:
     inputs:
       target_date:
@@ -126,7 +126,9 @@ jobs:
             python scripts/sync_foodpanda_to_supabase.py \
               --date "${{ inputs.target_date }}"
           else
-            python scripts/sync_foodpanda_to_supabase.py --daily
+            python scripts/sync_foodpanda_to_supabase.py \
+              --rolling-days 7 \
+              --fail-on-empty
           fi
 
   # ── Step 4: Anomaly detection (AFTER all syncs complete) ─────────────────
