@@ -445,6 +445,123 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 		self.assertEqual(captured_last_runs[5]["current_store_code"], "AMM")
 		self.assertIn("updated_at", captured_last_runs[-1])
 
+	def test_run_store_inventory_shadow_sync_skips_store_already_synced_today(self):
+		completed_store = shadow_sync.StoreSyncConfig(
+			store_code="AFT",
+			store_name="Store One",
+			spreadsheet_id="sheet-1",
+			warehouse_name="Store One",
+			warehouse_docname="Store One - BEI",
+			last_checksum="checksum-1",
+			last_success_at="2026-03-10T08:00:00",
+			last_error="transient export failure",
+			last_import_rows=103,
+			last_inventory_date="2026-03-10",
+		)
+		pending_store = shadow_sync.StoreSyncConfig(
+			store_code="AMM",
+			store_name="Store Two",
+			spreadsheet_id="sheet-2",
+			warehouse_name="Store Two",
+			warehouse_docname="Store Two - BEI",
+		)
+		fake_erp_sync = types.ModuleType("hrms.api.erp_sync")
+		fake_erp_sync._sync_inventory_rows = MagicMock(
+			return_value={"rows_created": 1, "rows_updated": 0, "rows_failed": 0, "errors": []}
+		)
+		fake_api = types.ModuleType("hrms.api")
+		fake_api.erp_sync = fake_erp_sync
+
+		import hrms
+
+		original_api = getattr(hrms, "api", None)
+		original_api_module = sys.modules.get("hrms.api")
+		original_erp_sync_module = sys.modules.get("hrms.api.erp_sync")
+		hrms.api = fake_api
+		sys.modules["hrms.api"] = fake_api
+		sys.modules["hrms.api.erp_sync"] = fake_erp_sync
+		captured_states = []
+
+		try:
+			with tempfile.TemporaryDirectory() as tmp_dir:
+				tmp_path = Path(tmp_dir)
+				with (
+					patch.object(
+						shadow_sync,
+						"load_store_registry",
+						return_value=[completed_store, pending_store],
+					),
+					patch.object(shadow_sync, "load_item_mapping", return_value={}),
+					patch.object(shadow_sync, "ensure_required_master_data", return_value={}),
+					patch.object(shadow_sync, "_build_google_services", return_value=(None, None)),
+					patch.object(
+						shadow_sync,
+						"export_store_workbook",
+						return_value=tmp_path / "two.xlsx",
+					) as export_mock,
+					patch.object(
+						shadow_sync,
+						"extract_store_inventory_payload",
+						return_value={
+							"payload_rows": [
+								{
+									"store_code": "AMM",
+									"store_name": "Store Two",
+									"warehouse": "Store Two - BEI",
+									"item_code": "ITEM-2",
+									"qty": 2,
+									"qty_source": "encode",
+									"inventory_date": "2026-03-10",
+									"spreadsheet_id": "sheet-2",
+									"source_row": 4,
+									"workbook_path": str(tmp_path / "two.xlsx"),
+								}
+							],
+							"exception_rows": [],
+							"audit_rows": [],
+							"checksum": "checksum-2",
+						},
+					),
+					patch.object(
+						shadow_sync,
+						"_persist_shadow_sync_progress",
+						side_effect=lambda **kwargs: captured_states.append(
+							copy.deepcopy(kwargs["runtime_state"])
+						),
+					),
+				):
+					result = shadow_sync.run_store_inventory_shadow_sync(
+						run_date="2026-03-10",
+						force=False,
+						output_dir=str(tmp_path / "run"),
+						registry_path=str(tmp_path / "registry.csv"),
+						state_path=str(tmp_path / "state.json"),
+					)
+		finally:
+			if original_api is None:
+				delattr(hrms, "api")
+			else:
+				hrms.api = original_api
+			if original_api_module is None:
+				sys.modules.pop("hrms.api", None)
+			else:
+				sys.modules["hrms.api"] = original_api_module
+			if original_erp_sync_module is None:
+				sys.modules.pop("hrms.api.erp_sync", None)
+			else:
+				sys.modules["hrms.api.erp_sync"] = original_erp_sync_module
+
+		self.assertEqual(result["status"], "completed")
+		self.assertEqual(result["imported_stores"], 1)
+		self.assertEqual(result["skipped_unchanged"], 1)
+		self.assertEqual(export_mock.call_count, 1)
+		self.assertEqual(fake_erp_sync._sync_inventory_rows.call_count, 1)
+		self.assertEqual(completed_store.last_error, "")
+		self.assertEqual(
+			captured_states[0]["stores"]["AFT"]["last_error"],
+			"",
+		)
+
 
 if __name__ == "__main__":
 	unittest.main()

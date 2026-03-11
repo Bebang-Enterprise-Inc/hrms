@@ -1818,6 +1818,7 @@ def watch_store_inventory_shadow_sync_health(
 	run_date_value = _safe_date(run_date) or nowdate()
 	stale_after = max(cint(stale_after_minutes), 1)
 	cooldown = max(cint(cooldown_minutes), 1)
+	registry_file = store_inventory_shadow_sync_builder.get_runtime_registry_path()
 	state_file = (
 		Path(state_path) if state_path else store_inventory_shadow_sync_builder.get_runtime_state_path()
 	)
@@ -1835,6 +1836,53 @@ def watch_store_inventory_shadow_sync_health(
 			"reason": "run_date_mismatch",
 			"run_date": run_date_value,
 			"recorded_run_date": recorded_run_date,
+		}
+
+	try:
+		registry_rows = store_inventory_shadow_sync_builder.load_store_registry(registry_file)
+	except Exception:
+		registry_rows = []
+
+	importable_states = getattr(store_inventory_shadow_sync_builder, "IMPORTABLE_STATES", {"shadow_sync"})
+	enabled_rows = [
+		row
+		for row in registry_rows
+		if getattr(row, "sheet_sync_enabled", False) and getattr(row, "state", "") in importable_states
+	]
+	completed_rows = [
+		row
+		for row in enabled_rows
+		if _safe_date(getattr(row, "last_inventory_date", "")) == run_date_value
+		and bool(getattr(row, "last_success_at", ""))
+	]
+	if enabled_rows and len(completed_rows) == len(enabled_rows):
+		completed_at = _runtime_timestamp()
+		for row in completed_rows:
+			if getattr(row, "last_error", ""):
+				row.last_error = ""
+		try:
+			store_inventory_shadow_sync_builder.save_store_registry(registry_rows, registry_file)
+		except Exception:
+			pass
+		runtime_state["last_run"] = {
+			"status": "completed",
+			"run_date": run_date_value,
+			"generated_at": last_run.get("generated_at") or completed_at,
+			"updated_at": completed_at,
+			"imported_stores": len(completed_rows),
+			"skipped_unchanged": 0,
+			"failed_stores": 0,
+			"recovery_enqueued_at": "",
+			"current_store_code": "",
+			"current_store_name": "",
+			"current_stage": "completed",
+		}
+		store_inventory_shadow_sync_builder.save_runtime_state(runtime_state, state_file)
+		return {
+			"queued": False,
+			"reason": "already_complete",
+			"run_date": run_date_value,
+			"completed_stores": len(completed_rows),
 		}
 
 	now_value = now_datetime()
