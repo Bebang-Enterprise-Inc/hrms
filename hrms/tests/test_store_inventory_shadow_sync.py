@@ -3,9 +3,9 @@ import sys
 import tempfile
 import types
 import unittest
-from unittest.mock import MagicMock, patch
 from datetime import date
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from openpyxl import Workbook
 
