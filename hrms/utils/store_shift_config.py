@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-
 DEFAULT_SHIFT_OPTIONS = [
 	{
 		"shift_type_name": "Opening",
