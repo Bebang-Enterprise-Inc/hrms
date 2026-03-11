@@ -65,6 +65,7 @@ class SheetConfig:
 	related_sheet_keys: list[str] = field(default_factory=list)
 	data_transformer: str | None = None
 	sync_chunk_field: str | None = None
+	sync_chunk_max_rows: int = 0
 
 
 @dataclass
@@ -164,6 +165,7 @@ WATCHED_SHEETS: dict[str, SheetConfig] = {
 		sync_mode="replace",
 		data_transformer="inventory_summary_matrix",
 		sync_chunk_field="warehouse_source_code",
+		sync_chunk_max_rows=25,
 	),
 	"coa": SheetConfig(
 		name="Chart of Accounts",

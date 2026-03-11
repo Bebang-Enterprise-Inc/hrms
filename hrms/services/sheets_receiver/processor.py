@@ -190,6 +190,7 @@ class ChangeProcessor:
 	) -> list[tuple[str | None, list[dict[str, Any]]]]:
 		"""Split large logical sheets into stable sub-payloads when configured."""
 		chunk_field = getattr(sheet_config, "sync_chunk_field", None)
+		chunk_max_rows = max(0, int(getattr(sheet_config, "sync_chunk_max_rows", 0) or 0))
 		if not chunk_field or not data:
 			return [(None, data)]
 
@@ -198,7 +199,17 @@ class ChangeProcessor:
 			group_value = str(row.get(chunk_field) or "").strip() or "__empty__"
 			grouped.setdefault(group_value, []).append(row)
 
-		return [(group_key, grouped[group_key]) for group_key in sorted(grouped)]
+		chunks: list[tuple[str | None, list[dict[str, Any]]]] = []
+		for group_key in sorted(grouped):
+			rows = grouped[group_key]
+			if chunk_max_rows > 0 and len(rows) > chunk_max_rows:
+				for index in range(0, len(rows), chunk_max_rows):
+					chunk_number = (index // chunk_max_rows) + 1
+					chunks.append((f"{group_key}#{chunk_number}", rows[index : index + chunk_max_rows]))
+			else:
+				chunks.append((group_key, rows))
+
+		return chunks
 
 	def _sync_sheet_payload(
 		self,
@@ -220,11 +231,22 @@ class ChangeProcessor:
 			)
 
 		aggregate = SyncResult(success=True)
-		for chunk_key, chunk_rows in chunks:
+		for chunk_index, (chunk_key, chunk_rows) in enumerate(chunks, start=1):
+			chunk_checksum = checksum
+			if len(chunks) > 1:
+				chunk_payload = {
+					"checksum": checksum,
+					"chunk_key": chunk_key,
+					"chunk_index": chunk_index,
+					"rows": chunk_rows,
+				}
+				chunk_checksum = hashlib.md5(
+					json.dumps(chunk_payload, sort_keys=True, default=str).encode()
+				).hexdigest()
 			chunk_result = self.frappe.sync_sheet_data(
 				sheet_config,
 				chunk_rows,
-				checksum,
+				chunk_checksum,
 				related_data=related_data or None,
 			)
 			aggregate.success = aggregate.success and chunk_result.success

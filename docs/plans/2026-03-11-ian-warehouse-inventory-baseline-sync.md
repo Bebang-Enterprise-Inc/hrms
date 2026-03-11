@@ -33,7 +33,8 @@ Each transformed row is keyed by `inventory_key = <warehouse_code>::<item_code>`
 - Manual force sync endpoint:
   - `POST /api/sync/inventory?force=true`
 - Receiver sends `inventory` in per-warehouse chunks using `warehouse_source_code`
-  so each Frappe request stays below the gateway timeout envelope
+  and further caps each chunk at `25` rows so each Frappe request stays below the
+  gateway timeout envelope
 - Payload written to Frappe inventory sync:
   - `item_code`
   - `warehouse`
