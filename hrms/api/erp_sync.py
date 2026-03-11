@@ -87,6 +87,10 @@ def _is_duplicate_error(exc: Exception) -> bool:
 	return "duplicate" in message and "entry" in message
 
 
+def _is_no_stock_ledger_entry_error(exc: Exception) -> bool:
+	return "no stock ledger entries were created" in str(exc).lower()
+
+
 def _ap_opening_store_label(row: dict[str, Any]) -> str | None:
 	return _first_non_empty(row, "bei_store_label", "store_label", "warehouse", "store", "branch")
 
@@ -313,6 +317,7 @@ def _resolve_inventory_valuation_rate(
 	row: dict[str, Any],
 	*,
 	is_shadow_sync: bool,
+	is_inventory_baseline_sync: bool,
 ) -> tuple[float, bool]:
 	explicit_rate = _safe_float(_first_non_empty(row, "valuation_rate", "current_valuation_rate"))
 	explicit_allow_zero = bool(_sheet_flag(_first_non_empty(row, "allow_zero_valuation_rate")))
@@ -355,7 +360,7 @@ def _resolve_inventory_valuation_rate(
 			return last_purchase_rate, explicit_allow_zero
 
 	qty = _safe_float(_first_non_empty(row, "qty", "quantity", "stock"))
-	return 0.0, bool(explicit_allow_zero or (is_shadow_sync and qty > 0))
+	return 0.0, bool(explicit_allow_zero or ((is_shadow_sync or is_inventory_baseline_sync) and qty > 0))
 
 
 def _persist_store_demand_outputs(
@@ -919,6 +924,7 @@ def _sync_inventory_rows(
 
 	items_by_warehouse: dict[str, dict[str, dict[str, Any]]] = {}
 	is_shadow_sync = _is_store_inventory_shadow_sync(sheet_name)
+	is_inventory_baseline_sync = _is_inventory_baseline_sync(sheet_name)
 
 	for row in rows:
 		try:
@@ -991,6 +997,7 @@ def _sync_inventory_rows(
 				warehouse,
 				row,
 				is_shadow_sync=is_shadow_sync,
+				is_inventory_baseline_sync=is_inventory_baseline_sync,
 			)
 
 			if warehouse not in items_by_warehouse:
@@ -1097,6 +1104,9 @@ def _sync_inventory_rows(
 				if existing:
 					results["rows_updated"] += len(items)
 					continue
+			if _is_no_stock_ledger_entry_error(exc):
+				results["rows_updated"] += len(items)
+				continue
 			results["errors"].append(f"{warehouse}: {exc!s}")
 			results["rows_failed"] += len(items)
 

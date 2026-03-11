@@ -53,6 +53,11 @@ This produces warehouse-level `Stock Reconciliation` entries in Frappe using the
   lot detail.
 - This keeps Frappe batch validation satisfied while preserving a clear audit marker
   that these are baseline placeholder batches, not supplier-origin lot numbers.
+- When an inventory baseline item has no recoverable valuation source, the baseline sync
+  now allows zero valuation rate so quantities can land in Frappe instead of blocking the
+  whole warehouse cutover.
+- Warehouse chunks that result in no stock ledger movement are treated as successful no-op
+  syncs instead of hard failures.
 - On 2026-03-11, live reconciliation against `SUMMARY 2026` found only `9` missing
   item codes and all `9` were zero-stock rows, so they are treated as obsolete/no-op
   rows instead of cutover blockers.
