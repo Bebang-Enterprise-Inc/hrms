@@ -134,7 +134,7 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 			compute_checksum=MagicMock(return_value="chk-001"),
 			fetch_sheet_data=MagicMock(
 				return_value=([{"invoice_no": "SINV-0001", "outstanding": 1200}], "chk-001")
-			)
+			),
 		)
 		processor.frappe = types.SimpleNamespace(
 			sync_sheet_data=MagicMock(

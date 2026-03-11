@@ -212,7 +212,9 @@ class ChangeProcessor:
 			# Fetch data from Google Sheets
 			range_name = f"{sheet_config.sheet_name}!{sheet_config.range}"
 			if getattr(sheet_config, "data_transformer", None):
-				raw_rows, _raw_checksum = self.sheets.fetch_sheet_values(sheet_config.spreadsheet_id, range_name)
+				raw_rows, _raw_checksum = self.sheets.fetch_sheet_values(
+					sheet_config.spreadsheet_id, range_name
+				)
 				data = transform_sheet_rows(sheet_config.data_transformer, raw_rows)
 				primary_checksum = self.sheets.compute_checksum(data)
 			else:
