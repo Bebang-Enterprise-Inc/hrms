@@ -23,7 +23,11 @@
   "end_date",
   "shift_request",
   "shift_schedule_assignment",
-  "amended_from"
+  "amended_from",
+  "custom_bei_schedule_source",
+  "custom_bei_weekly_labor_plan",
+  "custom_bei_weekly_plan_row_key",
+  "custom_bei_publish_run_id"
  ],
  "fields": [
   {
@@ -86,6 +90,35 @@
    "no_copy": 1,
    "options": "Shift Assignment",
    "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_bei_schedule_source",
+   "fieldtype": "Data",
+   "label": "BEI Schedule Source",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_bei_weekly_labor_plan",
+   "fieldtype": "Link",
+   "label": "BEI Weekly Labor Plan",
+   "no_copy": 1,
+   "options": "BEI Weekly Labor Plan",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_bei_weekly_plan_row_key",
+   "fieldtype": "Data",
+   "label": "BEI Weekly Plan Row Key",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_bei_publish_run_id",
+   "fieldtype": "Data",
+   "label": "BEI Publish Run Id",
+   "no_copy": 1,
    "read_only": 1
   },
   {

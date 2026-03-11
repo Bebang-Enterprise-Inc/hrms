@@ -540,6 +540,123 @@ Use `PHOTO_DATA_URL` everywhere a photo field is tested.
 
 ---
 
+## Supervisor Labor Plan Module (5 scenarios)
+
+### SUPLABOR-001: Store Supervisor Saves Draft Weekly Labor Plan
+- **Type:** happy
+- **Role:** test.supervisor@bebang.ph
+- **Route:** `/dashboard/supervisor/labor-plan`
+- **Submit network:** `POST /api/supervisor/labor-plan`
+- **Payload:**
+  ```json
+  {
+    "store": "TEST-STORE-BGC - BEI",
+    "week_start": "2026-03-16",
+    "labor_budget": 40,
+    "shifts": [
+      {
+        "employee": "TEST-CREW-001",
+        "employee_name": "Test Crew 1",
+        "day_of_week": "Monday",
+        "shift_type_name": "Opening",
+        "shift_start": "09:30",
+        "shift_end": "18:30",
+        "is_off": false,
+        "ends_next_day": false,
+        "hours": 8
+      },
+      {
+        "employee": "TEST-STAFF-001",
+        "employee_name": "Test Staff",
+        "day_of_week": "Tuesday",
+        "shift_type_name": "Off",
+        "shift_start": "",
+        "shift_end": "",
+        "is_off": true,
+        "ends_next_day": false,
+        "hours": 0
+      }
+    ]
+  }
+  ```
+- **Assert:**
+  - UI shows success toast for draft save
+  - DB verify: `BEI Weekly Labor Plan.status == "Draft"`
+  - DB verify: `store == "TEST-STORE-BGC - BEI"` or warehouse-mapped equivalent for the branch
+  - DB verify: 2 child rows exist for `Monday/TEST-CREW-001` and `Tuesday/TEST-STAFF-001`
+  - DB verify: `total_hours == 8`
+
+### SUPLABOR-002: Publish Draft Creates Tagged Shift Assignment
+- **Type:** happy
+- **Role:** test.supervisor@bebang.ph
+- **Depends on:** SUPLABOR-001
+- **Route:** `/dashboard/supervisor/labor-plan`
+- **Submit network:** `POST /api/supervisor/labor-plan/publish`
+- **Payload:** `{"plan_name": "<from SUPLABOR-001>"}` via real Publish button
+- **Assert:**
+  - UI shows publish success toast
+  - DB verify: `BEI Weekly Labor Plan.status == "Published"`
+  - DB verify: exactly 1 submitted `Shift Assignment` exists for `TEST-CREW-001` on `2026-03-16`
+  - DB verify: that assignment has `shift_type == "Opening"`
+  - DB verify: `custom_bei_schedule_source == "BEI_WEEKLY_LABOR_PLAN"`
+  - DB verify: `custom_bei_weekly_labor_plan == "<from SUPLABOR-001>"`
+  - DB verify: `custom_bei_weekly_plan_row_key == "TEST-CREW-001|2026-03-16"`
+  - DB verify: no `Shift Assignment` is created for the Off row
+
+### SUPLABOR-003: Republish Replaces Tagged Assignment Instead of Duplicating
+- **Type:** regression
+- **Role:** test.supervisor@bebang.ph
+- **Depends on:** SUPLABOR-002
+- **Route:** `/dashboard/supervisor/labor-plan`
+- **Submit network:** `PUT /api/supervisor/labor-plan` then `POST /api/supervisor/labor-plan/publish`
+- **Payload:**
+  ```json
+  {
+    "plan_name": "<from SUPLABOR-001>",
+    "shifts": [
+      {
+        "employee": "TEST-CREW-001",
+        "employee_name": "Test Crew 1",
+        "day_of_week": "Monday",
+        "shift_type_name": "Mid",
+        "shift_start": "12:00",
+        "shift_end": "20:00",
+        "is_off": false,
+        "ends_next_day": false,
+        "hours": 8
+      }
+    ]
+  }
+  ```
+- **Assert:**
+  - UI shows draft-save success, then publish success
+  - DB verify: plan returns to `Published`
+  - DB verify: exactly 1 active submitted `Shift Assignment` exists for `TEST-CREW-001` on `2026-03-16`
+  - DB verify: active assignment `shift_type == "Mid"` (old Opening row was replaced, not duplicated)
+  - DB verify: no stale tagged assignment remains for the same `custom_bei_weekly_plan_row_key`
+
+### SUPLABOR-004: Store OIC Backup Can Open Labor Plan
+- **Type:** rbac
+- **Role:** test.staff@bebang.ph
+- **Route:** `/dashboard/supervisor/labor-plan`
+- **Submit network:** `GET /api/supervisor/labor-plan/bootstrap?store=TEST-STORE-BGC%20-%20BEI`
+- **Assert:**
+  - Page loads without `Access Restricted`
+  - Store auto-resolves to the user's assigned branch
+  - Add Shift button is visible when roster and shift options load
+
+### SUPLABOR-005: Area Supervisor Can Open Same Store Plan
+- **Type:** rbac
+- **Role:** test.area@bebang.ph
+- **Route:** `/dashboard/supervisor/labor-plan`
+- **Submit network:** `GET /api/supervisor/labor-plan?store=TEST-STORE-BGC%20-%20BEI&week_start=2026-03-16`
+- **Assert:**
+  - Page loads without `Access Restricted`
+  - Store selector includes `TEST-STORE-BGC - BEI`
+  - Published plan from SUPLABOR-003 is visible with `status == "Published"`
+
+---
+
 ## HR Self-Service Module (8 scenarios + 2 bug regression)
 
 ### HR-001: Submit Leave Application
