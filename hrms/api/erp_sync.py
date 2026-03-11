@@ -5,6 +5,7 @@ These endpoints receive data from the Sheets Receiver service
 and sync it to ERPNext DocTypes.
 """
 
+import datetime
 import hashlib
 import json
 import re
@@ -34,9 +35,12 @@ STORE_DEMAND_SNAPSHOT_SHEET_NAME = "Store Demand Snapshot"
 STORE_DEMAND_SNAPSHOT_AUTO_PREFIX = "scheduled_store_demand_snapshot"
 STORE_INVENTORY_SHADOW_SYNC_SHEET_NAME = "Store Inventory Shadow Sync"
 STORE_INVENTORY_SHADOW_SYNC_AUTO_PREFIX = "scheduled_store_inventory_shadow_sync"
+STORE_INVENTORY_SHADOW_SYNC_RECOVERY_PREFIX = "scheduled_store_inventory_shadow_sync_recovery"
 STORE_INVENTORY_SHADOW_BATCH_PREFIX = "SHADOW"
 INVENTORY_BASELINE_SHEET_NAME = "Inventory"
 INVENTORY_BASELINE_BATCH_PREFIX = "INVBASE"
+STORE_INVENTORY_SHADOW_STALE_AFTER_MINUTES = 20
+STORE_INVENTORY_SHADOW_RECOVERY_COOLDOWN_MINUTES = 20
 PO_REFERENCE_RE = re.compile(r"^\s*(?:PO|PURCHASE\s*ORDER)\s*[-#:/]?\s*[A-Z0-9-]+\s*$", re.IGNORECASE)
 
 
@@ -233,6 +237,20 @@ def _store_demand_output_root() -> Path:
 
 def _store_demand_output_dir(snapshot_date: str) -> Path:
 	return _store_demand_output_root() / f"{snapshot_date}_store_order_demand_snapshot_auto"
+
+
+def _runtime_timestamp() -> str:
+	return now_datetime().strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def _parse_runtime_timestamp(value: Any) -> Any | None:
+	text = str(value or "").strip()
+	if not text:
+		return None
+	try:
+		return datetime.datetime.strptime(text, "%Y-%m-%dT%H:%M:%S")
+	except ValueError:
+		return None
 
 
 def _log_sync_run_summary(title: str, payload: dict[str, Any]) -> None:
@@ -1035,10 +1053,10 @@ def _sync_inventory_rows(
 				["custom_sync_ref", "custom_last_sync_checksum"],
 			)
 			lookup_filters: dict[str, Any] = {"docstatus": ["<", 2]}
-			if has_remarks:
-				lookup_filters["remarks"] = ["like", f"%{sync_ref}%"]
-			elif token_field:
+			if token_field:
 				lookup_filters[token_field] = sync_ref
+			elif has_remarks:
+				lookup_filters["remarks"] = ["like", f"%{sync_ref}%"]
 			else:
 				lookup_filters = {}
 
@@ -1071,7 +1089,7 @@ def _sync_inventory_rows(
 					f"ERP Inventory Sync ({sync_ref}) "
 					f"sheet={sheet_name} warehouse={warehouse} rows={len(items)}"
 				)
-			elif token_field:
+			if token_field:
 				setattr(sr, token_field, sync_ref)
 
 			for item in items:
@@ -1778,6 +1796,7 @@ def enqueue_scheduled_store_inventory_shadow_sync(
 		"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
 		queue="long",
 		job_id=job_id,
+		deduplicate=True,
 		run_date=run_date_value,
 		force=force_flag,
 	)
@@ -1787,6 +1806,87 @@ def enqueue_scheduled_store_inventory_shadow_sync(
 		"run_date": run_date_value,
 		"force": force_flag,
 	}
+
+
+def watch_store_inventory_shadow_sync_health(
+	run_date: str | None = None,
+	stale_after_minutes: int = STORE_INVENTORY_SHADOW_STALE_AFTER_MINUTES,
+	cooldown_minutes: int = STORE_INVENTORY_SHADOW_RECOVERY_COOLDOWN_MINUTES,
+	state_path: str | None = None,
+) -> dict[str, Any]:
+	"""Resume the daily shadow sync when the tracked run is stale mid-flight."""
+	run_date_value = _safe_date(run_date) or nowdate()
+	stale_after = max(cint(stale_after_minutes), 1)
+	cooldown = max(cint(cooldown_minutes), 1)
+	state_file = (
+		Path(state_path) if state_path else store_inventory_shadow_sync_builder.get_runtime_state_path()
+	)
+	runtime_state = store_inventory_shadow_sync_builder.load_runtime_state(state_file)
+	last_run = runtime_state.get("last_run") or {}
+	status = str(last_run.get("status") or "").strip().lower()
+	recorded_run_date = _safe_date(last_run.get("run_date"))
+
+	if status != "in_progress":
+		return {"queued": False, "reason": "not_in_progress", "run_date": run_date_value}
+
+	if recorded_run_date != run_date_value:
+		return {
+			"queued": False,
+			"reason": "run_date_mismatch",
+			"run_date": run_date_value,
+			"recorded_run_date": recorded_run_date,
+		}
+
+	now_value = now_datetime()
+	progress_ts = _parse_runtime_timestamp(last_run.get("updated_at")) or _parse_runtime_timestamp(
+		last_run.get("generated_at")
+	)
+	if not progress_ts:
+		return {"queued": False, "reason": "missing_progress_timestamp", "run_date": run_date_value}
+
+	age_minutes = (now_value - progress_ts).total_seconds() / 60.0
+	if age_minutes < stale_after:
+		return {
+			"queued": False,
+			"reason": "not_stale",
+			"run_date": run_date_value,
+			"age_minutes": round(age_minutes, 2),
+			"stale_after_minutes": stale_after,
+		}
+
+	recovery_enqueued_at = _parse_runtime_timestamp(last_run.get("recovery_enqueued_at"))
+	if recovery_enqueued_at:
+		cooldown_age = (now_value - recovery_enqueued_at).total_seconds() / 60.0
+		if cooldown_age < cooldown:
+			return {
+				"queued": False,
+				"reason": "recovery_cooldown",
+				"run_date": run_date_value,
+				"cooldown_remaining_minutes": round(cooldown - cooldown_age, 2),
+			}
+
+	job_id = f"{STORE_INVENTORY_SHADOW_SYNC_RECOVERY_PREFIX}:{run_date_value}"
+	frappe.enqueue(
+		"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
+		queue="long",
+		job_id=job_id,
+		deduplicate=True,
+		run_date=run_date_value,
+		force=False,
+	)
+	last_run["recovery_enqueued_at"] = _runtime_timestamp()
+	store_inventory_shadow_sync_builder.save_runtime_state(runtime_state, state_file)
+
+	result = {
+		"queued": True,
+		"reason": "stale_in_progress_run",
+		"job_id": job_id,
+		"run_date": run_date_value,
+		"age_minutes": round(age_minutes, 2),
+		"stale_after_minutes": stale_after,
+	}
+	_log_sync_run_summary("Store Inventory Shadow Sync Watchdog", result)
+	return result
 
 
 def run_scheduled_store_inventory_shadow_sync(

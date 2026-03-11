@@ -262,10 +262,15 @@ class TestErpSync(unittest.TestCase):
 
 			return _FakeDoc(doctype, on_insert=on_insert)
 
+		def meta_has_field(fieldname):
+			return fieldname not in {"custom_sync_ref", "custom_last_sync_checksum"}
+
 		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
 		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
 		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
-		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+		erp_sync.frappe.get_meta = MagicMock(
+			return_value=types.SimpleNamespace(has_field=meta_has_field)
+		)
 
 		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
 			first = erp_sync.sync_inventory(
@@ -288,6 +293,63 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(first["rows_created"], 2)
 		self.assertEqual(second["rows_updated"], 2)
 		self.assertEqual(len(created_docs), 1)
+
+	def test_sync_inventory_is_idempotent_by_custom_sync_ref_when_remarks_missing(self):
+		created_sync_refs = set()
+		created_docs = []
+
+		def db_exists(doctype, name=None):
+			if doctype in ("Item", "Warehouse", "Company"):
+				return name or True
+			return None
+
+		def db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Stock Reconciliation" and isinstance(filters, dict) and "custom_sync_ref" in filters:
+				return "SR-0001" if filters["custom_sync_ref"] in created_sync_refs else None
+			if doctype == "Account" and isinstance(filters, dict):
+				return "Stock Adjustment - BEI"
+			if doctype == "Company" and filters == "BEI" and fieldname == "cost_center":
+				return "Main - BEI"
+			return None
+
+		def new_doc(doctype):
+			if doctype != "Stock Reconciliation":
+				return _FakeDoc(doctype)
+
+			def on_insert(doc):
+				doc.name = f"SR-{len(created_docs) + 1:04d}"
+				created_docs.append(doc)
+				if getattr(doc, "custom_sync_ref", None):
+					created_sync_refs.add(doc.custom_sync_ref)
+
+			return _FakeDoc(doctype, on_insert=on_insert)
+
+		def meta_has_field(fieldname):
+			return fieldname != "remarks"
+
+		erp_sync.frappe.db.exists = MagicMock(side_effect=db_exists)
+		erp_sync.frappe.db.get_value = MagicMock(side_effect=db_get_value)
+		erp_sync.frappe.new_doc = MagicMock(side_effect=new_doc)
+		erp_sync.frappe.get_meta = MagicMock(
+			return_value=types.SimpleNamespace(has_field=meta_has_field)
+		)
+
+		with patch.object(erp_sync, "_normalize_company", return_value="BEI"):
+			first = erp_sync.sync_inventory(
+				sheet_name="Inventory",
+				data=[{"item_code": "ITM-001", "warehouse": "Stores - BEI", "qty": 5}],
+				checksum="chk-token-1",
+			)
+			second = erp_sync.sync_inventory(
+				sheet_name="Inventory",
+				data=[{"item_code": "ITM-001", "warehouse": "Stores - BEI", "qty": 5}],
+				checksum="chk-token-1",
+			)
+
+		self.assertEqual(first["rows_created"], 1)
+		self.assertEqual(second["rows_updated"], 1)
+		self.assertEqual(len(created_docs), 1)
+		self.assertTrue(created_docs[0].custom_sync_ref.startswith("INV:"))
 
 	def test_sync_inventory_shadow_sync_uses_stable_batch_placeholder(self):
 		created_sync_refs = set()
@@ -883,6 +945,7 @@ class TestErpSync(unittest.TestCase):
 			"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
 			queue="long",
 			job_id="scheduled_store_inventory_shadow_sync:2026-03-10",
+			deduplicate=True,
 			run_date="2026-03-10",
 			force=True,
 		)

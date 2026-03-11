@@ -32,6 +32,9 @@ def _install_fake_hrms():
 	store_inventory_mod = types.ModuleType("hrms.utils.store_inventory_shadow_sync")
 	store_inventory_mod.DEFAULT_OUTPUT_ROOT = ROOT / "tmp"
 	store_inventory_mod.run_shadow_sync = lambda *args, **kwargs: {}
+	store_inventory_mod.get_runtime_state_path = lambda: ROOT / "tmp" / "store_inventory_shadow_sync_state.json"
+	store_inventory_mod.load_runtime_state = lambda *args, **kwargs: {"stores": {}, "last_run": {}}
+	store_inventory_mod.save_runtime_state = lambda *args, **kwargs: None
 	sys.modules["hrms.utils.store_inventory_shadow_sync"] = store_inventory_mod
 	utils_pkg.store_inventory_shadow_sync = store_inventory_mod
 
@@ -148,6 +151,80 @@ class TestErpSyncRuntime(unittest.TestCase):
 
 		sync_ap_opening.assert_called_once_with(sheet_name="Supplier SOA", data=rows, checksum="runtime-2")
 		self.assertEqual(result, expected)
+
+	def test_watch_store_inventory_shadow_sync_health_queues_recovery_for_stale_run(self):
+		runtime_state = {
+			"stores": {},
+			"last_run": {
+				"status": "in_progress",
+				"run_date": "2026-01-01",
+				"generated_at": "2026-01-01T07:30:00",
+				"updated_at": "2026-01-01T07:35:00",
+			},
+		}
+		erp_sync.frappe.enqueue = MagicMock()
+		erp_sync.frappe.log_error = MagicMock()
+
+		with (
+			patch.object(
+				erp_sync.store_inventory_shadow_sync_builder,
+				"load_runtime_state",
+				return_value=runtime_state,
+			),
+			patch.object(
+				erp_sync.store_inventory_shadow_sync_builder,
+				"save_runtime_state",
+				MagicMock(),
+			) as save_state_mock,
+		):
+			result = erp_sync.watch_store_inventory_shadow_sync_health(
+				run_date="2026-01-01",
+				stale_after_minutes=20,
+				cooldown_minutes=20,
+				state_path=str(ROOT / "tmp" / "shadow-state.json"),
+			)
+
+		self.assertTrue(result["queued"])
+		self.assertEqual(
+			result["job_id"], "scheduled_store_inventory_shadow_sync_recovery:2026-01-01"
+		)
+		erp_sync.frappe.enqueue.assert_called_once_with(
+			"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
+			queue="long",
+			job_id="scheduled_store_inventory_shadow_sync_recovery:2026-01-01",
+			deduplicate=True,
+			run_date="2026-01-01",
+			force=False,
+		)
+		self.assertIn("recovery_enqueued_at", runtime_state["last_run"])
+		save_state_mock.assert_called_once()
+
+	def test_watch_store_inventory_shadow_sync_health_skips_fresh_run(self):
+		runtime_state = {
+			"stores": {},
+			"last_run": {
+				"status": "in_progress",
+				"run_date": "2026-01-01",
+				"generated_at": "2026-01-01T07:55:00",
+				"updated_at": "2026-01-01T07:55:00",
+			},
+		}
+		erp_sync.frappe.enqueue = MagicMock()
+
+		with patch.object(
+			erp_sync.store_inventory_shadow_sync_builder,
+			"load_runtime_state",
+			return_value=runtime_state,
+		):
+			result = erp_sync.watch_store_inventory_shadow_sync_health(
+				run_date="2026-01-01",
+				stale_after_minutes=20,
+				cooldown_minutes=20,
+			)
+
+		self.assertFalse(result["queued"])
+		self.assertEqual(result["reason"], "not_stale")
+		erp_sync.frappe.enqueue.assert_not_called()
 
 
 if __name__ == "__main__":

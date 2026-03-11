@@ -314,6 +314,18 @@ def get_custom_fields():
 				"insert_after": "column_break_3",
 			},
 		],
+		"Stock Reconciliation": [
+			{
+				"fieldname": "custom_sync_ref",
+				"fieldtype": "Data",
+				"label": _("Sync Reference"),
+				"insert_after": "expense_account",
+				"hidden": 1,
+				"read_only": 1,
+				"no_copy": 1,
+				"description": _("Idempotency token for ERP sync retries and shadow sync recovery."),
+			},
+		],
 		"Terms and Conditions": [
 			{
 				"default": "1",

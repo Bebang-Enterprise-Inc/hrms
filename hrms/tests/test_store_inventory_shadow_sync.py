@@ -398,6 +398,12 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 		self.assertEqual(persist_mock.call_count, 4)
 		self.assertEqual(persist_mock.call_args_list[0].kwargs["summary"]["status"], "in_progress")
 		self.assertEqual(persist_mock.call_args_list[-1].kwargs["summary"]["status"], "completed")
+		self.assertEqual(
+			persist_mock.call_args_list[0].kwargs["runtime_state"]["last_run"]["recovery_enqueued_at"], ""
+		)
+		self.assertIn(
+			"updated_at", persist_mock.call_args_list[-1].kwargs["runtime_state"]["last_run"]
+		)
 
 
 if __name__ == "__main__":
