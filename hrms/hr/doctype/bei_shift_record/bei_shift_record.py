@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import get_datetime, time_diff_in_hours, getdate
+from frappe.utils import get_datetime, getdate, time_diff_in_hours
 
 
 class BEIShiftRecord(Document):
@@ -77,12 +77,15 @@ class BEIShiftRecord(Document):
 
 		from hrms.utils.geo import calculate_haversine_distance
 
-		distance_km = calculate_haversine_distance(
-			last.punch_out_latitude,
-			last.punch_out_longitude,
-			self.punch_in_latitude,
-			self.punch_in_longitude,
-		) / 1000
+		distance_km = (
+			calculate_haversine_distance(
+				last.punch_out_latitude,
+				last.punch_out_longitude,
+				self.punch_in_latitude,
+				self.punch_in_longitude,
+			)
+			/ 1000
+		)
 
 		time_hours = time_diff_in_hours(
 			get_datetime(self.punch_in_time),
@@ -100,6 +103,32 @@ class BEIShiftRecord(Document):
 	def create_attendance_from_shift(self):
 		"""Bridge: create/update Attendance record from completed shift record."""
 		att_date = getdate(self.punch_in_time)
+		shift_assignment = frappe.db.get_value(
+			"Shift Assignment",
+			{
+				"employee": self.employee,
+				"docstatus": 1,
+				"status": "Active",
+				"start_date": ("<=", att_date),
+				"end_date": [">=", att_date],
+			},
+			["shift_type"],
+			as_dict=True,
+		)
+		if not shift_assignment:
+			shift_assignment = frappe.db.get_value(
+				"Shift Assignment",
+				{
+					"employee": self.employee,
+					"docstatus": 1,
+					"status": "Active",
+					"start_date": ("<=", att_date),
+					"end_date": ("is", "not set"),
+				},
+				["shift_type"],
+				as_dict=True,
+			)
+		shift_type = shift_assignment.get("shift_type") if shift_assignment else None
 
 		# Cap auto-punched-out shifts at 8h to prevent phantom overtime
 		if getattr(self, "auto_punched_out", 0):
@@ -112,17 +141,42 @@ class BEIShiftRecord(Document):
 			needs_review = False
 
 		# Guard: don't duplicate — update if exists
-		existing = frappe.db.exists("Attendance", {
-			"employee": self.employee,
-			"attendance_date": att_date
-		})
+		existing = frappe.db.exists("Attendance", {"employee": self.employee, "attendance_date": att_date})
 
 		if existing:
 			update_fields = {
 				"working_hours": working_hours,
 				"status": att_status,
+				"shift": shift_type,
+				"in_time": self.punch_in_time,
+				"out_time": self.punch_out_time,
 			}
 			frappe.db.set_value("Attendance", existing, update_fields)
+			try:
+				from hrms.hr.doctype.employee_checkin.employee_checkin import get_overtime_data
+
+				if shift_type and att_status == "Present":
+					overtime_data = get_overtime_data(shift_type, working_hours)
+					if overtime_data:
+						frappe.db.set_value(
+							"Attendance",
+							existing,
+							{
+								"overtime_type": frappe.db.get_value(
+									"Shift Type", shift_type, "overtime_type"
+								),
+								"standard_working_hours": overtime_data.get("standard_working_hours"),
+								"actual_overtime_duration": overtime_data.get("actual_overtime_duration"),
+							},
+						)
+			except Exception:
+				pass
+			try:
+				from hrms.api.overtime import upsert_overtime_case_from_attendance
+
+				upsert_overtime_case_from_attendance(existing, source_trigger="shift_record_close")
+			except Exception:
+				frappe.log_error(frappe.get_traceback(), f"Failed OT upsert for Attendance {existing}")
 			return
 
 		# Create new Attendance via raw SQL (avoids ORM validation cascade)
@@ -130,7 +184,8 @@ class BEIShiftRecord(Document):
 		company = frappe.db.get_value("Employee", self.employee, "company")
 
 		try:
-			frappe.db.sql("""
+			frappe.db.sql(
+				"""
 				INSERT INTO `tabAttendance` (
 					name, employee, employee_name, attendance_date,
 					status, working_hours, docstatus,
@@ -140,29 +195,73 @@ class BEIShiftRecord(Document):
 					%(status)s, %(hours)s, 1,
 					%(company)s, NOW(), NOW(), %(user)s, %(user)s
 				)
-			""", {
-				"name": att_name,
-				"employee": self.employee,
-				"employee_name": self.employee_name,
-				"date": att_date,
-				"status": att_status,
-				"hours": working_hours,
-				"company": company,
-				"user": frappe.session.user,
-			})
+			""",
+				{
+					"name": att_name,
+					"employee": self.employee,
+					"employee_name": self.employee_name,
+					"date": att_date,
+					"status": att_status,
+					"hours": working_hours,
+					"company": company,
+					"user": frappe.session.user,
+				},
+			)
 		except Exception:
 			# Name collision with non-standard naming — fallback to update
-			frappe.db.sql("""
+			frappe.db.sql(
+				"""
 				UPDATE `tabAttendance`
-				SET working_hours = %(hours)s, status = %(status)s, modified = NOW()
+				SET working_hours = %(hours)s, status = %(status)s, shift = %(shift)s,
+				    in_time = %(in_time)s, out_time = %(out_time)s, modified = NOW()
 				WHERE employee = %(employee)s AND attendance_date = %(date)s
 				LIMIT 1
-			""", {
-				"employee": self.employee,
-				"date": att_date,
-				"status": att_status,
-				"hours": working_hours,
-			})
+			""",
+				{
+					"employee": self.employee,
+					"date": att_date,
+					"status": att_status,
+					"hours": working_hours,
+					"shift": shift_type,
+					"in_time": self.punch_in_time,
+					"out_time": self.punch_out_time,
+				},
+			)
+
+		attendance_name = frappe.db.get_value(
+			"Attendance",
+			{"employee": self.employee, "attendance_date": att_date, "docstatus": 1},
+			"name",
+		)
+		if attendance_name:
+			try:
+				from hrms.hr.doctype.employee_checkin.employee_checkin import get_overtime_data
+
+				if shift_type and att_status == "Present":
+					overtime_data = get_overtime_data(shift_type, working_hours)
+					if overtime_data:
+						frappe.db.set_value(
+							"Attendance",
+							attendance_name,
+							{
+								"shift": shift_type,
+								"in_time": self.punch_in_time,
+								"out_time": self.punch_out_time,
+								"overtime_type": frappe.db.get_value(
+									"Shift Type", shift_type, "overtime_type"
+								),
+								"standard_working_hours": overtime_data.get("standard_working_hours"),
+								"actual_overtime_duration": overtime_data.get("actual_overtime_duration"),
+							},
+						)
+			except Exception:
+				pass
+			try:
+				from hrms.api.overtime import upsert_overtime_case_from_attendance
+
+				upsert_overtime_case_from_attendance(attendance_name, source_trigger="shift_record_close")
+			except Exception:
+				frappe.log_error(frappe.get_traceback(), f"Failed OT upsert for Attendance {attendance_name}")
 
 		if needs_review:
 			frappe.logger().warning(

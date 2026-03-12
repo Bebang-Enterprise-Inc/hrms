@@ -526,18 +526,19 @@ def get_overtime_report(
 	results = frappe.db.sql(
 		"""
         SELECT
-            a.employee,
+            ot.employee,
             e.employee_name,
             e.department,
             e.designation,
             e.branch,
-            SUM(GREATEST(COALESCE(a.working_hours, 0) - 8, 0)) as total_ot_hours,
-            COUNT(CASE WHEN a.working_hours > 8 THEN 1 END) as ot_days
-        FROM `tabAttendance` a
-        INNER JOIN `tabEmployee` e ON a.employee = e.name
-        WHERE a.attendance_date BETWEEN %(from_date)s AND %(to_date)s
+            SUM(COALESCE(ot.approved_payable_duration, ot.overtime_hours, 0)) as total_ot_hours,
+            COUNT(*) as ot_days
+        FROM `tabBEI Overtime Request` ot
+        INNER JOIN `tabEmployee` e ON ot.employee = e.name
+        WHERE ot.attendance_date BETWEEN %(from_date)s AND %(to_date)s
+          AND ot.overtime_status IN ('Approved', 'Payroll Locked')
           AND (%(department)s IS NULL OR e.department = %(department)s)
-        GROUP BY a.employee, e.employee_name, e.department, e.designation, e.branch
+        GROUP BY ot.employee, e.employee_name, e.department, e.designation, e.branch
         HAVING total_ot_hours > 0
         ORDER BY total_ot_hours DESC
     """,
@@ -551,11 +552,11 @@ def get_overtime_report(
 			ot_slip_hours = frappe.db.sql(
 				"""
                 SELECT
-                    SUM(COALESCE(total_hours, 0)) as approved_ot_hours
+                    SUM(COALESCE(total_overtime_duration, 0)) as approved_ot_hours
                 FROM `tabOvertime Slip`
                 WHERE employee = %s
-                AND from_date >= %s
-                AND to_date <= %s
+                AND start_date >= %s
+                AND end_date <= %s
                 AND docstatus = 1
             """,
 				(row["employee"], from_date, to_date),

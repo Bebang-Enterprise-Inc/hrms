@@ -96,6 +96,8 @@ class OvertimeSlip(Document):
 
 	@frappe.whitelist()
 	def get_emp_and_overtime_details(self):
+		from hrms.api.overtime import mark_overtime_requests_bridged
+
 		records = self.get_attendance_records()
 		if len(records):
 			self.create_overtime_details_row_for_attendance(records)
@@ -106,19 +108,23 @@ class OvertimeSlip(Document):
 					total_overtime_duration += detail.overtime_duration
 			self.total_overtime_duration = total_overtime_duration
 		self.save()
+		mark_overtime_requests_bridged(getattr(self, "_bridge_ot_request_names", []), self.name)
 
 	def create_overtime_details_row_for_attendance(self, records):
 		self.overtime_details = []
+		self._bridge_ot_request_names = []
 		overtime_type_cache = {}
 
 		for record in records:
+			if record.name:
+				self._bridge_ot_request_names.append(record.name)
 			if record.overtime_type not in overtime_type_cache:
 				overtime_type_cache[record.overtime_type] = frappe.db.get_value(
 					"Overtime Type", record.overtime_type, "maximum_overtime_hours_allowed"
 				)
 
 			maximum_overtime_hours_allowed = overtime_type_cache[record.overtime_type]
-			overtime_duration = record.actual_overtime_duration or 0.0
+			overtime_duration = record.overtime_duration or 0.0
 
 			if maximum_overtime_hours_allowed > 0:
 				overtime_duration = (
@@ -131,7 +137,7 @@ class OvertimeSlip(Document):
 				self.append(
 					"overtime_details",
 					{
-						"reference_document": record.name,
+						"reference_document": record.reference_document,
 						"date": record.attendance_date,
 						"overtime_type": record.overtime_type,
 						"overtime_duration": overtime_duration,
@@ -140,24 +146,12 @@ class OvertimeSlip(Document):
 				)
 
 	def get_attendance_records(self):
+		from hrms.api.overtime import get_approved_ot_bridge_rows
+
 		records = []
 		if self.start_date and self.end_date:
-			records = frappe.get_all(
-				"Attendance",
-				fields=[
-					"name",
-					"attendance_date",
-					"overtime_type",
-					"actual_overtime_duration",
-					"standard_working_hours",
-				],
-				filters={
-					"employee": self.employee,
-					"docstatus": 1,
-					"attendance_date": ("between", [getdate(self.start_date), getdate(self.end_date)]),
-					"status": "Present",
-					"overtime_type": ["!=", ""],
-				},
+			records = get_approved_ot_bridge_rows(
+				self.employee, getdate(self.start_date), getdate(self.end_date)
 			)
 			if not len(records):
 				frappe.throw(
@@ -393,7 +387,14 @@ class OvertimeSlip(Document):
 
 
 @frappe.whitelist()
-def filter_employees_for_overtime_slip_creation(start_date, end_date, employees, limit=None):
+def filter_employees_for_overtime_slip_creation(
+	start_date: str,
+	end_date: str,
+	employees: list[str] | str,
+	limit: int | None = None,
+) -> list[str]:
+	from hrms.api.overtime import get_approved_ot_bridge_rows
+
 	if not employees:
 		return []
 
@@ -401,23 +402,9 @@ def filter_employees_for_overtime_slip_creation(start_date, end_date, employees,
 		employees = json.loads(employees)
 
 	OvertimeSlip = frappe.qb.DocType("Overtime Slip")
-	Attendance = frappe.qb.DocType("Attendance")
-
-	# First, get employees with valid attendance records
-	employees_with_overtime_attendance = (
-		frappe.qb.from_(Attendance)
-		.select(Attendance.employee)
-		.distinct()
-		.where(
-			(Attendance.employee.isin(employees))
-			& (Attendance.attendance_date >= start_date)
-			& (Attendance.attendance_date <= end_date)
-			& (Attendance.docstatus == 1)  # Only submitted attendance
-			& (Attendance.status == "Present")  # Only present attendance
-			& (Attendance.overtime_type != "")
-			& (Attendance.overtime_type.isnotnull())
-		)
-	).run(pluck=True)
+	employees_with_overtime_attendance = [
+		employee for employee in employees if get_approved_ot_bridge_rows(employee, start_date, end_date)
+	]
 
 	if not employees_with_overtime_attendance:
 		return []
@@ -439,6 +426,9 @@ def filter_employees_for_overtime_slip_creation(start_date, end_date, employees,
 	eligible_employees = list(
 		set(employees_with_overtime_attendance) - set(employees_with_existing_overtime_slips)
 	)
+
+	if limit:
+		return eligible_employees[:limit]
 
 	return eligible_employees
 
@@ -476,6 +466,8 @@ def create_overtime_slips_for_employees(employees, args):
 
 
 def submit_overtime_slips_for_employees(overtime_slips, payroll_entry):
+	from hrms.api.overtime import mark_overtime_requests_bridged
+
 	count = 0
 	errors = []
 	for overtime_slip in overtime_slips:
@@ -483,6 +475,9 @@ def submit_overtime_slips_for_employees(overtime_slips, payroll_entry):
 			doc = frappe.get_doc("Overtime Slip", overtime_slip)
 			doc.submitted_via_payroll_entry = 1
 			doc.submit()
+			mark_overtime_requests_bridged(
+				getattr(doc, "_bridge_ot_request_names", []), doc.name, locked=True
+			)
 			count += 1
 		except Exception as e:
 			frappe.clear_last_message()

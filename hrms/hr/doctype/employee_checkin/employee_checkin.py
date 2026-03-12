@@ -316,6 +316,13 @@ def create_or_update_attendance(
 		attendance.save()
 		attendance.submit()
 
+	try:
+		from hrms.api.overtime import upsert_overtime_case_from_attendance
+
+		upsert_overtime_case_from_attendance(attendance.name, source_trigger="attendance_close")
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), f"Failed OT upsert for Attendance {attendance.name}")
+
 	return attendance
 
 

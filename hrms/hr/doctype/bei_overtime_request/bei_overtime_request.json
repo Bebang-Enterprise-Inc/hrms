@@ -21,8 +21,26 @@
 		"reviewed_by",
 		"reviewed_at",
 		"column_break_review",
+		"review_note",
 		"approval_notes",
-		"rejection_reason"
+		"rejection_reason",
+		"employee_explanation",
+		"clarification_question",
+		"clarification_response",
+		"override_note",
+		"shift_record",
+		"request_source",
+		"source_trigger",
+		"source_event_key",
+		"reason_category",
+		"assigned_approver",
+		"fallback_approver",
+		"escalation_approver",
+		"candidate_overtime_type",
+		"approved_payable_duration",
+		"approved_overtime_type",
+		"payroll_bridge_status",
+		"payroll_bridge_reference"
 	],
 	"fields": [
 		{
@@ -60,13 +78,13 @@
 			"fieldtype": "Column Break"
 		},
 		{
-			"default": "Pending Approval",
+			"default": "Pending Review",
 			"fieldname": "overtime_status",
 			"fieldtype": "Select",
 			"in_list_view": 1,
 			"in_standard_filter": 1,
 			"label": "Status",
-			"options": "Pending Approval\nApproved\nRejected"
+			"options": "Pending Review\nNeeds Clarification\nClarification Submitted\nApproved\nRejected\nEscalated\nPayroll Locked\nPending Approval"
 		},
 		{
 			"fieldname": "supervisor",
@@ -129,6 +147,11 @@
 			"fieldtype": "Column Break"
 		},
 		{
+			"fieldname": "review_note",
+			"fieldtype": "Small Text",
+			"label": "Review Note"
+		},
+		{
 			"fieldname": "approval_notes",
 			"fieldtype": "Small Text",
 			"label": "Approval Notes"
@@ -138,6 +161,103 @@
 			"fieldname": "rejection_reason",
 			"fieldtype": "Small Text",
 			"label": "Rejection Reason"
+		},
+		{
+			"fieldname": "employee_explanation",
+			"fieldtype": "Small Text",
+			"label": "Employee Explanation"
+		},
+		{
+			"fieldname": "clarification_question",
+			"fieldtype": "Small Text",
+			"label": "Clarification Question"
+		},
+		{
+			"fieldname": "clarification_response",
+			"fieldtype": "Small Text",
+			"label": "Clarification Response"
+		},
+		{
+			"fieldname": "override_note",
+			"fieldtype": "Small Text",
+			"label": "Override Note"
+		},
+		{
+			"fieldname": "shift_record",
+			"fieldtype": "Link",
+			"label": "Shift Record",
+			"options": "BEI Shift Record"
+		},
+		{
+			"fieldname": "request_source",
+			"fieldtype": "Select",
+			"label": "Request Source",
+			"options": "system_detected\nemployee_submitted\nmanager_validated"
+		},
+		{
+			"fieldname": "source_trigger",
+			"fieldtype": "Select",
+			"label": "Source Trigger",
+			"options": "attendance_close\nshift_record_close\nnightly_backfill"
+		},
+		{
+			"fieldname": "source_event_key",
+			"fieldtype": "Data",
+			"label": "Source Event Key"
+		},
+		{
+			"fieldname": "reason_category",
+			"fieldtype": "Select",
+			"label": "Reason Category",
+			"options": "Post Shift OT\nLate Flex Exception\nEarly Start Validation\nManual Review"
+		},
+		{
+			"fieldname": "assigned_approver",
+			"fieldtype": "Link",
+			"label": "Assigned Approver",
+			"options": "User"
+		},
+		{
+			"fieldname": "fallback_approver",
+			"fieldtype": "Link",
+			"label": "Fallback Approver",
+			"options": "User"
+		},
+		{
+			"fieldname": "escalation_approver",
+			"fieldtype": "Link",
+			"label": "Escalation Approver",
+			"options": "User"
+		},
+		{
+			"fieldname": "candidate_overtime_type",
+			"fieldtype": "Link",
+			"label": "Candidate Overtime Type",
+			"options": "Overtime Type"
+		},
+		{
+			"fieldname": "approved_payable_duration",
+			"fieldtype": "Float",
+			"label": "Approved Payable Duration",
+			"precision": "2"
+		},
+		{
+			"fieldname": "approved_overtime_type",
+			"fieldtype": "Link",
+			"label": "Approved Overtime Type",
+			"options": "Overtime Type"
+		},
+		{
+			"fieldname": "payroll_bridge_status",
+			"fieldtype": "Select",
+			"label": "Payroll Bridge Status",
+			"options": "Not Ready\nPending Bridge\nBridged\nPayroll Locked"
+		},
+		{
+			"fieldname": "payroll_bridge_reference",
+			"fieldtype": "Link",
+			"label": "Payroll Bridge Reference",
+			"options": "Overtime Slip"
 		}
 	],
 	"index_web_pages_for_search": 0,
