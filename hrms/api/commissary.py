@@ -16,6 +16,7 @@ Modules:
 """
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -66,6 +67,15 @@ def get_commissary_warehouse():
 		or _stocked_candidate(include_legacy=True)
 		or _existing_candidate(include_legacy=True)
 		or CANONICAL_COMMISSARY_OPERATION_WAREHOUSE
+	)
+
+
+def _raise_direct_fulfillment_retired() -> None:
+	frappe.throw(
+		_(
+			"Commissary direct store fulfillment is retired. "
+			"Use the warehouse-centered flow: raw materials -> production -> QA -> warehouse handoff."
+		)
 	)
 
 
@@ -515,7 +525,12 @@ def get_returns_pending(store=None):
 
 
 @frappe.whitelist()
-def create_dispatch_transfer(target_warehouse, items, mr_name=None, remarks=None):
+def create_dispatch_transfer(
+	target_warehouse: str,
+	items: str | list[dict[str, Any]],
+	mr_name: str | None = None,
+	remarks: str | None = None,
+):
 	"""
 	DEPRECATED: Use fulfill_store_order() instead.
 	Kept for backward compatibility with existing frontend calls.
@@ -528,6 +543,8 @@ def create_dispatch_transfer(target_warehouse, items, mr_name=None, remarks=None
 	    mr_name: Optional Material Request reference
 	    remarks: Optional notes
 	"""
+	_raise_direct_fulfillment_retired()
+
 	if isinstance(items, str):
 		items = json.loads(items)
 
@@ -646,7 +663,7 @@ def get_order_detail(mr_name):
 
 
 @frappe.whitelist()
-def fulfill_store_order(mr_name, items):
+def fulfill_store_order(mr_name: str, items: str | list[dict[str, Any]]):
 	"""
 	Fulfill a Material Request by creating a Stock Entry (Material Transfer).
 
@@ -654,6 +671,8 @@ def fulfill_store_order(mr_name, items):
 	    mr_name: Material Request name
 	    items: JSON array of {item_code, qty_to_fulfill, uom}
 	"""
+	_raise_direct_fulfillment_retired()
+
 	if isinstance(items, str):
 		items = json.loads(items)
 
@@ -1869,7 +1888,11 @@ def get_distribution_hubs():
 
 
 @frappe.whitelist()
-def create_hub_transfer(destination_hub, items, remarks=None):
+def create_hub_transfer(
+	destination_hub: str,
+	items: str | list[dict[str, Any]],
+	remarks: str | None = None,
+):
 	"""
 	Create Stock Entry (Material Transfer) from Commissary to Distribution Hub.
 
@@ -1881,6 +1904,8 @@ def create_hub_transfer(destination_hub, items, remarks=None):
 	Returns:
 	    Stock Entry name and details
 	"""
+	_raise_direct_fulfillment_retired()
+
 	if isinstance(items, str):
 		items = json.loads(items)
 
