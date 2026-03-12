@@ -21,11 +21,18 @@ class _FakeMaterialRequest:
         self.set_warehouse = None
         self.remarks = None
         self.items = []
+        self.status = "Draft"
+        self.docstatus = 0
 
     def append(self, table, row):
         self.items.append(types.SimpleNamespace(**row))
 
-    def insert(self):
+    def insert(self, ignore_permissions=False):
+        return self
+
+    def submit(self):
+        self.docstatus = 1
+        self.status = "Pending"
         return self
 
 
@@ -124,7 +131,7 @@ module_spec.loader.exec_module(commissary_requisition)
 
 
 class TestS37CommissaryRequestContract(unittest.TestCase):
-    def test_create_rm_requisition_uses_material_transfer_and_warehouse_language(self):
+    def test_create_rm_requisition_auto_submits_into_warehouse_queue(self):
         _DOCS_CREATED.clear()
         result = commissary_requisition.create_rm_requisition(
             items=json.dumps([{"item_code": "RM-001", "qty": 5}]),
@@ -135,12 +142,15 @@ class TestS37CommissaryRequestContract(unittest.TestCase):
         self.assertTrue(result["success"])
         self.assertEqual(result["data"]["name"], "MAT-REQ-0001")
         self.assertEqual(result["data"]["request_source"], "commissary_raw_material_request")
-        self.assertIn("warehouse approval", result["message"].lower())
+        self.assertIn("warehouse queue", result["message"].lower())
+        self.assertEqual(result["data"]["status"], "Pending")
         self.assertEqual(len(_DOCS_CREATED), 1)
         created = _DOCS_CREATED[0]
         self.assertEqual(created.material_request_type, "Material Transfer")
         self.assertEqual(created.set_warehouse, "Commissary - BEI")
         self.assertEqual(created.items[0].from_warehouse, "SHAW BLVD - BEBANG ENTERPRISE INC.")
+        self.assertEqual(created.docstatus, 1)
+        self.assertEqual(created.status, "Pending")
 
 
 if __name__ == "__main__":

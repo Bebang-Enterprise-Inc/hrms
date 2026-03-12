@@ -208,8 +208,8 @@ def create_rm_requisition(items=None, required_by_date=None, remarks=None, sourc
             row["from_warehouse"] = source_warehouse
         mr.append("items", row)
 
-    mr.insert()
-    # G-047: Do NOT auto-submit — save as Draft for SCM Manager approval
+    mr.insert(ignore_permissions=True)
+    mr.submit()
 
     return {
         "success": True,
@@ -218,11 +218,11 @@ def create_rm_requisition(items=None, required_by_date=None, remarks=None, sourc
             "items_count": len(mr.items),
             "total_qty": sum(i.qty for i in mr.items),
             "required_by_date": str(required_by_date),
-            "status": "Draft",
+            "status": mr.status,
             "request_source": REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL,
             "request_source_label": get_request_source_label(REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL),
         },
-        "message": f"Material Request {mr.name} created as Draft — pending warehouse approval"
+        "message": f"Material Request {mr.name} submitted to the warehouse queue"
     }
 
 
