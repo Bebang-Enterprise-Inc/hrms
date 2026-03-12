@@ -836,9 +836,9 @@ def submit_overtime_clarification(name: str, response: str):
 def escalate_overtime(name: str, notes: str | None = None):
 	doc = frappe.get_doc("BEI Overtime Request", name)
 	_assert_review_access(doc, "overtime_status")
-	target = _txt(doc.fallback_approver or doc.escalation_approver)
+	target = _txt(doc.escalation_approver)
 	if not target or target == _txt(frappe.session.user):
-		target = _txt(doc.escalation_approver)
+		target = _txt(doc.fallback_approver)
 	if not target:
 		frappe.throw(_("No escalation approver is configured."))
 	doc.overtime_status = OT_ESCALATED
