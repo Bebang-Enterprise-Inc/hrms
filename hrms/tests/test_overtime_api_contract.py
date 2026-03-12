@@ -2,9 +2,9 @@ import importlib.util
 import sys
 import types
 import unittest
+from datetime import datetime, time
 from pathlib import Path
 from unittest.mock import patch
-from datetime import datetime, time
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -49,16 +49,16 @@ def _install_fake_frappe():
 			return [
 				AttrDict(
 					{
-					"department": "Operations",
-					"store": "ARANETA",
-					"total_requests": 3,
-					"total_hours": 8.0,
-					"approved_hours": 5.0,
-					"pending_hours": 2.0,
-					"rejected_hours": 1.0,
-					"approved_count": 2,
-					"pending_count": 1,
-					"rejected_count": 0,
+						"department": "Operations",
+						"store": "ARANETA",
+						"total_requests": 3,
+						"total_hours": 8.0,
+						"approved_hours": 5.0,
+						"pending_hours": 2.0,
+						"rejected_hours": 1.0,
+						"approved_count": 2,
+						"pending_count": 1,
+						"rejected_count": 0,
 					}
 				)
 			]
@@ -66,21 +66,21 @@ def _install_fake_frappe():
 		return [
 			AttrDict(
 				{
-				"name": "OT-0001",
-				"employee": "EMP-0001",
-				"employee_name": "Test Employee",
-				"branch": "ARANETA",
-				"attendance_date": "2026-02-27",
-				"shift": "Morning",
-				"regular_hours": 8.0,
-				"overtime_hours": 1.5,
-				"total_hours": 9.5,
-				"overtime_status": "Pending Approval",
-				"supervisor": "EMP-MGR-001",
-				"reviewed_by": None,
-				"reviewed_at": None,
-				"approval_notes": None,
-				"rejection_reason": None,
+					"name": "OT-0001",
+					"employee": "EMP-0001",
+					"employee_name": "Test Employee",
+					"branch": "ARANETA",
+					"attendance_date": "2026-02-27",
+					"shift": "Morning",
+					"regular_hours": 8.0,
+					"overtime_hours": 1.5,
+					"total_hours": 9.5,
+					"overtime_status": "Pending Approval",
+					"supervisor": "EMP-MGR-001",
+					"reviewed_by": None,
+					"reviewed_at": None,
+					"approval_notes": None,
+					"rejection_reason": None,
 				}
 			)
 		]
@@ -106,7 +106,9 @@ def _install_fake_frappe():
 	utils.nowdate = lambda: "2026-02-27"
 	utils.now_datetime = lambda: datetime(2026, 2, 27, 8, 0, 0)
 	utils.getdate = lambda value=None: value
-	utils.get_datetime = lambda value=None: value if isinstance(value, datetime) else datetime(2026, 2, 27, 8, 0, 0)
+	utils.get_datetime = lambda value=None: (
+		value if isinstance(value, datetime) else datetime(2026, 2, 27, 8, 0, 0)
+	)
 	utils.get_time = lambda value=None: value if isinstance(value, time) else time(8, 0, 0)
 	utils.add_days = lambda date_obj, days: date_obj
 
