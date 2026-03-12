@@ -16,6 +16,7 @@ Modules:
 """
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -524,7 +525,12 @@ def get_returns_pending(store=None):
 
 
 @frappe.whitelist()
-def create_dispatch_transfer(target_warehouse, items, mr_name=None, remarks=None):
+def create_dispatch_transfer(
+	target_warehouse: str,
+	items: str | list[dict[str, Any]],
+	mr_name: str | None = None,
+	remarks: str | None = None,
+):
 	"""
 	DEPRECATED: Use fulfill_store_order() instead.
 	Kept for backward compatibility with existing frontend calls.
@@ -657,7 +663,7 @@ def get_order_detail(mr_name):
 
 
 @frappe.whitelist()
-def fulfill_store_order(mr_name, items):
+def fulfill_store_order(mr_name: str, items: str | list[dict[str, Any]]):
 	"""
 	Fulfill a Material Request by creating a Stock Entry (Material Transfer).
 
@@ -1882,7 +1888,11 @@ def get_distribution_hubs():
 
 
 @frappe.whitelist()
-def create_hub_transfer(destination_hub, items, remarks=None):
+def create_hub_transfer(
+	destination_hub: str,
+	items: str | list[dict[str, Any]],
+	remarks: str | None = None,
+):
 	"""
 	Create Stock Entry (Material Transfer) from Commissary to Distribution Hub.
 
