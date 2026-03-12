@@ -303,5 +303,69 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 		mock_run.assert_not_called()
 
 
+class TestSheetsReceiverStartup(unittest.TestCase):
+	def test_main_starts_webhook_server_without_waiting_for_initial_setup(self):
+		started_threads = []
+
+		class _FakeThread:
+			def __init__(self, *, target, daemon):
+				self.target = target
+				self.daemon = daemon
+				self.started = False
+
+			def start(self):
+				self.started = True
+				started_threads.append(self)
+
+		original_setup_file_logging = main_mod.setup_file_logging
+		original_signal = main_mod.signal.signal
+		original_run_initial_setup_background = main_mod.run_initial_setup_background
+		original_run_daily_baseline_loop = main_mod.run_daily_baseline_loop
+		original_run_scheduler = main_mod.run_scheduler
+		original_run_server = main_mod.run_server
+		original_thread = main_mod.threading.Thread
+
+		setup_file_logging = MagicMock()
+		signal_handler = MagicMock()
+		run_initial_setup_background = MagicMock()
+		run_daily_baseline_loop = MagicMock()
+		run_scheduler = MagicMock()
+		run_server = MagicMock()
+
+		main_mod.setup_file_logging = setup_file_logging
+		main_mod.signal.signal = signal_handler
+		main_mod.run_initial_setup_background = run_initial_setup_background
+		main_mod.run_daily_baseline_loop = run_daily_baseline_loop
+		main_mod.run_scheduler = run_scheduler
+		main_mod.run_server = run_server
+		main_mod.threading.Thread = _FakeThread
+
+		try:
+			main_mod.main()
+		finally:
+			main_mod.setup_file_logging = original_setup_file_logging
+			main_mod.signal.signal = original_signal
+			main_mod.run_initial_setup_background = original_run_initial_setup_background
+			main_mod.run_daily_baseline_loop = original_run_daily_baseline_loop
+			main_mod.run_scheduler = original_run_scheduler
+			main_mod.run_server = original_run_server
+			main_mod.threading.Thread = original_thread
+
+		setup_file_logging.assert_called_once_with()
+		signal_handler.assert_any_call(main_mod.signal.SIGTERM, main_mod.handle_shutdown)
+		signal_handler.assert_any_call(main_mod.signal.SIGINT, main_mod.handle_shutdown)
+		self.assertEqual(
+			[thread.target for thread in started_threads],
+			[
+				run_initial_setup_background,
+				run_daily_baseline_loop,
+				run_scheduler,
+			],
+		)
+		self.assertTrue(all(thread.daemon for thread in started_threads))
+		self.assertTrue(all(thread.started for thread in started_threads))
+		run_server.assert_called_once_with()
+
+
 if __name__ == "__main__":
 	unittest.main()
