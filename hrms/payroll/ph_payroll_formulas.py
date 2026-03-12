@@ -208,7 +208,7 @@ def get_holiday_premium_days(employee, start_date, end_date, holiday_type="Regul
 
 
 def get_approved_ot_hours(employee, start_date, end_date, ot_type="regular"):
-    """Query approved Overtime Slip records.
+    """Query approved standard Overtime Slip records.
 
     Args:
         employee: Employee ID (string)
@@ -225,46 +225,26 @@ def get_approved_ot_hours(employee, start_date, end_date, ot_type="regular"):
     start = getdate(start_date)
     end = getdate(end_date)
 
-    # Map OT types to potential field/doctype values
-    # Note: Adjust field names based on actual BEI Overtime Slip DocType
     ot_type_filter = ""
     if ot_type == "regular":
-        ot_type_filter = "AND (os.overtime_type = 'Regular' OR os.overtime_type IS NULL)"
+        ot_type_filter = "AND od.overtime_type NOT LIKE '%Rest Day%' AND od.overtime_type NOT LIKE '%Holiday%'"
     elif ot_type == "rest_day":
-        ot_type_filter = "AND os.overtime_type = 'Rest Day'"
+        ot_type_filter = "AND od.overtime_type LIKE '%Rest Day%'"
     elif ot_type == "holiday":
-        ot_type_filter = "AND os.overtime_type = 'Holiday'"
+        ot_type_filter = "AND od.overtime_type LIKE '%Holiday%'"
 
-    # Query approved Overtime Slip records
-    # Adjust table/field names if BEI uses custom DocType
     result = frappe.db.sql(f"""
-        SELECT SUM(os.hours) as total_hours
-        FROM `tabBEI Overtime Slip` os
+        SELECT SUM(od.overtime_duration) as total_hours
+        FROM `tabOvertime Slip` os
+        INNER JOIN `tabOvertime Details` od ON od.parent = os.name
         WHERE os.employee = %(employee)s
-          AND os.date BETWEEN %(start_date)s AND %(end_date)s
           AND os.docstatus = 1
+          AND od.date BETWEEN %(start_date)s AND %(end_date)s
           {ot_type_filter}
-    """, {
+    """, {{
         "employee": employee,
         "start_date": start,
         "end_date": end
-    }, as_dict=True)
-
-    # Fallback: If no custom BEI OT DocType, try querying from Attendance custom fields
-    if not result or result[0].total_hours is None:
-        # Check if Attendance has ot_hours custom field
-        if frappe.db.has_column("Attendance", "ot_hours"):
-            result = frappe.db.sql("""
-                SELECT SUM(a.ot_hours) as total_hours
-                FROM `tabAttendance` a
-                WHERE a.employee = %(employee)s
-                  AND a.attendance_date BETWEEN %(start_date)s AND %(end_date)s
-                  AND a.docstatus = 1
-                  AND a.ot_hours > 0
-            """, {
-                "employee": employee,
-                "start_date": start,
-                "end_date": end
-            }, as_dict=True)
+    }}, as_dict=True)
 
     return flt(result[0].total_hours) if result and result[0].total_hours else 0.0

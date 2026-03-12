@@ -22,8 +22,21 @@ class AttendanceRequest(Document):
 		validate_active_employee(self.employee)
 		validate_dates(self, self.from_date, self.to_date, False)
 		self.validate_half_day()
+		if self.reason == "Flex Exception":
+			self.validate_flex_exception()
+			return
 		self.validate_request_overlap()
 		self.validate_no_attendance_to_create()
+
+	def validate_flex_exception(self):
+		if getdate(self.from_date) != getdate(self.to_date):
+			frappe.throw(_("Flex exceptions must stay on a single attendance date"))
+		if not self.flex_exception_type:
+			frappe.throw(_("Flex exception type is required"))
+		if not self.review_status:
+			self.review_status = "Pending Review"
+		if not self.cutoff_datetime:
+			self.cutoff_datetime = f"{self.from_date} 23:59:00"
 
 	def validate_half_day(self):
 		if self.half_day:
@@ -72,9 +85,13 @@ class AttendanceRequest(Document):
 		frappe.throw(msg, title=_("Overlapping Attendance Request"), exc=OverlappingAttendanceRequestError)
 
 	def on_submit(self):
+		if self.reason == "Flex Exception":
+			return
 		self.create_attendance_records()
 
 	def on_cancel(self):
+		if self.reason == "Flex Exception":
+			return
 		attendance_list = frappe.get_all(
 			"Attendance", {"employee": self.employee, "attendance_request": self.name, "docstatus": 1}
 		)
