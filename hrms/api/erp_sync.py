@@ -2877,9 +2877,7 @@ def _summarize_receiver_area(
 	all_ready = all(bool(lane.get("ready_before_deadline")) for lane in lanes)
 	all_clean = all(bool(lane.get("clean_success")) for lane in lanes)
 	completion_values = sorted(
-		completed_at
-		for lane in lanes
-		if (completed_at := lane.get("completed_at_pht"))
+		completed_at for lane in lanes if (completed_at := lane.get("completed_at_pht"))
 	)
 	if all_ready and all_clean:
 		status = "green"
@@ -3072,7 +3070,9 @@ def _persist_morning_sync_health_report(report: dict[str, Any]) -> dict[str, str
 	return {"json_path": str(json_path), "markdown_path": str(md_path)}
 
 
-def _collect_morning_sync_health_report(report_date: str | None = None, *, persist: bool = False) -> dict[str, Any]:
+def _collect_morning_sync_health_report(
+	report_date: str | None = None, *, persist: bool = False
+) -> dict[str, Any]:
 	"""Collect the consolidated morning report across store shadow sync and receiver baselines."""
 	report_date_value = _normalize_report_date(report_date)
 	report_date_text = report_date_value.isoformat()
@@ -3126,7 +3126,9 @@ def _collect_morning_sync_health_report(report_date: str | None = None, *, persi
 def get_morning_sync_health_report(report_date: str | None = None, persist: bool = False):
 	"""Return the consolidated morning report for store inventory, Ian inventory, and AP/procurement."""
 	_assert_sync_authorized()
-	persist_flag = persist if isinstance(persist, bool) else str(persist).strip().lower() in {"1", "true", "yes", "on"}
+	persist_flag = (
+		persist if isinstance(persist, bool) else str(persist).strip().lower() in {"1", "true", "yes", "on"}
+	)
 	return _collect_morning_sync_health_report(report_date=report_date, persist=persist_flag)
 
 

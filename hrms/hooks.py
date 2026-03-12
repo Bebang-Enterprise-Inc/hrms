@@ -370,17 +370,14 @@ scheduler_events = {
 		"0 0,6,12,18 * * *": [
 			"hrms.utils.adms_monitor.refresh_biometric_status",
 		],
-		# Biometric daily digest: 7 AM PHT = 23:00 UTC (previous day)
+		# Biometric daily digest + store syncs: 7 AM PHT = 23:00 UTC (previous day)
 		"0 23 * * *": [
 			"hrms.utils.biometric_alerts.send_daily_digest",
-		],
-		# Monthly billing generation: 6 AM on 1st of each month
-		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
-		# Store demand + inventory shadow sync: 7:00 AM PHT daily (23:00 UTC previous day)
-		"0 23 * * *": [
 			"hrms.api.erp_sync.enqueue_scheduled_store_inventory_shadow_sync",
 			"hrms.api.erp_sync.enqueue_scheduled_store_demand_snapshot_sync",
 		],
+		# Monthly billing generation: 6 AM on 1st of each month
+		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
 		# Morning sync health report: 8:15 AM PHT daily (00:15 UTC) after sync buffer
 		"15 0 * * *": [
 			"hrms.api.erp_sync.scheduled_generate_morning_sync_health_report",
