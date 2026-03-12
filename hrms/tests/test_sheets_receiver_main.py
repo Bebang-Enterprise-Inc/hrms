@@ -225,7 +225,7 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 
 		main_mod.configure_scheduled_jobs(schedule_module=fake_schedule)
 
-		self.assertIn(
+		self.assertNotIn(
 			main_mod.run_daily_baseline_sync_if_due,
 			[job["func"] for job in fake_schedule.jobs],
 		)
@@ -272,6 +272,35 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 			main_mod.run_interval_baseline_sync_job,
 			[job["func"] for job in fake_schedule.jobs],
 		)
+
+	def test_daily_baseline_loop_runs_guard_on_its_own_thread(self):
+		stop_event = main_mod.threading.Event()
+		original = main_mod.run_daily_baseline_sync_if_due
+		main_mod.run_daily_baseline_sync_if_due = MagicMock(side_effect=lambda: stop_event.set())
+		try:
+			main_mod.run_daily_baseline_loop(stop_event=stop_event, sleep_seconds=1)
+			main_mod.run_daily_baseline_sync_if_due.assert_called_once()
+		finally:
+			main_mod.run_daily_baseline_sync_if_due = original
+
+	def test_baseline_guard_skips_when_another_run_is_already_active(self):
+		original = main_mod._run_baseline_sync
+		mock_run = MagicMock(return_value=["should-not-run"])
+		main_mod._run_baseline_sync = mock_run
+		acquired = main_mod._baseline_sync_lock.acquire(blocking=False)
+		self.assertTrue(acquired)
+		try:
+			results = main_mod._run_baseline_sync_guarded(
+				trigger="daily_baseline",
+				force=True,
+				enforce_daily_gate=True,
+			)
+		finally:
+			main_mod._baseline_sync_lock.release()
+			main_mod._run_baseline_sync = original
+
+		self.assertEqual(results, [])
+		mock_run.assert_not_called()
 
 
 if __name__ == "__main__":
