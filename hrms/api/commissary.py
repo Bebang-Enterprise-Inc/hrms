@@ -69,6 +69,15 @@ def get_commissary_warehouse():
 	)
 
 
+def _raise_direct_fulfillment_retired() -> None:
+	frappe.throw(
+		_(
+			"Commissary direct store fulfillment is retired. "
+			"Use the warehouse-centered flow: raw materials -> production -> QA -> warehouse handoff."
+		)
+	)
+
+
 @frappe.whitelist()
 def get_production_cost_per_batch(limit=20, item_code=None):
 	"""
@@ -528,6 +537,8 @@ def create_dispatch_transfer(target_warehouse, items, mr_name=None, remarks=None
 	    mr_name: Optional Material Request reference
 	    remarks: Optional notes
 	"""
+	_raise_direct_fulfillment_retired()
+
 	if isinstance(items, str):
 		items = json.loads(items)
 
@@ -654,6 +665,8 @@ def fulfill_store_order(mr_name, items):
 	    mr_name: Material Request name
 	    items: JSON array of {item_code, qty_to_fulfill, uom}
 	"""
+	_raise_direct_fulfillment_retired()
+
 	if isinstance(items, str):
 		items = json.loads(items)
 
@@ -1881,6 +1894,8 @@ def create_hub_transfer(destination_hub, items, remarks=None):
 	Returns:
 	    Stock Entry name and details
 	"""
+	_raise_direct_fulfillment_retired()
+
 	if isinstance(items, str):
 		items = json.loads(items)
 
