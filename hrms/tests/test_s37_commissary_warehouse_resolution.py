@@ -21,10 +21,16 @@ class _FakeDB:
 		return [(1 if warehouse_name in self.stocked else 0,)]
 
 
+class _FakeFrappe(types.ModuleType):
+	@property
+	def db(self):
+		return self.local.db
+
+
 def _install_fake_modules(db):
-	frappe = types.ModuleType("frappe")
+	frappe = _FakeFrappe("frappe")
 	utils = types.ModuleType("frappe.utils")
-	frappe.db = db
+	frappe.local = types.SimpleNamespace(db=db)
 	frappe._ = lambda text: text
 	frappe.throw = lambda message, exc=None, title=None: (_ for _ in ()).throw(Exception(message))
 	frappe.whitelist = lambda *args, **kwargs: (lambda fn: fn)

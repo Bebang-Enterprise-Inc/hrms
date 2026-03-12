@@ -1,6 +1,7 @@
 """Commissary Requisition & Production Planning APIs. Split from commissary.py (P0-11) for maintainability."""
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -144,7 +145,12 @@ def get_rm_reorder_alerts():
 
 
 @frappe.whitelist()
-def create_rm_requisition(items=None, required_by_date=None, remarks=None, source_warehouse=None):
+def create_rm_requisition(
+	items: str | list[dict[str, Any]] | None = None,
+	required_by_date: str | None = None,
+	remarks: str | None = None,
+	source_warehouse: str | None = None,
+):
 	"""
 	Create Material Request for raw materials from Commissary.
 

@@ -10,6 +10,7 @@ Date: 2026-02-02
 """
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -815,7 +816,13 @@ def get_ready_for_dispatch():
 
 
 @frappe.whitelist()
-def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=None, remarks=None):
+def create_stock_transfer(
+	source_warehouse: str,
+	target_warehouse: str,
+	items: str | list[dict[str, Any]],
+	mr_name: str | None = None,
+	remarks: str | None = None,
+):
 	"""
 	Create Stock Entry (Material Transfer) for dispatch.
 
