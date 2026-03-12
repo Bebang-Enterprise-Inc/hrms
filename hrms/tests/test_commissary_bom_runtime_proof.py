@@ -41,7 +41,7 @@ except Exception:
 	sys.modules.setdefault("hrms.utils", types.ModuleType("hrms.utils"))
 
 	fake_commissary = types.ModuleType("hrms.api.commissary")
-	fake_commissary.get_commissary_warehouse = lambda: "Commissary - BEI"
+	fake_commissary.get_commissary_warehouse = lambda: "Shaw BLVD - BKI"
 	sys.modules["hrms.api.commissary"] = fake_commissary
 
 	fake_bei_config = types.ModuleType("hrms.utils.bei_config")
@@ -77,7 +77,7 @@ class TestCommissaryBOMRuntimeProof(unittest.TestCase):
 		with (
 			patch("frappe.db.get_value", side_effect=_fake_get_value),
 			patch("frappe.get_all", return_value=bom_items),
-			patch.object(commissary_bom, "get_commissary_warehouse", return_value="Commissary - BEI"),
+			patch.object(commissary_bom, "get_commissary_warehouse", return_value="Shaw BLVD - BKI"),
 		):
 			result = commissary_bom.get_bom_runtime_deduction_proof("FG001", 20)
 

@@ -23,6 +23,10 @@ from frappe.utils import add_days, flt, today
 
 from hrms.api.store import _get_store_customer
 from hrms.utils.bei_config import get_company
+from hrms.utils.supply_chain_contracts import (
+	CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
+	get_preferred_commissary_warehouses,
+)
 
 # ============================================================
 # SHARED UTILITY (must be defined BEFORE sub-module re-exports
@@ -31,23 +35,38 @@ from hrms.utils.bei_config import get_company
 
 
 def get_commissary_warehouse():
-	"""Get the commissary warehouse name (handles test vs production)."""
-	# Check if TEST-COMMISSARY exists and has stock
-	test_commissary = "TEST-COMMISSARY - BEI"
-	prod_commissary = "Commissary - BEI"
+	"""Resolve the operational commissary warehouse, preferring the BKI custody model."""
 
-	if frappe.db.exists("Warehouse", test_commissary):
-		# Check if it has any stock
-		stock = frappe.db.sql(
-			"""
-            SELECT COUNT(*) FROM `tabBin` WHERE warehouse = %s AND actual_qty > 0
-        """,
-			test_commissary,
-		)[0][0]
-		if stock > 0:
-			return test_commissary
+	def _stocked_candidate(include_legacy: bool) -> str | None:
+		for warehouse_name in get_preferred_commissary_warehouses(include_legacy=include_legacy):
+			if not frappe.db.exists("Warehouse", warehouse_name):
+				continue
+			stocked = frappe.db.sql(
+				"""
+				SELECT COUNT(*)
+				FROM `tabBin`
+				WHERE warehouse = %s
+				  AND actual_qty > 0
+				""",
+				warehouse_name,
+			)[0][0]
+			if stocked:
+				return warehouse_name
+		return None
 
-	return prod_commissary
+	def _existing_candidate(include_legacy: bool) -> str | None:
+		for warehouse_name in get_preferred_commissary_warehouses(include_legacy=include_legacy):
+			if frappe.db.exists("Warehouse", warehouse_name):
+				return warehouse_name
+		return None
+
+	return (
+		_stocked_candidate(include_legacy=False)
+		or _existing_candidate(include_legacy=False)
+		or _stocked_candidate(include_legacy=True)
+		or _existing_candidate(include_legacy=True)
+		or CANONICAL_COMMISSARY_OPERATION_WAREHOUSE
+	)
 
 
 @frappe.whitelist()

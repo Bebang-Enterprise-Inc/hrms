@@ -10,6 +10,7 @@ Date: 2026-02-02
 """
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -18,9 +19,12 @@ from frappe.utils import cint, flt, now_datetime
 from hrms.utils.bei_config import get_company
 from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
 from hrms.utils.supply_chain_contracts import (
+	CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
 	FINANCE_TREATMENT_SAME_COMPANY,
 	REQUEST_SOURCE_COMMISSARY_FG_TRANSFER,
 	REQUEST_SOURCE_STORE_ORDER,
+	TEST_COMMISSARY_OPERATION_WAREHOUSE,
+	get_preferred_commissary_warehouses,
 	get_request_source_label,
 	infer_finance_treatment,
 	resolve_material_request_contract,
@@ -262,6 +266,25 @@ def create_purchase_receipt(po_name, items, remarks=None):
 @frappe.whitelist()
 def get_internal_receiving_warehouses():
 	"""List active BKI warehouses that can receive commissary finished goods."""
+	commissary_source_warehouse = None
+	try:
+		from hrms.api.commissary import get_commissary_warehouse
+
+		commissary_source_warehouse = get_commissary_warehouse()
+	except Exception:
+		commissary_source_warehouse = None
+
+	excluded_warehouses = set(get_preferred_commissary_warehouses(include_legacy=True))
+	excluded_warehouses.update(
+		name
+		for name in (
+			CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
+			TEST_COMMISSARY_OPERATION_WAREHOUSE,
+			commissary_source_warehouse,
+		)
+		if name
+	)
+
 	warehouses = frappe.get_all(
 		"Warehouse",
 		filters={"is_group": 0},
@@ -275,7 +298,7 @@ def get_internal_receiving_warehouses():
 		name = warehouse.get("name") or ""
 		if company != "Bebang Kitchen Inc.":
 			continue
-		if "commissary" in name.lower():
+		if name in excluded_warehouses:
 			continue
 		filtered.append(
 			{
@@ -793,12 +816,18 @@ def get_ready_for_dispatch():
 
 
 @frappe.whitelist()
-def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=None, remarks=None):
+def create_stock_transfer(
+	source_warehouse: str,
+	target_warehouse: str,
+	items: str | list[dict[str, Any]],
+	mr_name: str | None = None,
+	remarks: str | None = None,
+):
 	"""
 	Create Stock Entry (Material Transfer) for dispatch.
 
 	Args:
-	    source_warehouse: From warehouse (e.g., "Commissary - BEI")
+	    source_warehouse: From warehouse (e.g., "Shaw BLVD - BKI")
 	    target_warehouse: To warehouse (e.g., "SM-CALOOCAN - BEI")
 	    items: JSON array of {item_code, qty, uom, batch_no (optional), mr_item_name (optional)}
 	    mr_name: Optional Material Request reference
