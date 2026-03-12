@@ -69,6 +69,9 @@ def _install_fake_runtime():
 
         sys.modules["frappe"] = frappe
         sys.modules["frappe.utils"] = utils
+        frappe_exceptions = types.ModuleType("frappe.exceptions")
+        frappe_exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
+        sys.modules["frappe.exceptions"] = frappe_exceptions
 
     if "hrms" not in sys.modules:
         hrms_pkg = types.ModuleType("hrms")
@@ -110,6 +113,15 @@ def _install_fake_runtime():
         bei_config = types.ModuleType("hrms.utils.bei_config")
         bei_config.get_company = lambda: "BEI"
         sys.modules["hrms.utils.bei_config"] = bei_config
+
+    if "hrms.utils.supply_chain_contracts" not in sys.modules:
+        contracts_spec = importlib.util.spec_from_file_location(
+            "hrms.utils.supply_chain_contracts",
+            ROOT / "hrms" / "utils" / "supply_chain_contracts.py",
+        )
+        contracts_mod = importlib.util.module_from_spec(contracts_spec)
+        contracts_spec.loader.exec_module(contracts_mod)
+        sys.modules["hrms.utils.supply_chain_contracts"] = contracts_mod
 
 
 def _load_module(module_name: str, relative_path: str):

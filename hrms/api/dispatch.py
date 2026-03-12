@@ -20,6 +20,12 @@ from hrms.utils.delivery_billing_policy import (
 	get_pre_delivery_exception_trace,
 	should_auto_create_billing_on_delivery,
 )
+from hrms.utils.supply_chain_contracts import (
+	buyer_entity_requires_billing_hold,
+	resolve_markup_percent,
+	resolve_store_buyer_entity,
+	stamp_billing_schedule_contract,
+)
 
 # P0-10: Import centralized RBAC role sets
 from hrms.utils.scm_roles import SCM_ADMIN_ROLES, SCM_DISPATCH_ROLES, SCM_STORE_ROLES
@@ -617,10 +623,6 @@ def create_trip(trip_date: str | None, route_name: str, stops: list[dict[str, An
 	}
 
 
-FRANCHISE_STORE_TYPES = ("Full Franchise", "Managed Franchise")
-FRANCHISE_MARKUP = 1.08
-
-
 def _create_delivery_billing(
 	trip_name: str,
 	stop_idx: int | str,
@@ -704,6 +706,11 @@ def _create_delivery_billing(
 			return
 
 		store_type = frappe.db.get_value("BEI Store Type", {"store": dept}, "store_type")
+		entity_row = resolve_store_buyer_entity(
+			warehouse_docname=stop.store,
+			store_name=dept,
+		)
+		markup_percent = resolve_markup_percent(store_type or entity_row.get("store_type"))
 
 		rate = frappe.db.get_value(
 			"BEI Delivery Rate",
@@ -717,10 +724,7 @@ def _create_delivery_billing(
 
 		# Calculate goods value from store order
 		goods_value = _get_order_goods_value(stop.store_order)
-
-		# Apply 8% markup for franchise stores
-		is_franchise = store_type in FRANCHISE_STORE_TYPES
-		markup = FRANCHISE_MARKUP if is_franchise else 1.0
+		billing_hold = buyer_entity_requires_billing_hold(entity_row)
 
 		# Create billing record
 		billing = frappe.new_doc("BEI Billing Schedule")
@@ -732,12 +736,18 @@ def _create_delivery_billing(
 				"trip_reference": trip.name,
 				"trip_stop_idx": stop.idx,
 				"cargo_type": trip.cargo_type,
-				"delivery_fee": flt(rate.delivery_fee * markup, 2),
-				"logistics_fee": flt(rate.logistics_fee * markup, 2),
+				"delivery_fee": flt(rate.delivery_fee or 0, 2),
+				"logistics_fee": flt(rate.logistics_fee or 0, 2),
 				"goods_value": goods_value,
-				"handling_fee": flt(goods_value * 0.08, 2) if is_franchise else 0,
-				"status": "Pending",
+				"handling_fee": flt(goods_value * markup_percent, 2),
+				"status": "Draft" if billing_hold else "Pending",
 			}
+		)
+		stamp_billing_schedule_contract(
+			billing,
+			entity_row=entity_row,
+			markup_percent=markup_percent,
+			warehouse_docname=stop.store,
 		)
 		if pre_delivery_exception and _has_column("BEI Billing Schedule", "pre_delivery_exception"):
 			billing.pre_delivery_exception = pre_delivery_exception

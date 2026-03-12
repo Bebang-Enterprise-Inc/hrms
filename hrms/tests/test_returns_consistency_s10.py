@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
 
 class _FakeStockEntry:
 	def __init__(self):
+		self.doctype = "Stock Entry"
 		self.name = "STE-RET-0001"
 		self.items = []
 		self.stock_entry_type = None
@@ -79,6 +80,7 @@ def _install_fake_modules():
 		utils.nowtime = lambda: "10:00:00"
 		utils.nowdate = lambda: "2026-02-28"
 		utils.now_datetime = lambda: "2026-02-28 10:00:00"
+		utils.cint = lambda value: int(value or 0)
 		utils.flt = lambda value, precision=None: float(value or 0)
 		utils.add_days = lambda date, days: date
 
@@ -143,6 +145,8 @@ def _install_fake_modules():
 		utils.nowdate = lambda: "2026-02-28"
 	if not hasattr(utils, "now_datetime"):
 		utils.now_datetime = lambda: "2026-02-28 10:00:00"
+	if not hasattr(utils, "cint"):
+		utils.cint = lambda value: int(value or 0)
 	if not hasattr(utils, "flt"):
 		utils.flt = lambda value, precision=None: float(value or 0)
 	if not hasattr(utils, "add_days"):
@@ -167,6 +171,15 @@ def _install_fake_modules():
 		bei_config_mod = types.ModuleType("hrms.utils.bei_config")
 		bei_config_mod.get_company = lambda: "Bebang Enterprise Inc."
 		sys.modules["hrms.utils.bei_config"] = bei_config_mod
+
+	if "hrms.utils.supply_chain_contracts" not in sys.modules:
+		contracts_spec = importlib.util.spec_from_file_location(
+			"hrms.utils.supply_chain_contracts",
+			ROOT / "hrms" / "utils" / "supply_chain_contracts.py",
+		)
+		contracts_mod = importlib.util.module_from_spec(contracts_spec)
+		contracts_spec.loader.exec_module(contracts_mod)
+		sys.modules["hrms.utils.supply_chain_contracts"] = contracts_mod
 
 	if "hrms.utils.scm_roles" not in sys.modules:
 		scm_roles_mod = types.ModuleType("hrms.utils.scm_roles")
@@ -206,9 +219,16 @@ warehouse_spec.loader.exec_module(warehouse)
 class _FakeMR:
 	def __init__(self):
 		self.status = "Ordered"
+		self.custom_request_source = "store_order"
+		self.custom_cargo_lane = "DRY"
+		self.custom_source_warehouse = "COM - BEI"
+		self.custom_source_company = "Bebang Enterprise Inc."
+		self.custom_target_company = "Bebang Enterprise Inc."
+		self.custom_finance_treatment = "same_company"
+		self.set_warehouse = "STORE-A - BEI"
 		self.items = [
-			types.SimpleNamespace(item_code="ITM-001", name="MRI-001"),
-			types.SimpleNamespace(item_code="ITM-002", name="MRI-002"),
+			types.SimpleNamespace(item_code="ITM-001", name="MRI-001", from_warehouse="COM - BEI", warehouse="STORE-A - BEI"),
+			types.SimpleNamespace(item_code="ITM-002", name="MRI-002", from_warehouse="COM - BEI", warehouse="STORE-A - BEI"),
 		]
 
 
@@ -288,6 +308,9 @@ class TestReturnsConsistencyS10(unittest.TestCase):
 		self.assertEqual(result["data"]["movement_type"], "Material Transfer")
 		self.assertEqual(result["data"]["source_warehouse"], "COM - BEI")
 		self.assertEqual(result["data"]["target_warehouse"], "STORE-A - BEI")
+		self.assertEqual(result["data"]["request_source"], "store_order")
+		self.assertEqual(result["data"]["cargo_lane"], "DRY")
+		self.assertEqual(result["data"]["finance_treatment"], "same_company")
 
 
 if __name__ == "__main__":

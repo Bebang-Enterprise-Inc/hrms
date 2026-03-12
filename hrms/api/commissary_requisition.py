@@ -7,7 +7,16 @@ from frappe import _
 from frappe.utils import today, add_days, flt
 
 from hrms.api.commissary import get_commissary_warehouse
-from hrms.utils.bei_config import get_company
+from hrms.utils.supply_chain_contracts import (
+    REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL,
+    get_request_source_label,
+    resolve_material_request_contract,
+    resolve_warehouse_company,
+    stamp_material_request_contract,
+)
+
+
+COMMISSARY_COMPANY = "Bebang Kitchen Inc."
 
 
 # ---------------------------------------------------------------------------
@@ -121,7 +130,7 @@ def get_rm_reorder_alerts():
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
-def create_rm_requisition(items=None, required_by_date=None, remarks=None):
+def create_rm_requisition(items=None, required_by_date=None, remarks=None, source_warehouse=None):
     """
     Create Material Request for raw materials from Commissary.
 
@@ -145,7 +154,7 @@ def create_rm_requisition(items=None, required_by_date=None, remarks=None):
 
     # G-100: Idempotency — prevent duplicate Draft requisitions by same user on same day
     existing_draft = frappe.db.exists("Material Request", {
-        "material_request_type": "Purchase",
+        "material_request_type": "Material Transfer",
         "set_warehouse": commissary_warehouse,
         "transaction_date": today(),
         "owner": frappe.session.user,
@@ -163,17 +172,28 @@ def create_rm_requisition(items=None, required_by_date=None, remarks=None):
 
     # Create Material Request
     mr = frappe.new_doc("Material Request")
-    mr.material_request_type = "Purchase"
-    mr.company = get_company()
+    mr.material_request_type = "Material Transfer"
+    target_company = resolve_warehouse_company(commissary_warehouse) or COMMISSARY_COMPANY
+    source_company = resolve_warehouse_company(source_warehouse) or target_company
+    mr.company = target_company
     mr.transaction_date = today()
     mr.schedule_date = required_by_date
     mr.set_warehouse = commissary_warehouse
-    mr.remarks = remarks or "Raw Material Requisition from Commissary"
+    mr.remarks = remarks or "Warehouse raw material request from Commissary"
+    stamp_material_request_contract(
+        mr,
+        request_source=REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL,
+        cargo_lane="RM",
+        source_warehouse=source_warehouse,
+        source_company=source_company,
+        target_company=target_company,
+        finance_treatment="same_company",
+    )
 
     for item_data in items:
         item = frappe.get_doc("Item", item_data["item_code"])
 
-        mr.append("items", {
+        row = {
             "item_code": item_data["item_code"],
             "item_name": item.item_name,
             "description": item.description,
@@ -183,7 +203,10 @@ def create_rm_requisition(items=None, required_by_date=None, remarks=None):
             "conversion_factor": 1,
             "warehouse": commissary_warehouse,
             "schedule_date": required_by_date
-        })
+        }
+        if source_warehouse:
+            row["from_warehouse"] = source_warehouse
+        mr.append("items", row)
 
     mr.insert()
     # G-047: Do NOT auto-submit — save as Draft for SCM Manager approval
@@ -195,9 +218,11 @@ def create_rm_requisition(items=None, required_by_date=None, remarks=None):
             "items_count": len(mr.items),
             "total_qty": sum(i.qty for i in mr.items),
             "required_by_date": str(required_by_date),
-            "status": "Draft"
+            "status": "Draft",
+            "request_source": REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL,
+            "request_source_label": get_request_source_label(REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL),
         },
-        "message": f"Material Request {mr.name} created as Draft — pending approval"
+        "message": f"Material Request {mr.name} created as Draft — pending warehouse approval"
     }
 
 
@@ -239,7 +264,7 @@ def get_my_requisitions(status=None, limit=50):
     commissary_warehouse = get_commissary_warehouse()
 
     filters = {
-        "material_request_type": "Purchase",
+        "material_request_type": "Material Transfer",
         "set_warehouse": commissary_warehouse,
         "docstatus": ["in", [0, 1]]  # Draft or Submitted
     }
@@ -258,7 +283,13 @@ def get_my_requisitions(status=None, limit=50):
         limit=int(limit)
     )
 
+    filtered_mrs = []
     for mr in mrs:
+        mr_doc = frappe.get_doc("Material Request", mr["name"])
+        contract = resolve_material_request_contract(mr_doc, commissary_warehouse=commissary_warehouse)
+        if contract["request_source"] != REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL:
+            continue
+
         # Get items
         items = frappe.get_all(
             "Material Request Item",
@@ -270,22 +301,24 @@ def get_my_requisitions(status=None, limit=50):
         mr["total_qty"] = sum(i.get("qty", 0) for i in items)
         mr["total_ordered"] = sum(i.get("ordered_qty", 0) for i in items)
         mr["total_received"] = sum(i.get("received_qty", 0) for i in items)
+        mr.update(contract)
 
         # Calculate fulfillment percentage
         if mr["total_qty"] > 0:
             mr["fulfillment_pct"] = flt((mr["total_received"] / mr["total_qty"]) * 100, 1)
         else:
             mr["fulfillment_pct"] = 0
+        filtered_mrs.append(mr)
 
     return {
         "success": True,
-        "data": mrs,
+        "data": filtered_mrs,
         "summary": {
-            "total": len(mrs),
-            "pending": sum(1 for m in mrs if m["status"] in ["Pending", "Draft"]),
-            "ordered": sum(1 for m in mrs if m["status"] == "Ordered"),
-            "partially_received": sum(1 for m in mrs if m["status"] == "Partially Received"),
-            "received": sum(1 for m in mrs if m["status"] == "Received")
+            "total": len(filtered_mrs),
+            "pending": sum(1 for m in filtered_mrs if m["status"] in ["Pending", "Draft"]),
+            "ordered": sum(1 for m in filtered_mrs if m["status"] == "Ordered"),
+            "partially_received": sum(1 for m in filtered_mrs if m["status"] == "Partially Received"),
+            "received": sum(1 for m in filtered_mrs if m["status"] == "Received")
         }
     }
 

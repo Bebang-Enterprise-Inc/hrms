@@ -17,6 +17,19 @@ from frappe.utils import add_days, cint, flt, get_datetime, getdate, now_datetim
 
 from hrms.utils.bei_config import get_company
 from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
+from hrms.utils.supply_chain_contracts import (
+	REQUEST_SOURCE_STORE_ORDER,
+	REQUEST_SOURCE_STORE_RETURN,
+	resolve_route_source_warehouse,
+	resolve_warehouse_company,
+	stamp_material_request_contract,
+	stamp_stock_entry_contract,
+)
+
+MANUAL_POS_UPLOAD_DISABLED_MESSAGE = _(
+	"Manual POS uploads are disabled. Sales now sync automatically via API. "
+	"Use Closing Report for X/Z-reading evidence, cash control, and POS-down exceptions."
+)
 
 
 def _notify_store_ops(msg):
@@ -951,6 +964,11 @@ def _lane_to_cargo_category(lane):
 	if lane == "Fresh Market":
 		return "FM"
 	return "DRY"
+
+
+def _resolve_store_order_source_warehouse(store_warehouse, cargo_category):
+	"""Resolve the warehouse that should fulfill a store order lane."""
+	return resolve_route_source_warehouse(store_warehouse, cargo_category)
 
 
 def _resolve_delivery_lane(item_doc):
@@ -2048,7 +2066,6 @@ def _create_mr_for_store_order(order):
 
 		mr = frappe.new_doc("Material Request")
 		mr.material_request_type = "Material Transfer"
-		mr.company = get_company()
 		mr.transaction_date = nowdate()
 		mr.schedule_date = required_by
 		mr.custom_store_order = order.name
@@ -2058,24 +2075,43 @@ def _create_mr_for_store_order(order):
 		if not store_warehouse:
 			frappe.log_error(f"No store warehouse found on order {order.name}", "Store Ordering")
 			return None
+		mr.set_warehouse = store_warehouse
+
+		cargo_category = getattr(order, "cargo_category", None) or "DRY"
+		source_warehouse = _resolve_store_order_source_warehouse(store_warehouse, cargo_category)
+		source_company = resolve_warehouse_company(source_warehouse) or get_company()
+		target_company = resolve_warehouse_company(store_warehouse) or source_company
+		mr.company = source_company
+		stamp_material_request_contract(
+			mr,
+			request_source=REQUEST_SOURCE_STORE_ORDER,
+			cargo_lane=cargo_category,
+			source_warehouse=source_warehouse,
+			source_company=source_company,
+			target_company=target_company,
+		)
+		mr.remarks = (
+			f"Warehouse dispatch request for store order {order.name} "
+			f"({cargo_category})"
+		)
 
 		for item in order.items:
 			qty = flt(getattr(item, "qty_approved", None) or getattr(item, "qty_requested", 0))
 			if qty <= 0:
 				continue
-			mr.append(
-				"items",
-				{
-					"item_code": item.item_code,
-					"item_name": item.item_name,
-					"qty": qty,
-					"uom": getattr(item, "uom", None) or "Nos",
-					"stock_uom": getattr(item, "uom", None) or "Nos",
-					"conversion_factor": 1,
-					"warehouse": store_warehouse,
-					"schedule_date": required_by,
-				},
-			)
+			row = {
+				"item_code": item.item_code,
+				"item_name": item.item_name,
+				"qty": qty,
+				"uom": getattr(item, "uom", None) or "Nos",
+				"stock_uom": getattr(item, "uom", None) or "Nos",
+				"conversion_factor": 1,
+				"warehouse": store_warehouse,
+				"schedule_date": required_by,
+			}
+			if source_warehouse:
+				row["from_warehouse"] = source_warehouse
+			mr.append("items", row)
 
 		if not mr.items:
 			return None
@@ -2330,6 +2366,23 @@ def get_returns_pending(store: str | None = None) -> dict:
 	return {"items": items}
 
 
+def _resolve_store_return_destination_warehouse(receiving_doc):
+	"""Resolve the warehouse that originally dispatched the received trip."""
+	trip_name = getattr(receiving_doc, "trip", None)
+	if not trip_name or not frappe.db.exists("BEI Distribution Trip", trip_name):
+		return None
+
+	trip = frappe.get_doc("BEI Distribution Trip", trip_name)
+	route_ref = getattr(trip, "route", None) or getattr(trip, "route_name", None)
+	if not route_ref:
+		return None
+
+	if frappe.db.exists("BEI Route", route_ref):
+		return frappe.db.get_value("BEI Route", route_ref, "source_warehouse")
+
+	return frappe.db.get_value("BEI Route", {"route_name": route_ref}, "source_warehouse")
+
+
 @frappe.whitelist()
 def create_store_return(
 	receiving: str,
@@ -2339,7 +2392,7 @@ def create_store_return(
 ) -> dict:
 	"""
 	Create a store return for items with issues from a receiving doc.
-	Tracks the return intent and creates a Stock Entry to transfer items back to commissary.
+	Tracks the return intent and creates a Stock Entry to transfer items back to warehouse.
 
 	Args:
 	    receiving: BEI Store Receiving document name
@@ -2368,27 +2421,31 @@ def create_store_return(
 	if existing_return:
 		frappe.throw(_("A return already exists for receiving {0}: {1}").format(receiving, existing_return))
 
-	# Resolve commissary warehouse
-	from hrms.api.commissary import get_commissary_warehouse
-
-	commissary_warehouse = get_commissary_warehouse()
-
-	if not commissary_warehouse:
-		frappe.throw(_("Commissary warehouse not found"))
+	return_warehouse = _resolve_store_return_destination_warehouse(receiving_doc)
+	if not return_warehouse:
+		frappe.throw(_("Unable to resolve the originating warehouse for this return"))
 
 	# Save photo if provided
 	if photo:
 		save_base64_image(photo, "Stock Entry", fieldname="custom_return_photo")
 
-	# Create Stock Entry (Material Transfer back to commissary)
+	# Create Stock Entry (Material Transfer back to warehouse)
 	se = frappe.new_doc("Stock Entry")
 	se.stock_entry_type = "Material Transfer"
-	se.company = get_company()
 	se.posting_date = nowdate()
 	se.posting_time = now_datetime().strftime("%H:%M:%S")
 	se.from_warehouse = store
-	se.to_warehouse = commissary_warehouse
+	se.to_warehouse = return_warehouse
 	se.remarks = f"Store Return from {store} | Receiving: {receiving} | Reason: {reason}"
+	source_company = resolve_warehouse_company(store) or get_company()
+	target_company = resolve_warehouse_company(return_warehouse) or source_company
+	se.company = source_company
+	stamp_stock_entry_contract(
+		se,
+		request_source=REQUEST_SOURCE_STORE_RETURN,
+		source_company=source_company,
+		target_company=target_company,
+	)
 
 	for item_data in items:
 		qty = flt(item_data.get("qty") or item_data.get("return_qty"))
@@ -2409,7 +2466,7 @@ def create_store_return(
 				"stock_uom": item.stock_uom,
 				"conversion_factor": 1,
 				"s_warehouse": store,
-				"t_warehouse": commissary_warehouse,
+				"t_warehouse": return_warehouse,
 			},
 		)
 
@@ -2426,13 +2483,14 @@ def create_store_return(
 		frappe.log_error(f"Store return Stock Entry failed for {receiving}", "Store Return Error")
 		frappe.throw(_("Failed to create store return. Please try again."))
 
-	# G-002 Task 2D: Notify commissary of new return request
+	# G-002 Task 2D: Notify warehouse-facing operations of the return request
 	try:
 		from hrms.api.google_chat import SPACE_NOTIFICATIONS, get_chat_space, send_message_to_space
 
 		store_name = store.replace(" - BEI", "") if store else "Unknown"
 		msg = f"New Store Return Request: {se.name}\n"
 		msg += f"Store: {store_name} | Items: {len(se.items)}\n"
+		msg += f"Return To: {return_warehouse}\n"
 		msg += f"Reason: {reason}"
 		space = get_chat_space(SPACE_NOTIFICATIONS)
 		send_message_to_space(space, msg)
@@ -2442,7 +2500,7 @@ def create_store_return(
 	return {
 		"success": True,
 		"stock_entry": se.name,
-		"message": f"Store return {se.name} created — {len(se.items)} item(s) returned to commissary",
+		"message": f"Store return {se.name} created — {len(se.items)} item(s) returned to warehouse",
 	}
 
 
@@ -3011,12 +3069,7 @@ def upload_pos_data(
 	    notes: Optional notes
 	    skip_date_validation: Skip date validation (for back-dated uploads with supervisor approval)
 	"""
-	frappe.throw(
-		_(
-			"Manual POS uploads are disabled. Sales now sync automatically via API. "
-			"Use Closing Report for X/Z-reading evidence, cash control, and POS-down exceptions."
-		)
-	)
+	frappe.throw(MANUAL_POS_UPLOAD_DISABLED_MESSAGE)
 	validate_store_ops_role()
 
 	if not store:

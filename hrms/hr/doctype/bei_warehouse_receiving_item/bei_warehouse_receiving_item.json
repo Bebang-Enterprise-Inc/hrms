@@ -1,0 +1,108 @@
+{
+  "actions": [],
+  "creation": "2026-03-12 12:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "item_code",
+    "item_name",
+    "batch_no",
+    "uom",
+    "column_break_qty",
+    "expected_qty",
+    "received_qty",
+    "rejected_qty",
+    "accepted_qty",
+    "column_break_issue",
+    "has_issue",
+    "issue_notes"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item Code",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "label": "Item Name",
+      "fetch_from": "item_code.item_name",
+      "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "batch_no",
+      "fieldtype": "Link",
+      "label": "Batch",
+      "options": "Batch",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "uom",
+      "fieldtype": "Data",
+      "label": "UOM",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_qty",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "expected_qty",
+      "fieldtype": "Float",
+      "label": "Expected Qty",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "received_qty",
+      "fieldtype": "Float",
+      "label": "Received Qty",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "rejected_qty",
+      "fieldtype": "Float",
+      "label": "Rejected Qty"
+    },
+    {
+      "fieldname": "accepted_qty",
+      "fieldtype": "Float",
+      "label": "Accepted Qty",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_issue",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "has_issue",
+      "fieldtype": "Check",
+      "label": "Has Issue",
+      "default": "0",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "issue_notes",
+      "fieldtype": "Small Text",
+      "label": "Issue Notes"
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2026-03-12 12:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Warehouse Receiving Item",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "creation",
+  "sort_order": "ASC",
+  "states": [],
+  "track_changes": 1
+}
