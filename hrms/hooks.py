@@ -376,10 +376,14 @@ scheduler_events = {
 		],
 		# Monthly billing generation: 6 AM on 1st of each month
 		"0 6 1 * *": ["hrms.api.billing.scheduled_monthly_billing"],
-		# Store demand + inventory shadow sync: 8:00 AM PHT daily (00:00 UTC)
-		"0 0 * * *": [
+		# Store demand + inventory shadow sync: 7:00 AM PHT daily (23:00 UTC previous day)
+		"0 23 * * *": [
 			"hrms.api.erp_sync.enqueue_scheduled_store_inventory_shadow_sync",
 			"hrms.api.erp_sync.enqueue_scheduled_store_demand_snapshot_sync",
+		],
+		# Morning sync health report: 8:15 AM PHT daily (00:15 UTC) after sync buffer
+		"15 0 * * *": [
+			"hrms.api.erp_sync.scheduled_generate_morning_sync_health_report",
 		],
 		# Store inventory shadow sync watchdog: resume stale in-progress runs after deploy interruptions
 		"*/10 * * * *": [

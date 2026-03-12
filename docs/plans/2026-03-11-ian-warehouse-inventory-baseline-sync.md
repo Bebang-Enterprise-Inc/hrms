@@ -4,7 +4,7 @@ Date: 2026-03-11
 
 ## Purpose
 
-Prepare Frappe inventory so Ian can start warehouse operations from Frappe with a daily 8:00 AM PHT baseline sync from the active warehouse workbook.
+Prepare Frappe inventory so Ian can start warehouse operations from Frappe with a daily 7:00 AM PHT baseline sync from the active warehouse workbook.
 
 ## Active Source
 
@@ -29,7 +29,7 @@ Each transformed row is keyed by `inventory_key = <warehouse_code>::<item_code>`
 
 ## Runtime Behavior
 
-- Daily baseline scheduler includes `inventory` at `8:00 AM PHT`
+- Daily baseline scheduler includes `inventory` at `7:00 AM PHT`
 - Manual force sync endpoint:
   - `POST /api/sync/inventory?force=true`
 - Receiver sends `inventory` in per-warehouse chunks using `warehouse_source_code`

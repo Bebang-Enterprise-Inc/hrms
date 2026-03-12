@@ -63,7 +63,7 @@ logger = logging.getLogger(__name__)
 PHT_TIMEZONE = ZoneInfo("Asia/Manila")
 DAILY_BASELINE_TRIGGER = "daily_baseline"
 INTERVAL_BASELINE_TRIGGER = "interval_baseline"
-DAILY_BASELINE_PHT_TIME = dt_time(hour=8, minute=0)
+DAILY_BASELINE_PHT_TIME = dt_time(hour=7, minute=0)
 BASELINE_LOOP_SLEEP_SECONDS = 30
 DAILY_BASELINE_SHEET_KEYS = (
 	"inventory",
@@ -130,7 +130,7 @@ def _normalize_now_utc(now_utc: datetime | None = None) -> datetime:
 
 
 def get_daily_baseline_sheet_keys() -> tuple[str, ...]:
-	"""Return the sheet keys that must be force-synced at 8:00 AM PHT."""
+	"""Return the sheet keys that must be force-synced at 7:00 AM PHT."""
 	return DAILY_BASELINE_SHEET_KEYS
 
 
@@ -236,7 +236,7 @@ def _run_baseline_sync_guarded(
 
 def run_daily_baseline_sync_if_due(now_utc: datetime | None = None):
 	"""
-	Force-sync Inventory, AP, and Procurement baseline sheets once per PHT day after 8:00 AM.
+	Force-sync Inventory, AP, and Procurement baseline sheets once per PHT day after 7:00 AM.
 
 	This does not rely on the host/container timezone. It checks whether each target
 	sheet already has a successful `daily_baseline` sync logged for the current PHT
@@ -270,7 +270,7 @@ def run_daily_baseline_loop(
 	"""Run the 8AM PHT baseline gate in a dedicated loop so long jobs cannot starve it."""
 	stop_event = stop_event or threading.Event()
 	logger.info(
-		"Daily AP/procurement baseline loop started: every %s seconds, target 8 AM PHT",
+		"Daily AP/procurement baseline loop started: every %s seconds, target 7 AM PHT",
 		sleep_seconds,
 	)
 
@@ -472,7 +472,7 @@ def run_scheduler():
 	logger.info("Scheduler started with jobs:")
 	logger.info("  - Sheet watch renewal: every 1 hour")
 	logger.info("  - Sheet backup sync: every 6 hours")
-	logger.info("  - Daily AP/procurement baseline sync: dedicated loop, target 8 AM PHT")
+	logger.info("  - Daily AP/procurement baseline sync: dedicated loop, target 7 AM PHT")
 	if config.baseline_test_interval_minutes > 0:
 		logger.info(
 			"  - Interval AP/procurement baseline sync: every %s minutes (test mode)",

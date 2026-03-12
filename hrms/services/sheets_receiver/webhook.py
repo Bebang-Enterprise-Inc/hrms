@@ -5,7 +5,10 @@ Handles incoming push notifications from Google Drive.
 """
 
 import logging
-from typing import Optional
+from datetime import UTC, date, datetime
+from datetime import time as dt_time
+from typing import Any, Optional
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, Request, Header, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
@@ -15,6 +18,149 @@ from .config import get_config
 from .processor import get_processor
 
 logger = logging.getLogger(__name__)
+
+PHT_TIMEZONE = ZoneInfo("Asia/Manila")
+BASELINE_TARGET_PHT_TIME = dt_time(hour=7, minute=0)
+MORNING_READY_DEADLINE_PHT_TIME = dt_time(hour=9, minute=0)
+MORNING_HEALTH_SHEET_KEYS = (
+    "inventory",
+    "ap_opening_balance",
+    "procurement_suppliers",
+    "procurement_requisitions",
+    "procurement_purchase_orders",
+    "procurement_goods_receipts",
+)
+
+
+def _normalize_report_date(report_date: str | None) -> date:
+    """Normalize the requested report date in PHT."""
+    if report_date:
+        return date.fromisoformat(report_date)
+    return datetime.now(PHT_TIMEZONE).date()
+
+
+def _serialize_sync_log(sync_log: Any | None) -> dict[str, Any] | None:
+    """Serialize a sync log dataclass for API responses."""
+    if not sync_log:
+        return None
+
+    created_at_utc = sync_log.created_at.replace(tzinfo=UTC)
+    return {
+        "id": sync_log.id,
+        "trigger": sync_log.trigger,
+        "status": sync_log.status,
+        "rows_processed": sync_log.rows_processed,
+        "rows_created": sync_log.rows_created,
+        "rows_updated": sync_log.rows_updated,
+        "rows_failed": sync_log.rows_failed,
+        "error_message": sync_log.error_message,
+        "duration_seconds": sync_log.duration_seconds,
+        "created_at_utc": created_at_utc.isoformat(),
+        "created_at_pht": created_at_utc.astimezone(PHT_TIMEZONE).isoformat(),
+    }
+
+
+def _build_lane_health(sheet_key: str, report_date_value: date) -> dict[str, Any]:
+    """Summarize one receiver lane for the morning health report."""
+    from .config import get_sheet_config
+    from .models import get_db
+
+    sheet_config = get_sheet_config(sheet_key)
+    if not sheet_config:
+        return {
+            "sheet_key": sheet_key,
+            "status": "missing",
+            "ready_before_deadline": False,
+            "clean_success": False,
+        }
+
+    if not getattr(sheet_config, "enabled", True):
+        return {
+            "sheet_key": sheet_key,
+            "name": sheet_config.name,
+            "status": "disabled",
+            "ready_before_deadline": False,
+            "clean_success": False,
+        }
+
+    pht_day_start = datetime.combine(report_date_value, dt_time.min, tzinfo=PHT_TIMEZONE)
+    pht_deadline = datetime.combine(report_date_value, MORNING_READY_DEADLINE_PHT_TIME, tzinfo=PHT_TIMEZONE)
+    day_start_utc = pht_day_start.astimezone(UTC)
+    deadline_utc = pht_deadline.astimezone(UTC)
+
+    db = get_db()
+    latest_today = db.get_latest_sync_since(
+        sheet_config.spreadsheet_id,
+        sheet_config.sheet_name,
+        day_start_utc,
+        trigger="daily_baseline",
+    )
+    latest_success_today = db.get_latest_sync_since(
+        sheet_config.spreadsheet_id,
+        sheet_config.sheet_name,
+        day_start_utc,
+        trigger="daily_baseline",
+        status="success",
+    )
+
+    ready_before_deadline = bool(
+        latest_success_today and latest_success_today.created_at.replace(tzinfo=UTC) <= deadline_utc
+    )
+    clean_success = bool(latest_success_today and latest_success_today.rows_failed == 0)
+
+    if latest_today is None:
+        status = "pending"
+    elif latest_today.status == "success":
+        status = "completed_with_exceptions" if latest_today.rows_failed else "completed"
+    elif latest_success_today is not None:
+        status = f"{latest_today.status}_after_success"
+    else:
+        status = latest_today.status or "unknown"
+
+    return {
+        "sheet_key": sheet_key,
+        "name": sheet_config.name,
+        "sheet_name": sheet_config.sheet_name,
+        "owner_email": sheet_config.owner_email,
+        "status": status,
+        "ready_before_deadline": ready_before_deadline,
+        "clean_success": clean_success,
+        "latest_today": _serialize_sync_log(latest_today),
+        "latest_success_today": _serialize_sync_log(latest_success_today),
+        "completed_at_pht": (
+            latest_success_today.created_at.replace(tzinfo=UTC).astimezone(PHT_TIMEZONE).isoformat()
+            if latest_success_today
+            else None
+        ),
+    }
+
+
+def build_morning_health_report(report_date: str | None = None) -> dict[str, Any]:
+    """Build the receiver-side morning health report for Ian inventory + AP/procurement."""
+    report_date_value = _normalize_report_date(report_date)
+    lane_rows = [_build_lane_health(sheet_key, report_date_value) for sheet_key in MORNING_HEALTH_SHEET_KEYS]
+    active_lanes = [lane for lane in lane_rows if lane.get("status") not in {"disabled", "missing"}]
+    all_ready = bool(active_lanes) and all(lane.get("ready_before_deadline") for lane in active_lanes)
+    all_clean = all(lane.get("clean_success") for lane in active_lanes) if active_lanes else False
+
+    if all_ready and all_clean:
+        status = "green"
+    elif all_ready:
+        status = "yellow"
+    else:
+        status = "red"
+
+    return {
+        "service": "sheets-receiver",
+        "report_date": report_date_value.isoformat(),
+        "generated_at_utc": datetime.now(UTC).isoformat(),
+        "generated_at_pht": datetime.now(PHT_TIMEZONE).isoformat(),
+        "baseline_target_pht_time": BASELINE_TARGET_PHT_TIME.strftime("%H:%M"),
+        "ready_deadline_pht_time": MORNING_READY_DEADLINE_PHT_TIME.strftime("%H:%M"),
+        "status": status,
+        "ready_before_deadline": all_ready,
+        "lanes": lane_rows,
+    }
 
 app = FastAPI(
     title="Sheets Receiver",
@@ -222,6 +368,15 @@ async def get_status():
             for s in recent_syncs
         ]
     }
+
+
+@app.get("/api/morning-health")
+async def get_morning_health(report_date: str | None = None):
+    """Get same-day baseline readiness for Ian inventory and AP/procurement."""
+    try:
+        return build_morning_health_report(report_date=report_date)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.post("/api/watches/setup")
