@@ -132,7 +132,7 @@ class ServiceConfig:
 	suppress_critical_alert_triggers: tuple[str, ...] = field(
 		default_factory=lambda: _env_csv(
 			"SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS",
-			("startup", "manual", "interval_baseline"),
+			("startup", "manual", "interval_baseline", "scheduled"),
 		)
 	)
 
@@ -150,8 +150,9 @@ WATCHED_SHEETS: dict[str, SheetConfig] = {
 		owner_email="alyssa@bebang.ph",
 		sync_endpoint="/api/method/hrms.api.erp_sync.sync_ar_aging",
 		doctype="Sales Invoice",
-		key_column="invoice_no",
+		key_column="ar_entry_key",
 		sync_mode="upsert",
+		data_transformer="ar_aging_table",
 	),
 	"inventory": SheetConfig(
 		name="Inventory",

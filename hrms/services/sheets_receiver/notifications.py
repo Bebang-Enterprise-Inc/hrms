@@ -407,6 +407,21 @@ def send_batch_failure_alert(failures: list[dict[str, Any]]) -> str | None:
 		return None
 
 
+def _unique_preserve_order(items: list[str], limit: int = 3) -> list[str]:
+	"""Keep only the first unique non-empty items, preserving order."""
+	seen: set[str] = set()
+	result: list[str] = []
+	for item in items:
+		text = str(item or "").strip()
+		if not text or text in seen:
+			continue
+		seen.add(text)
+		result.append(text)
+		if len(result) >= limit:
+			break
+	return result
+
+
 def send_sheets_sync_critical_alert(
 	spreadsheet_name: str,
 	sheet_name: str,
@@ -439,15 +454,16 @@ def send_sheets_sync_critical_alert(
 
 	try:
 		chat = get_chat_service()
+		trigger_label = "scheduled (6-hour fallback)" if trigger == "scheduled" else trigger
 		reason_lines = [f"  - {reason_map.get(reason, reason)}" for reason in sorted(set(reasons))]
-		error_lines = [f"  - {err}" for err in errors[:3]]
-		alert_lines = [f"  - {msg}" for msg in alerts[:3]]
+		error_lines = [f"  - {err}" for err in _unique_preserve_order(errors)]
+		alert_lines = [f"  - {msg}" for msg in _unique_preserve_order(alerts)]
 
 		message_parts = [
 			"*SHEETS SYNC CRITICAL ALERT*",
 			"",
 			f"*Sheet:* {spreadsheet_name} / {sheet_name}",
-			f"*Trigger:* {trigger}",
+			f"*Trigger:* {trigger_label}",
 			f"*Rows:* processed={rows_processed}, failed={rows_failed}",
 		]
 

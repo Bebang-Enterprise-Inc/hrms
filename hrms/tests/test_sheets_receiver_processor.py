@@ -122,7 +122,7 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 	def _make_processor(self):
 		processor = ChangeProcessor.__new__(ChangeProcessor)
 		processor.config = types.SimpleNamespace(
-			suppress_critical_alert_triggers=("startup", "manual", "interval_baseline")
+			suppress_critical_alert_triggers=("startup", "manual", "interval_baseline", "scheduled")
 		)
 		processor.db = types.SimpleNamespace(
 			has_changed=MagicMock(return_value=True),
@@ -167,7 +167,8 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 
 		self.assertTrue(processor._critical_alerts_suppressed_for_trigger("interval_baseline"))
 		self.assertTrue(processor._critical_alerts_suppressed_for_trigger("manual"))
-		self.assertFalse(processor._critical_alerts_suppressed_for_trigger("scheduled"))
+		self.assertTrue(processor._critical_alerts_suppressed_for_trigger("scheduled"))
+		self.assertFalse(processor._critical_alerts_suppressed_for_trigger("daily_baseline"))
 
 	def test_sync_sheet_emits_alert_for_critical_change_pattern(self):
 		processor = self._make_processor()
@@ -204,13 +205,42 @@ class TestSheetsReceiverProcessorCriticalAlerts(unittest.TestCase):
 			errors=["Missing supplier on row 2"],
 		)
 
-		log = processor.sync_sheet(sheet_config, trigger="scheduled")
+		log = processor.sync_sheet(sheet_config, trigger="daily_baseline")
 
 		self.assertEqual(log.status, "success")
 		processor._send_critical_sync_alert.assert_called_once()
 		call = processor._send_critical_sync_alert.call_args
 		self.assertIn("rows_failed", call.kwargs["reasons"])
 		self.assertIn("sync_errors_reported", call.kwargs["reasons"])
+
+	def test_sync_sheet_suppresses_scheduled_trigger_alerts(self):
+		processor = self._make_processor()
+		sheet_config = self._make_sheet_config()
+		processor.frappe.sync_sheet_data.return_value = SyncResult(
+			success=True,
+			rows_processed=2,
+			rows_created=0,
+			rows_updated=0,
+			rows_failed=1,
+			errors=["Missing supplier on row 2"],
+		)
+		processor._send_critical_sync_alert = processor_mod.ChangeProcessor._send_critical_sync_alert.__get__(
+			processor, ChangeProcessor
+		)
+		fake_notifications = types.SimpleNamespace(send_sheets_sync_critical_alert=MagicMock())
+
+		original_notifications = sys.modules.get("hrms.services.sheets_receiver.notifications")
+		sys.modules["hrms.services.sheets_receiver.notifications"] = fake_notifications
+		try:
+			log = processor.sync_sheet(sheet_config, trigger="scheduled")
+		finally:
+			if original_notifications is None:
+				del sys.modules["hrms.services.sheets_receiver.notifications"]
+			else:
+				sys.modules["hrms.services.sheets_receiver.notifications"] = original_notifications
+
+		self.assertEqual(log.status, "success")
+		fake_notifications.send_sheets_sync_critical_alert.assert_not_called()
 
 	def test_sync_sheet_emits_alert_when_exception_occurs(self):
 		processor = self._make_processor()

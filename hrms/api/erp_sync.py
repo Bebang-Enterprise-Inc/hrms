@@ -231,6 +231,53 @@ def _coerce_metadata_dict(value: Any) -> dict[str, Any]:
 	return {}
 
 
+def _row_has_meaningful_value(row: dict[str, Any], keys: list[str]) -> bool:
+	for key in keys:
+		value = row.get(key)
+		if value is None:
+			continue
+		if isinstance(value, str):
+			if value.strip():
+				return True
+			continue
+		if isinstance(value, (int, float)):
+			if flt(value) != 0:
+				return True
+			continue
+		if value:
+			return True
+	return False
+
+
+def _is_blank_ap_opening_row(row: dict[str, Any]) -> bool:
+	return not _row_has_meaningful_value(
+		row,
+		[
+			"supplier",
+			"supplier_name",
+			"reference",
+			"invoice_no",
+			"invoice_no.",
+			"bill_no",
+			"date_entry",
+			"invoice_date",
+			"particulars",
+			"amount",
+			"payment",
+			"outstanding_balance",
+			"balance",
+			"outstanding",
+		],
+	)
+
+
+def _is_receivables_summary_ar_row(row: dict[str, Any]) -> bool:
+	return bool(
+		_first_non_empty(row, "date_billed", "type_billings", "particulars", "net_receivables")
+		and not _first_non_empty(row, "invoice_no", "invoice_number", "name")
+	)
+
+
 def _store_demand_output_root() -> Path:
 	get_site_path = getattr(frappe, "get_site_path", None)
 	if callable(get_site_path):
@@ -838,6 +885,14 @@ def sync_ar_aging(sheet_name: str, data: list[dict], checksum: str, **kwargs) ->
 	results = _init_results(len(rows))
 	seen_invoice_keys: set[str] = set()
 
+	if rows and any(_is_receivables_summary_ar_row(row) for row in rows):
+		results["rows_skipped"] = len(rows)
+		frappe.logger().info(
+			"AR Aging sync skipped: sheet '%s' uses receivables summary rows without invoice numbers",
+			sheet_name,
+		)
+		return results
+
 	outstanding_field = _first_available_field(
 		"Sales Invoice",
 		[
@@ -879,7 +934,7 @@ def sync_ar_aging(sheet_name: str, data: list[dict], checksum: str, **kwargs) ->
 
 			if not invoice_no:
 				results["rows_failed"] += 1
-				results["errors"].append("Missing invoice_no in AR row")
+				results["errors"].append("Missing invoice_no in AR invoice row")
 				_release_savepoint(savepoint)
 				continue
 
@@ -1608,6 +1663,10 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 	for row in rows:
 		savepoint: str | None = None
 		try:
+			if _is_blank_ap_opening_row(row):
+				results["rows_skipped"] = results.get("rows_skipped", 0) + 1
+				continue
+
 			supplier_input = _normalize_sheet_text(_first_non_empty(row, "supplier", "supplier_name"))
 			raw_reference = _normalize_sheet_text(_first_non_empty(row, "reference"))
 			invoice_no = _normalize_sheet_text(_first_non_empty(row, "invoice_no", "invoice_no.", "bill_no"))
@@ -1615,7 +1674,7 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 				invoice_no = raw_reference
 			if not supplier_input:
 				results["rows_failed"] += 1
-				results["errors"].append("Missing supplier or invoice_no in AP opening row")
+				results["errors"].append("Missing supplier in AP opening row")
 				continue
 
 			amount = _safe_float(
@@ -1646,7 +1705,9 @@ def sync_ap_opening(sheet_name: str, data: list[dict], checksum: str, **kwargs) 
 			missing_supplier_invoice = not bool(invoice_no)
 			if missing_supplier_invoice and not exception_config["allowed"]:
 				results["rows_failed"] += 1
-				results["errors"].append("Missing supplier or invoice_no in AP opening row")
+				results["errors"].append(
+					f"Missing invoice_no for non-whitelisted AP opening supplier: {supplier_input}"
+				)
 				continue
 
 			lookup_key = internal_ap_ref if missing_supplier_invoice else invoice_no

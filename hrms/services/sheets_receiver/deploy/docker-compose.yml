@@ -33,7 +33,7 @@ services:
       BASELINE_TEST_INTERVAL_MINUTES: ${BASELINE_TEST_INTERVAL_MINUTES:-0}
       GENERATE_AP_EXCEPTION_REPORTS: ${GENERATE_AP_EXCEPTION_REPORTS:-true}
       AP_EXCEPTION_REPORT_DIR: ${AP_EXCEPTION_REPORT_DIR:-/app/data/reports/ap_exception_reports}
-      SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS: ${SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS:-startup,manual,interval_baseline}
+      SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS: ${SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS:-startup,manual,interval_baseline,scheduled}
 
     volumes:
       # Google service account (copy from main credentials folder)

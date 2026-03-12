@@ -27,6 +27,7 @@ services:
 
       # Logging
       LOG_LEVEL: INFO
+      SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS: ${SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS:-startup,manual,interval_baseline,scheduled}
 
     volumes:
       # Google service account credentials

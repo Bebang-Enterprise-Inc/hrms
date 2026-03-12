@@ -153,6 +153,38 @@ class TestSheetsReceiverNotifications(unittest.TestCase):
 
 		self.assertIsNone(result)
 
+	def test_send_sheets_sync_critical_alert_dedupes_errors_and_labels_scheduled_trigger(self):
+		fake_chat = _FakeChatAPI()
+		fake_db = types.SimpleNamespace(log_notification=MagicMock())
+
+		with (
+			patch.object(notifications, "get_chat_service", return_value=fake_chat),
+			patch.object(notifications, "get_db", return_value=fake_db),
+		):
+			notifications.send_sheets_sync_critical_alert(
+				spreadsheet_name="AR Aging",
+				sheet_name="AR",
+				trigger="scheduled",
+				reasons=["rows_failed", "sync_errors_reported"],
+				rows_processed=1674,
+				rows_failed=1674,
+				errors=[
+					"Missing invoice_no in AR invoice row",
+					"Missing invoice_no in AR invoice row",
+					"Missing invoice_no in AR invoice row",
+				],
+				alerts=[
+					"⚠️ MASS EDIT: 1502 rows modified",
+					"⚠️ MASS EDIT: 1502 rows modified",
+					"⚠️ UNUSUAL PATTERN: More modifications than additions",
+				],
+			)
+
+		text = fake_chat.messages_api.last_body.get("text", "")
+		self.assertIn("scheduled (6-hour fallback)", text)
+		self.assertEqual(text.count("Missing invoice_no in AR invoice row"), 1)
+		self.assertEqual(text.count("⚠️ MASS EDIT: 1502 rows modified"), 1)
+
 
 if __name__ == "__main__":
 	unittest.main()

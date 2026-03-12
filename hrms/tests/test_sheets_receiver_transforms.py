@@ -76,6 +76,68 @@ class TestSheetsReceiverTransforms(unittest.TestCase):
 		with self.assertRaisesRegex(ValueError, "missing expected warehouse columns"):
 			transforms.transform_sheet_rows("inventory_summary_matrix", raw_rows)
 
+	def test_ar_aging_table_normalizes_receivables_rows_and_generates_stable_keys(self):
+		raw_rows = [
+			["TOTAL BALANCE", 12345],
+			[
+				"BILLED BY:",
+				"DATE BILLED",
+				"",
+				"TYPE BILLINGS",
+				"PARTICULARS",
+				"PERIOD",
+				"BILLED AMOUNT",
+				"AMOUNT PAID",
+				"NET RECEIVABLES",
+				"STATUS",
+				"overdue",
+				"AGING (days)",
+				"REMARKS",
+				"0-30",
+				"31-60",
+				"61-90",
+				"91-120",
+				"over 120",
+			],
+			[
+				"IVY",
+				"January 20, 2026",
+				"BF Homes",
+				"OTHERS",
+				"Event Billing",
+				"",
+				"1000",
+				"250",
+				"750",
+				"OPEN",
+				"YES",
+				"15",
+				"",
+				"750",
+				"",
+				"",
+				"",
+				"",
+			],
+		]
+
+		rows = transforms.transform_sheet_rows("ar_aging_table", raw_rows)
+
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(rows[0]["store"], "BF Homes")
+		self.assertEqual(rows[0]["net_receivables"], 750.0)
+		self.assertEqual(rows[0]["aging_days"], 15)
+		self.assertEqual(
+			rows[0]["ar_entry_key"],
+			"January 20, 2026::BF Homes::OTHERS::Event Billing::1000.0",
+		)
+
+	def test_ar_aging_table_raises_when_receivables_header_is_missing(self):
+		raw_rows = [["TOTAL BALANCE", 12345], ["wrong", "headers"]]
+
+		with self.assertRaisesRegex(ValueError, "missing the expected receivables header row"):
+			transforms.transform_sheet_rows("ar_aging_table", raw_rows)
+
 
 if __name__ == "__main__":
 	unittest.main()

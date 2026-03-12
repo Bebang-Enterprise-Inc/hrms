@@ -227,6 +227,34 @@ class TestErpSync(unittest.TestCase):
 		self.assertEqual(args[1], "SINV-0001")
 		self.assertIn("outstanding_amount", args[2])
 
+	def test_sync_ar_aging_skips_receivables_summary_layout_without_invoice_numbers(self):
+		erp_sync.frappe.db.exists = MagicMock()
+		erp_sync.frappe.db.get_value = MagicMock()
+		erp_sync.frappe.db.set_value = MagicMock()
+		logger = types.SimpleNamespace(info=MagicMock())
+		erp_sync.frappe.logger = MagicMock(return_value=logger)
+		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda field: True))
+
+		result = erp_sync.sync_ar_aging(
+			sheet_name="AR Aging",
+			data=[
+				{
+					"ar_entry_key": "2026-01-20::BF Homes::OTHERS::Event Billing",
+					"date_billed": "2026-01-20",
+					"store": "BF Homes",
+					"type_billings": "OTHERS",
+					"particulars": "Event Billing",
+					"net_receivables": 750,
+				}
+			],
+			checksum="chk-ar-summary-skip",
+		)
+
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["rows_skipped"], 1)
+		erp_sync.frappe.db.set_value.assert_not_called()
+		logger.info.assert_called_once()
+
 	def test_sync_inventory_is_idempotent_by_sync_reference(self):
 		created_sync_refs = set()
 		created_docs = []
@@ -1473,7 +1501,33 @@ class TestErpSync(unittest.TestCase):
 
 		self.assertEqual(result["rows_created"], 0)
 		self.assertEqual(result["rows_failed"], 1)
-		self.assertIn("Missing supplier or invoice_no in AP opening row", result["errors"])
+		self.assertIn(
+			"Missing invoice_no for non-whitelisted AP opening supplier: STRICT SUPPLIER",
+			result["errors"],
+		)
+
+	def test_sync_ap_opening_skips_fully_blank_tail_rows(self):
+		erp_sync.frappe.db.exists = MagicMock(return_value=None)
+		erp_sync.frappe.db.get_value = MagicMock(return_value=None)
+		erp_sync.frappe.new_doc = MagicMock()
+
+		result = erp_sync.sync_ap_opening(
+			"Supplier SOA",
+			[
+				{
+					"supplier_name": "",
+					"reference": "",
+					"invoice_no.": "",
+					"outstanding_balance": "",
+					"date_entry": "",
+				}
+			],
+			"chk-ap-blank-tail",
+		)
+
+		self.assertEqual(result["rows_failed"], 0)
+		self.assertEqual(result["rows_skipped"], 1)
+		erp_sync.frappe.new_doc.assert_not_called()
 		erp_sync.frappe.new_doc.assert_not_called()
 
 	def test_sync_procurement_suppliers_creates_then_updates_by_supplier_code(self):
