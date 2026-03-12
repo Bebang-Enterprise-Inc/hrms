@@ -570,6 +570,14 @@ def initial_setup():
 	logger.info("=" * 60)
 
 
+def run_initial_setup_background():
+	"""Run expensive startup setup without blocking the webhook server."""
+	try:
+		initial_setup()
+	except Exception:
+		logger.exception("Background initial setup failed")
+
+
 def handle_shutdown(signum, frame):
 	"""Handle shutdown signals gracefully."""
 	logger.info("Shutdown signal received, cleaning up...")
@@ -589,8 +597,10 @@ def main():
 	signal.signal(signal.SIGTERM, handle_shutdown)
 	signal.signal(signal.SIGINT, handle_shutdown)
 
-	# Initial setup
-	initial_setup()
+	# Keep startup health checks responsive by running the heavy Google setup,
+	# initial syncs, and POS scans in the background.
+	initial_setup_thread = threading.Thread(target=run_initial_setup_background, daemon=True)
+	initial_setup_thread.start()
 
 	# Keep the 8AM baseline independent from the shared schedule loop so it cannot
 	# be delayed by long-running watch-renewal or file-processing work.
