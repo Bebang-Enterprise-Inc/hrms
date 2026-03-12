@@ -75,9 +75,22 @@ def _ensure_module(name: str, **attrs):
 	module = sys.modules.get(name)
 	if module is None:
 		module = types.ModuleType(name)
+		if "." not in name:
+			module.__path__ = []
 		sys.modules[name] = module
 	for key, value in attrs.items():
 		setattr(module, key, value)
+	return module
+
+
+def _install_supply_chain_contracts():
+	spec = importlib.util.spec_from_file_location(
+		"hrms.utils.supply_chain_contracts",
+		ROOT / "hrms" / "utils" / "supply_chain_contracts.py",
+	)
+	module = importlib.util.module_from_spec(spec)
+	spec.loader.exec_module(module)
+	sys.modules["hrms.utils.supply_chain_contracts"] = module
 	return module
 
 
@@ -109,6 +122,7 @@ def _install_dispatch_deps():
 	_ensure_module("hrms")
 	_ensure_module("hrms.api")
 	_ensure_module("hrms.utils")
+	_install_supply_chain_contracts()
 	_ensure_module(
 		"hrms.utils.delivery_billing_policy",
 		DeliveryBillingPolicyError=type("DeliveryBillingPolicyError", (Exception,), {}),
@@ -129,6 +143,7 @@ def _install_store_deps():
 	_ensure_module("hrms")
 	_ensure_module("hrms.api")
 	_ensure_module("hrms.utils")
+	_install_supply_chain_contracts()
 	_ensure_module("hrms.utils.bei_config", get_company=lambda: "Bebang Enterprise Inc.")
 	_ensure_module(
 		"hrms.utils.scm_roles",
@@ -281,9 +296,9 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		def fake_get_value(doctype, filters, fieldname=None, as_dict=False):
 			if doctype == "BEI Route":
 				if filters == "BEI-ROUTE-0001":
-					return "TEST-COMMISSARY - BEI"
+					return "Shaw BLVD - BKI"
 				if filters == {"route_name": "S027 Pick Route"}:
-					return "TEST-COMMISSARY - BEI"
+					return "Shaw BLVD - BKI"
 			if doctype == "Warehouse":
 				return "UNEXPECTED-WAREHOUSE"
 			return None
@@ -296,10 +311,10 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 			route="BEI-ROUTE-0001",
 			route_name="S027 Pick Route",
 		)
-		self.assertEqual(picking._resolve_trip_source_warehouse(trip), "TEST-COMMISSARY - BEI")
+		self.assertEqual(picking._resolve_trip_source_warehouse(trip), "Shaw BLVD - BKI")
 
 		trip.route = ""
-		self.assertEqual(picking._resolve_trip_source_warehouse(trip), "TEST-COMMISSARY - BEI")
+		self.assertEqual(picking._resolve_trip_source_warehouse(trip), "Shaw BLVD - BKI")
 
 
 if __name__ == "__main__":

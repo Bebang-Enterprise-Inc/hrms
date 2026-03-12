@@ -17,6 +17,11 @@ REQUEST_SOURCE_STORE_DISPOSAL = "store_disposal"
 FINANCE_TREATMENT_SAME_COMPANY = "same_company"
 FINANCE_TREATMENT_INTERCOMPANY = "intercompany"
 
+CANONICAL_COMMISSARY_GROUP_WAREHOUSE = "Commissary - BKI"
+CANONICAL_COMMISSARY_OPERATION_WAREHOUSE = "Shaw BLVD - BKI"
+TEST_COMMISSARY_OPERATION_WAREHOUSE = "TEST-COMMISSARY - BKI"
+LEGACY_COMMISSARY_OPERATION_WAREHOUSES = ("TEST-COMMISSARY - BEI", "Commissary - BEI")
+
 BUYER_ENTITY_STATUS_CONFIRMED = "confirmed_legal_entity"
 BUYER_ENTITY_STATUS_CONFIRMED_TYPE_PENDING = "entity_confirmed_store_type_pending"
 BUYER_ENTITY_STATUS_PROVISIONAL = "provisional_entity_from_pos_master"
@@ -39,6 +44,16 @@ REQUEST_SOURCE_LABELS = {
     REQUEST_SOURCE_STORE_RETURN: "Store Return",
     REQUEST_SOURCE_STORE_DISPOSAL: "Store Disposal",
 }
+
+
+def get_preferred_commissary_warehouses(include_legacy: bool = True) -> tuple[str, ...]:
+    preferred = (
+        TEST_COMMISSARY_OPERATION_WAREHOUSE,
+        CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
+    )
+    if include_legacy:
+        return preferred + LEGACY_COMMISSARY_OPERATION_WAREHOUSES
+    return preferred
 
 
 def _project_root() -> Path:

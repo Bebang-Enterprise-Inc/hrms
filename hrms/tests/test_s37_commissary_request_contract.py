@@ -105,7 +105,7 @@ def _install_fake_modules():
 		sys.modules["hrms.utils"] = hrms_utils_pkg
 
 	commissary_mod = types.ModuleType("hrms.api.commissary")
-	commissary_mod.get_commissary_warehouse = lambda: "Commissary - BEI"
+	commissary_mod.get_commissary_warehouse = lambda: "Shaw BLVD - BKI"
 	sys.modules["hrms.api.commissary"] = commissary_mod
 
 	bei_config_mod = types.ModuleType("hrms.utils.bei_config")
@@ -137,7 +137,7 @@ class TestS37CommissaryRequestContract(unittest.TestCase):
 		result = commissary_requisition.create_rm_requisition(
 			items=json.dumps([{"item_code": "RM-001", "qty": 5}]),
 			remarks=None,
-			source_warehouse="SHAW BLVD - BEBANG ENTERPRISE INC.",
+			source_warehouse="Greenhills Ortigas - BKI",
 		)
 
 		self.assertTrue(result["success"])
@@ -148,8 +148,8 @@ class TestS37CommissaryRequestContract(unittest.TestCase):
 		self.assertEqual(len(_DOCS_CREATED), 1)
 		created = _DOCS_CREATED[0]
 		self.assertEqual(created.material_request_type, "Material Transfer")
-		self.assertEqual(created.set_warehouse, "Commissary - BEI")
-		self.assertEqual(created.items[0].from_warehouse, "SHAW BLVD - BEBANG ENTERPRISE INC.")
+		self.assertEqual(created.set_warehouse, "Shaw BLVD - BKI")
+		self.assertEqual(created.items[0].from_warehouse, "Greenhills Ortigas - BKI")
 		self.assertEqual(created.docstatus, 1)
 		self.assertEqual(created.status, "Pending")
 

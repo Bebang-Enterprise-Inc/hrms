@@ -44,7 +44,7 @@ def _load_module(module_name, rel_path):
 	sys.modules.setdefault("hrms.utils", types.ModuleType("hrms.utils"))
 
 	fake_commissary = types.ModuleType("hrms.api.commissary")
-	fake_commissary.get_commissary_warehouse = lambda: "Commissary - BEI"
+	fake_commissary.get_commissary_warehouse = lambda: "Shaw BLVD - BKI"
 	sys.modules["hrms.api.commissary"] = fake_commissary
 
 	fake_bei_config = types.ModuleType("hrms.utils.bei_config")
