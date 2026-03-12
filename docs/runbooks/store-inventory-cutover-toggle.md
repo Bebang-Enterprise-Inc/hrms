@@ -14,7 +14,7 @@ Do not edit the fixture unless you are changing the default seed for future envi
 ## State Meanings
 
 - `shadow_sync`
-  The store still uses the Google Sheet as the operational stock source. Daily `8:00 AM PHT` sync remains active.
+  The store still uses the Google Sheet as the operational stock source. Daily `7:00 AM PHT` sync remains active.
 
 - `cutover_ready`
   The store is preparing to cut over. The bridge skips it.

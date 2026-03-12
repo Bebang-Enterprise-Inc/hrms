@@ -25,7 +25,7 @@ Tuesday, 2026-03-10 cutover prep + temporary bridge until each store fully cuts 
 Create a controlled store-inventory bridge that:
 
 1. Imports the extracted `3. INVENTORY` current balances into Frappe as store opening stock.
-2. Keeps store inventory mirrored from Google Sheets every morning at **8:00 AM PHT** until cutover is complete.
+2. Keeps store inventory mirrored from Google Sheets every morning at **7:00 AM PHT** until cutover is complete.
 3. Preserves the full workbook history for analytics without polluting Frappe's live stock ledger with synthetic historical transactions.
 4. Stops sheet-driven updates per store the moment that store starts using Frappe/my.bebang.ph as the stock source of truth.
 5. Tracks the linked reordering dependency: store order prefills must become sales-driven, and current FoodPanda workbook data only supports consolidated sales until an item-level FoodPanda pipeline exists.
@@ -51,7 +51,7 @@ Create a controlled store-inventory bridge that:
   - `hrms/tests/test_erp_sync.py` `test_sync_inventory_is_idempotent_by_sync_reference`
 - Sheets Receiver already provides a production scheduler, checksum tracking, retries, and webhook/watch management:
   - `hrms/services/sheets_receiver/`
-- Existing scheduler currently runs fallback sheet sync every `6` hours, not at `8:00 AM PHT`:
+- Existing scheduler currently runs fallback sheet sync every `6` hours, not at `7:00 AM PHT`:
   - `hrms/services/sheets_receiver/main.py`
 - Existing in-app stock count / daily stock update path already exists for post-cutover operation:
   - `hrms/api/inventory.py` `daily_stock_update`
@@ -115,7 +115,7 @@ Some older docs still describe `erp_sync.sync_inventory` as a log-only stub. The
 | FoodPanda order-header sales pipeline | workbook tabs `FP SUMMARY` -> `FP_CLEAN` -> `FP_REJECTS` -> `SALES_FACT_DAILY_FINAL`; `scripts/sync_foodpanda_to_supabase.py` | `[EXTEND]` | Keep this as the consolidated-sales and P&L revenue path |
 | Current snapshot -> Frappe payload transform | no dedicated transformer found | `[BUILD]` | Build a bridge script that outputs `item_code, warehouse, qty` rows |
 | Per-store cutover switch | no explicit cutover registry found | `[BUILD]` | Build an operator-visible cutover config to disable sheet sync store-by-store |
-| Morning 8AM inventory job | no store-workbook-specific 8AM job found | `[BUILD]` | Build a new scheduled runner on top of existing service patterns |
+| Morning 7AM inventory job | no store-workbook-specific 7AM job found | `[BUILD]` | Build a new scheduled runner on top of existing service patterns |
 | Sales-driven store demand snapshot | no store-item demand snapshot feeding `get_orderable_items` found | `[BUILD]` | Build a compact Frappe-side demand snapshot fed by Supabase sales + stock |
 | FoodPanda item-level workbook pipeline | no `FP_ITEMS_*` / `SALES_FACT_ITEM_DAILY` flow found | `[BUILD]` | Add a dedicated FoodPanda item pipeline so the channel can participate in future item-level reorder forecasts |
 | New frontend admin UI for sync control | none required for first delivery | `[SKIP]` | Keep control in config/runbook first; add UI only if operator friction appears |
@@ -124,7 +124,7 @@ Some older docs still describe `erp_sync.sync_inventory` as a log-only stub. The
 
 - Importing the extracted store `3. INVENTORY` current balances into Frappe store warehouses
 - Building the transformation and exception pipeline needed before calling `sync_inventory`
-- Adding an **8:00 AM PHT** automated shadow sync for store workbooks
+- Adding a **7:00 AM PHT** automated shadow sync for store workbooks
 - Per-store sync enable/disable and cutover state
 - Verification against `Bin.actual_qty` and store ordering availability
 - Preserving workbook history for analytics

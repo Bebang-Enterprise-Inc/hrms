@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import frappe
 from frappe import _
@@ -41,6 +42,11 @@ INVENTORY_BASELINE_SHEET_NAME = "Inventory"
 INVENTORY_BASELINE_BATCH_PREFIX = "INVBASE"
 STORE_INVENTORY_SHADOW_STALE_AFTER_MINUTES = 20
 STORE_INVENTORY_SHADOW_RECOVERY_COOLDOWN_MINUTES = 20
+PHT_TIMEZONE = ZoneInfo("Asia/Manila")
+MORNING_SYNC_TARGET_PHT_TIME = datetime.time(hour=7, minute=0)
+MORNING_SYNC_READY_DEADLINE_PHT_TIME = datetime.time(hour=9, minute=0)
+MORNING_SYNC_REPORT_DIRNAME = "morning_sync_health_reports"
+RECEIVER_MORNING_HEALTH_URL = "http://sheets-receiver:8765/api/morning-health"
 PO_REFERENCE_RE = re.compile(r"^\s*(?:PO|PURCHASE\s*ORDER)\s*[-#:/]?\s*[A-Z0-9-]+\s*$", re.IGNORECASE)
 
 
@@ -2800,3 +2806,332 @@ def trigger_sync(sheet_key: str | None = None, force: bool = False):
 		return response.json()
 	except Exception as e:
 		return {"status": "error", "message": str(e)}
+
+
+def _normalize_report_date(report_date: str | None) -> datetime.date:
+	"""Normalize a requested report date in site-local terms."""
+	return getdate(report_date or nowdate())
+
+
+def _parse_iso_datetime(value: str | None) -> datetime.datetime | None:
+	"""Parse an ISO timestamp with sane fallback for legacy values."""
+	if not value:
+		return None
+	try:
+		parsed = datetime.datetime.fromisoformat(str(value))
+	except ValueError:
+		return None
+	if parsed.tzinfo is None:
+		return parsed.replace(tzinfo=datetime.UTC)
+	return parsed.astimezone(datetime.UTC)
+
+
+def _to_pht_iso(value: datetime.datetime | None) -> str | None:
+	"""Render a UTC or naive datetime as an ISO timestamp in PHT."""
+	if value is None:
+		return None
+	if value.tzinfo is None:
+		value = value.replace(tzinfo=datetime.UTC)
+	return value.astimezone(PHT_TIMEZONE).isoformat()
+
+
+def _morning_sync_report_dir() -> Path:
+	"""Return the site-private output directory for morning sync health reports."""
+	return Path(frappe.get_site_path("private", "files", MORNING_SYNC_REPORT_DIRNAME))
+
+
+def _morning_sync_report_paths(report_date: str) -> tuple[Path, Path]:
+	"""Return the JSON and Markdown artifact paths for a report date."""
+	report_dir = _morning_sync_report_dir()
+	report_dir.mkdir(parents=True, exist_ok=True)
+	return (
+		report_dir / f"{report_date}_morning_sync_health_report.json",
+		report_dir / f"{report_date}_morning_sync_health_report.md",
+	)
+
+
+def _summarize_receiver_area(
+	receiver_report: dict[str, Any],
+	*,
+	key: str,
+	label: str,
+	sheet_keys: list[str],
+) -> dict[str, Any]:
+	"""Summarize one logical receiver area from lane-level health rows."""
+	lanes = [
+		lane
+		for lane in receiver_report.get("lanes", [])
+		if lane.get("sheet_key") in sheet_keys and lane.get("status") not in {"disabled", "missing"}
+	]
+	if not lanes:
+		return {
+			"key": key,
+			"label": label,
+			"status": "red",
+			"ready_before_deadline": False,
+			"clean_success": False,
+			"completed_at_pht": None,
+			"lanes": [],
+		}
+
+	all_ready = all(bool(lane.get("ready_before_deadline")) for lane in lanes)
+	all_clean = all(bool(lane.get("clean_success")) for lane in lanes)
+	completion_values = sorted(
+		completed_at for lane in lanes if (completed_at := lane.get("completed_at_pht"))
+	)
+	if all_ready and all_clean:
+		status = "green"
+	elif all_ready:
+		status = "yellow"
+	else:
+		status = "red"
+
+	return {
+		"key": key,
+		"label": label,
+		"status": status,
+		"ready_before_deadline": all_ready,
+		"clean_success": all_clean,
+		"completed_at_pht": completion_values[-1] if completion_values else None,
+		"lanes": lanes,
+	}
+
+
+def _build_store_inventory_morning_health(report_date_value: datetime.date) -> dict[str, Any]:
+	"""Build readiness and cleanliness status for the store shadow-sync bridge."""
+	registry_rows = store_inventory_shadow_sync_builder.load_store_registry(
+		store_inventory_shadow_sync_builder.get_runtime_registry_path()
+	)
+	runtime_state = store_inventory_shadow_sync_builder.load_runtime_state(
+		store_inventory_shadow_sync_builder.get_runtime_state_path()
+	)
+	importable_states = getattr(store_inventory_shadow_sync_builder, "IMPORTABLE_STATES", {"shadow_sync"})
+	target_rows = [
+		row
+		for row in registry_rows
+		if getattr(row, "sheet_sync_enabled", False) and getattr(row, "state", "") in importable_states
+	]
+	report_date_text = report_date_value.isoformat()
+	deadline_utc = datetime.datetime.combine(
+		report_date_value,
+		MORNING_SYNC_READY_DEADLINE_PHT_TIME,
+		tzinfo=PHT_TIMEZONE,
+	).astimezone(datetime.UTC)
+
+	completed_store_codes: list[str] = []
+	pending_store_codes: list[str] = []
+	late_store_codes: list[str] = []
+	error_rows: list[dict[str, str]] = []
+	completion_times: list[datetime.datetime] = []
+
+	for row in target_rows:
+		last_success_at = _parse_iso_datetime(getattr(row, "last_success_at", ""))
+		last_inventory_date = getattr(row, "last_inventory_date", "")
+		if last_success_at and last_inventory_date == report_date_text:
+			completed_store_codes.append(row.store_code)
+			completion_times.append(last_success_at)
+			if last_success_at > deadline_utc:
+				late_store_codes.append(row.store_code)
+		else:
+			pending_store_codes.append(row.store_code)
+
+		last_error = getattr(row, "last_error", "")
+		if last_error:
+			error_rows.append({"store_code": row.store_code, "error": last_error})
+
+	latest_completion = max(completion_times) if completion_times else None
+	ready_before_deadline = bool(target_rows) and not pending_store_codes and not late_store_codes
+	clean_success = ready_before_deadline and not error_rows
+	if clean_success:
+		status = "green"
+	elif ready_before_deadline:
+		status = "yellow"
+	else:
+		status = "red"
+
+	last_run = runtime_state.get("last_run", {}) if isinstance(runtime_state, dict) else {}
+	return {
+		"key": "store_inventory_shadow_sync",
+		"label": "Store Inventory Shadow Sync",
+		"status": status,
+		"ready_before_deadline": ready_before_deadline,
+		"clean_success": clean_success,
+		"report_date": report_date_text,
+		"enabled_stores": len(target_rows),
+		"completed_stores": len(completed_store_codes),
+		"pending_store_codes": pending_store_codes,
+		"late_store_codes": late_store_codes,
+		"error_stores": error_rows,
+		"latest_completion_at_pht": _to_pht_iso(latest_completion),
+		"last_run": {
+			"status": last_run.get("status"),
+			"run_date": last_run.get("run_date"),
+			"generated_at": last_run.get("generated_at"),
+			"updated_at": last_run.get("updated_at"),
+			"failed_stores": last_run.get("failed_stores"),
+			"current_stage": last_run.get("current_stage"),
+		},
+	}
+
+
+def _fetch_receiver_morning_health(report_date: str) -> dict[str, Any]:
+	"""Fetch the receiver-side health summary without failing the whole report on transport errors."""
+	import requests
+
+	try:
+		response = requests.get(
+			RECEIVER_MORNING_HEALTH_URL,
+			params={"report_date": report_date},
+			timeout=15,
+		)
+		response.raise_for_status()
+		return response.json()
+	except Exception as exc:
+		return {
+			"service": "sheets-receiver",
+			"report_date": report_date,
+			"generated_at_utc": datetime.datetime.now(datetime.UTC).isoformat(),
+			"generated_at_pht": datetime.datetime.now(PHT_TIMEZONE).isoformat(),
+			"baseline_target_pht_time": MORNING_SYNC_TARGET_PHT_TIME.strftime("%H:%M"),
+			"ready_deadline_pht_time": MORNING_SYNC_READY_DEADLINE_PHT_TIME.strftime("%H:%M"),
+			"status": "red",
+			"ready_before_deadline": False,
+			"error": str(exc),
+			"lanes": [],
+		}
+
+
+def _build_morning_sync_health_markdown(report: dict[str, Any]) -> str:
+	"""Render a compact Markdown summary for the morning sync health artifact."""
+	lines = [
+		"# Morning Sync Health Report",
+		"",
+		f"- report_date: `{report['report_date']}`",
+		f"- overall_status: `{report['status']}`",
+		f"- sync_target_pht_time: `{report['sync_target_pht_time']}`",
+		f"- ready_deadline_pht_time: `{report['ready_deadline_pht_time']}`",
+		f"- generated_at_pht: `{report['generated_at_pht']}`",
+		"",
+	]
+	for area in report["areas"]:
+		lines.extend(
+			[
+				f"## {area['label']}",
+				"",
+				f"- status: `{area['status']}`",
+				f"- ready_before_deadline: `{area['ready_before_deadline']}`",
+			]
+		)
+		if area["key"] == "store_inventory_shadow_sync":
+			lines.extend(
+				[
+					f"- completed_stores: `{area['completed_stores']}/{area['enabled_stores']}`",
+					f"- latest_completion_at_pht: `{area['latest_completion_at_pht'] or ''}`",
+				]
+			)
+			if area["pending_store_codes"]:
+				lines.append(f"- pending_store_codes: `{', '.join(area['pending_store_codes'])}`")
+			if area["late_store_codes"]:
+				lines.append(f"- late_store_codes: `{', '.join(area['late_store_codes'])}`")
+			if area["error_stores"]:
+				lines.append(f"- error_store_count: `{len(area['error_stores'])}`")
+		else:
+			lines.extend(
+				[
+					f"- completed_at_pht: `{area.get('completed_at_pht') or ''}`",
+					f"- lane_count: `{len(area.get('lanes', []))}`",
+				]
+			)
+		lines.append("")
+
+	if report.get("receiver", {}).get("error"):
+		lines.extend(["## Receiver Error", "", f"- `{report['receiver']['error']}`", ""])
+
+	lines.extend(["## Receiver Lane Detail", ""])
+	for lane in report.get("receiver", {}).get("lanes", []):
+		lines.append(
+			"- `{name}` [{sheet_key}] status=`{status}` ready_before_deadline=`{ready}` completed_at_pht=`{completed}`".format(
+				name=lane.get("name", lane.get("sheet_key", "lane")),
+				sheet_key=lane.get("sheet_key", "lane"),
+				status=lane.get("status", "unknown"),
+				ready=lane.get("ready_before_deadline"),
+				completed=lane.get("completed_at_pht") or "",
+			)
+		)
+
+	return "\n".join(lines).rstrip() + "\n"
+
+
+def _persist_morning_sync_health_report(report: dict[str, Any]) -> dict[str, str]:
+	"""Write the JSON and Markdown artifacts for a morning sync health report."""
+	json_path, md_path = _morning_sync_report_paths(report["report_date"])
+	json_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+	md_path.write_text(_build_morning_sync_health_markdown(report), encoding="utf-8")
+	return {"json_path": str(json_path), "markdown_path": str(md_path)}
+
+
+def _collect_morning_sync_health_report(
+	report_date: str | None = None, *, persist: bool = False
+) -> dict[str, Any]:
+	"""Collect the consolidated morning report across store shadow sync and receiver baselines."""
+	report_date_value = _normalize_report_date(report_date)
+	report_date_text = report_date_value.isoformat()
+	receiver_report = _fetch_receiver_morning_health(report_date_text)
+	store_area = _build_store_inventory_morning_health(report_date_value)
+	ian_area = _summarize_receiver_area(
+		receiver_report,
+		key="ian_warehouse_inventory",
+		label="Ian Warehouse Inventory",
+		sheet_keys=["inventory"],
+	)
+	ap_procurement_area = _summarize_receiver_area(
+		receiver_report,
+		key="ap_procurement_baselines",
+		label="AP / Procurement Baselines",
+		sheet_keys=[
+			"ap_opening_balance",
+			"procurement_suppliers",
+			"procurement_requisitions",
+			"procurement_purchase_orders",
+			"procurement_goods_receipts",
+		],
+	)
+	areas = [store_area, ian_area, ap_procurement_area]
+	all_ready = all(bool(area.get("ready_before_deadline")) for area in areas)
+	all_clean = all(bool(area.get("clean_success")) for area in areas)
+	if all_ready and all_clean:
+		status = "green"
+	elif all_ready:
+		status = "yellow"
+	else:
+		status = "red"
+
+	report = {
+		"report_date": report_date_text,
+		"generated_at_utc": datetime.datetime.now(datetime.UTC).isoformat(),
+		"generated_at_pht": datetime.datetime.now(PHT_TIMEZONE).isoformat(),
+		"sync_target_pht_time": MORNING_SYNC_TARGET_PHT_TIME.strftime("%H:%M"),
+		"ready_deadline_pht_time": MORNING_SYNC_READY_DEADLINE_PHT_TIME.strftime("%H:%M"),
+		"status": status,
+		"ready_before_deadline": all_ready,
+		"areas": areas,
+		"receiver": receiver_report,
+	}
+	if persist:
+		report["artifacts"] = _persist_morning_sync_health_report(report)
+	return report
+
+
+@frappe.whitelist()
+def get_morning_sync_health_report(report_date: str | None = None, persist: bool = False):
+	"""Return the consolidated morning report for store inventory, Ian inventory, and AP/procurement."""
+	_assert_sync_authorized()
+	persist_flag = (
+		persist if isinstance(persist, bool) else str(persist).strip().lower() in {"1", "true", "yes", "on"}
+	)
+	return _collect_morning_sync_health_report(report_date=report_date, persist=persist_flag)
+
+
+def scheduled_generate_morning_sync_health_report(report_date: str | None = None) -> dict[str, Any]:
+	"""Generate and persist the daily morning sync health report for operations."""
+	return _collect_morning_sync_health_report(report_date=report_date, persist=True)

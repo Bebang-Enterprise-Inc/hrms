@@ -12,16 +12,17 @@ if str(ROOT) not in sys.path:
 
 
 def _install_fake_hrms():
-	if "hrms" in sys.modules:
-		return
+	if "hrms" not in sys.modules:
+		hrms_pkg = types.ModuleType("hrms")
+		hrms_pkg.__path__ = []
+		sys.modules["hrms"] = hrms_pkg
 
-	hrms_pkg = types.ModuleType("hrms")
-	hrms_pkg.__path__ = []
-	sys.modules["hrms"] = hrms_pkg
-
-	utils_pkg = types.ModuleType("hrms.utils")
-	utils_pkg.__path__ = []
-	sys.modules["hrms.utils"] = utils_pkg
+	if "hrms.utils" not in sys.modules:
+		utils_pkg = types.ModuleType("hrms.utils")
+		utils_pkg.__path__ = []
+		sys.modules["hrms.utils"] = utils_pkg
+	else:
+		utils_pkg = sys.modules["hrms.utils"]
 
 	store_snapshot_mod = types.ModuleType("hrms.utils.store_order_demand_snapshot")
 	store_snapshot_mod.DEFAULT_DESTINATION_DIR = ROOT / "tmp"
@@ -293,6 +294,231 @@ class TestErpSyncRuntime(unittest.TestCase):
 		erp_sync.frappe.enqueue.assert_not_called()
 		save_registry_mock.assert_called_once()
 		save_state_mock.assert_called_once()
+
+	def test_get_morning_sync_health_report_is_yellow_when_receiver_has_exceptions(self):
+		registry_rows = [
+			types.SimpleNamespace(
+				store_code="AFT",
+				sheet_sync_enabled=True,
+				state="shadow_sync",
+				last_inventory_date="2026-01-01",
+				last_success_at="2026-01-01T07:22:00+08:00",
+				last_error="",
+			),
+			types.SimpleNamespace(
+				store_code="AMM",
+				sheet_sync_enabled=True,
+				state="shadow_sync",
+				last_inventory_date="2026-01-01",
+				last_success_at="2026-01-01T07:25:00+08:00",
+				last_error="",
+			),
+		]
+		runtime_state = {
+			"last_run": {
+				"status": "completed",
+				"run_date": "2026-01-01",
+				"generated_at": "2026-01-01T07:00:00+08:00",
+				"updated_at": "2026-01-01T07:25:00+08:00",
+				"failed_stores": 0,
+				"current_stage": "completed",
+			}
+		}
+		receiver_payload = {
+			"status": "yellow",
+			"ready_before_deadline": True,
+			"lanes": [
+				{
+					"sheet_key": "inventory",
+					"name": "Inventory",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T07:40:00+08:00",
+				},
+				{
+					"sheet_key": "ap_opening_balance",
+					"name": "AP Opening Balance",
+					"status": "completed_with_exceptions",
+					"ready_before_deadline": True,
+					"clean_success": False,
+					"completed_at_pht": "2026-01-01T08:05:00+08:00",
+				},
+				{
+					"sheet_key": "procurement_suppliers",
+					"name": "Procurement Suppliers",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T07:50:00+08:00",
+				},
+				{
+					"sheet_key": "procurement_requisitions",
+					"name": "Procurement Requisitions",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T07:55:00+08:00",
+				},
+				{
+					"sheet_key": "procurement_purchase_orders",
+					"name": "Procurement Purchase Orders",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T08:00:00+08:00",
+				},
+				{
+					"sheet_key": "procurement_goods_receipts",
+					"name": "Procurement Goods Receipts",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T08:02:00+08:00",
+				},
+			],
+		}
+
+		class _Response:
+			def raise_for_status(self):
+				return None
+
+			def json(self):
+				return receiver_payload
+
+		with (
+			patch.object(
+				erp_sync.store_inventory_shadow_sync_builder,
+				"load_store_registry",
+				return_value=registry_rows,
+			),
+			patch.object(
+				erp_sync.store_inventory_shadow_sync_builder,
+				"load_runtime_state",
+				return_value=runtime_state,
+			),
+			patch("requests.get", return_value=_Response()),
+		):
+			report = erp_sync.get_morning_sync_health_report(report_date="2026-01-01")
+
+		self.assertEqual(report["status"], "yellow")
+		self.assertTrue(report["ready_before_deadline"])
+		areas = {area["key"]: area for area in report["areas"]}
+		self.assertEqual(areas["store_inventory_shadow_sync"]["status"], "green")
+		self.assertEqual(areas["ian_warehouse_inventory"]["status"], "green")
+		self.assertEqual(areas["ap_procurement_baselines"]["status"], "yellow")
+
+	def test_get_morning_sync_health_report_is_red_when_store_sync_is_incomplete(self):
+		registry_rows = [
+			types.SimpleNamespace(
+				store_code="AFT",
+				sheet_sync_enabled=True,
+				state="shadow_sync",
+				last_inventory_date="2026-01-01",
+				last_success_at="2026-01-01T07:22:00+08:00",
+				last_error="",
+			),
+			types.SimpleNamespace(
+				store_code="AMM",
+				sheet_sync_enabled=True,
+				state="shadow_sync",
+				last_inventory_date="",
+				last_success_at="",
+				last_error="download failed",
+			),
+		]
+		runtime_state = {
+			"last_run": {
+				"status": "in_progress",
+				"run_date": "2026-01-01",
+				"generated_at": "2026-01-01T07:00:00+08:00",
+				"updated_at": "2026-01-01T07:40:00+08:00",
+				"failed_stores": 1,
+				"current_stage": "download",
+			}
+		}
+		receiver_payload = {
+			"status": "green",
+			"ready_before_deadline": True,
+			"lanes": [
+				{
+					"sheet_key": "inventory",
+					"name": "Inventory",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T07:30:00+08:00",
+				},
+				{
+					"sheet_key": "ap_opening_balance",
+					"name": "AP Opening Balance",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T07:40:00+08:00",
+				},
+				{
+					"sheet_key": "procurement_suppliers",
+					"name": "Procurement Suppliers",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T07:45:00+08:00",
+				},
+				{
+					"sheet_key": "procurement_requisitions",
+					"name": "Procurement Requisitions",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T07:50:00+08:00",
+				},
+				{
+					"sheet_key": "procurement_purchase_orders",
+					"name": "Procurement Purchase Orders",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T07:55:00+08:00",
+				},
+				{
+					"sheet_key": "procurement_goods_receipts",
+					"name": "Procurement Goods Receipts",
+					"status": "completed",
+					"ready_before_deadline": True,
+					"clean_success": True,
+					"completed_at_pht": "2026-01-01T08:00:00+08:00",
+				},
+			],
+		}
+
+		class _Response:
+			def raise_for_status(self):
+				return None
+
+			def json(self):
+				return receiver_payload
+
+		with (
+			patch.object(
+				erp_sync.store_inventory_shadow_sync_builder,
+				"load_store_registry",
+				return_value=registry_rows,
+			),
+			patch.object(
+				erp_sync.store_inventory_shadow_sync_builder,
+				"load_runtime_state",
+				return_value=runtime_state,
+			),
+			patch("requests.get", return_value=_Response()),
+		):
+			report = erp_sync.get_morning_sync_health_report(report_date="2026-01-01")
+
+		self.assertEqual(report["status"], "red")
+		self.assertFalse(report["ready_before_deadline"])
+		store_area = next(area for area in report["areas"] if area["key"] == "store_inventory_shadow_sync")
+		self.assertEqual(store_area["status"], "red")
+		self.assertEqual(store_area["pending_store_codes"], ["AMM"])
 
 
 if __name__ == "__main__":

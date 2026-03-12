@@ -2,13 +2,38 @@
 
 ## Purpose
 
-Mirror each enabled store's Google Sheet `3. INVENTORY` tab into Frappe every day at `8:00 AM PHT` (`00:00 UTC`) until that store cuts over to Frappe/my.bebang as the stock source of truth.
+Mirror each enabled store's Google Sheet `3. INVENTORY` tab into Frappe every day at `7:00 AM PHT` (`23:00 UTC` previous day) until that store cuts over to Frappe/my.bebang as the stock source of truth.
 
 ## Scheduler
 
 - Hook: `hrms.api.erp_sync.enqueue_scheduled_store_inventory_shadow_sync`
-- Schedule: `0 0 * * *`
+- Schedule: `0 23 * * *`
 - Runtime job: `hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync`
+- Morning health report schedule: `15 0 * * *`
+- Morning health report writer: `hrms.api.erp_sync.scheduled_generate_morning_sync_health_report`
+
+## Morning Health Report
+
+Use the morning report to confirm, before `9:00 AM PHT`, whether all critical sync lanes are ready:
+
+- store inventory shadow sync
+- Ian warehouse inventory baseline
+- AP / procurement baselines
+
+API entry point:
+
+- `hrms.api.erp_sync.get_morning_sync_health_report`
+
+Artifact paths:
+
+- `sites/<site>/private/files/morning_sync_health_reports/YYYY-MM-DD_morning_sync_health_report.json`
+- `sites/<site>/private/files/morning_sync_health_reports/YYYY-MM-DD_morning_sync_health_report.md`
+
+Status meaning:
+
+- `green`: every area completed before `9:00 AM PHT` with no failed-row exceptions
+- `yellow`: every area completed before `9:00 AM PHT`, but at least one area completed with exceptions
+- `red`: at least one area missed the deadline or the receiver summary could not be fetched
 
 ## Registry And State
 

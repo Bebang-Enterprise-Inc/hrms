@@ -322,6 +322,28 @@ class Database:
 			)
 			return cursor.lastrowid
 
+	def _row_to_sync_log(self, row: sqlite3.Row | None) -> SyncLog | None:
+		"""Hydrate a SyncLog dataclass from a sqlite row."""
+		if not row:
+			return None
+
+		return SyncLog(
+			id=row["id"],
+			spreadsheet_id=row["spreadsheet_id"],
+			spreadsheet_name=row["spreadsheet_name"],
+			sheet_name=row["sheet_name"],
+			trigger=row["trigger"],
+			status=row["status"],
+			rows_processed=row["rows_processed"],
+			rows_created=row["rows_created"],
+			rows_updated=row["rows_updated"],
+			rows_failed=row["rows_failed"],
+			error_message=row["error_message"],
+			duration_seconds=row["duration_seconds"],
+			data_checksum=row["data_checksum"],
+			created_at=datetime.fromisoformat(row["created_at"]),
+		)
+
 	def get_recent_syncs(self, limit: int = 50) -> list[SyncLog]:
 		"""Get recent sync logs."""
 		with self._connection() as conn:
@@ -334,25 +356,7 @@ class Database:
 				(limit,),
 			).fetchall()
 
-			return [
-				SyncLog(
-					id=row["id"],
-					spreadsheet_id=row["spreadsheet_id"],
-					spreadsheet_name=row["spreadsheet_name"],
-					sheet_name=row["sheet_name"],
-					trigger=row["trigger"],
-					status=row["status"],
-					rows_processed=row["rows_processed"],
-					rows_created=row["rows_created"],
-					rows_updated=row["rows_updated"],
-					rows_failed=row["rows_failed"],
-					error_message=row["error_message"],
-					duration_seconds=row["duration_seconds"],
-					data_checksum=row["data_checksum"],
-					created_at=datetime.fromisoformat(row["created_at"]),
-				)
-				for row in rows
-			]
+			return [sync_log for row in rows if (sync_log := self._row_to_sync_log(row))]
 
 	def get_latest_sync(
 		self,
@@ -377,25 +381,36 @@ class Database:
 
 		with self._connection() as conn:
 			row = conn.execute(" ".join(query), params).fetchone()
-			if not row:
-				return None
+			return self._row_to_sync_log(row)
 
-			return SyncLog(
-				id=row["id"],
-				spreadsheet_id=row["spreadsheet_id"],
-				spreadsheet_name=row["spreadsheet_name"],
-				sheet_name=row["sheet_name"],
-				trigger=row["trigger"],
-				status=row["status"],
-				rows_processed=row["rows_processed"],
-				rows_created=row["rows_created"],
-				rows_updated=row["rows_updated"],
-				rows_failed=row["rows_failed"],
-				error_message=row["error_message"],
-				duration_seconds=row["duration_seconds"],
-				data_checksum=row["data_checksum"],
-				created_at=datetime.fromisoformat(row["created_at"]),
-			)
+	def get_latest_sync_since(
+		self,
+		spreadsheet_id: str,
+		sheet_name: str,
+		since: datetime,
+		*,
+		status: str | None = None,
+		trigger: str | None = None,
+	) -> SyncLog | None:
+		"""Return the most recent sync log for a sheet on or after a UTC timestamp."""
+		if since.tzinfo is not None:
+			since = since.astimezone(UTC).replace(tzinfo=None)
+
+		query = [
+			"SELECT * FROM sync_logs WHERE spreadsheet_id = ? AND sheet_name = ? AND created_at >= ?",
+		]
+		params: list[Any] = [spreadsheet_id, sheet_name, since.isoformat()]
+		if status:
+			query.append("AND status = ?")
+			params.append(status)
+		if trigger:
+			query.append("AND trigger = ?")
+			params.append(trigger)
+		query.append("ORDER BY created_at DESC LIMIT 1")
+
+		with self._connection() as conn:
+			row = conn.execute(" ".join(query), params).fetchone()
+			return self._row_to_sync_log(row)
 
 	def has_successful_sync_since(
 		self,

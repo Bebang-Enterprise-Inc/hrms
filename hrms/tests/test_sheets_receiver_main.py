@@ -188,8 +188,8 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 		)
 		main_mod._maybe_generate_ap_exception_report = MagicMock()
 
-	def test_daily_baseline_sync_skips_before_8am_pht(self):
-		now_utc = datetime(2026, 3, 9, 23, 59, tzinfo=UTC)
+	def test_daily_baseline_sync_skips_before_7am_pht(self):
+		now_utc = datetime(2026, 3, 9, 22, 59, tzinfo=UTC)
 
 		results = main_mod.run_daily_baseline_sync_if_due(now_utc=now_utc)
 
@@ -197,8 +197,8 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 		self.processor.sync_sheet.assert_not_called()
 		self.db.has_successful_sync_since.assert_not_called()
 
-	def test_daily_baseline_sync_runs_force_sync_for_target_sheets_after_8am_pht(self):
-		now_utc = datetime(2026, 3, 10, 0, 5, tzinfo=UTC)
+	def test_daily_baseline_sync_runs_force_sync_for_target_sheets_after_7am_pht(self):
+		now_utc = datetime(2026, 3, 9, 23, 5, tzinfo=UTC)
 
 		results = main_mod.run_daily_baseline_sync_if_due(now_utc=now_utc)
 
@@ -209,7 +209,7 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 			self.assertTrue(call.kwargs["force"])
 
 	def test_daily_baseline_sync_skips_sheets_already_synced_today(self):
-		now_utc = datetime(2026, 3, 10, 0, 5, tzinfo=UTC)
+		now_utc = datetime(2026, 3, 9, 23, 5, tzinfo=UTC)
 		self.db.has_successful_sync_since.side_effect = lambda spreadsheet_id, sheet_name, trigger, since: (
 			sheet_name == "SUPPLIERS SOA"
 		)
@@ -231,7 +231,7 @@ class TestSheetsReceiverDailyBaselineSync(unittest.TestCase):
 		)
 
 	def test_daily_baseline_sync_generates_ap_exception_report_when_enabled(self):
-		now_utc = datetime(2026, 3, 10, 0, 5, tzinfo=UTC)
+		now_utc = datetime(2026, 3, 9, 23, 5, tzinfo=UTC)
 		main_mod.get_config.return_value = types.SimpleNamespace(
 			baseline_test_interval_minutes=0,
 			generate_ap_exception_reports=True,
