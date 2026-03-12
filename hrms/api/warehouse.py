@@ -8,13 +8,24 @@ Handles PO receiving, Material Request approval, and stock transfers for Ian.
 Author: Claude Code
 Date: 2026-02-02
 """
-from hrms.utils.bei_config import get_company
-from hrms.utils.scm_roles import check_scm_permission, SCM_APPROVAL_ROLES
-
 import frappe
 from frappe import _
-from frappe.utils import flt
 import json
+from frappe.utils import cint, flt, now_datetime
+
+from hrms.utils.bei_config import get_company
+from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
+from hrms.utils.supply_chain_contracts import (
+    FINANCE_TREATMENT_SAME_COMPANY,
+    REQUEST_SOURCE_COMMISSARY_FG_TRANSFER,
+    REQUEST_SOURCE_STORE_ORDER,
+    infer_finance_treatment,
+    get_request_source_label,
+    resolve_material_request_contract,
+    resolve_warehouse_company,
+    stamp_stock_entry_contract,
+    strip_company_suffix,
+)
 
 
 # ============================================================
@@ -25,6 +36,31 @@ def _row_value(row, key, default=None):
     if isinstance(row, dict):
         return row.get(key, default)
     return getattr(row, key, default)
+
+
+def _ensure_warehouse_receiving_doctype():
+    if not frappe.db.exists("DocType", "BEI Warehouse Receiving"):
+        frappe.throw(_("BEI Warehouse Receiving DocType is not installed"))
+
+
+def _warehouse_receiving_item_rows(receiving_doc):
+    rows = []
+    for item in receiving_doc.items:
+        rows.append(
+            {
+                "item_code": item.item_code,
+                "item_name": item.item_name,
+                "batch_no": getattr(item, "batch_no", None),
+                "uom": getattr(item, "uom", None),
+                "expected_qty": flt(item.expected_qty or 0),
+                "received_qty": flt(item.received_qty or 0),
+                "rejected_qty": flt(item.rejected_qty or 0),
+                "accepted_qty": flt(item.accepted_qty or 0),
+                "has_issue": cint(getattr(item, "has_issue", 0)),
+                "issue_notes": getattr(item, "issue_notes", None),
+            }
+        )
+    return rows
 
 
 @frappe.whitelist()
@@ -212,6 +248,285 @@ def create_purchase_receipt(po_name, items, remarks=None):
     }
 
 
+@frappe.whitelist()
+def get_internal_receiving_warehouses():
+    """List active BKI warehouses that can receive commissary finished goods."""
+    warehouses = frappe.get_all(
+        "Warehouse",
+        filters={"is_group": 0},
+        fields=["name", "warehouse_name", "company"],
+        order_by="warehouse_name asc",
+    )
+
+    filtered = []
+    for warehouse in warehouses:
+        company = warehouse.get("company") or resolve_warehouse_company(warehouse.get("name"))
+        name = warehouse.get("name") or ""
+        if company != "Bebang Kitchen Inc.":
+            continue
+        if "commissary" in name.lower():
+            continue
+        filtered.append(
+            {
+                "name": name,
+                "label": warehouse.get("warehouse_name") or strip_company_suffix(name),
+                "company": company,
+            }
+        )
+
+    return {"success": True, "data": filtered}
+
+
+@frappe.whitelist()
+def create_warehouse_receiving(
+    source_warehouse,
+    target_warehouse,
+    items,
+    linked_quality_inspection=None,
+    linked_production_entry=None,
+    remarks=None,
+):
+    """Create a pending warehouse inbound record for commissary finished goods."""
+    _ensure_warehouse_receiving_doctype()
+
+    if isinstance(items, str):
+        items = json.loads(items)
+
+    if not source_warehouse or not target_warehouse:
+        frappe.throw(_("source_warehouse and target_warehouse are required"))
+    if not items:
+        frappe.throw(_("No items to hand off"))
+
+    source_company = resolve_warehouse_company(source_warehouse)
+    target_company = resolve_warehouse_company(target_warehouse)
+    if source_company != "Bebang Kitchen Inc." or target_company != "Bebang Kitchen Inc.":
+        frappe.throw(_("Commissary warehouse handoff must stay within Bebang Kitchen Inc. warehouses"))
+
+    doc = frappe.new_doc("BEI Warehouse Receiving")
+    doc.naming_series = "BEI-WHR-.YYYY.-.#####"
+    doc.source_type = "Commissary Finished Goods"
+    doc.source_warehouse = source_warehouse
+    doc.target_warehouse = target_warehouse
+    doc.dispatch_date = now_datetime()
+    doc.linked_quality_inspection = linked_quality_inspection
+    doc.linked_production_entry = linked_production_entry
+    doc.created_by_user = frappe.session.user
+    doc.remarks = remarks or f"FG handoff from {source_warehouse} to {target_warehouse}"
+
+    for item_data in items:
+        qty = flt(item_data.get("qty") or item_data.get("expected_qty"))
+        if qty <= 0:
+            continue
+        item_doc = frappe.get_doc("Item", item_data["item_code"])
+        doc.append(
+            "items",
+            {
+                "item_code": item_data["item_code"],
+                "item_name": item_doc.item_name,
+                "batch_no": item_data.get("batch_no"),
+                "uom": item_data.get("uom") or item_doc.stock_uom,
+                "expected_qty": qty,
+                "received_qty": 0,
+                "rejected_qty": 0,
+                "accepted_qty": 0,
+                "issue_notes": item_data.get("issue_notes"),
+            },
+        )
+
+    if not doc.items:
+        frappe.throw(_("No valid finished goods items to hand off"))
+
+    doc.insert(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "data": {
+            "name": doc.name,
+            "source_warehouse": doc.source_warehouse,
+            "target_warehouse": doc.target_warehouse,
+            "items_count": len(doc.items),
+            "total_qty": sum(flt(item.expected_qty) for item in doc.items),
+        },
+        "message": f"Warehouse handoff {doc.name} created successfully",
+    }
+
+
+@frappe.whitelist()
+def get_pending_warehouse_receivings(target_warehouse=None):
+    """Return pending commissary FG handoffs for warehouse receiving."""
+    _ensure_warehouse_receiving_doctype()
+
+    filters = {"status": "Pending Warehouse Receive"}
+    if target_warehouse:
+        filters["target_warehouse"] = target_warehouse
+
+    docs = frappe.get_all(
+        "BEI Warehouse Receiving",
+        filters=filters,
+        fields=[
+            "name",
+            "source_type",
+            "source_warehouse",
+            "target_warehouse",
+            "dispatch_date",
+            "status",
+            "linked_quality_inspection",
+            "linked_production_entry",
+        ],
+        order_by="dispatch_date desc",
+    )
+
+    for row in docs:
+        row["items_count"] = frappe.db.count("BEI Warehouse Receiving Item", {"parent": row["name"]})
+        row["total_qty"] = sum(
+            flt(item.expected_qty)
+            for item in frappe.get_all(
+                "BEI Warehouse Receiving Item",
+                filters={"parent": row["name"]},
+                fields=["expected_qty"],
+            )
+        )
+        row["source_label"] = strip_company_suffix(row["source_warehouse"])
+        row["target_label"] = strip_company_suffix(row["target_warehouse"])
+
+    return {"success": True, "data": docs}
+
+
+@frappe.whitelist()
+def get_warehouse_receiving_detail(receiving_name):
+    """Return one pending or completed warehouse receiving record."""
+    _ensure_warehouse_receiving_doctype()
+    if not frappe.db.exists("BEI Warehouse Receiving", receiving_name):
+        frappe.throw(_("Warehouse receiving record not found"))
+
+    doc = frappe.get_doc("BEI Warehouse Receiving", receiving_name)
+    return {
+        "success": True,
+        "data": {
+            "name": doc.name,
+            "source_type": doc.source_type,
+            "source_warehouse": doc.source_warehouse,
+            "target_warehouse": doc.target_warehouse,
+            "dispatch_date": doc.dispatch_date,
+            "receiving_date": doc.receiving_date,
+            "status": doc.status,
+            "linked_quality_inspection": doc.linked_quality_inspection,
+            "linked_production_entry": doc.linked_production_entry,
+            "stock_entry": doc.stock_entry,
+            "remarks": doc.remarks,
+            "items": _warehouse_receiving_item_rows(doc),
+        },
+    }
+
+
+@frappe.whitelist()
+def complete_warehouse_receiving(receiving_name, items, remarks=None):
+    """Complete warehouse receipt for a commissary FG handoff by creating the stock transfer."""
+    _ensure_warehouse_receiving_doctype()
+
+    if isinstance(items, str):
+        items = json.loads(items)
+
+    if not frappe.db.exists("BEI Warehouse Receiving", receiving_name):
+        frappe.throw(_("Warehouse receiving record not found"))
+
+    receiving = frappe.get_doc("BEI Warehouse Receiving", receiving_name)
+    if receiving.status == "Completed" and receiving.stock_entry:
+        return {
+            "success": True,
+            "data": {"name": receiving.stock_entry, "receiving_name": receiving.name},
+            "message": f"Warehouse receiving {receiving.name} already completed",
+        }
+
+    item_map = {item.item_code: item for item in receiving.items}
+    accepted_items = []
+    has_issues = False
+
+    for item_data in items:
+        item_code = item_data.get("item_code")
+        row = item_map.get(item_code)
+        if not row:
+            continue
+        received_qty = flt(item_data.get("received_qty", row.expected_qty))
+        rejected_qty = flt(item_data.get("rejected_qty", 0))
+        if rejected_qty > received_qty:
+            frappe.throw(_("Rejected quantity cannot exceed received quantity for {0}").format(item_code))
+        row.received_qty = received_qty
+        row.rejected_qty = rejected_qty
+        row.accepted_qty = max(received_qty - rejected_qty, 0)
+        row.issue_notes = item_data.get("issue_notes") or row.issue_notes
+        row.has_issue = 1 if row.rejected_qty > 0 or row.issue_notes else 0
+        has_issues = has_issues or bool(row.has_issue)
+        if row.accepted_qty > 0:
+            accepted_items.append(
+                {
+                    "item_code": row.item_code,
+                    "qty": row.accepted_qty,
+                    "uom": row.uom,
+                    "batch_no": row.batch_no,
+                }
+            )
+
+    if not accepted_items:
+        frappe.throw(_("No accepted quantity to receive into warehouse"))
+
+    stock_entry = frappe.new_doc("Stock Entry")
+    stock_entry.stock_entry_type = "Material Transfer"
+    stock_entry.company = resolve_warehouse_company(receiving.source_warehouse) or get_company()
+    stock_entry.posting_date = frappe.utils.today()
+    stock_entry.posting_time = frappe.utils.nowtime()
+    stock_entry.from_warehouse = receiving.source_warehouse
+    stock_entry.to_warehouse = receiving.target_warehouse
+    stock_entry.remarks = remarks or f"Warehouse receiving {receiving.name}"
+    stamp_stock_entry_contract(
+        stock_entry,
+        request_source=REQUEST_SOURCE_COMMISSARY_FG_TRANSFER,
+        cargo_lane="FG",
+        source_company=resolve_warehouse_company(receiving.source_warehouse),
+        target_company=resolve_warehouse_company(receiving.target_warehouse),
+        finance_treatment=FINANCE_TREATMENT_SAME_COMPANY,
+    )
+
+    for item_data in accepted_items:
+        item_doc = frappe.get_doc("Item", item_data["item_code"])
+        stock_entry.append(
+            "items",
+            {
+                "item_code": item_data["item_code"],
+                "item_name": item_doc.item_name,
+                "description": item_doc.description,
+                "qty": item_data["qty"],
+                "uom": item_data.get("uom") or item_doc.stock_uom,
+                "stock_uom": item_doc.stock_uom,
+                "conversion_factor": 1,
+                "s_warehouse": receiving.source_warehouse,
+                "t_warehouse": receiving.target_warehouse,
+                "batch_no": item_data.get("batch_no"),
+            },
+        )
+
+    stock_entry.insert(ignore_permissions=True)
+    stock_entry.submit()
+
+    receiving.stock_entry = stock_entry.name
+    receiving.receiving_date = now_datetime()
+    receiving.received_by_user = frappe.session.user
+    receiving.remarks = remarks or receiving.remarks
+    receiving.status = "With Issues" if has_issues else "Completed"
+    receiving.save(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "data": {
+            "name": stock_entry.name,
+            "receiving_name": receiving.name,
+            "items_count": len(stock_entry.items),
+            "total_qty": sum(flt(item.qty) for item in stock_entry.items),
+        },
+        "message": f"Warehouse receiving {receiving.name} completed successfully",
+    }
+
+
 # ============================================================
 # 2. MATERIAL REQUEST APPROVAL
 # ============================================================
@@ -236,10 +551,20 @@ def get_pending_material_requests():
         limit=50
     )
 
+    commissary_warehouse = None
+    try:
+        from hrms.api.commissary import get_commissary_warehouse
+
+        commissary_warehouse = get_commissary_warehouse()
+    except Exception:
+        commissary_warehouse = None
+
     for mr in mrs:
-        # Get warehouse/store name
-        if mr.set_warehouse:
-            mr["store_name"] = mr.set_warehouse.replace(" - BEI", "")
+        mr_doc = frappe.get_doc("Material Request", mr["name"])
+        contract = resolve_material_request_contract(mr_doc, commissary_warehouse=commissary_warehouse)
+        mr.update(contract)
+        mr["store_name"] = contract["destination_label"] or strip_company_suffix(mr.set_warehouse)
+        mr["request_source_label"] = get_request_source_label(contract["request_source"])
 
         # Get items summary
         items = frappe.get_all(
@@ -263,6 +588,14 @@ def get_material_request_items(mr_name):
         frappe.throw(_("Material Request not found"))
 
     mr = frappe.get_doc("Material Request", mr_name)
+    commissary_warehouse = None
+    try:
+        from hrms.api.commissary import get_commissary_warehouse
+
+        commissary_warehouse = get_commissary_warehouse()
+    except Exception:
+        commissary_warehouse = None
+    contract = resolve_material_request_contract(mr, commissary_warehouse=commissary_warehouse)
 
     items = frappe.get_all(
         "Material Request Item",
@@ -273,34 +606,37 @@ def get_material_request_items(mr_name):
         ]
     )
 
-    # Add stock availability from source warehouse (from_warehouse in MR items)
-    # Fall back to "Commissary - BEI" or "TEST-COMMISSARY - BEI" if not specified
-    default_commissary = "Commissary - BEI"
     for item in items:
         item["pending_qty"] = item["qty"] - (item["ordered_qty"] or 0)
-        # Get from_warehouse for this item
         from_warehouse = frappe.db.get_value(
             "Material Request Item",
             item["name"],
             "from_warehouse"
-        ) or default_commissary
+        ) or contract["source_warehouse"]
         item["from_warehouse"] = from_warehouse
-        # Get available stock at source warehouse
-        bin_qty = frappe.db.get_value(
-            "Bin",
-            {"item_code": item["item_code"], "warehouse": from_warehouse},
-            "actual_qty"
-        ) or 0
+        bin_qty = 0
+        if from_warehouse:
+            bin_qty = frappe.db.get_value(
+                "Bin",
+                {"item_code": item["item_code"], "warehouse": from_warehouse},
+                "actual_qty"
+            ) or 0
         item["available_qty"] = bin_qty
+        item["source_warehouse_missing"] = not bool(from_warehouse)
 
     return {
         "success": True,
         "data": {
             "mr_name": mr.name,
-            "store": mr.set_warehouse,
-            "store_name": mr.set_warehouse.replace(" - BEI", "") if mr.set_warehouse else "",
+            "store": contract["destination_warehouse"] or mr.set_warehouse,
+            "store_name": contract["destination_label"],
             "transaction_date": mr.transaction_date,
             "schedule_date": mr.schedule_date,
+            "request_source": contract["request_source"],
+            "request_source_label": contract["request_source_label"],
+            "cargo_lane": contract["cargo_lane"],
+            "source_warehouse": contract["source_warehouse"],
+            "finance_treatment": contract["finance_treatment"],
             "items": items
         }
     }
@@ -405,7 +741,7 @@ def get_ready_for_dispatch():
     mrs = frappe.get_all(
         "Material Request",
         filters={
-            "status": ["in", ["Pending", "Partially Ordered"]],
+            "status": ["in", ["Ordered", "Partially Ordered"]],
             "docstatus": 1,
             "material_request_type": "Material Transfer"
         },
@@ -416,14 +752,24 @@ def get_ready_for_dispatch():
         order_by="schedule_date asc"
     )
 
+    commissary_warehouse = None
+    try:
+        from hrms.api.commissary import get_commissary_warehouse
+
+        commissary_warehouse = get_commissary_warehouse()
+    except Exception:
+        commissary_warehouse = None
+
     # Group by destination warehouse
     by_store = {}
     for mr in mrs:
-        store = mr.set_warehouse or "Unknown"
+        mr_doc = frappe.get_doc("Material Request", mr["name"])
+        contract = resolve_material_request_contract(mr_doc, commissary_warehouse=commissary_warehouse)
+        store = contract["destination_warehouse"] or mr.set_warehouse or "Unknown"
         if store not in by_store:
             by_store[store] = {
                 "store": store,
-                "store_name": store.replace(" - BEI", ""),
+                "store_name": contract["destination_label"] or strip_company_suffix(store),
                 "requests": [],
                 "total_items": 0
             }
@@ -431,10 +777,12 @@ def get_ready_for_dispatch():
         items = frappe.get_all(
             "Material Request Item",
             filters={"parent": mr.name},
-            fields=["item_code", "item_name", "qty", "uom"]
+            fields=["item_code", "item_name", "qty", "uom", "from_warehouse"]
         )
         mr["items"] = items
         mr["items_count"] = len(items)
+        mr.update(contract)
+        mr["store_name"] = contract["destination_label"] or strip_company_suffix(store)
 
         by_store[store]["requests"].append(mr)
         by_store[store]["total_items"] += len(items)
@@ -460,6 +808,9 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
     if isinstance(items, str):
         items = json.loads(items)
 
+    default_source_company = resolve_warehouse_company(source_warehouse) or get_company()
+    default_target_company = resolve_warehouse_company(target_warehouse) or default_source_company
+
     # AUDIT CONTROL: Require approved Material Request before dispatch
     if not mr_name:
         frappe.throw(
@@ -470,6 +821,13 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
 
     # Load and validate MR
     mr_items_map = {}
+    contract = {
+        "request_source": REQUEST_SOURCE_STORE_ORDER,
+        "cargo_lane": None,
+        "source_company": default_source_company,
+        "target_company": default_target_company,
+        "finance_treatment": infer_finance_treatment(default_source_company, default_target_company),
+    }
     try:
         mr = frappe.get_doc("Material Request", mr_name)
         # Only allow dispatch for MRs that have been approved/ordered
@@ -480,6 +838,7 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
                 ),
                 title=_("Invalid Material Request Status")
             )
+        contract.update(resolve_material_request_contract(mr))
         for mr_item in mr.items:
             mr_items_map[mr_item.item_code] = mr_item.name
     except frappe.DoesNotExistError:
@@ -491,12 +850,20 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
     # Create Stock Entry
     se = frappe.new_doc("Stock Entry")
     se.stock_entry_type = "Material Transfer"
-    se.company = get_company()
+    se.company = contract.get("source_company") or default_source_company
     se.posting_date = frappe.utils.today()
     se.posting_time = frappe.utils.nowtime()
     se.from_warehouse = source_warehouse
     se.to_warehouse = target_warehouse
     se.remarks = remarks or f"Transfer to {target_warehouse}"
+    stamp_stock_entry_contract(
+        se,
+        request_source=contract["request_source"],
+        cargo_lane=contract.get("cargo_lane"),
+        source_company=contract.get("source_company") or default_source_company,
+        target_company=contract.get("target_company") or default_target_company,
+        finance_treatment=contract.get("finance_treatment"),
+    )
 
     # Add items
     normalized_items = []
@@ -563,6 +930,10 @@ def create_stock_transfer(source_warehouse, target_warehouse, items, mr_name=Non
             "movement_type": "Material Transfer",
             "source_warehouse": source_warehouse,
             "target_warehouse": target_warehouse,
+            "request_source": contract["request_source"],
+            "request_source_label": get_request_source_label(contract["request_source"]),
+            "cargo_lane": contract.get("cargo_lane"),
+            "finance_treatment": contract.get("finance_treatment"),
         },
         "message": f"Stock Transfer {se.name} created successfully"
     }
