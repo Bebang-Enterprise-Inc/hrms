@@ -23,7 +23,26 @@
   "reason",
   "column_break_4",
   "explanation",
-  "amended_from"
+  "amended_from",
+  "review_status",
+  "flex_exception_type",
+  "attendance",
+  "shift_record",
+  "shift_assignment",
+  "cutoff_datetime",
+  "requested_minutes",
+  "validated_minutes",
+  "manager_decision_note",
+  "clarification_prompt",
+  "clarification_response",
+  "reviewed_by",
+  "reviewed_at",
+  "assigned_approver",
+  "fallback_approver",
+  "escalation_approver",
+  "hr_notified",
+  "hr_notified_at",
+  "linked_ot_case"
  ],
  "fields": [
   {
@@ -99,7 +118,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Reason",
-   "options": "Work From Home\nOn Duty",
+   "options": "Work From Home\nOn Duty\nFlex Exception",
    "reqd": 1
   },
   {
@@ -132,6 +151,115 @@
    "fieldname": "include_holidays",
    "fieldtype": "Check",
    "label": "Include Holidays"
+  },
+  {
+   "default": "Pending Review",
+   "fieldname": "review_status",
+   "fieldtype": "Select",
+   "label": "Review Status",
+   "options": "Pending Review\nNeeds Clarification\nClarification Submitted\nApproved\nRejected\nExpired"
+  },
+  {
+   "fieldname": "flex_exception_type",
+   "fieldtype": "Select",
+   "label": "Flex Exception Type",
+   "options": "Late Flex Exception\nEarly Start Validation"
+  },
+  {
+   "fieldname": "attendance",
+   "fieldtype": "Link",
+   "label": "Attendance",
+   "options": "Attendance"
+  },
+  {
+   "fieldname": "shift_record",
+   "fieldtype": "Link",
+   "label": "Shift Record",
+   "options": "BEI Shift Record"
+  },
+  {
+   "fieldname": "shift_assignment",
+   "fieldtype": "Link",
+   "label": "Shift Assignment",
+   "options": "Shift Assignment"
+  },
+  {
+   "fieldname": "cutoff_datetime",
+   "fieldtype": "Datetime",
+   "label": "Cutoff Datetime"
+  },
+  {
+   "fieldname": "requested_minutes",
+   "fieldtype": "Float",
+   "label": "Requested Minutes",
+   "precision": "2"
+  },
+  {
+   "fieldname": "validated_minutes",
+   "fieldtype": "Float",
+   "label": "Validated Minutes",
+   "precision": "2"
+  },
+  {
+   "fieldname": "manager_decision_note",
+   "fieldtype": "Small Text",
+   "label": "Manager Decision Note"
+  },
+  {
+   "fieldname": "clarification_prompt",
+   "fieldtype": "Small Text",
+   "label": "Clarification Prompt"
+  },
+  {
+   "fieldname": "clarification_response",
+   "fieldtype": "Small Text",
+   "label": "Clarification Response"
+  },
+  {
+   "fieldname": "reviewed_by",
+   "fieldtype": "Link",
+   "label": "Reviewed By",
+   "options": "User"
+  },
+  {
+   "fieldname": "reviewed_at",
+   "fieldtype": "Datetime",
+   "label": "Reviewed At"
+  },
+  {
+   "fieldname": "assigned_approver",
+   "fieldtype": "Link",
+   "label": "Assigned Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "fallback_approver",
+   "fieldtype": "Link",
+   "label": "Fallback Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "escalation_approver",
+   "fieldtype": "Link",
+   "label": "Escalation Approver",
+   "options": "User"
+  },
+  {
+   "default": "0",
+   "fieldname": "hr_notified",
+   "fieldtype": "Check",
+   "label": "HR Notified"
+  },
+  {
+   "fieldname": "hr_notified_at",
+   "fieldtype": "Datetime",
+   "label": "HR Notified At"
+  },
+  {
+   "fieldname": "linked_ot_case",
+   "fieldtype": "Link",
+   "label": "Linked OT Case",
+   "options": "BEI Overtime Request"
   }
  ],
  "is_submittable": 1,

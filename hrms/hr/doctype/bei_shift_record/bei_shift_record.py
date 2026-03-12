@@ -100,6 +100,32 @@ class BEIShiftRecord(Document):
 	def create_attendance_from_shift(self):
 		"""Bridge: create/update Attendance record from completed shift record."""
 		att_date = getdate(self.punch_in_time)
+		shift_assignment = frappe.db.get_value(
+			"Shift Assignment",
+			{
+				"employee": self.employee,
+				"docstatus": 1,
+				"status": "Active",
+				"start_date": ("<=", att_date),
+				"end_date": [">=", att_date],
+			},
+			["shift_type"],
+			as_dict=True,
+		)
+		if not shift_assignment:
+			shift_assignment = frappe.db.get_value(
+				"Shift Assignment",
+				{
+					"employee": self.employee,
+					"docstatus": 1,
+					"status": "Active",
+					"start_date": ("<=", att_date),
+					"end_date": ("is", "not set"),
+				},
+				["shift_type"],
+				as_dict=True,
+			)
+		shift_type = shift_assignment.get("shift_type") if shift_assignment else None
 
 		# Cap auto-punched-out shifts at 8h to prevent phantom overtime
 		if getattr(self, "auto_punched_out", 0):
@@ -121,8 +147,34 @@ class BEIShiftRecord(Document):
 			update_fields = {
 				"working_hours": working_hours,
 				"status": att_status,
+				"shift": shift_type,
+				"in_time": self.punch_in_time,
+				"out_time": self.punch_out_time,
 			}
 			frappe.db.set_value("Attendance", existing, update_fields)
+			try:
+				from hrms.hr.doctype.employee_checkin.employee_checkin import get_overtime_data
+
+				if shift_type and att_status == "Present":
+					overtime_data = get_overtime_data(shift_type, working_hours)
+					if overtime_data:
+						frappe.db.set_value(
+							"Attendance",
+							existing,
+							{
+								"overtime_type": frappe.db.get_value("Shift Type", shift_type, "overtime_type"),
+								"standard_working_hours": overtime_data.get("standard_working_hours"),
+								"actual_overtime_duration": overtime_data.get("actual_overtime_duration"),
+							},
+						)
+			except Exception:
+				pass
+			try:
+				from hrms.api.overtime import upsert_overtime_case_from_attendance
+
+				upsert_overtime_case_from_attendance(existing, source_trigger="shift_record_close")
+			except Exception:
+				frappe.log_error(frappe.get_traceback(), f"Failed OT upsert for Attendance {existing}")
 			return
 
 		# Create new Attendance via raw SQL (avoids ORM validation cascade)
@@ -154,7 +206,8 @@ class BEIShiftRecord(Document):
 			# Name collision with non-standard naming — fallback to update
 			frappe.db.sql("""
 				UPDATE `tabAttendance`
-				SET working_hours = %(hours)s, status = %(status)s, modified = NOW()
+				SET working_hours = %(hours)s, status = %(status)s, shift = %(shift)s,
+				    in_time = %(in_time)s, out_time = %(out_time)s, modified = NOW()
 				WHERE employee = %(employee)s AND attendance_date = %(date)s
 				LIMIT 1
 			""", {
@@ -162,7 +215,43 @@ class BEIShiftRecord(Document):
 				"date": att_date,
 				"status": att_status,
 				"hours": working_hours,
+				"shift": shift_type,
+				"in_time": self.punch_in_time,
+				"out_time": self.punch_out_time,
 			})
+
+		attendance_name = frappe.db.get_value(
+			"Attendance",
+			{"employee": self.employee, "attendance_date": att_date, "docstatus": 1},
+			"name",
+		)
+		if attendance_name:
+			try:
+				from hrms.hr.doctype.employee_checkin.employee_checkin import get_overtime_data
+
+				if shift_type and att_status == "Present":
+					overtime_data = get_overtime_data(shift_type, working_hours)
+					if overtime_data:
+						frappe.db.set_value(
+							"Attendance",
+							attendance_name,
+							{
+								"shift": shift_type,
+								"in_time": self.punch_in_time,
+								"out_time": self.punch_out_time,
+								"overtime_type": frappe.db.get_value("Shift Type", shift_type, "overtime_type"),
+								"standard_working_hours": overtime_data.get("standard_working_hours"),
+								"actual_overtime_duration": overtime_data.get("actual_overtime_duration"),
+							},
+						)
+			except Exception:
+				pass
+			try:
+				from hrms.api.overtime import upsert_overtime_case_from_attendance
+
+				upsert_overtime_case_from_attendance(attendance_name, source_trigger="shift_record_close")
+			except Exception:
+				frappe.log_error(frappe.get_traceback(), f"Failed OT upsert for Attendance {attendance_name}")
 
 		if needs_review:
 			frappe.logger().warning(
