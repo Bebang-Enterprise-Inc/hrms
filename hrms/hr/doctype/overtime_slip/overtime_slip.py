@@ -150,7 +150,9 @@ class OvertimeSlip(Document):
 
 		records = []
 		if self.start_date and self.end_date:
-			records = get_approved_ot_bridge_rows(self.employee, getdate(self.start_date), getdate(self.end_date))
+			records = get_approved_ot_bridge_rows(
+				self.employee, getdate(self.start_date), getdate(self.end_date)
+			)
 			if not len(records):
 				frappe.throw(
 					_("No attendance records found for employee {0} between {1} and {2}").format(
@@ -465,7 +467,9 @@ def submit_overtime_slips_for_employees(overtime_slips, payroll_entry):
 			doc = frappe.get_doc("Overtime Slip", overtime_slip)
 			doc.submitted_via_payroll_entry = 1
 			doc.submit()
-			mark_overtime_requests_bridged(getattr(doc, "_bridge_ot_request_names", []), doc.name, locked=True)
+			mark_overtime_requests_bridged(
+				getattr(doc, "_bridge_ot_request_names", []), doc.name, locked=True
+			)
 			count += 1
 		except Exception as e:
 			frappe.clear_last_message()

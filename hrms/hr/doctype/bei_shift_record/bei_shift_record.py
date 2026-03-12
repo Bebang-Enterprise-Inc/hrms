@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import get_datetime, time_diff_in_hours, getdate
+from frappe.utils import get_datetime, getdate, time_diff_in_hours
 
 
 class BEIShiftRecord(Document):
@@ -77,12 +77,15 @@ class BEIShiftRecord(Document):
 
 		from hrms.utils.geo import calculate_haversine_distance
 
-		distance_km = calculate_haversine_distance(
-			last.punch_out_latitude,
-			last.punch_out_longitude,
-			self.punch_in_latitude,
-			self.punch_in_longitude,
-		) / 1000
+		distance_km = (
+			calculate_haversine_distance(
+				last.punch_out_latitude,
+				last.punch_out_longitude,
+				self.punch_in_latitude,
+				self.punch_in_longitude,
+			)
+			/ 1000
+		)
 
 		time_hours = time_diff_in_hours(
 			get_datetime(self.punch_in_time),
@@ -138,10 +141,7 @@ class BEIShiftRecord(Document):
 			needs_review = False
 
 		# Guard: don't duplicate — update if exists
-		existing = frappe.db.exists("Attendance", {
-			"employee": self.employee,
-			"attendance_date": att_date
-		})
+		existing = frappe.db.exists("Attendance", {"employee": self.employee, "attendance_date": att_date})
 
 		if existing:
 			update_fields = {
@@ -162,7 +162,9 @@ class BEIShiftRecord(Document):
 							"Attendance",
 							existing,
 							{
-								"overtime_type": frappe.db.get_value("Shift Type", shift_type, "overtime_type"),
+								"overtime_type": frappe.db.get_value(
+									"Shift Type", shift_type, "overtime_type"
+								),
 								"standard_working_hours": overtime_data.get("standard_working_hours"),
 								"actual_overtime_duration": overtime_data.get("actual_overtime_duration"),
 							},
@@ -182,7 +184,8 @@ class BEIShiftRecord(Document):
 		company = frappe.db.get_value("Employee", self.employee, "company")
 
 		try:
-			frappe.db.sql("""
+			frappe.db.sql(
+				"""
 				INSERT INTO `tabAttendance` (
 					name, employee, employee_name, attendance_date,
 					status, working_hours, docstatus,
@@ -192,33 +195,38 @@ class BEIShiftRecord(Document):
 					%(status)s, %(hours)s, 1,
 					%(company)s, NOW(), NOW(), %(user)s, %(user)s
 				)
-			""", {
-				"name": att_name,
-				"employee": self.employee,
-				"employee_name": self.employee_name,
-				"date": att_date,
-				"status": att_status,
-				"hours": working_hours,
-				"company": company,
-				"user": frappe.session.user,
-			})
+			""",
+				{
+					"name": att_name,
+					"employee": self.employee,
+					"employee_name": self.employee_name,
+					"date": att_date,
+					"status": att_status,
+					"hours": working_hours,
+					"company": company,
+					"user": frappe.session.user,
+				},
+			)
 		except Exception:
 			# Name collision with non-standard naming — fallback to update
-			frappe.db.sql("""
+			frappe.db.sql(
+				"""
 				UPDATE `tabAttendance`
 				SET working_hours = %(hours)s, status = %(status)s, shift = %(shift)s,
 				    in_time = %(in_time)s, out_time = %(out_time)s, modified = NOW()
 				WHERE employee = %(employee)s AND attendance_date = %(date)s
 				LIMIT 1
-			""", {
-				"employee": self.employee,
-				"date": att_date,
-				"status": att_status,
-				"hours": working_hours,
-				"shift": shift_type,
-				"in_time": self.punch_in_time,
-				"out_time": self.punch_out_time,
-			})
+			""",
+				{
+					"employee": self.employee,
+					"date": att_date,
+					"status": att_status,
+					"hours": working_hours,
+					"shift": shift_type,
+					"in_time": self.punch_in_time,
+					"out_time": self.punch_out_time,
+				},
+			)
 
 		attendance_name = frappe.db.get_value(
 			"Attendance",
@@ -239,7 +247,9 @@ class BEIShiftRecord(Document):
 								"shift": shift_type,
 								"in_time": self.punch_in_time,
 								"out_time": self.punch_out_time,
-								"overtime_type": frappe.db.get_value("Shift Type", shift_type, "overtime_type"),
+								"overtime_type": frappe.db.get_value(
+									"Shift Type", shift_type, "overtime_type"
+								),
 								"standard_working_hours": overtime_data.get("standard_working_hours"),
 								"actual_overtime_duration": overtime_data.get("actual_overtime_duration"),
 							},
