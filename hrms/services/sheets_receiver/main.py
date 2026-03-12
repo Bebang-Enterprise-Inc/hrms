@@ -64,6 +64,7 @@ PHT_TIMEZONE = ZoneInfo("Asia/Manila")
 DAILY_BASELINE_TRIGGER = "daily_baseline"
 INTERVAL_BASELINE_TRIGGER = "interval_baseline"
 DAILY_BASELINE_PHT_TIME = dt_time(hour=8, minute=0)
+BASELINE_LOOP_SLEEP_SECONDS = 30
 DAILY_BASELINE_SHEET_KEYS = (
 	"inventory",
 	"ap_opening_balance",
@@ -73,6 +74,7 @@ DAILY_BASELINE_SHEET_KEYS = (
 	"procurement_purchase_orders",
 	"procurement_goods_receipts",
 )
+_baseline_sync_lock = threading.Lock()
 
 
 def setup_file_logging():
@@ -209,6 +211,29 @@ def _run_baseline_sync(
 	return results
 
 
+def _run_baseline_sync_guarded(
+	*,
+	trigger: str,
+	force: bool,
+	now_utc: datetime | None = None,
+	enforce_daily_gate: bool,
+) -> list:
+	"""Prevent overlapping baseline runs across the daily and interval lanes."""
+	if not _baseline_sync_lock.acquire(blocking=False):
+		logger.info("Skipping %s baseline sync because another baseline run is already in progress", trigger)
+		return []
+
+	try:
+		return _run_baseline_sync(
+			trigger=trigger,
+			force=force,
+			now_utc=now_utc,
+			enforce_daily_gate=enforce_daily_gate,
+		)
+	finally:
+		_baseline_sync_lock.release()
+
+
 def run_daily_baseline_sync_if_due(now_utc: datetime | None = None):
 	"""
 	Force-sync Inventory, AP, and Procurement baseline sheets once per PHT day after 8:00 AM.
@@ -217,7 +242,7 @@ def run_daily_baseline_sync_if_due(now_utc: datetime | None = None):
 	sheet already has a successful `daily_baseline` sync logged for the current PHT
 	day and only re-syncs missing sheets.
 	"""
-	return _run_baseline_sync(
+	return _run_baseline_sync_guarded(
 		trigger=DAILY_BASELINE_TRIGGER,
 		force=True,
 		now_utc=now_utc,
@@ -230,11 +255,33 @@ def run_interval_baseline_sync_job():
 	config = get_config()
 	if config.baseline_test_interval_minutes <= 0:
 		return []
-	return _run_baseline_sync(
+	return _run_baseline_sync_guarded(
 		trigger=INTERVAL_BASELINE_TRIGGER,
 		force=True,
 		enforce_daily_gate=False,
 	)
+
+
+def run_daily_baseline_loop(
+	*,
+	stop_event: threading.Event | None = None,
+	sleep_seconds: int = BASELINE_LOOP_SLEEP_SECONDS,
+):
+	"""Run the 8AM PHT baseline gate in a dedicated loop so long jobs cannot starve it."""
+	stop_event = stop_event or threading.Event()
+	logger.info(
+		"Daily AP/procurement baseline loop started: every %s seconds, target 8 AM PHT",
+		sleep_seconds,
+	)
+
+	while not stop_event.is_set():
+		try:
+			run_daily_baseline_sync_if_due()
+		except Exception as e:
+			logger.error(f"Daily baseline sync check failed: {e}")
+
+		if stop_event.wait(max(1, sleep_seconds)):
+			break
 
 
 # =============================================================================
@@ -388,9 +435,6 @@ def configure_scheduled_jobs(schedule_module=schedule):
 	# Backup sync every 6 hours (in case webhooks missed)
 	schedule_module.every(6).hours.do(scheduled_sync_job)
 
-	# Deterministic AP + Procurement baseline refresh at 8:00 AM PHT.
-	# Runs through a once-per-day gate so it is safe across restarts.
-	schedule_module.every(1).minutes.do(run_daily_baseline_sync_if_due)
 	if config.baseline_test_interval_minutes > 0:
 		schedule_module.every(config.baseline_test_interval_minutes).minutes.do(
 			run_interval_baseline_sync_job
@@ -428,7 +472,7 @@ def run_scheduler():
 	logger.info("Scheduler started with jobs:")
 	logger.info("  - Sheet watch renewal: every 1 hour")
 	logger.info("  - Sheet backup sync: every 6 hours")
-	logger.info("  - Daily AP/procurement baseline sync gate: every 1 minute, target 8 AM PHT")
+	logger.info("  - Daily AP/procurement baseline sync: dedicated loop, target 8 AM PHT")
 	if config.baseline_test_interval_minutes > 0:
 		logger.info(
 			"  - Interval AP/procurement baseline sync: every %s minutes (test mode)",
@@ -547,6 +591,11 @@ def main():
 
 	# Initial setup
 	initial_setup()
+
+	# Keep the 8AM baseline independent from the shared schedule loop so it cannot
+	# be delayed by long-running watch-renewal or file-processing work.
+	baseline_thread = threading.Thread(target=run_daily_baseline_loop, daemon=True)
+	baseline_thread.start()
 
 	# Start scheduler in background thread
 	scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
