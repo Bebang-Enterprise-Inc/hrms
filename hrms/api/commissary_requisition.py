@@ -226,9 +226,9 @@ def create_rm_requisition(items=None, required_by_date=None, remarks=None, sourc
 		if source_warehouse:
 			row["from_warehouse"] = source_warehouse
 		mr.append("items", row)
+
 	mr.insert(ignore_permissions=True)
 	mr.submit()
-
 	return {
 		"success": True,
 		"data": {
