@@ -9,6 +9,7 @@ Usage in Salary Component formula field:
 
 import frappe
 from frappe import _
+from frappe.query_builder.functions import Sum
 from frappe.utils import date_diff, flt, get_datetime, getdate
 
 
@@ -206,7 +207,7 @@ def get_holiday_premium_days(employee, start_date, end_date, holiday_type="Regul
 	return flt(worked_holidays, 1)
 
 
-def get_approved_ot_hours(employee, start_date, end_date, ot_type="regular"):
+def get_approved_ot_hours(employee: str, start_date: str, end_date: str, ot_type: str = "regular") -> float:
 	"""Query approved standard Overtime Slip records.
 
 	Args:
@@ -224,28 +225,30 @@ def get_approved_ot_hours(employee, start_date, end_date, ot_type="regular"):
 	start = getdate(start_date)
 	end = getdate(end_date)
 
-	ot_type_filter = ""
+	OvertimeSlip = frappe.qb.DocType("Overtime Slip")
+	OvertimeDetails = frappe.qb.DocType("Overtime Details")
+	query = (
+		frappe.qb.from_(OvertimeSlip)
+		.inner_join(OvertimeDetails)
+		.on(OvertimeDetails.parent == OvertimeSlip.name)
+		.select(Sum(OvertimeDetails.overtime_duration).as_("total_hours"))
+		.where(
+			(OvertimeSlip.employee == employee)
+			& (OvertimeSlip.docstatus == 1)
+			& (OvertimeDetails.date.between(start, end))
+		)
+	)
+
 	if ot_type == "regular":
-		ot_type_filter = (
-			"AND od.overtime_type NOT LIKE '%Rest Day%' AND od.overtime_type NOT LIKE '%Holiday%'"
+		query = query.where(
+			(~OvertimeDetails.overtime_type.like("%Rest Day%"))
+			& (~OvertimeDetails.overtime_type.like("%Holiday%"))
 		)
 	elif ot_type == "rest_day":
-		ot_type_filter = "AND od.overtime_type LIKE '%Rest Day%'"
+		query = query.where(OvertimeDetails.overtime_type.like("%Rest Day%"))
 	elif ot_type == "holiday":
-		ot_type_filter = "AND od.overtime_type LIKE '%Holiday%'"
+		query = query.where(OvertimeDetails.overtime_type.like("%Holiday%"))
 
-	result = frappe.db.sql(
-		f"""
-        SELECT SUM(od.overtime_duration) as total_hours
-        FROM `tabOvertime Slip` os
-        INNER JOIN `tabOvertime Details` od ON od.parent = os.name
-        WHERE os.employee = %(employee)s
-          AND os.docstatus = 1
-          AND od.date BETWEEN %(start_date)s AND %(end_date)s
-          {ot_type_filter}
-    """,
-		{{"employee": employee, "start_date": start, "end_date": end}},
-		as_dict=True,
-	)
+	result = query.run(as_dict=True)
 
 	return flt(result[0].total_hours) if result and result[0].total_hours else 0.0

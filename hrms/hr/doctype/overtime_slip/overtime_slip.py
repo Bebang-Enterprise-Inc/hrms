@@ -387,7 +387,12 @@ class OvertimeSlip(Document):
 
 
 @frappe.whitelist()
-def filter_employees_for_overtime_slip_creation(start_date, end_date, employees, limit=None):
+def filter_employees_for_overtime_slip_creation(
+	start_date: str,
+	end_date: str,
+	employees: list[str] | str,
+	limit: int | None = None,
+) -> list[str]:
 	from hrms.api.overtime import get_approved_ot_bridge_rows
 
 	if not employees:
@@ -421,6 +426,9 @@ def filter_employees_for_overtime_slip_creation(start_date, end_date, employees,
 	eligible_employees = list(
 		set(employees_with_overtime_attendance) - set(employees_with_existing_overtime_slips)
 	)
+
+	if limit:
+		return eligible_employees[:limit]
 
 	return eligible_employees
 
