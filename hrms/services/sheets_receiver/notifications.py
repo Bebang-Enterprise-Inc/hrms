@@ -20,8 +20,9 @@ from googleapiclient.discovery import build
 
 try:
 	from hrms.utils.chat_space_lockdown import route_outbound_chat_space
-except ModuleNotFoundError:
+except ImportError:
 	_TRUE_VALUES = {"1", "true", "yes", "on"}
+	_STRICT_BLIP_ONLY_ENV = "BEI_CHAT_STRICT_BLIP_ONLY"
 
 	def route_outbound_chat_space(
 		requested_space: str | None,
@@ -31,6 +32,9 @@ except ModuleNotFoundError:
 	) -> str:
 		requested = (requested_space or "").strip()
 		blip_space = (os.environ.get("BEI_BLIP_NOTIFICATIONS_SPACE") or "").strip() or "spaces/AAQABiNmpBg"
+		strict_blip_only = (
+			os.environ.get(_STRICT_BLIP_ONLY_ENV) or "true"
+		).strip().lower() in _TRUE_VALUES
 		lockdown_enabled = (
 			os.environ.get("BEI_CHAT_LOCKDOWN_ENABLED") or "true"
 		).strip().lower() in _TRUE_VALUES
@@ -44,6 +48,15 @@ except ModuleNotFoundError:
 		}
 
 		if not requested:
+			return blip_space
+		if strict_blip_only:
+			if requested != blip_space and logger is not None:
+				logger.warning(
+					"Outbound Google Chat destination rerouted to ! Blip Notifications by strict mode; requested=%s effective=%s context=%s",
+					requested,
+					blip_space,
+					context or "unspecified",
+				)
 			return blip_space
 		if not lockdown_enabled:
 			return requested
