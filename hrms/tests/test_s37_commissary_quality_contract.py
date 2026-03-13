@@ -30,6 +30,7 @@ class _FakeQualityInspection:
 		self.sample_size = None
 		self.inspected_by = None
 		self.status = None
+		self.manual_inspection = 0
 		self.batch_no = None
 		self.remarks = None
 		self.readings = []
@@ -198,6 +199,58 @@ class TestS37CommissaryQualityContract(unittest.TestCase):
 		self.assertEqual(created.readings[1].specification, "Texture/Consistency")
 		self.assertEqual(created.readings[1].status, "Rejected")
 		self.assertEqual(created.readings[1].reading_1, "Too soft")
+
+	def test_create_quality_inspection_marks_template_rows_manual_and_prefills_readings(self):
+		_DOCS_CREATED.clear()
+		original_get_value = commissary_quality.frappe.db.get_value
+		original_get_doc = commissary_quality.frappe.get_doc
+
+		def fake_get_value(doctype, filters, fieldname=None, as_dict=False):
+			if doctype == "Stock Entry Detail":
+				return types.SimpleNamespace(qty=4, batch_no="BATCH-TEMPLATE")
+			if doctype == "Item" and fieldname == "quality_inspection_template":
+				return "Commissary FG QC"
+			return original_get_value(doctype, filters, fieldname, as_dict)
+
+		def fake_get_doc(doctype, name=None):
+			if doctype == "Quality Inspection Template" and name == "Commissary FG QC":
+				return types.SimpleNamespace(
+					item_quality_inspection_parameter=[
+						types.SimpleNamespace(specification="Visual Appearance", value="No defects, correct color"),
+						types.SimpleNamespace(specification="Temperature", value="-18°C to 4°C range"),
+					]
+				)
+			return original_get_doc(doctype, name)
+
+		commissary_quality.frappe.db.get_value = fake_get_value
+		commissary_quality.frappe.get_doc = fake_get_doc
+		try:
+			result = commissary_quality.create_quality_inspection(
+				stock_entry_name="STE-TEMPLATE-0001",
+				item_code="FG002-A",
+				readings=json.dumps([{"specification": "Temperature", "status": "Accepted"}]),
+				status="Accepted",
+				remarks="Template-backed QA",
+			)
+		finally:
+			commissary_quality.frappe.db.get_value = original_get_value
+			commissary_quality.frappe.get_doc = original_get_doc
+
+		self.assertTrue(result["success"])
+		self.assertEqual(result["data"]["status"], "Accepted")
+		self.assertEqual(len(_DOCS_CREATED), 1)
+
+		created = _DOCS_CREATED[0]
+		self.assertEqual(created.manual_inspection, 1)
+		self.assertEqual(len(created.readings), 2)
+		self.assertEqual(created.readings[0].specification, "Visual Appearance")
+		self.assertEqual(created.readings[0].manual_inspection, 1)
+		self.assertEqual(created.readings[0].reading_1, "No defects, correct color")
+		self.assertEqual(created.readings[0].status, "Accepted")
+		self.assertEqual(created.readings[1].specification, "Temperature")
+		self.assertEqual(created.readings[1].manual_inspection, 1)
+		self.assertEqual(created.readings[1].reading_1, "-18°C to 4°C range")
+		self.assertEqual(created.readings[1].status, "Accepted")
 
 
 if __name__ == "__main__":

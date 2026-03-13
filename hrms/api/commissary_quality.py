@@ -166,6 +166,7 @@ def create_quality_inspection(
 	qi.sample_size = sed.qty
 	qi.inspected_by = inspected_by or frappe.session.user
 	qi.status = status
+	qi.manual_inspection = 1
 	qi.batch_no = sed.batch_no
 	if remarks:
 		qi.remarks = remarks
@@ -175,7 +176,13 @@ def create_quality_inspection(
 		qi.quality_inspection_template = template
 		template_doc = frappe.get_doc("Quality Inspection Template", template)
 		for param in template_doc.item_quality_inspection_parameter:
-			reading = {"specification": param.specification, "value": param.value, "status": "Accepted"}
+			reading = {
+				"specification": param.specification,
+				"value": param.value,
+				"reading_1": param.value,
+				"status": "Accepted",
+				"manual_inspection": 1,
+			}
 			# Override with provided readings
 			if param.specification in normalized_readings:
 				reading_payload = normalized_readings[param.specification]
@@ -192,6 +199,7 @@ def create_quality_inspection(
 					"specification": spec,
 					"reading_1": payload.get("reading_1"),
 					"status": payload.get("status") or "Accepted",
+					"manual_inspection": 1,
 				},
 			)
 
