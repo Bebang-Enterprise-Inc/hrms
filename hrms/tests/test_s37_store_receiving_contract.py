@@ -224,6 +224,8 @@ def _install_fake_modules():
 
 	if "hrms.utils.bei_config" not in sys.modules:
 		bei_config_mod = types.ModuleType("hrms.utils.bei_config")
+		bei_config_mod.SPACE_OPS = "OPS"
+		bei_config_mod.get_chat_space = lambda key=None: None
 		bei_config_mod.get_company = lambda: "Bebang Enterprise Inc."
 		sys.modules["hrms.utils.bei_config"] = bei_config_mod
 
@@ -309,6 +311,55 @@ class TestS37StoreReceivingContract(unittest.TestCase):
 		self.assertEqual(stock_entry.items[0].item_code, "FG-001")
 		self.assertEqual(stock_entry.items[0].qty, 4)
 		self.assertEqual(stock_entry.items[0].t_warehouse, "TEST-STORE-BGC - BEI")
+
+	def test_complete_receiving_keeps_buyer_entity_in_contract_when_store_warehouse_uses_bei_company(self):
+		original_get_doc = store.frappe.get_doc
+		try:
+			store.frappe.get_doc = lambda doctype, name=None: (
+				types.SimpleNamespace(
+					custom_request_source="store_order",
+					custom_cargo_lane="DRY",
+					custom_source_warehouse="Greenhills Ortigas - BKI",
+					custom_destination_warehouse="TEST-STORE-BGC - BEI",
+					custom_source_company="Bebang Kitchen Inc.",
+					custom_target_company="Day Ones Food and Drink Establishments Corp.",
+					custom_finance_treatment="intercompany",
+					custom_store_order="BEI-ORD-TEST-0009",
+					set_warehouse="TEST-STORE-BGC - BEI",
+					items=[],
+				)
+				if doctype == "Material Request"
+				else original_get_doc(doctype, name)
+			)
+
+			result = store.complete_receiving(
+				store="TEST-STORE-BGC - BEI",
+				trip="TRIP-INTER",
+				items=[
+					{
+						"item_code": "FG-001",
+						"expected_qty": 2,
+						"received_qty": 2,
+						"check_condition": 1,
+						"check_packaging": 1,
+						"check_expiry": 1,
+						"check_temperature": 1,
+						"check_food_quality": 1,
+						"has_issue": 0,
+					}
+				],
+			)
+		finally:
+			store.frappe.get_doc = original_get_doc
+
+		self.assertTrue(result["success"])
+		stock_entry = _DOCS_CREATED[1]
+		self.assertEqual(stock_entry.company, "Bebang Enterprise Inc.")
+		self.assertEqual(
+			stock_entry.custom_target_company, "Day Ones Food and Drink Establishments Corp."
+		)
+		self.assertEqual(stock_entry.custom_finance_treatment, "intercompany")
+		self.assertEqual(stock_entry.to_warehouse, "TEST-STORE-BGC - BEI")
 
 	def test_complete_receiving_skips_duplicate_stock_posting_for_same_company(self):
 		original_get_doc = store.frappe.get_doc

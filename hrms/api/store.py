@@ -18,6 +18,7 @@ from frappe.utils import add_days, cint, flt, get_datetime, getdate, now_datetim
 from hrms.utils.bei_config import SPACE_OPS, get_chat_space, get_company
 from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
 from hrms.utils.supply_chain_contracts import (
+	FINANCE_TREATMENT_INTERCOMPANY,
 	FINANCE_TREATMENT_SAME_COMPANY,
 	REQUEST_SOURCE_STORE_DISPOSAL,
 	REQUEST_SOURCE_STORE_ORDER,
@@ -2195,18 +2196,19 @@ def _create_mr_for_store_order(order):
 		source_warehouse = _resolve_store_order_source_warehouse(store_warehouse, cargo_category)
 		buyer_entity_row = resolve_store_buyer_entity(warehouse_docname=store_warehouse)
 		source_company = resolve_warehouse_company(source_warehouse) or get_company()
-		target_company = (
+		operational_target_company = resolve_warehouse_company(store_warehouse) or get_company()
+		billing_target_company = (
 			str(buyer_entity_row.get("buyer_entity_name") or "").strip()
-			or resolve_warehouse_company(store_warehouse)
+			or operational_target_company
 			or source_company
 		)
-		finance_treatment = infer_finance_treatment(source_company, target_company)
-		# Material Request must preserve the real destination warehouse even for
-		# intercompany lanes. Reusing the source warehouse as the accepted
-		# warehouse breaks Frappe validation because the request row would point
-		# to the same warehouse on both sides of the transfer.
+		finance_treatment = infer_finance_treatment(source_company, billing_target_company)
+		# Frappe validates the Material Request header company against the actual
+		# destination warehouse owner. The buyer entity used later for billing can
+		# diverge from that operational company, so keep it in the stamped
+		# contract fields instead of on the header itself.
 		mr.set_warehouse = store_warehouse
-		mr.company = source_company
+		mr.company = operational_target_company
 		stamp_material_request_contract(
 			mr,
 			request_source=REQUEST_SOURCE_STORE_ORDER,
@@ -2214,7 +2216,7 @@ def _create_mr_for_store_order(order):
 			source_warehouse=source_warehouse,
 			destination_warehouse=store_warehouse,
 			source_company=source_company,
-			target_company=target_company,
+			target_company=billing_target_company,
 			finance_treatment=finance_treatment,
 		)
 		mr.remarks = f"Warehouse dispatch request for store order {order.name} " f"({cargo_category})"
@@ -2428,9 +2430,8 @@ def _create_store_receiving_stock_entry(receiving, contract: dict) -> str | None
 
 	stock_entry = frappe.new_doc("Stock Entry")
 	stock_entry.stock_entry_type = "Material Receipt"
-	stock_entry.company = (
-		contract.get("target_company") or resolve_warehouse_company(receiving.store) or get_company()
-	)
+	operational_target_company = resolve_warehouse_company(receiving.store) or get_company()
+	stock_entry.company = operational_target_company
 	stock_entry.posting_date = frappe.utils.today()
 	stock_entry.posting_time = _current_time_string()
 	stock_entry.to_warehouse = receiving.store
@@ -2445,7 +2446,7 @@ def _create_store_receiving_stock_entry(receiving, contract: dict) -> str | None
 		cargo_lane=contract.get("cargo_lane"),
 		destination_warehouse=receiving.store,
 		source_company=contract.get("source_company"),
-		target_company=stock_entry.company,
+		target_company=contract.get("target_company") or operational_target_company,
 		finance_treatment=finance_treatment,
 	)
 
