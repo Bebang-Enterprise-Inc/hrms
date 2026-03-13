@@ -46,8 +46,11 @@ PHT_TIMEZONE = ZoneInfo("Asia/Manila")
 MORNING_SYNC_TARGET_PHT_TIME = datetime.time(hour=7, minute=0)
 MORNING_SYNC_READY_DEADLINE_PHT_TIME = datetime.time(hour=9, minute=0)
 MORNING_SYNC_REPORT_DIRNAME = "morning_sync_health_reports"
-DEFAULT_RECEIVER_API_BASE_URL = "https://hq.bebang.ph/sheets-api"
-DEFAULT_RECEIVER_WEBHOOK_PROXY_URL = "https://hq.bebang.ph/sheets-webhook"
+# The standalone sheets-receiver runs on the EC2 host, outside the Frappe Swarm.
+# Backend containers reach it through the host bridge, while Google webhooks land
+# on the public Frappe method route and are proxied internally from there.
+DEFAULT_RECEIVER_API_BASE_URL = "http://172.17.0.1:8765/api"
+DEFAULT_RECEIVER_WEBHOOK_PROXY_URL = "http://172.17.0.1:8765/webhook/sheets"
 PO_REFERENCE_RE = re.compile(r"^\s*(?:PO|PURCHASE\s*ORDER)\s*[-#:/]?\s*[A-Z0-9-]+\s*$", re.IGNORECASE)
 
 
@@ -2810,10 +2813,10 @@ def webhook():
 	and be forwarded to the Sheets Receiver service.
 
 	Google sends webhooks to:
-	https://hq.bebang.ph/api/method/hrms.api.sheets_receiver.webhook
+	https://hq.bebang.ph/api/method/hrms.api.erp_sync.webhook
 
 	We forward to:
-	http://sheets-receiver:8765/webhook/sheets
+	http://172.17.0.1:8765/webhook/sheets
 	"""
 	import requests
 

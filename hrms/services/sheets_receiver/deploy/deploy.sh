@@ -77,15 +77,16 @@ case "${1:-deploy}" in
         log "Starting service..."
         docker-compose up -d
 
-        # Configure nginx
-        log "Configuring nginx..."
-        sudo cp nginx-sheets-receiver.conf /etc/nginx/conf.d/ 2>/dev/null || \
-            warn "Could not copy nginx config - add manually"
-        sudo nginx -t && sudo systemctl reload nginx || \
-            warn "Nginx reload failed - check config manually"
+        # Legacy nginx proxy config is no longer required for the main webhook path,
+        # because Google hits the public Frappe method route directly. Keep the file
+        # available for optional host-local proxy use, but do not treat nginx as a
+        # deployment dependency.
+        if [ -f nginx-sheets-receiver.conf ]; then
+            log "Legacy nginx helper file refreshed (not required for webhook path)"
+        fi
 
         log "Deployment complete!"
-        log "Webhook URL: https://hq.bebang.ph/sheets-webhook"
+        log "Webhook URL: https://hq.bebang.ph/api/method/hrms.api.erp_sync.webhook"
         log "Status: docker-compose logs -f"
         ;;
 

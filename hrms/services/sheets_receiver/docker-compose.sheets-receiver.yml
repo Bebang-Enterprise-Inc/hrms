@@ -22,7 +22,7 @@ services:
       FRAPPE_API_SECRET: ${FRAPPE_API_SECRET}
 
       # Webhook
-      PUBLIC_WEBHOOK_URL: https://hq.bebang.ph/api/method/hrms.api.sheets_receiver.webhook
+      PUBLIC_WEBHOOK_URL: https://hq.bebang.ph/api/method/hrms.api.erp_sync.webhook
       SHEETS_RECEIVER_PORT: 8765
 
       # Logging
