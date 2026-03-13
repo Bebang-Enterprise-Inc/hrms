@@ -3656,10 +3656,24 @@ def _send_critical_discount_alert_notifications_internal(
 	email_sent = False
 
 	try:
-		from hrms.api.google_chat import send_message_to_space
+		from hrms.api.google_chat import send_notification_event
 		from hrms.utils.bei_config import SPACE_ACCOUNTING, get_chat_space
 
-		chat_sent = send_message_to_space(get_chat_space(SPACE_ACCOUNTING), message)
+		chat_sent = send_notification_event(
+			{
+				"family": "discount_critical_digest",
+				"source_system": "frappe",
+				"source_ref": f"discount_audit:{target_day.isoformat()}",
+				"severity": "critical",
+				"owner": "Accounting",
+				"requested_space": get_chat_space(SPACE_ACCOUNTING),
+				"facts": {
+					"business_date": target_day.isoformat(),
+					"rows": rows,
+					"review_url": PORTAL_QUEUE_URL,
+				},
+			}
+		)
 	except Exception as exc:
 		frappe.log_error(
 			title="Discount Alert Chat Notification Failed",

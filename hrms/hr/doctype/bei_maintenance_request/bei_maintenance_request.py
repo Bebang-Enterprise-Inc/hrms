@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from typing import Any
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -38,9 +40,18 @@ class BEIMaintenanceRequest(Document):
 		if self.description:
 			lines.append(f"*Issue:* {self.description}")
 		_notify_maintenance_event(
-			title=f"*New Maintenance Request*\\n{self.name}",
+			title=f"*New Maintenance Request*\n{self.name}",
 			lines=lines,
 			store=self.store,
+			request_name=self.name,
+			event_kind="created",
+			status=self.status or "Open",
+			priority=self.priority,
+			issue_category=self.issue_category,
+			description=self.description,
+			assigned_to=self.assigned_to,
+			vendor=self.vendor,
+			scheduled_date=self.scheduled_date,
 		)
 
 	def send_status_notification(self):
@@ -57,13 +68,22 @@ class BEIMaintenanceRequest(Document):
 		if self.scheduled_date:
 			lines.append(f"*Scheduled Date:* {self.scheduled_date}")
 		_notify_maintenance_event(
-			title=f"*Maintenance Status Updated*\\n{self.name}",
+			title=f"*Maintenance Status Updated*\n{self.name}",
 			lines=lines,
 			store=self.store,
+			request_name=self.name,
+			event_kind="status_change",
+			status=self.status,
+			priority=self.priority,
+			issue_category=self.issue_category,
+			description=self.description,
+			assigned_to=self.assigned_to,
+			vendor=self.vendor,
+			scheduled_date=self.scheduled_date,
 		)
 
 	@frappe.whitelist()
-	def assign_to_user(self, user, scheduled_date=None, estimated_cost=None):
+	def assign_to_user(self, user: Any, scheduled_date: Any = None, estimated_cost: Any = None):
 		"""Assign maintenance request to internal user."""
 		self.assigned_to = user
 		self.status = "Assigned"
@@ -75,7 +95,7 @@ class BEIMaintenanceRequest(Document):
 		return {"status": "success", "message": _("Request assigned to {0}").format(user)}
 
 	@frappe.whitelist()
-	def assign_to_vendor(self, vendor, scheduled_date=None, estimated_cost=None):
+	def assign_to_vendor(self, vendor: Any, scheduled_date: Any = None, estimated_cost: Any = None):
 		"""Assign maintenance request to external vendor."""
 		self.vendor = vendor
 		self.status = "Assigned"
@@ -94,7 +114,7 @@ class BEIMaintenanceRequest(Document):
 		return {"status": "success"}
 
 	@frappe.whitelist()
-	def cancel_request(self, reason):
+	def cancel_request(self, reason: Any):
 		"""Cancel maintenance request."""
 		self.status = "Cancelled"
 		self.add_comment("Comment", _("Cancelled: {0}").format(reason))
@@ -103,55 +123,60 @@ class BEIMaintenanceRequest(Document):
 
 
 @frappe.whitelist()
-def get_open_requests_for_store(store):
+def get_open_requests_for_store(store: Any):
 	"""Get all open maintenance requests for a store."""
 	return frappe.get_all(
 		"BEI Maintenance Request",
-		filters={
-			"store": store,
-			"status": ["in", ["Open", "Assigned", "In Progress"]]
-		},
-		fields=["name", "issue_category", "priority", "status", "scheduled_date", "description"]
+		filters={"store": store, "status": ["in", ["Open", "Assigned", "In Progress"]]},
+		fields=["name", "issue_category", "priority", "status", "scheduled_date", "description"],
 	)
 
 
 @frappe.whitelist()
-def get_scheduled_maintenance_today(store):
+def get_scheduled_maintenance_today(store: Any):
 	"""Check if store has scheduled maintenance today."""
 	return frappe.db.exists(
 		"BEI Maintenance Request",
-		{
-			"store": store,
-			"scheduled_date": today(),
-			"status": ["in", ["Assigned", "In Progress"]]
-		}
+		{"store": store, "scheduled_date": today(), "status": ["in", ["Assigned", "In Progress"]]},
 	)
 
 
-def _notify_maintenance_event(title, lines, store=None):
+def _notify_maintenance_event(title, lines, store=None, **event_fields):
 	"""Best-effort Google Chat notification for maintenance lifecycle events."""
+	status = str(event_fields.get("status") or "").strip()
+	event_kind = str(event_fields.get("event_kind") or "status_change").strip()
+	if event_kind == "status_change" and status in {"Assigned", "In Progress"}:
+		return
+
 	try:
-		from hrms.api.google_chat import send_message_to_space
-		from hrms.utils.bei_config import SPACE_NOTIFICATIONS, get_chat_space
+		from hrms.api.google_chat import send_notification_event
+		from hrms.utils.bei_config import SPACE_OPS, get_chat_space
 
-		spaces = []
-		store_space = _resolve_store_chat_space(store)
-		if store_space:
-			spaces.append(store_space)
-
-		default_space = get_chat_space(SPACE_NOTIFICATIONS)
-		if default_space:
-			spaces.append(default_space)
-
-		if not spaces:
-			return
-
-		message = title
-		if lines:
-			message = f"{title}\\n\\n" + "\\n".join(lines)
-
-		for space in dict.fromkeys(spaces):
-			send_message_to_space(space, message)
+		requested_space = _resolve_store_chat_space(store) or get_chat_space(SPACE_OPS)
+		severity = "high" if str(event_fields.get("priority") or "").strip() == "Urgent" else "medium"
+		send_notification_event(
+			{
+				"family": "maintenance_status_update",
+				"source_system": "frappe",
+				"source_ref": event_fields.get("request_name") or title,
+				"severity": severity,
+				"owner": "Store Manager" if status == "Completed" else "Projects Team / Store Manager",
+				"requested_space": requested_space,
+				"facts": {
+					"request_name": event_fields.get("request_name") or title,
+					"event_kind": event_kind,
+					"status": status or "Open",
+					"store": store,
+					"priority": event_fields.get("priority"),
+					"issue_category": event_fields.get("issue_category"),
+					"description": event_fields.get("description"),
+					"assigned_to": event_fields.get("assigned_to"),
+					"vendor": event_fields.get("vendor"),
+					"scheduled_date": event_fields.get("scheduled_date"),
+					"legacy_lines": lines,
+				},
+			}
+		)
 	except Exception as e:
 		frappe.log_error(
 			title="Maintenance Notification Error",

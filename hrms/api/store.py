@@ -15,7 +15,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, cint, flt, get_datetime, getdate, now_datetime, nowdate
 
-from hrms.utils.bei_config import get_company
+from hrms.utils.bei_config import SPACE_OPS, get_chat_space, get_company
 from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
 from hrms.utils.supply_chain_contracts import (
 	FINANCE_TREATMENT_SAME_COMPANY,
@@ -31,19 +31,30 @@ from hrms.utils.supply_chain_contracts import (
 	stamp_stock_entry_contract,
 )
 
-MANUAL_POS_UPLOAD_DISABLED_MESSAGE = _(
-	"Manual POS uploads are disabled. Sales now sync automatically via API. "
-	"Use Closing Report for X/Z-reading evidence, cash control, and POS-down exceptions."
-)
+
+def _manual_pos_upload_disabled_message() -> str:
+	return _(
+		"Manual POS uploads are disabled. Sales now sync automatically via API. "
+		"Use Closing Report for X/Z-reading evidence, cash control, and POS-down exceptions."
+	)
 
 
-def _notify_store_ops(msg):
-	"""Send a non-blocking GChat notification to the Store Ops notifications space."""
+def _notify_store_ops(msg=None, *, event=None, requested_space=None):
+	"""Send a non-blocking Store Ops notification.
+
+	Legacy raw text is kept for non-migrated callers. Sprint 38 structured events
+	should use the ``event`` path.
+	"""
 	try:
-		from hrms.api.google_chat import send_message_to_space
-		from hrms.utils.bei_config import SPACE_NOTIFICATIONS, get_chat_space
+		from hrms.api.google_chat import send_message_to_space, send_notification_event
 
-		send_message_to_space(get_chat_space(SPACE_NOTIFICATIONS), msg)
+		if event:
+			payload = dict(event)
+			payload.setdefault("requested_space", requested_space or get_chat_space(SPACE_OPS))
+			send_notification_event(payload)
+			return
+		if msg:
+			send_message_to_space(get_chat_space(SPACE_OPS), msg)
 	except Exception:
 		pass
 
@@ -1755,10 +1766,6 @@ def submit_order(
 
 	order.insert(ignore_permissions=True)
 
-	_notify_store_ops(
-		f"New store order {order.name} from {warehouse} -- {len(items)} items. Review: my.bebang.ph/dashboard/store-ops/order-approvals"
-	)
-
 	warning = None
 	queue_status = "not_required"
 	queue_name = None
@@ -1835,6 +1842,26 @@ def submit_order(
 	}
 	if warning:
 		result["warning"] = warning
+	_notify_store_ops(
+		event={
+			"family": "store_order_new",
+			"source_system": "frappe",
+			"source_ref": order.name,
+			"severity": "critical" if is_emergency_flag else "medium",
+			"owner": "Store Ops / Warehouse",
+			"facts": {
+				"order_name": order.name,
+				"warehouse": warehouse,
+				"item_count": len(items),
+				"is_emergency": bool(is_emergency_flag),
+				"queue_status": queue_status,
+				"approval_queue_name": queue_name,
+				"approval_assigned_approver": first_approver if requires_manual_approval else None,
+				"dashboard_url": "https://my.bebang.ph/dashboard/store-ops/order-approvals",
+			},
+		},
+		requested_space=get_chat_space(SPACE_OPS),
+	)
 	return result
 
 
@@ -2009,7 +2036,22 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 			)
 
 		_notify_store_ops(
-			f"Store order {order_name} approved by Area Supervisor {user} and routed to Regional Manager {regional_approver}."
+			event={
+				"family": "store_order_approved",
+				"source_system": "frappe",
+				"source_ref": order_name,
+				"severity": "high",
+				"owner": regional_approver or "Regional Manager",
+				"facts": {
+					"order_name": order_name,
+					"stage": "area_supervisor_forwarded",
+					"store": order.store,
+					"approved_by": user,
+					"regional_approver": regional_approver,
+					"dashboard_url": "https://my.bebang.ph/dashboard/store-ops/order-approvals",
+				},
+			},
+			requested_space=get_chat_space(SPACE_OPS),
 		)
 		return {
 			"success": True,
@@ -2041,8 +2083,29 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 			).format(order_name)
 		)
 
+	store_space = None
+	try:
+		store_space = frappe.db.get_value("Warehouse", order.store, "custom_gchat_space")
+	except Exception:
+		store_space = None
+
 	_notify_store_ops(
-		f"Store order {order_name} approved by {user}. Warehouse dispatch request {mr_name} is ready."
+		event={
+			"family": "store_order_approved",
+			"source_system": "frappe",
+			"source_ref": order_name,
+			"severity": "medium",
+			"owner": "Warehouse / Store Ops",
+			"facts": {
+				"order_name": order_name,
+				"stage": "approved",
+				"store": order.store,
+				"approved_by": user,
+				"material_request": mr_name,
+				"dashboard_url": "https://my.bebang.ph/dashboard/store-ops/order-approvals",
+			},
+		},
+		requested_space=store_space or get_chat_space(SPACE_OPS),
 	)
 	final_stage = "regional_manager" if requires_dual_stage else current_stage
 
@@ -3375,7 +3438,7 @@ def upload_pos_data(
 	    notes: Optional notes
 	    skip_date_validation: Skip date validation (for back-dated uploads with supervisor approval)
 	"""
-	frappe.throw(MANUAL_POS_UPLOAD_DISABLED_MESSAGE)
+	frappe.throw(_manual_pos_upload_disabled_message())
 	validate_store_ops_role()
 
 	if not store:

@@ -30,14 +30,13 @@ except ModuleNotFoundError:
 		context: str | None = None,
 	) -> str:
 		requested = (requested_space or "").strip()
-		blip_space = (
-			(os.environ.get("BEI_BLIP_NOTIFICATIONS_SPACE") or "").strip() or "spaces/AAQABiNmpBg"
-		)
-		lockdown_enabled = (os.environ.get("BEI_CHAT_LOCKDOWN_ENABLED") or "true").strip().lower() in _TRUE_VALUES
+		blip_space = (os.environ.get("BEI_BLIP_NOTIFICATIONS_SPACE") or "").strip() or "spaces/AAQABiNmpBg"
+		lockdown_enabled = (
+			os.environ.get("BEI_CHAT_LOCKDOWN_ENABLED") or "true"
+		).strip().lower() in _TRUE_VALUES
 		allow_non_blip = (
-			(os.environ.get("BEI_ALLOW_NON_BLIP_CHAT_DESTINATIONS") or "false").strip().lower()
-			in _TRUE_VALUES
-		)
+			os.environ.get("BEI_ALLOW_NON_BLIP_CHAT_DESTINATIONS") or "false"
+		).strip().lower() in _TRUE_VALUES
 		allowed_spaces = {
 			space.strip()
 			for space in (os.environ.get("BEI_ALLOWED_CHAT_SPACES") or "").split(",")
@@ -61,13 +60,16 @@ except ModuleNotFoundError:
 			)
 		return blip_space
 
+
 logger = logging.getLogger(__name__)
 
 # Import database for notification tracking
 try:
+	from .frappe_client import get_frappe_client
 	from .models import get_db
 except ImportError:
 	# Fallback for when module is run directly
+	from frappe_client import get_frappe_client
 	from models import get_db
 
 # Google Chat Configuration
@@ -431,76 +433,61 @@ def send_sheets_sync_critical_alert(
 	rows_failed: int,
 	errors: list[str] | None = None,
 	alerts: list[str] | None = None,
+	spreadsheet_id: str | None = None,
 ) -> str | None:
-	"""
-	Send critical alert for Sheets sync failures and suspicious change patterns.
-
-	This path is used by the sheet sync pipeline to escalate operational issues
-	that can impact finance/store reporting.
-	"""
+	"""Send structured Sheets sync alerts through the Frappe notification contract."""
 	errors = errors or []
 	alerts = alerts or []
 
 	if not (reasons or rows_failed or errors or alerts):
 		return None
 
-	reason_map = {
-		"sync_exception": "Sync process exception",
-		"sync_result_failed": "Frappe sync returned failed status",
-		"rows_failed": "One or more rows failed during sync",
-		"sync_errors_reported": "Sync result returned error details",
-		"suspicious_change_alert": "Suspicious data-change pattern detected",
-	}
-
 	try:
-		chat = get_chat_service()
-		trigger_label = "scheduled (6-hour fallback)" if trigger == "scheduled" else trigger
-		reason_lines = [f"  - {reason_map.get(reason, reason)}" for reason in sorted(set(reasons))]
-		error_lines = [f"  - {err}" for err in _unique_preserve_order(errors)]
-		alert_lines = [f"  - {msg}" for msg in _unique_preserve_order(alerts)]
-
-		message_parts = [
-			"*SHEETS SYNC CRITICAL ALERT*",
-			"",
-			f"*Sheet:* {spreadsheet_name} / {sheet_name}",
-			f"*Trigger:* {trigger_label}",
-			f"*Rows:* processed={rows_processed}, failed={rows_failed}",
-		]
-
-		if reason_lines:
-			message_parts.extend(["", "*Reasons:*", *reason_lines])
-		if error_lines:
-			message_parts.extend(["", "*Top Errors:*", *error_lines])
-		if alert_lines:
-			message_parts.extend(["", "*Change Alerts:*", *alert_lines])
-
-		message_parts.extend(["", f"<users/{DAVE_USER_ID}> <users/{EDLICE_USER_ID}>"])
-		message = "\n".join(message_parts)
-
-		result = (
-			chat.spaces()
-			.messages()
-			.create(
-				parent=_get_target_space(),
-				body={"text": message},
-			)
-			.execute()
+		client = get_frappe_client()
+		result = client.call_method(
+			"hrms.api.google_chat.ingest_notification_event",
+			data={
+				"event": {
+					"family": "sheets_sync_critical",
+					"source_system": "sheets_receiver",
+					"source_ref": f"{spreadsheet_name} / {sheet_name}",
+					"severity": "critical" if rows_failed else "high",
+					"owner": "Dave Martinez / Edlice Dela Cruz",
+					"facts": {
+						"spreadsheet_name": spreadsheet_name,
+						"sheet_name": sheet_name,
+						"spreadsheet_id": spreadsheet_id,
+						"trigger": trigger,
+						"reasons": sorted(set(reasons or [])),
+						"rows_processed": rows_processed,
+						"rows_failed": rows_failed,
+						"errors": _unique_preserve_order(errors),
+						"alerts": _unique_preserve_order(alerts),
+					},
+				}
+			},
 		)
-		message_id = result.get("name")
+		message_id = (result or {}).get("message_id")
+		rendered_text = str((result or {}).get("rendered_text") or "")
 
-		# Best-effort audit trail; never block sync path.
 		try:
 			db = get_db()
 			db.log_notification(
-				message_id=message_id,
+				message_id=message_id or "frappe_ingest",
 				message_type="sheets_sync_critical",
-				message_preview=message[:100],
+				message_preview=rendered_text[:100],
 			)
 		except Exception as log_error:
 			logger.warning(f"Failed to log critical sync alert to database: {log_error}")
 
-		logger.info(f"Sent sheets sync critical alert for {spreadsheet_name}/{sheet_name}")
-		return message_id
+		logger.info(
+			"Sent sheets sync critical alert via Frappe for %s/%s sent=%s skipped=%s",
+			spreadsheet_name,
+			sheet_name,
+			(result or {}).get("sent"),
+			(result or {}).get("skipped"),
+		)
+		return message_id or ("frappe_ingest" if (result or {}).get("success") else None)
 	except Exception as e:
 		logger.error(f"Failed to send sheets sync critical alert: {e}")
 		return None

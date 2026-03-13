@@ -520,6 +520,48 @@ class TestErpSyncRuntime(unittest.TestCase):
 		self.assertEqual(store_area["status"], "red")
 		self.assertEqual(store_area["pending_store_codes"], ["AMM"])
 
+	def test_scheduled_generate_morning_sync_health_report_sends_digest(self):
+		report = {
+			"report_date": "2026-01-01",
+			"status": "yellow",
+			"areas": [
+				{
+					"key": "store_inventory_shadow_sync",
+					"label": "Store Inventory Shadow Sync",
+					"status": "green",
+				},
+				{
+					"key": "ap_procurement_baselines",
+					"label": "AP / Procurement Baselines",
+					"status": "yellow",
+				},
+			],
+			"sync_target_pht_time": "07:00",
+			"ready_deadline_pht_time": "09:00",
+			"artifacts": {"markdown_path": str(ROOT / "tmp" / "morning.md")},
+		}
+		fake_send = MagicMock(return_value=True)
+		api_pkg = types.ModuleType("hrms.api")
+		api_pkg.__path__ = []
+		google_chat_mod = types.ModuleType("hrms.api.google_chat")
+		google_chat_mod.send_notification_event = fake_send
+
+		with (
+			patch.object(erp_sync, "_collect_morning_sync_health_report", return_value=dict(report)),
+			patch.dict(
+				sys.modules,
+				{"hrms.api": api_pkg, "hrms.api.google_chat": google_chat_mod},
+				clear=False,
+			),
+		):
+			result = erp_sync.scheduled_generate_morning_sync_health_report(report_date="2026-01-01")
+
+		event = fake_send.call_args.args[0]
+		self.assertEqual(event["family"], "morning_readiness_digest")
+		self.assertEqual(event["severity"], "high")
+		self.assertEqual(event["facts"]["artifact_markdown_path"], str(ROOT / "tmp" / "morning.md"))
+		self.assertTrue(result["notification_sent"])
+
 
 if __name__ == "__main__":
 	unittest.main()
