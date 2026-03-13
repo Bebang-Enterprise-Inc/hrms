@@ -2195,14 +2195,11 @@ def _create_mr_for_store_order(order):
 			or source_company
 		)
 		finance_treatment = infer_finance_treatment(source_company, target_company)
-		operational_target_warehouse = store_warehouse
-		if finance_treatment != FINANCE_TREATMENT_SAME_COMPANY and source_warehouse:
-			# Intercompany store lanes cannot use the buyer-store warehouse in the
-			# stock movement doc. Keep the real destination in contract metadata and
-			# use a source-company-valid operational target so the MR remains valid.
-			operational_target_warehouse = source_warehouse
-
-		mr.set_warehouse = operational_target_warehouse
+		# Material Request must preserve the real destination warehouse even for
+		# intercompany lanes. Reusing the source warehouse as the accepted
+		# warehouse breaks Frappe validation because the request row would point
+		# to the same warehouse on both sides of the transfer.
+		mr.set_warehouse = store_warehouse
 		mr.company = source_company
 		stamp_material_request_contract(
 			mr,
@@ -2227,7 +2224,7 @@ def _create_mr_for_store_order(order):
 				"uom": getattr(item, "uom", None) or "Nos",
 				"stock_uom": getattr(item, "uom", None) or "Nos",
 				"conversion_factor": 1,
-				"warehouse": operational_target_warehouse,
+				"warehouse": store_warehouse,
 				"schedule_date": required_by,
 			}
 			if source_warehouse:

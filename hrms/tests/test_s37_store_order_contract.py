@@ -104,6 +104,8 @@ def _install_fake_modules():
 
 	if "hrms.utils.bei_config" not in sys.modules:
 		bei_config_mod = types.ModuleType("hrms.utils.bei_config")
+		bei_config_mod.SPACE_OPS = "OPS"
+		bei_config_mod.get_chat_space = lambda key=None: None
 		bei_config_mod.get_company = lambda: "Bebang Enterprise Inc."
 		sys.modules["hrms.utils.bei_config"] = bei_config_mod
 
@@ -182,7 +184,7 @@ class TestS37StoreOrderContract(unittest.TestCase):
 		self.assertEqual(stamp_calls[0]["source_warehouse"], "DRY-WH - BEI")
 		self.assertEqual(stamp_calls[0]["destination_warehouse"], "STORE-A - BEI")
 
-	def test_create_mr_for_intercompany_store_order_uses_operational_target_and_preserves_real_destination(
+	def test_create_mr_for_intercompany_store_order_preserves_real_destination_on_request(
 		self,
 	):
 		_DOCS_CREATED.clear()
@@ -217,8 +219,8 @@ class TestS37StoreOrderContract(unittest.TestCase):
 		self.assertEqual(mr_name, "MAT-REQ-TEST-0001")
 		created = _DOCS_CREATED[0]
 		self.assertEqual(created.company, "Bebang Kitchen Inc.")
-		self.assertEqual(created.set_warehouse, "GREENHILLS - BKI")
-		self.assertEqual(created.items[0].warehouse, "GREENHILLS - BKI")
+		self.assertEqual(created.set_warehouse, "STORE-B - BEI")
+		self.assertEqual(created.items[0].warehouse, "STORE-B - BEI")
 		self.assertEqual(created.items[0].from_warehouse, "GREENHILLS - BKI")
 		self.assertEqual(stamp_calls[0]["destination_warehouse"], "STORE-B - BEI")
 		self.assertEqual(stamp_calls[0]["source_company"], "Bebang Kitchen Inc.")
@@ -263,7 +265,8 @@ class TestS37StoreOrderContract(unittest.TestCase):
 		self.assertEqual(mr_name, "MAT-REQ-TEST-0001")
 		created = _DOCS_CREATED[0]
 		self.assertEqual(created.company, "Bebang Kitchen Inc.")
-		self.assertEqual(created.set_warehouse, "SHAW BLVD - BKI")
+		self.assertEqual(created.set_warehouse, "STORE-C - BEI")
+		self.assertEqual(created.items[0].warehouse, "STORE-C - BEI")
 		self.assertEqual(stamp_calls[0]["source_company"], "Bebang Kitchen Inc.")
 		self.assertEqual(stamp_calls[0]["target_company"], "Day Ones Food and Drink Establishments Corp.")
 		self.assertEqual(stamp_calls[0]["finance_treatment"], "intercompany")
