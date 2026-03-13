@@ -2203,11 +2203,13 @@ def _create_mr_for_store_order(order):
 			or source_company
 		)
 		finance_treatment = infer_finance_treatment(source_company, billing_target_company)
+		is_intercompany = finance_treatment == FINANCE_TREATMENT_INTERCOMPANY
+		operational_dispatch_warehouse = source_warehouse if is_intercompany and source_warehouse else store_warehouse
 		# Frappe validates Material Transfer requests against the operational stock
 		# owner on the source side of the move. The buyer entity used later for
 		# billing can diverge from that operational company, so keep it in the
 		# stamped contract fields instead of on the header itself.
-		mr.set_warehouse = store_warehouse
+		mr.set_warehouse = operational_dispatch_warehouse
 		mr.company = source_company
 		stamp_material_request_contract(
 			mr,
@@ -2232,7 +2234,7 @@ def _create_mr_for_store_order(order):
 				"uom": getattr(item, "uom", None) or "Nos",
 				"stock_uom": getattr(item, "uom", None) or "Nos",
 				"conversion_factor": 1,
-				"warehouse": store_warehouse,
+				"warehouse": operational_dispatch_warehouse,
 				"schedule_date": required_by,
 			}
 			if source_warehouse:
