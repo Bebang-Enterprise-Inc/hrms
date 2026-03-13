@@ -162,6 +162,7 @@ class TestGoogleChatNotificationRouting(unittest.TestCase):
 			patch.dict(
 				os.environ,
 				{
+					"BEI_CHAT_STRICT_BLIP_ONLY": "false",
 					"BEI_ALLOW_NON_BLIP_CHAT_DESTINATIONS": "true",
 					"BEI_ALLOWED_CHAT_SPACES": "spaces/AAAAvDZdY-o",
 				},
@@ -213,7 +214,7 @@ class TestGoogleChatNotificationRouting(unittest.TestCase):
 
 		with (
 			patch.object(self.module.os.path, "exists", return_value=True),
-			patch.dict(os.environ, {}, clear=False),
+			patch.dict(os.environ, {"BEI_CHAT_STRICT_BLIP_ONLY": "false"}, clear=False),
 		):
 			result = self.module.ingest_notification_event(event=event)
 
@@ -221,6 +222,57 @@ class TestGoogleChatNotificationRouting(unittest.TestCase):
 		self.assertTrue(result["sent"])
 		self.assertEqual(self.fake_chat.messages_api.last_parent, "spaces/AAAAvDZdY-o")
 		self.assertIn("maintenance status update", self.fake_chat.messages_api.last_body["text"].lower())
+
+	def test_send_notification_event_strict_blip_only_reroutes_family_allowed_space(self):
+		event = {
+			"family": "maintenance_status_update",
+			"source_system": "frappe",
+			"source_ref": "MR-STRICT-0001",
+			"severity": "medium",
+			"owner": "Projects Team / Store Manager",
+			"requested_space": "spaces/AAQA3NVVR6c",
+			"facts": {
+				"request_name": "MR-STRICT-0001",
+				"status": "Completed",
+				"store": "Ayala Evo",
+				"event_kind": "status_change",
+			},
+		}
+
+		with (
+			patch.object(self.module.os.path, "exists", return_value=True),
+			patch.dict(os.environ, {}, clear=False),
+		):
+			result = self.module.ingest_notification_event(event=event)
+
+		self.assertTrue(result["success"])
+		self.assertTrue(result["sent"])
+		self.assertEqual(result["target_space"], "spaces/AAQABiNmpBg")
+		self.assertEqual(self.fake_chat.messages_api.last_parent, "spaces/AAQABiNmpBg")
+
+	def test_ingest_notification_event_dry_run_reports_routed_target_space(self):
+		result = self.module.ingest_notification_event(
+			event={
+				"family": "morning_readiness_digest",
+				"source_system": "frappe",
+				"source_ref": "morning_sync:2026-03-13:test",
+				"severity": "critical",
+				"requested_space": "spaces/AAQA3NVVR6c",
+				"owner": "ERP Automation / Ops",
+				"facts": {
+					"report_date": "2026-03-13",
+					"status": "red",
+					"sync_target_pht_time": "07:00",
+					"ready_deadline_pht_time": "09:00",
+					"areas": [{"label": "Store Inventory Shadow Sync", "status": "red"}],
+				},
+			},
+			dry_run=True,
+		)
+
+		self.assertTrue(result["success"])
+		self.assertFalse(result["sent"])
+		self.assertEqual(result["target_space"], "spaces/AAQABiNmpBg")
 
 	def test_ingest_notification_event_dedups_within_policy_window(self):
 		event = {

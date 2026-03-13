@@ -1,4 +1,5 @@
 import importlib.util
+import os
 import sys
 import types
 import unittest
@@ -65,6 +66,54 @@ class TestSheetsReceiverNotificationsStandalone(unittest.TestCase):
 		spec.loader.exec_module(module)
 
 		self.assertEqual(module._get_target_space(), "spaces/AAQABiNmpBg")
+
+	def test_standalone_fallback_honors_strict_blip_only_default(self):
+		_install_fake_google_modules()
+		_install_fake_package_path_without_utils()
+
+		spec = importlib.util.spec_from_file_location(
+			"hrms.services.sheets_receiver.notifications_standalone_under_test_strict",
+			ROOT / "hrms" / "services" / "sheets_receiver" / "notifications.py",
+		)
+		module = importlib.util.module_from_spec(spec)
+
+		original_env = dict(os.environ)
+		try:
+			os.environ.pop("BEI_CHAT_STRICT_BLIP_ONLY", None)
+			os.environ["BEI_ALLOW_NON_BLIP_CHAT_DESTINATIONS"] = "true"
+			os.environ["BEI_ALLOWED_CHAT_SPACES"] = "spaces/AAQA3NVVR6c"
+			spec.loader.exec_module(module)
+			self.assertEqual(
+				module.route_outbound_chat_space("spaces/AAQA3NVVR6c"),
+				"spaces/AAQABiNmpBg",
+			)
+		finally:
+			os.environ.clear()
+			os.environ.update(original_env)
+
+	def test_standalone_fallback_can_disable_strict_mode_explicitly(self):
+		_install_fake_google_modules()
+		_install_fake_package_path_without_utils()
+
+		spec = importlib.util.spec_from_file_location(
+			"hrms.services.sheets_receiver.notifications_standalone_under_test_unlocked",
+			ROOT / "hrms" / "services" / "sheets_receiver" / "notifications.py",
+		)
+		module = importlib.util.module_from_spec(spec)
+
+		original_env = dict(os.environ)
+		try:
+			os.environ["BEI_CHAT_STRICT_BLIP_ONLY"] = "false"
+			os.environ["BEI_ALLOW_NON_BLIP_CHAT_DESTINATIONS"] = "true"
+			os.environ["BEI_ALLOWED_CHAT_SPACES"] = "spaces/AAQA3NVVR6c"
+			spec.loader.exec_module(module)
+			self.assertEqual(
+				module.route_outbound_chat_space("spaces/AAQA3NVVR6c"),
+				"spaces/AAQA3NVVR6c",
+			)
+		finally:
+			os.environ.clear()
+			os.environ.update(original_env)
 
 
 if __name__ == "__main__":
