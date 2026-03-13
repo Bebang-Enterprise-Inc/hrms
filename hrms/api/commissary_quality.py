@@ -677,9 +677,7 @@ def get_wastage_trends(days: int | str = 30, group_by: str = "reason") -> dict[s
 
 
 @frappe.whitelist()
-def get_fefo_picking_list(
-	item_code: str | None = None, warehouse: str | None = None
-) -> dict[str, Any]:
+def get_fefo_picking_list(item_code: str | None = None, warehouse: str | None = None) -> dict[str, Any]:
 	"""
 	Get FEFO (First Expired First Out) picking recommendations.
 	Returns batches sorted by expiry date for picking priority.

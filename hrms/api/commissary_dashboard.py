@@ -471,9 +471,7 @@ def get_production_history(
 
 
 @frappe.whitelist()
-def get_production_cost_per_batch(
-	limit: int | str = 20, item_code: str | None = None
-) -> dict[str, Any]:
+def get_production_cost_per_batch(limit: int | str = 20, item_code: str | None = None) -> dict[str, Any]:
 	"""
 	Return production cost per batch from submitted Manufacture entries.
 
