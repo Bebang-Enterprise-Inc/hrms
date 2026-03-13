@@ -279,6 +279,47 @@ def get_inventory_levels(item_group=None, show_low_stock_only=False):
 
 
 @frappe.whitelist()
+def get_transfer_ready_inventory():
+	"""
+	Fast finished-goods inventory feed for the commissary -> warehouse handoff page.
+
+	This intentionally avoids the threshold enrichment loop used by the broader
+	commissary inventory dashboard because the transfer page only needs current FG
+	stock with positive quantity in the active commissary warehouse.
+	"""
+	commissary_warehouse = get_commissary_warehouse()
+
+	items = frappe.db.sql(
+		"""
+		SELECT
+			b.item_code,
+			i.item_name,
+			i.item_group,
+			b.actual_qty,
+			0 as reserved_qty,
+			b.actual_qty as available_qty,
+			i.stock_uom,
+			b.warehouse
+		FROM `tabBin` b
+		JOIN `tabItem` i ON i.name = b.item_code
+		WHERE b.warehouse = %s
+		  AND b.actual_qty > 0
+		  AND i.disabled = 0
+		  AND i.is_stock_item = 1
+		  AND (
+			i.name LIKE 'FG%%'
+			OR i.item_group = 'Finished Goods'
+		  )
+		ORDER BY i.item_name
+		""",
+		commissary_warehouse,
+		as_dict=True,
+	)
+
+	return {"success": True, "data": items}
+
+
+@frappe.whitelist()
 def get_low_stock_alerts():
 	"""
 	Get items below safety stock or reorder level.
