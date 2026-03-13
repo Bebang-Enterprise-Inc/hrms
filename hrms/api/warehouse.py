@@ -10,6 +10,7 @@ Date: 2026-02-02
 """
 
 import json
+from contextlib import contextmanager
 from typing import Any
 
 import frappe
@@ -83,6 +84,22 @@ def _enable_role_gated_write(doc: Any):
 	doc.flags.ignore_permissions = True
 	doc.flags.ignore_user_permissions = True
 	return doc
+
+
+@contextmanager
+def _run_as_system_user(user: str = "Administrator"):
+	"""Temporarily elevate the session user for internal stock movements."""
+	session = getattr(frappe, "session", None)
+	if session is None:
+		session = getattr(getattr(frappe, "local", None), "session", None)
+	original_user = getattr(session, "user", None)
+	try:
+		if session and user:
+			session.user = user
+		yield
+	finally:
+		if session and original_user:
+			session.user = original_user
 
 
 def _resolve_valid_item_uom(item_doc: Any, requested_uom: str | None = None) -> str:
@@ -608,8 +625,9 @@ def complete_warehouse_receiving(
 		)
 
 	_enable_role_gated_write(stock_entry)
-	stock_entry.insert(ignore_permissions=True)
-	stock_entry.submit()
+	with _run_as_system_user():
+		stock_entry.insert(ignore_permissions=True)
+		stock_entry.submit()
 
 	receiving.stock_entry = stock_entry.name
 	receiving.receiving_date = now_datetime()
@@ -1035,8 +1053,9 @@ def create_stock_transfer(
 		frappe.throw(_("No items to transfer"))
 
 	_enable_role_gated_write(se)
-	se.insert(ignore_permissions=True)
-	se.submit()
+	with _run_as_system_user():
+		se.insert(ignore_permissions=True)
+		se.submit()
 
 	return {
 		"success": True,
