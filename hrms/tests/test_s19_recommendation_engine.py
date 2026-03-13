@@ -256,3 +256,69 @@ def test_orderable_items_falls_back_to_heuristic_when_snapshot_missing():
 	assert item["projected_sales"] == 5.85
 	assert item["bom_consumption"] == 2.25
 	assert item["coverage_window_days"] == 3
+
+
+def test_orderable_items_reads_stock_from_lane_source_warehouse():
+	store_mod = _load_store_module()
+
+	def _sql(query, params=None, as_dict=False):
+		if "FROM `tabItem` i" in query:
+			return [
+				_AttrDict(
+					name="FG002-A",
+					item_name="Frozen Milk",
+					item_group="Frozen Goods",
+					stock_uom="Bag",
+					image=None,
+					order_count=5,
+				),
+				_AttrDict(
+					name="RM-001",
+					item_name="Sugar Syrup",
+					item_group="Dry Goods",
+					stock_uom="Bottle",
+					image=None,
+					order_count=3,
+				),
+			]
+		if "FROM `tabBEI Store Order Item` oi" in query:
+			return [
+				_AttrDict(item_code="FG002-A", qty_requested=2),
+				_AttrDict(item_code="RM-001", qty_requested=4),
+			]
+		return []
+
+	def _get_all(doctype, filters=None, fields=None, **kwargs):
+		if doctype == "Bin":
+			warehouse = (filters or {}).get("warehouse")
+			if warehouse == "SM Taytay - BKI":
+				return [_AttrDict(item_code="FG002-A", actual_qty=7)]
+			if warehouse == "Shaw BLVD - BKI":
+				return [_AttrDict(item_code="RM-001", actual_qty=3)]
+			return []
+		if doctype == "BEI Inventory Risk Snapshot":
+			return []
+		return []
+
+	store_mod.frappe.db.sql = _sql
+	store_mod.frappe.get_all = _get_all
+	store_mod.resolve_warehouse = lambda store: "TEST-STORE-BGC - BEI"
+	store_mod._resolve_store_order_source_warehouse = (
+		lambda store_warehouse, cargo_category: (
+			"SM Taytay - BKI" if cargo_category == "FC" else "Shaw BLVD - BKI"
+		)
+	)
+	store_mod._get_signal_flags = lambda warehouse, for_date=None: {
+		"is_salary_week": False,
+		"is_holiday": False,
+		"is_weather_risk": False,
+	}
+	store_mod._get_adaptive_delta = lambda warehouse: 0.0
+
+	result = store_mod.get_orderable_items("TEST-STORE-BGC", "2026-03-02")
+	items = {item["item_code"]: item for item in result["items"]}
+
+	assert items["FG002-A"]["source_warehouse"] == "SM Taytay - BKI"
+	assert items["FG002-A"]["available_to_promise"] == 7.0
+	assert items["RM-001"]["source_warehouse"] == "Shaw BLVD - BKI"
+	assert items["RM-001"]["available_to_promise"] == 3.0

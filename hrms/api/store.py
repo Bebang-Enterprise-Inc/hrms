@@ -987,6 +987,43 @@ def _resolve_store_order_source_warehouse(store_warehouse, cargo_category):
 	return resolve_route_source_warehouse(store_warehouse, cargo_category)
 
 
+def _build_orderable_source_stock_context(store_warehouse, items):
+	"""Load ATP stock from the contracted source warehouse for each item lane."""
+	source_warehouse_by_item = {}
+	lane_by_item = {}
+	item_codes_by_source = {}
+
+	for item in items:
+		item_code = item.get("name") or item.get("item_code")
+		if not item_code:
+			continue
+		lane = _resolve_delivery_lane(item)
+		cargo_category = _lane_to_cargo_category(lane)
+		source_warehouse = _resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
+		source_warehouse_by_item[item_code] = source_warehouse
+		lane_by_item[item_code] = lane
+		if source_warehouse:
+			item_codes_by_source.setdefault(source_warehouse, set()).add(item_code)
+
+	stock_map = {}
+	for source_warehouse, item_codes in item_codes_by_source.items():
+		stock_rows = frappe.get_all(
+			"Bin",
+			filters={"warehouse": source_warehouse, "item_code": ["in", list(item_codes)]},
+			fields=["item_code", "actual_qty"],
+			limit_page_length=max(200, len(item_codes) * 3),
+		)
+		for row in stock_rows:
+			key = (source_warehouse, row.item_code)
+			stock_map[key] = flt(stock_map.get(key, 0)) + flt(row.actual_qty)
+
+	return {
+		"source_warehouse_by_item": source_warehouse_by_item,
+		"lane_by_item": lane_by_item,
+		"stock_map": stock_map,
+	}
+
+
 def _resolve_delivery_lane(item_doc):
 	"""Infer lane from explicit category first, then tokenized metadata."""
 	explicit_category = _normalize_cargo_category(item_doc.get("cargo_category") or item_doc.get("lane"))
@@ -1397,7 +1434,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		frappe.throw(_("Store is required"))
 
 	# Resolve branch name to warehouse name
-	warehouse = resolve_warehouse(store)
+	store_warehouse = resolve_warehouse(store)
 
 	# Get items with order frequency for this store, sorted by most ordered first
 	items = frappe.db.sql(
@@ -1416,7 +1453,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
         WHERE i.is_stock_item = 1 AND i.disabled = 0
         ORDER BY COALESCE(freq.order_count, 0) DESC, i.item_group, i.item_name
     """,
-		warehouse,
+		store_warehouse,
 		as_dict=True,
 	)
 
@@ -1437,37 +1474,33 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
                     AND oi2.item_code = oi.item_code
             )
     """,
-		{"warehouse": warehouse},
+		{"warehouse": store_warehouse},
 		as_dict=True,
 	)
 	for row in last_qty_rows:
 		last_qty_map[row.item_code] = row.qty_requested
 
-	# Batch stock quantities (available-to-promise approximation)
-	stock_map = {}
-	item_codes = [row.name for row in items]
-	if item_codes:
-		stock_rows = frappe.get_all(
-			"Bin",
-			filters={"warehouse": warehouse, "item_code": ["in", item_codes]},
-			fields=["item_code", "actual_qty"],
-			limit_page_length=max(200, len(item_codes) * 3),
-		)
-		for row in stock_rows:
-			stock_map[row.item_code] = flt(stock_map.get(row.item_code, 0)) + flt(row.actual_qty)
+	# Batch stock quantities (available-to-promise approximation) now read from the
+	# contracted source warehouse for the item lane rather than the destination store.
+	source_stock_context = _build_orderable_source_stock_context(store_warehouse, items)
+	source_warehouse_by_item = source_stock_context["source_warehouse_by_item"]
+	lane_by_item = source_stock_context["lane_by_item"]
+	stock_map = source_stock_context["stock_map"]
 
 	target_date = getdate(date or nowdate())
-	signal_flags = _get_signal_flags(warehouse, for_date=target_date)
+	signal_flags = _get_signal_flags(store_warehouse, for_date=target_date)
 	signal_modifiers = _compose_signal_modifiers(**signal_flags)
-	adaptive_delta = _get_adaptive_delta(warehouse)
+	adaptive_delta = _get_adaptive_delta(store_warehouse)
 	tuned_multiplier = _apply_adaptive_tuning(signal_modifiers["composite_multiplier"], adaptive_delta)
-	demand_snapshots = _load_store_item_demand_snapshots(warehouse, item_codes, target_date)
+	item_codes = [row.name for row in items]
+	demand_snapshots = _load_store_item_demand_snapshots(store_warehouse, item_codes, target_date)
 
 	for item in items:
 		item_code = item.name
 		last_order_qty = flt(last_qty_map.get(item_code, 0))
-		available_to_promise = flt(stock_map.get(item_code, 0), 2)
-		lane = _resolve_delivery_lane(item)
+		lane = lane_by_item.get(item_code) or _resolve_delivery_lane(item)
+		source_warehouse = source_warehouse_by_item.get(item_code) or store_warehouse
+		available_to_promise = flt(stock_map.get((source_warehouse, item_code), 0), 2)
 		snapshot = demand_snapshots.get(item_code) or {}
 		coverage_window_days = flt(snapshot.get("coverage_window_days") or 0)
 		if coverage_window_days <= 0:
@@ -1500,6 +1533,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		)
 		item["item_code"] = item_code
 		item["uom"] = item.get("stock_uom")
+		item["source_warehouse"] = source_warehouse
 		item["last_order_qty"] = last_order_qty
 		item["available_stock"] = available_to_promise
 		item["is_oos"] = 1 if available_to_promise <= 0 else 0
