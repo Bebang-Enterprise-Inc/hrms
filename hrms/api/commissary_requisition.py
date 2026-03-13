@@ -7,8 +7,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, flt, today
 
-from hrms.api.commissary import get_commissary_warehouse
-from hrms.utils.bei_config import get_company
+from hrms.api.commissary import get_commissary_company, get_commissary_warehouse
 from hrms.utils.supply_chain_contracts import (
 	REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL,
 	get_request_source_label,
@@ -531,7 +530,7 @@ def create_work_order(item_code, qty, planned_start_date=None, remarks=None):
 	wo.qty = flt(qty)
 	wo.fg_warehouse = commissary_warehouse
 	wo.wip_warehouse = commissary_warehouse  # Same warehouse for simplicity
-	wo.company = get_company()
+	wo.company = get_commissary_company()
 	wo.planned_start_date = planned_start_date or today()
 	wo.expected_delivery_date = planned_start_date or today()
 

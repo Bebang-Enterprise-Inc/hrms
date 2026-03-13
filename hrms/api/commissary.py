@@ -27,6 +27,7 @@ from hrms.utils.bei_config import get_company
 from hrms.utils.supply_chain_contracts import (
 	CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
 	get_preferred_commissary_warehouses,
+	resolve_warehouse_company,
 )
 
 # ============================================================
@@ -68,6 +69,11 @@ def get_commissary_warehouse():
 		or _existing_candidate(include_legacy=True)
 		or CANONICAL_COMMISSARY_OPERATION_WAREHOUSE
 	)
+
+
+def get_commissary_company() -> str:
+	"""Resolve the legal entity that owns the active commissary warehouse."""
+	return resolve_warehouse_company(get_commissary_warehouse()) or get_company()
 
 
 def _raise_direct_fulfillment_retired() -> None:
@@ -556,7 +562,7 @@ def create_dispatch_transfer(
 	# Create Stock Entry
 	se = frappe.new_doc("Stock Entry")
 	se.stock_entry_type = "Material Transfer"
-	se.company = get_company()
+	se.company = get_commissary_company()
 	se.posting_date = today()
 	se.posting_time = frappe.utils.nowtime()
 	se.from_warehouse = commissary_warehouse
@@ -696,7 +702,7 @@ def fulfill_store_order(mr_name: str, items: str | list[dict[str, Any]]):
 	# Create Stock Entry
 	se = frappe.new_doc("Stock Entry")
 	se.stock_entry_type = "Material Transfer"
-	se.company = get_company()
+	se.company = get_commissary_company()
 	se.posting_date = today()
 	se.posting_time = frappe.utils.nowtime()
 	se.from_warehouse = commissary_warehouse
@@ -1949,7 +1955,7 @@ def create_hub_transfer(
 	# Create Stock Entry
 	se = frappe.new_doc("Stock Entry")
 	se.stock_entry_type = "Material Transfer"
-	se.company = get_company()
+	se.company = get_commissary_company()
 	se.posting_date = today()
 	se.posting_time = frappe.utils.nowtime()
 	se.from_warehouse = commissary_warehouse

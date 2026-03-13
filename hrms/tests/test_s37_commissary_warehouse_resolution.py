@@ -20,6 +20,14 @@ class _FakeDB:
 	def sql(self, query, warehouse_name):
 		return [(1 if warehouse_name in self.stocked else 0,)]
 
+	def get_value(self, doctype, name, fieldname=None):
+		if doctype == "Warehouse" and fieldname == "company":
+			if name == "Shaw BLVD - BKI":
+				return "Bebang Kitchen Inc."
+			if name == "TEST-COMMISSARY - BEI":
+				return "Bebang Enterprise Inc."
+		return None
+
 
 class _FakeFrappe(types.ModuleType):
 	@property
@@ -159,6 +167,24 @@ class TestS37CommissaryWarehouseResolution(unittest.TestCase):
 			)
 		)
 		self.assertEqual(module.get_commissary_warehouse(), "TEST-COMMISSARY - BEI")
+
+	def test_resolves_commissary_company_from_active_bki_warehouse(self):
+		module = _load_module(
+			_FakeDB(
+				existing={"Shaw BLVD - BKI", "TEST-COMMISSARY - BEI"},
+				stocked={"Shaw BLVD - BKI"},
+			)
+		)
+		self.assertEqual(module.get_commissary_company(), "Bebang Kitchen Inc.")
+
+	def test_resolves_commissary_company_from_legacy_warehouse_when_bki_missing(self):
+		module = _load_module(
+			_FakeDB(
+				existing={"TEST-COMMISSARY - BEI"},
+				stocked={"TEST-COMMISSARY - BEI"},
+			)
+		)
+		self.assertEqual(module.get_commissary_company(), "Bebang Enterprise Inc.")
 
 
 if __name__ == "__main__":
