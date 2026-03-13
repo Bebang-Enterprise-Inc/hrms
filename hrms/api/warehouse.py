@@ -663,7 +663,7 @@ def get_pending_material_requests():
 		filters={
 			"status": ["in", ["Pending", "Partially Ordered"]],
 			"docstatus": 1,
-			"material_request_type": "Material Transfer",
+			"material_request_type": ["in", ["Material Transfer", "Material Issue"]],
 		},
 		fields=[
 			"name",
@@ -858,7 +858,7 @@ def get_ready_for_dispatch():
 		filters={
 			"status": ["in", ["Ordered", "Partially Ordered"]],
 			"docstatus": 1,
-			"material_request_type": "Material Transfer",
+			"material_request_type": ["in", ["Material Transfer", "Material Issue"]],
 		},
 		fields=["name", "transaction_date", "schedule_date", "status", "set_warehouse"],
 		order_by="schedule_date asc",
@@ -1144,7 +1144,7 @@ def get_warehouse_dashboard():
 		filters={
 			"status": ["in", ["Pending", "Partially Ordered"]],
 			"docstatus": 1,
-			"material_request_type": "Material Transfer",
+			"material_request_type": ["in", ["Material Transfer", "Material Issue"]],
 		},
 	)
 

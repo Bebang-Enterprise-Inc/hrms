@@ -2205,6 +2205,7 @@ def _create_mr_for_store_order(order):
 		finance_treatment = infer_finance_treatment(source_company, billing_target_company)
 		is_intercompany = finance_treatment == FINANCE_TREATMENT_INTERCOMPANY
 		operational_dispatch_warehouse = source_warehouse if is_intercompany and source_warehouse else store_warehouse
+		mr.material_request_type = "Material Issue" if is_intercompany else "Material Transfer"
 		# Frappe validates Material Transfer requests against the operational stock
 		# owner on the source side of the move. The buyer entity used later for
 		# billing can diverge from that operational company, so keep it in the
@@ -2237,7 +2238,7 @@ def _create_mr_for_store_order(order):
 				"warehouse": operational_dispatch_warehouse,
 				"schedule_date": required_by,
 			}
-			if source_warehouse:
+			if source_warehouse and not is_intercompany:
 				row["from_warehouse"] = source_warehouse
 			mr.append("items", row)
 

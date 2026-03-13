@@ -219,9 +219,10 @@ class TestS37StoreOrderContract(unittest.TestCase):
 		self.assertEqual(mr_name, "MAT-REQ-TEST-0001")
 		created = _DOCS_CREATED[0]
 		self.assertEqual(created.company, "Bebang Kitchen Inc.")
+		self.assertEqual(created.material_request_type, "Material Issue")
 		self.assertEqual(created.set_warehouse, "GREENHILLS - BKI")
 		self.assertEqual(created.items[0].warehouse, "GREENHILLS - BKI")
-		self.assertEqual(created.items[0].from_warehouse, "GREENHILLS - BKI")
+		self.assertIsNone(getattr(created.items[0], "from_warehouse", None))
 		self.assertEqual(stamp_calls[0]["destination_warehouse"], "STORE-B - BEI")
 		self.assertEqual(stamp_calls[0]["source_company"], "Bebang Kitchen Inc.")
 		self.assertEqual(stamp_calls[0]["target_company"], "Bebang Enterprise Inc.")
@@ -265,8 +266,10 @@ class TestS37StoreOrderContract(unittest.TestCase):
 		self.assertEqual(mr_name, "MAT-REQ-TEST-0001")
 		created = _DOCS_CREATED[0]
 		self.assertEqual(created.company, "Bebang Kitchen Inc.")
+		self.assertEqual(created.material_request_type, "Material Issue")
 		self.assertEqual(created.set_warehouse, "SHAW BLVD - BKI")
 		self.assertEqual(created.items[0].warehouse, "SHAW BLVD - BKI")
+		self.assertIsNone(getattr(created.items[0], "from_warehouse", None))
 		self.assertEqual(stamp_calls[0]["source_company"], "Bebang Kitchen Inc.")
 		self.assertEqual(stamp_calls[0]["target_company"], "Day Ones Food and Drink Establishments Corp.")
 		self.assertEqual(stamp_calls[0]["finance_treatment"], "intercompany")
