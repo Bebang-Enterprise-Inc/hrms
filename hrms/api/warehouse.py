@@ -85,6 +85,37 @@ def _enable_role_gated_write(doc: Any):
 	return doc
 
 
+def _resolve_valid_item_uom(item_doc: Any, requested_uom: str | None = None) -> str:
+	"""Prefer the requested UOM only when it exists in the UOM master.
+
+	Stock movements must use a valid UOM master record. Some operational feeds still
+	send packaging labels such as "TRAY" that are not configured as ERP UOMs. When
+	that happens, fall back to the item's real stock UOM instead of letting the stock
+	transaction fail later with a LinkValidationError.
+	"""
+	candidates: list[str] = []
+	for raw_value in [requested_uom, getattr(item_doc, "stock_uom", None)]:
+		value = str(raw_value or "").strip()
+		if value and value not in candidates:
+			candidates.append(value)
+
+	for row in getattr(item_doc, "uoms", None) or []:
+		value = str(_row_value(row, "uom", "") or "").strip()
+		if value and value not in candidates:
+			candidates.append(value)
+
+	for candidate in candidates:
+		if frappe.db.exists("UOM", candidate):
+			return candidate
+
+	frappe.throw(
+		_("No valid UOM master record found for item {0}. Checked: {1}").format(
+			item_doc.name,
+			", ".join(candidates) or _("none"),
+		)
+	)
+
+
 @frappe.whitelist()
 def get_pending_purchase_orders(item_code=None, warehouse=None):
 	"""
@@ -259,6 +290,9 @@ def create_purchase_receipt(
 		if received_qty <= 0:
 			continue
 
+		item_doc = frappe.get_doc("Item", item_data["item_code"])
+		valid_uom = _resolve_valid_item_uom(item_doc, getattr(po_item, "uom", None))
+
 		pr.append(
 			"items",
 			{
@@ -267,8 +301,8 @@ def create_purchase_receipt(
 				"description": po_item.description,
 				"qty": received_qty,
 				"rejected_qty": item_data.get("rejected_qty", 0),
-				"uom": po_item.uom,
-				"stock_uom": po_item.stock_uom,
+				"uom": valid_uom,
+				"stock_uom": valid_uom,
 				"conversion_factor": po_item.conversion_factor or 1,
 				"rate": po_item.rate,
 				"warehouse": item_data.get("warehouse") or po_item.warehouse,
@@ -380,13 +414,14 @@ def create_warehouse_receiving(
 		if qty <= 0:
 			continue
 		item_doc = frappe.get_doc("Item", item_data["item_code"])
+		valid_uom = _resolve_valid_item_uom(item_doc, item_data.get("uom"))
 		doc.append(
 			"items",
 			{
 				"item_code": item_data["item_code"],
 				"item_name": item_doc.item_name,
 				"batch_no": item_data.get("batch_no"),
-				"uom": item_data.get("uom") or item_doc.stock_uom,
+				"uom": valid_uom,
 				"expected_qty": qty,
 				"received_qty": 0,
 				"rejected_qty": 0,
@@ -555,6 +590,7 @@ def complete_warehouse_receiving(
 
 	for item_data in accepted_items:
 		item_doc = frappe.get_doc("Item", item_data["item_code"])
+		valid_uom = _resolve_valid_item_uom(item_doc, item_data.get("uom"))
 		stock_entry.append(
 			"items",
 			{
@@ -562,8 +598,8 @@ def complete_warehouse_receiving(
 				"item_name": item_doc.item_name,
 				"description": item_doc.description,
 				"qty": item_data["qty"],
-				"uom": item_data.get("uom") or item_doc.stock_uom,
-				"stock_uom": item_doc.stock_uom,
+				"uom": valid_uom,
+				"stock_uom": valid_uom,
 				"conversion_factor": 1,
 				"s_warehouse": receiving.source_warehouse,
 				"t_warehouse": receiving.target_warehouse,
@@ -959,6 +995,7 @@ def create_stock_transfer(
 	for item_data in normalized_items:
 		# Get item details
 		item = frappe.get_doc("Item", item_data["item_code"])
+		valid_uom = _resolve_valid_item_uom(item, item_data.get("uom"))
 
 		# Bug fix B9-002: Handle batch_no for batch-tracked items
 		batch_no = item_data.get("batch_no")
@@ -982,8 +1019,8 @@ def create_stock_transfer(
 			"item_name": item.item_name,
 			"description": item.description,
 			"qty": item_data["qty"],
-			"uom": item_data.get("uom") or item.stock_uom,
-			"stock_uom": item.stock_uom,
+			"uom": valid_uom,
+			"stock_uom": valid_uom,
 			"conversion_factor": 1,
 			"s_warehouse": source_warehouse,
 			"batch_no": batch_no,

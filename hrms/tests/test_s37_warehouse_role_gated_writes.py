@@ -76,10 +76,11 @@ class _FakeMaterialRequest:
 class _FakeItem:
 	def __init__(self, item_code):
 		self.name = item_code
-		self.item_name = f"Item {item_code}"
+		self.item_name = "BANANA CINNAMON" if item_code == "FG002-A" else f"Item {item_code}"
 		self.description = f"Desc {item_code}"
-		self.stock_uom = "Nos"
+		self.stock_uom = "KG" if item_code == "FG002-A" else "Nos"
 		self.has_batch_no = False
+		self.uoms = [types.SimpleNamespace(uom=self.stock_uom)]
 
 
 class _FakePurchaseReceipt:
@@ -179,6 +180,8 @@ def _install_fake_modules():
 				return value == _PO_DOC.name
 			if doctype == "Material Request":
 				return value == _MR_DOC.name
+			if doctype == "UOM":
+				return value in {"Nos", "KG", "SACK"}
 			return False
 
 		frappe.local.db = types.SimpleNamespace(
@@ -389,6 +392,26 @@ class TestS37WarehouseRoleGatedWrites(unittest.TestCase):
 		created = _DOCS_CREATED[0]
 		self.assertEqual(created.to_warehouse, "Shaw BLVD - BKI")
 		self.assertEqual(created.items[0].t_warehouse, "Shaw BLVD - BKI")
+
+	def test_create_stock_transfer_falls_back_to_valid_stock_uom_when_requested_uom_missing(self):
+		result = warehouse.create_stock_transfer(
+			source_warehouse="Shaw BLVD - BKI",
+			target_warehouse="TEST-STORE-BGC - BEI",
+			items=[
+				{
+					"item_code": "FG002-A",
+					"qty": 1,
+					"uom": "TRAY",
+				}
+			],
+			mr_name=_MR_DOC.name,
+			remarks="S037 invalid packaging uom fallback",
+		)
+
+		self.assertTrue(result["success"])
+		created = _DOCS_CREATED[0]
+		self.assertEqual(created.items[0].uom, "KG")
+		self.assertEqual(created.items[0].stock_uom, "KG")
 
 
 if __name__ == "__main__":
