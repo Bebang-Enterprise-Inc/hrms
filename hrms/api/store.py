@@ -1289,6 +1289,7 @@ def _normalize_order_line(item_data, lane="Dry"):
 		"qty_requested": qty_requested,
 		"suggested_qty": recommended_qty,
 		"recommended_qty": recommended_qty,
+		"unit_price": flt(item_data.get("unit_price", 0)),
 		"lane": lane,
 		"available_to_promise": flt(item_data.get("available_to_promise", 0)),
 		"forecast_demand": flt(item_data.get("forecast_demand", 0)),
@@ -1441,6 +1442,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		"""
         SELECT
             i.name, i.item_name, i.item_group, i.stock_uom, i.image,
+            i.valuation_rate, i.standard_rate, i.last_purchase_rate,
             COALESCE(freq.order_count, 0) as order_count
         FROM `tabItem` i
         LEFT JOIN (
@@ -1539,6 +1541,10 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		item["is_oos"] = 1 if available_to_promise <= 0 else 0
 		item["cargo_category"] = _lane_to_cargo_category(lane)
 		item["packaging_description"] = item.get("stock_uom") or ""
+		item["unit_price"] = flt(
+			item.get("valuation_rate") or item.get("standard_rate") or item.get("last_purchase_rate") or 0,
+			2,
+		)
 		item["signal_multiplier"] = tuned_multiplier
 		item["avg_daily_demand"] = avg_daily_demand
 		item["recommendation_source"] = recommendation_source

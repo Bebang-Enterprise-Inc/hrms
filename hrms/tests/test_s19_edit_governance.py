@@ -106,6 +106,11 @@ def test_edited_lines_force_supervisor_review_markers():
 			"item_code": "ITEM-001",
 			"qty_requested": 15,
 			"recommended_qty": 10,
+			"unit_price": 96.47,
+			"available_to_promise": 7,
+			"forecast_demand": 3.8,
+			"safety_buffer": 1.0,
+			"risk_rank": 2,
 			"reason_for_edit": "higher demand",
 			"lane": "Dry",
 		},
@@ -123,6 +128,11 @@ def test_edited_lines_force_supervisor_review_markers():
 
 	assert edited["is_edited"] == 1
 	assert edited["deviation_reason"] == "higher demand"
+	assert edited["unit_price"] == 96.47
+	assert edited["available_to_promise"] == 7.0
+	assert edited["forecast_demand"] == 3.8
+	assert edited["safety_buffer"] == 1.0
+	assert edited["risk_rank"] == 2
 	assert unchanged["is_edited"] == 0
 
 

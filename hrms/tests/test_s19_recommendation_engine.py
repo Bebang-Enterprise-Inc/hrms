@@ -269,6 +269,9 @@ def test_orderable_items_reads_stock_from_lane_source_warehouse():
 					item_name="Frozen Milk",
 					item_group="Frozen Goods",
 					stock_uom="Bag",
+					valuation_rate=96.47,
+					standard_rate=0,
+					last_purchase_rate=101.25,
 					image=None,
 					order_count=5,
 				),
@@ -277,6 +280,9 @@ def test_orderable_items_reads_stock_from_lane_source_warehouse():
 					item_name="Sugar Syrup",
 					item_group="Dry Goods",
 					stock_uom="Bottle",
+					valuation_rate=0,
+					standard_rate=0,
+					last_purchase_rate=45.5,
 					image=None,
 					order_count=3,
 				),
@@ -320,5 +326,7 @@ def test_orderable_items_reads_stock_from_lane_source_warehouse():
 
 	assert items["FG002-A"]["source_warehouse"] == "SM Taytay - BKI"
 	assert items["FG002-A"]["available_to_promise"] == 7.0
+	assert items["FG002-A"]["unit_price"] == 96.47
 	assert items["RM-001"]["source_warehouse"] == "Shaw BLVD - BKI"
 	assert items["RM-001"]["available_to_promise"] == 3.0
+	assert items["RM-001"]["unit_price"] == 45.5
