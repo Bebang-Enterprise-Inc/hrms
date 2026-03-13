@@ -17,9 +17,15 @@ from frappe import _
 from frappe.utils import cint, flt, now_datetime
 
 from hrms.utils.bei_config import get_company
-from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
+from hrms.utils.scm_roles import (
+	SCM_APPROVAL_ROLES,
+	SCM_DISPATCH_ROLES,
+	SCM_RECEIVING_ROLES,
+	check_scm_permission,
+)
 from hrms.utils.supply_chain_contracts import (
 	CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
+	FINANCE_TREATMENT_INTERCOMPANY,
 	FINANCE_TREATMENT_SAME_COMPANY,
 	REQUEST_SOURCE_COMMISSARY_FG_TRANSFER,
 	REQUEST_SOURCE_STORE_ORDER,
@@ -67,6 +73,15 @@ def _warehouse_receiving_item_rows(receiving_doc):
 			}
 		)
 	return rows
+
+
+def _enable_role_gated_write(doc: Any):
+	"""Use explicit SCM role checks as the write gate for workflow-owned mutations."""
+	if getattr(doc, "flags", None) is None:
+		doc.flags = type("_WarehouseDocFlags", (), {})()
+	doc.flags.ignore_permissions = True
+	doc.flags.ignore_user_permissions = True
+	return doc
 
 
 @frappe.whitelist()
@@ -192,7 +207,9 @@ def get_purchase_order_items(po_name):
 
 
 @frappe.whitelist()
-def create_purchase_receipt(po_name, items, remarks=None):
+def create_purchase_receipt(
+	po_name: str, items: str | list[dict[str, Any]], remarks: str | None = None
+) -> dict[str, Any]:
 	"""
 	Create Purchase Receipt from PO.
 
@@ -206,6 +223,8 @@ def create_purchase_receipt(po_name, items, remarks=None):
 	"""
 	if isinstance(items, str):
 		items = json.loads(items)
+
+	check_scm_permission(SCM_RECEIVING_ROLES, "receive supplier purchase orders")
 
 	if not frappe.db.exists("Purchase Order", po_name):
 		frappe.throw(_("Purchase Order not found"))
@@ -253,7 +272,8 @@ def create_purchase_receipt(po_name, items, remarks=None):
 	if not pr.items:
 		frappe.throw(_("No items to receive"))
 
-	pr.insert()
+	_enable_role_gated_write(pr)
+	pr.insert(ignore_permissions=True)
 	pr.submit()
 
 	return {
@@ -454,12 +474,16 @@ def get_warehouse_receiving_detail(receiving_name):
 
 
 @frappe.whitelist()
-def complete_warehouse_receiving(receiving_name, items, remarks=None):
+def complete_warehouse_receiving(
+	receiving_name: str, items: str | list[dict[str, Any]], remarks: str | None = None
+) -> dict[str, Any]:
 	"""Complete warehouse receipt for a commissary FG handoff by creating the stock transfer."""
 	_ensure_warehouse_receiving_doctype()
 
 	if isinstance(items, str):
 		items = json.loads(items)
+
+	check_scm_permission(SCM_RECEIVING_ROLES, "complete warehouse receiving")
 
 	if not frappe.db.exists("BEI Warehouse Receiving", receiving_name):
 		frappe.throw(_("Warehouse receiving record not found"))
@@ -539,6 +563,7 @@ def complete_warehouse_receiving(receiving_name, items, remarks=None):
 			},
 		)
 
+	_enable_role_gated_write(stock_entry)
 	stock_entry.insert(ignore_permissions=True)
 	stock_entry.submit()
 
@@ -839,6 +864,8 @@ def create_stock_transfer(
 	if isinstance(items, str):
 		items = json.loads(items)
 
+	check_scm_permission(SCM_DISPATCH_ROLES, "dispatch warehouse stock transfers")
+
 	default_source_company = resolve_warehouse_company(source_warehouse) or get_company()
 	default_target_company = resolve_warehouse_company(target_warehouse) or default_source_company
 
@@ -880,21 +907,36 @@ def create_stock_transfer(
 		)
 
 	# Create Stock Entry
+	actual_target_warehouse = contract.get("destination_warehouse") or target_warehouse
+	actual_target_company = (
+		contract.get("target_company")
+		or resolve_warehouse_company(actual_target_warehouse)
+		or default_target_company
+	)
+	finance_treatment = contract.get("finance_treatment") or infer_finance_treatment(
+		contract.get("source_company") or default_source_company,
+		actual_target_company,
+	)
+	is_intercompany = finance_treatment == FINANCE_TREATMENT_INTERCOMPANY
+	movement_type = "Material Issue" if is_intercompany else "Material Transfer"
+
 	se = frappe.new_doc("Stock Entry")
-	se.stock_entry_type = "Material Transfer"
+	se.stock_entry_type = movement_type
 	se.company = contract.get("source_company") or default_source_company
 	se.posting_date = frappe.utils.today()
 	se.posting_time = frappe.utils.nowtime()
 	se.from_warehouse = source_warehouse
-	se.to_warehouse = target_warehouse
-	se.remarks = remarks or f"Transfer to {target_warehouse}"
+	if not is_intercompany:
+		se.to_warehouse = target_warehouse
+	se.remarks = remarks or (f"{movement_type} for {strip_company_suffix(actual_target_warehouse)}")
 	stamp_stock_entry_contract(
 		se,
 		request_source=contract["request_source"],
 		cargo_lane=contract.get("cargo_lane"),
+		destination_warehouse=actual_target_warehouse,
 		source_company=contract.get("source_company") or default_source_company,
-		target_company=contract.get("target_company") or default_target_company,
-		finance_treatment=contract.get("finance_treatment"),
+		target_company=actual_target_company,
+		finance_treatment=finance_treatment,
 	)
 
 	# Add items
@@ -927,28 +969,28 @@ def create_stock_transfer(
 		if not mr_item_ref and mr_name:
 			mr_item_ref = mr_items_map.get(item_data["item_code"])
 
-		se.append(
-			"items",
-			{
-				"item_code": item_data["item_code"],
-				"item_name": item.item_name,
-				"description": item.description,
-				"qty": item_data["qty"],
-				"uom": item_data.get("uom") or item.stock_uom,
-				"stock_uom": item.stock_uom,
-				"conversion_factor": 1,
-				"s_warehouse": source_warehouse,
-				"t_warehouse": target_warehouse,
-				"batch_no": batch_no,
-				"material_request": mr_name if mr_item_ref else None,
-				"material_request_item": mr_item_ref,
-			},
-		)
+		row = {
+			"item_code": item_data["item_code"],
+			"item_name": item.item_name,
+			"description": item.description,
+			"qty": item_data["qty"],
+			"uom": item_data.get("uom") or item.stock_uom,
+			"stock_uom": item.stock_uom,
+			"conversion_factor": 1,
+			"s_warehouse": source_warehouse,
+			"batch_no": batch_no,
+			"material_request": mr_name if mr_item_ref else None,
+			"material_request_item": mr_item_ref,
+		}
+		if not is_intercompany:
+			row["t_warehouse"] = target_warehouse
+		se.append("items", row)
 
 	if not se.items:
 		frappe.throw(_("No items to transfer"))
 
-	se.insert()
+	_enable_role_gated_write(se)
+	se.insert(ignore_permissions=True)
 	se.submit()
 
 	return {
@@ -957,15 +999,15 @@ def create_stock_transfer(
 			"name": se.name,
 			"total_qty": sum(i.qty for i in se.items),
 			"items_count": len(se.items),
-			"movement_type": "Material Transfer",
+			"movement_type": movement_type,
 			"source_warehouse": source_warehouse,
-			"target_warehouse": target_warehouse,
+			"target_warehouse": actual_target_warehouse,
 			"request_source": contract["request_source"],
 			"request_source_label": get_request_source_label(contract["request_source"]),
 			"cargo_lane": contract.get("cargo_lane"),
-			"finance_treatment": contract.get("finance_treatment"),
+			"finance_treatment": finance_treatment,
 		},
-		"message": f"Stock Transfer {se.name} created successfully",
+		"message": f"{movement_type} {se.name} created successfully",
 	}
 
 

@@ -17,7 +17,13 @@ from frappe import _
 
 # Dispatch / trip management (dispatch.py)
 SCM_ADMIN_ROLES = {"HR Manager", "Warehouse Manager", "System Manager"}
-SCM_DISPATCH_ROLES = {"HR Manager", "Warehouse Manager", "Logistics Coordinator", "System Manager"}
+SCM_DISPATCH_ROLES = {
+	"HR Manager",
+	"Warehouse Manager",
+	"Warehouse User",
+	"Logistics Coordinator",
+	"System Manager",
+}
 SCM_STORE_ROLES = {"Store Staff", "Store Supervisor", "Area Supervisor", "Warehouse User", "System Manager"}
 
 # Picking / loading (picking.py)
@@ -68,7 +74,22 @@ SCM_STOCK_UPDATE_ROLES = {"Warehouse Manager", "Warehouse Staff", "System Manage
 SCM_PERMIT_ROLES = {"Warehouse Manager", "Logistics Coordinator", "HR Manager", "System Manager"}
 
 # Requisition approval (commissary_requisition.py)
-SCM_APPROVAL_ROLES = {"Warehouse Manager", "Supply Chain Manager", "HR Manager", "System Manager"}
+SCM_APPROVAL_ROLES = {
+	"Warehouse Manager",
+	"Warehouse User",
+	"Supply Chain Manager",
+	"HR Manager",
+	"System Manager",
+}
+
+# Warehouse receiving (warehouse.py)
+SCM_RECEIVING_ROLES = {
+	"Warehouse Manager",
+	"Warehouse User",
+	"Supply Chain Manager",
+	"HR Manager",
+	"System Manager",
+}
 
 
 # ============================================================

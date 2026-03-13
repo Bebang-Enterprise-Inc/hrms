@@ -12,6 +12,7 @@
     "trip",
     "receiving_date",
     "status",
+    "stock_entry",
     "column_break_1",
     "receiver_1",
     "receiver_2",
@@ -64,6 +65,13 @@
       "reqd": 1,
       "in_list_view": 1,
       "in_standard_filter": 1
+    },
+    {
+      "fieldname": "stock_entry",
+      "fieldtype": "Link",
+      "label": "Linked Stock Entry",
+      "options": "Stock Entry",
+      "read_only": 1
     },
     {
       "fieldname": "column_break_1",

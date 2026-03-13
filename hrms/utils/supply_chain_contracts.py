@@ -60,13 +60,47 @@ def _project_root() -> Path:
 	return Path(__file__).resolve().parents[2]
 
 
-BUYER_ENTITY_REGISTER_PATH = (
-	_project_root()
-	/ "data"
+RUNTIME_BUYER_ENTITY_REGISTER_RELATIVE_PATH = (
+	Path("hrms") / "fixtures" / "store_buyer_entity_register" / "store_buyer_entity_register.csv"
+)
+
+CLEANROOM_BUYER_ENTITY_REGISTER_RELATIVE_PATH = (
+	Path("data")
 	/ "_CLEANROOM"
 	/ "2026-03-12-s037-store-buyer-entity-register"
 	/ "store_buyer_entity_register_2026-03-12.csv"
 )
+
+
+def _candidate_project_roots() -> tuple[Path, ...]:
+	current_root = _project_root()
+	candidates = [current_root]
+
+	# Worktrees in this repo commonly live beside the canonical workspace root
+	# (for example: `BEI-ERP-s037-handoff` -> `BEI-ERP`). Search that root too
+	# so local execution never silently falls back to "missing register" state.
+	canonical_sibling = current_root.parent / "BEI-ERP"
+	if canonical_sibling != current_root:
+		candidates.append(canonical_sibling)
+
+	unique: list[Path] = []
+	for candidate in candidates:
+		if candidate not in unique:
+			unique.append(candidate)
+	return tuple(unique)
+
+
+def _candidate_register_paths() -> tuple[Path, ...]:
+	paths: list[Path] = []
+	for root in _candidate_project_roots():
+		for relative_path in (
+			RUNTIME_BUYER_ENTITY_REGISTER_RELATIVE_PATH,
+			CLEANROOM_BUYER_ENTITY_REGISTER_RELATIVE_PATH,
+		):
+			candidate = root / relative_path
+			if candidate not in paths:
+				paths.append(candidate)
+	return tuple(paths)
 
 
 def has_column(doctype: str, fieldname: str) -> bool:
@@ -147,10 +181,11 @@ def resolve_warehouse_company(warehouse_name: str | None) -> str | None:
 
 @lru_cache(maxsize=1)
 def load_store_buyer_entity_register() -> list[dict[str, str]]:
-	if not BUYER_ENTITY_REGISTER_PATH.exists():
+	register_path = next((path for path in _candidate_register_paths() if path.exists()), None)
+	if not register_path:
 		return []
 
-	with BUYER_ENTITY_REGISTER_PATH.open("r", encoding="utf-8-sig", newline="") as handle:
+	with register_path.open("r", encoding="utf-8-sig", newline="") as handle:
 		rows = list(csv.DictReader(handle))
 
 	for row in rows:
@@ -212,7 +247,46 @@ def buyer_entity_requires_billing_hold(entity_row: dict[str, Any]) -> bool:
 	)
 
 
-def resolve_markup_percent(store_type: str | None) -> float:
+def _coerce_percent(value: Any) -> float | None:
+	try:
+		numeric = float(value)
+	except (TypeError, ValueError):
+		return None
+	if numeric <= 0:
+		return None
+	return numeric / 100 if numeric > 1 else numeric
+
+
+def _get_store_type_delivery_markup_percent(store_name: str | None) -> float | None:
+	if not store_name or not getattr(getattr(frappe, "db", None), "get_value", None):
+		return None
+	try:
+		row = frappe.db.get_value(
+			"BEI Store Type",
+			{"store": store_name},
+			["price_list_multiplier", "store_type"],
+			as_dict=True,
+		)
+	except Exception:
+		return None
+	if not row:
+		return None
+	return _coerce_percent(get_field(row, "price_list_multiplier"))
+
+
+def resolve_markup_percent(
+	store_type: str | None,
+	*,
+	store_name: str | None = None,
+	entity_row: dict[str, Any] | None = None,
+) -> float:
+	if entity_row:
+		store_name = store_name or entity_row.get("store_name")
+
+	configured_markup = _get_store_type_delivery_markup_percent(store_name)
+	if configured_markup is not None:
+		return configured_markup
+
 	normalized = str(store_type or "").strip().lower()
 	if normalized == "jv":
 		return JV_MARKUP_RATE
@@ -292,16 +366,19 @@ def stamp_material_request_contract(
 	request_source: str,
 	cargo_lane: str | None = None,
 	source_warehouse: str | None = None,
+	destination_warehouse: str | None = None,
 	source_company: str | None = None,
 	target_company: str | None = None,
 	finance_treatment: str | None = None,
 ) -> None:
 	source_company = source_company or resolve_warehouse_company(source_warehouse)
-	target_company = target_company or resolve_warehouse_company(getattr(doc, "set_warehouse", None))
+	destination_warehouse = destination_warehouse or getattr(doc, "set_warehouse", None)
+	target_company = target_company or resolve_warehouse_company(destination_warehouse)
 	resolved_treatment = finance_treatment or infer_finance_treatment(source_company, target_company)
 	set_if_column(doc, "custom_request_source", normalize_request_source(request_source))
 	set_if_column(doc, "custom_cargo_lane", cargo_lane)
 	set_if_column(doc, "custom_source_warehouse", source_warehouse)
+	set_if_column(doc, "custom_destination_warehouse", destination_warehouse)
 	set_if_column(doc, "custom_source_company", source_company)
 	set_if_column(doc, "custom_target_company", target_company)
 	set_if_column(doc, "custom_finance_treatment", resolved_treatment)
@@ -312,6 +389,7 @@ def stamp_stock_entry_contract(
 	*,
 	request_source: str,
 	cargo_lane: str | None = None,
+	destination_warehouse: str | None = None,
 	source_company: str | None = None,
 	target_company: str | None = None,
 	finance_treatment: str | None = None,
@@ -319,12 +397,14 @@ def stamp_stock_entry_contract(
 	source_company = source_company or resolve_warehouse_company(
 		getattr(doc, "from_warehouse", None) or getattr(doc, "source_warehouse", None)
 	)
-	target_company = target_company or resolve_warehouse_company(
-		getattr(doc, "to_warehouse", None) or getattr(doc, "target_warehouse", None)
+	destination_warehouse = (
+		destination_warehouse or getattr(doc, "to_warehouse", None) or getattr(doc, "target_warehouse", None)
 	)
+	target_company = target_company or resolve_warehouse_company(destination_warehouse)
 	resolved_treatment = finance_treatment or infer_finance_treatment(source_company, target_company)
 	set_if_column(doc, "custom_request_source", normalize_request_source(request_source))
 	set_if_column(doc, "custom_cargo_lane", cargo_lane)
+	set_if_column(doc, "custom_destination_warehouse", destination_warehouse)
 	set_if_column(doc, "custom_source_company", source_company)
 	set_if_column(doc, "custom_target_company", target_company)
 	set_if_column(doc, "custom_finance_treatment", resolved_treatment)
@@ -343,7 +423,9 @@ def resolve_material_request_contract(
 			request_source = REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL
 
 	source_warehouse = get_field(material_request, "custom_source_warehouse")
-	destination_warehouse = get_field(material_request, "set_warehouse")
+	destination_warehouse = get_field(material_request, "custom_destination_warehouse") or get_field(
+		material_request, "set_warehouse"
+	)
 	first_item_warehouse = None
 	for item in get_field(material_request, "items", []) or []:
 		first_item_warehouse = get_field(item, "from_warehouse") or first_item_warehouse
@@ -351,6 +433,14 @@ def resolve_material_request_contract(
 		if source_warehouse and destination_warehouse:
 			break
 		source_warehouse = source_warehouse or first_item_warehouse
+
+	if request_source == REQUEST_SOURCE_STORE_ORDER and not destination_warehouse:
+		linked_store_order = get_field(material_request, "custom_store_order")
+		if linked_store_order and getattr(getattr(frappe, "db", None), "get_value", None):
+			try:
+				destination_warehouse = frappe.db.get_value("BEI Store Order", linked_store_order, "store")
+			except Exception:
+				destination_warehouse = destination_warehouse
 
 	source_company = get_field(material_request, "custom_source_company") or resolve_warehouse_company(
 		source_warehouse

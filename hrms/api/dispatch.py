@@ -20,16 +20,16 @@ from hrms.utils.delivery_billing_policy import (
 	get_pre_delivery_exception_trace,
 	should_auto_create_billing_on_delivery,
 )
+
+# P0-10: Import centralized RBAC role sets
+from hrms.utils.scm_roles import SCM_ADMIN_ROLES, SCM_DISPATCH_ROLES, SCM_STORE_ROLES
+from hrms.utils.scm_roles import check_scm_permission as _check_scm_permission
 from hrms.utils.supply_chain_contracts import (
 	buyer_entity_requires_billing_hold,
 	resolve_markup_percent,
 	resolve_store_buyer_entity,
 	stamp_billing_schedule_contract,
 )
-
-# P0-10: Import centralized RBAC role sets
-from hrms.utils.scm_roles import SCM_ADMIN_ROLES, SCM_DISPATCH_ROLES, SCM_STORE_ROLES
-from hrms.utils.scm_roles import check_scm_permission as _check_scm_permission
 
 
 def _has_column(doctype: str, fieldname: str) -> bool:
@@ -710,7 +710,11 @@ def _create_delivery_billing(
 			warehouse_docname=stop.store,
 			store_name=dept,
 		)
-		markup_percent = resolve_markup_percent(store_type or entity_row.get("store_type"))
+		markup_percent = resolve_markup_percent(
+			store_type or entity_row.get("store_type"),
+			store_name=dept,
+			entity_row=entity_row,
+		)
 
 		rate = frappe.db.get_value(
 			"BEI Delivery Rate",
