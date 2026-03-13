@@ -46,7 +46,8 @@ PHT_TIMEZONE = ZoneInfo("Asia/Manila")
 MORNING_SYNC_TARGET_PHT_TIME = datetime.time(hour=7, minute=0)
 MORNING_SYNC_READY_DEADLINE_PHT_TIME = datetime.time(hour=9, minute=0)
 MORNING_SYNC_REPORT_DIRNAME = "morning_sync_health_reports"
-RECEIVER_MORNING_HEALTH_URL = "http://sheets-receiver:8765/api/morning-health"
+DEFAULT_RECEIVER_API_BASE_URL = "https://hq.bebang.ph/sheets-api"
+DEFAULT_RECEIVER_WEBHOOK_PROXY_URL = "https://hq.bebang.ph/sheets-webhook"
 PO_REFERENCE_RE = re.compile(r"^\s*(?:PO|PURCHASE\s*ORDER)\s*[-#:/]?\s*[A-Z0-9-]+\s*$", re.IGNORECASE)
 
 
@@ -2827,7 +2828,7 @@ def webhook():
 
 	try:
 		response = requests.post(
-			"http://sheets-receiver:8765/webhook/sheets",
+			_receiver_webhook_proxy_url(),
 			headers=headers,
 			data=frappe.request.data,
 			timeout=5,
@@ -2845,7 +2846,7 @@ def get_sync_status():
 	import requests
 
 	try:
-		response = requests.get("http://sheets-receiver:8765/api/status", timeout=10)
+		response = requests.get(_receiver_api_url("status"), timeout=10)
 		return response.json()
 	except Exception as e:
 		return {"status": "error", "message": str(e)}
@@ -2859,14 +2860,42 @@ def trigger_sync(sheet_key: str | None = None, force: bool = False):
 
 	try:
 		if sheet_key:
-			url = f"http://sheets-receiver:8765/api/sync/{sheet_key}?force={force}"
+			url = f"{_receiver_api_url(f'sync/{sheet_key}')}?force={force}"
 		else:
-			url = f"http://sheets-receiver:8765/api/sync-all?force={force}"
+			url = f"{_receiver_api_url('sync-all')}?force={force}"
 
 		response = requests.post(url, timeout=10)
 		return response.json()
 	except Exception as e:
 		return {"status": "error", "message": str(e)}
+
+
+def _frappe_conf() -> Any:
+	local_ctx = getattr(frappe, "local", None)
+	local_conf = getattr(local_ctx, "conf", None) if local_ctx is not None else None
+	if local_conf is not None:
+		return local_conf
+	return getattr(frappe, "conf", None)
+
+
+def _receiver_api_base_url() -> str:
+	conf = _frappe_conf()
+	configured = str(
+		(conf.get("sheets_receiver_api_base_url") if conf else "")
+		or (conf.get("sheets_receiver_base_url") if conf else "")
+		or ""
+	).strip()
+	return configured.rstrip("/") or DEFAULT_RECEIVER_API_BASE_URL
+
+
+def _receiver_api_url(path: str) -> str:
+	return f"{_receiver_api_base_url()}/{str(path or '').lstrip('/')}"
+
+
+def _receiver_webhook_proxy_url() -> str:
+	conf = _frappe_conf()
+	configured = str((conf.get("sheets_receiver_webhook_url") if conf else "") or "").strip()
+	return configured.rstrip("/") or DEFAULT_RECEIVER_WEBHOOK_PROXY_URL
 
 
 def _normalize_report_date(report_date: str | None) -> datetime.date:
@@ -3041,7 +3070,7 @@ def _fetch_receiver_morning_health(report_date: str) -> dict[str, Any]:
 
 	try:
 		response = requests.get(
-			RECEIVER_MORNING_HEALTH_URL,
+			_receiver_api_url("morning-health"),
 			params={"report_date": report_date},
 			timeout=15,
 		)
