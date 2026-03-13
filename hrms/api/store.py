@@ -18,9 +18,14 @@ from frappe.utils import add_days, cint, flt, get_datetime, getdate, now_datetim
 from hrms.utils.bei_config import get_company
 from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
 from hrms.utils.supply_chain_contracts import (
+	FINANCE_TREATMENT_SAME_COMPANY,
+	REQUEST_SOURCE_STORE_DISPOSAL,
 	REQUEST_SOURCE_STORE_ORDER,
 	REQUEST_SOURCE_STORE_RETURN,
+	infer_finance_treatment,
+	resolve_material_request_contract,
 	resolve_route_source_warehouse,
+	resolve_store_buyer_entity,
 	resolve_warehouse_company,
 	stamp_material_request_contract,
 	stamp_stock_entry_contract,
@@ -2025,12 +2030,20 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 	order.save(ignore_permissions=True)
 	_close_order_assignments(order_name)
 
-	_notify_store_ops(
-		f"Store order {order_name} approved by {user}. Check my.bebang.ph/dashboard/store-ops/order-approvals for details."
-	)
-
-	# Create Material Request so commissary can pick it up, linking back to this store order
+	# Create the warehouse dispatch request inside the same transaction so the
+	# order cannot report success while the downstream fulfillment contract is broken.
 	mr_name = _create_mr_for_store_order(order)
+	if not mr_name:
+		frappe.throw(
+			_(
+				"Failed to create the warehouse dispatch request for order {0}. "
+				"Check route/source warehouse configuration and retry."
+			).format(order_name)
+		)
+
+	_notify_store_ops(
+		f"Store order {order_name} approved by {user}. Warehouse dispatch request {mr_name} is ready."
+	)
 	final_stage = "regional_manager" if requires_dual_stage else current_stage
 
 	return {
@@ -2057,9 +2070,9 @@ def reject_order(order_name: str, reason: str) -> dict:
 def _create_mr_for_store_order(order):
 	"""
 	Create a Material Request (Material Transfer) for an approved BEI Store Order.
-	Sets custom_store_order so commissary can trace MR → originating store order.
+	Sets custom_store_order so warehouse dispatch can trace MR -> originating store order.
 
-	Returns the MR name, or None if creation fails (non-fatal).
+	Returns the MR name, or None if creation fails so the caller can abort approval.
 	"""
 	try:
 		required_by = add_days(nowdate(), 1)
@@ -2075,25 +2088,36 @@ def _create_mr_for_store_order(order):
 		if not store_warehouse:
 			frappe.log_error(f"No store warehouse found on order {order.name}", "Store Ordering")
 			return None
-		mr.set_warehouse = store_warehouse
-
 		cargo_category = getattr(order, "cargo_category", None) or "DRY"
 		source_warehouse = _resolve_store_order_source_warehouse(store_warehouse, cargo_category)
+		buyer_entity_row = resolve_store_buyer_entity(warehouse_docname=store_warehouse)
 		source_company = resolve_warehouse_company(source_warehouse) or get_company()
-		target_company = resolve_warehouse_company(store_warehouse) or source_company
+		target_company = (
+			str(buyer_entity_row.get("buyer_entity_name") or "").strip()
+			or resolve_warehouse_company(store_warehouse)
+			or source_company
+		)
+		finance_treatment = infer_finance_treatment(source_company, target_company)
+		operational_target_warehouse = store_warehouse
+		if finance_treatment != FINANCE_TREATMENT_SAME_COMPANY and source_warehouse:
+			# Intercompany store lanes cannot use the buyer-store warehouse in the
+			# stock movement doc. Keep the real destination in contract metadata and
+			# use a source-company-valid operational target so the MR remains valid.
+			operational_target_warehouse = source_warehouse
+
+		mr.set_warehouse = operational_target_warehouse
 		mr.company = source_company
 		stamp_material_request_contract(
 			mr,
 			request_source=REQUEST_SOURCE_STORE_ORDER,
 			cargo_lane=cargo_category,
 			source_warehouse=source_warehouse,
+			destination_warehouse=store_warehouse,
 			source_company=source_company,
 			target_company=target_company,
+			finance_treatment=finance_treatment,
 		)
-		mr.remarks = (
-			f"Warehouse dispatch request for store order {order.name} "
-			f"({cargo_category})"
-		)
+		mr.remarks = f"Warehouse dispatch request for store order {order.name} " f"({cargo_category})"
 
 		for item in order.items:
 			qty = flt(getattr(item, "qty_approved", None) or getattr(item, "qty_requested", 0))
@@ -2106,7 +2130,7 @@ def _create_mr_for_store_order(order):
 				"uom": getattr(item, "uom", None) or "Nos",
 				"stock_uom": getattr(item, "uom", None) or "Nos",
 				"conversion_factor": 1,
-				"warehouse": store_warehouse,
+				"warehouse": operational_target_warehouse,
 				"schedule_date": required_by,
 			}
 			if source_warehouse:
@@ -2214,7 +2238,136 @@ def complete_receiving(
 	receiving.status = "With Issues" if has_issues else "Completed"
 	receiving.insert(ignore_permissions=True)
 
-	return {"success": True, "receiving": receiving.name, "message": f"Receiving {receiving.name} completed"}
+	contract = _resolve_store_receiving_contract(warehouse, trip)
+	stock_entry_name = _create_store_receiving_stock_entry(receiving, contract)
+	if stock_entry_name and _has_column("BEI Store Receiving", "stock_entry"):
+		receiving.stock_entry = stock_entry_name
+		receiving.save(ignore_permissions=True)
+
+	result = {
+		"success": True,
+		"receiving": receiving.name,
+		"message": f"Receiving {receiving.name} completed",
+	}
+	if stock_entry_name:
+		result["stock_entry"] = stock_entry_name
+	return result
+
+
+def _resolve_store_receiving_contract(store_warehouse: str, trip_name: str | None) -> dict:
+	"""Resolve the original delivery contract so receiving can post stock correctly."""
+	source_warehouse = None
+	store_order_name = None
+	cargo_lane = None
+
+	if trip_name and frappe.db.exists("BEI Distribution Trip", trip_name):
+		source_warehouse = _resolve_store_return_destination_warehouse(
+			type("_TripRef", (), {"trip": trip_name})()
+		)
+		if frappe.db.exists("DocType", "BEI Trip Stop"):
+			store_order_name = frappe.db.get_value(
+				"BEI Trip Stop",
+				{"parent": trip_name, "store": store_warehouse},
+				"store_order",
+				order_by="idx asc",
+			)
+
+	if store_order_name:
+		cargo_lane = frappe.db.get_value("BEI Store Order", store_order_name, "cargo_category")
+		if _has_column("Material Request", "custom_store_order"):
+			mr_name = frappe.db.get_value(
+				"Material Request",
+				{"custom_store_order": store_order_name, "docstatus": 1},
+				"name",
+				order_by="creation desc",
+			)
+			if mr_name:
+				contract = resolve_material_request_contract(frappe.get_doc("Material Request", mr_name))
+				contract["source_warehouse"] = contract.get("source_warehouse") or source_warehouse
+				contract["destination_warehouse"] = contract.get("destination_warehouse") or store_warehouse
+				contract["cargo_lane"] = contract.get("cargo_lane") or cargo_lane
+				contract["source_company"] = contract.get("source_company") or resolve_warehouse_company(
+					contract["source_warehouse"]
+				)
+				contract["target_company"] = contract.get("target_company") or resolve_warehouse_company(
+					store_warehouse
+				)
+				contract["finance_treatment"] = contract.get("finance_treatment") or infer_finance_treatment(
+					contract["source_company"], contract["target_company"]
+				)
+				return contract
+
+	source_company = resolve_warehouse_company(source_warehouse)
+	target_company = resolve_warehouse_company(store_warehouse)
+	return {
+		"request_source": REQUEST_SOURCE_STORE_ORDER,
+		"cargo_lane": cargo_lane,
+		"source_warehouse": source_warehouse,
+		"destination_warehouse": store_warehouse,
+		"source_company": source_company,
+		"target_company": target_company,
+		"finance_treatment": infer_finance_treatment(source_company, target_company),
+	}
+
+
+def _create_store_receiving_stock_entry(receiving, contract: dict) -> str | None:
+	"""Post intercompany store receipts into store inventory after delivery confirmation."""
+	finance_treatment = contract.get("finance_treatment") or FINANCE_TREATMENT_SAME_COMPANY
+	if finance_treatment == FINANCE_TREATMENT_SAME_COMPANY:
+		return None
+
+	receipt_rows = []
+	for item in receiving.items:
+		received_qty = flt(getattr(item, "received_qty", 0))
+		if received_qty <= 0:
+			continue
+		receipt_rows.append((item, received_qty))
+
+	if not receipt_rows:
+		return None
+
+	stock_entry = frappe.new_doc("Stock Entry")
+	stock_entry.stock_entry_type = "Material Receipt"
+	stock_entry.company = (
+		contract.get("target_company") or resolve_warehouse_company(receiving.store) or get_company()
+	)
+	stock_entry.posting_date = frappe.utils.today()
+	stock_entry.posting_time = _current_time_string()
+	stock_entry.to_warehouse = receiving.store
+	stock_entry.remarks = (
+		f"Store receiving {receiving.name}"
+		f" | Trip: {receiving.trip or ''}"
+		f" | Source: {contract.get('source_warehouse') or 'Unclassified'}"
+	)
+	stamp_stock_entry_contract(
+		stock_entry,
+		request_source=contract.get("request_source") or REQUEST_SOURCE_STORE_ORDER,
+		cargo_lane=contract.get("cargo_lane"),
+		destination_warehouse=receiving.store,
+		source_company=contract.get("source_company"),
+		target_company=stock_entry.company,
+		finance_treatment=finance_treatment,
+	)
+
+	for item, received_qty in receipt_rows:
+		item_doc = frappe.get_doc("Item", item.item_code)
+		row = {
+			"item_code": item.item_code,
+			"item_name": item_doc.item_name,
+			"description": item_doc.description,
+			"qty": received_qty,
+			"uom": getattr(item, "uom", None) or item_doc.stock_uom,
+			"stock_uom": item_doc.stock_uom,
+			"conversion_factor": 1,
+			"t_warehouse": receiving.store,
+		}
+		if getattr(item, "batch_no", None):
+			row["batch_no"] = item.batch_no
+		stock_entry.append("items", row)
+
+	stock_entry.insert(ignore_permissions=True)
+	stock_entry.submit()
+	return stock_entry.name
 
 
 @frappe.whitelist()
@@ -2321,7 +2474,7 @@ def get_fqi_reports(
 def get_returns_pending(store: str | None = None) -> dict:
 	"""
 	Get store receiving items where has_issue=1 and no linked return Stock Entry.
-	Returns items that need to be returned to commissary.
+	Returns items that need operator resolution back to warehouse or disposal.
 	"""
 	filters = {"has_issue": 1}
 
@@ -2383,6 +2536,152 @@ def _resolve_store_return_destination_warehouse(receiving_doc):
 	return frappe.db.get_value("BEI Route", {"route_name": route_ref}, "source_warehouse")
 
 
+def _attach_store_issue_photo(stock_entry, photo: str | None):
+	"""Persist optional proof photo on the Stock Entry when the custom field exists."""
+	if not photo:
+		return
+	photo_url = save_base64_image(photo, "Stock Entry", fieldname="custom_return_photo")
+	if photo_url and _has_column("Stock Entry", "custom_return_photo"):
+		stock_entry.custom_return_photo = photo_url
+
+
+def _current_time_string() -> str:
+	"""Return HH:MM:SS even when now_datetime() is stubbed to a plain string in tests."""
+	current = now_datetime()
+	if hasattr(current, "strftime"):
+		return current.strftime("%H:%M:%S")
+	return str(current)
+
+
+def _extract_store_issue_context(stock_entry):
+	receiving_name = None
+	store = stock_entry.from_warehouse
+	reason = ""
+	if stock_entry.remarks:
+		for part in stock_entry.remarks.split("|"):
+			part = part.strip()
+			if part.startswith("Receiving:"):
+				receiving_name = part.replace("Receiving:", "").strip()
+			elif part.startswith("Reason:"):
+				reason = part.replace("Reason:", "").strip()
+	return receiving_name, store, reason
+
+
+def _create_store_issue_credit_note(stock_entry, store, reason):
+	"""Create the finance reversal record for a store issue movement when applicable."""
+	credit_note_name = None
+	journal_entry_name = None
+	original_billing = _find_original_billing(store)
+	if not original_billing:
+		return credit_note_name, journal_entry_name
+
+	frappe.db.savepoint("store_issue_credit")
+	try:
+		return_value = flt(stock_entry.total_outgoing_value or 0)
+		billed_value = flt(original_billing.get("total_billed_value")) or 1
+		ratio = min(return_value / billed_value, 1.0) if billed_value > 0 else 0
+
+		royalty_rev = round(flt(original_billing.get("royalty_fee", 0)) * ratio, 2)
+		mgmt_rev = round(flt(original_billing.get("management_fee", 0)) * ratio, 2)
+		marketing_rev = round(flt(original_billing.get("marketing_fee", 0)) * ratio, 2)
+		ecomm_rev = round(flt(original_billing.get("ecommerce_fee", 0)) * ratio, 2)
+		total_credit = royalty_rev + mgmt_rev + marketing_rev + ecomm_rev
+
+		if total_credit > 0:
+			cn = frappe.new_doc("BEI Billing Schedule")
+			cn.billing_type = "Credit Note"
+			cn.naming_series = "BILL-CN-.YYYY.-.#####"
+			cn.store = original_billing.get("store")
+			cn.billing_period_start = nowdate()
+			cn.billing_period_end = nowdate()
+			cn.status = "Unpaid"
+			cn.royalty_fee = -royalty_rev
+			cn.management_fee = -mgmt_rev
+			cn.marketing_fee = -marketing_rev
+			cn.ecommerce_fee = -ecomm_rev
+			cn.subtotal = -total_credit
+			cn.vat_amount = 0
+			cn.total_amount = -total_credit
+			cn.remarks = f"Credit Note for Store Issue {stock_entry.name} | {store} | {reason}"
+			cn.flags.ignore_mandatory = True
+			cn.insert(ignore_permissions=True)
+			credit_note_name = cn.name
+
+			store_cost_center = _get_store_cost_center(store)
+			store_customer = _get_store_customer(store)
+
+			jv_accounts = []
+			if royalty_rev > 0:
+				jv_accounts.append(
+					{
+						"account": "4000301 - ROYALTY FEE INCOME - BEI",
+						"debit_in_account_currency": royalty_rev,
+						"cost_center": store_cost_center,
+					}
+				)
+			if mgmt_rev > 0:
+				jv_accounts.append(
+					{
+						"account": "4000302 - MANAGEMENT FEE INCOME - BEI",
+						"debit_in_account_currency": mgmt_rev,
+						"cost_center": store_cost_center,
+					}
+				)
+			if marketing_rev > 0:
+				jv_accounts.append(
+					{
+						"account": "4000303 - MARKETING FEE INCOME - BEI",
+						"debit_in_account_currency": marketing_rev,
+						"cost_center": store_cost_center,
+					}
+				)
+			if ecomm_rev > 0:
+				jv_accounts.append(
+					{
+						"account": "4000304 - ECOMMERCE FEE INCOME - BEI",
+						"debit_in_account_currency": ecomm_rev,
+						"cost_center": store_cost_center,
+					}
+				)
+
+			jv_accounts.append(
+				{
+					"account": "1103101 - ACCOUNTS RECEIVABLE - TRADE - BEI",
+					"credit_in_account_currency": total_credit,
+					"party_type": "Customer",
+					"party": store_customer,
+					"cost_center": store_cost_center,
+				}
+			)
+
+			journal_entry = frappe.get_doc(
+				{
+					"doctype": "Journal Entry",
+					"voucher_type": "Credit Note",
+					"posting_date": nowdate(),
+					"company": get_company(),
+					"user_remark": f"Credit Note for Store Issue {stock_entry.name} | {store} | {reason}",
+					"cheque_no": stock_entry.name,
+					"cheque_date": frappe.utils.today(),
+					"accounts": jv_accounts,
+				}
+			)
+			journal_entry.insert(ignore_permissions=True)
+			journal_entry.submit()
+			journal_entry_name = journal_entry.name
+
+		frappe.db.release_savepoint("store_issue_credit")
+	except Exception:
+		frappe.db.rollback(save_point="store_issue_credit")
+		frappe.log_error(
+			f"Credit note creation failed for store issue {stock_entry.name}",
+			"Store Issue Credit Note Error",
+		)
+		frappe.throw(_("Failed to create credit note for the store issue. Please try again."))
+
+	return credit_note_name, journal_entry_name
+
+
 @frappe.whitelist()
 def create_store_return(
 	receiving: str,
@@ -2425,15 +2724,11 @@ def create_store_return(
 	if not return_warehouse:
 		frappe.throw(_("Unable to resolve the originating warehouse for this return"))
 
-	# Save photo if provided
-	if photo:
-		save_base64_image(photo, "Stock Entry", fieldname="custom_return_photo")
-
 	# Create Stock Entry (Material Transfer back to warehouse)
 	se = frappe.new_doc("Stock Entry")
 	se.stock_entry_type = "Material Transfer"
 	se.posting_date = nowdate()
-	se.posting_time = now_datetime().strftime("%H:%M:%S")
+	se.posting_time = _current_time_string()
 	se.from_warehouse = store
 	se.to_warehouse = return_warehouse
 	se.remarks = f"Store Return from {store} | Receiving: {receiving} | Reason: {reason}"
@@ -2473,6 +2768,8 @@ def create_store_return(
 	if not se.items:
 		frappe.throw(_("No valid items with quantity to return"))
 
+	_attach_store_issue_photo(se, photo)
+
 	frappe.db.savepoint("create_store_return")
 	try:
 		se.insert(ignore_permissions=True)
@@ -2505,6 +2802,103 @@ def create_store_return(
 
 
 @frappe.whitelist()
+def create_store_disposal(
+	receiving: str,
+	items: list | str,
+	reason: str,
+	photo: str | None = None,
+) -> dict:
+	"""
+	Create a store disposal/write-off entry for receiving issues that cannot be returned.
+	Requires supervisor-level authority and proof photo when available.
+	"""
+	allowed_roles = {"Store Supervisor", "Area Supervisor", "Warehouse User", "System Manager"}
+	if not set(frappe.get_roles(frappe.session.user)).intersection(allowed_roles):
+		frappe.throw(_("You do not have permission to dispose store receiving items"), frappe.PermissionError)
+
+	if isinstance(items, str):
+		items = json.loads(items)
+
+	if not items:
+		frappe.throw(_("No items to dispose"))
+
+	receiving_doc = frappe.get_doc("BEI Store Receiving", receiving)
+	store = receiving_doc.store
+
+	existing_disposal = frappe.db.exists(
+		"Stock Entry",
+		{
+			"stock_entry_type": "Material Issue",
+			"remarks": ["like", f"%Store Disposal%Receiving: {receiving}%"],
+			"docstatus": ["<", 2],
+		},
+	)
+	if existing_disposal:
+		frappe.throw(
+			_("A disposal already exists for receiving {0}: {1}").format(receiving, existing_disposal)
+		)
+
+	se = frappe.new_doc("Stock Entry")
+	se.stock_entry_type = "Material Issue"
+	se.company = resolve_warehouse_company(store) or get_company()
+	se.posting_date = nowdate()
+	se.posting_time = _current_time_string()
+	se.from_warehouse = store
+	se.remarks = f"Store Disposal from {store} | Receiving: {receiving} | Reason: {reason}"
+	stamp_stock_entry_contract(
+		se,
+		request_source=REQUEST_SOURCE_STORE_DISPOSAL,
+		source_company=se.company,
+		target_company=se.company,
+		finance_treatment=FINANCE_TREATMENT_SAME_COMPANY,
+	)
+
+	for item_data in items:
+		qty = flt(item_data.get("qty") or item_data.get("disposal_qty") or item_data.get("return_qty"))
+		if qty <= 0:
+			continue
+
+		item_code = item_data.get("item_code")
+		item = frappe.get_doc("Item", item_code)
+
+		se.append(
+			"items",
+			{
+				"item_code": item_code,
+				"item_name": item.item_name,
+				"description": item.description or item.item_name,
+				"qty": qty,
+				"uom": item_data.get("uom") or item.stock_uom,
+				"stock_uom": item.stock_uom,
+				"conversion_factor": 1,
+				"s_warehouse": store,
+			},
+		)
+
+	if not se.items:
+		frappe.throw(_("No valid items with quantity to dispose"))
+
+	_attach_store_issue_photo(se, photo)
+
+	frappe.db.savepoint("create_store_disposal")
+	try:
+		se.insert(ignore_permissions=True)
+		se.submit()
+		frappe.db.release_savepoint("create_store_disposal")
+	except Exception:
+		frappe.db.rollback(save_point="create_store_disposal")
+		frappe.log_error(f"Store disposal Stock Entry failed for {receiving}", "Store Disposal Error")
+		frappe.throw(_("Failed to create store disposal. Please try again."))
+
+	return {
+		"success": True,
+		"stock_entry": se.name,
+		"receiving": receiving,
+		"message": f"Store disposal {se.name} created — {len(se.items)} item(s) written off",
+	}
+
+
+@frappe.whitelist()
 def process_store_return(stock_entry_name: str) -> dict:
 	"""
 	Process a submitted store return Stock Entry.
@@ -2524,139 +2918,12 @@ def process_store_return(stock_entry_name: str) -> dict:
 	if se.stock_entry_type != "Material Transfer":
 		frappe.throw(_("Not a valid store return entry"))
 
-	# Extract receiving name and store from remarks
-	receiving_name = None
-	store = se.from_warehouse
-	reason = ""
-	if se.remarks:
-		for part in se.remarks.split("|"):
-			part = part.strip()
-			if part.startswith("Receiving:"):
-				receiving_name = part.replace("Receiving:", "").strip()
-			elif part.startswith("Reason:"):
-				reason = part.replace("Reason:", "").strip()
-
-	# G-002 Task 2B: Create credit note with GL JE
-	credit_note_name = None
-	jv_name = None
-
-	# Find the most recent billing for this store to calculate pro-rata reversal
-	original_billing = _find_original_billing(store)
-
-	if original_billing:
-		# DM-2: Atomicity via savepoint
-		frappe.db.savepoint("store_return_credit")
-		try:
-			# Calculate return value ratio (value/value = dimensionless, not qty/currency)
-			return_value = flt(se.total_outgoing_value or 0)
-			billed_value = flt(original_billing.get("total_billed_value")) or 1
-			ratio = min(return_value / billed_value, 1.0) if billed_value > 0 else 0
-
-			# Pro-rata fee reversal
-			royalty_rev = round(flt(original_billing.get("royalty_fee", 0)) * ratio, 2)
-			mgmt_rev = round(flt(original_billing.get("management_fee", 0)) * ratio, 2)
-			marketing_rev = round(flt(original_billing.get("marketing_fee", 0)) * ratio, 2)
-			ecomm_rev = round(flt(original_billing.get("ecommerce_fee", 0)) * ratio, 2)
-			total_credit = royalty_rev + mgmt_rev + marketing_rev + ecomm_rev
-
-			if total_credit > 0:
-				# Step 2: Create BEI Billing Schedule (credit note record)
-				cn = frappe.new_doc("BEI Billing Schedule")
-				cn.billing_type = "Credit Note"
-				cn.naming_series = "BILL-CN-.YYYY.-.#####"
-				cn.store = original_billing.get("store")
-				cn.billing_period_start = nowdate()
-				cn.billing_period_end = nowdate()
-				cn.status = "Unpaid"
-				cn.royalty_fee = -royalty_rev
-				cn.management_fee = -mgmt_rev
-				cn.marketing_fee = -marketing_rev
-				cn.ecommerce_fee = -ecomm_rev
-				cn.subtotal = -total_credit
-				cn.vat_amount = 0
-				cn.total_amount = -total_credit
-				cn.remarks = f"Credit Note for Store Return {se.name} | {store} | {reason}"
-				cn.flags.ignore_mandatory = True
-				cn.insert(ignore_permissions=True)
-				credit_note_name = cn.name
-
-				# Step 3: Post GL Journal Entry (DM-1 compliant)
-				store_cost_center = _get_store_cost_center(store)
-				store_customer = _get_store_customer(store)
-
-				jv_accounts = []
-				# Debit fee income accounts (reversing revenue)
-				if royalty_rev > 0:
-					jv_accounts.append(
-						{
-							"account": "4000301 - ROYALTY FEE INCOME - BEI",
-							"debit_in_account_currency": royalty_rev,
-							"cost_center": store_cost_center,
-						}
-					)
-				if mgmt_rev > 0:
-					jv_accounts.append(
-						{
-							"account": "4000302 - MANAGEMENT FEE INCOME - BEI",
-							"debit_in_account_currency": mgmt_rev,
-							"cost_center": store_cost_center,
-						}
-					)
-				if marketing_rev > 0:
-					jv_accounts.append(
-						{
-							"account": "4000303 - MARKETING FEE INCOME - BEI",
-							"debit_in_account_currency": marketing_rev,
-							"cost_center": store_cost_center,
-						}
-					)
-				if ecomm_rev > 0:
-					jv_accounts.append(
-						{
-							"account": "4000304 - ECOMMERCE FEE INCOME - BEI",
-							"debit_in_account_currency": ecomm_rev,
-							"cost_center": store_cost_center,
-						}
-					)
-
-				# Credit AR — DM-1: party ONLY on this AR row
-				jv_accounts.append(
-					{
-						"account": "1103101 - ACCOUNTS RECEIVABLE - TRADE - BEI",
-						"credit_in_account_currency": total_credit,
-						"party_type": "Customer",
-						"party": store_customer,
-						"cost_center": store_cost_center,
-					}
-				)
-
-				jv = frappe.get_doc(
-					{
-						"doctype": "Journal Entry",
-						"voucher_type": "Credit Note",
-						"posting_date": nowdate(),
-						"company": get_company(),
-						"user_remark": f"Credit Note for Store Return {se.name} | {store} | {reason}",
-						"cheque_no": stock_entry_name,
-						"cheque_date": frappe.utils.today(),
-						"accounts": jv_accounts,
-					}
-				)
-				jv.insert(ignore_permissions=True)
-				jv.submit()
-				jv_name = jv.name
-
-			frappe.db.release_savepoint("store_return_credit")
-		except Exception:
-			frappe.db.rollback(save_point="store_return_credit")
-			frappe.log_error(
-				f"Credit note creation failed for return {se.name}", "Store Return Credit Note Error"
-			)
-			frappe.throw(_("Failed to create credit note for store return. Please try again."))
+	receiving_name, store, reason = _extract_store_issue_context(se)
+	credit_note_name, jv_name = _create_store_issue_credit_note(se, store, reason)
 
 	# G-002 Task 2D: Notification OUTSIDE savepoint — failure must NOT roll back
 	try:
-		_notify_return_processed(se, store, reason, credit_note_name)
+		_notify_store_issue_processed(se, store, reason, credit_note_name, issue_label="Store Return")
 	except Exception:
 		frappe.log_error(f"Return notification failed for {se.name}", "Store Return Notification Error")
 
@@ -2671,6 +2938,45 @@ def process_store_return(stock_entry_name: str) -> dict:
 	}
 
 	return result
+
+
+@frappe.whitelist()
+def process_store_disposal(stock_entry_name: str) -> dict:
+	"""Process a submitted store disposal entry and create the related billing reversal."""
+	check_scm_permission(SCM_APPROVAL_ROLES, "process store disposals")
+
+	se = frappe.get_doc("Stock Entry", stock_entry_name)
+
+	if se.docstatus != 1:
+		frappe.throw(_("Stock Entry must be submitted before processing"))
+
+	if se.stock_entry_type != "Material Issue":
+		frappe.throw(_("Not a valid store disposal entry"))
+
+	if REQUEST_SOURCE_STORE_DISPOSAL != getattr(se, "custom_request_source", REQUEST_SOURCE_STORE_DISPOSAL):
+		if "Store Disposal" not in str(se.remarks or ""):
+			frappe.throw(_("Not a valid store disposal entry"))
+
+	receiving_name, store, reason = _extract_store_issue_context(se)
+	credit_note_name, journal_entry_name = _create_store_issue_credit_note(se, store, reason)
+
+	try:
+		_notify_store_issue_processed(se, store, reason, credit_note_name, issue_label="Store Disposal")
+	except Exception:
+		frappe.log_error(f"Disposal notification failed for {se.name}", "Store Disposal Notification Error")
+
+	return {
+		"success": True,
+		"stock_entry": se.name,
+		"receiving": receiving_name,
+		"items_disposed": len(se.items),
+		"credit_note": credit_note_name,
+		"journal_entry": journal_entry_name,
+		"message": (
+			f"Disposal {se.name} processed — {len(se.items)} item(s) written off, "
+			f"credit note: {credit_note_name or 'N/A'}"
+		),
+	}
 
 
 def _find_original_billing(store):
@@ -2717,14 +3023,14 @@ def _get_store_customer(store):
 	return customer
 
 
-def _notify_return_processed(se, store, reason, credit_note_name):
-	"""G-002 Task 2D: Send Google Chat notification when return is processed."""
+def _notify_store_issue_processed(se, store, reason, credit_note_name, issue_label="Store Return"):
+	"""Send a non-blocking Google Chat notification for a processed store issue."""
 	try:
 		from hrms.api.google_chat import SPACE_NOTIFICATIONS, get_chat_space, send_message_to_space
 
 		store_name = store.replace(" - BEI", "") if store else "Unknown"
 		items_count = len(se.items)
-		msg = f"Store Return Processed: {se.name}\n"
+		msg = f"{issue_label} Processed: {se.name}\n"
 		msg += f"Store: {store_name} | Items: {items_count}\n"
 		if reason:
 			msg += f"Reason: {reason}\n"

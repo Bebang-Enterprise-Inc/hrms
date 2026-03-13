@@ -98,6 +98,28 @@ def get_commissary_dashboard():
 		limit=5,
 	)
 
+	production_summary = frappe.db.sql(
+		"""
+        SELECT
+            sed.item_code,
+            sed.item_name,
+            SUM(sed.qty) AS qty_produced,
+            COALESCE(NULLIF(sed.uom, ''), i.stock_uom) AS uom
+        FROM `tabStock Entry` se
+        JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
+        LEFT JOIN `tabItem` i ON i.name = sed.item_code
+        WHERE se.stock_entry_type = 'Manufacture'
+          AND se.posting_date = %s
+          AND sed.t_warehouse = %s
+          AND se.docstatus = 1
+        GROUP BY sed.item_code, sed.item_name, COALESCE(NULLIF(sed.uom, ''), i.stock_uom)
+        ORDER BY qty_produced DESC, sed.item_name ASC
+        LIMIT 5
+    """,
+		(today_date, commissary_warehouse),
+		as_dict=True,
+	)
+
 	# Current stock summary
 	stock_summary = frappe.db.sql(
 		"""
@@ -120,10 +142,13 @@ def get_commissary_dashboard():
 			"commissary_warehouse": commissary_warehouse,
 			"todays_production": todays_production,
 			"low_stock_count": low_stock_count,
+			"low_stock_items": low_stock_count,
 			"pending_orders": pending_orders,
 			"todays_dispatches": todays_dispatches,
+			"dispatches_today": todays_dispatches,
 			"fqi_issues": fqi_issues,
 			"recent_production": recent_production,
+			"production_summary": production_summary,
 			"stock_summary": {
 				"total_items": stock_summary.get("total_items") or 0,
 				"total_qty": flt(stock_summary.get("total_qty") or 0),
@@ -232,6 +257,14 @@ def get_or_create_batch(batch_id, item_code):
 	return batch.name
 
 
+def _build_production_remarks(batch_no=None, remarks=None):
+	"""Stamp production output rows with a stable prefix for downstream QA lookup."""
+	base = f"Production output | Batch: {(batch_no or 'No batch').strip() if batch_no else 'No batch'}"
+	if remarks and str(remarks).strip():
+		return f"{base} | Notes: {str(remarks).strip()}"
+	return base
+
+
 @frappe.whitelist()
 def submit_production_output(items, batch_no=None, remarks=None):
 	"""
@@ -256,7 +289,7 @@ def submit_production_output(items, batch_no=None, remarks=None):
 	se.posting_date = today()
 	se.posting_time = frappe.utils.nowtime()
 	se.to_warehouse = commissary_warehouse
-	se.remarks = remarks or f"Production batch: {batch_no or 'No batch'}"
+	se.remarks = _build_production_remarks(batch_no=batch_no, remarks=remarks)
 
 	# Try Manufacture type if BOM exists (auto-deducts raw materials)
 	# Fall back to Material Receipt if no BOM available

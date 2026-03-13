@@ -95,18 +95,23 @@ def _install_fake_modules():
 	frappe.utils = utils
 
 	if not hasattr(frappe, "whitelist"):
+
 		def whitelist(*args, **kwargs):
 			def decorator(fn):
 				return fn
+
 			return decorator
+
 		frappe.whitelist = whitelist
 	if not hasattr(frappe, "_"):
 		frappe._ = lambda text: text
 	if not hasattr(frappe, "throw"):
+
 		def _throw(message, exc=None, title=None):
 			if isinstance(exc, type) and issubclass(exc, Exception):
 				raise exc(message)
 			raise Exception(message)
+
 		frappe.throw = _throw
 	if not hasattr(frappe, "PermissionError"):
 		frappe.PermissionError = type("PermissionError", (Exception,), {})
@@ -189,9 +194,12 @@ def _install_fake_modules():
 	scm_roles_mod.SCM_APPROVAL_ROLES = getattr(scm_roles_mod, "SCM_APPROVAL_ROLES", ["System Manager"])
 	scm_roles_mod.SCM_INVENTORY_ROLES = getattr(scm_roles_mod, "SCM_INVENTORY_ROLES", ["System Manager"])
 	scm_roles_mod.SCM_COMPLIANCE_ROLES = getattr(scm_roles_mod, "SCM_COMPLIANCE_ROLES", ["System Manager"])
-	scm_roles_mod.SCM_STOCK_UPDATE_ROLES = getattr(scm_roles_mod, "SCM_STOCK_UPDATE_ROLES", ["System Manager"])
+	scm_roles_mod.SCM_STOCK_UPDATE_ROLES = getattr(
+		scm_roles_mod, "SCM_STOCK_UPDATE_ROLES", ["System Manager"]
+	)
 	scm_roles_mod.SCM_STORE_ROLES = getattr(scm_roles_mod, "SCM_STORE_ROLES", ["Store Supervisor"])
 	scm_roles_mod.SCM_DISPATCH_ROLES = getattr(scm_roles_mod, "SCM_DISPATCH_ROLES", ["System Manager"])
+	scm_roles_mod.SCM_RECEIVING_ROLES = getattr(scm_roles_mod, "SCM_RECEIVING_ROLES", ["System Manager"])
 	scm_roles_mod.check_scm_permission = getattr(
 		scm_roles_mod,
 		"check_scm_permission",
@@ -227,8 +235,33 @@ class _FakeMR:
 		self.custom_finance_treatment = "same_company"
 		self.set_warehouse = "STORE-A - BEI"
 		self.items = [
-			types.SimpleNamespace(item_code="ITM-001", name="MRI-001", from_warehouse="COM - BEI", warehouse="STORE-A - BEI"),
-			types.SimpleNamespace(item_code="ITM-002", name="MRI-002", from_warehouse="COM - BEI", warehouse="STORE-A - BEI"),
+			types.SimpleNamespace(
+				item_code="ITM-001", name="MRI-001", from_warehouse="COM - BEI", warehouse="STORE-A - BEI"
+			),
+			types.SimpleNamespace(
+				item_code="ITM-002", name="MRI-002", from_warehouse="COM - BEI", warehouse="STORE-A - BEI"
+			),
+		]
+
+
+class _FakeIntercompanyMR:
+	def __init__(self):
+		self.status = "Ordered"
+		self.custom_request_source = "store_order"
+		self.custom_cargo_lane = "DRY"
+		self.custom_source_warehouse = "Greenhills Ortigas - BKI"
+		self.custom_destination_warehouse = "SM Megamall - Bebang Enterprise Inc."
+		self.custom_source_company = "Bebang Kitchen Inc."
+		self.custom_target_company = "Bebang Enterprise Inc."
+		self.custom_finance_treatment = "intercompany"
+		self.set_warehouse = "Greenhills Ortigas - BKI"
+		self.items = [
+			types.SimpleNamespace(
+				item_code="ITM-010",
+				name="MRI-010",
+				from_warehouse="Greenhills Ortigas - BKI",
+				warehouse="Greenhills Ortigas - BKI",
+			),
 		]
 
 
@@ -257,7 +290,9 @@ class TestReturnsConsistencyS10(unittest.TestCase):
 	def test_submit_return_request_includes_consistent_transfer_contract_data(self):
 		inventory.frappe.db.exists = lambda doctype, value: bool(value)
 		inventory.frappe.db.get_value = (
-			lambda doctype, filters, fieldname=None, order_by=None: f"Item {filters}" if doctype == "Item" else None
+			lambda doctype, filters, fieldname=None, order_by=None: f"Item {filters}"
+			if doctype == "Item"
+			else None
 		)
 
 		result = inventory.submit_return_request(
@@ -311,6 +346,35 @@ class TestReturnsConsistencyS10(unittest.TestCase):
 		self.assertEqual(result["data"]["request_source"], "store_order")
 		self.assertEqual(result["data"]["cargo_lane"], "DRY")
 		self.assertEqual(result["data"]["finance_treatment"], "same_company")
+
+	def test_create_stock_transfer_uses_material_issue_for_intercompany_dispatch(self):
+		warehouse.frappe.db.exists = lambda doctype, value: True
+		warehouse.frappe.db.get_value = lambda doctype, filters, fieldname=None, order_by=None: None
+
+		def _get_doc(doctype, name=None):
+			if doctype == "Material Request":
+				return _FakeIntercompanyMR()
+			if doctype == "Item":
+				return _FakeItem(name)
+			return None
+
+		warehouse.frappe.get_doc = _get_doc
+
+		result = warehouse.create_stock_transfer(
+			source_warehouse="Greenhills Ortigas - BKI",
+			target_warehouse="SM Megamall - Bebang Enterprise Inc.",
+			items=[{"item_code": "ITM-010", "qty": 2}],
+			mr_name="MR-INTER-0001",
+			remarks="S37 intercompany dispatch test",
+		)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(result["data"]["movement_type"], "Material Issue")
+		self.assertEqual(result["data"]["target_warehouse"], "SM Megamall - Bebang Enterprise Inc.")
+		self.assertEqual(result["data"]["finance_treatment"], "intercompany")
+		self.assertEqual(self.docs_created[0].stock_entry_type, "Material Issue")
+		self.assertIsNone(self.docs_created[0].to_warehouse)
+		self.assertFalse(hasattr(self.docs_created[0].items[0], "t_warehouse"))
 
 
 if __name__ == "__main__":

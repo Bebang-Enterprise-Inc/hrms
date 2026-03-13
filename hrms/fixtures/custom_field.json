@@ -191,13 +191,24 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Material Request-custom_destination_warehouse",
+        "dt": "Material Request",
+        "fieldname": "custom_destination_warehouse",
+        "fieldtype": "Link",
+        "label": "Destination Warehouse",
+        "options": "Warehouse",
+        "insert_after": "custom_source_warehouse",
+        "read_only": 1
+    },
+    {
+        "doctype": "Custom Field",
         "name": "Material Request-custom_source_company",
         "dt": "Material Request",
         "fieldname": "custom_source_company",
         "fieldtype": "Link",
         "label": "Source Company",
         "options": "Company",
-        "insert_after": "custom_source_warehouse",
+        "insert_after": "custom_destination_warehouse",
         "read_only": 1
     },
     {
@@ -247,13 +258,24 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Stock Entry-custom_destination_warehouse",
+        "dt": "Stock Entry",
+        "fieldname": "custom_destination_warehouse",
+        "fieldtype": "Link",
+        "label": "Destination Warehouse",
+        "options": "Warehouse",
+        "insert_after": "custom_cargo_lane",
+        "read_only": 1
+    },
+    {
+        "doctype": "Custom Field",
         "name": "Stock Entry-custom_source_company",
         "dt": "Stock Entry",
         "fieldname": "custom_source_company",
         "fieldtype": "Link",
         "label": "Source Company",
         "options": "Company",
-        "insert_after": "custom_cargo_lane",
+        "insert_after": "custom_destination_warehouse",
         "read_only": 1
     },
     {

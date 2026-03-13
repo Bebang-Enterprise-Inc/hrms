@@ -106,6 +106,8 @@ class BEIStoreType(Document):
 			self.management_fee_rate = 0
 			if not self.marketing_fee_rate:
 				self.marketing_fee_rate = 5  # 5% of net sales
+			if not self.price_list_multiplier:
+				self.price_list_multiplier = 2.5  # 2.5% markup on warehouse billings
 
 		elif self.store_type == "Managed Franchise":
 			# Managed Franchise: All fees applicable
