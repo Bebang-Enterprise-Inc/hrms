@@ -207,7 +207,9 @@ def get_purchase_order_items(po_name):
 
 
 @frappe.whitelist()
-def create_purchase_receipt(po_name, items, remarks=None):
+def create_purchase_receipt(
+	po_name: str, items: str | list[dict[str, Any]], remarks: str | None = None
+) -> dict[str, Any]:
 	"""
 	Create Purchase Receipt from PO.
 
@@ -472,7 +474,9 @@ def get_warehouse_receiving_detail(receiving_name):
 
 
 @frappe.whitelist()
-def complete_warehouse_receiving(receiving_name, items, remarks=None):
+def complete_warehouse_receiving(
+	receiving_name: str, items: str | list[dict[str, Any]], remarks: str | None = None
+) -> dict[str, Any]:
 	"""Complete warehouse receipt for a commissary FG handoff by creating the stock transfer."""
 	_ensure_warehouse_receiving_doctype()
 
