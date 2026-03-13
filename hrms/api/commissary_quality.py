@@ -78,7 +78,8 @@ def get_pending_inspections() -> dict[str, Any]:
 	pending = frappe.db.sql(
 		"""
         SELECT
-            se.name,
+            sed.name as name,
+            se.name as reference_name,
             se.posting_date,
             sed.item_code,
             sed.item_name,

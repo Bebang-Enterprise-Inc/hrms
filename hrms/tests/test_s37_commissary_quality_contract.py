@@ -138,7 +138,8 @@ class TestS37CommissaryQualityContract(unittest.TestCase):
 			captured["as_dict"] = as_dict
 			return [
 				{
-					"name": "MAT-STE-0001",
+					"name": "STE-ROW-0001",
+					"reference_name": "MAT-STE-0001",
 					"posting_date": "2026-03-12",
 					"item_code": "FG002-A",
 					"item_name": "BANANA CINNAMON",
@@ -154,7 +155,8 @@ class TestS37CommissaryQualityContract(unittest.TestCase):
 
 		self.assertTrue(result["success"])
 		self.assertEqual(result["total"], 1)
-		self.assertEqual(result["data"][0]["name"], "MAT-STE-0001")
+		self.assertEqual(result["data"][0]["name"], "STE-ROW-0001")
+		self.assertEqual(result["data"][0]["reference_name"], "MAT-STE-0001")
 		self.assertIn("Material Receipt", str(captured.get("query", "")))
 		self.assertIn("Production output", str(captured.get("query", "")))
 		self.assertEqual(captured.get("params"), "Shaw BLVD - BKI")
