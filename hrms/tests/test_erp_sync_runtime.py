@@ -137,6 +137,48 @@ class TestErpSyncRuntime(unittest.TestCase):
 			{"Accounts Manager", "Accounts User", "HR Manager"}.issubset(erp_sync.SYNC_ALLOWED_ROLES)
 		)
 
+	def test_current_pht_business_date_uses_pht_calendar_not_utc_date(self):
+		with patch.object(erp_sync, "now_datetime", return_value=datetime.datetime(2026, 1, 1, 23, 5, 0)):
+			self.assertEqual(erp_sync._current_pht_business_date(), "2026-01-02")
+
+	def test_enqueue_scheduled_store_inventory_shadow_sync_defaults_to_pht_business_date(self):
+		erp_sync.frappe.enqueue = MagicMock()
+		with patch.object(erp_sync, "now_datetime", return_value=datetime.datetime(2026, 1, 1, 23, 5, 0)):
+			result = erp_sync.enqueue_scheduled_store_inventory_shadow_sync()
+
+		self.assertEqual(result["run_date"], "2026-01-02")
+		self.assertEqual(
+			result["job_id"],
+			"scheduled_store_inventory_shadow_sync:2026-01-02",
+		)
+		erp_sync.frappe.enqueue.assert_called_once_with(
+			"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
+			queue="long",
+			job_id="scheduled_store_inventory_shadow_sync:2026-01-02",
+			deduplicate=True,
+			run_date="2026-01-02",
+			force=False,
+		)
+
+	def test_enqueue_scheduled_store_demand_snapshot_sync_defaults_to_pht_business_date(self):
+		erp_sync.frappe.enqueue = MagicMock()
+		with patch.object(erp_sync, "now_datetime", return_value=datetime.datetime(2026, 1, 1, 23, 5, 0)):
+			result = erp_sync.enqueue_scheduled_store_demand_snapshot_sync()
+
+		self.assertEqual(result["snapshot_date"], "2026-01-02")
+		self.assertEqual(
+			result["job_id"],
+			"scheduled_store_demand_snapshot:2026-01-02",
+		)
+		erp_sync.frappe.enqueue.assert_called_once_with(
+			"hrms.api.erp_sync.run_scheduled_store_demand_snapshot_sync",
+			queue="long",
+			job_id="scheduled_store_demand_snapshot:2026-01-02",
+			enqueue_after_commit=True,
+			snapshot_date="2026-01-02",
+			lookback_days=28,
+		)
+
 	def test_successful_sync_releases_savepoint(self):
 		result = erp_sync.sync_ar_aging(
 			sheet_name="AR Aging",
