@@ -93,6 +93,14 @@ def _safe_date(value: Any) -> str | None:
 		return None
 
 
+def _current_pht_business_date() -> str:
+	"""Return the current Asia/Manila business date for scheduler-owned jobs."""
+	current = now_datetime()
+	if current.tzinfo is None:
+		current = current.replace(tzinfo=datetime.UTC)
+	return current.astimezone(PHT_TIMEZONE).date().isoformat()
+
+
 def _is_duplicate_error(exc: Exception) -> bool:
 	duplicate_cls = getattr(frappe, "DuplicateEntryError", None)
 	if duplicate_cls and isinstance(exc, duplicate_cls):
@@ -1860,7 +1868,7 @@ def enqueue_scheduled_store_inventory_shadow_sync(
 	run_date: str | None = None, force: bool = False
 ) -> dict[str, Any]:
 	"""Queue the daily store inventory workbook shadow sync."""
-	run_date_value = _safe_date(run_date) or nowdate()
+	run_date_value = _safe_date(run_date) or _current_pht_business_date()
 	force_flag = bool(cint(force))
 	job_id = f"{STORE_INVENTORY_SHADOW_SYNC_AUTO_PREFIX}:{run_date_value}"
 	frappe.enqueue(
@@ -1886,7 +1894,7 @@ def watch_store_inventory_shadow_sync_health(
 	state_path: str | None = None,
 ) -> dict[str, Any]:
 	"""Resume the daily shadow sync when the tracked run is stale mid-flight."""
-	run_date_value = _safe_date(run_date) or nowdate()
+	run_date_value = _safe_date(run_date) or _current_pht_business_date()
 	stale_after = max(cint(stale_after_minutes), 1)
 	cooldown = max(cint(cooldown_minutes), 1)
 	registry_file = store_inventory_shadow_sync_builder.get_runtime_registry_path()
@@ -2012,7 +2020,7 @@ def run_scheduled_store_inventory_shadow_sync(
 	run_date: str | None = None, force: bool = False
 ) -> dict[str, Any]:
 	"""Mirror store inventory sheets into Frappe using the tracked workbook bridge."""
-	run_date_value = _safe_date(run_date) or nowdate()
+	run_date_value = _safe_date(run_date) or _current_pht_business_date()
 	result = store_inventory_shadow_sync_builder.run_store_inventory_shadow_sync(
 		run_date=run_date_value,
 		force=bool(cint(force)),
@@ -2042,7 +2050,7 @@ def enqueue_scheduled_store_demand_snapshot_sync(
 	snapshot_date: str | None = None, lookback_days: int = 28
 ) -> dict[str, Any]:
 	"""Queue the daily sales-to-BOM demand snapshot sync for store ordering."""
-	snapshot_date_value = _safe_date(snapshot_date) or nowdate()
+	snapshot_date_value = _safe_date(snapshot_date) or _current_pht_business_date()
 	lookback_days = cint(lookback_days) or 28
 	job_id = f"{STORE_DEMAND_SNAPSHOT_AUTO_PREFIX}:{snapshot_date_value}"
 	frappe.enqueue(
@@ -2065,7 +2073,7 @@ def run_scheduled_store_demand_snapshot_sync(
 	snapshot_date: str | None = None, lookback_days: int = 28
 ) -> dict[str, Any]:
 	"""Build and sync the mapped store demand snapshot into Frappe."""
-	snapshot_date_value = _safe_date(snapshot_date) or nowdate()
+	snapshot_date_value = _safe_date(snapshot_date) or _current_pht_business_date()
 	lookback_days = cint(lookback_days) or 28
 	outputs = store_demand_snapshot_builder.build_outputs(
 		snapshot_date=getdate(snapshot_date_value),
