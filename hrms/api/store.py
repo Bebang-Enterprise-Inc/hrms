@@ -2203,12 +2203,12 @@ def _create_mr_for_store_order(order):
 			or source_company
 		)
 		finance_treatment = infer_finance_treatment(source_company, billing_target_company)
-		# Frappe validates the Material Request header company against the actual
-		# destination warehouse owner. The buyer entity used later for billing can
-		# diverge from that operational company, so keep it in the stamped
-		# contract fields instead of on the header itself.
+		# Frappe validates Material Transfer requests against the operational stock
+		# owner on the source side of the move. The buyer entity used later for
+		# billing can diverge from that operational company, so keep it in the
+		# stamped contract fields instead of on the header itself.
 		mr.set_warehouse = store_warehouse
-		mr.company = operational_target_company
+		mr.company = source_company
 		stamp_material_request_contract(
 			mr,
 			request_source=REQUEST_SOURCE_STORE_ORDER,
