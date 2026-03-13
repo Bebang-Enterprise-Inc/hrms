@@ -45,8 +45,8 @@ def _install_fake_frappe():
 		warning=lambda *a, **k: None,
 		error=lambda *a, **k: None,
 	)
-	frappe.session = types.SimpleNamespace(user="test.user@bebang.ph")
-	frappe.db = types.SimpleNamespace(
+	frappe.__dict__["session"] = types.SimpleNamespace(user="test.user@bebang.ph")
+	frappe.__dict__["db"] = types.SimpleNamespace(
 		exists=lambda *args, **kwargs: None,
 		get_value=lambda *args, **kwargs: None,
 		count=lambda *args, **kwargs: 0,

@@ -31,10 +31,12 @@ from hrms.utils.supply_chain_contracts import (
 	stamp_stock_entry_contract,
 )
 
-MANUAL_POS_UPLOAD_DISABLED_MESSAGE = _(
-	"Manual POS uploads are disabled. Sales now sync automatically via API. "
-	"Use Closing Report for X/Z-reading evidence, cash control, and POS-down exceptions."
-)
+
+def _manual_pos_upload_disabled_message() -> str:
+	return _(
+		"Manual POS uploads are disabled. Sales now sync automatically via API. "
+		"Use Closing Report for X/Z-reading evidence, cash control, and POS-down exceptions."
+	)
 
 
 def _notify_store_ops(msg=None, *, event=None, requested_space=None):
@@ -3436,7 +3438,7 @@ def upload_pos_data(
 	    notes: Optional notes
 	    skip_date_validation: Skip date validation (for back-dated uploads with supervisor approval)
 	"""
-	frappe.throw(MANUAL_POS_UPLOAD_DISABLED_MESSAGE)
+	frappe.throw(_manual_pos_upload_disabled_message())
 	validate_store_ops_role()
 
 	if not store:

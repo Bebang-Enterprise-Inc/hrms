@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from typing import Any
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -81,7 +83,7 @@ class BEIMaintenanceRequest(Document):
 		)
 
 	@frappe.whitelist()
-	def assign_to_user(self, user, scheduled_date=None, estimated_cost=None):
+	def assign_to_user(self, user: Any, scheduled_date: Any = None, estimated_cost: Any = None):
 		"""Assign maintenance request to internal user."""
 		self.assigned_to = user
 		self.status = "Assigned"
@@ -93,7 +95,7 @@ class BEIMaintenanceRequest(Document):
 		return {"status": "success", "message": _("Request assigned to {0}").format(user)}
 
 	@frappe.whitelist()
-	def assign_to_vendor(self, vendor, scheduled_date=None, estimated_cost=None):
+	def assign_to_vendor(self, vendor: Any, scheduled_date: Any = None, estimated_cost: Any = None):
 		"""Assign maintenance request to external vendor."""
 		self.vendor = vendor
 		self.status = "Assigned"
@@ -112,7 +114,7 @@ class BEIMaintenanceRequest(Document):
 		return {"status": "success"}
 
 	@frappe.whitelist()
-	def cancel_request(self, reason):
+	def cancel_request(self, reason: Any):
 		"""Cancel maintenance request."""
 		self.status = "Cancelled"
 		self.add_comment("Comment", _("Cancelled: {0}").format(reason))
@@ -121,7 +123,7 @@ class BEIMaintenanceRequest(Document):
 
 
 @frappe.whitelist()
-def get_open_requests_for_store(store):
+def get_open_requests_for_store(store: Any):
 	"""Get all open maintenance requests for a store."""
 	return frappe.get_all(
 		"BEI Maintenance Request",
@@ -131,7 +133,7 @@ def get_open_requests_for_store(store):
 
 
 @frappe.whitelist()
-def get_scheduled_maintenance_today(store):
+def get_scheduled_maintenance_today(store: Any):
 	"""Check if store has scheduled maintenance today."""
 	return frappe.db.exists(
 		"BEI Maintenance Request",

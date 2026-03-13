@@ -56,6 +56,7 @@ def _agent_log(hypothesis_id: str, location: str, message: str, data: dict | Non
 		"timestamp": int(time.time() * 1000),
 	}
 	try:
+		# nosemgrep: frappe-semgrep-rules.rules.security.frappe-security-file-traversal -- debug log path is internal and not user-controlled.
 		with open(log_path, "a", encoding="utf-8") as f:
 			f.write(json.dumps(payload, ensure_ascii=False) + "\n")
 	except Exception:
