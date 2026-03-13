@@ -96,6 +96,7 @@ class ChangeProcessor:
 			send_sheets_sync_critical_alert(
 				spreadsheet_name=sheet_config.name,
 				sheet_name=sheet_config.sheet_name,
+				spreadsheet_id=sheet_config.spreadsheet_id,
 				trigger=trigger,
 				reasons=reasons,
 				rows_processed=rows_processed,

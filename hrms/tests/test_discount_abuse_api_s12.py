@@ -8,7 +8,7 @@ import types
 import unittest
 from datetime import date
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -926,6 +926,37 @@ class TestDiscountAbuseApiS12(unittest.TestCase):
 		self.assertEqual(rows[0]["total_gross_sales"], 1400.0)
 		self.assertEqual(rows[0]["fp_orders"], 2)
 		self.assertEqual(rows[0]["fp_gross_sales"], 200.0)
+
+	def test_send_critical_notifications_emit_structured_chat_event(self):
+		rows = [
+			{
+				"store_name": "SM North EDSA",
+				"identity_key": "25402",
+				"order_count": 2,
+				"discount_amount_total": "70.72",
+			}
+		]
+		fake_send = MagicMock(return_value=True)
+		google_chat_mod = types.ModuleType("hrms.api.google_chat")
+		google_chat_mod.send_notification_event = fake_send
+		bei_config_mod = types.ModuleType("hrms.utils.bei_config")
+		bei_config_mod.SPACE_ACCOUNTING = "ACCOUNTING"
+		bei_config_mod.get_chat_space = lambda _space: "spaces/AAAA9RN0JZQ"
+
+		with patch.dict(sys.modules, {"hrms.api.google_chat": google_chat_mod, "hrms.utils.bei_config": bei_config_mod}, clear=False), patch.object(
+			discount_abuse, "_notifications_enabled_for_day", return_value=True
+		), patch.object(discount_abuse, "_query_same_day_rows", return_value=rows), patch.object(
+			discount_abuse, "_sort_same_day_rows", side_effect=lambda payload: payload
+		), patch.object(discount_abuse, "_parse_email_recipients", return_value=[]), patch.object(
+			discount_abuse, "_mark_alerts_notified", return_value=1
+		):
+			result = discount_abuse._send_critical_discount_alert_notifications_internal(date(2026, 3, 12))
+
+		event = fake_send.call_args.args[0]
+		self.assertEqual(event["family"], "discount_critical_digest")
+		self.assertEqual(event["facts"]["business_date"], "2026-03-12")
+		self.assertEqual(event["facts"]["review_url"], discount_abuse.PORTAL_QUEUE_URL)
+		self.assertTrue(result["data"]["chat_sent"])
 
 
 if __name__ == "__main__":

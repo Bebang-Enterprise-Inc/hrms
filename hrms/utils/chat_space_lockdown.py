@@ -8,7 +8,11 @@ from __future__ import annotations
 
 import os
 
-DEFAULT_BLIP_NOTIFICATIONS_SPACE = "spaces/AAQABiNmpBg"
+from hrms.utils.notification_intelligence import (
+	SPACE_NOTIFICATIONS as DEFAULT_BLIP_NOTIFICATIONS_SPACE,
+	family_allows_requested_space,
+	get_family_allowed_spaces,
+)
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 _LOCKDOWN_ENV = "BEI_CHAT_LOCKDOWN_ENABLED"
@@ -47,6 +51,7 @@ def route_outbound_chat_space(
 	*,
 	logger=None,
 	context: str | None = None,
+	family: str | None = None,
 ) -> str:
 	"""Return the only permitted outbound chat space for the current policy."""
 	requested = (requested_space or "").strip()
@@ -61,14 +66,22 @@ def route_outbound_chat_space(
 	if requested == blip_space:
 		return requested
 
+	if family:
+		family_allowed_spaces = get_family_allowed_spaces(family)
+		if requested in family_allowed_spaces:
+			return requested
+		if family_allows_requested_space(family):
+			return requested
+
 	if allow_non_blip_chat_destinations() and requested in get_explicitly_allowed_chat_spaces():
 		return requested
 
 	if logger is not None:
 		logger.warning(
-			"Outbound Google Chat destination rerouted to ! Blip Notifications; requested=%s effective=%s context=%s",
+			"Outbound Google Chat destination rerouted to ! Blip Notifications; requested=%s effective=%s family=%s context=%s",
 			requested,
 			blip_space,
+			family or "legacy",
 			context or "unspecified",
 		)
 

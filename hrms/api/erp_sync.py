@@ -3194,5 +3194,40 @@ def get_morning_sync_health_report(report_date: str | None = None, persist: bool
 
 
 def scheduled_generate_morning_sync_health_report(report_date: str | None = None) -> dict[str, Any]:
-	"""Generate and persist the daily morning sync health report for operations."""
-	return _collect_morning_sync_health_report(report_date=report_date, persist=True)
+	"""Generate, persist, and notify the daily morning sync health report for operations."""
+	report = _collect_morning_sync_health_report(report_date=report_date, persist=True)
+	try:
+		from hrms.api.google_chat import send_notification_event
+
+		severity = "medium"
+		if report.get("status") == "red":
+			severity = "critical"
+		elif report.get("status") == "yellow":
+			severity = "high"
+
+		notification_sent = send_notification_event(
+			{
+				"family": "morning_readiness_digest",
+				"source_system": "frappe",
+				"source_ref": f"morning_sync:{report.get('report_date')}",
+				"severity": severity,
+				"owner": "ERP Automation / Ops",
+				"facts": {
+					"report_date": report.get("report_date"),
+					"status": report.get("status"),
+					"areas": report.get("areas") or [],
+					"sync_target_pht_time": report.get("sync_target_pht_time"),
+					"ready_deadline_pht_time": report.get("ready_deadline_pht_time"),
+					"artifact_markdown_path": ((report.get("artifacts") or {}).get("markdown_path")),
+				},
+			}
+		)
+		report["notification_sent"] = bool(notification_sent)
+	except Exception as exc:
+		frappe.log_error(
+			title="Morning Sync Digest Notification Failed",
+			message=str(exc),
+		)
+		report["notification_sent"] = False
+		report["notification_error"] = str(exc)
+	return report

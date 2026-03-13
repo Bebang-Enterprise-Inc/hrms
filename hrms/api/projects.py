@@ -2540,13 +2540,15 @@ def update_permit_status(permit_id, status, permit_number=None, approval_date=No
     }
 
 def check_sla_violations():
-    """Scheduled: check for SLA breaches on maintenance requests, send Google Chat alerts."""
-    from hrms.api.google_chat import send_message_to_space
-    from hrms.utils.bei_config import get_chat_space, SPACE_NOTIFICATIONS
+    """Scheduled: send one grouped maintenance SLA digest instead of raw hourly triplets."""
     from datetime import timedelta
+
+    from hrms.api.google_chat import send_notification_event
 
     SLA_HOURS = {"Urgent": 4, "High": 24, "Normal": 72}
     now = now_datetime()
+    breached_rows = []
+    counts_by_priority = {"Urgent": 0, "High": 0, "Normal": 0}
 
     for priority, hours in SLA_HOURS.items():
         threshold_dt = now - timedelta(hours=hours)
@@ -2555,20 +2557,42 @@ def check_sla_violations():
             filters={
                 "priority": priority,
                 "status": ["in", ["Open", "Assigned"]],
-                "creation": ["<", threshold_dt]
+                "creation": ["<", threshold_dt],
             },
-            fields=["name", "store", "priority", "issue_category", "description", "creation"]
+            fields=["name", "store", "priority", "issue_category", "description", "creation"],
         )
+        counts_by_priority[priority] = len(breached)
+        for req in breached:
+            age_hrs = round((now - req.creation).total_seconds() / 3600, 1)
+            breached_rows.append(
+                {
+                    "name": req.name,
+                    "store": req.store,
+                    "priority": req.priority,
+                    "issue_category": req.issue_category,
+                    "description": req.description,
+                    "age_hours": age_hrs,
+                }
+            )
 
-        if breached:
-            lines = [f"*SLA BREACH — {priority} ({hours}hr SLA)*"]
-            for req in breached:
-                age_hrs = round((now - req.creation).total_seconds() / 3600, 1)
-                lines.append(f"• {req.name} — {req.store} | {req.issue_category} | Age: {age_hrs}h")
-            message = "\n".join(lines)
-            try:
-                space = get_chat_space(SPACE_NOTIFICATIONS)
-                send_message_to_space(space, message)
-            except Exception:
-                frappe.log_error("SLA alert failed", "Maintenance SLA")
+    if not breached_rows:
+        return
+
+    severity = "critical" if counts_by_priority.get("Urgent") else "high" if counts_by_priority.get("High") else "medium"
+    sent = send_notification_event(
+        {
+            "family": "maintenance_sla_backlog",
+            "source_system": "frappe",
+            "source_ref": f"maintenance_sla:{nowdate()}",
+            "severity": severity,
+            "owner": "Projects Manager",
+            "facts": {
+                "report_date": nowdate(),
+                "counts_by_priority": counts_by_priority,
+                "breaches": breached_rows,
+            },
+        }
+    )
+    if not sent:
+        frappe.log_error("SLA alert failed", "Maintenance SLA")
 
