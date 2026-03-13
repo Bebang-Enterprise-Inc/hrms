@@ -53,7 +53,8 @@ AWS EC2 Instance
 └── Sheets Receiver (temporary)  ← THIS SERVICE
     └── sheets-receiver container
          ↓
-    nginx proxy (/sheets-webhook)
+    Frappe public webhook proxy
+    (/api/method/hrms.api.erp_sync.webhook)
          ↓
     Google Drive Watch API
 ```
@@ -95,9 +96,8 @@ echo "FRAPPE_API_SECRET=xxx" >> .env
 docker-compose build
 docker-compose up -d
 
-# Configure nginx
-sudo cp nginx-sheets-receiver.conf /etc/nginx/conf.d/
-sudo nginx -t && sudo systemctl reload nginx
+# Webhooks go through the public Frappe method route.
+# The legacy nginx helper file is optional and not required for normal operation.
 ```
 
 ### 3. Set Up Google Drive Watches
@@ -313,6 +313,7 @@ Every 6 hours, a scheduled job syncs all sheets as backup (in case webhooks were
 
 ### Webhook not receiving notifications
 1. Check PUBLIC_WEBHOOK_URL is accessible from internet
+   Expected production path: `https://hq.bebang.ph/api/method/hrms.api.erp_sync.webhook`
 2. Verify watches are set up: `GET /api/status`
 3. Check Google Cloud Console for webhook delivery status
 

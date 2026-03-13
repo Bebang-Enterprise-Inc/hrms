@@ -22,8 +22,8 @@ services:
       FRAPPE_API_KEY: ${FRAPPE_API_KEY}
       FRAPPE_API_SECRET: ${FRAPPE_API_SECRET}
 
-      # Webhook - Google sends to this URL
-      PUBLIC_WEBHOOK_URL: https://hq.bebang.ph/sheets-webhook
+      # Webhook - Google sends to the public Frappe proxy method
+      PUBLIC_WEBHOOK_URL: https://hq.bebang.ph/api/method/hrms.api.erp_sync.webhook
       SHEETS_RECEIVER_PORT: 8765
 
       # Logging
@@ -46,7 +46,8 @@ services:
       - ./logs:/app/logs
 
     ports:
-      - "127.0.0.1:8765:8765"  # Only localhost - nginx will proxy
+      - "127.0.0.1:8765:8765"   # Host-local operator access
+      - "172.17.0.1:8765:8765"  # Backend containers reach receiver via Docker host bridge
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8765/health"]

@@ -1,4 +1,5 @@
 import importlib.util
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -17,6 +18,18 @@ config_spec.loader.exec_module(config)
 
 
 class TestSheetsReceiverConfig(unittest.TestCase):
+	def test_default_public_webhook_url_uses_frappe_method_proxy(self):
+		original = os.environ.pop("PUBLIC_WEBHOOK_URL", None)
+		try:
+			service_config = config.ServiceConfig()
+			self.assertEqual(
+				service_config.public_webhook_url,
+				"https://hq.bebang.ph/api/method/hrms.api.erp_sync.webhook",
+			)
+		finally:
+			if original is not None:
+				os.environ["PUBLIC_WEBHOOK_URL"] = original
+
 	def test_ap_opening_balance_uses_supplier_soa_tab(self):
 		ap_config = config.get_sheet_config("ap_opening_balance")
 		supplier_soa_config = config.get_sheet_config("supplier_soa")

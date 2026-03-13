@@ -90,10 +90,13 @@ class ServiceConfig:
 	webhook_port: int = field(default_factory=lambda: int(os.environ.get("SHEETS_RECEIVER_PORT", "8765")))
 	webhook_path: str = "/webhook/sheets"
 
-	# Public URL for Google to send webhooks to
-	# Uses nginx proxy directly - NOT routed through Frappe
+	# Public URL for Google Drive notifications.
+	# This should stay on the public Frappe route, not the private receiver port.
 	public_webhook_url: str = field(
-		default_factory=lambda: os.environ.get("PUBLIC_WEBHOOK_URL", "https://hq.bebang.ph/sheets-webhook")
+		default_factory=lambda: os.environ.get(
+			"PUBLIC_WEBHOOK_URL",
+			"https://hq.bebang.ph/api/method/hrms.api.erp_sync.webhook",
+		)
 	)
 
 	# Database

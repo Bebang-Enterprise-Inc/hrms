@@ -297,10 +297,14 @@ class TestErpSyncRuntime(unittest.TestCase):
 		save_registry_mock.assert_called_once()
 		save_state_mock.assert_called_once()
 
-	def test_receiver_api_url_defaults_to_public_proxy(self):
+	def test_receiver_urls_default_to_host_bridge(self):
 		self.assertEqual(
 			erp_sync._receiver_api_url("morning-health"),
-			"https://hq.bebang.ph/sheets-api/morning-health",
+			"http://172.17.0.1:8765/api/morning-health",
+		)
+		self.assertEqual(
+			erp_sync._receiver_webhook_proxy_url(),
+			"http://172.17.0.1:8765/webhook/sheets",
 		)
 
 	def test_receiver_urls_honor_explicit_config(self):
@@ -311,7 +315,7 @@ class TestErpSyncRuntime(unittest.TestCase):
 		self.assertEqual(erp_sync._receiver_api_url("status"), "https://receiver.internal/api/status")
 		self.assertEqual(erp_sync._receiver_webhook_proxy_url(), "https://receiver.internal/webhook")
 
-	def test_get_sync_status_uses_public_receiver_proxy(self):
+	def test_get_sync_status_uses_host_bridge_receiver_proxy(self):
 		class _Response:
 			def json(self):
 				return {"status": "healthy"}
@@ -319,7 +323,7 @@ class TestErpSyncRuntime(unittest.TestCase):
 		with patch("requests.get", return_value=_Response()) as mock_get:
 			result = erp_sync.get_sync_status()
 
-		mock_get.assert_called_once_with("https://hq.bebang.ph/sheets-api/status", timeout=10)
+		mock_get.assert_called_once_with("http://172.17.0.1:8765/api/status", timeout=10)
 		self.assertEqual(result["status"], "healthy")
 
 	def test_get_morning_sync_health_report_is_yellow_when_receiver_has_exceptions(self):
