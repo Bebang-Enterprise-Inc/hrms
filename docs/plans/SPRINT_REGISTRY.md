@@ -1,5 +1,5 @@
 # Sprint Registry (Canonical SSOT)
-**Last Updated:** 2026-03-10  
+**Last Updated:** 2026-03-13  
 **Policy:** `docs/plans/SPRINT_NUMBERING_POLICY.md`
 
 ## Canonical Sprint Timeline
@@ -36,12 +36,19 @@
 | `S024` | Sprint 24 | Planned | `docs/plans/2026-03-03-sprint-24-adms-attendance-supabase-sync.md` |
 | `S025` | Sprint 25 | Planned | `docs/plans/2026-03-03-sprint-25-control-tower-command-closure.md` |
 | `S026` | Sprint 26 | Done (Closed 2026-03-09) | `docs/plans/2026-03-09-s026-full-surface-operational-readiness-final-consolidated-closeout.md` |
-| `S027` | Sprint 27 | In Progress (SCM Logistics Routing Closed 2026-03-10; 138 locked / 81 authoring_required) | `docs/plans/2026-03-09-sprint-27-full-surface-e2e-l1-l4-operational-certification.md` |
+| `S027` | Sprint 27 | Done (Single-owner signoff 2026-03-11; 217 locked / live L4 green / ready for team use) | `docs/plans/2026-03-09-sprint-27-full-surface-e2e-l1-l4-operational-certification.md` |
 | `S028` | Sprint 28 | Planned | `docs/plans/2026-03-09-sprint-28-discount-monitoring-ux-incident-workspace.md` |
 | `S029` | Sprint 29 | Planned | `docs/plans/2026-03-09-sprint-29-discount-monitoring-finance-benchmark-foundation.md` |
 | `S030` | Sprint 30 | Done (Completed 2026-03-09) | `docs/plans/2026-03-09-analytics-agent-10x-report.md` |
 | `S031` | Sprint 31 | In Progress | `docs/plans/2026-03-10-sprint-31-store-inventory-import-and-shadow-sync.md` |
 | `S032` | Sprint 32 | Planned | `docs/plans/2026-03-10-sprint-32-dual-repo-safe-clean-start.md` |
+| `S033` | Sprint 33 | Planned | `docs/plans/2026-03-10-sprint-33-schedule-management-attendance-bridge.md` |
+| `S034` | Sprint 34 | Done (Completed 2026-03-11; canonical my-bebang reference regenerated from current source) | `docs/plans/2026-03-11-sprint-34-my-bebang-reference-canonical-regeneration.md` |
+| `S035` | Sprint 35 | Done (Completed 2026-03-13; strict L1/L2/L3/L4/payroll certification passed after HRMS payroll hotfix #216) | `docs/plans/2026-03-11-sprint-35-overtime-post-approval-operational-workflow.md` |
+| `S036` | Sprint 36 | Planned | `docs/plans/2026-03-12-sprint-36-omnichannel-order-hub.md` |
+| `S037` | Sprint 37 | In Progress (portal hotfix #114 live 2026-03-13 02:29 PHT; prior technical route blockers cleared; final dispatch certification awaits explicit live-mutation approval) | `docs/plans/2026-03-12-sprint-37-warehouse-commissary-store-handoff-alignment.md` |
+| `S038` | Sprint 38 | Done (Completed 2026-03-13; structured notification intelligence live, receiver topology fixed, PHT business-date correction live, full E2E certification passed) | `docs/plans/2026-03-12-sprint-38-blip-notification-intelligence-and-routing.md` |
+| `S039` | Sprint 39 | In Progress | `docs/plans/2026-03-13-sprint-39-cfo-disciplinary-action-transition.md` |
 
 ## Legacy Sprint Labels (Non-Canonical)
 These documents contain sprint-like naming but are not part of the canonical sequence and must not be used as numbering anchors for new work.
@@ -63,5 +70,5 @@ These documents contain sprint-like naming but are not part of the canonical seq
 | `Geo-Attendance Sprint 3 E2E` | `docs/plans/archived/GEO_ATTENDANCE_SPRINT3_E2E_TEST_PLAN_2026-02-10.md` | Separate historical track |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S033`.
-2. Create new sprint plan only after adding `S033` row here first.
+1. Next canonical sprint ID to assign: `S040`.
+2. Create new sprint plan only after adding `S039` row here first.
