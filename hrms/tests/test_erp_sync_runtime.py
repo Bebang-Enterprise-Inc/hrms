@@ -83,6 +83,7 @@ def _install_fake_frappe():
 	frappe.log_error = lambda *args, **kwargs: None
 	frappe.logger = lambda: types.SimpleNamespace(info=lambda *args, **kwargs: None)
 	frappe.get_traceback = lambda: "traceback"
+	frappe.local = types.SimpleNamespace(conf={})
 	frappe.__dict__["session"] = types.SimpleNamespace(user="Administrator")
 	frappe.get_roles = lambda user=None: ["System Manager"] if user and user != "Guest" else []
 	frappe.__dict__["db"] = types.SimpleNamespace(
@@ -129,6 +130,7 @@ class TestErpSyncRuntime(unittest.TestCase):
 		erp_sync.frappe.db.get_value = MagicMock(return_value=1)
 		erp_sync.frappe.db.set_value = MagicMock()
 		erp_sync.frappe.get_meta = MagicMock(return_value=types.SimpleNamespace(has_field=lambda *_: True))
+		erp_sync.frappe.local = types.SimpleNamespace(conf={})
 
 	def test_allowed_roles_cover_finance_and_hr(self):
 		self.assertTrue(
@@ -294,6 +296,31 @@ class TestErpSyncRuntime(unittest.TestCase):
 		erp_sync.frappe.enqueue.assert_not_called()
 		save_registry_mock.assert_called_once()
 		save_state_mock.assert_called_once()
+
+	def test_receiver_api_url_defaults_to_public_proxy(self):
+		self.assertEqual(
+			erp_sync._receiver_api_url("morning-health"),
+			"https://hq.bebang.ph/sheets-api/morning-health",
+		)
+
+	def test_receiver_urls_honor_explicit_config(self):
+		erp_sync.frappe.local.conf = {
+			"sheets_receiver_api_base_url": "https://receiver.internal/api",
+			"sheets_receiver_webhook_url": "https://receiver.internal/webhook",
+		}
+		self.assertEqual(erp_sync._receiver_api_url("status"), "https://receiver.internal/api/status")
+		self.assertEqual(erp_sync._receiver_webhook_proxy_url(), "https://receiver.internal/webhook")
+
+	def test_get_sync_status_uses_public_receiver_proxy(self):
+		class _Response:
+			def json(self):
+				return {"status": "healthy"}
+
+		with patch("requests.get", return_value=_Response()) as mock_get:
+			result = erp_sync.get_sync_status()
+
+		mock_get.assert_called_once_with("https://hq.bebang.ph/sheets-api/status", timeout=10)
+		self.assertEqual(result["status"], "healthy")
 
 	def test_get_morning_sync_health_report_is_yellow_when_receiver_has_exceptions(self):
 		registry_rows = [
