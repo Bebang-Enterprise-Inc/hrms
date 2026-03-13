@@ -18,6 +18,7 @@ from hrms.utils.notification_intelligence import (
 
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 _LOCKDOWN_ENV = "BEI_CHAT_LOCKDOWN_ENABLED"
+_STRICT_BLIP_ONLY_ENV = "BEI_CHAT_STRICT_BLIP_ONLY"
 _ALLOW_NON_BLIP_ENV = "BEI_ALLOW_NON_BLIP_CHAT_DESTINATIONS"
 _EXTRA_ALLOWED_SPACES_ENV = "BEI_ALLOWED_CHAT_SPACES"
 _BLIP_SPACE_ENV = "BEI_BLIP_NOTIFICATIONS_SPACE"
@@ -37,6 +38,10 @@ def get_blip_notifications_space() -> str:
 
 def is_chat_lockdown_enabled() -> bool:
 	return _env_flag(_LOCKDOWN_ENV, default=True)
+
+
+def is_strict_blip_only_enabled() -> bool:
+	return _env_flag(_STRICT_BLIP_ONLY_ENV, default=True)
 
 
 def allow_non_blip_chat_destinations() -> bool:
@@ -60,6 +65,17 @@ def route_outbound_chat_space(
 	blip_space = get_blip_notifications_space()
 
 	if not requested:
+		return blip_space
+
+	if is_strict_blip_only_enabled():
+		if requested != blip_space and logger is not None:
+			logger.warning(
+				"Outbound Google Chat destination rerouted to ! Blip Notifications by strict mode; requested=%s effective=%s family=%s context=%s",
+				requested,
+				blip_space,
+				family or "legacy",
+				context or "unspecified",
+			)
 		return blip_space
 
 	if not is_chat_lockdown_enabled():

@@ -28,6 +28,7 @@ services:
 
       # Logging
       LOG_LEVEL: INFO
+      BEI_CHAT_STRICT_BLIP_ONLY: ${BEI_CHAT_STRICT_BLIP_ONLY:-true}
 
       # Baseline sync orchestration / testing
       BASELINE_TEST_INTERVAL_MINUTES: ${BASELINE_TEST_INTERVAL_MINUTES:-0}

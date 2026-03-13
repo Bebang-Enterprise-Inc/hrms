@@ -27,6 +27,7 @@ services:
 
       # Logging
       LOG_LEVEL: INFO
+      BEI_CHAT_STRICT_BLIP_ONLY: ${BEI_CHAT_STRICT_BLIP_ONLY:-true}
       SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS: ${SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS:-startup,manual,interval_baseline,scheduled}
 
     volumes:

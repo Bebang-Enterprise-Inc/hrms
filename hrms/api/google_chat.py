@@ -404,6 +404,12 @@ def _deliver_notification_event(
 		deterministic_text = render_notification_text(normalized)
 		final_text, ai_meta = _maybe_polish_notification_text(normalized, deterministic_text)
 		normalized["rendered_text"] = final_text
+		effective_target_space = route_outbound_chat_space(
+			str(normalized["requested_space"]),
+			logger=logger,
+			context="hrms.api.google_chat.send_notification_event",
+			family=str(normalized["family"]),
+		)
 
 		if dry_run:
 			return {
@@ -412,7 +418,7 @@ def _deliver_notification_event(
 				"skipped": False,
 				"dry_run": True,
 				"family": normalized["family"],
-				"target_space": normalized["requested_space"],
+				"target_space": effective_target_space,
 				"rendered_text": final_text,
 				"ai_meta": ai_meta,
 				"source_ref": normalized["source_ref"],
@@ -431,7 +437,7 @@ def _deliver_notification_event(
 				"skipped": True,
 				"reason": "dedup_window_active",
 				"family": normalized["family"],
-				"target_space": normalized["requested_space"],
+				"target_space": effective_target_space,
 				"dedup_key": normalized["dedup_key"],
 			}
 
@@ -443,15 +449,15 @@ def _deliver_notification_event(
 		)
 		if send_result.get("success"):
 			_mark_notification_delivered(normalized)
-		return {
-			"success": bool(send_result.get("success")),
-			"sent": bool(send_result.get("sent")),
-			"skipped": False,
-			"family": normalized["family"],
-			"target_space": send_result.get("target_space", normalized["requested_space"]),
-			"message_id": send_result.get("message_id"),
-			"rendered_text": final_text,
-			"ai_meta": ai_meta,
+			return {
+				"success": bool(send_result.get("success")),
+				"sent": bool(send_result.get("sent")),
+				"skipped": False,
+				"family": normalized["family"],
+				"target_space": send_result.get("target_space", effective_target_space),
+				"message_id": send_result.get("message_id"),
+				"rendered_text": final_text,
+				"ai_meta": ai_meta,
 			"source_ref": normalized["source_ref"],
 			"dedup_key": normalized["dedup_key"],
 		}
