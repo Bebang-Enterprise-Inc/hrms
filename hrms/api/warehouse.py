@@ -23,6 +23,7 @@ from hrms.utils.scm_roles import (
 	SCM_RECEIVING_ROLES,
 	check_scm_permission,
 )
+from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 from hrms.utils.supply_chain_contracts import (
 	CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
 	FINANCE_TREATMENT_INTERCOMPANY,
@@ -236,9 +237,16 @@ def create_purchase_receipt(
 	pr.supplier = po.supplier
 	pr.supplier_name = po.supplier_name
 	pr.company = po.company
+	pr.currency = getattr(po, "currency", None) or "PHP"
+	pr.buying_price_list = getattr(po, "buying_price_list", None) or "Standard Buying"
+	pr.price_list_currency = getattr(po, "price_list_currency", None) or pr.currency
+	pr.plc_conversion_rate = flt(getattr(po, "plc_conversion_rate", None) or 1)
+	pr.conversion_rate = flt(getattr(po, "conversion_rate", None) or 1)
+	pr.set_warehouse = getattr(po, "set_warehouse", None)
 	pr.posting_date = frappe.utils.today()
 	pr.posting_time = frappe.utils.nowtime()
 	pr.remarks = remarks or f"Received against {po_name}"
+	apply_standard_buying_context(pr, store_label=pr.set_warehouse or "Stores - BEI", legal_entity=po.company)
 
 	# Add items
 	for item_data in items:

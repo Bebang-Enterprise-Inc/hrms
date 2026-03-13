@@ -44,6 +44,12 @@ class _FakePurchaseOrder:
 		self.supplier = "S037 E2E Temp Supplier"
 		self.supplier_name = "S037 E2E Temp Supplier"
 		self.company = "Bebang Kitchen Inc."
+		self.currency = "PHP"
+		self.buying_price_list = "Standard Buying"
+		self.price_list_currency = "PHP"
+		self.plc_conversion_rate = 1
+		self.conversion_rate = 1
+		self.set_warehouse = "SM Taytay - BKI"
 		self.items = [_FakePOItem()]
 
 
@@ -84,6 +90,12 @@ class _FakePurchaseReceipt:
 		self.supplier = None
 		self.supplier_name = None
 		self.company = None
+		self.currency = None
+		self.buying_price_list = None
+		self.price_list_currency = None
+		self.plc_conversion_rate = None
+		self.conversion_rate = None
+		self.set_warehouse = None
 		self.posting_date = None
 		self.posting_time = None
 		self.remarks = None
@@ -223,6 +235,16 @@ def _install_fake_modules():
 	bei_config_mod.get_company = lambda: "Bebang Enterprise Inc."
 	sys.modules["hrms.utils.bei_config"] = bei_config_mod
 
+	standard_buying_bridge_mod = types.ModuleType("hrms.utils.standard_buying_bridge")
+	standard_buying_bridge_mod.apply_standard_buying_context = (
+		lambda doc, store_label=None, legal_entity=None: setattr(
+			doc,
+			"_standard_buying_context",
+			{"store_label": store_label, "legal_entity": legal_entity},
+		)
+	)
+	sys.modules["hrms.utils.standard_buying_bridge"] = standard_buying_bridge_mod
+
 	scm_roles_mod = types.ModuleType("hrms.utils.scm_roles")
 	scm_roles_mod.SCM_APPROVAL_ROLES = {"Warehouse User", "System Manager"}
 	scm_roles_mod.SCM_DISPATCH_ROLES = {"Warehouse User", "System Manager"}
@@ -303,6 +325,16 @@ class TestS37WarehouseRoleGatedWrites(unittest.TestCase):
 		self.assertTrue(created.submit_called)
 		self.assertTrue(created.flags.ignore_permissions)
 		self.assertTrue(created.flags.ignore_user_permissions)
+		self.assertEqual(created.currency, "PHP")
+		self.assertEqual(created.buying_price_list, "Standard Buying")
+		self.assertEqual(created.price_list_currency, "PHP")
+		self.assertEqual(created.plc_conversion_rate, 1)
+		self.assertEqual(created.conversion_rate, 1)
+		self.assertEqual(created.set_warehouse, "SM Taytay - BKI")
+		self.assertEqual(
+			created._standard_buying_context,
+			{"store_label": "SM Taytay - BKI", "legal_entity": "Bebang Kitchen Inc."},
+		)
 
 	def test_create_stock_transfer_uses_dispatch_roles_and_ignore_permissions(self):
 		calls = []

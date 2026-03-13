@@ -188,6 +188,17 @@ def _install_fake_modules():
 		bei_config_mod.get_company = lambda: "Bebang Enterprise Inc."
 		sys.modules["hrms.utils.bei_config"] = bei_config_mod
 
+	if "hrms.utils.standard_buying_bridge" not in sys.modules:
+		standard_buying_bridge_mod = types.ModuleType("hrms.utils.standard_buying_bridge")
+		standard_buying_bridge_mod.apply_standard_buying_context = (
+			lambda doc, store_label=None, legal_entity=None: setattr(
+				doc,
+				"_standard_buying_context",
+				{"store_label": store_label, "legal_entity": legal_entity},
+			)
+		)
+		sys.modules["hrms.utils.standard_buying_bridge"] = standard_buying_bridge_mod
+
 	if "hrms.utils.supply_chain_contracts" not in sys.modules:
 		contracts_spec = importlib.util.spec_from_file_location(
 			"hrms.utils.supply_chain_contracts",
