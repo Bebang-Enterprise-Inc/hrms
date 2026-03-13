@@ -299,6 +299,9 @@ spec.loader.exec_module(warehouse)
 class TestS37WarehouseRoleGatedWrites(unittest.TestCase):
 	def setUp(self):
 		_DOCS_CREATED.clear()
+		_MR_DOC.custom_destination_warehouse = "TEST-STORE-BGC - BEI"
+		_MR_DOC.custom_target_company = "Bebang Enterprise Inc."
+		_MR_DOC.custom_finance_treatment = "intercompany"
 
 	def test_create_purchase_receipt_uses_receiving_roles_and_ignore_permissions(self):
 		calls = []
@@ -362,6 +365,30 @@ class TestS37WarehouseRoleGatedWrites(unittest.TestCase):
 		self.assertTrue(created.submit_called)
 		self.assertTrue(created.flags.ignore_permissions)
 		self.assertTrue(created.flags.ignore_user_permissions)
+
+	def test_create_stock_transfer_uses_contract_destination_for_same_company(self):
+		_MR_DOC.custom_destination_warehouse = "Shaw BLVD - BKI"
+		_MR_DOC.custom_target_company = "Bebang Kitchen Inc."
+		_MR_DOC.custom_finance_treatment = "same_company"
+
+		result = warehouse.create_stock_transfer(
+			source_warehouse="SM Taytay - BKI",
+			target_warehouse="TEST-COMMISSARY - BKI",
+			items=[
+				{
+					"item_code": "FG002-A",
+					"qty": 1,
+					"uom": "Nos",
+				}
+			],
+			mr_name=_MR_DOC.name,
+			remarks="S037 same-company RM handoff",
+		)
+
+		self.assertTrue(result["success"])
+		created = _DOCS_CREATED[0]
+		self.assertEqual(created.to_warehouse, "Shaw BLVD - BKI")
+		self.assertEqual(created.items[0].t_warehouse, "Shaw BLVD - BKI")
 
 
 if __name__ == "__main__":

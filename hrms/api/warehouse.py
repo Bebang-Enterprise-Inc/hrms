@@ -935,7 +935,7 @@ def create_stock_transfer(
 	se.posting_time = frappe.utils.nowtime()
 	se.from_warehouse = source_warehouse
 	if not is_intercompany:
-		se.to_warehouse = target_warehouse
+		se.to_warehouse = actual_target_warehouse
 	se.remarks = remarks or (f"{movement_type} for {strip_company_suffix(actual_target_warehouse)}")
 	stamp_stock_entry_contract(
 		se,
@@ -991,7 +991,7 @@ def create_stock_transfer(
 			"material_request_item": mr_item_ref,
 		}
 		if not is_intercompany:
-			row["t_warehouse"] = target_warehouse
+			row["t_warehouse"] = actual_target_warehouse
 		se.append("items", row)
 
 	if not se.items:
