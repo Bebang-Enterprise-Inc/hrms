@@ -10,6 +10,15 @@ if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
 
 
+class _FakeFrappe(types.ModuleType):
+	def __getattr__(self, name):
+		if name == "db":
+			return self.local.db
+		if name == "session":
+			return self.local.session
+		raise AttributeError(name)
+
+
 class _FakeQualityInspection:
 	def __init__(self):
 		self.doctype = "Quality Inspection"
@@ -44,7 +53,7 @@ _DOCS_CREATED: list[_FakeQualityInspection] = []
 
 def _install_fake_modules():
 	if "frappe" not in sys.modules:
-		frappe = types.ModuleType("frappe")
+		frappe = _FakeFrappe("frappe")
 		utils = types.ModuleType("frappe.utils")
 
 		def whitelist(*args, **kwargs):
@@ -55,16 +64,18 @@ def _install_fake_modules():
 
 		frappe.whitelist = whitelist
 		frappe._ = lambda text: text
-		frappe.session = types.SimpleNamespace(user="test.commissary@bebang.ph")
-		frappe.db = types.SimpleNamespace(
-			get_value=lambda doctype, filters, fieldname=None, as_dict=False: (
-				types.SimpleNamespace(qty=12, batch_no="BATCH-001")
-				if doctype == "Stock Entry Detail"
-				else None
+		frappe.local = types.SimpleNamespace(
+			session=types.SimpleNamespace(user="test.commissary@bebang.ph"),
+			db=types.SimpleNamespace(
+				get_value=lambda doctype, filters, fieldname=None, as_dict=False: (
+					types.SimpleNamespace(qty=12, batch_no="BATCH-001")
+					if doctype == "Stock Entry Detail"
+					else None
+				),
+				savepoint=lambda name: None,
+				release_savepoint=lambda name: None,
+				rollback=lambda save_point=None: None,
 			),
-			savepoint=lambda name: None,
-			release_savepoint=lambda name: None,
-			rollback=lambda save_point=None: None,
 		)
 
 		def _new_doc(doctype):

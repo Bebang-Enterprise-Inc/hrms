@@ -9,11 +9,20 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 
 
+class _FakeFrappe(types.ModuleType):
+	def __getattr__(self, name):
+		if name == "db":
+			return self.local.db
+		raise AttributeError(name)
+
+
 def _install_fake_frappe() -> None:
-	frappe = types.ModuleType("frappe")
-	frappe.db = types.SimpleNamespace(
-		has_column=lambda doctype, fieldname: True,
-		get_value=lambda *args, **kwargs: None,
+	frappe = _FakeFrappe("frappe")
+	frappe.local = types.SimpleNamespace(
+		db=types.SimpleNamespace(
+			has_column=lambda doctype, fieldname: True,
+			get_value=lambda *args, **kwargs: None,
+		)
 	)
 	sys.modules["frappe"] = frappe
 
@@ -29,18 +38,19 @@ module_spec.loader.exec_module(supply_chain_contracts)
 
 
 def _write_register(path: Path, store_name: str, buyer_entity_name: str) -> None:
+	header = (
+		"store_name,buyer_entity_name,buyer_entity_status,buyer_entity_source,billing_policy,"
+		"billing_post_policy,store_type,store_type_status,store_allocation_required,"
+		"markup_rule_mode,markup_rule_source,active_fulfillment_status,warehouse_docname,"
+		"evidence_primary,evidence_secondary,notes"
+	)
+	row = (
+		f"{store_name},{buyer_entity_name},confirmed_legal_entity,test-source,"
+		f"BKI_TO_STORE_INTERCOMPANY,AUTO_POST_ALLOWED,JV,confirmed,0,CONFIG_BY_STORE_TYPE,"
+		f"test-source,active,{store_name} - Bebang Enterprise Inc.,test-source,test-source,"
+	)
 	path.write_text(
-		"\n".join(
-			[
-				"store_name,buyer_entity_name,buyer_entity_status,buyer_entity_source,billing_policy,"
-				"billing_post_policy,store_type,store_type_status,store_allocation_required,"
-				"markup_rule_mode,markup_rule_source,active_fulfillment_status,warehouse_docname,"
-				"evidence_primary,evidence_secondary,notes",
-				f"{store_name},{buyer_entity_name},confirmed_legal_entity,test-source,"
-				"BKI_TO_STORE_INTERCOMPANY,AUTO_POST_ALLOWED,JV,confirmed,0,CONFIG_BY_STORE_TYPE,"
-				"test-source,active,{store_name} - Bebang Enterprise Inc.,test-source,test-source,",
-			]
-		),
+		"\n".join([header, row]),
 		encoding="utf-8",
 	)
 

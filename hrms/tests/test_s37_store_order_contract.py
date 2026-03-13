@@ -9,6 +9,15 @@ if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
 
 
+class _FakeFrappe(types.ModuleType):
+	def __getattr__(self, name):
+		if name == "db":
+			return self.local.db
+		if name == "session":
+			return self.local.session
+		raise AttributeError(name)
+
+
 class _FakeMaterialRequest:
 	def __init__(self):
 		self.doctype = "Material Request"
@@ -39,7 +48,7 @@ _DOCS_CREATED: list[_FakeMaterialRequest] = []
 
 def _install_fake_modules():
 	if "frappe" not in sys.modules:
-		frappe = types.ModuleType("frappe")
+		frappe = _FakeFrappe("frappe")
 		utils = types.ModuleType("frappe.utils")
 
 		def whitelist(*args, **kwargs):
@@ -52,10 +61,13 @@ def _install_fake_modules():
 		frappe._ = lambda text: text
 		frappe.throw = lambda message, exc=None, title=None: (_ for _ in ()).throw(Exception(message))
 		frappe.log_error = lambda *args, **kwargs: None
-		frappe.db = types.SimpleNamespace(
-			exists=lambda doctype, value: False,
-			get_value=lambda *args, **kwargs: None,
-			has_column=lambda doctype, fieldname: False,
+		frappe.local = types.SimpleNamespace(
+			db=types.SimpleNamespace(
+				exists=lambda doctype, value: False,
+				get_value=lambda *args, **kwargs: None,
+				has_column=lambda doctype, fieldname: False,
+			),
+			session=types.SimpleNamespace(user="test.regional@bebang.ph"),
 		)
 
 		def _new_doc(doctype):
@@ -66,7 +78,6 @@ def _install_fake_modules():
 		frappe.new_doc = _new_doc
 		frappe.get_doc = lambda *args, **kwargs: None
 		frappe.get_all = lambda *args, **kwargs: []
-		frappe.session = types.SimpleNamespace(user="test.regional@bebang.ph")
 		frappe.get_roles = lambda user=None: ["Regional Manager"]
 		frappe.utils = utils
 

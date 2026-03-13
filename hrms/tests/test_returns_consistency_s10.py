@@ -10,6 +10,15 @@ if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
 
 
+class _FakeFrappe(types.ModuleType):
+	def __getattr__(self, name):
+		if name == "db":
+			return self.local.db
+		if name == "session":
+			return self.local.session
+		raise AttributeError(name)
+
+
 class _FakeStockEntry:
 	def __init__(self):
 		self.doctype = "Stock Entry"
@@ -39,7 +48,7 @@ class _FakeStockEntry:
 
 def _install_fake_modules():
 	if "frappe" not in sys.modules:
-		frappe = types.ModuleType("frappe")
+		frappe = _FakeFrappe("frappe")
 		utils = types.ModuleType("frappe.utils")
 
 		def whitelist(*args, **kwargs):
@@ -61,10 +70,10 @@ def _install_fake_modules():
 		frappe.log_error = lambda *args, **kwargs: None
 		frappe.get_traceback = lambda: "traceback"
 		frappe.parse_json = json.loads
-		frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
+		frappe.local = types.SimpleNamespace(session=types.SimpleNamespace(user="test.supervisor@bebang.ph"))
 		frappe.get_roles = lambda user=None: ["Store Supervisor"]
 
-		frappe.db = types.SimpleNamespace(
+		frappe.local.db = types.SimpleNamespace(
 			exists=lambda doctype, value: bool(value),
 			get_value=lambda doctype, filters, fieldname=None, order_by=None: None,
 			sql=lambda *args, **kwargs: [],
@@ -119,12 +128,14 @@ def _install_fake_modules():
 		frappe.DoesNotExistError = type("DoesNotExistError", (Exception,), {})
 	if not hasattr(frappe, "parse_json"):
 		frappe.parse_json = json.loads
-	if not hasattr(frappe, "session"):
-		frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
+	if not hasattr(frappe, "local"):
+		frappe.local = types.SimpleNamespace()
+	if not hasattr(frappe.local, "session"):
+		frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
 	if not hasattr(frappe, "get_roles"):
 		frappe.get_roles = lambda user=None: ["Store Supervisor"]
-	if not hasattr(frappe, "db"):
-		frappe.db = types.SimpleNamespace(
+	if not hasattr(frappe.local, "db"):
+		frappe.local.db = types.SimpleNamespace(
 			exists=lambda doctype, value: bool(value),
 			get_value=lambda doctype, filters, fieldname=None, order_by=None: None,
 			sql=lambda *args, **kwargs: [],

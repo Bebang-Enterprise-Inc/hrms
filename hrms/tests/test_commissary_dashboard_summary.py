@@ -8,15 +8,24 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 
 
+class _FakeFrappe(types.ModuleType):
+	def __getattr__(self, name):
+		if name == "db":
+			return self.local.db
+		raise AttributeError(name)
+
+
 def _install_fake_modules():
 	def _whitelist(fn=None, *args, **kwargs):
 		if fn is None:
 			return lambda real_fn: real_fn
 		return fn
 
-	fake_frappe = types.ModuleType("frappe")
+	fake_frappe = _FakeFrappe("frappe")
 	fake_frappe._dict = lambda data: types.SimpleNamespace(**data)
-	fake_frappe.db = types.SimpleNamespace(sql=lambda *args, **kwargs: [], count=lambda *args, **kwargs: 0)
+	fake_frappe.local = types.SimpleNamespace(
+		db=types.SimpleNamespace(sql=lambda *args, **kwargs: [], count=lambda *args, **kwargs: 0)
+	)
 	fake_frappe.get_all = lambda *args, **kwargs: []
 	fake_frappe.whitelist = _whitelist
 	fake_frappe.throw = lambda msg: (_ for _ in ()).throw(Exception(msg))

@@ -14,6 +14,15 @@ _PO_DOC = None
 _MR_DOC = None
 
 
+class _FakeFrappe(types.ModuleType):
+	def __getattr__(self, name):
+		if name == "db":
+			return self.local.db
+		if name == "session":
+			return self.local.session
+		raise AttributeError(name)
+
+
 class _FakePOItem:
 	def __init__(self):
 		self.name = "PO-ITEM-0001"
@@ -129,7 +138,7 @@ def _install_fake_modules():
 	_MR_DOC = _FakeMaterialRequest()
 
 	if "frappe" not in sys.modules:
-		frappe = types.ModuleType("frappe")
+		frappe = _FakeFrappe("frappe")
 		utils = types.ModuleType("frappe.utils")
 
 		def whitelist(*args, **kwargs):
@@ -148,7 +157,7 @@ def _install_fake_modules():
 		frappe.throw = _throw
 		frappe.PermissionError = type("PermissionError", (Exception,), {})
 		frappe.DoesNotExistError = type("DoesNotExistError", (Exception,), {})
-		frappe.session = types.SimpleNamespace(user="test.warehouse@bebang.ph")
+		frappe.local = types.SimpleNamespace(session=types.SimpleNamespace(user="test.warehouse@bebang.ph"))
 		frappe.log_error = lambda *args, **kwargs: None
 		frappe.get_traceback = lambda: "traceback"
 		frappe.parse_json = json.loads
@@ -160,7 +169,7 @@ def _install_fake_modules():
 				return value == _MR_DOC.name
 			return False
 
-		frappe.db = types.SimpleNamespace(
+		frappe.local.db = types.SimpleNamespace(
 			exists=_exists,
 			get_value=lambda *args, **kwargs: None,
 			has_column=lambda *args, **kwargs: False,

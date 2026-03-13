@@ -10,6 +10,15 @@ if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
 
 
+class _FakeFrappe(types.ModuleType):
+	def __getattr__(self, name):
+		if name == "db":
+			return self.local.db
+		if name == "session":
+			return self.local.session
+		raise AttributeError(name)
+
+
 class _FakeStoreReceiving:
 	def __init__(self):
 		self.doctype = "BEI Store Receiving"
@@ -104,7 +113,7 @@ def _material_request_factory(finance_treatment: str):
 
 def _install_fake_modules():
 	if "frappe" not in sys.modules:
-		frappe = types.ModuleType("frappe")
+		frappe = _FakeFrappe("frappe")
 		utils = types.ModuleType("frappe.utils")
 
 		def whitelist(*args, **kwargs):
@@ -124,7 +133,7 @@ def _install_fake_modules():
 		frappe.log_error = lambda *args, **kwargs: None
 		frappe.get_traceback = lambda: "traceback"
 		frappe.parse_json = json.loads
-		frappe.session = types.SimpleNamespace(user="test.staff@bebang.ph")
+		frappe.local = types.SimpleNamespace(session=types.SimpleNamespace(user="test.staff@bebang.ph"))
 		frappe.get_roles = lambda user=None: ["Store Staff"]
 
 		def _exists(doctype, value):
@@ -151,7 +160,7 @@ def _install_fake_modules():
 				return "Greenhills Ortigas - BKI"
 			return None
 
-		frappe.db = types.SimpleNamespace(
+		frappe.local.db = types.SimpleNamespace(
 			exists=_exists,
 			get_value=_get_value,
 			has_column=lambda doctype, fieldname: (

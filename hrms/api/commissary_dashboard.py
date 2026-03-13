@@ -7,6 +7,7 @@ Split from commissary.py (P0-11) for maintainability.
 """
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -21,7 +22,7 @@ from hrms.utils.bei_config import get_company
 
 
 @frappe.whitelist()
-def get_commissary_dashboard():
+def get_commissary_dashboard() -> dict[str, Any]:
 	"""
 	Get commissary supervisor dashboard summary.
 	"""
@@ -164,7 +165,7 @@ def get_commissary_dashboard():
 
 
 @frappe.whitelist()
-def get_production_items():
+def get_production_items() -> dict[str, Any]:
 	"""
 	Get finished goods that commissary produces.
 	Returns items with current stock levels.
@@ -218,7 +219,9 @@ def get_production_items():
 
 
 @frappe.whitelist()
-def get_runtime_deduction_proof(item_code, qty, warehouse=None):
+def get_runtime_deduction_proof(
+	item_code: str, qty: float | int | str, warehouse: str | None = None
+) -> dict[str, Any]:
 	"""
 	Dashboard proxy for BOM runtime deduction proof.
 
@@ -229,7 +232,7 @@ def get_runtime_deduction_proof(item_code, qty, warehouse=None):
 	return get_bom_runtime_deduction_proof(item_code=item_code, produced_qty=qty, warehouse=warehouse)
 
 
-def get_or_create_batch(batch_id, item_code):
+def get_or_create_batch(batch_id: str | None, item_code: str) -> str | None:
 	"""
 	Get existing batch or create a new one.
 	Frappe requires Batch documents to exist before referencing in Stock Entry.
@@ -257,7 +260,7 @@ def get_or_create_batch(batch_id, item_code):
 	return batch.name
 
 
-def _build_production_remarks(batch_no=None, remarks=None):
+def _build_production_remarks(batch_no: str | None = None, remarks: str | None = None) -> str:
 	"""Stamp production output rows with a stable prefix for downstream QA lookup."""
 	base = f"Production output | Batch: {(batch_no or 'No batch').strip() if batch_no else 'No batch'}"
 	if remarks and str(remarks).strip():
@@ -266,7 +269,11 @@ def _build_production_remarks(batch_no=None, remarks=None):
 
 
 @frappe.whitelist()
-def submit_production_output(items, batch_no=None, remarks=None):
+def submit_production_output(
+	items: str | list[dict[str, Any]],
+	batch_no: str | None = None,
+	remarks: str | None = None,
+) -> dict[str, Any]:
 	"""
 	Record production batch output.
 	Creates Stock Entry with type=Manufacture.
@@ -381,7 +388,7 @@ def submit_production_output(items, batch_no=None, remarks=None):
 	return result
 
 
-def _check_fefo_warnings(stock_entry, warehouse):
+def _check_fefo_warnings(stock_entry: Any, warehouse: str | None) -> list[dict[str, str]]:
 	"""G-051: Check if any items in the Stock Entry used a newer batch when older ones exist."""
 	warnings = []
 	for item in stock_entry.items:
@@ -418,7 +425,11 @@ def _check_fefo_warnings(stock_entry, warehouse):
 
 
 @frappe.whitelist()
-def get_production_history(date_from=None, date_to=None, limit=20):
+def get_production_history(
+	date_from: str | None = None,
+	date_to: str | None = None,
+	limit: int | str = 20,
+) -> dict[str, Any]:
 	"""
 	Get production history.
 	"""
@@ -460,7 +471,9 @@ def get_production_history(date_from=None, date_to=None, limit=20):
 
 
 @frappe.whitelist()
-def get_production_cost_per_batch(limit=20, item_code=None):
+def get_production_cost_per_batch(
+	limit: int | str = 20, item_code: str | None = None
+) -> dict[str, Any]:
 	"""
 	Return production cost per batch from submitted Manufacture entries.
 
@@ -537,7 +550,7 @@ def get_production_cost_per_batch(limit=20, item_code=None):
 
 
 @frappe.whitelist()
-def get_logistics_architecture_mode(route_name=None):
+def get_logistics_architecture_mode(route_name: str | None = None) -> dict[str, Any]:
 	"""
 	Return current logistics architecture mode (`hub` or `direct`).
 

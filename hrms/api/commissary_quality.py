@@ -13,6 +13,7 @@ Contains all quality-related functionality:
 """
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -26,7 +27,7 @@ from hrms.utils.bei_config import get_company
 # ============================================================
 
 
-def _normalize_quality_readings(readings):
+def _normalize_quality_readings(readings: Any) -> dict[str, dict[str, Any]]:
 	"""Accept legacy dict payloads and portal array payloads for QC rows."""
 	if not readings:
 		return {}
@@ -61,7 +62,7 @@ def _normalize_quality_readings(readings):
 
 
 @frappe.whitelist()
-def get_pending_inspections():
+def get_pending_inspections() -> dict[str, Any]:
 	"""
 	Get production batches awaiting quality inspection.
 	Returns production stock entries that don't yet have a linked QI.
@@ -118,14 +119,14 @@ def get_pending_inspections():
 
 @frappe.whitelist()
 def create_quality_inspection(
-	stock_entry_name,
-	item_code,
-	inspected_by=None,
-	readings=None,
-	status="Accepted",
-	rejection_disposition=None,
-	remarks=None,
-):
+	stock_entry_name: str,
+	item_code: str,
+	inspected_by: str | None = None,
+	readings: str | list[dict[str, Any]] | dict[str, Any] | None = None,
+	status: str = "Accepted",
+	rejection_disposition: str | None = None,
+	remarks: str | None = None,
+) -> dict[str, Any]:
 	"""
 	Create a quality inspection record for a production batch.
 	If rejected with disposition "Scrap", auto-creates wastage entry.
@@ -228,7 +229,7 @@ def create_quality_inspection(
 
 
 @frappe.whitelist()
-def get_inspection_history(item_code=None, days=30):
+def get_inspection_history(item_code: str | None = None, days: int | str = 30) -> dict[str, Any]:
 	"""
 	Get quality inspection history.
 
@@ -281,7 +282,7 @@ def get_inspection_history(item_code=None, days=30):
 
 
 @frappe.whitelist()
-def get_inspection_details(inspection_name):
+def get_inspection_details(inspection_name: str) -> dict[str, Any]:
 	"""Get full details of a quality inspection including readings."""
 	qi = frappe.get_doc("Quality Inspection", inspection_name)
 
@@ -326,7 +327,13 @@ WASTAGE_REASONS = {
 
 
 @frappe.whitelist()
-def log_wastage(item_code, qty, reason_code, batch_no=None, remarks=None):
+def log_wastage(
+	item_code: str,
+	qty: float | int | str,
+	reason_code: str,
+	batch_no: str | None = None,
+	remarks: str | None = None,
+) -> dict[str, Any]:
 	"""
 	Log wastage for a commissary item.
 	Creates a Material Issue Stock Entry for inventory reduction.
@@ -397,7 +404,7 @@ def log_wastage(item_code, qty, reason_code, batch_no=None, remarks=None):
 
 
 @frappe.whitelist()
-def get_wastage_history(days=30, item_code=None):
+def get_wastage_history(days: int | str = 30, item_code: str | None = None) -> dict[str, Any]:
 	"""
 	Get wastage history from commissary.
 
@@ -472,7 +479,7 @@ def get_wastage_history(days=30, item_code=None):
 
 
 @frappe.whitelist()
-def get_wastage_reasons():
+def get_wastage_reasons() -> dict[str, Any]:
 	"""Get available wastage reason codes and descriptions."""
 	return {
 		"success": True,
@@ -481,7 +488,7 @@ def get_wastage_reasons():
 
 
 @frappe.whitelist()
-def get_wastage_trends(days=30, group_by="reason"):
+def get_wastage_trends(days: int | str = 30, group_by: str = "reason") -> dict[str, Any]:
 	"""
 	Aggregate wastage data for trend analysis.
 
@@ -537,7 +544,7 @@ def get_wastage_trends(days=30, group_by="reason"):
 	total_value = flt(sum(r.wastage_value or 0 for r in rows), 2)
 	avg_daily = flt(total_qty / days, 3)
 
-	def _extract_reason_code(remarks):
+	def _extract_reason_code(remarks: str | None) -> str:
 		"""Pull reason code from 'WASTAGE: <label> - remarks' format."""
 		if not remarks:
 			return "other"
@@ -548,7 +555,7 @@ def get_wastage_trends(days=30, group_by="reason"):
 				return code
 		return stripped
 
-	def _shift_from_time(posting_time):
+	def _shift_from_time(posting_time: Any) -> str:
 		"""Classify AM / PM / Dispatch based on posting_time."""
 		if not posting_time:
 			return "Unknown"
@@ -670,7 +677,9 @@ def get_wastage_trends(days=30, group_by="reason"):
 
 
 @frappe.whitelist()
-def get_fefo_picking_list(item_code=None, warehouse=None):
+def get_fefo_picking_list(
+	item_code: str | None = None, warehouse: str | None = None
+) -> dict[str, Any]:
 	"""
 	Get FEFO (First Expired First Out) picking recommendations.
 	Returns batches sorted by expiry date for picking priority.
@@ -735,7 +744,7 @@ def get_fefo_picking_list(item_code=None, warehouse=None):
 
 
 @frappe.whitelist()
-def get_expiring_batches(days=7, item_group=None):
+def get_expiring_batches(days: int | str = 7, item_group: str | None = None) -> dict[str, Any]:
 	"""
 	Get batches expiring within specified days.
 	Helps identify items that need to be used or disposed.
@@ -794,7 +803,7 @@ def get_expiring_batches(days=7, item_group=None):
 
 
 @frappe.whitelist()
-def enable_batch_tracking_for_fg():
+def enable_batch_tracking_for_fg() -> dict[str, Any]:
 	"""
 	Enable batch and expiry date tracking for all Finished Goods items.
 	This is required for FEFO picking to work.
@@ -863,7 +872,14 @@ QC_FORM_TEMPLATES = {
 
 
 @frappe.whitelist()
-def submit_qc_form(form_type, readings=None, shift=None, area=None, remarks=None, photo_evidence=None):
+def submit_qc_form(
+	form_type: str,
+	readings: str | list[dict[str, Any]] | None = None,
+	shift: str | None = None,
+	area: str | None = None,
+	remarks: str | None = None,
+	photo_evidence: str | None = None,
+) -> dict[str, Any]:
 	"""
 	Submit a QC form with readings.
 
@@ -925,7 +941,12 @@ def submit_qc_form(form_type, readings=None, shift=None, area=None, remarks=None
 
 
 @frappe.whitelist()
-def get_qc_forms(form_type=None, date_from=None, date_to=None, limit=50):
+def get_qc_forms(
+	form_type: str | None = None,
+	date_from: str | None = None,
+	date_to: str | None = None,
+	limit: int | str = 50,
+) -> dict[str, Any]:
 	"""
 	List QC forms with optional filters.
 
@@ -957,7 +978,7 @@ def get_qc_forms(form_type=None, date_from=None, date_to=None, limit=50):
 
 
 @frappe.whitelist()
-def get_qc_form_detail(form_name):
+def get_qc_form_detail(form_name: str) -> dict[str, Any]:
 	"""Get a single QC form with all readings."""
 	qc = frappe.get_doc("BEI QC Form", form_name)
 
@@ -990,6 +1011,6 @@ def get_qc_form_detail(form_name):
 
 
 @frappe.whitelist()
-def get_qc_form_templates():
+def get_qc_form_templates() -> dict[str, Any]:
 	"""Return expected readings per form type with ranges."""
 	return {"success": True, "data": QC_FORM_TEMPLATES}

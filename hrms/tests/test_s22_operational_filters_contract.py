@@ -12,8 +12,17 @@ if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
 
 
+class _FakeFrappe(types.ModuleType):
+	def __getattr__(self, name):
+		if name == "db":
+			return self.local.db
+		if name == "session":
+			return self.local.session
+		raise AttributeError(name)
+
+
 def _install_fake_frappe():
-	frappe = types.ModuleType("frappe")
+	frappe = _FakeFrappe("frappe")
 	utils = types.ModuleType("frappe.utils")
 
 	class ValidationError(Exception):
@@ -52,12 +61,14 @@ def _install_fake_frappe():
 	frappe.enqueue = lambda *args, **kwargs: None
 	frappe.get_doc = lambda *args, **kwargs: None
 	frappe.get_all = lambda *args, **kwargs: []
-	frappe.session = types.SimpleNamespace(user="Administrator")
-	frappe.db = types.SimpleNamespace(
-		exists=lambda *args, **kwargs: None,
-		get_value=lambda *args, **kwargs: None,
-		set_value=lambda *args, **kwargs: None,
-		sql=lambda *args, **kwargs: [],
+	frappe.local = types.SimpleNamespace(
+		session=types.SimpleNamespace(user="Administrator"),
+		db=types.SimpleNamespace(
+			exists=lambda *args, **kwargs: None,
+			get_value=lambda *args, **kwargs: None,
+			set_value=lambda *args, **kwargs: None,
+			sql=lambda *args, **kwargs: [],
+		),
 	)
 
 	utils.flt = (

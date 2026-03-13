@@ -9,6 +9,15 @@ if str(ROOT) not in sys.path:
 	sys.path.insert(0, str(ROOT))
 
 
+class _FakeFrappe(types.ModuleType):
+	def __getattr__(self, name):
+		if name == "db":
+			return self.local.db
+		if name == "session":
+			return self.local.session
+		raise AttributeError(name)
+
+
 class _FakeStockEntry:
 	def __init__(self):
 		self.doctype = "Stock Entry"
@@ -40,7 +49,7 @@ _DOCS_CREATED: list[_FakeStockEntry] = []
 
 def _install_fake_modules():
 	if "frappe" not in sys.modules:
-		frappe = types.ModuleType("frappe")
+		frappe = _FakeFrappe("frappe")
 		utils = types.ModuleType("frappe.utils")
 
 		def whitelist(*args, **kwargs):
@@ -53,9 +62,9 @@ def _install_fake_modules():
 		frappe._ = lambda text: text
 		frappe.throw = lambda message, exc=None, title=None: (_ for _ in ()).throw(Exception(message))
 		frappe.log_error = lambda *args, **kwargs: None
-		frappe.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
+		frappe.local = types.SimpleNamespace(session=types.SimpleNamespace(user="test.supervisor@bebang.ph"))
 		frappe.get_roles = lambda user=None: ["Store Supervisor"]
-		frappe.db = types.SimpleNamespace(
+		frappe.local.db = types.SimpleNamespace(
 			exists=lambda doctype, value: False,
 			get_value=lambda doctype, filters, fieldname=None, order_by=None, as_dict=False: (
 				"Bebang Enterprise Inc." if doctype == "Warehouse" else None
