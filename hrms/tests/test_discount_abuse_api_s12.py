@@ -943,12 +943,17 @@ class TestDiscountAbuseApiS12(unittest.TestCase):
 		bei_config_mod.SPACE_ACCOUNTING = "ACCOUNTING"
 		bei_config_mod.get_chat_space = lambda _space: "spaces/AAAA9RN0JZQ"
 
-		with patch.dict(sys.modules, {"hrms.api.google_chat": google_chat_mod, "hrms.utils.bei_config": bei_config_mod}, clear=False), patch.object(
-			discount_abuse, "_notifications_enabled_for_day", return_value=True
-		), patch.object(discount_abuse, "_query_same_day_rows", return_value=rows), patch.object(
-			discount_abuse, "_sort_same_day_rows", side_effect=lambda payload: payload
-		), patch.object(discount_abuse, "_parse_email_recipients", return_value=[]), patch.object(
-			discount_abuse, "_mark_alerts_notified", return_value=1
+		with (
+			patch.dict(
+				sys.modules,
+				{"hrms.api.google_chat": google_chat_mod, "hrms.utils.bei_config": bei_config_mod},
+				clear=False,
+			),
+			patch.object(discount_abuse, "_notifications_enabled_for_day", return_value=True),
+			patch.object(discount_abuse, "_query_same_day_rows", return_value=rows),
+			patch.object(discount_abuse, "_sort_same_day_rows", side_effect=lambda payload: payload),
+			patch.object(discount_abuse, "_parse_email_recipients", return_value=[]),
+			patch.object(discount_abuse, "_mark_alerts_notified", return_value=1),
 		):
 			result = discount_abuse._send_critical_discount_alert_notifications_internal(date(2026, 3, 12))
 

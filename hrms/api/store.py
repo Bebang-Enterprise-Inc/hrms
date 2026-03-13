@@ -4570,4 +4570,3 @@ def verify_maintenance_from_closing(
 		if not verification_notes:
 			frappe.throw(_("Rejection reason is required"))
 		return doc.reject_completion(notes=verification_notes)
-

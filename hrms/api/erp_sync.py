@@ -240,7 +240,7 @@ def _row_has_meaningful_value(row: dict[str, Any], keys: list[str]) -> bool:
 			if value.strip():
 				return True
 			continue
-		if isinstance(value, (int, float)):
+		if isinstance(value, int | float):
 			if flt(value) != 0:
 				return True
 			continue

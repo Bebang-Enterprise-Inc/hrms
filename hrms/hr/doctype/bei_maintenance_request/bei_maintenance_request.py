@@ -125,11 +125,8 @@ def get_open_requests_for_store(store):
 	"""Get all open maintenance requests for a store."""
 	return frappe.get_all(
 		"BEI Maintenance Request",
-		filters={
-			"store": store,
-			"status": ["in", ["Open", "Assigned", "In Progress"]]
-		},
-		fields=["name", "issue_category", "priority", "status", "scheduled_date", "description"]
+		filters={"store": store, "status": ["in", ["Open", "Assigned", "In Progress"]]},
+		fields=["name", "issue_category", "priority", "status", "scheduled_date", "description"],
 	)
 
 
@@ -138,11 +135,7 @@ def get_scheduled_maintenance_today(store):
 	"""Check if store has scheduled maintenance today."""
 	return frappe.db.exists(
 		"BEI Maintenance Request",
-		{
-			"store": store,
-			"scheduled_date": today(),
-			"status": ["in", ["Assigned", "In Progress"]]
-		}
+		{"store": store, "scheduled_date": today(), "status": ["in", ["Assigned", "In Progress"]]},
 	)
 
 

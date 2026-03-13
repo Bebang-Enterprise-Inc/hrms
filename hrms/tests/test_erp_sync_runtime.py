@@ -525,8 +525,16 @@ class TestErpSyncRuntime(unittest.TestCase):
 			"report_date": "2026-01-01",
 			"status": "yellow",
 			"areas": [
-				{"key": "store_inventory_shadow_sync", "label": "Store Inventory Shadow Sync", "status": "green"},
-				{"key": "ap_procurement_baselines", "label": "AP / Procurement Baselines", "status": "yellow"},
+				{
+					"key": "store_inventory_shadow_sync",
+					"label": "Store Inventory Shadow Sync",
+					"status": "green",
+				},
+				{
+					"key": "ap_procurement_baselines",
+					"label": "AP / Procurement Baselines",
+					"status": "yellow",
+				},
 			],
 			"sync_target_pht_time": "07:00",
 			"ready_deadline_pht_time": "09:00",
@@ -538,10 +546,13 @@ class TestErpSyncRuntime(unittest.TestCase):
 		google_chat_mod = types.ModuleType("hrms.api.google_chat")
 		google_chat_mod.send_notification_event = fake_send
 
-		with patch.object(erp_sync, "_collect_morning_sync_health_report", return_value=dict(report)), patch.dict(
-			sys.modules,
-			{"hrms.api": api_pkg, "hrms.api.google_chat": google_chat_mod},
-			clear=False,
+		with (
+			patch.object(erp_sync, "_collect_morning_sync_health_report", return_value=dict(report)),
+			patch.dict(
+				sys.modules,
+				{"hrms.api": api_pkg, "hrms.api.google_chat": google_chat_mod},
+				clear=False,
+			),
 		):
 			result = erp_sync.scheduled_generate_morning_sync_health_report(report_date="2026-01-01")
 

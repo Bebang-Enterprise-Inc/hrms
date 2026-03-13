@@ -30,14 +30,13 @@ except ModuleNotFoundError:
 		context: str | None = None,
 	) -> str:
 		requested = (requested_space or "").strip()
-		blip_space = (
-			(os.environ.get("BEI_BLIP_NOTIFICATIONS_SPACE") or "").strip() or "spaces/AAQABiNmpBg"
-		)
-		lockdown_enabled = (os.environ.get("BEI_CHAT_LOCKDOWN_ENABLED") or "true").strip().lower() in _TRUE_VALUES
+		blip_space = (os.environ.get("BEI_BLIP_NOTIFICATIONS_SPACE") or "").strip() or "spaces/AAQABiNmpBg"
+		lockdown_enabled = (
+			os.environ.get("BEI_CHAT_LOCKDOWN_ENABLED") or "true"
+		).strip().lower() in _TRUE_VALUES
 		allow_non_blip = (
-			(os.environ.get("BEI_ALLOW_NON_BLIP_CHAT_DESTINATIONS") or "false").strip().lower()
-			in _TRUE_VALUES
-		)
+			os.environ.get("BEI_ALLOW_NON_BLIP_CHAT_DESTINATIONS") or "false"
+		).strip().lower() in _TRUE_VALUES
 		allowed_spaces = {
 			space.strip()
 			for space in (os.environ.get("BEI_ALLOWED_CHAT_SPACES") or "").split(",")
@@ -60,6 +59,7 @@ except ModuleNotFoundError:
 				context or "unspecified",
 			)
 		return blip_space
+
 
 logger = logging.getLogger(__name__)
 

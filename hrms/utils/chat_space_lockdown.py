@@ -10,6 +10,8 @@ import os
 
 from hrms.utils.notification_intelligence import (
 	SPACE_NOTIFICATIONS as DEFAULT_BLIP_NOTIFICATIONS_SPACE,
+)
+from hrms.utils.notification_intelligence import (
 	family_allows_requested_space,
 	get_family_allowed_spaces,
 )

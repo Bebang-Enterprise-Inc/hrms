@@ -328,7 +328,9 @@ def _sheet_recommended_fix(facts: dict[str, Any]) -> str:
 	if "supplier" in errors:
 		return "Fill the missing supplier/invoice fields on real rows and delete blank tail rows before rerunning."
 	if "suspicious_change_alert" in reasons and not int(facts.get("rows_failed") or 0):
-		return "Confirm the mass edit/deletion was intentional before finance or ops rely on the updated sheet."
+		return (
+			"Confirm the mass edit/deletion was intentional before finance or ops rely on the updated sheet."
+		)
 	return "Fix the top sync errors or source-sheet schema mismatch, then rerun the sheet sync."
 
 
@@ -379,7 +381,11 @@ def _render_maintenance_sla_backlog(event: dict[str, Any]) -> dict[str, Any]:
 	breaches = list(facts.get("breaches") or [])
 	counts = facts.get("counts_by_priority") or {}
 	total = len(breaches)
-	count_bits = [f"{priority}: {int(counts.get(priority) or 0)}" for priority in ("Urgent", "High", "Normal") if int(counts.get(priority) or 0)]
+	count_bits = [
+		f"{priority}: {int(counts.get(priority) or 0)}"
+		for priority in ("Urgent", "High", "Normal")
+		if int(counts.get(priority) or 0)
+	]
 	top_rows = []
 	for row in breaches[:5]:
 		top_rows.append(
@@ -429,8 +435,12 @@ def _render_maintenance_status_update(event: dict[str, Any]) -> dict[str, Any]:
 		why = "A newly reported issue needs ownership before it becomes an SLA breach or store escalation."
 	elif status == "Completed":
 		summary = f"Maintenance request {request_name} is marked Completed for {store}."
-		action = "Store leadership should verify the work result and close the loop in the next maintenance check."
-		recommended = "Confirm the work quality and capture verification so the ticket does not linger unresolved."
+		action = (
+			"Store leadership should verify the work result and close the loop in the next maintenance check."
+		)
+		recommended = (
+			"Confirm the work quality and capture verification so the ticket does not linger unresolved."
+		)
 		why = "Completed work still needs store confirmation before the issue is truly closed."
 	elif status == "Verified":
 		summary = f"Maintenance request {request_name} has been verified for {store}."
@@ -476,7 +486,9 @@ def _render_approval_queue_new(event: dict[str, Any]) -> dict[str, Any]:
 	reference_name = _clean_text(facts.get("reference_name"), fallback=facts.get("subject"))
 	store = _clean_text(facts.get("store"))
 	queue_name = _clean_text(facts.get("queue_name"))
-	dashboard_url = _clean_text(facts.get("dashboard_url"), fallback=_portal_url("/dashboard/store-ops/order-approvals"))
+	dashboard_url = _clean_text(
+		facts.get("dashboard_url"), fallback=_portal_url("/dashboard/store-ops/order-approvals")
+	)
 	return {
 		"summary": f"{reference_doctype} {reference_name} is waiting for approval.",
 		"why_it_matters": "The workflow will not move forward until the assigned approver reviews the queue item.",
@@ -506,7 +518,9 @@ def _render_store_order_new(event: dict[str, Any]) -> dict[str, Any]:
 	is_emergency = bool(facts.get("is_emergency"))
 	queue_status = _clean_text(facts.get("queue_status"), fallback="unknown")
 	queue_name = _clean_text(facts.get("approval_queue_name"), fallback="")
-	dashboard_url = _clean_text(facts.get("dashboard_url"), fallback=_portal_url("/dashboard/store-ops/order-approvals"))
+	dashboard_url = _clean_text(
+		facts.get("dashboard_url"), fallback=_portal_url("/dashboard/store-ops/order-approvals")
+	)
 	if queue_status in {"failed", "unmapped"}:
 		action = "Fix the approval routing now so the order does not stall."
 		recommended = "Repair the approver mapping or assignment failure before the cutoff window closes."
@@ -642,7 +656,9 @@ def _render_morning_readiness_digest(event: dict[str, Any]) -> dict[str, Any]:
 	else:
 		summary = f"Morning syncs landed with exceptions for {_clean_text(facts.get('report_date'))}."
 		action = "Review the exception lane now and clear it before finance or ops uses the affected data."
-		recommended = "Resolve the exception rows or rerun the incomplete lane so the day starts from a clean baseline."
+		recommended = (
+			"Resolve the exception rows or rerun the incomplete lane so the day starts from a clean baseline."
+		)
 		why = "The morning data is present, but at least one lane still needs operator attention."
 	return {
 		"summary": summary,

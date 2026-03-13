@@ -91,7 +91,11 @@ def _install_stubs():
 	utils.flt = _flt
 	utils.cint = _cint
 	utils.getdate = _getdate
-	utils.get_datetime = lambda value=None: datetime(2026, 3, 2, 10, 0, 0) if value in (None, "") else datetime.strptime(str(value), "%Y-%m-%d %H:%M:%S")
+	utils.get_datetime = (
+		lambda value=None: datetime(2026, 3, 2, 10, 0, 0)
+		if value in (None, "")
+		else datetime.strptime(str(value), "%Y-%m-%d %H:%M:%S")
+	)
 
 	sys.modules["frappe"] = frappe
 	sys.modules["frappe.utils"] = utils
@@ -185,6 +189,7 @@ def test_emergency_duplicate_bypasses_duplicate_gate():
 	assert result["status"] == "Pending Approval"
 	assert result["cargo_category"] == "DRY"
 
+
 def test_emergency_submit_emits_store_order_new_event():
 	store_mod = _load_store_module()
 	notifications = []
@@ -212,4 +217,3 @@ def test_emergency_submit_emits_store_order_new_event():
 	assert event["family"] == "store_order_new"
 	assert event["facts"]["order_name"] == "BEI-ORD-TEST-0001"
 	assert notifications[0]["requested_space"] == "spaces/AAAAvDZdY-o"
-
