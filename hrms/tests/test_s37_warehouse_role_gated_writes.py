@@ -413,6 +413,50 @@ class TestS37WarehouseRoleGatedWrites(unittest.TestCase):
 		self.assertEqual(created.items[0].uom, "KG")
 		self.assertEqual(created.items[0].stock_uom, "KG")
 
+	def test_create_stock_transfer_clears_legacy_batch_fields_after_auto_bundle_insert(self):
+		original_get_doc = warehouse.frappe.get_doc
+		original_insert = _FakeStockEntry.insert
+
+		def _batch_item_get_doc(doctype, name=None):
+			doc = original_get_doc(doctype, name)
+			if doctype == "Item":
+				doc.has_batch_no = True
+			return doc
+
+		def _insert_with_auto_bundle(self, ignore_permissions=False):
+			result = original_insert(self, ignore_permissions=ignore_permissions)
+			for row in self.items:
+				if getattr(row, "batch_no", None):
+					row.serial_and_batch_bundle = "AUTO-BUNDLE-001"
+			return result
+
+		try:
+			warehouse.frappe.get_doc = _batch_item_get_doc
+			_FakeStockEntry.insert = _insert_with_auto_bundle
+
+			result = warehouse.create_stock_transfer(
+				source_warehouse="Shaw BLVD - BKI",
+				target_warehouse="TEST-STORE-BGC - BEI",
+				items=[
+					{
+						"item_code": "FG002-A",
+						"qty": 1,
+						"uom": "KG",
+						"batch_no": "FG-BATCH-001",
+					}
+				],
+				mr_name=_MR_DOC.name,
+				remarks="S037 bundle regression",
+			)
+		finally:
+			warehouse.frappe.get_doc = original_get_doc
+			_FakeStockEntry.insert = original_insert
+
+		self.assertTrue(result["success"])
+		created = _DOCS_CREATED[0]
+		self.assertEqual(created.items[0].serial_and_batch_bundle, "AUTO-BUNDLE-001")
+		self.assertIsNone(getattr(created.items[0], "batch_no", None))
+
 
 if __name__ == "__main__":
 	unittest.main()

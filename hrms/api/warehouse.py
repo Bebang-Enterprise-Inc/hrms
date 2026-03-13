@@ -133,6 +133,24 @@ def _resolve_valid_item_uom(item_doc: Any, requested_uom: str | None = None) -> 
 	)
 
 
+def _clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry: Any) -> None:
+	"""Avoid duplicate auto-bundle validation on submit.
+
+	ERPNext v15 can auto-create `serial_and_batch_bundle` rows when a draft stock
+	transaction is inserted with old-style `batch_no` / `serial_no` values. When the
+	same document is then submitted, ERPNext rejects rows that still carry both the
+	auto-bundle reference and the legacy fields. Clear those legacy fields once the
+	bundle exists so submit reuses the created bundle instead of trying to recreate it.
+	"""
+	for item in getattr(stock_entry, "items", None) or []:
+		if not getattr(item, "serial_and_batch_bundle", None):
+			continue
+		if getattr(item, "batch_no", None):
+			item.batch_no = None
+		if getattr(item, "serial_no", None):
+			item.serial_no = None
+
+
 @frappe.whitelist()
 def get_pending_purchase_orders(item_code=None, warehouse=None):
 	"""
@@ -1055,6 +1073,7 @@ def create_stock_transfer(
 	_enable_role_gated_write(se)
 	with _run_as_system_user():
 		se.insert(ignore_permissions=True)
+		_clear_legacy_serial_batch_fields_after_auto_bundle(se)
 		se.submit()
 
 	return {
