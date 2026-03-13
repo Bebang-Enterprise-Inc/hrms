@@ -13,8 +13,7 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, flt, today
 
-from hrms.api.commissary import get_commissary_warehouse
-from hrms.utils.bei_config import get_company
+from hrms.api.commissary import get_commissary_company, get_commissary_warehouse
 
 # ============================================================
 # DASHBOARD / SUMMARY
@@ -292,7 +291,7 @@ def submit_production_output(
 	commissary_warehouse = get_commissary_warehouse()
 
 	se = frappe.new_doc("Stock Entry")
-	se.company = get_company()
+	se.company = get_commissary_company()
 	se.posting_date = today()
 	se.posting_time = frappe.utils.nowtime()
 	se.to_warehouse = commissary_warehouse

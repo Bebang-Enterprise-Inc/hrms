@@ -30,12 +30,14 @@ def _install_fake_modules():
 	fake_frappe.whitelist = _whitelist
 	fake_frappe.throw = lambda msg: (_ for _ in ()).throw(Exception(msg))
 	fake_frappe._ = lambda msg: msg
-	sys.modules["frappe"] = fake_frappe
 
 	fake_utils = types.ModuleType("frappe.utils")
 	fake_utils.flt = float
 	fake_utils.today = lambda: "2026-03-12"
 	fake_utils.add_days = lambda value, days: value
+	fake_utils.nowtime = lambda: "12:00:00"
+	fake_frappe.utils = fake_utils
+	sys.modules["frappe"] = fake_frappe
 	sys.modules["frappe.utils"] = fake_utils
 
 	sys.modules.setdefault("hrms", types.ModuleType("hrms"))
@@ -44,6 +46,7 @@ def _install_fake_modules():
 
 	fake_commissary = types.ModuleType("hrms.api.commissary")
 	fake_commissary.get_commissary_warehouse = lambda: "Shaw BLVD - BKI"
+	fake_commissary.get_commissary_company = lambda: "Bebang Kitchen Inc."
 	sys.modules["hrms.api.commissary"] = fake_commissary
 
 	fake_bei_config = types.ModuleType("hrms.utils.bei_config")
@@ -115,6 +118,73 @@ class TestCommissaryDashboardSummary(unittest.TestCase):
 		self.assertEqual(data["stock_summary"]["total_items"], 2)
 		self.assertEqual(data["stock_summary"]["total_qty"], 6.5)
 		self.assertEqual(data["stock_summary"]["total_value"], 900.75)
+
+	def test_submit_production_output_uses_commissary_company_for_bki_warehouse(self):
+		created = {}
+
+		class _FakeStockEntry:
+			def __init__(self):
+				self.company = None
+				self.stock_entry_type = None
+				self.posting_date = None
+				self.posting_time = None
+				self.to_warehouse = None
+				self.remarks = None
+				self.items = []
+				self.insert_called = False
+				self.submit_called = False
+				self.name = "MAT-STE-UNIT-0001"
+
+			def append(self, table, row):
+				defaults = {"batch_no": None, "s_warehouse": None, "t_warehouse": None}
+				defaults.update(row)
+				self.items.append(types.SimpleNamespace(**defaults))
+
+			def insert(self):
+				self.insert_called = True
+				return self
+
+			def submit(self):
+				self.submit_called = True
+				return self
+
+		def fake_new_doc(doctype):
+			self.assertEqual(doctype, "Stock Entry")
+			doc = _FakeStockEntry()
+			created["doc"] = doc
+			return doc
+
+		with (
+			patch.object(commissary_dashboard, "get_commissary_warehouse", return_value="Shaw BLVD - BKI"),
+			patch.object(commissary_dashboard, "get_commissary_company", return_value="Bebang Kitchen Inc."),
+			patch.object(commissary_dashboard.frappe, "new_doc", side_effect=fake_new_doc, create=True),
+			patch.object(
+				commissary_dashboard.frappe.db,
+				"get_value",
+				side_effect=[None],
+				create=True,
+			),
+			patch.object(
+				commissary_dashboard.frappe,
+				"get_doc",
+				return_value=types.SimpleNamespace(
+					item_name="BANANA CINNAMON", description="Finished good", stock_uom="KG"
+				),
+				create=True,
+			),
+		):
+			result = commissary_dashboard.submit_production_output(
+				items='[{"item_code":"FG002-A","qty":1,"uom":"KG"}]',
+				remarks="unit-test",
+			)
+
+		doc = created["doc"]
+		self.assertEqual(doc.company, "Bebang Kitchen Inc.")
+		self.assertEqual(doc.to_warehouse, "Shaw BLVD - BKI")
+		self.assertEqual(doc.stock_entry_type, "Material Receipt")
+		self.assertTrue(doc.insert_called)
+		self.assertTrue(doc.submit_called)
+		self.assertEqual(result["data"]["name"], "MAT-STE-UNIT-0001")
 
 
 if __name__ == "__main__":
