@@ -42,13 +42,18 @@
 | `S030` | Sprint 30 | Done (Completed 2026-03-09) | `docs/plans/2026-03-09-analytics-agent-10x-report.md` |
 | `S031` | Sprint 31 | In Progress | `docs/plans/2026-03-10-sprint-31-store-inventory-import-and-shadow-sync.md` |
 | `S032` | Sprint 32 | Planned | `docs/plans/2026-03-10-sprint-32-dual-repo-safe-clean-start.md` |
-| `S033` | Sprint 33 | Planned | `docs/plans/2026-03-10-sprint-33-schedule-management-attendance-bridge.md` |
+| `S033` | Sprint 33 | Partial (Phase 0 shipped 2026-03-11 via PRs #197-#203 + bei-tasks #99/#103; publish bridge live; remaining phases — attendance classification, missing-punch reports, scheduling UX — deferred to S043) | `docs/plans/2026-03-10-sprint-33-schedule-management-attendance-bridge.md` |
 | `S034` | Sprint 34 | Done (Completed 2026-03-11; canonical my-bebang reference regenerated from current source) | `docs/plans/2026-03-11-sprint-34-my-bebang-reference-canonical-regeneration.md` |
 | `S035` | Sprint 35 | Done (Completed 2026-03-13; strict L1/L2/L3/L4/payroll certification passed after HRMS payroll hotfix #216) | `docs/plans/2026-03-11-sprint-35-overtime-post-approval-operational-workflow.md` |
 | `S036` | Sprint 36 | Planned | `docs/plans/2026-03-12-sprint-36-omnichannel-order-hub.md` |
-| `S037` | Sprint 37 | In Progress (portal hotfix #114 live 2026-03-13 02:29 PHT; prior technical route blockers cleared; final dispatch certification awaits explicit live-mutation approval) | `docs/plans/2026-03-12-sprint-37-warehouse-commissary-store-handoff-alignment.md` |
+| `S037` | Sprint 37 | Done (Completed 2026-03-14; final live heads hrms 0471cad199a9557d73c53b5322391609100c2aa8 and portal 7ccaa5df70b3c8fea4e6f742716d1ee7c72c6044; full production E2E passed; finance math fact-check passed; no open Sprint 37 defects remain) | `docs/plans/2026-03-12-sprint-37-warehouse-commissary-store-handoff-alignment.md` |
 | `S038` | Sprint 38 | Done (Completed 2026-03-13; structured notification intelligence live, receiver topology fixed, PHT business-date correction live, full E2E certification passed) | `docs/plans/2026-03-12-sprint-38-blip-notification-intelligence-and-routing.md` |
 | `S039` | Sprint 39 | In Progress | `docs/plans/2026-03-13-sprint-39-cfo-disciplinary-action-transition.md` |
+| `S040` | Sprint 40 | Done (Completed 2026-03-14; semantic_search fixed, 56 memories seeded, RPCs deployed, Edge Functions verified) | `docs/plans/2026-03-14-sprint-40-bei-brain-repair-and-feeding.md` |
+| `S041` | Sprint 41 | Done (Completed 2026-03-14; repos clean, 331K files removed, 137 branches deleted, Dropbox sync stabilized) | `docs/plans/2026-03-14-sprint-41-repo-dropbox-hygiene-cleanup.md` |
+| `S042` | Sprint 42 | Phase 1 Done, Phase 2 Planned (13 new hires onboarded across 5 systems; ADMS scheduler planned) | `docs/plans/2026-03-14-sprint-42-new-hire-onboarding-adms-scheduler.md` |
+| `S043` | Sprint 43 | GO (Audited 2026-03-14; 13 blockers resolved; Frappe auto-attendance architecture) | `docs/plans/2026-03-14-sprint-43-schedule-attendance-bridge-v2.md` |
+| `S044` | Sprint 44 | Planned | `docs/plans/2026-03-14-sprint-44-bei-brain-gemini-embedding-2-migration.md` |
 
 ## Legacy Sprint Labels (Non-Canonical)
 These documents contain sprint-like naming but are not part of the canonical sequence and must not be used as numbering anchors for new work.
@@ -70,5 +75,5 @@ These documents contain sprint-like naming but are not part of the canonical seq
 | `Geo-Attendance Sprint 3 E2E` | `docs/plans/archived/GEO_ATTENDANCE_SPRINT3_E2E_TEST_PLAN_2026-02-10.md` | Separate historical track |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S040`.
-2. Create new sprint plan only after adding `S039` row here first.
+1. Next canonical sprint ID to assign: `S045`.
+2. Create new sprint plan only after adding `S044` row here first.

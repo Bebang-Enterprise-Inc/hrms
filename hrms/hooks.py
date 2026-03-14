@@ -392,6 +392,10 @@ scheduler_events = {
 		"50 16 * * *": ["hrms.api.discount_abuse.scheduled_generate_daily_discount_audit_report"],
 		# Discount alert notifications: 1:05 AM PHT after workbook generation
 		"5 17 * * *": ["hrms.api.discount_abuse.scheduled_send_critical_discount_alert_notifications"],
+		# S043: Daily missing punch report at 00:00 PHT (16:00 UTC)
+		# Runs after all retail shifts end (latest S-2P at 23:00 + 60 min checkout)
+		# and after auto-attendance hourly job has processed
+		"0 16 * * *": ["hrms.services.missing_punch_report.run_daily_missing_punch_report"],
 	},
 	"hourly_long": [
 		"hrms.hr.doctype.shift_type.shift_type.update_last_sync_of_checkin",

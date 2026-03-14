@@ -446,12 +446,38 @@ def _ensure_shift_type_for_plan_row(row: Any):
 			_("Shift Type {0} is missing start/end times and cannot be provisioned.").format(shift_type_name)
 		)
 
+	# S043: provision with ALL required fields for auto-attendance.
+	# Bare provisioning (start_time + end_time only) causes
+	# has_incorrect_shift_config() to return True and silently skip
+	# auto-attendance processing.
+	from datetime import timedelta
+
+	end_dt = frappe.utils.get_time(end_time)
+	start_dt = frappe.utils.get_time(start_time)
+
+	# process_attendance_after = shift end + 60 minutes
+	process_after = frappe.utils.get_time(
+		(frappe.utils.datetime.datetime.combine(frappe.utils.today(), end_dt)
+		 + timedelta(minutes=60)).time()
+	)
+
 	frappe.get_doc(
 		{
 			"doctype": "Shift Type",
 			"name": shift_type_name,
 			"start_time": start_time,
 			"end_time": end_time,
+			"enable_auto_attendance": 1,
+			"process_attendance_after": str(process_after),
+			"last_sync_of_checkin": str(process_after),
+			"late_entry_grace_period": 15,
+			"early_exit_grace_period": 15,
+			"working_hours_threshold_for_half_day": 4,
+			"working_hours_threshold_for_absent": 1,
+			"allow_check_out_after_shift_end_time": 60,
+			"enable_late_entry_marking": 1,
+			"enable_early_exit_marking": 1,
+			"determine_check_in_and_check_out": "Alternating entries as IN and OUT during a Shift",
 		}
 	).insert(ignore_permissions=True, ignore_if_duplicate=True)
 

@@ -42,9 +42,10 @@
   },
   {
    "fieldname": "shift_type_name",
-   "fieldtype": "Data",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Shift Type Name"
+   "label": "Shift Type",
+   "options": "Shift Type"
   },
   {
    "default": "0",

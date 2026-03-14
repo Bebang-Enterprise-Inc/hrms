@@ -25,7 +25,7 @@
         "dt": "Item",
         "fieldname": "custom_storage_temp_min",
         "fieldtype": "Float",
-        "label": "Min Storage Temp (°C)",
+        "label": "Min Storage Temp (\u00c2\u00b0C)",
         "insert_after": "custom_reorder_days",
         "description": "Minimum storage temperature in Celsius"
     },
@@ -35,7 +35,7 @@
         "dt": "Item",
         "fieldname": "custom_storage_temp_max",
         "fieldtype": "Float",
-        "label": "Max Storage Temp (°C)",
+        "label": "Max Storage Temp (\u00c2\u00b0C)",
         "insert_after": "custom_storage_temp_min",
         "description": "Maximum storage temperature in Celsius"
     },
@@ -433,5 +433,16 @@
         "insert_after": "custom_invoice_exception_reason",
         "read_only": 1,
         "description": "Checked while the supplier invoice exception remains unresolved"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Shift Type-custom_short_code",
+        "dt": "Shift Type",
+        "fieldname": "custom_short_code",
+        "fieldtype": "Data",
+        "label": "Short Code",
+        "insert_after": "name",
+        "unique": 1,
+        "description": "Portal display code (e.g., S-9A, C-5P). Used by my.bebang.ph schedule grid."
     }
 ]
