@@ -460,8 +460,10 @@ def configure_scheduled_jobs(schedule_module=schedule):
 	# Notifications & Reporting
 	# ==========================================================================
 
-	# Daily summary at 7 AM Philippines time (23:00 UTC)
-	schedule_module.every().day.at("23:00").do(daily_summary_job)
+	# POS file upload daily summary — DISABLED 2026-03-14
+	# POS data now flows via Mosaic API (daily-pos-sync.yml GitHub Action),
+	# the manual XLSX upload pipeline and its daily report are retired.
+	# schedule_module.every().day.at("23:00").do(daily_summary_job)
 
 
 def run_scheduler():

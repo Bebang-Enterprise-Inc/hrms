@@ -305,8 +305,28 @@ def _mark_notification_delivered(event: dict[str, object]) -> None:
 			{"sent_at": time.time(), "source_ref": event.get("source_ref")},
 			expires_in_sec=ttl_seconds,
 		)
+		# Store snapshot for delta-aware rendering next time
+		snapshot = event.get("_current_snapshot")
+		if snapshot:
+			family = str(event.get("family") or "unknown")
+			cache.set_value(
+				f"s038:snapshot:{family}",
+				snapshot,
+				expires_in_sec=86400,  # 24h — snapshots survive across dedup windows
+			)
 	except Exception:
 		return
+
+
+def _get_previous_snapshot(family: str) -> dict[str, object] | None:
+	"""Retrieve the last-sent snapshot for delta-aware rendering."""
+	cache = _notification_cache()
+	if cache is None:
+		return None
+	try:
+		return cache.get_value(f"s038:snapshot:{family}") or None
+	except Exception:
+		return None
 
 
 def _notification_config_get(key: str, default: object | None = None) -> object | None:
@@ -396,7 +416,9 @@ def _deliver_notification_event(
 	logger = frappe.logger("google_chat")
 	try:
 		payload = _coerce_notification_event_payload(event, **kwargs)
-		normalized = build_notification_event(payload)
+		family = str(payload.get("family") or "")
+		previous_snapshot = _get_previous_snapshot(family) if family else None
+		normalized = build_notification_event(payload, previous_snapshot=previous_snapshot)
 		validation_errors = validate_notification_event(normalized)
 		if validation_errors:
 			raise ValueError("Missing notification fields: " + ", ".join(validation_errors))
