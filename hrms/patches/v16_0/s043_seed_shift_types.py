@@ -105,7 +105,7 @@ COMMON_FIELDS = {
     "allow_check_out_after_shift_end_time": 60,
     "enable_late_entry_marking": 1,
     "enable_early_exit_marking": 1,
-    "determine_check_in_and_check_out": "Alternating entries as IN and OUT during a Shift",
+    "determine_check_in_and_check_out": "Alternating entries as IN and OUT during the same shift",
     "mark_auto_attendance_on_holidays": 0,
 }
 
