@@ -1033,9 +1033,11 @@ def create_stock_transfer(
 		item = frappe.get_doc("Item", item_data["item_code"])
 		valid_uom = _resolve_valid_item_uom(item, item_data.get("uom"))
 
-		# Bug fix B9-002: Handle batch_no for batch-tracked items
-		batch_no = item_data.get("batch_no")
-		if item.has_batch_no and not batch_no:
+		# ERPNext v15 auto-creates outward serial/batch bundles for Material Issue.
+		# Supplying legacy batch fields in that path causes duplicate-bundle validation,
+		# so only resolve / send batch_no for non-issue transfers.
+		batch_no = None if is_intercompany else item_data.get("batch_no")
+		if item.has_batch_no and not batch_no and not is_intercompany:
 			# Auto-select oldest batch with sufficient stock
 			oldest_batch = frappe.db.get_value(
 				"Batch",
@@ -1059,10 +1061,11 @@ def create_stock_transfer(
 			"stock_uom": valid_uom,
 			"conversion_factor": 1,
 			"s_warehouse": source_warehouse,
-			"batch_no": batch_no,
 			"material_request": mr_name if mr_item_ref else None,
 			"material_request_item": mr_item_ref,
 		}
+		if batch_no:
+			row["batch_no"] = batch_no
 		if not is_intercompany:
 			row["t_warehouse"] = actual_target_warehouse
 		se.append("items", row)

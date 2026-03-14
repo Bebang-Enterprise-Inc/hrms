@@ -418,9 +418,45 @@ class TestS37WarehouseRoleGatedWrites(unittest.TestCase):
 		self.assertEqual(created.items[0].uom, "KG")
 		self.assertEqual(created.items[0].stock_uom, "KG")
 
+	def test_create_stock_transfer_omits_legacy_batch_field_for_intercompany_material_issue(self):
+		original_get_doc = warehouse.frappe.get_doc
+
+		def _batch_item_get_doc(doctype, name=None):
+			doc = original_get_doc(doctype, name)
+			if doctype == "Item":
+				doc.has_batch_no = True
+			return doc
+
+		try:
+			warehouse.frappe.get_doc = _batch_item_get_doc
+			result = warehouse.create_stock_transfer(
+				source_warehouse="Shaw BLVD - BKI",
+				target_warehouse="TEST-STORE-BGC - BEI",
+				items=[
+					{
+						"item_code": "FG002-A",
+						"qty": 1,
+						"uom": "KG",
+						"batch_no": "FG-BATCH-001",
+					}
+				],
+				mr_name=_MR_DOC.name,
+				remarks="S037 intercompany bundle auto-create",
+			)
+		finally:
+			warehouse.frappe.get_doc = original_get_doc
+
+		self.assertTrue(result["success"])
+		created = _DOCS_CREATED[0]
+		self.assertEqual(created.stock_entry_type, "Material Issue")
+		self.assertIsNone(getattr(created.items[0], "batch_no", None))
+
 	def test_create_stock_transfer_clears_legacy_batch_fields_after_auto_bundle_insert(self):
 		original_get_doc = warehouse.frappe.get_doc
 		original_insert = _FakeStockEntry.insert
+		original_destination = _MR_DOC.custom_destination_warehouse
+		original_target_company = _MR_DOC.custom_target_company
+		original_finance = _MR_DOC.custom_finance_treatment
 
 		def _batch_item_get_doc(doctype, name=None):
 			doc = original_get_doc(doctype, name)
@@ -436,12 +472,15 @@ class TestS37WarehouseRoleGatedWrites(unittest.TestCase):
 			return result
 
 		try:
+			_MR_DOC.custom_destination_warehouse = "Shaw BLVD - BKI"
+			_MR_DOC.custom_target_company = "Bebang Kitchen Inc."
+			_MR_DOC.custom_finance_treatment = "same_company"
 			warehouse.frappe.get_doc = _batch_item_get_doc
 			_FakeStockEntry.insert = _insert_with_auto_bundle
 
 			result = warehouse.create_stock_transfer(
 				source_warehouse="Shaw BLVD - BKI",
-				target_warehouse="TEST-STORE-BGC - BEI",
+				target_warehouse="TEST-COMMISSARY - BKI",
 				items=[
 					{
 						"item_code": "FG002-A",
@@ -456,6 +495,9 @@ class TestS37WarehouseRoleGatedWrites(unittest.TestCase):
 		finally:
 			warehouse.frappe.get_doc = original_get_doc
 			_FakeStockEntry.insert = original_insert
+			_MR_DOC.custom_destination_warehouse = original_destination
+			_MR_DOC.custom_target_company = original_target_company
+			_MR_DOC.custom_finance_treatment = original_finance
 
 		self.assertTrue(result["success"])
 		created = _DOCS_CREATED[0]
