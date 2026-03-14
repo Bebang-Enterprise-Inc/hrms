@@ -2850,35 +2850,21 @@ def create_store_return(
 	if not return_warehouse:
 		frappe.throw(_("Unable to resolve the originating warehouse for this return"))
 
-	# Create Stock Entry (Material Transfer back to warehouse)
-	se = frappe.new_doc("Stock Entry")
-	se.stock_entry_type = "Material Transfer"
-	se.posting_date = nowdate()
-	se.posting_time = _current_time_string()
-	se.from_warehouse = store
-	se.to_warehouse = return_warehouse
-	se.remarks = f"Store Return from {store} | Receiving: {receiving} | Reason: {reason}"
 	source_company = resolve_warehouse_company(store) or get_company()
 	target_company = resolve_warehouse_company(return_warehouse) or source_company
-	se.company = source_company
-	stamp_stock_entry_contract(
-		se,
-		request_source=REQUEST_SOURCE_STORE_RETURN,
-		source_company=source_company,
-		target_company=target_company,
-	)
+	finance_treatment = infer_finance_treatment(source_company, target_company)
+	receiving_contract = _resolve_store_receiving_contract(store, getattr(receiving_doc, "trip", None))
+	cargo_lane = receiving_contract.get("cargo_lane")
 
-	for item_data in items:
-		qty = flt(item_data.get("qty") or item_data.get("return_qty"))
-		if qty <= 0:
-			continue
+	def _append_store_return_rows(stock_entry, warehouse_field: str):
+		for item_data in items:
+			qty = flt(item_data.get("qty") or item_data.get("return_qty"))
+			if qty <= 0:
+				continue
 
-		item_code = item_data.get("item_code")
-		item = frappe.get_doc("Item", item_code)
-
-		se.append(
-			"items",
-			{
+			item_code = item_data.get("item_code")
+			item = frappe.get_doc("Item", item_code)
+			row = {
 				"item_code": item_code,
 				"item_name": item.item_name,
 				"description": item.description or item.item_name,
@@ -2886,20 +2872,93 @@ def create_store_return(
 				"uom": item_data.get("uom") or item.stock_uom,
 				"stock_uom": item.stock_uom,
 				"conversion_factor": 1,
-				"s_warehouse": store,
-				"t_warehouse": return_warehouse,
-			},
-		)
+			}
+			row[warehouse_field] = return_warehouse if warehouse_field == "t_warehouse" else store
+			stock_entry.append("items", row)
 
-	if not se.items:
-		frappe.throw(_("No valid items with quantity to return"))
-
-	_attach_store_issue_photo(se, photo)
+	primary_entry = None
+	warehouse_receipt = None
 
 	frappe.db.savepoint("create_store_return")
 	try:
-		se.insert(ignore_permissions=True)
-		se.submit()
+		if finance_treatment == FINANCE_TREATMENT_INTERCOMPANY:
+			issue_entry = frappe.new_doc("Stock Entry")
+			issue_entry.stock_entry_type = "Material Issue"
+			issue_entry.company = source_company
+			issue_entry.posting_date = nowdate()
+			issue_entry.posting_time = _current_time_string()
+			issue_entry.from_warehouse = store
+			issue_entry.remarks = (
+				f"Store Return from {store} | Receiving: {receiving} | Reason: {reason} | "
+				f"Return Warehouse: {return_warehouse}"
+			)
+			stamp_stock_entry_contract(
+				issue_entry,
+				request_source=REQUEST_SOURCE_STORE_RETURN,
+				cargo_lane=cargo_lane,
+				destination_warehouse=return_warehouse,
+				source_company=source_company,
+				target_company=target_company,
+				finance_treatment=finance_treatment,
+			)
+			_append_store_return_rows(issue_entry, "s_warehouse")
+			if not issue_entry.items:
+				frappe.throw(_("No valid items with quantity to return"))
+			_attach_store_issue_photo(issue_entry, photo)
+			issue_entry.insert(ignore_permissions=True)
+			issue_entry.submit()
+			primary_entry = issue_entry
+
+			receipt_entry = frappe.new_doc("Stock Entry")
+			receipt_entry.stock_entry_type = "Material Receipt"
+			receipt_entry.company = target_company
+			receipt_entry.posting_date = nowdate()
+			receipt_entry.posting_time = _current_time_string()
+			receipt_entry.to_warehouse = return_warehouse
+			receipt_entry.remarks = (
+				f"Warehouse Receipt for Store Return {issue_entry.name} | Store: {store} | "
+				f"Receiving: {receiving} | Reason: {reason}"
+			)
+			stamp_stock_entry_contract(
+				receipt_entry,
+				request_source=REQUEST_SOURCE_STORE_RETURN,
+				cargo_lane=cargo_lane,
+				destination_warehouse=return_warehouse,
+				source_company=source_company,
+				target_company=target_company,
+				finance_treatment=finance_treatment,
+			)
+			_append_store_return_rows(receipt_entry, "t_warehouse")
+			receipt_entry.insert(ignore_permissions=True)
+			receipt_entry.submit()
+			warehouse_receipt = receipt_entry
+		else:
+			se = frappe.new_doc("Stock Entry")
+			se.stock_entry_type = "Material Transfer"
+			se.company = source_company
+			se.posting_date = nowdate()
+			se.posting_time = _current_time_string()
+			se.from_warehouse = store
+			se.to_warehouse = return_warehouse
+			se.remarks = f"Store Return from {store} | Receiving: {receiving} | Reason: {reason}"
+			stamp_stock_entry_contract(
+				se,
+				request_source=REQUEST_SOURCE_STORE_RETURN,
+				cargo_lane=cargo_lane,
+				source_company=source_company,
+				target_company=target_company,
+				finance_treatment=finance_treatment,
+			)
+			_append_store_return_rows(se, "s_warehouse")
+			for row in se.items:
+				row.t_warehouse = return_warehouse
+			if not se.items:
+				frappe.throw(_("No valid items with quantity to return"))
+			_attach_store_issue_photo(se, photo)
+			se.insert(ignore_permissions=True)
+			se.submit()
+			primary_entry = se
+
 		frappe.db.release_savepoint("create_store_return")
 	except Exception:
 		frappe.db.rollback(save_point="create_store_return")
@@ -2911,19 +2970,35 @@ def create_store_return(
 		from hrms.api.google_chat import SPACE_NOTIFICATIONS, get_chat_space, send_message_to_space
 
 		store_name = store.replace(" - BEI", "") if store else "Unknown"
-		msg = f"New Store Return Request: {se.name}\n"
-		msg += f"Store: {store_name} | Items: {len(se.items)}\n"
+		msg = f"New Store Return Request: {primary_entry.name}\n"
+		msg += f"Store: {store_name} | Items: {len(primary_entry.items)}\n"
 		msg += f"Return To: {return_warehouse}\n"
+		if warehouse_receipt:
+			msg += f"Warehouse Receipt: {warehouse_receipt.name}\n"
 		msg += f"Reason: {reason}"
 		space = get_chat_space(SPACE_NOTIFICATIONS)
 		send_message_to_space(space, msg)
 	except Exception:
-		frappe.log_error(f"Return notification failed for {se.name}", "Store Return Notification Error")
+		frappe.log_error(
+			f"Return notification failed for {primary_entry.name}",
+			"Store Return Notification Error",
+		)
 
 	return {
 		"success": True,
-		"stock_entry": se.name,
-		"message": f"Store return {se.name} created — {len(se.items)} item(s) returned to warehouse",
+		"stock_entry": primary_entry.name,
+		"warehouse_receipt": getattr(warehouse_receipt, "name", None),
+		"movement_type": primary_entry.stock_entry_type,
+		"finance_treatment": finance_treatment,
+		"message": (
+			f"Store return {primary_entry.name} created"
+			+ (
+				f" with warehouse receipt {warehouse_receipt.name}"
+				if warehouse_receipt
+				else ""
+			)
+			+ f" — {len(primary_entry.items)} item(s) returned to warehouse"
+		),
 	}
 
 
@@ -3041,8 +3116,11 @@ def process_store_return(stock_entry_name: str) -> dict:
 	if se.docstatus != 1:
 		frappe.throw(_("Stock Entry must be submitted before processing"))
 
-	if se.stock_entry_type != "Material Transfer":
+	if se.stock_entry_type not in {"Material Transfer", "Material Issue"}:
 		frappe.throw(_("Not a valid store return entry"))
+	if REQUEST_SOURCE_STORE_RETURN != getattr(se, "custom_request_source", REQUEST_SOURCE_STORE_RETURN):
+		if "Store Return" not in str(se.remarks or ""):
+			frappe.throw(_("Not a valid store return entry"))
 
 	receiving_name, store, reason = _extract_store_issue_context(se)
 	credit_note_name, jv_name = _create_store_issue_credit_note(se, store, reason)
