@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+from collections import Counter
 from copy import deepcopy
 from typing import Any
 
@@ -263,6 +265,220 @@ def _build_sheet_url(facts: dict[str, Any]) -> str:
 	return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit"
 
 
+# ---------------------------------------------------------------------------
+# Error Diagnosis Map — translate raw error strings into actionable fixes
+# ---------------------------------------------------------------------------
+
+# Each entry: (compiled_regex, diagnosis, recommended_fix)
+# Order matters: first match wins.
+_ERROR_DIAGNOSES: list[tuple[re.Pattern[str], str, str]] = [
+	(
+		re.compile(r"set default Stock Received But Not Billed.*?Company\s+(\S+)", re.IGNORECASE),
+		'Company "{match}" is missing the "Stock Received But Not Billed" default account. '
+		"This is a one-time ERPNext setup issue, not a data problem.",
+		'Go to ERPNext > Setup > Company > "{match}" > Default Accounts and set the '
+		'"Stock Received But Not Billed" account (usually under Current Liabilities). '
+		"Once configured, rerun the sync — all affected rows should clear.",
+	),
+	(
+		re.compile(r"Could not find.*?Item Code:\s*(\S+)", re.IGNORECASE),
+		'Item Code "{match}" does not exist in ERPNext. The source sheet references an item '
+		"that has not been created or was deleted.",
+		'Create Item "{match}" in ERPNext (Stock > Item > New) with the correct item group '
+		"and UOM, or correct the item code in the source sheet, then rerun.",
+	),
+	(
+		re.compile(r"Warehouse\s+(\S+.*?)\s+not found", re.IGNORECASE),
+		'Warehouse "{match}" referenced in the sheet does not exist in ERPNext.',
+		'Create the warehouse in ERPNext (Stock > Warehouse > New) under the correct '
+		"company tree, or fix the warehouse name in the source sheet.",
+	),
+	(
+		re.compile(r"duplicate entry.*?for key\s+'(\S+)'", re.IGNORECASE),
+		"Duplicate record detected — the sync tried to create a record that already exists.",
+		"Check if the source sheet has duplicate rows with the same key. "
+		"Remove duplicates from the sheet or mark existing records for update instead of insert.",
+	),
+	(
+		re.compile(r"Mandatory.*?Supplier\s", re.IGNORECASE),
+		"Rows are missing the required Supplier field. Likely blank rows at the bottom of the sheet.",
+		"Delete empty/blank rows at the bottom of the source sheet that have no supplier, "
+		"then rerun the sync.",
+	),
+	(
+		re.compile(r"Mandatory.*?Invoice", re.IGNORECASE),
+		"Rows are missing required invoice numbers. These may be partial entries or blank tail rows.",
+		"Fill in invoice numbers on real data rows or delete blank rows, then rerun.",
+	),
+	(
+		re.compile(r"rate must be.*?positive|amount.*?cannot be (zero|negative)", re.IGNORECASE),
+		"Some rows have zero or negative amounts that ERPNext rejects.",
+		"Review the flagged rows for pricing errors or credit notes that need separate handling.",
+	),
+	(
+		re.compile(r"Account.*?does not belong to.*?Company\s+(\S+)", re.IGNORECASE),
+		'An account is assigned to the wrong company. The ledger account does not belong to "{match}".',
+		'Check the Chart of Accounts for company "{match}" and ensure the correct '
+		"account is mapped. This is usually a setup issue after adding a new company entity.",
+	),
+]
+
+
+def _diagnose_errors(errors: list[str]) -> tuple[str, str] | None:
+	"""Match error strings against known patterns. Returns (diagnosis, fix) or None."""
+	error_text = " ".join(errors).strip()
+	if not error_text:
+		return None
+	for pattern, diagnosis_template, fix_template in _ERROR_DIAGNOSES:
+		m = pattern.search(error_text)
+		if m:
+			match_val = m.group(1) if m.lastindex and m.lastindex >= 1 else ""
+			return (
+				diagnosis_template.replace("{match}", match_val),
+				fix_template.replace("{match}", match_val),
+			)
+	return None
+
+
+# ---------------------------------------------------------------------------
+# Pattern Recognition — detect clusters, aging, and anomalies
+# ---------------------------------------------------------------------------
+
+def _analyze_store_clusters(breaches: list[dict[str, Any]]) -> str:
+	"""Identify store-level concentration in SLA breaches."""
+	if not breaches:
+		return ""
+	store_counts: Counter[str] = Counter()
+	for row in breaches:
+		store = _clean_text((row or {}).get("store"), fallback="")
+		if store:
+			store_counts[store] += 1
+	if not store_counts:
+		return ""
+	top_store, top_count = store_counts.most_common(1)[0]
+	total = len(breaches)
+	pct = round(top_count / total * 100) if total else 0
+	if top_count >= 5 and pct >= 30:
+		return (
+			f"{top_store} accounts for {top_count} of {total} breaches ({pct}%). "
+			f"This looks like a systemic maintenance gap at that location, "
+			f"not individual ticket delays."
+		)
+	if len(store_counts) <= 3 and total >= 10:
+		names = ", ".join(s for s, _ in store_counts.most_common(3))
+		return f"Breaches are concentrated in {len(store_counts)} stores: {names}."
+	return ""
+
+
+def _analyze_aging_pattern(breaches: list[dict[str, Any]]) -> str:
+	"""Identify tickets that have been stale for an unusually long time."""
+	if not breaches:
+		return ""
+	ages = []
+	for row in breaches:
+		try:
+			ages.append(float((row or {}).get("age_hours") or 0))
+		except (ValueError, TypeError):
+			pass
+	if not ages:
+		return ""
+	max_age = max(ages)
+	if max_age >= 168:  # 7+ days
+		days = round(max_age / 24, 1)
+		return f"Oldest breach is {days} days old — well past any SLA tier."
+	if max_age >= 48:
+		return f"Oldest breach is {round(max_age, 1)}h — multiple days without movement."
+	return ""
+
+
+def _diagnose_morning_lane(area: dict[str, Any]) -> str:
+	"""Produce a lane-specific diagnosis for morning readiness failures."""
+	label = _clean_text((area or {}).get("label"), fallback="").lower()
+	status = _clean_text((area or {}).get("status"), fallback="").lower()
+	error = _clean_text((area or {}).get("last_error"), fallback="")
+	if status in ("green", "ready"):
+		return ""
+	# Try to diagnose from the error message
+	if error:
+		diagnosis = _diagnose_errors([error])
+		if diagnosis:
+			return f"{(area or {}).get('label', 'Lane')}: {diagnosis[0]}"
+	# Fallback lane-specific guidance
+	if "inventory" in label or "shadow" in label:
+		return f"{(area or {}).get('label', 'Store Inventory')}: Sync did not complete before deadline. Check if the scheduled job ran and whether any stores timed out."
+	if "warehouse" in label or "ian" in label:
+		return f"{(area or {}).get('label', 'Warehouse Inventory')}: Warehouse baseline sync missed the window. Verify the cron trigger fired and the warehouse API responded."
+	if "ap" in label or "procurement" in label or "finance" in label:
+		return f"{(area or {}).get('label', 'AP/Procurement')}: Finance baseline sync failed. Check the Sheets Receiver logs for row-level errors or schema mismatches."
+	return f"{(area or {}).get('label', 'Unknown lane')}: Sync did not reach ready state before the deadline."
+
+
+# ---------------------------------------------------------------------------
+# Delta Awareness — compare current state to previous notification
+# ---------------------------------------------------------------------------
+
+def _compute_delta_summary(family: str, current_facts: dict[str, Any], previous_snapshot: dict[str, Any] | None) -> str:
+	"""Compare current facts to previous snapshot and describe what changed."""
+	if not previous_snapshot:
+		return ""
+	if family == "maintenance_sla_backlog":
+		prev_count = int(previous_snapshot.get("total_breaches") or 0)
+		curr_breaches = list(current_facts.get("breaches") or [])
+		curr_count = len(curr_breaches)
+		if curr_count == prev_count:
+			prev_names = set(previous_snapshot.get("breach_names") or [])
+			curr_names = {_clean_text((r or {}).get("name"), "") for r in curr_breaches} - {""}
+			new_tickets = curr_names - prev_names
+			resolved = prev_names - curr_names
+			if not new_tickets and not resolved:
+				return "Backlog unchanged since last report — same tickets, same count."
+			parts = []
+			if new_tickets:
+				parts.append(f"{len(new_tickets)} new breach(es)")
+			if resolved:
+				parts.append(f"{len(resolved)} resolved")
+			return "Since last report: " + ", ".join(parts) + "."
+		diff = curr_count - prev_count
+		direction = "increased" if diff > 0 else "decreased"
+		return f"Backlog {direction} from {prev_count} to {curr_count} ({'+' if diff > 0 else ''}{diff})."
+	if family == "morning_readiness_digest":
+		prev_status = _clean_text(previous_snapshot.get("status"), fallback="")
+		curr_status = _clean_text(current_facts.get("status"), fallback="")
+		if prev_status and curr_status and prev_status != curr_status:
+			return f"Status changed from {prev_status} to {curr_status} since last report."
+	return ""
+
+
+def _build_snapshot_for_cache(family: str, facts: dict[str, Any]) -> dict[str, Any]:
+	"""Build a compact snapshot of current facts for delta comparison next time."""
+	if family == "maintenance_sla_backlog":
+		breaches = list(facts.get("breaches") or [])
+		return {
+			"total_breaches": len(breaches),
+			"breach_names": sorted(
+				_clean_text((r or {}).get("name"), "")
+				for r in breaches
+				if _clean_text((r or {}).get("name"), "")
+			),
+			"counts_by_priority": facts.get("counts_by_priority") or {},
+		}
+	if family == "morning_readiness_digest":
+		return {
+			"status": facts.get("status"),
+			"area_keys": [
+				_clean_text((a or {}).get("key"), "")
+				for a in (facts.get("areas") or [])
+			],
+		}
+	if family == "sheets_sync_critical":
+		return {
+			"rows_failed": facts.get("rows_failed"),
+			"rows_processed": facts.get("rows_processed"),
+			"errors": _unique_texts(facts.get("errors") or [], limit=3),
+		}
+	return {}
+
+
 def _build_default_source_ref(family: str, facts: dict[str, Any]) -> str:
 	if family == "sheets_sync_critical":
 		return f"{_clean_text(facts.get('spreadsheet_name'))} / {_clean_text(facts.get('sheet_name'))}"
@@ -320,18 +536,35 @@ def _build_default_dedup_key(family: str, facts: dict[str, Any], source_ref: str
 	return f"{family}:{digest}"
 
 
-def _sheet_recommended_fix(facts: dict[str, Any]) -> str:
-	errors = " ".join(_unique_texts(facts.get("errors") or [], limit=3)).lower()
+def _sheet_recommended_fix(facts: dict[str, Any]) -> tuple[str, str]:
+	"""Returns (diagnosis, recommended_fix) for sheets sync errors."""
+	error_list = _unique_texts(facts.get("errors") or [], limit=5)
 	reasons = set(_unique_texts(facts.get("reasons") or []))
-	if "invoice_no" in errors:
-		return "Restore invoice numbers on non-blank rows or correct the AR/AP transform before rerunning the sync."
-	if "supplier" in errors:
-		return "Fill the missing supplier/invoice fields on real rows and delete blank tail rows before rerunning."
+	# Try the diagnosis map first for specific actionable fixes
+	diagnosis_result = _diagnose_errors(error_list)
+	if diagnosis_result:
+		return diagnosis_result
+	# Fallback to legacy pattern matching
+	errors_lower = " ".join(error_list).lower()
+	if "invoice_no" in errors_lower:
+		return (
+			"Rows are missing required invoice numbers.",
+			"Restore invoice numbers on non-blank rows or correct the AR/AP transform before rerunning the sync.",
+		)
+	if "supplier" in errors_lower:
+		return (
+			"Rows have missing supplier fields — likely blank tail rows in the sheet.",
+			"Fill the missing supplier/invoice fields on real rows and delete blank tail rows before rerunning.",
+		)
 	if "suspicious_change_alert" in reasons and not int(facts.get("rows_failed") or 0):
 		return (
-			"Confirm the mass edit/deletion was intentional before finance or ops rely on the updated sheet."
+			"An unusual edit or deletion pattern was detected in the source sheet.",
+			"Confirm the mass edit/deletion was intentional before finance or ops rely on the updated sheet.",
 		)
-	return "Fix the top sync errors or source-sheet schema mismatch, then rerun the sheet sync."
+	return (
+		"The sync encountered errors that need manual review.",
+		"Fix the top sync errors or source-sheet schema mismatch, then rerun the sheet sync.",
+	)
 
 
 def _render_sheets_sync_critical(event: dict[str, Any]) -> dict[str, Any]:
@@ -339,17 +572,26 @@ def _render_sheets_sync_critical(event: dict[str, Any]) -> dict[str, Any]:
 	rows_failed = int(facts.get("rows_failed") or 0)
 	rows_processed = int(facts.get("rows_processed") or 0)
 	reasons = _unique_texts(facts.get("reasons") or [])
-	errors = _unique_texts(facts.get("errors") or [], limit=3)
+	errors = _unique_texts(facts.get("errors") or [], limit=5)
 	alerts = _unique_texts(facts.get("alerts") or [], limit=3)
 	trigger = _clean_text(facts.get("trigger"), fallback="manual")
 	if trigger == "scheduled":
 		trigger = "scheduled (6-hour fallback)"
 	sheet_ref = _build_default_source_ref("sheets_sync_critical", facts)
-	summary = (
-		f"{sheet_ref} needs intervention: {rows_failed} of {rows_processed} rows failed during {trigger}."
-		if rows_failed
-		else f"{sheet_ref} synced, but the change pattern looks unusual and needs review."
-	)
+	diagnosis, recommended_fix = _sheet_recommended_fix(facts)
+	if rows_failed:
+		summary = f"{sheet_ref}: {rows_failed} of {rows_processed} rows failed during {trigger}."
+		if diagnosis:
+			summary += f" Root cause: {diagnosis}"
+	else:
+		summary = f"{sheet_ref} synced, but the change pattern looks unusual and needs review."
+	delta = _compute_delta_summary("sheets_sync_critical", facts, event.get("_previous_snapshot"))
+	if delta:
+		summary += f" {delta}"
+	if rows_failed:
+		action = recommended_fix
+	else:
+		action = "Verify the reported edit/deletion pattern against the source sheet before the team relies on it."
 	evidence_bits = [f"Sheet: {sheet_ref}", f"Trigger: {trigger}"]
 	if reasons:
 		evidence_bits.append("Reasons: " + ", ".join(reasons))
@@ -363,13 +605,9 @@ def _render_sheets_sync_critical(event: dict[str, Any]) -> dict[str, Any]:
 	return {
 		"summary": summary,
 		"why_it_matters": "Finance and ops can end up working from stale or misleading sheet-backed data until this lane is verified.",
-		"action_now": (
-			"Open the source sheet, fix the blocking rows or schema issue, and rerun the sync now."
-			if rows_failed
-			else "Verify the reported edit/deletion pattern against the source sheet before the team relies on it."
-		),
+		"action_now": action,
 		"owner": event["owner"],
-		"recommended_fix": _sheet_recommended_fix(facts),
+		"recommended_fix": recommended_fix,
 		"evidence": " | ".join(evidence_bits),
 		"urgency": _severity_label(event["severity"]),
 		"event_count": max(rows_failed, len(alerts), len(errors), 1),
@@ -396,15 +634,27 @@ def _render_maintenance_sla_backlog(event: dict[str, Any]) -> dict[str, Any]:
 				age=_clean_text((row or {}).get("age_hours")),
 			)
 		)
+	delta = _compute_delta_summary("maintenance_sla_backlog", facts, event.get("_previous_snapshot"))
+	cluster_insight = _analyze_store_clusters(breaches)
+	aging_insight = _analyze_aging_pattern(breaches)
 	summary = f"{total} maintenance requests are past SLA."
 	if count_bits:
 		summary += " " + ", ".join(count_bits) + "."
+	if delta:
+		summary += f" {delta}"
+	why = "Stores are carrying unresolved maintenance issues beyond target response time, which can keep operations exposed or degraded."
+	if cluster_insight:
+		why = cluster_insight + " " + why
+	action = "Review the Projects queue now, assign or escalate the oldest urgent items first, and update each ticket with the next ETA."
+	recommended = "Clear urgent breaches first, then rebalance high/normal backlog and chase vendors with no confirmed schedule."
+	if aging_insight:
+		recommended = f"{aging_insight} {recommended}"
 	return {
 		"summary": summary,
-		"why_it_matters": "Stores are carrying unresolved maintenance issues beyond target response time, which can keep operations exposed or degraded.",
-		"action_now": "Review the Projects queue now, assign or escalate the oldest urgent items first, and update each ticket with the next ETA.",
+		"why_it_matters": why,
+		"action_now": action,
 		"owner": event["owner"],
-		"recommended_fix": "Clear urgent breaches first, then rebalance high/normal backlog and chase vendors with no confirmed schedule.",
+		"recommended_fix": recommended,
 		"evidence": " | ".join(
 			_unique_texts(
 				[
@@ -636,13 +886,22 @@ def _render_morning_readiness_digest(event: dict[str, Any]) -> dict[str, Any]:
 	status = _clean_text(facts.get("status"), fallback="yellow").lower()
 	areas = list(facts.get("areas") or [])
 	area_bits = []
+	failed_lanes = []
+	lane_diagnoses = []
 	for area in areas:
+		area_status = _clean_text((area or {}).get("status"), fallback="").lower()
 		area_bits.append(
 			"{label}: {status}".format(
 				label=_clean_text((area or {}).get("label")),
 				status=_clean_text((area or {}).get("status")),
 			)
 		)
+		if area_status in ("red", "failed", "error"):
+			failed_lanes.append(_clean_text((area or {}).get("label")))
+			diagnosis = _diagnose_morning_lane(area)
+			if diagnosis:
+				lane_diagnoses.append(diagnosis)
+	delta = _compute_delta_summary("morning_readiness_digest", facts, event.get("_previous_snapshot"))
 	if status == "green":
 		summary = f"Morning syncs are ready for operations for {_clean_text(facts.get('report_date'))}."
 		action = "No action needed."
@@ -650,15 +909,25 @@ def _render_morning_readiness_digest(event: dict[str, Any]) -> dict[str, Any]:
 		why = "Store ordering, warehouse inventory, and finance baselines all landed before the morning operating window."
 	elif status == "red":
 		summary = f"Morning syncs are not ready for {_clean_text(facts.get('report_date'))}."
-		action = "Escalate the failing lane now and rerun the missed sync before teams rely on the data."
+		if failed_lanes:
+			summary += f" Failing: {', '.join(failed_lanes)}."
+		if delta:
+			summary += f" {delta}"
+		if lane_diagnoses:
+			action = " ".join(lane_diagnoses)
+		else:
+			action = "Escalate the failing lane now and rerun the missed sync before teams rely on the data."
 		recommended = "Open the morning sync report, recover the blocked lane, and clear the latest runtime error before 9:00 AM PHT."
 		why = "At least one operational data lane missed the readiness target or failed outright."
 	else:
 		summary = f"Morning syncs landed with exceptions for {_clean_text(facts.get('report_date'))}."
-		action = "Review the exception lane now and clear it before finance or ops uses the affected data."
-		recommended = (
-			"Resolve the exception rows or rerun the incomplete lane so the day starts from a clean baseline."
-		)
+		if delta:
+			summary += f" {delta}"
+		if lane_diagnoses:
+			action = " ".join(lane_diagnoses)
+		else:
+			action = "Review the exception lane now and clear it before finance or ops uses the affected data."
+		recommended = "Resolve the exception rows or rerun the incomplete lane so the day starts from a clean baseline."
 		why = "The morning data is present, but at least one lane still needs operator attention."
 	return {
 		"summary": summary,
@@ -693,7 +962,10 @@ RENDERERS = {
 }
 
 
-def build_notification_event(event: dict[str, Any]) -> dict[str, Any]:
+def build_notification_event(
+	event: dict[str, Any],
+	previous_snapshot: dict[str, Any] | None = None,
+) -> dict[str, Any]:
 	if not isinstance(event, dict):
 		raise ValueError("Notification event must be a dict")
 	family = _clean_text(event.get("family"), fallback="")
@@ -711,10 +983,14 @@ def build_notification_event(event: dict[str, Any]) -> dict[str, Any]:
 	normalized.setdefault("owner", policy["owner"])
 	normalized.setdefault("source_ref", _build_default_source_ref(family, facts))
 	normalized.setdefault("dedup_key", _build_default_dedup_key(family, facts, normalized["source_ref"]))
+	if previous_snapshot:
+		normalized["_previous_snapshot"] = previous_snapshot
 	brief = RENDERERS[family](normalized)
 	normalized["brief"] = brief
 	normalized["event_count"] = brief.get("event_count") or normalized.get("event_count") or 1
 	normalized["fallback_text"] = normalized.get("fallback_text") or render_notification_text(normalized)
+	normalized["_current_snapshot"] = _build_snapshot_for_cache(family, facts)
+	normalized.pop("_previous_snapshot", None)
 	return normalized
 
 
