@@ -2628,10 +2628,12 @@ def get_returns_pending(store: str | None = None) -> dict:
         WHERE ri.has_issue = 1
             AND NOT EXISTS (
                 SELECT 1 FROM `tabStock Entry`
-                WHERE stock_entry_type = 'Material Transfer'
-                    AND purpose = 'Material Transfer'
-                    AND remarks LIKE CONCAT('%%Store Return%%', ri.parent, '%%')
-                    AND docstatus = 1
+                WHERE docstatus = 1
+                    AND remarks LIKE CONCAT('%%Receiving: ', ri.parent, '%%')
+                    AND (
+                        remarks LIKE CONCAT('%%Store Return%%', ri.parent, '%%')
+                        OR remarks LIKE CONCAT('%%Store Disposal%%', ri.parent, '%%')
+                    )
             )
     """
 	params = {}
@@ -2693,16 +2695,232 @@ def _extract_store_issue_context(stock_entry):
 	return receiving_name, store, reason
 
 
-def _create_store_issue_credit_note(stock_entry, store, reason):
+def _existing_store_issue_entry(receiving: str, request_source: str) -> str | None:
+	"""Return an existing live Stock Entry for the same receiving and issue type."""
+	if not receiving:
+		return None
+
+	filters = {
+		"docstatus": ["<", 2],
+		"remarks": ["like", f"%Receiving: {receiving}%"],
+	}
+	if _has_column("Stock Entry", "custom_request_source"):
+		filters["custom_request_source"] = request_source
+
+	existing_name = frappe.db.get_value("Stock Entry", filters, "name", order_by="creation desc")
+	if existing_name:
+		return existing_name
+
+	remarks_hint = "Store Return" if request_source == REQUEST_SOURCE_STORE_RETURN else "Store Disposal"
+	return frappe.db.get_value(
+		"Stock Entry",
+		{
+			"docstatus": ["<", 2],
+			"remarks": ["like", f"%{remarks_hint}%Receiving: {receiving}%"],
+		},
+		"name",
+		order_by="creation desc",
+	)
+
+
+def _find_existing_store_issue_credit(stock_entry_name: str) -> tuple[str | None, str | None]:
+	"""Return previously created credit-note artifacts for a store issue if they exist."""
+	if not stock_entry_name:
+		return None, None
+
+	credit_note_name = frappe.db.get_value(
+		"BEI Billing Schedule",
+		{
+			"billing_type": "Credit Note",
+			"remarks": ["like", f"%Store Issue {stock_entry_name}%"],
+			"status": ["!=", "Cancelled"],
+		},
+		"name",
+		order_by="creation desc",
+	)
+	journal_entry_name = frappe.db.get_value(
+		"Journal Entry",
+		{"cheque_no": stock_entry_name, "docstatus": ["!=", 2]},
+		"name",
+		order_by="creation desc",
+	)
+	return credit_note_name, journal_entry_name
+
+
+def _resolve_store_issue_origin_context(receiving_name: str | None, store: str | None) -> dict:
+	"""Resolve the trip/stop/store-order context for a store return or disposal."""
+	context = {
+		"receiving": receiving_name,
+		"trip_reference": None,
+		"trip_stop_idx": None,
+		"store_order": None,
+		"store": store,
+	}
+	if not receiving_name or not frappe.db.exists("BEI Store Receiving", receiving_name):
+		return context
+
+	receiving_doc = frappe.get_doc("BEI Store Receiving", receiving_name)
+	context["trip_reference"] = getattr(receiving_doc, "trip", None)
+	context["store"] = getattr(receiving_doc, "store", None) or store
+
+	trip_reference = context["trip_reference"]
+	store_name = context["store"]
+	if not trip_reference or not frappe.db.exists("DocType", "BEI Trip Stop"):
+		return context
+
+	stop_filters = {"parent": trip_reference}
+	if store_name and _has_column("BEI Trip Stop", "store"):
+		stop_filters["store"] = store_name
+
+	stop_rows = frappe.get_all(
+		"BEI Trip Stop",
+		filters=stop_filters,
+		fields=["idx", "store_order"],
+		order_by="idx asc",
+		limit_page_length=1,
+	)
+	if stop_rows:
+		stop_row = stop_rows[0]
+		context["trip_stop_idx"] = stop_row.get("idx")
+		context["store_order"] = stop_row.get("store_order")
+
+	return context
+
+
+def _resolve_store_order_item_pricing(store_order_name: str | None) -> dict[str, dict[str, float]]:
+	"""Return per-item price and delivered quantity from the linked store order."""
+	if not store_order_name:
+		return {}
+
+	rows = frappe.get_all(
+		"BEI Store Order Item",
+		filters={"parent": store_order_name},
+		fields=["item_code", "unit_price", "qty_delivered", "qty_approved", "qty_requested"],
+		limit_page_length=500,
+	)
+	result: dict[str, dict[str, float]] = {}
+	for row in rows:
+		item_code = str(row.get("item_code") or "").strip()
+		if not item_code:
+			continue
+		result[item_code] = {
+			"unit_price": flt(row.get("unit_price"), 6),
+			"delivered_qty": (
+				flt(row.get("qty_delivered"))
+				or flt(row.get("qty_approved"))
+				or flt(row.get("qty_requested"))
+			),
+		}
+	return result
+
+
+def _calculate_delivery_return_credit(stock_entry, original_billing: dict) -> dict:
+	"""Calculate delivery-billing credit-note amounts from returned store items."""
+	origin_context = dict(original_billing.get("_origin_context") or {})
+	pricing_map = _resolve_store_order_item_pricing(origin_context.get("store_order"))
+	original_goods_value = flt(original_billing.get("goods_value"), 2)
+	original_handling_fee = flt(original_billing.get("handling_fee"), 2)
+
+	goods_reversal = 0.0
+	for row in getattr(stock_entry, "items", []) or []:
+		item_code = str(getattr(row, "item_code", "") or "").strip()
+		qty = flt(getattr(row, "qty", 0), 6)
+		if qty <= 0 or not item_code:
+			continue
+		pricing = pricing_map.get(item_code)
+		if not pricing:
+			continue
+		unit_price = flt(pricing.get("unit_price"), 6)
+		delivered_qty = flt(pricing.get("delivered_qty"), 6)
+		effective_qty = min(qty, delivered_qty) if delivered_qty > 0 else qty
+		if unit_price > 0 and effective_qty > 0:
+			goods_reversal += effective_qty * unit_price
+
+	if goods_reversal <= 0:
+		goods_reversal = min(flt(getattr(stock_entry, "total_outgoing_value", 0), 2), original_goods_value)
+
+	goods_reversal = flt(min(goods_reversal, original_goods_value), 2)
+	markup_percent = flt(original_billing.get("custom_markup_percent"), 6)
+	if markup_percent <= 0 and original_goods_value > 0 and original_handling_fee > 0:
+		markup_percent = (original_handling_fee / original_goods_value) * 100
+
+	handling_reversal = 0.0
+	if goods_reversal > 0 and markup_percent > 0:
+		handling_reversal = flt(goods_reversal * markup_percent / 100, 2)
+	elif goods_reversal > 0 and original_goods_value > 0 and original_handling_fee > 0:
+		handling_reversal = flt(original_handling_fee * (goods_reversal / original_goods_value), 2)
+
+	handling_reversal = flt(min(handling_reversal, original_handling_fee), 2)
+	total_credit = flt(goods_reversal + handling_reversal, 2)
+	return {
+		"goods_value": goods_reversal,
+		"handling_fee": handling_reversal,
+		"delivery_fee": 0.0,
+		"logistics_fee": 0.0,
+		"subtotal": -total_credit,
+		"vat_amount": 0.0,
+		"total_amount": -total_credit,
+		"balance_due": -total_credit,
+		"markup_percent": markup_percent,
+	}
+
+
+def _resolve_store_issue_credit_status(original_billing: dict) -> str:
+	"""Map the original billing status to a safe credit-note review state."""
+	if str(original_billing.get("status") or "").strip() == "Draft":
+		return "Draft"
+	return "Pending"
+
+
+def _create_store_issue_credit_note(stock_entry, store, reason, receiving_name: str | None = None):
 	"""Create the finance reversal record for a store issue movement when applicable."""
+	existing_credit_note, existing_journal_entry = _find_existing_store_issue_credit(stock_entry.name)
+	if existing_credit_note or existing_journal_entry:
+		return existing_credit_note, existing_journal_entry
+
 	credit_note_name = None
 	journal_entry_name = None
-	original_billing = _find_original_billing(store)
+	original_billing = _find_original_billing(store, receiving_name=receiving_name)
 	if not original_billing:
 		return credit_note_name, journal_entry_name
 
 	frappe.db.savepoint("store_issue_credit")
 	try:
+		if str(original_billing.get("billing_type") or "") == "Delivery":
+			credit_values = _calculate_delivery_return_credit(stock_entry, original_billing)
+			total_credit = abs(flt(credit_values.get("total_amount"), 2))
+			if total_credit > 0:
+				cn = frappe.new_doc("BEI Billing Schedule")
+				cn.billing_type = "Credit Note"
+				cn.naming_series = "BILL-CN-.YYYY.-.#####"
+				cn.store = original_billing.get("store")
+				cn.store_type = original_billing.get("store_type")
+				cn.billing_period = original_billing.get("billing_period")
+				cn.trip_reference = original_billing.get("trip_reference")
+				cn.trip_stop_idx = original_billing.get("trip_stop_idx")
+				cn.cargo_type = original_billing.get("cargo_type")
+				cn.status = _resolve_store_issue_credit_status(original_billing)
+				cn.goods_value = -flt(credit_values.get("goods_value"), 2)
+				cn.handling_fee = -flt(credit_values.get("handling_fee"), 2)
+				cn.delivery_fee = -flt(credit_values.get("delivery_fee"), 2)
+				cn.logistics_fee = -flt(credit_values.get("logistics_fee"), 2)
+				cn.subtotal = flt(credit_values.get("subtotal"), 2)
+				cn.vat_amount = flt(credit_values.get("vat_amount"), 2)
+				cn.total_amount = flt(credit_values.get("total_amount"), 2)
+				cn.balance_due = flt(credit_values.get("balance_due"), 2)
+				cn.remarks = (
+					f"Credit Note for Store Issue {stock_entry.name} | {store} | {reason} | "
+					f"Original Billing: {original_billing.get('name') or 'N/A'}"
+				)
+				if _has_column("BEI Billing Schedule", "custom_markup_percent"):
+					cn.custom_markup_percent = flt(credit_values.get("markup_percent"), 6)
+				cn.flags.ignore_mandatory = True
+				cn.insert(ignore_permissions=True)
+				credit_note_name = cn.name
+
+			frappe.db.release_savepoint("store_issue_credit")
+			return credit_note_name, journal_entry_name
+
 		return_value = flt(stock_entry.total_outgoing_value or 0)
 		billed_value = flt(original_billing.get("total_billed_value")) or 1
 		ratio = min(return_value / billed_value, 1.0) if billed_value > 0 else 0
@@ -2720,7 +2938,7 @@ def _create_store_issue_credit_note(stock_entry, store, reason):
 			cn.store = original_billing.get("store")
 			cn.billing_period_start = nowdate()
 			cn.billing_period_end = nowdate()
-			cn.status = "Unpaid"
+			cn.status = _resolve_store_issue_credit_status(original_billing)
 			cn.royalty_fee = -royalty_rev
 			cn.management_fee = -mgmt_rev
 			cn.marketing_fee = -marketing_rev
@@ -2835,14 +3053,7 @@ def create_store_return(
 	store = receiving_doc.store
 
 	# G-100: Idempotency — check if a return Stock Entry already exists for this receiving
-	existing_return = frappe.db.exists(
-		"Stock Entry",
-		{
-			"stock_entry_type": "Material Transfer",
-			"remarks": ["like", f"%Receiving: {receiving}%"],
-			"docstatus": ["<", 2],
-		},
-	)
+	existing_return = _existing_store_issue_entry(receiving, REQUEST_SOURCE_STORE_RETURN)
 	if existing_return:
 		frappe.throw(_("A return already exists for receiving {0}: {1}").format(receiving, existing_return))
 
@@ -3026,14 +3237,7 @@ def create_store_disposal(
 	receiving_doc = frappe.get_doc("BEI Store Receiving", receiving)
 	store = receiving_doc.store
 
-	existing_disposal = frappe.db.exists(
-		"Stock Entry",
-		{
-			"stock_entry_type": "Material Issue",
-			"remarks": ["like", f"%Store Disposal%Receiving: {receiving}%"],
-			"docstatus": ["<", 2],
-		},
-	)
+	existing_disposal = _existing_store_issue_entry(receiving, REQUEST_SOURCE_STORE_DISPOSAL)
 	if existing_disposal:
 		frappe.throw(
 			_("A disposal already exists for receiving {0}: {1}").format(receiving, existing_disposal)
@@ -3123,7 +3327,12 @@ def process_store_return(stock_entry_name: str) -> dict:
 			frappe.throw(_("Not a valid store return entry"))
 
 	receiving_name, store, reason = _extract_store_issue_context(se)
-	credit_note_name, jv_name = _create_store_issue_credit_note(se, store, reason)
+	credit_note_name, jv_name = _create_store_issue_credit_note(
+		se, store, reason, receiving_name=receiving_name
+	)
+	credit_note_status = (
+		frappe.db.get_value("BEI Billing Schedule", credit_note_name, "status") if credit_note_name else None
+	)
 
 	# G-002 Task 2D: Notification OUTSIDE savepoint — failure must NOT roll back
 	try:
@@ -3137,6 +3346,7 @@ def process_store_return(stock_entry_name: str) -> dict:
 		"receiving": receiving_name,
 		"items_returned": len(se.items),
 		"credit_note": credit_note_name,
+		"credit_note_status": credit_note_status,
 		"journal_entry": jv_name,
 		"message": f"Return {se.name} processed — {len(se.items)} item(s) returned, credit note: {credit_note_name or 'N/A'}",
 	}
@@ -3162,7 +3372,12 @@ def process_store_disposal(stock_entry_name: str) -> dict:
 			frappe.throw(_("Not a valid store disposal entry"))
 
 	receiving_name, store, reason = _extract_store_issue_context(se)
-	credit_note_name, journal_entry_name = _create_store_issue_credit_note(se, store, reason)
+	credit_note_name, journal_entry_name = _create_store_issue_credit_note(
+		se, store, reason, receiving_name=receiving_name
+	)
+	credit_note_status = (
+		frappe.db.get_value("BEI Billing Schedule", credit_note_name, "status") if credit_note_name else None
+	)
 
 	try:
 		_notify_store_issue_processed(se, store, reason, credit_note_name, issue_label="Store Disposal")
@@ -3175,6 +3390,7 @@ def process_store_disposal(stock_entry_name: str) -> dict:
 		"receiving": receiving_name,
 		"items_disposed": len(se.items),
 		"credit_note": credit_note_name,
+		"credit_note_status": credit_note_status,
 		"journal_entry": journal_entry_name,
 		"message": (
 			f"Disposal {se.name} processed — {len(se.items)} item(s) written off, "
@@ -3183,17 +3399,70 @@ def process_store_disposal(stock_entry_name: str) -> dict:
 	}
 
 
-def _find_original_billing(store):
-	"""Find the most recent billing for a store to calculate pro-rata fee reversal."""
+def _find_original_billing(store, receiving_name: str | None = None):
+	"""Find the most relevant original billing for a store issue reversal."""
+	origin_context = _resolve_store_issue_origin_context(receiving_name, store)
+	delivery_fields = [
+		"name",
+		"billing_type",
+		"store",
+		"status",
+		"store_type",
+		"trip_reference",
+		"trip_stop_idx",
+		"cargo_type",
+		"goods_value",
+		"handling_fee",
+		"delivery_fee",
+		"logistics_fee",
+		"subtotal",
+		"total_amount",
+	]
+	if _has_column("BEI Billing Schedule", "custom_markup_percent"):
+		delivery_fields.append("custom_markup_percent")
+
+	delivery_filters = []
+	if origin_context.get("trip_reference") and origin_context.get("trip_stop_idx"):
+		delivery_filters.append(
+			{
+				"billing_type": "Delivery",
+				"trip_reference": origin_context["trip_reference"],
+				"trip_stop_idx": origin_context["trip_stop_idx"],
+				"status": ["!=", "Cancelled"],
+			}
+		)
+	if store:
+		delivery_filters.append(
+			{
+				"billing_type": "Delivery",
+				"store": store,
+				"status": ["!=", "Cancelled"],
+			}
+		)
+
+	for filters in delivery_filters:
+		rows = frappe.get_all(
+			"BEI Billing Schedule",
+			filters=filters,
+			fields=delivery_fields,
+			order_by="modified desc",
+			limit_page_length=1,
+		)
+		if rows:
+			result = rows[0]
+			result["total_billed_value"] = flt(result.get("total_amount", 0)) or 1
+			result["_origin_context"] = origin_context
+			return result
+
 	billing = frappe.db.sql(
 		"""
-        SELECT name, store, royalty_fee, management_fee, marketing_fee,
+        SELECT name, billing_type, store, status, royalty_fee, management_fee, marketing_fee,
                ecommerce_fee, subtotal, total_amount
         FROM `tabBEI Billing Schedule`
         WHERE store = %s
         AND billing_type IN ('Monthly Fees', 'Delivery')
-        AND docstatus < 2
-        ORDER BY billing_period_end DESC
+        AND status != 'Cancelled'
+        ORDER BY generated_on DESC
         LIMIT 1
     """,
 		store,
@@ -3204,8 +3473,8 @@ def _find_original_billing(store):
 		return None
 
 	result = billing[0]
-	# total_billed_value is the PHP value used for pro-rata ratio (value / value = dimensionless)
 	result["total_billed_value"] = flt(result.get("total_amount", 0)) or 1
+	result["_origin_context"] = origin_context
 	return result
 
 

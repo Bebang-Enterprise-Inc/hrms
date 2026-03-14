@@ -186,8 +186,8 @@ class BEIBillingSchedule(Document):
 
 	def calculate_fees(self):
 		"""Calculate all fees based on store type and billing type."""
-		# Delivery billings have fees set by _create_delivery_billing()
-		if self.billing_type == "Delivery":
+		# Delivery, credit-note, and adjustment billings keep their manually supplied values.
+		if self.billing_type in {"Delivery", "Credit Note", "Adjustment"}:
 			return
 
 		# C-04/C-05 fix: Monthly fees should NOT include delivery/logistics

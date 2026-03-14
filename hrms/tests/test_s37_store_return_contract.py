@@ -48,6 +48,20 @@ class _FakeStockEntry:
 		self.submit_called = True
 
 
+class _FakeBillingSchedule:
+	counter = 0
+
+	def __init__(self):
+		type(self).counter += 1
+		self.doctype = "BEI Billing Schedule"
+		self.name = f"BILL-CN-TEST-{type(self).counter:04d}"
+		self.flags = types.SimpleNamespace(ignore_mandatory=False)
+		self.insert_called = False
+
+	def insert(self, ignore_permissions=True):
+		self.insert_called = True
+
+
 _DOCS_CREATED: list[_FakeStockEntry] = []
 
 
@@ -185,6 +199,7 @@ class TestS37StoreReturnContract(unittest.TestCase):
 	def setUp(self):
 		_DOCS_CREATED.clear()
 		_FakeStockEntry.counter = 0
+		_FakeBillingSchedule.counter = 0
 
 	def test_create_store_return_creates_intercompany_issue_and_receipt_pair(self):
 		original_stamp = store.stamp_stock_entry_contract
@@ -242,23 +257,94 @@ class TestS37StoreReturnContract(unittest.TestCase):
 	def test_process_store_return_accepts_intercompany_material_issue(self):
 		original_credit = store._create_store_issue_credit_note
 		original_notify = store._notify_store_issue_processed
+		original_get_value = store.frappe.db.get_value
 		try:
-			store._create_store_issue_credit_note = lambda se, store_name, reason: (
+			store._create_store_issue_credit_note = lambda se, store_name, reason, receiving_name=None: (
 				"BILL-CN-TEST-0001",
 				"ACC-JV-TEST-0001",
 			)
 			store._notify_store_issue_processed = lambda *args, **kwargs: None
+			store.frappe.db.get_value = (
+				lambda doctype, filters, fieldname=None, order_by=None, as_dict=False: "Pending"
+				if doctype == "BEI Billing Schedule"
+				else original_get_value(doctype, filters, fieldname, order_by, as_dict)
+			)
 
 			result = store.process_store_return("MAT-STE-TEST-0001")
 		finally:
 			store._create_store_issue_credit_note = original_credit
 			store._notify_store_issue_processed = original_notify
+			store.frappe.db.get_value = original_get_value
 
 		self.assertTrue(result["success"])
 		self.assertEqual(result["stock_entry"], "MAT-STE-TEST-0001")
 		self.assertEqual(result["credit_note"], "BILL-CN-TEST-0001")
+		self.assertEqual(result["credit_note_status"], "Pending")
 		self.assertEqual(result["journal_entry"], "ACC-JV-TEST-0001")
 		self.assertEqual(result["items_returned"], 1)
+
+	def test_create_store_issue_credit_note_uses_delivery_billing_goods_and_markup(self):
+		credit_notes: list[_FakeBillingSchedule] = []
+		stock_entry = types.SimpleNamespace(
+			name="MAT-STE-TEST-0009",
+			items=[types.SimpleNamespace(item_code="FG-001", qty=1)],
+			total_outgoing_value=0,
+		)
+		original_find_credit = store._find_existing_store_issue_credit
+		original_find_billing = store._find_original_billing
+		original_resolve_pricing = store._resolve_store_order_item_pricing
+		original_new_doc = store.frappe.new_doc
+		try:
+			store._find_existing_store_issue_credit = lambda stock_entry_name: (None, None)
+			store._find_original_billing = lambda store_name, receiving_name=None: {
+				"name": "BILL-DL-TEST-0001",
+				"billing_type": "Delivery",
+				"store": "TEST-STORE-BGC - BEI",
+				"status": "Pending",
+				"store_type": "JV",
+				"trip_reference": "TRIP-TEST-001",
+				"trip_stop_idx": 1,
+				"cargo_type": "DRY",
+				"goods_value": 300.0,
+				"handling_fee": 7.5,
+				"custom_markup_percent": 2.5,
+				"_origin_context": {"store_order": "SO-TEST-001"},
+			}
+			store._resolve_store_order_item_pricing = lambda store_order_name: {
+				"FG-001": {"unit_price": 100.0, "delivered_qty": 3.0}
+			}
+
+			def _new_doc(doctype):
+				if doctype == "BEI Billing Schedule":
+					doc = _FakeBillingSchedule()
+					credit_notes.append(doc)
+					return doc
+				return original_new_doc(doctype)
+
+			store.frappe.new_doc = _new_doc
+
+			credit_note_name, journal_entry_name = store._create_store_issue_credit_note(
+				stock_entry,
+				"TEST-STORE-BGC - BEI",
+				"quality",
+				receiving_name="BEI-RCV-TEST-0001",
+			)
+		finally:
+			store._find_existing_store_issue_credit = original_find_credit
+			store._find_original_billing = original_find_billing
+			store._resolve_store_order_item_pricing = original_resolve_pricing
+			store.frappe.new_doc = original_new_doc
+
+		self.assertEqual(credit_note_name, "BILL-CN-TEST-0001")
+		self.assertIsNone(journal_entry_name)
+		self.assertEqual(len(credit_notes), 1)
+		credit_note = credit_notes[0]
+		self.assertTrue(credit_note.insert_called)
+		self.assertEqual(credit_note.status, "Pending")
+		self.assertEqual(credit_note.goods_value, -100.0)
+		self.assertEqual(credit_note.handling_fee, -2.5)
+		self.assertEqual(credit_note.total_amount, -102.5)
+		self.assertEqual(credit_note.balance_due, -102.5)
 
 
 if __name__ == "__main__":
