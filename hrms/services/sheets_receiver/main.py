@@ -429,10 +429,12 @@ def configure_scheduled_jobs(schedule_module=schedule):
 	# Sheets Processing (Original)
 	# ==========================================================================
 
-	# Renew sheet watches every hour (they expire after 24h)
-	schedule_module.every(1).hour.do(renew_watches_job)
+	# Google Sheets/Drive watches — DISABLED 2026-03-14
+	# Watches consumed ~2,400 API calls/day and caused rate-limit outages on restart.
+	# The daily 8 AM baseline cron + 6-hour backup sync handle all operational needs.
+	# schedule_module.every(1).hour.do(renew_watches_job)
 
-	# Backup sync every 6 hours (in case webhooks missed)
+	# Backup sync every 6 hours (catches any changes between daily baselines)
 	schedule_module.every(6).hours.do(scheduled_sync_job)
 
 	if config.baseline_test_interval_minutes > 0:
@@ -453,8 +455,9 @@ def configure_scheduled_jobs(schedule_module=schedule):
 	# Scan all folders every 30 minutes (backup to webhooks)
 	schedule_module.every(30).minutes.do(scan_for_new_files_job)
 
-	# Renew folder watches every hour (they expire after 24h)
-	schedule_module.every(1).hour.do(renew_folder_watches_job)
+	# Folder watches — DISABLED 2026-03-14 (same reason as sheet watches)
+	# POS folders are scanned every 30 minutes via scan_for_new_files_job above.
+	# schedule_module.every(1).hour.do(renew_folder_watches_job)
 
 	# ==========================================================================
 	# Notifications & Reporting
@@ -472,8 +475,7 @@ def run_scheduler():
 	config = get_config()
 
 	logger.info("Scheduler started with jobs:")
-	logger.info("  - Sheet watch renewal: every 1 hour")
-	logger.info("  - Sheet backup sync: every 6 hours")
+	logger.info("  - Sheet backup sync: every 6 hours (watches disabled)")
 	logger.info("  - Daily AP/procurement baseline sync: dedicated loop, target 7 AM PHT")
 	if config.baseline_test_interval_minutes > 0:
 		logger.info(
@@ -483,8 +485,7 @@ def run_scheduler():
 	logger.info("  - POS file processing: every 2 minutes")
 	logger.info("  - Failed file retry: every 15 minutes")
 	logger.info("  - Folder scan (backup): every 30 minutes")
-	logger.info("  - Folder watch renewal: every 1 hour")
-	logger.info("  - Daily summary report: 7 AM PHT (23:00 UTC)")
+	logger.info("  - Folder scan (no watches): every 30 minutes")
 
 	while True:
 		schedule.run_pending()
@@ -514,26 +515,12 @@ def initial_setup():
 	for _key, sheet in sheets.items():
 		logger.info(f"  - {sheet.name} ({sheet.spreadsheet_id})")
 
-	# Set up sheet watches
-	logger.info("Setting up Google Drive watches for sheets...")
-	try:
-		client = get_sheets_client()
-		watches = client.setup_all_watches()
-		logger.info(f"Created/verified {len(watches)} sheet watches")
-	except Exception as e:
-		logger.error(f"Failed to set up sheet watches: {e}")
-		logger.warning("Service will continue without real-time notifications")
-		logger.warning("Using scheduled sync as fallback")
-
-	# Set up folder watches for POS files
-	logger.info("Setting up Google Drive watches for POS folders...")
-	try:
-		watcher = get_folder_watcher()
-		folder_watches = watcher.setup_all_folder_watches()
-		logger.info(f"Created/verified {len(folder_watches)} folder watches")
-	except Exception as e:
-		logger.error(f"Failed to set up folder watches: {e}")
-		logger.warning("Using scheduled folder scan as fallback")
+	# Google Drive watches — DISABLED 2026-03-14
+	# Watch setup on startup triggered 55 API calls in seconds, causing rate-limit
+	# outages that blocked ALL Google API operations (including data reads).
+	# Data sync relies on 8 AM daily baseline + 6-hour backup cron.
+	# POS folders are scanned every 30 minutes via scheduled job.
+	logger.info("Google Drive watches DISABLED — using scheduled sync only")
 
 	# Initial sync for sheets
 	logger.info("Performing initial sheet sync check...")
