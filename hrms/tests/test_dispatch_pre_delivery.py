@@ -70,6 +70,9 @@ def _install_fake_frappe_and_dependencies():
 
 		sys.modules["frappe"] = frappe
 		sys.modules["frappe.utils"] = utils
+		exceptions = types.ModuleType("frappe.exceptions")
+		exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
+		sys.modules["frappe.exceptions"] = exceptions
 
 	if "hrms" not in sys.modules:
 		hrms_pkg = types.ModuleType("hrms")
@@ -112,6 +115,14 @@ def _install_fake_frappe_and_dependencies():
 		scm_roles_mod.check_scm_permission = lambda roles, action: None
 		sys.modules["hrms.utils.scm_roles"] = scm_roles_mod
 
+	if "hrms.utils.supply_chain_contracts" not in sys.modules:
+		contracts_mod = types.ModuleType("hrms.utils.supply_chain_contracts")
+		contracts_mod.resolve_store_buyer_entity = lambda *args, **kwargs: {}
+		contracts_mod.resolve_markup_percent = lambda *args, **kwargs: 0.0
+		contracts_mod.buyer_entity_requires_billing_hold = lambda *args, **kwargs: False
+		contracts_mod.stamp_billing_schedule_contract = lambda *args, **kwargs: None
+		sys.modules["hrms.utils.supply_chain_contracts"] = contracts_mod
+
 	if "hrms.api.procurement" not in sys.modules:
 		procurement_mod = types.ModuleType("hrms.api.procurement")
 		procurement_mod.request_match_exception = lambda payload: {
@@ -141,6 +152,7 @@ class _Stop:
 		store="AYALA EVO - BEI",
 		store_order="SO-0001",
 	):
+		self.name = f"STOP-{idx:04d}"
 		self.idx = idx
 		self.status = status
 		self.billing_reference = billing_reference
@@ -233,6 +245,11 @@ class TestDispatchPreDelivery(unittest.TestCase):
 		dispatch.frappe.db.savepoint = MagicMock(return_value="delivery_billing")
 		dispatch.frappe.db.rollback = MagicMock(return_value=None)
 		dispatch.frappe.db.release_savepoint = MagicMock(return_value=None)
+		dispatch.frappe.db.set_value = MagicMock(
+			side_effect=lambda doctype, name, fieldname, value: setattr(stop, fieldname, value)
+			if doctype == "BEI Trip Stop" and name == stop.name and isinstance(fieldname, str)
+			else None
+		)
 		dispatch.frappe.log_error = MagicMock()
 
 		dispatch._create_delivery_billing(

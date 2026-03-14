@@ -66,6 +66,97 @@ def _get_record_value(record: Any, fieldname: str) -> Any:
 	return getattr(record, fieldname, None)
 
 
+def _find_employee_identity(employee_ref: str | None):
+	"""Resolve either an Employee ID or employee_name into a canonical Employee record."""
+	employee_ref = (employee_ref or "").strip()
+	if not employee_ref:
+		return None
+
+	employee = frappe.db.get_value("Employee", employee_ref, ["name", "employee_name"], as_dict=True)
+	if employee:
+		return employee
+
+	return frappe.db.get_value(
+		"Employee",
+		{"employee_name": employee_ref},
+		["name", "employee_name"],
+		as_dict=True,
+	)
+
+
+def _infer_vehicle_type(vehicle_label: str | None) -> str:
+	"""Choose a safe default BEI Vehicle type from free-text input."""
+	text = (vehicle_label or "").strip().lower()
+	if "reefer" in text and "van" in text:
+		return "Reefer Van"
+	if "reefer" in text or "cold" in text:
+		return "Reefer Truck"
+	if "motor" in text or "bike" in text:
+		return "Motorcycle"
+	if "l300" in text:
+		return "L300"
+	if "van" in text:
+		return "Van"
+	return "Truck"
+
+
+def _resolve_or_create_departure_vehicle(
+	vehicle_label: str | None,
+	vehicle_plate: str | None,
+) -> tuple[str, str]:
+	"""
+	Resolve a BEI Vehicle link for trip departure.
+
+	If the submitted vehicle is free text and no master exists yet, create a 3PL vehicle
+	record keyed by the plate so dispatch can proceed without pre-seeded master data.
+	"""
+	vehicle_label = (vehicle_label or "").strip()
+	vehicle_plate = (vehicle_plate or "").strip()
+
+	if not vehicle_label and not vehicle_plate:
+		return "", ""
+
+	if vehicle_label:
+		existing_name = frappe.db.get_value("BEI Vehicle", vehicle_label, "name")
+		if existing_name:
+			existing_plate = frappe.db.get_value("BEI Vehicle", existing_name, "vehicle_plate") or vehicle_plate
+			return str(existing_name), str(existing_plate or "")
+
+	if vehicle_plate:
+		existing_by_plate = frappe.db.get_value(
+			"BEI Vehicle",
+			{"vehicle_plate": vehicle_plate},
+			["name", "vehicle_plate"],
+			as_dict=True,
+		)
+		if existing_by_plate:
+			return (
+				str(_get_record_value(existing_by_plate, "name") or ""),
+				str(_get_record_value(existing_by_plate, "vehicle_plate") or vehicle_plate),
+			)
+
+	if not vehicle_plate:
+		return "", vehicle_label
+
+	try:
+		vehicle_doc = frappe.new_doc("BEI Vehicle")
+		vehicle_doc.naming_series = "BEI-VEH-.####"
+		vehicle_doc.vehicle_plate = vehicle_plate
+		vehicle_doc.vehicle_type = _infer_vehicle_type(vehicle_label)
+		vehicle_doc.owner_type = "3PL"
+		vehicle_doc.status = "Available"
+		if hasattr(vehicle_doc, "notes"):
+			vehicle_doc.notes = vehicle_label or vehicle_plate
+		vehicle_doc.insert(ignore_permissions=True)
+		return str(vehicle_doc.name or ""), vehicle_plate
+	except Exception:
+		frappe.log_error(
+			title="Dispatch Vehicle Auto-Create Failed",
+			message=f"vehicle_label={vehicle_label!r}, vehicle_plate={vehicle_plate!r}",
+		)
+		return "", vehicle_plate
+
+
 def _get_employee_phone_field() -> str | None:
 	"""Return the live employee mobile-number column across schema revisions."""
 	for fieldname in ("cell_number", "cell_phone"):
@@ -187,12 +278,23 @@ def confirm_departure(
 		frappe.throw(_("Trip is not in Preparing status"))
 
 	if driver:
-		trip.driver = driver
-		trip.driver_name = frappe.db.get_value("Employee", driver, "employee_name") or trip.driver_name
-	if vehicle:
-		trip.vehicle = vehicle
-	if vehicle_plate:
-		trip.vehicle_plate = vehicle_plate
+		employee = _find_employee_identity(driver)
+		if employee:
+			trip.driver = _get_record_value(employee, "name")
+			trip.driver_name = _get_record_value(employee, "employee_name") or trip.driver_name
+			_set_if_column(trip, "threepl_driver_name", "")
+		else:
+			trip.driver = ""
+			trip.driver_name = driver.strip()
+			_set_if_column(trip, "threepl_driver_name", driver.strip())
+
+	resolved_vehicle, resolved_vehicle_plate = _resolve_or_create_departure_vehicle(vehicle, vehicle_plate)
+	if resolved_vehicle:
+		trip.vehicle = resolved_vehicle
+	elif vehicle:
+		trip.vehicle = ""
+	if resolved_vehicle_plate:
+		trip.vehicle_plate = resolved_vehicle_plate
 	if temperature:
 		trip.departure_temp = float(temperature)
 	if seal_number:

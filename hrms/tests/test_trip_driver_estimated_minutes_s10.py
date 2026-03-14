@@ -105,6 +105,14 @@ def _install_fake_frappe_and_dependencies():
 		scm_roles_mod.check_scm_permission = lambda roles, action: None
 		sys.modules["hrms.utils.scm_roles"] = scm_roles_mod
 
+	if "hrms.utils.supply_chain_contracts" not in sys.modules:
+		contracts_mod = types.ModuleType("hrms.utils.supply_chain_contracts")
+		contracts_mod.resolve_store_buyer_entity = lambda *args, **kwargs: {}
+		contracts_mod.resolve_markup_percent = lambda *args, **kwargs: 0.0
+		contracts_mod.buyer_entity_requires_billing_hold = lambda *args, **kwargs: False
+		contracts_mod.stamp_billing_schedule_contract = lambda *args, **kwargs: None
+		sys.modules["hrms.utils.supply_chain_contracts"] = contracts_mod
+
 
 _install_fake_frappe_and_dependencies()
 dispatch_spec = importlib.util.spec_from_file_location(
@@ -137,6 +145,7 @@ class _TripDoc:
 		self.name = "TRIP-S10-0001"
 		self.driver = None
 		self.driver_name = None
+		self.threepl_driver_name = None
 		self.vehicle = None
 		self.vehicle_plate = None
 		self.cargo_type = None
@@ -152,9 +161,11 @@ class _TripDoc:
 class _TripMutationDoc:
 	def __init__(self, status="Preparing"):
 		self.name = "TRIP-MUTATION-0001"
+		self.doctype = "BEI Distribution Trip"
 		self.status = status
 		self.driver = None
 		self.driver_name = None
+		self.threepl_driver_name = None
 		self.vehicle = None
 		self.vehicle_plate = None
 		self.departure_temp = None
@@ -356,6 +367,19 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		trip = _TripMutationDoc(status="Preparing")
 		trip.stops[0].store_order = "SO-001"
 		dispatch.frappe.get_doc = MagicMock(return_value=trip)
+		dispatch.frappe.db.get_value = MagicMock(
+			side_effect=lambda doctype, filters=None, fieldname=None, as_dict=False: (
+				{"name": "EMP-DRIVER-001", "employee_name": "Juan Driver"}
+				if doctype == "Employee" and filters == "EMP-DRIVER-001" and as_dict
+				else "TRK-001"
+				if doctype == "BEI Vehicle" and filters == "TRK-001" and fieldname == "name"
+				else "ABC-1234"
+				if doctype == "BEI Vehicle" and filters == "TRK-001" and fieldname == "vehicle_plate"
+				else "BEI-Owned"
+				if doctype == "BEI Vehicle" and filters == "TRK-001" and fieldname == "owner_type"
+				else None
+			)
+		)
 
 		with (
 			patch.object(dispatch, "now_datetime", return_value="2026-02-28 08:00:00"),
@@ -381,6 +405,66 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		self.assertTrue(trip.flags.ignore_user_permissions)
 		self.assertEqual(trip.save_kwargs, {"ignore_permissions": True})
 		set_in_transit.assert_called_once_with([{"store_order": "SO-001"}])
+
+	def test_confirm_departure_accepts_free_text_driver_and_autocreates_threepl_vehicle(self):
+		trip = _TripMutationDoc(status="Preparing")
+		vehicle_doc = types.SimpleNamespace(
+			name="BEI-VEH-0001",
+			naming_series=None,
+			vehicle_plate=None,
+			vehicle_type=None,
+			owner_type=None,
+			status=None,
+			notes=None,
+			insert_kwargs=None,
+		)
+
+		def _vehicle_insert(**kwargs):
+			vehicle_doc.insert_kwargs = kwargs
+			return vehicle_doc
+
+		vehicle_doc.insert = _vehicle_insert
+
+		def _get_value(doctype, filters=None, fieldname=None, as_dict=False):
+			if doctype == "Employee":
+				return None
+			if doctype == "BEI Vehicle" and filters == "S037 Truck":
+				return None
+			if doctype == "BEI Vehicle" and filters == {"vehicle_plate": "ABC-1234"} and as_dict:
+				return None
+			if doctype == "BEI Vehicle" and filters == "BEI-VEH-0001" and fieldname == "owner_type":
+				return "3PL"
+			return None
+
+		dispatch.frappe.get_doc = MagicMock(return_value=trip)
+		dispatch.frappe.db.get_value = MagicMock(side_effect=_get_value)
+		dispatch.frappe.new_doc = MagicMock(return_value=vehicle_doc)
+
+		with (
+			patch.object(dispatch, "_has_column", return_value=True),
+			patch.object(dispatch, "now_datetime", return_value="2026-02-28 08:15:00"),
+			patch.object(dispatch, "_set_store_orders_in_transit") as set_in_transit,
+		):
+			result = dispatch.confirm_departure(
+				trip_name="TRIP-MUTATION-0001",
+				driver="S037 Driver",
+				vehicle="S037 Truck",
+				vehicle_plate="ABC-1234",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(trip.status, "In Transit")
+		self.assertEqual(trip.driver, "")
+		self.assertEqual(trip.driver_name, "S037 Driver")
+		self.assertEqual(trip.threepl_driver_name, "S037 Driver")
+		self.assertEqual(trip.vehicle, "BEI-VEH-0001")
+		self.assertEqual(trip.vehicle_plate, "ABC-1234")
+		self.assertEqual(vehicle_doc.vehicle_type, "Truck")
+		self.assertEqual(vehicle_doc.owner_type, "3PL")
+		self.assertEqual(vehicle_doc.status, "Available")
+		self.assertEqual(vehicle_doc.notes, "S037 Truck")
+		self.assertEqual(vehicle_doc.insert_kwargs, {"ignore_permissions": True})
+		set_in_transit.assert_called_once_with([{"store_order": ""}])
 
 	def test_confirm_delivery_uses_role_gated_save(self):
 		trip = _TripMutationDoc(status="In Transit")
