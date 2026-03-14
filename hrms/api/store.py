@@ -10,6 +10,7 @@ import base64
 import hashlib
 import json
 import re
+from contextlib import contextmanager
 
 import frappe
 from frappe import _
@@ -31,6 +32,22 @@ from hrms.utils.supply_chain_contracts import (
 	stamp_material_request_contract,
 	stamp_stock_entry_contract,
 )
+
+
+@contextmanager
+def _run_as_system_user(user: str = "Administrator"):
+	"""Temporarily elevate the session user for stock-ledger mutations."""
+	session = getattr(frappe, "session", None)
+	if session is None:
+		session = getattr(getattr(frappe, "local", None), "session", None)
+	original_user = getattr(session, "user", None)
+	try:
+		if session and user:
+			session.user = user
+		yield
+	finally:
+		if session and original_user:
+			session.user = original_user
 
 
 def _manual_pos_upload_disabled_message() -> str:
@@ -2469,8 +2486,13 @@ def _create_store_receiving_stock_entry(receiving, contract: dict) -> str | None
 			row["batch_no"] = item.batch_no
 		stock_entry.append("items", row)
 
-	stock_entry.insert(ignore_permissions=True)
-	stock_entry.submit()
+	with _run_as_system_user():
+		stock_entry.insert(ignore_permissions=True)
+		if getattr(stock_entry, "flags", None) is None:
+			stock_entry.flags = type("_StoreReceivingFlags", (), {})()
+		stock_entry.flags.ignore_permissions = True
+		stock_entry.flags.ignore_user_permissions = True
+		stock_entry.submit()
 	return stock_entry.name
 
 

@@ -69,6 +69,10 @@ class _FakeStockEntry:
 		self.custom_source_company = None
 		self.custom_target_company = None
 		self.custom_finance_treatment = None
+		self.flags = types.SimpleNamespace(
+			ignore_permissions=False,
+			ignore_user_permissions=False,
+		)
 
 	def append(self, table, row):
 		self.items.append(types.SimpleNamespace(**row))
@@ -305,6 +309,8 @@ class TestS37StoreReceivingContract(unittest.TestCase):
 		self.assertEqual(stock_entry.custom_source_company, "Bebang Kitchen Inc.")
 		self.assertEqual(stock_entry.custom_target_company, "Bebang Enterprise Inc.")
 		self.assertEqual(stock_entry.custom_finance_treatment, "intercompany")
+		self.assertTrue(stock_entry.flags.ignore_permissions)
+		self.assertTrue(stock_entry.flags.ignore_user_permissions)
 		self.assertTrue(stock_entry.insert_called)
 		self.assertTrue(stock_entry.submit_called)
 		self.assertEqual(len(stock_entry.items), 1)
