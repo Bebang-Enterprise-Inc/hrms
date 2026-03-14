@@ -4,6 +4,12 @@ Run via: bench execute hrms.patches.v16_0.s043_seed_shift_types.execute
 """
 
 import frappe
+from frappe.utils import now_datetime
+
+
+# Auto-attendance starts from BEI's February 1, 2026 go-live.
+# `process_attendance_after` is a Date field, not a Time field.
+AUTO_ATTENDANCE_START_DATE = "2026-02-01"
 
 
 SHIFT_TYPES = [
@@ -103,8 +109,10 @@ COMMON_FIELDS = {
     "working_hours_threshold_for_half_day": 4,
     "working_hours_threshold_for_absent": 1,
     "allow_check_out_after_shift_end_time": 60,
+    "working_hours_calculation_based_on": "First Check-in and Last Check-out",
     "enable_late_entry_marking": 1,
     "enable_early_exit_marking": 1,
+    "auto_update_last_sync": 1,
     "determine_check_in_and_check_out": "Alternating entries as IN and OUT during the same shift",
     "mark_auto_attendance_on_holidays": 0,
 }
@@ -118,8 +126,9 @@ def execute():
     for shift_def in SHIFT_TYPES:
         name = shift_def["name"]
         fields = {**COMMON_FIELDS, **shift_def}
-        # last_sync_of_checkin mirrors process_attendance_after
-        fields["last_sync_of_checkin"] = fields["process_attendance_after"]
+        fields["process_attendance_after"] = AUTO_ATTENDANCE_START_DATE
+        # Seed a valid baseline immediately; the hourly scheduler keeps it fresh afterwards.
+        fields["last_sync_of_checkin"] = now_datetime()
 
         if frappe.db.exists("Shift Type", name):
             # Update existing — ensure all auto-attendance fields are set

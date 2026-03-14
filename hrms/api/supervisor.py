@@ -447,19 +447,10 @@ def _ensure_shift_type_for_plan_row(row: Any):
 		)
 
 	# S043: provision with ALL required fields for auto-attendance.
-	# Bare provisioning (start_time + end_time only) causes
-	# has_incorrect_shift_config() to return True and silently skip
-	# auto-attendance processing.
-	from datetime import timedelta
-
-	end_dt = frappe.utils.get_time(end_time)
-	start_dt = frappe.utils.get_time(start_time)
-
-	# process_attendance_after = shift end + 60 minutes
-	process_after = frappe.utils.get_time(
-		(frappe.utils.datetime.datetime.combine(frappe.utils.today(), end_dt)
-		 + timedelta(minutes=60)).time()
-	)
+	# `process_attendance_after` is a Date field; `last_sync_of_checkin`
+	# is a Datetime updated hourly by the scheduler when auto_update_last_sync=1.
+	process_after = "2026-02-01"
+	last_sync = frappe.utils.now_datetime()
 
 	frappe.get_doc(
 		{
@@ -468,15 +459,17 @@ def _ensure_shift_type_for_plan_row(row: Any):
 			"start_time": start_time,
 			"end_time": end_time,
 			"enable_auto_attendance": 1,
-			"process_attendance_after": str(process_after),
-			"last_sync_of_checkin": str(process_after),
+			"process_attendance_after": process_after,
+			"last_sync_of_checkin": last_sync,
 			"late_entry_grace_period": 15,
 			"early_exit_grace_period": 15,
 			"working_hours_threshold_for_half_day": 4,
 			"working_hours_threshold_for_absent": 1,
 			"allow_check_out_after_shift_end_time": 60,
+			"working_hours_calculation_based_on": "First Check-in and Last Check-out",
 			"enable_late_entry_marking": 1,
 			"enable_early_exit_marking": 1,
+			"auto_update_last_sync": 1,
 			"determine_check_in_and_check_out": "Alternating entries as IN and OUT during the same shift",
 		}
 	).insert(ignore_permissions=True, ignore_if_duplicate=True)
