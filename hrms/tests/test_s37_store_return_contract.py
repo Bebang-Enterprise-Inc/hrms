@@ -57,6 +57,7 @@ class _FakeBillingSchedule:
 		self.name = f"BILL-CN-TEST-{type(self).counter:04d}"
 		self.flags = types.SimpleNamespace(ignore_mandatory=False)
 		self.insert_called = False
+		self.payment_reference = None
 
 	def insert(self, ignore_permissions=True):
 		self.insert_called = True
@@ -341,10 +342,36 @@ class TestS37StoreReturnContract(unittest.TestCase):
 		credit_note = credit_notes[0]
 		self.assertTrue(credit_note.insert_called)
 		self.assertEqual(credit_note.status, "Pending")
+		self.assertEqual(credit_note.payment_reference, "Store Issue MAT-STE-TEST-0009")
 		self.assertEqual(credit_note.goods_value, -100.0)
 		self.assertEqual(credit_note.handling_fee, -2.5)
 		self.assertEqual(credit_note.total_amount, -102.5)
 		self.assertEqual(credit_note.balance_due, -102.5)
+
+	def test_find_existing_store_issue_credit_uses_payment_reference(self):
+		calls = []
+		original_get_value = store.frappe.db.get_value
+		try:
+			def _get_value(doctype, filters, fieldname=None, order_by=None, as_dict=False):
+				calls.append((doctype, filters))
+				if doctype == "BEI Billing Schedule":
+					return "BILL-CN-TEST-0099"
+				if doctype == "Journal Entry":
+					return None
+				return original_get_value(doctype, filters, fieldname, order_by, as_dict)
+
+			store.frappe.db.get_value = _get_value
+			credit_note_name, journal_entry_name = store._find_existing_store_issue_credit(
+				"MAT-STE-TEST-0099"
+			)
+		finally:
+			store.frappe.db.get_value = original_get_value
+
+		self.assertEqual(credit_note_name, "BILL-CN-TEST-0099")
+		self.assertIsNone(journal_entry_name)
+		self.assertEqual(calls[0][0], "BEI Billing Schedule")
+		self.assertEqual(calls[0][1]["payment_reference"], "Store Issue MAT-STE-TEST-0099")
+		self.assertNotIn("remarks", calls[0][1])
 
 
 if __name__ == "__main__":

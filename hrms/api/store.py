@@ -2728,16 +2728,30 @@ def _find_existing_store_issue_credit(stock_entry_name: str) -> tuple[str | None
 	if not stock_entry_name:
 		return None, None
 
-	credit_note_name = frappe.db.get_value(
-		"BEI Billing Schedule",
-		{
-			"billing_type": "Credit Note",
-			"remarks": ["like", f"%Store Issue {stock_entry_name}%"],
-			"status": ["!=", "Cancelled"],
-		},
-		"name",
-		order_by="creation desc",
-	)
+	credit_note_name = None
+	reference_token = f"Store Issue {stock_entry_name}"
+	if _has_column("BEI Billing Schedule", "payment_reference"):
+		credit_note_name = frappe.db.get_value(
+			"BEI Billing Schedule",
+			{
+				"billing_type": "Credit Note",
+				"payment_reference": reference_token,
+				"status": ["!=", "Cancelled"],
+			},
+			"name",
+			order_by="creation desc",
+		)
+	elif _has_column("BEI Billing Schedule", "remarks"):
+		credit_note_name = frappe.db.get_value(
+			"BEI Billing Schedule",
+			{
+				"billing_type": "Credit Note",
+				"remarks": ["like", f"%{reference_token}%"],
+				"status": ["!=", "Cancelled"],
+			},
+			"name",
+			order_by="creation desc",
+		)
 	journal_entry_name = frappe.db.get_value(
 		"Journal Entry",
 		{"cheque_no": stock_entry_name, "docstatus": ["!=", 2]},
@@ -2878,6 +2892,7 @@ def _create_store_issue_credit_note(stock_entry, store, reason, receiving_name: 
 	if existing_credit_note or existing_journal_entry:
 		return existing_credit_note, existing_journal_entry
 
+	reference_token = f"Store Issue {stock_entry.name}"
 	credit_note_name = None
 	journal_entry_name = None
 	original_billing = _find_original_billing(store, receiving_name=receiving_name)
@@ -2908,10 +2923,12 @@ def _create_store_issue_credit_note(stock_entry, store, reason, receiving_name: 
 				cn.vat_amount = flt(credit_values.get("vat_amount"), 2)
 				cn.total_amount = flt(credit_values.get("total_amount"), 2)
 				cn.balance_due = flt(credit_values.get("balance_due"), 2)
-				cn.remarks = (
-					f"Credit Note for Store Issue {stock_entry.name} | {store} | {reason} | "
-					f"Original Billing: {original_billing.get('name') or 'N/A'}"
-				)
+				cn.payment_reference = reference_token
+				if _has_column("BEI Billing Schedule", "remarks"):
+					cn.remarks = (
+						f"Credit Note for {reference_token} | {store} | {reason} | "
+						f"Original Billing: {original_billing.get('name') or 'N/A'}"
+					)
 				if _has_column("BEI Billing Schedule", "custom_markup_percent"):
 					cn.custom_markup_percent = flt(credit_values.get("markup_percent"), 6)
 				cn.flags.ignore_mandatory = True
@@ -2946,7 +2963,9 @@ def _create_store_issue_credit_note(stock_entry, store, reason, receiving_name: 
 			cn.subtotal = -total_credit
 			cn.vat_amount = 0
 			cn.total_amount = -total_credit
-			cn.remarks = f"Credit Note for Store Issue {stock_entry.name} | {store} | {reason}"
+			cn.payment_reference = reference_token
+			if _has_column("BEI Billing Schedule", "remarks"):
+				cn.remarks = f"Credit Note for {reference_token} | {store} | {reason}"
 			cn.flags.ignore_mandatory = True
 			cn.insert(ignore_permissions=True)
 			credit_note_name = cn.name
