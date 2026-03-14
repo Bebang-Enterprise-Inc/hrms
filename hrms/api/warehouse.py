@@ -1073,6 +1073,8 @@ def create_stock_transfer(
 	_enable_role_gated_write(se)
 	with _run_as_system_user():
 		se.insert(ignore_permissions=True)
+		se = frappe.get_doc("Stock Entry", se.name)
+		_enable_role_gated_write(se)
 		_clear_legacy_serial_batch_fields_after_auto_bundle(se)
 		se.submit()
 

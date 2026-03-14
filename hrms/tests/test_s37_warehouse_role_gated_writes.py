@@ -207,6 +207,11 @@ def _install_fake_modules():
 				return _MR_DOC
 			if doctype == "Item":
 				return _FakeItem(name)
+			if doctype == "Stock Entry":
+				for doc in reversed(_DOCS_CREATED):
+					if getattr(doc, "doctype", "") == "Stock Entry" and getattr(doc, "name", None) == name:
+						return doc
+				raise AssertionError(f"Unknown Stock Entry {name}")
 			raise AssertionError(f"Unexpected get_doc {doctype} {name}")
 
 		frappe.new_doc = _new_doc
