@@ -203,6 +203,7 @@ def test_data_quality_warning_flags_stale_foodpanda_cups():
 
 	assert any("FoodPanda cups" in warning for warning in warnings)
 
+
 def test_supabase_get_all_honors_requested_limit():
 	_install_fake_frappe(["System Manager"])
 	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_paging_test")
