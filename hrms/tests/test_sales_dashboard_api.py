@@ -202,3 +202,31 @@ def test_data_quality_warning_flags_stale_foodpanda_cups():
 	warnings = module._build_data_quality_warnings(module.date(2026, 3, 14), freshness)
 
 	assert any("FoodPanda cups" in warning for warning in warnings)
+
+
+def test_supabase_get_all_honors_requested_limit():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_paging_test")
+
+	calls: list[list[tuple[str, str]]] = []
+
+	def fake_supabase_get(resource, params=None):
+		assert resource == "daily_weather"
+		assert params is not None
+		calls.append(list(params))
+		return [{"business_date": "2026-03-14"}]
+
+	module._supabase_get = fake_supabase_get
+
+	rows = module._supabase_get_all(
+		"daily_weather",
+		[
+			("select", "business_date"),
+			("order", "business_date.desc"),
+			("limit", "1"),
+		],
+		page_size=1,
+	)
+
+	assert rows == [{"business_date": "2026-03-14"}]
+	assert len(calls) == 1

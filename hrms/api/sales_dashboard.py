@@ -202,20 +202,40 @@ def _merge_params(
 	return merged
 
 
+def _get_param_value(params: dict[str, Any] | list[tuple[str, Any]] | None, key: str) -> Any:
+	if params is None:
+		return None
+	if isinstance(params, dict):
+		return params.get(key)
+	for existing_key, value in reversed(params):
+		if existing_key == key:
+			return value
+	return None
+
+
 def _supabase_get_all(
 	resource: str,
 	params: dict[str, Any] | list[tuple[str, Any]] | None = None,
 	page_size: int = 1000,
 ) -> list[dict[str, Any]]:
 	rows: list[dict[str, Any]] = []
-	offset = 0
+	offset = int(_get_param_value(params, "offset") or 0)
+	requested_limit_value = _get_param_value(params, "limit")
+	requested_limit = int(requested_limit_value) if requested_limit_value is not None else None
 	while True:
-		page_params = _merge_params(params, [("limit", str(page_size)), ("offset", str(offset))])
+		remaining = requested_limit - len(rows) if requested_limit is not None else page_size
+		if remaining <= 0:
+			break
+		current_page_size = min(page_size, remaining)
+		page_params = _merge_params(
+			params,
+			[("limit", str(current_page_size)), ("offset", str(offset))],
+		)
 		page = _supabase_get(resource, page_params)
 		rows.extend(page)
-		if len(page) < page_size:
+		if len(page) < current_page_size:
 			break
-		offset += page_size
+		offset += current_page_size
 	return rows
 
 
