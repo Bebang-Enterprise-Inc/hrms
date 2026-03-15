@@ -572,7 +572,9 @@ def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
 
 	def builder() -> dict[str, Any]:
 		return {
-			"pos_max_business_date": _get_resource_max_business_date("pos_orders", "payment_status", "eq.PAID"),
+			"pos_max_business_date": _get_resource_max_business_date(
+				"pos_orders", "payment_status", "eq.PAID"
+			),
 			"web_max_business_date": _get_resource_max_business_date(
 				"web_orders", "order_status_raw", "eq.Completed"
 			),

@@ -261,7 +261,9 @@ def test_query_daily_rows_filters_scope_after_fetch():
 
 def test_summary_skips_comparisons_by_default():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_default_test")
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_default_test"
+	)
 
 	module.get_sales_dashboard_overview = lambda **kwargs: {
 		"scope": {
