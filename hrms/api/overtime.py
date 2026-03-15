@@ -372,6 +372,18 @@ def _validated_minutes(doc) -> float:
 	return flt(doc.validated_minutes or doc.requested_minutes or 0)
 
 
+def _sync_attendance_flags(attendance_doc, *, late_entry: bool, early_exit: bool) -> None:
+	updates = {}
+	if cint(attendance_doc.get("late_entry") or 0) != int(bool(late_entry)):
+		updates["late_entry"] = int(bool(late_entry))
+		attendance_doc.late_entry = int(bool(late_entry))
+	if cint(attendance_doc.get("early_exit") or 0) != int(bool(early_exit)):
+		updates["early_exit"] = int(bool(early_exit))
+		attendance_doc.early_exit = int(bool(early_exit))
+	if updates:
+		frappe.db.set_value("Attendance", attendance_doc.name, updates, update_modified=False)
+
+
 def _evaluate(attendance_doc, employee_doc, shift_ctx):
 	if (
 		not attendance_doc.get("in_time")
@@ -387,6 +399,8 @@ def _evaluate(attendance_doc, employee_doc, shift_ctx):
 				"eligible": total > OT_THRESHOLD_HOURS,
 				"late_exception_minutes": 0,
 				"early_exception_minutes": 0,
+				"normalized_late_entry": bool(cint(attendance_doc.get("late_entry") or 0)),
+				"normalized_early_exit": bool(cint(attendance_doc.get("early_exit") or 0)),
 			}
 		)
 	actual_in = get_datetime(attendance_doc.in_time)
@@ -395,33 +409,49 @@ def _evaluate(attendance_doc, employee_doc, shift_ctx):
 	early_doc = _flex_doc(employee_doc.name, attendance_doc.attendance_date, FLEX_EARLY)
 	approved_late = _validated_minutes(late_doc)
 	approved_early = _validated_minutes(early_doc)
-	standard_allowed_in = shift_ctx.scheduled_start - timedelta(minutes=shift_ctx.allowed_early_minutes)
+	approved_early_window = shift_ctx.allowed_early_minutes + approved_early
 	late_minutes = _minutes(shift_ctx.scheduled_start, actual_in)
-	extra_early = _minutes(actual_in, standard_allowed_in) if actual_in < standard_allowed_in else 0
-	within_default_late = bool(
-		shift_ctx.flex_eligible
-		and shift_ctx.late_flex_minutes > 0
-		and 0 < late_minutes < shift_ctx.late_flex_minutes
+	pre_shift_minutes = _minutes(actual_in, shift_ctx.scheduled_start) if actual_in < shift_ctx.scheduled_start else 0
+	post_shift_minutes = _minutes(shift_ctx.scheduled_end, actual_out) if actual_out > shift_ctx.scheduled_end else 0
+	early_leave_minutes = _minutes(actual_out, shift_ctx.scheduled_end) if actual_out < shift_ctx.scheduled_end else 0
+	extra_early = (
+		max(0.0, pre_shift_minutes - approved_early_window) if shift_ctx.flex_eligible else 0.0
 	)
-	unresolved_late = bool(
-		shift_ctx.flex_eligible and late_minutes >= shift_ctx.late_flex_minutes > 0 and approved_late <= 0
+	earned_early_leave = min(pre_shift_minutes, approved_early_window) if shift_ctx.flex_eligible else 0.0
+	late_makeup_minutes = min(post_shift_minutes, late_minutes)
+	late_flex_covered = (
+		min(late_makeup_minutes, float(shift_ctx.late_flex_minutes or 0)) + approved_late
+		if shift_ctx.flex_eligible
+		else 0.0
+	)
+	uncovered_late_minutes = (
+		max(0.0, late_minutes - late_flex_covered) if shift_ctx.flex_eligible else 0.0
 	)
 	counted_start = max(
 		actual_in,
-		shift_ctx.scheduled_start - timedelta(minutes=shift_ctx.allowed_early_minutes + approved_early),
-	)
-	expected_end = shift_ctx.scheduled_end + timedelta(
-		minutes=(late_minutes if within_default_late else min(approved_late, late_minutes))
+		shift_ctx.scheduled_start - timedelta(minutes=approved_early_window),
 	)
 	effective_hours = _hours(counted_start, actual_out)
-	candidate = max(0.0, _hours(expected_end, actual_out))
+	candidate = max(0.0, (post_shift_minutes - late_makeup_minutes) / 60.0)
+	normalized_late_entry = (
+		uncovered_late_minutes > 0.01
+		if shift_ctx.flex_eligible
+		else bool(cint(attendance_doc.get("late_entry") or 0))
+	)
+	normalized_early_exit = (
+		early_leave_minutes > (earned_early_leave + 0.01)
+		if shift_ctx.flex_eligible
+		else bool(cint(attendance_doc.get("early_exit") or 0))
+	)
 	return frappe._dict(
 		{
 			"total_hours": round(_hours(actual_in, actual_out), 2),
 			"candidate_hours": round(candidate, 2),
-			"eligible": candidate > 0 and effective_hours > OT_THRESHOLD_HOURS and not unresolved_late,
-			"late_exception_minutes": round(late_minutes, 2) if unresolved_late else 0,
+			"eligible": candidate > 0 and effective_hours > OT_THRESHOLD_HOURS,
+			"late_exception_minutes": round(uncovered_late_minutes, 2) if shift_ctx.flex_eligible else 0,
 			"early_exception_minutes": round(extra_early, 2) if shift_ctx.flex_eligible else 0,
+			"normalized_late_entry": normalized_late_entry,
+			"normalized_early_exit": normalized_early_exit,
 		}
 	)
 
@@ -477,6 +507,11 @@ def _upsert_from_attendance_doc(
 	employee_doc = _employee(attendance_doc.employee)
 	shift_ctx = _shift_context(employee_doc, attendance_doc.attendance_date, attendance_doc.get("shift"))
 	eval_result = _evaluate(attendance_doc, employee_doc, shift_ctx)
+	_sync_attendance_flags(
+		attendance_doc,
+		late_entry=eval_result.normalized_late_entry,
+		early_exit=eval_result.normalized_early_exit,
+	)
 	if eval_result.early_exception_minutes and shift_ctx.flex_eligible:
 		_upsert_flex(
 			employee_doc,
