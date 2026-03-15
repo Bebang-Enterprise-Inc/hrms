@@ -283,6 +283,12 @@ def _to_int(value: Any) -> int:
 		return 0
 
 
+def _to_bool(value: Any) -> bool:
+	if isinstance(value, bool):
+		return value
+	return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _coerce_date(value: str | date | datetime | None, default: date | None = None) -> date:
 	if isinstance(value, datetime):
 		return value.date()
@@ -684,6 +690,13 @@ def _build_comparisons(
 	}
 
 
+def _empty_comparisons() -> dict[str, dict[str, bool]]:
+	return {
+		"previous_period": {"available": False},
+		"same_period_last_year": {"available": False},
+	}
+
+
 def _calendar_map_for_scope(stores: list[dict[str, Any]], dates: set[str]) -> dict[str, dict[str, Any]]:
 	company_to_holiday_list: dict[str, str] = {}
 	for store in stores:
@@ -1021,6 +1034,7 @@ def get_sales_dashboard_summary(
 	stores: list[str] | str | None = None,
 	view_mode: str = "canonical",
 	channel: str = "all",
+	include_comparisons: str | int | bool = False,
 ) -> dict[str, Any]:
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
@@ -1040,7 +1054,9 @@ def get_sales_dashboard_summary(
 		"mode_state": mode_state,
 		"summary": summary,
 		"freshness": freshness,
-		"comparisons": _build_comparisons(start_day, end_day, selected_location_ids, summary),
+		"comparisons": _build_comparisons(start_day, end_day, selected_location_ids, summary)
+		if _to_bool(include_comparisons)
+		else _empty_comparisons(),
 	}
 	if view_mode == "ops_matched" and mode_state.get("supported"):
 		response["ops_summary"] = _build_ops_summary()

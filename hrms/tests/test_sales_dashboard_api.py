@@ -254,3 +254,76 @@ def test_query_daily_rows_filters_scope_after_fetch():
 	assert rows == [{"location_id": 2217, "business_date": "2026-03-02", "store_name": "BF Homes"}]
 	assert captured["resource"] == module.SUPABASE_DAILY_VIEW
 	assert ("location_id", "in.(2217)") not in captured["params"]
+
+
+def test_summary_skips_comparisons_by_default():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_default_test")
+
+	module._parse_stores_param = lambda stores: stores
+	module._selected_scope = lambda stores: {
+		"selected_stores": [
+			{
+				"warehouse": "BF Homes - Bebang Enterprise Inc.",
+				"warehouse_name": "BF Homes",
+				"company": "Bebang Enterprise Inc.",
+				"location_id": 2217,
+			}
+		]
+	}
+	module._resolve_date_range = lambda start, end: (module.date(2026, 3, 2), module.date(2026, 3, 8))
+	module._query_daily_rows = lambda start, end, location_ids: [{"business_date": "2026-03-02"}]
+	module._aggregate_sales = lambda rows: {"gross_sales": 1000.0}
+	module._build_mode_state = lambda *args, **kwargs: {"view_mode": "canonical", "supported": True}
+	module._build_freshness = lambda location_ids: {}
+	module._build_data_quality_warnings = lambda end_day, freshness: []
+
+	captured = {"called": False}
+
+	def fake_build_comparisons(*args, **kwargs):
+		captured["called"] = True
+		return {"previous_period": {"available": True}}
+
+	module._build_comparisons = fake_build_comparisons
+
+	result = module.get_sales_dashboard_summary()
+
+	assert captured["called"] is False
+	assert result["comparisons"] == {
+		"previous_period": {"available": False},
+		"same_period_last_year": {"available": False},
+	}
+
+
+def test_summary_builds_comparisons_when_opted_in():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_optin_test")
+
+	module._parse_stores_param = lambda stores: stores
+	module._selected_scope = lambda stores: {
+		"selected_stores": [
+			{
+				"warehouse": "BF Homes - Bebang Enterprise Inc.",
+				"warehouse_name": "BF Homes",
+				"company": "Bebang Enterprise Inc.",
+				"location_id": 2217,
+			}
+		]
+	}
+	module._resolve_date_range = lambda start, end: (module.date(2026, 3, 2), module.date(2026, 3, 8))
+	module._query_daily_rows = lambda start, end, location_ids: [{"business_date": "2026-03-02"}]
+	module._aggregate_sales = lambda rows: {"gross_sales": 1000.0}
+	module._build_mode_state = lambda *args, **kwargs: {"view_mode": "canonical", "supported": True}
+	module._build_freshness = lambda location_ids: {}
+	module._build_data_quality_warnings = lambda end_day, freshness: []
+	module._build_comparisons = lambda *args, **kwargs: {
+		"previous_period": {"available": True, "gross_sales_delta": 100.0},
+		"same_period_last_year": {"available": False},
+	}
+
+	result = module.get_sales_dashboard_summary(include_comparisons="1")
+
+	assert result["comparisons"] == {
+		"previous_period": {"available": True, "gross_sales_delta": 100.0},
+		"same_period_last_year": {"available": False},
+	}
