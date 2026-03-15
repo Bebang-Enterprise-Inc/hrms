@@ -18,6 +18,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Tuple
@@ -80,10 +81,21 @@ LOCATION_ID_MAP = {
     "D'verde Laguna": 2766,
 }
 
+WAREHOUSE_NAME_ALIASES = {
+    "SM  Manila": "SM Manila",
+    "Robisons Galleria South": "Robinsons Galleria South",
+}
+
 # Supabase configuration
 SUPABASE_PROJECT_ID = "csnniykjrychgajfrgua"
 SUPABASE_API_TOKEN = os.environ['SUPABASE_MGMT_TOKEN']
 SUPABASE_API_URL = f"https://api.supabase.com/v1/projects/{SUPABASE_PROJECT_ID}/database/query"
+
+
+def normalize_warehouse_name(name: str) -> str:
+    """Normalize warehouse names so minor label drift does not break the weather join."""
+    text = re.sub(r"\s+", " ", (name or "").strip())
+    return WAREHOUSE_NAME_ALIASES.get(text, text)
 
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -114,16 +126,17 @@ def read_store_coordinates(csv_path: str) -> List[Dict]:
                     continue
 
                 warehouse_name = row['warehouse_name']
+                canonical_name = normalize_warehouse_name(warehouse_name)
 
                 # Only include stores with known location_ids
-                if warehouse_name not in LOCATION_ID_MAP:
+                if canonical_name not in LOCATION_ID_MAP:
                     print(f"[WARN] Skipping {warehouse_name} - no location_id mapping")
                     continue
 
                 stores.append({
                     'warehouse_id': row['warehouse_id'],
-                    'warehouse_name': warehouse_name,
-                    'location_id': LOCATION_ID_MAP[warehouse_name],
+                    'warehouse_name': canonical_name,
+                    'location_id': LOCATION_ID_MAP[canonical_name],
                     'latitude': float(row['latitude']),
                     'longitude': float(row['longitude']),
                 })
@@ -416,6 +429,8 @@ def main():
     parser = argparse.ArgumentParser(description='Sync weather data to Supabase')
     parser.add_argument('--date', type=str, help='Date to sync (YYYY-MM-DD). Default: yesterday')
     parser.add_argument('--backfill-days', type=int, help='Backfill N days of historical data')
+    parser.add_argument('--start-date', type=str, help='Range start date (YYYY-MM-DD)')
+    parser.add_argument('--end-date', type=str, help='Range end date (YYYY-MM-DD)')
     parser.add_argument('--warehouse-tree', type=str,
                        default='data/_FINAL/WAREHOUSE_TREE.csv',
                        help='Path to WAREHOUSE_TREE.csv')
@@ -423,7 +438,19 @@ def main():
     args = parser.parse_args()
 
     # Determine date range
-    if args.backfill_days:
+    if args.start_date or args.end_date:
+        if not (args.start_date and args.end_date):
+            raise SystemExit('--start-date and --end-date must be used together')
+        start_date = datetime.strptime(args.start_date, '%Y-%m-%d')
+        end_date = datetime.strptime(args.end_date, '%Y-%m-%d')
+        if start_date > end_date:
+            raise SystemExit('--start-date must be on or before --end-date')
+        dates = []
+        current = start_date
+        while current <= end_date:
+            dates.append(current.strftime('%Y-%m-%d'))
+            current += timedelta(days=1)
+    elif args.backfill_days:
         end_date = datetime.now() - timedelta(days=1)  # Yesterday
         start_date = end_date - timedelta(days=args.backfill_days - 1)
         dates = []
