@@ -438,11 +438,12 @@ jobs:
             --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
+              "set -euo pipefail",
               "BACKEND_CONTAINER=$(docker ps --filter name=frappe_backend --format \"{{.Names}}\" | head -1)",
               "FRONTEND_CONTAINER=$(docker ps --filter name=frappe_frontend --format \"{{.Names}}\" | head -1)",
               "if [ -z \"$BACKEND_CONTAINER\" ] || [ -z \"$FRONTEND_CONTAINER\" ]; then echo \"❌ Container not found\"; exit 1; fi",
-              "echo \"📦 Copying CSS and JS assets from $BACKEND_CONTAINER to $FRONTEND_CONTAINER...\"",
-              "docker exec -T $BACKEND_CONTAINER tar czf - /home/frappe/frappe-bench/sites/assets/frappe/dist/css /home/frappe/frappe-bench/sites/assets/erpnext/dist/css /home/frappe/frappe-bench/sites/assets/hrms/dist/css /home/frappe/frappe-bench/sites/assets/assets.json 2>/dev/null | docker exec -T -i $FRONTEND_CONTAINER tar xzf - -C /",
+              "echo \"📦 Copying asset bundles from $BACKEND_CONTAINER to $FRONTEND_CONTAINER...\"",
+              "docker exec $BACKEND_CONTAINER tar czf - /home/frappe/frappe-bench/sites/assets/frappe /home/frappe/frappe-bench/sites/assets/erpnext /home/frappe/frappe-bench/sites/assets/hrms /home/frappe/frappe-bench/sites/assets/assets.json 2>/dev/null | docker exec -i $FRONTEND_CONTAINER tar xzf - -C /",
               "echo \"✅ Assets synced successfully!\""
             ]' \
             --output text \
@@ -507,42 +508,29 @@ jobs:
           echo "❌ API did not return pong after deployment" >&2
           exit 1
 
-      - name: Verify CSS assets loading
+      - name: Verify login page assets loading
         run: |
           set -euo pipefail
-          echo "🎨 Verifying CSS assets are loading correctly..."
+          echo "🎨 Verifying login page assets are loading correctly..."
 
-          # Get a CSS file reference from the login page
-          CSS_URL=$(curl -s https://hq.bebang.ph/login | grep -oP 'href="/assets/frappe/dist/css/[^"]+\.css"' | head -1 | tr -d '"' | sed 's/href=//')
+          LOGIN_HTML=$(curl -fsSL https://hq.bebang.ph/login)
+          ASSET_URLS=$(printf '%s' "$LOGIN_HTML" | grep -oE '/assets/[^" )>]+' | sort -u || true)
 
-          if [ -n "$CSS_URL" ]; then
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hq.bebang.ph$CSS_URL")
-            if [ "$HTTP_CODE" = "200" ]; then
-              echo "✅ CSS loading correctly: $CSS_URL"
-            else
-              echo "❌ CSS 404 error: $CSS_URL returned $HTTP_CODE"
-              echo "⚠️ This may indicate stale assets. Consider re-running deployment."
-              exit 1
-            fi
-          else
-            echo "❌ Could not find CSS reference in login page" >&2
+          if [ -z "$ASSET_URLS" ]; then
+            echo "❌ Could not find any /assets/ references in login page" >&2
             exit 1
           fi
 
-          # Verify JS assets as well
-          JS_URL=$(curl -s https://hq.bebang.ph/login | grep -oP 'src="/assets/frappe/dist/js/[^"]+\.js"' | head -1 | tr -d '"' | sed 's/src=//')
-          if [ -n "$JS_URL" ]; then
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hq.bebang.ph$JS_URL")
+          echo "$ASSET_URLS" | head -10 | while IFS= read -r asset_url; do
+            [ -n "$asset_url" ] || continue
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hq.bebang.ph$asset_url")
             if [ "$HTTP_CODE" = "200" ]; then
-              echo "✅ JS loading correctly: $JS_URL"
+              echo "✅ Asset loading correctly: $asset_url"
             else
-              echo "❌ JS returned $HTTP_CODE: $JS_URL" >&2
+              echo "❌ Asset returned $HTTP_CODE: $asset_url" >&2
               exit 1
             fi
-          else
-            echo "❌ Could not find JS reference in login page" >&2
-            exit 1
-          fi
+          done
 
   cleanup:
     name: Archive old images & cleanup
