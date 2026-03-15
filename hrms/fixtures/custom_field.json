@@ -94,6 +94,27 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Employee-custom_work_phone",
+        "dt": "Employee",
+        "fieldname": "custom_work_phone",
+        "fieldtype": "Data",
+        "label": "Work Phone",
+        "insert_after": "company_email",
+        "description": "Official BEI-issued work phone number",
+        "in_standard_filter": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Employee-custom_uniform_size",
+        "dt": "Employee",
+        "fieldname": "custom_uniform_size",
+        "fieldtype": "Data",
+        "label": "Uniform Size",
+        "insert_after": "custom_work_phone",
+        "description": "Uniform size for store operations issue"
+    },
+    {
+        "doctype": "Custom Field",
         "name": "Employee-custom_government_id_photo",
         "dt": "Employee",
         "fieldname": "custom_government_id_photo",
