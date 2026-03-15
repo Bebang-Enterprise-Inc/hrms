@@ -414,19 +414,25 @@ def _evaluate(attendance_doc, employee_doc, shift_ctx):
 	pre_shift_minutes = _minutes(actual_in, shift_ctx.scheduled_start) if actual_in < shift_ctx.scheduled_start else 0
 	post_shift_minutes = _minutes(shift_ctx.scheduled_end, actual_out) if actual_out > shift_ctx.scheduled_end else 0
 	early_leave_minutes = _minutes(actual_out, shift_ctx.scheduled_end) if actual_out < shift_ctx.scheduled_end else 0
+	default_late_window = float(shift_ctx.late_flex_minutes or 0)
+	automatic_late_allowance = (
+		late_minutes
+		if shift_ctx.flex_eligible and 0 < late_minutes <= default_late_window
+		else 0.0
+	)
+	approved_late_window = automatic_late_allowance if automatic_late_allowance > 0 else approved_late
 	extra_early = (
 		max(0.0, pre_shift_minutes - approved_early_window) if shift_ctx.flex_eligible else 0.0
 	)
 	earned_early_leave = min(pre_shift_minutes, approved_early_window) if shift_ctx.flex_eligible else 0.0
 	late_makeup_minutes = min(post_shift_minutes, late_minutes)
-	late_flex_covered = (
-		min(late_makeup_minutes, float(shift_ctx.late_flex_minutes or 0)) + approved_late
-		if shift_ctx.flex_eligible
-		else 0.0
+	credited_late_makeup = (
+		min(late_makeup_minutes, approved_late_window) if shift_ctx.flex_eligible else 0.0
 	)
 	uncovered_late_minutes = (
-		max(0.0, late_minutes - late_flex_covered) if shift_ctx.flex_eligible else 0.0
+		max(0.0, late_minutes - credited_late_makeup) if shift_ctx.flex_eligible else 0.0
 	)
+	requires_late_exception = shift_ctx.flex_eligible and late_minutes > default_late_window > 0
 	counted_start = max(
 		actual_in,
 		shift_ctx.scheduled_start - timedelta(minutes=approved_early_window),
@@ -448,7 +454,7 @@ def _evaluate(attendance_doc, employee_doc, shift_ctx):
 			"total_hours": round(_hours(actual_in, actual_out), 2),
 			"candidate_hours": round(candidate, 2),
 			"eligible": candidate > 0 and effective_hours > OT_THRESHOLD_HOURS,
-			"late_exception_minutes": round(uncovered_late_minutes, 2) if shift_ctx.flex_eligible else 0,
+			"late_exception_minutes": round(late_minutes, 2) if requires_late_exception else 0,
 			"early_exception_minutes": round(extra_early, 2) if shift_ctx.flex_eligible else 0,
 			"normalized_late_entry": normalized_late_entry,
 			"normalized_early_exit": normalized_early_exit,
