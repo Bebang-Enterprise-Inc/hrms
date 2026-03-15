@@ -67,6 +67,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [guard]
     if: ${{ needs.guard.result == 'success' && github.event.inputs.skip_build != 'true' }}
+    outputs:
+      deploy_image: ${{ steps.digest_ref.outputs.ref }}
+      immutable_image: ${{ steps.image_ref.outputs.ref }}
+      image_digest: ${{ steps.build_push.outputs.digest }}
+      image_short_sha: ${{ steps.tags.outputs.short_sha }}
 
     steps:
       - name: Checkout code
@@ -107,7 +112,13 @@ jobs:
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
           echo "📌 Tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}, ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-$DATE_TAG"
 
+      - name: Compose immutable image reference
+        id: image_ref
+        run: |
+          echo "ref=${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.short_sha }}" >> $GITHUB_OUTPUT
+
       - name: Build and push
+        id: build_push
         uses: docker/build-push-action@v6
         with:
           context: frappe_docker
@@ -130,20 +141,31 @@ jobs:
           cache-from: ${{ github.event_name != 'push' && github.event.inputs.no_cache != 'true' && format('type=registry,ref={0}:{1}', env.DOCKER_IMAGE, env.DOCKER_TAG) || '' }}
           cache-to: type=inline
 
+      - name: Compose digest image reference
+        id: digest_ref
+        run: |
+          echo "ref=${{ env.DOCKER_IMAGE }}@${{ steps.build_push.outputs.digest }}" >> $GITHUB_OUTPUT
+
       - name: Output image info
         run: |
           echo "✅ Image built and pushed successfully!"
           echo "📦 Image: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}"
           echo "📦 Dated: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.date_tag }}"
+          echo "📦 Immutable deploy image: ${{ steps.image_ref.outputs.ref }}"
+          echo "📦 Digest deploy image: ${{ steps.digest_ref.outputs.ref }}"
+          echo "🔐 Digest: ${{ steps.build_push.outputs.digest }}"
 
   deploy:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest
     needs: [guard, build]
     environment: production-deploy
-    if: always() && (needs.build.result == 'success' || github.event.inputs.skip_build == 'true')
+    if: ${{ needs.guard.result == 'success' && needs.build.result == 'success' }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -154,7 +176,11 @@ jobs:
       - name: Deploy via Docker Swarm
         id: deploy
         run: |
+          set -euo pipefail
           echo "🚀 Deploying to EC2 instance ${{ env.EC2_INSTANCE_ID }} via Docker Swarm..."
+          echo "📦 Immutable image tag: ${{ needs.build.outputs.immutable_image }}"
+          echo "📦 Digest deploy image: ${{ needs.build.outputs.deploy_image }}"
+          echo "🔐 Expected digest: ${{ needs.build.outputs.image_digest }}"
 
           # Rolling update all Frappe services with zero downtime
           COMMAND_ID=$(aws ssm send-command \
@@ -162,22 +188,45 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
               "set -e",
-              "echo \"📥 Pulling latest image...\"",
-              "docker pull ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}",
+              "DEPLOY_IMAGE=${{ needs.build.outputs.deploy_image }}",
+              "EXPECTED_DIGEST=${{ needs.build.outputs.image_digest }}",
+              "MIN_FREE_KB=6291456",
+              "echo \"💾 Root disk before deploy:\"",
+              "df -h /",
+              "AVAILABLE_KB=$(df --output=avail / | tail -1 | tr -d \" \")",
+              "if [ \"$AVAILABLE_KB\" -lt \"$MIN_FREE_KB\" ]; then",
+              "  echo \"🧹 Low disk detected, pruning unused Docker artifacts...\"",
+              "  docker container prune -f || true",
+              "  docker image prune -af || true",
+              "  docker builder prune -af || true",
+              "  echo \"💾 Root disk after cleanup:\"",
+              "  df -h /",
+              "  AVAILABLE_KB=$(df --output=avail / | tail -1 | tr -d \" \")",
+              "fi",
+              "if [ \"$AVAILABLE_KB\" -lt \"$MIN_FREE_KB\" ]; then",
+              "  echo \"❌ Not enough free disk for image pull: ${AVAILABLE_KB}KB available\"",
+              "  exit 1",
+              "fi",
+              "echo \"\"",
+              "echo \"📥 Pulling immutable image: $DEPLOY_IMAGE\"",
+              "docker pull $DEPLOY_IMAGE",
               "echo \"\"",
               "echo \"🚀 Starting rolling updates (zero-downtime)...\"",
-              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_backend --with-registry-auth",
-              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_frontend --with-registry-auth",
-              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_websocket --with-registry-auth",
-              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_queue-short --with-registry-auth",
-              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_queue-long --with-registry-auth",
-              "docker service update --image ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} frappe_scheduler --with-registry-auth",
-              "echo \"\"",
-              "echo \"⏳ Waiting for rolling update to complete...\"",
-              "sleep 60",
-              "echo \"\"",
+              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_backend",
+              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_frontend",
+              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_websocket",
+              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_queue-short",
+              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_queue-long",
+              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_scheduler",
               "echo \"📋 Service status:\"",
               "docker service ls",
+              "echo \"🔎 Verifying backend service digest...\"",
+              "ACTUAL_IMAGE=$(docker service inspect frappe_backend --format \"{{.Spec.TaskTemplate.ContainerSpec.Image}}\")",
+              "echo \"Backend service image: $ACTUAL_IMAGE\"",
+              "case \"$ACTUAL_IMAGE\" in",
+              "  *\"$EXPECTED_DIGEST\"*) echo \"✅ Backend service digest matches expected build\" ;;",
+              "  *) echo \"❌ Backend service digest mismatch\"; exit 1 ;;",
+              "esac",
               "echo \"\"",
               "echo \"✅ Deployment complete!\""
             ]' \
@@ -187,22 +236,16 @@ jobs:
           echo "command_id=$COMMAND_ID" >> $GITHUB_OUTPUT
           echo "📋 SSM Command ID: $COMMAND_ID"
 
-          # Wait for command to complete (rolling updates take longer)
-          echo "⏳ Waiting for rolling updates to complete..."
-          sleep 90
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
-
-          # Get command output
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
-            --query '[Status, StandardOutputContent, StandardErrorContent]' \
-            --output text
+          bash .github/helper/ssm_wait_and_assert.sh \
+            "$COMMAND_ID" \
+            "${{ env.EC2_INSTANCE_ID }}" \
+            "deploy command" \
+            15 \
+            80
 
       - name: Set Sentry DSN on services
         run: |
+          set -euo pipefail
           echo "📊 Setting Sentry DSN environment variable on Frappe services..."
 
           COMMAND_ID=$(aws ssm send-command \
@@ -210,10 +253,10 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
               "if [ -n \"${{ secrets.SENTRY_DSN }}\" ]; then",
-              "  docker service update --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_backend --detach",
-              "  docker service update --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-short --detach",
-              "  docker service update --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-long --detach",
-              "  docker service update --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_scheduler --detach",
+              "  docker service update --detach=false --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_backend",
+              "  docker service update --detach=false --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-short",
+              "  docker service update --detach=false --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-long",
+              "  docker service update --detach=false --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_scheduler",
               "  echo \"✅ Sentry DSN set on all backend services\"",
               "else",
               "  echo \"⚠️ SENTRY_DSN not set, skipping\"",
@@ -224,12 +267,16 @@ jobs:
 
           echo "📋 Sentry DSN Command ID: $COMMAND_ID"
 
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
+          bash .github/helper/ssm_wait_and_assert.sh \
+            "$COMMAND_ID" \
+            "${{ env.EC2_INSTANCE_ID }}" \
+            "set sentry dsn" \
+            10 \
+            60
 
       - name: Set Supabase runtime env on services
         run: |
+          set -euo pipefail
           echo "🗄️ Setting Supabase runtime environment variables on Frappe services..."
 
           COMMAND_ID=$(aws ssm send-command \
@@ -238,7 +285,7 @@ jobs:
             --parameters 'commands=[
               "if [ -n \"${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}\" ]; then",
               "  for SERVICE in frappe_backend frappe_queue-short frappe_queue-long frappe_scheduler; do",
-              "    docker service update --env-rm SUPABASE_URL --env-rm SUPABASE_SERVICE_ROLE_KEY --env-add SUPABASE_URL=${{ env.SUPABASE_URL }} --env-add SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }} $SERVICE --detach",
+              "    docker service update --detach=false --env-rm SUPABASE_URL --env-rm SUPABASE_SERVICE_ROLE_KEY --env-add SUPABASE_URL=${{ env.SUPABASE_URL }} --env-add SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }} $SERVICE",
               "  done",
               "  echo \"✅ Supabase runtime env set on backend services\"",
               "else",
@@ -251,18 +298,16 @@ jobs:
 
           echo "📋 Supabase Env Command ID: $COMMAND_ID"
 
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}"
-
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
-            --query '[Status, StandardOutputContent, StandardErrorContent]' \
-            --output text
+          bash .github/helper/ssm_wait_and_assert.sh \
+            "$COMMAND_ID" \
+            "${{ env.EC2_INSTANCE_ID }}" \
+            "set supabase runtime env" \
+            10 \
+            60
 
       - name: Fix nginx site header
         run: |
+          set -euo pipefail
           echo "🔧 Fixing nginx X-Frappe-Site-Name header..."
 
           COMMAND_ID=$(aws ssm send-command \
@@ -275,7 +320,8 @@ jobs:
               "  docker exec $FRONTEND_CONTAINER nginx -s reload",
               "  echo \"✅ Nginx site header fixed!\"",
               "else",
-              "  echo \"⚠️ Frontend container not found, skipping nginx fix\"",
+              "  echo \"❌ Frontend container not found\"",
+              "  exit 1",
               "fi"
             ]' \
             --output text \
@@ -283,12 +329,16 @@ jobs:
 
           echo "📋 Nginx Fix Command ID: $COMMAND_ID"
 
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
+          bash .github/helper/ssm_wait_and_assert.sh \
+            "$COMMAND_ID" \
+            "${{ env.EC2_INSTANCE_ID }}" \
+            "fix nginx site header" \
+            10 \
+            40
 
       - name: Configure Blip webhook proxy
         run: |
+          set -euo pipefail
           echo "🤖 Configuring nginx proxy for Blip webhook..."
 
           COMMAND_ID=$(aws ssm send-command \
@@ -339,19 +389,17 @@ jobs:
 
           echo "📋 Blip Config Command ID: $COMMAND_ID"
 
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
-
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
-            --query '[Status, StandardOutputContent, StandardErrorContent]' \
-            --output text
+          bash .github/helper/ssm_wait_and_assert.sh \
+            "$COMMAND_ID" \
+            "${{ env.EC2_INSTANCE_ID }}" \
+            "configure blip webhook proxy" \
+            10 \
+            40
 
       - name: Run migrations (if enabled)
         if: ${{ github.event.inputs.run_migrate != 'false' }}
         run: |
+          set -euo pipefail
           echo "🔧 Running database migrations..."
 
           COMMAND_ID=$(aws ssm send-command \
@@ -372,20 +420,17 @@ jobs:
 
           echo "📋 Migration Command ID: $COMMAND_ID"
 
-          # Wait and get output
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
-
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
-            --query '[Status, StandardOutputContent, StandardErrorContent]' \
-            --output text
+          bash .github/helper/ssm_wait_and_assert.sh \
+            "$COMMAND_ID" \
+            "${{ env.EC2_INSTANCE_ID }}" \
+            "run migrations" \
+            15 \
+            80
 
       - name: Sync assets to frontend container
         if: ${{ github.event.inputs.run_migrate != 'false' }}
         run: |
+          set -euo pipefail
           echo "🔄 Syncing assets from backend to frontend (fixes CSS hash mismatch)..."
 
           COMMAND_ID=$(aws ssm send-command \
@@ -404,18 +449,16 @@ jobs:
 
           echo "📋 Asset Sync Command ID: $COMMAND_ID"
 
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
-
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
-            --query '[Status, StandardOutputContent, StandardErrorContent]' \
-            --output text
+          bash .github/helper/ssm_wait_and_assert.sh \
+            "$COMMAND_ID" \
+            "${{ env.EC2_INSTANCE_ID }}" \
+            "sync assets to frontend" \
+            10 \
+            40
 
       - name: Flush Redis cache
         run: |
+          set -euo pipefail
           echo "🧹 Flushing Redis cache (prevents stale HTML with old asset hashes)..."
 
           COMMAND_ID=$(aws ssm send-command \
@@ -425,7 +468,7 @@ jobs:
               "echo \"Flushing Redis cache...\"",
               "docker exec $(docker ps --filter name=frappe_redis-cache --format \"{{.Names}}\" | head -1) redis-cli FLUSHALL",
               "echo \"Flushing Redis queue...\"",
-              "docker exec $(docker ps --filter name=frappe_redis-queue --format \"{{.Names}}\" | head -1) redis-cli FLUSHALL || true",
+              "docker exec $(docker ps --filter name=frappe_redis-queue --format \"{{.Names}}\" | head -1) redis-cli FLUSHALL",
               "echo \"✅ Redis flushed!\""
             ]' \
             --output text \
@@ -433,29 +476,39 @@ jobs:
 
           echo "📋 Redis Flush Command ID: $COMMAND_ID"
 
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" || true
+          bash .github/helper/ssm_wait_and_assert.sh \
+            "$COMMAND_ID" \
+            "${{ env.EC2_INSTANCE_ID }}" \
+            "flush redis cache" \
+            10 \
+            40
 
       - name: Verify deployment
         run: |
+          set -euo pipefail
           echo "🔍 Verifying API is responding..."
-          sleep 10
+          ATTEMPT=1
+          MAX_ATTEMPTS=24
 
-          # Test API endpoint (frappe.ping doesn't require auth)
-          # Use public domain hq.bebang.ph (FRAPPE_SITE is internal folder name)
-          RESPONSE=$(curl -s "https://hq.bebang.ph/api/method/frappe.ping" || echo "{}")
+          while [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; do
+            RESPONSE=$(curl -fsS "https://hq.bebang.ph/api/method/frappe.ping" || true)
+            if echo "$RESPONSE" | grep -q '"pong"'; then
+              echo "✅ API is responding correctly"
+              echo "$RESPONSE"
+              exit 0
+            fi
 
-          if echo "$RESPONSE" | grep -q '"pong"'; then
-            echo "✅ API is responding correctly"
-            echo "$RESPONSE"
-          else
-            echo "⚠️ API may not be responding correctly"
-            echo "Response: $RESPONSE"
-          fi
+            echo "Attempt ${ATTEMPT}/${MAX_ATTEMPTS}: frappe.ping not ready yet"
+            sleep 5
+            ATTEMPT=$((ATTEMPT + 1))
+          done
+
+          echo "❌ API did not return pong after deployment" >&2
+          exit 1
 
       - name: Verify CSS assets loading
         run: |
+          set -euo pipefail
           echo "🎨 Verifying CSS assets are loading correctly..."
 
           # Get a CSS file reference from the login page
@@ -471,7 +524,8 @@ jobs:
               exit 1
             fi
           else
-            echo "⚠️ Could not find CSS reference in page (may be OK for API-only changes)"
+            echo "❌ Could not find CSS reference in login page" >&2
+            exit 1
           fi
 
           # Verify JS assets as well
@@ -481,8 +535,12 @@ jobs:
             if [ "$HTTP_CODE" = "200" ]; then
               echo "✅ JS loading correctly: $JS_URL"
             else
-              echo "⚠️ JS returned $HTTP_CODE: $JS_URL"
+              echo "❌ JS returned $HTTP_CODE: $JS_URL" >&2
+              exit 1
             fi
+          else
+            echo "❌ Could not find JS reference in login page" >&2
+            exit 1
           fi
 
   cleanup:
@@ -493,6 +551,9 @@ jobs:
     if: needs.deploy.result == 'success'
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -502,6 +563,7 @@ jobs:
 
       - name: Archive and cleanup old images
         run: |
+          set -euo pipefail
           echo "🧹 Starting image cleanup (keep latest 4 builds)..."
 
           COMMAND_ID=$(aws ssm send-command \
@@ -557,19 +619,12 @@ jobs:
 
           echo "📋 Cleanup Command ID: $COMMAND_ID"
 
-          # Wait for completion (can take a while for large images)
-          aws ssm wait command-executed \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
-            --waiter-delay 30 \
-            --waiter-max-attempts 20 || true
-
-          # Get output
-          aws ssm get-command-invocation \
-            --command-id "$COMMAND_ID" \
-            --instance-id "${{ env.EC2_INSTANCE_ID }}" \
-            --query '[Status, StandardOutputContent, StandardErrorContent]' \
-            --output text
+          bash .github/helper/ssm_wait_and_assert.sh \
+            "$COMMAND_ID" \
+            "${{ env.EC2_INSTANCE_ID }}" \
+            "cleanup old images" \
+            30 \
+            20
 
   notify:
     name: Notify on completion
