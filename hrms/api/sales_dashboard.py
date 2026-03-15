@@ -176,7 +176,9 @@ def _supabase_get(
 		timeout=60,
 	)
 	if not response.ok:
-		raise RuntimeError(f"Supabase GET failed for {resource}: {response.status_code} {response.text[:300]}")
+		raise RuntimeError(
+			f"Supabase GET failed for {resource}: {response.status_code} {response.text[:300]}"
+		)
 	payload = response.json()
 	if isinstance(payload, list):
 		return payload
@@ -369,9 +371,7 @@ def _resolve_allowed_store_scope(user: str | None = None) -> dict[str, Any]:
 		warehouse_rows = _get_warehouse_rows({"is_group": 0, "disabled": 0})
 	elif ROLE_AREA_SUPERVISOR in roles:
 		role_label = ROLE_AREA_SUPERVISOR
-		warehouse_rows = _get_warehouse_rows(
-			{"custom_area_supervisor": user, "is_group": 0, "disabled": 0}
-		)
+		warehouse_rows = _get_warehouse_rows({"custom_area_supervisor": user, "is_group": 0, "disabled": 0})
 	elif ROLE_STORE_SUPERVISOR in roles:
 		role_label = ROLE_STORE_SUPERVISOR
 		warehouse_rows = _find_store_supervisor_warehouse(user)
@@ -390,7 +390,9 @@ def _resolve_allowed_store_scope(user: str | None = None) -> dict[str, Any]:
 		)
 		assigned_names = [row["warehouse"] for row in assigned if row.get("warehouse")]
 		if assigned_names:
-			warehouse_rows = _get_warehouse_rows({"name": ["in", assigned_names], "is_group": 0, "disabled": 0})
+			warehouse_rows = _get_warehouse_rows(
+				{"name": ["in", assigned_names], "is_group": 0, "disabled": 0}
+			)
 		else:
 			warehouse_rows = []
 
@@ -496,7 +498,9 @@ def _get_resource_max_business_date(resource: str, filter_key: str, filter_value
 def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
 	return {
 		"pos_max_business_date": _get_resource_max_business_date("pos_orders", "payment_status", "eq.PAID"),
-		"web_max_business_date": _get_resource_max_business_date("web_orders", "order_status_raw", "eq.Completed"),
+		"web_max_business_date": _get_resource_max_business_date(
+			"web_orders", "order_status_raw", "eq.Completed"
+		),
 		"foodpanda_max_business_date": _get_resource_max_business_date(
 			"foodpanda_orders", "order_status", "ilike.delivered"
 		),
@@ -634,7 +638,9 @@ def _build_comparisons(
 	prev_start, prev_end = _shift_range(start_day, end_day, span_days)
 	prev_rows = _query_daily_rows(prev_start, prev_end, location_ids)
 	prev = _aggregate_sales(prev_rows) if prev_rows else {}
-	last_year_rows = _query_daily_rows(start_day - timedelta(days=365), end_day - timedelta(days=365), location_ids)
+	last_year_rows = _query_daily_rows(
+		start_day - timedelta(days=365), end_day - timedelta(days=365), location_ids
+	)
 	last_year = _aggregate_sales(last_year_rows) if last_year_rows else {}
 
 	def delta_payload(baseline: dict[str, Any]) -> dict[str, Any]:
@@ -757,7 +763,9 @@ def _aggregate_daily_series(
 			bucket.update(
 				{
 					"avg_temperature": round(
-						sum(_to_float(item.get("avg_temperature")) for item in weather_group) / len(weather_group), 2
+						sum(_to_float(item.get("avg_temperature")) for item in weather_group)
+						/ len(weather_group),
+						2,
 					),
 					"max_temperature": round(
 						max(_to_float(item.get("max_temperature")) for item in weather_group), 2
@@ -788,8 +796,12 @@ def _aggregate_daily_series(
 					"weather_coverage_count": 0,
 				}
 			)
-		bucket["average_guest_check"] = round(bucket["gross_sales"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
-		bucket["cups_per_transaction"] = round(bucket["cups_sold"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
+		bucket["average_guest_check"] = (
+			round(bucket["gross_sales"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
+		)
+		bucket["cups_per_transaction"] = (
+			round(bucket["cups_sold"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
+		)
 		bucket.update(calendar)
 		for key in ("gross_sales", "net_sales_with_vat", "net_sales_without_vat"):
 			bucket[key] = round(bucket[key], 2)
@@ -819,7 +831,11 @@ def _build_weather_context(series: list[dict[str, Any]]) -> dict[str, Any]:
 			"holiday": _build_group_stat([row for row in series if row.get("is_holiday")]),
 			"non_holiday": _build_group_stat([row for row in series if not row.get("is_holiday")]),
 			"hot": _build_group_stat(
-				[row for row in series if row.get("avg_temperature") is not None and _to_float(row.get("avg_temperature")) >= 32]
+				[
+					row
+					for row in series
+					if row.get("avg_temperature") is not None and _to_float(row.get("avg_temperature")) >= 32
+				]
 			),
 			"high_precipitation": _build_group_stat(
 				[
@@ -849,7 +865,9 @@ def _is_ops_scope_calibrated(
 	)
 
 
-def _build_mode_state(view_mode: str, start_day: date, end_day: date, scope: dict[str, Any]) -> dict[str, Any]:
+def _build_mode_state(
+	view_mode: str, start_day: date, end_day: date, scope: dict[str, Any]
+) -> dict[str, Any]:
 	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
 	is_calibrated = _is_ops_scope_calibrated(
 		view_mode,
@@ -904,7 +922,8 @@ def _build_store_rankings(
 			{
 				"location_id": location_id,
 				"warehouse": store_lookup.get(location_id, {}).get("warehouse"),
-				"warehouse_name": store_lookup.get(location_id, {}).get("warehouse_name") or row.get("store_name"),
+				"warehouse_name": store_lookup.get(location_id, {}).get("warehouse_name")
+				or row.get("store_name"),
 				"gross_sales": 0.0,
 				"net_sales_without_vat": 0.0,
 				"cups_sold": 0,
@@ -925,8 +944,12 @@ def _build_store_rankings(
 	for row in by_location.values():
 		row["gross_sales"] = round(row["gross_sales"], 2)
 		row["net_sales_without_vat"] = round(row["net_sales_without_vat"], 2)
-		row["average_guest_check"] = round(row["gross_sales"] / row["transactions"], 2) if row["transactions"] else 0.0
-		row["cups_per_transaction"] = round(row["cups_sold"] / row["transactions"], 2) if row["transactions"] else 0.0
+		row["average_guest_check"] = (
+			round(row["gross_sales"] / row["transactions"], 2) if row["transactions"] else 0.0
+		)
+		row["cups_per_transaction"] = (
+			round(row["cups_sold"] / row["transactions"], 2) if row["transactions"] else 0.0
+		)
 	return sorted(by_location.values(), key=lambda row: row["gross_sales"], reverse=True)
 
 
