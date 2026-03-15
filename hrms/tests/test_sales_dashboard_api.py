@@ -203,7 +203,6 @@ def test_data_quality_warning_flags_stale_foodpanda_cups():
 
 	assert any("FoodPanda cups" in warning for warning in warnings)
 
-
 def test_supabase_get_all_honors_requested_limit():
 	_install_fake_frappe(["System Manager"])
 	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_paging_test")
@@ -230,3 +229,27 @@ def test_supabase_get_all_honors_requested_limit():
 
 	assert rows == [{"business_date": "2026-03-14"}]
 	assert len(calls) == 1
+
+
+def test_query_daily_rows_filters_scope_after_fetch():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_query_rows_test")
+
+	captured: dict[str, object] = {}
+
+	def fake_supabase_get_all(resource, params=None, page_size=1000):
+		captured["resource"] = resource
+		captured["params"] = params
+		captured["page_size"] = page_size
+		return [
+			{"location_id": 2217, "business_date": "2026-03-02", "store_name": "BF Homes"},
+			{"location_id": 2557, "business_date": "2026-03-02", "store_name": "Araneta Gateway"},
+		]
+
+	module._supabase_get_all = fake_supabase_get_all
+
+	rows = module._query_daily_rows(module.date(2026, 3, 2), module.date(2026, 3, 8), [2217])
+
+	assert rows == [{"location_id": 2217, "business_date": "2026-03-02", "store_name": "BF Homes"}]
+	assert captured["resource"] == module.SUPABASE_DAILY_VIEW
+	assert ("location_id", "in.(2217)") not in captured["params"]

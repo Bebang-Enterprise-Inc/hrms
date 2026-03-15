@@ -571,17 +571,17 @@ def _build_access_context(scope: dict[str, Any]) -> dict[str, Any]:
 def _query_daily_rows(start_day: date, end_day: date, location_ids: list[int]) -> list[dict[str, Any]]:
 	if not location_ids:
 		return []
-	location_filter = ",".join(str(location_id) for location_id in sorted(set(location_ids)))
-	return _supabase_get_all(
+	allowed_location_ids = set(location_ids)
+	rows = _supabase_get_all(
 		SUPABASE_DAILY_VIEW,
 		[
 			("select", DAILY_METRIC_SELECT),
 			("business_date", f"gte.{start_day.isoformat()}"),
 			("business_date", f"lte.{end_day.isoformat()}"),
-			("location_id", f"in.({location_filter})"),
 			("order", "business_date.asc,store_name.asc"),
 		],
 	)
+	return [row for row in rows if _to_int(row.get("location_id")) in allowed_location_ids]
 
 
 def _query_weather_rows(start_day: date, end_day: date, location_ids: list[int]) -> list[dict[str, Any]]:
