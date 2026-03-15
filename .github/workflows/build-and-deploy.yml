@@ -442,7 +442,12 @@ jobs:
               "FRONTEND_CONTAINER=$(docker ps --filter name=frappe_frontend --format \"{{.Names}}\" | head -1)",
               "if [ -z \"$BACKEND_CONTAINER\" ] || [ -z \"$FRONTEND_CONTAINER\" ]; then echo \"❌ Container not found\"; exit 1; fi",
               "echo \"📦 Copying asset bundles from $BACKEND_CONTAINER to $FRONTEND_CONTAINER...\"",
-              "BACKEND_CONTAINER=\"$BACKEND_CONTAINER\" FRONTEND_CONTAINER=\"$FRONTEND_CONTAINER\" bash -lc 'set -euo pipefail; docker exec \"$BACKEND_CONTAINER\" tar czf - /home/frappe/frappe-bench/sites/assets/frappe /home/frappe/frappe-bench/sites/assets/erpnext /home/frappe/frappe-bench/sites/assets/hrms /home/frappe/frappe-bench/sites/assets/assets.json 2>/dev/null | docker exec -i \"$FRONTEND_CONTAINER\" tar xzf - -C /'",
+              "TMP_ASSET_TAR=/tmp/frappe-assets-sync.tar.gz",
+              "rm -f \"$TMP_ASSET_TAR\"",
+              "docker exec \"$BACKEND_CONTAINER\" sh -lc \"cd /home/frappe/frappe-bench/sites/assets && tar czf - frappe erpnext hrms assets.json\" > \"$TMP_ASSET_TAR\"",
+              "if [ ! -s \"$TMP_ASSET_TAR\" ]; then echo \"❌ Asset archive is empty\"; exit 1; fi",
+              "docker exec -i \"$FRONTEND_CONTAINER\" sh -lc \"cd /home/frappe/frappe-bench/sites/assets && tar xzf -\" < \"$TMP_ASSET_TAR\"",
+              "rm -f \"$TMP_ASSET_TAR\"",
               "echo \"✅ Assets synced successfully!\""
             ]' \
             --output text \
