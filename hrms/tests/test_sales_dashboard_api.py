@@ -41,7 +41,11 @@ def _load_module(path: Path, alias: str):
 
 def _install_fake_frappe(user_roles: list[str]):
 	frappe = types.ModuleType("frappe")
-	frappe.local = types.SimpleNamespace(session=types.SimpleNamespace(user="stakeholder@example.com"))
+	frappe.local = types.SimpleNamespace(
+		session=types.SimpleNamespace(user="stakeholder@example.com"),
+		db=types.SimpleNamespace(get_value=lambda *args, **kwargs: None),
+		conf={},
+	)
 
 	class PermissionError(Exception):
 		pass
@@ -65,17 +69,20 @@ def _install_fake_frappe(user_roles: list[str]):
 	def __getattr__(name: str):
 		if name == "session":
 			return frappe.local.session
+		if name == "db":
+			return frappe.local.db
+		if name == "conf":
+			return frappe.local.conf
 		raise AttributeError(name)
 
 	frappe.whitelist = whitelist
 	frappe.throw = throw
+	frappe._ = lambda message: message
 	frappe.PermissionError = PermissionError
 	frappe.ValidationError = ValidationError
 	frappe.get_roles = lambda user=None: list(user_roles)
 	frappe.get_all = lambda *args, **kwargs: []
 	frappe.get_doc = lambda *args, **kwargs: None
-	frappe.db = types.SimpleNamespace(get_value=lambda *args, **kwargs: None)
-	frappe.conf = {}
 	frappe.__getattr__ = __getattr__
 
 	_register_module("frappe", frappe)

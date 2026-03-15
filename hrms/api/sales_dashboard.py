@@ -16,6 +16,7 @@ from zoneinfo import ZoneInfo
 import requests
 
 import frappe
+from frappe import _
 
 MANILA_TZ = ZoneInfo("Asia/Manila")
 ROLE_SALES_STAKEHOLDER = "Sales Stakeholder"
@@ -347,12 +348,12 @@ def _find_store_supervisor_warehouse(user: str) -> list[dict[str, Any]]:
 
 def _resolve_allowed_store_scope(user: str | None = None) -> dict[str, Any]:
 	if _guest_user():
-		frappe.throw("Not authenticated", _permission_error_class())
+		frappe.throw(_("Not authenticated"), _permission_error_class())
 
 	user = user or _current_user()
 	roles = _get_roles(user)
 	if not roles.intersection(ALLOWED_ROLES):
-		frappe.throw("You do not have access to the Sales Dashboard.", _permission_error_class())
+		frappe.throw(_("You do not have access to the Sales Dashboard."), _permission_error_class())
 
 	role_label = None
 	warehouse_rows: list[dict[str, Any]] = []
@@ -699,7 +700,7 @@ def _calendar_map_for_scope(stores: list[dict[str, Any]], dates: set[str]) -> di
 			"day_of_week": day_obj.strftime("%A"),
 			"is_weekend": day_obj.weekday() >= 5,
 			"is_holiday": bool(holiday_names),
-			"holiday_name": ", ".join(sorted(set(filter(None, holiday_names)))) or None,
+			"holiday_name": ", ".join(sorted({name for name in holiday_names if name})) or None,
 			"holiday_list_used": ", ".join(sorted(set(holiday_lists))) or None,
 		}
 	return calendar

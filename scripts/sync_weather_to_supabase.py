@@ -22,6 +22,7 @@ import re
 import time
 from datetime import datetime, timedelta
 from math import atan2, cos, radians, sin, sqrt
+from pathlib import Path
 
 import requests
 
@@ -127,8 +128,9 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 def read_store_coordinates(csv_path: str) -> list[dict]:
 	"""Read store coordinates from WAREHOUSE_TREE.csv."""
 	stores = []
+	csv_file = Path(csv_path).expanduser().resolve()
 
-	with open(csv_path, encoding="utf-8") as f:
+	with csv_file.open(encoding="utf-8") as f:
 		reader = csv.DictReader(f)
 		for row in reader:
 			# Only include open stores with coordinates

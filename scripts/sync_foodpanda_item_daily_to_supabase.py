@@ -153,10 +153,10 @@ def parse_float(value: Any) -> float:
 		return 0.0
 
 
-def build_date_filter(args: argparse.Namespace) -> tuple[str | None, str | None]:
-	if args.date:
-		return args.date, args.date
-	return args.start_date, args.end_date
+def build_date_filter(cli_args: argparse.Namespace) -> tuple[str | None, str | None]:
+	if cli_args.date:
+		return cli_args.date, cli_args.date
+	return cli_args.start_date, cli_args.end_date
 
 
 def extract_rows(start_date: str | None, end_date: str | None) -> list[dict[str, Any]]:
