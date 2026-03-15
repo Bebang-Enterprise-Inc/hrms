@@ -68,8 +68,6 @@ jobs:
     needs: [guard]
     if: ${{ needs.guard.result == 'success' && github.event.inputs.skip_build != 'true' }}
     outputs:
-      deploy_image: ${{ steps.digest_ref.outputs.ref }}
-      immutable_image: ${{ steps.image_ref.outputs.ref }}
       image_digest: ${{ steps.build_push.outputs.digest }}
       image_short_sha: ${{ steps.tags.outputs.short_sha }}
 
@@ -177,9 +175,12 @@ jobs:
         id: deploy
         run: |
           set -euo pipefail
+          IMAGE_TAG="${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ needs.build.outputs.image_short_sha }}"
+          DEPLOY_IMAGE="${{ env.DOCKER_IMAGE }}@${{ needs.build.outputs.image_digest }}"
+
           echo "🚀 Deploying to EC2 instance ${{ env.EC2_INSTANCE_ID }} via Docker Swarm..."
-          echo "📦 Immutable image tag: ${{ needs.build.outputs.immutable_image }}"
-          echo "📦 Digest deploy image: ${{ needs.build.outputs.deploy_image }}"
+          echo "📦 Immutable image tag: $IMAGE_TAG"
+          echo "📦 Digest deploy image: $DEPLOY_IMAGE"
           echo "🔐 Expected digest: ${{ needs.build.outputs.image_digest }}"
 
           # Rolling update all Frappe services with zero downtime
@@ -188,7 +189,7 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
               "set -e",
-              "DEPLOY_IMAGE=${{ needs.build.outputs.deploy_image }}",
+              "DEPLOY_IMAGE='"$DEPLOY_IMAGE"'",
               "EXPECTED_DIGEST=${{ needs.build.outputs.image_digest }}",
               "MIN_FREE_KB=6291456",
               "echo \"💾 Root disk before deploy:\"",
