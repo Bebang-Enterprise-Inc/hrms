@@ -47,6 +47,8 @@ ALLOWED_ROLES = ALL_STORE_ROLES | {ROLE_AREA_SUPERVISOR, ROLE_STORE_SUPERVISOR, 
 CALENDAR_SOURCE = "Company.default_holiday_list"
 MAPPING_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "sales_dashboard_store_mapping.csv"
 SUPABASE_DAILY_VIEW = "sales_dashboard_daily_store_metrics"
+SALES_DASHBOARD_CACHE_TTL = 300
+SALES_DASHBOARD_FRESHNESS_CACHE_TTL = 900
 
 DAILY_METRIC_SELECT = ",".join(
 	[
@@ -237,6 +239,49 @@ def _supabase_get_all(
 			break
 		offset += current_page_size
 	return rows
+
+
+def _cache_available() -> bool:
+	return callable(getattr(frappe, "cache", None))
+
+
+def _cache_get_or_set(cache_key: str, builder, expires_in_sec: int) -> Any:
+	if not _cache_available():
+		return builder()
+	cache = frappe.cache()
+	cached = cache.get_value(cache_key)
+	if cached is not None:
+		return cached
+	value = builder()
+	cache.set_value(cache_key, value, expires_in_sec=expires_in_sec)
+	return value
+
+
+def _location_scope_key(location_ids: list[int]) -> str:
+	return ",".join(str(location_id) for location_id in sorted(set(location_ids)))
+
+
+def _sales_dashboard_cache_key(
+	prefix: str,
+	location_ids: list[int],
+	start_day: date | None = None,
+	end_day: date | None = None,
+	view_mode: str | None = None,
+	channel: str | None = None,
+	include_comparisons: bool | None = None,
+) -> str:
+	parts = [prefix, _location_scope_key(location_ids)]
+	if start_day:
+		parts.append(start_day.isoformat())
+	if end_day:
+		parts.append(end_day.isoformat())
+	if view_mode:
+		parts.append(view_mode)
+	if channel:
+		parts.append(channel)
+	if include_comparisons is not None:
+		parts.append("cmp1" if include_comparisons else "cmp0")
+	return "sales_dashboard:" + ":".join(parts)
 
 
 def _normalize_store_key(value: str | None) -> str:
@@ -523,17 +568,22 @@ def _get_resource_max_business_date(resource: str, filter_key: str, filter_value
 
 
 def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
-	return {
-		"pos_max_business_date": _get_resource_max_business_date("pos_orders", "payment_status", "eq.PAID"),
-		"web_max_business_date": _get_resource_max_business_date(
-			"web_orders", "order_status_raw", "eq.Completed"
-		),
-		"foodpanda_max_business_date": _get_resource_max_business_date(
-			"foodpanda_orders", "order_status", "ilike.delivered"
-		),
-		"foodpanda_cups_max_business_date": _get_foodpanda_cups_max_business_date(location_ids),
-		"weather_max_business_date": _get_weather_max_business_date(location_ids),
-	}
+	cache_key = _sales_dashboard_cache_key("freshness", location_ids)
+
+	def builder() -> dict[str, Any]:
+		return {
+			"pos_max_business_date": _get_resource_max_business_date("pos_orders", "payment_status", "eq.PAID"),
+			"web_max_business_date": _get_resource_max_business_date(
+				"web_orders", "order_status_raw", "eq.Completed"
+			),
+			"foodpanda_max_business_date": _get_resource_max_business_date(
+				"foodpanda_orders", "order_status", "ilike.delivered"
+			),
+			"foodpanda_cups_max_business_date": _get_foodpanda_cups_max_business_date(location_ids),
+			"weather_max_business_date": _get_weather_max_business_date(location_ids),
+		}
+
+	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_FRESHNESS_CACHE_TTL)
 
 
 def _build_data_quality_warnings(end_day: date, freshness: dict[str, Any]) -> list[str]:
@@ -577,33 +627,43 @@ def _build_access_context(scope: dict[str, Any]) -> dict[str, Any]:
 def _query_daily_rows(start_day: date, end_day: date, location_ids: list[int]) -> list[dict[str, Any]]:
 	if not location_ids:
 		return []
-	allowed_location_ids = set(location_ids)
-	rows = _supabase_get_all(
-		SUPABASE_DAILY_VIEW,
-		[
-			("select", DAILY_METRIC_SELECT),
-			("business_date", f"gte.{start_day.isoformat()}"),
-			("business_date", f"lte.{end_day.isoformat()}"),
-			("order", "business_date.asc,store_name.asc"),
-		],
-	)
-	return [row for row in rows if _to_int(row.get("location_id")) in allowed_location_ids]
+	cache_key = _sales_dashboard_cache_key("daily_rows", location_ids, start_day=start_day, end_day=end_day)
+
+	def builder() -> list[dict[str, Any]]:
+		location_filter = _location_scope_key(location_ids)
+		return _supabase_get_all(
+			SUPABASE_DAILY_VIEW,
+			[
+				("select", DAILY_METRIC_SELECT),
+				("business_date", f"gte.{start_day.isoformat()}"),
+				("business_date", f"lte.{end_day.isoformat()}"),
+				("location_id", f"in.({location_filter})"),
+				("order", "business_date.asc,store_name.asc"),
+			],
+		)
+
+	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_CACHE_TTL)
 
 
 def _query_weather_rows(start_day: date, end_day: date, location_ids: list[int]) -> list[dict[str, Any]]:
 	if not location_ids:
 		return []
-	location_filter = ",".join(str(location_id) for location_id in sorted(set(location_ids)))
-	return _supabase_get_all(
-		"daily_weather",
-		[
-			("select", WEATHER_SELECT),
-			("business_date", f"gte.{start_day.isoformat()}"),
-			("business_date", f"lte.{end_day.isoformat()}"),
-			("location_id", f"in.({location_filter})"),
-			("order", "business_date.asc"),
-		],
-	)
+	cache_key = _sales_dashboard_cache_key("weather_rows", location_ids, start_day=start_day, end_day=end_day)
+
+	def builder() -> list[dict[str, Any]]:
+		location_filter = _location_scope_key(location_ids)
+		return _supabase_get_all(
+			"daily_weather",
+			[
+				("select", WEATHER_SELECT),
+				("business_date", f"gte.{start_day.isoformat()}"),
+				("business_date", f"lte.{end_day.isoformat()}"),
+				("location_id", f"in.({location_filter})"),
+				("order", "business_date.asc"),
+			],
+		)
+
+	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_CACHE_TTL)
 
 
 def _aggregate_sales(rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -883,6 +943,36 @@ def _build_weather_context(series: list[dict[str, Any]]) -> dict[str, Any]:
 	}
 
 
+def _build_channel_mix(summary: dict[str, Any]) -> list[dict[str, Any]]:
+	return [
+		{
+			"key": "pickup",
+			"label": "Pickup Sales",
+			"sales_with_vat": summary["pickup_sales"],
+			"sales_without_vat": summary["pickup_sales"],
+		},
+		{
+			"key": "website",
+			"label": "Website Sales (Non-COD)",
+			"sales_with_vat": summary["website_sales"],
+			"sales_without_vat": summary["website_sales_without_vat"],
+		},
+		{
+			"key": "website_cod",
+			"label": "Website COD",
+			"orders": summary["website_cod_orders"],
+			"sales_with_vat": summary["website_cod_sales_with_vat"],
+			"sales_without_vat": summary["website_cod_sales_without_vat"],
+		},
+		{
+			"key": "foodpanda",
+			"label": "FoodPanda",
+			"sales_with_vat": summary["foodpanda_sales"],
+			"sales_without_vat": summary["foodpanda_sales_without_vat"],
+		},
+	]
+
+
 def _is_ops_scope_calibrated(
 	view_mode: str,
 	start_day: date,
@@ -987,6 +1077,58 @@ def _build_store_rankings(
 	return sorted(by_location.values(), key=lambda row: row["gross_sales"], reverse=True)
 
 
+def _build_dashboard_overview_payload(
+	scope: dict[str, Any],
+	start_day: date,
+	end_day: date,
+	view_mode: str,
+	channel: str,
+	include_comparisons: bool,
+) -> dict[str, Any]:
+	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
+	cache_key = _sales_dashboard_cache_key(
+		"overview",
+		selected_location_ids,
+		start_day=start_day,
+		end_day=end_day,
+		view_mode=view_mode,
+		channel=channel,
+		include_comparisons=include_comparisons,
+	)
+
+	def builder() -> dict[str, Any]:
+		sales_rows = _query_daily_rows(start_day, end_day, selected_location_ids)
+		weather_rows = _query_weather_rows(start_day, end_day, selected_location_ids)
+		summary = _aggregate_sales(sales_rows)
+		mode_state = _build_mode_state(view_mode, start_day, end_day, scope)
+		freshness = _build_freshness(selected_location_ids)
+		freshness["data_quality_warnings"] = _build_data_quality_warnings(end_day, freshness)
+		series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows)
+		response: dict[str, Any] = {
+			"scope": {
+				"selected_stores": scope["selected_stores"],
+				"selected_location_ids": selected_location_ids,
+				"channel": channel,
+			},
+			"date_window": {"start_date": start_day.isoformat(), "end_date": end_day.isoformat()},
+			"mode_state": mode_state,
+			"summary": summary,
+			"freshness": freshness,
+			"comparisons": _build_comparisons(start_day, end_day, selected_location_ids, summary)
+			if include_comparisons
+			else _empty_comparisons(),
+			"daily": series,
+			"analysis": _build_weather_context(series),
+			"stores": _build_store_rankings(scope, sales_rows, weather_rows),
+			"channels": _build_channel_mix(summary),
+		}
+		if view_mode == "ops_matched" and mode_state.get("supported"):
+			response["ops_summary"] = _build_ops_summary()
+		return response
+
+	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_CACHE_TTL)
+
+
 def _build_export_rows(
 	scope: dict[str, Any],
 	series: list[dict[str, Any]],
@@ -1028,7 +1170,7 @@ def get_sales_dashboard_access_context() -> dict[str, Any]:
 
 
 @frappe.whitelist()
-def get_sales_dashboard_summary(
+def get_sales_dashboard_overview(
 	start_date: str | None = None,
 	end_date: str | None = None,
 	stores: list[str] | str | None = None,
@@ -1038,28 +1180,43 @@ def get_sales_dashboard_summary(
 ) -> dict[str, Any]:
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
-	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
-	sales_rows = _query_daily_rows(start_day, end_day, selected_location_ids)
-	summary = _aggregate_sales(sales_rows)
-	mode_state = _build_mode_state(view_mode, start_day, end_day, scope)
-	freshness = _build_freshness(selected_location_ids)
-	freshness["data_quality_warnings"] = _build_data_quality_warnings(end_day, freshness)
-	response: dict[str, Any] = {
-		"scope": {
-			"selected_stores": scope["selected_stores"],
-			"selected_location_ids": selected_location_ids,
-			"channel": channel,
-		},
-		"date_window": {"start_date": start_day.isoformat(), "end_date": end_day.isoformat()},
-		"mode_state": mode_state,
-		"summary": summary,
-		"freshness": freshness,
-		"comparisons": _build_comparisons(start_day, end_day, selected_location_ids, summary)
-		if _to_bool(include_comparisons)
-		else _empty_comparisons(),
+	return _build_dashboard_overview_payload(
+		scope,
+		start_day,
+		end_day,
+		view_mode,
+		channel,
+		include_comparisons=_to_bool(include_comparisons),
+	)
+
+
+@frappe.whitelist()
+def get_sales_dashboard_summary(
+	start_date: str | None = None,
+	end_date: str | None = None,
+	stores: list[str] | str | None = None,
+	view_mode: str = "canonical",
+	channel: str = "all",
+	include_comparisons: str | int | bool = False,
+) -> dict[str, Any]:
+	overview = get_sales_dashboard_overview(
+		start_date=start_date,
+		end_date=end_date,
+		stores=stores,
+		view_mode=view_mode,
+		channel=channel,
+		include_comparisons=include_comparisons,
+	)
+	response = {
+		"scope": overview["scope"],
+		"date_window": overview["date_window"],
+		"mode_state": overview["mode_state"],
+		"summary": overview["summary"],
+		"freshness": overview["freshness"],
+		"comparisons": overview["comparisons"],
 	}
-	if view_mode == "ops_matched" and mode_state.get("supported"):
-		response["ops_summary"] = _build_ops_summary()
+	if "ops_summary" in overview:
+		response["ops_summary"] = overview["ops_summary"]
 	return response
 
 
@@ -1071,17 +1228,18 @@ def get_sales_dashboard_daily_series(
 	view_mode: str = "canonical",
 	channel: str = "all",
 ) -> dict[str, Any]:
-	scope = _selected_scope(_parse_stores_param(stores))
-	start_day, end_day = _resolve_date_range(start_date, end_date)
-	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
-	sales_rows = _query_daily_rows(start_day, end_day, selected_location_ids)
-	weather_rows = _query_weather_rows(start_day, end_day, selected_location_ids)
-	series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows)
+	overview = get_sales_dashboard_overview(
+		start_date=start_date,
+		end_date=end_date,
+		stores=stores,
+		view_mode=view_mode,
+		channel=channel,
+	)
 	return {
-		"scope": {"selected_stores": scope["selected_stores"], "channel": channel},
-		"date_window": {"start_date": start_day.isoformat(), "end_date": end_day.isoformat()},
-		"mode_state": _build_mode_state(view_mode, start_day, end_day, scope),
-		"series": series,
+		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
+		"date_window": overview["date_window"],
+		"mode_state": overview["mode_state"],
+		"series": overview["daily"],
 	}
 
 
@@ -1093,41 +1251,18 @@ def get_sales_dashboard_channel_mix(
 	view_mode: str = "canonical",
 	channel: str = "all",
 ) -> dict[str, Any]:
-	scope = _selected_scope(_parse_stores_param(stores))
-	start_day, end_day = _resolve_date_range(start_date, end_date)
-	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
-	summary = _aggregate_sales(_query_daily_rows(start_day, end_day, selected_location_ids))
+	overview = get_sales_dashboard_overview(
+		start_date=start_date,
+		end_date=end_date,
+		stores=stores,
+		view_mode=view_mode,
+		channel=channel,
+	)
 	return {
-		"scope": {"selected_stores": scope["selected_stores"], "channel": channel},
-		"date_window": {"start_date": start_day.isoformat(), "end_date": end_day.isoformat()},
-		"mode_state": _build_mode_state(view_mode, start_day, end_day, scope),
-		"channels": [
-			{
-				"key": "pickup",
-				"label": "Pickup Sales",
-				"sales_with_vat": summary["pickup_sales"],
-				"sales_without_vat": summary["pickup_sales"],
-			},
-			{
-				"key": "website",
-				"label": "Website Sales (Non-COD)",
-				"sales_with_vat": summary["website_sales"],
-				"sales_without_vat": summary["website_sales_without_vat"],
-			},
-			{
-				"key": "website_cod",
-				"label": "Website COD",
-				"orders": summary["website_cod_orders"],
-				"sales_with_vat": summary["website_cod_sales_with_vat"],
-				"sales_without_vat": summary["website_cod_sales_without_vat"],
-			},
-			{
-				"key": "foodpanda",
-				"label": "FoodPanda",
-				"sales_with_vat": summary["foodpanda_sales"],
-				"sales_without_vat": summary["foodpanda_sales_without_vat"],
-			},
-		],
+		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
+		"date_window": overview["date_window"],
+		"mode_state": overview["mode_state"],
+		"channels": overview["channels"],
 	}
 
 
@@ -1139,16 +1274,18 @@ def get_sales_dashboard_store_rankings(
 	view_mode: str = "canonical",
 	channel: str = "all",
 ) -> dict[str, Any]:
-	scope = _selected_scope(_parse_stores_param(stores))
-	start_day, end_day = _resolve_date_range(start_date, end_date)
-	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
-	sales_rows = _query_daily_rows(start_day, end_day, selected_location_ids)
-	weather_rows = _query_weather_rows(start_day, end_day, selected_location_ids)
+	overview = get_sales_dashboard_overview(
+		start_date=start_date,
+		end_date=end_date,
+		stores=stores,
+		view_mode=view_mode,
+		channel=channel,
+	)
 	return {
-		"scope": {"selected_stores": scope["selected_stores"], "channel": channel},
-		"date_window": {"start_date": start_day.isoformat(), "end_date": end_day.isoformat()},
-		"mode_state": _build_mode_state(view_mode, start_day, end_day, scope),
-		"stores": _build_store_rankings(scope, sales_rows, weather_rows),
+		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
+		"date_window": overview["date_window"],
+		"mode_state": overview["mode_state"],
+		"stores": overview["stores"],
 	}
 
 
@@ -1160,18 +1297,19 @@ def get_sales_dashboard_weather_context(
 	view_mode: str = "canonical",
 	channel: str = "all",
 ) -> dict[str, Any]:
-	scope = _selected_scope(_parse_stores_param(stores))
-	start_day, end_day = _resolve_date_range(start_date, end_date)
-	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
-	sales_rows = _query_daily_rows(start_day, end_day, selected_location_ids)
-	weather_rows = _query_weather_rows(start_day, end_day, selected_location_ids)
-	series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows)
+	overview = get_sales_dashboard_overview(
+		start_date=start_date,
+		end_date=end_date,
+		stores=stores,
+		view_mode=view_mode,
+		channel=channel,
+	)
 	return {
-		"scope": {"selected_stores": scope["selected_stores"], "channel": channel},
-		"date_window": {"start_date": start_day.isoformat(), "end_date": end_day.isoformat()},
-		"mode_state": _build_mode_state(view_mode, start_day, end_day, scope),
-		"daily": series,
-		"analysis": _build_weather_context(series),
+		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
+		"date_window": overview["date_window"],
+		"mode_state": overview["mode_state"],
+		"daily": overview["daily"],
+		"analysis": overview["analysis"],
 	}
 
 
