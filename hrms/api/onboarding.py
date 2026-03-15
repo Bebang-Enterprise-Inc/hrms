@@ -129,7 +129,7 @@ def _norm_text(value: Any) -> str:
         return ""
     if isinstance(value, bool):
         return "1" if value else "0"
-    if isinstance(value, (int, float)):
+    if isinstance(value, int | float):
         return str(value)
     return str(value).strip()
 
