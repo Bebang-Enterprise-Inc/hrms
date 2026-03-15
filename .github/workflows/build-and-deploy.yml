@@ -438,12 +438,11 @@ jobs:
             --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=[
-              "set -euo pipefail",
               "BACKEND_CONTAINER=$(docker ps --filter name=frappe_backend --format \"{{.Names}}\" | head -1)",
               "FRONTEND_CONTAINER=$(docker ps --filter name=frappe_frontend --format \"{{.Names}}\" | head -1)",
               "if [ -z \"$BACKEND_CONTAINER\" ] || [ -z \"$FRONTEND_CONTAINER\" ]; then echo \"❌ Container not found\"; exit 1; fi",
               "echo \"📦 Copying asset bundles from $BACKEND_CONTAINER to $FRONTEND_CONTAINER...\"",
-              "docker exec $BACKEND_CONTAINER tar czf - /home/frappe/frappe-bench/sites/assets/frappe /home/frappe/frappe-bench/sites/assets/erpnext /home/frappe/frappe-bench/sites/assets/hrms /home/frappe/frappe-bench/sites/assets/assets.json 2>/dev/null | docker exec -i $FRONTEND_CONTAINER tar xzf - -C /",
+              "BACKEND_CONTAINER=\"$BACKEND_CONTAINER\" FRONTEND_CONTAINER=\"$FRONTEND_CONTAINER\" bash -lc 'set -euo pipefail; docker exec \"$BACKEND_CONTAINER\" tar czf - /home/frappe/frappe-bench/sites/assets/frappe /home/frappe/frappe-bench/sites/assets/erpnext /home/frappe/frappe-bench/sites/assets/hrms /home/frappe/frappe-bench/sites/assets/assets.json 2>/dev/null | docker exec -i \"$FRONTEND_CONTAINER\" tar xzf - -C /'",
               "echo \"✅ Assets synced successfully!\""
             ]' \
             --output text \
