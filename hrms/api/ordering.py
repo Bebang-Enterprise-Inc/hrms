@@ -218,15 +218,17 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 	Returns:
 	    dict: {"orders": [...], "total": int}
 	"""
-	_check_ordering_permission(ORDERING_WAREHOUSE_ROLES, "view order review queue")
-
 	filter_date = date or today()
 	current_user = frappe.session.user
 	current_roles = set(frappe.get_roles(current_user))
 	from hrms.api.store import _get_order_approval_fallback_user
 
-	conditions = ["so.order_date = %(date)s", "so.docstatus < 2"]
 	fallback_approver = _get_order_approval_fallback_user()
+	is_fallback_viewer = bool(fallback_approver and current_user == fallback_approver)
+	if not current_roles.intersection(ORDERING_WAREHOUSE_ROLES) and not is_fallback_viewer:
+		frappe.throw(_("You do not have permission to view order review queue"), frappe.PermissionError)
+
+	conditions = ["so.order_date = %(date)s", "so.docstatus < 2"]
 	params = {
 		"date": filter_date,
 		"current_user": current_user,
@@ -238,7 +240,6 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 		params["status"] = status
 
 	admin_viewer_roles = {"System Manager", "Administrator", "Warehouse Manager"}
-	is_fallback_viewer = bool(fallback_approver and current_user == fallback_approver)
 	is_admin_viewer = bool(current_roles.intersection(admin_viewer_roles)) or is_fallback_viewer
 	if not is_admin_viewer:
 		conditions.append(
