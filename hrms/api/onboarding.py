@@ -24,6 +24,9 @@ import frappe
 from frappe.utils import now_datetime, today
 from frappe.utils.data import add_to_date
 
+from hrms.api.contact_validation import validate_email_address, validate_ph_mobile_number
+from hrms.api.profile_policy import classify_employee_policy
+
 SESSION_DOCTYPE = "BEI Onboarding Session"
 REQUEST_DOCTYPE = "BEI Onboarding Request"
 
@@ -48,37 +51,6 @@ def _as_dict(obj: Any) -> dict[str, Any]:
 
 
 HR_APPROVER_FALLBACK = "nad@bebang.ph,ana@bebang.ph"
-OFFICE_LIKE_BRANCHES = {"BRITTANY OFFICE", "CAPITAL HOUSE"}
-ADMIN_ROLE_SET = {"SYSTEM MANAGER", "ADMINISTRATOR"}
-SUPERVISOR_TITLE_KEYWORDS = (
-	"SUPERVISOR",
-	"MANAGER",
-	"HEAD",
-	"OFFICER",
-	"CHIEF",
-	"DIRECTOR",
-	"LEAD",
-	"ARCHITECT",
-)
-EXECUTIVE_TITLE_KEYWORDS = (
-	"CEO",
-	"PRESIDENT",
-	"OWNER",
-	"FOUNDER",
-	"CO-FOUNDER",
-	"EXECUTIVE",
-	"VICE PRESIDENT",
-	"AVP",
-	"GENERAL MANAGER",
-)
-COMMISSARY_KEYWORDS = ("COMMISSARY",)
-COMMISSARY_PRODUCTION_KEYWORDS = (
-	"PRODUCTION",
-	"COMMISSARY CREW",
-	"COMMISSARY SUPERVISOR",
-	"QC INSPECTOR",
-)
-OPERATIONS_SUPPORT_KEYWORDS = ("WAREHOUSE", "LOGISTICS", "SUPPLY CHAIN", "STOCKMAN", "DRIVER")
 IDENTITY_FIELDS = {
 	"first_name",
 	"middle_name",
@@ -90,7 +62,8 @@ IDENTITY_FIELDS = {
 GOVERNMENT_ID_FIELDS = {"tin_number", "sss_number", "philhealth_number", "pagibig_number"}
 BANK_FIELDS = {"bank_name", "bank_ac_no"}
 WORK_IDENTITY_FIELDS = {"company_email", "custom_work_phone"}
-EMPLOYMENT_STRUCTURE_FIELDS = {"reports_to", "employment_type", "date_of_joining"}
+EMAIL_FIELDS = {"company_email", "personal_email"}
+PHONE_FIELDS = {"cell_number", "custom_work_phone", "emergency_phone_number"}
 PROOF_ATTACHMENTS = {
 	"tin_proof_url": ("tin_number", "custom_tin_verified"),
 	"sss_proof_url": ("sss_number", "custom_sss_verified"),
@@ -130,9 +103,6 @@ INPUT_TO_EMPLOYEE_FIELD_MAP = {
 	"relation": "relation",
 	"bank_name": "bank_name",
 	"bank_ac_no": "bank_ac_no",
-	"reports_to": "reports_to",
-	"employment_type": "employment_type",
-	"date_of_joining": "date_of_joining",
 	"tin_number": "tin_number",
 	"sss_number": "sss_number",
 	"philhealth_number": "philhealth_number",
@@ -141,15 +111,6 @@ INPUT_TO_EMPLOYEE_FIELD_MAP = {
 	"attachments": None,
 	"selfie_file_url": None,
 }
-ENRICHMENT_SNAPSHOT_EMPLOYEE_FIELDS = sorted(
-	{
-		"name",
-		"employee_name",
-		"branch",
-		"designation",
-		*[field_name for field_name in INPUT_TO_EMPLOYEE_FIELD_MAP.values() if field_name],
-	}
-)
 
 
 def _json_dumps(value: Any) -> str:
@@ -187,23 +148,6 @@ def _normalize_requested_changes(changes: dict[str, Any]) -> dict[str, Any]:
 	return normalized
 
 
-def _parse_role_list(value: Any) -> list[str]:
-	if isinstance(value, list):
-		return [_norm_text(item).upper() for item in value if _norm_text(item)]
-	if isinstance(value, str):
-		parsed = _as_dict(value)
-		if parsed:
-			return _parse_role_list(parsed)
-		try:
-			loaded = json.loads(value)
-			if isinstance(loaded, list):
-				return [_norm_text(item).upper() for item in loaded if _norm_text(item)]
-		except Exception:
-			pass
-		return [_norm_text(part).upper() for part in value.split(",") if _norm_text(part)]
-	return []
-
-
 def _extract_requested_field_keys(changes: dict[str, Any]) -> list[str]:
 	flat_changes = _flatten_requested_changes(changes)
 	keys = []
@@ -217,74 +161,26 @@ def _extract_requested_field_keys(changes: dict[str, Any]) -> list[str]:
 	return sorted(set(keys))
 
 
-def _classify_employee_policy(employee_row: dict[str, Any]) -> dict[str, Any]:
-	branch = _norm_text(employee_row.get("branch")).upper()
-	designation = _norm_text(employee_row.get("designation")).upper()
-	roles = _parse_role_list(employee_row.get("requester_roles") or employee_row.get("roles"))
-	is_admin_role = any(role in ADMIN_ROLE_SET for role in roles)
-	is_area_supervisor = "AREA SUPERVISOR" in designation
-	is_store_oic = "STORE OIC" in designation
-	is_executive_title = (
-		any(keyword in designation for keyword in EXECUTIVE_TITLE_KEYWORDS)
-		or designation.startswith("VP ")
-		or designation == "VP"
-		or designation.startswith("AVP ")
-		or designation == "AVP"
-		or designation.startswith("GM ")
-		or designation == "GM"
-	)
-	is_executive_or_admin = is_admin_role or is_executive_title
-	is_office_like = branch in OFFICE_LIKE_BRANCHES or is_executive_or_admin
-	is_supervisor_grade = (
-		is_executive_or_admin
-		or is_area_supervisor
-		or any(keyword in designation for keyword in SUPERVISOR_TITLE_KEYWORDS)
-	)
-	is_commissary = any(keyword in branch for keyword in COMMISSARY_KEYWORDS) or any(
-		keyword in designation for keyword in COMMISSARY_KEYWORDS
-	)
-	is_commissary_production = is_commissary and (
-		any(keyword in branch for keyword in COMMISSARY_PRODUCTION_KEYWORDS)
-		or any(keyword in designation for keyword in COMMISSARY_PRODUCTION_KEYWORDS)
-	)
-	is_operations_support = not is_commissary_production and (
-		any(keyword in branch for keyword in OPERATIONS_SUPPORT_KEYWORDS)
-		or any(keyword in designation for keyword in OPERATIONS_SUPPORT_KEYWORDS)
-	)
+def _validate_contact_fields(changes: dict[str, Any]) -> dict[str, Any]:
+	validated = _normalize_requested_changes(changes)
 
-	if is_area_supervisor:
-		cohort = "area_supervisor"
-	elif is_executive_or_admin:
-		cohort = "executive_system_manager"
-	elif is_commissary_production:
-		cohort = "commissary_production"
-	elif is_operations_support:
-		cohort = "operations_support"
-	elif is_store_oic:
-		cohort = "store_oic"
-	elif is_office_like and is_supervisor_grade:
-		cohort = "office_supervisor_manager"
-	elif is_office_like:
-		cohort = "office_staff"
-	else:
-		cohort = "store_employee"
+	for section_value in validated.values():
+		if not isinstance(section_value, dict):
+			continue
 
-	return {
-		"cohort": cohort,
-		"roles": roles,
-		"is_office_like": is_office_like,
-		"is_supervisor_grade": is_supervisor_grade,
-		"is_area_supervisor": is_area_supervisor,
-		"is_executive_or_admin": is_executive_or_admin,
-		"is_commissary_production": is_commissary_production,
-		"is_operations_support": is_operations_support,
-		"uses_store_contact_policy": cohort in {"store_employee", "store_oic"},
-		"uses_commissary_contact_policy": cohort == "commissary_production",
-		"has_office_email_fields": is_office_like or is_area_supervisor,
-		"has_supervisor_phone_fields": cohort
-		in {"office_supervisor_manager", "area_supervisor", "executive_system_manager"},
-		"has_uniform_size": cohort in {"store_employee", "store_oic", "commissary_production"},
-	}
+		for field_key, field_value in list(section_value.items()):
+			if field_key in EMAIL_FIELDS:
+				result = validate_email_address(_norm_text(field_value))
+				if not result["valid"]:
+					frappe.throw(result["error"])
+				section_value[field_key] = result["normalized"]
+			elif field_key in PHONE_FIELDS:
+				result = validate_ph_mobile_number(_norm_text(field_value))
+				if not result["valid"]:
+					frappe.throw(result["error"])
+				section_value[field_key] = result["normalized"]
+
+	return validated
 
 
 def _determine_review_lane(requested_field_keys: list[str]) -> str:
@@ -295,8 +191,6 @@ def _determine_review_lane(requested_field_keys: list[str]) -> str:
 		return "government_ids"
 	if keys & BANK_FIELDS:
 		return "payroll_bank"
-	if keys & EMPLOYMENT_STRUCTURE_FIELDS:
-		return "employment_org"
 	if keys & WORK_IDENTITY_FIELDS:
 		return "work_identity"
 	return "non_sensitive_follow_up"
@@ -306,8 +200,6 @@ def _determine_risk_level(requested_field_keys: list[str]) -> str:
 	keys = set(requested_field_keys)
 	if keys & (IDENTITY_FIELDS | GOVERNMENT_ID_FIELDS | BANK_FIELDS):
 		return "high"
-	if keys & EMPLOYMENT_STRUCTURE_FIELDS:
-		return "medium"
 	if keys & WORK_IDENTITY_FIELDS:
 		return "medium"
 	return "low"
@@ -315,103 +207,7 @@ def _determine_risk_level(requested_field_keys: list[str]) -> str:
 
 def _requires_hr_review(requested_field_keys: list[str]) -> bool:
 	keys = set(requested_field_keys)
-	return bool(
-		keys
-		& (
-			IDENTITY_FIELDS
-			| GOVERNMENT_ID_FIELDS
-			| BANK_FIELDS
-			| WORK_IDENTITY_FIELDS
-			| EMPLOYMENT_STRUCTURE_FIELDS
-		)
-	)
-
-
-def _parse_email_list(value: Any) -> list[str]:
-	if not value:
-		return []
-	if isinstance(value, str):
-		return [_norm_text(part) for part in value.replace("\n", ",").split(",") if _norm_text(part)]
-	if isinstance(value, list):
-		return [_norm_text(part) for part in value if _norm_text(part)]
-	return []
-
-
-def _get_user_roles_upper(user_email: str) -> set[str]:
-	normalized = _norm_text(user_email)
-	if not normalized:
-		return set()
-	try:
-		return {_norm_text(role).upper() for role in frappe.get_roles(normalized) if _norm_text(role)}
-	except Exception:
-		return set()
-
-
-def _is_admin_user(user_email: str) -> bool:
-	return bool(_get_user_roles_upper(user_email) & ADMIN_ROLE_SET)
-
-
-def _session_can_impersonate_review_actor(review_actor_email: str) -> bool:
-	session_user = _norm_text(frappe.session.user)
-	if not session_user or session_user == "Guest":
-		return False
-	if session_user == review_actor_email:
-		return True
-	return _is_admin_user(session_user)
-
-
-def _request_allows_reviewer(req: Any, reviewer_email: str) -> bool:
-	normalized_reviewer = _norm_text(reviewer_email)
-	if not normalized_reviewer:
-		return False
-
-	allowed_reviewers = _parse_email_list(getattr(req, "approver_email", ""))
-	return (
-		not allowed_reviewers
-		or normalized_reviewer in allowed_reviewers
-		or _is_admin_user(normalized_reviewer)
-	)
-
-
-def _authorize_request_reviewer(req: Any, reviewer_email: str) -> dict[str, Any] | None:
-	normalized_reviewer = _norm_text(reviewer_email)
-	if not normalized_reviewer:
-		return {
-			"success": False,
-			"error": "Reviewer is required",
-			"code": "MISSING_REVIEWER",
-		}
-
-	if not _session_can_impersonate_review_actor(normalized_reviewer):
-		return {
-			"success": False,
-			"error": "Reviewer identity does not match the active session",
-			"code": "REVIEWER_MISMATCH",
-		}
-
-	request_employee = _norm_text(getattr(req, "employee", None) or req.get("employee"))
-	request_employee_user = (
-		_norm_text(frappe.db.get_value("Employee", request_employee, "user_id")) if request_employee else ""
-	)
-	if (
-		request_employee_user
-		and request_employee_user == normalized_reviewer
-		and not _is_admin_user(normalized_reviewer)
-	):
-		return {
-			"success": False,
-			"error": "Employees cannot review their own submission",
-			"code": "FORBIDDEN",
-		}
-
-	if not _request_allows_reviewer(req, normalized_reviewer):
-		return {
-			"success": False,
-			"error": "Not permitted to review this request",
-			"code": "FORBIDDEN",
-		}
-
-	return None
+	return bool(keys & (IDENTITY_FIELDS | GOVERNMENT_ID_FIELDS | BANK_FIELDS | WORK_IDENTITY_FIELDS))
 
 
 def _determine_proof_status(changes: dict[str, Any]) -> str:
@@ -572,7 +368,6 @@ def lookup_employee(
 		"department",
 		"designation",
 		"reports_to",
-		"employment_type",
 		"cell_number",
 		"personal_email",
 		"current_address",
@@ -617,7 +412,6 @@ def lookup_employee(
 			"department": row.get("department"),
 			"designation": row.get("designation"),
 			"reports_to": row.get("reports_to"),
-			"employment_type": row.get("employment_type"),
 			"cell_number": row.get("cell_number"),
 			"personal_email": row.get("personal_email"),
 			"current_address": row.get("current_address"),
@@ -715,12 +509,9 @@ def _build_enrichment_submission_meta(
 	requested_changes: dict[str, Any],
 	submitted_via: str | None = None,
 	submission_reason: str | None = None,
-	requester_roles: Any = None,
 ) -> dict[str, Any]:
-	if requester_roles:
-		employee_row = {**employee_row, "requester_roles": requester_roles}
 	requested_field_keys = _extract_requested_field_keys(requested_changes)
-	policy = _classify_employee_policy(employee_row)
+	policy = classify_employee_policy(employee_row)
 	snapshot = _get_employee_snapshot(employee_row, requested_field_keys)
 
 	return {
@@ -821,7 +612,6 @@ def submit_enrichment_update(
 	submitted_via: str | None = None,
 	approver_email: str | None = None,
 	submission_reason: str | None = None,
-	requester_roles: str | None = None,
 ) -> dict[str, Any]:
 	"""Create one grouped enrichment submission for profile updates."""
 	if not employee:
@@ -830,7 +620,7 @@ def submit_enrichment_update(
 	if not frappe.db.exists("Employee", employee):
 		return {"success": False, "error": "Employee not found", "code": "EMP_NOT_FOUND"}
 
-	changes = _normalize_requested_changes(_as_dict(requested_changes))
+	changes = _validate_contact_fields(_as_dict(requested_changes))
 	requested_field_keys = _extract_requested_field_keys(changes)
 	attachments = _flatten_requested_changes(changes).get("attachments")
 
@@ -841,18 +631,12 @@ def submit_enrichment_update(
 		frappe.db.get_value(
 			"Employee",
 			employee,
-			ENRICHMENT_SNAPSHOT_EMPLOYEE_FIELDS,
+			["name", "employee_name", "branch", "department", "designation"],
 			as_dict=True,
 		)
 		or {}
 	)
-	meta = _build_enrichment_submission_meta(
-		employee_row,
-		changes,
-		submitted_via,
-		submission_reason,
-		requester_roles,
-	)
+	meta = _build_enrichment_submission_meta(employee_row, changes, submitted_via, submission_reason)
 
 	superseded_requests: list[str] = []
 	open_requests = frappe.get_all(
@@ -1106,7 +890,6 @@ def approve_and_apply(
 	approver_notes: str | None = None,
 	is_hr_approver: bool | int | None = None,
 	approved_fields: str | None = None,
-	acting_reviewer_email: str | None = None,
 ) -> dict[str, Any]:
 	"""
 	Approve (or reject) and optionally apply an onboarding request.
@@ -1126,13 +909,10 @@ def approve_and_apply(
 		return {"success": False, "error": "Request not found", "code": "NOT_FOUND"}
 
 	req = frappe.get_doc(REQUEST_DOCTYPE, request_name)
-	acting_email = _norm_text(acting_reviewer_email or approver_email)
-	auth_error = _authorize_request_reviewer(req, acting_email)
-	if auth_error:
-		return auth_error
 
 	if req.status not in ("Pending", "Escalated"):
 		return {"success": False, "error": "Request not pending", "code": "NOT_PENDING"}
+
 	req.approver_email = approver_email or ""
 	req.approver_notes = approver_notes or ""
 	req.approved_at = now_datetime()
@@ -1142,21 +922,21 @@ def approve_and_apply(
 	if not isinstance(workflow, dict):
 		workflow = {}
 	claim_owner = _norm_text(workflow.get("claimed_by"))
-	if claim_owner and claim_owner != acting_email:
+	if claim_owner and claim_owner != _norm_text(approver_email):
 		return {
 			"success": False,
 			"error": f"Request is currently claimed by {claim_owner}",
 			"code": "CLAIM_CONFLICT",
 		}
 	if not claim_owner:
-		workflow["claimed_by"] = acting_email
+		workflow["claimed_by"] = approver_email
 		workflow["claimed_at"] = str(now_datetime())
 	meta["workflow"] = workflow
 	_set_request_meta(req, meta)
 
 	if decision == "reject":
 		req.status = "Rejected"
-		_set_workflow_state(req, "Rejected", decided_by=acting_email, decided_at=str(now_datetime()))
+		_set_workflow_state(req, "Rejected", decided_by=approver_email, decided_at=str(now_datetime()))
 		req.save(ignore_permissions=True)
 		frappe.db.commit()
 		return {"success": True, "data": {"status": req.status, "review_state": "Rejected"}}
@@ -1165,7 +945,7 @@ def approve_and_apply(
 		req.status = "Escalated"
 		req.escalated_to_hr = 1
 		_set_workflow_state(
-			req, "Pending Review", escalated_by=acting_email, escalated_at=str(now_datetime())
+			req, "Pending Review", escalated_by=approver_email, escalated_at=str(now_datetime())
 		)
 		req.save(ignore_permissions=True)
 		frappe.db.commit()
@@ -1271,7 +1051,7 @@ def approve_and_apply(
 				review_state,
 				approved_fields=sorted(approved_field_set),
 				remaining_fields=remaining_fields,
-				decided_by=acting_email,
+				decided_by=approver_email,
 				decided_at=str(now_datetime()),
 			)
 			req.save(ignore_permissions=True)
@@ -1287,7 +1067,7 @@ def approve_and_apply(
 			req.applied_at = now_datetime()
 			req.applied_by = frappe.session.user
 			req.approver_notes = (req.approver_notes or "") + f"\nEmployee created: {result['employee_id']}"
-			_set_workflow_state(req, "Applied", decided_by=acting_email, decided_at=str(now_datetime()))
+			_set_workflow_state(req, "Applied", decided_by=approver_email, decided_at=str(now_datetime()))
 			req.save(ignore_permissions=True)
 			frappe.db.commit()
 
@@ -1339,9 +1119,6 @@ def request_revision(
 		return {"success": False, "error": "Request not found", "code": "NOT_FOUND"}
 
 	req = frappe.get_doc(REQUEST_DOCTYPE, request_name)
-	auth_error = _authorize_request_reviewer(req, reviewer_email)
-	if auth_error:
-		return auth_error
 
 	if req.status not in ("Pending", "Escalated"):
 		return {"success": False, "error": "Request not pending", "code": "NOT_PENDING"}
@@ -1406,9 +1183,6 @@ def claim_request(request_name: str, reviewer_email: str, release: bool = False)
 		return {"success": False, "error": "Request not found", "code": "NOT_FOUND"}
 
 	req = frappe.get_doc(REQUEST_DOCTYPE, request_name)
-	auth_error = _authorize_request_reviewer(req, reviewer_email)
-	if auth_error:
-		return auth_error
 	if req.status not in OPEN_REVIEW_STATUSES and req.status != "Approved":
 		return {"success": False, "error": "Request is not open for review", "code": "NOT_OPEN"}
 
