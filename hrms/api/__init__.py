@@ -7,7 +7,12 @@ from frappe.utils import add_days, date_diff, getdate, strip_html
 
 from erpnext.setup.doctype.employee.employee import get_holiday_list_for_employee
 
-from hrms.api.profile_policy import is_reports_to_candidate, normalize_text
+from hrms.api.profile_policy import (
+	is_reports_to_candidate,
+	matches_reports_to_query,
+	normalize_text,
+	resolve_reports_to_display_name,
+)
 
 SUPPORTED_FIELD_TYPES = [
 	"Link",
@@ -111,19 +116,25 @@ def search_reports_to_candidates(
 		limit_page_length=2000,
 	)
 
+	user_ids = sorted({row.get("user_id") for row in rows if row.get("user_id")})
+	user_map: dict[str, dict] = {}
+	if user_ids:
+		user_rows = frappe.get_all(
+			"User",
+			filters={"name": ["in", user_ids]},
+			fields=["name", "full_name", "first_name", "last_name"],
+			limit_page_length=len(user_ids),
+		)
+		user_map = {row.get("name"): row for row in user_rows if row.get("name")}
+
 	branch_norm = normalize_text(branch)
-	query_norm = normalize_text(query)
 	candidates = [row for row in rows if is_reports_to_candidate(row)]
 
-	if query_norm:
+	if query:
 		candidates = [
 			row
 			for row in candidates
-			if query_norm in normalize_text(row.get("employee_name"))
-			or query_norm in normalize_text(row.get("first_name"))
-			or query_norm in normalize_text(row.get("last_name"))
-			or query_norm in normalize_text(row.get("designation"))
-			or query_norm in normalize_text(row.get("user_id"))
+			if matches_reports_to_query(row, user_map.get(row.get("user_id")), query)
 		]
 
 	def _priority(row: dict) -> tuple[int, int, str]:
@@ -171,19 +182,30 @@ def search_reports_to_candidates(
 		if len(results) >= limit:
 			break
 
-	return [
-		{
-			"name": row.get("name"),
-			"employee_id": row.get("name"),
-			"employee_name": row.get("employee_name"),
-			"designation": row.get("designation") or "",
-			"department": row.get("department") or "",
-			"branch": row.get("branch") or "",
-			"user_id": row.get("user_id") or "",
-			"image": row.get("image") or "",
-		}
-		for row in results
-	]
+	return [_build_reports_to_candidate_response(row, user_map.get(row.get("user_id"))) for row in results]
+
+
+def _build_reports_to_candidate_response(employee_row: dict, user_row: dict | None = None) -> dict:
+	employee_name = employee_row.get("employee_name") or ""
+	full_name = (user_row or {}).get("full_name") or ""
+	display_name = _resolve_reports_to_display_name(employee_name, full_name)
+
+	return {
+		"name": employee_row.get("name"),
+		"employee_id": employee_row.get("name"),
+		"employee_name": employee_name,
+		"display_name": display_name,
+		"full_name": full_name,
+		"designation": employee_row.get("designation") or "",
+		"department": employee_row.get("department") or "",
+		"branch": employee_row.get("branch") or "",
+		"user_id": employee_row.get("user_id") or "",
+		"image": employee_row.get("image") or "",
+	}
+
+
+def _resolve_reports_to_display_name(employee_name: str, full_name: str) -> str:
+	return resolve_reports_to_display_name(employee_name, full_name)
 
 
 # HR Settings
