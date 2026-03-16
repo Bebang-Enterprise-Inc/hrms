@@ -7,7 +7,7 @@ from copy import deepcopy
 
 import frappe
 from frappe import _
-from frappe.utils import cint, flt, now_datetime
+from frappe.utils import cint, flt, now_datetime, nowdate
 
 try:
     from frappe.utils import add_to_date
@@ -357,11 +357,377 @@ def build_risk_snapshot_row(source: dict, horizon_hours: int = 72) -> dict:
     }
 
 
-def _load_risk_inputs() -> list[dict]:
-    _ensure_default_test_fixture()
+def _normalize_filter_values(values: list[str] | tuple[str, ...] | None) -> list[str]:
+    return sorted({str(value or "").strip() for value in values or [] if str(value or "").strip()})
+
+
+def _fetch_latest_snapshot_source_rows(
+    warehouses: list[str] | None = None,
+    item_codes: list[str] | None = None,
+) -> list[dict]:
+    warehouse_filter = _normalize_filter_values(warehouses)
+    item_filter = _normalize_filter_values(item_codes)
+    conditions: list[str] = []
+    values: dict[str, object] = {}
+
+    if warehouse_filter:
+        conditions.append("warehouse IN %(warehouses)s")
+        values["warehouses"] = tuple(warehouse_filter)
+    if item_filter:
+        conditions.append("item_code IN %(item_codes)s")
+        values["item_codes"] = tuple(item_filter)
+
+    where_clause = " AND ".join(conditions) if conditions else "1=1"
+    return _safe_db_sql(
+        f"""
+        SELECT
+            snap.snapshot_date,
+            snap.item_code,
+            snap.warehouse,
+            snap.available_qty,
+            snap.avg_daily_demand,
+            snap.inbound_qty,
+            snap.pending_po_count,
+            snap.delayed_po_count,
+            snap.in_transit_qty,
+            snap.next_eta,
+            snap.days_to_stockout,
+            snap.projected_stockout_at,
+            snap.supplier_on_time_rate,
+            snap.risk_score,
+            snap.risk_level,
+            snap.value_at_risk,
+            snap.margin_at_risk
+        FROM `tabBEI Inventory Risk Snapshot` snap
+        INNER JOIN (
+            SELECT warehouse, item_code, MAX(snapshot_date) AS latest_snapshot_date
+            FROM `tabBEI Inventory Risk Snapshot`
+            WHERE {where_clause}
+            GROUP BY warehouse, item_code
+        ) latest
+            ON latest.warehouse = snap.warehouse
+           AND latest.item_code = snap.item_code
+           AND latest.latest_snapshot_date = snap.snapshot_date
+        WHERE {where_clause}
+        """,
+        values,
+    )
+
+
+def _fetch_risk_profile_map(
+    warehouses: list[str] | None,
+    item_codes: list[str] | None,
+) -> dict[tuple[str, str], dict]:
+    warehouse_filter = _normalize_filter_values(warehouses)
+    item_filter = _normalize_filter_values(item_codes)
+    if not warehouse_filter or not item_filter:
+        return {}
+
+    rows = _safe_db_sql(
+        """
+        SELECT
+            warehouse,
+            item_code,
+            lead_time_days,
+            supplier_reliability_score,
+            supplier_on_time_rate_target,
+            default_margin_rate
+        FROM `tabBEI Inventory Risk Profile`
+        WHERE is_active = 1
+          AND warehouse IN %(warehouses)s
+          AND item_code IN %(item_codes)s
+        """,
+        {"warehouses": tuple(warehouse_filter), "item_codes": tuple(item_filter)},
+    )
+    return {(str(row.get("warehouse") or ""), str(row.get("item_code") or "")): row for row in rows}
+
+
+def _fetch_item_price_map(item_codes: list[str] | None) -> dict[str, dict]:
+    normalized_item_codes = _normalize_filter_values(item_codes)
+    if not normalized_item_codes:
+        return {}
+
+    rows = _safe_db_sql(
+        """
+        SELECT
+            name AS item_code,
+            valuation_rate,
+            standard_rate,
+            last_purchase_rate
+        FROM `tabItem`
+        WHERE name IN %(item_codes)s
+        """,
+        {"item_codes": tuple(normalized_item_codes)},
+    )
+    return {str(row.get("item_code") or ""): row for row in rows}
+
+
+def _decorate_snapshot_source_rows(snapshot_rows: list[dict]) -> list[dict]:
+    if not snapshot_rows:
+        return []
+
+    warehouses = [str(row.get("warehouse") or "") for row in snapshot_rows]
+    item_codes = [str(row.get("item_code") or "") for row in snapshot_rows]
+    profile_map = _fetch_risk_profile_map(warehouses, item_codes)
+    item_price_map = _fetch_item_price_map(item_codes)
+
+    decorated: list[dict] = []
+    for row in snapshot_rows:
+        warehouse = str(row.get("warehouse") or "")
+        item_code = str(row.get("item_code") or "")
+        profile = profile_map.get((warehouse, item_code), {})
+        prices = item_price_map.get(item_code, {})
+        decorated.append(
+            {
+                "item_code": item_code,
+                "warehouse": warehouse,
+                "available_qty": flt(row.get("available_qty")),
+                "avg_daily_demand": flt(row.get("avg_daily_demand")),
+                "lead_time_days": flt(profile.get("lead_time_days") or 2),
+                "supplier_reliability_score": flt(profile.get("supplier_reliability_score") or 70),
+                "supplier_on_time_rate": flt(
+                    row.get("supplier_on_time_rate")
+                    or profile.get("supplier_on_time_rate_target")
+                    or profile.get("supplier_reliability_score")
+                    or 70
+                ),
+                "pending_po_count": cint(row.get("pending_po_count") or 0),
+                "inbound_qty": flt(row.get("inbound_qty") or 0),
+                "delayed_po_count": cint(row.get("delayed_po_count") or 0),
+                "in_transit_qty": flt(row.get("in_transit_qty") or 0),
+                "next_eta": row.get("next_eta"),
+                "unit_cost": flt(prices.get("valuation_rate") or prices.get("last_purchase_rate") or 0),
+                "selling_price": flt(prices.get("standard_rate") or prices.get("valuation_rate") or 0),
+                "margin_rate": flt(profile.get("default_margin_rate") or 0.35),
+                "source_mode": "risk_snapshot",
+                "last_inventory_at": row.get("snapshot_date"),
+            }
+        )
+    return decorated
+
+
+def _fetch_live_bin_rows(
+    warehouses: list[str] | None = None,
+    item_codes: list[str] | None = None,
+) -> list[dict]:
+    warehouse_filter = _normalize_filter_values(warehouses)
+    item_filter = _normalize_filter_values(item_codes)
+    conditions = ["(b.actual_qty <> 0 OR b.reserved_qty <> 0)"]
+    values: dict[str, object] = {}
+
+    if warehouse_filter:
+        conditions.append("b.warehouse IN %(warehouses)s")
+        values["warehouses"] = tuple(warehouse_filter)
+    if item_filter:
+        conditions.append("b.item_code IN %(item_codes)s")
+        values["item_codes"] = tuple(item_filter)
+
+    where_clause = " AND ".join(conditions)
+    return _safe_db_sql(
+        """
+        SELECT
+            b.item_code,
+            b.warehouse,
+            b.actual_qty,
+            b.reserved_qty,
+            (b.actual_qty - b.reserved_qty) AS available_qty
+        FROM `tabBin` b
+        WHERE """
+        + where_clause,
+        values,
+    )
+
+
+def _fetch_live_demand_map(
+    warehouses: list[str] | None,
+    item_codes: list[str] | None,
+) -> dict[tuple[str, str], dict]:
+    warehouse_filter = _normalize_filter_values(warehouses)
+    item_filter = _normalize_filter_values(item_codes)
+    if not warehouse_filter and not item_filter:
+        return {}
+
+    conditions = ["sle.is_cancelled = 0", "sle.posting_date >= %(since_date)s"]
+    values: dict[str, object] = {"since_date": frappe.utils.add_days(nowdate(), -28)}
+    if warehouse_filter:
+        conditions.append("sle.warehouse IN %(warehouses)s")
+        values["warehouses"] = tuple(warehouse_filter)
+    if item_filter:
+        conditions.append("sle.item_code IN %(item_codes)s")
+        values["item_codes"] = tuple(item_filter)
+
+    rows = _safe_db_sql(
+        """
+        SELECT
+            sle.warehouse,
+            sle.item_code,
+            ROUND(SUM(CASE WHEN sle.actual_qty < 0 THEN ABS(sle.actual_qty) ELSE 0 END) / 28, 4) AS avg_daily_demand
+        FROM `tabStock Ledger Entry` sle
+        WHERE """
+        + " AND ".join(conditions)
+        + """
+        GROUP BY sle.warehouse, sle.item_code
+        """,
+        values,
+    )
+    return {(str(row.get("warehouse") or ""), str(row.get("item_code") or "")): row for row in rows}
+
+
+def _fetch_live_po_map(
+    warehouses: list[str] | None,
+    item_codes: list[str] | None,
+) -> dict[tuple[str, str], dict]:
+    warehouse_filter = _normalize_filter_values(warehouses)
+    item_filter = _normalize_filter_values(item_codes)
+    if not warehouse_filter and not item_filter:
+        return {}
+
+    conditions = ["po.status NOT IN ('Draft', 'Cancelled', 'Fully Received')"]
+    values: dict[str, object] = {}
+    if warehouse_filter:
+        conditions.append("po.ship_to IN %(warehouses)s")
+        values["warehouses"] = tuple(warehouse_filter)
+    if item_filter:
+        conditions.append("poi.item_code IN %(item_codes)s")
+        values["item_codes"] = tuple(item_filter)
+
+    rows = _safe_db_sql(
+        """
+        SELECT
+            po.ship_to AS warehouse,
+            poi.item_code,
+            ROUND(SUM(GREATEST(COALESCE(poi.qty, 0) - COALESCE(poi.received_qty, 0), 0)), 2) AS inbound_qty,
+            COUNT(DISTINCT CASE
+                WHEN GREATEST(COALESCE(poi.qty, 0) - COALESCE(poi.received_qty, 0), 0) > 0 THEN po.name
+                ELSE NULL
+            END) AS pending_po_count,
+            COUNT(DISTINCT CASE
+                WHEN GREATEST(COALESCE(poi.qty, 0) - COALESCE(poi.received_qty, 0), 0) > 0
+                     AND COALESCE(poi.delivery_schedule, po.delivery_date) < CURDATE() THEN po.name
+                ELSE NULL
+            END) AS delayed_po_count,
+            MIN(CASE
+                WHEN GREATEST(COALESCE(poi.qty, 0) - COALESCE(poi.received_qty, 0), 0) > 0
+                THEN COALESCE(poi.delivery_schedule, po.delivery_date)
+                ELSE NULL
+            END) AS next_eta
+        FROM `tabBEI Purchase Order` po
+        INNER JOIN `tabBEI PO Item` poi ON poi.parent = po.name
+        WHERE """
+        + " AND ".join(conditions)
+        + """
+        GROUP BY po.ship_to, poi.item_code
+        """,
+        values,
+    )
+    return {(str(row.get("warehouse") or ""), str(row.get("item_code") or "")): row for row in rows}
+
+
+def _build_live_fallback_rows(bin_rows: list[dict]) -> list[dict]:
+    if not bin_rows:
+        return []
+
+    warehouses = [str(row.get("warehouse") or "") for row in bin_rows]
+    item_codes = [str(row.get("item_code") or "") for row in bin_rows]
+    profile_map = _fetch_risk_profile_map(warehouses, item_codes)
+    item_price_map = _fetch_item_price_map(item_codes)
+    demand_map = _fetch_live_demand_map(warehouses, item_codes)
+    po_map = _fetch_live_po_map(warehouses, item_codes)
+
+    rows: list[dict] = []
+    for bin_row in bin_rows:
+        warehouse = str(bin_row.get("warehouse") or "")
+        item_code = str(bin_row.get("item_code") or "")
+        profile = profile_map.get((warehouse, item_code), {})
+        prices = item_price_map.get(item_code, {})
+        demand = demand_map.get((warehouse, item_code), {})
+        po = po_map.get((warehouse, item_code), {})
+
+        rows.append(
+            {
+                "item_code": item_code,
+                "warehouse": warehouse,
+                "available_qty": flt(bin_row.get("available_qty")),
+                "avg_daily_demand": flt(demand.get("avg_daily_demand") or 0),
+                "lead_time_days": flt(profile.get("lead_time_days") or 2),
+                "supplier_reliability_score": flt(profile.get("supplier_reliability_score") or 70),
+                "supplier_on_time_rate": flt(
+                    profile.get("supplier_on_time_rate_target")
+                    or profile.get("supplier_reliability_score")
+                    or 70
+                ),
+                "pending_po_count": cint(po.get("pending_po_count") or 0),
+                "inbound_qty": flt(po.get("inbound_qty") or 0),
+                "delayed_po_count": cint(po.get("delayed_po_count") or 0),
+                "in_transit_qty": 0.0,
+                "next_eta": po.get("next_eta"),
+                "unit_cost": flt(prices.get("valuation_rate") or prices.get("last_purchase_rate") or 0),
+                "selling_price": flt(prices.get("standard_rate") or prices.get("valuation_rate") or 0),
+                "margin_rate": flt(profile.get("default_margin_rate") or 0.35),
+                "source_mode": "live_stock_fallback",
+                "last_inventory_at": None,
+            }
+        )
+    return rows
+
+
+def _load_risk_inputs(
+    *,
+    warehouses: list[str] | None = None,
+    item_codes: list[str] | None = None,
+) -> list[dict]:
     if _TEST_RISK_ROWS:
         return [deepcopy(row) for row in _TEST_RISK_ROWS]
-    return []
+
+    warehouse_filter = _normalize_filter_values(warehouses)
+    item_filter = _normalize_filter_values(item_codes)
+
+    snapshot_rows = _decorate_snapshot_source_rows(
+        _fetch_latest_snapshot_source_rows(warehouse_filter, item_filter)
+    )
+    if snapshot_rows and not warehouse_filter and not item_filter:
+        return snapshot_rows
+
+    bin_rows = _fetch_live_bin_rows(warehouse_filter, item_filter)
+    if not snapshot_rows and not bin_rows:
+        _ensure_default_test_fixture()
+        if _TEST_RISK_ROWS:
+            return [deepcopy(row) for row in _TEST_RISK_ROWS]
+
+    if not bin_rows:
+        return snapshot_rows
+
+    snapshot_keys = {
+        (str(row.get("warehouse") or ""), str(row.get("item_code") or "")) for row in snapshot_rows
+    }
+    fallback_rows = _build_live_fallback_rows(
+        [
+            row
+            for row in bin_rows
+            if (str(row.get("warehouse") or ""), str(row.get("item_code") or "")) not in snapshot_keys
+        ]
+    )
+    return snapshot_rows + fallback_rows
+
+
+def load_risk_input_rows(
+    *,
+    warehouses: list[str] | None = None,
+    item_codes: list[str] | None = None,
+) -> list[dict]:
+    return _load_risk_inputs(warehouses=warehouses, item_codes=item_codes)
+
+
+def get_computed_risk_rows(
+    *,
+    warehouses: list[str] | None = None,
+    item_codes: list[str] | None = None,
+    horizon_hours: int = 72,
+) -> list[dict]:
+    return [
+        build_risk_snapshot_row(row, horizon_hours=horizon_hours)
+        for row in _load_risk_inputs(warehouses=warehouses, item_codes=item_codes)
+    ]
 
 
 def _load_open_incidents() -> list[dict]:
