@@ -77,7 +77,8 @@ SCM_BILLING_ROLES = {
 # Include both backend-native warehouse titles and the portal role names so
 # inventory pages do not render as shells for otherwise-authorized users.
 SCM_INVENTORY_ROLES = {
-	"HR Manager",
+	"Area Supervisor",
+	"Regional Manager",
 	"Supply Chain Manager",
 	"Warehouse Manager",
 	"Warehouse Staff",
@@ -87,7 +88,6 @@ SCM_INVENTORY_ROLES = {
 	"Administrator",
 }
 SCM_STOCK_UPDATE_ROLES = {
-	"HR Manager",
 	"Supply Chain Manager",
 	"Warehouse Manager",
 	"Warehouse Staff",
