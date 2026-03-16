@@ -72,6 +72,12 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://csnniykjrychgajfrgua.supa
 CREATE_NO_WINDOW = 0x08000000
 UPSERT_BATCH_SIZE = 500
 INTER_GROUP_DELAY_SECONDS = 0.1
+RAIN_LIGHT_PEAK_MM = 2.5
+RAIN_DISRUPTIVE_PEAK_MM = 7.5
+RAIN_DISRUPTIVE_TOTAL_MM = 20.0
+RAIN_SUSTAINED_PEAK_MM = 4.0
+RAIN_SUSTAINED_TOTAL_MM = 10.0
+RAIN_SUSTAINED_HOURS = 6
 
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -199,9 +205,15 @@ def calculate_business_impact(
 
 	if max_temp >= 33 and total_precipitation == 0 and weather_code < 3:
 		return "peak"
-	if storm_flag or max_hourly_precipitation >= 7.5 or total_precipitation >= 20 or rain_hours >= 6:
+	if (
+		storm_flag
+		or max_hourly_precipitation >= RAIN_DISRUPTIVE_PEAK_MM
+		or total_precipitation >= RAIN_DISRUPTIVE_TOTAL_MM
+		or (max_hourly_precipitation >= RAIN_SUSTAINED_PEAK_MM and rain_hours >= 4)
+		or (rain_hours >= RAIN_SUSTAINED_HOURS and total_precipitation >= RAIN_SUSTAINED_TOTAL_MM)
+	):
 		return "disruptive_rain"
-	if max_hourly_precipitation < 2.5 and rain_hours <= 2 and total_precipitation > 0:
+	if max_hourly_precipitation < RAIN_LIGHT_PEAK_MM and rain_hours <= 2 and total_precipitation > 0:
 		return "passing_showers"
 	if total_precipitation > 0:
 		return "wet"
