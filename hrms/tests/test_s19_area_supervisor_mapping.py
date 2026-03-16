@@ -217,8 +217,8 @@ def test_invalid_store_supervisor_mapping_is_replaced_by_area_supervisor():
 def test_unmapped_store_returns_none_when_no_area_supervisor_can_be_inferred():
 	store_mod, _db, _rows = _load_store_module()
 
-	store_mod.frappe.get_all = (
-		lambda doctype, **kwargs: [] if doctype in {"Employee", "Has Role", "User"} else []
+	store_mod.frappe.get_all = lambda doctype, **kwargs: (
+		[] if doctype in {"Employee", "Has Role", "User"} else []
 	)
 
 	approver = store_mod._get_area_supervisor_for_store("UNMAPPED - BEI")
@@ -228,8 +228,8 @@ def test_unmapped_store_returns_none_when_no_area_supervisor_can_be_inferred():
 def test_unmapped_store_uses_fallback_approver_when_area_supervisor_missing():
 	store_mod, _db, _rows = _load_store_module()
 
-	store_mod.frappe.get_all = (
-		lambda doctype, **kwargs: []
+	store_mod.frappe.get_all = lambda doctype, **kwargs: (
+		[]
 		if doctype == "Employee"
 		else (
 			[
@@ -241,13 +241,11 @@ def test_unmapped_store_uses_fallback_approver_when_area_supervisor_missing():
 			else []
 		)
 	)
-	store_mod.frappe.get_roles = (
-		lambda user=None: {
-			"test.supervisor@bebang.ph": ["Store Supervisor"],
-			"test.area@bebang.ph": ["Area Supervisor"],
-			"edlice@bebang.ph": ["Area Supervisor"],
-		}.get(user or "test.supervisor@bebang.ph", [])
-	)
+	store_mod.frappe.get_roles = lambda user=None: {
+		"test.supervisor@bebang.ph": ["Store Supervisor"],
+		"test.area@bebang.ph": ["Area Supervisor"],
+		"edlice@bebang.ph": ["Area Supervisor"],
+	}.get(user or "test.supervisor@bebang.ph", [])
 
 	approver, source = store_mod._resolve_review_approver_for_store("UNMAPPED - BEI")
 	assert approver == "edlice@bebang.ph"

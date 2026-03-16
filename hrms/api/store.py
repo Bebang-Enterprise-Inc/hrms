@@ -1707,9 +1707,7 @@ def submit_order(
 	first_source = routing["first_source"]
 
 	requires_manual_approval = bool(
-		is_bulk_order
-		or edited_lines_count > 0
-		or (is_emergency_flag and submitted_after_cutoff)
+		is_bulk_order or edited_lines_count > 0 or (is_emergency_flag and submitted_after_cutoff)
 	)
 	if requires_manual_approval and not first_approver:
 		frappe.throw(
@@ -1772,9 +1770,7 @@ def submit_order(
 			requires_manual_approval and first_source == "area_supervisor"
 		),
 		"requires_regional_manager_review": False,
-		"requires_fallback_approval": bool(
-			requires_manual_approval and first_source == "fallback_approver"
-		),
+		"requires_fallback_approval": bool(requires_manual_approval and first_source == "fallback_approver"),
 		"edited_lines_count": edited_lines_count,
 		"message": f"Order {order.name} submitted successfully",
 		"approval_queue_status": queue_status,
@@ -1782,9 +1778,7 @@ def submit_order(
 		"approval_approver_source": first_source if requires_manual_approval else "not_required",
 		"approval_assigned_approver": first_approver if requires_manual_approval else None,
 		"fallback_approver": (
-			first_approver
-			if requires_manual_approval and first_source == "fallback_approver"
-			else None
+			first_approver if requires_manual_approval and first_source == "fallback_approver" else None
 		),
 		"submitted_after_cutoff": bool(submitted_after_cutoff),
 		"is_emergency": bool(is_emergency_flag),
@@ -1882,7 +1876,9 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		is_fallback_user = bool(fallback_approver and user == fallback_approver)
 		if not user_roles.intersection(allowed_roles) and not is_fallback_user:
 			frappe.throw(
-				_("Only assigned approvers, Area Supervisors, fallback approvers, or System Managers can approve."),
+				_(
+					"Only assigned approvers, Area Supervisors, fallback approvers, or System Managers can approve."
+				),
 				frappe.PermissionError,
 			)
 

@@ -171,8 +171,9 @@ class _FakeQueueDoc:
 
 def test_resolve_routing_prefers_area_supervisor():
 	store_mod = _load_store_module()
-	with patch.object(store_mod, "_get_area_supervisor_for_store", return_value="test.area@bebang.ph"), patch.object(
-		store_mod, "_get_order_approval_fallback_user", return_value="edlice@bebang.ph"
+	with (
+		patch.object(store_mod, "_get_area_supervisor_for_store", return_value="test.area@bebang.ph"),
+		patch.object(store_mod, "_get_order_approval_fallback_user", return_value="edlice@bebang.ph"),
 	):
 		routing = store_mod._resolve_order_approval_routing(
 			warehouse="TEST-STORE - BEI",
@@ -186,8 +187,9 @@ def test_resolve_routing_prefers_area_supervisor():
 
 def test_resolve_routing_falls_back_when_area_is_unmapped():
 	store_mod = _load_store_module()
-	with patch.object(store_mod, "_get_area_supervisor_for_store", return_value=None), patch.object(
-		store_mod, "_get_order_approval_fallback_user", return_value="edlice@bebang.ph"
+	with (
+		patch.object(store_mod, "_get_area_supervisor_for_store", return_value=None),
+		patch.object(store_mod, "_get_order_approval_fallback_user", return_value="edlice@bebang.ph"),
 	):
 		routing = store_mod._resolve_order_approval_routing(
 			warehouse="TEST-STORE - BEI",
@@ -212,28 +214,26 @@ def test_approve_order_area_supervisor_finalizes_order():
 			return fake_queue_doc
 		raise AssertionError(f"Unexpected get_doc call: {doctype} / {name}")
 
-	with patch.object(store_mod.frappe, "get_doc", side_effect=fake_get_doc), patch.object(
-		store_mod,
-		"_get_pending_approval_entries",
-		return_value=[
-			{
-				"name": "BEI-APQ-AREA-0001",
-				"assigned_approver": "test.area@bebang.ph",
-			}
-		],
-	), patch.object(store_mod, "_is_system_approver", return_value=False), patch.object(
-		store_mod, "_get_area_supervisor_for_store", return_value="test.area@bebang.ph"
-	), patch.object(
-		store_mod, "_get_order_approval_fallback_user", return_value="edlice@bebang.ph"
-	), patch.object(
-		store_mod, "_notify_store_ops"
-	), patch.object(
-		store_mod, "_close_order_assignments"
-	), patch.object(
-		store_mod, "_append_order_comment"
-	) as append_comment, patch.object(
-		store_mod, "_create_mr_for_store_order", return_value="MAT-MR-0001"
-	) as create_mr:
+	with (
+		patch.object(store_mod.frappe, "get_doc", side_effect=fake_get_doc),
+		patch.object(
+			store_mod,
+			"_get_pending_approval_entries",
+			return_value=[
+				{
+					"name": "BEI-APQ-AREA-0001",
+					"assigned_approver": "test.area@bebang.ph",
+				}
+			],
+		),
+		patch.object(store_mod, "_is_system_approver", return_value=False),
+		patch.object(store_mod, "_get_area_supervisor_for_store", return_value="test.area@bebang.ph"),
+		patch.object(store_mod, "_get_order_approval_fallback_user", return_value="edlice@bebang.ph"),
+		patch.object(store_mod, "_notify_store_ops"),
+		patch.object(store_mod, "_close_order_assignments"),
+		patch.object(store_mod, "_append_order_comment") as append_comment,
+		patch.object(store_mod, "_create_mr_for_store_order", return_value="MAT-MR-0001") as create_mr,
+	):
 		result = store_mod.approve_order(
 			order_name=fake_order.name,
 			approved_quantities=[{"item_code": "ITEM-001", "qty_approved": 2}],
@@ -265,28 +265,26 @@ def test_approve_order_fallback_override_finalizes_order():
 			return fake_queue_doc
 		raise AssertionError(f"Unexpected get_doc call: {doctype} / {name}")
 
-	with patch.object(store_mod.frappe, "get_doc", side_effect=fake_get_doc), patch.object(
-		store_mod,
-		"_get_pending_approval_entries",
-		return_value=[
-			{
-				"name": "BEI-APQ-AREA-0001",
-				"assigned_approver": "test.area@bebang.ph",
-			}
-		],
-	), patch.object(store_mod, "_is_system_approver", return_value=False), patch.object(
-		store_mod, "_get_area_supervisor_for_store", return_value="test.area@bebang.ph"
-	), patch.object(
-		store_mod, "_get_order_approval_fallback_user", return_value="edlice@bebang.ph"
-	), patch.object(
-		store_mod, "_notify_store_ops"
-	), patch.object(
-		store_mod, "_close_order_assignments"
-	), patch.object(
-		store_mod, "_append_order_comment"
-	) as append_comment, patch.object(
-		store_mod, "_create_mr_for_store_order", return_value="MAT-MR-0001"
-	) as create_mr:
+	with (
+		patch.object(store_mod.frappe, "get_doc", side_effect=fake_get_doc),
+		patch.object(
+			store_mod,
+			"_get_pending_approval_entries",
+			return_value=[
+				{
+					"name": "BEI-APQ-AREA-0001",
+					"assigned_approver": "test.area@bebang.ph",
+				}
+			],
+		),
+		patch.object(store_mod, "_is_system_approver", return_value=False),
+		patch.object(store_mod, "_get_area_supervisor_for_store", return_value="test.area@bebang.ph"),
+		patch.object(store_mod, "_get_order_approval_fallback_user", return_value="edlice@bebang.ph"),
+		patch.object(store_mod, "_notify_store_ops"),
+		patch.object(store_mod, "_close_order_assignments"),
+		patch.object(store_mod, "_append_order_comment") as append_comment,
+		patch.object(store_mod, "_create_mr_for_store_order", return_value="MAT-MR-0001") as create_mr,
+	):
 		result = store_mod.approve_order(
 			order_name=fake_order.name,
 			approved_quantities=[{"item_code": "ITEM-001", "qty_approved": 2}],
