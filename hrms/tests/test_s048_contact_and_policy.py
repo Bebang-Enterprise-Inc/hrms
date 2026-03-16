@@ -7,7 +7,12 @@ from hrms.api.contact_validation import (
 	validate_email_address,
 	validate_ph_mobile_number,
 )
-from hrms.api.profile_policy import classify_employee_policy, is_reports_to_candidate
+from hrms.api.profile_policy import (
+	classify_employee_policy,
+	is_reports_to_candidate,
+	matches_reports_to_query,
+	resolve_reports_to_display_name,
+)
 
 
 def test_contact_validation_normalizes_ph_numbers_and_rejects_bad_prefixes():
@@ -84,6 +89,37 @@ def test_reports_to_candidates_only_include_leadership_roles():
 			}
 		)
 		is False
+	)
+
+
+def test_reports_to_query_matches_linked_user_full_name():
+	employee_row = {
+		"name": "HR-EMP-00020",
+		"employee_name": "Sam Admin",
+		"first_name": "Sam",
+		"last_name": "Admin",
+		"designation": "Hr Manager",
+		"department": "Operations - BEI",
+		"branch": "ARANETA GATEWAY",
+		"user_id": "sam@bebang.ph",
+	}
+	user_row = {
+		"name": "sam@bebang.ph",
+		"full_name": "Sam Karazi",
+		"first_name": "Sam",
+		"last_name": "Karazi",
+	}
+
+	assert matches_reports_to_query(employee_row, user_row, "Karazi") is True
+	assert matches_reports_to_query(employee_row, user_row, "sam@bebang.ph") is True
+	assert matches_reports_to_query(employee_row, user_row, "Crew") is False
+
+
+def test_reports_to_display_name_prefers_user_full_name_for_admin_aliases():
+	assert resolve_reports_to_display_name("Sam Admin", "Sam Karazi") == "Sam Karazi"
+	assert (
+		resolve_reports_to_display_name("CARINGAL, RONALD H.", "Ronald Caringal")
+		== "CARINGAL, RONALD H."
 	)
 
 

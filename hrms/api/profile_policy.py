@@ -121,3 +121,43 @@ def is_reports_to_candidate(employee_row: dict[str, Any]) -> bool:
 	if "EXECUTIVE" in department:
 		return True
 	return False
+
+
+def resolve_reports_to_display_name(employee_name: str | None, full_name: str | None) -> str:
+	employee_name = str(employee_name or "").strip()
+	full_name = str(full_name or "").strip()
+
+	if not full_name:
+		return employee_name
+	if not employee_name:
+		return full_name
+	if normalize_text(employee_name) == normalize_text(full_name):
+		return employee_name
+	if normalize_text(employee_name).endswith(" ADMIN"):
+		return full_name
+	return employee_name
+
+
+def matches_reports_to_query(
+	employee_row: dict[str, Any],
+	user_row: dict[str, Any] | None,
+	query: str | None,
+) -> bool:
+	query_norm = normalize_text(query)
+	if not query_norm:
+		return True
+
+	user_row = user_row or {}
+	return any(
+		query_norm in normalize_text(value)
+		for value in (
+			employee_row.get("employee_name"),
+			employee_row.get("first_name"),
+			employee_row.get("last_name"),
+			employee_row.get("designation"),
+			employee_row.get("user_id"),
+			user_row.get("full_name"),
+			user_row.get("first_name"),
+			user_row.get("last_name"),
+		)
+	)
