@@ -246,9 +246,8 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 		)
 
 	where_clause = " AND ".join(conditions)
-
-	orders = frappe.db.sql(
-		f"""
+	query = (
+		"""
 		SELECT
 			so.name,
 			so.store,
@@ -286,16 +285,18 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 		LEFT JOIN `tabWarehouse` wh ON wh.name = so.store
 		LEFT JOIN `tabWarehouse` wh_parent ON wh_parent.name = wh.parent_warehouse
 		LEFT JOIN `tabBEI Store Order Item` soi ON soi.parent = so.name
-		WHERE {where_clause}
+		WHERE """
+		+ where_clause
+		+ """
 		GROUP BY so.name
 		ORDER BY
 			CASE so.status WHEN 'Pending Approval' THEN 0 ELSE 1 END,
 			COALESCE(pending_queue.pending_since, so.creation) ASC,
 			so.store ASC
-		""",
-		params,
-		as_dict=True,
+		"""
 	)
+
+	orders = frappe.db.sql(query, params, as_dict=True)
 
 	return {
 		"orders": orders,
