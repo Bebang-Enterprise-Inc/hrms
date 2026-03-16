@@ -51,6 +51,12 @@ def _as_dict(obj: Any) -> dict[str, Any]:
 
 
 HR_APPROVER_FALLBACK = "nad@bebang.ph,ana@bebang.ph"
+ELEVATED_ONBOARDING_REVIEWER_ROLES = {
+	"System Manager",
+	"Administrator",
+	"HR Manager",
+	"HR User",
+}
 IDENTITY_FIELDS = {
 	"first_name",
 	"middle_name",
@@ -125,6 +131,31 @@ def _norm_text(value: Any) -> str:
 	if isinstance(value, int | float):
 		return str(value)
 	return str(value).strip()
+
+
+def _norm_email(value: Any) -> str:
+	return _norm_text(value).lower()
+
+
+def _is_elevated_onboarding_reviewer(user_id: str) -> bool:
+	if not user_id:
+		return False
+	return bool(set(frappe.get_roles(user_id) or []).intersection(ELEVATED_ONBOARDING_REVIEWER_ROLES))
+
+
+def _can_access_assigned_request(approver_email: Any, reviewer_email: str) -> bool:
+	if _is_elevated_onboarding_reviewer(reviewer_email):
+		return True
+
+	allowed_reviewers = [
+		_norm_email(value)
+		for value in _norm_text(approver_email).replace("\n", ",").split(",")
+		if _norm_email(value)
+	]
+	if not allowed_reviewers:
+		return False
+
+	return _norm_email(reviewer_email) in allowed_reviewers
 
 
 def _normalize_field_name(field_name: str) -> str:
@@ -913,6 +944,9 @@ def approve_and_apply(
 	if req.status not in ("Pending", "Escalated"):
 		return {"success": False, "error": "Request not pending", "code": "NOT_PENDING"}
 
+	if not _can_access_assigned_request(req.approver_email, approver_email):
+		return {"success": False, "error": "Not permitted to act on this request", "code": "FORBIDDEN"}
+
 	req.approver_email = approver_email or ""
 	req.approver_notes = approver_notes or ""
 	req.approved_at = now_datetime()
@@ -1123,6 +1157,13 @@ def request_revision(
 	if req.status not in ("Pending", "Escalated"):
 		return {"success": False, "error": "Request not pending", "code": "NOT_PENDING"}
 
+	if not _can_access_assigned_request(req.approver_email, reviewer_email):
+		return {
+			"success": False,
+			"error": "Not permitted to request revision for this request",
+			"code": "FORBIDDEN",
+		}
+
 	# Parse fields to revise
 	try:
 		fields = json.loads(fields_to_revise) if isinstance(fields_to_revise, str) else fields_to_revise
@@ -1185,6 +1226,9 @@ def claim_request(request_name: str, reviewer_email: str, release: bool = False)
 	req = frappe.get_doc(REQUEST_DOCTYPE, request_name)
 	if req.status not in OPEN_REVIEW_STATUSES and req.status != "Approved":
 		return {"success": False, "error": "Request is not open for review", "code": "NOT_OPEN"}
+
+	if not _can_access_assigned_request(req.approver_email, reviewer_email):
+		return {"success": False, "error": "Not permitted to claim this request", "code": "FORBIDDEN"}
 
 	meta = _get_request_meta(req)
 	workflow = meta.get("workflow")
