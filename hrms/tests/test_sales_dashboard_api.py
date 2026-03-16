@@ -251,7 +251,9 @@ def test_supabase_get_all_honors_requested_limit():
 
 def test_summary_defaults_to_empty_comparisons_for_hot_path():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_default_test")
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_default_test"
+	)
 
 	module.get_sales_dashboard_overview = lambda **kwargs: {
 		"scope": {
@@ -291,7 +293,9 @@ def test_effective_end_day_clips_to_closed_core_sales_date():
 
 def test_daily_series_treats_passing_showers_as_not_operational_rain():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_daily_series_weather_test")
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_daily_series_weather_test"
+	)
 
 	stores = [
 		{
@@ -363,7 +367,9 @@ def test_daily_series_treats_passing_showers_as_not_operational_rain():
 
 def test_weather_effects_require_minimum_comparable_history():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_effects_history_floor_test")
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_effects_history_floor_test"
+	)
 
 	scope = {
 		"selected_stores": [
@@ -415,3 +421,264 @@ def test_weather_effects_require_minimum_comparable_history():
 	assert result["available"] is False
 	assert result["history_days_considered"] == 10
 	assert result["minimum_history_days_required"] == 56
+
+
+def test_daily_series_recomputes_scope_rain_severity_from_aggregate_metrics():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_scope_weather_aggregate_test"
+	)
+
+	stores = [
+		{
+			"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+			"warehouse_name": "SM Megamall",
+			"company": "Bebang Enterprise Inc.",
+			"location_id": 2338,
+		},
+		{
+			"warehouse": "SM North EDSA - Bebang Enterprise Inc.",
+			"warehouse_name": "SM North EDSA",
+			"company": "Bebang Enterprise Inc.",
+			"location_id": 2340,
+		},
+		{
+			"warehouse": "SM Southmall - Bebang Enterprise Inc.",
+			"warehouse_name": "SM Southmall",
+			"company": "Bebang Enterprise Inc.",
+			"location_id": 2345,
+		},
+	]
+	sales_rows = [
+		{
+			"location_id": 2338,
+			"business_date": "2026-03-11",
+			"total_gross_sales": "1000.00",
+			"total_net_sales_without_vat": "892.86",
+			"pos_net_sales_without_vat": "600.00",
+			"website_non_cod_net_sales_without_vat": "150.00",
+			"web_cod_net_sales_without_vat": "50.00",
+			"foodpanda_vat_deducted_sales": "92.86",
+			"cups_sold": "10",
+			"transactions": "5",
+		},
+		{
+			"location_id": 2340,
+			"business_date": "2026-03-11",
+			"total_gross_sales": "1200.00",
+			"total_net_sales_without_vat": "1071.43",
+			"pos_net_sales_without_vat": "700.00",
+			"website_non_cod_net_sales_without_vat": "200.00",
+			"web_cod_net_sales_without_vat": "60.00",
+			"foodpanda_vat_deducted_sales": "111.43",
+			"cups_sold": "12",
+			"transactions": "6",
+		},
+		{
+			"location_id": 2345,
+			"business_date": "2026-03-11",
+			"total_gross_sales": "900.00",
+			"total_net_sales_without_vat": "803.57",
+			"pos_net_sales_without_vat": "500.00",
+			"website_non_cod_net_sales_without_vat": "140.00",
+			"web_cod_net_sales_without_vat": "40.00",
+			"foodpanda_vat_deducted_sales": "123.57",
+			"cups_sold": "9",
+			"transactions": "4",
+		},
+	]
+	weather_rows = [
+		{
+			"location_id": 2338,
+			"business_date": "2026-03-11",
+			"avg_temperature": 28.5,
+			"max_temperature": 30.0,
+			"min_temperature": 26.0,
+			"apparent_temperature_max": 31.0,
+			"avg_wind_speed": 9.0,
+			"max_wind_speed": 12.0,
+			"total_precipitation": 1.4,
+			"precipitation_hours": 6,
+			"max_hourly_precipitation": 1.9,
+			"weather_description": "Slight rain showers",
+			"business_impact": "disruptive_rain",
+			"temperature_anomaly_vs_28d": -0.6,
+			"rain_severity": "disruptive_rain",
+			"wind_disruption_level": "low",
+			"storm_flag": False,
+			"service_window_weather_summary_lunch": "showery_lunch",
+			"service_window_weather_summary_dinner": "stable_dinner",
+			"is_rainy": True,
+			"hourly_backed": True,
+			"hourly_points": 24,
+		},
+		{
+			"location_id": 2340,
+			"business_date": "2026-03-11",
+			"avg_temperature": 27.5,
+			"max_temperature": 29.0,
+			"min_temperature": 25.0,
+			"apparent_temperature_max": 30.0,
+			"avg_wind_speed": 8.0,
+			"max_wind_speed": 11.0,
+			"total_precipitation": 1.2,
+			"precipitation_hours": 6,
+			"max_hourly_precipitation": 1.8,
+			"weather_description": "Moderate drizzle",
+			"business_impact": "disruptive_rain",
+			"temperature_anomaly_vs_28d": -0.5,
+			"rain_severity": "disruptive_rain",
+			"wind_disruption_level": "low",
+			"storm_flag": False,
+			"service_window_weather_summary_lunch": "showery_lunch",
+			"service_window_weather_summary_dinner": "stable_dinner",
+			"is_rainy": True,
+			"hourly_backed": True,
+			"hourly_points": 24,
+		},
+		{
+			"location_id": 2345,
+			"business_date": "2026-03-11",
+			"avg_temperature": 26.5,
+			"max_temperature": 28.0,
+			"min_temperature": 24.0,
+			"apparent_temperature_max": 29.0,
+			"avg_wind_speed": 8.0,
+			"max_wind_speed": 10.0,
+			"total_precipitation": 1.0,
+			"precipitation_hours": 5,
+			"max_hourly_precipitation": 1.5,
+			"weather_description": "Light drizzle",
+			"business_impact": "wet",
+			"temperature_anomaly_vs_28d": -0.4,
+			"rain_severity": "wet",
+			"wind_disruption_level": "low",
+			"storm_flag": False,
+			"service_window_weather_summary_lunch": "showery_lunch",
+			"service_window_weather_summary_dinner": "stable_dinner",
+			"is_rainy": True,
+			"hourly_backed": True,
+			"hourly_points": 24,
+		},
+	]
+
+	module._calendar_map_for_scope = lambda *_args, **_kwargs: {
+		"2026-03-11": {
+			"business_date": "2026-03-11",
+			"day_of_week": "Wednesday",
+			"is_weekend": False,
+			"is_holiday": False,
+			"holiday_name": None,
+			"holiday_list_used": None,
+		}
+	}
+
+	series = module._aggregate_daily_series(stores, sales_rows, weather_rows)
+
+	assert len(series) == 1
+	assert series[0]["rain_severity"] == "wet"
+	assert series[0]["is_rainy"] is True
+	assert series[0]["disruptive_rain_store_count"] == 2
+	assert series[0]["disruptive_rain_store_share_pct"] == 66.67
+	assert series[0]["apparent_temperature_max"] == 30.0
+	assert series[0]["average_max_hourly_precipitation"] == 1.73
+	assert series[0]["max_hourly_precipitation"] == 1.9
+
+
+def test_weather_effects_return_matched_store_day_count():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_effects_match_count_test"
+	)
+
+	scope = {
+		"selected_stores": [
+			{
+				"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+				"warehouse_name": "SM Megamall",
+				"company": "Bebang Enterprise Inc.",
+				"location_id": 2338,
+			}
+		]
+	}
+	current_rows = [
+		{
+			"location_id": 2338,
+			"business_date": "2026-03-14",
+			"total_net_sales_without_vat": "1000.00",
+			"transactions": "5",
+			"cups_sold": "10",
+			"pos_net_sales_without_vat": "700.00",
+			"website_non_cod_net_sales_without_vat": "200.00",
+			"web_cod_net_sales_without_vat": "50.00",
+			"foodpanda_vat_deducted_sales": "50.00",
+		}
+	]
+	history_rows = [
+		{
+			"location_id": 2338,
+			"business_date": f"2026-02-{index + 1:02d}",
+			"total_net_sales_without_vat": "900.00",
+			"transactions": "4",
+			"cups_sold": "9",
+			"pos_net_sales_without_vat": "650.00",
+			"website_non_cod_net_sales_without_vat": "150.00",
+			"web_cod_net_sales_without_vat": "50.00",
+			"foodpanda_vat_deducted_sales": "50.00",
+		}
+		for index in range(28)
+	] + [
+		{
+			"location_id": 2338,
+			"business_date": f"2026-01-{index + 1:02d}",
+			"total_net_sales_without_vat": "950.00",
+			"transactions": "5",
+			"cups_sold": "10",
+			"pos_net_sales_without_vat": "700.00",
+			"website_non_cod_net_sales_without_vat": "150.00",
+			"web_cod_net_sales_without_vat": "50.00",
+			"foodpanda_vat_deducted_sales": "50.00",
+		}
+		for index in range(28)
+	]
+
+	module._query_daily_rows = lambda *args, **kwargs: history_rows
+	module._calendar_map_for_scope = lambda *_args, **_kwargs: {
+		**{
+			row["business_date"]: {
+				"business_date": row["business_date"],
+				"day_of_week": "Friday",
+				"is_weekend": False,
+				"is_holiday": False,
+				"holiday_name": None,
+				"holiday_list_used": None,
+			}
+			for row in history_rows
+		},
+		"2026-03-14": {
+			"business_date": "2026-03-14",
+			"day_of_week": "Friday",
+			"is_weekend": False,
+			"is_holiday": False,
+			"holiday_name": None,
+			"holiday_list_used": None,
+		},
+	}
+
+	result = module._build_weather_effects(
+		scope=scope,
+		start_day=module.date(2026, 3, 14),
+		end_day=module.date(2026, 3, 14),
+		current_rows=current_rows,
+		summary={
+			"net_sales_without_vat": 1000.0,
+			"transactions": 5,
+			"cups_sold": 10,
+			"pickup_sales_without_vat": 700.0,
+			"delivery_sales_without_vat": 300.0,
+		},
+	)
+
+	assert result["available"] is True
+	assert result["matched_days"] == 1
+	assert result["matched_store_days"] == 1
