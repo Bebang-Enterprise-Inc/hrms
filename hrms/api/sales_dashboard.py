@@ -1518,6 +1518,63 @@ def _build_weather_effects(
 	}
 
 
+def _build_dashboard_summary_payload(
+	scope: dict[str, Any],
+	start_day: date,
+	end_day: date,
+	view_mode: str,
+	channel: str,
+	include_comparisons: bool,
+) -> dict[str, Any]:
+	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
+	cache_key = _sales_dashboard_cache_key(
+		"summary",
+		selected_location_ids,
+		start_day=start_day,
+		end_day=end_day,
+		view_mode=view_mode,
+		channel=channel,
+		include_comparisons=include_comparisons,
+	)
+
+	def builder() -> dict[str, Any]:
+		freshness = _build_freshness(selected_location_ids)
+		effective_end = _effective_end_day(end_day, freshness)
+		freshness["effective_end_date"] = effective_end.isoformat()
+		freshness["requested_end_date"] = end_day.isoformat()
+		freshness["data_quality_warnings"] = _build_data_quality_warnings(end_day, freshness)
+		sales_rows = (
+			_query_daily_rows(start_day, effective_end, selected_location_ids)
+			if selected_location_ids and effective_end >= start_day
+			else []
+		)
+		summary = _aggregate_sales(sales_rows)
+		mode_state = _build_mode_state(view_mode, start_day, effective_end, scope)
+		response: dict[str, Any] = {
+			"scope": {
+				"selected_stores": scope["selected_stores"],
+				"selected_location_ids": selected_location_ids,
+				"channel": channel,
+			},
+			"date_window": {
+				"start_date": start_day.isoformat(),
+				"end_date": effective_end.isoformat(),
+				"requested_end_date": end_day.isoformat(),
+			},
+			"mode_state": mode_state,
+			"summary": summary,
+			"freshness": freshness,
+			"comparisons": _build_comparisons(start_day, effective_end, selected_location_ids, summary)
+			if include_comparisons
+			else _empty_comparisons(),
+		}
+		if view_mode == "ops_matched" and mode_state.get("supported"):
+			response["ops_summary"] = _build_ops_summary()
+		return response
+
+	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_CACHE_TTL)
+
+
 def _build_dashboard_overview_payload(
 	scope: dict[str, Any],
 	start_day: date,
@@ -1661,25 +1718,16 @@ def get_sales_dashboard_summary(
 	channel: str = "all",
 	include_comparisons: bool | str | int | None = None,
 ) -> dict[str, Any]:
-	overview = get_sales_dashboard_overview(
-		start_date=start_date,
-		end_date=end_date,
-		stores=stores,
-		view_mode=view_mode,
-		channel=channel,
-		include_comparisons=include_comparisons,
+	scope = _selected_scope(_parse_stores_param(stores))
+	start_day, end_day = _resolve_date_range(start_date, end_date)
+	return _build_dashboard_summary_payload(
+		scope,
+		start_day,
+		end_day,
+		view_mode,
+		channel,
+		include_comparisons=_to_bool_flag(include_comparisons, default=False),
 	)
-	response = {
-		"scope": overview["scope"],
-		"date_window": overview["date_window"],
-		"mode_state": overview["mode_state"],
-		"summary": overview["summary"],
-		"freshness": overview["freshness"],
-		"comparisons": overview["comparisons"],
-	}
-	if "ops_summary" in overview:
-		response["ops_summary"] = overview["ops_summary"]
-	return response
 
 
 @frappe.whitelist()

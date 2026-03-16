@@ -249,30 +249,79 @@ def test_supabase_get_all_honors_requested_limit():
 	assert ("offset", "0") in calls[0]
 
 
-def test_summary_defaults_to_empty_comparisons_for_hot_path():
+def test_summary_hot_path_skips_overview_only_builders():
 	_install_fake_frappe(["System Manager"])
 	module = _load_module(
 		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_default_test"
 	)
 
-	module.get_sales_dashboard_overview = lambda **kwargs: {
-		"scope": {
-			"selected_stores": [],
-			"selected_location_ids": [2338],
-			"channel": "all",
-		},
-		"date_window": {"start_date": "2026-03-01", "end_date": "2026-03-14"},
-		"mode_state": {"view_mode": "canonical", "supported": True, "label": "Canonical warehouse"},
-		"summary": {"gross_sales": 123.0},
-		"freshness": {"weather_max_business_date": "2026-03-14"},
-		"comparisons": {
-			"previous_period": {"available": False},
-			"same_period_last_year": {"available": False},
-		},
+	scope = {
+		"selected_stores": [
+			{
+				"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+				"warehouse_name": "SM Megamall",
+				"company": "Bebang Enterprise Inc.",
+				"location_id": 2338,
+			}
+		],
+		"stores": [
+			{
+				"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+				"warehouse_name": "SM Megamall",
+				"company": "Bebang Enterprise Inc.",
+				"location_id": 2338,
+			}
+		],
 	}
+	module._selected_scope = lambda requested_stores, user=None: scope
+	module._resolve_date_range = lambda start_date, end_date: (module.date(2026, 3, 1), module.date(2026, 3, 14))
+	module._build_freshness = lambda location_ids: {
+		"pos_max_business_date": "2026-03-14",
+		"web_max_business_date": "2026-03-14",
+		"weather_max_business_date": "2026-03-14",
+	}
+	module._query_daily_rows = lambda *args, **kwargs: [
+		{
+			"business_date": "2026-03-14",
+			"total_gross_sales": "123.00",
+			"total_net_sales_without_vat": "100.00",
+			"cups_sold": "5",
+			"transactions": "2",
+			"pos_gross_sales": "70.00",
+			"pos_net_sales_without_vat": "62.50",
+			"website_non_cod_gross_sales": "20.00",
+			"website_non_cod_net_sales_without_vat": "17.86",
+			"web_cod_orders": "0",
+			"web_cod_gross_sales": "0.00",
+			"web_cod_net_sales_without_vat": "0.00",
+			"foodpanda_subtotal": "33.00",
+			"foodpanda_vat_deducted_sales": "29.46",
+		}
+	]
+	module._build_mode_state = lambda *args, **kwargs: {
+		"view_mode": "canonical",
+		"supported": True,
+		"label": "Canonical warehouse",
+	}
+	module._build_weather_effects = lambda *args, **kwargs: (_ for _ in ()).throw(
+		AssertionError("summary hot path must not build weather effects")
+	)
+	module._query_weather_rows = lambda *args, **kwargs: (_ for _ in ()).throw(
+		AssertionError("summary hot path must not query weather rows")
+	)
+	module._build_store_rankings = lambda *args, **kwargs: (_ for _ in ()).throw(
+		AssertionError("summary hot path must not build store rankings")
+	)
+	module._build_channel_mix = lambda *args, **kwargs: (_ for _ in ()).throw(
+		AssertionError("summary hot path must not build channel mix")
+	)
+	module._build_comparisons = lambda *args, **kwargs: (_ for _ in ()).throw(
+		AssertionError("summary hot path must not build comparisons when omitted")
+	)
 
 	result = module.get_sales_dashboard_summary()
 
+	assert result["summary"]["gross_sales"] == 123.0
 	assert result["comparisons"]["previous_period"]["available"] is False
 	assert result["comparisons"]["same_period_last_year"]["available"] is False
 
