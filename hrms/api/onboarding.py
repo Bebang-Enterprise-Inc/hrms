@@ -568,6 +568,27 @@ def _build_enrichment_submission_meta(
 	}
 
 
+def _get_enrichment_employee_row(employee: str, requested_field_keys: list[str]) -> dict[str, Any]:
+	base_fields = ["name", "employee_name", "branch", "department", "designation"]
+	snapshot_fields = [
+		employee_field
+		for employee_field in {
+			INPUT_TO_EMPLOYEE_FIELD_MAP.get(field_key, field_key) for field_key in requested_field_keys
+		}
+		if employee_field
+	]
+	employee_fields = list(dict.fromkeys([*base_fields, *snapshot_fields]))
+	return (
+		frappe.db.get_value(
+			"Employee",
+			employee,
+			employee_fields,
+			as_dict=True,
+		)
+		or {}
+	)
+
+
 def _get_requested_field_keys_from_request(doc_or_row: Any) -> list[str]:
 	meta = _get_request_meta(doc_or_row)
 	workflow = meta.get("workflow")
@@ -658,15 +679,7 @@ def submit_enrichment_update(
 	if not requested_field_keys and not (isinstance(attachments, dict) and attachments):
 		return {"success": False, "error": "No changes to submit", "code": "NO_CHANGES"}
 
-	employee_row = (
-		frappe.db.get_value(
-			"Employee",
-			employee,
-			["name", "employee_name", "branch", "department", "designation"],
-			as_dict=True,
-		)
-		or {}
-	)
+	employee_row = _get_enrichment_employee_row(employee, requested_field_keys)
 	meta = _build_enrichment_submission_meta(employee_row, changes, submitted_via, submission_reason)
 
 	superseded_requests: list[str] = []

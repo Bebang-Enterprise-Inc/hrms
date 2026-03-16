@@ -1,3 +1,7 @@
+import importlib
+import sys
+import types
+
 from hrms.api.contact_validation import (
 	normalize_ph_mobile_draft_value,
 	validate_email_address,
@@ -81,3 +85,54 @@ def test_reports_to_candidates_only_include_leadership_roles():
 		)
 		is False
 	)
+
+
+def test_enrichment_employee_row_fetches_requested_snapshot_fields(monkeypatch):
+	import frappe.utils
+
+	captured = {}
+	utils_data = types.ModuleType("frappe.utils.data")
+	utils_data.add_to_date = lambda *args, **kwargs: None
+
+	def fake_get_value(doctype, name, fields, as_dict=False):
+		captured["doctype"] = doctype
+		captured["name"] = name
+		captured["fields"] = list(fields)
+		captured["as_dict"] = as_dict
+		return {
+			"name": name,
+			"employee_name": "Test Crew",
+			"branch": "TEST-STORE-BGC",
+			"department": "Operations",
+			"designation": "Store Staff",
+			"custom_nickname": "Crew Nick",
+			"current_address": "123 Test Street",
+			"reports_to": "TEST-AREA-001",
+		}
+
+	monkeypatch.setattr(frappe.utils, "today", lambda: "2026-03-16", raising=False)
+	monkeypatch.setattr("frappe.db.get_value", fake_get_value)
+	monkeypatch.setitem(sys.modules, "frappe.utils.data", utils_data)
+	onboarding = importlib.import_module("hrms.api.onboarding")
+
+	row = onboarding._get_enrichment_employee_row(
+		"TEST-CREW-001",
+		["custom_nickname", "current_address", "reports_to"],
+	)
+
+	assert captured["doctype"] == "Employee"
+	assert captured["name"] == "TEST-CREW-001"
+	assert captured["as_dict"] is True
+	assert set(captured["fields"]) == {
+		"name",
+		"employee_name",
+		"branch",
+		"department",
+		"designation",
+		"custom_nickname",
+		"current_address",
+		"reports_to",
+	}
+	assert row["custom_nickname"] == "Crew Nick"
+	assert row["current_address"] == "123 Test Street"
+	assert row["reports_to"] == "TEST-AREA-001"
