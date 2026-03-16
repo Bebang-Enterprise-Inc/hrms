@@ -590,8 +590,14 @@ def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
 
 def _build_data_quality_warnings(end_day: date, freshness: dict[str, Any]) -> list[str]:
 	warnings: list[str] = []
+	foodpanda_sales_max = freshness.get("foodpanda_max_business_date")
 	foodpanda_cups_max = freshness.get("foodpanda_cups_max_business_date")
 	weather_max = freshness.get("weather_max_business_date")
+
+	if foodpanda_sales_max and str(foodpanda_sales_max) < end_day.isoformat():
+		warnings.append(
+			f"FoodPanda sales are validated only through {foodpanda_sales_max}; later dates may understate gross and net sales."
+		)
 
 	if foodpanda_cups_max and str(foodpanda_cups_max) < end_day.isoformat():
 		warnings.append(
@@ -604,6 +610,50 @@ def _build_data_quality_warnings(end_day: date, freshness: dict[str, Any]) -> li
 		)
 
 	return warnings
+
+
+def _validated_sales_cutoff(freshness: dict[str, Any]) -> date | None:
+	candidates = [
+		_coerce_date(freshness.get("pos_max_business_date"))
+		if freshness.get("pos_max_business_date")
+		else None,
+		_coerce_date(freshness.get("web_max_business_date"))
+		if freshness.get("web_max_business_date")
+		else None,
+		_coerce_date(freshness.get("foodpanda_max_business_date"))
+		if freshness.get("foodpanda_max_business_date")
+		else None,
+	]
+	valid_dates = [candidate for candidate in candidates if candidate is not None]
+	return max(valid_dates) if valid_dates else None
+
+
+def _filter_unvalidated_sales_rows(
+	rows: list[dict[str, Any]],
+	freshness: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[str]]:
+	cutoff = _validated_sales_cutoff(freshness)
+	if cutoff is None:
+		return rows, []
+
+	filtered_rows: list[dict[str, Any]] = []
+	dropped_dates: list[str] = []
+	for row in rows:
+		business_day = _coerce_date(row.get("business_date"))
+		if business_day <= cutoff:
+			filtered_rows.append(row)
+			continue
+
+		gross_sales = _to_float(row.get("total_gross_sales"))
+		net_sales_without_vat = _to_float(row.get("total_net_sales_without_vat"))
+		transactions = _to_int(row.get("transactions"))
+		if gross_sales == 0 and net_sales_without_vat == 0 and transactions == 0:
+			dropped_dates.append(business_day.isoformat())
+			continue
+
+		filtered_rows.append(row)
+
+	return filtered_rows, sorted(set(dropped_dates))
 
 
 def _build_access_context(scope: dict[str, Any]) -> dict[str, Any]:
@@ -702,8 +752,12 @@ def _aggregate_sales(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 	transactions = totals["transactions"]
 	cups = totals["cups_sold"]
-	totals["average_daily_sales"] = round(totals["gross_sales"] / day_count, 2) if day_count else 0.0
-	totals["average_guest_check"] = round(totals["gross_sales"] / transactions, 2) if transactions else 0.0
+	totals["average_daily_sales"] = (
+		round(totals["net_sales_without_vat"] / day_count, 2) if day_count else 0.0
+	)
+	totals["average_guest_check"] = (
+		round(totals["net_sales_without_vat"] / transactions, 2) if transactions else 0.0
+	)
 	totals["cups_per_transaction"] = round(cups / transactions, 2) if transactions else 0.0
 	totals["day_count"] = day_count
 
@@ -893,7 +947,9 @@ def _aggregate_daily_series(
 				}
 			)
 		bucket["average_guest_check"] = (
-			round(bucket["gross_sales"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
+			round(bucket["net_sales_without_vat"] / bucket["transactions"], 2)
+			if bucket["transactions"]
+			else 0.0
 		)
 		bucket["cups_per_transaction"] = (
 			round(bucket["cups_sold"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
@@ -1071,7 +1127,9 @@ def _build_store_rankings(
 		row["gross_sales"] = round(row["gross_sales"], 2)
 		row["net_sales_without_vat"] = round(row["net_sales_without_vat"], 2)
 		row["average_guest_check"] = (
-			round(row["gross_sales"] / row["transactions"], 2) if row["transactions"] else 0.0
+			round(row["net_sales_without_vat"] / row["transactions"], 2)
+			if row["transactions"]
+			else 0.0
 		)
 		row["cups_per_transaction"] = (
 			round(row["cups_sold"] / row["transactions"], 2) if row["transactions"] else 0.0
@@ -1101,11 +1159,16 @@ def _build_dashboard_overview_payload(
 	def builder() -> dict[str, Any]:
 		sales_rows = _query_daily_rows(start_day, end_day, selected_location_ids)
 		weather_rows = _query_weather_rows(start_day, end_day, selected_location_ids)
-		summary = _aggregate_sales(sales_rows)
 		mode_state = _build_mode_state(view_mode, start_day, end_day, scope)
 		freshness = _build_freshness(selected_location_ids)
+		validated_sales_rows, dropped_dates = _filter_unvalidated_sales_rows(sales_rows, freshness)
+		summary = _aggregate_sales(validated_sales_rows)
 		freshness["data_quality_warnings"] = _build_data_quality_warnings(end_day, freshness)
-		series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows)
+		if dropped_dates:
+			freshness["data_quality_warnings"].append(
+				f"Excluded incomplete sales rows on {', '.join(dropped_dates)} because sales/transactions were not yet validated for those dates."
+			)
+		series = _aggregate_daily_series(scope["selected_stores"], validated_sales_rows, weather_rows)
 		response: dict[str, Any] = {
 			"scope": {
 				"selected_stores": scope["selected_stores"],
@@ -1121,7 +1184,7 @@ def _build_dashboard_overview_payload(
 			else _empty_comparisons(),
 			"daily": series,
 			"analysis": _build_weather_context(series),
-			"stores": _build_store_rankings(scope, sales_rows, weather_rows),
+			"stores": _build_store_rankings(scope, validated_sales_rows, weather_rows),
 			"channels": _build_channel_mix(summary),
 		}
 		if view_mode == "ops_matched" and mode_state.get("supported"):

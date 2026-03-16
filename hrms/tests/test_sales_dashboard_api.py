@@ -184,10 +184,102 @@ def test_aggregate_sales_computes_dashboard_metrics():
 	assert result["net_sales_without_vat"] == 1339.29
 	assert result["cups_sold"] == 15
 	assert result["transactions"] == 7
-	assert result["average_daily_sales"] == 750.0
-	assert result["average_guest_check"] == 214.29
+	assert result["average_daily_sales"] == 669.64
+	assert result["average_guest_check"] == 191.33
 	assert result["cups_per_transaction"] == 2.14
 	assert result["website_cod_orders"] == 1
+
+
+def test_daily_series_average_guest_check_uses_net_sales_without_vat():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_daily_agc_test")
+
+	stores = [
+		{
+			"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+			"warehouse_name": "SM Megamall",
+			"company": "Bebang Enterprise Inc.",
+			"location_id": 2338,
+		}
+	]
+	rows = [
+		{
+			"business_date": "2026-03-14",
+			"location_id": "2338",
+			"total_gross_sales": "1000.00",
+			"total_net_sales_without_vat": "800.00",
+			"cups_sold": "12",
+			"transactions": "4",
+		}
+	]
+
+	result = module._aggregate_daily_series(stores, rows, [])
+
+	assert result[0]["average_guest_check"] == 200.0
+
+
+def test_store_rankings_average_guest_check_uses_net_sales_without_vat():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_store_agc_test")
+
+	scope = {
+		"selected_stores": [
+			{
+				"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+				"warehouse_name": "SM Megamall",
+				"company": "Bebang Enterprise Inc.",
+				"location_id": 2338,
+			}
+		]
+	}
+	rows = [
+		{
+			"business_date": "2026-03-14",
+			"location_id": "2338",
+			"store_name": "SM Megamall",
+			"total_gross_sales": "1000.00",
+			"total_net_sales_without_vat": "800.00",
+			"cups_sold": "12",
+			"transactions": "4",
+		}
+	]
+
+	result = module._build_store_rankings(scope, rows, [])
+
+	assert result[0]["average_guest_check"] == 200.0
+
+
+def test_filter_unvalidated_sales_rows_excludes_zero_value_rows_beyond_latest_sales_cutoff():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_filter_rows_test")
+
+	rows = [
+		{
+			"business_date": "2026-03-14",
+			"total_gross_sales": "2575678.48",
+			"total_net_sales_without_vat": "2337204.35",
+			"cups_sold": "18520",
+			"transactions": "7140",
+		},
+		{
+			"business_date": "2026-03-15",
+			"total_gross_sales": "0",
+			"total_net_sales_without_vat": "0",
+			"cups_sold": "3248",
+			"transactions": "0",
+		},
+	]
+	freshness = {
+		"pos_max_business_date": "2026-03-14",
+		"web_max_business_date": "2026-03-14",
+		"foodpanda_max_business_date": "2026-03-13",
+	}
+
+	filtered_rows, dropped_dates = module._filter_unvalidated_sales_rows(rows, freshness)
+
+	assert len(filtered_rows) == 1
+	assert filtered_rows[0]["business_date"] == "2026-03-14"
+	assert dropped_dates == ["2026-03-15"]
 
 
 def test_data_quality_warning_flags_stale_foodpanda_cups():
