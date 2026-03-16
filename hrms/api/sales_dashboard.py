@@ -613,19 +613,20 @@ def _build_data_quality_warnings(end_day: date, freshness: dict[str, Any]) -> li
 
 
 def _validated_sales_cutoff(freshness: dict[str, Any]) -> date | None:
-	candidates = [
+	core_candidates = [
 		_coerce_date(freshness.get("pos_max_business_date"))
 		if freshness.get("pos_max_business_date")
 		else None,
 		_coerce_date(freshness.get("web_max_business_date"))
 		if freshness.get("web_max_business_date")
 		else None,
-		_coerce_date(freshness.get("foodpanda_max_business_date"))
-		if freshness.get("foodpanda_max_business_date")
-		else None,
 	]
-	valid_dates = [candidate for candidate in candidates if candidate is not None]
-	return max(valid_dates) if valid_dates else None
+	core_valid_dates = [candidate for candidate in core_candidates if candidate is not None]
+	if core_valid_dates:
+		return max(core_valid_dates)
+	if freshness.get("foodpanda_max_business_date"):
+		return _coerce_date(freshness.get("foodpanda_max_business_date"))
+	return None
 
 
 def _filter_unvalidated_sales_rows(
@@ -644,14 +645,7 @@ def _filter_unvalidated_sales_rows(
 			filtered_rows.append(row)
 			continue
 
-		gross_sales = _to_float(row.get("total_gross_sales"))
-		net_sales_without_vat = _to_float(row.get("total_net_sales_without_vat"))
-		transactions = _to_int(row.get("transactions"))
-		if gross_sales == 0 and net_sales_without_vat == 0 and transactions == 0:
-			dropped_dates.append(business_day.isoformat())
-			continue
-
-		filtered_rows.append(row)
+		dropped_dates.append(business_day.isoformat())
 
 	return filtered_rows, sorted(set(dropped_dates))
 
@@ -1166,7 +1160,7 @@ def _build_dashboard_overview_payload(
 		freshness["data_quality_warnings"] = _build_data_quality_warnings(end_day, freshness)
 		if dropped_dates:
 			freshness["data_quality_warnings"].append(
-				f"Excluded incomplete sales rows on {', '.join(dropped_dates)} because sales/transactions were not yet validated for those dates."
+				f"Excluded sales rows on {', '.join(dropped_dates)} because they are beyond the latest validated core sales business date."
 			)
 		series = _aggregate_daily_series(scope["selected_stores"], validated_sales_rows, weather_rows)
 		response: dict[str, Any] = {

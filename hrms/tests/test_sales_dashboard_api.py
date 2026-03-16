@@ -282,6 +282,39 @@ def test_filter_unvalidated_sales_rows_excludes_zero_value_rows_beyond_latest_sa
 	assert dropped_dates == ["2026-03-15"]
 
 
+def test_filter_unvalidated_sales_rows_excludes_rows_beyond_core_sales_cutoff_even_if_foodpanda_has_sales():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_cutoff_scope_test")
+
+	rows = [
+		{
+			"business_date": "2026-03-14",
+			"total_gross_sales": "3224826.48",
+			"total_net_sales_without_vat": "2916800.76",
+			"cups_sold": "18520",
+			"transactions": "8247",
+		},
+		{
+			"business_date": "2026-03-15",
+			"total_gross_sales": "718244.00",
+			"total_net_sales_without_vat": "641289.31",
+			"cups_sold": "3248",
+			"transactions": "1219",
+		},
+	]
+	freshness = {
+		"pos_max_business_date": "2026-03-14",
+		"web_max_business_date": "2026-03-14",
+		"foodpanda_max_business_date": "2026-03-15",
+	}
+
+	filtered_rows, dropped_dates = module._filter_unvalidated_sales_rows(rows, freshness)
+
+	assert len(filtered_rows) == 1
+	assert filtered_rows[0]["business_date"] == "2026-03-14"
+	assert dropped_dates == ["2026-03-15"]
+
+
 def test_data_quality_warning_flags_stale_foodpanda_cups():
 	_install_fake_frappe(["System Manager"])
 	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_quality_test")
