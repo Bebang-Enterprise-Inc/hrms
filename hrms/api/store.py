@@ -1017,7 +1017,9 @@ def _build_orderable_source_stock_context(store_warehouse, items):
 			continue
 		lane = _resolve_delivery_lane(item)
 		cargo_category = _lane_to_cargo_category(lane)
-		source_warehouse = _resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
+		source_warehouse = (
+			_resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
+		)
 		source_warehouse_by_item[item_code] = source_warehouse
 		lane_by_item[item_code] = lane
 		if source_warehouse:
@@ -2221,7 +2223,9 @@ def _create_mr_for_store_order(order):
 		)
 		finance_treatment = infer_finance_treatment(source_company, billing_target_company)
 		is_intercompany = finance_treatment == FINANCE_TREATMENT_INTERCOMPANY
-		operational_dispatch_warehouse = source_warehouse if is_intercompany and source_warehouse else store_warehouse
+		operational_dispatch_warehouse = (
+			source_warehouse if is_intercompany and source_warehouse else store_warehouse
+		)
 		mr.material_request_type = "Material Issue" if is_intercompany else "Material Transfer"
 		# Frappe validates Material Transfer requests against the operational stock
 		# owner on the source side of the move. The buyer entity used later for
@@ -2239,7 +2243,7 @@ def _create_mr_for_store_order(order):
 			target_company=billing_target_company,
 			finance_treatment=finance_treatment,
 		)
-		mr.remarks = f"Warehouse dispatch request for store order {order.name} " f"({cargo_category})"
+		mr.remarks = f"Warehouse dispatch request for store order {order.name} ({cargo_category})"
 
 		for item in order.items:
 			qty = flt(getattr(item, "qty_approved", None) or getattr(item, "qty_requested", 0))
@@ -2275,15 +2279,15 @@ def _create_mr_for_store_order(order):
 
 
 @frappe.whitelist()
-def get_expected_deliveries(store: str | None = None) -> dict:
+def get_expected_deliveries(store: str | None = None, date: str | None = None) -> dict:
 	"""
-	Get trips expected to deliver to this store today.
+	Get trips expected to deliver to this store on the selected date.
 	Returns distribution trips with this store as a stop.
 	"""
 	if not store:
 		return {"deliveries": []}
 
-	today = nowdate()
+	selected_date = str(getdate(date)) if date else nowdate()
 
 	# Find trips with this store as a stop
 	trips = frappe.db.sql(
@@ -2296,10 +2300,10 @@ def get_expected_deliveries(store: str | None = None) -> dict:
         JOIN `tabBEI Trip Stop` s ON s.parent = t.name
         WHERE s.store = %s
         AND t.trip_date = %s
-        AND t.status IN ('Preparing', 'In Transit')
+        AND t.status != 'Cancelled'
         ORDER BY t.trip_date, s.stop_order
     """,
-		(store, today),
+		(store, selected_date),
 		as_dict=True,
 	)
 
@@ -2820,9 +2824,7 @@ def _resolve_store_order_item_pricing(store_order_name: str | None) -> dict[str,
 		result[item_code] = {
 			"unit_price": flt(row.get("unit_price"), 6),
 			"delivered_qty": (
-				flt(row.get("qty_delivered"))
-				or flt(row.get("qty_approved"))
-				or flt(row.get("qty_requested"))
+				flt(row.get("qty_delivered")) or flt(row.get("qty_approved")) or flt(row.get("qty_requested"))
 			),
 		}
 	return result
@@ -3222,11 +3224,7 @@ def create_store_return(
 		"finance_treatment": finance_treatment,
 		"message": (
 			f"Store return {primary_entry.name} created"
-			+ (
-				f" with warehouse receipt {warehouse_receipt.name}"
-				if warehouse_receipt
-				else ""
-			)
+			+ (f" with warehouse receipt {warehouse_receipt.name}" if warehouse_receipt else "")
 			+ f" — {len(primary_entry.items)} item(s) returned to warehouse"
 		),
 	}

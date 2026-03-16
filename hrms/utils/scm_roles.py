@@ -16,13 +16,22 @@ from frappe import _
 # ============================================================
 
 # Dispatch / trip management (dispatch.py)
-SCM_ADMIN_ROLES = {"HR Manager", "Warehouse Manager", "System Manager"}
+SCM_ADMIN_ROLES = {
+	"HR Manager",
+	"Supply Chain Manager",
+	"Warehouse Manager",
+	"System Manager",
+	"Administrator",
+}
 SCM_DISPATCH_ROLES = {
 	"HR Manager",
+	"Supply Chain Manager",
 	"Warehouse Manager",
 	"Warehouse User",
 	"Logistics Coordinator",
+	"Driver",
 	"System Manager",
+	"Administrator",
 }
 SCM_STORE_ROLES = {"Store Staff", "Store Supervisor", "Area Supervisor", "Warehouse User", "System Manager"}
 
@@ -67,8 +76,27 @@ SCM_BILLING_ROLES = {
 }
 
 # Inventory (inventory.py)
-SCM_INVENTORY_ROLES = {"Warehouse Manager", "Warehouse Staff", "Logistics Coordinator", "System Manager"}
-SCM_STOCK_UPDATE_ROLES = {"Warehouse Manager", "Warehouse Staff", "System Manager"}
+# Include both backend-native warehouse titles and the portal role names so
+# inventory pages do not render as shells for otherwise-authorized users.
+SCM_INVENTORY_ROLES = {
+	"HR Manager",
+	"Supply Chain Manager",
+	"Warehouse Manager",
+	"Warehouse Staff",
+	"Warehouse User",
+	"Logistics Coordinator",
+	"System Manager",
+	"Administrator",
+}
+SCM_STOCK_UPDATE_ROLES = {
+	"HR Manager",
+	"Supply Chain Manager",
+	"Warehouse Manager",
+	"Warehouse Staff",
+	"Warehouse User",
+	"System Manager",
+	"Administrator",
+}
 
 # Permits (permits.py)
 SCM_PERMIT_ROLES = {"Warehouse Manager", "Logistics Coordinator", "HR Manager", "System Manager"}

@@ -10,7 +10,7 @@ from contextlib import contextmanager
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, flt, now_datetime, nowdate
+from frappe.utils import add_days, cint, flt, now_datetime, nowdate
 
 from hrms.utils.bei_config import get_company
 from hrms.utils.scm_roles import SCM_INVENTORY_ROLES, SCM_STOCK_UPDATE_ROLES
@@ -720,6 +720,146 @@ def _resolve_warehouse(store_or_branch: str):
 	return None
 
 
+def _coerce_flag(value) -> bool:
+	return bool(cint(value or 0))
+
+
+def _get_inventory_warehouse_catalog() -> list[dict]:
+	"""Return the canonical warehouse selector catalog for inventory surfaces."""
+	mapped_rows = frappe.get_all(
+		"BEI Warehouse Department Mapping",
+		filters={"is_active": 1},
+		fields=["warehouse", "department"],
+		order_by="warehouse",
+	)
+
+	catalog: list[dict] = []
+	seen: set[str] = set()
+
+	for row in mapped_rows:
+		warehouse = _resolve_warehouse(row.warehouse) or row.warehouse
+		if not warehouse or warehouse in seen or not frappe.db.exists("Warehouse", warehouse):
+			continue
+		seen.add(warehouse)
+		catalog.append(
+			{
+				"warehouse": warehouse,
+				"warehouse_name": frappe.db.get_value("Warehouse", warehouse, "warehouse_name") or warehouse,
+				"department": row.department,
+			}
+		)
+
+	if catalog:
+		return catalog
+
+	return [
+		{
+			"warehouse": row.name,
+			"warehouse_name": row.warehouse_name or row.name,
+			"department": None,
+		}
+		for row in frappe.get_all(
+			"Warehouse",
+			filters={"company": get_company(), "is_group": 0, "disabled": 0},
+			fields=["name", "warehouse_name"],
+			order_by="warehouse_name",
+		)
+	]
+
+
+def _get_inventory_scope_context() -> dict:
+	"""
+	Resolve the current user's warehouse scope for inventory pages.
+
+	Preferred source is the employee branch -> warehouse mapping. Manager/admin
+	cohorts get all warehouses. If a warehouse user has no branch mapping yet, we
+	fall back to the catalog so the page is still operable instead of shelling out.
+	"""
+	user = frappe.session.user
+	user_roles = set(frappe.get_roles(user))
+	catalog = _get_inventory_warehouse_catalog()
+	catalog_names = {row["warehouse"] for row in catalog}
+
+	elevated_roles = {
+		"HR Manager",
+		"Supply Chain Manager",
+		"Warehouse Manager",
+		"Logistics Coordinator",
+		"System Manager",
+		"Administrator",
+	}
+	can_view_all = bool(user_roles.intersection(elevated_roles))
+
+	employee = frappe.db.get_value(
+		"Employee",
+		{"user_id": user, "status": "Active"},
+		["name", "branch", "employee_name"],
+		as_dict=True,
+	)
+	default_warehouse = _resolve_warehouse(employee.branch) if employee and employee.branch else None
+
+	scope_source = "all_warehouses_role" if can_view_all else "catalog_fallback"
+	allowed_rows = catalog
+
+	if not can_view_all and default_warehouse:
+		scope_source = "employee_branch"
+		allowed_rows = [row for row in catalog if row["warehouse"] == default_warehouse]
+		if not allowed_rows:
+			allowed_rows = [
+				{
+					"warehouse": default_warehouse,
+					"warehouse_name": frappe.db.get_value("Warehouse", default_warehouse, "warehouse_name")
+					or default_warehouse,
+					"department": None,
+				}
+			]
+
+	if not default_warehouse and allowed_rows:
+		default_warehouse = allowed_rows[0]["warehouse"]
+
+	return {
+		"user": user,
+		"user_roles": sorted(user_roles),
+		"can_view_all": can_view_all,
+		"default_warehouse": default_warehouse,
+		"scope_source": scope_source,
+		"warehouses": allowed_rows,
+		"catalog_warehouses": catalog,
+		"warehouse_names": {row["warehouse"] for row in allowed_rows} or catalog_names,
+	}
+
+
+def _resolve_inventory_requested_warehouses(scope: dict, warehouse: str | None = None) -> list[str]:
+	"""Validate a requested warehouse against the current user's inventory scope."""
+	allowed_names = sorted(scope.get("warehouse_names") or [])
+	if not allowed_names:
+		return []
+
+	if not warehouse:
+		return allowed_names
+
+	resolved = _resolve_warehouse(warehouse) or warehouse
+	if resolved not in scope["warehouse_names"]:
+		frappe.throw(
+			_("You do not have inventory access to warehouse {0}").format(warehouse),
+			frappe.PermissionError,
+		)
+	return [resolved]
+
+
+@frappe.whitelist()
+def get_inventory_scope():
+	"""Return the warehouse selector contract for inventory and daily update surfaces."""
+	_check_warehouse_permission(SCM_INVENTORY_ROLES, "view inventory scope")
+	scope = _get_inventory_scope_context()
+	return {
+		"can_view_all": scope["can_view_all"],
+		"default_warehouse": scope["default_warehouse"],
+		"scope_source": scope["scope_source"],
+		"warehouses": scope["warehouses"],
+	}
+
+
 @frappe.whitelist()
 def get_returnable_items(store: str | None = None):
 	"""
@@ -1310,7 +1450,11 @@ def export_count_to_cos_recon(cycle_count_name: str):
 
 
 @frappe.whitelist()
-def get_warehouse_stock(warehouse: str | None = None, item_group: str | None = None):
+def get_warehouse_stock(
+	warehouse: str | None = None,
+	item_group: str | None = None,
+	include_zero_stock: int | str = 0,
+):
 	"""
 	GET stock levels across warehouses.
 	If warehouse is specified, filter to that warehouse only.
@@ -1319,13 +1463,19 @@ def get_warehouse_stock(warehouse: str | None = None, item_group: str | None = N
 	            reserved_qty, available_qty, reorder_point, is_low_stock}]
 	"""
 	_check_warehouse_permission(SCM_INVENTORY_ROLES, "view warehouse stock")
+	scope = _get_inventory_scope_context()
+	warehouse_names = _resolve_inventory_requested_warehouses(scope, warehouse)
+	if not warehouse_names:
+		return []
 
-	conditions = ["(b.actual_qty > 0 OR b.reserved_qty > 0)"]
-	values = {}
+	conditions = ["b.warehouse IN %(warehouses)s"]
+	values = {"warehouses": tuple(warehouse_names)}
+
+	if not _coerce_flag(include_zero_stock):
+		conditions.append("(b.actual_qty > 0 OR b.reserved_qty > 0)")
 
 	if warehouse:
-		conditions.append("b.warehouse = %(warehouse)s")
-		values["warehouse"] = warehouse
+		values["warehouse"] = warehouse_names[0]
 
 	if item_group:
 		conditions.append("i.item_group = %(item_group)s")
@@ -1378,6 +1528,7 @@ def daily_stock_update(warehouse: str, items: list[dict] | str):
 	Returns: {name, status, warehouse, item_count}
 	"""
 	_check_warehouse_permission(SCM_STOCK_UPDATE_ROLES, "submit daily stock update")
+	scope = _get_inventory_scope_context()
 
 	if isinstance(items, str):
 		items = json.loads(items)
@@ -1387,6 +1538,11 @@ def daily_stock_update(warehouse: str, items: list[dict] | str):
 
 	if not warehouse:
 		frappe.throw(_("Warehouse is required"))
+
+	allowed_warehouses = _resolve_inventory_requested_warehouses(scope, warehouse)
+	if not allowed_warehouses:
+		frappe.throw(_("No warehouse scope is assigned to this account"), frappe.PermissionError)
+	warehouse = allowed_warehouses[0]
 
 	frappe.db.savepoint("daily_stock_update_start")
 
@@ -1434,13 +1590,20 @@ def get_low_stock_alerts(warehouse: str | None = None):
 	            reorder_point, shortage, suggested_order_qty}]
 	"""
 	_check_warehouse_permission(SCM_INVENTORY_ROLES, "view low stock alerts")
+	scope = _get_inventory_scope_context()
+	warehouse_names = _resolve_inventory_requested_warehouses(scope, warehouse)
+	if not warehouse_names:
+		return []
 
-	conditions = ["ir.warehouse_reorder_level > 0", "b.actual_qty <= ir.warehouse_reorder_level"]
-	values = {}
+	conditions = [
+		"b.warehouse IN %(warehouses)s",
+		"ir.warehouse_reorder_level > 0",
+		"b.actual_qty <= ir.warehouse_reorder_level",
+	]
+	values = {"warehouses": tuple(warehouse_names)}
 
 	if warehouse:
-		conditions.append("b.warehouse = %(warehouse)s")
-		values["warehouse"] = warehouse
+		values["warehouse"] = warehouse_names[0]
 
 	where_clause = " AND ".join(conditions)
 
@@ -1479,19 +1642,29 @@ def get_multi_warehouse_summary():
 	Returns: [{warehouse, total_items, low_stock_count, last_updated}]
 	"""
 	_check_warehouse_permission(SCM_INVENTORY_ROLES, "view warehouse summary")
+	scope = _get_inventory_scope_context()
+	warehouse_rows = scope["warehouses"]
+	warehouse_names = sorted(scope["warehouse_names"])
+	if not warehouse_names:
+		return []
 
-	summary = frappe.db.sql(
+	summary_rows = frappe.db.sql(
 		"""
         SELECT
             b.warehouse,
-            COUNT(DISTINCT b.item_code) AS total_items,
-            SUM(
+            COUNT(
+                DISTINCT CASE
+                    WHEN (b.actual_qty > 0 OR b.reserved_qty > 0) THEN b.item_code
+                    ELSE NULL
+                END
+            ) AS total_items,
+            COALESCE(SUM(
                 CASE
                     WHEN ir.warehouse_reorder_level > 0
                          AND b.actual_qty <= ir.warehouse_reorder_level THEN 1
                     ELSE 0
                 END
-            ) AS low_stock_count,
+            ), 0) AS low_stock_count,
             MAX(sle.posting_datetime) AS last_updated
         FROM `tabBin` b
         LEFT JOIN `tabItem Reorder` ir
@@ -1501,14 +1674,191 @@ def get_multi_warehouse_summary():
             ON sle.item_code = b.item_code
             AND sle.warehouse = b.warehouse
             AND sle.is_cancelled = 0
-        WHERE b.actual_qty > 0
+        WHERE b.warehouse IN %(warehouses)s
         GROUP BY b.warehouse
         ORDER BY b.warehouse
     """,
+		{"warehouses": tuple(warehouse_names)},
 		as_dict=True,
 	)
 
-	return summary
+	summary_map = {row.warehouse: row for row in summary_rows}
+	return [
+		{
+			"warehouse": row["warehouse"],
+			"warehouse_name": row["warehouse_name"],
+			"total_items": cint(getattr(summary_map.get(row["warehouse"]), "total_items", 0) or 0),
+			"low_stock_count": cint(getattr(summary_map.get(row["warehouse"]), "low_stock_count", 0) or 0),
+			"last_updated": getattr(summary_map.get(row["warehouse"]), "last_updated", None),
+		}
+		for row in warehouse_rows
+	]
+
+
+@frappe.whitelist()
+def get_network_inventory_overview(
+	warehouse: str | None = None,
+	item_group: str | None = None,
+	query: str | None = None,
+	limit: int | str = 100,
+	include_zero_stock: int | str = 0,
+):
+	"""Return a bird's-eye item x warehouse inventory view for the current scope."""
+	_check_warehouse_permission(SCM_INVENTORY_ROLES, "view network inventory overview")
+	scope = _get_inventory_scope_context()
+	warehouse_names = _resolve_inventory_requested_warehouses(scope, warehouse)
+	if not warehouse_names:
+		return {
+			"summary": {
+				"total_on_hand": 0,
+				"total_reserved": 0,
+				"total_available": 0,
+				"warehouse_count": 0,
+				"item_count": 0,
+				"low_stock_items": 0,
+				"stockout_items": 0,
+			},
+			"items": [],
+		}
+
+	limit = min(max(cint(limit or 100), 1), 250)
+	conditions = ["b.warehouse IN %(warehouses)s"]
+	values: dict[str, object] = {"warehouses": tuple(warehouse_names)}
+
+	if item_group:
+		conditions.append("i.item_group = %(item_group)s")
+		values["item_group"] = item_group
+
+	if query:
+		values["query"] = f"%{query.strip()}%"
+		conditions.append("(b.item_code LIKE %(query)s OR i.item_name LIKE %(query)s)")
+
+	if not _coerce_flag(include_zero_stock):
+		conditions.append(
+			"(b.actual_qty > 0 OR b.reserved_qty > 0 OR COALESCE(ir.warehouse_reorder_level, 0) > 0)"
+		)
+
+	where_clause = " AND ".join(conditions)
+
+	summary = frappe.db.sql(
+		"""
+        SELECT
+            COALESCE(SUM(b.actual_qty), 0) AS total_on_hand,
+            COALESCE(SUM(b.reserved_qty), 0) AS total_reserved,
+            COALESCE(SUM(b.actual_qty - b.reserved_qty), 0) AS total_available,
+            COUNT(DISTINCT b.warehouse) AS warehouse_count,
+            COUNT(DISTINCT b.item_code) AS item_count,
+            COUNT(
+                DISTINCT CASE
+                    WHEN ir.warehouse_reorder_level > 0
+                         AND b.actual_qty <= ir.warehouse_reorder_level THEN b.item_code
+                    ELSE NULL
+                END
+            ) AS low_stock_items,
+            COUNT(
+                DISTINCT CASE
+                    WHEN ir.warehouse_reorder_level > 0
+                         AND b.actual_qty <= 0 THEN b.item_code
+                    ELSE NULL
+                END
+            ) AS stockout_items
+        FROM `tabBin` b
+        INNER JOIN `tabItem` i ON i.name = b.item_code
+        LEFT JOIN `tabItem Reorder` ir
+            ON ir.parent = b.item_code
+            AND ir.warehouse = b.warehouse
+        WHERE """
+		+ where_clause,
+		values,
+		as_dict=True,
+	)[0]
+
+	rows = frappe.db.sql(
+		"""
+        SELECT
+            b.item_code,
+            i.item_name,
+            i.item_group,
+            b.warehouse,
+            b.actual_qty,
+            b.reserved_qty,
+            (b.actual_qty - b.reserved_qty) AS available_qty,
+            COALESCE(ir.warehouse_reorder_level, 0) AS reorder_point,
+            CASE
+                WHEN ir.warehouse_reorder_level > 0
+                     AND b.actual_qty <= ir.warehouse_reorder_level THEN 1
+                ELSE 0
+            END AS is_low_stock
+        FROM `tabBin` b
+        INNER JOIN `tabItem` i ON i.name = b.item_code
+        LEFT JOIN `tabItem Reorder` ir
+            ON ir.parent = b.item_code
+            AND ir.warehouse = b.warehouse
+        WHERE """
+		+ where_clause
+		+ """
+        ORDER BY i.item_name, b.warehouse
+    """,
+		values,
+		as_dict=True,
+	)
+
+	items_map: dict[str, dict] = {}
+	for row in rows:
+		item = items_map.setdefault(
+			row.item_code,
+			{
+				"item_code": row.item_code,
+				"item_name": row.item_name,
+				"item_group": row.item_group,
+				"total_on_hand": 0.0,
+				"total_reserved": 0.0,
+				"total_available": 0.0,
+				"warehouse_count": 0,
+				"low_stock_warehouse_count": 0,
+				"stockout_warehouse_count": 0,
+				"warehouses": [],
+			},
+		)
+		item["total_on_hand"] += flt(row.actual_qty)
+		item["total_reserved"] += flt(row.reserved_qty)
+		item["total_available"] += flt(row.available_qty)
+		item["warehouse_count"] += 1
+		item["low_stock_warehouse_count"] += cint(row.is_low_stock or 0)
+		if flt(row.actual_qty) <= 0:
+			item["stockout_warehouse_count"] += 1
+		item["warehouses"].append(
+			{
+				"warehouse": row.warehouse,
+				"actual_qty": flt(row.actual_qty),
+				"reserved_qty": flt(row.reserved_qty),
+				"available_qty": flt(row.available_qty),
+				"reorder_point": flt(row.reorder_point),
+				"is_low_stock": cint(row.is_low_stock or 0),
+			}
+		)
+
+	items = sorted(
+		items_map.values(),
+		key=lambda row: (
+			-row["stockout_warehouse_count"],
+			-row["low_stock_warehouse_count"],
+			row["item_name"],
+		),
+	)[:limit]
+
+	return {
+		"summary": {
+			"total_on_hand": flt(summary.total_on_hand),
+			"total_reserved": flt(summary.total_reserved),
+			"total_available": flt(summary.total_available),
+			"warehouse_count": cint(summary.warehouse_count),
+			"item_count": cint(summary.item_count),
+			"low_stock_items": cint(summary.low_stock_items),
+			"stockout_items": cint(summary.stockout_items),
+		},
+		"items": items,
+	}
 
 
 @frappe.whitelist()
@@ -1525,6 +1875,10 @@ def get_item_stock_history(item_code: str, warehouse: str | None = None, days: i
 	            actual_qty, qty_after_transaction, stock_value_difference}]
 	"""
 	_check_warehouse_permission(SCM_INVENTORY_ROLES, "view stock history")
+	scope = _get_inventory_scope_context()
+	warehouse_names = _resolve_inventory_requested_warehouses(scope, warehouse)
+	if not warehouse_names:
+		return []
 
 	days = min(int(days), 365)
 	from_date = add_days(nowdate(), -days)
@@ -1533,12 +1887,12 @@ def get_item_stock_history(item_code: str, warehouse: str | None = None, days: i
 		"sle.item_code = %(item_code)s",
 		"sle.posting_date >= %(from_date)s",
 		"sle.is_cancelled = 0",
+		"sle.warehouse IN %(warehouses)s",
 	]
-	values = {"item_code": item_code, "from_date": from_date}
+	values = {"item_code": item_code, "from_date": from_date, "warehouses": tuple(warehouse_names)}
 
 	if warehouse:
-		conditions.append("sle.warehouse = %(warehouse)s")
-		values["warehouse"] = warehouse
+		values["warehouse"] = warehouse_names[0]
 
 	where_clause = " AND ".join(conditions)
 
