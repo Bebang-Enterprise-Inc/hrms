@@ -193,8 +193,7 @@ STORE_OPS_ALLOWED_ROLES = [
 	"Administrator",
 ]
 AREA_SUPERVISOR_ROLE = "Area Supervisor"
-REGIONAL_MANAGER_ROLE = "Regional Manager"
-REGIONAL_MANAGER_FALLBACK_EMAIL = "edlice@bebang.ph"
+ORDER_APPROVAL_FALLBACK_EMAIL = "edlice@bebang.ph"
 SYSTEM_APPROVER_ROLES = {"System Manager", "Administrator"}
 
 
@@ -469,13 +468,13 @@ def _doctype_has_field(doctype, fieldname):
 		return False
 
 
-def _get_regional_manager_fallback_user():
-	user = str(REGIONAL_MANAGER_FALLBACK_EMAIL or "").strip()
+def _get_order_approval_fallback_user():
+	user = str(ORDER_APPROVAL_FALLBACK_EMAIL or "").strip()
 	if not user:
 		return None
 	if not _is_enabled_user(user):
 		frappe.log_error(
-			f"Regional manager fallback user {user} is missing or disabled.",
+			f"Order approval fallback user {user} is missing or disabled.",
 			"Store Order Approver Fallback",
 		)
 		return None
@@ -483,9 +482,9 @@ def _get_regional_manager_fallback_user():
 		roles = set(frappe.get_roles(user))
 	except Exception:
 		roles = set()
-	if not roles.intersection({AREA_SUPERVISOR_ROLE, REGIONAL_MANAGER_ROLE, "System Manager"}):
+	if not roles.intersection({AREA_SUPERVISOR_ROLE, "Regional Manager"}.union(SYSTEM_APPROVER_ROLES)):
 		frappe.log_error(
-			f"Regional manager fallback user {user} has no approval role.",
+			f"Order approval fallback user {user} has no approval role.",
 			"Store Order Approver Fallback",
 		)
 		return None
@@ -497,9 +496,9 @@ def _resolve_review_approver_for_store(warehouse):
 	if area_supervisor:
 		return area_supervisor, "area_supervisor"
 
-	regional_manager = _get_regional_manager_fallback_user()
-	if regional_manager:
-		return regional_manager, "regional_manager_fallback"
+	fallback_approver = _get_order_approval_fallback_user()
+	if fallback_approver:
+		return fallback_approver, "fallback_approver"
 
 	return None, "unmapped"
 
@@ -510,17 +509,6 @@ def _is_system_approver(user_id):
 	except Exception:
 		roles = set()
 	return bool(roles.intersection(SYSTEM_APPROVER_ROLES))
-
-
-def _is_regional_manager_user(user_id):
-	user = str(user_id or "").strip()
-	if not user:
-		return False
-	try:
-		roles = set(frappe.get_roles(user))
-	except Exception:
-		roles = set()
-	return bool(roles.intersection({REGIONAL_MANAGER_ROLE, "System Manager", "HR Manager"}))
 
 
 def _create_order_notification_log(order_name, for_user, subject):
@@ -677,99 +665,11 @@ def _has_approved_stage_entry(order_name, approver):
 	)
 
 
-def _get_regional_manager_for_store(warehouse, area_supervisor=None):
-	field_candidates = [
-		"custom_regional_manager",
-		"custom_regional_supervisor",
-		"custom_regional_approver",
-	]
-
-	warehouse_chain = [warehouse]
-	parent = frappe.db.get_value("Warehouse", warehouse, "parent_warehouse")
-	if parent:
-		warehouse_chain.append(parent)
-
-	for wh in warehouse_chain:
-		for fieldname in field_candidates:
-			if not _doctype_has_field("Warehouse", fieldname):
-				continue
-			candidate = frappe.db.get_value("Warehouse", wh, fieldname)
-			if candidate and _is_enabled_user(candidate) and _is_regional_manager_user(candidate):
-				return candidate, f"warehouse.{fieldname}"
-
-	if area_supervisor:
-		area_employee = frappe.db.get_value(
-			"Employee",
-			{"user_id": area_supervisor, "status": "Active"},
-			["name", "reports_to"],
-			as_dict=True,
-		)
-		reports_to = area_employee.get("reports_to") if area_employee else None
-		if reports_to:
-			manager_user = frappe.db.get_value("Employee", reports_to, "user_id")
-			if manager_user and _is_enabled_user(manager_user) and _is_regional_manager_user(manager_user):
-				return manager_user, "employee.reports_to"
-
-	regional_manager = _get_regional_manager_fallback_user()
-	if regional_manager:
-		return regional_manager, "regional_manager_fallback"
-
-	return None, "unmapped"
-
-
-def _get_regional_manager_fallback_excluding(exclude_user):
-	candidate = _get_regional_manager_fallback_user()
-	if candidate and candidate != exclude_user:
-		return candidate, "regional_manager_fallback"
-	return None, "unmapped"
-
-
 def _resolve_order_approval_routing(warehouse, is_emergency, submitted_after_cutoff):
-	area_approver = _get_area_supervisor_for_store(warehouse)
-	regional_approver, regional_source = _get_regional_manager_for_store(
-		warehouse, area_supervisor=area_approver
-	)
-
-	if area_approver and regional_approver and regional_approver == area_approver:
-		fallback_regional, fallback_source = _get_regional_manager_fallback_excluding(
-			exclude_user=area_approver
-		)
-		if fallback_regional:
-			regional_approver = fallback_regional
-			regional_source = fallback_source
-
-	requires_regional_after_area = bool(
-		cint(is_emergency)
-		and submitted_after_cutoff
-		and area_approver
-		and regional_approver
-		and regional_approver != area_approver
-	)
-
-	if area_approver:
-		return {
-			"first_approver": area_approver,
-			"first_source": "area_supervisor",
-			"requires_regional_after_area": requires_regional_after_area,
-			"regional_approver": regional_approver,
-			"regional_source": regional_source,
-		}
-
-	if regional_approver:
-		return {
-			"first_approver": regional_approver,
-			"first_source": "regional_manager_fallback",
-			"requires_regional_after_area": False,
-			"regional_approver": regional_approver,
-			"regional_source": regional_source,
-		}
-
+	first_approver, first_source = _resolve_review_approver_for_store(warehouse)
 	return {
-		"first_approver": None,
-		"first_source": "unmapped",
-		"requires_regional_after_area": False,
-		"regional_approver": None,
-		"regional_source": "unmapped",
+		"first_approver": first_approver,
+		"first_source": first_source,
 	}
 
 
@@ -1805,23 +1705,17 @@ def submit_order(
 	)
 	first_approver = routing["first_approver"]
 	first_source = routing["first_source"]
-	requires_regional_after_area = bool(routing["requires_regional_after_area"])
-	regional_approver = routing["regional_approver"]
-	regional_source = routing["regional_source"]
 
 	requires_manual_approval = bool(
-		is_bulk_order
-		or edited_lines_count > 0
-		or requires_regional_after_area
-		or (is_emergency_flag and submitted_after_cutoff)
+		is_bulk_order or edited_lines_count > 0 or (is_emergency_flag and submitted_after_cutoff)
 	)
 	if requires_manual_approval and not first_approver:
 		frappe.throw(
 			_(
 				"Order requires Area Supervisor approval but no valid Area Supervisor mapping was found for {0}, "
-				"and Regional Manager fallback {1} is unavailable. Please update Warehouse.custom_area_supervisor "
+				"and fallback approver {1} is unavailable. Please update Warehouse.custom_area_supervisor "
 				"or provision fallback approver access before submitting."
-			).format(warehouse, REGIONAL_MANAGER_FALLBACK_EMAIL)
+			).format(warehouse, ORDER_APPROVAL_FALLBACK_EMAIL)
 		)
 
 	order.insert(ignore_permissions=True)
@@ -1843,11 +1737,7 @@ def submit_order(
 				assigned = _assign_order_for_approval(
 					order_name=order.name,
 					assigned_to=first_approver,
-					description=(
-						f"Store order {order.name} requires your approval."
-						if not requires_regional_after_area
-						else f"Store order {order.name} requires your Stage 1 approval before regional sign-off."
-					),
+					description=f"Store order {order.name} requires your approval.",
 				)
 				queue_status = "created" if assigned else "failed"
 				if not assigned:
@@ -1864,17 +1754,10 @@ def submit_order(
 			warning = "Order created but approval routing failed. Please notify your approver manually."
 			queue_status = "failed"
 
-	if requires_regional_after_area and regional_approver:
+	if first_source == "fallback_approver" and first_approver:
 		_append_order_comment(
 			order.name,
-			_(
-				"Emergency order submitted after cutoff {0}. Approval chain: Area Supervisor -> Regional Manager ({1})."
-			).format(cutoff_time, regional_approver),
-		)
-	elif first_source == "regional_manager_fallback" and first_approver:
-		_append_order_comment(
-			order.name,
-			_("Area Supervisor mapping missing; routed directly to Regional Manager ({0}).").format(
+			_("Area Supervisor mapping missing; routed directly to fallback approver ({0}).").format(
 				first_approver
 			),
 		)
@@ -1886,15 +1769,17 @@ def submit_order(
 		"requires_area_supervisor_review": bool(
 			requires_manual_approval and first_source == "area_supervisor"
 		),
-		"requires_regional_manager_review": bool(requires_regional_after_area),
+		"requires_regional_manager_review": False,
+		"requires_fallback_approval": bool(requires_manual_approval and first_source == "fallback_approver"),
 		"edited_lines_count": edited_lines_count,
 		"message": f"Order {order.name} submitted successfully",
 		"approval_queue_status": queue_status,
 		"approval_queue_name": queue_name,
 		"approval_approver_source": first_source if requires_manual_approval else "not_required",
 		"approval_assigned_approver": first_approver if requires_manual_approval else None,
-		"regional_approver": regional_approver,
-		"regional_approver_source": regional_source,
+		"fallback_approver": (
+			first_approver if requires_manual_approval and first_source == "fallback_approver" else None
+		),
 		"submitted_after_cutoff": bool(submitted_after_cutoff),
 		"is_emergency": bool(is_emergency_flag),
 		"cargo_category": normalized_cargo_category,
@@ -1960,9 +1845,9 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 @frappe.whitelist()
 def approve_order(order_name: str, approved_quantities: list | str | None = None) -> dict:
 	"""
-	Approve a store order with staged routing support.
-	- Regular/manual orders: single-step approval
-	- Emergency orders submitted after cutoff: Area Supervisor -> Regional Manager
+	Approve a store order.
+	Area Supervisors own the approval queue. The designated fallback approver may
+	intervene directly when an assigned approval is stuck.
 	"""
 	user = frappe.session.user
 	order = frappe.get_doc("BEI Store Order", order_name)
@@ -1975,19 +1860,24 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 	assigned_approver = active_entry.get("assigned_approver") if active_entry else None
 
 	is_system_user = _is_system_approver(user)
+	fallback_approver = _get_order_approval_fallback_user()
+	is_fallback_override = bool(
+		fallback_approver and user == fallback_approver and assigned_approver and assigned_approver != user
+	)
 	if assigned_approver:
-		if assigned_approver != user and not is_system_user:
+		if assigned_approver != user and not is_system_user and not is_fallback_override:
 			frappe.throw(
 				_("Order {0} is currently assigned to {1}.").format(order_name, assigned_approver),
 				frappe.PermissionError,
 			)
 	else:
 		user_roles = set(frappe.get_roles(user))
-		allowed_roles = {AREA_SUPERVISOR_ROLE, REGIONAL_MANAGER_ROLE}.union(SYSTEM_APPROVER_ROLES)
-		if not user_roles.intersection(allowed_roles):
+		allowed_roles = {AREA_SUPERVISOR_ROLE}.union(SYSTEM_APPROVER_ROLES)
+		is_fallback_user = bool(fallback_approver and user == fallback_approver)
+		if not user_roles.intersection(allowed_roles) and not is_fallback_user:
 			frappe.throw(
 				_(
-					"Only assigned approvers, Area Supervisors, Regional Managers, or System Managers can approve."
+					"Only assigned approvers, Area Supervisors, fallback approvers, or System Managers can approve."
 				),
 				frappe.PermissionError,
 			)
@@ -2013,41 +1903,14 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		elif not flt(getattr(item, "qty_approved", 0)):
 			item.qty_approved = item.qty_requested
 
-	cutoff_hour, _cutoff_time = _get_order_cutoff()
-	order_created_dt = get_datetime(order.creation) if getattr(order, "creation", None) else now_datetime()
-	submitted_after_cutoff = order_created_dt.hour >= cutoff_hour
-	routing = _resolve_order_approval_routing(
-		warehouse=order.store,
-		is_emergency=order.is_emergency,
-		submitted_after_cutoff=submitted_after_cutoff,
-	)
 	area_approver = _get_area_supervisor_for_store(order.store)
-	regional_approver = routing.get("regional_approver")
-	requires_dual_stage = bool(routing.get("requires_regional_after_area"))
-
-	current_stage = "single_step"
-	if assigned_approver and assigned_approver == area_approver:
+	current_stage = "approved"
+	if fallback_approver and user == fallback_approver and user != area_approver:
+		current_stage = "fallback_approver"
+	elif assigned_approver and assigned_approver == area_approver:
 		current_stage = "area_supervisor"
-	elif assigned_approver and assigned_approver == regional_approver:
-		current_stage = "regional_manager"
-	elif requires_dual_stage:
-		if user == area_approver:
-			current_stage = "area_supervisor"
-		elif user == regional_approver:
-			current_stage = "regional_manager"
-
-	if requires_dual_stage and current_stage == "regional_manager":
-		if not _has_approved_stage_entry(order_name, area_approver):
-			frappe.throw(
-				_("Area Supervisor approval is required before Regional Manager final approval."),
-				frappe.PermissionError,
-			)
-
-	if requires_dual_stage and current_stage == "single_step" and not is_system_user:
-		frappe.throw(
-			_("Dual-stage approval is configured, but current approval stage could not be resolved."),
-			frappe.PermissionError,
-		)
+	elif is_system_user:
+		current_stage = "system_override"
 
 	if active_entry:
 		queue_doc = frappe.get_doc("BEI Approval Queue", active_entry["name"])
@@ -2057,74 +1920,13 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		queue_doc.save(ignore_permissions=True)
 		_close_order_assignments(order_name, allocated_to=assigned_approver)
 
-	is_area_stage_approval = current_stage == "area_supervisor"
-	should_forward_to_regional = bool(
-		requires_dual_stage and is_area_stage_approval and regional_approver and regional_approver != user
-	)
-
-	if should_forward_to_regional:
-		order.status = "Pending Approval"
-		order.save(ignore_permissions=True)
-
-		queue_entry = None
-		try:
-			queue_entry = _create_approval_queue_entry(
-				order=order,
-				approver=regional_approver,
-				priority="Urgent",
-			)
-		except Exception:
-			frappe.log_error(
-				f"Failed to create regional approval queue for order {order_name}",
-				"Store Order Regional Queue Error",
-			)
-		assigned_ok = False
-		if queue_entry:
-			assigned_ok = _assign_order_for_approval(
-				order_name=order_name,
-				assigned_to=regional_approver,
-				description=(
-					f"Store order {order_name} completed Area Supervisor approval. "
-					"Regional Manager final approval required."
-				),
-			)
-			_append_order_comment(
-				order_name,
-				_(
-					"Area Supervisor approval completed by {0}. Routed to Regional Manager ({1}) for final sign-off."
-				).format(user, regional_approver),
-			)
-
-		_notify_store_ops(
-			event={
-				"family": "store_order_approved",
-				"source_system": "frappe",
-				"source_ref": order_name,
-				"severity": "high",
-				"owner": regional_approver or "Regional Manager",
-				"facts": {
-					"order_name": order_name,
-					"stage": "area_supervisor_forwarded",
-					"store": order.store,
-					"approved_by": user,
-					"regional_approver": regional_approver,
-					"dashboard_url": "https://my.bebang.ph/dashboard/store-ops/order-approvals",
-				},
-			},
-			requested_space=get_chat_space(SPACE_OPS),
+	if is_fallback_override:
+		_append_order_comment(
+			order_name,
+			_("Fallback approval applied by {0}; original assigned approver was {1}.").format(
+				user, assigned_approver
+			),
 		)
-		return {
-			"success": True,
-			"status": order.status,
-			"stage": "area_supervisor",
-			"message": f"Area Supervisor approval captured. Routed to Regional Manager ({regional_approver}).",
-			"requires_regional_manager_review": True,
-			"approval_approver_source": "regional_manager",
-			"approval_assigned_approver": regional_approver,
-			"approval_queue_status": "created" if queue_entry and assigned_ok else "failed",
-			"material_request": None,
-			"dr_number": "",
-		}
 
 	order.status = "Approved"
 	order.approved_by = user
@@ -2161,22 +1963,24 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 				"stage": "approved",
 				"store": order.store,
 				"approved_by": user,
+				"approval_mode": "fallback_override" if is_fallback_override else "standard",
+				"assigned_approver": assigned_approver,
 				"material_request": mr_name,
 				"dashboard_url": "https://my.bebang.ph/dashboard/store-ops/order-approvals",
 			},
 		},
 		requested_space=store_space or get_chat_space(SPACE_OPS),
 	)
-	final_stage = "regional_manager" if requires_dual_stage else current_stage
-
 	return {
 		"success": True,
 		"message": f"Order {order_name} approved",
 		"status": order.status,
-		"stage": final_stage,
+		"stage": current_stage,
 		"approval_queue_status": "completed",
 		"requires_regional_manager_review": False,
-		"approval_approver_source": final_stage,
+		"approval_approver_source": current_stage,
+		"approval_assigned_approver": None,
+		"fallback_override": bool(is_fallback_override),
 		"material_request": mr_name,
 		"dr_number": mr_name or "",
 	}

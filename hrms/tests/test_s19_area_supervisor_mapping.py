@@ -61,7 +61,7 @@ def _install_stubs():
 	role_map = {
 		"store.supervisor@bebang.ph": ["Store Supervisor"],
 		"area.supervisor@bebang.ph": ["Area Supervisor"],
-		"edlice@bebang.ph": ["Regional Manager"],
+		"edlice@bebang.ph": ["Area Supervisor"],
 		"test.area@bebang.ph": ["Area Supervisor"],
 	}
 	role_rows = [
@@ -105,6 +105,7 @@ def _install_stubs():
 	frappe.parse_json = lambda payload: payload
 	frappe.get_meta = lambda _doctype: types.SimpleNamespace(has_field=lambda _field: False)
 	frappe.get_roles = lambda user=None: role_map.get(user or "test.supervisor@bebang.ph", [])
+
 	def _get_all(doctype, **kwargs):
 		if doctype == "Employee":
 			return employees
@@ -148,6 +149,7 @@ def _install_stubs():
 	utils.now_datetime = lambda: "2026-03-02 10:00:00"
 	utils.flt = lambda value, precision=None: float(value or 0)
 	utils.cint = lambda value: int(float(value or 0))
+	utils.get_datetime = lambda value=None: value or "2026-03-02 10:00:00"
 	utils.getdate = lambda value=None: value or "2026-03-02"
 
 	sys.modules["frappe"] = frappe
@@ -162,6 +164,8 @@ def _install_stubs():
 	sys.modules["hrms.utils"] = utils_pkg
 
 	bei_config = types.ModuleType("hrms.utils.bei_config")
+	bei_config.SPACE_OPS = "OPS"
+	bei_config.get_chat_space = lambda _space=None: "spaces/AAAAvDZdY-o"
 	bei_config.get_company = lambda: "Bebang Enterprise Inc."
 	sys.modules["hrms.utils.bei_config"] = bei_config
 
@@ -169,6 +173,21 @@ def _install_stubs():
 	scm_roles.SCM_APPROVAL_ROLES = []
 	scm_roles.check_scm_permission = lambda *args, **kwargs: None
 	sys.modules["hrms.utils.scm_roles"] = scm_roles
+
+	supply_chain_contracts = types.ModuleType("hrms.utils.supply_chain_contracts")
+	supply_chain_contracts.FINANCE_TREATMENT_INTERCOMPANY = "intercompany"
+	supply_chain_contracts.FINANCE_TREATMENT_SAME_COMPANY = "same_company"
+	supply_chain_contracts.REQUEST_SOURCE_STORE_DISPOSAL = "store_disposal"
+	supply_chain_contracts.REQUEST_SOURCE_STORE_ORDER = "store_order"
+	supply_chain_contracts.REQUEST_SOURCE_STORE_RETURN = "store_return"
+	supply_chain_contracts.infer_finance_treatment = lambda *args, **kwargs: None
+	supply_chain_contracts.resolve_material_request_contract = lambda *args, **kwargs: {}
+	supply_chain_contracts.resolve_route_source_warehouse = lambda *args, **kwargs: None
+	supply_chain_contracts.resolve_store_buyer_entity = lambda *args, **kwargs: None
+	supply_chain_contracts.resolve_warehouse_company = lambda *args, **kwargs: "Bebang Enterprise Inc."
+	supply_chain_contracts.stamp_material_request_contract = lambda *args, **kwargs: None
+	supply_chain_contracts.stamp_stock_entry_contract = lambda *args, **kwargs: None
+	sys.modules["hrms.utils.supply_chain_contracts"] = supply_chain_contracts
 
 	return db, warehouse_rows
 
@@ -198,21 +217,19 @@ def test_invalid_store_supervisor_mapping_is_replaced_by_area_supervisor():
 def test_unmapped_store_returns_none_when_no_area_supervisor_can_be_inferred():
 	store_mod, _db, _rows = _load_store_module()
 
-	# Remove branch-linked area supervisor signals so inference cannot resolve.
-	store_mod.frappe.get_all = (
-		lambda doctype, **kwargs: [] if doctype in {"Employee", "Has Role", "User"} else []
+	store_mod.frappe.get_all = lambda doctype, **kwargs: (
+		[] if doctype in {"Employee", "Has Role", "User"} else []
 	)
 
 	approver = store_mod._get_area_supervisor_for_store("UNMAPPED - BEI")
 	assert approver is None
 
 
-def test_unmapped_store_uses_regional_manager_fallback_when_area_supervisor_missing():
+def test_unmapped_store_uses_fallback_approver_when_area_supervisor_missing():
 	store_mod, _db, _rows = _load_store_module()
 
-	# Remove branch-linked employee and role signals; fallback should route to Regional Manager approver.
-	store_mod.frappe.get_all = (
-		lambda doctype, **kwargs: []
+	store_mod.frappe.get_all = lambda doctype, **kwargs: (
+		[]
 		if doctype == "Employee"
 		else (
 			[
@@ -224,14 +241,12 @@ def test_unmapped_store_uses_regional_manager_fallback_when_area_supervisor_miss
 			else []
 		)
 	)
-	store_mod.frappe.get_roles = (
-		lambda user=None: {
-			"test.supervisor@bebang.ph": ["Store Supervisor"],
-			"test.area@bebang.ph": ["Area Supervisor"],
-			"edlice@bebang.ph": ["Regional Manager"],
-		}.get(user or "test.supervisor@bebang.ph", [])
-	)
+	store_mod.frappe.get_roles = lambda user=None: {
+		"test.supervisor@bebang.ph": ["Store Supervisor"],
+		"test.area@bebang.ph": ["Area Supervisor"],
+		"edlice@bebang.ph": ["Area Supervisor"],
+	}.get(user or "test.supervisor@bebang.ph", [])
 
 	approver, source = store_mod._resolve_review_approver_for_store("UNMAPPED - BEI")
 	assert approver == "edlice@bebang.ph"
-	assert source == "regional_manager_fallback"
+	assert source == "fallback_approver"
