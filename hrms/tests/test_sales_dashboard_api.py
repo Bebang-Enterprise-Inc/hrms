@@ -251,7 +251,9 @@ def test_supabase_get_all_honors_requested_limit():
 
 def test_summary_defaults_to_empty_comparisons_for_hot_path():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_default_test")
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_default_test"
+	)
 
 	module.get_sales_dashboard_overview = lambda **kwargs: {
 		"scope": {
@@ -291,7 +293,9 @@ def test_effective_end_day_clips_to_closed_core_sales_date():
 
 def test_daily_series_treats_passing_showers_as_not_operational_rain():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_daily_series_weather_test")
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_daily_series_weather_test"
+	)
 
 	stores = [
 		{
@@ -363,7 +367,9 @@ def test_daily_series_treats_passing_showers_as_not_operational_rain():
 
 def test_weather_effects_require_minimum_comparable_history():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_effects_history_floor_test")
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_effects_history_floor_test"
+	)
 
 	scope = {
 		"selected_stores": [
@@ -419,7 +425,9 @@ def test_weather_effects_require_minimum_comparable_history():
 
 def test_daily_series_recomputes_scope_rain_severity_from_aggregate_metrics():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_scope_weather_aggregate_test")
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_scope_weather_aggregate_test"
+	)
 
 	stores = [
 		{
@@ -579,7 +587,9 @@ def test_daily_series_recomputes_scope_rain_severity_from_aggregate_metrics():
 
 def test_weather_effects_return_matched_store_day_count():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_effects_match_count_test")
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_effects_match_count_test"
+	)
 
 	scope = {
 		"selected_stores": [

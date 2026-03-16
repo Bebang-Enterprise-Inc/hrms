@@ -26,6 +26,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 import requests
+
 from supabase import Client, create_client
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -134,7 +135,7 @@ def upsert_batches(client: Client, table: str, rows: list[dict[str, Any]], on_co
 def read_store_coordinates(csv_path: str) -> list[dict[str, Any]]:
 	"""Read store coordinates and resolve location IDs from the shared mapping."""
 	stores: list[dict[str, Any]] = []
-	with open(csv_path, "r", encoding="utf-8") as handle:
+	with open(csv_path, encoding="utf-8") as handle:
 		reader = csv.DictReader(handle)
 		for row in reader:
 			if row["is_open"] != "True" or not row["latitude"] or not row["longitude"]:
@@ -159,7 +160,9 @@ def read_store_coordinates(csv_path: str) -> list[dict[str, Any]]:
 	return stores
 
 
-def group_nearby_stores(stores: list[dict[str, Any]], max_distance_km: float = 5.0) -> list[list[dict[str, Any]]]:
+def group_nearby_stores(
+	stores: list[dict[str, Any]], max_distance_km: float = 5.0
+) -> list[list[dict[str, Any]]]:
 	"""Group stores within max_distance_km of each other."""
 	groups: list[list[dict[str, Any]]] = []
 	ungrouped = stores.copy()
@@ -227,7 +230,11 @@ def fetch_weather_bundle(latitude: float, longitude: float, date_str: str) -> di
 	target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
 	days_ago = (datetime.now(tz=MANILA_TZ).date() - target_date).days
 	use_archive = days_ago > 3
-	base_url = "https://archive-api.open-meteo.com/v1/archive" if use_archive else "https://api.open-meteo.com/v1/forecast"
+	base_url = (
+		"https://archive-api.open-meteo.com/v1/archive"
+		if use_archive
+		else "https://api.open-meteo.com/v1/forecast"
+	)
 
 	hourly_fields = [
 		"temperature_2m",
@@ -285,7 +292,9 @@ def fetch_weather_bundle(latitude: float, longitude: float, date_str: str) -> di
 				"business_date": local_dt.date().isoformat(),
 				"hour_local": local_dt.hour,
 				"precipitation": _value_from_series(hourly.get("precipitation"), index),
-				"precipitation_probability": _value_from_series(hourly.get("precipitation_probability"), index),
+				"precipitation_probability": _value_from_series(
+					hourly.get("precipitation_probability"), index
+				),
 				"weather_code": _value_from_series(hourly.get("weather_code"), index),
 				"temperature_2m": _value_from_series(hourly.get("temperature_2m"), index),
 				"apparent_temperature": _value_from_series(hourly.get("apparent_temperature"), index),
@@ -324,7 +333,9 @@ def fetch_weather_bundle(latitude: float, longitude: float, date_str: str) -> di
 	}
 
 
-def upsert_daily_weather(client: Client, group: list[dict[str, Any]], date_str: str, daily_weather: dict[str, Any]) -> None:
+def upsert_daily_weather(
+	client: Client, group: list[dict[str, Any]], date_str: str, daily_weather: dict[str, Any]
+) -> None:
 	weather_description = WEATHER_CODES.get(
 		int(daily_weather["weather_code"]),
 		f"Unknown ({daily_weather['weather_code']})",
@@ -361,7 +372,9 @@ def upsert_daily_weather(client: Client, group: list[dict[str, Any]], date_str: 
 	upsert_batches(client, "daily_weather", rows, "location_id,business_date")
 
 
-def upsert_hourly_weather(client: Client, group: list[dict[str, Any]], hourly_rows: list[dict[str, Any]]) -> None:
+def upsert_hourly_weather(
+	client: Client, group: list[dict[str, Any]], hourly_rows: list[dict[str, Any]]
+) -> None:
 	rows = []
 	for store in group:
 		for row in hourly_rows:
@@ -413,7 +426,9 @@ def sync_weather(client: Client, date_str: str, warehouse_tree_path: str) -> dic
 
 	for group_index, group in enumerate(groups, start=1):
 		seed = group[0]
-		print(f"[Group {group_index}/{len(groups)}] Fetching weather at ({seed['latitude']:.4f}, {seed['longitude']:.4f})")
+		print(
+			f"[Group {group_index}/{len(groups)}] Fetching weather at ({seed['latitude']:.4f}, {seed['longitude']:.4f})"
+		)
 		print(f"   Stores in group: {', '.join(store['warehouse_name'] for store in group)}")
 
 		weather_bundle = fetch_weather_bundle(seed["latitude"], seed["longitude"], date_str)
@@ -435,7 +450,9 @@ def sync_weather(client: Client, date_str: str, warehouse_tree_path: str) -> dic
 		)
 		weather_desc = WEATHER_CODES.get(int(daily_weather["weather_code"]), "Unknown")
 
-		print(f"   Temperature: {float(daily_weather['temperature_mean']):.1f}C (max: {float(daily_weather['temperature_max']):.1f}C)")
+		print(
+			f"   Temperature: {float(daily_weather['temperature_mean']):.1f}C (max: {float(daily_weather['temperature_max']):.1f}C)"
+		)
 		print(f"   Precipitation: {float(daily_weather['precipitation']):.1f}mm")
 		print(f"   Rain hours: {int(daily_weather['rain_hours'])}")
 		print(f"   Conditions: {weather_desc}")
@@ -445,7 +462,9 @@ def sync_weather(client: Client, date_str: str, warehouse_tree_path: str) -> dic
 			upsert_daily_weather(client, group, date_str, daily_weather)
 			upsert_hourly_weather(client, group, weather_bundle["hourly"])
 			stats["successful_groups"] += 1
-			stats["weather_conditions"][business_impact] = stats["weather_conditions"].get(business_impact, 0) + len(group)
+			stats["weather_conditions"][business_impact] = stats["weather_conditions"].get(
+				business_impact, 0
+			) + len(group)
 			for store in group:
 				print(f"   [OK] {store['warehouse_name']} (location_id: {store['location_id']})")
 		except Exception as exc:

@@ -15,6 +15,7 @@ from zoneinfo import ZoneInfo
 import requests
 
 import frappe
+
 from hrms.utils.sales_location_mapping import lookup_location_id, normalize_store_key
 
 MANILA_TZ = ZoneInfo("Asia/Manila")
@@ -204,7 +205,9 @@ def _supabase_get(
 		timeout=60,
 	)
 	if not response.ok:
-		raise RuntimeError(f"Supabase GET failed for {resource}: {response.status_code} {response.text[:300]}")
+		raise RuntimeError(
+			f"Supabase GET failed for {resource}: {response.status_code} {response.text[:300]}"
+		)
 	payload = response.json()
 	if isinstance(payload, list):
 		return payload
@@ -435,9 +438,7 @@ def _resolve_allowed_store_scope(user: str | None = None) -> dict[str, Any]:
 		warehouse_rows = _get_warehouse_rows({"is_group": 0, "disabled": 0})
 	elif ROLE_AREA_SUPERVISOR in roles:
 		role_label = ROLE_AREA_SUPERVISOR
-		warehouse_rows = _get_warehouse_rows(
-			{"custom_area_supervisor": user, "is_group": 0, "disabled": 0}
-		)
+		warehouse_rows = _get_warehouse_rows({"custom_area_supervisor": user, "is_group": 0, "disabled": 0})
 	elif ROLE_STORE_SUPERVISOR in roles:
 		role_label = ROLE_STORE_SUPERVISOR
 		warehouse_rows = _find_store_supervisor_warehouse(user)
@@ -456,7 +457,9 @@ def _resolve_allowed_store_scope(user: str | None = None) -> dict[str, Any]:
 		)
 		assigned_names = [row["warehouse"] for row in assigned if row.get("warehouse")]
 		if assigned_names:
-			warehouse_rows = _get_warehouse_rows({"name": ["in", assigned_names], "is_group": 0, "disabled": 0})
+			warehouse_rows = _get_warehouse_rows(
+				{"name": ["in", assigned_names], "is_group": 0, "disabled": 0}
+			)
 		else:
 			warehouse_rows = []
 
@@ -768,7 +771,9 @@ def _build_comparisons(
 	prev_start, prev_end = _shift_range(start_day, end_day, span_days)
 	prev_rows = _query_daily_rows(prev_start, prev_end, location_ids)
 	prev = _aggregate_sales(prev_rows) if prev_rows else {}
-	last_year_rows = _query_daily_rows(start_day - timedelta(days=365), end_day - timedelta(days=365), location_ids)
+	last_year_rows = _query_daily_rows(
+		start_day - timedelta(days=365), end_day - timedelta(days=365), location_ids
+	)
 	last_year = _aggregate_sales(last_year_rows) if last_year_rows else {}
 
 	def delta_payload(baseline: dict[str, Any]) -> dict[str, Any]:
@@ -904,7 +909,12 @@ def _classify_rain_severity(
 	)
 	if total <= 0 and hours <= 0 and peak <= 0 and not storm_flag:
 		return "dry"
-	if storm_flag or peak >= RAIN_DISRUPTIVE_PEAK_MM or total >= RAIN_DISRUPTIVE_TOTAL_MM or sustained_disruption:
+	if (
+		storm_flag
+		or peak >= RAIN_DISRUPTIVE_PEAK_MM
+		or total >= RAIN_DISRUPTIVE_TOTAL_MM
+		or sustained_disruption
+	):
 		return "disruptive_rain"
 	if total > 0 and peak < RAIN_LIGHT_PEAK_MM and hours <= 2:
 		return "passing_showers"
@@ -993,7 +1003,8 @@ def _aggregate_daily_series(
 				2,
 			)
 			average_apparent_temperature_max = round(
-				sum(_to_float(item.get("apparent_temperature_max")) for item in weather_group) / coverage_count,
+				sum(_to_float(item.get("apparent_temperature_max")) for item in weather_group)
+				/ coverage_count,
 				2,
 			)
 			average_precipitation = round(
@@ -1005,11 +1016,13 @@ def _aggregate_daily_series(
 				2,
 			)
 			average_max_hourly_precipitation = round(
-				sum(_to_float(item.get("max_hourly_precipitation")) for item in weather_group) / coverage_count,
+				sum(_to_float(item.get("max_hourly_precipitation")) for item in weather_group)
+				/ coverage_count,
 				2,
 			)
 			temperature_anomaly = round(
-				sum(_to_float(item.get("temperature_anomaly_vs_28d")) for item in weather_group) / coverage_count,
+				sum(_to_float(item.get("temperature_anomaly_vs_28d")) for item in weather_group)
+				/ coverage_count,
 				2,
 			)
 			severity_counts = Counter(
@@ -1032,14 +1045,20 @@ def _aggregate_daily_series(
 			bucket.update(
 				{
 					"avg_temperature": average_temp,
-					"max_temperature": round(max(_to_float(item.get("max_temperature")) for item in weather_group), 2),
-					"min_temperature": round(min(_to_float(item.get("min_temperature")) for item in weather_group), 2),
+					"max_temperature": round(
+						max(_to_float(item.get("max_temperature")) for item in weather_group), 2
+					),
+					"min_temperature": round(
+						min(_to_float(item.get("min_temperature")) for item in weather_group), 2
+					),
 					"apparent_temperature_max": average_apparent_temperature_max,
 					"avg_wind_speed": round(
 						sum(_to_float(item.get("avg_wind_speed")) for item in weather_group) / coverage_count,
 						2,
 					),
-					"max_wind_speed": round(max(_to_float(item.get("max_wind_speed")) for item in weather_group), 2),
+					"max_wind_speed": round(
+						max(_to_float(item.get("max_wind_speed")) for item in weather_group), 2
+					),
 					"total_precipitation": average_precipitation,
 					"precipitation_hours": average_precipitation_hours,
 					"average_max_hourly_precipitation": average_max_hourly_precipitation,
@@ -1047,7 +1066,9 @@ def _aggregate_daily_series(
 						max(_to_float(item.get("max_hourly_precipitation")) for item in weather_group),
 						2,
 					),
-					"weather_description": _pick_mode([item.get("weather_description") for item in weather_group]),
+					"weather_description": _pick_mode(
+						[item.get("weather_description") for item in weather_group]
+					),
 					"business_impact": _classify_business_impact(
 						apparent_temperature_max=average_apparent_temperature_max,
 						total_precipitation=average_precipitation,
@@ -1074,7 +1095,9 @@ def _aggregate_daily_series(
 					"passing_showers_store_count": severity_counts.get("passing_showers", 0),
 					"wet_store_count": severity_counts.get("wet", 0),
 					"disruptive_rain_store_count": disruptive_rain_store_count,
-					"disruptive_rain_store_share_pct": _share_pct(disruptive_rain_store_count, coverage_count),
+					"disruptive_rain_store_share_pct": _share_pct(
+						disruptive_rain_store_count, coverage_count
+					),
 				}
 			)
 		else:
@@ -1111,9 +1134,13 @@ def _aggregate_daily_series(
 				}
 			)
 		bucket["average_guest_check"] = (
-			round(bucket["net_sales_without_vat"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
+			round(bucket["net_sales_without_vat"] / bucket["transactions"], 2)
+			if bucket["transactions"]
+			else 0.0
 		)
-		bucket["cups_per_transaction"] = round(bucket["cups_sold"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
+		bucket["cups_per_transaction"] = (
+			round(bucket["cups_sold"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
+		)
 		bucket.update(calendar)
 		for key in (
 			"gross_sales",
@@ -1227,7 +1254,9 @@ def _is_ops_scope_calibrated(
 	)
 
 
-def _build_mode_state(view_mode: str, start_day: date, end_day: date, scope: dict[str, Any]) -> dict[str, Any]:
+def _build_mode_state(
+	view_mode: str, start_day: date, end_day: date, scope: dict[str, Any]
+) -> dict[str, Any]:
 	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
 	is_calibrated = _is_ops_scope_calibrated(
 		view_mode,
@@ -1302,7 +1331,8 @@ def _build_store_rankings(
 			{
 				"location_id": location_id,
 				"warehouse": store_lookup.get(location_id, {}).get("warehouse"),
-				"warehouse_name": store_lookup.get(location_id, {}).get("warehouse_name") or row.get("store_name"),
+				"warehouse_name": store_lookup.get(location_id, {}).get("warehouse_name")
+				or row.get("store_name"),
 				"gross_sales": 0.0,
 				"net_sales_without_vat": 0.0,
 				"cups_sold": 0,
@@ -1329,7 +1359,9 @@ def _build_store_rankings(
 		row["average_guest_check"] = (
 			round(row["net_sales_without_vat"] / row["transactions"], 2) if row["transactions"] else 0.0
 		)
-		row["cups_per_transaction"] = round(row["cups_sold"] / row["transactions"], 2) if row["transactions"] else 0.0
+		row["cups_per_transaction"] = (
+			round(row["cups_sold"] / row["transactions"], 2) if row["transactions"] else 0.0
+		)
 	return sorted(by_location.values(), key=lambda row: row["gross_sales"], reverse=True)
 
 
@@ -1409,7 +1441,12 @@ def _build_weather_effects(
 		metrics = _sales_row_metrics(row)
 		calendar = calendar_map.get(metrics["business_date"], {})
 		context_candidates = [
-			(metrics["location_id"], calendar.get("day_of_week"), bool(calendar.get("is_holiday")), bool(calendar.get("is_weekend"))),
+			(
+				metrics["location_id"],
+				calendar.get("day_of_week"),
+				bool(calendar.get("is_holiday")),
+				bool(calendar.get("is_weekend")),
+			),
 			(metrics["location_id"], calendar.get("day_of_week"), bool(calendar.get("is_weekend"))),
 			(metrics["location_id"], calendar.get("day_of_week")),
 		]
@@ -1422,11 +1459,19 @@ def _build_weather_effects(
 			continue
 
 		recent_candidates = candidates[:8]
-		expected_net += sum(item["net_sales_without_vat"] for item in recent_candidates) / len(recent_candidates)
-		expected_transactions += sum(item["transactions"] for item in recent_candidates) / len(recent_candidates)
+		expected_net += sum(item["net_sales_without_vat"] for item in recent_candidates) / len(
+			recent_candidates
+		)
+		expected_transactions += sum(item["transactions"] for item in recent_candidates) / len(
+			recent_candidates
+		)
 		expected_cups += sum(item["cups_sold"] for item in recent_candidates) / len(recent_candidates)
-		expected_pickup += sum(item["pickup_sales_without_vat"] for item in recent_candidates) / len(recent_candidates)
-		expected_delivery += sum(item["delivery_sales_without_vat"] for item in recent_candidates) / len(recent_candidates)
+		expected_pickup += sum(item["pickup_sales_without_vat"] for item in recent_candidates) / len(
+			recent_candidates
+		)
+		expected_delivery += sum(item["delivery_sales_without_vat"] for item in recent_candidates) / len(
+			recent_candidates
+		)
 		matched_days += 1
 
 	if matched_days == 0:
@@ -1452,7 +1497,9 @@ def _build_weather_effects(
 		"available": True,
 		"expected_net_sales_without_vat": round(expected_net, 2),
 		"actual_vs_expected_net_sales_delta": net_delta,
-		"actual_vs_expected_net_sales_delta_pct": round((net_delta / expected_net) * 100, 2) if expected_net else None,
+		"actual_vs_expected_net_sales_delta_pct": round((net_delta / expected_net) * 100, 2)
+		if expected_net
+		else None,
 		"actual_vs_expected_transactions_delta": round(actual_transactions - expected_transactions, 2),
 		"actual_vs_expected_cups_delta": round(actual_cups - expected_cups, 2),
 		"channel_mix_shift_vs_baseline": {
