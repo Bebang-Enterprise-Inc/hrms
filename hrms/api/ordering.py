@@ -223,16 +223,23 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 	filter_date = date or today()
 	current_user = frappe.session.user
 	current_roles = set(frappe.get_roles(current_user))
+	from hrms.api.store import _get_order_approval_fallback_user
 
 	conditions = ["so.order_date = %(date)s", "so.docstatus < 2"]
-	params = {"date": filter_date, "current_user": current_user}
+	fallback_approver = _get_order_approval_fallback_user()
+	params = {
+		"date": filter_date,
+		"current_user": current_user,
+		"fallback_user": fallback_approver or "",
+	}
 
 	if status:
 		conditions.append("so.status = %(status)s")
 		params["status"] = status
 
-	admin_viewer_roles = {"System Manager", "Administrator", "HR Manager", "Warehouse Manager"}
-	is_admin_viewer = bool(current_roles.intersection(admin_viewer_roles))
+	admin_viewer_roles = {"System Manager", "Administrator", "Warehouse Manager"}
+	is_fallback_viewer = bool(fallback_approver and current_user == fallback_approver)
+	is_admin_viewer = bool(current_roles.intersection(admin_viewer_roles)) or is_fallback_viewer
 	if not is_admin_viewer:
 		conditions.append(
 			"(so.status != 'Pending Approval' OR pending_queue.assigned_approver = %(current_user)s)"
@@ -256,10 +263,9 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 			pending_queue.assigned_approver AS current_approver,
 			pending_queue.pending_since AS pending_since,
 			CASE
-				WHEN so.is_emergency = 1
-					AND pending_queue.assigned_approver IS NOT NULL
-					AND pending_queue.assigned_approver != COALESCE(wh.custom_area_supervisor, wh_parent.custom_area_supervisor)
-					THEN 'Regional Manager Review'
+				WHEN %(fallback_user)s != ''
+					AND pending_queue.assigned_approver = %(fallback_user)s
+					THEN 'Fallback Approval Review'
 				ELSE 'Area Supervisor Review'
 			END AS approval_stage,
 			COUNT(soi.name) as items_count,
