@@ -7,6 +7,8 @@ from frappe.utils import add_days, date_diff, getdate, strip_html
 
 from erpnext.setup.doctype.employee.employee import get_holiday_list_for_employee
 
+from hrms.api.profile_policy import is_reports_to_candidate, normalize_text
+
 SUPPORTED_FIELD_TYPES = [
 	"Link",
 	"Select",
@@ -76,6 +78,112 @@ def get_all_employees() -> list[dict]:
 		],
 		limit=999999,
 	)
+
+
+@frappe.whitelist()
+def search_reports_to_candidates(
+	query: str | None = None,
+	branch: str | None = None,
+	limit: int = 30,
+	selected_employee: str | None = None,
+) -> list[dict]:
+	"""Search active supervisor/manager/executive records for reports_to pickers."""
+	try:
+		limit = max(1, min(int(limit or 30), 50))
+	except Exception:
+		limit = 30
+
+	rows = frappe.get_all(
+		"Employee",
+		filters={"status": "Active"},
+		fields=[
+			"name",
+			"employee_name",
+			"first_name",
+			"last_name",
+			"designation",
+			"department",
+			"branch",
+			"user_id",
+			"image",
+		],
+		order_by="employee_name asc",
+		limit_page_length=2000,
+	)
+
+	branch_norm = normalize_text(branch)
+	query_norm = normalize_text(query)
+	candidates = [row for row in rows if is_reports_to_candidate(row)]
+
+	if query_norm:
+		candidates = [
+			row
+			for row in candidates
+			if query_norm in normalize_text(row.get("employee_name"))
+			or query_norm in normalize_text(row.get("first_name"))
+			or query_norm in normalize_text(row.get("last_name"))
+			or query_norm in normalize_text(row.get("designation"))
+			or query_norm in normalize_text(row.get("user_id"))
+		]
+
+	def _priority(row: dict) -> tuple[int, int, str]:
+		designation = normalize_text(row.get("designation"))
+		department = normalize_text(row.get("department"))
+		row_branch = normalize_text(row.get("branch"))
+
+		if any(keyword in designation for keyword in ("CEO", "PRESIDENT", "FOUNDER", "OWNER", "CHAIRMAN")):
+			role_rank = 0
+		elif (
+			"EXECUTIVE" in department or "CHIEF" in designation or "VP" in designation or "AVP" in designation
+		):
+			role_rank = 1
+		elif "AREA SUPERVISOR" in designation or "AREA MANAGER" in designation:
+			role_rank = 2
+		elif "MANAGER" in designation or "HEAD" in designation or "DIRECTOR" in designation:
+			role_rank = 3
+		else:
+			role_rank = 4
+
+		branch_rank = 0 if branch_norm and row_branch == branch_norm else 1
+		return (role_rank, branch_rank, normalize_text(row.get("employee_name")))
+
+	candidates.sort(key=_priority)
+
+	selected_row = None
+	if selected_employee:
+		selected_row = next((row for row in rows if row.get("name") == selected_employee), None)
+		if selected_row and not is_reports_to_candidate(selected_row):
+			selected_row = None
+
+	results = []
+	seen = set()
+
+	if selected_row:
+		seen.add(selected_row.get("name"))
+		results.append(selected_row)
+
+	for row in candidates:
+		name = row.get("name")
+		if not name or name in seen:
+			continue
+		seen.add(name)
+		results.append(row)
+		if len(results) >= limit:
+			break
+
+	return [
+		{
+			"name": row.get("name"),
+			"employee_id": row.get("name"),
+			"employee_name": row.get("employee_name"),
+			"designation": row.get("designation") or "",
+			"department": row.get("department") or "",
+			"branch": row.get("branch") or "",
+			"user_id": row.get("user_id") or "",
+			"image": row.get("image") or "",
+		}
+		for row in results
+	]
 
 
 # HR Settings

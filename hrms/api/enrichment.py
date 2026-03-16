@@ -8,6 +8,8 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime, today
 
+from hrms.api.contact_validation import validate_email_address, validate_ph_mobile_number
+
 # ============================================================================
 # Data Enrichment V2 - Field Classification
 # ============================================================================
@@ -30,6 +32,9 @@ OPEN_ENRICHMENT_REQUEST_STATUSES = [
 	"Escalated",
 	"Revision Requested",
 ]
+
+EMAIL_FIELDS = {"company_email", "personal_email"}
+PHONE_FIELDS = {"cell_number", "custom_work_phone", "emergency_phone_number"}
 
 # Fields that require HR approval (grouped enrichment submission)
 HR_APPROVAL_FIELDS = [
@@ -578,6 +583,18 @@ def update_self_service_field(employee: str, field_name: str, value: str) -> dic
 	# Validate field is self-service
 	if field_name not in SELF_SERVICE_FIELDS:
 		frappe.throw(_("Field '{0}' requires HR approval. Please submit an edit request.").format(field_name))
+
+	value = str(value or "").strip()
+	if field_name in EMAIL_FIELDS:
+		email_validation = validate_email_address(value)
+		if not email_validation["valid"]:
+			frappe.throw(_(email_validation["error"]))
+		value = email_validation["normalized"]
+	elif field_name in PHONE_FIELDS:
+		phone_validation = validate_ph_mobile_number(value)
+		if not phone_validation["valid"]:
+			frappe.throw(_(phone_validation["error"]))
+		value = phone_validation["normalized"]
 
 	# Validate user can edit this employee (must be own record)
 	user = frappe.session.user
