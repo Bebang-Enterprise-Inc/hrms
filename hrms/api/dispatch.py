@@ -119,7 +119,9 @@ def _resolve_or_create_departure_vehicle(
 	if vehicle_label:
 		existing_name = frappe.db.get_value("BEI Vehicle", vehicle_label, "name")
 		if existing_name:
-			existing_plate = frappe.db.get_value("BEI Vehicle", existing_name, "vehicle_plate") or vehicle_plate
+			existing_plate = (
+				frappe.db.get_value("BEI Vehicle", existing_name, "vehicle_plate") or vehicle_plate
+			)
 			return str(existing_name), str(existing_plate or "")
 
 	if vehicle_plate:

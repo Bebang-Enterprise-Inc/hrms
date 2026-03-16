@@ -744,8 +744,7 @@ def _get_inventory_warehouse_catalog() -> list[dict]:
 		catalog.append(
 			{
 				"warehouse": warehouse,
-				"warehouse_name": frappe.db.get_value("Warehouse", warehouse, "warehouse_name")
-				or warehouse,
+				"warehouse_name": frappe.db.get_value("Warehouse", warehouse, "warehouse_name") or warehouse,
 				"department": row.department,
 			}
 		)
@@ -809,9 +808,7 @@ def _get_inventory_scope_context() -> dict:
 			allowed_rows = [
 				{
 					"warehouse": default_warehouse,
-					"warehouse_name": frappe.db.get_value(
-						"Warehouse", default_warehouse, "warehouse_name"
-					)
+					"warehouse_name": frappe.db.get_value("Warehouse", default_warehouse, "warehouse_name")
 					or default_warehouse,
 					"department": None,
 				}
@@ -1691,9 +1688,7 @@ def get_multi_warehouse_summary():
 			"warehouse": row["warehouse"],
 			"warehouse_name": row["warehouse_name"],
 			"total_items": cint(getattr(summary_map.get(row["warehouse"]), "total_items", 0) or 0),
-			"low_stock_count": cint(
-				getattr(summary_map.get(row["warehouse"]), "low_stock_count", 0) or 0
-			),
+			"low_stock_count": cint(getattr(summary_map.get(row["warehouse"]), "low_stock_count", 0) or 0),
 			"last_updated": getattr(summary_map.get(row["warehouse"]), "last_updated", None),
 		}
 		for row in warehouse_rows
@@ -1739,7 +1734,9 @@ def get_network_inventory_overview(
 		conditions.append("(b.item_code LIKE %(query)s OR i.item_name LIKE %(query)s)")
 
 	if not _coerce_flag(include_zero_stock):
-		conditions.append("(b.actual_qty > 0 OR b.reserved_qty > 0 OR COALESCE(ir.warehouse_reorder_level, 0) > 0)")
+		conditions.append(
+			"(b.actual_qty > 0 OR b.reserved_qty > 0 OR COALESCE(ir.warehouse_reorder_level, 0) > 0)"
+		)
 
 	where_clause = " AND ".join(conditions)
 
