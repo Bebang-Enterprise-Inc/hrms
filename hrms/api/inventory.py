@@ -17,9 +17,17 @@ from hrms.utils.inventory_visibility import (
 	FACILITY_MODE_ALL,
 	FACILITY_MODE_STORES,
 	FACILITY_MODE_WAREHOUSES,
+)
+from hrms.utils.inventory_visibility import (
 	get_inventory_facility_catalog as _load_inventory_facility_catalog,
+)
+from hrms.utils.inventory_visibility import (
 	get_inventory_scope_context as _load_inventory_scope_context,
+)
+from hrms.utils.inventory_visibility import (
 	resolve_inventory_requested_facilities as _resolve_inventory_requested_facilities,
+)
+from hrms.utils.inventory_visibility import (
 	resolve_inventory_requested_warehouses as _scope_resolve_requested_warehouses,
 )
 from hrms.utils.scm_roles import SCM_INVENTORY_ROLES, SCM_STOCK_UPDATE_ROLES
@@ -1691,7 +1699,9 @@ def get_inventory_matrix(
 		values["query"] = f"%{query.strip()}%"
 		conditions.append("(b.item_code LIKE %(query)s OR i.item_name LIKE %(query)s)")
 
-	conditions.append("(b.actual_qty <> 0 OR b.reserved_qty <> 0 OR COALESCE(ir.warehouse_reorder_level, 0) > 0)")
+	conditions.append(
+		"(b.actual_qty <> 0 OR b.reserved_qty <> 0 OR COALESCE(ir.warehouse_reorder_level, 0) > 0)"
+	)
 	where_clause = " AND ".join(conditions)
 
 	base_rows = frappe.db.sql(
@@ -1719,7 +1729,9 @@ def get_inventory_matrix(
 		as_dict=True,
 	)
 
-	item_codes = sorted({str(row.get("item_code") or "").strip() for row in base_rows if row.get("item_code")})
+	item_codes = sorted(
+		{str(row.get("item_code") or "").strip() for row in base_rows if row.get("item_code")}
+	)
 	if not item_codes:
 		return {
 			"summary": {
@@ -1867,9 +1879,13 @@ def get_inventory_matrix(
 			flt(item["total_available"]) + flt(item["inbound_7d"]) - flt(item["projected_demand_7d"]),
 			2,
 		)
-		item["days_cover"] = round(flt(item["total_available"]) / total_demand_daily, 2) if total_demand_daily > 0 else 999.0
+		item["days_cover"] = (
+			round(flt(item["total_available"]) / total_demand_daily, 2) if total_demand_daily > 0 else 999.0
+		)
 		item["days_to_stockout"] = item["days_cover"]
-		item["risk_level"] = "Critical" if item["status"] == "Critical" else "Moderate" if item["status"] == "Low" else "Low"
+		item["risk_level"] = (
+			"Critical" if item["status"] == "Critical" else "Moderate" if item["status"] == "Low" else "Low"
+		)
 		for facility in selected_facilities:
 			item["facility_qty_map"].setdefault(
 				facility["warehouse"],

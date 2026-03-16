@@ -6,6 +6,7 @@ from typing import Any
 import frappe
 
 from hrms.services.sheets_receiver.transforms import INVENTORY_SUMMARY_WAREHOUSE_MAP
+from hrms.utils.store_inventory_shadow_sync import load_store_registry
 from hrms.utils.supply_chain_contracts import (
 	CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
 	LEGACY_COMMISSARY_OPERATION_WAREHOUSES,
@@ -14,7 +15,6 @@ from hrms.utils.supply_chain_contracts import (
 	normalize_lookup_key,
 	strip_company_suffix,
 )
-from hrms.utils.store_inventory_shadow_sync import load_store_registry
 
 FACILITY_MODE_WAREHOUSES = "warehouses"
 FACILITY_MODE_STORES = "stores"
@@ -168,7 +168,9 @@ def _store_lookup() -> dict[str, dict[str, Any]]:
 		source_mode = "mirrored_sheet" if config.sheet_sync_enabled and state == "shadow_sync" else "erp_live"
 		last_sync_at = config.last_success_at or config.last_inventory_date or None
 		payload = {
-			"store_name": config.store_name or config.warehouse_name or strip_company_suffix(config.warehouse_docname),
+			"store_name": config.store_name
+			or config.warehouse_name
+			or strip_company_suffix(config.warehouse_docname),
 			"warehouse_docname": config.warehouse_docname,
 			"source_mode": source_mode,
 			"freshness_status": _freshness_status(source_mode, last_sync_at),
@@ -189,7 +191,9 @@ def _warehouse_definition_lookup() -> dict[str, dict[str, Any]]:
 			lookup[normalize_lookup_key(key)] = entry
 	for short_code, label in INVENTORY_SUMMARY_WAREHOUSE_MAP.items():
 		lookup[normalize_lookup_key(short_code)] = next(
-			entry for entry in KNOWN_WAREHOUSE_FACILITIES if entry["display_label"] == ("Shaw BLVD" if short_code == "SHAW" else label)
+			entry
+			for entry in KNOWN_WAREHOUSE_FACILITIES
+			if entry["display_label"] == ("Shaw BLVD" if short_code == "SHAW" else label)
 		)
 	return lookup
 
@@ -291,7 +295,10 @@ def get_inventory_facility_catalog() -> list[dict[str, Any]]:
 				display_order = warehouse_meta["display_order"]
 			else:
 				joined_keys = " ".join(sorted(keys))
-				if any(token in joined_keys for token in ("storage", "logistics", "cold", "jentec", "pinnacle", "3md", "rcs")):
+				if any(
+					token in joined_keys
+					for token in ("storage", "logistics", "cold", "jentec", "pinnacle", "3md", "rcs")
+				):
 					facility_kind = FACILITY_KIND_WAREHOUSE_3PL_HUB
 					display_label = warehouse_name
 					display_order = 800
@@ -309,7 +316,9 @@ def get_inventory_facility_catalog() -> list[dict[str, Any]]:
 
 		store_meta = next((store_lookup[key] for key in keys if key in store_lookup), {})
 		source_mode = store_meta.get("source_mode") if facility_kind == FACILITY_KIND_STORE else "erp_live"
-		freshness_status = store_meta.get("freshness_status") if facility_kind == FACILITY_KIND_STORE else "current"
+		freshness_status = (
+			store_meta.get("freshness_status") if facility_kind == FACILITY_KIND_STORE else "current"
+		)
 		last_sync_at = store_meta.get("last_sync_at") if facility_kind == FACILITY_KIND_STORE else None
 		area_user = str(row.get("custom_area_supervisor") or "").strip()
 		area_label = area_lookup.get(area_user) or area_user or None
@@ -321,7 +330,9 @@ def get_inventory_facility_catalog() -> list[dict[str, Any]]:
 				"warehouse_docname": warehouse,
 				"source_warehouse_name": warehouse_name,
 				"facility_kind": facility_kind,
-				"facility_mode": FACILITY_MODE_STORES if facility_kind == FACILITY_KIND_STORE else FACILITY_MODE_WAREHOUSES,
+				"facility_mode": FACILITY_MODE_STORES
+				if facility_kind == FACILITY_KIND_STORE
+				else FACILITY_MODE_WAREHOUSES,
 				"display_order": display_order,
 				"company": row.get("company"),
 				"area_label": area_label,
@@ -426,7 +437,10 @@ def resolve_inventory_requested_warehouses(scope: dict[str, Any], warehouse: str
 		if requested.intersection(_lookup_keys(candidate.get("warehouse"), candidate.get("warehouse_name"))):
 			return [candidate["warehouse"]]
 
-	frappe.throw(frappe._("You do not have inventory access to warehouse {0}").format(warehouse), frappe.PermissionError)
+	frappe.throw(
+		frappe._("You do not have inventory access to warehouse {0}").format(warehouse),
+		frappe.PermissionError,
+	)
 	return []
 
 
@@ -459,5 +473,7 @@ def resolve_inventory_requested_facilities(
 		if requested.intersection(_lookup_keys(row.get("warehouse"), row.get("warehouse_name")))
 	]
 	if not selected:
-		frappe.throw(frappe._("No accessible facilities matched the requested selection."), frappe.PermissionError)
+		frappe.throw(
+			frappe._("No accessible facilities matched the requested selection."), frappe.PermissionError
+		)
 	return selected
