@@ -1213,7 +1213,7 @@ def get_my_delivery(date: str | None = None):
 	# Find trip with a stop at user's warehouse
 	trips = frappe.get_all(
 		"BEI Distribution Trip",
-		filters={"trip_date": trip_date, "status": ["in", ["Preparing", "In Transit", "Partial"]]},
+		filters={"trip_date": trip_date, "status": ["!=", "Cancelled"]},
 		fields=["name"],
 	)
 

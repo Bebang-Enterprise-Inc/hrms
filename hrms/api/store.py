@@ -2275,15 +2275,15 @@ def _create_mr_for_store_order(order):
 
 
 @frappe.whitelist()
-def get_expected_deliveries(store: str | None = None) -> dict:
+def get_expected_deliveries(store: str | None = None, date: str | None = None) -> dict:
 	"""
-	Get trips expected to deliver to this store today.
+	Get trips expected to deliver to this store on the selected date.
 	Returns distribution trips with this store as a stop.
 	"""
 	if not store:
 		return {"deliveries": []}
 
-	today = nowdate()
+	selected_date = str(getdate(date)) if date else nowdate()
 
 	# Find trips with this store as a stop
 	trips = frappe.db.sql(
@@ -2296,10 +2296,10 @@ def get_expected_deliveries(store: str | None = None) -> dict:
         JOIN `tabBEI Trip Stop` s ON s.parent = t.name
         WHERE s.store = %s
         AND t.trip_date = %s
-        AND t.status IN ('Preparing', 'In Transit')
+        AND t.status != 'Cancelled'
         ORDER BY t.trip_date, s.stop_order
     """,
-		(store, today),
+		(store, selected_date),
 		as_dict=True,
 	)
 
