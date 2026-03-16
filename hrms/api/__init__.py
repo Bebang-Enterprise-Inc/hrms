@@ -125,11 +125,7 @@ def search_reports_to_candidates(
 			fields=["name", "full_name", "first_name", "last_name"],
 			limit_page_length=len(user_ids),
 		)
-		user_map = {
-			row.get("name"): row
-			for row in user_rows
-			if row.get("name")
-		}
+		user_map = {row.get("name"): row for row in user_rows if row.get("name")}
 
 	branch_norm = normalize_text(branch)
 	candidates = [row for row in rows if is_reports_to_candidate(row)]
@@ -186,10 +182,7 @@ def search_reports_to_candidates(
 		if len(results) >= limit:
 			break
 
-	return [
-		_build_reports_to_candidate_response(row, user_map.get(row.get("user_id")))
-		for row in results
-	]
+	return [_build_reports_to_candidate_response(row, user_map.get(row.get("user_id"))) for row in results]
 
 
 def _build_reports_to_candidate_response(employee_row: dict, user_row: dict | None = None) -> dict:

@@ -117,10 +117,7 @@ def test_reports_to_query_matches_linked_user_full_name():
 
 def test_reports_to_display_name_prefers_user_full_name_for_admin_aliases():
 	assert resolve_reports_to_display_name("Sam Admin", "Sam Karazi") == "Sam Karazi"
-	assert (
-		resolve_reports_to_display_name("CARINGAL, RONALD H.", "Ronald Caringal")
-		== "CARINGAL, RONALD H."
-	)
+	assert resolve_reports_to_display_name("CARINGAL, RONALD H.", "Ronald Caringal") == "CARINGAL, RONALD H."
 
 
 def test_enrichment_employee_row_fetches_requested_snapshot_fields(monkeypatch):
