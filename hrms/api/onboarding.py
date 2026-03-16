@@ -141,6 +141,15 @@ INPUT_TO_EMPLOYEE_FIELD_MAP = {
     "attachments": None,
     "selfie_file_url": None,
 }
+ENRICHMENT_SNAPSHOT_EMPLOYEE_FIELDS = sorted(
+    {
+        "name",
+        "employee_name",
+        "branch",
+        "designation",
+        *[field_name for field_name in INPUT_TO_EMPLOYEE_FIELD_MAP.values() if field_name],
+    }
+)
 
 
 def _json_dumps(value: Any) -> str:
@@ -803,7 +812,7 @@ def submit_enrichment_update(
     employee_row = frappe.db.get_value(
         "Employee",
         employee,
-        ["name", "employee_name", "branch", "designation"],
+        ENRICHMENT_SNAPSHOT_EMPLOYEE_FIELDS,
         as_dict=True,
     ) or {}
     meta = _build_enrichment_submission_meta(
