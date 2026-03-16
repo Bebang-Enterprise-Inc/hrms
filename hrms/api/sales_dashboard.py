@@ -8,15 +8,14 @@ import json
 import os
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
-from functools import lru_cache
-from pathlib import Path
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
 
 import requests
 
 import frappe
-from frappe import _
+from hrms.utils.sales_location_mapping import lookup_location_id, normalize_store_key
 
 MANILA_TZ = ZoneInfo("Asia/Manila")
 ROLE_SALES_STAKEHOLDER = "Sales Stakeholder"
@@ -45,10 +44,12 @@ OPS_ALLOWED_ROLES = {
 }
 ALLOWED_ROLES = ALL_STORE_ROLES | {ROLE_AREA_SUPERVISOR, ROLE_STORE_SUPERVISOR, ROLE_SALES_STAKEHOLDER}
 CALENDAR_SOURCE = "Company.default_holiday_list"
-MAPPING_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "sales_dashboard_store_mapping.csv"
 SUPABASE_DAILY_VIEW = "sales_dashboard_daily_store_metrics"
+SUPABASE_WEATHER_VIEW = "sales_dashboard_weather_daily_features"
 SALES_DASHBOARD_CACHE_TTL = 300
-SALES_DASHBOARD_FRESHNESS_CACHE_TTL = 900
+SALES_DASHBOARD_FRESHNESS_CACHE_TTL = 300
+WEATHER_EFFECT_HISTORY_LOOKBACK_DAYS = 210
+WEATHER_EFFECT_MIN_COMPARABLE_HISTORY_DAYS = 56
 
 DAILY_METRIC_SELECT = ",".join(
 	[
@@ -84,14 +85,31 @@ WEATHER_SELECT = ",".join(
 	[
 		"location_id",
 		"business_date",
+		"avg_humidity",
 		"max_temperature",
 		"min_temperature",
 		"avg_temperature",
+		"apparent_temperature_max",
+		"avg_wind_speed",
+		"avg_hourly_wind_speed",
+		"max_wind_speed",
 		"total_precipitation",
+		"precipitation_hours",
+		"max_hourly_precipitation",
 		"weather_description",
 		"weather_code",
 		"is_rainy",
+		"hourly_backed",
+		"hourly_points",
+		"temperature_anomaly_vs_28d",
+		"temperature_state",
+		"rain_severity",
+		"wind_disruption_level",
+		"storm_flag",
+		"service_window_weather_summary_lunch",
+		"service_window_weather_summary_dinner",
 		"business_impact",
+		"synced_at",
 	]
 )
 
@@ -179,9 +197,7 @@ def _supabase_get(
 		timeout=60,
 	)
 	if not response.ok:
-		raise RuntimeError(
-			f"Supabase GET failed for {resource}: {response.status_code} {response.text[:300]}"
-		)
+		raise RuntimeError(f"Supabase GET failed for {resource}: {response.status_code} {response.text[:300]}")
 	payload = response.json()
 	if isinstance(payload, list):
 		return payload
@@ -204,40 +220,20 @@ def _merge_params(
 	return merged
 
 
-def _get_param_value(params: dict[str, Any] | list[tuple[str, Any]] | None, key: str) -> Any:
-	if params is None:
-		return None
-	if isinstance(params, dict):
-		return params.get(key)
-	for existing_key, value in reversed(params):
-		if existing_key == key:
-			return value
-	return None
-
-
 def _supabase_get_all(
 	resource: str,
 	params: dict[str, Any] | list[tuple[str, Any]] | None = None,
 	page_size: int = 1000,
 ) -> list[dict[str, Any]]:
 	rows: list[dict[str, Any]] = []
-	offset = int(_get_param_value(params, "offset") or 0)
-	requested_limit_value = _get_param_value(params, "limit")
-	requested_limit = int(requested_limit_value) if requested_limit_value is not None else None
+	offset = 0
 	while True:
-		remaining = requested_limit - len(rows) if requested_limit is not None else page_size
-		if remaining <= 0:
-			break
-		current_page_size = min(page_size, remaining)
-		page_params = _merge_params(
-			params,
-			[("limit", str(current_page_size)), ("offset", str(offset))],
-		)
+		page_params = _merge_params(params, [("limit", str(page_size)), ("offset", str(offset))])
 		page = _supabase_get(resource, page_params)
 		rows.extend(page)
-		if len(page) < current_page_size:
+		if len(page) < page_size:
 			break
-		offset += current_page_size
+		offset += page_size
 	return rows
 
 
@@ -284,36 +280,6 @@ def _sales_dashboard_cache_key(
 	return "sales_dashboard:" + ":".join(parts)
 
 
-def _normalize_store_key(value: str | None) -> str:
-	text = str(value or "").strip().lower().replace("’", "'")
-	text = " ".join(text.split())
-	return text
-
-
-@lru_cache(maxsize=1)
-def _load_store_mapping() -> dict[str, dict[str, Any]]:
-	mapping: dict[str, dict[str, Any]] = {}
-	with MAPPING_PATH.open("r", encoding="utf-8", newline="") as handle:
-		reader = csv.DictReader(handle)
-		for row in reader:
-			row["location_id"] = int(row["location_id"])
-			for key in (
-				_normalize_store_key(row.get("warehouse_name")),
-				_normalize_store_key(row.get("warehouse_record_name")),
-			):
-				if key:
-					mapping[key] = row
-	return mapping
-
-
-def _lookup_location_id(warehouse_name: str | None, warehouse_record_name: str | None = None) -> int | None:
-	mapping = _load_store_mapping()
-	for key in (_normalize_store_key(warehouse_record_name), _normalize_store_key(warehouse_name)):
-		if key and key in mapping:
-			return int(mapping[key]["location_id"])
-	return None
-
-
 def _to_float(value: Any) -> float:
 	try:
 		return float(value or 0)
@@ -328,10 +294,9 @@ def _to_int(value: Any) -> int:
 		return 0
 
 
-def _to_bool(value: Any) -> bool:
-	if isinstance(value, bool):
-		return value
-	return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+def _round_half_up(value: float, places: int = 2) -> float:
+	quant = Decimal("1").scaleb(-places)
+	return float(Decimal(str(value or 0)).quantize(quant, rounding=ROUND_HALF_UP))
 
 
 def _coerce_date(value: str | date | datetime | None, default: date | None = None) -> date:
@@ -393,7 +358,7 @@ def _get_warehouse_rows(filters: dict[str, Any] | None = None) -> list[dict[str,
 def _filter_sales_warehouses(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 	filtered = []
 	for row in rows:
-		location_id = _lookup_location_id(row.get("warehouse_name"), row.get("name"))
+		location_id = lookup_location_id(row.get("warehouse_name"), row.get("name"))
 		if not location_id:
 			continue
 		filtered.append(
@@ -419,12 +384,12 @@ def _find_store_supervisor_warehouse(user: str) -> list[dict[str, Any]]:
 
 def _resolve_allowed_store_scope(user: str | None = None) -> dict[str, Any]:
 	if _guest_user():
-		frappe.throw(_("Not authenticated"), _permission_error_class())
+		frappe.throw("Not authenticated", _permission_error_class())
 
 	user = user or _current_user()
 	roles = _get_roles(user)
 	if not roles.intersection(ALLOWED_ROLES):
-		frappe.throw(_("You do not have access to the Sales Dashboard."), _permission_error_class())
+		frappe.throw("You do not have access to the Sales Dashboard.", _permission_error_class())
 
 	role_label = None
 	warehouse_rows: list[dict[str, Any]] = []
@@ -443,7 +408,9 @@ def _resolve_allowed_store_scope(user: str | None = None) -> dict[str, Any]:
 		warehouse_rows = _get_warehouse_rows({"is_group": 0, "disabled": 0})
 	elif ROLE_AREA_SUPERVISOR in roles:
 		role_label = ROLE_AREA_SUPERVISOR
-		warehouse_rows = _get_warehouse_rows({"custom_area_supervisor": user, "is_group": 0, "disabled": 0})
+		warehouse_rows = _get_warehouse_rows(
+			{"custom_area_supervisor": user, "is_group": 0, "disabled": 0}
+		)
 	elif ROLE_STORE_SUPERVISOR in roles:
 		role_label = ROLE_STORE_SUPERVISOR
 		warehouse_rows = _find_store_supervisor_warehouse(user)
@@ -462,9 +429,7 @@ def _resolve_allowed_store_scope(user: str | None = None) -> dict[str, Any]:
 		)
 		assigned_names = [row["warehouse"] for row in assigned if row.get("warehouse")]
 		if assigned_names:
-			warehouse_rows = _get_warehouse_rows(
-				{"name": ["in", assigned_names], "is_group": 0, "disabled": 0}
-			)
+			warehouse_rows = _get_warehouse_rows({"name": ["in", assigned_names], "is_group": 0, "disabled": 0})
 		else:
 			warehouse_rows = []
 
@@ -489,13 +454,13 @@ def _selected_scope(requested_stores: list[str], user: str | None = None) -> dic
 	allowed_keys: dict[str, dict[str, Any]] = {}
 	for store in allowed_stores:
 		for key in (store["warehouse"], store["warehouse_name"], str(store["location_id"])):
-			allowed_keys[_normalize_store_key(key)] = store
+			allowed_keys[normalize_store_key(key)] = store
 
 	if requested_stores:
 		selected: list[dict[str, Any]] = []
 		seen: set[str] = set()
 		for requested in requested_stores:
-			match = allowed_keys.get(_normalize_store_key(requested))
+			match = allowed_keys.get(normalize_store_key(requested))
 			if not match:
 				frappe.throw(
 					f"Store selection '{requested}' is outside your allowed scope.",
@@ -553,15 +518,23 @@ def _get_foodpanda_cups_max_business_date(location_ids: list[int]) -> str | None
 	return str(rows[0]["business_date"]) if rows else None
 
 
-def _get_resource_max_business_date(resource: str, filter_key: str, filter_value: str) -> str | None:
+def _get_resource_max_business_date(
+	resource: str,
+	filter_key: str,
+	filter_value: str,
+	location_ids: list[int] | None = None,
+) -> str | None:
+	params: list[tuple[str, Any]] = [
+		("select", "business_date"),
+		(filter_key, filter_value),
+		("order", "business_date.desc"),
+		("limit", "1"),
+	]
+	if location_ids:
+		params.append(("location_id", f"in.({_location_scope_key(location_ids)})"))
 	rows = _supabase_get_all(
 		resource,
-		[
-			("select", "business_date"),
-			(filter_key, filter_value),
-			("order", "business_date.desc"),
-			("limit", "1"),
-		],
+		params,
 		page_size=1,
 	)
 	return str(rows[0]["business_date"]) if rows else None
@@ -573,13 +546,22 @@ def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
 	def builder() -> dict[str, Any]:
 		return {
 			"pos_max_business_date": _get_resource_max_business_date(
-				"pos_orders", "payment_status", "eq.PAID"
+				"pos_orders",
+				"payment_status",
+				"eq.PAID",
+				location_ids=location_ids,
 			),
 			"web_max_business_date": _get_resource_max_business_date(
-				"web_orders", "order_status_raw", "eq.Completed"
+				"web_orders",
+				"order_status_raw",
+				"eq.Completed",
+				location_ids=location_ids,
 			),
 			"foodpanda_max_business_date": _get_resource_max_business_date(
-				"foodpanda_orders", "order_status", "ilike.delivered"
+				"foodpanda_orders",
+				"order_status",
+				"ilike.delivered",
+				location_ids=location_ids,
 			),
 			"foodpanda_cups_max_business_date": _get_foodpanda_cups_max_business_date(location_ids),
 			"weather_max_business_date": _get_weather_max_business_date(location_ids),
@@ -590,14 +572,9 @@ def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
 
 def _build_data_quality_warnings(end_day: date, freshness: dict[str, Any]) -> list[str]:
 	warnings: list[str] = []
-	foodpanda_sales_max = freshness.get("foodpanda_max_business_date")
 	foodpanda_cups_max = freshness.get("foodpanda_cups_max_business_date")
 	weather_max = freshness.get("weather_max_business_date")
-
-	if foodpanda_sales_max and str(foodpanda_sales_max) < end_day.isoformat():
-		warnings.append(
-			f"FoodPanda sales are validated only through {foodpanda_sales_max}; later dates may understate gross and net sales."
-		)
+	effective_end_date = freshness.get("effective_end_date")
 
 	if foodpanda_cups_max and str(foodpanda_cups_max) < end_day.isoformat():
 		warnings.append(
@@ -609,45 +586,26 @@ def _build_data_quality_warnings(end_day: date, freshness: dict[str, Any]) -> li
 			f"Weather context is validated only through {weather_max}; later dates will not have complete weather overlays."
 		)
 
+	if effective_end_date and str(effective_end_date) < end_day.isoformat():
+		warnings.append(
+			f"Dashboard analytics were clipped to {effective_end_date}, the latest closed core-sales business date for the selected scope."
+		)
+
 	return warnings
 
 
-def _validated_sales_cutoff(freshness: dict[str, Any]) -> date | None:
-	core_candidates = [
-		_coerce_date(freshness.get("pos_max_business_date"))
-		if freshness.get("pos_max_business_date")
-		else None,
-		_coerce_date(freshness.get("web_max_business_date"))
-		if freshness.get("web_max_business_date")
-		else None,
+def _effective_end_day(requested_end_day: date, freshness: dict[str, Any]) -> date:
+	core_sales_dates = [
+		date.fromisoformat(value)
+		for value in (
+			freshness.get("pos_max_business_date"),
+			freshness.get("web_max_business_date"),
+		)
+		if value
 	]
-	core_valid_dates = [candidate for candidate in core_candidates if candidate is not None]
-	if core_valid_dates:
-		return max(core_valid_dates)
-	if freshness.get("foodpanda_max_business_date"):
-		return _coerce_date(freshness.get("foodpanda_max_business_date"))
-	return None
-
-
-def _filter_unvalidated_sales_rows(
-	rows: list[dict[str, Any]],
-	freshness: dict[str, Any],
-) -> tuple[list[dict[str, Any]], list[str]]:
-	cutoff = _validated_sales_cutoff(freshness)
-	if cutoff is None:
-		return rows, []
-
-	filtered_rows: list[dict[str, Any]] = []
-	dropped_dates: list[str] = []
-	for row in rows:
-		business_day = _coerce_date(row.get("business_date"))
-		if business_day <= cutoff:
-			filtered_rows.append(row)
-			continue
-
-		dropped_dates.append(business_day.isoformat())
-
-	return filtered_rows, sorted(set(dropped_dates))
+	if not core_sales_dates:
+		return requested_end_day
+	return min(requested_end_day, min(core_sales_dates))
 
 
 def _build_access_context(scope: dict[str, Any]) -> dict[str, Any]:
@@ -699,7 +657,7 @@ def _query_weather_rows(start_day: date, end_day: date, location_ids: list[int])
 	def builder() -> list[dict[str, Any]]:
 		location_filter = _location_scope_key(location_ids)
 		return _supabase_get_all(
-			"daily_weather",
+			SUPABASE_WEATHER_VIEW,
 			[
 				("select", WEATHER_SELECT),
 				("business_date", f"gte.{start_day.isoformat()}"),
@@ -728,6 +686,8 @@ def _aggregate_sales(rows: list[dict[str, Any]]) -> dict[str, Any]:
 		"website_cod_sales_without_vat": 0.0,
 		"foodpanda_sales": 0.0,
 		"foodpanda_sales_without_vat": 0.0,
+		"pickup_sales_without_vat": 0.0,
+		"delivery_sales_without_vat": 0.0,
 	}
 	for row in rows:
 		totals["gross_sales"] += _to_float(row.get("total_gross_sales"))
@@ -743,21 +703,27 @@ def _aggregate_sales(rows: list[dict[str, Any]]) -> dict[str, Any]:
 		totals["website_cod_sales_without_vat"] += _to_float(row.get("web_cod_net_sales_without_vat"))
 		totals["foodpanda_sales"] += _to_float(row.get("foodpanda_subtotal"))
 		totals["foodpanda_sales_without_vat"] += _to_float(row.get("foodpanda_vat_deducted_sales"))
+		totals["pickup_sales_without_vat"] += _to_float(row.get("pos_net_sales_without_vat"))
+		totals["delivery_sales_without_vat"] += (
+			_to_float(row.get("website_non_cod_net_sales_without_vat"))
+			+ _to_float(row.get("web_cod_net_sales_without_vat"))
+			+ _to_float(row.get("foodpanda_vat_deducted_sales"))
+		)
 
 	transactions = totals["transactions"]
 	cups = totals["cups_sold"]
 	totals["average_daily_sales"] = (
-		round(totals["net_sales_without_vat"] / day_count, 2) if day_count else 0.0
+		_round_half_up(totals["net_sales_without_vat"] / day_count) if day_count else 0.0
 	)
 	totals["average_guest_check"] = (
-		round(totals["net_sales_without_vat"] / transactions, 2) if transactions else 0.0
+		_round_half_up(totals["net_sales_without_vat"] / transactions) if transactions else 0.0
 	)
-	totals["cups_per_transaction"] = round(cups / transactions, 2) if transactions else 0.0
+	totals["cups_per_transaction"] = _round_half_up(cups / transactions) if transactions else 0.0
 	totals["day_count"] = day_count
 
 	for key, value in list(totals.items()):
 		if isinstance(value, float):
-			totals[key] = round(value, 2)
+			totals[key] = _round_half_up(value)
 	return totals
 
 
@@ -775,9 +741,7 @@ def _build_comparisons(
 	prev_start, prev_end = _shift_range(start_day, end_day, span_days)
 	prev_rows = _query_daily_rows(prev_start, prev_end, location_ids)
 	prev = _aggregate_sales(prev_rows) if prev_rows else {}
-	last_year_rows = _query_daily_rows(
-		start_day - timedelta(days=365), end_day - timedelta(days=365), location_ids
-	)
+	last_year_rows = _query_daily_rows(start_day - timedelta(days=365), end_day - timedelta(days=365), location_ids)
 	last_year = _aggregate_sales(last_year_rows) if last_year_rows else {}
 
 	def delta_payload(baseline: dict[str, Any]) -> dict[str, Any]:
@@ -800,7 +764,7 @@ def _build_comparisons(
 	}
 
 
-def _empty_comparisons() -> dict[str, dict[str, bool]]:
+def _empty_comparisons() -> dict[str, Any]:
 	return {
 		"previous_period": {"available": False},
 		"same_period_last_year": {"available": False},
@@ -843,7 +807,7 @@ def _calendar_map_for_scope(stores: list[dict[str, Any]], dates: set[str]) -> di
 			"day_of_week": day_obj.strftime("%A"),
 			"is_weekend": day_obj.weekday() >= 5,
 			"is_holiday": bool(holiday_names),
-			"holiday_name": ", ".join(sorted({name for name in holiday_names if name})) or None,
+			"holiday_name": ", ".join(sorted(set(filter(None, holiday_names)))) or None,
 			"holiday_list_used": ", ".join(sorted(set(holiday_lists))) or None,
 		}
 	return calendar
@@ -855,6 +819,48 @@ def _weather_by_store_day(rows: list[dict[str, Any]]) -> dict[tuple[int, str], d
 		key = (_to_int(row.get("location_id")), str(row.get("business_date")))
 		result[key] = row
 	return result
+
+
+RAIN_SEVERITY_ORDER = {
+	"dry": 0,
+	"passing_showers": 1,
+	"wet": 2,
+	"disruptive_rain": 3,
+}
+
+WIND_DISRUPTION_ORDER = {
+	"low": 0,
+	"moderate": 1,
+	"high": 2,
+}
+
+
+def _pick_mode(values: list[str | None]) -> str | None:
+	filtered = [str(value).strip() for value in values if str(value or "").strip()]
+	if not filtered:
+		return None
+	return Counter(filtered).most_common(1)[0][0]
+
+
+def _pick_highest(values: list[str | None], ordering: dict[str, int]) -> str | None:
+	best: str | None = None
+	best_score = -1
+	for value in values:
+		score = ordering.get(str(value or "").strip(), -1)
+		if score > best_score:
+			best = str(value).strip()
+			best_score = score
+	return best
+
+
+def _temperature_state_from_anomaly(value: float | None) -> str | None:
+	if value is None:
+		return None
+	if value <= -1.5:
+		return "cooler_than_normal"
+	if value >= 1.5:
+		return "hotter_than_normal"
+	return "normal"
 
 
 def _aggregate_daily_series(
@@ -874,6 +880,8 @@ def _aggregate_daily_series(
 				"gross_sales": 0.0,
 				"net_sales_with_vat": 0.0,
 				"net_sales_without_vat": 0.0,
+				"pickup_sales_without_vat": 0.0,
+				"delivery_sales_without_vat": 0.0,
 				"cups_sold": 0,
 				"transactions": 0,
 				"weather_rows": [],
@@ -882,6 +890,12 @@ def _aggregate_daily_series(
 		bucket["gross_sales"] += _to_float(row.get("total_gross_sales"))
 		bucket["net_sales_with_vat"] += _to_float(row.get("total_gross_sales"))
 		bucket["net_sales_without_vat"] += _to_float(row.get("total_net_sales_without_vat"))
+		bucket["pickup_sales_without_vat"] += _to_float(row.get("pos_net_sales_without_vat"))
+		bucket["delivery_sales_without_vat"] += (
+			_to_float(row.get("website_non_cod_net_sales_without_vat"))
+			+ _to_float(row.get("web_cod_net_sales_without_vat"))
+			+ _to_float(row.get("foodpanda_vat_deducted_sales"))
+		)
 		bucket["cups_sold"] += _to_int(row.get("cups_sold"))
 		bucket["transactions"] += _to_int(row.get("transactions"))
 		weather_row = weather_map.get((_to_int(row.get("location_id")), day_key))
@@ -894,36 +908,66 @@ def _aggregate_daily_series(
 		weather_group = bucket.pop("weather_rows")
 		calendar = calendar_map.get(day_key, {})
 		if weather_group:
-			description = Counter(
-				str(item.get("weather_description") or "").strip()
-				for item in weather_group
-				if item.get("weather_description")
-			).most_common(1)
-			impact = Counter(
-				str(item.get("business_impact") or "").strip()
-				for item in weather_group
-				if item.get("business_impact")
-			).most_common(1)
+			average_temp = round(
+				sum(_to_float(item.get("avg_temperature")) for item in weather_group) / len(weather_group),
+				2,
+			)
+			average_precipitation = round(
+				sum(_to_float(item.get("total_precipitation")) for item in weather_group) / len(weather_group),
+				2,
+			)
+			average_precipitation_hours = round(
+				sum(_to_float(item.get("precipitation_hours")) for item in weather_group) / len(weather_group),
+				2,
+			)
+			temperature_anomaly = round(
+				sum(_to_float(item.get("temperature_anomaly_vs_28d")) for item in weather_group) / len(weather_group),
+				2,
+			)
+			rain_severity = _pick_highest(
+				[item.get("rain_severity") for item in weather_group],
+				RAIN_SEVERITY_ORDER,
+			)
+			wind_disruption = _pick_highest(
+				[item.get("wind_disruption_level") for item in weather_group],
+				WIND_DISRUPTION_ORDER,
+			)
 			bucket.update(
 				{
-					"avg_temperature": round(
-						sum(_to_float(item.get("avg_temperature")) for item in weather_group)
-						/ len(weather_group),
+					"avg_temperature": average_temp,
+					"max_temperature": round(max(_to_float(item.get("max_temperature")) for item in weather_group), 2),
+					"min_temperature": round(min(_to_float(item.get("min_temperature")) for item in weather_group), 2),
+					"apparent_temperature_max": round(
+						max(_to_float(item.get("apparent_temperature_max")) for item in weather_group),
 						2,
 					),
-					"max_temperature": round(
-						max(_to_float(item.get("max_temperature")) for item in weather_group), 2
+					"avg_wind_speed": round(
+						sum(_to_float(item.get("avg_wind_speed")) for item in weather_group) / len(weather_group),
+						2,
 					),
-					"min_temperature": round(
-						min(_to_float(item.get("min_temperature")) for item in weather_group), 2
+					"max_wind_speed": round(max(_to_float(item.get("max_wind_speed")) for item in weather_group), 2),
+					"total_precipitation": average_precipitation,
+					"precipitation_hours": average_precipitation_hours,
+					"max_hourly_precipitation": round(
+						max(_to_float(item.get("max_hourly_precipitation")) for item in weather_group),
+						2,
 					),
-					"total_precipitation": round(
-						sum(_to_float(item.get("total_precipitation")) for item in weather_group), 2
+					"weather_description": _pick_mode([item.get("weather_description") for item in weather_group]),
+					"business_impact": _pick_mode([item.get("business_impact") for item in weather_group]),
+					"temperature_anomaly_vs_28d": temperature_anomaly,
+					"temperature_state": _temperature_state_from_anomaly(temperature_anomaly),
+					"rain_severity": rain_severity,
+					"wind_disruption_level": wind_disruption,
+					"storm_flag": any(bool(item.get("storm_flag")) for item in weather_group),
+					"service_window_weather_summary_lunch": _pick_mode(
+						[item.get("service_window_weather_summary_lunch") for item in weather_group]
 					),
-					"weather_description": description[0][0] if description else None,
-					"business_impact": impact[0][0] if impact else None,
-					"is_rainy": any(bool(item.get("is_rainy")) for item in weather_group)
-					or sum(_to_float(item.get("total_precipitation")) for item in weather_group) > 0,
+					"service_window_weather_summary_dinner": _pick_mode(
+						[item.get("service_window_weather_summary_dinner") for item in weather_group]
+					),
+					"is_rainy": rain_severity in {"wet", "disruptive_rain"},
+					"hourly_backed": any(bool(item.get("hourly_backed")) for item in weather_group),
+					"hourly_points": sum(_to_int(item.get("hourly_points")) for item in weather_group),
 					"weather_coverage_count": len(weather_group),
 				}
 			)
@@ -933,23 +977,39 @@ def _aggregate_daily_series(
 					"avg_temperature": None,
 					"max_temperature": None,
 					"min_temperature": None,
+					"apparent_temperature_max": None,
+					"avg_wind_speed": None,
+					"max_wind_speed": None,
 					"total_precipitation": None,
+					"precipitation_hours": None,
+					"max_hourly_precipitation": None,
 					"weather_description": None,
 					"business_impact": None,
+					"temperature_anomaly_vs_28d": None,
+					"temperature_state": None,
+					"rain_severity": None,
+					"wind_disruption_level": None,
+					"storm_flag": False,
+					"service_window_weather_summary_lunch": None,
+					"service_window_weather_summary_dinner": None,
 					"is_rainy": False,
+					"hourly_backed": False,
+					"hourly_points": 0,
 					"weather_coverage_count": 0,
 				}
 			)
 		bucket["average_guest_check"] = (
-			round(bucket["net_sales_without_vat"] / bucket["transactions"], 2)
-			if bucket["transactions"]
-			else 0.0
+			round(bucket["net_sales_without_vat"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
 		)
-		bucket["cups_per_transaction"] = (
-			round(bucket["cups_sold"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
-		)
+		bucket["cups_per_transaction"] = round(bucket["cups_sold"] / bucket["transactions"], 2) if bucket["transactions"] else 0.0
 		bucket.update(calendar)
-		for key in ("gross_sales", "net_sales_with_vat", "net_sales_without_vat"):
+		for key in (
+			"gross_sales",
+			"net_sales_with_vat",
+			"net_sales_without_vat",
+			"pickup_sales_without_vat",
+			"delivery_sales_without_vat",
+		):
 			bucket[key] = round(bucket[key], 2)
 		series.append(bucket)
 	return series
@@ -960,9 +1020,25 @@ def _build_group_stat(rows: list[dict[str, Any]]) -> dict[str, Any]:
 		return {"sample_size": 0}
 	return {
 		"sample_size": len(rows),
+		"average_net_sales_without_vat": round(
+			sum(_to_float(row.get("net_sales_without_vat")) for row in rows) / len(rows),
+			2,
+		),
 		"average_gross_sales": round(sum(_to_float(row.get("gross_sales")) for row in rows) / len(rows), 2),
 		"average_cups_sold": round(sum(_to_int(row.get("cups_sold")) for row in rows) / len(rows), 2),
 		"average_transactions": round(sum(_to_int(row.get("transactions")) for row in rows) / len(rows), 2),
+		"average_pickup_sales_without_vat": round(
+			sum(_to_float(row.get("pickup_sales_without_vat")) for row in rows) / len(rows),
+			2,
+		),
+		"average_delivery_sales_without_vat": round(
+			sum(_to_float(row.get("delivery_sales_without_vat")) for row in rows) / len(rows),
+			2,
+		),
+		"average_temperature_anomaly_vs_28d": round(
+			sum(_to_float(row.get("temperature_anomaly_vs_28d")) for row in rows) / len(rows),
+			2,
+		),
 	}
 
 
@@ -970,26 +1046,24 @@ def _build_weather_context(series: list[dict[str, Any]]) -> dict[str, Any]:
 	return {
 		"not_enough_history": len(series) < 7,
 		"groups": {
-			"rainy": _build_group_stat([row for row in series if row.get("is_rainy")]),
-			"dry": _build_group_stat([row for row in series if not row.get("is_rainy")]),
+			"disruptive_rain": _build_group_stat(
+				[row for row in series if row.get("rain_severity") == "disruptive_rain"]
+			),
+			"non_disruptive_weather": _build_group_stat(
+				[row for row in series if row.get("rain_severity") != "disruptive_rain"]
+			),
+			"passing_showers": _build_group_stat(
+				[row for row in series if row.get("rain_severity") == "passing_showers"]
+			),
 			"weekend": _build_group_stat([row for row in series if row.get("is_weekend")]),
 			"weekday": _build_group_stat([row for row in series if not row.get("is_weekend")]),
 			"holiday": _build_group_stat([row for row in series if row.get("is_holiday")]),
 			"non_holiday": _build_group_stat([row for row in series if not row.get("is_holiday")]),
-			"hot": _build_group_stat(
-				[
-					row
-					for row in series
-					if row.get("avg_temperature") is not None and _to_float(row.get("avg_temperature")) >= 32
-				]
+			"cooler_than_normal": _build_group_stat(
+				[row for row in series if row.get("temperature_state") == "cooler_than_normal"]
 			),
-			"high_precipitation": _build_group_stat(
-				[
-					row
-					for row in series
-					if row.get("total_precipitation") is not None
-					and _to_float(row.get("total_precipitation")) >= 10
-				]
+			"hotter_than_normal": _build_group_stat(
+				[row for row in series if row.get("temperature_state") == "hotter_than_normal"]
 			),
 		},
 	}
@@ -1001,7 +1075,7 @@ def _build_channel_mix(summary: dict[str, Any]) -> list[dict[str, Any]]:
 			"key": "pickup",
 			"label": "Pickup Sales",
 			"sales_with_vat": summary["pickup_sales"],
-			"sales_without_vat": summary["pickup_sales"],
+			"sales_without_vat": summary["pickup_sales_without_vat"],
 		},
 		{
 			"key": "website",
@@ -1041,9 +1115,7 @@ def _is_ops_scope_calibrated(
 	)
 
 
-def _build_mode_state(
-	view_mode: str, start_day: date, end_day: date, scope: dict[str, Any]
-) -> dict[str, Any]:
+def _build_mode_state(view_mode: str, start_day: date, end_day: date, scope: dict[str, Any]) -> dict[str, Any]:
 	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
 	is_calibrated = _is_ops_scope_calibrated(
 		view_mode,
@@ -1053,7 +1125,12 @@ def _build_mode_state(
 		len(scope["stores"]),
 	)
 	if view_mode == "canonical":
-		return {"view_mode": view_mode, "supported": True, "label": "Canonical warehouse"}
+		return {
+			"view_mode": view_mode,
+			"supported": True,
+			"label": "Canonical warehouse",
+			"weather_analytics_mode": "canonical",
+		}
 	if is_calibrated:
 		return {
 			"view_mode": view_mode,
@@ -1061,6 +1138,7 @@ def _build_mode_state(
 			"label": "Ops-matched",
 			"calibration_status": "screenshot_calibrated",
 			"source": OPS_WW10_REFERENCE["source"],
+			"weather_analytics_mode": "canonical",
 		}
 	return {
 		"view_mode": view_mode,
@@ -1068,6 +1146,7 @@ def _build_mode_state(
 		"label": "Ops-matched",
 		"calibration_status": "unsupported_scope",
 		"message": "Ops-matched mode is currently certified only for the full-chain WW10 window.",
+		"weather_analytics_mode": "canonical",
 	}
 
 
@@ -1081,6 +1160,19 @@ def _build_ops_summary() -> dict[str, Any]:
 		"cups_sold": OPS_WW10_REFERENCE["cups_sold"],
 		"transactions": OPS_WW10_REFERENCE["transactions"],
 	}
+
+
+def _to_bool_flag(value: Any, default: bool = False) -> bool:
+	if value is None:
+		return default
+	if isinstance(value, bool):
+		return value
+	text = str(value).strip().lower()
+	if text in {"1", "true", "yes", "y", "on"}:
+		return True
+	if text in {"0", "false", "no", "n", "off", ""}:
+		return False
+	return default
 
 
 def _build_store_rankings(
@@ -1098,13 +1190,13 @@ def _build_store_rankings(
 			{
 				"location_id": location_id,
 				"warehouse": store_lookup.get(location_id, {}).get("warehouse"),
-				"warehouse_name": store_lookup.get(location_id, {}).get("warehouse_name")
-				or row.get("store_name"),
+				"warehouse_name": store_lookup.get(location_id, {}).get("warehouse_name") or row.get("store_name"),
 				"gross_sales": 0.0,
 				"net_sales_without_vat": 0.0,
 				"cups_sold": 0,
 				"transactions": 0,
 				"rainy_days": 0,
+				"disruptive_rain_days": 0,
 				"weather_covered_days": 0,
 			},
 		)
@@ -1115,20 +1207,155 @@ def _build_store_rankings(
 		weather_row = weather_map.get((location_id, str(row.get("business_date"))))
 		if weather_row:
 			store_row["weather_covered_days"] += 1
-			if bool(weather_row.get("is_rainy")) or _to_float(weather_row.get("total_precipitation")) > 0:
+			if bool(weather_row.get("is_rainy")):
 				store_row["rainy_days"] += 1
+			if str(weather_row.get("rain_severity") or "").strip() == "disruptive_rain":
+				store_row["disruptive_rain_days"] += 1
 	for row in by_location.values():
 		row["gross_sales"] = round(row["gross_sales"], 2)
 		row["net_sales_without_vat"] = round(row["net_sales_without_vat"], 2)
 		row["average_guest_check"] = (
-			round(row["net_sales_without_vat"] / row["transactions"], 2)
-			if row["transactions"]
-			else 0.0
+			round(row["net_sales_without_vat"] / row["transactions"], 2) if row["transactions"] else 0.0
 		)
-		row["cups_per_transaction"] = (
-			round(row["cups_sold"] / row["transactions"], 2) if row["transactions"] else 0.0
-		)
+		row["cups_per_transaction"] = round(row["cups_sold"] / row["transactions"], 2) if row["transactions"] else 0.0
 	return sorted(by_location.values(), key=lambda row: row["gross_sales"], reverse=True)
+
+
+def _sales_row_metrics(row: dict[str, Any]) -> dict[str, Any]:
+	return {
+		"location_id": _to_int(row.get("location_id")),
+		"business_date": str(row.get("business_date")),
+		"net_sales_without_vat": _to_float(row.get("total_net_sales_without_vat")),
+		"transactions": _to_int(row.get("transactions")),
+		"cups_sold": _to_int(row.get("cups_sold")),
+		"pickup_sales_without_vat": _to_float(row.get("pos_net_sales_without_vat")),
+		"delivery_sales_without_vat": (
+			_to_float(row.get("website_non_cod_net_sales_without_vat"))
+			+ _to_float(row.get("web_cod_net_sales_without_vat"))
+			+ _to_float(row.get("foodpanda_vat_deducted_sales"))
+		),
+	}
+
+
+def _build_weather_effects(
+	scope: dict[str, Any],
+	start_day: date,
+	end_day: date,
+	current_rows: list[dict[str, Any]],
+	summary: dict[str, Any],
+) -> dict[str, Any]:
+	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
+	if not selected_location_ids or not current_rows:
+		return {"available": False}
+
+	baseline_start = start_day - timedelta(days=WEATHER_EFFECT_HISTORY_LOOKBACK_DAYS)
+	baseline_end = start_day - timedelta(days=1)
+	if baseline_end < baseline_start:
+		return {"available": False}
+
+	history_rows = _query_daily_rows(baseline_start, baseline_end, selected_location_ids)
+	if not history_rows:
+		return {"available": False}
+	history_day_count = len({str(row.get("business_date")) for row in history_rows})
+	if history_day_count < WEATHER_EFFECT_MIN_COMPARABLE_HISTORY_DAYS:
+		return {
+			"available": False,
+			"history_days_considered": history_day_count,
+			"minimum_history_days_required": WEATHER_EFFECT_MIN_COMPARABLE_HISTORY_DAYS,
+		}
+
+	all_dates = {str(row.get("business_date")) for row in current_rows}
+	all_dates.update(str(row.get("business_date")) for row in history_rows)
+	calendar_map = _calendar_map_for_scope(scope["selected_stores"], all_dates)
+
+	by_context: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
+	for row in history_rows:
+		metrics = _sales_row_metrics(row)
+		calendar = calendar_map.get(metrics["business_date"], {})
+		day_of_week = calendar.get("day_of_week")
+		is_weekend = bool(calendar.get("is_weekend"))
+		is_holiday = bool(calendar.get("is_holiday"))
+		context_keys = [
+			(metrics["location_id"], day_of_week, is_holiday, is_weekend),
+			(metrics["location_id"], day_of_week, is_weekend),
+			(metrics["location_id"], day_of_week),
+		]
+		for context_key in context_keys:
+			by_context.setdefault(context_key, []).append(metrics)
+
+	for values in by_context.values():
+		values.sort(key=lambda item: item["business_date"], reverse=True)
+
+	expected_net = 0.0
+	expected_transactions = 0.0
+	expected_cups = 0.0
+	expected_pickup = 0.0
+	expected_delivery = 0.0
+	matched_days = 0
+
+	for row in current_rows:
+		metrics = _sales_row_metrics(row)
+		calendar = calendar_map.get(metrics["business_date"], {})
+		context_candidates = [
+			(metrics["location_id"], calendar.get("day_of_week"), bool(calendar.get("is_holiday")), bool(calendar.get("is_weekend"))),
+			(metrics["location_id"], calendar.get("day_of_week"), bool(calendar.get("is_weekend"))),
+			(metrics["location_id"], calendar.get("day_of_week")),
+		]
+		candidates: list[dict[str, Any]] = []
+		for context_key in context_candidates:
+			candidates = by_context.get(context_key, [])
+			if candidates:
+				break
+		if not candidates:
+			continue
+
+		recent_candidates = candidates[:8]
+		expected_net += sum(item["net_sales_without_vat"] for item in recent_candidates) / len(recent_candidates)
+		expected_transactions += sum(item["transactions"] for item in recent_candidates) / len(recent_candidates)
+		expected_cups += sum(item["cups_sold"] for item in recent_candidates) / len(recent_candidates)
+		expected_pickup += sum(item["pickup_sales_without_vat"] for item in recent_candidates) / len(recent_candidates)
+		expected_delivery += sum(item["delivery_sales_without_vat"] for item in recent_candidates) / len(recent_candidates)
+		matched_days += 1
+
+	if matched_days == 0:
+		return {
+			"available": False,
+			"history_days_considered": history_day_count,
+			"minimum_history_days_required": WEATHER_EFFECT_MIN_COMPARABLE_HISTORY_DAYS,
+		}
+
+	actual_net = _to_float(summary.get("net_sales_without_vat"))
+	actual_transactions = _to_float(summary.get("transactions"))
+	actual_cups = _to_float(summary.get("cups_sold"))
+	actual_pickup = _to_float(summary.get("pickup_sales_without_vat"))
+	actual_delivery = _to_float(summary.get("delivery_sales_without_vat"))
+	expected_total = expected_pickup + expected_delivery
+	actual_total = actual_pickup + actual_delivery
+
+	def share(value: float, total: float) -> float:
+		return round((value / total) * 100, 2) if total else 0.0
+
+	net_delta = round(actual_net - expected_net, 2)
+	return {
+		"available": True,
+		"expected_net_sales_without_vat": round(expected_net, 2),
+		"actual_vs_expected_net_sales_delta": net_delta,
+		"actual_vs_expected_net_sales_delta_pct": round((net_delta / expected_net) * 100, 2) if expected_net else None,
+		"actual_vs_expected_transactions_delta": round(actual_transactions - expected_transactions, 2),
+		"actual_vs_expected_cups_delta": round(actual_cups - expected_cups, 2),
+		"channel_mix_shift_vs_baseline": {
+			"pickup_share_delta_pct_points": round(
+				share(actual_pickup, actual_total) - share(expected_pickup, expected_total),
+				2,
+			),
+			"delivery_share_delta_pct_points": round(
+				share(actual_delivery, actual_total) - share(expected_delivery, expected_total),
+				2,
+			),
+		},
+		"history_days_considered": history_day_count,
+		"matched_days": matched_days,
+	}
 
 
 def _build_dashboard_overview_payload(
@@ -1140,45 +1367,53 @@ def _build_dashboard_overview_payload(
 	include_comparisons: bool,
 ) -> dict[str, Any]:
 	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
+	freshness = _build_freshness(selected_location_ids)
+	effective_end = _effective_end_day(end_day, freshness)
+	freshness["effective_end_date"] = effective_end.isoformat()
+	freshness["requested_end_date"] = end_day.isoformat()
 	cache_key = _sales_dashboard_cache_key(
 		"overview",
 		selected_location_ids,
 		start_day=start_day,
-		end_day=end_day,
+		end_day=effective_end,
 		view_mode=view_mode,
 		channel=channel,
 		include_comparisons=include_comparisons,
 	)
 
 	def builder() -> dict[str, Any]:
-		sales_rows = _query_daily_rows(start_day, end_day, selected_location_ids)
-		weather_rows = _query_weather_rows(start_day, end_day, selected_location_ids)
-		mode_state = _build_mode_state(view_mode, start_day, end_day, scope)
-		freshness = _build_freshness(selected_location_ids)
-		validated_sales_rows, dropped_dates = _filter_unvalidated_sales_rows(sales_rows, freshness)
-		summary = _aggregate_sales(validated_sales_rows)
+		if effective_end < start_day:
+			sales_rows: list[dict[str, Any]] = []
+			weather_rows: list[dict[str, Any]] = []
+		else:
+			sales_rows = _query_daily_rows(start_day, effective_end, selected_location_ids)
+			weather_rows = _query_weather_rows(start_day, effective_end, selected_location_ids)
+		summary = _aggregate_sales(sales_rows)
+		mode_state = _build_mode_state(view_mode, start_day, effective_end, scope)
 		freshness["data_quality_warnings"] = _build_data_quality_warnings(end_day, freshness)
-		if dropped_dates:
-			freshness["data_quality_warnings"].append(
-				f"Excluded sales rows on {', '.join(dropped_dates)} because they are beyond the latest validated core sales business date."
-			)
-		series = _aggregate_daily_series(scope["selected_stores"], validated_sales_rows, weather_rows)
+		series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows)
+		analysis = _build_weather_context(series)
+		analysis["effects"] = _build_weather_effects(scope, start_day, effective_end, sales_rows, summary)
 		response: dict[str, Any] = {
 			"scope": {
 				"selected_stores": scope["selected_stores"],
 				"selected_location_ids": selected_location_ids,
 				"channel": channel,
 			},
-			"date_window": {"start_date": start_day.isoformat(), "end_date": end_day.isoformat()},
+			"date_window": {
+				"start_date": start_day.isoformat(),
+				"end_date": effective_end.isoformat(),
+				"requested_end_date": end_day.isoformat(),
+			},
 			"mode_state": mode_state,
 			"summary": summary,
 			"freshness": freshness,
-			"comparisons": _build_comparisons(start_day, end_day, selected_location_ids, summary)
+			"comparisons": _build_comparisons(start_day, effective_end, selected_location_ids, summary)
 			if include_comparisons
 			else _empty_comparisons(),
 			"daily": series,
-			"analysis": _build_weather_context(series),
-			"stores": _build_store_rankings(scope, validated_sales_rows, weather_rows),
+			"analysis": analysis,
+			"stores": _build_store_rankings(scope, sales_rows, weather_rows),
 			"channels": _build_channel_mix(summary),
 		}
 		if view_mode == "ops_matched" and mode_state.get("supported"):
@@ -1211,9 +1446,17 @@ def _build_export_rows(
 				"cups_sold": _to_int(row.get("cups_sold")),
 				"transactions": _to_int(row.get("transactions")),
 				"avg_temperature": day_meta.get("avg_temperature"),
+				"apparent_temperature_max": day_meta.get("apparent_temperature_max"),
+				"temperature_anomaly_vs_28d": day_meta.get("temperature_anomaly_vs_28d"),
+				"temperature_state": day_meta.get("temperature_state"),
 				"total_precipitation": day_meta.get("total_precipitation"),
+				"precipitation_hours": day_meta.get("precipitation_hours"),
+				"rain_severity": day_meta.get("rain_severity"),
+				"wind_disruption_level": day_meta.get("wind_disruption_level"),
+				"storm_flag": day_meta.get("storm_flag"),
 				"weather_description": day_meta.get("weather_description"),
 				"is_rainy": day_meta.get("is_rainy"),
+				"hourly_backed": day_meta.get("hourly_backed"),
 				"is_weekend": day_meta.get("is_weekend"),
 				"is_holiday": day_meta.get("is_holiday"),
 				"holiday_name": day_meta.get("holiday_name"),
@@ -1235,7 +1478,7 @@ def get_sales_dashboard_overview(
 	stores: list[str] | str | None = None,
 	view_mode: str = "canonical",
 	channel: str = "all",
-	include_comparisons: str | int | bool = False,
+	include_comparisons: bool | str | int | None = None,
 ) -> dict[str, Any]:
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
@@ -1245,7 +1488,7 @@ def get_sales_dashboard_overview(
 		end_day,
 		view_mode,
 		channel,
-		include_comparisons=_to_bool(include_comparisons),
+		include_comparisons=_to_bool_flag(include_comparisons, default=False),
 	)
 
 
@@ -1256,7 +1499,7 @@ def get_sales_dashboard_summary(
 	stores: list[str] | str | None = None,
 	view_mode: str = "canonical",
 	channel: str = "all",
-	include_comparisons: str | int | bool = False,
+	include_comparisons: bool | str | int | None = None,
 ) -> dict[str, Any]:
 	overview = get_sales_dashboard_overview(
 		start_date=start_date,
@@ -1399,9 +1642,17 @@ def export_sales_dashboard_detail(
 		"cups_sold",
 		"transactions",
 		"avg_temperature",
+		"apparent_temperature_max",
+		"temperature_anomaly_vs_28d",
+		"temperature_state",
 		"total_precipitation",
+		"precipitation_hours",
+		"rain_severity",
+		"wind_disruption_level",
+		"storm_flag",
 		"weather_description",
 		"is_rainy",
+		"hourly_backed",
 		"is_weekend",
 		"is_holiday",
 		"holiday_name",

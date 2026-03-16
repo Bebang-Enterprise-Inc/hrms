@@ -32,6 +32,7 @@ def _register_module(name: str, module: types.ModuleType) -> None:
 
 
 def _load_module(path: Path, alias: str):
+	_prime_sales_location_mapping_module()
 	spec = importlib.util.spec_from_file_location(alias, path)
 	module = importlib.util.module_from_spec(spec)
 	assert spec and spec.loader
@@ -39,13 +40,24 @@ def _load_module(path: Path, alias: str):
 	return module
 
 
+def _prime_sales_location_mapping_module() -> None:
+	module_name = "hrms.utils.sales_location_mapping"
+	if module_name in sys.modules:
+		return
+	_ensure_package("hrms.utils")
+	spec = importlib.util.spec_from_file_location(
+		module_name,
+		ROOT / "hrms" / "utils" / "sales_location_mapping.py",
+	)
+	module = importlib.util.module_from_spec(spec)
+	assert spec and spec.loader
+	spec.loader.exec_module(module)
+	_register_module(module_name, module)
+
+
 def _install_fake_frappe(user_roles: list[str]):
 	frappe = types.ModuleType("frappe")
-	frappe.local = types.SimpleNamespace(
-		session=types.SimpleNamespace(user="stakeholder@example.com"),
-		db=types.SimpleNamespace(get_value=lambda *args, **kwargs: None),
-		conf={},
-	)
+	frappe.local = types.SimpleNamespace(session=types.SimpleNamespace(user="stakeholder@example.com"))
 
 	class PermissionError(Exception):
 		pass
@@ -69,23 +81,26 @@ def _install_fake_frappe(user_roles: list[str]):
 	def __getattr__(name: str):
 		if name == "session":
 			return frappe.local.session
-		if name == "db":
-			return frappe.local.db
-		if name == "conf":
-			return frappe.local.conf
 		raise AttributeError(name)
 
 	frappe.whitelist = whitelist
 	frappe.throw = throw
-	frappe._ = lambda message: message
 	frappe.PermissionError = PermissionError
 	frappe.ValidationError = ValidationError
 	frappe.get_roles = lambda user=None: list(user_roles)
 	frappe.get_all = lambda *args, **kwargs: []
 	frappe.get_doc = lambda *args, **kwargs: None
+	frappe.db = types.SimpleNamespace(get_value=lambda *args, **kwargs: None)
+	frappe.conf = {}
 	frappe.__getattr__ = __getattr__
 
+	utils = types.ModuleType("frappe.utils")
+	utils.add_days = lambda value, days: value
+	utils.date_diff = lambda end, start: 0
+	frappe.utils = utils
+
 	_register_module("frappe", frappe)
+	_register_module("frappe.utils", utils)
 	return frappe
 
 
@@ -184,135 +199,10 @@ def test_aggregate_sales_computes_dashboard_metrics():
 	assert result["net_sales_without_vat"] == 1339.29
 	assert result["cups_sold"] == 15
 	assert result["transactions"] == 7
-	assert result["average_daily_sales"] == 669.64
+	assert result["average_daily_sales"] == 669.65
 	assert result["average_guest_check"] == 191.33
 	assert result["cups_per_transaction"] == 2.14
 	assert result["website_cod_orders"] == 1
-
-
-def test_daily_series_average_guest_check_uses_net_sales_without_vat():
-	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_daily_agc_test")
-
-	stores = [
-		{
-			"warehouse": "SM Megamall - Bebang Enterprise Inc.",
-			"warehouse_name": "SM Megamall",
-			"company": "Bebang Enterprise Inc.",
-			"location_id": 2338,
-		}
-	]
-	rows = [
-		{
-			"business_date": "2026-03-14",
-			"location_id": "2338",
-			"total_gross_sales": "1000.00",
-			"total_net_sales_without_vat": "800.00",
-			"cups_sold": "12",
-			"transactions": "4",
-		}
-	]
-
-	result = module._aggregate_daily_series(stores, rows, [])
-
-	assert result[0]["average_guest_check"] == 200.0
-
-
-def test_store_rankings_average_guest_check_uses_net_sales_without_vat():
-	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_store_agc_test")
-
-	scope = {
-		"selected_stores": [
-			{
-				"warehouse": "SM Megamall - Bebang Enterprise Inc.",
-				"warehouse_name": "SM Megamall",
-				"company": "Bebang Enterprise Inc.",
-				"location_id": 2338,
-			}
-		]
-	}
-	rows = [
-		{
-			"business_date": "2026-03-14",
-			"location_id": "2338",
-			"store_name": "SM Megamall",
-			"total_gross_sales": "1000.00",
-			"total_net_sales_without_vat": "800.00",
-			"cups_sold": "12",
-			"transactions": "4",
-		}
-	]
-
-	result = module._build_store_rankings(scope, rows, [])
-
-	assert result[0]["average_guest_check"] == 200.0
-
-
-def test_filter_unvalidated_sales_rows_excludes_zero_value_rows_beyond_latest_sales_cutoff():
-	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_filter_rows_test")
-
-	rows = [
-		{
-			"business_date": "2026-03-14",
-			"total_gross_sales": "2575678.48",
-			"total_net_sales_without_vat": "2337204.35",
-			"cups_sold": "18520",
-			"transactions": "7140",
-		},
-		{
-			"business_date": "2026-03-15",
-			"total_gross_sales": "0",
-			"total_net_sales_without_vat": "0",
-			"cups_sold": "3248",
-			"transactions": "0",
-		},
-	]
-	freshness = {
-		"pos_max_business_date": "2026-03-14",
-		"web_max_business_date": "2026-03-14",
-		"foodpanda_max_business_date": "2026-03-13",
-	}
-
-	filtered_rows, dropped_dates = module._filter_unvalidated_sales_rows(rows, freshness)
-
-	assert len(filtered_rows) == 1
-	assert filtered_rows[0]["business_date"] == "2026-03-14"
-	assert dropped_dates == ["2026-03-15"]
-
-
-def test_filter_unvalidated_sales_rows_excludes_rows_beyond_core_sales_cutoff_even_if_foodpanda_has_sales():
-	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_cutoff_scope_test")
-
-	rows = [
-		{
-			"business_date": "2026-03-14",
-			"total_gross_sales": "3224826.48",
-			"total_net_sales_without_vat": "2916800.76",
-			"cups_sold": "18520",
-			"transactions": "8247",
-		},
-		{
-			"business_date": "2026-03-15",
-			"total_gross_sales": "718244.00",
-			"total_net_sales_without_vat": "641289.31",
-			"cups_sold": "3248",
-			"transactions": "1219",
-		},
-	]
-	freshness = {
-		"pos_max_business_date": "2026-03-14",
-		"web_max_business_date": "2026-03-14",
-		"foodpanda_max_business_date": "2026-03-15",
-	}
-
-	filtered_rows, dropped_dates = module._filter_unvalidated_sales_rows(rows, freshness)
-
-	assert len(filtered_rows) == 1
-	assert filtered_rows[0]["business_date"] == "2026-03-14"
-	assert dropped_dates == ["2026-03-15"]
 
 
 def test_data_quality_warning_flags_stale_foodpanda_cups():
@@ -329,77 +219,20 @@ def test_data_quality_warning_flags_stale_foodpanda_cups():
 	assert any("FoodPanda cups" in warning for warning in warnings)
 
 
-def test_supabase_get_all_honors_requested_limit():
+def test_summary_defaults_to_empty_comparisons_for_hot_path():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_paging_test")
-
-	calls: list[list[tuple[str, str]]] = []
-
-	def fake_supabase_get(resource, params=None):
-		assert resource == "daily_weather"
-		assert params is not None
-		calls.append(list(params))
-		return [{"business_date": "2026-03-14"}]
-
-	module._supabase_get = fake_supabase_get
-
-	rows = module._supabase_get_all(
-		"daily_weather",
-		[
-			("select", "business_date"),
-			("order", "business_date.desc"),
-			("limit", "1"),
-		],
-		page_size=1,
-	)
-
-	assert rows == [{"business_date": "2026-03-14"}]
-	assert len(calls) == 1
-
-
-def test_query_daily_rows_filters_scope_after_fetch():
-	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_query_rows_test")
-
-	captured: dict[str, object] = {}
-
-	def fake_supabase_get_all(resource, params=None, page_size=1000):
-		captured["resource"] = resource
-		captured["params"] = params
-		captured["page_size"] = page_size
-		return [
-			{"location_id": 2217, "business_date": "2026-03-02", "store_name": "BF Homes"},
-			{"location_id": 2557, "business_date": "2026-03-02", "store_name": "Araneta Gateway"},
-		]
-
-	module._supabase_get_all = fake_supabase_get_all
-
-	rows = module._query_daily_rows(module.date(2026, 3, 2), module.date(2026, 3, 8), [2217])
-
-	assert rows == [
-		{"location_id": 2217, "business_date": "2026-03-02", "store_name": "BF Homes"},
-		{"location_id": 2557, "business_date": "2026-03-02", "store_name": "Araneta Gateway"},
-	]
-	assert captured["resource"] == module.SUPABASE_DAILY_VIEW
-	assert ("location_id", "in.(2217)") in captured["params"]
-
-
-def test_summary_skips_comparisons_by_default():
-	_install_fake_frappe(["System Manager"])
-	module = _load_module(
-		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_default_test"
-	)
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_default_test")
 
 	module.get_sales_dashboard_overview = lambda **kwargs: {
 		"scope": {
 			"selected_stores": [],
-			"selected_location_ids": [2217],
+			"selected_location_ids": [2338],
 			"channel": "all",
 		},
-		"date_window": {"start_date": "2026-03-02", "end_date": "2026-03-08"},
-		"mode_state": {"view_mode": "canonical", "supported": True},
-		"summary": {"gross_sales": 1000.0},
-		"freshness": {},
+		"date_window": {"start_date": "2026-03-01", "end_date": "2026-03-14"},
+		"mode_state": {"view_mode": "canonical", "supported": True, "label": "Canonical warehouse"},
+		"summary": {"gross_sales": 123.0},
+		"freshness": {"weather_max_business_date": "2026-03-14"},
 		"comparisons": {
 			"previous_period": {"available": False},
 			"same_period_last_year": {"available": False},
@@ -408,35 +241,147 @@ def test_summary_skips_comparisons_by_default():
 
 	result = module.get_sales_dashboard_summary()
 
-	assert result["comparisons"] == {
-		"previous_period": {"available": False},
-		"same_period_last_year": {"available": False},
-	}
+	assert result["comparisons"]["previous_period"]["available"] is False
+	assert result["comparisons"]["same_period_last_year"]["available"] is False
 
 
-def test_summary_builds_comparisons_when_opted_in():
+def test_effective_end_day_clips_to_closed_core_sales_date():
 	_install_fake_frappe(["System Manager"])
-	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_summary_optin_test")
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_effective_end_test")
 
-	module.get_sales_dashboard_overview = lambda **kwargs: {
-		"scope": {
-			"selected_stores": [],
-			"selected_location_ids": [2217],
-			"channel": "all",
-		},
-		"date_window": {"start_date": "2026-03-02", "end_date": "2026-03-08"},
-		"mode_state": {"view_mode": "canonical", "supported": True},
-		"summary": {"gross_sales": 1000.0},
-		"freshness": {},
-		"comparisons": {
-			"previous_period": {"available": True, "gross_sales_delta": 100.0},
-			"same_period_last_year": {"available": False},
-		},
+	freshness = {
+		"pos_max_business_date": "2026-03-14",
+		"web_max_business_date": "2026-03-13",
 	}
 
-	result = module.get_sales_dashboard_summary(include_comparisons="1")
+	result = module._effective_end_day(module.date(2026, 3, 15), freshness)
 
-	assert result["comparisons"] == {
-		"previous_period": {"available": True, "gross_sales_delta": 100.0},
-		"same_period_last_year": {"available": False},
+	assert result == module.date(2026, 3, 13)
+
+
+def test_daily_series_treats_passing_showers_as_not_operational_rain():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_daily_series_weather_test")
+
+	stores = [
+		{
+			"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+			"warehouse_name": "SM Megamall",
+			"company": "Bebang Enterprise Inc.",
+			"location_id": 2338,
+		}
+	]
+	sales_rows = [
+		{
+			"location_id": 2338,
+			"business_date": "2026-03-14",
+			"total_gross_sales": "1000.00",
+			"total_net_sales_without_vat": "892.86",
+			"pos_net_sales_without_vat": "600.00",
+			"website_non_cod_net_sales_without_vat": "150.00",
+			"web_cod_net_sales_without_vat": "50.00",
+			"foodpanda_vat_deducted_sales": "92.86",
+			"cups_sold": "10",
+			"transactions": "5",
+		}
+	]
+	weather_rows = [
+		{
+			"location_id": 2338,
+			"business_date": "2026-03-14",
+			"avg_temperature": 29.5,
+			"max_temperature": 31.0,
+			"min_temperature": 26.0,
+			"apparent_temperature_max": 33.0,
+			"avg_wind_speed": 10.0,
+			"max_wind_speed": 12.0,
+			"total_precipitation": 1.2,
+			"precipitation_hours": 1,
+			"max_hourly_precipitation": 0.8,
+			"weather_description": "Slight rain showers",
+			"business_impact": "passing_showers",
+			"temperature_anomaly_vs_28d": -0.4,
+			"rain_severity": "passing_showers",
+			"wind_disruption_level": "low",
+			"storm_flag": False,
+			"service_window_weather_summary_lunch": "showery_lunch",
+			"service_window_weather_summary_dinner": "stable_dinner",
+			"is_rainy": False,
+			"hourly_backed": True,
+			"hourly_points": 24,
+		}
+	]
+
+	module._calendar_map_for_scope = lambda *_args, **_kwargs: {
+		"2026-03-14": {
+			"business_date": "2026-03-14",
+			"day_of_week": "Saturday",
+			"is_weekend": True,
+			"is_holiday": False,
+			"holiday_name": None,
+			"holiday_list_used": None,
+		}
 	}
+
+	series = module._aggregate_daily_series(stores, sales_rows, weather_rows)
+
+	assert len(series) == 1
+	assert series[0]["is_rainy"] is False
+	assert series[0]["rain_severity"] == "passing_showers"
+	assert series[0]["average_guest_check"] == 178.57
+
+
+def test_weather_effects_require_minimum_comparable_history():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_effects_history_floor_test")
+
+	scope = {
+		"selected_stores": [
+			{
+				"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+				"warehouse_name": "SM Megamall",
+				"company": "Bebang Enterprise Inc.",
+				"location_id": 2338,
+			}
+		]
+	}
+	current_rows = [
+		{
+			"location_id": 2338,
+			"business_date": "2026-03-14",
+			"total_net_sales_without_vat": "1000.00",
+			"transactions": "5",
+			"cups_sold": "10",
+			"pos_net_sales_without_vat": "700.00",
+			"website_non_cod_net_sales_without_vat": "200.00",
+			"web_cod_net_sales_without_vat": "50.00",
+			"foodpanda_vat_deducted_sales": "50.00",
+		}
+	]
+	history_rows = [
+		{
+			"location_id": 2338,
+			"business_date": f"2025-12-{index + 1:02d}",
+			"total_net_sales_without_vat": "900.00",
+			"transactions": "4",
+			"cups_sold": "9",
+			"pos_net_sales_without_vat": "650.00",
+			"website_non_cod_net_sales_without_vat": "150.00",
+			"web_cod_net_sales_without_vat": "50.00",
+			"foodpanda_vat_deducted_sales": "50.00",
+		}
+		for index in range(10)
+	]
+	module._query_daily_rows = lambda *args, **kwargs: history_rows
+
+	result = module._build_weather_effects(
+		scope=scope,
+		start_day=module.date(2026, 3, 1),
+		end_day=module.date(2026, 3, 14),
+		current_rows=current_rows,
+		summary={"net_sales_without_vat": 1000.0},
+	)
+
+	assert result["available"] is False
+	assert result["history_days_considered"] == 10
+	assert result["minimum_history_days_required"] == 56

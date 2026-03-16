@@ -1,32 +1,51 @@
 #!/usr/bin/env python3
 """
-Sync weather data from Open-Meteo API to Supabase daily_weather table.
+Sync weather data from Open-Meteo into Supabase daily and hourly weather tables.
 
 This script:
 1. Reads store coordinates from WAREHOUSE_TREE.csv
-2. Groups nearby stores (within 5km) to minimize API calls
-3. Fetches historical weather data from Open-Meteo API
-4. Calculates business impact based on temperature/precipitation
-5. Upserts into Supabase daily_weather table
-
-Usage:
-    python scripts/sync_weather_to_supabase.py --date 2026-02-13
-    python scripts/sync_weather_to_supabase.py --backfill-days 30
+2. Resolves Mosaic location_id from the shared sales dashboard mapping
+3. Groups nearby stores to reduce provider calls
+4. Fetches daily + hourly weather for each weather group
+5. Upserts into daily_weather and weather_hourly
+6. Refreshes the sales_dashboard_weather_daily_features materialized view
 """
+
+from __future__ import annotations
 
 import argparse
 import csv
-import json
+import importlib.util
 import os
-import re
+import subprocess
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from math import atan2, cos, radians, sin, sqrt
 from pathlib import Path
+from typing import Any
+from zoneinfo import ZoneInfo
 
 import requests
+from supabase import Client, create_client
 
-# Weather code to description mapping
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load_lookup_sales_location():
+	spec = importlib.util.spec_from_file_location(
+		"sales_location_mapping_sync",
+		ROOT / "hrms" / "utils" / "sales_location_mapping.py",
+	)
+	module = importlib.util.module_from_spec(spec)
+	assert spec and spec.loader
+	spec.loader.exec_module(module)
+	return module.lookup_sales_location
+
+
+lookup_sales_location = _load_lookup_sales_location()
+
+MANILA_TZ = ZoneInfo("Asia/Manila")
+
 WEATHER_CODES = {
 	0: "Clear sky",
 	1: "Mainly clear",
@@ -48,186 +67,167 @@ WEATHER_CODES = {
 	99: "Thunderstorm with heavy hail",
 }
 
-# Store name to Mosaic location_id mapping
-LOCATION_ID_MAP = {
-	"SM Caloocan": 2464,
-	"Ayala Market Market": 2287,
-	"SM Megamall": 2338,
-	"SM Manila": 2339,
-	"Robinsons Antipolo": 2342,
-	"SM Valenzuela": 2341,
-	"The Terminal": 2319,
-	"SM Grand Central": 2218,
-	"Ayala Malls Fairview Terraces": 2220,
-	"SM East Ortigas": 2184,
-	"SM Marikina": 2317,
-	"Megaworld Paseo Center": 2177,
-	"Megawide PITX": 2179,
-	"Megaworld Venice Grand Canal": 2216,
-	"Lucky Chinatown": 2311,
-	"SM North EDSA": 2284,
-	"SM Southmall": 2340,
-	"Festival Mall Alabang": 2222,
-	"SM Mall Of Asia": 2219,
-	"Ever Commonwealth": 2281,
-	"The Grid - Rockwell": 2250,
-	"BF Homes": 2217,
-	"SM Tanza": 2411,
-	"SJDM": 2481,
-	"SM Sangandaan": 2482,
-	"SM Marilao": 2413,
-	"SM Bicutan": 2412,
-	"Robinson Imus": 2408,
-	"SM Pulilan": 2478,
-	"Ayala Evo": 2426,
-	"Robinson General Trias": 2430,
-	"Ayala Vermosa": 2428,
-	"Ayala Solenad": 2547,
-	"Robinsons Galleria South": 2515,
-	"Ayala UPTC": 2425,
-	"Vista Mall Taguig": 2556,
-	"Sta. Lucia East Grand Mall": 2558,
-	"Up Town Mall BGC": 2548,
-	"SM Clark": 2646,
-	"Araneta Gateway": 2557,
-	"CTTM Tomas Morato": 2526,
-	"D'verde Laguna": 2766,
-}
-
-WAREHOUSE_NAME_ALIASES = {
-	"SM  Manila": "SM Manila",
-	"Robisons Galleria South": "Robinsons Galleria South",
-}
-
-# Supabase configuration
-SUPABASE_PROJECT_ID = "csnniykjrychgajfrgua"
-SUPABASE_API_TOKEN = os.environ["SUPABASE_MGMT_TOKEN"]
-SUPABASE_API_URL = f"https://api.supabase.com/v1/projects/{SUPABASE_PROJECT_ID}/database/query"
-
-
-def normalize_warehouse_name(name: str) -> str:
-	"""Normalize warehouse names so minor label drift does not break the weather join."""
-	text = re.sub(r"\s+", " ", (name or "").strip())
-	return WAREHOUSE_NAME_ALIASES.get(text, text)
+STORM_CODES = {95, 96, 99}
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://csnniykjrychgajfrgua.supabase.co")
+CREATE_NO_WINDOW = 0x08000000
+UPSERT_BATCH_SIZE = 500
+INTER_GROUP_DELAY_SECONDS = 0.1
 
 
 def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 	"""Calculate distance between two coordinates in kilometers."""
-	R = 6371  # Earth's radius in kilometers
-
+	radius_km = 6371
 	lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
 	dlat = lat2 - lat1
 	dlon = lon2 - lon1
-
 	a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
 	c = 2 * atan2(sqrt(a), sqrt(1 - a))
+	return radius_km * c
 
-	return R * c
+
+def _get_secret(env_name: str, doppler_name: str | None = None) -> str:
+	value = os.environ.get(env_name, "").strip()
+	if value:
+		return value
+	doppler_key = doppler_name or env_name
+	result = subprocess.run(
+		[
+			"C:/Users/Sam/bin/doppler.exe",
+			"secrets",
+			"get",
+			doppler_key,
+			"--plain",
+			"--project",
+			"bei-erp",
+			"--config",
+			"dev",
+		],
+		capture_output=True,
+		text=True,
+		timeout=15,
+		creationflags=CREATE_NO_WINDOW,
+	)
+	if result.returncode == 0 and result.stdout.strip():
+		return result.stdout.strip()
+	raise RuntimeError(f"{env_name} is required and could not be resolved from environment or Doppler")
 
 
-def read_store_coordinates(csv_path: str) -> list[dict]:
-	"""Read store coordinates from WAREHOUSE_TREE.csv."""
-	stores = []
-	csv_file = Path(csv_path).expanduser().resolve()
+def get_supabase_client() -> Client:
+	service_role_key = _get_secret("SUPABASE_SERVICE_ROLE_KEY")
+	return create_client(SUPABASE_URL, service_role_key)
 
-	with csv_file.open(encoding="utf-8") as f:
-		reader = csv.DictReader(f)
+
+def upsert_batches(client: Client, table: str, rows: list[dict[str, Any]], on_conflict: str) -> None:
+	if not rows:
+		return
+	for index in range(0, len(rows), UPSERT_BATCH_SIZE):
+		batch = rows[index : index + UPSERT_BATCH_SIZE]
+		client.table(table).upsert(batch, on_conflict=on_conflict).execute()
+
+
+def read_store_coordinates(csv_path: str) -> list[dict[str, Any]]:
+	"""Read store coordinates and resolve location IDs from the shared mapping."""
+	stores: list[dict[str, Any]] = []
+	with open(csv_path, "r", encoding="utf-8") as handle:
+		reader = csv.DictReader(handle)
 		for row in reader:
-			# Only include open stores with coordinates
-			if row["is_open"] == "True" and row["latitude"] and row["longitude"]:
-				# Skip external storage hubs
-				if row["node_kind"] == "external_storage_hub":
-					continue
+			if row["is_open"] != "True" or not row["latitude"] or not row["longitude"]:
+				continue
+			if row["node_kind"] == "external_storage_hub":
+				continue
 
-				warehouse_name = row["warehouse_name"]
-				canonical_name = normalize_warehouse_name(warehouse_name)
+			mapping = lookup_sales_location(warehouse_name=row["warehouse_name"])
+			if not mapping:
+				print(f"[WARN] Skipping {row['warehouse_name']} - no shared sales location mapping")
+				continue
 
-				# Only include stores with known location_ids
-				if canonical_name not in LOCATION_ID_MAP:
-					print(f"[WARN] Skipping {warehouse_name} - no location_id mapping")
-					continue
-
-				stores.append(
-					{
-						"warehouse_id": row["warehouse_id"],
-						"warehouse_name": canonical_name,
-						"location_id": LOCATION_ID_MAP[canonical_name],
-						"latitude": float(row["latitude"]),
-						"longitude": float(row["longitude"]),
-					}
-				)
-
+			stores.append(
+				{
+					"warehouse_id": row["warehouse_id"],
+					"warehouse_name": row["warehouse_name"],
+					"location_id": int(mapping["location_id"]),
+					"latitude": float(row["latitude"]),
+					"longitude": float(row["longitude"]),
+				}
+			)
 	return stores
 
 
-def group_nearby_stores(stores: list[dict], max_distance_km: float = 5.0) -> list[list[dict]]:
+def group_nearby_stores(stores: list[dict[str, Any]], max_distance_km: float = 5.0) -> list[list[dict[str, Any]]]:
 	"""Group stores within max_distance_km of each other."""
-	groups = []
+	groups: list[list[dict[str, Any]]] = []
 	ungrouped = stores.copy()
-
 	while ungrouped:
-		# Start a new group with the first ungrouped store
 		seed = ungrouped.pop(0)
 		group = [seed]
-
-		# Find all stores within max_distance_km
-		i = 0
-		while i < len(ungrouped):
-			store = ungrouped[i]
+		index = 0
+		while index < len(ungrouped):
+			store = ungrouped[index]
 			distance = haversine_distance(
-				seed["latitude"], seed["longitude"], store["latitude"], store["longitude"]
+				seed["latitude"],
+				seed["longitude"],
+				store["latitude"],
+				store["longitude"],
 			)
-
 			if distance <= max_distance_km:
-				group.append(ungrouped.pop(i))
+				group.append(ungrouped.pop(index))
 			else:
-				i += 1
-
+				index += 1
 		groups.append(group)
-
 	return groups
 
 
-def calculate_business_impact(max_temp: float, precipitation: float, weather_code: int) -> str:
-	"""
-	Calculate business impact based on weather conditions.
+def _value_from_series(series: list[Any] | None, index: int) -> Any:
+	if not series or index >= len(series):
+		return None
+	return series[index]
 
-	Rules:
-	- Hot (>33°C) + Clear (code < 3) = 'peak' (hot weather = halo-halo demand)
-	- Heavy rain (>5mm) = 'slow' (heavy rain = slow foot traffic)
-	- Moderate rain (>1mm) = 'moderate_rain'
-	- Light rain (>0mm) = 'light_rain'
-	- Otherwise = 'normal'
-	"""
-	# Hot and clear = peak demand
-	if max_temp > 33 and weather_code < 3:
+
+def calculate_business_impact(
+	max_temp: float | None,
+	total_precipitation: float | None,
+	max_hourly_precipitation: float | None,
+	rain_hours: int,
+	weather_code: int | None,
+	storm_flag: bool,
+) -> str:
+	"""Legacy business impact label kept for compatibility with existing dashboard payloads."""
+	max_temp = float(max_temp or 0)
+	total_precipitation = float(total_precipitation or 0)
+	max_hourly_precipitation = float(max_hourly_precipitation or 0)
+	weather_code = int(weather_code or 0)
+
+	if max_temp >= 33 and total_precipitation == 0 and weather_code < 3:
 		return "peak"
-
-	# Rain impacts
-	if precipitation > 5:
-		return "slow"
-	elif precipitation > 1:
-		return "moderate_rain"
-	elif precipitation > 0:
-		return "light_rain"
-
+	if storm_flag or max_hourly_precipitation >= 7.5 or total_precipitation >= 20 or rain_hours >= 6:
+		return "disruptive_rain"
+	if max_hourly_precipitation < 2.5 and rain_hours <= 2 and total_precipitation > 0:
+		return "passing_showers"
+	if total_precipitation > 0:
+		return "wet"
+	if max_temp <= 27:
+		return "cool"
 	return "normal"
 
 
-def fetch_weather_data(latitude: float, longitude: float, date_str: str) -> dict:
-	"""
-	Fetch weather data from Open-Meteo API.
+def fetch_weather_bundle(latitude: float, longitude: float, date_str: str) -> dict[str, Any] | None:
+	"""Fetch daily and hourly weather data for a single Manila business date."""
+	target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+	days_ago = (datetime.now(tz=MANILA_TZ).date() - target_date).days
+	use_archive = days_ago > 3
+	base_url = "https://archive-api.open-meteo.com/v1/archive" if use_archive else "https://api.open-meteo.com/v1/forecast"
 
-	For dates more than 3 days old, uses the archive endpoint.
-	"""
-	# Determine if we need the archive endpoint
-	target_date = datetime.strptime(date_str, "%Y-%m-%d")
-	days_ago = (datetime.now() - target_date).days
-
-	if days_ago > 3:
-		base_url = "https://archive-api.open-meteo.com/v1/archive"
-	else:
-		base_url = "https://api.open-meteo.com/v1/forecast"
+	hourly_fields = [
+		"temperature_2m",
+		"apparent_temperature",
+		"precipitation",
+		"weather_code",
+		"wind_speed_10m",
+		"wind_gusts_10m",
+		"cloud_cover",
+	]
+	if not use_archive:
+		hourly_fields.append("precipitation_probability")
 
 	params = {
 		"latitude": latitude,
@@ -237,217 +237,219 @@ def fetch_weather_data(latitude: float, longitude: float, date_str: str) -> dict
 				"temperature_2m_max",
 				"temperature_2m_min",
 				"temperature_2m_mean",
+				"apparent_temperature_max",
 				"relative_humidity_2m_mean",
 				"precipitation_sum",
 				"weather_code",
 				"wind_speed_10m_max",
 			]
 		),
+		"hourly": ",".join(hourly_fields),
 		"timezone": "Asia/Manila",
 		"start_date": date_str,
 		"end_date": date_str,
 	}
 
 	try:
-		response = requests.get(base_url, params=params, timeout=10)
+		response = requests.get(base_url, params=params, timeout=20)
 		response.raise_for_status()
-		data = response.json()
-
-		# Extract daily data
-		if "daily" not in data or not data["daily"].get("time"):
-			return None
-
-		daily = data["daily"]
-		idx = 0  # We only requested one day
-
-		return {
-			"temperature_max": daily["temperature_2m_max"][idx],
-			"temperature_min": daily["temperature_2m_min"][idx],
-			"temperature_mean": daily["temperature_2m_mean"][idx],
-			"humidity_mean": daily["relative_humidity_2m_mean"][idx],
-			"precipitation": daily["precipitation_sum"][idx],
-			"weather_code": daily["weather_code"][idx],
-			"wind_speed_max": daily["wind_speed_10m_max"][idx],
-		}
-
-	except Exception as e:
-		print(f"[ERROR] Error fetching weather data: {e}")
+		payload = response.json()
+	except Exception as exc:
+		print(f"[ERROR] Error fetching weather data: {exc}")
 		return None
 
+	daily = payload.get("daily", {})
+	hourly = payload.get("hourly", {})
+	if not daily.get("time"):
+		return None
 
-def upsert_to_supabase(location_id: int, date_str: str, weather_data: dict) -> bool:
-	"""Upsert weather data into Supabase daily_weather table."""
-	# Calculate business impact
-	business_impact = calculate_business_impact(
-		weather_data["temperature_max"], weather_data["precipitation"], weather_data["weather_code"]
+	hourly_rows: list[dict[str, Any]] = []
+	for index, observed_local in enumerate(hourly.get("time") or []):
+		local_dt = datetime.fromisoformat(observed_local).replace(tzinfo=MANILA_TZ)
+		hourly_rows.append(
+			{
+				"observed_at_utc": local_dt.astimezone(timezone.utc).isoformat(),
+				"observed_at_manila": local_dt.replace(tzinfo=None).isoformat(sep=" "),
+				"business_date": local_dt.date().isoformat(),
+				"hour_local": local_dt.hour,
+				"precipitation": _value_from_series(hourly.get("precipitation"), index),
+				"precipitation_probability": _value_from_series(hourly.get("precipitation_probability"), index),
+				"weather_code": _value_from_series(hourly.get("weather_code"), index),
+				"temperature_2m": _value_from_series(hourly.get("temperature_2m"), index),
+				"apparent_temperature": _value_from_series(hourly.get("apparent_temperature"), index),
+				"wind_speed_10m": _value_from_series(hourly.get("wind_speed_10m"), index),
+				"wind_gusts_10m": _value_from_series(hourly.get("wind_gusts_10m"), index),
+				"cloud_cover": _value_from_series(hourly.get("cloud_cover"), index),
+			}
+		)
+
+	rain_hours = sum(1 for row in hourly_rows if float(row["precipitation"] or 0) > 0)
+	max_hourly_precipitation = max((float(row["precipitation"] or 0) for row in hourly_rows), default=0.0)
+	avg_hourly_wind = (
+		sum(float(row["wind_speed_10m"] or 0) for row in hourly_rows) / len(hourly_rows)
+		if hourly_rows
+		else None
 	)
+	storm_flag = any(int(row["weather_code"] or 0) in STORM_CODES for row in hourly_rows)
+	daily_weather_code = int(daily["weather_code"][0])
 
-	# Get weather description
-	weather_description = WEATHER_CODES.get(
-		weather_data["weather_code"], f"Unknown ({weather_data['weather_code']})"
-	)
-
-	# Build SQL query
-	# Determine is_rainy and rain_hours from weather code
-	is_rainy = weather_data["weather_code"] in (51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99)
-	rain_hours = (
-		8
-		if weather_data["precipitation"] > 5
-		else (4 if weather_data["precipitation"] > 1 else (1 if weather_data["precipitation"] > 0 else 0))
-	)
-
-	sql = f"""
-    INSERT INTO daily_weather (
-        location_id,
-        business_date,
-        max_temperature,
-        min_temperature,
-        avg_temperature,
-        avg_humidity,
-        total_precipitation,
-        weather_code,
-        weather_description,
-        avg_wind_speed,
-        is_rainy,
-        rain_hours,
-        business_impact,
-        synced_at
-    ) VALUES (
-        {location_id},
-        '{date_str}',
-        {weather_data["temperature_max"]},
-        {weather_data["temperature_min"]},
-        {weather_data["temperature_mean"]},
-        {weather_data["humidity_mean"]},
-        {weather_data["precipitation"]},
-        {weather_data["weather_code"]},
-        '{weather_description}',
-        {weather_data["wind_speed_max"]},
-        {"TRUE" if is_rainy else "FALSE"},
-        {rain_hours},
-        '{business_impact}',
-        NOW()
-    )
-    ON CONFLICT (location_id, business_date)
-    DO UPDATE SET
-        max_temperature = EXCLUDED.max_temperature,
-        min_temperature = EXCLUDED.min_temperature,
-        avg_temperature = EXCLUDED.avg_temperature,
-        avg_humidity = EXCLUDED.avg_humidity,
-        total_precipitation = EXCLUDED.total_precipitation,
-        weather_code = EXCLUDED.weather_code,
-        weather_description = EXCLUDED.weather_description,
-        avg_wind_speed = EXCLUDED.avg_wind_speed,
-        is_rainy = EXCLUDED.is_rainy,
-        rain_hours = EXCLUDED.rain_hours,
-        business_impact = EXCLUDED.business_impact,
-        synced_at = NOW();
-    """
-
-	headers = {
-		"Authorization": f"Bearer {SUPABASE_API_TOKEN}",
-		"Content-Type": "application/json",
+	return {
+		"daily": {
+			"temperature_max": daily["temperature_2m_max"][0],
+			"temperature_min": daily["temperature_2m_min"][0],
+			"temperature_mean": daily["temperature_2m_mean"][0],
+			"apparent_temperature_max": daily.get("apparent_temperature_max", [None])[0],
+			"humidity_mean": daily["relative_humidity_2m_mean"][0],
+			"precipitation": daily["precipitation_sum"][0],
+			"weather_code": daily_weather_code,
+			"wind_speed_avg": avg_hourly_wind,
+			"wind_speed_max": daily["wind_speed_10m_max"][0],
+			"rain_hours": rain_hours,
+			"max_hourly_precipitation": max_hourly_precipitation,
+			"storm_flag": storm_flag,
+		},
+		"hourly": hourly_rows,
 	}
 
-	payload = {"query": sql}
 
-	try:
-		response = requests.post(SUPABASE_API_URL, headers=headers, json=payload, timeout=10)
-		response.raise_for_status()
-		return True
+def upsert_daily_weather(client: Client, group: list[dict[str, Any]], date_str: str, daily_weather: dict[str, Any]) -> None:
+	weather_description = WEATHER_CODES.get(
+		int(daily_weather["weather_code"]),
+		f"Unknown ({daily_weather['weather_code']})",
+	)
+	business_impact = calculate_business_impact(
+		max_temp=daily_weather.get("temperature_max"),
+		total_precipitation=daily_weather.get("precipitation"),
+		max_hourly_precipitation=daily_weather.get("max_hourly_precipitation"),
+		rain_hours=int(daily_weather.get("rain_hours") or 0),
+		weather_code=daily_weather.get("weather_code"),
+		storm_flag=bool(daily_weather.get("storm_flag")),
+	)
 
-	except Exception as e:
-		print(f"[ERROR] Error upserting to Supabase: {e}")
-		if "response" in locals() and hasattr(response, "text"):
-			print(f"   Response: {response.text}")
-		return False
+	rows = []
+	for store in group:
+		rows.append(
+			{
+				"location_id": store["location_id"],
+				"business_date": date_str,
+				"max_temperature": daily_weather.get("temperature_max"),
+				"min_temperature": daily_weather.get("temperature_min"),
+				"avg_temperature": daily_weather.get("temperature_mean"),
+				"avg_humidity": daily_weather.get("humidity_mean"),
+				"total_precipitation": daily_weather.get("precipitation"),
+				"weather_code": daily_weather.get("weather_code"),
+				"weather_description": weather_description,
+				"avg_wind_speed": daily_weather.get("wind_speed_avg") or daily_weather.get("wind_speed_max"),
+				"is_rainy": float(daily_weather.get("precipitation") or 0) > 0,
+				"rain_hours": int(daily_weather.get("rain_hours") or 0),
+				"business_impact": business_impact,
+				"synced_at": datetime.now(timezone.utc).isoformat(),
+			}
+		)
+	upsert_batches(client, "daily_weather", rows, "location_id,business_date")
 
 
-def sync_weather(date_str: str, warehouse_tree_path: str) -> dict:
-	"""Sync weather data for a specific date."""
+def upsert_hourly_weather(client: Client, group: list[dict[str, Any]], hourly_rows: list[dict[str, Any]]) -> None:
+	rows = []
+	for store in group:
+		for row in hourly_rows:
+			rows.append(
+				{
+					"location_id": store["location_id"],
+					"observed_at_utc": row["observed_at_utc"],
+					"observed_at_manila": row["observed_at_manila"],
+					"business_date": row["business_date"],
+					"hour_local": row["hour_local"],
+					"precipitation": row["precipitation"],
+					"precipitation_probability": row["precipitation_probability"],
+					"weather_code": row["weather_code"],
+					"temperature_2m": row["temperature_2m"],
+					"apparent_temperature": row["apparent_temperature"],
+					"wind_speed_10m": row["wind_speed_10m"],
+					"wind_gusts_10m": row["wind_gusts_10m"],
+					"cloud_cover": row["cloud_cover"],
+					"synced_at": datetime.now(timezone.utc).isoformat(),
+				}
+			)
+	upsert_batches(client, "weather_hourly", rows, "location_id,observed_at_utc")
+
+
+def refresh_weather_features(client: Client) -> None:
+	client.rpc("refresh_sales_dashboard_weather_daily_features").execute()
+
+
+def sync_weather(client: Client, date_str: str, warehouse_tree_path: str) -> dict[str, Any]:
 	print(f"\n{'=' * 60}")
 	print(f"Syncing weather data for {date_str}")
 	print(f"{'=' * 60}\n")
 
-	# Read store data
 	print(">> Reading store coordinates...")
 	stores = read_store_coordinates(warehouse_tree_path)
-	print(f"   Found {len(stores)} stores with coordinates and location_ids\n")
+	print(f"   Found {len(stores)} stores with coordinates and shared location mapping\n")
 
-	# Group nearby stores
 	print(">> Grouping nearby stores (within 5km)...")
 	groups = group_nearby_stores(stores)
 	print(f"   Created {len(groups)} weather fetch groups\n")
 
-	# Track statistics
 	stats = {
 		"stores_processed": 0,
 		"api_calls": 0,
-		"successful_upserts": 0,
-		"failed_upserts": 0,
+		"successful_groups": 0,
+		"failed_groups": 0,
 		"weather_conditions": {},
 	}
 
-	# Process each group
-	for group_idx, group in enumerate(groups, 1):
-		# Use the first store's coordinates as representative
+	for group_index, group in enumerate(groups, start=1):
 		seed = group[0]
-		print(
-			f"[Group {group_idx}/{len(groups)}] Fetching weather at ({seed['latitude']:.4f}, {seed['longitude']:.4f})"
-		)
-		print(f"   Stores in group: {', '.join(s['warehouse_name'] for s in group)}")
+		print(f"[Group {group_index}/{len(groups)}] Fetching weather at ({seed['latitude']:.4f}, {seed['longitude']:.4f})")
+		print(f"   Stores in group: {', '.join(store['warehouse_name'] for store in group)}")
 
-		# Fetch weather data
-		weather_data = fetch_weather_data(seed["latitude"], seed["longitude"], date_str)
+		weather_bundle = fetch_weather_bundle(seed["latitude"], seed["longitude"], date_str)
 		stats["api_calls"] += 1
-
-		if not weather_data:
-			print("   [WARN] Failed to fetch weather data, skipping group")
-			stats["failed_upserts"] += len(group)
+		if not weather_bundle:
+			print("   [WARN] Failed to fetch weather data, skipping group\n")
+			stats["failed_groups"] += 1
+			stats["stores_processed"] += len(group)
 			continue
 
-		# Calculate business impact for logging
+		daily_weather = weather_bundle["daily"]
 		business_impact = calculate_business_impact(
-			weather_data["temperature_max"], weather_data["precipitation"], weather_data["weather_code"]
+			max_temp=daily_weather.get("temperature_max"),
+			total_precipitation=daily_weather.get("precipitation"),
+			max_hourly_precipitation=daily_weather.get("max_hourly_precipitation"),
+			rain_hours=int(daily_weather.get("rain_hours") or 0),
+			weather_code=daily_weather.get("weather_code"),
+			storm_flag=bool(daily_weather.get("storm_flag")),
 		)
+		weather_desc = WEATHER_CODES.get(int(daily_weather["weather_code"]), "Unknown")
 
-		weather_desc = WEATHER_CODES.get(weather_data["weather_code"], "Unknown")
-
-		print(
-			f"   Temperature: {weather_data['temperature_mean']:.1f}C (max: {weather_data['temperature_max']:.1f}C)"
-		)
-		print(f"   Precipitation: {weather_data['precipitation']:.1f}mm")
+		print(f"   Temperature: {float(daily_weather['temperature_mean']):.1f}C (max: {float(daily_weather['temperature_max']):.1f}C)")
+		print(f"   Precipitation: {float(daily_weather['precipitation']):.1f}mm")
+		print(f"   Rain hours: {int(daily_weather['rain_hours'])}")
 		print(f"   Conditions: {weather_desc}")
 		print(f"   Business impact: {business_impact}")
 
-		# Track weather conditions
-		stats["weather_conditions"][business_impact] = stats["weather_conditions"].get(
-			business_impact, 0
-		) + len(group)
-
-		# Upsert for each store in the group
-		for store in group:
-			success = upsert_to_supabase(store["location_id"], date_str, weather_data)
-
-			if success:
-				stats["successful_upserts"] += 1
+		try:
+			upsert_daily_weather(client, group, date_str, daily_weather)
+			upsert_hourly_weather(client, group, weather_bundle["hourly"])
+			stats["successful_groups"] += 1
+			stats["weather_conditions"][business_impact] = stats["weather_conditions"].get(business_impact, 0) + len(group)
+			for store in group:
 				print(f"   [OK] {store['warehouse_name']} (location_id: {store['location_id']})")
-			else:
-				stats["failed_upserts"] += 1
-				print(f"   [FAIL] {store['warehouse_name']} (location_id: {store['location_id']})")
-
-			stats["stores_processed"] += 1
+		except Exception as exc:
+			stats["failed_groups"] += 1
+			print(f"   [FAIL] Group upsert failed: {exc}")
+		finally:
+			stats["stores_processed"] += len(group)
 
 		print()
-
-		# Rate limiting: be nice to the free API
-		if group_idx < len(groups):
-			time.sleep(0.5)
+		if group_index < len(groups):
+			time.sleep(INTER_GROUP_DELAY_SECONDS)
 
 	return stats
 
 
-def main():
+def main() -> None:
 	parser = argparse.ArgumentParser(description="Sync weather data to Supabase")
 	parser.add_argument("--date", type=str, help="Date to sync (YYYY-MM-DD). Default: yesterday")
 	parser.add_argument("--backfill-days", type=int, help="Backfill N days of historical data")
@@ -459,10 +461,13 @@ def main():
 		default="data/_FINAL/WAREHOUSE_TREE.csv",
 		help="Path to WAREHOUSE_TREE.csv",
 	)
-
+	parser.add_argument(
+		"--skip-refresh-features",
+		action="store_true",
+		help="Skip refreshing sales_dashboard_weather_daily_features after sync",
+	)
 	args = parser.parse_args()
 
-	# Determine date range
 	if args.start_date or args.end_date:
 		if not (args.start_date and args.end_date):
 			raise SystemExit("--start-date and --end-date must be used together")
@@ -476,7 +481,7 @@ def main():
 			dates.append(current.strftime("%Y-%m-%d"))
 			current += timedelta(days=1)
 	elif args.backfill_days:
-		end_date = datetime.now() - timedelta(days=1)  # Yesterday
+		end_date = datetime.now(tz=MANILA_TZ) - timedelta(days=1)
 		start_date = end_date - timedelta(days=args.backfill_days - 1)
 		dates = []
 		current = start_date
@@ -486,44 +491,45 @@ def main():
 	elif args.date:
 		dates = [args.date]
 	else:
-		# Default: yesterday
-		yesterday = datetime.now() - timedelta(days=1)
+		yesterday = datetime.now(tz=MANILA_TZ) - timedelta(days=1)
 		dates = [yesterday.strftime("%Y-%m-%d")]
 
 	print("\nWeather Data Sync")
 	print(f"Dates to process: {', '.join(dates)}")
+	supabase = get_supabase_client()
 
-	# Sync each date
 	all_stats = {
 		"total_stores_processed": 0,
 		"total_api_calls": 0,
-		"total_successful_upserts": 0,
-		"total_failed_upserts": 0,
+		"total_successful_groups": 0,
+		"total_failed_groups": 0,
 		"total_weather_conditions": {},
 	}
 
 	for date_str in dates:
-		stats = sync_weather(date_str, args.warehouse_tree)
-
+		stats = sync_weather(supabase, date_str, args.warehouse_tree)
 		all_stats["total_stores_processed"] += stats["stores_processed"]
 		all_stats["total_api_calls"] += stats["api_calls"]
-		all_stats["total_successful_upserts"] += stats["successful_upserts"]
-		all_stats["total_failed_upserts"] += stats["failed_upserts"]
-
+		all_stats["total_successful_groups"] += stats["successful_groups"]
+		all_stats["total_failed_groups"] += stats["failed_groups"]
 		for condition, count in stats["weather_conditions"].items():
 			all_stats["total_weather_conditions"][condition] = (
 				all_stats["total_weather_conditions"].get(condition, 0) + count
 			)
 
-	# Print summary
+	if not args.skip_refresh_features:
+		print(">> Refreshing weather intelligence materialized view...")
+		refresh_weather_features(supabase)
+		print("   [OK] sales_dashboard_weather_daily_features refreshed")
+
 	print(f"\n{'=' * 60}")
 	print("SUMMARY")
 	print(f"{'=' * 60}")
 	print(f"Dates processed: {len(dates)}")
 	print(f"Stores processed: {all_stats['total_stores_processed']}")
 	print(f"API calls: {all_stats['total_api_calls']}")
-	print(f"Successful upserts: {all_stats['total_successful_upserts']}")
-	print(f"Failed upserts: {all_stats['total_failed_upserts']}")
+	print(f"Successful groups: {all_stats['total_successful_groups']}")
+	print(f"Failed groups: {all_stats['total_failed_groups']}")
 	print("\nWeather conditions breakdown:")
 	for condition, count in sorted(all_stats["total_weather_conditions"].items()):
 		print(f"  {condition}: {count} stores")
