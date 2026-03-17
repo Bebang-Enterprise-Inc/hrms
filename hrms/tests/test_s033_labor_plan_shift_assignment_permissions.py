@@ -370,6 +370,36 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 		self.assertEqual(employees[0]["branch"], "COMMISSARY SHAW")
 		self.assertEqual(employees[0]["hour_rate"], 88.5)
 
+	def test_get_area_schedule_overview_uses_schedule_scope_for_area_personas_with_hr_roles(self):
+		store_mod = sys.modules["hrms.api.store"]
+		store_mod.get_user_store = lambda surface=None: {
+			"stores": [{"name": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"}]
+		}
+		store_mod._get_store_schedule_locations = lambda: []
+
+		with (
+			patch.object(
+				supervisor.frappe, "get_roles", return_value=["Area Supervisor", "HR User"], create=True
+			),
+			patch.object(
+				supervisor.frappe.db,
+				"get_value",
+				return_value=_AttrDict(designation="Area Supervisor"),
+			),
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"},
+			),
+			patch.object(supervisor, "_get_labor_plan_employees", return_value=[]),
+			patch.object(supervisor.frappe, "get_all", return_value=[]),
+		):
+			result = supervisor.get_area_schedule_overview("2026-03-16")
+
+		self.assertEqual(result["summary"]["locations"], 1)
+		self.assertEqual(result["summary"]["missing_locations"], 1)
+		self.assertEqual(result["items"][0]["store"], "TEST-STORE-BGC - BEI")
+
 	def test_cancel_and_delete_shift_assignment_uses_system_permission_flags(self):
 		doc = _FakeShiftAssignment(docstatus=1)
 		delete_doc = MagicMock()

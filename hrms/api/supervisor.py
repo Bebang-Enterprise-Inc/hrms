@@ -1289,10 +1289,22 @@ def get_area_schedule_overview(week_start: str | None = None):
 	normalized_week_start = str(getdate(week_start)) if week_start else _default_week_start_value()
 	week_end = str(add_days(normalized_week_start, 6))
 
-	if "Area Supervisor" in user_roles and not user_roles.intersection(
-		{"HR User", "HR Manager", "System Manager", "Administrator"}
-	):
-		stores = _get_area_supervisor_stores()
+	current_employee = frappe.db.get_value(
+		"Employee",
+		{"user_id": frappe.session.user, "status": "Active"},
+		["designation"],
+		as_dict=True,
+	)
+	is_area_persona = "Area Supervisor" in user_roles or _designation_is_area_supervisor(
+		(current_employee or {}).get("designation")
+	)
+	if is_area_persona:
+		from hrms.api.store import _get_store_schedule_locations, get_user_store
+
+		store_payload = get_user_store(surface=SCHEDULE_SURFACE_STORE) or {}
+		stores = store_payload.get("stores") or []
+		if not stores and user_roles.intersection({"HR User", "HR Manager", "System Manager", "Administrator"}):
+			stores = _get_store_schedule_locations()
 	else:
 		from hrms.api.store import _get_store_schedule_locations
 
