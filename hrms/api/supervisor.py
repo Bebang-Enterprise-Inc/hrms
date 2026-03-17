@@ -24,6 +24,13 @@ TRANSFER_REQUEST_DOCTYPE = "BEI Transfer Request"
 SCHEDULE_SOURCE = "BEI_WEEKLY_LABOR_PLAN"
 SCHEDULE_SURFACE_STORE = "store_schedule"
 SCHEDULE_SURFACE_COMMISSARY = "commissary_schedule"
+COMMISSARY_EMPLOYEE_BRANCH_ALIASES = {
+	"SHAWBLVD": ("COMMISSARY SHAW",),
+	"SHAWBLVDBKI": ("COMMISSARY SHAW",),
+	"TESTCOMMISSARY": ("TEST-COMMISSARY", "TEST-COMMISSARY - BKI", "TEST-COMMISSARY - BEI"),
+	"TESTCOMMISSARYBKI": ("TEST-COMMISSARY", "TEST-COMMISSARY - BKI", "TEST-COMMISSARY - BEI"),
+	"TESTCOMMISSARYBEI": ("TEST-COMMISSARY", "TEST-COMMISSARY - BKI", "TEST-COMMISSARY - BEI"),
+}
 
 
 # ==============================================================================
@@ -410,11 +417,21 @@ def _sort_labor_plan_employees(employees: list[dict[str, Any]]):
 
 
 def _get_labor_plan_employees(store_context: dict[str, str]):
+	branch_candidates = {
+		store_context["warehouse"],
+		store_context["warehouse_name"],
+	}
+	for key in (
+		_normalize_schedule_location_key(store_context["warehouse"]),
+		_normalize_schedule_location_key(store_context["warehouse_name"]),
+	):
+		branch_candidates.update(COMMISSARY_EMPLOYEE_BRANCH_ALIASES.get(key, ()))
+
 	employees = frappe.get_all(
 		"Employee",
 		filters={
 			"status": "Active",
-			"branch": ["in", [store_context["warehouse"], store_context["warehouse_name"]]],
+			"branch": ["in", [value for value in branch_candidates if value]],
 		},
 		fields=["name", "employee_name", "designation", "branch", "company"],
 		order_by="employee_name asc",

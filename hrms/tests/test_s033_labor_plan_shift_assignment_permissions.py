@@ -336,6 +336,40 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 		self.assertTrue(any(shift["employee"] == "EMP-LEAD" for shift in result["shifts"]))
 		self.assertEqual(result["warnings"], [])
 
+	def test_get_labor_plan_employees_accepts_commissary_branch_aliases(self):
+		employee_filters = {}
+
+		def fake_get_all(doctype, **kwargs):
+			if doctype == "Employee":
+				employee_filters.update(kwargs.get("filters") or {})
+				return [
+					{
+						"name": "EMP-COMM-001",
+						"employee_name": "Commissary Crew",
+						"designation": "Commissary Crew",
+						"branch": "COMMISSARY SHAW",
+						"company": "BKI",
+					}
+				]
+			return []
+
+		with (
+			patch.object(supervisor.frappe, "get_all", side_effect=fake_get_all),
+			patch.object(
+				supervisor,
+				"_get_labor_plan_hour_rate",
+				return_value={"hour_rate": 88.5, "source": "salary_structure", "base_salary": 18408},
+			),
+		):
+			employees = supervisor._get_labor_plan_employees(
+				{"warehouse": "Shaw BLVD - BKI", "warehouse_name": "Shaw BLVD"}
+			)
+
+		self.assertIn("COMMISSARY SHAW", employee_filters["branch"][1])
+		self.assertEqual(len(employees), 1)
+		self.assertEqual(employees[0]["branch"], "COMMISSARY SHAW")
+		self.assertEqual(employees[0]["hour_rate"], 88.5)
+
 	def test_cancel_and_delete_shift_assignment_uses_system_permission_flags(self):
 		doc = _FakeShiftAssignment(docstatus=1)
 		delete_doc = MagicMock()
