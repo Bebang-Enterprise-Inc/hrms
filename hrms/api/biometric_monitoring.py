@@ -216,9 +216,7 @@ def get_all_issues():
 		"employees": all_employees,
 		"missing_sources": missing_sources,
 		"message": (
-			"Biometric cache is stale or incomplete. Trigger a refresh."
-			if stale or missing_sources
-			else None
+			"Biometric cache is stale or incomplete. Trigger a refresh." if stale or missing_sources else None
 		),
 	}
 
