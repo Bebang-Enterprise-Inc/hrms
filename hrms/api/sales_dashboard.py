@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from calendar import monthrange
 import csv
 import io
 import json
@@ -35,22 +36,22 @@ ALL_STORE_ROLES = {
 	ROLE_HQ_FINANCE,
 	ROLE_ACCOUNTS_MANAGER,
 }
-OPS_ALLOWED_ROLES = {
-	ROLE_ADMINISTRATOR,
-	ROLE_SYSTEM_MANAGER,
-	ROLE_HQ_USER,
-	ROLE_HQ_FINANCE,
-	ROLE_ACCOUNTS_MANAGER,
-	ROLE_AREA_SUPERVISOR,
-}
 ALLOWED_ROLES = ALL_STORE_ROLES | {ROLE_AREA_SUPERVISOR, ROLE_STORE_SUPERVISOR, ROLE_SALES_STAKEHOLDER}
 CALENDAR_SOURCE = "Company.default_holiday_list"
+CANONICAL_VIEW_MODE = "canonical"
 SUPABASE_DAILY_VIEW = "sales_dashboard_daily_store_metrics"
 SUPABASE_WEATHER_VIEW = "sales_dashboard_weather_daily_features"
+SUPABASE_DISCOUNT_VIEW = "discount_investigation_store_day"
 SALES_DASHBOARD_CACHE_TTL = 300
 SALES_DASHBOARD_FRESHNESS_CACHE_TTL = 300
 WEATHER_EFFECT_HISTORY_LOOKBACK_DAYS = 210
 WEATHER_EFFECT_MIN_COMPARABLE_HISTORY_DAYS = 56
+PROJECTION_MIN_CLOSED_DAYS = 28
+PROJECTION_LOOKBACK_CALENDAR_DAYS = 60
+RANKING_MIN_SCOPE_STORES = 5
+RANKING_MIN_POS_ORIGINAL_GROSS = 20_000.0
+DEFAULT_RANKING_MODE = "discount_pct"
+ALLOWED_RANKING_MODES = {DEFAULT_RANKING_MODE, "discount_amt"}
 RAIN_LIGHT_PEAK_MM = 2.5
 RAIN_DISRUPTIVE_PEAK_MM = 7.5
 RAIN_DISRUPTIVE_TOTAL_MM = 20.0
@@ -120,19 +121,17 @@ WEATHER_SELECT = ",".join(
 		"synced_at",
 	]
 )
-
-OPS_WW10_REFERENCE = {
-	"start_date": "2026-03-02",
-	"end_date": "2026-03-08",
-	"gross_sales": 23_963_905.0,
-	"net_sales": 20_262_953.0,
-	"pickup_sales": 13_565_270.0,
-	"foodpanda_sales": 4_288_747.0,
-	"website_sales": 2_408_936.0,
-	"cups_sold": 119_411,
-	"transactions": 55_901,
-	"source": ".agents/skills/sales/references/ww10-team-truth.md",
-}
+DISCOUNT_SELECT = ",".join(
+	[
+		"location_id",
+		"business_date",
+		"store_name",
+		"pos_original_gross_sales",
+		"pos_total_discounts",
+		"sc_recorded_discount_amount",
+		"pwd_recorded_discount_amount",
+	]
+)
 
 
 def _permission_error_class():
@@ -228,6 +227,23 @@ def _merge_params(
 	merged = [(key, value) for key, value in params if key not in {"limit", "offset"}]
 	merged.extend(extra)
 	return merged
+
+
+def _canonical_view_mode(_view_mode: str | None = None) -> str:
+	return CANONICAL_VIEW_MODE
+
+
+def _parse_ranking_mode(value: str | None = None) -> str:
+	if not value:
+		return DEFAULT_RANKING_MODE
+	normalized = str(value).strip().lower()
+	return normalized if normalized in ALLOWED_RANKING_MODES else DEFAULT_RANKING_MODE
+
+
+def _pct(numerator: float, denominator: float) -> float | None:
+	if denominator <= 0:
+		return None
+	return _round_half_up((numerator / denominator) * 100)
 
 
 def _get_param_value(params: dict[str, Any] | list[tuple[str, Any]] | None, key: str) -> Any:
@@ -508,10 +524,8 @@ def _selected_scope(requested_stores: list[str], user: str | None = None) -> dic
 
 
 def _allowed_view_modes(roles: set[str]) -> list[str]:
-	modes = ["canonical"]
-	if roles.intersection(OPS_ALLOWED_ROLES):
-		modes.append("ops_matched")
-	return modes
+	_ = roles
+	return [CANONICAL_VIEW_MODE]
 
 
 def _get_weather_max_business_date(location_ids: list[int]) -> str | None:
@@ -548,26 +562,61 @@ def _get_foodpanda_cups_max_business_date(location_ids: list[int]) -> str | None
 	return str(rows[0]["business_date"]) if rows else None
 
 
+def _get_resource_boundary_business_date(
+	resource: str,
+	*,
+	order: str,
+	location_ids: list[int] | None = None,
+	extra_params: list[tuple[str, Any]] | None = None,
+) -> str | None:
+	params: list[tuple[str, Any]] = [("select", "business_date")]
+	if extra_params:
+		params.extend(extra_params)
+	if location_ids:
+		params.append(("location_id", f"in.({_location_scope_key(location_ids)})"))
+	params.extend([("order", order), ("limit", "1")])
+	rows = _supabase_get_all(resource, params, page_size=1)
+	return str(rows[0]["business_date"]) if rows else None
+
+
 def _get_resource_max_business_date(
 	resource: str,
 	filter_key: str,
 	filter_value: str,
 	location_ids: list[int] | None = None,
 ) -> str | None:
-	params: list[tuple[str, Any]] = [
-		("select", "business_date"),
-		(filter_key, filter_value),
-		("order", "business_date.desc"),
-		("limit", "1"),
-	]
-	if location_ids:
-		params.append(("location_id", f"in.({_location_scope_key(location_ids)})"))
-	rows = _supabase_get_all(
+	return _get_resource_boundary_business_date(
 		resource,
-		params,
-		page_size=1,
+		order="business_date.desc",
+		location_ids=location_ids,
+		extra_params=[(filter_key, filter_value)],
 	)
-	return str(rows[0]["business_date"]) if rows else None
+
+
+def _get_sales_history_start_date(location_ids: list[int]) -> str | None:
+	return _get_resource_boundary_business_date(
+		SUPABASE_DAILY_VIEW,
+		order="business_date.asc",
+		location_ids=location_ids,
+	)
+
+
+def _get_discount_history_start_date(location_ids: list[int]) -> str | None:
+	return _get_resource_boundary_business_date(
+		SUPABASE_DISCOUNT_VIEW,
+		order="business_date.asc",
+		location_ids=location_ids,
+		extra_params=[("scope", "eq.store")],
+	)
+
+
+def _get_discount_max_business_date(location_ids: list[int]) -> str | None:
+	return _get_resource_boundary_business_date(
+		SUPABASE_DISCOUNT_VIEW,
+		order="business_date.desc",
+		location_ids=location_ids,
+		extra_params=[("scope", "eq.store")],
+	)
 
 
 def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
@@ -595,16 +644,22 @@ def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
 			),
 			"foodpanda_cups_max_business_date": _get_foodpanda_cups_max_business_date(location_ids),
 			"weather_max_business_date": _get_weather_max_business_date(location_ids),
+			"discount_max_business_date": _get_discount_max_business_date(location_ids),
+			"sales_history_start_date": _get_sales_history_start_date(location_ids),
+			"discount_history_start_date": _get_discount_history_start_date(location_ids),
 		}
 
 	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_FRESHNESS_CACHE_TTL)
 
 
-def _build_data_quality_warnings(end_day: date, freshness: dict[str, Any]) -> list[str]:
+def _build_data_quality_warnings(start_day: date, end_day: date, freshness: dict[str, Any]) -> list[str]:
 	warnings: list[str] = []
 	foodpanda_cups_max = freshness.get("foodpanda_cups_max_business_date")
 	weather_max = freshness.get("weather_max_business_date")
 	effective_end_date = freshness.get("effective_end_date")
+	discount_effective_end_date = freshness.get("discount_effective_end_date")
+	discount_history_start_date = freshness.get("discount_history_start_date")
+	sales_history_start_date = freshness.get("sales_history_start_date")
 
 	if foodpanda_cups_max and str(foodpanda_cups_max) < end_day.isoformat():
 		warnings.append(
@@ -620,6 +675,23 @@ def _build_data_quality_warnings(end_day: date, freshness: dict[str, Any]) -> li
 		warnings.append(
 			f"Dashboard analytics were clipped to {effective_end_date}, the latest closed core-sales business date for the selected scope."
 		)
+
+	if discount_effective_end_date and str(discount_effective_end_date) < str(effective_end_date or end_day.isoformat()):
+		warnings.append(
+			f"Projection and discount analytics were clipped to {discount_effective_end_date}, the latest aligned discount business date for the selected scope."
+		)
+
+	if discount_history_start_date and start_day.isoformat() < str(discount_history_start_date):
+		warnings.append(
+			f"Discount analytics start on {discount_history_start_date}; earlier dates in the selected window have partial or unavailable discount visibility."
+		)
+
+	if sales_history_start_date:
+		last_year_start = start_day - timedelta(days=365)
+		if last_year_start.isoformat() < str(sales_history_start_date):
+			warnings.append(
+				f"Same-period last year is unavailable for this window because verified sales history begins on {sales_history_start_date}."
+			)
 
 	return warnings
 
@@ -638,15 +710,21 @@ def _effective_end_day(requested_end_day: date, freshness: dict[str, Any]) -> da
 	return min(requested_end_day, min(core_sales_dates))
 
 
+def _effective_discount_end_day(sales_effective_end_day: date, freshness: dict[str, Any]) -> date:
+	discount_max_business_date = freshness.get("discount_max_business_date")
+	if not discount_max_business_date:
+		return sales_effective_end_day
+	return min(sales_effective_end_day, date.fromisoformat(str(discount_max_business_date)))
+
+
 def _build_access_context(scope: dict[str, Any]) -> dict[str, Any]:
 	location_ids = [store["location_id"] for store in scope["stores"]]
-	roles = set(scope["roles"])
 	weather_max = _get_weather_max_business_date(location_ids)
 	return {
 		"role": scope["role"],
 		"allowed_stores": scope["stores"],
 		"default_store_ids": [store["warehouse"] for store in scope["stores"]],
-		"allowed_view_modes": _allowed_view_modes(roles),
+		"allowed_view_modes": _allowed_view_modes(set(scope["roles"])),
 		"can_export": bool(scope["stores"]),
 		"can_group_by_area": scope["role"] in ALL_STORE_ROLES | {ROLE_AREA_SUPERVISOR},
 		"weather_coverage_summary": {
@@ -694,6 +772,33 @@ def _query_weather_rows(start_day: date, end_day: date, location_ids: list[int])
 				("business_date", f"lte.{end_day.isoformat()}"),
 				("location_id", f"in.({location_filter})"),
 				("order", "business_date.asc"),
+			],
+		)
+
+	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_CACHE_TTL)
+
+
+def _query_discount_rows(start_day: date, end_day: date, location_ids: list[int]) -> list[dict[str, Any]]:
+	if not location_ids or end_day < start_day:
+		return []
+	cache_key = _sales_dashboard_cache_key(
+		"discount_rows",
+		location_ids,
+		start_day=start_day,
+		end_day=end_day,
+	)
+
+	def builder() -> list[dict[str, Any]]:
+		location_filter = _location_scope_key(location_ids)
+		return _supabase_get_all(
+			SUPABASE_DISCOUNT_VIEW,
+			[
+				("select", DISCOUNT_SELECT),
+				("scope", "eq.store"),
+				("business_date", f"gte.{start_day.isoformat()}"),
+				("business_date", f"lte.{end_day.isoformat()}"),
+				("location_id", f"in.({location_filter})"),
+				("order", "business_date.asc,store_name.asc"),
 			],
 		)
 
@@ -757,6 +862,238 @@ def _aggregate_sales(rows: list[dict[str, Any]]) -> dict[str, Any]:
 	return totals
 
 
+def _aggregate_sales_by_business_date(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+	by_day: dict[str, float] = {}
+	for row in rows:
+		day_key = str(row.get("business_date"))
+		by_day[day_key] = by_day.get(day_key, 0.0) + _to_float(row.get("total_net_sales_without_vat"))
+	return [
+		{
+			"business_date": business_date,
+			"net_sales_without_vat": _round_half_up(net_sales_without_vat),
+		}
+		for business_date, net_sales_without_vat in sorted(by_day.items())
+	]
+
+
+def _build_projection(
+	selected_location_ids: list[int],
+	start_day: date,
+	projection_effective_end_day: date,
+	current_window_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+	if not selected_location_ids:
+		return {
+			"available": False,
+			"reason": "No stores selected.",
+			"closed_days_considered": 0,
+			"minimum_closed_days_required": PROJECTION_MIN_CLOSED_DAYS,
+		}
+	if projection_effective_end_day < start_day:
+		return {
+			"available": False,
+			"reason": "No closed business days matched the selected window.",
+			"closed_days_considered": 0,
+			"minimum_closed_days_required": PROJECTION_MIN_CLOSED_DAYS,
+		}
+
+	lookback_start_day = projection_effective_end_day - timedelta(days=PROJECTION_LOOKBACK_CALENDAR_DAYS)
+	projection_rows = _query_daily_rows(lookback_start_day, projection_effective_end_day, selected_location_ids)
+	daily_projection_rows = _aggregate_sales_by_business_date(projection_rows)
+	eligible_rows = daily_projection_rows[-PROJECTION_MIN_CLOSED_DAYS:]
+	closed_days_considered = len(eligible_rows)
+
+	if closed_days_considered < PROJECTION_MIN_CLOSED_DAYS:
+		return {
+			"available": False,
+			"reason": "Projection requires 28 closed business days.",
+			"closed_days_considered": closed_days_considered,
+			"minimum_closed_days_required": PROJECTION_MIN_CLOSED_DAYS,
+		}
+
+	weighted_total = 0.0
+	weight_sum = 0
+	for index, row in enumerate(eligible_rows, start=1):
+		weighted_total += index * _to_float(row.get("net_sales_without_vat"))
+		weight_sum += index
+
+	projected_daily_pace = _round_half_up(weighted_total / weight_sum) if weight_sum else 0.0
+	projected_7_day = _round_half_up(projected_daily_pace * 7)
+	current_window_summary = _aggregate_sales(current_window_rows)
+	current_window_average = _to_float(current_window_summary.get("average_daily_sales"))
+	delta_vs_window_average = _round_half_up(projected_daily_pace - current_window_average)
+	delta_vs_window_average_pct = (
+		_round_half_up((delta_vs_window_average / current_window_average) * 100)
+		if current_window_average
+		else None
+	)
+
+	projected_month_close = None
+	month_start = projection_effective_end_day.replace(day=1)
+	if start_day == month_start:
+		total_days_in_month = monthrange(projection_effective_end_day.year, projection_effective_end_day.month)[1]
+		remaining_days = max(total_days_in_month - projection_effective_end_day.day, 0)
+		projected_month_close = _round_half_up(
+			_to_float(current_window_summary.get("net_sales_without_vat")) + (projected_daily_pace * remaining_days)
+		)
+
+	return {
+		"available": True,
+		"reason": None,
+		"closed_days_considered": closed_days_considered,
+		"minimum_closed_days_required": PROJECTION_MIN_CLOSED_DAYS,
+		"window_start_date": eligible_rows[0]["business_date"],
+		"window_end_date": eligible_rows[-1]["business_date"],
+		"projected_daily_pace_net_sales_without_vat": projected_daily_pace,
+		"projected_7_day_net_sales_without_vat": projected_7_day,
+		"projected_month_close_net_sales_without_vat": projected_month_close,
+		"delta_vs_selected_window_average_daily_sales": delta_vs_window_average,
+		"delta_vs_selected_window_average_daily_sales_pct": delta_vs_window_average_pct,
+	}
+
+
+def _aggregate_discount_metrics(
+	discount_rows: list[dict[str, Any]],
+	selected_location_ids: list[int],
+	start_day: date,
+	discount_effective_end_day: date,
+	freshness: dict[str, Any],
+) -> dict[str, Any]:
+	denominator = 0.0
+	total_discount_amount = 0.0
+	sc_discount_amount = 0.0
+	pwd_discount_amount = 0.0
+
+	for row in discount_rows:
+		denominator += _to_float(row.get("pos_original_gross_sales"))
+		total_discount_amount += _to_float(row.get("pos_total_discounts"))
+		sc_discount_amount += _to_float(row.get("sc_recorded_discount_amount"))
+		pwd_discount_amount += _to_float(row.get("pwd_recorded_discount_amount"))
+
+	covered_store_count = len(
+		{
+			_to_int(row.get("location_id"))
+			for row in discount_rows
+			if str(row.get("business_date")) == discount_effective_end_day.isoformat()
+		}
+	)
+	selected_store_count = len(selected_location_ids)
+	coverage_pct = _round_half_up((covered_store_count / selected_store_count) * 100) if selected_store_count else 0.0
+	discount_history_start_date = freshness.get("discount_history_start_date")
+
+	return {
+		"available": bool(discount_rows),
+		"partial_history": bool(
+			discount_history_start_date and start_day.isoformat() < str(discount_history_start_date)
+		),
+		"denominator_policy": "POS original gross sales",
+		"recording_policy": "Recorded discount only; excludes VAT relief and effective statutory benefit.",
+		"pos_original_gross_sales": _round_half_up(denominator),
+		"discount_amount": _round_half_up(total_discount_amount),
+		"discount_percentage": _pct(total_discount_amount, denominator),
+		"sc_discount_amount": _round_half_up(sc_discount_amount),
+		"sc_discount_percentage": _pct(sc_discount_amount, denominator),
+		"pwd_discount_amount": _round_half_up(pwd_discount_amount),
+		"pwd_discount_percentage": _pct(pwd_discount_amount, denominator),
+		"discount_effective_end_date": discount_effective_end_day.isoformat(),
+		"discount_scope_coverage_pct": coverage_pct,
+		"covered_store_count": covered_store_count,
+		"selected_store_count": selected_store_count,
+	}
+
+
+def _build_discount_rankings(
+	scope: dict[str, Any],
+	discount_rows: list[dict[str, Any]],
+	ranking_mode: str,
+) -> dict[str, Any]:
+	selected_stores = scope["selected_stores"]
+	selected_store_count = len(selected_stores)
+	if selected_store_count < RANKING_MIN_SCOPE_STORES:
+		return {
+			"ranking_state": {
+				"visible": False,
+				"reason": f"Select at least {RANKING_MIN_SCOPE_STORES} stores to compare discount burden.",
+				"ranking_mode": ranking_mode,
+				"selected_store_count": selected_store_count,
+				"minimum_store_count": RANKING_MIN_SCOPE_STORES,
+				"minimum_pos_original_gross": RANKING_MIN_POS_ORIGINAL_GROSS,
+			},
+			"discount_rankings": [],
+		}
+
+	store_lookup = {store["location_id"]: store for store in selected_stores}
+	by_location: dict[int, dict[str, Any]] = {}
+	for row in discount_rows:
+		location_id = _to_int(row.get("location_id"))
+		entry = by_location.setdefault(
+			location_id,
+			{
+				"location_id": location_id,
+				"warehouse": store_lookup.get(location_id, {}).get("warehouse"),
+				"warehouse_name": store_lookup.get(location_id, {}).get("warehouse_name") or row.get("store_name"),
+				"pos_original_gross_sales": 0.0,
+				"discount_amount": 0.0,
+				"sc_discount_amount": 0.0,
+				"pwd_discount_amount": 0.0,
+				"fact_days": 0,
+			},
+		)
+		entry["pos_original_gross_sales"] += _to_float(row.get("pos_original_gross_sales"))
+		entry["discount_amount"] += _to_float(row.get("pos_total_discounts"))
+		entry["sc_discount_amount"] += _to_float(row.get("sc_recorded_discount_amount"))
+		entry["pwd_discount_amount"] += _to_float(row.get("pwd_recorded_discount_amount"))
+		entry["fact_days"] += 1
+
+	eligible_rows: list[dict[str, Any]] = []
+	for row in by_location.values():
+		row["pos_original_gross_sales"] = _round_half_up(row["pos_original_gross_sales"])
+		row["discount_amount"] = _round_half_up(row["discount_amount"])
+		row["sc_discount_amount"] = _round_half_up(row["sc_discount_amount"])
+		row["pwd_discount_amount"] = _round_half_up(row["pwd_discount_amount"])
+		row["discount_percentage"] = _pct(row["discount_amount"], row["pos_original_gross_sales"])
+		row["sc_discount_percentage"] = _pct(row["sc_discount_amount"], row["pos_original_gross_sales"])
+		row["pwd_discount_percentage"] = _pct(row["pwd_discount_amount"], row["pos_original_gross_sales"])
+		if row["pos_original_gross_sales"] >= RANKING_MIN_POS_ORIGINAL_GROSS and row["discount_percentage"] is not None:
+			eligible_rows.append(row)
+
+	if ranking_mode == "discount_amt":
+		eligible_rows.sort(
+			key=lambda row: (
+				-row["discount_amount"],
+				-(row["discount_percentage"] or 0.0),
+				-row["pos_original_gross_sales"],
+				str(row.get("warehouse_name") or ""),
+			)
+		)
+	else:
+		eligible_rows.sort(
+			key=lambda row: (
+				-(row["discount_percentage"] or 0.0),
+				-row["discount_amount"],
+				-row["pos_original_gross_sales"],
+				str(row.get("warehouse_name") or ""),
+			)
+		)
+
+	return {
+		"ranking_state": {
+			"visible": True,
+			"reason": (
+				None
+				if eligible_rows
+				else f"No store met the PHP {RANKING_MIN_POS_ORIGINAL_GROSS:,.0f} POS original gross floor in the selected window."
+			),
+			"ranking_mode": ranking_mode,
+			"selected_store_count": selected_store_count,
+			"eligible_store_count": len(eligible_rows),
+			"minimum_store_count": RANKING_MIN_SCOPE_STORES,
+			"minimum_pos_original_gross": RANKING_MIN_POS_ORIGINAL_GROSS,
+		},
+		"discount_rankings": eligible_rows,
+	}
+
+
 def _shift_range(start_day: date, end_day: date, delta_days: int) -> tuple[date, date]:
 	return start_day - timedelta(days=delta_days), end_day - timedelta(days=delta_days)
 
@@ -766,19 +1103,25 @@ def _build_comparisons(
 	end_day: date,
 	location_ids: list[int],
 	current: dict[str, Any],
+	sales_history_start_date: str | None = None,
 ) -> dict[str, Any]:
 	span_days = (end_day - start_day).days + 1
 	prev_start, prev_end = _shift_range(start_day, end_day, span_days)
 	prev_rows = _query_daily_rows(prev_start, prev_end, location_ids)
 	prev = _aggregate_sales(prev_rows) if prev_rows else {}
-	last_year_rows = _query_daily_rows(
-		start_day - timedelta(days=365), end_day - timedelta(days=365), location_ids
+	last_year_start = start_day - timedelta(days=365)
+	last_year_end = end_day - timedelta(days=365)
+	last_year_history_floor = (
+		date.fromisoformat(str(sales_history_start_date)) if sales_history_start_date else None
 	)
+	last_year_rows: list[dict[str, Any]] = []
+	if not last_year_history_floor or last_year_start >= last_year_history_floor:
+		last_year_rows = _query_daily_rows(last_year_start, last_year_end, location_ids)
 	last_year = _aggregate_sales(last_year_rows) if last_year_rows else {}
 
-	def delta_payload(baseline: dict[str, Any]) -> dict[str, Any]:
+	def delta_payload(baseline: dict[str, Any], reason: str | None = None) -> dict[str, Any]:
 		if not baseline:
-			return {"available": False}
+			return {"available": False, "reason": reason}
 		base_sales = _to_float(baseline.get("gross_sales"))
 		current_sales = _to_float(current.get("gross_sales"))
 		delta = round(current_sales - base_sales, 2)
@@ -792,7 +1135,12 @@ def _build_comparisons(
 
 	return {
 		"previous_period": delta_payload(prev),
-		"same_period_last_year": delta_payload(last_year),
+		"same_period_last_year": delta_payload(
+			last_year,
+			reason="insufficient_history"
+			if last_year_history_floor and last_year_start < last_year_history_floor
+			else None,
+		),
 	}
 
 
@@ -1245,61 +1593,19 @@ def _is_ops_scope_calibrated(
 	selected_location_ids: list[int],
 	allowed_store_count: int,
 ) -> bool:
-	if view_mode != "ops_matched":
-		return False
-	return (
-		start_day.isoformat() == OPS_WW10_REFERENCE["start_date"]
-		and end_day.isoformat() == OPS_WW10_REFERENCE["end_date"]
-		and len(selected_location_ids) == allowed_store_count
-	)
+	_ = (view_mode, start_day, end_day, selected_location_ids, allowed_store_count)
+	return False
 
 
 def _build_mode_state(
 	view_mode: str, start_day: date, end_day: date, scope: dict[str, Any]
 ) -> dict[str, Any]:
-	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
-	is_calibrated = _is_ops_scope_calibrated(
-		view_mode,
-		start_day,
-		end_day,
-		selected_location_ids,
-		len(scope["stores"]),
-	)
-	if view_mode == "canonical":
-		return {
-			"view_mode": view_mode,
-			"supported": True,
-			"label": "Canonical warehouse",
-			"weather_analytics_mode": "canonical",
-		}
-	if is_calibrated:
-		return {
-			"view_mode": view_mode,
-			"supported": True,
-			"label": "Ops-matched",
-			"calibration_status": "screenshot_calibrated",
-			"source": OPS_WW10_REFERENCE["source"],
-			"weather_analytics_mode": "canonical",
-		}
+	_ = (view_mode, start_day, end_day, scope)
 	return {
-		"view_mode": view_mode,
-		"supported": False,
-		"label": "Ops-matched",
-		"calibration_status": "unsupported_scope",
-		"message": "Ops-matched mode is currently certified only for the full-chain WW10 window.",
+		"view_mode": CANONICAL_VIEW_MODE,
+		"supported": True,
+		"label": "Sales dashboard canonical",
 		"weather_analytics_mode": "canonical",
-	}
-
-
-def _build_ops_summary() -> dict[str, Any]:
-	return {
-		"gross_sales": OPS_WW10_REFERENCE["gross_sales"],
-		"net_sales": OPS_WW10_REFERENCE["net_sales"],
-		"pickup_sales": OPS_WW10_REFERENCE["pickup_sales"],
-		"website_sales": OPS_WW10_REFERENCE["website_sales"],
-		"foodpanda_sales": OPS_WW10_REFERENCE["foodpanda_sales"],
-		"cups_sold": OPS_WW10_REFERENCE["cups_sold"],
-		"transactions": OPS_WW10_REFERENCE["transactions"],
 	}
 
 
@@ -1526,6 +1832,7 @@ def _build_dashboard_summary_payload(
 	channel: str,
 	include_comparisons: bool,
 ) -> dict[str, Any]:
+	view_mode = _canonical_view_mode(view_mode)
 	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
 	cache_key = _sales_dashboard_cache_key(
 		"summary",
@@ -1540,15 +1847,40 @@ def _build_dashboard_summary_payload(
 	def builder() -> dict[str, Any]:
 		freshness = _build_freshness(selected_location_ids)
 		effective_end = _effective_end_day(end_day, freshness)
+		discount_effective_end = _effective_discount_end_day(effective_end, freshness)
 		freshness["effective_end_date"] = effective_end.isoformat()
+		freshness["sales_effective_end_date"] = effective_end.isoformat()
+		freshness["discount_effective_end_date"] = discount_effective_end.isoformat()
 		freshness["requested_end_date"] = end_day.isoformat()
-		freshness["data_quality_warnings"] = _build_data_quality_warnings(end_day, freshness)
+		freshness["data_quality_warnings"] = _build_data_quality_warnings(start_day, end_day, freshness)
 		sales_rows = (
 			_query_daily_rows(start_day, effective_end, selected_location_ids)
 			if selected_location_ids and effective_end >= start_day
 			else []
 		)
+		discount_rows = (
+			_query_discount_rows(start_day, discount_effective_end, selected_location_ids)
+			if selected_location_ids and discount_effective_end >= start_day
+			else []
+		)
 		summary = _aggregate_sales(sales_rows)
+		projection_window_rows = [
+			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
+		]
+		summary["projection"] = _build_projection(
+			selected_location_ids,
+			start_day,
+			discount_effective_end,
+			projection_window_rows,
+		)
+		summary["discount_metrics"] = _aggregate_discount_metrics(
+			discount_rows,
+			selected_location_ids,
+			start_day,
+			discount_effective_end,
+			freshness,
+		)
+		freshness["discount_scope_coverage_pct"] = summary["discount_metrics"]["discount_scope_coverage_pct"]
 		mode_state = _build_mode_state(view_mode, start_day, effective_end, scope)
 		response: dict[str, Any] = {
 			"scope": {
@@ -1564,12 +1896,16 @@ def _build_dashboard_summary_payload(
 			"mode_state": mode_state,
 			"summary": summary,
 			"freshness": freshness,
-			"comparisons": _build_comparisons(start_day, effective_end, selected_location_ids, summary)
+			"comparisons": _build_comparisons(
+				start_day,
+				effective_end,
+				selected_location_ids,
+				summary,
+				sales_history_start_date=freshness.get("sales_history_start_date"),
+			)
 			if include_comparisons
 			else _empty_comparisons(),
 		}
-		if view_mode == "ops_matched" and mode_state.get("supported"):
-			response["ops_summary"] = _build_ops_summary()
 		return response
 
 	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_CACHE_TTL)
@@ -1582,11 +1918,17 @@ def _build_dashboard_overview_payload(
 	view_mode: str,
 	channel: str,
 	include_comparisons: bool,
+	ranking_mode: str,
 ) -> dict[str, Any]:
+	view_mode = _canonical_view_mode(view_mode)
+	ranking_mode = _parse_ranking_mode(ranking_mode)
 	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
 	freshness = _build_freshness(selected_location_ids)
 	effective_end = _effective_end_day(end_day, freshness)
+	discount_effective_end = _effective_discount_end_day(effective_end, freshness)
 	freshness["effective_end_date"] = effective_end.isoformat()
+	freshness["sales_effective_end_date"] = effective_end.isoformat()
+	freshness["discount_effective_end_date"] = discount_effective_end.isoformat()
 	freshness["requested_end_date"] = end_day.isoformat()
 	cache_key = _sales_dashboard_cache_key(
 		"overview",
@@ -1596,6 +1938,7 @@ def _build_dashboard_overview_payload(
 		view_mode=view_mode,
 		channel=channel,
 		include_comparisons=include_comparisons,
+		ranking_mode=ranking_mode,
 	)
 
 	def builder() -> dict[str, Any]:
@@ -1605,12 +1948,35 @@ def _build_dashboard_overview_payload(
 		else:
 			sales_rows = _query_daily_rows(start_day, effective_end, selected_location_ids)
 			weather_rows = _query_weather_rows(start_day, effective_end, selected_location_ids)
+		discount_rows = (
+			_query_discount_rows(start_day, discount_effective_end, selected_location_ids)
+			if selected_location_ids and discount_effective_end >= start_day
+			else []
+		)
 		summary = _aggregate_sales(sales_rows)
 		mode_state = _build_mode_state(view_mode, start_day, effective_end, scope)
-		freshness["data_quality_warnings"] = _build_data_quality_warnings(end_day, freshness)
+		projection_window_rows = [
+			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
+		]
+		summary["projection"] = _build_projection(
+			selected_location_ids,
+			start_day,
+			discount_effective_end,
+			projection_window_rows,
+		)
+		summary["discount_metrics"] = _aggregate_discount_metrics(
+			discount_rows,
+			selected_location_ids,
+			start_day,
+			discount_effective_end,
+			freshness,
+		)
+		freshness["discount_scope_coverage_pct"] = summary["discount_metrics"]["discount_scope_coverage_pct"]
+		freshness["data_quality_warnings"] = _build_data_quality_warnings(start_day, end_day, freshness)
 		series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows)
 		analysis = _build_weather_context(series)
 		analysis["effects"] = _build_weather_effects(scope, start_day, effective_end, sales_rows, summary)
+		discount_ranking_payload = _build_discount_rankings(scope, discount_rows, ranking_mode)
 		response: dict[str, Any] = {
 			"scope": {
 				"selected_stores": scope["selected_stores"],
@@ -1625,16 +1991,22 @@ def _build_dashboard_overview_payload(
 			"mode_state": mode_state,
 			"summary": summary,
 			"freshness": freshness,
-			"comparisons": _build_comparisons(start_day, effective_end, selected_location_ids, summary)
+			"comparisons": _build_comparisons(
+				start_day,
+				effective_end,
+				selected_location_ids,
+				summary,
+				sales_history_start_date=freshness.get("sales_history_start_date"),
+			)
 			if include_comparisons
 			else _empty_comparisons(),
 			"daily": series,
 			"analysis": analysis,
 			"stores": _build_store_rankings(scope, sales_rows, weather_rows),
+			"ranking_state": discount_ranking_payload["ranking_state"],
+			"discount_rankings": discount_ranking_payload["discount_rankings"],
 			"channels": _build_channel_mix(summary),
 		}
-		if view_mode == "ops_matched" and mode_state.get("supported"):
-			response["ops_summary"] = _build_ops_summary()
 		return response
 
 	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_CACHE_TTL)
@@ -1695,6 +2067,7 @@ def get_sales_dashboard_overview(
 	stores: list[str] | str | None = None,
 	view_mode: str = "canonical",
 	channel: str = "all",
+	ranking_mode: str = DEFAULT_RANKING_MODE,
 	include_comparisons: bool | str | int | None = None,
 ) -> dict[str, Any]:
 	scope = _selected_scope(_parse_stores_param(stores))
@@ -1706,6 +2079,7 @@ def get_sales_dashboard_overview(
 		view_mode,
 		channel,
 		include_comparisons=_to_bool_flag(include_comparisons, default=False),
+		ranking_mode=ranking_mode,
 	)
 
 
@@ -1716,8 +2090,10 @@ def get_sales_dashboard_summary(
 	stores: list[str] | str | None = None,
 	view_mode: str = "canonical",
 	channel: str = "all",
+	ranking_mode: str = DEFAULT_RANKING_MODE,
 	include_comparisons: bool | str | int | None = None,
 ) -> dict[str, Any]:
+	_ = ranking_mode
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
 	return _build_dashboard_summary_payload(
@@ -1737,6 +2113,7 @@ def get_sales_dashboard_daily_series(
 	stores: list[str] | str | None = None,
 	view_mode: str = "canonical",
 	channel: str = "all",
+	ranking_mode: str = DEFAULT_RANKING_MODE,
 ) -> dict[str, Any]:
 	overview = get_sales_dashboard_overview(
 		start_date=start_date,
@@ -1744,6 +2121,7 @@ def get_sales_dashboard_daily_series(
 		stores=stores,
 		view_mode=view_mode,
 		channel=channel,
+		ranking_mode=ranking_mode,
 	)
 	return {
 		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
@@ -1760,6 +2138,7 @@ def get_sales_dashboard_channel_mix(
 	stores: list[str] | str | None = None,
 	view_mode: str = "canonical",
 	channel: str = "all",
+	ranking_mode: str = DEFAULT_RANKING_MODE,
 ) -> dict[str, Any]:
 	overview = get_sales_dashboard_overview(
 		start_date=start_date,
@@ -1767,6 +2146,7 @@ def get_sales_dashboard_channel_mix(
 		stores=stores,
 		view_mode=view_mode,
 		channel=channel,
+		ranking_mode=ranking_mode,
 	)
 	return {
 		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
@@ -1783,6 +2163,7 @@ def get_sales_dashboard_store_rankings(
 	stores: list[str] | str | None = None,
 	view_mode: str = "canonical",
 	channel: str = "all",
+	ranking_mode: str = DEFAULT_RANKING_MODE,
 ) -> dict[str, Any]:
 	overview = get_sales_dashboard_overview(
 		start_date=start_date,
@@ -1790,12 +2171,15 @@ def get_sales_dashboard_store_rankings(
 		stores=stores,
 		view_mode=view_mode,
 		channel=channel,
+		ranking_mode=ranking_mode,
 	)
 	return {
 		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
 		"date_window": overview["date_window"],
 		"mode_state": overview["mode_state"],
 		"stores": overview["stores"],
+		"ranking_state": overview["ranking_state"],
+		"discount_rankings": overview["discount_rankings"],
 	}
 
 
@@ -1806,6 +2190,7 @@ def get_sales_dashboard_weather_context(
 	stores: list[str] | str | None = None,
 	view_mode: str = "canonical",
 	channel: str = "all",
+	ranking_mode: str = DEFAULT_RANKING_MODE,
 ) -> dict[str, Any]:
 	overview = get_sales_dashboard_overview(
 		start_date=start_date,
@@ -1813,6 +2198,7 @@ def get_sales_dashboard_weather_context(
 		stores=stores,
 		view_mode=view_mode,
 		channel=channel,
+		ranking_mode=ranking_mode,
 	)
 	return {
 		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
@@ -1830,12 +2216,16 @@ def export_sales_dashboard_detail(
 	stores: list[str] | str | None = None,
 	view_mode: str = "canonical",
 	channel: str = "all",
+	ranking_mode: str = DEFAULT_RANKING_MODE,
 ) -> dict[str, Any]:
+	_ = ranking_mode
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
 	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
-	sales_rows = _query_daily_rows(start_day, end_day, selected_location_ids)
-	weather_rows = _query_weather_rows(start_day, end_day, selected_location_ids)
+	freshness = _build_freshness(selected_location_ids)
+	effective_end = _effective_end_day(end_day, freshness)
+	sales_rows = _query_daily_rows(start_day, effective_end, selected_location_ids)
+	weather_rows = _query_weather_rows(start_day, effective_end, selected_location_ids)
 	series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows)
 	export_rows = _build_export_rows(scope, series, sales_rows)
 
@@ -1868,13 +2258,13 @@ def export_sales_dashboard_detail(
 	writer = csv.DictWriter(buffer, fieldnames=fieldnames)
 	writer.writeheader()
 	writer.writerows(export_rows)
-	filename = f"sales_dashboard_detail_{start_day.isoformat()}_{end_day.isoformat()}.csv"
+	filename = f"sales_dashboard_detail_{start_day.isoformat()}_{effective_end.isoformat()}.csv"
 
 	return {
 		"filename": filename,
 		"content_type": "text/csv",
 		"content": buffer.getvalue(),
 		"row_count": len(export_rows),
-		"view_mode": view_mode,
+		"view_mode": CANONICAL_VIEW_MODE,
 		"channel": channel,
 	}

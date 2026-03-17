@@ -214,7 +214,11 @@ def test_data_quality_warning_flags_stale_foodpanda_cups():
 		"weather_max_business_date": "2026-03-14",
 	}
 
-	warnings = module._build_data_quality_warnings(module.date(2026, 3, 14), freshness)
+	warnings = module._build_data_quality_warnings(
+		module.date(2026, 3, 1),
+		module.date(2026, 3, 14),
+		freshness,
+	)
 
 	assert any("FoodPanda cups" in warning for warning in warnings)
 
@@ -279,6 +283,9 @@ def test_summary_hot_path_skips_overview_only_builders():
 		"pos_max_business_date": "2026-03-14",
 		"web_max_business_date": "2026-03-14",
 		"weather_max_business_date": "2026-03-14",
+		"discount_max_business_date": "2026-03-14",
+		"sales_history_start_date": "2025-06-01",
+		"discount_history_start_date": "2026-02-01",
 	}
 	module._query_daily_rows = lambda *args, **kwargs: [
 		{
@@ -298,10 +305,21 @@ def test_summary_hot_path_skips_overview_only_builders():
 			"foodpanda_vat_deducted_sales": "29.46",
 		}
 	]
+	module._query_discount_rows = lambda *args, **kwargs: [
+		{
+			"location_id": 2338,
+			"business_date": "2026-03-14",
+			"store_name": "SM Megamall",
+			"pos_original_gross_sales": "70.00",
+			"pos_total_discounts": "7.00",
+			"sc_recorded_discount_amount": "3.00",
+			"pwd_recorded_discount_amount": "2.00",
+		}
+	]
 	module._build_mode_state = lambda *args, **kwargs: {
 		"view_mode": "canonical",
 		"supported": True,
-		"label": "Canonical warehouse",
+		"label": "Sales dashboard canonical",
 	}
 	module._build_weather_effects = lambda *args, **kwargs: (_ for _ in ()).throw(
 		AssertionError("summary hot path must not build weather effects")
@@ -322,6 +340,8 @@ def test_summary_hot_path_skips_overview_only_builders():
 	result = module.get_sales_dashboard_summary()
 
 	assert result["summary"]["gross_sales"] == 123.0
+	assert result["summary"]["projection"]["available"] is False
+	assert result["summary"]["discount_metrics"]["discount_percentage"] == 10.0
 	assert result["comparisons"]["previous_period"]["available"] is False
 	assert result["comparisons"]["same_period_last_year"]["available"] is False
 
@@ -731,3 +751,224 @@ def test_weather_effects_return_matched_store_day_count():
 	assert result["available"] is True
 	assert result["matched_days"] == 1
 	assert result["matched_store_days"] == 1
+
+
+def test_projection_uses_weighted_last_28_closed_days():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_projection_test")
+
+	projection_rows = [
+		{
+			"business_date": f"2026-02-{index:02d}",
+			"total_net_sales_without_vat": f"{index * 100:.2f}",
+		}
+		for index in range(1, 29)
+	]
+	module._query_daily_rows = lambda *args, **kwargs: projection_rows
+
+	result = module._build_projection(
+		[2338],
+		module.date(2026, 2, 1),
+		module.date(2026, 2, 28),
+		projection_rows[-7:],
+	)
+
+	expected_daily_pace = module._round_half_up(
+		sum(index * (index * 100) for index in range(1, 29)) / sum(range(1, 29))
+	)
+
+	assert result["available"] is True
+	assert result["closed_days_considered"] == 28
+	assert result["projected_daily_pace_net_sales_without_vat"] == expected_daily_pace
+	assert result["projected_7_day_net_sales_without_vat"] == module._round_half_up(expected_daily_pace * 7)
+
+
+def test_discount_metrics_use_pos_original_gross_denominator():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_discount_metrics_test"
+	)
+
+	result = module._aggregate_discount_metrics(
+		[
+			{
+				"location_id": 2338,
+				"business_date": "2026-03-14",
+				"pos_original_gross_sales": "1000.00",
+				"pos_total_discounts": "120.00",
+				"sc_recorded_discount_amount": "40.00",
+				"pwd_recorded_discount_amount": "20.00",
+			}
+		],
+		[2338],
+		module.date(2026, 3, 1),
+		module.date(2026, 3, 14),
+		{"discount_history_start_date": "2026-02-01"},
+	)
+
+	assert result["discount_percentage"] == 12.0
+	assert result["sc_discount_percentage"] == 4.0
+	assert result["pwd_discount_percentage"] == 2.0
+	assert result["discount_scope_coverage_pct"] == 100.0
+
+
+def test_discount_metrics_return_na_when_pos_denominator_is_zero():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_discount_zero_denom_test"
+	)
+
+	result = module._aggregate_discount_metrics(
+		[
+			{
+				"location_id": 2774,
+				"business_date": "2026-03-14",
+				"pos_original_gross_sales": "0.00",
+				"pos_total_discounts": "0.00",
+				"sc_recorded_discount_amount": "0.00",
+				"pwd_recorded_discount_amount": "0.00",
+			}
+		],
+		[2774],
+		module.date(2026, 3, 1),
+		module.date(2026, 3, 14),
+		{"discount_history_start_date": "2026-02-01"},
+	)
+
+	assert result["discount_percentage"] is None
+	assert result["sc_discount_percentage"] is None
+	assert result["pwd_discount_percentage"] is None
+
+
+def test_discount_rankings_hide_below_scope_minimum_and_exclude_low_floor_rows():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_rankings_test")
+
+	hidden = module._build_discount_rankings(
+		{
+			"selected_stores": [
+				{
+					"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+					"warehouse_name": "SM Megamall",
+					"company": "Bebang Enterprise Inc.",
+					"location_id": 2338,
+				}
+			]
+		},
+		[],
+		"discount_pct",
+	)
+	assert hidden["ranking_state"]["visible"] is False
+
+	scope = {
+		"selected_stores": [
+			{"warehouse": f"Store {index}", "warehouse_name": f"Store {index}", "location_id": index}
+			for index in range(1, 6)
+		]
+	}
+	result = module._build_discount_rankings(
+		scope,
+		[
+			{
+				"location_id": 1,
+				"business_date": "2026-03-14",
+				"pos_original_gross_sales": "50000.00",
+				"pos_total_discounts": "5000.00",
+				"sc_recorded_discount_amount": "1000.00",
+				"pwd_recorded_discount_amount": "500.00",
+			},
+			{
+				"location_id": 2,
+				"business_date": "2026-03-14",
+				"pos_original_gross_sales": "15000.00",
+				"pos_total_discounts": "3000.00",
+				"sc_recorded_discount_amount": "200.00",
+				"pwd_recorded_discount_amount": "100.00",
+			},
+		],
+		"discount_pct",
+	)
+
+	assert result["ranking_state"]["visible"] is True
+	assert result["ranking_state"]["eligible_store_count"] == 1
+	assert [row["location_id"] for row in result["discount_rankings"]] == [1]
+
+
+def test_same_period_last_year_is_hidden_when_history_floor_not_met():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_history_floor_test"
+	)
+
+	module._query_daily_rows = lambda *args, **kwargs: []
+
+	result = module._build_comparisons(
+		module.date(2026, 3, 1),
+		module.date(2026, 3, 14),
+		[2338],
+		{"gross_sales": 1000.0},
+		sales_history_start_date="2025-06-01",
+	)
+
+	assert result["same_period_last_year"]["available"] is False
+	assert result["same_period_last_year"]["reason"] == "insufficient_history"
+
+
+def test_view_mode_param_is_ignored_and_summary_stays_canonical():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_view_mode_ignored_test"
+	)
+
+	scope = {
+		"selected_stores": [
+			{
+				"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+				"warehouse_name": "SM Megamall",
+				"company": "Bebang Enterprise Inc.",
+				"location_id": 2338,
+			}
+		],
+		"stores": [
+			{
+				"warehouse": "SM Megamall - Bebang Enterprise Inc.",
+				"warehouse_name": "SM Megamall",
+				"company": "Bebang Enterprise Inc.",
+				"location_id": 2338,
+			}
+		],
+	}
+	module._selected_scope = lambda requested_stores, user=None: scope
+	module._resolve_date_range = lambda start_date, end_date: (module.date(2026, 3, 1), module.date(2026, 3, 14))
+	module._build_freshness = lambda location_ids: {
+		"pos_max_business_date": "2026-03-14",
+		"web_max_business_date": "2026-03-14",
+		"discount_max_business_date": "2026-03-14",
+		"sales_history_start_date": "2025-06-01",
+		"discount_history_start_date": "2026-02-01",
+	}
+	module._query_daily_rows = lambda *args, **kwargs: [
+		{
+			"business_date": "2026-03-14",
+			"total_gross_sales": "123.00",
+			"total_net_sales_without_vat": "100.00",
+			"cups_sold": "5",
+			"transactions": "2",
+			"pos_gross_sales": "70.00",
+			"pos_net_sales_without_vat": "62.50",
+			"website_non_cod_gross_sales": "20.00",
+			"website_non_cod_net_sales_without_vat": "17.86",
+			"web_cod_orders": "0",
+			"web_cod_gross_sales": "0.00",
+			"web_cod_net_sales_without_vat": "0.00",
+			"foodpanda_subtotal": "33.00",
+			"foodpanda_vat_deducted_sales": "29.46",
+		}
+	]
+	module._query_discount_rows = lambda *args, **kwargs: []
+
+	result = module.get_sales_dashboard_summary(view_mode="ops_matched")
+
+	assert result["mode_state"]["view_mode"] == "canonical"
+	assert result["mode_state"]["supported"] is True
+	assert "ops_summary" not in result
