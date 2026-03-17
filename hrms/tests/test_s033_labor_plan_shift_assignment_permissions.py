@@ -75,6 +75,11 @@ def _install_fake_dependencies():
 		config_mod.get_shift_options_for_store = lambda *args, **kwargs: []
 		sys.modules["hrms.utils.store_shift_config"] = config_mod
 
+	if "hrms.utils.supply_chain_contracts" not in sys.modules:
+		contracts_mod = types.ModuleType("hrms.utils.supply_chain_contracts")
+		contracts_mod.get_preferred_commissary_warehouses = lambda *args, **kwargs: []
+		sys.modules["hrms.utils.supply_chain_contracts"] = contracts_mod
+
 
 _install_fake_dependencies()
 spec = importlib.util.spec_from_file_location(
@@ -108,6 +113,73 @@ class _AttrDict(dict):
 
 
 class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
+	def test_copy_weekly_plan_from_previous_week_returns_marker_when_no_prior_published_plan(self):
+		with (
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "Shaw BLVD - BKI", "warehouse_name": "Shaw BLVD"},
+			),
+			patch.object(supervisor, "_assert_schedule_access"),
+			patch.object(supervisor.frappe, "get_all", return_value=[]),
+		):
+			result = supervisor.copy_weekly_plan_from_previous_week(
+				store="Shaw BLVD - BKI",
+				target_week_start="2026-03-23",
+				surface="commissary_schedule",
+			)
+
+		self.assertFalse(result["success"])
+		self.assertEqual(result["error"], "no_previous_week")
+
+	def test_copy_weekly_plan_from_previous_week_returns_shift_payload(self):
+		source_plan = types.SimpleNamespace(
+			name="BEI-WLP-2026-00011",
+			shifts=[
+				types.SimpleNamespace(
+					employee="EMP-001",
+					employee_name="Jane Doe",
+					day_of_week="Monday",
+					shift_type_name="Commissary AM",
+					shift_type=None,
+					shift_start="06:00:00",
+					shift_end="14:00:00",
+					is_off=0,
+					ends_next_day=0,
+					hours=8,
+					notes="Prep",
+				)
+			],
+		)
+
+		with (
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "Shaw BLVD - BKI", "warehouse_name": "Shaw BLVD"},
+			),
+			patch.object(supervisor, "_assert_schedule_access"),
+			patch.object(
+				supervisor.frappe,
+				"get_all",
+				return_value=[{"name": "BEI-WLP-2026-00011", "week_start_date": "2026-03-16"}],
+			),
+			patch.object(supervisor.frappe, "get_doc", return_value=source_plan),
+		):
+			result = supervisor.copy_weekly_plan_from_previous_week(
+				store="Shaw BLVD - BKI",
+				target_week_start="2026-03-23",
+				surface="commissary_schedule",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(result["source_plan"], "BEI-WLP-2026-00011")
+		self.assertEqual(result["source_week"], "2026-03-16")
+		self.assertEqual(result["shift_count"], 1)
+		self.assertEqual(result["shifts"][0]["employee"], "EMP-001")
+		self.assertEqual(result["shifts"][0]["shift_type_name"], "Commissary AM")
+		self.assertEqual(result["shifts"][0]["hours"], 8)
+
 	def test_cancel_and_delete_shift_assignment_uses_system_permission_flags(self):
 		doc = _FakeShiftAssignment(docstatus=1)
 		delete_doc = MagicMock()

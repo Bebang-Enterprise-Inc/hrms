@@ -7,6 +7,7 @@ Handles approval queues, store visits, labor planning, and team management
 """
 
 import json
+import re
 from typing import Any
 
 import frappe
@@ -15,9 +16,12 @@ from frappe.utils import add_days, cint, get_time, now_datetime, nowdate
 
 from hrms.api.store import resolve_employee_store_context, resolve_warehouse
 from hrms.utils.store_shift_config import get_shift_options_for_store
+from hrms.utils.supply_chain_contracts import get_preferred_commissary_warehouses
 
 TRANSFER_REQUEST_DOCTYPE = "BEI Transfer Request"
 SCHEDULE_SOURCE = "BEI_WEEKLY_LABOR_PLAN"
+SCHEDULE_SURFACE_STORE = "store_schedule"
+SCHEDULE_SURFACE_COMMISSARY = "commissary_schedule"
 
 
 # ==============================================================================
@@ -272,6 +276,37 @@ def _resolve_labor_plan_store(store: str):
 	return {"warehouse": warehouse, "warehouse_name": warehouse_name}
 
 
+def _normalize_schedule_surface(surface: str | None) -> str:
+	value = re.sub(r"[^a-z_]", "", str(surface or "").strip().lower())
+	if value == SCHEDULE_SURFACE_COMMISSARY:
+		return SCHEDULE_SURFACE_COMMISSARY
+	return SCHEDULE_SURFACE_STORE
+
+
+def _normalize_schedule_location_key(value: str | None) -> str:
+	return re.sub(r"[^A-Z0-9]", "", str(value or "").upper())
+
+
+def _commissary_schedule_location_keys() -> set[str]:
+	keys = {"COMMISSARY", "SHAWBLVD", "SHAWBLVDBKI"}
+	for warehouse in get_preferred_commissary_warehouses(include_legacy=True):
+		normalized = str(warehouse or "").upper().strip()
+		if not normalized or normalized.startswith("TEST-"):
+			continue
+		keys.add(_normalize_schedule_location_key(normalized))
+		keys.add(_normalize_schedule_location_key(normalized.replace(" - BEI", "").replace(" - BKI", "")))
+	return {key for key in keys if key}
+
+
+def _is_commissary_schedule_store(store: str):
+	store_context = _resolve_labor_plan_store(store)
+	keys = _commissary_schedule_location_keys()
+	return (
+		_normalize_schedule_location_key(store_context["warehouse"]) in keys
+		or _normalize_schedule_location_key(store_context["warehouse_name"]) in keys
+	)
+
+
 def _get_current_employee():
 	return frappe.db.get_value(
 		"Employee",
@@ -310,7 +345,27 @@ def _user_can_manage_store_schedule(store: str):
 	return "Store Staff" in user_roles and _is_store_oic_designation(employee.get("designation"))
 
 
-def _assert_store_schedule_access(store: str):
+def _user_can_manage_commissary_schedule(store: str):
+	user_roles = set(frappe.get_roles(frappe.session.user))
+	if user_roles.intersection({"System Manager", "Administrator", "HR User", "HR Manager"}):
+		return True
+
+	if not _is_commissary_schedule_store(store):
+		return False
+
+	return bool(user_roles.intersection({"Commissary Supervisor", "Warehouse User", "Supply Chain Manager"}))
+
+
+def _assert_schedule_access(store: str, surface: str | None = None):
+	surface_key = _normalize_schedule_surface(surface)
+	if surface_key == SCHEDULE_SURFACE_COMMISSARY:
+		if not _user_can_manage_commissary_schedule(store):
+			frappe.throw(
+				_("You do not have permission to manage commissary schedules for {0}.").format(store),
+				frappe.PermissionError,
+			)
+		return
+
 	if not _user_can_manage_store_schedule(store):
 		frappe.throw(
 			_("You do not have permission to manage schedules for {0}.").format(store),
@@ -520,12 +575,13 @@ def _create_shift_assignment_from_plan(plan: Any, row: Any, work_date: str, publ
 
 
 @frappe.whitelist()
-def get_labor_plan_bootstrap(store: str):
+def get_labor_plan_bootstrap(store: str, surface: str | None = None):
 	"""Return store roster and shift options for labor planning."""
 	if not store:
 		frappe.throw(_("Store is required"))
 
-	_assert_store_schedule_access(store)
+	surface_key = _normalize_schedule_surface(surface)
+	_assert_schedule_access(store, surface_key)
 	store_context = _resolve_labor_plan_store(store)
 
 	employees = frappe.get_all(
@@ -555,6 +611,7 @@ def get_labor_plan_bootstrap(store: str):
 	return {
 		"store": store_context["warehouse"],
 		"warehouse_name": store_context["warehouse_name"],
+		"surface": surface_key,
 		"employees": employees,
 		"shift_options": get_shift_options_for_store(store_context["warehouse_name"]),
 	}
@@ -566,12 +623,14 @@ def create_weekly_plan(
 	week_start: str,
 	shifts: str | list[dict[str, Any]],
 	labor_budget: float | int | str | None = None,
+	surface: str | None = None,
 ):
 	"""Create a weekly labor plan."""
 	if not store:
 		frappe.throw(_("Store is required"))
 
-	_assert_store_schedule_access(store)
+	surface_key = _normalize_schedule_surface(surface)
+	_assert_schedule_access(store, surface_key)
 	shifts = _coerce_shifts(shifts)
 	store_context = _resolve_labor_plan_store(store)
 
@@ -589,13 +648,13 @@ def create_weekly_plan(
 
 
 @frappe.whitelist()
-def get_weekly_plan(store: str | None = None, week_start: str | None = None):
+def get_weekly_plan(store: str | None = None, week_start: str | None = None, surface: str | None = None):
 	"""Get weekly labor plan for a store."""
 	if not store or not week_start:
 		return {"plan": None}
 
 	store_context = _resolve_labor_plan_store(store)
-	_assert_store_schedule_access(store_context["warehouse"])
+	_assert_schedule_access(store_context["warehouse"], surface)
 
 	plans = frappe.get_all(
 		"BEI Weekly Labor Plan",
@@ -610,11 +669,77 @@ def get_weekly_plan(store: str | None = None, week_start: str | None = None):
 
 
 @frappe.whitelist()
-def update_weekly_plan(plan_name: str, shifts: str | list[dict[str, Any]]):
+def copy_weekly_plan_from_previous_week(
+	store: str,
+	target_week_start: str,
+	surface: str | None = None,
+):
+	"""Copy the most recent published weekly labor plan before the target week."""
+	if not store or not target_week_start:
+		frappe.throw(_("Store and target week start are required."))
+
+	store_context = _resolve_labor_plan_store(store)
+	_assert_schedule_access(store_context["warehouse"], surface)
+
+	plans = frappe.get_all(
+		"BEI Weekly Labor Plan",
+		filters={
+			"store": store_context["warehouse"],
+			"status": "Published",
+			"week_start_date": ["<", target_week_start],
+		},
+		fields=["name", "week_start_date"],
+		order_by="week_start_date desc",
+		limit=1,
+	)
+	if not plans:
+		return {
+			"success": False,
+			"error": "no_previous_week",
+			"message": _("No previous schedule found for this location."),
+		}
+
+	source_plan_meta = plans[0]
+	source_plan_name = source_plan_meta.get("name") if isinstance(source_plan_meta, dict) else source_plan_meta.name
+	source_week = (
+		source_plan_meta.get("week_start_date")
+		if isinstance(source_plan_meta, dict)
+		else source_plan_meta.week_start_date
+	)
+	source_plan = frappe.get_doc("BEI Weekly Labor Plan", source_plan_name)
+	copied_shifts = []
+	for row in source_plan.shifts:
+		copied_shifts.append(
+			{
+				"employee": row.employee,
+				"employee_name": row.employee_name,
+				"day_of_week": row.day_of_week,
+				"shift_type_name": row.shift_type_name or row.shift_type,
+				"shift_start": row.shift_start,
+				"shift_end": row.shift_end,
+				"is_off": cint(row.is_off),
+				"ends_next_day": cint(row.ends_next_day),
+				"hours": row.hours
+				or _calculate_shift_hours(row.shift_start, row.shift_end, row.is_off),
+				"notes": row.notes,
+			}
+		)
+
+	return {
+		"success": True,
+		"shifts": copied_shifts,
+		"source_week": source_week,
+		"source_plan": source_plan.name,
+		"shift_count": len(copied_shifts),
+	}
+
+
+@frappe.whitelist()
+def update_weekly_plan(plan_name: str, shifts: str | list[dict[str, Any]], surface: str | None = None):
 	"""Update shifts in a weekly plan."""
 	shifts = _coerce_shifts(shifts)
 	doc = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
-	_assert_store_schedule_access(doc.store)
+	_assert_schedule_access(doc.store, surface)
 	doc.shifts = []
 
 	total_hours = _apply_shifts(doc, shifts)
@@ -627,10 +752,13 @@ def update_weekly_plan(plan_name: str, shifts: str | list[dict[str, Any]]):
 
 
 @frappe.whitelist()
-def publish_weekly_plan(plan_name: str):
+def publish_weekly_plan(plan_name: str, surface: str | None = None):
 	"""Publish a weekly labor plan and sync tagged Shift Assignments."""
 	plan = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
-	_assert_store_schedule_access(plan.store)
+	inferred_surface = surface or (
+		SCHEDULE_SURFACE_COMMISSARY if _is_commissary_schedule_store(plan.store) else SCHEDULE_SURFACE_STORE
+	)
+	_assert_schedule_access(plan.store, inferred_surface)
 
 	current_rows = []
 	current_keys = set()

@@ -24,6 +24,7 @@ from hrms.utils.supply_chain_contracts import (
 	REQUEST_SOURCE_STORE_DISPOSAL,
 	REQUEST_SOURCE_STORE_ORDER,
 	REQUEST_SOURCE_STORE_RETURN,
+	get_preferred_commissary_warehouses,
 	infer_finance_treatment,
 	resolve_material_request_contract,
 	resolve_route_source_warehouse,
@@ -390,6 +391,37 @@ def _get_store_schedule_locations() -> list[dict]:
 			"department": row.get("department"),
 			"store_type": store_type_by_department.get(row.get("department")),
 			"custom_area_supervisor": row.get("custom_area_supervisor"),
+		}
+		for row in warehouse_rows
+	]
+
+
+def _get_commissary_schedule_locations() -> list[dict]:
+	"""Return active commissary scheduling units only."""
+	preferred = [
+		warehouse
+		for warehouse in get_preferred_commissary_warehouses(include_legacy=True)
+		if warehouse and not str(warehouse).upper().startswith("TEST-")
+	]
+	if not preferred:
+		return []
+
+	warehouse_rows = frappe.get_all(
+		"Warehouse",
+		filters={
+			"name": ["in", preferred],
+			"is_group": 0,
+			"disabled": 0,
+		},
+		fields=["name", "warehouse_name", "department", "company"],
+		order_by="warehouse_name asc",
+	)
+	return [
+		{
+			"name": row["name"],
+			"warehouse_name": row.get("warehouse_name") or row["name"],
+			"department": row.get("department"),
+			"company": row.get("company"),
 		}
 		for row in warehouse_rows
 	]
@@ -1450,8 +1482,12 @@ def get_user_store(surface: str | None = None):
 	user = frappe.session.user
 	user_roles = frappe.get_roles(user)
 	surface_key = _normalize_user_store_surface(surface)
-	schedule_store_rows = _get_store_schedule_locations() if surface_key == "store_schedule" else []
-	schedule_store_map = {row["name"]: row for row in schedule_store_rows}
+	schedule_rows = []
+	if surface_key == "store_schedule":
+		schedule_rows = _get_store_schedule_locations()
+	elif surface_key == "commissary_schedule":
+		schedule_rows = _get_commissary_schedule_locations()
+	schedule_store_map = {row["name"]: row for row in schedule_rows}
 
 	stores = []
 	role = None
@@ -1463,7 +1499,7 @@ def get_user_store(surface: str | None = None):
 		store_name = str(row.get("name") or "").strip()
 		if not store_name or store_name in seen_stores:
 			return
-		if surface_key == "store_schedule":
+		if surface_key in {"store_schedule", "commissary_schedule"}:
 			row = schedule_store_map.get(store_name)
 			if not row:
 				return
@@ -1508,6 +1544,37 @@ def get_user_store(surface: str | None = None):
 					}
 				)
 
+	if not stores and surface_key == "commissary_schedule" and (
+		"Commissary Supervisor" in user_roles
+		or "Warehouse User" in user_roles
+		or "Supply Chain Manager" in user_roles
+	):
+		role = (
+			"Supply Chain Manager"
+			if "Supply Chain Manager" in user_roles
+			else "Commissary Supervisor"
+			if "Commissary Supervisor" in user_roles
+			else "Warehouse User"
+		)
+		employee = frappe.db.get_value(
+			"Employee",
+			{"user_id": user, "status": "Active"},
+			["name", "branch", "employee_name", "reports_to"],
+			as_dict=True,
+		)
+		if employee:
+			store_context = resolve_employee_store_context(employee)
+			if store_context.get("warehouse"):
+				append_store(
+					{
+						"name": store_context["warehouse"],
+						"warehouse_name": store_context["warehouse_name"],
+					}
+				)
+		if not stores:
+			for store_row in schedule_rows:
+				append_store(store_row)
+
 	# System / HR / Regional fallback - return all stores
 	if not stores and (
 		"System Manager" in user_roles
@@ -1516,8 +1583,8 @@ def get_user_store(surface: str | None = None):
 		or "Regional Manager" in user_roles
 	):
 		role = "Regional Manager" if "Regional Manager" in user_roles else "HR User"
-		if surface_key == "store_schedule":
-			for store_row in schedule_store_rows:
+		if surface_key in {"store_schedule", "commissary_schedule"}:
+			for store_row in schedule_rows:
 				append_store(store_row)
 		else:
 			store_rows = frappe.get_all(
