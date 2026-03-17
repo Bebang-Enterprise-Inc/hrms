@@ -38,6 +38,9 @@ def iter_dates(start_date: str, end_date: str):
 
 def connect(site: str, sites_path: str | None = None):
 	resolved_sites_path = sites_path or str(DEFAULT_SITES_PATH)
+	Path(resolved_sites_path).mkdir(parents=True, exist_ok=True)
+	for log_dir in (BENCH_ROOT / "logs", Path("/home/frappe/logs")):
+		log_dir.mkdir(parents=True, exist_ok=True)
 	frappe.init(site=site, sites_path=resolved_sites_path)
 	frappe.connect()
 
