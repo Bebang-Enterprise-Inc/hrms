@@ -972,3 +972,25 @@ def test_view_mode_param_is_ignored_and_summary_stays_canonical():
 	assert result["mode_state"]["view_mode"] == "canonical"
 	assert result["mode_state"]["supported"] is True
 	assert "ops_summary" not in result
+
+
+def test_cache_key_accepts_ranking_mode_dimension():
+	_install_fake_frappe(["System Manager"])
+	module = _load_module(
+		ROOT / "hrms" / "api" / "sales_dashboard.py", "sales_dashboard_cache_key_ranking_mode_test"
+	)
+
+	cache_key = module._sales_dashboard_cache_key(
+		"overview",
+		[2338],
+		start_day=module.date(2026, 3, 1),
+		end_day=module.date(2026, 3, 14),
+		view_mode="canonical",
+		channel="all",
+		include_comparisons=False,
+		ranking_mode="discount_amt",
+	)
+
+	assert cache_key == (
+		"sales_dashboard:overview:2338:2026-03-01:2026-03-14:canonical:all:cmp0:discount_amt"
+	)

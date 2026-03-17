@@ -311,6 +311,7 @@ def _sales_dashboard_cache_key(
 	view_mode: str | None = None,
 	channel: str | None = None,
 	include_comparisons: bool | None = None,
+	ranking_mode: str | None = None,
 ) -> str:
 	parts = [prefix, _location_scope_key(location_ids)]
 	if start_day:
@@ -323,6 +324,8 @@ def _sales_dashboard_cache_key(
 		parts.append(channel)
 	if include_comparisons is not None:
 		parts.append("cmp1" if include_comparisons else "cmp0")
+	if ranking_mode:
+		parts.append(ranking_mode)
 	return "sales_dashboard:" + ":".join(parts)
 
 
