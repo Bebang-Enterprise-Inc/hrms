@@ -105,8 +105,8 @@ modules:
   - key: commissary
     status: ready
     command: commissary
-    scenario_count: 3
-    route_count_hint: 11
+    scenario_count: 4
+    route_count_hint: 12
     prefixes:
       - COMMISSARY
     scenario_files:
@@ -159,7 +159,7 @@ modules:
   - key: hr-self-service
     status: ready
     command: hr-self-service
-    scenario_count: 10
+    scenario_count: 12
     route_count_hint: 45
     prefixes:
       - HR
@@ -339,8 +339,8 @@ modules:
   - key: supervisor
     status: ready
     command: supervisor
-    scenario_count: 3
-    route_count_hint: 8
+    scenario_count: 4
+    route_count_hint: 9
     prefixes:
       - SUP
     scenario_files:
@@ -357,8 +357,8 @@ modules:
   - key: team
     status: ready
     command: team
-    scenario_count: 2
-    route_count_hint: 3
+    scenario_count: 3
+    route_count_hint: 4
     prefixes:
       - TEAM
     scenario_files:

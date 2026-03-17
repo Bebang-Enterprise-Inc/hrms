@@ -8,13 +8,15 @@ Handles approval queues, store visits, labor planning, and team management
 
 import json
 import re
+from collections import Counter
 from typing import Any
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, cint, get_time, now_datetime, nowdate
+from frappe.utils import add_days, cint, flt, get_time, getdate, now_datetime, nowdate
 
 from hrms.api.store import resolve_employee_store_context, resolve_warehouse
+from hrms.utils.labor_plan_templates import apply_template_to_employees, get_template_metadata
 from hrms.utils.store_shift_config import get_shift_options_for_store
 from hrms.utils.supply_chain_contracts import get_preferred_commissary_warehouses
 
@@ -311,7 +313,7 @@ def _get_current_employee():
 	return frappe.db.get_value(
 		"Employee",
 		{"user_id": frappe.session.user, "status": "Active"},
-		["name", "branch", "designation", "reports_to", "company"],
+		["name", "employee_name", "branch", "designation", "reports_to", "company", "user_id"],
 		as_dict=True,
 	)
 
@@ -389,6 +391,103 @@ def _calculate_shift_hours(shift_start: str | None, shift_end: str | None, is_of
 	if hours < 0:
 		hours += 24
 	return hours
+
+
+def _sort_labor_plan_employees(employees: list[dict[str, Any]]):
+	def employee_sort_key(row: dict[str, Any]):
+		designation = _normalize_designation(row.get("designation"))
+		if "STORE SUPERVISOR" in designation and "ASSISTANT" not in designation:
+			priority = 0
+		elif _is_store_oic_designation(designation):
+			priority = 1
+		elif "CASHIER" in designation:
+			priority = 3
+		else:
+			priority = 2
+		return (priority, row.get("employee_name") or row.get("name") or "")
+
+	return sorted(employees, key=employee_sort_key)
+
+
+def _get_labor_plan_employees(store_context: dict[str, str]):
+	employees = frappe.get_all(
+		"Employee",
+		filters={
+			"status": "Active",
+			"branch": ["in", [store_context["warehouse"], store_context["warehouse_name"]]],
+		},
+		fields=["name", "employee_name", "designation", "branch", "company"],
+		order_by="employee_name asc",
+	)
+	for employee in employees:
+		rate_meta = _get_labor_plan_hour_rate(employee.get("name"))
+		employee["hour_rate"] = rate_meta.get("hour_rate")
+		employee["hour_rate_source"] = rate_meta.get("source")
+		employee["base_salary"] = rate_meta.get("base_salary")
+	return _sort_labor_plan_employees(employees)
+
+
+def _annotate_commissary_rotation_groups(employees: list[dict[str, Any]]):
+	rotation_labels = ("Team A", "Team B", "Team C", "Team D")
+	for index, employee in enumerate(employees):
+		employee["rotation_group"] = rotation_labels[index % len(rotation_labels)]
+	return employees
+
+
+def _get_labor_plan_hour_rate(employee: str | None, effective_on: str | None = None):
+	if not employee:
+		return {"hour_rate": None, "source": None, "base_salary": None}
+
+	filters: dict[str, Any] = {"employee": employee, "docstatus": 1}
+	if effective_on:
+		filters["from_date"] = ["<=", effective_on]
+
+	assignments = frappe.get_all(
+		"Salary Structure Assignment",
+		filters=filters,
+		fields=["name", "salary_structure", "base", "from_date"],
+		order_by="from_date desc",
+		limit=1,
+	)
+	if not assignments:
+		return {"hour_rate": None, "source": None, "base_salary": None}
+
+	assignment = assignments[0]
+	base_salary = flt(assignment.get("base"))
+	structure_rate = flt(
+		frappe.db.get_value("Salary Structure", assignment.get("salary_structure"), "hour_rate") or 0
+	)
+	if structure_rate > 0:
+		return {"hour_rate": round(structure_rate, 2), "source": "salary_structure", "base_salary": base_salary}
+
+	if base_salary > 0:
+		# Fallback estimate: monthly base salary over a 26-day / 8-hour operating month.
+		return {
+			"hour_rate": round(base_salary / 208, 2),
+			"source": "salary_base_estimate",
+			"base_salary": base_salary,
+		}
+
+	return {"hour_rate": None, "source": None, "base_salary": base_salary or None}
+
+
+def _calculate_plan_cost(shifts: list[dict[str, Any]] | list[Any], hourly_rates: dict[str, float | None]):
+	total_cost = 0.0
+	for row in shifts:
+		employee = row.get("employee") if isinstance(row, dict) else getattr(row, "employee", None)
+		if not employee:
+			continue
+		if cint(row.get("is_off") if isinstance(row, dict) else getattr(row, "is_off", 0)):
+			continue
+		hours = flt(row.get("hours") if isinstance(row, dict) else getattr(row, "hours", 0))
+		if hours <= 0:
+			shift_start = row.get("shift_start") if isinstance(row, dict) else getattr(row, "shift_start", None)
+			shift_end = row.get("shift_end") if isinstance(row, dict) else getattr(row, "shift_end", None)
+			hours = flt(_calculate_shift_hours(shift_start, shift_end, 0))
+		rate = flt(hourly_rates.get(employee) or 0)
+		if rate > 0 and hours > 0:
+			total_cost += rate * hours
+	return round(total_cost, 2)
 
 
 def _get_shift_type_name(shift: dict[str, Any]):
@@ -574,6 +673,469 @@ def _create_shift_assignment_from_plan(plan: Any, row: Any, work_date: str, publ
 	return assignment
 
 
+def _get_shift_assignment_doc(assignment_name: str):
+	assignment = frappe.get_doc("Shift Assignment", assignment_name)
+	if assignment.docstatus != 1 or assignment.status != "Active":
+		frappe.throw(_("Shift Assignment {0} is not active.").format(assignment_name))
+	return assignment
+
+
+def _assignment_covers_date(assignment: Any, work_date: str) -> bool:
+	start_date = str(assignment.start_date)
+	end_date = str(assignment.end_date or assignment.start_date)
+	return start_date <= work_date <= end_date
+
+
+def _get_shift_assignments_for_employees(employee_names: list[str], from_date: str, to_date: str):
+	if not employee_names:
+		return []
+	placeholders = ", ".join(["%s"] * len(employee_names))
+	params = [*employee_names, to_date, from_date]
+	return frappe.db.sql(
+		f"""
+		SELECT
+			name,
+			employee,
+			shift_type,
+			start_date,
+			end_date,
+			status,
+			custom_bei_schedule_source,
+			custom_bei_weekly_labor_plan
+		FROM `tabShift Assignment`
+		WHERE employee IN ({placeholders})
+			AND docstatus = 1
+			AND status = 'Active'
+			AND start_date <= %s
+			AND (end_date IS NULL OR end_date = '' OR end_date >= %s)
+		ORDER BY employee ASC, start_date ASC
+		""",
+		params,
+		as_dict=True,
+	)
+
+
+def _expand_shift_assignment_rows(
+	assignments: list[dict[str, Any]],
+	from_date: str,
+	to_date: str,
+	employee_lookup: dict[str, dict[str, Any]],
+):
+	rows = []
+	for assignment in assignments:
+		current = str(max(getdate(assignment.start_date), getdate(from_date)))
+		final = str(min(getdate(assignment.end_date or assignment.start_date), getdate(to_date)))
+		while current <= final:
+			employee = employee_lookup.get(assignment.employee, {})
+			rows.append(
+				{
+					"assignment_name": assignment.name,
+					"employee": assignment.employee,
+					"employee_name": employee.get("employee_name") or assignment.employee,
+					"user_id": employee.get("user_id"),
+					"designation": employee.get("designation"),
+					"branch": employee.get("branch"),
+					"work_date": current,
+					"shift_type": assignment.shift_type,
+					"weekly_plan": assignment.custom_bei_weekly_labor_plan,
+				}
+			)
+			current = str(add_days(current, 1))
+	return rows
+
+
+def _serialize_shift_swap_request(request: Any, *, surface: str | None = None):
+	surface_key = surface or (
+		SCHEDULE_SURFACE_COMMISSARY if _is_commissary_schedule_store(request.store) else SCHEDULE_SURFACE_STORE
+	)
+	user_roles = set(frappe.get_roles(frappe.session.user))
+	can_manage = False
+	if surface_key == SCHEDULE_SURFACE_COMMISSARY:
+		can_manage = _user_can_manage_commissary_schedule(request.store)
+	else:
+		can_manage = _user_can_manage_store_schedule(request.store)
+	can_approve = request.status == "Pending Approval" and (
+		request.approver == frappe.session.user
+		or can_manage
+		or bool(user_roles.intersection({"HR User", "HR Manager", "System Manager", "Administrator"}))
+	)
+	return {
+		"name": request.name,
+		"store": request.store,
+		"swap_date": str(request.swap_date),
+		"requester_employee": request.requester_employee,
+		"requester_name": request.requester_name,
+		"requester_shift_assignment": request.requester_shift_assignment,
+		"requester_shift_type": request.requester_shift_type,
+		"target_employee": request.target_employee,
+		"target_name": request.target_name,
+		"target_shift_assignment": request.target_shift_assignment,
+		"target_shift_type": request.target_shift_type,
+		"approver": request.approver,
+		"approver_name": frappe.db.get_value("User", request.approver, "full_name") or request.approver,
+		"status": request.status,
+		"notes": request.notes,
+		"decision_note": request.decision_note,
+		"approved_by": request.approved_by,
+		"approved_at": str(request.approved_at) if request.approved_at else None,
+		"can_approve": can_approve,
+	}
+
+
+def _resolve_shift_swap_approver(employee: dict[str, Any], store_context: dict[str, str]):
+	if not employee:
+		return None
+	explicit_approver = frappe.db.get_value("Employee", employee.get("name"), "shift_request_approver")
+	if explicit_approver:
+		return explicit_approver
+	if employee.get("reports_to"):
+		manager_user = frappe.db.get_value("Employee", employee.get("reports_to"), "user_id")
+		if manager_user:
+			return manager_user
+	area_supervisor = frappe.db.get_value("Warehouse", store_context["warehouse"], "custom_area_supervisor")
+	if area_supervisor:
+		return area_supervisor
+	return None
+
+
+def _notify_schedule_change(
+	store: str,
+	employee: str,
+	employee_name: str,
+	message: str,
+	*,
+	context: str,
+):
+	try:
+		from hrms.api.google_chat import send_message_to_space, send_message_to_user_direct
+
+		user_id = frappe.db.get_value("Employee", employee, "user_id")
+		result = send_message_to_user_direct(user_id, message, context=context)
+		if result.get("success"):
+			return result
+		store_space = frappe.db.get_value("Warehouse", store, "custom_gchat_space")
+		if store_space:
+			send_message_to_space(store_space, f"{employee_name}\n{message}")
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "Schedule Change Notification Failed")
+	return {"success": False, "sent": False}
+
+
+def _send_published_schedule_notifications(plan: Any, change_map: dict[str, list[dict[str, Any]]]):
+	if not change_map:
+		return
+
+	for employee, changes in change_map.items():
+		employee_name = frappe.db.get_value("Employee", employee, "employee_name") or employee
+		lines = [
+			"*Schedule Update*",
+			"",
+			f"Location: {plan.store}",
+			f"Week of {plan.week_start_date}",
+			"",
+			"*Changes*",
+		]
+		for change in changes:
+			work_date = str(change.get("work_date") or "")
+			change_type = str(change.get("type") or "updated")
+			new_shift = str(change.get("new_shift") or "-")
+			old_shift = str(change.get("old_shift") or "-")
+			if change_type == "created":
+				lines.append(f"• {work_date}: assigned to {new_shift}")
+			elif change_type == "deleted":
+				lines.append(f"• {work_date}: removed from {old_shift}")
+			else:
+				lines.append(f"• {work_date}: {old_shift} → {new_shift}")
+		lines.extend(["", f"Open: https://my.bebang.ph/dashboard/hr/schedule"])
+		_notify_schedule_change(
+			plan.store,
+			employee,
+			employee_name,
+			"\n".join(lines),
+			context="hrms.api.supervisor.publish_weekly_plan",
+		)
+
+
+def _sync_shift_swap_plan_rows(doc: Any):
+	requester_assignment = _get_shift_assignment_doc(doc.requester_shift_assignment)
+	target_assignment = _get_shift_assignment_doc(doc.target_shift_assignment)
+	requester_plan = requester_assignment.custom_bei_weekly_labor_plan
+	target_plan = target_assignment.custom_bei_weekly_labor_plan
+	if not requester_plan or requester_plan != target_plan:
+		return
+
+	plan = frappe.get_doc("BEI Weekly Labor Plan", requester_plan)
+	day_name = None
+	for label, offset in DAY_OFFSETS.items():
+		if str(add_days(plan.week_start_date, offset)) == str(doc.swap_date):
+			day_name = label
+			break
+	if not day_name:
+		return
+
+	requester_row = None
+	target_row = None
+	for row in plan.shifts:
+		if row.day_of_week != day_name:
+			continue
+		if row.employee == doc.requester_employee and requester_row is None:
+			requester_row = row
+		elif row.employee == doc.target_employee and target_row is None:
+			target_row = row
+
+	if not requester_row or not target_row:
+		return
+
+	requester_row.employee, target_row.employee = target_row.employee, requester_row.employee
+	requester_row.employee_name, target_row.employee_name = target_row.employee_name, requester_row.employee_name
+	plan.save(ignore_permissions=True)
+
+
+def _notify_shift_swap_decision(doc: Any):
+	lines = [
+		"*Shift Swap Update*",
+		"",
+		f"Location: {doc.store}",
+		f"Date: {doc.swap_date}",
+		f"{doc.requester_name}: {doc.requester_shift_type}",
+		f"{doc.target_name}: {doc.target_shift_type}",
+		"",
+		f"Status: {doc.status}",
+	]
+	if doc.decision_note:
+		lines.extend(["", f"Note: {doc.decision_note}"])
+	message = "\n".join(lines)
+	_notify_schedule_change(
+		doc.store,
+		doc.requester_employee,
+		doc.requester_name or doc.requester_employee,
+		message,
+		context="hrms.api.supervisor.shift_swap_decision",
+	)
+	_notify_schedule_change(
+		doc.store,
+		doc.target_employee,
+		doc.target_name or doc.target_employee,
+		message,
+		context="hrms.api.supervisor.shift_swap_decision",
+	)
+
+
+@frappe.whitelist()
+def get_shift_swap_context(week_start: str | None = None):
+	current_employee = _get_current_employee()
+	if not current_employee:
+		frappe.throw(_("No active employee record found for the current user."))
+
+	store_context = resolve_employee_store_context(current_employee)
+	if not store_context.get("warehouse"):
+		return {
+			"employee": current_employee,
+			"store": None,
+			"warehouse_name": None,
+			"week_start": str(getdate(week_start)) if week_start else _default_week_start_value(),
+			"week_end": str(add_days(str(getdate(week_start)) if week_start else _default_week_start_value(), 6)),
+			"approver": {"user_id": None, "full_name": None},
+			"assignments": [],
+			"coworker_assignments": [],
+			"requests": [],
+		}
+
+	start_date = str(getdate(week_start)) if week_start else _default_week_start_value()
+	if start_date < nowdate():
+		start_date = nowdate()
+	end_date = str(add_days(start_date, 6))
+
+	coworkers = frappe.get_all(
+		"Employee",
+		filters={
+			"status": "Active",
+			"branch": ["in", [store_context["warehouse"], store_context["warehouse_name"]]],
+			"name": ["!=", current_employee["name"]],
+		},
+		fields=["name", "employee_name", "designation", "branch", "user_id"],
+		order_by="employee_name asc",
+	)
+	employee_lookup = {
+		current_employee["name"]: current_employee,
+		**{row["name"]: row for row in coworkers},
+	}
+
+	assignments = _get_shift_assignments_for_employees(list(employee_lookup.keys()), start_date, end_date)
+	expanded = _expand_shift_assignment_rows(assignments, start_date, end_date, employee_lookup)
+	my_assignments = [row for row in expanded if row["employee"] == current_employee["name"]]
+	coworker_assignments = [row for row in expanded if row["employee"] != current_employee["name"]]
+	approver = _resolve_shift_swap_approver(current_employee, store_context)
+	requests = frappe.get_all(
+		"BEI Shift Swap Request",
+		filters={
+			"requester_employee": current_employee["name"],
+			"swap_date": ["between", [start_date, end_date]],
+		},
+		fields=["name"],
+		order_by="creation desc",
+	)
+
+	return {
+		"employee": current_employee,
+		"store": store_context["warehouse"],
+		"warehouse_name": store_context["warehouse_name"],
+		"week_start": start_date,
+		"week_end": end_date,
+		"approver": {
+			"user_id": approver,
+			"full_name": frappe.db.get_value("User", approver, "full_name") if approver else None,
+		},
+		"assignments": my_assignments,
+		"coworker_assignments": coworker_assignments,
+		"requests": [
+			_serialize_shift_swap_request(frappe.get_doc("BEI Shift Swap Request", row.name))
+			for row in requests
+		],
+	}
+
+
+@frappe.whitelist()
+def create_shift_swap_request(
+	requester_shift_assignment: str,
+	target_shift_assignment: str,
+	work_date: str,
+	notes: str | None = None,
+):
+	current_employee = _get_current_employee()
+	if not current_employee:
+		frappe.throw(_("No active employee record found for the current user."))
+
+	swap_date = str(getdate(work_date))
+	requester_assignment = _get_shift_assignment_doc(requester_shift_assignment)
+	target_assignment = _get_shift_assignment_doc(target_shift_assignment)
+	if requester_assignment.employee != current_employee["name"]:
+		frappe.throw(_("You can only request swaps for your own shifts."), frappe.PermissionError)
+	if not _assignment_covers_date(requester_assignment, swap_date):
+		frappe.throw(_("Your selected shift does not cover {0}.").format(swap_date))
+	if not _assignment_covers_date(target_assignment, swap_date):
+		frappe.throw(_("The coworker's shift does not cover {0}.").format(swap_date))
+	if requester_assignment.employee == target_assignment.employee:
+		frappe.throw(_("Choose a coworker shift to swap with."))
+
+	store_context = resolve_employee_store_context(current_employee)
+	target_employee = frappe.db.get_value(
+		"Employee",
+		target_assignment.employee,
+		["name", "employee_name", "branch", "company"],
+		as_dict=True,
+	)
+	if not target_employee:
+		frappe.throw(_("Target employee could not be found."))
+	if target_employee.get("branch") not in {store_context["warehouse"], store_context["warehouse_name"]}:
+		frappe.throw(_("Shift swaps are limited to coworkers in the same location."))
+
+	if frappe.db.exists(
+		"BEI Shift Swap Request",
+		{
+			"requester_employee": current_employee["name"],
+			"swap_date": swap_date,
+			"status": "Pending Approval",
+		},
+	):
+		frappe.throw(_("You already have a pending swap request for {0}.").format(swap_date))
+
+	approver = _resolve_shift_swap_approver(current_employee, store_context)
+	if not approver:
+		frappe.throw(_("No approver is configured for shift swaps at this location."))
+
+	doc = frappe.get_doc(
+		{
+			"doctype": "BEI Shift Swap Request",
+			"requester_employee": current_employee["name"],
+			"store": store_context["warehouse"],
+			"company": current_employee.get("company") or target_employee.get("company"),
+			"swap_date": swap_date,
+			"target_employee": target_employee["name"],
+			"requester_shift_assignment": requester_assignment.name,
+			"requester_shift_type": requester_assignment.shift_type,
+			"target_shift_assignment": target_assignment.name,
+			"target_shift_type": target_assignment.shift_type,
+			"approver": approver,
+			"status": "Pending Approval",
+			"notes": notes,
+		}
+	)
+	doc.flags.ignore_permissions = True
+	doc.insert(ignore_permissions=True)
+
+	return {"success": True, "request": _serialize_shift_swap_request(doc)}
+
+
+@frappe.whitelist()
+def get_location_shift_swap_requests(store: str, week_start: str, surface: str | None = None):
+	store_context = _resolve_labor_plan_store(store)
+	surface_key = _normalize_schedule_surface(surface)
+	_assert_schedule_access(store_context["warehouse"], surface_key)
+	week_start_date = str(getdate(week_start))
+	week_end_date = str(add_days(week_start_date, 6))
+	requests = frappe.get_all(
+		"BEI Shift Swap Request",
+		filters={
+			"store": store_context["warehouse"],
+			"swap_date": ["between", [week_start_date, week_end_date]],
+		},
+		fields=["name"],
+		order_by="swap_date asc, creation asc",
+	)
+	return {
+		"requests": [
+			_serialize_shift_swap_request(
+				frappe.get_doc("BEI Shift Swap Request", row.name),
+				surface=surface_key,
+			)
+			for row in requests
+		]
+	}
+
+
+@frappe.whitelist()
+def approve_shift_swap_request(request_name: str, decision_note: str | None = None):
+	doc = frappe.get_doc("BEI Shift Swap Request", request_name)
+	if doc.status != "Pending Approval":
+		frappe.throw(_("Only pending shift swap requests can be approved."))
+
+	surface_key = (
+		SCHEDULE_SURFACE_COMMISSARY if _is_commissary_schedule_store(doc.store) else SCHEDULE_SURFACE_STORE
+	)
+	_assert_schedule_access(doc.store, surface_key)
+	from hrms.api.roster import swap_shift
+
+	swap_shift(doc.requester_shift_assignment, str(doc.swap_date), doc.target_employee, str(doc.swap_date), doc.target_shift_assignment)
+	_sync_shift_swap_plan_rows(doc)
+	doc.status = "Approved"
+	doc.approved_by = frappe.session.user
+	doc.approved_at = now_datetime()
+	doc.decision_note = decision_note
+	doc.save(ignore_permissions=True)
+	_notify_shift_swap_decision(doc)
+	return {"success": True, "request": _serialize_shift_swap_request(doc, surface=surface_key)}
+
+
+@frappe.whitelist()
+def reject_shift_swap_request(request_name: str, decision_note: str | None = None):
+	doc = frappe.get_doc("BEI Shift Swap Request", request_name)
+	if doc.status != "Pending Approval":
+		frappe.throw(_("Only pending shift swap requests can be rejected."))
+
+	surface_key = (
+		SCHEDULE_SURFACE_COMMISSARY if _is_commissary_schedule_store(doc.store) else SCHEDULE_SURFACE_STORE
+	)
+	_assert_schedule_access(doc.store, surface_key)
+	doc.status = "Rejected"
+	doc.approved_by = frappe.session.user
+	doc.approved_at = now_datetime()
+	doc.decision_note = decision_note
+	doc.save(ignore_permissions=True)
+	_notify_shift_swap_decision(doc)
+	return {"success": True, "request": _serialize_shift_swap_request(doc, surface=surface_key)}
+
+
 @frappe.whitelist()
 def get_labor_plan_bootstrap(store: str, surface: str | None = None):
 	"""Return store roster and shift options for labor planning."""
@@ -583,30 +1145,9 @@ def get_labor_plan_bootstrap(store: str, surface: str | None = None):
 	surface_key = _normalize_schedule_surface(surface)
 	_assert_schedule_access(store, surface_key)
 	store_context = _resolve_labor_plan_store(store)
-
-	employees = frappe.get_all(
-		"Employee",
-		filters={
-			"status": "Active",
-			"branch": ["in", [store_context["warehouse"], store_context["warehouse_name"]]],
-		},
-		fields=["name", "employee_name", "designation", "branch", "company"],
-		order_by="employee_name asc",
-	)
-
-	def employee_sort_key(row: dict[str, Any]):
-		designation = _normalize_designation(row.get("designation"))
-		if "STORE SUPERVISOR" in designation and "ASSISTANT" not in designation:
-			priority = 0
-		elif _is_store_oic_designation(designation):
-			priority = 1
-		elif "CASHIER" in designation:
-			priority = 3
-		else:
-			priority = 2
-		return (priority, row.get("employee_name") or row.get("name") or "")
-
-	employees = sorted(employees, key=employee_sort_key)
+	employees = _get_labor_plan_employees(store_context)
+	if surface_key == SCHEDULE_SURFACE_COMMISSARY:
+		employees = _annotate_commissary_rotation_groups(employees)
 
 	return {
 		"store": store_context["warehouse"],
@@ -614,6 +1155,60 @@ def get_labor_plan_bootstrap(store: str, surface: str | None = None):
 		"surface": surface_key,
 		"employees": employees,
 		"shift_options": get_shift_options_for_store(store_context["warehouse_name"]),
+		"templates": get_template_metadata(surface_key),
+	}
+
+
+@frappe.whitelist()
+def get_weekly_templates(store: str, surface: str | None = None):
+	"""Return template metadata for the selected labor-plan surface."""
+	if not store:
+		frappe.throw(_("Store is required"))
+
+	surface_key = _normalize_schedule_surface(surface)
+	_assert_schedule_access(store, surface_key)
+	return {"templates": get_template_metadata(surface_key)}
+
+
+@frappe.whitelist()
+def apply_weekly_template(
+	store: str,
+	template_key: str,
+	week_start: str | None = None,
+	surface: str | None = None,
+):
+	"""Apply a roster-aware weekly template to the selected location."""
+	if not store:
+		frappe.throw(_("Store is required"))
+	if not template_key:
+		frappe.throw(_("Template key is required"))
+
+	surface_key = _normalize_schedule_surface(surface)
+	_assert_schedule_access(store, surface_key)
+	store_context = _resolve_labor_plan_store(store)
+	employees = _get_labor_plan_employees(store_context)
+	shift_options = get_shift_options_for_store(store_context["warehouse_name"])
+
+	try:
+		applied = apply_template_to_employees(
+			template_key,
+			surface_key,
+			employees,
+			shift_options,
+			week_start=week_start,
+		)
+	except KeyError:
+		frappe.throw(_("Template {0} is not available for this location.").format(template_key))
+
+	return {
+		"store": store_context["warehouse"],
+		"warehouse_name": store_context["warehouse_name"],
+		"surface": surface_key,
+		"week_start": week_start,
+		"template": applied["template"],
+		"shifts": applied["shifts"],
+		"warnings": applied["warnings"],
+		"shift_count": len(applied["shifts"]),
 	}
 
 
@@ -668,6 +1263,180 @@ def get_weekly_plan(store: str | None = None, week_start: str | None = None, sur
 	return {"plan": None}
 
 
+def _default_week_start_value():
+	today = getdate(nowdate())
+	return str(add_days(today, -today.weekday()))
+
+
+@frappe.whitelist()
+def get_area_schedule_overview(week_start: str | None = None):
+	"""Return a cross-store weekly schedule overview for area supervisors and HR."""
+	user_roles = set(frappe.get_roles(frappe.session.user))
+	allowed_roles = {"Area Supervisor", "HR User", "HR Manager", "System Manager", "Administrator"}
+	if not user_roles.intersection(allowed_roles):
+		frappe.throw(_("You do not have permission to view the area labor overview."), frappe.PermissionError)
+
+	normalized_week_start = str(getdate(week_start)) if week_start else _default_week_start_value()
+	week_end = str(add_days(normalized_week_start, 6))
+
+	if "Area Supervisor" in user_roles and not user_roles.intersection(
+		{"HR User", "HR Manager", "System Manager", "Administrator"}
+	):
+		stores = _get_area_supervisor_stores()
+	else:
+		from hrms.api.store import _get_store_schedule_locations
+
+		stores = _get_store_schedule_locations()
+
+	items = []
+	status_counter: Counter[str] = Counter()
+	total_hours = 0.0
+	total_cost = 0.0
+	total_locations = 0
+	total_missing_locations = 0
+
+	for store in stores:
+		store_name = store.get("name") if isinstance(store, dict) else store.name
+		warehouse_name = (
+			store.get("warehouse_name") if isinstance(store, dict) else getattr(store, "warehouse_name", None)
+		) or store_name
+		if not store_name:
+			continue
+
+		total_locations += 1
+		store_context = _resolve_labor_plan_store(store_name)
+		employees = _get_labor_plan_employees(store_context)
+		hourly_rates = {row.get("name"): row.get("hour_rate") for row in employees if row.get("name")}
+
+		plan_rows = frappe.get_all(
+			"BEI Weekly Labor Plan",
+			filters={"store": store_context["warehouse"], "week_start_date": normalized_week_start},
+			fields=["name", "status", "total_hours", "labor_budget", "planned_by"],
+			order_by="creation desc",
+			limit=1,
+		)
+		plan_meta = plan_rows[0] if plan_rows else None
+		plan_doc = frappe.get_doc("BEI Weekly Labor Plan", plan_meta["name"]) if plan_meta else None
+		plan_shifts = list(plan_doc.shifts) if plan_doc else []
+		coverage_days = {
+			row.day_of_week for row in plan_shifts if not cint(getattr(row, "is_off", 0)) and row.day_of_week
+		}
+		scheduled_employees = {
+			row.employee for row in plan_shifts if not cint(getattr(row, "is_off", 0)) and row.employee
+		}
+		status = plan_meta.get("status") if plan_meta else "Missing"
+		empty_days = [day for day in DAY_OFFSETS if day not in coverage_days]
+		warning_count = 0
+		if not plan_meta:
+			warning_count += 1
+		if empty_days:
+			warning_count += len(empty_days)
+		if plan_meta and flt(plan_meta.get("total_hours")) > flt(plan_meta.get("labor_budget") or 0):
+			warning_count += 1
+
+		location_cost = _calculate_plan_cost(plan_shifts, hourly_rates) if plan_meta else 0.0
+		location_hours = flt(plan_meta.get("total_hours")) if plan_meta else 0.0
+		status_counter[status] += 1
+		total_hours += location_hours
+		total_cost += location_cost
+		if status == "Missing":
+			total_missing_locations += 1
+
+		items.append(
+			{
+				"store": store_context["warehouse"],
+				"warehouse_name": warehouse_name,
+				"status": status,
+				"plan_name": plan_meta.get("name") if plan_meta else None,
+				"planned_by": plan_meta.get("planned_by") if plan_meta else None,
+				"roster_count": len(employees),
+				"scheduled_employee_count": len(scheduled_employees),
+				"unscheduled_employee_count": max(len(employees) - len(scheduled_employees), 0),
+				"coverage_days": sorted(coverage_days, key=lambda day: DAY_OFFSETS.get(day, 99)),
+				"empty_days": empty_days,
+				"warning_count": warning_count,
+				"total_hours": location_hours,
+				"labor_budget": flt(plan_meta.get("labor_budget")) if plan_meta else 0.0,
+				"total_cost": location_cost,
+			}
+		)
+
+	items.sort(key=lambda item: (item["status"] == "Missing", item["warehouse_name"]))
+
+	return {
+		"week_start": normalized_week_start,
+		"week_end": week_end,
+		"items": items,
+		"summary": {
+			"locations": total_locations,
+			"missing_locations": total_missing_locations,
+			"draft_locations": status_counter.get("Draft", 0),
+			"published_locations": status_counter.get("Published", 0),
+			"total_hours": round(total_hours, 2),
+			"total_cost": round(total_cost, 2),
+		},
+	}
+
+
+@frappe.whitelist()
+def create_team_attendance_request(
+	employee: str,
+	attendance_date: str,
+	reason: str,
+	explanation: str | None = None,
+	shift: str | None = None,
+):
+	"""Create and submit a same-day office exception for a direct report."""
+	if reason not in {"Work From Home", "On Duty"}:
+		frappe.throw(_("Reason must be Work From Home or On Duty."))
+
+	target_employee = frappe.db.get_value(
+		"Employee",
+		employee,
+		["name", "employee_name", "reports_to", "status", "company"],
+		as_dict=True,
+	)
+	if not target_employee or target_employee.get("status") != "Active":
+		frappe.throw(_("Employee {0} is not active.").format(employee))
+
+	current_roles = set(frappe.get_roles(frappe.session.user))
+	current_employee = _get_current_employee()
+	allowed = bool(current_roles.intersection({"HQ User", "HR User", "HR Manager", "System Manager", "Administrator"}))
+	if current_employee and target_employee.get("reports_to") == current_employee.get("name"):
+		allowed = True
+	if not allowed:
+		frappe.throw(
+			_("You do not have permission to manage office schedule exceptions for {0}.").format(employee),
+			frappe.PermissionError,
+		)
+
+	request_date = str(getdate(attendance_date))
+	doc = frappe.get_doc(
+		{
+			"doctype": "Attendance Request",
+			"employee": target_employee["name"],
+			"from_date": request_date,
+			"to_date": request_date,
+			"reason": reason,
+			"explanation": explanation
+			or _("Created from Office Team Schedule by {0}.").format(frappe.session.user),
+			"company": target_employee.get("company"),
+			"shift": shift,
+		}
+	)
+	doc.flags.ignore_permissions = True
+	doc.insert(ignore_permissions=True)
+	doc.submit()
+	doc.add_comment(
+		"Info",
+		text=_("{0} submitted this {1} request from the Office Team Schedule surface.").format(
+			frappe.session.user, reason
+		),
+	)
+
+	return {"success": True, "name": doc.name, "reason": doc.reason, "attendance_date": request_date}
+
+
 @frappe.whitelist()
 def copy_weekly_plan_from_previous_week(
 	store: str,
@@ -707,8 +1476,28 @@ def copy_weekly_plan_from_previous_week(
 		else source_plan_meta.week_start_date
 	)
 	source_plan = frappe.get_doc("BEI Weekly Labor Plan", source_plan_name)
+	active_roster = {
+		row.get("name"): row
+		for row in _get_labor_plan_employees(store_context)
+		if row.get("name")
+	}
 	copied_shifts = []
+	warnings = []
+	source_employee_names = set()
 	for row in source_plan.shifts:
+		source_employee_names.add(row.employee)
+		if row.employee not in active_roster:
+			warnings.append(
+				{
+					"code": "transferred_out",
+					"level": "warning",
+					"message": _("Removed {0} because they are no longer on this roster.").format(
+						row.employee_name or row.employee
+					),
+					"employee": row.employee,
+				}
+			)
+			continue
 		copied_shifts.append(
 			{
 				"employee": row.employee,
@@ -725,12 +1514,27 @@ def copy_weekly_plan_from_previous_week(
 			}
 		)
 
+	for employee_name, employee_row in active_roster.items():
+		if employee_name in source_employee_names:
+			continue
+		warnings.append(
+			{
+				"code": "new_hire",
+				"level": "info",
+				"message": _("Added {0} as an empty row because they were not on the previous week.").format(
+					employee_row.get("employee_name") or employee_name
+				),
+				"employee": employee_name,
+			}
+		)
+
 	return {
 		"success": True,
 		"shifts": copied_shifts,
 		"source_week": source_week,
 		"source_plan": source_plan.name,
 		"shift_count": len(copied_shifts),
+		"warnings": warnings,
 	}
 
 
@@ -767,6 +1571,7 @@ def publish_weekly_plan(plan_name: str, surface: str | None = None):
 		frappe.qb.from_(ShiftAssignment)
 		.select(
 			ShiftAssignment.name,
+			ShiftAssignment.employee,
 			ShiftAssignment.shift_type,
 			ShiftAssignment.start_date,
 			ShiftAssignment.end_date,
@@ -815,6 +1620,7 @@ def publish_weekly_plan(plan_name: str, surface: str | None = None):
 	created = 0
 	updated = 0
 	unchanged = 0
+	notifications: dict[str, list[dict[str, Any]]] = {}
 
 	for row, work_date, row_key in current_rows:
 		shift_type_name = row.shift_type_name or row.shift_type
@@ -832,8 +1638,23 @@ def publish_weekly_plan(plan_name: str, surface: str | None = None):
 		if existing:
 			_cancel_and_delete_shift_assignment(existing.name)
 			updated += 1
+			notifications.setdefault(row.employee, []).append(
+				{
+					"type": "updated",
+					"work_date": work_date,
+					"old_shift": existing.shift_type,
+					"new_shift": shift_type_name,
+				}
+			)
 		else:
 			created += 1
+			notifications.setdefault(row.employee, []).append(
+				{
+					"type": "created",
+					"work_date": work_date,
+					"new_shift": shift_type_name,
+				}
+			)
 
 		_create_shift_assignment_from_plan(plan, row, work_date, publish_run_id)
 
@@ -843,12 +1664,21 @@ def publish_weekly_plan(plan_name: str, surface: str | None = None):
 			continue
 		_cancel_and_delete_shift_assignment(assignment.name)
 		deleted += 1
+		if assignment.employee:
+			notifications.setdefault(assignment.employee, []).append(
+				{
+					"type": "deleted",
+					"work_date": str(assignment.start_date),
+					"old_shift": assignment.shift_type,
+				}
+			)
 
 	plan.status = "Published"
 	plan.approved_by = None
 	plan.rejection_reason = None
 	plan.rejected_by = None
 	plan.save(ignore_permissions=True)
+	_send_published_schedule_notifications(plan, notifications)
 
 	return {
 		"success": True,

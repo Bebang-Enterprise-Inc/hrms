@@ -1,0 +1,253 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-SSR-.YYYY.-.#####",
+ "creation": "2026-03-17 18:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "requester_employee",
+  "requester_name",
+  "store",
+  "swap_date",
+  "column_break_1",
+  "target_employee",
+  "target_name",
+  "company",
+  "section_request",
+  "requester_shift_assignment",
+  "requester_shift_type",
+  "target_shift_assignment",
+  "target_shift_type",
+  "approver",
+  "status",
+  "notes",
+  "decision_note",
+  "approved_by",
+  "approved_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "requester_employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Requester Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "requester_employee.employee_name",
+   "fieldname": "requester_name",
+   "fieldtype": "Data",
+   "label": "Requester Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "swap_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Swap Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "target_employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Target Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "target_employee.employee_name",
+   "fieldname": "target_name",
+   "fieldtype": "Data",
+   "label": "Target Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "section_request",
+   "fieldtype": "Section Break",
+   "label": "Request Details"
+  },
+  {
+   "fieldname": "requester_shift_assignment",
+   "fieldtype": "Link",
+   "label": "Requester Shift Assignment",
+   "options": "Shift Assignment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "requester_shift_type",
+   "fieldtype": "Link",
+   "label": "Requester Shift Type",
+   "options": "Shift Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "target_shift_assignment",
+   "fieldtype": "Link",
+   "label": "Target Shift Assignment",
+   "options": "Shift Assignment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "target_shift_type",
+   "fieldtype": "Link",
+   "label": "Target Shift Type",
+   "options": "Shift Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approver",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Approver",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "Pending Approval",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending Approval\nApproved\nRejected\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Employee Note"
+  },
+  {
+   "fieldname": "decision_note",
+   "fieldtype": "Small Text",
+   "label": "Decision Note"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_at",
+   "fieldtype": "Datetime",
+   "label": "Approved At",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-03-17 18:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Shift Swap Request",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Employee",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Store Supervisor",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Area Supervisor",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Commissary Supervisor",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Warehouse User",
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
