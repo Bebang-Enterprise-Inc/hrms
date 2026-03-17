@@ -24,6 +24,8 @@ except ModuleNotFoundError:  # pragma: no cover - CLI help still works without b
 	getdate = _missing_frappe
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+BENCH_ROOT = REPO_ROOT.parent.parent
+DEFAULT_SITES_PATH = BENCH_ROOT / "sites"
 
 
 def iter_dates(start_date: str, end_date: str):
@@ -34,8 +36,9 @@ def iter_dates(start_date: str, end_date: str):
 		current = str(add_days(current, 1))
 
 
-def connect(site: str):
-	frappe.init(site=site)
+def connect(site: str, sites_path: str | None = None):
+	resolved_sites_path = sites_path or str(DEFAULT_SITES_PATH)
+	frappe.init(site=site, sites_path=resolved_sites_path)
 	frappe.connect()
 
 
@@ -253,13 +256,14 @@ def build_output_dir(base_dir: str | None):
 def main():
 	parser = argparse.ArgumentParser(description="Generate a missing-punch report.")
 	parser.add_argument("--site", default="hq.bebang.ph")
+	parser.add_argument("--sites-path", default=str(DEFAULT_SITES_PATH))
 	parser.add_argument("--start-date", required=True)
 	parser.add_argument("--end-date", required=True)
 	parser.add_argument("--store")
 	parser.add_argument("--output-dir")
 	args = parser.parse_args()
 
-	connect(args.site)
+	connect(args.site, args.sites_path)
 	try:
 		rows = build_missing_punch_rows(args.start_date, args.end_date, args.store)
 		output_dir = build_output_dir(args.output_dir)

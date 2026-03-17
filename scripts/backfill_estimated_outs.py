@@ -27,6 +27,7 @@ if str(ROOT) not in sys.path:
   sys.path.insert(0, str(ROOT))
 
 from scripts.missing_punch_report import (
+  DEFAULT_SITES_PATH,
   REPO_ROOT,
   build_missing_punch_rows,
   connect,
@@ -121,6 +122,7 @@ def write_artifacts(rows: list[dict], output_dir: Path):
 def main():
   parser = argparse.ArgumentParser(description="Backfill estimated OUT checkins for single-punch days.")
   parser.add_argument("--site", default="hq.bebang.ph")
+  parser.add_argument("--sites-path", default=str(DEFAULT_SITES_PATH))
   parser.add_argument("--start-date", required=True)
   parser.add_argument("--end-date", required=True)
   parser.add_argument("--store")
@@ -128,7 +130,7 @@ def main():
   parser.add_argument("--apply", action="store_true", help="Insert the estimated OUT checkins.")
   args = parser.parse_args()
 
-  connect(args.site)
+  connect(args.site, args.sites_path)
   try:
     missing_rows = build_missing_punch_rows(args.start_date, args.end_date, args.store)
     candidates = [
