@@ -444,11 +444,15 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 
 	def test_approve_shift_swap_request_elevates_assignment_mutation_permissions(self):
 		doc = types.SimpleNamespace(
+			name="BEI-SSR-1",
 			status="Pending Approval",
 			store="TEST-STORE-BGC - BEI",
 			requester_shift_assignment="HR-SHA-1",
 			target_shift_assignment="HR-SHA-2",
+			requester_shift_type="Opening",
+			target_shift_type="Mid",
 			target_employee="TEST-STAFF-001",
+			requester_employee="TEST-CREW-001",
 			swap_date="2026-03-17",
 			save=MagicMock(),
 		)
@@ -471,9 +475,15 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 			patch.object(supervisor, "_is_commissary_schedule_store", return_value=False),
 			patch.object(supervisor, "_assert_schedule_access"),
 			patch.object(supervisor, "_sync_shift_swap_plan_rows"),
+			patch.object(
+				supervisor,
+				"_find_active_shift_assignment_name",
+				side_effect=["HR-SHA-NEW-REQUESTER", "HR-SHA-NEW-TARGET"],
+			),
 			patch.object(supervisor, "_notify_shift_swap_decision"),
 			patch.object(supervisor, "_serialize_shift_swap_request", return_value={"name": "BEI-SSR-1"}),
 			patch.object(supervisor, "now_datetime", return_value="2026-03-17 20:10:00"),
+			patch.object(supervisor.frappe.db, "set_value", create=True),
 		):
 			result = supervisor.approve_shift_swap_request("BEI-SSR-1", "approved")
 
@@ -485,10 +495,9 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 			"HR-SHA-2",
 			ignore_permissions=True,
 		)
-		self.assertEqual(doc.save.call_count, 2)
-		doc.save.assert_any_call(ignore_permissions=True)
-		self.assertIsNone(doc.requester_shift_assignment)
-		self.assertIsNone(doc.target_shift_assignment)
+		doc.save.assert_called_once_with(ignore_permissions=True)
+		self.assertEqual(doc.requester_shift_assignment, "HR-SHA-NEW-REQUESTER")
+		self.assertEqual(doc.target_shift_assignment, "HR-SHA-NEW-TARGET")
 		self.assertTrue(result["success"])
 
 

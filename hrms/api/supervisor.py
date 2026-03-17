@@ -696,6 +696,26 @@ def _assignment_covers_date(assignment: Any, work_date: str) -> bool:
 	return start_date <= work_date <= end_date
 
 
+def _find_active_shift_assignment_name(employee: str, shift_type: str, work_date: str) -> str | None:
+	rows = frappe.db.sql(
+		"""
+		SELECT name
+		FROM `tabShift Assignment`
+		WHERE employee = %(employee)s
+		  AND shift_type = %(shift_type)s
+		  AND docstatus = 1
+		  AND status = 'Active'
+		  AND start_date <= %(work_date)s
+		  AND (end_date IS NULL OR end_date = '' OR end_date >= %(work_date)s)
+		ORDER BY start_date DESC, creation DESC
+		LIMIT 1
+		""",
+		{"employee": employee, "shift_type": shift_type, "work_date": work_date},
+		as_dict=True,
+	)
+	return rows[0].name if rows else None
+
+
 def _get_shift_assignments_for_employees(employee_names: list[str], from_date: str, to_date: str):
 	if not employee_names:
 		return []
@@ -1126,14 +1146,21 @@ def approve_shift_swap_request(request_name: str, decision_note: str | None = No
 	target_assignment_name = doc.target_shift_assignment
 	requester_plan = None
 	target_plan = None
+	requester_replacement_shift_type = doc.target_shift_type
+	target_replacement_shift_type = doc.requester_shift_type
 	if requester_assignment_name:
 		requester_plan = _get_shift_assignment_doc(requester_assignment_name).custom_bei_weekly_labor_plan
 	if target_assignment_name:
 		target_plan = _get_shift_assignment_doc(target_assignment_name).custom_bei_weekly_labor_plan
 
+	frappe.db.set_value(
+		"BEI Shift Swap Request",
+		doc.name,
+		{"requester_shift_assignment": None, "target_shift_assignment": None},
+		update_modified=False,
+	)
 	doc.requester_shift_assignment = None
 	doc.target_shift_assignment = None
-	doc.save(ignore_permissions=True)
 	try:
 		swap_shift(
 			requester_assignment_name,
@@ -1144,10 +1171,30 @@ def approve_shift_swap_request(request_name: str, decision_note: str | None = No
 			ignore_permissions=True,
 		)
 	except Exception:
+		frappe.db.set_value(
+			"BEI Shift Swap Request",
+			doc.name,
+			{
+				"requester_shift_assignment": requester_assignment_name,
+				"target_shift_assignment": target_assignment_name,
+			},
+			update_modified=False,
+		)
 		doc.requester_shift_assignment = requester_assignment_name
 		doc.target_shift_assignment = target_assignment_name
-		doc.save(ignore_permissions=True)
 		raise
+	doc.requester_shift_assignment = _find_active_shift_assignment_name(
+		doc.requester_employee,
+		requester_replacement_shift_type,
+		str(doc.swap_date),
+	)
+	doc.target_shift_assignment = _find_active_shift_assignment_name(
+		doc.target_employee,
+		target_replacement_shift_type,
+		str(doc.swap_date),
+	)
+	if not doc.requester_shift_assignment or not doc.target_shift_assignment:
+		frappe.throw(_("Approved shift swap could not resolve updated shift assignments."))
 	_sync_shift_swap_plan_rows(doc, requester_plan=requester_plan, target_plan=target_plan)
 	doc.status = "Approved"
 	doc.approved_by = frappe.session.user
