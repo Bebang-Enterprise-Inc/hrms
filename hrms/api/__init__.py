@@ -66,6 +66,21 @@ def get_current_employee_info() -> dict:
 	return employee
 
 
+def _resolve_self_service_employee(employee: str | None) -> str:
+	employee_name = str(employee or "").strip()
+	if employee_name:
+		return employee_name
+
+	current_employee = frappe.db.get_value(
+		"Employee",
+		{"user_id": frappe.session.user, "status": "Active"},
+		"name",
+	)
+	if not current_employee:
+		frappe.throw(_("No active employee record found for the current user."))
+	return current_employee
+
+
 @frappe.whitelist()
 def get_all_employees() -> list[dict]:
 	return frappe.get_all(
@@ -288,11 +303,12 @@ def get_holidays_for_calendar(employee: str, from_date: str, to_date: str) -> li
 
 @frappe.whitelist()
 def get_shift_requests(
-	employee: str,
+	employee: str | None = None,
 	approver_id: str | None = None,
 	for_approval: bool = False,
 	limit: int | None = None,
 ) -> list[dict]:
+	employee = _resolve_self_service_employee(employee)
 	filters = get_filters("Shift Request", employee, approver_id, for_approval)
 	fields = [
 		"name",
@@ -394,7 +410,8 @@ def get_filters(
 
 
 @frappe.whitelist()
-def get_shift_request_approvers(employee: str) -> str | list[str]:
+def get_shift_request_approvers(employee: str | None = None) -> str | list[str]:
+	employee = _resolve_self_service_employee(employee)
 	shift_request_approver, department = frappe.get_cached_value(
 		"Employee",
 		employee,
