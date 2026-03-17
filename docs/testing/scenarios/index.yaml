@@ -405,9 +405,9 @@ flows:
       - docs/testing/scenarios/regressions/regression-bank-store-ops-inventory.md
 
 coverage:
-  generated_at_utc: 2026-03-09T08:46:37.710496+00:00
+  generated_at_utc: 2026-03-17T07:45:00+00:00
   baseline_route_count: 214
-  live_route_count: 244
+  live_route_count: 247
   required_domains:
     - hr
     - procurement
@@ -485,7 +485,7 @@ coverage:
     billing: 6
     biometric: 6
     clearance: 2
-    commissary: 11
+    commissary: 12
     communication: 5
     completeness: 1
     dashboard: 1
@@ -511,9 +511,9 @@ coverage:
     settings: 1
     setup: 1
     store-ops: 10
-    supervisor: 8
+    supervisor: 9
     tasks: 5
-    team: 3
+    team: 4
     templates: 1
     transfers: 1
     warehouse: 24
