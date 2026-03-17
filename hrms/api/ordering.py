@@ -169,7 +169,7 @@ def _generate_dr_internal(order_name: str, order: Any = None) -> dict[str, Any]:
 		_send_order_notification(
 			store=order.store,
 			message=_(
-				"Delivery Receipt {0} has been generated for your order {1}. " "Delivery scheduled for {2}."
+				"Delivery Receipt {0} has been generated for your order {1}. Delivery scheduled for {2}."
 			).format(dr_number, order_name, order.delivery_date or "TBD"),
 		)
 	except Exception as e:
@@ -239,7 +239,7 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 		conditions.append("so.status = %(status)s")
 		params["status"] = status
 
-	admin_viewer_roles = {"System Manager", "Administrator", "Warehouse Manager"}
+	admin_viewer_roles = {"System Manager", "Administrator", "Supply Chain Manager", "Warehouse Manager"}
 	is_admin_viewer = bool(current_roles.intersection(admin_viewer_roles)) or is_fallback_viewer
 	if not is_admin_viewer:
 		conditions.append(
