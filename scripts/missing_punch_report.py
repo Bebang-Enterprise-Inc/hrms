@@ -41,6 +41,11 @@ def connect(site: str, sites_path: str | None = None):
 	Path(resolved_sites_path).mkdir(parents=True, exist_ok=True)
 	for log_dir in (BENCH_ROOT / "logs", Path("/home/frappe/logs")):
 		log_dir.mkdir(parents=True, exist_ok=True)
+	for site_log_dir in (
+		Path(resolved_sites_path) / site / "logs",
+		BENCH_ROOT / site / "logs",
+	):
+		site_log_dir.mkdir(parents=True, exist_ok=True)
 	frappe.init(site=site, sites_path=resolved_sites_path)
 	frappe.connect()
 
