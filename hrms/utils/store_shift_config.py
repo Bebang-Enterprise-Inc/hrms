@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+from hrms.utils.supply_chain_contracts import get_preferred_commissary_warehouses
+
 DEFAULT_SHIFT_OPTIONS = [
 	{
 		"shift_type_name": "Opening",
@@ -100,9 +102,20 @@ def _normalized_store_name(store_name: str | None) -> str:
 	return (store_name or "").strip().upper()
 
 
+def _normalized_commissary_keys() -> set[str]:
+	keys = {"COMMISSARY", "SHAW BLVD", "SHAW BLVD - BKI"}
+	for warehouse in get_preferred_commissary_warehouses(include_legacy=True):
+		normalized = _normalized_store_name(warehouse)
+		if normalized.startswith("TEST-"):
+			continue
+		keys.add(normalized)
+		keys.add(normalized.replace(" - BEI", "").replace(" - BKI", "").strip())
+	return {key for key in keys if key}
+
+
 def is_commissary_store(store_name: str | None) -> bool:
 	normalized = _normalized_store_name(store_name)
-	return "COMMISSARY" in normalized
+	return "COMMISSARY" in normalized or normalized in _normalized_commissary_keys()
 
 
 def get_shift_options_for_store(store_name: str | None) -> list[dict]:

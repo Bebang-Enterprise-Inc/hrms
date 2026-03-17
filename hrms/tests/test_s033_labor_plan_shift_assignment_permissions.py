@@ -42,6 +42,8 @@ def _install_fake_dependencies():
 
 	utils.add_days = getattr(utils, "add_days", lambda value, days: value)
 	utils.cint = getattr(utils, "cint", lambda value: int(float(value or 0)))
+	utils.flt = getattr(utils, "flt", lambda value: float(value or 0))
+	utils.getdate = getattr(utils, "getdate", lambda value=None: value)
 	utils.get_time = getattr(utils, "get_time", lambda value: value)
 	utils.now_datetime = getattr(utils, "now_datetime", lambda: "2026-03-11 18:50:00")
 	utils.nowdate = getattr(utils, "nowdate", lambda: "2026-03-11")
@@ -56,12 +58,12 @@ def _install_fake_dependencies():
 
 	if "hrms.api" not in sys.modules:
 		hrms_api_pkg = types.ModuleType("hrms.api")
-		hrms_api_pkg.__path__ = []
+		hrms_api_pkg.__path__ = [str(ROOT / "hrms" / "api")]
 		sys.modules["hrms.api"] = hrms_api_pkg
 
 	if "hrms.utils" not in sys.modules:
 		hrms_utils_pkg = types.ModuleType("hrms.utils")
-		hrms_utils_pkg.__path__ = []
+		hrms_utils_pkg.__path__ = [str(ROOT / "hrms" / "utils")]
 		sys.modules["hrms.utils"] = hrms_utils_pkg
 
 	if "hrms.api.store" not in sys.modules:
@@ -74,6 +76,11 @@ def _install_fake_dependencies():
 		config_mod = types.ModuleType("hrms.utils.store_shift_config")
 		config_mod.get_shift_options_for_store = lambda *args, **kwargs: []
 		sys.modules["hrms.utils.store_shift_config"] = config_mod
+
+	if "hrms.utils.supply_chain_contracts" not in sys.modules:
+		contracts_mod = types.ModuleType("hrms.utils.supply_chain_contracts")
+		contracts_mod.get_preferred_commissary_warehouses = lambda *args, **kwargs: []
+		sys.modules["hrms.utils.supply_chain_contracts"] = contracts_mod
 
 
 _install_fake_dependencies()
@@ -108,6 +115,227 @@ class _AttrDict(dict):
 
 
 class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
+	def test_copy_weekly_plan_from_previous_week_returns_marker_when_no_prior_published_plan(self):
+		with (
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "Shaw BLVD - BKI", "warehouse_name": "Shaw BLVD"},
+			),
+			patch.object(supervisor, "_assert_schedule_access"),
+			patch.object(supervisor.frappe, "get_all", return_value=[]),
+		):
+			result = supervisor.copy_weekly_plan_from_previous_week(
+				store="Shaw BLVD - BKI",
+				target_week_start="2026-03-23",
+				surface="commissary_schedule",
+			)
+
+		self.assertFalse(result["success"])
+		self.assertEqual(result["error"], "no_previous_week")
+
+	def test_copy_weekly_plan_from_previous_week_returns_shift_payload(self):
+		source_plan = types.SimpleNamespace(
+			name="BEI-WLP-2026-00011",
+			shifts=[
+				types.SimpleNamespace(
+					employee="EMP-001",
+					employee_name="Jane Doe",
+					day_of_week="Monday",
+					shift_type_name="Commissary AM",
+					shift_type=None,
+					shift_start="06:00:00",
+					shift_end="14:00:00",
+					is_off=0,
+					ends_next_day=0,
+					hours=8,
+					notes="Prep",
+				)
+			],
+		)
+
+		with (
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "Shaw BLVD - BKI", "warehouse_name": "Shaw BLVD"},
+			),
+			patch.object(supervisor, "_assert_schedule_access"),
+			patch.object(
+				supervisor.frappe,
+				"get_all",
+				return_value=[{"name": "BEI-WLP-2026-00011", "week_start_date": "2026-03-16"}],
+			),
+			patch.object(
+				supervisor,
+				"_get_labor_plan_employees",
+				return_value=[
+					{
+						"name": "EMP-001",
+						"employee_name": "Jane Doe",
+						"designation": "Commissary Staff",
+						"branch": "Shaw BLVD - BKI",
+						"company": "BEI",
+					}
+				],
+			),
+			patch.object(supervisor.frappe, "get_doc", return_value=source_plan),
+		):
+			result = supervisor.copy_weekly_plan_from_previous_week(
+				store="Shaw BLVD - BKI",
+				target_week_start="2026-03-23",
+				surface="commissary_schedule",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(result["source_plan"], "BEI-WLP-2026-00011")
+		self.assertEqual(result["source_week"], "2026-03-16")
+		self.assertEqual(result["shift_count"], 1)
+		self.assertEqual(result["shifts"][0]["employee"], "EMP-001")
+		self.assertEqual(result["shifts"][0]["shift_type_name"], "Commissary AM")
+		self.assertEqual(result["shifts"][0]["hours"], 8)
+		self.assertEqual(result["warnings"], [])
+
+	def test_copy_weekly_plan_from_previous_week_filters_transferred_rows_and_flags_new_hires(self):
+		source_plan = types.SimpleNamespace(
+			name="BEI-WLP-2026-00012",
+			shifts=[
+				types.SimpleNamespace(
+					employee="EMP-OLD",
+					employee_name="Transferred Out",
+					day_of_week="Monday",
+					shift_type_name="Opening",
+					shift_type=None,
+					shift_start="09:30:00",
+					shift_end="18:30:00",
+					is_off=0,
+					ends_next_day=0,
+					hours=8,
+					notes=None,
+				)
+			],
+		)
+
+		with (
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "AYALA", "warehouse_name": "Ayala"},
+			),
+			patch.object(supervisor, "_assert_schedule_access"),
+			patch.object(
+				supervisor.frappe,
+				"get_all",
+				return_value=[{"name": "BEI-WLP-2026-00012", "week_start_date": "2026-03-16"}],
+			),
+			patch.object(
+				supervisor,
+				"_get_labor_plan_employees",
+				return_value=[
+					{
+						"name": "EMP-NEW",
+						"employee_name": "New Hire",
+						"designation": "Cashier",
+						"branch": "AYALA",
+						"company": "BEI",
+					}
+				],
+			),
+			patch.object(supervisor.frappe, "get_doc", return_value=source_plan),
+		):
+			result = supervisor.copy_weekly_plan_from_previous_week(
+				store="AYALA",
+				target_week_start="2026-03-23",
+				surface="store_schedule",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(result["shift_count"], 0)
+		self.assertEqual({warning["code"] for warning in result["warnings"]}, {"transferred_out", "new_hire"})
+
+	def test_apply_weekly_template_returns_role_mapped_rows(self):
+		with (
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "AYALA", "warehouse_name": "Ayala"},
+			),
+			patch.object(supervisor, "_assert_schedule_access"),
+			patch.object(
+				supervisor,
+				"_get_labor_plan_employees",
+				return_value=[
+					{
+						"name": "EMP-LEAD",
+						"employee_name": "Lead",
+						"designation": "Store Supervisor",
+						"branch": "AYALA",
+						"company": "BEI",
+					},
+					{
+						"name": "EMP-CASH",
+						"employee_name": "Cashier",
+						"designation": "Cashier",
+						"branch": "AYALA",
+						"company": "BEI",
+					},
+				],
+			),
+			patch.object(
+				supervisor,
+				"get_shift_options_for_store",
+				return_value=[
+					{
+						"shift_type_name": "Opening",
+						"label": "Opening",
+						"shift_start": "09:30",
+						"shift_end": "18:30",
+						"hours": 8,
+						"is_off": 0,
+						"ends_next_day": 0,
+					},
+					{
+						"shift_type_name": "Mid",
+						"label": "Mid",
+						"shift_start": "12:00",
+						"shift_end": "20:00",
+						"hours": 8,
+						"is_off": 0,
+						"ends_next_day": 0,
+					},
+					{
+						"shift_type_name": "Closing",
+						"label": "Closing",
+						"shift_start": "14:00",
+						"shift_end": "22:30",
+						"hours": 8,
+						"is_off": 0,
+						"ends_next_day": 0,
+					},
+					{
+						"shift_type_name": "Off",
+						"label": "Off",
+						"shift_start": "",
+						"shift_end": "",
+						"hours": 0,
+						"is_off": 1,
+						"ends_next_day": 0,
+					},
+				],
+			),
+		):
+			result = supervisor.apply_weekly_template(
+				store="AYALA",
+				template_key="retail_balanced",
+				week_start="2026-03-23",
+				surface="store_schedule",
+			)
+
+		self.assertEqual(result["template"]["template_key"], "retail_balanced")
+		self.assertGreater(result["shift_count"], 0)
+		self.assertTrue(any(shift["employee"] == "EMP-LEAD" for shift in result["shifts"]))
+		self.assertEqual(result["warnings"], [])
+
 	def test_cancel_and_delete_shift_assignment_uses_system_permission_flags(self):
 		doc = _FakeShiftAssignment(docstatus=1)
 		delete_doc = MagicMock()

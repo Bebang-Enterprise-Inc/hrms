@@ -35,12 +35,26 @@ class _FakeMessagesAPI:
 		return types.SimpleNamespace(execute=lambda: {"name": f"{parent}/messages/{self.call_count}"})
 
 
+class _FakeSpacesAPI:
+	def __init__(self, messages_api):
+		self.messages_api = messages_api
+		self.last_dm_lookup = None
+
+	def messages(self):
+		return self.messages_api
+
+	def findDirectMessage(self, name):
+		self.last_dm_lookup = name
+		return types.SimpleNamespace(execute=lambda: {"name": "spaces/DM-SPACE"})
+
+
 class _FakeChatAPI:
 	def __init__(self):
 		self.messages_api = _FakeMessagesAPI()
+		self.spaces_api = _FakeSpacesAPI(self.messages_api)
 
 	def spaces(self):
-		return types.SimpleNamespace(messages=lambda: self.messages_api)
+		return self.spaces_api
 
 
 def _install_fake_frappe():
@@ -249,6 +263,17 @@ class TestGoogleChatNotificationRouting(unittest.TestCase):
 		self.assertTrue(result["sent"])
 		self.assertEqual(result["target_space"], "spaces/AAQABiNmpBg")
 		self.assertEqual(self.fake_chat.messages_api.last_parent, "spaces/AAQABiNmpBg")
+
+	def test_send_message_to_user_direct_bypasses_lockdown_after_dm_lookup(self):
+		with (
+			patch.object(self.module.os.path, "exists", return_value=True),
+			patch.dict(os.environ, {}, clear=False),
+		):
+			result = self.module.send_message_to_user_direct("sam@bebang.ph", "hello direct")
+
+		self.assertTrue(result["success"])
+		self.assertEqual(self.fake_chat.spaces_api.last_dm_lookup, "users/sam@bebang.ph")
+		self.assertEqual(self.fake_chat.messages_api.last_parent, "spaces/DM-SPACE")
 
 	def test_ingest_notification_event_dry_run_reports_routed_target_space(self):
 		result = self.module.ingest_notification_event(
