@@ -828,6 +828,46 @@ def _resolve_shift_swap_approver(employee: dict[str, Any], store_context: dict[s
 	return None
 
 
+def _resolve_schedule_notification_space(store: str | None):
+	from hrms.utils.bei_config import SPACE_OPS, get_chat_space
+
+	default_space = get_chat_space(SPACE_OPS)
+	if not store:
+		return default_space
+
+	try:
+		store_context = _resolve_labor_plan_store(store)
+	except Exception:
+		store_context = {
+			"warehouse": store,
+			"warehouse_name": store,
+		}
+
+	warehouse_name = str(store_context.get("warehouse") or "").strip()
+	branch_name = str(store_context.get("warehouse_name") or "").strip()
+
+	try:
+		if warehouse_name and frappe.db.has_column("Warehouse", "custom_gchat_space"):
+			warehouse_space = frappe.db.get_value("Warehouse", warehouse_name, "custom_gchat_space")
+			if warehouse_space:
+				return warehouse_space
+	except Exception:
+		pass
+
+	try:
+		if frappe.db.has_column("Branch", "custom_gchat_space"):
+			for candidate in dict.fromkeys(
+				[value for value in (branch_name, store, warehouse_name) if str(value or "").strip()]
+			):
+				branch_space = frappe.db.get_value("Branch", candidate, "custom_gchat_space")
+				if branch_space:
+					return branch_space
+	except Exception:
+		pass
+
+	return default_space
+
+
 def _notify_schedule_change(
 	store: str,
 	employee: str,
@@ -843,9 +883,10 @@ def _notify_schedule_change(
 		result = send_message_to_user_direct(user_id, message, context=context)
 		if result.get("success"):
 			return result
-		store_space = frappe.db.get_value("Warehouse", store, "custom_gchat_space")
+		store_space = _resolve_schedule_notification_space(store)
 		if store_space:
-			send_message_to_space(store_space, f"{employee_name}\n{message}")
+			sent = send_message_to_space(store_space, f"{employee_name}\n{message}")
+			return {"success": bool(sent), "sent": bool(sent), "target_space": store_space}
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "Schedule Change Notification Failed")
 	return {"success": False, "sent": False}

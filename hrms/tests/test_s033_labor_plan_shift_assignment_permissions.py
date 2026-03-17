@@ -26,11 +26,14 @@ def _install_fake_dependencies():
 		frappe, "throw", lambda message, exc=None: (_ for _ in ()).throw(Exception(message))
 	)
 	frappe.ValidationError = getattr(frappe, "ValidationError", type("ValidationError", (Exception,), {}))
+	frappe.log_error = getattr(frappe, "log_error", lambda *args, **kwargs: None)
+	frappe.get_traceback = getattr(frappe, "get_traceback", lambda: "traceback")
 	frappe.__dict__.setdefault("local", types.SimpleNamespace())
 	if not getattr(frappe.local, "db", None):
 		frappe.local.db = types.SimpleNamespace(
 			get_value=lambda *args, **kwargs: None,
 			exists=lambda *args, **kwargs: False,
+			has_column=lambda *args, **kwargs: False,
 		)
 	if not getattr(frappe.local, "session", None):
 		frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
@@ -38,6 +41,7 @@ def _install_fake_dependencies():
 	frappe.get_doc = getattr(frappe, "get_doc", lambda *args, **kwargs: None)
 	frappe.delete_doc = getattr(frappe, "delete_doc", lambda *args, **kwargs: None)
 	frappe.get_all = getattr(frappe, "get_all", lambda *args, **kwargs: [])
+	frappe.get_roles = getattr(frappe, "get_roles", lambda *args, **kwargs: [])
 	frappe.__dict__.setdefault("session", frappe.local.session)
 
 	utils.add_days = getattr(utils, "add_days", lambda value, days: value)
@@ -81,6 +85,12 @@ def _install_fake_dependencies():
 		contracts_mod = types.ModuleType("hrms.utils.supply_chain_contracts")
 		contracts_mod.get_preferred_commissary_warehouses = lambda *args, **kwargs: []
 		sys.modules["hrms.utils.supply_chain_contracts"] = contracts_mod
+
+	if "hrms.utils.bei_config" not in sys.modules:
+		config_mod = types.ModuleType("hrms.utils.bei_config")
+		config_mod.SPACE_OPS = "ops"
+		config_mod.get_chat_space = lambda *args, **kwargs: "spaces/OPS"
+		sys.modules["hrms.utils.bei_config"] = config_mod
 
 
 _install_fake_dependencies()
@@ -499,6 +509,90 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 		self.assertEqual(doc.requester_shift_assignment, "HR-SHA-NEW-REQUESTER")
 		self.assertEqual(doc.target_shift_assignment, "HR-SHA-NEW-TARGET")
 		self.assertTrue(result["success"])
+
+	def test_resolve_schedule_notification_space_prefers_branch_override(self):
+		with (
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"},
+			),
+			patch.object(
+				supervisor.frappe.db,
+				"has_column",
+				side_effect=lambda doctype, column: doctype == "Branch" and column == "custom_gchat_space",
+				create=True,
+			),
+			patch.object(
+				supervisor.frappe.db,
+				"get_value",
+				side_effect=lambda doctype, name, fieldname=None, as_dict=False: (
+					"spaces/STORE" if doctype == "Branch" and name == "TEST-STORE-BGC" else None
+				),
+				create=True,
+			),
+		):
+			space = supervisor._resolve_schedule_notification_space("TEST-STORE-BGC - BEI")
+
+		self.assertEqual(space, "spaces/STORE")
+
+	def test_notify_schedule_change_prefers_direct_message(self):
+		google_chat_mod = types.ModuleType("hrms.api.google_chat")
+		google_chat_mod.send_message_to_user_direct = MagicMock(
+			return_value={"success": True, "sent": True, "target_space": "spaces/DM"}
+		)
+		google_chat_mod.send_message_to_space = MagicMock(return_value=True)
+
+		with (
+			patch.dict(sys.modules, {"hrms.api.google_chat": google_chat_mod}),
+			patch.object(supervisor.frappe.db, "get_value", return_value="crew@bebang.ph", create=True),
+		):
+			result = supervisor._notify_schedule_change(
+				"TEST-STORE-BGC - BEI",
+				"EMP-001",
+				"Crew Member",
+				"*Schedule Update*",
+				context="test.direct_message",
+			)
+
+		self.assertTrue(result["success"])
+		google_chat_mod.send_message_to_space.assert_not_called()
+
+	def test_notify_schedule_change_falls_back_to_ops_space_when_store_fields_are_missing(self):
+		google_chat_mod = types.ModuleType("hrms.api.google_chat")
+		google_chat_mod.send_message_to_user_direct = MagicMock(
+			return_value={"success": False, "sent": False, "reason": "direct_message_not_found"}
+		)
+		google_chat_mod.send_message_to_space = MagicMock(return_value=True)
+
+		def fake_get_value(doctype, name=None, fieldname=None, as_dict=False):
+			if doctype == "Employee":
+				return "crew@bebang.ph"
+			return None
+
+		with (
+			patch.dict(sys.modules, {"hrms.api.google_chat": google_chat_mod}),
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"},
+			),
+			patch.object(supervisor.frappe.db, "get_value", side_effect=fake_get_value, create=True),
+			patch.object(supervisor.frappe.db, "has_column", return_value=False, create=True),
+		):
+			result = supervisor._notify_schedule_change(
+				"TEST-STORE-BGC - BEI",
+				"EMP-001",
+				"Crew Member",
+				"*Schedule Update*",
+				context="test.ops_fallback",
+			)
+
+		self.assertTrue(result["success"])
+		google_chat_mod.send_message_to_space.assert_called_once_with(
+			"spaces/OPS",
+			"Crew Member\n*Schedule Update*",
+		)
 
 
 if __name__ == "__main__":
