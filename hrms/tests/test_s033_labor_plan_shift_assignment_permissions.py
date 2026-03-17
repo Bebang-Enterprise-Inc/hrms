@@ -452,6 +452,41 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 		self.assertEqual(doc.insert_kwargs, {"ignore_permissions": True})
 		self.assertTrue(doc.submit_called)
 
+	def test_apply_shifts_keeps_off_rows_out_of_shift_type_link_field(self):
+		class _Doc:
+			def __init__(self):
+				self.shifts = []
+				self.total_hours = 0
+
+			def append(self, _fieldname, _payload):
+				row = types.SimpleNamespace()
+				self.shifts.append(row)
+				return row
+
+		doc = _Doc()
+		total_hours = supervisor._apply_shifts(
+			doc,
+			[
+				{
+					"employee": "TEST-STAFF-001",
+					"employee_name": "Test Staff",
+					"day_of_week": "Monday",
+					"shift_type_name": "Off",
+					"is_off": 1,
+					"ends_next_day": 0,
+					"shift_start": "",
+					"shift_end": "",
+					"hours": 0,
+				}
+			],
+		)
+
+		self.assertEqual(total_hours, 0)
+		self.assertEqual(len(doc.shifts), 1)
+		self.assertIsNone(doc.shifts[0].shift_type_name)
+		self.assertEqual(doc.shifts[0].shift_type, "Off")
+		self.assertEqual(doc.shifts[0].hours, 0)
+
 	def test_approve_shift_swap_request_elevates_assignment_mutation_permissions(self):
 		doc = types.SimpleNamespace(
 			name="BEI-SSR-1",

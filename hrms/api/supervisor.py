@@ -514,7 +514,7 @@ def _get_shift_type_name(shift: dict[str, Any]):
 
 
 def _legacy_shift_type_value(shift_type_name: str | None):
-	return shift_type_name if shift_type_name in {"Opening", "Mid", "Closing"} else None
+	return shift_type_name if shift_type_name in {"Opening", "Mid", "Closing", "Off"} else None
 
 
 def _apply_shifts(doc: Any, shifts: list[dict[str, Any]]):
@@ -526,11 +526,12 @@ def _apply_shifts(doc: Any, shifts: list[dict[str, Any]]):
 		row.employee = shift.get("employee")
 		row.employee_name = shift.get("employee_name")
 		row.day_of_week = shift.get("day_of_week")
-		row.shift_type_name = _get_shift_type_name(shift)
 		row.is_off = cint(shift.get("is_off"))
 		row.ends_next_day = cint(shift.get("ends_next_day"))
 		row.notes = shift.get("notes")
-		row.shift_type = _legacy_shift_type_value(row.shift_type_name)
+		resolved_shift_type = _get_shift_type_name(shift)
+		row.shift_type_name = None if row.is_off else resolved_shift_type
+		row.shift_type = _legacy_shift_type_value(resolved_shift_type)
 
 		if not row.is_off:
 			row.shift_start = shift.get("shift_start")
