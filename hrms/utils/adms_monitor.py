@@ -126,6 +126,7 @@ def _load_device_mapping():
 	"""Load device mapping from JSON file."""
 	try:
 		if os.path.exists(DEVICE_MAPPING_PATH):
+			# nosemgrep: frappe-semgrep-rules.rules.security.frappe-security-file-traversal -- DEVICE_MAPPING_PATH is derived from frappe.get_app_path("hrms") and fixed path segments only.
 			with open(DEVICE_MAPPING_PATH) as f:
 				return json.load(f)
 		else:
