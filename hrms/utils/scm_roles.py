@@ -42,12 +42,14 @@ SCM_PICKING_ROLES = {"Warehouse Manager", "Warehouse Staff", "Logistics Coordina
 ORDERING_STORE_ROLES = {"Store Staff", "Store Supervisor", "Store OIC", "System Manager"}
 ORDERING_WAREHOUSE_ROLES = {
 	"Area Supervisor",
+	"Supply Chain Manager",
 	"Warehouse Manager",
 	"System Manager",
 	"Administrator",
 }
 ORDERING_APPROVAL_ROLES = {
 	"Area Supervisor",
+	"Supply Chain Manager",
 	"Warehouse Manager",
 	"System Manager",
 	"Administrator",
@@ -81,6 +83,7 @@ SCM_INVENTORY_ROLES = {
 	"Regional Manager",
 	"Supply Chain Manager",
 	"Warehouse Manager",
+	"Warehouse Viewer",
 	"Warehouse Staff",
 	"Warehouse User",
 	"Logistics Coordinator",

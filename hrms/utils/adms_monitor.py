@@ -23,11 +23,13 @@ CACHE_KEYS = {
 	"not_punching": "biometric:v1:not_punching",
 	"wrong_device": "biometric:v1:wrong_device",
 	"not_enrolled": "biometric:v1:not_enrolled",
+	"registry_mismatch": "biometric:v1:registry_mismatch",
 	"ghost": "biometric:v1:ghost_punchers",
 	"leaderboard": "biometric:v1:leaderboard",
 	"refresh_lock": "biometric:v1:refresh_lock",
 }
 CACHE_TTL = 6 * 60 * 60  # 6 hours in seconds
+CONTRACT_REVISION = "s059-biometric-v1"
 
 # SQL Queries
 SQL_PUNCH_BY_DEVICE = """
@@ -53,6 +55,12 @@ SQL_48H_ACTIVITY = """
 SELECT pin, COUNT(*) as punch_count, MAX(event_time) as last_punch
 FROM adms_attlog_raw
 WHERE event_time >= NOW() - INTERVAL '48 hours'
+GROUP BY pin
+"""
+
+SQL_PUNCH_LAST_ACTIVITY = """
+SELECT pin, COUNT(*) as punch_count, MAX(event_time) as last_punch
+FROM adms_attlog_raw
 GROUP BY pin
 """
 
@@ -147,6 +155,15 @@ def _parse_ssm_result(output):
 	return rows
 
 
+def _cache_payload(now_iso, **data):
+	"""Wrap cache data with the active contract revision."""
+	return {
+		"last_refreshed": now_iso,
+		"contract_revision": CONTRACT_REVISION,
+		**data,
+	}
+
+
 def _increment_failure_count(cache):
 	"""Track consecutive failures. Alert after 3."""
 	count = cache.get_value("biometric:v1:failure_count") or 0
@@ -178,17 +195,18 @@ def refresh_biometric_status():
 	try:
 		ssm = boto3.client("ssm", region_name=REGION)
 
-		# Run all 4 queries
+		# Run all core queries
 		q1_result = _run_ssm_query(ssm, SQL_PUNCH_BY_DEVICE, "punch_by_device")
 		q2_result = _run_ssm_query(ssm, SQL_DEVICE_LAST_ACTIVITY, "device_last_activity")
 		q3_result = _run_ssm_query(ssm, SQL_REGISTRY_ENTRIES, "registry_entries")
 		q4_result = _run_ssm_query(ssm, SQL_48H_ACTIVITY, "48h_activity")
+		q5_result = _run_ssm_query(ssm, SQL_PUNCH_LAST_ACTIVITY, "punch_last_activity")
 
 		# If ALL queries fail, keep stale cache and alert
-		if all(r is None for r in [q1_result, q2_result, q3_result, q4_result]):
+		if all(r is None for r in [q1_result, q2_result, q3_result, q4_result, q5_result]):
 			frappe.log_error(
 				title="ADMS All Queries Failed",
-				message="All 4 SSM queries returned None. Keeping stale cache."
+				message="All ADMS SSM queries returned None. Keeping stale cache."
 			)
 			_increment_failure_count(cache)
 			return
@@ -200,23 +218,34 @@ def refresh_biometric_status():
 		# Build lookup maps
 		emp_by_bioid = {e.attendance_device_id: e for e in employees}
 		all_bioids = set(emp_by_bioid.keys())
+		employee_count_by_store = defaultdict(int)
+		for emp in employees:
+			employee_count_by_store[emp.branch or "Unknown"] += 1
 
 		# Parse query results
 		punch_data = _parse_ssm_result(q1_result)
 		device_activity = _parse_ssm_result(q2_result)
 		registry_data = _parse_ssm_result(q3_result)
 		recent_activity = _parse_ssm_result(q4_result)
+		punch_last_activity = _parse_ssm_result(q5_result)
 
-		# Process punch_by_device (pin|sn|count|last_punch)
+		# Process punch_by_device (pin|sn|count|last_punch) for wrong-device checks
 		punch_by_emp_device = defaultdict(lambda: defaultdict(int))
-		emp_last_punch = {}
 		for row in punch_data:
 			parts = row.split('|')
 			if len(parts) >= 4:
-				pin, sn, count, last_punch = parts[0], parts[1], int(parts[2]), parts[3]
+				pin, sn, count = parts[0], parts[1], int(parts[2])
 				punch_by_emp_device[pin][sn] = count
-				if pin not in emp_last_punch or last_punch > emp_last_punch[pin]:
-					emp_last_punch[pin] = last_punch
+
+		# Process punch_last_activity (pin|count|last_punch) for truth-level punch history
+		all_punchers = set()
+		emp_last_punch = {}
+		for row in punch_last_activity:
+			parts = row.split('|')
+			if len(parts) >= 3:
+				pin, last_punch = parts[0], parts[2]
+				all_punchers.add(pin)
+				emp_last_punch[pin] = last_punch
 
 		# Process device_last_activity (sn|last_activity|total_punches)
 		device_status = {}
@@ -229,6 +258,10 @@ def refresh_biometric_status():
 					"last_activity": last_activity,
 					"total_punches": total,
 					"store": device_mapping.get(sn, {}).get("store", "Unknown"),
+					"employee_count": employee_count_by_store.get(
+						device_mapping.get(sn, {}).get("store", "Unknown"),
+						0,
+					),
 					"status": _get_device_status(last_activity),
 				}
 
@@ -250,6 +283,7 @@ def refresh_biometric_status():
 		not_punching = []
 		wrong_device = []
 		not_enrolled = []
+		registry_mismatch = []
 		ghost_punchers = []
 
 		# Find employees not punching in 48h
@@ -288,14 +322,28 @@ def refresh_biometric_status():
 						"supervisor": emp.reports_to,
 					})
 
-		# Find employees never enrolled (no registry entry, no punches)
+		# Find employees with registry mismatch or never enrolled
 		for bioid, emp in emp_by_bioid.items():
-			if bioid not in enrolled_bioids and bioid not in punch_by_emp_device:
+			last_punch = emp_last_punch.get(bioid)
+			hours_since = _calculate_hours_since(last_punch) if last_punch else None
+			if bioid not in enrolled_bioids and bioid in recent_punchers:
+				registry_mismatch.append({
+					"employee_id": emp.name,
+					"employee_name": emp.employee_name,
+					"bio_id": bioid,
+					"store": emp.branch or "Unknown",
+					"last_punch": last_punch,
+					"hours_since_punch": hours_since,
+					"supervisor": emp.reports_to,
+				})
+			elif bioid not in enrolled_bioids and bioid not in all_punchers:
 				not_enrolled.append({
 					"employee_id": emp.name,
 					"employee_name": emp.employee_name,
 					"bio_id": bioid,
 					"store": emp.branch or "Unknown",
+					"last_punch": last_punch,
+					"hours_since_punch": hours_since,
 					"supervisor": emp.reports_to,
 				})
 
@@ -305,8 +353,15 @@ def refresh_biometric_status():
 		for bioid in ghost_ids:
 			# Find which devices they're punching at
 			devices_used = list(punch_by_emp_device[bioid].keys())
+			last_punch = emp_last_punch.get(bioid)
 			ghost_punchers.append({
+				"employee_id": None,
+				"employee_name": "Unknown Bio ID",
 				"bio_id": bioid,
+				"store": device_mapping.get(devices_used[0], {}).get("store", "Unknown") if devices_used else "Unknown",
+				"last_punch": last_punch,
+				"hours_since_punch": _calculate_hours_since(last_punch) if last_punch else None,
+				"supervisor": None,
 				"devices": devices_used,
 				"stores": [device_mapping.get(sn, {}).get("store", "Unknown") for sn in devices_used],
 				"total_punches": sum(punch_by_emp_device[bioid].values()),
@@ -336,36 +391,71 @@ def refresh_biometric_status():
 		# Build summary
 		total_employees = len(employees)
 		punching_employees = len(recent_punchers & all_bioids)
-		enrollment_pct = (punching_employees / total_employees * 100) if total_employees > 0 else 0
+		registry_enrolled_employees = len(enrolled_bioids & all_bioids)
+		enrollment_pct = (registry_enrolled_employees / total_employees * 100) if total_employees > 0 else 0
+		punching_pct = (punching_employees / total_employees * 100) if total_employees > 0 else 0
 		devices_online = sum(1 for d in device_status.values() if d["status"] == "online")
 		devices_total = len(device_status)
-		issues_count = len(not_punching) + len(wrong_device) + len(not_enrolled) + len(ghost_punchers)
-
-		# Calculate days to deadline (Feb 26, 2026)
-		deadline = datetime(2026, 2, 26)
-		days_to_deadline = (deadline - datetime.now()).days
+		issues_count = (
+			len(not_punching)
+			+ len(wrong_device)
+			+ len(not_enrolled)
+			+ len(registry_mismatch)
+			+ len(ghost_punchers)
+		)
 
 		now_iso = datetime.now().isoformat()
 
 		# Store all results in cache
-		summary_data = {
-			"last_refreshed": now_iso,
-			"total_employees": total_employees,
-			"punching_employees": punching_employees,
-			"enrollment_pct": round(enrollment_pct, 1),
-			"devices_online": devices_online,
-			"devices_total": devices_total,
-			"issues_count": issues_count,
-			"days_to_deadline": days_to_deadline,
-		}
+		summary_data = _cache_payload(
+			now_iso,
+			total_employees=total_employees,
+			punching_employees=punching_employees,
+			punching_pct=round(punching_pct, 1),
+			registry_enrolled_employees=registry_enrolled_employees,
+			enrollment_pct=round(enrollment_pct, 1),
+			devices_online=devices_online,
+			devices_total=devices_total,
+			issues_count=issues_count,
+			registry_mismatch_count=len(registry_mismatch),
+		)
 
 		cache.set_value(CACHE_KEYS["summary"], summary_data, expires_in_sec=CACHE_TTL)
-		cache.set_value(CACHE_KEYS["devices"], {"last_refreshed": now_iso, "devices": list(device_status.values())}, expires_in_sec=CACHE_TTL)
-		cache.set_value(CACHE_KEYS["not_punching"], {"last_refreshed": now_iso, "employees": not_punching}, expires_in_sec=CACHE_TTL)
-		cache.set_value(CACHE_KEYS["wrong_device"], {"last_refreshed": now_iso, "employees": wrong_device}, expires_in_sec=CACHE_TTL)
-		cache.set_value(CACHE_KEYS["not_enrolled"], {"last_refreshed": now_iso, "employees": not_enrolled}, expires_in_sec=CACHE_TTL)
-		cache.set_value(CACHE_KEYS["ghost"], {"last_refreshed": now_iso, "punchers": ghost_punchers}, expires_in_sec=CACHE_TTL)
-		cache.set_value(CACHE_KEYS["leaderboard"], {"last_refreshed": now_iso, "stores": leaderboard}, expires_in_sec=CACHE_TTL)
+		cache.set_value(
+			CACHE_KEYS["devices"],
+			_cache_payload(now_iso, devices=list(device_status.values())),
+			expires_in_sec=CACHE_TTL,
+		)
+		cache.set_value(
+			CACHE_KEYS["not_punching"],
+			_cache_payload(now_iso, employees=not_punching),
+			expires_in_sec=CACHE_TTL,
+		)
+		cache.set_value(
+			CACHE_KEYS["wrong_device"],
+			_cache_payload(now_iso, employees=wrong_device),
+			expires_in_sec=CACHE_TTL,
+		)
+		cache.set_value(
+			CACHE_KEYS["not_enrolled"],
+			_cache_payload(now_iso, employees=not_enrolled),
+			expires_in_sec=CACHE_TTL,
+		)
+		cache.set_value(
+			CACHE_KEYS["registry_mismatch"],
+			_cache_payload(now_iso, employees=registry_mismatch),
+			expires_in_sec=CACHE_TTL,
+		)
+		cache.set_value(
+			CACHE_KEYS["ghost"],
+			_cache_payload(now_iso, punchers=ghost_punchers),
+			expires_in_sec=CACHE_TTL,
+		)
+		cache.set_value(
+			CACHE_KEYS["leaderboard"],
+			_cache_payload(now_iso, stores=leaderboard),
+			expires_in_sec=CACHE_TTL,
+		)
 
 		# Reset failure counter on success
 		cache.delete_value("biometric:v1:failure_count")
