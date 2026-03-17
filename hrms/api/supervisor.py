@@ -866,11 +866,17 @@ def _send_published_schedule_notifications(plan: Any, change_map: dict[str, list
 		)
 
 
-def _sync_shift_swap_plan_rows(doc: Any):
-	requester_assignment = _get_shift_assignment_doc(doc.requester_shift_assignment)
-	target_assignment = _get_shift_assignment_doc(doc.target_shift_assignment)
-	requester_plan = requester_assignment.custom_bei_weekly_labor_plan
-	target_plan = target_assignment.custom_bei_weekly_labor_plan
+def _sync_shift_swap_plan_rows(
+	doc: Any,
+	requester_plan: str | None = None,
+	target_plan: str | None = None,
+):
+	if requester_plan is None and doc.requester_shift_assignment:
+		requester_assignment = _get_shift_assignment_doc(doc.requester_shift_assignment)
+		requester_plan = requester_assignment.custom_bei_weekly_labor_plan
+	if target_plan is None and doc.target_shift_assignment:
+		target_assignment = _get_shift_assignment_doc(doc.target_shift_assignment)
+		target_plan = target_assignment.custom_bei_weekly_labor_plan
 	if not requester_plan or requester_plan != target_plan:
 		return
 
@@ -1116,15 +1122,33 @@ def approve_shift_swap_request(request_name: str, decision_note: str | None = No
 	_assert_schedule_access(doc.store, surface_key)
 	from hrms.api.roster import swap_shift
 
-	swap_shift(
-		doc.requester_shift_assignment,
-		str(doc.swap_date),
-		doc.target_employee,
-		str(doc.swap_date),
-		doc.target_shift_assignment,
-		ignore_permissions=True,
-	)
-	_sync_shift_swap_plan_rows(doc)
+	requester_assignment_name = doc.requester_shift_assignment
+	target_assignment_name = doc.target_shift_assignment
+	requester_plan = None
+	target_plan = None
+	if requester_assignment_name:
+		requester_plan = _get_shift_assignment_doc(requester_assignment_name).custom_bei_weekly_labor_plan
+	if target_assignment_name:
+		target_plan = _get_shift_assignment_doc(target_assignment_name).custom_bei_weekly_labor_plan
+
+	doc.requester_shift_assignment = None
+	doc.target_shift_assignment = None
+	doc.save(ignore_permissions=True)
+	try:
+		swap_shift(
+			requester_assignment_name,
+			str(doc.swap_date),
+			doc.target_employee,
+			str(doc.swap_date),
+			target_assignment_name,
+			ignore_permissions=True,
+		)
+	except Exception:
+		doc.requester_shift_assignment = requester_assignment_name
+		doc.target_shift_assignment = target_assignment_name
+		doc.save(ignore_permissions=True)
+		raise
+	_sync_shift_swap_plan_rows(doc, requester_plan=requester_plan, target_plan=target_plan)
 	doc.status = "Approved"
 	doc.approved_by = frappe.session.user
 	doc.approved_at = now_datetime()

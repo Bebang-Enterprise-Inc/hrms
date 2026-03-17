@@ -455,10 +455,19 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 		swap_shift = MagicMock()
 		roster_mod = types.ModuleType("hrms.api.roster")
 		roster_mod.swap_shift = swap_shift
+		assignment_doc = types.SimpleNamespace(
+			custom_bei_weekly_labor_plan="BEI-WLP-1",
+			docstatus=1,
+			status="Active",
+		)
 
 		with (
 			patch.dict(sys.modules, {"hrms.api.roster": roster_mod}),
-			patch.object(supervisor.frappe, "get_doc", return_value=doc),
+			patch.object(
+				supervisor.frappe,
+				"get_doc",
+				side_effect=lambda doctype, name: doc if doctype == "BEI Shift Swap Request" else assignment_doc,
+			),
 			patch.object(supervisor, "_is_commissary_schedule_store", return_value=False),
 			patch.object(supervisor, "_assert_schedule_access"),
 			patch.object(supervisor, "_sync_shift_swap_plan_rows"),
@@ -476,7 +485,10 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 			"HR-SHA-2",
 			ignore_permissions=True,
 		)
-		doc.save.assert_called_once_with(ignore_permissions=True)
+		self.assertEqual(doc.save.call_count, 2)
+		doc.save.assert_any_call(ignore_permissions=True)
+		self.assertIsNone(doc.requester_shift_assignment)
+		self.assertIsNone(doc.target_shift_assignment)
 		self.assertTrue(result["success"])
 
 
