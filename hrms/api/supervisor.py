@@ -1116,7 +1116,14 @@ def approve_shift_swap_request(request_name: str, decision_note: str | None = No
 	_assert_schedule_access(doc.store, surface_key)
 	from hrms.api.roster import swap_shift
 
-	swap_shift(doc.requester_shift_assignment, str(doc.swap_date), doc.target_employee, str(doc.swap_date), doc.target_shift_assignment)
+	swap_shift(
+		doc.requester_shift_assignment,
+		str(doc.swap_date),
+		doc.target_employee,
+		str(doc.swap_date),
+		doc.target_shift_assignment,
+		ignore_permissions=True,
+	)
 	_sync_shift_swap_plan_rows(doc)
 	doc.status = "Approved"
 	doc.approved_by = frappe.session.user

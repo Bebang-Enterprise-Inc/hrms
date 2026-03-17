@@ -94,7 +94,12 @@ def delete_shift_schedule_assignment(shift_schedule_assignment: str) -> None:
 
 @frappe.whitelist()
 def swap_shift(
-	src_shift: str, src_date: str, tgt_employee: str, tgt_date: str, tgt_shift: str | None
+	src_shift: str,
+	src_date: str,
+	tgt_employee: str,
+	tgt_date: str,
+	tgt_shift: str | None,
+	ignore_permissions: bool = False,
 ) -> None:
 	if src_shift == tgt_shift:
 		frappe.throw(_("Source and target shifts cannot be the same"))
@@ -102,12 +107,12 @@ def swap_shift(
 	if tgt_shift:
 		tgt_shift_doc = frappe.get_doc("Shift Assignment", tgt_shift)
 		tgt_company = tgt_shift_doc.company
-		break_shift(tgt_shift_doc, tgt_date)
+		break_shift(tgt_shift_doc, tgt_date, ignore_permissions=ignore_permissions)
 	else:
 		tgt_company = frappe.db.get_value("Employee", tgt_employee, "company")
 
 	src_shift_doc = frappe.get_doc("Shift Assignment", src_shift)
-	break_shift(src_shift_doc, src_date)
+	break_shift(src_shift_doc, src_date, ignore_permissions=ignore_permissions)
 	insert_shift(
 		tgt_employee,
 		tgt_company,
@@ -116,6 +121,7 @@ def swap_shift(
 		tgt_date,
 		src_shift_doc.status,
 		src_shift_doc.shift_location,
+		ignore_permissions=ignore_permissions,
 	)
 
 	if tgt_shift:
@@ -127,13 +133,17 @@ def swap_shift(
 			src_date,
 			tgt_shift_doc.status,
 			tgt_shift_doc.shift_location,
+			ignore_permissions=ignore_permissions,
 		)
 
 
 @frappe.whitelist()
-def break_shift(assignment: str | ShiftAssignment, date: str) -> None:
+def break_shift(assignment: str | ShiftAssignment, date: str, ignore_permissions: bool = False) -> None:
 	if isinstance(assignment, str):
 		assignment = frappe.get_doc("Shift Assignment", assignment)
+	if ignore_permissions:
+		assignment.flags.ignore_permissions = True
+		assignment.flags.ignore_user_permissions = True
 
 	if assignment.end_date and date_diff(assignment.end_date, date) < 0:
 		frappe.throw(_("Cannot break shift after end date"))
@@ -149,14 +159,21 @@ def break_shift(assignment: str | ShiftAssignment, date: str) -> None:
 
 	if date_diff(date, assignment.start_date) == 0:
 		assignment.cancel()
-		assignment.delete()
+		assignment.delete(ignore_permissions=ignore_permissions)
 	else:
 		assignment.end_date = add_days(date, -1)
-		assignment.save()
+		assignment.save(ignore_permissions=ignore_permissions)
 
 	if not end_date or date_diff(end_date, date) > 0:
 		create_shift_assignment(
-			employee, company, shift_type, add_days(date, 1), end_date, status, shift_location
+			employee,
+			company,
+			shift_type,
+			add_days(date, 1),
+			end_date,
+			status,
+			shift_location,
+			ignore_permissions=ignore_permissions,
 		)
 
 
@@ -169,6 +186,7 @@ def insert_shift(
 	end_date: str | None,
 	status: str,
 	shift_location: str | None = None,
+	ignore_permissions: bool = False,
 ) -> None:
 	filters = {
 		"doctype": "Shift Assignment",
@@ -194,7 +212,16 @@ def insert_shift(
 		frappe.db.set_value("Shift Assignment", next_shift, "start_date", start_date)
 
 	else:
-		create_shift_assignment(employee, company, shift_type, start_date, end_date, status, shift_location)
+		create_shift_assignment(
+			employee,
+			company,
+			shift_type,
+			start_date,
+			end_date,
+			status,
+			shift_location,
+			ignore_permissions=ignore_permissions,
+		)
 
 
 def get_holidays(month_start: str, month_end: str, employee_filters: dict[str, str]) -> dict[str, list[dict]]:

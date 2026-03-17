@@ -329,6 +329,7 @@ def create_shift_assignment(
 	status: str,
 	shift_location: str | None = None,
 	shift_schedule_assignment: str | None = None,
+	ignore_permissions: bool = False,
 ) -> str:
 	assignment = frappe.new_doc("Shift Assignment")
 	assignment.employee = employee
@@ -339,6 +340,9 @@ def create_shift_assignment(
 	assignment.status = status
 	assignment.shift_location = shift_location
 	assignment.shift_schedule_assignment = shift_schedule_assignment
-	assignment.save()
+	if ignore_permissions:
+		assignment.flags.ignore_permissions = True
+		assignment.flags.ignore_user_permissions = True
+	assignment.save(ignore_permissions=ignore_permissions)
 	assignment.submit()
 	return assignment

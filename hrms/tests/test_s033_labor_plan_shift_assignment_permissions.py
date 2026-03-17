@@ -442,6 +442,43 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 		self.assertEqual(doc.insert_kwargs, {"ignore_permissions": True})
 		self.assertTrue(doc.submit_called)
 
+	def test_approve_shift_swap_request_elevates_assignment_mutation_permissions(self):
+		doc = types.SimpleNamespace(
+			status="Pending Approval",
+			store="TEST-STORE-BGC - BEI",
+			requester_shift_assignment="HR-SHA-1",
+			target_shift_assignment="HR-SHA-2",
+			target_employee="TEST-STAFF-001",
+			swap_date="2026-03-17",
+			save=MagicMock(),
+		)
+		swap_shift = MagicMock()
+		roster_mod = types.ModuleType("hrms.api.roster")
+		roster_mod.swap_shift = swap_shift
+
+		with (
+			patch.dict(sys.modules, {"hrms.api.roster": roster_mod}),
+			patch.object(supervisor.frappe, "get_doc", return_value=doc),
+			patch.object(supervisor, "_is_commissary_schedule_store", return_value=False),
+			patch.object(supervisor, "_assert_schedule_access"),
+			patch.object(supervisor, "_sync_shift_swap_plan_rows"),
+			patch.object(supervisor, "_notify_shift_swap_decision"),
+			patch.object(supervisor, "_serialize_shift_swap_request", return_value={"name": "BEI-SSR-1"}),
+			patch.object(supervisor, "now_datetime", return_value="2026-03-17 20:10:00"),
+		):
+			result = supervisor.approve_shift_swap_request("BEI-SSR-1", "approved")
+
+		swap_shift.assert_called_once_with(
+			"HR-SHA-1",
+			"2026-03-17",
+			"TEST-STAFF-001",
+			"2026-03-17",
+			"HR-SHA-2",
+			ignore_permissions=True,
+		)
+		doc.save.assert_called_once_with(ignore_permissions=True)
+		self.assertTrue(result["success"])
+
 
 if __name__ == "__main__":
 	unittest.main()
