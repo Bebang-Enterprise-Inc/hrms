@@ -46,7 +46,7 @@ def _install_fake_frappe():
 	frappe.throw = _throw
 	frappe.ValidationError = ValidationError
 	frappe.PermissionError = PermissionError
-	frappe.session = types.SimpleNamespace(user="Administrator")
+	frappe.__dict__["session"] = types.SimpleNamespace(user="Administrator")
 	frappe.parse_json = lambda value: json.loads(value) if isinstance(value, str) else value
 	frappe.has_permission = lambda *args, **kwargs: True
 	frappe.get_roles = lambda user=None: ["System Manager"]
@@ -54,7 +54,7 @@ def _install_fake_frappe():
 	frappe.msgprint = lambda *args, **kwargs: None
 	frappe.get_doc = lambda *args, **kwargs: None
 	frappe.get_all = lambda *args, **kwargs: []
-	frappe.db = types.SimpleNamespace(
+	frappe.__dict__["db"] = types.SimpleNamespace(
 		exists=lambda *args, **kwargs: None,
 		get_value=lambda *args, **kwargs: None,
 		set_value=lambda *args, **kwargs: None,
@@ -114,7 +114,7 @@ class _InsertedDoc:
 
 class TestProcurementMathContractS062(unittest.TestCase):
 	def setUp(self):
-		procurement.frappe.session = types.SimpleNamespace(user="Administrator")
+		procurement.frappe.__dict__["session"] = types.SimpleNamespace(user="Administrator")
 		procurement.frappe.db.exists = MagicMock(return_value=True)
 		procurement.frappe.db.get_value = MagicMock(return_value=None)
 		procurement.frappe.db.sql = MagicMock(return_value=[])

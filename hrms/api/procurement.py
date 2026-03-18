@@ -12,6 +12,7 @@ All endpoints use @frappe.whitelist() for external access.
 
 import json
 import re
+from typing import Any
 
 import frappe
 from hrms.utils.bei_config import get_company
@@ -664,7 +665,12 @@ def _augment_invoice_response(data):
 
 
 @frappe.whitelist()
-def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
+def get_purchase_orders(
+    filters: dict[str, Any] | str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 20,
+    search: str | None = None,
+) -> dict[str, Any]:
     """Get paginated list of POs."""
     conditions = []
     values = {}
@@ -704,12 +710,10 @@ def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
 
-    total = frappe.db.sql(
-        f"SELECT COUNT(*) FROM `tabBEI Purchase Order` WHERE {where_clause}",
-        values
-    )[0][0]
+    total_query = "SELECT COUNT(*) FROM `tabBEI Purchase Order` WHERE " + where_clause
+    total = frappe.db.sql(total_query, values)[0][0]
 
-    pos = frappe.db.sql(f"""
+    po_query = """
         SELECT
             name, po_no, po_date, status, supplier, supplier_name,
             subtotal, vat_amount, grand_total,
@@ -718,10 +722,13 @@ def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
             requires_dual_approval, mae_approval, butch_approval,
             delivery_date
         FROM `tabBEI Purchase Order`
-        WHERE {where_clause}
+        WHERE """
+    po_query += where_clause
+    po_query += """
         ORDER BY po_date DESC
         LIMIT %(page_size)s OFFSET %(offset)s
-    """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+    """
+    pos = frappe.db.sql(po_query, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
 
     if _clean_optional_filter(applied_filters.get("item_code")):
         for row in pos:
@@ -740,7 +747,7 @@ def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
 
 
 @frappe.whitelist()
-def get_purchase_order(name):
+def get_purchase_order(name: str) -> dict[str, Any]:
     """Get single PO with items."""
     po = frappe.get_doc("BEI Purchase Order", name)
     data = po.as_dict()
@@ -760,7 +767,7 @@ def get_purchase_order(name):
 
 
 @frappe.whitelist()
-def get_purchase_order_items(name):
+def get_purchase_order_items(name: str) -> list[dict[str, Any]]:
     """Get items for a specific PO."""
     return frappe.db.sql("""
         SELECT name, item_code, item_name, description, qty, unit_cost, unit_cost as rate,
@@ -785,7 +792,7 @@ def get_goods_receipt_items(name):
 
 
 @frappe.whitelist()
-def create_purchase_order(data=None):
+def create_purchase_order(data: dict[str, Any] | str | None = None) -> dict[str, Any]:
     """Create new PO.
 
     AUDIT CONTROL 2.8: Supplier master data quality checks
@@ -923,7 +930,12 @@ def get_pending_po_approvals():
 # =============================================================================
 
 @frappe.whitelist()
-def get_goods_receipts(filters=None, page=1, page_size=20, search=None):
+def get_goods_receipts(
+    filters: dict[str, Any] | str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 20,
+    search: str | None = None,
+) -> dict[str, Any]:
     """Get paginated list of GRs."""
     conditions = []
     values = {}
@@ -953,22 +965,23 @@ def get_goods_receipts(filters=None, page=1, page_size=20, search=None):
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
 
-    total = frappe.db.sql(
-        f"SELECT COUNT(*) FROM `tabBEI Goods Receipt` WHERE {where_clause}",
-        values
-    )[0][0]
+    total_query = "SELECT COUNT(*) FROM `tabBEI Goods Receipt` WHERE " + where_clause
+    total = frappe.db.sql(total_query, values)[0][0]
 
-    grs = frappe.db.sql(f"""
+    gr_query = """
         SELECT
             name, gr_no, gr_no as gr_number, receipt_date, status,
             purchase_order, purchase_order as po_number,
             supplier, supplier_name,
             total_ordered_qty, total_received_qty, total_amount
         FROM `tabBEI Goods Receipt`
-        WHERE {where_clause}
+        WHERE """
+    gr_query += where_clause
+    gr_query += """
         ORDER BY receipt_date DESC
         LIMIT %(page_size)s OFFSET %(offset)s
-    """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+    """
+    grs = frappe.db.sql(gr_query, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
 
     return {
         "data": grs,
@@ -980,7 +993,7 @@ def get_goods_receipts(filters=None, page=1, page_size=20, search=None):
 
 
 @frappe.whitelist()
-def get_goods_receipt(name):
+def get_goods_receipt(name: str) -> dict[str, Any]:
     """Get single GR with items."""
     gr = frappe.get_doc("BEI Goods Receipt", name)
     data = gr.as_dict()
@@ -1018,7 +1031,7 @@ def get_invoices_for_po(name):
 
 
 @frappe.whitelist()
-def create_goods_receipt(data=None):
+def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, Any]:
     """Create new GR.
 
     AUDIT CONTROL 2.4: Block GR creation for >₱500K POs without complete approval
@@ -1094,7 +1107,12 @@ def submit_goods_receipt(name):
 
 
 @frappe.whitelist()
-def complete_gr_inspection(name, passed=True, result=None, notes=None):
+def complete_gr_inspection(
+    name: str,
+    passed: bool = True,
+    result: str | None = None,
+    notes: str | None = None,
+) -> dict[str, Any]:
     """Complete quality inspection on GR."""
     if result is not None:
         passed = result == "pass"
@@ -1103,7 +1121,7 @@ def complete_gr_inspection(name, passed=True, result=None, notes=None):
 
 
 @frappe.whitelist()
-def get_pending_gr_for_po(purchase_order):
+def get_pending_gr_for_po(purchase_order: str) -> dict[str, Any]:
     """Get receivable items for a PO."""
     po = frappe.get_doc("BEI Purchase Order", purchase_order)
 
@@ -1132,7 +1150,12 @@ def get_pending_gr_for_po(purchase_order):
 # =============================================================================
 
 @frappe.whitelist()
-def get_invoices(filters=None, page=1, page_size=20, search=None):
+def get_invoices(
+    filters: dict[str, Any] | str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 20,
+    search: str | None = None,
+) -> dict[str, Any]:
     """Get paginated list of invoices."""
     conditions = []
     values = {}
@@ -1167,22 +1190,23 @@ def get_invoices(filters=None, page=1, page_size=20, search=None):
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
 
-    total = frappe.db.sql(
-        f"SELECT COUNT(*) FROM `tabBEI Invoice` WHERE {where_clause}",
-        values
-    )[0][0]
+    total_query = "SELECT COUNT(*) FROM `tabBEI Invoice` WHERE " + where_clause
+    total = frappe.db.sql(total_query, values)[0][0]
 
-    invoices = frappe.db.sql(f"""
+    invoice_query = """
         SELECT
             name, invoice_no, invoice_no as invoice_number, supplier_invoice_no, invoice_date, due_date,
             status, supplier, supplier_name, purchase_order, purchase_order as po_number,
             subtotal, vat_amount, subtotal as net_total, vat_amount as tax_amount,
             grand_total, balance_due, payment_status, match_status
         FROM `tabBEI Invoice`
-        WHERE {where_clause}
+        WHERE """
+    invoice_query += where_clause
+    invoice_query += """
         ORDER BY due_date ASC
         LIMIT %(page_size)s OFFSET %(offset)s
-    """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+    """
+    invoices = frappe.db.sql(invoice_query, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
 
     return {
         "data": invoices,
@@ -1194,14 +1218,14 @@ def get_invoices(filters=None, page=1, page_size=20, search=None):
 
 
 @frappe.whitelist()
-def get_invoice(name):
+def get_invoice(name: str) -> dict[str, Any]:
     """Get single invoice with full details."""
     invoice = frappe.get_doc("BEI Invoice", name)
     return _augment_invoice_response(invoice.as_dict())
 
 
 @frappe.whitelist()
-def get_invoice_items(name):
+def get_invoice_items(name: str) -> list[dict[str, Any]]:
     """Return the line items that support an invoice's 3-way match math.
 
     BEI Invoice itself does not persist a child table, so the UI should inspect
@@ -1256,7 +1280,7 @@ def get_invoice_items(name):
 
 
 @frappe.whitelist()
-def create_invoice(data):
+def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
     """Create new invoice.
 
     AUDIT CONTROL 2.1: Require Goods Receipt before Invoice (Three-Way Matching)
@@ -1340,14 +1364,14 @@ def verify_invoice_match(name):
 
 
 @frappe.whitelist()
-def approve_invoice_variance(name, notes=None):
+def approve_invoice_variance(name: str, notes: str | None = None) -> dict[str, Any]:
     """Approve invoice despite variance."""
     invoice = frappe.get_doc("BEI Invoice", name)
     return invoice.approve_variance(notes)
 
 
 @frappe.whitelist()
-def reject_invoice_variance(name, reason):
+def reject_invoice_variance(name: str, reason: str) -> dict[str, Any]:
     """Reject invoice due to variance."""
     invoice = frappe.get_doc("BEI Invoice", name)
     return invoice.reject_variance(reason)
@@ -1358,7 +1382,12 @@ def reject_invoice_variance(name, reason):
 # =============================================================================
 
 @frappe.whitelist()
-def get_payment_requests(filters=None, page=1, page_size=20, search=None):
+def get_payment_requests(
+    filters: dict[str, Any] | str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 20,
+    search: str | None = None,
+) -> dict[str, Any]:
     """Get paginated list of payment requests."""
     conditions = []
     values = {}
@@ -1396,12 +1425,10 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
 
-    total = frappe.db.sql(
-        f"SELECT COUNT(*) FROM `tabBEI Payment Request` pr WHERE {where_clause}",
-        values
-    )[0][0]
+    total_query = "SELECT COUNT(*) FROM `tabBEI Payment Request` pr WHERE " + where_clause
+    total = frappe.db.sql(total_query, values)[0][0]
 
-    requests = frappe.db.sql(f"""
+    request_query = """
         SELECT
             pr.name, pr.payment_request_no, pr.payment_request_no as request_number, pr.request_date, pr.status,
             COALESCE(pr.supplier, inv.supplier) as supplier,
@@ -1410,10 +1437,17 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
             pr.ceo_required, pr.payment_date
         FROM `tabBEI Payment Request` pr
         LEFT JOIN `tabBEI Invoice` inv ON pr.invoice = inv.name
-        WHERE {where_clause}
+        WHERE """
+    request_query += where_clause
+    request_query += """
         ORDER BY pr.request_date DESC
         LIMIT %(page_size)s OFFSET %(offset)s
-    """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+    """
+    requests = frappe.db.sql(
+        request_query,
+        {**values, "page_size": int(page_size), "offset": offset},
+        as_dict=True,
+    )
 
     if _clean_optional_filter(applied_filters.get("item_code")):
         for row in requests:
@@ -1432,7 +1466,7 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
 
 
 @frappe.whitelist()
-def get_payment_request(name):
+def get_payment_request(name: str) -> dict[str, Any]:
     """Get single payment request with approval status."""
     request = frappe.get_doc("BEI Payment Request", name)
     data = request.as_dict()
@@ -1443,7 +1477,7 @@ def get_payment_request(name):
 
 
 @frappe.whitelist()
-def create_payment_request(data):
+def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
     """Create new payment request.
 
     AUDIT CONTROL 2.1: Require Goods Receipt before Payment (Three-Way Matching)
