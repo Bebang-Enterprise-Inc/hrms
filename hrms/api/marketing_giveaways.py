@@ -696,8 +696,12 @@ def _supabase_get_all(
 	return all_rows
 
 
-def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dict[str, Any]]:
-	params: list[tuple[str, Any]] = [
+def _query_probable_giveaway_leakage(
+	start_day: date,
+	end_day: date,
+	max_results: int = 20,
+) -> list[dict[str, Any]]:
+	base_params: list[tuple[str, Any]] = [
 		(
 			"select",
 			"id,location_id,business_date,bill_number,original_gross_sales,total_discounts,payment_status",
@@ -708,76 +712,92 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 		("total_discounts", "gt.0"),
 		("order", "business_date.desc,id.desc"),
 	]
-	order_rows = _supabase_get_all("pos_orders", params)
-	if not order_rows:
-		return []
-	order_ids = [int(row.get("id") or 0) for row in order_rows if int(row.get("id") or 0)]
-	if not order_ids:
-		return []
-	order_lookup = {int(row["id"]): row for row in order_rows if int(row.get("id") or 0)}
 	result: list[dict[str, Any]] = []
-	for index in range(0, len(order_ids), 200):
-		chunk = order_ids[index : index + 200]
-		item_params: list[tuple[str, Any]] = [
-			("select", "order_id,product_name,quantity,discount_amount,discount_name,discount_name_normalized"),
-			("discount_amount", "gt.0"),
-			("order_id", f"in.({','.join(str(order_id) for order_id in chunk)})"),
-			("order", "order_id.asc"),
-		]
-		item_rows = _supabase_get_all("pos_order_items", item_params)
-		per_order: dict[int, list[dict[str, Any]]] = {}
-		for row in item_rows:
-			order_id = int(row.get("order_id") or 0)
-			if order_id:
-				per_order.setdefault(order_id, []).append(row)
-		for order_id, rows in per_order.items():
-			order = order_lookup.get(order_id)
-			if not order:
-				continue
-			order_gross = flt(order.get("original_gross_sales") or 0, 2)
-			total_discounts = flt(order.get("total_discounts") or 0, 2)
-			discount_names = sorted(
-				{
-					str(row.get("discount_name") or "").strip()
-					for row in rows
-					if str(row.get("discount_name") or "").strip()
-				}
-			)
-			normalized_names = {_normalize_text(row.get("discount_name_normalized") or row.get("discount_name")) for row in rows}
-			is_marketing = any("marketing" in name for name in normalized_names)
-			is_effectively_free = bool(order_gross and total_discounts >= round(order_gross * 0.95, 2))
-			if not (is_marketing or is_effectively_free):
-				continue
-			item_summary = [
-				{
-					"product_name": str(row.get("product_name") or ""),
-					"quantity": cint(row.get("quantity") or 0),
-					"discount_amount": flt(row.get("discount_amount") or 0, 2),
-				}
-				for row in rows
+	page_size = 200
+	offset = 0
+	while True:
+		order_rows = _supabase_get(
+			"pos_orders",
+			base_params + [("limit", str(page_size)), ("offset", str(offset))],
+		)
+		if not order_rows:
+			break
+		order_ids = [int(row.get("id") or 0) for row in order_rows if int(row.get("id") or 0)]
+		if not order_ids:
+			break
+		order_lookup = {int(row["id"]): row for row in order_rows if int(row.get("id") or 0)}
+		for index in range(0, len(order_ids), 200):
+			chunk = order_ids[index : index + 200]
+			item_params: list[tuple[str, Any]] = [
+				("select", "order_id,product_name,quantity,discount_amount,discount_name,discount_name_normalized"),
+				("discount_amount", "gt.0"),
+				("order_id", f"in.({','.join(str(order_id) for order_id in chunk)})"),
+				("order", "order_id.asc"),
 			]
-			result.append(
-				{
-					"alert_reference": f"pos-order:{order_id}",
-					"order_id": order_id,
-					"business_date": str(order.get("business_date") or ""),
-					"store_name": _store_label_for_location(cint(order.get("location_id") or 0)),
-					"location_id": cint(order.get("location_id") or 0),
-					"bill_number": str(order.get("bill_number") or ""),
-					"order_gross_sales": order_gross,
-					"total_discounts": total_discounts,
-					"discount_names": discount_names,
-					"is_marketing_discount": is_marketing,
-					"is_effectively_free": is_effectively_free,
-					"item_summary": item_summary,
-					"linked_campaigns": frappe.get_all(
-						EXCEPTION_DT,
-						filters={"linked_alert_reference": f"pos-order:{order_id}"},
-						fields=["campaign", "status"],
-						limit_page_length=20,
-					),
+			item_rows = _supabase_get_all("pos_order_items", item_params)
+			per_order: dict[int, list[dict[str, Any]]] = {}
+			for row in item_rows:
+				order_id = int(row.get("order_id") or 0)
+				if order_id:
+					per_order.setdefault(order_id, []).append(row)
+			for order_id in chunk:
+				rows = per_order.get(order_id) or []
+				if not rows:
+					continue
+				order = order_lookup.get(order_id)
+				if not order:
+					continue
+				order_gross = flt(order.get("original_gross_sales") or 0, 2)
+				total_discounts = flt(order.get("total_discounts") or 0, 2)
+				discount_names = sorted(
+					{
+						str(row.get("discount_name") or "").strip()
+						for row in rows
+						if str(row.get("discount_name") or "").strip()
+					}
+				)
+				normalized_names = {
+					_normalize_text(row.get("discount_name_normalized") or row.get("discount_name")) for row in rows
 				}
-			)
+				is_marketing = any("marketing" in name for name in normalized_names)
+				is_effectively_free = bool(order_gross and total_discounts >= round(order_gross * 0.95, 2))
+				if not (is_marketing or is_effectively_free):
+					continue
+				item_summary = [
+					{
+						"product_name": str(row.get("product_name") or ""),
+						"quantity": cint(row.get("quantity") or 0),
+						"discount_amount": flt(row.get("discount_amount") or 0, 2),
+					}
+					for row in rows
+				]
+				result.append(
+					{
+						"alert_reference": f"pos-order:{order_id}",
+						"order_id": order_id,
+						"business_date": str(order.get("business_date") or ""),
+						"store_name": _store_label_for_location(cint(order.get("location_id") or 0)),
+						"location_id": cint(order.get("location_id") or 0),
+						"bill_number": str(order.get("bill_number") or ""),
+						"order_gross_sales": order_gross,
+						"total_discounts": total_discounts,
+						"discount_names": discount_names,
+						"is_marketing_discount": is_marketing,
+						"is_effectively_free": is_effectively_free,
+						"item_summary": item_summary,
+						"linked_campaigns": frappe.get_all(
+							EXCEPTION_DT,
+							filters={"linked_alert_reference": f"pos-order:{order_id}"},
+							fields=["campaign", "status"],
+							limit_page_length=20,
+						),
+					}
+				)
+				if max_results and len(result) >= max_results:
+					return result
+		if len(order_rows) < page_size:
+			break
+		offset += page_size
 	return result
 
 

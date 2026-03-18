@@ -377,7 +377,7 @@ def test_query_probable_giveaway_leakage_resolves_store_name_from_location_mappi
 		},
 	)
 
-	def _fake_supabase_get_all(resource, params, page_size=1000):
+	def _fake_supabase_get(resource, params=None):
 		if resource == "pos_orders":
 			return [
 				{
@@ -390,6 +390,9 @@ def test_query_probable_giveaway_leakage_resolves_store_name_from_location_mappi
 					"payment_status": "PAID",
 				}
 			]
+		return []
+
+	def _fake_supabase_get_all(resource, params, page_size=1000):
 		if resource == "pos_order_items":
 			return [
 				{
@@ -403,6 +406,7 @@ def test_query_probable_giveaway_leakage_resolves_store_name_from_location_mappi
 			]
 		return []
 
+	monkeypatch.setattr(module, "_supabase_get", _fake_supabase_get)
 	monkeypatch.setattr(module, "_supabase_get_all", _fake_supabase_get_all)
 	monkeypatch.setattr(module.frappe, "get_all", lambda *args, **kwargs: [])
 
@@ -509,13 +513,12 @@ def test_update_campaign_tracking_computes_multi_day_progress(monkeypatch):
 def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_orders(monkeypatch):
 	module = _load_module("marketing_giveaways_leakage_query")
 
-	def _supabase_get_all(resource, params=None, page_size=1000):
+	def _supabase_get(resource, params=None):
 		if resource == "pos_orders":
 			return [
 				{
 					"id": 101,
 					"location_id": 2338,
-					"store_name": "SM Megamall",
 					"business_date": "2026-03-18",
 					"bill_number": "BILL-101",
 					"original_gross_sales": 500.0,
@@ -525,7 +528,6 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 				{
 					"id": 102,
 					"location_id": 2112,
-					"store_name": "Ayala Solenad",
 					"business_date": "2026-03-17",
 					"bill_number": "BILL-102",
 					"original_gross_sales": 300.0,
@@ -535,7 +537,6 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 				{
 					"id": 103,
 					"location_id": 2339,
-					"store_name": "Ayala Evo",
 					"business_date": "2026-03-16",
 					"bill_number": "BILL-103",
 					"original_gross_sales": 400.0,
@@ -543,6 +544,9 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 					"payment_status": "PAID",
 				},
 			]
+		return []
+
+	def _supabase_get_all(resource, params=None, page_size=1000):
 		if resource == "pos_order_items":
 			return [
 				{
@@ -572,6 +576,7 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 			]
 		raise AssertionError(resource)
 
+	monkeypatch.setattr(module, "_supabase_get", _supabase_get)
 	monkeypatch.setattr(module, "_supabase_get_all", _supabase_get_all)
 	monkeypatch.setattr(
 		module.frappe,
