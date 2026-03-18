@@ -12,6 +12,8 @@ class _FakeFrappe(types.ModuleType):
 	def __getattr__(self, name):
 		if name == "db":
 			return self.local.db
+		if name == "session":
+			return self.local.session
 		raise AttributeError(name)
 
 
@@ -24,7 +26,14 @@ def _install_fake_modules():
 	fake_frappe = _FakeFrappe("frappe")
 	fake_frappe._dict = lambda data: types.SimpleNamespace(**data)
 	fake_frappe.local = types.SimpleNamespace(
-		db=types.SimpleNamespace(sql=lambda *args, **kwargs: [], count=lambda *args, **kwargs: 0)
+		session=types.SimpleNamespace(user="test.commissary@bebang.ph"),
+		db=types.SimpleNamespace(
+			sql=lambda *args, **kwargs: [],
+			count=lambda *args, **kwargs: 0,
+			savepoint=lambda *args, **kwargs: None,
+			release_savepoint=lambda *args, **kwargs: None,
+			rollback=lambda *args, **kwargs: None,
+		),
 	)
 	fake_frappe.get_all = lambda *args, **kwargs: []
 	fake_frappe.whitelist = _whitelist
@@ -48,6 +57,11 @@ def _install_fake_modules():
 	fake_commissary.get_commissary_warehouse = lambda: "Shaw BLVD - BKI"
 	fake_commissary.get_commissary_company = lambda: "Bebang Kitchen Inc."
 	sys.modules["hrms.api.commissary"] = fake_commissary
+
+	fake_scm_roles = types.ModuleType("hrms.utils.scm_roles")
+	fake_scm_roles.SCM_COMMISSARY_ROLES = {"Commissary Supervisor", "Warehouse User"}
+	fake_scm_roles.check_scm_permission = lambda roles, action="": None
+	sys.modules["hrms.utils.scm_roles"] = fake_scm_roles
 
 	fake_bei_config = types.ModuleType("hrms.utils.bei_config")
 	fake_bei_config.get_company = lambda: "Bebang Kitchen Inc."
@@ -124,6 +138,7 @@ class TestCommissaryDashboardSummary(unittest.TestCase):
 
 		class _FakeStockEntry:
 			def __init__(self):
+				self.doctype = "Stock Entry"
 				self.company = None
 				self.stock_entry_type = None
 				self.posting_date = None
@@ -139,9 +154,10 @@ class TestCommissaryDashboardSummary(unittest.TestCase):
 				defaults = {"batch_no": None, "s_warehouse": None, "t_warehouse": None}
 				defaults.update(row)
 				self.items.append(types.SimpleNamespace(**defaults))
+				return self.items[-1]
 
-			def insert(self):
-				self.insert_called = True
+			def insert(self, ignore_permissions=False):
+				self.insert_called = ignore_permissions
 				return self
 
 			def submit(self):
@@ -153,6 +169,13 @@ class TestCommissaryDashboardSummary(unittest.TestCase):
 			doc = _FakeStockEntry()
 			created["doc"] = doc
 			return doc
+
+		def fake_get_doc(doctype, name=None):
+			if doctype == "Stock Entry":
+				return created["doc"]
+			return types.SimpleNamespace(
+				item_name="BANANA CINNAMON", description="Finished good", stock_uom="KG"
+			)
 
 		with (
 			patch.object(commissary_dashboard, "get_commissary_warehouse", return_value="Shaw BLVD - BKI"),
@@ -167,9 +190,7 @@ class TestCommissaryDashboardSummary(unittest.TestCase):
 			patch.object(
 				commissary_dashboard.frappe,
 				"get_doc",
-				return_value=types.SimpleNamespace(
-					item_name="BANANA CINNAMON", description="Finished good", stock_uom="KG"
-				),
+				side_effect=fake_get_doc,
 				create=True,
 			),
 		):
@@ -184,6 +205,8 @@ class TestCommissaryDashboardSummary(unittest.TestCase):
 		self.assertEqual(doc.stock_entry_type, "Material Receipt")
 		self.assertTrue(doc.insert_called)
 		self.assertTrue(doc.submit_called)
+		self.assertTrue(doc.flags.ignore_permissions)
+		self.assertTrue(doc.flags.ignore_user_permissions)
 		self.assertEqual(result["data"]["name"], "MAT-STE-UNIT-0001")
 
 

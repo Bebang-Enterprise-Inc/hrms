@@ -151,6 +151,34 @@ def _clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry: Any) -> Non
 			item.serial_no = None
 
 
+def _resolve_stock_entry_item_valuation(item_code: str, warehouse: str | None):
+	"""Return a stable valuation context for outbound stock rows.
+
+	Material Issue movements can fail at submit time when the source stock has no
+	valuation rate yet. When that happens, explicitly mark the row as an allowed
+	zero-valuation movement so dispatch does not die on a generic 417/validation error.
+	"""
+	bin_rate = flt(
+		frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "valuation_rate") or 0
+	)
+	if bin_rate > 0:
+		return bin_rate, False
+
+	item_rates = frappe.db.get_value(
+		"Item",
+		item_code,
+		["valuation_rate", "standard_rate", "last_purchase_rate"],
+		as_dict=True,
+	) or {"valuation_rate": 0, "standard_rate": 0, "last_purchase_rate": 0}
+	resolved_rate = flt(
+		item_rates.get("valuation_rate")
+		or item_rates.get("standard_rate")
+		or item_rates.get("last_purchase_rate")
+		or 0
+	)
+	return resolved_rate, resolved_rate <= 0
+
+
 @frappe.whitelist()
 def get_pending_purchase_orders(item_code=None, warehouse=None):
 	"""
@@ -1032,6 +1060,9 @@ def create_stock_transfer(
 		# Get item details
 		item = frappe.get_doc("Item", item_data["item_code"])
 		valid_uom = _resolve_valid_item_uom(item, item_data.get("uom"))
+		valuation_rate, allow_zero_valuation_rate = _resolve_stock_entry_item_valuation(
+			item_data["item_code"], source_warehouse
+		)
 
 		# ERPNext v15 auto-creates outward serial/batch bundles for Material Issue.
 		# Supplying legacy batch fields in that path causes duplicate-bundle validation,
@@ -1064,6 +1095,10 @@ def create_stock_transfer(
 			"material_request": mr_name if mr_item_ref else None,
 			"material_request_item": mr_item_ref,
 		}
+		if is_intercompany:
+			row["valuation_rate"] = valuation_rate
+			if allow_zero_valuation_rate:
+				row["allow_zero_valuation_rate"] = 1
 		if batch_no:
 			row["batch_no"] = batch_no
 		if not is_intercompany:

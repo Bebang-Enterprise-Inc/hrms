@@ -13,14 +13,65 @@ Contains all quality-related functionality:
 """
 
 import json
+import time
+from contextlib import contextmanager
 from typing import Any
 
 import frappe
 from frappe import _
 from frappe.utils import add_days, flt, today
 
-from hrms.api.commissary import get_commissary_warehouse
-from hrms.utils.bei_config import get_company
+from hrms.api.commissary import get_commissary_company, get_commissary_warehouse
+from hrms.utils.scm_roles import SCM_COMMISSARY_ROLES, check_scm_permission
+
+
+def _enable_role_gated_write(doc: Any):
+	if getattr(doc, "flags", None) is None:
+		doc.flags = type("_CommissaryQualityDocFlags", (), {})()
+	doc.flags.ignore_permissions = True
+	doc.flags.ignore_user_permissions = True
+	return doc
+
+
+@contextmanager
+def _run_as_system_user(user: str = "Administrator"):
+	session = getattr(frappe, "session", None)
+	if session is None:
+		session = getattr(getattr(frappe, "local", None), "session", None)
+	original_user = getattr(session, "user", None)
+	try:
+		if session and user:
+			session.user = user
+		yield
+	finally:
+		if session and original_user:
+			session.user = original_user
+
+
+def _rollback_savepoint(savepoint_name: str):
+	rollback = getattr(getattr(frappe, "db", None), "rollback", None)
+	if not callable(rollback):
+		return
+	try:
+		rollback(save_point=savepoint_name)
+	except TypeError:
+		rollback()
+
+
+def _release_savepoint(savepoint_name: str):
+	release = getattr(getattr(frappe, "db", None), "release_savepoint", None)
+	if callable(release):
+		release(savepoint_name)
+
+
+def _is_retryable_stock_entry_submit_error(exc: Exception) -> bool:
+	message = str(exc).lower()
+	return (
+		"lock wait timeout exceeded" in message
+		or "deadlock found" in message
+		or "try restarting transaction" in message
+	)
+
 
 # ============================================================
 # QUALITY INSPECTION
@@ -354,6 +405,8 @@ def log_wastage(
 	    batch_no: Batch number (optional)
 	    remarks: Additional notes
 	"""
+	check_scm_permission(SCM_COMMISSARY_ROLES, "log commissary wastage")
+
 	commissary_warehouse = get_commissary_warehouse()
 
 	if reason_code not in WASTAGE_REASONS:
@@ -368,33 +421,54 @@ def log_wastage(
 	if not item:
 		return {"success": False, "error": f"Item {item_code} not found"}
 
-	# Create Stock Entry for Material Issue (Wastage)
-	se = frappe.new_doc("Stock Entry")
-	se.stock_entry_type = "Material Issue"
-	se.company = get_company()
-	se.purpose = "Material Issue"
+	se = None
+	for attempt in range(3):
+		savepoint_name = f"commissary_wastage_{attempt}"
+		savepoint = getattr(getattr(frappe, "db", None), "savepoint", None)
+		if callable(savepoint):
+			savepoint(savepoint_name)
 
-	# Build remarks with reason
-	full_remarks = f"WASTAGE: {WASTAGE_REASONS[reason_code]}"
-	if remarks:
-		full_remarks += f" - {remarks}"
-	se.remarks = full_remarks
+		try:
+			# Create Stock Entry for Material Issue (Wastage)
+			se = frappe.new_doc("Stock Entry")
+			se.stock_entry_type = "Material Issue"
+			se.company = get_commissary_company()
+			se.purpose = "Material Issue"
 
-	se.append(
-		"items",
-		{
-			"item_code": item_code,
-			"item_name": item.item_name,
-			"s_warehouse": commissary_warehouse,
-			"qty": flt(qty),
-			"uom": item.stock_uom,
-			"stock_uom": item.stock_uom,
-			"batch_no": batch_no,
-		},
-	)
+			# Build remarks with reason
+			full_remarks = f"WASTAGE: {WASTAGE_REASONS[reason_code]}"
+			if remarks:
+				full_remarks += f" - {remarks}"
+			se.remarks = full_remarks
 
-	se.insert()
-	se.submit()
+			row = {
+				"item_code": item_code,
+				"item_name": item.item_name,
+				"s_warehouse": commissary_warehouse,
+				"qty": flt(qty),
+				"uom": item.stock_uom,
+				"stock_uom": item.stock_uom,
+				"batch_no": batch_no,
+				"valuation_rate": flt(item.valuation_rate or 0),
+			}
+			if flt(item.valuation_rate or 0) <= 0:
+				row["allow_zero_valuation_rate"] = 1
+			se.append("items", row)
+
+			_enable_role_gated_write(se)
+			with _run_as_system_user():
+				se.insert(ignore_permissions=True)
+				se = frappe.get_doc("Stock Entry", se.name)
+				_enable_role_gated_write(se)
+				se.submit()
+
+			_release_savepoint(savepoint_name)
+			break
+		except Exception as exc:
+			_rollback_savepoint(savepoint_name)
+			if attempt == 2 or not _is_retryable_stock_entry_submit_error(exc):
+				raise
+			time.sleep(0.2 * (attempt + 1))
 
 	# Calculate wastage value
 	wastage_value = flt(qty) * flt(item.valuation_rate or 0)

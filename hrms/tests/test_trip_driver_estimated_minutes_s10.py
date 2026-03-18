@@ -357,6 +357,28 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		self.assertTrue(result["success"])
 		set_in_transit.assert_not_called()
 
+	def test_create_trip_from_route_returns_structured_duplicate_response(self):
+		route = _Route()
+
+		def _get_value(doctype, filters=None, fieldname=None):
+			if doctype == "BEI Distribution Trip":
+				return "TRIP-EXISTING-0001"
+			return None
+
+		dispatch.frappe.get_doc = MagicMock(return_value=route)
+		dispatch.frappe.db.get_value = MagicMock(side_effect=_get_value)
+
+		result = dispatch.create_trip_from_route(
+			route_name="ROUTE-S10",
+			trip_date="2026-02-28",
+			selected_stops="[]",
+		)
+
+		self.assertFalse(result["success"])
+		self.assertEqual(result["error_code"], "TRIP_ALREADY_EXISTS")
+		self.assertEqual(result["trip"], "TRIP-EXISTING-0001")
+		self.assertIn("already exists", result["message"])
+
 	def test_enable_role_gated_write_sets_ignore_user_permissions(self):
 		doc = types.SimpleNamespace(flags=None)
 		dispatch._enable_role_gated_write(doc)

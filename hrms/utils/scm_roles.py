@@ -120,6 +120,17 @@ SCM_RECEIVING_ROLES = {
 	"System Manager",
 }
 
+# Commissary production / QA mutations
+SCM_COMMISSARY_ROLES = {
+	"Commissary Supervisor",
+	"Warehouse Manager",
+	"Warehouse User",
+	"Supply Chain Manager",
+	"HR Manager",
+	"System Manager",
+	"Administrator",
+}
+
 
 # ============================================================
 # Shared Permission Check
