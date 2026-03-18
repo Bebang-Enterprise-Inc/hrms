@@ -1,6 +1,10 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
+from datetime import date, datetime
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -476,7 +480,7 @@ class BEIInvoice(Document):
 	def record_payment(
 		self,
 		amount: float | int | str,
-		payment_date: str | None = None,
+		payment_date: str | date | datetime | None = None,
 		reference: str | None = None,
 	):
 		"""Record a payment against this invoice."""
@@ -489,7 +493,7 @@ class BEIInvoice(Document):
 			frappe.throw(_("Payment amount cannot exceed balance due"))
 
 		self.amount_paid = flt(self.amount_paid, 2) + amount
-		self.last_payment_date = payment_date or getdate()
+		self.last_payment_date = getdate(payment_date) if payment_date else getdate()
 		self.calculate_totals()
 
 		if self.payment_status == "Paid":
