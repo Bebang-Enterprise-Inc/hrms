@@ -1,6 +1,8 @@
 # Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+from __future__ import annotations
+
 import frappe
 from frappe import _
 from frappe.model.document import Document
@@ -182,7 +184,7 @@ class BEIPurchaseOrder(Document):
 		pass
 
 	@frappe.whitelist()
-	def approve_mae(self, comment=None):
+	def approve_mae(self, comment: str | None = None):
 		"""Mae approves the PO."""
 		if self.status != "Pending Mae Approval":
 			frappe.throw(_("PO is not pending Mae's approval"))
@@ -206,7 +208,7 @@ class BEIPurchaseOrder(Document):
 			return {"success": True, "message": _("PO approved by Mae")}
 
 	@frappe.whitelist()
-	def approve_butch(self, comment=None):
+	def approve_butch(self, comment: str | None = None):
 		"""Butch (CFO) approves the PO for >500K."""
 		if self.status != "Pending Butch Approval":
 			frappe.throw(_("PO is not pending Butch's approval"))
@@ -233,7 +235,7 @@ class BEIPurchaseOrder(Document):
 		self.update_supplier_metrics()
 
 	@frappe.whitelist()
-	def reject(self, reason, rejector="mae"):
+	def reject(self, reason: str, rejector: str = "mae"):
 		"""Reject the PO."""
 		if self.status not in ["Pending Mae Approval", "Pending Butch Approval"]:
 			frappe.throw(_("PO is not pending approval"))
@@ -487,7 +489,7 @@ class BEIPurchaseOrder(Document):
 		return {"success": True, "message": _("PO sent to supplier")}
 
 	@frappe.whitelist()
-	def update_received_qty(self, item_code, received_qty):
+	def update_received_qty(self, item_code: str, received_qty: float | int):
 		"""Update received quantity for an item (called from GR)."""
 		found = False
 		for item in self.items:
