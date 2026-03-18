@@ -1580,6 +1580,19 @@ def preview_trip_stops(route_name: str, trip_date: str | None = None):
 	return {"route_name": route_name, "trip_date": trip_date, "stops": stops}
 
 
+def _duplicate_trip_response(route_name: str, trip_date: str, existing_trip: str):
+	return {
+		"success": False,
+		"error_code": "TRIP_ALREADY_EXISTS",
+		"trip": existing_trip,
+		"route_name": route_name,
+		"trip_date": trip_date,
+		"message": _("A trip already exists for route '{0}' on {1}: {2}").format(
+			route_name, trip_date, existing_trip
+		),
+	}
+
+
 @frappe.whitelist()
 def create_trip_from_route(
 	route_name: str,
@@ -1610,11 +1623,7 @@ def create_trip_from_route(
 		"BEI Distribution Trip", {"route_name": route_name, "trip_date": trip_date}, "name"
 	)
 	if existing_trip:
-		frappe.throw(
-			_("A trip already exists for route '{0}' on {1}: {2}").format(
-				route_name, trip_date, existing_trip
-			)
-		)
+		return _duplicate_trip_response(route_name, trip_date, existing_trip)
 
 	# Resolve vehicle details
 	vehicle_plate = None
@@ -1705,7 +1714,15 @@ def create_trip_from_route(
 			trip.stops[idx].store_order = stop_data["store_order"]
 
 	_enable_role_gated_write(trip)
-	trip.insert(ignore_permissions=True)
+	try:
+		trip.insert(ignore_permissions=True)
+	except frappe.DuplicateEntryError:
+		existing_trip = frappe.db.get_value(
+			"BEI Distribution Trip", {"route_name": route_name, "trip_date": trip_date}, "name"
+		)
+		if existing_trip:
+			return _duplicate_trip_response(route_name, trip_date, existing_trip)
+		raise
 
 	return {
 		"success": True,

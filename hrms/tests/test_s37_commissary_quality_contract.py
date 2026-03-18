@@ -49,6 +49,32 @@ class _FakeQualityInspection:
 		return self
 
 
+class _FakeStockEntry:
+	def __init__(self):
+		self.doctype = "Stock Entry"
+		self.name = "MAT-STE-WASTE-0001"
+		self.company = None
+		self.stock_entry_type = None
+		self.purpose = None
+		self.remarks = None
+		self.flags = None
+		self.items = []
+		self.insert_called = False
+		self.submit_called = False
+
+	def append(self, table, row):
+		self.items.append(types.SimpleNamespace(**row))
+		return self.items[-1]
+
+	def insert(self, ignore_permissions=False):
+		self.insert_called = ignore_permissions
+		return self
+
+	def submit(self):
+		self.submit_called = True
+		return self
+
+
 _DOCS_CREATED: list[_FakeQualityInspection] = []
 
 
@@ -80,7 +106,7 @@ def _install_fake_modules():
 		)
 
 		def _new_doc(doctype):
-			doc = _FakeQualityInspection()
+			doc = _FakeQualityInspection() if doctype == "Quality Inspection" else _FakeStockEntry()
 			_DOCS_CREATED.append(doc)
 			return doc
 
@@ -112,11 +138,13 @@ def _install_fake_modules():
 
 	commissary_mod = types.ModuleType("hrms.api.commissary")
 	commissary_mod.get_commissary_warehouse = lambda: "Shaw BLVD - BKI"
+	commissary_mod.get_commissary_company = lambda: "Bebang Kitchen Inc."
 	sys.modules["hrms.api.commissary"] = commissary_mod
 
-	bei_config_mod = types.ModuleType("hrms.utils.bei_config")
-	bei_config_mod.get_company = lambda: "Bebang Kitchen Inc."
-	sys.modules["hrms.utils.bei_config"] = bei_config_mod
+	scm_roles_mod = types.ModuleType("hrms.utils.scm_roles")
+	scm_roles_mod.SCM_COMMISSARY_ROLES = {"Commissary Supervisor", "Warehouse User"}
+	scm_roles_mod.check_scm_permission = lambda roles, action="": None
+	sys.modules["hrms.utils.scm_roles"] = scm_roles_mod
 
 
 _install_fake_modules()
@@ -251,6 +279,45 @@ class TestS37CommissaryQualityContract(unittest.TestCase):
 		self.assertEqual(created.readings[1].manual_inspection, 1)
 		self.assertEqual(created.readings[1].reading_1, "-18°C to 4°C range")
 		self.assertEqual(created.readings[1].status, "Accepted")
+
+	def test_log_wastage_uses_commissary_company_and_role_gated_submit(self):
+		_DOCS_CREATED.clear()
+		original_get_value = commissary_quality.frappe.db.get_value
+		original_get_doc = commissary_quality.frappe.get_doc
+
+		def fake_get_value(doctype, filters, fieldname=None, as_dict=False):
+			if doctype == "Item":
+				return types.SimpleNamespace(item_name="TAPIOCA", stock_uom="KG", valuation_rate=0)
+			return original_get_value(doctype, filters, fieldname, as_dict)
+
+		def fake_get_doc(doctype, name=None):
+			if doctype == "Stock Entry":
+				return _DOCS_CREATED[-1]
+			return original_get_doc(doctype, name)
+
+		commissary_quality.frappe.db.get_value = fake_get_value
+		commissary_quality.frappe.get_doc = fake_get_doc
+		try:
+			result = commissary_quality.log_wastage(
+				item_code="FG009",
+				qty=2,
+				reason_code="expired",
+				remarks="S078 wastage hardening",
+			)
+		finally:
+			commissary_quality.frappe.db.get_value = original_get_value
+			commissary_quality.frappe.get_doc = original_get_doc
+
+		self.assertTrue(result["success"])
+		created = _DOCS_CREATED[-1]
+		self.assertEqual(created.company, "Bebang Kitchen Inc.")
+		self.assertEqual(created.stock_entry_type, "Material Issue")
+		self.assertTrue(created.insert_called)
+		self.assertTrue(created.submit_called)
+		self.assertTrue(created.flags.ignore_permissions)
+		self.assertTrue(created.flags.ignore_user_permissions)
+		self.assertEqual(created.items[0].allow_zero_valuation_rate, 1)
+		self.assertEqual(created.items[0].valuation_rate, 0)
 
 
 if __name__ == "__main__":
