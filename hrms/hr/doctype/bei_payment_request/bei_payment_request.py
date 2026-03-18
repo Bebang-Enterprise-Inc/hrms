@@ -342,6 +342,10 @@ class BEIPaymentRequest(Document):
 
 		# Check PI is submitted
 		pi_doc = frappe.get_doc("Purchase Invoice", frappe_pi)
+		if pi_doc.docstatus == 0 and bei_invoice.status in ["Verified", "Partially Paid", "Paid"]:
+			bei_invoice.submit_frappe_invoice()
+			pi_doc = frappe.get_doc("Purchase Invoice", frappe_pi)
+
 		if pi_doc.docstatus != 1:
 			frappe.throw(
 				_("Frappe Purchase Invoice {0} is not submitted. " "Please submit it first.").format(
