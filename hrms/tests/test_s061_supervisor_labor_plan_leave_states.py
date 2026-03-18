@@ -230,6 +230,49 @@ class TestS061LeaveAwareMerging(unittest.TestCase):
 		self.assertEqual(overrides[0]["leave_application"], "HR-LAP-0001")
 		self.assertEqual(overrides[0]["shift_source"], "approved_leave")
 
+	def test_apply_shifts_persists_leave_metadata_on_plan_rows(self):
+		class FakeRow:
+			pass
+
+		class FakeDoc:
+			def __init__(self):
+				self.shifts = []
+				self.total_hours = 0
+
+			def append(self, fieldname, value):
+				self.asserted_fieldname = fieldname
+				row = FakeRow()
+				self.shifts.append(row)
+				return row
+
+		doc = FakeDoc()
+
+		supervisor._apply_shifts(
+			doc,
+			[
+				{
+					"employee": "EMP-001",
+					"employee_name": "Pat",
+					"day_of_week": "Monday",
+					"shift_type_name": "Off",
+					"shift_type": "VL",
+					"shift_label": "VL",
+					"storage_shift_type_name": "Off",
+					"is_off": 1,
+					"shift_source": "approved_leave",
+					"is_locked": 1,
+					"notes": "Approved vacation leave",
+				}
+			],
+		)
+
+		self.assertEqual(doc.asserted_fieldname, "shifts")
+		self.assertEqual(len(doc.shifts), 1)
+		self.assertEqual(doc.shifts[0].shift_type, "VL")
+		self.assertEqual(doc.shifts[0].shift_source, "approved_leave")
+		self.assertEqual(doc.shifts[0].is_locked, 1)
+		self.assertEqual(doc.shifts[0].notes, "Approved vacation leave")
+
 
 if __name__ == "__main__":
 	unittest.main()

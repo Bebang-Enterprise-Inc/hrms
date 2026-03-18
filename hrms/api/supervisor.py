@@ -722,6 +722,8 @@ def _apply_shifts(doc: Any, shifts: list[dict[str, Any]]):
 		row.is_off = cint(normalized_shift.get("is_off"))
 		row.ends_next_day = cint(normalized_shift.get("ends_next_day"))
 		row.notes = normalized_shift.get("notes")
+		row.shift_source = normalized_shift.get("shift_source") or "manual"
+		row.is_locked = cint(normalized_shift.get("is_locked"))
 		resolved_shift_type = normalized_shift.get("storage_shift_type_name")
 		row.shift_type_name = _linked_shift_type_value(resolved_shift_type)
 		row.shift_type = _legacy_shift_type_value(normalized_shift.get("display_label"))
