@@ -78,7 +78,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Shift Type",
-   "options": "Opening\nMid\nClosing\nOff\nCommissary - Dawn\nCommissary - Morning\nCommissary - Afternoon\nCommissary - Night"
+   "options": "Opening\nMid\nClosing\nOff\nDay Off\nVL\nSL\nCommissary - Dawn\nCommissary - Morning\nCommissary - Afternoon\nCommissary - Night"
   },
   {
    "fieldname": "hours",
