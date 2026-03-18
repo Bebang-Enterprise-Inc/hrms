@@ -298,6 +298,18 @@ class TestS061LeaveAwareMerging(unittest.TestCase):
 		self.assertEqual(serialized["shifts"][0]["is_locked"], 1)
 		self.assertNotIn("leave_locked", serialized["shifts"][0])
 
+	def test_serialize_weekly_plan_handles_rows_with_noncallable_as_dict(self):
+		row = {"employee": "EMP-001", "shift_source": None, "leave_locked": 0}
+		row["as_dict"] = None
+
+		class FakeDoc:
+			def as_dict(self):
+				return {"name": "BEI-WLP-TEST", "status": "Draft", "shifts": [row]}
+
+		serialized = supervisor._serialize_weekly_plan(FakeDoc())
+		self.assertEqual(serialized["shifts"][0]["shift_source"], "manual")
+		self.assertEqual(serialized["shifts"][0]["is_locked"], 0)
+
 
 if __name__ == "__main__":
 	unittest.main()

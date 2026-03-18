@@ -746,7 +746,8 @@ def _serialize_weekly_plan(doc: Any):
 	plan = doc.as_dict()
 	serialized_shifts = []
 	for row in plan.get("shifts") or []:
-		shift = row.as_dict() if hasattr(row, "as_dict") else dict(row)
+		row_as_dict = getattr(row, "as_dict", None)
+		shift = row_as_dict() if callable(row_as_dict) else dict(row)
 		shift["shift_source"] = shift.get("shift_source") or "manual"
 		shift["is_locked"] = cint(shift.get("leave_locked"))
 		shift.pop("leave_locked", None)
