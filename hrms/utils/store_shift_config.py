@@ -14,6 +14,7 @@ DEFAULT_SHIFT_OPTIONS = [
 		"is_off": 0,
 		"ends_next_day": 0,
 		"color": "blue",
+		"category": "work",
 	},
 	{
 		"shift_type_name": "Mid",
@@ -24,6 +25,7 @@ DEFAULT_SHIFT_OPTIONS = [
 		"is_off": 0,
 		"ends_next_day": 0,
 		"color": "green",
+		"category": "work",
 	},
 	{
 		"shift_type_name": "Closing",
@@ -34,16 +36,45 @@ DEFAULT_SHIFT_OPTIONS = [
 		"is_off": 0,
 		"ends_next_day": 0,
 		"color": "orange",
+		"category": "work",
 	},
 	{
-		"shift_type_name": "Off",
-		"label": "Off",
+		"shift_type_name": "Day Off",
+		"label": "Day Off",
 		"shift_start": "",
 		"shift_end": "",
 		"hours": 0,
 		"is_off": 1,
 		"ends_next_day": 0,
 		"color": "gray",
+		"category": "manual_off",
+		"storage_shift_type_name": "Off",
+	},
+	{
+		"shift_type_name": "VL",
+		"label": "VL",
+		"shift_start": "",
+		"shift_end": "",
+		"hours": 0,
+		"is_off": 1,
+		"ends_next_day": 0,
+		"color": "emerald",
+		"category": "leave",
+		"requires_approved_leave": 1,
+		"storage_shift_type_name": "Off",
+	},
+	{
+		"shift_type_name": "SL",
+		"label": "SL",
+		"shift_start": "",
+		"shift_end": "",
+		"hours": 0,
+		"is_off": 1,
+		"ends_next_day": 0,
+		"color": "rose",
+		"category": "leave",
+		"requires_approved_leave": 1,
+		"storage_shift_type_name": "Off",
 	},
 ]
 
@@ -57,6 +88,7 @@ COMMISSARY_SHIFT_OPTIONS = [
 		"is_off": 0,
 		"ends_next_day": 0,
 		"color": "purple",
+		"category": "work",
 	},
 	{
 		"shift_type_name": "Commissary - Morning",
@@ -67,6 +99,7 @@ COMMISSARY_SHIFT_OPTIONS = [
 		"is_off": 0,
 		"ends_next_day": 0,
 		"color": "blue",
+		"category": "work",
 	},
 	{
 		"shift_type_name": "Commissary - Afternoon",
@@ -77,6 +110,7 @@ COMMISSARY_SHIFT_OPTIONS = [
 		"is_off": 0,
 		"ends_next_day": 0,
 		"color": "green",
+		"category": "work",
 	},
 	{
 		"shift_type_name": "Commissary - Night",
@@ -87,8 +121,11 @@ COMMISSARY_SHIFT_OPTIONS = [
 		"is_off": 0,
 		"ends_next_day": 1,
 		"color": "red",
+		"category": "work",
 	},
-	DEFAULT_SHIFT_OPTIONS[-1],
+	DEFAULT_SHIFT_OPTIONS[3],
+	DEFAULT_SHIFT_OPTIONS[4],
+	DEFAULT_SHIFT_OPTIONS[5],
 ]
 
 NAIA_SHIFT_OPTIONS = [

@@ -33,6 +33,10 @@ COMMISSARY_EMPLOYEE_BRANCH_ALIASES = {
 }
 
 
+def _designation_is_area_supervisor(designation):
+	return "AREA SUPERVISOR" in str(designation or "").upper()
+
+
 # ==============================================================================
 # APPROVAL QUEUE
 # ==============================================================================
@@ -264,6 +268,29 @@ DAY_OFFSETS = {
 	"Saturday": 5,
 	"Sunday": 6,
 }
+DAY_NAMES = tuple(DAY_OFFSETS.keys())
+OFF_STORAGE_SHIFT_TYPE = "Off"
+MANUAL_OFF_DISPLAY_LABELS = {"Off", "Day Off"}
+LEAVE_DISPLAY_LABELS = {
+	"VACATION LEAVE": "VL",
+	"SICK LEAVE": "SL",
+	"VL": "VL",
+	"SL": "SL",
+}
+LEAVE_REQUIRED_LABELS = {"VL", "SL"}
+PLANNED_SHIFT_SELECT_VALUES = {
+	"Opening",
+	"Mid",
+	"Closing",
+	"Off",
+	"Day Off",
+	"VL",
+	"SL",
+	"Commissary - Dawn",
+	"Commissary - Morning",
+	"Commissary - Afternoon",
+	"Commissary - Night",
+}
 
 
 def _normalize_designation(designation: str | None):
@@ -388,6 +415,161 @@ def _coerce_shifts(shifts: str | list[dict[str, Any]] | None):
 	return shifts or []
 
 
+def _get_shift_value(source: Any, fieldname: str):
+	if isinstance(source, dict):
+		return source.get(fieldname)
+	return getattr(source, fieldname, None)
+
+
+def _normalize_leave_display_label(leave_type: str | None):
+	normalized = (leave_type or "").strip().upper()
+	return LEAVE_DISPLAY_LABELS.get(normalized, "Leave")
+
+
+def _normalize_off_display_label(label: str | None):
+	normalized = (label or "").strip()
+	if not normalized or normalized in MANUAL_OFF_DISPLAY_LABELS:
+		return "Day Off"
+	return normalized
+
+
+def _get_requested_shift_label(shift: dict[str, Any] | Any):
+	for fieldname in ("shift_label", "shift_type", "shift_type_name"):
+		value = _get_shift_value(shift, fieldname)
+		if isinstance(value, str) and value.strip():
+			return value.strip()
+	return ""
+
+
+def _normalize_shift_payload(shift: dict[str, Any] | Any):
+	requested_label = _get_requested_shift_label(shift)
+	requested_storage_type = _get_shift_value(shift, "storage_shift_type_name")
+	is_off = cint(_get_shift_value(shift, "is_off")) or requested_label in MANUAL_OFF_DISPLAY_LABELS.union(
+		LEAVE_REQUIRED_LABELS
+	)
+	normalized = {
+		"employee": _get_shift_value(shift, "employee"),
+		"employee_name": _get_shift_value(shift, "employee_name"),
+		"day_of_week": _get_shift_value(shift, "day_of_week"),
+		"shift_type_name": _get_shift_value(shift, "shift_type_name"),
+		"shift_type": _get_shift_value(shift, "shift_type"),
+		"shift_label": _get_shift_value(shift, "shift_label"),
+		"shift_start": _get_shift_value(shift, "shift_start"),
+		"shift_end": _get_shift_value(shift, "shift_end"),
+		"is_off": cint(is_off),
+		"ends_next_day": cint(_get_shift_value(shift, "ends_next_day")),
+		"hours": _get_shift_value(shift, "hours"),
+		"notes": _get_shift_value(shift, "notes"),
+		"rotation_group": _get_shift_value(shift, "rotation_group"),
+		"shift_source": _get_shift_value(shift, "shift_source") or "manual",
+		"is_locked": cint(_get_shift_value(shift, "is_locked")),
+		"locked_reason": _get_shift_value(shift, "locked_reason"),
+		"leave_application": _get_shift_value(shift, "leave_application"),
+		"leave_type": _get_shift_value(shift, "leave_type"),
+		"work_date": _get_shift_value(shift, "work_date"),
+	}
+
+	if normalized["is_off"]:
+		display_label = _normalize_off_display_label(requested_label)
+		if requested_label in LEAVE_REQUIRED_LABELS:
+			display_label = requested_label
+		normalized.update(
+			{
+				"display_label": display_label,
+				"shift_label": display_label,
+				"storage_shift_type_name": requested_storage_type or OFF_STORAGE_SHIFT_TYPE,
+				"shift_start": None,
+				"shift_end": None,
+				"hours": 0,
+				"ends_next_day": 0,
+			}
+		)
+		return normalized
+
+	working_label = requested_label or normalized["shift_type_name"] or normalized["shift_type"]
+	normalized.update(
+		{
+			"display_label": working_label,
+			"shift_label": working_label,
+			"storage_shift_type_name": requested_storage_type
+			or normalized["shift_type_name"]
+			or normalized["shift_type"],
+			"hours": normalized["hours"]
+			or _calculate_shift_hours(
+				normalized["shift_start"], normalized["shift_end"], normalized["is_off"]
+			),
+		}
+	)
+	return normalized
+
+
+def _make_leave_override_row(leave: dict[str, Any], day_of_week: str, work_date: str):
+	display_label = _normalize_leave_display_label(leave.get("leave_type"))
+	return {
+		"employee": leave.get("employee"),
+		"employee_name": leave.get("employee_name") or leave.get("employee"),
+		"day_of_week": day_of_week,
+		"shift_type_name": display_label,
+		"shift_type": display_label,
+		"shift_label": display_label,
+		"storage_shift_type_name": OFF_STORAGE_SHIFT_TYPE,
+		"is_off": 1,
+		"ends_next_day": 0,
+		"hours": 0,
+		"shift_source": "approved_leave",
+		"is_locked": 1,
+		"locked_reason": _("Locked from approved leave application."),
+		"leave_application": leave.get("name"),
+		"leave_type": leave.get("leave_type"),
+		"notes": leave.get("description"),
+		"work_date": work_date,
+	}
+
+
+def _get_approved_leave_overrides(
+	store_context: dict[str, str], week_start: str | None, employees: list[dict[str, Any]] | None = None
+):
+	if not week_start:
+		return []
+
+	employees = employees or _get_labor_plan_employees(store_context)
+	employee_names = [row.get("name") for row in employees if row.get("name")]
+	if not employee_names:
+		return []
+
+	week_start_date = getdate(week_start)
+	week_end = add_days(str(week_start_date), 6)
+	leaves = frappe.get_all(
+		"Leave Application",
+		filters={
+			"employee": ["in", employee_names],
+			"docstatus": 1,
+			"status": "Approved",
+			"from_date": ["<=", week_end],
+			"to_date": [">=", str(week_start_date)],
+		},
+		fields=["name", "employee", "employee_name", "leave_type", "from_date", "to_date", "description"],
+		order_by="from_date asc, employee asc",
+	)
+
+	overrides = []
+	seen_keys = set()
+	week_end_date = getdate(week_end)
+	for leave in leaves:
+		start_date = max(getdate(leave.get("from_date")), week_start_date)
+		end_date = min(getdate(leave.get("to_date")), week_end_date)
+		cursor = start_date
+		while cursor <= end_date:
+			day_of_week = DAY_NAMES[cursor.weekday()]
+			row_key = f"{leave.get('employee')}|{day_of_week}"
+			if row_key not in seen_keys:
+				overrides.append(_make_leave_override_row(leave, day_of_week, str(cursor)))
+				seen_keys.add(row_key)
+			cursor = getdate(add_days(str(cursor), 1))
+
+	return overrides
+
+
 def _calculate_shift_hours(shift_start: str | None, shift_end: str | None, is_off: bool | int = 0):
 	if cint(is_off) or not shift_start or not shift_end:
 		return 0
@@ -475,7 +657,11 @@ def _get_labor_plan_hour_rate(employee: str | None, effective_on: str | None = N
 		frappe.db.get_value("Salary Structure", assignment.get("salary_structure"), "hour_rate") or 0
 	)
 	if structure_rate > 0:
-		return {"hour_rate": round(structure_rate, 2), "source": "salary_structure", "base_salary": base_salary}
+		return {
+			"hour_rate": round(structure_rate, 2),
+			"source": "salary_structure",
+			"base_salary": base_salary,
+		}
 
 	if base_salary > 0:
 		# Fallback estimate: monthly base salary over a 26-day / 8-hour operating month.
@@ -498,7 +684,9 @@ def _calculate_plan_cost(shifts: list[dict[str, Any]] | list[Any], hourly_rates:
 			continue
 		hours = flt(row.get("hours") if isinstance(row, dict) else getattr(row, "hours", 0))
 		if hours <= 0:
-			shift_start = row.get("shift_start") if isinstance(row, dict) else getattr(row, "shift_start", None)
+			shift_start = (
+				row.get("shift_start") if isinstance(row, dict) else getattr(row, "shift_start", None)
+			)
 			shift_end = row.get("shift_end") if isinstance(row, dict) else getattr(row, "shift_end", None)
 			hours = flt(_calculate_shift_hours(shift_start, shift_end, 0))
 		rate = flt(hourly_rates.get(employee) or 0)
@@ -508,17 +696,15 @@ def _calculate_plan_cost(shifts: list[dict[str, Any]] | list[Any], hourly_rates:
 
 
 def _get_shift_type_name(shift: dict[str, Any]):
-	if cint(shift.get("is_off")):
-		return "Off"
-	return shift.get("shift_type_name") or shift.get("shift_type")
+	return _normalize_shift_payload(shift).get("storage_shift_type_name")
 
 
 def _legacy_shift_type_value(shift_type_name: str | None):
-	return shift_type_name if shift_type_name in {"Opening", "Mid", "Closing", "Off"} else None
+	return shift_type_name if shift_type_name in PLANNED_SHIFT_SELECT_VALUES else None
 
 
 def _linked_shift_type_value(shift_type_name: str | None):
-	if not shift_type_name or shift_type_name == "Off":
+	if not shift_type_name or shift_type_name == OFF_STORAGE_SHIFT_TYPE:
 		return None
 	return shift_type_name if frappe.db.exists("Shift Type", shift_type_name) else None
 
@@ -528,20 +714,21 @@ def _apply_shifts(doc: Any, shifts: list[dict[str, Any]]):
 	total_hours = 0
 
 	for shift in shifts:
+		normalized_shift = _normalize_shift_payload(shift)
 		row = doc.append("shifts", {})
-		row.employee = shift.get("employee")
-		row.employee_name = shift.get("employee_name")
-		row.day_of_week = shift.get("day_of_week")
-		row.is_off = cint(shift.get("is_off"))
-		row.ends_next_day = cint(shift.get("ends_next_day"))
-		row.notes = shift.get("notes")
-		resolved_shift_type = _get_shift_type_name(shift)
+		row.employee = normalized_shift.get("employee")
+		row.employee_name = normalized_shift.get("employee_name")
+		row.day_of_week = normalized_shift.get("day_of_week")
+		row.is_off = cint(normalized_shift.get("is_off"))
+		row.ends_next_day = cint(normalized_shift.get("ends_next_day"))
+		row.notes = normalized_shift.get("notes")
+		resolved_shift_type = normalized_shift.get("storage_shift_type_name")
 		row.shift_type_name = _linked_shift_type_value(resolved_shift_type)
-		row.shift_type = _legacy_shift_type_value(resolved_shift_type)
+		row.shift_type = _legacy_shift_type_value(normalized_shift.get("display_label"))
 
 		if not row.is_off:
-			row.shift_start = shift.get("shift_start")
-			row.shift_end = shift.get("shift_end")
+			row.shift_start = normalized_shift.get("shift_start")
+			row.shift_end = normalized_shift.get("shift_end")
 		else:
 			row.shift_start = None
 			row.shift_end = None
@@ -783,7 +970,9 @@ def _expand_shift_assignment_rows(
 
 def _serialize_shift_swap_request(request: Any, *, surface: str | None = None):
 	surface_key = surface or (
-		SCHEDULE_SURFACE_COMMISSARY if _is_commissary_schedule_store(request.store) else SCHEDULE_SURFACE_STORE
+		SCHEDULE_SURFACE_COMMISSARY
+		if _is_commissary_schedule_store(request.store)
+		else SCHEDULE_SURFACE_STORE
 	)
 	user_roles = set(frappe.get_roles(frappe.session.user))
 	can_manage = False
@@ -924,7 +1113,7 @@ def _send_published_schedule_notifications(plan: Any, change_map: dict[str, list
 				lines.append(f"• {work_date}: removed from {old_shift}")
 			else:
 				lines.append(f"• {work_date}: {old_shift} → {new_shift}")
-		lines.extend(["", f"Open: https://my.bebang.ph/dashboard/hr/schedule"])
+		lines.extend(["", "Open: https://my.bebang.ph/dashboard/hr/schedule"])
 		_notify_schedule_change(
 			plan.store,
 			employee,
@@ -971,7 +1160,10 @@ def _sync_shift_swap_plan_rows(
 		return
 
 	requester_row.employee, target_row.employee = target_row.employee, requester_row.employee
-	requester_row.employee_name, target_row.employee_name = target_row.employee_name, requester_row.employee_name
+	requester_row.employee_name, target_row.employee_name = (
+		target_row.employee_name,
+		requester_row.employee_name,
+	)
 	plan.save(ignore_permissions=True)
 
 
@@ -1018,7 +1210,9 @@ def get_shift_swap_context(week_start: str | None = None):
 			"store": None,
 			"warehouse_name": None,
 			"week_start": str(getdate(week_start)) if week_start else _default_week_start_value(),
-			"week_end": str(add_days(str(getdate(week_start)) if week_start else _default_week_start_value(), 6)),
+			"week_end": str(
+				add_days(str(getdate(week_start)) if week_start else _default_week_start_value(), 6)
+			),
 			"approver": {"user_id": None, "full_name": None},
 			"assignments": [],
 			"coworker_assignments": [],
@@ -1273,7 +1467,7 @@ def reject_shift_swap_request(request_name: str, decision_note: str | None = Non
 
 
 @frappe.whitelist()
-def get_labor_plan_bootstrap(store: str, surface: str | None = None):
+def get_labor_plan_bootstrap(store: str, surface: str | None = None, week_start: str | None = None):
 	"""Return store roster and shift options for labor planning."""
 	if not store:
 		frappe.throw(_("Store is required"))
@@ -1292,6 +1486,7 @@ def get_labor_plan_bootstrap(store: str, surface: str | None = None):
 		"employees": employees,
 		"shift_options": get_shift_options_for_store(store_context["warehouse_name"]),
 		"templates": get_template_metadata(surface_key),
+		"leave_overrides": _get_approved_leave_overrides(store_context, week_start, employees=employees),
 	}
 
 
@@ -1364,6 +1559,8 @@ def create_weekly_plan(
 	_assert_schedule_access(store, surface_key)
 	shifts = _coerce_shifts(shifts)
 	store_context = _resolve_labor_plan_store(store)
+	employees = _get_labor_plan_employees(store_context)
+	shifts = _merge_approved_leave_shifts(store_context, week_start, shifts, employees=employees)
 
 	doc = frappe.new_doc("BEI Weekly Labor Plan")
 	doc.store = store_context["warehouse"]
@@ -1429,7 +1626,9 @@ def get_area_schedule_overview(week_start: str | None = None):
 
 		store_payload = get_user_store(surface=SCHEDULE_SURFACE_STORE) or {}
 		stores = store_payload.get("stores") or []
-		if not stores and user_roles.intersection({"HR User", "HR Manager", "System Manager", "Administrator"}):
+		if not stores and user_roles.intersection(
+			{"HR User", "HR Manager", "System Manager", "Administrator"}
+		):
 			stores = _get_store_schedule_locations()
 	else:
 		from hrms.api.store import _get_store_schedule_locations
@@ -1549,7 +1748,9 @@ def create_team_attendance_request(
 
 	current_roles = set(frappe.get_roles(frappe.session.user))
 	current_employee = _get_current_employee()
-	allowed = bool(current_roles.intersection({"HQ User", "HR User", "HR Manager", "System Manager", "Administrator"}))
+	allowed = bool(
+		current_roles.intersection({"HQ User", "HR User", "HR Manager", "System Manager", "Administrator"})
+	)
 	if current_employee and target_employee.get("reports_to") == current_employee.get("name"):
 		allowed = True
 	if not allowed:
@@ -1617,7 +1818,9 @@ def copy_weekly_plan_from_previous_week(
 		}
 
 	source_plan_meta = plans[0]
-	source_plan_name = source_plan_meta.get("name") if isinstance(source_plan_meta, dict) else source_plan_meta.name
+	source_plan_name = (
+		source_plan_meta.get("name") if isinstance(source_plan_meta, dict) else source_plan_meta.name
+	)
 	source_week = (
 		source_plan_meta.get("week_start_date")
 		if isinstance(source_plan_meta, dict)
@@ -1625,9 +1828,7 @@ def copy_weekly_plan_from_previous_week(
 	)
 	source_plan = frappe.get_doc("BEI Weekly Labor Plan", source_plan_name)
 	active_roster = {
-		row.get("name"): row
-		for row in _get_labor_plan_employees(store_context)
-		if row.get("name")
+		row.get("name"): row for row in _get_labor_plan_employees(store_context) if row.get("name")
 	}
 	copied_shifts = []
 	warnings = []
@@ -1646,18 +1847,37 @@ def copy_weekly_plan_from_previous_week(
 				}
 			)
 			continue
+		display_label = (row.shift_type or row.shift_type_name or "").strip()
+		if display_label in LEAVE_REQUIRED_LABELS or (
+			cint(row.is_off) and display_label and display_label not in MANUAL_OFF_DISPLAY_LABELS
+		):
+			warnings.append(
+				{
+					"code": "leave_state_skipped",
+					"level": "info",
+					"message": _(
+						"Skipped {0} for {1}; leave states are re-evaluated from approved leave in the target week."
+					).format(display_label, row.employee_name or row.employee),
+					"employee": row.employee,
+				}
+			)
+			continue
 		copied_shifts.append(
 			{
 				"employee": row.employee,
 				"employee_name": row.employee_name,
 				"day_of_week": row.day_of_week,
 				"shift_type_name": row.shift_type_name or row.shift_type,
+				"shift_type": row.shift_type or row.shift_type_name,
+				"shift_label": row.shift_type or row.shift_type_name,
+				"storage_shift_type_name": OFF_STORAGE_SHIFT_TYPE
+				if cint(row.is_off)
+				else (row.shift_type_name or row.shift_type),
 				"shift_start": row.shift_start,
 				"shift_end": row.shift_end,
 				"is_off": cint(row.is_off),
 				"ends_next_day": cint(row.ends_next_day),
-				"hours": row.hours
-				or _calculate_shift_hours(row.shift_start, row.shift_end, row.is_off),
+				"hours": row.hours or _calculate_shift_hours(row.shift_start, row.shift_end, row.is_off),
 				"notes": row.notes,
 			}
 		)
@@ -1692,6 +1912,11 @@ def update_weekly_plan(plan_name: str, shifts: str | list[dict[str, Any]], surfa
 	shifts = _coerce_shifts(shifts)
 	doc = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
 	_assert_schedule_access(doc.store, surface)
+	store_context = _resolve_labor_plan_store(doc.store)
+	employees = _get_labor_plan_employees(store_context)
+	shifts = _merge_approved_leave_shifts(
+		store_context, str(doc.week_start_date), shifts, employees=employees
+	)
 	doc.shifts = []
 
 	total_hours = _apply_shifts(doc, shifts)
@@ -1701,6 +1926,35 @@ def update_weekly_plan(plan_name: str, shifts: str | list[dict[str, Any]], surfa
 	doc.rejected_by = None
 	doc.save(ignore_permissions=True)
 	return {"success": True, "total_hours": total_hours}
+
+
+def _merge_approved_leave_shifts(
+	store_context: dict[str, str],
+	week_start: str,
+	shifts: list[dict[str, Any]],
+	employees: list[dict[str, Any]] | None = None,
+):
+	normalized_shifts = [_normalize_shift_payload(shift) for shift in shifts]
+	leave_overrides = _get_approved_leave_overrides(store_context, week_start, employees=employees)
+	leave_by_key = {f"{leave.get('employee')}|{leave.get('day_of_week')}": leave for leave in leave_overrides}
+	merged_shifts: dict[str, dict[str, Any]] = {}
+
+	for shift in normalized_shifts:
+		row_key = f"{shift.get('employee')}|{shift.get('day_of_week')}"
+		if shift.get("shift_label") in LEAVE_REQUIRED_LABELS and row_key not in leave_by_key:
+			frappe.throw(
+				_("Approved leave is required before scheduling {0} for {1} on {2}.").format(
+					shift.get("shift_label"),
+					shift.get("employee_name") or shift.get("employee"),
+					shift.get("day_of_week"),
+				)
+			)
+		merged_shifts[row_key] = shift
+
+	for row_key, leave_shift in leave_by_key.items():
+		merged_shifts[row_key] = leave_shift
+
+	return list(merged_shifts.values())
 
 
 @frappe.whitelist()
