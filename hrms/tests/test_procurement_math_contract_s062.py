@@ -379,6 +379,99 @@ class TestProcurementMathContractS062(unittest.TestCase):
 		self.assertEqual(doc.last_payment_date, date(2026, 3, 18))
 		self.assertEqual(doc.status, "Partially Paid")
 
+	def test_create_frappe_purchase_invoice_disables_rounding_and_carries_vat(self):
+		supplier_doc = types.SimpleNamespace(get_or_create_frappe_supplier=lambda: "SUP-MARIVIC")
+		po_doc = types.SimpleNamespace(frappe_po="PO-0001", status="Approved", ship_to="Stores - BEI")
+		gr_item = types.SimpleNamespace(
+			item_code="CM34",
+			item_name="SANDO ECO BAG LARGE",
+			description="Grounded line",
+			accepted_qty=1,
+			uom="Pc",
+			unit_cost=4.55,
+			name="GRI-0001",
+		)
+		gr_doc = types.SimpleNamespace(
+			frappe_purchase_receipt="PR-0001",
+			status="Accepted",
+			warehouse="Stores - BEI",
+			items=[gr_item],
+		)
+
+		class _PurchaseInvoiceDraft:
+			def __init__(self, payload):
+				self.payload = payload
+				self.name = "PINV-0002"
+				self.taxes = []
+
+			def append(self, fieldname, payload):
+				if fieldname == "taxes":
+					self.taxes.append(payload)
+
+			def insert(self, ignore_permissions=False):
+				return self
+
+		captured = {}
+
+		def _get_doc(*args, **kwargs):
+			if args and args[0] == "BEI Supplier":
+				return supplier_doc
+			if args and args[0] == "BEI Purchase Order":
+				return po_doc
+			if args and args[0] == "BEI Goods Receipt":
+				return gr_doc
+			if args and isinstance(args[0], dict):
+				captured["pi"] = _PurchaseInvoiceDraft(args[0])
+				return captured["pi"]
+			raise AssertionError(f"Unexpected get_doc call: {args} {kwargs}")
+
+		bei_invoice.frappe.get_doc = MagicMock(side_effect=_get_doc)
+		bei_invoice.frappe.db.get_value = MagicMock(
+			side_effect=lambda doctype, filters=None, fieldname=None, as_dict=False: (
+				"INPUT VAT - GOODS - Bebang Enterprise Inc."
+				if doctype == "Account"
+				else "PO-ITEM-0001"
+				if doctype == "Purchase Order Item"
+				else "PR-ITEM-0001"
+				if doctype == "Purchase Receipt Item"
+				else None
+			)
+		)
+		bei_invoice.apply_standard_buying_context = lambda *args, **kwargs: None
+
+		doc = types.SimpleNamespace(
+			name="INV-0002",
+			status="Verified",
+			match_status="Matched",
+			supplier="MU9",
+			purchase_order="PO-BEI-0001",
+			goods_receipt="GR-BEI-0001",
+			invoice_date="2026-03-18",
+			due_date="2026-03-25",
+			supplier_invoice_no="SI-0002",
+			payment_terms="",
+			vat_amount=0.55,
+			withholding_tax=0,
+			frappe_purchase_invoice="",
+			db_set=lambda *args, **kwargs: None,
+		)
+		doc._find_po_item = lambda frappe_po_name, item_code: "PO-ITEM-0001"
+		doc._find_pr_item = lambda frappe_pr_name, item_code: "PR-ITEM-0001"
+		doc._get_expense_account = lambda gr_item: "5000 - Cost of Goods Sold - BEI"
+		doc._add_input_vat_tax = lambda pi: bei_invoice.BEIInvoice._add_input_vat_tax(doc, pi)
+		doc._add_withholding_tax = lambda pi: None
+
+		result = bei_invoice.BEIInvoice.create_frappe_purchase_invoice(doc)
+
+		self.assertEqual(result, "PINV-0002")
+		self.assertEqual(captured["pi"].payload["disable_rounded_total"], 1)
+		self.assertEqual(len(captured["pi"].taxes), 1)
+		self.assertEqual(captured["pi"].taxes[0]["tax_amount"], 0.55)
+		self.assertEqual(
+			captured["pi"].taxes[0]["account_head"],
+			"INPUT VAT - GOODS - Bebang Enterprise Inc.",
+		)
+
 	def test_payment_request_auto_submits_linked_frappe_pi_before_creating_payment_entry(self):
 		bei_invoice_doc = types.SimpleNamespace(
 			status="Verified",
