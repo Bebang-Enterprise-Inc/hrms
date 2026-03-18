@@ -723,7 +723,7 @@ def _apply_shifts(doc: Any, shifts: list[dict[str, Any]]):
 		row.ends_next_day = cint(normalized_shift.get("ends_next_day"))
 		row.notes = normalized_shift.get("notes")
 		row.shift_source = normalized_shift.get("shift_source") or "manual"
-		row.is_locked = cint(normalized_shift.get("is_locked"))
+		row.leave_locked = cint(normalized_shift.get("is_locked"))
 		resolved_shift_type = normalized_shift.get("storage_shift_type_name")
 		row.shift_type_name = _linked_shift_type_value(resolved_shift_type)
 		row.shift_type = _legacy_shift_type_value(normalized_shift.get("display_label"))
@@ -740,6 +740,19 @@ def _apply_shifts(doc: Any, shifts: list[dict[str, Any]]):
 
 	doc.total_hours = total_hours
 	return total_hours
+
+
+def _serialize_weekly_plan(doc: Any):
+	plan = doc.as_dict()
+	serialized_shifts = []
+	for row in plan.get("shifts") or []:
+		shift = row.as_dict() if hasattr(row, "as_dict") else dict(row)
+		shift["shift_source"] = shift.get("shift_source") or "manual"
+		shift["is_locked"] = cint(shift.get("leave_locked"))
+		shift.pop("leave_locked", None)
+		serialized_shifts.append(shift)
+	plan["shifts"] = serialized_shifts
+	return plan
 
 
 def _get_work_date(week_start_date: str, day_of_week: str):
@@ -1594,7 +1607,7 @@ def get_weekly_plan(store: str | None = None, week_start: str | None = None, sur
 
 	if plans:
 		doc = frappe.get_doc("BEI Weekly Labor Plan", plans[0].name)
-		return {"plan": doc.as_dict()}
+		return {"plan": _serialize_weekly_plan(doc)}
 	return {"plan": None}
 
 
