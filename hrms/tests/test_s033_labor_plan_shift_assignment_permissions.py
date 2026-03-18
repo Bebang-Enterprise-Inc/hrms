@@ -483,8 +483,8 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 
 		self.assertEqual(total_hours, 0)
 		self.assertEqual(len(doc.shifts), 1)
-		self.assertEqual(doc.shifts[0].shift_type_name, "Off")
-		self.assertIsNone(doc.shifts[0].shift_type)
+		self.assertIsNone(doc.shifts[0].shift_type_name)
+		self.assertEqual(doc.shifts[0].shift_type, "Off")
 		self.assertEqual(doc.shifts[0].hours, 0)
 
 	def test_apply_shifts_skips_link_field_for_missing_shift_type_docs(self):
@@ -522,8 +522,8 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 
 		self.assertEqual(total_hours, 8)
 		self.assertEqual(len(doc.shifts), 1)
-		self.assertEqual(doc.shifts[0].shift_type_name, "Closing")
-		self.assertIsNone(doc.shifts[0].shift_type)
+		self.assertIsNone(doc.shifts[0].shift_type_name)
+		self.assertEqual(doc.shifts[0].shift_type, "Closing")
 
 	def test_approve_shift_swap_request_elevates_assignment_mutation_permissions(self):
 		doc = types.SimpleNamespace(
