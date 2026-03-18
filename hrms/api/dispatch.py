@@ -1583,14 +1583,36 @@ def preview_trip_stops(route_name: str, trip_date: str | None = None):
 def _duplicate_trip_response(route_name: str, trip_date: str, existing_trip: str):
 	return {
 		"success": False,
+		"code": "TRIP_ALREADY_EXISTS",
 		"error_code": "TRIP_ALREADY_EXISTS",
 		"trip": existing_trip,
+		"existing_trip": existing_trip,
+		"trip_name": existing_trip,
 		"route_name": route_name,
 		"trip_date": trip_date,
 		"message": _("A trip already exists for route '{0}' on {1}: {2}").format(
 			route_name, trip_date, existing_trip
 		),
 	}
+
+
+def _is_duplicate_trip_insert_error(exc: Exception) -> bool:
+	duplicate_types: list[type[Exception]] = []
+	for candidate in (
+		getattr(frappe, "DuplicateEntryError", None),
+		getattr(getattr(frappe, "exceptions", None), "DuplicateEntryError", None),
+	):
+		if isinstance(candidate, type) and issubclass(candidate, Exception):
+			duplicate_types.append(candidate)
+
+	if duplicate_types and isinstance(exc, tuple(duplicate_types)):
+		return True
+
+	if exc.__class__.__name__ == "DuplicateEntryError":
+		return True
+
+	message = str(exc).lower()
+	return "trip already exists" in message or ("duplicate" in message and "route" in message)
 
 
 @frappe.whitelist()
@@ -1716,13 +1738,15 @@ def create_trip_from_route(
 	_enable_role_gated_write(trip)
 	try:
 		trip.insert(ignore_permissions=True)
-	except frappe.DuplicateEntryError:
+	except Exception as exc:
+		if not _is_duplicate_trip_insert_error(exc):
+			raise
 		existing_trip = frappe.db.get_value(
 			"BEI Distribution Trip", {"route_name": route_name, "trip_date": trip_date}, "name"
 		)
 		if existing_trip:
 			return _duplicate_trip_response(route_name, trip_date, existing_trip)
-		raise
+		raise exc
 
 	return {
 		"success": True,

@@ -73,7 +73,9 @@ def _install_fake_frappe_and_dependencies():
 	if "frappe.exceptions" not in sys.modules:
 		exceptions = types.ModuleType("frappe.exceptions")
 		exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
+		exceptions.DuplicateEntryError = type("DuplicateEntryError", (Exception,), {})
 		sys.modules["frappe.exceptions"] = exceptions
+	frappe.exceptions = sys.modules["frappe.exceptions"]
 
 	if "hrms" not in sys.modules:
 		hrms_pkg = types.ModuleType("hrms")
@@ -378,6 +380,34 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		self.assertEqual(result["error_code"], "TRIP_ALREADY_EXISTS")
 		self.assertEqual(result["trip"], "TRIP-EXISTING-0001")
 		self.assertIn("already exists", result["message"])
+
+	def test_create_trip_from_route_normalizes_frappe_exceptions_duplicate_error(self):
+		route = _Route()
+		trip = _TripDoc([])
+		duplicate_cls = dispatch.frappe.exceptions.DuplicateEntryError
+		trip.insert = MagicMock(side_effect=duplicate_cls("duplicate trip"))
+
+		def _get_value(doctype, filters=None, fieldname=None):
+			if doctype == "BEI Distribution Trip":
+				return "TRIP-EXISTING-0002"
+			return None
+
+		dispatch.frappe.get_doc = MagicMock(return_value=route)
+		dispatch.frappe.db.get_value = MagicMock(side_effect=_get_value)
+
+		with patch.object(dispatch, "_build_stop_preview", return_value=[]), patch.object(
+			dispatch, "_build_trip_doc", return_value=trip
+		):
+			result = dispatch.create_trip_from_route(
+				route_name="ROUTE-S10",
+				trip_date="2026-02-28",
+				selected_stops="[]",
+			)
+
+		self.assertFalse(result["success"])
+		self.assertEqual(result["code"], "TRIP_ALREADY_EXISTS")
+		self.assertEqual(result["error_code"], "TRIP_ALREADY_EXISTS")
+		self.assertEqual(result["existing_trip"], "TRIP-EXISTING-0002")
 
 	def test_enable_role_gated_write_sets_ignore_user_permissions(self):
 		doc = types.SimpleNamespace(flags=None)
