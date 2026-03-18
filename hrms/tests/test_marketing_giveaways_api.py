@@ -594,3 +594,64 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 	assert rows[0]["linked_campaigns"] == [{"campaign": "CMP-0001", "status": "Linked"}]
 	assert rows[1]["is_marketing_discount"] is False
 	assert rows[1]["is_effectively_free"] is True
+
+
+def test_get_campaign_giveaways_dashboard_defers_probable_leakage(monkeypatch):
+	module = _load_module("marketing_giveaways_dashboard_deferred", user_roles=["Area Supervisor"])
+
+	monkeypatch.setattr(module, "_require_enabled", lambda: None)
+	monkeypatch.setattr(module, "_require_roles", lambda allowed_roles, message: {"Area Supervisor"})
+	monkeypatch.setattr(
+		module.frappe,
+		"get_all",
+		lambda doctype, filters=None, fields=None, order_by=None, limit_page_length=None: [{"name": "CMP-0001"}]
+		if doctype == module.CAMPAIGN_DT
+		else [],
+	)
+	monkeypatch.setattr(module, "_campaign_doc", lambda name: FakeCampaignDoc(name=name))
+	monkeypatch.setattr(
+		module,
+		"_serialize_campaign_row",
+		lambda campaign: {
+			"name": campaign.name,
+			"campaign_name": campaign.campaign_name,
+			"campaign_code": campaign.campaign_code,
+			"status": campaign.status,
+			"schedule_rows": [],
+			"remaining_days": 2,
+			"required_daily_pace": 5,
+		},
+	)
+	monkeypatch.setattr(module, "_manila_today", lambda: date(2026, 3, 18))
+	monkeypatch.setattr(
+		module,
+		"_query_probable_giveaway_leakage",
+		lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("dashboard should not query leakage directly")),
+	)
+
+	result = module.get_campaign_giveaways_dashboard()
+
+	assert result["summary"]["total_campaigns"] == 1
+	assert result["probable_leakage"] == []
+	assert result["probable_leakage_deferred"] is True
+
+
+def test_get_campaign_giveaway_probable_leakage_returns_windowed_rows(monkeypatch):
+	module = _load_module("marketing_giveaways_probable_leakage_endpoint", user_roles=["Area Supervisor"])
+
+	monkeypatch.setattr(module, "_require_enabled", lambda: None)
+	monkeypatch.setattr(module, "_require_roles", lambda allowed_roles, message: {"Area Supervisor"})
+	monkeypatch.setattr(module, "_manila_today", lambda: date(2026, 3, 18))
+	monkeypatch.setattr(
+		module,
+		"_query_probable_giveaway_leakage",
+		lambda start_day, end_day, max_results=20, max_pages=module.LEAKAGE_SCAN_MAX_PAGES: [
+			{"alert_reference": "pos-order:101", "order_id": 101}
+		],
+	)
+
+	result = module.get_campaign_giveaway_probable_leakage(max_results=10)
+
+	assert result["rows"] == [{"alert_reference": "pos-order:101", "order_id": 101}]
+	assert result["window_start"] == "2026-03-02"
+	assert result["window_end"] == "2026-03-18"

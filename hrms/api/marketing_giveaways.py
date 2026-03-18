@@ -26,6 +26,8 @@ EXCEPTION_DT = "BEI Campaign Giveaway Exception"
 POLICY_VERSION = "S075-2026-03-18"
 DEFAULT_EXPENSE_ACCOUNT_NUMBER = "6005001"
 DEFAULT_EXPENSE_ACCOUNT_NAME = "MARKETING GIVEAWAYS"
+LEAKAGE_LOOKBACK_DAYS = 16
+LEAKAGE_SCAN_MAX_PAGES = 4
 APPROVED_STATES = {"Approved / Active", "Partially Fulfilled"}
 OPS_REVIEW_ROLES = {"Area Supervisor", "Supply Chain Manager", "HQ User", "System Manager", "Administrator"}
 FINANCE_REVIEW_ROLES = {"HQ Finance", "Accounts Manager", "HQ User", "System Manager", "Administrator"}
@@ -700,6 +702,7 @@ def _query_probable_giveaway_leakage(
 	start_day: date,
 	end_day: date,
 	max_results: int = 20,
+	max_pages: int = LEAKAGE_SCAN_MAX_PAGES,
 ) -> list[dict[str, Any]]:
 	base_params: list[tuple[str, Any]] = [
 		(
@@ -713,15 +716,19 @@ def _query_probable_giveaway_leakage(
 		("order", "business_date.desc,id.desc"),
 	]
 	result: list[dict[str, Any]] = []
-	page_size = max(25, min((max_results or 20) * 4, 100))
+	page_size = max(20, min(max_results or 20, 40))
 	offset = 0
+	pages_scanned = 0
 	while True:
+		if max_pages and pages_scanned >= max_pages:
+			break
 		order_rows = _supabase_get(
 			"pos_orders",
 			base_params + [("limit", str(page_size)), ("offset", str(offset))],
 		)
 		if not order_rows:
 			break
+		pages_scanned += 1
 		order_ids = [int(row.get("id") or 0) for row in order_rows if int(row.get("id") or 0)]
 		if not order_ids:
 			break
@@ -801,6 +808,26 @@ def _query_probable_giveaway_leakage(
 	return result
 
 
+def _leakage_window() -> tuple[date, date]:
+	leakage_end = _manila_today()
+	return leakage_end - timedelta(days=LEAKAGE_LOOKBACK_DAYS), leakage_end
+
+
+@frappe.whitelist()
+def get_campaign_giveaway_probable_leakage(
+	max_results: int | str | None = None,
+) -> dict[str, Any]:
+	_require_enabled()
+	_require_roles(EXCEPTION_ROLES, "You do not have exception access to Campaign Giveaways.")
+	window_start, window_end = _leakage_window()
+	limit = max(1, min(cint(max_results or 20), 50))
+	return {
+		"rows": _query_probable_giveaway_leakage(window_start, window_end, max_results=limit),
+		"window_start": window_start.isoformat(),
+		"window_end": window_end.isoformat(),
+	}
+
+
 @lru_cache(maxsize=1)
 def _location_store_labels() -> dict[int, str]:
 	labels: dict[int, str] = {}
@@ -847,8 +874,6 @@ def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, A
 		limit_page_length=20,
 	)
 	upcoming = [row for row in active_campaigns if row["remaining_days"] > 0 and row["required_daily_pace"] > 0 and row["status"] in APPROVED_STATES]
-	leakage_end = _manila_today()
-	leakage_start = leakage_end - timedelta(days=16)
 	return {
 		"summary": {
 			"total_campaigns": len(campaign_rows),
@@ -864,7 +889,8 @@ def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, A
 		"todays_schedule": todays_schedule,
 		"pace_watch": sorted(upcoming, key=lambda row: (-row["required_daily_pace"], row["campaign_name"]))[:10],
 		"open_exceptions": [_serialize_exception_row(row) for row in exceptions],
-		"probable_leakage": _query_probable_giveaway_leakage(leakage_start, leakage_end, max_results=10),
+		"probable_leakage": [],
+		"probable_leakage_deferred": True,
 	}
 
 
@@ -1144,11 +1170,10 @@ def get_campaign_giveaway_exceptions(campaign: str | None = None) -> dict[str, A
 		order_by="modified desc",
 		limit_page_length=300,
 	)
-	leakage_end = _manila_today()
-	leakage_start = leakage_end - timedelta(days=16)
 	return {
 		"rows": [_serialize_exception_row(row) for row in rows],
-		"probable_leakage": _query_probable_giveaway_leakage(leakage_start, leakage_end, max_results=20),
+		"probable_leakage": [],
+		"probable_leakage_deferred": True,
 	}
 
 
