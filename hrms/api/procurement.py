@@ -1017,9 +1017,9 @@ def get_goods_receipts_for_po(name):
 
 
 @frappe.whitelist()
-def get_invoices_for_po(name):
-    """Get invoices linked to a specific PO."""
-    return frappe.db.sql("""
+def get_invoices_for_po(name: str) -> list[dict[str, Any]]:
+	"""Get invoices linked to a specific PO."""
+	return frappe.db.sql("""
         SELECT name, invoice_no, invoice_no as invoice_number, invoice_date, due_date, status,
             supplier, supplier_name, purchase_order, purchase_order as po_number,
             subtotal, vat_amount, subtotal as net_total, vat_amount as tax_amount,

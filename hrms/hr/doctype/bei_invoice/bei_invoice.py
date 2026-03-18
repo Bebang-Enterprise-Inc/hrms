@@ -176,7 +176,7 @@ class BEIInvoice(Document):
 			return {"success": False, "message": _("3-way match failed")}
 
 	@frappe.whitelist()
-	def approve_variance(self, notes=None):
+	def approve_variance(self, notes: str | None = None):
 		"""Approve invoice despite variance."""
 		if self.status != "Variance Pending Approval":
 			frappe.throw(_("Invoice is not pending variance approval"))
@@ -201,7 +201,7 @@ class BEIInvoice(Document):
 		return {"success": True, "message": _("Variance approved - Invoice verified") + pi_message}
 
 	@frappe.whitelist()
-	def reject_variance(self, reason):
+	def reject_variance(self, reason: str):
 		"""Reject invoice due to variance."""
 		if self.status != "Variance Pending Approval":
 			frappe.throw(_("Invoice is not pending variance approval"))
@@ -473,7 +473,12 @@ class BEIInvoice(Document):
 			frappe.throw(_("Failed to submit Purchase Invoice: {0}").format(str(e)))
 
 	@frappe.whitelist()
-	def record_payment(self, amount, payment_date=None, reference=None):
+	def record_payment(
+		self,
+		amount: float | int | str,
+		payment_date: str | None = None,
+		reference: str | None = None,
+	):
 		"""Record a payment against this invoice."""
 		amount = flt(amount, 2)
 
@@ -503,3 +508,4 @@ class BEIInvoice(Document):
 	def on_cancel(self):
 		"""Handle invoice cancellation."""
 		self.status = "Cancelled"
+		self.db_set("status", self.status, update_modified=False)
