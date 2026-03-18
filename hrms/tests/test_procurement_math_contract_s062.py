@@ -17,11 +17,16 @@ def _install_fake_frappe():
 
 	frappe = types.ModuleType("frappe")
 	utils = types.ModuleType("frappe.utils")
+	model = types.ModuleType("frappe.model")
+	document = types.ModuleType("frappe.model.document")
 
 	class ValidationError(Exception):
 		pass
 
 	class PermissionError(Exception):
+		pass
+
+	class Document:
 		pass
 
 	def whitelist(*args, **kwargs):
@@ -65,13 +70,17 @@ def _install_fake_frappe():
 	utils.cint = lambda value: int(float(value or 0))
 	utils.getdate = lambda value=None: value or "2026-03-18"
 	utils.nowdate = lambda: "2026-03-18"
+	utils.now_datetime = lambda: "2026-03-18 00:00:00"
 	utils.add_days = lambda date_obj, days: date_obj
 	utils.date_diff = lambda end_date, start_date: 0
 	utils.get_first_day = lambda date_obj: date_obj
 	utils.get_last_day = lambda date_obj: date_obj
+	document.Document = Document
 
 	sys.modules["frappe"] = frappe
 	sys.modules["frappe.utils"] = utils
+	sys.modules["frappe.model"] = model
+	sys.modules["frappe.model.document"] = document
 
 
 def _install_stub_dependencies():
@@ -85,9 +94,13 @@ def _install_stub_dependencies():
 	delivery_policy.CFO_APPROVER_EMAIL = "butch@bebang.ph"
 	delivery_policy.append_approval_audit_log = lambda *args, **kwargs: None
 
+	standard_buying_bridge = types.ModuleType("hrms.utils.standard_buying_bridge")
+	standard_buying_bridge.apply_standard_buying_context = lambda *args, **kwargs: None
+
 	sys.modules["hrms.api"] = hrms_api
 	sys.modules["hrms.utils.bei_config"] = bei_config
 	sys.modules["hrms.utils.delivery_billing_policy"] = delivery_policy
+	sys.modules["hrms.utils.standard_buying_bridge"] = standard_buying_bridge
 
 
 _install_fake_frappe()
@@ -100,6 +113,14 @@ procurement_spec = importlib.util.spec_from_file_location(
 procurement = importlib.util.module_from_spec(procurement_spec)
 assert procurement_spec and procurement_spec.loader
 procurement_spec.loader.exec_module(procurement)
+
+purchase_order_spec = importlib.util.spec_from_file_location(
+	"bei_purchase_order_under_test_s062",
+	ROOT / "hrms" / "hr" / "doctype" / "bei_purchase_order" / "bei_purchase_order.py",
+)
+bei_purchase_order = importlib.util.module_from_spec(purchase_order_spec)
+assert purchase_order_spec and purchase_order_spec.loader
+purchase_order_spec.loader.exec_module(bei_purchase_order)
 
 
 class _InsertedDoc:
@@ -288,6 +309,23 @@ class TestProcurementMathContractS062(unittest.TestCase):
 		self.assertEqual(inserted_doc.insert_calls, 1)
 		self.assertEqual(captured_payload["invoice"], "INV-2026-00001")
 		self.assertEqual(captured_payload["payment_amount"], 142.10)
+
+	def test_purchase_order_doctype_rounds_vat_and_grand_total_to_centavos(self):
+		doc = types.SimpleNamespace(
+			items=[
+				types.SimpleNamespace(qty=3, unit_cost=4.55, vat_rate=12, vat_amount=0, amount=0),
+			],
+			discount_amount=0,
+			delivery_fee=0,
+		)
+
+		bei_purchase_order.BEIPurchaseOrder.calculate_totals(doc)
+
+		self.assertEqual(doc.items[0].vat_amount, 1.64)
+		self.assertEqual(doc.items[0].amount, 15.29)
+		self.assertEqual(doc.subtotal, 13.65)
+		self.assertEqual(doc.vat_amount, 1.64)
+		self.assertEqual(doc.grand_total, 15.29)
 
 
 if __name__ == "__main__":
