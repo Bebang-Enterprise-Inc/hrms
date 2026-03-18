@@ -196,6 +196,15 @@ STORE_OPS_ALLOWED_ROLES = [
 AREA_SUPERVISOR_ROLE = "Area Supervisor"
 ORDER_APPROVAL_FALLBACK_EMAIL = "edlice@bebang.ph"
 SYSTEM_APPROVER_ROLES = {"System Manager", "Administrator"}
+SCHEDULE_CANONICAL_STORE_TYPES = {"JV", "Managed Franchise", "Full Franchise"}
+SCHEDULE_STORE_TYPE_ALIASES = {
+	"jv": "JV",
+	"joint venture": "JV",
+	"managed franchise": "Managed Franchise",
+	"managedfranchise": "Managed Franchise",
+	"full franchise": "Full Franchise",
+	"fullfranchise": "Full Franchise",
+}
 COMMISSARY_WAREHOUSE_ALIAS_MAP = {
 	"COMMISSARYSHAW": "Shaw BLVD - BKI",
 	"SHAWCOMMISSARY": "Shaw BLVD - BKI",
@@ -327,6 +336,34 @@ def _designation_is_area_supervisor(designation):
 	return "AREA SUPERVISOR" in str(designation or "").upper()
 
 
+def _normalize_schedule_store_type(value: str | None) -> str:
+	text = " ".join(str(value or "").strip().replace("_", " ").replace("-", " ").split()).lower()
+	if not text:
+		return ""
+	return SCHEDULE_STORE_TYPE_ALIASES.get(text, str(value or "").strip())
+
+
+def _get_schedule_store_type_by_department() -> dict[str, str]:
+	if not frappe.db.table_exists("tabBEI Store Type"):
+		return {}
+
+	store_type_rows = frappe.get_all(
+		"BEI Store Type",
+		filters={"store": ["is", "set"]},
+		fields=["store", "store_type"],
+		order_by="store asc",
+	)
+	store_type_by_department = {}
+	for row in store_type_rows or []:
+		department = str(row.get("store") or "").strip()
+		if not department:
+			continue
+		store_type = _normalize_schedule_store_type(row.get("store_type"))
+		if store_type in SCHEDULE_CANONICAL_STORE_TYPES:
+			store_type_by_department[department] = store_type
+	return store_type_by_department
+
+
 def _normalize_user_store_surface(surface: str | None) -> str | None:
 	normalized = re.sub(r"[^a-z_]", "", str(surface or "").strip().lower())
 	return normalized or None
@@ -433,6 +470,7 @@ def _employee_schedule_store_row(
 
 def _get_store_schedule_locations() -> list[dict]:
 	"""Return active BEI retail store warehouses for scheduling surfaces."""
+	store_type_by_department = _get_schedule_store_type_by_department()
 	mapping_rows = []
 	if frappe.db.table_exists("tabBEI Warehouse Department Mapping"):
 		mapping_rows = frappe.get_all(
@@ -442,8 +480,36 @@ def _get_store_schedule_locations() -> list[dict]:
 			order_by="warehouse asc",
 		)
 
+	locations = []
+	seen = set()
+
+	def append_location(warehouse_row: dict | None, *, department: str | None = None, store_type: str | None = None):
+		if not warehouse_row:
+			return
+		warehouse_name = str(warehouse_row.get("name") or "").strip()
+		if not warehouse_name or warehouse_name in seen:
+			return
+		resolved_department = str(warehouse_row.get("department") or department or "").strip()
+		resolved_store_type = store_type_by_department.get(resolved_department)
+		if not resolved_store_type:
+			fallback_store_type = _normalize_schedule_store_type(store_type)
+			if not store_type_by_department and fallback_store_type in SCHEDULE_CANONICAL_STORE_TYPES:
+				resolved_store_type = fallback_store_type
+			else:
+				return
+		locations.append(
+			{
+				"name": warehouse_name,
+				"warehouse_name": warehouse_row.get("warehouse_name") or warehouse_name,
+				"department": resolved_department or None,
+				"store_type": resolved_store_type,
+				"custom_area_supervisor": warehouse_row.get("custom_area_supervisor"),
+			}
+		)
+		seen.add(warehouse_name)
+
 	if mapping_rows:
-		warehouse_rows = frappe.get_all(
+		mapped_warehouse_rows = frappe.get_all(
 			"Warehouse",
 			filters={
 				"name": ["in", [row.get("warehouse") for row in mapping_rows if row.get("warehouse")]],
@@ -453,63 +519,29 @@ def _get_store_schedule_locations() -> list[dict]:
 			fields=["name", "warehouse_name", "department", "custom_area_supervisor"],
 			order_by="warehouse_name asc",
 		)
-		warehouse_by_name = {row["name"]: row for row in warehouse_rows}
-		locations = []
-		seen = set()
+		warehouse_by_name = {row["name"]: row for row in mapped_warehouse_rows}
 		for mapping in mapping_rows:
-			warehouse = warehouse_by_name.get(mapping.get("warehouse"))
-			if not warehouse:
-				continue
-			warehouse_name = warehouse.get("name")
-			if warehouse_name in seen:
-				continue
-			locations.append(
-				{
-					"name": warehouse_name,
-					"warehouse_name": warehouse.get("warehouse_name") or warehouse_name,
-					"department": warehouse.get("department") or mapping.get("department"),
-					"store_type": mapping.get("store_type"),
-					"custom_area_supervisor": warehouse.get("custom_area_supervisor"),
-				}
+			append_location(
+				warehouse_by_name.get(mapping.get("warehouse")),
+				department=mapping.get("department"),
+				store_type=mapping.get("store_type"),
 			)
-			seen.add(warehouse_name)
-		return locations
 
-	if not frappe.db.table_exists("tabBEI Store Type"):
-		return []
+	if store_type_by_department:
+		warehouse_rows = frappe.get_all(
+			"Warehouse",
+			filters={
+				"department": ["in", list(store_type_by_department.keys())],
+				"is_group": 0,
+				"disabled": 0,
+			},
+			fields=["name", "warehouse_name", "department", "custom_area_supervisor"],
+			order_by="warehouse_name asc",
+		)
+		for row in warehouse_rows:
+			append_location(row)
 
-	store_types = frappe.get_all(
-		"BEI Store Type",
-		filters={"store": ["is", "set"]},
-		fields=["store", "store_type"],
-		order_by="store asc",
-	)
-	if not store_types:
-		return []
-
-	store_type_by_department = {
-		row["store"]: row.get("store_type") for row in store_types if row.get("store")
-	}
-	warehouse_rows = frappe.get_all(
-		"Warehouse",
-		filters={
-			"department": ["in", list(store_type_by_department.keys())],
-			"is_group": 0,
-			"disabled": 0,
-		},
-		fields=["name", "warehouse_name", "department", "custom_area_supervisor"],
-		order_by="warehouse_name asc",
-	)
-	return [
-		{
-			"name": row["name"],
-			"warehouse_name": row.get("warehouse_name") or row["name"],
-			"department": row.get("department"),
-			"store_type": store_type_by_department.get(row.get("department")),
-			"custom_area_supervisor": row.get("custom_area_supervisor"),
-		}
-		for row in warehouse_rows
-	]
+	return locations
 
 
 def _get_commissary_schedule_locations() -> list[dict]:

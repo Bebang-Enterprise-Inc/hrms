@@ -195,6 +195,112 @@ class TestS055ScheduleStoreResolution(unittest.TestCase):
 			[{"name": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"}],
 		)
 
+	def test_get_store_schedule_locations_filters_polluted_mapping_and_unions_canonical_stores(self):
+		def fake_table_exists(table_name):
+			return table_name in {"tabBEI Warehouse Department Mapping", "tabBEI Store Type"}
+
+		def fake_get_all(doctype, **kwargs):
+			if doctype == "BEI Warehouse Department Mapping":
+				return [
+					{"warehouse": "3MD Logistics - Camangyanan", "department": "3MD Logistics", "store_type": ""},
+					{"warehouse": "TEST-COMMISSARY - BKI", "department": "COMMISSARY SHAW", "store_type": ""},
+					{"warehouse": "SM Bicutan - BEI", "department": "SM Bicutan", "store_type": "JV"},
+				]
+			if doctype == "BEI Store Type":
+				return [
+					{"store": "SM Bicutan", "store_type": "JV"},
+					{"store": "TEST-STORE-BGC", "store_type": "Full Franchise"},
+				]
+			if doctype == "Warehouse":
+				filters = kwargs.get("filters") or {}
+				if "name" in filters:
+					return [
+						{
+							"name": "3MD Logistics - Camangyanan",
+							"warehouse_name": "3MD Logistics",
+							"department": "3MD Logistics",
+							"custom_area_supervisor": None,
+						},
+						{
+							"name": "TEST-COMMISSARY - BKI",
+							"warehouse_name": "TEST-COMMISSARY",
+							"department": "COMMISSARY SHAW",
+							"custom_area_supervisor": None,
+						},
+						{
+							"name": "SM Bicutan - BEI",
+							"warehouse_name": "SM Bicutan",
+							"department": "SM Bicutan",
+							"custom_area_supervisor": "test.area@bebang.ph",
+						},
+					]
+				if "department" in filters:
+					return [
+						{
+							"name": "SM Bicutan - BEI",
+							"warehouse_name": "SM Bicutan",
+							"department": "SM Bicutan",
+							"custom_area_supervisor": "test.area@bebang.ph",
+						},
+						{
+							"name": "TEST-STORE-BGC - BEI",
+							"warehouse_name": "TEST-STORE-BGC",
+							"department": "TEST-STORE-BGC",
+							"custom_area_supervisor": "test.area@bebang.ph",
+						},
+					]
+			return []
+
+		store.frappe.db.table_exists = MagicMock(side_effect=fake_table_exists)
+		store.frappe.get_all = MagicMock(side_effect=fake_get_all)
+
+		result = store._get_store_schedule_locations()
+
+		self.assertEqual(
+			result,
+			[
+				{
+					"name": "SM Bicutan - BEI",
+					"warehouse_name": "SM Bicutan",
+					"department": "SM Bicutan",
+					"store_type": "JV",
+					"custom_area_supervisor": "test.area@bebang.ph",
+				},
+				{
+					"name": "TEST-STORE-BGC - BEI",
+					"warehouse_name": "TEST-STORE-BGC",
+					"department": "TEST-STORE-BGC",
+					"store_type": "Full Franchise",
+					"custom_area_supervisor": "test.area@bebang.ph",
+				},
+			],
+		)
+
+	def test_get_user_store_store_schedule_system_user_uses_filtered_schedule_rows(self):
+		store.frappe.session.user = "sam@bebang.ph"
+		store.frappe.get_roles = MagicMock(return_value=["System Manager"])
+		store.frappe.db.get_value = MagicMock(return_value=None)
+
+		with patch.object(
+			store,
+			"_get_store_schedule_locations",
+			return_value=[
+				{"name": "SM Bicutan - BEI", "warehouse_name": "SM Bicutan"},
+				{"name": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"},
+			],
+		):
+			result = store.get_user_store(surface="store_schedule")
+
+		self.assertEqual(result["role"], "HR User")
+		self.assertEqual(result["default_store"], "SM Bicutan - BEI")
+		self.assertEqual(
+			result["stores"],
+			[
+				{"name": "SM Bicutan - BEI", "warehouse_name": "SM Bicutan"},
+				{"name": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"},
+			],
+		)
+
 	def test_get_user_store_area_designation_uses_area_mapping_without_role_flag(self):
 		active_employee = {
 			"name": "TEST-AREA-001",
