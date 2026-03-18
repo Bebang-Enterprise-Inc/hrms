@@ -6,6 +6,7 @@ commands:
   - billing
   - biometric
   - biometric-monitoring
+  - campaign-giveaways
   - clearance
   - commissary
   - communication
@@ -93,6 +94,15 @@ modules:
       - BIO
     scenario_files:
       - docs/testing/scenarios/modules/biometric-monitoring.md
+  - key: campaign-giveaways
+    status: ready
+    command: campaign-giveaways
+    scenario_count: 6
+    route_count_hint: 6
+    prefixes:
+      - CG
+    scenario_files:
+      - docs/testing/scenarios/modules/campaign-giveaways.md
   - key: clearance
     status: ready
     command: clearance

@@ -1,0 +1,245 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "autoname": "naming_series:",
+  "creation": "2026-03-18 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "campaign",
+    "campaign_issue",
+    "status",
+    "severity",
+    "exception_type",
+    "column_break_identity",
+    "source_location",
+    "item_code",
+    "issue_date",
+    "requested_quantity",
+    "attempted_value",
+    "message",
+    "linked_alert_reference",
+    "linked_alert_payload_json",
+    "resolution_code",
+    "resolution_notes",
+    "created_by",
+    "resolved_by",
+    "resolved_at"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "BEI-CGX-.YYYY.-.#####",
+      "reqd": 1
+    },
+    {
+      "fieldname": "campaign",
+      "fieldtype": "Link",
+      "label": "Campaign",
+      "options": "BEI Campaign Giveaway",
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "campaign_issue",
+      "fieldtype": "Link",
+      "label": "Campaign Issue",
+      "options": "BEI Campaign Giveaway Issue"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Open\nLinked\nResolved\nIgnored",
+      "default": "Open",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "severity",
+      "fieldtype": "Select",
+      "label": "Severity",
+      "options": "High\nMedium\nLow",
+      "default": "High",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "exception_type",
+      "fieldtype": "Select",
+      "label": "Exception Type",
+      "options": "Quantity Overrun\nDaily Cap Exceeded\nSource Not Approved\nOutside Campaign Window\nInsufficient Stock\nValue Tolerance Breach\nLeaked POS Giveaway\nCampaign Link Required\nUnauthorized Giveaway",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "column_break_identity",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "source_location",
+      "fieldtype": "Link",
+      "label": "Source Location",
+      "options": "Warehouse",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item Code",
+      "options": "Item"
+    },
+    {
+      "fieldname": "issue_date",
+      "fieldtype": "Date",
+      "label": "Issue Date",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "requested_quantity",
+      "fieldtype": "Float",
+      "label": "Requested Quantity",
+      "precision": 3
+    },
+    {
+      "fieldname": "attempted_value",
+      "fieldtype": "Currency",
+      "label": "Attempted Value"
+    },
+    {
+      "fieldname": "message",
+      "fieldtype": "Small Text",
+      "label": "Message"
+    },
+    {
+      "fieldname": "linked_alert_reference",
+      "fieldtype": "Data",
+      "label": "Linked Alert Reference"
+    },
+    {
+      "fieldname": "linked_alert_payload_json",
+      "fieldtype": "JSON",
+      "label": "Linked Alert Payload"
+    },
+    {
+      "fieldname": "resolution_code",
+      "fieldtype": "Data",
+      "label": "Resolution Code"
+    },
+    {
+      "fieldname": "resolution_notes",
+      "fieldtype": "Small Text",
+      "label": "Resolution Notes"
+    },
+    {
+      "fieldname": "created_by",
+      "fieldtype": "Link",
+      "label": "Created By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "resolved_by",
+      "fieldtype": "Link",
+      "label": "Resolved By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "resolved_at",
+      "fieldtype": "Datetime",
+      "label": "Resolved At",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-03-18 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Campaign Giveaway Exception",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Administrator",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "HQ User",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "HQ Finance",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Marketing Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
