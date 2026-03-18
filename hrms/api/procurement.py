@@ -1067,6 +1067,8 @@ def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, 
     if isinstance(data, str):
         data = frappe.parse_json(data)
 
+    po = None
+
     # AUDIT CONTROL 2.4: Validate PO approval for >₱500K
     purchase_order = data.get("purchase_order")
     if purchase_order:
@@ -1098,9 +1100,38 @@ def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, 
                 title=_("Invalid Date Sequence")
             )
 
+        if not data.get("warehouse") and po.ship_to:
+            data["warehouse"] = po.ship_to
+
+    received_by = (data.get("received_by") or "").strip()
+    if received_by and not frappe.db.exists("Employee", received_by):
+        employee_match = frappe.db.get_value("Employee", {"employee_name": received_by}, "name")
+        if employee_match:
+            data["received_by"] = employee_match
+        else:
+            data.pop("received_by", None)
+
     # Map 'rate' to 'unit_cost' in items if needed
+    po_item_map = {}
+    if po:
+        po_item_map = {row.item_code: row for row in po.items}
+
     if "items" in data:
         for item in data["items"]:
+            po_item = po_item_map.get(item.get("item_code"))
+
+            if po_item:
+                if not item.get("item_name"):
+                    item["item_name"] = po_item.item_name
+                if not item.get("description"):
+                    item["description"] = po_item.description
+                if not item.get("ordered_qty"):
+                    item["ordered_qty"] = po_item.qty
+                if item.get("unit_cost") in (None, ""):
+                    item["unit_cost"] = po_item.unit_cost
+                if not item.get("uom"):
+                    item["uom"] = po_item.uom
+
             if "rate" in item and "unit_cost" not in item:
                 item["unit_cost"] = item.pop("rate")
             # Strip invalid UOM to avoid LinkValidationError
