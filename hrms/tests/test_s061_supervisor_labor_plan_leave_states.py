@@ -213,7 +213,9 @@ class TestS061LeaveAwareMerging(unittest.TestCase):
 			patch.object(
 				supervisor,
 				"add_days",
-				side_effect=lambda value, days: (date.fromisoformat(str(value)) + timedelta(days=days)).isoformat(),
+				side_effect=lambda value, days: (
+					date.fromisoformat(str(value)) + timedelta(days=days)
+				).isoformat(),
 			),
 			patch.object(supervisor.frappe, "get_all", side_effect=fake_get_all),
 		):
