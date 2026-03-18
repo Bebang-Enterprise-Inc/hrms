@@ -6,6 +6,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime, getdate, add_days
 from hrms.utils.bei_config import get_company
+from hrms.utils.procurement_math import calculate_goods_receipt_gross_total
 from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 
 
@@ -65,14 +66,35 @@ class BEIInvoice(Document):
     def load_reference_amounts(self):
         """Load PO and GR amounts for 3-way match."""
         if self.purchase_order:
-            self.po_amount = flt(frappe.db.get_value(
-                "BEI Purchase Order", self.purchase_order, "grand_total"
-            ))
+            self.po_amount = flt(
+                frappe.db.get_value("BEI Purchase Order", self.purchase_order, "grand_total")
+            )
 
         if self.goods_receipt:
-            self.gr_amount = flt(frappe.db.get_value(
-                "BEI Goods Receipt", self.goods_receipt, "total_amount"
-            ))
+            po_items = frappe.db.sql(
+                """
+                SELECT item_code, qty, unit_cost, vat_rate, vat_amount
+                FROM `tabBEI PO Item`
+                WHERE parent = %s
+                ORDER BY idx
+                """,
+                (self.purchase_order,),
+                as_dict=True,
+            )
+            gr_items = frappe.db.sql(
+                """
+                SELECT item_code, accepted_qty, received_qty, rejected_qty, unit_cost
+                FROM `tabBEI GR Item`
+                WHERE parent = %s
+                ORDER BY idx
+                """,
+                (self.goods_receipt,),
+                as_dict=True,
+            )
+            receipt_slice_total = calculate_goods_receipt_gross_total(gr_items, po_items)
+            self.gr_amount = receipt_slice_total
+            if self.purchase_order:
+                self.po_amount = receipt_slice_total
 
     def perform_three_way_match(self):
         """Perform 3-way match between PO, GR, and Invoice."""
