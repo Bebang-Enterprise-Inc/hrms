@@ -336,6 +336,7 @@ class BEIInvoice(Document):
 				"company": get_company(),
 				"currency": "PHP",
 				"buying_price_list": "Standard Buying",
+				"disable_rounded_total": 1,
 				"update_stock": 0,  # Stock already updated via PR
 				"is_return": 0,
 				"bei_invoice": self.name,  # Reference back
@@ -347,6 +348,10 @@ class BEIInvoice(Document):
 			pi,
 			store_label=bei_gr.warehouse or bei_po.ship_to,
 		)
+
+		# Keep ERPNext payable totals aligned with BEI invoice totals.
+		if flt(self.vat_amount, 2) > 0:
+			self._add_input_vat_tax(pi)
 
 		# Add withholding tax (EWT) if applicable
 		if flt(self.withholding_tax, 2) > 0:
@@ -375,6 +380,35 @@ class BEIInvoice(Document):
 				"BEI Invoice Integration Error",
 			)
 			frappe.throw(_("Failed to create Frappe Purchase Invoice: {0}").format(str(e)))
+
+	def _add_input_vat_tax(self, pi):
+		"""Add input VAT to the Purchase Invoice so payable matches the BEI invoice."""
+		vat_account = frappe.db.get_value(
+			"Account",
+			{"account_number": "1105103", "company": get_company()},
+			"name",
+		)
+		if not vat_account:
+			vat_account = frappe.db.get_value(
+				"Account",
+				{"account_name": ["like", "INPUT VAT%"], "company": get_company()},
+				"name",
+			)
+
+		if not vat_account:
+			frappe.throw(_("Input VAT account 1105103 is not configured for {0}.").format(get_company()))
+
+		pi.append(
+			"taxes",
+			{
+				"charge_type": "Actual",
+				"account_head": vat_account,
+				"description": "Input VAT (goods)",
+				"tax_amount": flt(self.vat_amount, 2),
+				"category": "Total",
+				"add_deduct_tax": "Add",
+			},
+		)
 
 	def _find_po_item(self, frappe_po_name, item_code):
 		"""Find Purchase Order Item for linking."""
