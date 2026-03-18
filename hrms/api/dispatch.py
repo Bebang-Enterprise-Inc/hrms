@@ -1571,6 +1571,7 @@ def preview_trip_stops(route_name: str, trip_date: str | None = None):
 	"""Preview stops and pending store orders for a proposed trip."""
 	_check_scm_permission(SCM_DISPATCH_ROLES, "preview trip stops")
 	route = frappe.get_doc("BEI Route", route_name)
+	trip_route_name = route.route_name or route_name
 
 	if not route.active:
 		frappe.throw(_("Route is not active"))
@@ -1634,6 +1635,7 @@ def create_trip_from_route(
 	_check_scm_permission(SCM_DISPATCH_ROLES, "create trips from routes")
 
 	route = frappe.get_doc("BEI Route", route_name)
+	trip_route_name = route.route_name or route_name
 
 	if not route.active:
 		frappe.throw(_("Route is not active"))
@@ -1642,10 +1644,10 @@ def create_trip_from_route(
 
 	# G-069: UX pre-check for duplicate trip (DB constraint is the real guard)
 	existing_trip = frappe.db.get_value(
-		"BEI Distribution Trip", {"route_name": route_name, "trip_date": trip_date}, "name"
+		"BEI Distribution Trip", {"route_name": trip_route_name, "trip_date": trip_date}, "name"
 	)
 	if existing_trip:
-		return _duplicate_trip_response(route_name, trip_date, existing_trip)
+		return _duplicate_trip_response(trip_route_name, trip_date, existing_trip)
 
 	# Resolve vehicle details
 	vehicle_plate = None
@@ -1742,10 +1744,10 @@ def create_trip_from_route(
 		if not _is_duplicate_trip_insert_error(exc):
 			raise
 		existing_trip = frappe.db.get_value(
-			"BEI Distribution Trip", {"route_name": route_name, "trip_date": trip_date}, "name"
+			"BEI Distribution Trip", {"route_name": trip_route_name, "trip_date": trip_date}, "name"
 		)
 		if existing_trip:
-			return _duplicate_trip_response(route_name, trip_date, existing_trip)
+			return _duplicate_trip_response(trip_route_name, trip_date, existing_trip)
 		raise exc
 
 	return {

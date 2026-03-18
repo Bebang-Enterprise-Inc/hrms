@@ -388,7 +388,10 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		trip.insert = MagicMock(side_effect=duplicate_cls("duplicate trip"))
 
 		def _get_value(doctype, filters=None, fieldname=None):
-			if doctype == "BEI Distribution Trip":
+			if doctype == "BEI Distribution Trip" and filters == {
+				"route_name": route.route_name,
+				"trip_date": "2026-02-28",
+			}:
 				return "TRIP-EXISTING-0002"
 			return None
 
@@ -408,6 +411,7 @@ class TestTripDriverEstimatedMinutesS10(unittest.TestCase):
 		self.assertEqual(result["code"], "TRIP_ALREADY_EXISTS")
 		self.assertEqual(result["error_code"], "TRIP_ALREADY_EXISTS")
 		self.assertEqual(result["existing_trip"], "TRIP-EXISTING-0002")
+		self.assertEqual(result["route_name"], route.route_name)
 
 	def test_enable_role_gated_write_sets_ignore_user_permissions(self):
 		doc = types.SimpleNamespace(flags=None)
