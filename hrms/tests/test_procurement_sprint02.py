@@ -168,6 +168,19 @@ class _FormDoc:
 		return self
 
 
+class _InsertedDoc:
+	def __init__(self, payload, name="INV-TEST-0001"):
+		self.payload = dict(payload)
+		self.name = name
+		self.insert_calls = 0
+		for key, value in self.payload.items():
+			setattr(self, key, value)
+
+	def insert(self, ignore_permissions=False):
+		self.insert_calls += 1
+		return self
+
+
 class TestProcurementSprint02(unittest.TestCase):
 	def setUp(self):
 		procurement.frappe.session = types.SimpleNamespace(user="Administrator")
@@ -582,6 +595,104 @@ class TestProcurementSprint02(unittest.TestCase):
 
 		self.assertTrue(result["success"])
 		self.assertEqual(inserted_payload["received_by"], "HR-EMP-0001")
+
+	def test_create_invoice_backfills_supplier_context_from_purchase_order(self):
+		gr_doc = types.SimpleNamespace(
+			name="GR-TEST-0001",
+			purchase_order="PO-TEST-0001",
+		)
+		po_doc = types.SimpleNamespace(
+			name="PO-TEST-0001",
+			po_date="2026-02-28",
+			grand_total=1200,
+			mae_approval=1,
+			butch_approval=1,
+			supplier="SUP-001",
+			supplier_name="Supplier A",
+		)
+		captured = {}
+
+		def _get_doc(arg, *args, **kwargs):
+			if isinstance(arg, str) and arg == "BEI Goods Receipt":
+				return gr_doc
+			if isinstance(arg, str) and arg == "BEI Purchase Order":
+				return po_doc
+			if isinstance(arg, dict):
+				doc = _InsertedDoc(arg)
+				captured["invoice"] = doc
+				return doc
+			raise AssertionError(f"Unexpected get_doc call: {arg!r}")
+
+		procurement.frappe.db.exists = MagicMock(return_value="GR-TEST-0001")
+		procurement.frappe.get_doc = MagicMock(side_effect=_get_doc)
+
+		result = procurement.create_invoice(
+			{
+				"purchase_order": "PO-TEST-0001",
+				"goods_receipt": "GR-TEST-0001",
+				"supplier_invoice_no": "SI-0001",
+				"invoice_date": "2026-03-01",
+				"due_date": "2026-03-31",
+				"subtotal": 1000,
+				"vat_amount": 200,
+				"invoice_attachment": "/files/test.png",
+			}
+		)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(captured["invoice"].supplier, "SUP-001")
+		self.assertEqual(captured["invoice"].supplier_name, "Supplier A")
+		self.assertEqual(captured["invoice"].insert_calls, 1)
+
+	def test_create_invoice_backfills_purchase_order_and_supplier_from_goods_receipt(self):
+		gr_doc = types.SimpleNamespace(
+			name="GR-TEST-0001",
+			purchase_order="PO-TEST-0002",
+			supplier="SUP-002",
+			supplier_name="Supplier B",
+		)
+		po_doc = types.SimpleNamespace(
+			name="PO-TEST-0002",
+			po_date="2026-02-28",
+			grand_total=850,
+			mae_approval=1,
+			butch_approval=1,
+			supplier="SUP-002",
+			supplier_name="Supplier B",
+		)
+		captured = {}
+
+		def _get_doc(arg, *args, **kwargs):
+			if isinstance(arg, str) and arg == "BEI Goods Receipt":
+				return gr_doc
+			if isinstance(arg, str) and arg == "BEI Purchase Order":
+				return po_doc
+			if isinstance(arg, dict):
+				doc = _InsertedDoc(arg, name="INV-TEST-0002")
+				captured["invoice"] = doc
+				return doc
+			raise AssertionError(f"Unexpected get_doc call: {arg!r}")
+
+		procurement.frappe.db.exists = MagicMock(return_value="GR-TEST-0001")
+		procurement.frappe.get_doc = MagicMock(side_effect=_get_doc)
+
+		result = procurement.create_invoice(
+			{
+				"goods_receipt": "GR-TEST-0001",
+				"supplier_invoice_no": "SI-0002",
+				"invoice_date": "2026-03-01",
+				"due_date": "2026-03-31",
+				"subtotal": 850,
+				"vat_amount": 0,
+				"invoice_attachment": "/files/test.png",
+			}
+		)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(captured["invoice"].purchase_order, "PO-TEST-0002")
+		self.assertEqual(captured["invoice"].supplier, "SUP-002")
+		self.assertEqual(captured["invoice"].supplier_name, "Supplier B")
+		self.assertEqual(captured["invoice"].insert_calls, 1)
 
 	def test_bei_purchase_order_doctype_is_submittable(self):
 		doctype_path = (

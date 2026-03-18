@@ -69,6 +69,31 @@ def _populate_payment_request_invoice_context(data: dict[str, Any], invoice: Any
         data["rfp_type"] = "Vendor Invoice"
 
 
+def _populate_invoice_context(
+    data: dict[str, Any],
+    purchase_order: Any | None = None,
+    goods_receipt: Any | None = None,
+) -> None:
+    """Backfill invoice party context from linked procurement documents."""
+    if not data.get("purchase_order") and getattr(goods_receipt, "purchase_order", None):
+        data["purchase_order"] = goods_receipt.purchase_order
+
+    if not data.get("supplier"):
+        supplier = getattr(purchase_order, "supplier", None) or getattr(goods_receipt, "supplier", None)
+        if supplier:
+            data["supplier"] = supplier
+
+    if not data.get("supplier_name"):
+        supplier_name = (
+            getattr(purchase_order, "supplier_name", None)
+            or getattr(goods_receipt, "supplier_name", None)
+        )
+        if not supplier_name and data.get("supplier"):
+            supplier_name = frappe.db.get_value("BEI Supplier", data["supplier"], "supplier_name")
+        if supplier_name:
+            data["supplier_name"] = supplier_name
+
+
 def _require_roles(allowed_roles: set[str], message: str) -> None:
     """Enforce role-based access for sensitive procurement actions."""
     user = frappe.session.user or "Guest"
@@ -1348,6 +1373,15 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
     data = _normalize_invoice_payload(data)
 
     purchase_order = data.get("purchase_order")
+    goods_receipt = data.get("goods_receipt")
+    po = None
+    gr_doc = None
+
+    if goods_receipt:
+        gr_doc = frappe.get_doc("BEI Goods Receipt", goods_receipt)
+        _populate_invoice_context(data, goods_receipt=gr_doc)
+        purchase_order = data.get("purchase_order") or purchase_order
+
     if purchase_order:
         # AUDIT CONTROL 2.1: Check GR exists for this PO
         # Note: GR status can be "Accepted" after the receive+inspect workflow
@@ -1376,6 +1410,7 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
 
         # AUDIT CONTROL 2.2: Invoice date >= PO date
         po = frappe.get_doc("BEI Purchase Order", purchase_order)
+        _populate_invoice_context(data, purchase_order=po, goods_receipt=gr_doc)
         invoice_date = getdate(data.get("invoice_date") or nowdate())
         po_date = getdate(po.po_date)
         if invoice_date < po_date:
