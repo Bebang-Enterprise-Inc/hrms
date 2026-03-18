@@ -7,10 +7,12 @@ Handles store ordering, receiving, and FQI reports for my.bebang.ph
 """
 
 import base64
+import ast
 import hashlib
 import json
 import re
 from contextlib import contextmanager
+from pathlib import Path
 
 import frappe
 from frappe import _
@@ -205,6 +207,7 @@ SCHEDULE_STORE_TYPE_ALIASES = {
 	"full franchise": "Full Franchise",
 	"fullfranchise": "Full Franchise",
 }
+_SCHEDULE_FALLBACK_STORE_ROWS_CACHE = None
 COMMISSARY_WAREHOUSE_ALIAS_MAP = {
 	"COMMISSARYSHAW": "Shaw BLVD - BKI",
 	"SHAWCOMMISSARY": "Shaw BLVD - BKI",
@@ -364,6 +367,49 @@ def _get_schedule_store_type_by_department() -> dict[str, str]:
 	return store_type_by_department
 
 
+def _load_schedule_fallback_store_rows() -> list[dict]:
+	"""Load canonical schedule stores from the checked-in store-type seed script."""
+	global _SCHEDULE_FALLBACK_STORE_ROWS_CACHE
+	if _SCHEDULE_FALLBACK_STORE_ROWS_CACHE is not None:
+		return list(_SCHEDULE_FALLBACK_STORE_ROWS_CACHE)
+
+	rows = []
+	try:
+		script_path = Path(__file__).resolve().parents[2] / "scripts" / "seed_store_types.py"
+		source = script_path.read_text(encoding="utf-8")
+		module = ast.parse(source)
+		seed_rows = []
+		for node in module.body:
+			if not isinstance(node, ast.Assign):
+				continue
+			for target in node.targets:
+				if isinstance(target, ast.Name) and target.id == "STORE_TYPES":
+					seed_rows = ast.literal_eval(node.value)
+					break
+			if seed_rows:
+				break
+		for row in seed_rows or []:
+			store_name = str((row or {}).get("store") or "").strip()
+			store_type = _normalize_schedule_store_type((row or {}).get("store_type"))
+			if store_name and store_type in SCHEDULE_CANONICAL_STORE_TYPES:
+				rows.append({"store": store_name, "store_type": store_type})
+	except Exception:
+		rows = []
+
+	# Keep a safe manual QA sandbox available even when master data is empty.
+	rows.append({"store": "TEST-STORE-BGC", "store_type": "Managed Franchise"})
+	seen = set()
+	deduped = []
+	for row in rows:
+		key = (str(row.get("store") or "").strip(), str(row.get("store_type") or "").strip())
+		if not key[0] or key in seen:
+			continue
+		seen.add(key)
+		deduped.append(row)
+	_SCHEDULE_FALLBACK_STORE_ROWS_CACHE = deduped
+	return list(_SCHEDULE_FALLBACK_STORE_ROWS_CACHE)
+
+
 def _normalize_user_store_surface(surface: str | None) -> str | None:
 	normalized = re.sub(r"[^a-z_]", "", str(surface or "").strip().lower())
 	return normalized or None
@@ -389,6 +435,24 @@ def _find_schedule_store_row(schedule_rows: list[dict], *candidates: str | None)
 	for row in schedule_rows:
 		if candidate_keys.intersection(_schedule_row_keys(row)):
 			return row
+	return None
+
+
+def _resolve_schedule_warehouse_row(warehouse_rows: list[dict], *candidates: str | None) -> dict | None:
+	warehouse_by_name = {str(row.get("name") or "").strip(): row for row in warehouse_rows if row.get("name")}
+	for candidate in candidates:
+		text = str(candidate or "").strip()
+		if not text:
+			continue
+		try:
+			resolved = resolve_warehouse(text)
+		except Exception:
+			resolved = None
+		if resolved and warehouse_by_name.get(resolved):
+			return warehouse_by_name[resolved]
+	matched = _find_schedule_store_row(warehouse_rows, *candidates)
+	if matched:
+		return matched
 	return None
 
 
@@ -470,7 +534,6 @@ def _employee_schedule_store_row(
 
 def _get_store_schedule_locations() -> list[dict]:
 	"""Return active BEI retail store warehouses for scheduling surfaces."""
-	store_type_by_department = _get_schedule_store_type_by_department()
 	mapping_rows = []
 	if frappe.db.table_exists("tabBEI Warehouse Department Mapping"):
 		mapping_rows = frappe.get_all(
@@ -479,6 +542,24 @@ def _get_store_schedule_locations() -> list[dict]:
 			fields=["warehouse", "department", "store_type"],
 			order_by="warehouse asc",
 		)
+
+	store_type_rows = []
+	if frappe.db.table_exists("tabBEI Store Type"):
+		store_type_rows = frappe.get_all(
+			"BEI Store Type",
+			filters={"store": ["is", "set"]},
+			fields=["store", "store_type"],
+			order_by="store asc",
+		)
+	if not mapping_rows and not store_type_rows:
+		store_type_rows = _load_schedule_fallback_store_rows()
+
+	warehouse_rows = frappe.get_all(
+		"Warehouse",
+		filters={"is_group": 0, "disabled": 0},
+		fields=["name", "warehouse_name", "custom_area_supervisor"],
+		order_by="warehouse_name asc",
+	)
 
 	locations = []
 	seen = set()
@@ -489,14 +570,10 @@ def _get_store_schedule_locations() -> list[dict]:
 		warehouse_name = str(warehouse_row.get("name") or "").strip()
 		if not warehouse_name or warehouse_name in seen:
 			return
-		resolved_department = str(warehouse_row.get("department") or department or "").strip()
-		resolved_store_type = store_type_by_department.get(resolved_department)
-		if not resolved_store_type:
-			fallback_store_type = _normalize_schedule_store_type(store_type)
-			if not store_type_by_department and fallback_store_type in SCHEDULE_CANONICAL_STORE_TYPES:
-				resolved_store_type = fallback_store_type
-			else:
-				return
+		resolved_department = str(department or "").strip()
+		resolved_store_type = _normalize_schedule_store_type(store_type)
+		if resolved_store_type not in SCHEDULE_CANONICAL_STORE_TYPES:
+			return
 		locations.append(
 			{
 				"name": warehouse_name,
@@ -509,37 +586,23 @@ def _get_store_schedule_locations() -> list[dict]:
 		seen.add(warehouse_name)
 
 	if mapping_rows:
-		mapped_warehouse_rows = frappe.get_all(
-			"Warehouse",
-			filters={
-				"name": ["in", [row.get("warehouse") for row in mapping_rows if row.get("warehouse")]],
-				"is_group": 0,
-				"disabled": 0,
-			},
-			fields=["name", "warehouse_name", "department", "custom_area_supervisor"],
-			order_by="warehouse_name asc",
-		)
-		warehouse_by_name = {row["name"]: row for row in mapped_warehouse_rows}
 		for mapping in mapping_rows:
 			append_location(
-				warehouse_by_name.get(mapping.get("warehouse")),
+				_resolve_schedule_warehouse_row(
+					warehouse_rows,
+					mapping.get("warehouse"),
+					mapping.get("department"),
+				),
 				department=mapping.get("department"),
 				store_type=mapping.get("store_type"),
 			)
 
-	if store_type_by_department:
-		warehouse_rows = frappe.get_all(
-			"Warehouse",
-			filters={
-				"department": ["in", list(store_type_by_department.keys())],
-				"is_group": 0,
-				"disabled": 0,
-			},
-			fields=["name", "warehouse_name", "department", "custom_area_supervisor"],
-			order_by="warehouse_name asc",
+	for store_type_row in store_type_rows:
+		append_location(
+			_resolve_schedule_warehouse_row(warehouse_rows, store_type_row.get("store")),
+			department=store_type_row.get("store"),
+			store_type=store_type_row.get("store_type"),
 		)
-		for row in warehouse_rows:
-			append_location(row)
 
 	return locations
 

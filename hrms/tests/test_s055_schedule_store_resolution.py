@@ -212,43 +212,28 @@ class TestS055ScheduleStoreResolution(unittest.TestCase):
 					{"store": "TEST-STORE-BGC", "store_type": "Full Franchise"},
 				]
 			if doctype == "Warehouse":
-				filters = kwargs.get("filters") or {}
-				if "name" in filters:
-					return [
-						{
-							"name": "3MD Logistics - Camangyanan",
-							"warehouse_name": "3MD Logistics",
-							"department": "3MD Logistics",
-							"custom_area_supervisor": None,
-						},
-						{
-							"name": "TEST-COMMISSARY - BKI",
-							"warehouse_name": "TEST-COMMISSARY",
-							"department": "COMMISSARY SHAW",
-							"custom_area_supervisor": None,
-						},
-						{
-							"name": "SM Bicutan - BEI",
-							"warehouse_name": "SM Bicutan",
-							"department": "SM Bicutan",
-							"custom_area_supervisor": "test.area@bebang.ph",
-						},
-					]
-				if "department" in filters:
-					return [
-						{
-							"name": "SM Bicutan - BEI",
-							"warehouse_name": "SM Bicutan",
-							"department": "SM Bicutan",
-							"custom_area_supervisor": "test.area@bebang.ph",
-						},
-						{
-							"name": "TEST-STORE-BGC - BEI",
-							"warehouse_name": "TEST-STORE-BGC",
-							"department": "TEST-STORE-BGC",
-							"custom_area_supervisor": "test.area@bebang.ph",
-						},
-					]
+				return [
+					{
+						"name": "3MD Logistics - Camangyanan",
+						"warehouse_name": "3MD Logistics",
+						"custom_area_supervisor": None,
+					},
+					{
+						"name": "TEST-COMMISSARY - BKI",
+						"warehouse_name": "TEST-COMMISSARY",
+						"custom_area_supervisor": None,
+					},
+					{
+						"name": "SM Bicutan - BEI",
+						"warehouse_name": "SM Bicutan",
+						"custom_area_supervisor": "test.area@bebang.ph",
+					},
+					{
+						"name": "TEST-STORE-BGC - BEI",
+						"warehouse_name": "TEST-STORE-BGC",
+						"custom_area_supervisor": "test.area@bebang.ph",
+					},
+				]
 			return []
 
 		store.frappe.db.table_exists = MagicMock(side_effect=fake_table_exists)
@@ -271,6 +256,123 @@ class TestS055ScheduleStoreResolution(unittest.TestCase):
 					"warehouse_name": "TEST-STORE-BGC",
 					"department": "TEST-STORE-BGC",
 					"store_type": "Full Franchise",
+					"custom_area_supervisor": "test.area@bebang.ph",
+				},
+			],
+		)
+
+	def test_get_store_schedule_locations_works_when_mapping_empty_and_warehouse_has_no_department_column(self):
+		def fake_table_exists(table_name):
+			return table_name == "tabBEI Store Type"
+
+		def fake_get_all(doctype, **kwargs):
+			if doctype == "BEI Store Type":
+				return [
+					{"store": "ARANETA GATEWAY - BEI", "store_type": "JV"},
+					{"store": "TEST-STORE-BGC", "store_type": "Managed Franchise"},
+				]
+			if doctype == "Warehouse":
+				return [
+					{
+						"name": "Araneta Gateway - Bebang Enterprise Inc.",
+						"warehouse_name": "Araneta Gateway",
+						"custom_area_supervisor": "sam@bebang.ph",
+					},
+					{
+						"name": "TEST-STORE-BGC - BEI",
+						"warehouse_name": "TEST-STORE-BGC",
+						"custom_area_supervisor": "test.area@bebang.ph",
+					},
+				]
+			return []
+
+		def fake_exists(doctype, name=None):
+			return doctype == "Warehouse" and name == "TEST-STORE-BGC - BEI"
+
+		def fake_get_value(doctype, filters=None, fieldname=None, as_dict=False):
+			if doctype == "Warehouse" and isinstance(filters, dict) and filters.get("warehouse_name") == "ARANETA GATEWAY - BEI":
+				return None
+			if doctype == "Warehouse" and isinstance(filters, dict) and filters.get("warehouse_name") == "TEST-STORE-BGC":
+				return "TEST-STORE-BGC - BEI"
+			return None
+
+		store.frappe.db.table_exists = MagicMock(side_effect=fake_table_exists)
+		store.frappe.get_all = MagicMock(side_effect=fake_get_all)
+		store.frappe.db.exists = MagicMock(side_effect=fake_exists)
+		store.frappe.db.get_value = MagicMock(side_effect=fake_get_value)
+
+		result = store._get_store_schedule_locations()
+
+		self.assertEqual(
+			result,
+			[
+				{
+					"name": "Araneta Gateway - Bebang Enterprise Inc.",
+					"warehouse_name": "Araneta Gateway",
+					"department": "ARANETA GATEWAY - BEI",
+					"store_type": "JV",
+					"custom_area_supervisor": "sam@bebang.ph",
+				},
+				{
+					"name": "TEST-STORE-BGC - BEI",
+					"warehouse_name": "TEST-STORE-BGC",
+					"department": "TEST-STORE-BGC",
+					"store_type": "Managed Franchise",
+					"custom_area_supervisor": "test.area@bebang.ph",
+				},
+			],
+		)
+
+	def test_get_store_schedule_locations_uses_fallback_catalog_when_live_master_data_is_empty(self):
+		def fake_table_exists(table_name):
+			return False
+
+		def fake_get_all(doctype, **kwargs):
+			if doctype == "Warehouse":
+				return [
+					{
+						"name": "Araneta Gateway - Bebang Enterprise Inc.",
+						"warehouse_name": "Araneta Gateway",
+						"custom_area_supervisor": "sam@bebang.ph",
+					},
+					{
+						"name": "TEST-STORE-BGC - BEI",
+						"warehouse_name": "TEST-STORE-BGC",
+						"custom_area_supervisor": "test.area@bebang.ph",
+					},
+				]
+			return []
+
+		store.frappe.db.table_exists = MagicMock(side_effect=fake_table_exists)
+		store.frappe.get_all = MagicMock(side_effect=fake_get_all)
+		store.frappe.db.exists = MagicMock(side_effect=lambda doctype, name=None: doctype == "Warehouse" and name == "TEST-STORE-BGC - BEI")
+		store.frappe.db.get_value = MagicMock(return_value=None)
+
+		with patch.object(
+			store,
+			"_load_schedule_fallback_store_rows",
+			return_value=[
+				{"store": "ARANETA GATEWAY", "store_type": "JV"},
+				{"store": "TEST-STORE-BGC", "store_type": "Managed Franchise"},
+			],
+		):
+			result = store._get_store_schedule_locations()
+
+		self.assertEqual(
+			result,
+			[
+				{
+					"name": "Araneta Gateway - Bebang Enterprise Inc.",
+					"warehouse_name": "Araneta Gateway",
+					"department": "ARANETA GATEWAY",
+					"store_type": "JV",
+					"custom_area_supervisor": "sam@bebang.ph",
+				},
+				{
+					"name": "TEST-STORE-BGC - BEI",
+					"warehouse_name": "TEST-STORE-BGC",
+					"department": "TEST-STORE-BGC",
+					"store_type": "Managed Franchise",
 					"custom_area_supervisor": "test.area@bebang.ph",
 				},
 			],
