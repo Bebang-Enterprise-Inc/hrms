@@ -543,7 +543,7 @@ def _get_approved_leave_overrides(
 		"Leave Application",
 		filters={
 			"employee": ["in", employee_names],
-			"docstatus": 1,
+			"docstatus": ["!=", 2],
 			"status": "Approved",
 			"from_date": ["<=", week_end],
 			"to_date": [">=", str(week_start_date)],

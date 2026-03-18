@@ -2,6 +2,7 @@ import importlib.util
 import sys
 import types
 import unittest
+from datetime import date, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -189,6 +190,43 @@ class TestS061LeaveAwareMerging(unittest.TestCase):
 				)
 
 		self.assertIn("Approved leave is required", str(exc.exception))
+
+	def test_approved_leave_overrides_include_status_approved_rows_even_if_not_submitted(self):
+		def fake_get_all(*args, **kwargs):
+			filters = kwargs.get("filters") or {}
+			if filters.get("docstatus") == 1:
+				return []
+			return [
+				{
+					"name": "HR-LAP-0001",
+					"employee": "EMP-001",
+					"employee_name": "Pat",
+					"leave_type": "Vacation Leave",
+					"from_date": "2026-03-16",
+					"to_date": "2026-03-16",
+					"description": "Approved but still draft-docstatus contract",
+				}
+			]
+
+		with (
+			patch.object(supervisor, "getdate", side_effect=lambda value: date.fromisoformat(str(value))),
+			patch.object(
+				supervisor,
+				"add_days",
+				side_effect=lambda value, days: (date.fromisoformat(str(value)) + timedelta(days=days)).isoformat(),
+			),
+			patch.object(supervisor.frappe, "get_all", side_effect=fake_get_all),
+		):
+			overrides = supervisor._get_approved_leave_overrides(
+				{"warehouse": "W1", "warehouse_name": "W1"},
+				"2026-03-16",
+				employees=[{"name": "EMP-001", "employee_name": "Pat"}],
+			)
+
+		self.assertEqual(len(overrides), 1)
+		self.assertEqual(overrides[0]["shift_label"], "VL")
+		self.assertEqual(overrides[0]["leave_application"], "HR-LAP-0001")
+		self.assertEqual(overrides[0]["shift_source"], "approved_leave")
 
 
 if __name__ == "__main__":
