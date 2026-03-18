@@ -1,8 +1,10 @@
 import importlib.util
+import inspect
 import json
 import sys
 import types
 import unittest
+from datetime import date
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -121,6 +123,14 @@ purchase_order_spec = importlib.util.spec_from_file_location(
 bei_purchase_order = importlib.util.module_from_spec(purchase_order_spec)
 assert purchase_order_spec and purchase_order_spec.loader
 purchase_order_spec.loader.exec_module(bei_purchase_order)
+
+invoice_spec = importlib.util.spec_from_file_location(
+	"bei_invoice_under_test_s062",
+	ROOT / "hrms" / "hr" / "doctype" / "bei_invoice" / "bei_invoice.py",
+)
+bei_invoice = importlib.util.module_from_spec(invoice_spec)
+assert invoice_spec and invoice_spec.loader
+invoice_spec.loader.exec_module(bei_invoice)
 
 
 class _InsertedDoc:
@@ -326,6 +336,33 @@ class TestProcurementMathContractS062(unittest.TestCase):
 		self.assertEqual(doc.subtotal, 13.65)
 		self.assertEqual(doc.vat_amount, 1.64)
 		self.assertEqual(doc.grand_total, 15.29)
+
+	def test_invoice_record_payment_annotation_accepts_date_inputs(self):
+		annotation = (
+			inspect.signature(bei_invoice.BEIInvoice.record_payment).parameters["payment_date"].annotation
+		)
+		self.assertIn("date", str(annotation))
+
+		doc = types.SimpleNamespace(
+			amount_paid=0,
+			balance_due=100,
+			payment_status="Unpaid",
+			status="Verified",
+			last_payment_date=None,
+		)
+		doc.calculate_totals = lambda: setattr(doc, "payment_status", "Partially Paid")
+		doc.save = lambda: None
+
+		result = bei_invoice.BEIInvoice.record_payment(
+			doc,
+			amount=50,
+			payment_date=date(2026, 3, 18),
+		)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(doc.amount_paid, 50)
+		self.assertEqual(doc.last_payment_date, date(2026, 3, 18))
+		self.assertEqual(doc.status, "Partially Paid")
 
 
 if __name__ == "__main__":
