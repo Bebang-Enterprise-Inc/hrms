@@ -713,7 +713,7 @@ def _query_probable_giveaway_leakage(
 		("order", "business_date.desc,id.desc"),
 	]
 	result: list[dict[str, Any]] = []
-	page_size = 200
+	page_size = max(25, min((max_results or 20) * 4, 100))
 	offset = 0
 	while True:
 		order_rows = _supabase_get(
@@ -726,8 +726,8 @@ def _query_probable_giveaway_leakage(
 		if not order_ids:
 			break
 		order_lookup = {int(row["id"]): row for row in order_rows if int(row.get("id") or 0)}
-		for index in range(0, len(order_ids), 200):
-			chunk = order_ids[index : index + 200]
+		for index in range(0, len(order_ids), page_size):
+			chunk = order_ids[index : index + page_size]
 			item_params: list[tuple[str, Any]] = [
 				("select", "order_id,product_name,quantity,discount_amount,discount_name,discount_name_normalized"),
 				("discount_amount", "gt.0"),
@@ -864,7 +864,7 @@ def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, A
 		"todays_schedule": todays_schedule,
 		"pace_watch": sorted(upcoming, key=lambda row: (-row["required_daily_pace"], row["campaign_name"]))[:10],
 		"open_exceptions": [_serialize_exception_row(row) for row in exceptions],
-		"probable_leakage": _query_probable_giveaway_leakage(leakage_start, leakage_end)[:20],
+		"probable_leakage": _query_probable_giveaway_leakage(leakage_start, leakage_end, max_results=10),
 	}
 
 
@@ -1146,7 +1146,10 @@ def get_campaign_giveaway_exceptions(campaign: str | None = None) -> dict[str, A
 	)
 	leakage_end = _manila_today()
 	leakage_start = leakage_end - timedelta(days=16)
-	return {"rows": [_serialize_exception_row(row) for row in rows], "probable_leakage": _query_probable_giveaway_leakage(leakage_start, leakage_end)}
+	return {
+		"rows": [_serialize_exception_row(row) for row in rows],
+		"probable_leakage": _query_probable_giveaway_leakage(leakage_start, leakage_end, max_results=20),
+	}
 
 
 @frappe.whitelist()
