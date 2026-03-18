@@ -132,6 +132,14 @@ bei_invoice = importlib.util.module_from_spec(invoice_spec)
 assert invoice_spec and invoice_spec.loader
 invoice_spec.loader.exec_module(bei_invoice)
 
+payment_request_spec = importlib.util.spec_from_file_location(
+	"bei_payment_request_under_test_s062",
+	ROOT / "hrms" / "hr" / "doctype" / "bei_payment_request" / "bei_payment_request.py",
+)
+bei_payment_request = importlib.util.module_from_spec(payment_request_spec)
+assert payment_request_spec and payment_request_spec.loader
+payment_request_spec.loader.exec_module(bei_payment_request)
+
 
 class _InsertedDoc:
 	def __init__(self, name):
@@ -363,6 +371,85 @@ class TestProcurementMathContractS062(unittest.TestCase):
 		self.assertEqual(doc.amount_paid, 50)
 		self.assertEqual(doc.last_payment_date, date(2026, 3, 18))
 		self.assertEqual(doc.status, "Partially Paid")
+
+	def test_payment_request_auto_submits_linked_frappe_pi_before_creating_payment_entry(self):
+		bei_invoice_doc = types.SimpleNamespace(
+			status="Verified",
+			frappe_purchase_invoice="PINV-0001",
+			submit_calls=0,
+		)
+		supplier_doc = types.SimpleNamespace(
+			supplier_name="Marivic's Ube",
+			get_or_create_frappe_supplier=lambda: "SUP-MARIVIC",
+		)
+		pi_doc = types.SimpleNamespace(
+			docstatus=0,
+			credit_to="2101000 - ACCOUNTS PAYABLE - TRADE - BEI",
+			grand_total=142.10,
+			outstanding_amount=142.10,
+		)
+
+		def _submit_frappe_invoice():
+			bei_invoice_doc.submit_calls += 1
+			pi_doc.docstatus = 1
+
+		bei_invoice_doc.submit_frappe_invoice = _submit_frappe_invoice
+
+		class _PaymentEntry:
+			def __init__(self):
+				self.name = "PE-0001"
+				self.references = []
+				self.insert_calls = 0
+				self.submit_calls = 0
+
+			def append(self, fieldname, payload):
+				if fieldname == "references":
+					self.references.append(payload)
+
+			def insert(self, ignore_permissions=False):
+				self.insert_calls += 1
+				return self
+
+			def submit(self):
+				self.submit_calls += 1
+
+		payment_entry = _PaymentEntry()
+
+		def _get_doc(*args, **kwargs):
+			if args and args[0] == "BEI Invoice":
+				return bei_invoice_doc
+			if args and args[0] == "Purchase Invoice":
+				return pi_doc
+			if args and args[0] == "BEI Supplier":
+				return supplier_doc
+			if args and isinstance(args[0], dict):
+				return payment_entry
+			raise AssertionError(f"Unexpected get_doc call: {args} {kwargs}")
+
+		bei_payment_request.frappe.get_doc = MagicMock(side_effect=_get_doc)
+
+		doc = types.SimpleNamespace(
+			status="Approved",
+			invoice="INV-0001",
+			supplier="S062SUP",
+			payment_mode="Bank Transfer",
+			payment_amount=142.10,
+			payment_date="2026-03-18",
+			transaction_reference="TXN-0001",
+			check_number="",
+			name="PAY-0001",
+			_get_payment_accounts=lambda: ("1100 - Cash and Bank - BEI", "Wire Transfer"),
+			db_set=lambda *args, **kwargs: None,
+		)
+		doc.get = lambda fieldname, default=None: getattr(doc, fieldname, default)
+
+		result = bei_payment_request.BEIPaymentRequest.create_frappe_payment_entry(doc)
+
+		self.assertEqual(result, "PE-0001")
+		self.assertEqual(bei_invoice_doc.submit_calls, 1)
+		self.assertEqual(payment_entry.insert_calls, 1)
+		self.assertEqual(payment_entry.submit_calls, 1)
+		self.assertEqual(payment_entry.references[0]["reference_name"], "PINV-0001")
 
 
 if __name__ == "__main__":
