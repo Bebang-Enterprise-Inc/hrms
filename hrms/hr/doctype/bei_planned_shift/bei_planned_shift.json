@@ -14,7 +14,7 @@
   "ends_next_day",
   "shift_type",
   "shift_source",
-  "is_locked",
+  "leave_locked",
   "hours",
   "notes"
  ],
@@ -93,10 +93,10 @@
   },
   {
    "default": "0",
-   "fieldname": "is_locked",
+   "fieldname": "leave_locked",
    "fieldtype": "Check",
    "hidden": 1,
-   "label": "Is Locked",
+   "label": "Leave Locked",
    "read_only": 1
   },
   {

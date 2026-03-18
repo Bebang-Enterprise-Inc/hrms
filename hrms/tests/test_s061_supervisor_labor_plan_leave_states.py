@@ -270,8 +270,33 @@ class TestS061LeaveAwareMerging(unittest.TestCase):
 		self.assertEqual(len(doc.shifts), 1)
 		self.assertEqual(doc.shifts[0].shift_type, "VL")
 		self.assertEqual(doc.shifts[0].shift_source, "approved_leave")
-		self.assertEqual(doc.shifts[0].is_locked, 1)
+		self.assertEqual(doc.shifts[0].leave_locked, 1)
 		self.assertEqual(doc.shifts[0].notes, "Approved vacation leave")
+
+	def test_serialize_weekly_plan_exposes_is_locked_alias(self):
+		class FakeRow(dict):
+			pass
+
+		class FakeDoc:
+			def as_dict(self):
+				return {
+					"name": "BEI-WLP-TEST",
+					"status": "Draft",
+					"shifts": [
+						FakeRow(
+							employee="EMP-001",
+							day_of_week="Monday",
+							shift_type="VL",
+							shift_source="approved_leave",
+							leave_locked=1,
+						)
+					],
+				}
+
+		serialized = supervisor._serialize_weekly_plan(FakeDoc())
+		self.assertEqual(serialized["shifts"][0]["shift_source"], "approved_leave")
+		self.assertEqual(serialized["shifts"][0]["is_locked"], 1)
+		self.assertNotIn("leave_locked", serialized["shifts"][0])
 
 
 if __name__ == "__main__":
