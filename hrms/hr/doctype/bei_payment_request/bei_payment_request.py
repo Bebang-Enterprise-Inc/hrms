@@ -53,10 +53,38 @@ class BEIPaymentRequest(Document):
 	"""
 
 	def validate(self):
+		self.populate_invoice_context()
 		self.set_payment_request_no()
 		self.check_ceo_requirement()
 		self.load_supplier_bank_info()
 		self.auto_assign_gl_account()
+
+	def populate_invoice_context(self):
+		"""Backfill canonical vendor-invoice fields from the linked invoice."""
+		if not self.invoice:
+			return
+
+		invoice = frappe.get_doc("BEI Invoice", self.invoice)
+
+		if not self.supplier and invoice.supplier:
+			self.supplier = invoice.supplier
+
+		if not self.supplier_name:
+			self.supplier_name = invoice.supplier_name or (
+				frappe.db.get_value("BEI Supplier", self.supplier, "supplier_name") if self.supplier else None
+			)
+
+		if not self.purchase_order and invoice.purchase_order:
+			self.purchase_order = invoice.purchase_order
+
+		if not self.goods_receipt and invoice.goods_receipt:
+			self.goods_receipt = invoice.goods_receipt
+
+		if not self.payment_amount:
+			self.payment_amount = flt(invoice.balance_due or invoice.grand_total, 2)
+
+		if not self.rfp_type:
+			self.rfp_type = "Vendor Invoice"
 
 	def set_payment_request_no(self):
 		"""Set payment request number from name if not already set."""
@@ -276,9 +304,14 @@ class BEIPaymentRequest(Document):
 		invoice = frappe.get_doc("BEI Invoice", self.invoice)
 		invoice.record_payment(amount=self.payment_amount, payment_date=self.payment_date)
 
+		supplier_id = self.supplier or invoice.supplier
+		if supplier_id and not self.supplier:
+			self.supplier = supplier_id
+			self.db_set("supplier", supplier_id, update_modified=False)
+
 		# Update supplier payment metrics
-		if self.supplier:
-			supplier = frappe.get_doc("BEI Supplier", self.supplier)
+		if supplier_id:
+			supplier = frappe.get_doc("BEI Supplier", supplier_id)
 			supplier.update_metrics()
 			supplier.save()
 
@@ -354,7 +387,15 @@ class BEIPaymentRequest(Document):
 			)
 
 		# Get Frappe Supplier
-		bei_supplier = frappe.get_doc("BEI Supplier", self.supplier)
+		supplier_id = self.supplier or bei_invoice.supplier
+		if not supplier_id:
+			frappe.throw(_("No BEI Supplier linked to Payment Request {0}.").format(self.name))
+
+		if not self.supplier:
+			self.supplier = supplier_id
+			self.db_set("supplier", supplier_id, update_modified=False)
+
+		bei_supplier = frappe.get_doc("BEI Supplier", supplier_id)
 		frappe_supplier = bei_supplier.get_or_create_frappe_supplier()
 
 		# Determine accounts and mode of payment

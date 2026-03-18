@@ -245,6 +245,8 @@ class TestProcurementMathContractS062(unittest.TestCase):
 
 	def test_create_payment_request_allows_vatable_partial_receipt_up_to_gross_invoice_amount(self):
 		invoice = types.SimpleNamespace(
+			supplier="MU9",
+			supplier_name="Marivic's Ube",
 			purchase_order="PO-2026-00001",
 			goods_receipt="GR-2026-00001",
 			balance_due=142.10,
@@ -326,7 +328,12 @@ class TestProcurementMathContractS062(unittest.TestCase):
 		self.assertEqual(result["name"], "PAY-2026-00001")
 		self.assertEqual(inserted_doc.insert_calls, 1)
 		self.assertEqual(captured_payload["invoice"], "INV-2026-00001")
+		self.assertEqual(captured_payload["supplier"], "MU9")
+		self.assertEqual(captured_payload["supplier_name"], "Marivic's Ube")
+		self.assertEqual(captured_payload["purchase_order"], "PO-2026-00001")
+		self.assertEqual(captured_payload["goods_receipt"], "GR-2026-00001")
 		self.assertEqual(captured_payload["payment_amount"], 142.10)
+		self.assertEqual(captured_payload["rfp_type"], "Vendor Invoice")
 
 	def test_purchase_order_doctype_rounds_vat_and_grand_total_to_centavos(self):
 		doc = types.SimpleNamespace(
@@ -375,6 +382,7 @@ class TestProcurementMathContractS062(unittest.TestCase):
 	def test_payment_request_auto_submits_linked_frappe_pi_before_creating_payment_entry(self):
 		bei_invoice_doc = types.SimpleNamespace(
 			status="Verified",
+			supplier="S062SUP",
 			frappe_purchase_invoice="PINV-0001",
 			submit_calls=0,
 		)
@@ -450,6 +458,108 @@ class TestProcurementMathContractS062(unittest.TestCase):
 		self.assertEqual(payment_entry.insert_calls, 1)
 		self.assertEqual(payment_entry.submit_calls, 1)
 		self.assertEqual(payment_entry.references[0]["reference_name"], "PINV-0001")
+
+	def test_payment_request_populates_missing_invoice_context_during_validate(self):
+		invoice_doc = types.SimpleNamespace(
+			supplier="MU9",
+			supplier_name="Marivic's Ube",
+			purchase_order="PO-2026-00001",
+			goods_receipt="GR-2026-00001",
+			balance_due=142.10,
+			grand_total=142.10,
+		)
+		bei_payment_request.frappe.get_doc = MagicMock(return_value=invoice_doc)
+		bei_payment_request.frappe.db.get_value = MagicMock(return_value="Marivic's Ube")
+
+		doc = types.SimpleNamespace(
+			invoice="INV-2026-00001",
+			supplier="",
+			supplier_name="",
+			purchase_order="",
+			goods_receipt="",
+			payment_amount=0,
+			rfp_type="",
+		)
+
+		bei_payment_request.BEIPaymentRequest.populate_invoice_context(doc)
+
+		self.assertEqual(doc.supplier, "MU9")
+		self.assertEqual(doc.supplier_name, "Marivic's Ube")
+		self.assertEqual(doc.purchase_order, "PO-2026-00001")
+		self.assertEqual(doc.goods_receipt, "GR-2026-00001")
+		self.assertEqual(doc.payment_amount, 142.10)
+		self.assertEqual(doc.rfp_type, "Vendor Invoice")
+
+	def test_payment_request_falls_back_to_invoice_supplier_when_legacy_row_is_blank(self):
+		bei_invoice_doc = types.SimpleNamespace(
+			status="Verified",
+			supplier="S062SUP",
+			frappe_purchase_invoice="PINV-0001",
+			submit_calls=0,
+		)
+		supplier_doc = types.SimpleNamespace(
+			supplier_name="Marivic's Ube",
+			get_or_create_frappe_supplier=lambda: "SUP-MARIVIC",
+		)
+		pi_doc = types.SimpleNamespace(
+			docstatus=1,
+			credit_to="2101000 - ACCOUNTS PAYABLE - TRADE - BEI",
+			grand_total=142.10,
+			outstanding_amount=142.10,
+		)
+
+		class _PaymentEntry:
+			def __init__(self):
+				self.name = "PE-0002"
+				self.references = []
+
+			def append(self, fieldname, payload):
+				if fieldname == "references":
+					self.references.append(payload)
+
+			def insert(self, ignore_permissions=False):
+				return self
+
+			def submit(self):
+				return None
+
+		payment_entry = _PaymentEntry()
+		db_set_calls = []
+
+		def _get_doc(*args, **kwargs):
+			if args and args[0] == "BEI Invoice":
+				return bei_invoice_doc
+			if args and args[0] == "Purchase Invoice":
+				return pi_doc
+			if args and args[0] == "BEI Supplier":
+				self.assertEqual(args[1], "S062SUP")
+				return supplier_doc
+			if args and isinstance(args[0], dict):
+				return payment_entry
+			raise AssertionError(f"Unexpected get_doc call: {args} {kwargs}")
+
+		bei_payment_request.frappe.get_doc = MagicMock(side_effect=_get_doc)
+
+		doc = types.SimpleNamespace(
+			status="Approved",
+			invoice="INV-0001",
+			supplier="",
+			payment_mode="Bank Transfer",
+			payment_amount=142.10,
+			payment_date="2026-03-18",
+			transaction_reference="TXN-0002",
+			check_number="",
+			name="PAY-0002",
+			_get_payment_accounts=lambda: ("1100 - Cash and Bank - BEI", "Wire Transfer"),
+			db_set=lambda *args, **kwargs: db_set_calls.append((args, kwargs)),
+		)
+		doc.get = lambda fieldname, default=None: getattr(doc, fieldname, default)
+
+		result = bei_payment_request.BEIPaymentRequest.create_frappe_payment_entry(doc)
+
+		self.assertEqual(result, "PE-0002")
+		self.assertEqual(doc.supplier, "S062SUP")
+		self.assertTrue(db_set_calls)
 
 
 if __name__ == "__main__":
