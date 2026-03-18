@@ -705,6 +705,7 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 		("business_date", f"gte.{start_day.isoformat()}"),
 		("business_date", f"lte.{end_day.isoformat()}"),
 		("payment_status", "eq.PAID"),
+		("total_discounts", "gt.0"),
 		("order", "business_date.desc,id.desc"),
 	]
 	order_rows = _supabase_get_all("pos_orders", params)
