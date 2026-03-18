@@ -1589,6 +1589,14 @@ def get_user_store(surface: str | None = None):
 		allow_area_unmapped = surface_key not in {"store_schedule", "commissary_schedule"}
 		for store_row in area_stores:
 			append_store(store_row, allow_unmapped=allow_area_unmapped)
+		if surface_key in {"store_schedule", "commissary_schedule"} and (
+			"System Manager" in user_roles
+			or "HR User" in user_roles
+			or "HR Manager" in user_roles
+			or "Regional Manager" in user_roles
+		):
+			for store_row in schedule_rows:
+				append_store(store_row)
 
 	if not stores and active_employee and surface_key in {"store_schedule", "commissary_schedule"}:
 		employee_store_row = _employee_schedule_store_row(

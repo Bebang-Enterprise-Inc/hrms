@@ -347,6 +347,49 @@ class TestS055ScheduleStoreResolution(unittest.TestCase):
 			],
 		)
 
+	def test_get_user_store_hybrid_area_and_system_user_unions_schedule_rows(self):
+		active_employee = {
+			"name": "TEST-AREA-001",
+			"branch": "Araneta Gateway",
+			"employee_name": "Sam Tester",
+			"reports_to": None,
+			"designation": "Area Supervisor",
+		}
+
+		def fake_db_get_value(doctype, filters=None, fieldname=None, as_dict=False):
+			if doctype == "Employee" and isinstance(filters, dict):
+				return dict(active_employee)
+			return None
+
+		def fake_get_all(doctype, **kwargs):
+			if doctype == "Warehouse":
+				return [{"name": "Araneta Gateway - Bebang Enterprise Inc.", "warehouse_name": "Araneta Gateway"}]
+			return []
+
+		store.frappe.session.user = "sam@bebang.ph"
+		store.frappe.db.get_value = MagicMock(side_effect=fake_db_get_value)
+		store.frappe.get_all = MagicMock(side_effect=fake_get_all)
+		store.frappe.get_roles = MagicMock(return_value=["Area Supervisor", "System Manager", "HR User"])
+
+		with patch.object(
+			store,
+			"_get_store_schedule_locations",
+			return_value=[
+				{"name": "Araneta Gateway - Bebang Enterprise Inc.", "warehouse_name": "Araneta Gateway"},
+				{"name": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"},
+			],
+		):
+			result = store.get_user_store(surface="store_schedule")
+
+		self.assertEqual(result["role"], "Area Supervisor")
+		self.assertEqual(
+			result["stores"],
+			[
+				{"name": "Araneta Gateway - Bebang Enterprise Inc.", "warehouse_name": "Araneta Gateway"},
+				{"name": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"},
+			],
+		)
+
 	def test_get_user_store_commissary_schedule_uses_employee_context_with_warehouse_role(self):
 		active_employee = {
 			"name": "TEST-COMMISSARY-001",
