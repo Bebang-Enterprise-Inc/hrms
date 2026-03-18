@@ -44,6 +44,31 @@ def _sanitize_doc_data(data):
     return {k: v for k, v in data.items() if k not in _BLOCKED_FIELDS}
 
 
+def _populate_payment_request_invoice_context(data: dict[str, Any], invoice: Any) -> None:
+    """Backfill canonical vendor-invoice fields from the linked invoice."""
+    if not data.get("supplier") and getattr(invoice, "supplier", None):
+        data["supplier"] = invoice.supplier
+
+    if not data.get("supplier_name"):
+        supplier_name = getattr(invoice, "supplier_name", None)
+        if not supplier_name and data.get("supplier"):
+            supplier_name = frappe.db.get_value("BEI Supplier", data["supplier"], "supplier_name")
+        if supplier_name:
+            data["supplier_name"] = supplier_name
+
+    if not data.get("purchase_order") and getattr(invoice, "purchase_order", None):
+        data["purchase_order"] = invoice.purchase_order
+
+    if not data.get("goods_receipt") and getattr(invoice, "goods_receipt", None):
+        data["goods_receipt"] = invoice.goods_receipt
+
+    if not data.get("payment_amount"):
+        data["payment_amount"] = flt(invoice.balance_due or invoice.grand_total, 2)
+
+    if not data.get("rfp_type"):
+        data["rfp_type"] = "Vendor Invoice"
+
+
 def _require_roles(allowed_roles: set[str], message: str) -> None:
     """Enforce role-based access for sensitive procurement actions."""
     user = frappe.session.user or "Guest"
@@ -1528,6 +1553,7 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
     invoice_name = data.get("invoice")
     if invoice_name:
         invoice = frappe.get_doc("BEI Invoice", invoice_name)
+        _populate_payment_request_invoice_context(data, invoice)
         purchase_order = invoice.purchase_order
 
         if purchase_order:
