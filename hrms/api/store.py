@@ -1586,8 +1586,9 @@ def get_user_store(surface: str | None = None):
 			fields=["name", "warehouse_name"],
 			order_by="warehouse_name",
 		)
+		allow_area_unmapped = surface_key not in {"store_schedule", "commissary_schedule"}
 		for store_row in area_stores:
-			append_store(store_row, allow_unmapped=True)
+			append_store(store_row, allow_unmapped=allow_area_unmapped)
 
 	if not stores and active_employee and surface_key in {"store_schedule", "commissary_schedule"}:
 		employee_store_row = _employee_schedule_store_row(

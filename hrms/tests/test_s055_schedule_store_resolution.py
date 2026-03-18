@@ -301,7 +301,7 @@ class TestS055ScheduleStoreResolution(unittest.TestCase):
 			],
 		)
 
-	def test_get_user_store_area_designation_uses_area_mapping_without_role_flag(self):
+	def test_get_user_store_area_designation_filters_to_schedule_locations(self):
 		active_employee = {
 			"name": "TEST-AREA-001",
 			"branch": "TEST-STORE-BGC",
@@ -318,6 +318,7 @@ class TestS055ScheduleStoreResolution(unittest.TestCase):
 		def fake_get_all(doctype, **kwargs):
 			if doctype == "Warehouse":
 				return [
+					{"name": "3MD Logistics - Camangyanan", "warehouse_name": "3MD Logistics"},
 					{"name": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"},
 					{"name": "TEST-STORE-MOA - BEI", "warehouse_name": "TEST-STORE-MOA"},
 				]
@@ -327,7 +328,14 @@ class TestS055ScheduleStoreResolution(unittest.TestCase):
 		store.frappe.get_all = MagicMock(side_effect=fake_get_all)
 		store.frappe.get_roles = MagicMock(return_value=["HR User"])
 
-		with patch.object(store, "_get_store_schedule_locations", return_value=[]):
+		with patch.object(
+			store,
+			"_get_store_schedule_locations",
+			return_value=[
+				{"name": "TEST-STORE-BGC - BEI", "warehouse_name": "TEST-STORE-BGC"},
+				{"name": "TEST-STORE-MOA - BEI", "warehouse_name": "TEST-STORE-MOA"},
+			],
+		):
 			result = store.get_user_store(surface="store_schedule")
 
 		self.assertEqual(result["role"], "Area Supervisor")
