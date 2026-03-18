@@ -4,6 +4,7 @@ import json
 import os
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -14,6 +15,7 @@ from frappe import _
 from frappe.utils import cint, flt, getdate, now_datetime, nowdate
 
 from hrms.utils.bei_config import get_company
+from hrms.utils.sales_location_mapping import load_sales_location_mapping
 from hrms.utils.supply_chain_contracts import resolve_warehouse_company
 
 MANILA_TZ = ZoneInfo("Asia/Manila")
@@ -698,7 +700,7 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 	params: list[tuple[str, Any]] = [
 		(
 			"select",
-			"id,location_id,store_name,business_date,bill_number,original_gross_sales,total_discounts,payment_status",
+			"id,location_id,business_date,bill_number,original_gross_sales,total_discounts,payment_status",
 		),
 		("business_date", f"gte.{start_day.isoformat()}"),
 		("business_date", f"lte.{end_day.isoformat()}"),
@@ -758,7 +760,7 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 					"alert_reference": f"pos-order:{order_id}",
 					"order_id": order_id,
 					"business_date": str(order.get("business_date") or ""),
-					"store_name": str(order.get("store_name") or ""),
+					"store_name": _store_label_for_location(cint(order.get("location_id") or 0)),
 					"location_id": cint(order.get("location_id") or 0),
 					"bill_number": str(order.get("bill_number") or ""),
 					"order_gross_sales": order_gross,
@@ -776,6 +778,25 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 				}
 			)
 	return result
+
+
+@lru_cache(maxsize=1)
+def _location_store_labels() -> dict[int, str]:
+	labels: dict[int, str] = {}
+	for row in load_sales_location_mapping().values():
+		location_id = cint(row.get("location_id") or 0)
+		if not location_id or location_id in labels:
+			continue
+		labels[location_id] = str(
+			row.get("warehouse_record_name") or row.get("warehouse_name") or f"Location {location_id}"
+		).strip()
+	return labels
+
+
+def _store_label_for_location(location_id: int) -> str:
+	if not location_id:
+		return ""
+	return _location_store_labels().get(location_id, f"Location {location_id}")
 
 
 @frappe.whitelist()

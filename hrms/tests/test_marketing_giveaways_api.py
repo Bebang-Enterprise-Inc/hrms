@@ -120,6 +120,10 @@ def _install_fake_dependencies(user_roles: list[str] | None = None):
 	supply_chain_contracts.resolve_warehouse_company = lambda warehouse: "Bebang Enterprise Inc."
 	_register_module("hrms.utils.supply_chain_contracts", supply_chain_contracts)
 
+	sales_location_mapping = types.ModuleType("hrms.utils.sales_location_mapping")
+	sales_location_mapping.load_sales_location_mapping = lambda: {}
+	_register_module("hrms.utils.sales_location_mapping", sales_location_mapping)
+
 	return frappe
 
 
@@ -356,6 +360,57 @@ def test_post_campaign_giveaway_issue_returns_idempotent_replay(monkeypatch):
 	assert result["idempotent_replay"] is True
 	assert result["issue"]["name"] == existing_issue.name
 	assert result["issue"]["stock_entry"] == existing_issue.stock_entry
+
+
+def test_query_probable_giveaway_leakage_resolves_store_name_from_location_mapping(monkeypatch):
+	module = _load_module("marketing_giveaways_leakage_store_name")
+	module._location_store_labels.cache_clear()
+	monkeypatch.setattr(
+		module,
+		"load_sales_location_mapping",
+		lambda: {
+			"ayala evo": {
+				"location_id": 2426,
+				"warehouse_name": "Ayala Evo",
+				"warehouse_record_name": "Ayala Evo - Bebang Enterprise Inc.",
+			}
+		},
+	)
+
+	def _fake_supabase_get_all(resource, params, page_size=1000):
+		if resource == "pos_orders":
+			return [
+				{
+					"id": 1001,
+					"location_id": 2426,
+					"business_date": "2026-03-18",
+					"bill_number": "BILL-1001",
+					"original_gross_sales": 100.0,
+					"total_discounts": 100.0,
+					"payment_status": "PAID",
+				}
+			]
+		if resource == "pos_order_items":
+			return [
+				{
+					"order_id": 1001,
+					"product_name": "Presidential",
+					"quantity": 10,
+					"discount_amount": 100.0,
+					"discount_name": "Marketing Discount 100%",
+					"discount_name_normalized": "marketing discount 100%",
+				}
+			]
+		return []
+
+	monkeypatch.setattr(module, "_supabase_get_all", _fake_supabase_get_all)
+	monkeypatch.setattr(module.frappe, "get_all", lambda *args, **kwargs: [])
+
+	rows = module._query_probable_giveaway_leakage(date(2026, 3, 1), date(2026, 3, 18))
+
+	assert len(rows) == 1
+	assert rows[0]["store_name"] == "Ayala Evo - Bebang Enterprise Inc."
+	assert rows[0]["location_id"] == 2426
 
 
 def test_post_campaign_giveaway_issue_posts_stock_entry_and_updates_campaign(monkeypatch):
