@@ -258,6 +258,47 @@ class TestL1BlockerContractsS27(unittest.TestCase):
 		self.assertEqual(result["drivers"][0]["cell_phone"], "09170000001")
 		self.assertEqual(result["drivers"][0]["status"], "Available")
 
+	def test_dispatch_matches_uppercase_and_extended_driver_designations(self):
+		_install_dispatch_deps()
+		dispatch = _load_module("dispatch_s27_uppercase_driver_under_test", "hrms/api/dispatch.py")
+
+		dispatch.frappe.db.has_column = lambda doctype, fieldname: False
+
+		def fake_get_all(doctype, filters=None, fields=None, order_by=None):
+			if doctype == "Employee":
+				return [
+					types.SimpleNamespace(
+						name="EMP-DRIVER",
+						employee_name="Upper Driver",
+						designation="DRIVER",
+						status="Active",
+					),
+					types.SimpleNamespace(
+						name="EMP-EXEC",
+						employee_name="Executive Driver",
+						designation="EXECUTIVE DRIVER",
+						status="Active",
+					),
+					types.SimpleNamespace(
+						name="EMP-OTHER",
+						employee_name="Other Employee",
+						designation="Warehouse Staff",
+						status="Active",
+					),
+				]
+			if doctype == "BEI Distribution Trip":
+				return []
+			return []
+
+		dispatch.frappe.get_all = fake_get_all
+
+		result = dispatch.get_available_drivers(date="2026-03-19")
+		self.assertEqual(result["summary"]["total"], 2)
+		self.assertCountEqual(
+			[driver["employee"] for driver in result["drivers"]],
+			["EMP-DRIVER", "EMP-EXEC"],
+		)
+
 	def test_store_closing_status_skips_missing_optional_columns(self):
 		_install_store_deps()
 		store = _load_module("store_s27_under_test", "hrms/api/store.py")

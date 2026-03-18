@@ -1821,6 +1821,23 @@ def get_driver_list():
 # ============================================================================
 
 DRIVER_DESIGNATIONS = ["Driver", "Helper", "Relief Driver", "Delivery Driver", "Truck Driver"]
+_NORMALIZED_DRIVER_DESIGNATIONS = {
+	"driver",
+	"helper",
+	"relief driver",
+	"delivery driver",
+	"truck driver",
+	"executive driver",
+}
+
+
+def _normalize_driver_designation(value: str | None) -> str:
+	return " ".join(str(value or "").strip().lower().split())
+
+
+def _is_driver_designation(value: str | None) -> bool:
+	normalized = _normalize_driver_designation(value)
+	return normalized in _NORMALIZED_DRIVER_DESIGNATIONS or normalized.endswith(" driver")
 
 
 @frappe.whitelist()
@@ -1846,13 +1863,16 @@ def get_available_drivers(date: str | None = None):
 	if phone_field:
 		driver_fields.append(phone_field)
 
-	# All active employees with driver designations
+	# Designation labels are not normalized consistently in live data
+	# (for example DRIVER vs Driver vs Executive Driver), so filter in
+	# Python after loading active employees.
 	all_drivers = frappe.get_all(
 		"Employee",
-		filters={"status": "Active", "designation": ["in", DRIVER_DESIGNATIONS]},
+		filters={"status": "Active"},
 		fields=driver_fields,
 		order_by="employee_name",
 	)
+	all_drivers = [driver for driver in all_drivers if _is_driver_designation(driver.designation)]
 
 	# Build a map of employee -> trip for the date
 	trips_on_date = frappe.get_all(
