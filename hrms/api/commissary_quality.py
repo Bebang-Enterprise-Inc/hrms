@@ -12,9 +12,9 @@ Contains all quality-related functionality:
   - QC Form Management (submit, list, detail, templates)
 """
 
+import json
 import time
 from contextlib import contextmanager
-import json
 from typing import Any
 
 import frappe
@@ -71,6 +71,7 @@ def _is_retryable_stock_entry_submit_error(exc: Exception) -> bool:
 		or "deadlock found" in message
 		or "try restarting transaction" in message
 	)
+
 
 # ============================================================
 # QUALITY INSPECTION

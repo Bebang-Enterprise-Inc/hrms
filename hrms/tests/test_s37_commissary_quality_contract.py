@@ -244,7 +244,9 @@ class TestS37CommissaryQualityContract(unittest.TestCase):
 			if doctype == "Quality Inspection Template" and name == "Commissary FG QC":
 				return types.SimpleNamespace(
 					item_quality_inspection_parameter=[
-						types.SimpleNamespace(specification="Visual Appearance", value="No defects, correct color"),
+						types.SimpleNamespace(
+							specification="Visual Appearance", value="No defects, correct color"
+						),
 						types.SimpleNamespace(specification="Temperature", value="-18°C to 4°C range"),
 					]
 				)

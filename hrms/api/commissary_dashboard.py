@@ -6,9 +6,9 @@ Commissary Dashboard & Production Tracking APIs.
 Split from commissary.py (P0-11) for maintainability.
 """
 
+import json
 import time
 from contextlib import contextmanager
-import json
 from typing import Any
 
 import frappe
@@ -65,6 +65,7 @@ def _is_retryable_stock_entry_submit_error(exc: Exception) -> bool:
 		or "deadlock found" in message
 		or "try restarting transaction" in message
 	)
+
 
 # ============================================================
 # DASHBOARD / SUMMARY

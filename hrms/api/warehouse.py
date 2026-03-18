@@ -159,8 +159,7 @@ def _resolve_stock_entry_item_valuation(item_code: str, warehouse: str | None):
 	zero-valuation movement so dispatch does not die on a generic 417/validation error.
 	"""
 	bin_rate = flt(
-		frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "valuation_rate")
-		or 0
+		frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "valuation_rate") or 0
 	)
 	if bin_rate > 0:
 		return bin_rate, False
