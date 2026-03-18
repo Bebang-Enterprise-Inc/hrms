@@ -514,7 +514,9 @@ def _get_shift_type_name(shift: dict[str, Any]):
 
 
 def _legacy_shift_type_value(shift_type_name: str | None):
-	return shift_type_name if shift_type_name in {"Opening", "Mid", "Closing", "Off"} else None
+	if not shift_type_name or shift_type_name == "Off":
+		return None
+	return shift_type_name if frappe.db.exists("Shift Type", shift_type_name) else None
 
 
 def _apply_shifts(doc: Any, shifts: list[dict[str, Any]]):
@@ -530,7 +532,7 @@ def _apply_shifts(doc: Any, shifts: list[dict[str, Any]]):
 		row.ends_next_day = cint(shift.get("ends_next_day"))
 		row.notes = shift.get("notes")
 		resolved_shift_type = _get_shift_type_name(shift)
-		row.shift_type_name = None if row.is_off else resolved_shift_type
+		row.shift_type_name = resolved_shift_type
 		row.shift_type = _legacy_shift_type_value(resolved_shift_type)
 
 		if not row.is_off:

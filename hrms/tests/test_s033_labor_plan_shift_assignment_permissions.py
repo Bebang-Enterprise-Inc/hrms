@@ -483,9 +483,47 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 
 		self.assertEqual(total_hours, 0)
 		self.assertEqual(len(doc.shifts), 1)
-		self.assertIsNone(doc.shifts[0].shift_type_name)
-		self.assertEqual(doc.shifts[0].shift_type, "Off")
+		self.assertEqual(doc.shifts[0].shift_type_name, "Off")
+		self.assertIsNone(doc.shifts[0].shift_type)
 		self.assertEqual(doc.shifts[0].hours, 0)
+
+	def test_apply_shifts_skips_link_field_for_missing_shift_type_docs(self):
+		class _Doc:
+			def __init__(self):
+				self.shifts = []
+				self.total_hours = 0
+
+			def append(self, _fieldname, _payload):
+				row = types.SimpleNamespace()
+				self.shifts.append(row)
+				return row
+
+		doc = _Doc()
+		with (
+			patch.object(supervisor.frappe.db, "exists", return_value=False),
+			patch.object(supervisor, "_calculate_shift_hours", return_value=8),
+		):
+			total_hours = supervisor._apply_shifts(
+				doc,
+				[
+					{
+						"employee": "TEST-STAFF-001",
+						"employee_name": "Test Staff",
+						"day_of_week": "Monday",
+						"shift_type_name": "Closing",
+						"is_off": 0,
+						"ends_next_day": 0,
+						"shift_start": "14:00",
+						"shift_end": "22:30",
+						"hours": 8,
+					}
+				],
+			)
+
+		self.assertEqual(total_hours, 8)
+		self.assertEqual(len(doc.shifts), 1)
+		self.assertEqual(doc.shifts[0].shift_type_name, "Closing")
+		self.assertIsNone(doc.shifts[0].shift_type)
 
 	def test_approve_shift_swap_request_elevates_assignment_mutation_permissions(self):
 		doc = types.SimpleNamespace(
