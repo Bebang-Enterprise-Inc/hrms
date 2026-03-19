@@ -70,9 +70,10 @@ def _install_fake_frappe_and_dependencies():
 
 		sys.modules["frappe"] = frappe
 		sys.modules["frappe.utils"] = utils
-		exceptions = types.ModuleType("frappe.exceptions")
-		exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
-		sys.modules["frappe.exceptions"] = exceptions
+
+	exceptions = types.ModuleType("frappe.exceptions")
+	exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
+	sys.modules["frappe.exceptions"] = exceptions
 
 	if "hrms" not in sys.modules:
 		hrms_pkg = types.ModuleType("hrms")
@@ -111,6 +112,7 @@ def _install_fake_frappe_and_dependencies():
 		scm_roles_mod = types.ModuleType("hrms.utils.scm_roles")
 		scm_roles_mod.SCM_ADMIN_ROLES = ["System Manager"]
 		scm_roles_mod.SCM_DISPATCH_ROLES = ["System Manager"]
+		scm_roles_mod.SCM_ROUTE_MANAGEMENT_ROLES = ["System Manager"]
 		scm_roles_mod.SCM_STORE_ROLES = ["Store User"]
 		scm_roles_mod.check_scm_permission = lambda roles, action: None
 		sys.modules["hrms.utils.scm_roles"] = scm_roles_mod

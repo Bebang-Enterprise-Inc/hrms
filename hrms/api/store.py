@@ -2047,23 +2047,23 @@ def submit_order(
 
 	order_date = nowdate()
 
-	# Duplicate check: no existing non-cancelled order for same store + date + category
+	# Same-day follow-up orders are allowed before cutoff so stores can add missed
+	# items without waiting for the emergency lane. They still route to Area
+	# Supervisor review and stay blocked after the noon cutoff.
+	existing_same_day_orders = []
 	if not is_emergency_flag:
-		existing = frappe.db.exists(
+		existing_same_day_orders = frappe.get_all(
 			"BEI Store Order",
-			{
+			filters={
 				"store": warehouse,
 				"order_date": order_date,
 				"cargo_category": normalized_cargo_category,
 				"status": ["not in", ["Cancelled"]],
 			},
+			fields=["name", "status"],
+			order_by="creation asc",
+			limit_page_length=20,
 		)
-		if existing:
-			frappe.throw(
-				_("An order already exists for {0} on {1} for category {2}: {3}").format(
-					warehouse, order_date, normalized_cargo_category, existing
-				)
-			)
 
 	# Validate quantities - prevent unreasonable orders
 	MAX_ORDER_QTY = 10000
@@ -2096,6 +2096,8 @@ def submit_order(
 
 	# Determine is_bulk_order: bulk if more than 10 line items
 	is_bulk_order = 1 if len(items) > 10 else 0
+	is_same_day_additional_order = 1 if len(existing_same_day_orders) > 0 else 0
+	same_day_order_sequence = len(existing_same_day_orders) + 1
 
 	order = frappe.new_doc("BEI Store Order")
 	order.store = warehouse
@@ -2138,7 +2140,10 @@ def submit_order(
 	first_source = routing["first_source"]
 
 	requires_manual_approval = bool(
-		is_bulk_order or edited_lines_count > 0 or (is_emergency_flag and submitted_after_cutoff)
+		is_bulk_order
+		or edited_lines_count > 0
+		or is_same_day_additional_order
+		or (is_emergency_flag and submitted_after_cutoff)
 	)
 	if requires_manual_approval and not first_approver:
 		frappe.throw(
@@ -2192,6 +2197,13 @@ def submit_order(
 				first_approver
 			),
 		)
+	if is_same_day_additional_order:
+		_append_order_comment(
+			order.name,
+			_(
+				"Additional scheduled order #{0} for {1} / {2}; routed for manual approval before cutoff."
+			).format(same_day_order_sequence, warehouse, normalized_cargo_category),
+		)
 
 	result = {
 		"success": True,
@@ -2203,7 +2215,11 @@ def submit_order(
 		"requires_regional_manager_review": False,
 		"requires_fallback_approval": bool(requires_manual_approval and first_source == "fallback_approver"),
 		"edited_lines_count": edited_lines_count,
-		"message": f"Order {order.name} submitted successfully",
+		"message": (
+			f"Additional scheduled order {order.name} submitted successfully"
+			if is_same_day_additional_order
+			else f"Order {order.name} submitted successfully"
+		),
 		"approval_queue_status": queue_status,
 		"approval_queue_name": queue_name,
 		"approval_approver_source": first_source if requires_manual_approval else "not_required",
@@ -2213,6 +2229,8 @@ def submit_order(
 		),
 		"submitted_after_cutoff": bool(submitted_after_cutoff),
 		"is_emergency": bool(is_emergency_flag),
+		"is_same_day_additional_order": bool(is_same_day_additional_order),
+		"same_day_order_sequence": same_day_order_sequence,
 		"cargo_category": normalized_cargo_category,
 		"dropped_invalid_lines": len(dropped_items),
 	}

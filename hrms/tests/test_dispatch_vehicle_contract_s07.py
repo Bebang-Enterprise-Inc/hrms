@@ -69,9 +69,10 @@ def _install_fake_runtime():
 
         sys.modules["frappe"] = frappe
         sys.modules["frappe.utils"] = utils
-        frappe_exceptions = types.ModuleType("frappe.exceptions")
-        frappe_exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
-        sys.modules["frappe.exceptions"] = frappe_exceptions
+
+    frappe_exceptions = types.ModuleType("frappe.exceptions")
+    frappe_exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
+    sys.modules["frappe.exceptions"] = frappe_exceptions
 
     if "hrms" not in sys.modules:
         hrms_pkg = types.ModuleType("hrms")
@@ -104,6 +105,7 @@ def _install_fake_runtime():
         scm_roles.SCM_ADMIN_ROLES = ["System Manager"]
         scm_roles.SCM_DISPATCH_ROLES = ["Warehouse User", "System Manager"]
         scm_roles.SCM_INVENTORY_ROLES = ["Warehouse User", "System Manager"]
+        scm_roles.SCM_ROUTE_MANAGEMENT_ROLES = ["Warehouse User", "System Manager"]
         scm_roles.SCM_STOCK_UPDATE_ROLES = ["Warehouse User", "System Manager"]
         scm_roles.SCM_STORE_ROLES = ["Store User", "Warehouse User"]
         scm_roles.check_scm_permission = lambda *_args, **_kwargs: None
@@ -113,6 +115,17 @@ def _install_fake_runtime():
         bei_config = types.ModuleType("hrms.utils.bei_config")
         bei_config.get_company = lambda: "BEI"
         sys.modules["hrms.utils.bei_config"] = bei_config
+
+    if "hrms.utils.inventory_visibility" not in sys.modules:
+        inventory_visibility = types.ModuleType("hrms.utils.inventory_visibility")
+        inventory_visibility.FACILITY_MODE_ALL = "all"
+        inventory_visibility.FACILITY_MODE_STORES = "stores"
+        inventory_visibility.FACILITY_MODE_WAREHOUSES = "warehouses"
+        inventory_visibility.get_inventory_facility_catalog = lambda *args, **kwargs: []
+        inventory_visibility.get_inventory_scope_context = lambda *args, **kwargs: {}
+        inventory_visibility.resolve_inventory_requested_facilities = lambda *args, **kwargs: []
+        inventory_visibility.resolve_inventory_requested_warehouses = lambda *args, **kwargs: []
+        sys.modules["hrms.utils.inventory_visibility"] = inventory_visibility
 
     if "hrms.utils.supply_chain_contracts" not in sys.modules:
         contracts_spec = importlib.util.spec_from_file_location(
