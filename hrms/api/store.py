@@ -6,8 +6,8 @@ Store Operations API
 Handles store ordering, receiving, and FQI reports for my.bebang.ph
 """
 
-import base64
 import ast
+import base64
 import hashlib
 import json
 import re
@@ -426,9 +426,7 @@ def _schedule_row_keys(row: dict | None) -> set[str]:
 
 def _find_schedule_store_row(schedule_rows: list[dict], *candidates: str | None) -> dict | None:
 	candidate_keys = {
-		_normalize_store_key(value)
-		for value in _clean_warehouse_branch_candidates(*candidates)
-		if value
+		_normalize_store_key(value) for value in _clean_warehouse_branch_candidates(*candidates) if value
 	}
 	if not candidate_keys:
 		return None
@@ -456,7 +454,9 @@ def _resolve_schedule_warehouse_row(warehouse_rows: list[dict], *candidates: str
 	return None
 
 
-def _is_store_schedule_employee(employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str]) -> bool:
+def _is_store_schedule_employee(
+	employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str]
+) -> bool:
 	roles = set(user_roles or [])
 	designation = employee.get("designation") if isinstance(employee, dict) else None
 	return bool(
@@ -466,7 +466,9 @@ def _is_store_schedule_employee(employee: dict | None, user_roles: list[str] | t
 	)
 
 
-def _is_commissary_schedule_employee(employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str]) -> bool:
+def _is_commissary_schedule_employee(
+	employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str]
+) -> bool:
 	roles = set(user_roles or [])
 	designation = str((employee or {}).get("designation") or "").upper()
 	branch = str((employee or {}).get("branch") or "").upper()
@@ -477,7 +479,9 @@ def _is_commissary_schedule_employee(employee: dict | None, user_roles: list[str
 	)
 
 
-def _employee_schedule_role(employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str], surface: str | None):
+def _employee_schedule_role(
+	employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str], surface: str | None
+):
 	roles = set(user_roles or [])
 	designation = (employee or {}).get("designation")
 	if surface == "commissary_schedule":
@@ -564,7 +568,9 @@ def _get_store_schedule_locations() -> list[dict]:
 	locations = []
 	seen = set()
 
-	def append_location(warehouse_row: dict | None, *, department: str | None = None, store_type: str | None = None):
+	def append_location(
+		warehouse_row: dict | None, *, department: str | None = None, store_type: str | None = None
+	):
 		if not warehouse_row:
 			return
 		warehouse_name = str(warehouse_row.get("name") or "").strip()
@@ -1640,7 +1646,9 @@ def get_user_store(surface: str | None = None):
 		)
 		seen_stores.add(store_name)
 
-	if "Area Supervisor" in user_roles or _designation_is_area_supervisor((active_employee or {}).get("designation")):
+	if "Area Supervisor" in user_roles or _designation_is_area_supervisor(
+		(active_employee or {}).get("designation")
+	):
 		# Area supervisors see all stores assigned to them
 		role = "Area Supervisor"
 		area_stores = frappe.get_all(
@@ -1694,10 +1702,14 @@ def get_user_store(surface: str | None = None):
 					allow_unmapped=surface_key in {"store_schedule", "commissary_schedule"},
 				)
 
-	if not stores and surface_key == "commissary_schedule" and (
-		"Commissary Supervisor" in user_roles
-		or "Warehouse User" in user_roles
-		or "Supply Chain Manager" in user_roles
+	if (
+		not stores
+		and surface_key == "commissary_schedule"
+		and (
+			"Commissary Supervisor" in user_roles
+			or "Warehouse User" in user_roles
+			or "Supply Chain Manager" in user_roles
+		)
 	):
 		role = (
 			"Supply Chain Manager"
@@ -2047,23 +2059,23 @@ def submit_order(
 
 	order_date = nowdate()
 
-	# Duplicate check: no existing non-cancelled order for same store + date + category
+	# Same-day follow-up orders are allowed before cutoff so stores can add missed
+	# items without waiting for the emergency lane. They still route to Area
+	# Supervisor review and stay blocked after the noon cutoff.
+	existing_same_day_orders = []
 	if not is_emergency_flag:
-		existing = frappe.db.exists(
+		existing_same_day_orders = frappe.get_all(
 			"BEI Store Order",
-			{
+			filters={
 				"store": warehouse,
 				"order_date": order_date,
 				"cargo_category": normalized_cargo_category,
 				"status": ["not in", ["Cancelled"]],
 			},
+			fields=["name", "status"],
+			order_by="creation asc",
+			limit_page_length=20,
 		)
-		if existing:
-			frappe.throw(
-				_("An order already exists for {0} on {1} for category {2}: {3}").format(
-					warehouse, order_date, normalized_cargo_category, existing
-				)
-			)
 
 	# Validate quantities - prevent unreasonable orders
 	MAX_ORDER_QTY = 10000
@@ -2096,6 +2108,8 @@ def submit_order(
 
 	# Determine is_bulk_order: bulk if more than 10 line items
 	is_bulk_order = 1 if len(items) > 10 else 0
+	is_same_day_additional_order = 1 if len(existing_same_day_orders) > 0 else 0
+	same_day_order_sequence = len(existing_same_day_orders) + 1
 
 	order = frappe.new_doc("BEI Store Order")
 	order.store = warehouse
@@ -2138,7 +2152,10 @@ def submit_order(
 	first_source = routing["first_source"]
 
 	requires_manual_approval = bool(
-		is_bulk_order or edited_lines_count > 0 or (is_emergency_flag and submitted_after_cutoff)
+		is_bulk_order
+		or edited_lines_count > 0
+		or is_same_day_additional_order
+		or (is_emergency_flag and submitted_after_cutoff)
 	)
 	if requires_manual_approval and not first_approver:
 		frappe.throw(
@@ -2192,6 +2209,13 @@ def submit_order(
 				first_approver
 			),
 		)
+	if is_same_day_additional_order:
+		_append_order_comment(
+			order.name,
+			_(
+				"Additional scheduled order #{0} for {1} / {2}; routed for manual approval before cutoff."
+			).format(same_day_order_sequence, warehouse, normalized_cargo_category),
+		)
 
 	result = {
 		"success": True,
@@ -2203,7 +2227,11 @@ def submit_order(
 		"requires_regional_manager_review": False,
 		"requires_fallback_approval": bool(requires_manual_approval and first_source == "fallback_approver"),
 		"edited_lines_count": edited_lines_count,
-		"message": f"Order {order.name} submitted successfully",
+		"message": (
+			f"Additional scheduled order {order.name} submitted successfully"
+			if is_same_day_additional_order
+			else f"Order {order.name} submitted successfully"
+		),
 		"approval_queue_status": queue_status,
 		"approval_queue_name": queue_name,
 		"approval_approver_source": first_source if requires_manual_approval else "not_required",
@@ -2213,6 +2241,8 @@ def submit_order(
 		),
 		"submitted_after_cutoff": bool(submitted_after_cutoff),
 		"is_emergency": bool(is_emergency_flag),
+		"is_same_day_additional_order": bool(is_same_day_additional_order),
+		"same_day_order_sequence": same_day_order_sequence,
 		"cargo_category": normalized_cargo_category,
 		"dropped_invalid_lines": len(dropped_items),
 	}

@@ -137,10 +137,19 @@ def get_pending_inspections() -> dict[str, Any]:
             sed.item_name,
             sed.qty,
             sed.uom,
-            i.quality_inspection_template
+            i.quality_inspection_template,
+            sed.batch_no,
+            b.expiry_date,
+            b.manufacturing_date,
+            CASE
+                WHEN b.expiry_date IS NOT NULL AND b.manufacturing_date IS NOT NULL
+                THEN DATEDIFF(b.expiry_date, b.manufacturing_date)
+                ELSE NULL
+            END as shelf_life_days
         FROM `tabStock Entry` se
         JOIN `tabStock Entry Detail` sed ON sed.parent = se.name
         JOIN `tabItem` i ON i.name = sed.item_code
+        LEFT JOIN `tabBatch` b ON b.name = sed.batch_no
         WHERE (
             se.stock_entry_type = 'Manufacture'
             OR (

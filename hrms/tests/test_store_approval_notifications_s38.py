@@ -108,6 +108,7 @@ def _install_stubs():
 	supply_chain_contracts.REQUEST_SOURCE_STORE_DISPOSAL = "store_disposal"
 	supply_chain_contracts.REQUEST_SOURCE_STORE_ORDER = "store_order"
 	supply_chain_contracts.REQUEST_SOURCE_STORE_RETURN = "store_return"
+	supply_chain_contracts.get_preferred_commissary_warehouses = lambda *args, **kwargs: []
 	supply_chain_contracts.infer_finance_treatment = lambda *args, **kwargs: None
 	supply_chain_contracts.resolve_material_request_contract = lambda *args, **kwargs: {}
 	supply_chain_contracts.resolve_route_source_warehouse = lambda *args, **kwargs: None

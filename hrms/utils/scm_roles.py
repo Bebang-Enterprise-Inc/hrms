@@ -23,6 +23,14 @@ SCM_ADMIN_ROLES = {
 	"System Manager",
 	"Administrator",
 }
+SCM_ROUTE_MANAGEMENT_ROLES = {
+	"Supply Chain Manager",
+	"Warehouse Manager",
+	"Warehouse User",
+	"Logistics Coordinator",
+	"System Manager",
+	"Administrator",
+}
 SCM_DISPATCH_ROLES = {
 	"HR Manager",
 	"Supply Chain Manager",
