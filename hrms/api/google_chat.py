@@ -199,6 +199,7 @@ def _send_message_to_space_internal(
 	*,
 	family: str | None = None,
 	context: str = "hrms.api.google_chat.send_message_to_space",
+	bypass_lockdown: bool = False,
 ) -> dict[str, object]:
 	"""Low-level Google Chat transport with optional family-aware routing."""
 	logger = frappe.logger("google_chat")
@@ -217,11 +218,15 @@ def _send_message_to_space_internal(
 		from hrms.utils.bei_config import get_service_account_path
 
 		cred_path = get_service_account_path()
-		target_space = route_outbound_chat_space(
-			space_name,
-			logger=logger,
-			context=context,
-			family=family,
+		target_space = (
+			space_name
+			if bypass_lockdown
+			else route_outbound_chat_space(
+				space_name,
+				logger=logger,
+				context=context,
+				family=family,
+			)
 		)
 
 		if not os.path.exists(cred_path):
@@ -274,7 +279,7 @@ def send_message_to_space(space_name: str, message: str) -> bool:
 	return bool(result.get("success"))
 
 
-def send_notification_to_user(
+def _create_pwa_notification(
 	user: str,
 	message: str,
 	reference_document_type: str = "User",
@@ -308,6 +313,76 @@ def send_notification_to_user(
 		return {"success": False, "sent": False, "reason": "insert_failed", "error": str(exc)}
 
 
+def _normalize_direct_message_user(user_identifier: str | None) -> str | None:
+	value = str(user_identifier or "").strip()
+	if not value:
+		return None
+	if value.startswith("users/"):
+		return value
+	return f"users/{value}"
+
+
+def find_direct_message_space(user_identifier: str | None) -> str | None:
+	"""Resolve an existing Google Chat direct-message space for the given user."""
+	logger = frappe.logger("google_chat")
+	normalized_user = _normalize_direct_message_user(user_identifier)
+	if not normalized_user:
+		return None
+
+	try:
+		from google.oauth2 import service_account
+		from googleapiclient.discovery import build
+	except ImportError:
+		logger.warning("google-auth package not installed — direct-message lookup skipped")
+		return None
+
+	try:
+		from hrms.utils.bei_config import get_service_account_path
+
+		cred_path = get_service_account_path()
+		if not os.path.exists(cred_path):
+			logger.warning("find_direct_message_space: service account file missing at %s", cred_path)
+			return None
+
+		creds = service_account.Credentials.from_service_account_file(
+			cred_path,
+			scopes=["https://www.googleapis.com/auth/chat.bot"],
+		)
+		chat = build("chat", "v1", credentials=creds)
+		result = chat.spaces().findDirectMessage(name=normalized_user).execute()
+		space_name = result.get("name")
+		if space_name:
+			return space_name
+	except Exception as exc:
+		logger.warning("find_direct_message_space failed for %s: %s", normalized_user, exc)
+	return None
+
+
+def send_message_to_user_direct(
+	user_identifier: str | None,
+	message: str,
+	*,
+	family: str | None = None,
+	context: str = "hrms.api.google_chat.send_message_to_user_direct",
+) -> dict[str, object]:
+	"""Send a bot-authored message to a user's existing Google Chat direct message space."""
+	space_name = find_direct_message_space(user_identifier)
+	if not space_name:
+		return {
+			"success": False,
+			"sent": False,
+			"reason": "direct_message_not_found",
+			"user_identifier": user_identifier,
+		}
+	return _send_message_to_space_internal(
+		space_name,
+		message,
+		family=family,
+		context=context,
+		bypass_lockdown=True,
+	)
+
+
 def send_notification_to_user(
 	user_identifier: str | None,
 	message: str,
@@ -329,14 +404,41 @@ def send_notification_to_user(
 			context=context,
 		)
 		if not result.get("success"):
+			fallback_result = _create_pwa_notification(
+				normalized_user,
+				message,
+				reference_document_name=normalized_user,
+			)
+			if fallback_result.get("success"):
+				logger.info(
+					"send_notification_to_user fell back to PWA notification for %s",
+					normalized_user,
+				)
+				return True
 			logger.warning(
-				"send_notification_to_user skipped for %s reason=%s",
+				"send_notification_to_user skipped for %s reason=%s fallback=%s",
 				normalized_user,
 				result.get("reason", "unknown"),
+				fallback_result.get("reason", "unknown"),
 			)
-		return bool(result.get("success"))
+			return False
+		return True
 	except Exception as exc:
 		logger.warning("send_notification_to_user failed for %s: %s", normalized_user, exc)
+		try:
+			fallback_result = _create_pwa_notification(
+				normalized_user,
+				message,
+				reference_document_name=normalized_user,
+			)
+			if fallback_result.get("success"):
+				logger.info(
+					"send_notification_to_user recovered with PWA notification for %s",
+					normalized_user,
+				)
+				return True
+		except Exception:
+			pass
 		try:
 			frappe.log_error(
 				title="Google Chat User Notification Error",
