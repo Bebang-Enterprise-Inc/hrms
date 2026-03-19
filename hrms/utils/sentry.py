@@ -18,18 +18,20 @@ import frappe
 
 # Test accounts whose errors should NOT be sent to Sentry.
 # These generate hundreds of expected validation errors during E2E testing.
-_TEST_USERS = frozenset({
-	"Administrator",
-	"test.area@bebang.ph",
-	"test.supervisor@bebang.ph",
-	"test.staff@bebang.ph",
-	"test.crew1@bebang.ph",
-	"test.hr@bebang.ph",
-	"test.projects@bebang.ph",
-	"test.projects.staff@bebang.ph",
-	"test.commissary@bebang.ph",
-	"test.warehouse@bebang.ph",
-})
+_TEST_USERS = frozenset(
+	{
+		"Administrator",
+		"test.area@bebang.ph",
+		"test.supervisor@bebang.ph",
+		"test.staff@bebang.ph",
+		"test.crew1@bebang.ph",
+		"test.hr@bebang.ph",
+		"test.projects@bebang.ph",
+		"test.projects.staff@bebang.ph",
+		"test.commissary@bebang.ph",
+		"test.warehouse@bebang.ph",
+	}
+)
 
 _sentry_initialized = False
 _log_error_patched = False
@@ -39,7 +41,9 @@ _handle_exception_patched = False
 def _is_test_user():
 	"""Return True if the current session user is a test/admin account."""
 	try:
-		user = getattr(frappe.session, "user", None) if hasattr(frappe, "session") and frappe.session else None
+		user = (
+			getattr(frappe.session, "user", None) if hasattr(frappe, "session") and frappe.session else None
+		)
 		return user in _TEST_USERS
 	except Exception:
 		return False
@@ -70,13 +74,13 @@ def _to_safe_tag_value(value: Any) -> str | None:
 
 def _sanitize_value(value: Any, depth: int = 0):
 	"""Best-effort sanitizer for Sentry context payloads."""
-	if value is None or isinstance(value, (str, int, float, bool)):
+	if value is None or isinstance(value, str | int | float | bool):
 		return value
 
 	if depth >= _MAX_DEPTH:
 		return "[truncated]"
 
-	if isinstance(value, (list, tuple, set)):
+	if isinstance(value, list | tuple | set):
 		return [_sanitize_value(item, depth + 1) for item in list(value)[:_MAX_ARRAY_ITEMS]]
 
 	if isinstance(value, dict):
@@ -272,11 +276,7 @@ def init_sentry():
 
 			sentry_sdk.init(
 				dsn=dsn,
-				environment=(
-					"development"
-					if getattr(frappe.conf, "developer_mode", 0)
-					else "production"
-				),
+				environment=("development" if getattr(frappe.conf, "developer_mode", 0) else "production"),
 				release=f"bei-hrms@{__version__}",
 				traces_sample_rate=0.1,
 				profiles_sample_rate=0.1,

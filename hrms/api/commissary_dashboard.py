@@ -67,6 +67,7 @@ def _is_retryable_stock_entry_submit_error(exc: Exception) -> bool:
 		or "try restarting transaction" in message
 	)
 
+
 # ============================================================
 # DASHBOARD / SUMMARY
 # ============================================================
