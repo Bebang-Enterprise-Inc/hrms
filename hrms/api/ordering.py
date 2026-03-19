@@ -169,7 +169,7 @@ def _generate_dr_internal(order_name: str, order: Any = None) -> dict[str, Any]:
 		_send_order_notification(
 			store=order.store,
 			message=_(
-				"Delivery Receipt {0} has been generated for your order {1}. " "Delivery scheduled for {2}."
+				"Delivery Receipt {0} has been generated for your order {1}. Delivery scheduled for {2}."
 			).format(dr_number, order_name, order.delivery_date or "TBD"),
 		)
 	except Exception as e:

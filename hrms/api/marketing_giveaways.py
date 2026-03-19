@@ -34,7 +34,13 @@ APPROVED_STATES = {"Approved / Active", "Partially Fulfilled"}
 OPS_REVIEW_ROLES = {"Area Supervisor", "Supply Chain Manager", "HQ User", "System Manager", "Administrator"}
 FINANCE_REVIEW_ROLES = {"HQ Finance", "Accounts Manager", "HQ User", "System Manager", "Administrator"}
 REQUEST_ROLES = {"Marketing User", "Marketing Manager", "HQ User", "System Manager", "Administrator"}
-FULFILLMENT_ROLES = {"Store Supervisor", "Area Supervisor", "Supply Chain Manager", "System Manager", "Administrator"}
+FULFILLMENT_ROLES = {
+	"Store Supervisor",
+	"Area Supervisor",
+	"Supply Chain Manager",
+	"System Manager",
+	"Administrator",
+}
 EXCEPTION_ROLES = {
 	"HQ Finance",
 	"Accounts Manager",
@@ -127,7 +133,7 @@ def _capture(
 def _safe_json(value: Any, default: Any):
 	if value in (None, ""):
 		return default
-	if isinstance(value, (dict, list)):
+	if isinstance(value, dict | list):
 		return value
 	try:
 		return json.loads(value)
@@ -159,7 +165,9 @@ def _finished_goods_item(item_code: str) -> dict[str, Any]:
 		frappe.throw(_("Item {0} does not exist.").format(item_code))
 
 	item_group = str(item.get("item_group") or "").strip()
-	is_finished_goods = item_group in FINISHED_GOODS_ITEM_GROUPS or str(item.get("name") or "").upper().startswith("FG")
+	is_finished_goods = item_group in FINISHED_GOODS_ITEM_GROUPS or str(
+		item.get("name") or ""
+	).upper().startswith("FG")
 	if cint(item.get("disabled") or 0):
 		frappe.throw(_("Item {0} is disabled.").format(item_code))
 	if not cint(item.get("is_stock_item") or 0):
@@ -216,7 +224,9 @@ def _require_assigned_reviewer(campaign_doc, action: str) -> None:
 	queue_name = str(campaign_doc.active_queue_name or "").strip()
 	if not queue_name or not frappe.db.exists("BEI Approval Queue", queue_name):
 		return
-	assigned_approver = str(frappe.db.get_value("BEI Approval Queue", queue_name, "assigned_approver") or "").strip()
+	assigned_approver = str(
+		frappe.db.get_value("BEI Approval Queue", queue_name, "assigned_approver") or ""
+	).strip()
 	if assigned_approver and assigned_approver != frappe.session.user:
 		_capture(
 			action,
@@ -232,15 +242,21 @@ def _require_assigned_reviewer(campaign_doc, action: str) -> None:
 		frappe.throw(_("This review step is assigned to another approver."), _permission_error_class())
 
 
-def _validate_campaign_payload(payload: dict[str, Any], *, existing_name: str | None = None) -> dict[str, Any]:
+def _validate_campaign_payload(
+	payload: dict[str, Any], *, existing_name: str | None = None
+) -> dict[str, Any]:
 	data = dict(payload or {})
 	existing = None
 	if existing_name:
 		existing = _campaign_doc(existing_name)
 		_require_request_owner(existing, "save_campaign_giveaway")
 
-	data["requester_user"] = str(existing.requester_user if existing and existing.requester_user else frappe.session.user).strip()
-	data["owning_department"] = _require_master_record("Department", data.get("owning_department") or "Marketing", "Department")
+	data["requester_user"] = str(
+		existing.requester_user if existing and existing.requester_user else frappe.session.user
+	).strip()
+	data["owning_department"] = _require_master_record(
+		"Department", data.get("owning_department") or "Marketing", "Department"
+	)
 	data["budget_owner"] = _require_master_record(
 		"User",
 		data.get("budget_owner"),
@@ -256,7 +272,9 @@ def _validate_campaign_payload(payload: dict[str, Any], *, existing_name: str | 
 		allow_blank=True,
 	)
 
-	source_locations = _normalize_list(data.get("source_locations") or data.get("source_locations_json") or [])
+	source_locations = _normalize_list(
+		data.get("source_locations") or data.get("source_locations_json") or []
+	)
 	if not source_locations:
 		frappe.throw(_("At least one approved source location is required."))
 	for source_location in source_locations:
@@ -276,7 +294,9 @@ def _validate_campaign_payload(payload: dict[str, Any], *, existing_name: str | 
 		approved_quantity = flt(raw_item.get("approved_quantity") or 0, 3)
 		if approved_quantity <= 0:
 			frappe.throw(_("Approved quantity for {0} must be greater than 0.").format(item_code))
-		if source_locations and not any(_source_supports_item(source_location, item_code) for source_location in source_locations):
+		if source_locations and not any(
+			_source_supports_item(source_location, item_code) for source_location in source_locations
+		):
 			frappe.throw(_("Item {0} is not stocked in any approved source location.").format(item_code))
 		normalized_items.append(
 			{
@@ -294,7 +314,9 @@ def _validate_campaign_payload(payload: dict[str, Any], *, existing_name: str | 
 	schedule_rows = data.get("schedule_rows") or data.get("schedule_json") or []
 	normalized_schedule: list[dict[str, Any]] = []
 	approved_item_codes = {row["item_code"] for row in normalized_items}
-	approved_qty_by_item = {row["item_code"]: flt(row["approved_quantity"] or 0, 3) for row in normalized_items}
+	approved_qty_by_item = {
+		row["item_code"]: flt(row["approved_quantity"] or 0, 3) for row in normalized_items
+	}
 	start_date = getdate(data.get("start_date")) if data.get("start_date") else None
 	end_date = getdate(data.get("end_date")) if data.get("end_date") else None
 	for row in schedule_rows if isinstance(schedule_rows, list) else []:
@@ -307,9 +329,13 @@ def _validate_campaign_payload(payload: dict[str, Any], *, existing_name: str | 
 		if not row_date or not item_code or not source_location or quantity <= 0:
 			continue
 		if item_code not in approved_item_codes:
-			frappe.throw(_("Schedule row item {0} is not in the approved campaign item list.").format(item_code))
+			frappe.throw(
+				_("Schedule row item {0} is not in the approved campaign item list.").format(item_code)
+			)
 		if source_location not in source_locations:
-			frappe.throw(_("Schedule row source {0} is not in the approved source list.").format(source_location))
+			frappe.throw(
+				_("Schedule row source {0} is not in the approved source list.").format(source_location)
+			)
 		if start_date and end_date:
 			schedule_day = getdate(row_date[:10])
 			if schedule_day < start_date or schedule_day > end_date:
@@ -326,7 +352,9 @@ def _validate_campaign_payload(payload: dict[str, Any], *, existing_name: str | 
 		scheduled_qty_by_item: dict[str, float] = {}
 		for row in normalized_schedule:
 			item_code = row["item_code"]
-			scheduled_qty_by_item[item_code] = scheduled_qty_by_item.get(item_code, 0.0) + flt(row["quantity"] or 0, 3)
+			scheduled_qty_by_item[item_code] = scheduled_qty_by_item.get(item_code, 0.0) + flt(
+				row["quantity"] or 0, 3
+			)
 		for item_code, scheduled_qty in scheduled_qty_by_item.items():
 			if scheduled_qty > flt(approved_qty_by_item.get(item_code) or 0, 3):
 				frappe.throw(_("Scheduled quantity for {0} exceeds the approved quantity.").format(item_code))
@@ -392,11 +420,14 @@ def _resolve_marketing_expense_account(company: str | None = None) -> str:
 	if account:
 		return account
 	like_name = f"{DEFAULT_EXPENSE_ACCOUNT_NUMBER} - {DEFAULT_EXPENSE_ACCOUNT_NAME}%"
-	return frappe.db.get_value(
-		"Account",
-		{"company": company_name, "name": ["like", like_name], "is_group": 0},
-		"name",
-	) or f"{DEFAULT_EXPENSE_ACCOUNT_NUMBER} - {DEFAULT_EXPENSE_ACCOUNT_NAME} - {company_name}"
+	return (
+		frappe.db.get_value(
+			"Account",
+			{"company": company_name, "name": ["like", like_name], "is_group": 0},
+			"name",
+		)
+		or f"{DEFAULT_EXPENSE_ACCOUNT_NUMBER} - {DEFAULT_EXPENSE_ACCOUNT_NAME} - {company_name}"
+	)
 
 
 def _resolve_item_cost(item_code: str) -> float:
@@ -479,9 +510,7 @@ def _update_campaign_tracking(campaign) -> float:
 	else:
 		campaign.remaining_days = 0
 	campaign.required_daily_pace = (
-		round(campaign.remaining_quantity / campaign.remaining_days, 3)
-		if campaign.remaining_days > 0
-		else 0
+		round(campaign.remaining_quantity / campaign.remaining_days, 3) if campaign.remaining_days > 0 else 0
 	)
 	return max(round(flt(campaign.estimated_peso_value or 0, 2) - total_value, 2), 0.0)
 
@@ -694,11 +723,15 @@ def _create_or_update_campaign(payload: dict[str, Any], *, existing_name: str | 
 		"owning_department",
 		"ops_review_notes",
 		"finance_review_notes",
-		):
+	):
 		if fieldname in payload:
 			setattr(doc, fieldname, payload.get(fieldname))
-	doc.requester_user = str(payload.get("requester_user") or doc.requester_user or frappe.session.user).strip()
-	doc.source_locations_json = json.dumps(payload.get("source_locations") or payload.get("source_locations_json") or [])
+	doc.requester_user = str(
+		payload.get("requester_user") or doc.requester_user or frappe.session.user
+	).strip()
+	doc.source_locations_json = json.dumps(
+		payload.get("source_locations") or payload.get("source_locations_json") or []
+	)
 	doc.schedule_json = json.dumps(payload.get("schedule_rows") or payload.get("schedule_json") or [])
 	doc.supporting_attachments_json = json.dumps(
 		payload.get("supporting_attachments") or payload.get("supporting_attachments_json") or []
@@ -713,7 +746,8 @@ def _create_or_update_campaign(payload: dict[str, Any], *, existing_name: str | 
 				"item_name": item.get("item_name"),
 				"uom": item.get("uom"),
 				"approved_quantity": item.get("approved_quantity"),
-				"estimated_unit_cost": item.get("estimated_unit_cost") or _resolve_item_cost(item.get("item_code")),
+				"estimated_unit_cost": item.get("estimated_unit_cost")
+				or _resolve_item_cost(item.get("item_code")),
 			},
 		)
 	doc.save(ignore_permissions=True)
@@ -742,12 +776,15 @@ def _current_time_string() -> str:
 def _post_stock_entry_for_issue(campaign, issue_doc) -> str:
 	source_company = resolve_warehouse_company(issue_doc.source_location) or get_company()
 	expense_account = campaign.finance_expense_account or _resolve_marketing_expense_account(source_company)
-	item_meta = frappe.db.get_value(
-		"Item",
-		issue_doc.item_code,
-		["item_name", "description", "stock_uom"],
-		as_dict=True,
-	) or {}
+	item_meta = (
+		frappe.db.get_value(
+			"Item",
+			issue_doc.item_code,
+			["item_name", "description", "stock_uom"],
+			as_dict=True,
+		)
+		or {}
+	)
 	stock_entry = frappe.new_doc("Stock Entry")
 	stock_entry.stock_entry_type = "Material Issue"
 	stock_entry.company = source_company
@@ -782,7 +819,9 @@ def _post_stock_entry_for_issue(campaign, issue_doc) -> str:
 	return stock_entry.name
 
 
-def _validate_issue_request(campaign, source_location: str, item_code: str, quantity: float, issue_day: date) -> tuple[Any, float]:
+def _validate_issue_request(
+	campaign, source_location: str, item_code: str, quantity: float, issue_day: date
+) -> tuple[Any, float]:
 	if campaign.status not in APPROVED_STATES:
 		frappe.throw(_("Only approved or active campaigns can issue stock."))
 	_finished_goods_item(item_code)
@@ -918,7 +957,9 @@ def _supabase_headers() -> dict[str, str]:
 	}
 
 
-def _supabase_get(resource: str, params: list[tuple[str, Any]] | dict[str, Any] | None = None) -> list[dict[str, Any]]:
+def _supabase_get(
+	resource: str, params: list[tuple[str, Any]] | dict[str, Any] | None = None
+) -> list[dict[str, Any]]:
 	response = requests.get(
 		f"{_get_supabase_url()}/rest/v1/{resource}",
 		headers=_supabase_headers(),
@@ -926,7 +967,9 @@ def _supabase_get(resource: str, params: list[tuple[str, Any]] | dict[str, Any] 
 		timeout=30,
 	)
 	if not response.ok:
-		raise RuntimeError(f"Supabase GET failed for {resource}: {response.status_code} {response.text[:250]}")
+		raise RuntimeError(
+			f"Supabase GET failed for {resource}: {response.status_code} {response.text[:250]}"
+		)
 	payload = response.json()
 	return payload if isinstance(payload, list) else []
 
@@ -974,7 +1017,10 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 	for index in range(0, len(order_ids), 200):
 		chunk = order_ids[index : index + 200]
 		item_params: list[tuple[str, Any]] = [
-			("select", "order_id,product_name,quantity,discount_amount,discount_name,discount_name_normalized"),
+			(
+				"select",
+				"order_id,product_name,quantity,discount_amount,discount_name,discount_name_normalized",
+			),
 			("discount_amount", "gt.0"),
 			("order_id", f"in.({','.join(str(order_id) for order_id in chunk)})"),
 			("order", "order_id.asc"),
@@ -998,7 +1044,10 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 					if str(row.get("discount_name") or "").strip()
 				}
 			)
-			normalized_names = {_normalize_text(row.get("discount_name_normalized") or row.get("discount_name")) for row in rows}
+			normalized_names = {
+				_normalize_text(row.get("discount_name_normalized") or row.get("discount_name"))
+				for row in rows
+			}
 			is_marketing = any("marketing" in name for name in normalized_names)
 			is_effectively_free = bool(order_gross and total_discounts >= round(order_gross * 0.95, 2))
 			if not (is_marketing or is_effectively_free):
@@ -1062,12 +1111,18 @@ def _store_label_for_location(location_id: int) -> str:
 
 @frappe.whitelist()
 def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, Any]:
-	_observe("get_campaign_giveaways_dashboard", phase="read", mutation_type="load", extras={"campaign": campaign})
+	_observe(
+		"get_campaign_giveaways_dashboard", phase="read", mutation_type="load", extras={"campaign": campaign}
+	)
 	_require_enabled()
 	_require_roles(DASHBOARD_ROLES, "You do not have access to Campaign Giveaways.")
-	campaign_names = frappe.get_all(CAMPAIGN_DT, filters={}, fields=["name"], order_by="modified desc", limit_page_length=200)
+	campaign_names = frappe.get_all(
+		CAMPAIGN_DT, filters={}, fields=["name"], order_by="modified desc", limit_page_length=200
+	)
 	campaign_rows = [_serialize_campaign_row(_campaign_doc(row["name"])) for row in campaign_names]
-	selected = next((row for row in campaign_rows if row["name"] == campaign), campaign_rows[0] if campaign_rows else None)
+	selected = next(
+		(row for row in campaign_rows if row["name"] == campaign), campaign_rows[0] if campaign_rows else None
+	)
 	today = _manila_today().isoformat()
 	active_statuses = (*APPROVED_STATES, "Pending Ops Review", "Pending Finance Approval")
 	active_campaigns = [row for row in campaign_rows if row["status"] in active_statuses]
@@ -1076,7 +1131,9 @@ def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, A
 			"campaign": row["name"],
 			"campaign_name": row["campaign_name"],
 			"campaign_code": row["campaign_code"],
-			"rows": [schedule for schedule in row["schedule_rows"] if str(schedule.get("date") or "")[:10] == today],
+			"rows": [
+				schedule for schedule in row["schedule_rows"] if str(schedule.get("date") or "")[:10] == today
+			],
 		}
 		for row in active_campaigns
 	]
@@ -1088,13 +1145,21 @@ def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, A
 		order_by="modified desc",
 		limit_page_length=20,
 	)
-	upcoming = [row for row in active_campaigns if row["remaining_days"] > 0 and row["required_daily_pace"] > 0 and row["status"] in APPROVED_STATES]
+	upcoming = [
+		row
+		for row in active_campaigns
+		if row["remaining_days"] > 0 and row["required_daily_pace"] > 0 and row["status"] in APPROVED_STATES
+	]
 	return {
 		"summary": {
 			"total_campaigns": len(campaign_rows),
 			"active_campaigns": len([row for row in active_campaigns if row["status"] in APPROVED_STATES]),
-			"pending_ops_review": len([row for row in campaign_rows if row["status"] == "Pending Ops Review"]),
-			"pending_finance_review": len([row for row in campaign_rows if row["status"] == "Pending Finance Approval"]),
+			"pending_ops_review": len(
+				[row for row in campaign_rows if row["status"] == "Pending Ops Review"]
+			),
+			"pending_finance_review": len(
+				[row for row in campaign_rows if row["status"] == "Pending Finance Approval"]
+			),
 			"open_exceptions": len(exceptions),
 			"today_scheduled_issues": sum(len(entry["rows"]) for entry in todays_schedule),
 		},
@@ -1102,7 +1167,9 @@ def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, A
 		"campaigns": campaign_rows,
 		"active_campaigns": active_campaigns,
 		"todays_schedule": todays_schedule,
-		"pace_watch": sorted(upcoming, key=lambda row: (-row["required_daily_pace"], row["campaign_name"]))[:10],
+		"pace_watch": sorted(upcoming, key=lambda row: (-row["required_daily_pace"], row["campaign_name"]))[
+			:10
+		],
 		"open_exceptions": [_serialize_exception_row(row) for row in exceptions],
 		"probable_leakage": [],
 		"probable_leakage_deferred": True,
@@ -1114,13 +1181,21 @@ def list_campaign_giveaways(status: str | None = None) -> dict[str, Any]:
 	_observe("list_campaign_giveaways", phase="read", mutation_type="load", extras={"status": status})
 	_require_enabled()
 	_require_roles(DASHBOARD_ROLES, "You do not have access to Campaign Giveaways.")
-	rows = frappe.get_all(CAMPAIGN_DT, filters=_campaign_filters(status), fields=["name"], order_by="modified desc", limit_page_length=200)
+	rows = frappe.get_all(
+		CAMPAIGN_DT,
+		filters=_campaign_filters(status),
+		fields=["name"],
+		order_by="modified desc",
+		limit_page_length=200,
+	)
 	return {"rows": [_serialize_campaign_row(_campaign_doc(row["name"])) for row in rows]}
 
 
 @frappe.whitelist()
 def get_campaign_giveaway_detail(campaign: str) -> dict[str, Any]:
-	_observe("get_campaign_giveaway_detail", phase="read", mutation_type="load", extras={"campaign": campaign})
+	_observe(
+		"get_campaign_giveaway_detail", phase="read", mutation_type="load", extras={"campaign": campaign}
+	)
 	_require_enabled()
 	_require_roles(DASHBOARD_ROLES, "You do not have access to Campaign Giveaways.")
 	doc = _campaign_doc(campaign)
@@ -1129,14 +1204,46 @@ def get_campaign_giveaway_detail(campaign: str) -> dict[str, Any]:
 	issues = frappe.get_all(
 		ISSUE_DT,
 		filters={"campaign": campaign},
-		fields=["name", "status", "issue_date", "source_location", "item_code", "item_name", "quantity", "actual_unit_cost", "actual_total_cost", "stock_entry", "finance_expense_account", "cost_center", "budget_owner", "notes"],
+		fields=[
+			"name",
+			"status",
+			"issue_date",
+			"source_location",
+			"item_code",
+			"item_name",
+			"quantity",
+			"actual_unit_cost",
+			"actual_total_cost",
+			"stock_entry",
+			"finance_expense_account",
+			"cost_center",
+			"budget_owner",
+			"notes",
+		],
 		order_by="issue_date desc, creation desc",
 		limit_page_length=200,
 	)
 	exceptions = frappe.get_all(
 		EXCEPTION_DT,
 		filters={"campaign": campaign},
-		fields=["name", "status", "severity", "exception_type", "source_location", "item_code", "issue_date", "requested_quantity", "attempted_value", "message", "linked_alert_reference", "linked_alert_payload_json", "resolution_code", "resolution_notes", "resolved_by", "resolved_at"],
+		fields=[
+			"name",
+			"status",
+			"severity",
+			"exception_type",
+			"source_location",
+			"item_code",
+			"issue_date",
+			"requested_quantity",
+			"attempted_value",
+			"message",
+			"linked_alert_reference",
+			"linked_alert_payload_json",
+			"resolution_code",
+			"resolution_notes",
+			"resolved_by",
+			"resolved_at",
+		],
 		order_by="modified desc",
 		limit_page_length=200,
 	)
@@ -1161,7 +1268,12 @@ def save_campaign_giveaway(payload: str | dict[str, Any]) -> dict[str, Any]:
 
 @frappe.whitelist()
 def submit_campaign_giveaway_for_ops_review(campaign: str) -> dict[str, Any]:
-	_observe("submit_campaign_giveaway_for_ops_review", phase="mutation", mutation_type="mutation", extras={"campaign": campaign})
+	_observe(
+		"submit_campaign_giveaway_for_ops_review",
+		phase="mutation",
+		mutation_type="mutation",
+		extras={"campaign": campaign},
+	)
 	_require_enabled()
 	_require_roles(REQUEST_ROLES, "Only authorized requestors can submit campaign giveaway requests.")
 	doc = _campaign_doc(campaign)
@@ -1185,7 +1297,12 @@ def review_campaign_giveaway_ops(
 	source_locations_json: str | None = None,
 	schedule_json: str | None = None,
 ) -> dict[str, Any]:
-	_observe("review_campaign_giveaway_ops", phase="mutation", mutation_type="mutation", extras={"campaign": campaign, "decision": decision})
+	_observe(
+		"review_campaign_giveaway_ops",
+		phase="mutation",
+		mutation_type="mutation",
+		extras={"campaign": campaign, "decision": decision},
+	)
 	_require_enabled()
 	_require_roles(OPS_REVIEW_ROLES, "Only Ops reviewers can process this stage.")
 	doc = _campaign_doc(campaign)
@@ -1229,7 +1346,12 @@ def review_campaign_giveaway_finance(
 	budget_owner: str | None = None,
 	approved_value_tolerance_pct: float | str | None = None,
 ) -> dict[str, Any]:
-	_observe("review_campaign_giveaway_finance", phase="mutation", mutation_type="mutation", extras={"campaign": campaign, "decision": decision})
+	_observe(
+		"review_campaign_giveaway_finance",
+		phase="mutation",
+		mutation_type="mutation",
+		extras={"campaign": campaign, "decision": decision},
+	)
 	_require_enabled()
 	_require_roles(FINANCE_REVIEW_ROLES, "Only Finance reviewers can process this stage.")
 	doc = _campaign_doc(campaign)
@@ -1243,9 +1365,13 @@ def review_campaign_giveaway_finance(
 	doc.finance_reviewed_at = now_datetime()
 	doc.finance_review_notes = notes or doc.finance_review_notes
 	if cost_center:
-		doc.cost_center = _require_master_record("Cost Center", cost_center, "Cost Center", filters={"is_group": 0})
+		doc.cost_center = _require_master_record(
+			"Cost Center", cost_center, "Cost Center", filters={"is_group": 0}
+		)
 	if budget_owner:
-		doc.budget_owner = _require_master_record("User", budget_owner, "Budget Owner", filters={"enabled": 1})
+		doc.budget_owner = _require_master_record(
+			"User", budget_owner, "Budget Owner", filters={"enabled": 1}
+		)
 	if approved_value_tolerance_pct is not None:
 		doc.approved_value_tolerance_pct = flt(approved_value_tolerance_pct, 2)
 	if decision_normalized == "reject":
@@ -1267,9 +1393,13 @@ def review_campaign_giveaway_finance(
 
 @frappe.whitelist()
 def cancel_campaign_giveaway(campaign: str, reason: str | None = None) -> dict[str, Any]:
-	_observe("cancel_campaign_giveaway", phase="mutation", mutation_type="mutation", extras={"campaign": campaign})
+	_observe(
+		"cancel_campaign_giveaway", phase="mutation", mutation_type="mutation", extras={"campaign": campaign}
+	)
 	_require_enabled()
-	_require_roles(REQUEST_ROLES | {"System Manager", "Administrator"}, "Only authorized users can cancel this request.")
+	_require_roles(
+		REQUEST_ROLES | {"System Manager", "Administrator"}, "Only authorized users can cancel this request."
+	)
 	doc = _campaign_doc(campaign)
 	_require_request_owner(doc, "cancel_campaign_giveaway")
 	if doc.status not in {"Draft", "Pending Ops Review", "Pending Finance Approval"}:
@@ -1293,7 +1423,12 @@ def post_campaign_giveaway_issue(
 	idempotency_key: str | None = None,
 	notes: str | None = None,
 ) -> dict[str, Any]:
-	_observe("post_campaign_giveaway_issue", phase="mutation", mutation_type="mutation", extras={"campaign": campaign, "item_code": item_code, "source_location": source_location})
+	_observe(
+		"post_campaign_giveaway_issue",
+		phase="mutation",
+		mutation_type="mutation",
+		extras={"campaign": campaign, "item_code": item_code, "source_location": source_location},
+	)
 	_require_enabled()
 	_require_roles(FULFILLMENT_ROLES, "Only approved fulfillment roles can issue campaign giveaways.")
 	quantity_value = flt(quantity or 0, 3)
@@ -1317,7 +1452,9 @@ def post_campaign_giveaway_issue(
 		}
 	campaign_doc = _campaign_doc(campaign)
 	issue_day = getdate(issue_date) if issue_date else _manila_today()
-	item_row, unit_cost = _validate_issue_request(campaign_doc, source_location, item_code, quantity_value, issue_day)
+	item_row, unit_cost = _validate_issue_request(
+		campaign_doc, source_location, item_code, quantity_value, issue_day
+	)
 	frappe.db.savepoint(f"campaign_issue_{campaign_doc.name.replace('-', '_')}")
 	try:
 		issue_doc = frappe.new_doc(ISSUE_DT)
@@ -1332,7 +1469,9 @@ def post_campaign_giveaway_issue(
 		issue_doc.quantity = quantity_value
 		issue_doc.actual_unit_cost = unit_cost
 		issue_doc.actual_total_cost = round(quantity_value * unit_cost, 2)
-		issue_doc.finance_expense_account = campaign_doc.finance_expense_account or _resolve_marketing_expense_account()
+		issue_doc.finance_expense_account = (
+			campaign_doc.finance_expense_account or _resolve_marketing_expense_account()
+		)
 		issue_doc.cost_center = campaign_doc.cost_center
 		issue_doc.budget_owner = campaign_doc.budget_owner
 		issue_doc.notes = notes
@@ -1366,7 +1505,9 @@ def post_campaign_giveaway_issue(
 def get_campaign_giveaway_approvals() -> dict[str, Any]:
 	_observe("get_campaign_giveaway_approvals", phase="read", mutation_type="load")
 	_require_enabled()
-	_require_roles(OPS_REVIEW_ROLES | FINANCE_REVIEW_ROLES, "You do not have approval access to Campaign Giveaways.")
+	_require_roles(
+		OPS_REVIEW_ROLES | FINANCE_REVIEW_ROLES, "You do not have approval access to Campaign Giveaways."
+	)
 	rows = frappe.get_all(
 		CAMPAIGN_DT,
 		filters={"status": ["in", ["Pending Ops Review", "Pending Finance Approval"]]},
@@ -1379,19 +1520,28 @@ def get_campaign_giveaway_approvals() -> dict[str, Any]:
 
 @frappe.whitelist()
 def get_campaign_giveaway_fulfillment_queue(campaign: str | None = None) -> dict[str, Any]:
-	_observe("get_campaign_giveaway_fulfillment_queue", phase="read", mutation_type="load", extras={"campaign": campaign})
+	_observe(
+		"get_campaign_giveaway_fulfillment_queue",
+		phase="read",
+		mutation_type="load",
+		extras={"campaign": campaign},
+	)
 	_require_enabled()
 	_require_roles(FULFILLMENT_ROLES, "You do not have fulfillment access to Campaign Giveaways.")
 	filters: dict[str, Any] = {"status": ["in", list(APPROVED_STATES)]}
 	if campaign:
 		filters["name"] = campaign
-	rows = frappe.get_all(CAMPAIGN_DT, filters=filters, fields=["name"], order_by="modified desc", limit_page_length=200)
+	rows = frappe.get_all(
+		CAMPAIGN_DT, filters=filters, fields=["name"], order_by="modified desc", limit_page_length=200
+	)
 	return {"rows": [_serialize_campaign_row(_campaign_doc(row["name"])) for row in rows]}
 
 
 @frappe.whitelist()
 def get_campaign_giveaway_exceptions(campaign: str | None = None) -> dict[str, Any]:
-	_observe("get_campaign_giveaway_exceptions", phase="read", mutation_type="load", extras={"campaign": campaign})
+	_observe(
+		"get_campaign_giveaway_exceptions", phase="read", mutation_type="load", extras={"campaign": campaign}
+	)
 	_require_enabled()
 	_require_roles(EXCEPTION_ROLES, "You do not have exception access to Campaign Giveaways.")
 	filters: dict[str, Any] = {}
@@ -1400,7 +1550,27 @@ def get_campaign_giveaway_exceptions(campaign: str | None = None) -> dict[str, A
 	rows = frappe.get_all(
 		EXCEPTION_DT,
 		filters=filters,
-		fields=["name", "campaign", "campaign_issue", "status", "severity", "exception_type", "source_location", "item_code", "issue_date", "requested_quantity", "attempted_value", "message", "linked_alert_reference", "linked_alert_payload_json", "resolution_code", "resolution_notes", "created_by", "resolved_by", "resolved_at"],
+		fields=[
+			"name",
+			"campaign",
+			"campaign_issue",
+			"status",
+			"severity",
+			"exception_type",
+			"source_location",
+			"item_code",
+			"issue_date",
+			"requested_quantity",
+			"attempted_value",
+			"message",
+			"linked_alert_reference",
+			"linked_alert_payload_json",
+			"resolution_code",
+			"resolution_notes",
+			"created_by",
+			"resolved_by",
+			"resolved_at",
+		],
 		order_by="modified desc",
 		limit_page_length=300,
 	)
@@ -1413,7 +1583,12 @@ def get_campaign_giveaway_exceptions(campaign: str | None = None) -> dict[str, A
 
 @frappe.whitelist()
 def get_campaign_giveaway_probable_leakage(campaign: str | None = None) -> dict[str, Any]:
-	_observe("get_campaign_giveaway_probable_leakage", phase="read", mutation_type="load", extras={"campaign": campaign})
+	_observe(
+		"get_campaign_giveaway_probable_leakage",
+		phase="read",
+		mutation_type="load",
+		extras={"campaign": campaign},
+	)
 	_require_enabled()
 	_require_roles(EXCEPTION_ROLES, "You do not have probable leakage access to Campaign Giveaways.")
 	leakage_start, leakage_end = _leakage_window()
@@ -1425,8 +1600,15 @@ def get_campaign_giveaway_probable_leakage(campaign: str | None = None) -> dict[
 
 
 @frappe.whitelist()
-def resolve_campaign_giveaway_exception(exception_name: str, resolution_code: str, resolution_notes: str | None = None) -> dict[str, Any]:
-	_observe("resolve_campaign_giveaway_exception", phase="mutation", mutation_type="mutation", extras={"exception_name": exception_name, "resolution_code": resolution_code})
+def resolve_campaign_giveaway_exception(
+	exception_name: str, resolution_code: str, resolution_notes: str | None = None
+) -> dict[str, Any]:
+	_observe(
+		"resolve_campaign_giveaway_exception",
+		phase="mutation",
+		mutation_type="mutation",
+		extras={"exception_name": exception_name, "resolution_code": resolution_code},
+	)
 	_require_enabled()
 	_require_roles(EXCEPTION_ROLES, "You do not have exception access to Campaign Giveaways.")
 	doc = frappe.get_doc(EXCEPTION_DT, exception_name)
@@ -1446,11 +1628,18 @@ def link_probable_leakage_to_campaign(
 	alert_payload: str | dict[str, Any] | None = None,
 	resolution_notes: str | None = None,
 ) -> dict[str, Any]:
-	_observe("link_probable_leakage_to_campaign", phase="mutation", mutation_type="mutation", extras={"campaign": campaign, "alert_reference": alert_reference})
+	_observe(
+		"link_probable_leakage_to_campaign",
+		phase="mutation",
+		mutation_type="mutation",
+		extras={"campaign": campaign, "alert_reference": alert_reference},
+	)
 	_require_enabled()
 	_require_roles(EXCEPTION_ROLES, "You do not have exception access to Campaign Giveaways.")
 	payload = _safe_json(alert_payload, {})
-	existing = frappe.db.get_value(EXCEPTION_DT, {"campaign": campaign, "linked_alert_reference": alert_reference}, "name")
+	existing = frappe.db.get_value(
+		EXCEPTION_DT, {"campaign": campaign, "linked_alert_reference": alert_reference}, "name"
+	)
 	if existing:
 		doc = frappe.get_doc(EXCEPTION_DT, existing)
 		if resolution_notes:
@@ -1474,10 +1663,21 @@ def link_probable_leakage_to_campaign(
 
 @frappe.whitelist()
 def get_campaign_giveaway_reconciliation(campaign: str | None = None) -> dict[str, Any]:
-	_observe("get_campaign_giveaway_reconciliation", phase="read", mutation_type="load", extras={"campaign": campaign})
+	_observe(
+		"get_campaign_giveaway_reconciliation",
+		phase="read",
+		mutation_type="load",
+		extras={"campaign": campaign},
+	)
 	_require_enabled()
 	_require_roles(RECONCILIATION_ROLES, "You do not have reconciliation access to Campaign Giveaways.")
-	rows = frappe.get_all(CAMPAIGN_DT, filters={"name": campaign} if campaign else {}, fields=["name"], order_by="modified desc", limit_page_length=200)
+	rows = frappe.get_all(
+		CAMPAIGN_DT,
+		filters={"name": campaign} if campaign else {},
+		fields=["name"],
+		order_by="modified desc",
+		limit_page_length=200,
+	)
 	results = []
 	for row in rows:
 		doc = _campaign_doc(row["name"])
@@ -1490,10 +1690,14 @@ def get_campaign_giveaway_reconciliation(campaign: str | None = None) -> dict[st
 		by_store: dict[str, dict[str, Any]] = {}
 		for issue in issues:
 			source = str(issue.get("source_location") or "Unknown")
-			entry = by_store.setdefault(source, {"source_location": source, "quantity": 0.0, "actual_value": 0.0})
+			entry = by_store.setdefault(
+				source, {"source_location": source, "quantity": 0.0, "actual_value": 0.0}
+			)
 			entry["quantity"] += flt(issue.get("quantity") or 0, 3)
 			entry["actual_value"] += flt(issue.get("actual_total_cost") or 0, 2)
-		exception_count = frappe.db.count(EXCEPTION_DT, {"campaign": doc.name, "status": ["not in", ["Resolved", "Ignored"]]})
+		exception_count = frappe.db.count(
+			EXCEPTION_DT, {"campaign": doc.name, "status": ["not in", ["Resolved", "Ignored"]]}
+		)
 		results.append(
 			{
 				"campaign": _serialize_campaign_row(doc),
@@ -1503,7 +1707,9 @@ def get_campaign_giveaway_reconciliation(campaign: str | None = None) -> dict[st
 				"approved_value": flt(doc.estimated_peso_value or 0, 2),
 				"actual_issued_value": round(sum(entry["actual_value"] for entry in by_store.values()), 2),
 				"open_exception_count": exception_count,
-				"by_store": sorted(by_store.values(), key=lambda entry: (-entry["actual_value"], entry["source_location"])),
+				"by_store": sorted(
+					by_store.values(), key=lambda entry: (-entry["actual_value"], entry["source_location"])
+				),
 			}
 		)
 	return {"rows": results}

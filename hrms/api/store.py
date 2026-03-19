@@ -917,7 +917,9 @@ def _build_orderable_source_stock_context(store_warehouse, items):
 			continue
 		lane = _resolve_delivery_lane(item)
 		cargo_category = _lane_to_cargo_category(lane)
-		source_warehouse = _resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
+		source_warehouse = (
+			_resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
+		)
 		source_warehouse_by_item[item_code] = source_warehouse
 		lane_by_item[item_code] = lane
 		if source_warehouse:
@@ -1705,9 +1707,7 @@ def submit_order(
 	first_source = routing["first_source"]
 
 	requires_manual_approval = bool(
-		is_bulk_order
-		or edited_lines_count > 0
-		or (is_emergency_flag and submitted_after_cutoff)
+		is_bulk_order or edited_lines_count > 0 or (is_emergency_flag and submitted_after_cutoff)
 	)
 	if requires_manual_approval and not first_approver:
 		frappe.throw(
@@ -1770,9 +1770,7 @@ def submit_order(
 			requires_manual_approval and first_source == "area_supervisor"
 		),
 		"requires_regional_manager_review": False,
-		"requires_fallback_approval": bool(
-			requires_manual_approval and first_source == "fallback_approver"
-		),
+		"requires_fallback_approval": bool(requires_manual_approval and first_source == "fallback_approver"),
 		"edited_lines_count": edited_lines_count,
 		"message": f"Order {order.name} submitted successfully",
 		"approval_queue_status": queue_status,
@@ -1780,9 +1778,7 @@ def submit_order(
 		"approval_approver_source": first_source if requires_manual_approval else "not_required",
 		"approval_assigned_approver": first_approver if requires_manual_approval else None,
 		"fallback_approver": (
-			first_approver
-			if requires_manual_approval and first_source == "fallback_approver"
-			else None
+			first_approver if requires_manual_approval and first_source == "fallback_approver" else None
 		),
 		"submitted_after_cutoff": bool(submitted_after_cutoff),
 		"is_emergency": bool(is_emergency_flag),
@@ -1880,7 +1876,9 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		is_fallback_user = bool(fallback_approver and user == fallback_approver)
 		if not user_roles.intersection(allowed_roles) and not is_fallback_user:
 			frappe.throw(
-				_("Only assigned approvers, Area Supervisors, fallback approvers, or System Managers can approve."),
+				_(
+					"Only assigned approvers, Area Supervisors, fallback approvers, or System Managers can approve."
+				),
 				frappe.PermissionError,
 			)
 
@@ -1969,7 +1967,7 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 				"dashboard_url": "https://my.bebang.ph/dashboard/store-ops/order-approvals",
 			},
 		},
-			requested_space=store_space or get_chat_space(SPACE_OPS),
+		requested_space=store_space or get_chat_space(SPACE_OPS),
 	)
 
 	return {
@@ -2028,7 +2026,9 @@ def _create_mr_for_store_order(order):
 		)
 		finance_treatment = infer_finance_treatment(source_company, billing_target_company)
 		is_intercompany = finance_treatment == FINANCE_TREATMENT_INTERCOMPANY
-		operational_dispatch_warehouse = source_warehouse if is_intercompany and source_warehouse else store_warehouse
+		operational_dispatch_warehouse = (
+			source_warehouse if is_intercompany and source_warehouse else store_warehouse
+		)
 		mr.material_request_type = "Material Issue" if is_intercompany else "Material Transfer"
 		# Frappe validates Material Transfer requests against the operational stock
 		# owner on the source side of the move. The buyer entity used later for
@@ -2046,7 +2046,7 @@ def _create_mr_for_store_order(order):
 			target_company=billing_target_company,
 			finance_treatment=finance_treatment,
 		)
-		mr.remarks = f"Warehouse dispatch request for store order {order.name} " f"({cargo_category})"
+		mr.remarks = f"Warehouse dispatch request for store order {order.name} ({cargo_category})"
 
 		for item in order.items:
 			qty = flt(getattr(item, "qty_approved", None) or getattr(item, "qty_requested", 0))
@@ -2627,9 +2627,7 @@ def _resolve_store_order_item_pricing(store_order_name: str | None) -> dict[str,
 		result[item_code] = {
 			"unit_price": flt(row.get("unit_price"), 6),
 			"delivered_qty": (
-				flt(row.get("qty_delivered"))
-				or flt(row.get("qty_approved"))
-				or flt(row.get("qty_requested"))
+				flt(row.get("qty_delivered")) or flt(row.get("qty_approved")) or flt(row.get("qty_requested"))
 			),
 		}
 	return result
@@ -3029,11 +3027,7 @@ def create_store_return(
 		"finance_treatment": finance_treatment,
 		"message": (
 			f"Store return {primary_entry.name} created"
-			+ (
-				f" with warehouse receipt {warehouse_receipt.name}"
-				if warehouse_receipt
-				else ""
-			)
+			+ (f" with warehouse receipt {warehouse_receipt.name}" if warehouse_receipt else "")
 			+ f" — {len(primary_entry.items)} item(s) returned to warehouse"
 		),
 	}

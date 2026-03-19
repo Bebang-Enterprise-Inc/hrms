@@ -170,8 +170,8 @@ class TestEnrichmentReminderQueueFallbackS09(unittest.TestCase):
 
 	def test_submit_order_requires_valid_area_supervisor_mapping_for_edited_lines(self):
 		store.frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
-		store.frappe.new_doc = (
-			lambda doctype: _FakeOrderDoc() if doctype == "BEI Store Order" else _FakeOrderDoc("APQ-0001")
+		store.frappe.new_doc = lambda doctype: (
+			_FakeOrderDoc() if doctype == "BEI Store Order" else _FakeOrderDoc("APQ-0001")
 		)
 
 		with (
