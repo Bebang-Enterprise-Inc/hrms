@@ -4,7 +4,6 @@ import json
 import os
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
-from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -811,6 +810,17 @@ def _validate_issue_request(campaign, source_location: str, item_code: str, quan
 	item_row = _find_item_row(campaign, item_code)
 	if not item_row:
 		frappe.throw(_("Item is not approved for this campaign."))
+	if not _source_supports_item(source_location, item_code):
+		exception_name = _create_exception(
+			campaign=campaign.name,
+			exception_type="Invalid Source Item Combination",
+			message="Selected source location does not stock the approved giveaway item.",
+			source_location=source_location,
+			item_code=item_code,
+			issue_date=issue_day.isoformat(),
+			requested_quantity=quantity,
+		)
+		frappe.throw(_("Issue blocked: invalid source/item combination ({0}).").format(exception_name))
 	remaining_qty = flt(item_row.remaining_quantity or item_row.approved_quantity or 0, 3)
 	if quantity > remaining_qty:
 		exception_name = _create_exception(
@@ -1005,6 +1015,7 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 					"alert_reference": f"pos-order:{order_id}",
 					"order_id": order_id,
 					"business_date": str(order.get("business_date") or ""),
+<<<<<<< HEAD
 					"store_name": _store_label_for_location(cint(order.get("location_id") or 0)),
 					"location_id": cint(order.get("location_id") or 0),
 					"bill_number": str(order.get("bill_number") or ""),
@@ -1047,8 +1058,6 @@ def _store_label_for_location(location_id: int) -> str:
 	if not location_id:
 		return ""
 	return _location_store_labels().get(location_id, f"Location {location_id}")
-
-
 @frappe.whitelist()
 def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, Any]:
 	_observe("get_campaign_giveaways_dashboard", phase="read", mutation_type="load", extras={"campaign": campaign})
@@ -1093,8 +1102,6 @@ def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, A
 		"todays_schedule": todays_schedule,
 		"pace_watch": sorted(upcoming, key=lambda row: (-row["required_daily_pace"], row["campaign_name"]))[:10],
 		"open_exceptions": [_serialize_exception_row(row) for row in exceptions],
-		"probable_leakage": [],
-		"probable_leakage_deferred": True,
 	}
 
 
@@ -1393,11 +1400,17 @@ def get_campaign_giveaway_exceptions(campaign: str | None = None) -> dict[str, A
 		order_by="modified desc",
 		limit_page_length=300,
 	)
-	return {
-		"rows": [_serialize_exception_row(row) for row in rows],
-		"probable_leakage": [],
-		"probable_leakage_deferred": True,
-	}
+	return {"rows": [_serialize_exception_row(row) for row in rows]}
+
+
+@frappe.whitelist()
+def get_campaign_giveaway_probable_leakage(campaign: str | None = None) -> dict[str, Any]:
+	_observe("get_campaign_giveaway_probable_leakage", phase="read", mutation_type="load", extras={"campaign": campaign})
+	_require_enabled()
+	_require_roles(EXCEPTION_ROLES, "You do not have probable leakage access to Campaign Giveaways.")
+	leakage_end = _manila_today()
+	leakage_start = leakage_end - timedelta(days=16)
+	return {"rows": _query_probable_giveaway_leakage(leakage_start, leakage_end)}
 
 
 @frappe.whitelist()

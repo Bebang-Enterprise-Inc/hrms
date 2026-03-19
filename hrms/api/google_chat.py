@@ -175,13 +175,30 @@ def _truthy(value: object) -> bool:
 	return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _has_warehouse_chat_space_column() -> bool:
+	try:
+		return bool(frappe.db.has_column("Warehouse", "custom_gchat_space"))
+	except Exception:
+		return False
+
+
+def resolve_store_chat_space(store_warehouse: str | None) -> str | None:
+	"""Resolve a store Warehouse chat space safely across schema revisions."""
+	store_warehouse = str(store_warehouse or "").strip()
+	if not store_warehouse or not _has_warehouse_chat_space_column():
+		return None
+	try:
+		return frappe.db.get_value("Warehouse", store_warehouse, "custom_gchat_space") or None
+	except Exception:
+		return None
+
+
 def _send_message_to_space_internal(
 	space_name: str,
 	message: str,
 	*,
 	family: str | None = None,
 	context: str = "hrms.api.google_chat.send_message_to_space",
-	bypass_lockdown: bool = False,
 ) -> dict[str, object]:
 	"""Low-level Google Chat transport with optional family-aware routing."""
 	logger = frappe.logger("google_chat")
@@ -200,15 +217,11 @@ def _send_message_to_space_internal(
 		from hrms.utils.bei_config import get_service_account_path
 
 		cred_path = get_service_account_path()
-		target_space = (
-			space_name
-			if bypass_lockdown
-			else route_outbound_chat_space(
-				space_name,
-				logger=logger,
-				context=context,
-				family=family,
-			)
+		target_space = route_outbound_chat_space(
+			space_name,
+			logger=logger,
+			context=context,
+			family=family,
 		)
 
 		if not os.path.exists(cred_path):
@@ -261,74 +274,38 @@ def send_message_to_space(space_name: str, message: str) -> bool:
 	return bool(result.get("success"))
 
 
-def _normalize_direct_message_user(user_identifier: str | None) -> str | None:
-	value = str(user_identifier or "").strip()
-	if not value:
-		return None
-	if value.startswith("users/"):
-		return value
-	return f"users/{value}"
-
-
-def find_direct_message_space(user_identifier: str | None) -> str | None:
-	"""Resolve an existing Google Chat direct-message space for the given user."""
-	logger = frappe.logger("google_chat")
-	normalized_user = _normalize_direct_message_user(user_identifier)
-	if not normalized_user:
-		return None
-
-	try:
-		from google.oauth2 import service_account
-		from googleapiclient.discovery import build
-	except ImportError:
-		logger.warning("google-auth package not installed — direct-message lookup skipped")
-		return None
-
-	try:
-		from hrms.utils.bei_config import get_service_account_path
-
-		cred_path = get_service_account_path()
-		if not os.path.exists(cred_path):
-			logger.warning("find_direct_message_space: service account file missing at %s", cred_path)
-			return None
-
-		creds = service_account.Credentials.from_service_account_file(
-			cred_path,
-			scopes=["https://www.googleapis.com/auth/chat.bot"],
-		)
-		chat = build("chat", "v1", credentials=creds)
-		result = chat.spaces().findDirectMessage(name=normalized_user).execute()
-		space_name = result.get("name")
-		if space_name:
-			return space_name
-	except Exception as exc:
-		logger.warning("find_direct_message_space failed for %s: %s", normalized_user, exc)
-	return None
-
-
-def send_message_to_user_direct(
-	user_identifier: str | None,
+def send_notification_to_user(
+	user: str,
 	message: str,
-	*,
-	family: str | None = None,
-	context: str = "hrms.api.google_chat.send_message_to_user_direct",
+	reference_document_type: str = "User",
+	reference_document_name: str | None = None,
+	from_user: str | None = None,
 ) -> dict[str, object]:
-	"""Send a bot-authored message to a user's existing Google Chat direct message space."""
-	space_name = find_direct_message_space(user_identifier)
-	if not space_name:
+	"""Best-effort in-app user notification used by legacy finance/procurement flows."""
+	target_user = str(user or "").strip()
+	if not target_user or target_user == "Guest":
+		return {"success": False, "sent": False, "reason": "missing_user"}
+
+	try:
+		notification = frappe.new_doc("PWA Notification")
+		notification.to_user = target_user
+		notification.from_user = from_user or frappe.session.user
+		notification.message = str(message or "").strip()
+		notification.reference_document_type = reference_document_type
+		notification.reference_document_name = reference_document_name or target_user
+		notification.insert(ignore_permissions=True)
 		return {
-			"success": False,
-			"sent": False,
-			"reason": "direct_message_not_found",
-			"user_identifier": user_identifier,
+			"success": True,
+			"sent": True,
+			"channel": "pwa_notification",
+			"notification": notification.name,
 		}
-	return _send_message_to_space_internal(
-		space_name,
-		message,
-		family=family,
-		context=context,
-		bypass_lockdown=True,
-	)
+	except Exception as exc:
+		frappe.log_error(
+			title="User Notification Error",
+			message=f"user={target_user}, error={str(exc)[:300]}",
+		)
+		return {"success": False, "sent": False, "reason": "insert_failed", "error": str(exc)}
 
 
 def send_notification_to_user(
@@ -892,7 +869,7 @@ def on_store_order_update(doc, method=None):
 		space = None
 		store_warehouse = getattr(doc, "warehouse", None) or getattr(doc, "store_warehouse", None)
 		if store_warehouse:
-			space = frappe.db.get_value("Warehouse", store_warehouse, "custom_gchat_space")
+			space = resolve_store_chat_space(store_warehouse)
 
 		if not space:
 			from hrms.utils.bei_config import SPACE_NOTIFICATIONS, get_chat_space

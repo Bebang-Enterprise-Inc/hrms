@@ -56,6 +56,14 @@ def _install_fake_dependencies(user_roles: list[str] | None = None):
 			return payload.get(str(fields or "name"))
 		return None
 
+<<<<<<< HEAD
+=======
+	def _db_exists(doctype, filters=None, *args, **kwargs):
+		if doctype == "Bin":
+			return "BIN-0001"
+		return None
+
+>>>>>>> a621231fc (fix: harden backend sentry cleanup surfaces)
 	class PermissionError(Exception):
 		pass
 
@@ -85,7 +93,7 @@ def _install_fake_dependencies(user_roles: list[str] | None = None):
 	frappe.local = types.SimpleNamespace(
 		db=types.SimpleNamespace(
 			get_value=_db_get_value,
-			exists=lambda *args, **kwargs: None,
+			exists=_db_exists,
 			count=lambda *args, **kwargs: 0,
 			savepoint=lambda *args, **kwargs: None,
 			release_savepoint=lambda *args, **kwargs: None,

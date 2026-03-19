@@ -189,6 +189,8 @@ def _resolve_store_chat_space(store):
 	if not store:
 		return None
 	try:
-		return frappe.db.get_value("Warehouse", store, "custom_gchat_space")
+		from hrms.api.google_chat import resolve_store_chat_space
+
+		return resolve_store_chat_space(store)
 	except Exception:
 		return None

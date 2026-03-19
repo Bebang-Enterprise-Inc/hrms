@@ -1163,12 +1163,12 @@ def set_maintenance_charge(request_id: Any, charge_amount: Any, charging_reason:
 def _notify_maintenance_charge_pending_ack(doc):
 	"""Notify store and ops channels when a maintenance charge awaits acknowledgement."""
 	try:
-		from hrms.api.google_chat import send_message_to_space
+		from hrms.api.google_chat import resolve_store_chat_space, send_message_to_space
 		from hrms.utils.bei_config import SPACE_NOTIFICATIONS, get_chat_space
 
 		spaces = []
 		if getattr(doc, "store", None):
-			store_space = frappe.db.get_value("Warehouse", doc.store, "custom_gchat_space")
+			store_space = resolve_store_chat_space(doc.store)
 			if store_space:
 				spaces.append(store_space)
 

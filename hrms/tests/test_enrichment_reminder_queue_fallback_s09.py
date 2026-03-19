@@ -85,13 +85,35 @@ def _install_fake_runtime():
 	sys.modules["hrms.utils"] = hrms_utils_pkg
 
 	bei_config_mod = types.ModuleType("hrms.utils.bei_config")
+	bei_config_mod.SPACE_OPS = "ops-space"
+	bei_config_mod.get_chat_space = lambda value=None: value or "ops-space"
 	bei_config_mod.get_company = lambda: "BEI"
 	sys.modules["hrms.utils.bei_config"] = bei_config_mod
+
+	contact_validation_mod = types.ModuleType("hrms.api.contact_validation")
+	contact_validation_mod.validate_email_address = lambda value, *args, **kwargs: value
+	contact_validation_mod.validate_ph_mobile_number = lambda value, *args, **kwargs: value
+	sys.modules["hrms.api.contact_validation"] = contact_validation_mod
 
 	scm_roles_mod = types.ModuleType("hrms.utils.scm_roles")
 	scm_roles_mod.check_scm_permission = lambda *args, **kwargs: None
 	scm_roles_mod.SCM_APPROVAL_ROLES = ["Area Supervisor", "System Manager"]
 	sys.modules["hrms.utils.scm_roles"] = scm_roles_mod
+
+	supply_chain_contracts_mod = types.ModuleType("hrms.utils.supply_chain_contracts")
+	supply_chain_contracts_mod.FINANCE_TREATMENT_INTERCOMPANY = "intercompany"
+	supply_chain_contracts_mod.FINANCE_TREATMENT_SAME_COMPANY = "same_company"
+	supply_chain_contracts_mod.REQUEST_SOURCE_STORE_DISPOSAL = "store_disposal"
+	supply_chain_contracts_mod.REQUEST_SOURCE_STORE_ORDER = "store_order"
+	supply_chain_contracts_mod.REQUEST_SOURCE_STORE_RETURN = "store_return"
+	supply_chain_contracts_mod.infer_finance_treatment = lambda *args, **kwargs: "same_company"
+	supply_chain_contracts_mod.resolve_material_request_contract = lambda *args, **kwargs: {}
+	supply_chain_contracts_mod.resolve_route_source_warehouse = lambda *args, **kwargs: None
+	supply_chain_contracts_mod.resolve_store_buyer_entity = lambda *args, **kwargs: None
+	supply_chain_contracts_mod.resolve_warehouse_company = lambda *args, **kwargs: "BEI"
+	supply_chain_contracts_mod.stamp_material_request_contract = lambda *args, **kwargs: None
+	supply_chain_contracts_mod.stamp_stock_entry_contract = lambda *args, **kwargs: None
+	sys.modules["hrms.utils.supply_chain_contracts"] = supply_chain_contracts_mod
 
 
 def _load_module(name: str, relative_path: str):

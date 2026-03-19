@@ -5,7 +5,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-
 MAPPING_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "sales_dashboard_store_mapping.csv"
 
 
@@ -62,3 +61,25 @@ def lookup_location_id(
 	match = lookup_sales_location(warehouse_name=warehouse_name, warehouse_record_name=warehouse_record_name)
 	return int(match["location_id"]) if match else None
 
+
+@lru_cache(maxsize=1)
+def load_sales_location_mapping_by_id() -> dict[int, dict[str, Any]]:
+	mapping: dict[int, dict[str, Any]] = {}
+	for row in load_sales_location_mapping().values():
+		location_id = int(row["location_id"])
+		if location_id not in mapping:
+			mapping[location_id] = row
+	return mapping
+
+
+def lookup_store_name_by_location_id(location_id: int | str | None) -> str | None:
+	try:
+		key = int(location_id or 0)
+	except (TypeError, ValueError):
+		return None
+	if not key:
+		return None
+	match = load_sales_location_mapping_by_id().get(key)
+	if not match:
+		return None
+	return str(match.get("warehouse_name") or match.get("warehouse_record_name") or "").strip() or None
