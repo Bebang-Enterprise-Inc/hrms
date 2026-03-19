@@ -39,6 +39,7 @@ def _install_fake_dependencies():
 		frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
 	frappe.__dict__.setdefault("db", frappe.local.db)
 	frappe.get_doc = getattr(frappe, "get_doc", lambda *args, **kwargs: None)
+	frappe.new_doc = getattr(frappe, "new_doc", lambda *args, **kwargs: None)
 	frappe.delete_doc = getattr(frappe, "delete_doc", lambda *args, **kwargs: None)
 	frappe.get_all = getattr(frappe, "get_all", lambda *args, **kwargs: [])
 	frappe.get_roles = getattr(frappe, "get_roles", lambda *args, **kwargs: [])
@@ -261,7 +262,76 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 
 		self.assertTrue(result["success"])
 		self.assertEqual(result["shift_count"], 0)
-		self.assertEqual({warning["code"] for warning in result["warnings"]}, {"transferred_out", "new_hire"})
+		self.assertEqual(
+			{warning["code"] for warning in result["warnings"]},
+			{"transferred_out", "new_hire"},
+		)
+
+	def test_create_weekly_plan_inserts_with_ignore_permissions_after_schedule_access(self):
+		doc = MagicMock()
+		doc.name = "BEI-WLP-2026-00021"
+
+		with (
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "Shaw BLVD - BKI", "warehouse_name": "Shaw BLVD"},
+			),
+			patch.object(supervisor, "_assert_schedule_access"),
+			patch.object(
+				supervisor,
+				"_get_labor_plan_employees",
+				return_value=[{"name": "EMP-001", "employee_name": "Jane Doe"}],
+			),
+			patch.object(supervisor, "_merge_approved_leave_shifts", return_value=[]),
+			patch.object(supervisor, "_apply_shifts", return_value=40),
+			patch.object(supervisor.frappe, "new_doc", return_value=doc),
+		):
+			result = supervisor.create_weekly_plan(
+				store="Shaw BLVD - BKI",
+				week_start="2026-03-23",
+				shifts=[],
+				labor_budget=320,
+				surface="commissary_schedule",
+			)
+
+		doc.insert.assert_called_once_with(ignore_permissions=True)
+		self.assertTrue(result["success"])
+		self.assertEqual(result["name"], "BEI-WLP-2026-00021")
+		self.assertEqual(result["total_hours"], 40)
+
+	def test_get_weekly_plan_queries_with_ignore_permissions_after_schedule_access(self):
+		doc = MagicMock()
+		doc.name = "BEI-WLP-2026-00022"
+
+		with (
+			patch.object(
+				supervisor,
+				"_resolve_labor_plan_store",
+				return_value={"warehouse": "Shaw BLVD - BKI", "warehouse_name": "Shaw BLVD"},
+			),
+			patch.object(supervisor, "_assert_schedule_access"),
+			patch.object(
+				supervisor.frappe,
+				"get_all",
+				return_value=[_AttrDict(name="BEI-WLP-2026-00022")],
+			) as get_all,
+			patch.object(supervisor.frappe, "get_doc", return_value=doc),
+			patch.object(supervisor, "_serialize_weekly_plan", return_value={"name": "BEI-WLP-2026-00022"}),
+		):
+			result = supervisor.get_weekly_plan(
+				store="Shaw BLVD - BKI",
+				week_start="2026-03-23",
+				surface="commissary_schedule",
+			)
+
+		get_all.assert_called_once_with(
+			"BEI Weekly Labor Plan",
+			filters={"store": "Shaw BLVD - BKI", "week_start_date": "2026-03-23"},
+			fields=["name", "status", "total_hours", "planned_by"],
+			ignore_permissions=True,
+		)
+		self.assertEqual(result, {"plan": {"name": "BEI-WLP-2026-00022"}})
 
 	def test_apply_weekly_template_returns_role_mapped_rows(self):
 		with (
@@ -484,7 +554,7 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 		self.assertEqual(total_hours, 0)
 		self.assertEqual(len(doc.shifts), 1)
 		self.assertIsNone(doc.shifts[0].shift_type_name)
-		self.assertEqual(doc.shifts[0].shift_type, "Off")
+		self.assertEqual(doc.shifts[0].shift_type, "Day Off")
 		self.assertEqual(doc.shifts[0].hours, 0)
 
 	def test_apply_shifts_skips_link_field_for_missing_shift_type_docs(self):
@@ -553,7 +623,9 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 			patch.object(
 				supervisor.frappe,
 				"get_doc",
-				side_effect=lambda doctype, name: doc if doctype == "BEI Shift Swap Request" else assignment_doc,
+				side_effect=lambda doctype, name: (
+					doc if doctype == "BEI Shift Swap Request" else assignment_doc
+				),
 			),
 			patch.object(supervisor, "_is_commissary_schedule_store", return_value=False),
 			patch.object(supervisor, "_assert_schedule_access"),
