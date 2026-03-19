@@ -8,6 +8,12 @@ from frappe.utils import flt, now_datetime
 from hrms.utils.bei_config import get_company
 from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 
+IAN_GR_VALIDATOR_EMAIL = "ian@bebang.ph"
+
+
+def _normalize_user_id(value):
+    return (value or "").strip().lower()
+
 
 class BEIGoodsReceipt(Document):
     def validate(self):
@@ -23,6 +29,10 @@ class BEIGoodsReceipt(Document):
     def after_insert(self):
         self.gr_no = self.name
         self.db_set("gr_no", self.name, update_modified=False)
+        uploaded_by = self.uploaded_by or frappe.session.user or self.owner
+        if uploaded_by:
+            self.uploaded_by = uploaded_by
+            self.db_set("uploaded_by", uploaded_by, update_modified=False)
 
     def calculate_totals(self):
         """Calculate all totals from items."""
@@ -143,9 +153,20 @@ class BEIGoodsReceipt(Document):
         if self.status != "Pending Inspection":
             frappe.throw(_("GR is not pending inspection"))
 
+        validation_context = self._build_validation_context()
+        validated_at = now_datetime()
+
         self.inspection_status = "Passed" if passed else "Failed"
-        self.inspection_date = now_datetime()
+        self.inspection_date = validated_at
         self.inspection_notes = notes
+        self.validated_by = validation_context["actor"]
+        self.validated_at = validated_at
+        self.validation_actor_mode = validation_context["actor_mode"]
+        self.self_validation_exception = 1 if validation_context["self_validation_exception"] else 0
+
+        inspector = self._resolve_employee_for_user(validation_context["actor"])
+        if inspector:
+            self.inspector = inspector
 
         if passed:
             self.status = "Accepted"
@@ -155,6 +176,11 @@ class BEIGoodsReceipt(Document):
             self.status = "Rejected"
 
         self.save()
+        self._append_validation_comment(
+            passed=passed,
+            notes=notes,
+            validation_context=validation_context,
+        )
 
         return {
             "success": True,
@@ -162,6 +188,64 @@ class BEIGoodsReceipt(Document):
                 "Passed" if passed else "Failed"
             )
         }
+
+    def _build_validation_context(self):
+        actor = frappe.session.user or "Guest"
+        normalized_actor = _normalize_user_id(actor)
+        uploaded_by = self.uploaded_by or self.owner
+        normalized_uploader = _normalize_user_id(uploaded_by)
+        is_ian = self._is_ian_validator(actor)
+
+        if not is_ian:
+            frappe.throw(
+                _("Only Ian can validate Goods Receipts in the current operating policy."),
+                frappe.PermissionError,
+            )
+
+        is_self_validation = bool(normalized_actor and normalized_actor == normalized_uploader)
+        actor_mode = (
+            "Self-validated by Ian (temporary exception)"
+            if is_self_validation
+            else "Validated by Ian"
+        )
+
+        return {
+            "actor": actor,
+            "uploaded_by": uploaded_by,
+            "self_validation_exception": is_self_validation,
+            "actor_mode": actor_mode,
+        }
+
+    def _is_ian_validator(self, user_id):
+        normalized_user = _normalize_user_id(user_id)
+        if normalized_user in {"administrator", _normalize_user_id(IAN_GR_VALIDATOR_EMAIL)}:
+            return True
+
+        employee_name = frappe.db.get_value("Employee", {"user_id": user_id}, "employee_name")
+        if employee_name:
+            normalized_name = employee_name.strip().upper()
+            if "IAN" in normalized_name and "DIONISIO" in normalized_name:
+                return True
+
+        return False
+
+    def _resolve_employee_for_user(self, user_id):
+        if not user_id or user_id == "Administrator":
+            return None
+        return frappe.db.get_value("Employee", {"user_id": user_id}, "name")
+
+    def _append_validation_comment(self, passed, notes, validation_context):
+        result_label = "passed" if passed else "failed"
+        message = _("GR inspection {0} by {1}.").format(result_label, validation_context["actor"])
+        if validation_context["self_validation_exception"]:
+            message += " " + _("Self-validated by Ian (temporary exception).")
+        if notes:
+            message += " " + _("Notes: {0}").format(notes)
+
+        try:
+            self.add_comment("Info", message)
+        except Exception:
+            frappe.log_error(message, "BEI GR Validation Comment Failed")
 
     def create_frappe_purchase_receipt(self):
         """

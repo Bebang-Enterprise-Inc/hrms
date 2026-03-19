@@ -6,13 +6,20 @@ from __future__ import annotations
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, now_datetime
+from frappe.utils import cint, flt, now_datetime
 
 from hrms.utils.bei_config import get_company
 from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 
 # Approval threshold - PO above this needs both Mae AND Butch
 DUAL_APPROVAL_THRESHOLD = 500000
+
+
+def _clean_csv_emails(value):
+	if not value:
+		return ""
+	emails = [part.strip() for part in str(value).split(",") if part and part.strip()]
+	return ", ".join(dict.fromkeys(emails))
 
 
 class BEIPurchaseOrder(Document):
@@ -465,28 +472,112 @@ class BEIPurchaseOrder(Document):
 
 	@frappe.whitelist()
 	def send_to_supplier(self):
-		"""Generate PDF and send PO to supplier."""
-		if self.status not in ["Approved", "Sent to Supplier"]:
-			frappe.throw(_("PO must be approved before sending to supplier"))
+		"""Record a supplier send event for legacy callers."""
+		return self.record_distribution_event(
+			action="send",
+			outcome="success",
+			recipient_email=self.supplier_email,
+			send_mode="manual",
+		)
 
-		if not self.supplier_email:
+	@frappe.whitelist()
+	def record_distribution_event(
+		self,
+		action="send",
+		outcome="success",
+		recipient_email=None,
+		cc_emails=None,
+		send_mode="manual",
+		message_id=None,
+		error_message=None,
+	):
+		"""Persist PO distribution state separately from the core approval workflow."""
+		if self.status not in ["Approved", "Sent to Supplier"]:
+			if self.status not in ["Partially Received", "Fully Received"]:
+				frappe.throw(_("PO must be approved before sending to supplier"))
+
+		if not (recipient_email or self.supplier_email):
 			frappe.throw(_("Supplier email is required"))
 
-		# Generate PDF
-		# pdf_content = frappe.get_print(self.doctype, self.name, "Standard")
+		recipient_email = (recipient_email or self.supplier_email or "").strip()
+		cc_emails = _clean_csv_emails(cc_emails)
+		action = (action or "send").strip().lower()
+		send_mode = (send_mode or action or "manual").strip().lower()
+		actor = frappe.session.user or "Guest"
 
-		# Send email
-		# frappe.sendmail(...)
+		self.distribution_last_action = action
+		self.distribution_send_mode = send_mode
+		self.distribution_recipient_email = recipient_email
+		self.distribution_cc_emails = cc_emails
+		self.distribution_message_id = message_id or ""
 
-		sent_at = now_datetime()
-		self.db_set("sent_to_supplier_date", sent_at, update_modified=False)
-		self.db_set("sent_by", frappe.session.user, update_modified=False)
-		self.db_set("status", "Sent to Supplier", update_modified=False)
-		self.sent_to_supplier_date = sent_at
-		self.sent_by = frappe.session.user
-		self.status = "Sent to Supplier"
+		if outcome == "success":
+			sent_at = now_datetime()
+			self.distribution_delivery_count = cint(self.distribution_delivery_count) + 1
+			self.distribution_last_sent_at = sent_at
+			self.distribution_last_sent_by = actor
+			self.distribution_last_error = ""
+			if send_mode == "auto":
+				self.distribution_status = "Auto-Sent"
+			elif action == "resend":
+				self.distribution_status = "Resent"
+			else:
+				self.distribution_status = "Sent"
 
-		return {"success": True, "message": _("PO sent to supplier")}
+			self.sent_to_supplier_date = sent_at
+			self.sent_by = actor
+			if self.status == "Approved":
+				self.status = "Sent to Supplier"
+		else:
+			self.distribution_status = "Send Failed"
+			self.distribution_last_error = (error_message or _("Unknown email delivery error")).strip()
+
+		self.save(ignore_permissions=True)
+		self._append_distribution_comment(
+			action=action,
+			outcome=outcome,
+			recipient_email=recipient_email,
+			cc_emails=cc_emails,
+			send_mode=send_mode,
+			error_message=error_message,
+		)
+
+		return {
+			"success": outcome == "success",
+			"distribution_status": self.distribution_status,
+			"distribution_delivery_count": cint(self.distribution_delivery_count),
+			"recipient_email": self.distribution_recipient_email,
+			"cc_emails": self.distribution_cc_emails,
+			"message_id": self.distribution_message_id,
+			"message": _("PO distribution state updated"),
+		}
+
+	def _append_distribution_comment(
+		self,
+		*,
+		action,
+		outcome,
+		recipient_email,
+		cc_emails,
+		send_mode,
+		error_message=None,
+	):
+		if outcome == "success":
+			message = _("PO {0} recorded via {1} to {2}.").format(action, send_mode, recipient_email)
+			if cc_emails:
+				message += " " + _("CC: {0}.").format(cc_emails)
+		else:
+			message = _("PO {0} failed via {1} to {2}. Error: {3}").format(
+				action,
+				send_mode,
+				recipient_email,
+				error_message or _("Unknown error"),
+			)
+
+		try:
+			self.add_comment("Info", message)
+		except Exception:
+			frappe.log_error(message, "BEI PO Distribution Comment Failed")
 
 	@frappe.whitelist()
 	def update_received_qty(self, item_code: str, received_qty: float | int):

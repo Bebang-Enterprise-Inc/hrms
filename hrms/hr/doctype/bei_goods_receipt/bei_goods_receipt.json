@@ -18,6 +18,7 @@
     "delivery_note_no",
     "delivery_date",
     "column_break_delivery",
+    "uploaded_by",
     "received_by",
     "warehouse",
     "items_section",
@@ -38,6 +39,10 @@
     "column_break_quality",
     "inspection_date",
     "inspection_notes",
+    "validated_by",
+    "validated_at",
+    "validation_actor_mode",
+    "self_validation_exception",
     "integration_section",
     "frappe_purchase_receipt"
   ],
@@ -125,6 +130,13 @@
     {
       "fieldname": "column_break_delivery",
       "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "uploaded_by",
+      "fieldtype": "Link",
+      "label": "Uploaded By",
+      "options": "User",
+      "read_only": 1
     },
     {
       "fieldname": "received_by",
@@ -248,6 +260,32 @@
       "fieldname": "inspection_notes",
       "fieldtype": "Small Text",
       "label": "Inspection Notes"
+    },
+    {
+      "fieldname": "validated_by",
+      "fieldtype": "Link",
+      "label": "Validated By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "validated_at",
+      "fieldtype": "Datetime",
+      "label": "Validated At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "validation_actor_mode",
+      "fieldtype": "Data",
+      "label": "Validation Actor Mode",
+      "read_only": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "self_validation_exception",
+      "fieldtype": "Check",
+      "label": "Self Validation Exception",
+      "read_only": 1
     },
     {
       "collapsible": 1,

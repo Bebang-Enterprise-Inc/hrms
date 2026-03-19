@@ -40,9 +40,19 @@
     "butch_comment",
     "butch_approval_date",
     "supplier_comm_section",
+    "distribution_status",
+    "distribution_recipient_email",
+    "distribution_cc_emails",
     "sent_to_supplier_date",
     "sent_by",
     "column_break_comm",
+    "distribution_last_sent_at",
+    "distribution_last_sent_by",
+    "distribution_last_action",
+    "distribution_send_mode",
+    "distribution_delivery_count",
+    "distribution_message_id",
+    "distribution_last_error",
     "po_pdf",
     "integration_section",
     "frappe_po"
@@ -262,6 +272,26 @@
       "label": "Supplier Communication"
     },
     {
+      "default": "Not Sent",
+      "fieldname": "distribution_status",
+      "fieldtype": "Select",
+      "label": "Distribution Status",
+      "options": "Not Sent\nSent\nResent\nAuto-Sent\nSend Failed",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_recipient_email",
+      "fieldtype": "Data",
+      "label": "Recipient Email",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_cc_emails",
+      "fieldtype": "Small Text",
+      "label": "CC Emails",
+      "read_only": 1
+    },
+    {
       "fieldname": "sent_to_supplier_date",
       "fieldtype": "Datetime",
       "label": "Sent to Supplier",
@@ -277,6 +307,50 @@
     {
       "fieldname": "column_break_comm",
       "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "distribution_last_sent_at",
+      "fieldtype": "Datetime",
+      "label": "Last Sent At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_last_sent_by",
+      "fieldtype": "Link",
+      "label": "Last Sent By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_last_action",
+      "fieldtype": "Data",
+      "label": "Last Distribution Action",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_send_mode",
+      "fieldtype": "Data",
+      "label": "Distribution Mode",
+      "read_only": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "distribution_delivery_count",
+      "fieldtype": "Int",
+      "label": "Distribution Count",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_message_id",
+      "fieldtype": "Data",
+      "label": "Distribution Message ID",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_last_error",
+      "fieldtype": "Small Text",
+      "label": "Distribution Error",
+      "read_only": 1
     },
     {
       "fieldname": "po_pdf",

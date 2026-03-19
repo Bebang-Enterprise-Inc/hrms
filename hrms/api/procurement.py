@@ -37,6 +37,7 @@ _SUPPLIER_INVOICE_EXCEPTION_MANAGER_ROLES = {
     "Procurement Manager",
     "Accounts Manager",
 }
+IAN_GR_VALIDATOR_EMAILS = frozenset({"ian@bebang.ph"})
 
 
 def _sanitize_doc_data(data):
@@ -149,6 +150,74 @@ def _table_has_column(table_name: str, column_name: str) -> bool:
     return bool(rows)
 
 
+def _normalize_user_id(value: str | None) -> str:
+    return (value or "").strip().lower()
+
+
+def _join_csv_emails(value) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, (list, tuple, set)):
+        parts = [str(item).strip() for item in value if str(item).strip()]
+    else:
+        parts = [item.strip() for item in str(value).split(",") if item and item.strip()]
+    return ", ".join(dict.fromkeys(parts))
+
+
+def _is_ian_validator_user(user_id: str | None) -> bool:
+    normalized = _normalize_user_id(user_id)
+    if normalized in {"administrator", *IAN_GR_VALIDATOR_EMAILS}:
+        return True
+
+    if not user_id:
+        return False
+
+    employee_name = frappe.db.get_value("Employee", {"user_id": user_id}, "employee_name")
+    if employee_name:
+        normalized_name = employee_name.strip().upper()
+        return "IAN" in normalized_name and "DIONISIO" in normalized_name
+
+    return False
+
+
+def _resolve_employee_label(employee_id: str | None) -> str | None:
+    if not employee_id:
+        return None
+    return frappe.db.get_value("Employee", employee_id, "employee_name") or employee_id
+
+
+def _decorate_goods_receipt_policy_fields(data: dict) -> dict:
+    current_user = frappe.session.user or "Guest"
+    status = data.get("status")
+    uploaded_by = data.get("uploaded_by") or data.get("owner")
+    is_ian = _is_ian_validator_user(current_user)
+    is_self_validation = _normalize_user_id(current_user) == _normalize_user_id(uploaded_by)
+
+    block_reason = None
+    can_validate = False
+    if status == "Pending Inspection":
+        if is_ian:
+            can_validate = True
+        else:
+            block_reason = _("Only Ian can validate Goods Receipts at this time.")
+    else:
+        block_reason = _("Goods Receipt is not pending inspection.")
+
+    if data.get("self_validation_exception"):
+        data["self_validation_label"] = _("Self-validated by Ian (temporary exception)")
+    elif status == "Pending Inspection" and is_ian and is_self_validation:
+        data["self_validation_label"] = _("Ian may self-validate this GR under the temporary exception.")
+    else:
+        data["self_validation_label"] = None
+
+    data["validator_of_record"] = "Ian Dionisio"
+    data["can_validate"] = can_validate
+    data["validation_block_reason"] = block_reason
+    data["received_by_display"] = _resolve_employee_label(data.get("received_by"))
+    data["inspection_actor_display"] = data.get("validated_by") or data.get("inspector")
+    return data
+
+
 def _get_g046_sql_parts():
     """Build schema-compatible SQL fragments for G-046 visibility queries."""
     has_stock_entry_column = _table_has_column("tabSales Invoice", "custom_stock_entry")
@@ -221,9 +290,17 @@ def get_suppliers(filters=None, page=1, page_size=20, search=None):
         if isinstance(filters, str):
             filters = frappe.parse_json(filters)
 
-        if filters.get("status"):
+        statuses = _normalize_status_filters(filters)
+        if len(statuses) == 1:
             conditions.append("status = %(status)s")
-            values["status"] = filters["status"]
+            values["status"] = statuses[0]
+        elif statuses:
+            placeholders = []
+            for index, status_value in enumerate(statuses):
+                key = f"status_{index}"
+                placeholders.append(f"%({key})s")
+                values[key] = status_value
+            conditions.append(f"status IN ({', '.join(placeholders)})")
 
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
@@ -836,6 +913,7 @@ def get_purchase_order(name: str) -> dict[str, Any]:
     """Get single PO with items."""
     po = frappe.get_doc("BEI Purchase Order", name)
     data = po.as_dict()
+    data["distribution_cc_emails"] = _join_csv_emails(data.get("distribution_cc_emails"))
 
     # Ensure items are always present (even if child table was added after PO creation)
     if not data.get("items"):
@@ -848,7 +926,76 @@ def get_purchase_order(name: str) -> dict[str, Any]:
         """, (name,), as_dict=True)
         data["items"] = items
 
+    if data.get("supplier"):
+        supplier = frappe.db.get_value(
+            "BEI Supplier",
+            data["supplier"],
+            ["bir_2307", "sec_certificate"],
+            as_dict=True,
+        ) or {}
+        data["supplier_has_bir"] = bool(supplier.get("bir_2307"))
+        data["supplier_has_sec"] = bool(supplier.get("sec_certificate"))
+
     return _augment_purchase_order_response(data)
+
+
+@frappe.whitelist()
+def get_purchase_order_history(name) -> list[dict[str, Any]]:
+    """Build a readable PO activity log from workflow fields and info comments."""
+    po = frappe.get_doc("BEI Purchase Order", name)
+    events = [
+        {
+            "action": "Created",
+            "user": po.owner,
+            "timestamp": str(po.creation),
+            "comment": _("Purchase Order created."),
+        }
+    ]
+
+    if po.mae_approval_date:
+        events.append(
+            {
+                "action": "Approved",
+                "user": "Mae Karazi",
+                "timestamp": str(po.mae_approval_date),
+                "comment": po.mae_comment or _("Approved by Mae."),
+            }
+        )
+
+    if po.butch_approval_date:
+        events.append(
+            {
+                "action": "Approved",
+                "user": "Butch Formoso",
+                "timestamp": str(po.butch_approval_date),
+                "comment": po.butch_comment or _("Approved by Butch."),
+            }
+        )
+
+    comment_rows = frappe.db.sql(
+        """
+        SELECT comment_email, content, modified
+        FROM `tabComment`
+        WHERE reference_doctype = 'BEI Purchase Order'
+          AND reference_name = %s
+          AND comment_type = 'Info'
+        ORDER BY modified ASC
+        """,
+        (name,),
+        as_dict=True,
+    )
+    for row in comment_rows:
+        events.append(
+            {
+                "action": "Activity",
+                "user": row.get("comment_email") or _("System"),
+                "timestamp": str(row.get("modified")),
+                "comment": row.get("content"),
+            }
+        )
+
+    events.sort(key=lambda event: event.get("timestamp") or "")
+    return events
 
 
 @frappe.whitelist()
@@ -976,10 +1123,39 @@ def reject_po(name, reason, rejector="mae"):
 
 
 @frappe.whitelist()
-def send_po_to_supplier(name):
-    """Send PO to supplier via email."""
+def send_po_to_supplier(
+    name,
+    action="send",
+    outcome="success",
+    recipient_email=None,
+    cc_emails=None,
+    send_mode="manual",
+    message_id=None,
+    error_message=None,
+):
+    """Record PO distribution state after the portal handles PDF/email delivery."""
     po = frappe.get_doc("BEI Purchase Order", name)
-    return po.send_to_supplier()
+    return po.record_distribution_event(
+        action=action,
+        outcome=outcome,
+        recipient_email=recipient_email,
+        cc_emails=cc_emails,
+        send_mode=send_mode,
+        message_id=message_id,
+        error_message=error_message,
+    )
+
+
+@frappe.whitelist()
+def get_purchase_order_pdf(name):
+    """Return a data URL for the supplier-facing PO PDF."""
+    from hrms.api import _download_pdf
+
+    return {
+        "name": name,
+        "filename": f"{name}.pdf",
+        "data_url": _download_pdf("BEI Purchase Order", name),
+    }
 
 
 @frappe.whitelist()
@@ -1058,7 +1234,9 @@ def get_goods_receipts(
             name, gr_no, gr_no as gr_number, receipt_date, status,
             purchase_order, purchase_order as po_number,
             supplier, supplier_name,
-            total_ordered_qty, total_received_qty, total_amount
+            delivery_note_no, total_ordered_qty, total_received_qty, total_accepted_qty, total_rejected_qty, total_amount,
+            uploaded_by, received_by, inspection_status, inspection_notes,
+            validated_by, validated_at, validation_actor_mode, self_validation_exception
         FROM `tabBEI Goods Receipt`
         WHERE """
     gr_query += where_clause
@@ -1067,6 +1245,9 @@ def get_goods_receipts(
         LIMIT %(page_size)s OFFSET %(offset)s
     """
     grs = frappe.db.sql(gr_query, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+
+    for row in grs:
+        _decorate_goods_receipt_policy_fields(row)
 
     return {
         "data": grs,
@@ -1084,29 +1265,36 @@ def get_goods_receipt(name: str) -> dict[str, Any]:
     data = gr.as_dict()
     data["gr_number"] = data.get("gr_no")
     data["po_number"] = data.get("purchase_order")
+    _decorate_goods_receipt_policy_fields(data)
     return data
 
 
 @frappe.whitelist()
 def get_goods_receipts_for_po(name):
     """Get goods receipts linked to a specific PO."""
-    return frappe.db.sql("""
+    rows = frappe.db.sql("""
         SELECT name, gr_no, gr_no as gr_number, receipt_date, status,
             purchase_order, purchase_order as po_number,
             supplier, supplier_name,
-            total_ordered_qty, total_received_qty, total_amount
+            delivery_note_no, total_ordered_qty, total_received_qty, total_accepted_qty, total_rejected_qty, total_amount,
+            uploaded_by, received_by, inspection_status, inspection_notes,
+            validated_by, validated_at, validation_actor_mode, self_validation_exception
         FROM `tabBEI Goods Receipt`
         WHERE purchase_order = %s
         ORDER BY receipt_date DESC
     """, (name,), as_dict=True)
+    for row in rows:
+        _decorate_goods_receipt_policy_fields(row)
+    return rows
 
 
 @frappe.whitelist()
 def get_invoices_for_po(name: str) -> list[dict[str, Any]]:
 	"""Get invoices linked to a specific PO."""
 	return frappe.db.sql("""
-        SELECT name, invoice_no, invoice_no as invoice_number, invoice_date, due_date, status,
+        SELECT name, invoice_no, invoice_no as invoice_number, supplier_invoice_no, invoice_date, due_date, status,
             supplier, supplier_name, purchase_order, purchase_order as po_number,
+            goods_receipt, goods_receipt as gr_number,
             subtotal, vat_amount, subtotal as net_total, vat_amount as tax_amount,
             grand_total, balance_due, payment_status, match_status
         FROM `tabBEI Invoice`
@@ -1313,6 +1501,7 @@ def get_invoices(
         SELECT
             name, invoice_no, invoice_no as invoice_number, supplier_invoice_no, invoice_date, due_date,
             status, supplier, supplier_name, purchase_order, purchase_order as po_number,
+            goods_receipt, goods_receipt as gr_number,
             subtotal, vat_amount, subtotal as net_total, vat_amount as tax_amount,
             grand_total, balance_due, payment_status, match_status
         FROM `tabBEI Invoice`
@@ -1560,9 +1749,14 @@ def get_payment_requests(
             COALESCE(pr.supplier, inv.supplier) as supplier,
             COALESCE(pr.supplier_name, inv.supplier_name) as supplier_name,
             pr.payment_amount, pr.payment_mode, pr.payment_mode as payment_method, pr.invoice,
-            pr.ceo_required, pr.payment_date
+            inv.invoice_no as invoice_number, inv.supplier_invoice_no, inv.invoice_date, inv.due_date,
+            inv.match_status, pr.purchase_order, po.po_no as po_number,
+            pr.goods_receipt, gr.gr_no as gr_number,
+            pr.ceo_required, pr.payment_date, pr.check_number
         FROM `tabBEI Payment Request` pr
         LEFT JOIN `tabBEI Invoice` inv ON pr.invoice = inv.name
+        LEFT JOIN `tabBEI Purchase Order` po ON pr.purchase_order = po.name
+        LEFT JOIN `tabBEI Goods Receipt` gr ON pr.goods_receipt = gr.name
         WHERE """
     request_query += where_clause
     request_query += """
@@ -1599,6 +1793,23 @@ def get_payment_request(name: str) -> dict[str, Any]:
     data["request_number"] = data.get("payment_request_no")
     data["payment_method"] = data.get("payment_mode")
     data["approval_status"] = request.get_approval_status()
+    if data.get("purchase_order"):
+        data["po_number"] = frappe.db.get_value("BEI Purchase Order", data["purchase_order"], "po_no")
+    if data.get("goods_receipt"):
+        data["gr_number"] = frappe.db.get_value("BEI Goods Receipt", data["goods_receipt"], "gr_no")
+    if data.get("invoice"):
+        invoice_fields = frappe.db.get_value(
+            "BEI Invoice",
+            data["invoice"],
+            ["invoice_no", "supplier_invoice_no", "invoice_date", "due_date", "match_status", "grand_total"],
+            as_dict=True,
+        ) or {}
+        data["invoice_number"] = invoice_fields.get("invoice_no") or data["invoice"]
+        data["supplier_invoice_no"] = invoice_fields.get("supplier_invoice_no")
+        data["invoice_date"] = invoice_fields.get("invoice_date")
+        data["due_date"] = invoice_fields.get("due_date")
+        data["match_status"] = invoice_fields.get("match_status")
+        data["invoice_amount"] = invoice_fields.get("grand_total") or data.get("invoice_amount")
     return data
 
 
@@ -1654,6 +1865,69 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
     invoice_name = data.get("invoice")
     if invoice_name:
         invoice = frappe.get_doc("BEI Invoice", invoice_name)
+        if invoice.status not in ["Verified", "Partially Paid"]:
+            frappe.throw(
+                _("Invoice must be verified before creating a payment request."),
+                title=_("Verification Required"),
+            )
+
+        payment_amount = flt(data.get("payment_amount") or invoice.balance_due)
+        if payment_amount <= 0:
+            frappe.throw(
+                _("Payment amount must be greater than zero."),
+                title=_("Invalid Payment Amount"),
+            )
+        if payment_amount > flt(invoice.balance_due):
+            frappe.throw(
+                _(
+                    "Payment amount (₱{0:,.2f}) exceeds the current invoice balance "
+                    "(₱{1:,.2f})."
+                ).format(payment_amount, flt(invoice.balance_due)),
+                title=_("Balance Exceeded"),
+            )
+
+        pending_request_statuses = [
+            "Draft",
+            "Pending Review",
+            "Pending Budget Approval",
+            "Pending CFO Approval",
+            "Pending CEO Approval",
+        ]
+        pending_status_placeholders = []
+        pending_status_values = {"invoice_name": invoice_name}
+        for index, status_value in enumerate(pending_request_statuses):
+            key = f"pending_status_{index}"
+            pending_status_placeholders.append(f"%({key})s")
+            pending_status_values[key] = status_value
+        pending_requested_total = flt(
+            frappe.db.sql(
+                f"""
+                SELECT COALESCE(SUM(payment_amount), 0)
+                FROM `tabBEI Payment Request`
+                WHERE invoice = %(invoice_name)s
+                  AND status IN ({', '.join(pending_status_placeholders)})
+                """,
+                pending_status_values,
+            )[0][0]
+        )
+        remaining_invoice_balance = flt(invoice.balance_due) - pending_requested_total
+        if remaining_invoice_balance <= 0:
+            frappe.throw(
+                _(
+                    "This invoice already has pending payment requests totaling "
+                    "₱{0:,.2f}. Create a new request only after those are resolved."
+                ).format(pending_requested_total),
+                title=_("Duplicate Payment Risk"),
+            )
+        if payment_amount > remaining_invoice_balance:
+            frappe.throw(
+                _(
+                    "Payment amount (₱{0:,.2f}) plus pending requests would exceed the "
+                    "remaining invoice balance (₱{1:,.2f})."
+                ).format(payment_amount, remaining_invoice_balance),
+                title=_("Duplicate Payment Risk"),
+            )
+
         _populate_payment_request_invoice_context(data, invoice)
         purchase_order = invoice.purchase_order
 
