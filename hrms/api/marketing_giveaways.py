@@ -29,6 +29,7 @@ DEFAULT_EXPENSE_ACCOUNT_NUMBER = "6005001"
 DEFAULT_EXPENSE_ACCOUNT_NAME = "MARKETING GIVEAWAYS"
 FINISHED_GOODS_ITEM_GROUPS = {"Finished Goods"}
 LEAKAGE_LOOKBACK_DAYS = 16
+LEAKAGE_CANDIDATE_ORDER_LIMIT = 600
 APPROVED_STATES = {"Approved / Active", "Partially Fulfilled"}
 OPS_REVIEW_ROLES = {"Area Supervisor", "Supply Chain Manager", "HQ User", "System Manager", "Administrator"}
 FINANCE_REVIEW_ROLES = {"HQ Finance", "Accounts Manager", "HQ User", "System Manager", "Administrator"}
@@ -947,9 +948,11 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 		("business_date", f"gte.{start_day.isoformat()}"),
 		("business_date", f"lte.{end_day.isoformat()}"),
 		("payment_status", "eq.PAID"),
+		("total_discounts", "gt.0"),
 		("order", "business_date.desc,id.desc"),
+		("limit", str(LEAKAGE_CANDIDATE_ORDER_LIMIT)),
 	]
-	order_rows = _supabase_get_all("pos_orders", params)
+	order_rows = _supabase_get("pos_orders", params)
 	if not order_rows:
 		return []
 	order_ids = [int(row.get("id") or 0) for row in order_rows if int(row.get("id") or 0)]

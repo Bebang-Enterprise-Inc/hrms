@@ -496,9 +496,11 @@ def test_update_campaign_tracking_computes_multi_day_progress(monkeypatch):
 
 def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_orders(monkeypatch):
 	module = _load_module("marketing_giveaways_leakage_query")
+	order_queries: list[list[tuple[str, object]]] = []
 
-	def _supabase_get_all(resource, params=None, page_size=1000):
+	def _supabase_get(resource, params=None):
 		if resource == "pos_orders":
+			order_queries.append(list(params or []))
 			return [
 				{
 					"id": 101,
@@ -531,6 +533,9 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 					"payment_status": "PAID",
 				},
 			]
+		raise AssertionError(resource)
+
+	def _supabase_get_all(resource, params=None, page_size=1000):
 		if resource == "pos_order_items":
 			return [
 				{
@@ -560,6 +565,7 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 			]
 		raise AssertionError(resource)
 
+	monkeypatch.setattr(module, "_supabase_get", _supabase_get)
 	monkeypatch.setattr(module, "_supabase_get_all", _supabase_get_all)
 	monkeypatch.setattr(
 		module.frappe,
@@ -577,3 +583,6 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 	assert rows[0]["linked_campaigns"] == [{"campaign": "CMP-0001", "status": "Linked"}]
 	assert rows[1]["is_marketing_discount"] is False
 	assert rows[1]["is_effectively_free"] is True
+	assert order_queries, "pos_orders query was not issued"
+	assert ("total_discounts", "gt.0") in order_queries[0]
+	assert ("limit", str(module.LEAKAGE_CANDIDATE_ORDER_LIMIT)) in order_queries[0]
