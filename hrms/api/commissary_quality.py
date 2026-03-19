@@ -23,6 +23,7 @@ from frappe.utils import add_days, flt, today
 
 from hrms.api.commissary import get_commissary_company, get_commissary_warehouse
 from hrms.utils.scm_roles import SCM_COMMISSARY_ROLES, check_scm_permission
+from hrms.utils.sentry import capture_backend_message, set_backend_observability_context
 
 
 def _enable_role_gated_write(doc: Any):
@@ -406,10 +407,28 @@ def log_wastage(
 	    remarks: Additional notes
 	"""
 	check_scm_permission(SCM_COMMISSARY_ROLES, "log commissary wastage")
-
+	set_backend_observability_context(
+		module="commissary",
+		action="log_wastage",
+		route_action="log_wastage",
+		mutation_type="create",
+		endpoint_or_job="hrms.api.commissary_quality.log_wastage",
+		phase="mutation",
+		extras={"item_code": item_code, "qty": qty, "reason_code": reason_code, "batch_no": batch_no},
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	if reason_code not in WASTAGE_REASONS:
+		capture_backend_message(
+			"Invalid wastage reason code",
+			module="commissary",
+			action="log_wastage",
+			route_action="log_wastage",
+			mutation_type="create",
+			endpoint_or_job="hrms.api.commissary_quality.log_wastage",
+			phase="mutation",
+			extras={"item_code": item_code, "qty": qty, "reason_code": reason_code, "batch_no": batch_no},
+		)
 		return {
 			"success": False,
 			"error": f"Invalid reason code. Valid codes: {', '.join(WASTAGE_REASONS.keys())}",
@@ -419,6 +438,16 @@ def log_wastage(
 	item = frappe.db.get_value("Item", item_code, ["item_name", "stock_uom", "valuation_rate"], as_dict=True)
 
 	if not item:
+		capture_backend_message(
+			f"Item {item_code} not found for wastage logging",
+			module="commissary",
+			action="log_wastage",
+			route_action="log_wastage",
+			mutation_type="create",
+			endpoint_or_job="hrms.api.commissary_quality.log_wastage",
+			phase="mutation",
+			extras={"item_code": item_code, "qty": qty, "reason_code": reason_code, "batch_no": batch_no},
+		)
 		return {"success": False, "error": f"Item {item_code} not found"}
 
 	se = None
@@ -495,6 +524,15 @@ def get_wastage_history(days: int | str = 30, item_code: str | None = None) -> d
 	    days: Days to look back (default 30)
 	    item_code: Filter by specific item (optional)
 	"""
+	set_backend_observability_context(
+		module="commissary",
+		action="get_wastage_history",
+		route_action="get_wastage_history",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.commissary_quality.get_wastage_history",
+		phase="load",
+		extras={"days": days, "item_code": item_code},
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	# Build filters
@@ -564,6 +602,14 @@ def get_wastage_history(days: int | str = 30, item_code: str | None = None) -> d
 @frappe.whitelist()
 def get_wastage_reasons() -> dict[str, Any]:
 	"""Get available wastage reason codes and descriptions."""
+	set_backend_observability_context(
+		module="commissary",
+		action="get_wastage_reasons",
+		route_action="get_wastage_reasons",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.commissary_quality.get_wastage_reasons",
+		phase="load",
+	)
 	return {
 		"success": True,
 		"data": [{"code": code, "description": desc} for code, desc in WASTAGE_REASONS.items()],

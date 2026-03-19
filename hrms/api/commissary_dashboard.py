@@ -17,6 +17,7 @@ from frappe.utils import add_days, flt, today
 
 from hrms.api.commissary import get_commissary_company, get_commissary_warehouse
 from hrms.utils.scm_roles import SCM_COMMISSARY_ROLES, check_scm_permission
+from hrms.utils.sentry import set_backend_observability_context
 
 
 def _enable_role_gated_write(doc: Any):
@@ -221,6 +222,14 @@ def get_production_items() -> dict[str, Any]:
 	Get finished goods that commissary produces.
 	Returns items with current stock levels.
 	"""
+	set_backend_observability_context(
+		module="commissary",
+		action="get_production_items",
+		route_action="get_production_items",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.commissary_dashboard.get_production_items",
+		phase="load",
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	# P0-12: Batch query — get items + stock in one query (was N+1)
@@ -339,6 +348,18 @@ def submit_production_output(
 	if isinstance(items, str):
 		items = json.loads(items)
 
+	set_backend_observability_context(
+		module="commissary",
+		action="submit_production_output",
+		route_action="submit_production_output",
+		mutation_type="create",
+		endpoint_or_job="hrms.api.commissary_dashboard.submit_production_output",
+		phase="mutation",
+		extras={
+			"batch_no": batch_no,
+			"item_count": len(items) if isinstance(items, list) else None,
+		},
+	)
 	if not items:
 		frappe.throw(_("No items to record"))
 
@@ -505,6 +526,15 @@ def get_production_history(
 	"""
 	Get production history.
 	"""
+	set_backend_observability_context(
+		module="commissary",
+		action="get_production_history",
+		route_action="get_production_history",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.commissary_dashboard.get_production_history",
+		phase="load",
+		extras={"date_from": date_from, "date_to": date_to, "limit": limit},
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	filters = {

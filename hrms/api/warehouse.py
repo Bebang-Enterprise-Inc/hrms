@@ -24,6 +24,7 @@ from hrms.utils.scm_roles import (
 	SCM_RECEIVING_ROLES,
 	check_scm_permission,
 )
+from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 from hrms.utils.supply_chain_contracts import (
 	CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
@@ -899,6 +900,14 @@ def get_ready_for_dispatch():
 	Get approved Material Requests ready for dispatch.
 	Groups by destination store for trip planning.
 	"""
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_ready_for_dispatch",
+		route_action="get_ready_for_dispatch",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.warehouse.get_ready_for_dispatch",
+		phase="load",
+	)
 	mrs = frappe.get_all(
 		"Material Request",
 		filters={
@@ -972,6 +981,20 @@ def create_stock_transfer(
 	if isinstance(items, str):
 		items = json.loads(items)
 
+	set_backend_observability_context(
+		module="warehouse",
+		action="create_stock_transfer",
+		route_action="create_stock_transfer",
+		mutation_type="create",
+		endpoint_or_job="hrms.api.warehouse.create_stock_transfer",
+		phase="mutation",
+		extras={
+			"source_warehouse": source_warehouse,
+			"target_warehouse": target_warehouse,
+			"mr_name": mr_name,
+			"item_count": len(items) if isinstance(items, list) else None,
+		},
+	)
 	check_scm_permission(SCM_DISPATCH_ROLES, "dispatch warehouse stock transfers")
 
 	default_source_company = resolve_warehouse_company(source_warehouse) or get_company()
