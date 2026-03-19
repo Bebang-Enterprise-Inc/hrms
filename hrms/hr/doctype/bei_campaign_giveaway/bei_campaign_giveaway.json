@@ -1,0 +1,469 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "autoname": "naming_series:",
+  "creation": "2026-03-18 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "campaign_name",
+    "campaign_code",
+    "status",
+    "workflow_state",
+    "column_break_identity",
+    "requester_user",
+    "owning_department",
+    "request_date",
+    "section_schedule",
+    "purpose_event",
+    "start_date",
+    "end_date",
+    "daily_cap_quantity",
+    "column_break_schedule",
+    "budget_owner",
+    "cost_center",
+    "approved_value_tolerance_pct",
+    "section_items",
+    "items",
+    "section_sources",
+    "source_locations_json",
+    "schedule_json",
+    "supporting_attachments_json",
+    "section_tracking",
+    "total_approved_quantity",
+    "quantity_served",
+    "remaining_quantity",
+    "remaining_days",
+    "required_daily_pace",
+    "column_break_tracking",
+    "estimated_peso_value",
+    "latest_issue_date",
+    "active_queue_name",
+    "section_reviews",
+    "ops_reviewed_by",
+    "ops_reviewed_at",
+    "ops_review_notes",
+    "column_break_ops",
+    "finance_reviewed_by",
+    "finance_reviewed_at",
+    "finance_review_notes",
+    "section_policy",
+    "finance_expense_account",
+    "policy_version",
+    "rejection_reason",
+    "cancel_reason"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "BEI-CGN-.YYYY.-.#####",
+      "reqd": 1
+    },
+    {
+      "fieldname": "campaign_name",
+      "fieldtype": "Data",
+      "label": "Campaign Name",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "campaign_code",
+      "fieldtype": "Data",
+      "label": "Campaign Code",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nPending Ops Review\nPending Finance Approval\nApproved / Active\nPartially Fulfilled\nFully Fulfilled\nExpired\nRejected\nCancelled",
+      "default": "Draft",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "workflow_state",
+      "fieldtype": "Data",
+      "label": "Workflow State",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_identity",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "requester_user",
+      "fieldtype": "Link",
+      "label": "Requester",
+      "options": "User",
+      "reqd": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "owning_department",
+      "fieldtype": "Link",
+      "label": "Owning Department",
+      "options": "Department"
+    },
+    {
+      "fieldname": "request_date",
+      "fieldtype": "Date",
+      "label": "Request Date",
+      "default": "Today",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_schedule",
+      "fieldtype": "Section Break",
+      "label": "Campaign Window"
+    },
+    {
+      "fieldname": "purpose_event",
+      "fieldtype": "Small Text",
+      "label": "Purpose / Event",
+      "reqd": 1
+    },
+    {
+      "fieldname": "start_date",
+      "fieldtype": "Date",
+      "label": "Start Date",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "end_date",
+      "fieldtype": "Date",
+      "label": "End Date",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "daily_cap_quantity",
+      "fieldtype": "Float",
+      "label": "Daily Cap Quantity",
+      "precision": 3
+    },
+    {
+      "fieldname": "column_break_schedule",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "budget_owner",
+      "fieldtype": "Link",
+      "label": "Budget Owner",
+      "options": "User"
+    },
+    {
+      "fieldname": "cost_center",
+      "fieldtype": "Link",
+      "label": "Cost Center",
+      "options": "Cost Center"
+    },
+    {
+      "fieldname": "approved_value_tolerance_pct",
+      "fieldtype": "Float",
+      "label": "Approved Value Tolerance %",
+      "default": 0,
+      "precision": 2
+    },
+    {
+      "fieldname": "section_items",
+      "fieldtype": "Section Break",
+      "label": "Approved Quantities by SKU"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "BEI Campaign Giveaway Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_sources",
+      "fieldtype": "Section Break",
+      "label": "Sources And Schedule"
+    },
+    {
+      "fieldname": "source_locations_json",
+      "fieldtype": "JSON",
+      "label": "Approved Source Stores / Locations",
+      "description": "JSON array of approved source warehouse names."
+    },
+    {
+      "fieldname": "schedule_json",
+      "fieldtype": "JSON",
+      "label": "Daily Fulfillment Schedule",
+      "description": "JSON array of schedule rows: date, quantity, source_location, item_code."
+    },
+    {
+      "fieldname": "supporting_attachments_json",
+      "fieldtype": "JSON",
+      "label": "Supporting Files",
+      "description": "JSON array of file metadata or URLs."
+    },
+    {
+      "fieldname": "section_tracking",
+      "fieldtype": "Section Break",
+      "label": "Tracking"
+    },
+    {
+      "fieldname": "total_approved_quantity",
+      "fieldtype": "Float",
+      "label": "Total Approved Quantity",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "quantity_served",
+      "fieldtype": "Float",
+      "label": "Quantity Served",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "remaining_quantity",
+      "fieldtype": "Float",
+      "label": "Remaining Quantity",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "remaining_days",
+      "fieldtype": "Int",
+      "label": "Remaining Campaign Days",
+      "read_only": 1
+    },
+    {
+      "fieldname": "required_daily_pace",
+      "fieldtype": "Float",
+      "label": "Required Pace",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "column_break_tracking",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "estimated_peso_value",
+      "fieldtype": "Currency",
+      "label": "Estimated Peso Value",
+      "read_only": 1
+    },
+    {
+      "fieldname": "latest_issue_date",
+      "fieldtype": "Date",
+      "label": "Latest Issue Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "active_queue_name",
+      "fieldtype": "Link",
+      "label": "Active Approval Queue",
+      "options": "BEI Approval Queue",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_reviews",
+      "fieldtype": "Section Break",
+      "label": "Review History"
+    },
+    {
+      "fieldname": "ops_reviewed_by",
+      "fieldtype": "Link",
+      "label": "Ops Reviewed By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "ops_reviewed_at",
+      "fieldtype": "Datetime",
+      "label": "Ops Reviewed At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "ops_review_notes",
+      "fieldtype": "Small Text",
+      "label": "Ops Review Notes"
+    },
+    {
+      "fieldname": "column_break_ops",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "finance_reviewed_by",
+      "fieldtype": "Link",
+      "label": "Finance Reviewed By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "finance_reviewed_at",
+      "fieldtype": "Datetime",
+      "label": "Finance Reviewed At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "finance_review_notes",
+      "fieldtype": "Small Text",
+      "label": "Finance Review Notes"
+    },
+    {
+      "fieldname": "section_policy",
+      "fieldtype": "Section Break",
+      "label": "Finance Policy"
+    },
+    {
+      "fieldname": "finance_expense_account",
+      "fieldtype": "Link",
+      "label": "Finance Expense Account",
+      "options": "Account",
+      "read_only": 1
+    },
+    {
+      "fieldname": "policy_version",
+      "fieldtype": "Data",
+      "label": "Policy Version",
+      "read_only": 1
+    },
+    {
+      "fieldname": "rejection_reason",
+      "fieldtype": "Small Text",
+      "label": "Rejection Reason"
+    },
+    {
+      "fieldname": "cancel_reason",
+      "fieldtype": "Small Text",
+      "label": "Cancel Reason"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-03-18 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Campaign Giveaway",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Administrator",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "HQ User",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "HQ Finance",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Marketing User",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Marketing Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Area Supervisor",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 1,
+      "read": 1,
+      "report": 0,
+      "role": "Store Supervisor",
+      "share": 0,
+      "write": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

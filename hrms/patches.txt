@@ -48,3 +48,5 @@ hrms.patches.v16_0.drop_cycle_count_unique_index #2026-02-20
 hrms.patches.v16_0.ensure_statement_of_account_doctype #2026-03-10
 hrms.patches.v16_0.add_stock_reconciliation_sync_ref_field #2026-03-11
 hrms.patches.v16_0.ensure_bki_commissary_warehouses #2026-03-12
+hrms.patches.v16_0.ensure_sales_dashboard_access #2026-03-15
+hrms.patches.v16_0.ensure_marketing_giveaway_setup #2026-03-18
