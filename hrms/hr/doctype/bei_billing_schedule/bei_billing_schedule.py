@@ -122,8 +122,9 @@ class BEIBillingSchedule(Document):
 				{
 					"account": account,
 					"credit_in_account_currency": credit_amount,
-					"reference_type": "BEI Billing Schedule",
-					"reference_name": self.name,
+					# Journal Entry Account only accepts core ERP reference doctypes here.
+					# Keep BEI billing linkage on the receivable leg instead of writing an invalid custom doctype.
+					"user_remark": f"Billing revenue for {self.name}",
 				},
 			)
 
@@ -140,8 +141,7 @@ class BEIBillingSchedule(Document):
 				{
 					"account": franchise_income_account,
 					"credit_in_account_currency": flt(self.handling_fee),
-					"reference_type": "BEI Billing Schedule",
-					"reference_name": self.name,
+					"user_remark": f"Billing markup for {self.name}",
 				},
 			)
 
