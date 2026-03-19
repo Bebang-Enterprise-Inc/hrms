@@ -331,6 +331,45 @@ def send_message_to_user_direct(
 	)
 
 
+def send_notification_to_user(
+	user_identifier: str | None,
+	message: str,
+	*,
+	family: str | None = None,
+	context: str = "hrms.api.google_chat.send_notification_to_user",
+) -> bool:
+	"""Legacy compatibility wrapper for direct user notifications."""
+	logger = frappe.logger("google_chat")
+	normalized_user = str(user_identifier or "").strip()
+	if not normalized_user:
+		return False
+
+	try:
+		result = send_message_to_user_direct(
+			normalized_user,
+			message,
+			family=family,
+			context=context,
+		)
+		if not result.get("success"):
+			logger.warning(
+				"send_notification_to_user skipped for %s reason=%s",
+				normalized_user,
+				result.get("reason", "unknown"),
+			)
+		return bool(result.get("success"))
+	except Exception as exc:
+		logger.warning("send_notification_to_user failed for %s: %s", normalized_user, exc)
+		try:
+			frappe.log_error(
+				title="Google Chat User Notification Error",
+				message=f"user={normalized_user[:120]}, family={family or 'legacy'}, error={str(exc)[:500]}",
+			)
+		except Exception:
+			pass
+		return False
+
+
 def _notification_cache() -> object | None:
 	cache_factory = getattr(frappe, "cache", None)
 	if not callable(cache_factory):
@@ -555,9 +594,9 @@ def _deliver_notification_event(
 				"message_id": send_result.get("message_id"),
 				"rendered_text": final_text,
 				"ai_meta": ai_meta,
-			"source_ref": normalized["source_ref"],
-			"dedup_key": normalized["dedup_key"],
-		}
+				"source_ref": normalized["source_ref"],
+				"dedup_key": normalized["dedup_key"],
+			}
 	except Exception as exc:
 		logger.error("send_notification_event failed: %s", exc)
 		frappe.log_error(

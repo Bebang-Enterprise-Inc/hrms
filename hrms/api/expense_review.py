@@ -373,31 +373,60 @@ def _create_pcf_jv(expense):
 	return {"created": False, "journal_entry": None, "reason": "pcf_jv_policy_pending"}
 
 
+def _safe_log_notification_error(message: str) -> None:
+	"""Notification failures must never break expense mutation outcomes."""
+	try:
+		logger = getattr(frappe, "logger", None)
+		if callable(logger):
+			logger("expense_review").warning(message)
+	except Exception:
+		pass
+
+	try:
+		frappe.log_error(
+			title="Expense Review Notification Error",
+			message=message[:500],
+		)
+	except Exception:
+		pass
+
+
 def _notify_employee(expense, action: str):
 	"""Notify employee of expense status change."""
-	try:
-		from hrms.api.google_chat import send_notification_to_user
+	user = frappe.db.get_value("Employee", expense.employee, "user_id")
+	if not user:
+		return
 
-		user = frappe.db.get_value("Employee", expense.employee, "user_id")
-		if not user:
-			return
-
-		if action == "approved":
-			message = f"""*Expense Approved*
+	if action == "approved":
+		message = f"""*Expense Approved*
 
 Your expense request {expense.name} has been approved.
-*Amount:* PHP {expense.internal_approved_amount:,.2f}
+*Amount:* PHP {flt(expense.internal_approved_amount):,.2f}
 *COA:* {expense.internal_final_coa}"""
-		else:
-			message = f"""*Expense Rejected*
+	else:
+		message = f"""*Expense Rejected*
 
 Your expense request {expense.name} was rejected.
 Please resubmit with a clearer receipt photo."""
 
-		send_notification_to_user(user, message)
+	try:
+		from hrms.api.google_chat import send_notification_to_user
+	except Exception as exc:
+		_safe_log_notification_error(
+			f"expense={expense.name}, action={action}, user={user}, stage=import, error={str(exc)[:250]}"
+		)
+		return
 
-	except Exception as e:
-		frappe.log_error(f"Employee notification failed: {e}")
+	try:
+		result = send_notification_to_user(user, message)
+		if result is False:
+			_safe_log_notification_error(
+				f"expense={expense.name}, action={action}, user={user}, stage=deliver, error=notification_not_sent"
+			)
+	except Exception as exc:
+		_safe_log_notification_error(
+			f"expense={expense.name}, action={action}, user={user}, stage=deliver, error={str(exc)[:250]}"
+		)
 
 
 @frappe.whitelist()
