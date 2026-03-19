@@ -38,9 +38,10 @@ def _install_fake_frappe():
 		frappe.throw = _throw
 		frappe.log_error = lambda *args, **kwargs: None
 		frappe.get_roles = lambda: ["Accounts Manager"]
-		frappe.session = types.SimpleNamespace(user="test.accounting@bebang.ph")
+		frappe.local = types.SimpleNamespace()
+		frappe.local.session = types.SimpleNamespace(user="test.accounting@bebang.ph")
 		frappe.conf = {}
-		frappe.db = types.SimpleNamespace(
+		frappe.local.db = types.SimpleNamespace(
 			count=lambda *args, **kwargs: 0,
 			sql=lambda *args, **kwargs: [(0,)],
 			get_value=lambda *args, **kwargs: None,
@@ -49,6 +50,15 @@ def _install_fake_frappe():
 		)
 		frappe.get_all = lambda *args, **kwargs: []
 		frappe.get_doc = lambda *args, **kwargs: None
+
+		def _module_getattr(name):
+			if name == "db":
+				return frappe.local.db
+			if name == "session":
+				return frappe.local.session
+			raise AttributeError(name)
+
+		frappe.__getattr__ = _module_getattr
 		sys.modules["frappe"] = frappe
 
 	if "frappe.utils" not in sys.modules:
@@ -156,7 +166,7 @@ class TestExpenseModelFallbackS07(unittest.TestCase):
 
 		with (
 			patch.object(
-				expense_review.frappe.db,
+				expense_review.frappe.local.db,
 				"get_value",
 				return_value="test.accounting@bebang.ph",
 			),
