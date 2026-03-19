@@ -51,9 +51,14 @@ def _install_fake_dependencies(user_roles: list[str] | None = None):
 			}
 			if as_dict:
 				return payload
-			if isinstance(fields, (list, tuple)):
+			if isinstance(fields, list | tuple):
 				return [payload.get(field) for field in fields]
 			return payload.get(str(fields or "name"))
+		return None
+
+	def _db_exists(doctype, filters=None, *args, **kwargs):
+		if doctype == "Bin":
+			return "BIN-0001"
 		return None
 
 	class PermissionError(Exception):
@@ -85,7 +90,7 @@ def _install_fake_dependencies(user_roles: list[str] | None = None):
 	frappe.local = types.SimpleNamespace(
 		db=types.SimpleNamespace(
 			get_value=_db_get_value,
-			exists=lambda *args, **kwargs: None,
+			exists=_db_exists,
 			count=lambda *args, **kwargs: 0,
 			savepoint=lambda *args, **kwargs: None,
 			release_savepoint=lambda *args, **kwargs: None,
@@ -202,7 +207,7 @@ class FakeCampaignDoc:
 	cost_center: str = "Main - BEI"
 	budget_owner: str = "Marketing"
 	requester_user: str = "marketing@bebang.ph"
-	source_locations_json: str = "[\"SM Megamall - Bebang Enterprise Inc.\"]"
+	source_locations_json: str = '["SM Megamall - Bebang Enterprise Inc."]'
 	schedule_json: str = "[]"
 	items: list[FakeItemRow] = field(default_factory=list)
 	total_approved_quantity: float = 10.0
@@ -248,7 +253,11 @@ class FakeIssueDoc:
 def test_validate_issue_request_blocks_quantity_overrun(monkeypatch):
 	module = _load_module("marketing_giveaways_quantity_overrun")
 	campaign = FakeCampaignDoc(
-		items=[FakeItemRow(item_code="ITEM-001", approved_quantity=10, remaining_quantity=2, estimated_unit_cost=5)]
+		items=[
+			FakeItemRow(
+				item_code="ITEM-001", approved_quantity=10, remaining_quantity=2, estimated_unit_cost=5
+			)
+		]
 	)
 	exceptions: list[dict] = []
 
@@ -274,7 +283,11 @@ def test_validate_issue_request_blocks_quantity_overrun(monkeypatch):
 def test_validate_issue_request_blocks_non_approved_source(monkeypatch):
 	module = _load_module("marketing_giveaways_source_block")
 	campaign = FakeCampaignDoc(
-		items=[FakeItemRow(item_code="ITEM-001", approved_quantity=10, remaining_quantity=10, estimated_unit_cost=5)]
+		items=[
+			FakeItemRow(
+				item_code="ITEM-001", approved_quantity=10, remaining_quantity=10, estimated_unit_cost=5
+			)
+		]
 	)
 	exceptions: list[dict] = []
 
@@ -301,7 +314,11 @@ def test_validate_issue_request_blocks_daily_cap(monkeypatch):
 	module = _load_module("marketing_giveaways_daily_cap")
 	campaign = FakeCampaignDoc(
 		daily_cap_quantity=5,
-		items=[FakeItemRow(item_code="ITEM-001", approved_quantity=10, remaining_quantity=10, estimated_unit_cost=5)],
+		items=[
+			FakeItemRow(
+				item_code="ITEM-001", approved_quantity=10, remaining_quantity=10, estimated_unit_cost=5
+			)
+		],
 	)
 	exceptions: list[dict] = []
 
@@ -334,7 +351,11 @@ def test_validate_issue_request_blocks_value_tolerance_breach(monkeypatch):
 	campaign = FakeCampaignDoc(
 		estimated_peso_value=100,
 		approved_value_tolerance_pct=10,
-		items=[FakeItemRow(item_code="ITEM-001", approved_quantity=10, remaining_quantity=10, estimated_unit_cost=10)],
+		items=[
+			FakeItemRow(
+				item_code="ITEM-001", approved_quantity=10, remaining_quantity=10, estimated_unit_cost=10
+			)
+		],
 	)
 	exceptions: list[dict] = []
 
@@ -344,9 +365,9 @@ def test_validate_issue_request_blocks_value_tolerance_breach(monkeypatch):
 	monkeypatch.setattr(
 		module.frappe,
 		"get_all",
-		lambda doctype, filters=None, fields=None, limit_page_length=None: [{"actual_total_cost": 95}]
-		if doctype == module.ISSUE_DT
-		else [],
+		lambda doctype, filters=None, fields=None, limit_page_length=None: (
+			[{"actual_total_cost": 95}] if doctype == module.ISSUE_DT else []
+		),
 	)
 
 	def _capture_exception(**kwargs):
@@ -379,7 +400,11 @@ def test_post_campaign_giveaway_issue_returns_idempotent_replay(monkeypatch):
 	)
 
 	def _get_value(doctype, filters=None, fieldname=None, *args, **kwargs):
-		if doctype == module.ISSUE_DT and isinstance(filters, dict) and filters.get("idempotency_key") == "dup-key":
+		if (
+			doctype == module.ISSUE_DT
+			and isinstance(filters, dict)
+			and filters.get("idempotency_key") == "dup-key"
+		):
 			return existing_issue.name
 		return None
 
@@ -404,7 +429,16 @@ def test_post_campaign_giveaway_issue_returns_idempotent_replay(monkeypatch):
 def test_post_campaign_giveaway_issue_posts_stock_entry_and_updates_campaign(monkeypatch):
 	module = _load_module("marketing_giveaways_happy_path", user_roles=["Store Supervisor"])
 	campaign = FakeCampaignDoc(
-		items=[FakeItemRow(item_code="ITEM-001", item_name="Presidential", uom="Cup", approved_quantity=10, remaining_quantity=10, estimated_unit_cost=12.5)]
+		items=[
+			FakeItemRow(
+				item_code="ITEM-001",
+				item_name="Presidential",
+				uom="Cup",
+				approved_quantity=10,
+				remaining_quantity=10,
+				estimated_unit_cost=12.5,
+			)
+		]
 	)
 	issue_doc = FakeIssueDoc()
 	savepoints: list[str] = []
@@ -419,7 +453,11 @@ def test_post_campaign_giveaway_issue_posts_stock_entry_and_updates_campaign(mon
 
 	monkeypatch.setattr(module.frappe.db, "get_value", _get_value)
 	monkeypatch.setattr(module.frappe.db, "savepoint", lambda name: savepoints.append(name))
-	monkeypatch.setattr(module.frappe.db, "rollback", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("rollback should not be called")))
+	monkeypatch.setattr(
+		module.frappe.db,
+		"rollback",
+		lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("rollback should not be called")),
+	)
 	monkeypatch.setattr(module.frappe.db, "commit", lambda: commits.append(True))
 	monkeypatch.setattr(module.frappe, "new_doc", _new_doc)
 	monkeypatch.setattr(module, "_campaign_doc", lambda name: campaign)
@@ -430,7 +468,11 @@ def test_post_campaign_giveaway_issue_posts_stock_entry_and_updates_campaign(mon
 	)
 	monkeypatch.setattr(module, "_post_stock_entry_for_issue", lambda campaign_doc, issue: "STE-0001")
 	monkeypatch.setattr(module, "_update_campaign_tracking", lambda campaign_doc: 875.0)
-	monkeypatch.setattr(module, "_serialize_campaign_row", lambda campaign_doc: {"name": campaign_doc.name, "status": campaign_doc.status})
+	monkeypatch.setattr(
+		module,
+		"_serialize_campaign_row",
+		lambda campaign_doc: {"name": campaign_doc.name, "status": campaign_doc.status},
+	)
 
 	result = module.post_campaign_giveaway_issue(
 		campaign=campaign.name,
@@ -472,8 +514,20 @@ def test_update_campaign_tracking_computes_multi_day_progress(monkeypatch):
 	def _get_all(doctype, filters=None, fields=None, limit_page_length=None):
 		assert doctype == module.ISSUE_DT
 		return [
-			{"name": "CGI-0001", "issue_date": "2026-03-18", "item_code": "ITEM-001", "quantity": 5, "actual_total_cost": 60},
-			{"name": "CGI-0002", "issue_date": "2026-03-19", "item_code": "ITEM-002", "quantity": 3, "actual_total_cost": 36},
+			{
+				"name": "CGI-0001",
+				"issue_date": "2026-03-18",
+				"item_code": "ITEM-001",
+				"quantity": 5,
+				"actual_total_cost": 60,
+			},
+			{
+				"name": "CGI-0002",
+				"issue_date": "2026-03-19",
+				"item_code": "ITEM-002",
+				"quantity": 3,
+				"actual_total_cost": 36,
+			},
 		]
 
 	monkeypatch.setattr(module.frappe, "get_all", _get_all)
@@ -570,9 +624,13 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 	monkeypatch.setattr(
 		module.frappe,
 		"get_all",
-		lambda doctype, filters=None, fields=None, limit_page_length=None: [{"campaign": "CMP-0001", "status": "Linked"}]
-		if doctype == module.EXCEPTION_DT and filters and filters.get("linked_alert_reference") == "pos-order:101"
-		else [],
+		lambda doctype, filters=None, fields=None, limit_page_length=None: (
+			[{"campaign": "CMP-0001", "status": "Linked"}]
+			if doctype == module.EXCEPTION_DT
+			and filters
+			and filters.get("linked_alert_reference") == "pos-order:101"
+			else []
+		),
 	)
 
 	rows = module._query_probable_giveaway_leakage(date(2026, 3, 1), date(2026, 3, 18))

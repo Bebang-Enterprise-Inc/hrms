@@ -175,6 +175,24 @@ def _truthy(value: object) -> bool:
 	return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _has_warehouse_chat_space_column() -> bool:
+	try:
+		return bool(frappe.db.has_column("Warehouse", "custom_gchat_space"))
+	except Exception:
+		return False
+
+
+def resolve_store_chat_space(store_warehouse: str | None) -> str | None:
+	"""Resolve a store Warehouse chat space safely across schema revisions."""
+	store_warehouse = str(store_warehouse or "").strip()
+	if not store_warehouse or not _has_warehouse_chat_space_column():
+		return None
+	try:
+		return frappe.db.get_value("Warehouse", store_warehouse, "custom_gchat_space") or None
+	except Exception:
+		return None
+
+
 def _send_message_to_space_internal(
 	space_name: str,
 	message: str,
@@ -259,6 +277,40 @@ def send_message_to_space(space_name: str, message: str) -> bool:
 		context="hrms.api.google_chat.send_message_to_space",
 	)
 	return bool(result.get("success"))
+
+
+def _create_pwa_notification(
+	user: str,
+	message: str,
+	reference_document_type: str = "User",
+	reference_document_name: str | None = None,
+	from_user: str | None = None,
+) -> dict[str, object]:
+	"""Best-effort in-app user notification used by legacy finance/procurement flows."""
+	target_user = str(user or "").strip()
+	if not target_user or target_user == "Guest":
+		return {"success": False, "sent": False, "reason": "missing_user"}
+
+	try:
+		notification = frappe.new_doc("PWA Notification")
+		notification.to_user = target_user
+		notification.from_user = from_user or frappe.session.user
+		notification.message = str(message or "").strip()
+		notification.reference_document_type = reference_document_type
+		notification.reference_document_name = reference_document_name or target_user
+		notification.insert(ignore_permissions=True)
+		return {
+			"success": True,
+			"sent": True,
+			"channel": "pwa_notification",
+			"notification": notification.name,
+		}
+	except Exception as exc:
+		frappe.log_error(
+			title="User Notification Error",
+			message=f"user={target_user}, error={str(exc)[:300]}",
+		)
+		return {"success": False, "sent": False, "reason": "insert_failed", "error": str(exc)}
 
 
 def _normalize_direct_message_user(user_identifier: str | None) -> str | None:
@@ -352,14 +404,41 @@ def send_notification_to_user(
 			context=context,
 		)
 		if not result.get("success"):
+			fallback_result = _create_pwa_notification(
+				normalized_user,
+				message,
+				reference_document_name=normalized_user,
+			)
+			if fallback_result.get("success"):
+				logger.info(
+					"send_notification_to_user fell back to PWA notification for %s",
+					normalized_user,
+				)
+				return True
 			logger.warning(
-				"send_notification_to_user skipped for %s reason=%s",
+				"send_notification_to_user skipped for %s reason=%s fallback=%s",
 				normalized_user,
 				result.get("reason", "unknown"),
+				fallback_result.get("reason", "unknown"),
 			)
-		return bool(result.get("success"))
+			return False
+		return True
 	except Exception as exc:
 		logger.warning("send_notification_to_user failed for %s: %s", normalized_user, exc)
+		try:
+			fallback_result = _create_pwa_notification(
+				normalized_user,
+				message,
+				reference_document_name=normalized_user,
+			)
+			if fallback_result.get("success"):
+				logger.info(
+					"send_notification_to_user recovered with PWA notification for %s",
+					normalized_user,
+				)
+				return True
+		except Exception:
+			pass
 		try:
 			frappe.log_error(
 				title="Google Chat User Notification Error",
@@ -892,7 +971,7 @@ def on_store_order_update(doc, method=None):
 		space = None
 		store_warehouse = getattr(doc, "warehouse", None) or getattr(doc, "store_warehouse", None)
 		if store_warehouse:
-			space = frappe.db.get_value("Warehouse", store_warehouse, "custom_gchat_space")
+			space = resolve_store_chat_space(store_warehouse)
 
 		if not space:
 			from hrms.utils.bei_config import SPACE_NOTIFICATIONS, get_chat_space

@@ -218,36 +218,27 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 	Returns:
 	    dict: {"orders": [...], "total": int}
 	"""
+	_check_ordering_permission(ORDERING_WAREHOUSE_ROLES, "view order review queue")
+
 	filter_date = date or today()
 	current_user = frappe.session.user
 	current_roles = set(frappe.get_roles(current_user))
 	from hrms.api.store import _get_order_approval_fallback_user
 
 	fallback_approver = _get_order_approval_fallback_user()
-	is_fallback_viewer = bool(fallback_approver and current_user == fallback_approver)
-	if not current_roles.intersection(ORDERING_WAREHOUSE_ROLES) and not is_fallback_viewer:
-		frappe.throw(_("You do not have permission to view order review queue"), frappe.PermissionError)
-
-	conditions = ["so.order_date = %(date)s", "so.docstatus < 2"]
 	params = {
 		"date": filter_date,
 		"current_user": current_user,
 		"fallback_user": fallback_approver or "",
+		"status": status or None,
 	}
 
-	if status:
-		conditions.append("so.status = %(status)s")
-		params["status"] = status
-
 	admin_viewer_roles = {"System Manager", "Administrator", "Supply Chain Manager", "Warehouse Manager"}
+	is_fallback_viewer = bool(fallback_approver and current_user == fallback_approver)
 	is_admin_viewer = bool(current_roles.intersection(admin_viewer_roles)) or is_fallback_viewer
-	if not is_admin_viewer:
-		conditions.append(
-			"(so.status != 'Pending Approval' OR pending_queue.assigned_approver = %(current_user)s)"
-		)
+	params["is_admin_viewer"] = 1 if is_admin_viewer else 0
 
-	where_clause = " AND ".join(conditions)
-	query = (
+	orders = frappe.db.sql(
 		"""
 		SELECT
 			so.name,
@@ -286,18 +277,23 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 		LEFT JOIN `tabWarehouse` wh ON wh.name = so.store
 		LEFT JOIN `tabWarehouse` wh_parent ON wh_parent.name = wh.parent_warehouse
 		LEFT JOIN `tabBEI Store Order Item` soi ON soi.parent = so.name
-		WHERE """
-		+ where_clause
-		+ """
+		WHERE so.order_date = %(date)s
+		  AND so.docstatus < 2
+		  AND (%(status)s IS NULL OR so.status = %(status)s)
+		  AND (
+			%(is_admin_viewer)s = 1
+			OR so.status != 'Pending Approval'
+			OR pending_queue.assigned_approver = %(current_user)s
+		  )
 		GROUP BY so.name
 		ORDER BY
 			CASE so.status WHEN 'Pending Approval' THEN 0 ELSE 1 END,
 			COALESCE(pending_queue.pending_since, so.creation) ASC,
 			so.store ASC
-		"""
+		""",
+		params,
+		as_dict=True,
 	)
-
-	orders = frappe.db.sql(query, params, as_dict=True)
 
 	return {
 		"orders": orders,
@@ -410,10 +406,10 @@ def _send_order_notification(store: str, message: str) -> None:
 	Silently fails if Google Chat integration is not configured.
 	"""
 	try:
-		from hrms.api.google_chat import send_message_to_space
+		from hrms.api.google_chat import resolve_store_chat_space, send_message_to_space
 
 		# Look up store's notification space from Warehouse custom fields or config
-		space_id = frappe.db.get_value("Warehouse", store, "custom_gchat_space") or None
+		space_id = resolve_store_chat_space(store)
 		if space_id:
 			send_message_to_space(space_id, message)
 	except ImportError:

@@ -933,12 +933,12 @@ def queue_enrichment_reminders(
 	"""Queue enrichment reminders with direct-call fallback."""
 	try:
 		frappe.enqueue(
-			"hrms.api.enrichment.send_enrichment_reminders",
+			"hrms.api.enrichment.send_enrichment_reminders_job",
 			queue="short",
 			employees=employees,
 			branch=branch,
 			status_filter=status_filter,
-			method=method,
+			channel=method,
 			enqueue_after_commit=True,
 		)
 		return {
@@ -960,6 +960,21 @@ def queue_enrichment_reminders(
 		result["status"] = "queued_fallback"
 		result["mode"] = "sync_fallback"
 		return result
+
+
+def send_enrichment_reminders_job(
+	employees: list | None = None,
+	branch: str | None = None,
+	status_filter: str | None = None,
+	channel: str = "email",
+):
+	"""Queue-safe wrapper so Frappe's reserved `method` kwarg is not reused."""
+	return send_enrichment_reminders(
+		employees=employees,
+		branch=branch,
+		status_filter=status_filter,
+		method=channel,
+	)
 
 
 @frappe.whitelist()
