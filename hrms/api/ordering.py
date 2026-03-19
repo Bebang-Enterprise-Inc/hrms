@@ -225,30 +225,21 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 	current_roles = set(frappe.get_roles(current_user))
 	from hrms.api.store import _get_order_approval_fallback_user
 
-	conditions = ["so.order_date = %(date)s", "so.docstatus < 2"]
 	fallback_approver = _get_order_approval_fallback_user()
 	params = {
 		"date": filter_date,
 		"current_user": current_user,
 		"fallback_user": fallback_approver or "",
+		"status": status or None,
 	}
-
-	if status:
-		conditions.append("so.status = %(status)s")
-		params["status"] = status
 
 	admin_viewer_roles = {"System Manager", "Administrator", "Supply Chain Manager", "Warehouse Manager"}
 	is_fallback_viewer = bool(fallback_approver and current_user == fallback_approver)
 	is_admin_viewer = bool(current_roles.intersection(admin_viewer_roles)) or is_fallback_viewer
-	if not is_admin_viewer:
-		conditions.append(
-			"(so.status != 'Pending Approval' OR pending_queue.assigned_approver = %(current_user)s)"
-		)
-
-	where_clause = " AND ".join(conditions)
+	params["is_admin_viewer"] = 1 if is_admin_viewer else 0
 
 	orders = frappe.db.sql(
-		f"""
+		"""
 		SELECT
 			so.name,
 			so.store,
@@ -286,7 +277,14 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 		LEFT JOIN `tabWarehouse` wh ON wh.name = so.store
 		LEFT JOIN `tabWarehouse` wh_parent ON wh_parent.name = wh.parent_warehouse
 		LEFT JOIN `tabBEI Store Order Item` soi ON soi.parent = so.name
-		WHERE {where_clause}
+		WHERE so.order_date = %(date)s
+		  AND so.docstatus < 2
+		  AND (%(status)s IS NULL OR so.status = %(status)s)
+		  AND (
+			%(is_admin_viewer)s = 1
+			OR so.status != 'Pending Approval'
+			OR pending_queue.assigned_approver = %(current_user)s
+		  )
 		GROUP BY so.name
 		ORDER BY
 			CASE so.status WHEN 'Pending Approval' THEN 0 ELSE 1 END,
