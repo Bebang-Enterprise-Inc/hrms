@@ -69,7 +69,8 @@ def _install_fake_frappe():
 		def submit(self):
 			self.submit_called = True
 
-	frappe.db = FakeDB()
+	frappe.local = types.SimpleNamespace()
+	frappe.local.db = FakeDB()
 	journal_entries = []
 
 	def new_doc(doctype):
@@ -82,11 +83,20 @@ def _install_fake_frappe():
 	frappe.throw = lambda message, exc=None: (_ for _ in ()).throw(Exception(message))
 	frappe._ = lambda text: text
 	frappe.get_roles = lambda *_args, **_kwargs: []
-	frappe.session = types.SimpleNamespace(user="test.hr@bebang.ph")
+	frappe.local.session = types.SimpleNamespace(user="test.hr@bebang.ph")
 	frappe.whitelist = lambda *args, **kwargs: lambda fn: fn
 	frappe.log_error = lambda *args, **kwargs: None
 	frappe.model = model
 	frappe.utils = utils
+
+	def _module_getattr(name):
+		if name == "db":
+			return frappe.local.db
+		if name == "session":
+			return frappe.local.session
+		raise AttributeError(name)
+
+	frappe.__getattr__ = _module_getattr
 	return journal_entries
 
 

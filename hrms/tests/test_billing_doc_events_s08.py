@@ -54,12 +54,13 @@ def _install_fake_frappe():
 	frappe.throw = _throw
 	frappe.ValidationError = ValidationError
 	frappe.PermissionError = PermissionError
-	frappe.session = types.SimpleNamespace(user="Administrator")
+	frappe.local = types.SimpleNamespace()
+	frappe.local.session = types.SimpleNamespace(user="Administrator")
 	frappe.has_permission = lambda *args, **kwargs: True
 	frappe.format_value = lambda value, _type=None: f"{float(value):.2f}"
 	frappe.log_error = lambda *args, **kwargs: None
 	frappe.new_doc = MagicMock()
-	frappe.db = types.SimpleNamespace(
+	frappe.local.db = types.SimpleNamespace(
 		sql=lambda *args, **kwargs: [],
 		get_value=lambda *args, **kwargs: None,
 		set_value=lambda *args, **kwargs: None,
@@ -81,6 +82,15 @@ def _install_fake_frappe():
 
 	frappe.utils = utils
 	frappe.model = model
+
+	def _module_getattr(name):
+		if name == "db":
+			return frappe.local.db
+		if name == "session":
+			return frappe.local.session
+		raise AttributeError(name)
+
+	frappe.__getattr__ = _module_getattr
 
 
 def _install_stub_dependencies():
