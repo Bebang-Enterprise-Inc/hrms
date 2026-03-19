@@ -106,6 +106,40 @@ def _infer_vehicle_type(vehicle_label: str | None) -> str:
 	return "Truck"
 
 
+def _normalize_vehicle_type(vehicle_type: str | None, vehicle_label: str | None = None) -> str:
+	"""Map portal shorthand into the valid BEI Vehicle master options."""
+	text = (vehicle_type or "").strip().lower()
+	if not text:
+		return _infer_vehicle_type(vehicle_label)
+	if text in {"reefer", "reefer truck"}:
+		return "Reefer Truck"
+	if text == "reefer van":
+		return "Reefer Van"
+	if text in {"non-reefer", "truck"}:
+		return "Truck"
+	if text in {"motorcycle", "motorbike", "bike"}:
+		return "Motorcycle"
+	if text == "l300":
+		return "L300"
+	if text == "van":
+		return "Van"
+	return vehicle_type
+
+
+def _resolve_threepl_partner_link(threepl_partner: str | None) -> str:
+	"""Resolve either a Supplier name or supplier_name into a valid Supplier link."""
+	partner = (threepl_partner or "").strip()
+	if not partner:
+		return ""
+	exact_name = frappe.db.get_value("Supplier", partner, "name")
+	if exact_name:
+		return str(exact_name)
+	match_by_supplier_name = frappe.db.get_value("Supplier", {"supplier_name": partner}, "name")
+	if match_by_supplier_name:
+		return str(match_by_supplier_name)
+	return partner
+
+
 def _resolve_or_create_departure_vehicle(
 	vehicle_label: str | None,
 	vehicle_plate: str | None,
@@ -152,10 +186,10 @@ def _resolve_or_create_departure_vehicle(
 		vehicle_doc = frappe.new_doc("BEI Vehicle")
 		vehicle_doc.naming_series = "BEI-VEH-.####"
 		vehicle_doc.vehicle_plate = vehicle_plate
-		vehicle_doc.vehicle_type = vehicle_type or _infer_vehicle_type(vehicle_label)
+		vehicle_doc.vehicle_type = _normalize_vehicle_type(vehicle_type, vehicle_label)
 		vehicle_doc.owner_type = "3PL"
 		if _has_column("BEI Vehicle", "threepl_partner") and threepl_partner:
-			vehicle_doc.threepl_partner = threepl_partner
+			vehicle_doc.threepl_partner = _resolve_threepl_partner_link(threepl_partner)
 		vehicle_doc.status = "Available"
 		if hasattr(vehicle_doc, "notes"):
 			vehicle_doc.notes = vehicle_label or vehicle_plate
@@ -1541,10 +1575,10 @@ def create_vehicle(
 	vehicle_doc = frappe.new_doc("BEI Vehicle")
 	vehicle_doc.naming_series = "BEI-VEH-.####"
 	vehicle_doc.vehicle_plate = vehicle_plate
-	vehicle_doc.vehicle_type = vehicle_type or _infer_vehicle_type(notes or vehicle_plate)
+	vehicle_doc.vehicle_type = _normalize_vehicle_type(vehicle_type, notes or vehicle_plate)
 	vehicle_doc.owner_type = owner_type or "3PL"
 	if _has_column("BEI Vehicle", "threepl_partner") and threepl_partner:
-		vehicle_doc.threepl_partner = threepl_partner
+		vehicle_doc.threepl_partner = _resolve_threepl_partner_link(threepl_partner)
 	vehicle_doc.status = "Available"
 	if hasattr(vehicle_doc, "notes") and notes:
 		vehicle_doc.notes = notes
