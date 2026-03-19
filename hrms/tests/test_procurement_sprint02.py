@@ -13,8 +13,8 @@ if str(ROOT) not in sys.path:
 
 
 def _install_fake_frappe():
-	if "frappe" in sys.modules:
-		return
+	sys.modules.pop("frappe", None)
+	sys.modules.pop("frappe.utils", None)
 
 	frappe = types.ModuleType("frappe")
 	utils = types.ModuleType("frappe.utils")
