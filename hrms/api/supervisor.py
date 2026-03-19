@@ -1587,7 +1587,7 @@ def create_weekly_plan(
 
 	total_hours = _apply_shifts(doc, shifts)
 	doc.status = "Draft"
-	doc.insert()
+	doc.insert(ignore_permissions=True)
 	return {"success": True, "name": doc.name, "total_hours": total_hours}
 
 
@@ -1604,6 +1604,7 @@ def get_weekly_plan(store: str | None = None, week_start: str | None = None, sur
 		"BEI Weekly Labor Plan",
 		filters={"store": store_context["warehouse"], "week_start_date": week_start},
 		fields=["name", "status", "total_hours", "planned_by"],
+		ignore_permissions=True,
 	)
 
 	if plans:
