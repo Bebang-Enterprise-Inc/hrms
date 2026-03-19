@@ -95,6 +95,44 @@ commissary_dashboard = _load_module()
 
 
 class TestCommissaryDashboardSummary(unittest.TestCase):
+	def test_get_production_items_handles_missing_item_supplier_columns(self):
+		sql_calls = []
+
+		def fake_sql(query, *args, **kwargs):
+			sql_calls.append(query)
+			if "FROM `tabItem` i" in query:
+				return [
+					{
+						"item_code": "FG-OUT-001",
+						"item_name": "Finished Good Outsourced",
+						"description": "Outsourced finished good",
+						"stock_uom": "PC",
+						"standard_rate": 0,
+						"item_group": "Finished Goods",
+						"current_stock": 3,
+						"bom_name": None,
+					}
+				]
+			return []
+
+		with (
+			patch.object(commissary_dashboard, "get_commissary_warehouse", return_value="Shaw BLVD - BKI"),
+			patch.object(commissary_dashboard.frappe.db, "sql", side_effect=fake_sql, create=True),
+			patch.object(commissary_dashboard.frappe.db, "has_column", return_value=False, create=True),
+			patch.object(
+				commissary_dashboard,
+				"resolve_outsourced_item_flag",
+				return_value={"is_outsourced_item": True, "reason": "unit-test-outsourced"},
+			),
+		):
+			result = commissary_dashboard.get_production_items()
+
+		self.assertTrue(result["success"])
+		self.assertEqual(len(result["data"]), 1)
+		self.assertNotIn("default_supplier", sql_calls[0])
+		self.assertTrue(result["data"][0]["is_outsourced_item"])
+		self.assertEqual(result["data"][0]["outsourced_flag_reason"], "unit-test-outsourced")
+
 	def test_dashboard_includes_portal_compatibility_aliases(self):
 		sql_results = [
 			[(3,)],
@@ -116,11 +154,13 @@ class TestCommissaryDashboardSummary(unittest.TestCase):
 				commissary_dashboard.frappe.db,
 				"count",
 				side_effect=[4, 2, 1, 0],
+				create=True,
 			),
 			patch.object(
 				commissary_dashboard.frappe.db,
 				"sql",
 				side_effect=sql_results,
+				create=True,
 			),
 			patch.object(
 				commissary_dashboard.frappe,
@@ -235,6 +275,85 @@ class TestCommissaryDashboardSummary(unittest.TestCase):
 		self.assertTrue(doc.flags.ignore_permissions)
 		self.assertTrue(doc.flags.ignore_user_permissions)
 		self.assertEqual(result["data"]["name"], "MAT-STE-UNIT-0001")
+
+	def test_submit_production_output_skips_missing_supplier_columns(self):
+		requested_fields = []
+		created = {}
+
+		class _FakeStockEntry:
+			def __init__(self):
+				self.doctype = "Stock Entry"
+				self.company = None
+				self.stock_entry_type = None
+				self.posting_date = None
+				self.posting_time = None
+				self.to_warehouse = None
+				self.remarks = None
+				self.items = []
+				self.name = "MAT-STE-UNIT-0002"
+
+			def append(self, table, row):
+				defaults = {"batch_no": None, "s_warehouse": None, "t_warehouse": None}
+				defaults.update(row)
+				self.items.append(types.SimpleNamespace(**defaults))
+				return self.items[-1]
+
+			def insert(self, ignore_permissions=False):
+				return self
+
+			def submit(self):
+				return self
+
+		def fake_get_value(doctype, name_or_filters, fields=None, as_dict=False):
+			if doctype == "Item":
+				requested_fields.extend(fields or [])
+				return {
+					"item_name": "Finished Good Outsourced",
+					"description": "Outsourced finished good",
+					"stock_uom": "PC",
+					"item_group": "Finished Goods",
+				}
+			if doctype == "BOM":
+				return None
+			return None
+
+		def fake_new_doc(doctype):
+			doc = _FakeStockEntry()
+			created["doc"] = doc
+			return doc
+
+		def fake_get_doc(doctype, name=None):
+			if doctype == "Stock Entry":
+				return created["doc"]
+			return types.SimpleNamespace(
+				item_name="Finished Good Outsourced",
+				description="Outsourced finished good",
+				stock_uom="PC",
+			)
+
+		with (
+			patch.object(commissary_dashboard, "get_commissary_warehouse", return_value="Shaw BLVD - BKI"),
+			patch.object(commissary_dashboard, "get_commissary_company", return_value="Bebang Kitchen Inc."),
+			patch.object(commissary_dashboard.frappe.db, "get_value", side_effect=fake_get_value, create=True),
+			patch.object(commissary_dashboard.frappe.db, "has_column", return_value=False, create=True),
+			patch.object(
+				commissary_dashboard,
+				"resolve_outsourced_item_flag",
+				return_value={"is_outsourced_item": True, "reason": "unit-test-outsourced"},
+			),
+			patch.object(commissary_dashboard.frappe, "new_doc", side_effect=fake_new_doc, create=True),
+			patch.object(commissary_dashboard.frappe, "get_doc", side_effect=fake_get_doc, create=True),
+		):
+			result = commissary_dashboard.submit_production_output(
+				items='[{"item_code":"FG-OUT-001","qty":1,"uom":"PC"}]',
+				remarks="schema-safe test",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(
+			requested_fields,
+			["item_name", "description", "stock_uom", "item_group"],
+		)
 
 
 if __name__ == "__main__":

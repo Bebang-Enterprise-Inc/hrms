@@ -86,6 +86,47 @@ def _normalize_outsourced_flag(item_row: dict[str, Any]) -> dict[str, Any]:
 	return item_row
 
 
+def _item_has_column(column_name: str) -> bool:
+	has_column = getattr(getattr(frappe, "db", None), "has_column", None)
+	if callable(has_column):
+		try:
+			return bool(has_column("Item", column_name))
+		except Exception:
+			return False
+	return False
+
+
+def _get_item_default_supplier_map(item_codes: list[str]) -> dict[str, str]:
+	if not item_codes:
+		return {}
+
+	try:
+		rows = frappe.get_all(
+			"Item Default",
+			filters={"parent": ["in", item_codes], "default_supplier": ["is", "set"]},
+			fields=["parent", "default_supplier"],
+			order_by="idx asc",
+			limit_page_length=max(len(item_codes) * 2, 20),
+		)
+	except Exception:
+		return {}
+
+	supplier_map: dict[str, str] = {}
+	for row in rows:
+		parent = row.get("parent")
+		supplier = row.get("default_supplier")
+		if parent and supplier and parent not in supplier_map:
+			supplier_map[parent] = supplier
+	return supplier_map
+
+
+def _hydrate_item_outsourcing_meta(item_row: dict[str, Any], supplier_map: dict[str, str] | None = None) -> dict[str, Any]:
+	supplier_map = supplier_map or {}
+	if not item_row.get("default_supplier"):
+		item_row["default_supplier"] = supplier_map.get(item_row.get("item_code"))
+	return item_row
+
+
 def _build_production_shortfall_error(item_code: str, shortfall: list[dict[str, Any]]) -> str:
 	if not shortfall:
 		return _("Cannot produce {0} because raw material stock is insufficient.").format(item_code)
@@ -263,6 +304,15 @@ def get_production_items() -> dict[str, Any]:
 		phase="load",
 	)
 	commissary_warehouse = get_commissary_warehouse()
+	optional_item_fields = []
+	if _item_has_column("is_outsourced_item"):
+		optional_item_fields.append("i.is_outsourced_item")
+	if _item_has_column("outsourced_supplier"):
+		optional_item_fields.append("i.outsourced_supplier")
+	if _item_has_column("default_supplier"):
+		optional_item_fields.append("i.default_supplier")
+	optional_item_sql = ",\n            ".join(optional_item_fields)
+	optional_item_sql = f",\n            {optional_item_sql}" if optional_item_sql else ""
 
 	# P0-12: Batch query — get items + stock in one query (was N+1)
 	items = frappe.db.sql(
@@ -275,8 +325,8 @@ def get_production_items() -> dict[str, Any]:
             i.valuation_rate as standard_rate,
             i.item_group,
             IFNULL(b.actual_qty, 0) as current_stock,
-            bom.name as bom_name,
-            i.default_supplier
+            bom.name as bom_name
+            {optional_item_sql}
         FROM `tabItem` i
         LEFT JOIN `tabBin` b ON b.item_code = i.name AND b.warehouse = %s
         LEFT JOIN `tabBOM` bom
@@ -288,10 +338,11 @@ def get_production_items() -> dict[str, Any]:
         AND i.is_stock_item = 1
         AND i.item_group = 'Finished Goods'
         ORDER BY i.item_name
-    """,
+    """.format(optional_item_sql=optional_item_sql),
 		commissary_warehouse,
 		as_dict=True,
 	)
+	default_supplier_map = _get_item_default_supplier_map([item.get("item_code") for item in items])
 
 	# P0-12: Batch query — get today's production for ALL items in one query (was N+1)
 	today_production = frappe.db.sql(
@@ -312,6 +363,7 @@ def get_production_items() -> dict[str, Any]:
 
 	result = []
 	for item in items:
+		item = _hydrate_item_outsourcing_meta(item, default_supplier_map)
 		item = _normalize_outsourced_flag(item)
 		if not item.get("bom_name") and not item.get("is_outsourced_item"):
 			continue
@@ -412,14 +464,20 @@ def submit_production_output(
 	if not first_item_code:
 		frappe.throw(_("A finished good item is required"))
 
+	item_fields = ["item_name", "description", "stock_uom", "item_group"]
+	for optional_field in ("is_outsourced_item", "outsourced_supplier", "default_supplier"):
+		if _item_has_column(optional_field):
+			item_fields.append(optional_field)
 	first_item = frappe.db.get_value(
 		"Item",
 		first_item_code,
-		["item_name", "description", "stock_uom", "item_group", "default_supplier"],
+		item_fields,
 		as_dict=True,
 	)
 	if not first_item:
 		frappe.throw(_("Item {0} was not found").format(first_item_code))
+	first_item["item_code"] = first_item_code
+	first_item = _hydrate_item_outsourcing_meta(first_item, _get_item_default_supplier_map([first_item_code]))
 
 	outsourced_flag = resolve_outsourced_item_flag(
 		item_code=first_item_code,
