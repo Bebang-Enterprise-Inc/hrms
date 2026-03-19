@@ -244,6 +244,49 @@ class TestS22OperationalFiltersContract(unittest.TestCase):
 		self.assertEqual(sql_calls[0][1]["status_0"], "Approved")
 		self.assertEqual(sql_calls[0][1]["status_1"], "Fully Received")
 
+	def test_purchase_orders_support_status_array_alias(self):
+		sql_calls = []
+
+		def _db_sql(query, values=None, as_dict=False):
+			sql_calls.append((query, values, as_dict))
+			if "COUNT(*)" in query:
+				return [(1,)]
+			return [
+				{
+					"name": "PO-TEST-003",
+					"po_no": "PO-TEST-003",
+					"po_date": "2026-03-19",
+					"status": "Approved",
+					"supplier": "SUP-003",
+					"supplier_name": "test-supplier-03",
+					"subtotal": 500,
+					"vat_amount": 60,
+					"grand_total": 560,
+					"discount_amount": 0,
+					"delivery_fee": 0,
+					"net_total": 500,
+					"tax_amount": 60,
+					"requires_dual_approval": 0,
+					"mae_approval": "Approved",
+					"butch_approval": "Pending",
+					"delivery_date": "2026-03-20",
+				}
+			]
+
+		procurement.frappe.db.sql = MagicMock(side_effect=_db_sql)
+
+		payload = procurement.get_purchase_orders(
+			filters={"status": ["Approved", "Fully Received"]},
+			page=1,
+			page_size=20,
+		)
+
+		self.assertEqual(len(payload["data"]), 1)
+		self.assertEqual(payload["data"][0]["status"], "Approved")
+		self.assertIn("status IN", sql_calls[0][0])
+		self.assertEqual(sql_calls[0][1]["status_0"], "Approved")
+		self.assertEqual(sql_calls[0][1]["status_1"], "Fully Received")
+
 	def test_warehouse_pending_pos_apply_exact_item_and_warehouse(self):
 		def _get_all(doctype, filters=None, fields=None, order_by=None, limit=None):
 			if doctype == "Purchase Order":

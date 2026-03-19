@@ -641,6 +641,8 @@ def _normalize_status_filters(filters: dict[str, Any] | None) -> list[str]:
     """Normalize single- or multi-status filters from query params."""
     filters = filters or {}
     raw_statuses = filters.get("statuses")
+    if raw_statuses is None:
+        raw_statuses = filters.get("status")
 
     if isinstance(raw_statuses, str):
         try:
@@ -649,8 +651,7 @@ def _normalize_status_filters(filters: dict[str, Any] | None) -> list[str]:
             raw_statuses = [raw_statuses]
 
     if raw_statuses is None:
-        raw_status = _clean_optional_filter(filters.get("status"))
-        return [raw_status] if raw_status else []
+        return []
 
     if not isinstance(raw_statuses, (list, tuple, set)):
         raw_statuses = [raw_statuses]
