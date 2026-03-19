@@ -148,6 +148,18 @@ class TestExpenseModelFallbackS07(unittest.TestCase):
         self.assertEqual(expense.internal_final_coa, "6006003")
         self.assertEqual(expense.status, "Approved")
 
+    def test_notify_employee_swallow_import_and_logging_failures(self):
+        expense = _ExpenseDoc()
+
+        with patch.object(
+            expense_review.frappe.db,
+            "get_value",
+            return_value="test.accounting@bebang.ph",
+        ), patch.object(expense_review.frappe, "log_error", side_effect=Exception("log failed")):
+            result = expense_review._notify_employee(expense, "rejected")
+
+        self.assertIsNone(result)
+
 
 if __name__ == "__main__":
     unittest.main()
