@@ -13,6 +13,12 @@ from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 
 # Approval threshold - PO above this needs both Mae AND Butch
 DUAL_APPROVAL_THRESHOLD = 500000
+FRAPPE_PO_SYNC_ALLOWED_STATUSES = {
+	"Approved",
+	"Sent to Supplier",
+	"Partially Received",
+	"Fully Received",
+}
 
 
 def _clean_csv_emails(value):
@@ -264,12 +270,22 @@ class BEIPurchaseOrder(Document):
 
 		return {"success": True, "message": _("PO rejected")}
 
+	def has_required_procurement_approvals(self) -> bool:
+		"""Return whether the commercial approval chain is complete."""
+		if self.requires_dual_approval:
+			return self.mae_approval == "Approved" and self.butch_approval == "Approved"
+		return self.mae_approval == "Approved"
+
+	def can_create_frappe_purchase_order(self) -> bool:
+		"""Allow ERP sync after approval even if operations already advanced the PO status."""
+		return self.status in FRAPPE_PO_SYNC_ALLOWED_STATUSES and self.has_required_procurement_approvals()
+
 	def create_frappe_purchase_order(self):
 		"""
 		Create corresponding Frappe Purchase Order.
 
 		PREREQUISITES:
-		- BEI PO must be fully approved (status = "Approved")
+		- BEI PO must be commercially approved
 		- For >500K: Both Mae AND Butch approval required
 		- For <=500K: Mae approval sufficient
 
@@ -288,11 +304,12 @@ class BEIPurchaseOrder(Document):
 			return self.frappe_po
 
 		# Validate approval status
-		if self.status != "Approved":
+		if self.status not in FRAPPE_PO_SYNC_ALLOWED_STATUSES:
 			frappe.throw(
-				_("Cannot create Frappe PO - BEI PO must be fully approved. " "Current status: {0}").format(
-					self.status
-				)
+				_(
+					"Cannot create Frappe PO - BEI PO must be commercially approved before ERP sync. "
+					"Current status: {0}"
+				).format(self.status)
 			)
 
 		# Validate dual approval for high-value POs
@@ -301,9 +318,8 @@ class BEIPurchaseOrder(Document):
 				frappe.throw(_("Mae approval required for PO > 500K"))
 			if self.butch_approval != "Approved":
 				frappe.throw(_("Butch (CFO) approval required for PO > 500K"))
-		else:
-			if self.mae_approval != "Approved":
-				frappe.throw(_("Mae approval required"))
+		elif self.mae_approval != "Approved":
+			frappe.throw(_("Mae approval required"))
 
 		# Get or create Frappe Supplier
 		bei_supplier = frappe.get_doc("BEI Supplier", self.supplier)

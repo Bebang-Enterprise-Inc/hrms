@@ -915,8 +915,19 @@ def _download_pdf(doctype: str, docname: str) -> str:
 	except Exception as e:
 		frappe.throw(_("Failed to download PDF: {0}").format(str(e)))
 
-	base64content = base64.b64encode(frappe.local.response.filecontent)
-	content_type = frappe.local.response.type
+	response = frappe.local.response
+	filecontent = getattr(response, "filecontent", None)
+	if not filecontent:
+		frappe.throw(_("Failed to generate PDF content for {0} {1}.").format(doctype, docname))
+
+	base64content = base64.b64encode(filecontent)
+	content_type = getattr(response, "type", None) or "application/pdf"
+
+	# Reset the raw download response so whitelisted callers can still return JSON.
+	response.filecontent = None
+	response.filename = None
+	response.display_content_as = None
+	response.type = "json"
 
 	return f"data:{content_type};base64," + base64content.decode("utf-8")
 

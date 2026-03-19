@@ -299,12 +299,15 @@ class BEIGoodsReceipt(Document):
         bei_po = frappe.get_doc("BEI Purchase Order", self.purchase_order)
 
         if not bei_po.frappe_po:
-            # Try to create Frappe PO first
-            if bei_po.status == "Approved":
+            # Backfill the ERP-side PO when the BEI PO was approved earlier but already advanced operationally.
+            if bei_po.can_create_frappe_purchase_order():
                 bei_po.create_frappe_purchase_order()
             else:
                 frappe.throw(
-                    _("No Frappe PO linked. Approve BEI PO first to create Frappe PO.")
+                    _(
+                        "No Frappe PO linked. The linked BEI PO is not commercially approved for ERP sync yet. "
+                        "Current status: {0}"
+                    ).format(bei_po.status)
                 )
 
         frappe_po = bei_po.frappe_po
