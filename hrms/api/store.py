@@ -24,6 +24,7 @@ from hrms.utils.supply_chain_contracts import (
 	REQUEST_SOURCE_STORE_DISPOSAL,
 	REQUEST_SOURCE_STORE_ORDER,
 	REQUEST_SOURCE_STORE_RETURN,
+	get_preferred_commissary_warehouses,
 	infer_finance_treatment,
 	resolve_material_request_contract,
 	resolve_route_source_warehouse,
@@ -32,6 +33,9 @@ from hrms.utils.supply_chain_contracts import (
 	stamp_material_request_contract,
 	stamp_stock_entry_contract,
 )
+
+SCHEDULE_SURFACE_STORE = "store_schedule"
+SCHEDULE_SURFACE_COMMISSARY = "commissary_schedule"
 
 
 @contextmanager
@@ -301,6 +305,36 @@ def resolve_employee_store_context(employee):
 
 def _normalize_store_key(value):
 	return re.sub(r"[^A-Z0-9]", "", str(value or "").upper())
+
+
+def _normalize_schedule_surface(surface):
+	value = re.sub(r"[^a-z_]", "", str(surface or "").strip().lower())
+	if value == SCHEDULE_SURFACE_COMMISSARY:
+		return SCHEDULE_SURFACE_COMMISSARY
+	return SCHEDULE_SURFACE_STORE
+
+
+def _get_commissary_schedule_locations():
+	preferred = list(get_preferred_commissary_warehouses(include_legacy=True))
+	if not preferred:
+		return []
+
+	rows = frappe.get_all(
+		"Warehouse",
+		filters={"name": ["in", preferred], "is_group": 0, "disabled": 0},
+		fields=["name", "warehouse_name", "company"],
+		order_by="warehouse_name",
+	)
+	by_name = {row["name"]: row for row in rows}
+	result = []
+	for warehouse_name in preferred:
+		row = by_name.get(warehouse_name)
+		if not row:
+			continue
+		normalized = dict(row)
+		normalized["department"] = None
+		result.append(normalized)
+	return result
 
 
 def _designation_is_store_lead(designation):
@@ -1248,7 +1282,7 @@ def _sanitize_submitted_items(items):
 
 
 @frappe.whitelist()
-def get_user_store():
+def get_user_store(surface: str | None = None):
 	"""
 	Resolve the current user's store(s) based on their role.
 
@@ -1265,9 +1299,53 @@ def get_user_store():
 	"""
 	user = frappe.session.user
 	user_roles = frappe.get_roles(user)
+	surface_key = _normalize_schedule_surface(surface)
 
 	stores = []
 	role = None
+	commissary_roles = {"Warehouse User", "Commissary Supervisor", "Supply Chain Manager"}
+	system_roles = {"System Manager", "HR User", "HR Manager", "Regional Manager"}
+
+	if surface_key == SCHEDULE_SURFACE_COMMISSARY:
+		commissary_locations = _get_commissary_schedule_locations()
+		employee = frappe.db.get_value(
+			"Employee",
+			{"user_id": user, "status": "Active"},
+			["name", "branch", "employee_name", "reports_to", "designation"],
+			as_dict=True,
+		)
+		if employee and set(user_roles).intersection(commissary_roles):
+			role = next((candidate for candidate in ["Commissary Supervisor", "Warehouse User", "Supply Chain Manager"] if candidate in user_roles), None)
+			store_context = resolve_employee_store_context(employee)
+			if store_context.get("warehouse"):
+				stores = [
+					{
+						"name": store_context["warehouse"],
+						"warehouse_name": store_context["warehouse_name"] or store_context["warehouse"],
+					}
+				]
+
+		if not stores and set(user_roles).intersection(commissary_roles) and commissary_locations:
+			role = role or next((candidate for candidate in ["Commissary Supervisor", "Warehouse User", "Supply Chain Manager"] if candidate in user_roles), None)
+			stores = [
+				{
+					"name": commissary_locations[0]["name"],
+					"warehouse_name": commissary_locations[0].get("warehouse_name") or commissary_locations[0]["name"],
+				}
+			]
+
+		if not stores and set(user_roles).intersection(system_roles):
+			role = "Regional Manager" if "Regional Manager" in user_roles else "HR User"
+			stores = [
+				{
+					"name": row["name"],
+					"warehouse_name": row.get("warehouse_name") or row["name"],
+				}
+				for row in commissary_locations
+			]
+
+		default_store = stores[0]["name"] if stores else None
+		return {"stores": stores, "default_store": default_store, "is_multi_store": len(stores) > 1, "role": role}
 
 	if "Area Supervisor" in user_roles:
 		# Area supervisors see all stores assigned to them
