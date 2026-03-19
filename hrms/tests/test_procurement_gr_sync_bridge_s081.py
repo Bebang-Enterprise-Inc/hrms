@@ -98,6 +98,14 @@ def _install_stub_dependencies():
 
 	standard_buying_bridge = types.ModuleType("hrms.utils.standard_buying_bridge")
 	standard_buying_bridge.apply_standard_buying_context = lambda *args, **kwargs: None
+	standard_buying_bridge.resolve_active_buying_warehouse = (
+		lambda warehouse_name_or_label, company=None: warehouse_name_or_label
+	)
+
+	supply_chain_contracts = types.ModuleType("hrms.utils.supply_chain_contracts")
+	supply_chain_contracts.resolve_warehouse_company = (
+		lambda warehouse_name: "Bebang Enterprises Inc." if warehouse_name else None
+	)
 
 	erpnext = types.ModuleType("erpnext")
 	erpnext_setup = types.ModuleType("erpnext.setup")
@@ -117,6 +125,7 @@ def _install_stub_dependencies():
 
 	sys.modules["hrms.utils.bei_config"] = bei_config
 	sys.modules["hrms.utils.standard_buying_bridge"] = standard_buying_bridge
+	sys.modules["hrms.utils.supply_chain_contracts"] = supply_chain_contracts
 	sys.modules["erpnext"] = erpnext
 	sys.modules["erpnext.setup"] = erpnext_setup
 	sys.modules["erpnext.setup.doctype"] = erpnext_setup_doctype
@@ -145,6 +154,8 @@ goods_receipt = _load_module(
 	"bei_goods_receipt_under_test",
 	"hrms/hr/doctype/bei_goods_receipt/bei_goods_receipt.py",
 )
+
+
 class _InsertedDoc:
 	def __init__(self, payload):
 		self.payload = payload
@@ -165,6 +176,14 @@ class TestProcurementGrSyncBridge(unittest.TestCase):
 	def setUp(self):
 		frappe.get_doc.reset_mock(return_value=True, side_effect=True)
 		frappe.db.get_value = MagicMock(return_value=None)
+		purchase_order.resolve_active_buying_warehouse = lambda warehouse_name_or_label, company=None: warehouse_name_or_label
+		purchase_order.resolve_warehouse_company = (
+			lambda warehouse_name: "Bebang Enterprises Inc." if warehouse_name else None
+		)
+		goods_receipt.resolve_active_buying_warehouse = lambda warehouse_name_or_label, company=None: warehouse_name_or_label
+		goods_receipt.resolve_warehouse_company = (
+			lambda warehouse_name: "Bebang Enterprises Inc." if warehouse_name else None
+		)
 		frappe.local.response = types.SimpleNamespace(
 			filecontent=None,
 			type=None,
@@ -247,6 +266,124 @@ class TestProcurementGrSyncBridge(unittest.TestCase):
 		self.assertEqual(gr.frappe_purchase_receipt, "PR-0001")
 		self.assertEqual(inserted_docs[0].insert_calls, 1)
 		self.assertEqual(inserted_docs[0].submit_calls, 1)
+
+	def test_purchase_order_uses_resolved_active_warehouse_company_for_erp_sync(self):
+		purchase_order.resolve_active_buying_warehouse = (
+			lambda warehouse_name_or_label, company=None: "Shaw BLVD - BKI"
+		)
+		purchase_order.resolve_warehouse_company = lambda warehouse_name: "Bebang Kitchen Inc."
+
+		inserted_docs = []
+		supplier_doc = types.SimpleNamespace(
+			get_or_create_frappe_supplier=MagicMock(return_value="SUP-ERP-0001")
+		)
+
+		def _get_doc(*args, **kwargs):
+			if args and args[0] == "BEI Supplier":
+				return supplier_doc
+			if args and isinstance(args[0], dict):
+				doc = _InsertedDoc(args[0])
+				doc.name = "PO-ERP-0001"
+				inserted_docs.append(doc)
+				return doc
+			raise AssertionError(f"Unexpected get_doc call: {args!r} {kwargs!r}")
+
+		frappe.get_doc.side_effect = _get_doc
+
+		po = purchase_order.BEIPurchaseOrder()
+		po.name = "PO-0001"
+		po.frappe_po = None
+		po.status = "Fully Received"
+		po.requires_dual_approval = 0
+		po.mae_approval = "Approved"
+		po.butch_approval = "Pending"
+		po.supplier = "SUP-0001"
+		po.po_date = "2026-03-19"
+		po.delivery_date = "2026-03-20"
+		po.payment_terms = None
+		po.discount_amount = 0
+		po.ship_to = "Shaw BLVD - Bebang Enterprise Inc."
+		po.items = [
+			types.SimpleNamespace(
+				name="POI-0001",
+				item_code="ITEM-001",
+				item_name="Test Item",
+				description="Test Item",
+				qty=5,
+				unit_cost=100,
+				uom="Nos",
+			)
+		]
+		po._get_or_create_item = MagicMock(return_value="ITEM-001")
+		po.db_set = MagicMock()
+
+		result = po.create_frappe_purchase_order()
+
+		self.assertEqual(result, "PO-ERP-0001")
+		self.assertEqual(inserted_docs[0].payload["company"], "Bebang Kitchen Inc.")
+		self.assertEqual(inserted_docs[0].payload["items"][0]["warehouse"], "Shaw BLVD - BKI")
+
+	def test_goods_receipt_uses_resolved_active_warehouse_company_for_purchase_receipt(self):
+		goods_receipt.resolve_active_buying_warehouse = (
+			lambda warehouse_name_or_label, company=None: "Shaw BLVD - BKI"
+		)
+		goods_receipt.resolve_warehouse_company = lambda warehouse_name: "Bebang Kitchen Inc."
+
+		bei_po = types.SimpleNamespace(
+			status="Fully Received",
+			frappe_po="PO-ERP-0001",
+			ship_to="Shaw BLVD - Bebang Enterprise Inc.",
+		)
+		supplier_doc = types.SimpleNamespace(
+			get_or_create_frappe_supplier=MagicMock(return_value="SUP-ERP-0001")
+		)
+		inserted_docs = []
+
+		def _get_doc(*args, **kwargs):
+			if args and args[0] == "BEI Purchase Order":
+				return bei_po
+			if args and args[0] == "BEI Supplier":
+				return supplier_doc
+			if args and isinstance(args[0], dict):
+				doc = _InsertedDoc(args[0])
+				inserted_docs.append(doc)
+				return doc
+			raise AssertionError(f"Unexpected get_doc call: {args!r} {kwargs!r}")
+
+		frappe.get_doc.side_effect = _get_doc
+
+		gr = goods_receipt.BEIGoodsReceipt()
+		gr.name = "GR-0002"
+		gr.frappe_purchase_receipt = None
+		gr.status = "Accepted"
+		gr.inspection_required = 0
+		gr.inspection_status = "Passed"
+		gr.purchase_order = "PO-0002"
+		gr.supplier = "SUP-0001"
+		gr.receipt_date = "2026-03-19"
+		gr.warehouse = "Shaw BLVD - Bebang Enterprise Inc."
+		gr.total_rejected_qty = 0
+		gr.items = [
+			types.SimpleNamespace(
+				name="GRI-0002",
+				item_code="ITEM-001",
+				item_name="Test Item",
+				description="Test Item",
+				accepted_qty=2,
+				rejected_qty=0,
+				unit_cost=100,
+				uom="Nos",
+			)
+		]
+		gr._find_frappe_po_item = MagicMock(return_value="POI-0001")
+		gr.db_set = MagicMock()
+
+		result = gr.create_frappe_purchase_receipt()
+
+		self.assertEqual(result, "PR-0001")
+		self.assertEqual(inserted_docs[0].payload["company"], "Bebang Kitchen Inc.")
+		self.assertEqual(inserted_docs[0].set_warehouse, "Shaw BLVD - BKI")
+		self.assertEqual(inserted_docs[0].payload["items"][0]["warehouse"], "Shaw BLVD - BKI")
 
 if __name__ == "__main__":
 	unittest.main()

@@ -9,7 +9,8 @@ from frappe.model.document import Document
 from frappe.utils import cint, flt, now_datetime
 
 from hrms.utils.bei_config import get_company
-from hrms.utils.standard_buying_bridge import apply_standard_buying_context
+from hrms.utils.standard_buying_bridge import apply_standard_buying_context, resolve_active_buying_warehouse
+from hrms.utils.supply_chain_contracts import resolve_warehouse_company
 
 # Approval threshold - PO above this needs both Mae AND Butch
 DUAL_APPROVAL_THRESHOLD = 500000
@@ -328,26 +329,30 @@ class BEIPurchaseOrder(Document):
 		if not frappe_supplier:
 			frappe.throw(_("Could not get or create Frappe Supplier for {0}").format(self.supplier))
 
+		resolved_store_warehouse = resolve_active_buying_warehouse(self.ship_to, company=get_company())
+		erp_company = resolve_warehouse_company(resolved_store_warehouse) or get_company()
+
 		# Validate and prepare items
 		po_items = []
 		for item in self.items:
 			frappe_item = self._get_or_create_item(item)
 
-			po_items.append(
-				{
-					"item_code": frappe_item,
-					"item_name": item.item_name or item.item_code,
-					"description": item.description or item.item_name or item.item_code,
-					"qty": flt(item.qty, 2),
-					"uom": item.uom or "Nos",
-					"stock_uom": item.uom or "Nos",
-					"conversion_factor": 1,
-					"rate": flt(item.unit_cost, 2),
-					"schedule_date": self.delivery_date,
-					"warehouse": self.ship_to or "Stores - BEI",  # Default warehouse
-					"bei_po_item": item.name,  # Reference back to BEI item
-				}
-			)
+			po_row = {
+				"item_code": frappe_item,
+				"item_name": item.item_name or item.item_code,
+				"description": item.description or item.item_name or item.item_code,
+				"qty": flt(item.qty, 2),
+				"uom": item.uom or "Nos",
+				"stock_uom": item.uom or "Nos",
+				"conversion_factor": 1,
+				"rate": flt(item.unit_cost, 2),
+				"schedule_date": self.delivery_date,
+				"bei_po_item": item.name,  # Reference back to BEI item
+			}
+			if resolved_store_warehouse:
+				po_row["warehouse"] = resolved_store_warehouse
+
+			po_items.append(po_row)
 
 		if not po_items:
 			frappe.throw(_("No valid items to create Purchase Order"))
@@ -359,7 +364,7 @@ class BEIPurchaseOrder(Document):
 				"supplier": frappe_supplier,
 				"transaction_date": self.po_date,
 				"schedule_date": self.delivery_date,
-				"company": get_company(),
+				"company": erp_company,
 				"currency": "PHP",
 				"buying_price_list": "Standard Buying",
 				"price_list_currency": "PHP",
@@ -370,7 +375,7 @@ class BEIPurchaseOrder(Document):
 				"items": po_items,
 			}
 		)
-		apply_standard_buying_context(po, store_label=self.ship_to)
+		apply_standard_buying_context(po, store_label=resolved_store_warehouse or self.ship_to, legal_entity=erp_company)
 
 		# Apply discount if any
 		if flt(self.discount_amount, 2) > 0:
@@ -427,9 +432,11 @@ class BEIPurchaseOrder(Document):
 					"is_stock_item": 1,
 					"is_purchase_item": 1,
 					"include_item_in_manufacturing": 0,
-					"default_warehouse": self.ship_to or "Stores - BEI",
 				}
 			)
+			resolved_default_warehouse = resolve_active_buying_warehouse(self.ship_to, company=get_company())
+			if resolved_default_warehouse:
+				new_item.default_warehouse = resolved_default_warehouse
 			new_item.insert(ignore_permissions=True)
 
 			frappe.msgprint(_("Created new Item: {0}").format(item_code), indicator="blue")

@@ -6,7 +6,8 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, now_datetime
 from hrms.utils.bei_config import get_company
-from hrms.utils.standard_buying_bridge import apply_standard_buying_context
+from hrms.utils.standard_buying_bridge import apply_standard_buying_context, resolve_active_buying_warehouse
+from hrms.utils.supply_chain_contracts import resolve_warehouse_company
 
 IAN_GR_VALIDATOR_EMAIL = "ian@bebang.ph"
 
@@ -315,6 +316,11 @@ class BEIGoodsReceipt(Document):
         # Get Frappe Supplier
         bei_supplier = frappe.get_doc("BEI Supplier", self.supplier)
         frappe_supplier = bei_supplier.get_or_create_frappe_supplier()
+        resolved_receiving_warehouse = resolve_active_buying_warehouse(
+            self.warehouse or bei_po.ship_to,
+            company=get_company(),
+        )
+        erp_company = resolve_warehouse_company(resolved_receiving_warehouse) or get_company()
 
         # Prepare PR items - only accepted quantities
         pr_items = []
@@ -327,7 +333,7 @@ class BEIGoodsReceipt(Document):
             # Find matching PO item for rate and proper linking
             po_item = self._find_frappe_po_item(frappe_po, item.item_code)
 
-            pr_items.append({
+            pr_row = {
                 "item_code": item.item_code,
                 "item_name": item.item_name,
                 "description": item.description or item.item_name,
@@ -336,12 +342,15 @@ class BEIGoodsReceipt(Document):
                 "uom": item.uom or "Nos",
                 "conversion_factor": 1,
                 "rate": flt(item.unit_cost, 2),
-                "warehouse": self.warehouse or "Stores - BEI",
                 "purchase_order": frappe_po,
                 "purchase_order_item": po_item,
                 "rejected_qty": flt(item.rejected_qty, 2),
                 "bei_gr_item": item.name,  # Reference back
-            })
+            }
+            if resolved_receiving_warehouse:
+                pr_row["warehouse"] = resolved_receiving_warehouse
+
+            pr_items.append(pr_row)
 
         if not pr_items:
             frappe.throw(_("No items with accepted quantity to create Purchase Receipt"))
@@ -352,14 +361,19 @@ class BEIGoodsReceipt(Document):
             "supplier": frappe_supplier,
             "posting_date": self.receipt_date,
             "posting_time": frappe.utils.nowtime(),
-            "company": get_company(),
+            "company": erp_company,
             "currency": "PHP",
             "buying_price_list": "Standard Buying",
-            "set_warehouse": self.warehouse or "Stores - BEI",
             "bei_goods_receipt": self.name,  # Reference back to BEI GR
             "items": pr_items
         })
-        apply_standard_buying_context(pr, store_label=self.warehouse or bei_po.ship_to)
+        if resolved_receiving_warehouse:
+            pr.set_warehouse = resolved_receiving_warehouse
+        apply_standard_buying_context(
+            pr,
+            store_label=resolved_receiving_warehouse or self.warehouse or bei_po.ship_to,
+            legal_entity=erp_company,
+        )
 
         # Add rejected warehouse if there are rejections
         if self.total_rejected_qty > 0:
