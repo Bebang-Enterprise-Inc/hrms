@@ -27,7 +27,8 @@ def _install_fake_frappe():
 	frappe.throw = lambda message, exc=None: (_ for _ in ()).throw(Exception(message))
 	frappe.log_error = lambda *args, **kwargs: None
 	frappe.get_roles = lambda: ["Accounts Manager"]
-	frappe.session = types.SimpleNamespace(user="test.hr@bebang.ph")
+	frappe.local = types.SimpleNamespace()
+	frappe.local.session = types.SimpleNamespace(user="test.hr@bebang.ph")
 
 	class FakeDB:
 		def get_value(self, doctype, name, fieldname):
@@ -43,7 +44,14 @@ def _install_fake_frappe():
 
 	captured = {"filters": None}
 
-	def fake_get_all(_doctype, filters=None, fields=None, order_by=None, limit_page_length=None, start=None):
+	def fake_get_all(
+		_doctype,
+		filters=None,
+		fields=None,
+		order_by=None,
+		limit_page_length=None,
+		start=None,
+	):
 		captured["filters"] = filters
 		return [
 			{
@@ -68,9 +76,18 @@ def _install_fake_frappe():
 			}
 		]
 
-	frappe.db = FakeDB()
+	frappe.local.db = FakeDB()
 	frappe.get_all = fake_get_all
 	frappe.get_doc = lambda *args, **kwargs: None
+
+	def _module_getattr(name):
+		if name == "db":
+			return frappe.local.db
+		if name == "session":
+			return frappe.local.session
+		raise AttributeError(name)
+
+	frappe.__getattr__ = _module_getattr
 	return captured
 
 
