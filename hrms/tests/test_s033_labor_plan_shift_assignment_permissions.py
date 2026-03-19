@@ -623,7 +623,9 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 			patch.object(
 				supervisor.frappe,
 				"get_doc",
-				side_effect=lambda doctype, name: doc if doctype == "BEI Shift Swap Request" else assignment_doc,
+				side_effect=lambda doctype, name: (
+					doc if doctype == "BEI Shift Swap Request" else assignment_doc
+				),
 			),
 			patch.object(supervisor, "_is_commissary_schedule_store", return_value=False),
 			patch.object(supervisor, "_assert_schedule_access"),
