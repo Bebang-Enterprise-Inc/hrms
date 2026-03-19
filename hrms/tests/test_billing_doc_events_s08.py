@@ -16,6 +16,10 @@ def _install_fake_frappe():
     if frappe is None:
         frappe = types.ModuleType("frappe")
         sys.modules["frappe"] = frappe
+    model = sys.modules.get("frappe.model")
+    if model is None:
+        model = types.ModuleType("frappe.model")
+        sys.modules["frappe.model"] = model
     utils = sys.modules.get("frappe.utils")
     if utils is None:
         utils = types.ModuleType("frappe.utils")
@@ -71,10 +75,18 @@ def _install_fake_frappe():
     utils.get_last_day = lambda value: datetime.date.fromisoformat(str(value)[:10]).replace(day=28)
     utils.getdate = _getdate
 
+    model.get_permitted_fields = lambda *args, **kwargs: []
+
     frappe.utils = utils
+    frappe.model = model
 
 
 def _install_stub_dependencies():
+    hrms_pkg = types.ModuleType("hrms")
+    hrms_hr = types.ModuleType("hrms.hr")
+    hrms_doctype = types.ModuleType("hrms.hr.doctype")
+    hrms_store_type_pkg = types.ModuleType("hrms.hr.doctype.bei_store_type")
+    hrms_utils = types.ModuleType("hrms.utils")
     bei_config = types.ModuleType("hrms.utils.bei_config")
     bei_config.get_company = lambda: "Bebang Enterprises Inc."
 
@@ -83,8 +95,18 @@ def _install_stub_dependencies():
     scm_roles.SCM_BILLING_ROLES = ["Accounts Manager", "Supply Chain Manager"]
     scm_roles.check_scm_permission = lambda roles, action=None: True
 
+    store_type = types.ModuleType("hrms.hr.doctype.bei_store_type.bei_store_type")
+    store_type.resolve_store_type = lambda *args, **kwargs: None
+
+    sys.modules["hrms"] = hrms_pkg
+    sys.modules["hrms.hr"] = hrms_hr
+    sys.modules["hrms.hr.doctype"] = hrms_doctype
+    sys.modules["hrms.hr.doctype.bei_store_type"] = hrms_store_type_pkg
+    sys.modules["hrms.utils"] = hrms_utils
+
     sys.modules["hrms.utils.bei_config"] = bei_config
     sys.modules["hrms.utils.scm_roles"] = scm_roles
+    sys.modules["hrms.hr.doctype.bei_store_type.bei_store_type"] = store_type
 
 
 _install_fake_frappe()
