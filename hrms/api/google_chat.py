@@ -594,9 +594,9 @@ def _deliver_notification_event(
 				"message_id": send_result.get("message_id"),
 				"rendered_text": final_text,
 				"ai_meta": ai_meta,
-			"source_ref": normalized["source_ref"],
-			"dedup_key": normalized["dedup_key"],
-		}
+				"source_ref": normalized["source_ref"],
+				"dedup_key": normalized["dedup_key"],
+			}
 	except Exception as exc:
 		logger.error("send_notification_event failed: %s", exc)
 		frappe.log_error(
