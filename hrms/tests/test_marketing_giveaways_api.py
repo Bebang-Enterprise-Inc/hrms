@@ -56,14 +56,10 @@ def _install_fake_dependencies(user_roles: list[str] | None = None):
 			return payload.get(str(fields or "name"))
 		return None
 
-<<<<<<< HEAD
-=======
 	def _db_exists(doctype, filters=None, *args, **kwargs):
 		if doctype == "Bin":
 			return "BIN-0001"
 		return None
-
->>>>>>> a621231fc (fix: harden backend sentry cleanup surfaces)
 	class PermissionError(Exception):
 		pass
 

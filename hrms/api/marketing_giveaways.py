@@ -4,6 +4,7 @@ import json
 import os
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -1015,7 +1016,6 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 					"alert_reference": f"pos-order:{order_id}",
 					"order_id": order_id,
 					"business_date": str(order.get("business_date") or ""),
-<<<<<<< HEAD
 					"store_name": _store_label_for_location(cint(order.get("location_id") or 0)),
 					"location_id": cint(order.get("location_id") or 0),
 					"bill_number": str(order.get("bill_number") or ""),
@@ -1058,6 +1058,8 @@ def _store_label_for_location(location_id: int) -> str:
 	if not location_id:
 		return ""
 	return _location_store_labels().get(location_id, f"Location {location_id}")
+
+
 @frappe.whitelist()
 def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, Any]:
 	_observe("get_campaign_giveaways_dashboard", phase="read", mutation_type="load", extras={"campaign": campaign})
@@ -1102,6 +1104,8 @@ def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, A
 		"todays_schedule": todays_schedule,
 		"pace_watch": sorted(upcoming, key=lambda row: (-row["required_daily_pace"], row["campaign_name"]))[:10],
 		"open_exceptions": [_serialize_exception_row(row) for row in exceptions],
+		"probable_leakage": [],
+		"probable_leakage_deferred": True,
 	}
 
 
@@ -1400,17 +1404,11 @@ def get_campaign_giveaway_exceptions(campaign: str | None = None) -> dict[str, A
 		order_by="modified desc",
 		limit_page_length=300,
 	)
-	return {"rows": [_serialize_exception_row(row) for row in rows]}
-
-
-@frappe.whitelist()
-def get_campaign_giveaway_probable_leakage(campaign: str | None = None) -> dict[str, Any]:
-	_observe("get_campaign_giveaway_probable_leakage", phase="read", mutation_type="load", extras={"campaign": campaign})
-	_require_enabled()
-	_require_roles(EXCEPTION_ROLES, "You do not have probable leakage access to Campaign Giveaways.")
-	leakage_end = _manila_today()
-	leakage_start = leakage_end - timedelta(days=16)
-	return {"rows": _query_probable_giveaway_leakage(leakage_start, leakage_end)}
+	return {
+		"rows": [_serialize_exception_row(row) for row in rows],
+		"probable_leakage": [],
+		"probable_leakage_deferred": True,
+	}
 
 
 @frappe.whitelist()
