@@ -190,6 +190,59 @@ class TestDispatchVehicleContractS07(unittest.TestCase):
 		self.assertIn("resolution_notes", result["required_fields"])
 		self.assertIn("System Error", result["resolution_types"])
 
+	@patch.object(dispatch, "_check_scm_permission")
+	@patch.object(dispatch, "_has_column", return_value=True)
+	def test_create_vehicle_normalizes_portal_contract_inputs(self, _mock_has_column, _mock_perm):
+		insert_calls = []
+		comment_calls = []
+		vehicle_doc = types.SimpleNamespace(
+			name="BEI-VEH-0009",
+			doctype="BEI Vehicle",
+			vehicle_plate="ABC 1234",
+			vehicle_type="",
+			owner_type="",
+			threepl_partner="",
+			status="",
+			notes="",
+		)
+
+		def _insert(**kwargs):
+			insert_calls.append(kwargs)
+
+		def _add_comment(_comment_type, text=None):
+			comment_calls.append(text)
+
+		vehicle_doc.insert = _insert
+		vehicle_doc.add_comment = _add_comment
+
+		def _fake_get_value(doctype, filters=None, fieldname=None, as_dict=False):
+			if doctype == "BEI Vehicle":
+				return None
+			if doctype == "Supplier" and filters == "RCS Logistics":
+				return None
+			if doctype == "Supplier" and filters == {"supplier_name": "RCS Logistics"}:
+				return "SUP-RCS"
+			return None
+
+		with (
+			patch.object(dispatch.frappe.db, "get_value", side_effect=_fake_get_value),
+			patch.object(dispatch.frappe, "new_doc", return_value=vehicle_doc),
+		):
+			result = dispatch.create_vehicle(
+				vehicle_plate="ABC 1234",
+				vehicle_type="Non-Reefer",
+				owner_type="3PL",
+				threepl_partner="RCS Logistics",
+				notes="Portal onboarding",
+			)
+
+		self.assertTrue(result["success"])
+		self.assertTrue(result["created"])
+		self.assertEqual(vehicle_doc.vehicle_type, "Truck")
+		self.assertEqual(vehicle_doc.threepl_partner, "SUP-RCS")
+		self.assertEqual(insert_calls, [{"ignore_permissions": True}])
+		self.assertTrue(any("Vehicle onboarded by" in str(text) for text in comment_calls))
+
 
 if __name__ == "__main__":
 	unittest.main()
