@@ -24,6 +24,7 @@ from hrms.utils.delivery_billing_policy import (
 # P0-10: Import centralized RBAC role sets
 from hrms.utils.scm_roles import SCM_ADMIN_ROLES, SCM_DISPATCH_ROLES, SCM_STORE_ROLES
 from hrms.utils.scm_roles import check_scm_permission as _check_scm_permission
+from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.supply_chain_contracts import (
 	buyer_entity_requires_billing_hold,
 	resolve_markup_percent,
@@ -1269,6 +1270,15 @@ def get_my_delivery(date: str | None = None):
 @frappe.whitelist()
 def get_routes(cargo_type: str | None = None, active_only: bool = True):
 	"""Get all route masters, optionally filtered."""
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_routes",
+		route_action="get_routes",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.dispatch.get_routes",
+		phase="load",
+		extras={"cargo_type": cargo_type, "active_only": active_only},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view routes")
 
 	filters = {}
@@ -1309,6 +1319,15 @@ def get_routes(cargo_type: str | None = None, active_only: bool = True):
 @frappe.whitelist()
 def get_route_detail(route_name: str):
 	"""Get full route details including all stops."""
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_route_detail",
+		route_action="get_route_detail",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.dispatch.get_route_detail",
+		phase="load",
+		extras={"route_name": route_name},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view route details")
 
 	route = frappe.get_doc("BEI Route", route_name)
@@ -1439,6 +1458,15 @@ def delete_route(route_name: str):
 @frappe.whitelist()
 def get_vehicles(status: str | None = None, owner_type: str | None = None):
 	"""List vehicles with optional filters."""
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_vehicles",
+		route_action="get_vehicles",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.dispatch.get_vehicles",
+		phase="load",
+		extras={"status": status, "owner_type": owner_type},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view vehicles")
 
 	filters = {}
@@ -1569,6 +1597,16 @@ def _save_base64_attachment(
 @frappe.whitelist()
 def preview_trip_stops(route_name: str, trip_date: str | None = None):
 	"""Preview stops and pending store orders for a proposed trip."""
+	trip_date = trip_date or nowdate()
+	set_backend_observability_context(
+		module="warehouse",
+		action="preview_trip_stops",
+		route_action="preview_trip_stops",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.dispatch.preview_trip_stops",
+		phase="load",
+		extras={"route_name": route_name, "trip_date": trip_date},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "preview trip stops")
 	route = frappe.get_doc("BEI Route", route_name)
 	trip_route_name = route.route_name or route_name
@@ -1576,7 +1614,6 @@ def preview_trip_stops(route_name: str, trip_date: str | None = None):
 	if not route.active:
 		frappe.throw(_("Route is not active"))
 
-	trip_date = trip_date or nowdate()
 	stops = _build_stop_preview(route, trip_date)
 	return {"route_name": route_name, "trip_date": trip_date, "stops": stops}
 
@@ -1632,6 +1669,22 @@ def create_trip_from_route(
 	3. Copies stops, links approved store orders
 	4. Returns trip name
 	"""
+	trip_date = trip_date or nowdate()
+	set_backend_observability_context(
+		module="warehouse",
+		action="create_trip_from_route",
+		route_action="create_trip_from_route",
+		mutation_type="create",
+		endpoint_or_job="hrms.api.dispatch.create_trip_from_route",
+		phase="mutation",
+		extras={
+			"route_name": route_name,
+			"trip_date": trip_date,
+			"vehicle": vehicle,
+			"driver": driver,
+			"selected_stops_provided": bool(selected_stops),
+		},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "create trips from routes")
 
 	route = frappe.get_doc("BEI Route", route_name)
@@ -1639,8 +1692,6 @@ def create_trip_from_route(
 
 	if not route.active:
 		frappe.throw(_("Route is not active"))
-
-	trip_date = trip_date or nowdate()
 
 	# G-069: UX pre-check for duplicate trip (DB constraint is the real guard)
 	existing_trip = frappe.db.get_value(
@@ -1881,9 +1932,18 @@ def get_available_drivers(date: str | None = None):
 	Returns:
 	    {"drivers": [DriverStatus, ...]}
 	"""
+	trip_date = date or nowdate()
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_available_drivers",
+		route_action="get_available_drivers",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.dispatch.get_available_drivers",
+		phase="load",
+		extras={"trip_date": trip_date},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view available drivers")
 
-	trip_date = date or nowdate()
 	phone_field = _get_employee_phone_field()
 	driver_fields = ["name", "employee_name", "designation", "status"]
 	if phone_field:
