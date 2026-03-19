@@ -131,11 +131,62 @@ jobs:
               --fail-on-empty
           fi
 
-  # ── Step 4: Anomaly detection (AFTER all syncs complete) ─────────────────
+  # ── Step 4: FoodPanda cups from governed item fact sheet ──────────────────
+  foodpanda-item-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests google-auth google-api-python-client
+
+      - name: Setup Google credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
+
+      - name: Run FoodPanda item-daily sync
+        run: |
+          if [ -n "${{ inputs.target_date }}" ]; then
+            python scripts/sync_foodpanda_item_daily_to_supabase.py \
+              --date "${{ inputs.target_date }}"
+          else
+            python scripts/sync_foodpanda_item_daily_to_supabase.py \
+              --start-date "$(date -u -d '7 days ago' +%F)" \
+              --end-date "$(date -u -d 'yesterday' +%F)"
+          fi
+
+  # ── Step 5: Refresh dashboard materialized views after all sales feeds ────
+  refresh-sales-dashboard-views:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [pos-sync, web-sync, foodpanda-sync, foodpanda-item-sync]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install httpx
+
+      - name: Refresh sales dashboard materialized views
+        run: |
+          python scripts/supabase_exec.py "select public.refresh_sales_dashboard_daily_store_metrics();"
+
+  # ── Step 6: Anomaly detection (AFTER all syncs complete) ─────────────────
   anomaly-detection:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [pos-sync, web-sync, foodpanda-sync]
+    needs: [refresh-sales-dashboard-views]
     if: ${{ !inputs.skip_anomaly }}
 
     steps:
@@ -165,7 +216,7 @@ jobs:
   notify-failure:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [pos-sync, web-sync, foodpanda-sync, anomaly-detection]
+    needs: [pos-sync, web-sync, foodpanda-sync, foodpanda-item-sync, refresh-sales-dashboard-views, anomaly-detection]
     if: ${{ always() && contains(needs.*.result, 'failure') }}
 
     steps:
@@ -201,6 +252,8 @@ jobs:
               'POS sync: ${{ needs.pos-sync.result }}\n'
               'Web sync: ${{ needs.web-sync.result }}\n'
               'FoodPanda sync: ${{ needs.foodpanda-sync.result }}\n'
+              'FoodPanda item sync: ${{ needs.foodpanda-item-sync.result }}\n'
+              'Sales dashboard refresh: ${{ needs.refresh-sales-dashboard-views.result }}\n'
               'Anomaly detection: ${{ needs.anomaly-detection.result }}\n\n'
               'Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
           )

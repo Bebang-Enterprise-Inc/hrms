@@ -418,6 +418,40 @@ class TestS37WarehouseRoleGatedWrites(unittest.TestCase):
 		self.assertEqual(created.items[0].uom, "KG")
 		self.assertEqual(created.items[0].stock_uom, "KG")
 
+	def test_create_stock_transfer_allows_zero_valuation_for_intercompany_material_issue(self):
+		original_get_value = warehouse.frappe.db.get_value
+
+		def _get_value(doctype, filters=None, fieldname=None, as_dict=False):
+			if doctype == "Bin":
+				return 0
+			if doctype == "Item" and filters == "FG002-A" and as_dict:
+				return {"valuation_rate": 0, "standard_rate": 0, "last_purchase_rate": 0}
+			return original_get_value(doctype, filters, fieldname, as_dict)
+
+		warehouse.frappe.db.get_value = _get_value
+		try:
+			result = warehouse.create_stock_transfer(
+				source_warehouse="Shaw BLVD - BKI",
+				target_warehouse="TEST-STORE-BGC - BEI",
+				items=[
+					{
+						"item_code": "FG002-A",
+						"qty": 1,
+						"uom": "KG",
+					}
+				],
+				mr_name=_MR_DOC.name,
+				remarks="S078 zero valuation dispatch hardening",
+			)
+		finally:
+			warehouse.frappe.db.get_value = original_get_value
+
+		self.assertTrue(result["success"])
+		created = _DOCS_CREATED[0]
+		self.assertEqual(created.stock_entry_type, "Material Issue")
+		self.assertEqual(created.items[0].valuation_rate, 0)
+		self.assertEqual(created.items[0].allow_zero_valuation_rate, 1)
+
 	def test_create_stock_transfer_omits_legacy_batch_field_for_intercompany_material_issue(self):
 		original_get_doc = warehouse.frappe.get_doc
 

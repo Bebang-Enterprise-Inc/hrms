@@ -18,23 +18,30 @@ def get_employee_masterlist(
 	department: str | None = None,
 	store: str | None = None,
 	employment_type: str | None = None,
+	search: str | None = None,
+	reports_to: str | None = None,
 	page: int = 1,
 	page_size: int = 50,
 ):
-	"""Active/Inactive employee masterlist with filters.
+	"""Employee masterlist with operational people-data fields.
 
 	Args:
 	    status: Filter by status (Active/Inactive/Left)
 	    department: Filter by department
 	    store: Filter by branch/store
 	    employment_type: Filter by employment type
+	    search: Search employee id, name, email, designation, or branch
+	    reports_to: Filter by manager employee id
 	    page: Page number (1-based)
 	    page_size: Results per page
 
 	Returns:
-	    dict: Paginated employee list
+	    dict: Paginated employee list with summary + filter metadata
 	"""
 	_check_hr_permission()
+
+	page = max(int(page or 1), 1)
+	page_size = min(max(int(page_size or 50), 1), 200)
 
 	filters = {}
 	if status:
@@ -45,12 +52,15 @@ def get_employee_masterlist(
 		filters["branch"] = store
 	if employment_type:
 		filters["employment_type"] = employment_type
+	if reports_to:
+		filters["reports_to"] = reports_to
 
 	results = frappe.get_all(
 		"Employee",
 		filters=filters,
 		fields=[
 			"name",
+			"name as employee_id",
 			"employee_name",
 			"department",
 			"designation",
@@ -60,15 +70,98 @@ def get_employee_masterlist(
 			"employment_type",
 			"company",
 			"user_id",
+			"company_email",
+			"personal_email",
 			"cell_number",
 			"reports_to",
+			"custom_enrichment_status",
+			"custom_enrichment_submitted_date",
+			"custom_enrichment_complete_date",
 			"gender",
 			"date_of_birth",
 		],
 		order_by="employee_name asc",
 	)
 
-	return _paginate(results, page=int(page), page_size=int(page_size))
+	if search:
+		search_lower = search.strip().lower()
+		if search_lower:
+			results = [
+				row
+				for row in results
+				if search_lower in str(row.get("name") or "").lower()
+				or search_lower in str(row.get("employee_name") or "").lower()
+				or search_lower in str(row.get("user_id") or "").lower()
+				or search_lower in str(row.get("designation") or "").lower()
+				or search_lower in str(row.get("branch") or "").lower()
+				or search_lower in str(row.get("department") or "").lower()
+			]
+
+	manager_ids = sorted({row.get("reports_to") for row in results if row.get("reports_to")})
+	manager_name_map = {}
+	if manager_ids:
+		manager_rows = frappe.get_all(
+			"Employee",
+			filters={"name": ("in", manager_ids)},
+			fields=["name", "employee_name"],
+		)
+		manager_name_map = {row["name"]: row["employee_name"] for row in manager_rows}
+
+	open_enrichment_employees = set(
+		frappe.get_all(
+			"BEI Onboarding Request",
+			filters={
+				"request_type": "update_existing",
+				"status": ("in", ["Pending", "Escalated", "Revision Requested"]),
+			},
+			pluck="employee",
+		)
+	)
+
+	for row in results:
+		if not row.get("custom_enrichment_status"):
+			row["custom_enrichment_status"] = "Not Started"
+		row["reports_to_name"] = manager_name_map.get(row.get("reports_to"), "")
+		row["has_pending_enrichment"] = row.get("name") in open_enrichment_employees
+
+	summary = {
+		"total_employees": len(results),
+		"active": sum(1 for row in results if row.get("status") == "Active"),
+		"inactive": sum(1 for row in results if row.get("status") != "Active"),
+		"missing_manager": sum(1 for row in results if not row.get("reports_to")),
+		"missing_company_email": sum(1 for row in results if not row.get("company_email")),
+		"pending_enrichment": sum(1 for row in results if row.get("has_pending_enrichment")),
+		"in_progress_enrichment": sum(
+			1 for row in results if row.get("custom_enrichment_status") == "In Progress"
+		),
+		"submitted_enrichment": sum(
+			1 for row in results if row.get("custom_enrichment_status") == "Submitted"
+		),
+		"complete_enrichment": sum(
+			1 for row in results if row.get("custom_enrichment_status") == "Complete"
+		),
+	}
+
+	filter_meta = {
+		"branches": sorted({row.get("branch") for row in results if row.get("branch")}),
+		"departments": sorted({row.get("department") for row in results if row.get("department")}),
+		"employment_types": sorted(
+			{row.get("employment_type") for row in results if row.get("employment_type")}
+		),
+		"statuses": sorted({row.get("status") for row in results if row.get("status")}),
+		"managers": sorted(
+			[
+				{"name": manager_id, "employee_name": manager_name_map.get(manager_id, manager_id)}
+				for manager_id in manager_ids
+			],
+			key=lambda row: row["employee_name"],
+		),
+	}
+
+	paginated = _paginate(results, page=page, page_size=page_size)
+	paginated["summary"] = summary
+	paginated["filters"] = filter_meta
+	return paginated
 
 
 @frappe.whitelist()

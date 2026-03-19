@@ -103,10 +103,12 @@ def _install_stubs():
 	scm_roles.check_scm_permission = lambda *args, **kwargs: None
 
 	supply_chain_contracts = types.ModuleType("hrms.utils.supply_chain_contracts")
+	supply_chain_contracts.FINANCE_TREATMENT_INTERCOMPANY = "intercompany"
 	supply_chain_contracts.FINANCE_TREATMENT_SAME_COMPANY = "same_company"
 	supply_chain_contracts.REQUEST_SOURCE_STORE_DISPOSAL = "store_disposal"
 	supply_chain_contracts.REQUEST_SOURCE_STORE_ORDER = "store_order"
 	supply_chain_contracts.REQUEST_SOURCE_STORE_RETURN = "store_return"
+	supply_chain_contracts.get_preferred_commissary_warehouses = lambda *args, **kwargs: []
 	supply_chain_contracts.infer_finance_treatment = lambda *args, **kwargs: None
 	supply_chain_contracts.resolve_material_request_contract = lambda *args, **kwargs: {}
 	supply_chain_contracts.resolve_route_source_warehouse = lambda *args, **kwargs: None
@@ -163,11 +165,18 @@ class _FakeQueueDoc:
 		self._save_count += 1
 
 
-def test_area_stage_emits_forwarded_store_order_approved_event():
+@pytest.mark.parametrize(
+	("acting_user", "expected_stage", "expected_mode"),
+	[
+		("test.area@bebang.ph", "area_supervisor", "standard"),
+		("edlice@bebang.ph", "fallback_approver", "fallback_override"),
+	],
+)
+def test_store_order_approval_emits_approved_signal(acting_user, expected_stage, expected_mode):
 	store_mod = _load_store_module()
 	fake_order = _FakeOrder()
 	fake_queue_doc = _FakeQueueDoc("BEI-APQ-AREA-0001")
-	store_mod.frappe.session.user = "test.area@bebang.ph"
+	store_mod.frappe.session.user = acting_user
 	notifications = []
 
 	def fake_get_doc(doctype, name):
@@ -186,18 +195,10 @@ def test_area_stage_emits_forwarded_store_order_approved_event():
 		),
 		patch.object(store_mod, "_is_system_approver", return_value=False),
 		patch.object(store_mod, "_get_area_supervisor_for_store", return_value="test.area@bebang.ph"),
-		patch.object(
-			store_mod,
-			"_get_regional_manager_for_store",
-			return_value=("test.hr@bebang.ph", "employee.reports_to"),
-		),
-		patch.object(
-			store_mod, "_create_approval_queue_entry", return_value=SimpleNamespace(name="BEI-APQ-REG-0001")
-		),
-		patch.object(store_mod, "_assign_order_for_approval", return_value=True),
-		patch.object(store_mod, "_append_order_comment"),
+		patch.object(store_mod, "_get_order_approval_fallback_user", return_value="edlice@bebang.ph"),
 		patch.object(store_mod, "_close_order_assignments"),
-		patch.object(store_mod, "_create_mr_for_store_order") as create_mr,
+		patch.object(store_mod, "_append_order_comment"),
+		patch.object(store_mod, "_create_mr_for_store_order", return_value="MAT-MR-0001") as create_mr,
 	):
 		store_mod._notify_store_ops = lambda *args, **kwargs: notifications.append(kwargs)
 		result = store_mod.approve_order(
@@ -206,62 +207,13 @@ def test_area_stage_emits_forwarded_store_order_approved_event():
 		)
 
 	assert result["success"] is True
-	assert result["stage"] == "area_supervisor"
-	assert notifications
-	event = notifications[0]["event"]
-	assert event["family"] == "store_order_approved"
-	assert event["facts"]["stage"] == "area_supervisor_forwarded"
-	assert event["facts"]["regional_approver"] == "test.hr@bebang.ph"
-	assert notifications[0]["requested_space"] == "spaces/AAAAvDZdY-o"
-	assert not create_mr.called
-
-
-def test_final_stage_emits_store_order_approved_material_request_signal():
-	store_mod = _load_store_module()
-	fake_order = _FakeOrder()
-	fake_queue_doc = _FakeQueueDoc("BEI-APQ-REG-0001")
-	store_mod.frappe.session.user = "test.hr@bebang.ph"
-	notifications = []
-
-	def fake_get_doc(doctype, name):
-		if doctype == "BEI Store Order":
-			return fake_order
-		if doctype == "BEI Approval Queue":
-			return fake_queue_doc
-		raise AssertionError(f"Unexpected get_doc call: {doctype} / {name}")
-
-	with (
-		patch.object(store_mod.frappe, "get_doc", side_effect=fake_get_doc),
-		patch.object(
-			store_mod,
-			"_get_pending_approval_entries",
-			return_value=[{"name": "BEI-APQ-REG-0001", "assigned_approver": "test.hr@bebang.ph"}],
-		),
-		patch.object(store_mod, "_is_system_approver", return_value=False),
-		patch.object(store_mod, "_get_area_supervisor_for_store", return_value="test.area@bebang.ph"),
-		patch.object(
-			store_mod,
-			"_get_regional_manager_for_store",
-			return_value=("test.hr@bebang.ph", "employee.reports_to"),
-		),
-		patch.object(store_mod, "_has_approved_stage_entry", return_value=True),
-		patch.object(store_mod, "_close_order_assignments"),
-		patch.object(store_mod, "_create_mr_for_store_order", return_value="MAT-REQ-0001") as create_mr,
-		patch.object(store_mod.frappe.db, "get_value", return_value=None),
-	):
-		store_mod._notify_store_ops = lambda *args, **kwargs: notifications.append(kwargs)
-		result = store_mod.approve_order(
-			order_name=fake_order.name,
-			approved_quantities=[{"item_code": "ITEM-001", "qty_approved": 3}],
-		)
-
-	assert result["success"] is True
-	assert result["stage"] == "regional_manager"
-	assert result["material_request"] == "MAT-REQ-0001"
+	assert result["stage"] == expected_stage
+	assert result["material_request"] == "MAT-MR-0001"
 	assert create_mr.call_count == 1
 	assert notifications
 	event = notifications[0]["event"]
 	assert event["family"] == "store_order_approved"
 	assert event["facts"]["stage"] == "approved"
-	assert event["facts"]["material_request"] == "MAT-REQ-0001"
+	assert event["facts"]["approval_mode"] == expected_mode
+	assert event["facts"]["material_request"] == "MAT-MR-0001"
 	assert notifications[0]["requested_space"] == "spaces/AAAAvDZdY-o"

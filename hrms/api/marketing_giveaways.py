@@ -4,6 +4,7 @@ import json
 import os
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
+from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -14,7 +15,7 @@ from frappe import _
 from frappe.utils import cint, flt, getdate, now_datetime, nowdate
 
 from hrms.utils.bei_config import get_company
-from hrms.utils.sales_location_mapping import lookup_store_name_by_location_id
+from hrms.utils.sales_location_mapping import load_sales_location_mapping
 from hrms.utils.sentry import capture_backend_message, set_backend_observability_context
 from hrms.utils.supply_chain_contracts import resolve_warehouse_company
 
@@ -27,6 +28,7 @@ POLICY_VERSION = "S075-2026-03-18"
 DEFAULT_EXPENSE_ACCOUNT_NUMBER = "6005001"
 DEFAULT_EXPENSE_ACCOUNT_NAME = "MARKETING GIVEAWAYS"
 FINISHED_GOODS_ITEM_GROUPS = {"Finished Goods"}
+LEAKAGE_LOOKBACK_DAYS = 16
 APPROVED_STATES = {"Approved / Active", "Partially Fulfilled"}
 OPS_REVIEW_ROLES = {"Area Supervisor", "Supply Chain Manager", "HQ User", "System Manager", "Administrator"}
 FINANCE_REVIEW_ROLES = {"HQ Finance", "Accounts Manager", "HQ User", "System Manager", "Administrator"}
@@ -1000,11 +1002,7 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 					"alert_reference": f"pos-order:{order_id}",
 					"order_id": order_id,
 					"business_date": str(order.get("business_date") or ""),
-					"store_name": str(
-						order.get("store_name")
-						or lookup_store_name_by_location_id(order.get("location_id"))
-						or ""
-					),
+					"store_name": _store_label_for_location(cint(order.get("location_id") or 0)),
 					"location_id": cint(order.get("location_id") or 0),
 					"bill_number": str(order.get("bill_number") or ""),
 					"order_gross_sales": order_gross,
@@ -1022,6 +1020,30 @@ def _query_probable_giveaway_leakage(start_day: date, end_day: date) -> list[dic
 				}
 			)
 	return result
+
+
+def _leakage_window() -> tuple[date, date]:
+	leakage_end = _manila_today()
+	return leakage_end - timedelta(days=LEAKAGE_LOOKBACK_DAYS), leakage_end
+
+
+@lru_cache(maxsize=1)
+def _location_store_labels() -> dict[int, str]:
+	labels: dict[int, str] = {}
+	for row in load_sales_location_mapping().values():
+		location_id = cint(row.get("location_id") or 0)
+		if not location_id or location_id in labels:
+			continue
+		labels[location_id] = str(
+			row.get("warehouse_record_name") or row.get("warehouse_name") or f"Location {location_id}"
+		).strip()
+	return labels
+
+
+def _store_label_for_location(location_id: int) -> str:
+	if not location_id:
+		return ""
+	return _location_store_labels().get(location_id, f"Location {location_id}")
 
 
 @frappe.whitelist()
@@ -1068,6 +1090,8 @@ def get_campaign_giveaways_dashboard(campaign: str | None = None) -> dict[str, A
 		"todays_schedule": todays_schedule,
 		"pace_watch": sorted(upcoming, key=lambda row: (-row["required_daily_pace"], row["campaign_name"]))[:10],
 		"open_exceptions": [_serialize_exception_row(row) for row in exceptions],
+		"probable_leakage": [],
+		"probable_leakage_deferred": True,
 	}
 
 
@@ -1366,7 +1390,11 @@ def get_campaign_giveaway_exceptions(campaign: str | None = None) -> dict[str, A
 		order_by="modified desc",
 		limit_page_length=300,
 	)
-	return {"rows": [_serialize_exception_row(row) for row in rows]}
+	return {
+		"rows": [_serialize_exception_row(row) for row in rows],
+		"probable_leakage": [],
+		"probable_leakage_deferred": True,
+	}
 
 
 @frappe.whitelist()
@@ -1374,9 +1402,12 @@ def get_campaign_giveaway_probable_leakage(campaign: str | None = None) -> dict[
 	_observe("get_campaign_giveaway_probable_leakage", phase="read", mutation_type="load", extras={"campaign": campaign})
 	_require_enabled()
 	_require_roles(EXCEPTION_ROLES, "You do not have probable leakage access to Campaign Giveaways.")
-	leakage_end = _manila_today()
-	leakage_start = leakage_end - timedelta(days=16)
-	return {"rows": _query_probable_giveaway_leakage(leakage_start, leakage_end)}
+	leakage_start, leakage_end = _leakage_window()
+	return {
+		"rows": _query_probable_giveaway_leakage(leakage_start, leakage_end),
+		"window_start": leakage_start.isoformat(),
+		"window_end": leakage_end.isoformat(),
+	}
 
 
 @frappe.whitelist()

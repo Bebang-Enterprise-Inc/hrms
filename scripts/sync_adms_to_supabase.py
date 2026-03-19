@@ -60,6 +60,8 @@ SSM_POLL_INTERVAL = 2
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://csnniykjrychgajfrgua.supabase.co")
 UPSERT_BATCH_SIZE = 500
 DEDUP_WINDOW_SECS = 60  # Near-duplicate suppression window
+BACKFILL_WINDOW_HOURS = 6
+PHT = timezone(timedelta(hours=8))
 
 
 def _get_secret(env_name: str, doppler_name: str | None = None) -> str:
@@ -274,6 +276,14 @@ def _dedup_punches(punches: list[dict]) -> list[dict]:
     return deduped
 
 
+def _adms_event_time_to_utc(event_time: str) -> str:
+    """Convert ADMS local wall-clock time (PHT) into UTC ISO-8601."""
+    dt = datetime.fromisoformat(event_time.replace(" ", "T"))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=PHT)
+    return dt.astimezone(timezone.utc).isoformat()
+
+
 # ---------------------------------------------------------------------------
 # Supabase Upsert
 # ---------------------------------------------------------------------------
@@ -311,24 +321,28 @@ def _upsert_punches(punches: list[dict], dry_run: bool = False) -> int:
 # Fetch Modes
 # ---------------------------------------------------------------------------
 
-def _fetch_device_week(ssm_client, device_sn: str, start: date, end: date) -> list[dict]:
-    """Fetch punches for one device for a date range."""
+def _fetch_device_window(ssm_client, device_sn: str, start_dt: datetime, end_dt: datetime) -> list[dict]:
+    """Fetch punches for one device for a bounded datetime window."""
     sql = (
         f"SELECT id, pin, event_time, status_code, verify_code, sn "
         f"FROM adms_attlog_raw "
         f"WHERE sn = '{device_sn}' "
-        f"AND event_time >= '{start.isoformat()}' "
-        f"AND event_time < '{(end + timedelta(days=1)).isoformat()}' "
+        f"AND event_time >= '{start_dt.isoformat(sep=' ')}' "
+        f"AND event_time < '{end_dt.isoformat(sep=' ')}' "
         f"ORDER BY event_time"
     )
-    raw = _run_ssm_query(ssm_client, sql, f"{device_sn} {start}..{end}")
+    raw = _run_ssm_query(
+        ssm_client,
+        sql,
+        f"{device_sn} {start_dt.isoformat(sep=' ')}..{end_dt.isoformat(sep=' ')}",
+    )
     if not raw:
         return []
     return _parse_ssm_output(raw)
 
 
 def _fetch_all_devices_range(ssm_client, start: date, end: date, store_filter: str | None = None) -> list[dict]:
-    """Fetch punches from all devices for a date range, splitting into weekly chunks."""
+    """Fetch punches from all devices for a date range using small windows to avoid SSM truncation."""
     devices = list(DEVICE_TO_STORE.keys())
     if store_filter:
         store_upper = store_filter.upper()
@@ -340,23 +354,23 @@ def _fetch_all_devices_range(ssm_client, start: date, end: date, store_filter: s
     all_punches = []
     total_devices = len(devices)
 
-    # Split into weekly chunks
-    weeks = []
-    w_start = start
-    while w_start <= end:
-        w_end = min(w_start + timedelta(days=6), end)
-        weeks.append((w_start, w_end))
-        w_start = w_end + timedelta(days=1)
+    windows = []
+    window_start = datetime.combine(start, datetime.min.time())
+    end_dt = datetime.combine(end + timedelta(days=1), datetime.min.time())
+    while window_start < end_dt:
+        window_end = min(window_start + timedelta(hours=BACKFILL_WINDOW_HOURS), end_dt)
+        windows.append((window_start, window_end))
+        window_start = window_end
 
-    total_queries = total_devices * len(weeks)
+    total_queries = total_devices * len(windows)
     done = 0
 
-    for w_start, w_end in weeks:
+    for window_start, window_end in windows:
         for idx, device_sn in enumerate(devices):
             done += 1
             if done % 20 == 0 or done == total_queries:
                 print(f"  SSM progress: {done}/{total_queries} queries ({len(all_punches)} rows so far)", flush=True)
-            rows = _fetch_device_week(ssm_client, device_sn, w_start, w_end)
+            rows = _fetch_device_window(ssm_client, device_sn, window_start, window_end)
             all_punches.extend(rows)
 
     print(f"  Fetched {len(all_punches)} raw punches from {total_devices} devices", flush=True)
@@ -388,7 +402,7 @@ def _transform_punches(raw_punches: list[dict]) -> list[dict]:
         enrichment = _enrich_punch(p["pin"], p["device_sn"])
         records.append({
             "pin": p["pin"],
-            "event_time": p["event_time"],
+            "event_time": _adms_event_time_to_utc(p["event_time"]),
             "device_sn": p["device_sn"],
             "status_code": p["status_code"],
             "verify_code": p["verify_code"],

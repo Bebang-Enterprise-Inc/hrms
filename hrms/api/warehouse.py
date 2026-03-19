@@ -24,6 +24,7 @@ from hrms.utils.scm_roles import (
 	SCM_RECEIVING_ROLES,
 	check_scm_permission,
 )
+from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 from hrms.utils.supply_chain_contracts import (
 	CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
@@ -149,6 +150,34 @@ def _clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry: Any) -> Non
 			item.batch_no = None
 		if getattr(item, "serial_no", None):
 			item.serial_no = None
+
+
+def _resolve_stock_entry_item_valuation(item_code: str, warehouse: str | None):
+	"""Return a stable valuation context for outbound stock rows.
+
+	Material Issue movements can fail at submit time when the source stock has no
+	valuation rate yet. When that happens, explicitly mark the row as an allowed
+	zero-valuation movement so dispatch does not die on a generic 417/validation error.
+	"""
+	bin_rate = flt(
+		frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "valuation_rate") or 0
+	)
+	if bin_rate > 0:
+		return bin_rate, False
+
+	item_rates = frappe.db.get_value(
+		"Item",
+		item_code,
+		["valuation_rate", "standard_rate", "last_purchase_rate"],
+		as_dict=True,
+	) or {"valuation_rate": 0, "standard_rate": 0, "last_purchase_rate": 0}
+	resolved_rate = flt(
+		item_rates.get("valuation_rate")
+		or item_rates.get("standard_rate")
+		or item_rates.get("last_purchase_rate")
+		or 0
+	)
+	return resolved_rate, resolved_rate <= 0
 
 
 @frappe.whitelist()
@@ -871,6 +900,14 @@ def get_ready_for_dispatch():
 	Get approved Material Requests ready for dispatch.
 	Groups by destination store for trip planning.
 	"""
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_ready_for_dispatch",
+		route_action="get_ready_for_dispatch",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.warehouse.get_ready_for_dispatch",
+		phase="load",
+	)
 	mrs = frappe.get_all(
 		"Material Request",
 		filters={
@@ -944,6 +981,20 @@ def create_stock_transfer(
 	if isinstance(items, str):
 		items = json.loads(items)
 
+	set_backend_observability_context(
+		module="warehouse",
+		action="create_stock_transfer",
+		route_action="create_stock_transfer",
+		mutation_type="create",
+		endpoint_or_job="hrms.api.warehouse.create_stock_transfer",
+		phase="mutation",
+		extras={
+			"source_warehouse": source_warehouse,
+			"target_warehouse": target_warehouse,
+			"mr_name": mr_name,
+			"item_count": len(items) if isinstance(items, list) else None,
+		},
+	)
 	check_scm_permission(SCM_DISPATCH_ROLES, "dispatch warehouse stock transfers")
 
 	default_source_company = resolve_warehouse_company(source_warehouse) or get_company()
@@ -1032,6 +1083,9 @@ def create_stock_transfer(
 		# Get item details
 		item = frappe.get_doc("Item", item_data["item_code"])
 		valid_uom = _resolve_valid_item_uom(item, item_data.get("uom"))
+		valuation_rate, allow_zero_valuation_rate = _resolve_stock_entry_item_valuation(
+			item_data["item_code"], source_warehouse
+		)
 
 		# ERPNext v15 auto-creates outward serial/batch bundles for Material Issue.
 		# Supplying legacy batch fields in that path causes duplicate-bundle validation,
@@ -1064,6 +1118,10 @@ def create_stock_transfer(
 			"material_request": mr_name if mr_item_ref else None,
 			"material_request_item": mr_item_ref,
 		}
+		if is_intercompany:
+			row["valuation_rate"] = valuation_rate
+			if allow_zero_valuation_rate:
+				row["allow_zero_valuation_rate"] = 1
 		if batch_no:
 			row["batch_no"] = batch_no
 		if not is_intercompany:

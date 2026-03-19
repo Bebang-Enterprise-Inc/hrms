@@ -10,6 +10,10 @@ def _install_stubs(query_capture):
 	frappe.whitelist = lambda fn=None, **kwargs: fn if fn else (lambda inner: inner)
 	frappe.logger = lambda _name: types.SimpleNamespace(warning=lambda *args, **kwargs: None)
 	frappe.parse_json = lambda payload: payload
+	frappe.session = types.SimpleNamespace(user="test.area@bebang.ph")
+	frappe.get_roles = lambda user=None: ["Area Supervisor"]
+	frappe.PermissionError = type("PermissionError", (Exception,), {})
+	frappe.throw = lambda message, exc=None: (_ for _ in ()).throw((exc or Exception)(message))
 
 	class _DB:
 		@staticmethod
@@ -33,15 +37,21 @@ def _install_stubs(query_capture):
 
 	hrms_pkg = types.ModuleType("hrms")
 	hrms_pkg.__path__ = []
+	api_pkg = types.ModuleType("hrms.api")
+	api_pkg.__path__ = []
 	utils_pkg = types.ModuleType("hrms.utils")
 	utils_pkg.__path__ = []
+	store_mod = types.ModuleType("hrms.api.store")
+	store_mod._get_order_approval_fallback_user = lambda: "edlice@bebang.ph"
 	scm_roles = types.ModuleType("hrms.utils.scm_roles")
 	scm_roles.ORDERING_STORE_ROLES = []
-	scm_roles.ORDERING_WAREHOUSE_ROLES = []
+	scm_roles.ORDERING_WAREHOUSE_ROLES = ["Area Supervisor"]
 	scm_roles.ORDERING_APPROVAL_ROLES = []
 	scm_roles.check_scm_permission = lambda *args, **kwargs: None
 
 	sys.modules["hrms"] = hrms_pkg
+	sys.modules["hrms.api"] = api_pkg
+	sys.modules["hrms.api.store"] = store_mod
 	sys.modules["hrms.utils"] = utils_pkg
 	sys.modules["hrms.utils.scm_roles"] = scm_roles
 

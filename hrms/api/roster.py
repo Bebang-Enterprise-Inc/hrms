@@ -8,6 +8,23 @@ from hrms.hr.doctype.shift_assignment.shift_assignment import ShiftAssignment
 from hrms.hr.doctype.shift_assignment_tool.shift_assignment_tool import create_shift_assignment
 from hrms.hr.doctype.shift_schedule.shift_schedule import get_or_insert_shift_schedule
 
+BEI_SHIFT_METADATA_FIELDS = (
+	"custom_bei_schedule_source",
+	"custom_bei_weekly_labor_plan",
+	"custom_bei_weekly_plan_row_key",
+	"custom_bei_publish_run_id",
+)
+
+
+def _extract_shift_assignment_metadata(assignment: ShiftAssignment | None) -> dict[str, str]:
+	if not assignment:
+		return {}
+	return {
+		fieldname: value
+		for fieldname in BEI_SHIFT_METADATA_FIELDS
+		if (value := getattr(assignment, fieldname, None))
+	}
+
 
 @frappe.whitelist()
 def get_default_company() -> str:
@@ -94,20 +111,29 @@ def delete_shift_schedule_assignment(shift_schedule_assignment: str) -> None:
 
 @frappe.whitelist()
 def swap_shift(
-	src_shift: str, src_date: str, tgt_employee: str, tgt_date: str, tgt_shift: str | None
+	src_shift: str,
+	src_date: str,
+	tgt_employee: str,
+	tgt_date: str,
+	tgt_shift: str | None,
+	ignore_permissions: bool = False,
 ) -> None:
 	if src_shift == tgt_shift:
 		frappe.throw(_("Source and target shifts cannot be the same"))
 
+	tgt_shift_doc = None
+	tgt_shift_metadata = {}
 	if tgt_shift:
 		tgt_shift_doc = frappe.get_doc("Shift Assignment", tgt_shift)
+		tgt_shift_metadata = _extract_shift_assignment_metadata(tgt_shift_doc)
 		tgt_company = tgt_shift_doc.company
-		break_shift(tgt_shift_doc, tgt_date)
+		break_shift(tgt_shift_doc, tgt_date, ignore_permissions=ignore_permissions)
 	else:
 		tgt_company = frappe.db.get_value("Employee", tgt_employee, "company")
 
 	src_shift_doc = frappe.get_doc("Shift Assignment", src_shift)
-	break_shift(src_shift_doc, src_date)
+	src_shift_metadata = _extract_shift_assignment_metadata(src_shift_doc)
+	break_shift(src_shift_doc, src_date, ignore_permissions=ignore_permissions)
 	insert_shift(
 		tgt_employee,
 		tgt_company,
@@ -116,6 +142,8 @@ def swap_shift(
 		tgt_date,
 		src_shift_doc.status,
 		src_shift_doc.shift_location,
+		custom_fields=tgt_shift_metadata or None,
+		ignore_permissions=ignore_permissions,
 	)
 
 	if tgt_shift:
@@ -127,13 +155,23 @@ def swap_shift(
 			src_date,
 			tgt_shift_doc.status,
 			tgt_shift_doc.shift_location,
+			custom_fields=src_shift_metadata or None,
+			ignore_permissions=ignore_permissions,
 		)
 
 
 @frappe.whitelist()
-def break_shift(assignment: str | ShiftAssignment, date: str) -> None:
+def break_shift(
+	assignment: str | ShiftAssignment,
+	date: str,
+	ignore_permissions: bool = False,
+	custom_fields: dict[str, str] | None = None,
+) -> None:
 	if isinstance(assignment, str):
 		assignment = frappe.get_doc("Shift Assignment", assignment)
+	if ignore_permissions:
+		assignment.flags.ignore_permissions = True
+		assignment.flags.ignore_user_permissions = True
 
 	if assignment.end_date and date_diff(assignment.end_date, date) < 0:
 		frappe.throw(_("Cannot break shift after end date"))
@@ -146,17 +184,26 @@ def break_shift(assignment: str | ShiftAssignment, date: str) -> None:
 	status = assignment.status
 	end_date = assignment.end_date
 	shift_location = assignment.shift_location
+	metadata = custom_fields if custom_fields is not None else _extract_shift_assignment_metadata(assignment)
 
 	if date_diff(date, assignment.start_date) == 0:
 		assignment.cancel()
-		assignment.delete()
+		assignment.delete(ignore_permissions=ignore_permissions)
 	else:
 		assignment.end_date = add_days(date, -1)
-		assignment.save()
+		assignment.save(ignore_permissions=ignore_permissions)
 
 	if not end_date or date_diff(end_date, date) > 0:
 		create_shift_assignment(
-			employee, company, shift_type, add_days(date, 1), end_date, status, shift_location
+			employee,
+			company,
+			shift_type,
+			add_days(date, 1),
+			end_date,
+			status,
+			shift_location,
+			custom_fields=metadata or None,
+			ignore_permissions=ignore_permissions,
 		)
 
 
@@ -169,7 +216,26 @@ def insert_shift(
 	end_date: str | None,
 	status: str,
 	shift_location: str | None = None,
+	custom_fields: dict[str, str] | None = None,
+	ignore_permissions: bool = False,
 ) -> None:
+	if custom_fields and (
+		custom_fields.get("custom_bei_weekly_labor_plan")
+		or custom_fields.get("custom_bei_weekly_plan_row_key")
+	):
+		create_shift_assignment(
+			employee,
+			company,
+			shift_type,
+			start_date,
+			end_date,
+			status,
+			shift_location,
+			ignore_permissions=ignore_permissions,
+			custom_fields=custom_fields,
+		)
+		return
+
 	filters = {
 		"doctype": "Shift Assignment",
 		"employee": employee,
@@ -194,7 +260,17 @@ def insert_shift(
 		frappe.db.set_value("Shift Assignment", next_shift, "start_date", start_date)
 
 	else:
-		create_shift_assignment(employee, company, shift_type, start_date, end_date, status, shift_location)
+		create_shift_assignment(
+			employee,
+			company,
+			shift_type,
+			start_date,
+			end_date,
+			status,
+			shift_location,
+			custom_fields=custom_fields,
+			ignore_permissions=ignore_permissions,
+		)
 
 
 def get_holidays(month_start: str, month_end: str, employee_filters: dict[str, str]) -> dict[str, list[dict]]:

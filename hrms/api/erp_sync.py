@@ -26,6 +26,84 @@ _FIELD_CACHE: dict[tuple, bool] = {}
 ROOT_TYPES = {"Asset", "Liability", "Equity", "Income", "Expense"}
 AP_OPENING_ITEM_CODE = "ERP-SYNC-AP-OPENING"
 AP_INTERNAL_REF_PREFIX = "XINV"
+WAREHOUSE_COMPANY_PREFERENCE = ("Bebang Enterprise Inc.", "Bebang Kitchen Inc.")
+GENERIC_WAREHOUSE_LABELS = {
+	"",
+	"BEBANG",
+	"WAREHOUSE",
+	"STORE",
+	"SUPPLIER",
+	"CONFIRMATORY",
+	"FOR GR PURPOSES PAYMENT",
+	"DO NOT DELIVER FOR GR PURPOSES PAYMENT",
+}
+WAREHOUSE_ALIAS_DOCNAME_MAP = {
+	"SHAW": "Shaw BLVD - Bebang Enterprise Inc.",
+	"SHAW BOULEVARD": "Shaw BLVD - Bebang Enterprise Inc.",
+	"SHAW BLVD": "Shaw BLVD - Bebang Enterprise Inc.",
+	"SHAW BEBANG": "Shaw BLVD - Bebang Enterprise Inc.",
+	"BEBANG SHAW": "Shaw BLVD - Bebang Enterprise Inc.",
+	"BEBANG SHAW TEST": "Shaw BLVD - Bebang Enterprise Inc.",
+	"BEBANGA SHAW": "Shaw BLVD - Bebang Enterprise Inc.",
+	"BEBANG SHAND": "Shaw BLVD - Bebang Enterprise Inc.",
+	"BEBANG SHAWS": "Shaw BLVD - Bebang Enterprise Inc.",
+	"BEBENG SHAW": "Shaw BLVD - Bebang Enterprise Inc.",
+	"SHAW COMMISSARY": "Shaw BLVD - BKI",
+	"SHAW COMMI": "Shaw BLVD - BKI",
+}
+WAREHOUSE_ALIAS_NAME_MAP = {
+	"3MD": "3MD Logistics – Camangyanan",
+	"3MD WAREHOUSE": "3MD Logistics – Camangyanan",
+	"33MD": "3MD Logistics – Camangyanan",
+	"JENTEC": "Jentec Storage Inc.",
+	"JENTEC WAREHOUSE": "Jentec Storage Inc.",
+	"JENTECT WAREHOUSE": "Jentec Storage Inc.",
+	"PINNACLE": "Pinnacle Cold Storage Solutions",
+	"PINNACLE WAREHOUSE": "Pinnacle Cold Storage Solutions",
+	"PINACCLE": "Pinnacle Cold Storage Solutions",
+	"RCS": "Royal Cold Storage – Taytay (RCS)",
+	"D VERDE": "D'verde Laguna",
+	"DVERDE": "D'verde Laguna",
+	"CTTM": "CTTM Tomas Morato",
+	"TOMAS MORATO": "CTTM Tomas Morato",
+	"GREENHILLS": "Greenhills Ortigas",
+	"ESTANCIA": "Estancia",
+	"NAIA T3": "NAIA T3",
+	"NAIA TERMINAL 3": "NAIA T3",
+	"VISTA MALL": "Vista Mall Taguig",
+	"VISTA MALL TAGUIG": "Vista Mall Taguig",
+	"VISTAMALL": "Vista Mall Taguig",
+	"UP TOWN CENTER": "Ayala UPTC",
+	"UPTOWN CENTER": "Ayala UPTC",
+	"UP TOWN MALL BGC": "Up Town Mall BGC",
+	"UPTOWN MALL BGC": "Up Town Mall BGC",
+	"UPTOWN BGC": "Up Town Mall BGC",
+	"UPTOWN MALL BRANCH": "Up Town Mall BGC",
+	"STA LUCIA": "Sta. Lucia East Grand Mall",
+	"STA ROSA": "SM Sta. Rosa",
+	"SM STA ROSA": "SM Sta. Rosa",
+	"SM CITY STA ROSA": "SM Sta. Rosa",
+	"SJDM": "SJDM",
+	"SM TAYTAY": "SM Taytay",
+	"SM CITY TAYTAY": "SM Taytay",
+	"CLARK": "SM Clark",
+	"SM CLARK": "SM Clark",
+	"BF HOMES": "BF Homes",
+	"FESTIVAL MALL": "Festival Mall Alabang",
+	"FESTIVALL MALL": "Festival Mall Alabang",
+	"MARKET MARKET": "Ayala Market Market",
+	"UP TOWN CENTER": "Ayala UPTC",
+	"UPTOWN CENTER": "Ayala UPTC",
+	"UP TOWN (COMPLETED)": "Ayala UPTC",
+	"ANTIPOLO": "Robinsons Antipolo",
+	"GENERAL TRIAS": "Robinson General Trias",
+	"ROBINSIN PLACE GENERAL TRIAS": "Robinson General Trias",
+	"BEBANG ROBINSONS GENTRI": "Robinson General Trias",
+	"ROB GALLERIA SOUTH": "Robisons Galleria South",
+	"ROBINSON GALLERIA SOUTH": "Robisons Galleria South",
+	"GALLERIA SOUTH": "Robisons Galleria South",
+	"MALL OF ASIA": "SM Mall Of Asia",
+}
 SYNC_ALLOWED_ROLES = {
 	"System Manager",
 	"Accounts Manager",
@@ -200,6 +278,111 @@ def _normalize_company(company: str | None = None) -> str:
 	frappe.throw(_("Default company is required for ERP sync writes"))
 
 
+def _normalize_warehouse_label(value: str | None) -> str:
+	return re.sub(r"\s+", " ", re.sub(r"[^A-Z0-9]+", " ", str(value or "").upper())).strip()
+
+
+def _resolve_warehouse_exact_or_name(value: str | None) -> str | None:
+	lookup_value = str(value or "").strip()
+	if not lookup_value:
+		return None
+
+	if frappe.db.exists("Warehouse", lookup_value):
+		return lookup_value
+
+	if not lookup_value.endswith(" - BEI"):
+		candidate = f"{lookup_value} - BEI"
+		if frappe.db.exists("Warehouse", candidate):
+			return candidate
+
+	for company_name in WAREHOUSE_COMPANY_PREFERENCE:
+		warehouse_name_match = frappe.db.get_value(
+			"Warehouse",
+			{"warehouse_name": lookup_value, "company": company_name},
+			"name",
+		)
+		if warehouse_name_match:
+			return warehouse_name_match
+
+	warehouse_name_match = frappe.db.get_value("Warehouse", {"warehouse_name": lookup_value}, "name")
+	if warehouse_name_match:
+		return warehouse_name_match
+
+	return None
+
+
+def _resolve_warehouse_alias(value: str | None) -> str | None:
+	normalized = _normalize_warehouse_label(value)
+	if not normalized:
+		return None
+
+	docname_alias = WAREHOUSE_ALIAS_DOCNAME_MAP.get(normalized)
+	if docname_alias:
+		return _resolve_warehouse_exact_or_name(docname_alias)
+
+	warehouse_name_alias = WAREHOUSE_ALIAS_NAME_MAP.get(normalized)
+	if warehouse_name_alias:
+		return _resolve_warehouse_exact_or_name(warehouse_name_alias)
+
+	if "3MD" in normalized or "CAMANGYANAN" in normalized:
+		return _resolve_warehouse_exact_or_name("3MD Logistics – Camangyanan")
+	if "JENTEC" in normalized or ("PASIG" in normalized and "ONG" in normalized):
+		return _resolve_warehouse_exact_or_name("Jentec Storage Inc.")
+	if "RCS" in normalized or "ROYAL COLD STORAGE" in normalized:
+		return _resolve_warehouse_exact_or_name("Royal Cold Storage – Taytay (RCS)")
+	if "PINNACLE" in normalized or "TURBINA" in normalized or "CALAMBA" in normalized:
+		return _resolve_warehouse_exact_or_name("Pinnacle Cold Storage Solutions")
+	if "SHAW COMMISSARY" in normalized or "SHAW COMMI" in normalized:
+		return _resolve_warehouse_exact_or_name("Shaw BLVD - BKI")
+	if "SHAW" in normalized:
+		return _resolve_warehouse_exact_or_name("Shaw BLVD - Bebang Enterprise Inc.")
+	if "GREENHILLS" in normalized:
+		return _resolve_warehouse_exact_or_name("Greenhills Ortigas")
+	if "ESTANCIA" in normalized:
+		return _resolve_warehouse_exact_or_name("Estancia")
+	if "NAIA" in normalized:
+		return _resolve_warehouse_exact_or_name("NAIA T3")
+	if "CTTM" in normalized or "TOMAS MORATO" in normalized:
+		return _resolve_warehouse_exact_or_name("CTTM Tomas Morato")
+	if "UPTOWN" in normalized and "CENTER" not in normalized:
+		return _resolve_warehouse_exact_or_name("Up Town Mall BGC")
+	if "UP TOWN CENTER" in normalized or "UPTOWN CENTER" in normalized or "UPTC" in normalized:
+		return _resolve_warehouse_exact_or_name("Ayala UPTC")
+	if "VISTA MALL" in normalized or "VISTAMALL" in normalized:
+		return _resolve_warehouse_exact_or_name("Vista Mall Taguig")
+	if "STA LUCIA" in normalized:
+		return _resolve_warehouse_exact_or_name("Sta. Lucia East Grand Mall")
+	if "STA ROSA" in normalized:
+		return _resolve_warehouse_exact_or_name("SM Sta. Rosa")
+	if "D VERDE" in normalized or "DVERDE" in normalized:
+		return _resolve_warehouse_exact_or_name("D'verde Laguna")
+	if normalized == "SJDM":
+		return _resolve_warehouse_exact_or_name("SJDM")
+	if "SM TAYTAY" in normalized or "CITY TAYTAY" in normalized:
+		return _resolve_warehouse_exact_or_name("SM Taytay")
+	if normalized == "CLARK" or normalized == "SM CLARK":
+		return _resolve_warehouse_exact_or_name("SM Clark")
+	if normalized == "BF HOMES":
+		return _resolve_warehouse_exact_or_name("BF Homes")
+	if "FESTIVAL MALL" in normalized:
+		return _resolve_warehouse_exact_or_name("Festival Mall Alabang")
+	if "MARKET MARKET" in normalized:
+		return _resolve_warehouse_exact_or_name("Ayala Market Market")
+	if "GALLERIA SOUTH" in normalized:
+		return _resolve_warehouse_exact_or_name("Robisons Galleria South")
+	if "GENERAL TRIAS" in normalized or "GENTRI" in normalized:
+		return _resolve_warehouse_exact_or_name("Robinson General Trias")
+	if normalized == "ANTIPOLO":
+		return _resolve_warehouse_exact_or_name("Robinsons Antipolo")
+	if "MALL OF ASIA" in normalized:
+		return _resolve_warehouse_exact_or_name("SM Mall Of Asia")
+	return None
+
+
+def _is_generic_warehouse_label(value: str | None) -> bool:
+	return _normalize_warehouse_label(value) in GENERIC_WAREHOUSE_LABELS
+
+
 def _resolve_warehouse(raw_value: str | None) -> str | None:
 	value = (raw_value or "").strip()
 	if not value:
@@ -207,19 +390,14 @@ def _resolve_warehouse(raw_value: str | None) -> str | None:
 			return "Stores - BEI"
 		return frappe.db.get_value("Warehouse", {"is_group": 0}, "name")
 
-	if frappe.db.exists("Warehouse", value):
-		return value
+	resolved = _resolve_warehouse_exact_or_name(value)
+	if resolved:
+		return resolved
 
-	if not value.endswith(" - BEI"):
-		candidate = f"{value} - BEI"
-		if frappe.db.exists("Warehouse", candidate):
-			return candidate
+	if _is_generic_warehouse_label(value):
+		return None
 
-	warehouse_name_match = frappe.db.get_value("Warehouse", {"warehouse_name": value}, "name")
-	if warehouse_name_match:
-		return warehouse_name_match
-
-	return None
+	return _resolve_warehouse_alias(value)
 
 
 def _company_for_warehouse(warehouse: str | None) -> str:
@@ -2621,7 +2799,12 @@ def sync_procurement_purchase_orders(
 				_first_non_empty(row, "supplier_name"),
 			)
 			doc.delivery_date = _safe_date(_first_non_empty(row, "delivery_date")) or doc.po_date
-			doc.ship_to = _resolve_warehouse(_first_non_empty(row, "ship_to"))
+			raw_ship_to = _first_non_empty(row, "ship_to")
+			resolved_ship_to = _resolve_warehouse(raw_ship_to)
+			if not resolved_ship_to and doc.pr_reference:
+				pr_delivery_to = frappe.db.get_value("BEI Purchase Requisition", doc.pr_reference, "delivery_to")
+				resolved_ship_to = _resolve_warehouse(pr_delivery_to) or pr_delivery_to
+			doc.ship_to = resolved_ship_to
 			doc.payment_terms = _resolve_payment_terms_template(_first_non_empty(row, "terms_of_payment"))
 			doc.discount_amount = _safe_float(_first_non_empty(row, "total_discount"))
 			doc.delivery_fee = _safe_float(_first_non_empty(row, "delivery_fee"))
@@ -2752,7 +2935,11 @@ def sync_procurement_goods_receipts(
 			doc.receipt_date = _safe_date(_first_non_empty(row, "date", "timestamp")) or nowdate()
 			doc.delivery_date = _safe_date(_first_non_empty(row, "date")) or doc.receipt_date
 			doc.delivery_note_no = _normalize_sheet_text(_first_non_empty(row, "invoice_no")) or gr_no
-			doc.warehouse = _resolve_warehouse(_first_non_empty(row, "issue_to"))
+			raw_issue_to = _first_non_empty(row, "issue_to")
+			resolved_warehouse = _resolve_warehouse(raw_issue_to)
+			if not resolved_warehouse or _is_generic_warehouse_label(raw_issue_to):
+				resolved_warehouse = _resolve_warehouse(getattr(po_doc, "ship_to", None)) or getattr(po_doc, "ship_to", None)
+			doc.warehouse = resolved_warehouse
 			if _doctype_has_field("BEI Goods Receipt", "supplier_invoice_photo"):
 				doc.supplier_invoice_photo = _normalize_file_url(_first_non_empty(row, "invoice"))
 			_ensure_doc_flags(doc).ignore_mandatory = True

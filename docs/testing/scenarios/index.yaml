@@ -6,6 +6,7 @@ commands:
   - billing
   - biometric
   - biometric-monitoring
+  - campaign-giveaways
   - clearance
   - commissary
   - communication
@@ -93,6 +94,15 @@ modules:
       - BIO
     scenario_files:
       - docs/testing/scenarios/modules/biometric-monitoring.md
+  - key: campaign-giveaways
+    status: ready
+    command: campaign-giveaways
+    scenario_count: 6
+    route_count_hint: 6
+    prefixes:
+      - CG
+    scenario_files:
+      - docs/testing/scenarios/modules/campaign-giveaways.md
   - key: clearance
     status: ready
     command: clearance
@@ -105,8 +115,8 @@ modules:
   - key: commissary
     status: ready
     command: commissary
-    scenario_count: 3
-    route_count_hint: 11
+    scenario_count: 4
+    route_count_hint: 12
     prefixes:
       - COMMISSARY
     scenario_files:
@@ -159,7 +169,7 @@ modules:
   - key: hr-self-service
     status: ready
     command: hr-self-service
-    scenario_count: 10
+    scenario_count: 12
     route_count_hint: 45
     prefixes:
       - HR
@@ -339,8 +349,8 @@ modules:
   - key: supervisor
     status: ready
     command: supervisor
-    scenario_count: 3
-    route_count_hint: 8
+    scenario_count: 4
+    route_count_hint: 9
     prefixes:
       - SUP
     scenario_files:
@@ -357,8 +367,8 @@ modules:
   - key: team
     status: ready
     command: team
-    scenario_count: 2
-    route_count_hint: 3
+    scenario_count: 3
+    route_count_hint: 4
     prefixes:
       - TEAM
     scenario_files:
@@ -405,9 +415,9 @@ flows:
       - docs/testing/scenarios/regressions/regression-bank-store-ops-inventory.md
 
 coverage:
-  generated_at_utc: 2026-03-09T08:46:37.710496+00:00
+  generated_at_utc: 2026-03-17T07:45:00+00:00
   baseline_route_count: 214
-  live_route_count: 244
+  live_route_count: 247
   required_domains:
     - hr
     - procurement
@@ -485,7 +495,7 @@ coverage:
     billing: 6
     biometric: 6
     clearance: 2
-    commissary: 11
+    commissary: 12
     communication: 5
     completeness: 1
     dashboard: 1
@@ -511,9 +521,9 @@ coverage:
     settings: 1
     setup: 1
     store-ops: 10
-    supervisor: 8
+    supervisor: 9
     tasks: 5
-    team: 3
+    team: 4
     templates: 1
     transfers: 1
     warehouse: 24

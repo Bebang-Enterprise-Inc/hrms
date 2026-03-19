@@ -107,6 +107,15 @@ def _install_stub_dependencies():
 	delivery_policy.CFO_APPROVER_EMAIL = "butch@bebang.ph"
 	delivery_policy.append_approval_audit_log = lambda *args, **kwargs: None
 
+	procurement_math = types.ModuleType("hrms.utils.procurement_math")
+	procurement_math.calculate_goods_receipt_gross_total = lambda *args, **kwargs: 0
+
+	sentry = types.ModuleType("hrms.utils.sentry")
+	sentry.set_backend_observability_context = lambda *args, **kwargs: None
+
+	standard_buying_bridge = types.ModuleType("hrms.utils.standard_buying_bridge")
+	standard_buying_bridge.apply_standard_buying_context = lambda *args, **kwargs: None
+
 	scm_roles = types.ModuleType("hrms.utils.scm_roles")
 	scm_roles.SCM_APPROVAL_ROLES = ["SCM Manager"]
 	scm_roles.SCM_DISPATCH_ROLES = ["SCM Manager"]
@@ -115,7 +124,10 @@ def _install_stub_dependencies():
 
 	sys.modules["hrms.utils.bei_config"] = bei_config
 	sys.modules["hrms.utils.delivery_billing_policy"] = delivery_policy
+	sys.modules["hrms.utils.procurement_math"] = procurement_math
+	sys.modules["hrms.utils.sentry"] = sentry
 	sys.modules["hrms.utils.scm_roles"] = scm_roles
+	sys.modules["hrms.utils.standard_buying_bridge"] = standard_buying_bridge
 
 	if "hrms.utils.supply_chain_contracts" not in sys.modules:
 		contracts_spec = importlib.util.spec_from_file_location(
@@ -188,6 +200,49 @@ class TestS22OperationalFiltersContract(unittest.TestCase):
 		self.assertEqual(len(payload["data"]), 1)
 		self.assertTrue(payload["data"][0]["has_item_match"])
 		self.assertTrue(payload["data"][0]["has_warehouse_match"])
+
+	def test_purchase_orders_support_multiple_status_filters(self):
+		sql_calls = []
+
+		def _db_sql(query, values=None, as_dict=False):
+			sql_calls.append((query, values, as_dict))
+			if "COUNT(*)" in query:
+				return [(1,)]
+			return [
+				{
+					"name": "PO-TEST-002",
+					"po_no": "PO-TEST-002",
+					"po_date": "2026-03-19",
+					"status": "Fully Received",
+					"supplier": "SUP-002",
+					"supplier_name": "test-supplier-02",
+					"subtotal": 1000,
+					"vat_amount": 120,
+					"grand_total": 1120,
+					"discount_amount": 0,
+					"delivery_fee": 0,
+					"net_total": 1000,
+					"tax_amount": 120,
+					"requires_dual_approval": 0,
+					"mae_approval": "Approved",
+					"butch_approval": "Pending",
+					"delivery_date": "2026-03-20",
+				}
+			]
+
+		procurement.frappe.db.sql = MagicMock(side_effect=_db_sql)
+
+		payload = procurement.get_purchase_orders(
+			filters={"statuses": ["Approved", "Fully Received"]},
+			page=1,
+			page_size=20,
+		)
+
+		self.assertEqual(len(payload["data"]), 1)
+		self.assertEqual(payload["data"][0]["status"], "Fully Received")
+		self.assertIn("status IN", sql_calls[0][0])
+		self.assertEqual(sql_calls[0][1]["status_0"], "Approved")
+		self.assertEqual(sql_calls[0][1]["status_1"], "Fully Received")
 
 	def test_warehouse_pending_pos_apply_exact_item_and_warehouse(self):
 		def _get_all(doctype, filters=None, fields=None, order_by=None, limit=None):

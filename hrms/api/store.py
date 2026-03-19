@@ -6,11 +6,13 @@ Store Operations API
 Handles store ordering, receiving, and FQI reports for my.bebang.ph
 """
 
+import ast
 import base64
 import hashlib
 import json
 import re
 from contextlib import contextmanager
+from pathlib import Path
 
 import frappe
 from frappe import _
@@ -24,6 +26,7 @@ from hrms.utils.supply_chain_contracts import (
 	REQUEST_SOURCE_STORE_DISPOSAL,
 	REQUEST_SOURCE_STORE_ORDER,
 	REQUEST_SOURCE_STORE_RETURN,
+	get_preferred_commissary_warehouses,
 	infer_finance_treatment,
 	resolve_material_request_contract,
 	resolve_route_source_warehouse,
@@ -193,9 +196,24 @@ STORE_OPS_ALLOWED_ROLES = [
 	"Administrator",
 ]
 AREA_SUPERVISOR_ROLE = "Area Supervisor"
-REGIONAL_MANAGER_ROLE = "Regional Manager"
-REGIONAL_MANAGER_FALLBACK_EMAIL = "edlice@bebang.ph"
+ORDER_APPROVAL_FALLBACK_EMAIL = "edlice@bebang.ph"
 SYSTEM_APPROVER_ROLES = {"System Manager", "Administrator"}
+SCHEDULE_CANONICAL_STORE_TYPES = {"JV", "Managed Franchise", "Full Franchise"}
+SCHEDULE_STORE_TYPE_ALIASES = {
+	"jv": "JV",
+	"joint venture": "JV",
+	"managed franchise": "Managed Franchise",
+	"managedfranchise": "Managed Franchise",
+	"full franchise": "Full Franchise",
+	"fullfranchise": "Full Franchise",
+}
+_SCHEDULE_FALLBACK_STORE_ROWS_CACHE = None
+COMMISSARY_WAREHOUSE_ALIAS_MAP = {
+	"COMMISSARYSHAW": "Shaw BLVD - BKI",
+	"SHAWCOMMISSARY": "Shaw BLVD - BKI",
+	"SHAWCOMMI": "Shaw BLVD - BKI",
+	"SHAWBLVDCOMMISSARY": "Shaw BLVD - BKI",
+}
 
 
 def _has_column(doctype: str, fieldname: str) -> bool:
@@ -234,10 +252,18 @@ def resolve_warehouse(store_or_branch):
 	if frappe.db.exists("Warehouse", warehouse_with_company):
 		return warehouse_with_company
 
+	warehouse_with_commissary_company = f"{store_or_branch} - BKI"
+	if frappe.db.exists("Warehouse", warehouse_with_commissary_company):
+		return warehouse_with_commissary_company
+
 	# Try to find warehouse by warehouse_name (without company suffix)
 	warehouse = frappe.db.get_value("Warehouse", {"warehouse_name": store_or_branch}, "name")
 	if warehouse:
 		return warehouse
+
+	alias_warehouse = COMMISSARY_WAREHOUSE_ALIAS_MAP.get(_normalize_store_key(store_or_branch))
+	if alias_warehouse and frappe.db.exists("Warehouse", alias_warehouse):
+		return alias_warehouse
 
 	frappe.throw(_("Could not find Store: {0}").format(store_or_branch))
 
@@ -307,6 +333,315 @@ def _normalize_store_key(value):
 def _designation_is_store_lead(designation):
 	label = str(designation or "").upper()
 	return "STORE SUPERVISOR" in label or "STORE OIC" in label or " OIC" in label or label == "OIC"
+
+
+def _designation_is_area_supervisor(designation):
+	return "AREA SUPERVISOR" in str(designation or "").upper()
+
+
+def _normalize_schedule_store_type(value: str | None) -> str:
+	text = " ".join(str(value or "").strip().replace("_", " ").replace("-", " ").split()).lower()
+	if not text:
+		return ""
+	return SCHEDULE_STORE_TYPE_ALIASES.get(text, str(value or "").strip())
+
+
+def _get_schedule_store_type_by_department() -> dict[str, str]:
+	if not frappe.db.table_exists("tabBEI Store Type"):
+		return {}
+
+	store_type_rows = frappe.get_all(
+		"BEI Store Type",
+		filters={"store": ["is", "set"]},
+		fields=["store", "store_type"],
+		order_by="store asc",
+	)
+	store_type_by_department = {}
+	for row in store_type_rows or []:
+		department = str(row.get("store") or "").strip()
+		if not department:
+			continue
+		store_type = _normalize_schedule_store_type(row.get("store_type"))
+		if store_type in SCHEDULE_CANONICAL_STORE_TYPES:
+			store_type_by_department[department] = store_type
+	return store_type_by_department
+
+
+def _load_schedule_fallback_store_rows() -> list[dict]:
+	"""Load canonical schedule stores from the checked-in store-type seed script."""
+	global _SCHEDULE_FALLBACK_STORE_ROWS_CACHE
+	if _SCHEDULE_FALLBACK_STORE_ROWS_CACHE is not None:
+		return list(_SCHEDULE_FALLBACK_STORE_ROWS_CACHE)
+
+	rows = []
+	try:
+		script_path = Path(__file__).resolve().parents[2] / "scripts" / "seed_store_types.py"
+		source = script_path.read_text(encoding="utf-8")
+		module = ast.parse(source)
+		seed_rows = []
+		for node in module.body:
+			if not isinstance(node, ast.Assign):
+				continue
+			for target in node.targets:
+				if isinstance(target, ast.Name) and target.id == "STORE_TYPES":
+					seed_rows = ast.literal_eval(node.value)
+					break
+			if seed_rows:
+				break
+		for row in seed_rows or []:
+			store_name = str((row or {}).get("store") or "").strip()
+			store_type = _normalize_schedule_store_type((row or {}).get("store_type"))
+			if store_name and store_type in SCHEDULE_CANONICAL_STORE_TYPES:
+				rows.append({"store": store_name, "store_type": store_type})
+	except Exception:
+		rows = []
+
+	# Keep a safe manual QA sandbox available even when master data is empty.
+	rows.append({"store": "TEST-STORE-BGC", "store_type": "Managed Franchise"})
+	seen = set()
+	deduped = []
+	for row in rows:
+		key = (str(row.get("store") or "").strip(), str(row.get("store_type") or "").strip())
+		if not key[0] or key in seen:
+			continue
+		seen.add(key)
+		deduped.append(row)
+	_SCHEDULE_FALLBACK_STORE_ROWS_CACHE = deduped
+	return list(_SCHEDULE_FALLBACK_STORE_ROWS_CACHE)
+
+
+def _normalize_user_store_surface(surface: str | None) -> str | None:
+	normalized = re.sub(r"[^a-z_]", "", str(surface or "").strip().lower())
+	return normalized or None
+
+
+def _schedule_row_keys(row: dict | None) -> set[str]:
+	row = row or {}
+	return {
+		_normalize_store_key(value)
+		for value in _clean_warehouse_branch_candidates(row.get("name"), row.get("warehouse_name"))
+		if value
+	}
+
+
+def _find_schedule_store_row(schedule_rows: list[dict], *candidates: str | None) -> dict | None:
+	candidate_keys = {
+		_normalize_store_key(value) for value in _clean_warehouse_branch_candidates(*candidates) if value
+	}
+	if not candidate_keys:
+		return None
+	for row in schedule_rows:
+		if candidate_keys.intersection(_schedule_row_keys(row)):
+			return row
+	return None
+
+
+def _resolve_schedule_warehouse_row(warehouse_rows: list[dict], *candidates: str | None) -> dict | None:
+	warehouse_by_name = {str(row.get("name") or "").strip(): row for row in warehouse_rows if row.get("name")}
+	for candidate in candidates:
+		text = str(candidate or "").strip()
+		if not text:
+			continue
+		try:
+			resolved = resolve_warehouse(text)
+		except Exception:
+			resolved = None
+		if resolved and warehouse_by_name.get(resolved):
+			return warehouse_by_name[resolved]
+	matched = _find_schedule_store_row(warehouse_rows, *candidates)
+	if matched:
+		return matched
+	return None
+
+
+def _is_store_schedule_employee(
+	employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str]
+) -> bool:
+	roles = set(user_roles or [])
+	designation = employee.get("designation") if isinstance(employee, dict) else None
+	return bool(
+		roles.intersection({"Store Supervisor", "Store Staff", "Area Supervisor", "Employee"})
+		or _designation_is_store_lead(designation)
+		or _designation_is_area_supervisor(designation)
+	)
+
+
+def _is_commissary_schedule_employee(
+	employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str]
+) -> bool:
+	roles = set(user_roles or [])
+	designation = str((employee or {}).get("designation") or "").upper()
+	branch = str((employee or {}).get("branch") or "").upper()
+	return bool(
+		roles.intersection({"Commissary Supervisor", "Warehouse User", "Supply Chain Manager"})
+		or "COMMISSARY" in designation
+		or "COMMISSARY" in branch
+	)
+
+
+def _employee_schedule_role(
+	employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str], surface: str | None
+):
+	roles = set(user_roles or [])
+	designation = (employee or {}).get("designation")
+	if surface == "commissary_schedule":
+		if "Supply Chain Manager" in roles:
+			return "Supply Chain Manager"
+		if "Warehouse User" in roles:
+			return "Warehouse User"
+		if "Commissary Supervisor" in roles or "COMMISSARY" in str(designation or "").upper():
+			return "Commissary Supervisor"
+		return None
+	if _designation_is_area_supervisor(designation) or "Area Supervisor" in roles:
+		return "Area Supervisor"
+	if _designation_is_store_lead(designation) or "Store Supervisor" in roles:
+		return "Store Supervisor"
+	if "Store Staff" in roles or "Employee" in roles:
+		return "Store Staff"
+	return None
+
+
+def _employee_schedule_store_row(
+	employee: dict | None,
+	*,
+	surface: str | None,
+	schedule_rows: list[dict],
+	user_roles: list[str] | tuple[str, ...] | set[str],
+) -> dict | None:
+	if not employee:
+		return None
+
+	store_context = resolve_employee_store_context(employee)
+	warehouse = str(store_context.get("warehouse") or "").strip()
+	if not warehouse:
+		return None
+
+	matched = _find_schedule_store_row(
+		schedule_rows,
+		warehouse,
+		store_context.get("warehouse_name"),
+		store_context.get("branch"),
+	)
+	if matched:
+		return matched
+
+	if surface == "store_schedule" and not _is_store_schedule_employee(employee, user_roles):
+		return None
+	if surface == "commissary_schedule" and not _is_commissary_schedule_employee(employee, user_roles):
+		return None
+
+	return {
+		"name": warehouse,
+		"warehouse_name": str(store_context.get("warehouse_name") or warehouse).strip(),
+	}
+
+
+def _get_store_schedule_locations() -> list[dict]:
+	"""Return active BEI retail store warehouses for scheduling surfaces."""
+	mapping_rows = []
+	if frappe.db.table_exists("tabBEI Warehouse Department Mapping"):
+		mapping_rows = frappe.get_all(
+			"BEI Warehouse Department Mapping",
+			filters={"is_active": 1},
+			fields=["warehouse", "department", "store_type"],
+			order_by="warehouse asc",
+		)
+
+	store_type_rows = []
+	if frappe.db.table_exists("tabBEI Store Type"):
+		store_type_rows = frappe.get_all(
+			"BEI Store Type",
+			filters={"store": ["is", "set"]},
+			fields=["store", "store_type"],
+			order_by="store asc",
+		)
+	if not mapping_rows and not store_type_rows:
+		store_type_rows = _load_schedule_fallback_store_rows()
+
+	warehouse_rows = frappe.get_all(
+		"Warehouse",
+		filters={"is_group": 0, "disabled": 0},
+		fields=["name", "warehouse_name", "custom_area_supervisor"],
+		order_by="warehouse_name asc",
+	)
+
+	locations = []
+	seen = set()
+
+	def append_location(
+		warehouse_row: dict | None, *, department: str | None = None, store_type: str | None = None
+	):
+		if not warehouse_row:
+			return
+		warehouse_name = str(warehouse_row.get("name") or "").strip()
+		if not warehouse_name or warehouse_name in seen:
+			return
+		resolved_department = str(department or "").strip()
+		resolved_store_type = _normalize_schedule_store_type(store_type)
+		if resolved_store_type not in SCHEDULE_CANONICAL_STORE_TYPES:
+			return
+		locations.append(
+			{
+				"name": warehouse_name,
+				"warehouse_name": warehouse_row.get("warehouse_name") or warehouse_name,
+				"department": resolved_department or None,
+				"store_type": resolved_store_type,
+				"custom_area_supervisor": warehouse_row.get("custom_area_supervisor"),
+			}
+		)
+		seen.add(warehouse_name)
+
+	if mapping_rows:
+		for mapping in mapping_rows:
+			append_location(
+				_resolve_schedule_warehouse_row(
+					warehouse_rows,
+					mapping.get("warehouse"),
+					mapping.get("department"),
+				),
+				department=mapping.get("department"),
+				store_type=mapping.get("store_type"),
+			)
+
+	for store_type_row in store_type_rows:
+		append_location(
+			_resolve_schedule_warehouse_row(warehouse_rows, store_type_row.get("store")),
+			department=store_type_row.get("store"),
+			store_type=store_type_row.get("store_type"),
+		)
+
+	return locations
+
+
+def _get_commissary_schedule_locations() -> list[dict]:
+	"""Return active commissary scheduling units only."""
+	preferred = [
+		warehouse
+		for warehouse in get_preferred_commissary_warehouses(include_legacy=True)
+		if warehouse and not str(warehouse).upper().startswith("TEST-")
+	]
+	if not preferred:
+		return []
+
+	warehouse_rows = frappe.get_all(
+		"Warehouse",
+		filters={
+			"name": ["in", preferred],
+			"is_group": 0,
+			"disabled": 0,
+		},
+		fields=["name", "warehouse_name", "company"],
+		order_by="warehouse_name asc",
+	)
+	return [
+		{
+			"name": row["name"],
+			"warehouse_name": row.get("warehouse_name") or row["name"],
+			"department": None,
+			"company": row.get("company"),
+		}
+		for row in warehouse_rows
+	]
 
 
 def _is_test_user(user_id):
@@ -469,13 +804,13 @@ def _doctype_has_field(doctype, fieldname):
 		return False
 
 
-def _get_regional_manager_fallback_user():
-	user = str(REGIONAL_MANAGER_FALLBACK_EMAIL or "").strip()
+def _get_order_approval_fallback_user():
+	user = str(ORDER_APPROVAL_FALLBACK_EMAIL or "").strip()
 	if not user:
 		return None
 	if not _is_enabled_user(user):
 		frappe.log_error(
-			f"Regional manager fallback user {user} is missing or disabled.",
+			f"Order approval fallback user {user} is missing or disabled.",
 			"Store Order Approver Fallback",
 		)
 		return None
@@ -483,9 +818,9 @@ def _get_regional_manager_fallback_user():
 		roles = set(frappe.get_roles(user))
 	except Exception:
 		roles = set()
-	if not roles.intersection({AREA_SUPERVISOR_ROLE, REGIONAL_MANAGER_ROLE, "System Manager"}):
+	if not roles.intersection({AREA_SUPERVISOR_ROLE, "Regional Manager"}.union(SYSTEM_APPROVER_ROLES)):
 		frappe.log_error(
-			f"Regional manager fallback user {user} has no approval role.",
+			f"Order approval fallback user {user} has no approval role.",
 			"Store Order Approver Fallback",
 		)
 		return None
@@ -497,9 +832,9 @@ def _resolve_review_approver_for_store(warehouse):
 	if area_supervisor:
 		return area_supervisor, "area_supervisor"
 
-	regional_manager = _get_regional_manager_fallback_user()
-	if regional_manager:
-		return regional_manager, "regional_manager_fallback"
+	fallback_approver = _get_order_approval_fallback_user()
+	if fallback_approver:
+		return fallback_approver, "fallback_approver"
 
 	return None, "unmapped"
 
@@ -510,17 +845,6 @@ def _is_system_approver(user_id):
 	except Exception:
 		roles = set()
 	return bool(roles.intersection(SYSTEM_APPROVER_ROLES))
-
-
-def _is_regional_manager_user(user_id):
-	user = str(user_id or "").strip()
-	if not user:
-		return False
-	try:
-		roles = set(frappe.get_roles(user))
-	except Exception:
-		roles = set()
-	return bool(roles.intersection({REGIONAL_MANAGER_ROLE, "System Manager", "HR Manager"}))
 
 
 def _create_order_notification_log(order_name, for_user, subject):
@@ -677,99 +1001,11 @@ def _has_approved_stage_entry(order_name, approver):
 	)
 
 
-def _get_regional_manager_for_store(warehouse, area_supervisor=None):
-	field_candidates = [
-		"custom_regional_manager",
-		"custom_regional_supervisor",
-		"custom_regional_approver",
-	]
-
-	warehouse_chain = [warehouse]
-	parent = frappe.db.get_value("Warehouse", warehouse, "parent_warehouse")
-	if parent:
-		warehouse_chain.append(parent)
-
-	for wh in warehouse_chain:
-		for fieldname in field_candidates:
-			if not _doctype_has_field("Warehouse", fieldname):
-				continue
-			candidate = frappe.db.get_value("Warehouse", wh, fieldname)
-			if candidate and _is_enabled_user(candidate) and _is_regional_manager_user(candidate):
-				return candidate, f"warehouse.{fieldname}"
-
-	if area_supervisor:
-		area_employee = frappe.db.get_value(
-			"Employee",
-			{"user_id": area_supervisor, "status": "Active"},
-			["name", "reports_to"],
-			as_dict=True,
-		)
-		reports_to = area_employee.get("reports_to") if area_employee else None
-		if reports_to:
-			manager_user = frappe.db.get_value("Employee", reports_to, "user_id")
-			if manager_user and _is_enabled_user(manager_user) and _is_regional_manager_user(manager_user):
-				return manager_user, "employee.reports_to"
-
-	regional_manager = _get_regional_manager_fallback_user()
-	if regional_manager:
-		return regional_manager, "regional_manager_fallback"
-
-	return None, "unmapped"
-
-
-def _get_regional_manager_fallback_excluding(exclude_user):
-	candidate = _get_regional_manager_fallback_user()
-	if candidate and candidate != exclude_user:
-		return candidate, "regional_manager_fallback"
-	return None, "unmapped"
-
-
 def _resolve_order_approval_routing(warehouse, is_emergency, submitted_after_cutoff):
-	area_approver = _get_area_supervisor_for_store(warehouse)
-	regional_approver, regional_source = _get_regional_manager_for_store(
-		warehouse, area_supervisor=area_approver
-	)
-
-	if area_approver and regional_approver and regional_approver == area_approver:
-		fallback_regional, fallback_source = _get_regional_manager_fallback_excluding(
-			exclude_user=area_approver
-		)
-		if fallback_regional:
-			regional_approver = fallback_regional
-			regional_source = fallback_source
-
-	requires_regional_after_area = bool(
-		cint(is_emergency)
-		and submitted_after_cutoff
-		and area_approver
-		and regional_approver
-		and regional_approver != area_approver
-	)
-
-	if area_approver:
-		return {
-			"first_approver": area_approver,
-			"first_source": "area_supervisor",
-			"requires_regional_after_area": requires_regional_after_area,
-			"regional_approver": regional_approver,
-			"regional_source": regional_source,
-		}
-
-	if regional_approver:
-		return {
-			"first_approver": regional_approver,
-			"first_source": "regional_manager_fallback",
-			"requires_regional_after_area": False,
-			"regional_approver": regional_approver,
-			"regional_source": regional_source,
-		}
-
+	first_approver, first_source = _resolve_review_approver_for_store(warehouse)
 	return {
-		"first_approver": None,
-		"first_source": "unmapped",
-		"requires_regional_after_area": False,
-		"regional_approver": None,
-		"regional_source": "unmapped",
+		"first_approver": first_approver,
+		"first_source": first_source,
 	}
 
 
@@ -1017,7 +1253,9 @@ def _build_orderable_source_stock_context(store_warehouse, items):
 			continue
 		lane = _resolve_delivery_lane(item)
 		cargo_category = _lane_to_cargo_category(lane)
-		source_warehouse = _resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
+		source_warehouse = (
+			_resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
+		)
 		source_warehouse_by_item[item_code] = source_warehouse
 		lane_by_item[item_code] = lane
 		if source_warehouse:
@@ -1346,7 +1584,7 @@ def _sanitize_submitted_items(items):
 
 
 @frappe.whitelist()
-def get_user_store():
+def get_user_store(surface: str | None = None):
 	"""
 	Resolve the current user's store(s) based on their role.
 
@@ -1363,41 +1601,142 @@ def get_user_store():
 	"""
 	user = frappe.session.user
 	user_roles = frappe.get_roles(user)
+	surface_key = _normalize_user_store_surface(surface)
+	schedule_rows = []
+	if surface_key == "store_schedule":
+		schedule_rows = _get_store_schedule_locations()
+	elif surface_key == "commissary_schedule":
+		schedule_rows = _get_commissary_schedule_locations()
+	schedule_store_map = {row["name"]: row for row in schedule_rows}
 
 	stores = []
 	role = None
+	seen_stores = set()
+	active_employee = None
 
-	if "Area Supervisor" in user_roles:
+	if surface_key in {"store_schedule", "commissary_schedule"}:
+		active_employee = frappe.db.get_value(
+			"Employee",
+			{"user_id": user, "status": "Active"},
+			["name", "branch", "employee_name", "reports_to", "designation"],
+			as_dict=True,
+		)
+
+	def append_store(row: dict | None, *, allow_unmapped: bool = False):
+		if not row:
+			return
+		store_name = str(row.get("name") or "").strip()
+		if not store_name or store_name in seen_stores:
+			return
+		if surface_key in {"store_schedule", "commissary_schedule"}:
+			matched_row = schedule_store_map.get(store_name) or _find_schedule_store_row(
+				schedule_rows,
+				store_name,
+				row.get("warehouse_name"),
+			)
+			if matched_row:
+				row = matched_row
+			elif not allow_unmapped:
+				return
+		stores.append(
+			{
+				"name": store_name,
+				"warehouse_name": str(row.get("warehouse_name") or store_name).strip(),
+			}
+		)
+		seen_stores.add(store_name)
+
+	if "Area Supervisor" in user_roles or _designation_is_area_supervisor(
+		(active_employee or {}).get("designation")
+	):
 		# Area supervisors see all stores assigned to them
 		role = "Area Supervisor"
 		area_stores = frappe.get_all(
 			"Warehouse",
-			filters={"custom_area_supervisor": user, "is_group": 0},
+			filters={"custom_area_supervisor": user, "is_group": 0, "disabled": 0},
 			fields=["name", "warehouse_name"],
 			order_by="warehouse_name",
 		)
-		stores = area_stores
+		allow_area_unmapped = surface_key not in {"store_schedule", "commissary_schedule"}
+		for store_row in area_stores:
+			append_store(store_row, allow_unmapped=allow_area_unmapped)
+		if surface_key in {"store_schedule", "commissary_schedule"} and (
+			"System Manager" in user_roles
+			or "HR User" in user_roles
+			or "HR Manager" in user_roles
+			or "Regional Manager" in user_roles
+		):
+			for store_row in schedule_rows:
+				append_store(store_row)
+
+	if not stores and active_employee and surface_key in {"store_schedule", "commissary_schedule"}:
+		employee_store_row = _employee_schedule_store_row(
+			active_employee,
+			surface=surface_key,
+			schedule_rows=schedule_rows,
+			user_roles=user_roles,
+		)
+		if employee_store_row:
+			role = role or _employee_schedule_role(active_employee, user_roles, surface_key)
+			append_store(employee_store_row, allow_unmapped=True)
 
 	if not stores and (
 		"Store Supervisor" in user_roles or "Store Staff" in user_roles or "Employee" in user_roles
 	):
 		# Store staff/supervisors get their branch from Employee record
-		role = "Store Supervisor" if "Store Supervisor" in user_roles else "Store Staff"
-		employee = frappe.db.get_value(
+		role = role or ("Store Supervisor" if "Store Supervisor" in user_roles else "Store Staff")
+		employee = active_employee or frappe.db.get_value(
 			"Employee",
 			{"user_id": user, "status": "Active"},
-			["name", "branch", "employee_name", "reports_to"],
+			["name", "branch", "employee_name", "reports_to", "designation"],
 			as_dict=True,
 		)
 		if employee:
 			store_context = resolve_employee_store_context(employee)
 			if store_context.get("warehouse"):
-				stores = [
+				append_store(
 					{
 						"name": store_context["warehouse"],
 						"warehouse_name": store_context["warehouse_name"],
-					}
-				]
+					},
+					allow_unmapped=surface_key in {"store_schedule", "commissary_schedule"},
+				)
+
+	if (
+		not stores
+		and surface_key == "commissary_schedule"
+		and (
+			"Commissary Supervisor" in user_roles
+			or "Warehouse User" in user_roles
+			or "Supply Chain Manager" in user_roles
+		)
+	):
+		role = (
+			"Supply Chain Manager"
+			if "Supply Chain Manager" in user_roles
+			else "Commissary Supervisor"
+			if "Commissary Supervisor" in user_roles
+			else "Warehouse User"
+		)
+		employee = active_employee or frappe.db.get_value(
+			"Employee",
+			{"user_id": user, "status": "Active"},
+			["name", "branch", "employee_name", "reports_to", "designation"],
+			as_dict=True,
+		)
+		if employee:
+			store_context = resolve_employee_store_context(employee)
+			if store_context.get("warehouse"):
+				append_store(
+					{
+						"name": store_context["warehouse"],
+						"warehouse_name": store_context["warehouse_name"],
+					},
+					allow_unmapped=True,
+				)
+		if not stores:
+			for store_row in schedule_rows:
+				append_store(store_row)
 
 	# System / HR / Regional fallback - return all stores
 	if not stores and (
@@ -1407,13 +1746,19 @@ def get_user_store():
 		or "Regional Manager" in user_roles
 	):
 		role = "Regional Manager" if "Regional Manager" in user_roles else "HR User"
-		stores = frappe.get_all(
-			"Warehouse",
-			filters={"is_group": 0, "disabled": 0},
-			fields=["name", "warehouse_name"],
-			order_by="warehouse_name",
-			limit=50,
-		)
+		if surface_key in {"store_schedule", "commissary_schedule"}:
+			for store_row in schedule_rows:
+				append_store(store_row)
+		else:
+			store_rows = frappe.get_all(
+				"Warehouse",
+				filters={"is_group": 0, "disabled": 0},
+				fields=["name", "warehouse_name"],
+				order_by="warehouse_name",
+				limit=50,
+			)
+			for store_row in store_rows:
+				append_store(store_row)
 
 	default_store = stores[0]["name"] if stores else None
 
@@ -1714,23 +2059,23 @@ def submit_order(
 
 	order_date = nowdate()
 
-	# Duplicate check: no existing non-cancelled order for same store + date + category
+	# Same-day follow-up orders are allowed before cutoff so stores can add missed
+	# items without waiting for the emergency lane. They still route to Area
+	# Supervisor review and stay blocked after the noon cutoff.
+	existing_same_day_orders = []
 	if not is_emergency_flag:
-		existing = frappe.db.exists(
+		existing_same_day_orders = frappe.get_all(
 			"BEI Store Order",
-			{
+			filters={
 				"store": warehouse,
 				"order_date": order_date,
 				"cargo_category": normalized_cargo_category,
 				"status": ["not in", ["Cancelled"]],
 			},
+			fields=["name", "status"],
+			order_by="creation asc",
+			limit_page_length=20,
 		)
-		if existing:
-			frappe.throw(
-				_("An order already exists for {0} on {1} for category {2}: {3}").format(
-					warehouse, order_date, normalized_cargo_category, existing
-				)
-			)
 
 	# Validate quantities - prevent unreasonable orders
 	MAX_ORDER_QTY = 10000
@@ -1763,6 +2108,8 @@ def submit_order(
 
 	# Determine is_bulk_order: bulk if more than 10 line items
 	is_bulk_order = 1 if len(items) > 10 else 0
+	is_same_day_additional_order = 1 if len(existing_same_day_orders) > 0 else 0
+	same_day_order_sequence = len(existing_same_day_orders) + 1
 
 	order = frappe.new_doc("BEI Store Order")
 	order.store = warehouse
@@ -1803,23 +2150,20 @@ def submit_order(
 	)
 	first_approver = routing["first_approver"]
 	first_source = routing["first_source"]
-	requires_regional_after_area = bool(routing["requires_regional_after_area"])
-	regional_approver = routing["regional_approver"]
-	regional_source = routing["regional_source"]
 
 	requires_manual_approval = bool(
 		is_bulk_order
 		or edited_lines_count > 0
-		or requires_regional_after_area
+		or is_same_day_additional_order
 		or (is_emergency_flag and submitted_after_cutoff)
 	)
 	if requires_manual_approval and not first_approver:
 		frappe.throw(
 			_(
 				"Order requires Area Supervisor approval but no valid Area Supervisor mapping was found for {0}, "
-				"and Regional Manager fallback {1} is unavailable. Please update Warehouse.custom_area_supervisor "
+				"and fallback approver {1} is unavailable. Please update Warehouse.custom_area_supervisor "
 				"or provision fallback approver access before submitting."
-			).format(warehouse, REGIONAL_MANAGER_FALLBACK_EMAIL)
+			).format(warehouse, ORDER_APPROVAL_FALLBACK_EMAIL)
 		)
 
 	order.insert(ignore_permissions=True)
@@ -1841,11 +2185,7 @@ def submit_order(
 				assigned = _assign_order_for_approval(
 					order_name=order.name,
 					assigned_to=first_approver,
-					description=(
-						f"Store order {order.name} requires your approval."
-						if not requires_regional_after_area
-						else f"Store order {order.name} requires your Stage 1 approval before regional sign-off."
-					),
+					description=f"Store order {order.name} requires your approval.",
 				)
 				queue_status = "created" if assigned else "failed"
 				if not assigned:
@@ -1862,19 +2202,19 @@ def submit_order(
 			warning = "Order created but approval routing failed. Please notify your approver manually."
 			queue_status = "failed"
 
-	if requires_regional_after_area and regional_approver:
+	if first_source == "fallback_approver" and first_approver:
+		_append_order_comment(
+			order.name,
+			_("Area Supervisor mapping missing; routed directly to fallback approver ({0}).").format(
+				first_approver
+			),
+		)
+	if is_same_day_additional_order:
 		_append_order_comment(
 			order.name,
 			_(
-				"Emergency order submitted after cutoff {0}. Approval chain: Area Supervisor -> Regional Manager ({1})."
-			).format(cutoff_time, regional_approver),
-		)
-	elif first_source == "regional_manager_fallback" and first_approver:
-		_append_order_comment(
-			order.name,
-			_("Area Supervisor mapping missing; routed directly to Regional Manager ({0}).").format(
-				first_approver
-			),
+				"Additional scheduled order #{0} for {1} / {2}; routed for manual approval before cutoff."
+			).format(same_day_order_sequence, warehouse, normalized_cargo_category),
 		)
 
 	result = {
@@ -1884,17 +2224,25 @@ def submit_order(
 		"requires_area_supervisor_review": bool(
 			requires_manual_approval and first_source == "area_supervisor"
 		),
-		"requires_regional_manager_review": bool(requires_regional_after_area),
+		"requires_regional_manager_review": False,
+		"requires_fallback_approval": bool(requires_manual_approval and first_source == "fallback_approver"),
 		"edited_lines_count": edited_lines_count,
-		"message": f"Order {order.name} submitted successfully",
+		"message": (
+			f"Additional scheduled order {order.name} submitted successfully"
+			if is_same_day_additional_order
+			else f"Order {order.name} submitted successfully"
+		),
 		"approval_queue_status": queue_status,
 		"approval_queue_name": queue_name,
 		"approval_approver_source": first_source if requires_manual_approval else "not_required",
 		"approval_assigned_approver": first_approver if requires_manual_approval else None,
-		"regional_approver": regional_approver,
-		"regional_approver_source": regional_source,
+		"fallback_approver": (
+			first_approver if requires_manual_approval and first_source == "fallback_approver" else None
+		),
 		"submitted_after_cutoff": bool(submitted_after_cutoff),
 		"is_emergency": bool(is_emergency_flag),
+		"is_same_day_additional_order": bool(is_same_day_additional_order),
+		"same_day_order_sequence": same_day_order_sequence,
 		"cargo_category": normalized_cargo_category,
 		"dropped_invalid_lines": len(dropped_items),
 	}
@@ -1958,9 +2306,9 @@ def get_order_review_queue(date: str | None = None, status: str | None = None) -
 @frappe.whitelist()
 def approve_order(order_name: str, approved_quantities: list | str | None = None) -> dict:
 	"""
-	Approve a store order with staged routing support.
-	- Regular/manual orders: single-step approval
-	- Emergency orders submitted after cutoff: Area Supervisor -> Regional Manager
+	Approve a store order.
+	Area Supervisors own the approval queue. The designated fallback approver may
+	intervene directly when an assigned approval is stuck.
 	"""
 	user = frappe.session.user
 	order = frappe.get_doc("BEI Store Order", order_name)
@@ -1973,19 +2321,24 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 	assigned_approver = active_entry.get("assigned_approver") if active_entry else None
 
 	is_system_user = _is_system_approver(user)
+	fallback_approver = _get_order_approval_fallback_user()
+	is_fallback_override = bool(
+		fallback_approver and user == fallback_approver and assigned_approver and assigned_approver != user
+	)
 	if assigned_approver:
-		if assigned_approver != user and not is_system_user:
+		if assigned_approver != user and not is_system_user and not is_fallback_override:
 			frappe.throw(
 				_("Order {0} is currently assigned to {1}.").format(order_name, assigned_approver),
 				frappe.PermissionError,
 			)
 	else:
 		user_roles = set(frappe.get_roles(user))
-		allowed_roles = {AREA_SUPERVISOR_ROLE, REGIONAL_MANAGER_ROLE}.union(SYSTEM_APPROVER_ROLES)
-		if not user_roles.intersection(allowed_roles):
+		allowed_roles = {AREA_SUPERVISOR_ROLE}.union(SYSTEM_APPROVER_ROLES)
+		is_fallback_user = bool(fallback_approver and user == fallback_approver)
+		if not user_roles.intersection(allowed_roles) and not is_fallback_user:
 			frappe.throw(
 				_(
-					"Only assigned approvers, Area Supervisors, Regional Managers, or System Managers can approve."
+					"Only assigned approvers, Area Supervisors, fallback approvers, or System Managers can approve."
 				),
 				frappe.PermissionError,
 			)
@@ -2011,41 +2364,14 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		elif not flt(getattr(item, "qty_approved", 0)):
 			item.qty_approved = item.qty_requested
 
-	cutoff_hour, _cutoff_time = _get_order_cutoff()
-	order_created_dt = get_datetime(order.creation) if getattr(order, "creation", None) else now_datetime()
-	submitted_after_cutoff = order_created_dt.hour >= cutoff_hour
-	routing = _resolve_order_approval_routing(
-		warehouse=order.store,
-		is_emergency=order.is_emergency,
-		submitted_after_cutoff=submitted_after_cutoff,
-	)
 	area_approver = _get_area_supervisor_for_store(order.store)
-	regional_approver = routing.get("regional_approver")
-	requires_dual_stage = bool(routing.get("requires_regional_after_area"))
-
-	current_stage = "single_step"
-	if assigned_approver and assigned_approver == area_approver:
+	current_stage = "approved"
+	if fallback_approver and user == fallback_approver and user != area_approver:
+		current_stage = "fallback_approver"
+	elif assigned_approver and assigned_approver == area_approver:
 		current_stage = "area_supervisor"
-	elif assigned_approver and assigned_approver == regional_approver:
-		current_stage = "regional_manager"
-	elif requires_dual_stage:
-		if user == area_approver:
-			current_stage = "area_supervisor"
-		elif user == regional_approver:
-			current_stage = "regional_manager"
-
-	if requires_dual_stage and current_stage == "regional_manager":
-		if not _has_approved_stage_entry(order_name, area_approver):
-			frappe.throw(
-				_("Area Supervisor approval is required before Regional Manager final approval."),
-				frappe.PermissionError,
-			)
-
-	if requires_dual_stage and current_stage == "single_step" and not is_system_user:
-		frappe.throw(
-			_("Dual-stage approval is configured, but current approval stage could not be resolved."),
-			frappe.PermissionError,
-		)
+	elif is_system_user:
+		current_stage = "system_override"
 
 	if active_entry:
 		queue_doc = frappe.get_doc("BEI Approval Queue", active_entry["name"])
@@ -2055,74 +2381,13 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		queue_doc.save(ignore_permissions=True)
 		_close_order_assignments(order_name, allocated_to=assigned_approver)
 
-	is_area_stage_approval = current_stage == "area_supervisor"
-	should_forward_to_regional = bool(
-		requires_dual_stage and is_area_stage_approval and regional_approver and regional_approver != user
-	)
-
-	if should_forward_to_regional:
-		order.status = "Pending Approval"
-		order.save(ignore_permissions=True)
-
-		queue_entry = None
-		try:
-			queue_entry = _create_approval_queue_entry(
-				order=order,
-				approver=regional_approver,
-				priority="Urgent",
-			)
-		except Exception:
-			frappe.log_error(
-				f"Failed to create regional approval queue for order {order_name}",
-				"Store Order Regional Queue Error",
-			)
-		assigned_ok = False
-		if queue_entry:
-			assigned_ok = _assign_order_for_approval(
-				order_name=order_name,
-				assigned_to=regional_approver,
-				description=(
-					f"Store order {order_name} completed Area Supervisor approval. "
-					"Regional Manager final approval required."
-				),
-			)
-			_append_order_comment(
-				order_name,
-				_(
-					"Area Supervisor approval completed by {0}. Routed to Regional Manager ({1}) for final sign-off."
-				).format(user, regional_approver),
-			)
-
-		_notify_store_ops(
-			event={
-				"family": "store_order_approved",
-				"source_system": "frappe",
-				"source_ref": order_name,
-				"severity": "high",
-				"owner": regional_approver or "Regional Manager",
-				"facts": {
-					"order_name": order_name,
-					"stage": "area_supervisor_forwarded",
-					"store": order.store,
-					"approved_by": user,
-					"regional_approver": regional_approver,
-					"dashboard_url": "https://my.bebang.ph/dashboard/store-ops/order-approvals",
-				},
-			},
-			requested_space=get_chat_space(SPACE_OPS),
+	if is_fallback_override:
+		_append_order_comment(
+			order_name,
+			_("Fallback approval applied by {0}; original assigned approver was {1}.").format(
+				user, assigned_approver
+			),
 		)
-		return {
-			"success": True,
-			"status": order.status,
-			"stage": "area_supervisor",
-			"message": f"Area Supervisor approval captured. Routed to Regional Manager ({regional_approver}).",
-			"requires_regional_manager_review": True,
-			"approval_approver_source": "regional_manager",
-			"approval_assigned_approver": regional_approver,
-			"approval_queue_status": "created" if queue_entry and assigned_ok else "failed",
-			"material_request": None,
-			"dr_number": "",
-		}
 
 	order.status = "Approved"
 	order.approved_by = user
@@ -2159,22 +2424,24 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 				"stage": "approved",
 				"store": order.store,
 				"approved_by": user,
+				"approval_mode": "fallback_override" if is_fallback_override else "standard",
+				"assigned_approver": assigned_approver,
 				"material_request": mr_name,
 				"dashboard_url": "https://my.bebang.ph/dashboard/store-ops/order-approvals",
 			},
 		},
 		requested_space=store_space or get_chat_space(SPACE_OPS),
 	)
-	final_stage = "regional_manager" if requires_dual_stage else current_stage
-
 	return {
 		"success": True,
 		"message": f"Order {order_name} approved",
 		"status": order.status,
-		"stage": final_stage,
+		"stage": current_stage,
 		"approval_queue_status": "completed",
 		"requires_regional_manager_review": False,
-		"approval_approver_source": final_stage,
+		"approval_approver_source": current_stage,
+		"approval_assigned_approver": None,
+		"fallback_override": bool(is_fallback_override),
 		"material_request": mr_name,
 		"dr_number": mr_name or "",
 	}
@@ -2221,7 +2488,9 @@ def _create_mr_for_store_order(order):
 		)
 		finance_treatment = infer_finance_treatment(source_company, billing_target_company)
 		is_intercompany = finance_treatment == FINANCE_TREATMENT_INTERCOMPANY
-		operational_dispatch_warehouse = source_warehouse if is_intercompany and source_warehouse else store_warehouse
+		operational_dispatch_warehouse = (
+			source_warehouse if is_intercompany and source_warehouse else store_warehouse
+		)
 		mr.material_request_type = "Material Issue" if is_intercompany else "Material Transfer"
 		# Frappe validates Material Transfer requests against the operational stock
 		# owner on the source side of the move. The buyer entity used later for
@@ -2239,7 +2508,7 @@ def _create_mr_for_store_order(order):
 			target_company=billing_target_company,
 			finance_treatment=finance_treatment,
 		)
-		mr.remarks = f"Warehouse dispatch request for store order {order.name} " f"({cargo_category})"
+		mr.remarks = f"Warehouse dispatch request for store order {order.name} ({cargo_category})"
 
 		for item in order.items:
 			qty = flt(getattr(item, "qty_approved", None) or getattr(item, "qty_requested", 0))
@@ -2275,15 +2544,15 @@ def _create_mr_for_store_order(order):
 
 
 @frappe.whitelist()
-def get_expected_deliveries(store: str | None = None) -> dict:
+def get_expected_deliveries(store: str | None = None, date: str | None = None) -> dict:
 	"""
-	Get trips expected to deliver to this store today.
+	Get trips expected to deliver to this store on the selected date.
 	Returns distribution trips with this store as a stop.
 	"""
 	if not store:
 		return {"deliveries": []}
 
-	today = nowdate()
+	selected_date = str(getdate(date)) if date else nowdate()
 
 	# Find trips with this store as a stop
 	trips = frappe.db.sql(
@@ -2296,10 +2565,10 @@ def get_expected_deliveries(store: str | None = None) -> dict:
         JOIN `tabBEI Trip Stop` s ON s.parent = t.name
         WHERE s.store = %s
         AND t.trip_date = %s
-        AND t.status IN ('Preparing', 'In Transit')
+        AND t.status != 'Cancelled'
         ORDER BY t.trip_date, s.stop_order
     """,
-		(store, today),
+		(store, selected_date),
 		as_dict=True,
 	)
 
@@ -2820,9 +3089,7 @@ def _resolve_store_order_item_pricing(store_order_name: str | None) -> dict[str,
 		result[item_code] = {
 			"unit_price": flt(row.get("unit_price"), 6),
 			"delivered_qty": (
-				flt(row.get("qty_delivered"))
-				or flt(row.get("qty_approved"))
-				or flt(row.get("qty_requested"))
+				flt(row.get("qty_delivered")) or flt(row.get("qty_approved")) or flt(row.get("qty_requested"))
 			),
 		}
 	return result
@@ -3222,11 +3489,7 @@ def create_store_return(
 		"finance_treatment": finance_treatment,
 		"message": (
 			f"Store return {primary_entry.name} created"
-			+ (
-				f" with warehouse receipt {warehouse_receipt.name}"
-				if warehouse_receipt
-				else ""
-			)
+			+ (f" with warehouse receipt {warehouse_receipt.name}" if warehouse_receipt else "")
 			+ f" — {len(primary_entry.items)} item(s) returned to warehouse"
 		),
 	}

@@ -94,6 +94,27 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Employee-custom_work_phone",
+        "dt": "Employee",
+        "fieldname": "custom_work_phone",
+        "fieldtype": "Data",
+        "label": "Work Phone",
+        "insert_after": "company_email",
+        "description": "Official BEI-issued work phone number",
+        "in_standard_filter": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Employee-custom_uniform_size",
+        "dt": "Employee",
+        "fieldname": "custom_uniform_size",
+        "fieldtype": "Data",
+        "label": "Uniform Size",
+        "insert_after": "custom_work_phone",
+        "description": "Uniform size for store operations issue"
+    },
+    {
+        "doctype": "Custom Field",
         "name": "Employee-custom_government_id_photo",
         "dt": "Employee",
         "fieldname": "custom_government_id_photo",
@@ -104,12 +125,92 @@
     },
     {
         "doctype": "Custom Field",
+        "name": "Employee-custom_tin_proof_url",
+        "dt": "Employee",
+        "fieldname": "custom_tin_proof_url",
+        "fieldtype": "Attach",
+        "label": "TIN Proof",
+        "insert_after": "custom_government_id_photo",
+        "description": "Latest supporting document for TIN verification"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Employee-custom_tin_verified",
+        "dt": "Employee",
+        "fieldname": "custom_tin_verified",
+        "fieldtype": "Check",
+        "label": "TIN Verified",
+        "insert_after": "custom_tin_proof_url",
+        "read_only": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Employee-custom_sss_proof_url",
+        "dt": "Employee",
+        "fieldname": "custom_sss_proof_url",
+        "fieldtype": "Attach",
+        "label": "SSS Proof",
+        "insert_after": "custom_tin_verified",
+        "description": "Latest supporting document for SSS verification"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Employee-custom_sss_verified",
+        "dt": "Employee",
+        "fieldname": "custom_sss_verified",
+        "fieldtype": "Check",
+        "label": "SSS Verified",
+        "insert_after": "custom_sss_proof_url",
+        "read_only": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Employee-custom_philhealth_proof_url",
+        "dt": "Employee",
+        "fieldname": "custom_philhealth_proof_url",
+        "fieldtype": "Attach",
+        "label": "PhilHealth Proof",
+        "insert_after": "custom_sss_verified",
+        "description": "Latest supporting document for PhilHealth verification"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Employee-custom_philhealth_verified",
+        "dt": "Employee",
+        "fieldname": "custom_philhealth_verified",
+        "fieldtype": "Check",
+        "label": "PhilHealth Verified",
+        "insert_after": "custom_philhealth_proof_url",
+        "read_only": 1
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Employee-custom_pagibig_proof_url",
+        "dt": "Employee",
+        "fieldname": "custom_pagibig_proof_url",
+        "fieldtype": "Attach",
+        "label": "Pag-IBIG Proof",
+        "insert_after": "custom_philhealth_verified",
+        "description": "Latest supporting document for Pag-IBIG verification"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Employee-custom_pagibig_verified",
+        "dt": "Employee",
+        "fieldname": "custom_pagibig_verified",
+        "fieldtype": "Check",
+        "label": "Pag-IBIG Verified",
+        "insert_after": "custom_pagibig_proof_url",
+        "read_only": 1
+    },
+    {
+        "doctype": "Custom Field",
         "name": "Employee-custom_enrichment_section",
         "dt": "Employee",
         "fieldname": "custom_enrichment_section",
         "fieldtype": "Section Break",
         "label": "Data Enrichment Status",
-        "insert_after": "custom_government_id_photo",
+        "insert_after": "custom_pagibig_verified",
         "collapsible": 1
     },
     {

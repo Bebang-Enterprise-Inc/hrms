@@ -22,8 +22,14 @@ from hrms.utils.delivery_billing_policy import (
 )
 
 # P0-10: Import centralized RBAC role sets
-from hrms.utils.scm_roles import SCM_ADMIN_ROLES, SCM_DISPATCH_ROLES, SCM_STORE_ROLES
+from hrms.utils.scm_roles import (
+	SCM_ADMIN_ROLES,
+	SCM_DISPATCH_ROLES,
+	SCM_ROUTE_MANAGEMENT_ROLES,
+	SCM_STORE_ROLES,
+)
 from hrms.utils.scm_roles import check_scm_permission as _check_scm_permission
+from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.supply_chain_contracts import (
 	buyer_entity_requires_billing_hold,
 	resolve_markup_percent,
@@ -100,9 +106,45 @@ def _infer_vehicle_type(vehicle_label: str | None) -> str:
 	return "Truck"
 
 
+def _normalize_vehicle_type(vehicle_type: str | None, vehicle_label: str | None = None) -> str:
+	"""Map portal shorthand into the valid BEI Vehicle master options."""
+	text = (vehicle_type or "").strip().lower()
+	if not text:
+		return _infer_vehicle_type(vehicle_label)
+	if text in {"reefer", "reefer truck"}:
+		return "Reefer Truck"
+	if text == "reefer van":
+		return "Reefer Van"
+	if text in {"non-reefer", "truck"}:
+		return "Truck"
+	if text in {"motorcycle", "motorbike", "bike"}:
+		return "Motorcycle"
+	if text == "l300":
+		return "L300"
+	if text == "van":
+		return "Van"
+	return vehicle_type
+
+
+def _resolve_threepl_partner_link(threepl_partner: str | None) -> str:
+	"""Resolve either a Supplier name or supplier_name into a valid Supplier link."""
+	partner = (threepl_partner or "").strip()
+	if not partner:
+		return ""
+	exact_name = frappe.db.get_value("Supplier", partner, "name")
+	if exact_name:
+		return str(exact_name)
+	match_by_supplier_name = frappe.db.get_value("Supplier", {"supplier_name": partner}, "name")
+	if match_by_supplier_name:
+		return str(match_by_supplier_name)
+	return partner
+
+
 def _resolve_or_create_departure_vehicle(
 	vehicle_label: str | None,
 	vehicle_plate: str | None,
+	vehicle_type: str | None = None,
+	threepl_partner: str | None = None,
 ) -> tuple[str, str]:
 	"""
 	Resolve a BEI Vehicle link for trip departure.
@@ -119,7 +161,9 @@ def _resolve_or_create_departure_vehicle(
 	if vehicle_label:
 		existing_name = frappe.db.get_value("BEI Vehicle", vehicle_label, "name")
 		if existing_name:
-			existing_plate = frappe.db.get_value("BEI Vehicle", existing_name, "vehicle_plate") or vehicle_plate
+			existing_plate = (
+				frappe.db.get_value("BEI Vehicle", existing_name, "vehicle_plate") or vehicle_plate
+			)
 			return str(existing_name), str(existing_plate or "")
 
 	if vehicle_plate:
@@ -142,8 +186,10 @@ def _resolve_or_create_departure_vehicle(
 		vehicle_doc = frappe.new_doc("BEI Vehicle")
 		vehicle_doc.naming_series = "BEI-VEH-.####"
 		vehicle_doc.vehicle_plate = vehicle_plate
-		vehicle_doc.vehicle_type = _infer_vehicle_type(vehicle_label)
+		vehicle_doc.vehicle_type = _normalize_vehicle_type(vehicle_type, vehicle_label)
 		vehicle_doc.owner_type = "3PL"
+		if _has_column("BEI Vehicle", "threepl_partner") and threepl_partner:
+			vehicle_doc.threepl_partner = _resolve_threepl_partner_link(threepl_partner)
 		vehicle_doc.status = "Available"
 		if hasattr(vehicle_doc, "notes"):
 			vehicle_doc.notes = vehicle_label or vehicle_plate
@@ -171,6 +217,35 @@ def _get_employee_phone(record: Any) -> str:
 	if not phone_field:
 		return ""
 	return str(_get_record_value(record, phone_field) or "")
+
+
+def _get_vehicle_type_map(vehicle_names: list[str] | tuple[str, ...]) -> dict[str, str]:
+	"""Resolve BEI Vehicle.type in bulk for trip cards and detail panels."""
+	names = sorted({name for name in vehicle_names if name})
+	if not names:
+		return {}
+
+	rows = frappe.get_all(
+		"BEI Vehicle",
+		filters={"name": ["in", names]},
+		fields=["name", "vehicle_type"],
+		limit_page_length=max(20, len(names)),
+	)
+	return {str(row.name): str(row.vehicle_type or "") for row in rows}
+
+
+def _append_route_audit_comment(route: Any, action: str, details: str | None = None) -> None:
+	"""Append a timeline note so route changes are traceable outside field diffs."""
+	try:
+		message = f"Dispatch route {action} by {frappe.session.user}"
+		if details:
+			message = f"{message}. {details}"
+		route.add_comment("Comment", text=message)
+	except Exception:
+		frappe.log_error(
+			title="Route Audit Comment Failed",
+			message=f"route={getattr(route, 'name', '')!r} action={action!r}",
+		)
 
 
 @frappe.whitelist()
@@ -205,6 +280,8 @@ def get_trips(date: str | None = None, status: str | None = None):
 		order_by="creation",
 	)
 
+	vehicle_types = _get_vehicle_type_map([str(trip.get("vehicle") or "") for trip in trips])
+
 	# Get stop counts and delivery progress
 	for trip in trips:
 		stops = frappe.get_all("BEI Trip Stop", filters={"parent": trip.name}, fields=["status"])
@@ -213,6 +290,7 @@ def get_trips(date: str | None = None, status: str | None = None):
 		trip["driver_display"] = (
 			trip.get("driver_name") or trip.get("threepl_driver_name") or trip.get("driver") or ""
 		)
+		trip["vehicle_type"] = vehicle_types.get(str(trip.get("vehicle") or ""), "")
 
 	return {"trips": trips}
 
@@ -224,6 +302,9 @@ def get_trip_detail(trip_name: str):
 
 	trip = frappe.get_doc("BEI Distribution Trip", trip_name)
 	driver_name = getattr(trip, "driver_name", "") or getattr(trip, "threepl_driver_name", "") or ""
+	vehicle_type = ""
+	if getattr(trip, "vehicle", None):
+		vehicle_type = str(frappe.db.get_value("BEI Vehicle", trip.vehicle, "vehicle_type") or "")
 
 	return {
 		"trip": {
@@ -235,6 +316,7 @@ def get_trip_detail(trip_name: str):
 			"threepl_driver_name": getattr(trip, "threepl_driver_name", ""),
 			"vehicle": trip.vehicle,
 			"vehicle_plate": trip.vehicle_plate,
+			"vehicle_type": vehicle_type,
 			"status": trip.status,
 			"departure_time": trip.departure_time,
 			"departure_temp": trip.departure_temp,
@@ -1213,7 +1295,7 @@ def get_my_delivery(date: str | None = None):
 	# Find trip with a stop at user's warehouse
 	trips = frappe.get_all(
 		"BEI Distribution Trip",
-		filters={"trip_date": trip_date, "status": ["in", ["Preparing", "In Transit", "Partial"]]},
+		filters={"trip_date": trip_date, "status": ["!=", "Cancelled"]},
 		fields=["name"],
 	)
 
@@ -1267,6 +1349,15 @@ def get_my_delivery(date: str | None = None):
 @frappe.whitelist()
 def get_routes(cargo_type: str | None = None, active_only: bool = True):
 	"""Get all route masters, optionally filtered."""
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_routes",
+		route_action="get_routes",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.dispatch.get_routes",
+		phase="load",
+		extras={"cargo_type": cargo_type, "active_only": active_only},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view routes")
 
 	filters = {}
@@ -1307,6 +1398,15 @@ def get_routes(cargo_type: str | None = None, active_only: bool = True):
 @frappe.whitelist()
 def get_route_detail(route_name: str):
 	"""Get full route details including all stops."""
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_route_detail",
+		route_action="get_route_detail",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.dispatch.get_route_detail",
+		phase="load",
+		extras={"route_name": route_name},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view route details")
 
 	route = frappe.get_doc("BEI Route", route_name)
@@ -1347,7 +1447,7 @@ def create_route(
 	notes: str | None = None,
 ):
 	"""Create a new route master."""
-	_check_scm_permission(SCM_ADMIN_ROLES, "create routes")
+	_check_scm_permission(SCM_ROUTE_MANAGEMENT_ROLES, "create routes")
 
 	if isinstance(stops, str):
 		stops = frappe.parse_json(stops)
@@ -1376,18 +1476,24 @@ def create_route(
 
 	_enable_role_gated_write(route)
 	route.insert(ignore_permissions=True)
+	_append_route_audit_comment(
+		route,
+		"created",
+		f"Cargo={cargo_type}; source={source_warehouse}; stops={len(stops or [])}",
+	)
 	return {"success": True, "route": route.name}
 
 
 @frappe.whitelist()
 def update_route(route_name: str, updates: dict[str, Any] | str | None = None):
 	"""Update a route master. Accepts partial updates."""
-	_check_scm_permission(SCM_ADMIN_ROLES, "update routes")
+	_check_scm_permission(SCM_ROUTE_MANAGEMENT_ROLES, "update routes")
 
 	if isinstance(updates, str):
 		updates = frappe.parse_json(updates)
 
 	route = frappe.get_doc("BEI Route", route_name)
+	changed_fields: list[str] = []
 
 	simple_fields = [
 		"route_name",
@@ -1402,6 +1508,7 @@ def update_route(route_name: str, updates: dict[str, Any] | str | None = None):
 	for field in simple_fields:
 		if field in updates:
 			setattr(route, field, updates[field])
+			changed_fields.append(field)
 
 	if "stops" in updates:
 		route.stops = []
@@ -1416,27 +1523,95 @@ def update_route(route_name: str, updates: dict[str, Any] | str | None = None):
 					"mall_permit_required": stop_data.get("mall_permit_required", 0),
 				},
 			)
+		changed_fields.append(f"stops({len(updates['stops'])})")
 
 	_enable_role_gated_write(route)
 	route.save(ignore_permissions=True)
+	_append_route_audit_comment(
+		route,
+		"updated",
+		f"Changed: {', '.join(changed_fields) if changed_fields else 'no-op save'}",
+	)
 	return {"success": True, "route": route.name}
 
 
 @frappe.whitelist()
 def delete_route(route_name: str):
 	"""Soft-delete a route (set active=0)."""
-	_check_scm_permission(SCM_ADMIN_ROLES, "delete routes")
+	_check_scm_permission(SCM_ROUTE_MANAGEMENT_ROLES, "delete routes")
 
 	route = frappe.get_doc("BEI Route", route_name)
 	route.active = 0
 	_enable_role_gated_write(route)
 	route.save(ignore_permissions=True)
+	_append_route_audit_comment(route, "deactivated")
 	return {"success": True, "message": f"Route {route_name} deactivated"}
+
+
+@frappe.whitelist()
+def create_vehicle(
+	vehicle_plate: str,
+	vehicle_type: str | None = None,
+	owner_type: str | None = "3PL",
+	threepl_partner: str | None = None,
+	notes: str | None = None,
+):
+	"""Create or reuse a BEI Vehicle master for logistics onboarding."""
+	_check_scm_permission(SCM_ROUTE_MANAGEMENT_ROLES, "create vehicles")
+
+	vehicle_plate = (vehicle_plate or "").strip()
+	if not vehicle_plate:
+		frappe.throw(_("Vehicle plate is required"))
+
+	existing = frappe.db.get_value(
+		"BEI Vehicle",
+		{"vehicle_plate": vehicle_plate},
+		["name", "vehicle_plate", "vehicle_type", "owner_type", "threepl_partner", "status"],
+		as_dict=True,
+	)
+	if existing:
+		return {"success": True, "created": False, "vehicle": existing}
+
+	vehicle_doc = frappe.new_doc("BEI Vehicle")
+	vehicle_doc.naming_series = "BEI-VEH-.####"
+	vehicle_doc.vehicle_plate = vehicle_plate
+	vehicle_doc.vehicle_type = _normalize_vehicle_type(vehicle_type, notes or vehicle_plate)
+	vehicle_doc.owner_type = owner_type or "3PL"
+	if _has_column("BEI Vehicle", "threepl_partner") and threepl_partner:
+		vehicle_doc.threepl_partner = _resolve_threepl_partner_link(threepl_partner)
+	vehicle_doc.status = "Available"
+	if hasattr(vehicle_doc, "notes") and notes:
+		vehicle_doc.notes = notes
+	_enable_role_gated_write(vehicle_doc)
+	vehicle_doc.insert(ignore_permissions=True)
+	if hasattr(vehicle_doc, "add_comment"):
+		vehicle_doc.add_comment("Comment", text=f"Vehicle onboarded by {frappe.session.user}")
+	return {
+		"success": True,
+		"created": True,
+		"vehicle": {
+			"name": vehicle_doc.name,
+			"vehicle_plate": vehicle_doc.vehicle_plate,
+			"vehicle_type": vehicle_doc.vehicle_type,
+			"owner_type": vehicle_doc.owner_type,
+			"threepl_partner": getattr(vehicle_doc, "threepl_partner", "") or "",
+			"status": vehicle_doc.status,
+		},
+	}
 
 
 @frappe.whitelist()
 def get_vehicles(status: str | None = None, owner_type: str | None = None):
 	"""List vehicles with optional filters."""
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_vehicles",
+		route_action="get_vehicles",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.dispatch.get_vehicles",
+		phase="load",
+		extras={"status": status, "owner_type": owner_type},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view vehicles")
 
 	filters = {}
@@ -1567,15 +1742,60 @@ def _save_base64_attachment(
 @frappe.whitelist()
 def preview_trip_stops(route_name: str, trip_date: str | None = None):
 	"""Preview stops and pending store orders for a proposed trip."""
+	trip_date = trip_date or nowdate()
+	set_backend_observability_context(
+		module="warehouse",
+		action="preview_trip_stops",
+		route_action="preview_trip_stops",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.dispatch.preview_trip_stops",
+		phase="load",
+		extras={"route_name": route_name, "trip_date": trip_date},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "preview trip stops")
 	route = frappe.get_doc("BEI Route", route_name)
+	trip_route_name = route.route_name or route_name
 
 	if not route.active:
 		frappe.throw(_("Route is not active"))
 
-	trip_date = trip_date or nowdate()
 	stops = _build_stop_preview(route, trip_date)
-	return {"route_name": route_name, "trip_date": trip_date, "stops": stops}
+	return {"route_name": trip_route_name, "trip_date": trip_date, "stops": stops}
+
+
+def _duplicate_trip_response(route_name: str, trip_date: str, existing_trip: str):
+	return {
+		"success": False,
+		"code": "TRIP_ALREADY_EXISTS",
+		"error_code": "TRIP_ALREADY_EXISTS",
+		"trip": existing_trip,
+		"existing_trip": existing_trip,
+		"trip_name": existing_trip,
+		"route_name": route_name,
+		"trip_date": trip_date,
+		"message": _("A trip already exists for route '{0}' on {1}: {2}").format(
+			route_name, trip_date, existing_trip
+		),
+	}
+
+
+def _is_duplicate_trip_insert_error(exc: Exception) -> bool:
+	duplicate_types: list[type[Exception]] = []
+	for candidate in (
+		getattr(frappe, "DuplicateEntryError", None),
+		getattr(getattr(frappe, "exceptions", None), "DuplicateEntryError", None),
+	):
+		if isinstance(candidate, type) and issubclass(candidate, Exception):
+			duplicate_types.append(candidate)
+
+	if duplicate_types and isinstance(exc, tuple(duplicate_types)):
+		return True
+
+	if exc.__class__.__name__ == "DuplicateEntryError":
+		return True
+
+	message = str(exc).lower()
+	return "trip already exists" in message or ("duplicate" in message and "route" in message)
 
 
 @frappe.whitelist()
@@ -1585,6 +1805,10 @@ def create_trip_from_route(
 	vehicle: str | None = None,
 	driver: str | None = None,
 	threepl_driver_name: str | None = None,
+	vehicle_plate: str | None = None,
+	vehicle_type: str | None = None,
+	vehicle_label: str | None = None,
+	threepl_partner: str | None = None,
 	selected_stops: list[dict[str, Any]] | str | None = None,
 ):
 	"""One-click trip creation from a route template.
@@ -1594,33 +1818,50 @@ def create_trip_from_route(
 	3. Copies stops, links approved store orders
 	4. Returns trip name
 	"""
+	trip_date = trip_date or nowdate()
+	set_backend_observability_context(
+		module="warehouse",
+		action="create_trip_from_route",
+		route_action="create_trip_from_route",
+		mutation_type="create",
+		endpoint_or_job="hrms.api.dispatch.create_trip_from_route",
+		phase="mutation",
+		extras={
+			"route_name": route_name,
+			"trip_date": trip_date,
+			"vehicle": vehicle,
+			"driver": driver,
+			"selected_stops_provided": bool(selected_stops),
+		},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "create trips from routes")
 
 	route = frappe.get_doc("BEI Route", route_name)
+	trip_route_name = route.route_name or route_name
 
 	if not route.active:
 		frappe.throw(_("Route is not active"))
 
-	trip_date = trip_date or nowdate()
-
 	# G-069: UX pre-check for duplicate trip (DB constraint is the real guard)
 	existing_trip = frappe.db.get_value(
-		"BEI Distribution Trip", {"route_name": route_name, "trip_date": trip_date}, "name"
+		"BEI Distribution Trip", {"route_name": trip_route_name, "trip_date": trip_date}, "name"
 	)
 	if existing_trip:
-		frappe.throw(
-			_("A trip already exists for route '{0}' on {1}: {2}").format(
-				route_name, trip_date, existing_trip
-			)
-		)
+		return _duplicate_trip_response(trip_route_name, trip_date, existing_trip)
 
-	# Resolve vehicle details
-	vehicle_plate = None
-	if vehicle:
-		vehicle_plate = frappe.db.get_value("BEI Vehicle", vehicle, "vehicle_plate")
-	elif route.default_vehicle:
-		vehicle = route.default_vehicle
-		vehicle_plate = frappe.db.get_value("BEI Vehicle", route.default_vehicle, "vehicle_plate")
+	# Resolve vehicle details. Logistics can either pick an existing master or
+	# onboard a new 3PL vehicle inline by plate before creating the trip.
+	resolved_vehicle = vehicle or route.default_vehicle or ""
+	resolved_vehicle_plate = None
+	if resolved_vehicle:
+		resolved_vehicle_plate = frappe.db.get_value("BEI Vehicle", resolved_vehicle, "vehicle_plate")
+	elif vehicle_plate:
+		resolved_vehicle, resolved_vehicle_plate = _resolve_or_create_departure_vehicle(
+			vehicle_label or threepl_partner or vehicle_type or vehicle_plate,
+			vehicle_plate,
+			vehicle_type=vehicle_type,
+			threepl_partner=threepl_partner,
+		)
 
 	if isinstance(selected_stops, str):
 		selected_stops = frappe.parse_json(selected_stops)
@@ -1679,8 +1920,8 @@ def create_trip_from_route(
 	trip = _build_trip_doc(trip_date, route.route_name, stops)
 	trip.route = route.name
 	trip.driver = driver or route.default_driver
-	trip.vehicle = vehicle
-	trip.vehicle_plate = vehicle_plate
+	trip.vehicle = resolved_vehicle
+	trip.vehicle_plate = resolved_vehicle_plate
 	trip.cargo_type = route.cargo_type
 
 	if trip.driver:
@@ -1689,6 +1930,8 @@ def create_trip_from_route(
 	is_threepl_vehicle = bool(trip.vehicle) and (
 		frappe.db.get_value("BEI Vehicle", trip.vehicle, "owner_type") == "3PL"
 	)
+	if not is_threepl_vehicle and threepl_partner:
+		is_threepl_vehicle = True
 	external_driver = (threepl_driver_name or "").strip()
 	if is_threepl_vehicle and external_driver:
 		trip.driver = ""
@@ -1703,7 +1946,17 @@ def create_trip_from_route(
 			trip.stops[idx].store_order = stop_data["store_order"]
 
 	_enable_role_gated_write(trip)
-	trip.insert(ignore_permissions=True)
+	try:
+		trip.insert(ignore_permissions=True)
+	except Exception as exc:
+		if not _is_duplicate_trip_insert_error(exc):
+			raise
+		existing_trip = frappe.db.get_value(
+			"BEI Distribution Trip", {"route_name": trip_route_name, "trip_date": trip_date}, "name"
+		)
+		if existing_trip:
+			return _duplicate_trip_response(trip_route_name, trip_date, existing_trip)
+		raise exc
 
 	return {
 		"success": True,
@@ -1715,7 +1968,7 @@ def create_trip_from_route(
 @frappe.whitelist()
 def duplicate_route(route_name: str, new_name: str):
 	"""Clone a route with a new name."""
-	_check_scm_permission(SCM_ADMIN_ROLES, "duplicate routes")
+	_check_scm_permission(SCM_ROUTE_MANAGEMENT_ROLES, "duplicate routes")
 
 	source = frappe.get_doc("BEI Route", route_name)
 
@@ -1743,13 +1996,18 @@ def duplicate_route(route_name: str, new_name: str):
 
 	_enable_role_gated_write(new_route)
 	new_route.insert(ignore_permissions=True)
+	_append_route_audit_comment(
+		new_route,
+		"duplicated",
+		f"Copied from {route_name}",
+	)
 	return {"success": True, "route": new_route.name}
 
 
 @frappe.whitelist()
 def reorder_stops(route_name: str, stop_order_map: dict[str, int] | str):
 	"""Reorder stops in a route. stop_order_map: {store: new_order}"""
-	_check_scm_permission(SCM_ADMIN_ROLES, "reorder stops")
+	_check_scm_permission(SCM_ROUTE_MANAGEMENT_ROLES, "reorder stops")
 
 	if isinstance(stop_order_map, str):
 		stop_order_map = frappe.parse_json(stop_order_map)
@@ -1768,6 +2026,7 @@ def reorder_stops(route_name: str, stop_order_map: dict[str, int] | str):
 
 	_enable_role_gated_write(route)
 	route.save(ignore_permissions=True)
+	_append_route_audit_comment(route, "reordered stops", f"Stops={len(route.stops)}")
 	return {"success": True, "route": route.name}
 
 
@@ -1802,6 +2061,23 @@ def get_driver_list():
 # ============================================================================
 
 DRIVER_DESIGNATIONS = ["Driver", "Helper", "Relief Driver", "Delivery Driver", "Truck Driver"]
+_NORMALIZED_DRIVER_DESIGNATIONS = {
+	"driver",
+	"helper",
+	"relief driver",
+	"delivery driver",
+	"truck driver",
+	"executive driver",
+}
+
+
+def _normalize_driver_designation(value: str | None) -> str:
+	return " ".join(str(value or "").strip().lower().split())
+
+
+def _is_driver_designation(value: str | None) -> bool:
+	normalized = _normalize_driver_designation(value)
+	return normalized in _NORMALIZED_DRIVER_DESIGNATIONS or normalized.endswith(" driver")
 
 
 @frappe.whitelist()
@@ -1819,21 +2095,33 @@ def get_available_drivers(date: str | None = None):
 	Returns:
 	    {"drivers": [DriverStatus, ...]}
 	"""
+	trip_date = date or nowdate()
+	set_backend_observability_context(
+		module="warehouse",
+		action="get_available_drivers",
+		route_action="get_available_drivers",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.dispatch.get_available_drivers",
+		phase="load",
+		extras={"trip_date": trip_date},
+	)
 	_check_scm_permission(SCM_DISPATCH_ROLES, "view available drivers")
 
-	trip_date = date or nowdate()
 	phone_field = _get_employee_phone_field()
 	driver_fields = ["name", "employee_name", "designation", "status"]
 	if phone_field:
 		driver_fields.append(phone_field)
 
-	# All active employees with driver designations
+	# Designation labels are not normalized consistently in live data
+	# (for example DRIVER vs Driver vs Executive Driver), so filter in
+	# Python after loading active employees.
 	all_drivers = frappe.get_all(
 		"Employee",
-		filters={"status": "Active", "designation": ["in", DRIVER_DESIGNATIONS]},
+		filters={"status": "Active"},
 		fields=driver_fields,
 		order_by="employee_name",
 	)
+	all_drivers = [driver for driver in all_drivers if _is_driver_designation(driver.designation)]
 
 	# Build a map of employee -> trip for the date
 	trips_on_date = frappe.get_all(

@@ -135,11 +135,23 @@ def _install_fake_dependencies(user_roles: list[str] | None = None):
 	_register_module("hrms.utils.bei_config", bei_config)
 
 	sales_location_mapping = types.ModuleType("hrms.utils.sales_location_mapping")
-	sales_location_mapping.lookup_store_name_by_location_id = lambda location_id: {
-		2338: "SM Megamall",
-		2112: "Ayala Solenad",
-		2339: "Ayala Evo",
-	}.get(int(location_id or 0))
+	sales_location_mapping.load_sales_location_mapping = lambda: {
+		"sm megamall": {
+			"location_id": 2338,
+			"warehouse_name": "SM Megamall",
+			"warehouse_record_name": "SM Megamall - Bebang Enterprise Inc.",
+		},
+		"ayala solenad": {
+			"location_id": 2112,
+			"warehouse_name": "Ayala Solenad",
+			"warehouse_record_name": "Ayala Solenad - Bebang Enterprise Inc.",
+		},
+		"ayala evo": {
+			"location_id": 2339,
+			"warehouse_name": "Ayala Evo",
+			"warehouse_record_name": "Ayala Evo - Bebang Enterprise Inc.",
+		},
+	}
 	_register_module("hrms.utils.sales_location_mapping", sales_location_mapping)
 
 	sentry_mod = types.ModuleType("hrms.utils.sentry")

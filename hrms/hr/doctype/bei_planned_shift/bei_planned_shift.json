@@ -13,6 +13,8 @@
   "shift_end",
   "ends_next_day",
   "shift_type",
+  "shift_source",
+  "leave_locked",
   "hours",
   "notes"
  ],
@@ -78,7 +80,24 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Shift Type",
-   "options": "Opening\nMid\nClosing\nOff\nCommissary - Dawn\nCommissary - Morning\nCommissary - Afternoon\nCommissary - Night"
+   "options": "Opening\nMid\nClosing\nOff\nDay Off\nVL\nSL\nCommissary - Dawn\nCommissary - Morning\nCommissary - Afternoon\nCommissary - Night"
+  },
+  {
+   "default": "manual",
+   "fieldname": "shift_source",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Shift Source",
+   "options": "manual\napproved_leave",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "leave_locked",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Leave Locked",
+   "read_only": 1
   },
   {
    "fieldname": "hours",

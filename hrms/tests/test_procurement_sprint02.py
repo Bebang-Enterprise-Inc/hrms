@@ -18,6 +18,9 @@ def _install_fake_frappe():
 
 	frappe = types.ModuleType("frappe")
 	utils = types.ModuleType("frappe.utils")
+	model = types.ModuleType("frappe.model")
+	workflow = types.ModuleType("frappe.model.workflow")
+	query_builder = types.ModuleType("frappe.query_builder")
 
 	class ValidationError(Exception):
 		pass
@@ -86,25 +89,56 @@ def _install_fake_frappe():
 	utils.cint = lambda value: int(float(value or 0))
 	utils.getdate = _getdate
 	utils.nowdate = lambda: "2026-02-27"
+	utils.today = lambda: "2026-02-27"
 	utils.add_days = _add_days
+	utils.date_diff = lambda end, start: (_getdate(end) - _getdate(start)).days
 	utils.get_first_day = _first_day
 	utils.get_last_day = _last_day
+	utils.strip_html = lambda value: value
+	utils.__getattr__ = lambda name: (lambda *args, **kwargs: None)
+	model.get_permitted_fields = lambda *args, **kwargs: []
+	workflow.get_workflow_name = lambda *args, **kwargs: None
+	query_builder.Order = types.SimpleNamespace(asc="asc", desc="desc")
 
 	sys.modules["frappe"] = frappe
 	sys.modules["frappe.utils"] = utils
+	sys.modules["frappe.model"] = model
+	sys.modules["frappe.model.workflow"] = workflow
+	sys.modules["frappe.query_builder"] = query_builder
 
 
 def _install_stub_dependencies():
 	bei_config = types.ModuleType("hrms.utils.bei_config")
 	bei_config.get_company = lambda: "Bebang Enterprises Inc."
+	hrms_api = types.ModuleType("hrms.api")
 
 	delivery_policy = types.ModuleType("hrms.utils.delivery_billing_policy")
 	delivery_policy.CPO_APPROVER_EMAIL = "mae@bebang.ph"
 	delivery_policy.CFO_APPROVER_EMAIL = "butch@bebang.ph"
 	delivery_policy.append_approval_audit_log = lambda *args, **kwargs: None
 
+	profile_policy = types.ModuleType("hrms.api.profile_policy")
+	profile_policy.is_reports_to_candidate = lambda *args, **kwargs: False
+	profile_policy.matches_reports_to_query = lambda *args, **kwargs: False
+	profile_policy.normalize_text = lambda value: value
+	profile_policy.resolve_reports_to_display_name = lambda *args, **kwargs: ""
+
+	erpnext = types.ModuleType("erpnext")
+	erpnext_setup = types.ModuleType("erpnext.setup")
+	erpnext_setup_doctype = types.ModuleType("erpnext.setup.doctype")
+	erpnext_employee_pkg = types.ModuleType("erpnext.setup.doctype.employee")
+	erpnext_employee = types.ModuleType("erpnext.setup.doctype.employee.employee")
+	erpnext_employee.get_holiday_list_for_employee = lambda *args, **kwargs: None
+
 	sys.modules["hrms.utils.bei_config"] = bei_config
+	sys.modules["hrms.api"] = hrms_api
 	sys.modules["hrms.utils.delivery_billing_policy"] = delivery_policy
+	sys.modules["hrms.api.profile_policy"] = profile_policy
+	sys.modules["erpnext"] = erpnext
+	sys.modules["erpnext.setup"] = erpnext_setup
+	sys.modules["erpnext.setup.doctype"] = erpnext_setup_doctype
+	sys.modules["erpnext.setup.doctype.employee"] = erpnext_employee_pkg
+	sys.modules["erpnext.setup.doctype.employee.employee"] = erpnext_employee
 
 
 _install_fake_frappe()
@@ -131,6 +165,19 @@ class _FormDoc:
 
 	def save(self, ignore_permissions=False):
 		self.save_calls += 1
+		return self
+
+
+class _InsertedDoc:
+	def __init__(self, payload, name="INV-TEST-0001"):
+		self.payload = dict(payload)
+		self.name = name
+		self.insert_calls = 0
+		for key, value in self.payload.items():
+			setattr(self, key, value)
+
+	def insert(self, ignore_permissions=False):
+		self.insert_calls += 1
 		return self
 
 
@@ -421,6 +468,231 @@ class TestProcurementSprint02(unittest.TestCase):
 		joined_sql = " ".join(queries[1:])
 		self.assertNotIn("IFNULL(si.custom_stock_entry, '') !=", joined_sql)
 		self.assertIn("Inter-company Sales Invoice for Hub Transfer SE:", joined_sql)
+
+	def test_create_goods_receipt_inherits_po_context_and_drops_invalid_received_by(self):
+		inserted_payload = {}
+
+		class _FakeInsertedGR:
+			name = "GR-2026-TEST01"
+
+			def insert(self):
+				return self
+
+		po = types.SimpleNamespace(
+			grand_total=985.6,
+			po_no="PO-2026512",
+			po_date="2026-03-09",
+			ship_to="Shaw BLVD - Bebang Enterprise Inc.",
+			items=[
+				types.SimpleNamespace(
+					item_code="A050",
+					item_name="CORNSTARCH",
+					description="CORNSTARCH",
+					qty=1,
+					uom="SACK",
+					unit_cost=880.0,
+				)
+			],
+		)
+
+		def _db_exists(doctype, name=None):
+			if doctype == "Employee" and name == "cayla (test)":
+				return False
+			if doctype == "UOM" and name == "SACK":
+				return True
+			return None
+
+		def _get_doc(arg, *args, **kwargs):
+			if isinstance(arg, str) and arg == "BEI Purchase Order":
+				return po
+			if isinstance(arg, dict):
+				inserted_payload.update(arg)
+				return _FakeInsertedGR()
+			raise AssertionError(f"Unexpected get_doc call: {arg!r}")
+
+		procurement.frappe.db.exists = MagicMock(side_effect=_db_exists)
+		procurement.frappe.db.get_value = MagicMock(return_value=None)
+		procurement.frappe.get_doc = MagicMock(side_effect=_get_doc)
+
+		result = procurement.create_goods_receipt(
+			{
+				"purchase_order": "PO-2026-01612",
+				"receipt_date": "2026-03-18",
+				"delivery_note_no": "000 test",
+				"received_by": "cayla (test)",
+				"items": [
+					{
+						"item_code": "A050",
+						"item_name": "CORNSTARCH",
+						"ordered_qty": 1,
+						"received_qty": 1,
+					}
+				],
+			}
+		)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(inserted_payload["warehouse"], "Shaw BLVD - Bebang Enterprise Inc.")
+		self.assertNotIn("received_by", inserted_payload)
+		self.assertEqual(inserted_payload["items"][0]["description"], "CORNSTARCH")
+		self.assertEqual(inserted_payload["items"][0]["unit_cost"], 880.0)
+		self.assertEqual(inserted_payload["items"][0]["uom"], "SACK")
+
+	def test_create_goods_receipt_resolves_received_by_employee_name(self):
+		inserted_payload = {}
+
+		class _FakeInsertedGR:
+			name = "GR-2026-TEST02"
+
+			def insert(self):
+				return self
+
+		po = types.SimpleNamespace(
+			grand_total=1000.0,
+			po_no="PO-2026999",
+			po_date="2026-03-18",
+			ship_to="Brittany Office - BEI",
+			items=[],
+		)
+
+		def _db_exists(doctype, name=None):
+			if doctype == "Employee" and name == "Cayla Cabagnot":
+				return False
+			return None
+
+		def _db_get_value(doctype, filters=None, fieldname=None):
+			if doctype == "Employee" and filters == {"employee_name": "Cayla Cabagnot"}:
+				return "HR-EMP-0001"
+			return None
+
+		def _get_doc(arg, *args, **kwargs):
+			if isinstance(arg, str) and arg == "BEI Purchase Order":
+				return po
+			if isinstance(arg, dict):
+				inserted_payload.update(arg)
+				return _FakeInsertedGR()
+			raise AssertionError(f"Unexpected get_doc call: {arg!r}")
+
+		procurement.frappe.db.exists = MagicMock(side_effect=_db_exists)
+		procurement.frappe.db.get_value = MagicMock(side_effect=_db_get_value)
+		procurement.frappe.get_doc = MagicMock(side_effect=_get_doc)
+
+		result = procurement.create_goods_receipt(
+			{
+				"purchase_order": "PO-2026-09999",
+				"receipt_date": "2026-03-18",
+				"received_by": "Cayla Cabagnot",
+				"items": [
+					{
+						"item_code": "RM001",
+						"item_name": "Sample Item",
+						"ordered_qty": 1,
+						"received_qty": 1,
+					}
+				],
+			}
+		)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(inserted_payload["received_by"], "HR-EMP-0001")
+
+	def test_create_invoice_backfills_supplier_context_from_purchase_order(self):
+		gr_doc = types.SimpleNamespace(
+			name="GR-TEST-0001",
+			purchase_order="PO-TEST-0001",
+		)
+		po_doc = types.SimpleNamespace(
+			name="PO-TEST-0001",
+			po_date="2026-02-28",
+			grand_total=1200,
+			mae_approval=1,
+			butch_approval=1,
+			supplier="SUP-001",
+			supplier_name="Supplier A",
+		)
+		captured = {}
+
+		def _get_doc(arg, *args, **kwargs):
+			if isinstance(arg, str) and arg == "BEI Goods Receipt":
+				return gr_doc
+			if isinstance(arg, str) and arg == "BEI Purchase Order":
+				return po_doc
+			if isinstance(arg, dict):
+				doc = _InsertedDoc(arg)
+				captured["invoice"] = doc
+				return doc
+			raise AssertionError(f"Unexpected get_doc call: {arg!r}")
+
+		procurement.frappe.db.exists = MagicMock(return_value="GR-TEST-0001")
+		procurement.frappe.get_doc = MagicMock(side_effect=_get_doc)
+
+		result = procurement.create_invoice(
+			{
+				"purchase_order": "PO-TEST-0001",
+				"goods_receipt": "GR-TEST-0001",
+				"supplier_invoice_no": "SI-0001",
+				"invoice_date": "2026-03-01",
+				"due_date": "2026-03-31",
+				"subtotal": 1000,
+				"vat_amount": 200,
+				"invoice_attachment": "/files/test.png",
+			}
+		)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(captured["invoice"].supplier, "SUP-001")
+		self.assertEqual(captured["invoice"].supplier_name, "Supplier A")
+		self.assertEqual(captured["invoice"].insert_calls, 1)
+
+	def test_create_invoice_backfills_purchase_order_and_supplier_from_goods_receipt(self):
+		gr_doc = types.SimpleNamespace(
+			name="GR-TEST-0001",
+			purchase_order="PO-TEST-0002",
+			supplier="SUP-002",
+			supplier_name="Supplier B",
+		)
+		po_doc = types.SimpleNamespace(
+			name="PO-TEST-0002",
+			po_date="2026-02-28",
+			grand_total=850,
+			mae_approval=1,
+			butch_approval=1,
+			supplier="SUP-002",
+			supplier_name="Supplier B",
+		)
+		captured = {}
+
+		def _get_doc(arg, *args, **kwargs):
+			if isinstance(arg, str) and arg == "BEI Goods Receipt":
+				return gr_doc
+			if isinstance(arg, str) and arg == "BEI Purchase Order":
+				return po_doc
+			if isinstance(arg, dict):
+				doc = _InsertedDoc(arg, name="INV-TEST-0002")
+				captured["invoice"] = doc
+				return doc
+			raise AssertionError(f"Unexpected get_doc call: {arg!r}")
+
+		procurement.frappe.db.exists = MagicMock(return_value="GR-TEST-0001")
+		procurement.frappe.get_doc = MagicMock(side_effect=_get_doc)
+
+		result = procurement.create_invoice(
+			{
+				"goods_receipt": "GR-TEST-0001",
+				"supplier_invoice_no": "SI-0002",
+				"invoice_date": "2026-03-01",
+				"due_date": "2026-03-31",
+				"subtotal": 850,
+				"vat_amount": 0,
+				"invoice_attachment": "/files/test.png",
+			}
+		)
+
+		self.assertTrue(result["success"])
+		self.assertEqual(captured["invoice"].purchase_order, "PO-TEST-0002")
+		self.assertEqual(captured["invoice"].supplier, "SUP-002")
+		self.assertEqual(captured["invoice"].supplier_name, "Supplier B")
+		self.assertEqual(captured["invoice"].insert_calls, 1)
 
 	def test_bei_purchase_order_doctype_is_submittable(self):
 		doctype_path = (

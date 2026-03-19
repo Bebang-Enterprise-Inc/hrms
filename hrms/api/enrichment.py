@@ -8,6 +8,8 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime, today
 
+from hrms.api.contact_validation import validate_email_address, validate_ph_mobile_number
+
 # ============================================================================
 # Data Enrichment V2 - Field Classification
 # ============================================================================
@@ -19,23 +21,37 @@ SELF_SERVICE_FIELDS = [
 	"cell_number",
 	"current_address",
 	"permanent_address",
-	"emergency_contact_name",
+	"person_to_be_contacted",
 	"emergency_phone_number",
-	"bank_name",
-	"bank_ac_no",
+	"relation",
+	"custom_uniform_size",
 ]
 
-# Fields that require HR approval (via BEI Edit Request)
+OPEN_ENRICHMENT_REQUEST_STATUSES = [
+	"Pending",
+	"Escalated",
+	"Revision Requested",
+]
+
+EMAIL_FIELDS = {"company_email", "personal_email"}
+PHONE_FIELDS = {"cell_number", "custom_work_phone", "emergency_phone_number"}
+
+# Fields that require HR approval (grouped enrichment submission)
 HR_APPROVAL_FIELDS = [
 	"first_name",
 	"middle_name",
 	"last_name",
 	"date_of_birth",
+	"gender",
 	"marital_status",
-	"ctc_sss",
-	"ctc_tin",
-	"ctc_philhealth",
-	"ctc_pagibig",
+	"company_email",
+	"custom_work_phone",
+	"bank_name",
+	"bank_ac_no",
+	"tin_number",
+	"sss_number",
+	"philhealth_number",
+	"pagibig_number",
 ]
 
 # Human-readable labels for fields
@@ -44,20 +60,25 @@ FIELD_LABELS = {
 	"middle_name": "Middle Name",
 	"last_name": "Last Name",
 	"date_of_birth": "Date of Birth",
+	"gender": "Gender",
 	"marital_status": "Marital Status",
-	"ctc_sss": "SSS Number",
-	"ctc_tin": "TIN",
-	"ctc_philhealth": "PhilHealth Number",
-	"ctc_pagibig": "Pag-IBIG Number",
+	"company_email": "Company Email",
+	"custom_work_phone": "Work Phone",
+	"tin_number": "TIN",
+	"sss_number": "SSS Number",
+	"philhealth_number": "PhilHealth Number",
+	"pagibig_number": "Pag-IBIG Number",
 	"custom_nickname": "Nickname",
 	"personal_email": "Personal Email",
-	"cell_number": "Mobile Number",
+	"cell_number": "Personal Phone",
 	"current_address": "Current Address",
 	"permanent_address": "Permanent Address",
-	"emergency_contact_name": "Emergency Contact Name",
+	"person_to_be_contacted": "Emergency Contact Name",
 	"emergency_phone_number": "Emergency Contact Phone",
+	"relation": "Relationship",
 	"bank_name": "Bank Name",
 	"bank_ac_no": "Bank Account Number",
+	"custom_uniform_size": "Uniform Size",
 }
 
 
@@ -81,6 +102,7 @@ def get_enrichment_dashboard(store: str | None = None) -> dict:
 		fields=[
 			"name",
 			"employee_name",
+			"custom_nickname",
 			"first_name",
 			"last_name",
 			"branch",
@@ -562,6 +584,18 @@ def update_self_service_field(employee: str, field_name: str, value: str) -> dic
 	if field_name not in SELF_SERVICE_FIELDS:
 		frappe.throw(_("Field '{0}' requires HR approval. Please submit an edit request.").format(field_name))
 
+	value = str(value or "").strip()
+	if field_name in EMAIL_FIELDS:
+		email_validation = validate_email_address(value)
+		if not email_validation["valid"]:
+			frappe.throw(_(email_validation["error"]))
+		value = email_validation["normalized"]
+	elif field_name in PHONE_FIELDS:
+		phone_validation = validate_ph_mobile_number(value)
+		if not phone_validation["valid"]:
+			frappe.throw(_(phone_validation["error"]))
+		value = phone_validation["normalized"]
+
 	# Validate user can edit this employee (must be own record)
 	user = frappe.session.user
 	user_employee = frappe.db.get_value("Employee", {"user_id": user, "status": "Active"}, "name")
@@ -720,9 +754,29 @@ def get_enrichment_tracker(
 			"name as employee_id",
 			"employee_name",
 			"branch",
+			"department",
+			"designation",
+			"custom_nickname",
 			"custom_enrichment_status as enrichment_status",
+			"custom_enrichment_submitted_date",
+			"custom_enrichment_complete_date",
 			"user_id as email",
+			"company_email",
+			"personal_email",
 			"cell_number",
+			"custom_work_phone",
+			"current_address",
+			"permanent_address",
+			"person_to_be_contacted",
+			"emergency_phone_number",
+			"relation",
+			"bank_name",
+			"bank_ac_no",
+			"tin_number",
+			"sss_number",
+			"philhealth_number",
+			"pagibig_number",
+			"custom_uniform_size",
 		],
 		order_by="custom_enrichment_status asc, employee_name asc",
 		start=offset,
@@ -738,13 +792,20 @@ def get_enrichment_tracker(
 	total_count = frappe.db.count("Employee", filters)
 	total_pages = (total_count + page_size - 1) // page_size
 
-	# Get pending edit requests count
-	pending_requests = frappe.db.count("BEI Edit Request", {"status": "Pending"})
+	# Get grouped enrichment submission count
+	pending_requests = frappe.db.count(
+		"BEI Onboarding Request",
+		{
+			"request_type": "update_existing",
+			"status": ("in", OPEN_ENRICHMENT_REQUEST_STATUSES),
+		},
+	)
 
 	return {
 		"summary": summary,
 		"by_branch": by_branch,
 		"employees": employees,
+		"pending_requests": pending_requests,
 		"pending_edit_requests": pending_requests,
 		"pagination": {
 			"page": page,
@@ -759,6 +820,7 @@ def get_enrichment_tracker(
 def send_enrichment_reminders(
 	employees: list | None = None,
 	branch: str | None = None,
+	status_filter: str | None = None,
 	method: str = "email",
 ) -> dict:
 	"""Send reminder notifications to employees who haven't completed enrichment.
@@ -791,8 +853,14 @@ def send_enrichment_reminders(
 	else:
 		filters = {
 			"status": "Active",
-			"custom_enrichment_status": ("in", ["Not Started", "", None]),
 		}
+		if status_filter:
+			if status_filter == "Not Started":
+				filters["custom_enrichment_status"] = ("in", ["Not Started", "", None])
+			else:
+				filters["custom_enrichment_status"] = status_filter
+		else:
+			filters["custom_enrichment_status"] = ("in", ["Not Started", "", None])
 		if branch:
 			filters["branch"] = branch
 		targets = frappe.get_all(
@@ -800,6 +868,19 @@ def send_enrichment_reminders(
 			filters=filters,
 			fields=["name", "employee_name", "user_id", "cell_number"],
 		)
+
+	# Suppress reminders for employees with open grouped enrichment submissions
+	open_request_employees = set(
+		frappe.get_all(
+			"BEI Onboarding Request",
+			filters={
+				"request_type": "update_existing",
+				"status": ("in", OPEN_ENRICHMENT_REQUEST_STATUSES),
+			},
+			pluck="employee",
+		)
+	)
+	targets = [emp for emp in targets if emp.get("name") not in open_request_employees]
 
 	sent_count = 0
 	failed_count = 0
@@ -846,6 +927,7 @@ def send_enrichment_reminders(
 def queue_enrichment_reminders(
 	employees: list | None = None,
 	branch: str | None = None,
+	status_filter: str | None = None,
 	method: str = "email",
 ) -> dict:
 	"""Queue enrichment reminders with direct-call fallback."""
@@ -855,6 +937,7 @@ def queue_enrichment_reminders(
 			queue="short",
 			employees=employees,
 			branch=branch,
+			status_filter=status_filter,
 			method=method,
 			enqueue_after_commit=True,
 		)
@@ -871,6 +954,7 @@ def queue_enrichment_reminders(
 		result = send_enrichment_reminders(
 			employees=employees,
 			branch=branch,
+			status_filter=status_filter,
 			method=method,
 		)
 		result["status"] = "queued_fallback"

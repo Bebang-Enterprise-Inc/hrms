@@ -7,6 +7,8 @@ Split from commissary.py (P0-11) for maintainability.
 """
 
 import json
+import time
+from contextlib import contextmanager
 from typing import Any
 
 import frappe
@@ -14,6 +16,57 @@ from frappe import _
 from frappe.utils import add_days, flt, today
 
 from hrms.api.commissary import get_commissary_company, get_commissary_warehouse
+from hrms.utils.scm_roles import SCM_COMMISSARY_ROLES, check_scm_permission
+from hrms.utils.sentry import set_backend_observability_context
+
+
+def _enable_role_gated_write(doc: Any):
+	if getattr(doc, "flags", None) is None:
+		doc.flags = type("_CommissaryDashboardDocFlags", (), {})()
+	doc.flags.ignore_permissions = True
+	doc.flags.ignore_user_permissions = True
+	return doc
+
+
+@contextmanager
+def _run_as_system_user(user: str = "Administrator"):
+	session = getattr(frappe, "session", None)
+	if session is None:
+		session = getattr(getattr(frappe, "local", None), "session", None)
+	original_user = getattr(session, "user", None)
+	try:
+		if session and user:
+			session.user = user
+		yield
+	finally:
+		if session and original_user:
+			session.user = original_user
+
+
+def _rollback_savepoint(savepoint_name: str):
+	rollback = getattr(getattr(frappe, "db", None), "rollback", None)
+	if not callable(rollback):
+		return
+	try:
+		rollback(save_point=savepoint_name)
+	except TypeError:
+		rollback()
+
+
+def _release_savepoint(savepoint_name: str):
+	release = getattr(getattr(frappe, "db", None), "release_savepoint", None)
+	if callable(release):
+		release(savepoint_name)
+
+
+def _is_retryable_stock_entry_submit_error(exc: Exception) -> bool:
+	message = str(exc).lower()
+	return (
+		"lock wait timeout exceeded" in message
+		or "deadlock found" in message
+		or "try restarting transaction" in message
+	)
+
 
 # ============================================================
 # DASHBOARD / SUMMARY
@@ -169,6 +222,14 @@ def get_production_items() -> dict[str, Any]:
 	Get finished goods that commissary produces.
 	Returns items with current stock levels.
 	"""
+	set_backend_observability_context(
+		module="commissary",
+		action="get_production_items",
+		route_action="get_production_items",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.commissary_dashboard.get_production_items",
+		phase="load",
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	# P0-12: Batch query — get items + stock in one query (was N+1)
@@ -282,23 +343,27 @@ def submit_production_output(
 	    batch_no: Optional batch reference (will auto-create if doesn't exist)
 	    remarks: Optional production notes
 	"""
+	check_scm_permission(SCM_COMMISSARY_ROLES, "record commissary production output")
+
 	if isinstance(items, str):
 		items = json.loads(items)
 
+	set_backend_observability_context(
+		module="commissary",
+		action="submit_production_output",
+		route_action="submit_production_output",
+		mutation_type="create",
+		endpoint_or_job="hrms.api.commissary_dashboard.submit_production_output",
+		phase="mutation",
+		extras={
+			"batch_no": batch_no,
+			"item_count": len(items) if isinstance(items, list) else None,
+		},
+	)
 	if not items:
 		frappe.throw(_("No items to record"))
 
 	commissary_warehouse = get_commissary_warehouse()
-
-	se = frappe.new_doc("Stock Entry")
-	se.company = get_commissary_company()
-	se.posting_date = today()
-	se.posting_time = frappe.utils.nowtime()
-	se.to_warehouse = commissary_warehouse
-	se.remarks = _build_production_remarks(batch_no=batch_no, remarks=remarks)
-
-	# Try Manufacture type if BOM exists (auto-deducts raw materials)
-	# Fall back to Material Receipt if no BOM available
 	first_item_code = items[0]["item_code"] if items else None
 	bom = None
 	if first_item_code:
@@ -309,70 +374,99 @@ def submit_production_output(
 			as_dict=True,
 		)
 
-	if bom:
-		# Use Manufacture type - auto-deducts RM from BOM
-		se.stock_entry_type = "Manufacture"
-		se.from_bom = 1
-		se.bom_no = bom.name
-		se.fg_completed_qty = sum(flt(i["qty"]) for i in items)
-		se.from_warehouse = commissary_warehouse  # RM source
-		se.get_items()
+	se = None
+	for attempt in range(3):
+		savepoint_name = f"commissary_production_{attempt}"
+		savepoint = getattr(getattr(frappe, "db", None), "savepoint", None)
+		if callable(savepoint):
+			savepoint(savepoint_name)
 
-		# Only add FG if not already present from BOM
-		fg_already_present = any(
-			item.item_code == first_item_code and item.is_finished_item for item in se.items
-		)
-		item = frappe.get_doc("Item", first_item_code)
-		if not fg_already_present:
-			fg_row = se.append(
-				"items",
-				{
-					"item_code": first_item_code,
-					"item_name": item.item_name,
-					"description": item.description,
-					"qty": se.fg_completed_qty,
-					"uom": item.stock_uom,
-					"stock_uom": item.stock_uom,
-					"conversion_factor": 1,
-					"t_warehouse": commissary_warehouse,
-					"is_finished_item": 1,
-					"is_scrap_item": 0,
-				},
-			)
-		else:
-			# Get reference to the existing FG row for batch assignment below
-			fg_row = next(i for i in se.items if i.item_code == first_item_code and i.is_finished_item)
+		try:
+			se = frappe.new_doc("Stock Entry")
+			se.company = get_commissary_company()
+			se.posting_date = today()
+			se.posting_time = frappe.utils.nowtime()
+			se.to_warehouse = commissary_warehouse
+			se.remarks = _build_production_remarks(batch_no=batch_no, remarks=remarks)
 
-		# Override batch on FG if provided
-		if batch_no and batch_no.strip():
-			valid_batch = get_or_create_batch(batch_no, first_item_code)
-			if valid_batch:
-				fg_row.batch_no = valid_batch
-	else:
-		# Fallback: Material Receipt (no RM deduction)
-		se.stock_entry_type = "Material Receipt"
+			if bom:
+				# Use Manufacture type - auto-deducts RM from BOM
+				se.stock_entry_type = "Manufacture"
+				se.from_bom = 1
+				se.bom_no = bom.name
+				se.fg_completed_qty = sum(flt(i["qty"]) for i in items)
+				se.from_warehouse = commissary_warehouse  # RM source
+				se.get_items()
 
-		for item_data in items:
-			item = frappe.get_doc("Item", item_data["item_code"])
+				# Only add FG if not already present from BOM
+				fg_already_present = any(
+					item.item_code == first_item_code and item.is_finished_item for item in se.items
+				)
+				item = frappe.get_doc("Item", first_item_code)
+				if not fg_already_present:
+					fg_row = se.append(
+						"items",
+						{
+							"item_code": first_item_code,
+							"item_name": item.item_name,
+							"description": item.description,
+							"qty": se.fg_completed_qty,
+							"uom": item.stock_uom,
+							"stock_uom": item.stock_uom,
+							"conversion_factor": 1,
+							"t_warehouse": commissary_warehouse,
+							"is_finished_item": 1,
+							"is_scrap_item": 0,
+						},
+					)
+				else:
+					# Get reference to the existing FG row for batch assignment below
+					fg_row = next(
+						i for i in se.items if i.item_code == first_item_code and i.is_finished_item
+					)
 
-			item_row = {
-				"item_code": item_data["item_code"],
-				"item_name": item.item_name,
-				"description": item.description,
-				"qty": flt(item_data["qty"]),
-				"uom": item_data.get("uom") or item.stock_uom,
-				"stock_uom": item.stock_uom,
-				"conversion_factor": 1,
-				"t_warehouse": commissary_warehouse,
-			}
-			if batch_no and batch_no.strip():
-				valid_batch = get_or_create_batch(batch_no, item_data["item_code"])
-				if valid_batch:
-					item_row["batch_no"] = valid_batch
-			se.append("items", item_row)
+				# Override batch on FG if provided
+				if batch_no and batch_no.strip():
+					valid_batch = get_or_create_batch(batch_no, first_item_code)
+					if valid_batch:
+						fg_row.batch_no = valid_batch
+			else:
+				# Fallback: Material Receipt (no RM deduction)
+				se.stock_entry_type = "Material Receipt"
 
-	se.insert()
-	se.submit()
+				for item_data in items:
+					item = frappe.get_doc("Item", item_data["item_code"])
+
+					item_row = {
+						"item_code": item_data["item_code"],
+						"item_name": item.item_name,
+						"description": item.description,
+						"qty": flt(item_data["qty"]),
+						"uom": item_data.get("uom") or item.stock_uom,
+						"stock_uom": item.stock_uom,
+						"conversion_factor": 1,
+						"t_warehouse": commissary_warehouse,
+					}
+					if batch_no and batch_no.strip():
+						valid_batch = get_or_create_batch(batch_no, item_data["item_code"])
+						if valid_batch:
+							item_row["batch_no"] = valid_batch
+					se.append("items", item_row)
+
+			_enable_role_gated_write(se)
+			with _run_as_system_user():
+				se.insert(ignore_permissions=True)
+				se = frappe.get_doc("Stock Entry", se.name)
+				_enable_role_gated_write(se)
+				se.submit()
+
+			_release_savepoint(savepoint_name)
+			break
+		except Exception as exc:
+			_rollback_savepoint(savepoint_name)
+			if attempt == 2 or not _is_retryable_stock_entry_submit_error(exc):
+				raise
+			time.sleep(0.2 * (attempt + 1))
 
 	# G-051: FEFO warnings — check if older batches were skipped
 	fefo_warnings = _check_fefo_warnings(se, commissary_warehouse)
@@ -432,6 +526,15 @@ def get_production_history(
 	"""
 	Get production history.
 	"""
+	set_backend_observability_context(
+		module="commissary",
+		action="get_production_history",
+		route_action="get_production_history",
+		mutation_type="load",
+		endpoint_or_job="hrms.api.commissary_dashboard.get_production_history",
+		phase="load",
+		extras={"date_from": date_from, "date_to": date_to, "limit": limit},
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	filters = {

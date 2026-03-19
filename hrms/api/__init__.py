@@ -7,6 +7,13 @@ from frappe.utils import add_days, date_diff, getdate, strip_html
 
 from erpnext.setup.doctype.employee.employee import get_holiday_list_for_employee
 
+from hrms.api.profile_policy import (
+	is_reports_to_candidate,
+	matches_reports_to_query,
+	normalize_text,
+	resolve_reports_to_display_name,
+)
+
 SUPPORTED_FIELD_TYPES = [
 	"Link",
 	"Select",
@@ -59,6 +66,21 @@ def get_current_employee_info() -> dict:
 	return employee
 
 
+def _resolve_self_service_employee(employee: str | None) -> str:
+	employee_name = str(employee or "").strip()
+	if employee_name:
+		return employee_name
+
+	current_employee = frappe.db.get_value(
+		"Employee",
+		{"user_id": frappe.session.user, "status": "Active"},
+		"name",
+	)
+	if not current_employee:
+		frappe.throw(_("No active employee record found for the current user."))
+	return current_employee
+
+
 @frappe.whitelist()
 def get_all_employees() -> list[dict]:
 	return frappe.get_all(
@@ -76,6 +98,129 @@ def get_all_employees() -> list[dict]:
 		],
 		limit=999999,
 	)
+
+
+@frappe.whitelist()
+def search_reports_to_candidates(
+	query: str | None = None,
+	branch: str | None = None,
+	limit: int = 30,
+	selected_employee: str | None = None,
+) -> list[dict]:
+	"""Search active supervisor/manager/executive records for reports_to pickers."""
+	try:
+		limit = max(1, min(int(limit or 30), 50))
+	except Exception:
+		limit = 30
+
+	rows = frappe.get_all(
+		"Employee",
+		filters={"status": "Active"},
+		fields=[
+			"name",
+			"employee_name",
+			"first_name",
+			"last_name",
+			"designation",
+			"department",
+			"branch",
+			"user_id",
+			"image",
+		],
+		order_by="employee_name asc",
+		limit_page_length=2000,
+	)
+
+	user_ids = sorted({row.get("user_id") for row in rows if row.get("user_id")})
+	user_map: dict[str, dict] = {}
+	if user_ids:
+		user_rows = frappe.get_all(
+			"User",
+			filters={"name": ["in", user_ids]},
+			fields=["name", "full_name", "first_name", "last_name"],
+			limit_page_length=len(user_ids),
+		)
+		user_map = {row.get("name"): row for row in user_rows if row.get("name")}
+
+	branch_norm = normalize_text(branch)
+	candidates = [row for row in rows if is_reports_to_candidate(row)]
+
+	if query:
+		candidates = [
+			row
+			for row in candidates
+			if matches_reports_to_query(row, user_map.get(row.get("user_id")), query)
+		]
+
+	def _priority(row: dict) -> tuple[int, int, str]:
+		designation = normalize_text(row.get("designation"))
+		department = normalize_text(row.get("department"))
+		row_branch = normalize_text(row.get("branch"))
+
+		if any(keyword in designation for keyword in ("CEO", "PRESIDENT", "FOUNDER", "OWNER", "CHAIRMAN")):
+			role_rank = 0
+		elif (
+			"EXECUTIVE" in department or "CHIEF" in designation or "VP" in designation or "AVP" in designation
+		):
+			role_rank = 1
+		elif "AREA SUPERVISOR" in designation or "AREA MANAGER" in designation:
+			role_rank = 2
+		elif "MANAGER" in designation or "HEAD" in designation or "DIRECTOR" in designation:
+			role_rank = 3
+		else:
+			role_rank = 4
+
+		branch_rank = 0 if branch_norm and row_branch == branch_norm else 1
+		return (role_rank, branch_rank, normalize_text(row.get("employee_name")))
+
+	candidates.sort(key=_priority)
+
+	selected_row = None
+	if selected_employee:
+		selected_row = next((row for row in rows if row.get("name") == selected_employee), None)
+		if selected_row and not is_reports_to_candidate(selected_row):
+			selected_row = None
+
+	results = []
+	seen = set()
+
+	if selected_row:
+		seen.add(selected_row.get("name"))
+		results.append(selected_row)
+
+	for row in candidates:
+		name = row.get("name")
+		if not name or name in seen:
+			continue
+		seen.add(name)
+		results.append(row)
+		if len(results) >= limit:
+			break
+
+	return [_build_reports_to_candidate_response(row, user_map.get(row.get("user_id"))) for row in results]
+
+
+def _build_reports_to_candidate_response(employee_row: dict, user_row: dict | None = None) -> dict:
+	employee_name = employee_row.get("employee_name") or ""
+	full_name = (user_row or {}).get("full_name") or ""
+	display_name = _resolve_reports_to_display_name(employee_name, full_name)
+
+	return {
+		"name": employee_row.get("name"),
+		"employee_id": employee_row.get("name"),
+		"employee_name": employee_name,
+		"display_name": display_name,
+		"full_name": full_name,
+		"designation": employee_row.get("designation") or "",
+		"department": employee_row.get("department") or "",
+		"branch": employee_row.get("branch") or "",
+		"user_id": employee_row.get("user_id") or "",
+		"image": employee_row.get("image") or "",
+	}
+
+
+def _resolve_reports_to_display_name(employee_name: str, full_name: str) -> str:
+	return resolve_reports_to_display_name(employee_name, full_name)
 
 
 # HR Settings
@@ -158,11 +303,12 @@ def get_holidays_for_calendar(employee: str, from_date: str, to_date: str) -> li
 
 @frappe.whitelist()
 def get_shift_requests(
-	employee: str,
+	employee: str | None = None,
 	approver_id: str | None = None,
 	for_approval: bool = False,
 	limit: int | None = None,
 ) -> list[dict]:
+	employee = _resolve_self_service_employee(employee)
 	filters = get_filters("Shift Request", employee, approver_id, for_approval)
 	fields = [
 		"name",
@@ -264,7 +410,8 @@ def get_filters(
 
 
 @frappe.whitelist()
-def get_shift_request_approvers(employee: str) -> str | list[str]:
+def get_shift_request_approvers(employee: str | None = None) -> str | list[str]:
+	employee = _resolve_self_service_employee(employee)
 	shift_request_approver, department = frappe.get_cached_value(
 		"Employee",
 		employee,

@@ -12,10 +12,12 @@ All endpoints use @frappe.whitelist() for external access.
 
 import json
 import re
+from typing import Any
 
 import frappe
 from hrms.utils.bei_config import get_company
 from hrms.utils.delivery_billing_policy import CPO_APPROVER_EMAIL, CFO_APPROVER_EMAIL, append_approval_audit_log
+from hrms.utils.procurement_math import calculate_goods_receipt_gross_total
 from frappe import _
 from frappe.utils import flt, cint, getdate, nowdate, add_days, get_first_day, get_last_day
 
@@ -40,6 +42,56 @@ _SUPPLIER_INVOICE_EXCEPTION_MANAGER_ROLES = {
 def _sanitize_doc_data(data):
     """Remove system/internal fields from user-supplied data before doc creation."""
     return {k: v for k, v in data.items() if k not in _BLOCKED_FIELDS}
+
+
+def _populate_payment_request_invoice_context(data: dict[str, Any], invoice: Any) -> None:
+    """Backfill canonical vendor-invoice fields from the linked invoice."""
+    if not data.get("supplier") and getattr(invoice, "supplier", None):
+        data["supplier"] = invoice.supplier
+
+    if not data.get("supplier_name"):
+        supplier_name = getattr(invoice, "supplier_name", None)
+        if not supplier_name and data.get("supplier"):
+            supplier_name = frappe.db.get_value("BEI Supplier", data["supplier"], "supplier_name")
+        if supplier_name:
+            data["supplier_name"] = supplier_name
+
+    if not data.get("purchase_order") and getattr(invoice, "purchase_order", None):
+        data["purchase_order"] = invoice.purchase_order
+
+    if not data.get("goods_receipt") and getattr(invoice, "goods_receipt", None):
+        data["goods_receipt"] = invoice.goods_receipt
+
+    if not data.get("payment_amount"):
+        data["payment_amount"] = flt(invoice.balance_due or invoice.grand_total, 2)
+
+    if not data.get("rfp_type"):
+        data["rfp_type"] = "Vendor Invoice"
+
+
+def _populate_invoice_context(
+    data: dict[str, Any],
+    purchase_order: Any | None = None,
+    goods_receipt: Any | None = None,
+) -> None:
+    """Backfill invoice party context from linked procurement documents."""
+    if not data.get("purchase_order") and getattr(goods_receipt, "purchase_order", None):
+        data["purchase_order"] = goods_receipt.purchase_order
+
+    if not data.get("supplier"):
+        supplier = getattr(purchase_order, "supplier", None) or getattr(goods_receipt, "supplier", None)
+        if supplier:
+            data["supplier"] = supplier
+
+    if not data.get("supplier_name"):
+        supplier_name = (
+            getattr(purchase_order, "supplier_name", None)
+            or getattr(goods_receipt, "supplier_name", None)
+        )
+        if not supplier_name and data.get("supplier"):
+            supplier_name = frappe.db.get_value("BEI Supplier", data["supplier"], "supplier_name")
+        if supplier_name:
+            data["supplier_name"] = supplier_name
 
 
 def _require_roles(allowed_roles: set[str], message: str) -> None:
@@ -508,6 +560,33 @@ def _clean_optional_filter(value):
     return (value or "").strip() if isinstance(value, str) else value
 
 
+def _normalize_status_filters(filters: dict[str, Any] | None) -> list[str]:
+    """Normalize single- or multi-status filters from query params."""
+    filters = filters or {}
+    raw_statuses = filters.get("statuses")
+
+    if isinstance(raw_statuses, str):
+        try:
+            raw_statuses = frappe.parse_json(raw_statuses)
+        except Exception:
+            raw_statuses = [raw_statuses]
+
+    if raw_statuses is None:
+        raw_status = _clean_optional_filter(filters.get("status"))
+        return [raw_status] if raw_status else []
+
+    if not isinstance(raw_statuses, (list, tuple, set)):
+        raw_statuses = [raw_statuses]
+
+    normalized: list[str] = []
+    for value in raw_statuses:
+        cleaned = _clean_optional_filter(value)
+        if cleaned and cleaned not in normalized:
+            normalized.append(cleaned)
+
+    return normalized
+
+
 def build_purchase_order_operational_filters(filters=None):
     """Build exact item_code + warehouse filter clauses for PO drilldowns."""
     filters = filters or {}
@@ -556,8 +635,119 @@ def build_payment_request_operational_filters(filters=None):
     return clauses, values
 
 
+def _normalize_purchase_order_payload(data):
+    """Compute authoritative PO totals from line items and document-level adjustments."""
+    normalized = dict(data or {})
+    normalized_items = []
+    subtotal = 0.0
+    vat_total = 0.0
+
+    for raw_item in normalized.get("items") or []:
+        item = dict(raw_item or {})
+
+        if "rate" in item and "unit_cost" not in item:
+            item["unit_cost"] = item.pop("rate")
+
+        if item.get("uom") and not frappe.db.exists("UOM", item["uom"]):
+            item.pop("uom")
+
+        qty = flt(item.get("qty"), 2)
+        unit_cost = flt(item.get("unit_cost"), 2)
+        vat_rate = flt(item.get("vat_rate") if item.get("vat_rate") is not None else 12, 2)
+
+        line_subtotal = flt(qty * unit_cost, 2)
+        line_vat = flt(line_subtotal * vat_rate / 100, 2)
+
+        item["qty"] = qty
+        item["unit_cost"] = unit_cost
+        item["vat_rate"] = vat_rate
+        item["vat_amount"] = line_vat
+        item["amount"] = flt(line_subtotal + line_vat, 2)
+
+        subtotal += line_subtotal
+        vat_total += line_vat
+        normalized_items.append(item)
+
+    discount_amount = flt(normalized.get("discount_amount"), 2)
+    delivery_fee = flt(normalized.get("delivery_fee"), 2)
+    grand_total = flt(subtotal + vat_total - discount_amount + delivery_fee, 2)
+
+    normalized["items"] = normalized_items
+    normalized["subtotal"] = flt(subtotal, 2)
+    normalized["vat_amount"] = flt(vat_total, 2)
+    normalized["discount_amount"] = discount_amount
+    normalized["delivery_fee"] = delivery_fee
+    normalized["grand_total"] = grand_total
+    normalized["requires_dual_approval"] = 1 if grand_total > 500000 else 0
+
+    return normalized
+
+
+def _normalize_invoice_payload(data):
+    """Compute authoritative invoice subtotal/VAT totals from submitted line hints."""
+    normalized = dict(data or {})
+    raw_items = normalized.pop("items", None) or []
+
+    subtotal = normalized.get("subtotal", normalized.get("net_total"))
+    vat_amount = normalized.get("vat_amount", normalized.get("tax_amount"))
+
+    if raw_items:
+        subtotal = 0.0
+        vat_amount = 0.0
+
+        for raw_item in raw_items:
+            item = dict(raw_item or {})
+            qty = flt(item.get("qty"), 2)
+            rate = flt(item.get("rate") or item.get("unit_cost"), 2)
+            line_subtotal = flt(qty * rate, 2)
+
+            if item.get("vat_rate") not in (None, ""):
+                line_vat = flt(line_subtotal * flt(item.get("vat_rate"), 2) / 100, 2)
+            elif item.get("vat_amount") not in (None, ""):
+                line_vat = flt(item.get("vat_amount"), 2)
+            elif item.get("amount") not in (None, ""):
+                line_vat = max(flt(item.get("amount"), 2) - line_subtotal, 0)
+            else:
+                line_vat = 0.0
+
+            subtotal += line_subtotal
+            vat_amount += flt(line_vat, 2)
+
+    normalized["subtotal"] = flt(subtotal, 2)
+    normalized["vat_amount"] = flt(vat_amount, 2)
+    normalized["withholding_tax"] = flt(normalized.get("withholding_tax"), 2)
+    normalized["grand_total"] = flt(
+        normalized["subtotal"] + normalized["vat_amount"] - normalized["withholding_tax"], 2
+    )
+    normalized.pop("net_total", None)
+    normalized.pop("tax_amount", None)
+
+    return normalized
+
+
+def _augment_purchase_order_response(data):
+    """Expose legacy aliases while keeping canonical VAT fields available."""
+    data["net_total"] = flt(data.get("subtotal"), 2)
+    data["tax_amount"] = flt(data.get("vat_amount"), 2)
+    return data
+
+
+def _augment_invoice_response(data):
+    """Expose stable aliases expected by the portal detail/list contracts."""
+    data["invoice_number"] = data.get("invoice_no")
+    data["po_number"] = data.get("purchase_order")
+    data["net_total"] = flt(data.get("subtotal"), 2)
+    data["tax_amount"] = flt(data.get("vat_amount"), 2)
+    return data
+
+
 @frappe.whitelist()
-def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
+def get_purchase_orders(
+    filters: dict[str, Any] | str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 20,
+    search: str | None = None,
+) -> dict[str, Any]:
     """Get paginated list of POs."""
     conditions = []
     values = {}
@@ -574,9 +764,17 @@ def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
             filters = frappe.parse_json(filters)
         applied_filters = dict(filters)
 
-        if filters.get("status"):
+        statuses = _normalize_status_filters(filters)
+        if len(statuses) == 1:
             conditions.append("status = %(status)s")
-            values["status"] = filters["status"]
+            values["status"] = statuses[0]
+        elif statuses:
+            placeholders = []
+            for index, status_value in enumerate(statuses):
+                key = f"status_{index}"
+                placeholders.append(f"%({key})s")
+                values[key] = status_value
+            conditions.append(f"status IN ({', '.join(placeholders)})")
 
         if filters.get("supplier"):
             conditions.append("supplier = %(supplier)s")
@@ -597,21 +795,25 @@ def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
 
-    total = frappe.db.sql(
-        f"SELECT COUNT(*) FROM `tabBEI Purchase Order` WHERE {where_clause}",
-        values
-    )[0][0]
+    total_query = "SELECT COUNT(*) FROM `tabBEI Purchase Order` WHERE " + where_clause
+    total = frappe.db.sql(total_query, values)[0][0]
 
-    pos = frappe.db.sql(f"""
+    po_query = """
         SELECT
             name, po_no, po_date, status, supplier, supplier_name,
-            grand_total, requires_dual_approval, mae_approval, butch_approval,
+            subtotal, vat_amount, grand_total,
+            discount_amount, delivery_fee,
+            subtotal as net_total, vat_amount as tax_amount,
+            requires_dual_approval, mae_approval, butch_approval,
             delivery_date
         FROM `tabBEI Purchase Order`
-        WHERE {where_clause}
+        WHERE """
+    po_query += where_clause
+    po_query += """
         ORDER BY po_date DESC
         LIMIT %(page_size)s OFFSET %(offset)s
-    """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+    """
+    pos = frappe.db.sql(po_query, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
 
     if _clean_optional_filter(applied_filters.get("item_code")):
         for row in pos:
@@ -630,7 +832,7 @@ def get_purchase_orders(filters=None, page=1, page_size=20, search=None):
 
 
 @frappe.whitelist()
-def get_purchase_order(name):
+def get_purchase_order(name: str) -> dict[str, Any]:
     """Get single PO with items."""
     po = frappe.get_doc("BEI Purchase Order", name)
     data = po.as_dict()
@@ -638,22 +840,23 @@ def get_purchase_order(name):
     # Ensure items are always present (even if child table was added after PO creation)
     if not data.get("items"):
         items = frappe.db.sql("""
-            SELECT name, item_code, item_name, description, qty, rate, amount, uom
+            SELECT name, item_code, item_name, description, qty,
+                   unit_cost, unit_cost as rate, vat_rate, vat_amount, amount, uom, received_qty
             FROM `tabBEI PO Item`
             WHERE parent = %s
             ORDER BY idx
         """, (name,), as_dict=True)
         data["items"] = items
 
-    return data
+    return _augment_purchase_order_response(data)
 
 
 @frappe.whitelist()
-def get_purchase_order_items(name):
+def get_purchase_order_items(name: str) -> list[dict[str, Any]]:
     """Get items for a specific PO."""
     return frappe.db.sql("""
-        SELECT name, item_code, item_name, description, qty, unit_cost, unit_cost as rate, amount, uom,
-               received_qty
+        SELECT name, item_code, item_name, description, qty, unit_cost, unit_cost as rate,
+               vat_rate, vat_amount, amount, uom, received_qty
         FROM `tabBEI PO Item`
         WHERE parent = %s
         ORDER BY idx
@@ -674,7 +877,7 @@ def get_goods_receipt_items(name):
 
 
 @frappe.whitelist()
-def create_purchase_order(data=None):
+def create_purchase_order(data: dict[str, Any] | str | None = None) -> dict[str, Any]:
     """Create new PO.
 
     AUDIT CONTROL 2.8: Supplier master data quality checks
@@ -685,6 +888,7 @@ def create_purchase_order(data=None):
         frappe.throw(_("Missing required parameter: data"), frappe.ValidationError)
     if isinstance(data, str):
         data = frappe.parse_json(data)
+    data = _normalize_purchase_order_payload(data)
 
     warnings = []
     supplier_name = data.get("supplier")
@@ -729,15 +933,6 @@ def create_purchase_order(data=None):
                     supplier.supplier_name, ", ".join(missing_docs)
                 )
             )
-
-    # Map 'rate' to 'unit_cost' in items if needed (frontend sends 'rate')
-    if "items" in data:
-        for item in data["items"]:
-            if "rate" in item and "unit_cost" not in item:
-                item["unit_cost"] = item.pop("rate")
-            # Strip invalid UOM to avoid LinkValidationError
-            if item.get("uom") and not frappe.db.exists("UOM", item["uom"]):
-                item.pop("uom")
 
     po = frappe.get_doc({
         "doctype": "BEI Purchase Order",
@@ -820,7 +1015,12 @@ def get_pending_po_approvals():
 # =============================================================================
 
 @frappe.whitelist()
-def get_goods_receipts(filters=None, page=1, page_size=20, search=None):
+def get_goods_receipts(
+    filters: dict[str, Any] | str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 20,
+    search: str | None = None,
+) -> dict[str, Any]:
     """Get paginated list of GRs."""
     conditions = []
     values = {}
@@ -850,22 +1050,23 @@ def get_goods_receipts(filters=None, page=1, page_size=20, search=None):
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
 
-    total = frappe.db.sql(
-        f"SELECT COUNT(*) FROM `tabBEI Goods Receipt` WHERE {where_clause}",
-        values
-    )[0][0]
+    total_query = "SELECT COUNT(*) FROM `tabBEI Goods Receipt` WHERE " + where_clause
+    total = frappe.db.sql(total_query, values)[0][0]
 
-    grs = frappe.db.sql(f"""
+    gr_query = """
         SELECT
             name, gr_no, gr_no as gr_number, receipt_date, status,
             purchase_order, purchase_order as po_number,
             supplier, supplier_name,
             total_ordered_qty, total_received_qty, total_amount
         FROM `tabBEI Goods Receipt`
-        WHERE {where_clause}
+        WHERE """
+    gr_query += where_clause
+    gr_query += """
         ORDER BY receipt_date DESC
         LIMIT %(page_size)s OFFSET %(offset)s
-    """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+    """
+    grs = frappe.db.sql(gr_query, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
 
     return {
         "data": grs,
@@ -877,7 +1078,7 @@ def get_goods_receipts(filters=None, page=1, page_size=20, search=None):
 
 
 @frappe.whitelist()
-def get_goods_receipt(name):
+def get_goods_receipt(name: str) -> dict[str, Any]:
     """Get single GR with items."""
     gr = frappe.get_doc("BEI Goods Receipt", name)
     data = gr.as_dict()
@@ -901,11 +1102,12 @@ def get_goods_receipts_for_po(name):
 
 
 @frappe.whitelist()
-def get_invoices_for_po(name):
-    """Get invoices linked to a specific PO."""
-    return frappe.db.sql("""
-        SELECT name, invoice_no, invoice_date, due_date, status,
-            supplier, supplier_name, purchase_order,
+def get_invoices_for_po(name: str) -> list[dict[str, Any]]:
+	"""Get invoices linked to a specific PO."""
+	return frappe.db.sql("""
+        SELECT name, invoice_no, invoice_no as invoice_number, invoice_date, due_date, status,
+            supplier, supplier_name, purchase_order, purchase_order as po_number,
+            subtotal, vat_amount, subtotal as net_total, vat_amount as tax_amount,
             grand_total, balance_due, payment_status, match_status
         FROM `tabBEI Invoice`
         WHERE purchase_order = %s
@@ -914,7 +1116,7 @@ def get_invoices_for_po(name):
 
 
 @frappe.whitelist()
-def create_goods_receipt(data=None):
+def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, Any]:
     """Create new GR.
 
     AUDIT CONTROL 2.4: Block GR creation for >₱500K POs without complete approval
@@ -924,6 +1126,8 @@ def create_goods_receipt(data=None):
         frappe.throw(_("Missing required parameter: data"), frappe.ValidationError)
     if isinstance(data, str):
         data = frappe.parse_json(data)
+
+    po = None
 
     # AUDIT CONTROL 2.4: Validate PO approval for >₱500K
     purchase_order = data.get("purchase_order")
@@ -956,9 +1160,38 @@ def create_goods_receipt(data=None):
                 title=_("Invalid Date Sequence")
             )
 
+        if not data.get("warehouse") and po.ship_to:
+            data["warehouse"] = po.ship_to
+
+    received_by = (data.get("received_by") or "").strip()
+    if received_by and not frappe.db.exists("Employee", received_by):
+        employee_match = frappe.db.get_value("Employee", {"employee_name": received_by}, "name")
+        if employee_match:
+            data["received_by"] = employee_match
+        else:
+            data.pop("received_by", None)
+
     # Map 'rate' to 'unit_cost' in items if needed
+    po_item_map = {}
+    if po:
+        po_item_map = {row.item_code: row for row in po.items}
+
     if "items" in data:
         for item in data["items"]:
+            po_item = po_item_map.get(item.get("item_code"))
+
+            if po_item:
+                if not item.get("item_name"):
+                    item["item_name"] = po_item.item_name
+                if not item.get("description"):
+                    item["description"] = po_item.description
+                if not item.get("ordered_qty"):
+                    item["ordered_qty"] = po_item.qty
+                if item.get("unit_cost") in (None, ""):
+                    item["unit_cost"] = po_item.unit_cost
+                if not item.get("uom"):
+                    item["uom"] = po_item.uom
+
             if "rate" in item and "unit_cost" not in item:
                 item["unit_cost"] = item.pop("rate")
             # Strip invalid UOM to avoid LinkValidationError
@@ -990,7 +1223,12 @@ def submit_goods_receipt(name):
 
 
 @frappe.whitelist()
-def complete_gr_inspection(name, passed=True, result=None, notes=None):
+def complete_gr_inspection(
+    name: str,
+    passed: bool = True,
+    result: str | None = None,
+    notes: str | None = None,
+) -> dict[str, Any]:
     """Complete quality inspection on GR."""
     if result is not None:
         passed = result == "pass"
@@ -999,7 +1237,7 @@ def complete_gr_inspection(name, passed=True, result=None, notes=None):
 
 
 @frappe.whitelist()
-def get_pending_gr_for_po(purchase_order):
+def get_pending_gr_for_po(purchase_order: str) -> dict[str, Any]:
     """Get receivable items for a PO."""
     po = frappe.get_doc("BEI Purchase Order", purchase_order)
 
@@ -1028,7 +1266,12 @@ def get_pending_gr_for_po(purchase_order):
 # =============================================================================
 
 @frappe.whitelist()
-def get_invoices(filters=None, page=1, page_size=20, search=None):
+def get_invoices(
+    filters: dict[str, Any] | str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 20,
+    search: str | None = None,
+) -> dict[str, Any]:
     """Get paginated list of invoices."""
     conditions = []
     values = {}
@@ -1063,21 +1306,23 @@ def get_invoices(filters=None, page=1, page_size=20, search=None):
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
 
-    total = frappe.db.sql(
-        f"SELECT COUNT(*) FROM `tabBEI Invoice` WHERE {where_clause}",
-        values
-    )[0][0]
+    total_query = "SELECT COUNT(*) FROM `tabBEI Invoice` WHERE " + where_clause
+    total = frappe.db.sql(total_query, values)[0][0]
 
-    invoices = frappe.db.sql(f"""
+    invoice_query = """
         SELECT
-            name, invoice_no, supplier_invoice_no, invoice_date, due_date,
-            status, supplier, supplier_name, purchase_order, grand_total,
-            balance_due, payment_status, match_status
+            name, invoice_no, invoice_no as invoice_number, supplier_invoice_no, invoice_date, due_date,
+            status, supplier, supplier_name, purchase_order, purchase_order as po_number,
+            subtotal, vat_amount, subtotal as net_total, vat_amount as tax_amount,
+            grand_total, balance_due, payment_status, match_status
         FROM `tabBEI Invoice`
-        WHERE {where_clause}
+        WHERE """
+    invoice_query += where_clause
+    invoice_query += """
         ORDER BY due_date ASC
         LIMIT %(page_size)s OFFSET %(offset)s
-    """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+    """
+    invoices = frappe.db.sql(invoice_query, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
 
     return {
         "data": invoices,
@@ -1089,14 +1334,69 @@ def get_invoices(filters=None, page=1, page_size=20, search=None):
 
 
 @frappe.whitelist()
-def get_invoice(name):
+def get_invoice(name: str) -> dict[str, Any]:
     """Get single invoice with full details."""
     invoice = frappe.get_doc("BEI Invoice", name)
-    return invoice.as_dict()
+    return _augment_invoice_response(invoice.as_dict())
 
 
 @frappe.whitelist()
-def create_invoice(data):
+def get_invoice_items(name: str) -> list[dict[str, Any]]:
+    """Return the line items that support an invoice's 3-way match math.
+
+    BEI Invoice itself does not persist a child table, so the UI should inspect
+    the linked Goods Receipt first, then fall back to the PO items when the
+    invoice is still in pre-verification drafting.
+    """
+    invoice = frappe.get_doc("BEI Invoice", name)
+
+    if invoice.goods_receipt:
+        return frappe.db.sql(
+            """
+            SELECT
+                name,
+                item_code,
+                item_name,
+                description,
+                accepted_qty AS qty,
+                unit_cost AS rate,
+                amount,
+                uom
+            FROM `tabBEI GR Item`
+            WHERE parent = %s
+            ORDER BY idx
+            """,
+            (invoice.goods_receipt,),
+            as_dict=True,
+        )
+
+    if invoice.purchase_order:
+        return frappe.db.sql(
+            """
+            SELECT
+                name,
+                item_code,
+                item_name,
+                description,
+                qty,
+                unit_cost AS rate,
+                amount,
+                uom,
+                vat_rate,
+                vat_amount
+            FROM `tabBEI PO Item`
+            WHERE parent = %s
+            ORDER BY idx
+            """,
+            (invoice.purchase_order,),
+            as_dict=True,
+        )
+
+    return []
+
+
+@frappe.whitelist()
+def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
     """Create new invoice.
 
     AUDIT CONTROL 2.1: Require Goods Receipt before Invoice (Three-Way Matching)
@@ -1105,8 +1405,18 @@ def create_invoice(data):
     """
     if isinstance(data, str):
         data = frappe.parse_json(data)
+    data = _normalize_invoice_payload(data)
 
     purchase_order = data.get("purchase_order")
+    goods_receipt = data.get("goods_receipt")
+    po = None
+    gr_doc = None
+
+    if goods_receipt:
+        gr_doc = frappe.get_doc("BEI Goods Receipt", goods_receipt)
+        _populate_invoice_context(data, goods_receipt=gr_doc)
+        purchase_order = data.get("purchase_order") or purchase_order
+
     if purchase_order:
         # AUDIT CONTROL 2.1: Check GR exists for this PO
         # Note: GR status can be "Accepted" after the receive+inspect workflow
@@ -1135,6 +1445,7 @@ def create_invoice(data):
 
         # AUDIT CONTROL 2.2: Invoice date >= PO date
         po = frappe.get_doc("BEI Purchase Order", purchase_order)
+        _populate_invoice_context(data, purchase_order=po, goods_receipt=gr_doc)
         invoice_date = getdate(data.get("invoice_date") or nowdate())
         po_date = getdate(po.po_date)
         if invoice_date < po_date:
@@ -1179,14 +1490,14 @@ def verify_invoice_match(name):
 
 
 @frappe.whitelist()
-def approve_invoice_variance(name, notes=None):
+def approve_invoice_variance(name: str, notes: str | None = None) -> dict[str, Any]:
     """Approve invoice despite variance."""
     invoice = frappe.get_doc("BEI Invoice", name)
     return invoice.approve_variance(notes)
 
 
 @frappe.whitelist()
-def reject_invoice_variance(name, reason):
+def reject_invoice_variance(name: str, reason: str) -> dict[str, Any]:
     """Reject invoice due to variance."""
     invoice = frappe.get_doc("BEI Invoice", name)
     return invoice.reject_variance(reason)
@@ -1197,7 +1508,12 @@ def reject_invoice_variance(name, reason):
 # =============================================================================
 
 @frappe.whitelist()
-def get_payment_requests(filters=None, page=1, page_size=20, search=None):
+def get_payment_requests(
+    filters: dict[str, Any] | str | None = None,
+    page: int | str = 1,
+    page_size: int | str = 20,
+    search: str | None = None,
+) -> dict[str, Any]:
     """Get paginated list of payment requests."""
     conditions = []
     values = {}
@@ -1235,24 +1551,29 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
     where_clause = " AND ".join(conditions) if conditions else "1=1"
     offset = (int(page) - 1) * int(page_size)
 
-    total = frappe.db.sql(
-        f"SELECT COUNT(*) FROM `tabBEI Payment Request` pr WHERE {where_clause}",
-        values
-    )[0][0]
+    total_query = "SELECT COUNT(*) FROM `tabBEI Payment Request` pr WHERE " + where_clause
+    total = frappe.db.sql(total_query, values)[0][0]
 
-    requests = frappe.db.sql(f"""
+    request_query = """
         SELECT
-            pr.name, pr.payment_request_no, pr.request_date, pr.status,
+            pr.name, pr.payment_request_no, pr.payment_request_no as request_number, pr.request_date, pr.status,
             COALESCE(pr.supplier, inv.supplier) as supplier,
             COALESCE(pr.supplier_name, inv.supplier_name) as supplier_name,
-            pr.payment_amount, pr.payment_mode, pr.invoice,
+            pr.payment_amount, pr.payment_mode, pr.payment_mode as payment_method, pr.invoice,
             pr.ceo_required, pr.payment_date
         FROM `tabBEI Payment Request` pr
         LEFT JOIN `tabBEI Invoice` inv ON pr.invoice = inv.name
-        WHERE {where_clause}
+        WHERE """
+    request_query += where_clause
+    request_query += """
         ORDER BY pr.request_date DESC
         LIMIT %(page_size)s OFFSET %(offset)s
-    """, {**values, "page_size": int(page_size), "offset": offset}, as_dict=True)
+    """
+    requests = frappe.db.sql(
+        request_query,
+        {**values, "page_size": int(page_size), "offset": offset},
+        as_dict=True,
+    )
 
     if _clean_optional_filter(applied_filters.get("item_code")):
         for row in requests:
@@ -1271,16 +1592,18 @@ def get_payment_requests(filters=None, page=1, page_size=20, search=None):
 
 
 @frappe.whitelist()
-def get_payment_request(name):
+def get_payment_request(name: str) -> dict[str, Any]:
     """Get single payment request with approval status."""
     request = frappe.get_doc("BEI Payment Request", name)
     data = request.as_dict()
+    data["request_number"] = data.get("payment_request_no")
+    data["payment_method"] = data.get("payment_mode")
     data["approval_status"] = request.get_approval_status()
     return data
 
 
 @frappe.whitelist()
-def create_payment_request(data):
+def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
     """Create new payment request.
 
     AUDIT CONTROL 2.1: Require Goods Receipt before Payment (Three-Way Matching)
@@ -1331,6 +1654,7 @@ def create_payment_request(data):
     invoice_name = data.get("invoice")
     if invoice_name:
         invoice = frappe.get_doc("BEI Invoice", invoice_name)
+        _populate_payment_request_invoice_context(data, invoice)
         purchase_order = invoice.purchase_order
 
         if purchase_order:
@@ -1365,21 +1689,39 @@ def create_payment_request(data):
                     data["is_advance_payment"] = 1
             else:
                 # AUDIT CONTROL 2.3: Payment limited to received value
-                # (only applies when GR exists — exception-approved payments skip this)
-                received_value = frappe.db.sql("""
-                    SELECT COALESCE(SUM(gri.received_qty * gri.unit_cost), 0)
-                    FROM `tabBEI GR Item` gri
-                    JOIN `tabBEI Goods Receipt` gr ON gri.parent = gr.name
-                    WHERE gr.purchase_order = %s
-                    AND gr.status IN ('Submitted', 'Approved', 'Inspected', 'Accepted')
-                """, (purchase_order,))[0][0] or 0
-
                 payment_amount = flt(data.get("payment_amount") or invoice.balance_due)
-                if payment_amount > received_value:
+                invoice_payable = flt(invoice.balance_due or invoice.grand_total)
+                received_value = invoice_payable
+
+                if invoice.goods_receipt:
+                    po_items = frappe.db.sql(
+                        """
+                        SELECT item_code, qty, unit_cost, vat_rate, vat_amount
+                        FROM `tabBEI PO Item`
+                        WHERE parent = %s
+                        ORDER BY idx
+                        """,
+                        (purchase_order,),
+                        as_dict=True,
+                    )
+                    gr_items = frappe.db.sql(
+                        """
+                        SELECT item_code, accepted_qty, received_qty, rejected_qty, unit_cost
+                        FROM `tabBEI GR Item`
+                        WHERE parent = %s
+                        ORDER BY idx
+                        """,
+                        (invoice.goods_receipt,),
+                        as_dict=True,
+                    )
+                    received_value = calculate_goods_receipt_gross_total(gr_items, po_items)
+
+                payable_cap = min(invoice_payable, received_value)
+                if payment_amount > payable_cap:
                     frappe.throw(
-                        _("Payment amount (₱{0:,.2f}) exceeds received value (₱{1:,.2f}). "
-                          "You can only pay for goods actually received.").format(
-                            payment_amount, received_value
+                        _("Payment amount (₱{0:,.2f}) exceeds the payable received value (₱{1:,.2f}). "
+                          "You can only pay for goods actually accepted and invoiced.").format(
+                            payment_amount, payable_cap
                         ),
                         title=_("Partial Delivery Control")
                     )

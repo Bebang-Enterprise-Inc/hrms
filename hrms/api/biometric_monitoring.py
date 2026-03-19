@@ -12,8 +12,16 @@ from typing import Any
 import frappe
 from frappe import _
 
-BIOMETRIC_ROLES = {"HR Manager", "HR User", "System Manager", "Administrator"}
+BIOMETRIC_ROLES = {"HR Manager", "HR User", "IT User", "System Manager", "Administrator"}
 BIOMETRIC_ADMIN_ROLES = {"System Manager", "Administrator"}
+CONTRACT_REVISION = "s059-biometric-v1"
+ISSUE_CACHE_SPECS = [
+	("not_punching", "biometric:v1:not_punching", "employees"),
+	("wrong_device", "biometric:v1:wrong_device", "employees"),
+	("not_enrolled", "biometric:v1:not_enrolled", "employees"),
+	("registry_mismatch", "biometric:v1:registry_mismatch", "employees"),
+	("ghost", "biometric:v1:ghost_punchers", "punchers"),
+]
 
 
 def _check_biometric_access():
@@ -38,6 +46,39 @@ def _is_stale(data: dict[str, Any] | None) -> bool:
 	return (datetime.now() - refreshed) > timedelta(hours=6)
 
 
+def _empty_response(list_key: str | None = None) -> dict[str, Any]:
+	"""Return a normalized stale payload when cache is empty."""
+	payload: dict[str, Any] = {
+		"ok": True,
+		"stale": True,
+		"contract_revision": CONTRACT_REVISION,
+		"message": "No cached data. Trigger a refresh.",
+	}
+	if list_key:
+		payload[list_key] = []
+	return payload
+
+
+def _with_cache_metadata(data: dict[str, Any] | None, list_key: str | None = None) -> dict[str, Any]:
+	"""Normalize cached payloads so frontend state can distinguish stale from clean-empty."""
+	if not data:
+		return _empty_response(list_key)
+
+	payload = dict(data)
+	payload["ok"] = True
+	payload["stale"] = _is_stale(data)
+	payload["contract_revision"] = payload.get("contract_revision", CONTRACT_REVISION)
+	if payload["stale"]:
+		payload["message"] = payload.get("message") or "Biometric cache is stale. Trigger a refresh."
+	elif "message" not in payload:
+		payload["message"] = None
+
+	if list_key:
+		payload.setdefault(list_key, [])
+
+	return payload
+
+
 def _matches_not_punching_threshold(employee: dict[str, Any], hours: int) -> bool:
 	"""Guard against null cache values and keep never-punched rows in the result set."""
 	value = employee.get("hours_since_punch")
@@ -55,9 +96,7 @@ def get_dashboard_summary():
 	_check_biometric_access()
 	cache = frappe.cache()
 	data = cache.get_value("biometric:v1:summary")
-	if not data:
-		return {"ok": True, "stale": True, "message": "No cached data. Trigger a refresh."}
-	return {"ok": True, "stale": _is_stale(data), **data}
+	return _with_cache_metadata(data)
 
 
 @frappe.whitelist()
@@ -66,9 +105,7 @@ def get_device_status():
 	_check_biometric_access()
 	cache = frappe.cache()
 	data = cache.get_value("biometric:v1:devices")
-	if not data:
-		return {"ok": True, "stale": True, "devices": [], "message": "No cached data. Trigger a refresh."}
-	return {"ok": True, "stale": _is_stale(data), "devices": data.get("devices", [])}
+	return _with_cache_metadata(data, "devices")
 
 
 @frappe.whitelist()
@@ -86,15 +123,15 @@ def get_not_punching(hours: int | str = 48):
 	if not data:
 		data = cache.get_value("biometric:v1:not_punching")
 
-	if not data:
-		return {"ok": True, "stale": True, "employees": [], "message": "No cached data. Trigger a refresh."}
+	payload = _with_cache_metadata(data, "employees")
 
 	# Filter by hours if we have timestamp data
-	employees = data.get("employees", [])
+	employees = payload.get("employees", [])
 	if hours != 48 and employees:
 		employees = [e for e in employees if _matches_not_punching_threshold(e, hours)]
 
-	return {"ok": True, "stale": _is_stale(data), "employees": employees}
+	payload["employees"] = employees
+	return payload
 
 
 @frappe.whitelist()
@@ -103,9 +140,7 @@ def get_wrong_device():
 	_check_biometric_access()
 	cache = frappe.cache()
 	data = cache.get_value("biometric:v1:wrong_device")
-	if not data:
-		return {"ok": True, "stale": True, "employees": [], "message": "No cached data. Trigger a refresh."}
-	return {"ok": True, "stale": _is_stale(data), "employees": data.get("employees", [])}
+	return _with_cache_metadata(data, "employees")
 
 
 @frappe.whitelist()
@@ -114,9 +149,16 @@ def get_not_enrolled():
 	_check_biometric_access()
 	cache = frappe.cache()
 	data = cache.get_value("biometric:v1:not_enrolled")
-	if not data:
-		return {"ok": True, "stale": True, "employees": [], "message": "No cached data. Trigger a refresh."}
-	return {"ok": True, "stale": _is_stale(data), "employees": data.get("employees", [])}
+	return _with_cache_metadata(data, "employees")
+
+
+@frappe.whitelist()
+def get_registry_mismatch():
+	"""Get active punchers with raw ADMS punches but no registry-backed enrollment."""
+	_check_biometric_access()
+	cache = frappe.cache()
+	data = cache.get_value("biometric:v1:registry_mismatch")
+	return _with_cache_metadata(data, "employees")
 
 
 @frappe.whitelist()
@@ -125,9 +167,7 @@ def get_ghost_punchers():
 	_check_biometric_access()
 	cache = frappe.cache()
 	data = cache.get_value("biometric:v1:ghost_punchers")
-	if not data:
-		return {"ok": True, "stale": True, "punchers": [], "message": "No cached data. Trigger a refresh."}
-	return {"ok": True, "stale": _is_stale(data), "punchers": data.get("punchers", [])}
+	return _with_cache_metadata(data, "punchers")
 
 
 @frappe.whitelist()
@@ -136,33 +176,49 @@ def get_store_leaderboard():
 	_check_biometric_access()
 	cache = frappe.cache()
 	data = cache.get_value("biometric:v1:leaderboard")
-	if not data:
-		return {"ok": True, "stale": True, "stores": [], "message": "No cached data. Trigger a refresh."}
-	return {"ok": True, "stale": _is_stale(data), "stores": data.get("stores", [])}
+	return _with_cache_metadata(data, "stores")
 
 
 @frappe.whitelist()
 def get_all_issues():
-	"""Get all issues combined (not_punching + wrong_device + not_enrolled + ghost)."""
+	"""Get all issues combined with freshness metadata preserved."""
 	_check_biometric_access()
 	cache = frappe.cache()
 
 	all_employees = []
+	missing_sources = []
+	last_refreshed_values = []
+	stale = False
+	contract_revision = CONTRACT_REVISION
 
-	# Collect from all 4 issue caches, tagging each with issue_type
-	for issue_type, cache_key, list_key in [
-		("not_punching", "biometric:v1:not_punching", "employees"),
-		("wrong_device", "biometric:v1:wrong_device", "employees"),
-		("not_enrolled", "biometric:v1:not_enrolled", "employees"),
-		("ghost", "biometric:v1:ghost_punchers", "punchers"),
-	]:
+	for issue_type, cache_key, list_key in ISSUE_CACHE_SPECS:
 		data = cache.get_value(cache_key)
-		if data:
-			for emp in data.get(list_key, []):
-				emp["issue_type"] = issue_type
-				all_employees.append(emp)
+		if not data:
+			stale = True
+			missing_sources.append(issue_type)
+			continue
 
-	return {"ok": True, "employees": all_employees}
+		stale = stale or _is_stale(data)
+		contract_revision = data.get("contract_revision", contract_revision)
+		if data.get("last_refreshed"):
+			last_refreshed_values.append(data["last_refreshed"])
+
+		for entry in data.get(list_key, []):
+			row = dict(entry)
+			row["issue_type"] = issue_type
+			all_employees.append(row)
+
+	return {
+		"ok": True,
+		"stale": stale or bool(missing_sources),
+		"contract_revision": contract_revision,
+		"last_refreshed": max(last_refreshed_values) if last_refreshed_values else None,
+		"employees": all_employees,
+		"missing_sources": missing_sources,
+		"message": (
+			"Biometric cache is stale or incomplete. Trigger a refresh." if stale or missing_sources else None
+		),
+	}
 
 
 @frappe.whitelist()
@@ -200,6 +256,7 @@ def invalidate_biometric_cache():
 		"biometric:v1:not_punching",
 		"biometric:v1:wrong_device",
 		"biometric:v1:not_enrolled",
+		"biometric:v1:registry_mismatch",
 		"biometric:v1:ghost_punchers",
 		"biometric:v1:leaderboard",
 		"biometric:v1:refresh_lock",
