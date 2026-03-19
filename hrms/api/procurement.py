@@ -560,6 +560,33 @@ def _clean_optional_filter(value):
     return (value or "").strip() if isinstance(value, str) else value
 
 
+def _normalize_status_filters(filters: dict[str, Any] | None) -> list[str]:
+    """Normalize single- or multi-status filters from query params."""
+    filters = filters or {}
+    raw_statuses = filters.get("statuses")
+
+    if isinstance(raw_statuses, str):
+        try:
+            raw_statuses = frappe.parse_json(raw_statuses)
+        except Exception:
+            raw_statuses = [raw_statuses]
+
+    if raw_statuses is None:
+        raw_status = _clean_optional_filter(filters.get("status"))
+        return [raw_status] if raw_status else []
+
+    if not isinstance(raw_statuses, (list, tuple, set)):
+        raw_statuses = [raw_statuses]
+
+    normalized: list[str] = []
+    for value in raw_statuses:
+        cleaned = _clean_optional_filter(value)
+        if cleaned and cleaned not in normalized:
+            normalized.append(cleaned)
+
+    return normalized
+
+
 def build_purchase_order_operational_filters(filters=None):
     """Build exact item_code + warehouse filter clauses for PO drilldowns."""
     filters = filters or {}
@@ -737,9 +764,17 @@ def get_purchase_orders(
             filters = frappe.parse_json(filters)
         applied_filters = dict(filters)
 
-        if filters.get("status"):
+        statuses = _normalize_status_filters(filters)
+        if len(statuses) == 1:
             conditions.append("status = %(status)s")
-            values["status"] = filters["status"]
+            values["status"] = statuses[0]
+        elif statuses:
+            placeholders = []
+            for index, status_value in enumerate(statuses):
+                key = f"status_{index}"
+                placeholders.append(f"%({key})s")
+                values[key] = status_value
+            conditions.append(f"status IN ({', '.join(placeholders)})")
 
         if filters.get("supplier"):
             conditions.append("supplier = %(supplier)s")
