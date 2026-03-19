@@ -6,8 +6,8 @@ Store Operations API
 Handles store ordering, receiving, and FQI reports for my.bebang.ph
 """
 
-import base64
 import ast
+import base64
 import hashlib
 import json
 import re
@@ -426,9 +426,7 @@ def _schedule_row_keys(row: dict | None) -> set[str]:
 
 def _find_schedule_store_row(schedule_rows: list[dict], *candidates: str | None) -> dict | None:
 	candidate_keys = {
-		_normalize_store_key(value)
-		for value in _clean_warehouse_branch_candidates(*candidates)
-		if value
+		_normalize_store_key(value) for value in _clean_warehouse_branch_candidates(*candidates) if value
 	}
 	if not candidate_keys:
 		return None
@@ -456,7 +454,9 @@ def _resolve_schedule_warehouse_row(warehouse_rows: list[dict], *candidates: str
 	return None
 
 
-def _is_store_schedule_employee(employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str]) -> bool:
+def _is_store_schedule_employee(
+	employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str]
+) -> bool:
 	roles = set(user_roles or [])
 	designation = employee.get("designation") if isinstance(employee, dict) else None
 	return bool(
@@ -466,7 +466,9 @@ def _is_store_schedule_employee(employee: dict | None, user_roles: list[str] | t
 	)
 
 
-def _is_commissary_schedule_employee(employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str]) -> bool:
+def _is_commissary_schedule_employee(
+	employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str]
+) -> bool:
 	roles = set(user_roles or [])
 	designation = str((employee or {}).get("designation") or "").upper()
 	branch = str((employee or {}).get("branch") or "").upper()
@@ -477,7 +479,9 @@ def _is_commissary_schedule_employee(employee: dict | None, user_roles: list[str
 	)
 
 
-def _employee_schedule_role(employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str], surface: str | None):
+def _employee_schedule_role(
+	employee: dict | None, user_roles: list[str] | tuple[str, ...] | set[str], surface: str | None
+):
 	roles = set(user_roles or [])
 	designation = (employee or {}).get("designation")
 	if surface == "commissary_schedule":
@@ -564,7 +568,9 @@ def _get_store_schedule_locations() -> list[dict]:
 	locations = []
 	seen = set()
 
-	def append_location(warehouse_row: dict | None, *, department: str | None = None, store_type: str | None = None):
+	def append_location(
+		warehouse_row: dict | None, *, department: str | None = None, store_type: str | None = None
+	):
 		if not warehouse_row:
 			return
 		warehouse_name = str(warehouse_row.get("name") or "").strip()
@@ -1640,7 +1646,9 @@ def get_user_store(surface: str | None = None):
 		)
 		seen_stores.add(store_name)
 
-	if "Area Supervisor" in user_roles or _designation_is_area_supervisor((active_employee or {}).get("designation")):
+	if "Area Supervisor" in user_roles or _designation_is_area_supervisor(
+		(active_employee or {}).get("designation")
+	):
 		# Area supervisors see all stores assigned to them
 		role = "Area Supervisor"
 		area_stores = frappe.get_all(
@@ -1694,10 +1702,14 @@ def get_user_store(surface: str | None = None):
 					allow_unmapped=surface_key in {"store_schedule", "commissary_schedule"},
 				)
 
-	if not stores and surface_key == "commissary_schedule" and (
-		"Commissary Supervisor" in user_roles
-		or "Warehouse User" in user_roles
-		or "Supply Chain Manager" in user_roles
+	if (
+		not stores
+		and surface_key == "commissary_schedule"
+		and (
+			"Commissary Supervisor" in user_roles
+			or "Warehouse User" in user_roles
+			or "Supply Chain Manager" in user_roles
+		)
 	):
 		role = (
 			"Supply Chain Manager"
