@@ -1615,7 +1615,7 @@ def preview_trip_stops(route_name: str, trip_date: str | None = None):
 		frappe.throw(_("Route is not active"))
 
 	stops = _build_stop_preview(route, trip_date)
-	return {"route_name": route_name, "trip_date": trip_date, "stops": stops}
+	return {"route_name": trip_route_name, "trip_date": trip_date, "stops": stops}
 
 
 def _duplicate_trip_response(route_name: str, trip_date: str, existing_trip: str):
