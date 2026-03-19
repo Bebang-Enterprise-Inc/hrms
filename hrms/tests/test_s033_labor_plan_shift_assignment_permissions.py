@@ -35,6 +35,11 @@ def _install_fake_dependencies():
 			exists=lambda *args, **kwargs: False,
 			has_column=lambda *args, **kwargs: False,
 		)
+	else:
+		frappe.local.db.exists = getattr(frappe.local.db, "exists", lambda *args, **kwargs: False)
+		frappe.local.db.has_column = getattr(
+			frappe.local.db, "has_column", lambda *args, **kwargs: False
+		)
 	if not getattr(frappe.local, "session", None):
 		frappe.local.session = types.SimpleNamespace(user="test.supervisor@bebang.ph")
 	frappe.__dict__.setdefault("db", frappe.local.db)
@@ -87,11 +92,39 @@ def _install_fake_dependencies():
 		contracts_mod.get_preferred_commissary_warehouses = lambda *args, **kwargs: []
 		sys.modules["hrms.utils.supply_chain_contracts"] = contracts_mod
 
-	if "hrms.utils.bei_config" not in sys.modules:
-		config_mod = types.ModuleType("hrms.utils.bei_config")
-		config_mod.SPACE_OPS = "ops"
-		config_mod.get_chat_space = lambda *args, **kwargs: "spaces/OPS"
-		sys.modules["hrms.utils.bei_config"] = config_mod
+	config_mod = sys.modules.get("hrms.utils.bei_config") or types.ModuleType("hrms.utils.bei_config")
+	config_mod.SPACE_OPS = "ops"
+	config_mod.get_chat_space = lambda *args, **kwargs: "spaces/OPS"
+	sys.modules["hrms.utils.bei_config"] = config_mod
+
+	templates_mod = sys.modules.get("hrms.utils.labor_plan_templates") or types.ModuleType(
+		"hrms.utils.labor_plan_templates"
+	)
+	def _apply_template_to_employees(*args, **kwargs):
+		template_key = args[0] if args else kwargs.get("template_key", "template")
+		employees = args[2] if len(args) > 2 else kwargs.get("employees", [])
+		return {
+			"template": {"template_key": template_key},
+			"shifts": [
+				{
+					"employee": employee.get("name"),
+					"employee_name": employee.get("employee_name"),
+					"day_of_week": "Monday",
+					"shift_type_name": "Opening",
+					"is_off": 0,
+					"ends_next_day": 0,
+					"shift_start": "09:30",
+					"shift_end": "18:30",
+					"hours": 8,
+				}
+				for employee in employees
+			],
+			"warnings": [],
+		}
+
+	templates_mod.apply_template_to_employees = _apply_template_to_employees
+	templates_mod.get_template_metadata = lambda template_key: {"template_key": template_key}
+	sys.modules["hrms.utils.labor_plan_templates"] = templates_mod
 
 
 _install_fake_dependencies()
@@ -570,7 +603,7 @@ class TestS033LaborPlanShiftAssignmentPermissions(unittest.TestCase):
 
 		doc = _Doc()
 		with (
-			patch.object(supervisor.frappe.db, "exists", return_value=False),
+			patch.object(supervisor.frappe.db, "exists", return_value=False, create=True),
 			patch.object(supervisor, "_calculate_shift_hours", return_value=8),
 		):
 			total_hours = supervisor._apply_shifts(

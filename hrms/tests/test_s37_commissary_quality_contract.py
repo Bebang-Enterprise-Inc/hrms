@@ -79,47 +79,46 @@ _DOCS_CREATED: list[_FakeQualityInspection] = []
 
 
 def _install_fake_modules():
-	if "frappe" not in sys.modules:
-		frappe = _FakeFrappe("frappe")
-		utils = types.ModuleType("frappe.utils")
+	frappe = sys.modules.get("frappe") or _FakeFrappe("frappe")
+	utils = sys.modules.get("frappe.utils") or types.ModuleType("frappe.utils")
 
-		def whitelist(*args, **kwargs):
-			def decorator(fn):
-				return fn
+	def whitelist(*args, **kwargs):
+		def decorator(fn):
+			return fn
 
-			return decorator
+		return decorator
 
-		frappe.whitelist = whitelist
-		frappe._ = lambda text: text
-		frappe.local = types.SimpleNamespace(
-			session=types.SimpleNamespace(user="test.commissary@bebang.ph"),
-			db=types.SimpleNamespace(
-				get_value=lambda doctype, filters, fieldname=None, as_dict=False: (
-					types.SimpleNamespace(qty=12, batch_no="BATCH-001")
-					if doctype == "Stock Entry Detail"
-					else None
-				),
-				savepoint=lambda name: None,
-				release_savepoint=lambda name: None,
-				rollback=lambda save_point=None: None,
+	frappe.whitelist = whitelist
+	frappe._ = lambda text: text
+	frappe.local = types.SimpleNamespace(
+		session=types.SimpleNamespace(user="test.commissary@bebang.ph"),
+		db=types.SimpleNamespace(
+			get_value=lambda doctype, filters, fieldname=None, as_dict=False: (
+				types.SimpleNamespace(qty=12, batch_no="BATCH-001")
+				if doctype == "Stock Entry Detail"
+				else None
 			),
-		)
+			savepoint=lambda name: None,
+			release_savepoint=lambda name: None,
+			rollback=lambda save_point=None: None,
+		),
+	)
 
-		def _new_doc(doctype):
-			doc = _FakeQualityInspection() if doctype == "Quality Inspection" else _FakeStockEntry()
-			_DOCS_CREATED.append(doc)
-			return doc
+	def _new_doc(doctype):
+		doc = _FakeQualityInspection() if doctype == "Quality Inspection" else _FakeStockEntry()
+		_DOCS_CREATED.append(doc)
+		return doc
 
-		frappe.new_doc = _new_doc
-		frappe.get_doc = lambda doctype, name=None: None
-		frappe.utils = utils
+	frappe.new_doc = _new_doc
+	frappe.get_doc = lambda doctype, name=None: None
+	frappe.utils = utils
 
-		utils.today = lambda: "2026-03-12"
-		utils.add_days = lambda value, days: "2026-03-05"
-		utils.flt = lambda value, precision=None: float(value or 0)
+	utils.today = lambda: "2026-03-12"
+	utils.add_days = lambda value, days: "2026-03-05"
+	utils.flt = lambda value, precision=None: float(value or 0)
 
-		sys.modules["frappe"] = frappe
-		sys.modules["frappe.utils"] = utils
+	sys.modules["frappe"] = frappe
+	sys.modules["frappe.utils"] = utils
 
 	if "hrms" not in sys.modules:
 		hrms_pkg = types.ModuleType("hrms")
@@ -139,12 +138,23 @@ def _install_fake_modules():
 	commissary_mod = types.ModuleType("hrms.api.commissary")
 	commissary_mod.get_commissary_warehouse = lambda: "Shaw BLVD - BKI"
 	commissary_mod.get_commissary_company = lambda: "Bebang Kitchen Inc."
+	commissary_mod.resolve_outsourced_item_flag = (
+		lambda item_code=None, item_name=None, item_meta=None: {
+			"is_outsourced_item": False,
+			"reason": "unit-test-default",
+		}
+	)
 	sys.modules["hrms.api.commissary"] = commissary_mod
 
 	scm_roles_mod = types.ModuleType("hrms.utils.scm_roles")
 	scm_roles_mod.SCM_COMMISSARY_ROLES = {"Commissary Supervisor", "Warehouse User"}
 	scm_roles_mod.check_scm_permission = lambda roles, action="": None
 	sys.modules["hrms.utils.scm_roles"] = scm_roles_mod
+
+	sentry_mod = types.ModuleType("hrms.utils.sentry")
+	sentry_mod.capture_backend_message = lambda *args, **kwargs: None
+	sentry_mod.set_backend_observability_context = lambda *args, **kwargs: None
+	sys.modules["hrms.utils.sentry"] = sentry_mod
 
 
 _install_fake_modules()

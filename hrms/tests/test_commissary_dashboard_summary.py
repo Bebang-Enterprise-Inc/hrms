@@ -56,6 +56,12 @@ def _install_fake_modules():
 	fake_commissary = types.ModuleType("hrms.api.commissary")
 	fake_commissary.get_commissary_warehouse = lambda: "Shaw BLVD - BKI"
 	fake_commissary.get_commissary_company = lambda: "Bebang Kitchen Inc."
+	fake_commissary.resolve_outsourced_item_flag = (
+		lambda item_code=None, item_name=None, item_meta=None: {
+			"is_outsourced_item": False,
+			"reason": "unit-test-default",
+		}
+	)
 	sys.modules["hrms.api.commissary"] = fake_commissary
 
 	fake_scm_roles = types.ModuleType("hrms.utils.scm_roles")
@@ -65,7 +71,14 @@ def _install_fake_modules():
 
 	fake_bei_config = types.ModuleType("hrms.utils.bei_config")
 	fake_bei_config.get_company = lambda: "Bebang Kitchen Inc."
+	fake_bei_config.SPACE_OPS = "ops"
+	fake_bei_config.get_chat_space = lambda *args, **kwargs: "spaces/OPS"
 	sys.modules["hrms.utils.bei_config"] = fake_bei_config
+
+	fake_sentry = types.ModuleType("hrms.utils.sentry")
+	fake_sentry.set_backend_observability_context = lambda *args, **kwargs: None
+	fake_sentry.capture_backend_message = lambda *args, **kwargs: None
+	sys.modules["hrms.utils.sentry"] = fake_sentry
 
 
 def _load_module():
@@ -180,11 +193,25 @@ class TestCommissaryDashboardSummary(unittest.TestCase):
 		with (
 			patch.object(commissary_dashboard, "get_commissary_warehouse", return_value="Shaw BLVD - BKI"),
 			patch.object(commissary_dashboard, "get_commissary_company", return_value="Bebang Kitchen Inc."),
+			patch.object(
+				commissary_dashboard,
+				"resolve_outsourced_item_flag",
+				return_value={"is_outsourced_item": True, "reason": "unit-test-outsourced"},
+			),
 			patch.object(commissary_dashboard.frappe, "new_doc", side_effect=fake_new_doc, create=True),
 			patch.object(
 				commissary_dashboard.frappe.db,
 				"get_value",
-				side_effect=[None],
+				side_effect=[
+					{
+						"item_name": "BANANA CINNAMON",
+						"description": "Finished good",
+						"stock_uom": "KG",
+						"item_group": "Finished Goods",
+						"default_supplier": "Bebang Outsourced",
+					},
+					None,
+				],
 				create=True,
 			),
 			patch.object(

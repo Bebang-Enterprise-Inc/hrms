@@ -15,7 +15,11 @@ import frappe
 from frappe import _
 from frappe.utils import add_days, flt, today
 
-from hrms.api.commissary import get_commissary_company, get_commissary_warehouse
+from hrms.api.commissary import (
+	get_commissary_company,
+	get_commissary_warehouse,
+	resolve_outsourced_item_flag,
+)
 from hrms.utils.scm_roles import SCM_COMMISSARY_ROLES, check_scm_permission
 from hrms.utils.sentry import set_backend_observability_context
 
@@ -66,6 +70,34 @@ def _is_retryable_stock_entry_submit_error(exc: Exception) -> bool:
 		or "deadlock found" in message
 		or "try restarting transaction" in message
 	)
+
+
+def _normalize_outsourced_flag(item_row: dict[str, Any]) -> dict[str, Any]:
+	flag = resolve_outsourced_item_flag(
+		item_code=item_row.get("item_code"),
+		item_name=item_row.get("item_name"),
+		item_meta={
+			"default_supplier": item_row.get("default_supplier"),
+			"is_outsourced_item": item_row.get("is_outsourced_item"),
+		},
+	)
+	item_row["is_outsourced_item"] = flag["is_outsourced_item"]
+	item_row["outsourced_flag_reason"] = flag["reason"]
+	return item_row
+
+
+def _build_production_shortfall_error(item_code: str, shortfall: list[dict[str, Any]]) -> str:
+	if not shortfall:
+		return _("Cannot produce {0} because raw material stock is insufficient.").format(item_code)
+
+	def _format_shortfall(row: dict[str, Any]) -> str:
+		return _("{0} needs {1} more {2}").format(
+			row.get("item_code") or row.get("item_name"),
+			flt(row.get("deficit") or row.get("shortage") or 0),
+			row.get("uom") or "",
+		).strip()
+
+	return _("{0}.").format("; ".join(_format_shortfall(row) for row in shortfall[:3]))
 
 
 # ============================================================
@@ -242,12 +274,19 @@ def get_production_items() -> dict[str, Any]:
             i.stock_uom,
             i.valuation_rate as standard_rate,
             i.item_group,
-            IFNULL(b.actual_qty, 0) as current_stock
+            IFNULL(b.actual_qty, 0) as current_stock,
+            bom.name as bom_name,
+            i.default_supplier
         FROM `tabItem` i
         LEFT JOIN `tabBin` b ON b.item_code = i.name AND b.warehouse = %s
+        LEFT JOIN `tabBOM` bom
+            ON bom.item = i.name
+            AND bom.is_active = 1
+            AND bom.is_default = 1
+            AND bom.docstatus = 1
         WHERE i.disabled = 0
         AND i.is_stock_item = 1
-        AND (i.item_group = 'Finished Goods' OR b.actual_qty > 0)
+        AND i.item_group = 'Finished Goods'
         ORDER BY i.item_name
     """,
 		commissary_warehouse,
@@ -271,11 +310,16 @@ def get_production_items() -> dict[str, Any]:
 	)
 	production_map = {r.item_code: flt(r.total_produced) for r in today_production}
 
+	result = []
 	for item in items:
+		item = _normalize_outsourced_flag(item)
+		if not item.get("bom_name") and not item.get("is_outsourced_item"):
+			continue
 		item["current_stock"] = flt(item["current_stock"])
 		item["today_produced"] = production_map.get(item["item_code"], 0.0)
+		result.append(item)
 
-	return {"success": True, "data": items}
+	return {"success": True, "data": result}
 
 
 @frappe.whitelist()
@@ -365,6 +409,32 @@ def submit_production_output(
 
 	commissary_warehouse = get_commissary_warehouse()
 	first_item_code = items[0]["item_code"] if items else None
+	if not first_item_code:
+		frappe.throw(_("A finished good item is required"))
+
+	first_item = frappe.db.get_value(
+		"Item",
+		first_item_code,
+		["item_name", "description", "stock_uom", "item_group", "default_supplier"],
+		as_dict=True,
+	)
+	if not first_item:
+		frappe.throw(_("Item {0} was not found").format(first_item_code))
+
+	outsourced_flag = resolve_outsourced_item_flag(
+		item_code=first_item_code,
+		item_name=first_item.get("item_name"),
+		item_meta={"default_supplier": first_item.get("default_supplier")},
+	)
+	is_outsourced_item = bool(outsourced_flag["is_outsourced_item"])
+	if first_item.get("item_group") != "Finished Goods" and not is_outsourced_item:
+		frappe.throw(
+			_("Only finished goods can be logged in Production Tracking. {0} is tagged as {1}.").format(
+				first_item_code,
+				first_item.get("item_group") or _("Unknown"),
+			)
+		)
+
 	bom = None
 	if first_item_code:
 		bom = frappe.db.get_value(
@@ -373,6 +443,28 @@ def submit_production_output(
 			["name", "quantity"],
 			as_dict=True,
 		)
+		if bom:
+			from hrms.api.commissary_bom import check_production_feasibility as _check_production_feasibility
+
+			feasibility = _check_production_feasibility(
+				item_code=first_item_code,
+				qty=sum(flt(i.get("qty")) for i in items),
+			)
+			if not feasibility.get("success"):
+				frappe.throw(feasibility.get("error") or _("Production feasibility check failed"))
+			if not feasibility.get("data", {}).get("can_produce"):
+				frappe.throw(
+					_build_production_shortfall_error(
+						first_item_code,
+						feasibility.get("data", {}).get("shortfall") or [],
+					)
+				)
+		elif not is_outsourced_item:
+			frappe.throw(
+				_("No active default BOM is configured for {0}. Production Tracking only supports finished goods with an active BOM or explicitly outsourced items.").format(
+					first_item_code
+				)
+			)
 
 	se = None
 	for attempt in range(3):
@@ -402,17 +494,16 @@ def submit_production_output(
 				fg_already_present = any(
 					item.item_code == first_item_code and item.is_finished_item for item in se.items
 				)
-				item = frappe.get_doc("Item", first_item_code)
 				if not fg_already_present:
 					fg_row = se.append(
 						"items",
 						{
 							"item_code": first_item_code,
-							"item_name": item.item_name,
-							"description": item.description,
+							"item_name": first_item.get("item_name"),
+							"description": first_item.get("description"),
 							"qty": se.fg_completed_qty,
-							"uom": item.stock_uom,
-							"stock_uom": item.stock_uom,
+							"uom": first_item.get("stock_uom"),
+							"stock_uom": first_item.get("stock_uom"),
 							"conversion_factor": 1,
 							"t_warehouse": commissary_warehouse,
 							"is_finished_item": 1,

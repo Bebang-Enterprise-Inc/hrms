@@ -74,6 +74,37 @@ def _is_retryable_stock_entry_submit_error(exc: Exception) -> bool:
 	)
 
 
+def _get_available_batch_rows(item_code: str, warehouse: str) -> list[dict[str, Any]]:
+	return frappe.db.sql(
+		"""
+        SELECT
+            sle.batch_no,
+            b.expiry_date,
+            SUM(sle.actual_qty) as available_qty
+        FROM `tabStock Ledger Entry` sle
+        LEFT JOIN `tabBatch` b ON b.name = sle.batch_no
+        WHERE sle.item_code = %(item_code)s
+          AND sle.warehouse = %(warehouse)s
+          AND sle.is_cancelled = 0
+          AND IFNULL(sle.batch_no, '') != ''
+        GROUP BY sle.batch_no, b.expiry_date
+        HAVING available_qty > 0
+        ORDER BY
+          CASE WHEN b.expiry_date IS NULL THEN 1 ELSE 0 END,
+          b.expiry_date ASC,
+          sle.batch_no ASC
+    """,
+		{"item_code": item_code, "warehouse": warehouse},
+		as_dict=True,
+	)
+
+
+def _format_available_batch_hint(rows: list[dict[str, Any]]) -> str:
+	if not rows:
+		return ""
+	return ", ".join(str(row.get("batch_no")) for row in rows[:5] if row.get("batch_no"))
+
+
 # ============================================================
 # QUALITY INSPECTION
 # ============================================================
@@ -426,6 +457,24 @@ def log_wastage(
 		extras={"item_code": item_code, "qty": qty, "reason_code": reason_code, "batch_no": batch_no},
 	)
 	commissary_warehouse = get_commissary_warehouse()
+	normalized_batch_no = (batch_no or "").strip()
+	available_batches = _get_available_batch_rows(item_code, commissary_warehouse)
+	available_batch_numbers = {str(row.get("batch_no")).strip() for row in available_batches if row.get("batch_no")}
+
+	if normalized_batch_no:
+		if normalized_batch_no not in available_batch_numbers:
+			hint = _format_available_batch_hint(available_batches)
+			return {
+				"success": False,
+				"error": (
+					_("Select a valid batch for {0}.").format(item_code)
+					if not hint
+					else _("Select a valid batch for {0}. Available batches: {1}.").format(item_code, hint)
+				),
+			}
+		batch_no = normalized_batch_no
+	elif available_batches:
+		batch_no = str(available_batches[0].get("batch_no"))
 
 	if reason_code not in WASTAGE_REASONS:
 		capture_backend_message(
@@ -868,6 +917,8 @@ def get_fefo_picking_list(item_code: str | None = None, warehouse: str | None = 
 	# Summary by expiry status
 	summary = {"expired": 0, "critical": 0, "warning": 0, "ok": 0, "no_expiry": 0}
 	for item in picking_list:
+		item["qty"] = flt(item.get("available_qty"))
+		item["uom"] = item.get("stock_uom")
 		status = item.expiry_status or "no_expiry"
 		summary[status] += 1
 
@@ -923,6 +974,8 @@ def get_expiring_batches(days: int | str = 7, item_group: str | None = None) -> 
 	# Group by urgency
 	by_urgency = {"expired": [], "critical": [], "warning": []}
 	for batch in expiring:
+		batch["qty"] = flt(batch.get("available_qty"))
+		batch["uom"] = batch.get("stock_uom")
 		urgency = batch.urgency
 		by_urgency[urgency].append(batch)
 

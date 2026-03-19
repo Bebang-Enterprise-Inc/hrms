@@ -19,6 +19,45 @@ from hrms.utils.supply_chain_contracts import (
 COMMISSARY_COMPANY = "Bebang Kitchen Inc."
 
 
+def _get_commissary_raw_material_items(commissary_warehouse: str) -> list[dict[str, Any]]:
+	"""
+	Return the canonical commissary raw-material universe.
+
+	Only ingredients used by active default BOMs for finished goods are included,
+	and the item itself must still be tagged as Raw Materials. This keeps the
+	commissary monitor centered on true production inputs instead of every stock
+	item that happens to share an RM code prefix.
+	"""
+	return frappe.db.sql(
+		"""
+        SELECT DISTINCT
+            i.name as item_code,
+            i.item_name,
+            i.item_group,
+            i.stock_uom as uom,
+            IFNULL(b.actual_qty, 0) as current_qty
+        FROM `tabItem` i
+        JOIN `tabBOM Item` bi ON bi.item_code = i.name
+        JOIN `tabBOM` bom
+            ON bom.name = bi.parent
+            AND bom.is_active = 1
+            AND bom.is_default = 1
+            AND bom.docstatus = 1
+        JOIN `tabItem` fg
+            ON fg.name = bom.item
+            AND fg.item_group = 'Finished Goods'
+            AND fg.disabled = 0
+        LEFT JOIN `tabBin` b ON b.item_code = i.name AND b.warehouse = %s
+        WHERE i.disabled = 0
+          AND i.is_stock_item = 1
+          AND i.item_group = 'Raw Materials'
+        ORDER BY i.item_name
+    """,
+		commissary_warehouse,
+		as_dict=True,
+	)
+
+
 # ---------------------------------------------------------------------------
 # RAW MATERIAL REORDER ALERTS
 # ---------------------------------------------------------------------------
@@ -35,31 +74,7 @@ def get_rm_reorder_alerts():
 	today_date = today()
 	date_7_days_ago = add_days(today_date, -7)
 
-	rm_items = frappe.db.sql(
-		"""
-        SELECT
-            i.name as item_code,
-            i.item_name,
-            i.item_group,
-            i.stock_uom as uom,
-            IFNULL(ir.warehouse_reorder_level, 0) as reorder_level,
-            IFNULL(ir.warehouse_reorder_qty, 0) as safety_stock,
-            IFNULL(b.actual_qty, 0) as current_qty
-        FROM `tabItem` i
-        LEFT JOIN `tabItem Reorder` ir ON ir.parent = i.name AND ir.warehouse = %s
-        LEFT JOIN `tabBin` b ON b.item_code = i.name AND b.warehouse = %s
-        WHERE i.disabled = 0
-        AND i.is_stock_item = 1
-        AND (
-            i.item_group LIKE '%%Raw%%'
-            OR i.item_code LIKE 'RM%%'
-            OR i.item_group = 'Raw Materials'
-        )
-        ORDER BY i.item_name
-    """,
-		(commissary_warehouse, commissary_warehouse),
-		as_dict=True,
-	)
+	rm_items = _get_commissary_raw_material_items(commissary_warehouse)
 
 	alerts = []
 	for item in rm_items:
@@ -81,13 +96,20 @@ def get_rm_reorder_alerts():
 
 		avg_daily = flt(consumption / 7, 2)
 
-		if item["reorder_level"] and item["reorder_level"] > 0:
-			reorder_level = flt(item["reorder_level"])
+		reorder_meta = frappe.db.get_value(
+			"Item Reorder",
+			{"parent": item["item_code"], "warehouse": commissary_warehouse},
+			["warehouse_reorder_level", "warehouse_reorder_qty"],
+			as_dict=True,
+		) or {}
+
+		if reorder_meta.get("warehouse_reorder_level") and reorder_meta["warehouse_reorder_level"] > 0:
+			reorder_level = flt(reorder_meta["warehouse_reorder_level"])
 		else:
 			reorder_level = flt(avg_daily * 3, 2)
 
-		if item["safety_stock"] and item["safety_stock"] > 0:
-			safety_stock = flt(item["safety_stock"])
+		if reorder_meta.get("warehouse_reorder_qty") and reorder_meta["warehouse_reorder_qty"] > 0:
+			safety_stock = flt(reorder_meta["warehouse_reorder_qty"])
 		else:
 			safety_stock = flt(avg_daily, 2)
 
@@ -357,30 +379,7 @@ def get_rm_for_requisition():
 	alerts = {a["item_code"]: a for a in alerts_data["data"]}
 
 	commissary_warehouse = get_commissary_warehouse()
-
-	# Get all raw materials
-	rm_items = frappe.db.sql(
-		"""
-        SELECT
-            i.name as item_code,
-            i.item_name,
-            i.item_group,
-            i.stock_uom as uom,
-            IFNULL(b.actual_qty, 0) as current_qty
-        FROM `tabItem` i
-        LEFT JOIN `tabBin` b ON b.item_code = i.name AND b.warehouse = %s
-        WHERE i.disabled = 0
-        AND i.is_stock_item = 1
-        AND (
-            i.item_group LIKE '%%Raw%%'
-            OR i.item_code LIKE 'RM%%'
-            OR i.item_group = 'Raw Materials'
-        )
-        ORDER BY i.item_name
-    """,
-		commissary_warehouse,
-		as_dict=True,
-	)
+	rm_items = _get_commissary_raw_material_items(commissary_warehouse)
 
 	result = []
 	for item in rm_items:
