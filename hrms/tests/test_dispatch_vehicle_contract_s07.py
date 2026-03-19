@@ -36,13 +36,19 @@ def _install_fake_runtime():
 		frappe.log_error = lambda *args, **kwargs: None
 		frappe.get_roles = lambda *_args, **_kwargs: ["Warehouse User", "System Manager"]
 		frappe.session = types.SimpleNamespace(user="test.warehouse@bebang.ph")
-		frappe.db = types.SimpleNamespace(
+		fake_db = types.SimpleNamespace(
 			has_column=lambda *args, **kwargs: True,
 			get_single_value=lambda *args, **kwargs: None,
 			get_value=lambda *args, **kwargs: None,
 			exists=lambda *args, **kwargs: None,
 			sql=lambda *args, **kwargs: [],
 			count=lambda *args, **kwargs: 0,
+		)
+		frappe.local = types.SimpleNamespace(db=fake_db)
+		frappe.__getattr__ = (
+			lambda name, _frappe=frappe: getattr(_frappe.local, name)
+			if name == "db"
+			else (_ for _ in ()).throw(AttributeError(name))
 		)
 		frappe.get_all = lambda *args, **kwargs: []
 		frappe.get_doc = lambda *args, **kwargs: types.SimpleNamespace(
