@@ -109,8 +109,9 @@
     },
     {
       "fieldname": "owning_department",
-      "fieldtype": "Data",
-      "label": "Owning Department"
+      "fieldtype": "Link",
+      "label": "Owning Department",
+      "options": "Department"
     },
     {
       "fieldname": "request_date",

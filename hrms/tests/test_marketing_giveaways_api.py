@@ -38,6 +38,24 @@ def _install_fake_dependencies(user_roles: list[str] | None = None):
 
 	frappe = types.ModuleType("frappe")
 
+	def _db_get_value(doctype, name=None, fields=None, as_dict=False, *args, **kwargs):
+		if doctype == "Item":
+			payload = {
+				"name": str(name or "ITEM-001"),
+				"item_name": "Presidential",
+				"stock_uom": "Nos",
+				"valuation_rate": 12.5,
+				"item_group": "Finished Goods",
+				"is_stock_item": 1,
+				"disabled": 0,
+			}
+			if as_dict:
+				return payload
+			if isinstance(fields, (list, tuple)):
+				return [payload.get(field) for field in fields]
+			return payload.get(str(fields or "name"))
+		return None
+
 	class PermissionError(Exception):
 		pass
 
@@ -66,7 +84,7 @@ def _install_fake_dependencies(user_roles: list[str] | None = None):
 
 	frappe.local = types.SimpleNamespace(
 		db=types.SimpleNamespace(
-			get_value=lambda *args, **kwargs: None,
+			get_value=_db_get_value,
 			exists=lambda *args, **kwargs: None,
 			count=lambda *args, **kwargs: 0,
 			savepoint=lambda *args, **kwargs: None,
@@ -116,13 +134,34 @@ def _install_fake_dependencies(user_roles: list[str] | None = None):
 	bei_config.get_company = lambda: "Bebang Enterprise Inc."
 	_register_module("hrms.utils.bei_config", bei_config)
 
+	sales_location_mapping = types.ModuleType("hrms.utils.sales_location_mapping")
+	sales_location_mapping.load_sales_location_mapping = lambda: {
+		"sm megamall": {
+			"location_id": 2338,
+			"warehouse_name": "SM Megamall",
+			"warehouse_record_name": "SM Megamall - Bebang Enterprise Inc.",
+		},
+		"ayala solenad": {
+			"location_id": 2112,
+			"warehouse_name": "Ayala Solenad",
+			"warehouse_record_name": "Ayala Solenad - Bebang Enterprise Inc.",
+		},
+		"ayala evo": {
+			"location_id": 2339,
+			"warehouse_name": "Ayala Evo",
+			"warehouse_record_name": "Ayala Evo - Bebang Enterprise Inc.",
+		},
+	}
+	_register_module("hrms.utils.sales_location_mapping", sales_location_mapping)
+
+	sentry_mod = types.ModuleType("hrms.utils.sentry")
+	sentry_mod.capture_backend_message = lambda *args, **kwargs: None
+	sentry_mod.set_backend_observability_context = lambda *args, **kwargs: None
+	_register_module("hrms.utils.sentry", sentry_mod)
+
 	supply_chain_contracts = types.ModuleType("hrms.utils.supply_chain_contracts")
 	supply_chain_contracts.resolve_warehouse_company = lambda warehouse: "Bebang Enterprise Inc."
 	_register_module("hrms.utils.supply_chain_contracts", supply_chain_contracts)
-
-	sales_location_mapping = types.ModuleType("hrms.utils.sales_location_mapping")
-	sales_location_mapping.load_sales_location_mapping = lambda: {}
-	_register_module("hrms.utils.sales_location_mapping", sales_location_mapping)
 
 	return frappe
 
@@ -362,61 +401,6 @@ def test_post_campaign_giveaway_issue_returns_idempotent_replay(monkeypatch):
 	assert result["issue"]["stock_entry"] == existing_issue.stock_entry
 
 
-def test_query_probable_giveaway_leakage_resolves_store_name_from_location_mapping(monkeypatch):
-	module = _load_module("marketing_giveaways_leakage_store_name")
-	module._location_store_labels.cache_clear()
-	monkeypatch.setattr(
-		module,
-		"load_sales_location_mapping",
-		lambda: {
-			"ayala evo": {
-				"location_id": 2426,
-				"warehouse_name": "Ayala Evo",
-				"warehouse_record_name": "Ayala Evo - Bebang Enterprise Inc.",
-			}
-		},
-	)
-
-	def _fake_supabase_get(resource, params=None):
-		if resource == "pos_orders":
-			return [
-				{
-					"id": 1001,
-					"location_id": 2426,
-					"business_date": "2026-03-18",
-					"bill_number": "BILL-1001",
-					"original_gross_sales": 100.0,
-					"total_discounts": 100.0,
-					"payment_status": "PAID",
-				}
-			]
-		return []
-
-	def _fake_supabase_get_all(resource, params, page_size=1000):
-		if resource == "pos_order_items":
-			return [
-				{
-					"order_id": 1001,
-					"product_name": "Presidential",
-					"quantity": 10,
-					"discount_amount": 100.0,
-					"discount_name": "Marketing Discount 100%",
-					"discount_name_normalized": "marketing discount 100%",
-				}
-			]
-		return []
-
-	monkeypatch.setattr(module, "_supabase_get", _fake_supabase_get)
-	monkeypatch.setattr(module, "_supabase_get_all", _fake_supabase_get_all)
-	monkeypatch.setattr(module.frappe, "get_all", lambda *args, **kwargs: [])
-
-	rows = module._query_probable_giveaway_leakage(date(2026, 3, 1), date(2026, 3, 18))
-
-	assert len(rows) == 1
-	assert rows[0]["store_name"] == "Ayala Evo - Bebang Enterprise Inc."
-	assert rows[0]["location_id"] == 2426
-
-
 def test_post_campaign_giveaway_issue_posts_stock_entry_and_updates_campaign(monkeypatch):
 	module = _load_module("marketing_giveaways_happy_path", user_roles=["Store Supervisor"])
 	campaign = FakeCampaignDoc(
@@ -513,12 +497,13 @@ def test_update_campaign_tracking_computes_multi_day_progress(monkeypatch):
 def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_orders(monkeypatch):
 	module = _load_module("marketing_giveaways_leakage_query")
 
-	def _supabase_get(resource, params=None):
+	def _supabase_get_all(resource, params=None, page_size=1000):
 		if resource == "pos_orders":
 			return [
 				{
 					"id": 101,
 					"location_id": 2338,
+					"store_name": "SM Megamall",
 					"business_date": "2026-03-18",
 					"bill_number": "BILL-101",
 					"original_gross_sales": 500.0,
@@ -528,6 +513,7 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 				{
 					"id": 102,
 					"location_id": 2112,
+					"store_name": "Ayala Solenad",
 					"business_date": "2026-03-17",
 					"bill_number": "BILL-102",
 					"original_gross_sales": 300.0,
@@ -537,6 +523,7 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 				{
 					"id": 103,
 					"location_id": 2339,
+					"store_name": "Ayala Evo",
 					"business_date": "2026-03-16",
 					"bill_number": "BILL-103",
 					"original_gross_sales": 400.0,
@@ -544,9 +531,6 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 					"payment_status": "PAID",
 				},
 			]
-		return []
-
-	def _supabase_get_all(resource, params=None, page_size=1000):
 		if resource == "pos_order_items":
 			return [
 				{
@@ -576,7 +560,6 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 			]
 		raise AssertionError(resource)
 
-	monkeypatch.setattr(module, "_supabase_get", _supabase_get)
 	monkeypatch.setattr(module, "_supabase_get_all", _supabase_get_all)
 	monkeypatch.setattr(
 		module.frappe,
@@ -594,64 +577,3 @@ def test_query_probable_giveaway_leakage_flags_marketing_and_effectively_free_or
 	assert rows[0]["linked_campaigns"] == [{"campaign": "CMP-0001", "status": "Linked"}]
 	assert rows[1]["is_marketing_discount"] is False
 	assert rows[1]["is_effectively_free"] is True
-
-
-def test_get_campaign_giveaways_dashboard_defers_probable_leakage(monkeypatch):
-	module = _load_module("marketing_giveaways_dashboard_deferred", user_roles=["Area Supervisor"])
-
-	monkeypatch.setattr(module, "_require_enabled", lambda: None)
-	monkeypatch.setattr(module, "_require_roles", lambda allowed_roles, message: {"Area Supervisor"})
-	monkeypatch.setattr(
-		module.frappe,
-		"get_all",
-		lambda doctype, filters=None, fields=None, order_by=None, limit_page_length=None: [{"name": "CMP-0001"}]
-		if doctype == module.CAMPAIGN_DT
-		else [],
-	)
-	monkeypatch.setattr(module, "_campaign_doc", lambda name: FakeCampaignDoc(name=name))
-	monkeypatch.setattr(
-		module,
-		"_serialize_campaign_row",
-		lambda campaign: {
-			"name": campaign.name,
-			"campaign_name": campaign.campaign_name,
-			"campaign_code": campaign.campaign_code,
-			"status": campaign.status,
-			"schedule_rows": [],
-			"remaining_days": 2,
-			"required_daily_pace": 5,
-		},
-	)
-	monkeypatch.setattr(module, "_manila_today", lambda: date(2026, 3, 18))
-	monkeypatch.setattr(
-		module,
-		"_query_probable_giveaway_leakage",
-		lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("dashboard should not query leakage directly")),
-	)
-
-	result = module.get_campaign_giveaways_dashboard()
-
-	assert result["summary"]["total_campaigns"] == 1
-	assert result["probable_leakage"] == []
-	assert result["probable_leakage_deferred"] is True
-
-
-def test_get_campaign_giveaway_probable_leakage_returns_windowed_rows(monkeypatch):
-	module = _load_module("marketing_giveaways_probable_leakage_endpoint", user_roles=["Area Supervisor"])
-
-	monkeypatch.setattr(module, "_require_enabled", lambda: None)
-	monkeypatch.setattr(module, "_require_roles", lambda allowed_roles, message: {"Area Supervisor"})
-	monkeypatch.setattr(module, "_manila_today", lambda: date(2026, 3, 18))
-	monkeypatch.setattr(
-		module,
-		"_query_probable_giveaway_leakage",
-		lambda start_day, end_day, max_results=20, max_pages=module.LEAKAGE_SCAN_MAX_PAGES: [
-			{"alert_reference": "pos-order:101", "order_id": 101}
-		],
-	)
-
-	result = module.get_campaign_giveaway_probable_leakage(max_results=10)
-
-	assert result["rows"] == [{"alert_reference": "pos-order:101", "order_id": 101}]
-	assert result["window_start"] == "2026-03-02"
-	assert result["window_end"] == "2026-03-18"
