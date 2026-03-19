@@ -127,6 +127,11 @@ def _install_fake_runtime():
         inventory_visibility.resolve_inventory_requested_warehouses = lambda *args, **kwargs: []
         sys.modules["hrms.utils.inventory_visibility"] = inventory_visibility
 
+    if "hrms.utils.sentry" not in sys.modules:
+        sentry_mod = types.ModuleType("hrms.utils.sentry")
+        sentry_mod.set_backend_observability_context = lambda *args, **kwargs: None
+        sys.modules["hrms.utils.sentry"] = sentry_mod
+
     if "hrms.utils.supply_chain_contracts" not in sys.modules:
         contracts_spec = importlib.util.spec_from_file_location(
             "hrms.utils.supply_chain_contracts",

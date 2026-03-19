@@ -117,6 +117,11 @@ def _install_fake_frappe_and_dependencies():
 		scm_roles_mod.check_scm_permission = lambda roles, action: None
 		sys.modules["hrms.utils.scm_roles"] = scm_roles_mod
 
+	if "hrms.utils.sentry" not in sys.modules:
+		sentry_mod = types.ModuleType("hrms.utils.sentry")
+		sentry_mod.set_backend_observability_context = lambda *args, **kwargs: None
+		sys.modules["hrms.utils.sentry"] = sentry_mod
+
 	if "hrms.utils.supply_chain_contracts" not in sys.modules:
 		contracts_mod = types.ModuleType("hrms.utils.supply_chain_contracts")
 		contracts_mod.resolve_store_buyer_entity = lambda *args, **kwargs: {}
