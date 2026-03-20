@@ -38,6 +38,48 @@ function New-UtcNow {
     return (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 }
 
+function Get-ReportedStatus {
+    param([string]$OutputText)
+    if ($OutputText -match "(?im)^Status:\s*([A-Z0-9_-]+)\b") {
+        return $Matches[1].Trim().ToUpperInvariant()
+    }
+    return ""
+}
+
+function Get-DecisionNeeded {
+    param([string]$OutputText)
+    if ($OutputText -match "(?im)^Decision needed:\s*(.+)$") {
+        return $Matches[1].Trim()
+    }
+    return ""
+}
+
+function Test-DecisionNeededIsClear {
+    param([string]$DecisionNeeded)
+    if ([string]::IsNullOrWhiteSpace($DecisionNeeded)) {
+        return $false
+    }
+    return $DecisionNeeded -match '^(?i)(none|no|n/?a|not needed)$'
+}
+
+function Test-StagePassStatus {
+    param(
+        [string]$Stage,
+        [string]$ReportedStatus
+    )
+
+    $allowed = switch ($Stage) {
+        "audit" { @("GO") }
+        "execute" { @("READY_TO_DEPLOY", "GO") }
+        "deploy" { @("READY_FOR_E2E", "GO") }
+        "e2e" { @("READY_TO_CLOSEOUT", "GO") }
+        "closeout" { @("GO", "GO_SIGNED_OFF", "COMPLETE", "COMPLETED") }
+        default { @("GO") }
+    }
+
+    return $allowed -contains $ReportedStatus
+}
+
 function Write-AutoChainStatus {
     param(
         [hashtable]$State,
@@ -62,14 +104,14 @@ function Write-AutoChainStatus {
     $lines += ""
     $lines += "## Stage Results"
     $lines += ""
-    $lines += "| stage | exit_code | status | log_path | finished_utc |"
-    $lines += "|---|---:|---|---|---|"
+    $lines += "| stage | exit_code | status | raw_status | decision_needed | log_path | finished_utc |"
+    $lines += "|---|---:|---|---|---|---|---|"
     foreach ($stage in @("audit", "execute", "deploy", "e2e", "closeout")) {
         if ($State.stages.ContainsKey($stage)) {
             $s = $State.stages[$stage]
-            $lines += "| $stage | $($s.exit_code) | $($s.status) | $($s.log_path) | $($s.finished_utc) |"
+            $lines += "| $stage | $($s.exit_code) | $($s.status) | $($s.raw_status) | $($s.decision_needed) | $($s.log_path) | $($s.finished_utc) |"
         } else {
-            $lines += "| $stage | - | - | - | - |"
+            $lines += "| $stage | - | - | - | - | - | - |"
         }
     }
 
@@ -186,18 +228,32 @@ exit `$LASTEXITCODE
         $outputText += "`n" + (Get-Content -Raw $stderrLogPath)
     }
 
-    $reportedStatus = if ($outputText -match "(?im)^Status:\s*(GO|NO-GO)\b") {
-        $Matches[1].Trim().ToUpperInvariant()
-    } elseif ($exitCode -eq 0) {
-        "GO"
+    $reportedStatus = Get-ReportedStatus -OutputText $outputText
+    $decisionNeeded = Get-DecisionNeeded -OutputText $outputText
+    $decisionIsClear = Test-DecisionNeededIsClear -DecisionNeeded $decisionNeeded
+    $stagePass = Test-StagePassStatus -Stage $Stage -ReportedStatus $reportedStatus
+
+    $stageStatus = "NO-GO"
+    if ($terminationReason -ne "completed") {
+        $stageStatus = "NO-GO"
+    } elseif ([string]::IsNullOrWhiteSpace($reportedStatus)) {
+        $terminationReason = "missing-status-line"
+    } elseif (-not $stagePass) {
+        $terminationReason = "invalid-stage-status:$reportedStatus"
+    } elseif (-not $decisionIsClear) {
+        $terminationReason = if ([string]::IsNullOrWhiteSpace($decisionNeeded)) { "missing-decision-line" } else { "decision-needed:$decisionNeeded" }
+    } elseif ($exitCode -ne 0) {
+        $terminationReason = "nonzero-exit:$exitCode"
     } else {
-        "NO-GO"
+        $stageStatus = "GO"
     }
 
     return @{
         stage = $Stage
         exit_code = $exitCode
-        status = $reportedStatus
+        status = $stageStatus
+        raw_status = if ($reportedStatus) { $reportedStatus } else { "NO-STATUS" }
+        decision_needed = if ($decisionNeeded) { $decisionNeeded } else { "MISSING" }
         log_path = $stdoutLogPath
         stderr_log_path = $stderrLogPath
         termination_reason = $terminationReason
@@ -251,9 +307,9 @@ $stagesToRun = $stageOrder[$startIndex..$stopIndex]
 
 $prompts = @{
     audit = "Use /plan-audit-bei-erp on `"$($state.plan_path)`". Update output artifacts under output/agent-runs/$RunUnit and end with lines: Status: and Decision needed:."
-    execute = "Use /execute-plan-bei-erp for run unit `"$RunUnit`". Continue execution and update output/agent-runs/$RunUnit artifacts. End with lines: Status: and Decision needed:."
-    deploy = "Use /deploy for run unit `"$RunUnit`". Continue from integration through deploy and update output/agent-runs/$RunUnit artifacts. End with lines: Status: and Decision needed:."
-    e2e = "Use /e2e-test for run unit `"$RunUnit`" after deploy. Write evidence under output/agent-runs/$RunUnit and end with lines: Status: and Decision needed:."
+    execute = "Use /execute-plan-bei-erp for run unit `"$RunUnit`". Continue execution and update output/agent-runs/$RunUnit artifacts. Do not stop on checkpoints or truthful non-final states. End with `Status: READY_TO_DEPLOY` only when execute work is genuinely ready for release, `Status: GO` only if you already completed merge+deploy+live verification+closeout inside this stage, or `Status: NO-GO` if a true human-only blocker remains. Always end with `Decision needed: none` unless a human decision is actually required."
+    deploy = "Use /deploy for run unit `"$RunUnit`". Continue from integration through deploy and update output/agent-runs/$RunUnit artifacts. If packet manifests are absent but this is an active direct execution run, reconstruct the minimal release artifacts and continue in direct release mode instead of stopping just because templates are missing. End with `Status: READY_FOR_E2E` only when merge+deploy are complete and the live target matches release truth, `Status: GO` only if you also completed post-deploy verification+closeout inside this stage, or `Status: NO-GO` if a true blocker remains. Always end with `Decision needed: none` unless a human decision is actually required."
+    e2e = "Use /e2e-test for run unit `"$RunUnit`" after deploy. Write evidence under output/agent-runs/$RunUnit and end with `Status: READY_TO_CLOSEOUT` only when required live L1-L4 are green for the affected scope, `Status: GO` only if closeout is also already complete, or `Status: NO-GO` if a true blocker remains. Always end with `Decision needed: none` unless a human decision is actually required."
     closeout = "Finalize closeout for run unit `"$RunUnit`". Update output/agent-runs/$RunUnit artifacts and end with lines: Status: and Decision needed:."
 }
 
