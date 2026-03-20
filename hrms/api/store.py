@@ -387,9 +387,7 @@ def _schedule_row_keys(row: dict | None) -> set[str]:
 
 def _find_schedule_store_row(schedule_rows: list[dict], *candidates: str | None) -> dict | None:
 	candidate_keys = {
-		_normalize_store_key(value)
-		for value in _clean_warehouse_branch_candidates(*candidates)
-		if value
+		_normalize_store_key(value) for value in _clean_warehouse_branch_candidates(*candidates) if value
 	}
 	if not candidate_keys:
 		return None
@@ -1654,7 +1652,11 @@ def get_user_store(surface: str | None = None):
 				allow_unmapped=surface_key not in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY},
 			)
 
-	if not stores and active_employee and surface_key in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY}:
+	if (
+		not stores
+		and active_employee
+		and surface_key in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY}
+	):
 		employee_store_row = _employee_schedule_store_row(
 			active_employee,
 			surface=surface_key,
@@ -1686,10 +1688,14 @@ def get_user_store(surface: str | None = None):
 					allow_unmapped=surface_key in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY},
 				)
 
-	if not stores and surface_key == SCHEDULE_SURFACE_COMMISSARY and (
-		"Commissary Supervisor" in user_roles
-		or "Warehouse User" in user_roles
-		or "Supply Chain Manager" in user_roles
+	if (
+		not stores
+		and surface_key == SCHEDULE_SURFACE_COMMISSARY
+		and (
+			"Commissary Supervisor" in user_roles
+			or "Warehouse User" in user_roles
+			or "Supply Chain Manager" in user_roles
+		)
 	):
 		role = (
 			"Supply Chain Manager"
