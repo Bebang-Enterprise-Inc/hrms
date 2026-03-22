@@ -248,6 +248,12 @@ class BEIPurchaseOrder(Document):
 		# Update supplier metrics
 		self.update_supplier_metrics()
 
+		# Auto-send PO to supplier if email on file
+		supplier = frappe.get_doc("BEI Supplier", self.supplier)
+		if supplier.email:
+			from hrms.api.procurement import send_po_to_supplier
+			send_po_to_supplier(self.name, send_mode="auto_approval")
+
 	@frappe.whitelist()
 	def reject(self, reason: str, rejector: str = "mae"):
 		"""Reject the PO."""

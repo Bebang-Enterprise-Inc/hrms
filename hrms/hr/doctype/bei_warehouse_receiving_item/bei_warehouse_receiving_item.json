@@ -15,7 +15,8 @@
     "accepted_qty",
     "column_break_issue",
     "has_issue",
-    "issue_notes"
+    "issue_notes",
+    "check_expiry"
   ],
   "fields": [
     {
@@ -91,6 +92,12 @@
       "fieldname": "issue_notes",
       "fieldtype": "Small Text",
       "label": "Issue Notes"
+    },
+    {
+      "fieldname": "check_expiry",
+      "fieldtype": "Check",
+      "label": "Expiry OK",
+      "default": "0"
     }
   ],
   "istable": 1,

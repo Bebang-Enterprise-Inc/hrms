@@ -13,7 +13,7 @@ from typing import Any
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, flt, today
+from frappe.utils import add_days, date_diff, flt, getdate, today
 
 from hrms.api.commissary import (
 	get_commissary_company,
@@ -388,7 +388,39 @@ def get_runtime_deduction_proof(
 	return get_bom_runtime_deduction_proof(item_code=item_code, produced_qty=qty, warehouse=warehouse)
 
 
-def get_or_create_batch(batch_id: str | None, item_code: str) -> str | None:
+def _validate_shelf_life_gate(item_code, batch_no, action_date, action_type="dispatch"):
+	"""Hard gate: block if batch is expired or below minimum shelf life."""
+	if not batch_no:
+		return {"valid": True}
+	if not frappe.db.exists("Batch", batch_no):
+		return {"valid": True}
+	batch = frappe.get_doc("Batch", batch_no)
+	if not batch.expiry_date:
+		return {"valid": True}
+	if getdate(batch.expiry_date) < getdate(action_date):
+		return {"valid": False, "error": f"Batch {batch_no} expired on {batch.expiry_date}. Cannot {action_type}.", "requires_override": True}
+	min_shelf_days = frappe.db.get_single_value("BEI Settings", "min_shelf_life_days") or 0
+	if min_shelf_days:
+		remaining = date_diff(batch.expiry_date, action_date)
+		if remaining < min_shelf_days:
+			return {"valid": False, "error": f"Batch {batch_no} has only {remaining} days remaining (minimum: {min_shelf_days}).", "requires_override": True}
+	return {"valid": True}
+
+
+@frappe.whitelist()
+def override_shelf_life_gate(batch_no, reason, action_type="dispatch"):
+	"""Allow supervisor to override shelf life gate with audit trail."""
+	user_roles = frappe.get_roles()
+	if "Commissary Supervisor" not in user_roles and "System Manager" not in user_roles:
+		frappe.throw(_("Only Commissary Supervisor can override shelf life gate"))
+	if not reason or not reason.strip():
+		frappe.throw(_("Override reason is required"))
+	frappe.logger().warning(f"SHELF LIFE OVERRIDE: {batch_no} by {frappe.session.user}: {reason}")
+	frappe.get_doc({"doctype": "Comment", "comment_type": "Info", "reference_doctype": "Batch", "reference_name": batch_no, "content": f"Shelf life override by {frappe.session.user}: {reason}"}).insert(ignore_permissions=True)
+	return {"success": True, "overridden": True}
+
+
+def get_or_create_batch(batch_id: str | None, item_code: str, production_date: str | None = None) -> str | None:
 	"""
 	Get existing batch or create a new one.
 	Frappe requires Batch documents to exist before referencing in Stock Entry.
@@ -410,7 +442,7 @@ def get_or_create_batch(batch_id: str | None, item_code: str) -> str | None:
 	batch = frappe.new_doc("Batch")
 	batch.batch_id = batch_id
 	batch.item = item_code
-	batch.manufacturing_date = today()
+	batch.manufacturing_date = getdate(production_date) if production_date else today()
 	batch.insert(ignore_permissions=True)
 
 	return batch.name
@@ -429,6 +461,8 @@ def submit_production_output(
 	items: str | list[dict[str, Any]],
 	batch_no: str | None = None,
 	remarks: str | None = None,
+	production_date: str | None = None,
+	override_approved: bool = False,
 ) -> dict[str, Any]:
 	"""
 	Record production batch output.
@@ -534,7 +568,7 @@ def submit_production_output(
 		try:
 			se = frappe.new_doc("Stock Entry")
 			se.company = get_commissary_company()
-			se.posting_date = today()
+			se.posting_date = getdate(production_date) if production_date else today()
 			se.posting_time = frappe.utils.nowtime()
 			se.to_warehouse = commissary_warehouse
 			se.remarks = _build_production_remarks(batch_no=batch_no, remarks=remarks)
@@ -576,7 +610,7 @@ def submit_production_output(
 
 				# Override batch on FG if provided
 				if batch_no and batch_no.strip():
-					valid_batch = get_or_create_batch(batch_no, first_item_code)
+					valid_batch = get_or_create_batch(batch_no, first_item_code, production_date)
 					if valid_batch:
 						fg_row.batch_no = valid_batch
 			else:
@@ -597,10 +631,17 @@ def submit_production_output(
 						"t_warehouse": commissary_warehouse,
 					}
 					if batch_no and batch_no.strip():
-						valid_batch = get_or_create_batch(batch_no, item_data["item_code"])
+						valid_batch = get_or_create_batch(batch_no, item_data["item_code"], production_date)
 						if valid_batch:
 							item_row["batch_no"] = valid_batch
 					se.append("items", item_row)
+
+			# UX-010: Shelf life gate before dispatch
+			for se_item in se.items:
+				if se_item.batch_no and se_item.t_warehouse:
+					gate = _validate_shelf_life_gate(se_item.item_code, se_item.batch_no, se.posting_date, "dispatch")
+					if not gate["valid"] and not override_approved:
+						return {"success": False, "error": gate["error"], "requires_override": True}
 
 			_enable_role_gated_write(se)
 			with _run_as_system_user():

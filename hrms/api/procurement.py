@@ -1123,6 +1123,26 @@ def reject_po(name, reason, rejector="mae"):
     return po.reject(reason, rejector)
 
 
+def _get_po_pdf_bytes(po_name):
+    """Return PO PDF as raw bytes for email attachment."""
+    import base64
+    from hrms.api import _download_pdf
+    b64_data = _download_pdf("BEI Purchase Order", po_name)
+    if "," in b64_data:
+        b64_data = b64_data.split(",", 1)[1]
+    return base64.b64decode(b64_data)
+
+
+def _get_procurement_finance_cc_list():
+    """Return procurement + finance CC emails for PO distribution."""
+    cc = []
+    for role in ("Procurement Manager", "Accounts Manager"):
+        users = frappe.get_all("Has Role", filters={"role": role, "parenttype": "User"}, pluck="parent")
+        cc.extend(users)
+    seen = set()
+    return [e for e in cc if e and "@" in e and not (e in seen or seen.add(e))]
+
+
 @frappe.whitelist()
 def send_po_to_supplier(
     name,
@@ -1134,15 +1154,33 @@ def send_po_to_supplier(
     message_id=None,
     error_message=None,
 ):
-    """Record PO distribution state after the portal handles PDF/email delivery."""
+    """Send PO PDF to supplier via email and record distribution event."""
     po = frappe.get_doc("BEI Purchase Order", name)
+    if send_mode in ("email", "auto_approval"):
+        supplier = frappe.get_doc("BEI Supplier", po.supplier)
+        if not supplier.email:
+            return {"success": False, "error": "Supplier has no email on file"}
+        try:
+            pdf_content = _get_po_pdf_bytes(name)
+            frappe.sendmail(
+                recipients=[supplier.email],
+                cc=_get_procurement_finance_cc_list(),
+                subject=f"Purchase Order {po.name} - {po.supplier_name}",
+                message=f"Please find attached Purchase Order {po.name}.
+Bebang Enterprise Inc.",
+                attachments=[{"fname": f"PO-{po.name}.pdf", "fcontent": pdf_content}],
+                now=True,
+            )
+            recipient_email = supplier.email
+            outcome = "success"
+            action = "send"
+        except Exception as e:
+            frappe.log_error(f"PO email failed for {name}: {e!s}")
+            outcome = "failed"
+            error_message = str(e)
     return po.record_distribution_event(
-        action=action,
-        outcome=outcome,
-        recipient_email=recipient_email,
-        cc_emails=cc_emails,
-        send_mode=send_mode,
-        message_id=message_id,
+        action=action, outcome=outcome, recipient_email=recipient_email,
+        cc_emails=cc_emails, send_mode=send_mode, message_id=message_id,
         error_message=error_message,
     )
 

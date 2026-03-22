@@ -2556,6 +2556,18 @@ def complete_receiving(
 
 	has_issues = False
 	for item_data in items:
+		# UX-010: Auto-validate shelf life at store receiving
+		check_expiry_val = item_data.get("check_expiry", 0)
+		has_issue_val = item_data.get("has_issue", 0)
+		batch_no = item_data.get("batch_no")
+		if batch_no:
+			from hrms.api.commissary_dashboard import _validate_shelf_life_gate
+			from frappe.utils import today as _today
+			gate = _validate_shelf_life_gate(item_data.get("item_code"), batch_no, _today(), "store_receive")
+			if not gate["valid"]:
+				check_expiry_val = 0
+				has_issue_val = 1
+
 		row = receiving.append(
 			"items",
 			{
@@ -2564,12 +2576,12 @@ def complete_receiving(
 				"received_qty": item_data.get("received_qty"),
 				"check_condition": item_data.get("check_condition", 0),
 				"check_packaging": item_data.get("check_packaging", 0),
-				"check_expiry": item_data.get("check_expiry", 0),
+				"check_expiry": check_expiry_val,
 				"check_temperature": item_data.get("check_temperature", 0),
 				"check_food_quality": item_data.get("check_food_quality", 0),
 				"expiry_date": item_data.get("expiry_date"),
 				"temperature_reading": item_data.get("temperature_reading"),
-				"has_issue": item_data.get("has_issue", 0),
+				"has_issue": has_issue_val,
 			},
 		)
 		if row.has_issue:
