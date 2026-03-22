@@ -1,1 +1,3 @@
-# Governor live deploy test — Sun Mar 22 17:46:59 MPST 2026
+# BEI-ERP Merge Governor
+
+Serializes production merges with AI review.
