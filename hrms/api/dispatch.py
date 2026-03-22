@@ -2240,3 +2240,5 @@ def get_stores():
 		}
 		for row in get_warehouses()
 	]
+
+# Governor conflict test — touches same file as recent PR #274
