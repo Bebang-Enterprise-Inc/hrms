@@ -1,0 +1,201 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "BEI-EDIT-.YYYY.-.#####",
+ "creation": "2026-02-01 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "branch",
+  "column_break_1",
+  "status",
+  "submission_date",
+  "section_change",
+  "field_name",
+  "field_label",
+  "column_break_2",
+  "current_value",
+  "requested_value",
+  "section_justification",
+  "reason",
+  "government_id_photo",
+  "section_processing",
+  "hr_notes",
+  "processed_by",
+  "processed_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.branch",
+   "fieldname": "branch",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Branch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending\nApproved\nRejected\nMore Info Needed"
+  },
+  {
+   "default": "Now",
+   "fieldname": "submission_date",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Submission Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_change",
+   "fieldtype": "Section Break",
+   "label": "Requested Change"
+  },
+  {
+   "fieldname": "field_name",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Field Name",
+   "options": "first_name\nmiddle_name\nlast_name\ndate_of_birth\nmarital_status\nctc_sss\nctc_tin\nctc_philhealth\nctc_pagibig\ncustom_nickname",
+   "reqd": 1
+  },
+  {
+   "fieldname": "field_label",
+   "fieldtype": "Data",
+   "label": "Field Label",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "current_value",
+   "fieldtype": "Data",
+   "label": "Current Value",
+   "read_only": 1
+  },
+  {
+   "fieldname": "requested_value",
+   "fieldtype": "Data",
+   "label": "Requested Value",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_justification",
+   "fieldtype": "Section Break",
+   "label": "Justification"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason for Change",
+   "reqd": 1
+  },
+  {
+   "fieldname": "government_id_photo",
+   "fieldtype": "Attach Image",
+   "label": "Government ID Photo"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_processing",
+   "fieldtype": "Section Break",
+   "label": "HR Processing"
+  },
+  {
+   "fieldname": "hr_notes",
+   "fieldtype": "Small Text",
+   "label": "HR Notes"
+  },
+  {
+   "fieldname": "processed_by",
+   "fieldtype": "Link",
+   "label": "Processed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "processed_date",
+   "fieldtype": "Datetime",
+   "label": "Processed Date",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-01 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Edit Request",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "write": 1
+  },
+  {
+   "create": 0,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Employee",
+   "write": 0
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "employee_name",
+ "track_changes": 1
+}

@@ -1,0 +1,57 @@
+# Sheets Receiver - Standalone Deployment
+# NOT part of Frappe stack - runs independently on same server
+# Temporary service for ERP migration period
+
+version: "3.8"
+
+services:
+  sheets-receiver:
+    build:
+      context: ./hrms/hrms/services/sheets_receiver
+      dockerfile: Dockerfile
+    container_name: sheets-receiver
+    restart: unless-stopped
+
+    environment:
+      # Google API
+      GOOGLE_SERVICE_ACCOUNT_FILE: /app/credentials/task-manager-service.json
+      IMPERSONATE_USER: sam@bebang.ph
+
+      # Frappe API - calls external URL (not internal Docker network)
+      FRAPPE_URL: https://hq.bebang.ph
+      FRAPPE_API_KEY: ${FRAPPE_API_KEY}
+      FRAPPE_API_SECRET: ${FRAPPE_API_SECRET}
+
+      # Webhook - Google sends to the public Frappe proxy method
+      PUBLIC_WEBHOOK_URL: https://hq.bebang.ph/api/method/hrms.api.erp_sync.webhook
+      SHEETS_RECEIVER_PORT: 8765
+
+      # Logging
+      LOG_LEVEL: INFO
+      BEI_CHAT_STRICT_BLIP_ONLY: ${BEI_CHAT_STRICT_BLIP_ONLY:-true}
+
+      # Baseline sync orchestration / testing
+      BASELINE_TEST_INTERVAL_MINUTES: ${BASELINE_TEST_INTERVAL_MINUTES:-0}
+      GENERATE_AP_EXCEPTION_REPORTS: ${GENERATE_AP_EXCEPTION_REPORTS:-true}
+      AP_EXCEPTION_REPORT_DIR: ${AP_EXCEPTION_REPORT_DIR:-/app/data/reports/ap_exception_reports}
+      SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS: ${SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS:-startup,manual,interval_baseline,scheduled}
+
+    volumes:
+      # Google service account (copy from main credentials folder)
+      - ./credentials:/app/credentials:ro
+
+      # Persistent data
+      - ./data:/app/data
+
+      # Logs
+      - ./logs:/app/logs
+
+    ports:
+      - "127.0.0.1:8765:8765"   # Host-local operator access
+      - "172.17.0.1:8765:8765"  # Backend containers reach receiver via Docker host bridge
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

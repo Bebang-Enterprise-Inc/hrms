@@ -1,0 +1,17 @@
+{
+  "name": "bei-brain-mcp",
+  "version": "1.0.0",
+  "description": "BEI Brain MCP Server — 14 tools for enterprise knowledge retrieval",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "openai": "^4.20.0",
+    "zod": "^3.22.0"
+  }
+}

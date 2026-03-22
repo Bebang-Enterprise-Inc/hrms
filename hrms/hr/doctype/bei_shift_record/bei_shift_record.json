@@ -1,0 +1,355 @@
+{
+ "actions": [],
+ "autoname": "format:SR-{YYYY}-{#####}",
+ "creation": "2026-02-06 12:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "department",
+  "designation",
+  "section_break_punch_in",
+  "punch_in_time",
+  "punch_in_latitude",
+  "punch_in_longitude",
+  "punch_in_accuracy",
+  "punch_in_gps_latitude",
+  "punch_in_gps_longitude",
+  "punch_in_adjustment_distance",
+  "column_break_punch_in",
+  "punch_in_address",
+  "punch_in_photo",
+  "section_break_punch_out",
+  "punch_out_time",
+  "punch_out_latitude",
+  "punch_out_longitude",
+  "punch_out_accuracy",
+  "column_break_punch_out",
+  "punch_out_address",
+  "section_break_calc",
+  "total_hours",
+  "overtime_flag",
+  "cross_day_flag",
+  "column_break_calc",
+  "velocity_flag",
+  "auto_punched_out",
+  "status",
+  "section_break_review",
+  "verification_status",
+  "verified_by",
+  "verification_time",
+  "column_break_review",
+  "verification_notes",
+  "notes",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Department",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.designation",
+   "fieldname": "designation",
+   "fieldtype": "Data",
+   "label": "Designation",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_punch_in",
+   "fieldtype": "Section Break",
+   "label": "Punch-In Details"
+  },
+  {
+   "fieldname": "punch_in_time",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Punch-In Time",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "punch_in_latitude",
+   "fieldtype": "Float",
+   "label": "Punch-In Latitude",
+   "precision": "8",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "punch_in_longitude",
+   "fieldtype": "Float",
+   "label": "Punch-In Longitude",
+   "precision": "8",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "punch_in_accuracy",
+   "fieldtype": "Float",
+   "label": "GPS Accuracy (meters)",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "punch_in_gps_latitude",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "GPS Raw Latitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "punch_in_gps_longitude",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "GPS Raw Longitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "punch_in_adjustment_distance",
+   "fieldtype": "Float",
+   "label": "Pin Adjustment (meters)",
+   "precision": "1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_punch_in",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "punch_in_address",
+   "fieldtype": "Data",
+   "label": "Punch-In Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "punch_in_photo",
+   "fieldtype": "Attach Image",
+   "label": "Punch-In Photo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_punch_out",
+   "fieldtype": "Section Break",
+   "label": "Punch-Out Details"
+  },
+  {
+   "fieldname": "punch_out_time",
+   "fieldtype": "Datetime",
+   "label": "Punch-Out Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "punch_out_latitude",
+   "fieldtype": "Float",
+   "label": "Punch-Out Latitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "punch_out_longitude",
+   "fieldtype": "Float",
+   "label": "Punch-Out Longitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "punch_out_accuracy",
+   "fieldtype": "Float",
+   "label": "GPS Accuracy (meters)",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_punch_out",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "punch_out_address",
+   "fieldtype": "Data",
+   "label": "Punch-Out Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_calc",
+   "fieldtype": "Section Break",
+   "label": "Calculated Fields"
+  },
+  {
+   "fieldname": "total_hours",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Hours",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "overtime_flag",
+   "fieldtype": "Check",
+   "label": "Overtime (>8h)",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "cross_day_flag",
+   "fieldtype": "Check",
+   "label": "Cross-Day Shift",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_calc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "velocity_flag",
+   "fieldtype": "Check",
+   "label": "Velocity Flag",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "auto_punched_out",
+   "fieldtype": "Check",
+   "label": "Auto Punched-Out",
+   "read_only": 1
+  },
+  {
+   "default": "In Progress",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "In Progress\nCompleted",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_review",
+   "fieldtype": "Section Break",
+   "label": "Manager Review"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "verification_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Verification Status",
+   "options": "Pending\nApproved\nFlagged"
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Link",
+   "label": "Verified By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "verification_time",
+   "fieldtype": "Datetime",
+   "label": "Verification Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_review",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "verification_notes",
+   "fieldtype": "Small Text",
+   "label": "Verification Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "BEI Shift Record",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 0,
+ "links": [],
+ "modified": "2026-02-10 18:00:00.000000",
+ "module": "HR",
+ "name": "BEI Shift Record",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "if_owner": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "employee_name",
+ "track_changes": 1
+}

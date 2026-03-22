@@ -1,0 +1,109 @@
+name: Weather Sync
+
+on:
+  schedule:
+    # Every 3 hours at :15 UTC -> 08:15, 11:15, 14:15, 17:15, 20:15, 23:15, 02:15, 05:15 PHT
+    - cron: "15 */3 * * *"
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Optional Manila-local start date (YYYY-MM-DD)"
+        required: false
+        type: string
+      end_date:
+        description: "Optional Manila-local end date (YYYY-MM-DD)"
+        required: false
+        type: string
+
+env:
+  SUPABASE_URL: "https://csnniykjrychgajfrgua.supabase.co"
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+concurrency:
+  group: weather-sync
+  cancel-in-progress: false
+
+jobs:
+  weather-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests supabase
+
+      - name: Run weather sync
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -n "${{ inputs.start_date }}" ] || [ -n "${{ inputs.end_date }}" ]; then
+            if [ -z "${{ inputs.start_date }}" ] || [ -z "${{ inputs.end_date }}" ]; then
+              echo "start_date and end_date must be provided together" >&2
+              exit 1
+            fi
+
+            python scripts/sync_weather_to_supabase.py \
+              --start-date "${{ inputs.start_date }}" \
+              --end-date "${{ inputs.end_date }}"
+            exit 0
+          fi
+
+          START_DATE=$(TZ=Asia/Manila date -d '2 days ago' +%F)
+          END_DATE=$(TZ=Asia/Manila date +%F)
+
+          echo "Syncing weather window ${START_DATE} -> ${END_DATE}"
+          python scripts/sync_weather_to_supabase.py \
+            --start-date "${START_DATE}" \
+            --end-date "${END_DATE}"
+
+  notify-failure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [weather-sync]
+    if: ${{ failure() }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install google-auth google-api-python-client
+
+      - name: Setup Google credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
+
+      - name: Send failure alert to Google Chat
+        run: |
+          python -c "
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+
+          creds = service_account.Credentials.from_service_account_file(
+              'credentials/task-manager-service.json',
+              scopes=['https://www.googleapis.com/auth/chat.bot'],
+          )
+          chat = build('chat', 'v1', credentials=creds)
+
+          msg = (
+              'WORKFLOW FAILURE: Weather Sync\n\n'
+              'The scheduled weather sync failed.\n'
+              'Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          )
+          chat.spaces().messages().create(
+              parent='spaces/AAQABiNmpBg',
+              body={'text': msg},
+          ).execute()
+          print('Failure alert sent to Google Chat')
+          "

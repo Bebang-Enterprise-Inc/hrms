@@ -1,0 +1,127 @@
+{
+ "actions": [],
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "day_of_week",
+  "shift_type_name",
+  "is_off",
+  "shift_start",
+  "shift_end",
+  "ends_next_day",
+  "shift_type",
+  "shift_source",
+  "leave_locked",
+  "hours",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "day_of_week",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Day of Week",
+   "options": "Monday\nTuesday\nWednesday\nThursday\nFriday\nSaturday\nSunday",
+   "reqd": 1
+  },
+  {
+   "fieldname": "shift_type_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Shift Type",
+   "options": "Shift Type"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_off",
+   "fieldtype": "Check",
+   "label": "Is Off"
+  },
+  {
+   "fieldname": "shift_start",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Shift Start",
+   "mandatory_depends_on": "eval:!doc.is_off"
+  },
+  {
+   "fieldname": "shift_end",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Shift End",
+   "mandatory_depends_on": "eval:!doc.is_off"
+  },
+  {
+   "default": "0",
+   "fieldname": "ends_next_day",
+   "fieldtype": "Check",
+   "label": "Ends Next Day"
+  },
+  {
+   "fieldname": "shift_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Shift Type",
+   "options": "Opening\nMid\nClosing\nOff\nDay Off\nVL\nSL\nCommissary - Dawn\nCommissary - Morning\nCommissary - Afternoon\nCommissary - Night"
+  },
+  {
+   "default": "manual",
+   "fieldname": "shift_source",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Shift Source",
+   "options": "manual\napproved_leave",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "leave_locked",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Leave Locked",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hours",
+   "fieldtype": "Float",
+   "label": "Hours",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-01-25 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Planned Shift",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,143 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "autoname": "naming_series:",
+  "creation": "2026-02-16 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "route_name",
+    "cargo_type",
+    "source_warehouse",
+    "column_break_1",
+    "default_vehicle",
+    "default_driver",
+    "estimated_duration_hrs",
+    "active",
+    "section_break_notes",
+    "notes",
+    "section_break_stops",
+    "stops"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "BEI-ROUTE-.####",
+      "reqd": 1
+    },
+    {
+      "fieldname": "route_name",
+      "fieldtype": "Data",
+      "label": "Route Name",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "cargo_type",
+      "fieldtype": "Select",
+      "label": "Cargo Type",
+      "options": "FC\nDRY\nFM\nMixed",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "source_warehouse",
+      "fieldtype": "Link",
+      "label": "Source Warehouse",
+      "options": "Warehouse",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "default_vehicle",
+      "fieldtype": "Link",
+      "label": "Default Vehicle",
+      "options": "BEI Vehicle"
+    },
+    {
+      "fieldname": "default_driver",
+      "fieldtype": "Link",
+      "label": "Default Driver",
+      "options": "Employee"
+    },
+    {
+      "fieldname": "estimated_duration_hrs",
+      "fieldtype": "Float",
+      "label": "Estimated Duration (Hours)"
+    },
+    {
+      "fieldname": "active",
+      "fieldtype": "Check",
+      "label": "Active",
+      "default": "1",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "section_break_notes",
+      "fieldtype": "Section Break",
+      "label": "Notes"
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Small Text",
+      "label": "Notes"
+    },
+    {
+      "fieldname": "section_break_stops",
+      "fieldtype": "Section Break",
+      "label": "Route Stops"
+    },
+    {
+      "fieldname": "stops",
+      "fieldtype": "Table",
+      "label": "Stops",
+      "options": "BEI Route Stop"
+    }
+  ],
+  "links": [],
+  "modified": "2026-02-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Route",
+  "naming_rule": "By \"Naming Series\" field",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Warehouse User",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "sort_field": "route_name",
+  "sort_order": "ASC",
+  "states": [],
+  "track_changes": 1
+}

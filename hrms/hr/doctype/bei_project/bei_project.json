@@ -1,0 +1,431 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "format:PROJ-{YYYY}-{####}",
+	"creation": "2026-02-04 00:00:00.000000",
+	"default_view": "List",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"section_basic",
+		"project_name",
+		"project_type",
+		"store",
+		"store_code",
+		"column_break_basic",
+		"stage",
+		"status",
+		"priority",
+		"section_details",
+		"description",
+		"scope_of_work",
+		"column_break_details",
+		"project_manager",
+		"area_manager",
+		"section_schedule",
+		"target_start_date",
+		"actual_start_date",
+		"target_completion_date",
+		"column_break_schedule",
+		"actual_completion_date",
+		"target_opening_date",
+		"actual_opening_date",
+		"section_budget",
+		"approved_budget",
+		"contract_amount",
+		"column_break_budget",
+		"total_actual_cost",
+		"variance",
+		"section_contractor",
+		"contractor",
+		"contractor_contact",
+		"column_break_contractor",
+		"contractor_email",
+		"contractor_phone",
+		"section_progress",
+		"progress_percent",
+		"last_update_date",
+		"column_break_progress",
+		"notes",
+		"section_documents",
+		"architectural_plans",
+		"construction_contract",
+		"column_break_documents",
+		"permits_folder",
+		"photos_folder",
+		"section_audit",
+		"created_by",
+		"created_at",
+		"column_break_audit",
+		"modified_by_user",
+		"modified_at"
+	],
+	"fields": [
+		{
+			"fieldname": "section_basic",
+			"fieldtype": "Section Break",
+			"label": "Project Details"
+		},
+		{
+			"fieldname": "project_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Project Name",
+			"reqd": 1
+		},
+		{
+			"fieldname": "project_type",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Project Type",
+			"options": "New Store\nRenovation\nExpansion\nRelocation\nMajor Repair",
+			"reqd": 1
+		},
+		{
+			"fieldname": "store",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Store",
+			"options": "Warehouse"
+		},
+		{
+			"fetch_from": "store.warehouse_name",
+			"fieldname": "store_code",
+			"fieldtype": "Data",
+			"label": "Store Code",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "Pre-Design",
+			"fieldname": "stage",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Stage",
+			"options": "Pre-Design\nDesign\nBidding\nPre-Construction\nConstruction\nPost-Construction\nCompleted\nOn Hold\nCancelled",
+			"reqd": 1
+		},
+		{
+			"default": "Active",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "Active\nOn Hold\nCompleted\nCancelled"
+		},
+		{
+			"default": "Normal",
+			"fieldname": "priority",
+			"fieldtype": "Select",
+			"in_standard_filter": 1,
+			"label": "Priority",
+			"options": "Urgent\nHigh\nNormal\nLow"
+		},
+		{
+			"fieldname": "section_details",
+			"fieldtype": "Section Break",
+			"label": "Description"
+		},
+		{
+			"fieldname": "description",
+			"fieldtype": "Text",
+			"label": "Project Description"
+		},
+		{
+			"fieldname": "scope_of_work",
+			"fieldtype": "Text Editor",
+			"label": "Scope of Work"
+		},
+		{
+			"fieldname": "column_break_details",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "project_manager",
+			"fieldtype": "Link",
+			"label": "Project Manager",
+			"options": "Employee"
+		},
+		{
+			"fieldname": "area_manager",
+			"fieldtype": "Link",
+			"label": "Area Manager",
+			"options": "Employee"
+		},
+		{
+			"fieldname": "section_schedule",
+			"fieldtype": "Section Break",
+			"label": "Schedule"
+		},
+		{
+			"fieldname": "target_start_date",
+			"fieldtype": "Date",
+			"label": "Target Start Date"
+		},
+		{
+			"fieldname": "actual_start_date",
+			"fieldtype": "Date",
+			"label": "Actual Start Date"
+		},
+		{
+			"fieldname": "target_completion_date",
+			"fieldtype": "Date",
+			"label": "Target Completion Date"
+		},
+		{
+			"fieldname": "column_break_schedule",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "actual_completion_date",
+			"fieldtype": "Date",
+			"label": "Actual Completion Date"
+		},
+		{
+			"fieldname": "target_opening_date",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"label": "Target Opening Date"
+		},
+		{
+			"fieldname": "actual_opening_date",
+			"fieldtype": "Date",
+			"label": "Actual Opening Date"
+		},
+		{
+			"fieldname": "section_budget",
+			"fieldtype": "Section Break",
+			"label": "Budget & Costs"
+		},
+		{
+			"fieldname": "approved_budget",
+			"fieldtype": "Currency",
+			"label": "Approved Budget",
+			"precision": "2"
+		},
+		{
+			"fieldname": "contract_amount",
+			"fieldtype": "Currency",
+			"in_list_view": 1,
+			"label": "Contract Amount",
+			"precision": "2"
+		},
+		{
+			"fieldname": "column_break_budget",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "total_actual_cost",
+			"fieldtype": "Currency",
+			"label": "Total Actual Cost",
+			"precision": "2",
+			"read_only": 1
+		},
+		{
+			"fieldname": "variance",
+			"fieldtype": "Currency",
+			"label": "Budget Variance",
+			"precision": "2",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_contractor",
+			"fieldtype": "Section Break",
+			"label": "Contractor"
+		},
+		{
+			"fieldname": "contractor",
+			"fieldtype": "Link",
+			"label": "Contractor",
+			"options": "BEI Supplier"
+		},
+		{
+			"fieldname": "contractor_contact",
+			"fieldtype": "Data",
+			"label": "Contractor Contact Person"
+		},
+		{
+			"fieldname": "column_break_contractor",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "contractor_email",
+			"fieldtype": "Data",
+			"label": "Contractor Email",
+			"options": "Email"
+		},
+		{
+			"fieldname": "contractor_phone",
+			"fieldtype": "Data",
+			"label": "Contractor Phone",
+			"options": "Phone"
+		},
+		{
+			"fieldname": "section_progress",
+			"fieldtype": "Section Break",
+			"label": "Progress"
+		},
+		{
+			"default": "0",
+			"fieldname": "progress_percent",
+			"fieldtype": "Percent",
+			"in_list_view": 1,
+			"label": "Progress %"
+		},
+		{
+			"fieldname": "last_update_date",
+			"fieldtype": "Date",
+			"label": "Last Progress Update"
+		},
+		{
+			"fieldname": "column_break_progress",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "notes",
+			"fieldtype": "Small Text",
+			"label": "Progress Notes"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_documents",
+			"fieldtype": "Section Break",
+			"label": "Documents"
+		},
+		{
+			"fieldname": "architectural_plans",
+			"fieldtype": "Attach",
+			"label": "Architectural Plans"
+		},
+		{
+			"fieldname": "construction_contract",
+			"fieldtype": "Attach",
+			"label": "Construction Contract"
+		},
+		{
+			"fieldname": "column_break_documents",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "permits_folder",
+			"fieldtype": "Data",
+			"label": "Permits Folder URL"
+		},
+		{
+			"fieldname": "photos_folder",
+			"fieldtype": "Data",
+			"label": "Photos Folder URL"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_audit",
+			"fieldtype": "Section Break",
+			"label": "Audit Trail"
+		},
+		{
+			"default": "__user",
+			"fieldname": "created_by",
+			"fieldtype": "Link",
+			"label": "Created By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "created_at",
+			"fieldtype": "Datetime",
+			"label": "Created At",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_audit",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "modified_by_user",
+			"fieldtype": "Link",
+			"label": "Last Modified By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "modified_at",
+			"fieldtype": "Datetime",
+			"label": "Last Modified At",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [
+		{
+			"link_doctype": "BEI Site Inspection",
+			"link_fieldname": "project"
+		},
+		{
+			"link_doctype": "BEI Project Bid",
+			"link_fieldname": "project"
+		},
+		{
+			"link_doctype": "BEI Project Permit",
+			"link_fieldname": "project"
+		},
+		{
+			"link_doctype": "BEI Project Milestone",
+			"link_fieldname": "project"
+		},
+		{
+			"link_doctype": "BEI Punchlist Item",
+			"link_fieldname": "project"
+		}
+	],
+	"modified": "2026-02-04 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Project",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects User",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects Manager",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"read": 1,
+			"report": 1,
+			"role": "Employee"
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"title_field": "project_name",
+	"track_changes": 1
+}

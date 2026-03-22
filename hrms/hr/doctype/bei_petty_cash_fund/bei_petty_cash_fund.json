@@ -1,0 +1,237 @@
+{
+    "actions": [],
+    "allow_rename": 0,
+    "autoname": "format:PCF-{store}",
+    "creation": "2026-02-03 00:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "section_store",
+        "store",
+        "company",
+        "is_enabled",
+        "column_break_store",
+        "custodian",
+        "backup_custodian",
+        "section_fund",
+        "fund_amount",
+        "current_balance",
+        "column_break_fund",
+        "pending_total",
+        "pending_count",
+        "section_threshold",
+        "threshold_percentage",
+        "auto_submit_enabled",
+        "column_break_threshold",
+        "month_end_auto_submit",
+        "section_history",
+        "last_batch_date",
+        "last_replenishment_date",
+        "column_break_history",
+        "total_batches",
+        "total_expenses_ytd"
+    ],
+    "fields": [
+        {
+            "fieldname": "section_store",
+            "fieldtype": "Section Break",
+            "label": "Store Configuration"
+        },
+        {
+            "fieldname": "store",
+            "fieldtype": "Link",
+            "label": "Store",
+            "options": "Warehouse",
+            "reqd": 1,
+            "unique": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "description": "One PCF fund per store"
+        },
+        {
+            "fieldname": "company",
+            "fieldtype": "Link",
+            "label": "Company",
+            "options": "Company",
+            "reqd": 1,
+            "default": "Bebang Enterprise Inc."
+        },
+        {
+            "fieldname": "is_enabled",
+            "fieldtype": "Check",
+            "label": "Enabled",
+            "default": 0,
+            "in_list_view": 1,
+            "description": "Toggle PCF workflow on/off for this store"
+        },
+        {
+            "fieldname": "column_break_store",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "custodian",
+            "fieldtype": "Link",
+            "label": "PCF Custodian",
+            "options": "User",
+            "reqd": 1,
+            "in_list_view": 1,
+            "description": "User responsible for managing PCF batches"
+        },
+        {
+            "fieldname": "backup_custodian",
+            "fieldtype": "Link",
+            "label": "Backup Custodian",
+            "options": "User",
+            "description": "Backup custodian when primary is unavailable"
+        },
+        {
+            "fieldname": "section_fund",
+            "fieldtype": "Section Break",
+            "label": "Fund Details"
+        },
+        {
+            "fieldname": "fund_amount",
+            "fieldtype": "Currency",
+            "label": "Fund Amount",
+            "reqd": 1,
+            "default": 10000,
+            "in_list_view": 1,
+            "description": "Total PCF amount (e.g., PHP 10,000)"
+        },
+        {
+            "fieldname": "current_balance",
+            "fieldtype": "Currency",
+            "label": "Current Balance",
+            "read_only": 1,
+            "description": "Fund amount minus pending expenses"
+        },
+        {
+            "fieldname": "column_break_fund",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "pending_total",
+            "fieldtype": "Currency",
+            "label": "Pending Total",
+            "read_only": 1,
+            "description": "Sum of all pending expenses"
+        },
+        {
+            "fieldname": "pending_count",
+            "fieldtype": "Int",
+            "label": "Pending Count",
+            "read_only": 1,
+            "description": "Number of pending expenses"
+        },
+        {
+            "fieldname": "section_threshold",
+            "fieldtype": "Section Break",
+            "label": "Auto-Submit Settings"
+        },
+        {
+            "fieldname": "threshold_percentage",
+            "fieldtype": "Percent",
+            "label": "Auto-Submit Threshold",
+            "reqd": 1,
+            "default": 50,
+            "description": "Auto-submit batch when pending reaches this % of fund (1-100)"
+        },
+        {
+            "fieldname": "auto_submit_enabled",
+            "fieldtype": "Check",
+            "label": "Enable Threshold Auto-Submit",
+            "default": 1,
+            "description": "Automatically create batch when threshold is reached"
+        },
+        {
+            "fieldname": "column_break_threshold",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "month_end_auto_submit",
+            "fieldtype": "Check",
+            "label": "Enable Month-End Auto-Submit",
+            "default": 1,
+            "description": "Auto-submit any pending expenses on second-to-last day of month"
+        },
+        {
+            "fieldname": "section_history",
+            "fieldtype": "Section Break",
+            "label": "History",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "last_batch_date",
+            "fieldtype": "Date",
+            "label": "Last Batch Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "last_replenishment_date",
+            "fieldtype": "Date",
+            "label": "Last Replenishment Date",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_history",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "total_batches",
+            "fieldtype": "Int",
+            "label": "Total Batches",
+            "read_only": 1,
+            "default": 0
+        },
+        {
+            "fieldname": "total_expenses_ytd",
+            "fieldtype": "Currency",
+            "label": "Total Expenses YTD",
+            "read_only": 1,
+            "default": 0
+        }
+    ],
+    "index_web_pages_for_search": 0,
+    "links": [
+        {
+            "link_doctype": "BEI PCF Batch",
+            "link_fieldname": "store"
+        },
+        {
+            "link_doctype": "BEI Expense Request",
+            "link_fieldname": "store"
+        }
+    ],
+    "modified": "2026-02-03 00:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "HR",
+    "name": "BEI Petty Cash Fund",
+    "naming_rule": "Expression",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "share": 1,
+            "write": 1,
+            "role": "System Manager"
+        },
+        {
+            "read": 1,
+            "role": "Accounts Manager"
+        },
+        {
+            "read": 1,
+            "role": "Accounts User"
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

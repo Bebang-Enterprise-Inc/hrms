@@ -1,0 +1,726 @@
+{
+  "actions": [],
+  "autoname": "format:PAY-{YYYY}-{#####}",
+  "creation": "2026-02-03 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "header_section",
+    "payment_request_no",
+    "request_date",
+    "status",
+    "column_break_header",
+    "supplier",
+    "supplier_name",
+    "requested_by",
+    "reference_section",
+    "invoice",
+    "invoice_amount",
+    "column_break_ref",
+    "purchase_order",
+    "goods_receipt",
+    "payment_details_section",
+    "payment_amount",
+    "payment_mode",
+    "column_break_payment",
+    "bank_account",
+    "check_number",
+    "payment_date",
+    "rfp_details_section",
+    "rfp_type",
+    "rfp_purpose",
+    "column_break_rfp",
+    "payee_tin",
+    "payee_address",
+    "account_code",
+    "bank_info_section",
+    "supplier_bank_name",
+    "supplier_bank_account",
+    "column_break_bank",
+    "supplier_account_name",
+    "level1_section",
+    "reviewer_status",
+    "reviewer",
+    "reviewer_date",
+    "column_break_l1",
+    "reviewer_comment",
+    "level2_section",
+    "budget_status",
+    "budget_approver",
+    "budget_date",
+    "column_break_l2",
+    "budget_comment",
+    "level3_section",
+    "cfo_status",
+    "cfo_approver",
+    "cfo_date",
+    "column_break_l3",
+    "cfo_comment",
+    "level4_section",
+    "ceo_status",
+    "ceo_approver",
+    "ceo_date",
+    "column_break_l4",
+    "ceo_comment",
+    "ceo_required",
+    "processing_section",
+    "processed_by",
+    "processed_date",
+    "column_break_process",
+    "transaction_reference",
+    "payment_proof",
+    "integration_section",
+    "frappe_payment_entry",
+    "advance_payment_section",
+    "is_advance_payment",
+    "advance_status",
+    "column_break_advance1",
+    "advance_amount",
+    "advance_cleared_amount",
+    "advance_outstanding",
+    "advance_gl_section",
+    "advance_gl_account",
+    "ewt_rate",
+    "column_break_advance2",
+    "ewt_amount",
+    "or_tracking_section",
+    "or_status",
+    "or_required",
+    "or_due_date",
+    "column_break_or1",
+    "or_number",
+    "or_date",
+    "or_amount",
+    "or_attachment_section",
+    "or_attachment",
+    "or_uploaded_by",
+    "column_break_or2",
+    "or_uploaded_date",
+    "or_follow_up_section",
+    "or_follow_up_count",
+    "or_last_follow_up"
+  ],
+  "fields": [
+    {
+      "fieldname": "header_section",
+      "fieldtype": "Section Break",
+      "label": "Payment Request Information"
+    },
+    {
+      "fieldname": "payment_request_no",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Payment Request No",
+      "read_only": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "request_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Request Date",
+      "reqd": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Draft\nPending Review\nPending Budget Approval\nPending CFO Approval\nPending CEO Approval\nApproved\nProcessing\nPaid\nPaid - Awaiting OR\nClosed\nRejected\nCancelled"
+    },
+    {
+      "fieldname": "column_break_header",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "supplier",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Supplier",
+      "options": "BEI Supplier",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "supplier.supplier_name",
+      "fieldname": "supplier_name",
+      "fieldtype": "Data",
+      "label": "Supplier Name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "requested_by",
+      "fieldtype": "Link",
+      "label": "Requested By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "reference_section",
+      "fieldtype": "Section Break",
+      "label": "References"
+    },
+    {
+      "fieldname": "invoice",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Invoice",
+      "options": "BEI Invoice",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "invoice.grand_total",
+      "fieldname": "invoice_amount",
+      "fieldtype": "Currency",
+      "label": "Invoice Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_ref",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fetch_from": "invoice.purchase_order",
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "label": "Purchase Order",
+      "options": "BEI Purchase Order",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "invoice.goods_receipt",
+      "fieldname": "goods_receipt",
+      "fieldtype": "Link",
+      "label": "Goods Receipt",
+      "options": "BEI Goods Receipt",
+      "read_only": 1
+    },
+    {
+      "fieldname": "payment_details_section",
+      "fieldtype": "Section Break",
+      "label": "Payment Details"
+    },
+    {
+      "fieldname": "payment_amount",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Payment Amount",
+      "reqd": 1
+    },
+    {
+      "fieldname": "payment_mode",
+      "fieldtype": "Select",
+      "label": "Payment Mode",
+      "options": "\nBank Transfer\nCheck",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_payment",
+      "fieldtype": "Column Break"
+    },
+    {
+      "depends_on": "eval:doc.payment_mode == 'Bank Transfer'",
+      "fieldname": "bank_account",
+      "fieldtype": "Link",
+      "label": "From Bank Account",
+      "options": "Bank Account"
+    },
+    {
+      "depends_on": "eval:doc.payment_mode == 'Check'",
+      "fieldname": "check_number",
+      "fieldtype": "Data",
+      "label": "Check Number"
+    },
+    {
+      "fieldname": "payment_date",
+      "fieldtype": "Date",
+      "label": "Target Payment Date"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "rfp_details_section",
+      "fieldtype": "Section Break",
+      "label": "RFP Details (Request for Payment)"
+    },
+    {
+      "description": "Type of payment request for validation and GL account assignment",
+      "fieldname": "rfp_type",
+      "fieldtype": "Select",
+      "label": "RFP Type",
+      "options": "\nPCF Replenishment\nDelivery Fund\nTranspo Allowance\nRentals\nVendor Invoice\nCash Advance\nReimbursement\nCredit Card Transaction"
+    },
+    {
+      "description": "Detailed purpose and justification for this payment request",
+      "fieldname": "rfp_purpose",
+      "fieldtype": "Small Text",
+      "label": "RFP Purpose"
+    },
+    {
+      "fieldname": "column_break_rfp",
+      "fieldtype": "Column Break"
+    },
+    {
+      "description": "Tax Identification Number of payee",
+      "fieldname": "payee_tin",
+      "fieldtype": "Data",
+      "label": "Payee TIN"
+    },
+    {
+      "fieldname": "payee_address",
+      "fieldtype": "Small Text",
+      "label": "Payee Address"
+    },
+    {
+      "description": "Auto-assigned based on RFP Type. Override if needed.",
+      "fieldname": "account_code",
+      "fieldtype": "Link",
+      "label": "GL Account Code",
+      "options": "Account"
+    },
+    {
+      "fieldname": "bank_info_section",
+      "fieldtype": "Section Break",
+      "label": "Supplier Bank Information"
+    },
+    {
+      "fetch_from": "supplier.bank_name",
+      "fieldname": "supplier_bank_name",
+      "fieldtype": "Data",
+      "label": "Bank Name",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "supplier.bank_account_number",
+      "fieldname": "supplier_bank_account",
+      "fieldtype": "Data",
+      "label": "Bank Account No",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_bank",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fetch_from": "supplier.bank_account_name",
+      "fieldname": "supplier_account_name",
+      "fieldtype": "Data",
+      "label": "Account Name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "level1_section",
+      "fieldtype": "Section Break",
+      "label": "Level 1: Reviewer Approval"
+    },
+    {
+      "default": "Pending",
+      "fieldname": "reviewer_status",
+      "fieldtype": "Select",
+      "label": "Reviewer Status",
+      "options": "Pending\nApproved\nRejected"
+    },
+    {
+      "fieldname": "reviewer",
+      "fieldtype": "Link",
+      "label": "Reviewed By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "reviewer_date",
+      "fieldtype": "Datetime",
+      "label": "Review Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_l1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "reviewer_comment",
+      "fieldtype": "Small Text",
+      "label": "Reviewer Comment"
+    },
+    {
+      "fieldname": "level2_section",
+      "fieldtype": "Section Break",
+      "label": "Level 2: Budget Approval"
+    },
+    {
+      "default": "Pending",
+      "fieldname": "budget_status",
+      "fieldtype": "Select",
+      "label": "Budget Status",
+      "options": "Pending\nApproved\nRejected"
+    },
+    {
+      "fieldname": "budget_approver",
+      "fieldtype": "Link",
+      "label": "Budget Approved By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "budget_date",
+      "fieldtype": "Datetime",
+      "label": "Budget Approval Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_l2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "budget_comment",
+      "fieldtype": "Small Text",
+      "label": "Budget Comment"
+    },
+    {
+      "fieldname": "level3_section",
+      "fieldtype": "Section Break",
+      "label": "Level 3: CFO Approval (Butch)"
+    },
+    {
+      "default": "Pending",
+      "fieldname": "cfo_status",
+      "fieldtype": "Select",
+      "label": "CFO Status",
+      "options": "Pending\nApproved\nRejected"
+    },
+    {
+      "fieldname": "cfo_approver",
+      "fieldtype": "Link",
+      "label": "CFO Approved By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "cfo_date",
+      "fieldtype": "Datetime",
+      "label": "CFO Approval Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_l3",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "cfo_comment",
+      "fieldtype": "Small Text",
+      "label": "CFO Comment"
+    },
+    {
+      "depends_on": "eval:doc.ceo_required",
+      "fieldname": "level4_section",
+      "fieldtype": "Section Break",
+      "label": "Level 4: CEO Approval"
+    },
+    {
+      "default": "Pending",
+      "depends_on": "eval:doc.ceo_required",
+      "fieldname": "ceo_status",
+      "fieldtype": "Select",
+      "label": "CEO Status",
+      "options": "Pending\nApproved\nRejected"
+    },
+    {
+      "depends_on": "eval:doc.ceo_required",
+      "fieldname": "ceo_approver",
+      "fieldtype": "Link",
+      "label": "CEO Approved By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "depends_on": "eval:doc.ceo_required",
+      "fieldname": "ceo_date",
+      "fieldtype": "Datetime",
+      "label": "CEO Approval Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_l4",
+      "fieldtype": "Column Break"
+    },
+    {
+      "depends_on": "eval:doc.ceo_required",
+      "fieldname": "ceo_comment",
+      "fieldtype": "Small Text",
+      "label": "CEO Comment"
+    },
+    {
+      "default": "0",
+      "description": "Required for new suppliers or amounts > 1M",
+      "fieldname": "ceo_required",
+      "fieldtype": "Check",
+      "label": "CEO Approval Required",
+      "read_only": 1
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "processing_section",
+      "fieldtype": "Section Break",
+      "label": "Payment Processing"
+    },
+    {
+      "fieldname": "processed_by",
+      "fieldtype": "Link",
+      "label": "Processed By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "processed_date",
+      "fieldtype": "Datetime",
+      "label": "Processed Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_process",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "transaction_reference",
+      "fieldtype": "Data",
+      "label": "Transaction Reference"
+    },
+    {
+      "fieldname": "payment_proof",
+      "fieldtype": "Attach",
+      "label": "Payment Proof"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "integration_section",
+      "fieldtype": "Section Break",
+      "label": "ERP Integration"
+    },
+    {
+      "fieldname": "frappe_payment_entry",
+      "fieldtype": "Link",
+      "label": "Frappe Payment Entry",
+      "options": "Payment Entry",
+      "read_only": 1
+    },
+    {
+      "fieldname": "advance_payment_section",
+      "fieldtype": "Section Break",
+      "label": "Advance Payment",
+      "collapsible": 1,
+      "depends_on": "eval:doc.is_advance_payment"
+    },
+    {
+      "default": "0",
+      "description": "Check if this is an advance payment to supplier before goods delivery",
+      "fieldname": "is_advance_payment",
+      "fieldtype": "Check",
+      "label": "Is Advance Payment"
+    },
+    {
+      "default": "N/A",
+      "fieldname": "advance_status",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "Advance Status",
+      "options": "N/A\nOutstanding\nPartially Cleared\nFully Cleared\nReclassified",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_advance1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "advance_amount",
+      "fieldtype": "Currency",
+      "label": "Advance Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "advance_cleared_amount",
+      "fieldtype": "Currency",
+      "label": "Cleared Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "advance_outstanding",
+      "fieldtype": "Currency",
+      "label": "Outstanding Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "advance_gl_section",
+      "fieldtype": "Section Break",
+      "label": "Advance GL & Tax",
+      "collapsible": 1,
+      "depends_on": "eval:doc.is_advance_payment"
+    },
+    {
+      "default": "1105203 - ADVANCES TO SUPPLIERS - BEI",
+      "fieldname": "advance_gl_account",
+      "fieldtype": "Data",
+      "label": "Advance GL Account",
+      "read_only": 1
+    },
+    {
+      "description": "EWT rate applied to this advance (1% goods, 2% services, 5% professional)",
+      "fieldname": "ewt_rate",
+      "fieldtype": "Percent",
+      "label": "EWT Rate"
+    },
+    {
+      "fieldname": "column_break_advance2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "ewt_amount",
+      "fieldtype": "Currency",
+      "label": "EWT Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "or_tracking_section",
+      "fieldtype": "Section Break",
+      "label": "Official Receipt Tracking"
+    },
+    {
+      "default": "Not Required",
+      "fieldname": "or_status",
+      "fieldtype": "Select",
+      "in_standard_filter": 1,
+      "label": "OR Status",
+      "options": "Not Required\nAwaiting OR\nOR Received\nOverdue",
+      "read_only": 1
+    },
+    {
+      "default": "1",
+      "description": "Most payments require an Official Receipt from the supplier",
+      "fieldname": "or_required",
+      "fieldtype": "Check",
+      "label": "OR Required"
+    },
+    {
+      "description": "Expected date for OR (payment date + supplier payment terms)",
+      "fieldname": "or_due_date",
+      "fieldtype": "Date",
+      "label": "OR Due Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_or1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "or_number",
+      "fieldtype": "Data",
+      "label": "OR Number"
+    },
+    {
+      "fieldname": "or_date",
+      "fieldtype": "Date",
+      "label": "OR Date"
+    },
+    {
+      "fieldname": "or_amount",
+      "fieldtype": "Currency",
+      "label": "OR Amount"
+    },
+    {
+      "fieldname": "or_attachment_section",
+      "fieldtype": "Section Break",
+      "label": "OR Document"
+    },
+    {
+      "fieldname": "or_attachment",
+      "fieldtype": "Attach",
+      "label": "OR Attachment"
+    },
+    {
+      "fieldname": "or_uploaded_by",
+      "fieldtype": "Data",
+      "label": "OR Uploaded By",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_or2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "or_uploaded_date",
+      "fieldtype": "Datetime",
+      "label": "OR Uploaded Date",
+      "read_only": 1
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "or_follow_up_section",
+      "fieldtype": "Section Break",
+      "label": "OR Follow-Up"
+    },
+    {
+      "default": "0",
+      "fieldname": "or_follow_up_count",
+      "fieldtype": "Int",
+      "label": "Follow-Up Count",
+      "read_only": 1
+    },
+    {
+      "fieldname": "or_last_follow_up",
+      "fieldtype": "Datetime",
+      "label": "Last Follow-Up",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-02-03 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Payment Request",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts User",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "search_fields": "supplier_name,invoice",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "title_field": "payment_request_no",
+  "track_changes": 1
+}

@@ -1,0 +1,67 @@
+# Docker Compose for Sheets Receiver Service
+# Add this to your main docker-compose.yml or include separately
+
+version: "3.8"
+
+services:
+  sheets-receiver:
+    build:
+      context: ./hrms/services/sheets_receiver
+      dockerfile: Dockerfile
+    container_name: sheets-receiver
+    restart: unless-stopped
+
+    environment:
+      # Google API
+      GOOGLE_SERVICE_ACCOUNT_FILE: /app/credentials/task-manager-service.json
+      IMPERSONATE_USER: sam@bebang.ph
+
+      # Frappe API (use Doppler or secrets)
+      FRAPPE_URL: https://hq.bebang.ph
+      FRAPPE_API_KEY: ${FRAPPE_API_KEY}
+      FRAPPE_API_SECRET: ${FRAPPE_API_SECRET}
+
+      # Webhook
+      PUBLIC_WEBHOOK_URL: https://hq.bebang.ph/api/method/hrms.api.erp_sync.webhook
+      SHEETS_RECEIVER_PORT: 8765
+
+      # Logging
+      LOG_LEVEL: INFO
+      BEI_CHAT_STRICT_BLIP_ONLY: ${BEI_CHAT_STRICT_BLIP_ONLY:-true}
+      SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS: ${SHEETS_RECEIVER_SUPPRESS_CRITICAL_ALERT_TRIGGERS:-startup,manual,interval_baseline,scheduled}
+
+    volumes:
+      # Google service account credentials
+      - ./credentials:/app/credentials:ro
+
+      # Persistent data (sync logs, watch channels)
+      - sheets-receiver-data:/app/data
+
+      # Logs
+      - sheets-receiver-logs:/app/logs
+
+    ports:
+      - "8765:8765"
+
+    networks:
+      - frappe-network
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sheets-receiver.rule=Host(`hq.bebang.ph`) && PathPrefix(`/api/method/hrms.api.sheets_receiver`)"
+      - "traefik.http.services.sheets-receiver.loadbalancer.server.port=8765"
+
+volumes:
+  sheets-receiver-data:
+  sheets-receiver-logs:
+
+networks:
+  frappe-network:
+    external: true

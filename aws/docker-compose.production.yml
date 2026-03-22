@@ -1,0 +1,102 @@
+version: "3.8"
+
+# Production Docker Compose for AWS Deployment
+# This configuration uses RDS instead of local MariaDB
+
+services:
+  frappe:
+    image: frappe/bench:latest
+    container_name: frappe-hrms-prod
+    restart: unless-stopped
+    environment:
+      # Database Configuration (RDS)
+      - DB_HOST=${DB_HOST:-your-rds-endpoint.rds.amazonaws.com}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_USER=${DB_USER:-admin}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-frappe_hrms}
+      
+      # Redis Configuration (ElastiCache or local)
+      - REDIS_CACHE_HOST=${REDIS_CACHE_HOST:-redis}
+      - REDIS_QUEUE_HOST=${REDIS_QUEUE_HOST:-redis}
+      - REDIS_SOCKETIO_HOST=${REDIS_SOCKETIO_HOST:-redis}
+      
+      # Application Settings
+      - SITE_NAME=${SITE_NAME:-hrms.yourdomain.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - DEVELOPER_MODE=${DEVELOPER_MODE:-0}
+      
+      # AWS S3 Configuration (for file storage)
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION:-ap-southeast-1}
+      - S3_BUCKET=${S3_BUCKET:-frappe-hrms-files}
+      
+      # Email Configuration (SES)
+      - MAIL_SERVER=${MAIL_SERVER:-email-smtp.ap-southeast-1.amazonaws.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_USE_TLS=${MAIL_USE_TLS:-1}
+      
+    volumes:
+      - frappe-data:/home/frappe/frappe-bench/sites
+      - frappe-logs:/home/frappe/frappe-bench/logs
+    ports:
+      - "8000:8000"
+      - "9000:9000"
+    depends_on:
+      - redis
+    networks:
+      - frappe-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/method/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  redis:
+    image: redis:7-alpine
+    container_name: frappe-redis-prod
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis-data:/data
+    networks:
+      - frappe-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: frappe-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - frappe-data:/var/www/html:ro
+    depends_on:
+      - frappe
+    networks:
+      - frappe-network
+
+volumes:
+  frappe-data:
+    driver: local
+  frappe-logs:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  frappe-network:
+    driver: bridge
+
+

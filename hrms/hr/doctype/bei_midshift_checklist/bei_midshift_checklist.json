@@ -1,0 +1,211 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-MID-.YYYY.-.#####",
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "store",
+  "check_datetime",
+  "submitted_by",
+  "column_break_1",
+  "shift",
+  "shift_template",
+  "equipment",
+  "cleanliness_status",
+  "section_time_window",
+  "window_start",
+  "window_end",
+  "column_break_window",
+  "is_on_time",
+  "late_reason",
+  "section_temps",
+  "temperature_readings",
+  "section_issues",
+  "issues_found",
+  "corrective_action",
+  "photo_evidence"
+ ],
+ "fields": [
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "Now",
+   "fieldname": "check_datetime",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Check Date/Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "submitted_by",
+   "fieldtype": "Link",
+   "label": "Submitted By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "shift",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Shift",
+   "options": "Morning\nAfternoon\nEvening",
+   "reqd": 1
+  },
+  {
+   "description": "Link to shift template that defines expected time windows",
+   "fieldname": "shift_template",
+   "fieldtype": "Link",
+   "label": "Shift Template",
+   "options": "BEI Shift Template"
+  },
+  {
+   "default": "General",
+   "fieldname": "equipment",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Equipment"
+  },
+  {
+   "fieldname": "cleanliness_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Cleanliness Status",
+   "options": "Excellent\nGood\nNeeds Attention\nCritical",
+   "reqd": 1
+  },
+  {
+   "description": "Expected time window for this midshift check",
+   "fieldname": "section_time_window",
+   "fieldtype": "Section Break",
+   "label": "Time Window"
+  },
+  {
+   "description": "Start of expected midshift check window (e.g., 14:00)",
+   "fieldname": "window_start",
+   "fieldtype": "Time",
+   "label": "Window Start"
+  },
+  {
+   "description": "End of expected midshift check window (e.g., 15:00)",
+   "fieldname": "window_end",
+   "fieldtype": "Time",
+   "label": "Window End"
+  },
+  {
+   "fieldname": "column_break_window",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Check was submitted within the expected time window",
+   "fieldname": "is_on_time",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "On Time",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:!doc.is_on_time",
+   "description": "Required if check is submitted outside the time window",
+   "fieldname": "late_reason",
+   "fieldtype": "Small Text",
+   "label": "Late Reason",
+   "mandatory_depends_on": "eval:!doc.is_on_time"
+  },
+  {
+   "fieldname": "section_temps",
+   "fieldtype": "Section Break",
+   "label": "Temperature Readings"
+  },
+  {
+   "fieldname": "temperature_readings",
+   "fieldtype": "Table",
+   "label": "Temperature Readings",
+   "options": "BEI Temperature Reading",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_issues",
+   "fieldtype": "Section Break",
+   "label": "Issues & Actions"
+  },
+  {
+   "fieldname": "issues_found",
+   "fieldtype": "Text",
+   "label": "Issues Found"
+  },
+  {
+   "fieldname": "corrective_action",
+   "fieldtype": "Text",
+   "label": "Corrective Action"
+  },
+  {
+   "fieldname": "photo_evidence",
+   "fieldtype": "Attach Image",
+   "label": "Photo Evidence"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-10 21:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Midshift Checklist",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee"
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee Self Service"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

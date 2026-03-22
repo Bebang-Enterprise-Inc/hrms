@@ -1,0 +1,389 @@
+{
+  "actions": [],
+  "autoname": "format:INV-{YYYY}-{#####}",
+  "creation": "2026-02-03 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "header_section",
+    "invoice_no",
+    "supplier_invoice_no",
+    "invoice_date",
+    "status",
+    "column_break_header",
+    "supplier",
+    "supplier_name",
+    "due_date",
+    "payment_terms",
+    "reference_section",
+    "purchase_order",
+    "po_amount",
+    "column_break_ref",
+    "goods_receipt",
+    "gr_amount",
+    "three_way_match_section",
+    "match_status",
+    "po_gr_variance",
+    "gr_inv_variance",
+    "column_break_match",
+    "variance_tolerance",
+    "variance_approved_by",
+    "variance_notes",
+    "amounts_section",
+    "subtotal",
+    "vat_amount",
+    "column_break_amounts",
+    "withholding_tax",
+    "grand_total",
+    "payment_section",
+    "amount_paid",
+    "balance_due",
+    "column_break_payment",
+    "payment_status",
+    "last_payment_date",
+    "verification_section",
+    "verified_by",
+    "verified_date",
+    "column_break_verify",
+    "verification_notes",
+    "attachments_section",
+    "invoice_attachment",
+    "supporting_docs",
+    "integration_section",
+    "frappe_purchase_invoice"
+  ],
+  "fields": [
+    {
+      "fieldname": "header_section",
+      "fieldtype": "Section Break",
+      "label": "Invoice Information"
+    },
+    {
+      "fieldname": "invoice_no",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Invoice No",
+      "read_only": 1
+    },
+    {
+      "fieldname": "supplier_invoice_no",
+      "fieldtype": "Data",
+      "label": "Supplier Invoice No",
+      "reqd": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "invoice_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Invoice Date",
+      "reqd": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Draft\nPending 3-Way Match\nMatch Failed\nVariance Pending Approval\nVerified\nPaid\nPartially Paid\nCancelled"
+    },
+    {
+      "fieldname": "column_break_header",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "supplier",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Supplier",
+      "options": "BEI Supplier",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "supplier.supplier_name",
+      "fieldname": "supplier_name",
+      "fieldtype": "Data",
+      "label": "Supplier Name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "due_date",
+      "fieldtype": "Date",
+      "label": "Due Date",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "supplier.payment_terms",
+      "fieldname": "payment_terms",
+      "fieldtype": "Link",
+      "label": "Payment Terms",
+      "options": "Payment Terms Template"
+    },
+    {
+      "fieldname": "reference_section",
+      "fieldtype": "Section Break",
+      "label": "References (3-Way Match)"
+    },
+    {
+      "fieldname": "purchase_order",
+      "fieldtype": "Link",
+      "label": "Purchase Order",
+      "options": "BEI Purchase Order",
+      "reqd": 1
+    },
+    {
+      "fieldname": "po_amount",
+      "fieldtype": "Currency",
+      "label": "PO Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_ref",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "goods_receipt",
+      "fieldtype": "Link",
+      "label": "Goods Receipt",
+      "options": "BEI Goods Receipt",
+      "reqd": 0
+    },
+    {
+      "fieldname": "gr_amount",
+      "fieldtype": "Currency",
+      "label": "GR Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "three_way_match_section",
+      "fieldtype": "Section Break",
+      "label": "3-Way Match Verification"
+    },
+    {
+      "default": "Pending",
+      "fieldname": "match_status",
+      "fieldtype": "Select",
+      "label": "Match Status",
+      "options": "Pending\nMatched\nVariance Detected\nApproved with Variance",
+      "read_only": 1
+    },
+    {
+      "description": "PO Amount - GR Amount",
+      "fieldname": "po_gr_variance",
+      "fieldtype": "Currency",
+      "label": "PO vs GR Variance",
+      "read_only": 1
+    },
+    {
+      "description": "GR Amount - Invoice Amount",
+      "fieldname": "gr_inv_variance",
+      "fieldtype": "Currency",
+      "label": "GR vs Invoice Variance",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_match",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "1000",
+      "description": "Maximum acceptable variance in PHP",
+      "fieldname": "variance_tolerance",
+      "fieldtype": "Currency",
+      "label": "Variance Tolerance"
+    },
+    {
+      "depends_on": "eval:doc.match_status == 'Approved with Variance'",
+      "fieldname": "variance_approved_by",
+      "fieldtype": "Link",
+      "label": "Variance Approved By",
+      "options": "User"
+    },
+    {
+      "depends_on": "eval:doc.match_status == 'Approved with Variance' || doc.match_status == 'Variance Detected'",
+      "fieldname": "variance_notes",
+      "fieldtype": "Small Text",
+      "label": "Variance Notes"
+    },
+    {
+      "fieldname": "amounts_section",
+      "fieldtype": "Section Break",
+      "label": "Invoice Amounts"
+    },
+    {
+      "fieldname": "subtotal",
+      "fieldtype": "Currency",
+      "label": "Subtotal",
+      "reqd": 1
+    },
+    {
+      "fieldname": "vat_amount",
+      "fieldtype": "Currency",
+      "label": "VAT Amount"
+    },
+    {
+      "fieldname": "column_break_amounts",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "0",
+      "description": "Withholding tax (EWT) to be deducted",
+      "fieldname": "withholding_tax",
+      "fieldtype": "Currency",
+      "label": "Withholding Tax"
+    },
+    {
+      "fieldname": "grand_total",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Grand Total",
+      "read_only": 1
+    },
+    {
+      "fieldname": "payment_section",
+      "fieldtype": "Section Break",
+      "label": "Payment Tracking"
+    },
+    {
+      "default": "0",
+      "fieldname": "amount_paid",
+      "fieldtype": "Currency",
+      "label": "Amount Paid",
+      "read_only": 1
+    },
+    {
+      "fieldname": "balance_due",
+      "fieldtype": "Currency",
+      "label": "Balance Due",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_payment",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "Unpaid",
+      "fieldname": "payment_status",
+      "fieldtype": "Select",
+      "label": "Payment Status",
+      "options": "Unpaid\nPartially Paid\nPaid",
+      "read_only": 1
+    },
+    {
+      "fieldname": "last_payment_date",
+      "fieldtype": "Date",
+      "label": "Last Payment Date",
+      "read_only": 1
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "verification_section",
+      "fieldtype": "Section Break",
+      "label": "Verification"
+    },
+    {
+      "fieldname": "verified_by",
+      "fieldtype": "Link",
+      "label": "Verified By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "verified_date",
+      "fieldtype": "Datetime",
+      "label": "Verified Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_verify",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "verification_notes",
+      "fieldtype": "Small Text",
+      "label": "Verification Notes"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "attachments_section",
+      "fieldtype": "Section Break",
+      "label": "Attachments"
+    },
+    {
+      "fieldname": "invoice_attachment",
+      "fieldtype": "Attach",
+      "label": "Invoice Attachment"
+    },
+    {
+      "fieldname": "supporting_docs",
+      "fieldtype": "Attach",
+      "label": "Supporting Documents"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "integration_section",
+      "fieldtype": "Section Break",
+      "label": "ERP Integration"
+    },
+    {
+      "fieldname": "frappe_purchase_invoice",
+      "fieldtype": "Link",
+      "label": "Frappe Purchase Invoice",
+      "options": "Purchase Invoice",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-02-03 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Invoice",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts User",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "search_fields": "supplier_name,supplier_invoice_no,purchase_order",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "title_field": "invoice_no",
+  "track_changes": 1
+}

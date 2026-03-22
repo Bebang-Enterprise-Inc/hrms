@@ -1,0 +1,203 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-02-09 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "reported_by",
+  "reported_by_name",
+  "store",
+  "incident_date",
+  "incident_category",
+  "column_break_1",
+  "status",
+  "recommended_action",
+  "section_break_description",
+  "description",
+  "section_break_evidence",
+  "witnesses",
+  "evidence_photos",
+  "evidence_documents",
+  "section_break_hr",
+  "hr_notes",
+  "linked_nte",
+  "linked_coaching_log"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "BEI-IR-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reported_by",
+   "fieldtype": "Link",
+   "label": "Reported By",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "reported_by.employee_name",
+   "fieldname": "reported_by_name",
+   "fieldtype": "Data",
+   "label": "Reported By Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "label": "Store",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "incident_date",
+   "fieldtype": "Date",
+   "label": "Incident Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "incident_category",
+   "fieldtype": "Select",
+   "label": "Incident Category",
+   "options": "Attendance\nConduct\nPerformance\nPolicy Violation\nSafety\nTheft-Fraud\nInsubordination\nOther",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nSubmitted\nUnder Review\nNTE Issued\nResolved\nDismissed",
+   "reqd": 1
+  },
+  {
+   "fieldname": "recommended_action",
+   "fieldtype": "Select",
+   "label": "Recommended Action",
+   "options": "Coaching\nVerbal Warning\nWritten Warning\nSuspension\nDismissal\nPIP\nOther"
+  },
+  {
+   "fieldname": "section_break_description",
+   "fieldtype": "Section Break",
+   "label": "Incident Details"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_evidence",
+   "fieldtype": "Section Break",
+   "label": "Evidence"
+  },
+  {
+   "fieldname": "witnesses",
+   "fieldtype": "Small Text",
+   "label": "Witnesses"
+  },
+  {
+   "fieldname": "evidence_photos",
+   "fieldtype": "Attach Image",
+   "label": "Evidence Photos"
+  },
+  {
+   "fieldname": "evidence_documents",
+   "fieldtype": "Attach",
+   "label": "Evidence Documents"
+  },
+  {
+   "fieldname": "section_break_hr",
+   "fieldtype": "Section Break",
+   "label": "HR Review"
+  },
+  {
+   "fieldname": "hr_notes",
+   "fieldtype": "Text",
+   "label": "HR Notes"
+  },
+  {
+   "fieldname": "linked_nte",
+   "fieldtype": "Link",
+   "label": "Linked Notice to Explain",
+   "options": "BEI Notice to Explain",
+   "read_only": 1
+  },
+  {
+   "fieldname": "linked_coaching_log",
+   "fieldtype": "Link",
+   "label": "Linked Coaching Log",
+   "options": "BEI Coaching Log"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-09 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Incident Report",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Employee"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

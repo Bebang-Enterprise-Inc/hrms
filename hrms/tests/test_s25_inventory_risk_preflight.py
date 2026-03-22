@@ -1,0 +1,90 @@
+import datetime
+import importlib.util
+import sys
+import types
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+
+def _install_fake_frappe():
+    if "frappe" in sys.modules:
+        return
+
+    frappe = types.ModuleType("frappe")
+    utils = types.ModuleType("frappe.utils")
+
+    def whitelist(*args, **kwargs):
+        def decorator(fn):
+            return fn
+
+        return decorator
+
+    def throw(message, exc=None):
+        if isinstance(exc, type) and issubclass(exc, Exception):
+            raise exc(message)
+        raise Exception(message)
+
+    def add_to_date(dt, days=0, as_string=False):
+        base = dt if isinstance(dt, datetime.datetime) else datetime.datetime(2026, 3, 2, 10, 0, 0)
+        shifted = base + datetime.timedelta(days=float(days or 0))
+        return shifted.strftime("%Y-%m-%d %H:%M:%S") if as_string else shifted
+
+    frappe.whitelist = whitelist
+    frappe._ = lambda text: text
+    frappe.throw = throw
+    frappe.session = types.SimpleNamespace(user="Administrator")
+
+    utils.flt = lambda value: float(value or 0)
+    utils.cint = lambda value: int(float(value or 0))
+    utils.now_datetime = lambda: datetime.datetime(2026, 3, 2, 10, 0, 0)
+    utils.add_to_date = add_to_date
+
+    sys.modules["frappe"] = frappe
+    sys.modules["frappe.utils"] = utils
+
+
+_install_fake_frappe()
+
+spec = importlib.util.spec_from_file_location(
+    "inventory_risk_under_test",
+    ROOT / "hrms" / "api" / "inventory_risk.py",
+)
+inventory_risk = importlib.util.module_from_spec(spec)
+assert spec and spec.loader
+spec.loader.exec_module(inventory_risk)
+
+
+class TestS25InventoryRiskPreflight(unittest.TestCase):
+    def setUp(self):
+        inventory_risk.set_test_risk_rows([])
+        inventory_risk.set_test_incidents([])
+        inventory_risk.set_test_exposure_map({})
+        inventory_risk.set_test_pipeline_source_map({})
+
+    def test_default_fixture_is_release_gate_ready(self):
+        dashboard = inventory_risk.get_risk_dashboard(72)
+        self.assertGreaterEqual(dashboard["summary"]["total_items"], 50)
+
+        items_payload = inventory_risk.get_risk_items(limit=50, horizon_hours=72)
+        items = items_payload["items"]
+        self.assertEqual(len(items), 50)
+
+        candidate = next((row for row in items if int(row.get("pending_po_count") or 0) > 0), None)
+        self.assertIsNotNone(candidate)
+
+        pending = inventory_risk.get_item_pending_pos(candidate["item_code"], candidate["warehouse"], 72)
+        delayed = inventory_risk.get_item_delayed_deliveries(candidate["item_code"], candidate["warehouse"], 72)
+
+        self.assertIn("synthetic_fallback_count", pending["totals"])
+        self.assertIn("synthetic_fallback_count", delayed["totals"])
+        self.assertTrue(all("is_synthetic_fallback" in row for row in pending["pending_pos"]))
+        self.assertTrue(all("is_synthetic_fallback" in row for row in delayed["delayed_deliveries"]))
+
+
+if __name__ == "__main__":
+    unittest.main()

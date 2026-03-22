@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+credentials/
+data/
+logs/
+.pytest_cache/

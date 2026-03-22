@@ -1,0 +1,53 @@
+name: Synthetic Monitoring
+
+on:
+  # schedule:
+    # Every 30 min during business hours (6AM-10PM PHT = UTC+8)
+    # = 1,920 min/mo, under GitHub Actions free tier 2,000 limit
+    # - cron: "*/30 22,23,0-14 * * *"  # UTC 22:00-14:59 = PHT 06:00-22:59
+  workflow_dispatch: {}
+
+jobs:
+  click-path-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Playwright
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+        timeout-minutes: 5
+
+      - name: Run Click-Path Tests
+        run: python tests/e2e/click_path_test.py --json
+        env:
+          STAFF_PASSWORD: ${{ secrets.TEST_STAFF_PASSWORD }}
+          SCREENSHOTS_DIR: test-results/click_path
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: click-path-results-${{ github.run_id }}
+          path: test-results/
+          retention-days: 7
+
+      - name: Alert on Failure
+        if: failure()
+        env:
+          GCHAT_WEBHOOK: ${{ secrets.GCHAT_ALERTS_WEBHOOK }}
+        run: |
+          if [ -n "$GCHAT_WEBHOOK" ]; then
+            curl -s -X POST "$GCHAT_WEBHOOK" \
+              -H "Content-Type: application/json" \
+              -d "{\"text\": \"⚠️ SYNTHETIC MONITOR FAILED\\n\\nClick-path test detected broken navigation on my.bebang.ph.\\nCheck: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+          else
+            echo "No GCHAT_ALERTS_WEBHOOK configured, skipping chat notification"
+          fi

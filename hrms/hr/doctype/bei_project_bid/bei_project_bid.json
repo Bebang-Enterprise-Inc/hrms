@@ -1,0 +1,305 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "format:BID-{YYYY}-{####}",
+	"creation": "2026-02-04 00:00:00.000000",
+	"default_view": "List",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"section_basic",
+		"project",
+		"project_name",
+		"contractor",
+		"contractor_name",
+		"column_break_basic",
+		"submission_date",
+		"status",
+		"section_amounts",
+		"base_amount",
+		"vat_amount",
+		"column_break_amounts",
+		"total_amount",
+		"final_amount",
+		"section_items",
+		"items",
+		"section_evaluation",
+		"technical_score",
+		"financial_score",
+		"overall_score",
+		"column_break_evaluation",
+		"evaluation_notes",
+		"section_award",
+		"is_awarded",
+		"award_date",
+		"award_notes",
+		"column_break_award",
+		"awarded_by",
+		"section_documents",
+		"bid_document",
+		"technical_proposal",
+		"column_break_documents",
+		"financial_proposal",
+		"section_audit",
+		"received_by",
+		"received_at"
+	],
+	"fields": [
+		{
+			"fieldname": "section_basic",
+			"fieldtype": "Section Break",
+			"label": "Bid Details"
+		},
+		{
+			"fieldname": "project",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Project",
+			"options": "BEI Project",
+			"reqd": 1
+		},
+		{
+			"fetch_from": "project.project_name",
+			"fieldname": "project_name",
+			"fieldtype": "Data",
+			"label": "Project Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "contractor",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Contractor",
+			"options": "BEI Supplier",
+			"reqd": 1
+		},
+		{
+			"fetch_from": "contractor.supplier_name",
+			"fieldname": "contractor_name",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Contractor Name",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "Today",
+			"fieldname": "submission_date",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Submission Date",
+			"reqd": 1
+		},
+		{
+			"default": "Submitted",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "Draft\nSubmitted\nUnder Review\nShortlisted\nAwarded\nNot Awarded\nWithdrawn"
+		},
+		{
+			"fieldname": "section_amounts",
+			"fieldtype": "Section Break",
+			"label": "Amounts"
+		},
+		{
+			"fieldname": "base_amount",
+			"fieldtype": "Currency",
+			"label": "Base Amount",
+			"precision": "2"
+		},
+		{
+			"fieldname": "vat_amount",
+			"fieldtype": "Currency",
+			"label": "VAT Amount",
+			"precision": "2"
+		},
+		{
+			"fieldname": "column_break_amounts",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "total_amount",
+			"fieldtype": "Currency",
+			"in_list_view": 1,
+			"label": "Total Amount",
+			"precision": "2"
+		},
+		{
+			"description": "Negotiated final amount after evaluation",
+			"fieldname": "final_amount",
+			"fieldtype": "Currency",
+			"label": "Final Amount",
+			"precision": "2"
+		},
+		{
+			"fieldname": "section_items",
+			"fieldtype": "Section Break",
+			"label": "Line Items"
+		},
+		{
+			"fieldname": "items",
+			"fieldtype": "Table",
+			"label": "Bid Items",
+			"options": "BEI Project Bid Item"
+		},
+		{
+			"fieldname": "section_evaluation",
+			"fieldtype": "Section Break",
+			"label": "Evaluation"
+		},
+		{
+			"fieldname": "technical_score",
+			"fieldtype": "Percent",
+			"label": "Technical Score"
+		},
+		{
+			"fieldname": "financial_score",
+			"fieldtype": "Percent",
+			"label": "Financial Score"
+		},
+		{
+			"fieldname": "overall_score",
+			"fieldtype": "Percent",
+			"label": "Overall Score",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_evaluation",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "evaluation_notes",
+			"fieldtype": "Text",
+			"label": "Evaluation Notes"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_award",
+			"fieldtype": "Section Break",
+			"label": "Award"
+		},
+		{
+			"default": "0",
+			"fieldname": "is_awarded",
+			"fieldtype": "Check",
+			"label": "Awarded",
+			"read_only": 1
+		},
+		{
+			"fieldname": "award_date",
+			"fieldtype": "Date",
+			"label": "Award Date",
+			"read_only": 1
+		},
+		{
+			"fieldname": "award_notes",
+			"fieldtype": "Small Text",
+			"label": "Award Notes"
+		},
+		{
+			"fieldname": "column_break_award",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "awarded_by",
+			"fieldtype": "Link",
+			"label": "Awarded By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_documents",
+			"fieldtype": "Section Break",
+			"label": "Documents"
+		},
+		{
+			"fieldname": "bid_document",
+			"fieldtype": "Attach",
+			"label": "Bid Document"
+		},
+		{
+			"fieldname": "technical_proposal",
+			"fieldtype": "Attach",
+			"label": "Technical Proposal"
+		},
+		{
+			"fieldname": "column_break_documents",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "financial_proposal",
+			"fieldtype": "Attach",
+			"label": "Financial Proposal"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_audit",
+			"fieldtype": "Section Break",
+			"label": "Audit Trail"
+		},
+		{
+			"default": "__user",
+			"fieldname": "received_by",
+			"fieldtype": "Link",
+			"label": "Received By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "received_at",
+			"fieldtype": "Datetime",
+			"label": "Received At",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [],
+	"modified": "2026-02-04 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Project Bid",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects User",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"title_field": "contractor_name",
+	"track_changes": 1
+}

@@ -1,0 +1,530 @@
+commands:
+  - all
+  - accounting
+  - analytics
+  - attendance
+  - billing
+  - biometric
+  - biometric-monitoring
+  - campaign-giveaways
+  - clearance
+  - commissary
+  - communication
+  - discount-monitoring
+  - expense
+  - finance-and-billing
+  - hr
+  - hr-self-service
+  - inventory
+  - maintenance
+  - my-profile
+  - onboarding
+  - procurement
+  - projects
+  - projects-mgmt
+  - queue
+  - receiving
+  - rm
+  - rm-admin
+  - root
+  - scm-logistics
+  - settings
+  - setup
+  - store-operations
+  - store-ops
+  - store-ops-inventory-sprint
+  - supervisor
+  - tasks
+  - team
+  - templates
+  - warehouse
+
+modules:
+  - key: accounting
+    status: ready
+    command: accounting
+    scenario_count: 3
+    route_count_hint: 21
+    prefixes:
+      - ACCT
+    scenario_files:
+      - docs/testing/scenarios/modules/accounting.md
+  - key: analytics
+    status: ready
+    command: analytics
+    scenario_count: 2
+    route_count_hint: 3
+    prefixes:
+      - AN
+    scenario_files:
+      - docs/testing/scenarios/modules/analytics.md
+  - key: attendance
+    status: ready
+    command: attendance
+    scenario_count: 3
+    route_count_hint: 6
+    prefixes:
+      - ATT
+    scenario_files:
+      - docs/testing/scenarios/modules/attendance.md
+  - key: billing
+    status: ready
+    command: billing
+    scenario_count: 17
+    route_count_hint: 27
+    prefixes:
+      - BILL
+    scenario_files:
+      - docs/testing/scenarios/modules/billing.md
+  - key: biometric
+    status: ready
+    command: biometric
+    scenario_count: 2
+    route_count_hint: 6
+    prefixes:
+      - BIOPORTAL
+    scenario_files:
+      - docs/testing/scenarios/modules/biometric.md
+  - key: biometric-monitoring
+    status: ready
+    command: biometric-monitoring
+    scenario_count: 14
+    route_count_hint: 6
+    prefixes:
+      - BIO
+    scenario_files:
+      - docs/testing/scenarios/modules/biometric-monitoring.md
+  - key: campaign-giveaways
+    status: ready
+    command: campaign-giveaways
+    scenario_count: 6
+    route_count_hint: 6
+    prefixes:
+      - CG
+    scenario_files:
+      - docs/testing/scenarios/modules/campaign-giveaways.md
+  - key: clearance
+    status: ready
+    command: clearance
+    scenario_count: 2
+    route_count_hint: 2
+    prefixes:
+      - CLEAR
+    scenario_files:
+      - docs/testing/scenarios/modules/clearance.md
+  - key: commissary
+    status: ready
+    command: commissary
+    scenario_count: 4
+    route_count_hint: 12
+    prefixes:
+      - COMMISSARY
+    scenario_files:
+      - docs/testing/scenarios/modules/commissary.md
+  - key: communication
+    status: ready
+    command: communication
+    scenario_count: 4
+    route_count_hint: 5
+    prefixes:
+      - COMM
+    scenario_files:
+      - docs/testing/scenarios/modules/communication.md
+  - key: discount-monitoring
+    status: ready
+    command: discount-monitoring
+    scenario_count: 10
+    route_count_hint: 21
+    prefixes:
+      - DISCMON
+    scenario_files:
+      - docs/testing/scenarios/modules/discount-monitoring.md
+  - key: expense
+    status: ready
+    command: expense
+    scenario_count: 6
+    route_count_hint: 9
+    prefixes:
+      - EXP
+    scenario_files:
+      - docs/testing/scenarios/modules/expense.md
+  - key: finance-and-billing
+    status: ready
+    command: finance-and-billing
+    scenario_count: 15
+    route_count_hint: 64
+    prefixes:
+      - FIN
+    scenario_files:
+      - docs/testing/scenarios/modules/finance-and-billing.md
+  - key: hr
+    status: ready
+    command: hr
+    scenario_count: 3
+    route_count_hint: 34
+    prefixes:
+      - HRM
+    scenario_files:
+      - docs/testing/scenarios/modules/hr.md
+  - key: hr-self-service
+    status: ready
+    command: hr-self-service
+    scenario_count: 12
+    route_count_hint: 45
+    prefixes:
+      - HR
+      - BUG
+    scenario_files:
+      - docs/testing/scenarios/modules/hr-self-service.md
+  - key: inventory
+    status: ready
+    command: inventory
+    scenario_count: 2
+    route_count_hint: 13
+    prefixes:
+      - INV
+    scenario_files:
+      - docs/testing/scenarios/modules/inventory.md
+  - key: maintenance
+    status: ready
+    command: maintenance
+    scenario_count: 24
+    route_count_hint: 17
+    prefixes:
+      - MAINT
+    scenario_files:
+      - docs/testing/scenarios/modules/maintenance.md
+  - key: my-profile
+    status: ready
+    command: my-profile
+    scenario_count: 2
+    route_count_hint: 1
+    prefixes:
+      - PROFILE
+    scenario_files:
+      - docs/testing/scenarios/modules/my-profile.md
+  - key: onboarding
+    status: ready
+    command: onboarding
+    scenario_count: 2
+    route_count_hint: 4
+    prefixes:
+      - ONB
+    scenario_files:
+      - docs/testing/scenarios/modules/onboarding.md
+  - key: procurement
+    status: ready
+    command: procurement
+    scenario_count: 3
+    route_count_hint: 37
+    prefixes:
+      - PROC
+    scenario_files:
+      - docs/testing/scenarios/modules/procurement.md
+  - key: projects
+    status: ready
+    command: projects
+    scenario_count: 2
+    route_count_hint: 2
+    prefixes:
+      - PROJ
+    scenario_files:
+      - docs/testing/scenarios/modules/projects.md
+  - key: projects-mgmt
+    status: ready
+    command: projects-mgmt
+    scenario_count: 2
+    route_count_hint: 3
+    prefixes:
+      - PM
+    scenario_files:
+      - docs/testing/scenarios/modules/projects-mgmt.md
+  - key: queue
+    status: ready
+    command: queue
+    scenario_count: 2
+    route_count_hint: 1
+    prefixes:
+      - QUE
+    scenario_files:
+      - docs/testing/scenarios/modules/queue.md
+  - key: receiving
+    status: ready
+    command: receiving
+    scenario_count: 3
+    route_count_hint: 3
+    prefixes:
+      - RECV
+    scenario_files:
+      - docs/testing/scenarios/modules/receiving.md
+  - key: rm
+    status: ready
+    command: rm
+    scenario_count: 2
+    route_count_hint: 2
+    prefixes:
+      - RM
+    scenario_files:
+      - docs/testing/scenarios/modules/rm.md
+  - key: rm-admin
+    status: ready
+    command: rm-admin
+    scenario_count: 2
+    route_count_hint: 3
+    prefixes:
+      - RMADM
+    scenario_files:
+      - docs/testing/scenarios/modules/rm-admin.md
+  - key: root
+    status: ready
+    command: root
+    scenario_count: 1
+    route_count_hint: 1
+    prefixes:
+      - ROOT
+    scenario_files:
+      - docs/testing/scenarios/modules/root.md
+  - key: scm-logistics
+    status: ready
+    command: scm-logistics
+    scenario_count: 30
+    route_count_hint: 96
+    prefixes:
+      - SCM
+    scenario_files:
+      - docs/testing/scenarios/modules/scm-logistics.md
+  - key: settings
+    status: ready
+    command: settings
+    scenario_count: 1
+    route_count_hint: 1
+    prefixes:
+      - SET
+    scenario_files:
+      - docs/testing/scenarios/modules/settings.md
+  - key: setup
+    status: ready
+    command: setup
+    scenario_count: 2
+    route_count_hint: 1
+    prefixes:
+      - SETUP
+    scenario_files:
+      - docs/testing/scenarios/modules/setup.md
+  - key: store-operations
+    status: ready
+    command: store-operations
+    scenario_count: 10
+    route_count_hint: 10
+    prefixes:
+      - STORE
+    scenario_files:
+      - docs/testing/scenarios/modules/store-operations.md
+  - key: store-ops
+    status: ready
+    command: store-ops
+    scenario_count: 3
+    route_count_hint: 10
+    prefixes:
+      - SOP
+    scenario_files:
+      - docs/testing/scenarios/modules/store-ops.md
+  - key: store-ops-inventory-sprint
+    status: ready
+    command: store-ops-inventory-sprint
+    scenario_count: 24
+    route_count_hint: 26
+    prefixes:
+      - SORDER
+      - POSDATE
+      - FQI
+      - VAR
+      - CCRECON
+      - GCHAT
+      - RBAC
+      - STAGE3
+      - CC
+    scenario_files:
+      - docs/testing/scenarios/modules/store-ops-inventory-sprint.md
+  - key: supervisor
+    status: ready
+    command: supervisor
+    scenario_count: 4
+    route_count_hint: 9
+    prefixes:
+      - SUP
+    scenario_files:
+      - docs/testing/scenarios/modules/supervisor.md
+  - key: tasks
+    status: ready
+    command: tasks
+    scenario_count: 2
+    route_count_hint: 5
+    prefixes:
+      - TASKS
+    scenario_files:
+      - docs/testing/scenarios/modules/tasks.md
+  - key: team
+    status: ready
+    command: team
+    scenario_count: 3
+    route_count_hint: 4
+    prefixes:
+      - TEAM
+    scenario_files:
+      - docs/testing/scenarios/modules/team.md
+  - key: templates
+    status: ready
+    command: templates
+    scenario_count: 1
+    route_count_hint: 1
+    prefixes:
+      - TPL
+    scenario_files:
+      - docs/testing/scenarios/modules/templates.md
+  - key: warehouse
+    status: ready
+    command: warehouse
+    scenario_count: 3
+    route_count_hint: 24
+    prefixes:
+      - WH
+    scenario_files:
+      - docs/testing/scenarios/modules/warehouse.md
+
+flows:
+  - key: employee-transfer
+    status: ready
+    scenario_count: 6
+    prefixes:
+      - TRF
+    scenario_files:
+      - docs/testing/scenarios/flows/employee-transfer.md
+  - key: regression-regression-bank
+    status: ready
+    scenario_count: 0
+    prefixes:
+    scenario_files:
+      - docs/testing/scenarios/regressions/regression-bank.md
+  - key: regression-regression-bank-store-ops-inventory
+    status: ready
+    scenario_count: 2
+    prefixes:
+      - T
+    scenario_files:
+      - docs/testing/scenarios/regressions/regression-bank-store-ops-inventory.md
+
+coverage:
+  generated_at_utc: 2026-03-17T07:45:00+00:00
+  baseline_route_count: 214
+  live_route_count: 247
+  required_domains:
+    - hr
+    - procurement
+    - warehouse
+    - accounting
+    - commissary
+    - inventory
+    - store-ops
+    - expense
+    - supervisor
+    - biometric
+    - billing
+    - attendance
+    - communication
+    - tasks
+    - onboarding
+    - receiving
+    - projects-mgmt
+    - analytics
+    - rm-admin
+    - clearance
+    - rm
+    - projects
+    - team
+    - maintenance
+    - settings
+    - templates
+    - root
+    - setup
+    - my-profile
+    - queue
+  domain_prefix_requirements:
+    accounting: "ACCT"
+    analytics: "AN"
+    attendance: "ATT"
+    billing: "BILL"
+    biometric: "BIOPORTAL"
+    biometric-monitoring: "BIO"
+    clearance: "CLEAR"
+    commissary: "COMMISSARY"
+    communication: "COMM"
+    discount-monitoring: "DISCMON"
+    expense: "EXP"
+    finance-and-billing: "FIN"
+    hr: "HRM"
+    hr-self-service: "HR, BUG"
+    inventory: "INV"
+    maintenance: "MAINT"
+    my-profile: "PROFILE"
+    onboarding: "ONB"
+    procurement: "PROC"
+    projects: "PROJ"
+    projects-mgmt: "PM"
+    queue: "QUE"
+    receiving: "RECV"
+    rm: "RM"
+    rm-admin: "RMADM"
+    root: "ROOT"
+    scm-logistics: "SCM"
+    settings: "SET"
+    setup: "SETUP"
+    store-operations: "STORE"
+    store-ops: "SOP"
+    store-ops-inventory-sprint: "SORDER, POSDATE, FQI, VAR, CCRECON, GCHAT, RBAC, STAGE3, CC"
+    supervisor: "SUP"
+    tasks: "TASKS"
+    team: "TEAM"
+    templates: "TPL"
+    warehouse: "WH"
+  module_route_counts:
+    accounting: 21
+    analytics: 3
+    attendance: 6
+    auth: 1
+    billing: 6
+    biometric: 6
+    clearance: 2
+    commissary: 12
+    communication: 5
+    completeness: 1
+    dashboard: 1
+    dev: 1
+    enrichment: 1
+    expense: 9
+    hr: 34
+    hr-admin: 1
+    inventory: 13
+    maintenance: 2
+    my-profile: 1
+    onboarding: 4
+    procurement: 37
+    projects: 2
+    projects-mgmt: 3
+    queue: 1
+    receiving: 3
+    reports: 1
+    rm: 2
+    rm-admin: 3
+    root: 1
+    scm: 8
+    settings: 1
+    setup: 1
+    store-ops: 10
+    supervisor: 9
+    tasks: 5
+    team: 4
+    templates: 1
+    transfers: 1
+    warehouse: 24
+  modules_without_scenarios:

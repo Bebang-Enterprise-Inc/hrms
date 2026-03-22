@@ -1,0 +1,238 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-VISIT-.YYYY.-.#####",
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "store",
+  "visit_date",
+  "visit_type",
+  "visited_by",
+  "column_break_1",
+  "store_supervisor_present",
+  "status",
+  "section_checklist",
+  "audit_items",
+  "section_scoring",
+  "score_funds",
+  "score_stocks",
+  "score_organization",
+  "column_break_scoring",
+  "score_staffing",
+  "score_coaching",
+  "overall_score",
+  "overall_grade",
+  "section_findings",
+  "critical_findings",
+  "action_items",
+  "follow_up_date",
+  "section_photos",
+  "photos"
+ ],
+ "fields": [
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "fieldname": "visit_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Visit Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "visit_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Visit Type",
+   "options": "Scheduled\nSurprise\nFollow-up",
+   "reqd": 1
+  },
+  {
+   "fieldname": "visited_by",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Visited By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "store_supervisor_present",
+   "fieldtype": "Link",
+   "label": "Store Supervisor Present",
+   "options": "User"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nSubmitted\nAcknowledged"
+  },
+  {
+   "fieldname": "section_checklist",
+   "fieldtype": "Section Break",
+   "label": "Audit Checklist"
+  },
+  {
+   "fieldname": "audit_items",
+   "fieldtype": "Table",
+   "label": "Audit Items",
+   "options": "BEI Store Audit Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_scoring",
+   "fieldtype": "Section Break",
+   "label": "100-Point Scoring"
+  },
+  {
+   "description": "Cash intact (10) + Documentation (10)",
+   "fieldname": "score_funds",
+   "fieldtype": "Int",
+   "label": "A. Funds (max 20)"
+  },
+  {
+   "description": "No expired (10) + FIFO (5) + Temperature (5)",
+   "fieldname": "score_stocks",
+   "fieldtype": "Int",
+   "label": "B. Stocks (max 20)"
+  },
+  {
+   "description": "Cleanliness (5) + Equipment (5) + Waste mgmt (10)",
+   "fieldname": "score_organization",
+   "fieldtype": "Int",
+   "label": "C. Organization (max 20)"
+  },
+  {
+   "fieldname": "column_break_scoring",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Equipment (5) + Uniform (5) + Service (10)",
+   "fieldname": "score_staffing",
+   "fieldtype": "Int",
+   "label": "D. Staffing (max 20)"
+  },
+  {
+   "description": "Improvements identified (10) + Coaching done (10)",
+   "fieldname": "score_coaching",
+   "fieldtype": "Int",
+   "label": "E. Coaching (max 20)"
+  },
+  {
+   "fieldname": "overall_score",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Total Score (max 100)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "overall_grade",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Grade",
+   "options": "\nEXCELLENT\nSATISFACTORY\nNEEDS IMPROVEMENT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_findings",
+   "fieldtype": "Section Break",
+   "label": "Findings & Actions"
+  },
+  {
+   "fieldname": "critical_findings",
+   "fieldtype": "Text",
+   "label": "Critical Findings"
+  },
+  {
+   "fieldname": "action_items",
+   "fieldtype": "Text",
+   "label": "Action Items"
+  },
+  {
+   "fieldname": "follow_up_date",
+   "fieldtype": "Date",
+   "label": "Follow-up Date"
+  },
+  {
+   "fieldname": "section_photos",
+   "fieldtype": "Section Break",
+   "label": "Photos"
+  },
+  {
+   "fieldname": "photos",
+   "fieldtype": "Table",
+   "label": "Photos",
+   "options": "BEI Visit Photo"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-25 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Store Visit Report",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Area Supervisor",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Store Supervisor",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Employee"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

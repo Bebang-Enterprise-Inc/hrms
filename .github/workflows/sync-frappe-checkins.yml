@@ -1,0 +1,97 @@
+name: Supabase → Frappe Checkin Sync (every 5 min)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: "Max punches per run (default: 500)"
+        required: false
+        type: number
+        default: 500
+      dry_run:
+        description: "Dry run (show what would sync)"
+        required: false
+        type: boolean
+        default: false
+
+env:
+  SUPABASE_URL: "https://csnniykjrychgajfrgua.supabase.co"
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  FRAPPE_URL: "https://hq.bebang.ph"
+  FRAPPE_API_KEY: ${{ secrets.FRAPPE_API_KEY }}
+  FRAPPE_API_SECRET: ${{ secrets.FRAPPE_API_SECRET }}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install httpx
+
+      - name: Sync attendance to Frappe
+        run: |
+          ARGS=""
+          if [ -n "${{ inputs.batch_size }}" ] && [ "${{ inputs.batch_size }}" != "500" ]; then
+            ARGS="--batch-size ${{ inputs.batch_size }}"
+          fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            ARGS="$ARGS --dry-run"
+          fi
+          echo "Running: python scripts/sync_supabase_to_frappe.py $ARGS"
+          eval python scripts/sync_supabase_to_frappe.py $ARGS
+
+  # Failure notification — same pattern as sync-adms.yml
+  notify-failure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [sync]
+    if: ${{ failure() }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install google-auth google-api-python-client
+
+      - name: Setup Google credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
+
+      - name: Send failure alert to Google Chat
+        run: |
+          python -c "
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+
+          creds = service_account.Credentials.from_service_account_file(
+              'credentials/task-manager-service.json',
+              scopes=['https://www.googleapis.com/auth/chat.bot'],
+          )
+          chat = build('chat', 'v1', credentials=creds)
+
+          msg = (
+              'SYNC FAILURE: Supabase → Frappe Checkin Sync\n\n'
+              'The attendance bridge (Supabase → Frappe Employee Checkin) failed.\n'
+              'Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          )
+          chat.spaces().messages().create(
+              parent='spaces/AAQABiNmpBg',
+              body={'text': msg},
+          ).execute()
+          print('Failure alert sent to Google Chat')
+          "

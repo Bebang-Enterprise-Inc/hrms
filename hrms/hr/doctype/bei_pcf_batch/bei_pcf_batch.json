@@ -1,0 +1,251 @@
+{
+    "actions": [],
+    "allow_rename": 0,
+    "autoname": "BEI-PCF-.YYYY.-.#####",
+    "creation": "2026-02-03 00:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "section_batch",
+        "store",
+        "company",
+        "batch_date",
+        "column_break_batch",
+        "status",
+        "submission_type",
+        "section_summary",
+        "total_amount",
+        "expense_count",
+        "column_break_summary",
+        "period_start",
+        "period_end",
+        "section_items",
+        "items",
+        "section_submission",
+        "submitted_by",
+        "submitted_at",
+        "column_break_submission",
+        "section_review",
+        "reviewed_by",
+        "reviewed_at",
+        "review_notes",
+        "section_replenishment",
+        "replenishment_requested",
+        "replenishment_amount",
+        "replenishment_date"
+    ],
+    "fields": [
+        {
+            "fieldname": "section_batch",
+            "fieldtype": "Section Break",
+            "label": "Batch Details"
+        },
+        {
+            "fieldname": "store",
+            "fieldtype": "Link",
+            "label": "Store",
+            "options": "Warehouse",
+            "reqd": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "company",
+            "fieldtype": "Link",
+            "label": "Company",
+            "options": "Company",
+            "reqd": 1,
+            "default": "Bebang Enterprise Inc."
+        },
+        {
+            "fieldname": "batch_date",
+            "fieldtype": "Date",
+            "label": "Batch Date",
+            "reqd": 1,
+            "default": "Today",
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "column_break_batch",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "status",
+            "fieldtype": "Select",
+            "label": "Status",
+            "options": "Submitted\nUnder Review\nApproved\nRejected",
+            "default": "Submitted",
+            "reqd": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "submission_type",
+            "fieldtype": "Select",
+            "label": "Submission Type",
+            "options": "Manual\nThreshold Auto\nMonth-End Auto",
+            "reqd": 1,
+            "in_list_view": 1,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "section_summary",
+            "fieldtype": "Section Break",
+            "label": "Summary"
+        },
+        {
+            "fieldname": "total_amount",
+            "fieldtype": "Currency",
+            "label": "Total Amount",
+            "read_only": 1,
+            "in_list_view": 1
+        },
+        {
+            "fieldname": "expense_count",
+            "fieldtype": "Int",
+            "label": "Expense Count",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_summary",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "period_start",
+            "fieldtype": "Date",
+            "label": "Period Start",
+            "read_only": 1,
+            "description": "Earliest expense date in batch"
+        },
+        {
+            "fieldname": "period_end",
+            "fieldtype": "Date",
+            "label": "Period End",
+            "read_only": 1,
+            "description": "Latest expense date in batch"
+        },
+        {
+            "fieldname": "section_items",
+            "fieldtype": "Section Break",
+            "label": "Expenses"
+        },
+        {
+            "fieldname": "items",
+            "fieldtype": "Table",
+            "label": "Batch Items",
+            "options": "BEI PCF Batch Item",
+            "reqd": 1
+        },
+        {
+            "fieldname": "section_submission",
+            "fieldtype": "Section Break",
+            "label": "Submission"
+        },
+        {
+            "fieldname": "submitted_by",
+            "fieldtype": "Link",
+            "label": "Submitted By",
+            "options": "User",
+            "read_only": 1
+        },
+        {
+            "fieldname": "submitted_at",
+            "fieldtype": "Datetime",
+            "label": "Submitted At",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_submission",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "section_review",
+            "fieldtype": "Section Break",
+            "label": "Review",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "reviewed_by",
+            "fieldtype": "Link",
+            "label": "Reviewed By",
+            "options": "User",
+            "read_only": 1
+        },
+        {
+            "fieldname": "reviewed_at",
+            "fieldtype": "Datetime",
+            "label": "Reviewed At",
+            "read_only": 1
+        },
+        {
+            "fieldname": "review_notes",
+            "fieldtype": "Small Text",
+            "label": "Review Notes"
+        },
+        {
+            "fieldname": "section_replenishment",
+            "fieldtype": "Section Break",
+            "label": "Replenishment",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "replenishment_requested",
+            "fieldtype": "Check",
+            "label": "Replenishment Requested",
+            "default": 0
+        },
+        {
+            "fieldname": "replenishment_amount",
+            "fieldtype": "Currency",
+            "label": "Replenishment Amount"
+        },
+        {
+            "fieldname": "replenishment_date",
+            "fieldtype": "Date",
+            "label": "Replenishment Date",
+            "read_only": 1
+        }
+    ],
+    "index_web_pages_for_search": 0,
+    "links": [
+        {
+            "link_doctype": "BEI Expense Request",
+            "link_fieldname": "pcf_batch"
+        }
+    ],
+    "modified": "2026-02-03 00:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "HR",
+    "name": "BEI PCF Batch",
+    "naming_rule": "Expression",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "share": 1,
+            "write": 1,
+            "role": "System Manager"
+        },
+        {
+            "create": 1,
+            "read": 1,
+            "write": 1,
+            "role": "Accounts Manager"
+        },
+        {
+            "read": 1,
+            "write": 1,
+            "role": "Accounts User"
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": [],
+    "track_changes": 1
+}

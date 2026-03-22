@@ -1,0 +1,6 @@
+[
+    {"url": "https://github.com/frappe/erpnext", "branch": "version-15"},
+    {"url": "https://github.com/frappe/payments", "branch": "version-15"},
+    {"url": "https://github.com/Bebang-Enterprise-Inc/hrms", "branch": "production"}
+]
+

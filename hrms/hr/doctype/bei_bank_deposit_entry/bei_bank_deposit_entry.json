@@ -1,0 +1,41 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-01-30 08:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "dates_covered",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "dates_covered",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Dates Covered",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-01-30 08:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Bank Deposit Entry",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,61 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-14 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "billing_reference",
+  "billing_type",
+  "billing_date",
+  "description",
+  "amount"
+ ],
+ "fields": [
+  {
+   "fieldname": "billing_reference",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Billing Reference",
+   "options": "BEI Billing Schedule"
+  },
+  {
+   "fieldname": "billing_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Billing Type"
+  },
+  {
+   "fieldname": "billing_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Billing Date"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Description"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Amount",
+   "precision": "2"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-02-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI SOA Line Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

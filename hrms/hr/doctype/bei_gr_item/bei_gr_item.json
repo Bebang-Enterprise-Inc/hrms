@@ -1,0 +1,131 @@
+{
+  "actions": [],
+  "creation": "2026-02-03 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "item_code",
+    "item_name",
+    "column_break_item",
+    "description",
+    "qty_section",
+    "ordered_qty",
+    "received_qty",
+    "column_break_qty",
+    "uom",
+    "rejected_qty",
+    "acceptance_section",
+    "accepted_qty",
+    "unit_cost",
+    "column_break_accept",
+    "amount",
+    "rejection_reason"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Item Code",
+      "options": "Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "label": "Item Name"
+    },
+    {
+      "fieldname": "column_break_item",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {
+      "fieldname": "qty_section",
+      "fieldtype": "Section Break",
+      "label": "Quantities"
+    },
+    {
+      "fieldname": "ordered_qty",
+      "fieldtype": "Float",
+      "label": "Ordered Qty",
+      "precision": "2",
+      "read_only": 1
+    },
+    {
+      "fieldname": "received_qty",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Received Qty",
+      "precision": "2",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_qty",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "uom",
+      "fieldtype": "Link",
+      "label": "UOM",
+      "options": "UOM"
+    },
+    {
+      "default": "0",
+      "fieldname": "rejected_qty",
+      "fieldtype": "Float",
+      "label": "Rejected Qty",
+      "precision": "2"
+    },
+    {
+      "fieldname": "acceptance_section",
+      "fieldtype": "Section Break",
+      "label": "Acceptance"
+    },
+    {
+      "fieldname": "accepted_qty",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Accepted Qty",
+      "precision": "2",
+      "read_only": 1
+    },
+    {
+      "fieldname": "unit_cost",
+      "fieldtype": "Currency",
+      "label": "Unit Cost",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_accept",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Amount",
+      "read_only": 1
+    },
+    {
+      "fieldname": "rejection_reason",
+      "fieldtype": "Small Text",
+      "label": "Rejection Reason"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "istable": 1,
+  "links": [],
+  "modified": "2026-02-03 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI GR Item",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC"
+}

@@ -1,0 +1,168 @@
+{
+  "actions": [],
+  "creation": "2026-01-24 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "item_code",
+    "item_name",
+    "uom",
+    "unit_price",
+    "qty_requested",
+    "qty_approved",
+    "qty_delivered",
+    "last_order_qty",
+    "amount",
+    "suggested_qty",
+    "recommended_qty",
+    "lane",
+    "available_to_promise",
+    "forecast_demand",
+    "safety_buffer",
+    "risk_rank",
+    "is_edited",
+    "deviation_pct",
+    "deviation_reason"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item Code",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "label": "Item Name",
+      "fetch_from": "item_code.item_name",
+      "in_list_view": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "uom",
+      "fieldtype": "Link",
+      "label": "UOM",
+      "options": "UOM",
+      "fetch_from": "item_code.stock_uom",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "unit_price",
+      "fieldtype": "Currency",
+      "label": "Unit Price",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "qty_requested",
+      "fieldtype": "Float",
+      "label": "Qty Requested",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "qty_approved",
+      "fieldtype": "Float",
+      "label": "Qty Approved",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "qty_delivered",
+      "fieldtype": "Float",
+      "label": "Qty Delivered",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "last_order_qty",
+      "fieldtype": "Float",
+      "label": "Last Order Qty",
+      "read_only": 1
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "label": "Amount",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "suggested_qty",
+      "fieldtype": "Float",
+      "label": "Suggested Qty",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "recommended_qty",
+      "fieldtype": "Float",
+      "label": "Recommended Qty",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "lane",
+      "fieldtype": "Data",
+      "label": "Lane",
+      "read_only": 1
+    },
+    {
+      "fieldname": "available_to_promise",
+      "fieldtype": "Float",
+      "label": "Available to Promise",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "forecast_demand",
+      "fieldtype": "Float",
+      "label": "Forecast Demand",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "safety_buffer",
+      "fieldtype": "Float",
+      "label": "Safety Buffer",
+      "read_only": 1,
+      "precision": 3
+    },
+    {
+      "fieldname": "risk_rank",
+      "fieldtype": "Int",
+      "label": "Risk Rank",
+      "read_only": 1
+    },
+    {
+      "fieldname": "is_edited",
+      "fieldtype": "Check",
+      "label": "Is Edited",
+      "read_only": 1
+    },
+    {
+      "fieldname": "deviation_pct",
+      "fieldtype": "Float",
+      "label": "Deviation %",
+      "read_only": 1,
+      "precision": 1
+    },
+    {
+      "fieldname": "deviation_reason",
+      "fieldtype": "Small Text",
+      "label": "Deviation Reason"
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2026-02-17 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Store Order Item",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "creation",
+  "sort_order": "ASC",
+  "states": [],
+  "track_changes": 1
+}

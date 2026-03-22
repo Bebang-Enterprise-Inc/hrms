@@ -1,0 +1,88 @@
+{
+  "actions": [],
+  "allow_import": 0,
+  "allow_rename": 0,
+  "autoname": "format:{user}-{provider}",
+  "creation": "2025-12-16 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Setup",
+  "editable_grid": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "user",
+    "provider",
+    "access_token",
+    "refresh_token",
+    "token_expiry",
+    "scopes",
+    "last_refreshed"
+  ],
+  "fields": [
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "label": "User",
+      "options": "User",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "provider",
+      "fieldtype": "Data",
+      "label": "Provider",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "access_token",
+      "fieldtype": "Long Text",
+      "label": "Access Token"
+    },
+    {
+      "fieldname": "refresh_token",
+      "fieldtype": "Long Text",
+      "label": "Refresh Token"
+    },
+    {
+      "fieldname": "token_expiry",
+      "fieldtype": "Datetime",
+      "label": "Token Expiry",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "scopes",
+      "fieldtype": "Small Text",
+      "label": "Scopes"
+    },
+    {
+      "fieldname": "last_refreshed",
+      "fieldtype": "Datetime",
+      "label": "Last Refreshed",
+      "in_list_view": 1
+    }
+  ],
+  "links": [],
+  "modified": "2025-12-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "User OAuth Token",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 0,
+      "export": 0,
+      "print": 0,
+      "read": 1,
+      "report": 0,
+      "role": "System Manager",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "quick_entry": 0,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

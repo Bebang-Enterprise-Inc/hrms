@@ -1,0 +1,138 @@
+{
+ "actions": [],
+ "autoname": "BEI-WX-.YYYY.-.#####",
+ "creation": "2026-01-31 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "weather_zone",
+  "collection_time",
+  "section_conditions",
+  "temperature",
+  "feels_like",
+  "humidity",
+  "column_break_conditions",
+  "precipitation",
+  "wind_speed",
+  "is_rainy",
+  "section_weather",
+  "weather_code",
+  "weather_description"
+ ],
+ "fields": [
+  {
+   "fieldname": "weather_zone",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Weather Zone",
+   "options": "BEI Weather Zone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "collection_time",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Collection Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_conditions",
+   "fieldtype": "Section Break",
+   "label": "Weather Conditions"
+  },
+  {
+   "fieldname": "temperature",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Temperature (°C)",
+   "precision": "1"
+  },
+  {
+   "fieldname": "feels_like",
+   "fieldtype": "Float",
+   "label": "Feels Like (°C)",
+   "precision": "1"
+  },
+  {
+   "fieldname": "humidity",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Humidity (%)"
+  },
+  {
+   "fieldname": "column_break_conditions",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "precipitation",
+   "fieldtype": "Float",
+   "label": "Precipitation (mm)",
+   "precision": "2"
+  },
+  {
+   "fieldname": "wind_speed",
+   "fieldtype": "Float",
+   "label": "Wind Speed (km/h)",
+   "precision": "1"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_rainy",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Rainy"
+  },
+  {
+   "fieldname": "section_weather",
+   "fieldtype": "Section Break",
+   "label": "Weather Type"
+  },
+  {
+   "fieldname": "weather_code",
+   "fieldtype": "Int",
+   "label": "Weather Code"
+  },
+  {
+   "fieldname": "weather_description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Weather Description"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-31 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Weather Log",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1
+  }
+ ],
+ "sort_field": "collection_time",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

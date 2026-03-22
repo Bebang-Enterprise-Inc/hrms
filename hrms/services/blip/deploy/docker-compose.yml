@@ -1,0 +1,58 @@
+# Blip AI Assistant - Standalone Deployment
+# NOT part of Frappe stack - runs independently on same server
+# AI-powered company assistant with full company knowledge
+
+version: "3.8"
+
+services:
+  blip:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: blip-assistant
+    restart: unless-stopped
+
+    environment:
+      # Frappe API - calls external URL (not internal Docker network)
+      FRAPPE_URL: https://hq.bebang.ph
+      FRAPPE_API_KEY: ${FRAPPE_API_KEY}
+      FRAPPE_API_SECRET: ${FRAPPE_API_SECRET}
+
+      # Claude AI - intent parsing (Haiku 4.5 - LATEST)
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      CLAUDE_MODEL: claude-haiku-4-5-20251001
+
+      # Gemini AI - response formatting (Gemini 3 Flash - LATEST)
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_MODEL: gemini-3-flash-preview
+
+      # Admin users (full data access)
+      ADMIN_EMAILS: sam@bebang.ph,butch@bebang.ph
+
+      # Service config
+      BLIP_PORT: 8766
+      LOG_LEVEL: INFO
+
+      # Google Chat verification (optional)
+      GOOGLE_CHAT_PROJECT_NUMBER: ${GOOGLE_CHAT_PROJECT_NUMBER:-}
+
+      # BEI Brain (Supabase) - for /remember command
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+
+    volumes:
+      # Logs
+      - ./logs:/app/logs
+
+    ports:
+      - "172.17.0.1:8766:8766"  # Docker gateway - accessible from Frappe container
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8766/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  default:
+    name: blip-network

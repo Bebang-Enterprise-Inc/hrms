@@ -1,0 +1,78 @@
+# ... existing content ...
+
+# AWS Credentials
+.aws/
+*.pem
+*.key
+.env
+.env.local
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+
+# AWS MCP
+.cursor/mcp.json.local
+
+# Cursor (ALWAYS local-only)
+.cursor/
+
+# Claude Code (ALWAYS local-only)
+.claude/
+tmpclaude-*
+
+# Private investigations / audit artifacts (LOCAL ONLY)
+Audit/
+
+# ERP Data Warehouse (local only - too large for git)
+data/
+!data/README.md
+
+# Local documentation (not synced)
+docs/
+docs/plans/
+!docs/GOOGLE_OAUTH_RUNBOOK.md
+
+# AWS deployment artifacts
+aws/
+
+# Company data (local only)
+BEI Company Details/
+
+# Assets (local only)
+assets/
+
+# Credentials (NEVER commit)
+credentials/
+**/credentials/
+*.local.mdc
+*.tar.gz
+
+# Claude hook session tracking
+.claude/hooks/.brain_session_tracker.json
+
+# Auto Claude data directory
+.auto-claude/
+
+# ADMS Receiver (has its own repo: Bebang-Enterprise-Inc/adms-receiver)
+adms_receiver/
+
+# Local investigation scratch files (root only)
+/investigate_deep.json
+/investigate_suppliers.py
+/investigate_suppliers_deep.py
+/investigation_results.json
+
+# Local analysis scratch files (root only)
+/analysis_data.json
+/analyze_inventory.py
+/calc_dtl.py
+/fetch_cold_inv.py
+/inventory_cold.json
+/summarize.py
+
+# Python local cache artifacts
+**/__pycache__/
+*.py[cod]

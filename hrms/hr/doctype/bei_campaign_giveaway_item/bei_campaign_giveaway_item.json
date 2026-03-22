@@ -1,0 +1,90 @@
+{
+  "actions": [],
+  "creation": "2026-03-18 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "item_code",
+    "item_name",
+    "uom",
+    "approved_quantity",
+    "served_quantity",
+    "remaining_quantity",
+    "estimated_unit_cost",
+    "estimated_total_cost"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item Code",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "label": "Item Name",
+      "fetch_from": "item_code.item_name",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "uom",
+      "fieldtype": "Link",
+      "label": "UOM",
+      "options": "UOM",
+      "fetch_from": "item_code.stock_uom",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "approved_quantity",
+      "fieldtype": "Float",
+      "label": "Approved Quantity",
+      "reqd": 1,
+      "precision": 3,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "served_quantity",
+      "fieldtype": "Float",
+      "label": "Served Quantity",
+      "default": 0,
+      "precision": 3,
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "remaining_quantity",
+      "fieldtype": "Float",
+      "label": "Remaining Quantity",
+      "precision": 3,
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "estimated_unit_cost",
+      "fieldtype": "Currency",
+      "label": "Estimated Unit Cost"
+    },
+    {
+      "fieldname": "estimated_total_cost",
+      "fieldtype": "Currency",
+      "label": "Estimated Total Cost",
+      "read_only": 1
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2026-03-18 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Campaign Giveaway Item",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "creation",
+  "sort_order": "ASC",
+  "states": [],
+  "track_changes": 1
+}

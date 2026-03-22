@@ -1,0 +1,211 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-COACH-.YYYY.-.#####",
+ "creation": "2026-01-26 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "store",
+  "coaching_date",
+  "coaching_type",
+  "column_break_1",
+  "employee",
+  "coached_by",
+  "section_details",
+  "topic",
+  "observations",
+  "coaching_remarks",
+  "section_follow_up",
+  "follow_up_required",
+  "follow_up_date",
+  "column_break_follow_up",
+  "follow_up_status",
+  "follow_up_notes",
+  "section_source",
+  "source_visit",
+  "source_action_plan"
+ ],
+ "fields": [
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "coaching_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Coaching Date",
+   "reqd": 1
+  },
+  {
+   "default": "On-the-spot",
+   "fieldname": "coaching_type",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "Coaching Type",
+   "options": "On-the-spot\nScheduled\nFollow-up\nPerformance Review"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Employee Coached",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "coached_by",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Coached By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_details",
+   "fieldtype": "Section Break",
+   "label": "Coaching Details"
+  },
+  {
+   "fieldname": "topic",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Topic",
+   "reqd": 1
+  },
+  {
+   "fieldname": "observations",
+   "fieldtype": "Text",
+   "label": "Observations"
+  },
+  {
+   "fieldname": "coaching_remarks",
+   "fieldtype": "Text",
+   "label": "Coaching Remarks",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_follow_up",
+   "fieldtype": "Section Break",
+   "label": "Follow-up"
+  },
+  {
+   "default": "0",
+   "fieldname": "follow_up_required",
+   "fieldtype": "Check",
+   "label": "Follow-up Required"
+  },
+  {
+   "depends_on": "eval:doc.follow_up_required",
+   "fieldname": "follow_up_date",
+   "fieldtype": "Date",
+   "label": "Follow-up Date"
+  },
+  {
+   "fieldname": "column_break_follow_up",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.follow_up_required",
+   "fieldname": "follow_up_status",
+   "fieldtype": "Select",
+   "label": "Follow-up Status",
+   "options": "\nPending\nCompleted\nNot Required"
+  },
+  {
+   "depends_on": "eval:doc.follow_up_required",
+   "fieldname": "follow_up_notes",
+   "fieldtype": "Small Text",
+   "label": "Follow-up Notes"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_source",
+   "fieldtype": "Section Break",
+   "label": "Source Reference"
+  },
+  {
+   "fieldname": "source_visit",
+   "fieldtype": "Link",
+   "label": "From Store Visit",
+   "options": "BEI Store Visit Report"
+  },
+  {
+   "fieldname": "source_action_plan",
+   "fieldtype": "Link",
+   "label": "From Action Plan",
+   "options": "BEI Action Plan"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-26 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Coaching Log",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Area Supervisor",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "coaching_date",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

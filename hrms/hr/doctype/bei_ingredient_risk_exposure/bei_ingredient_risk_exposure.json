@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-RISK-EXP-.YYYY.-.#####",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "snapshot",
+  "parent_item_code",
+  "warehouse",
+  "ingredient_item_code",
+  "required_qty",
+  "available_qty",
+  "shortage_qty",
+  "days_cover",
+  "recovery_eta",
+  "exposure_status"
+ ],
+ "fields": [
+  {"fieldname": "snapshot", "fieldtype": "Link", "label": "Risk Snapshot", "options": "BEI Inventory Risk Snapshot"},
+  {"fieldname": "parent_item_code", "fieldtype": "Link", "label": "Parent Item", "options": "Item", "reqd": 1},
+  {"fieldname": "warehouse", "fieldtype": "Link", "label": "Warehouse", "options": "Warehouse"},
+  {"fieldname": "ingredient_item_code", "fieldtype": "Link", "label": "Ingredient Item", "options": "Item", "reqd": 1},
+  {"fieldname": "required_qty", "fieldtype": "Float", "label": "Required Qty"},
+  {"fieldname": "available_qty", "fieldtype": "Float", "label": "Available Qty"},
+  {"fieldname": "shortage_qty", "fieldtype": "Float", "label": "Shortage Qty"},
+  {"fieldname": "days_cover", "fieldtype": "Float", "label": "Days Cover"},
+  {"fieldname": "recovery_eta", "fieldtype": "Datetime", "label": "Recovery ETA"},
+  {"fieldname": "exposure_status", "fieldtype": "Select", "label": "Exposure Status", "options": "Normal\nWatch\nCritical", "in_list_view": 1}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "HR",
+ "name": "BEI Ingredient Risk Exposure",
+ "naming_rule": "Expression",
+ "permissions": [
+  {"create": 1, "read": 1, "write": 1, "delete": 1, "role": "System Manager"},
+  {"create": 1, "read": 1, "write": 1, "role": "Warehouse User"},
+  {"read": 1, "role": "HQ User"}
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

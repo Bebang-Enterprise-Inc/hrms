@@ -1,0 +1,249 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:BEI-MRF-{YYYY}-{#####}",
+ "creation": "2026-02-09 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "requesting_info_section",
+  "requesting_department",
+  "requested_by",
+  "column_break_3",
+  "store",
+  "preferred_start_date",
+  "section_break_5",
+  "position_title",
+  "designation",
+  "department",
+  "column_break_9",
+  "number_of_vacancies",
+  "reason",
+  "replaced_employee",
+  "section_break_13",
+  "job_description",
+  "qualifications",
+  "section_break_16",
+  "salary_range_min",
+  "salary_range_max",
+  "column_break_19",
+  "internal_hiring_eligible",
+  "section_break_21",
+  "justification",
+  "status_section",
+  "status",
+  "column_break_25",
+  "linked_job_opening"
+ ],
+ "fields": [
+  {
+   "fieldname": "requesting_info_section",
+   "fieldtype": "Section Break",
+   "label": "Requesting Information"
+  },
+  {
+   "fieldname": "requesting_department",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Requesting Department",
+   "options": "Department",
+   "reqd": 1
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "label": "Store",
+   "options": "Warehouse"
+  },
+  {
+   "fieldname": "preferred_start_date",
+   "fieldtype": "Date",
+   "label": "Preferred Start Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_5",
+   "fieldtype": "Section Break",
+   "label": "Position Details"
+  },
+  {
+   "fieldname": "position_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Position Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Designation",
+   "options": "Designation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "number_of_vacancies",
+   "fieldtype": "Int",
+   "default": "1",
+   "label": "Number of Vacancies",
+   "reqd": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Reason",
+   "options": "Replacement\nNew Position\nSeasonal\nExpansion",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.reason=='Replacement'",
+   "fieldname": "replaced_employee",
+   "fieldtype": "Link",
+   "label": "Replaced Employee",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "section_break_13",
+   "fieldtype": "Section Break",
+   "label": "Job Requirements"
+  },
+  {
+   "fieldname": "job_description",
+   "fieldtype": "Text Editor",
+   "label": "Job Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "qualifications",
+   "fieldtype": "Text Editor",
+   "label": "Qualifications"
+  },
+  {
+   "fieldname": "section_break_16",
+   "fieldtype": "Section Break",
+   "label": "Compensation & Eligibility"
+  },
+  {
+   "fieldname": "salary_range_min",
+   "fieldtype": "Currency",
+   "label": "Salary Range Min"
+  },
+  {
+   "fieldname": "salary_range_max",
+   "fieldtype": "Currency",
+   "label": "Salary Range Max"
+  },
+  {
+   "fieldname": "column_break_19",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "internal_hiring_eligible",
+   "fieldtype": "Check",
+   "label": "Internal Hiring Eligible"
+  },
+  {
+   "fieldname": "section_break_21",
+   "fieldtype": "Section Break",
+   "label": "Justification"
+  },
+  {
+   "fieldname": "justification",
+   "fieldtype": "Text Editor",
+   "label": "Justification",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status_section",
+   "fieldtype": "Section Break",
+   "label": "Status"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nPending Hiring Manager\nPending HR Manager\nPending CEO\nApproved\nRejected\nFilled\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_25",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "linked_job_opening",
+   "fieldtype": "Link",
+   "label": "Linked Job Opening",
+   "options": "Job Opening",
+   "read_only": 1
+  }
+ ],
+ "links": [],
+ "modified": "2026-02-09 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Manpower Request Form",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

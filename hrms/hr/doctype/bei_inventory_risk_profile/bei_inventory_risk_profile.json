@@ -1,0 +1,45 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-RISK-PROFILE-.YYYY.-.#####",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "warehouse",
+  "supplier",
+  "lead_time_days",
+  "safety_stock_days",
+  "supplier_reliability_score",
+  "supplier_on_time_rate_target",
+  "default_margin_rate",
+  "payable_buffer_days",
+  "is_active"
+ ],
+ "fields": [
+  {"fieldname": "item_code", "fieldtype": "Link", "label": "Item Code", "options": "Item", "reqd": 1},
+  {"fieldname": "warehouse", "fieldtype": "Link", "label": "Warehouse", "options": "Warehouse", "reqd": 1},
+  {"fieldname": "supplier", "fieldtype": "Link", "label": "Supplier", "options": "Supplier"},
+  {"default": "2", "fieldname": "lead_time_days", "fieldtype": "Float", "label": "Lead Time (Days)"},
+  {"default": "2", "fieldname": "safety_stock_days", "fieldtype": "Float", "label": "Safety Stock (Days)"},
+  {"default": "70", "fieldname": "supplier_reliability_score", "fieldtype": "Float", "label": "Supplier Reliability Score"},
+  {"default": "85", "fieldname": "supplier_on_time_rate_target", "fieldtype": "Float", "label": "Supplier On-Time Target"},
+  {"default": "0.35", "fieldname": "default_margin_rate", "fieldtype": "Float", "label": "Default Margin Rate"},
+  {"default": "2", "fieldname": "payable_buffer_days", "fieldtype": "Int", "label": "Payable Buffer Days"},
+  {"default": "1", "fieldname": "is_active", "fieldtype": "Check", "label": "Is Active"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "HR",
+ "name": "BEI Inventory Risk Profile",
+ "naming_rule": "Expression",
+ "permissions": [
+  {"create": 1, "read": 1, "write": 1, "delete": 1, "role": "System Manager"},
+  {"create": 1, "read": 1, "write": 1, "role": "Warehouse User"},
+  {"read": 1, "role": "HQ User"}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

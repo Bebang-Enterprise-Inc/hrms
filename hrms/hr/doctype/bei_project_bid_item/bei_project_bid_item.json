@@ -1,0 +1,63 @@
+{
+	"actions": [],
+	"creation": "2026-02-04 00:00:00.000000",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"item_description",
+		"quantity",
+		"unit",
+		"unit_price",
+		"amount"
+	],
+	"fields": [
+		{
+			"fieldname": "item_description",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Item Description",
+			"reqd": 1
+		},
+		{
+			"default": "1",
+			"fieldname": "quantity",
+			"fieldtype": "Float",
+			"in_list_view": 1,
+			"label": "Quantity"
+		},
+		{
+			"fieldname": "unit",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Unit"
+		},
+		{
+			"fieldname": "unit_price",
+			"fieldtype": "Currency",
+			"in_list_view": 1,
+			"label": "Unit Price",
+			"precision": "2"
+		},
+		{
+			"fieldname": "amount",
+			"fieldtype": "Currency",
+			"in_list_view": 1,
+			"label": "Amount",
+			"precision": "2",
+			"read_only": 1
+		}
+	],
+	"istable": 1,
+	"links": [],
+	"modified": "2026-02-04 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Project Bid Item",
+	"owner": "Administrator",
+	"permissions": [],
+	"sort_field": "creation",
+	"sort_order": "ASC",
+	"states": [],
+	"track_changes": 1
+}

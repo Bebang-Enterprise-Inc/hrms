@@ -1,0 +1,38 @@
+# Blip Sentinel v2.3 — Cron Schedule
+# All times in UTC (PHT = UTC+8)
+
+# Chat sweep every 5 minutes
+*/5 * * * * python /app/blip-sentinel/sentinel.py --sweep chat
+
+# Gmail sweep every 30 minutes
+*/30 * * * * python /app/blip-sentinel/sentinel.py --sweep gmail
+
+# Calendar sweep every 30 minutes
+*/30 * * * * python /app/blip-sentinel/sentinel.py --sweep calendar
+
+# Classification every 5 minutes (offset from sweeps by 2 min)
+2,7,12,17,22,27,32,37,42,47,52,57 * * * * python /app/blip-sentinel/sentinel.py --classify
+
+# 30-minute digest (offset by 5 min to run AFTER classifier)
+5,35 * * * * python /app/blip-sentinel/sentinel.py --digest
+
+# Morning briefing at midnight UTC (8 AM PHT)
+0 0 * * * python /app/blip-sentinel/sentinel.py --briefing morning
+
+# Evening briefing at 1 PM UTC (9 PM PHT)
+0 13 * * * python /app/blip-sentinel/sentinel.py --briefing evening
+
+# Meeting reminders every 30 minutes
+*/30 * * * * python /app/blip-sentinel/sentinel.py --remind meetings
+
+# Nightly store report summary at 3:30 PM UTC (11:30 PM PHT)
+30 15 * * * python /app/blip-sentinel/sentinel.py --store-summary
+
+# Space discovery at 4 PM UTC (midnight PHT)
+0 16 * * * python /app/blip-sentinel/sentinel.py --discover spaces
+
+# S3 backup at 7 PM UTC (3 AM PHT) — uses proper Python backup
+0 19 * * * python /app/blip-sentinel/scripts/backup_db.py
+
+# Weekly prune on Sunday at 8 PM UTC (Monday 4 AM PHT)
+0 20 * * 0 python /app/blip-sentinel/sentinel.py --prune --days 90

@@ -1,0 +1,175 @@
+{
+  "actions": [],
+  "autoname": "format:BEI-PICK-{YYYY}-{#####}",
+  "creation": "2026-02-17 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "header_section",
+    "trip",
+    "warehouse",
+    "pick_date",
+    "column_break_header",
+    "status",
+    "picked_by",
+    "verified_by",
+    "timing_section",
+    "packed_at",
+    "column_break_timing",
+    "loaded_at",
+    "items_section",
+    "items"
+  ],
+  "fields": [
+    {
+      "fieldname": "header_section",
+      "fieldtype": "Section Break",
+      "label": "Pick List Information"
+    },
+    {
+      "fieldname": "trip",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Distribution Trip",
+      "options": "BEI Distribution Trip",
+      "reqd": 1
+    },
+    {
+      "fieldname": "warehouse",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Warehouse",
+      "options": "Warehouse",
+      "reqd": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "pick_date",
+      "fieldtype": "Date",
+      "label": "Pick Date"
+    },
+    {
+      "fieldname": "column_break_header",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "Pending",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Pending\nIn Progress\nPacked\nLoaded"
+    },
+    {
+      "fieldname": "picked_by",
+      "fieldtype": "Link",
+      "label": "Picked By",
+      "options": "Employee"
+    },
+    {
+      "fieldname": "verified_by",
+      "fieldtype": "Link",
+      "label": "Verified By",
+      "options": "Employee"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "timing_section",
+      "fieldtype": "Section Break",
+      "label": "Timing"
+    },
+    {
+      "fieldname": "packed_at",
+      "fieldtype": "Datetime",
+      "label": "Packed At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_timing",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "loaded_at",
+      "fieldtype": "Datetime",
+      "label": "Loaded At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "items_section",
+      "fieldtype": "Section Break",
+      "label": "Items to Pick"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "BEI Pick List Item",
+      "reqd": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-02-17 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Pick List",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Warehouse Staff",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Warehouse Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Logistics Coordinator",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "search_fields": "trip,status",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "title_field": "name",
+  "track_changes": 1
+}

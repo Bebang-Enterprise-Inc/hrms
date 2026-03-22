@@ -1,0 +1,442 @@
+{
+  "actions": [],
+  "autoname": "format:PO-{YYYY}-{#####}",
+  "creation": "2026-02-03 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "header_section",
+    "po_no",
+    "po_date",
+    "status",
+    "pr_reference",
+    "column_break_header",
+    "supplier",
+    "supplier_name",
+    "supplier_email",
+    "supplier_contact",
+    "delivery_section",
+    "delivery_date",
+    "ship_to",
+    "column_break_delivery",
+    "payment_terms",
+    "items_section",
+    "items",
+    "totals_section",
+    "subtotal",
+    "discount_amount",
+    "column_break_totals",
+    "delivery_fee",
+    "vat_amount",
+    "grand_total",
+    "approval_section",
+    "requires_dual_approval",
+    "mae_approval",
+    "mae_comment",
+    "mae_approval_date",
+    "column_break_mae",
+    "butch_section",
+    "butch_approval",
+    "butch_comment",
+    "butch_approval_date",
+    "supplier_comm_section",
+    "distribution_status",
+    "distribution_recipient_email",
+    "distribution_cc_emails",
+    "sent_to_supplier_date",
+    "sent_by",
+    "column_break_comm",
+    "distribution_last_sent_at",
+    "distribution_last_sent_by",
+    "distribution_last_action",
+    "distribution_send_mode",
+    "distribution_delivery_count",
+    "distribution_message_id",
+    "distribution_last_error",
+    "po_pdf",
+    "integration_section",
+    "frappe_po"
+  ],
+  "fields": [
+    {
+      "fieldname": "header_section",
+      "fieldtype": "Section Break",
+      "label": "Order Information"
+    },
+    {
+      "fieldname": "po_no",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "PO Number",
+      "read_only": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "po_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "PO Date",
+      "reqd": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Draft\nPending Mae Approval\nPending Butch Approval\nApproved\nSent to Supplier\nPartially Received\nFully Received\nCancelled"
+    },
+    {
+      "fieldname": "pr_reference",
+      "fieldtype": "Link",
+      "label": "PR Reference",
+      "options": "BEI Purchase Requisition"
+    },
+    {
+      "fieldname": "column_break_header",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "supplier",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Supplier",
+      "options": "BEI Supplier",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "supplier.supplier_name",
+      "fieldname": "supplier_name",
+      "fieldtype": "Data",
+      "label": "Supplier Name",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "supplier.email",
+      "fieldname": "supplier_email",
+      "fieldtype": "Data",
+      "label": "Supplier Email",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "supplier.contact_person",
+      "fieldname": "supplier_contact",
+      "fieldtype": "Data",
+      "label": "Contact Person",
+      "read_only": 1
+    },
+    {
+      "fieldname": "delivery_section",
+      "fieldtype": "Section Break",
+      "label": "Delivery Details"
+    },
+    {
+      "fieldname": "delivery_date",
+      "fieldtype": "Date",
+      "label": "Expected Delivery Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "ship_to",
+      "fieldtype": "Link",
+      "label": "Ship To",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "column_break_delivery",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fetch_from": "supplier.payment_terms",
+      "fieldname": "payment_terms",
+      "fieldtype": "Link",
+      "label": "Payment Terms",
+      "options": "Payment Terms Template"
+    },
+    {
+      "fieldname": "items_section",
+      "fieldtype": "Section Break",
+      "label": "Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "BEI PO Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "totals_section",
+      "fieldtype": "Section Break",
+      "label": "Totals"
+    },
+    {
+      "fieldname": "subtotal",
+      "fieldtype": "Currency",
+      "label": "Subtotal",
+      "read_only": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "discount_amount",
+      "fieldtype": "Currency",
+      "label": "Discount"
+    },
+    {
+      "fieldname": "column_break_totals",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "0",
+      "fieldname": "delivery_fee",
+      "fieldtype": "Currency",
+      "label": "Delivery Fee"
+    },
+    {
+      "fieldname": "vat_amount",
+      "fieldtype": "Currency",
+      "label": "VAT (12%)",
+      "read_only": 1
+    },
+    {
+      "fieldname": "grand_total",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Grand Total",
+      "read_only": 1
+    },
+    {
+      "fieldname": "approval_section",
+      "fieldtype": "Section Break",
+      "label": "Approval - Mae Karazi"
+    },
+    {
+      "default": "0",
+      "fieldname": "requires_dual_approval",
+      "fieldtype": "Check",
+      "label": "Requires Dual Approval (>500K)",
+      "read_only": 1
+    },
+    {
+      "default": "Pending",
+      "fieldname": "mae_approval",
+      "fieldtype": "Select",
+      "label": "Mae Approval",
+      "options": "Pending\nApproved\nRejected"
+    },
+    {
+      "fieldname": "mae_comment",
+      "fieldtype": "Small Text",
+      "label": "Mae Comment"
+    },
+    {
+      "fieldname": "mae_approval_date",
+      "fieldtype": "Datetime",
+      "label": "Mae Approval Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_mae",
+      "fieldtype": "Column Break"
+    },
+    {
+      "depends_on": "eval:doc.requires_dual_approval",
+      "fieldname": "butch_section",
+      "fieldtype": "Section Break",
+      "label": "Approval - Butch Formoso (CFO)"
+    },
+    {
+      "default": "Pending",
+      "fieldname": "butch_approval",
+      "fieldtype": "Select",
+      "label": "Butch Approval",
+      "options": "Pending\nApproved\nRejected"
+    },
+    {
+      "fieldname": "butch_comment",
+      "fieldtype": "Small Text",
+      "label": "Butch Comment"
+    },
+    {
+      "fieldname": "butch_approval_date",
+      "fieldtype": "Datetime",
+      "label": "Butch Approval Date",
+      "read_only": 1
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "supplier_comm_section",
+      "fieldtype": "Section Break",
+      "label": "Supplier Communication"
+    },
+    {
+      "default": "Not Sent",
+      "fieldname": "distribution_status",
+      "fieldtype": "Select",
+      "label": "Distribution Status",
+      "options": "Not Sent\nSent\nResent\nAuto-Sent\nSend Failed",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_recipient_email",
+      "fieldtype": "Data",
+      "label": "Recipient Email",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_cc_emails",
+      "fieldtype": "Small Text",
+      "label": "CC Emails",
+      "read_only": 1
+    },
+    {
+      "fieldname": "sent_to_supplier_date",
+      "fieldtype": "Datetime",
+      "label": "Sent to Supplier",
+      "read_only": 1
+    },
+    {
+      "fieldname": "sent_by",
+      "fieldtype": "Link",
+      "label": "Sent By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_comm",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "distribution_last_sent_at",
+      "fieldtype": "Datetime",
+      "label": "Last Sent At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_last_sent_by",
+      "fieldtype": "Link",
+      "label": "Last Sent By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_last_action",
+      "fieldtype": "Data",
+      "label": "Last Distribution Action",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_send_mode",
+      "fieldtype": "Data",
+      "label": "Distribution Mode",
+      "read_only": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "distribution_delivery_count",
+      "fieldtype": "Int",
+      "label": "Distribution Count",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_message_id",
+      "fieldtype": "Data",
+      "label": "Distribution Message ID",
+      "read_only": 1
+    },
+    {
+      "fieldname": "distribution_last_error",
+      "fieldtype": "Small Text",
+      "label": "Distribution Error",
+      "read_only": 1
+    },
+    {
+      "fieldname": "po_pdf",
+      "fieldtype": "Attach",
+      "label": "PO PDF"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "integration_section",
+      "fieldtype": "Section Break",
+      "label": "ERP Integration"
+    },
+    {
+      "fieldname": "frappe_po",
+      "fieldtype": "Link",
+      "label": "Frappe PO",
+      "options": "Purchase Order",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "is_submittable": 1,
+  "links": [],
+  "modified": "2026-02-03 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Purchase Order",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Procurement User",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "cancel": 1,
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Procurement Manager",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    },
+    {
+      "cancel": 1,
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts Manager",
+      "share": 0,
+      "write": 0
+    }
+  ],
+  "search_fields": "supplier_name,pr_reference",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "title_field": "po_no",
+  "track_changes": 1
+}

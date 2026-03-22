@@ -1,0 +1,63 @@
+{
+ "actions": [],
+ "autoname": "format:BEI-ARR-{YYYY}-{00000}",
+ "creation": "2026-02-21 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "announcement",
+  "employee",
+  "read_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "announcement",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Announcement",
+   "options": "BEI Announcement",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "read_date",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Read Date",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-21 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Announcement Read Receipt",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,6 @@
+SHELL=/bin/sh
+# BEI Analytics Agent — Weekly Meta Ads Intelligence Report
+# Sunday 11:00 UTC = 7:00 PM PHT (full weekly report)
+0 11 * * 0 /usr/local/bin/python /app/analytics-agent/agent.py >> /app/analytics-agent/runs/cron.log 2>&1
+# Wednesday 08:00 UTC = 4:00 PM PHT (mid-week alert — Chat only, no DOCX)
+0 8 * * 3 /usr/local/bin/python /app/analytics-agent/agent.py --midweek >> /app/analytics-agent/runs/cron.log 2>&1

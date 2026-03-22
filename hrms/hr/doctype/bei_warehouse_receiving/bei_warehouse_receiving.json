@@ -1,0 +1,212 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "autoname": "naming_series:",
+  "creation": "2026-03-12 12:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "source_type",
+    "source_warehouse",
+    "target_warehouse",
+    "column_break_header",
+    "status",
+    "dispatch_date",
+    "receiving_date",
+    "reference_section",
+    "linked_quality_inspection",
+    "linked_production_entry",
+    "column_break_reference",
+    "stock_entry",
+    "created_by_user",
+    "received_by_user",
+    "remarks",
+    "items_section",
+    "items"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "BEI-WHR-.YYYY.-.#####",
+      "reqd": 1
+    },
+    {
+      "fieldname": "source_type",
+      "fieldtype": "Select",
+      "label": "Source Type",
+      "options": "Commissary Finished Goods",
+      "default": "Commissary Finished Goods",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "source_warehouse",
+      "fieldtype": "Link",
+      "label": "Source Warehouse",
+      "options": "Warehouse",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "target_warehouse",
+      "fieldtype": "Link",
+      "label": "Target Warehouse",
+      "options": "Warehouse",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "column_break_header",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Pending Warehouse Receive\nCompleted\nWith Issues\nCancelled",
+      "default": "Pending Warehouse Receive",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "dispatch_date",
+      "fieldtype": "Datetime",
+      "label": "Dispatch Date",
+      "default": "Now",
+      "reqd": 1
+    },
+    {
+      "fieldname": "receiving_date",
+      "fieldtype": "Datetime",
+      "label": "Receiving Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "reference_section",
+      "fieldtype": "Section Break",
+      "label": "References"
+    },
+    {
+      "fieldname": "linked_quality_inspection",
+      "fieldtype": "Link",
+      "label": "Quality Inspection",
+      "options": "Quality Inspection"
+    },
+    {
+      "fieldname": "linked_production_entry",
+      "fieldtype": "Link",
+      "label": "Production Stock Entry",
+      "options": "Stock Entry"
+    },
+    {
+      "fieldname": "column_break_reference",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "stock_entry",
+      "fieldtype": "Link",
+      "label": "Warehouse Receipt Stock Entry",
+      "options": "Stock Entry",
+      "read_only": 1
+    },
+    {
+      "fieldname": "created_by_user",
+      "fieldtype": "Link",
+      "label": "Created By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "received_by_user",
+      "fieldtype": "Link",
+      "label": "Received By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Small Text",
+      "label": "Remarks"
+    },
+    {
+      "fieldname": "items_section",
+      "fieldtype": "Section Break",
+      "label": "Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "BEI Warehouse Receiving Item",
+      "reqd": 1
+    }
+  ],
+  "links": [],
+  "modified": "2026-03-12 12:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Warehouse Receiving",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Warehouse Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Warehouse User",
+      "share": 0,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Supply Chain Manager",
+      "share": 0,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

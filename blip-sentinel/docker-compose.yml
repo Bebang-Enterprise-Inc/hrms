@@ -1,0 +1,11 @@
+services:
+  blip-sentinel:
+    build: .
+    container_name: blip-sentinel
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/app/blip-sentinel/data
+      - ./credentials:/app/blip-sentinel/credentials:ro
+      - ./logs:/app/blip-sentinel/logs
+    network_mode: host

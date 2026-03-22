@@ -1,0 +1,467 @@
+{
+	"actions": [],
+	"allow_rename": 0,
+	"autoname": "format:MR-{store_code}-{####}",
+	"creation": "2026-01-31 10:00:00.000000",
+	"default_view": "List",
+	"doctype": "DocType",
+	"editable_grid": 1,
+	"engine": "InnoDB",
+	"field_order": [
+		"section_basic",
+		"store",
+		"store_code",
+		"request_date",
+		"column_break_basic",
+		"status",
+		"priority",
+		"impact_on_operations",
+		"section_issue",
+		"issue_category",
+		"equipment_area",
+		"column_break_issue",
+		"description",
+		"section_photos",
+		"before_photos",
+		"photos",
+		"section_assignment",
+		"assigned_to",
+		"vendor",
+		"column_break_assignment",
+		"scheduled_date",
+		"estimated_cost",
+		"section_charging",
+		"concern_type",
+		"charge_to_store",
+		"charge_amount",
+		"charging_reason",
+		"column_break_charging",
+		"store_acknowledged",
+		"acknowledged_by",
+		"acknowledgement_date",
+		"section_costs",
+		"materials",
+		"materials_cost",
+		"column_break_costs",
+		"labor_hours",
+		"labor_cost",
+		"vendor_cost",
+		"total_cost",
+		"section_resolution",
+		"completion",
+		"column_break_resolution",
+		"resolved_date",
+		"section_billing",
+		"billing_status",
+		"billing_reference",
+		"column_break_billing",
+		"section_audit",
+		"reported_by",
+		"reported_at",
+		"column_break_audit",
+		"modified_by",
+		"modified_at"
+	],
+	"fields": [
+		{
+			"fieldname": "section_basic",
+			"fieldtype": "Section Break",
+			"label": "Request Details"
+		},
+		{
+			"fieldname": "store",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Store",
+			"options": "Warehouse",
+			"reqd": 1
+		},
+		{
+			"fetch_from": "store.warehouse_name",
+			"fieldname": "store_code",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Store Code",
+			"read_only": 1
+		},
+		{
+			"default": "Today",
+			"fieldname": "request_date",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Request Date",
+			"reqd": 1
+		},
+		{
+			"fieldname": "column_break_basic",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "Open",
+			"fieldname": "status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "Open\nAssigned\nIn Progress\nCompleted\nPending Acknowledgement\nVerified\nCancelled"
+		},
+		{
+			"default": "Normal",
+			"fieldname": "priority",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Priority",
+			"options": "Urgent\nHigh\nNormal",
+			"reqd": 1
+		},
+		{
+			"default": "Can Operate",
+			"fieldname": "impact_on_operations",
+			"fieldtype": "Select",
+			"label": "Impact on Operations",
+			"options": "Can Operate\nLimited Operations\nCannot Operate",
+			"reqd": 1
+		},
+		{
+			"fieldname": "section_issue",
+			"fieldtype": "Section Break",
+			"label": "Issue Details"
+		},
+		{
+			"fieldname": "issue_category",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Issue Category",
+			"options": "Electrical\nPlumbing\nMechanical\nPest\nSecurity\nNetwork\nArchitectural\nOther",
+			"reqd": 1
+		},
+		{
+			"fieldname": "equipment_area",
+			"fieldtype": "Select",
+			"label": "Equipment/Area",
+			"options": "Freezer\nChiller\nPOS Terminal\nLights\nAir Conditioning\nWater Heater\nSink/Faucet\nDrain\nDoors\nWindows\nRoll-up Door\nFloor\nCeiling\nWalls\nSignage\nOther"
+		},
+		{
+			"fieldname": "column_break_issue",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "description",
+			"fieldtype": "Text",
+			"label": "Issue Description",
+			"reqd": 1
+		},
+		{
+			"fieldname": "section_photos",
+			"fieldtype": "Section Break",
+			"label": "Before Photos"
+		},
+		{
+			"fieldname": "before_photos",
+			"fieldtype": "Attach Image",
+			"hidden": 1,
+			"label": "Before Photos (showing the problem)",
+			"description": "Deprecated - use Photos table instead"
+		},
+		{
+			"fieldname": "photos",
+			"fieldtype": "Table",
+			"label": "Photos",
+			"options": "BEI Maintenance Request Photo"
+		},
+		{
+			"fieldname": "section_assignment",
+			"fieldtype": "Section Break",
+			"label": "Assignment"
+		},
+		{
+			"fieldname": "assigned_to",
+			"fieldtype": "Link",
+			"label": "Assigned To (Internal)",
+			"options": "User"
+		},
+		{
+			"fieldname": "vendor",
+			"fieldtype": "Data",
+			"label": "Vendor (if outsourced)"
+		},
+		{
+			"fieldname": "column_break_assignment",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "scheduled_date",
+			"fieldtype": "Date",
+			"label": "Scheduled Date"
+		},
+		{
+			"fieldname": "estimated_cost",
+			"fieldtype": "Currency",
+			"label": "Estimated Cost",
+			"precision": "2"
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_charging",
+			"fieldtype": "Section Break",
+			"label": "Charging"
+		},
+		{
+			"fieldname": "concern_type",
+			"fieldtype": "Select",
+			"label": "Concern Type",
+			"options": "Wear & Tear\nSupplier Deficiency\nContractor Deficiency"
+		},
+		{
+			"default": "0",
+			"fieldname": "charge_to_store",
+			"fieldtype": "Check",
+			"label": "Charge to Store"
+		},
+		{
+			"depends_on": "charge_to_store",
+			"fieldname": "charge_amount",
+			"fieldtype": "Currency",
+			"label": "Charge Amount",
+			"precision": "2"
+		},
+		{
+			"depends_on": "charge_to_store",
+			"fieldname": "charging_reason",
+			"fieldtype": "Small Text",
+			"label": "Charging Reason"
+		},
+		{
+			"fieldname": "column_break_charging",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "0",
+			"fieldname": "store_acknowledged",
+			"fieldtype": "Check",
+			"label": "Store Acknowledged",
+			"read_only": 1
+		},
+		{
+			"fieldname": "acknowledged_by",
+			"fieldtype": "Link",
+			"label": "Acknowledged By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "acknowledgement_date",
+			"fieldtype": "Date",
+			"label": "Acknowledgement Date",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_costs",
+			"fieldtype": "Section Break",
+			"label": "Costs & Materials"
+		},
+		{
+			"fieldname": "materials",
+			"fieldtype": "Table",
+			"label": "Materials Used",
+			"options": "BEI Maintenance Material"
+		},
+		{
+			"fieldname": "materials_cost",
+			"fieldtype": "Currency",
+			"label": "Materials Cost",
+			"precision": "2",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_costs",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "labor_hours",
+			"fieldtype": "Float",
+			"label": "Labor Hours"
+		},
+		{
+			"fieldname": "labor_cost",
+			"fieldtype": "Currency",
+			"label": "Labor Cost",
+			"precision": "2"
+		},
+		{
+			"fieldname": "vendor_cost",
+			"fieldtype": "Currency",
+			"label": "Vendor Cost",
+			"description": "External contractor invoice amount",
+			"precision": "2"
+		},
+		{
+			"fieldname": "total_cost",
+			"fieldtype": "Currency",
+			"label": "Total Cost",
+			"precision": "2",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_resolution",
+			"fieldtype": "Section Break",
+			"label": "Resolution"
+		},
+		{
+			"fieldname": "completion",
+			"fieldtype": "Link",
+			"label": "Completion Record",
+			"options": "BEI Maintenance Completion",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_resolution",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "resolved_date",
+			"fieldtype": "Date",
+			"label": "Resolved Date",
+			"read_only": 1
+		},
+		{
+			"collapsible": 1,
+			"fieldname": "section_billing",
+			"fieldtype": "Section Break",
+			"label": "Billing"
+		},
+		{
+			"default": "Not Billed",
+			"fieldname": "billing_status",
+			"fieldtype": "Select",
+			"in_list_view": 0,
+			"in_standard_filter": 1,
+			"label": "Billing Status",
+			"options": "Not Billed\nBilled\nWaived"
+		},
+		{
+			"fieldname": "billing_reference",
+			"fieldtype": "Link",
+			"label": "Billing Reference",
+			"options": "BEI Billing Schedule",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_billing",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "section_audit",
+			"fieldtype": "Section Break",
+			"label": "Audit Trail"
+		},
+		{
+			"fieldname": "reported_by",
+			"fieldtype": "Link",
+			"label": "Reported By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "reported_at",
+			"fieldtype": "Datetime",
+			"label": "Reported At",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_audit",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "modified_by",
+			"fieldtype": "Link",
+			"label": "Last Modified By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "modified_at",
+			"fieldtype": "Datetime",
+			"label": "Last Modified At",
+			"read_only": 1
+		}
+	],
+	"index_web_pages_for_search": 1,
+	"links": [
+		{
+			"link_doctype": "BEI Maintenance Completion",
+			"link_fieldname": "maintenance_request"
+		}
+	],
+	"modified": "2026-02-17 10:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Maintenance Request",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 0,
+			"delete": 0,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Employee",
+			"share": 1,
+			"write": 0
+		},
+		{
+			"create": 0,
+			"read": 1,
+			"write": 0,
+			"role": "Employee Self Service"
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "HR Manager",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects User",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "Projects Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "modified",
+	"sort_order": "DESC",
+	"states": [],
+	"title_field": "store_code",
+	"track_changes": 1
+}

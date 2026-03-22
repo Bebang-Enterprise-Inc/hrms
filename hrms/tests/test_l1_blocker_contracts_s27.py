@@ -1,0 +1,362 @@
+import importlib.util
+import sys
+import types
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+	sys.path.insert(0, str(ROOT))
+
+
+def _install_base_frappe():
+	if "frappe" not in sys.modules:
+		frappe = types.ModuleType("frappe")
+		sys.modules["frappe"] = frappe
+	else:
+		frappe = sys.modules["frappe"]
+
+	if "frappe.utils" not in sys.modules:
+		utils = types.ModuleType("frappe.utils")
+		sys.modules["frappe.utils"] = utils
+	else:
+		utils = sys.modules["frappe.utils"]
+
+	if "frappe.exceptions" not in sys.modules:
+		exceptions = types.ModuleType("frappe.exceptions")
+		sys.modules["frappe.exceptions"] = exceptions
+	else:
+		exceptions = sys.modules["frappe.exceptions"]
+
+	def whitelist(*args, **kwargs):
+		def decorator(fn):
+			return fn
+
+		return decorator
+
+	frappe.whitelist = whitelist
+	frappe._ = lambda text: text
+	frappe.throw = lambda message, *args, **kwargs: (_ for _ in ()).throw(Exception(message))
+	frappe.log_error = lambda *args, **kwargs: None
+	frappe.PermissionError = type("PermissionError", (Exception,), {})
+	frappe.ValidationError = type("ValidationError", (Exception,), {})
+	frappe.DoesNotExistError = type("DoesNotExistError", (Exception,), {})
+	exceptions.TimestampMismatchError = type("TimestampMismatchError", (Exception,), {})
+	frappe.local = types.SimpleNamespace(
+		session=types.SimpleNamespace(user="tester@bebang.ph"),
+		db=types.SimpleNamespace(
+			has_column=lambda *args, **kwargs: False,
+			get_value=lambda *args, **kwargs: None,
+			sql=lambda *args, **kwargs: [],
+		),
+	)
+	frappe.__getattr__ = lambda name: getattr(frappe.local, name)
+	frappe.get_all = lambda *args, **kwargs: []
+	frappe.get_roles = lambda user=None: ["System Manager"]
+	frappe.get_doc = lambda *args, **kwargs: None
+	frappe.get_meta = lambda *args, **kwargs: types.SimpleNamespace(has_field=lambda field: False)
+	frappe.logger = lambda: types.SimpleNamespace(warning=lambda *args, **kwargs: None)
+
+	utils.cint = lambda value, *args, **kwargs: int(value or 0)
+	utils.flt = lambda value, *args, **kwargs: float(value or 0)
+	utils.nowdate = lambda: "2026-03-09"
+	utils.now_datetime = lambda: "2026-03-09 10:00:00"
+	utils.getdate = lambda value: value
+	utils.get_datetime = lambda value=None: value
+	utils.add_days = lambda value, days: value
+	utils.get_first_day = lambda value: value
+	utils.get_last_day = lambda value: value
+
+	frappe.utils = utils
+	return frappe, utils
+
+
+def _ensure_module(name: str, **attrs):
+	module = sys.modules.get(name)
+	if module is None:
+		module = types.ModuleType(name)
+		if "." not in name:
+			module.__path__ = []
+		sys.modules[name] = module
+	for key, value in attrs.items():
+		setattr(module, key, value)
+	return module
+
+
+def _install_supply_chain_contracts():
+	spec = importlib.util.spec_from_file_location(
+		"hrms.utils.supply_chain_contracts",
+		ROOT / "hrms" / "utils" / "supply_chain_contracts.py",
+	)
+	module = importlib.util.module_from_spec(spec)
+	spec.loader.exec_module(module)
+	sys.modules["hrms.utils.supply_chain_contracts"] = module
+	return module
+
+
+def _install_billing_deps():
+	_install_base_frappe()
+	_ensure_module("hrms")
+	_ensure_module("hrms.api")
+	_ensure_module("hrms.utils")
+	_ensure_module("hrms.hr")
+	_ensure_module("hrms.hr.doctype")
+	_ensure_module("hrms.hr.doctype.bei_store_type")
+	_ensure_module(
+		"hrms.hr.doctype.bei_store_type.bei_store_type",
+		resolve_store_type=lambda store_type=None, store_type_category=None: (
+			store_type or store_type_category
+		),
+	)
+	_ensure_module("hrms.utils.bei_config", get_company=lambda: "Bebang Enterprise Inc.")
+	_ensure_module(
+		"hrms.utils.scm_roles",
+		RATE_MANAGEMENT_ROLES=["System Manager"],
+		SCM_BILLING_ROLES=["System Manager"],
+		check_scm_permission=lambda roles, action: None,
+	)
+
+
+def _install_dispatch_deps():
+	_install_base_frappe()
+	_ensure_module("hrms")
+	_ensure_module("hrms.api")
+	_ensure_module("hrms.utils")
+	_install_supply_chain_contracts()
+	_ensure_module(
+		"hrms.utils.delivery_billing_policy",
+		DeliveryBillingPolicyError=type("DeliveryBillingPolicyError", (Exception,), {}),
+		get_pre_delivery_exception_trace=lambda *args, **kwargs: {},
+		should_auto_create_billing_on_delivery=lambda *args, **kwargs: False,
+	)
+	_ensure_module(
+		"hrms.utils.scm_roles",
+		SCM_ADMIN_ROLES=["System Manager"],
+		SCM_DISPATCH_ROLES=["System Manager"],
+		SCM_STORE_ROLES=["Store OIC"],
+		check_scm_permission=lambda roles, action: None,
+	)
+
+
+def _install_store_deps():
+	_install_base_frappe()
+	_ensure_module("hrms")
+	_ensure_module("hrms.api")
+	_ensure_module("hrms.utils")
+	_install_supply_chain_contracts()
+	_ensure_module("hrms.utils.bei_config", get_company=lambda: "Bebang Enterprise Inc.")
+	_ensure_module(
+		"hrms.utils.scm_roles",
+		SCM_APPROVAL_ROLES=["System Manager"],
+		check_scm_permission=lambda roles, action: None,
+	)
+
+
+def _install_picking_deps():
+	_install_base_frappe()
+	_ensure_module("hrms")
+	_ensure_module("hrms.api")
+	_ensure_module("hrms.utils")
+	_ensure_module("hrms.utils.bei_config", get_company=lambda: "Bebang Enterprise Inc.")
+	_ensure_module(
+		"hrms.utils.scm_roles",
+		SCM_PICKING_ROLES=["System Manager"],
+		check_scm_permission=lambda roles, action: None,
+	)
+
+
+def _load_module(module_name: str, relative_path: str):
+	spec = importlib.util.spec_from_file_location(module_name, ROOT / relative_path)
+	module = importlib.util.module_from_spec(spec)
+	spec.loader.exec_module(module)
+	return module
+
+
+class TestL1BlockerContractsS27(unittest.TestCase):
+	def test_billing_partner_field_falls_back_to_vehicle_partner(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_under_test", "hrms/api/billing.py")
+
+		billing.frappe.db.has_column = lambda doctype, fieldname: False
+		self.assertEqual(billing._trip_partner_field_sql(), "veh.threepl_partner")
+		self.assertIn("tabBEI Vehicle", billing._trip_vehicle_join_sql())
+
+		billing.frappe.db.has_column = lambda doctype, fieldname: fieldname == "vehicle_owner"
+		self.assertEqual(billing._trip_partner_field_sql(), "dt.vehicle_owner")
+		self.assertEqual(billing._trip_vehicle_join_sql(), "")
+
+	def test_billing_trip_query_uses_zero_for_missing_optional_trip_columns(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_query_under_test", "hrms/api/billing.py")
+
+		billing.frappe.db.has_column = lambda doctype, fieldname: fieldname in {"vehicle_owner", "store"}
+		query = billing._get_3pl_trip_query()
+
+		self.assertIn("0 AS overtime_hours", query)
+		self.assertIn("0 AS is_holiday_trip", query)
+		self.assertIn("0 AS is_weekend_trip", query)
+		self.assertNotIn("dt.overtime_hours", query)
+		self.assertIn("GROUP_CONCAT(DISTINCT ds.store SEPARATOR ', ') AS stores", query)
+		self.assertIn("COALESCE(dt.vehicle_owner, '') != ''", query)
+		self.assertIn("dt.docstatus < 2", query)
+		self.assertNotIn("ds.department", query)
+
+	def test_billing_trip_query_falls_back_to_legacy_trip_stop_department(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_trip_stop_under_test", "hrms/api/billing.py")
+
+		billing.frappe.db.has_column = lambda doctype, fieldname: fieldname in {"vehicle_owner", "department"}
+		query = billing._get_3pl_trip_query()
+
+		self.assertIn("GROUP_CONCAT(DISTINCT ds.department SEPARATOR ', ') AS stores", query)
+		self.assertIn("COALESCE(dt.vehicle_owner, '') != ''", query)
+		self.assertIn("dt.docstatus < 2", query)
+		self.assertNotIn("ds.store", query)
+
+	def test_billing_trip_count_query_includes_non_submittable_trip_rows(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_trip_count_under_test", "hrms/api/billing.py")
+
+		billing.frappe.db.has_column = lambda doctype, fieldname: False
+		query = billing._get_3pl_trip_count_query()
+
+		self.assertIn("dt.docstatus < 2", query)
+
+	def test_billing_normalizes_live_partner_aliases(self):
+		_install_billing_deps()
+		billing = _load_module("billing_s27_partner_alias_under_test", "hrms/api/billing.py")
+
+		self.assertEqual(billing._normalize_3pl_partner_label("Four Coolitz"), "COOLITZ")
+		self.assertEqual(billing._normalize_3pl_partner_label("coolitz"), "COOLITZ")
+		self.assertEqual(billing._normalize_3pl_partner_label("RCS"), "RCS")
+
+	def test_dispatch_maps_cell_number_back_to_cell_phone(self):
+		_install_dispatch_deps()
+		dispatch = _load_module("dispatch_s27_under_test", "hrms/api/dispatch.py")
+
+		dispatch.frappe.db.has_column = lambda doctype, fieldname: fieldname == "cell_number"
+
+		def fake_get_all(doctype, filters=None, fields=None, order_by=None):
+			if doctype == "Employee":
+				return [
+					types.SimpleNamespace(
+						name="EMP-001",
+						employee_name="Driver One",
+						designation="Driver",
+						status="Active",
+						cell_number="09170000001",
+					)
+				]
+			if doctype == "BEI Distribution Trip":
+				return []
+			return []
+
+		dispatch.frappe.get_all = fake_get_all
+
+		result = dispatch.get_available_drivers(date="2026-03-09")
+		self.assertEqual(result["summary"]["total"], 1)
+		self.assertEqual(result["drivers"][0]["cell_phone"], "09170000001")
+		self.assertEqual(result["drivers"][0]["status"], "Available")
+
+	def test_dispatch_matches_uppercase_and_extended_driver_designations(self):
+		_install_dispatch_deps()
+		dispatch = _load_module("dispatch_s27_uppercase_driver_under_test", "hrms/api/dispatch.py")
+
+		dispatch.frappe.db.has_column = lambda doctype, fieldname: False
+
+		def fake_get_all(doctype, filters=None, fields=None, order_by=None):
+			if doctype == "Employee":
+				return [
+					types.SimpleNamespace(
+						name="EMP-DRIVER",
+						employee_name="Upper Driver",
+						designation="DRIVER",
+						status="Active",
+					),
+					types.SimpleNamespace(
+						name="EMP-EXEC",
+						employee_name="Executive Driver",
+						designation="EXECUTIVE DRIVER",
+						status="Active",
+					),
+					types.SimpleNamespace(
+						name="EMP-OTHER",
+						employee_name="Other Employee",
+						designation="Warehouse Staff",
+						status="Active",
+					),
+				]
+			if doctype == "BEI Distribution Trip":
+				return []
+			return []
+
+		dispatch.frappe.get_all = fake_get_all
+
+		result = dispatch.get_available_drivers(date="2026-03-19")
+		self.assertEqual(result["summary"]["total"], 2)
+		self.assertCountEqual(
+			[driver["employee"] for driver in result["drivers"]],
+			["EMP-DRIVER", "EMP-EXEC"],
+		)
+
+	def test_store_closing_status_skips_missing_optional_columns(self):
+		_install_store_deps()
+		store = _load_module("store_s27_under_test", "hrms/api/store.py")
+
+		requested_fields = {}
+
+		def fake_has_column(doctype, fieldname):
+			return fieldname in {"cashier_signoff", "production_signoff"}
+
+		def fake_get_value(doctype, filters, fields, as_dict=False):
+			requested_fields["fields"] = list(fields)
+			return {
+				"name": "BEI-CLOSE-0001",
+				"stage_completed": "checklist",
+				"status": "Submitted",
+				"pos_down": 0,
+				"cash_variance": 25,
+				"cashier_signoff": 1,
+				"production_signoff": 0,
+			}
+
+		store.frappe.db.has_column = fake_has_column
+		store.frappe.db.get_value = fake_get_value
+
+		result = store.get_closing_report_status(store="TEST-STORE-BGC - BEI", date="2026-03-09")
+
+		self.assertNotIn("inventory_variance_total", requested_fields["fields"])
+		self.assertEqual(result["inventory_variance_total"], 0)
+		self.assertEqual(result["cashier_signoff"], 1)
+		self.assertEqual(result["production_signoff"], 0)
+
+	def test_picking_resolves_source_warehouse_from_linked_route(self):
+		_install_picking_deps()
+		picking = _load_module("picking_s27_under_test", "hrms/api/picking.py")
+
+		def fake_get_value(doctype, filters, fieldname=None, as_dict=False):
+			if doctype == "BEI Route":
+				if filters == "BEI-ROUTE-0001":
+					return "Shaw BLVD - BKI"
+				if filters == {"route_name": "S027 Pick Route"}:
+					return "Shaw BLVD - BKI"
+			if doctype == "Warehouse":
+				return "UNEXPECTED-WAREHOUSE"
+			return None
+
+		picking.frappe.db.get_value = fake_get_value
+
+		trip = types.SimpleNamespace(
+			warehouse="",
+			source_warehouse="",
+			route="BEI-ROUTE-0001",
+			route_name="S027 Pick Route",
+		)
+		self.assertEqual(picking._resolve_trip_source_warehouse(trip), "Shaw BLVD - BKI")
+
+		trip.route = ""
+		self.assertEqual(picking._resolve_trip_source_warehouse(trip), "Shaw BLVD - BKI")
+
+
+if __name__ == "__main__":
+	unittest.main()

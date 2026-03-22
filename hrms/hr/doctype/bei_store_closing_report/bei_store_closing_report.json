@@ -1,0 +1,1001 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-CLOSE-.YYYY.-.#####",
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "store",
+  "report_date",
+  "report_time",
+  "submitted_by",
+  "column_break_1",
+  "status",
+  "stage_completed",
+  "pos_upload",
+  "extraction_confirmed",
+  "section_pos_down",
+  "pos_down",
+  "pos_down_estimated_sales",
+  "pos_down_transaction_count",
+  "pos_down_notes",
+  "section_extracted_data",
+  "extracted_data",
+  "section_cash_funds",
+  "petty_cash_fund",
+  "delivery_fund",
+  "change_fund",
+  "column_break_funds",
+  "total_funds",
+  "fund_notes",
+  "section_variance_thresholds",
+  "pcf_variance_threshold",
+  "df_variance_threshold",
+  "column_break_variance",
+  "pcf_variance",
+  "pcf_variance_alert",
+  "df_variance",
+  "df_variance_alert",
+  "section_denomination",
+  "denom_1000",
+  "denom_500",
+  "denom_200",
+  "denom_100",
+  "column_break_denom1",
+  "denom_50",
+  "denom_20",
+  "denom_coins",
+  "denom_total",
+  "section_pcf_denomination",
+  "pcf_denom_1000",
+  "pcf_denom_500",
+  "pcf_denom_200",
+  "pcf_denom_100",
+  "column_break_pcf_denom",
+  "pcf_denom_50",
+  "pcf_denom_20",
+  "pcf_denom_coins",
+  "pcf_denom_total",
+  "section_del_denomination",
+  "del_denom_1000",
+  "del_denom_500",
+  "del_denom_200",
+  "del_denom_100",
+  "column_break_del_denom",
+  "del_denom_50",
+  "del_denom_20",
+  "del_denom_coins",
+  "del_denom_total",
+  "section_chg_denomination",
+  "chg_denom_1000",
+  "chg_denom_500",
+  "chg_denom_200",
+  "chg_denom_100",
+  "column_break_chg_denom",
+  "chg_denom_50",
+  "chg_denom_20",
+  "chg_denom_coins",
+  "chg_denom_total",
+  "section_vouchers",
+  "pcf_voucher_amount",
+  "column_break_vouchers",
+  "delivery_voucher_amount",
+  "section_sales_billing",
+  "gross_sales",
+  "net_sales",
+  "column_break_sales_billing",
+  "online_sales",
+  "website_sales",
+  "section_cash",
+  "pos_total_sales",
+  "actual_cash_count",
+  "column_break_cash",
+  "card_payments",
+  "gcash_total",
+  "cash_variance",
+  "variance_explanation",
+  "section_weather",
+  "weather_condition",
+  "temperature",
+  "column_break_weather",
+  "weather_auto_fetched",
+  "section_inventory",
+  "inventory_spot_check",
+  "section_checklist",
+  "checklist_items",
+  "notes",
+  "section_staff_signoff",
+  "cashier_signoff",
+  "cashier_signoff_time",
+  "column_break_signoff",
+  "production_signoff",
+  "production_signoff_time",
+  "section_maintenance",
+  "has_maintenance_today",
+  "maintenance_verified",
+  "maintenance_technician",
+  "maintenance_work_done",
+  "maintenance_resolved",
+  "maintenance_notes",
+  "section_photos_pos",
+  "photo_xread_opening",
+  "photo_xread_closing",
+  "photo_zread",
+  "column_break_photos_pos",
+  "photo_closing_reports",
+  "photo_dashboard_report",
+  "section_photos_store",
+  "photo_logo_signage",
+  "photo_hygrometer",
+  "photo_water_meter",
+  "column_break_photos_store1",
+  "photo_backup_area_clean",
+  "photo_frozen_milk_clean",
+  "photo_toppings_clean",
+  "column_break_photos_store2",
+  "photo_dispatch_clean",
+  "photo_cold_storage_close",
+  "photo_cashier_clean",
+  "photo_rollup_closed"
+ ],
+ "fields": [
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "report_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Report Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "report_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Report Time",
+   "reqd": 1
+  },
+  {
+   "fieldname": "submitted_by",
+   "fieldtype": "Link",
+   "label": "Submitted By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Submitted",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "\nSubmitted\nReviewed\nVariance Flagged\nInventory Variance\nPending Maintenance Verification\nVerified\nDiscrepancy\nPOS Down - Pending Review"
+  },
+  {
+   "default": "cash",
+   "description": "Tracks which stage of the 3-stage flow has been completed",
+   "fieldname": "stage_completed",
+   "fieldtype": "Select",
+   "label": "Stage Completed",
+   "options": "cash\nchecklist\nphotos\ncomplete"
+  },
+  {
+   "description": "Link to POS Upload document containing extracted sales data",
+   "fieldname": "pos_upload",
+   "fieldtype": "Link",
+   "label": "POS Upload",
+   "options": "BEI POS Upload"
+  },
+  {
+   "default": "0",
+   "description": "Staff confirmed the extracted data is correct",
+   "fieldname": "extraction_confirmed",
+   "fieldtype": "Check",
+   "label": "Data Confirmed"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:!doc.pos_down",
+   "depends_on": "eval:doc.pos_down",
+   "description": "Use this section when POS system is not working",
+   "fieldname": "section_pos_down",
+   "fieldtype": "Section Break",
+   "label": "POS Down Mode"
+  },
+  {
+   "default": "0",
+   "description": "Check this if the POS system is not working",
+   "fieldname": "pos_down",
+   "fieldtype": "Check",
+   "label": "POS is Down"
+  },
+  {
+   "depends_on": "eval:doc.pos_down",
+   "fieldname": "pos_down_estimated_sales",
+   "fieldtype": "Currency",
+   "label": "Estimated Sales"
+  },
+  {
+   "depends_on": "eval:doc.pos_down",
+   "fieldname": "pos_down_transaction_count",
+   "fieldtype": "Int",
+   "label": "Transaction Count"
+  },
+  {
+   "depends_on": "eval:doc.pos_down",
+   "fieldname": "pos_down_notes",
+   "fieldtype": "Text",
+   "label": "POS Down Notes",
+   "mandatory_depends_on": "eval:doc.pos_down"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_extracted_data",
+   "fieldtype": "Section Break",
+   "label": "Extracted POS Data"
+  },
+  {
+   "description": "Auto-extracted data from POS files (JSON)",
+   "fieldname": "extracted_data",
+   "fieldtype": "JSON",
+   "hidden": 1,
+   "label": "Extracted Data"
+  },
+  {
+   "description": "Enter the fund balances (NOT Cash Sales - that stays in POS only)",
+   "fieldname": "section_cash_funds",
+   "fieldtype": "Section Break",
+   "label": "Stage 1: Fund Count"
+  },
+  {
+   "description": "Remaining petty cash balance",
+   "fieldname": "petty_cash_fund",
+   "fieldtype": "Currency",
+   "label": "Petty Cash Fund"
+  },
+  {
+   "description": "For delivery operations (if applicable)",
+   "fieldname": "delivery_fund",
+   "fieldtype": "Currency",
+   "label": "Delivery Fund"
+  },
+  {
+   "description": "Bills/coins for giving change",
+   "fieldname": "change_fund",
+   "fieldtype": "Currency",
+   "label": "Change Fund"
+  },
+  {
+   "fieldname": "column_break_funds",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Auto-calculated: Petty Cash + Delivery + Change",
+   "fieldname": "total_funds",
+   "fieldtype": "Currency",
+   "label": "Total Funds",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fund_notes",
+   "fieldtype": "Small Text",
+   "label": "Fund Notes"
+  },
+  {
+   "collapsible": 1,
+   "description": "Variance alert thresholds for cash fund monitoring",
+   "fieldname": "section_variance_thresholds",
+   "fieldtype": "Section Break",
+   "label": "Variance Monitoring"
+  },
+  {
+   "default": "7500",
+   "description": "Alert if PCF variance exceeds this amount (from Accounting questionnaire)",
+   "fieldname": "pcf_variance_threshold",
+   "fieldtype": "Currency",
+   "label": "PCF Variance Threshold",
+   "precision": "2"
+  },
+  {
+   "default": "15000",
+   "description": "Alert if Delivery Fund variance exceeds this amount (from Accounting questionnaire)",
+   "fieldname": "df_variance_threshold",
+   "fieldtype": "Currency",
+   "label": "DF Variance Threshold",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_variance",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Auto-calculated variance from expected PCF balance",
+   "fieldname": "pcf_variance",
+   "fieldtype": "Currency",
+   "label": "PCF Variance",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Auto-set if PCF variance exceeds threshold",
+   "fieldname": "pcf_variance_alert",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "PCF Alert",
+   "read_only": 1
+  },
+  {
+   "description": "Auto-calculated variance from expected DF balance",
+   "fieldname": "df_variance",
+   "fieldtype": "Currency",
+   "label": "DF Variance",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Auto-set if DF variance exceeds threshold",
+   "fieldname": "df_variance_alert",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "DF Alert",
+   "read_only": 1
+  },
+  {
+   "description": "Count bills and coins by denomination",
+   "fieldname": "section_denomination",
+   "fieldtype": "Section Break",
+   "label": "Cash Denomination Breakdown"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 1000 bills",
+   "fieldname": "denom_1000",
+   "fieldtype": "Int",
+   "label": "PHP 1000 x"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 500 bills",
+   "fieldname": "denom_500",
+   "fieldtype": "Int",
+   "label": "PHP 500 x"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 200 bills",
+   "fieldname": "denom_200",
+   "fieldtype": "Int",
+   "label": "PHP 200 x"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 100 bills",
+   "fieldname": "denom_100",
+   "fieldtype": "Int",
+   "label": "PHP 100 x"
+  },
+  {
+   "fieldname": "column_break_denom1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 50 bills",
+   "fieldname": "denom_50",
+   "fieldtype": "Int",
+   "label": "PHP 50 x"
+  },
+  {
+   "default": "0",
+   "description": "Number of PHP 20 bills",
+   "fieldname": "denom_20",
+   "fieldtype": "Int",
+   "label": "PHP 20 x"
+  },
+  {
+   "default": "0",
+   "description": "Total value of all coins (1, 5, 10, 25 centavos and 1, 5, 10 pesos)",
+   "fieldname": "denom_coins",
+   "fieldtype": "Currency",
+   "label": "Coins Total"
+  },
+  {
+   "description": "Auto-calculated: Sum of all denominations",
+   "fieldname": "denom_total",
+   "fieldtype": "Currency",
+   "label": "Denomination Total",
+   "read_only": 1
+  },
+  {
+   "description": "Petty Cash Fund denomination breakdown",
+   "fieldname": "section_pcf_denomination",
+   "fieldtype": "Section Break",
+   "label": "PCF Denomination Breakdown"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_1000",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 1000"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_500",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 500"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_200",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 200"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_100",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 100"
+  },
+  {
+   "fieldname": "column_break_pcf_denom",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_50",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 50"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_20",
+   "fieldtype": "Currency",
+   "label": "PCF - PHP 20"
+  },
+  {
+   "default": "0",
+   "fieldname": "pcf_denom_coins",
+   "fieldtype": "Currency",
+   "label": "PCF - Coins"
+  },
+  {
+   "description": "Auto-calculated: Sum of PCF denominations",
+   "fieldname": "pcf_denom_total",
+   "fieldtype": "Currency",
+   "label": "PCF Denomination Total",
+   "read_only": 1
+  },
+  {
+   "description": "Delivery Fund denomination breakdown",
+   "fieldname": "section_del_denomination",
+   "fieldtype": "Section Break",
+   "label": "Delivery Fund Denomination Breakdown"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_1000",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 1000"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_500",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 500"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_200",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 200"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_100",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 100"
+  },
+  {
+   "fieldname": "column_break_del_denom",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_50",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 50"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_20",
+   "fieldtype": "Currency",
+   "label": "Delivery - PHP 20"
+  },
+  {
+   "default": "0",
+   "fieldname": "del_denom_coins",
+   "fieldtype": "Currency",
+   "label": "Delivery - Coins"
+  },
+  {
+   "description": "Auto-calculated: Sum of Delivery denominations",
+   "fieldname": "del_denom_total",
+   "fieldtype": "Currency",
+   "label": "Delivery Denomination Total",
+   "read_only": 1
+  },
+  {
+   "description": "Change Fund denomination breakdown",
+   "fieldname": "section_chg_denomination",
+   "fieldtype": "Section Break",
+   "label": "Change Fund Denomination Breakdown"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_1000",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 1000"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_500",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 500"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_200",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 200"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_100",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 100"
+  },
+  {
+   "fieldname": "column_break_chg_denom",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_50",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 50"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_20",
+   "fieldtype": "Currency",
+   "label": "Change Fund - PHP 20"
+  },
+  {
+   "default": "0",
+   "fieldname": "chg_denom_coins",
+   "fieldtype": "Currency",
+   "label": "Change Fund - Coins"
+  },
+  {
+   "description": "Auto-calculated: Sum of Change Fund denominations",
+   "fieldname": "chg_denom_total",
+   "fieldtype": "Currency",
+   "label": "Change Fund Denomination Total",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_vouchers",
+   "fieldtype": "Section Break",
+   "label": "Voucher Amounts"
+  },
+  {
+   "default": "0",
+   "description": "Total PCF voucher amount for the day",
+   "fieldname": "pcf_voucher_amount",
+   "fieldtype": "Currency",
+   "label": "PCF Voucher Amount"
+  },
+  {
+   "fieldname": "column_break_vouchers",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Total delivery voucher amount for the day",
+   "fieldname": "delivery_voucher_amount",
+   "fieldtype": "Currency",
+   "label": "Delivery Voucher Amount"
+  },
+  {
+   "fieldname": "section_sales_billing",
+   "fieldtype": "Section Break",
+   "label": "Sales Data (for Billing)"
+  },
+  {
+   "description": "Total sales including VAT",
+   "fieldname": "gross_sales",
+   "fieldtype": "Currency",
+   "label": "Gross Sales",
+   "precision": "2"
+  },
+  {
+   "description": "Sales net of VAT",
+   "fieldname": "net_sales",
+   "fieldtype": "Currency",
+   "label": "Net Sales",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_sales_billing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Online aggregator sales (GrabFood, FoodPanda)",
+   "fieldname": "online_sales",
+   "fieldtype": "Currency",
+   "label": "Online Sales",
+   "precision": "2"
+  },
+  {
+   "description": "Website direct order sales",
+   "fieldname": "website_sales",
+   "fieldtype": "Currency",
+   "label": "Website Sales",
+   "precision": "2"
+  },
+  {
+   "fieldname": "section_cash",
+   "fieldtype": "Section Break",
+   "label": "Cash Reconciliation (from POS)"
+  },
+  {
+   "description": "Auto-populated from POS extraction",
+   "fieldname": "pos_total_sales",
+   "fieldtype": "Currency",
+   "label": "POS Total Sales",
+   "read_only_depends_on": "eval:doc.pos_upload"
+  },
+  {
+   "fieldname": "actual_cash_count",
+   "fieldtype": "Currency",
+   "label": "Actual Cash Count"
+  },
+  {
+   "fieldname": "column_break_cash",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Auto-populated from POS extraction",
+   "fieldname": "card_payments",
+   "fieldtype": "Currency",
+   "label": "Card Payments",
+   "read_only_depends_on": "eval:doc.pos_upload"
+  },
+  {
+   "description": "Auto-populated from POS extraction",
+   "fieldname": "gcash_total",
+   "fieldtype": "Currency",
+   "label": "GCash/QRPH Total",
+   "read_only_depends_on": "eval:doc.pos_upload"
+  },
+  {
+   "fieldname": "cash_variance",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Cash Variance",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:Math.abs(doc.cash_variance || 0) > 50",
+   "description": "Required if variance exceeds +/- 50 pesos",
+   "fieldname": "variance_explanation",
+   "fieldtype": "Text",
+   "label": "Variance Explanation",
+   "mandatory_depends_on": "eval:Math.abs(doc.cash_variance || 0) > 50"
+  },
+  {
+   "fieldname": "section_weather",
+   "fieldtype": "Section Break",
+   "label": "Weather Conditions"
+  },
+  {
+   "description": "Auto-fetched from Open-Meteo API",
+   "fieldname": "weather_condition",
+   "fieldtype": "Select",
+   "label": "Weather Condition",
+   "options": "\nClear sky\nMainly clear\nPartly cloudy\nOvercast\nFoggy\nLight drizzle\nModerate drizzle\nDense drizzle\nSlight rain\nModerate rain\nHeavy rain\nSlight rain showers\nModerate rain showers\nViolent rain showers\nThunderstorm"
+  },
+  {
+   "description": "Temperature in Celsius (auto-fetched)",
+   "fieldname": "temperature",
+   "fieldtype": "Float",
+   "label": "Temperature (C)"
+  },
+  {
+   "fieldname": "column_break_weather",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Checked if weather was auto-fetched from API",
+   "fieldname": "weather_auto_fetched",
+   "fieldtype": "Check",
+   "label": "Weather Auto-Fetched",
+   "read_only": 1
+  },
+  {
+   "description": "Daily spot check of 12 key inventory items",
+   "fieldname": "section_inventory",
+   "fieldtype": "Section Break",
+   "label": "Stage 2: Inventory Spot Check (12 items)"
+  },
+  {
+   "fieldname": "inventory_spot_check",
+   "fieldtype": "Table",
+   "label": "Inventory Spot Check",
+   "options": "BEI Inventory Spot Check Item"
+  },
+  {
+   "fieldname": "section_checklist",
+   "fieldtype": "Section Break",
+   "label": "Stage 2: Closing Checklist"
+  },
+  {
+   "fieldname": "checklist_items",
+   "fieldtype": "Table",
+   "label": "Checklist Items",
+   "options": "BEI Closing Checklist Item"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  },
+  {
+   "description": "Staff sign-off for 2-person stores (Cashier + Production required)",
+   "fieldname": "section_staff_signoff",
+   "fieldtype": "Section Break",
+   "label": "Staff Sign-off"
+  },
+  {
+   "default": "0",
+   "fieldname": "cashier_signoff",
+   "fieldtype": "Check",
+   "label": "Cashier Confirmed"
+  },
+  {
+   "depends_on": "eval:doc.cashier_signoff",
+   "fieldname": "cashier_signoff_time",
+   "fieldtype": "Datetime",
+   "label": "Cashier Sign-off Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_signoff",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "production_signoff",
+   "fieldtype": "Check",
+   "label": "Production Confirmed"
+  },
+  {
+   "depends_on": "eval:doc.production_signoff",
+   "fieldname": "production_signoff_time",
+   "fieldtype": "Datetime",
+   "label": "Production Sign-off Time",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:!doc.has_maintenance_today",
+   "description": "Only visible when there was a scheduled maintenance visit today",
+   "fieldname": "section_maintenance",
+   "fieldtype": "Section Break",
+   "label": "Maintenance Verification (Dynamic)"
+  },
+  {
+   "default": "0",
+   "description": "Check if there was a maintenance visit today",
+   "fieldname": "has_maintenance_today",
+   "fieldtype": "Check",
+   "label": "Maintenance Visit Today"
+  },
+  {
+   "default": "0",
+   "depends_on": "eval:doc.has_maintenance_today",
+   "fieldname": "maintenance_verified",
+   "fieldtype": "Check",
+   "label": "Maintenance Completed"
+  },
+  {
+   "depends_on": "eval:doc.has_maintenance_today",
+   "fieldname": "maintenance_technician",
+   "fieldtype": "Data",
+   "label": "Technician Name"
+  },
+  {
+   "depends_on": "eval:doc.has_maintenance_today",
+   "fieldname": "maintenance_work_done",
+   "fieldtype": "Small Text",
+   "label": "Work Description"
+  },
+  {
+   "depends_on": "eval:doc.has_maintenance_today",
+   "fieldname": "maintenance_resolved",
+   "fieldtype": "Select",
+   "label": "Issue Resolved",
+   "options": "\nYes\nNo\nPartial"
+  },
+  {
+   "depends_on": "eval:doc.has_maintenance_today",
+   "fieldname": "maintenance_notes",
+   "fieldtype": "Small Text",
+   "label": "Maintenance Notes"
+  },
+  {
+   "description": "These photos require document scanning (edge detection, perspective correction)",
+   "fieldname": "section_photos_pos",
+   "fieldtype": "Section Break",
+   "label": "Stage 3: POS/Reports Photos (Document Scanner)"
+  },
+  {
+   "fieldname": "photo_xread_opening",
+   "fieldtype": "Attach Image",
+   "label": "1. X-reading Opening Cutoff"
+  },
+  {
+   "fieldname": "photo_xread_closing",
+   "fieldtype": "Attach Image",
+   "label": "2. X-reading Closing Cutoff"
+  },
+  {
+   "description": "Used for OCR validation against POS CSV data",
+   "fieldname": "photo_zread",
+   "fieldtype": "Attach Image",
+   "label": "3. Z-reading (OCR Validated)"
+  },
+  {
+   "fieldname": "column_break_photos_pos",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "photo_closing_reports",
+   "fieldtype": "Attach Image",
+   "label": "4. Closing Reports Screenshot"
+  },
+  {
+   "description": "DEPRECATED: Dashboard data now captured via POS Upload",
+   "fieldname": "photo_dashboard_report",
+   "fieldtype": "Attach Image",
+   "hidden": 1,
+   "label": "5. Dashboard Report Screenshot (DEPRECATED)"
+  },
+  {
+   "fieldname": "section_photos_store",
+   "fieldtype": "Section Break",
+   "label": "Stage 3: Store Area Photos (10)"
+  },
+  {
+   "fieldname": "photo_logo_signage",
+   "fieldtype": "Attach Image",
+   "label": "6. Logo/Signage (off)"
+  },
+  {
+   "fieldname": "photo_hygrometer",
+   "fieldtype": "Attach Image",
+   "label": "7. Hygrometer Reading"
+  },
+  {
+   "fieldname": "photo_water_meter",
+   "fieldtype": "Attach Image",
+   "label": "8. Water Meter Reading"
+  },
+  {
+   "fieldname": "column_break_photos_store1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "photo_backup_area_clean",
+   "fieldtype": "Attach Image",
+   "label": "9. Backup Area (clean)"
+  },
+  {
+   "fieldname": "photo_frozen_milk_clean",
+   "fieldtype": "Attach Image",
+   "label": "10. Frozen Milk Area (clean)"
+  },
+  {
+   "fieldname": "photo_toppings_clean",
+   "fieldtype": "Attach Image",
+   "label": "11. Toppings Area (clean)"
+  },
+  {
+   "fieldname": "column_break_photos_store2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "photo_dispatch_clean",
+   "fieldtype": "Attach Image",
+   "label": "12. Dispatch Area (clean)"
+  },
+  {
+   "fieldname": "photo_cold_storage_close",
+   "fieldtype": "Attach Image",
+   "label": "13. Cold Storage Temp (closing)"
+  },
+  {
+   "fieldname": "photo_cashier_clean",
+   "fieldtype": "Attach Image",
+   "label": "14. Cashier Area (clean)"
+  },
+  {
+   "fieldname": "photo_rollup_closed",
+   "fieldtype": "Attach Image",
+   "label": "15. Roll-up (closed)"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-01 00:45:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Store Closing Report",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee Self Service"
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

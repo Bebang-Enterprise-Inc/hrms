@@ -1,0 +1,265 @@
+name: Daily POS & Web Orders Sync
+
+on:
+  schedule:
+    # 09:30 PHT = 01:30 UTC
+    - cron: "30 1 * * *"
+  workflow_dispatch:
+    inputs:
+      target_date:
+        description: "Override sync date (YYYY-MM-DD). Leave blank for yesterday."
+        required: false
+        type: string
+      skip_anomaly:
+        description: "Skip anomaly detection step"
+        required: false
+        type: boolean
+        default: false
+
+env:
+  SUPABASE_URL: "https://csnniykjrychgajfrgua.supabase.co"
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  SUPABASE_MGMT_TOKEN: ${{ secrets.SUPABASE_MGMT_TOKEN }}
+  SUPERADMIN_API_KEY: ${{ secrets.SUPERADMIN_API_KEY }}
+
+jobs:
+  # ── Step 1: POS orders from Mosaic API (with retry) ────────────────────────
+  pos-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180  # 3 attempts x 60 min max
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install httpx
+
+      - name: Setup Mosaic credentials
+        run: |
+          mkdir -p data/POS_Extraction
+          echo "${{ secrets.MOSAIC_CREDS_CSV }}" | base64 -d > data/POS_Extraction/MOSAIC_POS_API_KEYS.csv
+
+      - name: Run POS sync with retry
+        run: |
+          MAX_ATTEMPTS=3
+          RETRY_DELAY=1800  # 30 minutes
+
+          for attempt in $(seq 1 $MAX_ATTEMPTS); do
+            echo "=== POS sync attempt $attempt/$MAX_ATTEMPTS ==="
+
+            if [ -n "${{ inputs.target_date }}" ]; then
+              python scripts/sync_pos_to_supabase.py \
+                --from "${{ inputs.target_date }}" \
+                --to "${{ inputs.target_date }}" \
+                --parallel --refresh-views && exit 0
+            else
+              python scripts/sync_pos_to_supabase.py \
+                --daily --parallel --refresh-views && exit 0
+            fi
+
+            if [ "$attempt" -lt "$MAX_ATTEMPTS" ]; then
+              echo "Attempt $attempt failed. Waiting ${RETRY_DELAY}s before retry..."
+              sleep $RETRY_DELAY
+            fi
+          done
+
+          echo "All $MAX_ATTEMPTS attempts failed."
+          exit 1
+
+  # ── Step 2: Web orders from Superadmin API (parallel with POS) ─────────────
+  web-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Setup data files
+        run: |
+          mkdir -p data/POS_Extraction
+          echo "${{ secrets.MOSAIC_TENANTS_JSON }}" | base64 -d > data/POS_Extraction/mosaic_tenants.json
+
+      - name: Run web orders sync
+        run: |
+          if [ -n "${{ inputs.target_date }}" ]; then
+            python scripts/sync_web_to_supabase.py \
+              --start-date "${{ inputs.target_date }}" \
+              --end-date "${{ inputs.target_date }}"
+          else
+            python scripts/sync_web_to_supabase.py --rolling-days 7
+          fi
+
+  # ── Step 3: FoodPanda orders from Google Sheet (parallel with POS & Web) ───
+  foodpanda-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests google-auth google-api-python-client pytz
+
+      - name: Setup Google credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
+
+      - name: Run FoodPanda sync
+        run: |
+          if [ -n "${{ inputs.target_date }}" ]; then
+            python scripts/sync_foodpanda_to_supabase.py \
+              --date "${{ inputs.target_date }}"
+          else
+            python scripts/sync_foodpanda_to_supabase.py \
+              --rolling-days 7 \
+              --fail-on-empty
+          fi
+
+  # ── Step 4: FoodPanda cups from governed item fact sheet ──────────────────
+  foodpanda-item-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests google-auth google-api-python-client
+
+      - name: Setup Google credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
+
+      - name: Run FoodPanda item-daily sync
+        run: |
+          if [ -n "${{ inputs.target_date }}" ]; then
+            python scripts/sync_foodpanda_item_daily_to_supabase.py \
+              --date "${{ inputs.target_date }}"
+          else
+            python scripts/sync_foodpanda_item_daily_to_supabase.py \
+              --start-date "$(date -u -d '7 days ago' +%F)" \
+              --end-date "$(date -u -d 'yesterday' +%F)"
+          fi
+
+  # ── Step 5: Refresh dashboard materialized views after all sales feeds ────
+  refresh-sales-dashboard-views:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [pos-sync, web-sync, foodpanda-sync, foodpanda-item-sync]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install httpx
+
+      - name: Refresh sales dashboard materialized views
+        run: |
+          python scripts/supabase_exec.py "select public.refresh_sales_dashboard_daily_store_metrics();"
+
+  # ── Step 6: Anomaly detection (AFTER all syncs complete) ─────────────────
+  anomaly-detection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [refresh-sales-dashboard-views]
+    if: ${{ !inputs.skip_anomaly }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests google-auth google-api-python-client
+
+      - name: Setup Google credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
+
+      - name: Run anomaly detection (log to DB only, 9 AM report sends Chat)
+        run: |
+          if [ -n "${{ inputs.target_date }}" ]; then
+            python scripts/detect_anomalies.py --date "${{ inputs.target_date }}" --no-chat
+          else
+            python scripts/detect_anomalies.py --no-chat
+          fi
+
+  # ── Workflow-level failure notification ─────────────────────────────────────
+  notify-failure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [pos-sync, web-sync, foodpanda-sync, foodpanda-item-sync, refresh-sales-dashboard-views, anomaly-detection]
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install google-auth google-api-python-client
+
+      - name: Setup Google credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
+
+      - name: Send failure alert to Google Chat
+        run: |
+          python -c "
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+
+          creds = service_account.Credentials.from_service_account_file(
+              'credentials/task-manager-service.json',
+              scopes=['https://www.googleapis.com/auth/chat.bot'],
+          )
+          chat = build('chat', 'v1', credentials=creds)
+
+          msg = (
+              'WORKFLOW FAILURE: Daily POS & Web Sync\n\n'
+              'One or more sync jobs failed.\n'
+              'POS sync: ${{ needs.pos-sync.result }}\n'
+              'Web sync: ${{ needs.web-sync.result }}\n'
+              'FoodPanda sync: ${{ needs.foodpanda-sync.result }}\n'
+              'FoodPanda item sync: ${{ needs.foodpanda-item-sync.result }}\n'
+              'Sales dashboard refresh: ${{ needs.refresh-sales-dashboard-views.result }}\n'
+              'Anomaly detection: ${{ needs.anomaly-detection.result }}\n\n'
+              'Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          )
+          chat.spaces().messages().create(
+              parent='spaces/AAQABiNmpBg',
+              body={'text': msg},
+          ).execute()
+          print('Failure alert sent to Google Chat')
+          "

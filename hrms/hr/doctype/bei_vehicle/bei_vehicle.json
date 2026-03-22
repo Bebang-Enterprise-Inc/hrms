@@ -1,0 +1,152 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "autoname": "naming_series:",
+  "creation": "2026-02-16 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "vehicle_plate",
+    "vehicle_type",
+    "capacity_kg",
+    "capacity_cbm",
+    "column_break_1",
+    "owner_type",
+    "threepl_partner",
+    "status",
+    "section_break_pms",
+    "last_pms_date",
+    "next_pms_date",
+    "section_break_notes",
+    "notes"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "BEI-VEH-.####",
+      "reqd": 1
+    },
+    {
+      "fieldname": "vehicle_plate",
+      "fieldtype": "Data",
+      "label": "Vehicle Plate",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "vehicle_type",
+      "fieldtype": "Select",
+      "label": "Vehicle Type",
+      "options": "Truck\nReefer Van\nReefer Truck\nMotorcycle\nL300\nVan",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "capacity_kg",
+      "fieldtype": "Float",
+      "label": "Capacity (kg)"
+    },
+    {
+      "fieldname": "capacity_cbm",
+      "fieldtype": "Float",
+      "label": "Capacity (cbm)"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "owner_type",
+      "fieldtype": "Select",
+      "label": "Owner Type",
+      "options": "BEI-Owned\n3PL",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "threepl_partner",
+      "fieldtype": "Link",
+      "label": "3PL Partner",
+      "options": "Supplier",
+      "depends_on": "eval:doc.owner_type=='3PL'"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Available\nIn Use\nMaintenance\nRetired",
+      "default": "Available",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "section_break_pms",
+      "fieldtype": "Section Break",
+      "label": "Maintenance"
+    },
+    {
+      "fieldname": "last_pms_date",
+      "fieldtype": "Date",
+      "label": "Last PMS Date"
+    },
+    {
+      "fieldname": "next_pms_date",
+      "fieldtype": "Date",
+      "label": "Next PMS Date"
+    },
+    {
+      "fieldname": "section_break_notes",
+      "fieldtype": "Section Break",
+      "label": "Notes"
+    },
+    {
+      "fieldname": "notes",
+      "fieldtype": "Small Text",
+      "label": "Notes"
+    }
+  ],
+  "links": [],
+  "modified": "2026-02-16 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Vehicle",
+  "naming_rule": "By \"Naming Series\" field",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Warehouse User",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "sort_field": "vehicle_plate",
+  "sort_order": "ASC",
+  "states": [],
+  "track_changes": 1
+}

@@ -1,0 +1,70 @@
+name: Uptime Check
+
+on:
+  # schedule:
+    # Every 5 minutes during business hours (PHT 6AM-10PM = UTC 22:00-14:00)
+    # - cron: "*/5 22-23,0-14 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Check Frappe API
+        id: frappe
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "https://hq.bebang.ph/api/method/frappe.ping" || echo "000")
+          echo "status=$HTTP_CODE" >> $GITHUB_OUTPUT
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Frappe API: UP (200)"
+          else
+            echo "::error::Frappe API: DOWN ($HTTP_CODE)"
+          fi
+
+      - name: Check Employee App
+        id: app
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "https://my.bebang.ph" || echo "000")
+          echo "status=$HTTP_CODE" >> $GITHUB_OUTPUT
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "Employee App: UP (200)"
+          else
+            echo "::error::Employee App: DOWN ($HTTP_CODE)"
+          fi
+
+      - name: Check ADMS Receiver
+        id: adms
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "https://adms.bebang.ph/health" || echo "000")
+          echo "status=$HTTP_CODE" >> $GITHUB_OUTPUT
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "ADMS Receiver: UP (200)"
+          else
+            echo "::warning::ADMS Receiver: status $HTTP_CODE"
+          fi
+
+      - name: Alert on failure
+        if: steps.frappe.outputs.status != '200' || steps.app.outputs.status != '200'
+        env:
+          GCHAT_WEBHOOK: ${{ secrets.GCHAT_ALERTS_WEBHOOK }}
+        run: |
+          FRAPPE_STATUS="${{ steps.frappe.outputs.status }}"
+          APP_STATUS="${{ steps.app.outputs.status }}"
+          ADMS_STATUS="${{ steps.adms.outputs.status }}"
+
+          MSG="🔴 UPTIME ALERT\n\n"
+          [ "$FRAPPE_STATUS" != "200" ] && MSG="${MSG}❌ Frappe API (hq.bebang.ph): $FRAPPE_STATUS\n"
+          [ "$APP_STATUS" != "200" ] && MSG="${MSG}❌ Employee App (my.bebang.ph): $APP_STATUS\n"
+          [ "$ADMS_STATUS" != "200" ] && MSG="${MSG}⚠️ ADMS Receiver: $ADMS_STATUS\n"
+          MSG="${MSG}\nCheck: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          if [ -n "$GCHAT_WEBHOOK" ]; then
+            curl -s -X POST "$GCHAT_WEBHOOK" \
+              -H "Content-Type: application/json" \
+              -d "{\"text\": \"$MSG\"}"
+          fi
+
+          # Fail the job so GitHub shows it as red
+          exit 1

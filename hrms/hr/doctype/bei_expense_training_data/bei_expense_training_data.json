@@ -1,0 +1,90 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "autoincrement",
+ "creation": "2026-02-22 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "expense_reference",
+  "description",
+  "vendor",
+  "store",
+  "original_suggestion",
+  "corrected_coa",
+  "corrected_by",
+  "correction_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "expense_reference",
+   "fieldtype": "Link",
+   "label": "Expense Reference",
+   "options": "BEI Expense Request",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "vendor",
+   "fieldtype": "Data",
+   "label": "Vendor"
+  },
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "label": "Store",
+   "options": "BEI Store Type"
+  },
+  {
+   "fieldname": "original_suggestion",
+   "fieldtype": "Data",
+   "label": "Original Suggestion"
+  },
+  {
+   "fieldname": "corrected_coa",
+   "fieldtype": "Data",
+   "label": "Corrected COA"
+  },
+  {
+   "fieldname": "corrected_by",
+   "fieldtype": "Link",
+   "label": "Corrected By",
+   "options": "User"
+  },
+  {
+   "fieldname": "correction_date",
+   "fieldtype": "Datetime",
+   "label": "Correction Date"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-22 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Expense Training Data",
+ "naming_rule": "Autoincrement",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

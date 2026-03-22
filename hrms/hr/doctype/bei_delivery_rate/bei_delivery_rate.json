@@ -1,0 +1,204 @@
+{
+ "actions": [],
+ "autoname": "format:BEI-DR-{####}",
+ "creation": "2026-02-14 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "rate_information_section",
+  "store",
+  "cargo_type",
+  "column_break_rate",
+  "delivery_fee",
+  "logistics_fee",
+  "effective_period_section",
+  "effective_from",
+  "status",
+  "approval_tracking_section",
+  "set_by",
+  "set_by_role",
+  "column_break_approval",
+  "reviewed_by",
+  "reviewed_by_role",
+  "reviewed_at",
+  "notes_section",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "rate_information_section",
+   "fieldtype": "Section Break",
+   "label": "Rate Information"
+  },
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "label": "Store",
+   "options": "Department",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "cargo_type",
+   "fieldtype": "Select",
+   "label": "Cargo Type",
+   "options": "FC\nDRY\nFM\nMixed",
+   "reqd": 1,
+   "in_list_view": 1
+  },
+  {
+   "fieldname": "column_break_rate",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "delivery_fee",
+   "fieldtype": "Currency",
+   "label": "Delivery Fee (per stop)",
+   "precision": "2"
+  },
+  {
+   "fieldname": "logistics_fee",
+   "fieldtype": "Currency",
+   "label": "Logistics Fee (per stop)",
+   "precision": "2"
+  },
+  {
+   "fieldname": "effective_period_section",
+   "fieldtype": "Section Break",
+   "label": "Effective Period"
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From",
+   "reqd": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nPending Review\nActive\nExpired",
+   "default": "Draft",
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "approval_tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Approval Tracking"
+  },
+  {
+   "fieldname": "set_by",
+   "fieldtype": "Link",
+   "label": "Set By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "set_by_role",
+   "fieldtype": "Data",
+   "label": "Set By Role",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reviewed_by",
+   "fieldtype": "Link",
+   "label": "Reviewed By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reviewed_by_role",
+   "fieldtype": "Data",
+   "label": "Reviewed By Role",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reviewed_at",
+   "fieldtype": "Datetime",
+   "label": "Reviewed At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes_section",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-14 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Delivery Rate",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Supply Chain Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Warehouse User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager"
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

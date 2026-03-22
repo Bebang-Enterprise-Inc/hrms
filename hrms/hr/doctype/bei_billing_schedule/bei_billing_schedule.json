@@ -1,0 +1,468 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-02-06 14:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "header_section",
+  "naming_series",
+  "billing_type",
+  "billing_period",
+  "store",
+  "store_type",
+  "column_break_header",
+  "status",
+  "generated_on",
+  "sent_on",
+  "paid_on",
+  "delivery_details_section",
+  "trip_reference",
+  "trip_stop_idx",
+  "column_break_delivery",
+  "cargo_type",
+  "goods_value",
+  "handling_fee",
+  "sales_section",
+  "gross_sales",
+  "net_sales",
+  "column_break_sales",
+  "online_sales",
+  "website_sales",
+  "delivery_cost",
+  "logistics_cost",
+  "fees_section",
+  "royalty_fee",
+  "management_fee",
+  "marketing_fee",
+  "column_break_fees",
+  "ecommerce_fee",
+  "delivery_fee",
+  "logistics_fee",
+  "maintenance_section",
+  "repairs_maintenance",
+  "column_break_maintenance",
+  "preventive_maintenance",
+  "line_items_section",
+  "line_items",
+  "totals_section",
+  "subtotal",
+  "vat_amount",
+  "column_break_totals",
+  "total_amount",
+  "payment_section",
+  "amount_paid",
+  "balance_due",
+  "column_break_payment",
+  "payment_reference",
+  "payment_proof"
+ ],
+ "fields": [
+  {
+   "fieldname": "header_section",
+   "fieldtype": "Section Break",
+   "label": "Billing Information"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "BILL-MF-.YYYY.-.#####\nBILL-DL-.YYYY.-.#####\nBILL-CN-.YYYY.-.#####\nBILL-ADJ-.YYYY.-.#####",
+   "default": "BILL-MF-.YYYY.-.#####",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "billing_type",
+   "fieldtype": "Select",
+   "label": "Billing Type",
+   "options": "Monthly Fees\nDelivery\nCredit Note\nAdjustment",
+   "default": "Monthly Fees",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "description": "Format: YYYY-MM (e.g., 2026-02)",
+   "fieldname": "billing_period",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Billing Period"
+  },
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Store",
+   "options": "Department",
+   "reqd": 1
+  },
+  {
+   "fieldname": "store_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Store Type",
+   "options": "JV\nManaged Franchise\nFull Franchise"
+  },
+  {
+   "fieldname": "column_break_header",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nPending\nApproved\nSent\nPartially Paid\nPaid\nDisputed\nCancelled"
+  },
+  {
+   "default": "Now",
+   "fieldname": "generated_on",
+   "fieldtype": "Datetime",
+   "label": "Generated On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sent_on",
+   "fieldtype": "Datetime",
+   "label": "Sent On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "paid_on",
+   "fieldtype": "Datetime",
+   "label": "Paid On",
+   "read_only": 1
+  },
+  {
+   "fieldname": "delivery_details_section",
+   "fieldtype": "Section Break",
+   "label": "Delivery Details",
+   "depends_on": "eval:doc.billing_type=='Delivery'"
+  },
+  {
+   "fieldname": "trip_reference",
+   "fieldtype": "Link",
+   "label": "Trip Reference",
+   "options": "BEI Distribution Trip",
+   "depends_on": "eval:doc.billing_type=='Delivery'"
+  },
+  {
+   "fieldname": "trip_stop_idx",
+   "fieldtype": "Int",
+   "label": "Trip Stop Index",
+   "depends_on": "eval:doc.billing_type=='Delivery'"
+  },
+  {
+   "fieldname": "column_break_delivery",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cargo_type",
+   "fieldtype": "Select",
+   "label": "Cargo Type",
+   "options": "\nFC\nDRY\nFM\nMixed",
+   "depends_on": "eval:doc.billing_type=='Delivery'"
+  },
+  {
+   "fieldname": "goods_value",
+   "fieldtype": "Currency",
+   "label": "Goods Value",
+   "precision": "2",
+   "read_only": 1,
+   "depends_on": "eval:doc.billing_type=='Delivery'",
+   "description": "Total value of goods from BEI Store Order"
+  },
+  {
+   "fieldname": "handling_fee",
+   "fieldtype": "Currency",
+   "label": "Handling Fee",
+   "precision": "2",
+   "read_only": 1,
+   "depends_on": "eval:doc.billing_type=='Delivery'",
+   "description": "8% markup on goods value (franchise only)"
+  },
+  {
+   "fieldname": "sales_section",
+   "fieldtype": "Section Break",
+   "label": "Sales Data"
+  },
+  {
+   "description": "Total sales including VAT (for franchise stores)",
+   "fieldname": "gross_sales",
+   "fieldtype": "Currency",
+   "label": "Gross Sales",
+   "precision": "2"
+  },
+  {
+   "description": "Sales excluding VAT (for JV stores)",
+   "fieldname": "net_sales",
+   "fieldtype": "Currency",
+   "label": "Net Sales",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_sales",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Online/eCommerce sales for 5% fee",
+   "fieldname": "online_sales",
+   "fieldtype": "Currency",
+   "label": "Online Sales",
+   "precision": "2"
+  },
+  {
+   "description": "Website-only sales (excludes Foodpanda/Grab) for 4% eCommerce fee",
+   "fieldname": "website_sales",
+   "fieldtype": "Currency",
+   "label": "Website Sales",
+   "precision": "2"
+  },
+  {
+   "description": "Delivery cost charged to store (before VAT and markup)",
+   "fieldname": "delivery_cost",
+   "fieldtype": "Currency",
+   "label": "Delivery Cost",
+   "precision": "2"
+  },
+  {
+   "description": "Logistics cost charged to store (before VAT and markup)",
+   "fieldname": "logistics_cost",
+   "fieldtype": "Currency",
+   "label": "Logistics Cost",
+   "precision": "2"
+  },
+  {
+   "fieldname": "fees_section",
+   "fieldtype": "Section Break",
+   "label": "Calculated Fees"
+  },
+  {
+   "description": "7% of gross sales + 12% VAT (franchise stores only)",
+   "fieldname": "royalty_fee",
+   "fieldtype": "Currency",
+   "label": "Royalty Fee",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "description": "2.5% of gross sales + 12% VAT (managed franchise only)",
+   "fieldname": "management_fee",
+   "fieldtype": "Currency",
+   "label": "Management Fee",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "description": "5% of gross/net sales (varies by store type)",
+   "fieldname": "marketing_fee",
+   "fieldtype": "Currency",
+   "label": "Marketing Fee",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_fees",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "4% of website sales",
+   "fieldname": "ecommerce_fee",
+   "fieldtype": "Currency",
+   "label": "eCommerce Fee",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "description": "Delivery cost + VAT + markup (varies by store type)",
+   "fieldname": "delivery_fee",
+   "fieldtype": "Currency",
+   "label": "Delivery Fee",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "description": "Logistics cost + VAT + markup (varies by store type)",
+   "fieldname": "logistics_fee",
+   "fieldtype": "Currency",
+   "label": "Logistics Fee",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "maintenance_section",
+   "fieldtype": "Section Break",
+   "label": "Maintenance Charges"
+  },
+  {
+   "description": "Repairs and maintenance charges",
+   "fieldname": "repairs_maintenance",
+   "fieldtype": "Currency",
+   "label": "Repairs & Maintenance",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_maintenance",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Preventive maintenance charges",
+   "fieldname": "preventive_maintenance",
+   "fieldtype": "Currency",
+   "label": "Preventive Maintenance",
+   "precision": "2"
+  },
+  {
+   "fieldname": "line_items_section",
+   "fieldtype": "Section Break",
+   "label": "Additional Line Items"
+  },
+  {
+   "fieldname": "line_items",
+   "fieldtype": "Table",
+   "label": "Line Items",
+   "options": "BEI Billing Line Item"
+  },
+  {
+   "fieldname": "totals_section",
+   "fieldtype": "Section Break",
+   "label": "Totals"
+  },
+  {
+   "description": "Sum of all fees and line items (before VAT on line items)",
+   "fieldname": "subtotal",
+   "fieldtype": "Currency",
+   "label": "Subtotal",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "description": "12% VAT on applicable line items",
+   "fieldname": "vat_amount",
+   "fieldtype": "Currency",
+   "label": "VAT Amount",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_totals",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "label": "Total Amount Due",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "payment_section",
+   "fieldtype": "Section Break",
+   "label": "Payment Tracking"
+  },
+  {
+   "default": "0",
+   "fieldname": "amount_paid",
+   "fieldtype": "Currency",
+   "label": "Amount Paid",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "description": "total_amount - amount_paid",
+   "fieldname": "balance_due",
+   "fieldtype": "Currency",
+   "label": "Balance Due",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_payment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "payment_reference",
+   "fieldtype": "Data",
+   "label": "Payment Reference"
+  },
+  {
+   "fieldname": "payment_proof",
+   "fieldtype": "Attach",
+   "label": "Payment Proof"
+  }
+ ],
+ "modified": "2026-02-12 14:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Billing Schedule",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Store Manager",
+   "share": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1
+  },
+  {
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,187 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-02-09 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "employee",
+  "employee_name",
+  "issued_by",
+  "issued_by_name",
+  "incident_report",
+  "column_break_1",
+  "status",
+  "issue_date",
+  "response_deadline",
+  "hearing_required",
+  "section_break_charges",
+  "charges",
+  "section_break_response",
+  "employee_response",
+  "response_date",
+  "section_break_links",
+  "linked_nod"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "BEI-NTE-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "issued_by",
+   "fieldtype": "Link",
+   "label": "Issued By",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "issued_by.employee_name",
+   "fieldname": "issued_by_name",
+   "fieldtype": "Data",
+   "label": "Issued By Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "incident_report",
+   "fieldtype": "Link",
+   "label": "Incident Report",
+   "options": "BEI Incident Report",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nIssued\nResponse Received\nHearing Scheduled\nUnder Review\nDecision Made",
+   "reqd": 1
+  },
+  {
+   "fieldname": "issue_date",
+   "fieldtype": "Date",
+   "label": "Issue Date",
+   "reqd": 1
+  },
+  {
+   "description": "Employee must respond within 5 days (DOLE standard)",
+   "fieldname": "response_deadline",
+   "fieldtype": "Date",
+   "label": "Response Deadline",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "hearing_required",
+   "fieldtype": "Check",
+   "label": "Hearing Required"
+  },
+  {
+   "fieldname": "section_break_charges",
+   "fieldtype": "Section Break",
+   "label": "Charges"
+  },
+  {
+   "fieldname": "charges",
+   "fieldtype": "Text Editor",
+   "label": "Charges",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_response",
+   "fieldtype": "Section Break",
+   "label": "Employee Response"
+  },
+  {
+   "fieldname": "employee_response",
+   "fieldtype": "Text Editor",
+   "label": "Employee Response"
+  },
+  {
+   "fieldname": "response_date",
+   "fieldtype": "Date",
+   "label": "Response Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_links",
+   "fieldtype": "Section Break",
+   "label": "Linked Documents"
+  },
+  {
+   "fieldname": "linked_nod",
+   "fieldtype": "Link",
+   "label": "Linked Notice of Decision",
+   "options": "BEI Notice of Decision",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-02-09 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Notice to Explain",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "role": "Employee",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

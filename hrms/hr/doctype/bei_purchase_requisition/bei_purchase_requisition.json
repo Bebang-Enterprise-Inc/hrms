@@ -1,0 +1,255 @@
+{
+  "actions": [],
+  "autoname": "format:PR-{YYYY}-{#####}",
+  "creation": "2026-02-03 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "header_section",
+    "pr_no",
+    "request_date",
+    "status",
+    "column_break_header",
+    "requested_by",
+    "requested_by_name",
+    "department",
+    "details_section",
+    "delivery_to",
+    "date_required",
+    "column_break_details",
+    "purpose",
+    "recurring",
+    "items_section",
+    "items",
+    "totals_section",
+    "total_items",
+    "total_estimated_cost",
+    "approval_section",
+    "approved_by",
+    "approved_by_name",
+    "approval_date",
+    "column_break_approval",
+    "rejection_reason"
+  ],
+  "fields": [
+    {
+      "fieldname": "header_section",
+      "fieldtype": "Section Break",
+      "label": "Request Information"
+    },
+    {
+      "fieldname": "pr_no",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "PR Number",
+      "read_only": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "request_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Request Date",
+      "reqd": 1
+    },
+    {
+      "default": "Draft",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Draft\nPending Approval\nApproved\nRejected\nConverted to PO"
+    },
+    {
+      "fieldname": "column_break_header",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "__user",
+      "fieldname": "requested_by",
+      "fieldtype": "Link",
+      "in_standard_filter": 1,
+      "label": "Requested By",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fetch_from": "requested_by.full_name",
+      "fieldname": "requested_by_name",
+      "fieldtype": "Data",
+      "label": "Requestor Name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "department",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "Department",
+      "options": "Department"
+    },
+    {
+      "fieldname": "details_section",
+      "fieldtype": "Section Break",
+      "label": "Delivery Details"
+    },
+    {
+      "fieldname": "delivery_to",
+      "fieldtype": "Link",
+      "label": "Delivery To",
+      "options": "Warehouse"
+    },
+    {
+      "fieldname": "date_required",
+      "fieldtype": "Date",
+      "label": "Date Required",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_details",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "purpose",
+      "fieldtype": "Small Text",
+      "label": "Purpose",
+      "reqd": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "recurring",
+      "fieldtype": "Check",
+      "label": "Recurring Request"
+    },
+    {
+      "fieldname": "items_section",
+      "fieldtype": "Section Break",
+      "label": "Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "BEI PR Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "totals_section",
+      "fieldtype": "Section Break",
+      "label": "Totals"
+    },
+    {
+      "fieldname": "total_items",
+      "fieldtype": "Int",
+      "label": "Total Items",
+      "read_only": 1
+    },
+    {
+      "fieldname": "total_estimated_cost",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "Total Estimated Cost",
+      "read_only": 1
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "approval_section",
+      "fieldtype": "Section Break",
+      "label": "Approval"
+    },
+    {
+      "fieldname": "approved_by",
+      "fieldtype": "Link",
+      "label": "Approved/Rejected By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fetch_from": "approved_by.full_name",
+      "fieldname": "approved_by_name",
+      "fieldtype": "Data",
+      "label": "Approver Name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "approval_date",
+      "fieldtype": "Datetime",
+      "label": "Approval Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_approval",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "rejection_reason",
+      "fieldtype": "Small Text",
+      "label": "Rejection Reason",
+      "read_only": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-02-03 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Purchase Requisition",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Procurement User",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Procurement Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts Manager",
+      "share": 0,
+      "write": 0
+    }
+  ],
+  "search_fields": "requested_by_name,department,purpose",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "title_field": "pr_no",
+  "track_changes": 1
+}

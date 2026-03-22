@@ -1,0 +1,187 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "autoname": "naming_series:",
+  "creation": "2026-01-24 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "store",
+    "receiving",
+    "item_code",
+    "item_name",
+    "issue_type",
+    "column_break_1",
+    "expected_qty",
+    "actual_qty",
+    "reported_by",
+    "reported_at",
+    "status",
+    "section_break_details",
+    "description",
+    "photo",
+    "section_break_resolution",
+    "resolution",
+    "resolved_by",
+    "resolved_at"
+  ],
+  "fields": [
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "label": "Series",
+      "options": "BEI-FQI-.YYYY.-.#####",
+      "reqd": 1
+    },
+    {
+      "fieldname": "store",
+      "fieldtype": "Link",
+      "label": "Store",
+      "options": "Warehouse",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "receiving",
+      "fieldtype": "Link",
+      "label": "Receiving Reference",
+      "options": "BEI Store Receiving"
+    },
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item Code",
+      "options": "Item",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "label": "Item Name",
+      "fetch_from": "item_code.item_name",
+      "read_only": 1
+    },
+    {
+      "fieldname": "issue_type",
+      "fieldtype": "Select",
+      "label": "Issue Type",
+      "options": "Shortage\nDamage\nWrong Item\nQuality\nTemperature\nExpiry",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "expected_qty",
+      "fieldtype": "Float",
+      "label": "Expected Qty"
+    },
+    {
+      "fieldname": "actual_qty",
+      "fieldtype": "Float",
+      "label": "Actual Qty"
+    },
+    {
+      "fieldname": "reported_by",
+      "fieldtype": "Link",
+      "label": "Reported By",
+      "options": "User",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "reported_at",
+      "fieldtype": "Datetime",
+      "label": "Reported At",
+      "default": "Now",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Open\nUnder Review\nResolved",
+      "default": "Open",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "section_break_details",
+      "fieldtype": "Section Break",
+      "label": "Issue Details"
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description"
+    },
+    {
+      "fieldname": "photo",
+      "fieldtype": "Attach Image",
+      "label": "Photo Evidence"
+    },
+    {
+      "fieldname": "section_break_resolution",
+      "fieldtype": "Section Break",
+      "label": "Resolution"
+    },
+    {
+      "fieldname": "resolution",
+      "fieldtype": "Small Text",
+      "label": "Resolution Notes"
+    },
+    {
+      "fieldname": "resolved_by",
+      "fieldtype": "Link",
+      "label": "Resolved By",
+      "options": "User"
+    },
+    {
+      "fieldname": "resolved_at",
+      "fieldtype": "Datetime",
+      "label": "Resolved At"
+    }
+  ],
+  "links": [],
+  "modified": "2026-01-24 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI FQI Report",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "HR Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 1,
+      "read": 1,
+      "report": 0,
+      "role": "Employee",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

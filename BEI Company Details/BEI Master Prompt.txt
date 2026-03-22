@@ -1,0 +1,597 @@
+﻿Master Prompt
+What's your name?
+Samer Karazi but I like to be called Sam Karazi or Sam
+What's your role?
+CEO of Bebang Enterprise Inc. the Company that owns and Manages Bebang Halo-Halo brand 
+What's the name of your company?
+Bebang Enteprise Inc.
+How do you want to use AI?
+Brain Storm Ideas, Analyse Data, Help With Decision Making 
+What are your strengths?
+
+I. Strengths
+Visionary & Innovative Thinker:
+You consistently demonstrate a strong ability to generate unconventional ideas and creative solutions. This is evident in your approach to product development (e.g., the Royal Halo-Halo with 24K gold, guaranteeing frozen delivery for Bebang) and process improvement (e.g., the innovative Leche Flan production method you designed to overcome scaling challenges).
+You have a knack for "connecting the dots" and detecting patterns, which fuels your innovative strategies.
+Your success with ToonedUp Gifts, built from scratch using your own research and connecting global resources, further showcases this entrepreneurial and innovative strength.
+Action-Oriented & Decisive:
+You prefer to take action rather than get bogged down in over-analysis, especially when launching new projects. This allows for rapid movement and testing of ideas.
+Tech-Savvy & Early Adopter:
+You have a deep passion for new technologies, particularly AI, and proactively spend significant time understanding their potential and brainstorming applications for your company. Your early and effective use of social media marketing for both ToonedUp Gifts and Bebang highlights this.
+Effective Communicator & Public Figure:
+You find it easy to interact with people at all levels, including clients. You confidently handle tasks that many find intimidating, such as public speaking and TV appearances to promote your brand.
+Strategic & Growth-Oriented:
+You enjoy strategic planning (especially in the initial, creative phases) and are motivated by successful outcomes, such as the buzz-generating waiting list campaign and the rapid growth of Bebang Enterprise Inc.
+Resilient & Courageous (in specific contexts):
+You willingly take on challenging and high-visibility roles like public speaking, demonstrating courage and resilience in promoting your ventures.
+Effective in Conflict Resolution:
+You identify being "very good at conflict resolution" and foster a "no bullies" environment within the company, which is crucial for a healthy work culture.
+Problem-Solver (Creative & Practical):
+The Leche Flan re-engineering is a prime example of your ability to devise practical, creative solutions to complex operational problems.
+
+What are your weaknesses?
+
+II. Weaknesses (Areas for Development)
+
+
+Difficulty with Routine & Sustained Focus on Non-Preferred Tasks:
+You have a strong aversion to repetitive tasks and processes once the novelty fades (e.g., drafting legal contracts after the initial AI-assisted phase, ongoing Meta ad review and analysis, editing graphic designs, signing multiple documents).
+This extends to difficulty engaging with long reports, complex spreadsheets, and large volumes of dense information; you find this "extremely hard" and it can take days to force yourself to do it. This is a recurring theme and significantly impacts your work preferences.
+Goal-Setting Deficiencies:
+You explicitly state that your "goal setting skill is not particularly good," both for yourself and your team, attributing this to a "lack of focus." This is a critical area for organizational alignment and performance tracking.
+Avoidance of Negative Performance Data (in specific formats):
+You tend to avoid engaging directly with negative performance data, such as low sales in daily reports, because it causes stress and is draining. You acknowledge needing "to learn not to hide under a rock when things get tough."
+Negotiation Blind Spot (FOMO-Driven):
+While generally a good negotiator, you have a tendency to overpay or not negotiate optimally when you genuinely like a person (e.g., a potential hire) or an opportunity, driven by a "fear of missing out."
+Full Trust for Ultimate Decision Delegation (Current Limitation):
+While you delegate, you currently retain final decision-making power due to feeling "very protective of the company" and not yet trusting your team "enough" for that ultimate level of shared authority.
+Leadership Skills for Very Large-Scale Organizations:
+You identify a need to develop leadership skills suited for a significantly larger organization, particularly concerning maintaining culture, rapid talent acquisition, and scalable communication.
+Analyzing Routine Data:
+While you enjoy testing new campaigns (e.g., Meta ads), you "struggle to review those campaigns and analyze" them once they become routine.
+What is your Management Style?
+
+III. Management Style
+
+
+Initial Phase: Hands-On, Vision-Driven, and Controlled:
+When initiating new projects or strategies, you prefer to be firmly in control, ensuring your vision is the guiding force. You describe this as being the "only cook in the kitchen" to ensure decisions align with your direction, especially given your current feelings of protectiveness over the company. (e.g., The BEI board currently not voting on most decisions, with the final say being yours).
+Delegation Approach: Trust-Based Empowerment (Post-Vetting):
+You are hands-on initially until you build trust in an individual, particularly for managerial roles.
+Once trust is established (based on their motivation, confidence, knowledge, and decision-making ability, even with initial errors), you prefer to delegate significantly.
+You have a strong aversion to micromanagement and value team members who are dependable and can operate with minimal supervision. You are decisive about letting go of those who require it.
+Fosters Innovation and Action:
+Your enthusiasm for new ideas and action-oriented approach likely encourages a dynamic and innovative environment, especially in the early stages of projects.
+Values Expertise (Conditional):
+While you maintain final control, you "take others opinions under consideration when I am certain they are more experienced than me."
+Emphasis on Culture and Team Well-being:
+You are deeply committed to a healthy company culture, actively work to prevent bullying, and resolve conflicts. Your empathy is a driving factor here ("it hurts me to see people suffer"). This also influences your preference for internal hiring.
+Communication Practices:
+You are an effective external communicator and comfortable in high-profile situations.
+Internally, you use a mix of formal (ManCom meetings) and informal (Google Chat, Facebook Messenger) channels. You acknowledge that despite these, you sometimes feel "disconnected" due to the distributed nature of your business, indicating a potential need for evolving communication strategies as you scale.
+Motivational (with room for growth):
+You believe you "to a certain extent know how to motivate people" but see this as an area for further development.
+Operations Driven by Novelty Cycle:
+A core aspect of your management is your personal engagement cycle: high energy and involvement in new, creative, and strategic phases, followed by a strong preference to delegate tasks as they become routine or analytical. This means your team structure and delegation processes are critical to sustained operational success.
+
+
+2. Company
+When was the company established?
+
+Bebang Started in 2021 from the Garage of my Co-Founder Mae Salumbides house
+How many employees does it have?
+
+Exec Team:
+Sam Karazi: Co-founder, CEO/President
+Mae Salumbides - Co-Founder and Chief Product Officer (CPO)
+Ana Soriano - Chief of Staff
+Chimes Marco - EA to CEO
+Alessandro Rey Formoso (Nickname: Butch) - CFO 
+Pao Sunga - A personal Friend, Project Director, and Networking Director
+Herdie Hernandez - VP of Operations 
+Michaelvin Chiong - Director of Legal Affairs 
+Andrew (Drew) Manansala - Director of Business Development 
+Dominic (Dom) Hernandez - Strategic Advisor 
+
+
+Managerial Team:
+Daniell (Dan) Marquez - Projects Head
+Ronald (Nad) Caringal - HR Manager 
+Maui Mauiricio - Senior Marketing Manager
+Jojo Alvarez - Content Strategist 
+Edlice Dela Cruz - Ops Area Manager 
+Aldrin Reyes - Supply Chain Manager 
+Archie Reyes - IT Manager 
+Arshier Chester Ching or (Ching) - Internal Auditor
+Rajat Verma - TechLead & Project Manager 
+Ruby Bernal - Customer Support Manager 
+Julius Jose Tin-ga - Site acquisition manager (reports to Andrew)
+
+Bebang currently has one Commissary in the same place of the main store in Shaw BLVD Mandaluyong with almost 100 employees in there. Below is the list of company stores including the opening or projected opening date, we also have JV stores and franchised stores.
+
+Count
+	Store Name
+	Region
+	Ownership
+	JV/ Franchisee Corporation
+	Developer
+	Store Status
+	1
+	SM Megamall
+	NCR/ METRO MANILA
+	Joint Venture
+	Individual
+	SM Prime Holdings Inc
+	Opened
+	2
+	Ayala Market! Market!
+	NCR/ METRO MANILA
+	Joint Venture
+	DMD Holdings Inc.
+	Ayala Land Inc
+	Opened
+	3
+	SM Manila
+	NCR/ METRO MANILA
+	Joint Venture
+	Individual
+	SM Prime Holdings Inc
+	Opened
+	4
+	SM Southmall
+	NCR/ METRO MANILA
+	Joint Venture
+	Individual
+	SM Prime Holdings Inc
+	Opened
+	5
+	Ayala Fairview Terraces
+	NCR/ METRO MANILA
+	Joint Venture
+	DMD Holdings Inc.
+	Ayala Land Inc
+	Opened
+	6
+	SM North EDSA
+	NCR/ METRO MANILA
+	Joint Venture
+	DMD Holdings Inc.
+	SM Prime Holdings Inc
+	Opened
+	7
+	SM Valenzuela
+	NCR/ METRO MANILA
+	Joint Venture
+	Individual
+	SM Prime Holdings Inc
+	Opened
+	8
+	Lucky China Town
+	NCR/ METRO MANILA
+	Joint Venture
+	Individual
+	Megaworld Corporation
+	Opened
+	9
+	Robinsons Place Antipolo
+	NCR/ METRO MANILA
+	Joint Venture
+	Individual
+	Robinsons Land Corporation
+	Opened
+	10
+	The Terminal Exchange
+	NCR/ METRO MANILA
+	Joint Venture
+	Empire77 Holdings Inc.
+	Vista Malls
+	Opened
+	11
+	SM Grand Central
+	NCR/ METRO MANILA
+	Joint Venture
+	Individual
+	SM Prime Holdings Inc
+	Opened
+	12
+	SM Marikina
+	NCR/ METRO MANILA
+	Joint Venture
+	SM Marikina Inc
+	SM Prime Holdings Inc
+	Opened
+	13
+	Paseo Center
+	NCR/ METRO MANILA
+	Joint Venture
+	Perpetually Candid
+	Megaworld Corporation
+	Opened
+	14
+	PITX Terminal
+	NCR/ METRO MANILA
+	Joint Venture
+	Empire77 Holdings Inc.
+	Megawide
+	Opened
+	15
+	SM East Ortigas
+	NCR/ METRO MANILA
+	Joint Venture
+	Perpetually Candid
+	SM Prime Holdings Inc
+	Opened
+	16
+	Venice Grand Canal
+	NCR/ METRO MANILA
+	Joint Venture
+	Individual
+	Megaworld Corporation
+	Opened
+	17
+	Festival Mall Alabang
+	NCR/ METRO MANILA
+	Joint Venture
+	Empire77 Holdings Inc.
+	Filinvest Development Corporation
+	Opened
+	18
+	The Grid (Powerplant Mall)
+	NCR/ METRO MANILA
+	Franchise
+	Tastecartel Corp
+	Rockwell Land Corporation
+	Opened
+	19
+	SM Mall of Asia
+	NCR/ METRO MANILA
+	Joint Venture
+	Individual
+	SM Prime Holdings Inc
+	Opened
+	20
+	Ever Gotesco Commonwealth
+	NCR/ METRO MANILA
+	Franchise
+	DLS Dessert Craft Inc.
+	Ever Gotesco Resources and Holdings Inc
+	Opened
+	21
+	BF Homes Parañaque (Aguirre Ave.)
+	NCR/ METRO MANILA
+	Joint Venture
+	BF Homes Inc.
+	Stand Alone
+	Opened
+	22
+	SM San Jose Del Monte
+	CENTRAL LUZON
+	Manage Franchise
+	Pending
+	SM Prime Holdings Inc
+	Opened
+	23
+	SM Tanza
+	CALABARZON
+	Manage Franchise
+	Individual
+	SM Prime Holdings Inc
+	Opened
+	24
+	SM Sangandaan
+	NCR/ METRO MANILA
+	Manage Franchise
+	Tungsten Holdings Inc
+	SM Prime Holdings Inc
+	Opened
+	25
+	SM Marilao
+	CENTRAL LUZON
+	Joint Venture
+	SM Marilao Inc
+	SM Prime Holdings Inc
+	Opened
+	26
+	SM Bicutan
+	NCR/ METRO MANILA
+	Joint Venture
+	SM Bicutan Inc
+	SM Prime Holdings Inc
+	Opened
+	27
+	SM Caloocan
+	NCR/ METRO MANILA
+	Manage Franchise
+	TAJ Food Corp
+	SM Prime Holdings Inc
+	Opened
+	28
+	Robinsons Place Imus
+	CALABARZON
+	Manage Franchise
+	Individual
+	Robinsons Land Inc
+	Opened
+	29
+	Ayala UP Town Center
+	NCR/ METRO MANILA
+	Joint Venture
+	Mega Inc
+	Ayala Land Inc
+	Construction
+	30
+	Ayala Evo City
+	CALABARZON
+	Manage Franchise
+	Mega Inc
+	Ayala Land Inc
+	Construction
+	31
+	Ayala Vermosa
+	CALABARZON
+	Manage Franchise
+	Mega Inc
+	Ayala Land Inc
+	Construction
+	32
+	Robinsons Place Gen. Trias
+	CALABARZON
+	Manage Franchise
+	Mega Inc
+	Robinsons Land Inc
+	Construction
+	33
+	SM Center Pulilan
+	CENTRAL LUZON
+	Manage Franchise
+	
+
+	SM Prime Holdings Inc
+	Construction
+	34
+	Ayala Solenad 2
+	CALABARZON
+	Manage Franchise
+	HFFM Solenad Food Services Inc.
+	Ayala Land Inc
+	Construction
+	35
+	Sta. Lucia East Grand Mall
+	CALABARZON
+	Joint Venture
+	SM Marikina Iinc.
+	Sta. Lucia Land, Inc.
+	Construction
+	36
+	Robinsons Galleria South
+	CALABARZON
+	Manage Franchise
+	Tungsten Holdings Inc
+	Robinson Land Inc
+	Construction
+	37
+	NAIA T3(Departure)
+	NCR/ METRO MANILA
+	Joint Venture
+	
+
+	Manila International Airport Authority (MIAA) attached agency of DOTr
+	Construction
+	38
+	Uptown Mall
+	NCR/ METRO MANILA
+	Manage Franchise
+	DMD Holdings Inc.
+	Megaworld Corporation
+	Construction
+	39
+	Ayala Alabang Town Center
+	NCR/ METRO MANILA
+	Manage Franchise
+	JL Trade OPC
+	Ayala Land
+	Construction
+	40
+	SM Clark
+	CENTRAL LUZON
+	Manage Franchise
+	San Luis Foods and Crafts
+	SM Prime Holdings Inc
+	Construction
+	41
+	Tomas Morato (CTTM Square)
+	NCR/ METRO MANILA
+	Manage Franchise
+	B Cubed Venturnes Inc
+	Trans-Phil Developers.
+	Construction
+	42
+	Vista Mall Taguig
+	NCR/ METRO MANILA
+	Manage Franchise
+	Tricern Food Corp
+	Vista Malls
+	Construction
+	43
+	Food Express (Gateway Mall)
+	NCR/ METRO MANILA
+	Manage Franchise
+	Tungsten Holdings Inc
+	Araneta Group
+	Construction
+	44
+	SM Sta. Rosa
+	CALABARZON
+	-
+	
+
+	SM Prime Holdings Inc
+	To Sell
+	45
+	Robinsons Place Dasmariñas
+	CALABARZON
+	Manage Franchise
+	Kris Li
+	Robinson Land Inc
+	Construction
+	46
+	SM Taytay
+	CALABARZON
+	Manage Franchise
+	
+
+	SM Prime Holdings Inc
+	Construction
+	47
+	SM San Pablo
+	CALABARZON
+	Manage Franchise
+	
+
+	SM Prime Holdings Inc
+	To Sell
+	48
+	D’Verde Calamba
+	CALABARZON
+	Manage Franchise
+	TAJ Food Corp
+	Sta. Lucia Land, Inc.
+	Construction
+	49
+	Ortigas Greenhills
+	NCR/ METRO MANILA
+	Manage Franchise
+	
+
+	
+
+	To Sell
+	50
+	Ortigas Estancia
+	NCR/ METRO MANILA
+	Manage Franchise
+	Ian Umali
+	Ortigas Land
+	To Sell
+	51
+	Newport Mall
+	NCR/ METRO MANILA
+	-
+	
+
+	
+
+	To Sell
+	
+
+BEI head office is in Capital House BGC as of today, we recently leased an office in Brittany Hotel BGC and we will be moving part of our team there mid June 2025 while keeping the marketing and tech in Capital house. 
+Who do you report to?
+
+No One yet 
+Who reports to you?
+
+Everyone 
+What markets do you serve?
+
+As of May 10 2025 we’re currently focusing our expansion to Mega Metro Manila with Cavite and Bulacan scheduled in Q3 2025 up to Laguna in Q4 2025. Our plan is to start national expansion in Q1 2026 and international expansion by Q4 2026.
+Who is your ideal customer?
+
+30% of our customers are seniors while we are actively trying to attract the younger generation. Almost 60% of our customers are women.
+Mid to high market with a little bit of mass consumer due to the price point starting at PHP 178
+
+What is the outcome that you give your customers?
+
+Cool them down during hot weather and in general satisfy their sugar and creamy craving.
+How is your offering different from your competitors?
+
+
+
+
+3. Market
+Who are your competitors and what do they do?
+Surprisingly we’re not competing only with Halo-Halo concepts but with major players in the refreshment and frozen dessert industry like Ilao Ilao and Coco Milk Tea, we also dominate the Halo-Halo concept in Metro Manila and we want to stay number one. 
+Team + KPIs
+KPIs are not available yet we will update this paragraph soon. 
+
+Bebang Halo-Halo Knowledge Base
+Overview
+Bebang Halo-Halo is a premium Filipino dessert brand known for reimagining traditional halo-halo. Unlike conventional halo-halo, Bebang uses shaved frozen full cream milk, providing a richer and creamier texture that stays consistent as it melts. The brand focuses on quality, innovation, and an engaging customer experience.
+Target Market
+Bebang primarily serves urban Filipino consumers, particularly women aged 23–45, with higher purchasing power. These customers are:
+* Active on social media platforms like TikTok, Instagram, and Facebook.
+
+* Willing to spend more for premium, innovative desserts.
+
+* Residents of major metropolitan areas like Ortigas, BGC, and Makati.
+
+* Interested in modern interpretations of Filipino culinary traditions.
+
+Product Offerings and Pricing (Updated)
+Based on the official Bebang menu (https://store.bebang.ph/product-listing):
+   * Royal Halo-Halo (Limited Edition) – ₱498 (Discontinued)
+
+   * Presidential – ₱188
+
+   * Banana Cinnamon Con Yelo – ₱168
+
+   * Halukay Ube – ₱188
+
+   * Strawberry Pistachio – ₱168
+
+   * Special (most affordable) – ₱158
+
+   * Mango Graham Caramel – ₱188
+
+   * Melon – ₱168
+
+   * Buko Fruit – ₱188
+
+   * Cookie Crumble – ₱168
+
+   * Blueberry Pistachio – ₱168
+
+   * Matcharap – ₱188
+
+   * Buko Pandan – ₱188
+
+   * Choco Banana – ₱148
+
+   * Mango Classic – ₱158
+
+   * SO Corny! – ₱158
+
+Unique Selling Points
+      * Creamy Base: Uses shaved frozen full cream milk instead of traditional ice.
+
+      * Premium Ingredients: Carefully selected, high-quality ingredients.
+
+      * Innovative Presentation: Leche flan placed at the bottom for a sweet finish.
+
+      * Reliable Delivery: Specialized packaging ensures products arrive frozen and fresh.
+
+      * Technology Driven: Advanced automated ordering system through Facebook Messenger.
+
+Core Values
+         * Quality and Excellence: Commitment to premium ingredients and consistency.
+
+         * Innovation: Continuously redefining traditional Filipino desserts.
+
+         * Customer-Centric: Emphasizing customer satisfaction and feedback.
+
+         * Filipino Pride: Celebrating and promoting Filipino culture.
+
+         * Adaptability: Responsive to market changes and customer preferences.
+
+         * Tech Integration: Using technology for efficient service and enhanced customer experience.
+
+Mission
+Bebang Halo-Halo aims to make premium halo-halo accessible nationally and internationally, elevating Filipino desserts through innovation, high-quality ingredients, and exceptional presentation.
+Vision (Long-Term Goal)
+Bebang aspires to become globally synonymous with halo-halo by:
+            * Expanding internationally to introduce their innovative dessert worldwide.
+
+            * Becoming the definitive, go-to halo-halo brand globally.
+
+            * Acting as a cultural ambassador to showcase Filipino cuisine globally.
+
+            * Evolving into a lifestyle brand representing premium Filipino culinary innovation.

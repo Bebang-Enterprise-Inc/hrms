@@ -1,0 +1,193 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-VAR-.YYYY.-.#####",
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "store",
+  "variance_date",
+  "cycle_count",
+  "item_code",
+  "column_break_1",
+  "variance_type",
+  "status",
+  "reported_by",
+  "section_quantities",
+  "system_qty",
+  "actual_qty",
+  "variance_qty",
+  "variance_value",
+  "section_explanation",
+  "explanation",
+  "photo_evidence",
+  "section_resolution",
+  "resolution"
+ ],
+ "fields": [
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "variance_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Variance Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cycle_count",
+   "fieldtype": "Link",
+   "label": "Cycle Count",
+   "options": "BEI Cycle Count"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Code",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "variance_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Variance Type",
+   "options": "Short\nOver\nDamaged\nExpired\nTheft\nOther",
+   "reqd": 1
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Open\nInvestigating\nResolved\nWritten Off"
+  },
+  {
+   "fieldname": "reported_by",
+   "fieldtype": "Link",
+   "label": "Reported By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_quantities",
+   "fieldtype": "Section Break",
+   "label": "Quantities"
+  },
+  {
+   "fieldname": "system_qty",
+   "fieldtype": "Float",
+   "label": "System Qty"
+  },
+  {
+   "fieldname": "actual_qty",
+   "fieldtype": "Float",
+   "label": "Actual Qty"
+  },
+  {
+   "fieldname": "variance_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Variance Qty"
+  },
+  {
+   "fieldname": "variance_value",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Variance Value"
+  },
+  {
+   "fieldname": "section_explanation",
+   "fieldtype": "Section Break",
+   "label": "Explanation"
+  },
+  {
+   "fieldname": "explanation",
+   "fieldtype": "Text",
+   "label": "Explanation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_evidence",
+   "fieldtype": "Attach Image",
+   "label": "Photo Evidence"
+  },
+  {
+   "fieldname": "section_resolution",
+   "fieldtype": "Section Break",
+   "label": "Resolution"
+  },
+  {
+   "fieldname": "resolution",
+   "fieldtype": "Text",
+   "label": "Resolution"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-25 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Inventory Variance",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee Self Service"
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

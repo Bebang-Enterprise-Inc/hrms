@@ -1,0 +1,313 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-CC-.YYYY.-.#####",
+ "creation": "2026-01-25 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "is_submittable": 1,
+ "field_order": [
+  "store",
+  "count_date",
+  "count_type",
+  "counted_by",
+  "column_break_1",
+  "verified_by",
+  "external_auditor",
+  "status",
+  "approved_by",
+  "approved_at",
+  "total_variance_value",
+  "section_export",
+  "photo_evidence",
+  "exported_to_cos_recon",
+  "export_date",
+  "section_rejection",
+  "rejection_reason",
+  "resubmission_count",
+  "original_count",
+  "section_items",
+  "items",
+  "section_notes",
+  "notes",
+  "section_reconciliation",
+  "stock_reconciliation",
+  "reconciliation_notes",
+  "reconciled_by",
+  "reconciled_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "store",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Store",
+   "options": "Warehouse",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "count_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Count Date",
+   "reqd": 1
+  },
+  {
+   "default": "Store Monthly",
+   "fieldname": "count_type",
+   "fieldtype": "Select",
+   "label": "Count Type",
+   "options": "Store Monthly\nWarehouse Monthly\nSpot Check\nExternal Audit",
+   "reqd": 1
+  },
+  {
+   "fieldname": "counted_by",
+   "fieldtype": "Link",
+   "label": "Counted By",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "verified_by",
+   "fieldtype": "Link",
+   "label": "Verified By",
+   "options": "User"
+  },
+  {
+   "fieldname": "external_auditor",
+   "fieldtype": "Link",
+   "label": "External Auditor",
+   "options": "User"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nSubmitted\nApproved\nRejected\nResubmitted\nVerified\nReconciled"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "approved_at",
+   "fieldtype": "Datetime",
+   "label": "Approved At",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_variance_value",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Variance Value",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_export",
+   "fieldtype": "Section Break",
+   "label": "COS RECON Export"
+  },
+  {
+   "fieldname": "photo_evidence",
+   "fieldtype": "Attach Image",
+   "label": "Photo Evidence"
+  },
+  {
+   "default": "0",
+   "fieldname": "exported_to_cos_recon",
+   "fieldtype": "Check",
+   "label": "Exported to COS RECON"
+  },
+  {
+   "fieldname": "export_date",
+   "fieldtype": "Date",
+   "label": "Export Date",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:!doc.rejection_reason",
+   "depends_on": "eval:doc.status=='Rejected' || doc.status=='Resubmitted' || doc.rejection_reason",
+   "fieldname": "section_rejection",
+   "fieldtype": "Section Break",
+   "label": "Rejection / Resubmission"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.rejection_reason",
+   "fieldname": "rejection_reason",
+   "fieldtype": "Text",
+   "label": "Rejection Reason",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "description": "Number of times this count has been resubmitted",
+   "fieldname": "resubmission_count",
+   "fieldtype": "Int",
+   "label": "Resubmission Count",
+   "read_only": 1
+  },
+  {
+   "description": "Link to original cycle count if this is a resubmission",
+   "fieldname": "original_count",
+   "fieldtype": "Link",
+   "label": "Original Count",
+   "options": "BEI Cycle Count",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_items",
+   "fieldtype": "Section Break",
+   "label": "Count Items"
+  },
+  {
+   "fieldname": "items",
+   "fieldtype": "Table",
+   "label": "Items",
+   "options": "BEI Cycle Count Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_notes",
+   "fieldtype": "Section Break",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Text",
+   "label": "Notes"
+  },
+  {
+   "collapsible": 1,
+   "collapsible_depends_on": "eval:doc.status=='Reconciled'",
+   "depends_on": "eval:doc.status=='Reconciled' || doc.stock_reconciliation",
+   "fieldname": "section_reconciliation",
+   "fieldtype": "Section Break",
+   "label": "Reconciliation"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "stock_reconciliation",
+   "fieldtype": "Link",
+   "label": "Stock Reconciliation",
+   "options": "Stock Reconciliation",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reconciliation_notes",
+   "fieldtype": "Text",
+   "label": "Reconciliation Notes",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reconciled_by",
+   "fieldtype": "Link",
+   "label": "Reconciled By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "reconciled_at",
+   "fieldtype": "Datetime",
+   "label": "Reconciled At",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-01-25 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Cycle Count",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Stock User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee Self Service"
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "write": 1,
+   "role": "Employee"
+  },
+  {
+   "create": 1,
+   "if_owner": 1,
+   "read": 1,
+   "role": "External Auditor",
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "role": "Store Supervisor",
+   "read": 1,
+   "write": 1,
+   "submit": 1,
+   "amend": 0
+  },
+  {
+   "role": "Area Supervisor",
+   "read": 1,
+   "write": 1,
+   "submit": 1,
+   "amend": 0
+  },
+  {
+   "role": "HQ User",
+   "read": 1,
+   "export": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

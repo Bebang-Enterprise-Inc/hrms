@@ -1,0 +1,311 @@
+{
+	"actions": [],
+	"autoname": "OT-{employee}-{attendance_date}",
+	"creation": "2026-02-17 10:00:00.000000",
+	"doctype": "DocType",
+	"engine": "InnoDB",
+	"field_order": [
+		"employee",
+		"attendance",
+		"attendance_date",
+		"shift",
+		"column_break_1",
+		"overtime_status",
+		"supervisor",
+		"section_hours",
+		"regular_hours",
+		"overtime_hours",
+		"column_break_hours",
+		"total_hours",
+		"section_review",
+		"reviewed_by",
+		"reviewed_at",
+		"column_break_review",
+		"review_note",
+		"approval_notes",
+		"rejection_reason",
+		"employee_explanation",
+		"clarification_question",
+		"clarification_response",
+		"override_note",
+		"shift_record",
+		"request_source",
+		"source_trigger",
+		"source_event_key",
+		"reason_category",
+		"assigned_approver",
+		"fallback_approver",
+		"escalation_approver",
+		"candidate_overtime_type",
+		"approved_payable_duration",
+		"approved_overtime_type",
+		"payroll_bridge_status",
+		"payroll_bridge_reference"
+	],
+	"fields": [
+		{
+			"fieldname": "employee",
+			"fieldtype": "Link",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Employee",
+			"options": "Employee",
+			"reqd": 1
+		},
+		{
+			"fieldname": "attendance",
+			"fieldtype": "Link",
+			"label": "Attendance Record",
+			"options": "Attendance",
+			"reqd": 1
+		},
+		{
+			"fieldname": "attendance_date",
+			"fieldtype": "Date",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Date",
+			"reqd": 1
+		},
+		{
+			"fieldname": "shift",
+			"fieldtype": "Link",
+			"label": "Shift",
+			"options": "Shift Type"
+		},
+		{
+			"fieldname": "column_break_1",
+			"fieldtype": "Column Break"
+		},
+		{
+			"default": "Pending Review",
+			"fieldname": "overtime_status",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"in_standard_filter": 1,
+			"label": "Status",
+			"options": "Pending Review\nNeeds Clarification\nClarification Submitted\nApproved\nRejected\nEscalated\nPayroll Locked\nPending Approval"
+		},
+		{
+			"fieldname": "supervisor",
+			"fieldtype": "Link",
+			"label": "Supervisor",
+			"options": "Employee"
+		},
+		{
+			"fieldname": "section_hours",
+			"fieldtype": "Section Break",
+			"label": "Hours"
+		},
+		{
+			"default": "8",
+			"fieldname": "regular_hours",
+			"fieldtype": "Float",
+			"label": "Regular Hours",
+			"precision": "2",
+			"read_only": 1
+		},
+		{
+			"fieldname": "overtime_hours",
+			"fieldtype": "Float",
+			"in_list_view": 1,
+			"label": "Overtime Hours",
+			"precision": "2",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_hours",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "total_hours",
+			"fieldtype": "Float",
+			"label": "Total Hours Worked",
+			"precision": "2",
+			"read_only": 1
+		},
+		{
+			"fieldname": "section_review",
+			"fieldtype": "Section Break",
+			"label": "Review"
+		},
+		{
+			"fieldname": "reviewed_by",
+			"fieldtype": "Link",
+			"label": "Reviewed By",
+			"options": "User",
+			"read_only": 1
+		},
+		{
+			"fieldname": "reviewed_at",
+			"fieldtype": "Datetime",
+			"label": "Reviewed At",
+			"read_only": 1
+		},
+		{
+			"fieldname": "column_break_review",
+			"fieldtype": "Column Break"
+		},
+		{
+			"fieldname": "review_note",
+			"fieldtype": "Small Text",
+			"label": "Review Note"
+		},
+		{
+			"fieldname": "approval_notes",
+			"fieldtype": "Small Text",
+			"label": "Approval Notes"
+		},
+		{
+			"depends_on": "eval:doc.overtime_status == 'Rejected'",
+			"fieldname": "rejection_reason",
+			"fieldtype": "Small Text",
+			"label": "Rejection Reason"
+		},
+		{
+			"fieldname": "employee_explanation",
+			"fieldtype": "Small Text",
+			"label": "Employee Explanation"
+		},
+		{
+			"fieldname": "clarification_question",
+			"fieldtype": "Small Text",
+			"label": "Clarification Question"
+		},
+		{
+			"fieldname": "clarification_response",
+			"fieldtype": "Small Text",
+			"label": "Clarification Response"
+		},
+		{
+			"fieldname": "override_note",
+			"fieldtype": "Small Text",
+			"label": "Override Note"
+		},
+		{
+			"fieldname": "shift_record",
+			"fieldtype": "Link",
+			"label": "Shift Record",
+			"options": "BEI Shift Record"
+		},
+		{
+			"fieldname": "request_source",
+			"fieldtype": "Select",
+			"label": "Request Source",
+			"options": "system_detected\nemployee_submitted\nmanager_validated"
+		},
+		{
+			"fieldname": "source_trigger",
+			"fieldtype": "Select",
+			"label": "Source Trigger",
+			"options": "attendance_close\nshift_record_close\nnightly_backfill"
+		},
+		{
+			"fieldname": "source_event_key",
+			"fieldtype": "Data",
+			"label": "Source Event Key"
+		},
+		{
+			"fieldname": "reason_category",
+			"fieldtype": "Select",
+			"label": "Reason Category",
+			"options": "Post Shift OT\nLate Flex Exception\nEarly Start Validation\nManual Review"
+		},
+		{
+			"fieldname": "assigned_approver",
+			"fieldtype": "Link",
+			"label": "Assigned Approver",
+			"options": "User"
+		},
+		{
+			"fieldname": "fallback_approver",
+			"fieldtype": "Link",
+			"label": "Fallback Approver",
+			"options": "User"
+		},
+		{
+			"fieldname": "escalation_approver",
+			"fieldtype": "Link",
+			"label": "Escalation Approver",
+			"options": "User"
+		},
+		{
+			"fieldname": "candidate_overtime_type",
+			"fieldtype": "Link",
+			"label": "Candidate Overtime Type",
+			"options": "Overtime Type"
+		},
+		{
+			"fieldname": "approved_payable_duration",
+			"fieldtype": "Float",
+			"label": "Approved Payable Duration",
+			"precision": "2"
+		},
+		{
+			"fieldname": "approved_overtime_type",
+			"fieldtype": "Link",
+			"label": "Approved Overtime Type",
+			"options": "Overtime Type"
+		},
+		{
+			"fieldname": "payroll_bridge_status",
+			"fieldtype": "Select",
+			"label": "Payroll Bridge Status",
+			"options": "Not Ready\nPending Bridge\nBridged\nPayroll Locked"
+		},
+		{
+			"fieldname": "payroll_bridge_reference",
+			"fieldtype": "Link",
+			"label": "Payroll Bridge Reference",
+			"options": "Overtime Slip"
+		}
+	],
+	"index_web_pages_for_search": 0,
+	"links": [],
+	"modified": "2026-02-17 10:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "HR",
+	"name": "BEI Overtime Request",
+	"naming_rule": "Expression",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 0,
+			"delete": 0,
+			"read": 1,
+			"write": 1,
+			"role": "Store Supervisor"
+		},
+		{
+			"create": 0,
+			"delete": 0,
+			"read": 1,
+			"write": 1,
+			"role": "Area Supervisor"
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "HR Manager",
+			"share": 1,
+			"write": 1
+		},
+		{
+			"create": 1,
+			"delete": 1,
+			"read": 1,
+			"write": 1,
+			"role": "System Manager"
+		}
+	],
+	"sort_field": "attendance_date",
+	"sort_order": "DESC",
+	"states": [],
+	"title_field": "employee",
+	"track_changes": 1
+}

@@ -1,0 +1,338 @@
+{
+ "actions": [],
+ "autoname": "format:OB-{YYYY}-{#####}",
+ "creation": "2026-02-05 12:00:00.000000",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "department",
+  "designation",
+  "supervisor",
+  "section_break_checkout",
+  "checkout_datetime",
+  "checkout_latitude",
+  "checkout_longitude",
+  "checkout_accuracy",
+  "checkout_gps_latitude",
+  "checkout_gps_longitude",
+  "checkout_adjustment_distance",
+  "checkout_address",
+  "checkout_selfie",
+  "column_break_checkout",
+  "destination",
+  "purpose",
+  "expected_return",
+  "section_break_checkin",
+  "checkin_datetime",
+  "checkin_latitude",
+  "checkin_longitude",
+  "checkin_accuracy",
+  "checkin_address",
+  "checkin_selfie",
+  "section_break_validation",
+  "matched_ob_location",
+  "distance_from_matched",
+  "checkout_within_geofence",
+  "velocity_flag",
+  "column_break_validation",
+  "status",
+  "flag_reason",
+  "supervisor_action",
+  "supervisor_notes",
+  "reviewed_datetime",
+  "section_break_calc",
+  "total_hours_out",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.department",
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.designation",
+   "fieldname": "designation",
+   "fieldtype": "Data",
+   "label": "Designation",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.reports_to",
+   "fieldname": "supervisor",
+   "fieldtype": "Link",
+   "label": "Supervisor",
+   "options": "Employee",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_checkout",
+   "fieldtype": "Section Break",
+   "label": "Check-Out Details"
+  },
+  {
+   "fieldname": "checkout_datetime",
+   "fieldtype": "Datetime",
+   "label": "Check-Out Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_latitude",
+   "fieldtype": "Float",
+   "label": "Check-Out Latitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_longitude",
+   "fieldtype": "Float",
+   "label": "Check-Out Longitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_accuracy",
+   "fieldtype": "Float",
+   "label": "GPS Accuracy (meters)",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_gps_latitude",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "GPS Raw Latitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_gps_longitude",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "GPS Raw Longitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_adjustment_distance",
+   "fieldtype": "Float",
+   "label": "Pin Adjustment (meters)",
+   "precision": "1",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_address",
+   "fieldtype": "Data",
+   "label": "Check-Out Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_selfie",
+   "fieldtype": "Attach Image",
+   "label": "Check-Out Selfie"
+  },
+  {
+   "fieldname": "column_break_checkout",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "destination",
+   "fieldtype": "Data",
+   "label": "Destination",
+   "reqd": 1
+  },
+  {
+   "fieldname": "purpose",
+   "fieldtype": "Small Text",
+   "label": "Purpose",
+   "reqd": 1
+  },
+  {
+   "fieldname": "expected_return",
+   "fieldtype": "Datetime",
+   "label": "Expected Return"
+  },
+  {
+   "fieldname": "section_break_checkin",
+   "fieldtype": "Section Break",
+   "label": "Check-In Details"
+  },
+  {
+   "fieldname": "checkin_datetime",
+   "fieldtype": "Datetime",
+   "label": "Check-In Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkin_latitude",
+   "fieldtype": "Float",
+   "label": "Check-In Latitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkin_longitude",
+   "fieldtype": "Float",
+   "label": "Check-In Longitude",
+   "precision": "8",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkin_accuracy",
+   "fieldtype": "Float",
+   "label": "GPS Accuracy (meters)",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkin_address",
+   "fieldtype": "Data",
+   "label": "Check-In Address",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkin_selfie",
+   "fieldtype": "Attach Image",
+   "label": "Check-In Selfie"
+  },
+  {
+   "fieldname": "section_break_validation",
+   "fieldtype": "Section Break",
+   "label": "Validation"
+  },
+  {
+   "fieldname": "matched_ob_location",
+   "fieldtype": "Link",
+   "label": "Matched Location",
+   "options": "BEI OB Location",
+   "read_only": 1
+  },
+  {
+   "fieldname": "distance_from_matched",
+   "fieldtype": "Float",
+   "label": "Distance from Matched (meters)",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "checkout_within_geofence",
+   "fieldtype": "Check",
+   "label": "Within Geofence",
+   "read_only": 1
+  },
+  {
+   "fieldname": "velocity_flag",
+   "fieldtype": "Check",
+   "label": "Velocity Flag",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_validation",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nOut\nReturned\nVerified\nFlagged\nCancelled",
+   "default": "Draft",
+   "read_only": 1
+  },
+  {
+   "fieldname": "flag_reason",
+   "fieldtype": "Data",
+   "label": "Flag Reason"
+  },
+  {
+   "fieldname": "supervisor_action",
+   "fieldtype": "Select",
+   "label": "Supervisor Action",
+   "options": "Pending\nApproved\nRejected",
+   "default": "Pending"
+  },
+  {
+   "fieldname": "supervisor_notes",
+   "fieldtype": "Small Text",
+   "label": "Supervisor Notes"
+  },
+  {
+   "fieldname": "reviewed_datetime",
+   "fieldtype": "Datetime",
+   "label": "Reviewed On"
+  },
+  {
+   "fieldname": "section_break_calc",
+   "fieldtype": "Section Break",
+   "label": "Calculated Fields"
+  },
+  {
+   "fieldname": "total_hours_out",
+   "fieldtype": "Float",
+   "label": "Total Hours Out",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "BEI Official Business",
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 0,
+ "modified": "2026-02-10 18:00:00.000000",
+ "module": "HR",
+ "name": "BEI Official Business",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "write": 1,
+   "if_owner": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "title_field": "employee_name",
+ "track_changes": 1
+}

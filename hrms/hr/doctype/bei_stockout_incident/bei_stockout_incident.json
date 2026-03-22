@@ -1,0 +1,51 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "BEI-STOCKOUT-.YYYY.-.#####",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "incident_title",
+  "item_code",
+  "warehouse",
+  "risk_snapshot",
+  "status",
+  "owner_user",
+  "detected_on",
+  "target_resolution_at",
+  "root_cause",
+  "escalation_level",
+  "last_escalated_at",
+  "mitigation_plan",
+  "resolution_notes"
+ ],
+ "fields": [
+  {"fieldname": "incident_title", "fieldtype": "Data", "label": "Incident Title", "reqd": 1},
+  {"fieldname": "item_code", "fieldtype": "Link", "label": "Item Code", "options": "Item", "reqd": 1},
+  {"fieldname": "warehouse", "fieldtype": "Link", "label": "Warehouse", "options": "Warehouse", "reqd": 1},
+  {"fieldname": "risk_snapshot", "fieldtype": "Link", "label": "Risk Snapshot", "options": "BEI Inventory Risk Snapshot"},
+  {"default": "Open", "fieldname": "status", "fieldtype": "Select", "label": "Status", "options": "Open\nMitigating\nBlocked\nResolved", "in_list_view": 1, "reqd": 1},
+  {"fieldname": "owner_user", "fieldtype": "Link", "label": "Owner User", "options": "User"},
+  {"fieldname": "detected_on", "fieldtype": "Datetime", "label": "Detected On"},
+  {"fieldname": "target_resolution_at", "fieldtype": "Datetime", "label": "Target Resolution At"},
+  {"fieldname": "root_cause", "fieldtype": "Select", "label": "Root Cause", "options": "Supplier Delay\nDemand Spike\nWarehouse Variance\nQuality Hold\nPayment Hold"},
+  {"default": "Level 1", "fieldname": "escalation_level", "fieldtype": "Select", "label": "Escalation Level", "options": "Level 1\nLevel 2\nLevel 3\nExecutive"},
+  {"fieldname": "last_escalated_at", "fieldtype": "Datetime", "label": "Last Escalated At"},
+  {"fieldname": "mitigation_plan", "fieldtype": "Text", "label": "Mitigation Plan"},
+  {"fieldname": "resolution_notes", "fieldtype": "Text", "label": "Resolution Notes"}
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "module": "HR",
+ "name": "BEI Stockout Incident",
+ "naming_rule": "Expression",
+ "permissions": [
+  {"create": 1, "read": 1, "write": 1, "delete": 1, "role": "System Manager"},
+  {"create": 1, "read": 1, "write": 1, "role": "Warehouse User"},
+  {"read": 1, "role": "HQ User"}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
