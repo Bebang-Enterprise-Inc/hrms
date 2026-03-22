@@ -58,7 +58,9 @@ def _ensure_warehouse_receiving_doctype():
 		frappe.throw(_("BEI Warehouse Receiving DocType is not installed"))
 
 
-def _notify_warehouse_handoff(receiving_name: str, source_warehouse: str | None = None, target_warehouse: str | None = None) -> None:
+def _notify_warehouse_handoff(
+	receiving_name: str, source_warehouse: str | None = None, target_warehouse: str | None = None
+) -> None:
 	"""S093 (UX-011): Notify warehouse team of incoming commissary handoff via GChat + in-app."""
 	try:
 		from hrms.api.google_chat import send_bot_message
