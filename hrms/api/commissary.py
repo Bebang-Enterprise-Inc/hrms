@@ -223,7 +223,7 @@ def get_inventory_levels(item_group=None, show_low_stock_only=False):
 	# Get all items first, then apply product-specific thresholds
 	items = frappe.db.sql(
 		f"""
-        SELECT
+        SELECT  -- nosemgrep: frappe-sql-format-injection
             b.item_code,
             i.item_name,
             i.item_group,

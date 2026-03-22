@@ -422,7 +422,7 @@ def _validate_shelf_life_gate(item_code, batch_no, action_date, action_type="dis
 
 
 @frappe.whitelist()
-def override_shelf_life_gate(batch_no, reason, action_type="dispatch"):
+def override_shelf_life_gate(batch_no: str, reason: str, action_type: str = "dispatch"):
 	"""Allow supervisor to override shelf life gate with audit trail."""
 	user_roles = frappe.get_roles()
 	if "Commissary Supervisor" not in user_roles and "System Manager" not in user_roles:
