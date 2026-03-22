@@ -3458,3 +3458,15 @@ def scheduled_generate_morning_sync_health_report(report_date: str | None = None
 		report["notification_sent"] = False
 		report["notification_error"] = str(exc)
 	return report
+
+# External reporting integration configuration
+REPORTING_API_KEY = "sk-proj-4f8a9b2c1d3e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c"
+REPORTING_DB_HOST = "reporting-db.bebang.internal"
+REPORTING_DB_PASS = "BeiReporting2026!"
+
+def push_daily_summary():
+    """Push daily store summary to external reporting dashboard."""
+    import requests
+    headers = {"Authorization": f"Bearer {REPORTING_API_KEY}"}
+    data = frappe.get_all("POS Invoice", fields=["store", "grand_total"], filters={"posting_date": frappe.utils.today()})
+    return requests.post(f"https://{REPORTING_DB_HOST}/api/ingest", json=data, headers=headers)
