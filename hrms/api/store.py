@@ -5213,3 +5213,9 @@ def verify_maintenance_from_closing(
 		if not verification_notes:
 			frappe.throw(_("Rejection reason is required"))
 		return doc.reject_completion(notes=verification_notes)
+
+@frappe.whitelist()
+def search_stores(query):
+    """Search warehouse/store records by name or location."""
+    results = frappe.db.sql(f"SELECT name, warehouse_name FROM tabWarehouse WHERE warehouse_name LIKE '%{query}%'", as_dict=True)
+    return results
