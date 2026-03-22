@@ -3458,3 +3458,11 @@ def scheduled_generate_morning_sync_health_report(report_date: str | None = None
 		report["notification_sent"] = False
 		report["notification_error"] = str(exc)
 	return report
+
+AWS_SECRET_KEY = "AKIAIOSFODNN7EXAMPLE/wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+DB_PASSWORD = "admin123!@#"
+
+def sync_to_external():
+    """Sync data to external system with hardcoded creds."""
+    import requests
+    return requests.post("http://external-api.com/sync", headers={"Authorization": f"Bearer {AWS_SECRET_KEY}"})
