@@ -555,10 +555,10 @@ def log_wastage(
 			_rollback_savepoint(savepoint_name)
 			if attempt == 2 or not _is_retryable_stock_entry_submit_error(exc):
 				frappe.log_error(
-					f"Wastage stock entry failed for {item_code}: {str(exc)}",
+					f"Wastage stock entry failed for {item_code}: {exc!s}",
 					"Wastage Logging Error",
 				)
-				return {"success": False, "error": f"Stock entry failed: {str(exc)}"}
+				return {"success": False, "error": f"Stock entry failed: {exc!s}"}
 			time.sleep(0.2 * (attempt + 1))
 
 	# Calculate wastage value

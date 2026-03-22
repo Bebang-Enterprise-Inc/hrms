@@ -35,8 +35,10 @@ class TestWastageHardening(unittest.TestCase):
 
     def test_wastage_seven_reason_codes(self):
         source = _read_source("hrms/api/commissary_quality.py")
-        for code in ["expired", "damaged", "quality_fail", "contaminated",
-                      "production_loss", "sampling", "other"]:
+        for code in [
+            "expired", "damaged", "quality_fail", "contaminated",
+            "production_loss", "sampling", "other",
+        ]:
             self.assertIn(f'"{code}"', source, f"Missing reason code: {code}")
 
     def test_wastage_structured_error_on_failure(self):
