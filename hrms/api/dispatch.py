@@ -696,7 +696,7 @@ def _build_trip_doc(trip_date: str | None, route_name: str, stops: list[dict[str
 @frappe.whitelist()
 def create_trip(trip_date: str | None, route_name: str, stops: list[dict[str, Any]] | str):
 	"""Create a new distribution trip. stops: list of {store, items_count}."""
-	_check_scm_permission(SCM_ADMIN_ROLES, "create trips")
+	_check_scm_permission(SCM_DISPATCH_ROLES, "create trips")
 
 	if isinstance(stops, str):
 		stops = frappe.parse_json(stops)

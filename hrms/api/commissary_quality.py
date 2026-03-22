@@ -457,6 +457,7 @@ def log_wastage(
 		extras={"item_code": item_code, "qty": qty, "reason_code": reason_code, "batch_no": batch_no},
 	)
 	commissary_warehouse = get_commissary_warehouse()
+	frappe.logger().info(f"Wastage warehouse resolved to: {commissary_warehouse}")
 	normalized_batch_no = (batch_no or "").strip()
 	available_batches = _get_available_batch_rows(item_code, commissary_warehouse)
 	available_batch_numbers = {str(row.get("batch_no")).strip() for row in available_batches if row.get("batch_no")}
@@ -543,18 +544,21 @@ def log_wastage(
 			se.append("items", row)
 
 			_enable_role_gated_write(se)
-			with _run_as_system_user():
-				se.insert(ignore_permissions=True)
-				se = frappe.get_doc("Stock Entry", se.name)
-				_enable_role_gated_write(se)
-				se.submit()
+			se.insert(ignore_permissions=True)
+			se = frappe.get_doc("Stock Entry", se.name)
+			_enable_role_gated_write(se)
+			se.submit()
 
 			_release_savepoint(savepoint_name)
 			break
 		except Exception as exc:
 			_rollback_savepoint(savepoint_name)
 			if attempt == 2 or not _is_retryable_stock_entry_submit_error(exc):
-				raise
+				frappe.log_error(
+					f"Wastage stock entry failed for {item_code}: {str(exc)}",
+					"Wastage Logging Error",
+				)
+				return {"success": False, "error": f"Stock entry failed: {str(exc)}"}
 			time.sleep(0.2 * (attempt + 1))
 
 	# Calculate wastage value

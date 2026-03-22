@@ -633,6 +633,19 @@ def complete_warehouse_receiving(
 			)
 
 	if not accepted_items:
+		if any(flt(item_data.get("rejected_qty", 0)) > 0 for item_data in items):
+			# Full rejection — no stock entry needed, just update status
+			receiving.receiving_date = now_datetime()
+			receiving.received_by_user = frappe.session.user
+			receiving.remarks = remarks or receiving.remarks
+			receiving.status = "With Issues"
+			receiving.save(ignore_permissions=True)
+			frappe.db.commit()
+			return {
+				"success": True,
+				"data": {"receiving_name": receiving.name, "status": "fully_rejected"},
+				"message": f"All items rejected for {receiving.name}",
+			}
 		frappe.throw(_("No accepted quantity to receive into warehouse"))
 
 	stock_entry = frappe.new_doc("Stock Entry")
@@ -672,9 +685,8 @@ def complete_warehouse_receiving(
 		)
 
 	_enable_role_gated_write(stock_entry)
-	with _run_as_system_user():
-		stock_entry.insert(ignore_permissions=True)
-		stock_entry.submit()
+	stock_entry.insert(ignore_permissions=True)
+	stock_entry.submit()
 
 	receiving.stock_entry = stock_entry.name
 	receiving.receiving_date = now_datetime()
@@ -781,6 +793,9 @@ def get_material_request_items(mr_name):
 			frappe.db.get_value("Material Request Item", item["name"], "from_warehouse")
 			or contract["source_warehouse"]
 		)
+		# FIX-5 (S092): Resolve blank from_warehouse via commissary warehouse fallback
+		if not from_warehouse:
+			from_warehouse = commissary_warehouse
 		item["from_warehouse"] = from_warehouse
 		bin_qty = 0
 		if from_warehouse:
@@ -790,6 +805,13 @@ def get_material_request_items(mr_name):
 				)
 				or 0
 			)
+		else:
+			# No warehouse resolved — sum across all warehouses as last resort
+			result = frappe.db.sql(
+				"SELECT SUM(actual_qty) FROM `tabBin` WHERE item_code = %s",
+				item["item_code"],
+			)
+			bin_qty = flt(result[0][0]) if result and result[0][0] else 0
 		item["available_qty"] = bin_qty
 		item["source_warehouse_missing"] = not bool(from_warehouse)
 
@@ -997,6 +1019,13 @@ def create_stock_transfer(
 	)
 	check_scm_permission(SCM_DISPATCH_ROLES, "dispatch warehouse stock transfers")
 
+	if not source_warehouse:
+		frappe.throw(
+			_("Cannot create stock transfer: source warehouse is not set. "
+			  "Please specify a source warehouse or ensure the Material Request has one assigned."),
+			title=_("Source Warehouse Required"),
+		)
+
 	default_source_company = resolve_warehouse_company(source_warehouse) or get_company()
 	default_target_company = resolve_warehouse_company(target_warehouse) or default_source_company
 
@@ -1132,12 +1161,11 @@ def create_stock_transfer(
 		frappe.throw(_("No items to transfer"))
 
 	_enable_role_gated_write(se)
-	with _run_as_system_user():
-		se.insert(ignore_permissions=True)
-		se = frappe.get_doc("Stock Entry", se.name)
-		_enable_role_gated_write(se)
-		_clear_legacy_serial_batch_fields_after_auto_bundle(se)
-		se.submit()
+	se.insert(ignore_permissions=True)
+	se = frappe.get_doc("Stock Entry", se.name)
+	_enable_role_gated_write(se)
+	_clear_legacy_serial_batch_fields_after_auto_bundle(se)
+	se.submit()
 
 	return {
 		"success": True,
