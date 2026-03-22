@@ -13,7 +13,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 
 
 def _read_source(rel_path):
-	with open(os.path.join(REPO_ROOT, rel_path), "r", encoding="utf-8") as f:
+	with open(os.path.join(REPO_ROOT, rel_path), encoding="utf-8") as f:
 		return f.read()
 
 

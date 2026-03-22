@@ -11,7 +11,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__fi
 
 
 def _read_source(rel_path):
-	with open(os.path.join(REPO_ROOT, rel_path), "r", encoding="utf-8") as f:
+	with open(os.path.join(REPO_ROOT, rel_path), encoding="utf-8") as f:
 		return f.read()
 
 
@@ -36,8 +36,13 @@ class TestWastageHardening(unittest.TestCase):
 	def test_wastage_seven_reason_codes(self):
 		source = _read_source("hrms/api/commissary_quality.py")
 		for code in [
-			"expired", "damaged", "quality_fail", "contaminated",
-			"production_loss", "sampling", "other",
+			"expired",
+			"damaged",
+			"quality_fail",
+			"contaminated",
+			"production_loss",
+			"sampling",
+			"other",
 		]:
 			self.assertIn(f'"{code}"', source, f"Missing reason code: {code}")
 

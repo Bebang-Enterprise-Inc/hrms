@@ -460,7 +460,9 @@ def log_wastage(
 	frappe.logger().info(f"Wastage warehouse resolved to: {commissary_warehouse}")
 	normalized_batch_no = (batch_no or "").strip()
 	available_batches = _get_available_batch_rows(item_code, commissary_warehouse)
-	available_batch_numbers = {str(row.get("batch_no")).strip() for row in available_batches if row.get("batch_no")}
+	available_batch_numbers = {
+		str(row.get("batch_no")).strip() for row in available_batches if row.get("batch_no")
+	}
 
 	if normalized_batch_no:
 		if normalized_batch_no not in available_batch_numbers:

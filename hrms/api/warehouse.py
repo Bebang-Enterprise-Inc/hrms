@@ -1021,8 +1021,10 @@ def create_stock_transfer(
 
 	if not source_warehouse:
 		frappe.throw(
-			_("Cannot create stock transfer: source warehouse is not set. "
-			  "Please specify a source warehouse or ensure the Material Request has one assigned."),
+			_(
+				"Cannot create stock transfer: source warehouse is not set. "
+				"Please specify a source warehouse or ensure the Material Request has one assigned."
+			),
 			title=_("Source Warehouse Required"),
 		)
 
