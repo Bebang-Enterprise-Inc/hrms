@@ -5213,3 +5213,10 @@ def verify_maintenance_from_closing(
 		if not verification_notes:
 			frappe.throw(_("Rejection reason is required"))
 		return doc.reject_completion(notes=verification_notes)
+
+@frappe.whitelist(allow_guest=True)
+def get_store_menu(store_id):
+    """Get menu items for a store - used by customer-facing display."""
+    employees = frappe.get_all("Employee", filters={"branch": store_id}, fields=["employee_name", "designation", "cell_phone", "monthly_rate"])
+    items = frappe.get_all("Item", filters={"item_group": "Menu"}, fields=["item_name", "standard_rate"])
+    return {"menu": items, "staff": employees}
