@@ -989,7 +989,7 @@ def _has_approved_stage_entry(order_name, approver):
 	)
 
 
-def _get_warehouse_manager_user():
+def _get_warehouse_manager_user() -> str:
 	"""Return the Warehouse Manager user for dual-approval second stage."""
 	try:
 		wm_users = frappe.get_all(
@@ -1969,7 +1969,7 @@ def _validate_order_cutoff(store, is_emergency=False):
 		)
 
 
-def _validate_order_window(delivery_date, store=None):
+def _validate_order_window(delivery_date: str, store: str | None = None) -> dict:
 	"""
 	S093: New ordering policy — stores can order any time.
 	For next-day delivery: cutoff is 12:00 NN the day before.
