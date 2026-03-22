@@ -354,7 +354,9 @@ def _get_current_employee():
 
 def _user_can_manage_store_schedule(store: str):
 	user_roles = set(frappe.get_roles(frappe.session.user))
-	if user_roles.intersection({"System Manager", "Administrator", "HR User", "HR Manager"}):
+	if user_roles.intersection(
+		{"System Manager", "Administrator", "HR User", "HR Manager", "Commissary Supervisor"}
+	):
 		return True
 
 	store_context = _resolve_labor_plan_store(store)
