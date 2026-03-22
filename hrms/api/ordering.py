@@ -157,10 +157,14 @@ def _generate_dr_internal(order_name: str, order: Any = None) -> dict[str, Any]:
 
 	# S093: Store DR linkage on the order itself
 	trip_stop_name = getattr(order, "trip_stop", None) or ""
-	frappe.db.set_value("BEI Store Order", order_name, {
-		"dr_number": dr_number,
-		"trip_stop": trip_stop_name,
-	})
+	frappe.db.set_value(
+		"BEI Store Order",
+		order_name,
+		{
+			"dr_number": dr_number,
+			"trip_stop": trip_stop_name,
+		},
+	)
 
 	# Log the DR generation as a comment on the order
 	frappe.get_doc(

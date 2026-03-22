@@ -1,4 +1,5 @@
 """S093 — DR Visibility + Warehouse Workflow Tests"""
+
 import unittest
 
 
@@ -15,7 +16,14 @@ class TestDRStructuredLinkage(unittest.TestCase):
 
 class TestManifestEndpoint(unittest.TestCase):
 	def test_manifest_structure(self):
-		response = {"deliveries": [{"name": "TRIP-001", "orders": [{"dr_number": "DR0000001", "items": [{"item_code": "FG-001"}]}]}]}
+		response = {
+			"deliveries": [
+				{
+					"name": "TRIP-001",
+					"orders": [{"dr_number": "DR0000001", "items": [{"item_code": "FG-001"}]}],
+				}
+			]
+		}
 		self.assertEqual(response["deliveries"][0]["orders"][0]["dr_number"], "DR0000001")
 
 	def test_empty_manifest(self):

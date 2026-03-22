@@ -62,7 +62,7 @@ def _notify_warehouse_handoff(receiving_name, source_warehouse=None, target_ware
 	"""S093 (UX-011): Notify warehouse team of incoming commissary handoff via GChat + in-app."""
 	try:
 		from hrms.api.google_chat import send_bot_message
-		from hrms.utils.bei_config import get_chat_space, SPACE_OPS
+		from hrms.utils.bei_config import SPACE_OPS, get_chat_space
 
 		space_id = get_chat_space(SPACE_OPS)
 		if space_id:

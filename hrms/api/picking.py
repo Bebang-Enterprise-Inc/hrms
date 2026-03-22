@@ -361,16 +361,20 @@ def get_open_orders_for_picking(warehouse: str | None = None) -> dict:
 		"BEI Store Order",
 		filters=filters,
 		fields=[
-			"name", "store", "order_date", "delivery_date",
-			"status", "cargo_category", "approved_by", "approved_at",
+			"name",
+			"store",
+			"order_date",
+			"delivery_date",
+			"status",
+			"cargo_category",
+			"approved_by",
+			"approved_at",
 		],
 		order_by="delivery_date asc, order_date asc",
 	)
 
 	for order in orders:
-		order["items_count"] = frappe.db.count(
-			"BEI Store Order Item", {"parent": order["name"]}
-		)
+		order["items_count"] = frappe.db.count("BEI Store Order Item", {"parent": order["name"]})
 		order["total_qty"] = (
 			frappe.db.sql(
 				"SELECT SUM(COALESCE(qty_approved, qty_requested)) FROM `tabBEI Store Order Item` WHERE parent = %s",

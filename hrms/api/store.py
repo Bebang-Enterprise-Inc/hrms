@@ -1001,8 +1001,7 @@ def _get_warehouse_manager_user():
 		active_wm = [
 			r["parent"]
 			for r in wm_users
-			if r["parent"]
-			and frappe.db.get_value("User", r["parent"], "enabled")
+			if r["parent"] and frappe.db.get_value("User", r["parent"], "enabled")
 		]
 		if active_wm:
 			if WAREHOUSE_MANAGER_EMAIL in active_wm:
@@ -2405,7 +2404,9 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 
 		_append_order_comment(
 			order_name,
-			_("Area Supervisor {0} approved (stage 1 of 2). Awaiting Warehouse Manager approval.").format(user),
+			_("Area Supervisor {0} approved (stage 1 of 2). Awaiting Warehouse Manager approval.").format(
+				user
+			),
 		)
 
 		return {
@@ -2416,7 +2417,10 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 			"message": f"Order {order.name} approved by Area Supervisor. Awaiting Warehouse Manager approval.",
 		}
 
-	if frappe.utils.cint(order.requires_dual_approval) and order.approval_stage == "Pending Warehouse Manager":
+	if (
+		frappe.utils.cint(order.requires_dual_approval)
+		and order.approval_stage == "Pending Warehouse Manager"
+	):
 		order.approval_stage = "Fully Approved"
 		order.second_approver = user
 		order.second_approval_date = now_datetime()
@@ -2612,7 +2616,8 @@ def get_expected_deliveries(store: str | None = None, date: str | None = None) -
 def get_pending_deliveries_with_manifest(store: str | None = None, date: str | None = None) -> dict:
 	"""S093 (UX-014): Get pending deliveries with item-level manifest."""
 	if not store:
-		store = _resolve_user_store()
+		user_store = get_user_store()
+		store = user_store.get("default_store") if user_store else None
 	if not store:
 		return {"deliveries": []}
 
