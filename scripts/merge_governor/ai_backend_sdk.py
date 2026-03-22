@@ -57,6 +57,7 @@ BEI has TWO repositories with different deployment pipelines:
 ### BEI-Tasks (my.bebang.ph) — React Frontend
 - Separate bei-tasks repo, release branch: `main`
 - Deploy: push to main -> Vercel auto-deploys
+- Governor auto-triggers `vercel --prod --force` (cache-bust) after every successful backend merge
 - Rollback: Vercel dashboard or CLI
 - CORS errors from my.bebang.ph = backend API not deployed yet
 
