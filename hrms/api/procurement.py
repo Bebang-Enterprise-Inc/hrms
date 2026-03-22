@@ -1166,7 +1166,7 @@ def send_po_to_supplier(
                 recipients=[supplier.email],
                 cc=_get_procurement_finance_cc_list(),
                 subject=f"Purchase Order {po.name} - {po.supplier_name}",
-                message=f"Please find attached Purchase Order {po.name}.
+                message="Please find attached Purchase Order " + po.name + ".
 Bebang Enterprise Inc.",
                 attachments=[{"fname": f"PO-{po.name}.pdf", "fcontent": pdf_content}],
                 now=True,

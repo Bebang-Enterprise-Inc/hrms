@@ -398,12 +398,20 @@ def _validate_shelf_life_gate(item_code, batch_no, action_date, action_type="dis
 	if not batch.expiry_date:
 		return {"valid": True}
 	if getdate(batch.expiry_date) < getdate(action_date):
-		return {"valid": False, "error": f"Batch {batch_no} expired on {batch.expiry_date}. Cannot {action_type}.", "requires_override": True}
+		return {
+			"valid": False,
+			"error": f"Batch {batch_no} expired on {batch.expiry_date}. Cannot {action_type}.",
+			"requires_override": True,
+		}
 	min_shelf_days = frappe.db.get_single_value("BEI Settings", "min_shelf_life_days") or 0
 	if min_shelf_days:
 		remaining = date_diff(batch.expiry_date, action_date)
 		if remaining < min_shelf_days:
-			return {"valid": False, "error": f"Batch {batch_no} has only {remaining} days remaining (minimum: {min_shelf_days}).", "requires_override": True}
+			return {
+				"valid": False,
+				"error": f"Batch {batch_no} has only {remaining} days remaining (minimum: {min_shelf_days}).",
+				"requires_override": True,
+			}
 	return {"valid": True}
 
 
@@ -416,7 +424,13 @@ def override_shelf_life_gate(batch_no, reason, action_type="dispatch"):
 	if not reason or not reason.strip():
 		frappe.throw(_("Override reason is required"))
 	frappe.logger().warning(f"SHELF LIFE OVERRIDE: {batch_no} by {frappe.session.user}: {reason}")
-	frappe.get_doc({"doctype": "Comment", "comment_type": "Info", "reference_doctype": "Batch", "reference_name": batch_no, "content": f"Shelf life override by {frappe.session.user}: {reason}"}).insert(ignore_permissions=True)
+	frappe.get_doc({
+		"doctype": "Comment",
+		"comment_type": "Info",
+		"reference_doctype": "Batch",
+		"reference_name": batch_no,
+		"content": f"Shelf life override by {frappe.session.user}: {reason}",
+	}).insert(ignore_permissions=True)
 	return {"success": True, "overridden": True}
 
 
