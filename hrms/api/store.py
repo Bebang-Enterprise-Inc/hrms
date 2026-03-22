@@ -2561,8 +2561,10 @@ def complete_receiving(
 		has_issue_val = item_data.get("has_issue", 0)
 		batch_no = item_data.get("batch_no")
 		if batch_no:
-			from hrms.api.commissary_dashboard import _validate_shelf_life_gate
 			from frappe.utils import today as _today
+
+			from hrms.api.commissary_dashboard import _validate_shelf_life_gate
+
 			gate = _validate_shelf_life_gate(item_data.get("item_code"), batch_no, _today(), "store_receive")
 			if not gate["valid"]:
 				check_expiry_val = 0

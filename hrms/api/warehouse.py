@@ -485,8 +485,10 @@ def create_warehouse_receiving(
 		shelf_life_warning = None
 		batch_no = item_data.get("batch_no")
 		if batch_no:
-			from hrms.api.commissary_dashboard import _validate_shelf_life_gate
 			from frappe.utils import today as _today
+
+			from hrms.api.commissary_dashboard import _validate_shelf_life_gate
+
 			gate = _validate_shelf_life_gate(item_data["item_code"], batch_no, _today(), "receive")
 			if not gate["valid"]:
 				shelf_life_warning = gate["error"]

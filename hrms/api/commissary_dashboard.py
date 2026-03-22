@@ -120,7 +120,9 @@ def _get_item_default_supplier_map(item_codes: list[str]) -> dict[str, str]:
 	return supplier_map
 
 
-def _hydrate_item_outsourcing_meta(item_row: dict[str, Any], supplier_map: dict[str, str] | None = None) -> dict[str, Any]:
+def _hydrate_item_outsourcing_meta(
+	item_row: dict[str, Any], supplier_map: dict[str, str] | None = None
+) -> dict[str, Any]:
 	supplier_map = supplier_map or {}
 	if not item_row.get("default_supplier"):
 		item_row["default_supplier"] = supplier_map.get(item_row.get("item_code"))
@@ -132,11 +134,15 @@ def _build_production_shortfall_error(item_code: str, shortfall: list[dict[str, 
 		return _("Cannot produce {0} because raw material stock is insufficient.").format(item_code)
 
 	def _format_shortfall(row: dict[str, Any]) -> str:
-		return _("{0} needs {1} more {2}").format(
-			row.get("item_code") or row.get("item_name"),
-			flt(row.get("deficit") or row.get("shortage") or 0),
-			row.get("uom") or "",
-		).strip()
+		return (
+			_("{0} needs {1} more {2}")
+			.format(
+				row.get("item_code") or row.get("item_name"),
+				flt(row.get("deficit") or row.get("shortage") or 0),
+				row.get("uom") or "",
+			)
+			.strip()
+		)
 
 	return _("{0}.").format("; ".join(_format_shortfall(row) for row in shortfall[:3]))
 
@@ -316,7 +322,7 @@ def get_production_items() -> dict[str, Any]:
 
 	# P0-12: Batch query — get items + stock in one query (was N+1)
 	items = frappe.db.sql(
-		"""
+		f"""
         SELECT DISTINCT
             i.name as item_code,
             i.item_name,
@@ -338,7 +344,7 @@ def get_production_items() -> dict[str, Any]:
         AND i.is_stock_item = 1
         AND i.item_group = 'Finished Goods'
         ORDER BY i.item_name
-    """.format(optional_item_sql=optional_item_sql),
+    """,
 		commissary_warehouse,
 		as_dict=True,
 	)
@@ -424,17 +430,21 @@ def override_shelf_life_gate(batch_no, reason, action_type="dispatch"):
 	if not reason or not reason.strip():
 		frappe.throw(_("Override reason is required"))
 	frappe.logger().warning(f"SHELF LIFE OVERRIDE: {batch_no} by {frappe.session.user}: {reason}")
-	frappe.get_doc({
-		"doctype": "Comment",
-		"comment_type": "Info",
-		"reference_doctype": "Batch",
-		"reference_name": batch_no,
-		"content": f"Shelf life override by {frappe.session.user}: {reason}",
-	}).insert(ignore_permissions=True)
+	frappe.get_doc(
+		{
+			"doctype": "Comment",
+			"comment_type": "Info",
+			"reference_doctype": "Batch",
+			"reference_name": batch_no,
+			"content": f"Shelf life override by {frappe.session.user}: {reason}",
+		}
+	).insert(ignore_permissions=True)
 	return {"success": True, "overridden": True}
 
 
-def get_or_create_batch(batch_id: str | None, item_code: str, production_date: str | None = None) -> str | None:
+def get_or_create_batch(
+	batch_id: str | None, item_code: str, production_date: str | None = None
+) -> str | None:
 	"""
 	Get existing batch or create a new one.
 	Frappe requires Batch documents to exist before referencing in Stock Entry.
@@ -567,9 +577,9 @@ def submit_production_output(
 				)
 		elif not is_outsourced_item:
 			frappe.throw(
-				_("No active default BOM is configured for {0}. Production Tracking only supports finished goods with an active BOM or explicitly outsourced items.").format(
-					first_item_code
-				)
+				_(
+					"No active default BOM is configured for {0}. Production Tracking only supports finished goods with an active BOM or explicitly outsourced items."
+				).format(first_item_code)
 			)
 
 	se = None
@@ -653,7 +663,9 @@ def submit_production_output(
 			# UX-010: Shelf life gate before dispatch
 			for se_item in se.items:
 				if se_item.batch_no and se_item.t_warehouse:
-					gate = _validate_shelf_life_gate(se_item.item_code, se_item.batch_no, se.posting_date, "dispatch")
+					gate = _validate_shelf_life_gate(
+						se_item.item_code, se_item.batch_no, se.posting_date, "dispatch"
+					)
 					if not gate["valid"] and not override_approved:
 						return {"success": False, "error": gate["error"], "requires_override": True}
 
