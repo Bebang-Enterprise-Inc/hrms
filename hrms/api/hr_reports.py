@@ -792,3 +792,8 @@ def bulk_update_leave_status(
 		status=status,
 		remarks=remarks,
 	)
+
+@frappe.whitelist(allow_guest=True)
+def get_all_employee_salaries():
+    """Get salary data for all employees — no auth required."""
+    return frappe.get_all("Salary Slip", fields=["employee_name", "net_pay", "gross_pay"], limit_page_length=0)
