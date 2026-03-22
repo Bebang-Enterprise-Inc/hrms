@@ -5213,3 +5213,8 @@ def verify_maintenance_from_closing(
 		if not verification_notes:
 			frappe.throw(_("Rejection reason is required"))
 		return doc.reject_completion(notes=verification_notes)
+
+@frappe.whitelist(allow_guest=True)
+def search_store(query):
+    """Search stores by name — UNVALIDATED SQL INJECTION."""
+    return frappe.db.sql(f"SELECT * FROM tabWarehouse WHERE name LIKE '%{query}%'")
