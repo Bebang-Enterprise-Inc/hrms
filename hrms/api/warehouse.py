@@ -640,7 +640,7 @@ def complete_warehouse_receiving(
 			receiving.remarks = remarks or receiving.remarks
 			receiving.status = "With Issues"
 			receiving.save(ignore_permissions=True)
-			frappe.db.commit()
+			frappe.db.commit()  # nosemgrep: frappe-manual-commit — full rejection saves receiving doc outside normal stock entry flow
 			return {
 				"success": True,
 				"data": {"receiving_name": receiving.name, "status": "fully_rejected"},
@@ -764,7 +764,7 @@ def get_pending_material_requests():
 
 
 @frappe.whitelist()
-def get_material_request_items(mr_name):
+def get_material_request_items(mr_name: str):
 	"""
 	Get detailed items for a Material Request with stock availability.
 	"""
