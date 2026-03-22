@@ -461,13 +461,13 @@ def get_internal_receiving_warehouses():
 
 @frappe.whitelist()
 def create_warehouse_receiving(
-	source_warehouse,
-	target_warehouse,
-	items,
-	linked_quality_inspection=None,
-	linked_production_entry=None,
-	remarks=None,
-):
+	source_warehouse: str,
+	target_warehouse: str,
+	items: list | str,
+	linked_quality_inspection: str | None = None,
+	linked_production_entry: str | None = None,
+	remarks: str | None = None,
+) -> dict:
 	"""Create a pending warehouse inbound record for commissary finished goods."""
 	_ensure_warehouse_receiving_doctype()
 
