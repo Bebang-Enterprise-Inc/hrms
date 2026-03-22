@@ -25,7 +25,16 @@
     "cargo_category",
     "delivery_schedule_day",
     "column_break_order_details_2",
-    "notes"
+    "notes",
+    "section_break_approval_workflow",
+    "requires_dual_approval",
+    "approval_stage",
+    "column_break_approval_2",
+    "second_approver",
+    "second_approval_date",
+    "section_break_delivery_receipt",
+    "dr_number",
+    "trip_stop"
   ],
   "fields": [
     {
@@ -150,10 +159,67 @@
       "fieldname": "notes",
       "fieldtype": "Text",
       "label": "Notes"
+    },
+    {
+      "fieldname": "section_break_approval_workflow",
+      "fieldtype": "Section Break",
+      "label": "Approval Workflow",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "requires_dual_approval",
+      "fieldtype": "Check",
+      "label": "Requires Dual Approval",
+      "default": "0",
+      "read_only": 1,
+      "description": "Set automatically when next-day order is placed after 12 NN cutoff"
+    },
+    {
+      "fieldname": "approval_stage",
+      "fieldtype": "Select",
+      "label": "Approval Stage",
+      "options": "\nSingle Approval\nPending Area Supervisor\nPending Warehouse Manager\nFully Approved",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_approval_2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "second_approver",
+      "fieldtype": "Link",
+      "label": "Second Approver",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "second_approval_date",
+      "fieldtype": "Datetime",
+      "label": "Second Approval Date",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_delivery_receipt",
+      "fieldtype": "Section Break",
+      "label": "Delivery Receipt",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "dr_number",
+      "fieldtype": "Data",
+      "label": "DR Number",
+      "read_only": 1
+    },
+    {
+      "fieldname": "trip_stop",
+      "fieldtype": "Link",
+      "label": "Trip Stop",
+      "options": "BEI Trip Stop",
+      "read_only": 1
     }
   ],
   "links": [],
-  "modified": "2026-02-17 00:00:00.000000",
+  "modified": "2026-03-23 01:15:00.000000",
   "modified_by": "Administrator",
   "module": "HR",
   "name": "BEI Store Order",
