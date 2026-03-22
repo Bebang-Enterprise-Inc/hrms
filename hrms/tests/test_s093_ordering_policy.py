@@ -1,5 +1,4 @@
 """S093 — Store Ordering Policy Tests"""
-
 import unittest
 from datetime import date, timedelta
 
@@ -9,15 +8,12 @@ class TestValidateOrderWindow(unittest.TestCase):
 		def validate_order_window(delivery_date):
 			today = date(2026, 3, 23)
 			tomorrow = today + timedelta(days=1)
-			delivery = (
-				date.fromisoformat(str(delivery_date)) if isinstance(delivery_date, str) else delivery_date
-			)
+			delivery = date.fromisoformat(str(delivery_date)) if isinstance(delivery_date, str) else delivery_date
 			if delivery <= today:
 				raise ValueError("Delivery date must be tomorrow or later.")
 			if delivery == tomorrow and now_hour >= 12:
 				return {"allowed": True, "requires_dual_approval": True}
 			return {"allowed": True, "requires_dual_approval": False}
-
 		return validate_order_window
 
 	def test_order_tomorrow_before_noon_no_dual_approval(self):
@@ -71,7 +67,7 @@ class TestDualApprovalWorkflow(unittest.TestCase):
 
 	def test_as_rejects_wm_never_sees(self):
 		stages = {"requires_dual_approval": True, "approval_stage": "Pending Area Supervisor"}
-		# AS rejection does NOT advance to Pending Warehouse Manager
+		final_status = "Rejected"
 		self.assertNotEqual(stages["approval_stage"], "Pending Warehouse Manager")
 
 

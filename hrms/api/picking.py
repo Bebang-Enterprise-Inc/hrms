@@ -345,3 +345,38 @@ def confirm_loaded(pick_list_name: str):
 	except Exception:
 		frappe.db.rollback(save_point="confirm_loaded")
 		raise
+
+
+@frappe.whitelist()
+def get_open_orders_for_picking(warehouse: str | None = None) -> dict:
+	"""S093 (UX-012): Get approved orders not yet assigned to trips."""
+	_check_picking_permission(SCM_PICKING_ROLES, "view open orders")
+
+	filters = {
+		"status": ["in", ["Approved", "Ready for Dispatch"]],
+		"trip": ["is", "not set"],
+	}
+
+	orders = frappe.get_all(
+		"BEI Store Order",
+		filters=filters,
+		fields=[
+			"name", "store", "order_date", "delivery_date",
+			"status", "cargo_category", "approved_by", "approved_at",
+		],
+		order_by="delivery_date asc, order_date asc",
+	)
+
+	for order in orders:
+		order["items_count"] = frappe.db.count(
+			"BEI Store Order Item", {"parent": order["name"]}
+		)
+		order["total_qty"] = (
+			frappe.db.sql(
+				"SELECT SUM(COALESCE(qty_approved, qty_requested)) FROM `tabBEI Store Order Item` WHERE parent = %s",
+				order["name"],
+			)[0][0]
+			or 0
+		)
+
+	return {"orders": orders, "count": len(orders)}

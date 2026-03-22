@@ -58,6 +58,26 @@ def _ensure_warehouse_receiving_doctype():
 		frappe.throw(_("BEI Warehouse Receiving DocType is not installed"))
 
 
+def _notify_warehouse_handoff(receiving_name, source_warehouse=None, target_warehouse=None):
+	"""S093 (UX-011): Notify warehouse team of incoming commissary handoff via GChat + in-app."""
+	try:
+		from hrms.api.google_chat import send_bot_message
+		from hrms.utils.bei_config import get_chat_space, SPACE_OPS
+
+		space_id = get_chat_space(SPACE_OPS)
+		if space_id:
+			send_bot_message(
+				space_id=space_id,
+				text=(
+					f"\U0001f4e6 New commissary handoff: *{receiving_name}*\n"
+					f"From: {source_warehouse or 'Commissary'} \u2192 To: {target_warehouse or 'Warehouse'}\n"
+					f"Check warehouse receiving queue: https://my.bebang.ph/dashboard/warehouse/receiving"
+				),
+			)
+	except Exception as e:
+		frappe.log_error(f"Warehouse handoff notification failed for {receiving_name}: {e}", "Warehouse API")
+
+
 def _warehouse_receiving_item_rows(receiving_doc):
 	rows = []
 	for item in receiving_doc.items:
@@ -515,6 +535,9 @@ def create_warehouse_receiving(
 		frappe.throw(_("No valid finished goods items to hand off"))
 
 	doc.insert(ignore_permissions=True)
+
+	# S093 (UX-011): Notify warehouse team of incoming handoff
+	_notify_warehouse_handoff(doc.name, doc.source_warehouse, doc.target_warehouse)
 
 	return {
 		"success": True,
