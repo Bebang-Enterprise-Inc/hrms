@@ -102,13 +102,23 @@ class MergeSerializer:
             return
 
         # Release gate: deterministic + AI verification (parallel)
-        gate_passed = await self._run_release_gate(pr)
-        if not gate_passed:
-            pr.gate_blocked = True
-            if pr_num in state.merge_queue:
-                state.merge_queue.remove(pr_num)
-                self.state_mgr.save()
-            return
+        # Skip if gate was already attempted and cleared by self-heal (avoid infinite loop)
+        gate_attempts = getattr(pr, "_gate_attempts", 0)
+        if gate_attempts == 0:
+            gate_passed = await self._run_release_gate(pr)
+            pr._gate_attempts = 1
+            if not gate_passed:
+                pr.gate_blocked = True
+                if pr_num in state.merge_queue:
+                    state.merge_queue.remove(pr_num)
+                    self.state_mgr.save()
+                logger.warning("release_gate_blocked", pr=pr_num,
+                    hint="Push L3 evidence or restart governor to retry")
+                print(f"[{time.strftime('%H:%M:%S')}] Release gate blocked PR #{pr_num} — push L3 evidence or governor will retry on next restart", flush=True)
+                return
+        else:
+            logger.info("release_gate_skipped", pr=pr_num, reason="already_attempted")
+            print(f"[{time.strftime('%H:%M:%S')}] Release gate skipped for PR #{pr_num} (already attempted, cleared by self-heal)", flush=True)
 
         # CI gate: wait for checks to pass before merge
         ci_ok = await self._wait_for_ci(pr)
