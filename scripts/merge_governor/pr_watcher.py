@@ -35,12 +35,16 @@ class PRWatcher:
         self.poll_interval = poll_interval
         self._on_new_pr_callbacks: list = []
         self._on_closed_pr_callbacks: list = []
+        self._on_pr_updated_callbacks: list = []
 
     def on_new_pr(self, callback):
         self._on_new_pr_callbacks.append(callback)
 
     def on_closed_pr(self, callback):
         self._on_closed_pr_callbacks.append(callback)
+
+    def on_pr_updated(self, callback):
+        self._on_pr_updated_callbacks.append(callback)
 
     async def poll_once(self) -> list[dict[str, Any]]:
         """Poll GitHub for open PRs. Uses subprocess in thread for Windows reliability."""
@@ -119,12 +123,23 @@ class PRWatcher:
                         existing.review_decision = None
                         existing.review_sha = None
                         logger.info("review_invalidated", pr=pr_num, reason="sha_changed")
+                    # Reset builder dispatch count on new SHA (fresh attempt)
+                    existing.builder_dispatch_count = 0
+                    existing.builder_dispatched = False
+
                     # Re-queue gate-blocked PRs on new push (builder fixed the issue)
                     if getattr(existing, "gate_blocked", False):
                         existing.gate_blocked = False
                         if pr_num not in state.merge_queue:
                             state.merge_queue.append(pr_num)
                         _activity(f"PR #{pr_num} re-queued (gate block cleared by new push)")
+
+                    # Fire update callbacks (triggers auto-re-review)
+                    for cb in self._on_pr_updated_callbacks:
+                        try:
+                            await cb(existing)
+                        except Exception as e:
+                            _activity(f"ERROR handling PR #{pr_num} update: {e}")
 
         # Detect closed PRs
         for key in list(state.active_prs.keys()):

@@ -16,7 +16,7 @@ _WIN_FLAGS = 0x08000000 if sys.platform == "win32" else 0  # CREATE_NO_WINDOW
 from .reviewer import Reviewer, get_pr_diff
 from .ssm_helper import PRODUCTION_INSTANCE_ID, ssm_run
 from .staging_manager import StagingManager
-from .state_manager import StateManager
+from .state_manager import PRRecord, StateManager
 
 logger = structlog.get_logger("governor.merge")
 
@@ -108,6 +108,11 @@ class MergeSerializer:
             if pr_num in state.merge_queue:
                 state.merge_queue.remove(pr_num)
                 self.state_mgr.save()
+            return
+
+        # CI gate: wait for checks to pass before merge
+        ci_ok = await self._wait_for_ci(pr)
+        if not ci_ok:
             return
 
         # Execute merge
@@ -229,6 +234,180 @@ class MergeSerializer:
         await self._post_merge_cleanup(pr)
 
         logger.info("merge_cycle_complete", pr=pr_num)
+
+    async def _wait_for_ci(self, pr, timeout_s: float = 600, poll_s: float = 30) -> bool:
+        """Wait for CI checks to pass. If they fail, dispatch a builder to fix.
+
+        Returns True if CI passes, False if failed and builder was dispatched
+        (governor should skip this PR until new SHA arrives).
+        """
+        pr_num = pr.number
+        logger.info("waiting_for_ci", pr=pr_num)
+        print(f"[{time.strftime('%H:%M:%S')}] Waiting for CI on PR #{pr_num}...", flush=True)
+
+        start = time.time()
+        while time.time() - start < timeout_s:
+            status, failed_jobs = await self._get_ci_status(pr_num)
+
+            if status == "pass":
+                logger.info("ci_passed", pr=pr_num)
+                print(f"[{time.strftime('%H:%M:%S')}] CI passed for PR #{pr_num}", flush=True)
+                return True
+
+            if status == "fail":
+                logger.warning("ci_failed", pr=pr_num, jobs=failed_jobs)
+                print(f"[{time.strftime('%H:%M:%S')}] CI FAILED for PR #{pr_num}: {', '.join(failed_jobs)}", flush=True)
+                await self._handle_ci_failure(pr, failed_jobs)
+                return False
+
+            # status == "pending" — wait and poll again
+            await asyncio.sleep(poll_s)
+
+        # Timeout
+        logger.error("ci_timeout", pr=pr_num, timeout_s=timeout_s)
+        print(f"[{time.strftime('%H:%M:%S')}] CI timeout for PR #{pr_num} ({timeout_s}s)", flush=True)
+        return False
+
+    async def _get_ci_status(self, pr_num: int) -> tuple[str, list[str]]:
+        """Check CI status for a PR.
+
+        Returns ("pass"|"fail"|"pending", [failed_job_names]).
+        """
+        proc = await asyncio.create_subprocess_exec(
+            "gh", "pr", "view", str(pr_num),
+            "--repo", REPO,
+            "--json", "statusCheckRollup",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await proc.communicate()
+        if proc.returncode != 0:
+            return "pending", []
+
+        data = json.loads(stdout.decode())
+        checks = data.get("statusCheckRollup", [])
+        if not checks:
+            return "pending", []
+
+        failed = []
+        has_pending = False
+        for check in checks:
+            status = check.get("status", "").upper()
+            conclusion = (check.get("conclusion") or "").upper()
+            name = check.get("name", "unknown")
+
+            # Skip non-blocking checks
+            if name in ("Documentation Required", "Semantic Commits", "Check for GL/Payment Features"):
+                continue
+
+            if status == "COMPLETED":
+                if conclusion in ("FAILURE", "ERROR", "TIMED_OUT"):
+                    failed.append(name)
+            elif status in ("IN_PROGRESS", "QUEUED", "PENDING", "WAITING"):
+                has_pending = True
+
+        if failed:
+            return "fail", failed
+        if has_pending:
+            return "pending", []
+        return "pass", []
+
+    async def _handle_ci_failure(self, pr, failed_jobs: list[str]) -> None:
+        """Read CI logs, dispatch a builder to fix the issue."""
+        pr_num = pr.number
+
+        # Record lesson
+        from .lessons import record_lesson
+        record_lesson(
+            category="build",
+            trigger=f"CI failed: {', '.join(failed_jobs)}",
+            wrong_action=f"PR #{pr_num} pushed code that fails CI",
+            correct_action="Check CI logs, fix the issue, push again",
+            source_incident=f"PR #{pr_num} ({pr.title[:40]})",
+        )
+
+        # Fetch CI failure logs
+        ci_log = await self._fetch_ci_failure_log(pr_num)
+
+        # Dispatch builder with CI context
+        from .builder_dispatch import dispatch_ci_fixer
+        from .config import GOVERNOR_REPO
+
+        builder_ok = await dispatch_ci_fixer(
+            pr=pr,
+            failed_jobs=failed_jobs,
+            ci_log=ci_log,
+            repo_root=GOVERNOR_REPO,
+        )
+
+        if builder_ok:
+            print(f"[{time.strftime('%H:%M:%S')}] Builder dispatched to fix CI for PR #{pr_num}", flush=True)
+        else:
+            # Builder couldn't fix — post comment for human
+            await self._comment_on_pr(
+                pr_num,
+                f"**Governor: CI Failed**\n\n"
+                f"**Failed jobs:** {', '.join(failed_jobs)}\n\n"
+                f"```\n{ci_log[:1500]}\n```\n\n"
+                "Builder agent attempted a fix but could not resolve it.\n"
+                "**Manual action required.**\n\n"
+                "*Posted by governor-erp*",
+            )
+
+        # Remove from queue — will re-queue on new SHA
+        if pr_num in self.state_mgr.state.merge_queue:
+            self.state_mgr.state.merge_queue.remove(pr_num)
+            self.state_mgr.save()
+
+    async def _fetch_ci_failure_log(self, pr_num: int) -> str:
+        """Fetch the last CI run's failure log for a PR."""
+        pr_key = str(pr_num)
+        pr_record = self.state_mgr.state.active_prs.get(pr_key)
+        branch = pr_record.head_ref if pr_record else ""
+
+        # Get the most recent failed run for this PR's branch
+        proc = await asyncio.create_subprocess_exec(
+            "gh", "run", "list",
+            "--repo", REPO,
+            "--branch", branch,
+            "--status", "failure",
+            "--limit", "1",
+            "--json", "databaseId",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await proc.communicate()
+        if proc.returncode != 0:
+            return "(could not fetch CI run ID)"
+
+        runs = json.loads(stdout.decode())
+        if not runs:
+            return "(no failed runs found)"
+
+        run_id = runs[0]["databaseId"]
+
+        # Get the failed log
+        proc2 = await asyncio.create_subprocess_exec(
+            "gh", "run", "view", str(run_id),
+            "--repo", REPO,
+            "--log-failed",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout2, _ = await proc2.communicate()
+        log_text = stdout2.decode(errors="replace")
+
+        # Trim to relevant parts — look for error lines
+        lines = log_text.splitlines()
+        error_lines = [l for l in lines if any(kw in l.lower() for kw in [
+            "error", "fail", "exception", "syntaxerror", "import", "module",
+            "could not find", "linkvalidation", "traceback",
+        ])]
+
+        if error_lines:
+            return "\n".join(error_lines[:50])
+        # Fallback: last 50 lines
+        return "\n".join(lines[-50:])
 
     async def _check_freshness(self, pr) -> bool:
         """Check if PR is based on current production HEAD."""

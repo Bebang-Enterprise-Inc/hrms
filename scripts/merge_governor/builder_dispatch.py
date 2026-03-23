@@ -93,6 +93,46 @@ async def dispatch_conflict_resolver(
     return await _run_builder_in_worktree(pr, prompt, repo_root, label="conflict_resolve")
 
 
+async def dispatch_ci_fixer(
+    pr: PRRecord,
+    failed_jobs: list[str],
+    ci_log: str,
+    repo_root: str,
+) -> bool:
+    """Spawn a builder subagent to fix CI failures.
+
+    Reads the CI error log and fixes the code so CI passes.
+    Returns True if the builder pushed a fix.
+    """
+    if pr.builder_dispatch_count >= MAX_DISPATCHES_PER_PR:
+        logger.warning("builder_circuit_breaker", pr=pr.number, count=pr.builder_dispatch_count)
+        return False
+
+    pr.builder_dispatched = True
+    pr.builder_dispatch_count += 1
+
+    prompt = (
+        f"You are a BEI ERP builder agent. PR #{pr.number} on branch `{pr.head_ref}` "
+        f"has FAILING CI checks. Your job is to fix the code so CI passes.\n\n"
+        f"**Failed jobs:** {', '.join(failed_jobs)}\n\n"
+        f"**CI Error Log (key lines):**\n```\n{ci_log[:3000]}\n```\n\n"
+        f"**Instructions:**\n"
+        "1. Analyze the error log above to identify the root cause\n"
+        "2. Read the relevant files and fix the issue\n"
+        "3. Common CI failures:\n"
+        "   - LinkValidationError: A DocType Link field has a `default` value referencing "
+        "data that doesn't exist in CI's test database. Remove the `default` from the JSON.\n"
+        "   - SyntaxError: Check for decorators on non-functions, missing imports, etc.\n"
+        "   - ImportError: Missing module or wrong import path.\n"
+        "   - Linter failures: Fix code style issues.\n"
+        "4. Run `git add` the changed files and `git commit` with message starting with 'fix(ci):'\n"
+        "5. Run `git push origin HEAD` to push the fix\n"
+        "The governor will auto-re-review when it detects the new SHA.\n"
+    )
+
+    return await _run_builder_in_worktree(pr, prompt, repo_root, label="ci_fix")
+
+
 async def _run_builder_in_worktree(
     pr: PRRecord,
     prompt: str,

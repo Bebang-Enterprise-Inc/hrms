@@ -210,6 +210,7 @@ class GovernorERP:
         self.pr_watcher = PRWatcher(self.state_mgr)
         self.pr_watcher.on_new_pr(self._handle_new_pr)
         self.pr_watcher.on_closed_pr(self._handle_closed_pr)
+        self.pr_watcher.on_pr_updated(self._handle_pr_updated)
 
         # AI backend (lazy — will be initialized in Phase 2a)
         self.ai_backend = await self._init_ai_backend()
@@ -562,6 +563,13 @@ class GovernorERP:
             "freed_port": freed_port,
             "timestamp": time.time(),
         })
+
+    async def _handle_pr_updated(self, pr: PRRecord) -> None:
+        """Called when an existing PR's SHA changes (new push). Triggers auto-re-review."""
+        print(f"[{time.strftime('%H:%M:%S')}] PR #{pr.number} updated (new SHA: {pr.head_sha[:8]}), auto-re-reviewing...", flush=True)
+
+        if self.ai_backend and not self.skip_review:
+            await self._auto_review_pr(pr)
 
     async def _chat_loop(self) -> None:
         """Read operator input from stdin using a dedicated thread."""
