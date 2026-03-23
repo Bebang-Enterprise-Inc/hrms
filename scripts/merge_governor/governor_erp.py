@@ -212,6 +212,22 @@ class GovernorERP:
         # Chat handler
         self.chat_handler = ChatHandler(ai_backend=self.ai_backend)
 
+        # Staging manager + Merge serializer (automated merge pipeline)
+        from .reviewer import Reviewer
+        from .staging_manager import StagingManager
+        from .merge_serializer import MergeSerializer
+        self.staging_mgr = StagingManager(
+            state_mgr=self.state_mgr,
+            port_allocator=self.port_allocator,
+            dry_run=self.dry_run,
+        )
+        self.merge_serializer = MergeSerializer(
+            state_mgr=self.state_mgr,
+            reviewer=Reviewer(backend=self.ai_backend, state_mgr=self.state_mgr),
+            staging_mgr=self.staging_mgr,
+            dry_run=self.dry_run,
+        )
+
         # Health server
         self.health_server = HealthServer(self.state_mgr)
 
@@ -379,6 +395,40 @@ class GovernorERP:
             if result.conflicting_files:
                 print(f"    Conflicts: {', '.join(result.conflicting_files[:5])}", flush=True)
 
+            # Auto-enqueue approved PRs for merge
+            if decision == "APPROVE" and pr.number not in self.state_mgr.state.merge_queue:
+                self.state_mgr.state.merge_queue.append(pr.number)
+                self.state_mgr.save()
+                print(f"[{time.strftime('%H:%M:%S')}] PR #{pr.number} added to merge queue (position {len(self.state_mgr.state.merge_queue)})", flush=True)
+            elif decision in ("REJECT", "NEEDS_FIX"):
+                # Post feedback on PR so the builder agent can fix it
+                body = (
+                    f"**Governor Review: {decision}** (confidence: {confidence:.2f})\n\n"
+                    f"**Issues found:**\n{result.reasoning}\n\n"
+                )
+                if result.conflicting_files:
+                    body += f"**Conflicting files:** {', '.join(result.conflicting_files)}\n\n"
+                if hasattr(result, 'suggested_fix') and result.suggested_fix:
+                    body += f"**Suggested fix:** {result.suggested_fix}\n\n"
+                body += (
+                    "---\n"
+                    "**Builder action required:** Fix the issues above and push to this branch. "
+                    "The governor will automatically re-review when it detects the new SHA.\n\n"
+                    "*Posted by governor-erp*"
+                )
+                try:
+                    proc = await asyncio.create_subprocess_exec(
+                        "gh", "pr", "comment", str(pr.number),
+                        "--repo", "Bebang-Enterprise-Inc/hrms",
+                        "--body", body,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                    )
+                    await proc.communicate()
+                    print(f"[{time.strftime('%H:%M:%S')}] Posted review feedback on PR #{pr.number}", flush=True)
+                except Exception:
+                    pass
+
         except Exception as e:
             print(f"[{time.strftime('%H:%M:%S')}] Review error for PR #{pr.number}: {e}", flush=True)
 
@@ -486,6 +536,7 @@ class GovernorERP:
             # Run tasks concurrently with error isolation
             async with asyncio.TaskGroup() as tg:
                 tg.create_task(self.pr_watcher.run(self._stop_event))
+                tg.create_task(self.merge_serializer.run(self._stop_event))
                 tg.create_task(self._chat_loop())
 
         except* KeyboardInterrupt:

@@ -53,8 +53,30 @@ class MergeSerializer:
             self.state_mgr.save()
             return
 
-        # Check review status
-        if pr.review_decision != "APPROVE":
+        # Check review status — auto-re-review if invalidated (SHA changed)
+        if pr.review_decision is None and pr.head_sha:
+            logger.info("queue_auto_reviewing", pr=pr_num, reason="review_invalidated")
+            try:
+                diff = await get_pr_diff(pr_num, REPO)
+                if diff:
+                    result = await self.reviewer.review_pr(pr_num, pr.head_sha, diff)
+                    if not result.is_approved:
+                        logger.warning("queue_review_rejected", pr=pr_num)
+                        await self._comment_on_pr(
+                            pr_num,
+                            f"**Governor Review: {result.decision}** (auto re-review)\n\n"
+                            f"{result.reasoning}\n\n"
+                            "**Builder action required:** Fix and push.\n\n*Posted by governor-erp*"
+                        )
+                        state.merge_queue.remove(pr_num)
+                        self.state_mgr.save()
+                        return
+                else:
+                    return
+            except Exception as e:
+                logger.error("queue_auto_review_error", pr=pr_num, error=str(e))
+                return
+        elif pr.review_decision != "APPROVE":
             logger.info("queue_waiting_review", pr=pr_num, decision=pr.review_decision)
             return
 
@@ -78,6 +100,20 @@ class MergeSerializer:
             rebased = await self._auto_rebase(pr)
             if not rebased:
                 logger.error("rebase_failed", pr=pr_num)
+                await self._comment_on_pr(
+                    pr_num,
+                    "**Governor: Merge Conflict**\n\n"
+                    "This PR has conflicts with production and cannot be auto-rebased.\n\n"
+                    "**Builder action required:**\n"
+                    "1. `git fetch origin production`\n"
+                    "2. `git rebase origin/production` (resolve conflicts)\n"
+                    "3. `git push --force-with-lease`\n\n"
+                    "The governor will automatically re-review when it detects the new SHA.\n\n"
+                    "*Posted by governor-erp*"
+                )
+                if pr_num in self.state_mgr.state.merge_queue:
+                    self.state_mgr.state.merge_queue.remove(pr_num)
+                    self.state_mgr.save()
                 return
 
             # Re-review if diff changed
@@ -85,6 +121,15 @@ class MergeSerializer:
             result = await self.reviewer.review_pr(pr_num, pr.head_sha, diff)
             if not result.is_approved:
                 logger.warning("review_rejected_after_rebase", pr=pr_num)
+                await self._comment_on_pr(
+                    pr_num,
+                    f"**Governor Review: {result.decision}** (post-rebase)\n\n"
+                    f"{result.reasoning}\n\n"
+                    "**Builder action required:** Fix and push.\n\n*Posted by governor-erp*"
+                )
+                if pr_num in self.state_mgr.state.merge_queue:
+                    self.state_mgr.state.merge_queue.remove(pr_num)
+                    self.state_mgr.save()
                 return
 
         # Step 2: Merge
@@ -109,7 +154,10 @@ class MergeSerializer:
             await self._handle_l1_failure(pr_num)
             return
 
-        # Step 6: Post-merge cleanup
+        # Step 6: Vercel cache-bust redeploy (my.bebang.ph)
+        await self._vercel_redeploy(pr_num)
+
+        # Step 7: Post-merge cleanup
         await self._post_merge_cleanup(pr)
 
         logger.info("merge_cycle_complete", pr=pr_num)
@@ -166,7 +214,7 @@ class MergeSerializer:
         proc = await asyncio.create_subprocess_exec(
             "gh", "pr", "merge", str(pr_num),
             "--repo", REPO,
-            "--merge", "--delete-branch",
+            "--merge", "--delete-branch", "--admin",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -425,6 +473,78 @@ class MergeSerializer:
 
         # Tear down staging
         await self.staging_mgr.teardown_branch(pr)
+
+    async def _vercel_redeploy(self, pr_num: int, max_retries: int = 3) -> None:
+        """Cache-bust redeploy my.bebang.ph after every backend merge.
+
+        Retries up to max_retries times with backoff. The frontend must match
+        the backend — a stale frontend calling new/changed APIs will break.
+        """
+        import shutil
+        import subprocess
+
+        doppler = shutil.which("doppler") or "C:/Users/Sam/bin/doppler.exe"
+        try:
+            token_result = subprocess.run(
+                [doppler, "secrets", "get", "VERCEL_TOKEN", "--plain",
+                 "--project", "bei-tasks", "--config", "dev"],
+                capture_output=True, text=True, timeout=15,
+                stdin=subprocess.DEVNULL,
+            )
+            if token_result.returncode != 0 or not token_result.stdout.strip():
+                logger.error("vercel_token_unavailable")
+                await self._comment_on_pr(
+                    pr_num,
+                    "**Governor: Vercel redeploy SKIPPED** — could not retrieve VERCEL_TOKEN from Doppler.\n"
+                    "Frontend may be stale. Redeploy manually: `vercel --prod --force`\n\n*Posted by governor-erp*"
+                )
+                return
+            token = token_result.stdout.strip()
+        except Exception as e:
+            logger.error("vercel_token_error", error=str(e))
+            return
+
+        vercel = shutil.which("vercel") or "vercel"
+        for attempt in range(1, max_retries + 1):
+            logger.info("vercel_redeploy_attempt", attempt=attempt)
+            print(f"[{time.strftime('%H:%M:%S')}] Vercel redeploy attempt {attempt}/{max_retries}...", flush=True)
+
+            try:
+                proc = subprocess.run(
+                    [vercel, "--prod", "--force", "--yes",
+                     "--token", token,
+                     "--scope", "team_xvK1nhuvsdZp3GNfd4uDJ0DW"],
+                    capture_output=True, text=True, timeout=300,
+                    stdin=subprocess.DEVNULL,
+                    cwd="F:/Dropbox/Projects/bei-tasks",
+                )
+                if proc.returncode == 0:
+                    url = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else "deployed"
+                    logger.info("vercel_redeploy_success", url=url, attempt=attempt)
+                    print(f"[{time.strftime('%H:%M:%S')}] Vercel redeploy OK: {url}", flush=True)
+                    return
+                else:
+                    logger.warning("vercel_redeploy_failed", attempt=attempt, stderr=proc.stderr[:200])
+            except subprocess.TimeoutExpired:
+                logger.warning("vercel_redeploy_timeout", attempt=attempt)
+            except Exception as e:
+                logger.warning("vercel_redeploy_error", attempt=attempt, error=str(e))
+
+            if attempt < max_retries:
+                wait = 10 * attempt
+                print(f"[{time.strftime('%H:%M:%S')}] Retrying in {wait}s...", flush=True)
+                await asyncio.sleep(wait)
+
+        # All retries exhausted
+        logger.error("vercel_redeploy_exhausted", attempts=max_retries)
+        print(f"[{time.strftime('%H:%M:%S')}] Vercel redeploy FAILED after {max_retries} attempts", flush=True)
+        await self._comment_on_pr(
+            pr_num,
+            f"**Governor: Vercel redeploy FAILED** after {max_retries} attempts.\n"
+            "Frontend is stale and may not work correctly with the new backend.\n\n"
+            "**Builder action required:** Run `vercel --prod --force` from the bei-tasks directory.\n\n"
+            "*Posted by governor-erp*"
+        )
 
     async def _comment_on_pr(self, pr_num: int, body: str) -> None:
         """Post a comment on a PR."""
