@@ -4,9 +4,26 @@
 from collections.abc import Mapping
 from datetime import datetime
 
+# Legacy constants kept for backward compatibility and test fixtures.
+# Production code should use get_approver_email() instead.
 CPO_APPROVER_EMAIL = "mae@bebang.ph"
 CFO_APPROVER_EMAIL = "butch@bebang.ph"
 DUAL_APPROVAL_TIER = "CPO+CFO"
+
+
+def get_approver_email(role: str) -> str:
+	"""Return approver email from BEI Settings, falling back to constants."""
+	try:
+		import frappe
+		from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+		settings = get_procurement_settings()
+		field_map = {"cpo": "cpo_approver_email", "cfo": "cfo_approver_email", "ceo": "ceo_approver_email"}
+		val = settings.get(field_map.get(role, ""))
+		if val:
+			return val
+	except Exception:
+		pass
+	return CPO_APPROVER_EMAIL if role == "cpo" else CFO_APPROVER_EMAIL
 
 
 class DeliveryBillingPolicyError(ValueError):
@@ -113,17 +130,19 @@ def get_pre_delivery_exception_trace(exception_doc, trip_reference, trip_stop_id
 	if not (cpo_approved_by and cpo_approved_at and cfo_approved_by and cfo_approved_at):
 		markers = _find_approval_markers(approval_audit_log, approver_comment)
 		fallback_at = _fallback_timestamp(exception_doc)
+		cpo_email = get_approver_email("cpo")
+		cfo_email = get_approver_email("cfo")
 		if markers["cpo"] and (not cpo_approved_by or not cpo_approved_at):
-			cpo_approved_by = CPO_APPROVER_EMAIL
+			cpo_approved_by = cpo_email
 			cpo_approved_at = cpo_approved_at or fallback_at
 		if markers["cfo"] and (not cfo_approved_by or not cfo_approved_at):
-			cfo_approved_by = CFO_APPROVER_EMAIL
+			cfo_approved_by = cfo_email
 			cfo_approved_at = cfo_approved_at or fallback_at
 
-	if cpo_approved_by != CPO_APPROVER_EMAIL or not cpo_approved_at:
+	if cpo_approved_by != get_approver_email("cpo") or not cpo_approved_at:
 		raise DeliveryBillingPolicyError("Pre-delivery billing requires explicit Daymae/CPO approval trace.")
 
-	if cfo_approved_by != CFO_APPROVER_EMAIL or not cfo_approved_at:
+	if cfo_approved_by != get_approver_email("cfo") or not cfo_approved_at:
 		raise DeliveryBillingPolicyError("Pre-delivery billing requires explicit Butch/CFO approval trace.")
 
 	return {

@@ -16,7 +16,7 @@ from typing import Any
 
 import frappe
 from hrms.utils.bei_config import get_company
-from hrms.utils.delivery_billing_policy import CPO_APPROVER_EMAIL, CFO_APPROVER_EMAIL, append_approval_audit_log
+from hrms.utils.delivery_billing_policy import CPO_APPROVER_EMAIL, CFO_APPROVER_EMAIL, append_approval_audit_log, get_approver_email
 from hrms.utils.procurement_math import calculate_goods_receipt_gross_total
 from frappe import _
 from frappe.utils import flt, cint, getdate, nowdate, add_days, get_first_day, get_last_day
@@ -514,7 +514,7 @@ def get_supplier_metrics(name):
         "supplier": supplier.as_dict(),
         "recent_pos": recent_pos,
         "outstanding_invoices": outstanding,
-        "total_outstanding": sum(flt(inv.get("balance_due", 0)) for inv in outstanding)
+        "total_outstanding": flt(supplier.total_outstanding)
     }
 
 
@@ -713,8 +713,24 @@ def build_payment_request_operational_filters(filters=None):
     return clauses, values
 
 
-def _normalize_purchase_order_payload(data):
-    """Compute authoritative PO totals from line items and document-level adjustments."""
+def _normalize_purchase_order_payload(data, supplier_code=None):
+    """Compute authoritative PO totals from line items and document-level adjustments.
+
+    S099: Reads supplier vat_status to determine default VAT rate.
+    - VAT Registered: uses BEI Settings default_vat_rate (12%)
+    - Non-VAT or Exempt: uses 0%
+    - Item-level vat_rate from frontend overrides if explicitly sent.
+    """
+    from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+    settings = get_procurement_settings()
+
+    # Determine default VAT rate based on supplier status
+    supplier_vat_rate = flt(settings.get("default_vat_rate", 12))
+    if supplier_code:
+        vat_status = frappe.db.get_value("BEI Supplier", supplier_code, "vat_status")
+        if vat_status in ("Non-VAT", "Exempt"):
+            supplier_vat_rate = 0
+
     normalized = dict(data or {})
     normalized_items = []
     subtotal = 0.0
@@ -731,7 +747,8 @@ def _normalize_purchase_order_payload(data):
 
         qty = flt(item.get("qty"), 2)
         unit_cost = flt(item.get("unit_cost"), 2)
-        vat_rate = flt(item.get("vat_rate") if item.get("vat_rate") is not None else 12, 2)
+        # Use item-level vat_rate if explicitly sent, otherwise use supplier-derived rate
+        vat_rate = flt(item.get("vat_rate") if item.get("vat_rate") is not None else supplier_vat_rate, 2)
 
         line_subtotal = flt(qty * unit_cost, 2)
         line_vat = flt(line_subtotal * vat_rate / 100, 2)
@@ -756,7 +773,8 @@ def _normalize_purchase_order_payload(data):
     normalized["discount_amount"] = discount_amount
     normalized["delivery_fee"] = delivery_fee
     normalized["grand_total"] = grand_total
-    normalized["requires_dual_approval"] = 1 if grand_total > 500000 else 0
+    dual_threshold = flt(settings.get("dual_approval_threshold", 500000))
+    normalized["requires_dual_approval"] = 1 if grand_total > dual_threshold else 0
 
     return normalized
 
@@ -1036,10 +1054,11 @@ def create_purchase_order(data: dict[str, Any] | str | None = None) -> dict[str,
         frappe.throw(_("Missing required parameter: data"), frappe.ValidationError)
     if isinstance(data, str):
         data = frappe.parse_json(data)
-    data = _normalize_purchase_order_payload(data)
+
+    supplier_name = (data or {}).get("supplier")
+    data = _normalize_purchase_order_payload(data, supplier_code=supplier_name)
 
     warnings = []
-    supplier_name = data.get("supplier")
 
     if supplier_name:
         supplier = frappe.get_doc("BEI Supplier", supplier_name)
@@ -1056,8 +1075,11 @@ def create_purchase_order(data: dict[str, Any] | str | None = None) -> dict[str,
 
         po_value = flt(data.get("grand_total", 0))
 
-        # If total annual + this PO > ₱250K, require TIN
-        if flt(annual_purchases) + po_value > 250000:
+        # If total annual + this PO > TIN threshold, require TIN
+        from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+        _tin_settings = get_procurement_settings()
+        _tin_threshold = flt(_tin_settings.get("tin_requirement_threshold", 250000))
+        if flt(annual_purchases) + po_value > _tin_threshold:
             if not supplier.tin:
                 frappe.throw(
                     _("Supplier {0} requires TIN registration. "
@@ -1068,12 +1090,14 @@ def create_purchase_order(data: dict[str, Any] | str | None = None) -> dict[str,
                     title=_("TIN Required")
                 )
 
-        # AUDIT CONTROL 2.8: Warn if supplier missing key documents
+        # AUDIT CONTROL 2.8: Warn if supplier missing key documents (incl. SEC registration)
         missing_docs = []
         if not supplier.bir_2307:
             missing_docs.append("BIR 2307")
         if not supplier.business_permit:
             missing_docs.append("Business Permit")
+        if not getattr(supplier, "sec_registration", None) and not getattr(supplier, "sec_certificate", None):
+            missing_docs.append("SEC Registration")
 
         if missing_docs:
             warnings.append(
@@ -1348,6 +1372,8 @@ def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, 
     AUDIT CONTROL 2.4: Block GR creation for >₱500K POs without complete approval
     Ref: Internal Audit Jan 30, 2026 - CFO "Pending" but payment released
     """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="create_goods_receipt", mutation_type="create")
     if not data:
         frappe.throw(_("Missing required parameter: data"), frappe.ValidationError)
     if isinstance(data, str):
@@ -1355,11 +1381,14 @@ def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, 
 
     po = None
 
-    # AUDIT CONTROL 2.4: Validate PO approval for >₱500K
+    # AUDIT CONTROL 2.4: Validate PO approval for >threshold
+    from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+    _gr_settings = get_procurement_settings()
+    _dual_threshold = flt(_gr_settings.get("dual_approval_threshold", 500000))
     purchase_order = data.get("purchase_order")
     if purchase_order:
         po = frappe.get_doc("BEI Purchase Order", purchase_order)
-        if flt(po.grand_total) > 500000:
+        if flt(po.grand_total) > _dual_threshold:
             if not po.mae_approval:
                 frappe.throw(
                     _("Cannot create GR: PO {0} (₱{1:,.2f}) requires CPO (Mae) approval first").format(
@@ -1424,11 +1453,47 @@ def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, 
             if item.get("uom") and not frappe.db.exists("UOM", item["uom"]):
                 item.pop("uom")
 
-    gr = frappe.get_doc({
-        "doctype": "BEI Goods Receipt",
-        **_sanitize_doc_data(data)
-    })
-    gr.insert()
+    # B1: Over-receipt prevention — validate received qty against ordered + tolerance
+    if po and "items" in data:
+        tolerance_pct = 5.0
+        try:
+            setting_val = frappe.db.get_single_value("BEI Settings", "gr_over_receipt_tolerance_pct")
+            if setting_val is not None:
+                tolerance_pct = flt(setting_val)
+        except Exception:
+            pass
+
+        for item in data["items"]:
+            item_code = item.get("item_code")
+            po_item = po_item_map.get(item_code)
+            if not po_item:
+                continue
+            ordered_qty = flt(po_item.qty)
+            already_received = flt(po_item.received_qty) if hasattr(po_item, "received_qty") else 0
+            this_received = flt(item.get("received_qty") or item.get("qty") or ordered_qty)
+            max_allowed = (ordered_qty - already_received) * (1 + tolerance_pct / 100)
+            if this_received > max_allowed and max_allowed > 0:
+                frappe.throw(
+                    _("Received quantity ({0}) for item {1} exceeds ordered quantity "
+                      "minus already received ({2}) plus {3}% tolerance (max: {4})").format(
+                        this_received, item_code, ordered_qty - already_received,
+                        tolerance_pct, flt(max_allowed, 2)
+                    ),
+                    title=_("Over-Receipt Not Allowed"),
+                )
+
+    # DM-2: Savepoint for atomic GR creation
+    try:
+        frappe.db.savepoint("goods_receipt_creation")
+        gr = frappe.get_doc({
+            "doctype": "BEI Goods Receipt",
+            **_sanitize_doc_data(data)
+        })
+        gr.insert()
+        frappe.db.release_savepoint("goods_receipt_creation")
+    except Exception:
+        frappe.db.rollback_to_savepoint("goods_receipt_creation")
+        raise
 
     return {"success": True, "name": gr.name, "message": _("GR created")}
 
@@ -1460,6 +1525,62 @@ def complete_gr_inspection(
         passed = result == "pass"
     gr = frappe.get_doc("BEI Goods Receipt", name)
     return gr.complete_inspection(passed, notes)
+
+
+@frappe.whitelist()
+def reject_gr_items(
+    name: str,
+    rejected_items: list[dict[str, Any]] | str = "[]",
+    reason: str = "",
+) -> dict[str, Any]:
+    """Reject GR items and log the rejection reason.
+
+    Each item in rejected_items: {item_code, rejected_qty, reason}
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="reject_gr_items", mutation_type="update")
+
+    if isinstance(rejected_items, str):
+        rejected_items = frappe.parse_json(rejected_items)
+    if not rejected_items:
+        frappe.throw(_("No items specified for rejection"))
+
+    gr = frappe.get_doc("BEI Goods Receipt", name)
+    if gr.status in ("Cancelled",):
+        frappe.throw(_("Cannot reject items on a cancelled GR"))
+
+    item_map = {row.item_code: row for row in gr.items}
+    rejection_log = []
+
+    for rej in rejected_items:
+        item_code = rej.get("item_code")
+        rejected_qty = flt(rej.get("rejected_qty", 0))
+        item_reason = rej.get("reason") or reason or "Quality issue"
+        row = item_map.get(item_code)
+        if not row or rejected_qty <= 0:
+            continue
+        if rejected_qty > flt(row.received_qty):
+            frappe.throw(
+                _("Rejected qty ({0}) exceeds received qty ({1}) for {2}").format(
+                    rejected_qty, row.received_qty, item_code
+                )
+            )
+        row.rejected_qty = flt(row.rejected_qty) + rejected_qty
+        row.accepted_qty = max(flt(row.received_qty) - flt(row.rejected_qty), 0)
+        rejection_log.append({"item_code": item_code, "rejected_qty": rejected_qty, "reason": item_reason})
+
+    if not rejection_log:
+        return {"success": False, "message": _("No valid items to reject")}
+
+    gr.save(ignore_permissions=True)
+    gr.add_comment("Info", _("Items rejected: {0}. Reason: {1}").format(
+        ", ".join(f"{r['item_code']} x{r['rejected_qty']}" for r in rejection_log),
+        reason or "See individual items",
+    ))
+    return {
+        "success": True, "name": gr.name, "rejected_items": rejection_log,
+        "message": _("{0} item(s) rejected on GR {1}").format(len(rejection_log), gr.name),
+    }
 
 
 @frappe.whitelist()
@@ -1630,6 +1751,8 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
     AUDIT CONTROL 2.2: Invoice date cannot be earlier than PO date
     Ref: Internal Audit Jan 30, 2026 - PO-2025108 paid without GR; Invoice Nov 21 vs PO Nov 25
     """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="create_invoice", mutation_type="create")
     if isinstance(data, str):
         data = frappe.parse_json(data)
     data = _normalize_invoice_payload(data)
@@ -1684,8 +1807,10 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
                 title=_("Invalid Date Sequence")
             )
 
-        # AUDIT CONTROL 2.4: Check PO approval for >₱500K
-        if flt(po.grand_total) > 500000:
+        # AUDIT CONTROL 2.4: Check PO approval for >threshold
+        from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+        _inv_dual_threshold = flt(get_procurement_settings().get("dual_approval_threshold", 500000))
+        if flt(po.grand_total) > _inv_dual_threshold:
             if not po.mae_approval or not po.butch_approval:
                 frappe.throw(
                     _("Cannot create Invoice: PO {0} (₱{1:,.2f}) requires complete approval "
@@ -1693,11 +1818,60 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
                     title=_("Approval Required")
                 )
 
-    invoice = frappe.get_doc({
-        "doctype": "BEI Invoice",
-        **_sanitize_doc_data(data)
-    })
-    invoice.insert()
+    # C3: Duplicate invoice detection — check supplier + supplier_invoice_no
+    supplier_invoice_no = data.get("supplier_invoice_no")
+    supplier = data.get("supplier")
+    if supplier_invoice_no and supplier:
+        existing = frappe.db.exists("BEI Invoice", {
+            "supplier": supplier,
+            "supplier_invoice_no": supplier_invoice_no,
+            "status": ["!=", "Cancelled"],
+        })
+        if existing:
+            # Allow override only for Procurement Manager role
+            allow_duplicate = data.pop("allow_duplicate_override", False)
+            duplicate_reason = data.pop("duplicate_override_reason", "")
+            if allow_duplicate and duplicate_reason:
+                from hrms.utils.scm_roles import _require_roles
+                _require_roles(["Procurement Manager", "System Manager"], "override duplicate invoice")
+            else:
+                frappe.throw(
+                    _("Duplicate invoice: supplier {0} already has invoice {1} with number {2}. "
+                      "If this is intentional (e.g. credit note), a Procurement Manager can override.").format(
+                        supplier, existing, supplier_invoice_no
+                    ),
+                    title=_("Duplicate Invoice Detected"),
+                )
+
+    # Extract line items before sanitizing
+    line_items = data.pop("items", None) or data.pop("line_items", None) or []
+
+    # DM-2: Savepoint for atomic invoice + child table creation
+    try:
+        frappe.db.savepoint("invoice_creation")
+        invoice = frappe.get_doc({
+            "doctype": "BEI Invoice",
+            **_sanitize_doc_data(data)
+        })
+
+        # C2: Add line items to child table if provided
+        if line_items:
+            for item_data in line_items:
+                invoice.append("items", {
+                    "item_code": item_data.get("item_code"),
+                    "item_name": item_data.get("item_name"),
+                    "qty": flt(item_data.get("qty")),
+                    "rate": flt(item_data.get("rate") or item_data.get("unit_cost")),
+                    "vat_rate": flt(item_data.get("vat_rate", 12)),
+                    "matched_gr_item": item_data.get("matched_gr_item"),
+                    "match_status": item_data.get("match_status", "Unmatched"),
+                })
+
+        invoice.insert()
+        frappe.db.release_savepoint("invoice_creation")
+    except Exception:
+        frappe.db.rollback_to_savepoint("invoice_creation")
+        raise
 
     return {"success": True, "name": invoice.name, "message": _("Invoice created")}
 
@@ -1862,6 +2036,8 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
     AUDIT CONTROL 2.5: Double-payment guard for advances
     Ref: Internal Audit Jan 30, 2026 - PO-2025320 paid ₱848,800 for partial delivery
     """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="create_payment_request", mutation_type="create")
     if isinstance(data, str):
         data = frappe.parse_json(data)
 
@@ -2038,8 +2214,10 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
                         title=_("Partial Delivery Control")
                     )
 
-            # AUDIT CONTROL 2.4: Check PO approval for >₱500K
-            if flt(po.grand_total) > 500000:
+            # AUDIT CONTROL 2.4: Check PO approval for >threshold
+            from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+            _pay_dual_threshold = flt(get_procurement_settings().get("dual_approval_threshold", 500000))
+            if flt(po.grand_total) > _pay_dual_threshold:
                 if not po.mae_approval or not po.butch_approval:
                     frappe.throw(
                         _("Cannot create Payment Request: PO {0} (₱{1:,.2f}) requires complete "
@@ -2057,6 +2235,24 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
                 ),
                 title=_("Invalid Date Sequence")
             )
+
+    # D1: Payment terms enforcement
+    _d1_supplier = data.get("supplier")
+    if _d1_supplier and invoice_name:
+        try:
+            _d1_pt = frappe.db.get_value("BEI Supplier", _d1_supplier, "payment_terms_days")
+            if _d1_pt and flt(_d1_pt) > 0:
+                _d1_inv_dt = getdate(frappe.db.get_value("BEI Invoice", invoice_name, "invoice_date"))
+                _d1_age = (getdate(nowdate()) - _d1_inv_dt).days
+                if _d1_age > flt(_d1_pt):
+                    frappe.msgprint(
+                        _("Warning: Invoice is {0} days past supplier payment terms ({1} days).").format(
+                            _d1_age - int(_d1_pt), int(_d1_pt)
+                        ),
+                        indicator="orange", alert=True,
+                    )
+        except Exception:
+            pass
 
     request = frappe.get_doc({
         "doctype": "BEI Payment Request",
@@ -2111,30 +2307,43 @@ def reject_payment_request(name, level, reason):
 
 @frappe.whitelist()
 def mark_payment_complete(name, transaction_reference=None, payment_proof=None):
-    """Mark payment as complete."""
+    """Mark payment as complete with atomic EWT JV creation (S099/DM-2)."""
     from frappe.utils import nowdate, flt
+    from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+
     request = frappe.get_doc("BEI Payment Request", name)
-    result = request.mark_as_paid(transaction_reference, payment_proof)
+    needs_ewt_jv = not request.is_advance_payment and flt(request.ewt_amount) > 0
 
-    # Task T14A: Auto-Generate EWT JV at Payment
-    if not request.is_advance_payment and flt(request.ewt_amount) > 0:
-        party_name = request.supplier_name or request.supplier
-        if request.supplier:
-            bei_sup = frappe.get_doc("BEI Supplier", request.supplier)
-            party_name = bei_sup.get_or_create_frappe_supplier() or party_name
+    if needs_ewt_jv:
+        settings = get_procurement_settings()
 
-        # Get context from linked Purchase Invoice
-        pi_name = request.reference_name
-        credit_to_account = frappe.db.get_value("Purchase Invoice", pi_name, "credit_to") if pi_name else None
-        if not credit_to_account:
-            credit_to_account = "2101000 - ACCOUNTS PAYABLE - TRADE - BEI"
-
-        supplier_tin = frappe.db.get_value("Supplier", party_name, "tax_id") or "NO-TIN"
-        company = request.company or frappe.db.get_single_value("Global Defaults", "default_company")
-
-        # Savepoint: if JV fails, don't leave payment in paid-but-no-JV state
-        frappe.db.savepoint("ewt_jv_creation")
+        # S099/DM-2: Wrap payment status + EWT JV in one atomic savepoint.
+        # If JV fails, payment is NOT marked as paid — prevents GL gap.
+        frappe.db.savepoint("payment_ewt_atomic")
         try:
+            result = request.mark_as_paid(transaction_reference, payment_proof)
+
+            party_name = request.supplier_name or request.supplier
+            if request.supplier:
+                bei_sup = frappe.get_doc("BEI Supplier", request.supplier)
+                party_name = bei_sup.get_or_create_frappe_supplier() or party_name
+
+            # S099: Read ATC code from supplier master, not hardcoded
+            supplier_atc = "WI100"
+            if request.supplier:
+                supplier_atc = frappe.db.get_value(
+                    "BEI Supplier", request.supplier, "atc_code"
+                ) or "WI100"
+
+            pi_name = request.reference_name
+            credit_to_account = frappe.db.get_value("Purchase Invoice", pi_name, "credit_to") if pi_name else None
+            if not credit_to_account:
+                credit_to_account = settings.get("ap_trade_account")
+
+            supplier_tin = frappe.db.get_value("Supplier", party_name, "tax_id") or "NO-TIN"
+            company = request.company or frappe.db.get_single_value("Global Defaults", "default_company")
+            cost_center = settings.get("default_cost_center") or ""
+
             jv = frappe.new_doc("Journal Entry")
             jv.voucher_type = "Journal Entry"
             jv.posting_date = nowdate()
@@ -2142,11 +2351,11 @@ def mark_payment_complete(name, transaction_reference=None, payment_proof=None):
             jv.user_remark = (
                 f"EWT Withheld: {request.ewt_amount:.2f} | "
                 f"Supplier: {party_name} (TIN: {supplier_tin}) | "
-                f"ATC: WC100 | Gross: {flt(request.grand_total):.2f} | "
+                f"ATC: {supplier_atc} | Gross: {flt(request.grand_total):.2f} | "
                 f"PI: {pi_name or 'N/A'} | PR: {request.name}"
             )
 
-            # Debit leg — reduce trade AP (same account as PI credit_to)
+            # Debit leg — reduce trade AP (DM-1: party + reference fields)
             jv.append("accounts", {
                 "account": credit_to_account,
                 "debit_in_account_currency": request.ewt_amount,
@@ -2154,27 +2363,31 @@ def mark_payment_complete(name, transaction_reference=None, payment_proof=None):
                 "party": party_name,
                 "reference_type": "BEI Payment Request",
                 "reference_name": request.name,
-                "cost_center": getattr(request, "cost_center", "") or "",
+                "cost_center": cost_center,
             })
 
             # Credit leg — EWT payable to BIR (NO party — government liability)
             jv.append("accounts", {
-                "account": "2102202 - EWT PAYABLE - BEI",
+                "account": settings.get("ewt_payable_account"),
                 "credit_in_account_currency": request.ewt_amount,
-                # No party_type, no party — owed to BIR, not supplier
                 "reference_type": "BEI Payment Request",
                 "reference_name": request.name,
-                "cost_center": getattr(request, "cost_center", "") or "",
+                "cost_center": cost_center,
             })
 
             jv.insert(ignore_permissions=True)
             jv.submit()
-            frappe.db.release_savepoint("ewt_jv_creation")
+            frappe.db.release_savepoint("payment_ewt_atomic")
 
         except Exception as e:
-            frappe.db.rollback_to_savepoint("ewt_jv_creation")
+            frappe.db.rollback_to_savepoint("payment_ewt_atomic")
             frappe.log_error(f"EWT JV generation failed for {request.name}: {e}")
-            frappe.throw(f"Payment recorded but EWT JV could not be created: {e}")
+            frappe.throw(
+                f"Payment could not be completed — EWT Journal Entry creation failed: {e}. "
+                f"No changes were made. Please retry or contact finance."
+            )
+    else:
+        result = request.mark_as_paid(transaction_reference, payment_proof)
 
     return result
 
@@ -4078,8 +4291,8 @@ def approve_match_exception(name: str, comment: str | None = None):
 
     # First stage for dual approvals
     if exception.approval_tier == "CPO+CFO" and exception.status == "Pending CPO":
-        _record_dual_trace(exception, "CPO", CPO_APPROVER_EMAIL, approved_at, comment)
-        exception.approver = _resolve_approver_user(CFO_APPROVER_EMAIL)
+        _record_dual_trace(exception, "CPO", get_approver_email("cpo"), approved_at, comment)
+        exception.approver = _resolve_approver_user(get_approver_email("cfo"))
         exception.status = "Pending CFO"
         exception.approver_status = "Pending"
         exception.save(ignore_permissions=True)
@@ -4092,8 +4305,8 @@ def approve_match_exception(name: str, comment: str | None = None):
         }
 
     if exception.approval_tier == "CPO+CEO" and exception.status == "Pending CPO":
-        _record_dual_trace(exception, "CPO", CPO_APPROVER_EMAIL, approved_at, comment)
-        exception.approver = _resolve_approver_user("sam@bebang.ph")
+        _record_dual_trace(exception, "CPO", get_approver_email("cpo"), approved_at, comment)
+        exception.approver = _resolve_approver_user(get_approver_email("ceo"))
         exception.status = "Pending CEO"
         exception.approver_status = "Pending"
         exception.save(ignore_permissions=True)
@@ -4107,7 +4320,7 @@ def approve_match_exception(name: str, comment: str | None = None):
 
     # Final stage
     if exception.approval_tier == "CPO+CFO" and exception.status == "Pending CFO":
-        _record_dual_trace(exception, "CFO", CFO_APPROVER_EMAIL, approved_at, comment)
+        _record_dual_trace(exception, "CFO", get_approver_email("cfo"), approved_at, comment)
     elif exception.approval_tier == "CPO+CEO" and exception.status == "Pending CEO":
         exception.approver_comment = _append_comment(exception.approver_comment, "CEO Approved", comment)
     else:
@@ -4679,39 +4892,57 @@ def tag_advance_to_gr(advance_payment, goods_receipt, amount_to_clear):
             advance_payment, goods_receipt, amount_to_clear
         )
 
+        # S099: Read accounts from BEI Settings
+        from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+        settings = get_procurement_settings()
+        cost_center = settings.get("default_cost_center") or "Main - BEI"
+
+        # S099/C3: Input VAT 3-way split based on supplier's input_vat_category
+        input_vat_category = frappe.db.get_value(
+            "BEI Supplier", supplier_name, "input_vat_category"
+        ) or "Goods"
+        input_vat_account_map = {
+            "Goods": settings.get("input_vat_goods_account"),
+            "Services": settings.get("input_vat_services_account"),
+            "Capital Goods": settings.get("input_vat_capital_goods_account"),
+        }
+        input_vat_account = input_vat_account_map.get(input_vat_category, settings.get("input_vat_goods_account"))
+
         # Calculate VAT split
         # Amount to clear is VAT-inclusive. Base = amount / 1.12, VAT = amount - base
-        base_amount = flt(amount_to_clear / 1.12, 2)
+        vat_rate = flt(settings.get("default_vat_rate", 12))
+        vat_divisor = 1 + (vat_rate / 100) if vat_rate > 0 else 1
+        base_amount = flt(amount_to_clear / vat_divisor, 2)
         vat_amount = flt(amount_to_clear - base_amount, 2)
 
         # Debit: GR/IR Clearing (Base Amount)
         jv.append("accounts", {
-            "account": "1104005 - GR/IR CLEARING - BEI",
+            "account": settings.get("gr_ir_clearing_account"),
             "debit_in_account_currency": base_amount,
             "credit_in_account_currency": 0,
             "party_type": "Supplier",
             "party": party_name,
-            "cost_center": "Main - BEI",
+            "cost_center": cost_center,
         })
 
-        # Debit: Input VAT (VAT Amount)
+        # Debit: Input VAT (VAT Amount) — account based on supplier category
         jv.append("accounts", {
-            "account": "1105103 - INPUT VAT-GOODS - BEI",
+            "account": input_vat_account,
             "debit_in_account_currency": vat_amount,
             "credit_in_account_currency": 0,
             "party_type": "Supplier",
             "party": party_name,
-            "cost_center": "Main - BEI",
+            "cost_center": cost_center,
         })
 
         # Credit: Advances to Suppliers (Total Amount)
         jv.append("accounts", {
-            "account": "1105203 - ADVANCES TO SUPPLIERS - BEI",
+            "account": settings.get("advances_to_suppliers_account"),
             "debit_in_account_currency": 0,
             "credit_in_account_currency": amount_to_clear,
             "party_type": "Supplier",
             "party": party_name,
-            "cost_center": "Main - BEI",
+            "cost_center": cost_center,
         })
 
         jv.insert(ignore_permissions=True)
@@ -4846,17 +5077,22 @@ def mark_advance_undeliverable(advance_payment, amount, reason):
         jv.user_remark = "Reclassification of undeliverable advance: {0}. Reason: {1}".format(
             advance_payment, reason.strip()
         )
+        from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+        reclass_settings = get_procurement_settings()
+
         jv.append("accounts", {
             "account": "1103102 - ACCOUNTS RECEIVABLE-OTHERS - BEI",
             "debit_in_account_currency": amount,
             "party_type": "Supplier",
             "party": party_name,
+            "cost_center": reclass_settings.get("default_cost_center") or "",
         })
         jv.append("accounts", {
-            "account": "1105203 - ADVANCES TO SUPPLIERS - BEI",
+            "account": reclass_settings.get("advances_to_suppliers_account"),
             "credit_in_account_currency": amount,
             "party_type": "Supplier",
             "party": party_name,
+            "cost_center": reclass_settings.get("default_cost_center") or "",
         })
         jv.insert(ignore_permissions=True)
         jv.submit()
@@ -5137,11 +5373,19 @@ def generate_form_2307_entry(payment_request):
     payment_date = getdate(pay_req.payment_date or pay_req.request_date or nowdate())
     tax_period = payment_date.strftime("%Y-%m")
 
-    # EWT calculation — default ATC WI100 (goods) at 1% for trade
+    # S099: Read ATC code and EWT rate from supplier master, fall back to settings defaults
+    from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+    settings = get_procurement_settings()
+
+    supplier_atc = frappe.db.get_value("BEI Supplier", pay_req.supplier, "atc_code") or "WI100"
+    supplier_ewt_rate = frappe.db.get_value("BEI Supplier", pay_req.supplier, "default_ewt_rate")
+
     gross_amount = flt(pay_req.payment_amount)
-    ewt_rate = flt(pay_req.ewt_rate) if hasattr(pay_req, "ewt_rate") and pay_req.ewt_rate else 1.0
+    ewt_rate = flt(pay_req.ewt_rate) if hasattr(pay_req, "ewt_rate") and pay_req.ewt_rate else (
+        flt(supplier_ewt_rate) if supplier_ewt_rate else flt(settings.get("default_ewt_rate", 1))
+    )
     ewt_amount = flt(gross_amount * ewt_rate / 100, 2)
-    atc_code = "WI100"  # Default: Income payments to suppliers of goods
+    atc_code = supplier_atc
 
     form_2307_data = {
         "supplier_tin": supplier_tin,
@@ -5549,3 +5793,181 @@ def check_overdue_invoices():
         msg = f"*Missing Invoice Alert*\\nPayment {pay.name} to {pay.supplier_name} for PHP {pay.payment_amount:,.2f} is missing a BEI Invoice. Paid on {pay.processed_date}. Please collect the invoice immediately to comply with EOPT."
         if pay.processed_by:
             send_notification_to_user(pay.processed_by, msg)
+
+
+def escalate_pending_approvals():
+    """Daily escalation: re-notify approvers for PO/PR/Payment approvals pending > 24 hours."""
+    from hrms.api.google_chat import send_notification_to_user
+
+    cutoff = add_days(nowdate(), -1)
+    notifications_sent = 0
+
+    cpo_email = None
+    cfo_email = None
+    try:
+        cpo_email = frappe.db.get_single_value("BEI Settings", "cpo_approver_email")
+        cfo_email = frappe.db.get_single_value("BEI Settings", "cfo_approver_email")
+    except Exception:
+        pass
+    if not cpo_email:
+        cpo_email = CPO_APPROVER_EMAIL
+    if not cfo_email:
+        cfo_email = CFO_APPROVER_EMAIL
+
+    # Pending PO approvals (Mae)
+    for po in frappe.db.sql(
+        "SELECT name, po_no, supplier_name, grand_total, modified FROM `tabBEI Purchase Order` "
+        "WHERE status = 'Pending Mae Approval' AND DATE(modified) <= %s LIMIT 20",
+        (cutoff,), as_dict=True,
+    ):
+        try:
+            send_notification_to_user(cpo_email, (
+                f"*Reminder: PO Approval Pending > 24h*\nPO: {po.po_no or po.name}\n"
+                f"Supplier: {po.supplier_name}\nAmount: PHP {flt(po.grand_total):,.2f}\n"
+                f"View: https://my.bebang.ph/procurement/po/{po.name}"
+            ))
+            notifications_sent += 1
+        except Exception:
+            frappe.log_error(f"Escalation failed for PO {po.name}", "Approval Escalation Error")
+
+    # Pending PO approvals (Butch/CFO)
+    for po in frappe.db.sql(
+        "SELECT name, po_no, supplier_name, grand_total, modified FROM `tabBEI Purchase Order` "
+        "WHERE status = 'Pending Butch Approval' AND DATE(modified) <= %s LIMIT 20",
+        (cutoff,), as_dict=True,
+    ):
+        try:
+            send_notification_to_user(cfo_email, (
+                f"*Reminder: PO CFO Approval Pending > 24h*\nPO: {po.po_no or po.name}\n"
+                f"Supplier: {po.supplier_name}\nAmount: PHP {flt(po.grand_total):,.2f}\n"
+                f"View: https://my.bebang.ph/procurement/po/{po.name}"
+            ))
+            notifications_sent += 1
+        except Exception:
+            frappe.log_error(f"Escalation failed for PO {po.name}", "Approval Escalation Error")
+
+    # Pending PR approvals
+    for pr in frappe.db.sql(
+        "SELECT name, pr_no, department, total_estimated_cost, modified FROM `tabBEI Purchase Requisition` "
+        "WHERE status = 'Pending Approval' AND DATE(modified) <= %s LIMIT 20",
+        (cutoff,), as_dict=True,
+    ):
+        try:
+            send_notification_to_user(cpo_email, (
+                f"*Reminder: PR Approval Pending > 24h*\nPR: {pr.pr_no or pr.name}\n"
+                f"Dept: {pr.department or 'N/A'}\nEst: PHP {flt(pr.total_estimated_cost):,.2f}\n"
+                f"View: https://my.bebang.ph/procurement/pr/{pr.name}"
+            ))
+            notifications_sent += 1
+        except Exception:
+            frappe.log_error(f"Escalation failed for PR {pr.name}", "Approval Escalation Error")
+
+    # Pending Payment Request approvals
+    for status, approver, label in [
+        ("Pending Review", cpo_email, "Reviewer"),
+        ("Pending Budget Approval", cpo_email, "Budget"),
+        ("Pending CFO Approval", cfo_email, "CFO"),
+        ("Pending CEO Approval", "sam@bebang.ph", "CEO"),
+    ]:
+        for pay in frappe.db.sql(
+            "SELECT name, supplier_name, payment_amount, modified FROM `tabBEI Payment Request` "
+            "WHERE status = %s AND DATE(modified) <= %s LIMIT 10",
+            (status, cutoff), as_dict=True,
+        ):
+            try:
+                send_notification_to_user(approver, (
+                    f"*Reminder: Payment {label} Approval Pending > 24h*\n"
+                    f"Payment: {pay.name}\nSupplier: {pay.supplier_name}\n"
+                    f"Amount: PHP {flt(pay.payment_amount):,.2f}\n"
+                    f"View: https://my.bebang.ph/procurement/payment/{pay.name}"
+                ))
+                notifications_sent += 1
+            except Exception:
+                frappe.log_error(f"Escalation failed for Payment {pay.name}", "Approval Escalation Error")
+
+    if notifications_sent:
+        frappe.db.commit()
+
+
+# ── S099: Auto-Price Lookup ──────────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_item_last_price(item_code, supplier=None):
+    """Return the last negotiated unit_cost for an item+supplier combination.
+
+    Also returns avg_90d_price for reference. Used by PR form auto-price.
+    """
+    from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_item_last_price")
+
+    settings = get_procurement_settings()
+    lookback_days = cint(settings.get("price_variance_lookback_days", 90))
+
+    if not item_code:
+        return {"last_price": None, "avg_price": None}
+
+    filters = {"item_code": item_code}
+    supplier_clause = ""
+    if supplier:
+        supplier_clause = "AND po.supplier = %(supplier)s"
+        filters["supplier"] = supplier
+
+    # Last PO price for this item+supplier
+    last_price_result = frappe.db.sql("""
+        SELECT poi.unit_cost, po.po_date, po.supplier
+        FROM `tabBEI PO Item` poi
+        JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+        WHERE poi.item_code = %(item_code)s
+        AND po.status NOT IN ('Draft', 'Cancelled')
+        {supplier_clause}
+        ORDER BY po.po_date DESC, po.creation DESC
+        LIMIT 1
+    """.format(supplier_clause=supplier_clause), filters, as_dict=True)
+
+    # Average price over lookback period
+    avg_result = frappe.db.sql("""
+        SELECT AVG(poi.unit_cost) as avg_price
+        FROM `tabBEI PO Item` poi
+        JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+        WHERE poi.item_code = %(item_code)s
+        AND po.status NOT IN ('Draft', 'Cancelled')
+        AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL %(lookback)s DAY)
+        {supplier_clause}
+    """.format(supplier_clause=supplier_clause), {**filters, "lookback": lookback_days}, as_dict=True)
+
+    last = last_price_result[0] if last_price_result else None
+    avg = avg_result[0] if avg_result else None
+
+    return {
+        "last_price": flt(last.unit_cost, 4) if last else None,
+        "last_po_date": str(last.po_date) if last else None,
+        "last_supplier": last.supplier if last else None,
+        "avg_price": flt(avg.avg_price, 4) if avg and avg.avg_price else None,
+        "lookback_days": lookback_days,
+    }
+
+
+@frappe.whitelist()
+def get_department_list():
+    """Return list of active departments for PR form dropdown."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_department_list")
+
+    departments = frappe.get_all(
+        "Department",
+        filters={"is_group": 0, "disabled": 0},
+        fields=["name", "department_name"],
+        order_by="department_name",
+    )
+    return [d.department_name or d.name for d in departments]
+
+
+@frappe.whitelist()
+def get_uom_list():
+    """Return list of UOMs for PR form dropdown."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_uom_list")
+
+    uoms = frappe.get_all("UOM", fields=["name"], order_by="name")
+    return [u.name for u in uoms]

@@ -50,3 +50,4 @@ hrms.patches.v16_0.add_stock_reconciliation_sync_ref_field #2026-03-11
 hrms.patches.v16_0.ensure_bki_commissary_warehouses #2026-03-12
 hrms.patches.v16_0.ensure_sales_dashboard_access #2026-03-15
 hrms.patches.v16_0.ensure_marketing_giveaway_setup #2026-03-18
+hrms.patches.v16_0.s099_seed_procurement_settings #2026-03-23

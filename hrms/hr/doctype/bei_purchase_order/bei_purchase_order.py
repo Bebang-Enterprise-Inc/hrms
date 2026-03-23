@@ -34,7 +34,26 @@ class BEIPurchaseOrder(Document):
 		self.calculate_totals()
 		self.set_po_no()
 		self.check_dual_approval_requirement()
+		self.check_new_vendor_ceo_requirement()
 		self.check_price_variance_blocks()
+
+	def check_new_vendor_ceo_requirement(self):
+		"""S099/E6: New vendor POs require CEO approval regardless of amount."""
+		if not self.supplier:
+			return
+
+		from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+		settings = get_procurement_settings()
+		window_days = cint(settings.get("new_supplier_window_days", 30))
+
+		is_new = frappe.db.sql("""
+			SELECT 1 FROM `tabBEI Supplier`
+			WHERE name = %s
+			AND creation >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
+		""", (self.supplier, window_days))
+
+		if is_new:
+			self.requires_ceo_approval = 1
 
 	def before_submit(self):
 		"""Only fully approved POs can be submitted."""
@@ -46,6 +65,9 @@ class BEIPurchaseOrder(Document):
 
 		if self.requires_dual_approval and self.butch_approval != "Approved":
 			frappe.throw(_("CFO approval is required before PO submission"))
+
+		if cint(self.get("requires_ceo_approval")) and self.get("ceo_approval") != "Approved":
+			frappe.throw(_("CEO approval is required for new vendor POs"))
 
 	def on_submit(self):
 		"""Lock PO lifecycle and create downstream ERP artifacts."""
@@ -108,8 +130,13 @@ class BEIPurchaseOrder(Document):
 		]
 
 	def check_price_variance_blocks(self):
-		"""Audit Control 2.6: Block PO if price variance >10% without override reason."""
+		"""Audit Control 2.6: Block PO if price variance >threshold without override reason."""
 		from frappe.utils import flt, now_datetime
+		from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+
+		settings = get_procurement_settings()
+		variance_threshold = flt(settings.get("price_variance_block_pct", 10))
+		lookback_days = cint(settings.get("price_variance_lookback_days", 90))
 
 		for item in self.items:
 			avg_price = frappe.db.sql(
@@ -118,15 +145,15 @@ class BEIPurchaseOrder(Document):
                 FROM `tabBEI PO Item` poi
                 JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
                 WHERE poi.item_code = %s AND po.supplier = %s AND po.status NOT IN ('Draft', 'Cancelled')
-                AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL 90 DAY)
+                AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
             """,
-				(item.item_code, self.supplier),
+				(item.item_code, self.supplier, lookback_days),
 			)
 
 			avg_price = flt(avg_price[0][0]) if avg_price and avg_price[0][0] else 0
 			if avg_price > 0:
 				variance_pct = abs(flt(item.unit_cost) - avg_price) / avg_price * 100
-				if variance_pct > 10.0:
+				if variance_pct > variance_threshold:
 					if not item.price_variance_override:
 						frappe.throw(
 							f"Price for item {item.item_code} exceeds 10% variance from historical average. An override reason is required."
@@ -141,13 +168,23 @@ class BEIPurchaseOrder(Document):
 			self.po_no = self.name
 
 	def calculate_totals(self):
-		"""Calculate all totals including VAT."""
+		"""Calculate all totals including VAT. S099: reads supplier vat_status."""
+		from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+		settings = get_procurement_settings()
+
+		# Determine default VAT rate from supplier's vat_status
+		default_vat_rate = flt(settings.get("default_vat_rate", 12))
+		if self.supplier:
+			vat_status = frappe.db.get_value("BEI Supplier", self.supplier, "vat_status")
+			if vat_status in ("Non-VAT", "Exempt"):
+				default_vat_rate = 0
+
 		subtotal = 0
 		total_vat = 0
 
 		for item in self.items:
 			item_subtotal = flt(item.qty, 2) * flt(item.unit_cost, 2)
-			item_vat = item_subtotal * flt(item.vat_rate if item.vat_rate is not None else 12, 2) / 100
+			item_vat = item_subtotal * flt(item.vat_rate if item.vat_rate is not None else default_vat_rate, 2) / 100
 
 			item.vat_amount = flt(item_vat, 2)
 			item.amount = flt(item_subtotal + item_vat, 2)
@@ -163,8 +200,10 @@ class BEIPurchaseOrder(Document):
 		)
 
 	def check_dual_approval_requirement(self):
-		"""Check if PO requires dual approval (>500K needs both Mae AND Butch)."""
-		self.requires_dual_approval = 1 if self.grand_total > DUAL_APPROVAL_THRESHOLD else 0
+		"""Check if PO requires dual approval (>threshold needs both CPO AND CFO)."""
+		from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+		threshold = flt(get_procurement_settings().get("dual_approval_threshold", DUAL_APPROVAL_THRESHOLD))
+		self.requires_dual_approval = 1 if self.grand_total > threshold else 0
 
 	def after_insert(self):
 		self.po_no = self.name
@@ -188,20 +227,65 @@ class BEIPurchaseOrder(Document):
 		return {"success": True, "message": _("PO submitted for Mae's approval")}
 
 	def notify_mae(self):
-		"""Send notification to Mae Karazi."""
-		# TODO: Implement Google Chat notification to mae@bebang.ph
-		pass
+		"""Send Google Chat notification to Mae (CPO) for PO approval."""
+		self._send_approval_notification(self._get_approver_email("cpo"), "CPO (Mae)")
 
 	def notify_butch(self):
-		"""Send notification to Butch Formoso."""
-		# TODO: Implement Google Chat notification to butch@bebang.ph
-		pass
+		"""Send Google Chat notification to Butch (CFO) for PO approval."""
+		self._send_approval_notification(self._get_approver_email("cfo"), "CFO (Butch)")
+
+	def _get_approver_email(self, role: str) -> str:
+		"""Get approver email from BEI Settings, fall back to delivery_billing_policy constants."""
+		field_map = {"cpo": "cpo_approver_email", "cfo": "cfo_approver_email"}
+		try:
+			email = frappe.db.get_single_value("BEI Settings", field_map.get(role, ""))
+			if email:
+				return email
+		except Exception:
+			pass
+		# Fall back to hardcoded constants (pre-S099)
+		from hrms.utils.delivery_billing_policy import CPO_APPROVER_EMAIL, CFO_APPROVER_EMAIL
+		return CPO_APPROVER_EMAIL if role == "cpo" else CFO_APPROVER_EMAIL
+
+	def _send_approval_notification(self, approver_email: str, approver_label: str):
+		"""Send PO approval notification via Google Chat DM."""
+		try:
+			from hrms.api.google_chat import send_notification_to_user
+
+			items_summary = ", ".join(
+				f"{row.item_code} x{flt(row.qty)}" for row in (self.items or [])[:5]
+			)
+			if len(self.items or []) > 5:
+				items_summary += f" (+{len(self.items) - 5} more)"
+
+			supplier_name = self.supplier_name or self.supplier or "Unknown"
+			message = (
+				f"*PO Approval Required*\n"
+				f"PO: {self.po_no or self.name}\n"
+				f"Supplier: {supplier_name}\n"
+				f"Amount: PHP {flt(self.grand_total):,.2f}\n"
+				f"Items: {items_summary}\n"
+				f"Requested by: {self.owner}\n"
+				f"View: https://my.bebang.ph/procurement/po/{self.name}"
+			)
+			send_notification_to_user(approver_email, message)
+		except Exception as e:
+			frappe.log_error(
+				f"Failed to send PO approval notification for {self.name} to {approver_label}: {e}",
+				"PO Approval Notification Error",
+			)
 
 	@frappe.whitelist()
 	def approve_mae(self, comment: str | None = None):
-		"""Mae approves the PO."""
+		"""Mae (CPO) approves the PO. Only the configured CPO can call this."""
 		if self.status != "Pending Mae Approval":
 			frappe.throw(_("PO is not pending Mae's approval"))
+
+		from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+		settings = get_procurement_settings()
+		cpo_email = settings.get("cpo_approver_email")
+		if cpo_email and frappe.session.user != cpo_email:
+			frappe.throw(_("Only {0} can approve as CPO").format(cpo_email))
 
 		self.mae_approval = "Approved"
 		self.mae_comment = comment
@@ -213,6 +297,11 @@ class BEIPurchaseOrder(Document):
 			self.save()
 			self.notify_butch()
 			return {"success": True, "message": _("Mae approved. PO now pending Butch's approval (>500K)")}
+		elif cint(self.get("requires_ceo_approval")) and self.get("ceo_approval") != "Approved":
+			# New vendor — needs CEO approval
+			self.status = "Pending CEO Approval"
+			self.save()
+			return {"success": True, "message": _("Mae approved. PO now pending CEO approval (new vendor)")}
 		else:
 			# Single approval sufficient
 			self.status = "Approved"
@@ -223,22 +312,59 @@ class BEIPurchaseOrder(Document):
 
 	@frappe.whitelist()
 	def approve_butch(self, comment: str | None = None):
-		"""Butch (CFO) approves the PO for >500K."""
+		"""Butch (CFO) approves the PO for >500K. Only the configured CFO can call this."""
 		if self.status != "Pending Butch Approval":
 			frappe.throw(_("PO is not pending Butch's approval"))
 
 		if not self.requires_dual_approval:
 			frappe.throw(_("This PO does not require CFO approval"))
 
+		from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+		settings = get_procurement_settings()
+		cfo_email = settings.get("cfo_approver_email")
+		if cfo_email and frappe.session.user != cfo_email:
+			frappe.throw(_("Only {0} can approve as CFO").format(cfo_email))
+
 		self.butch_approval = "Approved"
 		self.butch_comment = comment
 		self.butch_approval_date = now_datetime()
+
+		if cint(self.get("requires_ceo_approval")) and self.get("ceo_approval") != "Approved":
+			self.status = "Pending CEO Approval"
+			self.save()
+			return {"success": True, "message": _("CFO approved. PO now pending CEO approval (new vendor)")}
+
 		self.status = "Approved"
 		self.save()
 		if self.docstatus == 0:
 			self.submit()
 
 		return {"success": True, "message": _("PO approved by Butch (CFO)")}
+
+	@frappe.whitelist()
+	def approve_ceo(self, comment: str | None = None):
+		"""CEO approves the PO for new vendors. Only the configured CEO can call this."""
+		if self.status != "Pending CEO Approval":
+			frappe.throw(_("PO is not pending CEO approval"))
+
+		if not cint(self.get("requires_ceo_approval")):
+			frappe.throw(_("This PO does not require CEO approval"))
+
+		from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+		settings = get_procurement_settings()
+		ceo_email = settings.get("ceo_approver_email")
+		if ceo_email and frappe.session.user != ceo_email:
+			frappe.throw(_("Only {0} can approve as CEO").format(ceo_email))
+
+		self.ceo_approval = "Approved"
+		self.ceo_comment = comment
+		self.ceo_approval_date = now_datetime()
+		self.status = "Approved"
+		self.save()
+		if self.docstatus == 0:
+			self.submit()
+
+		return {"success": True, "message": _("PO approved by CEO")}
 
 	def on_fully_approved(self):
 		"""Actions when PO is fully approved."""

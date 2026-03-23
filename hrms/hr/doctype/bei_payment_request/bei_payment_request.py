@@ -54,10 +54,51 @@ class BEIPaymentRequest(Document):
 
 	def validate(self):
 		self.populate_invoice_context()
+		self.auto_populate_ewt_from_supplier()
 		self.set_payment_request_no()
 		self.check_ceo_requirement()
 		self.load_supplier_bank_info()
 		self.auto_assign_gl_account()
+
+	def auto_populate_ewt_from_supplier(self):
+		"""S099/C4: Auto-populate EWT rate from supplier master.
+
+		- If supplier has ewt_exempt=1, clear ewt_applicable and ewt fields.
+		- If supplier has default_ewt_rate, use it when ewt_rate is not set.
+		- ewt_exempt and ewt_applicable cannot both be 1.
+		"""
+		if not self.supplier:
+			return
+
+		supplier_fields = frappe.db.get_value(
+			"BEI Supplier", self.supplier,
+			["ewt_applicable", "ewt_exempt", "default_ewt_rate"],
+			as_dict=True,
+		)
+		if not supplier_fields:
+			return
+
+		# ewt_exempt overrides ewt_applicable
+		if cint(supplier_fields.get("ewt_exempt")):
+			self.ewt_applicable = 0
+			self.ewt_rate = 0
+			self.ewt_amount = 0
+			return
+
+		# Auto-populate ewt_rate from supplier default if not already set
+		if cint(supplier_fields.get("ewt_applicable")) and not self.ewt_rate:
+			supplier_rate = flt(supplier_fields.get("default_ewt_rate"))
+			if supplier_rate > 0:
+				self.ewt_rate = supplier_rate
+			else:
+				# Fall back to BEI Settings default
+				from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+				settings = get_procurement_settings()
+				self.ewt_rate = flt(settings.get("default_ewt_rate", 1))
+
+		# Recalculate ewt_amount if rate was auto-set
+		if flt(self.ewt_rate) > 0 and flt(self.payment_amount) > 0:
+			self.ewt_amount = flt(flt(self.payment_amount) * flt(self.ewt_rate) / 100, 2)
 
 	def populate_invoice_context(self):
 		"""Backfill canonical vendor-invoice fields from the linked invoice."""
@@ -225,7 +266,7 @@ class BEIPaymentRequest(Document):
 		self.status = "Pending Budget Approval"
 		self.save()
 
-		# TODO: Notify budget approver
+		self._notify_next_approver("Budget Approver", "cpo_approver_email")
 
 		return {"success": True, "message": _("Review approved - pending budget approval")}
 
@@ -245,7 +286,7 @@ class BEIPaymentRequest(Document):
 		self.status = "Pending CFO Approval"
 		self.save()
 
-		# TODO: Notify CFO (Butch)
+		self._notify_next_approver("CFO", "cfo_approver_email")
 
 		return {"success": True, "message": _("Budget approved - pending CFO approval")}
 
@@ -264,7 +305,7 @@ class BEIPaymentRequest(Document):
 		if self.ceo_required:
 			# Move to CEO (Level 4)
 			self.status = "Pending CEO Approval"
-			# TODO: Notify CEO
+			self._notify_next_approver("CEO", "ceo_approver_email")
 		else:
 			# Fully approved
 			self.status = "Approved"
@@ -297,6 +338,44 @@ class BEIPaymentRequest(Document):
 		self.on_fully_approved()
 
 		return {"success": True, "message": _("Payment request approved by CEO")}
+
+	def _notify_next_approver(self, approver_label: str, settings_field: str):
+		"""Send Google Chat notification to the next approver in the payment approval chain."""
+		try:
+			from hrms.api.google_chat import send_notification_to_user
+
+			approver_email = None
+			try:
+				approver_email = frappe.db.get_single_value("BEI Settings", settings_field)
+			except Exception:
+				pass
+			if not approver_email:
+				from hrms.utils.delivery_billing_policy import CPO_APPROVER_EMAIL, CFO_APPROVER_EMAIL
+				email_map = {
+					"cpo_approver_email": CPO_APPROVER_EMAIL,
+					"cfo_approver_email": CFO_APPROVER_EMAIL,
+					"ceo_approver_email": "sam@bebang.ph",
+				}
+				approver_email = email_map.get(settings_field)
+			if not approver_email:
+				return
+
+			supplier_name = self.supplier_name or self.supplier or "Unknown"
+			message = (
+				f"*Payment Approval Required ({approver_label})*\n"
+				f"Payment Request: {self.name}\n"
+				f"Supplier: {supplier_name}\n"
+				f"Amount: PHP {flt(self.payment_amount):,.2f}\n"
+				f"Status: {self.status}\n"
+				f"Invoice: {self.invoice or 'N/A'}\n"
+				f"View: https://my.bebang.ph/procurement/payment/{self.name}"
+			)
+			send_notification_to_user(approver_email, message)
+		except Exception as e:
+			frappe.log_error(
+				f"Failed to send payment approval notification for {self.name} to {approver_label}: {e}",
+				"Payment Approval Notification Error",
+			)
 
 	def on_fully_approved(self):
 		"""Actions when payment request is fully approved."""

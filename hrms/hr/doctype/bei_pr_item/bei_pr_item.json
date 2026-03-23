@@ -59,13 +59,13 @@
       "fieldname": "estimated_unit_cost",
       "fieldtype": "Currency",
       "in_list_view": 1,
-      "label": "Est. Unit Cost"
+      "label": "Unit Cost"
     },
     {
       "fieldname": "estimated_amount",
       "fieldtype": "Currency",
       "in_list_view": 1,
-      "label": "Est. Amount",
+      "label": "Amount",
       "read_only": 1
     },
     {

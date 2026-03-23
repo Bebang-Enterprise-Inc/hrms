@@ -13,7 +13,7 @@ from typing import Any
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, date_diff, flt, getdate, today
+from frappe.utils import add_days, cint, date_diff, flt, getdate, today
 
 from hrms.api.commissary import (
 	get_commissary_company,
@@ -171,21 +171,28 @@ def get_commissary_dashboard() -> dict[str, Any]:
 	)
 
 	# Low stock alerts (items below product-specific reorder level)
+	# S099: Read thresholds from BEI Settings
+	from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+	_comm_settings = get_procurement_settings()
 	low_stock_count = (
 		frappe.db.sql(
 			"""
         SELECT COUNT(DISTINCT b.item_code)
         FROM `tabBin` b
         JOIN `tabItem` i ON i.name = b.item_code
-        WHERE b.warehouse = %s
+        WHERE b.warehouse = %(warehouse)s
         AND (
             b.actual_qty <= 0
-            OR (i.item_code LIKE 'FG%%' AND b.actual_qty < 7)
-            OR (i.item_code NOT LIKE 'FG%%' AND b.actual_qty < IFNULL(i.safety_stock, 10))
+            OR (i.item_code LIKE 'FG%%' AND b.actual_qty < %(fg_threshold)s)
+            OR (i.item_code NOT LIKE 'FG%%' AND b.actual_qty < IFNULL(i.safety_stock, %(non_fg_fallback)s))
         )
         AND i.is_stock_item = 1
     """,
-			commissary_warehouse,
+			{
+				"warehouse": commissary_warehouse,
+				"fg_threshold": cint(_comm_settings.get("fg_low_stock_threshold", 7)),
+				"non_fg_fallback": cint(_comm_settings.get("non_fg_low_stock_fallback", 10)),
+			},
 		)[0][0]
 		or 0
 	)
@@ -414,13 +421,16 @@ def _validate_shelf_life_gate(item_code, batch_no, action_date, action_type="dis
 			"requires_override": True,
 		}
 
-	# Per-item minimum: shelf_life - 1 day (must dispatch within 24h of production)
+	# Per-item minimum: shelf_life - buffer (S099: buffer from BEI Settings)
 	from hrms.api.commissary import get_product_threshold
+	from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+	_shelf_settings = get_procurement_settings()
+	_shelf_buffer = cint(_shelf_settings.get("shelf_life_dispatch_buffer_days", 1))
 
 	threshold = get_product_threshold(item_code)
 	item_shelf_life = threshold.get("shelf_life", 0)
 	if item_shelf_life > 0:
-		min_shelf_days = item_shelf_life - 1
+		min_shelf_days = item_shelf_life - _shelf_buffer
 	else:
 		# Fallback to global setting for items without product thresholds
 		min_shelf_days = frappe.db.get_single_value("BEI Settings", "min_shelf_life_days") or 0
@@ -443,6 +453,15 @@ def _validate_shelf_life_gate(item_code, batch_no, action_date, action_type="dis
 @frappe.whitelist()
 def override_shelf_life_gate(batch_no: str, reason: str, action_type: str = "dispatch"):
 	"""Allow supervisor to override shelf life gate with audit trail."""
+	set_backend_observability_context(
+		module="commissary",
+		action="override_shelf_life_gate",
+		route_action="override_shelf_life_gate",
+		mutation_type="override",
+		endpoint_or_job="hrms.api.commissary_dashboard.override_shelf_life_gate",
+		phase="mutation",
+		extras={"batch_no": batch_no, "action_type": action_type},
+	)
 	user_roles = frappe.get_roles()
 	if "Commissary Supervisor" not in user_roles and "System Manager" not in user_roles:
 		frappe.throw(_("Only Commissary Supervisor can override shelf life gate"))

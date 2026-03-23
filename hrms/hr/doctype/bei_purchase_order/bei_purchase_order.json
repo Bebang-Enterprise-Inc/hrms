@@ -39,6 +39,11 @@
     "butch_approval",
     "butch_comment",
     "butch_approval_date",
+    "ceo_approval_section",
+    "requires_ceo_approval",
+    "ceo_approval",
+    "ceo_comment",
+    "ceo_approval_date",
     "supplier_comm_section",
     "distribution_status",
     "distribution_recipient_email",
@@ -263,6 +268,42 @@
       "fieldname": "butch_approval_date",
       "fieldtype": "Datetime",
       "label": "Butch Approval Date",
+      "read_only": 1
+    },
+    {
+      "collapsible": 1,
+      "depends_on": "eval:doc.requires_ceo_approval",
+      "fieldname": "ceo_approval_section",
+      "fieldtype": "Section Break",
+      "label": "CEO Approval (New Vendor)"
+    },
+    {
+      "default": "0",
+      "fieldname": "requires_ceo_approval",
+      "fieldtype": "Check",
+      "label": "Requires CEO Approval",
+      "read_only": 1
+    },
+    {
+      "default": "Pending",
+      "depends_on": "eval:doc.requires_ceo_approval",
+      "fieldname": "ceo_approval",
+      "fieldtype": "Select",
+      "label": "CEO Approval",
+      "options": "Pending\nApproved\nRejected",
+      "read_only": 1
+    },
+    {
+      "depends_on": "eval:doc.requires_ceo_approval",
+      "fieldname": "ceo_comment",
+      "fieldtype": "Small Text",
+      "label": "CEO Comment"
+    },
+    {
+      "depends_on": "eval:doc.requires_ceo_approval",
+      "fieldname": "ceo_approval_date",
+      "fieldtype": "Datetime",
+      "label": "CEO Approval Date",
       "read_only": 1
     },
     {

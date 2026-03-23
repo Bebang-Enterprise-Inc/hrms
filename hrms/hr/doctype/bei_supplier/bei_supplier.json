@@ -33,6 +33,9 @@
     "ewt_applicable",
     "ewt_exempt",
     "default_ewt_rate",
+    "column_break_ewt",
+    "atc_code",
+    "input_vat_category",
     "bank_section",
     "bank_name",
     "bank_account_name",
@@ -214,6 +217,26 @@
       "fieldname": "default_ewt_rate",
       "fieldtype": "Percent",
       "label": "Default EWT Rate"
+    },
+    {
+      "fieldname": "column_break_ewt",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "WI100",
+      "description": "BIR Alphanumeric Tax Code. WI100=Goods (1%), WC100=Services (2%), WI010/WC010=Corp Goods/Services (1%), WI020/WC020=Individual (5/10%)",
+      "fieldname": "atc_code",
+      "fieldtype": "Select",
+      "label": "ATC Code",
+      "options": "WI100\nWC100\nWI010\nWI020\nWC010\nWC020"
+    },
+    {
+      "default": "Goods",
+      "description": "Determines which Input VAT account to use: Goods (1105104), Services (1105105), or Capital Goods (1105106)",
+      "fieldname": "input_vat_category",
+      "fieldtype": "Select",
+      "label": "Input VAT Category",
+      "options": "Goods\nServices\nCapital Goods"
     },
     {
       "fieldname": "bank_section",

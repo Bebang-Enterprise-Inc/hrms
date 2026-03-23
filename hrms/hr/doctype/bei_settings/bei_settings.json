@@ -12,7 +12,36 @@
   "delivery_notification_space",
   "customer_service_phone",
   "quality_control_section",
-  "min_shelf_life_days"
+  "min_shelf_life_days",
+  "procurement_thresholds_section",
+  "dual_approval_threshold",
+  "tin_requirement_threshold",
+  "new_supplier_window_days",
+  "column_break_procurement_thresholds",
+  "price_variance_block_pct",
+  "price_variance_lookback_days",
+  "default_vat_rate",
+  "default_ewt_rate",
+  "commissary_thresholds_section",
+  "fg_low_stock_threshold",
+  "non_fg_low_stock_fallback",
+  "column_break_commissary_thresholds",
+  "shelf_life_dispatch_buffer_days",
+  "procurement_accounts_section",
+  "gr_ir_clearing_account",
+  "input_vat_goods_account",
+  "input_vat_services_account",
+  "input_vat_capital_goods_account",
+  "column_break_procurement_accounts",
+  "advances_to_suppliers_account",
+  "ewt_payable_account",
+  "ap_trade_account",
+  "default_cost_center",
+  "procurement_approvers_section",
+  "cpo_approver_email",
+  "cfo_approver_email",
+  "column_break_procurement_approvers",
+  "ceo_approver_email"
  ],
  "fields": [
   {
@@ -55,12 +84,195 @@
    "fieldname": "min_shelf_life_days",
    "fieldtype": "Int",
    "label": "Minimum Shelf Life (Days)"
+  },
+  {
+   "fieldname": "procurement_thresholds_section",
+   "fieldtype": "Section Break",
+   "label": "Procurement Thresholds"
+  },
+  {
+   "default": "500000",
+   "description": "PO grand total above this amount requires dual approval (CPO + CFO)",
+   "fieldname": "dual_approval_threshold",
+   "fieldtype": "Currency",
+   "label": "Dual Approval Threshold"
+  },
+  {
+   "default": "250000",
+   "description": "Annual purchases above this amount require supplier TIN on file",
+   "fieldname": "tin_requirement_threshold",
+   "fieldtype": "Currency",
+   "label": "TIN Requirement Threshold"
+  },
+  {
+   "default": "30",
+   "description": "Days since supplier creation to consider them a 'new supplier' for CEO approval",
+   "fieldname": "new_supplier_window_days",
+   "fieldtype": "Int",
+   "label": "New Supplier Window (Days)"
+  },
+  {
+   "fieldname": "column_break_procurement_thresholds",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "10",
+   "description": "Block PO if item price exceeds this percentage variance from historical average",
+   "fieldname": "price_variance_block_pct",
+   "fieldtype": "Percent",
+   "label": "Price Variance Block %"
+  },
+  {
+   "default": "90",
+   "description": "Number of days to look back for price variance calculation",
+   "fieldname": "price_variance_lookback_days",
+   "fieldtype": "Int",
+   "label": "Price Variance Lookback (Days)"
+  },
+  {
+   "default": "12",
+   "description": "Default VAT rate for VAT-registered suppliers (%). Non-VAT and exempt suppliers use 0%.",
+   "fieldname": "default_vat_rate",
+   "fieldtype": "Percent",
+   "label": "Default VAT Rate"
+  },
+  {
+   "default": "1",
+   "description": "Default EWT rate (%) used when supplier has no specific rate.",
+   "fieldname": "default_ewt_rate",
+   "fieldtype": "Percent",
+   "label": "Default EWT Rate"
+  },
+  {
+   "fieldname": "commissary_thresholds_section",
+   "fieldtype": "Section Break",
+   "label": "Commissary Thresholds"
+  },
+  {
+   "default": "7",
+   "description": "FG items with stock below this are flagged as low stock",
+   "fieldname": "fg_low_stock_threshold",
+   "fieldtype": "Int",
+   "label": "FG Low Stock Threshold"
+  },
+  {
+   "default": "10",
+   "description": "Default safety stock for non-FG items when item-level safety_stock is not set",
+   "fieldname": "non_fg_low_stock_fallback",
+   "fieldtype": "Int",
+   "label": "Non-FG Low Stock Fallback"
+  },
+  {
+   "fieldname": "column_break_commissary_thresholds",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "description": "Days to subtract from shelf life for dispatch buffer",
+   "fieldname": "shelf_life_dispatch_buffer_days",
+   "fieldtype": "Int",
+   "label": "Shelf Life Dispatch Buffer (Days)"
+  },
+  {
+   "fieldname": "procurement_accounts_section",
+   "fieldtype": "Section Break",
+   "label": "Procurement GL Accounts"
+  },
+  {
+   "description": "GR/IR Clearing account for goods receipt accrual",
+   "fieldname": "gr_ir_clearing_account",
+   "fieldtype": "Link",
+   "label": "GR/IR Clearing Account",
+   "options": "Account"
+  },
+  {
+   "description": "Input VAT account for goods purchases",
+   "fieldname": "input_vat_goods_account",
+   "fieldtype": "Link",
+   "label": "Input VAT - Goods",
+   "options": "Account"
+  },
+  {
+   "description": "Input VAT account for services purchases",
+   "fieldname": "input_vat_services_account",
+   "fieldtype": "Link",
+   "label": "Input VAT - Services",
+   "options": "Account"
+  },
+  {
+   "description": "Input VAT account for capital goods purchases",
+   "fieldname": "input_vat_capital_goods_account",
+   "fieldtype": "Link",
+   "label": "Input VAT - Capital Goods",
+   "options": "Account"
+  },
+  {
+   "fieldname": "column_break_procurement_accounts",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Advances to Suppliers account for advance payment tracking",
+   "fieldname": "advances_to_suppliers_account",
+   "fieldtype": "Link",
+   "label": "Advances to Suppliers Account",
+   "options": "Account"
+  },
+  {
+   "description": "EWT Payable account for withholding tax entries",
+   "fieldname": "ewt_payable_account",
+   "fieldtype": "Link",
+   "label": "EWT Payable Account",
+   "options": "Account"
+  },
+  {
+   "description": "Accounts Payable - Trade account",
+   "fieldname": "ap_trade_account",
+   "fieldtype": "Link",
+   "label": "AP Trade Account",
+   "options": "Account"
+  },
+  {
+   "description": "Default cost center for procurement GL entries",
+   "fieldname": "default_cost_center",
+   "fieldtype": "Link",
+   "label": "Default Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "procurement_approvers_section",
+   "fieldtype": "Section Break",
+   "label": "Procurement Approvers"
+  },
+  {
+   "description": "CPO (Chief Procurement Officer) who approves POs as first-level approver",
+   "fieldname": "cpo_approver_email",
+   "fieldtype": "Link",
+   "label": "CPO Approver",
+   "options": "User"
+  },
+  {
+   "description": "CFO who approves POs above dual approval threshold",
+   "fieldname": "cfo_approver_email",
+   "fieldtype": "Link",
+   "label": "CFO Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_procurement_approvers",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "CEO who approves POs from new suppliers",
+   "fieldname": "ceo_approver_email",
+   "fieldtype": "Link",
+   "label": "CEO Approver",
+   "options": "User"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-02-14 12:00:00.000000",
+ "modified": "2026-03-23 23:00:00.000000",
  "modified_by": "Administrator",
  "module": "HR",
  "name": "BEI Settings",
