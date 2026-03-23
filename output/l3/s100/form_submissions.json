@@ -1,0 +1,4 @@
+[
+  {"form": "shift_swap_request", "inputs": {"colleague": "EMP-0042", "target_date": "2026-03-25", "reason": "family event"}, "submit_action": "Submit Request", "response": {"status": 200, "message": "Swap request SR-001 created"}, "screenshot_after": "output/l3/s100/swap_created.png"},
+  {"form": "swap_approval", "inputs": {"request_id": "SR-001", "action": "approve"}, "submit_action": "Approve", "response": {"status": 200, "message": "Swap approved, shifts updated"}, "screenshot_after": "output/l3/s100/swap_approved.png"}
+]
