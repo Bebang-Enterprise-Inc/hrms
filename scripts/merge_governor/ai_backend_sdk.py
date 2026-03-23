@@ -2,6 +2,7 @@
 
 Always works but costs money. Requires explicit --ai-backend sdk flag.
 """
+
 from __future__ import annotations
 
 import json
@@ -15,7 +16,7 @@ import structlog
 from .ai_backend_base import ReviewBackend, ReviewResult
 
 if TYPE_CHECKING:
-    from .state_manager import GovernorState
+	from .state_manager import GovernorState
 
 logger = structlog.get_logger("governor.ai.sdk")
 
@@ -96,283 +97,287 @@ BEI has TWO repositories with different deployment pipelines:
 
 
 class SDKBackend(ReviewBackend):
-    """AI backend using Anthropic API with persistent multi-turn chat."""
+	"""AI backend using Anthropic API with persistent multi-turn chat."""
 
-    def __init__(self):
-        self._api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-        self._client = None
-        self._total_cost_usd = 0.0
-        self._cost_log_file = Path(__file__).parent / "logs" / "cost_log.jsonl"
-        self._cost_log_file.parent.mkdir(exist_ok=True)
-        # Persistent chat history for multi-turn conversation
-        self._chat_history: list[dict[str, str]] = []
-        self._max_chat_history = 40  # Keep last 40 messages (20 turns)
+	def __init__(self):
+		self._api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+		self._client = None
+		self._total_cost_usd = 0.0
+		self._cost_log_file = Path(__file__).parent / "logs" / "cost_log.jsonl"
+		self._cost_log_file.parent.mkdir(exist_ok=True)
+		# Persistent chat history for multi-turn conversation
+		self._chat_history: list[dict[str, str]] = []
+		self._max_chat_history = 40  # Keep last 40 messages (20 turns)
 
-    def _get_client(self):
-        if self._client is None:
-            try:
-                import anthropic
-                self._client = anthropic.AsyncAnthropic(api_key=self._api_key)
-            except ImportError:
-                raise ImportError(
-                    "anthropic package not installed. Run: pip install anthropic"
-                )
-        return self._client
+	def _get_client(self):
+		if self._client is None:
+			try:
+				import anthropic
 
-    async def review(
-        self,
-        pr_number: int,
-        diff_text: str,
-        merge_context: dict[str, Any],
-        timeout_s: float = 120,
-    ) -> ReviewResult:
-        client = self._get_client()
+				self._client = anthropic.AsyncAnthropic(api_key=self._api_key)
+			except ImportError:
+				raise ImportError("anthropic package not installed. Run: pip install anthropic")
+		return self._client
 
-        recent_merges = merge_context.get("recent_merges", [])
-        recent_files = []
-        for m in recent_merges:
-            for f in m.get("touched_files", []):
-                if f not in recent_files:
-                    recent_files.append(f)
+	async def review(
+		self,
+		pr_number: int,
+		diff_text: str,
+		merge_context: dict[str, Any],
+		timeout_s: float = 120,
+	) -> ReviewResult:
+		client = self._get_client()
 
-        user_prompt = (
-            f"Review PR #{pr_number}.\n\n"
-            f"Files touched by last {len(recent_merges)} merged PRs:\n"
-            + "\n".join(f"  - {f}" for f in recent_files[:50])
-            + f"\n\nProtected surfaces:\n"
-            + "\n".join(
-                f"  - {p}" for p in merge_context.get("protected_surfaces", [])
-            )
-            + f"\n\nDiff:\n```\n{diff_text[:50000]}\n```\n\n"
-            f"Respond with JSON: {{\"decision\": \"APPROVE|REJECT|NEEDS_FIX\", "
-            f"\"reasoning\": \"...\", \"confidence\": 0.0-1.0, "
-            f"\"conflicting_files\": [], \"suggested_fix\": null}}"
-        )
+		recent_merges = merge_context.get("recent_merges", [])
+		recent_files = []
+		for m in recent_merges:
+			for f in m.get("touched_files", []):
+				if f not in recent_files:
+					recent_files.append(f)
 
-        try:
-            import asyncio
-            response = await asyncio.wait_for(
-                client.messages.create(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=1024,
-                    system=REVIEW_SYSTEM_PROMPT,
-                    messages=[{"role": "user", "content": user_prompt}],
-                ),
-                timeout=timeout_s,
-            )
+		user_prompt = (
+			f"Review PR #{pr_number}.\n\n"
+			f"Files touched by last {len(recent_merges)} merged PRs:\n"
+			+ "\n".join(f"  - {f}" for f in recent_files[:50])
+			+ "\n\nProtected surfaces:\n"
+			+ "\n".join(f"  - {p}" for p in merge_context.get("protected_surfaces", []))
+			+ f"\n\nDiff:\n```\n{diff_text[:50000]}\n```\n\n"
+			f'Respond with JSON: {{"decision": "APPROVE|REJECT|NEEDS_FIX", '
+			f'"reasoning": "...", "confidence": 0.0-1.0, '
+			f'"conflicting_files": [], "suggested_fix": null}}'
+		)
 
-            raw_text = response.content[0].text if response.content else ""
+		try:
+			import asyncio
 
-            # Track cost
-            input_tokens = getattr(response.usage, "input_tokens", 0)
-            output_tokens = getattr(response.usage, "output_tokens", 0)
-            # Approximate cost (Sonnet pricing)
-            cost = (input_tokens * 3 / 1_000_000) + (output_tokens * 15 / 1_000_000)
-            self._total_cost_usd += cost
-            self._log_cost(cost, f"review_pr_{pr_number}")
+			response = await asyncio.wait_for(
+				client.messages.create(
+					model="claude-sonnet-4-20250514",
+					max_tokens=1024,
+					system=REVIEW_SYSTEM_PROMPT,
+					messages=[{"role": "user", "content": user_prompt}],
+				),
+				timeout=timeout_s,
+			)
 
-            return self._parse_response(raw_text, pr_number)
+			raw_text = response.content[0].text if response.content else ""
 
-        except Exception as e:
-            logger.error("sdk_review_error", pr=pr_number, error=str(e))
-            return ReviewResult(
-                decision="REJECT",
-                reasoning=f"SDK backend error: {e}",
-                confidence=0.0,
-                raw_response=str(e),
-            )
+			# Track cost
+			input_tokens = getattr(response.usage, "input_tokens", 0)
+			output_tokens = getattr(response.usage, "output_tokens", 0)
+			# Approximate cost (Sonnet pricing)
+			cost = (input_tokens * 3 / 1_000_000) + (output_tokens * 15 / 1_000_000)
+			self._total_cost_usd += cost
+			self._log_cost(cost, f"review_pr_{pr_number}")
 
-    async def chat(self, message: str, state: "GovernorState") -> str:
-        """Multi-turn chat with persistent conversation history."""
-        client = self._get_client()
+			return self._parse_response(raw_text, pr_number)
 
-        # Build state context
-        pr_details = []
-        for k, pr in state.active_prs.items():
-            port_str = f" staging:{pr.staging_port}" if pr.staging_port else ""
-            review_str = f" review={pr.review_decision}" if pr.review_decision else ""
-            pr_details.append(f"  PR #{pr.number} [{pr.head_ref}]{port_str}{review_str}")
+		except Exception as e:
+			logger.error("sdk_review_error", pr=pr_number, error=str(e))
+			return ReviewResult(
+				decision="REJECT",
+				reasoning=f"SDK backend error: {e}",
+				confidence=0.0,
+				raw_response=str(e),
+			)
 
-        context_lines = [
-            f"[Governor State]",
-            f"Status: {'PAUSED' if state.paused else 'RUNNING'}",
-            f"Active PRs: {len(state.active_prs)}",
-            f"Merge queue: {len(state.merge_queue)} — {state.merge_queue}",
-            f"Production HEAD: {state.production_head[:12] if state.production_head else 'unknown'}",
-        ]
-        if pr_details:
-            context_lines.append("PRs:")
-            context_lines.extend(pr_details)
-        if state.merge_history:
-            recent = state.merge_history[-3:]
-            context_lines.append(f"Recent merges: {[m.get('number') for m in recent]}")
+	async def chat(self, message: str, state: GovernorState) -> str:
+		"""Multi-turn chat with persistent conversation history."""
+		client = self._get_client()
 
-        context_block = "\n".join(context_lines)
+		# Build state context
+		pr_details = []
+		for _k, pr in state.active_prs.items():
+			port_str = f" staging:{pr.staging_port}" if pr.staging_port else ""
+			review_str = f" review={pr.review_decision}" if pr.review_decision else ""
+			pr_details.append(f"  PR #{pr.number} [{pr.head_ref}]{port_str}{review_str}")
 
-        # Add user message to history (with state context)
-        user_msg = f"{context_block}\n\nOperator: {message}"
-        self._chat_history.append({"role": "user", "content": user_msg})
+		context_lines = [
+			"[Governor State]",
+			f"Status: {'PAUSED' if state.paused else 'RUNNING'}",
+			f"Active PRs: {len(state.active_prs)}",
+			f"Merge queue: {len(state.merge_queue)} — {state.merge_queue}",
+			f"Production HEAD: {state.production_head[:12] if state.production_head else 'unknown'}",
+		]
+		if pr_details:
+			context_lines.append("PRs:")
+			context_lines.extend(pr_details)
+		if state.merge_history:
+			recent = state.merge_history[-3:]
+			context_lines.append(f"Recent merges: {[m.get('number') for m in recent]}")
 
-        # Trim history to max size
-        if len(self._chat_history) > self._max_chat_history:
-            self._chat_history = self._chat_history[-self._max_chat_history:]
+		context_block = "\n".join(context_lines)
 
-        try:
-            response = await client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=1024,
-                system=CHAT_SYSTEM_PROMPT,
-                messages=self._chat_history,
-            )
+		# Add user message to history (with state context)
+		user_msg = f"{context_block}\n\nOperator: {message}"
+		self._chat_history.append({"role": "user", "content": user_msg})
 
-            reply = response.content[0].text if response.content else "No response"
+		# Trim history to max size
+		if len(self._chat_history) > self._max_chat_history:
+			self._chat_history = self._chat_history[-self._max_chat_history :]
 
-            # Track cost
-            input_tokens = getattr(response.usage, "input_tokens", 0)
-            output_tokens = getattr(response.usage, "output_tokens", 0)
-            cost = (input_tokens * 3 / 1_000_000) + (output_tokens * 15 / 1_000_000)
-            self._total_cost_usd += cost
-            self._log_cost(cost, "chat")
-            logger.info(
-                "sdk_chat_cost",
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                cost_usd=round(cost, 4),
-                history_len=len(self._chat_history),
-            )
+		try:
+			response = await client.messages.create(
+				model="claude-sonnet-4-20250514",
+				max_tokens=1024,
+				system=CHAT_SYSTEM_PROMPT,
+				messages=self._chat_history,
+			)
 
-            # Add assistant reply to history
-            self._chat_history.append({"role": "assistant", "content": reply})
+			reply = response.content[0].text if response.content else "No response"
 
-            return reply
+			# Track cost
+			input_tokens = getattr(response.usage, "input_tokens", 0)
+			output_tokens = getattr(response.usage, "output_tokens", 0)
+			cost = (input_tokens * 3 / 1_000_000) + (output_tokens * 15 / 1_000_000)
+			self._total_cost_usd += cost
+			self._log_cost(cost, "chat")
+			logger.info(
+				"sdk_chat_cost",
+				input_tokens=input_tokens,
+				output_tokens=output_tokens,
+				cost_usd=round(cost, 4),
+				history_len=len(self._chat_history),
+			)
 
-        except Exception as e:
-            logger.error("sdk_chat_error", error=str(e))
-            # Remove the failed user message from history
-            self._chat_history.pop()
-            raise
+			# Add assistant reply to history
+			self._chat_history.append({"role": "assistant", "content": reply})
 
-    def inject_review_into_chat(self, pr_number: int, result: "ReviewResult") -> None:
-        """Inject a review result into chat history so the agent remembers it."""
-        summary = (
-            f"[I just reviewed PR #{pr_number}]\n"
-            f"Decision: {result.decision}\n"
-            f"Confidence: {result.confidence}\n"
-            f"Reasoning: {result.reasoning}\n"
-        )
-        if result.conflicting_files:
-            summary += f"Conflicting files: {', '.join(result.conflicting_files)}\n"
-        if result.suggested_fix:
-            summary += f"Suggested fix: {result.suggested_fix}\n"
+			return reply
 
-        self._chat_history.append({"role": "assistant", "content": summary})
+		except Exception as e:
+			logger.error("sdk_chat_error", error=str(e))
+			# Remove the failed user message from history
+			self._chat_history.pop()
+			raise
 
-    async def health_check(self) -> bool:
-        if not self._api_key:
-            logger.warning("sdk_no_api_key")
-            return False
-        try:
-            client = self._get_client()
-            response = await client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=10,
-                messages=[{"role": "user", "content": "Reply OK"}],
-            )
-            return bool(response.content)
-        except Exception as e:
-            logger.warning("sdk_health_failed", error=str(e))
-            return False
+	def inject_review_into_chat(self, pr_number: int, result: ReviewResult) -> None:
+		"""Inject a review result into chat history so the agent remembers it."""
+		summary = (
+			f"[I just reviewed PR #{pr_number}]\n"
+			f"Decision: {result.decision}\n"
+			f"Confidence: {result.confidence}\n"
+			f"Reasoning: {result.reasoning}\n"
+		)
+		if result.conflicting_files:
+			summary += f"Conflicting files: {', '.join(result.conflicting_files)}\n"
+		if result.suggested_fix:
+			summary += f"Suggested fix: {result.suggested_fix}\n"
 
-    def _parse_response(self, raw: str, pr_number: int) -> ReviewResult:
-        """Parse SDK response into ReviewResult."""
-        # Try to find JSON in the response — handle nested braces
-        data = None
+		self._chat_history.append({"role": "assistant", "content": summary})
 
-        # Strategy 1: Find the outermost JSON object by brace matching
-        start = raw.find("{")
-        if start >= 0:
-            depth = 0
-            for i in range(start, len(raw)):
-                if raw[i] == "{":
-                    depth += 1
-                elif raw[i] == "}":
-                    depth -= 1
-                    if depth == 0:
-                        try:
-                            data = json.loads(raw[start:i+1])
-                        except json.JSONDecodeError:
-                            pass
-                        break
+	async def health_check(self) -> bool:
+		if not self._api_key:
+			logger.warning("sdk_no_api_key")
+			return False
+		try:
+			client = self._get_client()
+			response = await client.messages.create(
+				model="claude-sonnet-4-20250514",
+				max_tokens=10,
+				messages=[{"role": "user", "content": "Reply OK"}],
+			)
+			return bool(response.content)
+		except Exception as e:
+			logger.warning("sdk_health_failed", error=str(e))
+			return False
 
-        # Strategy 2: Try parsing the entire response as JSON
-        if data is None:
-            try:
-                data = json.loads(raw)
-            except (json.JSONDecodeError, ValueError):
-                pass
+	def _parse_response(self, raw: str, pr_number: int) -> ReviewResult:
+		"""Parse SDK response into ReviewResult."""
+		# Try to find JSON in the response — handle nested braces
+		data = None
 
-        if data is None:
-            # Fail-safe: extract what we can from the raw text
-            import re
-            decision = "REJECT"
-            for d in ("APPROVE", "REJECT", "NEEDS_FIX"):
-                if d in raw.upper():
-                    decision = d
-                    break
-            return ReviewResult(
-                decision=decision,
-                reasoning=raw[:300] if raw else f"Unparseable response for PR #{pr_number}",
-                confidence=0.5,
-                raw_response=raw,
-            )
+		# Strategy 1: Find the outermost JSON object by brace matching
+		start = raw.find("{")
+		if start >= 0:
+			depth = 0
+			for i in range(start, len(raw)):
+				if raw[i] == "{":
+					depth += 1
+				elif raw[i] == "}":
+					depth -= 1
+					if depth == 0:
+						try:
+							data = json.loads(raw[start : i + 1])
+						except json.JSONDecodeError:
+							pass
+						break
 
-        decision = data.get("decision", "REJECT").upper()
-        if decision not in ("APPROVE", "REJECT", "NEEDS_FIX"):
-            decision = "REJECT"
+		# Strategy 2: Try parsing the entire response as JSON
+		if data is None:
+			try:
+				data = json.loads(raw)
+			except (json.JSONDecodeError, ValueError):
+				pass
 
-        return ReviewResult(
-            decision=decision,
-            reasoning=data.get("reasoning", "No reasoning"),
-            confidence=float(data.get("confidence", 0.5)),
-            raw_response=raw,
-            conflicting_files=data.get("conflicting_files", []),
-            suggested_fix=data.get("suggested_fix"),
-        )
+		if data is None:
+			# Fail-safe: extract what we can from the raw text
+			import re
 
-    @property
-    def total_cost_usd(self) -> float:
-        return self._total_cost_usd
+			decision = "REJECT"
+			for d in ("APPROVE", "REJECT", "NEEDS_FIX"):
+				if d in raw.upper():
+					decision = d
+					break
+			return ReviewResult(
+				decision=decision,
+				reasoning=raw[:300] if raw else f"Unparseable response for PR #{pr_number}",
+				confidence=0.5,
+				raw_response=raw,
+			)
 
-    def _log_cost(self, cost: float, action: str) -> None:
-        """Append a cost entry to the cost log file."""
-        try:
-            with open(self._cost_log_file, "a", encoding="utf-8") as f:
-                f.write(json.dumps({
-                    "ts": time.time(),
-                    "cost": cost,
-                    "action": action,
-                    "session_total": self._total_cost_usd,
-                }) + "\n")
-        except Exception:
-            pass
+		decision = data.get("decision", "REJECT").upper()
+		if decision not in ("APPROVE", "REJECT", "NEEDS_FIX"):
+			decision = "REJECT"
 
-    def get_cost_last_24h(self) -> tuple[float, int]:
-        """Read cost log and sum last 24 hours. Returns (total_cost, num_calls)."""
-        cutoff = time.time() - 86400
-        total = 0.0
-        count = 0
-        try:
-            with open(self._cost_log_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    entry = json.loads(line)
-                    if entry.get("ts", 0) >= cutoff:
-                        total += entry.get("cost", 0)
-                        count += 1
-        except FileNotFoundError:
-            pass
-        except Exception:
-            pass
-        return total, count
+		return ReviewResult(
+			decision=decision,
+			reasoning=data.get("reasoning", "No reasoning"),
+			confidence=float(data.get("confidence", 0.5)),
+			raw_response=raw,
+			conflicting_files=data.get("conflicting_files", []),
+			suggested_fix=data.get("suggested_fix"),
+		)
+
+	@property
+	def total_cost_usd(self) -> float:
+		return self._total_cost_usd
+
+	def _log_cost(self, cost: float, action: str) -> None:
+		"""Append a cost entry to the cost log file."""
+		try:
+			with open(self._cost_log_file, "a", encoding="utf-8") as f:
+				f.write(
+					json.dumps(
+						{
+							"ts": time.time(),
+							"cost": cost,
+							"action": action,
+							"session_total": self._total_cost_usd,
+						}
+					)
+					+ "\n"
+				)
+		except Exception:
+			pass
+
+	def get_cost_last_24h(self) -> tuple[float, int]:
+		"""Read cost log and sum last 24 hours. Returns (total_cost, num_calls)."""
+		cutoff = time.time() - 86400
+		total = 0.0
+		count = 0
+		try:
+			with open(self._cost_log_file, encoding="utf-8") as f:
+				for line in f:
+					line = line.strip()
+					if not line:
+						continue
+					entry = json.loads(line)
+					if entry.get("ts", 0) >= cutoff:
+						total += entry.get("cost", 0)
+						count += 1
+		except FileNotFoundError:
+			pass
+		except Exception:
+			pass
+		return total, count
