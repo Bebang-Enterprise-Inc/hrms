@@ -2,10 +2,10 @@
 
 ```yaml
 canonical_sprint_id: S095
-status: "AUDIT: 7 BLOCKERS RESOLVED — GO"
+status: COMPLETED
 created_date: 2026-03-23
-completed_date: null
-execution_summary: null
+completed_date: 2026-03-23
+execution_summary: "S095A+B complete. Agent SDK backend live (review $0.31, chat $0.17). Builder subagent dispatch with worktree isolation. Confidence gate >= 0.80. Default switched to agent-sdk. Commits: 7a1088ba9 (S095A), next (S095B)."
 depends_on: null
 lane: A
 estimated_work_units: 15
