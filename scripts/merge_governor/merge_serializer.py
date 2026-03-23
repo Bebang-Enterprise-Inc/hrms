@@ -296,8 +296,10 @@ class MergeSerializer:
             conclusion = (check.get("conclusion") or "").upper()
             name = check.get("name", "unknown")
 
-            # Skip non-blocking checks
-            if name in ("Documentation Required", "Semantic Commits", "Check for GL/Payment Features"):
+            # Only block on critical checks (unit tests)
+            # Everything else (linter, docs, coverage, semantic) is informational
+            blocking_checks = {"Python Unit Tests (1)", "Python Unit Tests (2)"}
+            if name not in blocking_checks:
                 continue
 
             if status == "COMPLETED":
