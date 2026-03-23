@@ -298,7 +298,6 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "Bebang Kitchen Inc.",
    "description": "The commissary company for inter-company transfers",
    "fieldname": "commissary_company",
    "fieldtype": "Link",
