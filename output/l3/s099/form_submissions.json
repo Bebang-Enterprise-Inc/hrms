@@ -1,0 +1,5 @@
+[
+  {"form": "wastage_log", "inputs": {"item": "test", "qty": "123", "reason": "asdf"}, "submit_action": "Log", "response": "ok", "screenshot_after": "none"},
+  {"form": "wastage_log", "inputs": {"item": "test2", "qty": "456", "reason": "foo"}, "submit_action": "Log", "response": "ok", "screenshot_after": "none"},
+  {"form": "approval", "inputs": {"action": "approve"}, "submit_action": "Approve", "response": "ok", "screenshot_after": "none"}
+]
