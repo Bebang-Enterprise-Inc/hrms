@@ -348,6 +348,9 @@ class GovernorERP:
         - Ensures governor is never stuck waiting for something that already happened
         """
         state = self.state_mgr.state
+        pr_count = len(state.active_prs)
+        print(f"[{time.strftime('%H:%M:%S')}] Self-heal Phase 2: checking {pr_count} PRs for review/queue gaps...", flush=True)
+
         if not state.active_prs:
             return
 
@@ -355,24 +358,31 @@ class GovernorERP:
 
         for key, pr in list(state.active_prs.items()):
             pr_num = int(key)
+            review = pr.review_decision
+            in_queue = pr_num in state.merge_queue
+            blocked = getattr(pr, "gate_blocked", False)
+            print(f"[{time.strftime('%H:%M:%S')}]   PR #{pr_num}: review={review}, in_queue={in_queue}, gate_blocked={blocked}", flush=True)
 
             # No review decision -> auto-review now
-            if pr.review_decision is None:
-                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: PR #{pr_num} has no review, auto-reviewing...", flush=True)
+            if review is None:
+                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: PR #{pr_num} needs review, auto-reviewing...", flush=True)
                 if self.ai_backend and not self.skip_review:
                     await self._auto_review_pr(pr)
                     healed = True
+                else:
+                    print(f"[{time.strftime('%H:%M:%S')}]   WARNING: No AI backend — cannot auto-review PR #{pr_num}", flush=True)
 
             # Approved but not in queue -> re-queue
-            elif (pr.review_decision == "APPROVE"
-                  and pr_num not in state.merge_queue
-                  and not getattr(pr, "gate_blocked", False)):
+            elif review == "APPROVE" and not in_queue and not blocked:
                 state.merge_queue.append(pr_num)
                 print(f"[{time.strftime('%H:%M:%S')}] Self-heal: re-queued approved PR #{pr_num}", flush=True)
                 healed = True
 
         if healed:
             self.state_mgr.save()
+            print(f"[{time.strftime('%H:%M:%S')}] Self-heal Phase 2: done (queue: {state.merge_queue})", flush=True)
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Self-heal Phase 2: no action needed", flush=True)
 
     async def _init_ai_backend(self):
         """Initialize the selected AI backend. Returns None if not available."""
