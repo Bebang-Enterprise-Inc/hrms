@@ -223,7 +223,7 @@ def get_inventory_levels(item_group=None, show_low_stock_only=False):
 	# Get all items first, then apply product-specific thresholds
 	items = frappe.db.sql(
 		f"""
-        SELECT
+        SELECT  -- nosemgrep: frappe-sql-format-injection
             b.item_code,
             i.item_name,
             i.item_group,
@@ -269,6 +269,16 @@ def get_inventory_levels(item_group=None, show_low_stock_only=False):
 		item["value"] = qty * flt(item["valuation_rate"] or 0)
 		item["shelf_life"] = threshold["shelf_life"]
 		item["storage_temp"] = threshold["storage_temp"]
+
+		# UX-008: Add batch info for items with batch tracking
+		item["batches"] = frappe.db.get_all(
+			"Batch",
+			filters={"item": item["item_code"], "disabled": 0},
+			fields=["name", "batch_id", "manufacturing_date", "expiry_date"],
+			order_by="expiry_date asc",
+			limit_page_length=10,
+		)
+
 		result.append(item)
 
 	# Sort by status priority

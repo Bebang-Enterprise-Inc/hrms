@@ -10,7 +10,9 @@
   "billing_auto_create_on_delivery",
   "notifications_section",
   "delivery_notification_space",
-  "customer_service_phone"
+  "customer_service_phone",
+  "quality_control_section",
+  "min_shelf_life_days"
  ],
  "fields": [
   {
@@ -41,6 +43,18 @@
    "fieldname": "customer_service_phone",
    "fieldtype": "Data",
    "label": "Customer Service Phone"
+  },
+  {
+   "fieldname": "quality_control_section",
+   "fieldtype": "Section Break",
+   "label": "Quality Control"
+  },
+  {
+   "default": "7",
+   "description": "Minimum remaining shelf life (in days) for batches to pass the dispatch/receiving gate. Set 0 to disable.",
+   "fieldname": "min_shelf_life_days",
+   "fieldtype": "Int",
+   "label": "Minimum Shelf Life (Days)"
   }
  ],
  "index_web_pages_for_search": 1,

@@ -248,6 +248,13 @@ class BEIPurchaseOrder(Document):
 		# Update supplier metrics
 		self.update_supplier_metrics()
 
+		# Auto-send PO to supplier if email on file
+		supplier = frappe.get_doc("BEI Supplier", self.supplier)
+		if supplier.email:
+			from hrms.api.procurement import send_po_to_supplier
+
+			send_po_to_supplier(self.name, send_mode="auto_approval")
+
 	@frappe.whitelist()
 	def reject(self, reason: str, rejector: str = "mae"):
 		"""Reject the PO."""
@@ -375,7 +382,9 @@ class BEIPurchaseOrder(Document):
 				"items": po_items,
 			}
 		)
-		apply_standard_buying_context(po, store_label=resolved_store_warehouse or self.ship_to, legal_entity=erp_company)
+		apply_standard_buying_context(
+			po, store_label=resolved_store_warehouse or self.ship_to, legal_entity=erp_company
+		)
 
 		# Apply discount if any
 		if flt(self.discount_amount, 2) > 0:

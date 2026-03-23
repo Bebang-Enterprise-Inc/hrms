@@ -479,18 +479,35 @@ def create_warehouse_receiving(
 			continue
 		item_doc = frappe.get_doc("Item", item_data["item_code"])
 		valid_uom = _resolve_valid_item_uom(item_doc, item_data.get("uom"))
+
+		# UX-010: Shelf life gate at warehouse receiving
+		check_expiry_val = 0
+		shelf_life_warning = None
+		batch_no = item_data.get("batch_no")
+		if batch_no:
+			from frappe.utils import today as _today
+
+			from hrms.api.commissary_dashboard import _validate_shelf_life_gate
+
+			gate = _validate_shelf_life_gate(item_data["item_code"], batch_no, _today(), "receive")
+			if not gate["valid"]:
+				shelf_life_warning = gate["error"]
+				check_expiry_val = 1
+
 		doc.append(
 			"items",
 			{
 				"item_code": item_data["item_code"],
 				"item_name": item_doc.item_name,
-				"batch_no": item_data.get("batch_no"),
+				"batch_no": batch_no,
 				"uom": valid_uom,
 				"expected_qty": qty,
 				"received_qty": 0,
 				"rejected_qty": 0,
 				"accepted_qty": 0,
-				"issue_notes": item_data.get("issue_notes"),
+				"has_issue": 1 if shelf_life_warning else 0,
+				"issue_notes": shelf_life_warning or item_data.get("issue_notes"),
+				"check_expiry": check_expiry_val,
 			},
 		)
 
