@@ -201,6 +201,11 @@ class GovernorERP:
         # Port allocator
         self.port_allocator = PortAllocator(self.state_mgr)
 
+        # SELF-HEAL: reconcile stale state against GitHub on every startup.
+        # Purges closed PRs, detects new ones, clears orphaned port allocations.
+        # This prevents the "stale state blocks new PRs" failure mode.
+        await self._self_heal_state()
+
         # PR watcher
         self.pr_watcher = PRWatcher(self.state_mgr)
         self.pr_watcher.on_new_pr(self._handle_new_pr)
@@ -238,6 +243,56 @@ class GovernorERP:
             "ai_backend": self.ai_backend_type,
             "timestamp": time.time(),
         })
+
+    async def _self_heal_state(self) -> None:
+        """Reconcile state against GitHub reality on startup.
+
+        Fixes the #1 governor failure mode: stale state with closed PRs
+        blocking ports and preventing new PR detection. Runs before the
+        PR watcher starts so the first poll cycle has clean state.
+        """
+        state = self.state_mgr.state
+        stale_count = len(state.active_prs)
+
+        if stale_count == 0 and not state.merge_queue:
+            return  # Clean state, nothing to heal
+
+        print(f"[{time.strftime('%H:%M:%S')}] Self-healing: {stale_count} PRs in state, verifying against GitHub...", flush=True)
+
+        # Create a temporary PR watcher (without callbacks) to poll GitHub
+        temp_watcher = PRWatcher(self.state_mgr, poll_interval=30)
+        try:
+            open_prs = await temp_watcher.poll_once()
+            open_numbers = {pr["number"] for pr in open_prs}
+
+            # Purge closed PRs from state
+            purged = []
+            for key in list(state.active_prs.keys()):
+                pr_num = int(key)
+                if pr_num not in open_numbers:
+                    pr = state.active_prs.pop(key)
+                    purged.append(pr_num)
+                    # Release port
+                    if self.port_allocator:
+                        self.port_allocator.release(pr_num)
+
+            # Purge closed PRs from merge queue
+            state.merge_queue = [n for n in state.merge_queue if n in open_numbers]
+
+            if purged:
+                self.state_mgr.save()
+                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: purged {len(purged)} closed PRs: {purged}", flush=True)
+                _json_logger.write({
+                    "event": "self_heal_purged",
+                    "purged_prs": purged,
+                    "remaining_active": len(state.active_prs),
+                    "timestamp": time.time(),
+                })
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: all {stale_count} PRs still open, state is clean", flush=True)
+
+        except Exception as e:
+            print(f"[{time.strftime('%H:%M:%S')}] Self-heal: GitHub poll failed ({e}), continuing with existing state", flush=True)
 
     async def _init_ai_backend(self):
         """Initialize the selected AI backend. Returns None if not available."""
@@ -650,30 +705,63 @@ def main(argv: list[str] | None = None) -> None:
 
     _configure_logging()
 
-    if args.ai_backend == "sdk":
+    if args.ai_backend in ("sdk", "agent-sdk"):
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
         if not api_key:
-            print("WARNING: --ai-backend sdk requires ANTHROPIC_API_KEY environment variable.")
-            print("This backend uses pay-per-token billing. Set the key or use --ai-backend cli.")
+            print("WARNING: --ai-backend requires ANTHROPIC_API_KEY environment variable.")
             sys.exit(1)
-        print("WARNING: SDK backend active. API calls will be billed to your Anthropic account.")
 
-    governor = GovernorERP(
-        dry_run=args.dry_run,
-        ai_backend_type=args.ai_backend,
-        skip_review=args.skip_review,
-        state_dir=args.state_dir,
-    )
+    # Watchdog loop: auto-restart on crash (max 5 restarts, then give up)
+    max_restarts = 5
+    restart_count = 0
+    restart_cooldown = 30  # seconds between restarts
 
-    # Signal handling
-    def _signal_handler(sig, frame):
-        print("\nShutting down gracefully (saving state, containers preserved)...")
-        governor._stop_event.set()
+    while restart_count <= max_restarts:
+        governor = GovernorERP(
+            dry_run=args.dry_run,
+            ai_backend_type=args.ai_backend,
+            skip_review=args.skip_review,
+            state_dir=args.state_dir,
+        )
 
-    signal.signal(signal.SIGINT, _signal_handler)
-    signal.signal(signal.SIGTERM, _signal_handler)
+        # Signal handling
+        def _signal_handler(sig, frame):
+            print("\nShutting down gracefully (saving state, containers preserved)...")
+            governor._stop_event.set()
 
-    asyncio.run(governor.run())
+        signal.signal(signal.SIGINT, _signal_handler)
+        signal.signal(signal.SIGTERM, _signal_handler)
+
+        try:
+            asyncio.run(governor.run())
+            break  # Clean exit (Ctrl+C or stop_event) — don't restart
+
+        except KeyboardInterrupt:
+            break  # User requested stop — don't restart
+
+        except Exception as e:
+            restart_count += 1
+            ts = time.strftime("%H:%M:%S")
+            print(f"\n[{ts}] GOVERNOR CRASHED: {e}", flush=True)
+
+            if restart_count > max_restarts:
+                print(f"[{ts}] Max restarts ({max_restarts}) exceeded. Exiting.", flush=True)
+                _json_logger.write({
+                    "event": "governor_crash_max_restarts",
+                    "error": str(e),
+                    "restart_count": restart_count,
+                    "timestamp": time.time(),
+                })
+                sys.exit(1)
+
+            print(f"[{ts}] Auto-restarting in {restart_cooldown}s (attempt {restart_count}/{max_restarts})...", flush=True)
+            _json_logger.write({
+                "event": "governor_crash_restart",
+                "error": str(e),
+                "restart_count": restart_count,
+                "timestamp": time.time(),
+            })
+            time.sleep(restart_cooldown)
 
 
 if __name__ == "__main__":
