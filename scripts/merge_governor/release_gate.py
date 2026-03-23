@@ -55,6 +55,8 @@ class GateResult:
 def find_sprint_plan(branch_name: str, plans_dir: str = "docs/plans") -> Path | None:
     """Find the sprint plan file from the PR's branch name.
 
+    Searches local filesystem first (production branch), then falls back to
+    the feature branch via `git show` if the plan was committed there.
     Returns None for non-sprint PRs (gate should be skipped).
     """
     match = re.search(r"s0?(\d{2,3})", branch_name, re.IGNORECASE)
@@ -63,14 +65,42 @@ def find_sprint_plan(branch_name: str, plans_dir: str = "docs/plans") -> Path | 
 
     sprint_num = match.group(1)
     plans_path = Path(plans_dir)
-    if not plans_path.exists():
-        return None
 
-    # Search for matching plan file
-    for pattern in [f"*sprint*{sprint_num}*", f"*s0{sprint_num}*", f"*s{sprint_num}*"]:
-        for f in plans_path.glob(pattern):
-            if f.suffix == ".md" and f.is_file():
-                return f
+    # Search local filesystem first (plan might be on production already)
+    if plans_path.exists():
+        for pattern in [f"*sprint*{sprint_num}*", f"*s0{sprint_num}*", f"*s{sprint_num}*"]:
+            for f in plans_path.glob(pattern):
+                if f.suffix == ".md" and f.is_file():
+                    return f
+
+    # Fallback: check if plan exists on the feature branch via git
+    import subprocess
+    try:
+        # List plan files on the branch
+        result = subprocess.run(
+            ["git", "ls-tree", "--name-only", f"origin/{branch_name}", "docs/plans/"],
+            capture_output=True, text=True, timeout=10,
+            stdin=subprocess.DEVNULL,
+        )
+        if result.returncode == 0:
+            for line in result.stdout.splitlines():
+                fname = line.strip().split("/")[-1]
+                if fname.endswith(".md"):
+                    # Check if it matches the sprint number
+                    if f"sprint-{sprint_num}" in fname or f"sprint{sprint_num}" in fname or f"s0{sprint_num}" in fname or f"s{sprint_num}" in fname:
+                        # Fetch the file content from the branch
+                        content_result = subprocess.run(
+                            ["git", "show", f"origin/{branch_name}:{line.strip()}"],
+                            capture_output=True, text=True, timeout=10,
+                            stdin=subprocess.DEVNULL,
+                        )
+                        if content_result.returncode == 0:
+                            # Write to a temp location so we can parse it
+                            temp_plan = Path(plans_dir) / f".gate_temp_{fname}"
+                            temp_plan.write_text(content_result.stdout, encoding="utf-8")
+                            return temp_plan
+    except Exception:
+        pass
 
     return None
 
@@ -102,9 +132,10 @@ def count_l3_scenarios(plan_path: Path) -> int:
     return count
 
 
-def find_evidence_files(sprint_id: str, repo_root: str = ".") -> dict:
+def find_evidence_files(sprint_id: str, repo_root: str = ".", branch_name: str = "") -> dict:
     """Find L3 evidence files — supports both canonical and legacy formats.
 
+    Checks local filesystem first, then the PR branch via git show.
     Canonical: output/l3/{sprint}/form_submissions.json
     Legacy: output/l3/{sprint}_*.json or output/l3/s{NNN}_*.json
     """
@@ -116,7 +147,7 @@ def find_evidence_files(sprint_id: str, repo_root: str = ".") -> dict:
         "any_found": False,
     }
 
-    if not base.exists():
+    if not base.exists() and not branch_name:
         return result
 
     # Check canonical format: output/l3/{sprint}/ — try multiple name forms
@@ -201,8 +232,8 @@ def run_deterministic_gate(
     # Step 3: Count expected L3 scenarios from plan
     expected_scenarios = count_l3_scenarios(plan_path)
 
-    # Step 4: Find evidence files
-    evidence = find_evidence_files(sprint_id, repo_root)
+    # Step 4: Find evidence files (check local first, then branch)
+    evidence = find_evidence_files(sprint_id, repo_root, branch_name=branch_name)
 
     # Step 5: Run checks
     missing = []
