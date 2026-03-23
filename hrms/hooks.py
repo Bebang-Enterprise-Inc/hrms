@@ -411,6 +411,7 @@ scheduler_events = {
 		"hrms.api.pcf.check_month_end_auto_submit",
 		"hrms.api.procurement.check_overdue_or",
 		"hrms.api.procurement.check_overdue_invoices",
+		"hrms.api.procurement.escalate_pending_approvals",
 		"hrms.api.inventory.send_low_stock_daily_alert",
 		"hrms.api.inventory_risk.recompute_risk_snapshots",
 		"hrms.api.permits.check_permit_expiry",

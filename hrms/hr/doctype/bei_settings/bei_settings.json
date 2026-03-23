@@ -41,7 +41,13 @@
   "cpo_approver_email",
   "cfo_approver_email",
   "column_break_procurement_approvers",
-  "ceo_approver_email"
+  "ceo_approver_email",
+  "scm_operational_section",
+  "gr_over_receipt_tolerance_pct",
+  "three_pl_warehouse_patterns",
+  "column_break_scm_operational",
+  "commissary_company",
+  "allowed_target_companies"
  ],
  "fields": [
   {
@@ -138,7 +144,7 @@
   },
   {
    "default": "1",
-   "description": "Default EWT rate (%) used when supplier has no specific rate.",
+   "description": "Default EWT rate (%) used when supplier has no specific rate. 1% for goods (WI100), 2% for services (WC100).",
    "fieldname": "default_ewt_rate",
    "fieldtype": "Percent",
    "label": "Default EWT Rate"
@@ -168,7 +174,7 @@
   },
   {
    "default": "1",
-   "description": "Days to subtract from shelf life for dispatch buffer",
+   "description": "Days to subtract from shelf life for dispatch buffer (shelf_life - buffer = minimum remaining days)",
    "fieldname": "shelf_life_dispatch_buffer_days",
    "fieldtype": "Int",
    "label": "Shelf Life Dispatch Buffer (Days)"
@@ -267,6 +273,44 @@
    "fieldtype": "Link",
    "label": "CEO Approver",
    "options": "User"
+  },
+  {
+   "fieldname": "scm_operational_section",
+   "fieldtype": "Section Break",
+   "label": "SCM Operational Settings"
+  },
+  {
+   "default": "5",
+   "description": "Maximum over-receipt tolerance as a percentage of ordered quantity. Set 0 to enforce exact match.",
+   "fieldname": "gr_over_receipt_tolerance_pct",
+   "fieldtype": "Percent",
+   "label": "GR Over-Receipt Tolerance %"
+  },
+  {
+   "default": "3MD,Pinnacle,Royal Cold,RCS",
+   "description": "Comma-separated warehouse name patterns that identify 3PL partner warehouses (e.g. 3MD,Pinnacle,Royal Cold,RCS)",
+   "fieldname": "three_pl_warehouse_patterns",
+   "fieldtype": "Small Text",
+   "label": "3PL Warehouse Patterns"
+  },
+  {
+   "fieldname": "column_break_scm_operational",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Bebang Kitchen Inc.",
+   "description": "The commissary company for inter-company transfers",
+   "fieldname": "commissary_company",
+   "fieldtype": "Link",
+   "label": "Commissary Company",
+   "options": "Company"
+  },
+  {
+   "default": "Bebang Kitchen Inc.,Bebang Enterprise Inc.",
+   "description": "Comma-separated list of companies whose warehouses can receive commissary dispatches",
+   "fieldname": "allowed_target_companies",
+   "fieldtype": "Small Text",
+   "label": "Allowed Target Companies"
   }
  ],
  "index_web_pages_for_search": 1,

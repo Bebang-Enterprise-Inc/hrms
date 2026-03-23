@@ -18,6 +18,7 @@ from frappe.utils import add_days, cint, flt, get_time, getdate, now_datetime, n
 from hrms.api.store import resolve_employee_store_context, resolve_warehouse
 from hrms.utils.labor_plan_templates import apply_template_to_employees, get_template_metadata
 from hrms.utils.store_shift_config import get_shift_options_for_store
+from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.supply_chain_contracts import get_preferred_commissary_warehouses
 
 TRANSFER_REQUEST_DOCTYPE = "BEI Transfer Request"
@@ -1487,6 +1488,7 @@ def reject_shift_swap_request(request_name: str, decision_note: str | None = Non
 @frappe.whitelist()
 def get_labor_plan_bootstrap(store: str, surface: str | None = None, week_start: str | None = None):
 	"""Return store roster and shift options for labor planning."""
+	set_backend_observability_context(module="hr", action="get_labor_plan_bootstrap", mutation_type="read")
 	if not store:
 		frappe.throw(_("Store is required"))
 
@@ -1511,6 +1513,7 @@ def get_labor_plan_bootstrap(store: str, surface: str | None = None, week_start:
 @frappe.whitelist()
 def get_weekly_templates(store: str, surface: str | None = None):
 	"""Return template metadata for the selected labor-plan surface."""
+	set_backend_observability_context(module="hr", action="get_weekly_templates", mutation_type="read")
 	if not store:
 		frappe.throw(_("Store is required"))
 
@@ -1527,6 +1530,7 @@ def apply_weekly_template(
 	surface: str | None = None,
 ):
 	"""Apply a roster-aware weekly template to the selected location."""
+	set_backend_observability_context(module="hr", action="apply_weekly_template", mutation_type="update")
 	if not store:
 		frappe.throw(_("Store is required"))
 	if not template_key:
@@ -1570,6 +1574,7 @@ def create_weekly_plan(
 	surface: str | None = None,
 ):
 	"""Create a weekly labor plan."""
+	set_backend_observability_context(module="hr", action="create_weekly_plan", mutation_type="create")
 	if not store:
 		frappe.throw(_("Store is required"))
 
@@ -1596,6 +1601,7 @@ def create_weekly_plan(
 @frappe.whitelist()
 def get_weekly_plan(store: str | None = None, week_start: str | None = None, surface: str | None = None):
 	"""Get weekly labor plan for a store."""
+	set_backend_observability_context(module="hr", action="get_weekly_plan", mutation_type="read")
 	if not store or not week_start:
 		return {"plan": None}
 
@@ -1928,6 +1934,7 @@ def copy_weekly_plan_from_previous_week(
 @frappe.whitelist()
 def update_weekly_plan(plan_name: str, shifts: str | list[dict[str, Any]], surface: str | None = None):
 	"""Update shifts in a weekly plan."""
+	set_backend_observability_context(module="hr", action="update_weekly_plan", mutation_type="update")
 	shifts = _coerce_shifts(shifts)
 	doc = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
 	_assert_schedule_access(doc.store, surface)
@@ -1979,6 +1986,7 @@ def _merge_approved_leave_shifts(
 @frappe.whitelist()
 def publish_weekly_plan(plan_name: str, surface: str | None = None):
 	"""Publish a weekly labor plan and sync tagged Shift Assignments."""
+	set_backend_observability_context(module="hr", action="publish_weekly_plan", mutation_type="update")
 	plan = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
 	inferred_surface = surface or (
 		SCHEDULE_SURFACE_COMMISSARY if _is_commissary_schedule_store(plan.store) else SCHEDULE_SURFACE_STORE

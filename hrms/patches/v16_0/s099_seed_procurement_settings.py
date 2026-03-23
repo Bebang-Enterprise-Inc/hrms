@@ -5,6 +5,7 @@ into the new configurable fields.
 """
 
 import frappe
+from frappe.utils import cint
 
 
 def execute():

@@ -21,6 +21,8 @@
     "column_break_ref",
     "goods_receipt",
     "gr_amount",
+    "items_section",
+    "items",
     "three_way_match_section",
     "match_status",
     "po_gr_variance",
@@ -155,6 +157,17 @@
       "fieldtype": "Currency",
       "label": "GR Amount",
       "read_only": 1
+    },
+    {
+      "fieldname": "items_section",
+      "fieldtype": "Section Break",
+      "label": "Line Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Invoice Items",
+      "options": "BEI Invoice Item"
     },
     {
       "fieldname": "three_way_match_section",

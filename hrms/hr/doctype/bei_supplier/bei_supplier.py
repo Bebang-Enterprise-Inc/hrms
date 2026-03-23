@@ -4,6 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
+from frappe.utils import flt
 
 _INVOICE_EXCEPTION_FIELDS = (
     "allow_missing_supplier_invoice",
@@ -118,6 +119,22 @@ class BEISupplier(Document):
         """, self.name)[0][0] or 0
 
         self.total_outstanding = invoiced - paid
+
+        # D5: Compute avg_delivery_days from GR data (last 12 months)
+        try:
+            avg_days = frappe.db.sql("""
+                SELECT AVG(DATEDIFF(gr.receipt_date, po.po_date))
+                FROM `tabBEI Goods Receipt` gr
+                JOIN `tabBEI Purchase Order` po ON gr.purchase_order = po.name
+                WHERE po.supplier = %s
+                  AND gr.receipt_date IS NOT NULL
+                  AND po.po_date IS NOT NULL
+                  AND gr.receipt_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+                  AND gr.status NOT IN ('Cancelled')
+            """, self.name)
+            self.avg_delivery_days = flt(avg_days[0][0]) if avg_days and avg_days[0][0] else 0
+        except Exception:
+            self.avg_delivery_days = 0
 
     def on_update(self):
         """Sync with Frappe Supplier if linked."""
