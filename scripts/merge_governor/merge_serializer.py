@@ -4,9 +4,13 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+import sys
 import time
 
 import structlog
+
+# Windows: prevent visible cmd windows from subprocess calls
+_WIN_FLAGS = 0x08000000 if sys.platform == "win32" else 0  # CREATE_NO_WINDOW
 
 from .reviewer import Reviewer, get_pr_diff
 from .ssm_helper import PRODUCTION_INSTANCE_ID, ssm_run
@@ -78,6 +82,22 @@ class MergeSerializer:
                 return
         elif pr.review_decision != "APPROVE":
             logger.info("queue_waiting_review", pr=pr_num, decision=pr.review_decision)
+            return
+
+        # Confidence gate: don't auto-merge low-confidence approvals
+        confidence = getattr(pr, "review_confidence", 1.0)
+        if confidence < 0.80:
+            logger.warning("low_confidence_review", pr=pr_num, confidence=confidence)
+            await self._comment_on_pr(
+                pr_num,
+                f"**Governor: Low confidence review ({confidence:.2f})**\n\n"
+                "Auto-merge paused. Review confidence is below 0.80 threshold.\n"
+                "Manual review recommended before proceeding.\n\n"
+                "*Posted by governor-erp*",
+            )
+            if pr_num in state.merge_queue:
+                state.merge_queue.remove(pr_num)
+                self.state_mgr.save()
             return
 
         # Execute merge

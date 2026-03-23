@@ -20,6 +20,7 @@ class PRRecord:
     labels: list[str] = field(default_factory=list)
     staging_port: int | None = None
     review_decision: str | None = None  # APPROVE / REJECT / NEEDS_FIX
+    review_confidence: float = 1.0  # 0.0 - 1.0
     review_sha: str | None = None  # SHA that was reviewed
     queued_at: float | None = None
     merged_at: float | None = None

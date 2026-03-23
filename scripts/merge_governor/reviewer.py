@@ -70,6 +70,7 @@ class Reviewer:
         pr_key = str(pr_number)
         if pr_key in state.active_prs:
             state.active_prs[pr_key].review_decision = result.decision
+            state.active_prs[pr_key].review_confidence = result.confidence
             state.active_prs[pr_key].review_sha = head_sha
             self.state_mgr.save()
 

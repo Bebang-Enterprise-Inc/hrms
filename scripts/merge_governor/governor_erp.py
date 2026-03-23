@@ -264,6 +264,18 @@ class GovernorERP:
                 else:
                     logger.warning("sdk_backend_unavailable")
                     return None
+            elif self.ai_backend_type == "agent-sdk":
+                from .ai_backend_agent_sdk import AgentSDKBackend
+                backend = AgentSDKBackend()
+                if await backend.health_check():
+                    logger.info("ai_backend_ready", type="agent-sdk")
+                    return backend
+                else:
+                    logger.warning(
+                        "agent_sdk_backend_unavailable",
+                        hint="Check ANTHROPIC_API_KEY and claude-agent-sdk install",
+                    )
+                    return None
         except ImportError as e:
             logger.warning("ai_backend_import_error", error=str(e))
             return None
@@ -371,12 +383,15 @@ class GovernorERP:
         print(f"[{time.strftime('%H:%M:%S')}] Reviewing PR #{pr.number}...", flush=True)
 
         try:
-            diff = await get_pr_diff(pr.number)
-            if not diff:
-                print(f"[{time.strftime('%H:%M:%S')}] WARNING: Could not fetch diff for PR #{pr.number}", flush=True)
-                return
-
             reviewer = Reviewer(backend=self.ai_backend, state_mgr=self.state_mgr)
+            # Only fetch diff if the backend needs it (raw SDK does, Agent SDK doesn't)
+            diff = ""
+            if self.ai_backend and self.ai_backend.needs_diff:
+                diff = await get_pr_diff(pr.number)
+                if not diff:
+                    print(f"[{time.strftime('%H:%M:%S')}] WARNING: Could not fetch diff for PR #{pr.number}", flush=True)
+                    return
+
             result = await reviewer.review_pr(pr.number, pr.head_sha, diff)
 
             # Display result
@@ -579,7 +594,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--ai-backend",
-        choices=["cli", "sdk"],
+        choices=["cli", "sdk", "agent-sdk"],
         default="cli",
         help="AI backend: 'cli' uses claude --print (Max subscription, $0), 'sdk' uses API key (pay-per-token). Default: cli",
     )
