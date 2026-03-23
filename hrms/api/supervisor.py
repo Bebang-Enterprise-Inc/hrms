@@ -20,6 +20,7 @@ from hrms.utils.labor_plan_templates import apply_template_to_employees, get_tem
 from hrms.utils.store_shift_config import get_shift_options_for_store
 from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.supply_chain_contracts import get_preferred_commissary_warehouses
+from hrms.utils.sentry import set_backend_observability_context
 
 TRANSFER_REQUEST_DOCTYPE = "BEI Transfer Request"
 SCHEDULE_SOURCE = "BEI_WEEKLY_LABOR_PLAN"
@@ -1987,6 +1988,7 @@ def _merge_approved_leave_shifts(
 def publish_weekly_plan(plan_name: str, surface: str | None = None):
 	"""Publish a weekly labor plan and sync tagged Shift Assignments."""
 	set_backend_observability_context(module="hr", action="publish_weekly_plan", mutation_type="update")
+	frappe.lock_doc("BEI Weekly Labor Plan", plan_name)
 	plan = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
 	inferred_surface = surface or (
 		SCHEDULE_SURFACE_COMMISSARY if _is_commissary_schedule_store(plan.store) else SCHEDULE_SURFACE_STORE
@@ -3626,3 +3628,135 @@ def get_report_comments(report_name: str, doctype: str):
 		c["owner_name"] = frappe.db.get_value("User", c["owner"], "full_name") or c["owner"]
 
 	return {"comments": comments}
+
+
+@frappe.whitelist()
+def approve_weekly_plan(plan_name: str, surface: str | None = None):
+	"""Approve a weekly labor plan."""
+	set_backend_observability_context(module="hr", action="approve_weekly_plan", mutation_type="update")
+	surface_key = _normalize_schedule_surface(surface)
+	plan = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
+	_assert_schedule_access(plan.store, surface_key)
+	if plan.status != "Draft":
+		frappe.throw(_("Only Draft plans can be approved. Current status: {0}").format(plan.status))
+	plan.status = "Approved"
+	plan.approved_by = frappe.session.user
+	plan.save(ignore_permissions=True)
+	return {"success": True, "name": plan.name, "status": plan.status}
+
+
+@frappe.whitelist()
+def reject_weekly_plan(plan_name: str, rejection_reason: str | None = None, surface: str | None = None):
+	"""Reject a weekly labor plan with a reason."""
+	set_backend_observability_context(module="hr", action="reject_weekly_plan", mutation_type="update")
+	surface_key = _normalize_schedule_surface(surface)
+	plan = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
+	_assert_schedule_access(plan.store, surface_key)
+	if plan.status != "Draft":
+		frappe.throw(_("Only Draft plans can be rejected. Current status: {0}").format(plan.status))
+	if not rejection_reason or not rejection_reason.strip():
+		frappe.throw(_("Rejection reason is required"))
+	plan.status = "Rejected"
+	plan.rejected_by = frappe.session.user
+	plan.rejection_reason = rejection_reason.strip()
+	plan.save(ignore_permissions=True)
+	return {"success": True, "name": plan.name, "status": plan.status}
+
+
+@frappe.whitelist()
+def get_schedule_compliance(store: str, week_start: str, surface: str | None = None):
+	"""Return schedule compliance metrics for a published labor plan week."""
+	set_backend_observability_context(module="hr", action="get_schedule_compliance", mutation_type="read")
+	if not store or not week_start:
+		frappe.throw(_("Store and week_start are required"))
+
+	surface_key = _normalize_schedule_surface(surface)
+	_assert_schedule_access(store, surface_key)
+	store_context = _resolve_labor_plan_store(store)
+	week_start_date = getdate(week_start)
+	week_end = add_days(str(week_start_date), 6)
+
+	plans = frappe.get_all(
+		"BEI Weekly Labor Plan",
+		filters={"store": store_context["warehouse"], "week_start_date": week_start, "status": "Published"},
+		fields=["name"],
+		limit=1,
+	)
+	if not plans:
+		return {"compliance_rate": 0, "total_scheduled_shifts": 0, "attended": 0, "absent": 0, "late_entries": 0, "early_exits": 0, "details": []}
+
+	plan_name = plans[0].name
+	shift_assignments = frappe.get_all(
+		"Shift Assignment",
+		filters={
+			"custom_bei_schedule_source": SCHEDULE_SOURCE,
+			"custom_bei_weekly_labor_plan": plan_name,
+			"docstatus": 1,
+		},
+		fields=["employee", "employee_name", "start_date", "shift_type"],
+	)
+
+	total_scheduled = len(shift_assignments)
+	attended = 0
+	absent = 0
+	late_entries = 0
+	early_exits = 0
+	details = []
+
+	for sa in shift_assignments:
+		attendance = frappe.get_all(
+			"Attendance",
+			filters={
+				"employee": sa.employee,
+				"attendance_date": sa.start_date,
+				"docstatus": 1,
+			},
+			fields=["status", "late_entry", "early_exit", "working_hours"],
+			limit=1,
+		)
+		day_name = DAY_NAMES[getdate(sa.start_date).weekday()]
+		if attendance:
+			att = attendance[0]
+			if att.status in ("Present", "Half Day"):
+				attended += 1
+			else:
+				absent += 1
+			if cint(att.late_entry):
+				late_entries += 1
+			if cint(att.early_exit):
+				early_exits += 1
+			details.append({
+				"employee": sa.employee,
+				"employee_name": sa.employee_name,
+				"day": day_name,
+				"date": str(sa.start_date),
+				"scheduled_shift": sa.shift_type,
+				"attendance_status": att.status,
+				"late_entry": bool(cint(att.late_entry)),
+				"early_exit": bool(cint(att.early_exit)),
+				"working_hours": flt(att.working_hours),
+			})
+		else:
+			absent += 1
+			details.append({
+				"employee": sa.employee,
+				"employee_name": sa.employee_name,
+				"day": day_name,
+				"date": str(sa.start_date),
+				"scheduled_shift": sa.shift_type,
+				"attendance_status": "No Record",
+				"late_entry": False,
+				"early_exit": False,
+				"working_hours": 0,
+			})
+
+	compliance_rate = round(attended / total_scheduled, 2) if total_scheduled > 0 else 0
+	return {
+		"compliance_rate": compliance_rate,
+		"total_scheduled_shifts": total_scheduled,
+		"attended": attended,
+		"absent": absent,
+		"late_entries": late_entries,
+		"early_exits": early_exits,
+		"details": details,
+	}
