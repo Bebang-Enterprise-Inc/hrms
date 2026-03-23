@@ -50,14 +50,73 @@ You review PR diffs, detect file conflicts, prevent anti-rewind regressions, and
 
 Be direct, concise, and opinionated. When asked about a PR, use your tools to read the actual files.
 
-## BEI Deployment Knowledge
+## BEI Deployment Knowledge (from /deploy-frappe and /ship skills)
 
-BEI has TWO repositories:
-- **BEI-ERP (hq.bebang.ph)** — Frappe backend. PR merge to production -> GHA -> Docker -> AWS EC2.
-- **BEI-Tasks (my.bebang.ph)** — React frontend. Push to main -> Vercel auto-deploys.
+### Two Repositories, Two Pipelines
 
-Docker flags: no_cache=true for Python changes. run_migrate=true for DocType schema changes.
-Governor auto-triggers Vercel --prod --force (cache-bust) after every backend merge.
+**BEI-ERP (hq.bebang.ph)** — Frappe backend
+- Repo: Bebang-Enterprise-Inc/hrms, release branch: `production`
+- Deploy: PR merge -> GHA `build-and-deploy.yml` -> Docker build -> AWS EC2 Docker Swarm
+- EC2: i-026b7477d27bd46d6 (ap-southeast-1), Docker Swarm with 9 services
+- Image: samkarazi/bebang-erpnext-hrms:v15
+- Rollback: `docker service rollback frappe_backend` (fastest)
+
+**BEI-Tasks (my.bebang.ph)** — React frontend
+- Repo: bei-tasks, release branch: `main`
+- Deploy: push to main -> Vercel auto-deploys
+- Governor auto-triggers `vercel --prod --force` (cache-bust) after every backend merge
+
+### Docker Build Flags (CRITICAL)
+
+| Scenario | no_cache | run_migrate | Build Time |
+|----------|----------|-------------|------------|
+| Python .py changes | ALWAYS true | false | 5-10 min |
+| DocType JSON changes | ALWAYS true | ALWAYS true | 8-12 min |
+| Config/workflow only | false | false | ~30s |
+| Dependencies (apps.json) | ALWAYS true | false | 5-10 min |
+
+**WARNING:** Build time ~30s = CACHED = old code deployed! Must be 5+ min for fresh build.
+
+### Post-Deploy Verification (Governor-Owned)
+
+1. Wait for GHA workflow success
+2. L1: `frappe.ping` -> pong (24 attempts, 5s apart)
+3. L1: Login page HTTP 200 + CSS/JS assets load
+4. **Image verification**: Check running container has the new image via SSM
+5. If stale: `docker service update --force frappe_backend` -> re-run L1
+6. Redis flush if CSS 404: `bench --site hq.bebang.ph clear-cache`
+7. Image cleanup: keep 4 newest, remove older ones
+
+### Docker Swarm Services (6 app services)
+
+frappe_backend, frappe_frontend, frappe_websocket, frappe_queue-short, frappe_queue-long, frappe_scheduler
+
+All 6 must be updated when deploying. The GHA workflow handles this.
+
+### Build Failure Handling
+
+If `bench build` fails (SyntaxError, yarn error, pip conflict):
+1. Retry once with no_cache=true (clears all layers)
+2. If retry fails: check if it's a Frappe upstream issue (bench init, yarn)
+3. If upstream: wait 15 min and retry (transient npm/pip issues)
+4. If our code: the review should have caught it — investigate
+
+### NEVER DO
+
+- `docker commit` (corrupts Python bytecode)
+- Edit files inside container (lost on restart)
+- `docker compose down -v` (deletes all data volumes)
+- Skip `bench migrate` after DocType changes
+- Deploy without `no_cache=true` for Python/DocType changes
+- Push directly to production branch
+- Claim SHIPPED without L1-L4 green
+
+### Ship Status Definitions
+
+- **SHIPPED** = merged + deployed + live + L1-L4 green
+- **MERGED_NOT_LIVE** = PR merged but deploy not proven
+- **DEPLOYED_NOT_VERIFIED** = production updated but L1-L4 red
+- **NOT_SHIPPED_NOT_MERGED** = code only on feature branch
 """
 
 # Bash patterns that must NEVER be executed

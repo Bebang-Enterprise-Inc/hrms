@@ -178,8 +178,17 @@ class MergeSerializer:
         if not success:
             return
 
-        # Step 3: Trigger production deploy
-        deploy_success = await self._trigger_deploy()
+        # Step 3: Trigger production deploy (auto-detect migrate need from touched files)
+        touched = pr.touched_files or []
+        if not touched:
+            # Fetch touched files from the PR diff
+            diff = await get_pr_diff(pr_num, REPO)
+            touched = [
+                line.split("b/")[-1]
+                for line in diff.splitlines()
+                if line.startswith("diff --git")
+            ]
+        deploy_success = await self._trigger_deploy(touched_files=touched)
         if not deploy_success:
             return
 
@@ -210,10 +219,13 @@ class MergeSerializer:
                 await self._handle_deploy_failure(pr_num)
                 return
 
-        # Step 6: Vercel cache-bust redeploy (my.bebang.ph)
+        # Step 6: Docker image cleanup (keep 4 newest, per /deploy-frappe skill)
+        await self._cleanup_old_images()
+
+        # Step 7: Vercel cache-bust redeploy (my.bebang.ph)
         await self._vercel_redeploy(pr_num)
 
-        # Step 7: Post-merge cleanup
+        # Step 8: Post-merge cleanup
         await self._post_merge_cleanup(pr)
 
         logger.info("merge_cycle_complete", pr=pr_num)
@@ -290,18 +302,37 @@ class MergeSerializer:
         logger.info("pr_merged", pr=pr_num)
         return True
 
-    async def _trigger_deploy(self) -> bool:
+    async def _trigger_deploy(self, touched_files: list[str] | None = None) -> bool:
         """Trigger production deploy via GitHub Actions.
 
         HARD BLOCKER: --ref production is MANDATORY.
+        Auto-detects if bench migrate is needed (DocType JSON changes).
         """
         logger.info("triggering_deploy")
 
-        proc = await asyncio.create_subprocess_exec(
+        # Detect if bench migrate is needed
+        run_migrate = "false"
+        if touched_files:
+            doctype_patterns = [".json", "doctype"]
+            if any(
+                "doctype" in f.lower() and f.endswith(".json")
+                for f in touched_files
+            ):
+                run_migrate = "true"
+                logger.info("migrate_needed", reason="DocType JSON changed")
+                print(f"[{time.strftime('%H:%M:%S')}] DocType changes detected — will run bench migrate", flush=True)
+
+        deploy_args = [
             "gh", "workflow", "run", "build-and-deploy.yml",
             "--repo", REPO,
             "--ref", "production",  # MANDATORY: guard job rejects non-production refs
             "-f", "no_cache=true",
+        ]
+        if run_migrate == "true":
+            deploy_args.extend(["-f", "run_migrate=true"])
+
+        proc = await asyncio.create_subprocess_exec(
+            *deploy_args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -601,6 +632,31 @@ class MergeSerializer:
             "**Builder action required:** Run `vercel --prod --force` from the bei-tasks directory.\n\n"
             "*Posted by governor-erp*"
         )
+
+    async def _cleanup_old_images(self) -> None:
+        """Clean up old Docker images on EC2. Keep 4 newest per /deploy-frappe skill.
+
+        The server has 50 GB disk. Each image is ~2.5 GB. Without cleanup,
+        disk fills in days. This runs after every successful deploy.
+        """
+        logger.info("image_cleanup_start")
+        try:
+            success, stdout, stderr = await ssm_run(
+                'docker container prune -f && '
+                'IMAGES=$(docker images samkarazi/bebang-erpnext-hrms --format "{{.ID}}" | tail -n +5) && '
+                'if [ -n "$IMAGES" ]; then docker rmi $IMAGES 2>/dev/null || true; fi && '
+                'docker image prune -f && '
+                'df -h / | tail -1',
+                instance_id=PRODUCTION_INSTANCE_ID,
+                timeout_s=60,
+            )
+            if success:
+                logger.info("image_cleanup_done", disk=stdout.strip().split('\n')[-1] if stdout else "unknown")
+                print(f"[{time.strftime('%H:%M:%S')}] Image cleanup done: {stdout.strip().split(chr(10))[-1] if stdout else 'OK'}", flush=True)
+            else:
+                logger.warning("image_cleanup_failed", stderr=stderr[:200])
+        except Exception as e:
+            logger.warning("image_cleanup_error", error=str(e))
 
     async def _verify_deployed_image(self) -> bool:
         """Verify the running Docker container has the latest image.
