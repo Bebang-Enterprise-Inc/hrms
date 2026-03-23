@@ -201,9 +201,7 @@ class GovernorERP:
         # Port allocator
         self.port_allocator = PortAllocator(self.state_mgr)
 
-        # SELF-HEAL: reconcile stale state against GitHub on every startup.
-        # Purges closed PRs, detects new ones, clears orphaned port allocations.
-        # This prevents the "stale state blocks new PRs" failure mode.
+        # SELF-HEAL Phase 1: clear paused, purge closed PRs (no AI needed)
         await self._self_heal_state()
 
         # PR watcher
@@ -212,11 +210,14 @@ class GovernorERP:
         self.pr_watcher.on_closed_pr(self._handle_closed_pr)
         self.pr_watcher.on_pr_updated(self._handle_pr_updated)
 
-        # AI backend (lazy — will be initialized in Phase 2a)
+        # AI backend
         self.ai_backend = await self._init_ai_backend()
 
         # Chat handler
         self.chat_handler = ChatHandler(ai_backend=self.ai_backend)
+
+        # SELF-HEAL Phase 2: re-review unreviewed PRs, re-queue approved (needs AI)
+        await self._self_heal_reviews()
 
         # Staging manager + Merge serializer (automated merge pipeline)
         from .reviewer import Reviewer
@@ -254,73 +255,101 @@ class GovernorERP:
         })
 
     async def _self_heal_state(self) -> None:
-        """Reconcile state against GitHub reality on startup.
+        """Phase 1: reconcile state against GitHub (no AI needed).
 
-        Fixes the #1 governor failure mode: stale state with closed PRs
-        blocking ports and preventing new PR detection. Runs before the
-        PR watcher starts so the first poll cycle has clean state.
+        Clears paused, purges closed PRs, updates SHAs from GitHub.
         """
         state = self.state_mgr.state
 
-        # ALWAYS clear paused state on startup — governor should never stay paused
+        # ALWAYS clear paused state — governor never stays paused
         if state.paused:
             state.paused = False
             self.state_mgr.save()
-            print(f"[{time.strftime('%H:%M:%S')}] Self-heal: cleared PAUSED state (governor never auto-pauses)", flush=True)
+            print(f"[{time.strftime('%H:%M:%S')}] Self-heal: cleared PAUSED state", flush=True)
 
         stale_count = len(state.active_prs)
-
         if stale_count == 0 and not state.merge_queue:
-            return  # Clean state, nothing to heal
+            return
 
         print(f"[{time.strftime('%H:%M:%S')}] Self-healing: {stale_count} PRs in state, verifying against GitHub...", flush=True)
 
-        # Create a temporary PR watcher (without callbacks) to poll GitHub
         temp_watcher = PRWatcher(self.state_mgr, poll_interval=30)
         try:
             open_prs = await temp_watcher.poll_once()
             open_numbers = {pr["number"] for pr in open_prs}
+            open_by_num = {pr["number"]: pr for pr in open_prs}
 
-            # Purge closed PRs from state
+            # Purge closed PRs
             purged = []
             for key in list(state.active_prs.keys()):
                 pr_num = int(key)
                 if pr_num not in open_numbers:
-                    pr = state.active_prs.pop(key)
+                    state.active_prs.pop(key)
                     purged.append(pr_num)
-                    # Release port
                     if self.port_allocator:
                         self.port_allocator.release(pr_num)
 
             # Purge closed PRs from merge queue
             state.merge_queue = [n for n in state.merge_queue if n in open_numbers]
 
-            if purged:
-                self.state_mgr.save()
-                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: purged {len(purged)} closed PRs: {purged}", flush=True)
-                _json_logger.write({
-                    "event": "self_heal_purged",
-                    "purged_prs": purged,
-                    "remaining_active": len(state.active_prs),
-                    "timestamp": time.time(),
-                })
-            else:
-                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: all {stale_count} PRs still open, state is clean", flush=True)
-
-            # Re-queue approved PRs that aren't in the merge queue (orphaned approvals)
+            # Update SHAs from GitHub (detect pushes while governor was down)
             for key, pr in state.active_prs.items():
                 pr_num = int(key)
-                if (pr.review_decision == "APPROVE"
-                    and pr_num not in state.merge_queue
-                    and not getattr(pr, "gate_blocked", False)):
-                    state.merge_queue.append(pr_num)
-                    print(f"[{time.strftime('%H:%M:%S')}] Self-heal: re-queued approved PR #{pr_num}", flush=True)
+                gh_pr = open_by_num.get(pr_num)
+                if gh_pr:
+                    new_sha = gh_pr.get("headRefOid", "")
+                    if new_sha and new_sha != pr.head_sha:
+                        print(f"[{time.strftime('%H:%M:%S')}] Self-heal: PR #{pr_num} SHA changed while offline ({pr.head_sha[:8]} -> {new_sha[:8]})", flush=True)
+                        pr.head_sha = new_sha
+                        pr.review_decision = None
+                        pr.review_sha = None
+                        pr.builder_dispatch_count = 0
+                        pr.builder_dispatched = False
 
-            if state.merge_queue:
-                self.state_mgr.save()
+            if purged:
+                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: purged {len(purged)} closed PRs: {purged}", flush=True)
+            else:
+                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: all {stale_count} PRs still open", flush=True)
+
+            self.state_mgr.save()
 
         except Exception as e:
             print(f"[{time.strftime('%H:%M:%S')}] Self-heal: GitHub poll failed ({e}), continuing with existing state", flush=True)
+
+    async def _self_heal_reviews(self) -> None:
+        """Phase 2: re-review unreviewed PRs, re-queue approved (needs AI).
+
+        Called after AI backend is initialized. Handles:
+        - PRs with no review (new PR or invalidated review) -> auto-review
+        - Approved PRs not in queue -> re-queue
+        - Ensures governor is never stuck waiting for something that already happened
+        """
+        state = self.state_mgr.state
+        if not state.active_prs:
+            return
+
+        healed = False
+
+        for key, pr in list(state.active_prs.items()):
+            pr_num = int(key)
+
+            # No review decision -> auto-review now
+            if pr.review_decision is None:
+                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: PR #{pr_num} has no review, auto-reviewing...", flush=True)
+                if self.ai_backend and not self.skip_review:
+                    await self._auto_review_pr(pr)
+                    healed = True
+
+            # Approved but not in queue -> re-queue
+            elif (pr.review_decision == "APPROVE"
+                  and pr_num not in state.merge_queue
+                  and not getattr(pr, "gate_blocked", False)):
+                state.merge_queue.append(pr_num)
+                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: re-queued approved PR #{pr_num}", flush=True)
+                healed = True
+
+        if healed:
+            self.state_mgr.save()
 
     async def _init_ai_backend(self):
         """Initialize the selected AI backend. Returns None if not available."""
