@@ -80,7 +80,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S096` | Sprint 96 | GO | `docs/plans/2026-03-23-sprint-96-release-manager-gate.md` |
 
-| `S097` | Sprint 97 | GO | `docs/plans/2026-03-23-sprint-97-commissary-handoff-fix.md` |
+| `S097` | Sprint 97 | COMPLETED 2026-03-23 -- Commissary handoff notification fix + grouped warehouse targets. PRs: hrms#317, bei-tasks#231. | `docs/plans/2026-03-23-sprint-97-commissary-handoff-fix.md` |
 
 ## Next Sprint Reservation
 1. Next canonical sprint ID to assign: `S098`.

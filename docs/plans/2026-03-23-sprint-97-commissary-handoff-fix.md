@@ -2,13 +2,13 @@
 
 ```yaml
 canonical_sprint_id: S097
-status: GO
+status: COMPLETED
 created: 2026-03-23
 lane: single
 depends_on: null
 estimated_work_units: 7
-completed_date: null
-execution_summary: null
+completed_date: 2026-03-23
+execution_summary: "5 fixes shipped. Backend PR #317 merged+deployed (hrms). Frontend PR #231 merged+deployed (bei-tasks/Vercel). FIX-1 notification import, FIX-2 dialog header, FIX-3 grouped warehouse targets, FIX-4 grouped dropdown, FIX-5 TS type update."
 ```
 
 ## Problem Statement
