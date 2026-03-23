@@ -25,6 +25,8 @@ class PRRecord:
     queued_at: float | None = None
     merged_at: float | None = None
     touched_files: list[str] = field(default_factory=list)
+    builder_dispatched: bool = False
+    builder_dispatch_count: int = 0
 
 
 @dataclass

@@ -416,7 +416,7 @@ class GovernorERP:
                 self.state_mgr.save()
                 print(f"[{time.strftime('%H:%M:%S')}] PR #{pr.number} added to merge queue (position {len(self.state_mgr.state.merge_queue)})", flush=True)
             elif decision in ("REJECT", "NEEDS_FIX"):
-                # Post feedback on PR so the builder agent can fix it
+                # Post feedback on PR
                 body = (
                     f"**Governor Review: {decision}** (confidence: {confidence:.2f})\n\n"
                     f"**Issues found:**\n{result.reasoning}\n\n"
@@ -444,8 +444,35 @@ class GovernorERP:
                 except Exception:
                     pass
 
+                # Auto-dispatch builder subagent to fix the issue
+                if self.ai_backend_type == "agent-sdk":
+                    await self._dispatch_builder_for_rejection(pr, result)
+
         except Exception as e:
             print(f"[{time.strftime('%H:%M:%S')}] Review error for PR #{pr.number}: {e}", flush=True)
+
+    async def _dispatch_builder_for_rejection(self, pr: PRRecord, result) -> None:
+        """Dispatch a builder subagent to fix a rejected PR."""
+        from .builder_dispatch import dispatch_rejection_fixer
+
+        repo_root = str(Path(__file__).parent.parent.parent)
+        pushed = await dispatch_rejection_fixer(pr, result, repo_root)
+        if pushed:
+            print(f"[{time.strftime('%H:%M:%S')}] Builder pushed fix for PR #{pr.number} — will re-review on next poll", flush=True)
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] Builder could not fix PR #{pr.number} — waiting for manual fix", flush=True)
+        self.state_mgr.save()
+
+    async def _dispatch_builder_for_conflict(self, pr: PRRecord) -> bool:
+        """Dispatch a builder subagent to resolve merge conflicts."""
+        from .builder_dispatch import dispatch_conflict_resolver
+
+        repo_root = str(Path(__file__).parent.parent.parent)
+        pushed = await dispatch_conflict_resolver(pr, repo_root)
+        if pushed:
+            print(f"[{time.strftime('%H:%M:%S')}] Builder resolved conflicts for PR #{pr.number}", flush=True)
+        self.state_mgr.save()
+        return pushed
 
     async def _handle_closed_pr(self, pr: PRRecord) -> None:
         """Called when a PR is closed/merged."""
@@ -595,8 +622,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--ai-backend",
         choices=["cli", "sdk", "agent-sdk"],
-        default="cli",
-        help="AI backend: 'cli' uses claude --print (Max subscription, $0), 'sdk' uses API key (pay-per-token). Default: cli",
+        default="agent-sdk",
+        help="AI backend: 'agent-sdk' (default, reads files directly), 'sdk' (raw API), 'cli' (claude --print)",
     )
     parser.add_argument(
         "--skip-review",

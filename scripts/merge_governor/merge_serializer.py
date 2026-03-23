@@ -6,6 +6,7 @@ import json
 import re
 import sys
 import time
+from pathlib import Path
 
 import structlog
 
@@ -120,21 +121,32 @@ class MergeSerializer:
             rebased = await self._auto_rebase(pr)
             if not rebased:
                 logger.error("rebase_failed", pr=pr_num)
-                await self._comment_on_pr(
-                    pr_num,
-                    "**Governor: Merge Conflict**\n\n"
-                    "This PR has conflicts with production and cannot be auto-rebased.\n\n"
-                    "**Builder action required:**\n"
-                    "1. `git fetch origin production`\n"
-                    "2. `git rebase origin/production` (resolve conflicts)\n"
-                    "3. `git push --force-with-lease`\n\n"
-                    "The governor will automatically re-review when it detects the new SHA.\n\n"
-                    "*Posted by governor-erp*"
-                )
-                if pr_num in self.state_mgr.state.merge_queue:
-                    self.state_mgr.state.merge_queue.remove(pr_num)
-                    self.state_mgr.save()
-                return
+                # Try builder subagent to resolve conflicts
+                builder_fixed = await self._try_builder_conflict_resolve(pr)
+                if not builder_fixed:
+                    await self._comment_on_pr(
+                        pr_num,
+                        "**Governor: Merge Conflict**\n\n"
+                        "This PR has conflicts with production and cannot be auto-rebased.\n"
+                        "Builder subagent also could not resolve the conflicts.\n\n"
+                        "**Builder action required:**\n"
+                        "1. `git fetch origin production`\n"
+                        "2. `git rebase origin/production` (resolve conflicts)\n"
+                        "3. `git push --force-with-lease`\n\n"
+                        "The governor will automatically re-review when it detects the new SHA.\n\n"
+                        "*Posted by governor-erp*"
+                    )
+                    if pr_num in self.state_mgr.state.merge_queue:
+                        self.state_mgr.state.merge_queue.remove(pr_num)
+                        self.state_mgr.save()
+                    return
+                # Builder fixed it — continue with freshness re-check
+                is_fresh = await self._check_freshness(pr)
+                if not is_fresh:
+                    if pr_num in self.state_mgr.state.merge_queue:
+                        self.state_mgr.state.merge_queue.remove(pr_num)
+                        self.state_mgr.save()
+                    return
 
             # Re-review if diff changed
             diff = await get_pr_diff(pr_num, REPO)
@@ -565,6 +577,24 @@ class MergeSerializer:
             "**Builder action required:** Run `vercel --prod --force` from the bei-tasks directory.\n\n"
             "*Posted by governor-erp*"
         )
+
+    async def _try_builder_conflict_resolve(self, pr) -> bool:
+        """Try to dispatch a builder subagent to resolve merge conflicts."""
+        try:
+            from .builder_dispatch import dispatch_conflict_resolver
+
+            repo_root = str(Path(__file__).parent.parent.parent)
+            pushed = await dispatch_conflict_resolver(pr, repo_root)
+            if pushed:
+                logger.info("builder_conflict_resolved", pr=pr.number)
+                self.state_mgr.save()
+            return pushed
+        except ImportError:
+            logger.info("builder_sdk_not_available", pr=pr.number)
+            return False
+        except Exception as e:
+            logger.error("builder_conflict_error", pr=pr.number, error=str(e))
+            return False
 
     async def _comment_on_pr(self, pr_num: int, body: str) -> None:
         """Post a comment on a PR."""
