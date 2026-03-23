@@ -372,8 +372,11 @@ class GovernorERP:
                 else:
                     print(f"[{time.strftime('%H:%M:%S')}]   WARNING: No AI backend — cannot auto-review PR #{pr_num}", flush=True)
 
-            # Approved but not in queue -> re-queue
-            elif review == "APPROVE" and not in_queue and not blocked:
+            # Approved but not in queue -> re-queue (clear gate_blocked on startup)
+            elif review == "APPROVE" and not in_queue:
+                if blocked:
+                    pr.gate_blocked = False
+                    print(f"[{time.strftime('%H:%M:%S')}] Self-heal: cleared gate_blocked on PR #{pr_num}", flush=True)
                 state.merge_queue.append(pr_num)
                 print(f"[{time.strftime('%H:%M:%S')}] Self-heal: re-queued approved PR #{pr_num}", flush=True)
                 healed = True
