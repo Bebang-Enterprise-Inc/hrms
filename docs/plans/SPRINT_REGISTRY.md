@@ -82,7 +82,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S097` | Sprint 97 | COMPLETED 2026-03-23 -- Commissary handoff notification fix + grouped warehouse targets. PRs: hrms#317, bei-tasks#231. | `docs/plans/2026-03-23-sprint-97-commissary-handoff-fix.md` |
 
-| `S098` | Sprint 98 | GO | `docs/plans/2026-03-23-sprint-98-governor-self-evolution.md` |
+| `S098` | Sprint 98 | COMPLETED 2026-03-23 — Self-evolution memory: 5 lessons + 3 playbooks seeded, Reflexion + Procedural, prompt injection on startup | `docs/plans/2026-03-23-sprint-98-governor-self-evolution.md` |
 
 ## Next Sprint Reservation
 1. Next canonical sprint ID to assign: `S099`.
