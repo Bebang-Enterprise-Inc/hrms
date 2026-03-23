@@ -490,10 +490,23 @@ class MergeSerializer:
         return stdout.decode().strip() == "200"
 
     async def _handle_deploy_failure(self, pr_num: int) -> None:
-        """Handle failed deploy: halt queue, display rollback commands."""
+        """Handle failed deploy: halt queue, display rollback commands, record lesson."""
         state = self.state_mgr.state
         state.paused = True
         self.state_mgr.save()
+
+        # Self-evolution: record lesson from deploy failure
+        try:
+            from .lessons import record_lesson
+            record_lesson(
+                category="deploy",
+                trigger=f"Deploy failed for PR #{pr_num}",
+                wrong_action="Deploy triggered but failed during image build or service update",
+                correct_action="Check GHA logs, verify no_cache=true was used, check for SyntaxError in bench build",
+                source_incident=f"PR #{pr_num}",
+            )
+        except Exception:
+            pass
 
         rollback_cmds = [
             f"# Rollback commands for PR #{pr_num}:",

@@ -137,6 +137,8 @@ _BLOCKED_RE = [re.compile(p, re.IGNORECASE) for p in BLOCKED_BASH_PATTERNS]
 class AgentSDKBackend(ReviewBackend):
     """AI backend using Claude Agent SDK — agent reads files, runs commands."""
 
+    _lessons_context: str = ""  # Injected on startup from governor memory
+
     def __init__(self):
         # Unset CLAUDECODE to allow SDK to run outside Claude Code sessions
         os.environ.pop("CLAUDECODE", None)
@@ -191,7 +193,7 @@ class AgentSDKBackend(ReviewBackend):
             max_turns=10,
             max_budget_usd=0.50,
             model="sonnet",
-            system_prompt=REVIEW_SYSTEM_PROMPT,
+            system_prompt=REVIEW_SYSTEM_PROMPT + self._lessons_context,
             cwd=self._repo_root,
         )
 
@@ -262,7 +264,7 @@ class AgentSDKBackend(ReviewBackend):
             max_turns=5,
             max_budget_usd=0.25,
             model="sonnet",
-            system_prompt=CHAT_SYSTEM_PROMPT,
+            system_prompt=CHAT_SYSTEM_PROMPT + self._lessons_context,
             cwd=self._repo_root,
             continue_conversation=True,
         )
@@ -332,6 +334,11 @@ class AgentSDKBackend(ReviewBackend):
     def inject_review_into_chat(self, pr_number: int, result: ReviewResult) -> None:
         """No-op for Agent SDK — session persistence handles context."""
         pass
+
+    def inject_lessons(self, lessons_text: str) -> None:
+        """Inject lessons + playbooks into the system prompts."""
+        self._lessons_context = lessons_text
+        logger.info("lessons_injected", length=len(lessons_text))
 
     async def verify_evidence(self, sprint_id: str, evidence_path: str, plan_scenarios: list[str]) -> dict:
         """AI verification of L3 evidence authenticity.

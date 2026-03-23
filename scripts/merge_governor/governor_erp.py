@@ -236,6 +236,14 @@ class GovernorERP:
         # Health server
         self.health_server = HealthServer(self.state_mgr)
 
+        # Self-evolution: load lessons + playbooks into AI prompts
+        from .lessons import load_memory, get_memory_stats
+        memory_text = load_memory()
+        if memory_text and self.ai_backend and hasattr(self.ai_backend, "inject_lessons"):
+            self.ai_backend.inject_lessons(memory_text)
+            stats = get_memory_stats()
+            print(f"[{time.strftime('%H:%M:%S')}] Loaded {stats['total']} memories ({stats['lesson_count']} lessons, {stats['playbook_count']} playbooks)", flush=True)
+
         # Log structured event
         _json_logger.write({
             "event": "governor_initialized",
@@ -471,6 +479,18 @@ class GovernorERP:
                 self.state_mgr.save()
                 print(f"[{time.strftime('%H:%M:%S')}] PR #{pr.number} added to merge queue (position {len(self.state_mgr.state.merge_queue)})", flush=True)
             elif decision in ("REJECT", "NEEDS_FIX"):
+                # Record lesson from rejection (self-evolution)
+                from .lessons import record_lesson, check_repeat_failure
+                is_repeat = check_repeat_failure(result.reasoning[:80])
+                if not is_repeat:
+                    record_lesson(
+                        category="review",
+                        trigger=result.reasoning[:80],
+                        wrong_action=f"PR #{pr.number} had this issue",
+                        correct_action=result.suggested_fix or "Fix the issue described above",
+                        source_incident=f"PR #{pr.number} ({pr.title[:40]})",
+                    )
+
                 # Post feedback on PR
                 body = (
                     f"**Governor Review: {decision}** (confidence: {confidence:.2f})\n\n"
