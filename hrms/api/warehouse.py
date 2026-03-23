@@ -63,18 +63,17 @@ def _notify_warehouse_handoff(
 ) -> None:
 	"""S093 (UX-011): Notify warehouse team of incoming commissary handoff via GChat + in-app."""
 	try:
-		from hrms.api.google_chat import send_bot_message
+		from hrms.api.google_chat import send_message_to_space
 		from hrms.utils.bei_config import SPACE_OPS, get_chat_space
 
-		space_id = get_chat_space(SPACE_OPS)
-		if space_id:
-			send_bot_message(
-				space_id=space_id,
-				text=(
-					f"\U0001f4e6 New commissary handoff: *{receiving_name}*\n"
-					f"From: {source_warehouse or 'Commissary'} \u2192 To: {target_warehouse or 'Warehouse'}\n"
-					f"Check warehouse receiving queue: https://my.bebang.ph/dashboard/warehouse/receiving"
-				),
+		# get_chat_space returns a resource path like "spaces/XXXX" compatible with send_message_to_space
+		space_name = get_chat_space(SPACE_OPS)
+		if space_name:
+			send_message_to_space(
+				space_name,
+				f"\U0001f4e6 New commissary handoff: *{receiving_name}*\n"
+				f"From: {source_warehouse or 'Commissary'} \u2192 To: {target_warehouse or 'Warehouse'}\n"
+				f"Check warehouse receiving queue: https://my.bebang.ph/dashboard/warehouse/receiving",
 			)
 	except Exception as e:
 		frappe.log_error(f"Warehouse handoff notification failed for {receiving_name}: {e}", "Warehouse API")
@@ -412,8 +411,21 @@ def create_purchase_receipt(
 
 
 @frappe.whitelist()
+_3PL_PATTERNS = ("3MD", "Pinnacle", "Royal Cold", "RCS")
+
+
+def _is_3pl_warehouse(warehouse_name: str) -> bool:
+	"""Check if a warehouse name matches a known 3PL partner pattern."""
+	upper = (warehouse_name or "").upper()
+	return any(p.upper() in upper for p in _3PL_PATTERNS)
+
+
 def get_internal_receiving_warehouses():
-	"""List active BKI warehouses that can receive commissary finished goods."""
+	"""List warehouses that can receive commissary finished goods, grouped by type.
+
+	Returns 3PL warehouses (3MD, Pinnacle, RCS) as the primary group and
+	BEI store warehouses as a secondary group for direct commissary-to-store dispatch.
+	"""
 	commissary_source_warehouse = None
 	try:
 		from hrms.api.commissary import get_commissary_warehouse
@@ -433,6 +445,8 @@ def get_internal_receiving_warehouses():
 		if name
 	)
 
+	allowed_companies = {"Bebang Kitchen Inc.", "Bebang Enterprise Inc."}
+
 	warehouses = frappe.get_all(
 		"Warehouse",
 		filters={"is_group": 0},
@@ -440,23 +454,28 @@ def get_internal_receiving_warehouses():
 		order_by="warehouse_name asc",
 	)
 
-	filtered = []
+	items_3pl = []
+	items_store = []
 	for warehouse in warehouses:
 		company = warehouse.get("company") or resolve_warehouse_company(warehouse.get("name"))
 		name = warehouse.get("name") or ""
-		if company != "Bebang Kitchen Inc.":
+		if company not in allowed_companies:
 			continue
 		if name in excluded_warehouses:
 			continue
-		filtered.append(
-			{
-				"name": name,
-				"label": warehouse.get("warehouse_name") or strip_company_suffix(name),
-				"company": company,
-			}
-		)
+		entry = {
+			"name": name,
+			"label": warehouse.get("warehouse_name") or strip_company_suffix(name),
+			"company": company,
+		}
+		if _is_3pl_warehouse(name):
+			entry["group"] = "3pl"
+			items_3pl.append(entry)
+		else:
+			entry["group"] = "store"
+			items_store.append(entry)
 
-	return {"success": True, "data": filtered}
+	return {"success": True, "data": items_3pl + items_store}
 
 
 @frappe.whitelist()
@@ -481,8 +500,11 @@ def create_warehouse_receiving(
 
 	source_company = resolve_warehouse_company(source_warehouse)
 	target_company = resolve_warehouse_company(target_warehouse)
-	if source_company != "Bebang Kitchen Inc." or target_company != "Bebang Kitchen Inc.":
-		frappe.throw(_("Commissary warehouse handoff must stay within Bebang Kitchen Inc. warehouses"))
+	if source_company != "Bebang Kitchen Inc.":
+		frappe.throw(_("Source warehouse must belong to Bebang Kitchen Inc."))
+	allowed_target_companies = {"Bebang Kitchen Inc.", "Bebang Enterprise Inc."}
+	if target_company not in allowed_target_companies:
+		frappe.throw(_("Target warehouse must belong to BKI or BEI"))
 
 	doc = frappe.new_doc("BEI Warehouse Receiving")
 	doc.naming_series = "BEI-WHR-.YYYY.-.#####"
