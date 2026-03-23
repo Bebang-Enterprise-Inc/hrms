@@ -395,7 +395,11 @@ def get_runtime_deduction_proof(
 
 
 def _validate_shelf_life_gate(item_code, batch_no, action_date, action_type="dispatch"):
-	"""Hard gate: block if batch is expired or below minimum shelf life."""
+	"""Hard gate: block if batch is expired or below minimum remaining shelf life.
+
+	Minimum = item shelf_life - 1 day (commissary must dispatch within 24h of production).
+	Falls back to BEI Settings min_shelf_life_days for items without product thresholds.
+	"""
 	if not batch_no:
 		return {"valid": True}
 	if not frappe.db.exists("Batch", batch_no):
@@ -409,13 +413,28 @@ def _validate_shelf_life_gate(item_code, batch_no, action_date, action_type="dis
 			"error": f"Batch {batch_no} expired on {batch.expiry_date}. Cannot {action_type}.",
 			"requires_override": True,
 		}
-	min_shelf_days = frappe.db.get_single_value("BEI Settings", "min_shelf_life_days") or 0
+
+	# Per-item minimum: shelf_life - 1 day (must dispatch within 24h of production)
+	from hrms.api.commissary import get_product_threshold
+
+	threshold = get_product_threshold(item_code)
+	item_shelf_life = threshold.get("shelf_life", 0)
+	if item_shelf_life > 0:
+		min_shelf_days = item_shelf_life - 1
+	else:
+		# Fallback to global setting for items without product thresholds
+		min_shelf_days = frappe.db.get_single_value("BEI Settings", "min_shelf_life_days") or 0
+
 	if min_shelf_days:
 		remaining = date_diff(batch.expiry_date, action_date)
 		if remaining < min_shelf_days:
 			return {
 				"valid": False,
-				"error": f"Batch {batch_no} has only {remaining} days remaining (minimum: {min_shelf_days}).",
+				"error": (
+					f"Batch {batch_no} has {remaining} days remaining "
+					f"(item requires {min_shelf_days} = shelf life {item_shelf_life} minus 1 day). "
+					f"Cannot {action_type}."
+				),
 				"requires_override": True,
 			}
 	return {"valid": True}
