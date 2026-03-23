@@ -1069,6 +1069,9 @@ class MergeSerializer:
                 await self.process_queue()
             except Exception as e:
                 logger.error("merge_processor_error", error=str(e))
+                import traceback
+                print(f"[{time.strftime('%H:%M:%S')}] MERGE ERROR: {e}", flush=True)
+                traceback.print_exc()
 
             try:
                 await asyncio.wait_for(stop_event.wait(), timeout=interval)
