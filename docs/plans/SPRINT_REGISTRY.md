@@ -73,6 +73,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 | `Store Ops Sprint 2` | `docs/plans/Completed/STORE_OPS_SPRINT2_PLAN_2026-02-07.md` | Separate historical track |
 | `Geotagged Attendance Sprint 3` | `docs/plans/Completed/GEOTAGGED_ATTENDANCE_SPRINT3_GEOFENCE_UX_2026-02-10.md` | Separate historical track |
 | `Geo-Attendance Sprint 3 E2E` | `docs/plans/archived/GEO_ATTENDANCE_SPRINT3_E2E_TEST_PLAN_2026-02-10.md` | Separate historical track |
+| `S092` | Sprint 92 | COMPLETED 2026-03-23 — 7 backend + 4 frontend fixes + billing view-only fix. PRs: hrms#309, bei-tasks#225, bei-tasks#226. L3 regression 7/8 PASS. | `docs/plans/2026-03-22-sprint-92-erp-testing-bug-remediation.md` |
 
 ## Next Sprint Reservation
 1. Next canonical sprint ID to assign: `S045`.
