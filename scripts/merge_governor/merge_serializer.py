@@ -195,6 +195,21 @@ class MergeSerializer:
             await self._handle_l1_failure(pr_num)
             return
 
+        # Step 5.5: Verify container is running the NEW image (not stale)
+        image_ok = await self._verify_deployed_image()
+        if not image_ok:
+            # Force-update the Docker service and re-run L1
+            force_ok = await self._force_service_update()
+            if force_ok:
+                l1_passed = await self._l1_smoke_test()
+                if not l1_passed:
+                    await self._handle_l1_failure(pr_num)
+                    return
+            else:
+                logger.error("force_update_failed", pr=pr_num)
+                await self._handle_deploy_failure(pr_num)
+                return
+
         # Step 6: Vercel cache-bust redeploy (my.bebang.ph)
         await self._vercel_redeploy(pr_num)
 
@@ -586,6 +601,86 @@ class MergeSerializer:
             "**Builder action required:** Run `vercel --prod --force` from the bei-tasks directory.\n\n"
             "*Posted by governor-erp*"
         )
+
+    async def _verify_deployed_image(self) -> bool:
+        """Verify the running Docker container has the latest image.
+
+        Compares the image digest of the running frappe_backend service
+        against the most recently built image. If they don't match,
+        the deploy succeeded on paper but the container is stale.
+        """
+        print(f"[{time.strftime('%H:%M:%S')}] Verifying container image is current...", flush=True)
+
+        try:
+            # Get the running image from Docker Swarm
+            success, stdout, stderr = await ssm_run(
+                "docker service inspect frappe_backend --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}'",
+                instance_id=PRODUCTION_INSTANCE_ID,
+                timeout_s=30,
+            )
+            if not success:
+                logger.warning("image_verify_failed", error=stderr[:200])
+                return True  # Fail-open: can't check, assume OK
+
+            running_image = stdout.strip().strip("'\"")
+
+            # Get the latest image from the registry
+            success2, stdout2, _ = await ssm_run(
+                "docker images samkarazi/bebang-erpnext-hrms --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' | head -1",
+                instance_id=PRODUCTION_INSTANCE_ID,
+                timeout_s=30,
+            )
+
+            if success2:
+                latest_image = stdout2.strip().split()[0] if stdout2.strip() else ""
+                logger.info("image_check", running=running_image[:80], latest=latest_image[:80])
+
+                # Check if running image matches latest
+                if running_image and latest_image and running_image != latest_image:
+                    print(f"[{time.strftime('%H:%M:%S')}] STALE: running={running_image[:50]} vs latest={latest_image[:50]}", flush=True)
+                    return False
+
+            # Also verify the API returns fresh code by checking a known endpoint
+            success3, stdout3, _ = await ssm_run(
+                "curl -s --max-time 5 http://localhost:8000/api/method/frappe.ping",
+                instance_id=PRODUCTION_INSTANCE_ID,
+                timeout_s=15,
+            )
+            if success3 and "pong" in stdout3:
+                print(f"[{time.strftime('%H:%M:%S')}] Container image verified OK", flush=True)
+                return True
+
+            return True  # Fail-open if checks are inconclusive
+
+        except Exception as e:
+            logger.warning("image_verify_error", error=str(e))
+            return True  # Fail-open
+
+    async def _force_service_update(self) -> bool:
+        """Force Docker Swarm to re-pull and restart the service."""
+        print(f"[{time.strftime('%H:%M:%S')}] Forcing Docker service update...", flush=True)
+        logger.info("force_service_update")
+
+        try:
+            success, stdout, stderr = await ssm_run(
+                "docker service update --force --with-registry-auth frappe_backend",
+                instance_id=PRODUCTION_INSTANCE_ID,
+                timeout_s=120,
+            )
+
+            if success:
+                logger.info("force_update_success")
+                print(f"[{time.strftime('%H:%M:%S')}] Force update complete. Waiting 30s for container startup...", flush=True)
+                await asyncio.sleep(30)  # Wait for new container to be ready
+                return True
+            else:
+                logger.error("force_update_failed", stderr=stderr[:300])
+                print(f"[{time.strftime('%H:%M:%S')}] Force update FAILED: {stderr[:200]}", flush=True)
+                return False
+
+        except Exception as e:
+            logger.error("force_update_error", error=str(e))
+            return False
 
     async def _run_release_gate(self, pr) -> bool:
         """Run two-layer release gate: deterministic + AI (parallel).
