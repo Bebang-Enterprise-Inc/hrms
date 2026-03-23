@@ -257,21 +257,18 @@ class GovernorERP:
     async def _self_heal_state(self) -> None:
         """Phase 1: reconcile state against GitHub (no AI needed).
 
-        Clears paused, purges closed PRs, updates SHAs from GitHub.
+        Clears paused, purges closed PRs, adds missing open PRs, updates SHAs.
+        ALWAYS polls GitHub — even with empty state (PRs may have been opened while offline).
         """
+        from .state_manager import PRRecord
         state = self.state_mgr.state
 
         # ALWAYS clear paused state — governor never stays paused
         if state.paused:
             state.paused = False
-            self.state_mgr.save()
             print(f"[{time.strftime('%H:%M:%S')}] Self-heal: cleared PAUSED state", flush=True)
 
-        stale_count = len(state.active_prs)
-        if stale_count == 0 and not state.merge_queue:
-            return
-
-        print(f"[{time.strftime('%H:%M:%S')}] Self-healing: {stale_count} PRs in state, verifying against GitHub...", flush=True)
+        print(f"[{time.strftime('%H:%M:%S')}] Self-healing: polling GitHub for open PRs...", flush=True)
 
         temp_watcher = PRWatcher(self.state_mgr, poll_interval=30)
         try:
@@ -279,7 +276,7 @@ class GovernorERP:
             open_numbers = {pr["number"] for pr in open_prs}
             open_by_num = {pr["number"]: pr for pr in open_prs}
 
-            # Purge closed PRs
+            # Purge closed PRs from state
             purged = []
             for key in list(state.active_prs.keys()):
                 pr_num = int(key)
@@ -289,12 +286,40 @@ class GovernorERP:
                     if self.port_allocator:
                         self.port_allocator.release(pr_num)
 
+            if purged:
+                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: purged {len(purged)} closed PRs: {purged}", flush=True)
+
             # Purge closed PRs from merge queue
             state.merge_queue = [n for n in state.merge_queue if n in open_numbers]
 
-            # Update SHAs from GitHub (detect pushes while governor was down)
+            # Add missing open PRs to state (opened while governor was offline)
+            added = []
+            for pr_data in open_prs:
+                pr_num = pr_data["number"]
+                key = str(pr_num)
+                if key not in state.active_prs:
+                    record = PRRecord(
+                        number=pr_num,
+                        title=pr_data.get("title", ""),
+                        head_ref=pr_data.get("headRefName", ""),
+                        head_sha=pr_data.get("headRefOid", ""),
+                        updated_at=pr_data.get("updatedAt", ""),
+                        labels=[l.get("name", "") for l in pr_data.get("labels", [])],
+                    )
+                    state.active_prs[key] = record
+                    added.append(pr_num)
+                    # Allocate port
+                    if self.port_allocator:
+                        port = self.port_allocator.allocate(pr_num)
+                        if port:
+                            record.staging_port = port
+                    print(f"[{time.strftime('%H:%M:%S')}] Self-heal: added missing PR #{pr_num}: {record.title}", flush=True)
+
+            # Update SHAs for existing PRs (detect pushes while governor was down)
             for key, pr in state.active_prs.items():
                 pr_num = int(key)
+                if pr_num in added:
+                    continue  # Just added, already fresh
                 gh_pr = open_by_num.get(pr_num)
                 if gh_pr:
                     new_sha = gh_pr.get("headRefOid", "")
@@ -306,10 +331,8 @@ class GovernorERP:
                         pr.builder_dispatch_count = 0
                         pr.builder_dispatched = False
 
-            if purged:
-                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: purged {len(purged)} closed PRs: {purged}", flush=True)
-            else:
-                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: all {stale_count} PRs still open", flush=True)
+            if not purged and not added:
+                print(f"[{time.strftime('%H:%M:%S')}] Self-heal: state matches GitHub ({len(state.active_prs)} PRs)", flush=True)
 
             self.state_mgr.save()
 
