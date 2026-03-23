@@ -78,7 +78,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 | `S095A` | Sprint 95 Lane A | COMPLETED 2026-03-23 — Agent SDK review backend, confidence gate, cost caps, PreToolUse hooks | `docs/plans/2026-03-23-sprint-95-governor-agent-sdk-upgrade.md` |
 | `S095B` | Sprint 95 Lane B | COMPLETED 2026-03-23 — Builder subagent dispatch, worktree isolation, conflict resolver, default switched to agent-sdk | `docs/plans/2026-03-23-sprint-95-governor-agent-sdk-upgrade.md` |
 
-| `S096` | Sprint 96 | GO | `docs/plans/2026-03-23-sprint-96-release-manager-gate.md` |
+| `S096` | Sprint 96 | COMPLETED 2026-03-23 — Two-layer release gate (deterministic + AI). Blocks merge without L3 evidence. Re-queue on fix push. | `docs/plans/2026-03-23-sprint-96-release-manager-gate.md` |
 
 | `S097` | Sprint 97 | COMPLETED 2026-03-23 -- Commissary handoff notification fix + grouped warehouse targets. PRs: hrms#317, bei-tasks#231. | `docs/plans/2026-03-23-sprint-97-commissary-handoff-fix.md` |
 
