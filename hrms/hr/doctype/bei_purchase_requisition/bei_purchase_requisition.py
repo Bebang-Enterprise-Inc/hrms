@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import now_datetime
+from frappe.utils import flt, now_datetime
 
 
 class BEIPurchaseRequisition(Document):
@@ -49,9 +49,42 @@ class BEIPurchaseRequisition(Document):
         return {"success": True, "message": _("PR submitted for approval")}
 
     def notify_approver(self):
-        """Send notification to PR approver."""
-        # TODO: Implement Google Chat notification
-        pass
+        """Send Google Chat notification to PR approver (CPO)."""
+        try:
+            from hrms.api.google_chat import send_notification_to_user
+
+            # Get CPO email from BEI Settings, fall back to hardcoded
+            approver_email = None
+            try:
+                approver_email = frappe.db.get_single_value("BEI Settings", "cpo_approver_email")
+            except Exception:
+                pass
+            if not approver_email:
+                from hrms.utils.delivery_billing_policy import CPO_APPROVER_EMAIL
+                approver_email = CPO_APPROVER_EMAIL
+
+            items_summary = ", ".join(
+                f"{row.item_code or row.item_name} x{flt(row.qty)}"
+                for row in (self.items or [])[:5]
+            )
+            if len(self.items or []) > 5:
+                items_summary += f" (+{len(self.items) - 5} more)"
+
+            message = (
+                f"*PR Approval Required*\n"
+                f"PR: {self.pr_no or self.name}\n"
+                f"Department: {self.department or 'N/A'}\n"
+                f"Estimated Cost: PHP {flt(self.total_estimated_cost):,.2f}\n"
+                f"Items: {items_summary}\n"
+                f"Requested by: {self.owner}\n"
+                f"View: https://my.bebang.ph/procurement/pr/{self.name}"
+            )
+            send_notification_to_user(approver_email, message)
+        except Exception as e:
+            frappe.log_error(
+                f"Failed to send PR approval notification for {self.name}: {e}",
+                "PR Approval Notification Error",
+            )
 
     @frappe.whitelist()
     def approve(self, comment=None):

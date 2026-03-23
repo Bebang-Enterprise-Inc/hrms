@@ -410,13 +410,48 @@ def create_purchase_receipt(
 	}
 
 
-_3PL_PATTERNS = ("3MD", "Pinnacle", "Royal Cold", "RCS")
+_3PL_PATTERNS_DEFAULT = ("3MD", "Pinnacle", "Royal Cold", "RCS")
+_ALLOWED_TARGET_COMPANIES_DEFAULT = {"Bebang Kitchen Inc.", "Bebang Enterprise Inc."}
+_COMMISSARY_COMPANY_DEFAULT = "Bebang Kitchen Inc."
+
+
+def _get_commissary_company() -> str:
+	"""Get commissary company from BEI Settings, falling back to hardcoded default."""
+	try:
+		val = frappe.db.get_single_value("BEI Settings", "commissary_company")
+		if val:
+			return val
+	except Exception:
+		pass
+	return _COMMISSARY_COMPANY_DEFAULT
+
+
+def _get_allowed_target_companies() -> set[str]:
+	"""Get allowed target companies from BEI Settings, falling back to defaults."""
+	try:
+		val = frappe.db.get_single_value("BEI Settings", "allowed_target_companies")
+		if val:
+			return {c.strip() for c in val.split(",") if c.strip()}
+	except Exception:
+		pass
+	return _ALLOWED_TARGET_COMPANIES_DEFAULT
+
+
+def _get_3pl_patterns() -> tuple[str, ...]:
+	"""Get 3PL warehouse patterns from BEI Settings, falling back to hardcoded defaults."""
+	try:
+		patterns_str = frappe.db.get_single_value("BEI Settings", "three_pl_warehouse_patterns")
+		if patterns_str:
+			return tuple(p.strip() for p in patterns_str.split(",") if p.strip())
+	except Exception:
+		pass
+	return _3PL_PATTERNS_DEFAULT
 
 
 def _is_3pl_warehouse(warehouse_name: str) -> bool:
 	"""Check if a warehouse name matches a known 3PL partner pattern."""
 	upper = (warehouse_name or "").upper()
-	return any(p.upper() in upper for p in _3PL_PATTERNS)
+	return any(p.upper() in upper for p in _get_3pl_patterns())
 
 
 @frappe.whitelist()
@@ -445,7 +480,7 @@ def get_internal_receiving_warehouses():
 		if name
 	)
 
-	allowed_companies = {"Bebang Kitchen Inc.", "Bebang Enterprise Inc."}
+	allowed_companies = _get_allowed_target_companies()
 
 	warehouses = frappe.get_all(
 		"Warehouse",
@@ -488,6 +523,8 @@ def create_warehouse_receiving(
 	remarks: str | None = None,
 ) -> dict:
 	"""Create a pending warehouse inbound record for commissary finished goods."""
+	from hrms.utils.sentry import set_backend_observability_context
+	set_backend_observability_context(module="warehouse", action="create_warehouse_receiving", mutation_type="create")
 	_ensure_warehouse_receiving_doctype()
 
 	if isinstance(items, str):
@@ -500,11 +537,12 @@ def create_warehouse_receiving(
 
 	source_company = resolve_warehouse_company(source_warehouse)
 	target_company = resolve_warehouse_company(target_warehouse)
-	if source_company != "Bebang Kitchen Inc.":
-		frappe.throw(_("Source warehouse must belong to Bebang Kitchen Inc."))
-	allowed_target_companies = {"Bebang Kitchen Inc.", "Bebang Enterprise Inc."}
+	commissary_co = _get_commissary_company()
+	if source_company != commissary_co:
+		frappe.throw(_("Source warehouse must belong to {0}").format(commissary_co))
+	allowed_target_companies = _get_allowed_target_companies()
 	if target_company not in allowed_target_companies:
-		frappe.throw(_("Target warehouse must belong to BKI or BEI"))
+		frappe.throw(_("Target warehouse must belong to one of: {0}").format(", ".join(allowed_target_companies)))
 
 	doc = frappe.new_doc("BEI Warehouse Receiving")
 	doc.naming_series = "BEI-WHR-.YYYY.-.#####"
@@ -649,6 +687,8 @@ def complete_warehouse_receiving(
 	receiving_name: str, items: str | list[dict[str, Any]], remarks: str | None = None
 ) -> dict[str, Any]:
 	"""Complete warehouse receipt for a commissary FG handoff by creating the stock transfer."""
+	from hrms.utils.sentry import set_backend_observability_context
+	set_backend_observability_context(module="warehouse", action="complete_warehouse_receiving", mutation_type="update")
 	_ensure_warehouse_receiving_doctype()
 
 	if isinstance(items, str):
@@ -680,6 +720,16 @@ def complete_warehouse_receiving(
 		rejected_qty = flt(item_data.get("rejected_qty", 0))
 		if rejected_qty > received_qty:
 			frappe.throw(_("Rejected quantity cannot exceed received quantity for {0}").format(item_code))
+
+		# B2: Over-receipt prevention — received_qty must not exceed expected_qty
+		expected = flt(row.expected_qty)
+		if expected > 0 and received_qty > expected:
+			frappe.throw(
+				_("Received quantity ({0}) exceeds expected quantity ({1}) for item {2}").format(
+					received_qty, expected, item_code
+				),
+				title=_("Over-Receipt Not Allowed"),
+			)
 		row.received_qty = received_qty
 		row.rejected_qty = rejected_qty
 		row.accepted_qty = max(received_qty - rejected_qty, 0)
