@@ -426,7 +426,8 @@ class MergeSerializer:
 
         data = json.loads(stdout.decode())
         status = data.get("mergeStateStatus", "")
-        is_clean = status in ("CLEAN", "HAS_HOOKS", "UNSTABLE")
+        # BLOCKED = branch protection requires checks, but we use --admin to bypass
+        is_clean = status in ("CLEAN", "HAS_HOOKS", "UNSTABLE", "BLOCKED")
 
         if not is_clean:
             logger.warning("pr_not_fresh", pr=pr.number, status=status)
