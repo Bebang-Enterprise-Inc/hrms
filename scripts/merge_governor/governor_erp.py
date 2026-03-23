@@ -261,6 +261,13 @@ class GovernorERP:
         PR watcher starts so the first poll cycle has clean state.
         """
         state = self.state_mgr.state
+
+        # ALWAYS clear paused state on startup — governor should never stay paused
+        if state.paused:
+            state.paused = False
+            self.state_mgr.save()
+            print(f"[{time.strftime('%H:%M:%S')}] Self-heal: cleared PAUSED state (governor never auto-pauses)", flush=True)
+
         stale_count = len(state.active_prs)
 
         if stale_count == 0 and not state.merge_queue:
@@ -299,6 +306,18 @@ class GovernorERP:
                 })
             else:
                 print(f"[{time.strftime('%H:%M:%S')}] Self-heal: all {stale_count} PRs still open, state is clean", flush=True)
+
+            # Re-queue approved PRs that aren't in the merge queue (orphaned approvals)
+            for key, pr in state.active_prs.items():
+                pr_num = int(key)
+                if (pr.review_decision == "APPROVE"
+                    and pr_num not in state.merge_queue
+                    and not getattr(pr, "gate_blocked", False)):
+                    state.merge_queue.append(pr_num)
+                    print(f"[{time.strftime('%H:%M:%S')}] Self-heal: re-queued approved PR #{pr_num}", flush=True)
+
+            if state.merge_queue:
+                self.state_mgr.save()
 
         except Exception as e:
             print(f"[{time.strftime('%H:%M:%S')}] Self-heal: GitHub poll failed ({e}), continuing with existing state", flush=True)

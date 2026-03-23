@@ -669,10 +669,13 @@ class MergeSerializer:
         return stdout.decode().strip() == "200"
 
     async def _handle_deploy_failure(self, pr_num: int) -> None:
-        """Handle failed deploy: halt queue, display rollback commands, record lesson."""
+        """Handle failed deploy: log error, record lesson, continue processing.
+
+        NOTE: We intentionally do NOT pause the governor. Pausing requires manual
+        intervention to resume, which defeats the purpose of autonomous operation.
+        The PR is removed from the queue; the builder can fix and re-push.
+        """
         state = self.state_mgr.state
-        state.paused = True
-        self.state_mgr.save()
 
         # Self-evolution: record lesson from deploy failure
         try:
