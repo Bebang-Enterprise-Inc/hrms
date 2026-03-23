@@ -410,7 +410,6 @@ def create_purchase_receipt(
 	}
 
 
-@frappe.whitelist()
 _3PL_PATTERNS = ("3MD", "Pinnacle", "Royal Cold", "RCS")
 
 
