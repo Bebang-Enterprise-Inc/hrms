@@ -419,6 +419,7 @@ def _is_3pl_warehouse(warehouse_name: str) -> bool:
 	return any(p.upper() in upper for p in _3PL_PATTERNS)
 
 
+@frappe.whitelist()
 def get_internal_receiving_warehouses():
 	"""List warehouses that can receive commissary finished goods, grouped by type.
 
