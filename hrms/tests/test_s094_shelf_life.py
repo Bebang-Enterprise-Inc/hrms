@@ -52,8 +52,14 @@ class TestShelfLifeGateFunction(unittest.TestCase):
 		self.assertIn("expiry_date", func)
 		self.assertIn("action_date", func)
 
-	def test_gate_reads_min_shelf_life_setting(self):
-		"""Gate reads min_shelf_life_days from BEI Settings."""
+	def test_gate_uses_per_item_shelf_life(self):
+		"""Gate uses item shelf_life - 1 day as minimum (24h dispatch rule)."""
+		func = _extract_function(self.source, "_validate_shelf_life_gate")
+		self.assertIn("get_product_threshold", func)
+		self.assertIn("item_shelf_life - 1", func)
+
+	def test_gate_falls_back_to_bei_settings(self):
+		"""Gate falls back to BEI Settings for items without thresholds."""
 		func = _extract_function(self.source, "_validate_shelf_life_gate")
 		self.assertIn("min_shelf_life_days", func)
 		self.assertIn("BEI Settings", func)
