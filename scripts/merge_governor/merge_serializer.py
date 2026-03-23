@@ -101,6 +101,15 @@ class MergeSerializer:
                 self.state_mgr.save()
             return
 
+        # Release gate: deterministic + AI verification (parallel)
+        gate_passed = await self._run_release_gate(pr)
+        if not gate_passed:
+            pr.gate_blocked = True
+            if pr_num in state.merge_queue:
+                state.merge_queue.remove(pr_num)
+                self.state_mgr.save()
+            return
+
         # Execute merge
         await self._execute_merge(pr)
 
@@ -577,6 +586,103 @@ class MergeSerializer:
             "**Builder action required:** Run `vercel --prod --force` from the bei-tasks directory.\n\n"
             "*Posted by governor-erp*"
         )
+
+    async def _run_release_gate(self, pr) -> bool:
+        """Run two-layer release gate: deterministic + AI (parallel).
+
+        Both must pass. If either fails, posts PR comment and returns False.
+        Non-sprint PRs skip the gate entirely.
+        """
+        from .release_gate import run_deterministic_gate, find_sprint_plan, count_l3_scenarios
+
+        repo_root = str(Path(__file__).parent.parent.parent)
+
+        # Deterministic check
+        det_result = run_deterministic_gate(
+            branch_name=pr.head_ref,
+            repo_root=repo_root,
+        )
+
+        # Skip gate for non-sprint PRs
+        if det_result.skip_reason:
+            logger.info("release_gate_skipped", pr=pr.number, reason=det_result.skip_reason)
+            return True
+
+        # AI verification (run in parallel if deterministic passes or fails)
+        ai_result = {"passed": True, "issues": []}  # Default: pass if no AI backend
+        try:
+            # Only run AI verification if we have the Agent SDK backend
+            if hasattr(self, '_get_ai_backend'):
+                backend = self._get_ai_backend()
+            else:
+                backend = getattr(self.reviewer, 'backend', None)
+
+            if backend and hasattr(backend, 'verify_evidence'):
+                import re as _re
+                match = _re.search(r"s0?(\d{2,3})", pr.head_ref, _re.IGNORECASE)
+                sprint_id = f"s{match.group(1)}" if match else ""
+
+                plan_path = find_sprint_plan(pr.head_ref, plans_dir=str(Path(repo_root) / "docs" / "plans"))
+                scenarios = []
+                if plan_path:
+                    content = plan_path.read_text(encoding="utf-8")
+                    # Extract scenario descriptions from L3 table
+                    in_table = False
+                    for line in content.splitlines():
+                        if "L3 Workflow Scenarios" in line:
+                            in_table = True
+                            continue
+                        if in_table and line.strip().startswith("|"):
+                            parts = [p.strip() for p in line.split("|")]
+                            if len(parts) >= 4 and parts[1] and not parts[1].startswith("-") and parts[1] != "User":
+                                scenarios.append(f"{parts[1]}: {parts[2]}")
+                        elif in_table and line.strip() and not line.strip().startswith("|"):
+                            break
+
+                evidence_path = f"output/l3/{sprint_id}/"
+                ai_result = await backend.verify_evidence(sprint_id, evidence_path, scenarios)
+        except Exception as e:
+            logger.warning("release_gate_ai_error", pr=pr.number, error=str(e))
+            ai_result = {"passed": False, "issues": [f"AI verification error: {e}"]}
+
+        # Both must pass
+        passed = det_result.passed and ai_result.get("passed", False)
+
+        if not passed:
+            # Format combined comment
+            lines = ["**Release Manager: BLOCKED**\n"]
+
+            if not det_result.passed:
+                lines.append("**Deterministic checks:**")
+                for item in det_result.missing_evidence:
+                    lines.append(f"- [ ] {item}")
+                for item in det_result.evidence_gaps:
+                    lines.append(f"- [ ] {item}")
+                lines.append("")
+
+            ai_issues = ai_result.get("issues", [])
+            if ai_issues:
+                lines.append("**AI verification:**")
+                for issue in ai_issues:
+                    lines.append(f"- [ ] {issue}")
+                lines.append("")
+
+            lines.append(
+                "**Builder action:** Complete L3 tests, commit evidence files "
+                "(`git add -f output/l3/ && git push`). "
+                "The gate will re-check on the next push.\n"
+            )
+            lines.append("*Posted by bei-release-manager*")
+
+            comment = "\n".join(lines)
+            await self._comment_on_pr(pr.number, comment)
+            logger.info("release_gate_blocked", pr=pr.number, det=det_result.passed, ai=ai_result.get("passed"))
+            print(f"[{time.strftime('%H:%M:%S')}] Release gate BLOCKED PR #{pr.number}", flush=True)
+        else:
+            logger.info("release_gate_passed", pr=pr.number)
+            print(f"[{time.strftime('%H:%M:%S')}] Release gate PASSED for PR #{pr.number}", flush=True)
+
+        return passed
 
     async def _try_builder_conflict_resolve(self, pr) -> bool:
         """Try to dispatch a builder subagent to resolve merge conflicts."""

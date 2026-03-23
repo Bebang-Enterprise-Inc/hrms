@@ -274,6 +274,66 @@ class AgentSDKBackend(ReviewBackend):
         """No-op for Agent SDK — session persistence handles context."""
         pass
 
+    async def verify_evidence(self, sprint_id: str, evidence_path: str, plan_scenarios: list[str]) -> dict:
+        """AI verification of L3 evidence authenticity.
+
+        Reads evidence files and cross-references against plan scenarios.
+        Returns {"passed": bool, "issues": list[str]}.
+        """
+        from claude_agent_sdk import ClaudeAgentOptions
+
+        scenarios_text = "\n".join(f"  - {s}" for s in plan_scenarios) if plan_scenarios else "  (none defined)"
+
+        prompt = (
+            f"You are a QA release manager verifying L3 test evidence for sprint {sprint_id}.\n\n"
+            f"Read the evidence files in: {evidence_path}\n"
+            f"Look for JSON files (form_submissions.json or any *{sprint_id}*.json).\n\n"
+            f"Plan defines these L3 scenarios:\n{scenarios_text}\n\n"
+            "Check:\n"
+            "1. Are the input values realistic? (not 'test', 'asdf', '123', 'foo')\n"
+            "2. Do the entries have actual API responses or real outcomes?\n"
+            "3. Does each plan scenario have a matching evidence entry?\n"
+            "4. Are there screenshots referenced? Do the paths exist?\n\n"
+            'Respond with JSON: {"passed": true/false, "issues": ["issue1", "issue2"]}\n'
+            "If evidence looks authentic and covers the scenarios, passed=true with empty issues."
+        )
+
+        options = ClaudeAgentOptions(
+            allowed_tools=["Read", "Grep", "Glob"],
+            disallowed_tools=["Edit", "Write", "Bash", "NotebookEdit"],
+            max_turns=4,
+            max_budget_usd=0.20,
+            model="sonnet",
+            system_prompt="You are a QA release manager. Verify evidence authenticity. Read-only access.",
+            cwd=self._repo_root,
+        )
+
+        try:
+            result_msg = await asyncio.wait_for(
+                self._run_query(prompt, options), timeout=60
+            )
+
+            if not result_msg or not result_msg.result:
+                return {"passed": False, "issues": ["AI verification returned no result"]}
+
+            cost = getattr(result_msg, "total_cost_usd", 0.0)
+            self._total_cost_usd += cost
+            self._log_cost(cost, f"verify_evidence_{sprint_id}")
+
+            # Parse JSON response
+            cleaned = re.sub(r"```(?:json)?\s*\n?", "", result_msg.result)
+            json_str = self._extract_json(cleaned)
+            if json_str:
+                data = json.loads(json_str)
+                return {"passed": data.get("passed", False), "issues": data.get("issues", [])}
+
+            return {"passed": False, "issues": ["Could not parse AI verification response"]}
+
+        except asyncio.TimeoutError:
+            return {"passed": False, "issues": ["AI verification timed out — push again to retry"]}
+        except Exception as e:
+            return {"passed": False, "issues": [f"AI verification error: {e}"]}
+
     # --- Internal helpers ---
 
     @staticmethod

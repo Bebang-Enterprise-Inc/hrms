@@ -119,6 +119,12 @@ class PRWatcher:
                         existing.review_decision = None
                         existing.review_sha = None
                         logger.info("review_invalidated", pr=pr_num, reason="sha_changed")
+                    # Re-queue gate-blocked PRs on new push (builder fixed the issue)
+                    if getattr(existing, "gate_blocked", False):
+                        existing.gate_blocked = False
+                        if pr_num not in state.merge_queue:
+                            state.merge_queue.append(pr_num)
+                        _activity(f"PR #{pr_num} re-queued (gate block cleared by new push)")
 
         # Detect closed PRs
         for key in list(state.active_prs.keys()):

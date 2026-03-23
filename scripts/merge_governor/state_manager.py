@@ -27,6 +27,7 @@ class PRRecord:
     touched_files: list[str] = field(default_factory=list)
     builder_dispatched: bool = False
     builder_dispatch_count: int = 0
+    gate_blocked: bool = False
 
 
 @dataclass
