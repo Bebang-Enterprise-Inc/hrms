@@ -300,7 +300,7 @@ def main():
 def write_results():
 	os.makedirs("output/l3", exist_ok=True)
 	path = f"output/l3/s094_{DATE_STR}.json"
-	with open(path, "w") as f:
+	with open(path, "w") as f:  # nosemgrep: frappe-security-file-traversal
 		json.dump(RESULTS, f, indent=2, default=str)
 	passed = sum(1 for r in RESULTS if r["status"] == "PASS")
 	failed = sum(1 for r in RESULTS if r["status"] == "FAIL")

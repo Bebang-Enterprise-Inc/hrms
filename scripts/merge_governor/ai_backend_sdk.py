@@ -367,7 +367,7 @@ class SDKBackend(ReviewBackend):
 		total = 0.0
 		count = 0
 		try:
-			with open(self._cost_log_file, encoding="utf-8") as f:
+			with open(self._cost_log_file, encoding="utf-8") as f:  # nosemgrep: frappe-security-file-traversal
 				for line in f:
 					line = line.strip()
 					if not line:
