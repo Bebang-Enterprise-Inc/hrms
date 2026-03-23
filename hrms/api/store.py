@@ -200,6 +200,7 @@ STORE_OPS_ALLOWED_ROLES = [
 ]
 AREA_SUPERVISOR_ROLE = "Area Supervisor"
 ORDER_APPROVAL_FALLBACK_EMAIL = "edlice@bebang.ph"
+WAREHOUSE_MANAGER_EMAIL = "ian@bebang.ph"
 SYSTEM_APPROVER_ROLES = {"System Manager", "Administrator"}
 SCHEDULE_CANONICAL_STORE_TYPES = {"JV", "Managed Franchise", "Full Franchise"}
 SCHEDULE_STORE_TYPE_ALIASES = {
@@ -986,6 +987,29 @@ def _has_approved_stage_entry(order_name, approver):
 			},
 		)
 	)
+
+
+def _get_warehouse_manager_user() -> str:
+	"""Return the Warehouse Manager user for dual-approval second stage."""
+	try:
+		wm_users = frappe.get_all(
+			"Has Role",
+			filters={"role": "Warehouse Manager", "parenttype": "User"},
+			fields=["parent"],
+			limit_page_length=10,
+		)
+		active_wm = [
+			r["parent"]
+			for r in wm_users
+			if r["parent"] and frappe.db.get_value("User", r["parent"], "enabled")
+		]
+		if active_wm:
+			if WAREHOUSE_MANAGER_EMAIL in active_wm:
+				return WAREHOUSE_MANAGER_EMAIL
+			return active_wm[0]
+	except Exception:
+		pass
+	return WAREHOUSE_MANAGER_EMAIL
 
 
 def _resolve_order_approval_routing(warehouse, is_emergency, submitted_after_cutoff):
@@ -1945,32 +1969,56 @@ def _validate_order_cutoff(store, is_emergency=False):
 		)
 
 
+def _validate_order_window(delivery_date: str, store: str | None = None) -> dict:
+	"""
+	S093: New ordering policy — stores can order any time.
+	For next-day delivery: cutoff is 12:00 NN the day before.
+	  - BEFORE cutoff: no approval needed
+	  - AFTER cutoff: requires dual approval (Area Supervisor + Warehouse Manager)
+	For day-after-tomorrow+: no cutoff, order any time.
+	"""
+	today = frappe.utils.today()
+	tomorrow = str(add_days(today, 1))
+	now_hour = now_datetime().hour
+	delivery_str = str(getdate(delivery_date)) if delivery_date else tomorrow
+
+	if getdate(delivery_str) <= getdate(today):
+		frappe.throw(
+			_("Delivery date must be tomorrow or later. Same-day and past-date orders are not allowed.")
+		)
+
+	if delivery_str == tomorrow and now_hour >= 12:
+		return {
+			"allowed": True,
+			"requires_dual_approval": True,
+			"message": "Next-day order after 12 NN cutoff — requires Area Supervisor + Warehouse Manager approval",
+		}
+
+	return {
+		"allowed": True,
+		"requires_dual_approval": False,
+		"message": "Order within normal window — no additional approval required",
+	}
+
+
 @frappe.whitelist()
-def validate_order_schedule(store: str, date: str | None = None) -> dict:
-	"""
-	Check if order submission is currently allowed for the given store.
-	Frontend can call this before showing the order form.
-	Returns {allowed: true/false, cutoff_time: "11:59", reason/message: "...", next_delivery_day: "..."}
-	"""
+def validate_order_schedule(store: str, date: str | None = None, delivery_date: str | None = None) -> dict:
+	"""S093: Check if order submission is allowed for the given store and delivery date."""
 	if not store:
 		frappe.throw(_("Store is required"))
 
-	cutoff_hour, cutoff_time = _get_order_cutoff()
-	allowed = now_datetime().hour < cutoff_hour
-	requested_date = getdate(date or nowdate())
-	next_delivery_date = add_days(str(requested_date), 1)
-	next_delivery_day = getdate(next_delivery_date).strftime("%A, %Y-%m-%d")
-	reason = (
-		f"Ordering is open until {cutoff_time}"
-		if allowed
-		else f"Ordering closed at {cutoff_time}. Contact your Area Supervisor for emergency orders."
-	)
+	_cutoff_hour, cutoff_time = _get_order_cutoff()
+	target_delivery = delivery_date or str(add_days(date or nowdate(), 1))
+	next_delivery_day = getdate(target_delivery).strftime("%A, %Y-%m-%d")
+
+	window = _validate_order_window(target_delivery, store=store)
 
 	return {
-		"allowed": allowed,
+		"allowed": window["allowed"],
+		"requires_dual_approval": window["requires_dual_approval"],
 		"cutoff_time": cutoff_time,
-		"reason": reason,
-		"message": reason,
+		"reason": window["message"],
+		"message": window["message"],
 		"next_delivery_day": next_delivery_day,
 	}
 
@@ -2003,11 +2051,17 @@ def submit_order(
 		frappe.throw(_("Cargo category is required (FC, DRY, or FM)"))
 
 	is_emergency_flag = frappe.utils.cint(is_emergency)
-	cutoff_hour, _cutoff_time = _get_order_cutoff()
-	submitted_after_cutoff = now_datetime().hour >= cutoff_hour
 
-	# Validate ordering schedule cutoff
-	_validate_order_cutoff(store, is_emergency=is_emergency_flag)
+	# S093: Reject emergency orders — stores can now order any time with date selector
+	if is_emergency_flag:
+		frappe.throw(
+			_("Emergency orders are no longer accepted. Use the date selector to place next-day orders.")
+		)
+
+	# S093: Validate delivery date window (replaces legacy cutoff)
+	order_window = _validate_order_window(delivery_date or add_days(nowdate(), 1), store=store)
+	requires_dual = order_window.get("requires_dual_approval", False)
+	submitted_after_cutoff = requires_dual
 
 	# Resolve branch name to warehouse name
 	warehouse = resolve_warehouse(store)
@@ -2027,23 +2081,7 @@ def submit_order(
 
 	order_date = nowdate()
 
-	# Duplicate check: no existing non-cancelled order for same store + date + category
-	if not is_emergency_flag:
-		existing = frappe.db.exists(
-			"BEI Store Order",
-			{
-				"store": warehouse,
-				"order_date": order_date,
-				"cargo_category": normalized_cargo_category,
-				"status": ["not in", ["Cancelled"]],
-			},
-		)
-		if existing:
-			frappe.throw(
-				_("An order already exists for {0} on {1} for category {2}: {3}").format(
-					warehouse, order_date, normalized_cargo_category, existing
-				)
-			)
+	# S093: Duplicate guard removed — multiple orders per store per day per category allowed.
 
 	# Validate quantities - prevent unreasonable orders
 	MAX_ORDER_QTY = 10000
@@ -2082,11 +2120,17 @@ def submit_order(
 	order.order_date = order_date
 	order.delivery_date = delivery_date or add_days(nowdate(), 1)
 	order.cargo_category = normalized_cargo_category
-	order.is_emergency = is_emergency_flag
+	order.is_emergency = 0  # S093: no longer written on new orders
 	order.is_bulk_order = is_bulk_order
 	order.notes = notes
 	order.status = "Pending Approval"
 	order.submitted_by = frappe.session.user
+	# S093: Dual approval fields
+	order.requires_dual_approval = 1 if requires_dual else 0
+	if requires_dual:
+		order.approval_stage = "Pending Area Supervisor"
+	else:
+		order.approval_stage = "Single Approval"
 
 	edited_lines_count = 0
 	for item_data in items:
@@ -2192,7 +2236,9 @@ def submit_order(
 			first_approver if requires_manual_approval and first_source == "fallback_approver" else None
 		),
 		"submitted_after_cutoff": bool(submitted_after_cutoff),
-		"is_emergency": bool(is_emergency_flag),
+		"requires_dual_approval": bool(requires_dual),
+		"approval_stage": order.approval_stage,
+		"is_emergency": False,
 		"cargo_category": normalized_cargo_category,
 		"dropped_invalid_lines": len(dropped_items),
 	}
@@ -2339,9 +2385,51 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 			),
 		)
 
+	# S093: Dual approval workflow
+	if frappe.utils.cint(order.requires_dual_approval) and order.approval_stage == "Pending Area Supervisor":
+		order.approval_stage = "Pending Warehouse Manager"
+		order.approved_by = user
+		order.approved_at = now_datetime()
+		order.save(ignore_permissions=True)
+		_close_order_assignments(order_name, allocated_to=user)
+
+		wm_user = _get_warehouse_manager_user()
+		if wm_user:
+			_create_approval_queue_entry(order=order, approver=wm_user, priority="Normal")
+			_assign_order_for_approval(
+				order_name=order.name,
+				assigned_to=wm_user,
+				description=f"Dual approval: Store order {order.name} approved by Area Supervisor, awaiting your confirmation.",
+			)
+
+		_append_order_comment(
+			order_name,
+			_("Area Supervisor {0} approved (stage 1 of 2). Awaiting Warehouse Manager approval.").format(
+				user
+			),
+		)
+
+		return {
+			"success": True,
+			"name": order.name,
+			"status": order.status,
+			"approval_stage": "Pending Warehouse Manager",
+			"message": f"Order {order.name} approved by Area Supervisor. Awaiting Warehouse Manager approval.",
+		}
+
+	if (
+		frappe.utils.cint(order.requires_dual_approval)
+		and order.approval_stage == "Pending Warehouse Manager"
+	):
+		order.approval_stage = "Fully Approved"
+		order.second_approver = user
+		order.second_approval_date = now_datetime()
+
 	order.status = "Approved"
-	order.approved_by = user
-	order.approved_at = now_datetime()
+	order.approved_by = order.approved_by or user
+	order.approved_at = order.approved_at or now_datetime()
+	if not frappe.utils.cint(order.requires_dual_approval):
+		order.approval_stage = "Single Approval"
 	order.save(ignore_permissions=True)
 	_close_order_assignments(order_name)
 
@@ -2520,6 +2608,45 @@ def get_expected_deliveries(store: str | None = None, date: str | None = None) -
 		(store, selected_date),
 		as_dict=True,
 	)
+
+	return {"deliveries": trips}
+
+
+@frappe.whitelist()
+def get_pending_deliveries_with_manifest(store: str | None = None, date: str | None = None) -> dict:
+	"""S093 (UX-014): Get pending deliveries with item-level manifest."""
+	if not store:
+		user_store = get_user_store()
+		store = user_store.get("default_store") if user_store else None
+	if not store:
+		return {"deliveries": []}
+
+	deliveries_result = get_expected_deliveries(store=store, date=date)
+	trips = deliveries_result.get("deliveries", [])
+
+	for trip in trips:
+		trip_name = trip.get("name")
+		if not trip_name:
+			continue
+
+		orders = frappe.db.get_all(
+			"BEI Store Order",
+			filters={
+				"trip": trip_name,
+				"store": store,
+				"dr_number": ["is", "set"],
+			},
+			fields=["name", "dr_number", "status", "cargo_category", "delivery_date"],
+		)
+
+		for order in orders:
+			order["items"] = frappe.db.get_all(
+				"BEI Store Order Item",
+				filters={"parent": order["name"]},
+				fields=["item_code", "item_name", "qty_requested", "qty_approved", "uom"],
+			)
+
+		trip["orders"] = orders
 
 	return {"deliveries": trips}
 

@@ -143,15 +143,28 @@ def _generate_dr_internal(order_name: str, order: Any = None) -> dict[str, Any]:
 		order = frappe.get_doc("BEI Store Order", order_name)
 
 	# Generate DR number: DR + 7-digit auto-increment
+	# S093: Generate DR number from BEI Store Order (BEI Delivery Receipt DocType doesn't exist)
 	try:
 		result = frappe.db.sql(
-			"SELECT MAX(CAST(SUBSTRING(name, 3) AS UNSIGNED)) FROM `tabBEI Delivery Receipt`"
+			"SELECT MAX(CAST(SUBSTRING(dr_number, 3) AS UNSIGNED)) "
+			"FROM `tabBEI Store Order` WHERE dr_number IS NOT NULL AND dr_number != ''"
 		)
 		last_num = result[0][0] if result and result[0][0] else 0
 	except Exception:
 		last_num = 0
 
 	dr_number = f"DR{last_num + 1:07d}"
+
+	# S093: Store DR linkage on the order itself
+	trip_stop_name = getattr(order, "trip_stop", None) or ""
+	frappe.db.set_value(
+		"BEI Store Order",
+		order_name,
+		{
+			"dr_number": dr_number,
+			"trip_stop": trip_stop_name,
+		},
+	)
 
 	# Log the DR generation as a comment on the order
 	frappe.get_doc(
@@ -178,6 +191,7 @@ def _generate_dr_internal(order_name: str, order: Any = None) -> dict[str, Any]:
 	return {
 		"dr_number": dr_number,
 		"items_count": len(order.items),
+		"trip_stop": trip_stop_name,
 	}
 
 
