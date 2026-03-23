@@ -1,0 +1,10 @@
+# Runtime files (stored in ~/.governor/ not here)
+state/
+logs/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Recovered/decompiled files
+recovered/
