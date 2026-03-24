@@ -1,0 +1,55 @@
+name: Build Fast 4-Core (benchmark)
+
+on:
+  push:
+    branches:
+      - s105-docker-build-acceleration
+    paths:
+      - '.github/workflows/build-fast-4core.yml'
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE: ghcr.io/bebang-enterprise-inc/bebang-erpnext-hrms
+  DOCKER_TAG: v15-fast-4core
+
+jobs:
+  build-fast-4core:
+    name: Build Fast (4-core runner)
+    runs-on: ubuntu-latest-4-cores
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .github/docker/Containerfile.fast
+          push: true
+          platforms: linux/amd64
+          provenance: false
+          tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+          build-args: HRMS_SHA=${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache-4core
+          cache-to: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache-4core,mode=max,image-manifest=true,oci-mediatypes=true,compression=zstd
+          outputs: type=image,oci-mediatypes=true,compression=zstd,compression-level=3
