@@ -239,20 +239,25 @@ def _check_lesson_patterns(changed_files: list[str], repo_root: str) -> tuple[Ch
     if not lessons:
         return CheckItem(name="lesson_match", passed=True, detail="No lessons loaded"), []
 
+    # Only check code files — skip docs, plans, tests, markdown
+    _SKIP_PREFIXES = ("docs/", "output/", "data/", ".claude/", "tmp/")
+    _SKIP_EXTENSIONS = (".md", ".csv", ".txt", ".png", ".jpg", ".pdf")
+    code_files = [
+        f for f in changed_files
+        if not any(f.startswith(p) for p in _SKIP_PREFIXES)
+        and not any(f.endswith(e) for e in _SKIP_EXTENSIONS)
+    ]
+
     matched = []
     for lesson_id, trigger_text in lessons:
-        # Simple keyword matching: check if trigger words appear in changed file content
-        trigger_words = set(trigger_text.lower().split())
-        # Check filenames first
-        for f in changed_files:
+        for f in code_files:
             file_path = os.path.join(repo_root, f)
             if not os.path.isfile(file_path):
                 continue
             try:
                 with open(file_path, encoding="utf-8", errors="ignore") as fh:
-                    content = fh.read(50000).lower()  # Read first 50K chars
+                    content = fh.read(50000).lower()
 
-                # Check for specific patterns from lessons
                 if _trigger_matches_content(trigger_text.lower(), content, f.lower()):
                     matched.append(f"Lesson '{lesson_id}' triggered on {f}: {trigger_text[:80]}")
                     break

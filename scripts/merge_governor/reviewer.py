@@ -108,6 +108,7 @@ async def get_pr_diff(pr_number: int, repo: str = "Bebang-Enterprise-Inc/hrms") 
             [gh, "pr", "diff", str(pr_number), "--repo", repo],
             capture_output=True, text=True, timeout=60,
             stdin=subprocess.DEVNULL,
+            encoding="utf-8", errors="replace",
         )
 
     result = await loop.run_in_executor(None, _fetch)
