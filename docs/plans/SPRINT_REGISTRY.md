@@ -105,9 +105,10 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S108` | Sprint 108 | `s108-pr-form-luwi-fix` | #341 (hrms), #236 (bei-tasks) | COMPLETED 2026-03-24 — PR form fix: auto-set request_date/requested_by/date_required/purpose, map justification→purpose, item_code fallback, Sentry. L3 3/3 PASS (PR-2026-02968, PR-2026-02969). | `docs/plans/2026-03-24-sprint-108-procurement-module-hardening.md` |
 | `S109` | Sprint 109 | `s109-procurement-full-audit` | — | PLANNED — Full procurement module hardening: Sentry for 93 endpoints, comprehensive L1/L2/L3 audit of all 107 endpoints + 36 pages, fix all bugs. | — |
+| `S110` | Sprint 110 | `s108-leave-type-validation` | #339 (hrms), #235 (bei-tasks) | COMPLETED 2026-03-24 — Leave-overtime mutual exclusion guards, compensation eligibility tagging, leave dropdown filter, policy doc, reference doc. VL/SL/EL/LWOP lifecycle 27/27. OT-leave guards S11-S13 ALL PASS. L3 0 FAIL 0 SKIP. | `docs/plans/2026-03-24-sprint-108-leave-type-e2e-validation.md` |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S110`.
+1. Next canonical sprint ID to assign: `S111`.
 2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**

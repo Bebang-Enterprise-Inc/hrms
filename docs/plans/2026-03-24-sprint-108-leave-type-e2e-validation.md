@@ -1,16 +1,17 @@
-# Sprint 108 — Leave Type E2E Validation
+# Sprint 110 — Leave Type E2E Validation + OT-Leave Guards
 
 ```yaml
-canonical_sprint_id: S108
-status: PR_CREATED
+canonical_sprint_id: S110
+status: COMPLETED
 created: 2026-03-24
 execution_started: 2026-03-24
+completed_date: 2026-03-24
 branch: s108-leave-type-validation
 lane: single
 depends_on: S106, S107
 backend_pr: "#339"
-completed_date: null
-execution_summary: "Phase 1 API tests 27/27 PASS. P2.5 OT-leave guards + compensation tagging built. PR #339 created. Awaiting governor merge + deploy for L3 scenarios 11-17."
+frontend_pr: "#235 (bei-tasks)"
+execution_summary: "Leave-overtime mutual exclusion guards deployed and verified. VL/SL/EL/LWOP full lifecycle 27/27 PASS. OT blocks leave (S12 PASS), leave blocks OT (S11 PASS), pending OT auto-rejected (S13 PASS). Compensation eligibility tagging for office/store/commissary verified. Leave dropdown filter hides dead types. Policy doc + reference doc committed. L3 ALL PASS, 0 FAIL, 0 SKIP."
 ```
 
 ## Summary
