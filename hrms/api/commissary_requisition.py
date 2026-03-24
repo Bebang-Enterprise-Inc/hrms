@@ -1,6 +1,7 @@
 """Commissary Requisition & Production Planning APIs. Split from commissary.py (P0-11) for maintainability."""
 
 import json
+from contextlib import contextmanager
 from typing import Any
 
 import frappe
@@ -8,6 +9,7 @@ from frappe import _
 from frappe.utils import add_days, flt, today
 
 from hrms.api.commissary import get_commissary_company, get_commissary_warehouse
+from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.supply_chain_contracts import (
 	REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL,
 	get_request_source_label,
@@ -15,6 +17,32 @@ from hrms.utils.supply_chain_contracts import (
 	resolve_warehouse_company,
 	stamp_material_request_contract,
 )
+
+
+@contextmanager
+def _run_as_system_user(user: str = "Administrator"):
+	session = getattr(frappe, "session", None)
+	if session is None:
+		session = getattr(getattr(frappe, "local", None), "session", None)
+	original_user = getattr(session, "user", None)
+	try:
+		if session and user:
+			session.user = user
+		yield
+	finally:
+		if session and original_user:
+			session.user = original_user
+
+
+def _clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry):
+	for item in getattr(stock_entry, "items", None) or []:
+		if not getattr(item, "serial_and_batch_bundle", None):
+			continue
+		if getattr(item, "batch_no", None):
+			item.batch_no = None
+		if getattr(item, "serial_no", None):
+			item.serial_no = None
+
 
 COMMISSARY_COMPANY = "Bebang Kitchen Inc."
 
@@ -70,6 +98,9 @@ def get_rm_reorder_alerts():
 	Uses reorder_level field on Item if set, otherwise estimates based on
 	7-day consumption average x 3 (lead time buffer).
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_rm_reorder_alerts", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 	today_date = today()
 	date_7_days_ago = add_days(today_date, -7)
@@ -96,12 +127,15 @@ def get_rm_reorder_alerts():
 
 		avg_daily = flt(consumption / 7, 2)
 
-		reorder_meta = frappe.db.get_value(
-			"Item Reorder",
-			{"parent": item["item_code"], "warehouse": commissary_warehouse},
-			["warehouse_reorder_level", "warehouse_reorder_qty"],
-			as_dict=True,
-		) or {}
+		reorder_meta = (
+			frappe.db.get_value(
+				"Item Reorder",
+				{"parent": item["item_code"], "warehouse": commissary_warehouse},
+				["warehouse_reorder_level", "warehouse_reorder_qty"],
+				as_dict=True,
+			)
+			or {}
+		)
 
 		if reorder_meta.get("warehouse_reorder_level") and reorder_meta["warehouse_reorder_level"] > 0:
 			reorder_level = flt(reorder_meta["warehouse_reorder_level"])
@@ -183,6 +217,9 @@ def create_rm_requisition(
 	Returns:
 	    Material Request name and details
 	"""
+	set_backend_observability_context(
+		module="commissary", action="create_rm_requisition", mutation_type="create"
+	)
 	if not items:
 		frappe.throw(_("Missing required parameter: items"), frappe.ValidationError)
 	if isinstance(items, str):
@@ -255,7 +292,8 @@ def create_rm_requisition(
 		mr.append("items", row)
 
 	mr.insert(ignore_permissions=True)
-	mr.submit()
+	with _run_as_system_user("Administrator"):
+		mr.submit()
 	return {
 		"success": True,
 		"data": {
@@ -277,6 +315,9 @@ def approve_requisition(mr_name):
 	Approve (submit) a Draft Material Request.
 	Only SCM Manager / Warehouse Manager can approve.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="approve_requisition", mutation_type="update"
+	)
 	from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
 
 	check_scm_permission(SCM_APPROVAL_ROLES, "approve requisitions")
@@ -289,7 +330,8 @@ def approve_requisition(mr_name):
 			)
 		)
 
-	mr.submit()
+	with _run_as_system_user("Administrator"):
+		mr.submit()
 
 	return {
 		"success": True,
@@ -309,6 +351,7 @@ def get_my_requisitions(status=None, limit=50):
 
 	Returns list of requisitions with item details.
 	"""
+	set_backend_observability_context(module="commissary", action="get_my_requisitions", mutation_type="read")
 	commissary_warehouse = get_commissary_warehouse()
 
 	filters = {
@@ -374,6 +417,9 @@ def get_rm_for_requisition():
 	Get raw materials available for requisition with current stock and alerts.
 	Combines inventory levels with reorder recommendations.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_rm_for_requisition", mutation_type="read"
+	)
 	# Get reorder alerts first
 	alerts_data = get_rm_reorder_alerts()
 	alerts = {a["item_code"]: a for a in alerts_data["data"]}
@@ -420,6 +466,9 @@ def get_production_suggestions():
 	Get production suggestions based on stock levels and demand.
 	Suggests FG items that are below safety stock or have pending orders.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_production_suggestions", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	# Get FG items with current stock and pending demand
@@ -486,6 +535,7 @@ def create_work_order(item_code, qty, planned_start_date=None, remarks=None):
 	    planned_start_date: When to start (defaults to today)
 	    remarks: Optional notes
 	"""
+	set_backend_observability_context(module="commissary", action="create_work_order", mutation_type="create")
 	commissary_warehouse = get_commissary_warehouse()
 
 	# Get the default BOM for this item
@@ -560,6 +610,7 @@ def get_work_orders(status=None, days=7):
 	    status: Filter by status (optional)
 	    days: Days to look back (default 7)
 	"""
+	set_backend_observability_context(module="commissary", action="get_work_orders", mutation_type="read")
 	filters = {"fg_warehouse": ["like", "%Commissary%"], "creation": [">=", add_days(today(), -int(days))]}
 
 	if status:
@@ -602,6 +653,7 @@ def get_work_orders(status=None, days=7):
 @frappe.whitelist()
 def start_work_order(work_order_name):
 	"""Start a work order (submit if draft, begin manufacturing)."""
+	set_backend_observability_context(module="commissary", action="start_work_order", mutation_type="create")
 	from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
 
 	commissary_warehouse = get_commissary_warehouse()
@@ -612,7 +664,8 @@ def start_work_order(work_order_name):
 		if not wo.source_warehouse:
 			wo.source_warehouse = commissary_warehouse or "Stores - BEI"
 			wo.save()
-		wo.submit()
+		with _run_as_system_user("Administrator"):
+			wo.submit()
 		wo.reload()
 
 	if wo.status in ("Submitted", "Not Started"):
@@ -631,7 +684,9 @@ def start_work_order(work_order_name):
 				item.t_warehouse = default_wip
 
 		se.insert()
-		se.submit()
+		_clear_legacy_serial_batch_fields_after_auto_bundle(se)
+		with _run_as_system_user("Administrator"):
+			se.submit()
 
 		return {
 			"success": True,
@@ -645,6 +700,9 @@ def start_work_order(work_order_name):
 @frappe.whitelist()
 def complete_work_order(work_order_name, qty_produced=None):
 	"""Complete a work order by creating manufacture stock entry."""
+	set_backend_observability_context(
+		module="commissary", action="complete_work_order", mutation_type="create"
+	)
 	from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
 
 	commissary_warehouse = get_commissary_warehouse()
@@ -667,7 +725,9 @@ def complete_work_order(work_order_name, qty_produced=None):
 			item.s_warehouse = default_source
 
 	se.insert()
-	se.submit()
+	_clear_legacy_serial_batch_fields_after_auto_bundle(se)
+	with _run_as_system_user("Administrator"):
+		se.submit()
 
 	# Refresh work order status
 	wo.reload()
@@ -692,6 +752,9 @@ def complete_work_order(work_order_name, qty_produced=None):
 @frappe.whitelist()
 def submit_production_output(items, batch_no=None, remarks=None):
 	"""Bridge requisition route mapping to dashboard production submit API."""
+	set_backend_observability_context(
+		module="commissary", action="submit_production_output", mutation_type="create"
+	)
 	from hrms.api.commissary_dashboard import submit_production_output as dashboard_submit
 
 	return dashboard_submit(items=items, batch_no=batch_no, remarks=remarks)
@@ -700,6 +763,9 @@ def submit_production_output(items, batch_no=None, remarks=None):
 @frappe.whitelist()
 def create_dispatch_transfer(target_warehouse, items, mr_name=None, remarks=None):
 	"""Legacy wrapper kept for Sprint 18 route compatibility."""
+	set_backend_observability_context(
+		module="commissary", action="create_dispatch_transfer", mutation_type="create"
+	)
 	from hrms.api.commissary import create_dispatch_transfer as legacy_create_dispatch_transfer
 
 	return legacy_create_dispatch_transfer(
@@ -713,6 +779,9 @@ def create_dispatch_transfer(target_warehouse, items, mr_name=None, remarks=None
 @frappe.whitelist()
 def create_hub_transfer(destination_hub, items, remarks=None):
 	"""Legacy wrapper kept for Sprint 18 route compatibility."""
+	set_backend_observability_context(
+		module="commissary", action="create_hub_transfer", mutation_type="create"
+	)
 	from hrms.api.commissary import create_hub_transfer as legacy_create_hub_transfer
 
 	return legacy_create_hub_transfer(
@@ -725,6 +794,9 @@ def create_hub_transfer(destination_hub, items, remarks=None):
 @frappe.whitelist()
 def fulfill_store_order(mr_name, items):
 	"""Legacy wrapper kept for Sprint 18 route compatibility."""
+	set_backend_observability_context(
+		module="commissary", action="fulfill_store_order", mutation_type="create"
+	)
 	from hrms.api.commissary import fulfill_store_order as legacy_fulfill_store_order
 
 	return legacy_fulfill_store_order(mr_name=mr_name, items=items)
@@ -733,6 +805,9 @@ def fulfill_store_order(mr_name, items):
 @frappe.whitelist()
 def update_hub_inventory(hub_code, item_code, qty, uom=None):
 	"""Legacy wrapper kept for Sprint 18 route compatibility."""
+	set_backend_observability_context(
+		module="commissary", action="update_hub_inventory", mutation_type="update"
+	)
 	from hrms.api.commissary import update_hub_inventory as legacy_update_hub_inventory
 
 	return legacy_update_hub_inventory(
@@ -746,6 +821,9 @@ def update_hub_inventory(hub_code, item_code, qty, uom=None):
 @frappe.whitelist()
 def check_production_feasibility(item_code, qty):
 	"""Expose production feasibility on canonical requisition module path."""
+	set_backend_observability_context(
+		module="commissary", action="check_production_feasibility", mutation_type="read"
+	)
 	from hrms.api.commissary_bom import check_production_feasibility as bom_feasibility
 
 	return bom_feasibility(item_code=item_code, qty=qty)

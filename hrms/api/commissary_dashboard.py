@@ -96,6 +96,16 @@ def _item_has_column(column_name: str) -> bool:
 	return False
 
 
+def _clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry):
+	for item in getattr(stock_entry, "items", None) or []:
+		if not getattr(item, "serial_and_batch_bundle", None):
+			continue
+		if getattr(item, "batch_no", None):
+			item.batch_no = None
+		if getattr(item, "serial_no", None):
+			item.serial_no = None
+
+
 def _get_item_default_supplier_map(item_codes: list[str]) -> dict[str, str]:
 	if not item_codes:
 		return {}
@@ -157,6 +167,9 @@ def get_commissary_dashboard() -> dict[str, Any]:
 	"""
 	Get commissary supervisor dashboard summary.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_commissary_dashboard", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 	today_date = today()
 
@@ -173,6 +186,7 @@ def get_commissary_dashboard() -> dict[str, Any]:
 	# Low stock alerts (items below product-specific reorder level)
 	# S099: Read thresholds from BEI Settings
 	from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+
 	_comm_settings = get_procurement_settings()
 	low_stock_count = (
 		frappe.db.sql(
@@ -396,6 +410,9 @@ def get_runtime_deduction_proof(
 
 	Kept in dashboard API surface so UI and evidence tooling can call a stable path.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_runtime_deduction_proof", mutation_type="read"
+	)
 	from hrms.api.commissary_bom import get_bom_runtime_deduction_proof
 
 	return get_bom_runtime_deduction_proof(item_code=item_code, produced_qty=qty, warehouse=warehouse)
@@ -424,6 +441,7 @@ def _validate_shelf_life_gate(item_code, batch_no, action_date, action_type="dis
 	# Per-item minimum: shelf_life - buffer (S099: buffer from BEI Settings)
 	from hrms.api.commissary import get_product_threshold
 	from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+
 	_shelf_settings = get_procurement_settings()
 	_shelf_buffer = cint(_shelf_settings.get("shelf_life_dispatch_buffer_days", 1))
 
@@ -712,6 +730,7 @@ def submit_production_output(
 				se.insert(ignore_permissions=True)
 				se = frappe.get_doc("Stock Entry", se.name)
 				_enable_role_gated_write(se)
+				_clear_legacy_serial_batch_fields_after_auto_bundle(se)
 				se.submit()
 
 			_release_savepoint(savepoint_name)
@@ -836,6 +855,9 @@ def get_production_cost_per_batch(limit: int | str = 20, item_code: str | None =
 	- labor_cost: 0 (placeholder for future payroll integration)
 	- overhead_cost: 0 (placeholder for future allocation model)
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_production_cost_per_batch", mutation_type="read"
+	)
 	try:
 		limit_value = max(1, int(limit))
 	except (TypeError, ValueError):
@@ -911,6 +933,9 @@ def get_logistics_architecture_mode(route_name: str | None = None) -> dict[str, 
 	If route_name is provided and exists, mode is resolved from that BEI Route.
 	Fallback mode is `hub`.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_logistics_architecture_mode", mutation_type="read"
+	)
 	mode = "hub"
 	route_hint = "Hub-and-spoke mode: transfers route through designated hubs."
 

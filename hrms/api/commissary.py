@@ -16,6 +16,7 @@ Modules:
 """
 
 import json
+from contextlib import contextmanager
 from typing import Any
 
 import frappe
@@ -24,6 +25,7 @@ from frappe.utils import add_days, flt, today
 
 from hrms.api.store import _get_store_customer
 from hrms.utils.bei_config import get_company
+from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.supply_chain_contracts import (
 	CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
 	get_preferred_commissary_warehouses,
@@ -34,6 +36,31 @@ from hrms.utils.supply_chain_contracts import (
 # SHARED UTILITY (must be defined BEFORE sub-module re-exports
 # to avoid circular import — sub-modules import this function)
 # ============================================================
+
+
+@contextmanager
+def _run_as_system_user(user: str = "Administrator"):
+	session = getattr(frappe, "session", None)
+	if session is None:
+		session = getattr(getattr(frappe, "local", None), "session", None)
+	original_user = getattr(session, "user", None)
+	try:
+		if session and user:
+			session.user = user
+		yield
+	finally:
+		if session and original_user:
+			session.user = original_user
+
+
+def _clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry):
+	for item in getattr(stock_entry, "items", None) or []:
+		if not getattr(item, "serial_and_batch_bundle", None):
+			continue
+		if getattr(item, "batch_no", None):
+			item.batch_no = None
+		if getattr(item, "serial_no", None):
+			item.serial_no = None
 
 
 def get_commissary_warehouse():
@@ -90,6 +117,9 @@ def get_production_cost_per_batch(limit=20, item_code=None):
 	"""
 	Compatibility wrapper for dashboard production costing endpoint.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_production_cost_per_batch", mutation_type="read"
+	)
 	from hrms.api.commissary_dashboard import get_production_cost_per_batch as _dashboard_costing
 
 	return _dashboard_costing(limit=limit, item_code=item_code)
@@ -100,6 +130,9 @@ def get_logistics_architecture_mode(route_name=None):
 	"""
 	Compatibility wrapper for logistics architecture mode endpoint.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_logistics_architecture_mode", mutation_type="read"
+	)
 	from hrms.api.commissary_dashboard import (
 		get_logistics_architecture_mode as _dashboard_logistics_architecture_mode,
 	)
@@ -142,6 +175,9 @@ def get_outsourced_item_flag(item_code, item_name=None):
 	"""
 	Public API for UI/audit checks.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_outsourced_item_flag", mutation_type="read"
+	)
 	return {"success": True, "data": resolve_outsourced_item_flag(item_code=item_code, item_name=item_name)}
 
 
@@ -211,6 +247,9 @@ def get_inventory_levels(item_group=None, show_low_stock_only=False):
 	Get current inventory levels at commissary.
 	Uses per-product thresholds instead of hardcoded values.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_inventory_levels", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	conditions = "WHERE b.warehouse = %s AND i.disabled = 0 AND i.is_stock_item = 1"
@@ -297,6 +336,9 @@ def get_transfer_ready_inventory():
 	commissary inventory dashboard because the transfer page only needs current FG
 	stock with positive quantity in the active commissary warehouse.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_transfer_ready_inventory", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	items = frappe.db.sql(
@@ -335,6 +377,9 @@ def get_low_stock_alerts():
 	Get items below safety stock or reorder level.
 	Uses per-product thresholds instead of hardcoded values.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_low_stock_alerts", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	# Get all items with stock
@@ -411,6 +456,7 @@ def get_item_groups():
 	"""
 	Get item groups for filtering.
 	"""
+	set_backend_observability_context(module="commissary", action="get_item_groups", mutation_type="read")
 	groups = frappe.get_all(
 		"Item Group", filters={"is_group": 0}, fields=["name", "parent_item_group"], order_by="name"
 	)
@@ -427,6 +473,9 @@ def get_pending_store_orders():
 	"""
 	Get pending Material Requests from stores, grouped by priority.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_pending_store_orders", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	mrs = frappe.get_all(
@@ -502,6 +551,7 @@ def get_order_summary():
 	"""
 	Get summary of pending orders by store.
 	"""
+	set_backend_observability_context(module="commissary", action="get_order_summary", mutation_type="read")
 	summary = frappe.db.sql(
 		"""
         SELECT
@@ -537,6 +587,7 @@ def get_fqi_summary(days=7):
 	Get FQI (Food Quality Inspection) summary from stores.
 	Aggregates BEI FQI Reports by issue_type, status, and store.
 	"""
+	set_backend_observability_context(module="commissary", action="get_fqi_summary", mutation_type="read")
 	days = int(days)
 	reports = frappe.get_all(
 		"BEI FQI Report",
@@ -571,6 +622,7 @@ def get_returns_pending(store=None):
 	DEPRECATED: Delegates to store.get_returns_pending() which uses
 	proper has_issue=1 + NOT EXISTS anti-join (G-002 Task 2C).
 	"""
+	set_backend_observability_context(module="commissary", action="get_returns_pending", mutation_type="read")
 	from hrms.api.store import get_returns_pending as _store_returns
 
 	return _store_returns(store=store)
@@ -600,6 +652,9 @@ def create_dispatch_transfer(
 	    mr_name: Optional Material Request reference
 	    remarks: Optional notes
 	"""
+	set_backend_observability_context(
+		module="commissary", action="create_dispatch_transfer", mutation_type="create"
+	)
 	_raise_direct_fulfillment_retired()
 
 	if isinstance(items, str):
@@ -643,7 +698,9 @@ def create_dispatch_transfer(
 		frappe.throw(_("No items to transfer"))
 
 	se.insert()
-	se.submit()
+	_clear_legacy_serial_batch_fields_after_auto_bundle(se)
+	with _run_as_system_user("Administrator"):
+		se.submit()
 
 	# G-051: FEFO warnings
 	from hrms.api.commissary_dashboard import _check_fefo_warnings
@@ -673,6 +730,7 @@ def get_order_detail(mr_name):
 	Args:
 	    mr_name: Material Request name (e.g., 'MAT-MR-2026-00002')
 	"""
+	set_backend_observability_context(module="commissary", action="get_order_detail", mutation_type="read")
 	if not mr_name:
 		frappe.throw(_("Material Request name is required"))
 
@@ -728,6 +786,9 @@ def fulfill_store_order(mr_name: str, items: str | list[dict[str, Any]]):
 	    mr_name: Material Request name
 	    items: JSON array of {item_code, qty_to_fulfill, uom}
 	"""
+	set_backend_observability_context(
+		module="commissary", action="fulfill_store_order", mutation_type="create"
+	)
 	_raise_direct_fulfillment_retired()
 
 	if isinstance(items, str):
@@ -792,7 +853,9 @@ def fulfill_store_order(mr_name: str, items: str | list[dict[str, Any]]):
 		frappe.throw(_("No valid items to fulfill"))
 
 	se.insert()
-	se.submit()
+	_clear_legacy_serial_batch_fields_after_auto_bundle(se)
+	with _run_as_system_user("Administrator"):
+		se.submit()
 
 	# G-046: Create inter-company invoices for hub transfers (commissary to store)
 	try:
@@ -973,7 +1036,8 @@ def _create_intercompany_invoices_async(stock_entry_name, store_info):
 			)
 
 		sales_invoice.insert(ignore_permissions=True)
-		sales_invoice.submit()
+		with _run_as_system_user("Administrator"):
+			sales_invoice.submit()
 
 		frappe.log_error(
 			f"G-046: Created Sales Invoice {sales_invoice.name} for {stock_entry_doc.name}",
@@ -987,7 +1051,8 @@ def _create_intercompany_invoices_async(stock_entry_name, store_info):
 		try:
 			purchase_invoice = make_inter_company_purchase_invoice(sales_invoice.name)
 			purchase_invoice.insert(ignore_permissions=True)
-			purchase_invoice.submit()
+			with _run_as_system_user("Administrator"):
+				purchase_invoice.submit()
 			frappe.log_error(
 				f"G-046: Created Purchase Invoice {purchase_invoice.name} for {stock_entry_doc.name}",
 				"Intercompany Invoice Log",
@@ -1011,6 +1076,9 @@ def get_ready_for_pickup():
 	Get Stock Entries that are ready for pickup/dispatch.
 	These are submitted Material Transfer entries from commissary.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_ready_for_pickup", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	# Get recent Material Transfer stock entries from commissary
@@ -1191,6 +1259,7 @@ def get_days_inventory():
 	    - status: 'ok', 'yellow', 'red', 'overstocked'
 	    - shelf_life: Product shelf life in days
 	"""
+	set_backend_observability_context(module="commissary", action="get_days_inventory", mutation_type="read")
 	commissary_warehouse = get_commissary_warehouse()
 	today_date = today()
 	date_7_days_ago = add_days(today_date, -7)
@@ -1324,6 +1393,7 @@ def get_current_shift():
 
 	Returns current shift info and next shift details.
 	"""
+	set_backend_observability_context(module="commissary", action="get_current_shift", mutation_type="read")
 	from datetime import datetime
 
 	now = datetime.now()
@@ -1409,6 +1479,9 @@ def get_productivity_metrics(date_from=None, date_to=None):
 
 	Target productivity: ~50 kg/manhour
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_productivity_metrics", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	if not date_from:
@@ -1537,6 +1610,7 @@ def get_weekly_summary(work_week=None):
 	    - wastage
 	    - week_on_week_comparison
 	"""
+	set_backend_observability_context(module="commissary", action="get_weekly_summary", mutation_type="read")
 	from datetime import datetime, timedelta
 
 	# Parse work week and get date range
@@ -1661,6 +1735,7 @@ def get_delivery_routes():
 	- South: 8 routes
 	- Total: 15 routes serving 50+ stores
 	"""
+	set_backend_observability_context(module="commissary", action="get_delivery_routes", mutation_type="read")
 	# Hard-coded route data from Bryan's questionnaire response
 	routes = {
 		"north": [
@@ -1754,6 +1829,7 @@ def get_hub_inventory(hub_code=None):
 
 	Returns hub information with current inventory items.
 	"""
+	set_backend_observability_context(module="commissary", action="get_hub_inventory", mutation_type="read")
 	# Check if BEI External Hub DocType exists
 	if not frappe.db.exists("DocType", "BEI External Hub"):
 		# Return hardcoded data if DocType not yet created
@@ -1849,6 +1925,9 @@ def update_hub_inventory(hub_code, item_code, qty, uom=None):
 	    qty: New quantity
 	    uom: Unit of measure (optional, defaults to stock UOM)
 	"""
+	set_backend_observability_context(
+		module="commissary", action="update_hub_inventory", mutation_type="update"
+	)
 	if not frappe.db.exists("DocType", "BEI External Hub"):
 		frappe.throw("BEI External Hub DocType not yet created. Please run bench migrate.")
 
@@ -1913,6 +1992,9 @@ def get_distribution_hubs():
 	"""
 	Get list of available distribution hubs for transfer.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_distribution_hubs", mutation_type="read"
+	)
 	hubs = []
 	for code, warehouse in DISTRIBUTION_HUBS.items():
 		# Check if warehouse exists
@@ -1961,6 +2043,9 @@ def create_hub_transfer(
 	Returns:
 	    Stock Entry name and details
 	"""
+	set_backend_observability_context(
+		module="commissary", action="create_hub_transfer", mutation_type="create"
+	)
 	_raise_direct_fulfillment_retired()
 
 	if isinstance(items, str):
@@ -2051,7 +2136,9 @@ def create_hub_transfer(
 		se.append("items", item_row)
 
 	se.insert()
-	se.submit()
+	_clear_legacy_serial_batch_fields_after_auto_bundle(se)
+	with _run_as_system_user("Administrator"):
+		se.submit()
 
 	return {
 		"success": True,
@@ -2077,6 +2164,9 @@ def get_transfer_history(destination_hub=None, date_from=None, date_to=None, lim
 	    date_to: Optional end date
 	    limit: Max results (default 50)
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_transfer_history", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	# Build warehouse filter

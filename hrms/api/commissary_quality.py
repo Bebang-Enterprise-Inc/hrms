@@ -74,6 +74,16 @@ def _is_retryable_stock_entry_submit_error(exc: Exception) -> bool:
 	)
 
 
+def _clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry):
+	for item in getattr(stock_entry, "items", None) or []:
+		if not getattr(item, "serial_and_batch_bundle", None):
+			continue
+		if getattr(item, "batch_no", None):
+			item.batch_no = None
+		if getattr(item, "serial_no", None):
+			item.serial_no = None
+
+
 def _get_available_batch_rows(item_code: str, warehouse: str) -> list[dict[str, Any]]:
 	return frappe.db.sql(
 		"""
@@ -153,6 +163,9 @@ def get_pending_inspections() -> dict[str, Any]:
 	  - Manufacture entries (with BOM)
 	  - Material Receipt entries stamped by the no-BOM production flow
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_pending_inspections", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	# Get recent production entries from the commissary warehouse without QI.
@@ -233,6 +246,9 @@ def create_quality_inspection(
 	    rejection_disposition: "Scrap", "Rework", or "Hold" (only used when status=Rejected)
 	    remarks: Optional inspector notes
 	"""
+	set_backend_observability_context(
+		module="commissary", action="create_quality_inspection", mutation_type="create"
+	)
 	normalized_readings = _normalize_quality_readings(readings)
 
 	# Get the Stock Entry Detail
@@ -298,7 +314,8 @@ def create_quality_inspection(
 	frappe.db.savepoint("quality_inspection")
 	try:
 		qi.insert(ignore_permissions=True)
-		qi.submit()
+		with _run_as_system_user("Administrator"):
+			qi.submit()
 
 		result = {
 			"success": True,
@@ -338,6 +355,9 @@ def get_inspection_history(item_code: str | None = None, days: int | str = 30) -
 	    item_code: Filter by specific item (optional)
 	    days: Number of days to look back (default 30)
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_inspection_history", mutation_type="read"
+	)
 	filters = {
 		"docstatus": 1,
 		"inspection_type": "Outgoing",
@@ -385,6 +405,9 @@ def get_inspection_history(item_code: str | None = None, days: int | str = 30) -
 @frappe.whitelist()
 def get_inspection_details(inspection_name: str) -> dict[str, Any]:
 	"""Get full details of a quality inspection including readings."""
+	set_backend_observability_context(
+		module="commissary", action="get_inspection_details", mutation_type="read"
+	)
 	qi = frappe.get_doc("Quality Inspection", inspection_name)
 
 	return {
@@ -549,7 +572,9 @@ def log_wastage(
 			se.insert(ignore_permissions=True)
 			se = frappe.get_doc("Stock Entry", se.name)
 			_enable_role_gated_write(se)
-			se.submit()
+			_clear_legacy_serial_batch_fields_after_auto_bundle(se)
+			with _run_as_system_user("Administrator"):
+				se.submit()
 
 			_release_savepoint(savepoint_name)
 			break
@@ -694,6 +719,7 @@ def get_wastage_trends(days: int | str = 30, group_by: str = "reason") -> dict[s
 	    daily_trend: Day-by-day qty + value for the period (always included)
 	    summary: {total_qty, total_value, avg_daily, top_reason, trend_pct}
 	"""
+	set_backend_observability_context(module="commissary", action="get_wastage_trends", mutation_type="read")
 	days = int(days)
 	commissary_warehouse = get_commissary_warehouse()
 
@@ -879,6 +905,9 @@ def get_fefo_picking_list(item_code: str | None = None, warehouse: str | None = 
 	    item_code: Filter by specific item (optional)
 	    warehouse: Filter by warehouse (defaults to commissary)
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_fefo_picking_list", mutation_type="read"
+	)
 	commissary_warehouse = warehouse or get_commissary_warehouse()
 
 	# Get batches with stock ordered by expiry date (FEFO)
@@ -946,6 +975,9 @@ def get_expiring_batches(days: int | str = 7, item_group: str | None = None) -> 
 	    days: Days until expiry (default 7)
 	    item_group: Filter by item group (optional)
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_expiring_batches", mutation_type="read"
+	)
 	commissary_warehouse = get_commissary_warehouse()
 
 	filters = """
@@ -1006,6 +1038,9 @@ def enable_batch_tracking_for_fg() -> dict[str, Any]:
 	Note: Run this once to enable batch tracking. New batches will be created
 	automatically during production.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="enable_batch_tracking_for_fg", mutation_type="update"
+	)
 	updated = 0
 
 	# Get all FG items without batch tracking
@@ -1086,6 +1121,7 @@ def submit_qc_form(
 	    remarks: Optional notes
 	    photo_evidence: Optional attached photo URL
 	"""
+	set_backend_observability_context(module="commissary", action="submit_qc_form", mutation_type="create")
 	if isinstance(readings, str):
 		readings = json.loads(readings)
 
@@ -1151,6 +1187,7 @@ def get_qc_forms(
 	    date_to: End date
 	    limit: Max results (default 50)
 	"""
+	set_backend_observability_context(module="commissary", action="get_qc_forms", mutation_type="read")
 	filters = {}
 	if form_type:
 		filters["form_type"] = form_type
@@ -1175,6 +1212,7 @@ def get_qc_forms(
 @frappe.whitelist()
 def get_qc_form_detail(form_name: str) -> dict[str, Any]:
 	"""Get a single QC form with all readings."""
+	set_backend_observability_context(module="commissary", action="get_qc_form_detail", mutation_type="read")
 	qc = frappe.get_doc("BEI QC Form", form_name)
 
 	return {
@@ -1208,4 +1246,7 @@ def get_qc_form_detail(form_name: str) -> dict[str, Any]:
 @frappe.whitelist()
 def get_qc_form_templates() -> dict[str, Any]:
 	"""Return expected readings per form type with ranges."""
+	set_backend_observability_context(
+		module="commissary", action="get_qc_form_templates", mutation_type="read"
+	)
 	return {"success": True, "data": QC_FORM_TEMPLATES}
