@@ -1,50 +1,68 @@
 [
   {
-    "check": "Processing page renders",
-    "before": "Dead link / 404",
-    "after": "Page renders with wizard steps",
+    "check": "Processing wizard renders with steps",
+    "before": "Was dead link",
+    "after": "6 steps visible",
     "passed": true
   },
   {
-    "check": "Readiness check surfaces blockers",
-    "before": "Step 1",
-    "after": "Step 2 rendered. Blocker info: true",
+    "check": "Readiness check API fires on Step 2",
+    "before": "Step 1 (period selected)",
+    "after": "Step 2 shows 7 blocker indicators",
     "passed": true
   },
   {
     "check": "Cannot advance past Step 2 with blockers",
-    "before": "Step 2 with blocker info",
-    "after": "Progression behavior verified",
+    "before": "Step 2 with blockers",
+    "after": "Next disabled, force-click did not advance",
     "passed": true
   },
   {
-    "check": "Remittances page renders with type selector",
+    "check": "Remittances renders with 4 type tabs",
     "before": "Was 404 dead link",
-    "after": "Page renders. Tabs: true",
+    "after": "4 tabs visible",
     "passed": true
   },
   {
-    "check": "SSS March 2026 loads",
-    "before": "SSS tab selected",
-    "after": "Data table shown",
+    "check": "SSS remittance loads after tab click and month change",
+    "before": "Default month",
+    "after": "Empty state shown",
     "passed": true
   },
   {
-    "check": "Export with no data",
-    "before": "No payroll data",
+    "check": "PhilHealth tab click renders content",
+    "before": "Previous tab",
+    "after": "PhilHealth content loaded, API calls: 1",
+    "passed": true
+  },
+  {
+    "check": "Pag-IBIG tab click renders content",
+    "before": "Previous tab",
+    "after": "Pag-IBIG content loaded, API calls: 1",
+    "passed": true
+  },
+  {
+    "check": "BIR tab click renders content",
+    "before": "Previous tab",
+    "after": "BIR content loaded, API calls: 0",
+    "passed": true
+  },
+  {
+    "check": "Export disabled with no data",
+    "before": "SSS tab, no payroll data",
     "after": "Export button correctly disabled",
     "passed": true
   },
   {
-    "check": "Mobile 375px renders both pages",
+    "check": "Mobile 375px: both pages render",
     "before": "Desktop",
     "after": "Mobile screenshots captured",
     "passed": true
   },
   {
-    "check": "L4: Payroll landing unbroken after S115",
+    "check": "L4: Landing page includes Processing + Remittances links",
     "before": "Pre-S115",
-    "after": "Landing renders normally",
+    "after": "Links visible",
     "passed": true
   }
 ]

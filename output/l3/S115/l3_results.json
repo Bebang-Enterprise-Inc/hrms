@@ -3,48 +3,48 @@
     "scenario": "L3-01",
     "test": "Processing page loads with 6-step wizard",
     "status": "PASS",
-    "detail": "Step labels visible",
+    "detail": "6/6 step labels found: Select Period, Readiness Check, Generate, Review, Submit, Bank. Nav: direct URL",
     "error": null,
-    "timestamp": "2026-03-24T16:41:44.376Z"
+    "ts": "2026-03-24T16:47:47.305Z"
   },
   {
     "scenario": "L3-02",
-    "test": "Readiness check surfaces S076 blockers",
+    "test": "Click Next → readiness check fires with S076 blockers",
     "status": "PASS",
-    "detail": "Blockers/readiness info visible. API calls: 2",
+    "detail": "2 API calls, 7 blocker indicators: Blocker, Must Be Resolved, Payroll Payable, Salary Structure, Not Set",
     "error": null,
-    "timestamp": "2026-03-24T16:41:49.546Z"
+    "ts": "2026-03-24T16:47:53.478Z"
   },
   {
     "scenario": "L3-03",
-    "test": "UI blocks progression with blockers present",
+    "test": "UI blocks advancement when blockers present",
     "status": "PASS",
-    "detail": "Next button disabled when blockers exist",
+    "detail": "Next button disabled=true. Force-click: still on Step 2=true",
     "error": null,
-    "timestamp": "2026-03-24T16:41:50.648Z"
+    "ts": "2026-03-24T16:47:54.588Z"
   },
   {
     "scenario": "L3-04",
-    "test": "Remittances page with type selector",
+    "test": "Remittances page with all 4 type tabs",
     "status": "PASS",
-    "detail": "SSS/PhilHealth/Pag-IBIG/BIR tabs visible",
+    "detail": "All tabs visible: SSS, PhilHealth, Pag-IBIG, BIR. Nav: direct URL",
     "error": null,
-    "timestamp": "2026-03-24T16:41:55.448Z"
+    "ts": "2026-03-24T16:48:00.406Z"
   },
   {
     "scenario": "L3-05",
-    "test": "SSS remittance loads for March 2026",
+    "test": "SSS tab click + month change → data loads",
     "status": "PASS",
-    "detail": "SSS data loaded with breakdown",
+    "detail": "Empty state (no payroll data), API calls: 1, month changed: true",
     "error": null,
-    "timestamp": "2026-03-24T16:41:58.168Z"
+    "ts": "2026-03-24T16:48:07.806Z"
   },
   {
     "scenario": "L3-06",
-    "test": "CSV export",
+    "test": "Export CSV button state",
     "status": "PASS",
-    "detail": "Export button disabled — no data to export (expected first-run)",
+    "detail": "Export button visible but correctly disabled — no payroll data to export (first-run state)",
     "error": null,
-    "timestamp": "2026-03-24T16:41:58.171Z"
+    "ts": "2026-03-24T16:48:19.276Z"
   }
 ]

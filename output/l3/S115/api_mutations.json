@@ -1,16 +1,37 @@
 [
   {
-    "endpoint": "https://my.bebang.ph/api/frappe/api/method/hrms.api.payroll.get_processing_blockers?from_date=2026-02-28&to_date=2026-03-30",
-    "method": "GET",
-    "payload": null,
-    "status": 200,
-    "response_body": ""
-  },
-  {
     "endpoint": "https://my.bebang.ph/api/frappe/api/method/hrms.api.payroll.get_payroll_readiness_check",
     "method": "GET",
     "payload": null,
     "status": 200,
-    "response_body": ""
+    "response_body": "{\"message\":{\"is_ready\":false,\"blockers\":[{\"category\":\"gl_account\",\"title\":\"Payroll Payable Account Not Set\",\"description\":\"Company does not have a default payroll payable account. Payroll Entry cannot post journal entries without this.\",\"owner\":\"Finance Team\",\"remediation\":\"Go to Company > Bebang Enterprise Inc. > Accounts Settings > set Default Payroll Payable Account\",\"severity\":\"critical\"},{\"category\":\"missing_ssa\",\"title\":\"33 Active Employees Without Salary Structure\",\"description\":\"These em"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/frappe/api/method/hrms.api.payroll.get_processing_blockers?from_date=2026-02-28&to_date=2026-03-30",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": "{\"message\":{\"from_date\":\"2026-02-28\",\"to_date\":\"2026-03-30\",\"total_employees\":516,\"ready_count\":0,\"blocked_count\":516,\"blocked_employees\":[{\"employee\":\"9000935\",\"employee_name\":\"ABAD, CYRUS JOHN R.\",\"department\":\"Operations - BEI\",\"branch\":\"SM CALOOCAN\",\"has_ssa\":true,\"has_tax_slab\":false,\"has_bank\":true,\"issues\":[{\"type\":\"no_tax_slab\",\"message\":\"No income tax slab assigned\",\"severity\":\"critical\"}]},{\"employee\":\"9001784\",\"employee_name\":\"ABADINES, JHARRED AUGUST\",\"department\":\"Operations - BEI\","
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/frappe/api/method/hrms.api.payroll.get_government_remittance?month=1&year=2026&remittance_type=sss",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": "{\"message\":{\"month\":1,\"year\":2026,\"remittance_type\":\"sss\",\"from_date\":\"2026-01-01\",\"to_date\":\"2026-01-31\",\"employees\":[],\"grand_total\":{\"employee_contribution\":0,\"employer_contribution\":0,\"total_remittance\":0}}}"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/frappe/api/method/hrms.api.payroll.get_government_remittance?month=1&year=2026&remittance_type=philhealth",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": "{\"message\":{\"month\":1,\"year\":2026,\"remittance_type\":\"philhealth\",\"from_date\":\"2026-01-01\",\"to_date\":\"2026-01-31\",\"employees\":[],\"grand_total\":{\"employee_contribution\":0,\"employer_contribution\":0,\"total_remittance\":0}}}"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/frappe/api/method/hrms.api.payroll.get_government_remittance?month=1&year=2026&remittance_type=pagibig",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": "{\"message\":{\"month\":1,\"year\":2026,\"remittance_type\":\"pagibig\",\"from_date\":\"2026-01-01\",\"to_date\":\"2026-01-31\",\"employees\":[],\"grand_total\":{\"employee_contribution\":0,\"employer_contribution\":0,\"total_remittance\":0}}}"
   }
 ]

@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "form": "processing_wizard_step1",
+    "inputs": {
+      "period": "default (current month)",
+      "has_date_picker": true
+    },
+    "submit_action": "Click Next button",
+    "response": "API calls: 2, blocker words: 7",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\L3-02_after_next.png"
+  },
+  {
+    "form": "processing_wizard_step2_blocked",
+    "inputs": {
+      "action": "tried to click Next with blockers present"
+    },
+    "submit_action": "Force-click Next (disabled button)",
+    "response": "Button disabled. Still on Step 2: true",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\L3-03_blocked_next.png"
+  },
+  {
+    "form": "remittances_type_selection",
+    "inputs": {
+      "tab": "SSS",
+      "month_changed": true,
+      "month_target": "January"
+    },
+    "submit_action": "Click SSS tab + change month dropdown",
+    "response": "API calls: 1, empty state: true, data table: false",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\L3-05b_month_changed.png"
+  },
+  {
+    "form": "remittance_export",
+    "inputs": {
+      "type": "SSS",
+      "action": "clicked Export"
+    },
+    "submit_action": "Click Export CSV (disabled)",
+    "response": "Button disabled — no data to export. Correct first-run behavior.",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\L3-06_export_disabled.png"
+  }
+]
