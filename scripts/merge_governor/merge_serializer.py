@@ -33,16 +33,19 @@ class MergeSerializer:
         reviewer: Reviewer,
         staging_mgr: StagingManager,
         dry_run: bool = False,
+        wake_event: asyncio.Event | None = None,
     ):
         self.state_mgr = state_mgr
         self.reviewer = reviewer
         self.staging_mgr = staging_mgr
         self.dry_run = dry_run
+        self.wake_event = wake_event
         # Live pipeline state — visible to chat AI and status API
         self.pipeline_status = "idle"
         self.pipeline_pr = None
         self.pipeline_step = ""
         self.pipeline_started_at = 0.0
+        self._is_processing = False
 
     def _set_pipeline(self, status: str, step: str, pr_num: int | None = None) -> None:
         """Update live pipeline state (read by chat AI)."""
@@ -61,6 +64,16 @@ class MergeSerializer:
 
     async def process_queue(self) -> None:
         """Process one PR from the merge queue."""
+        if self._is_processing:
+            return
+        self._is_processing = True
+        try:
+            await self._process_queue_inner()
+        finally:
+            self._is_processing = False
+
+    async def _process_queue_inner(self) -> None:
+        """Inner process_queue logic."""
         state = self.state_mgr.state
 
         if state.paused:
@@ -1148,6 +1161,17 @@ class MergeSerializer:
                 traceback.print_exc()
 
             try:
-                await asyncio.wait_for(stop_event.wait(), timeout=interval)
+                if self.wake_event:
+                    done, pending = await asyncio.wait(
+                        [asyncio.create_task(stop_event.wait()),
+                         asyncio.create_task(self.wake_event.wait())],
+                        timeout=interval, return_when=asyncio.FIRST_COMPLETED,
+                    )
+                    for t in pending:
+                        t.cancel()
+                    if self.wake_event.is_set():
+                        self.wake_event.clear()
+                else:
+                    await asyncio.wait_for(stop_event.wait(), timeout=interval)
             except asyncio.TimeoutError:
                 pass

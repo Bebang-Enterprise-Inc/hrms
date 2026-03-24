@@ -30,9 +30,10 @@ REPOS = [
 class PRWatcher:
     """Polls `gh pr list` for open PRs every poll_interval seconds."""
 
-    def __init__(self, state_mgr: StateManager, poll_interval: int = 30):
+    def __init__(self, state_mgr: StateManager, poll_interval: int = 30, wake_event: asyncio.Event | None = None):
         self.state_mgr = state_mgr
         self.poll_interval = poll_interval
+        self.wake_event = wake_event
         self._on_new_pr_callbacks: list = []
         self._on_closed_pr_callbacks: list = []
         self._on_pr_updated_callbacks: list = []
@@ -170,6 +171,17 @@ class PRWatcher:
                 traceback.print_exc()
 
             try:
-                await asyncio.wait_for(stop_event.wait(), timeout=self.poll_interval)
+                if self.wake_event:
+                    done, pending = await asyncio.wait(
+                        [asyncio.create_task(stop_event.wait()),
+                         asyncio.create_task(self.wake_event.wait())],
+                        timeout=self.poll_interval, return_when=asyncio.FIRST_COMPLETED,
+                    )
+                    for t in pending:
+                        t.cancel()
+                    if self.wake_event.is_set():
+                        self.wake_event.clear()
+                else:
+                    await asyncio.wait_for(stop_event.wait(), timeout=self.poll_interval)
             except asyncio.TimeoutError:
                 pass  # Normal: timeout means poll again

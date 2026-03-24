@@ -1,6 +1,7 @@
 """State persistence for governor-erp using atomic writes."""
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import tempfile
@@ -84,6 +85,7 @@ class StateManager:
         self.state_file = state_dir / "governor_erp_state.json"
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.state = GovernorState()
+        self._save_lock = asyncio.Lock()
 
     def load(self) -> GovernorState:
         """Load state from disk. Raises on corrupt file."""
@@ -109,6 +111,11 @@ class StateManager:
 
         self.state = GovernorState.from_dict(data)
         return self.state
+
+    async def async_save(self) -> None:
+        """Thread-safe async save with lock for concurrent callers."""
+        async with self._save_lock:
+            self.save()
 
     def save(self) -> None:
         """Write state to file with retry for Dropbox/antivirus file locks."""
