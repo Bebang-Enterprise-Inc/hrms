@@ -1,14 +1,15 @@
 ---
 canonical_sprint_id: S104
 display: Sprint 104
-status: DEPLOYED
+status: COMPLETED
 branch: s104-contracted-price-master
 lane: single
 created_date: 2026-03-24
 deployed_at: 2026-03-24
-backend_pr: 330
-completed_date:
-execution_summary: PR #330 created. 3 new DocTypes, 8 new endpoints, migration patch. Awaiting governor merge + L3.
+completed_date: 2026-03-24
+backend_pr: 330, 333, 334
+l3_result: 14/14 PASS
+execution_summary: Contracted price master live. PRs #330 (main), #333 (item block + perms), #334 (frappe.flags fix). 3 new DocTypes, 8 endpoints, 92 item prices seeded. L3 14/14 PASS.
 depends_on: S099
 ---
 

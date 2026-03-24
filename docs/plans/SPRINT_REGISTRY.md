@@ -96,7 +96,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S102` | Sprint 102 | `s102-governor-agent-platform` | #327 | COMPLETED — Governor Agent Platform: REST API (10 endpoints), event bus, force-wake, self-diagnosis. L3 10/10 pass. | `docs/plans/2026-03-24-sprint-102-governor-agent-platform.md` |
 | `S103` | Sprint 103 | `s103-labor-plan-bug-fixes` | #328, #233 | COMPLETED 2026-03-24 — Labor plan bug fixes: batch publish (Redis lock), compliance API (OR query + N+1 fix), approve/reject UI, ADMS verification, VL/SL dropdown. PRs: hrms#328, bei-tasks#233. L3 8/8 PASS. | `docs/plans/2026-03-24-sprint-103-labor-plan-bug-fixes.md` |
-| `S104` | Sprint 104 | DEPLOYED 2026-03-24 — Contracted Price Master: 92 item prices imported, price change approval workflow, item onboarding control, price override audit trail. PR #330. Branch: s104-contracted-price-master. Awaiting L3. | `docs/plans/2026-03-24-sprint-104-contracted-price-master.md` |
+| `S104` | Sprint 104 | `s104-contracted-price-master` | #330,#333,#334 | COMPLETED 2026-03-24 — Contracted Price Master: 92 item prices, CPO price change approval, item onboarding control, override audit trail. L3 14/14 PASS. | `docs/plans/2026-03-24-sprint-104-contracted-price-master.md` |
 
 | `S106` | Sprint 106 | `s106-leave-allocation-data-fix` | — (data fix, no PR) | COMPLETED 2026-03-24 — Fixed 1,557 Leave Allocations: total_leaves_allocated set, 1,557 Leave Ledger Entries created (8→1,565). All employees can now file VL/SL/EL. L3 5/5 PASS. | `docs/plans/2026-03-24-sprint-106-leave-allocation-data-fix.md` |
 
