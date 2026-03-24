@@ -1988,8 +1988,7 @@ def _merge_approved_leave_shifts(
 def publish_weekly_plan(plan_name: str, surface: str | None = None):
 	"""Publish a weekly labor plan and sync tagged Shift Assignments."""
 	set_backend_observability_context(module="hr", action="publish_weekly_plan", mutation_type="update")
-	frappe.lock_doc("BEI Weekly Labor Plan", plan_name)
-	plan = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
+	plan = frappe.get_doc("BEI Weekly Labor Plan", plan_name, for_update=True)
 	inferred_surface = surface or (
 		SCHEDULE_SURFACE_COMMISSARY if _is_commissary_schedule_store(plan.store) else SCHEDULE_SURFACE_STORE
 	)
