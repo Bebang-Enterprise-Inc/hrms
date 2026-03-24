@@ -661,12 +661,7 @@ class AgentSDKBackend(ReviewBackend):
         Prints AI reasoning, tool calls, and tool results in real time
         so the operator can watch the AI think — same as watching Claude Code work.
         """
-        from claude_agent_sdk import (
-            AssistantMessage,
-            ResultMessage,
-            ToolResultMessage,
-            query,
-        )
+        from claude_agent_sdk import AssistantMessage, ResultMessage, query
 
         result_msg = None
         last_text = ""
@@ -678,23 +673,22 @@ class AgentSDKBackend(ReviewBackend):
             if isinstance(msg, AssistantMessage):
                 for block in msg.content:
                     if hasattr(block, "text") and block.text.strip():
-                        # Print AI reasoning to terminal
                         for line in block.text.strip().splitlines():
                             truncated = line[:150]
                             print(f"[{ts}]     AI: {truncated}", flush=True)
                         last_text += block.text
                     elif hasattr(block, "name"):
-                        # Tool call — print what the AI is doing
                         step_num += 1
                         tool_name = block.name
                         tool_input = getattr(block, "input", {})
                         _print_tool_call(ts, step_num, tool_name, tool_input)
 
-            elif isinstance(msg, ToolResultMessage):
-                _print_tool_result(ts, msg)
-
             elif isinstance(msg, ResultMessage):
                 result_msg = msg
+
+            else:
+                # Handle tool results and other message types
+                _print_tool_result(ts, msg)
 
         # If result is empty but we got assistant text, use that
         if result_msg and not result_msg.result and last_text:
