@@ -889,6 +889,9 @@ def _create_shift_assignment_from_plan(plan: Any, row: Any, work_date: str, publ
 			"custom_bei_publish_run_id": publish_run_id,
 		}
 	)
+	# S103: Defensive assertion — end_date must never be NULL (prevents legacy open-ended SAs)
+	if not assignment.end_date:
+		frappe.throw(_("BUG: Shift Assignment for {0} on {1} has no end_date. Aborting.").format(row.employee, work_date))
 	assignment.flags.ignore_permissions = True
 	assignment.flags.ignore_user_permissions = True
 	assignment.insert(ignore_permissions=True)
@@ -1987,136 +1990,156 @@ def _merge_approved_leave_shifts(
 def publish_weekly_plan(plan_name: str, surface: str | None = None):
 	"""Publish a weekly labor plan and sync tagged Shift Assignments."""
 	set_backend_observability_context(module="hr", action="publish_weekly_plan", mutation_type="update")
-	plan = frappe.get_doc("BEI Weekly Labor Plan", plan_name, for_update=True)
+	plan = frappe.get_doc("BEI Weekly Labor Plan", plan_name)
 	inferred_surface = surface or (
 		SCHEDULE_SURFACE_COMMISSARY if _is_commissary_schedule_store(plan.store) else SCHEDULE_SURFACE_STORE
 	)
 	_assert_schedule_access(plan.store, inferred_surface)
 
-	current_rows = []
-	current_keys = set()
-	ShiftAssignment = frappe.qb.DocType("Shift Assignment")
-	existing_assignments = (
-		frappe.qb.from_(ShiftAssignment)
-		.select(
-			ShiftAssignment.name,
-			ShiftAssignment.employee,
-			ShiftAssignment.shift_type,
-			ShiftAssignment.start_date,
-			ShiftAssignment.end_date,
-			ShiftAssignment.docstatus,
-			ShiftAssignment.custom_bei_weekly_plan_row_key,
-		)
-		.where(
-			(ShiftAssignment.custom_bei_schedule_source == SCHEDULE_SOURCE)
-			& (ShiftAssignment.custom_bei_weekly_labor_plan == plan.name)
-		)
-	).run(as_dict=True)
-	existing_by_key = {
-		assignment.custom_bei_weekly_plan_row_key: assignment
-		for assignment in existing_assignments
-		if assignment.custom_bei_weekly_plan_row_key
-	}
+	# S103: Redis lock for concurrency (for_update released by batch commits)
+	BATCH_SIZE = 20
+	lock_key = f"labor-plan-publish:{plan_name}"
+	lock = frappe.cache().lock(lock_key, timeout=180)
+	if not lock.acquire(blocking=True, blocking_timeout=10):
+		frappe.throw(_("Another publish is in progress for this plan. Please try again."))
 
-	conflicts = []
-	for row in plan.shifts:
-		if cint(row.is_off):
-			continue
+	try:
+		current_rows = []
+		current_keys = set()
+		ShiftAssignment = frappe.qb.DocType("Shift Assignment")
+		existing_assignments = (
+			frappe.qb.from_(ShiftAssignment)
+			.select(
+				ShiftAssignment.name,
+				ShiftAssignment.employee,
+				ShiftAssignment.shift_type,
+				ShiftAssignment.start_date,
+				ShiftAssignment.end_date,
+				ShiftAssignment.docstatus,
+				ShiftAssignment.custom_bei_weekly_plan_row_key,
+			)
+			.where(
+				(ShiftAssignment.custom_bei_schedule_source == SCHEDULE_SOURCE)
+				& (ShiftAssignment.custom_bei_weekly_labor_plan == plan.name)
+			)
+		).run(as_dict=True)
+		existing_by_key = {
+			assignment.custom_bei_weekly_plan_row_key: assignment
+			for assignment in existing_assignments
+			if assignment.custom_bei_weekly_plan_row_key
+		}
 
-		work_date = _get_work_date(plan.week_start_date, row.day_of_week)
-		row_key = f"{row.employee}|{work_date}"
-		if row_key in current_keys:
-			conflicts.append(_("Duplicate schedule row for {0} on {1}.").format(row.employee, work_date))
-			continue
+		conflicts = []
+		for row in plan.shifts:
+			if cint(row.is_off):
+				continue
 
-		row_conflicts = _get_shift_assignment_conflicts(row.employee, work_date, row_key, plan.name)
-		if row_conflicts:
-			conflict_names = ", ".join(conflict.name for conflict in row_conflicts)
-			conflicts.append(
-				_("Employee {0} already has Shift Assignment(s) on {1}: {2}").format(
-					row.employee, work_date, conflict_names
+			work_date = _get_work_date(plan.week_start_date, row.day_of_week)
+			row_key = f"{row.employee}|{work_date}"
+			if row_key in current_keys:
+				conflicts.append(_("Duplicate schedule row for {0} on {1}.").format(row.employee, work_date))
+				continue
+
+			row_conflicts = _get_shift_assignment_conflicts(row.employee, work_date, row_key, plan.name)
+			if row_conflicts:
+				conflict_names = ", ".join(conflict.name for conflict in row_conflicts)
+				conflicts.append(
+					_("Employee {0} already has Shift Assignment(s) on {1}: {2}").format(
+						row.employee, work_date, conflict_names
+					)
 				)
-			)
-			continue
+				continue
 
-		current_keys.add(row_key)
-		current_rows.append((row, work_date, row_key))
+			current_keys.add(row_key)
+			current_rows.append((row, work_date, row_key))
 
-	if conflicts:
-		frappe.throw("<br>".join(conflicts), title=_("Publish blocked by assignment conflicts"))
+		if conflicts:
+			frappe.throw("<br>".join(conflicts), title=_("Publish blocked by assignment conflicts"))
 
-	publish_run_id = str(now_datetime())
-	created = 0
-	updated = 0
-	unchanged = 0
-	notifications: dict[str, list[dict[str, Any]]] = {}
+		publish_run_id = str(now_datetime())
+		created = 0
+		updated = 0
+		unchanged = 0
+		notifications: dict[str, list[dict[str, Any]]] = {}
 
-	for row, work_date, row_key in current_rows:
-		shift_type_name = row.shift_type_name or row.shift_type
-		existing = existing_by_key.get(row_key)
+		# S103: Process in batches with intermediate commits
+		rows_to_process = []
+		for row, work_date, row_key in current_rows:
+			shift_type_name = row.shift_type_name or row.shift_type
+			existing = existing_by_key.get(row_key)
 
-		if (
-			existing
-			and existing.shift_type == shift_type_name
-			and str(existing.start_date) == work_date
-			and str(existing.end_date or existing.start_date) == work_date
-		):
-			unchanged += 1
-			continue
+			if (
+				existing
+				and existing.shift_type == shift_type_name
+				and str(existing.start_date) == work_date
+				and str(existing.end_date or existing.start_date) == work_date
+			):
+				unchanged += 1
+				continue
 
-		if existing:
-			_cancel_and_delete_shift_assignment(existing.name)
-			updated += 1
-			notifications.setdefault(row.employee, []).append(
-				{
-					"type": "updated",
-					"work_date": work_date,
-					"old_shift": existing.shift_type,
-					"new_shift": shift_type_name,
-				}
-			)
-		else:
-			created += 1
-			notifications.setdefault(row.employee, []).append(
-				{
-					"type": "created",
-					"work_date": work_date,
-					"new_shift": shift_type_name,
-				}
-			)
+			if existing:
+				_cancel_and_delete_shift_assignment(existing.name)
+				updated += 1
+				notifications.setdefault(row.employee, []).append(
+					{
+						"type": "updated",
+						"work_date": work_date,
+						"old_shift": existing.shift_type,
+						"new_shift": shift_type_name,
+					}
+				)
+			else:
+				created += 1
+				notifications.setdefault(row.employee, []).append(
+					{
+						"type": "created",
+						"work_date": work_date,
+						"new_shift": shift_type_name,
+					}
+				)
 
-		_create_shift_assignment_from_plan(plan, row, work_date, publish_run_id)
+			rows_to_process.append((row, work_date))
 
-	deleted = 0
-	for row_key, assignment in existing_by_key.items():
-		if row_key in current_keys:
-			continue
-		_cancel_and_delete_shift_assignment(assignment.name)
-		deleted += 1
-		if assignment.employee:
-			notifications.setdefault(assignment.employee, []).append(
-				{
-					"type": "deleted",
-					"work_date": str(assignment.start_date),
-					"old_shift": assignment.shift_type,
-				}
-			)
+		for i in range(0, len(rows_to_process), BATCH_SIZE):
+			batch = rows_to_process[i:i + BATCH_SIZE]
+			for row, work_date in batch:
+				_create_shift_assignment_from_plan(plan, row, work_date, publish_run_id)
+			frappe.db.commit()
 
-	plan.status = "Published"
-	plan.approved_by = None
-	plan.rejection_reason = None
-	plan.rejected_by = None
-	plan.save(ignore_permissions=True)
-	_send_published_schedule_notifications(plan, notifications)
+		deleted = 0
+		for row_key, assignment in existing_by_key.items():
+			if row_key in current_keys:
+				continue
+			_cancel_and_delete_shift_assignment(assignment.name)
+			deleted += 1
+			if assignment.employee:
+				notifications.setdefault(assignment.employee, []).append(
+					{
+						"type": "deleted",
+						"work_date": str(assignment.start_date),
+						"old_shift": assignment.shift_type,
+					}
+				)
 
-	return {
-		"success": True,
-		"created": created,
-		"updated": updated,
-		"deleted": deleted,
-		"unchanged": unchanged,
-		"status": plan.status,
-	}
+		# S103: Reload plan after batch commits, preserve approved_by for audit trail
+		plan.reload()
+		plan.status = "Published"
+		plan.rejection_reason = None
+		plan.rejected_by = None
+		plan.save(ignore_permissions=True)
+		frappe.db.commit()
+		_send_published_schedule_notifications(plan, notifications)
+
+		return {
+			"success": True,
+			"created": created,
+			"updated": updated,
+			"deleted": deleted,
+			"unchanged": unchanged,
+			"status": plan.status,
+		}
+	finally:
+		lock.release()
 
 
 # ==============================================================================
@@ -3654,6 +3677,8 @@ def reject_weekly_plan(plan_name: str, rejection_reason: str | None = None, surf
 		frappe.throw(_("Only Draft plans can be rejected. Current status: {0}").format(plan.status))
 	if not rejection_reason or not rejection_reason.strip():
 		frappe.throw(_("Rejection reason is required"))
+	if len(rejection_reason.strip()) < 10:
+		frappe.throw(_("Rejection reason must be at least 10 characters"))
 	plan.status = "Rejected"
 	plan.rejected_by = frappe.session.user
 	plan.rejection_reason = rejection_reason.strip()
@@ -3674,21 +3699,22 @@ def get_schedule_compliance(store: str, week_start: str, surface: str | None = N
 	week_start_date = getdate(week_start)
 	week_end = add_days(str(week_start_date), 6)
 
-	plans = frappe.get_all(
-		"BEI Weekly Labor Plan",
-		filters={"store": store_context["warehouse"], "week_start_date": week_start, "status": "Published"},
-		fields=["name"],
-		order_by="modified desc",
-		limit=1,
-	)
-	if not plans:
-		plans = frappe.get_all(
-			"BEI Weekly Labor Plan",
-			filters={"store": store_context["warehouse_name"], "week_start_date": week_start, "status": "Published"},
-			fields=["name"],
-			order_by="modified desc",
-			limit=1,
+	# S103: Query plans matching either warehouse or warehouse_name form
+	WLP = frappe.qb.DocType("BEI Weekly Labor Plan")
+	plans = (
+		frappe.qb.from_(WLP)
+		.select(WLP.name)
+		.where(
+			(
+				(WLP.store == store_context["warehouse"])
+				| (WLP.store == store_context["warehouse_name"])
+			)
+			& (WLP.week_start_date == week_start)
+			& (WLP.status == "Published")
 		)
+		.orderby(WLP.modified, order=frappe.qb.desc)
+		.limit(1)
+	).run(as_dict=True)
 	if not plans:
 		return {"compliance_rate": 0, "total_scheduled_shifts": 0, "attended": 0, "absent": 0, "late_entries": 0, "early_exits": 0, "details": []}
 
@@ -3710,20 +3736,28 @@ def get_schedule_compliance(store: str, week_start: str, surface: str | None = N
 	early_exits = 0
 	details = []
 
+	# S103: Bulk attendance query to fix N+1 (was 182 queries for 26 employees x 7 days)
+	attendance_map = {}
+	if shift_assignments:
+		all_employees = list({sa.employee for sa in shift_assignments})
+		all_dates = list({str(sa.start_date) for sa in shift_assignments})
+		Att = frappe.qb.DocType("Attendance")
+		all_att = (
+			frappe.qb.from_(Att)
+			.select(Att.employee, Att.attendance_date, Att.status, Att.late_entry, Att.early_exit, Att.working_hours)
+			.where(
+				(Att.employee.isin(all_employees))
+				& (Att.attendance_date.isin(all_dates))
+				& (Att.docstatus == 1)
+			)
+		).run(as_dict=True)
+		for att in all_att:
+			attendance_map[(att.employee, str(att.attendance_date))] = att
+
 	for sa in shift_assignments:
-		attendance = frappe.get_all(
-			"Attendance",
-			filters={
-				"employee": sa.employee,
-				"attendance_date": sa.start_date,
-				"docstatus": 1,
-			},
-			fields=["status", "late_entry", "early_exit", "working_hours"],
-			limit=1,
-		)
+		att = attendance_map.get((sa.employee, str(sa.start_date)))
 		day_name = DAY_NAMES[getdate(sa.start_date).weekday()]
-		if attendance:
-			att = attendance[0]
+		if att:
 			if att.status in ("Present", "Half Day"):
 				attended += 1
 			else:
