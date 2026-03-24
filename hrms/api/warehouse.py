@@ -51,9 +51,9 @@ def _resolve_warehouse_name(name: str) -> str:
 	"""Resolve a partial/short warehouse name to the full Frappe Warehouse name.
 
 	Frappe Link fields require exact name matches.  Users (and frontends) sometimes
-	pass short names like "3MD Warehouse" instead of "3MD Logistics – Camangyanan -
+	pass short names like "3MD Warehouse" instead of "3MD Logistics - Camangyanan -
 	Bebang Enterprise Inc."  This mirrors the proven pattern from store.resolve_warehouse
-	without throwing — on failure it returns the original so the Stock Entry itself emits
+	without throwing -- on failure it returns the original so the Stock Entry itself emits
 	a clear LinkValidationError.
 	"""
 	if not name or frappe.db.exists("Warehouse", name):
@@ -65,9 +65,7 @@ def _resolve_warehouse_name(name: str) -> str:
 	if match:
 		return match
 	prefix = name.split()[0] if " " in name else name
-	like_match = frappe.db.get_value(
-		"Warehouse", {"name": ["like", f"{prefix}%"], "is_group": 0}, "name"
-	)
+	like_match = frappe.db.get_value("Warehouse", {"name": ["like", f"{prefix}%"], "is_group": 0}, "name")
 	if like_match:
 		return like_match
 	return name
@@ -367,6 +365,11 @@ def create_purchase_receipt(
 	if isinstance(items, str):
 		items = json.loads(items)
 
+	set_backend_observability_context(
+		module="warehouse",
+		action="create_purchase_receipt",
+		mutation_type="create",
+	)
 	check_scm_permission(SCM_RECEIVING_ROLES, "receive supplier purchase orders")
 
 	if not frappe.db.exists("Purchase Order", po_name):
@@ -427,7 +430,8 @@ def create_purchase_receipt(
 
 	_enable_role_gated_write(pr)
 	pr.insert(ignore_permissions=True)
-	pr.submit()
+	with _run_as_system_user("Administrator"):
+		pr.submit()
 
 	return {
 		"success": True,
@@ -549,7 +553,9 @@ def create_warehouse_receiving(
 	remarks: str | None = None,
 ) -> dict:
 	"""Create a pending warehouse inbound record for commissary finished goods."""
-	set_backend_observability_context(module="warehouse", action="create_warehouse_receiving", mutation_type="create")
+	set_backend_observability_context(
+		module="warehouse", action="create_warehouse_receiving", mutation_type="create"
+	)
 	_ensure_warehouse_receiving_doctype()
 
 	if isinstance(items, str):
@@ -567,7 +573,9 @@ def create_warehouse_receiving(
 		frappe.throw(_("Source warehouse must belong to {0}").format(commissary_co))
 	allowed_target_companies = _get_allowed_target_companies()
 	if target_company not in allowed_target_companies:
-		frappe.throw(_("Target warehouse must belong to one of: {0}").format(", ".join(allowed_target_companies)))
+		frappe.throw(
+			_("Target warehouse must belong to one of: {0}").format(", ".join(allowed_target_companies))
+		)
 
 	doc = frappe.new_doc("BEI Warehouse Receiving")
 	doc.naming_series = "BEI-WHR-.YYYY.-.#####"
@@ -712,7 +720,9 @@ def complete_warehouse_receiving(
 	receiving_name: str, items: str | list[dict[str, Any]], remarks: str | None = None
 ) -> dict[str, Any]:
 	"""Complete warehouse receipt for a commissary FG handoff by creating the stock transfer."""
-	set_backend_observability_context(module="warehouse", action="complete_warehouse_receiving", mutation_type="update")
+	set_backend_observability_context(
+		module="warehouse", action="complete_warehouse_receiving", mutation_type="update"
+	)
 	_ensure_warehouse_receiving_doctype()
 
 	if isinstance(items, str):
@@ -847,7 +857,8 @@ def complete_warehouse_receiving(
 		stock_entry = frappe.get_doc("Stock Entry", stock_entry.name)
 		_enable_role_gated_write(stock_entry)
 		_clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry)
-	stock_entry.submit()
+	with _run_as_system_user("Administrator"):
+		stock_entry.submit()
 
 	receiving.stock_entry = stock_entry.name
 	receiving.receiving_date = now_datetime()
@@ -1190,7 +1201,7 @@ def create_stock_transfer(
 		)
 
 	# Resolve partial/short warehouse names to full Frappe names (e.g. "3MD Warehouse" →
-	# "3MD Logistics – Camangyanan - Bebang Enterprise Inc.").  Frappe Link fields require
+	# "3MD Logistics - Camangyanan - Bebang Enterprise Inc.").  Frappe Link fields require
 	# exact name matches; short names cause LinkValidationError.
 	source_warehouse = _resolve_warehouse_name(source_warehouse)
 	target_warehouse = _resolve_warehouse_name(target_warehouse)
@@ -1334,7 +1345,8 @@ def create_stock_transfer(
 	se = frappe.get_doc("Stock Entry", se.name)
 	_enable_role_gated_write(se)
 	_clear_legacy_serial_batch_fields_after_auto_bundle(se)
-	se.submit()
+	with _run_as_system_user("Administrator"):
+		se.submit()
 
 	return {
 		"success": True,
