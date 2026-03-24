@@ -96,8 +96,10 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S102` | Sprint 102 | `s102-governor-agent-platform` | #327 | COMPLETED — Governor Agent Platform: REST API (10 endpoints), event bus, force-wake, self-diagnosis. L3 10/10 pass. | `docs/plans/2026-03-24-sprint-102-governor-agent-platform.md` |
 
+| `S104` | Sprint 104 | DEPLOYED 2026-03-24 — Contracted Price Master: 92 item prices imported, price change approval workflow, item onboarding control, price override audit trail. PR #330. Branch: s104-contracted-price-master. Awaiting L3. | `docs/plans/2026-03-24-sprint-104-contracted-price-master.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S103`.
-2. Reserve branch name: `s102-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S105`.
+2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**

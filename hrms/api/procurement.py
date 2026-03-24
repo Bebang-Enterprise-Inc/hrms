@@ -745,6 +745,20 @@ def _normalize_purchase_order_payload(data, supplier_code=None):
         if item.get("uom") and not frappe.db.exists("UOM", item["uom"]):
             item.pop("uom")
 
+        # S104: Look up contracted price and inject if item has no unit_cost or unit_cost=0
+        item_code = item.get("item_code")
+        contracted_info = None
+        if item_code:
+            contracted_info = get_contracted_price(item_code, supplier_code)
+        contracted_rate = contracted_info["contracted_rate"] if contracted_info else None
+
+        # Stamp contracted price for audit trail (D1)
+        item["contracted_unit_cost"] = contracted_rate
+
+        # Auto-fill from contracted price if no explicit cost given
+        if contracted_rate and (not item.get("unit_cost") or flt(item.get("unit_cost")) == 0):
+            item["unit_cost"] = contracted_rate
+
         qty = flt(item.get("qty"), 2)
         unit_cost = flt(item.get("unit_cost"), 2)
         # Use item-level vat_rate if explicitly sent, otherwise use supplier-derived rate
@@ -1105,6 +1119,20 @@ def create_purchase_order(data: dict[str, Any] | str | None = None) -> dict[str,
                     supplier.supplier_name, ", ".join(missing_docs)
                 )
             )
+
+    # S104: Validate price override reason when cost differs from contracted price
+    for item in data.get("items") or []:
+        contracted = flt(item.get("contracted_unit_cost"), 2)
+        actual = flt(item.get("unit_cost"), 2)
+        if contracted and contracted > 0 and actual != contracted:
+            if not item.get("price_override_reason"):
+                frappe.throw(
+                    _("Price for item {0} (₱{1:,.2f}) differs from contracted rate (₱{2:,.2f}). "
+                      "Please provide a price override reason.").format(
+                        item.get("item_code"), actual, contracted
+                    ),
+                    title=_("Price Override Reason Required")
+                )
 
     po = frappe.get_doc({
         "doctype": "BEI Purchase Order",
@@ -5880,13 +5908,83 @@ def escalate_pending_approvals():
         frappe.db.commit()
 
 
-# ── S099: Auto-Price Lookup ──────────────────────────────────────────────────
+# ── S104: Contracted Price Lookup ─────────────────────────────────────────────
+
+@frappe.whitelist()
+def get_contracted_price(item_code, supplier=None):
+    """Return the contracted price for an item from the Item Price list.
+
+    Priority:
+    1. Supplier-specific Item Price (if supplier given)
+    2. Standard Buying Item Price (no supplier filter)
+    3. None
+
+    Only returns prices where valid_from <= today AND (valid_upto IS NULL OR valid_upto >= today).
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_contracted_price")
+
+    if not item_code:
+        return None
+
+    today_date = frappe.utils.today()
+
+    # Try supplier-specific price first
+    if supplier:
+        supplier_price = frappe.db.sql("""
+            SELECT price_list_rate, price_list, modified, name
+            FROM `tabItem Price`
+            WHERE item_code = %(item_code)s
+            AND supplier = %(supplier)s
+            AND buying = 1
+            AND valid_from <= %(today)s
+            AND (valid_upto IS NULL OR valid_upto >= %(today)s)
+            ORDER BY valid_from DESC
+            LIMIT 1
+        """, {"item_code": item_code, "supplier": supplier, "today": today_date}, as_dict=True)
+
+        if supplier_price:
+            return {
+                "contracted_rate": flt(supplier_price[0].price_list_rate, 4),
+                "price_list": supplier_price[0].price_list,
+                "last_updated": str(supplier_price[0].modified),
+                "source": "supplier",
+                "item_price_name": supplier_price[0].name,
+            }
+
+    # Fall back to Standard Buying price (no supplier filter)
+    standard_price = frappe.db.sql("""
+        SELECT price_list_rate, price_list, modified, name
+        FROM `tabItem Price`
+        WHERE item_code = %(item_code)s
+        AND price_list = 'Standard Buying'
+        AND buying = 1
+        AND valid_from <= %(today)s
+        AND (valid_upto IS NULL OR valid_upto >= %(today)s)
+        ORDER BY valid_from DESC
+        LIMIT 1
+    """, {"item_code": item_code, "today": today_date}, as_dict=True)
+
+    if standard_price:
+        return {
+            "contracted_rate": flt(standard_price[0].price_list_rate, 4),
+            "price_list": standard_price[0].price_list,
+            "last_updated": str(standard_price[0].modified),
+            "source": "standard_buying",
+            "item_price_name": standard_price[0].name,
+        }
+
+    return None
+
+
+# ── S099/S104: Auto-Price Lookup ─────────────────────────────────────────────
 
 @frappe.whitelist()
 def get_item_last_price(item_code, supplier=None):
-    """Return the last negotiated unit_cost for an item+supplier combination.
+    """Return contracted price + last PO price for an item.
 
-    Also returns avg_90d_price for reference. Used by PR form auto-price.
+    S104: Returns contracted_price as the primary source of truth.
+    Keeps backward-compatible last_price field (alias for last_po_price).
     """
     from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
     from hrms.utils.sentry import set_backend_observability_context
@@ -5896,7 +5994,11 @@ def get_item_last_price(item_code, supplier=None):
     lookback_days = cint(settings.get("price_variance_lookback_days", 90))
 
     if not item_code:
-        return {"last_price": None, "avg_price": None}
+        return {"last_price": None, "contracted_price": None, "avg_price": None}
+
+    # S104: Get contracted price
+    contracted = get_contracted_price(item_code, supplier)
+    contracted_rate = contracted["contracted_rate"] if contracted else None
 
     filters = {"item_code": item_code}
     supplier_clause = ""
@@ -5930,13 +6032,121 @@ def get_item_last_price(item_code, supplier=None):
     last = last_price_result[0] if last_price_result else None
     avg = avg_result[0] if avg_result else None
 
+    last_po_price = flt(last.unit_cost, 4) if last else None
+
     return {
-        "last_price": flt(last.unit_cost, 4) if last else None,
+        "last_price": last_po_price,  # backward compat alias
+        "last_po_price": last_po_price,
+        "contracted_price": contracted_rate,
         "last_po_date": str(last.po_date) if last else None,
         "last_supplier": last.supplier if last else None,
-        "avg_price": flt(avg.avg_price, 4) if avg and avg.avg_price else None,
+        "avg_90d_price": flt(avg.avg_price, 4) if avg and avg.avg_price else None,
+        "avg_price": flt(avg.avg_price, 4) if avg and avg.avg_price else None,  # backward compat
         "lookback_days": lookback_days,
+        "source": "contracted" if contracted_rate else "po_history",
     }
+
+
+# ── S104: Price Change Request Endpoints ─────────────────────────────────────
+
+@frappe.whitelist()
+def request_price_change(item_code, new_price, reason, document=None):
+    """Create a price change request for CPO approval."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="request_price_change",
+                                     mutation_type="create")
+
+    if not item_code or not new_price or not reason:
+        frappe.throw(_("item_code, new_price, and reason are required"))
+
+    pcr = frappe.get_doc({
+        "doctype": "BEI Price Change Request",
+        "item_code": item_code,
+        "requested_price": flt(new_price),
+        "reason": reason,
+        "supporting_document": document,
+    })
+    pcr.insert()
+    pcr.submit_for_approval()
+
+    return {"success": True, "name": pcr.name, "status": pcr.status}
+
+
+@frappe.whitelist()
+def approve_price_change(name, comment=None):
+    """CPO approves a price change request."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="approve_price_change",
+                                     mutation_type="update")
+
+    pcr = frappe.get_doc("BEI Price Change Request", name)
+    return pcr.approve(comment)
+
+
+@frappe.whitelist()
+def reject_price_change(name, reason=None):
+    """CPO rejects a price change request."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="reject_price_change",
+                                     mutation_type="update")
+
+    pcr = frappe.get_doc("BEI Price Change Request", name)
+    return pcr.reject(reason)
+
+
+# ── S104: Item Request Endpoints ─────────────────────────────────────────────
+
+@frappe.whitelist()
+def request_new_item(data=None):
+    """Create a new item request for CPO approval."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="request_new_item",
+                                     mutation_type="create")
+
+    if isinstance(data, str):
+        data = frappe.parse_json(data)
+    if not data:
+        frappe.throw(_("Missing required parameter: data"))
+
+    required = ["item_code", "item_name", "item_group", "stock_uom",
+                "contracted_unit_cost", "cost_justification"]
+    for field in required:
+        if not data.get(field):
+            frappe.throw(_(f"Field '{field}' is required"))
+
+    item_request = frappe.get_doc({
+        "doctype": "BEI Item Request",
+        **{k: v for k, v in data.items() if k in [
+            "item_code", "item_name", "item_group", "stock_uom", "description",
+            "contracted_unit_cost", "cost_justification", "supporting_document", "supplier"
+        ]}
+    })
+    item_request.insert()
+    item_request.submit_for_approval()
+
+    return {"success": True, "name": item_request.name, "status": item_request.status}
+
+
+@frappe.whitelist()
+def approve_item_request(name):
+    """CPO approves a new item request."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="approve_item_request",
+                                     mutation_type="create")
+
+    item_req = frappe.get_doc("BEI Item Request", name)
+    return item_req.approve()
+
+
+@frappe.whitelist()
+def reject_item_request(name, reason=None):
+    """CPO rejects a new item request."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="reject_item_request",
+                                     mutation_type="update")
+
+    item_req = frappe.get_doc("BEI Item Request", name)
+    return item_req.reject(reason)
 
 
 @frappe.whitelist()

@@ -130,33 +130,51 @@ class BEIPurchaseOrder(Document):
 		]
 
 	def check_price_variance_blocks(self):
-		"""Audit Control 2.6: Block PO if price variance >threshold without override reason."""
+		"""Audit Control 2.6: Block PO if price variance >threshold.
+
+		S104: Compare against contracted price first. Fall back to PO history average
+		only when no contracted price exists for the item.
+		"""
 		from frappe.utils import flt, now_datetime
 		from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
+		from hrms.api.procurement import get_contracted_price
 
 		settings = get_procurement_settings()
 		variance_threshold = flt(settings.get("price_variance_block_pct", 10))
 		lookback_days = cint(settings.get("price_variance_lookback_days", 90))
 
 		for item in self.items:
-			avg_price = frappe.db.sql(
-				"""
-                SELECT AVG(poi.unit_cost)
-                FROM `tabBEI PO Item` poi
-                JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
-                WHERE poi.item_code = %s AND po.supplier = %s AND po.status NOT IN ('Draft', 'Cancelled')
-                AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
-            """,
-				(item.item_code, self.supplier, lookback_days),
-			)
+			reference_price = 0
+			reference_source = "none"
 
-			avg_price = flt(avg_price[0][0]) if avg_price and avg_price[0][0] else 0
-			if avg_price > 0:
-				variance_pct = abs(flt(item.unit_cost) - avg_price) / avg_price * 100
+			# S104: Try contracted price first
+			contracted = get_contracted_price(item.item_code, self.supplier)
+			if contracted:
+				reference_price = flt(contracted["contracted_rate"])
+				reference_source = "contracted rate"
+			else:
+				# Fall back to PO history average
+				avg_price = frappe.db.sql(
+					"""
+					SELECT AVG(poi.unit_cost)
+					FROM `tabBEI PO Item` poi
+					JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+					WHERE poi.item_code = %s AND po.supplier = %s AND po.status NOT IN ('Draft', 'Cancelled')
+					AND po.po_date >= DATE_SUB(CURDATE(), INTERVAL %s DAY)
+				""",
+					(item.item_code, self.supplier, lookback_days),
+				)
+				reference_price = flt(avg_price[0][0]) if avg_price and avg_price[0][0] else 0
+				reference_source = "historical average"
+
+			if reference_price > 0:
+				variance_pct = abs(flt(item.unit_cost) - reference_price) / reference_price * 100
 				if variance_pct > variance_threshold:
 					if not item.price_variance_override:
 						frappe.throw(
-							f"Price for item {item.item_code} exceeds 10% variance from historical average. An override reason is required."
+							f"Price for item {item.item_code} (₱{flt(item.unit_cost, 2):,.2f}) exceeds "
+							f"{variance_threshold}% variance from {reference_source} (₱{reference_price:,.2f}). "
+							f"An override reason is required."
 						)
 					if not item.price_variance_override_by:
 						item.price_variance_override_by = frappe.session.user
@@ -537,50 +555,26 @@ class BEIPurchaseOrder(Document):
 
 	def _get_or_create_item(self, bei_item):
 		"""
-		Get existing Frappe Item or create new one.
+		Get existing Frappe Item — S104: block auto-create for new items.
 
-		Item lookup priority:
-		1. Exact item_code match
-		2. Create new with proper item group
+		Existing items (462 grandfathered) are returned as-is.
+		New item codes that don't exist in Frappe are BLOCKED — they must go
+		through the BEI Item Request approval workflow first.
 
 		Returns: Item code (name)
 		"""
 		item_code = bei_item.item_code
 
-		# Check if item exists
+		# Check if item exists — grandfathered items pass through
 		if frappe.db.exists("Item", item_code):
 			return item_code
 
-		# Determine item group based on item characteristics
-		item_group = self._determine_item_group(bei_item)
-
-		# Create new item
-		try:
-			new_item = frappe.get_doc(
-				{
-					"doctype": "Item",
-					"item_code": item_code,
-					"item_name": bei_item.item_name or item_code,
-					"description": bei_item.description or bei_item.item_name or item_code,
-					"item_group": item_group,
-					"stock_uom": bei_item.uom or "Nos",
-					"is_stock_item": 1,
-					"is_purchase_item": 1,
-					"include_item_in_manufacturing": 0,
-				}
-			)
-			resolved_default_warehouse = resolve_active_buying_warehouse(self.ship_to, company=get_company())
-			if resolved_default_warehouse:
-				new_item.default_warehouse = resolved_default_warehouse
-			new_item.insert(ignore_permissions=True)
-
-			frappe.msgprint(_("Created new Item: {0}").format(item_code), indicator="blue")
-
-			return item_code
-
-		except Exception as e:
-			frappe.log_error(f"Failed to create Item {item_code}: {e}", "BEI Item Creation Error")
-			frappe.throw(_("Failed to create Item {0}: {1}").format(item_code, str(e)))
+		# S104: Block auto-creation of new items
+		frappe.throw(
+			_("Item {0} does not exist. Submit a New Item Request for CPO approval "
+			  "before adding it to a Purchase Order.").format(item_code),
+			title=_("Item Not Found")
+		)
 
 	def _determine_item_group(self, bei_item):
 		"""

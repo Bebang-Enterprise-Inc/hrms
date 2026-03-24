@@ -47,7 +47,10 @@
   "three_pl_warehouse_patterns",
   "column_break_scm_operational",
   "commissary_company",
-  "allowed_target_companies"
+  "allowed_target_companies",
+  "contracted_price_section",
+  "price_validity_days",
+  "default_price_list"
  ],
  "fields": [
   {
@@ -310,6 +313,25 @@
    "fieldname": "allowed_target_companies",
    "fieldtype": "Small Text",
    "label": "Allowed Target Companies"
+  },
+  {
+   "fieldname": "contracted_price_section",
+   "fieldtype": "Section Break",
+   "label": "Contracted Price Settings"
+  },
+  {
+   "default": "90",
+   "fieldname": "price_validity_days",
+   "fieldtype": "Int",
+   "label": "Price Validity (Days)",
+   "description": "Default validity period for new Item Prices (days from entry date)"
+  },
+  {
+   "fieldname": "default_price_list",
+   "fieldtype": "Link",
+   "label": "Default Buying Price List",
+   "options": "Price List",
+   "description": "Set to 'Standard Buying' after running the S104 migration"
   }
  ],
  "index_web_pages_for_search": 1,

@@ -52,3 +52,4 @@ hrms.patches.v16_0.ensure_sales_dashboard_access #2026-03-15
 hrms.patches.v16_0.ensure_marketing_giveaway_setup #2026-03-18
 hrms.patches.v16_0.s099_seed_procurement_settings #2026-03-23
 hrms.patches.v16_0.s099_create_tardiness_salary_components
+hrms.patches.v16_0.s104_setup_contracted_prices #2026-03-24

@@ -133,15 +133,22 @@ class BEIPurchaseRequisition(Document):
         po.delivery_date = self.date_required
         po.ship_to = self.delivery_to
 
-        # Copy items
+        # Copy items — S104: use contracted price if available, fall back to PR estimate
+        from hrms.api.procurement import get_contracted_price
+
         for pr_item in self.items:
+            contracted = get_contracted_price(pr_item.item_code, supplier_code)
+            contracted_rate = contracted["contracted_rate"] if contracted else None
+            unit_cost = contracted_rate if contracted_rate else pr_item.estimated_unit_cost
+
             po.append("items", {
                 "item_code": pr_item.item_code,
                 "item_name": pr_item.item_name,
                 "description": pr_item.description,
                 "qty": pr_item.qty,
                 "uom": pr_item.uom,
-                "unit_cost": pr_item.estimated_unit_cost
+                "unit_cost": unit_cost,
+                "contracted_unit_cost": contracted_rate,
             })
 
         po.insert()
