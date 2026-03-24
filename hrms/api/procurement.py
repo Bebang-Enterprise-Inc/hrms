@@ -1483,17 +1483,13 @@ def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, 
                 )
 
     # DM-2: Savepoint for atomic GR creation
-    try:
-        frappe.db.savepoint("goods_receipt_creation")
-        gr = frappe.get_doc({
-            "doctype": "BEI Goods Receipt",
-            **_sanitize_doc_data(data)
-        })
-        gr.insert()
-        frappe.db.release_savepoint("goods_receipt_creation")
-    except Exception:
-        frappe.db.rollback_to_savepoint("goods_receipt_creation")
-        raise
+    frappe.db.savepoint("goods_receipt_creation")
+    gr = frappe.get_doc({
+        "doctype": "BEI Goods Receipt",
+        **_sanitize_doc_data(data)
+    })
+    gr.insert()
+    frappe.db.release_savepoint("goods_receipt_creation")
 
     return {"success": True, "name": gr.name, "message": _("GR created")}
 
@@ -1847,31 +1843,27 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
     line_items = data.pop("items", None) or data.pop("line_items", None) or []
 
     # DM-2: Savepoint for atomic invoice + child table creation
-    try:
-        frappe.db.savepoint("invoice_creation")
-        invoice = frappe.get_doc({
-            "doctype": "BEI Invoice",
-            **_sanitize_doc_data(data)
-        })
+    frappe.db.savepoint("invoice_creation")
+    invoice = frappe.get_doc({
+        "doctype": "BEI Invoice",
+        **_sanitize_doc_data(data)
+    })
 
-        # C2: Add line items to child table if provided
-        if line_items:
-            for item_data in line_items:
-                invoice.append("items", {
-                    "item_code": item_data.get("item_code"),
-                    "item_name": item_data.get("item_name"),
-                    "qty": flt(item_data.get("qty")),
-                    "rate": flt(item_data.get("rate") or item_data.get("unit_cost")),
-                    "vat_rate": flt(item_data.get("vat_rate", 12)),
-                    "matched_gr_item": item_data.get("matched_gr_item"),
-                    "match_status": item_data.get("match_status", "Unmatched"),
-                })
+    # C2: Add line items to child table if provided
+    if line_items:
+        for item_data in line_items:
+            invoice.append("items", {
+                "item_code": item_data.get("item_code"),
+                "item_name": item_data.get("item_name"),
+                "qty": flt(item_data.get("qty")),
+                "rate": flt(item_data.get("rate") or item_data.get("unit_cost")),
+                "vat_rate": flt(item_data.get("vat_rate", 12)),
+                "matched_gr_item": item_data.get("matched_gr_item"),
+                "match_status": item_data.get("match_status", "Unmatched"),
+            })
 
-        invoice.insert()
-        frappe.db.release_savepoint("invoice_creation")
-    except Exception:
-        frappe.db.rollback_to_savepoint("invoice_creation")
-        raise
+    invoice.insert()
+    frappe.db.release_savepoint("invoice_creation")
 
     return {"success": True, "name": invoice.name, "message": _("Invoice created")}
 
@@ -2380,7 +2372,6 @@ def mark_payment_complete(name, transaction_reference=None, payment_proof=None):
             frappe.db.release_savepoint("payment_ewt_atomic")
 
         except Exception as e:
-            frappe.db.rollback_to_savepoint("payment_ewt_atomic")
             frappe.log_error(f"EWT JV generation failed for {request.name}: {e}")
             frappe.throw(
                 f"Payment could not be completed — EWT Journal Entry creation failed: {e}. "
