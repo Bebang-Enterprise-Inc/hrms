@@ -1,0 +1,13 @@
+{
+  "recorded_at": "2026-03-24T11:56:24.801471Z",
+  "docker_hub_image": {
+    "repository": "samkarazi/bebang-erpnext-hrms",
+    "tag": "v15",
+    "digest": "sha256:729c6b25d0d256ad380bf85e572e03690b67964b5e74968f0fc577318ca7a95f",
+    "image_id": "0a4ffdda8f28",
+    "created": "2026-03-24T11:07:32Z"
+  },
+  "current_running": "samkarazi/bebang-erpnext-hrms@sha256:729c6b25d0d256ad380bf85e572e03690b67964b5e74968f0fc577318ca7a95f",
+  "ec2_disk_free": "99G of 146G",
+  "purpose": "Tier 2 rollback target - last known Docker Hub image before GHCR swap"
+}

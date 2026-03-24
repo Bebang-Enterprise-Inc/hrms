@@ -1,18 +1,12 @@
 name: Build and Deploy Frappe HRMS
 
-# Ensure only one deployment runs at a time - prevents race conditions
-# when multiple PRs merge in quick succession
-concurrency:
-  group: frappe-production-deploy
-  cancel-in-progress: false  # Queue subsequent runs, don't cancel them
-
 on:
   push:
     branches:
       - production
     paths:
       - 'hrms/**'
-      - '.github/helper/apps.json'
+      - '.github/docker/Containerfile.fast'
       - '.github/workflows/build-and-deploy.yml'
   workflow_dispatch:
     inputs:
@@ -35,7 +29,8 @@ on:
 env:
   AWS_REGION: ap-southeast-1
   EC2_INSTANCE_ID: i-026b7477d27bd46d6
-  DOCKER_IMAGE: samkarazi/bebang-erpnext-hrms
+  DOCKER_IMAGE: ghcr.io/bebang-enterprise-inc/bebang-erpnext-hrms
+  DOCKERHUB_BASE: samkarazi/bebang-erpnext-hrms:v15
   DOCKER_TAG: v15
   FRAPPE_SITE: hrms.bebang.ph
   SUPABASE_URL: https://csnniykjrychgajfrgua.supabase.co
@@ -67,6 +62,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [guard]
     if: ${{ needs.guard.result == 'success' && github.event.inputs.skip_build != 'true' }}
+    concurrency:
+      group: frappe-build
+      cancel-in-progress: true
+    permissions:
+      packages: write
     outputs:
       image_digest: ${{ steps.build_push.outputs.digest }}
       image_short_sha: ${{ steps.tags.outputs.short_sha }}
@@ -75,82 +75,53 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
+      - name: Login to Docker Hub (base image pull)
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Checkout frappe_docker
-        uses: actions/checkout@v4
+      - name: Login to GHCR (push)
+        uses: docker/login-action@v3
         with:
-          repository: frappe/frappe_docker
-          path: frappe_docker
-
-      - name: Prepare apps.json
-        run: |
-          cp .github/helper/apps.json frappe_docker/apps.json
-          echo "📦 Apps to be included:"
-          cat frappe_docker/apps.json
-          export APPS_JSON_BASE64=$(base64 -w 0 frappe_docker/apps.json)
-          echo "APPS_JSON_BASE64=$APPS_JSON_BASE64" >> $GITHUB_ENV
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate image tags
         id: tags
         run: |
-          DATE_TAG=$(date +%Y%m%d-%H%M%S)
           SHORT_SHA=${GITHUB_SHA::7}
-          echo "date_tag=$DATE_TAG" >> $GITHUB_OUTPUT
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-          echo "📌 Tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}, ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-$DATE_TAG"
-
-      - name: Compose immutable image reference
-        id: image_ref
-        run: |
-          echo "ref=${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.short_sha }}" >> $GITHUB_OUTPUT
+          echo "📌 Tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}, ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-$SHORT_SHA"
 
       - name: Build and push
         id: build_push
         uses: docker/build-push-action@v6
         with:
-          context: frappe_docker
-          file: frappe_docker/images/custom/Containerfile
+          context: .
+          file: .github/docker/Containerfile.fast
           push: true
           platforms: linux/amd64
+          provenance: false
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-            ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.date_tag }}
             ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.short_sha }}
           build-args: |
-            FRAPPE_BRANCH=version-15
-            PYTHON_VERSION=3.11.6
-            NODE_VERSION=20.19.2
-            APPS_JSON_BASE64=${{ env.APPS_JSON_BASE64 }}
-            CACHE_BUST=${{ github.sha }}
-          # For push events, always disable cache (github.event_name == 'push')
-          # For workflow_dispatch, respect the no_cache input
-          no-cache: ${{ github.event_name == 'push' || github.event.inputs.no_cache == 'true' }}
-          cache-from: ${{ github.event_name != 'push' && github.event.inputs.no_cache != 'true' && format('type=registry,ref={0}:{1}', env.DOCKER_IMAGE, env.DOCKER_TAG) || '' }}
-          cache-to: type=inline
-
-      - name: Compose digest image reference
-        id: digest_ref
-        run: |
-          echo "ref=${{ env.DOCKER_IMAGE }}@${{ steps.build_push.outputs.digest }}" >> $GITHUB_OUTPUT
+            BASE_IMAGE=${{ env.DOCKERHUB_BASE }}
+            HRMS_SHA=${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_IMAGE }}:buildcache,image-manifest=true,oci-mediatypes=true,compression=zstd,mode=max
+          outputs: type=registry,compression=zstd,compression-level=3
 
       - name: Output image info
         run: |
           echo "✅ Image built and pushed successfully!"
           echo "📦 Image: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}"
-          echo "📦 Dated: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.date_tag }}"
-          echo "📦 Immutable deploy image: ${{ steps.image_ref.outputs.ref }}"
-          echo "📦 Digest deploy image: ${{ steps.digest_ref.outputs.ref }}"
+          echo "📦 SHA tag: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.short_sha }}"
           echo "🔐 Digest: ${{ steps.build_push.outputs.digest }}"
 
   deploy:
@@ -159,6 +130,11 @@ jobs:
     needs: [guard, build]
     environment: production-deploy
     if: ${{ needs.guard.result == 'success' && needs.build.result == 'success' }}
+    concurrency:
+      group: frappe-deploy
+      cancel-in-progress: false
+    permissions:
+      packages: read
 
     steps:
       - name: Checkout code
@@ -175,62 +151,115 @@ jobs:
         id: deploy
         run: |
           set -euo pipefail
-          IMAGE_TAG="${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ needs.build.outputs.image_short_sha }}"
           DEPLOY_IMAGE="${{ env.DOCKER_IMAGE }}@${{ needs.build.outputs.image_digest }}"
+          IMAGE_TAG="${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ needs.build.outputs.image_short_sha }}"
 
           echo "🚀 Deploying to EC2 instance ${{ env.EC2_INSTANCE_ID }} via Docker Swarm..."
           echo "📦 Immutable image tag: $IMAGE_TAG"
           echo "📦 Digest deploy image: $DEPLOY_IMAGE"
           echo "🔐 Expected digest: ${{ needs.build.outputs.image_digest }}"
 
-          # Rolling update all Frappe services with zero downtime
+          # Build the deploy script, base64 encode it to avoid JSON escaping issues
+          DEPLOY_SCRIPT=$(cat <<'SCRIPT_EOF'
+          set -e
+          DEPLOY_IMAGE="__DEPLOY_IMAGE__"
+          EXPECTED_DIGEST="__EXPECTED_DIGEST__"
+          SENTRY_DSN="__SENTRY_DSN__"
+          SUPABASE_URL="__SUPABASE_URL__"
+          SUPABASE_KEY="__SUPABASE_KEY__"
+          MIN_FREE_KB=6291456
+
+          echo "💾 Root disk before deploy:"
+          df -h /
+          AVAILABLE_KB=$(df --output=avail / | tail -1 | tr -d " ")
+          if [ "$AVAILABLE_KB" -lt "$MIN_FREE_KB" ]; then
+            echo "🧹 Low disk detected, pruning unused Docker artifacts..."
+            docker container prune -f || true
+            docker image prune -af || true
+            docker builder prune -af || true
+            echo "💾 Root disk after cleanup:"
+            df -h /
+            AVAILABLE_KB=$(df --output=avail / | tail -1 | tr -d " ")
+          fi
+          if [ "$AVAILABLE_KB" -lt "$MIN_FREE_KB" ]; then
+            echo "❌ Not enough free disk for image pull: ${AVAILABLE_KB}KB available"
+            exit 1
+          fi
+
+          echo ""
+          echo "🔑 Authenticating to GHCR..."
+          echo "__GHCR_TOKEN__" | docker login ghcr.io -u __GHCR_USER__ --password-stdin
+
+          echo ""
+          echo "📥 Pulling immutable image: $DEPLOY_IMAGE"
+          docker pull $DEPLOY_IMAGE
+
+          echo ""
+          echo "🚀 Starting rolling updates..."
+
+          # Backend services: image + env vars (parallel detach, then converge)
+          BACKEND_SERVICES="frappe_backend frappe_queue-short frappe_queue-long frappe_scheduler"
+          for SVC in $BACKEND_SERVICES; do
+            ENV_ARGS=""
+            if [ -n "$SENTRY_DSN" ]; then
+              ENV_ARGS="$ENV_ARGS --env-rm SENTRY_DSN --env-add SENTRY_DSN=$SENTRY_DSN"
+            fi
+            if [ -n "$SUPABASE_URL" ]; then
+              ENV_ARGS="$ENV_ARGS --env-rm SUPABASE_URL --env-rm SUPABASE_SERVICE_ROLE_KEY"
+              ENV_ARGS="$ENV_ARGS --env-add SUPABASE_URL=$SUPABASE_URL --env-add SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_KEY"
+            fi
+            docker service update --detach=true --update-failure-action=rollback --image $DEPLOY_IMAGE $ENV_ARGS $SVC
+            echo "  ↳ $SVC update dispatched"
+          done
+
+          # Frontend/websocket: image only (parallel detach)
+          for SVC in frappe_frontend frappe_websocket; do
+            docker service update --detach=true --update-failure-action=rollback --image $DEPLOY_IMAGE $SVC
+            echo "  ↳ $SVC update dispatched"
+          done
+
+          echo ""
+          echo "⏳ Waiting for all services to converge..."
+          ALL_SERVICES="frappe_backend frappe_queue-short frappe_queue-long frappe_scheduler frappe_frontend frappe_websocket"
+          for SVC in $ALL_SERVICES; do
+            docker service update --detach=false $SVC
+            echo "  ✅ $SVC converged"
+          done
+
+          echo ""
+          echo "📋 Service status:"
+          docker service ls
+
+          echo ""
+          echo "🔎 Verifying backend service digest..."
+          ACTUAL_IMAGE=$(docker service inspect frappe_backend --format "{{.Spec.TaskTemplate.ContainerSpec.Image}}")
+          echo "Backend service image: $ACTUAL_IMAGE"
+          case "$ACTUAL_IMAGE" in
+            *"$EXPECTED_DIGEST"*) echo "✅ Backend service digest matches expected build" ;;
+            *) echo "❌ Backend service digest mismatch"; exit 1 ;;
+          esac
+
+          echo ""
+          echo "✅ Deployment complete!"
+          SCRIPT_EOF
+          )
+
+          # Substitute variables into script
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__DEPLOY_IMAGE__/$DEPLOY_IMAGE}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__EXPECTED_DIGEST__/${{ needs.build.outputs.image_digest }}}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__SENTRY_DSN__/${{ secrets.SENTRY_DSN }}}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__SUPABASE_URL__/${{ env.SUPABASE_URL }}}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__SUPABASE_KEY__/${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__GHCR_TOKEN__/${{ secrets.GITHUB_TOKEN }}}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__GHCR_USER__/${{ github.actor }}}"
+
+          # Base64 encode the script for SSM transport
+          ENCODED_SCRIPT=$(echo "$DEPLOY_SCRIPT" | base64 -w 0)
+
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "set -e",
-              "DEPLOY_IMAGE='"$DEPLOY_IMAGE"'",
-              "EXPECTED_DIGEST=${{ needs.build.outputs.image_digest }}",
-              "MIN_FREE_KB=6291456",
-              "echo \"💾 Root disk before deploy:\"",
-              "df -h /",
-              "AVAILABLE_KB=$(df --output=avail / | tail -1 | tr -d \" \")",
-              "if [ \"$AVAILABLE_KB\" -lt \"$MIN_FREE_KB\" ]; then",
-              "  echo \"🧹 Low disk detected, pruning unused Docker artifacts...\"",
-              "  docker container prune -f || true",
-              "  docker image prune -af || true",
-              "  docker builder prune -af || true",
-              "  echo \"💾 Root disk after cleanup:\"",
-              "  df -h /",
-              "  AVAILABLE_KB=$(df --output=avail / | tail -1 | tr -d \" \")",
-              "fi",
-              "if [ \"$AVAILABLE_KB\" -lt \"$MIN_FREE_KB\" ]; then",
-              "  echo \"❌ Not enough free disk for image pull: ${AVAILABLE_KB}KB available\"",
-              "  exit 1",
-              "fi",
-              "echo \"\"",
-              "echo \"📥 Pulling immutable image: $DEPLOY_IMAGE\"",
-              "docker pull $DEPLOY_IMAGE",
-              "echo \"\"",
-              "echo \"🚀 Starting rolling updates (zero-downtime)...\"",
-              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_backend",
-              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_frontend",
-              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_websocket",
-              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_queue-short",
-              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_queue-long",
-              "docker service update --detach=false --with-registry-auth --image $DEPLOY_IMAGE frappe_scheduler",
-              "echo \"📋 Service status:\"",
-              "docker service ls",
-              "echo \"🔎 Verifying backend service digest...\"",
-              "ACTUAL_IMAGE=$(docker service inspect frappe_backend --format \"{{.Spec.TaskTemplate.ContainerSpec.Image}}\")",
-              "echo \"Backend service image: $ACTUAL_IMAGE\"",
-              "case \"$ACTUAL_IMAGE\" in",
-              "  *\"$EXPECTED_DIGEST\"*) echo \"✅ Backend service digest matches expected build\" ;;",
-              "  *) echo \"❌ Backend service digest mismatch\"; exit 1 ;;",
-              "esac",
-              "echo \"\"",
-              "echo \"✅ Deployment complete!\""
-            ]' \
+            --parameters "commands=[\"echo $ENCODED_SCRIPT | base64 -d | bash\"]" \
             --output text \
             --query 'Command.CommandId')
 
@@ -243,68 +272,6 @@ jobs:
             "deploy command" \
             15 \
             80
-
-      - name: Set Sentry DSN on services
-        run: |
-          set -euo pipefail
-          echo "📊 Setting Sentry DSN environment variable on Frappe services..."
-
-          COMMAND_ID=$(aws ssm send-command \
-            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "if [ -n \"${{ secrets.SENTRY_DSN }}\" ]; then",
-              "  docker service update --detach=false --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_backend",
-              "  docker service update --detach=false --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-short",
-              "  docker service update --detach=false --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_queue-long",
-              "  docker service update --detach=false --env-rm SENTRY_DSN --env-add SENTRY_DSN=${{ secrets.SENTRY_DSN }} frappe_scheduler",
-              "  echo \"✅ Sentry DSN set on all backend services\"",
-              "else",
-              "  echo \"⚠️ SENTRY_DSN not set, skipping\"",
-              "fi"
-            ]' \
-            --output text \
-            --query 'Command.CommandId')
-
-          echo "📋 Sentry DSN Command ID: $COMMAND_ID"
-
-          bash .github/helper/ssm_wait_and_assert.sh \
-            "$COMMAND_ID" \
-            "${{ env.EC2_INSTANCE_ID }}" \
-            "set sentry dsn" \
-            10 \
-            60
-
-      - name: Set Supabase runtime env on services
-        run: |
-          set -euo pipefail
-          echo "🗄️ Setting Supabase runtime environment variables on Frappe services..."
-
-          COMMAND_ID=$(aws ssm send-command \
-            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
-            --document-name "AWS-RunShellScript" \
-            --parameters 'commands=[
-              "if [ -n \"${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}\" ]; then",
-              "  for SERVICE in frappe_backend frappe_queue-short frappe_queue-long frappe_scheduler; do",
-              "    docker service update --detach=false --env-rm SUPABASE_URL --env-rm SUPABASE_SERVICE_ROLE_KEY --env-add SUPABASE_URL=${{ env.SUPABASE_URL }} --env-add SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }} $SERVICE",
-              "  done",
-              "  echo \"✅ Supabase runtime env set on backend services\"",
-              "else",
-              "  echo \"❌ SUPABASE_SERVICE_ROLE_KEY not set, failing deployment\"",
-              "  exit 1",
-              "fi"
-            ]' \
-            --output text \
-            --query 'Command.CommandId')
-
-          echo "📋 Supabase Env Command ID: $COMMAND_ID"
-
-          bash .github/helper/ssm_wait_and_assert.sh \
-            "$COMMAND_ID" \
-            "${{ env.EC2_INSTANCE_ID }}" \
-            "set supabase runtime env" \
-            10 \
-            60
 
       - name: Fix nginx site header
         run: |
@@ -567,32 +534,30 @@ jobs:
               "echo \"🗑️ Removing exited containers...\"",
               "docker container prune -f",
               "",
-              "echo \"📋 Current images:\"",
-              "docker images ${{ env.DOCKER_IMAGE }} --format \"{{.Tag}} {{.ID}} {{.CreatedAt}}\" | sort -r",
+              "echo \"📋 Current GHCR images:\"",
+              "docker images ghcr.io/bebang-enterprise-inc/bebang-erpnext-hrms --format \"{{.Tag}} {{.ID}} {{.CreatedAt}}\" | sort -r",
+              "",
+              "echo \"📋 Current Docker Hub images:\"",
+              "docker images samkarazi/bebang-erpnext-hrms --format \"{{.Tag}} {{.ID}} {{.CreatedAt}}\" | sort -r",
               "",
               "echo \"\"",
-              "echo \"🔍 Finding images to remove (keeping latest 4 builds)...\"",
+              "echo \"🔍 Finding GHCR images to remove (keeping latest 4 builds)...\"",
               "",
-              "# Get all image IDs sorted by creation date, skip first 4",
-              "OLD_IMAGES=$(docker images ${{ env.DOCKER_IMAGE }} --format \"{{.ID}}\" | tail -n +5)",
+              "# Get all GHCR image IDs sorted by creation date, skip first 4",
+              "OLD_IMAGES=$(docker images ghcr.io/bebang-enterprise-inc/bebang-erpnext-hrms --format \"{{.ID}}\" | tail -n +5)",
               "",
               "if [ -n \"$OLD_IMAGES\" ]; then",
-              "  echo \"📦 Removing old images: $OLD_IMAGES\"",
+              "  echo \"📦 Removing old GHCR images: $OLD_IMAGES\"",
               "  docker rmi $OLD_IMAGES 2>/dev/null || true",
               "else",
-              "  echo \"✅ No old images to remove (4 or fewer exist)\"",
+              "  echo \"✅ No old GHCR images to remove (4 or fewer exist)\"",
               "fi",
               "",
-              "# Also clean up dated tags older than 4 builds",
-              "OLD_TAGS=$(docker images ${{ env.DOCKER_IMAGE }} --format \"{{.Tag}}\" | grep -E \"^v15-[0-9]{8}\" | sort -r | tail -n +5)",
-              "",
-              "if [ -z \"$OLD_TAGS\" ]; then",
-              "  echo \"✅ No old dated tags to clean up\"",
-              "else",
-              "  echo \"📦 Removing old dated tags: $OLD_TAGS\"",
-              "  for TAG in $OLD_TAGS; do",
-              "    docker rmi ${{ env.DOCKER_IMAGE }}:$TAG 2>/dev/null || true",
-              "  done",
+              "# Clean up old Docker Hub images (legacy, keep only base v15 tag)",
+              "OLD_HUB_IMAGES=$(docker images samkarazi/bebang-erpnext-hrms --format \"{{.Tag}} {{.ID}}\" | grep -v \"^v15 \" | awk \"{print \\$2}\")",
+              "if [ -n \"$OLD_HUB_IMAGES\" ]; then",
+              "  echo \"📦 Removing old Docker Hub images (keeping base v15): $OLD_HUB_IMAGES\"",
+              "  docker rmi $OLD_HUB_IMAGES 2>/dev/null || true",
               "fi",
               "",
               "echo \"\"",
@@ -601,7 +566,7 @@ jobs:
               "",
               "echo \"\"",
               "echo \"📋 Final image list:\"",
-              "docker images ${{ env.DOCKER_IMAGE }} --format \"{{.Tag}} {{.Size}}\"",
+              "docker images --format \"{{.Repository}}:{{.Tag}} {{.Size}}\" | grep -E \"(ghcr.io/bebang|samkarazi/bebang)\"",
               "",
               "echo \"\"",
               "echo \"💾 Disk usage after cleanup:\"",
