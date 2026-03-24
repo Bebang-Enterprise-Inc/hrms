@@ -114,8 +114,10 @@ These documents contain sprint-like naming but are not part of the canonical seq
 | `S114` | Sprint 114 | `s114-payroll-compensation-sensitive` | — | PLANNED — Payroll Compensation & Sensitive Changes: compensation setup grid, dual-control approval for bank/statutory, effective dating, self-service intake. Replaces S083 scope 2/3. | `docs/plans/2026-03-24-sprint-114-payroll-compensation-sensitive-changes.md` |
 | `S115` | Sprint 115 | `s115-payroll-processing-remittances` | — | PLANNED — Payroll Processing & Remittances: step wizard for payroll run, S076 blocker handling, government remittance views + export. Replaces S083 scope 3/3. | `docs/plans/2026-03-24-sprint-115-payroll-processing-remittances.md` |
 
+| `S116` | Sprint 116 | `s116-procurement-defect-fixes` | — | GO — Fix all 6 S109 defects: invoice /undefined redirect, PO approval dialog, supplier PNaN, payments 500, seed verified invoice for payment test, GR over-delivery warning. Zero defects remaining. | `docs/plans/2026-03-24-sprint-116-procurement-defect-fixes.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S116`.
+1. Next canonical sprint ID to assign: `S117`.
 2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
