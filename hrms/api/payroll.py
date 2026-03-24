@@ -1083,6 +1083,22 @@ def get_processing_blockers(from_date: str | None = None, to_date: str | None = 
 		else:
 			ready.append(emp_entry)
 
+	# Build grouped summary by issue type
+	issue_counts = {}
+	for emp_entry in blocked + ready:
+		for issue in emp_entry.get("issues", []):
+			key = issue["type"]
+			if key not in issue_counts:
+				issue_counts[key] = {
+					"issue_type": key,
+					"message": issue["message"],
+					"severity": issue["severity"],
+					"count": 0,
+				}
+			issue_counts[key]["count"] += 1
+
+	grouped_summary = sorted(issue_counts.values(), key=lambda x: (-1 if x["severity"] == "critical" else 0, -x["count"]))
+
 	return {
 		"from_date": str(from_date),
 		"to_date": str(to_date),
@@ -1091,6 +1107,7 @@ def get_processing_blockers(from_date: str | None = None, to_date: str | None = 
 		"blocked_count": len(blocked),
 		"blocked_employees": blocked,
 		"ready_employees": ready,
+		"grouped_summary": grouped_summary,
 	}
 
 
