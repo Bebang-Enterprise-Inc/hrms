@@ -1,0 +1,26 @@
+{
+  "sprint": "S105",
+  "verified_at": "2026-03-24T09:55:00Z",
+  "ec2_instance": "i-026b7477d27bd46d6",
+  "checks": {
+    "docker_version": {"expected": ">=23.0", "actual": "28.2.2", "passed": true},
+    "disk_free_gb": {"expected": ">6", "actual": 99, "passed": true},
+    "swarm_services_healthy": {"expected": "6/6 running", "actual": "6/6 at 1/1 replicas", "passed": true},
+    "api_ping": {"url": "https://hq.bebang.ph/api/method/frappe.ping", "response": "{\"message\":\"pong\"}", "passed": true},
+    "login_page": {"url": "https://hq.bebang.ph/login", "http_code": 302, "passed": true},
+    "assets_loading": {"url_pattern": "/assets/hrms/images/*", "http_code": 200, "passed": true},
+    "consolidated_deploy_convergence": {"all_6_services_converged": true, "elapsed_seconds": 41, "passed": true},
+    "env_vars_preserved": {
+      "sentry_dsn": "set on backend, queue-short, queue-long, scheduler",
+      "supabase_url": "set on backend, queue-short, queue-long, scheduler",
+      "supabase_key": "set on backend, queue-short, queue-long, scheduler",
+      "passed": true
+    }
+  },
+  "ghcr_readiness": {
+    "docker_version_supports_zstd": true,
+    "ghcr_login_needed": true,
+    "ghcr_login_configured": false,
+    "notes": "Docker 28.2.2 supports zstd. GHCR login must be configured in Phase B2 before production swap."
+  }
+}

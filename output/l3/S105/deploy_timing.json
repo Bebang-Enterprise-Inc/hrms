@@ -1,0 +1,41 @@
+{
+  "sprint": "S105",
+  "measured_at": "2026-03-24",
+  "current_deploy": {
+    "approach": "3 separate SSM rounds (image, Sentry DSN, Supabase env) + 5 post-deploy steps",
+    "round_1_image_update": {"services": 6, "sequential": true, "detach_false": true, "seconds": 237},
+    "round_2_sentry_dsn": {"services": 4, "sequential": true, "seconds": 60},
+    "round_3_supabase_env": {"services": 4, "sequential": true, "seconds": 60},
+    "total_service_update_seconds": 357,
+    "total_container_restarts": 14,
+    "notes": "4 backend services restart 3 times each (12), 2 frontend services restart once each (2)"
+  },
+  "consolidated_deploy": {
+    "approach": "1 SSM round, combined --image + --env-add, parallel --detach=true, then convergence polling",
+    "ssm_command_id": "053abae7-0329-4078-bba4-4b99126b2a88",
+    "phase_1_parallel_fire": "instant (6 detached updates)",
+    "phase_2_convergence_polling": "sequential --detach=false per service (~7s each)",
+    "total_seconds": 41,
+    "total_container_restarts": 6,
+    "all_services_converged": true,
+    "api_health_after": "pong",
+    "assets_loading_after": true,
+    "improvement": "8.7x faster (41s vs 357s)",
+    "notes": "Same-image redeploy (no actual image change). New image deploys may take ~80s due to container startup with --preload."
+  },
+  "service_env_mapping": {
+    "frappe_backend": {"image": true, "sentry_dsn": true, "supabase_url": true, "supabase_key": true},
+    "frappe_frontend": {"image": true, "sentry_dsn": false, "supabase_url": false, "supabase_key": false},
+    "frappe_websocket": {"image": true, "sentry_dsn": false, "supabase_url": false, "supabase_key": false},
+    "frappe_queue-short": {"image": true, "sentry_dsn": true, "supabase_url": true, "supabase_key": true},
+    "frappe_queue-long": {"image": true, "sentry_dsn": true, "supabase_url": true, "supabase_key": true},
+    "frappe_scheduler": {"image": true, "sentry_dsn": true, "supabase_url": true, "supabase_key": true}
+  },
+  "ec2_environment": {
+    "docker_version": "28.2.2",
+    "zstd_compatible": true,
+    "disk_free": "99G of 146G (33% used)",
+    "swarm_mode": "single-node",
+    "all_services_healthy": true
+  }
+}

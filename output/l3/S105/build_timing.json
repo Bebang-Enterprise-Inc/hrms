@@ -1,0 +1,59 @@
+{
+  "sprint": "S105",
+  "measured_at": "2026-03-24",
+  "baseline": {
+    "source": "last 17 production runs",
+    "build_avg_seconds": 307,
+    "build_range": "278-331s",
+    "deploy_avg_seconds": 340,
+    "deploy_range": "334-350s",
+    "total_avg_seconds": 691,
+    "notes": "Wall clock 12-25 min due to concurrency queue wait"
+  },
+  "fast_build_validation": {
+    "approach": "git clone --depth 1 overlay on production image, GHCR push, zstd compression",
+    "containerfile": ".github/docker/Containerfile.fast",
+    "workflow": ".github/workflows/build-fast.yml",
+    "runs": [
+      {"run_id": 23481212382, "sha": "c1cb3be", "build_step_seconds": 125},
+      {"run_id": 23481215236, "sha": "6e3c3ba", "build_step_seconds": 135},
+      {"run_id": 23481218285, "sha": "71877bf", "build_step_seconds": 121},
+      {"run_id": 23481221211, "sha": "acf9854", "build_step_seconds": 152},
+      {"run_id": 23481224678, "sha": "adbeb5e", "build_step_seconds": 148}
+    ],
+    "avg_seconds": 136,
+    "min_seconds": 121,
+    "max_seconds": 152,
+    "std_dev_seconds": 12,
+    "all_under_180s": true,
+    "improvement_vs_baseline": "59%"
+  },
+  "deploy_consolidation": {
+    "approach": "Combined image+env in one docker service update, parallel --detach=true, then convergence polling",
+    "ssm_command_id": "053abae7-0329-4078-bba4-4b99126b2a88",
+    "elapsed_seconds": 41,
+    "services_updated": 6,
+    "all_converged": true,
+    "api_health": "pong",
+    "assets_healthy": true,
+    "improvement_vs_baseline": "8.7x faster (41s vs 357s)"
+  },
+  "projected_total": {
+    "build_seconds": 136,
+    "deploy_seconds": 80,
+    "post_deploy_seconds": 80,
+    "total_seconds": 296,
+    "total_minutes": 4.9,
+    "target_seconds": 300,
+    "target_met": true,
+    "improvement_vs_baseline": "57% (691s to 296s)"
+  },
+  "iteration_history": [
+    {"iteration": 0, "seconds": 334, "approach": "baseline - full bench get-app, gcc, Docker Hub"},
+    {"iteration": 1, "seconds": null, "approach": "FAILED - git fetch in-place (.git dirs stripped)"},
+    {"iteration": 2, "seconds": 371, "approach": "REGRESSION - single layer killed push (232s)"},
+    {"iteration": 3, "seconds": null, "approach": "FAILED - git clone no yarn (missing html2canvas)"},
+    {"iteration": 4, "seconds": 237, "approach": "git clone + yarn, no gcc, separate layers"},
+    {"iteration": 5, "seconds": 129, "approach": "GHCR + zstd compression - TARGET MET"}
+  ]
+}
