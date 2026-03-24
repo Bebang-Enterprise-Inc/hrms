@@ -1,159 +1,127 @@
 ```yaml
 canonical_sprint_id: S105
-status: "AUDIT: 4 BLOCKERS CLOSED, GO"
+status: GO
 created_date: 2026-03-24
 branch: s105-docker-build-acceleration
 lane: single
-estimated_work_units: 22
+estimated_work_units: 18
 completed_date:
 execution_summary:
-audit_version: 3
+audit_version: 4
 audit_date: 2026-03-24
-audit_agents: docker-researcher, deployment-qa, system-arch, team-orchestration, code-verifier
-audit_verdict: GO (all blockers closed by amendment)
 ```
 
-# S105: Docker Build Acceleration — 6 min Build to Under 3 min
+# S105: Full Pipeline Acceleration — 11 min to Under 5 min
 
-## Audit Amendment v3 (2026-03-24) — Multi-Domain Audit
+## Execution Amendment v4 (2026-03-24) — Validated Build + Deploy Optimization
 
-Full parallel audit by 5 agents: Docker best practices researcher (web search), deployment-qa, system architecture (4/5 score), team orchestration (80% compliance), and code verifier (8/10 confirmed, 2 stale, 5 new gaps). All CRITICAL blockers closed by amendment below.
+Previous plan versions proposed a pre-built base image. Real benchmarking proved that unnecessary — the winning approach overlays `git clone --depth 1` on the existing production image and pushes to GHCR with zstd compression.
 
-### Blockers Found and Closed
+**Validated build results (5 runs, unique SHAs):**
 
-| # | Severity | Finding | Source | Resolution |
-|---|----------|---------|--------|------------|
-| B-01 | **CRITICAL** | `bench get-app --depth 1` flag does not exist | code-verifier | **CLOSED:** Replaced with `bench config set-common-config -c shallow_clone 1` before `bench get-app`. See A3. |
-| B-02 | **CRITICAL** | Upstream Containerfile defaults diverged (Python 3.14, Node 24, version-16) | code-verifier | **CLOSED:** Containerfile.base MUST hardcode `ARG PYTHON_VERSION=3.11.6`, `ARG NODE_VERSION=20.19.2`, `ARG FRAPPE_BRANCH=version-15`. See A1. |
-| B-03 | **CRITICAL** | Mutable base image tag — no rollback/traceability | system-arch C1 | **CLOSED:** Base images tagged immutably as `frappe-base:v15-YYYYMMDD`. Floating `v15` alias kept. Containerfile.fast references dated tag. See A1, A2. |
-| B-04 | **CRITICAL** | No max_turns specified | team-orchestration C1 | **CLOSED:** Added `max_turns: 30` to execution contract. |
+| Run | Build Time | SHA |
+|-----|-----------|-----|
+| 1 | 125s (2.1m) | c1cb3be |
+| 2 | 135s (2.2m) | 6e3c3ba |
+| 3 | 121s (2.0m) | 71877bf |
+| 4 | 152s (2.5m) | acf9854 |
+| 5 | 148s (2.5m) | adbeb5e |
+| **Avg** | **136s (2.3m)** | |
 
-### Warnings Addressed
+**Current baseline (17 production runs):** Build avg 5m07s + Deploy avg 5m40s = ~11 min total
 
-| # | Finding | Source | Resolution |
-|---|---------|--------|------------|
-| W-01 | Cleanup job may prune base image | system-arch W5 | Added to B4: exclude `frappe-base` from prune commands |
-| W-02 | Cache type mismatch test vs prod | system-arch W3 | Aligned: both use `type=gha,mode=max` |
-| W-03 | L3 evidence files wrong for infra sprint | team-orchestration W3 | Replaced with `build_timing.json`, `image_manifest.json`, `deployment_verification.json` |
-| W-04 | No automated staleness detection | system-arch W1, deploy-qa D-04 | Added to A2: weekly cron check of upstream HEAD SHAs |
-| W-05 | `bench build --app hrms` unvalidated | system-arch W4 | Added validation step in B2: compare assets.json completeness |
-| W-06 | No rollback procedure | deploy-qa D-07 | Documented in Phase B section |
+**Target:** Full pipeline (build + deploy) under 5 minutes.
 
-### Improvements from Docker Research
+### Key findings from continuous improvement loop
 
-| # | Improvement | Impact |
-|---|------------|--------|
-| I-01 | Remove QEMU setup step (single-platform only) | Saves 15-30s per build |
-| I-02 | Add `provenance: false` to build-push-action | Saves 10-20s per build |
-| I-03 | Use BuildKit cache mounts for pip/yarn (`--mount=type=cache`) | Avoids re-downloads even on layer invalidation |
-| I-04 | Use `type=gha,mode=max` (not `type=inline`) | Caches ALL intermediate layers, not just final |
+| Finding | Detail |
+|---------|--------|
+| Pre-built base image NOT needed | Overlaying on production image works. No separate frappe-base to maintain. |
+| GHCR is 7.5x faster than Docker Hub | Same datacenter as GHA runners. Push: 78s to 10s. |
+| Zstd compression 4.2x faster export | Layer export: 56s to 13s. |
+| gcc/build-essential NOT needed | pip install had zero C compilations. Saves 11s. |
+| git clone --depth 1 faster than bench get-app | Direct clone skips bench overhead. Needs explicit yarn install. |
+| PWA/roster builds must be skipped | Workbox peer deps missing in overlay builds. PWA deploys via Vercel, not Docker. |
+| Single combined layer KILLS push | One layer = 232s push. Separate small layers = 10-78s push. |
+| .git dirs stripped by upstream | Cannot git fetch in-place on production images. |
+| Deploy has 3 unnecessary SSM rounds | Sentry DSN + Supabase env as separate service updates = 2 extra minutes. |
+| Queue wait dominates wall clock | cancel-in-progress: false causes 10-22 min queue for back-to-back merges. |
 
-Full audit findings: `output/plan-audit/s105-docker-build-acceleration/`
-
----
-
-## Audit Amendment v2 (2026-03-24) — Build Time Verification
-
-This plan was audited against the actual GHA build logs and the `/deploy-frappe` operational skill. Key corrections applied:
-
-| Original Claim | Actual (from GHA logs, last 4 runs) |
-|----------------|-------------------------------------|
-| Build step: 15-20 min | **5m31s – 5m52s** (consistently ~6 min) |
-| Deploy step: included above | **5m34s – 5m57s** (consistently ~6 min) |
-| Total wall clock: 15-20 min | **12-25 min** (variance is concurrency queue wait, not build time) |
-| Target: under 5 min total | **Target: build step under 3 min** (deploy step unchanged) |
-
-**Phase A (GHA Cache Fix) was DELETED.** It would have reintroduced a known production incident (stale code deployment, discovered 2026-01-29, documented in `/deploy-frappe` skill). `CACHE_BUST` and `no-cache: true` exist for a reason — Docker cannot detect git repo content changes inside a cached `bench init` layer.
-
-**HRMS cache-busting added to Containerfile.fast.** Without `HRMS_SHA=${{ github.sha }}`, the `bench get-app hrms` layer would be cached across builds and serve stale code — the exact same problem `CACHE_BUST` was created to solve.
-
-**Build tools gap addressed.** The upstream `backend` stage inherits from `base` (which has git, node, yarn) but lacks gcc/build-essential needed for pip install of C-extension deps. Containerfile.fast must install build deps or use a multi-stage pattern.
+Iteration log: `output/continuous-improvement/s105-docker-fast-build/ITERATION_LOG.md`
 
 ---
 
 ## Summary
 
-Cut the Docker **build step** from ~6 minutes to under 3 minutes by pre-baking a base image (frappe + erpnext + payments) and only rebuilding the BEI hrms layer on each merge. Zero risk to production — the new pipeline runs in parallel as a test lane until proven, then swaps in.
+Cut the full pipeline (build + deploy) from ~11 minutes to under 5 minutes through three changes:
 
-**Net effect:** Total pipeline (build + deploy) drops from ~12 min to ~9 min per merge.
+1. **Fast build (validated at 2.3 min):** GHCR push + zstd compression + git clone --depth 1 overlay on production image
+2. **Consolidated deploy (target ~2 min):** Combine 3 SSM rounds into 1 + parallel Swarm service updates
+3. **Smart concurrency:** Split build/deploy groups so back-to-back merges only build once
 
 ## Design Rationale (For Cold-Start Agents)
 
 ### Why this exists
 
-Every PR merge to production triggers a full Docker image build where `bench init` clones and installs frappe, erpnext, payments, and hrms from scratch. The build step takes ~6 min consistently:
+Every PR merge triggers a full Docker build (~5 min) + sequential deploy (~6 min) = ~11 min. When multiple PRs merge back-to-back, each queues behind the previous — 3 PRs = 33 min total wait.
 
-- **`bench init`** clones all 4 apps + pip install + bench build in the `builder` stage
-- **Docker push** to Docker Hub
+### Proven build approach (from 5 iterations of real testing)
 
-frappe, erpnext, and payments haven't changed in months (all pinned to `version-15`). They rebuild from scratch every time because the upstream Containerfile puts everything in one monolithic `bench init` layer, and `no-cache: true` + `CACHE_BUST` (correctly) prevent stale code.
+The fast build overlays fresh hrms code on the existing production image. No separate base image needed.
 
-### Why not just fix caching? (original Phase A was deleted)
-
-`CACHE_BUST=${{ github.sha }}` and `no-cache: true` on push events were added after a **production incident on 2026-01-29** where cached builds deployed stale code. Docker layer caching cannot detect when a git repo's branch HEAD has new commits — it sees the same `RUN bench init` instruction and serves the cached layer. Removing these protections would reintroduce stale code deployments.
-
-The pre-built base image approach is better because it **structurally separates** the static apps (frappe/erpnext/payments) from the changing app (hrms). Each gets its own cache lifecycle:
-- Base image: rebuilt manually when upstream releases security patches (tagged immutably per rebuild)
-- hrms layer: rebuilt on every merge with SHA-based cache busting
-
-### Upstream Containerfile stages (verified 2026-03-24)
-
-```
-base     → python:3.11-slim + git, node, yarn, nginx, wkhtmltopdf, frappe-bench CLI
-builder  → FROM base + gcc, build-essential, libmariadb-dev → bench init (all apps)
-backend  → FROM base + COPY frappe-bench from builder → production CMD (gunicorn --preload)
+```dockerfile
+FROM samkarazi/bebang-erpnext-hrms:v15   # existing production image
+ARG HRMS_SHA                              # cache-bust per commit
+RUN rm -rf apps/hrms \
+    && git clone --depth 1 --branch production <url> apps/hrms \
+    && yarn install && pip install && bench build --app hrms
 ```
 
-**Key fact:** The `base` stage HAS git, node, and yarn. The `backend` stage inherits from `base`. So `bench get-app` and `bench build --app hrms` CAN run in a container based on the backend image — but `pip install` of C-extension deps requires gcc (only in `builder` stage).
+Pushed to GHCR (same datacenter as GHA runners) with zstd compression. Result: **2.3 min average** (validated 5 runs).
 
-**CAUTION (audit v3 finding):** Upstream defaults have DIVERGED: Python 3.14.2, Node 24.13.0, FRAPPE_BRANCH=version-16. BEI MUST pin `PYTHON_VERSION=3.11.6`, `NODE_VERSION=20.19.2`, `FRAPPE_BRANCH=version-15` in Containerfile.base.
+### Deploy bottleneck analysis
 
-### Key trade-offs
+Current deploy runs 3 separate SSM commands that each restart Swarm services:
 
-- **Base image staleness**: If Frappe releases a critical security patch, we need to rebuild the base. Mitigated by: (1) manual `workflow_dispatch` trigger, (2) weekly cron job that checks upstream HEAD SHAs and alerts if changed.
-- **Two workflows to maintain**: `build-and-deploy.yml` (production, untouched) and `build-fast.yml` (test lane). Once proven, `build-fast.yml` replaces the old one.
-- **Docker Hub storage**: Two image families (`frappe-base` and `bebang-erpnext-hrms`). Minimal cost impact.
-- **EC2 disk**: Base image adds ~2 GB permanent resident. Cleanup job updated to never prune `frappe-base` images.
+| Round | What | Time |
+|-------|------|------|
+| 1 | `docker service update --image` (6 services, sequential) | 3m57s |
+| 2 | `docker service update --env-add SENTRY_DSN` (4 services) | 1m00s |
+| 3 | `docker service update --env-add SUPABASE_*` (4 services) | 1m00s |
+
+Fix: one round with all env vars + parallel service updates.
+
+### Concurrency bottleneck
+
+Current config queues all runs — 3 PRs merged back-to-back = 33 min total.
+Fix: separate build and deploy groups. Builds cancel (safe), deploys never cancel (unsafe mid-SSM).
 
 ### Source references
 
 - Current workflow: `.github/workflows/build-and-deploy.yml` (638 lines)
-- Apps config: `.github/helper/apps.json` (3 apps: erpnext, payments, hrms)
-- Upstream Containerfile: `frappe/frappe_docker/images/custom/Containerfile` (3 stages: base, builder, backend)
-- EC2 instance: `i-026b7477d27bd46d6` (ap-southeast-1)
-- Docker image: `samkarazi/bebang-erpnext-hrms:v15`
-- Deploy skill: `.claude/skills/deploy-frappe/SKILL.md` (stale cache incident documented)
-- Audit findings: `output/plan-audit/s105-docker-build-acceleration/` (5 agent reports)
-
-### Verified build times (2026-03-24, last 4 runs)
-
-| Run ID | Event | Build Step | Deploy Step | Wall Clock |
-|--------|-------|-----------|-------------|------------|
-| 23476267170 | push | 5m46s | 5m37s | 12m24s |
-| 23475670689 | push | 5m31s | 5m57s | 20m10s* |
-| 23475198819 | push | 5m52s | 5m34s | 25m02s* |
-| 23468362683 | dispatch | 5m43s | 5m35s | 24m11s* |
-
-*Wall clock inflated by concurrency queue wait (multiple PRs merging back-to-back).
+- Validated Containerfile: `.github/docker/Containerfile.fast` (on s105 branch)
+- Validated workflow: `.github/workflows/build-fast.yml` (on s105 branch)
+- Iteration log: `output/continuous-improvement/s105-docker-fast-build/`
+- Deploy skill: `.claude/skills/deploy-frappe/SKILL.md`
 
 ## Requirements Regression Checklist
 
-- [ ] Does the production workflow (`build-and-deploy.yml`) remain COMPLETELY UNTOUCHED until Phase B?
-- [ ] Does the test workflow (`build-fast.yml`) only trigger on `workflow_dispatch` (never on push)?
-- [ ] Does the test workflow push to a test tag (`v15-fast-test`), NOT to the production tag (`v15`)?
-- [ ] Does the base image include frappe version-15, erpnext version-15, and payments version-15?
-- [ ] Does the base Containerfile hardcode `PYTHON_VERSION=3.11.6`, `NODE_VERSION=20.19.2`, `FRAPPE_BRANCH=version-15`?
-- [ ] Does the fast Containerfile use `bench build --app hrms` (not `bench build` for all apps)?
-- [ ] Does the fast Containerfile include `HRMS_SHA` build arg for cache-busting the hrms layer?
-- [ ] Does the fast Containerfile install gcc/build-essential for pip install, OR use multi-stage build?
-- [ ] Does the fast Containerfile use `bench config set-common-config -c shallow_clone 1` (NOT `--depth 1` flag)?
-- [ ] Does the base image rebuild workflow exist as a manual trigger?
-- [ ] Is the base image tagged immutably (e.g., `v15-20260324`), not just overwriting `v15`?
-- [ ] Is the test image verified on EC2 before swapping the production pipeline?
-- [ ] Does Phase B preserve all deploy steps (SSM, Sentry DSN, Supabase env, nginx fix, Blip proxy, migrations, Redis flush, asset sync, verification, cleanup)?
-- [ ] Does Phase B verify `bench build --app hrms` produces a complete `assets.json`?
-- [ ] Does Phase B cleanup job exclude `frappe-base` from pruning?
-- [ ] Are all 6 Swarm services (backend, frontend, websocket, queue-short, queue-long, scheduler) still using the same image?
+- [ ] Does Containerfile.fast use `git clone --depth 1` (NOT `bench get-app`)?
+- [ ] Does Containerfile.fast include `HRMS_SHA` build arg for cache-busting?
+- [ ] Does Containerfile.fast skip PWA/roster builds (neuter package.json build script)?
+- [ ] Does Containerfile.fast NOT install gcc/build-essential?
+- [ ] Does Containerfile.fast add `yarn install` after git clone?
+- [ ] Does build-fast.yml push to GHCR (NOT Docker Hub)?
+- [ ] Does build-fast.yml use zstd compression + OCI mediatypes?
+- [ ] Does build-fast.yml use `type=registry` cache with `image-manifest=true`?
+- [ ] Does build-fast.yml set `provenance: false` and skip QEMU?
+- [ ] Does the consolidated deploy combine image + Sentry + Supabase in ONE `docker service update`?
+- [ ] Are all 6 Swarm services updated in parallel (`--detach=true`) then verified once?
+- [ ] Does the deploy concurrency group never cancel mid-SSM?
+- [ ] Does the build concurrency group allow cancel-in-progress?
+- [ ] Are ALL post-deploy steps preserved (nginx fix, Blip proxy, migrations, Redis flush, asset sync, verification)?
+- [ ] Does EC2 have Docker 25+ for zstd image pull?
+- [ ] Does EC2 have GHCR credentials configured?
 
 ## Scope
 
@@ -161,131 +129,95 @@ backend  → FROM base + COPY frappe-bench from builder → production CMD (guni
 
 | Item | Classification |
 |------|----------------|
-| Pre-built base image (`samkarazi/frappe-base:v15-YYYYMMDD`) | [BUILD] |
-| Fast Containerfile that extends base with hrms-only rebuild | [BUILD] |
-| Test workflow (`build-fast.yml`, manual-only) | [BUILD] |
-| Base image rebuild workflow (`build-base.yml`, manual + staleness cron) | [BUILD] |
-| EC2 verification of test image | [VERIFY] |
-| Production swap (replace old workflow with fast one) | [EXTEND] |
-| Build-push-action optimizations (remove QEMU, provenance: false) | [FIX] |
+| Fast Containerfile (GHCR + zstd + git clone overlay) | [PROVEN] |
+| Fast build workflow (push to GHCR) | [PROVEN] |
+| Consolidated deploy (1 SSM round + parallel updates) | [BUILD] |
+| Smart concurrency (split build/deploy groups) | [BUILD] |
+| EC2 verification (zstd pull + GHCR auth) | [VERIFY] |
+| Production swap | [EXTEND] |
 
 ### Out of Scope
 
-- ~~GHA cache fix on existing workflow (original Phase A — DELETED, would reintroduce stale code)~~
-- Changing the deploy steps (SSM commands, Sentry, Supabase, nginx — all stay identical)
-- Self-hosted runners
-- Docker Build Cloud
-- Changing the EC2 infrastructure
+- Pre-built base image (ABANDONED — unnecessary, adds maintenance burden)
+- Self-hosted runners / Docker Build Cloud
+- Changing EC2 infrastructure
 
-## Phase A: Pre-Built Base Image + Fast Containerfile (12 units)
-
-Build the base image and fast Containerfile in parallel — production pipeline is untouched.
+## Phase A: Deploy Consolidation + Smart Concurrency (8 units)
 
 | Task | Type | Description | Units |
 |------|------|-------------|-------|
-| A1 | BUILD | Create `.github/docker/Containerfile.base` — builds `samkarazi/frappe-base:v15-YYYYMMDD` with frappe + erpnext + payments baked in. Based on upstream `frappe_docker/images/custom/Containerfile` with apps hardcoded. **MUST hardcode:** `ARG PYTHON_VERSION=3.11.6`, `ARG NODE_VERSION=20.19.2`, `ARG FRAPPE_BRANCH=version-15` (upstream defaults have DIVERGED to 3.14/24/v16). Must include `bench build` for all three apps, wkhtmltopdf, nginx. The final image is the `backend` stage (production-ready). | 4 |
-| A2 | BUILD | Create `.github/workflows/build-base.yml` — manual `workflow_dispatch` trigger that builds and pushes `samkarazi/frappe-base:v15-YYYYMMDD` (immutable dated tag) AND updates floating alias `frappe-base:v15`. Includes Docker Hub login, buildx setup, single-platform (linux/amd64), `provenance: false`. **Remove QEMU step** (not needed for single-platform). Add weekly cron job that checks HEAD SHAs of `frappe/frappe:version-15`, `frappe/erpnext:version-15`, `frappe/payments:version-15` and opens an issue if any changed since last base build. Expected build time: ~6 min (same as current, one-time). | 2 |
-| A3 | BUILD | Create `.github/docker/Containerfile.fast` — extends `samkarazi/frappe-base:v15` (floating alias), adds ONLY hrms. Must accept `HRMS_SHA` build arg for cache-busting (see HARD BLOCKERS below). Steps: (1) install gcc/build-essential/libmariadb-dev for pip, (2) `bench config set-common-config -c shallow_clone 1` then `bench get-app https://github.com/Bebang-Enterprise-Inc/hrms.git --branch production` (**NOT** `--depth 1` — that flag does not exist on `bench get-app`), (3) `bench build --app hrms` (assets for hrms only), (4) clean up build deps. Use BuildKit cache mounts: `RUN --mount=type=cache,target=/root/.cache/pip` for pip install. **HARD BLOCKER:** Must use `bench build --app hrms`, not `bench build`. | 4 |
-| A4 | BUILD | Create `.github/workflows/build-fast.yml` — test workflow, `workflow_dispatch` ONLY (no push trigger). Builds using `Containerfile.fast`, pushes to `samkarazi/bebang-erpnext-hrms:v15-fast-test` (NOT the production tag). Must pass `HRMS_SHA=${{ github.sha }}` as build arg. Cache: `type=gha,mode=max`. `provenance: false`. **Remove QEMU step.** No deploy steps — build only. | 2 |
+| A1 | BUILD | Create consolidated deploy SSM command. Combine image update + Sentry DSN + Supabase env into ONE `docker service update` per service. Update all 6 services in parallel with `--detach=true`, then poll for convergence. Test manually via SSM first (does NOT touch workflow). | 3 |
+| A2 | VERIFY | Run the consolidated SSM command on EC2 (manual, not workflow). Verify: (1) all 6 services updated, (2) env vars set, (3) API returns pong, (4) assets load correctly. | 2 |
+| A3 | BUILD | Update `build-fast.yml` to add consolidated deploy job (after build succeeds). This makes `build-fast.yml` a full build+deploy test lane. Deploy only to test — does NOT touch production tag. | 2 |
+| A4 | VERIFY | Run full pipeline test: trigger `build-fast.yml`, verify build <3 min + deploy <2 min = total <5 min. Verify `hq.bebang.ph` is unaffected. | 1 |
 
-**Checkpoint:** After A1+A2 (6 units), write status to `output/l3/S105/checkpoint.md`.
+**HARD BLOCKER (A1):** The consolidated deploy MUST preserve ALL post-deploy steps: nginx X-Frappe-Site-Name fix, Blip webhook proxy, migrations, asset sync to frontend container, Redis flush, API verification, asset loading verification. These are NOT optional — every one was added to fix a specific production incident.
 
-**HARD BLOCKER (cache-busting):** `Containerfile.fast` MUST include:
-```dockerfile
-ARG HRMS_SHA
-RUN bench config set-common-config -c shallow_clone 1 \
-    && bench get-app https://github.com/Bebang-Enterprise-Inc/hrms.git --branch production \
-    && echo "hrms_sha=${HRMS_SHA}"
-```
-Without `HRMS_SHA`, Docker will cache the `bench get-app` layer and serve stale hrms code on every build. This is the EXACT same problem that `CACHE_BUST=${{ github.sha }}` solves in the current workflow — but now it only invalidates the hrms layer (~2 min) instead of all layers (~6 min).
+**HARD BLOCKER (A1):** `setuptools<71` pin in migration step must be preserved.
 
-**HARD BLOCKER (bench get-app --depth):** The `bench get-app` CLI does **NOT** have a `--depth` flag. Bench uses `shallow_clone` as a site config setting internally. Use `bench config set-common-config -c shallow_clone 1` before calling `bench get-app`. Do NOT pass `--depth 1` to bench.
-
-**HARD BLOCKER (version pinning):** Upstream Containerfile now defaults to Python 3.14.2, Node 24.13.0, FRAPPE_BRANCH=version-16. Containerfile.base MUST hardcode BEI's versions: `PYTHON_VERSION=3.11.6`, `NODE_VERSION=20.19.2`, `FRAPPE_BRANCH=version-15`. Failure to pin = incompatible base image.
-
-**HARD BLOCKER (build tools):** The `backend` stage inherits from `base` which has git/node/yarn but NOT gcc/build-essential. If any hrms pip dependency requires C compilation, `pip install` will fail. The fast Containerfile must install build deps, run pip install, then remove build deps (adds ~30s).
-
-**HARD BLOCKER (base image):** The base Containerfile must produce a `backend` stage image that includes `/home/frappe/frappe-bench` with all three apps installed, pip deps resolved, and assets built. The fast Containerfile's `bench get-app hrms` must work without re-running `bench init`.
-
-## Phase B: Test + Swap (10 units)
-
-Verify the fast-built image works, then swap the production pipeline.
+## Phase B: EC2 Verification + Production Swap (10 units)
 
 | Task | Type | Description | Units |
 |------|------|-------------|-------|
-| B1 | VERIFY | Run `build-base.yml` via `workflow_dispatch`. Verify: base image pushes to Docker Hub with immutable dated tag, size is reasonable (~1.5-2 GB), has frappe/erpnext/payments installed. Check `bench version --format json` shows correct versions. | 2 |
-| B2 | VERIFY | Run `build-fast.yml` via `workflow_dispatch`. Verify: (1) build step completes in under 3 minutes, (2) image pushes to `v15-fast-test` tag, (3) GHA cache works on second run. **Validate `bench build --app hrms`:** compare `assets.json` in the fast image against production image — must contain entries for frappe, erpnext, AND hrms. No "missing module" errors in build log. | 2 |
-| B3 | VERIFY | Pull `v15-fast-test` on EC2 and run alongside production. Pre-check: verify >6 GB free disk before pull. Verify: (1) `bench --site hrms.bebang.ph doctor` passes, (2) all BEI DocTypes load, (3) API endpoints respond, (4) assets match (no missing CSS/JS). Clean up: `docker rmi` the test tag after verification. | 2 |
-| B4 | EXTEND | Once verified: update `build-and-deploy.yml` to use `Containerfile.fast` instead of upstream Containerfile. Changes: (1) `context` from `frappe_docker` to `.github/docker`, (2) `file` to `.github/docker/Containerfile.fast`, (3) replace `CACHE_BUST=${{ github.sha }}` with `HRMS_SHA=${{ github.sha }}`, (4) remove `APPS_JSON_BASE64` build-arg, (5) remove `Checkout frappe_docker` step, (6) remove `Prepare apps.json` step, (7) remove `Set up QEMU` step, (8) add `provenance: false`, (9) change `no-cache` to `false`, (10) change `cache-to` to `type=gha,mode=max`. Update cleanup job: add `frappe-base` to prune exclusion list. **Verify all 6 Swarm services still use the same image tag.** Keep ALL deploy steps (Sentry DSN, Supabase env, nginx, Blip, migrations, asset sync, Redis flush, verification) IDENTICAL — diff the deploy job to confirm zero changes. `setuptools<71` pin in migration step must be preserved. | 2 |
-| B5 | BUILD | Closeout: update plan YAML status, SPRINT_REGISTRY.md, `git add -f docs/plans/`, `git add -f output/l3/S105/`, commit and push. Update `/deploy-frappe` skill to document new build architecture and updated build times. | 2 |
+| B1 | VERIFY | Check EC2 Docker version: must be 25+ for zstd image pull. If <25, upgrade Docker on EC2 first. | 1 |
+| B2 | VERIFY | Configure GHCR pull on EC2: `docker login ghcr.io` with credentials. Test pull of test image from GHCR. | 1 |
+| B3 | VERIFY | Pull test image on EC2 and verify: (1) bench doctor passes, (2) all DocTypes load, (3) API responds, (4) assets.json has frappe + erpnext + hrms, (5) no missing CSS/JS. | 2 |
+| B4 | EXTEND | Swap production workflow. Update `build-and-deploy.yml`: (1) replace build job with Containerfile.fast + GHCR push + zstd, (2) replace deploy job with consolidated SSM (1 round, parallel), (3) split concurrency into build group (cancel-in-progress: true) and deploy group (cancel-in-progress: false), (4) remove Checkout frappe_docker + QEMU steps, (5) add provenance: false, (6) keep ALL post-deploy steps. | 3 |
+| B5 | VERIFY | Trigger a real deploy after swap. Monitor: (1) build <3 min, (2) deploy <2 min, (3) hq.bebang.ph responds, (4) assets load, (5) total <5 min. | 1 |
+| B6 | BUILD | Closeout: update plan YAML status, SPRINT_REGISTRY.md, `git add -f docs/plans/`, `git add -f output/l3/S105/`, commit and push. Update `/deploy-frappe` skill. Remove temporary push triggers from test workflows. | 2 |
 
-**Checkpoint:** After B2 (16 total units), write Phase A results (build time, image size, layer count, assets.json validation) to `output/l3/S105/checkpoint.md`. Verify build time <3 min before proceeding to B3.
+**HARD BLOCKER (B4):** All post-deploy steps MUST remain. Only the deploy round structure changes (3 rounds to 1 round) and the concurrency groups split.
 
-**HARD BLOCKER (B4):** When swapping, the deploy job and ALL post-deploy steps must remain IDENTICAL. Only the build job changes. Run `git diff` on the deploy job section — must have zero changes.
-
-**NOTE (B4):** After swap, `no-cache: false` is safe because:
-- Base layers (FROM frappe-base:v15) are static — no stale code risk
-- hrms layer is invalidated by `HRMS_SHA=${{ github.sha }}` — guaranteed fresh code
-- This is structurally different from the current monolithic `bench init` where caching = stale code
-
-**Rollback procedure (if fast build fails post-swap):**
-1. Revert the `build-and-deploy.yml` change: `git revert HEAD && git push`
-2. The next merge to production will use the old workflow (full build from upstream Containerfile)
-3. For immediate recovery: `docker service update --image samkarazi/bebang-erpnext-hrms:v15-<previous-sha> frappe_backend` (and all 6 services)
-4. Previous images are retained (4 most recent builds)
+**Rollback procedure:**
+1. `git revert HEAD && git push` — reverts workflow
+2. Next merge uses old workflow automatically
+3. For immediate recovery: `docker service update --image samkarazi/bebang-erpnext-hrms:v15-<previous-sha>` for all 6 services
 
 ## L3 Workflow Scenarios
 
 | User | Action | Expected Outcome | Failure Means |
 |------|--------|-------------------|---------------|
-| sam@bebang.ph | Run `build-base.yml` via workflow_dispatch | Base image builds and pushes with dated tag (~6 min) | Base Containerfile broken |
-| sam@bebang.ph | Run `build-fast.yml` via workflow_dispatch | Fast image builds in <3 min, pushes to `v15-fast-test` | Fast Containerfile broken |
-| sam@bebang.ph | Run `build-fast.yml` a second time | Build completes in ~2 min (GHA cache hit on base pull layer) | Cache not configured |
-| sam@bebang.ph | Pull `v15-fast-test` on EC2, run health check | Container starts, bench commands work, API responds, assets complete | Missing deps or broken bench |
-| sam@bebang.ph | Merge a PR to production after swap | Build step <3 min, deploy succeeds, hq.bebang.ph responds | Swap broke pipeline |
-| sam@bebang.ph | Verify build time in GHA logs | Build step <3 min (down from ~6 min) | Not effective |
-| sam@bebang.ph | Base staleness cron fires (weekly) | Issue opened if upstream HEAD changed | Cron broken |
+| sam@bebang.ph | Run build-fast.yml 5x with different SHAs | All 5 under 3 min, avg ~2.3 min | Build regression |
+| sam@bebang.ph | Run consolidated deploy SSM manually | All 6 services updated in <2 min, env vars set | Deploy consolidation broken |
+| sam@bebang.ph | Run full pipeline test (build+deploy) | Total <5 min, hq.bebang.ph responds | Pipeline integration issue |
+| sam@bebang.ph | Merge a PR after production swap | Build <3 min + deploy <2 min, total <5 min | Swap broke pipeline |
+| sam@bebang.ph | Merge 3 PRs within 1 min (batch test) | Only 1 build runs (others cancelled), 1 deploy | Concurrency groups broken |
+| sam@bebang.ph | Verify hq.bebang.ph after swap | API pong, assets load, no CSS 404 | Image or deploy broken |
 
-Evidence files required:
+Evidence files:
 ```
-output/l3/S105/build_timing.json       (before/after build times from GHA logs)
-output/l3/S105/image_manifest.json     (layer sizes, total size, Python/Node versions)
-output/l3/S105/deployment_verification.json  (EC2 health checks, bench doctor, API pong)
-output/l3/S105/checkpoint.md           (phase completion checkpoints)
+output/l3/S105/build_timing.json           (5 validation runs + production comparison)
+output/l3/S105/deploy_timing.json          (consolidated vs current deploy times)
+output/l3/S105/deployment_verification.json (EC2 health, Docker version, GHCR pull)
+output/l3/S105/checkpoint.md               (phase completion checkpoints)
 ```
 
 ## Autonomous Execution Contract
 
 ```yaml
 completion_condition:
-  - Phase A: Base image built and pushed with immutable tag, fast Containerfile tested
-  - Phase B: Fast build verified on EC2, production pipeline swapped
-  - Build step under 3 minutes for hrms-only changes (measured from GHA logs)
-  - Production deploy still works after swap (hq.bebang.ph responds)
-  - assets.json verified complete (frappe + erpnext + hrms entries)
-  - /deploy-frappe skill updated with new architecture and build times
-  - Plan YAML status updated to COMPLETED and pushed (git add -f docs/plans/)
-  - SPRINT_REGISTRY.md row updated to COMPLETED and pushed
-  - L3 evidence committed: git add -f output/l3/S105/
+  - Build step under 3 minutes (validated: 2.3 min avg across 5 runs)
+  - Deploy step under 2 minutes (consolidated SSM + parallel services)
+  - Total pipeline under 5 minutes (build + deploy)
+  - Back-to-back merges produce only 1 build (concurrency groups)
+  - Production deploy works after swap (hq.bebang.ph responds)
+  - /deploy-frappe skill updated with GHCR + new build times
+  - Plan YAML status updated to COMPLETED and pushed
+  - SPRINT_REGISTRY.md updated and pushed
+  - L3 evidence committed
 
 stop_only_for:
-  - Docker Hub credentials missing or expired
-  - Base image build fails due to upstream frappe_docker changes
-  - EC2 verification shows missing functionality in fast-built image
-  - pip install fails in backend stage due to missing C build tools (test before committing)
-  - bench build --app hrms produces incomplete assets.json
-  - Business decision: whether to accept slightly stale frappe/erpnext (base rebuilt manually)
-
-continue_without_pause_through:
-  - Phase A (base + fast build)
-  - Phase B (test + swap)
-  - closeout
+  - EC2 Docker version <25 (cannot pull zstd images)
+  - GHCR credentials issue on EC2
+  - Consolidated deploy breaks a post-deploy step
+  - hq.bebang.ph unresponsive after swap
+  - Business decision on GHCR vs Docker Hub for production
 
 blocker_policy:
   - programmatic -> fix and continue
-  - upstream Containerfile changed -> adapt Containerfile.base, continue
-  - pip install needs build tools -> add gcc/build-essential to Containerfile.fast, continue
-  - bench get-app shallow clone fails -> fall back to full clone, continue
+  - EC2 Docker <25 -> upgrade Docker, continue
+  - GHCR pull fails -> add credentials, continue
+  - consolidated deploy issue -> debug SSM, continue
   - repeated failure x3 -> STOP, present options
 
 max_turns: 30
@@ -294,15 +226,14 @@ signoff_authority: single-owner
 
 ## Agent Boot Sequence
 
-1. Read this plan fully (including both Audit Amendment sections).
+1. Read this plan fully (v4 amendment has validated results).
 2. **Create sprint branch:** `git fetch origin production && git checkout -b s105-docker-build-acceleration origin/production`. NEVER write code on production.
-3. Read `.github/workflows/build-and-deploy.yml` — understand current build pipeline (638 lines).
-4. Read `.github/helper/apps.json` — the 3 apps being built.
-5. Fetch the upstream Containerfile: `curl -s https://raw.githubusercontent.com/frappe/frappe_docker/main/images/custom/Containerfile` — understand the 3 stages (base -> builder -> backend). **CRITICAL:** Note upstream defaults have DIVERGED (Python 3.14, Node 24, version-16). BEI MUST pin 3.11.6/20.19.2/version-15.
-6. **DO NOT** use `bench get-app --depth 1` — that flag does not exist. Use `bench config set-common-config -c shallow_clone 1` instead.
-7. Start with Phase A (base image + fast Containerfile), checkpoint at 6 units, then proceed to Phase B (test + swap).
+3. Read `.github/workflows/build-and-deploy.yml` — understand current deploy steps (638 lines).
+4. Read `.github/docker/Containerfile.fast` on the s105 branch — the validated fast Containerfile.
+5. Read `output/continuous-improvement/s105-docker-fast-build/ITERATION_LOG.md` — understand what was tried and what works.
+6. Start with Phase A (deploy consolidation), then Phase B (EC2 verify + swap).
 
-**DO NOT** attempt to remove `CACHE_BUST` or `no-cache` from the existing workflow. These exist to prevent a known stale-code incident (2026-01-29). The pre-built base approach makes them unnecessary only AFTER the swap in Phase B4.
+**Build is already proven.** Do NOT re-test the Containerfile. Focus on deploy consolidation and production swap.
 
 ## Execution Authority
 
@@ -312,6 +243,6 @@ Only pause for items listed in the Autonomous Execution Contract `stop_only_for`
 
 ## Execution Workflow
 
-- Test workflow changes: trigger `workflow_dispatch` on the test workflow
-- Deploy changes: modify `build-and-deploy.yml` only in Phase B after verification
+- Deploy testing: run SSM commands manually first, then add to workflow
+- Production swap: modify `build-and-deploy.yml` in Phase B4 only after all verification passes
 - Full workflow: `/agent-kickoff`
