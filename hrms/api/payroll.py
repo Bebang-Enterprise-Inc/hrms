@@ -1285,10 +1285,12 @@ def get_payroll_dashboard(from_date: str | None = None, to_date: str | None = No
 	_check_hr_permission()
 
 	# Default to current month if dates not provided
+	# Cast to str because get_first_day returns datetime.date but downstream
+	# functions have str type annotations that Frappe validates at runtime.
 	if not from_date:
-		from_date = get_first_day(nowdate())
+		from_date = str(get_first_day(nowdate()))
 	if not to_date:
-		to_date = nowdate()
+		to_date = str(nowdate())
 
 	# Get processing status (latest payroll entry)
 	processing_status = get_payroll_processing_status()
