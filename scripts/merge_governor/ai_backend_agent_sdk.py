@@ -328,15 +328,26 @@ class AgentSDKBackend(ReviewBackend):
         from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
 
         try:
+            print(f"[{time.strftime('%H:%M:%S')}] Agent SDK health check starting (30s timeout)...", flush=True)
             result_msg = await asyncio.wait_for(
                 self._run_query(
                     "Reply with exactly: HEALTH_OK",
-                    ClaudeAgentOptions(allowed_tools=[], max_turns=1),
+                    ClaudeAgentOptions(allowed_tools=[], max_turns=1, max_budget_usd=0.01),
                 ),
-                timeout=15,
+                timeout=30,
             )
-            return result_msg is not None and "HEALTH_OK" in (result_msg.result or "")
+            ok = result_msg is not None and "HEALTH_OK" in (result_msg.result or "")
+            if ok:
+                print(f"[{time.strftime('%H:%M:%S')}] Agent SDK health check: OK", flush=True)
+            else:
+                result_text = (result_msg.result or "")[:100] if result_msg else "None"
+                print(f"[{time.strftime('%H:%M:%S')}] Agent SDK health check: FAILED (response: {result_text})", flush=True)
+            return ok
+        except asyncio.TimeoutError:
+            print(f"[{time.strftime('%H:%M:%S')}] Agent SDK health check: TIMEOUT (30s)", flush=True)
+            logger.warning("agent_sdk_health_failed", error="timeout")
         except Exception as e:
+            print(f"[{time.strftime('%H:%M:%S')}] Agent SDK health check: ERROR ({e})", flush=True)
             logger.warning("agent_sdk_health_failed", error=str(e))
         return False
 
