@@ -305,10 +305,17 @@ class MergeSerializer:
                 await self._handle_ci_failure(pr, failed_jobs)
                 return False
 
-            # status == "pending" — wait and poll again
+            # status == "pending" — wait and poll again (interruptible by stop event)
             elapsed = int(time.time() - start)
             print(f"[{time.strftime('%H:%M:%S')}] CI: pending ({elapsed}s elapsed, {int((timeout_s - elapsed)/60)}min remaining)", flush=True)
-            await asyncio.sleep(poll_s)
+            try:
+                if hasattr(self, '_stop_event') and self._stop_event:
+                    await asyncio.wait_for(self._stop_event.wait(), timeout=poll_s)
+                    return False  # Shutdown requested
+                else:
+                    await asyncio.sleep(poll_s)
+            except asyncio.TimeoutError:
+                pass  # Normal: timeout = poll again
 
         # Timeout
         logger.error("ci_timeout", pr=pr_num, timeout_s=timeout_s)
@@ -642,7 +649,14 @@ class MergeSerializer:
                     # Progress update every poll
                     print(f"[{time.strftime('%H:%M:%S')}] Deploy: {status} ({elapsed}s elapsed, {int((timeout_s - elapsed)/60)}min remaining)", flush=True)
 
-            await asyncio.sleep(poll_s)
+            try:
+                if hasattr(self, '_stop_event') and self._stop_event:
+                    await asyncio.wait_for(self._stop_event.wait(), timeout=poll_s)
+                    return False  # Shutdown requested
+                else:
+                    await asyncio.sleep(poll_s)
+            except asyncio.TimeoutError:
+                pass  # Normal: timeout = poll again
 
         elapsed = int(time.time() - start)
         logger.error("deploy_poll_exhausted", elapsed=elapsed)
@@ -1122,6 +1136,7 @@ class MergeSerializer:
 
     async def run(self, stop_event: asyncio.Event, interval: int = 30) -> None:
         """Run the merge processor loop."""
+        self._stop_event = stop_event  # Share with sub-methods for graceful shutdown
         logger.info("merge_serializer_started", interval=interval)
         while not stop_event.is_set():
             try:
