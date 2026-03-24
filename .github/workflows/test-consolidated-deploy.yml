@@ -1,0 +1,249 @@
+name: "[S105] Test Consolidated Deploy"
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-southeast-1
+  EC2_INSTANCE_ID: i-026b7477d27bd46d6
+  GHCR_IMAGE: ghcr.io/bebang-enterprise-inc/bebang-erpnext-hrms
+  DOCKER_TAG: v15-fast-test
+  FRAPPE_SITE: hrms.bebang.ph
+  SUPABASE_URL: https://csnniykjrychgajfrgua.supabase.co
+
+jobs:
+  record-baseline:
+    name: Record rollback baseline
+    runs-on: ubuntu-latest
+    outputs:
+      current_image: ${{ steps.baseline.outputs.current_image }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Record current image for rollback
+        id: baseline
+        run: |
+          set -euo pipefail
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters '{"commands":["docker service inspect frappe_backend --format \"{{.Spec.TaskTemplate.ContainerSpec.Image}}\""],"executionTimeout":["30"]}' \
+            --output text --query 'Command.CommandId')
+          bash .github/helper/ssm_wait_and_assert.sh "$COMMAND_ID" "${{ env.EC2_INSTANCE_ID }}" "record baseline" 5 30
+          CURRENT_IMAGE=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" --instance-id "${{ env.EC2_INSTANCE_ID }}" \
+            --query 'StandardOutputContent' --output text | tr -d '[:space:]')
+          echo "current_image=$CURRENT_IMAGE" >> $GITHUB_OUTPUT
+          echo "Current running image: $CURRENT_IMAGE"
+
+  test-deploy:
+    name: Consolidated Deploy Test
+    runs-on: ubuntu-latest
+    needs: [record-baseline]
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Consolidated deploy (GHCR auth + pull + services + env vars)
+        id: deploy
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SUPABASE_SRK: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GH_TOKEN_FOR_EC2: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          DEPLOY_IMAGE="${{ env.GHCR_IMAGE }}:${{ env.DOCKER_TAG }}"
+          DEPLOY_START=$(date +%s)
+
+          # Write the deploy script to a temp file to avoid SSM JSON escaping hell
+          cat > /tmp/deploy_script.sh << 'DEPLOY_SCRIPT'
+          #!/bin/bash
+          set -e
+          DEPLOY_IMAGE="$1"
+          SENTRY_DSN="$2"
+          SUPABASE_URL="$3"
+          SUPABASE_KEY="$4"
+          GH_TOKEN="$5"
+
+          echo "Authenticating to GHCR..."
+          echo "$GH_TOKEN" | docker login ghcr.io -u github-actions --password-stdin
+
+          echo "Pulling image: $DEPLOY_IMAGE"
+          docker pull "$DEPLOY_IMAGE"
+
+          echo "Starting consolidated service updates (parallel dispatch)..."
+          for svc in backend queue-short queue-long scheduler; do
+            docker service update --detach=true --update-failure-action=rollback \
+              --image "$DEPLOY_IMAGE" \
+              --env-add "SENTRY_DSN=$SENTRY_DSN" \
+              --env-add "SUPABASE_URL=$SUPABASE_URL" \
+              --env-add "SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_KEY" \
+              "frappe_$svc"
+          done
+          for svc in frontend websocket; do
+            docker service update --detach=true --update-failure-action=rollback \
+              --image "$DEPLOY_IMAGE" "frappe_$svc"
+          done
+
+          echo "Waiting for all services to converge..."
+          for svc in backend frontend websocket queue-short queue-long scheduler; do
+            echo "Waiting for frappe_$svc..."
+            docker service update --detach=false "frappe_$svc"
+          done
+
+          docker service ls
+          echo "All services converged!"
+          DEPLOY_SCRIPT
+
+          # Base64 encode the script and pass via SSM
+          SCRIPT_B64=$(base64 -w0 /tmp/deploy_script.sh)
+
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "{\"commands\":[\"echo $SCRIPT_B64 | base64 -d > /tmp/deploy_script.sh\",\"chmod +x /tmp/deploy_script.sh\",\"bash /tmp/deploy_script.sh '$DEPLOY_IMAGE' '$SENTRY_DSN' '${{ env.SUPABASE_URL }}' '$SUPABASE_SRK' '$GH_TOKEN_FOR_EC2'\"],\"executionTimeout\":[\"600\"]}" \
+            --output text --query 'Command.CommandId')
+          echo "Deploy Command ID: $COMMAND_ID"
+          bash .github/helper/ssm_wait_and_assert.sh "$COMMAND_ID" "${{ env.EC2_INSTANCE_ID }}" "consolidated deploy" 15 80
+
+          DEPLOY_END=$(date +%s)
+          DEPLOY_DURATION=$((DEPLOY_END - DEPLOY_START))
+          echo "Deploy duration: ${DEPLOY_DURATION}s"
+          echo "deploy_duration=$DEPLOY_DURATION" >> $GITHUB_OUTPUT
+
+      - name: Fix nginx site header
+        run: |
+          set -euo pipefail
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters '{"commands":["FRONTEND_CONTAINER=$(docker ps --filter name=frappe_frontend --format \"{{.Names}}\" | head -1)","if [ -n \"$FRONTEND_CONTAINER\" ]; then","  docker exec $FRONTEND_CONTAINER sed -i \"s/X-Frappe-Site-Name frontend/X-Frappe-Site-Name hrms.bebang.ph/g\" /etc/nginx/conf.d/frappe.conf","  docker exec $FRONTEND_CONTAINER nginx -s reload","  echo \"Nginx site header fixed\"","else","  echo \"Frontend container not found\"","  exit 1","fi"],"executionTimeout":["60"]}' \
+            --output text --query 'Command.CommandId')
+          bash .github/helper/ssm_wait_and_assert.sh "$COMMAND_ID" "${{ env.EC2_INSTANCE_ID }}" "fix nginx" 10 40
+
+      - name: Configure Blip webhook proxy
+        run: |
+          set -euo pipefail
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters '{"commands":["FRONTEND_CONTAINER=$(docker ps --filter name=frappe_frontend --format \"{{.Names}}\" | head -1)","if [ -z \"$FRONTEND_CONTAINER\" ]; then echo \"Frontend not found\"; exit 1; fi","cat > /tmp/add_blip_nginx.py << PYEOF","import re","with open(\"/etc/nginx/conf.d/frappe.conf\", \"r\") as f:","    content = f.read()","blip_block = \"\"\"","\\tlocation /webhook/gchat {","\\t\\tproxy_http_version 1.1;","\\t\\tproxy_set_header Host $host;","\\t\\tproxy_set_header X-Real-IP $remote_addr;","\\t\\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;","\\t\\tproxy_set_header X-Forwarded-Proto $scheme;","\\t\\tproxy_pass http://172.17.0.1:8766/webhook/gchat;","\\t}","\"\"\"","if \"location /webhook/gchat\" not in content:","    content = content.replace(\"location /socket.io\", blip_block + \"\\n\\tlocation /socket.io\")","    with open(\"/etc/nginx/conf.d/frappe.conf\", \"w\") as f:","        f.write(content)","    print(\"Added Blip location block\")","else:","    print(\"Blip location block already exists\")","PYEOF","docker cp /tmp/add_blip_nginx.py $FRONTEND_CONTAINER:/tmp/","docker exec $FRONTEND_CONTAINER python3 /tmp/add_blip_nginx.py","docker exec $FRONTEND_CONTAINER nginx -t","docker exec $FRONTEND_CONTAINER nginx -s reload","echo \"Blip proxy configured\""],"executionTimeout":["60"]}' \
+            --output text --query 'Command.CommandId')
+          bash .github/helper/ssm_wait_and_assert.sh "$COMMAND_ID" "${{ env.EC2_INSTANCE_ID }}" "blip proxy" 10 40
+
+      - name: Run migrations
+        run: |
+          set -euo pipefail
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters '{"commands":["BACKEND_CONTAINER=$(docker ps --filter name=frappe_backend --format \"{{.Names}}\" | head -1)","if [ -z \"$BACKEND_CONTAINER\" ]; then echo \"Backend not found\"; exit 1; fi","docker exec $BACKEND_CONTAINER /home/frappe/frappe-bench/env/bin/pip install -q \"setuptools<71\"","docker exec $BACKEND_CONTAINER bench --site hrms.bebang.ph migrate","docker exec $BACKEND_CONTAINER bench --site hrms.bebang.ph clear-cache","echo \"Migration complete\""],"executionTimeout":["300"]}' \
+            --output text --query 'Command.CommandId')
+          bash .github/helper/ssm_wait_and_assert.sh "$COMMAND_ID" "${{ env.EC2_INSTANCE_ID }}" "migrations" 15 80
+
+      - name: Sync assets to frontend
+        run: |
+          set -euo pipefail
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters '{"commands":["BACKEND_CONTAINER=$(docker ps --filter name=frappe_backend --format \"{{.Names}}\" | head -1)","FRONTEND_CONTAINER=$(docker ps --filter name=frappe_frontend --format \"{{.Names}}\" | head -1)","if [ -z \"$BACKEND_CONTAINER\" ] || [ -z \"$FRONTEND_CONTAINER\" ]; then echo \"Container not found\"; exit 1; fi","TMP=/tmp/frappe-assets-sync.tar.gz","rm -f $TMP","docker exec $BACKEND_CONTAINER sh -lc \"cd /home/frappe/frappe-bench/sites/assets && tar czf - frappe erpnext hrms assets.json\" > $TMP","if [ ! -s $TMP ]; then echo \"Asset archive empty\"; exit 1; fi","docker exec -i $FRONTEND_CONTAINER sh -lc \"cd /home/frappe/frappe-bench/sites/assets && tar xzf -\" < $TMP","rm -f $TMP","echo \"Assets synced\""],"executionTimeout":["120"]}' \
+            --output text --query 'Command.CommandId')
+          bash .github/helper/ssm_wait_and_assert.sh "$COMMAND_ID" "${{ env.EC2_INSTANCE_ID }}" "asset sync" 10 40
+
+      - name: Flush Redis
+        run: |
+          set -euo pipefail
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters '{"commands":["docker exec $(docker ps --filter name=frappe_redis-cache --format \"{{.Names}}\" | head -1) redis-cli FLUSHALL","docker exec $(docker ps --filter name=frappe_redis-queue --format \"{{.Names}}\" | head -1) redis-cli FLUSHALL","echo \"Redis flushed\""],"executionTimeout":["60"]}' \
+            --output text --query 'Command.CommandId')
+          bash .github/helper/ssm_wait_and_assert.sh "$COMMAND_ID" "${{ env.EC2_INSTANCE_ID }}" "redis flush" 10 40
+
+      - name: Verify API
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 24); do
+            RESPONSE=$(curl -fsS "https://hq.bebang.ph/api/method/frappe.ping" || true)
+            if echo "$RESPONSE" | grep -q '"pong"'; then
+              echo "API responding: $RESPONSE"
+              exit 0
+            fi
+            echo "Attempt $i/24: not ready"
+            sleep 5
+          done
+          echo "API did not return pong" >&2
+          exit 1
+
+      - name: Verify login page assets
+        run: |
+          set -euo pipefail
+          LOGIN_HTML=$(curl -fsSL https://hq.bebang.ph/login)
+          ASSET_URLS=$(printf '%s' "$LOGIN_HTML" | grep -oE '/assets/[^" )>]+' | sort -u || true)
+          if [ -z "$ASSET_URLS" ]; then echo "No assets found" >&2; exit 1; fi
+          echo "$ASSET_URLS" | head -10 | while IFS= read -r url; do
+            [ -n "$url" ] || continue
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hq.bebang.ph$url")
+            if [ "$CODE" = "200" ]; then echo "OK: $url"
+            else echo "FAIL $CODE: $url" >&2; exit 1; fi
+          done
+
+      - name: Timing summary
+        if: always()
+        run: |
+          echo "## S105 Consolidated Deploy Test" >> $GITHUB_STEP_SUMMARY
+          echo "- Deploy: ${{ steps.deploy.outputs.deploy_duration }}s" >> $GITHUB_STEP_SUMMARY
+          echo "- Baseline: ${{ needs.record-baseline.outputs.current_image }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Image: ${{ env.GHCR_IMAGE }}:${{ env.DOCKER_TAG }}" >> $GITHUB_STEP_SUMMARY
+
+  rollback-on-failure:
+    name: Rollback if failed
+    runs-on: ubuntu-latest
+    needs: [record-baseline, test-deploy]
+    if: failure()
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Rollback to baseline
+        env:
+          BASELINE: ${{ needs.record-baseline.outputs.current_image }}
+        run: |
+          set -euo pipefail
+          echo "Rolling back to: $BASELINE"
+
+          cat > /tmp/rollback.sh << 'ROLLBACK_SCRIPT'
+          #!/bin/bash
+          set -e
+          BASELINE="$1"
+          for svc in backend frontend websocket queue-short queue-long scheduler; do
+            docker service update --detach=true --update-failure-action=rollback --image "$BASELINE" "frappe_$svc"
+          done
+          for svc in backend frontend websocket queue-short queue-long scheduler; do
+            docker service update --detach=false "frappe_$svc"
+          done
+          echo "Rollback complete"
+          ROLLBACK_SCRIPT
+
+          SCRIPT_B64=$(base64 -w0 /tmp/rollback.sh)
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids "${{ env.EC2_INSTANCE_ID }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "{\"commands\":[\"echo $SCRIPT_B64 | base64 -d > /tmp/rollback.sh\",\"chmod +x /tmp/rollback.sh\",\"bash /tmp/rollback.sh '$BASELINE'\"],\"executionTimeout\":[\"600\"]}" \
+            --output text --query 'Command.CommandId')
+          bash .github/helper/ssm_wait_and_assert.sh "$COMMAND_ID" "${{ env.EC2_INSTANCE_ID }}" "rollback" 15 80
