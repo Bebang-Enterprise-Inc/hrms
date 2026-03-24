@@ -27,7 +27,7 @@ class BEIItemRequest(Document):
             frappe.throw(_("Only Draft requests can be submitted for approval"))
 
         self.status = "Pending CPO Approval"
-        self.save()
+        self.save(ignore_permissions=True)
 
         # Notify CPO
         from hrms.hr.doctype.bei_settings.bei_settings import get_procurement_settings
@@ -122,7 +122,7 @@ class BEIItemRequest(Document):
         self.status = "Approved"
         self.approved_by = frappe.session.user
         self.approved_date = now_datetime()
-        self.save()
+        self.save(ignore_permissions=True)
 
         frappe.db.commit()
         return {
@@ -152,6 +152,6 @@ class BEIItemRequest(Document):
         self.approved_by = frappe.session.user
         self.approved_date = now_datetime()
         self.rejection_reason = reason
-        self.save()
+        self.save(ignore_permissions=True)
 
         return {"success": True, "status": "Rejected"}
