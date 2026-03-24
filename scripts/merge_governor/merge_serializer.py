@@ -257,6 +257,8 @@ class MergeSerializer:
                 return False
 
             # status == "pending" — wait and poll again
+            elapsed = int(time.time() - start)
+            print(f"[{time.strftime('%H:%M:%S')}] CI: pending ({elapsed}s elapsed, {int((timeout_s - elapsed)/60)}min remaining)", flush=True)
             await asyncio.sleep(poll_s)
 
         # Timeout
@@ -539,14 +541,16 @@ class MergeSerializer:
         logger.info("deploy_triggered")
         return True
 
-    async def _wait_for_deploy(self, timeout_s: float = 900) -> bool:
-        """Poll GHA workflow status. Timeout starts from in_progress, not invocation."""
+    async def _wait_for_deploy(self, timeout_s: float = 1800, poll_s: float = 180) -> bool:
+        """Poll GHA workflow status every 3 min, timeout 30 min."""
         logger.info("waiting_for_deploy")
+        print(f"[{time.strftime('%H:%M:%S')}] Deploy: waiting (poll every {int(poll_s)}s, timeout {int(timeout_s/60)}min)...", flush=True)
         await asyncio.sleep(10)  # Initial wait for workflow to register
 
         in_progress_at: float | None = None
+        start = time.time()
 
-        for _ in range(int(timeout_s / 15)):
+        while time.time() - start < timeout_s:
             proc = await asyncio.create_subprocess_exec(
                 "gh", "run", "list",
                 "--repo", REPO,
@@ -564,27 +568,30 @@ class MergeSerializer:
                     run = runs[0]
                     status = run.get("status", "")
                     conclusion = run.get("conclusion", "")
+                    elapsed = int(time.time() - start)
 
                     if status == "completed":
                         if conclusion == "success":
                             logger.info("deploy_succeeded")
+                            print(f"[{time.strftime('%H:%M:%S')}] Deploy: SUCCESS ({elapsed}s)", flush=True)
                             return True
                         else:
                             logger.error("deploy_failed", conclusion=conclusion)
+                            print(f"[{time.strftime('%H:%M:%S')}] Deploy: FAILED ({conclusion}, {elapsed}s)", flush=True)
                             return False
 
                     if status == "in_progress" and in_progress_at is None:
                         in_progress_at = time.time()
                         logger.info("deploy_in_progress")
 
-                    # Check timeout from in_progress, not invocation
-                    if in_progress_at and (time.time() - in_progress_at) > timeout_s:
-                        logger.error("deploy_timeout", elapsed=time.time() - in_progress_at)
-                        return False
+                    # Progress update every poll
+                    print(f"[{time.strftime('%H:%M:%S')}] Deploy: {status} ({elapsed}s elapsed, {int((timeout_s - elapsed)/60)}min remaining)", flush=True)
 
-            await asyncio.sleep(15)
+            await asyncio.sleep(poll_s)
 
-        logger.error("deploy_poll_exhausted")
+        elapsed = int(time.time() - start)
+        logger.error("deploy_poll_exhausted", elapsed=elapsed)
+        print(f"[{time.strftime('%H:%M:%S')}] Deploy: TIMEOUT after {elapsed}s", flush=True)
         return False
 
     async def _l1_smoke_test(self) -> bool:
