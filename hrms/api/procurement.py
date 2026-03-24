@@ -6087,7 +6087,8 @@ def approve_price_change(name, comment=None):
     set_backend_observability_context(module="procurement", action="approve_price_change",
                                      mutation_type="update")
 
-    pcr = frappe.get_doc("BEI Price Change Request", name)
+    # CPO identity check is inside the method — bypass DocType permission
+    pcr = frappe.get_doc("BEI Price Change Request", name, ignore_permissions=True)
     return pcr.approve(comment)
 
 
@@ -6098,7 +6099,7 @@ def reject_price_change(name, reason=None):
     set_backend_observability_context(module="procurement", action="reject_price_change",
                                      mutation_type="update")
 
-    pcr = frappe.get_doc("BEI Price Change Request", name)
+    pcr = frappe.get_doc("BEI Price Change Request", name, ignore_permissions=True)
     return pcr.reject(reason)
 
 
@@ -6129,7 +6130,7 @@ def request_new_item(data=None):
             "contracted_unit_cost", "cost_justification", "supporting_document", "supplier"
         ]}
     })
-    item_request.insert()
+    item_request.insert(ignore_permissions=True)
     item_request.submit_for_approval()
 
     return {"success": True, "name": item_request.name, "status": item_request.status}
@@ -6142,7 +6143,7 @@ def approve_item_request(name):
     set_backend_observability_context(module="procurement", action="approve_item_request",
                                      mutation_type="create")
 
-    item_req = frappe.get_doc("BEI Item Request", name)
+    item_req = frappe.get_doc("BEI Item Request", name, ignore_permissions=True)
     return item_req.approve()
 
 
@@ -6153,7 +6154,7 @@ def reject_item_request(name, reason=None):
     set_backend_observability_context(module="procurement", action="reject_item_request",
                                      mutation_type="update")
 
-    item_req = frappe.get_doc("BEI Item Request", name)
+    item_req = frappe.get_doc("BEI Item Request", name, ignore_permissions=True)
     return item_req.reject(reason)
 
 
