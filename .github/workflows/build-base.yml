@@ -1,0 +1,90 @@
+name: Build Base Image (frappe + erpnext + payments)
+
+# Manual trigger only — run when upstream frappe/erpnext/payments need updating
+on:
+  workflow_dispatch:
+    inputs:
+      tag_suffix:
+        description: 'Tag suffix (default: YYYYMMDD date)'
+        required: false
+        default: ''
+        type: string
+
+env:
+  DOCKER_IMAGE: samkarazi/frappe-base
+  DOCKER_TAG: v15
+
+jobs:
+  build-base:
+    name: Build Base Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Checkout frappe_docker (build context)
+        uses: actions/checkout@v4
+        with:
+          repository: frappe/frappe_docker
+          path: frappe_docker
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate image tags
+        id: tags
+        run: |
+          DATE_TAG=$(date +%Y%m%d)
+          if [ -n "${{ github.event.inputs.tag_suffix }}" ]; then
+            DATE_TAG="${{ github.event.inputs.tag_suffix }}"
+          fi
+          echo "date_tag=$DATE_TAG" >> $GITHUB_OUTPUT
+
+          # Record upstream SHAs for staleness tracking
+          FRAPPE_SHA=$(git ls-remote https://github.com/frappe/frappe.git version-15 | cut -f1 | head -c7)
+          ERPNEXT_SHA=$(git ls-remote https://github.com/frappe/erpnext.git version-15 | cut -f1 | head -c7)
+          PAYMENTS_SHA=$(git ls-remote https://github.com/frappe/payments.git version-15 | cut -f1 | head -c7)
+          echo "frappe_sha=$FRAPPE_SHA" >> $GITHUB_OUTPUT
+          echo "erpnext_sha=$ERPNEXT_SHA" >> $GITHUB_OUTPUT
+          echo "payments_sha=$PAYMENTS_SHA" >> $GITHUB_OUTPUT
+          echo "📌 Base image tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-$DATE_TAG, ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}"
+          echo "📦 Upstream SHAs: frappe=$FRAPPE_SHA, erpnext=$ERPNEXT_SHA, payments=$PAYMENTS_SHA"
+
+      - name: Build and push base image
+        uses: docker/build-push-action@v6
+        with:
+          context: frappe_docker
+          file: .github/docker/Containerfile.base
+          push: true
+          platforms: linux/amd64
+          provenance: false
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+            ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.date_tag }}
+          build-args: |
+            PYTHON_VERSION=3.11.6
+            NODE_VERSION=20.19.2
+            FRAPPE_BRANCH=version-15
+          cache-from: type=gha,scope=base-image
+          cache-to: type=gha,scope=base-image,mode=max
+          labels: |
+            org.opencontainers.image.title=BEI Frappe Base
+            org.opencontainers.image.description=Pre-built base with frappe+erpnext+payments v15
+            bei.base-image=true
+            bei.frappe-sha=${{ steps.tags.outputs.frappe_sha }}
+            bei.erpnext-sha=${{ steps.tags.outputs.erpnext_sha }}
+            bei.payments-sha=${{ steps.tags.outputs.payments_sha }}
+
+      - name: Output image info
+        run: |
+          echo "✅ Base image built and pushed!"
+          echo "📦 Immutable: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}-${{ steps.tags.outputs.date_tag }}"
+          echo "📦 Floating:  ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}"
+          echo "📦 Upstream:  frappe=${{ steps.tags.outputs.frappe_sha }} erpnext=${{ steps.tags.outputs.erpnext_sha }} payments=${{ steps.tags.outputs.payments_sha }}"

@@ -1,0 +1,71 @@
+# Containerfile.fast — Adds ONLY hrms on top of pre-built base
+# Base: samkarazi/frappe-base:v15 (frappe + erpnext + payments pre-installed)
+# Output: samkarazi/bebang-erpnext-hrms:v15 (production image)
+#
+# Build time target: <3 min (vs ~6 min for full rebuild)
+#
+# CRITICAL: HRMS_SHA must be passed as a build arg on every build.
+# Without it, Docker caches the bench get-app layer and serves stale code.
+
+ARG BASE_IMAGE=samkarazi/frappe-base:v15
+FROM ${BASE_IMAGE} AS backend
+
+USER root
+
+# Install build tools needed for pip install of C-extension deps
+# (base/backend stage has git/node/yarn but NOT gcc/build-essential)
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+    gcc \
+    build-essential \
+    libmariadb-dev \
+    libffi-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+USER frappe
+WORKDIR /home/frappe/frappe-bench
+
+# Enable shallow clones for bench get-app (--depth flag does NOT exist)
+RUN bench config set-common-config -c shallow_clone 1
+
+# ─── HRMS layer (cache-busted on every merge) ────────────────────────────────
+# HRMS_SHA changes on every commit, invalidating only this layer and below.
+# Everything above (base image pull, gcc install) stays cached.
+ARG HRMS_SHA
+RUN bench get-app https://github.com/Bebang-Enterprise-Inc/hrms.git --branch production \
+    && echo "hrms_sha=${HRMS_SHA}"
+
+# Build ONLY hrms assets (not all apps — saves ~3-5 min)
+RUN --mount=type=cache,target=/home/frappe/.cache/pip \
+    cd /home/frappe/frappe-bench \
+    && ./env/bin/pip install -e apps/hrms \
+    && bench build --app hrms
+
+# Clean up build tools to reduce final image size
+USER root
+RUN apt-get purge -y gcc build-essential \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+USER frappe
+WORKDIR /home/frappe/frappe-bench
+
+VOLUME [ \
+  "/home/frappe/frappe-bench/sites", \
+  "/home/frappe/frappe-bench/sites/assets", \
+  "/home/frappe/frappe-bench/logs" \
+]
+
+CMD [ \
+  "/home/frappe/frappe-bench/env/bin/gunicorn", \
+  "--chdir=/home/frappe/frappe-bench/sites", \
+  "--bind=0.0.0.0:8000", \
+  "--threads=4", \
+  "--workers=2", \
+  "--worker-class=gthread", \
+  "--worker-tmp-dir=/dev/shm", \
+  "--timeout=120", \
+  "--preload", \
+  "frappe.app:application" \
+]
