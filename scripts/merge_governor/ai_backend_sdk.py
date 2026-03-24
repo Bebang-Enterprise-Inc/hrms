@@ -198,7 +198,7 @@ class SDKBackend(ReviewBackend):
 				raw_response=str(e),
 			)
 
-	async def chat(self, message: str, state: GovernorState) -> str:
+	async def chat(self, message: str, state: GovernorState, pipeline_summary: str = "") -> str:
 		"""Multi-turn chat with persistent conversation history."""
 		client = self._get_client()
 
@@ -222,6 +222,8 @@ class SDKBackend(ReviewBackend):
 		if state.merge_history:
 			recent = state.merge_history[-3:]
 			context_lines.append(f"Recent merges: {[m.get('number') for m in recent]}")
+		if pipeline_summary:
+			context_lines.append(f"\n[Live Pipeline]\n{pipeline_summary}")
 
 		context_block = "\n".join(context_lines)
 

@@ -116,7 +116,7 @@ class CLIBackend(ReviewBackend):
                 raw_response=str(e),
             )
 
-    async def chat(self, message: str, state: "GovernorState") -> str:
+    async def chat(self, message: str, state: "GovernorState", pipeline_summary: str = "") -> str:
         if not self._available:
             raise RuntimeError("CLI backend unavailable")
 

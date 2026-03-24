@@ -57,7 +57,7 @@ class ReviewBackend(abc.ABC):
         """
 
     @abc.abstractmethod
-    async def chat(self, message: str, state: "GovernorState") -> str:
+    async def chat(self, message: str, state: "GovernorState", pipeline_summary: str = "") -> str:
         """Handle a natural language chat message from the operator."""
 
     @abc.abstractmethod
