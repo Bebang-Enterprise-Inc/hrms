@@ -60,7 +60,7 @@ Every fix maps to a real operator pain point at 500+ employee scale:
 | UX-4 | Remittances YTD shows info banner when all months are zero | [ ] |
 | UX-5 | Disabled Export shows tooltip explaining why | [ ] |
 | UX-6 | Mobile step indicators show abbreviated labels | [ ] |
-| UX-7 | "Full" column renamed to "Issues" or "Status" | [ ] |
+| UX-7 | ~~REMOVED — column already says "Issue" in source~~ | N/A |
 
 ---
 
@@ -100,7 +100,7 @@ Every fix maps to a real operator pain point at 500+ employee scale:
 - `payroll/page.tsx` (S113 landing — S117 owns)
 - `current-cutoff/page.tsx`, `review-output/page.tsx`, `history/page.tsx` (S113)
 - `compensation-setup/page.tsx`, `sensitive-changes/page.tsx` (S114)
-- `hr-payroll.ts` query layer (extend types only if needed)
+- `hr-payroll.ts` query layer — extend `ProcessingBlockers` interface with `grouped_summary` field
 - `roles.ts`, `constants.ts`
 
 ---
@@ -150,8 +150,9 @@ Every fix maps to a real operator pain point at 500+ employee scale:
 - [ ] 1u — Add **sort** by employee name (A-Z/Z-A) and department:
   - Column headers clickable for sort toggle
 
-- [ ] 1u — Fix the **"Full" column header** — rename to "Issues":
-  - Column shows issue messages, not a "Full" status
+- [ ] 1u — **Update `ProcessingBlockers` interface** in `hr-payroll.ts`:
+  - Add `grouped_summary: Array<{issue_type: string, message: string, severity: string, count: number}>` to the interface
+  - This is REQUIRED for type-safe access to the new backend field
 
 - [ ] 1u — Add **total counts bar** above the table:
   - "516 total | 483 blocked (critical) | 33 blocked (no SSA) | 54 missing bank (warning)"
@@ -253,7 +254,11 @@ completion_condition:
   - all L3 scenarios pass with real browser interactions
   - npm run build passes on bei-tasks
   - Sentry context on modified backend endpoint
-  - plan YAML → COMPLETED, registry updated, pushed to production
+  - output/l3/S118/form_submissions.json exists with real form data
+  - output/l3/S118/api_mutations.json exists with captured API calls
+  - output/l3/S118/state_verification.json exists
+  - git add -f output/l3/S118/ && git push (release manager gate requires this)
+  - plan YAML → COMPLETED, registry updated, pushed to production (git add -f docs/plans/)
 stop_only_for:
   - missing credentials/access
   - genuine business-policy decision
@@ -265,6 +270,7 @@ blocker_policy:
   - S117 file conflict → rebase and continue
   - business-data/policy → pause
 signoff_authority: single-owner (Sam Karazi)
+governor_protocol: standard (per /execute-plan-bei-erp — REJECT→fix+push, NEEDS_FIX→apply+push, Merge Conflict→rebase+force-push, Deploy Failure→check logs+fix)
 ```
 
 ---
