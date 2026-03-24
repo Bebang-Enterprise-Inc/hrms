@@ -83,9 +83,14 @@ class MergeSerializer:
         if not state.merge_queue:
             return
 
-        self.pipeline_started_at = time.time()
-        self._set_pipeline("processing", "starting", state.merge_queue[0])
-        print(f"[{time.strftime('%H:%M:%S')}] Queue: processing PR #{state.merge_queue[0]} ({len(state.merge_queue)} in queue)", flush=True)
+        # Only reset pipeline timer when starting a NEW PR (not re-processing same one)
+        next_pr = state.merge_queue[0]
+        if self.pipeline_pr != next_pr:
+            self.pipeline_started_at = time.time()
+        elif self.pipeline_started_at == 0.0:
+            self.pipeline_started_at = time.time()
+        self._set_pipeline("processing", "starting", next_pr)
+        print(f"[{time.strftime('%H:%M:%S')}] Queue: processing PR #{next_pr} ({len(state.merge_queue)} in queue)", flush=True)
 
         pr_num = state.merge_queue[0]
         pr_key = str(pr_num)
