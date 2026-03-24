@@ -20,7 +20,6 @@ from hrms.utils.labor_plan_templates import apply_template_to_employees, get_tem
 from hrms.utils.store_shift_config import get_shift_options_for_store
 from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.supply_chain_contracts import get_preferred_commissary_warehouses
-from hrms.utils.sentry import set_backend_observability_context
 
 TRANSFER_REQUEST_DOCTYPE = "BEI Transfer Request"
 SCHEDULE_SOURCE = "BEI_WEEKLY_LABOR_PLAN"
