@@ -1,0 +1,276 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "BSCR-.YYYY.-.#####",
+ "creation": "2026-03-24 10:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee",
+  "employee_name",
+  "branch",
+  "column_break_info",
+  "status",
+  "submission_date",
+  "section_change",
+  "field_name",
+  "old_value",
+  "column_break_change",
+  "new_value",
+  "effective_date",
+  "section_justification",
+  "reason",
+  "proof_attachment",
+  "column_break_justification",
+  "exception_justification",
+  "section_actors",
+  "initiated_by",
+  "initiator_role",
+  "column_break_actors",
+  "hr_verifier",
+  "finance_approver",
+  "hr_activator",
+  "activated_date",
+  "section_rejection",
+  "rejection_reason",
+  "section_audit",
+  "audit_log"
+ ],
+ "fields": [
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "employee.branch",
+   "fieldname": "branch",
+   "fieldtype": "Data",
+   "in_standard_filter": 1,
+   "label": "Branch",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_info",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nPending HR Verification\nPending Finance Approval\nFinance Approved\nPending HR Activation\nActive\nRejected"
+  },
+  {
+   "default": "Now",
+   "fieldname": "submission_date",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Submission Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_change",
+   "fieldtype": "Section Break",
+   "label": "Sensitive Field Change"
+  },
+  {
+   "fieldname": "field_name",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Field Changed",
+   "options": "bank_name\nbank_ac_no\ntin_number\nsss_number\nphilhealth_number\npagibig_number",
+   "reqd": 1
+  },
+  {
+   "fieldname": "old_value",
+   "fieldtype": "Data",
+   "label": "Old Value",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_change",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "new_value",
+   "fieldtype": "Data",
+   "label": "New Value",
+   "reqd": 1
+  },
+  {
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Effective Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_justification",
+   "fieldtype": "Section Break",
+   "label": "Justification"
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Small Text",
+   "label": "Reason",
+   "reqd": 1
+  },
+  {
+   "fieldname": "proof_attachment",
+   "fieldtype": "Attach",
+   "label": "Proof Attachment"
+  },
+  {
+   "fieldname": "column_break_justification",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.exception_justification",
+   "description": "Required when effective date is within or before the current payroll cutoff",
+   "fieldname": "exception_justification",
+   "fieldtype": "Small Text",
+   "label": "Exception Justification"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_actors",
+   "fieldtype": "Section Break",
+   "label": "Approval Chain"
+  },
+  {
+   "fieldname": "initiated_by",
+   "fieldtype": "Link",
+   "label": "Initiated By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "initiator_role",
+   "fieldtype": "Data",
+   "label": "Initiator Role",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_actors",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_verifier",
+   "fieldtype": "Link",
+   "label": "HR Verifier",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "finance_approver",
+   "fieldtype": "Link",
+   "label": "Finance Approver",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hr_activator",
+   "fieldtype": "Link",
+   "label": "HR Activator",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "activated_date",
+   "fieldtype": "Datetime",
+   "label": "Activated Date",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_rejection",
+   "fieldtype": "Section Break",
+   "label": "Rejection"
+  },
+  {
+   "fieldname": "rejection_reason",
+   "fieldtype": "Small Text",
+   "label": "Rejection Reason"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_audit",
+   "fieldtype": "Section Break",
+   "label": "Audit Trail"
+  },
+  {
+   "fieldname": "audit_log",
+   "fieldtype": "Table",
+   "label": "Audit Log",
+   "options": "BEI Sensitive Change Audit Log",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-03-24 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Sensitive Change Request",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR User",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Employee",
+   "write": 0
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
