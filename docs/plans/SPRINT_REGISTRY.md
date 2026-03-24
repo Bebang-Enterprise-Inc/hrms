@@ -107,12 +107,20 @@ These documents contain sprint-like naming but are not part of the canonical seq
 | `S109` | Sprint 109 | `s109-procurement-full-audit` | — | PLANNED — Full procurement module hardening: Sentry for 93 endpoints, comprehensive L1/L2/L3 audit of all 107 endpoints + 36 pages, fix all bugs. | — |
 | `S110` | Sprint 110 | `s108-leave-type-validation` | #339 (hrms), #235 (bei-tasks) | COMPLETED 2026-03-24 — Leave-overtime mutual exclusion guards, compensation eligibility tagging, leave dropdown filter, policy doc, reference doc. VL/SL/EL/LWOP lifecycle 27/27. OT-leave guards S11-S13 ALL PASS. L3 0 FAIL 0 SKIP. | `docs/plans/2026-03-24-sprint-108-leave-type-e2e-validation.md` |
 
-| `S111` | Sprint 111 | `s111-submit-permission-hardening` | — | IN_PROGRESS — Wrap 15 commissary .submit() calls with _run_as_system_user, add Sentry to 60 uncovered commissary endpoints. Same bug pattern as S108. | `docs/plans/2026-03-24-sprint-110-submit-permission-hardening.md` |
+| `S111` | Sprint 111 | `s111-submit-permission-hardening` | #343 | DEPLOYED 2026-03-24 — PR#343 merged. 15 commissary .submit() wraps + Sentry on 60 endpoints. Awaiting L3 in fresh session. | `docs/plans/2026-03-24-sprint-110-submit-permission-hardening.md` |
 
 | `S112` | Sprint 112 | `s112-luwi-training-blockers` | — | GO — Close all blockers for Luwi's procurement training: OR Follow-up sidebar nav, Warehouse RBAC for GR, supplier_code auto-gen, empty error toast, payments 500, seed verified invoice. | `docs/plans/2026-03-24-sprint-112-luwi-training-blockers.md` |
+| `S113` | Sprint 113 | `s113-payroll-command-center` | — | PLANNED — Payroll Command Center & Navigation: rebuild landing, Finance RBAC, Current Cutoff view, Review Output view, History + Comparison redirect. Read-only views. Replaces S083 scope 1/3. | `docs/plans/2026-03-24-sprint-113-payroll-command-center-navigation.md` |
+| `S114` | Sprint 114 | `s114-payroll-compensation-sensitive` | — | PLANNED — Payroll Compensation & Sensitive Changes: compensation setup grid, dual-control approval for bank/statutory, effective dating, self-service intake. Replaces S083 scope 2/3. | `docs/plans/2026-03-24-sprint-114-payroll-compensation-sensitive-changes.md` |
+| `S115` | Sprint 115 | `s115-payroll-processing-remittances` | — | PLANNED — Payroll Processing & Remittances: step wizard for payroll run, S076 blocker handling, government remittance views + export. Replaces S083 scope 3/3. | `docs/plans/2026-03-24-sprint-115-payroll-processing-remittances.md` |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S113`.
+1. Next canonical sprint ID to assign: `S116`.
 2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
+
+## Superseded Plans
+| Original | Superseded By | Reason |
+|----------|---------------|--------|
+| S083 (never registered) | S113 + S114 + S115 | S083 was ~100 real work units (7 new routes, dual-control workflows, RBAC, dense grids). Split into 3 independent sprints of ~25-28 units each. Original plan at `docs/plans/2026-03-19-sprint-83-payroll-war-room-portal-operations-workspace.md`. |
