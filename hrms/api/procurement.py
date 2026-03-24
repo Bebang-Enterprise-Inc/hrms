@@ -745,8 +745,16 @@ def _normalize_purchase_order_payload(data, supplier_code=None):
         if item.get("uom") and not frappe.db.exists("UOM", item["uom"]):
             item.pop("uom")
 
-        # S104: Look up contracted price and inject if item has no unit_cost or unit_cost=0
+        # S104: Validate item exists — block auto-creation of new items
         item_code = item.get("item_code")
+        if item_code and not frappe.db.exists("Item", item_code):
+            frappe.throw(
+                _("Item {0} does not exist. Submit a New Item Request for CPO approval "
+                  "before adding it to a Purchase Order.").format(item_code),
+                title=_("Item Not Found")
+            )
+
+        # S104: Look up contracted price and inject if item has no unit_cost or unit_cost=0
         contracted_info = None
         if item_code:
             contracted_info = get_contracted_price(item_code, supplier_code)

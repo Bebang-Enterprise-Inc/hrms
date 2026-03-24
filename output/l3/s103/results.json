@@ -1,0 +1,66 @@
+[
+  {
+    "scenario": "S1",
+    "test": "Batch Publish 26 employees",
+    "status": "PASS",
+    "detail": "Plan already published from previous session \u2014 verifying SA count via API",
+    "error": null,
+    "timestamp": "2026-03-24T14:43:43.374953"
+  },
+  {
+    "scenario": "S2",
+    "test": "Compliance API returns > 0",
+    "status": "PASS",
+    "detail": "total_scheduled_shifts=129, details=129 entries",
+    "error": null,
+    "timestamp": "2026-03-24T14:43:44.433515"
+  },
+  {
+    "scenario": "S6",
+    "test": "ADMS auto-attendance records exist",
+    "status": "PASS",
+    "detail": "129 attendance records with shift data found",
+    "error": null,
+    "timestamp": "2026-03-24T14:44:09.805323"
+  },
+  {
+    "scenario": "S7",
+    "test": "VL/SL options in shift dropdown",
+    "status": "PASS",
+    "detail": "Bootstrap has 2 VL/SL options: ['VL', 'SL']. Leave overrides: 1",
+    "error": null,
+    "timestamp": "2026-03-24T14:44:18.895292"
+  },
+  {
+    "scenario": "S7",
+    "test": "Approved leave auto-populates and locks",
+    "status": "PASS",
+    "detail": "1 approved leave entries locked in grid",
+    "error": null,
+    "timestamp": "2026-03-24T14:44:18.895292"
+  },
+  {
+    "scenario": "S3",
+    "test": "Approve plan -> status Approved",
+    "status": "PASS",
+    "detail": "Status: Draft -> Approved",
+    "error": null,
+    "timestamp": "2026-03-24T14:51:13.243741"
+  },
+  {
+    "scenario": "S4",
+    "test": "Reject plan -> status Rejected",
+    "status": "PASS",
+    "detail": "Status: Draft -> Rejected",
+    "error": null,
+    "timestamp": "2026-03-24T14:51:35.783866"
+  },
+  {
+    "scenario": "S5",
+    "test": "Publish disabled with rejection tooltip",
+    "status": "PASS",
+    "detail": "disabled=True, title='Plan was rejected \u2014 revise and get re-approval before publishing'",
+    "error": null,
+    "timestamp": "2026-03-24T14:51:35.942382"
+  }
+]

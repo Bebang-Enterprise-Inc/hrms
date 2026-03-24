@@ -1,0 +1,44 @@
+[
+  {
+    "check": "Compliance API total_scheduled_shifts > 0",
+    "before": "N/A (query)",
+    "after": "total_scheduled_shifts=129, detail_count=129",
+    "passed": true
+  },
+  {
+    "check": "ADMS auto-attendance records exist (via compliance API)",
+    "before": "SKIP_AUTO_ATTENDANCE=0 set on 2026-03-24",
+    "after": "attendance_entries_with_status=129 out of 129 total",
+    "passed": true
+  },
+  {
+    "check": "VL/SL shift options available in bootstrap",
+    "before": "N/A (read)",
+    "after": "vl_sl_options=2, leave_overrides=1",
+    "passed": true
+  },
+  {
+    "check": "Leave overrides auto-populate for employees with approved leave",
+    "before": "N/A (read)",
+    "after": "leave_overrides=1 locked leave entries",
+    "passed": true
+  },
+  {
+    "check": "Plan status changes to Approved after clicking Approve",
+    "before": "status=Draft",
+    "after": "status=Approved",
+    "passed": true
+  },
+  {
+    "check": "Plan status changes to Rejected",
+    "before": "status=Draft",
+    "after": "status=Rejected",
+    "passed": true
+  },
+  {
+    "check": "Publish button disabled on Rejected plan with tooltip",
+    "before": "Plan status = Rejected",
+    "after": "disabled=True, title='Plan was rejected \u2014 revise and get re-approval before publishing'",
+    "passed": true
+  }
+]

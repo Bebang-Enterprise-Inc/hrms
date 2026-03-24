@@ -523,7 +523,6 @@ def create_warehouse_receiving(
 	remarks: str | None = None,
 ) -> dict:
 	"""Create a pending warehouse inbound record for commissary finished goods."""
-	from hrms.utils.sentry import set_backend_observability_context
 	set_backend_observability_context(module="warehouse", action="create_warehouse_receiving", mutation_type="create")
 	_ensure_warehouse_receiving_doctype()
 
@@ -687,7 +686,6 @@ def complete_warehouse_receiving(
 	receiving_name: str, items: str | list[dict[str, Any]], remarks: str | None = None
 ) -> dict[str, Any]:
 	"""Complete warehouse receipt for a commissary FG handoff by creating the stock transfer."""
-	from hrms.utils.sentry import set_backend_observability_context
 	set_backend_observability_context(module="warehouse", action="complete_warehouse_receiving", mutation_type="update")
 	_ensure_warehouse_receiving_doctype()
 
@@ -764,64 +762,66 @@ def complete_warehouse_receiving(
 
 	source_co = resolve_warehouse_company(receiving.source_warehouse)
 	target_co = resolve_warehouse_company(receiving.target_warehouse)
-	is_intercompany = source_co and target_co and source_co != target_co
+	finance_treatment = infer_finance_treatment(source_co, target_co)
+	is_intercompany = finance_treatment == FINANCE_TREATMENT_INTERCOMPANY
+	movement_type = "Material Issue" if is_intercompany else "Material Transfer"
 
 	stock_entry = frappe.new_doc("Stock Entry")
-	stock_entry.stock_entry_type = "Material Transfer"
-	# For commissary→3PL (BKI→BEI): use SOURCE company (BKI) so the source warehouse's
-	# inventory account resolves correctly. The target warehouse (BEI 3PL) company check
-	# is bypassed below since it's a legitimate inter-company FG handoff.
+	stock_entry.stock_entry_type = movement_type
 	stock_entry.company = source_co or target_co or get_company()
 	stock_entry.posting_date = frappe.utils.today()
 	stock_entry.posting_time = frappe.utils.nowtime()
 	stock_entry.from_warehouse = receiving.source_warehouse
-	stock_entry.to_warehouse = receiving.target_warehouse
+	if not is_intercompany:
+		stock_entry.to_warehouse = receiving.target_warehouse
 	stock_entry.remarks = remarks or f"Warehouse receiving {receiving.name}"
 	stamp_stock_entry_contract(
 		stock_entry,
 		request_source=REQUEST_SOURCE_COMMISSARY_FG_TRANSFER,
 		cargo_lane="FG",
-		source_company=resolve_warehouse_company(receiving.source_warehouse),
-		target_company=resolve_warehouse_company(receiving.target_warehouse),
-		finance_treatment=FINANCE_TREATMENT_SAME_COMPANY,
+		destination_warehouse=receiving.target_warehouse,
+		source_company=source_co,
+		target_company=target_co,
+		finance_treatment=finance_treatment,
 	)
 
 	for item_data in accepted_items:
 		item_doc = frappe.get_doc("Item", item_data["item_code"])
 		valid_uom = _resolve_valid_item_uom(item_doc, item_data.get("uom"))
-		stock_entry.append(
-			"items",
-			{
-				"item_code": item_data["item_code"],
-				"item_name": item_doc.item_name,
-				"description": item_doc.description,
-				"qty": item_data["qty"],
-				"uom": valid_uom,
-				"stock_uom": valid_uom,
-				"conversion_factor": 1,
-				"s_warehouse": receiving.source_warehouse,
-				"t_warehouse": receiving.target_warehouse,
-				"batch_no": item_data.get("batch_no"),
-			},
-		)
+
+		row = {
+			"item_code": item_data["item_code"],
+			"item_name": item_doc.item_name,
+			"description": item_doc.description,
+			"qty": item_data["qty"],
+			"uom": valid_uom,
+			"stock_uom": valid_uom,
+			"conversion_factor": 1,
+			"s_warehouse": receiving.source_warehouse,
+		}
+
+		if is_intercompany:
+			# Material Issue: explicit valuation, no target warehouse, no batch
+			valuation_rate, allow_zero = _resolve_stock_entry_item_valuation(
+				item_data["item_code"], receiving.source_warehouse
+			)
+			row["valuation_rate"] = valuation_rate
+			if allow_zero:
+				row["allow_zero_valuation_rate"] = 1
+		else:
+			# Material Transfer: set target warehouse and batch
+			row["t_warehouse"] = receiving.target_warehouse
+			row["batch_no"] = item_data.get("batch_no")
+
+		stock_entry.append("items", row)
 
 	_enable_role_gated_write(stock_entry)
-
-	# For commissary→3PL inter-company transfers: temporarily bypass the
-	# warehouse-company validation that blocks BKI source warehouse when
-	# stock_entry.company is set to BEI (target). Restore immediately after.
+	stock_entry.insert(ignore_permissions=True)
 	if is_intercompany:
-		import erpnext.stock.utils as _su
-		_orig = _su.validate_warehouse_company
-		_su.validate_warehouse_company = lambda wh, co: None
-		try:
-			stock_entry.insert(ignore_permissions=True)
-			stock_entry.submit()
-		finally:
-			_su.validate_warehouse_company = _orig
-	else:
-		stock_entry.insert(ignore_permissions=True)
-		stock_entry.submit()
+		stock_entry = frappe.get_doc("Stock Entry", stock_entry.name)
+		_enable_role_gated_write(stock_entry)
+		_clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry)
+	stock_entry.submit()
 
 	receiving.stock_entry = stock_entry.name
 	receiving.receiving_date = now_datetime()
