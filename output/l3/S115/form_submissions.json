@@ -1,42 +1,42 @@
 [
   {
-    "form": "processing_wizard_step1",
+    "form": "processing_wizard_step1_to_step2",
     "inputs": {
-      "period": "default (current month)",
-      "has_date_picker": true
+      "period": "This Month (default or selected)",
+      "date_picker_interacted": true
     },
-    "submit_action": "Click Next button",
-    "response": "API calls: 2, blocker words: 7",
-    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\L3-02_after_next.png"
+    "submit_action": "Opened date picker → selected preset/closed → clicked Next",
+    "response": "2 readiness API calls, 5/5 content checks passed",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\02c_step2.png"
   },
   {
-    "form": "processing_wizard_step2_blocked",
+    "form": "processing_wizard_blocked_advance",
     "inputs": {
-      "action": "tried to click Next with blockers present"
+      "action": "Force-clicked disabled Next on Step 2"
     },
-    "submit_action": "Force-click Next (disabled button)",
-    "response": "Button disabled. Still on Step 2: true",
-    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\L3-03_blocked_next.png"
+    "submit_action": "Force-click Next (disabled)",
+    "response": "Disabled: true, stayed on Step 2: true",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\03_force_click.png"
   },
   {
-    "form": "remittances_type_selection",
+    "form": "remittances_sss_month_change",
     "inputs": {
       "tab": "SSS",
-      "month_changed": true,
-      "month_target": "January"
+      "month_dropdown_opened": true,
+      "month_selected": "January"
     },
-    "submit_action": "Click SSS tab + change month dropdown",
-    "response": "API calls: 1, empty state: true, data table: false",
-    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\L3-05b_month_changed.png"
+    "submit_action": "Click SSS tab → open month dropdown → select January",
+    "response": "APIs: 1, empty: true, data: false, month_changed: true",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\05c_january.png"
   },
   {
     "form": "remittance_export",
     "inputs": {
       "type": "SSS",
-      "action": "clicked Export"
+      "month": "January 2026"
     },
-    "submit_action": "Click Export CSV (disabled)",
-    "response": "Button disabled — no data to export. Correct first-run behavior.",
-    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\L3-06_export_disabled.png"
+    "submit_action": "Click Export CSV (button disabled)",
+    "response": "Disabled. Force-click: no download. Toast: \"none\"",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S115\\artifacts\\06_export.png"
   }
 ]

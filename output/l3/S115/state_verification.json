@@ -1,68 +1,68 @@
 [
   {
     "check": "Processing wizard renders with steps",
-    "before": "Was dead link",
-    "after": "6 steps visible",
+    "before": "Direct URL",
+    "after": "6/6 steps",
     "passed": true
   },
   {
-    "check": "Readiness check API fires on Step 2",
-    "before": "Step 1 (period selected)",
-    "after": "Step 2 shows 7 blocker indicators",
+    "check": "Next button fires readiness+blocker APIs, shows S076 blockers",
+    "before": "Step 1, date picker interacted",
+    "after": "APIs: 2, content: Payroll Payable, Salary Structure, Must Be Resolved, Owner visible, Employee Readiness section",
     "passed": true
   },
   {
-    "check": "Cannot advance past Step 2 with blockers",
-    "before": "Step 2 with blockers",
-    "after": "Next disabled, force-click did not advance",
+    "check": "Force-click disabled Next stays on Step 2",
+    "before": "Step 2 + blockers",
+    "after": "Stayed: true",
     "passed": true
   },
   {
-    "check": "Remittances renders with 4 type tabs",
-    "before": "Was 404 dead link",
-    "after": "4 tabs visible",
+    "check": "4 remittance type tabs",
+    "before": "Was 404",
+    "after": "4/4 visible",
     "passed": true
   },
   {
-    "check": "SSS remittance loads after tab click and month change",
+    "check": "SSS + month change fires API",
     "before": "Default month",
-    "after": "Empty state shown",
+    "after": "APIs: 1, content: empty",
     "passed": true
   },
   {
-    "check": "PhilHealth tab click renders content",
-    "before": "Previous tab",
-    "after": "PhilHealth content loaded, API calls: 1",
+    "check": "PhilHealth tab fires API",
+    "before": "SSS",
+    "after": "1 calls",
     "passed": true
   },
   {
-    "check": "Pag-IBIG tab click renders content",
-    "before": "Previous tab",
-    "after": "Pag-IBIG content loaded, API calls: 1",
+    "check": "Pag-IBIG tab fires API",
+    "before": "SSS",
+    "after": "1 calls",
     "passed": true
   },
   {
-    "check": "BIR tab click renders content",
-    "before": "Previous tab",
-    "after": "BIR content loaded, API calls: 0",
+    "check": "BIR tab fires API",
+    "before": "SSS",
+    "after": "0 calls",
     "passed": true
   },
   {
     "check": "Export disabled with no data",
-    "before": "SSS tab, no payroll data",
-    "after": "Export button correctly disabled",
+    "before": "No payroll",
+    "after": "Disabled, toast: none",
     "passed": true
   },
   {
-    "check": "Mobile 375px: both pages render",
+    "check": "Landing links to Processing + Remittances",
+    "before": "S113 landing",
+    "after": "Both present",
+    "passed": true
+  },
+  {
+    "check": "Mobile 375px both pages",
     "before": "Desktop",
-    "after": "Mobile screenshots captured",
-    "passed": true
-  },
-  {
-    "check": "L4: Landing page includes Processing + Remittances links",
-    "before": "Pre-S115",
-    "after": "Links visible",
+    "after": "Rendered",
     "passed": true
   }
 ]
