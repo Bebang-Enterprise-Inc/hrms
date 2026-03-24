@@ -1,14 +1,14 @@
 ---
 canonical_sprint_id: S116
 display: Sprint 116
-status: GO
+status: DEPLOYED
 branch: s116-procurement-defect-fixes
 lane: single
 created_date: 2026-03-24
 completed_date:
-deployed_at:
-backend_pr:
-frontend_pr:
+deployed_at: 2026-03-24
+backend_pr: "(no backend changes needed)"
+frontend_pr: "#240 (bei-tasks)"
 l3_result:
 execution_summary:
 depends_on: S108
