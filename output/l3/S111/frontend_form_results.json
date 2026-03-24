@@ -1,0 +1,38 @@
+[
+  {
+    "scenario": "S111-FORM-001",
+    "status": "PASS",
+    "test": "Log Production form submit",
+    "detail": "No PermissionError. HTTP 417"
+  },
+  {
+    "scenario": "S111-FORM-002",
+    "status": "PASS",
+    "test": "Log Wastage form submit",
+    "detail": "No PermissionError. HTTP 200"
+  },
+  {
+    "scenario": "S111-FORM-003",
+    "status": "PASS",
+    "test": "Material Requisition form submit",
+    "detail": "No PermissionError. HTTP 200"
+  },
+  {
+    "scenario": "S111-FORM-004",
+    "status": "PASS",
+    "test": "Create Work Order form submit",
+    "detail": "No PermissionError. HTTP 200"
+  },
+  {
+    "scenario": "S111-FORM-005",
+    "status": "PASS",
+    "test": "Warehouse Handoff form submit",
+    "detail": "No PermissionError. HTTP 417"
+  },
+  {
+    "scenario": "S111-FORM-006",
+    "status": "PASS",
+    "test": "Create BOM form submit",
+    "detail": "No PermissionError. HTTP 200"
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "scenario": "COMMISSARY-001",
+    "type": "workflow-surface",
+    "test": "Dashboard, production, work-order surfaces",
+    "status": "PASS",
+    "detail": "4/4 APIs healthy",
+    "error": null,
+    "sub_results": [
+      [
+        "get_production_history",
+        "PASS",
+        "{\"message\": {\"success\": true, \"data\": [{\"name\": \"MAT-STE-2026-00278\", \"posting_date\": \"2026-03-19\", \"remarks\": \"Production output | Batch: No batch\", \"owner\": \"Administrator\", \"items\": [{\"item_code\": \"A016\", \"item_name\": \"ALASKA EVAP 1L\", \"qty\": 2.0, \"uom\": \"BOX\"}], \"total_qty\": 2.0, \"items_count\": "
+      ],
+      [
+        "get_production_cost_per_batch",
+        "PASS",
+        "{\"message\": {\"success\": true, \"data\": [{\"batch_id\": \"MAT-STE-2026-00029\", \"posting_date\": \"2026-02-08\", \"item_code\": \"FG020\", \"item_name\": \"FROZEN ICE MILK\", \"material_cost\": 1488.86, \"labor_cost\": 0.0, \"overhead_cost\": 0.0, \"total_cost\": 1488.86}, {\"batch_id\": \"MAT-STE-2026-00027\", \"posting_date\": "
+      ],
+      [
+        "get_production_suggestions",
+        "PASS",
+        "{\"message\": {\"success\": true, \"data\": [{\"item_code\": \"FG002-A\", \"item_name\": \"BANANA CINNAMON\", \"uom\": \"KG\", \"current_stock\": 31.0, \"pending_demand\": 2072.54, \"suggested_qty\": 2142, \"bom_name\": \"BOM-FG002-A-001\", \"priority\": \"high\"}, {\"item_code\": \"FG020-GRIFFITH\", \"item_name\": \"FROZEN ICE MILK (GRI"
+      ],
+      [
+        "get_work_orders",
+        "PASS",
+        "{\"message\": {\"success\": true, \"data\": [], \"summary\": {}}}"
+      ]
+    ]
+  },
+  {
+    "scenario": "COMMISSARY-002",
+    "type": "workflow-surface",
+    "test": "Quality, transfer, fulfillment surfaces",
+    "status": "FAIL",
+    "detail": "1/3 APIs healthy",
+    "error": "HTTP 417: {\"exception\": \"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.commissary_quality.get_quality_inspections with module 'hrms.api.commissary_quality' has no attribute 'get_quality_inspections'\", \"exc_type\": \"ValidationError\", \"exc\": \"[\\\"Traceback (most recent call last):\\\\",
+    "sub_results": [
+      [
+        "get_quality_inspections",
+        "FAIL",
+        "{\"exception\": \"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.commissary_quality.get_quality_inspections with module 'hrms.api.commissary_quality' has no attribute 'get_quality_inspections'\", \"exc_type\": \"ValidationError\", \"exc\": \"[\\\"Traceback (most recent call last):\\\\"
+      ],
+      [
+        "get_quality_templates",
+        "FAIL",
+        "{\"exception\": \"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.commissary_quality.get_quality_templates with module 'hrms.api.commissary_quality' has no attribute 'get_quality_templates'\", \"exc_type\": \"ValidationError\", \"exc\": \"[\\\"Traceback (most recent call last):\\\\n  F"
+      ],
+      [
+        "get_my_requisitions",
+        "PASS",
+        "{\"message\": {\"success\": true, \"data\": [{\"name\": \"MAT-MR-2026-00120\", \"transaction_date\": \"2026-03-24\", \"schedule_date\": \"2026-04-01\", \"status\": \"Pending\", \"owner\": \"test.commissary@bebang.ph\", \"docstatus\": 1, \"items\": [{\"item_code\": \"RM001\", \"item_name\": \"CRUSHED GRAHAM\", \"qty\": 5.0, \"ordered_qty\": "
+      ]
+    ]
+  },
+  {
+    "scenario": "COMMISSARY-003",
+    "type": "view",
+    "test": "Inventory, wastage, raw-material, expiry monitoring",
+    "status": "PASS",
+    "detail": "4/4 APIs healthy",
+    "error": null,
+    "sub_results": [
+      [
+        "get_inventory_levels",
+        "PASS",
+        "{\"message\": {\"success\": true, \"data\": [{\"item_code\": \"KL004\", \"item_name\": \"365 Clean P 1303 1 gallon x 4/ case\", \"item_group\": \"Consumables\", \"uom\": \"GAL\", \"current_qty\": 0.0, \"valuation_rate\": 0.0, \"safety_stock\": 7, \"reorder_level\": 14, \"stock_status\": \"Out of Stock\", \"value\": 0.0, \"shelf_life\": "
+      ],
+      [
+        "get_wastage_trends",
+        "PASS",
+        "{\"message\": {\"success\": true, \"data\": [], \"daily_trend\": [], \"summary\": {\"total_qty\": 0.0, \"total_value\": 0.0, \"avg_daily\": 0.0, \"top_reason\": \"N/A\", \"trend_pct\": 0.0, \"trend_direction\": \"stable\", \"period_days\": 30, \"total_entries\": 0}}}"
+      ],
+      [
+        "get_rm_reorder_alerts",
+        "PASS",
+        "{\"message\": {\"success\": true, \"data\": [{\"item_code\": \"A027\", \"item_name\": \"BANANA/SABA\", \"item_group\": \"Raw Materials\", \"uom\": \"KG\", \"current_qty\": 0.0, \"reorder_level\": 0.0, \"safety_stock\": 0.0, \"avg_daily_consumption\": 0.0, \"suggested_order_qty\": 0.0, \"alert_level\": \"critical\", \"status\": \"Out of S"
+      ],
+      [
+        "get_rm_for_requisition",
+        "PASS",
+        "{\"message\": {\"success\": true, \"data\": [{\"item_code\": \"A027\", \"item_name\": \"BANANA/SABA\", \"item_group\": \"Raw Materials\", \"uom\": \"KG\", \"current_qty\": 0.0, \"needs_reorder\": true, \"suggested_qty\": 0.0, \"alert_level\": \"critical\", \"reorder_level\": 0.0}, {\"item_code\": \"RM004-1\", \"item_name\": \"BLUEBERRY COM"
+      ]
+    ]
+  },
+  {
+    "scenario": "COMMISSARY-004",
+    "type": "workflow-surface",
+    "test": "Commissary labor plan, coverage, rotation",
+    "status": "FAIL",
+    "detail": "0/1 APIs healthy",
+    "error": "HTTP 500: {\"exception\": \"TypeError: get_labor_plan_bootstrap() missing 1 required positional argument: 'store'\", \"exc_type\": \"TypeError\", \"exc\": \"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n           ",
+    "sub_results": [
+      [
+        "get_labor_plan_bootstrap",
+        "FAIL",
+        "{\"exception\": \"TypeError: get_labor_plan_bootstrap() missing 1 required positional argument: 'store'\", \"exc_type\": \"TypeError\", \"exc\": \"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n           "
+      ]
+    ]
+  }
+]

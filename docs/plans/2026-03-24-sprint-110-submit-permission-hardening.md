@@ -1,11 +1,11 @@
 ---
 canonical_sprint_id: S111
-status: DEPLOYED
+status: COMPLETED
 branch: s111-submit-permission-hardening
 pr: 343
 created: 2026-03-24
-completed_date: null
-execution_summary: null
+completed_date: 2026-03-25
+execution_summary: "All 15 commissary .submit() calls wrapped with _run_as_system_user. 8 Stock Entry submits also get _clear_legacy. 60 Sentry endpoints added. PR#343 merged and deployed. L3: 12/12 PASS (6 API + 6 form submissions), 0 PermissionError. 4 collateral defects (2 MAJOR frontend route gaps, 2 MINOR)."
 depends_on: null
 audit: "2026-03-24 — CONDITIONAL GO, 3 blockers resolved by amendment v1"
 ---

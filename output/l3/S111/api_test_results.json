@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": "S111-001",
+    "type": "regression",
+    "test": "submit_production_output SE wrap",
+    "status": "PASS",
+    "detail": "No PermissionError. HTTP 417. {\"exception\": \"frappe.exceptions.ValidationError: M001 needs 0.1 more BOX; A034 needs 0.02 more BOX.\", \"exc_type\": \"ValidationError\", \"_exc_source\": \"hrms (app)\", \"exc\": \"[\\\"Traceback (most recent cal",
+    "error": null
+  },
+  {
+    "scenario": "S111-002",
+    "type": "regression",
+    "test": "create_hub_transfer SE wrap",
+    "status": "PASS",
+    "detail": "No PermissionError. HTTP 417. {\"exception\": \"frappe.exceptions.ValidationError: Commissary direct store fulfillment is retired. Use the warehouse-centered flow: raw materials -> production -> QA -> warehouse handoff.\", \"exc_type\":",
+    "error": null
+  },
+  {
+    "scenario": "S111-003",
+    "type": "regression",
+    "test": "create_bom BOM wrap",
+    "status": "PASS",
+    "detail": "No PermissionError. HTTP 200. {\"message\": {\"success\": false, \"error\": \"Active default BOM already exists: BOM-FG002-001. Use update_bom() or deactivate first.\"}}",
+    "error": null
+  },
+  {
+    "scenario": "S111-004",
+    "type": "regression",
+    "test": "create_rm_requisition MR wrap",
+    "status": "PASS",
+    "detail": "No PermissionError. HTTP 200. {\"message\": {\"success\": true, \"data\": {\"name\": \"MAT-MR-2026-00120\", \"items_count\": 1, \"total_qty\": 5.0, \"required_by_date\": \"2026-04-01\", \"status\": \"Pending\", \"request_source\": \"commissary_raw_materia",
+    "error": null
+  },
+  {
+    "scenario": "S111-005",
+    "type": "regression",
+    "test": "create_quality_inspection QI wrap",
+    "status": "PASS",
+    "detail": "No PermissionError. HTTP 200. {\"message\": {\"success\": false, \"error\": \"Item FG004 not found in Stock Entry MAT-STE-2026-00029\"}}",
+    "error": null
+  },
+  {
+    "scenario": "S111-006",
+    "type": "regression",
+    "test": "create+start_work_order wrap",
+    "status": "PASS",
+    "detail": "WO creation did not return PermissionError. {\"message\": {\"success\": false, \"error\": \"Insufficient materials for production\", \"shortages\": [{\"item_code\": \"M001\", \"item_name\": \"JELLY BUKO PANDAN CRYSTAL GULAMAN\", \"required\": 0.1, \"available\": 0.0",
+    "error": null
+  }
+]

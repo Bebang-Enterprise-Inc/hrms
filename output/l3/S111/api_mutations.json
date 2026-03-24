@@ -1,0 +1,44 @@
+[
+  {
+    "endpoint": "backend/submit_production",
+    "method": "POST",
+    "payload": "{\"item_code\": \"FG004\", \"qty_produced\": 1}",
+    "status": 417,
+    "response_body": "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.commissary_dashboard.submit_production with module 'hrms.api.commissary_dashboard' has no attribute 'submit_production'\",\"exc_type\":\"ValidationError\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 75, in execute_cmd\\\\n    method = get_attr(cmd)\\\\n             ^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 293, in get_attr\\\\n    method ="
+  },
+  {
+    "endpoint": "backend/log_wastage",
+    "method": "POST",
+    "payload": "{\"item_code\": \"FG004\", \"qty\": 1, \"reason_code\": \"expired\"}",
+    "status": 200,
+    "response_body": "{\"message\":{\"success\":true,\"message\":\"Wastage logged: 1 KG of BUKO PANDAN JELLY\",\"data\":{\"name\":\"MAT-STE-2026-00309\",\"item_code\":\"FG004\",\"qty\":1,\"reason\":\"Expired/Past shelf life\",\"wastage_value\":47.48}}}"
+  },
+  {
+    "endpoint": "backend/create_rm_requisition",
+    "method": "POST",
+    "payload": "{\"items\": [{\"item_code\": \"RM001\", \"qty\": 5}]}",
+    "status": 200,
+    "response_body": "{\"message\":{\"success\":true,\"data\":{\"name\":\"MAT-MR-2026-00121\",\"items_count\":1,\"total_qty\":5.0,\"required_by_date\":\"2026-04-01\",\"status\":\"Pending\",\"request_source\":\"commissary_raw_material_request\",\"request_source_label\":\"Commissary Raw Materials\"},\"message\":\"Material Request MAT-MR-2026-00121 submitted to the warehouse queue\"}}"
+  },
+  {
+    "endpoint": "backend/create_work_order",
+    "method": "POST",
+    "payload": "{\"item_code\": \"FG004\", \"qty\": 1}",
+    "status": 200,
+    "response_body": "{\"message\":{\"success\":false,\"error\":\"Insufficient materials for production\",\"shortages\":[{\"item_code\":\"M001\",\"item_name\":\"JELLY BUKO PANDAN CRYSTAL GULAMAN\",\"required\":0.1,\"available\":0.0,\"short\":0.1},{\"item_code\":\"A034\",\"item_name\":\"TC BUKO PANDAN POWDER\",\"required\":0.02,\"available\":0.0,\"short\":0.02}]}}"
+  },
+  {
+    "endpoint": "backend/create_warehouse_handoff",
+    "method": "POST",
+    "payload": "{\"target_warehouse\": \"Finished Goods - BGCI\"}",
+    "status": 417,
+    "response_body": "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.commissary_dashboard.create_warehouse_handoff with module 'hrms.api.commissary_dashboard' has no attribute 'create_warehouse_handoff'\",\"exc_type\":\"ValidationError\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 75, in execute_cmd\\\\n    method = get_attr(cmd)\\\\n             ^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 293, in get_attr\\"
+  },
+  {
+    "endpoint": "backend/create_bom",
+    "method": "POST",
+    "payload": "{\"item_code\": \"FG002\", \"materials\": [{\"RM001\": 1}]}",
+    "status": 200,
+    "response_body": "{\"message\":{\"success\":false,\"error\":\"Active default BOM already exists: BOM-FG002-001. Use update_bom() or deactivate first.\"}}"
+  }
+]

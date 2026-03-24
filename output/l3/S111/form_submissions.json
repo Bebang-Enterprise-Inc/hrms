@@ -1,0 +1,77 @@
+[
+  {
+    "form": "Log Production",
+    "inputs": {
+      "item_code": "FG004",
+      "qty_produced": 1,
+      "production_date": "today"
+    },
+    "submit_action": "POST /api/commissary action=submit_production",
+    "response": "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.commissary_dashboard.submit_production with module 'hrms.api.commissary_dashboard' has no attribute 'submit_production'\",\"exc_type\":\"ValidationError\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"a",
+    "screenshot_after": null
+  },
+  {
+    "form": "Log Wastage",
+    "inputs": {
+      "item_code": "FG004",
+      "qty": 1,
+      "reason_code": "expired"
+    },
+    "submit_action": "POST /api/commissary action=log_wastage",
+    "response": "{\"message\":{\"success\":true,\"message\":\"Wastage logged: 1 KG of BUKO PANDAN JELLY\",\"data\":{\"name\":\"MAT-STE-2026-00309\",\"item_code\":\"FG004\",\"qty\":1,\"reason\":\"Expired/Past shelf life\",\"wastage_value\":47.48}}}",
+    "screenshot_after": null
+  },
+  {
+    "form": "Material Requisition",
+    "inputs": {
+      "items": [
+        {
+          "item_code": "RM001",
+          "qty": 5
+        }
+      ],
+      "required_by_date": "2026-04-01"
+    },
+    "submit_action": "POST /api/commissary action=create_rm_requisition",
+    "response": "{\"message\":{\"success\":true,\"data\":{\"name\":\"MAT-MR-2026-00121\",\"items_count\":1,\"total_qty\":5.0,\"required_by_date\":\"2026-04-01\",\"status\":\"Pending\",\"request_source\":\"commissary_raw_material_request\",\"request_source_label\":\"Commissary Raw Materials\"},\"message\":\"Material Request MAT-MR-2026-00121 submitt",
+    "screenshot_after": null
+  },
+  {
+    "form": "Create Work Order",
+    "inputs": {
+      "item_code": "FG004",
+      "qty": 1
+    },
+    "submit_action": "POST /api/commissary action=create_work_order",
+    "response": "{\"message\":{\"success\":false,\"error\":\"Insufficient materials for production\",\"shortages\":[{\"item_code\":\"M001\",\"item_name\":\"JELLY BUKO PANDAN CRYSTAL GULAMAN\",\"required\":0.1,\"available\":0.0,\"short\":0.1},{\"item_code\":\"A034\",\"item_name\":\"TC BUKO PANDAN POWDER\",\"required\":0.02,\"available\":0.0,\"short\":0.0",
+    "screenshot_after": null
+  },
+  {
+    "form": "Warehouse Handoff",
+    "inputs": {
+      "target_warehouse": "Finished Goods - BGCI",
+      "items": [
+        {
+          "FG004": 1
+        }
+      ]
+    },
+    "submit_action": "POST /api/commissary action=create_warehouse_handoff",
+    "response": "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.commissary_dashboard.create_warehouse_handoff with module 'hrms.api.commissary_dashboard' has no attribute 'create_warehouse_handoff'\",\"exc_type\":\"ValidationError\",\"exc\":\"[\\\"Traceback (most recent call last):\\",
+    "screenshot_after": null
+  },
+  {
+    "form": "Create BOM",
+    "inputs": {
+      "item_code": "FG002",
+      "materials": [
+        {
+          "RM001": 1
+        }
+      ]
+    },
+    "submit_action": "POST /api/commissary action=create_bom",
+    "response": "{\"message\":{\"success\":false,\"error\":\"Active default BOM already exists: BOM-FG002-001. Use update_bom() or deactivate first.\"}}",
+    "screenshot_after": null
+  }
+]

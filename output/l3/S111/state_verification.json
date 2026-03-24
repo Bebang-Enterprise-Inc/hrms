@@ -1,0 +1,38 @@
+[
+  {
+    "check": "S111-FORM-001: No PermissionError on production log",
+    "before": "Unprotected se.submit() in commissary_dashboard.py",
+    "after": "_run_as_system_user + _clear_legacy wrapped submit",
+    "passed": true
+  },
+  {
+    "check": "S111-FORM-002: No PermissionError on wastage log",
+    "before": "Unprotected se.submit() in commissary_quality.py",
+    "after": "_run_as_system_user + _clear_legacy wrapped submit",
+    "passed": true
+  },
+  {
+    "check": "S111-FORM-003: No PermissionError on MR submit",
+    "before": "Unprotected mr.submit() in commissary_requisition.py",
+    "after": "_run_as_system_user wrapped submit",
+    "passed": true
+  },
+  {
+    "check": "S111-FORM-004: No PermissionError on WO create",
+    "before": "Unprotected wo.submit() in commissary_requisition.py",
+    "after": "_run_as_system_user wrapped submit",
+    "passed": true
+  },
+  {
+    "check": "S111-FORM-005: No PermissionError on handoff",
+    "before": "Unprotected se.submit() in commissary_dashboard.py",
+    "after": "_run_as_system_user + _clear_legacy wrapped submit",
+    "passed": true
+  },
+  {
+    "check": "S111-FORM-006: No PermissionError on BOM create",
+    "before": "Unprotected bom.submit() in commissary_bom.py",
+    "after": "_run_as_system_user wrapped submit",
+    "passed": true
+  }
+]
