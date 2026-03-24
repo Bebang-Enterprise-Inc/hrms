@@ -1,10 +1,9 @@
-# Containerfile.fast — Rebuild hrms on existing image
+# Containerfile.fast — Iteration 7: Preserve node_modules, skip yarn
 #
-# Iteration 6: Pull base from GHCR (same datacenter as GHA runner)
-# instead of Docker Hub. Expected: 40s pull → ~10s pull.
-#
-# Uses v15-fast-test as base (already on GHCR from iteration 5).
-# Same content as production image — just different registry.
+# Key insight: yarn install takes 25-30s but most deps haven't changed.
+# The base image already has node_modules from the previous build.
+# Instead of rm -rf apps/hrms (deletes node_modules too), we preserve
+# node_modules and only replace source code + config files.
 
 ARG BASE_IMAGE=ghcr.io/bebang-enterprise-inc/bebang-erpnext-hrms:v15-fast-test
 FROM ${BASE_IMAGE}
@@ -14,18 +13,24 @@ ARG HRMS_SHA
 USER frappe
 WORKDIR /home/frappe/frappe-bench
 
-# Layer 1: Clone fresh hrms + install node deps
-RUN rm -rf apps/hrms \
-    && git clone --depth 1 --branch production \
-       https://github.com/Bebang-Enterprise-Inc/hrms.git apps/hrms \
-    && rm -rf apps/hrms/.git \
-    && echo "hrms_sha=${HRMS_SHA}" \
-    && cd apps/hrms && yarn install --check-files 2>&1 | tail -3
+# Layer 1: Update hrms source code while preserving node_modules
+# Clone to temp, copy source over, keep existing node_modules intact
+RUN git clone --depth 1 --branch production \
+       https://github.com/Bebang-Enterprise-Inc/hrms.git /tmp/hrms-fresh \
+    && rm -rf apps/hrms/hrms apps/hrms/.git apps/hrms/frontend/src apps/hrms/roster/src \
+    && cp -r /tmp/hrms-fresh/hrms apps/hrms/hrms \
+    && cp /tmp/hrms-fresh/setup.py /tmp/hrms-fresh/setup.cfg apps/hrms/ 2>/dev/null; \
+       cp /tmp/hrms-fresh/pyproject.toml apps/hrms/ 2>/dev/null; \
+       cp /tmp/hrms-fresh/package.json apps/hrms/ \
+    && cp -r /tmp/hrms-fresh/frontend/src apps/hrms/frontend/src 2>/dev/null; \
+       cp -r /tmp/hrms-fresh/roster/src apps/hrms/roster/src 2>/dev/null; true \
+    && rm -rf /tmp/hrms-fresh \
+    && echo "hrms_sha=${HRMS_SHA}"
 
-# Layer 2: Install Python deps
+# Layer 2: pip install (fast — most deps already installed)
 RUN ./env/bin/pip install -e apps/hrms 2>&1 | tail -5
 
-# Layer 3: Build desk assets only, skip PWA/roster
+# Layer 3: Build desk assets, skip PWA/roster
 RUN cp apps/hrms/package.json apps/hrms/package.json.bak \
     && python3 -c "import json,pathlib; p=json.loads(pathlib.Path('apps/hrms/package.json').read_text()); p['scripts']['build']='echo skip-pwa-roster'; pathlib.Path('apps/hrms/package.json').write_text(json.dumps(p))" \
     && bench build --app hrms \
