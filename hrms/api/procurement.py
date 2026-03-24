@@ -6088,8 +6088,13 @@ def approve_price_change(name, comment=None):
                                      mutation_type="update")
 
     # CPO identity check is inside the method — bypass DocType permission
-    pcr = frappe.get_doc("BEI Price Change Request", name, ignore_permissions=True)
-    return pcr.approve(comment)
+    # frappe.get_doc() doesn't accept ignore_permissions; use flags
+    frappe.flags.ignore_permissions = True
+    try:
+        pcr = frappe.get_doc("BEI Price Change Request", name)
+        return pcr.approve(comment)
+    finally:
+        frappe.flags.ignore_permissions = False
 
 
 @frappe.whitelist()
@@ -6099,8 +6104,12 @@ def reject_price_change(name, reason=None):
     set_backend_observability_context(module="procurement", action="reject_price_change",
                                      mutation_type="update")
 
-    pcr = frappe.get_doc("BEI Price Change Request", name, ignore_permissions=True)
-    return pcr.reject(reason)
+    frappe.flags.ignore_permissions = True
+    try:
+        pcr = frappe.get_doc("BEI Price Change Request", name)
+        return pcr.reject(reason)
+    finally:
+        frappe.flags.ignore_permissions = False
 
 
 # ── S104: Item Request Endpoints ─────────────────────────────────────────────
@@ -6123,15 +6132,19 @@ def request_new_item(data=None):
         if not data.get(field):
             frappe.throw(_(f"Field '{field}' is required"))
 
-    item_request = frappe.get_doc({
-        "doctype": "BEI Item Request",
-        **{k: v for k, v in data.items() if k in [
-            "item_code", "item_name", "item_group", "stock_uom", "description",
-            "contracted_unit_cost", "cost_justification", "supporting_document", "supplier"
-        ]}
-    })
-    item_request.insert(ignore_permissions=True)
-    item_request.submit_for_approval()
+    frappe.flags.ignore_permissions = True
+    try:
+        item_request = frappe.get_doc({
+            "doctype": "BEI Item Request",
+            **{k: v for k, v in data.items() if k in [
+                "item_code", "item_name", "item_group", "stock_uom", "description",
+                "contracted_unit_cost", "cost_justification", "supporting_document", "supplier"
+            ]}
+        })
+        item_request.insert()
+        item_request.submit_for_approval()
+    finally:
+        frappe.flags.ignore_permissions = False
 
     return {"success": True, "name": item_request.name, "status": item_request.status}
 
@@ -6143,8 +6156,12 @@ def approve_item_request(name):
     set_backend_observability_context(module="procurement", action="approve_item_request",
                                      mutation_type="create")
 
-    item_req = frappe.get_doc("BEI Item Request", name, ignore_permissions=True)
-    return item_req.approve()
+    frappe.flags.ignore_permissions = True
+    try:
+        item_req = frappe.get_doc("BEI Item Request", name)
+        return item_req.approve()
+    finally:
+        frappe.flags.ignore_permissions = False
 
 
 @frappe.whitelist()
@@ -6154,8 +6171,12 @@ def reject_item_request(name, reason=None):
     set_backend_observability_context(module="procurement", action="reject_item_request",
                                      mutation_type="update")
 
-    item_req = frappe.get_doc("BEI Item Request", name, ignore_permissions=True)
-    return item_req.reject(reason)
+    frappe.flags.ignore_permissions = True
+    try:
+        item_req = frappe.get_doc("BEI Item Request", name)
+        return item_req.reject(reason)
+    finally:
+        frappe.flags.ignore_permissions = False
 
 
 @frappe.whitelist()
