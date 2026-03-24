@@ -134,6 +134,7 @@ class MergeSerializer:
         print(f"[{time.strftime('%H:%M:%S')}] Release gate: skipped (advisory mode — L3 verified post-deploy)", flush=True)
 
         # CI gate: wait for checks to pass before merge
+        self._set_pipeline("ci_wait", "Waiting for CI checks", pr_num)
         ci_ok = await self._wait_for_ci(pr)
         if not ci_ok:
             return

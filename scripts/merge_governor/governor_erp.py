@@ -394,38 +394,23 @@ class GovernorERP:
             return None
 
         try:
-            if self.ai_backend_type == "cli":
-                from .ai_backend_cli import CLIBackend
-                backend = CLIBackend()
-                if await backend.health_check():
-                    logger.info("ai_backend_ready", type="cli")
-                    return backend
-                else:
-                    logger.warning("cli_backend_unavailable", hint="Falling back to no AI review")
-                    return None
-            elif self.ai_backend_type == "sdk":
-                from .ai_backend_sdk import SDKBackend
-                backend = SDKBackend()
-                if await backend.health_check():
-                    logger.info("ai_backend_ready", type="sdk")
-                    return backend
-                else:
-                    logger.warning("sdk_backend_unavailable")
-                    return None
-            elif self.ai_backend_type == "agent-sdk":
-                from .ai_backend_agent_sdk import AgentSDKBackend
-                backend = AgentSDKBackend()
-                if await backend.health_check():
-                    logger.info("ai_backend_ready", type="agent-sdk")
-                    return backend
-                else:
-                    logger.warning(
-                        "agent_sdk_backend_unavailable",
-                        hint="Check ANTHROPIC_API_KEY and claude-agent-sdk install",
-                    )
-                    return None
+            # Agent SDK is the ONLY backend — has full tool access (Read, Grep, Bash)
+            # Old SDKBackend (raw Anthropic API) and CLIBackend are removed.
+            from .ai_backend_agent_sdk import AgentSDKBackend
+            backend = AgentSDKBackend()
+            if await backend.health_check():
+                logger.info("ai_backend_ready", type="agent-sdk")
+                return backend
+            else:
+                logger.warning(
+                    "agent_sdk_backend_unavailable",
+                    hint="Check ANTHROPIC_API_KEY and claude-agent-sdk install",
+                )
+                print(f"[{time.strftime('%H:%M:%S')}] WARNING: Agent SDK health check failed — AI review disabled", flush=True)
+                return None
         except ImportError as e:
             logger.warning("ai_backend_import_error", error=str(e))
+            print(f"[{time.strftime('%H:%M:%S')}] ERROR: claude-agent-sdk not installed: {e}", flush=True)
             return None
         except Exception as e:
             logger.warning("ai_backend_init_error", error=str(e))
@@ -605,8 +590,7 @@ class GovernorERP:
                     pass
 
                 # Auto-dispatch builder subagent to fix the issue
-                if self.ai_backend_type == "agent-sdk":
-                    await self._dispatch_builder_for_rejection(pr, result)
+                await self._dispatch_builder_for_rejection(pr, result)
 
         except Exception as e:
             print(f"[{time.strftime('%H:%M:%S')}] Review error for PR #{pr.number}: {e}", flush=True)
@@ -788,9 +772,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--ai-backend",
-        choices=["cli", "sdk", "agent-sdk"],
         default="agent-sdk",
-        help="AI backend: 'agent-sdk' (default, reads files directly), 'sdk' (raw API), 'cli' (claude --print)",
+        help="AI backend (only 'agent-sdk' supported — has full tool access)",
     )
     parser.add_argument(
         "--skip-review",
