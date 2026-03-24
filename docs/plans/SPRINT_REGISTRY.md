@@ -84,8 +84,12 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S098` | Sprint 98 | COMPLETED 2026-03-23 — Self-evolution memory: 5 lessons + 3 playbooks seeded, Reflexion + Procedural, prompt injection on startup | `docs/plans/2026-03-23-sprint-98-governor-self-evolution.md` |
 
-| `S099` | Sprint 99 | GO — Labor Plan → Payroll Pipeline. ADMS auto-attendance fix, late/early deduction formulas, approval workflow, attendance reconciliation, VL/SL dropdown fix, Sentry observability. | `docs/plans/2026-03-23-sprint-99-labor-plan-payroll-pipeline.md` |
+| `S099` | Sprint 99 | COMPLETED 2026-03-24 — SCM policy enforcement: VAT from supplier vat_status (12%/0%), approver identity check (reject non-CPO), EWT atomic savepoint, ATC from supplier, 26 BEI Settings fields, CEO approval for new vendors. PR #321. L3: 12/12 PASS (math verified penny-exact). | `docs/plans/2026-03-23-sprint-99-scm-policy-enforcement.md` |
+
+| `S100` | Sprint 100 | MERGED 2026-03-24 — SCM operational hardening: notifications, over-receipt, invoice items, 3PL config. Shipped in PR #321 (combined with S099). | `docs/plans/2026-03-23-sprint-100-scm-operational-hardening.md` |
+
+| `S101` | Sprint 101 | GO — Governor AI Review Intelligence: replace rubber-stamp reviews with tool-driven code analysis, chain-of-thought terminal output, lesson-pattern checking, py_compile verification. | `docs/plans/2026-03-24-sprint-101-governor-review-intelligence.md` |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S100`.
-2. Create new sprint plan only after adding `S099` row here first.
+1. Next canonical sprint ID to assign: `S102`.
+2. Create new sprint plan only after adding `S101` row here first.
