@@ -11,8 +11,10 @@ from frappe.utils import add_days, flt, today
 from hrms.api.commissary import get_commissary_company, get_commissary_warehouse
 from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.supply_chain_contracts import (
+	FINANCE_TREATMENT_INTERCOMPANY,
 	REQUEST_SOURCE_COMMISSARY_RAW_MATERIAL,
 	get_request_source_label,
+	infer_finance_treatment,
 	resolve_material_request_contract,
 	resolve_warehouse_company,
 	stamp_material_request_contract,
@@ -258,6 +260,8 @@ def create_rm_requisition(
 	mr.material_request_type = "Material Transfer"
 	target_company = resolve_warehouse_company(commissary_warehouse) or COMMISSARY_COMPANY
 	source_company = resolve_warehouse_company(source_warehouse) or target_company
+	finance_treatment = infer_finance_treatment(source_company, target_company)
+	is_intercompany = finance_treatment == FINANCE_TREATMENT_INTERCOMPANY
 	mr.company = target_company
 	mr.transaction_date = today()
 	mr.schedule_date = required_by_date
@@ -270,7 +274,7 @@ def create_rm_requisition(
 		source_warehouse=source_warehouse,
 		source_company=source_company,
 		target_company=target_company,
-		finance_treatment="same_company",
+		finance_treatment=finance_treatment,
 	)
 
 	for item_data in items:
@@ -287,7 +291,11 @@ def create_rm_requisition(
 			"warehouse": commissary_warehouse,
 			"schedule_date": required_by_date,
 		}
-		if source_warehouse:
+		# For inter-company requests (e.g., BKI commissary requesting from BEI 3PL),
+		# omit from_warehouse to avoid ERPNext's validate_warehouse_company rejection.
+		# The MR is a request document — the actual stock transfer is handled by
+		# warehouse receiving which already supports inter-company via Material Issue.
+		if source_warehouse and not is_intercompany:
 			row["from_warehouse"] = source_warehouse
 		mr.append("items", row)
 
