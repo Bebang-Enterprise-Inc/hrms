@@ -72,6 +72,30 @@ def _is_head_office(branch: str | None) -> bool:
 	return any(key in label for key in HEAD_OFFICE_KEYS)
 
 
+# --- Employee compensation eligibility ---
+# Policy: CEO decision 2026-03-24
+# Office employees: voluntary choice (OT pay OR comp off)
+# Store + Commissary: auto-OT only (scheduled shift workers)
+VOLUNTARY_COMPENSATION_EXCLUDED_DEPTS = {"Operations - BEI", "Commissary - BEI"}
+
+
+def is_voluntary_compensation_eligible(employee_doc) -> bool:
+	"""Office employees get to choose OT pay vs Compensatory Off.
+	Store and commissary employees don't — holidays/weekends are normal shifts.
+
+	Rule:
+	  1. HEAD_OFFICE branch → always voluntary
+	  2. Department NOT in (Operations, Commissary) → voluntary
+	  3. Everything else → auto-OT only
+	"""
+	if _is_head_office(employee_doc.branch):
+		return True
+	dept = _txt(employee_doc.department)
+	if dept and dept not in VOLUNTARY_COMPENSATION_EXCLUDED_DEPTS:
+		return True
+	return False
+
+
 def _is_head_office_shift(shift_name: str | None) -> bool:
 	label = _upper(shift_name)
 	return label.startswith("HO ") or "HEAD OFFICE" in label or "BGC" in label or "CAPITAL" in label
@@ -507,9 +531,28 @@ def _ot_doc(attendance_name: str | None = None, shift_record_name: str | None = 
 	return frappe.get_doc("BEI Overtime Request", name) if name else None
 
 
+def _has_approved_leave(employee: str, attendance_date: str) -> bool:
+	"""Check if employee has approved leave on the given date.
+
+	Used to prevent OT creation when employee is on approved leave.
+	Policy: CEO decision 2026-03-24 — no OT and leave on the same day.
+	"""
+	return bool(frappe.db.exists("Leave Application", {
+		"employee": employee,
+		"from_date": ["<=", str(attendance_date)],
+		"to_date": [">=", str(attendance_date)],
+		"status": "Approved",
+		"docstatus": ["!=", 2],
+	}))
+
+
 def _upsert_from_attendance_doc(
 	attendance_doc, source_trigger: str = "attendance_close", shift_record_name: str | None = None
 ):
+	# P2.5-1: Block OT creation when employee has approved leave on this date
+	if _has_approved_leave(attendance_doc.employee, str(attendance_doc.attendance_date)):
+		return None
+
 	employee_doc = _employee(attendance_doc.employee)
 	shift_ctx = _shift_context(employee_doc, attendance_doc.attendance_date, attendance_doc.get("shift"))
 	eval_result = _evaluate(attendance_doc, employee_doc, shift_ctx)
