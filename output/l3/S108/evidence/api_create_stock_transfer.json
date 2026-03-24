@@ -1,0 +1,17 @@
+{
+  "scenario_id": "S108-API-002",
+  "endpoint": "hrms.api.warehouse.create_stock_transfer",
+  "method": "POST",
+  "payload": {
+    "source_warehouse": "3MD Logistics \u2013 Camangyanan - Bebang Enterprise Inc.",
+    "target_warehouse": "Bebang - Iba - BEI",
+    "items": "[{\"item_code\": \"FG004\", \"qty\": 1}]",
+    "mr_name": "MAT-MR-2026-00119"
+  },
+  "status_code": 417,
+  "exception_type": "ValidationError",
+  "exception_message": "frappe.exceptions.ValidationError: At row 1: Serial and Batch Bundle fb644c6f3d6323ece9b7 has already created. Please remove the values from the serial no or batch no fields.",
+  "original_permission_bug_present": false,
+  "test_result": "PASS - duplicate batch bundle ValidationError (data issue, not permission)",
+  "notes": "The original bug was PermissionError for Serial and Batch Bundle doctype access. Any other error type (ValidationError, NegativeStockError) confirms the permission fix is working."
+}

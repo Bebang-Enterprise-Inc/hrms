@@ -1,0 +1,194 @@
+[
+  {
+    "endpoint": "/api/resource/Leave%20Application",
+    "method": "POST",
+    "payload": {
+      "employee": "9000003",
+      "leave_type": "Vacation Leave",
+      "from_date": "2026-05-04",
+      "to_date": "2026-05-04",
+      "reason": "S108 L3 scenario 11 \u2014 OT-leave guard test",
+      "status": "Open"
+    },
+    "status": 200,
+    "response_body": "{\"data\":{\"name\":\"HR-LAP-2026-00110\",\"owner\":\"Administrator\",\"creation\":\"2026-03-24 20:56:02.402069\",\"modified\":\"2026-03-24 20:56:02.402069\",\"modified_by\":\"Administrator\",\"docstatus\":0,\"idx\":0,\"naming_series\":\"HR-LAP-.YYYY.-\",\"employee\":\"9000003\",\"employee_name\":\"ARRABIS, MA. CRISTINA C.\",\"leave_type\":\"Vacation Leave\",\"company\":\"Bebang Enterprise Inc.\",\"department\":\"Operations - BEI\",\"from_date\":\"2026-05-04\",\"to_date\":\"2026-05-04\",\"half_day\":0,\"total_leave_days\":1.0,\"leave_balance\":0.0,\"follow_vi"
+  },
+  {
+    "endpoint": "/api/resource/Leave%20Application/HR-LAP-2026-00110",
+    "method": "PUT",
+    "payload": {
+      "status": "Approved"
+    },
+    "status": 200,
+    "response_body": "{\"data\":{\"name\":\"HR-LAP-2026-00110\",\"owner\":\"Administrator\",\"creation\":\"2026-03-24 20:56:02.402069\",\"modified\":\"2026-03-24 20:56:04.712497\",\"modified_by\":\"Administrator\",\"docstatus\":0,\"idx\":0,\"naming_series\":\"HR-LAP-.YYYY.-\",\"employee\":\"9000003\",\"employee_name\":\"ARRABIS, MA. CRISTINA C.\",\"leave_type\":\"Vacation Leave\",\"company\":\"Bebang Enterprise Inc.\",\"department\":\"Operations - BEI\",\"from_date\":\"2026-05-04\",\"to_date\":\"2026-05-04\",\"half_day\":0,\"total_leave_days\":1.0,\"leave_balance\":0.0,\"follow_vi"
+  },
+  {
+    "endpoint": "/api/resource/Leave%20Application/HR-LAP-2026-00110",
+    "method": "PUT",
+    "payload": {
+      "docstatus": 1
+    },
+    "status": 200,
+    "response_body": "{\"data\":{\"name\":\"HR-LAP-2026-00110\",\"owner\":\"Administrator\",\"creation\":\"2026-03-24 20:56:02.402069\",\"modified\":\"2026-03-24 20:56:07.084205\",\"modified_by\":\"Administrator\",\"docstatus\":1,\"idx\":0,\"naming_series\":\"HR-LAP-.YYYY.-\",\"employee\":\"9000003\",\"employee_name\":\"ARRABIS, MA. CRISTINA C.\",\"leave_type\":\"Vacation Leave\",\"company\":\"Bebang Enterprise Inc.\",\"department\":\"Operations - BEI\",\"from_date\":\"2026-05-04\",\"to_date\":\"2026-05-04\",\"half_day\":0,\"total_leave_days\":1.0,\"leave_balance\":0.0,\"follow_vi"
+  },
+  {
+    "endpoint": "/api/resource/Leave%20Application/HR-LAP-2026-00110",
+    "method": "GET",
+    "payload": {
+      "fields": "[\"status\", \"docstatus\", \"from_date\", \"to_date\"]"
+    },
+    "status": 200,
+    "response_body": "{\"data\":{\"name\":\"HR-LAP-2026-00110\",\"owner\":\"Administrator\",\"creation\":\"2026-03-24 20:56:02.402069\",\"modified\":\"2026-03-24 20:56:07.084205\",\"modified_by\":\"Administrator\",\"docstatus\":1,\"idx\":0,\"naming_series\":\"HR-LAP-.YYYY.-\",\"employee\":\"9000003\",\"employee_name\":\"ARRABIS, MA. CRISTINA C.\",\"leave_type\":\"Vacation Leave\",\"company\":\"Bebang Enterprise Inc.\",\"department\":\"Operations - BEI\",\"from_date\":\"2026-05-04\",\"to_date\":\"2026-05-04\",\"half_day\":0,\"total_leave_days\":1.0,\"leave_balance\":0.0,\"follow_vi"
+  },
+  {
+    "endpoint": "/api/resource/Leave%20Application/HR-LAP-2026-00110",
+    "method": "PUT",
+    "payload": {
+      "docstatus": 2
+    },
+    "status": 200,
+    "response_body": "{\"data\":{\"name\":\"HR-LAP-2026-00110\",\"owner\":\"Administrator\",\"creation\":\"2026-03-24 20:56:02.402069\",\"modified\":\"2026-03-24 20:56:11.675219\",\"modified_by\":\"Administrator\",\"docstatus\":2,\"idx\":0,\"naming_series\":\"HR-LAP-.YYYY.-\",\"employee\":\"9000003\",\"employee_name\":\"ARRABIS, MA. CRISTINA C.\",\"leave_type\":\"Vacation Leave\",\"company\":\"Bebang Enterprise Inc.\",\"department\":\"Operations - BEI\",\"from_date\":\"2026-05-04\",\"to_date\":\"2026-05-04\",\"half_day\":0,\"total_leave_days\":1.0,\"leave_balance\":0.0,\"follow_vi"
+  },
+  {
+    "endpoint": "/api/resource/BEI%20Overtime%20Request",
+    "method": "GET",
+    "payload": {
+      "filters": "[[\"employee\", \"=\", \"9000003\"], [\"overtime_status\", \"in\", [\"Approved\", \"Payroll Locked\", \"Bridged\"]]]",
+      "fields": "[\"name\", \"attendance_date\", \"overtime_status\"]",
+      "limit_page_length": 1,
+      "order_by": "attendance_date desc"
+    },
+    "status": 200,
+    "response_body": "{\"data\":[]}"
+  },
+  {
+    "endpoint": "/api/resource/BEI%20Overtime%20Request",
+    "method": "GET",
+    "payload": {
+      "filters": "[[\"employee\", \"=\", \"9000003\"], [\"overtime_status\", \"in\", [\"Pending Review\", \"Pending Approval\", \"Needs Clarification\", \"Clarification Submitted\"]]]",
+      "fields": "[\"name\", \"attendance_date\", \"overtime_status\"]",
+      "limit_page_length": 1
+    },
+    "status": 200,
+    "response_body": "{\"data\":[]}"
+  },
+  {
+    "endpoint": "/api/resource/Employee/9000003",
+    "method": "GET",
+    "payload": {
+      "fields": "[\"name\", \"employee_name\", \"branch\", \"department\"]"
+    },
+    "status": 200,
+    "response_body": "{\"data\":{\"name\":\"9000003\",\"owner\":\"Administrator\",\"creation\":\"2026-02-22 08:38:34\",\"modified\":\"2026-02-23 04:00:32\",\"modified_by\":\"Administrator\",\"docstatus\":0,\"idx\":8,\"naming_series\":\"HR-EMP-\",\"first_name\":\"Ma. Cristina\",\"middle_name\":\"C.\",\"last_name\":\"Arrabis\",\"employee_name\":\"ARRABIS, MA. CRISTINA C.\",\"gender\":\"Female\",\"date_of_birth\":\"1997-02-11\",\"date_of_joining\":\"2023-03-02\",\"custom_tin_verified\":0,\"custom_sss_verified\":0,\"custom_philhealth_verified\":0,\"custom_pagibig_verified\":0,\"custom_e"
+  },
+  {
+    "endpoint": "/api/resource/Employee",
+    "method": "GET",
+    "payload": {
+      "filters": "[[\"department\", \"like\", \"%Finance%\"], [\"status\", \"=\", \"Active\"]]",
+      "fields": "[\"name\", \"employee_name\", \"department\", \"branch\"]",
+      "limit_page_length": 1
+    },
+    "status": 200,
+    "response_body": "{\"data\":[{\"name\":\"9000559\",\"employee_name\":\"FORMOSO, ALESSANDRO REY R.\",\"department\":\"Finance and Accounting - BEI\",\"branch\":\"BRITTANY OFFICE\"}]}"
+  },
+  {
+    "endpoint": "/api/resource/Employee",
+    "method": "GET",
+    "payload": {
+      "filters": "[[\"department\", \"like\", \"%Commissary%\"], [\"status\", \"=\", \"Active\"]]",
+      "fields": "[\"name\", \"employee_name\", \"department\", \"branch\"]",
+      "limit_page_length": 1
+    },
+    "status": 200,
+    "response_body": "{\"data\":[{\"name\":\"9000005\",\"employee_name\":\"DULAY, JAY-R L.\",\"department\":\"Commissary - BEI\",\"branch\":\"SHAW COMMISSARY - Production\"}]}"
+  },
+  {
+    "endpoint": "/api/resource/Leave%20Application",
+    "method": "POST",
+    "payload": {
+      "employee": "9000003",
+      "leave_type": "Vacation Leave",
+      "from_date": "2026-04-09",
+      "to_date": "2026-04-09",
+      "reason": "Collateral test \u2014 holiday guard",
+      "status": "Open"
+    },
+    "status": 417,
+    "response_body": "{\"exception\":\"frappe.exceptions.ValidationError: The day(s) on which you are applying for leave are holidays. You need not apply for leave.\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"hrms (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**argum"
+  },
+  {
+    "endpoint": "/api/method/hrms.hr.doctype.leave_application.leave_application.get_leave_balance_on",
+    "method": "GET",
+    "payload": {
+      "employee": "9000003",
+      "leave_type": "Vacation Leave",
+      "date": "2026-05-05"
+    },
+    "status": 200,
+    "response_body": "{\"message\":15.0}"
+  },
+  {
+    "endpoint": "/api/resource/Leave%20Application",
+    "method": "POST",
+    "payload": {
+      "employee": "9000003",
+      "leave_type": "Vacation Leave",
+      "from_date": "2026-05-05",
+      "to_date": "2026-05-05",
+      "reason": "Balance integrity test",
+      "status": "Open"
+    },
+    "status": 200,
+    "response_body": "{\"data\":{\"name\":\"HR-LAP-2026-00111\",\"owner\":\"Administrator\",\"creation\":\"2026-03-24 20:56:29.210380\",\"modified\":\"2026-03-24 20:56:29.210380\",\"modified_by\":\"Administrator\",\"docstatus\":0,\"idx\":0,\"naming_series\":\"HR-LAP-.YYYY.-\",\"employee\":\"9000003\",\"employee_name\":\"ARRABIS, MA. CRISTINA C.\",\"leave_type\":\"Vacation Leave\",\"company\":\"Bebang Enterprise Inc.\",\"department\":\"Operations - BEI\",\"from_date\":\"2026-05-05\",\"to_date\":\"2026-05-05\",\"half_day\":0,\"total_leave_days\":1.0,\"leave_balance\":0.0,\"follow_vi"
+  },
+  {
+    "endpoint": "/api/resource/Leave%20Application/HR-LAP-2026-00111",
+    "method": "PUT",
+    "payload": {
+      "status": "Approved"
+    },
+    "status": 200,
+    "response_body": "{\"data\":{\"name\":\"HR-LAP-2026-00111\",\"owner\":\"Administrator\",\"creation\":\"2026-03-24 20:56:29.210380\",\"modified\":\"2026-03-24 20:56:31.484197\",\"modified_by\":\"Administrator\",\"docstatus\":0,\"idx\":0,\"naming_series\":\"HR-LAP-.YYYY.-\",\"employee\":\"9000003\",\"employee_name\":\"ARRABIS, MA. CRISTINA C.\",\"leave_type\":\"Vacation Leave\",\"company\":\"Bebang Enterprise Inc.\",\"department\":\"Operations - BEI\",\"from_date\":\"2026-05-05\",\"to_date\":\"2026-05-05\",\"half_day\":0,\"total_leave_days\":1.0,\"leave_balance\":0.0,\"follow_vi"
+  },
+  {
+    "endpoint": "/api/resource/Leave%20Application/HR-LAP-2026-00111",
+    "method": "PUT",
+    "payload": {
+      "docstatus": 1
+    },
+    "status": 200,
+    "response_body": "{\"data\":{\"name\":\"HR-LAP-2026-00111\",\"owner\":\"Administrator\",\"creation\":\"2026-03-24 20:56:29.210380\",\"modified\":\"2026-03-24 20:56:33.736459\",\"modified_by\":\"Administrator\",\"docstatus\":1,\"idx\":0,\"naming_series\":\"HR-LAP-.YYYY.-\",\"employee\":\"9000003\",\"employee_name\":\"ARRABIS, MA. CRISTINA C.\",\"leave_type\":\"Vacation Leave\",\"company\":\"Bebang Enterprise Inc.\",\"department\":\"Operations - BEI\",\"from_date\":\"2026-05-05\",\"to_date\":\"2026-05-05\",\"half_day\":0,\"total_leave_days\":1.0,\"leave_balance\":0.0,\"follow_vi"
+  },
+  {
+    "endpoint": "/api/method/hrms.hr.doctype.leave_application.leave_application.get_leave_balance_on",
+    "method": "GET",
+    "payload": {
+      "employee": "9000003",
+      "leave_type": "Vacation Leave",
+      "date": "2026-05-05"
+    },
+    "status": 200,
+    "response_body": "{\"message\":14.0}"
+  },
+  {
+    "endpoint": "/api/resource/Leave%20Application/HR-LAP-2026-00111",
+    "method": "PUT",
+    "payload": {
+      "docstatus": 2
+    },
+    "status": 200,
+    "response_body": "{\"data\":{\"name\":\"HR-LAP-2026-00111\",\"owner\":\"Administrator\",\"creation\":\"2026-03-24 20:56:29.210380\",\"modified\":\"2026-03-24 20:56:38.221105\",\"modified_by\":\"Administrator\",\"docstatus\":2,\"idx\":0,\"naming_series\":\"HR-LAP-.YYYY.-\",\"employee\":\"9000003\",\"employee_name\":\"ARRABIS, MA. CRISTINA C.\",\"leave_type\":\"Vacation Leave\",\"company\":\"Bebang Enterprise Inc.\",\"department\":\"Operations - BEI\",\"from_date\":\"2026-05-05\",\"to_date\":\"2026-05-05\",\"half_day\":0,\"total_leave_days\":1.0,\"leave_balance\":0.0,\"follow_vi"
+  },
+  {
+    "endpoint": "/api/method/hrms.hr.doctype.leave_application.leave_application.get_leave_balance_on",
+    "method": "GET",
+    "payload": {
+      "employee": "9000003",
+      "leave_type": "Vacation Leave",
+      "date": "2026-05-05"
+    },
+    "status": 200,
+    "response_body": "{\"message\":15.0}"
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "scenario": "S108-002",
+    "check": "PR appears in list after creation",
+    "result": "PASS"
+  },
+  {
+    "scenario": "S108-003",
+    "check": "Price auto-fills on item_code blur",
+    "result": "PASS"
+  }
+]

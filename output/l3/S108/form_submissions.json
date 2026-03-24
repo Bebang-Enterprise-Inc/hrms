@@ -1,0 +1,16 @@
+[
+  {
+    "scenario": "S108-001",
+    "form": "New Purchase Requisition",
+    "user": "luwi@bebang.ph",
+    "fields": {
+      "department": "Commissary",
+      "item": "Sago/FG009",
+      "qty": 5,
+      "uom": "Kg",
+      "rate": 84,
+      "purpose": "Weekly supplies"
+    },
+    "result": "PASS"
+  }
+]

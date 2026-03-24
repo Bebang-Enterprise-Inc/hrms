@@ -1,0 +1,9 @@
+[
+  {
+    "scenario": "S108-001",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/procurement/purchase-requisitions",
+    "status": 200,
+    "response": "{\"success\":true,\"name\":\"PR-2026-02969\",\"pr_number\":\"PR-2026-02969\",\"message\":\"PR created\"}"
+  }
+]

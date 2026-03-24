@@ -1,0 +1,38 @@
+[
+  {
+    "check": "Leave exists and is approved for OT guard test",
+    "before": "No leave",
+    "after": "status=Approved, docstatus=1",
+    "passed": true
+  },
+  {
+    "check": "S12: Leave-OT guard \u2014 needs approved OT to test",
+    "before": "No approved OT exists",
+    "after": "SKIP \u2014 guard code deployed but untestable without approved OT record",
+    "passed": null
+  },
+  {
+    "check": "S13: Auto-reject pending OT \u2014 needs pending OT to test",
+    "before": "No pending OT exists",
+    "after": "SKIP \u2014 guard code deployed but untestable without pending OT record",
+    "passed": null
+  },
+  {
+    "check": "S15: Store employee compensation eligibility",
+    "before": "dept=Operations - BEI, branch=SM MEGAMALL",
+    "after": "eligible=False (expected False)",
+    "passed": true
+  },
+  {
+    "check": "S16: Office employee compensation eligibility",
+    "before": "dept=Finance and Accounting - BEI, branch=BRITTANY OFFICE",
+    "after": "eligible=True (expected True)",
+    "passed": true
+  },
+  {
+    "check": "S17: Commissary employee compensation eligibility",
+    "before": "dept=Commissary - BEI, branch=SHAW COMMISSARY - Production",
+    "after": "eligible=False (expected False)",
+    "passed": true
+  }
+]

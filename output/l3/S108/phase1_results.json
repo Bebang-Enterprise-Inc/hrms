@@ -1,0 +1,205 @@
+[
+  {
+    "scenario": "P1-1",
+    "test": "VL balance check",
+    "status": "PASS",
+    "detail": "Balance = 15.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-1",
+    "test": "VL create",
+    "status": "PASS",
+    "detail": "Created HR-LAP-2026-00106",
+    "error": ""
+  },
+  {
+    "scenario": "P1-1",
+    "test": "VL approve+submit",
+    "status": "PASS",
+    "detail": "status=Approved, docstatus=1",
+    "error": ""
+  },
+  {
+    "scenario": "P1-1",
+    "test": "VL attendance",
+    "status": "PASS",
+    "detail": "Attendance: On Leave, leave_type: Vacation Leave",
+    "error": ""
+  },
+  {
+    "scenario": "P1-1",
+    "test": "VL balance deducted",
+    "status": "PASS",
+    "detail": "Balance: 15.0 \u2192 14.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-1",
+    "test": "VL cancel+restore",
+    "status": "PASS",
+    "detail": "Balance restored: 15.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-2",
+    "test": "SL balance check",
+    "status": "PASS",
+    "detail": "Balance = 15.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-2",
+    "test": "SL create",
+    "status": "PASS",
+    "detail": "Created HR-LAP-2026-00107",
+    "error": ""
+  },
+  {
+    "scenario": "P1-2",
+    "test": "SL approve+submit",
+    "status": "PASS",
+    "detail": "status=Approved, docstatus=1",
+    "error": ""
+  },
+  {
+    "scenario": "P1-2",
+    "test": "SL attendance",
+    "status": "PASS",
+    "detail": "Attendance: On Leave, leave_type: Sick Leave",
+    "error": ""
+  },
+  {
+    "scenario": "P1-2",
+    "test": "SL balance deducted",
+    "status": "PASS",
+    "detail": "Balance: 15.0 \u2192 14.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-2",
+    "test": "SL cancel+restore",
+    "status": "PASS",
+    "detail": "Balance restored: 15.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-3",
+    "test": "EL balance check",
+    "status": "PASS",
+    "detail": "Balance = 5.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-3",
+    "test": "EL create",
+    "status": "PASS",
+    "detail": "Created HR-LAP-2026-00108",
+    "error": ""
+  },
+  {
+    "scenario": "P1-3",
+    "test": "EL approve+submit",
+    "status": "PASS",
+    "detail": "status=Approved, docstatus=1",
+    "error": ""
+  },
+  {
+    "scenario": "P1-3",
+    "test": "EL attendance",
+    "status": "PASS",
+    "detail": "Attendance: On Leave, leave_type: Emergency Leave",
+    "error": ""
+  },
+  {
+    "scenario": "P1-3",
+    "test": "EL balance deducted",
+    "status": "PASS",
+    "detail": "Balance: 5.0 \u2192 4.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-3",
+    "test": "EL cancel+restore",
+    "status": "PASS",
+    "detail": "Balance restored: 5.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-4",
+    "test": "CL balance check",
+    "status": "PASS",
+    "detail": "Balance = 0.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-4",
+    "test": "CL lifecycle",
+    "status": "SKIP",
+    "detail": "Balance is 0.0 \u2014 cannot test (no allocation)",
+    "error": ""
+  },
+  {
+    "scenario": "P1-5",
+    "test": "LWOP create",
+    "status": "PASS",
+    "detail": "Created HR-LAP-2026-00109",
+    "error": ""
+  },
+  {
+    "scenario": "P1-5",
+    "test": "LWOP approve+submit",
+    "status": "PASS",
+    "detail": "status=Approved, docstatus=1",
+    "error": ""
+  },
+  {
+    "scenario": "P1-5",
+    "test": "LWOP attendance",
+    "status": "PASS",
+    "detail": "Attendance: On Leave, leave_type: Leave Without Pay",
+    "error": ""
+  },
+  {
+    "scenario": "P1-5",
+    "test": "LWOP payroll impact",
+    "status": "PASS",
+    "detail": "Leave Type has is_lwp=1 \u2192 payroll will deduct salary for this day",
+    "error": ""
+  },
+  {
+    "scenario": "P1-5",
+    "test": "LWOP cancel+restore",
+    "status": "PASS",
+    "detail": "Cancelled successfully (no balance check for LWOP)",
+    "error": ""
+  },
+  {
+    "scenario": "P1-6",
+    "test": "CO config",
+    "status": "PASS",
+    "detail": "is_compensatory=1, max_leaves=0.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-6",
+    "test": "CO request mechanic",
+    "status": "PASS",
+    "detail": "Compensatory Leave Request DocType exists \u2014 filing mechanic available",
+    "error": ""
+  },
+  {
+    "scenario": "P1-7",
+    "test": "PL balance check",
+    "status": "PASS",
+    "detail": "Balance = 0.0",
+    "error": ""
+  },
+  {
+    "scenario": "P1-7",
+    "test": "PL lifecycle",
+    "status": "SKIP",
+    "detail": "Balance is 0.0 \u2014 cannot test (no allocation)",
+    "error": ""
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "S108-001",
+    "test": "Create PR end-to-end",
+    "status": "PASS",
+    "detail": "PR created: PR-2026-02969. Status 200",
+    "error": null
+  },
+  {
+    "id": "S108-002",
+    "test": "PR appears in list",
+    "status": "PASS",
+    "detail": "PR list loads with PR records visible",
+    "error": null
+  },
+  {
+    "id": "S108-003",
+    "test": "Contracted price auto-fill on item_code blur",
+    "status": "PASS",
+    "detail": "Price auto-filled to 195 for RM001",
+    "error": null
+  }
+]

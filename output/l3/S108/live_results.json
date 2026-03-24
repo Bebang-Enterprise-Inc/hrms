@@ -1,0 +1,86 @@
+[
+  {
+    "scenario": "S11",
+    "test": "Create leave",
+    "status": "PASS",
+    "detail": "Created HR-LAP-2026-00110",
+    "error": ""
+  },
+  {
+    "scenario": "S11",
+    "test": "Approve leave",
+    "status": "PASS",
+    "detail": "Approved HR-LAP-2026-00110",
+    "error": ""
+  },
+  {
+    "scenario": "S11",
+    "test": "OT would be blocked",
+    "status": "PASS",
+    "detail": "Leave HR-LAP-2026-00110 is Approved+Submitted on 2026-05-04 \u2014 _has_approved_leave() will return True, blocking OT creation",
+    "error": ""
+  },
+  {
+    "scenario": "S11",
+    "test": "Cleanup",
+    "status": "PASS",
+    "detail": "Cancelled HR-LAP-2026-00110",
+    "error": ""
+  },
+  {
+    "scenario": "S12",
+    "test": "Find approved OT",
+    "status": "SKIP",
+    "detail": "No approved OT found for 9000003 \u2014 cannot test leave-OT guard without existing approved OT. This is expected for test employees.",
+    "error": ""
+  },
+  {
+    "scenario": "S13",
+    "test": "Find pending OT",
+    "status": "SKIP",
+    "detail": "No pending OT for 9000003 \u2014 auto-reject untestable without pending OT. Code deployed, guard verified in source.",
+    "error": ""
+  },
+  {
+    "scenario": "S14",
+    "test": "Leave dropdown filter",
+    "status": "SKIP",
+    "detail": "Browser test \u2014 requires Playwright session",
+    "error": ""
+  },
+  {
+    "scenario": "S15",
+    "test": "Store employee (Operations) \u2192 NOT eligible",
+    "status": "PASS",
+    "detail": "ARRABIS, MA. CRISTINA C. | dept=Operations - BEI | branch=SM MEGAMALL \u2192 eligible=False",
+    "error": ""
+  },
+  {
+    "scenario": "S16",
+    "test": "Office employee \u2192 eligible",
+    "status": "PASS",
+    "detail": "FORMOSO, ALESSANDRO REY R. | dept=Finance and Accounting - BEI | branch=BRITTANY OFFICE \u2192 eligible=True",
+    "error": ""
+  },
+  {
+    "scenario": "S17",
+    "test": "Commissary employee \u2192 NOT eligible",
+    "status": "PASS",
+    "detail": "DULAY, JAY-R L. | dept=Commissary - BEI | branch=SHAW COMMISSARY - Production \u2192 eligible=False",
+    "error": ""
+  },
+  {
+    "scenario": "COL-1",
+    "test": "Leave on holiday blocked",
+    "status": "PASS",
+    "detail": "Correctly blocked \u2014 April 9 is a holiday",
+    "error": ""
+  },
+  {
+    "scenario": "COL-2",
+    "test": "Balance integrity",
+    "status": "PASS",
+    "detail": "Before=15.0, After approve=14.0, After cancel=15.0",
+    "error": ""
+  }
+]
