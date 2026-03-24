@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "sprint": "S101",
+    "test_level": "L3",
+    "run_at": "2026-03-24T03:15:44.608033+00:00",
+    "branch": "s101-governor-review-intelligence",
+    "results": {
+      "S1_syntax_error": true,
+      "S2_link_default": true,
+      "S3_decorator_constant": true,
+      "S4_clean_pr": true,
+      "S5_streaming": true,
+      "S6_confidence": true
+    },
+    "all_passed": true
+  },
+  "verifications": [
+    {
+      "timestamp": "2026-03-24T03:15:44.597527+00:00",
+      "scenario": "S1_syntax_error",
+      "check": "py_compile rejects syntax error",
+      "expected": "passed=False with blocking issue",
+      "actual": "passed=False, blocking=1",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:15:44.600034+00:00",
+      "scenario": "S2_link_default",
+      "check": "Link default flagged as BLOCKING",
+      "expected": "passed=False with Link field blocking issue",
+      "actual": "passed=False, detail=hrms/hr/doctype/bei_test_settings/bei_test_settings.json: Link field 'commissary_company' has defaul",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:15:44.602033+00:00",
+      "scenario": "S3_decorator_constant",
+      "check": "Decorator on constant flagged as BLOCKING",
+      "expected": "passed=False (caught by py_compile or decorator check)",
+      "actual": "passed=False, caught_by=py_compile (SyntaxError)",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:15:44.605033+00:00",
+      "scenario": "S4_clean_pr",
+      "check": "Clean PR pre-checks pass and confidence >= 0.85",
+      "expected": "passed=True, confidence>=0.85",
+      "actual": "passed=True, confidence=0.99",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:15:44.606032+00:00",
+      "scenario": "S5_streaming",
+      "check": "Terminal shows step-by-step tool calls and AI reasoning",
+      "expected": "All 4 tool types show with details; streaming code has ToolResultMessage + async for",
+      "actual": "tool_display=True, code_structure=True",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:15:44.606032+00:00",
+      "scenario": "S6_confidence",
+      "check": "Confidence calculated from verification depth, not vibes",
+      "expected": "Low < 0.70, High >= 0.85, Low < Mid < High, ReviewResult has fields",
+      "actual": "low=0.59, mid=0.80, high=0.99, fields=True",
+      "passed": true
+    }
+  ]
+}

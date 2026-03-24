@@ -92,7 +92,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 | `S098` | Sprint 98 | — | — | COMPLETED 2026-03-23 — Self-evolution memory: 5 lessons + 3 playbooks seeded, Reflexion + Procedural, prompt injection on startup | `docs/plans/2026-03-23-sprint-98-governor-self-evolution.md` |
 | `S099` | Sprint 99 | **VIOLATION: no branch** | #321 (shared) | COMPLETED 2026-03-24 — SCM policy enforcement. **Committed directly to production — no branch created.** | `docs/plans/2026-03-23-sprint-99-scm-policy-enforcement.md` |
 | `S100` | Sprint 100 | `s100-scm-operational-hardening` | #321 (shared) | MERGED 2026-03-24 — SCM operational hardening. **PR shared with S099 due to S099 branch violation.** | `docs/plans/2026-03-23-sprint-100-scm-operational-hardening.md` |
-| `S101` | Sprint 101 | `s101-governor-review-intelligence` | #324 | IN_PROGRESS — Governor AI Review Intelligence. PR created, waiting for governor merge. | `docs/plans/2026-03-24-sprint-101-governor-review-intelligence.md` |
+| `S101` | Sprint 101 | `s101-governor-review-intelligence` | #324 | COMPLETED — Governor AI Review Intelligence. L3 6/6 pass. Pre-checks (py_compile, Link defaults, decorators, lessons), streaming AI review, calculated confidence. | `docs/plans/2026-03-24-sprint-101-governor-review-intelligence.md` |
 
 | `S102` | Sprint 102 | `s102-governor-agent-platform` | — | GO — Governor Agent Platform: REST API (10 endpoints), force-wake, event bus, live logs, self-diagnosis, inter-agent communication. | `docs/plans/2026-03-24-sprint-102-governor-agent-platform.md` |
 
