@@ -598,7 +598,7 @@ def create_purchase_requisition(data=None):
     })
     pr.insert()
 
-    return {"success": True, "name": pr.name, "message": _("PR created")}
+    return {"success": True, "name": pr.name, "pr_number": pr.pr_no or pr.name, "message": _("PR created")}
 
 
 @frappe.whitelist()
@@ -6181,24 +6181,36 @@ def reject_item_request(name, reason=None):
 
 @frappe.whitelist()
 def get_department_list():
-    """Return list of active departments for PR form dropdown."""
+    """Return list of active departments for PR form dropdown.
+    Returns [{value: "Commissary - BEI", label: "Commissary"}, ...].
+    value = Frappe name (Link field ID), label = display name.
+    Filtered to BEI company only, deduplicated.
+    """
     from hrms.utils.sentry import set_backend_observability_context
     set_backend_observability_context(module="procurement", action="get_department_list")
 
     departments = frappe.get_all(
         "Department",
-        filters={"is_group": 0, "disabled": 0},
+        filters={"is_group": 0, "disabled": 0, "company": "Bebang Enterprise Inc."},
         fields=["name", "department_name"],
         order_by="department_name",
     )
-    return [d.department_name or d.name for d in departments]
+    seen = set()
+    result = []
+    for d in departments:
+        if d.name not in seen:
+            seen.add(d.name)
+            result.append({"value": d.name, "label": d.department_name or d.name})
+    return result
 
 
 @frappe.whitelist()
 def get_uom_list():
-    """Return list of UOMs for PR form dropdown."""
+    """Return list of UOMs for PR form dropdown.
+    Returns [{value: "Nos", label: "Nos"}, ...] for consistency with department format.
+    """
     from hrms.utils.sentry import set_backend_observability_context
     set_backend_observability_context(module="procurement", action="get_uom_list")
 
     uoms = frappe.get_all("UOM", fields=["name"], order_by="name")
-    return [u.name for u in uoms]
+    return [{"value": u.name, "label": u.name} for u in uoms]
