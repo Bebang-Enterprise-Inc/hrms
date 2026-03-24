@@ -103,10 +103,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S107` | Sprint 107 | `s107-pr-form-frontend-fix` | #336 (hrms), #234 (bei-tasks) | COMPLETED 2026-03-24 — PR form frontend fix: departments from API ({value,label} with BEI filter), UOMs from API (29 vs 14 hardcoded), item_code onBlur price auto-fill, qty NaN fix. Luwi's "Could not find Department: Commissary" bug fixed. L3 6/6 PASS. | `docs/plans/2026-03-24-sprint-107-pr-form-frontend-fix.md` |
 
-| `S108` | Sprint 108 | `s108-procurement-module-hardening` | — | GO — Procurement module hardening: test-first audit (107 endpoints, 36 pages), PR form fix (missing date_required/purpose), Sentry for 93 endpoints, fix all critical bugs. | `docs/plans/2026-03-24-sprint-108-procurement-module-hardening.md` |
+| `S108` | Sprint 108 | `s108-pr-form-luwi-fix` | #341 (hrms), #236 (bei-tasks) | COMPLETED 2026-03-24 — PR form fix: auto-set request_date/requested_by/date_required/purpose, map justification→purpose, item_code fallback, Sentry. L3 3/3 PASS (PR-2026-02968, PR-2026-02969). | `docs/plans/2026-03-24-sprint-108-procurement-module-hardening.md` |
+| `S109` | Sprint 109 | `s109-procurement-full-audit` | — | PLANNED — Full procurement module hardening: Sentry for 93 endpoints, comprehensive L1/L2/L3 audit of all 107 endpoints + 36 pages, fix all bugs. | — |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S109`.
+1. Next canonical sprint ID to assign: `S110`.
 2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
