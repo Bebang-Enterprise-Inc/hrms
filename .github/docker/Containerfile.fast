@@ -1,18 +1,20 @@
-# Containerfile.fast — Rebuild hrms on the production image
+# Containerfile.fast — Rebuild hrms on existing image
 #
-# Iteration 4: Fix missing node deps from iteration 3
-# Added yarn install after git clone to resolve html2canvas etc.
+# Iteration 6: Pull base from GHCR (same datacenter as GHA runner)
+# instead of Docker Hub. Expected: 40s pull → ~10s pull.
+#
+# Uses v15-fast-test as base (already on GHCR from iteration 5).
+# Same content as production image — just different registry.
 
-ARG BASE_IMAGE=samkarazi/bebang-erpnext-hrms:v15
+ARG BASE_IMAGE=ghcr.io/bebang-enterprise-inc/bebang-erpnext-hrms:v15-fast-test
 FROM ${BASE_IMAGE}
+
+ARG HRMS_SHA
 
 USER frappe
 WORKDIR /home/frappe/frappe-bench
 
-# HRMS_SHA invalidates everything below. Base image pull stays cached.
-ARG HRMS_SHA
-
-# Layer 1: Clone fresh hrms code + install node deps
+# Layer 1: Clone fresh hrms + install node deps
 RUN rm -rf apps/hrms \
     && git clone --depth 1 --branch production \
        https://github.com/Bebang-Enterprise-Inc/hrms.git apps/hrms \
@@ -47,8 +49,3 @@ CMD [ \
   "--preload", \
   "frappe.app:application" \
 ]
-# validation run 1 - 1774342762
-# validation run 2 - 1774342767
-# validation run 3 - 1774342772
-# validation run 4 - 1774342777
-# validation run 5 - 1774342782
