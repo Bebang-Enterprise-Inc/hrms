@@ -14,13 +14,31 @@
   {
     "check": "VL/SL shift options available in bootstrap",
     "before": "N/A (read)",
-    "after": "vl_sl_options=2, leave_overrides=1",
+    "after": "vl_sl_options=2 (VL, SL), leave_overrides=3 after creating VL+SL leave applications",
     "passed": true
   },
   {
-    "check": "Leave overrides auto-populate for employees with approved leave",
-    "before": "N/A (read)",
-    "after": "leave_overrides=1 locked leave entries",
+    "check": "VL leave auto-populates for HELUTIN on Wednesday 2026-03-25",
+    "before": "No VL leave application for HELUTIN on 2026-03-25",
+    "after": "HR-LAP-2026-00081 created (Vacation Leave, Approved), bootstrap shows VL locked on Wednesday for HELUTIN",
+    "passed": true
+  },
+  {
+    "check": "SL leave auto-populates for SAMSON on Thursday 2026-03-26",
+    "before": "No SL leave application for SAMSON on 2026-03-26",
+    "after": "HR-LAP-2026-00082 created (Sick Leave, Approved), bootstrap shows SL locked on Thursday for SAMSON",
+    "passed": true
+  },
+  {
+    "check": "Leave overrides are locked (is_locked=1, shift_source=approved_leave)",
+    "before": "1 existing leave override (Sam Admin Casual Leave)",
+    "after": "3 total leave overrides: VL(HELUTIN/Wed), SL(SAMSON/Thu), Leave(Sam Admin/Thu) — all locked=1",
+    "passed": true
+  },
+  {
+    "check": "VL and SL badges visible in labor plan grid",
+    "before": "0 VL, 0 SL badges",
+    "after": "1 VL badge, 1 SL badge visible in grid (screenshot: S7_vl_sl_verified.png)",
     "passed": true
   },
   {

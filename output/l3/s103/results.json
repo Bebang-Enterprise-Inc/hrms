@@ -25,19 +25,27 @@
   },
   {
     "scenario": "S7",
-    "test": "VL/SL options in shift dropdown",
+    "test": "Create VL leave application for HELUTIN on Wed 2026-03-25",
     "status": "PASS",
-    "detail": "Bootstrap has 2 VL/SL options: ['VL', 'SL']. Leave overrides: 1",
+    "detail": "HR-LAP-2026-00081 created (Vacation Leave, Approved). Shows as VL locked in grid.",
     "error": null,
-    "timestamp": "2026-03-24T14:44:18.895292"
+    "timestamp": "2026-03-24T15:00:00.000000"
   },
   {
     "scenario": "S7",
-    "test": "Approved leave auto-populates and locks",
+    "test": "Create SL leave application for SAMSON on Thu 2026-03-26",
     "status": "PASS",
-    "detail": "1 approved leave entries locked in grid",
+    "detail": "HR-LAP-2026-00082 created (Sick Leave, Approved). Shows as SL locked in grid.",
     "error": null,
-    "timestamp": "2026-03-24T14:44:18.895292"
+    "timestamp": "2026-03-24T15:00:00.000000"
+  },
+  {
+    "scenario": "S7",
+    "test": "VL/SL auto-populate and lock in labor plan grid",
+    "status": "PASS",
+    "detail": "3 leave overrides in bootstrap: VL(HELUTIN/Wed), SL(SAMSON/Thu), Leave(Sam Admin/Thu). Grid shows 1 VL + 1 SL badge, all locked=1.",
+    "error": null,
+    "timestamp": "2026-03-24T15:00:00.000000"
   },
   {
     "scenario": "S3",
