@@ -327,11 +327,11 @@
    "description": "Default validity period for new Item Prices (days from entry date)"
   },
   {
-   "default": "Standard Buying",
    "fieldname": "default_price_list",
    "fieldtype": "Link",
    "label": "Default Buying Price List",
-   "options": "Price List"
+   "options": "Price List",
+   "description": "Set to 'Standard Buying' after running the S104 migration"
   }
  ],
  "index_web_pages_for_search": 1,
