@@ -7,6 +7,7 @@ Split from commissary.py (P0-11) for maintainability.
 """
 
 import json
+from contextlib import contextmanager
 
 import frappe
 from frappe import _
@@ -14,6 +15,23 @@ from frappe.utils import flt
 
 from hrms.api.commissary import get_commissary_warehouse
 from hrms.utils.bei_config import get_company
+from hrms.utils.sentry import set_backend_observability_context
+
+
+@contextmanager
+def _run_as_system_user(user: str = "Administrator"):
+	session = getattr(frappe, "session", None)
+	if session is None:
+		session = getattr(getattr(frappe, "local", None), "session", None)
+	original_user = getattr(session, "user", None)
+	try:
+		if session and user:
+			session.user = user
+		yield
+	finally:
+		if session and original_user:
+			session.user = original_user
+
 
 # ============================================================
 # BOM MANAGEMENT
@@ -32,6 +50,7 @@ def create_bom(item_code, materials, quantity=1, uom=None, remarks=None):
 	    uom: Unit of measure for yield (defaults to item's stock_uom)
 	    remarks: Optional notes
 	"""
+	set_backend_observability_context(module="commissary", action="create_bom", mutation_type="create")
 	if isinstance(materials, str):
 		materials = json.loads(materials)
 
@@ -82,7 +101,8 @@ def create_bom(item_code, materials, quantity=1, uom=None, remarks=None):
 		)
 
 	bom.insert()
-	bom.submit()
+	with _run_as_system_user("Administrator"):
+		bom.submit()
 
 	return {
 		"success": True,
@@ -109,6 +129,7 @@ def update_bom(bom_name, materials=None, quantity=None, remarks=None):
 	    quantity: New yield quantity (optional)
 	    remarks: Optional notes
 	"""
+	set_backend_observability_context(module="commissary", action="update_bom", mutation_type="update")
 	if materials and isinstance(materials, str):
 		materials = json.loads(materials)
 
@@ -174,7 +195,8 @@ def update_bom(bom_name, materials=None, quantity=None, remarks=None):
 			)
 
 	new_bom.insert()
-	new_bom.submit()
+	with _run_as_system_user("Administrator"):
+		new_bom.submit()
 
 	return {
 		"success": True,
@@ -197,6 +219,7 @@ def get_bom_detail(item_code):
 	Args:
 	    item_code: Item to look up BOM for
 	"""
+	set_backend_observability_context(module="commissary", action="get_bom_detail", mutation_type="read")
 	bom = frappe.db.get_value(
 		"BOM",
 		{"item": item_code, "is_active": 1, "is_default": 1, "docstatus": 1},
@@ -254,6 +277,9 @@ def check_production_feasibility(item_code, qty):
 	    item_code: FG item to check
 	    qty: Desired production quantity
 	"""
+	set_backend_observability_context(
+		module="commissary", action="check_production_feasibility", mutation_type="read"
+	)
 	qty = flt(qty)
 	if qty <= 0:
 		return {"success": False, "error": "Quantity must be greater than 0"}
@@ -340,6 +366,9 @@ def get_bom_runtime_deduction_proof(item_code, produced_qty, warehouse=None):
 
 	This endpoint is read-only proof data used by execute/evidence gates.
 	"""
+	set_backend_observability_context(
+		module="commissary", action="get_bom_runtime_deduction_proof", mutation_type="read"
+	)
 	produced_qty = flt(produced_qty)
 	if produced_qty <= 0:
 		return {"success": False, "error": "produced_qty must be greater than 0"}
