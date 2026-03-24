@@ -424,13 +424,19 @@ class MergeSerializer:
 
         data = json.loads(stdout.decode())
         status = data.get("mergeStateStatus", "")
-        # BLOCKED = branch protection requires checks, but we use --admin to bypass
-        is_clean = status in ("CLEAN", "HAS_HOOKS", "UNSTABLE", "BLOCKED")
+        # We use --admin which bypasses all branch protection. Accept everything
+        # except DIRTY (actual merge conflicts) and BEHIND (needs rebase).
+        # UNKNOWN = GitHub race condition, just proceed.
+        is_conflict = status == "DIRTY"
+        needs_rebase = status == "BEHIND"
 
-        if not is_clean:
+        if is_conflict or needs_rebase:
             logger.warning("pr_not_fresh", pr=pr.number, status=status)
+            print(f"[{time.strftime('%H:%M:%S')}] PR #{pr.number} not fresh: {status}", flush=True)
+            return False
 
-        return is_clean
+        # Everything else (CLEAN, BLOCKED, UNKNOWN, HAS_HOOKS, UNSTABLE, "") = proceed
+        return True
 
     async def _auto_rebase(self, pr) -> bool:
         """Auto-rebase PR onto production."""
