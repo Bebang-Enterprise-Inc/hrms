@@ -1,7 +1,13 @@
 name: Build Base Image (frappe + erpnext + payments)
 
-# Manual trigger only — run when upstream frappe/erpnext/payments need updating
 on:
+  # Temporary push trigger for sprint branch testing — REMOVE before merging to production
+  push:
+    branches:
+      - s105-docker-build-acceleration
+    paths:
+      - '.github/docker/Containerfile.base'
+      - '.github/workflows/build-base.yml'
   workflow_dispatch:
     inputs:
       tag_suffix:

@@ -1,8 +1,13 @@
 name: Build Fast (hrms-only, test lane)
 
-# Test workflow — manual only, pushes to v15-fast-test tag
-# DO NOT add push trigger — this is a test lane only
 on:
+  # Temporary push trigger for sprint branch testing — REMOVE before merging to production
+  push:
+    branches:
+      - s105-docker-build-acceleration
+    paths:
+      - '.github/docker/Containerfile.fast'
+      - '.github/workflows/build-fast.yml'
   workflow_dispatch:
 
 env:
