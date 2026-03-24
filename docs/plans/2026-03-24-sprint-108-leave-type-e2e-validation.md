@@ -2,13 +2,15 @@
 
 ```yaml
 canonical_sprint_id: S108
-status: GO
+status: PR_CREATED
 created: 2026-03-24
+execution_started: 2026-03-24
 branch: s108-leave-type-validation
 lane: single
 depends_on: S106, S107
+backend_pr: "#339"
 completed_date: null
-execution_summary: null
+execution_summary: "Phase 1 API tests 27/27 PASS. P2.5 OT-leave guards + compensation tagging built. PR #339 created. Awaiting governor merge + deploy for L3 scenarios 11-17."
 ```
 
 ## Summary

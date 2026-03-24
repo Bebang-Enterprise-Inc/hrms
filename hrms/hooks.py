@@ -228,6 +228,10 @@ doc_events = {
 		"on_trash": "hrms.overrides.employee_master.update_employee_transfer",
 		"after_delete": "hrms.overrides.employee_master.publish_update",
 	},
+	"Leave Application": {
+		"validate": "hrms.overrides.leave_application_hooks.validate_no_overtime_conflict",
+		"on_update": "hrms.overrides.leave_application_hooks.on_leave_status_change",
+	},
 	"Project": {"validate": "hrms.controllers.employee_boarding_controller.update_employee_boarding_status"},
 	"Task": {"on_update": "hrms.controllers.employee_boarding_controller.update_task"},
 	"BEI Expense Request": {
