@@ -145,6 +145,7 @@ class _JsonFileLogger:
 _json_logger = _JsonFileLogger(_LOG_FILE)
 
 from .chat_handler import ChatHandler
+from .event_bus import EventBus
 from .health_server import HealthServer
 from .port_allocator import PortAllocator
 from .pr_watcher import PRWatcher
@@ -175,9 +176,11 @@ class GovernorERP:
         self.chat_handler: ChatHandler | None = None
         self.health_server: HealthServer | None = None
         self.ai_backend = None
+        self.event_bus = EventBus()
 
         # Control
         self._stop_event = asyncio.Event()
+        self._wake_event = asyncio.Event()
         self._running = False
 
     async def initialize(self) -> None:
@@ -204,8 +207,8 @@ class GovernorERP:
         # SELF-HEAL Phase 1: clear paused, purge closed PRs (no AI needed)
         await self._self_heal_state()
 
-        # PR watcher
-        self.pr_watcher = PRWatcher(self.state_mgr)
+        # PR watcher (with wake event for force-wake from API)
+        self.pr_watcher = PRWatcher(self.state_mgr, wake_event=self._wake_event)
         self.pr_watcher.on_new_pr(self._handle_new_pr)
         self.pr_watcher.on_closed_pr(self._handle_closed_pr)
         self.pr_watcher.on_pr_updated(self._handle_pr_updated)
@@ -230,13 +233,19 @@ class GovernorERP:
             reviewer=Reviewer(backend=self.ai_backend, state_mgr=self.state_mgr),
             staging_mgr=self.staging_mgr,
             dry_run=self.dry_run,
+            wake_event=self._wake_event,
         )
 
         # Chat handler — initialized AFTER merge_serializer so it can read pipeline state
         self.chat_handler = ChatHandler(ai_backend=self.ai_backend, merge_serializer=self.merge_serializer)
 
-        # Health server
-        self.health_server = HealthServer(self.state_mgr)
+        # Health server (full REST API with component injection)
+        self.health_server = HealthServer(
+            state_mgr=self.state_mgr,
+            merge_serializer=self.merge_serializer,
+            wake_event=self._wake_event,
+            review_callback=self._handle_pr_updated if hasattr(self, '_handle_pr_updated') else None,
+        )
 
         # Self-evolution: load lessons + playbooks into AI prompts
         from .lessons import load_memory, get_memory_stats
@@ -727,10 +736,12 @@ class GovernorERP:
             await self.health_server.start()
 
             # Run tasks concurrently with error isolation
+            from .self_diagnosis import self_diagnosis_loop
             async with asyncio.TaskGroup() as tg:
                 tg.create_task(self.pr_watcher.run(self._stop_event))
                 tg.create_task(self.merge_serializer.run(self._stop_event))
                 tg.create_task(self._chat_loop())
+                tg.create_task(self_diagnosis_loop(self._stop_event, self.merge_serializer, self.event_bus))
 
         except* KeyboardInterrupt:
             logger.info("keyboard_interrupt")
@@ -742,8 +753,12 @@ class GovernorERP:
 
     async def shutdown(self) -> None:
         """Graceful shutdown — save state, stop servers."""
+        import warnings
+        warnings.filterwarnings("ignore", category=ResourceWarning)
+
         logger.info("shutting_down")
         self._stop_event.set()
+        self._wake_event.set()  # Unblock any waiting loops
 
         # Save state (don't tear down containers — they persist)
         self.state_mgr.save()

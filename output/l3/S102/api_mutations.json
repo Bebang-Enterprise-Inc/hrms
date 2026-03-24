@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "sprint": "S102",
+    "test_level": "L3",
+    "run_at": "2026-03-24T03:41:05.901981+00:00",
+    "branch": "s102-governor-agent-platform",
+    "results": {
+      "S1_status": true,
+      "S2_pr_detail": true,
+      "S3_wake": true,
+      "S4_force_review": true,
+      "S5_event_log": true,
+      "S6_stuck": true,
+      "S7_gha_failure": true,
+      "BONUS_api": true,
+      "BONUS_lock": true,
+      "BONUS_guard": true
+    },
+    "all_passed": true
+  },
+  "mutations": [
+    {
+      "timestamp": "2026-03-24T03:41:04.264959+00:00",
+      "scenario": "S1_status",
+      "endpoint": "GET /status",
+      "status": "200",
+      "detail": "{\"status\": \"running\", \"uptime_s\": 120.0, \"active_pr_count\": 1, \"merge_queue\": [323], \"production_head\": \"abc123def456\", \"pipeline\": \"Pipeline: processing | PR #323 | Step: Step 4/7: waiting for GHA bu"
+    },
+    {
+      "timestamp": "2026-03-24T03:41:04.268467+00:00",
+      "scenario": "S2_pr_detail",
+      "endpoint": "GET /pr/323",
+      "status": "200",
+      "detail": "{\"number\": 323, \"title\": \"feat(s099): SCM policy enforcement\", \"head_ref\": \"s099-scm-policy\", \"head_sha\": \"deadbeef1234\", \"review_decision\": \"APPROVE\", \"review_confidence\": 0.87, \"queue_position\": 1, "
+    },
+    {
+      "timestamp": "2026-03-24T03:41:04.271471+00:00",
+      "scenario": "S3_wake",
+      "endpoint": "POST /wake",
+      "status": "200",
+      "detail": "{\"status\": \"woke\"}"
+    },
+    {
+      "timestamp": "2026-03-24T03:41:04.488941+00:00",
+      "scenario": "S4_force_review",
+      "endpoint": "POST /pr/323/review",
+      "status": "200",
+      "detail": "{\"status\": \"review_queued\", \"pr\": 323}"
+    },
+    {
+      "timestamp": "2026-03-24T03:41:05.008545+00:00",
+      "scenario": "S5_event_log",
+      "endpoint": "EventBus.emit() + GET /pr/{num}/log",
+      "status": "200",
+      "detail": "3 events"
+    }
+  ]
+}

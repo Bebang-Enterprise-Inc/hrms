@@ -33,16 +33,19 @@ class MergeSerializer:
         reviewer: Reviewer,
         staging_mgr: StagingManager,
         dry_run: bool = False,
+        wake_event: asyncio.Event | None = None,
     ):
         self.state_mgr = state_mgr
         self.reviewer = reviewer
         self.staging_mgr = staging_mgr
         self.dry_run = dry_run
+        self.wake_event = wake_event
         # Live pipeline state — visible to chat AI and status API
         self.pipeline_status = "idle"
         self.pipeline_pr = None
         self.pipeline_step = ""
         self.pipeline_started_at = 0.0
+        self._is_processing = False
 
     def _set_pipeline(self, status: str, step: str, pr_num: int | None = None) -> None:
         """Update live pipeline state (read by chat AI)."""
@@ -61,6 +64,16 @@ class MergeSerializer:
 
     async def process_queue(self) -> None:
         """Process one PR from the merge queue."""
+        if self._is_processing:
+            return
+        self._is_processing = True
+        try:
+            await self._process_queue_inner()
+        finally:
+            self._is_processing = False
+
+    async def _process_queue_inner(self) -> None:
+        """Inner process_queue logic."""
         state = self.state_mgr.state
 
         if state.paused:
@@ -70,9 +83,14 @@ class MergeSerializer:
         if not state.merge_queue:
             return
 
-        self.pipeline_started_at = time.time()
-        self._set_pipeline("processing", "starting", state.merge_queue[0])
-        print(f"[{time.strftime('%H:%M:%S')}] Queue: processing PR #{state.merge_queue[0]} ({len(state.merge_queue)} in queue)", flush=True)
+        # Only reset pipeline timer when starting a NEW PR (not re-processing same one)
+        next_pr = state.merge_queue[0]
+        if self.pipeline_pr != next_pr:
+            self.pipeline_started_at = time.time()
+        elif self.pipeline_started_at == 0.0:
+            self.pipeline_started_at = time.time()
+        self._set_pipeline("processing", "starting", next_pr)
+        print(f"[{time.strftime('%H:%M:%S')}] Queue: processing PR #{next_pr} ({len(state.merge_queue)} in queue)", flush=True)
 
         pr_num = state.merge_queue[0]
         pr_key = str(pr_num)
@@ -108,6 +126,13 @@ class MergeSerializer:
             except Exception as e:
                 print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} review error: {e}", flush=True)
                 return
+        elif pr.review_decision == "REJECT":
+            print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} is REJECTED — removing from queue (fix and push to re-review)", flush=True)
+            state.merge_queue.remove(pr_num)
+            self.state_mgr.save()
+            self._set_pipeline("idle", "rejected")
+            self.pipeline_started_at = 0.0
+            return
         elif pr.review_decision != "APPROVE":
             print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} waiting for review (current: {pr.review_decision})", flush=True)
             return
@@ -1148,6 +1173,17 @@ class MergeSerializer:
                 traceback.print_exc()
 
             try:
-                await asyncio.wait_for(stop_event.wait(), timeout=interval)
+                if self.wake_event:
+                    done, pending = await asyncio.wait(
+                        [asyncio.create_task(stop_event.wait()),
+                         asyncio.create_task(self.wake_event.wait())],
+                        timeout=interval, return_when=asyncio.FIRST_COMPLETED,
+                    )
+                    for t in pending:
+                        t.cancel()
+                    if self.wake_event.is_set():
+                        self.wake_event.clear()
+                else:
+                    await asyncio.wait_for(stop_event.wait(), timeout=interval)
             except asyncio.TimeoutError:
                 pass

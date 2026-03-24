@@ -1,0 +1,103 @@
+{
+  "metadata": {
+    "sprint": "S102",
+    "test_level": "L3",
+    "run_at": "2026-03-24T03:41:05.901981+00:00",
+    "branch": "s102-governor-agent-platform",
+    "results": {
+      "S1_status": true,
+      "S2_pr_detail": true,
+      "S3_wake": true,
+      "S4_force_review": true,
+      "S5_event_log": true,
+      "S6_stuck": true,
+      "S7_gha_failure": true,
+      "BONUS_api": true,
+      "BONUS_lock": true,
+      "BONUS_guard": true
+    },
+    "all_passed": true
+  },
+  "verifications": [
+    {
+      "timestamp": "2026-03-24T03:41:04.264959+00:00",
+      "scenario": "S1_status",
+      "check": "Returns pipeline state + PRs + queue",
+      "expected": "200 with status/pipeline/active_prs/merge_queue",
+      "actual": "HTTP 200, keys=['status', 'uptime_s', 'active_pr_count', 'merge_queue', 'production_head', 'pipeline', 'active_prs']",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:41:04.268467+00:00",
+      "scenario": "S2_pr_detail",
+      "check": "Returns PR review + confidence + queue position",
+      "expected": "200 with APPROVE, confidence, queue_position=1",
+      "actual": "review=APPROVE, confidence=0.87, pos=1, 404_ok=True",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:41:04.271471+00:00",
+      "scenario": "S3_wake",
+      "check": "Governor wakes within 2s",
+      "expected": "200, status=woke, wake_event.is_set()=True",
+      "actual": "HTTP 200, woke=True",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:41:04.488941+00:00",
+      "scenario": "S4_force_review",
+      "check": "Force-review clears decision + wakes + calls callback",
+      "expected": "200, review_decision=None, wake=True, callback fired",
+      "actual": "cleared=True, wake=True, callback=True",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:41:05.008545+00:00",
+      "scenario": "S5_event_log",
+      "check": "Events written to JSONL and readable via API",
+      "expected": "3+ events with timestamps and correct types",
+      "actual": "events=3, types=True, api_ok=True",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:41:05.882958+00:00",
+      "scenario": "S6_stuck",
+      "check": "Self-diagnosis detects stuck pipeline",
+      "expected": "Triggers after 5+ min, emits event, returns findings",
+      "actual": "trigger=True, event=True, findings=True",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:41:05.883958+00:00",
+      "scenario": "S7_gha_failure",
+      "check": "Self-diagnosis detects GHA + CI failures",
+      "expected": "deploy_failed + ci_failed + production OK + async subprocess",
+      "actual": "gha=True, ci=True, prod=True, async=True",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:41:05.895469+00:00",
+      "scenario": "BONUS_completeness",
+      "check": "All API endpoints respond",
+      "expected": "All return expected status codes",
+      "actual": "all_ok=True",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:41:05.897981+00:00",
+      "scenario": "BONUS_lock",
+      "check": "StateManager has async lock",
+      "expected": "has _save_lock + async_save + round-trip",
+      "actual": "lock=True, async_save=True, roundtrip=True",
+      "passed": true
+    },
+    {
+      "timestamp": "2026-03-24T03:41:05.900981+00:00",
+      "scenario": "BONUS_guard",
+      "check": "MergeSerializer has double-processing guard",
+      "expected": "_is_processing + try/finally + wake_event",
+      "actual": "guard=True, finally=True, init=True, wake=True",
+      "passed": true
+    }
+  ]
+}

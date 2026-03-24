@@ -393,67 +393,70 @@ class AgentSDKBackend(ReviewBackend):
             cwd=self._repo_root,
         )
 
-        # --- Step 4: Run AI review with streaming ---
-        print(f"[{time.strftime('%H:%M:%S')}]   Starting AI review (streaming)...", flush=True)
+        # --- Step 4: Run AI review ---
+        # Try Agent SDK first (has tools), fall back to raw Anthropic API
+        raw_text = None
+        cost = 0.0
+
+        print(f"[{time.strftime('%H:%M:%S')}]   Starting AI review (Agent SDK)...", flush=True)
         try:
             result_msg = await asyncio.wait_for(
                 self._run_query_streaming(prompt, options), timeout=timeout_s
             )
-
-            if not result_msg:
+            if result_msg:
+                raw_text = result_msg.result
+                cost = getattr(result_msg, "total_cost_usd", 0.0)
+        except Exception as sdk_err:
+            sdk_err_str = str(sdk_err)
+            if "Control request timeout" in sdk_err_str or "initialize" in sdk_err_str:
+                print(f"[{time.strftime('%H:%M:%S')}]   Agent SDK unavailable (nested session), falling back to Anthropic API...", flush=True)
+                raw_text, cost = await self._review_via_anthropic_api(prompt, pr_number, diff_text, timeout_s)
+            else:
+                logger.error("agent_sdk_review_error", pr=pr_number, error=sdk_err_str)
                 return ReviewResult(
                     decision="REJECT",
-                    reasoning="Agent SDK returned no result",
+                    reasoning=f"Agent SDK error: {sdk_err}",
                     confidence=0.0,
                 )
 
-            # Track cost
-            cost = getattr(result_msg, "total_cost_usd", 0.0)
-            self._total_cost_usd += cost
-            self._log_cost(cost, f"review_pr_{pr_number}")
-
-            # Parse AI response
-            ai_result = self._parse_response(result_msg.result, pr_number)
-
-            # --- Step 5: Calculate confidence from verification depth ---
-            from .lessons import get_memory_stats
-
-            lesson_stats = get_memory_stats()
-            calculated_confidence = calculate_confidence(
-                ai_confidence=ai_result.confidence,
-                files_read=ai_result.files_read,
-                total_files=total_files,
-                pre_check_passed=pre_result.passed,
-                lesson_matches=lesson_matched,
-                checks_performed=ai_result.checks_performed,
-            )
-            ai_result.confidence = calculated_confidence
-
-            # --- Step 6: Print review summary ---
-            elapsed = time.time() - review_start
-            print_review_summary(
-                pr_number, ai_result, total_files,
-                pre_check_count, pre_check_passed,
-                lesson_stats.get("lesson_count", 0), lesson_matched,
-                elapsed, cost,
-            )
-
-            return ai_result
-
-        except asyncio.TimeoutError:
-            logger.error("agent_sdk_review_timeout", pr=pr_number, timeout=timeout_s)
+        if not raw_text:
             return ReviewResult(
                 decision="REJECT",
-                reasoning=f"Review timed out after {timeout_s}s",
+                reasoning="AI review returned no result",
                 confidence=0.0,
             )
-        except Exception as e:
-            logger.error("agent_sdk_review_error", pr=pr_number, error=str(e))
-            return ReviewResult(
-                decision="REJECT",
-                reasoning=f"Agent SDK error: {e}",
-                confidence=0.0,
-            )
+
+        # Track cost
+        self._total_cost_usd += cost
+        self._log_cost(cost, f"review_pr_{pr_number}")
+
+        # Parse AI response
+        ai_result = self._parse_response(raw_text, pr_number)
+
+        # --- Step 5: Calculate confidence from verification depth ---
+        from .lessons import get_memory_stats
+
+        lesson_stats = get_memory_stats()
+        calculated_confidence = calculate_confidence(
+            ai_confidence=ai_result.confidence,
+            files_read=ai_result.files_read,
+            total_files=total_files,
+            pre_check_passed=pre_result.passed,
+            lesson_matches=lesson_matched,
+            checks_performed=ai_result.checks_performed,
+        )
+        ai_result.confidence = calculated_confidence
+
+        # --- Step 6: Print review summary ---
+        elapsed = time.time() - review_start
+        print_review_summary(
+            pr_number, ai_result, total_files,
+            pre_check_count, pre_check_passed,
+            lesson_stats.get("lesson_count", 0), lesson_matched,
+            elapsed, cost,
+        )
+
+        return ai_result
 
     async def chat(self, message: str, state: Any, pipeline_summary: str = "") -> str:
         from claude_agent_sdk import ClaudeAgentOptions, HookMatcher, ResultMessage, query
@@ -530,6 +533,54 @@ class AgentSDKBackend(ReviewBackend):
         except ImportError as e:
             print(f"[{time.strftime('%H:%M:%S')}] Agent SDK: import FAILED ({e})", flush=True)
             return False
+
+    async def _review_via_anthropic_api(
+        self, prompt: str, pr_number: int, diff_text: str, timeout_s: float
+    ) -> tuple[str, float]:
+        """Fallback: review using raw Anthropic API when Agent SDK can't initialize.
+
+        No tools available — sends the diff + pre-check results as context.
+        Returns (raw_text, cost_usd).
+        """
+        import anthropic
+
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            return "", 0.0
+
+        client = anthropic.AsyncAnthropic(api_key=api_key)
+
+        # Include diff text since we can't use tools to read files
+        if diff_text:
+            full_prompt = prompt + f"\n\nDiff text (since tools are unavailable):\n```\n{diff_text[:50000]}\n```"
+        else:
+            # Fetch diff ourselves
+            from .reviewer import get_pr_diff
+            fetched_diff = await get_pr_diff(pr_number)
+            full_prompt = prompt + f"\n\nDiff text:\n```\n{fetched_diff[:50000]}\n```"
+
+        try:
+            response = await asyncio.wait_for(
+                client.messages.create(
+                    model="claude-sonnet-4-20250514",
+                    max_tokens=1024,
+                    system=REVIEW_SYSTEM_PROMPT + self._lessons_context,
+                    messages=[{"role": "user", "content": full_prompt}],
+                ),
+                timeout=timeout_s,
+            )
+
+            raw_text = response.content[0].text if response.content else ""
+            input_tokens = getattr(response.usage, "input_tokens", 0)
+            output_tokens = getattr(response.usage, "output_tokens", 0)
+            cost = (input_tokens * 3 / 1_000_000) + (output_tokens * 15 / 1_000_000)
+
+            print(f"[{time.strftime('%H:%M:%S')}]   Anthropic API review: {input_tokens} in / {output_tokens} out (${cost:.4f})", flush=True)
+            return raw_text, cost
+
+        except Exception as e:
+            print(f"[{time.strftime('%H:%M:%S')}]   Anthropic API error: {e}", flush=True)
+            return "", 0.0
 
     def get_cost_last_24h(self) -> tuple[float, int]:
         """Read cost log and sum entries from last 24h."""
@@ -661,12 +712,7 @@ class AgentSDKBackend(ReviewBackend):
         Prints AI reasoning, tool calls, and tool results in real time
         so the operator can watch the AI think — same as watching Claude Code work.
         """
-        from claude_agent_sdk import (
-            AssistantMessage,
-            ResultMessage,
-            ToolResultMessage,
-            query,
-        )
+        from claude_agent_sdk import AssistantMessage, ResultMessage, query
 
         result_msg = None
         last_text = ""
@@ -678,23 +724,22 @@ class AgentSDKBackend(ReviewBackend):
             if isinstance(msg, AssistantMessage):
                 for block in msg.content:
                     if hasattr(block, "text") and block.text.strip():
-                        # Print AI reasoning to terminal
                         for line in block.text.strip().splitlines():
                             truncated = line[:150]
                             print(f"[{ts}]     AI: {truncated}", flush=True)
                         last_text += block.text
                     elif hasattr(block, "name"):
-                        # Tool call — print what the AI is doing
                         step_num += 1
                         tool_name = block.name
                         tool_input = getattr(block, "input", {})
                         _print_tool_call(ts, step_num, tool_name, tool_input)
 
-            elif isinstance(msg, ToolResultMessage):
-                _print_tool_result(ts, msg)
-
             elif isinstance(msg, ResultMessage):
                 result_msg = msg
+
+            else:
+                # Handle tool results and other message types
+                _print_tool_result(ts, msg)
 
         # If result is empty but we got assistant text, use that
         if result_msg and not result_msg.result and last_text:
