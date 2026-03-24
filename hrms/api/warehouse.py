@@ -47,6 +47,32 @@ from hrms.utils.supply_chain_contracts import (
 # ============================================================
 
 
+def _resolve_warehouse_name(name: str) -> str:
+	"""Resolve a partial/short warehouse name to the full Frappe Warehouse name.
+
+	Frappe Link fields require exact name matches.  Users (and frontends) sometimes
+	pass short names like "3MD Warehouse" instead of "3MD Logistics – Camangyanan -
+	Bebang Enterprise Inc."  This mirrors the proven pattern from store.resolve_warehouse
+	without throwing — on failure it returns the original so the Stock Entry itself emits
+	a clear LinkValidationError.
+	"""
+	if not name or frappe.db.exists("Warehouse", name):
+		return name
+	for suffix in (" - BEI", " - BKI"):
+		if frappe.db.exists("Warehouse", f"{name}{suffix}"):
+			return f"{name}{suffix}"
+	match = frappe.db.get_value("Warehouse", {"warehouse_name": name}, "name")
+	if match:
+		return match
+	prefix = name.split()[0] if " " in name else name
+	like_match = frappe.db.get_value(
+		"Warehouse", {"name": ["like", f"{prefix}%"], "is_group": 0}, "name"
+	)
+	if like_match:
+		return like_match
+	return name
+
+
 def _row_value(row, key, default=None):
 	if isinstance(row, dict):
 		return row.get(key, default)
@@ -1162,6 +1188,12 @@ def create_stock_transfer(
 			),
 			title=_("Source Warehouse Required"),
 		)
+
+	# Resolve partial/short warehouse names to full Frappe names (e.g. "3MD Warehouse" →
+	# "3MD Logistics – Camangyanan - Bebang Enterprise Inc.").  Frappe Link fields require
+	# exact name matches; short names cause LinkValidationError.
+	source_warehouse = _resolve_warehouse_name(source_warehouse)
+	target_warehouse = _resolve_warehouse_name(target_warehouse)
 
 	default_source_company = resolve_warehouse_company(source_warehouse) or get_company()
 	default_target_company = resolve_warehouse_company(target_warehouse) or default_source_company
