@@ -1,55 +1,40 @@
-# Containerfile.fast — Adds ONLY hrms on top of pre-built base
-# Base: samkarazi/frappe-base:v15 (frappe + erpnext + payments pre-installed)
-# Output: samkarazi/bebang-erpnext-hrms:v15 (production image)
+# Containerfile.fast — Update hrms in-place on the production image
 #
-# Build time target: <3 min (vs ~6 min for full rebuild)
+# Strategy: The production image already has hrms installed. Instead of
+# removing and re-cloning (55s overhead), we git-fetch the latest code
+# in-place and rebuild only hrms assets.
 #
-# CRITICAL: HRMS_SHA must be passed as a build arg on every build.
-# Without it, Docker caches the bench get-app layer and serves stale code.
+# Base: samkarazi/bebang-erpnext-hrms:v15 (current production image)
+# Output: samkarazi/bebang-erpnext-hrms:v15-fast-test (test tag only)
+#
+# Iteration 1 optimizations (vs baseline 334s):
+#   - git fetch+reset in-place instead of bench remove + bench get-app (-50s)
+#   - Skip gcc/build-essential install (-11s) -- pip install had no C compilation
+#   - Combined RUN layers to reduce overhead (-5s)
+#   - Skip PWA/roster builds (workbox peer dep issue + deploys via Vercel)
 
-ARG BASE_IMAGE=samkarazi/frappe-base:v15
-FROM ${BASE_IMAGE} AS backend
+ARG BASE_IMAGE=samkarazi/bebang-erpnext-hrms:v15
+FROM ${BASE_IMAGE}
 
-USER root
-
-# Install build tools needed for pip install of C-extension deps
-# (base/backend stage has git/node/yarn but NOT gcc/build-essential)
-RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-    gcc \
-    build-essential \
-    libmariadb-dev \
-    libffi-dev \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-USER frappe
-WORKDIR /home/frappe/frappe-bench
-
-# Enable shallow clones for bench get-app (--depth flag does NOT exist)
-RUN bench config set-common-config -c shallow_clone 1
-
-# ─── HRMS layer (cache-busted on every merge) ────────────────────────────────
-# HRMS_SHA changes on every commit, invalidating only this layer and below.
-# Everything above (base image pull, gcc install) stays cached.
+# HRMS_SHA changes on every commit, invalidating this layer and everything below.
+# The base image pull above stays cached across builds.
 ARG HRMS_SHA
-RUN bench get-app https://github.com/Bebang-Enterprise-Inc/hrms.git --branch production \
-    && echo "hrms_sha=${HRMS_SHA}"
-
-# Build ONLY hrms assets (not all apps — saves ~3-5 min)
-RUN --mount=type=cache,target=/home/frappe/.cache/pip \
-    cd /home/frappe/frappe-bench \
-    && ./env/bin/pip install -e apps/hrms \
-    && bench build --app hrms
-
-# Clean up build tools to reduce final image size
-USER root
-RUN apt-get purge -y gcc build-essential \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
 
 USER frappe
 WORKDIR /home/frappe/frappe-bench
+
+# Single RUN: fetch latest hrms code, install deps, build desk assets
+# All in one layer to minimize Docker overhead
+RUN cd apps/hrms \
+    && git fetch origin production \
+    && git reset --hard origin/production \
+    && echo "hrms_sha=${HRMS_SHA}" \
+    && cd /home/frappe/frappe-bench \
+    && ./env/bin/pip install -e apps/hrms \
+    && cp apps/hrms/package.json apps/hrms/package.json.bak \
+    && python3 -c "import json,pathlib; p=json.loads(pathlib.Path('apps/hrms/package.json').read_text()); p['scripts']['build']='echo skip-pwa-roster'; pathlib.Path('apps/hrms/package.json').write_text(json.dumps(p))" \
+    && bench build --app hrms \
+    && mv apps/hrms/package.json.bak apps/hrms/package.json
 
 VOLUME [ \
   "/home/frappe/frappe-bench/sites", \
