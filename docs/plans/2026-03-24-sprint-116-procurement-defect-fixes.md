@@ -36,7 +36,7 @@ S109 tested all procurement forms and found 6 defects. 5 forms passed, 1 was blo
 | D1 | Invoice redirect to `/invoices/undefined` | `result.name` is undefined — response structure mismatch | `bei-tasks/app/dashboard/procurement/invoices/new/page.tsx:249` | Null-check `result.name`, fall back to `result.data?.name` |
 | D2 | PO approval dialog stays open on error | `setApprovalDialogOpen(false)` only called in success path | `bei-tasks/app/dashboard/procurement/purchase-orders/[id]/page.tsx:377-379` | Add `setApprovalDialogOpen(false)` in catch block |
 | D3 | Supplier "Total Orders" shows PNaN | `supplier.total_orders` is undefined, no null coalesce | `bei-tasks/app/dashboard/procurement/suppliers/[id]/page.tsx:229` | Add `?? 0` or `?? 'P0.00'` |
-| D4 | Payments page 500 on load | SQL column alias error (`gr_no` vs `gr_number` in `get_payment_requests`) | `hrms/api/procurement.py:2041` | Fix column name to match DocType schema |
+| D4 | Payments page 500 on load | **AUDIT: Original diagnosis WRONG.** SQL alias `gr.gr_no` IS correct (field confirmed in DocType). Real cause unknown — must reproduce via curl and read traceback. S112 may have already fixed this. | `hrms/api/procurement.py:~2041` | Verify if S112 fixed it. If not, reproduce 500, read traceback, fix actual cause. |
 | D5 | Payment Request blocked — no verified invoices | Data dependency — need full chain PR→PO→GR→Invoice→Verify | Multiple | Seed data via API calls |
 | D6 | GR no warning on over-delivery | NOT A DEFECT — over-delivery protection EXISTS at `procurement.py:1539-1566` with 5% tolerance. Test script used qty within tolerance. | N/A | Close as working-as-designed |
 
@@ -66,7 +66,7 @@ S109 tested all procurement forms and found 6 defects. 5 forms passed, 1 was blo
 
 | Task | Type | File | Description | Units |
 |------|------|------|-------------|-------|
-| B1 | FIX | `hrms/api/procurement.py` | **D4 fix:** Find `get_payment_requests()` (~line 2041). Fix the SQL column alias — likely `gr.gr_no` should be `gr.name` or `gr.gr_number` to match the `BEI Goods Receipt` DocType schema. Run `frappe.get_meta("BEI Goods Receipt").get_field("gr_number")` or check the JSON to verify the correct column name. Add Sentry instrumentation (DM-7). | 2 |
+| B1 | FIX | `hrms/api/procurement.py` | **D4 fix:** Debug the Payments page 500 error. **AUDIT WARNING (2026-03-24):** The original diagnosis (`gr.gr_no` should be `gr.gr_number`) was WRONG — code verification confirmed the field IS `gr_no` in the DocType and the SQL alias is correct. The real 500 cause is elsewhere. Steps: (1) First verify by checking the BEI Goods Receipt DocType JSON to confirm `gr_no` is the correct field. (2) If SQL is correct, reproduce the 500 by calling `get_payment_requests` directly via curl and reading the full traceback. (3) Check if S112 already fixed this — if so, verify the fix on live and close. (4) If unfixed, debug the actual traceback, fix, add Sentry instrumentation (DM-7). | 2 |
 | B2 | BUILD | Terminal | Commit backend fix to branch and push. | 1 |
 
 ### Phase C: Seed Data — Create Verified Invoice for Payment Test (6 units)

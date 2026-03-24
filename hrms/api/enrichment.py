@@ -54,6 +54,19 @@ HR_APPROVAL_FIELDS = [
 	"pagibig_number",
 ]
 
+# Payroll-sensitive fields that require dual-control approval via
+# BEI Sensitive Change Request (S114). Changes to these fields from the
+# enrichment portal are routed to the payroll sensitive-changes queue
+# instead of the standard BEI Edit Request workflow.
+PAYROLL_SENSITIVE_FIELDS = frozenset({
+	"bank_name",
+	"bank_ac_no",
+	"tin_number",
+	"sss_number",
+	"philhealth_number",
+	"pagibig_number",
+})
+
 # Human-readable labels for fields
 FIELD_LABELS = {
 	"first_name": "First Name",
@@ -398,6 +411,17 @@ def submit_edit_request(
 
 	# Get current value
 	current_value = frappe.db.get_value("Employee", employee, field_name) or ""
+
+	# ── S114: Route payroll-sensitive fields through dual-control queue ──
+	if field_name in PAYROLL_SENSITIVE_FIELDS:
+		return _route_to_sensitive_change_queue(
+			employee=employee,
+			field_name=field_name,
+			current_value=str(current_value),
+			new_value=requested_value,
+			reason=reason,
+			proof_attachment=government_id_photo,
+		)
 
 	# Check for duplicate pending request
 	existing = frappe.db.exists(
@@ -1186,4 +1210,96 @@ def bulk_import_gov_ids(csv_content: str | None = None, csv_file_url: str | None
 		"error_count": len(errors),
 		"errors": errors[:50],  # Cap at 50 errors to avoid huge response
 		"total_rows": updated + skipped + len(errors),
+	}
+
+
+# ============================================================================
+# S114: Sensitive Field Routing (Dual-Control Queue)
+# ============================================================================
+
+
+def _route_to_sensitive_change_queue(
+	*,
+	employee: str,
+	field_name: str,
+	current_value: str,
+	new_value: str,
+	reason: str,
+	proof_attachment: str | None = None,
+) -> dict:
+	"""Route a payroll-sensitive field change to the dual-control approval queue.
+
+	Instead of creating a BEI Edit Request, this creates a BEI Sensitive Change
+	Request which enforces HR + Finance dual-control approval before the field
+	value is written to the Employee record.
+
+	Called from submit_edit_request() when field_name is in PAYROLL_SENSITIVE_FIELDS.
+	"""
+	from frappe.utils import today as frappe_today
+
+	# Check for duplicate pending sensitive change request
+	open_statuses = [
+		"Draft",
+		"Pending HR Verification",
+		"Pending Finance Approval",
+		"Finance Approved",
+		"Pending HR Activation",
+	]
+	existing = frappe.db.exists(
+		"BEI Sensitive Change Request",
+		{"employee": employee, "field_name": field_name, "status": ("in", open_statuses)},
+	)
+	if existing:
+		frappe.throw(
+			_(
+				"A sensitive change request for this field is already pending. "
+				"Please wait for it to be processed."
+			)
+		)
+
+	# Determine initiator role for routing
+	roles = frappe.get_roles(frappe.session.user)
+	if "HR Manager" in roles or "HR User" in roles:
+		initiator_role = "HR"
+		initial_status = "Pending Finance Approval"
+	elif "Accounts Manager" in roles:
+		initiator_role = "Finance"
+		initial_status = "Pending HR Verification"
+	else:
+		# Employee self-service
+		initiator_role = "Employee"
+		initial_status = "Pending HR Verification"
+
+	doc = frappe.get_doc(
+		{
+			"doctype": "BEI Sensitive Change Request",
+			"employee": employee,
+			"field_name": field_name,
+			"old_value": current_value,
+			"new_value": new_value,
+			"effective_date": frappe_today(),
+			"reason": reason,
+			"proof_attachment": proof_attachment,
+			"initiated_by": frappe.session.user,
+			"initiator_role": initiator_role,
+			"status": initial_status,
+			"audit_log": [
+				{
+					"actor": frappe.session.user,
+					"action": "Submitted",
+					"note": f"Change request submitted via enrichment portal. Routed to {initial_status}.",
+				}
+			],
+		}
+	)
+	doc.insert(ignore_permissions=True)
+
+	return {
+		"status": "success",
+		"message": _(
+			"Bank/statutory changes require Finance approval. "
+			"Your request has been submitted to the Payroll Sensitive Changes queue."
+		),
+		"sensitive_change_request_id": doc.name,
+		"routed_to": "sensitive_change_queue",
 	}

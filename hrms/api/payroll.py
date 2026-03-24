@@ -850,6 +850,426 @@ def get_my_schedule(from_date: str | None = None, to_date: str | None = None) ->
 
 
 @frappe.whitelist()
+def get_payroll_readiness_check() -> dict:
+	"""Pre-flight readiness check for payroll processing.
+
+	Checks S076 day-zero blockers:
+	- Company default_payroll_payable_account
+	- Income tax slab assignment on SSAs
+	- Active employees without Salary Structure Assignment
+	- Bank details coverage
+
+	Returns:
+	    dict: Categorized blockers with owner and remediation
+	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="payroll",
+		action="get_payroll_readiness_check",
+		mutation_type="read",
+	)
+	_check_hr_permission()
+
+	blockers = []
+	warnings = []
+
+	# 1. Check default_payroll_payable_account
+	company = frappe.db.get_value(
+		"Company",
+		frappe.defaults.get_user_default("Company") or "Bebang Enterprise Inc.",
+		["name", "default_payroll_payable_account"],
+		as_dict=True,
+	)
+	if not company or not company.default_payroll_payable_account:
+		blockers.append({
+			"category": "gl_account",
+			"title": "Payroll Payable Account Not Set",
+			"description": "Company does not have a default payroll payable account. Payroll Entry cannot post journal entries without this.",
+			"owner": "Finance Team",
+			"remediation": f"Go to Company > {company.name if company else 'Bebang Enterprise Inc.'} > Accounts Settings > set Default Payroll Payable Account",
+			"severity": "critical",
+		})
+
+	# 2. Check income tax slab on SSAs
+	total_ssa = frappe.db.count("Salary Structure Assignment", {"docstatus": 1})
+	ssa_without_tax = frappe.db.count(
+		"Salary Structure Assignment",
+		{"docstatus": 1, "income_tax_slab": ["in", ["", None]]},
+	)
+	if ssa_without_tax > 0:
+		blockers.append({
+			"category": "tax_slab",
+			"title": f"{ssa_without_tax} of {total_ssa} Salary Structure Assignments Missing Tax Slab",
+			"description": "BIR withholding tax will compute as zero for these employees.",
+			"owner": "HR Team",
+			"remediation": "Assign 'TRAIN Law 2025 - Philippines' income tax slab to all SSAs",
+			"severity": "critical",
+			"count": ssa_without_tax,
+			"total": total_ssa,
+		})
+
+	# 3. Check active employees without SSA
+	active_count = frappe.db.count("Employee", {"status": "Active"})
+	employees_with_ssa = frappe.db.sql("""
+		SELECT COUNT(DISTINCT ssa.employee)
+		FROM `tabSalary Structure Assignment` ssa
+		INNER JOIN `tabEmployee` e ON e.name = ssa.employee
+		WHERE ssa.docstatus = 1 AND e.status = 'Active'
+	""")[0][0]
+	missing_ssa = active_count - employees_with_ssa
+	if missing_ssa > 0:
+		blockers.append({
+			"category": "missing_ssa",
+			"title": f"{missing_ssa} Active Employees Without Salary Structure",
+			"description": "These employees cannot be included in payroll until they have a submitted Salary Structure Assignment.",
+			"owner": "HR Team",
+			"remediation": "Create and submit Salary Structure Assignments for these employees",
+			"severity": "critical",
+			"count": missing_ssa,
+			"total": active_count,
+		})
+
+	# 4. Check Payroll Period exists
+	current_year = frappe.utils.now_datetime().year
+	payroll_period = frappe.db.exists(
+		"Payroll Period",
+		{
+			"company": company.name if company else "Bebang Enterprise Inc.",
+			"start_date": ["<=", frappe.utils.nowdate()],
+			"end_date": [">=", frappe.utils.nowdate()],
+		},
+	)
+	if not payroll_period:
+		blockers.append({
+			"category": "payroll_period",
+			"title": "No Active Payroll Period",
+			"description": f"No Payroll Period covers the current date ({frappe.utils.nowdate()}). Tax calculations require an active period.",
+			"owner": "HR Team",
+			"remediation": f"Create a Payroll Period for {current_year} with start and end dates covering the full year",
+			"severity": "critical",
+		})
+
+	# 5. Bank details coverage (warning, not blocker)
+	employees_with_bank = frappe.db.sql("""
+		SELECT COUNT(*) FROM `tabEmployee`
+		WHERE status = 'Active'
+		  AND bank_ac_no IS NOT NULL AND bank_ac_no != ''
+	""")[0][0]
+	missing_bank = active_count - employees_with_bank
+	if missing_bank > 0:
+		warnings.append({
+			"category": "bank_details",
+			"title": f"{missing_bank} of {active_count} Active Employees Missing Bank Details",
+			"description": "These employees will be excluded from bank file generation. Payroll can still proceed.",
+			"owner": "HR Team (enrichment in progress)",
+			"severity": "warning",
+			"count": missing_bank,
+			"total": active_count,
+		})
+
+	is_ready = len(blockers) == 0
+
+	return {
+		"is_ready": is_ready,
+		"blockers": blockers,
+		"warnings": warnings,
+		"summary": {
+			"active_employees": active_count,
+			"employees_with_ssa": employees_with_ssa,
+			"employees_with_bank": employees_with_bank,
+			"total_ssa": total_ssa,
+			"ssa_with_tax_slab": total_ssa - ssa_without_tax,
+			"has_payable_account": bool(company and company.default_payroll_payable_account),
+			"has_payroll_period": bool(payroll_period),
+		},
+	}
+
+
+@frappe.whitelist()
+def get_processing_blockers(from_date: str | None = None, to_date: str | None = None) -> dict:
+	"""Get employee-level processing blockers.
+
+	Returns list of employees who cannot be processed and why.
+
+	Args:
+	    from_date: Payroll period start
+	    to_date: Payroll period end
+
+	Returns:
+	    dict: Employee-level blocker details
+	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="payroll",
+		action="get_processing_blockers",
+		mutation_type="read",
+	)
+	_check_hr_permission()
+
+	if not from_date:
+		from_date = get_first_day(nowdate())
+	if not to_date:
+		to_date = get_last_day(from_date)
+
+	# Get active employees
+	employees = frappe.db.sql("""
+		SELECT
+			e.name as employee,
+			e.employee_name,
+			e.department,
+			e.branch,
+			e.bank_ac_no,
+			e.bank_name
+		FROM `tabEmployee` e
+		WHERE e.status = 'Active'
+		ORDER BY e.employee_name
+	""", as_dict=True)
+
+	# Get employees with submitted SSA
+	ssa_map = {}
+	ssas = frappe.db.sql("""
+		SELECT employee, salary_structure, income_tax_slab
+		FROM `tabSalary Structure Assignment`
+		WHERE docstatus = 1
+		ORDER BY from_date DESC
+	""", as_dict=True)
+	for ssa in ssas:
+		if ssa.employee not in ssa_map:
+			ssa_map[ssa.employee] = ssa
+
+	blocked = []
+	ready = []
+
+	for emp in employees:
+		issues = []
+		ssa = ssa_map.get(emp.employee)
+
+		if not ssa:
+			issues.append({
+				"type": "no_ssa",
+				"message": "No Salary Structure Assignment",
+				"severity": "critical",
+			})
+		else:
+			if not ssa.income_tax_slab:
+				issues.append({
+					"type": "no_tax_slab",
+					"message": "No income tax slab assigned",
+					"severity": "critical",
+				})
+
+		if not emp.bank_ac_no:
+			issues.append({
+				"type": "no_bank",
+				"message": "No bank account number",
+				"severity": "warning",
+			})
+
+		emp_entry = {
+			"employee": emp.employee,
+			"employee_name": emp.employee_name,
+			"department": emp.department,
+			"branch": emp.branch,
+			"has_ssa": bool(ssa),
+			"has_tax_slab": bool(ssa and ssa.income_tax_slab),
+			"has_bank": bool(emp.bank_ac_no),
+			"issues": issues,
+		}
+
+		if any(i["severity"] == "critical" for i in issues):
+			blocked.append(emp_entry)
+		else:
+			ready.append(emp_entry)
+
+	return {
+		"from_date": str(from_date),
+		"to_date": str(to_date),
+		"total_employees": len(employees),
+		"ready_count": len(ready),
+		"blocked_count": len(blocked),
+		"blocked_employees": blocked,
+		"ready_employees": ready,
+	}
+
+
+@frappe.whitelist()
+def start_payroll_processing(
+	from_date: str,
+	to_date: str,
+	payroll_frequency: str = "Monthly",
+	department: str | None = None,
+	branch: str | None = None,
+) -> dict:
+	"""Initiate payroll entry creation with validation gate.
+
+	Runs readiness check first. If blockers exist, returns them without creating.
+
+	Args:
+	    from_date: Payroll period start
+	    to_date: Payroll period end
+	    payroll_frequency: Monthly, Bimonthly, etc.
+	    department: Optional department filter
+	    branch: Optional branch filter
+
+	Returns:
+	    dict: Created Payroll Entry details or blocker list
+	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="payroll",
+		action="start_payroll_processing",
+		mutation_type="create",
+	)
+	_check_hr_permission()
+
+	if not from_date or not to_date:
+		frappe.throw(_("Both from_date and to_date are required"))
+
+	_validate_date_range(from_date, to_date)
+
+	# Run readiness check first
+	readiness = get_payroll_readiness_check()
+	if not readiness["is_ready"]:
+		return {
+			"success": False,
+			"stage": "readiness_check_failed",
+			"blockers": readiness["blockers"],
+			"message": "Cannot start payroll processing. Resolve all blockers first.",
+		}
+
+	# Get company
+	company = frappe.defaults.get_user_default("Company") or "Bebang Enterprise Inc."
+
+	try:
+		# Create Payroll Entry
+		pe = frappe.new_doc("Payroll Entry")
+		pe.company = company
+		pe.start_date = from_date
+		pe.end_date = to_date
+		pe.payroll_frequency = payroll_frequency
+		pe.cost_center = frappe.db.get_value("Company", company, "cost_center")
+		pe.payment_account = frappe.db.get_value("Company", company, "default_payroll_payable_account")
+
+		if department:
+			pe.department = department
+		if branch:
+			pe.branch = branch
+
+		pe.insert(ignore_permissions=True)
+
+		# Get employees for this payroll entry
+		pe.fill_employee_details()
+		pe.save()
+
+		return {
+			"success": True,
+			"stage": "payroll_entry_created",
+			"payroll_entry": pe.name,
+			"employee_count": len(pe.employees) if hasattr(pe, "employees") else 0,
+			"message": f"Payroll Entry {pe.name} created with {len(pe.employees) if hasattr(pe, 'employees') else 0} employees.",
+		}
+
+	except Exception as e:
+		frappe.log_error(
+			message=f"Payroll processing failed: {str(e)[:500]}",
+			title="Payroll Processing Error",
+		)
+		return {
+			"success": False,
+			"stage": "creation_failed",
+			"error": str(e),
+			"message": "Failed to create Payroll Entry. Check error log for details.",
+		}
+
+
+@frappe.whitelist()
+def get_remittance_summary(year: int | str | None = None) -> dict:
+	"""Get aggregated remittance totals by type and period.
+
+	Returns monthly totals for SSS, PhilHealth, Pag-IBIG, and BIR
+	for the specified year.
+
+	Args:
+	    year: Year to summarize (defaults to current year)
+
+	Returns:
+	    dict: Monthly totals per remittance type
+	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="payroll",
+		action="get_remittance_summary",
+		mutation_type="read",
+	)
+	_check_hr_permission()
+
+	if not year:
+		year = frappe.utils.now_datetime().year
+	year = int(year)
+
+	# Component mapping
+	component_map = {
+		"sss": "SSS Contribution",
+		"philhealth": "PhilHealth Contribution",
+		"pagibig": "Pag-IBIG Contribution",
+		"bir": "Income Tax",
+	}
+
+	results = {}
+	for rtype, component in component_map.items():
+		monthly = []
+		for month in range(1, 13):
+			from_date = getdate(f"{year}-{month:02d}-01")
+			to_date = get_last_day(from_date)
+
+			totals = frappe.db.sql("""
+				SELECT
+					COUNT(DISTINCT ss.employee) as employee_count,
+					SUM(sd.amount) as total_amount
+				FROM `tabSalary Slip` ss
+				INNER JOIN `tabSalary Detail` sd ON sd.parent = ss.name
+				WHERE ss.docstatus = 1
+				  AND ss.start_date >= %(from_date)s
+				  AND ss.end_date <= %(to_date)s
+				  AND sd.parentfield = 'deductions'
+				  AND sd.salary_component = %(component)s
+			""", {
+				"from_date": from_date,
+				"to_date": to_date,
+				"component": component,
+			}, as_dict=True)
+
+			row = totals[0] if totals else {}
+			monthly.append({
+				"month": month,
+				"employee_count": row.get("employee_count", 0) or 0,
+				"total_amount": flt(row.get("total_amount", 0), 2),
+			})
+
+		year_total = sum(m["total_amount"] for m in monthly)
+		year_employees = max((m["employee_count"] for m in monthly), default=0)
+
+		results[rtype] = {
+			"component_name": component,
+			"monthly": monthly,
+			"year_total": flt(year_total, 2),
+			"max_monthly_employees": year_employees,
+		}
+
+	return {
+		"year": year,
+		"remittance_types": results,
+		"has_data": any(
+			results[rt]["year_total"] > 0 for rt in results
+		),
+	}
+
+
+@frappe.whitelist()
 def get_payroll_dashboard(from_date: str | None = None, to_date: str | None = None) -> dict:
 	"""Get combined payroll dashboard data.
 
