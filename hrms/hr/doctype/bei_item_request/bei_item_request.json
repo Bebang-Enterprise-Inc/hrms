@@ -1,0 +1,188 @@
+{
+ "actions": [],
+ "creation": "2026-03-24 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "item_code",
+  "item_name",
+  "column_break_1",
+  "item_group",
+  "stock_uom",
+  "description",
+  "section_break_pricing",
+  "contracted_unit_cost",
+  "cost_justification",
+  "column_break_pricing",
+  "supporting_document",
+  "supplier",
+  "section_break_workflow",
+  "requested_by",
+  "status",
+  "column_break_approval",
+  "approved_by",
+  "approved_date",
+  "rejection_reason"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Code",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Item Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Raw Material",
+   "fieldname": "item_group",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Item Group",
+   "options": "Raw Material\nFinished Goods\nPackaging Material\nConsumables\nSupplies",
+   "reqd": 1
+  },
+  {
+   "fieldname": "stock_uom",
+   "fieldtype": "Link",
+   "label": "Stock UOM",
+   "options": "UOM",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "section_break_pricing",
+   "fieldtype": "Section Break",
+   "label": "Pricing"
+  },
+  {
+   "fieldname": "contracted_unit_cost",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Contracted Unit Cost",
+   "reqd": 1,
+   "description": "First contracted price — must be set at onboarding"
+  },
+  {
+   "fieldname": "cost_justification",
+   "fieldtype": "Small Text",
+   "label": "Cost Justification",
+   "reqd": 1,
+   "description": "Supplier quote reference or market evidence"
+  },
+  {
+   "fieldname": "column_break_pricing",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "supporting_document",
+   "fieldtype": "Attach",
+   "label": "Supporting Document",
+   "reqd": 1,
+   "description": "Supplier price list, quote, or contract"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "label": "Supplier",
+   "options": "BEI Supplier"
+  },
+  {
+   "fieldname": "section_break_workflow",
+   "fieldtype": "Section Break",
+   "label": "Workflow"
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "label": "Requested By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Draft\nPending CPO Approval\nApproved\nRejected",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_approval",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "approved_date",
+   "fieldtype": "Datetime",
+   "label": "Approved Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rejection_reason",
+   "fieldtype": "Small Text",
+   "label": "Rejection Reason",
+   "depends_on": "eval:doc.status=='Rejected'"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-03-24 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Item Request",
+ "naming_rule": "Expression",
+ "autoname": "IR-.#####",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "report": 1,
+   "write": 1,
+   "role": "Purchase Manager"
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "Purchase User"
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

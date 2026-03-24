@@ -2764,6 +2764,7 @@ def sync_procurement_purchase_orders(
 				"vat_rate": vat_rate,
 				"delivery_schedule": _safe_date(_first_non_empty(item_row, "delivery_schedule")),
 				"price_variance_override": "Legacy AppSheet sync baseline import",
+				"price_override_reason": "Legacy AppSheet sync baseline import",
 			}
 		)
 

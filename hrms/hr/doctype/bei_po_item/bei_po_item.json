@@ -19,7 +19,9 @@
   "amount",
   "column_break_delivery",
   "delivery_schedule",
-  "received_qty"
+  "received_qty",
+  "contracted_unit_cost",
+  "price_override_reason"
  ],
  "fields": [
   {
@@ -109,6 +111,20 @@
    "fieldtype": "Float",
    "label": "Received Qty",
    "read_only": 1
+  },
+  {
+   "fieldname": "contracted_unit_cost",
+   "fieldtype": "Currency",
+   "label": "Contracted Unit Cost",
+   "read_only": 1,
+   "description": "Price from contracted price list at time of PO creation"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "price_override_reason",
+   "fieldtype": "Small Text",
+   "label": "Price Override Reason",
+   "description": "Required when unit_cost differs from contracted price"
   },
   {
    "fieldname": "price_variance_override",
