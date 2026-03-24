@@ -100,8 +100,10 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S106` | Sprint 106 | `s106-leave-allocation-data-fix` | — (data fix, no PR) | COMPLETED 2026-03-24 — Fixed 1,557 Leave Allocations: total_leaves_allocated set, 1,557 Leave Ledger Entries created (8→1,565). All employees can now file VL/SL/EL. L3 5/5 PASS. | `docs/plans/2026-03-24-sprint-106-leave-allocation-data-fix.md` |
 
+| `S107` | Sprint 107 | `s107-pr-form-frontend-fix` | #336 (hrms), #234 (bei-tasks) | COMPLETED 2026-03-24 — PR form frontend fix: departments from API ({value,label} with BEI filter), UOMs from API (29 vs 14 hardcoded), item_code onBlur price auto-fill, qty NaN fix. Luwi's "Could not find Department: Commissary" bug fixed. L3 6/6 PASS. | `docs/plans/2026-03-24-sprint-107-pr-form-frontend-fix.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S107`.
+1. Next canonical sprint ID to assign: `S108`.
 2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
