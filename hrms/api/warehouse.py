@@ -768,9 +768,10 @@ def complete_warehouse_receiving(
 
 	stock_entry = frappe.new_doc("Stock Entry")
 	stock_entry.stock_entry_type = "Material Transfer"
-	# For commissary→3PL (BKI→BEI): use target company so 3PL warehouse passes validation.
-	# Source warehouse (BKI) validation is temporarily disabled below.
-	stock_entry.company = target_co if is_intercompany else (source_co or target_co or get_company())
+	# For commissary→3PL (BKI→BEI): use SOURCE company (BKI) so the source warehouse's
+	# inventory account resolves correctly. The target warehouse (BEI 3PL) company check
+	# is bypassed below since it's a legitimate inter-company FG handoff.
+	stock_entry.company = source_co or target_co or get_company()
 	stock_entry.posting_date = frappe.utils.today()
 	stock_entry.posting_time = frappe.utils.nowtime()
 	stock_entry.from_warehouse = receiving.source_warehouse
