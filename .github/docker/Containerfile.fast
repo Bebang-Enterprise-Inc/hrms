@@ -1,37 +1,32 @@
-# Containerfile.fast — Update hrms in-place on the production image
+# Containerfile.fast — Iteration 8: Docker Hub base (faster pull) + preserved node_modules
 #
-# Strategy: The production image already has hrms installed. Instead of
-# removing and re-cloning (55s overhead), we git-fetch the latest code
-# in-place and rebuild only hrms assets.
-#
-# Base: samkarazi/bebang-erpnext-hrms:v15 (current production image)
-# Output: samkarazi/bebang-erpnext-hrms:v15-fast-test (test tag only)
-#
-# Iteration 1 optimizations (vs baseline 334s):
-#   - git fetch+reset in-place instead of bench remove + bench get-app (-50s)
-#   - Skip gcc/build-essential install (-11s) -- pip install had no C compilation
-#   - Combined RUN layers to reduce overhead (-5s)
-#   - Skip PWA/roster builds (workbox peer dep issue + deploys via Vercel)
+# GHCR base was 65s pull. Docker Hub was 43s pull.
+# Combined with node_modules preservation from iter 7.
 
 ARG BASE_IMAGE=samkarazi/bebang-erpnext-hrms:v15
 FROM ${BASE_IMAGE}
 
-# HRMS_SHA changes on every commit, invalidating this layer and everything below.
-# The base image pull above stays cached across builds.
 ARG HRMS_SHA
 
 USER frappe
 WORKDIR /home/frappe/frappe-bench
 
-# Single RUN: fetch latest hrms code, install deps, build desk assets
-# All in one layer to minimize Docker overhead
-RUN cd apps/hrms \
-    && git fetch origin production \
-    && git reset --hard origin/production \
-    && echo "hrms_sha=${HRMS_SHA}" \
-    && cd /home/frappe/frappe-bench \
-    && ./env/bin/pip install -e apps/hrms \
-    && cp apps/hrms/package.json apps/hrms/package.json.bak \
+# Update source code while preserving node_modules
+RUN git clone --depth 1 --branch production \
+       https://github.com/Bebang-Enterprise-Inc/hrms.git /tmp/hrms-fresh \
+    && rm -rf apps/hrms/hrms apps/hrms/.git apps/hrms/frontend/src apps/hrms/roster/src \
+    && cp -r /tmp/hrms-fresh/hrms apps/hrms/hrms \
+    && cp /tmp/hrms-fresh/setup.py /tmp/hrms-fresh/setup.cfg apps/hrms/ 2>/dev/null; \
+       cp /tmp/hrms-fresh/pyproject.toml apps/hrms/ 2>/dev/null; \
+       cp /tmp/hrms-fresh/package.json apps/hrms/ \
+    && cp -r /tmp/hrms-fresh/frontend/src apps/hrms/frontend/src 2>/dev/null; \
+       cp -r /tmp/hrms-fresh/roster/src apps/hrms/roster/src 2>/dev/null; true \
+    && rm -rf /tmp/hrms-fresh \
+    && echo "hrms_sha=${HRMS_SHA}"
+
+RUN ./env/bin/pip install -e apps/hrms 2>&1 | tail -5
+
+RUN cp apps/hrms/package.json apps/hrms/package.json.bak \
     && python3 -c "import json,pathlib; p=json.loads(pathlib.Path('apps/hrms/package.json').read_text()); p['scripts']['build']='echo skip-pwa-roster'; pathlib.Path('apps/hrms/package.json').write_text(json.dumps(p))" \
     && bench build --app hrms \
     && mv apps/hrms/package.json.bak apps/hrms/package.json
