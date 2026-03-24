@@ -1,19 +1,22 @@
-# Containerfile.fast — Adds ONLY hrms on top of pre-built base
-# Base: samkarazi/frappe-base:v15 (frappe + erpnext + payments pre-installed)
-# Output: samkarazi/bebang-erpnext-hrms:v15 (production image)
+# Containerfile.fast — Rebuild ONLY hrms on top of existing production image
 #
-# Build time target: <3 min (vs ~6 min for full rebuild)
+# BENCHMARK MODE: Uses the real production image as base to measure
+# actual hrms-only rebuild time with real infrastructure.
+#
+# Base: samkarazi/bebang-erpnext-hrms:v15 (current production image)
+# Output: samkarazi/bebang-erpnext-hrms:v15-fast-test (test tag only)
 #
 # CRITICAL: HRMS_SHA must be passed as a build arg on every build.
 # Without it, Docker caches the bench get-app layer and serves stale code.
 
-ARG BASE_IMAGE=samkarazi/frappe-base:v15
-FROM ${BASE_IMAGE} AS backend
+ARG BASE_IMAGE=samkarazi/bebang-erpnext-hrms:v15
+FROM ${BASE_IMAGE}
 
 USER root
 
 # Install build tools needed for pip install of C-extension deps
-# (base/backend stage has git/node/yarn but NOT gcc/build-essential)
+# The production image inherits from upstream 'base' stage which has
+# git/node/yarn but NOT gcc/build-essential (those are in 'builder' stage only)
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
     gcc \
@@ -26,17 +29,20 @@ RUN apt-get update \
 USER frappe
 WORKDIR /home/frappe/frappe-bench
 
+# Remove old hrms so bench get-app can install fresh
+RUN bench remove-app hrms --no-backup 2>/dev/null || rm -rf apps/hrms
+
 # Enable shallow clones for bench get-app (--depth flag does NOT exist)
 RUN bench config set-common-config -c shallow_clone 1
 
 # ─── HRMS layer (cache-busted on every merge) ────────────────────────────────
 # HRMS_SHA changes on every commit, invalidating only this layer and below.
-# Everything above (base image pull, gcc install) stays cached.
+# Everything above (base image pull, gcc install, remove old hrms) stays cached.
 ARG HRMS_SHA
 RUN bench get-app https://github.com/Bebang-Enterprise-Inc/hrms.git --branch production \
     && echo "hrms_sha=${HRMS_SHA}"
 
-# Build ONLY hrms assets (not all apps — saves ~3-5 min)
+# Install hrms pip deps + build ONLY hrms assets
 RUN --mount=type=cache,target=/home/frappe/.cache/pip \
     cd /home/frappe/frappe-bench \
     && ./env/bin/pip install -e apps/hrms \
