@@ -33,8 +33,13 @@ class BEISupplier(Document):
         self.validate_invoice_exception_control()
 
     def validate_supplier_code(self):
-        """Ensure supplier code is unique and properly formatted."""
-        if self.supplier_code:
+        """Ensure supplier code is unique and properly formatted.
+        Auto-generates if not provided (S112 B-02 dual-file fix).
+        """
+        if not self.supplier_code:
+            from frappe.utils import now_datetime
+            self.supplier_code = f"SUPP-{now_datetime().strftime('%Y%m%d%H%M%S')}"
+        else:
             self.supplier_code = self.supplier_code.strip().upper()
 
     def validate_required_documents(self):

@@ -350,8 +350,19 @@ def create_supplier(data):
     AUDIT CONTROL 2.5: Duplicate detection (phone, email, bank account, TIN)
     Ref: Internal Audit Jan 30, 2026 - Same phone number across multiple suppliers
     """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement",
+        action="create_supplier",
+        mutation_type="create",
+    )
     if isinstance(data, str):
         data = frappe.parse_json(data)
+
+    # S112 B-02: Auto-generate supplier_code if not provided
+    # DocType has autoname: field:supplier_code with reqd: 1
+    if not data.get("supplier_code"):
+        data["supplier_code"] = f"SUPP-{frappe.utils.now_datetime().strftime('%Y%m%d%H%M%S')}"
 
     warnings = []
 
@@ -2458,6 +2469,8 @@ def mark_payment_complete(name, transaction_reference=None, payment_proof=None):
 @frappe.whitelist()
 def get_pending_payment_approvals():
     """Get all payments pending approval at each level."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_pending_payment_approvals", mutation_type="read")
     levels = {
         "review": "Pending Review",
         "budget": "Pending Budget Approval",
