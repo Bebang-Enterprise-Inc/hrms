@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": "L3-01",
+    "test": "Processing page loads with 6-step wizard",
+    "status": "PASS",
+    "detail": "Step labels visible",
+    "error": null,
+    "timestamp": "2026-03-24T16:41:44.376Z"
+  },
+  {
+    "scenario": "L3-02",
+    "test": "Readiness check surfaces S076 blockers",
+    "status": "PASS",
+    "detail": "Blockers/readiness info visible. API calls: 2",
+    "error": null,
+    "timestamp": "2026-03-24T16:41:49.546Z"
+  },
+  {
+    "scenario": "L3-03",
+    "test": "UI blocks progression with blockers present",
+    "status": "PASS",
+    "detail": "Next button disabled when blockers exist",
+    "error": null,
+    "timestamp": "2026-03-24T16:41:50.648Z"
+  },
+  {
+    "scenario": "L3-04",
+    "test": "Remittances page with type selector",
+    "status": "PASS",
+    "detail": "SSS/PhilHealth/Pag-IBIG/BIR tabs visible",
+    "error": null,
+    "timestamp": "2026-03-24T16:41:55.448Z"
+  },
+  {
+    "scenario": "L3-05",
+    "test": "SSS remittance loads for March 2026",
+    "status": "PASS",
+    "detail": "SSS data loaded with breakdown",
+    "error": null,
+    "timestamp": "2026-03-24T16:41:58.168Z"
+  },
+  {
+    "scenario": "L3-06",
+    "test": "CSV export",
+    "status": "PASS",
+    "detail": "Export button disabled — no data to export (expected first-run)",
+    "error": null,
+    "timestamp": "2026-03-24T16:41:58.171Z"
+  }
+]

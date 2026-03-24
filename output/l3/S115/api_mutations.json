@@ -1,0 +1,16 @@
+[
+  {
+    "endpoint": "https://my.bebang.ph/api/frappe/api/method/hrms.api.payroll.get_processing_blockers?from_date=2026-02-28&to_date=2026-03-30",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": ""
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/frappe/api/method/hrms.api.payroll.get_payroll_readiness_check",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": ""
+  }
+]

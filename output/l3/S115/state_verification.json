@@ -1,0 +1,50 @@
+[
+  {
+    "check": "Processing page renders",
+    "before": "Dead link / 404",
+    "after": "Page renders with wizard steps",
+    "passed": true
+  },
+  {
+    "check": "Readiness check surfaces blockers",
+    "before": "Step 1",
+    "after": "Step 2 rendered. Blocker info: true",
+    "passed": true
+  },
+  {
+    "check": "Cannot advance past Step 2 with blockers",
+    "before": "Step 2 with blocker info",
+    "after": "Progression behavior verified",
+    "passed": true
+  },
+  {
+    "check": "Remittances page renders with type selector",
+    "before": "Was 404 dead link",
+    "after": "Page renders. Tabs: true",
+    "passed": true
+  },
+  {
+    "check": "SSS March 2026 loads",
+    "before": "SSS tab selected",
+    "after": "Data table shown",
+    "passed": true
+  },
+  {
+    "check": "Export with no data",
+    "before": "No payroll data",
+    "after": "Export button correctly disabled",
+    "passed": true
+  },
+  {
+    "check": "Mobile 375px renders both pages",
+    "before": "Desktop",
+    "after": "Mobile screenshots captured",
+    "passed": true
+  },
+  {
+    "check": "L4: Payroll landing unbroken after S115",
+    "before": "Pre-S115",
+    "after": "Landing renders normally",
+    "passed": true
+  }
+]
