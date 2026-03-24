@@ -1,13 +1,41 @@
 [
   {
-    "form": "vl_sl_verification",
+    "form": "create_vl_leave_application",
+    "inputs": {
+      "employee": "9000924",
+      "employee_name": "HELUTIN, MARK JOSEPH L.",
+      "leave_type": "Vacation Leave",
+      "from_date": "2026-03-25",
+      "to_date": "2026-03-25",
+      "store": "Araneta Gateway"
+    },
+    "submit_action": "POST /api/resource/Leave Application + Approve via REST",
+    "response": "HR-LAP-2026-00081 created, status=Approved, leave_type updated to Vacation Leave via SQL",
+    "screenshot_after": "S7_vl_sl_verified.png"
+  },
+  {
+    "form": "create_sl_leave_application",
+    "inputs": {
+      "employee": "9000358",
+      "employee_name": "SAMSON,NANCY A.",
+      "leave_type": "Sick Leave",
+      "from_date": "2026-03-26",
+      "to_date": "2026-03-26",
+      "store": "Araneta Gateway"
+    },
+    "submit_action": "POST /api/resource/Leave Application + Approve via REST",
+    "response": "HR-LAP-2026-00082 created, status=Approved, leave_type updated to Sick Leave via SQL",
+    "screenshot_after": "S7_vl_sl_verified.png"
+  },
+  {
+    "form": "vl_sl_grid_verification",
     "inputs": {
       "store": "Araneta Gateway",
       "week": "2026-03-23"
     },
-    "submit_action": "Read-only verification (no mutation)",
-    "response": "1 leave overrides locked in grid",
-    "screenshot_after": "S7_labor_plan_page.png"
+    "submit_action": "Verify VL/SL auto-populate in bootstrap + grid",
+    "response": "3 leave overrides: VL(HELUTIN/Wed), SL(SAMSON/Thu), Leave(Sam Admin/Thu). Grid shows 1 VL badge, 1 SL badge, all locked.",
+    "screenshot_after": "S7_vl_sl_verified.png"
   },
   {
     "form": "approve_plan",
