@@ -1,17 +1,16 @@
-# Containerfile.fast — Update hrms in-place on the production image
-#
-# Strategy: The production image already has hrms installed. Instead of
-# removing and re-cloning (55s overhead), we git-fetch the latest code
-# in-place and rebuild only hrms assets.
+# Containerfile.fast — Rebuild hrms on the production image
 #
 # Base: samkarazi/bebang-erpnext-hrms:v15 (current production image)
 # Output: samkarazi/bebang-erpnext-hrms:v15-fast-test (test tag only)
 #
-# Iteration 1 optimizations (vs baseline 334s):
-#   - git fetch+reset in-place instead of bench remove + bench get-app (-50s)
-#   - Skip gcc/build-essential install (-11s) -- pip install had no C compilation
-#   - Combined RUN layers to reduce overhead (-5s)
-#   - Skip PWA/roster builds (workbox peer dep issue + deploys via Vercel)
+# Note: upstream Containerfile strips .git dirs (find apps -path "*/.git" | xargs rm -fr)
+# so git fetch in-place is impossible. Must use bench get-app for fresh clone.
+#
+# Iteration 2 optimizations (vs baseline 334s):
+#   - Skip gcc/build-essential (-11s) -- pip install had 0 C compilations
+#   - Use --skip-assets on bench get-app, build separately (-3s overhead reduction)
+#   - Skip PWA/roster builds (workbox peer deps + deploys via Vercel)
+#   - Single combined RUN layer for all hrms work
 
 ARG BASE_IMAGE=samkarazi/bebang-erpnext-hrms:v15
 FROM ${BASE_IMAGE}
@@ -23,18 +22,17 @@ ARG HRMS_SHA
 USER frappe
 WORKDIR /home/frappe/frappe-bench
 
-# Single RUN: fetch latest hrms code, install deps, build desk assets
-# All in one layer to minimize Docker overhead
-RUN cd apps/hrms \
-    && git fetch origin production \
-    && git reset --hard origin/production \
+# Single RUN: remove old hrms, clone fresh, install deps, build desk assets
+RUN rm -rf apps/hrms \
+    && bench get-app --skip-assets \
+       https://github.com/Bebang-Enterprise-Inc/hrms.git --branch production \
     && echo "hrms_sha=${HRMS_SHA}" \
-    && cd /home/frappe/frappe-bench \
     && ./env/bin/pip install -e apps/hrms \
     && cp apps/hrms/package.json apps/hrms/package.json.bak \
     && python3 -c "import json,pathlib; p=json.loads(pathlib.Path('apps/hrms/package.json').read_text()); p['scripts']['build']='echo skip-pwa-roster'; pathlib.Path('apps/hrms/package.json').write_text(json.dumps(p))" \
     && bench build --app hrms \
-    && mv apps/hrms/package.json.bak apps/hrms/package.json
+    && mv apps/hrms/package.json.bak apps/hrms/package.json \
+    && find apps/hrms -path "*/.git" -type d | xargs rm -rf
 
 VOLUME [ \
   "/home/frappe/frappe-bench/sites", \
