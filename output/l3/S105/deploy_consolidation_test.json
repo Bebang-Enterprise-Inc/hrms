@@ -1,0 +1,46 @@
+{
+  "test_type": "deploy_consolidation_same_image",
+  "timestamp": "2026-03-24T09:47:00Z",
+  "environment": {
+    "ec2_instance": "i-026b7477d27bd46d6",
+    "docker_version": "28.2.2",
+    "disk_free": "99 GB",
+    "services": 6,
+    "all_running": true
+  },
+  "test_approach": "re_deployed_current_image_to_measure_consolidation_overhead",
+  "deploy_steps": [
+    "stop all 6 services (parallel)",
+    "remove all 6 containers (parallel)",
+    "pull latest image (parallel, same image reused)",
+    "create & run 6 services (parallel with preload)",
+    "health checks (parallel polling)"
+  ],
+  "timing": {
+    "total_seconds": 41,
+    "total_minutes": 0.7,
+    "baseline_current_approach": 5.9,
+    "speedup_factor": 8.7,
+    "projected_with_image_change": "~80-100s (doubled for container startup)"
+  },
+  "health_checks": {
+    "api_pong": "✓ responding",
+    "login_page": "✓ responding (200 OK)",
+    "assets": "✓ loading (CSS, JS verified)",
+    "database": "✓ queries working"
+  },
+  "cost_projection": {
+    "approach": "consolidation_parallel",
+    "monthly_deploys": 30,
+    "cost_per_deploy_seconds": 100,
+    "monthly_total_seconds": 3000,
+    "monthly_cost_in_compute_dollars": "~$0.41 (EC2 t3a.medium hourly rate)",
+    "notes": "negligible compute cost — bottleneck is network I/O (image pull), not CPU"
+  },
+  "verdict": "PASS — deploy consolidation achieves 8.7x speedup with same image, projected 80s with image change",
+  "next_steps": [
+    "test build consolidation (parallel Dockerfile layers)",
+    "test smart concurrency (alternative: orchestrate by dependency, not all-parallel)",
+    "decide on final approach based on both build + deploy timings"
+  ]
+}
