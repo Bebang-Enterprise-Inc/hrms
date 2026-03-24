@@ -586,11 +586,47 @@ def get_purchase_requisition(name):
 
 @frappe.whitelist()
 def create_purchase_requisition(data=None):
-    """Create new PR."""
+    """Create new PR.
+
+    Auto-sets mandatory defaults so the frontend doesn't need to send them:
+    - request_date: today
+    - requested_by: current session user's Employee record
+    - date_required: 7 days from now
+    - purpose: mapped from 'justification' if purpose not provided
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="create_purchase_requisition", mutation_type="create")
+
     if not data:
         frappe.throw(_("Missing required parameter: data"), frappe.ValidationError)
     if isinstance(data, str):
         data = frappe.parse_json(data)
+
+    # Auto-set mandatory defaults (S108: Luwi PR form fix)
+    if not data.get("request_date"):
+        data["request_date"] = frappe.utils.today()
+
+    if not data.get("requested_by"):
+        # Link field expects Employee record name, look up from user email
+        emp = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
+        if emp:
+            data["requested_by"] = emp
+        else:
+            data["requested_by"] = frappe.session.user
+
+    if not data.get("date_required"):
+        data["date_required"] = frappe.utils.add_days(frappe.utils.today(), 7)
+
+    # Map justification → purpose (frontend sends 'justification', DocType field is 'purpose')
+    if not data.get("purpose") and data.get("justification"):
+        data["purpose"] = data.pop("justification")
+    elif not data.get("purpose"):
+        data["purpose"] = "Purchase Requisition"
+
+    # Ensure each item has item_code (use item_name as fallback)
+    for item in data.get("items", []):
+        if not item.get("item_code") and item.get("item_name"):
+            item["item_code"] = item["item_name"]
 
     pr = frappe.get_doc({
         "doctype": "BEI Purchase Requisition",
