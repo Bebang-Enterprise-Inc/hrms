@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "sprint": "S101",
+    "test_level": "L3",
+    "run_at": "2026-03-24T03:15:44.608033+00:00",
+    "branch": "s101-governor-review-intelligence",
+    "results": {
+      "S1_syntax_error": true,
+      "S2_link_default": true,
+      "S3_decorator_constant": true,
+      "S4_clean_pr": true,
+      "S5_streaming": true,
+      "S6_confidence": true
+    },
+    "all_passed": true
+  },
+  "submissions": [
+    {
+      "timestamp": "2026-03-24T03:15:44.597527+00:00",
+      "scenario": "S1_syntax_error",
+      "action": "pre_check.run_all([bad_syntax.py])",
+      "result": {
+        "pre_check_passed": false,
+        "blocking_issues": [
+          "bad_syntax.py:   File \"C:\\Users\\Sam\\AppData\\Local\\Temp\\l3_s101_cz8k4paz\\bad_syntax.py\", line 2\n    def broken_function(\n                       ^\nSyntaxError: '(' was never closed\n"
+        ],
+        "check_detail": "bad_syntax.py:   File \"C:\\Users\\Sam\\AppData\\Local\\Temp\\l3_s101_cz8k4paz\\bad_syntax.py\", line 2\n    def broken_function(\n                       ^\nSyntaxError: '(' was never closed\n"
+      }
+    },
+    {
+      "timestamp": "2026-03-24T03:15:44.600034+00:00",
+      "scenario": "S2_link_default",
+      "action": "pre_check._check_link_defaults()",
+      "result": {
+        "pre_check_passed": false,
+        "blocking_issues": [
+          "hrms/hr/doctype/bei_test_settings/bei_test_settings.json: Link field 'commissary_company' has default 'Bebang Kitchen Inc.'; hrms/hr/doctype/bei_test_settings/bei_test_settings.json: Link field 'default_warehouse' has default 'Main Warehouse - BEI'"
+        ],
+        "check_detail": "hrms/hr/doctype/bei_test_settings/bei_test_settings.json: Link field 'commissary_company' has default 'Bebang Kitchen Inc.'; hrms/hr/doctype/bei_test_settings/bei_test_settings.json: Link field 'default_warehouse' has default 'Main Warehouse - BEI'"
+      }
+    },
+    {
+      "timestamp": "2026-03-24T03:15:44.602033+00:00",
+      "scenario": "S3_decorator_constant",
+      "action": "pre_check.run_all([bad_decorator.py])",
+      "result": {
+        "pre_check_passed": false,
+        "blocking_issues": [
+          "bad_decorator.py:   File \"C:\\Users\\Sam\\AppData\\Local\\Temp\\l3_s101_cz8k4paz\\bad_decorator.py\", line 4\n    CONSTANT_VALUE = \"this should not have a decorator\"\n    ^^^^^^^^^^^^^^\nSyntaxError: invalid syntax\n"
+        ],
+        "caught_by": "py_compile (SyntaxError)"
+      }
+    },
+    {
+      "timestamp": "2026-03-24T03:15:44.605033+00:00",
+      "scenario": "S4_clean_pr",
+      "action": "pre_check.run_all(clean_files) + calculate_confidence()",
+      "result": {
+        "pre_check_passed": true,
+        "blocking_issues": [],
+        "calculated_confidence": 0.99
+      }
+    },
+    {
+      "timestamp": "2026-03-24T03:15:44.606032+00:00",
+      "scenario": "S5_streaming",
+      "action": "inspect(_run_query_streaming) + _print_tool_call()",
+      "result": {
+        "streaming_output_captured": "[11:15:44]     Step 1: Read hrms/api/procurement.py\n[11:15:44]     Step 2: Grep 'get_procurement' in hrms/\n[11:15:44]     Step 3: Glob **/*.json\n[11:15:44]     Step 4: Bash: git diff origin/production...HEAD --name-only",
+        "has_tool_result_import": true,
+        "has_async_for": true,
+        "has_step_counter": true
+      }
+    },
+    {
+      "timestamp": "2026-03-24T03:15:44.606032+00:00",
+      "scenario": "S6_confidence",
+      "action": "calculate_confidence() variations",
+      "result": {
+        "low_effort": {
+          "ai_claimed": 0.95,
+          "calculated": 0.59
+        },
+        "full_effort": {
+          "ai_claimed": 0.9,
+          "calculated": 0.99
+        },
+        "partial_effort": {
+          "ai_claimed": 0.8,
+          "calculated": 0.8
+        },
+        "review_result_fields": true,
+        "summary_output": true
+      }
+    }
+  ]
+}
