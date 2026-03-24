@@ -1,0 +1,40 @@
+[
+  {
+    "scenario": "L3-1",
+    "employee": "9000924",
+    "leave_type": "Vacation Leave",
+    "balance": 15.0,
+    "expected_min": 13,
+    "passed": true
+  },
+  {
+    "scenario": "L3-2",
+    "employee": "9000358",
+    "leave_type": "Sick Leave",
+    "balance": 15.0,
+    "expected_min": 14,
+    "passed": true
+  },
+  {
+    "scenario": "L3-3",
+    "employee": "9000003",
+    "leave_type": "Emergency Leave",
+    "balance": 5.0,
+    "expected_min": 5,
+    "passed": true
+  },
+  {
+    "scenario": "L3-4",
+    "action": "create_leave_app",
+    "name": "HR-LAP-2026-00083",
+    "status_code": 200,
+    "passed": true
+  },
+  {
+    "scenario": "L3-5",
+    "action": "cancel_leave_app",
+    "name": "HR-LAP-2026-00083",
+    "status_code": 202,
+    "passed": true
+  }
+]

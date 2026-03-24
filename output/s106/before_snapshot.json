@@ -1,0 +1,6 @@
+{
+  "broken_total_zero": 1555,
+  "existing_ledger_entries": 8,
+  "estimated_fix_scope": "1555+ (includes 2 already patched with total=15 but no ledger)",
+  "timestamp": "2026-03-24T15:15:00+08:00"
+}

@@ -1,0 +1,19 @@
+[
+  {
+    "form": "leave_application",
+    "inputs": {
+      "employee": "9000924",
+      "employee_name": "HELUTIN, MARK JOSEPH L.",
+      "leave_type": "Vacation Leave",
+      "from_date": "2026-03-28",
+      "to_date": "2026-03-28",
+      "description": "S106 L3 test \u2014 will be cancelled",
+      "status": "Open",
+      "leave_approver": "Administrator",
+      "posting_date": "2026-03-24"
+    },
+    "submit_action": "POST /api/resource/Leave Application",
+    "response": "HR-LAP-2026-00083",
+    "screenshot_after": "N/A (API test)"
+  }
+]
