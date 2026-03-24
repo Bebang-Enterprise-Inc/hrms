@@ -43,12 +43,38 @@ Always respond with a JSON object:
 
 CHAT_SYSTEM_PROMPT = """\
 You are governor-erp, an AI merge governor for BEI-ERP (Frappe/ERPNext).
-You have access to the repository. Use Read, Grep, Glob to answer questions about code.
+You have FULL access to the repository, Bash commands, and external systems.
+You are NOT a chatbot — you are an OPERATOR. When asked a question, CHECK the actual state before answering.
 
-You manage production merges for a team of 5-8 parallel Claude Code builder sessions.
-You review PR diffs, detect file conflicts, prevent anti-rewind regressions, and serialize merges.
+## Your tools — USE THEM
+- **Read/Grep/Glob** — read source files, search code
+- **Bash** — run ANY command: gh, curl, aws ssm, docker, python, vercel
 
-Be direct, concise, and opinionated. When asked about a PR, use your tools to read the actual files.
+## When asked about status, ALWAYS check live state:
+```bash
+# PR status
+gh pr view <NUM> --repo Bebang-Enterprise-Inc/hrms --json state,mergedAt,statusCheckRollup
+
+# CI status
+gh pr view <NUM> --repo Bebang-Enterprise-Inc/hrms --json statusCheckRollup --jq '.statusCheckRollup[] | [.name, .status, .conclusion] | @tsv'
+
+# Deploy status (GHA workflow)
+gh run list --repo Bebang-Enterprise-Inc/hrms --workflow=build-and-deploy.yml --limit 1 --json status,conclusion
+
+# Production health
+curl -s https://hq.bebang.ph/api/method/ping
+
+# Container image on EC2
+aws ssm send-command --instance-ids i-026b7477d27bd46d6 --document-name AWS-RunShellScript --parameters '{"commands":["docker service ls --format {{.Name}}:{{.Image}}"]}' --output json
+
+# Vercel deploy status (my.bebang.ph)
+curl -s -o /dev/null -w '%{http_code}' https://my.bebang.ph
+```
+
+## NEVER guess. ALWAYS check.
+If someone asks "is the deploy working?" — run the command and report the actual result.
+If someone asks "why is it stuck?" — check CI, GHA runs, production ping, and report findings.
+If someone asks "what step are you on?" — read the pipeline state from context below.
 
 ## BEI Deployment Knowledge (from /deploy-frappe and /ship skills)
 
@@ -237,32 +263,37 @@ class AgentSDKBackend(ReviewBackend):
                 confidence=0.0,
             )
 
-    async def chat(self, message: str, state: Any) -> str:
+    async def chat(self, message: str, state: Any, pipeline_summary: str = "") -> str:
         from claude_agent_sdk import ClaudeAgentOptions, HookMatcher, ResultMessage, query
 
-        # Build state context
+        # Build rich state context with live pipeline info
         pr_details = []
         for _k, pr in state.active_prs.items():
             port_str = f" staging:{pr.staging_port}" if pr.staging_port else ""
             review_str = f" review={pr.review_decision}" if pr.review_decision else ""
+            confidence_str = f" confidence={pr.review_confidence:.2f}" if hasattr(pr, 'review_confidence') and pr.review_confidence else ""
+            gate_str = " GATE_BLOCKED" if getattr(pr, 'gate_blocked', False) else ""
+            builder_str = f" builder_dispatches={pr.builder_dispatch_count}" if getattr(pr, 'builder_dispatch_count', 0) else ""
             pr_details.append(
-                f"  PR #{pr.number} [{pr.head_ref}]{port_str}{review_str}"
+                f"  PR #{pr.number} [{pr.head_ref}]{port_str}{review_str}{confidence_str}{gate_str}{builder_str}"
             )
 
         context = (
-            f"[Governor State]\n"
+            f"[Governor Live State]\n"
             f"Status: {'PAUSED' if state.paused else 'RUNNING'}\n"
             f"Active PRs: {len(state.active_prs)}\n"
             f"Merge queue: {state.merge_queue}\n"
+            f"Production HEAD: {state.production_head[:8] if state.production_head else 'unknown'}\n"
             + "\n".join(pr_details)
-            + f"\n\nOperator message: {message}"
+            + f"\n\n[Live Pipeline]\n{pipeline_summary or 'No pipeline state available'}\n"
+            + f"\n[Operator Message]\n{message}"
         )
 
         options = ClaudeAgentOptions(
             allowed_tools=["Read", "Grep", "Glob", "Bash"],
             disallowed_tools=["Edit", "Write", "NotebookEdit"],
-            max_turns=5,
-            max_budget_usd=0.25,
+            max_turns=10,
+            max_budget_usd=0.50,
             model="sonnet",
             system_prompt=CHAT_SYSTEM_PROMPT + self._lessons_context,
             cwd=self._repo_root,
@@ -271,7 +302,7 @@ class AgentSDKBackend(ReviewBackend):
 
         try:
             result_msg = await asyncio.wait_for(
-                self._run_query(context, options), timeout=60
+                self._run_query(context, options), timeout=120
             )
 
             if result_msg:

@@ -213,9 +213,6 @@ class GovernorERP:
         # AI backend
         self.ai_backend = await self._init_ai_backend()
 
-        # Chat handler
-        self.chat_handler = ChatHandler(ai_backend=self.ai_backend)
-
         # SELF-HEAL Phase 2: re-review unreviewed PRs, re-queue approved (needs AI)
         await self._self_heal_reviews()
 
@@ -234,6 +231,9 @@ class GovernorERP:
             staging_mgr=self.staging_mgr,
             dry_run=self.dry_run,
         )
+
+        # Chat handler — initialized AFTER merge_serializer so it can read pipeline state
+        self.chat_handler = ChatHandler(ai_backend=self.ai_backend, merge_serializer=self.merge_serializer)
 
         # Health server
         self.health_server = HealthServer(self.state_mgr)

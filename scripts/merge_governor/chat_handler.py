@@ -38,8 +38,9 @@ KEYWORD_PATTERNS: list[tuple[re.Pattern, str]] = [
 class ChatHandler:
     """Two-tier chat: keyword commands (instant) + LLM forwarding (complex queries)."""
 
-    def __init__(self, ai_backend=None):
+    def __init__(self, ai_backend=None, merge_serializer=None):
         self.ai_backend = ai_backend
+        self.merge_serializer = merge_serializer
 
     def parse_keyword(self, message: str, state: GovernorState) -> ChatResponse | None:
         """Try to handle message as a keyword command. Returns None if not a keyword."""
@@ -64,7 +65,10 @@ class ChatHandler:
             try:
                 # Auto-fetch PR details if user mentions a PR number
                 enriched = await self._enrich_with_pr_details(message)
-                llm_response = await self.ai_backend.chat(enriched, state)
+                pipeline_summary = ""
+                if self.merge_serializer:
+                    pipeline_summary = self.merge_serializer.get_pipeline_summary()
+                llm_response = await self.ai_backend.chat(enriched, state, pipeline_summary=pipeline_summary)
                 logger.info("chat_llm", message=message[:50])
                 return ChatResponse(text=llm_response, source="llm")
             except Exception as e:

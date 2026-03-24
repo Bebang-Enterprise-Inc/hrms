@@ -38,6 +38,26 @@ class MergeSerializer:
         self.reviewer = reviewer
         self.staging_mgr = staging_mgr
         self.dry_run = dry_run
+        # Live pipeline state — visible to chat AI and status API
+        self.pipeline_status = "idle"
+        self.pipeline_pr = None
+        self.pipeline_step = ""
+        self.pipeline_started_at = 0.0
+
+    def _set_pipeline(self, status: str, step: str, pr_num: int | None = None) -> None:
+        """Update live pipeline state (read by chat AI)."""
+        self.pipeline_status = status
+        self.pipeline_step = step
+        if pr_num is not None:
+            self.pipeline_pr = pr_num
+        self.pipeline_started_at = self.pipeline_started_at or time.time()
+
+    def get_pipeline_summary(self) -> str:
+        """Human-readable pipeline state for chat AI context."""
+        if self.pipeline_status == "idle":
+            return "Pipeline: idle (no PR being processed)"
+        elapsed = int(time.time() - self.pipeline_started_at) if self.pipeline_started_at else 0
+        return f"Pipeline: {self.pipeline_status} | PR #{self.pipeline_pr} | Step: {self.pipeline_step} | Elapsed: {elapsed}s"
 
     async def process_queue(self) -> None:
         """Process one PR from the merge queue."""
@@ -50,6 +70,8 @@ class MergeSerializer:
         if not state.merge_queue:
             return
 
+        self.pipeline_started_at = time.time()
+        self._set_pipeline("processing", "starting", state.merge_queue[0])
         print(f"[{time.strftime('%H:%M:%S')}] Queue: processing PR #{state.merge_queue[0]} ({len(state.merge_queue)} in queue)", flush=True)
 
         pr_num = state.merge_queue[0]
@@ -131,6 +153,7 @@ class MergeSerializer:
             return
 
         # Step 1: Freshness check
+        self._set_pipeline("merging", "Step 1/7: freshness check", pr_num)
         print(f"[{time.strftime('%H:%M:%S')}] Step 1/7: Checking freshness for PR #{pr_num}...", flush=True)
         is_fresh = await self._check_freshness(pr)
         if not is_fresh:
@@ -181,6 +204,7 @@ class MergeSerializer:
                 return
 
         # Step 2: Merge
+        self._set_pipeline("merging", "Step 2/7: gh pr merge", pr_num)
         print(f"[{time.strftime('%H:%M:%S')}] Step 2/7: Merging PR #{pr_num}...", flush=True)
         success = await self._merge_pr(pr_num)
         if not success:
@@ -197,6 +221,7 @@ class MergeSerializer:
                 for line in diff.splitlines()
                 if line.startswith("diff --git")
             ]
+        self._set_pipeline("deploying", "Step 3/7: triggering GHA deploy", pr_num)
         print(f"[{time.strftime('%H:%M:%S')}] Step 3/7: Triggering deploy...", flush=True)
         deploy_success = await self._trigger_deploy(touched_files=touched)
         if not deploy_success:
@@ -204,6 +229,7 @@ class MergeSerializer:
             return
 
         # Step 4: Wait for deploy
+        self._set_pipeline("deploying", "Step 4/7: waiting for GHA build", pr_num)
         print(f"[{time.strftime('%H:%M:%S')}] Step 4/7: Waiting for deploy (30min timeout, 3min poll)...", flush=True)
         deploy_ok = await self._wait_for_deploy()
         if not deploy_ok:
@@ -212,6 +238,7 @@ class MergeSerializer:
             return
 
         # Step 5: L1 smoke test
+        self._set_pipeline("l1_test", "Step 5/7: L1 smoke test", pr_num)
         print(f"[{time.strftime('%H:%M:%S')}] Step 5/7: Running L1 smoke test...", flush=True)
         l1_passed = await self._l1_smoke_test()
         if not l1_passed:
@@ -220,6 +247,7 @@ class MergeSerializer:
             return
 
         # Step 6: Verify container is running the NEW image (not stale)
+        self._set_pipeline("verifying", "Step 6/7: container image verification", pr_num)
         print(f"[{time.strftime('%H:%M:%S')}] Step 6/7: Verifying container image...", flush=True)
         image_ok = await self._verify_deployed_image()
         if not image_ok:
@@ -236,6 +264,7 @@ class MergeSerializer:
                 return
 
         # Step 7a: Docker image cleanup
+        self._set_pipeline("cleanup", "Step 7/7: Docker cleanup + Vercel redeploy", pr_num)
         print(f"[{time.strftime('%H:%M:%S')}] Step 7/7: Cleanup (Docker images + Vercel redeploy)...", flush=True)
         await self._cleanup_old_images()
 
@@ -245,7 +274,10 @@ class MergeSerializer:
         # Post-merge cleanup
         await self._post_merge_cleanup(pr)
 
+        self._set_pipeline("idle", "complete")
+        self.pipeline_started_at = 0.0
         logger.info("merge_cycle_complete", pr=pr_num)
+        print(f"[{time.strftime('%H:%M:%S')}] MERGE CYCLE COMPLETE for PR #{pr_num}", flush=True)
 
     async def _wait_for_ci(self, pr, timeout_s: float = 600, poll_s: float = 30) -> bool:
         """Wait for CI checks to pass. If they fail, dispatch a builder to fix.
