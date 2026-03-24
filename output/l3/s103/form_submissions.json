@@ -1,0 +1,46 @@
+[
+  {
+    "form": "vl_sl_verification",
+    "inputs": {
+      "store": "Araneta Gateway",
+      "week": "2026-03-23"
+    },
+    "submit_action": "Read-only verification (no mutation)",
+    "response": "1 leave overrides locked in grid",
+    "screenshot_after": "S7_labor_plan_page.png"
+  },
+  {
+    "form": "approve_plan",
+    "inputs": {
+      "week": "2026-03-30",
+      "user": "test.area@bebang.ph"
+    },
+    "submit_action": "Approve",
+    "response": {
+      "success": true,
+      "data": {
+        "success": true,
+        "name": "BEI-WLP-2026-00018",
+        "status": "Approved"
+      }
+    },
+    "screenshot_after": "S3_after_approve.png"
+  },
+  {
+    "form": "reject_plan",
+    "inputs": {
+      "rejection_reason": "Insufficient coverage",
+      "week": "2026-04-06"
+    },
+    "submit_action": "Reject Plan",
+    "response": {
+      "success": true,
+      "data": {
+        "success": true,
+        "name": "BEI-WLP-2026-00019",
+        "status": "Rejected"
+      }
+    },
+    "screenshot_after": "S4_after_reject.png"
+  }
+]

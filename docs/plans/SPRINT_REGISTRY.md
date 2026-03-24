@@ -95,7 +95,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 | `S101` | Sprint 101 | `s101-governor-review-intelligence` | #324 | COMPLETED — Governor AI Review Intelligence. L3 6/6 pass. Pre-checks (py_compile, Link defaults, decorators, lessons), streaming AI review, calculated confidence. | `docs/plans/2026-03-24-sprint-101-governor-review-intelligence.md` |
 
 | `S102` | Sprint 102 | `s102-governor-agent-platform` | #327 | COMPLETED — Governor Agent Platform: REST API (10 endpoints), event bus, force-wake, self-diagnosis. L3 10/10 pass. | `docs/plans/2026-03-24-sprint-102-governor-agent-platform.md` |
-
+| `S103` | Sprint 103 | `s103-labor-plan-bug-fixes` | #328, #233 | COMPLETED 2026-03-24 — Labor plan bug fixes: batch publish (Redis lock), compliance API (OR query + N+1 fix), approve/reject UI, ADMS verification, VL/SL dropdown. PRs: hrms#328, bei-tasks#233. L3 8/8 PASS. | `docs/plans/2026-03-24-sprint-103-labor-plan-bug-fixes.md` |
 | `S104` | Sprint 104 | DEPLOYED 2026-03-24 — Contracted Price Master: 92 item prices imported, price change approval workflow, item onboarding control, price override audit trail. PR #330. Branch: s104-contracted-price-master. Awaiting L3. | `docs/plans/2026-03-24-sprint-104-contracted-price-master.md` |
 
 ## Next Sprint Reservation

@@ -1,0 +1,54 @@
+[
+  {
+    "endpoint": "https://my.bebang.ph/api/supervisor/labor-plan/compliance?store=Araneta+Gateway&week_start=2026-03-23",
+    "method": "GET",
+    "payload": {
+      "store": "Araneta Gateway",
+      "week_start": "2026-03-23"
+    },
+    "status": 200,
+    "response_body": "{'success': True, 'data': {'compliance_rate': 0, 'total_scheduled_shifts': 129, 'attended': 0, 'absent': 129, 'late_entries': 0, 'early_exits': 0, 'details': [{'employee': 'HR-EMP-00028', 'employee_name': 'Test TransferE2E', 'day': 'Sunday', 'date': '2026-03-29', 'scheduled_shift': 'Closing', 'attendance_status': 'No Record', 'late_entry': False, 'early_exit': False, 'working_hours': 0}, {'employee': 'HR-EMP-00028', 'employee_name': 'Test TransferE2E', 'day': 'Saturday', 'date': '2026-03-28', 's"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/supervisor/labor-plan/bootstrap?store=Araneta+Gateway&surface=supervisor&week_start=2026-03-23",
+    "method": "GET",
+    "payload": {
+      "store": "Araneta Gateway",
+      "week_start": "2026-03-23"
+    },
+    "status": 200,
+    "response_body": "employees=26, shifts=6, leave_overrides=1"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/supervisor/labor-plan",
+    "method": "POST",
+    "payload": "28 shifts for 4 employees",
+    "status": 200,
+    "response_body": "{'success': True, 'data': {'success': True, 'name': 'BEI-WLP-2026-00018', 'total_hours': 0}}"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/supervisor/labor-plan/approve",
+    "method": "POST",
+    "payload": {
+      "plan_name": "(from UI)"
+    },
+    "status": 200,
+    "response_body": "{'success': True, 'data': {'success': True, 'name': 'BEI-WLP-2026-00018', 'status': 'Approved'}}"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/supervisor/labor-plan",
+    "method": "POST",
+    "payload": "28 shifts for 4 employees",
+    "status": 200,
+    "response_body": "{'success': True, 'data': {'success': True, 'name': 'BEI-WLP-2026-00019', 'total_hours': 0}}"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/supervisor/labor-plan/reject",
+    "method": "POST",
+    "payload": {
+      "rejection_reason": "Insufficient coverage"
+    },
+    "status": 200,
+    "response_body": "{'success': True, 'data': {'success': True, 'name': 'BEI-WLP-2026-00019', 'status': 'Rejected'}}"
+  }
+]
