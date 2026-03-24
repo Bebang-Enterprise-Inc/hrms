@@ -44,29 +44,33 @@ class MergeSerializer:
         state = self.state_mgr.state
 
         if state.paused:
+            print(f"[{time.strftime('%H:%M:%S')}] Queue: PAUSED — type 'resume' to unpause", flush=True)
             return
 
         if not state.merge_queue:
             return
+
+        print(f"[{time.strftime('%H:%M:%S')}] Queue: processing PR #{state.merge_queue[0]} ({len(state.merge_queue)} in queue)", flush=True)
 
         pr_num = state.merge_queue[0]
         pr_key = str(pr_num)
         pr = state.active_prs.get(pr_key)
 
         if not pr:
+            print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} not in active_prs, removing from queue", flush=True)
             state.merge_queue.pop(0)
             self.state_mgr.save()
             return
 
         # Check review status — auto-re-review if invalidated (SHA changed)
         if pr.review_decision is None and pr.head_sha:
-            logger.info("queue_auto_reviewing", pr=pr_num, reason="review_invalidated")
+            print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} needs review (invalidated), re-reviewing...", flush=True)
             try:
                 diff = await get_pr_diff(pr_num, REPO)
                 if diff:
                     result = await self.reviewer.review_pr(pr_num, pr.head_sha, diff)
                     if not result.is_approved:
-                        logger.warning("queue_review_rejected", pr=pr_num)
+                        print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} REJECTED on re-review: {result.reasoning[:100]}", flush=True)
                         await self._comment_on_pr(
                             pr_num,
                             f"**Governor Review: {result.decision}** (auto re-review)\n\n"
@@ -77,18 +81,19 @@ class MergeSerializer:
                         self.state_mgr.save()
                         return
                 else:
+                    print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} could not fetch diff, skipping this cycle", flush=True)
                     return
             except Exception as e:
-                logger.error("queue_auto_review_error", pr=pr_num, error=str(e))
+                print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} review error: {e}", flush=True)
                 return
         elif pr.review_decision != "APPROVE":
-            logger.info("queue_waiting_review", pr=pr_num, decision=pr.review_decision)
+            print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} waiting for review (current: {pr.review_decision})", flush=True)
             return
 
-        # Confidence gate: don't auto-merge low-confidence approvals
+        # Confidence gate
         confidence = getattr(pr, "review_confidence", 1.0)
         if confidence < 0.80:
-            logger.warning("low_confidence_review", pr=pr_num, confidence=confidence)
+            print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} low confidence ({confidence:.2f}), pausing auto-merge", flush=True)
             await self._comment_on_pr(
                 pr_num,
                 f"**Governor: Low confidence review ({confidence:.2f})**\n\n"
@@ -126,6 +131,7 @@ class MergeSerializer:
             return
 
         # Step 1: Freshness check
+        print(f"[{time.strftime('%H:%M:%S')}] Step 1/7: Checking freshness for PR #{pr_num}...", flush=True)
         is_fresh = await self._check_freshness(pr)
         if not is_fresh:
             rebased = await self._auto_rebase(pr)
@@ -175,8 +181,10 @@ class MergeSerializer:
                 return
 
         # Step 2: Merge
+        print(f"[{time.strftime('%H:%M:%S')}] Step 2/7: Merging PR #{pr_num}...", flush=True)
         success = await self._merge_pr(pr_num)
         if not success:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 2/7: MERGE FAILED for PR #{pr_num}", flush=True)
             return
 
         # Step 3: Trigger production deploy (auto-detect migrate need from touched files)
@@ -189,23 +197,30 @@ class MergeSerializer:
                 for line in diff.splitlines()
                 if line.startswith("diff --git")
             ]
+        print(f"[{time.strftime('%H:%M:%S')}] Step 3/7: Triggering deploy...", flush=True)
         deploy_success = await self._trigger_deploy(touched_files=touched)
         if not deploy_success:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 3/7: DEPLOY TRIGGER FAILED", flush=True)
             return
 
         # Step 4: Wait for deploy
+        print(f"[{time.strftime('%H:%M:%S')}] Step 4/7: Waiting for deploy (30min timeout, 3min poll)...", flush=True)
         deploy_ok = await self._wait_for_deploy()
         if not deploy_ok:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 4/7: DEPLOY FAILED or TIMED OUT", flush=True)
             await self._handle_deploy_failure(pr_num)
             return
 
         # Step 5: L1 smoke test
+        print(f"[{time.strftime('%H:%M:%S')}] Step 5/7: Running L1 smoke test...", flush=True)
         l1_passed = await self._l1_smoke_test()
         if not l1_passed:
+            print(f"[{time.strftime('%H:%M:%S')}] Step 5/7: L1 SMOKE TEST FAILED", flush=True)
             await self._handle_l1_failure(pr_num)
             return
 
-        # Step 5.5: Verify container is running the NEW image (not stale)
+        # Step 6: Verify container is running the NEW image (not stale)
+        print(f"[{time.strftime('%H:%M:%S')}] Step 6/7: Verifying container image...", flush=True)
         image_ok = await self._verify_deployed_image()
         if not image_ok:
             # Force-update the Docker service and re-run L1
@@ -220,13 +235,14 @@ class MergeSerializer:
                 await self._handle_deploy_failure(pr_num)
                 return
 
-        # Step 6: Docker image cleanup (keep 4 newest, per /deploy-frappe skill)
+        # Step 7a: Docker image cleanup
+        print(f"[{time.strftime('%H:%M:%S')}] Step 7/7: Cleanup (Docker images + Vercel redeploy)...", flush=True)
         await self._cleanup_old_images()
 
-        # Step 7: Vercel cache-bust redeploy (my.bebang.ph)
+        # Step 7b: Vercel cache-bust redeploy (my.bebang.ph)
         await self._vercel_redeploy(pr_num)
 
-        # Step 8: Post-merge cleanup
+        # Post-merge cleanup
         await self._post_merge_cleanup(pr)
 
         logger.info("merge_cycle_complete", pr=pr_num)
