@@ -39,14 +39,25 @@ RUN bench config set-common-config -c shallow_clone 1
 # HRMS_SHA changes on every commit, invalidating only this layer and below.
 # Everything above (base image pull, gcc install, remove old hrms) stays cached.
 ARG HRMS_SHA
-RUN bench get-app https://github.com/Bebang-Enterprise-Inc/hrms.git --branch production \
+
+# Clone hrms and install pip deps (--skip-assets avoids automatic bench build)
+RUN bench get-app --skip-assets \
+    https://github.com/Bebang-Enterprise-Inc/hrms.git --branch production \
     && echo "hrms_sha=${HRMS_SHA}"
 
-# Install hrms pip deps + build ONLY hrms assets
 RUN --mount=type=cache,target=/home/frappe/.cache/pip \
     cd /home/frappe/frappe-bench \
-    && ./env/bin/pip install -e apps/hrms \
-    && bench build --app hrms
+    && ./env/bin/pip install -e apps/hrms
+
+# Build hrms desk assets only. Skip PWA frontend (frontend/) and roster (roster/)
+# builds — they have workbox peer dep issues in overlay builds and deploy
+# separately via Vercel, not inside this Docker image.
+RUN cd /home/frappe/frappe-bench/apps/hrms \
+    && cp package.json package.json.bak \
+    && python3 -c "import json,pathlib; p=json.loads(pathlib.Path('package.json').read_text()); p['scripts']['build']='echo skip-pwa-roster'; pathlib.Path('package.json').write_text(json.dumps(p))" \
+    && cd /home/frappe/frappe-bench \
+    && bench build --app hrms \
+    && cd apps/hrms && mv package.json.bak package.json
 
 # Clean up build tools to reduce final image size
 USER root
