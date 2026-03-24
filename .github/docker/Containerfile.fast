@@ -1,72 +1,40 @@
-# Containerfile.fast — Rebuild ONLY hrms on top of existing production image
+# Containerfile.fast — Update hrms in-place on the production image
 #
-# BENCHMARK MODE: Uses the real production image as base to measure
-# actual hrms-only rebuild time with real infrastructure.
+# Strategy: The production image already has hrms installed. Instead of
+# removing and re-cloning (55s overhead), we git-fetch the latest code
+# in-place and rebuild only hrms assets.
 #
 # Base: samkarazi/bebang-erpnext-hrms:v15 (current production image)
 # Output: samkarazi/bebang-erpnext-hrms:v15-fast-test (test tag only)
 #
-# CRITICAL: HRMS_SHA must be passed as a build arg on every build.
-# Without it, Docker caches the bench get-app layer and serves stale code.
+# Iteration 1 optimizations (vs baseline 334s):
+#   - git fetch+reset in-place instead of bench remove + bench get-app (-50s)
+#   - Skip gcc/build-essential install (-11s) -- pip install had no C compilation
+#   - Combined RUN layers to reduce overhead (-5s)
+#   - Skip PWA/roster builds (workbox peer dep issue + deploys via Vercel)
 
 ARG BASE_IMAGE=samkarazi/bebang-erpnext-hrms:v15
 FROM ${BASE_IMAGE}
 
-USER root
-
-# Install build tools needed for pip install of C-extension deps
-# The production image inherits from upstream 'base' stage which has
-# git/node/yarn but NOT gcc/build-essential (those are in 'builder' stage only)
-RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-    gcc \
-    build-essential \
-    libmariadb-dev \
-    libffi-dev \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-USER frappe
-WORKDIR /home/frappe/frappe-bench
-
-# Remove old hrms so bench get-app can install fresh
-RUN bench remove-app hrms --no-backup 2>/dev/null || rm -rf apps/hrms
-
-# Enable shallow clones for bench get-app (--depth flag does NOT exist)
-RUN bench config set-common-config -c shallow_clone 1
-
-# ─── HRMS layer (cache-busted on every merge) ────────────────────────────────
-# HRMS_SHA changes on every commit, invalidating only this layer and below.
-# Everything above (base image pull, gcc install, remove old hrms) stays cached.
+# HRMS_SHA changes on every commit, invalidating this layer and everything below.
+# The base image pull above stays cached across builds.
 ARG HRMS_SHA
 
-# Clone hrms and install pip deps (--skip-assets avoids automatic bench build)
-RUN bench get-app --skip-assets \
-    https://github.com/Bebang-Enterprise-Inc/hrms.git --branch production \
-    && echo "hrms_sha=${HRMS_SHA}"
-
-RUN --mount=type=cache,target=/home/frappe/.cache/pip \
-    cd /home/frappe/frappe-bench \
-    && ./env/bin/pip install -e apps/hrms
-
-# Build hrms desk assets only. Skip PWA frontend (frontend/) and roster (roster/)
-# builds — they have workbox peer dep issues in overlay builds and deploy
-# separately via Vercel, not inside this Docker image.
-RUN cd /home/frappe/frappe-bench/apps/hrms \
-    && cp package.json package.json.bak \
-    && python3 -c "import json,pathlib; p=json.loads(pathlib.Path('package.json').read_text()); p['scripts']['build']='echo skip-pwa-roster'; pathlib.Path('package.json').write_text(json.dumps(p))" \
-    && cd /home/frappe/frappe-bench \
-    && bench build --app hrms \
-    && cd apps/hrms && mv package.json.bak package.json
-
-# Clean up build tools to reduce final image size
-USER root
-RUN apt-get purge -y gcc build-essential \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
-
 USER frappe
 WORKDIR /home/frappe/frappe-bench
+
+# Single RUN: fetch latest hrms code, install deps, build desk assets
+# All in one layer to minimize Docker overhead
+RUN cd apps/hrms \
+    && git fetch origin production \
+    && git reset --hard origin/production \
+    && echo "hrms_sha=${HRMS_SHA}" \
+    && cd /home/frappe/frappe-bench \
+    && ./env/bin/pip install -e apps/hrms \
+    && cp apps/hrms/package.json apps/hrms/package.json.bak \
+    && python3 -c "import json,pathlib; p=json.loads(pathlib.Path('apps/hrms/package.json').read_text()); p['scripts']['build']='echo skip-pwa-roster'; pathlib.Path('apps/hrms/package.json').write_text(json.dumps(p))" \
+    && bench build --app hrms \
+    && mv apps/hrms/package.json.bak apps/hrms/package.json
 
 VOLUME [ \
   "/home/frappe/frappe-bench/sites", \
