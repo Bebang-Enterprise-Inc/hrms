@@ -1,11 +1,9 @@
-# Containerfile.fast — Iteration 7: Preserve node_modules, skip yarn
+# Containerfile.fast — Iteration 8: Docker Hub base (faster pull) + preserved node_modules
 #
-# Key insight: yarn install takes 25-30s but most deps haven't changed.
-# The base image already has node_modules from the previous build.
-# Instead of rm -rf apps/hrms (deletes node_modules too), we preserve
-# node_modules and only replace source code + config files.
+# GHCR base was 65s pull. Docker Hub was 43s pull.
+# Combined with node_modules preservation from iter 7.
 
-ARG BASE_IMAGE=ghcr.io/bebang-enterprise-inc/bebang-erpnext-hrms:v15-fast-test
+ARG BASE_IMAGE=samkarazi/bebang-erpnext-hrms:v15
 FROM ${BASE_IMAGE}
 
 ARG HRMS_SHA
@@ -13,8 +11,7 @@ ARG HRMS_SHA
 USER frappe
 WORKDIR /home/frappe/frappe-bench
 
-# Layer 1: Update hrms source code while preserving node_modules
-# Clone to temp, copy source over, keep existing node_modules intact
+# Update source code while preserving node_modules
 RUN git clone --depth 1 --branch production \
        https://github.com/Bebang-Enterprise-Inc/hrms.git /tmp/hrms-fresh \
     && rm -rf apps/hrms/hrms apps/hrms/.git apps/hrms/frontend/src apps/hrms/roster/src \
@@ -27,10 +24,8 @@ RUN git clone --depth 1 --branch production \
     && rm -rf /tmp/hrms-fresh \
     && echo "hrms_sha=${HRMS_SHA}"
 
-# Layer 2: pip install (fast — most deps already installed)
 RUN ./env/bin/pip install -e apps/hrms 2>&1 | tail -5
 
-# Layer 3: Build desk assets, skip PWA/roster
 RUN cp apps/hrms/package.json apps/hrms/package.json.bak \
     && python3 -c "import json,pathlib; p=json.loads(pathlib.Path('apps/hrms/package.json').read_text()); p['scripts']['build']='echo skip-pwa-roster'; pathlib.Path('apps/hrms/package.json').write_text(json.dumps(p))" \
     && bench build --app hrms \
