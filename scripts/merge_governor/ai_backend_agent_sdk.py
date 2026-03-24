@@ -20,8 +20,6 @@ You are a code review agent for BEI-ERP (Frappe/ERPNext).
 You have access to the full repository. Use Read, Grep, and Glob to examine source files directly.
 Do NOT rely solely on diff text — read the actual files to verify imports, check test coverage, and validate logic.
 
-Review the PR for: conflicts with recent merges, anti-rewind violations, security issues, and code quality.
-
 ## Decision criteria
 
 - **APPROVE**: Default for well-structured feature PRs. New functions, API endpoints, tests,
@@ -37,8 +35,47 @@ Review the PR for: conflicts with recent merges, anti-rewind violations, securit
 - BEI runs 5-8 parallel builder agents. Feature PRs adding new endpoints are routine.
 - Use Grep to verify claims (e.g., check if an import actually exists in the file).
 
-Always respond with a JSON object:
-{"decision": "APPROVE|REJECT|NEEDS_FIX", "reasoning": "...", "confidence": 0.0-1.0, "conflicting_files": [], "suggested_fix": null}
+## Response format
+
+Always respond with this JSON object at the end of your review:
+{"decision": "APPROVE|REJECT|NEEDS_FIX", "reasoning": "...", "confidence": 0.0-1.0, "files_read": ["file1.py", "file2.py"], "checks_performed": ["imports", "logic", "anti-patterns"], "conflicting_files": [], "suggested_fix": null}
+"""
+
+REVIEW_PROMPT_TEMPLATE = """\
+You are reviewing PR #{pr_number}. Follow these steps IN ORDER and report what you find at each step.
+
+STEP 1: Read the pre-check results below. If any are BLOCKING, your decision is REJECT — explain why.
+{pre_check_results}
+
+STEP 2: Run `git diff origin/production...HEAD --name-only` to see changed files.
+
+STEP 3: For each changed Python file, use Read to examine the FULL file (not just the diff).
+Focus on: imports that may be missing, function signatures, error handling.
+
+STEP 4: For each changed DocType JSON, verify:
+- New fields have correct fieldtype
+- No Link fields with defaults referencing production-only data
+- Required fields have proper validation
+
+STEP 5: Use Grep to check if any new function names conflict with existing functions.
+
+STEP 6: Check for these specific anti-patterns from governor lessons:
+{lessons_checklist}
+
+STEP 7: Generate your verdict. Base confidence on HOW MUCH you actually verified:
+- 0.90+ = Read all changed files, all checks passed, no warnings
+- 0.70-0.89 = Read most files, minor warnings only
+- 0.50-0.69 = Could not read some files, or unresolved warnings
+- Below 0.50 = Significant issues found or could not verify
+
+Files touched by last {merge_count} merged PRs:
+{recent_files}
+
+Protected surfaces:
+{protected_surfaces}
+
+Respond with JSON:
+{{"decision": "APPROVE|REJECT|NEEDS_FIX", "reasoning": "...", "confidence": 0.0-1.0, "files_read": [...], "checks_performed": [...], "conflicting_files": [], "suggested_fix": null}}
 """
 
 CHAT_SYSTEM_PROMPT = """\
@@ -160,6 +197,106 @@ BLOCKED_BASH_PATTERNS = [
 _BLOCKED_RE = [re.compile(p, re.IGNORECASE) for p in BLOCKED_BASH_PATTERNS]
 
 
+def _print_tool_call(ts: str, step_num: int, tool_name: str, tool_input: dict) -> None:
+    """Print a tool call to terminal in a human-readable format."""
+    if tool_name == "Read":
+        path = tool_input.get("file_path", "?")
+        print(f"[{ts}]     Step {step_num}: Read {path}", flush=True)
+    elif tool_name == "Grep":
+        pattern = tool_input.get("pattern", "?")
+        path = tool_input.get("path", ".")
+        print(f"[{ts}]     Step {step_num}: Grep '{pattern}' in {path}", flush=True)
+    elif tool_name == "Glob":
+        pattern = tool_input.get("pattern", "?")
+        print(f"[{ts}]     Step {step_num}: Glob {pattern}", flush=True)
+    elif tool_name == "Bash":
+        cmd = tool_input.get("command", "?")
+        print(f"[{ts}]     Step {step_num}: Bash: {cmd[:120]}", flush=True)
+    else:
+        print(f"[{ts}]     Step {step_num}: {tool_name}({str(tool_input)[:100]})", flush=True)
+
+
+def _print_tool_result(ts: str, msg) -> None:
+    """Print abbreviated tool result to terminal."""
+    content = ""
+    if hasattr(msg, "content"):
+        if isinstance(msg.content, str):
+            content = msg.content
+        elif isinstance(msg.content, list):
+            for block in msg.content:
+                if hasattr(block, "text"):
+                    content += block.text
+    if content:
+        lines = content.strip().splitlines()
+        preview = lines[0][:120] if lines else ""
+        line_count = len(lines)
+        if line_count > 1:
+            print(f"[{ts}]       -> {preview} ... ({line_count} lines)", flush=True)
+        elif preview:
+            print(f"[{ts}]       -> {preview}", flush=True)
+
+
+def calculate_confidence(
+    ai_confidence: float,
+    files_read: list[str],
+    total_files: int,
+    pre_check_passed: bool,
+    lesson_matches: int,
+    checks_performed: list[str],
+) -> float:
+    """Calculate confidence from verification depth, not AI self-assessment."""
+    confidence = 0.50  # Base
+
+    # Read coverage: +0.10 for reading all changed files
+    if total_files > 0:
+        coverage = len(files_read) / total_files
+        confidence += 0.10 * min(coverage, 1.0)
+    else:
+        confidence += 0.10  # No files = nothing to read
+
+    # Pre-checks passed: +0.10
+    if pre_check_passed:
+        confidence += 0.10
+
+    # No lesson matches: +0.10
+    if lesson_matches == 0:
+        confidence += 0.10
+
+    # Checks performed: +0.10 if AI reported doing 3+ checks
+    if len(checks_performed) >= 3:
+        confidence += 0.10
+
+    # AI's own confidence adds up to +0.10
+    confidence += 0.10 * min(ai_confidence, 1.0)
+
+    return min(round(confidence, 2), 1.0)
+
+
+def print_review_summary(
+    pr_number: int,
+    result: "ReviewResult",
+    total_files: int,
+    pre_check_count: int,
+    pre_check_passed: int,
+    lesson_count: int,
+    lesson_matched: int,
+    elapsed_s: float,
+    cost_usd: float,
+) -> None:
+    """Print a structured review summary to terminal."""
+    ts = time.strftime("%H:%M:%S")
+    files_pct = int(len(result.files_read) / total_files * 100) if total_files > 0 else 100
+    print(f"[{ts}] Review complete for PR #{pr_number}:", flush=True)
+    print(f"[{ts}]   Decision: {result.decision} (confidence: {result.confidence:.2f})", flush=True)
+    print(f"[{ts}]   Files read: {len(result.files_read)}/{total_files} ({files_pct}%)", flush=True)
+    print(f"[{ts}]   Pre-checks: {pre_check_passed}/{pre_check_count} passed", flush=True)
+    print(f"[{ts}]   Lessons checked: {lesson_count}, matched: {lesson_matched}", flush=True)
+    print(f"[{ts}]   Time: {int(elapsed_s)}s | Cost: ${cost_usd:.4f}", flush=True)
+    # Truncate reasoning for terminal
+    reasoning_preview = result.reasoning[:200].replace("\n", " ")
+    print(f"[{ts}]   Reasoning: {reasoning_preview}", flush=True)
+
+
 class AgentSDKBackend(ReviewBackend):
     """AI backend using Claude Agent SDK — agent reads files, runs commands."""
 
@@ -184,48 +321,83 @@ class AgentSDKBackend(ReviewBackend):
         pr_number: int,
         diff_text: str = "",
         merge_context: dict[str, Any] | None = None,
-        timeout_s: float = 120,
+        timeout_s: float = 180,
     ) -> ReviewResult:
-        from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
+        from claude_agent_sdk import ClaudeAgentOptions
 
+        from .pre_check import get_changed_files, run_all as run_pre_checks
+
+        review_start = time.time()
+        ts = time.strftime("%H:%M:%S")
         merge_context = merge_context or {}
+
+        # --- Step 1: Get changed files ---
+        changed_files = get_changed_files(self._repo_root)
+        total_files = len(changed_files)
+        print(f"[{ts}] Reviewing PR #{pr_number} ({total_files} files changed)...", flush=True)
+
+        # --- Step 2: Run deterministic pre-checks ---
+        print(f"[{time.strftime('%H:%M:%S')}]   Running deterministic pre-checks...", flush=True)
+        pre_result = run_pre_checks(changed_files, self._repo_root)
+
+        pre_check_count = len(pre_result.checks)
+        pre_check_passed = sum(1 for c in pre_result.checks if c.passed)
+        lesson_matched = len(pre_result.warnings)
+
+        # If BLOCKING issues found, REJECT immediately (no AI call = save money)
+        if not pre_result.passed:
+            elapsed = time.time() - review_start
+            result = ReviewResult(
+                decision="REJECT",
+                reasoning=f"Deterministic pre-checks failed: {'; '.join(pre_result.blocking_issues[:3])}",
+                confidence=0.95,  # High confidence — deterministic check
+                checks_performed=["py_compile", "link_defaults", "decorator_placement", "lesson_match"],
+            )
+            print_review_summary(
+                pr_number, result, total_files,
+                pre_check_count, pre_check_passed,
+                pre_check_count, lesson_matched,
+                elapsed, 0.0,
+            )
+            return result
+
+        # --- Step 3: Build structured AI review prompt ---
         recent_merges = merge_context.get("recent_merges", [])
-        recent_files = []
+        recent_files_list = []
         for m in recent_merges:
             for f in m.get("touched_files", []):
-                if f not in recent_files:
-                    recent_files.append(f)
+                if f not in recent_files_list:
+                    recent_files_list.append(f)
 
-        prompt = (
-            f"Review PR #{pr_number} in this repository.\n\n"
-            f"Use Grep and Read to examine the changed files on the current branch.\n"
-            f"Run `git diff origin/production...HEAD --name-only` to see which files changed.\n\n"
-            f"Files touched by last {len(recent_merges)} merged PRs:\n"
-            + "\n".join(f"  - {f}" for f in recent_files[:30])
-            + "\n\nProtected surfaces:\n"
-            + "\n".join(
-                f"  - {p}"
-                for p in merge_context.get("protected_surfaces", [])
-            )
-            + "\n\nRespond with JSON: "
-            '{"decision": "APPROVE|REJECT|NEEDS_FIX", '
-            '"reasoning": "...", "confidence": 0.0-1.0, '
-            '"conflicting_files": [], "suggested_fix": null}'
+        # Build lessons checklist for the prompt
+        lessons_checklist = self._lessons_context if self._lessons_context else "(No lessons loaded)"
+
+        prompt = REVIEW_PROMPT_TEMPLATE.format(
+            pr_number=pr_number,
+            pre_check_results=pre_result.summary_for_prompt(),
+            lessons_checklist=lessons_checklist,
+            merge_count=len(recent_merges),
+            recent_files="\n".join(f"  - {f}" for f in recent_files_list[:30]) or "  (none)",
+            protected_surfaces="\n".join(
+                f"  - {p}" for p in merge_context.get("protected_surfaces", [])
+            ) or "  (none)",
         )
 
         options = ClaudeAgentOptions(
             allowed_tools=["Read", "Grep", "Glob", "Bash"],
             disallowed_tools=["Edit", "Write", "NotebookEdit"],
-            max_turns=10,
-            max_budget_usd=0.50,
+            max_turns=15,
+            max_budget_usd=1.00,
             model="sonnet",
             system_prompt=REVIEW_SYSTEM_PROMPT + self._lessons_context,
             cwd=self._repo_root,
         )
 
+        # --- Step 4: Run AI review with streaming ---
+        print(f"[{time.strftime('%H:%M:%S')}]   Starting AI review (streaming)...", flush=True)
         try:
             result_msg = await asyncio.wait_for(
-                self._run_query(prompt, options), timeout=timeout_s
+                self._run_query_streaming(prompt, options), timeout=timeout_s
             )
 
             if not result_msg:
@@ -236,17 +408,37 @@ class AgentSDKBackend(ReviewBackend):
                 )
 
             # Track cost
-            cost = result_msg.total_cost_usd
+            cost = getattr(result_msg, "total_cost_usd", 0.0)
             self._total_cost_usd += cost
             self._log_cost(cost, f"review_pr_{pr_number}")
-            logger.info(
-                "sdk_review_cost",
-                pr=pr_number,
-                cost_usd=cost,
-                total_cost_usd=self._total_cost_usd,
+
+            # Parse AI response
+            ai_result = self._parse_response(result_msg.result, pr_number)
+
+            # --- Step 5: Calculate confidence from verification depth ---
+            from .lessons import get_memory_stats
+
+            lesson_stats = get_memory_stats()
+            calculated_confidence = calculate_confidence(
+                ai_confidence=ai_result.confidence,
+                files_read=ai_result.files_read,
+                total_files=total_files,
+                pre_check_passed=pre_result.passed,
+                lesson_matches=lesson_matched,
+                checks_performed=ai_result.checks_performed,
+            )
+            ai_result.confidence = calculated_confidence
+
+            # --- Step 6: Print review summary ---
+            elapsed = time.time() - review_start
+            print_review_summary(
+                pr_number, ai_result, total_files,
+                pre_check_count, pre_check_passed,
+                lesson_stats.get("lesson_count", 0), lesson_matched,
+                elapsed, cost,
             )
 
-            return self._parse_response(result_msg.result, pr_number)
+            return ai_result
 
         except asyncio.TimeoutError:
             logger.error("agent_sdk_review_timeout", pr=pr_number, timeout=timeout_s)
@@ -434,10 +626,9 @@ class AgentSDKBackend(ReviewBackend):
 
     @staticmethod
     async def _run_query(prompt, options):
-        """Run query() and return the final ResultMessage.
+        """Run query() silently and return the final ResultMessage.
 
-        If ResultMessage.result is empty, falls back to the last
-        AssistantMessage text content (agent may put response there).
+        Used for chat and health checks where terminal streaming is not needed.
         """
         from claude_agent_sdk import AssistantMessage, ResultMessage, query
 
@@ -455,7 +646,60 @@ class AgentSDKBackend(ReviewBackend):
         if result_msg and not result_msg.result and last_text:
             result_msg.result = last_text
         elif result_msg is None and last_text:
-            # Create a synthetic ResultMessage with the assistant text
+            result_msg = type("FakeResult", (), {
+                "result": last_text,
+                "total_cost_usd": 0.0,
+                "session_id": "",
+            })()
+
+        return result_msg
+
+    @staticmethod
+    async def _run_query_streaming(prompt, options):
+        """Run query() with streaming output to terminal.
+
+        Prints AI reasoning, tool calls, and tool results in real time
+        so the operator can watch the AI think — same as watching Claude Code work.
+        """
+        from claude_agent_sdk import (
+            AssistantMessage,
+            ResultMessage,
+            ToolResultMessage,
+            query,
+        )
+
+        result_msg = None
+        last_text = ""
+        step_num = 0
+
+        async for msg in query(prompt=prompt, options=options):
+            ts = time.strftime("%H:%M:%S")
+
+            if isinstance(msg, AssistantMessage):
+                for block in msg.content:
+                    if hasattr(block, "text") and block.text.strip():
+                        # Print AI reasoning to terminal
+                        for line in block.text.strip().splitlines():
+                            truncated = line[:150]
+                            print(f"[{ts}]     AI: {truncated}", flush=True)
+                        last_text += block.text
+                    elif hasattr(block, "name"):
+                        # Tool call — print what the AI is doing
+                        step_num += 1
+                        tool_name = block.name
+                        tool_input = getattr(block, "input", {})
+                        _print_tool_call(ts, step_num, tool_name, tool_input)
+
+            elif isinstance(msg, ToolResultMessage):
+                _print_tool_result(ts, msg)
+
+            elif isinstance(msg, ResultMessage):
+                result_msg = msg
+
+        # If result is empty but we got assistant text, use that
+        if result_msg and not result_msg.result and last_text:
+            result_msg.result = last_text
+        elif result_msg is None and last_text:
             result_msg = type("FakeResult", (), {
                 "result": last_text,
                 "total_cost_usd": 0.0,
@@ -489,6 +733,8 @@ class AgentSDKBackend(ReviewBackend):
 
         try:
             data = json.loads(json_match)
+            files_read = data.get("files_read", [])
+            checks_performed = data.get("checks_performed", [])
             return ReviewResult(
                 decision=data.get("decision", "REJECT").upper(),
                 reasoning=data.get("reasoning", "No reasoning provided"),
@@ -496,6 +742,8 @@ class AgentSDKBackend(ReviewBackend):
                 conflicting_files=data.get("conflicting_files", []),
                 suggested_fix=data.get("suggested_fix"),
                 raw_response=raw_text,
+                files_read=files_read if isinstance(files_read, list) else [],
+                checks_performed=checks_performed if isinstance(checks_performed, list) else [],
             )
         except (json.JSONDecodeError, ValueError) as e:
             logger.warning("json_parse_error", pr=pr_number, error=str(e))

@@ -18,6 +18,8 @@ class ReviewResult:
     raw_response: str = ""
     conflicting_files: list[str] = field(default_factory=list)
     suggested_fix: str | None = None
+    files_read: list[str] = field(default_factory=list)
+    checks_performed: list[str] = field(default_factory=list)
 
     @property
     def is_approved(self) -> bool:
