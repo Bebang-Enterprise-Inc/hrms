@@ -1,13 +1,7 @@
 # Containerfile.fast — Rebuild hrms on the production image
 #
-# Iteration 3: Separate small layers for efficient Docker push
-# Key insight: one big layer = 232s push. Small layers = 56s push.
-#
-# Optimizations:
-#   - git clone --depth 1 instead of bench get-app (skip bench overhead)
-#   - No gcc/build-essential (pip install had zero C compilations)
-#   - Skip PWA/roster builds (deploy via Vercel, not Docker)
-#   - Separate layers for push efficiency
+# Iteration 4: Fix missing node deps from iteration 3
+# Added yarn install after git clone to resolve html2canvas etc.
 
 ARG BASE_IMAGE=samkarazi/bebang-erpnext-hrms:v15
 FROM ${BASE_IMAGE}
@@ -18,17 +12,18 @@ WORKDIR /home/frappe/frappe-bench
 # HRMS_SHA invalidates everything below. Base image pull stays cached.
 ARG HRMS_SHA
 
-# Layer 1: Clone fresh hrms code (fast shallow clone, ~10s)
+# Layer 1: Clone fresh hrms code + install node deps
 RUN rm -rf apps/hrms \
     && git clone --depth 1 --branch production \
        https://github.com/Bebang-Enterprise-Inc/hrms.git apps/hrms \
     && rm -rf apps/hrms/.git \
-    && echo "hrms_sha=${HRMS_SHA}"
+    && echo "hrms_sha=${HRMS_SHA}" \
+    && cd apps/hrms && yarn install --check-files 2>&1 | tail -3
 
-# Layer 2: Install Python deps (~4s, no C compilation needed)
+# Layer 2: Install Python deps
 RUN ./env/bin/pip install -e apps/hrms 2>&1 | tail -5
 
-# Layer 3: Build desk assets only, skip PWA/roster (~4s)
+# Layer 3: Build desk assets only, skip PWA/roster
 RUN cp apps/hrms/package.json apps/hrms/package.json.bak \
     && python3 -c "import json,pathlib; p=json.loads(pathlib.Path('apps/hrms/package.json').read_text()); p['scripts']['build']='echo skip-pwa-roster'; pathlib.Path('apps/hrms/package.json').write_text(json.dumps(p))" \
     && bench build --app hrms \
