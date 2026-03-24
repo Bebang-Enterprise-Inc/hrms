@@ -252,3 +252,23 @@ def get_approved_ot_hours(employee: str, start_date: str, end_date: str, ot_type
 	result = query.run(as_dict=True)
 
 	return flt(result[0].total_hours) if result and result[0].total_hours else 0.0
+
+
+def get_late_entry_count(employee, start_date, end_date):
+	"""Count attendance records with late_entry=1 for the payroll period."""
+	return frappe.db.count("Attendance", filters={
+		"employee": employee,
+		"attendance_date": ["between", [start_date, end_date]],
+		"late_entry": 1,
+		"docstatus": 1,
+	}) or 0
+
+
+def get_early_exit_count(employee, start_date, end_date):
+	"""Count attendance records with early_exit=1 for the payroll period."""
+	return frappe.db.count("Attendance", filters={
+		"employee": employee,
+		"attendance_date": ["between", [start_date, end_date]],
+		"early_exit": 1,
+		"docstatus": 1,
+	}) or 0
