@@ -1,38 +1,38 @@
 # Containerfile.fast — Rebuild hrms on the production image
 #
-# Base: samkarazi/bebang-erpnext-hrms:v15 (current production image)
-# Output: samkarazi/bebang-erpnext-hrms:v15-fast-test (test tag only)
+# Iteration 3: Separate small layers for efficient Docker push
+# Key insight: one big layer = 232s push. Small layers = 56s push.
 #
-# Note: upstream Containerfile strips .git dirs (find apps -path "*/.git" | xargs rm -fr)
-# so git fetch in-place is impossible. Must use bench get-app for fresh clone.
-#
-# Iteration 2 optimizations (vs baseline 334s):
-#   - Skip gcc/build-essential (-11s) -- pip install had 0 C compilations
-#   - Use --skip-assets on bench get-app, build separately (-3s overhead reduction)
-#   - Skip PWA/roster builds (workbox peer deps + deploys via Vercel)
-#   - Single combined RUN layer for all hrms work
+# Optimizations:
+#   - git clone --depth 1 instead of bench get-app (skip bench overhead)
+#   - No gcc/build-essential (pip install had zero C compilations)
+#   - Skip PWA/roster builds (deploy via Vercel, not Docker)
+#   - Separate layers for push efficiency
 
 ARG BASE_IMAGE=samkarazi/bebang-erpnext-hrms:v15
 FROM ${BASE_IMAGE}
 
-# HRMS_SHA changes on every commit, invalidating this layer and everything below.
-# The base image pull above stays cached across builds.
-ARG HRMS_SHA
-
 USER frappe
 WORKDIR /home/frappe/frappe-bench
 
-# Single RUN: remove old hrms, clone fresh, install deps, build desk assets
+# HRMS_SHA invalidates everything below. Base image pull stays cached.
+ARG HRMS_SHA
+
+# Layer 1: Clone fresh hrms code (fast shallow clone, ~10s)
 RUN rm -rf apps/hrms \
-    && bench get-app --skip-assets \
-       https://github.com/Bebang-Enterprise-Inc/hrms.git --branch production \
-    && echo "hrms_sha=${HRMS_SHA}" \
-    && ./env/bin/pip install -e apps/hrms \
-    && cp apps/hrms/package.json apps/hrms/package.json.bak \
+    && git clone --depth 1 --branch production \
+       https://github.com/Bebang-Enterprise-Inc/hrms.git apps/hrms \
+    && rm -rf apps/hrms/.git \
+    && echo "hrms_sha=${HRMS_SHA}"
+
+# Layer 2: Install Python deps (~4s, no C compilation needed)
+RUN ./env/bin/pip install -e apps/hrms 2>&1 | tail -5
+
+# Layer 3: Build desk assets only, skip PWA/roster (~4s)
+RUN cp apps/hrms/package.json apps/hrms/package.json.bak \
     && python3 -c "import json,pathlib; p=json.loads(pathlib.Path('apps/hrms/package.json').read_text()); p['scripts']['build']='echo skip-pwa-roster'; pathlib.Path('apps/hrms/package.json').write_text(json.dumps(p))" \
     && bench build --app hrms \
-    && mv apps/hrms/package.json.bak apps/hrms/package.json \
-    && find apps/hrms -path "*/.git" -type d | xargs rm -rf
+    && mv apps/hrms/package.json.bak apps/hrms/package.json
 
 VOLUME [ \
   "/home/frappe/frappe-bench/sites", \
