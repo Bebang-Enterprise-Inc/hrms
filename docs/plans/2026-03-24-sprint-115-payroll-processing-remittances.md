@@ -2,11 +2,14 @@
 
 ```yaml
 canonical_sprint_id: S115
-status: In Progress
+status: DEPLOYED
 execution_started: 2026-03-24
+deployed_at: 2026-03-25
 branch: s115-payroll-processing-remittances
 completed_date: null
 execution_summary: null
+backend_pr: "#346 (Bebang-Enterprise-Inc/hrms) — MERGED"
+frontend_pr: "#238 (Bebang-Enterprise-Inc/BEI-Tasks) — MERGED"
 parent_initiative: S083-payroll-war-room-replacement
 parallel_sprints:
   - S113  # Command Center + Navigation (zero dependency)

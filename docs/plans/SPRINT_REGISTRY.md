@@ -111,8 +111,8 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S112` | Sprint 112 | `s112-luwi-training-blockers` | #344 (hrms), #237 (bei-tasks) | DEPLOYED 2026-03-24 — PRs merged, deploy triggered. L3 pending in separate session. | `docs/plans/2026-03-24-sprint-112-luwi-training-blockers.md` |
 | `S113` | Sprint 113 | `s113-payroll-command-center` | — | PLANNED — Payroll Command Center & Navigation: rebuild landing, Finance RBAC, Current Cutoff view, Review Output view, History + Comparison redirect. Read-only views. Replaces S083 scope 1/3. | `docs/plans/2026-03-24-sprint-113-payroll-command-center-navigation.md` |
-| `S114` | Sprint 114 | `s114-payroll-compensation-sensitive` | #345 | DEPLOYED 2026-03-24 — 12-endpoint backend API + 3 DocTypes + enrichment dual-control + 2 frontend pages. PR#345 awaiting governor merge + L3. | `docs/plans/2026-03-24-sprint-114-payroll-compensation-sensitive-changes.md` |
-| `S115` | Sprint 115 | `s115-payroll-processing-remittances` | — | PLANNED — Payroll Processing & Remittances: step wizard for payroll run, S076 blocker handling, government remittance views + export. Replaces S083 scope 3/3. | `docs/plans/2026-03-24-sprint-115-payroll-processing-remittances.md` |
+| `S114` | Sprint 114 | `s114-payroll-compensation-sensitive` | #345 | DEPLOYED 2026-03-24 — 12-endpoint backend API + 3 DocTypes + enrichment dual-control + 2 frontend pages. PR#345 merged. L3 pending. | `docs/plans/2026-03-24-sprint-114-payroll-compensation-sensitive-changes.md` |
+| `S115` | Sprint 115 | `s115-payroll-processing-remittances` | #346 (backend), BEI-Tasks#238 (frontend) | DEPLOYED 2026-03-25 — 4 new endpoints + processing wizard + remittances page. PR#346 merged. L3 pending. | `docs/plans/2026-03-24-sprint-115-payroll-processing-remittances.md` |
 
 | `S116` | Sprint 116 | `s116-procurement-defect-fixes` | — | GO — Fix all 6 S109 defects: invoice /undefined redirect, PO approval dialog, supplier PNaN, payments 500, seed verified invoice for payment test, GR over-delivery warning. Zero defects remaining. | `docs/plans/2026-03-24-sprint-116-procurement-defect-fixes.md` |
 
