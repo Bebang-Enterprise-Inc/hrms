@@ -116,8 +116,12 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S116` | Sprint 116 | `s116-procurement-defect-fixes` | — | GO — Fix all 6 S109 defects: invoice /undefined redirect, PO approval dialog, supplier PNaN, payments 500, seed verified invoice for payment test, GR over-delivery warning. Zero defects remaining. | `docs/plans/2026-03-24-sprint-116-procurement-defect-fixes.md` |
 
+| `S117` | Sprint 117 | `s117-payroll-ux-polish` | — | PLANNED — Payroll Command Center UX: false-readiness fix, unknown-state icons, summary card empty/dash, date formatting, launcher grid layout. 4 priority fixes. | `docs/plans/2026-03-25-sprint-117-payroll-command-center-ux-polish.md` |
+
+| `S118` | Sprint 118 | `s118-payroll-processing-ux` | — | GO — S115 UX hardening: blocker table group-by-issue + search + filter for 500+ employees, date consistency, empty state banners, export tooltip, mobile step labels. 18 units. | `docs/plans/2026-03-25-sprint-118-s115-payroll-ux-hardening.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S117`.
+1. Next canonical sprint ID to assign: `S119`.
 2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
