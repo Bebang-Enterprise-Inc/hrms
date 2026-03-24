@@ -259,6 +259,102 @@ const usableTypes = leaveTypes.filter(lt => {
 
 **Files:** `bei-tasks/components/hr/leave-request-dialog.tsx`
 
+### P2.5-5: Add employee compensation eligibility tagging [BUILD]
+
+**What:** Create a helper function in `overtime.py` that classifies whether an employee gets the voluntary compensation choice (OT pay vs Comp Off) or stays on auto-OT only.
+
+**Policy (locked by CEO 2026-03-24):**
+
+```
+IF branch matches HEAD_OFFICE_KEYS → VOLUNTARY (choose OT pay or Comp Off)
+ELIF department NOT IN ("Operations - BEI", "Commissary - BEI") → VOLUNTARY
+ELSE → AUTO_OT_ONLY (store + commissary, no choice)
+```
+
+**Rationale:** Store and commissary employees work scheduled shifts — weekends/holidays are normal work days for them, so OT is auto-detected. Office employees (Finance, HR, Marketing, IT, Projects, Customer Support, Procurement, BD, Audit, Supply Chain) only work weekends/holidays as an exception, so they should choose their compensation.
+
+**Implementation in `hrms/api/overtime.py`:**
+
+```python
+# --- Employee compensation eligibility ---
+# Policy: CEO decision 2026-03-24
+# Office employees: voluntary choice (OT pay OR comp off)
+# Store + Commissary: auto-OT only (scheduled shift workers)
+VOLUNTARY_COMPENSATION_EXCLUDED_DEPTS = {"Operations - BEI", "Commissary - BEI"}
+
+def is_voluntary_compensation_eligible(employee_doc) -> bool:
+    """Office employees get to choose OT pay vs Compensatory Off.
+    Store and commissary employees don't — holidays/weekends are normal shifts.
+
+    Rule:
+      1. HEAD_OFFICE branch → always voluntary
+      2. Department NOT in (Operations, Commissary) → voluntary
+      3. Everything else → auto-OT only
+    """
+    if _is_head_office(employee_doc.branch):
+        return True
+    dept = _txt(employee_doc.department)
+    if dept and dept not in VOLUNTARY_COMPENSATION_EXCLUDED_DEPTS:
+        return True
+    return False
+```
+
+**HARD BLOCKER:** Commissary is EXCLUDED from voluntary choice — all commissary employees (including office staff within commissary) stay on auto-OT. This was explicitly decided by the CEO. Do NOT add commissary exceptions.
+
+**Files:** `hrms/api/overtime.py`
+
+### P2.5-6: Write voluntary compensation policy document [BUILD]
+
+**What:** Create `docs/policies/OVERTIME_COMPENSATION_POLICY.md` documenting the locked decision so future agents and HR team know the rule.
+
+**Contents:**
+
+```markdown
+# Overtime & Compensation Policy
+
+## Effective: 2026-03-24
+## Approved by: Sam Karazi (CEO)
+
+### Employee Classification
+
+| Category | Departments | Compensation on Holiday/Weekend Work |
+|----------|------------|--------------------------------------|
+| **Office** | Finance, HR, IT, Marketing, Projects, Customer Support, Procurement, BD, Audit, Supply Chain | **Voluntary** — employee chooses OT pay OR Compensatory Off |
+| **Store** | Operations (all store branches) | **Auto-OT** — system detects, supervisor approves |
+| **Commissary** | Commissary (all roles) | **Auto-OT** — same as store |
+
+### How it works
+
+**Office employees:** When you work on a holiday, weekend, or your scheduled day off:
+1. System detects the extra work from your punch-in/out
+2. You receive a notification to choose your compensation
+3. Choose: "Request OT Pay" (extra cash) OR "Request Comp Day Off" (1 paid day off)
+4. If you don't choose within 48 hours, defaults to Comp Day Off
+5. Your supervisor approves the request
+
+**Store & Commissary employees:** Your schedule includes weekends/holidays as normal shifts.
+1. System auto-detects overtime (>8 hours worked)
+2. OT request goes to supervisor for approval
+3. Approved OT is paid in the next payroll cycle
+
+### Rules
+
+1. You CANNOT have both OT pay and leave on the same day
+2. If you have approved leave on a day, no OT can be created for that day
+3. If you have approved OT on a day, you cannot file leave for that day
+4. When leave is approved, any pending OT for those dates is auto-cancelled
+5. Compensatory Off days must be used within 90 days of earning
+
+### Technical implementation
+
+- Eligibility function: `hrms.api.overtime.is_voluntary_compensation_eligible()`
+- Branch keywords for office: BRITTANY, CAPITAL HOUSE, BGC, HEAD OFFICE, HQ
+- Excluded departments: Operations - BEI, Commissary - BEI
+- OT-Leave guard: `hrms.overrides.leave_application_hooks`
+```
+
+**Files:** `docs/policies/OVERTIME_COMPENSATION_POLICY.md`
+
 ## Phase 3 — Write Reference Document (~4 units)
 
 ### P3-1: Create leave type reference for BEI operations
@@ -292,6 +388,9 @@ Write `docs/reference/BEI_LEAVE_TYPES.md` with:
 | 12 | (API) | Create approved OT + attempt leave on same day | Leave Application throws validation error | P2.5-2 guard not working |
 | 13 | (API) | Create pending OT + approve leave on same day | Pending OT auto-rejected with reason | P2.5-3 auto-cancel not working |
 | 14 | (Browser) | Open Leave Request dialog, check dropdown | Compensatory Off NOT shown, CL/PL hidden if 0 balance | P2.5-4 filter not working |
+| 15 | (API) | Call is_voluntary_compensation_eligible for AGUARINO (store, Operations) | Returns False | P2.5-5 tagging wrong for store |
+| 16 | (API) | Call is_voluntary_compensation_eligible for an HR/Finance employee | Returns True | P2.5-5 tagging wrong for office |
+| 17 | (API) | Call is_voluntary_compensation_eligible for a Commissary employee | Returns False | P2.5-5 commissary exclusion broken |
 
 ## Requirements Regression Checklist
 
@@ -308,6 +407,11 @@ Write `docs/reference/BEI_LEAVE_TYPES.md` with:
 - [ ] Does leave approval auto-reject pending OT on same dates? (P2.5-3)
 - [ ] Are Compensatory Off, zero-balance CL, and zero-balance PL hidden from dropdown? (P2.5-4)
 - [ ] Does the OT guard only block on Approved/Locked/Bridged OT, NOT Pending? (P2.5-2 HARD BLOCKER)
+- [ ] Does is_voluntary_compensation_eligible return False for Operations dept? (P2.5-5)
+- [ ] Does is_voluntary_compensation_eligible return False for Commissary dept? (P2.5-5 — CEO explicit exclusion)
+- [ ] Does is_voluntary_compensation_eligible return True for HEAD_OFFICE branch? (P2.5-5)
+- [ ] Does is_voluntary_compensation_eligible return True for non-Ops/non-Commissary depts? (P2.5-5)
+- [ ] Does the policy document exist at docs/policies/OVERTIME_COMPENSATION_POLICY.md? (P2.5-6)
 - [ ] Does every new/modified @frappe.whitelist() endpoint call set_backend_observability_context()?
 
 ## Ground-Truth Lock
@@ -329,8 +433,10 @@ Write `docs/reference/BEI_LEAVE_TYPES.md` with:
   - LWOP payroll impact verified
   - Leave-overtime mutual exclusion guards deployed and verified (P2.5-1 through P2.5-3)
   - Non-functional leave types hidden from dropdown (P2.5-4)
+  - Employee compensation eligibility function deployed and tested (P2.5-5)
+  - Overtime compensation policy document committed (P2.5-6)
   - Reference document written
-  - All 14 L3 scenarios pass
+  - All 17 L3 scenarios pass
   - plan YAML and SPRINT_REGISTRY.md updated
 - stop_only_for:
   - SSM/EC2 access failure for payroll verification
@@ -339,7 +445,7 @@ Write `docs/reference/BEI_LEAVE_TYPES.md` with:
 
 ## Scope Size Warning
 
-Total ~30 units (was 22, +8 for Phase 2.5 leave-overtime guards), within the 80-unit ceiling. Single session executable. Phase 2.5 is the only code-change phase; all others are testing/documentation.
+Total ~36 units (was 22, +14 for Phase 2.5 leave-overtime guards + employee tagging + policy doc), within the 80-unit ceiling. Single session executable. Phase 2.5 is the code-change phase; all others are testing/documentation.
 
 ## Agent Boot Sequence
 
