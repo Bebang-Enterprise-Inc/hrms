@@ -3678,8 +3678,17 @@ def get_schedule_compliance(store: str, week_start: str, surface: str | None = N
 		"BEI Weekly Labor Plan",
 		filters={"store": store_context["warehouse"], "week_start_date": week_start, "status": "Published"},
 		fields=["name"],
+		order_by="modified desc",
 		limit=1,
 	)
+	if not plans:
+		plans = frappe.get_all(
+			"BEI Weekly Labor Plan",
+			filters={"store": store_context["warehouse_name"], "week_start_date": week_start, "status": "Published"},
+			fields=["name"],
+			order_by="modified desc",
+			limit=1,
+		)
 	if not plans:
 		return {"compliance_rate": 0, "total_scheduled_shifts": 0, "attended": 0, "absent": 0, "late_entries": 0, "early_exits": 0, "details": []}
 
