@@ -126,6 +126,13 @@ class MergeSerializer:
             except Exception as e:
                 print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} review error: {e}", flush=True)
                 return
+        elif pr.review_decision == "REJECT":
+            print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} is REJECTED — removing from queue (fix and push to re-review)", flush=True)
+            state.merge_queue.remove(pr_num)
+            self.state_mgr.save()
+            self._set_pipeline("idle", "rejected")
+            self.pipeline_started_at = 0.0
+            return
         elif pr.review_decision != "APPROVE":
             print(f"[{time.strftime('%H:%M:%S')}] Queue: PR #{pr_num} waiting for review (current: {pr.review_decision})", flush=True)
             return

@@ -753,8 +753,12 @@ class GovernorERP:
 
     async def shutdown(self) -> None:
         """Graceful shutdown — save state, stop servers."""
+        import warnings
+        warnings.filterwarnings("ignore", category=ResourceWarning)
+
         logger.info("shutting_down")
         self._stop_event.set()
+        self._wake_event.set()  # Unblock any waiting loops
 
         # Save state (don't tear down containers — they persist)
         self.state_mgr.save()

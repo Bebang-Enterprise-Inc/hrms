@@ -186,11 +186,21 @@ async def _post_diagnosis_comment(pr_num: int, step: str, elapsed_min: int, diag
 
 
 async def _run_cmd(*args: str) -> str | None:
+    """Run a command asynchronously. Resolves executable path via shutil.which on Windows."""
+    import shutil
+
+    # Resolve executable to full path (asyncio.create_subprocess_exec needs it on Windows)
+    exe = shutil.which(args[0])
+    if not exe:
+        logger.warning("self_diagnosis_cmd_not_found", cmd=args[0])
+        return None
+    resolved_args = (exe,) + args[1:]
+
     try:
         kwargs: dict[str, Any] = {"stdout": asyncio.subprocess.PIPE, "stderr": asyncio.subprocess.PIPE}
         if sys.platform == "win32":
             kwargs["creationflags"] = _WIN_FLAGS
-        proc = await asyncio.create_subprocess_exec(*args, **kwargs)
+        proc = await asyncio.create_subprocess_exec(*resolved_args, **kwargs)
         stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
         if proc.returncode == 0 and stdout:
             return stdout.decode("utf-8", errors="replace").strip()
