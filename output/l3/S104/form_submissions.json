@@ -1,0 +1,86 @@
+[
+  {
+    "form": "purchase_order",
+    "inputs": {
+      "supplier": "1T1MI3",
+      "item": "RM001",
+      "qty": 10,
+      "unit_cost": "(auto-fill)"
+    },
+    "submit_action": "create_purchase_order",
+    "response": "PO PO-2026-02966 created with auto-filled price",
+    "screenshot_after": null,
+    "timestamp": "2026-03-24T16:03:47.053625"
+  },
+  {
+    "form": "purchase_order",
+    "inputs": {
+      "item": "RM001",
+      "unit_cost": 200,
+      "override_reason": "NONE"
+    },
+    "submit_action": "create_purchase_order",
+    "response": "Rejected: price override reason required",
+    "screenshot_after": null,
+    "timestamp": "2026-03-24T16:03:47.605660"
+  },
+  {
+    "form": "purchase_order",
+    "inputs": {
+      "item": "RM001",
+      "unit_cost": 200,
+      "override_reason": "Supplier price increase"
+    },
+    "submit_action": "create_purchase_order",
+    "response": "PO PO-2026-02967 created successfully",
+    "screenshot_after": null,
+    "timestamp": "2026-03-24T16:03:47.742680"
+  },
+  {
+    "form": "price_change_request",
+    "inputs": {
+      "item": "RM001",
+      "new_price": 195,
+      "reason": "Q2 supplier increase"
+    },
+    "submit_action": "request_price_change",
+    "response": "Created PCR-00009",
+    "screenshot_after": null,
+    "timestamp": "2026-03-24T16:03:49.310081"
+  },
+  {
+    "form": "item_request",
+    "inputs": {
+      "item_code": "NL3-160345",
+      "cost": 150,
+      "group": "Raw Material"
+    },
+    "submit_action": "request_new_item",
+    "response": "Created IR-00004",
+    "screenshot_after": null,
+    "timestamp": "2026-03-24T16:03:51.665676"
+  },
+  {
+    "form": "item_request_approval",
+    "inputs": {
+      "ir": "IR-00004",
+      "action": "approve"
+    },
+    "submit_action": "approve_item_request",
+    "response": "Item + Price created, rate=150.00",
+    "screenshot_after": null,
+    "timestamp": "2026-03-24T16:03:52.677001"
+  },
+  {
+    "form": "price_change_rejection",
+    "inputs": {
+      "pcr": "PCR-00010",
+      "action": "reject",
+      "reason": "Price too high"
+    },
+    "submit_action": "reject_price_change",
+    "response": "Rejected successfully",
+    "screenshot_after": null,
+    "timestamp": "2026-03-24T16:03:53.054168"
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "check": "RM001 has contracted price in Standard Buying",
+    "before": "No contracted price existed before S104",
+    "after": "contracted_rate=188.16, source=standard_buying",
+    "passed": true,
+    "timestamp": "2026-03-24T16:03:46.505897"
+  },
+  {
+    "check": "PO PO-2026-02966 item RM001 unit_cost auto-filled from contracted price",
+    "before": "No unit_cost sent in payload",
+    "after": "unit_cost=188.16, contracted_unit_cost=188.16",
+    "passed": true,
+    "timestamp": "2026-03-24T16:03:47.142130"
+  },
+  {
+    "check": "PO PO-2026-02967 has price_override_reason saved",
+    "before": "No override reason",
+    "after": "price_override_reason='Supplier price increase pending contract update'",
+    "passed": true,
+    "timestamp": "2026-03-24T16:03:47.832798"
+  },
+  {
+    "check": "RM001 price updated after approval",
+    "before": "before_price=188.16",
+    "after": "after_price=195.0",
+    "passed": true,
+    "timestamp": "2026-03-24T16:03:50.676427"
+  },
+  {
+    "check": "NL3-160345 blocked from auto-creation",
+    "before": "Item does not exist in Frappe",
+    "after": "PO creation rejected \u2014 item must go through approval",
+    "passed": true,
+    "timestamp": "2026-03-24T16:03:50.849453"
+  },
+  {
+    "check": "NL3-160345 created after approval",
+    "before": "Item count before: 0",
+    "after": "Item count after: 1, price=150.0",
+    "passed": true,
+    "timestamp": "2026-03-24T16:03:52.595495"
+  }
+]

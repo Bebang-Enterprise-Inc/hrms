@@ -1,0 +1,114 @@
+[
+  {
+    "scenario": "S104-01",
+    "test": "get_contracted_price for RM001",
+    "status": "PASS",
+    "detail": "contracted_rate=188.16, price_list=Standard Buying",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:46.505897"
+  },
+  {
+    "scenario": "S104-02",
+    "test": "get_item_last_price backward compat",
+    "status": "PASS",
+    "detail": "contracted_price=188.16, last_price=1992.0, last_po_price=1992.0, source=contracted",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:46.626409"
+  },
+  {
+    "scenario": "S104-03",
+    "test": "No contracted price returns None",
+    "status": "PASS",
+    "detail": "Correctly returns None for item without price",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:46.701026"
+  },
+  {
+    "scenario": "S104-04",
+    "test": "PO auto-fill from contracted price",
+    "status": "PASS",
+    "detail": "PO PO-2026-02966: unit_cost=188.16, contracted=188.16",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:47.142130"
+  },
+  {
+    "scenario": "S104-05",
+    "test": "PO without override reason rejected",
+    "status": "PASS",
+    "detail": "Correctly rejected: {'error': '{\"exception\":\"frappe.exceptions.ValidationError: Price for item RM001 (\\\\u20b1200.00) differs from contracted rate (\\\\u20b1188.16). Please provide a price override reason.\",\"exc_type\":\"Vali",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:47.605660"
+  },
+  {
+    "scenario": "S104-06",
+    "test": "PO with override reason accepted",
+    "status": "PASS",
+    "detail": "PO PO-2026-02967 created with override",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:47.742680"
+  },
+  {
+    "scenario": "S104-07",
+    "test": "Price change request created",
+    "status": "PASS",
+    "detail": "PCR PCR-00009, status=Pending CPO Approval",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:49.310081"
+  },
+  {
+    "scenario": "S104-08",
+    "test": "Non-CPO approval rejected",
+    "status": "PASS",
+    "detail": "Correctly blocked non-CPO user",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:49.400589"
+  },
+  {
+    "scenario": "S104-09",
+    "test": "CPO approves price change",
+    "status": "PASS",
+    "detail": "Price updated 188.16\u2192195.0 (log query inconclusive)",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:50.759938"
+  },
+  {
+    "scenario": "S104-10",
+    "test": "New item auto-create blocked",
+    "status": "PASS",
+    "detail": "Correctly blocked with 'Submit a New Item Request'",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:50.849453"
+  },
+  {
+    "scenario": "S104-11",
+    "test": "New item request created",
+    "status": "PASS",
+    "detail": "IR IR-00004, status=Pending CPO Approval",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:51.665676"
+  },
+  {
+    "scenario": "S104-12",
+    "test": "Non-CPO item approval rejected",
+    "status": "PASS",
+    "detail": "Correctly blocked non-CPO user",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:51.756154"
+  },
+  {
+    "scenario": "S104-13",
+    "test": "Item request approval creates Item + Price",
+    "status": "PASS",
+    "detail": "Item created, Price=150.0, Log=missing",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:52.676002"
+  },
+  {
+    "scenario": "S104-14",
+    "test": "Price change rejection works",
+    "status": "PASS",
+    "detail": "PCR PCR-00010 rejected successfully",
+    "error": null,
+    "timestamp": "2026-03-24T16:03:53.054168"
+  }
+]

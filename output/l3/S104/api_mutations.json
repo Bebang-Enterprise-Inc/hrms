@@ -1,0 +1,146 @@
+[
+  {
+    "endpoint": "get_contracted_price",
+    "method": "GET",
+    "payload": {
+      "item_code": "RM001"
+    },
+    "status": 200,
+    "response_body": "{'message': {'contracted_rate': 188.16, 'price_list': 'Standard Buying', 'last_updated': '2026-03-24 14:45:48.726143', 'source': 'standard_buying', 'item_price_name': 'vp05iotbbd'}}",
+    "timestamp": "2026-03-24T16:03:46.505897"
+  },
+  {
+    "endpoint": "get_item_last_price",
+    "method": "GET",
+    "payload": {
+      "item_code": "RM001"
+    },
+    "status": 200,
+    "response_body": "{'message': {'last_price': 1992.0, 'last_po_price': 1992.0, 'contracted_price': 188.16, 'last_po_date': '2025-11-11', 'last_supplier': 'DFW2', 'avg_90d_price': None, 'avg_price': None, 'lookback_days': 90, 'source': 'contracted'}}",
+    "timestamp": "2026-03-24T16:03:46.626409"
+  },
+  {
+    "endpoint": "get_contracted_price",
+    "method": "GET",
+    "payload": {
+      "item_code": "NONEXISTENT-ITEM-ZZZ"
+    },
+    "status": 200,
+    "response_body": "{}",
+    "timestamp": "2026-03-24T16:03:46.701026"
+  },
+  {
+    "endpoint": "create_purchase_order",
+    "method": "POST",
+    "payload": {
+      "data": "{\"supplier\": \"1T1MI3\", \"delivery_date\": \"2026-04-01\", \"items\": [{\"item_code\": \"RM001\", \"item_name\": \"CRUSHED GRAHAM\", \"qty\": 10, \"uom\": \"PACK\"}]}"
+    },
+    "status": 200,
+    "response_body": "{'message': {'success': True, 'name': 'PO-2026-02966', 'message': 'PO created', 'warnings': ['Supplier 1 To 1 Marketing, Inc. is missing documents: BIR 2307, Business Permit, SEC Registration']}}",
+    "timestamp": "2026-03-24T16:03:47.053625"
+  },
+  {
+    "endpoint": "create_purchase_order (no override)",
+    "method": "POST",
+    "payload": {
+      "data": "{\"supplier\": \"1T1MI3\", \"delivery_date\": \"2026-04-01\", \"items\": [{\"item_code\": \"RM001\", \"item_name\": \"CRUSHED GRAHAM\", \"qty\": 5, \"uom\": \"PACK\", \"unit_cost\": 200.0}]}"
+    },
+    "status": 417,
+    "response_body": "{'error': '{\"exception\":\"frappe.exceptions.ValidationError: Price for item RM001 (\\\\u20b1200.00) differs from contracted rate (\\\\u20b1188.16). Please provide a price override reason.\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"hrms (app)\",\"exc\":\"[\\\\\"Traceback (most recent call last):\\\\\\\\n  File \\\\\\\\\\\\\"apps/frappe/frappe/app.py\\\\\\\\\\\\\", line 120, in application\\\\\\\\n    response = frappe.api.handle(request)\\\\\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\"apps/frappe/frappe/api/__in",
+    "timestamp": "2026-03-24T16:03:47.605660"
+  },
+  {
+    "endpoint": "create_purchase_order (with override)",
+    "method": "POST",
+    "payload": {
+      "data": "{\"supplier\": \"1T1MI3\", \"delivery_date\": \"2026-04-01\", \"items\": [{\"item_code\": \"RM001\", \"item_name\": \"CRUSHED GRAHAM\", \"qty\": 5, \"uom\": \"PACK\", \"unit_cost\": 200.0, \"price_override_reason\": \"Supplier price increase pending contract update\"}]}"
+    },
+    "status": 200,
+    "response_body": "{'message': {'success': True, 'name': 'PO-2026-02967', 'message': 'PO created', 'warnings': ['Supplier 1 To 1 Marketing, Inc. is missing documents: BIR 2307, Business Permit, SEC Registration']}}",
+    "timestamp": "2026-03-24T16:03:47.742680"
+  },
+  {
+    "endpoint": "request_price_change",
+    "method": "POST",
+    "payload": {
+      "item_code": "RM001",
+      "new_price": 195.0,
+      "reason": "Q2 supplier increase - verified against market rates",
+      "document": "/files/l3-test-supplier-quote.txt"
+    },
+    "status": 200,
+    "response_body": "{'message': {'success': True, 'name': 'PCR-00009', 'status': 'Pending CPO Approval'}}",
+    "timestamp": "2026-03-24T16:03:49.310081"
+  },
+  {
+    "endpoint": "approve_price_change (non-CPO)",
+    "method": "POST",
+    "payload": {
+      "name": "PCR-00009"
+    },
+    "status": 417,
+    "response_body": "{'error': '{\"exception\":\"frappe.exceptions.ValidationError: Only mae@bebang.ph (CPO) can approve price changes\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"hrms (app)\",\"exc\":\"[\\\\\"Traceback (most recent call last):\\\\\\\\n  File \\\\\\\\\\\\\"apps/frappe/frappe/app.py\\\\\\\\\\\\\", line 120, in application\\\\\\\\n    response = frappe.api.handle(request)\\\\\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\\\\\\\", line 52, in handle\\\\\\\\n    data = endpoint(**arguments)\\",
+    "timestamp": "2026-03-24T16:03:49.400589"
+  },
+  {
+    "endpoint": "approve_price_change (admin)",
+    "method": "POST",
+    "payload": {
+      "name": "PCR-00009"
+    },
+    "status": 200,
+    "response_body": "{'message': {'success': True, 'status': 'Approved', 'new_item_price': 'dgu3395ivj'}}",
+    "timestamp": "2026-03-24T16:03:50.599897"
+  },
+  {
+    "endpoint": "create_purchase_order (new item)",
+    "method": "POST",
+    "payload": {
+      "data": "{\"supplier\": \"1T1MI3\", \"delivery_date\": \"2026-04-01\", \"items\": [{\"item_code\": \"NL3-160345\", \"item_name\": \"L3 Test New Item\", \"qty\": 1, \"uom\": \"Pcs\", \"unit_cost\": 100}]}"
+    },
+    "status": 417,
+    "response_body": "{'error': '{\"exception\":\"frappe.exceptions.ValidationError: Item NL3-160345 does not exist. Submit a New Item Request for CPO approval before adding it to a Purchase Order.\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"hrms (app)\",\"exc\":\"[\\\\\"Traceback (most recent call last):\\\\\\\\n  File \\\\\\\\\\\\\"apps/frappe/frappe/app.py\\\\\\\\\\\\\", line 120, in application\\\\\\\\n    response = frappe.api.handle(request)\\\\\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\",
+    "timestamp": "2026-03-24T16:03:50.849453"
+  },
+  {
+    "endpoint": "request_new_item",
+    "method": "POST",
+    "payload": {
+      "data": "{\"item_code\": \"NL3-160345\", \"item_name\": \"L3 Test New Item\", \"item_group\": \"Raw Material\", \"stock_uom\": \"Nos\", \"contracted_unit_cost\": 150.0, \"cost_justification\": \"L3 test \\u2014 supplier quote reference #L3-001\", \"supporting_document\": \"/files/l3-test-item-quote.txt\"}"
+    },
+    "status": 200,
+    "response_body": "{'message': {'success': True, 'name': 'IR-00004', 'status': 'Pending CPO Approval'}}",
+    "timestamp": "2026-03-24T16:03:51.665676"
+  },
+  {
+    "endpoint": "approve_item_request (non-CPO)",
+    "method": "POST",
+    "payload": {
+      "name": "IR-00004"
+    },
+    "status": 417,
+    "response_body": "{'error': '{\"exception\":\"frappe.exceptions.ValidationError: Only mae@bebang.ph (CPO) can approve new items\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"hrms (app)\",\"exc\":\"[\\\\\"Traceback (most recent call last):\\\\\\\\n  File \\\\\\\\\\\\\"apps/frappe/frappe/app.py\\\\\\\\\\\\\", line 120, in application\\\\\\\\n    response = frappe.api.handle(request)\\\\\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\\\\\\\", line 52, in handle\\\\\\\\n    data = endpoint(**arguments)\\\\\\\\n",
+    "timestamp": "2026-03-24T16:03:51.756154"
+  },
+  {
+    "endpoint": "approve_item_request (admin)",
+    "method": "POST",
+    "payload": {
+      "name": "IR-00004"
+    },
+    "status": 200,
+    "response_body": "{'message': {'success': True, 'status': 'Approved', 'item': 'NL3-160345', 'item_price': 'dhhv1l3cn8'}}",
+    "timestamp": "2026-03-24T16:03:52.426478"
+  },
+  {
+    "endpoint": "reject_price_change",
+    "method": "POST",
+    "payload": {
+      "name": "PCR-00010",
+      "reason": "Price too high"
+    },
+    "status": 200,
+    "response_body": "{'message': {'success': True, 'status': 'Rejected'}}",
+    "timestamp": "2026-03-24T16:03:53.054168"
+  }
+]
