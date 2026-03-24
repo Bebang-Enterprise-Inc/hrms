@@ -325,31 +325,19 @@ class AgentSDKBackend(ReviewBackend):
             return f"Agent SDK error: {e}"
 
     async def health_check(self) -> bool:
-        from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, query
+        """Skip the expensive health check — just verify the SDK imports.
 
+        The old health check spawned a full Claude Code subprocess (30s timeout)
+        which hangs in non-interactive terminals. If the SDK doesn't work,
+        the first real review will fail with a clear error.
+        """
         try:
-            print(f"[{time.strftime('%H:%M:%S')}] Agent SDK health check starting (30s timeout)...", flush=True)
-            result_msg = await asyncio.wait_for(
-                self._run_query(
-                    "Reply with exactly: HEALTH_OK",
-                    ClaudeAgentOptions(allowed_tools=[], max_turns=1, max_budget_usd=0.01),
-                ),
-                timeout=30,
-            )
-            ok = result_msg is not None and "HEALTH_OK" in (result_msg.result or "")
-            if ok:
-                print(f"[{time.strftime('%H:%M:%S')}] Agent SDK health check: OK", flush=True)
-            else:
-                result_text = (result_msg.result or "")[:100] if result_msg else "None"
-                print(f"[{time.strftime('%H:%M:%S')}] Agent SDK health check: FAILED (response: {result_text})", flush=True)
-            return ok
-        except asyncio.TimeoutError:
-            print(f"[{time.strftime('%H:%M:%S')}] Agent SDK health check: TIMEOUT (30s)", flush=True)
-            logger.warning("agent_sdk_health_failed", error="timeout")
-        except Exception as e:
-            print(f"[{time.strftime('%H:%M:%S')}] Agent SDK health check: ERROR ({e})", flush=True)
-            logger.warning("agent_sdk_health_failed", error=str(e))
-        return False
+            from claude_agent_sdk import ClaudeAgentOptions, query
+            print(f"[{time.strftime('%H:%M:%S')}] Agent SDK: import OK, ready", flush=True)
+            return True
+        except ImportError as e:
+            print(f"[{time.strftime('%H:%M:%S')}] Agent SDK: import FAILED ({e})", flush=True)
+            return False
 
     def get_cost_last_24h(self) -> tuple[float, int]:
         """Read cost log and sum entries from last 24h."""
