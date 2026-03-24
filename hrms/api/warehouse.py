@@ -523,7 +523,6 @@ def create_warehouse_receiving(
 	remarks: str | None = None,
 ) -> dict:
 	"""Create a pending warehouse inbound record for commissary finished goods."""
-	from hrms.utils.sentry import set_backend_observability_context
 	set_backend_observability_context(module="warehouse", action="create_warehouse_receiving", mutation_type="create")
 	_ensure_warehouse_receiving_doctype()
 
@@ -687,7 +686,6 @@ def complete_warehouse_receiving(
 	receiving_name: str, items: str | list[dict[str, Any]], remarks: str | None = None
 ) -> dict[str, Any]:
 	"""Complete warehouse receipt for a commissary FG handoff by creating the stock transfer."""
-	from hrms.utils.sentry import set_backend_observability_context
 	set_backend_observability_context(module="warehouse", action="complete_warehouse_receiving", mutation_type="update")
 	_ensure_warehouse_receiving_doctype()
 
