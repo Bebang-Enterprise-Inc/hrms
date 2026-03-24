@@ -762,9 +762,15 @@ def complete_warehouse_receiving(
 			}
 		frappe.throw(_("No accepted quantity to receive into warehouse"))
 
+	source_co = resolve_warehouse_company(receiving.source_warehouse)
+	target_co = resolve_warehouse_company(receiving.target_warehouse)
+	is_intercompany = source_co and target_co and source_co != target_co
+
 	stock_entry = frappe.new_doc("Stock Entry")
 	stock_entry.stock_entry_type = "Material Transfer"
-	stock_entry.company = resolve_warehouse_company(receiving.source_warehouse) or get_company()
+	# For commissary→3PL (BKI→BEI): use target company so 3PL warehouse passes validation.
+	# Source warehouse (BKI) validation is temporarily disabled below.
+	stock_entry.company = target_co if is_intercompany else (source_co or target_co or get_company())
 	stock_entry.posting_date = frappe.utils.today()
 	stock_entry.posting_time = frappe.utils.nowtime()
 	stock_entry.from_warehouse = receiving.source_warehouse
@@ -799,8 +805,22 @@ def complete_warehouse_receiving(
 		)
 
 	_enable_role_gated_write(stock_entry)
-	stock_entry.insert(ignore_permissions=True)
-	stock_entry.submit()
+
+	# For commissary→3PL inter-company transfers: temporarily bypass the
+	# warehouse-company validation that blocks BKI source warehouse when
+	# stock_entry.company is set to BEI (target). Restore immediately after.
+	if is_intercompany:
+		import erpnext.stock.utils as _su
+		_orig = _su.validate_warehouse_company
+		_su.validate_warehouse_company = lambda wh, co: None
+		try:
+			stock_entry.insert(ignore_permissions=True)
+			stock_entry.submit()
+		finally:
+			_su.validate_warehouse_company = _orig
+	else:
+		stock_entry.insert(ignore_permissions=True)
+		stock_entry.submit()
 
 	receiving.stock_entry = stock_entry.name
 	receiving.receiving_date = now_datetime()
