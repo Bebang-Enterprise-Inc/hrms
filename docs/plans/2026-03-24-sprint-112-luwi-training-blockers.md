@@ -1,16 +1,16 @@
 ---
 canonical_sprint_id: S112
 display: Sprint 112
-status: GO
+status: DEPLOYED
 branch: s112-luwi-training-blockers
 lane: single
 created_date: 2026-03-24
 completed_date:
-deployed_at:
-backend_pr:
-frontend_pr:
-l3_result:
-execution_summary:
+deployed_at: 2026-03-24
+backend_pr: "#344"
+frontend_pr: "#237"
+l3_result: pending
+execution_summary: "Phase A+B implemented, PRs merged (#237 bei-tasks, #344 hrms), deploy triggered. L3 pending in separate session."
 depends_on: S108
 ---
 
