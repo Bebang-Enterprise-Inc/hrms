@@ -6362,8 +6362,9 @@ def update_po_item_price(po_name, item_idx, new_price, reason):
 
     # Block edits on final-status POs
     final_statuses = ("Approved", "Sent to Supplier", "Fully Received", "Cancelled")
-    if po.custom_approval_status in final_statuses or po.docstatus == 2:
-        frappe.throw(_("Cannot edit price on a {0} Purchase Order").format(po.custom_approval_status))
+    po_status = po.status or ""
+    if po_status in final_statuses or po.docstatus == 2:
+        frappe.throw(_("Cannot edit price on a {0} Purchase Order").format(po_status))
 
     # Find the item row by idx
     target_item = None
