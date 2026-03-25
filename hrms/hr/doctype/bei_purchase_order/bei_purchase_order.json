@@ -60,7 +60,10 @@
     "distribution_last_error",
     "po_pdf",
     "integration_section",
-    "frappe_po"
+    "frappe_po",
+    "price_override_section",
+    "custom_price_override",
+    "custom_price_change_log"
   ],
   "fields": [
     {
@@ -410,12 +413,33 @@
       "label": "Frappe PO",
       "options": "Purchase Order",
       "read_only": 1
+    },
+    {
+      "fieldname": "price_override_section",
+      "fieldtype": "Section Break",
+      "label": "Price Override",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "custom_price_override",
+      "fieldtype": "Check",
+      "label": "Price Override",
+      "default": "0",
+      "description": "Set automatically when a price is edited. Forces CPO approval.",
+      "read_only": 1
+    },
+    {
+      "fieldname": "custom_price_change_log",
+      "fieldtype": "Small Text",
+      "label": "Price Change Log",
+      "description": "JSON log of all price changes with old/new price, reason, and who changed it.",
+      "read_only": 1
     }
   ],
   "index_web_pages_for_search": 1,
   "is_submittable": 1,
   "links": [],
-  "modified": "2026-02-03 00:00:00.000000",
+  "modified": "2026-03-25 20:00:00.000000",
   "modified_by": "Administrator",
   "module": "HR",
   "name": "BEI Purchase Order",
