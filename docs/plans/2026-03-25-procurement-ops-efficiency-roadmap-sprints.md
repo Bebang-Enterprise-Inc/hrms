@@ -13,25 +13,25 @@
 
 | # | Feature | Classification | Exists Where | Sprint |
 |---|---------|---------------|-------------|--------|
-| 1 | PO Templates / Reorder | **[BUILD]** | — | S120 |
-| 2 | PO Review Step (Luwi) | **[EXTEND]** | Payment Request only, not POs | S121 |
-| 3 | Batch Approval (Mae) | **[BUILD]** | — | S120 |
-| 4 | Quick Receive | **[EXTEND]** | `load_gr_from_po()` exists | S121 |
-| 5 | Auto-Invoice from GR | **[BUILD]** | — | S121 |
+| 1 | PO Templates / Reorder | **[BUILD]** | — | S122 |
+| 2 | PO Review Step (Luwi) | **[EXTEND]** | Payment Request only, not POs | S123 |
+| 3 | Batch Approval (Mae) | **[BUILD]** | — | S122 |
+| 4 | Quick Receive | **[EXTEND]** | `load_gr_from_po()` exists | S123 |
+| 5 | Auto-Invoice from GR | **[BUILD]** | — | S123 |
 | 6 | RFP Approval Flow | **[EXISTS]** | 4-level chain in bei_payment_request | SKIP |
-| 7 | Inventory→PR Bridge | **[EXTEND]** | `convert_pr_to_po()` exists | S122 |
-| 8 | Supplier Price Alerts | **[EXISTS]** | `check_price_variance()` @ line 3391 | SKIP (enhance in S122) |
-| 9 | PO-to-GR Matching | **[EXISTS]** | `get_pending_gr_for_po()` @ line 1666 | SKIP (surface in S122 dashboard) |
-| 10 | Auto PR-to-PO | **[EXISTS]** | `convert_pr_to_po()` manual | S122 (make auto) |
+| 7 | Inventory→PR Bridge | **[EXTEND]** | `convert_pr_to_po()` exists | S124 |
+| 8 | Supplier Price Alerts | **[EXISTS]** | `check_price_variance()` @ line 3391 | SKIP (enhance in S124) |
+| 9 | PO-to-GR Matching | **[EXISTS]** | `get_pending_gr_for_po()` @ line 1666 | SKIP (surface in S124 dashboard) |
+| 10 | Auto PR-to-PO | **[EXISTS]** | `convert_pr_to_po()` manual | S124 (make auto) |
 | 11 | Spend Analytics | **[EXISTS]** | `get_monthly_spend_report()` full | SKIP |
-| 12 | Supplier Doc Expiry | **[BUILD]** | No expiry fields | S122 |
+| 12 | Supplier Doc Expiry | **[BUILD]** | No expiry fields | S124 |
 | 13 | GR Variance Report | **[EXISTS]** | 3-way match report | SKIP |
 
 **6 features SKIP** (already exist). **7 features need work** across 3 sprints.
 
 ---
 
-## Sprint S120 — Cayla + Mae Speed (PO Templates + Batch Approve)
+## Sprint S122 — Cayla + Mae Speed (PO Templates + Batch Approve)
 
 **Goal:** Eliminate 80% of Cayla's repetitive PO creation and unblock Mae's approval bottleneck.
 
@@ -69,11 +69,11 @@
 
 ---
 
-## Sprint S121 — Ian + Cayla Bridge (Quick Receive + Auto-Invoice)
+## Sprint S123 — Ian + Cayla Bridge (Quick Receive + Auto-Invoice)
 
 **Goal:** Speed up the delivery → invoice chain. Ian records GR in one click, invoice auto-drafts.
 
-**Depends on:** S120 (not blocking, can run in parallel)
+**Depends on:** S122 (not blocking, can run in parallel)
 
 **Impact:**
 - Ian: GR creation from 5 min → 30 seconds for matching deliveries
@@ -110,11 +110,11 @@
 
 ---
 
-## Sprint S122 — Luwi Strategic Tools (Inventory Bridge + Supplier Intelligence)
+## Sprint S124 — Luwi Strategic Tools (Inventory Bridge + Supplier Intelligence)
 
 **Goal:** Connect inventory data to procurement decisions. Luwi sees what's running low and the system suggests reorders.
 
-**Depends on:** S120 (templates exist so auto-reorder can use them), S121 (review step exists so Luwi's workflow is formalized)
+**Depends on:** S122 (templates exist so auto-reorder can use them), S123 (review step exists so Luwi's workflow is formalized), S121 (store inventory sync fixed so tabBin data is reliable)
 
 ### Scope (~30 units)
 
@@ -150,20 +150,23 @@
 ## Sprint Dependency Map
 
 ```
-S120 (Cayla+Mae Speed)          S121 (Ian+Cayla Bridge)
+S121 (Inventory Sync Fix — ALREADY PLANNED)
+        ↓ (tabBin data must be reliable first)
+S122 (Cayla+Mae Speed)          S123 (Ian+Cayla Bridge)
   PO Templates                    PO Review Step (Luwi)
   Batch Approve                   Quick Receive
                                   Auto-Invoice from GR
         ↓                               ↓
-              S122 (Luwi Strategic)
+              S124 (Luwi Strategic)
                 Inventory→PR Bridge
                 Auto PR-to-PO
                 Supplier Doc Expiry
                 Deliveries Widget
 ```
 
-S120 and S121 can run in **parallel** (different files, different surfaces).
-S122 depends on both (uses templates for auto-reorder, review step for Luwi's workflow).
+S121 must complete first (fixes inventory data that S124 depends on).
+S122 and S123 can run in **parallel** (different files, different surfaces).
+S124 depends on all three.
 
 ---
 
@@ -185,10 +188,11 @@ These features exist in the backend. If they're not visible enough in the UI, th
 
 | Sprint | Units | Duration | Parallel? |
 |--------|-------|----------|-----------|
-| S120 | 28 | ~1 day | Yes (with S121) |
-| S121 | 25 | ~1 day | Yes (with S120) |
-| S122 | 30 | ~1 day | After S120+S121 |
-| **Total** | **83** | **~2-3 days** | |
+| S121 (inventory sync fix) | 18 | ~0.5 day | First (prerequisite) |
+| S122 (PO templates + batch approve) | 28 | ~1 day | Yes (with S123) |
+| S123 (quick receive + auto-invoice) | 25 | ~1 day | Yes (with S122) |
+| S124 (inventory→PR bridge) | 30 | ~1 day | After S121+S122+S123 |
+| **Total** | **101** | **~3-4 days** | |
 
 ---
 
