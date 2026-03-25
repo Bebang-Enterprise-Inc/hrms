@@ -1,13 +1,13 @@
 ---
 canonical_sprint_id: S121
 display: Sprint 121
-status: GO
+status: IN_PROGRESS
 branch: s121-store-inventory-sync-fix
 lane: single
 created_date: 2026-03-25
 completed_date:
 deployed_at:
-backend_pr:
+backend_pr: 349
 frontend_pr:
 l3_result:
 execution_summary:
