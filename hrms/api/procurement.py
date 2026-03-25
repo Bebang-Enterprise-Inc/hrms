@@ -592,7 +592,18 @@ def get_purchase_requisitions(filters=None, page=1, page_size=20, search=None):
 def get_purchase_requisition(name):
     """Get single PR with items."""
     pr = frappe.get_doc("BEI Purchase Requisition", name)
-    return pr.as_dict()
+    data = pr.as_dict()
+    # Strip Frappe internal fields that leak as stray "0" in the frontend
+    for key in ("docstatus", "idx", "modified_by", "owner", "doctype",
+                "parent", "parentfield", "parenttype", "__unsaved",
+                "__islocal", "__last_sync_on"):
+        data.pop(key, None)
+    for item in data.get("items") or []:
+        if isinstance(item, dict):
+            for key in ("docstatus", "idx", "parent", "parentfield",
+                        "parenttype", "doctype", "__unsaved"):
+                item.pop(key, None)
+    return data
 
 
 @frappe.whitelist()
@@ -894,6 +905,17 @@ def _augment_purchase_order_response(data):
     """Expose legacy aliases while keeping canonical VAT fields available."""
     data["net_total"] = flt(data.get("subtotal"), 2)
     data["tax_amount"] = flt(data.get("vat_amount"), 2)
+    # Strip Frappe internal fields that leak as stray "0" in the frontend
+    for key in ("docstatus", "idx", "modified_by", "owner", "doctype",
+                "parent", "parentfield", "parenttype", "__unsaved",
+                "__islocal", "__last_sync_on"):
+        data.pop(key, None)
+    # Also clean items child rows
+    for item in data.get("items") or []:
+        if isinstance(item, dict):
+            for key in ("docstatus", "idx", "parent", "parentfield",
+                        "parenttype", "doctype", "__unsaved"):
+                item.pop(key, None)
     return data
 
 

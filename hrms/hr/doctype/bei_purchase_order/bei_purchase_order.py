@@ -236,6 +236,21 @@ class BEIPurchaseOrder(Document):
 		if not self.items:
 			frappe.throw(_("Please add at least one item"))
 
+		# Validate that items have prices — can't approve a ₱0 PO
+		zero_price_items = [
+			item.item_name or item.item_code
+			for item in self.items
+			if not flt(item.unit_cost)
+		]
+		if zero_price_items:
+			frappe.throw(
+				_("Cannot submit for approval: the following items have no price set: {0}. "
+				  "Please enter unit prices before submitting.").format(
+					", ".join(zero_price_items)
+				),
+				title=_("Missing Item Prices"),
+			)
+
 		self.status = "Pending Mae Approval"
 		self.save()
 
