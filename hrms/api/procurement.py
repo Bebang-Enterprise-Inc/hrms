@@ -6376,9 +6376,10 @@ def update_po_item_price(po_name, item_idx, new_price, reason):
     if not target_item:
         frappe.throw(_("Item row {0} not found in PO {1}").format(item_idx, po_name))
 
-    old_price = flt(target_item.rate, 2)
-    target_item.rate = new_price
+    old_price = flt(target_item.unit_cost, 2)
+    target_item.unit_cost = new_price
     target_item.amount = flt(new_price * flt(target_item.qty), 2)
+    target_item.price_override_reason = reason.strip()
 
     # Recalculate PO totals
     po.total = sum(flt(item.amount) for item in po.items)
