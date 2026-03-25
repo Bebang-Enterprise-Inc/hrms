@@ -47,7 +47,7 @@ No new backend API is needed. The sprint is 100% frontend (bei-tasks repo).
 
 ### Key trade-offs
 
-1. **Card list vs matrix table:** The warehouse uses a scrollable matrix (great on desktop, painful on mobile). For stores we use a **grouped card list** with sticky category headers — vertical scroll only, mobile-first. Desktop gets the same layout but wider cards with more detail inline.
+1. **Responsive dual layout:** Stores use both phones and laptops. The page renders as a **grouped card list** on mobile (<768px) with sticky category headers and big touch targets, and a **dense sortable table** on desktop (>=768px) similar to the warehouse inventory matrix — with columns for item, category, qty, status, days-of-stock, demand, and suggested order qty. Both layouts share the same data hooks and filters. Use Tailwind `md:` breakpoint to switch. The card layout is the default (mobile-first).
 
 2. **Single-store vs multi-store:** Store staff see only their store. Area Supervisors see a store picker at the top. This matches the existing pattern in ordering and store-ops pages.
 
@@ -76,11 +76,11 @@ Store scope     → useUserStore hook → resolves current user's store warehous
 
 ## Scope
 
-### Phase A: "My Stock" Page (12 units)
+### Phase A: "My Stock" Page (13 units)
 
 | Task | Type | File | Description | Units |
 |------|------|------|-------------|-------|
-| A1 | BUILD | `bei-tasks/app/dashboard/store-ops/inventory/page.tsx` | **[BUILD]** Create the store inventory page. Mobile-first card list grouped by category (DRY/COLD/FROZEN/CHILLED) with sticky headers. Each card: item name, item code, current qty (large font), stock status badge (Critical/Low/Healthy), UOM. Search bar at top. Category filter chips. Sort options: risk-first (default), qty high-low, alpha. Uses `useWarehouseStock(storeWarehouse)`. | 4 |
+| A1 | BUILD | `bei-tasks/app/dashboard/store-ops/inventory/page.tsx` | **[BUILD]** Create the store inventory page with **responsive dual layout**: (1) **Mobile (<768px):** grouped card list with sticky category headers (DRY/COLD/FROZEN/CHILLED), each card showing item name, item code, current qty (large font), stock status badge (Critical/Low/Healthy), UOM. Big touch targets. (2) **Desktop (>=768px):** dense sortable table with columns: Item, Category, Qty, Status, Days Left, Demand, Suggested Order, UOM. Pinned status column on right (same pattern as warehouse matrix). Shared across both: search bar, category filter chips, sort options (risk-first default, qty high-low, alpha). Switch via Tailwind `hidden md:block` / `md:hidden`. Uses `useWarehouseStock(storeWarehouse)`. | 5 |
 | A2 | BUILD | `bei-tasks/app/dashboard/store-ops/inventory/page.tsx` | **[BUILD]** Add demand + days-of-stock columns to each card. Pull from `useOrderableItems` to merge `forecast_demand`, `available_to_promise`, and `risk_rank` onto each stock card. Show "~X days left" in amber/red when low. Show "Next order: Y units suggested" when available. | 3 |
 | A3 | BUILD | `bei-tasks/app/dashboard/store-ops/inventory/page.tsx` | **[BUILD]** Add summary strip at top: 4 cards showing Total SKUs, Critical Items (count, red if >0), Low Stock Items (count), Overstock Items (qty > 2x suggested). This gives the birds-eye view at a glance. | 2 |
 | A4 | BUILD | `bei-tasks/lib/constants.ts` + `bei-tasks/components/layout/nav-main.tsx` | **[EXTEND]** Add route `STORE_OPS_INVENTORY: "/dashboard/store-ops/inventory"` to constants. Add sidebar entry with Package icon between "Ordering" and "Order Approvals" in the store-ops nav group. | 1 |
@@ -104,7 +104,7 @@ Store scope     → useUserStore hook → resolves current user's store warehous
 | C3 | BUILD | Commit, create PR to bei-tasks `main`, deploy to Vercel. | 1 |
 | C4 | BUILD | Closeout: update plan YAML to COMPLETED, update SPRINT_REGISTRY.md, `git add -f docs/plans/ output/l3/S122/`, push. | 1 |
 
-**Total: 22 units.**
+**Total: 23 units.**
 
 ---
 
@@ -142,7 +142,9 @@ output/l3/S122/state_verification.json
 
 - [ ] Does the page use `useUserStore()` for store scoping (not hardcoded)?
 - [ ] Does the page use `<RoleGuard module={MODULES.STORE_OPS}>` for access control?
-- [ ] Is the card layout mobile-first (works at 375px)?
+- [ ] Does mobile (<768px) show card layout with sticky category headers?
+- [ ] Does desktop (>=768px) show dense sortable table with pinned status column?
+- [ ] Does responsive switch use Tailwind `md:` breakpoint (not JS resize)?
 - [ ] Are items grouped by cargo category (DRY/COLD/FROZEN/CHILLED)?
 - [ ] Does the summary strip show Critical/Low/Overstock counts?
 - [ ] Does each card show days-of-stock from demand data?
