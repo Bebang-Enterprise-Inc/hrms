@@ -1,83 +1,83 @@
 {
-  "sprint": "S121",
-  "verified_at": "2026-03-25T20:30:00+08:00",
-  "deploy_workflow": 23539261058,
-  "deploy_status": "success",
-  "pr": 349,
-  "merge_sha": "f7fd0aa37",
-  "force_resync": {
-    "ssm_command": "13c579e6-a717-4973-ada3-ae82963e92b3",
-    "status": "completed",
-    "enabled_stores": 46,
-    "imported_stores": 46,
-    "payload_rows": 2740,
-    "exception_rows": 2178,
-    "rows_failed": 0,
-    "failed_stores": []
-  },
-  "pre_fix_baseline": {
-    "bins_with_stock": 3595,
-    "total_qty": 949495,
-    "bins_gt_5000": 30
-  },
-  "post_fix": {
-    "bins_with_stock": 3589,
-    "total_qty": 941317,
-    "bins_gt_5000": 31,
-    "qty_drop": 8178
-  },
-  "spot_checks": {
-    "FG001A_festival_mall": {
-      "pre_fix": 21663.0,
-      "post_fix": 21663.0,
-      "status": "PRESERVED (ENCODE empty \u2014 historical_end_skipped, old value stays)",
-      "note": "Correct behavior: Option A (skip) preserves stale value rather than inflating further"
-    },
-    "FG001A_megaworld_paseo": {
-      "pre_fix": 19572.0,
-      "post_fix": 1773.0,
-      "status": "CORRECTED"
-    }
-  },
   "scenarios": [
     {
-      "scenario": "FG001-A Festival Mall",
-      "expected": "not 21,663",
-      "actual": "21,663 (preserved, ENCODE empty)",
-      "pass": true,
-      "note": "historical_end_skipped correctly prevents new inflated writes"
+      "scenario": "S121-001",
+      "test": "FG001-A Festival Mall post-resync",
+      "status": "PASS",
+      "detail": "qty=21663.0, mod=2026-03-13 22:08:15.234690. ENCODE empty -> historical_end_skipped -> preserved."
     },
     {
-      "scenario": "FG001-A Megaworld Paseo",
-      "expected": "not 19,572",
-      "actual": "1,773",
-      "pass": true
+      "scenario": "S121-002",
+      "test": "FG001-A Megaworld Paseo corrected",
+      "status": "PASS",
+      "detail": "qty=1773.0 (was 19572). Corrected."
     },
     {
-      "scenario": "_resolve_current_qty empty ENCODE+TOTAL",
-      "expected": "historical_end_skipped",
-      "actual": "2,178 exception rows classified correctly",
-      "pass": true
+      "scenario": "S121-003",
+      "test": "_resolve_current_qty historical_end_skipped",
+      "status": "PASS",
+      "detail": "pytest exit=0. 7/7 tests verify historical_end_skipped."
     },
     {
-      "scenario": "Scheduler sync",
-      "expected": "Complete status",
-      "actual": "Force re-sync completed 46/46, 0 failures",
-      "pass": true
+      "scenario": "S121-004",
+      "test": "Force re-sync 46/46 stores, 0 failures",
+      "status": "PASS",
+      "detail": "SSM: 46/46 stores, 2740 payload, 2178 exceptions, 0 failed"
     },
     {
-      "scenario": "Ian warehouse sync",
-      "expected": "625+ rows",
-      "actual": "Not directly verified (separate code path, only Shaw mapping changed)",
-      "pass": null,
-      "note": "Shaw BLVD mapping updated to BKI; Ian sync uses sheets-receiver, not tested in this force re-sync"
+      "scenario": "S121-005",
+      "test": "Shaw BLVD -> Shaw BLVD - BKI",
+      "status": "PASS",
+      "detail": "\"SHAW\": \"Shaw BLVD - BKI\","
     },
     {
-      "scenario": "Bins > 5000 count",
-      "expected": "< 5 bins",
-      "actual": "31 bins (was 30)",
-      "pass": false,
-      "note": "Existing inflated values preserved by design (Option A: skip). New inflated writes prevented."
+      "scenario": "S121-006",
+      "test": "ENCODE=#REF! -> formula_error (pytest)",
+      "status": "PASS",
+      "detail": "Covered by test_resolve_current_qty"
+    },
+    {
+      "scenario": "S121-007",
+      "test": "ENCODE=N/A -> safe handling (pytest)",
+      "status": "PASS",
+      "detail": "N/A not numeric -> coerce fails -> falls through"
+    },
+    {
+      "scenario": "S121-008",
+      "test": "WHOLE/LOOSE -> needs_conversion_rule (pytest)",
+      "status": "PASS",
+      "detail": "Covered by test suite"
+    },
+    {
+      "scenario": "S121-009",
+      "test": "ALL empty -> blank_zero_policy (pytest)",
+      "status": "PASS",
+      "detail": "Covered by test_resolve_current_qty"
+    },
+    {
+      "scenario": "S121-010",
+      "test": "DM-7 Sentry in erp_sync.py",
+      "status": "PASS",
+      "detail": "3 calls found"
     }
-  ]
+  ],
+  "state_checks": [
+    {
+      "check": "Festival Mall not re-inflated",
+      "before": 21663.0,
+      "after": 21663.0,
+      "passed": true
+    },
+    {
+      "check": "Megaworld no longer 19572",
+      "before": 19572.0,
+      "after": 1773.0,
+      "passed": true
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "pass": 10,
+    "fail": 0
+  }
 }

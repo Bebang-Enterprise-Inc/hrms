@@ -1,0 +1,9 @@
+[
+  {
+    "endpoint": "hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
+    "method": "bench execute (SSM)",
+    "payload": "{\"force\": true}",
+    "status": "Success",
+    "response_body": "46/46 stores, 2740 payload, 2178 exceptions, 0 failed"
+  }
+]

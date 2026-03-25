@@ -1,0 +1,8 @@
+[
+  {
+    "form": "N/A (backend-only)",
+    "inputs": "force re-sync via SSM",
+    "submit_action": "bench execute",
+    "response": "46/46, 0 failures"
+  }
+]
