@@ -236,7 +236,9 @@ The root cause of Luwi's bug is that the system ALLOWED bad data in at every ste
   - 35 missing items created
   - 63 stale items disabled
   - PR form uses Item master autocomplete
-  - PO detail page supports inline price editing for Draft POs
+  - PO detail page supports read-only price with Edit Price button + reason field
+  - Sentry observability on all new `@frappe.whitelist()` endpoints
+  - L3 evidence files committed: `git add -f output/l3/s120/ && git push`
   - Plan YAML status updated to COMPLETED and pushed
   - SPRINT_REGISTRY.md updated and pushed
 - **stop_only_for:**
@@ -253,7 +255,32 @@ The root cause of Luwi's bug is that the system ALLOWED bad data in at every ste
   - `tmp/item_master_full_analysis.csv`
   - `tmp/price_import_results.json`
   - `output/l3/s120/form_submissions.json`
+  - `output/l3/s120/api_mutations.json`
+  - `output/l3/s120/state_verification.json`
   - `docs/plans/SPRINT_REGISTRY.md`
+
+Evidence files required before closeout (release manager gate will reject PR without these):
+```
+output/l3/s120/form_submissions.json
+output/l3/s120/api_mutations.json
+output/l3/s120/state_verification.json
+```
+Agent MUST `git add -f output/l3/s120/ && git push` after L3 testing.
+
+## Remote-Truth Baseline
+
+| Repo | Branch | HEAD SHA |
+|------|--------|---------|
+| hrms | production | `d94f1fdc6` |
+| bei-tasks | main | (check with `git log --oneline -1` in bei-tasks) |
+
+## Known Limitations
+
+- Google Sheets API rate limit: 60 reads/min per user. Phase 0 extraction may need delays between tabs.
+- Frappe API throttling: bulk `set_value` calls may hit rate limits during Phase 2 (252 items). Use 200ms delay between calls.
+- `tmp/` files are NOT in git — cold-start agent must re-extract (Phase 0) before proceeding.
+- The PR creation form is in `bei-tasks` repo (separate from `hrms`). Phase 4-5 require changes in BOTH repos — two PRs needed.
+- Compliance App Google Sheet may be edited by procurement team during extraction — snapshot timing matters.
 
 ## Agent Boot Sequence
 
