@@ -166,6 +166,32 @@ The PO detail page is where Mae reviews and approves. If she sees ₱0, she need
 ### Price resolution scoring
 Most recent PO unit cost wins because it reflects the actual negotiated price paid to the supplier. Compliance App Item List price is second because it's maintained by the procurement team. Frappe `valuation_rate` is third because it's computed from stock movements and may not reflect purchase price.
 
+### CRITICAL NOTES FROM PROCUREMENT DEEP-DIVE (2026-03-25 session)
+
+**Note 1: S104 Contracted Price Master already exists — don't duplicate.**
+Sprint S104 (completed 2026-03-24) built a `BEI Contracted Price` DocType with 92 item prices and CPO price-change approval. The `get_contracted_price()` function queries BEI Contracted Price FIRST, then falls back to Frappe's standard `Item Price`. This sprint (S120) populates `Item Price` records — that's correct (it fills the fallback layer). Do NOT touch `BEI Contracted Price` data. The two systems work together:
+- `BEI Contracted Price` = CPO-approved negotiated prices (92 items, requires Mae's approval to change)
+- `Item Price` (Standard Buying) = bulk reference prices from Compliance App history (252+ items)
+- Resolution order: `BEI Contracted Price` → `Item Price` → `standard_rate` → `valuation_rate` → 0
+
+**Note 2: After import, Frappe becomes the price SSOT — stop syncing prices from Compliance App.**
+The sheets-receiver currently syncs Compliance App data daily (PO Items, GR Items, Suppliers). After this sprint imports prices into Frappe, the price source of truth moves FROM the Compliance App TO Frappe. Future POs created in my.bebang.ph will have correct prices from Item Price records. The Compliance App sync should continue for historical/audit data but should NOT overwrite Frappe Item Prices. Verify that `sync_procurement_purchase_orders` does not touch `Item Price` or `standard_rate` — if it does, add a guard.
+
+**Note 3: 80% of POs are exact duplicates (same supplier + same items).**
+Data analysis of 561 POs from the Compliance App shows 455 (80%) are exact duplicates of prior POs. The top repeat: MATHEW GENERAL MERCHANDISE with the same 30 items ordered 20 times. This means the Item Price import has outsized impact — fixing prices for the top 50 items by frequency covers ~90% of all PO line items. Sprint S122 will add PO Templates/Reorder to eliminate the repetitive form-filling.
+
+**Note 4: PO approval flow has an extra step the system doesn't implement yet.**
+The real AppSheet approval matrix shows Luwi REVIEWS POs before Mae approves. The current system skips Luwi's review. S120's inline editing should allow edits during both "Draft" AND future "Pending Review" status (S123 will add the review step). When adding the status check for inline editing, use `status NOT IN ("Approved", "Sent to Supplier", "Fully Received", "Cancelled")` rather than `status IN ("Draft", "Pending Mae Approval")` — this future-proofs for new statuses.
+
+**Note 5: Hardcode validations to prevent recurring data quality issues.**
+The root cause of Luwi's bug is that the system ALLOWED bad data in at every step. This sprint must add validation gates that make it IMPOSSIBLE to create bad procurement data:
+1. **PR creation:** item_code MUST exist in Item master (no free text) — Phase 4 handles this
+2. **PR creation:** estimated_unit_cost MUST be > 0 when item has a known price — add validation
+3. **PO creation/conversion:** unit_cost MUST be > 0 — already deployed, verify
+4. **PO submission:** grand_total MUST be > 0 — already deployed, verify
+5. **Item Price record:** MUST have valid_from date and price_list — Phase 2 handles this
+6. **Future-proof:** Add a scheduled job that scans for Items with `standard_rate=0` and `disabled=0` and alerts procurement team weekly — prevents new items from being created without prices
+
 ## Requirements Regression Checklist
 
 - [ ] Are all 35 missing items created in Frappe with correct item_group and UOM?
@@ -176,6 +202,11 @@ Most recent PO unit cost wins because it reflects the actual negotiated price pa
 - [ ] Does PR creation auto-fill `estimated_unit_cost` from standard_rate?
 - [ ] Can PO item prices be edited inline on the detail page for Draft POs?
 - [ ] Does the PO submission block ₱0 items? (Already deployed — verify still works)
+- [ ] Does PR creation block items that don't exist in Item master? (No free text allowed)
+- [ ] Does PR creation warn when estimated_unit_cost is 0 for an item that has a known price?
+- [ ] Does `get_contracted_price()` check BEI Contracted Price FIRST, then Item Price? (Don't break S104)
+- [ ] Does the sheets-receiver sync NOT overwrite Item Price or standard_rate? (Frappe is now SSOT for prices)
+- [ ] Does inline PO editing use a permissive status check (not hardcoded to Draft only) to future-proof for Pending Review?
 - [ ] Does every new `@frappe.whitelist()` endpoint call `set_backend_observability_context()`?
 
 ## L3 Workflow Scenarios
