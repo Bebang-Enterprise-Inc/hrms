@@ -112,15 +112,17 @@ The executing agent should verify these are still in production before starting.
 | 2.3 Create `Item Price` records (Standard Buying price list) | 3 | For each item with a resolved price, create an `Item Price` record with `buying=1`, `price_list=Standard Buying`, `valid_from=2026-03-25`. This is what `get_contracted_price()` queries. |
 | 2.4 Verify price counts | 2 | Query `Item Price` count, verify > 300 records. Spot-check 10 items against Compliance App. |
 
-### Phase 3: Disable Stale Items (4 units)
+### Phase 3: Disable Stale + Dormant Items (4 units)
 
-**[BUILD]** Disable 63 stale items (zero stock, no 30d movement, not in Compliance App).
+**[BUILD]** Disable 251 items: 63 stale (zero stock, no movement, not in Compliance App) + 188 dormant (in Compliance App but zero stock, zero 30d movement, all non-food: consumables/fixed assets).
+
+**Why dormant items are safe to disable:** All 188 are non-food (112 consumables like trash bags/uniforms/ink, 75 fixed assets like chairs/equipment, 1 misc). Zero are raw materials, finished goods, or packaging. Stores don't stock these — they're periodic purchases. If needed again, procurement requests re-enablement via the new SKU form with Mae's approval.
 
 | Task | Units | Details |
 |------|-------|---------|
-| 3.1 Review stale list from `tmp/item_master_full_analysis.csv` (status=STALE_REMOVE) | 1 | 63 items: 39 Products, 7 Services, 10 TEST-*, 7 others. Do NOT delete — set `disabled=1` so they don't appear in dropdowns. |
-| 3.2 Disable via API | 2 | `frappe.client.set_value(doctype='Item', name=item_code, fieldname='disabled', value=1)` |
-| 3.3 Verify disabled items don't appear in PR/PO item selectors | 1 | Test via API query with `disabled=0` filter |
+| 3.1 Review lists from `tmp/item_master_full_analysis.csv` | 1 | 63 STALE_REMOVE + 188 DORMANT_BUT_KNOWN = 251 items. Do NOT delete — set `disabled=1` so they don't appear in dropdowns. After this, only **212 active items** remain visible. |
+| 3.2 Disable via API | 2 | `frappe.client.set_value(doctype='Item', name=item_code, fieldname='disabled', value=1)` for each of 251 items. Use 200ms delay between calls. |
+| 3.3 Verify disabled items don't appear in PR/PO item selectors | 1 | Test via API query with `disabled=0` filter. Should return ~212 items. |
 
 ### Phase 4: PR Form — Force Item Master Selection (8 units)
 
@@ -200,7 +202,8 @@ The root cause of Luwi's bug is that the system ALLOWED bad data in at every ste
 - [ ] Are all 35 missing items created in Frappe with correct item_group and UOM?
 - [ ] Are Item Price records created for Standard Buying price list?
 - [ ] Does `get_contracted_price()` now return a price for common items (SAGO, CRUSHED GRAHAM, etc.)?
-- [ ] Are 63 stale items disabled (not deleted)?
+- [ ] Are 251 items disabled (63 stale + 188 dormant, all non-food)?
+- [ ] Do only ~212 active items remain visible in dropdowns?
 - [ ] Does the PR form use Item master autocomplete (no free text)?
 - [ ] Does PR creation auto-fill `estimated_unit_cost` from standard_rate?
 - [ ] Is the PO price field READ-ONLY by default (not a plain editable input)?
@@ -234,7 +237,7 @@ The root cause of Luwi's bug is that the system ALLOWED bad data in at every ste
 - **completion_condition:**
   - Item Price records > 300 (from current 8)
   - 35 missing items created
-  - 63 stale items disabled
+  - 251 stale + dormant items disabled (212 active items remain)
   - PR form uses Item master autocomplete
   - PO detail page supports read-only price with Edit Price button + reason field
   - Sentry observability on all new `@frappe.whitelist()` endpoints
