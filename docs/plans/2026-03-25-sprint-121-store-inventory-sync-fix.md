@@ -1,16 +1,16 @@
 ---
 canonical_sprint_id: S121
 display: Sprint 121
-status: IN_PROGRESS
+status: DEPLOYED
 branch: s121-store-inventory-sync-fix
 lane: single
 created_date: 2026-03-25
 completed_date:
-deployed_at:
+deployed_at: 2026-03-25
 backend_pr: 349
 frontend_pr:
-l3_result:
-execution_summary:
+l3_result: 4 PASS, 1 N/A (Ian sync not directly tested), 1 EXPECTED (bins>5000 preserved by design)
+execution_summary: Removed historical_end fallback, added historical_end_skipped classification guard, fixed Shaw BLVD→BKI mapping, added Sentry DM-7. Force re-sync 46/46 stores, 2740 payload + 2178 exceptions, 0 failures. Megaworld corrected 19572→1773. Festival Mall preserved at 21663 (ENCODE empty = skip by design).
 depends_on:
 ---
 

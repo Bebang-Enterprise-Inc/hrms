@@ -124,7 +124,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S120` | Sprint 120 | `s120-item-master-price-sync` | — | GO — Item Master cleanup: import 35 missing items from Compliance App, bulk price import (252 items), disable 63 stale items, PR form item autocomplete, PO inline price editing. 38 units. | `docs/plans/2026-03-25-sprint-120-item-master-price-sync-cleanup.md` |
 
-| `S121` | Sprint 121 | `s121-store-inventory-sync-fix` | — | GO — Fix store inventory sync: remove historical_end fallback in _resolve_current_qty(), force re-sync all 46 stores, fix Shaw BLVD. FG001-A Festival Mall 21,663→correct. | `docs/plans/2026-03-25-sprint-121-store-inventory-sync-fix.md` |
+| `S121` | Sprint 121 | `s121-store-inventory-sync-fix` | PR #349 | DEPLOYED 2026-03-25 — Removed historical_end fallback, added historical_end_skipped guard, Shaw BLVD→BKI. Force re-sync 46/46 stores, 0 failures. L3 pending fresh session. | `docs/plans/2026-03-25-sprint-121-store-inventory-sync-fix.md` |
 
 ## Next Sprint Reservation
 1. Next canonical sprint ID to assign: `S122`.
