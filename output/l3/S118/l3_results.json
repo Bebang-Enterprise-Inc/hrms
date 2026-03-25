@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": "L3-01",
+    "test": "Grouped blocker summary visible",
+    "status": "PASS",
+    "detail": "Grouped cards: true, counts: true, search: true, filter: true",
+    "error": null,
+    "ts": "2026-03-25T01:49:50.871Z"
+  },
+  {
+    "scenario": "L3-02",
+    "test": "Search filters to matching employees",
+    "status": "PASS",
+    "detail": "2 rows after 'ABAD' search, match found: true",
+    "error": null,
+    "ts": "2026-03-25T01:49:54.919Z"
+  },
+  {
+    "scenario": "L3-03",
+    "test": "Department filter works",
+    "status": "PASS",
+    "detail": "Selected 'Admin - BEI', filtered: true",
+    "error": null,
+    "ts": "2026-03-25T01:49:58.214Z"
+  },
+  {
+    "scenario": "L3-04",
+    "test": "YTD empty state info banner",
+    "status": "PASS",
+    "detail": "Banner visible: \"No payroll runs completed\"",
+    "error": null,
+    "ts": "2026-03-25T01:50:06.157Z"
+  },
+  {
+    "scenario": "L3-05",
+    "test": "Export tooltip on hover",
+    "status": "PASS",
+    "detail": "Tooltip: \"No data to export — process payroll for this period first\"",
+    "error": null,
+    "ts": "2026-03-25T01:50:09.860Z"
+  },
+  {
+    "scenario": "L3-06",
+    "test": "Mobile step labels",
+    "status": "PASS",
+    "detail": "6/6 labels: Period, Check, Generate, Review, Submit, Bank",
+    "error": null,
+    "ts": "2026-03-25T01:50:17.708Z"
+  }
+]

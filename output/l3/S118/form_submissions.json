@@ -1,0 +1,39 @@
+[
+  {
+    "form": "processing_step2_grouped_view",
+    "inputs": {
+      "action": "Clicked Next to Step 2"
+    },
+    "submit_action": "Next button click",
+    "response": "Grouped: true, Search: true, Filter: true",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S118\\artifacts\\01_grouped_view.png"
+  },
+  {
+    "form": "employee_blocker_search",
+    "inputs": {
+      "search_term": "ABAD",
+      "group_expanded": true
+    },
+    "submit_action": "Type 'ABAD' in search input",
+    "response": "2 rows visible, 'abad' in text: true",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S118\\artifacts\\02b_search_abad.png"
+  },
+  {
+    "form": "employee_blocker_dept_filter",
+    "inputs": {
+      "department": "Admin - BEI"
+    },
+    "submit_action": "Select department from dropdown",
+    "response": "Department 'Admin - BEI' selected, filtered indicator: true",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S118\\artifacts\\03b_dept_filtered.png"
+  },
+  {
+    "form": "export_tooltip_hover",
+    "inputs": {
+      "action": "Hover over disabled Export button"
+    },
+    "submit_action": "Mouse hover on Export",
+    "response": "Tooltip visible: true, text: \"No data to export — process payroll for this period first\"",
+    "screenshot_after": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\S118\\artifacts\\05_export_tooltip.png"
+  }
+]

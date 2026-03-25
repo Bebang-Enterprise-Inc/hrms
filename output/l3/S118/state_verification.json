@@ -1,0 +1,38 @@
+[
+  {
+    "check": "Step 2 shows grouped issue cards (not flat 516-row table)",
+    "before": "Flat employee table with 516 identical rows",
+    "after": "Grouped: true, Search: true, Dept filter: true",
+    "passed": true
+  },
+  {
+    "check": "Search filters employees to those matching 'ABAD'",
+    "before": "All employees in group",
+    "after": "2 rows after search, contains abad: true",
+    "passed": true
+  },
+  {
+    "check": "Department filter shows only 'Admin - BEI' employees",
+    "before": "All departments",
+    "after": "Filtered to Admin - BEI, indicator: true",
+    "passed": true
+  },
+  {
+    "check": "YTD shows info banner when no payroll runs",
+    "before": "Flat gray mini-chart with ₱0.00",
+    "after": "Info banner: true, zero total: true",
+    "passed": true
+  },
+  {
+    "check": "Disabled Export shows tooltip on hover",
+    "before": "No tooltip (button just disabled)",
+    "after": "Tooltip: true, text: \"No data to export — process payroll for this period first\"",
+    "passed": true
+  },
+  {
+    "check": "Mobile shows abbreviated step labels (not just numbers)",
+    "before": "Step numbers only (1, 2, 3...)",
+    "after": "6/6 labels: Period, Check, Generate, Review, Submit, Bank",
+    "passed": true
+  }
+]
