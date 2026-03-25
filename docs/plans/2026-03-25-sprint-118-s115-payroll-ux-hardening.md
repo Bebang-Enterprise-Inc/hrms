@@ -3,7 +3,13 @@
 ```yaml
 canonical_sprint_id: S118
 sprint_title: "S115 UX Hardening: Processing Wizard + Remittances for 500+ Employees"
-status: GO
+status: COMPLETED
+execution_started: 2026-03-25
+deployed_at: 2026-03-25
+completed_date: 2026-03-25
+l3_result: "6/6 PASS, 0 defects"
+backend_pr: "#348 (hrms) — MERGED"
+frontend_pr: "#244, #246, #247 (BEI-Tasks) — MERGED"
 branch: s118-payroll-processing-ux
 repos:
   - bei-tasks

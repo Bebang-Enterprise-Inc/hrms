@@ -118,10 +118,12 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S117` | Sprint 117 | `s117-payroll-ux-polish` | — | PLANNED — Payroll Command Center UX: false-readiness fix, unknown-state icons, summary card empty/dash, date formatting, launcher grid layout. 4 priority fixes. | `docs/plans/2026-03-25-sprint-117-payroll-command-center-ux-polish.md` |
 
-| `S118` | Sprint 118 | `s118-payroll-processing-ux` | — | GO — S115 UX hardening: blocker table group-by-issue + search + filter for 500+ employees, date consistency, empty state banners, export tooltip, mobile step labels. 18 units. | `docs/plans/2026-03-25-sprint-118-s115-payroll-ux-hardening.md` |
+| `S118` | Sprint 118 | `s118-payroll-processing-ux` | #348 (hrms), BEI-Tasks#244,#246,#247 | COMPLETED 2026-03-25 — UX hardening: grouped blocker cards with search+filter, YTD empty banner, export tooltip, mobile step labels. L3 6/6 PASS. | `docs/plans/2026-03-25-sprint-118-s115-payroll-ux-hardening.md` |
+
+| `S119` | Sprint 119 | `s119-payroll-compensation-ux-polish` | BEI-Tasks#245 | DEPLOYED 2026-03-25 — UX polish: meta.className DataTable, EmployeeSearchSelector wiring, responsive columns, tab badges, right-aligned salary, date formatting, mobile overflow fix. 10 units. | `docs/plans/2026-03-25-sprint-119-payroll-compensation-ux-polish.md` |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S119`.
+1. Next canonical sprint ID to assign: `S120`.
 2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
