@@ -1,13 +1,13 @@
 ---
 canonical_sprint_id: S121
 display: Sprint 121
-status: GO
+status: IN_PROGRESS
 branch: s121-store-inventory-sync-fix
 lane: single
 created_date: 2026-03-25
 completed_date:
 deployed_at:
-backend_pr:
+backend_pr: 349
 frontend_pr:
 l3_result:
 execution_summary:
@@ -219,18 +219,21 @@ curl "https://hq.bebang.ph/api/resource/Bin?filters=[[\"item_code\",\"=\",\"FG00
 
 ## Scope
 
-### Phase A: Fix the Bug (4 units)
+### Phase A: Fix the Bug (6 units)
 
 | Task | Type | File | Description | Units |
 |------|------|------|-------------|-------|
-| A1 | FIX | `hrms/utils/store_inventory_shadow_sync.py` | In `_resolve_current_qty()` (line 520-576): Remove the `historical_end` fallback path (lines 543-564). When ENCODE and TOTAL are both None, skip directly to WHOLE/LOOSE check, then to `blank_zero_policy`. Replace `historical_end` with a new classification `historical_end_skipped` that logs the item as an exception but does NOT return a qty. **HARD BLOCKER:** Do NOT use daily BEG/IN/OUT/END values as stock quantities — they are daily movement records, not current on-hand. | 2 |
-| A2 | FIX | `hrms/utils/store_inventory_shadow_sync.py` | Add a log warning when historical_end is skipped: `frappe.logger().warning(f"Skipping {code} at {store_code}: ENCODE and TOTAL empty, historical END values are unreliable")`. This helps identify which items/stores need ENCODE column updates. | 1 |
+| A1 | FIX | `hrms/utils/store_inventory_shadow_sync.py` | In `_resolve_current_qty()` (line 520-576): Remove the `historical_end` fallback path (lines 543-564). When ENCODE and TOTAL are both None AND daily_records exist, return `(None, "historical_end_skipped", None, "ENCODE and TOTAL empty; historical END unreliable")` — this is an exception, NOT a payload row. **HARD BLOCKER:** Do NOT use daily BEG/IN/OUT/END values as stock quantities — they are daily movement records, not current on-hand. **ALSO REQUIRED (audit B-01):** Add `elif qty_source == "historical_end_skipped": classification = "historical_end_skipped"` to the classification switch at lines 720-738, BEFORE the `elif not mapping:` check. Without this guard, `resolved_qty = None` flows through as `ready_to_import` and `flt(None)` = 0.0, silently zeroing stock. **ALSO REQUIRED (audit B-02):** Update `hrms/tests/test_store_inventory_shadow_sync.py`: (1) line 138: change `source == "historical_end"` to `source == "historical_end_skipped"` and assert `qty is None`, (2) line 262: change payload count from 3 to 2, (3) line 268: move RM-HIST assertion to `exception_rows` with `classification == "historical_end_skipped"`. | 3 |
+| A2 | FIX | `hrms/utils/store_inventory_shadow_sync.py` | Add a log warning when historical_end is skipped: `frappe.logger().warning("Skipping %s at %s: ENCODE and TOTAL empty, historical END values are unreliable", code, store_code)`. Use positional `%s` args (not f-strings) to match codebase conventions in `erp_sync.py`. | 1 |
 | A3 | FIX | `hrms/services/sheets_receiver/transforms.py` | Fix Shaw BLVD: Change `"SHAW": "Shaw BLVD"` to `"SHAW": "Shaw BLVD - BKI"` in `INVENTORY_SUMMARY_WAREHOUSE_MAP` (line 21). The store warehouse `Shaw BLVD - Bebang Enterprise Inc.` is correctly disabled. The BKI warehouse `Shaw BLVD - BKI` is the active warehouse that should receive Ian's inventory data. **Decision confirmed by Sam (2026-03-25).** | 1 |
 
-### Phase B: Audit Current Data (5 units)
+| A4 | FIX | `hrms/api/erp_sync.py` | **DM-7 Sentry (audit B-08):** Add `set_backend_observability_context(module="inventory", action="<fn_name>", mutation_type="update")` to `sync_inventory` and `run_scheduled_store_inventory_shadow_sync`. Currently 0 calls in erp_sync.py vs 26 in commissary.py. | 1 |
+
+### Phase B: Audit Current Data (6 units)
 
 | Task | Type | Description | Units |
 |------|------|-------------|-------|
+| B0 | BUILD | **Pre-fix bin snapshot (audit B-03 rollback):** Before ANY deploy, dump ALL tabBin entries for store warehouses to `output/inventory_audit/pre_fix_bin_snapshot.csv` (warehouse, item_code, actual_qty, modified). This is the rollback baseline — if the fix overcorrects (blank_zero_policy zeros legitimate stock), re-import from this CSV as Stock Reconciliation corrections. B1's suspicious_bins.csv is NOT sufficient (only captures >5K). | 1 |
 | B1 | BUILD | Write a script to audit ALL `tabBin` entries: for each store warehouse, compare the bin qty against a reasonable maximum (e.g., >5,000 units per item per store = suspicious). Output a CSV of all suspicious bins with: warehouse, item_code, qty, last_modified. Save to `output/inventory_audit/suspicious_bins.csv`. | 2 |
 | B2 | BUILD | For a sample of 5 suspicious items (including FG001-A at Festival Mall), verify the current Google Sheet ENCODE value vs the Frappe bin qty. Document the gap. Save to `output/inventory_audit/sample_verification.csv`. | 2 |
 | B3 | VERIFY | Check how many items across all 46 stores have empty ENCODE and TOTAL columns. This tells us how many items will STOP syncing after the fix. Save count to `output/inventory_audit/empty_encode_count.json`. | 1 |
@@ -239,8 +242,8 @@ curl "https://hq.bebang.ph/api/resource/Bin?filters=[[\"item_code\",\"=\",\"FG00
 
 | Task | Type | Description | Units |
 |------|------|-------------|-------|
-| C1 | BUILD | Commit fix, create PR, merge, trigger deploy. Wait for completion. | 2 |
-| C2 | BUILD | Force a full re-sync of all 46 stores with `force=True`. Monitor for errors. This will re-read all store sheets with the corrected `_resolve_current_qty()` and overwrite bad bin values. | 2 |
+| C1 | BUILD | Commit fix, create PR, merge, trigger deploy with **`skip_build=false`, `no_cache=true`** (MEMORY.md lesson #2 — new Python code requires full Docker build). Deploy workflow ID: 226200303. Wait for completion. If deploy fails, STOP and report. | 2 |
+| C2 | BUILD | Force a full re-sync of all 46 stores. **Call `run_scheduled_store_inventory_shadow_sync(force=True)` directly via bench execute** (NOT via `enqueue_scheduled_store_inventory_shadow_sync`) to bypass the `deduplicate=True` job_id collision that silently drops force requests when a normal scheduled job is queued (audit B-06). Monitor for errors. If SR submission failure rate >10% for any single store, PAUSE and report. | 2 |
 | C3 | VERIFY | After re-sync completes, re-check the 5 sample items from B2. Verify bins now show correct values (ENCODE value or 0 if ENCODE is empty). Save to `output/inventory_audit/post_fix_verification.csv`. | 1 |
 
 ### Phase D: Validate + Closeout (4 units)
@@ -250,9 +253,17 @@ curl "https://hq.bebang.ph/api/resource/Bin?filters=[[\"item_code\",\"=\",\"FG00
 | D1 | VERIFY | Check FG001-A at Festival Mall: bin qty should be 0 (ENCODE is empty) or a small number, NOT 21,663. | 1 |
 | D2 | VERIFY | Check total bin count before vs after: total bins, bins with stock, total qty. Expect total qty to DROP significantly (inflated numbers removed). | 1 |
 | D3 | VERIFY | Verify the scheduled 10-minute sync still runs without errors. Check Frappe scheduler logs for the next 2 sync cycles. | 1 |
-| D4 | BUILD | Closeout: update plan YAML status, update SPRINT_REGISTRY.md, `git add -f docs/plans/ output/inventory_audit/`, push to production. | 1 |
+| D4 | BUILD | Closeout: update plan YAML status (`status: COMPLETED`, `completed_date`, `deployed_at`, `backend_pr`, `l3_result`, `execution_summary`), update SPRINT_REGISTRY.md, `git add -f docs/plans/ output/inventory_audit/ output/l3/S121/`, push to production. | 1 |
 
-**Total: 18 units.**
+**Total: 20 units.** (A1 expanded from 2→3, added A4=1, added B0=1, net +2)
+
+### Rollback Plan (audit B-03)
+
+If post-fix validation (D1/D2) shows unexpected zeroing of items that had legitimate stock:
+1. `pre_fix_bin_snapshot.csv` contains the rollback baseline (ALL store bins, not just suspicious ones)
+2. Revert commit on sprint branch, redeploy with `skip_build=false`
+3. Force re-sync again to restore correct values from the old code path
+4. Alternative: re-import specific bins from the snapshot CSV as targeted Stock Reconciliation corrections
 
 ---
 
@@ -265,10 +276,15 @@ curl "https://hq.bebang.ph/api/resource/Bin?filters=[[\"item_code\",\"=\",\"FG00
 | System | Run `_resolve_current_qty()` on a row with empty ENCODE+TOTAL | Returns classification `historical_end_skipped`, NOT a qty | Fallback still active |
 | System | Check scheduled sync runs successfully after deploy | Frappe scheduler logs show `Complete` status | Code broke the sync |
 | System | Check Ian's warehouse sync still works (SUMMARY 2026) | 625+ rows synced successfully, Shaw BLVD handled per A3 decision | A3 broke Ian sync |
-| System | Count bins with qty > 5000 per store warehouse after re-sync | Count should be near zero (vs potentially hundreds before) | Force re-sync didn't run |
+| System | Count bins with qty > 5000 per store warehouse after re-sync | Count < 5 bins across all 46 stores (vs potentially hundreds before) | Force re-sync didn't run |
+| System | Run `_resolve_current_qty()` on row with ENCODE="#REF!" | Returns classification `formula_error`, NOT `historical_end_skipped` or `blank_zero_policy` | Formula error guard broken |
+| System | Run `_resolve_current_qty()` on row with ENCODE="N/A" | Returns classification `formula_error` (# prefix detection in `_coerce_float`) | Formula error guard broken |
+| System | Run `_resolve_current_qty()` on row with WHOLE=5, LOOSE=3, no ENCODE/TOTAL | Returns classification `needs_conversion_rule` | WHOLE/LOOSE path broken |
+| System | Run `_resolve_current_qty()` on row with ALL empty + no daily_records | Returns `(0.0, "blank_zero_policy", ...)` — blank_zero_policy still fires for truly empty items | blank_zero_policy broken |
 
 Evidence files required before closeout:
 ```
+output/inventory_audit/pre_fix_bin_snapshot.csv
 output/inventory_audit/suspicious_bins.csv
 output/inventory_audit/sample_verification.csv
 output/inventory_audit/empty_encode_count.json
@@ -291,6 +307,14 @@ output/l3/S121/state_verification.json
 - [ ] Does Shaw BLVD map to `"Shaw BLVD - BKI"` (NOT `"Shaw BLVD"`)? (Sam confirmed 2026-03-25)
 - [ ] Were ALL 46 stores force re-synced after deploy?
 - [ ] Does FG001-A at Festival Mall show a reasonable qty (not 21,663)?
+- [ ] Is `historical_end_skipped` handled in the classification switch at lines 720-738? (audit B-01)
+- [ ] Are unit tests updated: line 138 expects `historical_end_skipped`, line 262 payload count = 2, line 268 RM-HIST in exception_rows? (audit B-02)
+- [ ] Does `_resolve_current_qty()` with ENCODE="#REF!" return `formula_error`? (audit B-09)
+- [ ] Does `_resolve_current_qty()` with ALL empty + no daily_records return `blank_zero_policy`? (audit B-09)
+- [ ] Is `pre_fix_bin_snapshot.csv` created BEFORE deploy? (audit B-03)
+- [ ] Is deploy triggered with `skip_build=false, no_cache=true`? (audit B-04)
+- [ ] Is force re-sync called directly (not via enqueue) to bypass dedup? (audit B-06)
+- [ ] Does `erp_sync.py` have `set_backend_observability_context()` on sync endpoints? (audit B-08)
 
 ---
 
@@ -298,16 +322,23 @@ output/l3/S121/state_verification.json
 
 - **completion_condition:**
   - `historical_end` fallback removed from `_resolve_current_qty()`
+  - `historical_end_skipped` guard added to classification switch (lines 720-738)
+  - Unit tests updated (lines 138, 262, 268)
+  - `set_backend_observability_context()` added to erp_sync.py sync endpoints
   - All 46 stores force re-synced with corrected code
   - FG001-A at Festival Mall shows reasonable qty
-  - No regression on Ian's warehouse sync
+  - No regression on Ian's warehouse sync (>=625 rows, Shaw BLVD routes to "Shaw BLVD - BKI")
   - Post-fix verification shows inflated bins corrected
+  - Pre-fix bin snapshot exists at `output/inventory_audit/pre_fix_bin_snapshot.csv`
   - Plan YAML status = COMPLETED, pushed to production
-  - SPRINT_REGISTRY.md updated
+  - SPRINT_REGISTRY.md updated (including PR number)
 
 - **stop_only_for:**
   - Missing credentials/access to production
   - Force re-sync causes Frappe errors that can't be fixed programmatically
+  - Google Sheets API quota exceeded during force re-sync (>5 stores fail with 429)
+  - Deploy workflow returns non-success
+  - Force re-sync SR failure rate >10% for any single store
   - (Shaw BLVD decision RESOLVED: map to "Shaw BLVD - BKI", confirmed by Sam 2026-03-25)
 
 - **continue_without_pause_through:**
@@ -333,12 +364,14 @@ output/l3/S121/state_verification.json
 
 ## Agent Boot Sequence
 
-1. Read this plan fully — including the Requirements Regression Checklist.
+1. Read this plan fully — including the Requirements Regression Checklist and Audit Amendment Log.
 2. **Create sprint branch:** `git fetch origin production && git checkout -b s121-store-inventory-sync-fix origin/production`
-3. Read `hrms/utils/store_inventory_shadow_sync.py` lines 520-576 — the `_resolve_current_qty()` function to fix.
+3. Read `hrms/utils/store_inventory_shadow_sync.py` lines 520-576 — the `_resolve_current_qty()` function to fix. **Also read lines 720-738** — the classification switch that needs the `historical_end_skipped` guard.
 4. Read `hrms/services/sheets_receiver/transforms.py` lines 16-22 — Ian's warehouse map (Shaw BLVD entry).
-5. Read `tmp/inventory_sync_bug_report.md` — full investigation report.
-6. Read `tmp/frappe_stock_recon_research.md` — how Stock Reconciliation works in Frappe.
+5. Read `hrms/tests/test_store_inventory_shadow_sync.py` lines 128-140 and 260-270 — the tests that must be updated.
+6. **Pre-flight check:** Verify `frappe.db.exists("Warehouse", "Shaw BLVD - BKI")` returns True before committing A3.
+7. *(Optional)* If `tmp/inventory_sync_bug_report.md` exists, read for additional context. May not exist in fresh checkout — the Design Rationale section above is the authoritative cold-start reference.
+8. *(Optional)* If `tmp/frappe_stock_recon_research.md` exists, read for SR behavior context.
 
 ## Execution Authority
 
@@ -348,6 +381,31 @@ Only pause for items listed in the Autonomous Execution Contract `stop_only_for`
 
 ## Execution Workflow
 - Test Python changes: `/local-frappe`
-- Deploy backend: create hrms PR → merge → trigger deploy workflow (ID: 226200303)
-- Force re-sync: call `run_store_inventory_shadow_sync(force=True)` via Frappe bench execute
+- Deploy backend: create hrms PR → merge → trigger deploy workflow (ID: 226200303) with `skip_build=false, no_cache=true`
+- Force re-sync: call `run_scheduled_store_inventory_shadow_sync(force=True)` directly via bench execute (NOT via enqueue wrapper)
 - Validate: query `tabBin` via Frappe API
+
+---
+
+## Audit Amendment Log
+
+**Audit date:** 2026-03-25 | **Audit version:** v1
+**Pipeline:** 4 domain agents (frappe-backend, system-arch, deployment-qa, team-orchestration) → code verifier → adversarial fact-checker
+**Result:** 8 SUPPORTED, 1 PARTIAL, 1 CONTRADICTED → **9 verified blockers, CONDITIONAL GO**
+**Full findings:** `output/plan-audit/s121-store-inventory-sync-fix/`
+
+| Blocker | Severity | Amendment | Section Changed |
+|---------|----------|-----------|-----------------|
+| B-01: `historical_end_skipped` not in classification switch | CRITICAL | Added switch guard + routing to exception_rows in A1 | Phase A, A1 task |
+| B-02: Unit tests assert `historical_end` | CRITICAL | Added test update instructions in A1 | Phase A, A1 task |
+| B-03: No rollback plan | CRITICAL | Added B0 (pre-fix snapshot) + Rollback Plan section | Phase B, new section |
+| B-04: Docker build type not specified | CRITICAL | Added `skip_build=false, no_cache=true` to C1 | Phase C, C1 task |
+| B-05: `output/l3/S121/` missing from git add | HIGH | Added to D4 git add command | Phase D, D4 task |
+| B-06: Force re-sync dedup collision | HIGH | Changed C2 to direct call (not enqueue) | Phase C, C2 task |
+| B-07: Shaw BLVD orphaned bins | MEDIUM | Noted as accepted (old warehouse disabled, bins will age out) | No task change |
+| B-08: DM-7 Sentry gap | MEDIUM | Added A4 task for Sentry instrumentation | Phase A, new A4 task |
+| B-09: No negative test scenarios | HIGH | Added 4 negative L3 scenarios | L3 table |
+| ~~B-10: Governor absent~~ | DISMISSED | Contradicted by fact-checker — not part of this sprint's architecture | None |
+
+**Units impact:** 18 → 20 (+2: A1 expanded 2→3, A4 added, B0 added)
+**Verdict after amendments:** GO

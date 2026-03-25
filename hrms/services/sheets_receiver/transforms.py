@@ -18,7 +18,7 @@ INVENTORY_SUMMARY_WAREHOUSE_MAP = {
 	"JENTEC": "Jentec Storage Inc.",
 	"RCS": "Royal Cold Storage – Taytay (RCS)",
 	"PINNACLE": "Pinnacle Cold Storage Solutions",
-	"SHAW": "Shaw BLVD",
+	"SHAW": "Shaw BLVD - BKI",
 }
 
 _INVENTORY_SECTION_MARKERS = {"DRY", "COLD", "FROZEN", "CHILLED"}

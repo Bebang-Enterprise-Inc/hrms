@@ -540,28 +540,24 @@ def _resolve_current_qty(
 	if total_qty is not None:
 		return total_qty, "total", run_date.isoformat(), ""
 
-	best_daily: tuple[date, float] | None = None
-	for daily in daily_records:
-		inventory_date = daily.get("inventory_date")
-		end_value = daily.get("end")
-		if not inventory_date:
-			continue
-		try:
-			parsed_date = datetime.strptime(str(inventory_date), "%Y-%m-%d").date()
-		except ValueError:
-			continue
-		if parsed_date > run_date:
-			continue
-		if _is_formula_error(end_value):
-			continue
-		end_qty = _coerce_float(end_value)
-		if end_qty is None:
-			continue
-		if not best_daily or parsed_date > best_daily[0]:
-			best_daily = (parsed_date, end_qty)
-
-	if best_daily:
-		return best_daily[1], "historical_end", best_daily[0].isoformat(), ""
+	# historical_end fallback REMOVED (S121): daily BEG/IN/OUT/END values are
+	# per-day movement records, NOT current stock on hand.  Using them inflated
+	# bins by orders of magnitude (e.g. 21,663 vs actual 12 at Festival Mall).
+	# When ENCODE and TOTAL are empty but daily records have usable END values,
+	# classify as "historical_end_skipped" so the item is routed to
+	# exception_rows and the previous bin value is preserved.
+	has_usable_daily_end = any(
+		_coerce_float(d.get("end")) is not None
+		for d in daily_records
+		if d.get("inventory_date") and not _is_formula_error(d.get("end"))
+	)
+	if has_usable_daily_end:
+		return (
+			None,
+			"historical_end_skipped",
+			None,
+			"ENCODE and TOTAL empty; historical END values are unreliable",
+		)
 
 	whole_qty = _coerce_float(row_payload["whole"])
 	loose_qty = _coerce_float(row_payload["loose"])
@@ -726,6 +722,14 @@ def extract_store_inventory_payload(
 			classification = "formula_error"
 		elif qty_source == "needs_conversion_rule":
 			classification = "needs_conversion_rule"
+		elif qty_source == "historical_end_skipped":
+			classification = "historical_end_skipped"
+			if frappe and hasattr(frappe, "logger"):
+				frappe.logger().warning(
+					"Skipping %s at %s: ENCODE and TOTAL empty, historical END values are unreliable",
+					code,
+					config.store_code,
+				)
 		elif not mapping:
 			classification = "item_unmapped"
 			detail = "No mapping found for inventory code"

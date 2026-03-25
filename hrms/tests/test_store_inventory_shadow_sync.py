@@ -125,7 +125,10 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 		self.assertEqual(inventory_date, "2026-03-10")
 		self.assertEqual(detail, "")
 
-		qty, source, inventory_date, _ = shadow_sync._resolve_current_qty(
+		# S121: historical_end fallback removed — daily END values are movement
+		# records, not current stock.  Items with empty ENCODE/TOTAL but existing
+		# daily records are now classified as "historical_end_skipped" (exception).
+		qty, source, inventory_date, detail = shadow_sync._resolve_current_qty(
 			{"encode": "", "total": "", "whole": "", "loose": "", "wt": 1},
 			[
 				{"inventory_date": "2026-03-08", "end": 4},
@@ -134,9 +137,9 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 			],
 			date(2026, 3, 10),
 		)
-		self.assertEqual(qty, 6)
-		self.assertEqual(source, "historical_end")
-		self.assertEqual(inventory_date, "2026-03-09")
+		self.assertIsNone(qty)
+		self.assertEqual(source, "historical_end_skipped")
+		self.assertIsNone(inventory_date)
 
 		qty, source, inventory_date, detail = shadow_sync._resolve_current_qty(
 			{"encode": "", "total": "", "whole": "", "loose": "", "wt": 1},
@@ -259,17 +262,17 @@ class TestStoreInventoryShadowSync(unittest.TestCase):
 				date(2026, 3, 10),
 			)
 
-		self.assertEqual(len(result["payload_rows"]), 3)
-		self.assertEqual(len(result["exception_rows"]), 1)
+		# S121: RM-HIST moved from payload to exceptions (historical_end_skipped)
+		self.assertEqual(len(result["payload_rows"]), 2)
+		self.assertEqual(len(result["exception_rows"]), 2)
 		by_code = {row["item_code"]: row for row in result["payload_rows"]}
 		self.assertEqual(by_code["RM-ENC"]["qty"], 3)
 		self.assertEqual(by_code["RM-ENC"]["qty_source"], "encode")
-		self.assertEqual(by_code["RM-HIST"]["qty"], 5)
-		self.assertEqual(by_code["RM-HIST"]["qty_source"], "historical_end")
 		self.assertEqual(by_code["RM-BLANK"]["qty"], 0)
 		self.assertEqual(by_code["RM-BLANK"]["qty_source"], "blank_zero_policy")
-		self.assertEqual(result["exception_rows"][0]["inventory_code"], "RM-ERR")
-		self.assertEqual(result["exception_rows"][0]["classification"], "formula_error")
+		by_exception = {row["inventory_code"]: row for row in result["exception_rows"]}
+		self.assertEqual(by_exception["RM-ERR"]["classification"], "formula_error")
+		self.assertEqual(by_exception["RM-HIST"]["classification"], "historical_end_skipped")
 
 	def test_export_store_workbook_uses_temp_file_before_promoting(self):
 		config = shadow_sync.StoreSyncConfig(
