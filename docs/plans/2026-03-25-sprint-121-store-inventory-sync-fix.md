@@ -24,40 +24,43 @@ depends_on:
 
 ---
 
-## Context (For Cold-Start Agents Who Have Never Seen This Codebase)
+## Investigation Findings (2026-03-25 Session)
 
-### What is BEI?
-Bebang Enterprise Inc. (BEI) operates a chain of 47 Bebang Halo-Halo stores across the Philippines (QSR — quick service restaurant). Each store tracks daily inventory of ingredients (sago, ube, leche flan, etc.) in a Google Sheet. A central warehouse team (Ian) tracks warehouse stock in a separate Google Sheet. The ERP system (Frappe Framework) needs to mirror this inventory data.
+### What we discovered
 
-### Key Frappe concepts
-- **Stock Reconciliation** — a Frappe DocType that SETS the absolute stock quantity for an item in a warehouse. If you say "item X in warehouse Y = 100 units," Frappe adjusts the stock ledger to match. It does NOT add — it overwrites. Submitting the same reconciliation twice with qty=100 keeps the bin at 100.
-- **tabBin** — Frappe's real-time stock balance table. One row per item × warehouse. The `actual_qty` column is the current stock. This is what operators see when they check inventory.
-- **Stock Ledger Entry (SLE)** — the audit trail. Every stock movement (receipt, issue, reconciliation) creates an SLE.
+We queried live production and found grossly inflated inventory numbers:
 
-### System architecture
-```
-Store Google Sheets (46 stores, tab "3. INVENTORY")
-    ↓ exported via Google Drive API every 10 min
-    ↓ by Frappe scheduler (frappe_scheduler container)
-    ↓ code: hrms/utils/store_inventory_shadow_sync.py
-    ↓
-Stock Reconciliation submitted → tabBin updated
+| Store | Item | Frappe tabBin qty | Google Sheet ENCODE | Correct? |
+|-------|------|-------------------|---------------------|----------|
+| Festival Mall Alabang | FG001-A (LECHE FLAN x 12) | **21,663** | **empty** (current on-hand ~12) | WRONG |
+| Megaworld Paseo Center | FG001-A | **19,572** | unknown | WRONG |
+| SM Clark | FG001-A | **3,174** | unknown | Suspicious |
 
-Ian's Warehouse Sheet ("SUMMARY 2026")
-    ↓ pulled by sheets-receiver container daily at 7 AM
-    ↓ code: hrms/services/sheets_receiver/ + hrms/api/erp_sync.py
-    ↓
-Stock Reconciliation submitted → tabBin updated
-```
+Total tabBin has 3,962 bins, 3,595 with stock, total qty 949,495 units. Many of these numbers are inflated.
 
-Both paths converge at `_sync_inventory_rows()` in `hrms/api/erp_sync.py` (line 1185) which creates and submits Stock Reconciliation documents.
+### How we traced the root cause
 
-### How to access production
-- **AWS SSM** for running commands on the EC2 instance (`i-026b7477d27bd46d6`)
-- **Frappe container name:** use `$(docker ps -q -f name=frappe_backend)` (Swarm naming varies)
-- **Bench commands:** `docker exec <container> bench --site hq.bebang.ph <command>`
-- **Frappe API credentials:** stored in Doppler (`bei-erp` project, `dev` config). Keys: `FRAPPE_API_KEY`, `FRAPPE_API_SECRET`. Auth header: `Authorization: token KEY:SECRET`
-- **Deploy workflow:** GitHub Actions workflow ID `226200303` on `Bebang-Enterprise-Inc/hrms`, triggered via `gh api repos/.../actions/workflows/226200303/dispatches -X POST -f ref=production`
+1. **Checked if Stock Reconciliation accumulates** — NO. Frappe SR is absolute (sets qty, doesn't add). Research confirmed + code verified. Submitting qty=100 twice keeps bin at 100.
+
+2. **Checked if too many SRs are being created** — YES (83-134/day, 1,664 total), but this is idempotent by design. Not the cause.
+
+3. **Checked the actual SLEs for FG001-A at Festival Mall** — only 3 SLEs total. The third one (MAT-RECO-2026-00397, March 13) set qty to 21,663. That SR was the source of the wrong number.
+
+4. **Checked what the SR said** — `qty: 21663.0`, `current_qty: 167.0`. The sync intentionally set 21,663 as the target. But the store sheet says ~12.
+
+5. **Checked the Google Sheet** — Festival Mall's FG001-A row has:
+   - ENCODE = **empty**
+   - TOTAL = **empty**
+   - Wt = 12 (package info, NOT stock qty)
+   - Daily END values: 618, 1381, 1212, 789, 1066, 1319, 1707, 1495... (growing cumulative numbers)
+
+6. **Found the bug in `_resolve_current_qty()`** — when ENCODE and TOTAL are empty, the function falls back to historical daily END values (line 543-564). These END values are BEG+IN-OUT for each day — daily movement records, NOT current on-hand. On March 13, the latest END value was ~21,663.
+
+7. **Checked if Festival Mall is being re-synced daily** — YES. State file shows `last_success_at: 2026-03-24T23:36:23`, 103 rows imported. But FG001-A is NOT in those 103 rows because the sync skips items where qty resolves to the same value (checksum dedup).
+
+8. **Checked Ian's warehouse sync** — NOT affected. Ian's sync reads qty directly from SOH columns in the SUMMARY 2026 sheet. No fallback logic. Only issue: Shaw BLVD maps to a disabled store warehouse instead of the active BKI warehouse.
+
+9. **Verified with Sam:** Shaw BLVD store (BEI) = correctly disabled. Shaw BLVD warehouse (BKI) = should be active and synced.
 
 ---
 
