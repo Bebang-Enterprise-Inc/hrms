@@ -6,7 +6,7 @@ depends_on: null
 created: 2026-03-25
 completed_date: null
 execution_summary: null
-total_work_units: 42
+total_work_units: 44
 ---
 
 # S120: Item Master Price Sync & Cleanup
@@ -132,15 +132,18 @@ The executing agent should verify these are still in production before starting.
 | 4.2 Update PR creation form to use item selector | 3 | Replace free-text item_code input with autocomplete that queries the new endpoint. Show item_name, item_code, UOM, and price. Auto-fill `estimated_unit_cost` from `standard_rate`. |
 | 4.3 PR→PO conversion: use resolved price | 2 | Update `convert_to_po()` to use `standard_rate` as fallback when `get_contracted_price()` returns None. The price chain: contracted_rate → standard_rate → valuation_rate → 0 (with warning). |
 
-### Phase 5: PO Inline Price Editing (8 units)
+### Phase 5: PO Price Edit with Approval Gate (10 units)
 
-**[BUILD]** Allow editing item prices on Draft and Pending Approval POs.
+**[BUILD]** Allow editing item prices on POs with mandatory reason + CPO approval trigger.
+
+**LOCKED POLICY (Sam Karazi, 2026-03-25):** Price fields are NOT free-text inputs. They display the auto-filled price as read-only. To change, user clicks an "Edit Price" button which reveals the input + mandatory reason field. Any price edit triggers Mae's approval regardless of PO amount. See `memory/procurement-data-policy.md`.
 
 | Task | Units | Details |
 |------|-------|---------|
-| 5.1 Add `update_po_item_price` API endpoint | 3 | `hrms.api.procurement.update_po_item_price(po_name, item_name, unit_cost)` — updates unit_cost, recalculates amount and grand_total. Only for Draft/Pending status POs. |
-| 5.2 Make PO detail items table editable for Draft POs | 3 | Unit Price cell becomes an inline input when PO status is Draft or Pending Mae Approval. On blur/change, call the update API and refresh totals. |
+| 5.1 Add `update_po_item_price` API endpoint | 3 | `hrms.api.procurement.update_po_item_price(po_name, item_idx, new_price, reason)` — updates unit_cost, recalculates amount and grand_total. Requires `reason` (non-empty string). Logs price change with old_price, new_price, reason, changed_by, timestamp. Sets `price_override=1` flag on the PO which forces Mae's approval regardless of amount threshold. Only for non-final status POs (NOT Approved/Sent/Received/Cancelled). Sentry instrumented. |
+| 5.2 PO detail price display — read-only with Edit button | 3 | Unit Price cell shows the price as **read-only text** (not an input). Next to it, a small pencil icon / "Edit" label. Clicking it: (1) replaces the read-only text with an editable input pre-filled with current price, (2) shows a "Reason for price change" text field below (mandatory), (3) shows Save/Cancel buttons. On Save → calls `update_po_item_price` API → refreshes totals → collapses back to read-only. **HARD BLOCKER:** Price must NEVER be a plain editable text field. The edit interaction must be deliberate (click to reveal). |
 | 5.3 Add "Return to Draft" button for Pending Approval POs | 2 | When Mae sees a ₱0 PO, she should be able to send it back to Draft (not just Reject). Add `return_to_draft` method on BEI Purchase Order. |
+| 5.4 Price change visible in approval view | 2 | When Mae reviews a PO that has `price_override=1`, show a banner: "Price was changed by [user] — [old] → [new]. Reason: [text]". She can see exactly what was changed and why before approving. |
 
 ### Phase 6: Closeout (2 units)
 
@@ -200,7 +203,10 @@ The root cause of Luwi's bug is that the system ALLOWED bad data in at every ste
 - [ ] Are 63 stale items disabled (not deleted)?
 - [ ] Does the PR form use Item master autocomplete (no free text)?
 - [ ] Does PR creation auto-fill `estimated_unit_cost` from standard_rate?
-- [ ] Can PO item prices be edited inline on the detail page for Draft POs?
+- [ ] Is the PO price field READ-ONLY by default (not a plain editable input)?
+- [ ] Does clicking "Edit Price" reveal an input + mandatory reason field?
+- [ ] Does price edit trigger Mae's approval regardless of PO amount?
+- [ ] Is the price change (old→new + reason) visible in Mae's approval view?
 - [ ] Does the PO submission block ₱0 items? (Already deployed — verify still works)
 - [ ] Does PR creation block items that don't exist in Item master? (No free text allowed)
 - [ ] Does PR creation warn when estimated_unit_cost is 0 for an item that has a known price?
@@ -216,7 +222,10 @@ The root cause of Luwi's bug is that the system ALLOWED bad data in at every ste
 | test.commissary@bebang.ph | Create PR: type "SAGO" in item field → select FG009 from autocomplete → qty=1 | Item auto-fills: FG009, SAGO, KG, price shows | Item search not working |
 | test.commissary@bebang.ph | Submit PR for approval | PR status changes to Pending Approval, estimated cost > 0 | Price not auto-filling |
 | test.commissary@bebang.ph | Approve PR → Convert to PO with supplier "1T1MI3" | PO created with unit_cost > 0 (from Item Price) | Price resolution chain broken |
-| test.commissary@bebang.ph | Open PO detail → click Unit Price cell → change to 500 → tab out | Price updates, total recalculates | Inline editing not working |
+| test.commissary@bebang.ph | Open PO detail → verify price is read-only text (NOT editable input) | Price shows as text, not input field | Price field is free-text (policy violation) |
+| test.commissary@bebang.ph | Click "Edit Price" pencil icon → input appears + reason field | Price input + "Reason for price change" text field shown | Edit interaction missing |
+| test.commissary@bebang.ph | Enter new price 500, reason "Supplier increased rate" → Save | Price updates, total recalculates, reason saved | Update API broken |
+| mae@bebang.ph | Open PO with price override → see price change banner | Shows "Price changed by [user]: ₱84 → ₱500. Reason: Supplier increased rate" | Approval view missing change context |
 | test.commissary@bebang.ph | Submit PO for approval | PO status changes to Pending Mae Approval | Submission validation broken |
 | test.commissary@bebang.ph | Search for disabled item (e.g., S084-RM-LIVE-TEST) in PR form | Item should NOT appear in autocomplete | Disabled filter not working |
 
