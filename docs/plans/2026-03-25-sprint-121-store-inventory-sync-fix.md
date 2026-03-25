@@ -24,6 +24,43 @@ depends_on:
 
 ---
 
+## Context (For Cold-Start Agents Who Have Never Seen This Codebase)
+
+### What is BEI?
+Bebang Enterprise Inc. (BEI) operates a chain of 47 Bebang Halo-Halo stores across the Philippines (QSR — quick service restaurant). Each store tracks daily inventory of ingredients (sago, ube, leche flan, etc.) in a Google Sheet. A central warehouse team (Ian) tracks warehouse stock in a separate Google Sheet. The ERP system (Frappe Framework) needs to mirror this inventory data.
+
+### Key Frappe concepts
+- **Stock Reconciliation** — a Frappe DocType that SETS the absolute stock quantity for an item in a warehouse. If you say "item X in warehouse Y = 100 units," Frappe adjusts the stock ledger to match. It does NOT add — it overwrites. Submitting the same reconciliation twice with qty=100 keeps the bin at 100.
+- **tabBin** — Frappe's real-time stock balance table. One row per item × warehouse. The `actual_qty` column is the current stock. This is what operators see when they check inventory.
+- **Stock Ledger Entry (SLE)** — the audit trail. Every stock movement (receipt, issue, reconciliation) creates an SLE.
+
+### System architecture
+```
+Store Google Sheets (46 stores, tab "3. INVENTORY")
+    ↓ exported via Google Drive API every 10 min
+    ↓ by Frappe scheduler (frappe_scheduler container)
+    ↓ code: hrms/utils/store_inventory_shadow_sync.py
+    ↓
+Stock Reconciliation submitted → tabBin updated
+
+Ian's Warehouse Sheet ("SUMMARY 2026")
+    ↓ pulled by sheets-receiver container daily at 7 AM
+    ↓ code: hrms/services/sheets_receiver/ + hrms/api/erp_sync.py
+    ↓
+Stock Reconciliation submitted → tabBin updated
+```
+
+Both paths converge at `_sync_inventory_rows()` in `hrms/api/erp_sync.py` (line 1185) which creates and submits Stock Reconciliation documents.
+
+### How to access production
+- **AWS SSM** for running commands on the EC2 instance (`i-026b7477d27bd46d6`)
+- **Frappe container name:** use `$(docker ps -q -f name=frappe_backend)` (Swarm naming varies)
+- **Bench commands:** `docker exec <container> bench --site hq.bebang.ph <command>`
+- **Frappe API credentials:** stored in Doppler (`bei-erp` project, `dev` config). Keys: `FRAPPE_API_KEY`, `FRAPPE_API_SECRET`. Auth header: `Authorization: token KEY:SECRET`
+- **Deploy workflow:** GitHub Actions workflow ID `226200303` on `Bebang-Enterprise-Inc/hrms`, triggered via `gh api repos/.../actions/workflows/226200303/dispatches -X POST -f ref=production`
+
+---
+
 ## Design Rationale (For Cold-Start Agents)
 
 ### Why this exists
@@ -81,6 +118,52 @@ Row 7 (sub-hdr): |      |       |             |     |     |       |       |     
 5. blank_zero_policy → returns 0
 
 **The fix removes step 3.** When ENCODE and TOTAL are empty, skip straight to WHOLE/LOOSE check, then blank_zero_policy.
+
+**Current code to modify** (`hrms/utils/store_inventory_shadow_sync.py` lines 520-576):
+```python
+def _resolve_current_qty(row_payload, daily_records, run_date):
+    # ... lines 525-541: checks encode, total (KEEP THESE)
+
+    # Lines 543-564: THE BUG — remove this entire block:
+    best_daily = None
+    for daily in daily_records:
+        inventory_date = daily.get("inventory_date")
+        end_value = daily.get("end")
+        # ... iterates through daily END values
+        # ... picks the most recent END before run_date
+    if best_daily:
+        return best_daily[1], "historical_end", best_daily[0].isoformat(), ""
+
+    # Lines 566-576: WHOLE/LOOSE and blank_zero_policy (KEEP THESE)
+```
+
+**After the fix**, the function should go from TOTAL check directly to WHOLE/LOOSE:
+```python
+def _resolve_current_qty(row_payload, daily_records, run_date):
+    # Check encode (lines 535-537) — KEEP
+    encode_qty = _coerce_float(row_payload["encode"])
+    if encode_qty is not None:
+        return encode_qty, "encode", run_date.isoformat(), ""
+
+    # Check total (lines 539-541) — KEEP
+    total_qty = _coerce_float(row_payload["total"])
+    if total_qty is not None:
+        return total_qty, "total", run_date.isoformat(), ""
+
+    # REMOVED: historical_end fallback (was lines 543-564)
+    # Log that we skipped it
+    # Return None with classification "historical_end_skipped"
+    # so the item is treated as an exception, not imported with wrong qty
+
+    # Check whole/loose (lines 566-569) — KEEP
+    whole_qty = _coerce_float(row_payload["whole"])
+    loose_qty = _coerce_float(row_payload["loose"])
+    if whole_qty is not None or loose_qty is not None:
+        return None, "needs_conversion_rule", None, "..."
+
+    # Blank zero policy (lines 571-576) — KEEP
+    return (0.0, "blank_zero_policy", run_date.isoformat(), "...")
+```
 
 ### How the force re-sync works
 
