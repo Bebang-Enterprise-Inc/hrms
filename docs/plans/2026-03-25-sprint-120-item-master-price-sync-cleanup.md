@@ -21,8 +21,38 @@ The procurement workflow is broken because:
 4. **63 items are completely stale** — zero stock, no movement in 30 days, not in the Compliance App, never received. These are test items, decommissioned products, and orphans.
 5. **The PO detail page has no edit capability** — once a PO is created with ₱0, there's no way to fix the price without database surgery.
 
-**Reported by:** luwi@bebang.ph (PR-2026-03022 → PO-2026-03023, SAGO at ₱0)
+**Reported by:** luwi@bebang.ph (2026-03-25)
 **Root cause analysis:** `tmp/item_master_full_analysis.csv` (463 rows with full status)
+
+### What Luwi Experienced (User Story)
+
+1. Luwi (procurement staff) created **PR-2026-03022** for 1 sack of SAGO via my.bebang.ph.
+2. She typed "SAGO" as the item code — the PR form accepted it as free text. The real Frappe Item code is `FG009` (SAGO, KG) or `PR024` (SAGO LIBERTY, SACK). Because she typed a non-existent code, no price was resolved → `estimated_unit_cost: 0`.
+3. The PR was **approved with ₱0** — no validation blocked it.
+4. She converted the PR to **PO-2026-03023** (supplier: 1 To 1 Marketing, Inc.). The conversion called `get_contracted_price("SAGO", "1T1MI3")` which returned `None` (item "SAGO" has no Item Price record, and only 8 Item Price records exist total). Fallback `estimated_unit_cost` was also 0. PO created with **₱0.00 grand total**.
+5. The PO was submitted for Mae's approval — the ₱0 validation we added earlier today wasn't deployed yet at that point.
+6. Luwi tried to **edit the price on the PO** but there is **no edit button** on the PO detail page. The items table is completely read-only. She is stuck.
+7. The PO detail page also shows **stray "0" values** next to "Approval Status" and in the header — caused by Frappe's `docstatus` and `idx` fields leaking into the React render (fix deployed earlier today, but she's seeing a cached version).
+
+### What Luwi Needs After This Sprint
+
+- Type "SAGO" in the PR form → autocomplete shows FG009 (SAGO) and PR024 (SAGO LIBERTY) with prices
+- Select the item → price auto-fills from Item Price / standard_rate
+- PR→PO conversion carries the price through
+- If price is wrong on PO, she can click the Unit Price cell and edit it inline
+- PO cannot be submitted for approval with ₱0 items (already deployed, verify it still works)
+
+### Fixes Already Deployed (Earlier Today, Before This Sprint)
+
+These were hotfixes pushed directly to production before this plan was written:
+
+1. **Serial and Batch Bundle error** — `hrms/api/warehouse.py`: stopped passing legacy `batch_no` on stock transfers (commit `46648c015`)
+2. **HTML in error messages** — `lib/error-handler.ts`: strip HTML tags from Frappe validation errors, detect insufficient stock pattern (commit `02df85b`)
+3. **PO submission blocks ₱0** — `bei_purchase_order.py`: `submit_for_approval()` now validates item prices (commit `84166ac2b`)
+4. **Stray 0s in PO/PR responses** — `hrms/api/procurement.py`: strip `docstatus`, `idx`, `owner` etc. from API responses (commit `84166ac2b`)
+5. **PR item normalizer** — `route.ts`: added `estimated_unit_cost` to field lookup chain (commit `fc25ca4`)
+
+The executing agent should verify these are still in production before starting. If any were reverted, re-apply them on the sprint branch.
 
 ## Data Sources (Ground Truth)
 
