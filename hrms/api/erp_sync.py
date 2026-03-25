@@ -20,6 +20,7 @@ from frappe.utils import cint, flt, getdate, now_datetime, nowdate
 
 from hrms.utils import store_inventory_shadow_sync as store_inventory_shadow_sync_builder
 from hrms.utils import store_order_demand_snapshot as store_demand_snapshot_builder
+from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.standard_buying_bridge import apply_standard_buying_context
 
 _FIELD_CACHE: dict[tuple, bool] = {}
@@ -1393,6 +1394,9 @@ def sync_inventory(sheet_name: str, data: list[dict], checksum: str, **kwargs) -
 
 	Updates stock levels via Stock Reconciliation.
 	"""
+	set_backend_observability_context(
+		module="inventory", action="sync_inventory", mutation_type="create"
+	)
 	return _sync_inventory_rows(sheet_name, data, checksum, require_auth=True)
 
 
@@ -2198,6 +2202,12 @@ def run_scheduled_store_inventory_shadow_sync(
 	run_date: str | None = None, force: bool = False
 ) -> dict[str, Any]:
 	"""Mirror store inventory sheets into Frappe using the tracked workbook bridge."""
+	set_backend_observability_context(
+		module="inventory",
+		action="run_scheduled_store_inventory_shadow_sync",
+		mutation_type="update",
+		extras={"force": force, "run_date": str(run_date)},
+	)
 	run_date_value = _safe_date(run_date) or _current_pht_business_date()
 	result = store_inventory_shadow_sync_builder.run_store_inventory_shadow_sync(
 		run_date=run_date_value,
