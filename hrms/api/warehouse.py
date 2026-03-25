@@ -845,18 +845,19 @@ def complete_warehouse_receiving(
 			if allow_zero:
 				row["allow_zero_valuation_rate"] = 1
 		else:
-			# Material Transfer: set target warehouse and batch
+			# Material Transfer: set target warehouse only.
+			# Do NOT set batch_no — ERPNext v15 handles batch via Serial and
+			# Batch Bundle.  Setting the legacy field causes orphaned bundles
+			# on retry ("… has already created" error).
 			row["t_warehouse"] = receiving.target_warehouse
-			row["batch_no"] = item_data.get("batch_no")
 
 		stock_entry.append("items", row)
 
 	_enable_role_gated_write(stock_entry)
 	stock_entry.insert(ignore_permissions=True)
-	if is_intercompany:
-		stock_entry = frappe.get_doc("Stock Entry", stock_entry.name)
-		_enable_role_gated_write(stock_entry)
-		_clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry)
+	stock_entry = frappe.get_doc("Stock Entry", stock_entry.name)
+	_enable_role_gated_write(stock_entry)
+	_clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry)
 	with _run_as_system_user("Administrator"):
 		stock_entry.submit()
 
@@ -1296,19 +1297,14 @@ def create_stock_transfer(
 			item_data["item_code"], source_warehouse
 		)
 
-		# ERPNext v15 auto-creates outward serial/batch bundles for Material Issue.
-		# Supplying legacy batch fields in that path causes duplicate-bundle validation,
-		# so only resolve / send batch_no for non-issue transfers.
-		batch_no = None if is_intercompany else item_data.get("batch_no")
-		if item.has_batch_no and not batch_no and not is_intercompany:
-			# Auto-select oldest batch with sufficient stock
-			oldest_batch = frappe.db.get_value(
-				"Batch",
-				{"item": item_data["item_code"], "batch_qty": [">", 0]},
-				"name",
-				order_by="creation asc",
-			)
-			batch_no = oldest_batch
+		# ERPNext v15 uses Serial and Batch Bundle for all batch tracking.
+		# Passing legacy `batch_no` on the item row causes ERPNext to auto-create
+		# a bundle during insert.  If the transaction then fails (validation,
+		# timeout, retry) the orphaned bundle blocks all subsequent attempts with
+		# "Serial and Batch Bundle … has already created".
+		# Fix: never set batch_no — let ERPNext handle batch selection via its
+		# own bundle mechanism during insert/submit.
+		batch_no = None
 
 		# Bug fix B9-001: Set material_request and material_request_item properly
 		mr_item_ref = item_data.get("mr_item_name")
