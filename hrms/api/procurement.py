@@ -6335,12 +6335,10 @@ def search_items(query="", category="", limit=20):
 
 
 @frappe.whitelist()
-def update_po_item_price(po_name, item_idx, new_price, reason):
+def update_po_item_price(po_name, new_price, reason, item_idx=None, item_name=None):
     """Update a PO item's unit price with mandatory reason. Triggers CPO approval.
 
-    - Price field is read-only by default on the frontend
-    - User clicks "Edit Price" → enters new price + reason
-    - Any price edit sets price_override=1 which forces Mae's approval
+    Accepts either item_idx (row index) or item_name (child table row name) to identify the item.
     """
     from hrms.utils.sentry import set_backend_observability_context
 
@@ -6357,8 +6355,6 @@ def update_po_item_price(po_name, item_idx, new_price, reason):
     if new_price <= 0:
         frappe.throw(_("Price must be greater than zero"))
 
-    item_idx = cint(item_idx)
-
     po = frappe.get_doc("BEI Purchase Order", po_name)
 
     # Block edits on final-status POs
@@ -6367,12 +6363,23 @@ def update_po_item_price(po_name, item_idx, new_price, reason):
     if po_status in final_statuses or po.docstatus == 2:
         frappe.throw(_("Cannot edit price on a {0} Purchase Order").format(po_status))
 
-    # Find the item row by idx
+    # Find the item row by name (preferred) or idx (fallback)
     target_item = None
-    for item in po.items:
-        if item.idx == item_idx:
-            target_item = item
-            break
+    if item_name:
+        for item in po.items:
+            if item.name == item_name:
+                target_item = item
+                break
+    if not target_item and item_idx:
+        item_idx = cint(item_idx)
+        for item in po.items:
+            if item.idx == item_idx:
+                target_item = item
+                break
+    if not target_item and po.items:
+        # Last resort: if only one item, use it
+        if len(po.items) == 1:
+            target_item = po.items[0]
 
     if not target_item:
         frappe.throw(_("Item row {0} not found in PO {1}").format(item_idx, po_name))
