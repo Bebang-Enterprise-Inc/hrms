@@ -6316,7 +6316,7 @@ def search_items(query="", category="", limit=20):
         "Item",
         filters=filters,
         or_filters=or_filters if query else None,
-        fields=["name", "item_code", "item_name", "stock_uom", "item_group", "standard_rate"],
+        fields=["name", "item_code", "item_name", "description", "stock_uom", "item_group", "standard_rate"],
         order_by="item_name asc",
         limit_page_length=limit,
     )
@@ -6325,6 +6325,7 @@ def search_items(query="", category="", limit=20):
         {
             "item_code": item.name,
             "item_name": item.item_name,
+            "description": item.description or "",
             "uom": item.stock_uom,
             "item_group": item.item_group,
             "standard_rate": flt(item.standard_rate, 2),
