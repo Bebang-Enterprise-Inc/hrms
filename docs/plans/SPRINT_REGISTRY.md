@@ -122,8 +122,10 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S119` | Sprint 119 | `s119-payroll-compensation-ux-polish` | BEI-Tasks#245 | DEPLOYED 2026-03-25 — UX polish: meta.className DataTable, EmployeeSearchSelector wiring, responsive columns, tab badges, right-aligned salary, date formatting, mobile overflow fix. 10 units. | `docs/plans/2026-03-25-sprint-119-payroll-compensation-ux-polish.md` |
 
+| `S120` | Sprint 120 | `s120-item-master-price-sync` | — | GO — Item Master cleanup: import 35 missing items from Compliance App, bulk price import (252 items), disable 63 stale items, PR form item autocomplete, PO inline price editing. 38 units. | `docs/plans/2026-03-25-sprint-120-item-master-price-sync-cleanup.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S120`.
+1. Next canonical sprint ID to assign: `S121`.
 2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
