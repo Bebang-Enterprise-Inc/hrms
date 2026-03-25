@@ -1337,12 +1337,38 @@ def create_stock_transfer(
 		frappe.throw(_("No items to transfer"))
 
 	_enable_role_gated_write(se)
-	se.insert(ignore_permissions=True)
-	se = frappe.get_doc("Stock Entry", se.name)
-	_enable_role_gated_write(se)
-	_clear_legacy_serial_batch_fields_after_auto_bundle(se)
-	with _run_as_system_user("Administrator"):
-		se.submit()
+	try:
+		se.insert(ignore_permissions=True)
+		se = frappe.get_doc("Stock Entry", se.name)
+		_enable_role_gated_write(se)
+		_clear_legacy_serial_batch_fields_after_auto_bundle(se)
+		with _run_as_system_user("Administrator"):
+			se.submit()
+	except frappe.ValidationError as e:
+		import re
+
+		raw_msg = str(e)
+		# Strip HTML from Frappe validation messages for clean API response
+		plain_msg = re.sub(r"<[^>]+>", "", raw_msg).strip()
+		plain_msg = re.sub(r"\s+", " ", plain_msg)
+		# Detect insufficient stock pattern
+		stock_match = re.search(
+			r"(\d+(?:\.\d+)?)\s*units?\s+of\s+(?:Item\s+\w+:\s*)?(.+?)\s+needed\s+in\s+(?:Warehouse\s+)?(.+?)\s+to\s+complete",
+			plain_msg,
+			re.IGNORECASE,
+		)
+		if stock_match:
+			qty, item_name, wh = stock_match.group(1), stock_match.group(2).strip(), stock_match.group(3).strip()
+			short_wh = re.sub(r"\s*-\s*(Bebang Enterprise Inc\.|BKI)\s*$", "", wh).strip()
+			frappe.throw(
+				_(
+					"Not enough stock: {0} needs {1} units in {2}, but there isn't enough. "
+					"Please check stock levels or do a stock receipt first."
+				).format(item_name, qty, short_wh),
+				title=_("Insufficient Stock"),
+			)
+		# Re-raise with HTML stripped
+		frappe.throw(_(plain_msg), title=_("Transfer Failed"))
 
 	return {
 		"success": True,
