@@ -72,7 +72,7 @@ The store inventory shadow sync reads Google Sheets from 46 stores (tab "3. INVE
 |------|------|------|-------------|-------|
 | A1 | FIX | `hrms/utils/store_inventory_shadow_sync.py` | In `_resolve_current_qty()` (line 520-576): Remove the `historical_end` fallback path (lines 543-564). When ENCODE and TOTAL are both None, skip directly to WHOLE/LOOSE check, then to `blank_zero_policy`. Replace `historical_end` with a new classification `historical_end_skipped` that logs the item as an exception but does NOT return a qty. **HARD BLOCKER:** Do NOT use daily BEG/IN/OUT/END values as stock quantities — they are daily movement records, not current on-hand. | 2 |
 | A2 | FIX | `hrms/utils/store_inventory_shadow_sync.py` | Add a log warning when historical_end is skipped: `frappe.logger().warning(f"Skipping {code} at {store_code}: ENCODE and TOTAL empty, historical END values are unreliable")`. This helps identify which items/stores need ENCODE column updates. | 1 |
-| A3 | FIX | `hrms/services/sheets_receiver/config.py` | Fix Shaw BLVD: either remove `"SHAW"` from `INVENTORY_SUMMARY_WAREHOUSE_MAP` (if the warehouse is permanently closed) or re-enable the warehouse in Frappe (if still active). **Decision needed from Sam.** | 1 |
+| A3 | FIX | `hrms/services/sheets_receiver/transforms.py` | Fix Shaw BLVD: Change `"SHAW": "Shaw BLVD"` to `"SHAW": "Shaw BLVD - BKI"` in `INVENTORY_SUMMARY_WAREHOUSE_MAP` (line 21). The store warehouse `Shaw BLVD - Bebang Enterprise Inc.` is correctly disabled. The BKI warehouse `Shaw BLVD - BKI` is the active warehouse that should receive Ian's inventory data. **Decision confirmed by Sam (2026-03-25).** | 1 |
 
 ### Phase B: Audit Current Data (5 units)
 
