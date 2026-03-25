@@ -6285,3 +6285,137 @@ def get_uom_list():
 
     uoms = frappe.get_all("UOM", fields=["name"], order_by="name")
     return [{"value": u.name, "label": u.name} for u in uoms]
+
+
+@frappe.whitelist()
+def search_items(query="", category="", limit=20):
+    """Search Item master by item_code or item_name for procurement dropdowns.
+
+    Returns active (non-disabled) items matching the query with their prices.
+    Searches both item_code and item_name so users can type "SAGO" and find FG009.
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+
+    set_backend_observability_context(module="procurement", action="search_items")
+
+    query = (query or "").strip()
+    limit = min(cint(limit) or 20, 50)
+
+    filters = {"disabled": 0}
+    if category:
+        filters["item_group"] = category
+
+    or_filters = {}
+    if query:
+        or_filters = {
+            "item_code": ["like", f"%{query}%"],
+            "item_name": ["like", f"%{query}%"],
+        }
+
+    items = frappe.get_all(
+        "Item",
+        filters=filters,
+        or_filters=or_filters if query else None,
+        fields=["name", "item_code", "item_name", "stock_uom", "item_group", "standard_rate"],
+        order_by="item_name asc",
+        limit_page_length=limit,
+    )
+
+    return [
+        {
+            "item_code": item.name,
+            "item_name": item.item_name,
+            "uom": item.stock_uom,
+            "item_group": item.item_group,
+            "standard_rate": flt(item.standard_rate, 2),
+        }
+        for item in items
+    ]
+
+
+@frappe.whitelist()
+def update_po_item_price(po_name, item_idx, new_price, reason):
+    """Update a PO item's unit price with mandatory reason. Triggers CPO approval.
+
+    - Price field is read-only by default on the frontend
+    - User clicks "Edit Price" → enters new price + reason
+    - Any price edit sets price_override=1 which forces Mae's approval
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+
+    set_backend_observability_context(
+        module="procurement",
+        action="update_po_item_price",
+        mutation_type="update",
+    )
+
+    if not po_name or not reason or not reason.strip():
+        frappe.throw(_("Reason for price change is required"))
+
+    new_price = flt(new_price, 2)
+    if new_price <= 0:
+        frappe.throw(_("Price must be greater than zero"))
+
+    item_idx = cint(item_idx)
+
+    po = frappe.get_doc("BEI Purchase Order", po_name)
+
+    # Block edits on final-status POs
+    final_statuses = ("Approved", "Sent to Supplier", "Fully Received", "Cancelled")
+    if po.custom_approval_status in final_statuses or po.docstatus == 2:
+        frappe.throw(_("Cannot edit price on a {0} Purchase Order").format(po.custom_approval_status))
+
+    # Find the item row by idx
+    target_item = None
+    for item in po.items:
+        if item.idx == item_idx:
+            target_item = item
+            break
+
+    if not target_item:
+        frappe.throw(_("Item row {0} not found in PO {1}").format(item_idx, po_name))
+
+    old_price = flt(target_item.rate, 2)
+    target_item.rate = new_price
+    target_item.amount = flt(new_price * flt(target_item.qty), 2)
+
+    # Recalculate PO totals
+    po.total = sum(flt(item.amount) for item in po.items)
+    po.grand_total = po.total
+
+    # Log the price change
+    change_log = {
+        "item_code": target_item.item_code,
+        "item_idx": item_idx,
+        "old_price": old_price,
+        "new_price": new_price,
+        "reason": reason.strip(),
+        "changed_by": frappe.session.user,
+        "changed_at": frappe.utils.now(),
+    }
+
+    # Store price override flag and change log
+    if hasattr(po, "custom_price_override"):
+        po.custom_price_override = 1
+    if hasattr(po, "custom_price_change_log"):
+        import json as _json
+
+        existing_log = []
+        if po.custom_price_change_log:
+            try:
+                existing_log = _json.loads(po.custom_price_change_log)
+            except (ValueError, TypeError):
+                existing_log = []
+        existing_log.append(change_log)
+        po.custom_price_change_log = _json.dumps(existing_log)
+
+    po.save(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "old_price": old_price,
+        "new_price": new_price,
+        "new_total": flt(po.grand_total, 2),
+        "price_override": 1,
+        "change_log": change_log,
+    }
