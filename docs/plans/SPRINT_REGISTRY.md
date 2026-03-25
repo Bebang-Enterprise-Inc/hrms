@@ -124,8 +124,10 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S120` | Sprint 120 | `s120-item-master-price-sync` | — | GO — Item Master cleanup: import 35 missing items from Compliance App, bulk price import (252 items), disable 63 stale items, PR form item autocomplete, PO inline price editing. 38 units. | `docs/plans/2026-03-25-sprint-120-item-master-price-sync-cleanup.md` |
 
+| `S121` | Sprint 121 | `s121-store-inventory-sync-fix` | — | GO — Fix store inventory sync: remove historical_end fallback in _resolve_current_qty(), force re-sync all 46 stores, fix Shaw BLVD. FG001-A Festival Mall 21,663→correct. | `docs/plans/2026-03-25-sprint-121-store-inventory-sync-fix.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S121`.
+1. Next canonical sprint ID to assign: `S122`.
 2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
