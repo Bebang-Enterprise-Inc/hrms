@@ -24,6 +24,10 @@ The procurement workflow is broken because:
 **Reported by:** luwi@bebang.ph (2026-03-25)
 **Root cause analysis:** `tmp/item_master_full_analysis.csv` (463 rows with full status)
 
+### Screenshots (Evidence from This Session)
+- `F:\Downloads\image (100).png` — Luwi's PO-2026-03023 detail page showing: ₱0.00 grand total, stray "0" values, no edit button, "Approval Status0" display bug
+- `F:\Downloads\image (98).png` and `image (99).png` — Jay's warehouse transfer error (separate issue, already fixed)
+
 ### What Luwi Experienced (User Story)
 
 1. Luwi (procurement staff) created **PR-2026-03022** for 1 sack of SAGO via my.bebang.ph.
