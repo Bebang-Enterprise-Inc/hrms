@@ -6380,6 +6380,9 @@ def update_po_item_price(po_name, item_idx, new_price, reason):
     target_item.unit_cost = new_price
     target_item.amount = flt(new_price * flt(target_item.qty), 2)
     target_item.price_override_reason = reason.strip()
+    target_item.price_variance_override = reason.strip()
+    target_item.price_variance_override_by = frappe.session.user
+    target_item.price_variance_override_date = frappe.utils.now_datetime()
 
     # Recalculate PO totals
     po.total = sum(flt(item.amount) for item in po.items)
