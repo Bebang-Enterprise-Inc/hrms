@@ -56,11 +56,78 @@ The store inventory shadow sync reads Google Sheets from 46 stores (tab "3. INVE
 2. **Force re-sync** will temporarily increase load (46 stores × ~100 items = ~4,600 SR rows in one batch). Spread across 10-minute intervals, this is manageable.
 3. **Shaw BLVD disabled warehouse** for Ian's sync is a separate fix — disable the SHAW column in the warehouse map or re-enable the warehouse.
 
+### How the store inventory sheet layout works (CRITICAL for cold-start agent)
+
+Each store has a Google Sheet with a tab called `3. INVENTORY`. The layout:
+
+```
+Row 6 (headers): | CODE | ITEMS | DESCRIPTION | UOM | Wt. | Whole | Loose | Total | ENCODE | | Dec 29 BEG | IN | OUT | END | Dec 30 BEG | IN | OUT | END | ...
+Row 7 (sub-hdr): |      |       |             |     |     |       |       |       |        | |     BEG     | IN | OUT | END |     BEG    | IN | OUT | END | ...
+```
+
+**Column meanings:**
+- **Wt.** — weight/package info (e.g., "12" = 12pcs per pack). This is NOT a stock quantity.
+- **Whole** — whole units on hand (rarely filled)
+- **Loose** — loose units on hand (rarely filled)
+- **Total** — computed total (formula: Whole × conversion + Loose). Often empty if Whole/Loose empty.
+- **ENCODE** — manually entered current on-hand count. **This is the intended sync source.** But many stores leave it empty.
+- **Daily BEG/IN/OUT/END columns** — daily movement tracking. BEG = beginning of day, IN = received, OUT = issued, END = BEG + IN - OUT. These are per-day snapshots, NOT current stock.
+
+**The priority order in `_resolve_current_qty()` (line 520-576):**
+1. ENCODE → if present, use it (most trusted)
+2. TOTAL → if present, use it
+3. **historical_end → THE BUG — picks the most recent daily END value before run_date**
+4. WHOLE/LOOSE → flags as needs_conversion_rule (skipped)
+5. blank_zero_policy → returns 0
+
+**The fix removes step 3.** When ENCODE and TOTAL are empty, skip straight to WHOLE/LOOSE check, then blank_zero_policy.
+
+### How the force re-sync works
+
+The sync system uses checksums to skip stores where data hasn't changed. `force=True` bypasses this check and re-syncs all stores regardless of checksum. The command:
+
+```bash
+docker exec $(docker ps -q -f name=frappe_backend) bench --site hq.bebang.ph execute \
+  hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync
+```
+
+To force: either pass `force=True` to `run_store_inventory_shadow_sync()` or delete the runtime state file:
+```
+/home/frappe/frappe-bench/sites/hrms.bebang.ph/private/files/store_inventory_shadow_sync_state.json
+```
+
+### How Ian's warehouse sync works (different code path)
+
+Ian's sync goes through the **sheets-receiver** container (NOT Frappe scheduler):
+- Source: Google Sheet `19Hm25vaj9gD8p6z_M6-4CPWvcXaPzAeOFKlUZ298V4s` tab "SUMMARY 2026"
+- Transform: `hrms/services/sheets_receiver/transforms.py` → `_transform_inventory_summary_matrix()`
+- Reads qty directly from warehouse columns (3MD, JENTEC, RCS, PINNACLE, SHAW)
+- No ENCODE/TOTAL/END fallback — just the cell value
+- Endpoint: `hrms.api.erp_sync.sync_inventory` → `_sync_inventory_rows()`
+- Same Stock Reconciliation code as store sync, different data source
+
+The Shaw BLVD fix (A3) is in this code path, not the store sync code path.
+
+### How to verify the fix worked
+
+After force re-sync, query Frappe:
+```bash
+# Via Frappe API
+curl "https://hq.bebang.ph/api/resource/Bin?filters=[[\"item_code\",\"=\",\"FG001-A\"],[\"warehouse\",\"like\",\"%Festival%\"]]&fields=[\"actual_qty\",\"modified\"]" \
+  -H "Authorization: token KEY:SECRET"
+
+# Expected: actual_qty should be 0 (ENCODE is empty) or a small number, NOT 21,663
+```
+
 ### Known limitations
 
 - Can't force store managers to fill ENCODE column — ops team needs to communicate this requirement
 - Force re-sync may hit Frappe rate limits — monitor during execution
 - Python Playwright broken on this machine — use Node.js for any browser testing
+- The store shadow sync runs inside the **Frappe scheduler container** (`frappe_scheduler`), NOT in `sheets-receiver`. Don't look for sync logs in sheets-receiver for store data.
+- The Frappe scheduled job runs as `enqueue_scheduled_store_inventory_shadow_sync` (hooks.py line 380), triggered every 10 minutes
+- Runtime state file is at: `/home/frappe/frappe-bench/sites/hrms.bebang.ph/private/files/store_inventory_shadow_sync_state.json`
+- Store sheet registry is at: `hrms/fixtures/store_inventory_shadow_sync/store_inventory_shadow_sync_registry.csv` (46 stores)
 
 ---
 
@@ -135,7 +202,7 @@ output/l3/S121/state_verification.json
 - [ ] Does the `encode` path still work when ENCODE has a value?
 - [ ] Does the `total` path still work when TOTAL has a value?
 - [ ] Is Ian's SUMMARY 2026 sync unchanged (no regression)?
-- [ ] Does Shaw BLVD handling match Sam's decision (remove vs re-enable)?
+- [ ] Does Shaw BLVD map to `"Shaw BLVD - BKI"` (NOT `"Shaw BLVD"`)? (Sam confirmed 2026-03-25)
 - [ ] Were ALL 46 stores force re-synced after deploy?
 - [ ] Does FG001-A at Festival Mall show a reasonable qty (not 21,663)?
 
@@ -154,8 +221,8 @@ output/l3/S121/state_verification.json
 
 - **stop_only_for:**
   - Missing credentials/access to production
-  - Shaw BLVD decision (remove vs re-enable) — needs Sam's input
   - Force re-sync causes Frappe errors that can't be fixed programmatically
+  - (Shaw BLVD decision RESOLVED: map to "Shaw BLVD - BKI", confirmed by Sam 2026-03-25)
 
 - **continue_without_pause_through:**
   - code fix → audit → deploy → force re-sync → verify → closeout
@@ -163,7 +230,7 @@ output/l3/S121/state_verification.json
 - **blocker_policy:**
   - programmatic → fix and continue
   - Frappe SR submission error during re-sync → log, skip item, continue
-  - Shaw BLVD → pause for Sam's decision
+  - Shaw BLVD → RESOLVED (map to BKI, confirmed 2026-03-25)
   - business-data → pause
 
 - **signoff_authority:** single-owner (Sam Karazi, CEO)
