@@ -118,9 +118,9 @@ class BEIPurchaseRequisition(Document):
 
     @frappe.whitelist()
     def convert_to_po(self, supplier_code):
-        """Convert approved PR to Purchase Order."""
-        if self.status != "Approved":
-            frappe.throw(_("Only Approved PRs can be converted to PO"))
+        """Convert PR to Purchase Order. Approval gate is at PO level (Mae), not PR level."""
+        if self.status in ("Cancelled", "Converted"):
+            frappe.throw(_("Cannot convert a {0} PR to PO").format(self.status))
 
         # Check supplier exists
         if not frappe.db.exists("BEI Supplier", supplier_code):
