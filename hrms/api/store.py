@@ -1480,11 +1480,22 @@ def _round_suggested_qty(qty, uom):
 # S128/B2: Filter non-orderable warehouses from store picker.
 _NON_ORDERABLE_WAREHOUSE_TYPES = frozenset({"3PL", "Commissary", "Cold Storage", "Transit"})
 
+# S133: Name-based fallback for warehouses that don't have warehouse_type set yet.
+_NON_ORDERABLE_NAME_PATTERNS = (
+	"Jentec", "Pinnacle", "Royal Cold", "RCS", "3MD",
+	"Commissary", "Kitchen", "TEST-COMMISSARY",
+	"Stores - BEI", "Stores - BK",
+)
+
 
 def _is_orderable_store(warehouse_dict):
 	"""Return True if the warehouse is a real store eligible for ordering."""
 	wt = (warehouse_dict.get("warehouse_type") or "").strip()
 	if wt and wt in _NON_ORDERABLE_WAREHOUSE_TYPES:
+		return False
+	# S133: Fallback — filter by name when warehouse_type is not set.
+	wh_name = warehouse_dict.get("warehouse_name") or warehouse_dict.get("name") or ""
+	if not wt and any(pat in wh_name for pat in _NON_ORDERABLE_NAME_PATTERNS):
 		return False
 	return True
 
@@ -1796,15 +1807,21 @@ def get_user_store(surface: str | None = None):
 			for store_row in schedule_rows:
 				append_store(store_row)
 		elif not stores:
+			# S133: For System Manager, return only actual stores (not 3PLs, groups, commissary).
+			# Use parent_warehouse filter to get stores under "Stores - BEI" or "Stores - BK".
 			store_rows = frappe.get_all(
 				"Warehouse",
-				filters={"is_group": 0, "disabled": 0},
+				filters={
+					"is_group": 0,
+					"disabled": 0,
+					"parent_warehouse": ["like", "Stores%"],
+				},
 				fields=["name", "warehouse_name", "warehouse_type"],
 				order_by="warehouse_name",
-				limit=50,
+				limit=100,
 			)
 			for store_row in store_rows:
-				# S128/B2: Skip non-orderable warehouses.
+				# S128/B2 + S133: Skip non-orderable warehouses.
 				if not _is_orderable_store(store_row):
 					continue
 				append_store(store_row)
