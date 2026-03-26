@@ -528,9 +528,11 @@ def get_or_create_batch(
 	return batch.name
 
 
-def _build_production_remarks(batch_no: str | None = None, remarks: str | None = None) -> str:
+def _build_production_remarks(batch_no: str | None = None, remarks: str | None = None, shift: str | None = None) -> str:
 	"""Stamp production output rows with a stable prefix for downstream QA lookup."""
 	base = f"Production output | Batch: {(batch_no or 'No batch').strip() if batch_no else 'No batch'}"
+	if shift and str(shift).strip():
+		base = f"{base} | SHIFT: {str(shift).strip().upper()}"
 	if remarks and str(remarks).strip():
 		return f"{base} | Notes: {str(remarks).strip()}"
 	return base
@@ -543,6 +545,7 @@ def submit_production_output(
 	remarks: str | None = None,
 	production_date: str | None = None,
 	override_approved: bool = False,
+	shift: str | None = None,
 ) -> dict[str, Any]:
 	"""
 	Record production batch output.
@@ -552,6 +555,7 @@ def submit_production_output(
 	    items: JSON array of {item_code, qty, uom}
 	    batch_no: Optional batch reference (will auto-create if doesn't exist)
 	    remarks: Optional production notes
+	    shift: Optional shift code (am/pm) — appended to remarks as SHIFT: AM/PM
 	"""
 	check_scm_permission(SCM_COMMISSARY_ROLES, "record commissary production output")
 
@@ -651,7 +655,7 @@ def submit_production_output(
 			se.posting_date = getdate(production_date) if production_date else today()
 			se.posting_time = frappe.utils.nowtime()
 			se.to_warehouse = commissary_warehouse
-			se.remarks = _build_production_remarks(batch_no=batch_no, remarks=remarks)
+			se.remarks = _build_production_remarks(batch_no=batch_no, remarks=remarks, shift=shift)
 
 			if bom:
 				# Use Manufacture type - auto-deducts RM from BOM
@@ -744,14 +748,132 @@ def submit_production_output(
 	# G-051: FEFO warnings — check if older batches were skipped
 	fefo_warnings = _check_fefo_warnings(se, commissary_warehouse)
 
+	# Auto-create QC inspection for all FG production (commissary workflow requires QC for every batch)
+	qc_name = None
+	try:
+		from hrms.api.commissary_quality import create_quality_inspection as _create_qc
+		set_backend_observability_context(
+			module="commissary",
+			action="auto_create_qc",
+			mutation_type="create",
+			extras={"se_name": se.name, "item_code": first_item_code},
+		)
+		qc_result = _create_qc(
+			stock_entry_name=se.name,
+			item_code=first_item_code,
+			status="Pending",
+		)
+		if qc_result.get("success"):
+			qc_name = qc_result.get("data", {}).get("name")
+	except Exception as qc_exc:
+		# QC creation failure must NOT roll back the production SE
+		frappe.log_error(
+			title=f"Auto-QC failed for {se.name}",
+			message=str(qc_exc),
+		)
+
 	result = {
 		"success": True,
-		"data": {"name": se.name, "total_qty": sum(i.qty for i in se.items), "items_count": len(se.items)},
-		"message": f"Production recorded: {se.name}",
+		"data": {
+			"name": se.name,
+			"total_qty": sum(i.qty for i in se.items),
+			"items_count": len(se.items),
+			"qc_name": qc_name,
+		},
+		"message": f"Production recorded: {se.name}" + (f" (QC: {qc_name})" if qc_name else ""),
 	}
 	if fefo_warnings:
 		result["fefo_warnings"] = fefo_warnings
 	return result
+
+
+@frappe.whitelist()
+def submit_production_batch(
+	items: str | list[dict[str, Any]],
+	shift: str | None = None,
+) -> dict[str, Any]:
+	"""
+	Batch-submit multiple production items in one call.
+	Each item creates a separate Stock Entry (Frappe BOM auto-deduction requires single-item SEs).
+	Items are processed SEQUENTIALLY to avoid Frappe deadlocks on concurrent Stock Entry submissions.
+
+	Args:
+	    items: JSON array of {item_code, qty, notes?}
+	    shift: Optional shift code (am/pm) — appended to remarks
+	"""
+	check_scm_permission(SCM_COMMISSARY_ROLES, "batch record commissary production output")
+
+	if isinstance(items, str):
+		items = json.loads(items)
+
+	set_backend_observability_context(
+		module="commissary",
+		action="submit_production_batch",
+		route_action="submit_production_batch",
+		mutation_type="create",
+		endpoint_or_job="hrms.api.commissary_dashboard.submit_production_batch",
+		phase="mutation",
+		extras={
+			"item_count": len(items) if isinstance(items, list) else None,
+			"shift": shift,
+		},
+	)
+
+	if not items:
+		frappe.throw(_("No items to record"))
+
+	results = []
+	for entry in items:
+		item_code = entry.get("item_code")
+		qty = flt(entry.get("qty"))
+		notes = entry.get("notes")
+
+		if not item_code or qty <= 0:
+			results.append({
+				"item_code": item_code or "unknown",
+				"status": "error",
+				"se_name": None,
+				"error": "Missing item_code or invalid qty",
+			})
+			continue
+
+		try:
+			# Build items array for submit_production_output (expects [{item_code, qty, uom}])
+			single_items = [{"item_code": item_code, "qty": qty, "uom": entry.get("uom") or "Nos"}]
+			result = submit_production_output(
+				items=single_items,
+				remarks=notes,
+				shift=shift,
+			)
+			results.append({
+				"item_code": item_code,
+				"status": "success",
+				"se_name": result.get("data", {}).get("name"),
+				"error": None,
+			})
+		except Exception as e:
+			frappe.log_error(
+				title=f"Batch production failed for {item_code}",
+				message=str(e),
+			)
+			results.append({
+				"item_code": item_code,
+				"status": "error",
+				"se_name": None,
+				"error": str(e),
+			})
+
+	success_count = sum(1 for r in results if r["status"] == "success")
+	return {
+		"success": success_count > 0,
+		"data": {
+			"results": results,
+			"total": len(results),
+			"success_count": success_count,
+			"error_count": len(results) - success_count,
+		},
+		"message": f"{success_count}/{len(results)} items recorded successfully",
+	}
 
 
 def _check_fefo_warnings(stock_entry: Any, warehouse: str | None) -> list[dict[str, str]]:
