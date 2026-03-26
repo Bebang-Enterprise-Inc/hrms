@@ -132,9 +132,15 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S124` | Sprint 124 | `s124-commissary-inventory-routing-fix` | #355 | GO — Fix erp_sync.py Shaw BLVD alias map routing all Shaw variants to BEI instead of BKI commissary. Code changes applied, needs deploy + re-sync + L3 verify. 14 units. | `docs/plans/2026-03-26-sprint-124-commissary-inventory-routing-fix.md` |
 
+| `S125` | Sprint 125 | `s125-s122-defect-fixes` | BEI-Tasks #254 | PR_CREATED — S122 defect fixes: F1 critical status fix, F2 banner expiry, F5 test cleanup done. PR #254 ready for merge. | `docs/plans/2026-03-26-sprint-125-s122-defect-fixes.md` |
+
+| `S126` | Sprint 126 | `s126-commissary-ux-improvements` | — | GO — Commissary UX: fix 3 display bugs, shift auto-tag, bulk production log (multi-item), bulk work orders, bulk expiry write-off, auto-QC after production, one-click RM reorder, workweek filter. 31 units. | `docs/plans/2026-03-26-sprint-126-commissary-ux-improvements.md` |
+
+| `S127` | Sprint 127 | `s127-docuseal-esignature` | — | PLANNED — Replace Documenso with DocuSeal: cleanup S123 Documenso artifacts (merged code, Vercel project, GitHub fork, Supabase schema), deploy DocuSeal Docker on EC2, update Frappe webhook API, update bei-tasks nav link. | `docs/plans/2026-03-26-sprint-127-docuseal-esignature.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S125`.
-2. Reserve branch name: `s125-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S128`.
+2. Reserve branch name: `s127-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
