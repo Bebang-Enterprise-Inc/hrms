@@ -1,16 +1,16 @@
 ---
 canonical_sprint_id: S122
 display: Sprint 122
-status: GO
+status: PR_CREATED
 branch: s122-store-inventory-dashboard
 lane: single
 created_date: 2026-03-25
 completed_date:
 deployed_at:
-backend_pr:
-frontend_pr:
+backend_pr: 353
+frontend_pr: 249
 l3_result:
-execution_summary:
+execution_summary: Frontend PR #249 (bei-tasks), Backend PR #353 (hrms). 7 new page components + composite hook + order history API.
 depends_on:
 ---
 

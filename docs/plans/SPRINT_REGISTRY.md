@@ -126,10 +126,12 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S121` | Sprint 121 | `s121-store-inventory-sync-fix` | PR #349 | COMPLETED 2026-03-25 — Removed historical_end fallback, historical_end_skipped guard, Shaw BLVD→BKI, Sentry DM-7. 46/46 stores re-synced, 0 failures. L3 10/10 PASS. Fact-check 10/10 SUPPORTED. | `docs/plans/2026-03-25-sprint-121-store-inventory-sync-fix.md` |
 
-| `S122` | Sprint 122 | `s122-store-inventory-dashboard` | — | GO — Store inventory dashboard for store-ops: My Stock view, Order Planner with demand projections, mobile-first card layout. | `docs/plans/2026-03-25-sprint-122-store-inventory-dashboard.md` |
+| `S122` | Sprint 122 | `s122-store-inventory-dashboard` | BEI-Tasks #249, hrms #353 | PR_CREATED — Store inventory dashboard. Frontend PR #249, Backend PR #353. | `docs/plans/2026-03-25-sprint-122-store-inventory-dashboard.md` |
+
+| `S123` | Sprint 123 | `s123-documenso-esignature` | — | PLANNED — Documenso e-signature integration: fork, Vercel deploy, Supabase DB, embedded signing in my.bebang.ph, Frappe webhook bridge. | `docs/plans/2026-03-26-sprint-123-documenso-esignature-integration.md` |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S123`.
+1. Next canonical sprint ID to assign: `S124`.
 2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**

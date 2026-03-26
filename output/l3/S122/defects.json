@@ -1,0 +1,46 @@
+[
+  {
+    "id": "D1",
+    "severity": "CRITICAL",
+    "sprint": "S122",
+    "component": "hrms/utils/scm_roles.py",
+    "title": "Store Staff/Supervisor blocked from warehouse_stock API",
+    "description": "SCM_INVENTORY_ROLES does not include Store Staff or Store Supervisor. The useWarehouseStock hook returns 403 for store-level users, making the entire inventory dashboard show 'Could not load inventory' error.",
+    "fix_pr": "https://github.com/Bebang-Enterprise-Inc/hrms/pull/354",
+    "status": "FIX_PR_CREATED",
+    "is_s122_bug": true
+  },
+  {
+    "id": "D2",
+    "severity": "HIGH",
+    "sprint": "S122",
+    "component": "bei-tasks/_components/LastOrderPanel.tsx",
+    "title": "LastOrderPanel overlay blocks clicks after opening — no Escape key handler",
+    "description": "After opening the Last Order panel, pressing Escape does not close it. The overlay remains and blocks pointer events on tabs. Backdrop onClick works but only if clicking the semi-transparent area.",
+    "fix_pr": "https://github.com/Bebang-Enterprise-Inc/BEI-Tasks/pull/250",
+    "status": "FIX_PR_CREATED",
+    "is_s122_bug": true
+  },
+  {
+    "id": "D3",
+    "severity": "MEDIUM",
+    "sprint": "S122",
+    "component": "hrms/api/store.py",
+    "title": "get_store_order_history returns 'Unknown action' — Frappe backend not rebuilt",
+    "description": "Order history API merged in PR #353 but Frappe Docker container not rebuilt. Frontend correctly routes the action. Requires Docker rebuild to deploy.",
+    "fix_pr": null,
+    "status": "AWAITING_FRAPPE_DEPLOY",
+    "is_s122_bug": false
+  },
+  {
+    "id": "D4",
+    "severity": "LOW",
+    "sprint": "N/A",
+    "component": "bei-tasks (auth)",
+    "title": "test.auditor@bebang.ph cannot login to /dashboard",
+    "description": "External Auditor role does not redirect to /dashboard after login. Not a bug — auditors have different landing page.",
+    "fix_pr": null,
+    "status": "NOT_A_BUG",
+    "is_s122_bug": false
+  }
+]

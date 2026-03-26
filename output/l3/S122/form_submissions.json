@@ -1,0 +1,25 @@
+[
+  {
+    "form": "error_retry",
+    "inputs": {},
+    "submit_action": "Click Retry",
+    "response": "Reload triggered",
+    "screenshot_after": "output/l3/S122/screenshots/01_crew_mobile.png"
+  },
+  {
+    "form": "last_order_panel",
+    "inputs": {
+      "action": "open"
+    },
+    "submit_action": "Click Last Order button",
+    "response": "Last OrderNo previous orders found",
+    "screenshot_after": "output/l3/S122/screenshots/07_last_order.png"
+  },
+  {
+    "form": "refresh",
+    "inputs": {},
+    "submit_action": "Click Refresh",
+    "response": "Data reloaded",
+    "screenshot_after": ""
+  }
+]

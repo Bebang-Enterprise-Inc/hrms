@@ -1,0 +1,37 @@
+[
+  {
+    "endpoint": "https://my.bebang.ph/api/auth/login",
+    "method": "POST",
+    "payload": "{\"usr\":\"test.crew1@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "status": 200,
+    "response_body": "null"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/auth/login",
+    "method": "POST",
+    "payload": "{\"usr\":\"test.crew1@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "status": 200,
+    "response_body": "null"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/auth/login",
+    "method": "POST",
+    "payload": "{\"usr\":\"test.crew1@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "status": 200,
+    "response_body": "null"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/auth/login",
+    "method": "POST",
+    "payload": "{\"usr\":\"test.area@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "status": 200,
+    "response_body": "null"
+  },
+  {
+    "endpoint": "https://my.bebang.ph/api/auth/login",
+    "method": "POST",
+    "payload": "{\"usr\":\"test.auditor@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "status": 401,
+    "response_body": "{\"success\":false,\"error\":\"User disabled or missing\",\"issueClass\":\"expected_auth_rejection\",\"expectedOutcome\":\"stay_on_login\",\"uiState\":\"inline_error\",\"alreadyCaptured\":false}"
+  }
+]
