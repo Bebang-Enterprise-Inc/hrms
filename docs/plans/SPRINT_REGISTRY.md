@@ -130,9 +130,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S123` | Sprint 123 | `s123-documenso-esignature` | — | PLANNED — Documenso e-signature integration: fork, Vercel deploy, Supabase DB, embedded signing in my.bebang.ph, Frappe webhook bridge. | `docs/plans/2026-03-26-sprint-123-documenso-esignature-integration.md` |
 
+| `S124` | Sprint 124 | `s124-commissary-inventory-routing-fix` | — | GO — Fix erp_sync.py Shaw BLVD alias map routing all Shaw variants to BEI instead of BKI commissary. Code changes applied, needs deploy + re-sync + L3 verify. 14 units. | `docs/plans/2026-03-26-sprint-124-commissary-inventory-routing-fix.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S124`.
-2. Reserve branch name: `s{number}-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S125`.
+2. Reserve branch name: `s125-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
