@@ -706,15 +706,21 @@ def get_wastage_history(days: int | str = 30, item_code: str | None = None) -> d
 	total_qty = sum(w.qty for w in wastage)
 	total_value = sum(w.wastage_value or 0 for w in wastage)
 
-	# Group by reason
+	# Reverse-map reason labels to codes for display
+	_reason_label_to_code = {v: k for k, v in WASTAGE_REASONS.items()}
+
+	# Group by reason and enrich each entry with reason_code + reason_label
 	by_reason = {}
 	for w in wastage:
-		reason = w.remarks.replace("WASTAGE: ", "").split(" - ")[0] if w.remarks else "Unknown"
-		if reason not in by_reason:
-			by_reason[reason] = {"count": 0, "qty": 0, "value": 0}
-		by_reason[reason]["count"] += 1
-		by_reason[reason]["qty"] += w.qty
-		by_reason[reason]["value"] += w.wastage_value or 0
+		reason_label = w.remarks.replace("WASTAGE: ", "").split(" - ")[0] if w.remarks else "Unknown"
+		reason_code = _reason_label_to_code.get(reason_label, "other")
+		w["reason_code"] = reason_code
+		w["reason_label"] = reason_label
+		if reason_label not in by_reason:
+			by_reason[reason_label] = {"count": 0, "qty": 0, "value": 0}
+		by_reason[reason_label]["count"] += 1
+		by_reason[reason_label]["qty"] += w.qty
+		by_reason[reason_label]["value"] += w.wastage_value or 0
 
 	return {
 		"success": True,
@@ -1033,18 +1039,33 @@ def get_expiring_batches(days: int | str = 7, item_group: str | None = None) -> 
 		filters += " AND i.item_group = %(item_group)s"
 		params["item_group"] = item_group
 
-	# filters is built from string constants, not user input
+	# Use SLE (not Bin) for batch-level stock — Bin tracks item-level totals which
+	# can show phantom stock for individual batches (S126 defect: 358 batches shown
+	# with stock from Bin but 0 in SLE, making write-off impossible)
 	expiring = frappe.db.sql(
-		"SELECT b.name as batch_no, b.item as item_code, i.item_name, i.item_group,"
-		" b.expiry_date, b.manufacturing_date, bin.actual_qty as available_qty, i.stock_uom,"
-		" DATEDIFF(b.expiry_date, CURDATE()) as days_to_expiry,"
-		" CASE WHEN b.expiry_date <= CURDATE() THEN 'expired'"
-		"      WHEN DATEDIFF(b.expiry_date, CURDATE()) <= 3 THEN 'critical'"
-		"      ELSE 'warning' END as urgency"
-		" FROM `tabBatch` b"
-		" JOIN `tabItem` i ON i.name = b.item"
-		" LEFT JOIN `tabBin` bin ON bin.item_code = b.item AND bin.warehouse = %(warehouse)s"
-		" " + filters + " ORDER BY b.expiry_date ASC",
+		"""
+		SELECT
+			b.name as batch_no, b.item as item_code, i.item_name, i.item_group,
+			b.expiry_date, b.manufacturing_date, i.stock_uom,
+			COALESCE(sle_sum.batch_qty, 0) as available_qty,
+			DATEDIFF(b.expiry_date, CURDATE()) as days_to_expiry,
+			CASE WHEN b.expiry_date <= CURDATE() THEN 'expired'
+			     WHEN DATEDIFF(b.expiry_date, CURDATE()) <= 3 THEN 'critical'
+			     ELSE 'warning' END as urgency
+		FROM `tabBatch` b
+		JOIN `tabItem` i ON i.name = b.item
+		LEFT JOIN (
+			SELECT batch_no, item_code, SUM(actual_qty) as batch_qty
+			FROM `tabStock Ledger Entry`
+			WHERE warehouse = %(warehouse)s AND is_cancelled = 0
+			AND IFNULL(batch_no, '') != ''
+			GROUP BY batch_no, item_code
+			HAVING batch_qty > 0
+		) sle_sum ON sle_sum.batch_no = b.name AND sle_sum.item_code = b.item
+		"""
+		+ filters.replace("AND bin.actual_qty > 0", "AND COALESCE(sle_sum.batch_qty, 0) > 0")
+		  .replace("AND bin.warehouse = %(warehouse)s", "")
+		+ " ORDER BY b.expiry_date ASC",
 		params,
 		as_dict=True,
 	)
