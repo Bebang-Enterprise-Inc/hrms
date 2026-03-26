@@ -1,0 +1,29 @@
+{
+  "scenario_id": "S126-11R",
+  "form_submitted": false,
+  "submit_method": "view_only",
+  "values_verified": [
+    {
+      "field": "qc_linked_to_se",
+      "expected": "true",
+      "actual": "false",
+      "method": "frappe.client.get_list()"
+    },
+    {
+      "field": "qc_name",
+      "expected": "QI-*",
+      "actual": "N/A",
+      "method": "frappe.client.get_list()"
+    },
+    {
+      "field": "pending_badge_on_page",
+      "expected": "visible",
+      "actual": "true",
+      "method": "isVisible()"
+    }
+  ],
+  "screenshots": [
+    "S126-11R_before.png",
+    "S126-11R_after.png"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "scenario_id": "S126-06R",
+  "form_submitted": false,
+  "submit_method": "view_only",
+  "values_verified": [
+    {
+      "field": "am_badge",
+      "expected": "maybe",
+      "actual": "true",
+      "method": "isVisible()"
+    },
+    {
+      "field": "pm_badge",
+      "expected": "visible",
+      "actual": "false",
+      "method": "isVisible()"
+    },
+    {
+      "field": "no_shift_badge",
+      "expected": "maybe",
+      "actual": "true",
+      "method": "isVisible()"
+    },
+    {
+      "field": "entry_visible",
+      "expected": "true",
+      "actual": "true",
+      "method": "textContent() includes item"
+    }
+  ],
+  "screenshots": [
+    "S126-06R_before.png",
+    "S126-06R_after.png"
+  ]
+}

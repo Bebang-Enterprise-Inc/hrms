@@ -1,0 +1,36 @@
+{
+  "scenario_id": "S126-05R",
+  "form_submitted": true,
+  "submit_method": "browser_click",
+  "submit_button_selector": "dialog button:has-text('Log Production')",
+  "submit_network_request": {
+    "method": "POST",
+    "url": "/api/commissary",
+    "status": 200,
+    "response_snippet": "{\"success\":true,\"data\":{\"item_code\":\"FG009\",\"requested_qty\":1,\"can_produce\":true,\"max_producible_qty\":100,\"bom_name\":\"BOM-FG009-001\",\"bom_yield\":1,\"shortfall\":[],\"shortfall_count\":0}}"
+  },
+  "values_verified": [
+    {
+      "field": "toast_text",
+      "expected": "recorded",
+      "actual": "Production recorded: MAT-STE-2026-00317",
+      "method": "textContent()"
+    },
+    {
+      "field": "se_name",
+      "expected": "MAT-STE-*",
+      "method": "response_json"
+    },
+    {
+      "field": "se_remarks_shift",
+      "expected": "contains SHIFT:",
+      "actual": "",
+      "method": "frappe.client.get_value()"
+    }
+  ],
+  "screenshots": [
+    "S126-05R_before.png",
+    "S126-05R_filled.png",
+    "S126-05R_after.png"
+  ]
+}

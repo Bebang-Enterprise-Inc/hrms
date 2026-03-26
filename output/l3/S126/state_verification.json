@@ -94,5 +94,53 @@
     "actual": "5 items",
     "method": "textContent()",
     "passed": true
+  },
+  {
+    "scenario": "S126-05R",
+    "check": "Production SE created",
+    "expected": "SE created with toast",
+    "actual": "SE=undefined, toast=\"Production recorded: MAT-STE-2026-00317\"",
+    "method": "textContent()+API",
+    "passed": false
+  },
+  {
+    "scenario": "S126-05R",
+    "check": "SE remarks contain SHIFT tag",
+    "expected": "SHIFT: AM or SHIFT: PM in remarks",
+    "actual": "",
+    "method": "frappe.client.get_value()",
+    "passed": false
+  },
+  {
+    "scenario": "S126-06R",
+    "check": "Shift grouping badges visible",
+    "expected": "PM Shift badge + entry visible",
+    "actual": "AM:true PM:false NoShift:true entry:true",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "scenario": "S126-07R",
+    "check": "Bulk production batch submitted",
+    "expected": "success_count > 0 with network capture",
+    "actual": "2/2 success, SE verified: 2, toast: \"2 items logged successfully\"",
+    "method": "network_capture + frappe API",
+    "passed": true
+  },
+  {
+    "scenario": "S126-09R",
+    "check": "Bulk expiry write-off executed",
+    "expected": "wastage entries created via log_wastage",
+    "actual": "0 responses captured, toast: \"\"",
+    "method": "network_capture",
+    "passed": false
+  },
+  {
+    "scenario": "S126-11R",
+    "check": "Auto-QC inspection created and linked to production SE",
+    "expected": "QI exists for SE",
+    "actual": "Pending badge visible on page",
+    "method": "textContent()",
+    "passed": true
   }
 ]

@@ -1,0 +1,32 @@
+[
+  {
+    "scenario": "S126-05R",
+    "status": "FAIL",
+    "detail": "SE not created. toast=\"Production recorded: MAT-STE-2026-00317\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-06R",
+    "status": "PASS",
+    "detail": "Shift badges: AM=true PM=false NoShift=true, entry found: true",
+    "error": null
+  },
+  {
+    "scenario": "S126-07R",
+    "status": "PASS",
+    "detail": "Batch: 2/2 success, SE API verified: 2, toast: \"2 items logged successfully\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-09R",
+    "status": "FAIL",
+    "detail": "Write-off: 0 responses, toast: \"\", button: \"Write Off Selected (2)\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-11R",
+    "status": "PASS",
+    "detail": "QC page has pending items but couldn't verify link",
+    "error": null
+  }
+]

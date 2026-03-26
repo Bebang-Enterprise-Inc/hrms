@@ -1,0 +1,32 @@
+{
+  "scenario_id": "S126-09R",
+  "form_submitted": true,
+  "submit_method": "browser_click",
+  "submit_button_selector": "button:has-text('Write Off Selected')",
+  "submit_network_request": null,
+  "values_verified": [
+    {
+      "field": "wastage_responses",
+      "expected": ">0",
+      "actual": "0",
+      "method": "network_capture"
+    },
+    {
+      "field": "toast",
+      "expected": "written off",
+      "actual": "",
+      "method": "textContent()"
+    },
+    {
+      "field": "button_text",
+      "expected": "Write Off Selected (2)",
+      "actual": "Write Off Selected (2)",
+      "method": "textContent()"
+    }
+  ],
+  "screenshots": [
+    "S126-09R_before.png",
+    "S126-09R_selected.png",
+    "S126-09R_after.png"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "scenario_id": "S126-07R",
+  "form_submitted": true,
+  "submit_method": "browser_click",
+  "submit_button_selector": "button:has-text('Submit All')",
+  "submit_network_request": {
+    "method": "POST",
+    "url": "/api/commissary",
+    "status": 200,
+    "response_snippet": "{\"success\":true,\"data\":{\"results\":[{\"item_code\":\"FG002\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00318\",\"error\":null},{\"item_code\":\"MN009\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00319\",\"error\":null}],\"total\":2,\"success_count\":2,\"error_count\":0},\"message\":\"2/2 items recorded successfully\"}"
+  },
+  "values_verified": [
+    {
+      "field": "success_count",
+      "expected": ">0",
+      "actual": "2",
+      "method": "network_capture"
+    },
+    {
+      "field": "se_verified_via_api",
+      "expected": ">0",
+      "actual": "2",
+      "method": "frappe.client.get_value()"
+    },
+    {
+      "field": "toast",
+      "expected": "logged",
+      "actual": "2 items logged successfully",
+      "method": "textContent()"
+    }
+  ],
+  "screenshots": [
+    "S126-07R_sheet_open.png",
+    "S126-07R_filled.png",
+    "S126-07R_after.png"
+  ]
+}
