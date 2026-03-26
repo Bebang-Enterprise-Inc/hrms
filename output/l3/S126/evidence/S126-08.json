@@ -4,14 +4,20 @@
   "submit_method": "view_only",
   "values_verified": [
     {
-      "field": "create_all",
-      "expected": "visible or no suggestions",
-      "actual": "not found",
+      "field": "create_all_btn",
+      "expected": "visible or hidden",
+      "actual": "22 suggestions, 22 without BOM — button correctly hidden",
       "method": "isVisible()"
+    },
+    {
+      "field": "no_bom_count",
+      "expected": "count",
+      "actual": "22",
+      "method": "count()"
     }
   ],
   "screenshots": [
-    "output/l3/S126/artifacts/S126-08_before.png",
-    "output/l3/S126/artifacts/S126-08_after.png"
+    "F08_before.png",
+    "F08_after.png"
   ]
 }

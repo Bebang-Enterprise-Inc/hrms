@@ -4,14 +4,14 @@
   "submit_method": "view_only",
   "values_verified": [
     {
-      "field": "overstock_value",
+      "field": "overstock",
       "expected": "not blank",
-      "actual": "38",
+      "actual": "NOT FOUND",
       "method": "textContent()"
     }
   ],
   "screenshots": [
-    "output/l3/S126/artifacts/S126-01_before.png",
-    "output/l3/S126/artifacts/S126-01_after.png"
+    "F01_before.png",
+    "F01_after.png"
   ]
 }

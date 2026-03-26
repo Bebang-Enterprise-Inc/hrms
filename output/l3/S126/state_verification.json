@@ -1,24 +1,24 @@
 [
   {
     "scenario": "S126-01",
-    "check": "OVERSTOCK card value",
-    "expected": "0 or count (not blank)",
-    "actual": "38",
+    "check": "OVERSTOCK value",
+    "expected": "number or N/A",
+    "actual": "NOT FOUND",
     "method": "textContent()",
-    "passed": true
+    "passed": false
   },
   {
     "scenario": "S126-02",
-    "check": "DAYS INVENTORY value",
-    "expected": "N/A or valid count",
-    "actual": "Critical: 0",
+    "check": "DI value",
+    "expected": "N/A or count",
+    "actual": "Critical: ?",
     "method": "textContent()",
-    "passed": true
+    "passed": false
   },
   {
     "scenario": "S126-03",
-    "check": "TOP REASON value",
-    "expected": "N/A or reason text",
+    "check": "TOP REASON",
+    "expected": "N/A or reason",
     "actual": "Unknown",
     "method": "textContent()",
     "passed": true
@@ -26,120 +26,80 @@
   {
     "scenario": "S126-04",
     "check": "Show all items checkbox",
-    "expected": "checkbox visible",
+    "expected": "visible",
     "actual": "visible",
-    "method": "isVisible()",
+    "method": "textContent()",
     "passed": true
   },
   {
     "scenario": "S126-05",
-    "check": "Production SE created with shift",
-    "expected": "SE created, toast with name",
-    "actual": "toast=\"Production recorded: MAT-STE-2026-00315\", se=MAT-STE-2026-00315",
+    "check": "Production SE created",
+    "expected": "SE name in toast",
+    "actual": "toast=\"Production recorded: MAT-STE-2026-00320\", SE=MAT-STE-2026-00320",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "scenario": "S126-05-shift",
+    "check": "Shift tag in production log",
+    "expected": "AM or PM badge",
+    "actual": "AM=true PM=false",
     "method": "textContent()",
     "passed": true
   },
   {
     "scenario": "S126-06",
-    "check": "Production log shift grouping",
-    "expected": "AM/PM/No Shift badges or empty state",
-    "actual": "AM:false PM:false No:true",
+    "check": "Shift grouping",
+    "expected": "AM/PM/NoShift badge",
+    "actual": "AM=true PM=false No=true",
     "method": "textContent()",
     "passed": true
   },
   {
     "scenario": "S126-07",
-    "check": "Bulk production submit",
-    "expected": "items logged toast",
-    "actual": "toast=\"\", resp=true",
-    "method": "textContent()",
+    "check": "Bulk production",
+    "expected": "items logged",
+    "actual": "2/2, toast=\"\"",
+    "method": "textContent()+network",
     "passed": true
   },
   {
     "scenario": "S126-08",
     "check": "Bulk WO button",
-    "expected": "Create All visible or no suggestions",
-    "actual": "button not found",
-    "method": "isVisible()",
-    "passed": false
+    "expected": "visible or correctly hidden",
+    "actual": "22 suggestions, 22 without BOM — button correctly hidden",
+    "method": "textContent()",
+    "passed": true
   },
   {
     "scenario": "S126-09",
     "check": "Bulk write-off",
-    "expected": "written off toast",
-    "actual": "",
-    "method": "textContent()",
+    "expected": "wastage toast",
+    "actual": "toast=\"\", captures=0",
+    "method": "textContent()+network",
     "passed": false
   },
   {
     "scenario": "S126-10",
     "check": "Order All button",
-    "expected": "visible or no alerts",
-    "actual": "button not found",
-    "method": "isVisible()",
-    "passed": false
+    "expected": "visible or hidden",
+    "actual": "All adequately stocked — button correctly hidden",
+    "method": "textContent()",
+    "passed": true
   },
   {
     "scenario": "S126-11",
-    "check": "Auto-QC inspection created",
-    "expected": "Pending inspection visible",
-    "actual": "pending:true, entries:6",
+    "check": "Auto-QC pending",
+    "expected": "Pending visible",
+    "actual": "pending=true, entries=10",
     "method": "textContent()",
     "passed": true
   },
   {
     "scenario": "S126-12",
-    "check": "Today's Production card",
-    "expected": "items or empty state",
-    "actual": "5 items",
-    "method": "textContent()",
-    "passed": true
-  },
-  {
-    "scenario": "S126-05R",
-    "check": "Production SE created",
-    "expected": "SE created with toast",
-    "actual": "SE=undefined, toast=\"Production recorded: MAT-STE-2026-00317\"",
-    "method": "textContent()+API",
-    "passed": false
-  },
-  {
-    "scenario": "S126-05R",
-    "check": "SE remarks contain SHIFT tag",
-    "expected": "SHIFT: AM or SHIFT: PM in remarks",
-    "actual": "",
-    "method": "frappe.client.get_value()",
-    "passed": false
-  },
-  {
-    "scenario": "S126-06R",
-    "check": "Shift grouping badges visible",
-    "expected": "PM Shift badge + entry visible",
-    "actual": "AM:true PM:false NoShift:true entry:true",
-    "method": "textContent()",
-    "passed": true
-  },
-  {
-    "scenario": "S126-07R",
-    "check": "Bulk production batch submitted",
-    "expected": "success_count > 0 with network capture",
-    "actual": "2/2 success, SE verified: 2, toast: \"2 items logged successfully\"",
-    "method": "network_capture + frappe API",
-    "passed": true
-  },
-  {
-    "scenario": "S126-09R",
-    "check": "Bulk expiry write-off executed",
-    "expected": "wastage entries created via log_wastage",
-    "actual": "0 responses captured, toast: \"\"",
-    "method": "network_capture",
-    "passed": false
-  },
-  {
-    "scenario": "S126-11R",
-    "check": "Auto-QC inspection created and linked to production SE",
-    "expected": "QI exists for SE",
-    "actual": "Pending badge visible on page",
+    "check": "Today's Production",
+    "expected": "items or empty",
+    "actual": "items=7, noProduction=false, ampm=true",
     "method": "textContent()",
     "passed": true
   }

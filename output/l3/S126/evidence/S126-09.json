@@ -3,16 +3,24 @@
   "form_submitted": true,
   "submit_method": "browser_click",
   "submit_button_selector": "button:has-text('Write Off Selected')",
+  "submit_network_request": null,
   "values_verified": [
     {
       "field": "toast",
       "expected": "written off",
       "actual": "",
       "method": "textContent()"
+    },
+    {
+      "field": "button_text",
+      "expected": "Write Off Selected (N)",
+      "actual": "Write Off Selected (2)",
+      "method": "textContent()"
     }
   ],
   "screenshots": [
-    "output/l3/S126/artifacts/S126-09_selected.png",
-    "output/l3/S126/artifacts/S126-09_after.png"
+    "F09_before.png",
+    "F09_selected.png",
+    "F09_after.png"
   ]
 }

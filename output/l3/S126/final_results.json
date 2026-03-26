@@ -1,0 +1,74 @@
+[
+  {
+    "scenario": "S126-01",
+    "status": "FAIL",
+    "detail": "OVERSTOCK: \"NOT FOUND\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-02",
+    "status": "FAIL",
+    "detail": "DI: \"Critical: ?\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-03",
+    "status": "PASS",
+    "detail": "TOP REASON: \"Unknown\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-04",
+    "status": "PASS",
+    "detail": "Checkbox: true",
+    "error": null
+  },
+  {
+    "scenario": "S126-05",
+    "status": "PASS",
+    "detail": "SE=MAT-STE-2026-00320, toast=\"Production recorded: MAT-STE-2026-00320\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-06",
+    "status": "PASS",
+    "detail": "AM=true PM=false No=true",
+    "error": null
+  },
+  {
+    "scenario": "S126-07",
+    "status": "PASS",
+    "detail": "Batch: 2/2, toast=\"\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-08",
+    "status": "PASS",
+    "detail": "22 suggestions, 22 without BOM — button correctly hidden",
+    "error": null
+  },
+  {
+    "scenario": "S126-09",
+    "status": "FAIL",
+    "detail": "Write-off: toast=\"\", captures=0",
+    "error": null
+  },
+  {
+    "scenario": "S126-10",
+    "status": "PASS",
+    "detail": "All adequately stocked — button correctly hidden",
+    "error": null
+  },
+  {
+    "scenario": "S126-11",
+    "status": "PASS",
+    "detail": "Pending=true, entries=10",
+    "error": null
+  },
+  {
+    "scenario": "S126-12",
+    "status": "PASS",
+    "detail": "Items=7, ampmLink=true",
+    "error": null
+  }
+]

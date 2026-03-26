@@ -4,20 +4,20 @@
   "submit_method": "view_only",
   "values_verified": [
     {
-      "field": "pending_inspections",
-      "expected": ">0",
-      "actual": "6",
-      "method": "count()"
+      "field": "pending",
+      "expected": "visible",
+      "actual": "true",
+      "method": "isVisible()"
     },
     {
-      "field": "pending_label",
-      "expected": "visible",
-      "actual": "yes",
-      "method": "isVisible()"
+      "field": "entries",
+      "expected": ">0",
+      "actual": "10",
+      "method": "count()"
     }
   ],
   "screenshots": [
-    "output/l3/S126/artifacts/S126-11_before.png",
-    "output/l3/S126/artifacts/S126-11_after.png"
+    "F11_before.png",
+    "F11_after.png"
   ]
 }

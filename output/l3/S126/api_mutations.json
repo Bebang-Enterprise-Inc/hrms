@@ -4,12 +4,10 @@
     "endpoint": "/api/commissary",
     "method": "POST",
     "payload": {
-      "action": "submit_production",
-      "item_code": "FG004",
-      "qty": 1
+      "action": "submit_production"
     },
     "status": 200,
-    "response_body": "{\"success\":true,\"data\":{\"name\":\"MAT-STE-2026-00315\",\"total_qty\":1.32,\"items_count\":4,\"qc_name\":null},\"message\":\"Production recorded: MAT-STE-2026-00315\"}"
+    "response_body": "{\"success\":true,\"data\":{\"item_code\":\"FG002\",\"requested_qty\":1,\"can_produce\":true,\"max_producible_qty\":91,\"bom_name\":\"BOM-FG002-001\",\"bom_yield\":1,\"shortfall\":[],\"shortfall_count\":0}}"
   },
   {
     "scenario": "S126-07",
@@ -19,29 +17,6 @@
       "action": "submit_production_batch"
     },
     "status": 200,
-    "response_body": "{\"success\":true,\"data\":{\"results\":[{\"item_code\":\"FG002\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00316\",\"error\":null},{\"item_code\":\"MN009\",\"status\":\"error\",\"se_name\":null,\"error\":\"<strong>1.25</strong> units of <a href=\\\"/app/Form/Item/A011\\\" style=\\\"font-weight: bold;\\\">Item A011: JOLLYCOW CONDENSED</a> needed in <a href=\\\"/app/Form/Warehouse/Shaw%20BLVD%20-%20BKI\\\" style=\\\"font-weight: bold;\\\">Warehouse Shaw BLVD - BKI</a> to complete this transaction.\"}],\"total\":2,\"success_count\":1,\"error_c"
-  },
-  {
-    "scenario": "S126-05R",
-    "endpoint": "/api/commissary",
-    "method": "POST",
-    "payload": {
-      "action": "submit_production",
-      "item_code": "FG009",
-      "qty": 1
-    },
-    "status": 200,
-    "response_body": "{\"success\":true,\"data\":{\"item_code\":\"FG009\",\"requested_qty\":1,\"can_produce\":true,\"max_producible_qty\":100,\"bom_name\":\"BOM-FG009-001\",\"bom_yield\":1,\"shortfall\":[],\"shortfall_count\":0}}"
-  },
-  {
-    "scenario": "S126-07R",
-    "endpoint": "/api/commissary",
-    "method": "POST",
-    "payload": {
-      "action": "submit_production_batch",
-      "items_count": 2
-    },
-    "status": 200,
-    "response_body": "{\"success\":true,\"data\":{\"results\":[{\"item_code\":\"FG002\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00318\",\"error\":null},{\"item_code\":\"MN009\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00319\",\"error\":null}],\"total\":2,\"success_count\":2,\"error_count\":0},\"message\":\"2/2 items recorded successfully\"}"
+    "response_body": "{\"success\":true,\"data\":{\"results\":[{\"item_code\":\"FG002\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00321\",\"error\":null},{\"item_code\":\"MN009\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00322\",\"error\":null}],\"total\":2,\"success_count\":2,\"error_count\":0},\"message\":\"2/2 items recorded successfully\"}"
   }
 ]
