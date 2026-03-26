@@ -1114,9 +1114,14 @@ After all tests run, the report includes:
 
 Proven patterns from 30+ real browser tests during S120 procurement testing.
 
-### Login
+### Login (CRITICAL — Use my.bebang.ph for L3 Testing)
 
-Login URL is `/login`, NOT `/auth/login`.
+For L3 browser tests on my.bebang.ph (the employee/procurement app):
+- URL: `https://my.bebang.ph/login`
+- Email field: `input[name="email"]`
+- Password field: `input[name="password"]`
+
+Do NOT use hq.bebang.ph for L3 browser tests. hq.bebang.ph is the Frappe backend — API calls go there, but browser tests go to my.bebang.ph.
 
 ```javascript
 await page.goto('https://my.bebang.ph/login', { waitUntil: 'networkidle' });
@@ -1140,9 +1145,9 @@ Results use `[role="option"]`, NOT `[cmdk-item]`.
 
 PR form combobox indexes: 0=Department, 1=Item search, 2=UOM.
 
-### Toast Reading
+### Toast Reading (MANDATORY after every submit/save action)
 
-Read within 2 seconds (toasts auto-dismiss at ~4s):
+After EVERY button click that triggers a mutation (Create PR, Save price, Submit for Approval), ALWAYS read the toast within 2 seconds:
 
 ```javascript
 await page.waitForTimeout(2000);
