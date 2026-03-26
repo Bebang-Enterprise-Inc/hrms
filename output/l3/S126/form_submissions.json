@@ -1,27 +1,20 @@
 [
   {
-    "scenario_id": "S126-04",
-    "form": "wastage_dialog",
-    "submit_method": "view_only",
-    "inputs": [],
-    "response": "checkbox present check only"
-  },
-  {
     "scenario_id": "S126-05",
     "form": "production_log",
     "submit_method": "browser_click",
     "submit_button_selector": "dialog button:has-text('Log Production')",
     "inputs": [
       {
-        "field": "item_code",
-        "value": "FG004"
+        "field": "item",
+        "value": "BANANA CINNAMON (FG002)"
       },
       {
         "field": "qty",
         "value": "1"
       }
     ],
-    "response": "Production recorded: MAT-STE-2026-00315",
+    "response": "Production recorded: MAT-STE-2026-00320",
     "network_captured": true
   },
   {
@@ -31,12 +24,8 @@
     "submit_button_selector": "button:has-text('Submit All')",
     "inputs": [
       {
-        "field": "row_1_qty",
-        "value": "5"
-      },
-      {
-        "field": "row_2_qty",
-        "value": "10"
+        "field": "rows_filled",
+        "value": "2"
       }
     ],
     "response": "",
@@ -49,64 +38,11 @@
     "submit_button_selector": "button:has-text('Write Off Selected')",
     "inputs": [
       {
-        "field": "selected_count",
+        "field": "selected",
         "value": "2"
       }
     ],
     "response": "",
-    "network_captured": true
-  },
-  {
-    "scenario_id": "S126-05R",
-    "form": "production_log",
-    "submit_method": "browser_click",
-    "submit_button_selector": "dialog button:has-text('Log Production'):last",
-    "inputs": [
-      {
-        "field": "item_code",
-        "value": "FG009"
-      },
-      {
-        "field": "qty",
-        "value": "1"
-      }
-    ],
-    "response": "Production recorded: MAT-STE-2026-00317",
-    "network_captured": true,
-    "network_response": "{\"success\":true,\"data\":{\"item_code\":\"FG009\",\"requested_qty\":1,\"can_produce\":true,\"max_producible_qty\":100,\"bom_name\":\"BOM-FG009-001\",\"bom_yield\":1,\"shortfall\":[],\"shortfall_count\":0}}"
-  },
-  {
-    "scenario_id": "S126-07R",
-    "form": "bulk_production",
-    "submit_method": "browser_click",
-    "submit_button_selector": "button:has-text('Submit All')",
-    "inputs": [
-      {
-        "field": "row_count",
-        "value": "9"
-      },
-      {
-        "field": "rows_with_qty",
-        "value": "2"
-      }
-    ],
-    "response": "2 items logged successfully",
-    "network_captured": true,
-    "network_response": "{\"success\":true,\"data\":{\"results\":[{\"item_code\":\"FG002\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00318\",\"error\":null},{\"item_code\":\"MN009\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00319\",\"error\":null}],\"total\":2,\"success_count\":2,\"error_count\":0},\"message\":\"2/2 items recorded successfully\"}"
-  },
-  {
-    "scenario_id": "S126-09R",
-    "form": "bulk_expiry_writeoff",
-    "submit_method": "browser_click",
-    "submit_button_selector": "button:has-text('Write Off Selected')",
-    "inputs": [
-      {
-        "field": "selected_count",
-        "value": "2"
-      }
-    ],
-    "response": "",
-    "network_captured": false,
-    "network_response": "[]"
+    "network_captured": false
   }
 ]

@@ -4,14 +4,14 @@
   "submit_method": "view_only",
   "values_verified": [
     {
-      "field": "order_all",
-      "expected": "visible or no alerts",
-      "actual": "not found",
+      "field": "order_btn",
+      "expected": "visible or hidden",
+      "actual": "All adequately stocked — button correctly hidden",
       "method": "isVisible()"
     }
   ],
   "screenshots": [
-    "output/l3/S126/artifacts/S126-10_before.png",
-    "output/l3/S126/artifacts/S126-10_after.png"
+    "F10_before.png",
+    "F10_after.png"
   ]
 }

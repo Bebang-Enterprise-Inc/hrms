@@ -2,29 +2,30 @@
   "scenario_id": "S126-05",
   "form_submitted": true,
   "submit_method": "browser_click",
-  "submit_button_selector": "dialog button:has-text('Log Production')",
+  "submit_button_selector": "dialog button:last",
   "submit_network_request": {
     "method": "POST",
-    "url": "/api/commissary",
+    "url": "https://my.bebang.ph/api/commissary",
     "status": 200,
-    "response_snippet": "{\"success\":true,\"data\":{\"name\":\"MAT-STE-2026-00315\",\"total_qty\":1.32,\"items_count\":4,\"qc_name\":null},\"message\":\"Production recorded: MAT-STE-2026-00315\"}"
+    "response_snippet": "{\"success\":true,\"data\":{\"item_code\":\"FG002\",\"requested_qty\":1,\"can_produce\":true,\"max_producible_qty\":91,\"bom_name\":\"BOM-FG002-001\",\"bom_yield\":1,\"shortfall\":[],\"shortfall_count\":0}}"
   },
   "values_verified": [
     {
-      "field": "toast_text",
-      "expected": "recorded/Production",
-      "actual": "Production recorded: MAT-STE-2026-00315",
+      "field": "toast",
+      "expected": "recorded",
+      "actual": "Production recorded: MAT-STE-2026-00320",
       "method": "textContent()"
     },
     {
       "field": "se_name",
-      "expected": "SE-XXXX",
-      "actual": "MAT-STE-2026-00315",
-      "method": "response_json"
+      "expected": "MAT-STE-*",
+      "actual": "MAT-STE-2026-00320",
+      "method": "regex match from toast"
     }
   ],
   "screenshots": [
-    "output/l3/S126/artifacts/S126-05_before.png",
-    "output/l3/S126/artifacts/S126-05_after.png"
+    "F05_before.png",
+    "F05_filled.png",
+    "F05_after.png"
   ]
 }

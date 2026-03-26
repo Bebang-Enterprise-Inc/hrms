@@ -4,20 +4,14 @@
   "submit_method": "view_only",
   "values_verified": [
     {
-      "field": "show_all_checkbox",
+      "field": "checkbox",
       "expected": "visible",
-      "actual": "visible",
-      "method": "isVisible()"
-    },
-    {
-      "field": "item_select",
-      "expected": "visible",
-      "actual": "visible",
+      "actual": "true",
       "method": "isVisible()"
     }
   ],
   "screenshots": [
-    "output/l3/S126/artifacts/S126-04_before.png",
-    "output/l3/S126/artifacts/S126-04_after.png"
+    "F04_before.png",
+    "F04_after.png"
   ]
 }

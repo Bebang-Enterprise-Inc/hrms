@@ -5,11 +5,17 @@
   "submit_button_selector": "button:has-text('Submit All')",
   "submit_network_request": {
     "method": "POST",
-    "url": "/api/commissary",
+    "url": "https://my.bebang.ph/api/commissary",
     "status": 200,
-    "response_snippet": "{\"success\":true,\"data\":{\"results\":[{\"item_code\":\"FG002\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00316\",\"error\":null},{\"item_code\":\"MN009\",\"status\":\"error\",\"se_name\":null,\"error\":\"<strong>1.25</strong> units of <a href=\\\"/app/Form/Item/A011\\\" style=\\\"font-weight: bold;\\\">Item A011: JOLLYCOW CONDEN"
+    "response_snippet": "{\"success\":true,\"data\":{\"results\":[{\"item_code\":\"FG002\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00321\",\"error\":null},{\"item_code\":\"MN009\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00322\",\"error\":null}],\"total\":2,\"success_count\":2,\"error_count\":0},\"message\":\"2/2 items recorded successfully\"}"
   },
   "values_verified": [
+    {
+      "field": "success_count",
+      "expected": ">0",
+      "actual": "2",
+      "method": "network"
+    },
     {
       "field": "toast",
       "expected": "logged",
@@ -18,7 +24,8 @@
     }
   ],
   "screenshots": [
-    "output/l3/S126/artifacts/S126-07_before.png",
-    "output/l3/S126/artifacts/S126-07_after.png"
+    "F07_sheet.png",
+    "F07_filled.png",
+    "F07_after.png"
   ]
 }

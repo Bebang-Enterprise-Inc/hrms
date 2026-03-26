@@ -4,14 +4,13 @@
   "submit_method": "view_only",
   "values_verified": [
     {
-      "field": "days_inventory",
+      "field": "di",
       "expected": "N/A or count",
-      "actual": "Critical: 0",
+      "actual": "Critical: ?",
       "method": "textContent()"
     }
   ],
   "screenshots": [
-    "output/l3/S126/artifacts/S126-02_before.png",
-    "output/l3/S126/artifacts/S126-02_after.png"
+    "F02_after.png"
   ]
 }
