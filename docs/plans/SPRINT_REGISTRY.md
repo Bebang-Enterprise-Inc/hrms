@@ -146,9 +146,17 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S131` | Sprint 131 | `s131-commissary-data-fixes` | — | PLANNED — Fix S126 defects: Bin/SLE divergence for expiring batches, BOM creation for FG items, wastage reason labels. | `docs/plans/2026-03-26-sprint-131-commissary-data-fixes.md` |
 
+| `S132` | Sprint 132 | `s132-po-collateral-defects` | — | PLANNED — Fix PO collateral defects found during S128 L3: missing CEO Approval status, stale test PO prices, Sentry for batch_approve/duplicate. | `docs/plans/2026-03-26-sprint-132-po-collateral-defects.md` |
+
+| `S133` | Sprint 133 | `s133-s129-ordering-defect-fixes` | — | PLANNED — Fix S129 L3 defects: cargo_category submit bug, deploy B1-B5 backend, identical suggested qty formula, 65% OOS commissary data, missing demand/days columns. | `docs/plans/2026-03-26-sprint-133-s129-ordering-defect-fixes.md` |
+
+| `S134` | Sprint 134 | `s134-quick-receive-auto-invoice` | hrms#374, BEI-Tasks#269 | PR_CREATED 2026-03-27 — Quick Receive GR + Auto-Invoice prompt + PO warehouse default. Ian+Cayla bridge. | `docs/plans/2026-03-27-sprint-134-quick-receive-auto-invoice.md` |
+
+| `S135` | Sprint 135 | `s135-inventory-bridge-supplier-intel` | — | PLANNED — Inventory→PR Bridge (low stock alerts, auto PR-to-PO), Supplier Doc Expiry, Today's Deliveries widget. Luwi strategic tools. 22-24 units. | `docs/plans/2026-03-27-sprint-135-inventory-bridge-supplier-intel.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S132`.
-2. Reserve branch name: `s132-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S136`.
+2. Reserve branch name: `s136-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 

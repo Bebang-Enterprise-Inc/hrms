@@ -1817,7 +1817,7 @@ def get_user_store(surface: str | None = None):
 				limit=200,
 			)
 			for store_row in store_rows:
-				# S128/B2 + S133: Skip non-orderable warehouses.
+				# S128/B2 + S133: Skip non-orderable warehouses by type and name.
 				if not _is_orderable_store(store_row):
 					continue
 				append_store(store_row)
