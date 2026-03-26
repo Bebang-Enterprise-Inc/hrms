@@ -37,13 +37,13 @@ The warehouse team has `/dashboard/warehouse/inventory` (a matrix view with stat
 
 ### Why this architecture
 
-**Reuse existing APIs, build new frontend only.** The backend already has everything:
-- `useWarehouseStock(warehouse)` — returns items with `actual_qty`, `is_low_stock` for any warehouse
-- `useInventoryMatrix({ facilityMode: "stores", facilityIds: [storeWarehouse] })` — returns the full matrix for a store
-- `useOrderableItems(store)` — returns items with `available_stock`, `forecast_demand`, `suggested_qty`, `risk_rank`, `is_oos`
-- `useOrderSchedule(store)` — returns whether the ordering window is open
+**Reuse existing APIs where possible, add minimal backend for order history.** Existing hooks:
+- `useWarehouseStock(warehouse)` — returns `WarehouseStockItem` with `item_code`, `item_name`, `actual_qty`, `available_qty`, `is_low_stock` (NOTE: no `uom` — source from `OrderableItem` instead)
+- `useOrderableItems(store)` — returns `OrderableItem` with `available_stock`, `forecast_demand`, `suggested_qty`, `risk_rank`, `is_oos`, `cargo_category`, `uom`
+- `useOrderSchedule(store)` — returns `{ schedule: OrderSchedule | null }` (NOTE: wrapped in `schedule` — access via `schedule?.allowed`, not bare `allowed`)
+- `useUserStore()` — returns `{ stores[], defaultStore, isMultiStore, role }`. NOTE: `defaultStore` and `stores[i].name` are Warehouse **docnames** (e.g., "Store Name - BEI") — pass these to `useWarehouseStock`. `stores[i].warehouse_name` is display-only, do NOT use as warehouse param.
 
-No new backend API is needed. The sprint is 100% frontend (bei-tasks repo).
+**One new backend endpoint needed (audit v2 finding):** Order history. No `useOrders(store)` hook or `/api/ordering?action=get_store_order_history` exists. Task A9-BE adds a Frappe method + route action (~30 lines).
 
 ### Key trade-offs
 
@@ -71,7 +71,8 @@ Create a **composite hook** `useStoreInventory(storeWarehouse)` that:
 ```typescript
 type StoreInventoryItem = {
   item_code: string; item_name: string; warehouse: string;
-  actual_qty: number; available_qty: number; is_low_stock: boolean; uom: string;
+  actual_qty: number; available_qty: number; is_low_stock: boolean;
+  uom: string; // From OrderableItem.uom (NOT WarehouseStockItem — it has no uom). Non-orderable items → ""
   // Enrichment from useOrderableItems (nullable when item is not orderable)
   cargo_category: string | null; forecast_demand: number | null;
   suggested_qty: number | null; risk_rank: number | null; is_oos: boolean;
@@ -131,7 +132,7 @@ Order history   → useOrders(store) → past orders for history tab
 
 ## Scope
 
-### Phase A: "My Stock" Page (18 units)
+### Phase A: "My Stock" Page (20 units)
 
 | Task | Type | File | Description | Units |
 |------|------|------|-------------|-------|
@@ -140,11 +141,12 @@ Order history   → useOrders(store) → past orders for history tab
 | A2 | BUILD | `_components/SummaryStrip.tsx` | **[BUILD]** Summary strip at top: 4 KPI cards — Total SKUs, Critical Items (red if >0), Low Stock Items, Overstock Items (qty > 2x suggested_qty). Compute from `useStoreInventory` items. | 1 |
 | A3 | BUILD | `_components/CriticalChipStrip.tsx` | **[BUILD, UX U2]** Sticky critical-items chip strip pinned above fold (both mobile and desktop). Red chips showing named items: "Ube Ice Cream: 0 pks", "Leche Flan: 2 pcs". Horizontally scrollable. Tap chip → scroll main list to that item. Strip disappears when 0 critical items. Cannot be dismissed without scrolling to the item. | 2 |
 | A4 | BUILD | `bei-tasks/lib/constants.ts` + `bei-tasks/components/layout/nav-main.tsx` | **[EXTEND]** Add route `STORE_OPS_INVENTORY: "/dashboard/store-ops/inventory"` to constants. Add sidebar entry with Package icon between "Ordering" and "Order Approvals" in the store-ops nav group. | 1 |
-| A5 | BUILD | `_components/OrderWindowBanner.tsx` | **[BUILD, UX U3]** Order window banner with **live countdown timer** (HH:MM to cutoff, uses server time not device time). When `useOrderSchedule.allowed === true`: green banner "Order window open — X:XX left — [Place Order →]" linking to `/dashboard/store-ops/ordering`. When `allowed === false`: grey banner "Next delivery: {next_delivery_day}". Submit button visually disabled (greyed, not hidden) when closed. | 2 |
-| A6 | BUILD | `_components/LastOrderPanel.tsx` | **[BUILD, UX U4]** Sheet/drawer accessible via "Last Order" button in header. Shows: order date, items ordered with quantities, status (Pending/Confirmed/Delivered), who submitted. "Reorder This" button pre-fills the ordering page with last order quantities (navigates to ordering, does NOT auto-submit). | 1 |
+| A5 | BUILD | `_components/OrderWindowBanner.tsx` | **[BUILD, UX U3]** Order window banner with **live countdown timer** (HH:MM to cutoff). **Audit SM-2 fix:** Use `const { schedule } = useOrderSchedule(store)` — result is wrapped in `{ schedule }`. Access via `schedule?.allowed`, `schedule?.cutoff_time`, `schedule?.next_delivery_day`. **Server time:** Fetch server time once via Frappe API response `Date` header on page load; compute countdown delta from that reference (not device clock). When `schedule?.allowed === true`: green banner "Order window open — X:XX left — [Place Order →]" linking to `/dashboard/store-ops/ordering`. When `false`: grey banner "Next delivery: {next_delivery_day}". Button visually disabled (greyed, not hidden) when closed. | 2 |
+| A6 | BUILD | `_components/LastOrderPanel.tsx` | **[BUILD, UX U4]** Sheet/drawer accessible via "Last Order" button in header. Shows: order date, items ordered with quantities, status (Pending/Confirmed/Delivered), who submitted. "Reorder This" button navigates to `/dashboard/store-ops/ordering?prefill=last` — save last order items to sessionStorage before navigation; the ordering page reads prefill and populates quantities (editable, NOT auto-submitted). Uses the order history API from A9-BE (get first result). | 1 |
 | A7 | BUILD | page.tsx + search/filter/sort | **[BUILD, UX U1]** Default view = **"Needs Attention"**: only Critical + Low + OOS items shown on first load. "Show All Items" toggle reveals full list. Category filter chips (horizontally scrollable, `overflow-x: auto` on mobile). Search bar (client-side fuzzy match). Refresh button wired to `useStoreInventory.mutate()`. Last-used view remembered in localStorage. | 2 |
 | A8 | BUILD | `bei-tasks/app/dashboard/store-ops/inventory/page.tsx` | **[BUILD]** CSV export. Client-side generation (no backend). Columns: item_code, item_name, cargo_category, actual_qty, status, days_of_stock, forecast_demand, suggested_order_qty, uom. Filename: `{store_name}_inventory_{YYYY-MM-DD}.csv`. | 1 |
-| A9 | BUILD | `_components/OrderHistoryView.tsx` | **[BUILD]** "Order History" tab showing all past orders for this store. Table: Order Date, Order ID, Items Count, Total Qty, Status (Draft/Submitted/Approved/Delivered/Cancelled), Submitted By. Tapping a row expands to show line items with qty per item. Sorted newest-first. Uses existing order list API. Paginated (20 per page). | 1 |
+| A9-BE | BUILD | `hrms/api/store.py` + `bei-tasks/app/api/ordering/route.ts` + `bei-tasks/hooks/use-order-history.ts` | **[BUILD, audit v2 M-1]** Order history API — does NOT exist yet (verified: no hook in 72 files, no route action). **Backend:** Add `@frappe.whitelist()` method `get_store_order_history(store, limit=20, offset=0)` in `hrms/api/store.py` that queries `BEI Store Order` filtered by store warehouse, returns `[{name, order_date, items_count, total_qty, status, submitted_by, items: [{item_code, item_name, qty}]}]`. Add `set_backend_observability_context(module="store-ops", action="get_store_order_history", mutation_type="read")`. **Frontend route:** Add `get_store_order_history` action to `/api/ordering/route.ts`. **Hook:** Create `useOrderHistory(store, limit?)` in `hooks/use-order-history.ts`. | 2 |
+| A9 | BUILD | `_components/OrderHistoryView.tsx` | **[BUILD]** "Order History" tab using `useOrderHistory(store)` hook from A9-BE. Table: Order Date, Order ID, Items Count, Total Qty, Status (Draft/Submitted/Approved/Delivered/Cancelled), Submitted By. Tapping a row expands to show line items with qty per item. Sorted newest-first. Paginated (20 per page). | 1 |
 
 ### Phase B: Area Supervisor Multi-Store View (8 units)
 
@@ -163,7 +165,7 @@ Order history   → useOrders(store) → past orders for history tab
 | C3 | BUILD | Open PR to bei-tasks `main` → Vercel deploys Preview URL → run all L3 scenarios on Preview URL → merge PR → Vercel auto-deploys production → verify production URL. Do NOT merge until all L3 scenarios pass on Preview. | 2 |
 | C4 | BUILD | Closeout: update plan YAML to COMPLETED, update SPRINT_REGISTRY.md. Evidence committed to **BEI-ERP repo** (not bei-tasks): `git add -f docs/plans/ output/l3/S122/`, push to production. | 1 |
 
-**Total: 31 units.** (Phase A: 18, Phase B: 8, Phase C: 5)
+**Total: 33 units.** (Phase A: 20, Phase B: 8, Phase C: 5)
 
 ---
 
@@ -193,6 +195,8 @@ This is a frontend-only sprint in bei-tasks (Vercel auto-deploy). Rollback = rev
 | test.areasup@bebang.ph | Expand a store row in aggregate | Stock detail lazy-loads for that store only (not all 46) | Lazy-load pattern broken |
 | test.areasup@bebang.ph | Switch to "Stockout Alerts" tab | Shows cross-store OOS/high-risk items grouped by item | Alert aggregation broken |
 | test.crew@bebang.ph | Tap refresh button | All data reloads (loading spinner shown during fetch) | mutate() not wired |
+| test.crew@bebang.ph | Load page for store with 0 stock items | Empty state: "No inventory data for this store" with Package icon | Empty state missing |
+| test.areasup@bebang.ph (0 stores) | Load page with no store assignments | "No stores assigned — contact your manager" message, no crash | Zero-stores crash |
 
 Evidence files required before closeout:
 ```
@@ -226,7 +230,12 @@ output/l3/S122/state_verification.json
 - [ ] Does AS with 0 stores show "No stores assigned" (not crash/empty table)? (audit B-05)
 - [ ] Does Stockout Alert tab aggregate across supervised stores?
 - [ ] Is no sync-freshness feature built (no ENCODE tracking, no sync timestamps)?
-- [ ] Are existing `useWarehouseStock` and `useOrderableItems` hooks reused (no new backend APIs)?
+- [ ] Are existing `useWarehouseStock` and `useOrderableItems` hooks reused for stock + demand?
+- [ ] Does `useOrderHistory(store)` hook exist and call `get_store_order_history` backend method? (A9-BE)
+- [ ] Does `get_store_order_history` in `hrms/api/store.py` have `set_backend_observability_context()`? (DM-7)
+- [ ] Does composite hook use `useUserStore().defaultStore` (docname), NOT `.warehouse_name`? (audit SM-3)
+- [ ] Does `uom` come from `OrderableItem.uom`, not `WarehouseStockItem` (which has no uom)? (audit SM-1)
+- [ ] Does `OrderWindowBanner` access `schedule?.allowed` (wrapped), NOT bare `allowed`? (audit SM-2)
 - [ ] Is CSV export client-side with columns: item_code, item_name, cargo_category, actual_qty, status, days_of_stock, forecast_demand, suggested_order_qty, uom?
 - [ ] Are `submitOrder`, `reportVariance`, `submitCycleCount` NOT imported on this page? (read-only enforcement)
 - [ ] Evidence files committed to **BEI-ERP** repo (not bei-tasks)?
@@ -253,7 +262,8 @@ output/l3/S122/state_verification.json
   - Refresh button wired
   - Empty/error/loading states all handled
   - Page works at 375px mobile AND 1280px desktop
-  - All 16 L3 scenarios pass
+  - Order history backend method deployed (hrms repo, `get_store_order_history`)
+  - All 18 L3 scenarios pass
   - Plan YAML status = COMPLETED, pushed
   - SPRINT_REGISTRY.md updated
   - Evidence files in BEI-ERP repo `output/l3/S122/`
@@ -296,6 +306,8 @@ output/l3/S122/state_verification.json
 9. Read `lib/constants.ts` lines 48-58 — existing STORE_OPS routes.
 10. Read `components/layout/nav-main.tsx` — sidebar navigation structure.
 11. Read `lib/roles.ts` — confirm `MODULES.STORE_OPS` includes required roles (use this, NOT `MODULES.INVENTORY`).
+12. Read `hrms/api/store.py` — check if `BEI Store Order` DocType exists for order history query. Grep for store order list methods.
+13. Read `bei-tasks/app/api/ordering/route.ts` — understand the action routing pattern for adding `get_store_order_history`.
 
 ## Execution Authority
 
