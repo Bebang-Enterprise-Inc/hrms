@@ -364,6 +364,7 @@ def get_production_items() -> dict[str, Any]:
         WHERE i.disabled = 0
         AND i.is_stock_item = 1
         AND i.item_group = 'Finished Goods'
+        AND (i.name LIKE 'FG%%' OR i.name LIKE 'OUT-%%')
         ORDER BY i.item_name
     """,
 		commissary_warehouse,
