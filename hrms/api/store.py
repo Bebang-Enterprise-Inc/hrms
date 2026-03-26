@@ -1480,12 +1480,17 @@ def _round_suggested_qty(qty, uom):
 # S128/B2: Filter non-orderable warehouses from store picker.
 _NON_ORDERABLE_WAREHOUSE_TYPES = frozenset({"3PL", "Commissary", "Cold Storage", "Transit"})
 
-# S133: Name-based fallback for warehouses that don't have warehouse_type set yet.
+# S133: Name-based filter for warehouses that are not real stores.
 _NON_ORDERABLE_NAME_PATTERNS = (
 	"Jentec", "Pinnacle", "Royal Cold", "RCS", "3MD",
 	"Commissary", "Kitchen", "TEST-COMMISSARY",
-	"Stores - BEI", "Stores - BK",
 )
+
+# S133: Exact names for group/meta warehouses that may have is_group=0.
+_NON_ORDERABLE_EXACT_NAMES = frozenset({
+	"Stores", "Stores - BEI", "Stores - BK",
+	"All Warehouses", "All Warehouses - BEI",
+})
 
 
 def _is_orderable_store(warehouse_dict):
@@ -1493,9 +1498,11 @@ def _is_orderable_store(warehouse_dict):
 	wt = (warehouse_dict.get("warehouse_type") or "").strip()
 	if wt and wt in _NON_ORDERABLE_WAREHOUSE_TYPES:
 		return False
-	# S133: Fallback — filter by name when warehouse_type is not set.
+	# S133: Filter by name — always runs regardless of warehouse_type.
 	wh_name = warehouse_dict.get("warehouse_name") or warehouse_dict.get("name") or ""
-	if not wt and any(pat in wh_name for pat in _NON_ORDERABLE_NAME_PATTERNS):
+	if wh_name in _NON_ORDERABLE_EXACT_NAMES:
+		return False
+	if any(pat in wh_name for pat in _NON_ORDERABLE_NAME_PATTERNS):
 		return False
 	return True
 
