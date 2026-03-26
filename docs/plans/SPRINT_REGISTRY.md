@@ -136,7 +136,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S126` | Sprint 126 | `s126-commissary-ux-improvements` | — | GO — Commissary UX: fix 3 display bugs, shift auto-tag, bulk production log (multi-item), bulk work orders, bulk expiry write-off, auto-QC after production, one-click RM reorder, workweek filter. 31 units. | `docs/plans/2026-03-26-sprint-126-commissary-ux-improvements.md` |
 
-| `S127` | Sprint 127 | `s127-docuseal-esignature` | — | PLANNED — Replace Documenso with DocuSeal: cleanup S123 Documenso artifacts (merged code, Vercel project, GitHub fork, Supabase schema), deploy DocuSeal Docker on EC2, update Frappe webhook API, update bei-tasks nav link. | `docs/plans/2026-03-26-sprint-127-docuseal-esignature.md` |
+| `S127` | Sprint 127 | `s127-documenso-ec2-deploy` | — | PLANNED — Deploy Documenso on EC2 Docker (replaces failed Vercel deploy from S123). Cleanup Vercel project, configure nginx + SSL, run Prisma migrations against existing Supabase, configure dual auth + SMTP. S123 Frappe integration code already merged — reuse as-is. 20 units. | `docs/plans/2026-03-26-sprint-127-documenso-ec2-deploy.md` |
 
 ## Next Sprint Reservation
 1. Next canonical sprint ID to assign: `S128`.
