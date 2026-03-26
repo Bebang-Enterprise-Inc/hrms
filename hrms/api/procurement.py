@@ -1252,6 +1252,49 @@ def reject_po(name, reason, rejector="mae"):
     return po.reject(reason, rejector)
 
 
+@frappe.whitelist()
+def request_po_revision(name, reason):
+    """Request revision on a PO — sends it back to Draft so the creator can fix and resubmit.
+
+    Unlike Reject (which kills the PO), Request Revision keeps the PO alive
+    and allows editing. Used when Mae sees a wrong price, wrong qty, or
+    missing information that can be corrected.
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+
+    set_backend_observability_context(
+        module="procurement",
+        action="request_po_revision",
+        mutation_type="update",
+    )
+
+    if not reason or not reason.strip():
+        frappe.throw(_("Reason for revision request is required"))
+
+    po = frappe.get_doc("BEI Purchase Order", name)
+
+    if po.status not in ("Pending Mae Approval", "Pending Butch Approval"):
+        frappe.throw(_("Can only request revision on POs pending approval"))
+
+    po.status = "Draft"
+    po.mae_approval = ""
+    po.mae_comment = ""
+    po.mae_approval_date = None
+
+    # Add revision comment to remarks
+    revision_note = f"Revision requested by {frappe.session.user}: {reason.strip()}"
+    po.add_comment("Comment", revision_note)
+
+    po.save(ignore_permissions=True)
+
+    return {
+        "success": True,
+        "message": _("PO sent back for revision"),
+        "reason": reason.strip(),
+        "requested_by": frappe.session.user,
+    }
+
+
 def _get_po_pdf_bytes(po_name):
     """Return PO PDF as raw bytes for email attachment."""
     import base64
