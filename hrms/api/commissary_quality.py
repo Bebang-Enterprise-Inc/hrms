@@ -567,11 +567,32 @@ def log_wastage(
 				full_remarks += f" - {remarks}"
 			se.remarks = full_remarks
 
+			# For batch-tracked items, check actual batch stock from SLE and cap qty
+			actual_qty = flt(qty)
+			if batch_no:
+				batch_stock = flt(frappe.db.sql(
+					"""SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
+					WHERE item_code=%s AND warehouse=%s AND batch_no=%s""",
+					(item_code, commissary_warehouse, batch_no),
+				)[0][0] or 0)
+				if batch_stock <= 0:
+					return {
+						"success": False,
+						"error": _("Batch {0} has no stock in {1} (SLE balance: {2}). Cannot write off.").format(
+							batch_no, commissary_warehouse, batch_stock
+						),
+					}
+				if actual_qty > batch_stock:
+					frappe.logger().info(
+						f"Wastage: requested {actual_qty} but batch {batch_no} only has {batch_stock}, capping"
+					)
+					actual_qty = batch_stock
+
 			row = {
 				"item_code": item_code,
 				"item_name": item.item_name,
 				"s_warehouse": commissary_warehouse,
-				"qty": flt(qty),
+				"qty": actual_qty,
 				"uom": item.stock_uom,
 				"stock_uom": item.stock_uom,
 				"valuation_rate": flt(item.valuation_rate or 0),
