@@ -1246,6 +1246,126 @@ def approve_po_butch(name, comment=None):
 
 
 @frappe.whitelist()
+def batch_approve_pos(names, level="mae", comment=None):
+    """Batch approve multiple POs at once.
+
+    Args:
+        names: JSON list of PO names to approve
+        level: 'mae' or 'butch'
+        comment: Optional approval comment applied to all
+    Returns:
+        dict with 'results' list (per-PO success/failure) and summary counts
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+
+    set_backend_observability_context(
+        module="procurement",
+        action="batch_approve_pos",
+        mutation_type="update",
+    )
+
+    if isinstance(names, str):
+        names = frappe.parse_json(names)
+
+    if not names or not isinstance(names, list):
+        frappe.throw(_("No POs selected for approval"))
+
+    results = []
+    approved = 0
+    failed = 0
+
+    for po_name in names:
+        try:
+            po = frappe.get_doc("BEI Purchase Order", po_name)
+            if level == "mae":
+                result = po.approve_mae(comment)
+            elif level == "butch":
+                result = po.approve_butch(comment)
+            else:
+                frappe.throw(_("Invalid approval level: {0}").format(level))
+
+            results.append({
+                "name": po_name,
+                "po_no": po.po_no,
+                "success": True,
+                "message": result.get("message", "Approved"),
+            })
+            approved += 1
+        except Exception as e:
+            results.append({
+                "name": po_name,
+                "success": False,
+                "message": str(e),
+            })
+            failed += 1
+
+    frappe.db.commit()
+
+    return {
+        "results": results,
+        "approved": approved,
+        "failed": failed,
+        "total": len(names),
+    }
+
+
+@frappe.whitelist()
+def duplicate_po(source_name):
+    """Create a new Draft PO by duplicating an existing PO.
+
+    Copies supplier, items, prices, and terms. Sets new PO date to today.
+    Returns the new PO name for redirect.
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+
+    set_backend_observability_context(
+        module="procurement",
+        action="duplicate_po",
+        mutation_type="create",
+    )
+
+    source = frappe.get_doc("BEI Purchase Order", source_name)
+
+    # Build items from source PO
+    items = []
+    for item in source.get("items") or []:
+        items.append({
+            "item_code": item.item_code,
+            "item_name": item.item_name,
+            "description": item.description,
+            "qty": item.qty,
+            "uom": item.uom,
+            "unit_cost": item.unit_cost,
+            "vat_rate": item.get("vat_rate") or 0,
+            "vat_amount": item.get("vat_amount") or 0,
+            "amount": item.get("amount") or 0,
+        })
+
+    new_po = frappe.get_doc({
+        "doctype": "BEI Purchase Order",
+        "supplier": source.supplier,
+        "supplier_name": source.supplier_name,
+        "po_date": frappe.utils.today(),
+        "delivery_date": None,
+        "payment_terms": source.get("payment_terms"),
+        "remarks": _("Duplicated from {0}").format(source.po_no or source_name),
+        "items": items,
+        "pr_reference": None,
+        "status": "Draft",
+    })
+
+    new_po.insert()
+
+    return {
+        "success": True,
+        "name": new_po.name,
+        "po_no": new_po.po_no,
+        "message": _("PO duplicated from {0}").format(source.po_no or source_name),
+        "source_po": source_name,
+    }
+
+
+@frappe.whitelist()
 def reject_po(name, reason, rejector="mae"):
     """Reject PO."""
     po = frappe.get_doc("BEI Purchase Order", name)
