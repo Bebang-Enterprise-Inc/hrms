@@ -5338,6 +5338,65 @@ def check_maintenance_for_closing(store: str, date: str | None = None) -> dict:
 
 
 @frappe.whitelist()
+def get_store_stock(store: str = "", include_zero_stock: int = 0) -> dict:
+	"""Return stock levels (Bin) for a single store warehouse.
+
+	Unlike hrms.api.inventory.get_warehouse_stock, this does NOT use the SCM
+	inventory visibility scope system.  It resolves the caller's store via
+	_get_user_store() and queries tabBin directly — any user who can reach
+	this endpoint can view the stock of their own store.
+	"""
+	from hrms.utils.sentry import set_backend_observability_context
+	set_backend_observability_context(
+		module="store-ops",
+		action="get_store_stock",
+		mutation_type="read",
+	)
+
+	if not store:
+		user_store = _get_user_store()
+		store = user_store.get("default_store") if user_store else ""
+	if not store:
+		return {"items": []}
+
+	conditions = ["b.warehouse = %(warehouse)s"]
+	values: dict = {"warehouse": store}
+
+	if not cint(include_zero_stock):
+		conditions.append("(b.actual_qty > 0 OR b.reserved_qty > 0)")
+
+	where_clause = " AND ".join(conditions)
+
+	items = frappe.db.sql(
+		f"""
+		SELECT
+			b.item_code,
+			i.item_name,
+			b.warehouse,
+			b.actual_qty,
+			b.reserved_qty,
+			(b.actual_qty - b.reserved_qty) AS available_qty,
+			COALESCE(ir.warehouse_reorder_level, 0) AS reorder_point,
+			CASE
+				WHEN ir.warehouse_reorder_level > 0
+					 AND b.actual_qty <= ir.warehouse_reorder_level THEN 1
+				ELSE 0
+			END AS is_low_stock
+		FROM `tabBin` b
+		JOIN `tabItem` i ON i.name = b.item_code AND i.disabled = 0
+		LEFT JOIN `tabItem Reorder` ir
+			ON ir.parent = b.item_code AND ir.warehouse = b.warehouse
+		WHERE {where_clause}
+		ORDER BY i.item_name
+		""",
+		values,
+		as_dict=True,
+	)
+
+	return {"items": items}
+
+
+@frappe.whitelist()
 def get_store_order_history(store: str = "", limit: int = 20, offset: int = 0) -> dict:
 	"""Return past BEI Store Orders for a store, newest first."""
 	from hrms.utils.sentry import set_backend_observability_context
