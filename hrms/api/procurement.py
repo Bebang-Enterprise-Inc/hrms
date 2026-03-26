@@ -1354,7 +1354,7 @@ def duplicate_po(source_name):
         "status": "Draft",
     })
 
-    new_po.insert()
+    new_po.insert(ignore_permissions=True)
 
     return {
         "success": True,
