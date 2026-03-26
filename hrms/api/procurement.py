@@ -1350,7 +1350,7 @@ def duplicate_po(source_name):
         "supplier": source.supplier,
         "supplier_name": source.supplier_name,
         "po_date": frappe.utils.today(),
-        "delivery_date": None,
+        "delivery_date": source.get("delivery_date") or frappe.utils.add_days(frappe.utils.today(), 7),
         "payment_terms": source.get("payment_terms"),
         "remarks": _("Duplicated from {0}").format(source.po_no or source_name),
         "items": items,
