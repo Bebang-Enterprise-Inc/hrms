@@ -5,13 +5,14 @@ sprint_id: S135
 display: Sprint 135
 slug: inventory-bridge-supplier-intel
 branch: s135-inventory-bridge-supplier-intel
-status: PLANNED
+status: PR_CREATED
 planned_date: 2026-03-27
+execution_started: 2026-03-27
 completed_date: null
 depends_on: [S128, S134, S121]
 total_units: 22-24
-backend_pr: null
-frontend_pr: null
+backend_pr: 375
+frontend_pr: 270
 l3_result: null
 execution_summary: null
 ```
