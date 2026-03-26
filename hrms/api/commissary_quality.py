@@ -574,9 +574,14 @@ def log_wastage(
 				"qty": flt(qty),
 				"uom": item.stock_uom,
 				"stock_uom": item.stock_uom,
-				"batch_no": batch_no,
 				"valuation_rate": flt(item.valuation_rate or 0),
 			}
+			if batch_no:
+				row["batch_no"] = batch_no
+				# Use legacy serial/batch fields to avoid "Serial and Batch Bundle already created" error.
+				# Frappe v15 auto-bundle system creates duplicate bundles for batches that already have
+				# prior transactions. Setting this flag tells Frappe to use batch_no directly on the SLE.
+				row["use_serial_batch_fields"] = 1
 			if flt(item.valuation_rate or 0) <= 0:
 				row["allow_zero_valuation_rate"] = 1
 			se.append("items", row)
