@@ -267,9 +267,13 @@ class BEIPurchaseOrder(Document):
 		"""Send Google Chat notification to Butch (CFO) for PO approval."""
 		self._send_approval_notification(self._get_approver_email("cfo"), "CFO (Butch)")
 
+	def notify_ceo(self):
+		"""Send Google Chat notification to CEO for new-vendor PO approval."""
+		self._send_approval_notification(self._get_approver_email("ceo"), "CEO (Sam)")
+
 	def _get_approver_email(self, role: str) -> str:
 		"""Get approver email from BEI Settings, fall back to delivery_billing_policy constants."""
-		field_map = {"cpo": "cpo_approver_email", "cfo": "cfo_approver_email"}
+		field_map = {"cpo": "cpo_approver_email", "cfo": "cfo_approver_email", "ceo": "ceo_approver_email"}
 		try:
 			email = frappe.db.get_single_value("BEI Settings", field_map.get(role, ""))
 			if email:
@@ -278,6 +282,8 @@ class BEIPurchaseOrder(Document):
 			pass
 		# Fall back to hardcoded constants (pre-S099)
 		from hrms.utils.delivery_billing_policy import CPO_APPROVER_EMAIL, CFO_APPROVER_EMAIL
+		if role == "ceo":
+			return "sam@bebang.ph"
 		return CPO_APPROVER_EMAIL if role == "cpo" else CFO_APPROVER_EMAIL
 
 	def _send_approval_notification(self, approver_email: str, approver_label: str):
@@ -334,6 +340,7 @@ class BEIPurchaseOrder(Document):
 			# New vendor — needs CEO approval
 			self.status = "Pending CEO Approval"
 			self.save()
+			self.notify_ceo()
 			return {"success": True, "message": _("Mae approved. PO now pending CEO approval (new vendor)")}
 		else:
 			# Single approval sufficient
@@ -365,6 +372,7 @@ class BEIPurchaseOrder(Document):
 		if cint(self.get("requires_ceo_approval")) and self.get("ceo_approval") != "Approved":
 			self.status = "Pending CEO Approval"
 			self.save()
+			self.notify_ceo()
 			return {"success": True, "message": _("CFO approved. PO now pending CEO approval (new vendor)")}
 
 		self.status = "Approved"
@@ -417,13 +425,17 @@ class BEIPurchaseOrder(Document):
 	@frappe.whitelist()
 	def reject(self, reason: str, rejector: str = "mae"):
 		"""Reject the PO."""
-		if self.status not in ["Pending Mae Approval", "Pending Butch Approval"]:
+		if self.status not in ["Pending Mae Approval", "Pending Butch Approval", "Pending CEO Approval"]:
 			frappe.throw(_("PO is not pending approval"))
 
 		if not reason:
 			frappe.throw(_("Please provide a rejection reason"))
 
-		if rejector == "mae":
+		if rejector == "ceo":
+			self.ceo_approval = "Rejected"
+			self.ceo_comment = reason
+			self.ceo_approval_date = now_datetime()
+		elif rejector == "mae":
 			self.mae_approval = "Rejected"
 			self.mae_comment = reason
 			self.mae_approval_date = now_datetime()
@@ -439,6 +451,8 @@ class BEIPurchaseOrder(Document):
 
 	def has_required_procurement_approvals(self) -> bool:
 		"""Return whether the commercial approval chain is complete."""
+		if cint(self.get("requires_ceo_approval")) and self.get("ceo_approval") != "Approved":
+			return False
 		if self.requires_dual_approval:
 			return self.mae_approval == "Approved" and self.butch_approval == "Approved"
 		return self.mae_approval == "Approved"

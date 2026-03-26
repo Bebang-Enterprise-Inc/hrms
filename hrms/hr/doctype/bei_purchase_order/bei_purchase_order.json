@@ -93,7 +93,7 @@
       "in_list_view": 1,
       "in_standard_filter": 1,
       "label": "Status",
-      "options": "Draft\nPending Mae Approval\nPending Butch Approval\nApproved\nSent to Supplier\nPartially Received\nFully Received\nCancelled"
+      "options": "Draft\nPending Mae Approval\nPending Butch Approval\nPending CEO Approval\nApproved\nSent to Supplier\nPartially Received\nFully Received\nCancelled"
     },
     {
       "fieldname": "pr_reference",

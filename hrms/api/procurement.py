@@ -1227,6 +1227,10 @@ def create_purchase_order(data: dict[str, Any] | str | None = None) -> dict[str,
 @frappe.whitelist()
 def submit_po_for_approval(name):
     """Submit PO for Mae's approval."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement", action="submit_po_for_approval", mutation_type="update",
+    )
     po = frappe.get_doc("BEI Purchase Order", name)
     return po.submit_for_approval()
 
@@ -1234,6 +1238,10 @@ def submit_po_for_approval(name):
 @frappe.whitelist()
 def approve_po_mae(name, comment=None):
     """Mae approves PO."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement", action="approve_po_mae", mutation_type="update",
+    )
     po = frappe.get_doc("BEI Purchase Order", name)
     return po.approve_mae(comment)
 
@@ -1241,8 +1249,25 @@ def approve_po_mae(name, comment=None):
 @frappe.whitelist()
 def approve_po_butch(name, comment=None):
     """Butch (CFO) approves PO for >500K."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement", action="approve_po_butch", mutation_type="update",
+    )
     po = frappe.get_doc("BEI Purchase Order", name)
     return po.approve_butch(comment)
+
+
+@frappe.whitelist()
+def approve_po_ceo(name, comment=None):
+    """CEO approves PO (for new vendor POs requiring CEO sign-off)."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement",
+        action="approve_po_ceo",
+        mutation_type="update",
+    )
+    po = frappe.get_doc("BEI Purchase Order", name)
+    return po.approve_ceo(comment)
 
 
 @frappe.whitelist()
@@ -1372,6 +1397,10 @@ def duplicate_po(source_name):
 @frappe.whitelist()
 def reject_po(name, reason, rejector="mae"):
     """Reject PO."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement", action="reject_po", mutation_type="update",
+    )
     po = frappe.get_doc("BEI Purchase Order", name)
     return po.reject(reason, rejector)
 
