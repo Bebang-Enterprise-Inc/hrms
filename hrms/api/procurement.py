@@ -1211,6 +1211,10 @@ def create_purchase_order(data: dict[str, Any] | str | None = None) -> dict[str,
                     title=_("Price Override Reason Required")
                 )
 
+    # S134/C1: Default ship_to warehouse if not provided
+    if not data.get("ship_to"):
+        data["ship_to"] = "Stores - BEI"
+
     po = frappe.get_doc({
         "doctype": "BEI Purchase Order",
         **_sanitize_doc_data(data)
