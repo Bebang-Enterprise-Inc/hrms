@@ -138,9 +138,17 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S127` | Sprint 127 | `s127-documenso-ec2-deploy` | — | PLANNED — Deploy Documenso on EC2 Docker (replaces failed Vercel deploy from S123). Cleanup Vercel project, configure nginx + SSL, run Prisma migrations against existing Supabase, configure dual auth + SMTP. S123 Frappe integration code already merged — reuse as-is. 20 units. | `docs/plans/2026-03-26-sprint-127-documenso-ec2-deploy.md` |
 
+| `S128` | Sprint 128 | `s128-po-batch-approve-duplicate` | #359 | COMPLETED 2026-03-26 — PO batch approve + duplicate button. | `docs/plans/2026-03-26-sprint-128-po-batch-approve-duplicate.md` |
+
+| `S129` | Sprint 129 | `s128-store-ordering-redesign` | hrms#367, BEI-Tasks#262 | PR_CREATED 2026-03-26 — Store ordering redesign. Backend: B1-B5 (zero-history guard, store picker filter, UOM rounding). Frontend: F1-F10 (composite hook, summary strip, table/card layout, Fill Suggested, offline queue). | `docs/plans/2026-03-26-sprint-128-store-ordering-redesign.md` |
+
+| `S130` | Sprint 130 | — | — | RESERVED | — |
+
+| `S131` | Sprint 131 | `s131-commissary-data-fixes` | — | PLANNED — Fix S126 defects: Bin/SLE divergence for expiring batches, BOM creation for FG items, wastage reason labels. | `docs/plans/2026-03-26-sprint-131-commissary-data-fixes.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S128`.
-2. Reserve branch name: `s127-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S132`.
+2. Reserve branch name: `s132-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
