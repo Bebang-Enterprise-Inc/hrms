@@ -5,13 +5,14 @@ sprint_id: S134
 display: Sprint 134
 slug: quick-receive-auto-invoice
 branch: s134-quick-receive-auto-invoice
-status: PLANNED
+status: PR_CREATED
 planned_date: 2026-03-27
+execution_started: 2026-03-27
 completed_date: null
 depends_on: [S128, S132]
 total_units: 14
-backend_pr: null
-frontend_pr: null
+backend_pr: 374
+frontend_pr: 269
 l3_result: null
 execution_summary: null
 ```

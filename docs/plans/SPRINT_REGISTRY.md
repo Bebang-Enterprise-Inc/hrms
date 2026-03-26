@@ -150,7 +150,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S133` | Sprint 133 | `s133-s129-ordering-defect-fixes` | — | PLANNED — Fix S129 L3 defects: cargo_category submit bug, deploy B1-B5 backend, identical suggested qty formula, 65% OOS commissary data, missing demand/days columns. | `docs/plans/2026-03-26-sprint-133-s129-ordering-defect-fixes.md` |
 
-| `S134` | Sprint 134 | `s134-quick-receive-auto-invoice` | — | PLANNED — Quick Receive GR + Auto-Invoice prompt + PO warehouse default + stale test PO cleanup. Ian+Cayla bridge. 14 units. | `docs/plans/2026-03-27-sprint-134-quick-receive-auto-invoice.md` |
+| `S134` | Sprint 134 | `s134-quick-receive-auto-invoice` | hrms#374, BEI-Tasks#269 | PR_CREATED 2026-03-27 — Quick Receive GR + Auto-Invoice prompt + PO warehouse default. Ian+Cayla bridge. | `docs/plans/2026-03-27-sprint-134-quick-receive-auto-invoice.md` |
 
 | `S135` | Sprint 135 | `s135-inventory-bridge-supplier-intel` | — | PLANNED — Inventory→PR Bridge (low stock alerts, auto PR-to-PO), Supplier Doc Expiry, Today's Deliveries widget. Luwi strategic tools. 22-24 units. | `docs/plans/2026-03-27-sprint-135-inventory-bridge-supplier-intel.md` |
 
