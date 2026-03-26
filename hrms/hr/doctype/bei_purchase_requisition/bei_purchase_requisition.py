@@ -10,7 +10,18 @@ from frappe.utils import flt, now_datetime
 class BEIPurchaseRequisition(Document):
     def validate(self):
         self.calculate_totals()
+        self.validate_item_prices()
         self.set_pr_no()
+
+    def validate_item_prices(self):
+        """Warn if items have ₱0 price when a known price exists in Item master."""
+        for item in self.items:
+            if flt(item.estimated_unit_cost) <= 0:
+                standard_rate = flt(frappe.db.get_value("Item", item.item_code, "standard_rate") or 0)
+                if standard_rate > 0:
+                    # Auto-fill from Item master instead of blocking
+                    item.estimated_unit_cost = standard_rate
+                    item.estimated_amount = flt(item.qty or 0) * standard_rate
 
     def set_pr_no(self):
         """Set PR number from name if not already set."""
@@ -139,7 +150,10 @@ class BEIPurchaseRequisition(Document):
         for pr_item in self.items:
             contracted = get_contracted_price(pr_item.item_code, supplier_code)
             contracted_rate = contracted["contracted_rate"] if contracted else None
-            unit_cost = contracted_rate if contracted_rate else pr_item.estimated_unit_cost
+            # Price chain: contracted_rate → PR estimated_unit_cost → standard_rate → 0
+            unit_cost = contracted_rate or flt(pr_item.estimated_unit_cost) or flt(
+                frappe.db.get_value("Item", pr_item.item_code, "standard_rate") or 0
+            )
 
             po.append("items", {
                 "item_code": pr_item.item_code,
