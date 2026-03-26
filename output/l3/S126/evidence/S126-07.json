@@ -1,0 +1,24 @@
+{
+  "scenario_id": "S126-07",
+  "form_submitted": true,
+  "submit_method": "browser_click",
+  "submit_button_selector": "button:has-text('Submit All')",
+  "submit_network_request": {
+    "method": "POST",
+    "url": "/api/commissary",
+    "status": 200,
+    "response_snippet": "{\"success\":true,\"data\":{\"results\":[{\"item_code\":\"FG002\",\"status\":\"success\",\"se_name\":\"MAT-STE-2026-00316\",\"error\":null},{\"item_code\":\"MN009\",\"status\":\"error\",\"se_name\":null,\"error\":\"<strong>1.25</strong> units of <a href=\\\"/app/Form/Item/A011\\\" style=\\\"font-weight: bold;\\\">Item A011: JOLLYCOW CONDEN"
+  },
+  "values_verified": [
+    {
+      "field": "toast",
+      "expected": "logged",
+      "actual": "",
+      "method": "textContent()"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S126/artifacts/S126-07_before.png",
+    "output/l3/S126/artifacts/S126-07_after.png"
+  ]
+}

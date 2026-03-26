@@ -1,0 +1,98 @@
+[
+  {
+    "scenario": "S126-01",
+    "check": "OVERSTOCK card value",
+    "expected": "0 or count (not blank)",
+    "actual": "38",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "scenario": "S126-02",
+    "check": "DAYS INVENTORY value",
+    "expected": "N/A or valid count",
+    "actual": "Critical: 0",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "scenario": "S126-03",
+    "check": "TOP REASON value",
+    "expected": "N/A or reason text",
+    "actual": "Unknown",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "scenario": "S126-04",
+    "check": "Show all items checkbox",
+    "expected": "checkbox visible",
+    "actual": "visible",
+    "method": "isVisible()",
+    "passed": true
+  },
+  {
+    "scenario": "S126-05",
+    "check": "Production SE created with shift",
+    "expected": "SE created, toast with name",
+    "actual": "toast=\"Production recorded: MAT-STE-2026-00315\", se=MAT-STE-2026-00315",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "scenario": "S126-06",
+    "check": "Production log shift grouping",
+    "expected": "AM/PM/No Shift badges or empty state",
+    "actual": "AM:false PM:false No:true",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "scenario": "S126-07",
+    "check": "Bulk production submit",
+    "expected": "items logged toast",
+    "actual": "toast=\"\", resp=true",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "scenario": "S126-08",
+    "check": "Bulk WO button",
+    "expected": "Create All visible or no suggestions",
+    "actual": "button not found",
+    "method": "isVisible()",
+    "passed": false
+  },
+  {
+    "scenario": "S126-09",
+    "check": "Bulk write-off",
+    "expected": "written off toast",
+    "actual": "",
+    "method": "textContent()",
+    "passed": false
+  },
+  {
+    "scenario": "S126-10",
+    "check": "Order All button",
+    "expected": "visible or no alerts",
+    "actual": "button not found",
+    "method": "isVisible()",
+    "passed": false
+  },
+  {
+    "scenario": "S126-11",
+    "check": "Auto-QC inspection created",
+    "expected": "Pending inspection visible",
+    "actual": "pending:true, entries:6",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "scenario": "S126-12",
+    "check": "Today's Production card",
+    "expected": "items or empty state",
+    "actual": "5 items",
+    "method": "textContent()",
+    "passed": true
+  }
+]

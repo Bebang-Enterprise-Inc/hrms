@@ -1,0 +1,23 @@
+{
+  "scenario_id": "S126-12",
+  "form_submitted": false,
+  "submit_method": "view_only",
+  "values_verified": [
+    {
+      "field": "production_items",
+      "expected": ">0 or empty",
+      "actual": "5",
+      "method": "count()"
+    },
+    {
+      "field": "ampm_link",
+      "expected": "visible",
+      "actual": "yes",
+      "method": "isVisible()"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S126/artifacts/S126-12_before.png",
+    "output/l3/S126/artifacts/S126-12_after.png"
+  ]
+}

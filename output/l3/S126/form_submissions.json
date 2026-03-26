@@ -1,0 +1,59 @@
+[
+  {
+    "scenario_id": "S126-04",
+    "form": "wastage_dialog",
+    "submit_method": "view_only",
+    "inputs": [],
+    "response": "checkbox present check only"
+  },
+  {
+    "scenario_id": "S126-05",
+    "form": "production_log",
+    "submit_method": "browser_click",
+    "submit_button_selector": "dialog button:has-text('Log Production')",
+    "inputs": [
+      {
+        "field": "item_code",
+        "value": "FG004"
+      },
+      {
+        "field": "qty",
+        "value": "1"
+      }
+    ],
+    "response": "Production recorded: MAT-STE-2026-00315",
+    "network_captured": true
+  },
+  {
+    "scenario_id": "S126-07",
+    "form": "bulk_production",
+    "submit_method": "browser_click",
+    "submit_button_selector": "button:has-text('Submit All')",
+    "inputs": [
+      {
+        "field": "row_1_qty",
+        "value": "5"
+      },
+      {
+        "field": "row_2_qty",
+        "value": "10"
+      }
+    ],
+    "response": "",
+    "network_captured": true
+  },
+  {
+    "scenario_id": "S126-09",
+    "form": "bulk_expiry_writeoff",
+    "submit_method": "browser_click",
+    "submit_button_selector": "button:has-text('Write Off Selected')",
+    "inputs": [
+      {
+        "field": "selected_count",
+        "value": "2"
+      }
+    ],
+    "response": "",
+    "network_captured": true
+  }
+]

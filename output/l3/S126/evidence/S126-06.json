@@ -1,0 +1,17 @@
+{
+  "scenario_id": "S126-06",
+  "form_submitted": false,
+  "submit_method": "view_only",
+  "values_verified": [
+    {
+      "field": "shift_grouping",
+      "expected": "AM/PM badges",
+      "actual": "AM:false PM:false",
+      "method": "isVisible()"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S126/artifacts/S126-06_before.png",
+    "output/l3/S126/artifacts/S126-06_after.png"
+  ]
+}

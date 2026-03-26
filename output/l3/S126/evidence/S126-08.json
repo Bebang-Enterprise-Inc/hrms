@@ -1,0 +1,17 @@
+{
+  "scenario_id": "S126-08",
+  "form_submitted": false,
+  "submit_method": "view_only",
+  "values_verified": [
+    {
+      "field": "create_all",
+      "expected": "visible or no suggestions",
+      "actual": "not found",
+      "method": "isVisible()"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S126/artifacts/S126-08_before.png",
+    "output/l3/S126/artifacts/S126-08_after.png"
+  ]
+}

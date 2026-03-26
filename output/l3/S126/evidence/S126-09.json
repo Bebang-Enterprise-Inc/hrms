@@ -1,0 +1,18 @@
+{
+  "scenario_id": "S126-09",
+  "form_submitted": true,
+  "submit_method": "browser_click",
+  "submit_button_selector": "button:has-text('Write Off Selected')",
+  "values_verified": [
+    {
+      "field": "toast",
+      "expected": "written off",
+      "actual": "",
+      "method": "textContent()"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S126/artifacts/S126-09_selected.png",
+    "output/l3/S126/artifacts/S126-09_after.png"
+  ]
+}

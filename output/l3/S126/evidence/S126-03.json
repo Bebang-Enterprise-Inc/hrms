@@ -1,0 +1,17 @@
+{
+  "scenario_id": "S126-03",
+  "form_submitted": false,
+  "submit_method": "view_only",
+  "values_verified": [
+    {
+      "field": "top_reason",
+      "expected": "not undefined",
+      "actual": "Unknown",
+      "method": "textContent()"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S126/artifacts/S126-03_before.png",
+    "output/l3/S126/artifacts/S126-03_after.png"
+  ]
+}

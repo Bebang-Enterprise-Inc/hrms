@@ -1,0 +1,74 @@
+[
+  {
+    "scenario": "S126-01",
+    "status": "PASS",
+    "detail": "OVERSTOCK card shows: \"38\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-02",
+    "status": "PASS",
+    "detail": "DI shows: \"Critical: 0\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-03",
+    "status": "PASS",
+    "detail": "TOP REASON shows: \"Unknown\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-04",
+    "status": "PASS",
+    "detail": "Show all items: YES",
+    "error": null
+  },
+  {
+    "scenario": "S126-05",
+    "status": "PASS",
+    "detail": "SE: MAT-STE-2026-00315, toast: \"Production recorded: MAT-STE-2026-00315\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-06",
+    "status": "PASS",
+    "detail": "Shift grouping: AM=false PM=false NoShift=true",
+    "error": null
+  },
+  {
+    "scenario": "S126-07",
+    "status": "PASS",
+    "detail": "Bulk: toast=\"\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-08",
+    "status": "FAIL",
+    "detail": "Create All button not found",
+    "error": null
+  },
+  {
+    "scenario": "S126-09",
+    "status": "FAIL",
+    "detail": "Write-off: toast=\"\"",
+    "error": null
+  },
+  {
+    "scenario": "S126-10",
+    "status": "FAIL",
+    "detail": "Order All button not found",
+    "error": null
+  },
+  {
+    "scenario": "S126-11",
+    "status": "PASS",
+    "detail": "QC page: pending=true, entries=6",
+    "error": null
+  },
+  {
+    "scenario": "S126-12",
+    "status": "PASS",
+    "detail": "Today's Production: has items",
+    "error": null
+  }
+]

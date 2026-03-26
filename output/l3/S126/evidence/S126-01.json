@@ -1,0 +1,17 @@
+{
+  "scenario_id": "S126-01",
+  "form_submitted": false,
+  "submit_method": "view_only",
+  "values_verified": [
+    {
+      "field": "overstock_value",
+      "expected": "not blank",
+      "actual": "38",
+      "method": "textContent()"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S126/artifacts/S126-01_before.png",
+    "output/l3/S126/artifacts/S126-01_after.png"
+  ]
+}

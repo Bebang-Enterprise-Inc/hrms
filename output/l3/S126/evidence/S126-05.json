@@ -1,0 +1,30 @@
+{
+  "scenario_id": "S126-05",
+  "form_submitted": true,
+  "submit_method": "browser_click",
+  "submit_button_selector": "dialog button:has-text('Log Production')",
+  "submit_network_request": {
+    "method": "POST",
+    "url": "/api/commissary",
+    "status": 200,
+    "response_snippet": "{\"success\":true,\"data\":{\"name\":\"MAT-STE-2026-00315\",\"total_qty\":1.32,\"items_count\":4,\"qc_name\":null},\"message\":\"Production recorded: MAT-STE-2026-00315\"}"
+  },
+  "values_verified": [
+    {
+      "field": "toast_text",
+      "expected": "recorded/Production",
+      "actual": "Production recorded: MAT-STE-2026-00315",
+      "method": "textContent()"
+    },
+    {
+      "field": "se_name",
+      "expected": "SE-XXXX",
+      "actual": "MAT-STE-2026-00315",
+      "method": "response_json"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S126/artifacts/S126-05_before.png",
+    "output/l3/S126/artifacts/S126-05_after.png"
+  ]
+}
