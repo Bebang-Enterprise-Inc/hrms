@@ -489,15 +489,28 @@ def log_wastage(
 
 	if normalized_batch_no:
 		if normalized_batch_no not in available_batch_numbers:
-			hint = _format_available_batch_hint(available_batches)
-			return {
-				"success": False,
-				"error": (
-					_("Select a valid batch for {0}.").format(item_code)
-					if not hint
-					else _("Select a valid batch for {0}. Available batches: {1}.").format(item_code, hint)
-				),
-			}
+			# For expired write-offs, also check Bin table (SLE and Bin can diverge)
+			bin_has_stock = frappe.db.exists("Bin", {
+				"item_code": item_code,
+				"warehouse": commissary_warehouse,
+				"actual_qty": [">", 0],
+			})
+			batch_exists = frappe.db.exists("Batch", normalized_batch_no)
+			if batch_exists and bin_has_stock:
+				# Batch exists and warehouse has stock — allow the wastage
+				frappe.logger().info(
+					f"Wastage: batch {normalized_batch_no} not in SLE but Bin has stock, allowing"
+				)
+			else:
+				hint = _format_available_batch_hint(available_batches)
+				return {
+					"success": False,
+					"error": (
+						_("Select a valid batch for {0}.").format(item_code)
+						if not hint
+						else _("Select a valid batch for {0}. Available batches: {1}.").format(item_code, hint)
+					),
+				}
 		batch_no = normalized_batch_no
 	elif available_batches:
 		batch_no = str(available_batches[0].get("batch_no"))
