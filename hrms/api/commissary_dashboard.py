@@ -791,6 +791,7 @@ def submit_production_output(
 def submit_production_batch(
 	items: str | list[dict[str, Any]],
 	shift: str | None = None,
+	production_date: str | None = None,
 ) -> dict[str, Any]:
 	"""
 	Batch-submit multiple production items in one call.
@@ -798,8 +799,9 @@ def submit_production_batch(
 	Items are processed SEQUENTIALLY to avoid Frappe deadlocks on concurrent Stock Entry submissions.
 
 	Args:
-	    items: JSON array of {item_code, qty, notes?}
+	    items: JSON array of {item_code, qty, batch_no?, notes?}
 	    shift: Optional shift code (am/pm) — appended to remarks
+	    production_date: Optional date string — shared across all items
 	"""
 	check_scm_permission(SCM_COMMISSARY_ROLES, "batch record commissary production output")
 
@@ -842,7 +844,9 @@ def submit_production_batch(
 			single_items = [{"item_code": item_code, "qty": qty, "uom": entry.get("uom") or "Nos"}]
 			result = submit_production_output(
 				items=single_items,
+				batch_no=entry.get("batch_no") or None,
 				remarks=notes,
+				production_date=production_date,
 				shift=shift,
 			)
 			results.append({
