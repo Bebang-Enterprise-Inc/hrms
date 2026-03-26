@@ -580,7 +580,13 @@ class BEIPurchaseOrder(Document):
 			frappe.log_error(
 				f"Failed to create Frappe PO for BEI PO {self.name}: {e}", "BEI PO Integration Error"
 			)
-			frappe.throw(_("Failed to create Frappe Purchase Order: {0}").format(str(e)))
+			# Do NOT throw — Frappe PO sync is downstream of BEI approval.
+			# The BEI PO approval must succeed even if Frappe PO creation fails.
+			# The Frappe PO can be retried later via can_create_frappe_purchase_order().
+			frappe.msgprint(
+				_("BEI PO approved but Frappe PO sync failed: {0}. This can be retried later.").format(str(e)),
+				indicator="orange",
+			)
 
 	def _get_or_create_item(self, bei_item):
 		"""
