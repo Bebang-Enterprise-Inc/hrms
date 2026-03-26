@@ -7,7 +7,6 @@ Endpoints:
   - get_signed_documents: Lists BEI Signed Document records
 """
 
-import hashlib
 import hmac
 import json
 
@@ -26,7 +25,7 @@ from hrms.utils.sentry import set_backend_observability_context
 def webhook_receiver():
     """Receive and process Documenso webhook events.
 
-    Verifies HMAC-SHA256 signature via x-documenso-signature header,
+    Verifies the plain-text secret via X-Documenso-Secret header,
     then creates/updates BEI Signed Document records.
     """
     set_backend_observability_context(
@@ -35,29 +34,26 @@ def webhook_receiver():
         mutation_type="update",
     )
 
-    # --- Signature verification ---
+    # --- Webhook secret verification ---
+    # Documenso sends the webhook secret as a plain string in the
+    # X-Documenso-Secret header (NOT HMAC-SHA256).
+    # Source: https://docs.documenso.com/docs/developers/webhooks/verification
     webhook_secret = frappe.conf.get("documenso_webhook_secret") or frappe.get_single_value(
         "BEI Settings", "documenso_webhook_secret"
     )
     if not webhook_secret:
         webhook_secret = _get_doppler_secret("DOCUMENSO_WEBHOOK_SECRET")
 
-    raw_body = frappe.request.get_data(as_text=True)
-    received_sig = frappe.request.headers.get("x-documenso-signature", "")
+    received_secret = frappe.request.headers.get("x-documenso-secret", "")
 
-    if webhook_secret and received_sig:
-        expected_sig = hmac.new(
-            webhook_secret.encode("utf-8"),
-            raw_body.encode("utf-8"),
-            hashlib.sha256,
-        ).hexdigest()
-
-        if not hmac.compare_digest(expected_sig, received_sig):
-            frappe.throw(_("Invalid webhook signature"), frappe.AuthenticationError)
-    elif webhook_secret and not received_sig:
-        frappe.throw(_("Missing webhook signature header"), frappe.AuthenticationError)
+    if webhook_secret and received_secret:
+        if not hmac.compare_digest(received_secret, webhook_secret):
+            frappe.throw(_("Invalid webhook secret"), frappe.AuthenticationError)
+    elif webhook_secret and not received_secret:
+        frappe.throw(_("Missing X-Documenso-Secret header"), frappe.AuthenticationError)
 
     # --- Parse payload ---
+    raw_body = frappe.request.get_data(as_text=True)
     try:
         payload = json.loads(raw_body)
     except json.JSONDecodeError:
@@ -203,7 +199,8 @@ def send_for_signature(template_id, signers, document_title=None, linked_doctype
 
     Args:
         template_id: Documenso template ID
-        signers: JSON array of {name, email, role} objects
+        signers: JSON array of {id, email, name} objects. Each signer needs
+                 a numeric `id` matching the template's recipient slot.
         document_title: Optional title override
         linked_doctype: Optional Frappe DocType to link
         linked_docname: Optional Frappe document name to link
@@ -223,24 +220,32 @@ def send_for_signature(template_id, signers, document_title=None, linked_doctype
     api_token = _get_documenso_api_token()
     base_url = _get_documenso_base_url()
 
-    # Create document from template via Documenso API
+    # Generate document from template via Documenso v1 API (generate-document).
+    # Each signer needs a numeric `id` matching the template's recipient slot.
+    # If callers pass {id, email, name} we use their id; otherwise auto-number from 1.
+    api_recipients = []
+    for idx, s in enumerate(signers):
+        recipient = {
+            "id": s.get("id", idx + 1),
+            "email": s["email"],
+        }
+        if s.get("name"):
+            recipient["name"] = s["name"]
+        if s.get("signingOrder") is not None:
+            recipient["signingOrder"] = s["signingOrder"]
+        api_recipients.append(recipient)
+
+    payload = {"recipients": api_recipients}
+    if document_title:
+        payload["title"] = document_title
+
     response = requests.post(
-        f"{base_url}/api/v1/templates/{template_id}/create-document",
+        f"{base_url}/api/v1/templates/{template_id}/generate-document",
         headers={
             "Authorization": f"Bearer {api_token}",
             "Content-Type": "application/json",
         },
-        json={
-            "title": document_title or f"BEI Document - {frappe.utils.now()}",
-            "recipients": [
-                {
-                    "name": s.get("name", ""),
-                    "email": s["email"],
-                    "role": s.get("role", "SIGNER"),
-                }
-                for s in signers
-            ],
-        },
+        json=payload,
         timeout=30,
     )
 
@@ -250,7 +255,7 @@ def send_for_signature(template_id, signers, document_title=None, linked_doctype
         )
 
     result = response.json()
-    documenso_doc_id = str(result.get("id", result.get("documentId", "")))
+    documenso_doc_id = str(result.get("documentId", ""))
 
     # Send the document for signing
     send_response = requests.post(
@@ -259,8 +264,14 @@ def send_for_signature(template_id, signers, document_title=None, linked_doctype
             "Authorization": f"Bearer {api_token}",
             "Content-Type": "application/json",
         },
+        json={"sendEmail": True},
         timeout=30,
     )
+
+    # Map generated recipients by email for linking
+    generated_recipients = {
+        r.get("email", "").lower(): r for r in result.get("recipients", [])
+    }
 
     # Create BEI Signed Document record
     bei_doc = frappe.new_doc("BEI Signed Document")
@@ -274,10 +285,12 @@ def send_for_signature(template_id, signers, document_title=None, linked_doctype
         bei_doc.linked_docname = linked_docname
 
     for s in signers:
+        gen = generated_recipients.get(s["email"].lower(), {})
         bei_doc.append("signers", {
             "signer_name": s.get("name", s["email"]),
             "signer_email": s["email"],
             "signer_status": "Sent" if send_response.status_code in (200, 201) else "Pending",
+            "documenso_recipient_id": str(gen.get("recipientId", "")),
         })
 
     bei_doc.insert(ignore_permissions=True)
