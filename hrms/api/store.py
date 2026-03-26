@@ -1807,18 +1807,14 @@ def get_user_store(surface: str | None = None):
 			for store_row in schedule_rows:
 				append_store(store_row)
 		elif not stores:
-			# S133: For System Manager, return only actual stores (not 3PLs, groups, commissary).
-			# Use parent_warehouse filter to get stores under "Stores - BEI" or "Stores - BK".
+			# S133: For System Manager, return all leaf warehouses then filter.
+			# The _is_orderable_store() name-based filter removes 3PLs, commissary, etc.
 			store_rows = frappe.get_all(
 				"Warehouse",
-				filters={
-					"is_group": 0,
-					"disabled": 0,
-					"parent_warehouse": ["like", "Stores%"],
-				},
+				filters={"is_group": 0, "disabled": 0},
 				fields=["name", "warehouse_name", "warehouse_type"],
 				order_by="warehouse_name",
-				limit=100,
+				limit=200,
 			)
 			for store_row in store_rows:
 				# S128/B2 + S133: Skip non-orderable warehouses.
