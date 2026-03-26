@@ -1088,7 +1088,7 @@ def get_purchase_order_history(name) -> list[dict[str, Any]]:
         FROM `tabComment`
         WHERE reference_doctype = 'BEI Purchase Order'
           AND reference_name = %s
-          AND comment_type = 'Info'
+          AND comment_type IN ('Info', 'Comment')
         ORDER BY modified ASC
         """,
         (name,),
