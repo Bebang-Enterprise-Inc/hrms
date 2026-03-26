@@ -85,25 +85,33 @@ def _clear_legacy_serial_batch_fields_after_auto_bundle(stock_entry):
 
 
 def _get_available_batch_rows(item_code: str, warehouse: str) -> list[dict[str, Any]]:
+	"""Get batches with positive stock. Handles both legacy batch_no and v15 bundle paths."""
 	return frappe.db.sql(
 		"""
-        SELECT
-            sle.batch_no,
-            b.expiry_date,
-            SUM(sle.actual_qty) as available_qty
-        FROM `tabStock Ledger Entry` sle
-        LEFT JOIN `tabBatch` b ON b.name = sle.batch_no
-        WHERE sle.item_code = %(item_code)s
-          AND sle.warehouse = %(warehouse)s
-          AND sle.is_cancelled = 0
-          AND IFNULL(sle.batch_no, '') != ''
-        GROUP BY sle.batch_no, b.expiry_date
-        HAVING available_qty > 0
-        ORDER BY
-          CASE WHEN b.expiry_date IS NULL THEN 1 ELSE 0 END,
-          b.expiry_date ASC,
-          sle.batch_no ASC
-    """,
+		SELECT batch_no, expiry_date, SUM(qty) as available_qty FROM (
+			/* Legacy: batch_no on SLE */
+			SELECT sle.batch_no, b.expiry_date, sle.actual_qty as qty
+			FROM `tabStock Ledger Entry` sle
+			LEFT JOIN `tabBatch` b ON b.name = sle.batch_no
+			WHERE sle.item_code = %(item_code)s AND sle.warehouse = %(warehouse)s
+			AND sle.is_cancelled = 0 AND IFNULL(sle.batch_no, '') != ''
+			UNION ALL
+			/* V15: batch via Serial and Batch Bundle */
+			SELECT sbbe.batch_no, b2.expiry_date, sbbe.qty
+			FROM `tabStock Ledger Entry` sle2
+			JOIN `tabSerial and Batch Bundle` sbb ON sbb.name = sle2.serial_and_batch_bundle
+			JOIN `tabSerial and Batch Entry` sbbe ON sbbe.parent = sbb.name
+			LEFT JOIN `tabBatch` b2 ON b2.name = sbbe.batch_no
+			WHERE sle2.item_code = %(item_code)s AND sle2.warehouse = %(warehouse)s
+			AND sle2.is_cancelled = 0 AND IFNULL(sle2.serial_and_batch_bundle, '') != ''
+		) combined
+		GROUP BY batch_no, expiry_date
+		HAVING available_qty > 0
+		ORDER BY
+			CASE WHEN expiry_date IS NULL THEN 1 ELSE 0 END,
+			expiry_date ASC,
+			batch_no ASC
+		""",
 		{"item_code": item_code, "warehouse": warehouse},
 		as_dict=True,
 	)
@@ -570,10 +578,18 @@ def log_wastage(
 			# For batch-tracked items, check actual batch stock and cap qty to avoid negative stock errors
 			actual_qty = flt(qty)
 			if batch_no:
+				# Check both legacy batch_no AND v15 bundle paths
 				batch_stock = flt(frappe.db.sql(
-					"""SELECT SUM(actual_qty) FROM `tabStock Ledger Entry`
-					WHERE item_code=%s AND warehouse=%s AND batch_no=%s""",
-					(item_code, commissary_warehouse, batch_no),
+					"""SELECT SUM(qty) FROM (
+						SELECT actual_qty as qty FROM `tabStock Ledger Entry`
+						WHERE item_code=%s AND warehouse=%s AND batch_no=%s AND is_cancelled=0
+						UNION ALL
+						SELECT sbbe.qty FROM `tabStock Ledger Entry` sle
+						JOIN `tabSerial and Batch Bundle` sbb ON sbb.name = sle.serial_and_batch_bundle
+						JOIN `tabSerial and Batch Entry` sbbe ON sbbe.parent = sbb.name
+						WHERE sle.item_code=%s AND sle.warehouse=%s AND sbbe.batch_no=%s AND sle.is_cancelled=0
+					) combined""",
+					(item_code, commissary_warehouse, batch_no, item_code, commissary_warehouse, batch_no),
 				)[0][0] or 0)
 				if batch_stock <= 0:
 					return {
@@ -1039,15 +1055,16 @@ def get_expiring_batches(days: int | str = 7, item_group: str | None = None) -> 
 		filters += " AND i.item_group = %(item_group)s"
 		params["item_group"] = item_group
 
-	# Use SLE (not Bin) for batch-level stock — Bin tracks item-level totals which
-	# can show phantom stock for individual batches (S126 defect: 358 batches shown
-	# with stock from Bin but 0 in SLE, making write-off impossible)
+	# Use SLE for batch-level stock. Frappe v15 stores batch via two paths:
+	# 1. Legacy: batch_no directly on SLE
+	# 2. V15: serial_and_batch_bundle on SLE -> Bundle Entry has batch_no + qty
+	# UNION both to get accurate per-batch stock.
 	expiring = frappe.db.sql(
 		"""
 		SELECT
 			b.name as batch_no, b.item as item_code, i.item_name, i.item_group,
 			b.expiry_date, b.manufacturing_date, i.stock_uom,
-			COALESCE(sle_sum.batch_qty, 0) as available_qty,
+			COALESCE(stock.batch_qty, 0) as available_qty,
 			DATEDIFF(b.expiry_date, CURDATE()) as days_to_expiry,
 			CASE WHEN b.expiry_date <= CURDATE() THEN 'expired'
 			     WHEN DATEDIFF(b.expiry_date, CURDATE()) <= 3 THEN 'critical'
@@ -1055,15 +1072,24 @@ def get_expiring_batches(days: int | str = 7, item_group: str | None = None) -> 
 		FROM `tabBatch` b
 		JOIN `tabItem` i ON i.name = b.item
 		LEFT JOIN (
-			SELECT batch_no, item_code, SUM(actual_qty) as batch_qty
-			FROM `tabStock Ledger Entry`
-			WHERE warehouse = %(warehouse)s AND is_cancelled = 0
-			AND IFNULL(batch_no, '') != ''
+			SELECT batch_no, item_code, SUM(qty) as batch_qty FROM (
+				SELECT sle.batch_no, sle.item_code, sle.actual_qty as qty
+				FROM `tabStock Ledger Entry` sle
+				WHERE sle.warehouse = %(warehouse)s AND sle.is_cancelled = 0
+				AND IFNULL(sle.batch_no, '') != ''
+				UNION ALL
+				SELECT sbbe.batch_no, sle2.item_code, sbbe.qty
+				FROM `tabStock Ledger Entry` sle2
+				JOIN `tabSerial and Batch Bundle` sbb ON sbb.name = sle2.serial_and_batch_bundle
+				JOIN `tabSerial and Batch Entry` sbbe ON sbbe.parent = sbb.name
+				WHERE sle2.warehouse = %(warehouse)s AND sle2.is_cancelled = 0
+				AND IFNULL(sle2.serial_and_batch_bundle, '') != ''
+			) combined
 			GROUP BY batch_no, item_code
 			HAVING batch_qty > 0
-		) sle_sum ON sle_sum.batch_no = b.name AND sle_sum.item_code = b.item
+		) stock ON stock.batch_no = b.name AND stock.item_code = b.item
 		"""
-		+ filters.replace("AND bin.actual_qty > 0", "AND COALESCE(sle_sum.batch_qty, 0) > 0")
+		+ filters.replace("AND bin.actual_qty > 0", "AND COALESCE(stock.batch_qty, 0) > 0")
 		  .replace("AND bin.warehouse = %(warehouse)s", "")
 		+ " ORDER BY b.expiry_date ASC",
 		params,
