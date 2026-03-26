@@ -10,6 +10,7 @@ import base64
 import csv
 import hashlib
 import json
+import math
 import re
 from contextlib import contextmanager
 from pathlib import Path
@@ -1400,6 +1401,24 @@ def _build_recommendation_contract(
 	bom_consumption=0.0,
 	coverage_window_days=1,
 ):
+	# S128/B1: Zero-history items get all-zero contract — do NOT touch with-history path.
+	if flt(last_order_qty) <= 0 and flt(order_count) <= 0:
+		return {
+			"lane": lane,
+			"available_to_promise": flt(available_to_promise, 2),
+			"coverage_window_days": max(1.0, flt(coverage_window_days)),
+			"projected_sales": 0.0,
+			"bom_consumption": 0.0,
+			"forecast_demand": 0.0,
+			"safety_buffer": 0.0,
+			"recommended_qty": 0.0,
+			"suggested_qty": 0.0,
+			"raw_suggested_qty": 0.0,
+			"raw_recommended_qty": 0.0,
+			"has_order_history": False,
+			"risk_rank": _risk_rank(0, 0, available_to_promise),
+		}
+
 	baseline = flt(last_order_qty)
 	if baseline <= 0:
 		baseline = max(1.0, flt(order_count) * 0.5)
@@ -1426,6 +1445,10 @@ def _build_recommendation_contract(
 		"recommended_qty": recommended_qty,
 		# S019 compatibility: suggested_qty remains canonical persistence field.
 		"suggested_qty": recommended_qty,
+		# S128/B5: Pre-rounding floats for analytics consumers.
+		"raw_suggested_qty": recommended_qty,
+		"raw_recommended_qty": recommended_qty,
+		"has_order_history": True,
 		"risk_rank": _risk_rank(order_count, recommended_qty, available_to_promise),
 	}
 
@@ -1436,6 +1459,34 @@ def _coverage_window_days_for_lane(lane):
 	if lane == "Fresh Market":
 		return 1
 	return 3
+
+
+# S128/B5: UOM whitelist for integer rounding.
+_INTEGER_UOMS = frozenset({
+	"Nos", "Pcs", "Box", "Pack", "Bag", "Piece", "Dozen", "Set", "Unit",
+	"Bundle", "Roll", "Can", "Bottle", "Sack", "Gallon",
+})
+
+
+def _round_suggested_qty(qty, uom):
+	"""Round qty based on UOM type. Integer UOMs get ceil, fractional get round(3)."""
+	if flt(qty) <= 0:
+		return 0.0
+	if uom in _INTEGER_UOMS:
+		return float(math.ceil(qty))
+	return round(flt(qty), 3)
+
+
+# S128/B2: Filter non-orderable warehouses from store picker.
+_NON_ORDERABLE_WAREHOUSE_TYPES = frozenset({"3PL", "Commissary", "Cold Storage", "Transit"})
+
+
+def _is_orderable_store(warehouse_dict):
+	"""Return True if the warehouse is a real store eligible for ordering."""
+	wt = (warehouse_dict.get("warehouse_type") or "").strip()
+	if wt and wt in _NON_ORDERABLE_WAREHOUSE_TYPES:
+		return False
+	return True
 
 
 def _parse_snapshot_source_reference(raw_value):
@@ -1667,10 +1718,13 @@ def get_user_store(surface: str | None = None):
 		area_stores = frappe.get_all(
 			"Warehouse",
 			filters={"custom_area_supervisor": user, "is_group": 0, "disabled": 0},
-			fields=["name", "warehouse_name"],
+			fields=["name", "warehouse_name", "warehouse_type"],
 			order_by="warehouse_name",
 		)
 		for store_row in area_stores:
+			# S128/B2: Skip 3PLs, cold storage, commissary from store picker.
+			if not _is_orderable_store(store_row):
+				continue
 			append_store(
 				store_row,
 				allow_unmapped=surface_key not in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY},
@@ -1745,16 +1799,81 @@ def get_user_store(surface: str | None = None):
 			store_rows = frappe.get_all(
 				"Warehouse",
 				filters={"is_group": 0, "disabled": 0},
-				fields=["name", "warehouse_name"],
+				fields=["name", "warehouse_name", "warehouse_type"],
 				order_by="warehouse_name",
 				limit=50,
 			)
 			for store_row in store_rows:
+				# S128/B2: Skip non-orderable warehouses.
+				if not _is_orderable_store(store_row):
+					continue
 				append_store(store_row)
 
 	default_store = stores[0]["name"] if stores else None
 
 	return {"stores": stores, "default_store": default_store, "is_multi_store": len(stores) > 1, "role": role}
+
+
+@frappe.whitelist()
+def set_warehouse_types(dry_run: int | str = 1) -> dict:
+	"""S128/B3: Bulk-set warehouse_type for all warehouses.
+
+	Real stores → 'Store', 3PLs → '3PL', commissary → 'Commissary'.
+	Only System Manager / Administrator may execute.
+	"""
+	user_roles = set(frappe.get_roles(frappe.session.user))
+	if not user_roles.intersection({"System Manager", "Administrator"}):
+		frappe.throw(_("Only System Manager or Administrator can run this."), frappe.PermissionError)
+
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(module="ordering", action="set_warehouse_types", mutation_type="update")
+
+	dry_run = bool(cint(dry_run))
+	_3PL_NAMES = {"Jentec Storage Inc.", "Pinnacle Cold Storage Solutions", "Royal Cold Storage"}
+	_COMMISSARY_NAMES = {"Bebang Kitchen Inc."}
+
+	warehouses = frappe.get_all(
+		"Warehouse",
+		filters={"is_group": 0, "disabled": 0},
+		fields=["name", "warehouse_name", "warehouse_type"],
+	)
+
+	updates = []
+	for wh in warehouses:
+		wh_name = wh.get("warehouse_name") or wh.get("name") or ""
+		current_type = (wh.get("warehouse_type") or "").strip()
+
+		# Determine target type
+		target_type = None
+		if any(n in wh_name for n in _3PL_NAMES):
+			target_type = "3PL"
+		elif any(n in wh_name for n in _COMMISSARY_NAMES):
+			target_type = "Commissary"
+		elif not current_type:
+			# Default untyped leaf warehouses to Store
+			target_type = "Store"
+
+		if target_type and target_type != current_type:
+			updates.append({"name": wh["name"], "from": current_type, "to": target_type})
+
+	if not dry_run and updates:
+		frappe.db.begin()
+		try:
+			for u in updates:
+				frappe.db.set_value("Warehouse", u["name"], "warehouse_type", u["to"])
+			frappe.db.commit()
+		except Exception:
+			frappe.db.rollback()
+			frappe.log_error("S128/B3 warehouse_type migration failed — rolled back")
+			raise
+
+	return {
+		"dry_run": dry_run,
+		"total_warehouses": len(warehouses),
+		"updates": updates,
+		"update_count": len(updates),
+	}
 
 
 @frappe.whitelist()
@@ -1786,6 +1905,13 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	Returns lane-aware recommendation fields while preserving `suggested_qty`
 	as canonical persisted field for S019 compatibility.
 	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="ordering",
+		action="get_orderable_items",
+		mutation_type="read",
+	)
 	if not store:
 		frappe.throw(_("Store is required"))
 
@@ -1906,6 +2032,12 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		item["demand_snapshot_date"] = snapshot.get("snapshot_date")
 		item["lookback_days"] = cint(snapshot.get("lookback_days") or 0)
 		item.update(contract)
+
+		# S128/B5: UOM-aware rounding — ceil for integer UOMs, round(3) for fractional.
+		item_uom = item.get("stock_uom") or ""
+		raw_sq = flt(item.get("suggested_qty"))
+		item["suggested_qty"] = _round_suggested_qty(raw_sq, item_uom)
+		item["recommended_qty"] = _round_suggested_qty(flt(item.get("recommended_qty")), item_uom)
 
 	items = sorted(
 		items,
