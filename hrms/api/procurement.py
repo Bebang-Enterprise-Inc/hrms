@@ -1339,6 +1339,8 @@ def duplicate_po(source_name):
             "vat_rate": item.get("vat_rate") or 0,
             "vat_amount": item.get("vat_amount") or 0,
             "amount": item.get("amount") or 0,
+            "contracted_unit_cost": item.get("contracted_unit_cost") or 0,
+            "price_override_reason": item.get("price_override_reason") or "",
         })
 
     new_po = frappe.get_doc({
