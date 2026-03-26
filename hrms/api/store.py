@@ -5338,6 +5338,51 @@ def check_maintenance_for_closing(store: str, date: str | None = None) -> dict:
 
 
 @frappe.whitelist()
+def get_store_order_history(store: str = "", limit: int = 20, offset: int = 0) -> dict:
+	"""Return past BEI Store Orders for a store, newest first."""
+	from hrms.utils.sentry import set_backend_observability_context
+	set_backend_observability_context(
+		module="store-ops",
+		action="get_store_order_history",
+		mutation_type="read",
+	)
+
+	if not store:
+		user_store = _get_user_store()
+		store = user_store.get("default_store") if user_store else ""
+	if not store:
+		return {"orders": []}
+
+	limit = min(int(limit), 100)
+	offset = max(int(offset), 0)
+
+	orders = frappe.db.get_all(
+		"BEI Store Order",
+		filters={"store": store},
+		fields=["name", "creation as order_date", "status", "cargo_category",
+				"owner as submitted_by"],
+		order_by="creation desc",
+		start=offset,
+		page_length=limit,
+	)
+
+	for order in orders:
+		items = frappe.db.get_all(
+			"BEI Store Order Item",
+			filters={"parent": order["name"]},
+			fields=["item_code", "item_name", "qty_requested as qty"],
+		)
+		order["items"] = items
+		order["items_count"] = len(items)
+		order["total_qty"] = sum(i.get("qty", 0) for i in items)
+		# Clean up submitted_by to show full name
+		if order.get("submitted_by"):
+			order["submitted_by"] = frappe.db.get_value("User", order["submitted_by"], "full_name") or order["submitted_by"]
+
+	return {"orders": orders}
+
+
+@frappe.whitelist()
 def verify_maintenance_from_closing(
 	maintenance_completion: str,
 	verified: bool | int | str = True,
