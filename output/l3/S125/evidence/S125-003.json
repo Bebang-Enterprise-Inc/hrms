@@ -1,0 +1,23 @@
+{
+  "scenario_id": "S125-003",
+  "form_submitted": false,
+  "submit_method": "n/a",
+  "values_verified": [
+    {
+      "field": "needs_attention_count",
+      "expected": "<86",
+      "actual": "81",
+      "method": "textContent()"
+    },
+    {
+      "field": "count_span_text",
+      "expected": "X of Y items",
+      "actual": "81 of 164 items",
+      "method": "textContent()"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S125/screenshots/S125-003_before.png",
+    "output/l3/S125/screenshots/S125-003_after.png"
+  ]
+}

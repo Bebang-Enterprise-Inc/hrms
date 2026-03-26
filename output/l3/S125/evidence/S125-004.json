@@ -1,0 +1,23 @@
+{
+  "scenario_id": "S125-004",
+  "form_submitted": false,
+  "submit_method": "n/a",
+  "values_verified": [
+    {
+      "field": "banner_text",
+      "expected": "no 0:00 left",
+      "actual": "Next delivery: Friday, 2026-03-27Place Order ",
+      "method": "textContent()"
+    },
+    {
+      "field": "place_order_state",
+      "expected": "greyed span if closed, active link if open",
+      "actual": "link=false, span=true",
+      "method": "isVisible()"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S125/screenshots/S125-004_banner.png"
+  ],
+  "limitation": "NOTE: This test verifies the current banner state (open or closed) does NOT show '0:00 left' with active link. It does NOT test the live countdown-to-expiry transition (would require waiting at the cutoff boundary). The TDZ fix (PR #255) was verified by the page loading without crash — the previous version crashed with ReferenceError."
+}

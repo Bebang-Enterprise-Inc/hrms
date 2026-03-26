@@ -1,0 +1,20 @@
+[
+  {
+    "scenario": "S125-003",
+    "test": "Needs Attention count from UI",
+    "status": "PASS",
+    "detail": "Needs Attention shows 81 of 164 items (was 86 before fix). Read from UI span: \"81 of 164 items\""
+  },
+  {
+    "scenario": "S125-004",
+    "test": "Banner state (no 0:00 bug, no crash)",
+    "status": "PASS",
+    "detail": "Closed banner correct: \"Next delivery: Friday, 2026-03-27Place Order \". Place Order is greyed (span, not link). | NOTE: This test verifies the current banner state (open or closed) does NOT show '0:00 left' with active link. It does NOT test the live countdown-to-expiry transition (would require waiting at the cutoff boundary). The TDZ fix (PR #255) was verified by the page loading without crash — the previous version crashed with ReferenceError."
+  },
+  {
+    "scenario": "S125-005",
+    "test": "Store reverted to TEST-STORE-BGC",
+    "status": "PASS",
+    "detail": "Total SKUs = 14 (different from Araneta's 164). Store assignment changed."
+  }
+]

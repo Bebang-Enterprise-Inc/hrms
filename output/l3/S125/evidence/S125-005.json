@@ -1,0 +1,29 @@
+{
+  "scenario_id": "S125-005",
+  "form_submitted": false,
+  "submit_method": "n/a",
+  "values_verified": [
+    {
+      "field": "total_skus_after_revert",
+      "expected": "0 (TEST-STORE-BGC)",
+      "actual": "14",
+      "method": "textContent()"
+    },
+    {
+      "field": "total_card_text",
+      "expected": "Total SKUs0",
+      "actual": "Total SKUs14",
+      "method": "textContent()"
+    },
+    {
+      "field": "critical_card_text",
+      "expected": "Critical0",
+      "actual": "Critical5",
+      "method": "textContent()"
+    }
+  ],
+  "screenshots": [
+    "output/l3/S125/screenshots/S125-005_fresh_login.png",
+    "output/l3/S125/screenshots/S125-005_after.png"
+  ]
+}
