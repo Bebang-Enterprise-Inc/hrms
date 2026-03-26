@@ -39,16 +39,17 @@ GENERIC_WAREHOUSE_LABELS = {
 	"DO NOT DELIVER FOR GR PURPOSES PAYMENT",
 }
 WAREHOUSE_ALIAS_DOCNAME_MAP = {
-	"SHAW": "Shaw BLVD - Bebang Enterprise Inc.",
-	"SHAW BOULEVARD": "Shaw BLVD - Bebang Enterprise Inc.",
-	"SHAW BLVD": "Shaw BLVD - Bebang Enterprise Inc.",
-	"SHAW BEBANG": "Shaw BLVD - Bebang Enterprise Inc.",
-	"BEBANG SHAW": "Shaw BLVD - Bebang Enterprise Inc.",
-	"BEBANG SHAW TEST": "Shaw BLVD - Bebang Enterprise Inc.",
-	"BEBANGA SHAW": "Shaw BLVD - Bebang Enterprise Inc.",
-	"BEBANG SHAND": "Shaw BLVD - Bebang Enterprise Inc.",
-	"BEBANG SHAWS": "Shaw BLVD - Bebang Enterprise Inc.",
-	"BEBENG SHAW": "Shaw BLVD - Bebang Enterprise Inc.",
+	# Shaw BLVD is the commissary, operated by BKI (Bebang Kitchen Inc.)
+	"SHAW": "Shaw BLVD - BKI",
+	"SHAW BOULEVARD": "Shaw BLVD - BKI",
+	"SHAW BLVD": "Shaw BLVD - BKI",
+	"SHAW BEBANG": "Shaw BLVD - BKI",
+	"BEBANG SHAW": "Shaw BLVD - BKI",
+	"BEBANG SHAW TEST": "Shaw BLVD - BKI",
+	"BEBANGA SHAW": "Shaw BLVD - BKI",
+	"BEBANG SHAND": "Shaw BLVD - BKI",
+	"BEBANG SHAWS": "Shaw BLVD - BKI",
+	"BEBENG SHAW": "Shaw BLVD - BKI",
 	"SHAW COMMISSARY": "Shaw BLVD - BKI",
 	"SHAW COMMI": "Shaw BLVD - BKI",
 }
@@ -333,10 +334,8 @@ def _resolve_warehouse_alias(value: str | None) -> str | None:
 		return _resolve_warehouse_exact_or_name("Royal Cold Storage – Taytay (RCS)")
 	if "PINNACLE" in normalized or "TURBINA" in normalized or "CALAMBA" in normalized:
 		return _resolve_warehouse_exact_or_name("Pinnacle Cold Storage Solutions")
-	if "SHAW COMMISSARY" in normalized or "SHAW COMMI" in normalized:
-		return _resolve_warehouse_exact_or_name("Shaw BLVD - BKI")
 	if "SHAW" in normalized:
-		return _resolve_warehouse_exact_or_name("Shaw BLVD - Bebang Enterprise Inc.")
+		return _resolve_warehouse_exact_or_name("Shaw BLVD - BKI")
 	if "GREENHILLS" in normalized:
 		return _resolve_warehouse_exact_or_name("Greenhills Ortigas")
 	if "ESTANCIA" in normalized:
@@ -390,6 +389,17 @@ def _resolve_warehouse(raw_value: str | None) -> str | None:
 		if frappe.db.exists("Warehouse", "Stores - BEI"):
 			return "Stores - BEI"
 		return frappe.db.get_value("Warehouse", {"is_group": 0}, "name")
+
+	# Check explicit alias map FIRST — these are curated redirects that must
+	# take precedence over the generic company-preference lookup.  Without this,
+	# "Shaw BLVD" resolves to the BEI store warehouse via warehouse_name search
+	# (BEI is first in WAREHOUSE_COMPANY_PREFERENCE) instead of the BKI commissary.
+	normalized = _normalize_warehouse_label(value)
+	docname_alias = WAREHOUSE_ALIAS_DOCNAME_MAP.get(normalized)
+	if docname_alias:
+		resolved = _resolve_warehouse_exact_or_name(docname_alias)
+		if resolved:
+			return resolved
 
 	resolved = _resolve_warehouse_exact_or_name(value)
 	if resolved:
