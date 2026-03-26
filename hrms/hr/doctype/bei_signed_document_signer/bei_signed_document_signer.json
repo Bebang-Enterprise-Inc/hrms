@@ -1,0 +1,46 @@
+{
+  "name": "BEI Signed Document Signer",
+  "module": "HR",
+  "doctype": "DocType",
+  "istable": 1,
+  "engine": "InnoDB",
+  "fields": [
+    {
+      "fieldname": "signer_name",
+      "fieldtype": "Data",
+      "label": "Signer Name",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "signer_email",
+      "fieldtype": "Data",
+      "label": "Signer Email",
+      "options": "Email",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "signer_status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Pending\nSent\nViewed\nSigned\nDeclined",
+      "default": "Pending",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "signed_at",
+      "fieldtype": "Datetime",
+      "label": "Signed At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "documenso_recipient_id",
+      "fieldtype": "Data",
+      "label": "Documenso Recipient ID",
+      "read_only": 1,
+      "hidden": 1
+    }
+  ],
+  "permissions": []
+}
