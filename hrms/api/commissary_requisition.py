@@ -500,7 +500,7 @@ def get_production_suggestions():
             b.name as bom_name
         FROM `tabItem` i
         LEFT JOIN `tabBin` bin ON bin.item_code = i.name AND bin.warehouse = %s
-        LEFT JOIN `tabBOM` b ON b.item = i.name AND b.is_active = 1 AND b.is_default = 1
+        LEFT JOIN `tabBOM` b ON b.item = i.name AND b.is_active = 1 AND b.is_default = 1 AND b.docstatus = 1
         WHERE i.item_group = 'Finished Goods'
         AND i.disabled = 0
         ORDER BY pending_demand DESC, current_stock ASC
@@ -515,7 +515,7 @@ def get_production_suggestions():
 		target_stock = 100  # Default safety stock
 		gap = target_stock - item.current_stock + item.pending_demand
 
-		if gap > 0 and item.bom_name:
+		if gap > 0:
 			result.append(
 				{
 					"item_code": item.item_code,
@@ -525,6 +525,7 @@ def get_production_suggestions():
 					"pending_demand": flt(item.pending_demand),
 					"suggested_qty": flt(gap, 0),
 					"bom_name": item.bom_name,
+					"has_bom": bool(item.bom_name),
 					"priority": "high" if item.pending_demand > 0 else "normal",
 				}
 			)
