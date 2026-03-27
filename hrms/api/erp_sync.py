@@ -1339,20 +1339,20 @@ def _sync_inventory_rows(
 			expense_account = _default_expense_account(sr.company)
 			cost_center = _default_cost_center(sr.company)
 			# For first-time stock (Opening Entry), Frappe requires an Asset/Liability
-			# difference account. Use Temporary Opening if available.
+			# expense_account. Use Temporary Opening if available for new warehouses.
 			temp_opening = frappe.db.get_value(
 				"Account",
 				{"company": sr.company, "account_type": "Temporary", "is_group": 0},
 				"name",
 			)
-			if temp_opening and _doctype_has_field("Stock Reconciliation", "difference_account"):
-				sr.difference_account = temp_opening
 			if _doctype_has_field("Stock Reconciliation", "expense_account"):
-				if not expense_account:
+				# Use Temporary Opening for Opening Entry (new warehouses with no SLE history),
+				# otherwise use the default expense account.
+				sr.expense_account = temp_opening or expense_account
+				if not sr.expense_account:
 					frappe.throw(
 						_("No stock adjustment expense account configured for company {0}").format(sr.company)
 					)
-				sr.expense_account = expense_account
 			if _doctype_has_field("Stock Reconciliation", "cost_center") and cost_center:
 				sr.cost_center = cost_center
 			if has_remarks:
