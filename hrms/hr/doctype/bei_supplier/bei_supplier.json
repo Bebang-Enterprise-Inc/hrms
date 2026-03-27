@@ -23,6 +23,11 @@
     "bir_2307",
     "sec_certificate",
     "business_permit",
+    "document_expiry_section",
+    "bir_expiry_date",
+    "sec_expiry_date",
+    "column_break_expiry",
+    "permit_expiry_date",
     "invoice_exception_section",
     "allow_missing_supplier_invoice",
     "missing_supplier_invoice_reason",
@@ -154,6 +159,31 @@
       "fieldname": "business_permit",
       "fieldtype": "Attach",
       "label": "Business Permit"
+    },
+    {
+      "collapsible": 1,
+      "fieldname": "document_expiry_section",
+      "fieldtype": "Section Break",
+      "label": "Document Expiry Dates"
+    },
+    {
+      "fieldname": "bir_expiry_date",
+      "fieldtype": "Date",
+      "label": "BIR 2307 Expiry Date"
+    },
+    {
+      "fieldname": "sec_expiry_date",
+      "fieldtype": "Date",
+      "label": "SEC Registration Expiry Date"
+    },
+    {
+      "fieldname": "column_break_expiry",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "permit_expiry_date",
+      "fieldtype": "Date",
+      "label": "Business Permit Expiry Date"
     },
     {
       "fieldname": "invoice_exception_section",

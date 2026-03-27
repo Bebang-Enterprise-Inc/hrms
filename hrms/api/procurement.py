@@ -6632,3 +6632,328 @@ def update_po_item_price(po_name, new_price, reason, item_idx=None, item_name=No
         "price_override": 1,
         "change_log": change_log,
     }
+
+
+# ---------------------------------------------------------------------------
+# S135: Inventory Bridge + Supplier Intelligence
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_low_stock_items(threshold_days: int | str = 7, warehouse: str = "") -> dict:
+    """Return items below reorder threshold with days-of-stock-remaining.
+
+    Calculates consumption rate from Stock Ledger Entry outflows over the last
+    30 days, then divides current stock by daily consumption to get days remaining.
+    Items with zero consumption in the last 30 days are excluded (no demand signal).
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement", action="get_low_stock_items", mutation_type="read",
+    )
+
+    threshold_days = cint(threshold_days) or 7
+
+    # Default to main warehouse if not specified
+    if not warehouse:
+        warehouse = "Stores - BEI"
+
+    # Get current stock from Bin table
+    stock_items = frappe.db.sql("""
+        SELECT
+            b.item_code,
+            i.item_name,
+            i.stock_uom,
+            b.warehouse,
+            b.actual_qty AS current_stock,
+            COALESCE(ir.warehouse_reorder_level, 0) AS reorder_point
+        FROM `tabBin` b
+        JOIN `tabItem` i ON i.name = b.item_code AND i.disabled = 0
+        LEFT JOIN `tabItem Reorder` ir
+            ON ir.parent = b.item_code AND ir.warehouse = b.warehouse
+        WHERE b.warehouse = %(warehouse)s
+          AND b.actual_qty > 0
+        ORDER BY i.item_name
+    """, {"warehouse": warehouse}, as_dict=True)
+
+    if not stock_items:
+        return {"items": [], "warehouse": warehouse, "threshold_days": threshold_days}
+
+    # Get consumption (outflows) from SLE over last 30 days
+    item_codes = [row["item_code"] for row in stock_items]
+    consumption_data = frappe.db.sql("""
+        SELECT
+            item_code,
+            ABS(SUM(actual_qty)) AS total_consumed
+        FROM `tabStock Ledger Entry`
+        WHERE item_code IN %(items)s
+          AND warehouse = %(warehouse)s
+          AND actual_qty < 0
+          AND posting_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+        GROUP BY item_code
+    """, {"items": item_codes, "warehouse": warehouse}, as_dict=True)
+
+    consumption_map = {row["item_code"]: flt(row["total_consumed"]) for row in consumption_data}
+
+    result = []
+    for item in stock_items:
+        total_consumed = consumption_map.get(item["item_code"], 0)
+        daily_consumption = flt(total_consumed / 30, 4)
+
+        if daily_consumption <= 0:
+            continue  # No consumption = no demand signal
+
+        days_remaining = flt(item["current_stock"] / daily_consumption, 1)
+
+        if days_remaining <= threshold_days:
+            result.append({
+                "item_code": item["item_code"],
+                "item_name": item["item_name"],
+                "stock_uom": item["stock_uom"],
+                "warehouse": item["warehouse"],
+                "current_stock": flt(item["current_stock"], 2),
+                "daily_consumption": daily_consumption,
+                "days_remaining": days_remaining,
+                "reorder_point": flt(item["reorder_point"], 2),
+                "suggested_qty": flt(daily_consumption * 14, 2),  # 2 weeks supply
+            })
+
+    # Sort by urgency (lowest days remaining first)
+    result.sort(key=lambda x: x["days_remaining"])
+
+    return {
+        "items": result,
+        "warehouse": warehouse,
+        "threshold_days": threshold_days,
+        "total_alerts": len(result),
+    }
+
+
+@frappe.whitelist()
+def auto_convert_pr_to_po(pr_name: str) -> dict:
+    """Auto-convert an approved PR to a PO draft if single-source supplier with contracted price.
+
+    Checks:
+    1. PR must be approved
+    2. All items must have exactly one supplier with a contracted price
+    3. If conditions met, calls convert_pr_to_po() and returns the new PO name
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement", action="auto_convert_pr_to_po", mutation_type="create",
+    )
+
+    pr = frappe.get_doc("BEI Purchase Requisition", pr_name)
+
+    if pr.status != "Approved":
+        return {"success": False, "message": _("PR must be approved before auto-conversion")}
+
+    # Check all items have a single contracted supplier
+    supplier = None
+    for item in pr.items:
+        price_info = get_contracted_price(item.item_code)
+        if not price_info or not price_info.get("contracted_rate"):
+            return {
+                "success": False,
+                "message": _("Item {0} has no contracted price — manual PO required").format(
+                    item.item_code
+                ),
+            }
+
+        # Get supplier from the Item Price record
+        item_price = frappe.db.get_value(
+            "Item Price", price_info.get("item_price_name"), "supplier"
+        )
+
+        if not item_price:
+            return {
+                "success": False,
+                "message": _("Item {0} contracted price has no supplier — manual PO required").format(
+                    item.item_code
+                ),
+            }
+
+        if supplier is None:
+            supplier = item_price
+        elif supplier != item_price:
+            return {
+                "success": False,
+                "message": _("Multiple suppliers found — manual PO required"),
+            }
+
+    if not supplier:
+        return {"success": False, "message": _("No supplier found for PR items")}
+
+    # All items have same supplier with contracted prices — convert
+    result = convert_pr_to_po(pr_name, supplier)
+    return {
+        "success": True,
+        "message": _("PO draft created from PR"),
+        "po_name": result.get("name") if isinstance(result, dict) else result,
+        "supplier": supplier,
+    }
+
+
+@frappe.whitelist()
+def get_expected_deliveries(days: int | str = 7) -> dict:
+    """Return POs with expected delivery dates within the given window.
+
+    Returns approved/sent POs where delivery_date falls within now + days.
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement", action="get_expected_deliveries", mutation_type="read",
+    )
+
+    days = cint(days) or 7
+
+    deliveries = frappe.db.sql("""
+        SELECT
+            po.name,
+            po.po_no,
+            po.supplier,
+            po.supplier_name,
+            po.delivery_date,
+            po.status,
+            po.grand_total,
+            po.items_count,
+            DATEDIFF(po.delivery_date, CURDATE()) AS days_until_delivery
+        FROM `tabBEI Purchase Order` po
+        WHERE po.status IN ('Approved', 'Sent to Supplier')
+          AND po.delivery_date IS NOT NULL
+          AND po.delivery_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND DATE_ADD(CURDATE(), INTERVAL %(days)s DAY)
+        ORDER BY po.delivery_date ASC
+    """, {"days": days}, as_dict=True)
+
+    for d in deliveries:
+        d["is_overdue"] = (d.get("days_until_delivery") or 0) < 0
+        d["grand_total"] = flt(d.get("grand_total"), 2)
+
+    return {
+        "deliveries": deliveries,
+        "total": len(deliveries),
+        "days_window": days,
+    }
+
+
+@frappe.whitelist()
+def check_supplier_document_expiry() -> dict:
+    """Check all suppliers for documents expiring within 30 days. Sends Google Chat alert.
+
+    Checks bir_expiry_date, sec_expiry_date, permit_expiry_date fields.
+    Called by scheduled job (cron).
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement", action="check_supplier_document_expiry", mutation_type="read",
+    )
+
+    today = getdate(nowdate())
+    alert_date = add_days(today, 30)
+
+    expiring = []
+
+    suppliers = frappe.db.sql("""
+        SELECT
+            name, supplier_name, supplier_code,
+            bir_expiry_date, sec_expiry_date, permit_expiry_date
+        FROM `tabBEI Supplier`
+        WHERE status = 'Active'
+          AND (
+            (bir_expiry_date IS NOT NULL AND bir_expiry_date <= %(alert_date)s)
+            OR (sec_expiry_date IS NOT NULL AND sec_expiry_date <= %(alert_date)s)
+            OR (permit_expiry_date IS NOT NULL AND permit_expiry_date <= %(alert_date)s)
+          )
+        ORDER BY supplier_name
+    """, {"alert_date": alert_date}, as_dict=True)
+
+    for s in suppliers:
+        docs_expiring = []
+        for field, label in [
+            ("bir_expiry_date", "BIR 2307"),
+            ("sec_expiry_date", "SEC Registration"),
+            ("permit_expiry_date", "Business Permit"),
+        ]:
+            exp_date = s.get(field)
+            if exp_date and getdate(exp_date) <= alert_date:
+                days_left = (getdate(exp_date) - today).days
+                status = "EXPIRED" if days_left < 0 else f"{days_left} days left"
+                docs_expiring.append({"document": label, "expiry_date": str(exp_date), "status": status})
+
+        if docs_expiring:
+            expiring.append({
+                "supplier_name": s["supplier_name"],
+                "supplier_code": s["supplier_code"],
+                "name": s["name"],
+                "documents": docs_expiring,
+            })
+
+    # Send Google Chat notification if any suppliers have expiring docs
+    if expiring:
+        try:
+            from hrms.api.google_chat import send_notification
+            lines = [f"*Supplier Document Expiry Alert* ({len(expiring)} suppliers)\n"]
+            for s in expiring[:10]:  # Limit to 10 in notification
+                doc_list = ", ".join(
+                    f"{d['document']} ({d['status']})" for d in s["documents"]
+                )
+                lines.append(f"• *{s['supplier_name']}*: {doc_list}")
+            if len(expiring) > 10:
+                lines.append(f"... and {len(expiring) - 10} more")
+            send_notification("\n".join(lines), space="procurement")
+        except Exception:
+            frappe.log_error("Failed to send supplier expiry notification")
+
+    return {
+        "suppliers": expiring,
+        "total": len(expiring),
+        "check_date": str(today),
+        "alert_window_days": 30,
+    }
+
+
+@frappe.whitelist()
+def get_suppliers_with_expiry(status: str = "Active") -> dict:
+    """Return suppliers with document expiry status for dashboard display."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement", action="get_suppliers_with_expiry", mutation_type="read",
+    )
+
+    today = getdate(nowdate())
+
+    suppliers = frappe.db.sql("""
+        SELECT
+            name, supplier_name, supplier_code,
+            bir_expiry_date, sec_expiry_date, permit_expiry_date
+        FROM `tabBEI Supplier`
+        WHERE status = %(status)s
+          AND (bir_expiry_date IS NOT NULL
+               OR sec_expiry_date IS NOT NULL
+               OR permit_expiry_date IS NOT NULL)
+        ORDER BY supplier_name
+    """, {"status": status}, as_dict=True)
+
+    for s in suppliers:
+        s["expiry_status"] = []
+        for field, label in [
+            ("bir_expiry_date", "BIR 2307"),
+            ("sec_expiry_date", "SEC Registration"),
+            ("permit_expiry_date", "Business Permit"),
+        ]:
+            exp_date = s.get(field)
+            if exp_date:
+                days_left = (getdate(exp_date) - today).days
+                if days_left < 0:
+                    badge = "expired"
+                elif days_left <= 30:
+                    badge = "warning"
+                else:
+                    badge = "ok"
+                s["expiry_status"].append({
+                    "document": label,
+                    "expiry_date": str(exp_date),
+                    "days_left": days_left,
+                    "badge": badge,
+                })
+
+    return {"suppliers": suppliers, "total": len(suppliers)}
