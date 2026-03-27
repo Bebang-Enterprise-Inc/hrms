@@ -158,37 +158,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S137` | Sprint 137 | `s137-commissary-production-planning` | — | PR_CREATED 2026-03-27 — Commissary Production Planning Control Room: recommendation engine, target setting, CEO audit view, store demand, immutable logs. | `docs/plans/2026-03-27-sprint-137-commissary-production-planning.md` |
 
-| `S138` | Sprint 138 | `s138-warehouse-routing-data-integrity`, `s138-sr-difference-account`, `s138-sync-commit-per-warehouse` | #382, #384, #385, #386 | COMPLETED 2026-03-28 — 3PL warehouse BEI→BKI move, SR expense_account fix (not difference_account), per-warehouse DB commit for lock timeout prevention. | — |
-
-| `S139` | Sprint 139 | `s139-infra-parallel-sync` | — | IN_PROGRESS — Phase B (parallel sync code) + Phase C (infra docs) complete. Phase A (EC2 resize, worker scaling, MariaDB tuning) blocked on cost approval ($61/month). | `docs/plans/2026-03-28-sprint-139-infra-parallel-sync.md` |
-
-| `S140` | Sprint 140 | — (data-only, no code) | — | PLANNED — Warehouse setup + full 46-store inventory re-sync via /frappe-bulk-edits. Disable syncs, create BKI warehouses, extract from Google Sheets, fact-check, upload, re-enable. | `docs/plans/2026-03-28-sprint-140-warehouse-setup-inventory-resync.md` |
-
-| `S141` | Sprint 141 | `s141-procurement-module-fix` | BEI-Tasks#274 | COMPLETED 2026-03-28 — PO pagination (577 POs), approved tab (543 POs), status filters (+CEO, +Cancelled), dashboard empty states, sidebar dedup. 12/12 L3 PASS. | `docs/plans/2026-03-28-sprint-141-procurement-module-fix.md` |
-
-| `S142` | Sprint 142 | `s142-procurement-qa-audit` | — | GO — Full procurement module QA audit: every page, every CTA, 3 roles, E2E workflow, three-way data match, Proof Matrix. | `docs/plans/2026-03-28-sprint-142-procurement-qa-audit.md` |
-
-| `S143` | Sprint 143 | `s143-procurement-defect-remediation` | BEI-Tasks#275 | DEPLOYED — Fix 4 verified defects from S142 QA audit: Boolean coercion (DEF-001), data quality reports (DEF-003/004). | `docs/plans/2026-03-29-sprint-143-procurement-defect-remediation.md` |
-
-| `S144` | Sprint 144 | `s144-supplier-page-defects` | BEI-Tasks#276,#277 + hrms#392,#394-397 | DEPLOYED — Supplier field mapping, is_new_supplier fix, items tab, PO/invoice stubs removed, edit approval workflow. | `docs/plans/2026-03-29-sprint-144-supplier-page-defects.md` |
-
-| `S145` | Sprint 145 | — (data-only, no code) | — | COMPLETED — AP opening balance sync: 714 invoices synced to Frappe + AppSheet, 577 matched to POs, 49 finance corrections, 110 flagged, Apps Script auto-sync deployed. | `docs/plans/2026-03-30-sprint-145-ap-opening-balance-sync.md` |
-
-| `S146` | Sprint 146 | `s146-payroll-recovery-go-live` | — | PLANNED — Payroll recovery: deploy Frappe backend, fix S076 day-zero blockers (payable account, tax slabs, SSAs), verify all 8 payroll pages end-to-end. | `docs/plans/2026-03-30-sprint-146-payroll-recovery-go-live.md` |
-
-| `S147` | Sprint 147 | `s147-ap-command-center` | — | GO — AP Command Center: finance team payables workspace, 5 tabs, 3 new backend endpoints, aging matrix, 4-level approval, supplier ledger. Audited v1 2026-03-30 (10 blockers resolved). | `docs/plans/2026-03-30-sprint-147-ap-command-center.md` |
-
-| `S148` | Sprint 148 | `s148-compensation-dashboard-overhaul` | — | PLANNED — Compensation Setup dashboard: UI/UX overhaul (sticky headers, dense grid, visual polish), L3 browser testing with test employees via frappe-bulk-edits, approval matrix testing (salary→Mae HR, bank→Mae Accounting), bank details edit fix, fullscreen mode. | `docs/plans/2026-03-30-sprint-148-compensation-dashboard-overhaul.md` |
-
-| `S149` | Sprint 149 | — (analysis-only, no code) | — | PLANNED — 3MD-era logistics route optimization: distance matrix, volume-per-store analysis, truck size recommendations, route consolidation, alternative transport evaluation (styro/Lalamove/Transportify). Forensic-level analysis with Google Maps API. | `docs/plans/2026-03-31-sprint-149-logistics-route-optimization.md` |
-
-| `S150` | Sprint 150 | `s150-payroll-data-quality` | hrms#403, BEI-Tasks#296 | IN_PROGRESS — Payroll data quality + allowance setup. Code PRs created 2026-03-31; SSM scripts ready; pending merge+deploy+SSM execution. | `docs/plans/2026-03-31-sprint-150-payroll-data-quality.md` |
-
-| `S151` | Sprint 151 | `s151-unionbank-api-integration` | — | POSTPONED — UnionBank API integration: balance check on payment approval, OTP for Mae, auto-disbursement (InstaPay/PESOnet/UBP-to-UBP). | `docs/plans/2026-03-31-sprint-151-unionbank-api-integration.md` |
+| `S138` | Sprint 138 | `s138-warehouse-routing-data-integrity` | — | PLANNED — Warehouse routing data integrity: clean BEI Route junk, seed proper store→3PL mappings, fix low stock API to use real warehouses, fix PO ship_to default. | `docs/plans/2026-03-27-sprint-138-warehouse-routing-data-integrity.md` |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S152`.
-2. Reserve branch name: `s152-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S139`.
+2. Reserve branch name: `s139-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
