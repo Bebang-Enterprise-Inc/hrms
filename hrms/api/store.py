@@ -1248,9 +1248,106 @@ def _lane_to_cargo_category(lane):
 	return "DRY"
 
 
+# S136: Central Warehouse route map (source: MARCH 2026 Central WHSE Inventory Monitoring_BEI.xlsx)
+# Key: normalized store name (upper, stripped of company suffix)
+# Value: Frappe warehouse name for the source DC
+# All stores use a SINGLE source warehouse for both FROZEN and DRY.
+_3MD = "3MD Logistics \u2013 Camangyanan - Bebang Enterprise Inc."
+_PINNACLE = "Pinnacle Cold Storage Solutions - Bebang Enterprise Inc."
+_JENTEC = "Jentec Storage Inc. - Bebang Enterprise Inc."
+_CENTRAL_WAREHOUSE_ROUTE_MAP = {
+	"ARANETA GATEWAY": _3MD,
+	"AYALA EVO": _PINNACLE,
+	"AYALA FAIRVIEW TERRACES": _3MD,
+	"AYALA MARKET MARKET": _PINNACLE,
+	"AYALA SOLENAD": _PINNACLE,
+	"AYALA VERMOSA": _PINNACLE,
+	"BF HOMES": _PINNACLE,
+	"CENTERMALL GREENHILLS": _3MD,
+	"CTTM TOMAS MORATO": _3MD,
+	"DVERDE CALAMBA": _PINNACLE,
+	"EVER GOTESCO COMMONWEALTH": _3MD,
+	"FESTIVAL MALL ALABANG": _PINNACLE,
+	"LUCKY CHINATOWN": _3MD,
+	"MEGAWORLD PASEO DE ROXAS": _PINNACLE,
+	"NAIA T3": _PINNACLE,
+	"PITX": _PINNACLE,
+	"ROBINSONS GALLERIA SOUTH": _PINNACLE,
+	"ROBINSONS GENERAL TRIAS": _PINNACLE,
+	"ROBINSONS IMUS": _PINNACLE,
+	"ROBINSONS PLACE ANTIPOLO": _3MD,
+	"SHAW BOULEVARD": _JENTEC,
+	"SM BICUTAN": _PINNACLE,
+	"SM CALOOCAN": _3MD,
+	"SM CLARK": _3MD,
+	"SM EAST ORTIGAS": _3MD,
+	"SM GRAND CENTRAL": _3MD,
+	"SM MALL OF ASIA": _PINNACLE,
+	"SM MANILA": _3MD,
+	"SM MARIKINA": _3MD,
+	"SM MARILAO": _3MD,
+	"SM MEGAMALL": _3MD,
+	"SM NORTH EDSA": _3MD,
+	"SM PULILAN": _3MD,
+	"SM SAN JOSE DEL MONTE": _3MD,
+	"SM SANGANDAAN": _3MD,
+	"SM SOUTHMALL": _PINNACLE,
+	"SM STA ROSA": _PINNACLE,
+	"SM TANZA": _PINNACLE,
+	"SM TAYTAY": _3MD,
+	"SM VALENZUELA": _3MD,
+	"STA. LUCIA GRAND MALL": _3MD,
+	"THE GRID ROCKWELL": _PINNACLE,
+	"THE TERMINAL ALABANG": _PINNACLE,
+	"UP TOWN CENTER": _3MD,
+	"UPTOWN MALL BGC": _PINNACLE,
+	"VENICE GRAND CANAL": _PINNACLE,
+	"VISTA MALL TAGUIG": _PINNACLE,
+	"ESTANCIA": _3MD,
+	"AYALA UPTC": _3MD,
+	"ROBISONS GALLERIA SOUTH": _PINNACLE,
+	"D'VERDE LAGUNA": _PINNACLE,
+	"MEGAWIDE PITX": _PINNACLE,
+	"MEGAWORLD VENICE GRAND CANAL": _PINNACLE,
+	"MEGAWORLD PASEO CENTER": _PINNACLE,
+	"STA. LUCIA EAST GRAND MALL": _3MD,
+	"SM  MANILA": _3MD,
+	"ROBINSON GENERAL TRIAS": _PINNACLE,
+	"ROBINSON IMUS": _PINNACLE,
+	"THE TERMINAL": _PINNACLE,
+	"SJDM": _3MD,
+	"EVER COMMONWEALTH": _3MD,
+	"GATEWAY CUBAO": _3MD,
+	"SM GRAND CENTRAL CALOOCAN": _3MD,
+}
+
+
+def _normalize_store_name_for_route(warehouse_name):
+	"""Normalize a Frappe warehouse name to match the Central Warehouse route map."""
+	name = (warehouse_name or "").upper()
+	# Strip company suffixes
+	for suffix in (
+		" - BEBANG ENTERPRISE INC.", " - BEI", " - BKI",
+		" - BEBANG KITCHEN INC.",
+	):
+		name = name.replace(suffix, "")
+	return name.strip()
+
+
 def _resolve_store_order_source_warehouse(store_warehouse, cargo_category):
-	"""Resolve the warehouse that should fulfill a store order lane."""
-	return resolve_route_source_warehouse(store_warehouse, cargo_category)
+	"""Resolve the warehouse that should fulfill a store order lane.
+
+	Priority:
+	1. BEI Route DocType (if routes are configured)
+	2. Hardcoded route map from Central Warehouse Excel (MARCH 2026)
+	3. Returns None (caller falls back to store_warehouse)
+	"""
+	# Try BEI Route first (the proper way)
+	result = resolve_route_source_warehouse(store_warehouse, cargo_category)
+	if result:
+		return result
+	# S136: Fallback to hardcoded route map derived from Central Warehouse Excel.
+	return _CENTRAL_WAREHOUSE_ROUTE_MAP.get(_normalize_store_name_for_route(store_warehouse))
 
 
 def _build_orderable_source_stock_context(store_warehouse, items):
@@ -2011,18 +2108,6 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	item_codes = [row.name for row in items]
 	demand_snapshots = _load_store_item_demand_snapshots(store_warehouse, item_codes, target_date)
 
-	# S136/B4: DRY fallback source warehouse (Jentec) when route resolves to store itself.
-	_DRY_FALLBACK_SOURCE = "Jentec Storage Inc. - Bebang Enterprise Inc."
-	_FROZEN_FALLBACK_SOURCE = "3MD Logistics \u2013 Camangyanan - Bebang Enterprise Inc."
-
-	# S136: Detect unmanaged source warehouses (0 Bin records with qty > 0).
-	_managed_source_whs = set()
-	for sw in set(source_warehouse_by_item.values()):
-		if sw and sw != store_warehouse:
-			has_bins = frappe.db.count("Bin", {"warehouse": sw, "actual_qty": [">", 0]})
-			if has_bins > 0:
-				_managed_source_whs.add(sw)
-
 	for item in items:
 		item_code = item.name
 		raw_last_order = flt(last_qty_map.get(item_code, 0))
@@ -2031,20 +2116,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		lane = lane_by_item.get(item_code) or _resolve_delivery_lane(item)
 		source_warehouse = source_warehouse_by_item.get(item_code) or store_warehouse
 
-		# S136/B4: Fix circular source (store sourcing from itself).
-		if source_warehouse == store_warehouse:
-			cargo = _lane_to_cargo_category(lane)
-			if cargo == "DRY":
-				source_warehouse = _DRY_FALLBACK_SOURCE
-			elif cargo in ("FC", "FM"):
-				source_warehouse = _FROZEN_FALLBACK_SOURCE
-
 		available_to_promise = flt(stock_map.get((source_warehouse, item_code), 0), 2)
-		# S136: Unmanaged source warehouse (no Bin data) → ATP = -1 sentinel.
-		source_is_managed = source_warehouse in _managed_source_whs
-		if not source_is_managed and available_to_promise <= 0:
-			available_to_promise = -1  # "No data" vs "OOS"
-
 		snapshot = demand_snapshots.get(item_code) or {}
 		coverage_window_days = flt(snapshot.get("coverage_window_days") or 0)
 		if coverage_window_days <= 0:
@@ -2085,10 +2157,8 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		item["source_warehouse_short"] = (source_warehouse or "").replace(" - Bebang Enterprise Inc.", "").strip()
 		item["store_actual_qty"] = store_actual
 		item["last_order_qty"] = last_order_qty
-		item["available_stock"] = available_to_promise if available_to_promise >= 0 else 0
-		# S136: ATP = -1 means unmanaged warehouse (no data). Not truly OOS.
-		item["is_oos"] = 1 if available_to_promise == 0 else 0
-		item["source_unmanaged"] = 1 if available_to_promise < 0 else 0
+		item["available_stock"] = available_to_promise
+		item["is_oos"] = 1 if available_to_promise <= 0 else 0
 		item["cargo_category"] = _lane_to_cargo_category(lane)
 		item["packaging_description"] = item.get("stock_uom") or ""
 		item["unit_price"] = flt(
