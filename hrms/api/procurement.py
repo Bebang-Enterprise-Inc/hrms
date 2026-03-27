@@ -1211,9 +1211,24 @@ def create_purchase_order(data: dict[str, Any] | str | None = None) -> dict[str,
                     title=_("Price Override Reason Required")
                 )
 
-    # S134/C1: Default ship_to warehouse if not provided
+    # S134/C1 + S138: Default ship_to warehouse.
+    # If a store is specified, resolve to its 3PL source warehouse via BEI Route.
+    # Otherwise default to Stores - BEI as the general receiving point.
     if not data.get("ship_to"):
-        data["ship_to"] = "Stores - BEI"
+        for_store = data.get("for_store") or data.get("delivery_warehouse")
+        if for_store:
+            route_wh = frappe.db.get_value(
+                "BEI Route",
+                {"active": 1, "cargo_type": "DRY"},
+                "source_warehouse",
+                filters={"name": ["in",
+                    [r.parent for r in frappe.get_all("BEI Route Stop",
+                        filters={"store": for_store}, fields=["parent"])]
+                ]},
+            )
+            data["ship_to"] = route_wh or "Stores - BEI"
+        else:
+            data["ship_to"] = "Stores - BEI"
 
     po = frappe.get_doc({
         "doctype": "BEI Purchase Order",
@@ -6639,12 +6654,17 @@ def update_po_item_price(po_name, new_price, reason, item_idx=None, item_name=No
 # ---------------------------------------------------------------------------
 
 @frappe.whitelist()
-def get_low_stock_items(threshold_days: int | str = 7, warehouse: str = "") -> dict:
+def get_low_stock_items(threshold_days: int | str = 7, warehouse: str = "", store: str = "") -> dict:
     """Return items below reorder threshold with days-of-stock-remaining.
 
-    Calculates consumption rate from Stock Ledger Entry outflows over the last
-    30 days, then divides current stock by daily consumption to get days remaining.
-    Items with zero consumption in the last 30 days are excluded (no demand signal).
+    S138: Queries real 3PL warehouses where stock actually lives, not the
+    empty "Stores - BEI" meta warehouse. When no warehouse is specified,
+    aggregates across all active BEI Route source warehouses (3MD, Pinnacle, Jentec).
+
+    Args:
+        threshold_days: Alert threshold in days (default 7).
+        warehouse: Query a specific warehouse directly (backward-compatible).
+        store: Query the source warehouse for a specific store via route map.
     """
     from hrms.utils.sentry import set_backend_observability_context
     set_backend_observability_context(
@@ -6653,76 +6673,113 @@ def get_low_stock_items(threshold_days: int | str = 7, warehouse: str = "") -> d
 
     threshold_days = cint(threshold_days) or 7
 
-    # Default to main warehouse if not specified
-    if not warehouse:
-        warehouse = "Stores - BEI"
+    # Determine which warehouses to query
+    if warehouse:
+        # Direct warehouse query (backward-compatible)
+        warehouses = [warehouse]
+    elif store:
+        # Resolve store to its source 3PL warehouse via BEI Route
+        source_wh = frappe.db.get_value(
+            "BEI Route", {"active": 1, "source_warehouse": ["!=", ""]},
+            "source_warehouse",
+            filters={"name": ["in",
+                [r.parent for r in frappe.get_all("BEI Route Stop",
+                    filters={"store": store}, fields=["parent"])]
+            ]},
+        )
+        if source_wh:
+            warehouses = [source_wh]
+        else:
+            warehouses = [store]  # Fallback to store warehouse itself
+    else:
+        # S138: Aggregate across all active 3PL source warehouses
+        source_warehouses = frappe.db.sql("""
+            SELECT DISTINCT source_warehouse
+            FROM `tabBEI Route`
+            WHERE active = 1 AND source_warehouse IS NOT NULL AND source_warehouse != ''
+        """, pluck="source_warehouse")
+        warehouses = source_warehouses if source_warehouses else ["Stores - BEI"]
 
-    # Get current stock from Bin table
-    stock_items = frappe.db.sql("""
-        SELECT
-            b.item_code,
-            i.item_name,
-            i.stock_uom,
-            b.warehouse,
-            b.actual_qty AS current_stock,
-            COALESCE(ir.warehouse_reorder_level, 0) AS reorder_point
-        FROM `tabBin` b
-        JOIN `tabItem` i ON i.name = b.item_code AND i.disabled = 0
-        LEFT JOIN `tabItem Reorder` ir
-            ON ir.parent = b.item_code AND ir.warehouse = b.warehouse
-        WHERE b.warehouse = %(warehouse)s
-          AND b.actual_qty > 0
-        ORDER BY i.item_name
-    """, {"warehouse": warehouse}, as_dict=True)
+    all_results = []
+    queried_warehouses = []
 
-    if not stock_items:
-        return {"items": [], "warehouse": warehouse, "threshold_days": threshold_days}
+    for wh in warehouses:
+        # Get current stock from Bin table
+        stock_items = frappe.db.sql("""
+            SELECT
+                b.item_code,
+                i.item_name,
+                i.stock_uom,
+                b.warehouse,
+                b.actual_qty AS current_stock,
+                COALESCE(ir.warehouse_reorder_level, 0) AS reorder_point
+            FROM `tabBin` b
+            JOIN `tabItem` i ON i.name = b.item_code AND i.disabled = 0
+            LEFT JOIN `tabItem Reorder` ir
+                ON ir.parent = b.item_code AND ir.warehouse = b.warehouse
+            WHERE b.warehouse = %(warehouse)s
+              AND b.actual_qty > 0
+            ORDER BY i.item_name
+        """, {"warehouse": wh}, as_dict=True)
 
-    # Get consumption (outflows) from SLE over last 30 days
-    item_codes = [row["item_code"] for row in stock_items]
-    consumption_data = frappe.db.sql("""
-        SELECT
-            item_code,
-            ABS(SUM(actual_qty)) AS total_consumed
-        FROM `tabStock Ledger Entry`
-        WHERE item_code IN %(items)s
-          AND warehouse = %(warehouse)s
-          AND actual_qty < 0
-          AND posting_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-        GROUP BY item_code
-    """, {"items": item_codes, "warehouse": warehouse}, as_dict=True)
+        if not stock_items:
+            queried_warehouses.append(wh)
+            continue
 
-    consumption_map = {row["item_code"]: flt(row["total_consumed"]) for row in consumption_data}
+        # Get consumption (outflows) from SLE over last 30 days
+        item_codes = [row["item_code"] for row in stock_items]
+        consumption_data = frappe.db.sql("""
+            SELECT
+                item_code,
+                ABS(SUM(actual_qty)) AS total_consumed
+            FROM `tabStock Ledger Entry`
+            WHERE item_code IN %(items)s
+              AND warehouse = %(warehouse)s
+              AND actual_qty < 0
+              AND posting_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            GROUP BY item_code
+        """, {"items": item_codes, "warehouse": wh}, as_dict=True)
 
-    result = []
-    for item in stock_items:
-        total_consumed = consumption_map.get(item["item_code"], 0)
-        daily_consumption = flt(total_consumed / 30, 4)
+        consumption_map = {row["item_code"]: flt(row["total_consumed"]) for row in consumption_data}
 
-        if daily_consumption <= 0:
-            continue  # No consumption = no demand signal
+        for item in stock_items:
+            total_consumed = consumption_map.get(item["item_code"], 0)
+            daily_consumption = flt(total_consumed / 30, 4)
 
-        days_remaining = flt(item["current_stock"] / daily_consumption, 1)
+            if daily_consumption <= 0:
+                continue
 
-        if days_remaining <= threshold_days:
-            result.append({
-                "item_code": item["item_code"],
-                "item_name": item["item_name"],
-                "stock_uom": item["stock_uom"],
-                "warehouse": item["warehouse"],
-                "current_stock": flt(item["current_stock"], 2),
-                "daily_consumption": daily_consumption,
-                "days_remaining": days_remaining,
-                "reorder_point": flt(item["reorder_point"], 2),
-                "suggested_qty": flt(daily_consumption * 14, 2),  # 2 weeks supply
-            })
+            days_remaining = flt(item["current_stock"] / daily_consumption, 1)
 
-    # Sort by urgency (lowest days remaining first)
+            if days_remaining <= threshold_days:
+                all_results.append({
+                    "item_code": item["item_code"],
+                    "item_name": item["item_name"],
+                    "stock_uom": item["stock_uom"],
+                    "warehouse": item["warehouse"],
+                    "current_stock": flt(item["current_stock"], 2),
+                    "daily_consumption": daily_consumption,
+                    "days_remaining": days_remaining,
+                    "reorder_point": flt(item["reorder_point"], 2),
+                    "suggested_qty": flt(daily_consumption * 14, 2),
+                })
+
+        queried_warehouses.append(wh)
+
+    # Deduplicate by item_code (keep the entry with lowest days_remaining)
+    seen = {}
+    for item in all_results:
+        key = item["item_code"]
+        if key not in seen or item["days_remaining"] < seen[key]["days_remaining"]:
+            seen[key] = item
+    result = list(seen.values())
+
+    # Sort by urgency
     result.sort(key=lambda x: x["days_remaining"])
 
     return {
         "items": result,
-        "warehouse": warehouse,
+        "warehouses_queried": queried_warehouses,
         "threshold_days": threshold_days,
         "total_alerts": len(result),
     }
