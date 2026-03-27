@@ -1,0 +1,180 @@
+{
+  "actions": [],
+  "autoname": "BPT-.YYYY.-.#####",
+  "creation": "2026-03-27 10:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "production_date",
+    "status",
+    "set_by",
+    "set_at",
+    "column_break_1",
+    "total_recommended",
+    "total_targeted",
+    "total_produced",
+    "section_break_items",
+    "items",
+    "section_break_meta",
+    "processed_stock_entries"
+  ],
+  "fields": [
+    {
+      "fieldname": "production_date",
+      "fieldtype": "Date",
+      "label": "Production Date",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "Status",
+      "options": "Draft\nSet\nIn Progress\nCompleted",
+      "default": "Draft",
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "set_by",
+      "fieldtype": "Link",
+      "label": "Set By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "set_at",
+      "fieldtype": "Datetime",
+      "label": "Set At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "total_recommended",
+      "fieldtype": "Float",
+      "label": "Total Recommended",
+      "read_only": 1,
+      "precision": "2"
+    },
+    {
+      "fieldname": "total_targeted",
+      "fieldtype": "Float",
+      "label": "Total Targeted",
+      "read_only": 1,
+      "precision": "2"
+    },
+    {
+      "fieldname": "total_produced",
+      "fieldtype": "Float",
+      "label": "Total Produced",
+      "read_only": 1,
+      "precision": "2"
+    },
+    {
+      "fieldname": "section_break_items",
+      "fieldtype": "Section Break",
+      "label": "Production Target Items"
+    },
+    {
+      "fieldname": "items",
+      "fieldtype": "Table",
+      "label": "Items",
+      "options": "BEI Production Target Item",
+      "reqd": 0
+    },
+    {
+      "fieldname": "section_break_meta",
+      "fieldtype": "Section Break",
+      "label": "Internal",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "processed_stock_entries",
+      "fieldtype": "Long Text",
+      "label": "Processed Stock Entries",
+      "hidden": 1,
+      "read_only": 1,
+      "description": "Comma-separated SE names for idempotency"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "is_submittable": 0,
+  "links": [],
+  "modified": "2026-03-27 10:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Production Target",
+  "naming_rule": "Expression",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Commissary User",
+      "share": 0,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Commissary Manager",
+      "share": 0,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "CEO",
+      "share": 0,
+      "write": 0
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "HR Manager",
+      "share": 0,
+      "write": 0
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 0,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "sort_field": "production_date",
+  "sort_order": "DESC",
+  "title_field": "production_date",
+  "track_changes": 1
+}

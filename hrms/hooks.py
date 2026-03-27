@@ -258,6 +258,11 @@ doc_events = {
 		# Notify Finance when all clearance items completed (SEP-02)
 		"on_update": "hrms.api.employee_clearance.on_separation_updated",
 	},
+	"Stock Entry": {
+		# S136: Update production target actuals when Manufacture SE is submitted/cancelled
+		"on_submit": "hrms.api.commissary_planning.on_stock_entry_submit",
+		"on_cancel": "hrms.api.commissary_planning.on_stock_entry_cancel",
+	},
 }
 
 # ============================================================
