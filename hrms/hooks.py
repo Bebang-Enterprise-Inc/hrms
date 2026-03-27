@@ -423,6 +423,7 @@ scheduler_events = {
 		"hrms.api.procurement.escalate_pending_approvals",
 		"hrms.api.inventory.send_low_stock_daily_alert",
 		"hrms.api.inventory_risk.recompute_risk_snapshots",
+		"hrms.api.procurement.check_supplier_document_expiry",
 		"hrms.api.permits.check_permit_expiry",
 		"hrms.tasks.send_overdue_action_plan_reminders",
 		"hrms.api.overtime.scheduled_overtime_detection",
