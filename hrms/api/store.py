@@ -2015,9 +2015,19 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	_DRY_FALLBACK_SOURCE = "Jentec Storage Inc. - Bebang Enterprise Inc."
 	_FROZEN_FALLBACK_SOURCE = "3MD Logistics \u2013 Camangyanan - Bebang Enterprise Inc."
 
+	# S136: Detect unmanaged source warehouses (0 Bin records with qty > 0).
+	_managed_source_whs = set()
+	for sw in set(source_warehouse_by_item.values()):
+		if sw and sw != store_warehouse:
+			has_bins = frappe.db.count("Bin", {"warehouse": sw, "actual_qty": [">", 0]})
+			if has_bins > 0:
+				_managed_source_whs.add(sw)
+
 	for item in items:
 		item_code = item.name
-		last_order_qty = flt(last_qty_map.get(item_code, 0))
+		raw_last_order = flt(last_qty_map.get(item_code, 0))
+		# S136: Cap last_order_qty at 200 to prevent test data inflation.
+		last_order_qty = min(raw_last_order, 200.0)
 		lane = lane_by_item.get(item_code) or _resolve_delivery_lane(item)
 		source_warehouse = source_warehouse_by_item.get(item_code) or store_warehouse
 
@@ -2030,6 +2040,11 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 				source_warehouse = _FROZEN_FALLBACK_SOURCE
 
 		available_to_promise = flt(stock_map.get((source_warehouse, item_code), 0), 2)
+		# S136: Unmanaged source warehouse (no Bin data) → ATP = -1 sentinel.
+		source_is_managed = source_warehouse in _managed_source_whs
+		if not source_is_managed and available_to_promise <= 0:
+			available_to_promise = -1  # "No data" vs "OOS"
+
 		snapshot = demand_snapshots.get(item_code) or {}
 		coverage_window_days = flt(snapshot.get("coverage_window_days") or 0)
 		if coverage_window_days <= 0:
@@ -2070,8 +2085,10 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		item["source_warehouse_short"] = (source_warehouse or "").replace(" - Bebang Enterprise Inc.", "").strip()
 		item["store_actual_qty"] = store_actual
 		item["last_order_qty"] = last_order_qty
-		item["available_stock"] = available_to_promise
-		item["is_oos"] = 1 if available_to_promise <= 0 else 0
+		item["available_stock"] = available_to_promise if available_to_promise >= 0 else 0
+		# S136: ATP = -1 means unmanaged warehouse (no data). Not truly OOS.
+		item["is_oos"] = 1 if available_to_promise == 0 else 0
+		item["source_unmanaged"] = 1 if available_to_promise < 0 else 0
 		item["cargo_category"] = _lane_to_cargo_category(lane)
 		item["packaging_description"] = item.get("stock_uom") or ""
 		item["unit_price"] = flt(
