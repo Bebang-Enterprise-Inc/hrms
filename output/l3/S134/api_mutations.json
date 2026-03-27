@@ -1,6 +1,6 @@
 [
   {
-    "endpoint": "/purchase-orders/PO-2026-03148/approve/mae",
+    "endpoint": "/purchase-orders/PO-2026-03157/approve/mae",
     "method": "POST",
     "payload": {
       "via": "browser button click"
@@ -9,7 +9,7 @@
     "response_body": "{\"success\":true,\"message\":\"Mae approved. PO now pending CEO approval (new vendor)\"}"
   },
   {
-    "endpoint": "/purchase-orders/PO-2026-03148/approve/ceo",
+    "endpoint": "/purchase-orders/PO-2026-03157/approve/ceo",
     "method": "POST",
     "payload": {
       "via": "browser button click"
@@ -18,7 +18,7 @@
     "response_body": "{\"success\":true,\"message\":\"PO approved by CEO\"}"
   },
   {
-    "endpoint": "/purchase-orders/PO-2026-03153/approve/mae",
+    "endpoint": "/purchase-orders/PO-2026-03162/approve/mae",
     "method": "POST",
     "payload": {
       "via": "browser button click"
@@ -27,7 +27,7 @@
     "response_body": "{\"success\":true,\"message\":\"Mae approved. PO now pending CEO approval (new vendor)\"}"
   },
   {
-    "endpoint": "/purchase-orders/PO-2026-03153/approve/ceo",
+    "endpoint": "/purchase-orders/PO-2026-03162/approve/ceo",
     "method": "POST",
     "payload": {
       "via": "browser button click by sam@bebang.ph"

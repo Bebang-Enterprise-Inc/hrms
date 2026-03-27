@@ -4,7 +4,7 @@
     "type": "happy",
     "test": "Quick Receive + Auto-Invoice Dialog",
     "status": "PASS",
-    "detail": "QR button clicked via browser. Dialog: true. GR response: GR-2026-03149",
+    "detail": "QR button clicked via browser. Dialog: true. GR response: GR-2026-03158",
     "error": null
   },
   {

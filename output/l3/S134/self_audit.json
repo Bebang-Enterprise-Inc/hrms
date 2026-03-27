@@ -1,7 +1,7 @@
 [
   {
     "scenario": "S134-L3-1",
-    "timestamp": "2026-03-27T01:32:06.653Z",
+    "timestamp": "2026-03-27T02:01:31.786Z",
     "checks": [
       {
         "label": "form_submissions has entry",
@@ -33,7 +33,7 @@
   },
   {
     "scenario": "S134-L3-2",
-    "timestamp": "2026-03-27T01:33:13.998Z",
+    "timestamp": "2026-03-27T02:02:38.576Z",
     "checks": [
       {
         "label": "Quick Receive button was checked for visibility",
@@ -53,7 +53,7 @@
   },
   {
     "scenario": "S134-L3-3",
-    "timestamp": "2026-03-27T01:33:29.510Z",
+    "timestamp": "2026-03-27T02:02:51.845Z",
     "checks": [
       {
         "label": "ship_to verified via API GET",
@@ -73,7 +73,7 @@
   },
   {
     "scenario": "S134-L3-4",
-    "timestamp": "2026-03-27T01:34:23.873Z",
+    "timestamp": "2026-03-27T02:03:46.478Z",
     "checks": [
       {
         "label": "Mae approval via browser button (not API)",
@@ -105,7 +105,7 @@
   },
   {
     "scenario": "S134-L3-5",
-    "timestamp": "2026-03-27T01:35:37.594Z",
+    "timestamp": "2026-03-27T02:04:59.663Z",
     "checks": [
       {
         "label": "Invoice form filled via browser",
@@ -129,7 +129,7 @@
   },
   {
     "scenario": "S134-L3-6",
-    "timestamp": "2026-03-27T01:35:41.856Z",
+    "timestamp": "2026-03-27T02:05:04.244Z",
     "checks": [
       {
         "label": "Both stale POs checked",
@@ -149,7 +149,7 @@
   },
   {
     "scenario": "S134-L3-7",
-    "timestamp": "2026-03-27T01:36:04.157Z",
+    "timestamp": "2026-03-27T02:05:28.057Z",
     "checks": [
       {
         "label": "Batch approve via browser button",

@@ -4,7 +4,7 @@
     "type": "happy",
     "test": "Stock Alerts widget + Create PR",
     "status": "PASS",
-    "detail": "Widget: true, Create PR: false, API items: 0",
+    "detail": "Widget: true, Create PR: true, API items: 2",
     "error": null
   },
   {
@@ -20,7 +20,7 @@
     "type": "happy",
     "test": "Supplier Document Expiry widget + detail",
     "status": "PASS",
-    "detail": "Dashboard widget: true, suppliers with expiry: 0",
+    "detail": "Dashboard widget: true, suppliers with expiry: 1",
     "error": null
   },
   {
@@ -36,7 +36,7 @@
     "type": "happy",
     "test": "Low Stock API threshold filtering",
     "status": "PASS",
-    "detail": "3d=0 <= 7d=0 <= 30d=0, API status: 200",
+    "detail": "3d=1 <= 7d=2 <= 30d=3, API status: 200",
     "error": null
   },
   {

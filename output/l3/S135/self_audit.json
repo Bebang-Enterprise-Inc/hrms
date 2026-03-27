@@ -1,7 +1,7 @@
 [
   {
     "scenario": "S135-L3-1",
-    "timestamp": "2026-03-27T01:36:21.068Z",
+    "timestamp": "2026-03-27T02:05:47.400Z",
     "checks": [
       {
         "label": "Widget visibility checked via textContent",
@@ -25,7 +25,7 @@
   },
   {
     "scenario": "S135-L3-2",
-    "timestamp": "2026-03-27T01:36:37.434Z",
+    "timestamp": "2026-03-27T02:06:03.820Z",
     "checks": [
       {
         "label": "Widget checked via textContent (not existence)",
@@ -45,7 +45,7 @@
   },
   {
     "scenario": "S135-L3-3",
-    "timestamp": "2026-03-27T01:36:52.691Z",
+    "timestamp": "2026-03-27T02:06:30.180Z",
     "checks": [
       {
         "label": "Dashboard widget verified",
@@ -65,7 +65,7 @@
   },
   {
     "scenario": "S135-L3-4",
-    "timestamp": "2026-03-27T01:36:56.419Z",
+    "timestamp": "2026-03-27T02:06:33.888Z",
     "checks": [
       {
         "label": "Tested with genuinely non-existent PR (not real data)",
@@ -85,7 +85,7 @@
   },
   {
     "scenario": "S135-L3-5",
-    "timestamp": "2026-03-27T01:37:01.433Z",
+    "timestamp": "2026-03-27T02:06:39.086Z",
     "checks": [
       {
         "label": "Three threshold levels tested",
@@ -109,7 +109,7 @@
   },
   {
     "scenario": "S135-L3-6",
-    "timestamp": "2026-03-27T01:37:17.072Z",
+    "timestamp": "2026-03-27T02:06:54.737Z",
     "checks": [
       {
         "label": "Tested with non-existent warehouse",

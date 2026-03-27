@@ -2,14 +2,14 @@
   {
     "check": "Auto-invoice dialog appears after Quick Receive GR creation",
     "before": "GR new page with Quick Receive button",
-    "after": "Dialog visible: true, has Create Invoice button: true, text: \"Goods Receipt CreatedGR-2026-03149 has been created successfully. Would you like to create an invoic\"",
+    "after": "Dialog visible: true, has Create Invoice button: true, text: \"Goods Receipt CreatedGR-2026-03158 has been created successfully. Would you like to create an invoic\"",
     "method": "isVisible() + textContent()",
     "passed": true
   },
   {
     "check": "Create Invoice button navigates to /invoices/new with po and gr params",
     "before": "Dialog with Create Invoice button",
-    "after": "URL: https://my.bebang.ph/dashboard/procurement/invoices/new?po=PO-2026-03148&gr=GR-2026-03149",
+    "after": "URL: https://my.bebang.ph/dashboard/procurement/invoices/new?po=PO-2026-03157&gr=GR-2026-03158",
     "method": "URL check after click",
     "passed": true
   },
@@ -71,14 +71,14 @@
   },
   {
     "check": "Invoice form pre-selects PO from query param",
-    "before": "Navigate to /invoices/new?po=PO-2026-03154",
+    "before": "Navigate to /invoices/new?po=PO-2026-03163",
     "after": "PO context loaded: true",
     "method": "textContent()",
     "passed": true
   },
   {
     "check": "Invoice created with amounts matching PO",
-    "before": "PO PO-2026-03154 with FG009 x5 @ 42.35",
+    "before": "PO PO-2026-03163 with FG009 x5 @ 42.35",
     "after": "Invoice new, total: undefined",
     "method": "API GET",
     "passed": false

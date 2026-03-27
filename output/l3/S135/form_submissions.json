@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "form": "stock_alert_create_pr",
+    "inputs": {
+      "action": "Create PR from stock alert widget"
+    },
+    "submit_action": "Create PR link click (browser)",
+    "response": "Navigated to: https://my.bebang.ph/dashboard/procurement/purchase-requisitions/new?item=RM018&qty=17.27",
+    "screenshot_after": "output/l3/S135/artifacts/S135-L3-1_02_create_pr_nav.png"
+  }
+]

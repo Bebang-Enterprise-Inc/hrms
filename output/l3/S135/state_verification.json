@@ -2,15 +2,15 @@
   {
     "check": "Stock Alerts widget visible on procurement dashboard",
     "before": "Navigate to /dashboard/procurement",
-    "after": "Widget: true, API status: 200, items: 0",
+    "after": "Widget: true, API status: 200, items: 2",
     "method": "textContent() + API GET",
     "passed": true
   },
   {
-    "check": "Create PR button visibility",
-    "before": "Stock Alerts widget",
-    "after": "Button visible: false (items: 0)",
-    "method": "isVisible()",
+    "check": "Create PR link navigates to PR creation page with item pre-filled",
+    "before": "Clicked Create PR on stock alert item",
+    "after": "URL: https://my.bebang.ph/dashboard/procurement/purchase-requisitions/new?item=RM018&qty=17.27",
+    "method": "URL check after click",
     "passed": true
   },
   {
@@ -23,15 +23,15 @@
   {
     "check": "Supplier Documents widget visible on dashboard",
     "before": "/dashboard/procurement",
-    "after": "Widget: true, API: 200, suppliers: 0",
+    "after": "Widget: true, API: 200, suppliers: 1",
     "method": "textContent() + API GET",
     "passed": true
   },
   {
-    "check": "Supplier detail page expiry badges",
-    "before": "No suppliers with expiry dates in system",
-    "after": "SKIPPED — no test data",
-    "method": "N/A",
+    "check": "Supplier detail page shows expiry information",
+    "before": "Navigate to supplier SUPP-20260327093551",
+    "after": "Has expiry info: true",
+    "method": "textContent()",
     "passed": true
   },
   {
@@ -44,8 +44,22 @@
   {
     "check": "Low stock threshold filtering: count(3d) <= count(7d) <= count(30d)",
     "before": "Three API calls with threshold 3, 7, 30",
-    "after": "3d=0, 7d=0, 30d=0",
+    "after": "3d=1, 7d=2, 30d=3",
     "method": "API GET x3",
+    "passed": true
+  },
+  {
+    "check": "Low stock response has all required fields",
+    "before": "Check first item for: item_code, item_name, current_stock, daily_consumption, days_remaining, suggested_qty",
+    "after": "Keys: [\"item_code\",\"item_name\",\"stock_uom\",\"warehouse\",\"current_stock\",\"daily_consumption\",\"days_remaining\",\"reorder_point\",\"suggested_qty\"], hasAll: true",
+    "method": "API response structure",
+    "passed": true
+  },
+  {
+    "check": "All items have days_remaining <= threshold (7)",
+    "before": "Check all items in 7-day response",
+    "after": "All below 7: true",
+    "method": "Response value check",
     "passed": true
   },
   {

@@ -4,7 +4,7 @@
     "method": "GET",
     "payload": null,
     "status": 200,
-    "response_body": "{\"items\":[],\"warehouse\":\"Stores - BEI\",\"threshold_days\":7,\"total_alerts\":0}"
+    "response_body": "{\"items\":[{\"item_code\":\"RM018\",\"item_name\":\"UBE HALAYA\",\"stock_uom\":\"KG\",\"warehouse\":\"Stores - BEI\",\"current_stock\":3,\"daily_consumption\":1.2333,\"days_remaining\":2.4,\"reorder_point\":0,\"suggested_qty\":17.27},{\"item_code\":\"CM34\",\"item_name\":\"SANDO ECO BAG LARGE\",\"stock_uom\":\"BUNDLE\",\"warehouse\":\"Stores - BEI\",\"current_stock\":7,\"daily_consumption\":1.7667,\"days_remaining\":4,\"reorder_point\":0,\"suggested_qty\":24.73}],\"warehouse\":\"Stores - BEI\",\"threshold_days\":7,\"total_alerts\":2}"
   },
   {
     "endpoint": "/dashboard/expected-deliveries?days=7",
@@ -18,7 +18,7 @@
     "method": "GET",
     "payload": null,
     "status": 200,
-    "response_body": "{\"suppliers\":[],\"total\":0}"
+    "response_body": "{\"suppliers\":[{\"name\":\"SUPP-20260327093551\",\"supplier_name\":\"L3-Batch-1774575345219\",\"supplier_code\":\"SUPP-20260327093551\",\"bir_expiry_date\":\"2026-04-11\",\"sec_expiry_date\":\"2026-03-17\",\"permit_expiry_date\":\"2026-06-25\",\"expiry_status\":[{\"document\":\"BIR 2307\",\"expiry_date\":\"2026-04-11\",\"days_left\":15,\"badge\":\"warning\"},{\"document\":\"SEC Registration\",\"expiry_date\":\"2026-03-17\",\"days_left\":-10,\"badge\":\"expired\"},{\"document\":\"Business Permit\",\"expiry_date\":\"2026-06-25\",\"days_left\":90,\"badge\":\"ok\"}]}"
   },
   {
     "endpoint": "/purchase-requisitions/PR-NONEXISTENT-999/auto-convert",
@@ -32,21 +32,21 @@
     "method": "GET",
     "payload": null,
     "status": 200,
-    "response_body": "{\"items\":[],\"warehouse\":\"Stores - BEI\",\"threshold_days\":3,\"total_alerts\":0}"
+    "response_body": "{\"items\":[{\"item_code\":\"RM018\",\"item_name\":\"UBE HALAYA\",\"stock_uom\":\"KG\",\"warehouse\":\"Stores - BEI\",\"current_stock\":3,\"daily_consumption\":1.2333,\"days_remaining\":2.4,\"reorder_point\":0,\"suggested_qty\":17.27}],\"warehouse\":\"Stores - BEI\",\"threshold_days\":3,\"total_alerts\":1}"
   },
   {
     "endpoint": "/dashboard/low-stock?threshold_days=7",
     "method": "GET",
     "payload": null,
     "status": 200,
-    "response_body": "{\"items\":[],\"warehouse\":\"Stores - BEI\",\"threshold_days\":7,\"total_alerts\":0}"
+    "response_body": "{\"items\":[{\"item_code\":\"RM018\",\"item_name\":\"UBE HALAYA\",\"stock_uom\":\"KG\",\"warehouse\":\"Stores - BEI\",\"current_stock\":3,\"daily_consumption\":1.2333,\"days_remaining\":2.4,\"reorder_point\":0,\"suggested_qty\":17.27},{\"item_code\":\"CM34\",\"item_name\":\"SANDO ECO BAG LARGE\",\"stock_uom\":\"BUNDLE\",\"warehouse\":\"Store"
   },
   {
     "endpoint": "/dashboard/low-stock?threshold_days=30",
     "method": "GET",
     "payload": null,
     "status": 200,
-    "response_body": "{\"items\":[],\"warehouse\":\"Stores - BEI\",\"threshold_days\":30,\"total_alerts\":0}"
+    "response_body": "{\"items\":[{\"item_code\":\"RM018\",\"item_name\":\"UBE HALAYA\",\"stock_uom\":\"KG\",\"warehouse\":\"Stores - BEI\",\"current_stock\":3,\"daily_consumption\":1.2333,\"days_remaining\":2.4,\"reorder_point\":0,\"suggested_qty\":17.27},{\"item_code\":\"CM34\",\"item_name\":\"SANDO ECO BAG LARGE\",\"stock_uom\":\"BUNDLE\",\"warehouse\":\"Store"
   },
   {
     "endpoint": "/dashboard/low-stock?threshold_days=7&warehouse=NONEXISTENT-WAREHOUSE-999",
