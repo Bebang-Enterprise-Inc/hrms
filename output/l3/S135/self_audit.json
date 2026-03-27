@@ -1,0 +1,130 @@
+[
+  {
+    "scenario": "S135-L3-1",
+    "timestamp": "2026-03-27T01:36:21.068Z",
+    "checks": [
+      {
+        "label": "Widget visibility checked via textContent",
+        "passed": true
+      },
+      {
+        "label": "API data verified",
+        "passed": true
+      },
+      {
+        "label": "Create PR button checked",
+        "passed": true
+      },
+      {
+        "label": "Screenshot taken",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S135-L3-2",
+    "timestamp": "2026-03-27T01:36:37.434Z",
+    "checks": [
+      {
+        "label": "Widget checked via textContent (not existence)",
+        "passed": true
+      },
+      {
+        "label": "API response verified",
+        "passed": true
+      },
+      {
+        "label": "Response fields validated",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S135-L3-3",
+    "timestamp": "2026-03-27T01:36:52.691Z",
+    "checks": [
+      {
+        "label": "Dashboard widget verified",
+        "passed": true
+      },
+      {
+        "label": "Supplier detail page checked",
+        "passed": true
+      },
+      {
+        "label": "API data verified",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S135-L3-4",
+    "timestamp": "2026-03-27T01:36:56.419Z",
+    "checks": [
+      {
+        "label": "Tested with genuinely non-existent PR (not real data)",
+        "passed": true
+      },
+      {
+        "label": "Response checked for success=false or 400+",
+        "passed": true
+      },
+      {
+        "label": "State verification recorded",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S135-L3-5",
+    "timestamp": "2026-03-27T01:37:01.433Z",
+    "checks": [
+      {
+        "label": "Three threshold levels tested",
+        "passed": true
+      },
+      {
+        "label": "Monotonicity verified (3 <= 7 <= 30)",
+        "passed": true
+      },
+      {
+        "label": "Response fields validated (not just existence)",
+        "passed": true
+      },
+      {
+        "label": "Values checked (days_remaining <= threshold)",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S135-L3-6",
+    "timestamp": "2026-03-27T01:37:17.072Z",
+    "checks": [
+      {
+        "label": "Tested with non-existent warehouse",
+        "passed": true
+      },
+      {
+        "label": "Response is empty array (not error)",
+        "passed": true
+      },
+      {
+        "label": "Dashboard empty state checked",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  }
+]

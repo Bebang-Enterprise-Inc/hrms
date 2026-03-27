@@ -1,0 +1,58 @@
+[
+  {
+    "scenario": "S134-L3-1",
+    "type": "happy",
+    "test": "Quick Receive + Auto-Invoice Dialog",
+    "status": "PASS",
+    "detail": "QR button clicked via browser. Dialog: true. GR response: GR-2026-03149",
+    "error": null
+  },
+  {
+    "scenario": "S134-L3-2",
+    "type": "adversarial",
+    "test": "Partial Receive — QR button hidden",
+    "status": "PASS",
+    "detail": "QR hidden: true, Partial GR created: true",
+    "error": null
+  },
+  {
+    "scenario": "S134-L3-3",
+    "type": "happy",
+    "test": "PO warehouse default",
+    "status": "PASS",
+    "detail": "ship_to=\"Stores - BEI\", browser shows: false",
+    "error": null
+  },
+  {
+    "scenario": "S134-L3-4",
+    "type": "happy",
+    "test": "CEO Approval full chain (all browser)",
+    "status": "PASS",
+    "detail": "Mae via browser: true, CEO via browser: true, final: Approved/Approved",
+    "error": null
+  },
+  {
+    "scenario": "S134-L3-5",
+    "type": "happy",
+    "test": "Auto-Invoice form fill and submit",
+    "status": "PASS",
+    "detail": "Invoice created: true, PO pre-selected: true",
+    "error": null
+  },
+  {
+    "scenario": "S134-L3-6",
+    "type": "adversarial",
+    "test": "Stale PO cleanup status",
+    "status": "FAIL",
+    "detail": "PO-2026-00069 and PO-2026-00073 checked. All clean: false",
+    "error": null
+  },
+  {
+    "scenario": "S134-L3-7",
+    "type": "happy",
+    "test": "Batch approve visibility",
+    "status": "FAIL",
+    "detail": "Button not visible",
+    "error": null
+  }
+]

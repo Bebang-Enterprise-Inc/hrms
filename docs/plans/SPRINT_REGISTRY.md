@@ -150,9 +150,9 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S133` | Sprint 133 | `s133-s129-ordering-defect-fixes` | — | PLANNED — Fix S129 L3 defects: cargo_category submit bug, deploy B1-B5 backend, identical suggested qty formula, 65% OOS commissary data, missing demand/days columns. | `docs/plans/2026-03-26-sprint-133-s129-ordering-defect-fixes.md` |
 
-| `S134` | Sprint 134 | `s134-quick-receive-auto-invoice` | hrms#374, BEI-Tasks#269 | PR_CREATED 2026-03-27 — Quick Receive GR + Auto-Invoice prompt + PO warehouse default. Ian+Cayla bridge. | `docs/plans/2026-03-27-sprint-134-quick-receive-auto-invoice.md` |
+| `S134` | Sprint 134 | `s134-quick-receive-auto-invoice` | hrms#374, BEI-Tasks#269 | COMPLETED 2026-03-27 — Quick Receive GR + Auto-Invoice prompt + PO warehouse default. L3: 5 PASS, 2 FAIL (stale PO=manual, batch approve=S128 collateral). | `docs/plans/2026-03-27-sprint-134-quick-receive-auto-invoice.md` |
 
-| `S135` | Sprint 135 | `s135-inventory-bridge-supplier-intel` | hrms#375, BEI-Tasks#270 | PR_CREATED 2026-03-27 — Inventory Bridge + Supplier Intelligence: low stock alerts, auto PR-to-PO, supplier doc expiry, deliveries widget. | `docs/plans/2026-03-27-sprint-135-inventory-bridge-supplier-intel.md` |
+| `S135` | Sprint 135 | `s135-inventory-bridge-supplier-intel` | hrms#375, BEI-Tasks#270 | COMPLETED 2026-03-27 — Inventory Bridge + Supplier Intelligence. L3: 6 PASS, 0 FAIL. | `docs/plans/2026-03-27-sprint-135-inventory-bridge-supplier-intel.md` |
 
 | `S136` | Sprint 136 | `s136-ordering-data-quality` | — | PLANNED — Fix 10 store ordering defects: picker leaks FG/WIP, On Hand=0, demand inflated, suggested absurd, Commissary label wrong, DRY source=self, OOS rate, no snapshots, bad last_order data. | `docs/plans/2026-03-27-sprint-136-ordering-data-quality.md` |
 

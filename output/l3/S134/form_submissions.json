@@ -1,0 +1,76 @@
+[
+  {
+    "form": "mae_approval",
+    "inputs": {
+      "po_name": "PO-2026-03148",
+      "approver": "mae@bebang.ph"
+    },
+    "submit_action": "Approve button click (browser)",
+    "response": "{\"success\":true,\"message\":\"Mae approved. PO now pending CEO approval (new vendor)\"}",
+    "screenshot_after": "output/l3/S134/artifacts/S134-L3-1_02_mae_approved.png"
+  },
+  {
+    "form": "goods_receipt_quick_receive",
+    "inputs": {
+      "purchase_order": "PO-2026-03148",
+      "mode": "quick_receive",
+      "items": [
+        "FG009 x10",
+        "FG020 x5"
+      ]
+    },
+    "submit_action": "Received All as Ordered (browser button click)",
+    "response": "{\"success\":true,\"name\":\"GR-2026-03149\",\"message\":\"GR created\"}",
+    "screenshot_after": "output/l3/S134/artifacts/S134-L3-1_07_after_qr_click.png"
+  },
+  {
+    "form": "auto_invoice_dialog",
+    "inputs": {
+      "action": "Create Invoice"
+    },
+    "submit_action": "Create Invoice button click in dialog (browser)",
+    "response": "Navigated to: https://my.bebang.ph/dashboard/procurement/invoices/new?po=PO-2026-03148&gr=GR-2026-03149",
+    "screenshot_after": "output/l3/S134/artifacts/S134-L3-1_09_invoice_page.png"
+  },
+  {
+    "form": "goods_receipt_partial",
+    "inputs": {
+      "purchase_order": "PO-2026-03150",
+      "received_qty": 7,
+      "ordered_qty": 10
+    },
+    "submit_action": "Create GR button (browser, partial receive)",
+    "response": "{\"success\":true,\"name\":\"GR-2026-03151\",\"message\":\"GR created\"}",
+    "screenshot_after": "output/l3/S134/artifacts/S134-L3-2_02_qr_hidden.png"
+  },
+  {
+    "form": "mae_approval_ceo_chain",
+    "inputs": {
+      "po_name": "PO-2026-03153",
+      "approver": "mae@bebang.ph"
+    },
+    "submit_action": "Approve button click (browser)",
+    "response": "{\"success\":true,\"message\":\"Mae approved. PO now pending CEO approval (new vendor)\"}",
+    "screenshot_after": "output/l3/S134/artifacts/S134-L3-4_02_mae_approved.png"
+  },
+  {
+    "form": "ceo_approval",
+    "inputs": {
+      "po_name": "PO-2026-03153",
+      "approver": "sam@bebang.ph"
+    },
+    "submit_action": "Approve button click + confirmation dialog (browser)",
+    "response": "{\"success\":true,\"message\":\"PO approved by CEO\"}",
+    "screenshot_after": "output/l3/S134/artifacts/S134-L3-4_04_ceo_approved.png"
+  },
+  {
+    "form": "invoice_creation",
+    "inputs": {
+      "purchase_order": "PO-2026-03154",
+      "supplier_invoice_no": "INV-L3-1774575316653"
+    },
+    "submit_action": "Create Invoice button (browser)",
+    "response": "timeout — verifying via page",
+    "screenshot_after": "output/l3/S134/artifacts/S134-L3-5_02_invoice_created.png"
+  }
+]

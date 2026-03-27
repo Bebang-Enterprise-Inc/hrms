@@ -1,0 +1,173 @@
+[
+  {
+    "scenario": "S134-L3-1",
+    "timestamp": "2026-03-27T01:32:06.653Z",
+    "checks": [
+      {
+        "label": "form_submissions has entry",
+        "passed": true
+      },
+      {
+        "label": "state_verification has entries",
+        "passed": true
+      },
+      {
+        "label": "screenshots before mutation",
+        "passed": true
+      },
+      {
+        "label": "screenshots after mutation",
+        "passed": true
+      },
+      {
+        "label": "mutation via browser button only",
+        "passed": true
+      },
+      {
+        "label": "Mae approval via browser button",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S134-L3-2",
+    "timestamp": "2026-03-27T01:33:13.998Z",
+    "checks": [
+      {
+        "label": "Quick Receive button was checked for visibility",
+        "passed": true
+      },
+      {
+        "label": "Quantity was modified in browser",
+        "passed": true
+      },
+      {
+        "label": "State verification recorded",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S134-L3-3",
+    "timestamp": "2026-03-27T01:33:29.510Z",
+    "checks": [
+      {
+        "label": "ship_to verified via API GET",
+        "passed": true
+      },
+      {
+        "label": "ship_to verified via browser textContent",
+        "passed": true
+      },
+      {
+        "label": "screenshot taken",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S134-L3-4",
+    "timestamp": "2026-03-27T01:34:23.873Z",
+    "checks": [
+      {
+        "label": "Mae approval via browser button (not API)",
+        "passed": true
+      },
+      {
+        "label": "CEO approval via browser button (not API)",
+        "passed": true
+      },
+      {
+        "label": "requires_ceo_approval verified",
+        "passed": true
+      },
+      {
+        "label": "Pending CEO Approval badge verified in browser",
+        "passed": true
+      },
+      {
+        "label": "Final status verified via API AND browser",
+        "passed": true
+      },
+      {
+        "label": "form_submissions has mae + ceo entries",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S134-L3-5",
+    "timestamp": "2026-03-27T01:35:37.594Z",
+    "checks": [
+      {
+        "label": "Invoice form filled via browser",
+        "passed": true
+      },
+      {
+        "label": "Submit via browser button",
+        "passed": true
+      },
+      {
+        "label": "Invoice amounts verified",
+        "passed": true
+      },
+      {
+        "label": "Screenshots before and after",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S134-L3-6",
+    "timestamp": "2026-03-27T01:35:41.856Z",
+    "checks": [
+      {
+        "label": "Both stale POs checked",
+        "passed": true
+      },
+      {
+        "label": "Status values read (not existence)",
+        "passed": true
+      },
+      {
+        "label": "Defects filed if not cleaned",
+        "passed": true
+      }
+    ],
+    "corners_cut": [],
+    "passed": true
+  },
+  {
+    "scenario": "S134-L3-7",
+    "timestamp": "2026-03-27T01:36:04.157Z",
+    "checks": [
+      {
+        "label": "Batch approve via browser button",
+        "passed": false
+      },
+      {
+        "label": "ship_to verified on approved POs",
+        "passed": false
+      },
+      {
+        "label": "Screenshots taken",
+        "passed": true
+      }
+    ],
+    "corners_cut": [
+      "Batch approve via browser button",
+      "ship_to verified on approved POs"
+    ],
+    "passed": false
+  }
+]

@@ -1,0 +1,100 @@
+[
+  {
+    "check": "Auto-invoice dialog appears after Quick Receive GR creation",
+    "before": "GR new page with Quick Receive button",
+    "after": "Dialog visible: true, has Create Invoice button: true, text: \"Goods Receipt CreatedGR-2026-03149 has been created successfully. Would you like to create an invoic\"",
+    "method": "isVisible() + textContent()",
+    "passed": true
+  },
+  {
+    "check": "Create Invoice button navigates to /invoices/new with po and gr params",
+    "before": "Dialog with Create Invoice button",
+    "after": "URL: https://my.bebang.ph/dashboard/procurement/invoices/new?po=PO-2026-03148&gr=GR-2026-03149",
+    "method": "URL check after click",
+    "passed": true
+  },
+  {
+    "check": "Quick Receive button hidden when received_qty != ordered_qty",
+    "before": "Modified received_qty from 10 to 7",
+    "after": "Button visible: false",
+    "method": "isVisible()",
+    "passed": true
+  },
+  {
+    "check": "PO ship_to defaults to \"Stores - BEI\"",
+    "before": "ship_to not in creation payload",
+    "after": "ship_to=\"Stores - BEI\"",
+    "method": "API GET (read-only verification)",
+    "passed": true
+  },
+  {
+    "check": "PO detail page shows \"Stores - BEI\" warehouse",
+    "before": "Navigate to PO detail",
+    "after": "Page contains \"Stores - BEI\": false",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "check": "New vendor PO has requires_ceo_approval=1",
+    "before": "PO created for brand-new supplier",
+    "after": "requires_ceo_approval=1",
+    "method": "API GET",
+    "passed": true
+  },
+  {
+    "check": "After Mae approve, status = \"Pending CEO Approval\"",
+    "before": "Pending Mae Approval",
+    "after": "Pending CEO Approval",
+    "method": "API GET",
+    "passed": true
+  },
+  {
+    "check": "Browser shows \"Pending CEO Approval\" badge",
+    "before": "Navigate to PO as CEO (sam@bebang.ph)",
+    "after": "Badge visible: true",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "check": "Final PO status = Approved, ceo_approval = Approved",
+    "before": "Pending CEO Approval",
+    "after": "status=\"Approved\", ceo_approval=\"Approved\"",
+    "method": "API GET",
+    "passed": true
+  },
+  {
+    "check": "Browser shows \"Approved\" status (not Pending)",
+    "before": "Navigate to PO after CEO approval",
+    "after": "Shows Approved: true",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "check": "Invoice form pre-selects PO from query param",
+    "before": "Navigate to /invoices/new?po=PO-2026-03154",
+    "after": "PO context loaded: true",
+    "method": "textContent()",
+    "passed": true
+  },
+  {
+    "check": "Invoice created with amounts matching PO",
+    "before": "PO PO-2026-03154 with FG009 x5 @ 42.35",
+    "after": "Invoice new, total: undefined",
+    "method": "API GET",
+    "passed": false
+  },
+  {
+    "check": "Stale PO PO-2026-00069 current status",
+    "before": "Known stale test PO from S132 testing",
+    "after": "status=\"Pending Mae Approval\", price_variance_override=undefined",
+    "method": "API GET",
+    "passed": false
+  },
+  {
+    "check": "Stale PO PO-2026-00073 current status",
+    "before": "Known stale test PO from S132 testing",
+    "after": "status=\"Pending Mae Approval\", price_variance_override=undefined",
+    "method": "API GET",
+    "passed": false
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "endpoint": "/dashboard/low-stock?threshold_days=7",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": "{\"items\":[],\"warehouse\":\"Stores - BEI\",\"threshold_days\":7,\"total_alerts\":0}"
+  },
+  {
+    "endpoint": "/dashboard/expected-deliveries?days=7",
+    "method": "GET",
+    "payload": null,
+    "status": 500,
+    "response_body": "{\"exception\":\"pymysql.err.OperationalError: (1054, \\\"Unknown column 'po.items_count' in 'SELECT'\\\")\",\"exc_type\":\"OperationalError\",\"_exc_source\":\"hrms (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^"
+  },
+  {
+    "endpoint": "/dashboard/supplier-expiry",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": "{\"suppliers\":[],\"total\":0}"
+  },
+  {
+    "endpoint": "/purchase-requisitions/PR-NONEXISTENT-999/auto-convert",
+    "method": "POST",
+    "payload": null,
+    "status": 500,
+    "response_body": "{\"exception\":\"TypeError: auto_convert_pr_to_po() missing 1 required positional argument: 'pr_name'\",\"exc_type\":\"TypeError\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/a"
+  },
+  {
+    "endpoint": "/dashboard/low-stock?threshold_days=3",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": "{\"items\":[],\"warehouse\":\"Stores - BEI\",\"threshold_days\":3,\"total_alerts\":0}"
+  },
+  {
+    "endpoint": "/dashboard/low-stock?threshold_days=7",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": "{\"items\":[],\"warehouse\":\"Stores - BEI\",\"threshold_days\":7,\"total_alerts\":0}"
+  },
+  {
+    "endpoint": "/dashboard/low-stock?threshold_days=30",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": "{\"items\":[],\"warehouse\":\"Stores - BEI\",\"threshold_days\":30,\"total_alerts\":0}"
+  },
+  {
+    "endpoint": "/dashboard/low-stock?threshold_days=7&warehouse=NONEXISTENT-WAREHOUSE-999",
+    "method": "GET",
+    "payload": null,
+    "status": 200,
+    "response_body": "{\"items\":[],\"warehouse\":\"NONEXISTENT-WAREHOUSE-999\",\"threshold_days\":7}"
+  }
+]

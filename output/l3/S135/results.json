@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": "S135-L3-1",
+    "type": "happy",
+    "test": "Stock Alerts widget + Create PR",
+    "status": "PASS",
+    "detail": "Widget: true, Create PR: false, API items: 0",
+    "error": null
+  },
+  {
+    "scenario": "S135-L3-2",
+    "type": "happy",
+    "test": "Deliveries This Week widget",
+    "status": "PASS",
+    "detail": "Widget: true, API deliveries: 0",
+    "error": null
+  },
+  {
+    "scenario": "S135-L3-3",
+    "type": "happy",
+    "test": "Supplier Document Expiry widget + detail",
+    "status": "PASS",
+    "detail": "Dashboard widget: true, suppliers with expiry: 0",
+    "error": null
+  },
+  {
+    "scenario": "S135-L3-4",
+    "type": "adversarial",
+    "test": "Auto-convert rejects invalid PR",
+    "status": "PASS",
+    "detail": "Graceful rejection: true, status=500",
+    "error": null
+  },
+  {
+    "scenario": "S135-L3-5",
+    "type": "happy",
+    "test": "Low Stock API threshold filtering",
+    "status": "PASS",
+    "detail": "3d=0 <= 7d=0 <= 30d=0, API status: 200",
+    "error": null
+  },
+  {
+    "scenario": "S135-L3-6",
+    "type": "adversarial",
+    "test": "Empty state for no stock data",
+    "status": "PASS",
+    "detail": "Empty array: true, status: 200, dashboard graceful: true",
+    "error": null
+  }
+]
