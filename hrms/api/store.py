@@ -1809,13 +1809,16 @@ def get_user_store(surface: str | None = None):
 		or "HR Manager" in user_roles
 		or "Regional Manager" in user_roles
 	):
-		role = role or ("Regional Manager" if "Regional Manager" in user_roles else "HR User")
+		# S133: System Manager always sees ALL stores, overriding Area Supervisor subset.
+		role = "Regional Manager" if "Regional Manager" in user_roles else "System Manager"
 		if surface_key in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY}:
 			for store_row in schedule_rows:
 				append_store(store_row)
-		elif not stores:
-			# S133: For System Manager, return all leaf warehouses then filter.
-			# The _is_orderable_store() name-based filter removes 3PLs, commissary, etc.
+		else:
+			# Clear any stores from earlier role paths (e.g., Area Supervisor)
+			# so System Manager sees the full list, not just their supervised stores.
+			stores.clear()
+			seen_stores.clear()
 			store_rows = frappe.get_all(
 				"Warehouse",
 				filters={"is_group": 0, "disabled": 0},
