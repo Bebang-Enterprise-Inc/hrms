@@ -1480,10 +1480,11 @@ def _round_suggested_qty(qty, uom):
 # S128/B2: Filter non-orderable warehouses from store picker.
 _NON_ORDERABLE_WAREHOUSE_TYPES = frozenset({"3PL", "Commissary", "Cold Storage", "Transit"})
 
-# S133: Name-based filter for warehouses that are not real stores.
+# S133+S136/B1: Name-based filter for warehouses that are not real stores.
 _NON_ORDERABLE_NAME_PATTERNS = (
 	"Jentec", "Pinnacle", "Royal Cold", "RCS", "3MD",
-	"Commissary", "Kitchen", "TEST-COMMISSARY",
+	"Commissary", "Kitchen", "TEST-COMMISSARY", "TEST-STORE",
+	"Finished Goods", "Work In Progress", "Raw Materials",
 )
 
 # S133: Exact names for group/meta warehouses that may have is_group=0.
@@ -1986,6 +1987,15 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	for row in last_qty_rows:
 		last_qty_map[row.item_code] = row.qty_requested
 
+	# S136/B3: Batch query for store's own stock (for On Hand display).
+	store_bin_rows = frappe.get_all(
+		"Bin",
+		filters={"warehouse": store_warehouse},
+		fields=["item_code", "actual_qty"],
+		limit_page_length=500,
+	)
+	store_stock_map = {row.item_code: flt(row.actual_qty) for row in store_bin_rows}
+
 	# Batch stock quantities (available-to-promise approximation) now read from the
 	# contracted source warehouse for the item lane rather than the destination store.
 	source_stock_context = _build_orderable_source_stock_context(store_warehouse, items)
@@ -2001,11 +2011,24 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	item_codes = [row.name for row in items]
 	demand_snapshots = _load_store_item_demand_snapshots(store_warehouse, item_codes, target_date)
 
+	# S136/B4: DRY fallback source warehouse (Jentec) when route resolves to store itself.
+	_DRY_FALLBACK_SOURCE = "Jentec Storage Inc. - Bebang Enterprise Inc."
+	_FROZEN_FALLBACK_SOURCE = "3MD Logistics \u2013 Camangyanan - Bebang Enterprise Inc."
+
 	for item in items:
 		item_code = item.name
 		last_order_qty = flt(last_qty_map.get(item_code, 0))
 		lane = lane_by_item.get(item_code) or _resolve_delivery_lane(item)
 		source_warehouse = source_warehouse_by_item.get(item_code) or store_warehouse
+
+		# S136/B4: Fix circular source (store sourcing from itself).
+		if source_warehouse == store_warehouse:
+			cargo = _lane_to_cargo_category(lane)
+			if cargo == "DRY":
+				source_warehouse = _DRY_FALLBACK_SOURCE
+			elif cargo in ("FC", "FM"):
+				source_warehouse = _FROZEN_FALLBACK_SOURCE
+
 		available_to_promise = flt(stock_map.get((source_warehouse, item_code), 0), 2)
 		snapshot = demand_snapshots.get(item_code) or {}
 		coverage_window_days = flt(snapshot.get("coverage_window_days") or 0)
@@ -2037,9 +2060,15 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 			bom_consumption=bom_consumption,
 			coverage_window_days=coverage_window_days,
 		)
+		# S136/B3: Store's own actual stock for On Hand display.
+		store_actual = flt(store_stock_map.get(item_code, 0), 2)
+
 		item["item_code"] = item_code
 		item["uom"] = item.get("stock_uom")
 		item["source_warehouse"] = source_warehouse
+		# S136/B5: Short name for display (strip company suffix).
+		item["source_warehouse_short"] = (source_warehouse or "").replace(" - Bebang Enterprise Inc.", "").strip()
+		item["store_actual_qty"] = store_actual
 		item["last_order_qty"] = last_order_qty
 		item["available_stock"] = available_to_promise
 		item["is_oos"] = 1 if available_to_promise <= 0 else 0
@@ -2061,6 +2090,12 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		raw_sq = flt(item.get("suggested_qty"))
 		item["suggested_qty"] = _round_suggested_qty(raw_sq, item_uom)
 		item["recommended_qty"] = _round_suggested_qty(flt(item.get("recommended_qty")), item_uom)
+
+		# S136/B2: Subtract store's actual stock from suggested qty.
+		if store_actual > 0 and flt(item.get("suggested_qty")) > 0:
+			adjusted = flt(item["suggested_qty"]) - store_actual
+			item["suggested_qty"] = _round_suggested_qty(max(0, adjusted), item_uom)
+			item["recommended_qty"] = item["suggested_qty"]
 
 	items = sorted(
 		items,
