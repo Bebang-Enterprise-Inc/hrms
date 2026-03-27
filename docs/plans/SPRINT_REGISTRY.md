@@ -154,9 +154,13 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S135` | Sprint 135 | `s135-inventory-bridge-supplier-intel` | hrms#375, BEI-Tasks#270 | PR_CREATED 2026-03-27 — Inventory Bridge + Supplier Intelligence: low stock alerts, auto PR-to-PO, supplier doc expiry, deliveries widget. | `docs/plans/2026-03-27-sprint-135-inventory-bridge-supplier-intel.md` |
 
+| `S136` | Sprint 136 | `s136-ordering-data-quality` | — | PLANNED — Fix 10 store ordering defects: picker leaks FG/WIP, On Hand=0, demand inflated, suggested absurd, Commissary label wrong, DRY source=self, OOS rate, no snapshots, bad last_order data. | `docs/plans/2026-03-27-sprint-136-ordering-data-quality.md` |
+
+| `S137` | Sprint 137 | `s137-commissary-production-planning` | — | PR_CREATED 2026-03-27 — Commissary Production Planning Control Room: recommendation engine, target setting, CEO audit view, store demand, immutable logs. | `docs/plans/2026-03-27-sprint-137-commissary-production-planning.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S136`.
-2. Reserve branch name: `s132-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S138`.
+2. Reserve branch name: `s138-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
