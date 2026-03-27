@@ -510,6 +510,9 @@ class BEIPurchaseOrder(Document):
 			frappe.throw(_("Could not get or create Frappe Supplier for {0}").format(self.supplier))
 
 		resolved_store_warehouse = resolve_active_buying_warehouse(self.ship_to, company=get_company())
+		if not resolved_store_warehouse:
+			# Fallback: use "Stores - BEI" as default warehouse when ship_to is empty
+			resolved_store_warehouse = resolve_active_buying_warehouse("Stores", company=get_company())
 		erp_company = resolve_warehouse_company(resolved_store_warehouse) or get_company()
 
 		# Validate and prepare items
