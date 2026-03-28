@@ -164,9 +164,13 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S140` | Sprint 140 | — (data-only, no code) | — | PLANNED — Warehouse setup + full 46-store inventory re-sync via /frappe-bulk-edits. Disable syncs, create BKI warehouses, extract from Google Sheets, fact-check, upload, re-enable. | `docs/plans/2026-03-28-sprint-140-warehouse-setup-inventory-resync.md` |
 
+| `S141` | Sprint 141 | `s141-procurement-module-fix` | BEI-Tasks#274 | COMPLETED 2026-03-28 — PO pagination (577 POs), approved tab (543 POs), status filters (+CEO, +Cancelled), dashboard empty states, sidebar dedup. 12/12 L3 PASS. | `docs/plans/2026-03-28-sprint-141-procurement-module-fix.md` |
+
+| `S142` | Sprint 142 | `s142-procurement-qa-audit` | — | GO — Full procurement module QA audit: every page, every CTA, 3 roles, E2E workflow, three-way data match, Proof Matrix. | `docs/plans/2026-03-28-sprint-142-procurement-qa-audit.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S141`.
-2. Reserve branch name: `s141-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S143`.
+2. Reserve branch name: `s142-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 

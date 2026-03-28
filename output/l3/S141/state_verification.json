@@ -1,0 +1,85 @@
+[
+  {
+    "check": "PO page shows pagination with total count",
+    "before": "No pagination controls, only 20 of 577 POs visible",
+    "after": "Showing 1 to 20 of 577 POs, Previous/Next buttons visible",
+    "passed": true,
+    "evidence": "output/l3/S141/artifacts/S141-001_po_page.png"
+  },
+  {
+    "check": "Click Next advances to page 2",
+    "before": "First row: PO-2026574 (page 1)",
+    "after": "First row: PO-2026557, Showing 21 to 40 of 577 POs",
+    "passed": true,
+    "evidence": "output/l3/S141/artifacts/S141-002_page2.png"
+  },
+  {
+    "check": "Click Previous returns to page 1, Previous button disabled",
+    "before": "On page 2",
+    "after": "Showing 1 to 20 of 577 POs, Previous button disabled: true",
+    "passed": true
+  },
+  {
+    "check": "Pending CEO and Cancelled status filters exist in dropdown",
+    "before": "Dropdown missing Pending CEO Approval and Cancelled",
+    "after": "Dropdown contains all 10 options: All Statuses, Draft, Pending Mae, Pending Butch, Approved, Sent to Supplier, Partially Received, Fully Received, Pending CEO, Cancelled",
+    "passed": true,
+    "note": "Test automation isVisible failed due to scroll position, but allTextContents() confirmed option exists. Screenshot evidence confirms dropdown renders correctly."
+  },
+  {
+    "check": "Cancelled filter selectable and filters table",
+    "before": "No Cancelled option",
+    "after": "15 cancelled POs displayed when Cancelled selected",
+    "passed": true
+  },
+  {
+    "check": "Approved tab shows data with pagination",
+    "before": "TabsContent was empty comment placeholder",
+    "after": "543 approved POs, Showing 1 to 20 of 543 POs, Approved/Fully Received badges visible, search box present",
+    "passed": true,
+    "evidence": "output/l3/S141/artifacts/S141-006_approved_tab.png"
+  },
+  {
+    "check": "Dashboard invoice-dependent KPIs show 'No data yet'",
+    "before": "Total Outstanding: ₱0, Overdue Amount: ₱0, Avg Payment Days: 0.0 days (misleading)",
+    "after": "Total Outstanding: 'No data yet' (Invoice sync not yet active), Overdue: 'No data yet', Avg Payment: 'No data yet'. MTD PO Value correctly shows ₱41,108,853 (94 orders this month).",
+    "passed": true,
+    "evidence": "output/l3/S141/artifacts/S141-007_dashboard.png"
+  },
+  {
+    "check": "AP Aging shows empty state instead of ₱0 pie chart",
+    "before": "Pie chart rendering with ₱0 Total Outstanding",
+    "after": "No AP data yet - Invoice sync is not yet active",
+    "passed": true,
+    "evidence": "output/l3/S141/artifacts/S141-008_ap_aging.png"
+  },
+  {
+    "check": "Only ONE sidebar visible (no duplicate procurement nav)",
+    "before": "Two sidebars: layout.tsx inner sidebar + nav-main.tsx main sidebar",
+    "after": "0 aside elements rendered, single navigation structure",
+    "passed": true,
+    "evidence": "output/l3/S141/artifacts/S141-009_sidebar.png"
+  },
+  {
+    "check": "PO search works correctly after pagination changes",
+    "before": "577 POs displayed",
+    "after": "Search 'Orangepop' returns 6 rows. First row: PO-2026523, Mar 25 2026, Orangepop Enterprise, ₱246,400, Fully Received",
+    "passed": true,
+    "evidence": "output/l3/S141/artifacts/S141-010_search_orangepop.png"
+  },
+  {
+    "check": "RBAC: Staff role correctly blocked from procurement",
+    "before": "N/A - testing RBAC enforcement",
+    "after": "test.staff@bebang.ph sees 'Access Restricted - You don't have permission to access this page. Please contact your supervisor or HR if you believe this is an error.'",
+    "passed": true,
+    "note": "This is CORRECT behavior - staff role does not have procurement module access",
+    "evidence": "output/l3/S141/artifacts/S141-011_staff_po_page.png"
+  },
+  {
+    "check": "Mobile viewport (375x812) - no horizontal overflow",
+    "before": "N/A",
+    "after": "Body scroll width 375px = viewport width, no overflow",
+    "passed": true,
+    "evidence": "output/l3/S141/artifacts/S141-012_mobile_po.png"
+  }
+]
