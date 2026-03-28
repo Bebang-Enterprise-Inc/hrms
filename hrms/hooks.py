@@ -382,7 +382,8 @@ scheduler_events = {
 		# Biometric daily digest + store syncs: 7 AM PHT = 23:00 UTC (previous day)
 		"0 23 * * *": [
 			"hrms.utils.biometric_alerts.send_daily_digest",
-			"hrms.api.erp_sync.enqueue_scheduled_store_inventory_shadow_sync",
+			# S140: inventory sync disabled during warehouse setup + re-sync (2026-03-28)
+			# "hrms.api.erp_sync.enqueue_scheduled_store_inventory_shadow_sync",
 			"hrms.api.erp_sync.enqueue_scheduled_store_demand_snapshot_sync",
 		],
 		# Monthly billing generation: 6 AM on 1st of each month
@@ -392,9 +393,10 @@ scheduler_events = {
 			"hrms.api.erp_sync.scheduled_generate_morning_sync_health_report",
 		],
 		# Store inventory shadow sync watchdog: resume stale in-progress runs after deploy interruptions
-		"*/10 * * * *": [
-			"hrms.api.erp_sync.watch_store_inventory_shadow_sync_health",
-		],
+		# S140: watchdog disabled during warehouse setup + re-sync (2026-03-28)
+		# "*/10 * * * *": [
+		# 	"hrms.api.erp_sync.watch_store_inventory_shadow_sync_health",
+		# ],
 		# Discount audit workbook: 12:50 AM PHT after Supabase alert refresh at 12:35 AM PHT
 		"42 16 * * *": ["hrms.api.discount_abuse.scheduled_refresh_discount_benchmark_snapshots"],
 		# Discount audit workbook: 12:50 AM PHT after benchmark refresh
