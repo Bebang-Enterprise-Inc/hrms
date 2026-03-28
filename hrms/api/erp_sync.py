@@ -1378,6 +1378,10 @@ def _sync_inventory_rows(
 			sr.submit()
 			results["rows_created"] += len(items)
 			_release_savepoint(savepoint)
+			# Commit per-warehouse to release tabBin locks immediately.
+			# Without this, 46 sequential SR submits hold locks for the entire
+			# run duration, causing Lock wait timeout for concurrent requests.
+			frappe.db.commit()
 
 		except Exception as exc:
 			frappe.db.rollback(save_point=savepoint)
