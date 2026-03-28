@@ -158,9 +158,13 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S137` | Sprint 137 | `s137-commissary-production-planning` | — | PR_CREATED 2026-03-27 — Commissary Production Planning Control Room: recommendation engine, target setting, CEO audit view, store demand, immutable logs. | `docs/plans/2026-03-27-sprint-137-commissary-production-planning.md` |
 
+| `S138` | Sprint 138 | `s138-warehouse-routing-data-integrity`, `s138-sr-difference-account`, `s138-sync-commit-per-warehouse` | #382, #384, #385, #386 | COMPLETED 2026-03-28 — 3PL warehouse BEI→BKI move, SR expense_account fix (not difference_account), per-warehouse DB commit for lock timeout prevention. | — |
+
+| `S139` | Sprint 139 | `s139-infra-parallel-sync` | — | IN_PROGRESS — Phase B (parallel sync code) + Phase C (infra docs) complete. Phase A (EC2 resize, worker scaling, MariaDB tuning) blocked on cost approval ($61/month). | `docs/plans/2026-03-28-sprint-139-infra-parallel-sync.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S138`.
-2. Reserve branch name: `s138-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S140`.
+2. Reserve branch name: `s140-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
