@@ -162,9 +162,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S139` | Sprint 139 | `s139-infra-parallel-sync` | — | IN_PROGRESS — Phase B (parallel sync code) + Phase C (infra docs) complete. Phase A (EC2 resize, worker scaling, MariaDB tuning) blocked on cost approval ($61/month). | `docs/plans/2026-03-28-sprint-139-infra-parallel-sync.md` |
 
+| `S140` | Sprint 140 | — (data-only, no code) | — | PLANNED — Warehouse setup + full 46-store inventory re-sync via /frappe-bulk-edits. Disable syncs, create BKI warehouses, extract from Google Sheets, fact-check, upload, re-enable. | `docs/plans/2026-03-28-sprint-140-warehouse-setup-inventory-resync.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S140`.
-2. Reserve branch name: `s140-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S141`.
+2. Reserve branch name: `s141-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
