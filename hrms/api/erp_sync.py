@@ -594,18 +594,36 @@ def _resolve_inventory_valuation_rate(
 	*,
 	is_shadow_sync: bool,
 	is_inventory_baseline_sync: bool,
+	bin_rate_cache: dict[tuple[str, str], float] | None = None,
+	item_rate_cache: dict[str, float] | None = None,
 ) -> tuple[float, bool]:
 	explicit_rate = _safe_float(_first_non_empty(row, "valuation_rate", "current_valuation_rate"))
 	explicit_allow_zero = bool(_sheet_flag(_first_non_empty(row, "allow_zero_valuation_rate")))
 	if explicit_rate > 0:
 		return explicit_rate, explicit_allow_zero
 
-	warehouse_bin_rate = _safe_float(
-		frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "valuation_rate")
-	)
-	if warehouse_bin_rate > 0:
-		return warehouse_bin_rate, explicit_allow_zero
+	# ── B3: Try pre-fetched Bin cache first (exact item+warehouse) ──
+	if bin_rate_cache:
+		cached_rate = bin_rate_cache.get((item_code, warehouse), 0.0)
+		if cached_rate > 0:
+			return cached_rate, explicit_allow_zero
+		# Try any warehouse for this item from cache
+		for (cached_item, _cached_wh), rate in bin_rate_cache.items():
+			if cached_item == item_code and rate > 0:
+				return rate, explicit_allow_zero
+	else:
+		# Fallback: per-row DB lookup when no cache provided
+		warehouse_bin_rate = _safe_float(
+			frappe.db.get_value("Bin", {"item_code": item_code, "warehouse": warehouse}, "valuation_rate")
+		)
+		if warehouse_bin_rate > 0:
+			return warehouse_bin_rate, explicit_allow_zero
 
+		any_bin_rate = _latest_positive_rate("Bin", {"item_code": item_code}, "actual_qty desc, warehouse asc")
+		if any_bin_rate > 0:
+			return any_bin_rate, explicit_allow_zero
+
+	# SLE lookups (not cached — too many rows, rarely needed after Bin cache hit)
 	same_warehouse_sle_rate = _latest_positive_rate(
 		"Stock Ledger Entry",
 		{"item_code": item_code, "warehouse": warehouse},
@@ -613,10 +631,6 @@ def _resolve_inventory_valuation_rate(
 	)
 	if same_warehouse_sle_rate > 0:
 		return same_warehouse_sle_rate, explicit_allow_zero
-
-	any_bin_rate = _latest_positive_rate("Bin", {"item_code": item_code}, "actual_qty desc, warehouse asc")
-	if any_bin_rate > 0:
-		return any_bin_rate, explicit_allow_zero
 
 	any_sle_rate = _latest_positive_rate(
 		"Stock Ledger Entry",
@@ -626,9 +640,16 @@ def _resolve_inventory_valuation_rate(
 	if any_sle_rate > 0:
 		return any_sle_rate, explicit_allow_zero
 
-	item_rate = _safe_float(frappe.db.get_value("Item", item_code, "valuation_rate"))
-	if item_rate > 0:
-		return item_rate, explicit_allow_zero
+	# ── B3: Try pre-fetched Item rate cache ─────────────────────────
+	if item_rate_cache:
+		cached_item_rate = item_rate_cache.get(item_code, 0.0)
+		if cached_item_rate > 0:
+			return cached_item_rate, explicit_allow_zero
+	else:
+		# Fallback: per-row DB lookup
+		item_rate = _safe_float(frappe.db.get_value("Item", item_code, "valuation_rate"))
+		if item_rate > 0:
+			return item_rate, explicit_allow_zero
 
 	if _doctype_has_field("Item", "last_purchase_rate"):
 		last_purchase_rate = _safe_float(frappe.db.get_value("Item", item_code, "last_purchase_rate"))
@@ -1210,6 +1231,54 @@ def _sync_inventory_rows(
 	is_shadow_sync = _is_store_inventory_shadow_sync(sheet_name)
 	is_inventory_baseline_sync = _is_inventory_baseline_sync(sheet_name)
 
+	# ── B2: Bulk pre-fetch Item attributes ──────────────────────────────
+	# Eliminates ~15,000 per-row get_value calls for has_batch_no / has_serial_no.
+	# Fallback: on empty result or error, per-row lookups remain as the default path.
+	_item_attr_cache: dict[str, dict[str, int]] = {}
+	try:
+		_all_items = frappe.get_all(
+			"Item",
+			fields=["name", "has_batch_no", "has_serial_no"],
+			limit_page_length=0,
+		)
+		if _all_items:
+			_item_attr_cache = {
+				r["name"]: {"has_batch_no": cint(r.get("has_batch_no")), "has_serial_no": cint(r.get("has_serial_no"))}
+				for r in _all_items
+			}
+	except Exception:
+		_item_attr_cache = {}
+
+	# ── B3: Bulk pre-fetch Bin valuation rates ──────────────────────────
+	# Eliminates ~22,000 cascade queries in _resolve_inventory_valuation_rate.
+	# Structure: {(item_code, warehouse): valuation_rate}
+	# Fallback: on cache miss, the existing per-row DB lookups in
+	# _resolve_inventory_valuation_rate still fire (cache is advisory).
+	_bin_rate_cache: dict[tuple[str, str], float] = {}
+	_item_rate_cache: dict[str, float] = {}
+	try:
+		_all_bins = frappe.get_all(
+			"Bin",
+			fields=["item_code", "warehouse", "valuation_rate"],
+			filters={"valuation_rate": [">", 0]},
+			limit_page_length=0,
+		)
+		if _all_bins:
+			for b in _all_bins:
+				_bin_rate_cache[(b["item_code"], b["warehouse"])] = flt(b["valuation_rate"])
+		# Also pre-fetch Item-level valuation rates as final fallback
+		_item_rates = frappe.get_all(
+			"Item",
+			fields=["name", "valuation_rate"],
+			filters={"valuation_rate": [">", 0]},
+			limit_page_length=0,
+		)
+		if _item_rates:
+			_item_rate_cache = {r["name"]: flt(r["valuation_rate"]) for r in _item_rates}
+	except Exception:
+		_bin_rate_cache = {}
+		_item_rate_cache = {}
+
 	for row in rows:
 		try:
 			item_code = str(_first_non_empty(row, "item_code", "sku") or "").strip()
@@ -1241,8 +1310,14 @@ def _sync_inventory_rows(
 				results["errors"].append(f"Warehouse not found for item {item_code}")
 				continue
 
-			has_batch_no = cint(frappe.db.get_value("Item", item_code, "has_batch_no") or 0)
-			has_serial_no = cint(frappe.db.get_value("Item", item_code, "has_serial_no") or 0)
+			# Use pre-fetched cache (B2), fall back to per-row DB lookup on miss.
+			_cached_attrs = _item_attr_cache.get(item_code)
+			if _cached_attrs is not None:
+				has_batch_no = _cached_attrs["has_batch_no"]
+				has_serial_no = _cached_attrs["has_serial_no"]
+			else:
+				has_batch_no = cint(frappe.db.get_value("Item", item_code, "has_batch_no") or 0)
+				has_serial_no = cint(frappe.db.get_value("Item", item_code, "has_serial_no") or 0)
 			use_serial_batch_fields = 0
 
 			if has_serial_no and not serial_no:
@@ -1282,6 +1357,8 @@ def _sync_inventory_rows(
 				row,
 				is_shadow_sync=is_shadow_sync,
 				is_inventory_baseline_sync=is_inventory_baseline_sync,
+				bin_rate_cache=_bin_rate_cache,
+				item_rate_cache=_item_rate_cache,
 			)
 
 			if warehouse not in items_by_warehouse:
@@ -2070,25 +2147,95 @@ def sync_supplier_soa(sheet_name: str, data: list[dict], checksum: str, **kwargs
 
 
 def enqueue_scheduled_store_inventory_shadow_sync(
-	run_date: str | None = None, force: bool = False
+	run_date: str | None = None, force: bool = False, batch_size: int = 5
 ) -> dict[str, Any]:
-	"""Queue the daily store inventory workbook shadow sync."""
+	"""Queue the daily store inventory workbook shadow sync in parallel batches.
+
+	Splits eligible stores into batches of ``batch_size`` (default 5) and
+	enqueues each batch as a separate RQ long-queue job.  With 5 queue-long
+	workers this allows ~10 stores to sync concurrently.
+
+	The existing single-job path is preserved when ``batch_size`` is 0 or
+	negative (legacy mode).
+	"""
+	set_backend_observability_context(
+		module="inventory",
+		action="enqueue_scheduled_store_inventory_shadow_sync",
+		extras={"force": force, "batch_size": batch_size},
+	)
 	run_date_value = _safe_date(run_date) or _current_pht_business_date()
 	force_flag = bool(cint(force))
-	job_id = f"{STORE_INVENTORY_SHADOW_SYNC_AUTO_PREFIX}:{run_date_value}"
-	frappe.enqueue(
-		"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
-		queue="long",
-		job_id=job_id,
-		deduplicate=True,
-		run_date=run_date_value,
-		force=force_flag,
-	)
+	batch_size = max(cint(batch_size), 0)
+
+	# ── Legacy single-job mode ──────────────────────────────────────────
+	if batch_size <= 0:
+		job_id = f"{STORE_INVENTORY_SHADOW_SYNC_AUTO_PREFIX}:{run_date_value}"
+		frappe.enqueue(
+			"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
+			queue="long",
+			job_id=job_id,
+			deduplicate=True,
+			run_date=run_date_value,
+			force=force_flag,
+		)
+		return {
+			"queued": True,
+			"job_id": job_id,
+			"run_date": run_date_value,
+			"force": force_flag,
+			"batches": 1,
+			"mode": "legacy",
+		}
+
+	# ── Parallel batch mode ─────────────────────────────────────────────
+	registry_path = store_inventory_shadow_sync_builder.get_runtime_registry_path()
+	try:
+		store_registry = store_inventory_shadow_sync_builder.load_store_registry(registry_path)
+	except Exception:
+		store_registry = []
+
+	eligible_codes = [
+		s.store_code
+		for s in store_registry
+		if s.sheet_sync_enabled and s.state in store_inventory_shadow_sync_builder.IMPORTABLE_STATES
+	]
+	if not eligible_codes:
+		return {
+			"queued": False,
+			"reason": "no_eligible_stores",
+			"run_date": run_date_value,
+			"force": force_flag,
+			"batches": 0,
+		}
+
+	# Chunk into batches
+	batches: list[list[str]] = []
+	for i in range(0, len(eligible_codes), batch_size):
+		batches.append(eligible_codes[i : i + batch_size])
+
+	job_ids: list[str] = []
+	for idx, batch_codes in enumerate(batches):
+		job_id = f"{STORE_INVENTORY_SHADOW_SYNC_AUTO_PREFIX}:batch{idx}:{run_date_value}"
+		frappe.enqueue(
+			"hrms.api.erp_sync.run_scheduled_store_inventory_shadow_sync",
+			queue="long",
+			job_id=job_id,
+			deduplicate=True,
+			run_date=run_date_value,
+			force=force_flag,
+			store_codes=batch_codes,
+		)
+		job_ids.append(job_id)
+
 	return {
 		"queued": True,
-		"job_id": job_id,
+		"job_ids": job_ids,
 		"run_date": run_date_value,
 		"force": force_flag,
+		"batches": len(batches),
+		"stores_per_batch": batch_size,
+		"total_stores": len(eligible_codes),
+		"mode": "parallel",
 	}
 
 
@@ -2222,19 +2369,27 @@ def watch_store_inventory_shadow_sync_health(
 
 
 def run_scheduled_store_inventory_shadow_sync(
-	run_date: str | None = None, force: bool = False
+	run_date: str | None = None,
+	force: bool = False,
+	store_codes: list[str] | None = None,
 ) -> dict[str, Any]:
-	"""Mirror store inventory sheets into Frappe using the tracked workbook bridge."""
+	"""Mirror store inventory sheets into Frappe using the tracked workbook bridge.
+
+	When ``store_codes`` is provided (from the parallel batch enqueue), only
+	those stores are processed.  This allows multiple workers to sync
+	different store subsets concurrently.
+	"""
 	set_backend_observability_context(
 		module="inventory",
 		action="run_scheduled_store_inventory_shadow_sync",
 		mutation_type="update",
-		extras={"force": force, "run_date": str(run_date)},
+		extras={"force": force, "run_date": str(run_date), "store_codes": store_codes},
 	)
 	run_date_value = _safe_date(run_date) or _current_pht_business_date()
 	result = store_inventory_shadow_sync_builder.run_store_inventory_shadow_sync(
 		run_date=run_date_value,
 		force=bool(cint(force)),
+		store_codes=store_codes,
 	)
 	_log_sync_run_summary(
 		"Scheduled Store Inventory Shadow Sync",
