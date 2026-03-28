@@ -1,0 +1,98 @@
+[
+  {
+    "scenario": "S141-001",
+    "type": "happy",
+    "test": "PO page shows pagination with total count",
+    "status": "PASS",
+    "detail": "Pagination text: \"Showing 1 to 20 of 577 POs\", Next button: visible, Previous button: true",
+    "error": null
+  },
+  {
+    "scenario": "S141-002",
+    "type": "happy",
+    "test": "Click Next advances to page 2",
+    "status": "PASS",
+    "detail": "Page changed: \"PO-2026574\" → \"PO-2026557\", pagination: \"Showing 21 to 40 of 577 POs\"",
+    "error": null
+  },
+  {
+    "scenario": "S141-003",
+    "type": "happy",
+    "test": "Click Previous returns to page 1",
+    "status": "PASS",
+    "detail": "Returned to page 1: \"Showing 1 to 20 of 577 POs\", Previous disabled: true",
+    "error": null
+  },
+  {
+    "scenario": "S141-004",
+    "type": "happy",
+    "test": "Pending CEO status filter exists",
+    "status": "FAIL",
+    "detail": "Available options: [\"All Statuses\",\"Draft\",\"Pending Mae\",\"Pending Butch\",\"Approved\",\"Sent to Supplier\",\"Partially Received\",\"Fully Received\",\"Pending CEO\",\"Cancelled\"]",
+    "error": "Pending CEO option missing from dropdown"
+  },
+  {
+    "scenario": "S141-005",
+    "type": "happy",
+    "test": "Cancelled status filter works",
+    "status": "PASS",
+    "detail": "Rows: 15, Badges: []",
+    "error": null
+  },
+  {
+    "scenario": "S141-006",
+    "type": "happy",
+    "test": "Approved tab shows data",
+    "status": "PASS",
+    "detail": "Search box: false, Data: true, Pagination: \"Showing 1 to 20 of 543 POs\"",
+    "error": null
+  },
+  {
+    "scenario": "S141-007",
+    "type": "happy",
+    "test": "Dashboard shows proper empty state for invoice-dependent KPIs",
+    "status": "PASS",
+    "detail": "Total Outstanding: \"Total OutstandingNo data yetInvoice sync not yet active\"",
+    "error": null
+  },
+  {
+    "scenario": "S141-008",
+    "type": "happy",
+    "test": "AP Aging shows proper empty state",
+    "status": "PASS",
+    "detail": "Shows: \"AP Aging AnalysisOutstanding payables by ageNo AP data yetInvoice sync is not ye\"",
+    "error": null
+  },
+  {
+    "scenario": "S141-009",
+    "type": "happy",
+    "test": "Only ONE sidebar visible",
+    "status": "PASS",
+    "detail": "Aside count: 0, PO links: 0",
+    "error": null
+  },
+  {
+    "scenario": "S141-010",
+    "type": "happy",
+    "test": "PO search works",
+    "status": "PASS",
+    "detail": "Search \"Orangepop\": 6 rows, first: \"PO-2026523Mar 25, 2026Orangepop Enterprise₱246,4000Fully Rec\"",
+    "error": null
+  },
+  {
+    "scenario": "S141-011",
+    "type": "rbac",
+    "test": "Staff role procurement access",
+    "status": "FAIL",
+    "detail": "Page text: \"BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nHR Self-Service\nStore Operations\nStore Inventory\nMy Expenses\nStock Cou\", URL: https://my.bebang.ph/dashboard/procurement/purchase-orders",
+    "error": "Could not determine access state"
+  },
+  {
+    "scenario": "S141-012",
+    "type": "edge",
+    "test": "Mobile viewport - no overflow",
+    "status": "PASS",
+    "detail": "Body width: 375px (viewport: 375px)",
+    "error": null
+  }
+]
