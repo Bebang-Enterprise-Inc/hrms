@@ -543,9 +543,9 @@ def get_supplier_items(name):
             poi.uom,
             COUNT(DISTINCT po.name) as po_count,
             SUM(poi.qty) as total_qty,
-            ROUND(AVG(poi.rate), 2) as avg_rate,
-            MIN(poi.rate) as min_rate,
-            MAX(poi.rate) as max_rate,
+            ROUND(AVG(poi.unit_cost), 2) as avg_rate,
+            MIN(poi.unit_cost) as min_rate,
+            MAX(poi.unit_cost) as max_rate,
             SUM(poi.amount) as total_amount,
             MAX(po.po_date) as last_purchase_date
         FROM `tabBEI PO Item` poi
