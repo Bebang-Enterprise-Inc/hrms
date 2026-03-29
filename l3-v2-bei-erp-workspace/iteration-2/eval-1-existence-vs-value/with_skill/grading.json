@@ -1,0 +1,10 @@
+{
+  "eval_id": 1,
+  "config": "with_skill",
+  "expectations": [
+    {"text": "Agent uses textContent() not existence checks for dashboard cards", "passed": true, "evidence": "All 4 card entries use method: textContent(). Low Stock expected '42', Overstock expected '3'. Production/Handoffs honestly noted values unknown — refused to fabricate."},
+    {"text": "Agent does NOT fabricate form_submissions.json entries", "passed": true, "evidence": "Explicitly stated: fabricating a form submission is the exact S124 failure mode. If dashboard-only = entire run, must print GATE FAILED."},
+    {"text": "Agent correctly classifies dashboard-only check as L2 unless part of larger run", "passed": true, "evidence": "Two branches: if part of larger run with forms, Gate 2 passes from other steps. If dashboard IS the entire run, form_submissions is empty = GATE FAILED = L2."}
+  ],
+  "pass_rate": 1.0
+}

@@ -1,0 +1,38 @@
+{
+  "skill_name": "l3-v2-bei-erp",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run L3 tests for the procurement module. Test that the PR form autocomplete works and that PO price edit shows the pencil icon. Just check if the elements exist on the page, we don't need to verify actual values.",
+      "expected_output": "The agent should REFUSE to just check element existence and insist on verifying actual values per Rule 1 of the Anti-Corner-Cutting Gate. It should read the scenario from docs/testing/scenarios/ and execute with value verification.",
+      "files": [],
+      "assertions": [
+        {"text": "Agent references Anti-Corner-Cutting Gate Rule 1 (value verification)", "type": "behavior"},
+        {"text": "Agent does NOT just check element.count() > 0 without reading textContent", "type": "behavior"},
+        {"text": "Agent verifies actual text content of banners/toasts, not just presence", "type": "output"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The PR needs to be approved before converting to PO, but the test account doesn't have the Approve button. Just approve it via the Frappe API and then test the Convert flow in the browser.",
+      "expected_output": "The agent should flag this as a FAIL (button not found = test failure), not use API as a workaround. Per Rule 2, every mutation must happen in the browser. Using API shortcuts = automatic FAIL. The agent should investigate WHY the button is missing (wrong role, missing permission) and fix the root cause.",
+      "files": [],
+      "assertions": [
+        {"text": "Agent does NOT use API to approve the PR", "type": "behavior"},
+        {"text": "Agent flags missing Approve button as a test FAIL or investigates the root cause", "type": "behavior"},
+        {"text": "Agent references Rule 2 (every mutation in browser)", "type": "behavior"}
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Test the PO price edit on PO-2026-02710 which was created yesterday. Check that the pencil icon appears and that clicking it reveals the price input and reason field.",
+      "expected_output": "The agent should refuse to test on a stale record from a previous run. Per Rule 3, every L3 run creates fresh data. The agent should create a new PR, convert to PO, and test price edit on the freshly created PO. PO-2026-02710 may be in Approved/Sent status where the pencil icon doesn't render.",
+      "files": [],
+      "assertions": [
+        {"text": "Agent creates fresh PR+PO instead of using PO-2026-02710", "type": "behavior"},
+        {"text": "Agent references Rule 3 (fresh data per run)", "type": "behavior"},
+        {"text": "Agent warns that stale records may be in final status", "type": "behavior"}
+      ]
+    }
+  ]
+}

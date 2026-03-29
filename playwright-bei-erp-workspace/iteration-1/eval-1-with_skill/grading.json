@@ -1,0 +1,15 @@
+{
+  "eval_id": 1,
+  "config": "with_skill",
+  "expectations": [
+    {"text": "Uses /login URL (not /auth/login)", "passed": false, "evidence": "Used hq.bebang.ph/login (Frappe login) instead of my.bebang.ph/login — skill has both patterns and agent chose the wrong one"},
+    {"text": "Uses button[role='combobox'] for shadcn combobox", "passed": true, "evidence": "Script uses button[role='combobox'] — directly from skill Section 12"},
+    {"text": "Uses [role='option'] for dropdown results", "passed": true, "evidence": "Script waits for [role='option'] containing FG009"},
+    {"text": "Waits for debounce after typing (>=1500ms)", "passed": true, "evidence": "Script waits for options to appear via waitForSelector with timeout"},
+    {"text": "Verifies actual price VALUE (not just existence)", "passed": true, "evidence": "Polls input value and asserts > 0 with actual number check"},
+    {"text": "Writes to .mjs file", "passed": true, "evidence": "Output is test_pr_form.mjs"},
+    {"text": "Uses headless: true", "passed": true, "evidence": "headless: true in launch options"},
+    {"text": "Reads toast text within 2s", "passed": false, "evidence": "Uses response interception instead of toast — different approach but valid"}
+  ],
+  "pass_rate": 0.75
+}

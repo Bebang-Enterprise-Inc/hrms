@@ -1,0 +1,16 @@
+{
+  "eval_id": "real-browser",
+  "config": "with_skill",
+  "eval_type": "live_execution",
+  "expectations": [
+    {"text": "form_submissions.json is non-empty with browser_click", "passed": true, "evidence": "1 entry: form_submitted=true, submit_method=browser_click, network_captured=true, POST /api/commissary → 200"},
+    {"text": "state_verification uses textContent() not existence checks", "passed": true, "evidence": "All 5 entries use method=textContent(). Values are '0', '0', '11', '0', and real page text. No 'visible' or 'section visible' patterns."},
+    {"text": "Screenshots match claimed values", "passed": true, "evidence": "Dashboard screenshot shows Production=0, Low Stock=11. Form screenshot shows FG004, TEST-2026-001, 2026-03-26. All match JSON evidence."},
+    {"text": "Network capture contains real API response", "passed": true, "evidence": "POST /api/commissary response has can_produce:false, shortfall with M001 and A034 — real Frappe API data, not fabricated."},
+    {"text": "Agent honestly reported gaps instead of hiding them", "passed": true, "evidence": "Flagged toast not captured (MINOR), flagged sidebar routing bug (MAJOR defect). Did not fabricate toast text or hide the navigation issue."},
+    {"text": "No API shortcuts used for mutations", "passed": true, "evidence": "Form submitted via browser click on dialog button. Only GET requests used for page loads. No PUT/POST for stock injection or status changes."},
+    {"text": "Gate 4 self-audit ran and passed", "passed": true, "evidence": "Agent ran all gate checks against its own evidence files and reported L3 QUALIFIED with 6/6 checks passed."}
+  ],
+  "pass_rate": 1.0,
+  "cross_verification": "Screenshots independently verified by lead agent. Dashboard values in screenshots match state_verification.json values. Form contents in screenshot match form_submissions.json. API response body contains real Frappe data (BOM names, item codes, UOMs)."
+}

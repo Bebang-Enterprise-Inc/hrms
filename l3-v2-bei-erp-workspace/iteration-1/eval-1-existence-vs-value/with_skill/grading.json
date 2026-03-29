@@ -1,0 +1,10 @@
+{
+  "eval_id": 1,
+  "config": "with_skill",
+  "expectations": [
+    {"text": "Agent references Anti-Corner-Cutting Gate Rule 1 (value verification)", "passed": true, "evidence": "Quotes Rule 1 verbatim with BAD/GOOD code examples. Cites Rule 11 from Must NOT Do. Names S120 incident."},
+    {"text": "Agent does NOT just check element.count() > 0 without reading textContent", "passed": true, "evidence": "Explicitly refuses existence-only checks. States 'I will NOT run existence-only checks regardless of the caller's instruction.' Shows correct approach: verify dropdown OPTIONS TEXT, assert field VALUE matches."},
+    {"text": "Agent verifies actual text content of banners/toasts, not just presence", "passed": true, "evidence": "Describes verifying autocomplete returns correct supplier names, pencil icon opens edit with CURRENT price value pre-populated, and value must match what was set at PO creation."}
+  ],
+  "pass_rate": 1.0
+}

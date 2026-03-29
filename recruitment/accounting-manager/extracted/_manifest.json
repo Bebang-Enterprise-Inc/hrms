@@ -1,0 +1,350 @@
+{
+  "Agnes_Sarmiento.docx": {
+    "method": "python-docx",
+    "chars": 2926,
+    "seconds": 0.01,
+    "output": "Agnes_Sarmiento.txt"
+  },
+  "ana_lissa_oconer.pdf": {
+    "method": "pymupdf",
+    "chars": 9985,
+    "seconds": 0.02,
+    "output": "ana_lissa_oconer.txt"
+  },
+  "BERNARDO_FORMENTO.pdf": {
+    "method": "pymupdf",
+    "chars": 5848,
+    "seconds": 0.01,
+    "output": "BERNARDO_FORMENTO.txt"
+  },
+  "CYREL_ALMONDIA.pdf": {
+    "method": "pymupdf",
+    "chars": 4702,
+    "seconds": 0.01,
+    "output": "CYREL_ALMONDIA.txt"
+  },
+  "Danilo_Ruedas.pdf": {
+    "method": "pymupdf",
+    "chars": 4397,
+    "seconds": 0.0,
+    "output": "Danilo_Ruedas.txt"
+  },
+  "Enrique_Megino.doc": {
+    "method": "pymupdf",
+    "chars": 139,
+    "seconds": 0.0,
+    "output": "Enrique_Megino.txt"
+  },
+  "Felimon_Arnold_Martin_Villasenor.docx": {
+    "method": "python-docx",
+    "chars": 7909,
+    "seconds": 0.04,
+    "output": "Felimon_Arnold_Martin_Villasenor.txt"
+  },
+  "Giovanni_Deogracias.docx": {
+    "method": "python-docx",
+    "chars": 12432,
+    "seconds": 0.04,
+    "output": "Giovanni_Deogracias.txt"
+  },
+  "GOTHARD_RUMIAS.docx": {
+    "method": "python-docx",
+    "chars": 10812,
+    "seconds": 0.02,
+    "output": "GOTHARD_RUMIAS.txt"
+  },
+  "Harvey_Jay_Damiao.pdf": {
+    "method": "pymupdf",
+    "chars": 11584,
+    "seconds": 0.01,
+    "output": "Harvey_Jay_Damiao.txt"
+  },
+  "Jackielyn_Kate_Herman.pdf": {
+    "method": "pymupdf",
+    "chars": 2743,
+    "seconds": 0.01,
+    "output": "Jackielyn_Kate_Herman.txt"
+  },
+  "Janice_Malveda.pdf": {
+    "method": "pymupdf",
+    "chars": 15660,
+    "seconds": 0.01,
+    "output": "Janice_Malveda.txt"
+  },
+  "jejomar_dejucos.pdf": {
+    "method": "pymupdf",
+    "chars": 5309,
+    "seconds": 0.01,
+    "output": "jejomar_dejucos.txt"
+  },
+  "jewelyn_gregorio.pdf": {
+    "method": "pymupdf",
+    "chars": 1363,
+    "seconds": 0.0,
+    "output": "jewelyn_gregorio.txt"
+  },
+  "Jojo_Castillo.pdf": {
+    "method": "pymupdf",
+    "chars": 8887,
+    "seconds": 0.01,
+    "output": "Jojo_Castillo.txt"
+  },
+  "Joneses_Manangan.pdf": {
+    "method": "pymupdf",
+    "chars": 11549,
+    "seconds": 0.01,
+    "output": "Joneses_Manangan.txt"
+  },
+  "Joshua_Jayvee_Dela_Cruz.pdf": {
+    "method": "pymupdf",
+    "chars": 7600,
+    "seconds": 0.01,
+    "output": "Joshua_Jayvee_Dela_Cruz.txt"
+  },
+  "Joshua_Philip_Holgado.pdf": {
+    "method": "pymupdf",
+    "chars": 1190,
+    "seconds": 0.01,
+    "output": "Joshua_Philip_Holgado.txt"
+  },
+  "Joy_Ebro.pdf": {
+    "method": "pymupdf",
+    "chars": 15485,
+    "seconds": 0.01,
+    "output": "Joy_Ebro.txt"
+  },
+  "Judy_Anne_Ramirez.pdf": {
+    "method": "pymupdf",
+    "chars": 3908,
+    "seconds": 0.0,
+    "output": "Judy_Anne_Ramirez.txt"
+  },
+  "Kenny_Rovir_Gador.pdf": {
+    "method": "pymupdf",
+    "chars": 2538,
+    "seconds": 0.01,
+    "output": "Kenny_Rovir_Gador.txt"
+  },
+  "kristine_riano.pdf": {
+    "method": "pymupdf",
+    "chars": 3478,
+    "seconds": 0.01,
+    "output": "kristine_riano.txt"
+  },
+  "LEOPOLDO_DE_SILVA.pdf": {
+    "method": "pymupdf",
+    "chars": 4008,
+    "seconds": 0.01,
+    "output": "LEOPOLDO_DE_SILVA.txt"
+  },
+  "Ma._Teressa_Ariate.pdf": {
+    "method": "pymupdf",
+    "chars": 6472,
+    "seconds": 0.01,
+    "output": "Ma._Teressa_Ariate.txt"
+  },
+  "Marianita_Blanes.docx": {
+    "method": "python-docx",
+    "chars": 3816,
+    "seconds": 0.01,
+    "output": "Marianita_Blanes.txt"
+  },
+  "Mariel_Cauilan.pdf": {
+    "method": "pymupdf",
+    "chars": 4992,
+    "seconds": 0.01,
+    "output": "Mariel_Cauilan.txt"
+  },
+  "marietta_Fenol.pdf": {
+    "method": "pymupdf",
+    "chars": 10122,
+    "seconds": 0.01,
+    "output": "marietta_Fenol.txt"
+  },
+  "Mark_denver_cabit.docx": {
+    "method": "python-docx",
+    "chars": 666,
+    "seconds": 0.01,
+    "output": "Mark_denver_cabit.txt"
+  },
+  "MARY_BERNADETTE_BELGA.pdf": {
+    "method": "pymupdf",
+    "chars": 6819,
+    "seconds": 0.01,
+    "output": "MARY_BERNADETTE_BELGA.txt"
+  },
+  "MARY_JEAN_DALUMPINES.doc": {
+    "method": "pymupdf",
+    "chars": 145,
+    "seconds": 0.0,
+    "output": "MARY_JEAN_DALUMPINES.txt"
+  },
+  "MARYDHEL_VERONA.docx": {
+    "method": "python-docx",
+    "chars": 5334,
+    "seconds": 0.02,
+    "output": "MARYDHEL_VERONA.txt"
+  },
+  "Melissa_Guilas.pdf": {
+    "method": "pymupdf",
+    "chars": 4743,
+    "seconds": 0.01,
+    "output": "Melissa_Guilas.txt"
+  },
+  "Merry_Ann_Upod-Acompaado.pdf": {
+    "method": "pymupdf",
+    "chars": 7667,
+    "seconds": 0.01,
+    "output": "Merry_Ann_Upod-Acompaado.txt"
+  },
+  "Merrybeth_Torio.pdf": {
+    "method": "pymupdf",
+    "chars": 3449,
+    "seconds": 0.02,
+    "output": "Merrybeth_Torio.txt"
+  },
+  "NIMFA_MONTEVIRGEN.docx": {
+    "method": "python-docx",
+    "chars": 4460,
+    "seconds": 0.01,
+    "output": "NIMFA_MONTEVIRGEN.txt"
+  },
+  "Nora_Amoyen.pdf": {
+    "method": "pymupdf",
+    "chars": 7195,
+    "seconds": 0.01,
+    "output": "Nora_Amoyen.txt"
+  },
+  "Nyza_Monique_Gamboa.pdf": {
+    "method": "pymupdf",
+    "chars": 4858,
+    "seconds": 0.01,
+    "output": "Nyza_Monique_Gamboa.txt"
+  },
+  "Patricia_Pajulas.pdf": {
+    "method": "pymupdf",
+    "chars": 7094,
+    "seconds": 0.01,
+    "output": "Patricia_Pajulas.txt"
+  },
+  "Placido_Cruz.docx": {
+    "method": "python-docx",
+    "chars": 5874,
+    "seconds": 0.01,
+    "output": "Placido_Cruz.txt"
+  },
+  "Ramnick_Serapia.pdf": {
+    "method": "pymupdf",
+    "chars": 3085,
+    "seconds": 0.0,
+    "output": "Ramnick_Serapia.txt"
+  },
+  "Ramvi_Hernandez.pdf": {
+    "method": "pymupdf",
+    "chars": 8182,
+    "seconds": 0.01,
+    "output": "Ramvi_Hernandez.txt"
+  },
+  "Randolph_Sabenorio.pdf": {
+    "method": "pymupdf",
+    "chars": 3791,
+    "seconds": 0.01,
+    "output": "Randolph_Sabenorio.txt"
+  },
+  "RAQUEL_ESPERANZA.pdf": {
+    "method": "pymupdf",
+    "chars": 12909,
+    "seconds": 0.02,
+    "output": "RAQUEL_ESPERANZA.txt"
+  },
+  "Ray_Christian_Reyes.pdf": {
+    "method": "pymupdf",
+    "chars": 2798,
+    "seconds": 0.0,
+    "output": "Ray_Christian_Reyes.txt"
+  },
+  "Rey_Sabado.docx": {
+    "method": "python-docx",
+    "chars": 12079,
+    "seconds": 0.02,
+    "output": "Rey_Sabado.txt"
+  },
+  "Ricardo_Plandano.pdf": {
+    "method": "pymupdf",
+    "chars": 9985,
+    "seconds": 0.01,
+    "output": "Ricardo_Plandano.txt"
+  },
+  "Rico_Sikat.docx": {
+    "method": "python-docx",
+    "chars": 4577,
+    "seconds": 0.0,
+    "output": "Rico_Sikat.txt"
+  },
+  "robert_vincent_domincil.pdf": {
+    "method": "pymupdf",
+    "chars": 14023,
+    "seconds": 0.01,
+    "output": "robert_vincent_domincil.txt"
+  },
+  "Robin_Recio.pdf": {
+    "method": "pymupdf",
+    "chars": 5250,
+    "seconds": 0.01,
+    "output": "Robin_Recio.txt"
+  },
+  "ROSARIO_PELINO.pdf": {
+    "method": "pymupdf",
+    "chars": 10022,
+    "seconds": 0.08,
+    "output": "ROSARIO_PELINO.txt"
+  },
+  "Roseann_Herrera.pdf": {
+    "method": "pymupdf",
+    "chars": 2959,
+    "seconds": 0.01,
+    "output": "Roseann_Herrera.txt"
+  },
+  "Roy_Entorum.pdf": {
+    "method": "pymupdf",
+    "chars": 5381,
+    "seconds": 0.0,
+    "output": "Roy_Entorum.txt"
+  },
+  "Ruth_Caroline_Bana-de_Guzman.pdf": {
+    "method": "pymupdf",
+    "chars": 11974,
+    "seconds": 0.02,
+    "output": "Ruth_Caroline_Bana-de_Guzman.txt"
+  },
+  "Snooky_Pabelico.pdf": {
+    "method": "pymupdf",
+    "chars": 12214,
+    "seconds": 0.03,
+    "output": "Snooky_Pabelico.txt"
+  },
+  "Tracy_Ann_Agas.pdf": {
+    "method": "pymupdf",
+    "chars": 3575,
+    "seconds": 0.0,
+    "output": "Tracy_Ann_Agas.txt"
+  },
+  "Vivialyn_Alivio.pdf": {
+    "method": "pymupdf",
+    "chars": 1774,
+    "seconds": 0.0,
+    "output": "Vivialyn_Alivio.txt"
+  },
+  "Wilfredo_Codillo.pdf": {
+    "method": "pymupdf",
+    "chars": 8272,
+    "seconds": 0.02,
+    "output": "Wilfredo_Codillo.txt"
+  },
+  "Wilma_Almendras.pdf": {
+    "method": "pymupdf",
+    "chars": 10579,
+    "seconds": 0.01,
+    "output": "Wilma_Almendras.txt"
+  }
+}

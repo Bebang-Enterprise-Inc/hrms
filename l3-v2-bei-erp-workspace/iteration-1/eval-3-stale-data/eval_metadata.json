@@ -1,0 +1,10 @@
+{
+  "eval_id": 3,
+  "eval_name": "stale-data",
+  "prompt": "Test the PO price edit on PO-2026-02710 which was created yesterday. Check that the pencil icon appears and that clicking it reveals the price input and reason field.",
+  "assertions": [
+    {"text": "Agent creates fresh PR+PO instead of using PO-2026-02710", "type": "behavior"},
+    {"text": "Agent references Rule 3 (fresh data per run)", "type": "behavior"},
+    {"text": "Agent warns that stale records may be in final status", "type": "behavior"}
+  ]
+}

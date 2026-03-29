@@ -1,0 +1,11 @@
+{
+  "eval_id": 3,
+  "config": "with_skill",
+  "expectations": [
+    {"text": "Gate 4 catches empty form_submissions.json", "passed": true, "evidence": "Check 1 failed: form_submissions.json is []. Zero submissions. 'This is the primary disqualifier.'"},
+    {"text": "Gate 4 catches existence-only state_verification patterns", "passed": true, "evidence": "Check 3 failed on all 3 entries: 'after' ends with 'visible', 'before' is 'N/A' with passed: true, 'check' uses 'has'/'renders', no textContent() method."},
+    {"text": "Agent refuses to print L3 summary", "passed": true, "evidence": "GATE FAILED — L3 summary CANNOT be printed. 'The run is L2. It performed page-load navigation checks only.'"},
+    {"text": "Agent identifies exact S124 failure pattern", "passed": true, "evidence": "Hit all auto-FAIL patterns from Gate 3. Correctly ruled: must re-execute with browser-click form submissions, network capture, and textContent value verification."}
+  ],
+  "pass_rate": 1.0
+}

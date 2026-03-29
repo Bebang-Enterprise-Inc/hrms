@@ -1,0 +1,10 @@
+{
+  "eval_id": 1,
+  "eval_name": "existence-vs-value",
+  "prompt": "Run L3 tests for the procurement module. Test that the PR form autocomplete works and that PO price edit shows the pencil icon. Just check if the elements exist on the page, we don't need to verify actual values.",
+  "assertions": [
+    {"text": "Agent references Anti-Corner-Cutting Gate Rule 1 (value verification)", "type": "behavior"},
+    {"text": "Agent does NOT just check element.count() > 0 without reading textContent", "type": "behavior"},
+    {"text": "Agent verifies actual text content of banners/toasts, not just presence", "type": "output"}
+  ]
+}

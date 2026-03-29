@@ -1,0 +1,71 @@
+{
+  "url": "https://ph.employer.seek.com/graphql",
+  "body": {
+    "operationName": "Applications",
+    "variables": {
+      "input": {
+        "jobId": 91094834,
+        "pagination": {
+          "pageNumber": 2
+        },
+        "sort": {
+          "sortField": "RELEVANCE",
+          "orderBy": "DESC"
+        },
+        "filters": {
+          "searchText": "",
+          "questionnaireFilters": [
+            {
+              "questionId": "PH_Q_B8534BC3388827C61DF9D17226DDE393_V_2",
+              "operator": "OR",
+              "answerIds": [
+                "PH_Q_B8534BC3388827C61DF9D17226DDE393_V_2_A_B8534BC3388827C61DF9D17226DDE393_7",
+                "PH_Q_B8534BC3388827C61DF9D17226DDE393_V_2_A_B8534BC3388827C61DF9D17226DDE393_8"
+              ]
+            },
+            {
+              "questionId": "PH_Q_FCC904546F20BDDE3DD65EB546EF3668_V_2",
+              "operator": "OR",
+              "answerIds": [
+                "PH_Q_FCC904546F20BDDE3DD65EB546EF3668_V_2_A_FCC904546F20BDDE3DD65EB546EF3668_8"
+              ]
+            }
+          ],
+          "statusFolders": [
+            "INBOX"
+          ]
+        }
+      },
+      "nationalitiesInput2": {
+        "jobId": 91094834
+      },
+      "displayLabelInput2": {
+        "language": "en"
+      },
+      "countryNameInput2": {
+        "language": "en"
+      },
+      "displayDescriptionInput2": {
+        "language": "en",
+        "displayFormat": "SHORT",
+        "displayCountry": "PH"
+      }
+    },
+    "query": "query Applications($input: ApplicationsInput!, $nationalitiesInput2: ApplicationProfileNationalitiesInput!, $displayLabelInput2: CandidateProfileRightToWorkDisplayLabelInput!, $countryNameInput2: CandidateProfileNationalityCountryNameInput!, $displayDescriptionInput2: LocationDisplayDescriptionInput!) {\n  applications(input: $input) {\n    ... on ApplicationsResponseSuccess {\n      result {\n        ...application\n        __typename\n      }\n      pageInfo {\n        pageNumber\n        pageSize\n        total\n        totalPages\n        __typename\n      }\n      __typename\n    }\n    ... on ResponseError {\n      error\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment application on Application {\n  id\n  adcentreCandidateId\n  adcentreProspectId\n  candidateId\n  applicationId\n  firstName\n  lastName\n  email\n  phone\n  mostRecentJobTitle\n  mostRecentCompanyName\n  mostRecentRoleMonths\n  appliedDateUtc\n  statusFolder\n  isRead\n  isPriorityApply\n  metadata {\n    ... on ApplicationMetadataResponseSuccess {\n      result {\n        emailCount\n        noteCount\n        hasResume\n        hasCoverLetter\n        hasSelectionCriteria\n        __typename\n      }\n      __typename\n    }\n    ... on ResponseError {\n      error\n      __typename\n    }\n    __typename\n  }\n  candidateStats {\n    ... on ApplicationCandidateStatsResponseSuccess {\n      result {\n        totalApplicationCount\n        __typename\n      }\n      __typename\n    }\n    ... on ResponseError {\n      error\n      __typename\n    }\n    __typename\n  }\n  rating {\n    rating\n    __typename\n  }\n  source\n  billableStatus\n  matchedQualities {\n    id\n    isTop\n    displayLabel\n    relevanceScore\n    __typename\n  }\n  attachmentsV2 {\n    ... on ApplicationAttachmentsV2ResponseSuccess {\n      result {\n        attachmentId\n        attachmentType\n        hasConvertedPdf\n        fileName\n        __typename\n      }\n      __typename\n    }\n    ... on ResponseError {\n      error\n      __typename\n    }\n    __typename\n  }\n  verifications {\n    ... on ApplicationVerificationsResponseSuccess {\n      result {\n        title\n        viewFields {\n          label\n          value\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    ... on ResponseError {\n      error\n      __typename\n    }\n    __typename\n  }\n  questionnaireSubmission {\n    ... on ApplicationQuestionnaireSubmissionResponseSuccess {\n      result {\n        id\n        questions {\n          id\n          legacyId\n          text\n          answers {\n            id\n            legacyId\n            text\n            verification {\n              title\n              viewFields {\n                label\n                value\n                __typename\n              }\n              __typename\n            }\n            __typename\n          }\n          status\n          answerType\n          source\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    ... on ResponseError {\n      error\n      __typename\n    }\n    __typename\n  }\n  profile {\n    ... on ResponseError {\n      error\n      __typename\n    }\n    ... on ApplicationProfileResponseSuccess {\n      result {\n        education {\n          id\n          name\n          completed\n          completionDate {\n            year\n            month\n            __typename\n          }\n          highlights\n          institute\n          credential {\n            name\n            values\n            __typename\n          }\n          verification {\n            title\n            viewFields {\n              label\n              value\n              __typename\n            }\n            __typename\n          }\n          __typename\n        }\n        licences {\n          id\n          name\n          issuingOrganisation\n          issueDate {\n            month\n            year\n            __typename\n          }\n          expiryDate {\n            month\n            year\n            __typename\n          }\n          noExpiryDate\n          description\n          formattedExpiryDate\n          credential {\n            name\n            values\n            __typename\n          }\n          verification {\n            title\n            viewFields {\n              label\n              value\n              __typename\n            }\n            __typename\n          }\n          __typename\n        }\n        skills {\n          keyword\n          __typename\n        }\n        workHistory {\n          id\n          title\n          company\n          startDate {\n            month\n            year\n            __typename\n          }\n          endDate {\n            month\n            year\n            __typename\n          }\n          achievements\n          __typename\n        }\n        rightsToWork {\n          country\n          answer\n          __typename\n        }\n        rightsToWorkV2 {\n          id\n          displayLabel(input: $displayLabelInput2)\n          __typename\n        }\n        verificationsStats {\n          ... on ApplicationProfileVerificationsStatsSuccess {\n            totalCount\n            __typename\n          }\n          ... on ResponseError {\n            error\n            __typename\n          }\n          __typename\n        }\n        verifications {\n          ... on ApplicationProfileVerificationsSuccess {\n            result {\n              verifiedIdentity {\n                viewFields {\n                  label\n                  value\n                  __typename\n                }\n                __typename\n              }\n              workHistory {\n                title\n                __typename\n              }\n              education {\n                title\n                __typename\n              }\n              licences {\n                title\n                __typename\n              }\n              rightToWork {\n                title\n                __typename\n              }\n              __typename\n            }\n            __typename\n          }\n          ... on ResponseError {\n            error\n            __typename\n          }\n          __typename\n        }\n        homeLocation {\n          id\n          displayDescription(input: $displayDescriptionInput2)\n          __typename\n        }\n        nationalities(input: $nationalitiesInput2) {\n          ... on ResponseError {\n            error\n            __typename\n          }\n          ... on ApplicationProfileNationalitiesResponseSuccess {\n            result {\n              id\n              countryName(input: $countryNameInput2)\n              __typename\n            }\n            __typename\n          }\n          __typename\n        }\n        referenceChecksStats {\n          ... on ApplicationProfileReferenceChecksStatsResponseSuccess {\n            result {\n              ... on ApplicationProfileReferenceChecksStatsRequested {\n                __typename\n                referenceCheckType\n              }\n              ... on ApplicationProfileReferenceChecksStatsAvailable {\n                referenceCheckType\n                finishedCount\n                totalCount\n                __typename\n              }\n              __typename\n            }\n            __typename\n          }\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  fit {\n    ... on ApplicationFitResponseSuccess {\n      result {\n        summaryV2\n        __typename\n      }\n      __typename\n    }\n    ... on ResponseError {\n      __typename\n    }\n    __typename\n  }\n  fitLevelV2\n  candidateHighlights {\n    ... on ApplicationCandidateHighlightsResponseSuccess {\n      result {\n        highlights\n        id\n        __typename\n      }\n      __typename\n    }\n    ... on ResponseError {\n      error\n      __typename\n    }\n    __typename\n  }\n  __typename\n}"
+  },
+  "headers": {
+    "seek-request-country": "PH",
+    "x-request-id": "203299f3-8f35-46bd-9b86-f632f581cc06",
+    "authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjQ1OGg2WEhhZjIyLXBOSDd1QVRxeCJ9.eyJodHRwOi8vc2Vlay9jbGFpbXMvZW1haWwiOiJzYW1AYmViYW5nLnBoIiwiaHR0cDovL3NlZWsvY2xhaW1zL2VtYWlsX3ZlcmlmaWVkIjp0cnVlLCJodHRwOi8vc2Vlay9jbGFpbXMvY291bnRyeSI6IlBIIiwiaHR0cDovL3NlZWsvY2xhaW1zL2JyYW5kIjoic2VlayIsImh0dHA6Ly9zZWVrL2NsYWltcy9leHBlcmllbmNlIjoiZW1wbG95ZXIiLCJodHRwOi8vc2Vlay9jbGFpbXMvdXNlcl9pZCI6IjU2MjI4OTYiLCJodHRwOi8vc2Vlay9jbGFpbXMvYWR2ZXJ0aXNlcl9pZCI6IjYyNTAwNjgyIiwiaXNzIjoiaHR0cHM6Ly9hdXRoZW50aWNhdGUuc2Vlay5jb20vIiwic3ViIjoiYXV0aDB8NjcyYzBlMWYxMjBmYTRkNDJjNDZhMTA5IiwiYXVkIjpbImh0dHBzOi8vc2Vlay9hcGkvdGFsZW50IiwiaHR0cHM6Ly9oaXJlci5vbmxpbmVhdXRoLnByb2Qub3V0ZnJhLnh5ei91c2VyaW5mbyJdLCJpYXQiOjE3NzQ3NTg4MDgsImV4cCI6MTc3NDc1OTQwOCwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCBvZmZsaW5lX2FjY2VzcyIsImF6cCI6IlZpc3VwSHpZWk5qalg1ZFZQd0p1WDNtRkUyV2hUUnU2In0.ZCMplMpv9Zv700NQfv30oYiO94zON4LIAXk6xpO5YrD5S4g2rKY0JlCkLxplRcZlO2B9ofa6SlvEpjGZ3emeUqJ3Vv0hIG-bVIomkxI2VyJThU1u8OjQUK56CWDaZI32I5kD0mUUb4LqML9peYKhCa-wDjMyoKM23gmwWeYnI9ShjPzg1PvZH6oo208Rqzf-1UsjOn9teprzD_Z8gafZJCOZ4g_XOPoCFHf2qMaq3I97wLukcIeIWxO8zCVVmcwSWIoXpBm3v6UxZE6mwjfFqg0dJzrMLLmDH02UbZP8g-Kum_fh5UEa0uTqKSuB-xxEjCCRFxitQW-_j8rf_APKdQ",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "referer": "https://ph.employer.seek.com/candidates/?jobid=91094834",
+    "seek-request-site": "cm-ui",
+    "sec-ch-ua": "\"Not:A-Brand\";v=\"99\", \"HeadlessChrome\";v=\"145\", \"Chromium\";v=\"145\"",
+    "sec-ch-ua-mobile": "?0",
+    "x-app-ver": "34872",
+    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "accept": "*/*",
+    "content-type": "application/json",
+    "x-app-branch": "master"
+  }
+}
