@@ -701,7 +701,7 @@ def reject_supplier_edit(queue_name, reason=None):
 
 @frappe.whitelist()
 def get_supplier_pending_approvals(name=None):
-    """Get pending approval queue entries for supplier edits with full supplier context."""
+    """Get pending approval queue entries for supplier edits."""
     from hrms.utils.sentry import set_backend_observability_context
     set_backend_observability_context(module="procurement", action="get_supplier_pending_approvals")
 
@@ -717,65 +717,13 @@ def get_supplier_pending_approvals(name=None):
     )
 
     for entry in entries:
-        # Parse change data
         if entry.get("rejection_reason"):
             try:
                 entry["change_data"] = frappe.parse_json(entry["rejection_reason"])
             except Exception:
                 entry["change_data"] = {}
 
-        # Enrich with supplier context so Mae can make an informed decision
-        try:
-            sup = frappe.get_doc("BEI Supplier", entry["reference_name"])
-            entry["supplier_context"] = {
-                "supplier_name": sup.supplier_name,
-                "supplier_code": sup.supplier_code,
-                "status": sup.status,
-                "creation": str(sup.creation),
-                "total_po_count": cint(sup.total_po_count),
-                "total_po_value": flt(sup.total_po_value),
-                "total_outstanding": flt(sup.total_outstanding),
-                "current_bank_name": sup.bank_name or "",
-                "current_bank_account_name": sup.bank_account_name or "",
-                "current_bank_account_number": sup.bank_account_number or "",
-                "current_tin": sup.tin or "",
-                "current_email": sup.email or "",
-                "current_contact_person": sup.contact_person or "",
-                "current_address": sup.address or "",
-            }
-
-            # Flag high-risk changes
-            changes = entry.get("change_data", {}).get("changes", {})
-            risk_flags = []
-            if "bank_account_number" in changes:
-                risk_flags.append("BANK_ACCOUNT_CHANGED")
-            if "bank_name" in changes:
-                risk_flags.append("BANK_CHANGED")
-            if "bank_account_name" in changes and changes["bank_account_name"]["new"].upper() != sup.supplier_name.upper():
-                risk_flags.append("BANK_NAME_MISMATCH — account name differs from supplier name")
-            if "tin" in changes:
-                risk_flags.append("TIN_CHANGED")
-            if "status" in changes and changes["status"]["new"] == "Active" and changes["status"]["old"] != "Active":
-                risk_flags.append("ACTIVATION — supplier being set to Active")
-            entry["risk_flags"] = risk_flags
-
-            # Submitter display name
-            submitter = entry.get("submitted_by", "")
-            if submitter:
-                entry["submitted_by_name"] = frappe.db.get_value("User", submitter, "full_name") or submitter
-        except Exception:
-            entry["supplier_context"] = {}
-            entry["risk_flags"] = []
-
     return {"entries": entries, "total": len(entries)}
-
-
-@frappe.whitelist()
-def get_all_supplier_pending_approvals():
-    """Get ALL pending supplier edit approvals (for Mae's approval dashboard)."""
-    from hrms.utils.sentry import set_backend_observability_context
-    set_backend_observability_context(module="procurement", action="get_all_supplier_pending_approvals")
-    return get_supplier_pending_approvals(name=None)
 
 
 @frappe.whitelist()

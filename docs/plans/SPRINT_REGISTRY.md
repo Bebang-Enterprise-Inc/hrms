@@ -168,13 +168,9 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S142` | Sprint 142 | `s142-procurement-qa-audit` | — | GO — Full procurement module QA audit: every page, every CTA, 3 roles, E2E workflow, three-way data match, Proof Matrix. | `docs/plans/2026-03-28-sprint-142-procurement-qa-audit.md` |
 
-| `S143` | Sprint 143 | `s143-procurement-defect-remediation` | BEI-Tasks#275 | DEPLOYED — Fix 4 verified defects from S142 QA audit: Boolean coercion (DEF-001), data quality reports (DEF-003/004). DEF-002 operational. | `docs/plans/2026-03-29-sprint-143-procurement-defect-remediation.md` |
-
-| `S144` | Sprint 144 | `s144-supplier-page-defects` | — | PLANNED — Supplier page field mapping, is_new_supplier Boolean fix, items-by-supplier tab, edit approval workflow. | `docs/plans/2026-03-29-sprint-144-supplier-page-defects.md` |
-
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S145`.
-2. Reserve branch name: `s145-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S143`.
+2. Reserve branch name: `s142-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
