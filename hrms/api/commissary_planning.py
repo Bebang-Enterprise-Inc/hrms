@@ -310,7 +310,7 @@ def set_production_targets(production_date=None, targets=None):
 
 	# Validate role
 	user_roles = frappe.get_roles()
-	if not any(r in user_roles for r in ["Commissary User", "Commissary Manager", "System Manager"]):
+	if not any(r in user_roles for r in ["Commissary User", "Commissary Manager", "Commissary Supervisor", "System Manager"]):
 		frappe.throw(_("You do not have permission to set production targets"))
 
 	# Re-fetch recommendations server-side (anti-manipulation)
