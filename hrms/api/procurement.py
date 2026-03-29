@@ -468,6 +468,98 @@ def update_supplier(name, data):
 
 
 @frappe.whitelist()
+def get_supplier_purchase_orders(name, page=1, page_size=20):
+    """Get purchase orders for a specific supplier."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_supplier_purchase_orders")
+
+    supplier_name, _ = _resolve_supplier_identity(name)
+    page = max(1, cint(page))
+    page_size = min(100, max(1, cint(page_size) or 20))
+    offset = (page - 1) * page_size
+
+    total = frappe.db.count("BEI Purchase Order", {"supplier": supplier_name})
+    data = frappe.db.sql("""
+        SELECT name, po_no, po_date, status, supplier, supplier_name,
+               grand_total, delivery_date, mae_approval, butch_approval,
+               requires_dual_approval
+        FROM `tabBEI Purchase Order`
+        WHERE supplier = %s
+        ORDER BY po_date DESC
+        LIMIT %s OFFSET %s
+    """, (supplier_name, page_size, offset), as_dict=True)
+
+    return {
+        "data": data,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": max(1, -(-total // page_size)),
+    }
+
+
+@frappe.whitelist()
+def get_supplier_invoices(name, page=1, page_size=20):
+    """Get invoices for a specific supplier."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_supplier_invoices")
+
+    supplier_name, _ = _resolve_supplier_identity(name)
+    page = max(1, cint(page))
+    page_size = min(100, max(1, cint(page_size) or 20))
+    offset = (page - 1) * page_size
+
+    total = frappe.db.count("BEI Invoice", {"supplier": supplier_name})
+    data = frappe.db.sql("""
+        SELECT name, invoice_no, invoice_date, due_date, status,
+               supplier, supplier_name, grand_total, payment_status
+        FROM `tabBEI Invoice`
+        WHERE supplier = %s
+        ORDER BY invoice_date DESC
+        LIMIT %s OFFSET %s
+    """, (supplier_name, page_size, offset), as_dict=True)
+
+    return {
+        "data": data,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": max(1, -(-total // page_size)),
+    }
+
+
+@frappe.whitelist()
+def get_supplier_items(name):
+    """Get aggregated items purchased from a supplier across all POs."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_supplier_items")
+
+    supplier_name, _ = _resolve_supplier_identity(name)
+
+    items = frappe.db.sql("""
+        SELECT
+            poi.item_code,
+            poi.item_name,
+            poi.uom,
+            COUNT(DISTINCT po.name) as po_count,
+            SUM(poi.qty) as total_qty,
+            ROUND(AVG(poi.rate), 2) as avg_rate,
+            MIN(poi.rate) as min_rate,
+            MAX(poi.rate) as max_rate,
+            SUM(poi.amount) as total_amount,
+            MAX(po.po_date) as last_purchase_date
+        FROM `tabBEI PO Item` poi
+        JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+        WHERE po.supplier = %s
+          AND po.status NOT IN ('Draft', 'Cancelled')
+        GROUP BY poi.item_code, poi.item_name, poi.uom
+        ORDER BY total_amount DESC
+    """, supplier_name, as_dict=True)
+
+    return {"items": items, "total": len(items)}
+
+
+@frappe.whitelist()
 def set_supplier_invoice_exception(name, allowed=1, reason=None):
     """Whitelist a supplier for missing-invoice AP exception handling."""
     _require_roles(
