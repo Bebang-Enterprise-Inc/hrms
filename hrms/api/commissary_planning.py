@@ -191,8 +191,8 @@ def get_production_recommendations():
 		wastage_factor = flt(1 + (wastage_7d / production_7d), 4) if production_7d > 0 else 1
 		recommended_qty = flt(recommended_qty * wastage_factor, 2)
 
-		# Step 10: Priority
-		if days_inventory == 0 or (avg_daily > 0 and days_inventory < 1):
+		# Step 10: Priority (only critical/high if there IS consumption demand)
+		if avg_daily > 0 and (days_inventory == 0 or days_inventory < 1):
 			priority = "critical"
 		elif avg_daily > 0 and days_inventory < target_di * 0.5:
 			priority = "high"
