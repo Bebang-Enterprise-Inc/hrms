@@ -559,6 +559,225 @@ def get_supplier_items(name):
     return {"items": items, "total": len(items)}
 
 
+# Critical supplier fields that require Mae (CPO) approval to change
+_SUPPLIER_APPROVAL_FIELDS = {
+    "bank_name", "bank_account_name", "bank_account_number",
+    "tin", "status", "contact_person", "email", "address",
+    "supplier_name",
+}
+
+
+@frappe.whitelist()
+def submit_supplier_edit_for_approval(name, data):
+    """Submit supplier edit for CPO (Mae) approval. Critical fields go to approval queue."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement",
+        action="submit_supplier_edit_for_approval",
+        mutation_type="create",
+    )
+
+    if isinstance(data, str):
+        data = frappe.parse_json(data)
+
+    supplier = frappe.get_doc("BEI Supplier", name)
+    safe_data = _sanitize_doc_data(data)
+
+    # Build diff of changed fields
+    changes = {}
+    for key, new_value in safe_data.items():
+        if not hasattr(supplier, key):
+            continue
+        old_value = getattr(supplier, key, None)
+        if str(old_value or "") != str(new_value or ""):
+            changes[key] = {"old": str(old_value or ""), "new": str(new_value or "")}
+
+    if not changes:
+        return {"success": True, "message": _("No changes detected"), "approval_required": False}
+
+    # Check if any critical field changed
+    critical_changes = {k: v for k, v in changes.items() if k in _SUPPLIER_APPROVAL_FIELDS}
+    non_critical_changes = {k: v for k, v in changes.items() if k not in _SUPPLIER_APPROVAL_FIELDS}
+
+    # Apply non-critical changes immediately
+    if non_critical_changes:
+        for key in non_critical_changes:
+            setattr(supplier, key, safe_data[key])
+        supplier.save(ignore_permissions=True)
+
+    if not critical_changes:
+        return {"success": True, "message": _("Supplier updated (no critical fields changed)"), "approval_required": False}
+
+    # Queue critical changes for Mae approval
+    queue_entry = frappe.get_doc({
+        "doctype": "BEI Approval Queue",
+        "reference_doctype": "BEI Supplier",
+        "reference_name": supplier.name,
+        "status": "Pending",
+        "priority": "High",
+        "submitted_by": frappe.session.user,
+        "submitted_at": frappe.utils.now_datetime(),
+        "assigned_approver": "mae@bebang.ph",
+        "rejection_reason": frappe.as_json({
+            "type": "supplier_edit",
+            "changes": critical_changes,
+            "non_critical_applied": list(non_critical_changes.keys()) if non_critical_changes else [],
+        }),
+    })
+    queue_entry.insert(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {
+        "success": True,
+        "message": _("Critical field changes submitted for CPO approval"),
+        "approval_required": True,
+        "queue_name": queue_entry.name,
+        "critical_changes": critical_changes,
+        "non_critical_applied": list(non_critical_changes.keys()),
+    }
+
+
+@frappe.whitelist()
+def approve_supplier_edit(queue_name):
+    """Mae approves pending supplier edit — apply stored changes."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement",
+        action="approve_supplier_edit",
+        mutation_type="update",
+    )
+
+    queue = frappe.get_doc("BEI Approval Queue", queue_name)
+    if queue.status != "Pending":
+        frappe.throw(_("This approval request is no longer pending"))
+
+    change_data = frappe.parse_json(queue.rejection_reason or "{}")
+    changes = change_data.get("changes", {})
+
+    if not changes or queue.reference_doctype != "BEI Supplier":
+        frappe.throw(_("Invalid approval queue entry"))
+
+    supplier = frappe.get_doc("BEI Supplier", queue.reference_name)
+    for key, diff in changes.items():
+        if hasattr(supplier, key):
+            setattr(supplier, key, diff["new"])
+    supplier.save(ignore_permissions=True)
+
+    queue.status = "Approved"
+    queue.approved_by = frappe.session.user
+    queue.approved_at = frappe.utils.now_datetime()
+    queue.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {"success": True, "message": _("Supplier edit approved and applied")}
+
+
+@frappe.whitelist()
+def reject_supplier_edit(queue_name, reason=None):
+    """Mae rejects pending supplier edit."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="procurement",
+        action="reject_supplier_edit",
+        mutation_type="update",
+    )
+
+    queue = frappe.get_doc("BEI Approval Queue", queue_name)
+    if queue.status != "Pending":
+        frappe.throw(_("This approval request is no longer pending"))
+
+    queue.status = "Rejected"
+    queue.approved_by = frappe.session.user
+    queue.approved_at = frappe.utils.now_datetime()
+    if reason:
+        change_data = frappe.parse_json(queue.rejection_reason or "{}")
+        change_data["reject_reason"] = reason
+        queue.rejection_reason = frappe.as_json(change_data)
+    queue.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {"success": True, "message": _("Supplier edit rejected")}
+
+
+@frappe.whitelist()
+def get_supplier_pending_approvals(name=None):
+    """Get pending approval queue entries for supplier edits with full supplier context."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_supplier_pending_approvals")
+
+    filters = {"reference_doctype": "BEI Supplier", "status": "Pending"}
+    if name:
+        filters["reference_name"] = name
+
+    entries = frappe.get_all("BEI Approval Queue",
+        filters=filters,
+        fields=["name", "reference_name", "submitted_by", "submitted_at", "assigned_approver", "rejection_reason"],
+        order_by="submitted_at desc",
+        limit_page_length=50,
+    )
+
+    for entry in entries:
+        # Parse change data
+        if entry.get("rejection_reason"):
+            try:
+                entry["change_data"] = frappe.parse_json(entry["rejection_reason"])
+            except Exception:
+                entry["change_data"] = {}
+
+        # Enrich with supplier context so Mae can make an informed decision
+        try:
+            sup = frappe.get_doc("BEI Supplier", entry["reference_name"])
+            entry["supplier_context"] = {
+                "supplier_name": sup.supplier_name,
+                "supplier_code": sup.supplier_code,
+                "status": sup.status,
+                "creation": str(sup.creation),
+                "total_po_count": cint(sup.total_po_count),
+                "total_po_value": flt(sup.total_po_value),
+                "total_outstanding": flt(sup.total_outstanding),
+                "current_bank_name": sup.bank_name or "",
+                "current_bank_account_name": sup.bank_account_name or "",
+                "current_bank_account_number": sup.bank_account_number or "",
+                "current_tin": sup.tin or "",
+                "current_email": sup.email or "",
+                "current_contact_person": sup.contact_person or "",
+                "current_address": sup.address or "",
+            }
+
+            # Flag high-risk changes
+            changes = entry.get("change_data", {}).get("changes", {})
+            risk_flags = []
+            if "bank_account_number" in changes:
+                risk_flags.append("BANK_ACCOUNT_CHANGED")
+            if "bank_name" in changes:
+                risk_flags.append("BANK_CHANGED")
+            if "bank_account_name" in changes and changes["bank_account_name"]["new"].upper() != sup.supplier_name.upper():
+                risk_flags.append("BANK_NAME_MISMATCH — account name differs from supplier name")
+            if "tin" in changes:
+                risk_flags.append("TIN_CHANGED")
+            if "status" in changes and changes["status"]["new"] == "Active" and changes["status"]["old"] != "Active":
+                risk_flags.append("ACTIVATION — supplier being set to Active")
+            entry["risk_flags"] = risk_flags
+
+            # Submitter display name
+            submitter = entry.get("submitted_by", "")
+            if submitter:
+                entry["submitted_by_name"] = frappe.db.get_value("User", submitter, "full_name") or submitter
+        except Exception:
+            entry["supplier_context"] = {}
+            entry["risk_flags"] = []
+
+    return {"entries": entries, "total": len(entries)}
+
+
+@frappe.whitelist()
+def get_all_supplier_pending_approvals():
+    """Get ALL pending supplier edit approvals (for Mae's approval dashboard)."""
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_all_supplier_pending_approvals")
+    return get_supplier_pending_approvals(name=None)
+
+
 @frappe.whitelist()
 def set_supplier_invoice_exception(name, allowed=1, reason=None):
     """Whitelist a supplier for missing-invoice AP exception handling."""
