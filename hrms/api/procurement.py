@@ -609,10 +609,15 @@ def submit_supplier_edit_for_approval(name, data):
         return {"success": True, "message": _("Supplier updated (no critical fields changed)"), "approval_required": False}
 
     # Queue critical changes for Mae approval
+    # Store field is required — use first store for non-store-specific approvals
+    _store = frappe.db.sql("SELECT name FROM `tabBEI Store` ORDER BY creation LIMIT 1", as_list=True)
+    default_store = _store[0][0] if _store and _store[0] else ""
+
     queue_entry = frappe.get_doc({
         "doctype": "BEI Approval Queue",
         "reference_doctype": "BEI Supplier",
         "reference_name": supplier.name,
+        "store": default_store,
         "status": "Pending",
         "priority": "High",
         "submitted_by": frappe.session.user,
