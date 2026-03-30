@@ -98,7 +98,7 @@ def get_compensation_grid(filters=None):
 	count_sql = f"SELECT COUNT(*) FROM `tabEmployee` e WHERE {where}"
 	total = frappe.db.sql(count_sql, values)[0][0]
 
-	# Get employees with salary structure assignment
+	# Get employees with salary structure assignment + gov IDs + bank
 	sql = f"""
 		SELECT
 			e.name AS employee,
@@ -107,8 +107,15 @@ def get_compensation_grid(filters=None):
 			e.branch,
 			e.designation,
 			e.employment_type,
+			e.date_of_joining,
 			ssa.salary_structure,
-			ssa.base AS base_salary
+			ssa.base AS base_salary,
+			ssa.income_tax_slab AS tax_slab,
+			ssa.from_date AS ssa_from_date,
+			ssa.payroll_payable_account,
+			e.salary_mode,
+			e.bank_name,
+			e.bank_ac_no
 		FROM `tabEmployee` e
 		LEFT JOIN `tabSalary Structure Assignment` ssa
 			ON ssa.employee = e.name
@@ -130,9 +137,15 @@ def get_compensation_grid(filters=None):
 
 	employees = frappe.db.sql(sql, values, as_dict=True)
 
-	# Get pending compensation changes count per employee
 	if employees:
 		emp_names = [e["employee"] for e in employees]
+
+		# Compute daily rate (base / 26 working days)
+		for emp in employees:
+			base = emp.get("base_salary") or 0
+			emp["daily_rate"] = round(base / 26, 2) if base else None
+
+		# Get pending compensation changes count per employee
 		pending = frappe.db.sql(
 			"""
 			SELECT employee, COUNT(*) AS pending_count
@@ -145,8 +158,46 @@ def get_compensation_grid(filters=None):
 			as_dict=True,
 		)
 		pending_map = {p["employee"]: p["pending_count"] for p in pending}
+
+		# Get salary structure earnings/deductions per structure (cached)
+		structure_names = list({e["salary_structure"] for e in employees if e.get("salary_structure")})
+		structure_components = {}
+		if structure_names:
+			components = frappe.db.sql(
+				"""
+				SELECT parent, parentfield, salary_component, amount, amount_based_on_formula,
+					formula, abbr
+				FROM `tabSalary Detail`
+				WHERE parent IN %(structures)s AND parenttype = 'Salary Structure'
+				ORDER BY parent, parentfield, idx
+				""",
+				{"structures": structure_names},
+				as_dict=True,
+			)
+			for c in components:
+				structure_components.setdefault(c["parent"], {"earnings": [], "deductions": []})
+				bucket = "earnings" if c["parentfield"] == "earnings" else "deductions"
+				structure_components[c["parent"]][bucket].append({
+					"component": c["salary_component"],
+					"abbr": c["abbr"],
+					"amount": float(c["amount"] or 0),
+					"formula_based": bool(c["amount_based_on_formula"]),
+					"formula": c["formula"],
+				})
+
 		for emp in employees:
 			emp["pending_changes"] = pending_map.get(emp["employee"], 0)
+			ss = emp.get("salary_structure")
+			comp = structure_components.get(ss, {"earnings": [], "deductions": []})
+			emp["earnings_components"] = comp["earnings"]
+			emp["deductions_components"] = comp["deductions"]
+			# Summarize: total fixed earnings, total fixed deductions
+			emp["total_earnings"] = sum(
+				c["amount"] for c in comp["earnings"] if not c["formula_based"]
+			)
+			emp["total_deductions"] = sum(
+				c["amount"] for c in comp["deductions"] if not c["formula_based"]
+			)
 
 	return {
 		"data": employees,
