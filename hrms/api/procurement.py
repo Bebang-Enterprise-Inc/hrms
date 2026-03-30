@@ -643,8 +643,9 @@ def submit_supplier_edit_for_approval(name, data):
 
 
 @frappe.whitelist()
-def approve_supplier_edit(queue_name):
+def approve_supplier_edit(name=None, queue_name=None):
     """Mae approves pending supplier edit — apply stored changes."""
+    queue_name = queue_name or name
     from hrms.utils.sentry import set_backend_observability_context
     set_backend_observability_context(
         module="procurement",
@@ -678,8 +679,9 @@ def approve_supplier_edit(queue_name):
 
 
 @frappe.whitelist()
-def reject_supplier_edit(queue_name, reason=None):
+def reject_supplier_edit(name=None, queue_name=None, reason=None):
     """Mae rejects pending supplier edit."""
+    queue_name = queue_name or name
     from hrms.utils.sentry import set_backend_observability_context
     set_backend_observability_context(
         module="procurement",
