@@ -7409,39 +7409,39 @@ def get_supplier_transaction_timeline(supplier: str, limit: int = 50) -> dict[st
     limit = cint(limit) or 50
     timeline = []
 
-    # Purchase Orders
+    # Purchase Orders (date field = po_date, amount = grand_total)
     pos = frappe.get_all(
         "BEI Purchase Order",
         filters={"supplier": supplier},
-        fields=["name", "transaction_date", "grand_total", "workflow_state", "status"],
-        order_by="transaction_date desc",
+        fields=["name", "po_date", "grand_total", "status"],
+        order_by="po_date desc",
         limit_page_length=limit,
     )
     for po in pos:
         timeline.append({
-            "date": str(po.transaction_date),
+            "date": str(po.po_date or ""),
             "doc_type": "Purchase Order",
             "doc_name": po.name,
             "description": f"PO {po.name}",
             "amount": flt(po.grand_total),
-            "status": po.workflow_state or po.status or "",
+            "status": po.status or "",
         })
 
-    # Goods Receipts
+    # Goods Receipts (date field = receipt_date, amount = total_amount)
     grs = frappe.get_all(
         "BEI Goods Receipt",
         filters={"supplier": supplier},
-        fields=["name", "posting_date", "grand_total", "status"],
-        order_by="posting_date desc",
+        fields=["name", "receipt_date", "total_amount", "status"],
+        order_by="receipt_date desc",
         limit_page_length=limit,
     )
     for gr in grs:
         timeline.append({
-            "date": str(gr.posting_date),
+            "date": str(gr.receipt_date or ""),
             "doc_type": "Goods Receipt",
             "doc_name": gr.name,
             "description": f"GR {gr.name}",
-            "amount": flt(gr.grand_total),
+            "amount": flt(gr.total_amount),
             "status": gr.status or "",
         })
 
@@ -7463,22 +7463,22 @@ def get_supplier_transaction_timeline(supplier: str, limit: int = 50) -> dict[st
             "status": inv.payment_status or "Unpaid",
         })
 
-    # Payment Requests
+    # Payment Requests (date = request_date, amount = payment_amount, status = status)
     pays = frappe.get_all(
         "BEI Payment Request",
         filters={"supplier": supplier},
-        fields=["name", "posting_date", "total_amount", "payment_status", "approval_status"],
-        order_by="posting_date desc",
+        fields=["name", "request_date", "payment_amount", "status"],
+        order_by="request_date desc",
         limit_page_length=limit,
     )
     for pay in pays:
         timeline.append({
-            "date": str(pay.posting_date),
+            "date": str(pay.request_date or ""),
             "doc_type": "Payment Request",
             "doc_name": pay.name,
             "description": f"PAY {pay.name}",
-            "amount": flt(pay.total_amount),
-            "status": pay.payment_status or pay.approval_status or "",
+            "amount": flt(pay.payment_amount),
+            "status": pay.status or "",
         })
 
     # Sort by date descending, then by doc_type for same-day ordering
