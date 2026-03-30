@@ -168,9 +168,21 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S142` | Sprint 142 | `s142-procurement-qa-audit` | — | GO — Full procurement module QA audit: every page, every CTA, 3 roles, E2E workflow, three-way data match, Proof Matrix. | `docs/plans/2026-03-28-sprint-142-procurement-qa-audit.md` |
 
+| `S143` | Sprint 143 | `s143-procurement-defect-remediation` | BEI-Tasks#275 | DEPLOYED — Fix 4 verified defects from S142 QA audit: Boolean coercion (DEF-001), data quality reports (DEF-003/004). | `docs/plans/2026-03-29-sprint-143-procurement-defect-remediation.md` |
+
+| `S144` | Sprint 144 | `s144-supplier-page-defects` | BEI-Tasks#276,#277 + hrms#392,#394-397 | DEPLOYED — Supplier field mapping, is_new_supplier fix, items tab, PO/invoice stubs removed, edit approval workflow. | `docs/plans/2026-03-29-sprint-144-supplier-page-defects.md` |
+
+| `S145` | Sprint 145 | — (data-only, no code) | — | COMPLETED — AP opening balance sync: 714 invoices synced to Frappe + AppSheet, 577 matched to POs, 49 finance corrections, 110 flagged, Apps Script auto-sync deployed. | `docs/plans/2026-03-30-sprint-145-ap-opening-balance-sync.md` |
+
+| `S146` | Sprint 146 | `s146-payroll-recovery-go-live` | — | PLANNED — Payroll recovery: deploy Frappe backend, fix S076 day-zero blockers (payable account, tax slabs, SSAs), verify all 8 payroll pages end-to-end. | `docs/plans/2026-03-30-sprint-146-payroll-recovery-go-live.md` |
+
+| `S147` | Sprint 147 | `s147-ap-command-center` | — | GO — AP Command Center: finance team payables workspace, 5 tabs, 3 new backend endpoints, aging matrix, 4-level approval, supplier ledger. Audited v1 2026-03-30 (10 blockers resolved). | `docs/plans/2026-03-30-sprint-147-ap-command-center.md` |
+
+| `S148` | Sprint 148 | `s148-compensation-dashboard-overhaul` | — | PLANNED — Compensation Setup dashboard: UI/UX overhaul (sticky headers, dense grid, visual polish), L3 browser testing with test employees via frappe-bulk-edits, approval matrix testing (salary→Mae HR, bank→Mae Accounting), bank details edit fix, fullscreen mode. | `docs/plans/2026-03-30-sprint-148-compensation-dashboard-overhaul.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S143`.
-2. Reserve branch name: `s142-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S149`.
+2. Reserve branch name: `s149-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 

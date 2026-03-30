@@ -7332,3 +7332,192 @@ def get_suppliers_with_expiry(status: str = "Active") -> dict:
                 })
 
     return {"suppliers": suppliers, "total": len(suppliers)}
+
+
+# ============================================================================
+# S147: AP Command Center — Backend Endpoints
+# ============================================================================
+
+
+@frappe.whitelist()
+def update_invoice_payment_status(invoice_name: str, payment_status: str, notes: str | None = None) -> dict[str, Any]:
+    """Update payment status on a BEI Invoice with audit trail.
+
+    Only Accounts Manager / System Manager can change status.
+    Writes audit entry to verification_notes for BIR traceability.
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="finance", action="update_invoice_payment_status", mutation_type="update"
+    )
+
+    allowed_statuses = ("Unpaid", "Partially Paid", "Paid")
+    if payment_status not in allowed_statuses:
+        frappe.throw(f"Invalid payment status: {payment_status}. Must be one of {allowed_statuses}")
+
+    if not frappe.db.exists("BEI Invoice", invoice_name):
+        frappe.throw(f"Invoice {invoice_name} not found")
+
+    doc = frappe.get_doc("BEI Invoice", invoice_name)
+    old_status = doc.payment_status or "Unpaid"
+
+    if old_status == payment_status:
+        return {"name": doc.name, "payment_status": payment_status, "changed": False}
+
+    # Build audit trail entry
+    user = frappe.session.user
+    timestamp = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M")
+    audit_entry = f"[{timestamp}] {user}: Status changed {old_status} -> {payment_status}"
+    if notes:
+        audit_entry += f" — {notes}"
+
+    existing_notes = doc.verification_notes or ""
+    doc.verification_notes = f"{audit_entry}\n{existing_notes}".strip()
+    doc.payment_status = payment_status
+
+    if payment_status == "Paid":
+        doc.amount_paid = flt(doc.grand_total)
+        doc.balance_due = 0
+    elif payment_status == "Unpaid":
+        doc.amount_paid = 0
+        doc.balance_due = flt(doc.grand_total)
+
+    doc.flags.ignore_validate = True
+    doc.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    return {
+        "name": doc.name,
+        "payment_status": payment_status,
+        "changed": True,
+        "audit_entry": audit_entry,
+    }
+
+
+@frappe.whitelist()
+def get_supplier_transaction_timeline(supplier: str, limit: int = 50) -> dict[str, Any]:
+    """Return unified chronological timeline of all documents for a supplier.
+
+    Merges POs, GRs, Invoices, Payment Requests, and ORs into a single
+    sorted timeline for the Supplier Ledger tab.
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="finance", action="get_supplier_transaction_timeline", mutation_type="read"
+    )
+
+    limit = cint(limit) or 50
+    timeline = []
+
+    # Purchase Orders
+    pos = frappe.get_all(
+        "BEI Purchase Order",
+        filters={"supplier": supplier},
+        fields=["name", "transaction_date", "grand_total", "workflow_state", "status"],
+        order_by="transaction_date desc",
+        limit_page_length=limit,
+    )
+    for po in pos:
+        timeline.append({
+            "date": str(po.transaction_date),
+            "doc_type": "Purchase Order",
+            "doc_name": po.name,
+            "description": f"PO {po.name}",
+            "amount": flt(po.grand_total),
+            "status": po.workflow_state or po.status or "",
+        })
+
+    # Goods Receipts
+    grs = frappe.get_all(
+        "BEI Goods Receipt",
+        filters={"supplier": supplier},
+        fields=["name", "posting_date", "grand_total", "status"],
+        order_by="posting_date desc",
+        limit_page_length=limit,
+    )
+    for gr in grs:
+        timeline.append({
+            "date": str(gr.posting_date),
+            "doc_type": "Goods Receipt",
+            "doc_name": gr.name,
+            "description": f"GR {gr.name}",
+            "amount": flt(gr.grand_total),
+            "status": gr.status or "",
+        })
+
+    # Invoices
+    invs = frappe.get_all(
+        "BEI Invoice",
+        filters={"supplier": supplier},
+        fields=["name", "invoice_date", "grand_total", "payment_status", "supplier_invoice_no"],
+        order_by="invoice_date desc",
+        limit_page_length=limit,
+    )
+    for inv in invs:
+        timeline.append({
+            "date": str(inv.invoice_date),
+            "doc_type": "Invoice",
+            "doc_name": inv.name,
+            "description": f"INV {inv.supplier_invoice_no or inv.name}",
+            "amount": flt(inv.grand_total),
+            "status": inv.payment_status or "Unpaid",
+        })
+
+    # Payment Requests
+    pays = frappe.get_all(
+        "BEI Payment Request",
+        filters={"supplier": supplier},
+        fields=["name", "posting_date", "total_amount", "payment_status", "approval_status"],
+        order_by="posting_date desc",
+        limit_page_length=limit,
+    )
+    for pay in pays:
+        timeline.append({
+            "date": str(pay.posting_date),
+            "doc_type": "Payment Request",
+            "doc_name": pay.name,
+            "description": f"PAY {pay.name}",
+            "amount": flt(pay.total_amount),
+            "status": pay.payment_status or pay.approval_status or "",
+        })
+
+    # Sort by date descending, then by doc_type for same-day ordering
+    doc_type_order = {"Purchase Order": 0, "Goods Receipt": 1, "Invoice": 2, "Payment Request": 3}
+    timeline.sort(key=lambda x: (x["date"], doc_type_order.get(x["doc_type"], 9)), reverse=True)
+
+    return {"timeline": timeline[:limit], "total": len(timeline)}
+
+
+@frappe.whitelist()
+def bulk_update_invoice_acctg_status(invoice_names: list[str] | str, acctg_status: str) -> dict[str, Any]:
+    """Bulk update accounting status on invoices via verification_notes.
+
+    Used for 'Transferred to Finance' and similar accounting workflow tags.
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="finance", action="bulk_update_invoice_acctg_status", mutation_type="update"
+    )
+
+    if isinstance(invoice_names, str):
+        invoice_names = frappe.parse_json(invoice_names)
+
+    if not invoice_names:
+        frappe.throw("No invoices specified")
+
+    user = frappe.session.user
+    timestamp = frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M")
+    tag = f"[{timestamp}] {user}: {acctg_status}"
+
+    updated = 0
+    for inv_name in invoice_names:
+        if not frappe.db.exists("BEI Invoice", inv_name):
+            continue
+        existing = frappe.db.get_value("BEI Invoice", inv_name, "verification_notes") or ""
+        if acctg_status not in existing:
+            new_notes = f"{tag}\n{existing}".strip()
+            frappe.db.set_value("BEI Invoice", inv_name, "verification_notes", new_notes)
+            updated += 1
+
+    frappe.db.commit()
+    return {"updated": updated, "total": len(invoice_names), "tag": tag}
