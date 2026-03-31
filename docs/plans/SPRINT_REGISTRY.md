@@ -182,7 +182,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S149` | Sprint 149 | — (analysis-only, no code) | — | PLANNED — 3MD-era logistics route optimization: distance matrix, volume-per-store analysis, truck size recommendations, route consolidation, alternative transport evaluation (styro/Lalamove/Transportify). Forensic-level analysis with Google Maps API. | `docs/plans/2026-03-31-sprint-149-logistics-route-optimization.md` |
 
-| `S150` | Sprint 150 | `s150-payroll-data-quality` | PR pending (hrms + bei-tasks) | IN_PROGRESS — Payroll data quality + allowance setup: fix 5 blockers, import actual Mar 2026 salaries + 6 allowance types from payroll files, create 4 salary structures, add allowance columns to compensation dashboard. 52 units. Code PRs created 2026-03-31; SSM scripts ready; pending merge+deploy+SSM execution. | `docs/plans/2026-03-31-sprint-150-payroll-data-quality.md` |
+| `S150` | Sprint 150 | `s150-payroll-data-quality` | hrms#403, BEI-Tasks#296 | IN_PROGRESS — Payroll data quality + allowance setup. Code PRs created 2026-03-31; SSM scripts ready; pending merge+deploy+SSM execution. | `docs/plans/2026-03-31-sprint-150-payroll-data-quality.md` |
 
 | `S151` | Sprint 151 | `s151-unionbank-api-integration` | — | POSTPONED — UnionBank API integration: balance check on payment approval, OTP for Mae, auto-disbursement (InstaPay/PESOnet/UBP-to-UBP). | `docs/plans/2026-03-31-sprint-151-unionbank-api-integration.md` |
 
