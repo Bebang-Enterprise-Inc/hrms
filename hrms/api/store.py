@@ -345,6 +345,12 @@ def _designation_is_area_supervisor(designation):
 	return "AREA SUPERVISOR" in str(designation or "").upper()
 
 
+def _designation_is_admin(designation):
+	"""Return True if the designation indicates a company-wide admin role."""
+	d = str(designation or "").upper()
+	return any(t in d for t in ("CEO", "CHIEF", "DIRECTOR", "PRESIDENT", "REGIONAL MANAGER", "HR MANAGER", "HR OFFICER"))
+
+
 def _normalize_schedule_store_type(value: str | None) -> str:
 	text = " ".join(str(value or "").strip().replace("_", " ").replace("-", " ").split()).lower()
 	if not text:
@@ -1790,15 +1796,13 @@ def get_user_store(surface: str | None = None):
 	stores = []
 	role = None
 	seen_stores = set()
-	active_employee = None
-
-	if surface_key in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY}:
-		active_employee = frappe.db.get_value(
-			"Employee",
-			{"user_id": user, "status": "Active"},
-			["name", "branch", "employee_name", "reports_to", "designation"],
-			as_dict=True,
-		)
+	# S136: Always fetch active employee for admin designation check.
+	active_employee = frappe.db.get_value(
+		"Employee",
+		{"user_id": user, "status": "Active"},
+		["name", "branch", "employee_name", "reports_to", "designation"],
+		as_dict=True,
+	)
 	has_area_designation = bool(
 		surface_key == SCHEDULE_SURFACE_STORE
 		and active_employee
@@ -1901,33 +1905,52 @@ def get_user_store(surface: str | None = None):
 		for store_row in schedule_rows[:1]:
 			append_store(store_row, allow_unmapped=True)
 
-	if (
+	# S136: Admin roles see ALL stores, but only if they're a "pure admin"
+	# (CEO, Director, no Employee record, etc.) — not a store employee with SM role.
+	_is_admin_role = (
 		"System Manager" in user_roles
-		or "HR User" in user_roles
 		or "HR Manager" in user_roles
 		or "Regional Manager" in user_roles
-	):
-		# S136: Only show ALL stores for admins who have NO stores from earlier role paths.
-		# If Area Supervisor/Store Staff already found stores, keep those — the user
-		# has a real operational role and should see only their assigned stores.
-		if not stores:
-			role = "Regional Manager" if "Regional Manager" in user_roles else "System Manager"
-			if surface_key in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY}:
-				for store_row in schedule_rows:
-					append_store(store_row)
-			else:
-				store_rows = frappe.get_all(
-					"Warehouse",
-					filters={"is_group": 0, "disabled": 0},
-					fields=["name", "warehouse_name", "warehouse_type"],
-					order_by="warehouse_name",
-					limit=200,
-				)
-				for store_row in store_rows:
-					# S128/B2 + S133: Skip non-orderable warehouses by type and name.
-					if not _is_orderable_store(store_row):
-						continue
-					append_store(store_row)
+	)
+	_is_pure_admin = (
+		user == "Administrator"
+		or not active_employee
+		or (active_employee and _designation_is_admin(active_employee.get("designation")))
+	)
+	if _is_admin_role and _is_pure_admin:
+		# CEO / Director / Regional Manager — override to all stores
+		role = "Regional Manager" if "Regional Manager" in user_roles else "System Manager"
+		stores.clear()
+		seen_stores.clear()
+		if surface_key in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY}:
+			for store_row in schedule_rows:
+				append_store(store_row)
+		else:
+			store_rows = frappe.get_all(
+				"Warehouse",
+				filters={"is_group": 0, "disabled": 0},
+				fields=["name", "warehouse_name", "warehouse_type"],
+				order_by="warehouse_name",
+				limit=200,
+			)
+			for store_row in store_rows:
+				if not _is_orderable_store(store_row):
+					continue
+				append_store(store_row)
+	elif _is_admin_role and not stores:
+		# Fallback: admin role but no stores from operational paths
+		role = role or "System Manager"
+		store_rows = frappe.get_all(
+			"Warehouse",
+			filters={"is_group": 0, "disabled": 0},
+			fields=["name", "warehouse_name", "warehouse_type"],
+			order_by="warehouse_name",
+			limit=200,
+		)
+		for store_row in store_rows:
+			if not _is_orderable_store(store_row):
+				continue
+			append_store(store_row)
 
 	default_store = stores[0]["name"] if stores else None
 
