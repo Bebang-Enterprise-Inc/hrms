@@ -57,7 +57,15 @@ class BEIInvoice(Document):
 		self.db_set("invoice_no", self.name, update_modified=False)
 
 	def calculate_totals(self):
-		"""Calculate grand total and balance."""
+		"""Calculate grand total and balance from items."""
+		# Compute subtotal and VAT from line items if they have amounts
+		if self.items:
+			items_subtotal = sum(flt(item.amount) for item in self.items)
+			items_vat = sum(flt(item.vat_amount) for item in self.items)
+			if items_subtotal > 0:
+				self.subtotal = flt(items_subtotal, 2)
+				self.vat_amount = flt(items_vat, 2)
+
 		self.grand_total = flt(self.subtotal, 2) + flt(self.vat_amount, 2) - flt(self.withholding_tax, 2)
 		self.balance_due = flt(self.grand_total, 2) - flt(self.amount_paid, 2)
 
