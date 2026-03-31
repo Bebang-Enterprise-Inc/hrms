@@ -186,7 +186,7 @@ def get_compensation_grid(filters=None):
 	count_sql = f"SELECT COUNT(*) FROM `tabEmployee` e WHERE {where}"
 	total = frappe.db.sql(count_sql, values)[0][0]
 
-	# Get employees with salary structure assignment + gov IDs + bank
+	# Get employees with salary structure assignment + gov IDs + bank + allowances
 	sql = f"""
 		SELECT
 			e.name AS employee,
@@ -203,7 +203,13 @@ def get_compensation_grid(filters=None):
 			ssa.payroll_payable_account,
 			e.salary_mode,
 			e.bank_name,
-			e.bank_ac_no
+			e.bank_ac_no,
+			COALESCE(e.bei_comm_allow_monthly, 0) AS bei_comm_allow_monthly,
+			COALESCE(e.bei_deminimis_monthly, 0) AS bei_deminimis_monthly,
+			COALESCE(e.bei_honorarium_monthly, 0) AS bei_honorarium_monthly,
+			COALESCE(e.bei_meal_allow_monthly, 0) AS bei_meal_allow_monthly,
+			COALESCE(e.bei_gasoline_allow_monthly, 0) AS bei_gasoline_allow_monthly,
+			COALESCE(e.bei_other_fixed_monthly, 0) AS bei_other_fixed_monthly
 		FROM `tabEmployee` e
 		LEFT JOIN `tabSalary Structure Assignment` ssa
 			ON ssa.employee = e.name
@@ -234,8 +240,19 @@ def get_compensation_grid(filters=None):
 			base = emp.get("base_salary") or 0
 			emp["daily_rate"] = round(base / 26, 2) if base else None
 
-			# Projected statutory deductions (2025 PH rates)
-			emp["projected_gross"] = base
+			# Total allowances from payroll data (bei_* custom fields)
+			allowances = (
+				(emp.get("bei_comm_allow_monthly") or 0)
+				+ (emp.get("bei_deminimis_monthly") or 0)
+				+ (emp.get("bei_honorarium_monthly") or 0)
+				+ (emp.get("bei_meal_allow_monthly") or 0)
+				+ (emp.get("bei_gasoline_allow_monthly") or 0)
+				+ (emp.get("bei_other_fixed_monthly") or 0)
+			)
+			emp["total_allowances"] = round(allowances, 2)
+
+			# Projected gross = base + allowances
+			emp["projected_gross"] = round(base + allowances, 2)
 			emp["projected_sss"] = compute_sss_employee(base)
 			emp["projected_philhealth"] = compute_philhealth_employee(base)
 			emp["projected_pagibig"] = compute_pagibig_employee(base)

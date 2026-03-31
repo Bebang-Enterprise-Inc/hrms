@@ -180,9 +180,15 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S148` | Sprint 148 | `s148-compensation-dashboard-overhaul` | — | PLANNED — Compensation Setup dashboard: UI/UX overhaul (sticky headers, dense grid, visual polish), L3 browser testing with test employees via frappe-bulk-edits, approval matrix testing (salary→Mae HR, bank→Mae Accounting), bank details edit fix, fullscreen mode. | `docs/plans/2026-03-30-sprint-148-compensation-dashboard-overhaul.md` |
 
+| `S149` | Sprint 149 | — (analysis-only, no code) | — | PLANNED — 3MD-era logistics route optimization: distance matrix, volume-per-store analysis, truck size recommendations, route consolidation, alternative transport evaluation (styro/Lalamove/Transportify). Forensic-level analysis with Google Maps API. | `docs/plans/2026-03-31-sprint-149-logistics-route-optimization.md` |
+
+| `S150` | Sprint 150 | `s150-payroll-data-quality` | hrms#403, BEI-Tasks#296 | IN_PROGRESS — Payroll data quality + allowance setup. Code PRs created 2026-03-31; SSM scripts ready; pending merge+deploy+SSM execution. | `docs/plans/2026-03-31-sprint-150-payroll-data-quality.md` |
+
+| `S151` | Sprint 151 | `s151-unionbank-api-integration` | — | POSTPONED — UnionBank API integration: balance check on payment approval, OTP for Mae, auto-disbursement (InstaPay/PESOnet/UBP-to-UBP). | `docs/plans/2026-03-31-sprint-151-unionbank-api-integration.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S149`.
-2. Reserve branch name: `s149-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S152`.
+2. Reserve branch name: `s152-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
