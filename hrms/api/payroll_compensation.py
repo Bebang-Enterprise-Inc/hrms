@@ -21,6 +21,94 @@ from hrms.utils.sentry import set_backend_observability_context
 
 
 # ============================================================================
+# 2025 Philippine Statutory Computation Helpers
+# Sources: SSS Circular 2024-005, PhilHealth Circular 2024-0009, HDMF Circular 417
+# TRAIN Law: R.A. 10963 (permanent rates effective 2023+)
+# ============================================================================
+
+
+def compute_sss_employee(base):
+	"""SSS employee share: map base to MSC bracket (₱500 intervals), then MSC × 4.5%.
+
+	HARD BLOCKER: This MUST be a table lookup, NOT base * 0.045.
+	MSC range: ₱5,000 to ₱35,000 (2025 ceiling per SSS Circular 2024-005).
+	"""
+	if not base or base <= 0:
+		return 0
+	# Map to nearest MSC bracket at ₱500 intervals, floor ₱5,000, cap ₱35,000
+	msc = min(max(round(base / 500) * 500, 5000), 35000)
+	return round(msc * 0.045, 2)
+
+
+def compute_sss_employer(base):
+	"""SSS employer share: MSC × 9.5%."""
+	if not base or base <= 0:
+		return 0
+	msc = min(max(round(base / 500) * 500, 5000), 35000)
+	return round(msc * 0.095, 2)
+
+
+def compute_philhealth_employee(base):
+	"""PhilHealth employee: 2.5% of base, floor ₱250/mo, cap ₱2,500/mo.
+
+	Per PhilHealth Circular 2024-0009: 5% total (2.5% each side).
+	Floor: ₱10,000 MBS → min ₱250 employee share.
+	Cap: ₱100,000 MBS → max ₱2,500 employee share.
+	"""
+	if not base or base <= 0:
+		return 0
+	return round(max(min(base * 0.025, 2500), 250), 2)
+
+
+def compute_philhealth_employer(base):
+	"""PhilHealth employer: same as employee share."""
+	return compute_philhealth_employee(base)
+
+
+def compute_pagibig_employee(base):
+	"""Pag-IBIG employee: 1% if base ≤ ₱1,500; 2% if > ₱1,500; cap ₱100/mo.
+
+	Per HDMF Circular 417: two-tier rate structure.
+	"""
+	if not base or base <= 0:
+		return 0
+	if base <= 1500:
+		return round(base * 0.01, 2)
+	return round(min(base * 0.02, 100), 2)
+
+
+def compute_pagibig_employer(base):
+	"""Pag-IBIG employer: always 2%, cap ₱100/mo."""
+	if not base or base <= 0:
+		return 0
+	return round(min(base * 0.02, 100), 2)
+
+
+def compute_monthly_tax(base):
+	"""TRAIN Law 2025 monthly income tax estimate.
+
+	Annualize base × 12, apply brackets, divide by 12.
+	Per BIR RR 11-2018 (TRAIN Law, R.A. 10963). Permanent rates from 2023+.
+	"""
+	if not base or base <= 0:
+		return 0
+	annual = base * 12
+	if annual <= 250000:
+		tax = 0
+	elif annual <= 400000:
+		tax = (annual - 250000) * 0.15
+	elif annual <= 800000:
+		tax = 22500 + (annual - 400000) * 0.20
+	elif annual <= 2000000:
+		tax = 102500 + (annual - 800000) * 0.25
+	elif annual <= 8000000:
+		tax = 402500 + (annual - 2000000) * 0.30
+	else:
+		tax = 2202500 + (annual - 8000000) * 0.35
+	return round(tax / 12, 2)
+
+
+# ============================================================================
 # Constants
 # ============================================================================
 
@@ -141,9 +229,31 @@ def get_compensation_grid(filters=None):
 		emp_names = [e["employee"] for e in employees]
 
 		# Compute daily rate (base / 26 working days)
+		# and projected compensation from statutory rates
 		for emp in employees:
 			base = emp.get("base_salary") or 0
 			emp["daily_rate"] = round(base / 26, 2) if base else None
+
+			# Projected statutory deductions (2025 PH rates)
+			emp["projected_gross"] = base
+			emp["projected_sss"] = compute_sss_employee(base)
+			emp["projected_philhealth"] = compute_philhealth_employee(base)
+			emp["projected_pagibig"] = compute_pagibig_employee(base)
+			emp["projected_tax"] = compute_monthly_tax(base)
+			emp["projected_total_deductions"] = (
+				emp["projected_sss"]
+				+ emp["projected_philhealth"]
+				+ emp["projected_pagibig"]
+				+ emp["projected_tax"]
+			)
+			emp["projected_net"] = round(base - emp["projected_total_deductions"], 2)
+			emp["projected_company_cost"] = round(
+				base
+				+ compute_sss_employer(base)
+				+ compute_philhealth_employer(base)
+				+ compute_pagibig_employer(base),
+				2,
+			)
 
 		# Get pending compensation changes count per employee
 		pending = frappe.db.sql(
@@ -159,45 +269,8 @@ def get_compensation_grid(filters=None):
 		)
 		pending_map = {p["employee"]: p["pending_count"] for p in pending}
 
-		# Get salary structure earnings/deductions per structure (cached)
-		structure_names = list({e["salary_structure"] for e in employees if e.get("salary_structure")})
-		structure_components = {}
-		if structure_names:
-			components = frappe.db.sql(
-				"""
-				SELECT parent, parentfield, salary_component, amount, amount_based_on_formula,
-					formula, abbr
-				FROM `tabSalary Detail`
-				WHERE parent IN %(structures)s AND parenttype = 'Salary Structure'
-				ORDER BY parent, parentfield, idx
-				""",
-				{"structures": structure_names},
-				as_dict=True,
-			)
-			for c in components:
-				structure_components.setdefault(c["parent"], {"earnings": [], "deductions": []})
-				bucket = "earnings" if c["parentfield"] == "earnings" else "deductions"
-				structure_components[c["parent"]][bucket].append({
-					"component": c["salary_component"],
-					"abbr": c["abbr"],
-					"amount": float(c["amount"] or 0),
-					"formula_based": bool(c["amount_based_on_formula"]),
-					"formula": c["formula"],
-				})
-
 		for emp in employees:
 			emp["pending_changes"] = pending_map.get(emp["employee"], 0)
-			ss = emp.get("salary_structure")
-			comp = structure_components.get(ss, {"earnings": [], "deductions": []})
-			emp["earnings_components"] = comp["earnings"]
-			emp["deductions_components"] = comp["deductions"]
-			# Summarize: total fixed earnings, total fixed deductions
-			emp["total_earnings"] = sum(
-				c["amount"] for c in comp["earnings"] if not c["formula_based"]
-			)
-			emp["total_deductions"] = sum(
-				c["amount"] for c in comp["deductions"] if not c["formula_based"]
-			)
 
 	return {
 		"data": employees,
