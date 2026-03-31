@@ -2480,6 +2480,14 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
     # Extract line items before sanitizing
     line_items = data.pop("items", None) or data.pop("line_items", None) or []
 
+    # DEFECT-4 fix: Auto-link invoice_attachment from GR's supplier_invoice_photo
+    if not data.get("invoice_attachment") and data.get("goods_receipt"):
+        gr_photo = frappe.db.get_value(
+            "BEI Goods Receipt", data["goods_receipt"], "supplier_invoice_photo"
+        )
+        if gr_photo:
+            data["invoice_attachment"] = gr_photo
+
     # DM-2: Savepoint for atomic invoice + child table creation
     frappe.db.savepoint("invoice_creation")
     invoice = frappe.get_doc({
@@ -2490,15 +2498,46 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
     # C2: Add line items to child table if provided
     if line_items:
         for item_data in line_items:
+            qty = flt(item_data.get("qty"))
+            rate = flt(item_data.get("rate") or item_data.get("unit_cost"))
+            vat_rate = flt(item_data.get("vat_rate", 12))
+            # DEFECT-5 fix: Calculate amount = qty * rate
+            amount = qty * rate
+            vat_amount = amount * vat_rate / 100
+
             invoice.append("items", {
                 "item_code": item_data.get("item_code"),
                 "item_name": item_data.get("item_name"),
-                "qty": flt(item_data.get("qty")),
-                "rate": flt(item_data.get("rate") or item_data.get("unit_cost")),
-                "vat_rate": flt(item_data.get("vat_rate", 12)),
+                "qty": qty,
+                "rate": rate,
+                "amount": amount,
+                "vat_rate": vat_rate,
+                "vat_amount": vat_amount,
                 "matched_gr_item": item_data.get("matched_gr_item"),
                 "match_status": item_data.get("match_status", "Unmatched"),
             })
+    else:
+        # DEFECT-5 fix: When no line items provided, populate from PO and compute amounts
+        if purchase_order:
+            po_items = frappe.db.sql("""
+                SELECT item_code, item_name, qty, unit_cost as rate, vat_rate, vat_amount
+                FROM `tabBEI PO Item` WHERE parent = %s ORDER BY idx
+            """, purchase_order, as_dict=True)
+            for pi in po_items:
+                qty = flt(pi.qty)
+                rate = flt(pi.rate)
+                vat_rate = flt(pi.vat_rate or 12)
+                amount = qty * rate
+                vat_amount = amount * vat_rate / 100
+                invoice.append("items", {
+                    "item_code": pi.item_code,
+                    "item_name": pi.item_name,
+                    "qty": qty,
+                    "rate": rate,
+                    "amount": amount,
+                    "vat_rate": vat_rate,
+                    "vat_amount": vat_amount,
+                })
 
     invoice.insert()
     frappe.db.release_savepoint("invoice_creation")
