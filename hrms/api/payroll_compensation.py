@@ -277,9 +277,9 @@ def get_compensation_grid(filters=None):
 				+ emp["projected_pagibig"]
 				+ emp["projected_tax"]
 			)
-			emp["projected_net"] = round(base - emp["projected_total_deductions"], 2)
+			emp["projected_net"] = round(emp["projected_gross"] - emp["projected_total_deductions"], 2)
 			emp["projected_company_cost"] = round(
-				base
+				emp["projected_gross"]
 				+ compute_sss_employer(base)
 				+ compute_philhealth_employer(base)
 				+ compute_pagibig_employer(base),
