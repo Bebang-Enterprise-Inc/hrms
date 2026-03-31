@@ -1,4 +1,4 @@
-# Sprint S138 — Warehouse Routing & Data Reset
+# Sprint S138 — Warehouse Routing Data Integrity
 
 ```yaml
 sprint_id: S138
@@ -9,7 +9,7 @@ status: PLANNED
 planned_date: 2026-03-27
 completed_date: null
 depends_on: [S136, S134, S135]
-total_units: 30
+total_units: 18
 backend_pr: null
 frontend_pr: null
 l3_result: null
@@ -21,18 +21,14 @@ execution_summary: null
 | S138 | Sprint 138 | s138-warehouse-routing-data-integrity | — | PLANNED — Warehouse routing data integrity | docs/plans/2026-03-27-sprint-138-warehouse-routing-data-integrity.md |
 ```
 
-**Goal:** Full data reset of test/demo transactional data, rename 47 warehouses from wrong `- Bebang Enterprise Inc.` suffix to `- BEI`, clean and reseed BEI Route mappings, fix low stock API to query real 3PL warehouses. Leave the system clean for live go-live data loading.
+**Goal:** Fix the disconnected warehouse architecture that causes the low stock API to query empty warehouses, POs to ship to meta warehouses, and BEI Route to be full of test junk — so that inventory data is accurate, synced, and reflects real stock at real 3PL warehouses.
 
 **Depends on:** S136 (route map merged via hrms#381), S134 (PO ship_to default), S135 (low stock API)
 
 **Impact:**
-- All test procurement, inventory, and store ordering data deleted — clean slate
-- 47 warehouses renamed to correct `- BEI` suffix — no more agent confusion
-- BEI Route seeded with proper store-to-3PL mappings
-- Low stock API queries real 3PL warehouses where stock actually lives
-- System ready for live data loading
-
-**CRITICAL PREREQUISITE:** Full Frappe backup created and stored in Dropbox BEFORE any destructive operations.
+- Luwi: Low stock dashboard shows REAL low-stock items at the 3PLs where stock actually lives (3MD, Pinnacle, Jentec) — not the empty "Stores - BEI"
+- Ian: PO ship_to defaults to the correct 3PL receiving warehouse based on route map
+- Operations: BEI Route DocType cleaned of 95+ test records, seeded with proper store→3PL mappings for all 47 stores × 3 cargo types
 
 ---
 
@@ -40,21 +36,27 @@ execution_summary: null
 
 ```yaml
 completion_condition: |
-  - Full backup created and verified in Dropbox
-  - All test transactional data deleted (POs, PRs, GRs, invoices, stock entries, etc.)
-  - 47 warehouses renamed from "- Bebang Enterprise Inc." to "- BEI"
-  - TEST-* warehouses deleted
-  - BEI Route cleaned and reseeded (47 stores x 3 cargo types)
-  - Low stock API uses real 3PL warehouses
+  - All 3 phases implemented and deployed
+  - BEI Route has ≤10 records (clean) + 141 new records (47 stores × 3 cargo types)
+  - Low stock API returns items from real 3PL warehouses
   - Plan YAML status updated to COMPLETED
   - SPRINT_REGISTRY.md updated with final status
+  - L3 evidence committed to branch
 stop_only_for:
   - missing_access: credentials/session not available
-  - destructive_approval: deleting production data (backup must be confirmed first)
-  - business_policy: unclear which data to keep vs delete
-  - direct_overwrite: conflicting active work on same files
+  - destructive_approval: deleting production data (BEI Route cleanup needs confirmation)
+  - business_policy: unclear store→3PL mapping for a specific store
+  - direct_overwrite: conflicting active work on same files (S136 store.py)
 signoff_authority: single-owner (Sam)
-deploy_handoff: PR creation -> share PR# -> STOP (user merges)
+deploy_handoff: PR creation → share PR# → STOP (user merges)
+governor_feedback_loop: |
+  REJECT: read PR comment, fix, push
+  NEEDS_FIX: apply fix, push
+  Merge Conflict: rebase against production, resolve, force-push
+  Deploy Failure: check logs, fix if code issue
+release_manager_gate: |
+  git add -f output/l3/S138/ && git push after L3
+confidence_threshold: reviews with confidence < 0.80 pause auto-merge
 ```
 
 ---
@@ -63,64 +65,44 @@ deploy_handoff: PR creation -> share PR# -> STOP (user merges)
 
 | File/Surface | Owner | Protected? |
 |---|---|---|
-| `hrms/api/procurement.py` (get_low_stock_items + ship_to) | S138 | Shared -- modify only low stock function and ship_to default |
-| `scripts/s138_data_reset.py` (new) | S138 | No -- new cleanup script |
-| Frappe data (bench console) | S138 | Destructive -- backup required first |
+| `hrms/api/procurement.py` (get_low_stock_items only) | S138 | Shared — modify only the low stock function |
+| `hrms/api/procurement.py` (ship_to default) | S138 | Shared — modify only the ship_to default logic |
+| `scripts/testing/setup_s138_route_cleanup.py` (new) | S138 | No — new file |
 
 **Protected surfaces (DO NOT TOUCH):**
-- Store ordering (S136 -- `hrms/api/store.py`, `hrms/utils/supply_chain_contracts.py`)
+- Store ordering (S136 — `hrms/api/store.py`, `hrms/utils/supply_chain_contracts.py`)
 - CEO approval flow (S132)
 - Quick Receive / Auto-Invoice dialog (S134)
 - Stock Alerts widget / dashboard (S135 frontend)
-- Employee data (666 employees -- HR data, DO NOT DELETE)
-- Real Items (472 non-test items -- keep all)
-- Real Suppliers (144 non-test BEI suppliers -- keep all)
-- BEI Settings, Vehicles, Store Types (config data)
+- Batch approve / duplicate (S128)
 
 ---
 
-## Phase 0: Backup (2 units) -- MUST COMPLETE BEFORE ANY DELETION
+## Phase A: BEI Route Data Cleanup + Seeding (8 units)
 
 | Task | Type | Description | Units |
 |------|------|-------------|-------|
-| 0.1 | BACKUP | **Create full Frappe backup.** Run `bench backup --with-files` via SSM on production. Download the backup tarball. Verify it contains: database SQL dump, uploaded files, site config. | 1 |
-| 0.2 | BACKUP | **Upload to Dropbox.** Create folder `Full ERP Backup - 2026-03-27` in Dropbox. Upload the backup tarball. Create `README.md` inside explaining: "Pre-S138 data reset backup. Contains all test/demo transactional data that will be deleted. Created before warehouse rename + data cleanup sprint." Confirm upload and share the Dropbox path. | 1 |
+| A1 | DATA | **Clean BEI Route junk.** Delete all BEI Route records where `route_name` contains "S026", "S027", "S037", "Codex", "probe", "Hacked", or "TEST" (95+ records). Keep only the 5 real GAP003 routes (BEI-ROUTE-0001 through 0005). Execute via `bench console` through SSM with preview-before-delete protocol. **HARD BLOCKER:** Preview the delete list and get confirmation before executing. List must be written to `tmp/s138_route_cleanup_preview.json` first. | 2 |
+| A2 | DATA | **Seed proper BEI Route records.** Create 141 BEI Route records (47 stores × 3 cargo types: FC, DRY, FM) mapping each store to its correct 3PL source warehouse based on the S136 hardcoded route map in `hrms/api/store.py` (lines 1251-1322). Source warehouses: `3MD Logistics – Camangyanan - Bebang Enterprise Inc.` (~40 stores), `Pinnacle Cold Storage Solutions - Bebang Enterprise Inc.` (~30 stores), `Jentec Storage Inc. - Bebang Enterprise Inc.` (Shaw only). Each route gets a BEI Route Stop child record with the store warehouse name. **HARD BLOCKER:** Use exact warehouse names from Frappe (verify each exists before inserting). | 4 |
+| A3 | DATA | **Cancel test Material Issue entries.** Cancel MAT-STE-2026-00345, MAT-STE-2026-00346, MAT-STE-2026-00347 via `bench console` to restore stock in "Stores - BEI". These were test entries created during S135 L3 testing. | 0.5 |
+| A4 | VERIFY | **Verify BEI Route state.** After cleanup + seeding: count active routes (should be 141 + 5 GAP003 = 146), verify each store has FC+DRY+FM mappings, verify source warehouses are valid Frappe Warehouse names. | 1.5 |
 
-**HARD BLOCKER:** Phase A CANNOT start until Phase 0 backup is confirmed uploaded and verified.
-
-## Phase A: Delete Test/Demo Transactional Data (10 units)
-
-All operations via `bench console` through SSM. Each delete batch must be previewed (count + sample) before executing.
+## Phase B: Fix Low Stock API (6 units)
 
 | Task | Type | Description | Units |
 |------|------|-------------|-------|
-| A1 | DATA | **Delete ALL BEI procurement transactions.** In order (child records first): BEI Invoice Items, BEI Invoices (59), BEI Payment Requests (44), BEI GR Items, BEI Goods Receipts (1,051), BEI PO Items, BEI Purchase Orders (802), BEI PR Items, BEI Purchase Requisitions (544). | 2 |
-| A2 | DATA | **Delete ALL inventory transactions.** Cancel all submitted Stock Entries first, then delete: Stock Entries (346), which cascades Stock Ledger Entries (23,413). Rebuild Bins after. | 2 |
-| A3 | DATA | **Delete ALL store operations transactions.** BEI Store Order Items + BEI Store Orders (220), BEI Distribution Trips (207), BEI Warehouse Receiving Items + BEI Warehouse Receiving (15), BEI Store Receiving Items + BEI Store Receiving (10), BEI Cycle Count Items + BEI Cycle Counts (62). | 2 |
-| A4 | DATA | **Delete Frappe native procurement transactions.** Cancel submitted docs first. Purchase Invoices (1,849), Purchase Receipts (112), Purchase Orders (155), Material Requests (115), Sales Invoices (136), Journal Entries (22), Payment Entries (7). GL Entries (3,225) cascade from above. | 2 |
-| A5 | DATA | **Delete test Items and Suppliers.** Delete 27 test Items (E2E*, TEST*, CYCLE* prefixes) and 10 test Item Groups. Delete 35 test BEI Suppliers (L3-*, Test*) and 15 test native Suppliers. Keep all real items (472) and real suppliers (144 BEI + 339 native). | 1 |
-| A6 | VERIFY | **Post-delete verification.** Confirm: 0 BEI POs, 0 BEI GRs, 0 Stock Entries, 0 SLEs, 0 GL Entries. Confirm real Items count ~472, real BEI Suppliers ~144. Confirm Employees untouched (666). Write verification to `tmp/s138_post_delete_verification.json`. | 1 |
+| B1 | EXTEND | **Update `get_low_stock_items()` to use real warehouses.** Remove hardcoded "Stores - BEI" default. New logic: (1) If `warehouse` param is provided, use it directly. (2) If `store` param is provided, call `resolve_route_source_warehouse(store, cargo_type)` to find the correct 3PL. (3) If neither, aggregate across ALL major source warehouses — query `SELECT DISTINCT source_warehouse FROM tabBEI Route WHERE active=1` to get the list (should be 3MD, Pinnacle, Jentec). Run the stock/consumption query against each, merge results, deduplicate by item_code (keep lowest days_remaining). **HARD BLOCKER:** The function signature must remain backward-compatible — existing callers that pass `warehouse="Stores - BEI"` must still work. Add `store` as new optional parameter. | 3 |
+| B2 | EXTEND | **Update frontend dashboard API route.** Add `store` parameter to the `/dashboard/low-stock` route in `bei-tasks/app/api/procurement/[...slug]/route.ts` so the widget can optionally query per-store. The default (no store param) should trigger the aggregate mode. | 1 |
+| B3 | VERIFY | **Verify low stock returns real data.** Call API with no params → should return items from 3MD/Pinnacle/Jentec with real stock and consumption data. Call with specific store → should return items from that store's source warehouse only. Sentry instrumentation on modified endpoint. | 2 |
 
-## Phase B: Warehouse Rename + Route Reset (10 units)
+## Phase C: Fix PO ship_to Default + Deploy (4 units)
 
 | Task | Type | Description | Units |
 |------|------|-------------|-------|
-| B1 | DATA | **Rename 47 warehouses.** Use `frappe.rename_doc("Warehouse", old_name, new_name)` which cascades to all linked records (Bins, SLEs, Stock Entries, etc.). Rename `{Store} - Bebang Enterprise Inc.` to `{Store} - BEI` for all 47 warehouses. **HARD BLOCKER:** After Phase A deletes, there should be minimal linked records to cascade. Verify Bin count is near-zero before renaming. Run one rename first as a test, verify no errors, then batch the rest. | 4 |
-| B2 | DATA | **Delete TEST-* warehouses.** Delete: TEST-COMMISSARY - BEI, TEST-STORE-BGC - BEI, TEST-STORE-MAKATI - BEI. These have test Bin records that should be gone after Phase A. | 0.5 |
-| B3 | DATA | **Delete ALL BEI Route records (219).** Clean slate -- no need to preserve any (all are test/probe data). | 0.5 |
-| B4 | DATA | **Seed proper BEI Route records.** Create 141 BEI Route records (47 stores x 3 cargo types: FC, DRY, FM) using the S136 hardcoded route map. Source warehouses NOW use the renamed `- BEI` suffix: `3MD Logistics - BEI` (~40 stores), `Pinnacle Cold Storage Solutions - BEI` (~30 stores), `Jentec Storage Inc. - BEI` (Shaw only). Each route gets a BEI Route Stop child with the store warehouse. | 3 |
-| B5 | VERIFY | **Post-rename verification.** Confirm: 0 warehouses with `- Bebang Enterprise Inc.` suffix. 47 warehouses with `- BEI` suffix (was 5, now 52). BEI Route count = 141 active. Each store has FC+DRY+FM. All source_warehouse values are valid Warehouse names. | 2 |
-
-## Phase C: Fix APIs + Deploy + Closeout (8 units)
-
-| Task | Type | Description | Units |
-|------|------|-------------|-------|
-| C1 | EXTEND | **Fix `get_low_stock_items()`.** Remove "Stores - BEI" hardcode. New default: aggregate across all distinct `source_warehouse` from active BEI Routes. Add optional `store` param that resolves via route map. Keep `warehouse` param for direct queries. Sentry instrumentation. | 3 |
-| C2 | EXTEND | **Fix PO ship_to default.** Change from "Stores - BEI" to route-map-based: if PO has store context, resolve via BEI Route. Fallback to first active 3PL warehouse (3MD). "Stores - BEI" is no longer the default since it's been renamed and is now just one of 52 `- BEI` warehouses. | 1 |
-| C3 | EXTEND | **Update frontend low-stock route.** Add `store` query parameter support to `/dashboard/low-stock` API route. | 0.5 |
-| C4 | DEPLOY | Create PR for hrms targeting production. Share PR number. Update SPRINT_REGISTRY.md. | 0.5 |
-| C5 | L3 | Generate L3 handoff prompt. | 0.5 |
-| C6 | CLOSEOUT | Update plan YAML status. Update SPRINT_REGISTRY.md. `git add -f` evidence. | 2.5 |
+| C1 | EXTEND | **Update PO ship_to to use route map.** In `create_purchase_order()`, after the existing "Stores - BEI" default, add an override: if the PO has a `delivery_warehouse` or `for_store` field, call `resolve_route_source_warehouse()` to find the correct receiving 3PL. If no store context, keep "Stores - BEI" as the centralized receiving point. **HARD BLOCKER:** Do NOT remove the "Stores - BEI" fallback — it's correct for POs without store context (general procurement). Only override when a specific store is known. | 1.5 |
+| C2 | DEPLOY | Create PR for hrms targeting production. Share PR numbers with user. Update SPRINT_REGISTRY.md with PR number. | 0.5 |
+| C3 | L3 | Generate L3 handoff prompt for fresh session testing. | 0.5 |
+| C4 | CLOSEOUT | Update plan YAML status. Update SPRINT_REGISTRY.md. `git add -f` for docs/ and output/l3/S138/. | 1.5 |
 
 ---
 
@@ -128,46 +110,44 @@ All operations via `bench console` through SSM. Each delete batch must be previe
 
 | # | Type | User | Action | Expected Outcome | Failure Means |
 |---|------|------|--------|-------------------|---------------|
-| L3-1 | happy | sam@bebang.ph | Count warehouses with `- Bebang Enterprise Inc.` suffix | 0 warehouses. All renamed to `- BEI`. | Rename incomplete |
-| L3-2 | happy | sam@bebang.ph | Count active BEI Route records | 141 active. 47 stores x 3 cargo types. Source warehouses = 3MD/Pinnacle/Jentec (now with `- BEI` suffix). | Route seeding wrong |
-| L3-3 | happy | sam@bebang.ph | GET low-stock with no params | Returns items from 3PL warehouses. `warehouse` field shows `- BEI` suffix names. Count > 0 with real stock data. | API still hardcoded |
-| L3-4 | happy | sam@bebang.ph | Count BEI POs, GRs, Stock Entries | All 0. Clean slate. | Delete incomplete |
-| L3-5 | happy | sam@bebang.ph | Count Employees | 666 (unchanged). | HR data accidentally deleted |
-| L3-6 | happy | sam@bebang.ph | Count real Items (not E2E/TEST/CYCLE) | ~472 items. Test items gone. | Wrong items deleted |
-| L3-7 | adversarial | sam@bebang.ph | GET low-stock with `warehouse=Stores - BEI` | Returns items from Stores - BEI only (may be empty). No crash. Backward compatible. | Signature broken |
+| L3-1 | happy | sam@bebang.ph | GET `/api/method/hrms.api.procurement.get_low_stock_items` with no params | Returns items from 3MD/Pinnacle/Jentec warehouses (not "Stores - BEI"). `items` array has entries with `warehouse` field showing real 3PL names. | Low stock API still hardcoded to "Stores - BEI" |
+| L3-2 | happy | sam@bebang.ph | GET low-stock with `warehouse=3MD Logistics – Camangyanan - Bebang Enterprise Inc.` | Returns items ONLY from 3MD. All items have `warehouse` = 3MD. Count > 0 (3MD has 151 items with stock). | Warehouse filter not working |
+| L3-3 | happy | test.hr@bebang.ph | Navigate to procurement dashboard → Stock Alerts widget | Widget shows low-stock items from real warehouses. Items have actual stock quantities (not 0). | Frontend not passing correct params or API broken |
+| L3-4 | adversarial | sam@bebang.ph | GET low-stock with `warehouse=NONEXISTENT-WAREHOUSE` | Returns empty items array, status 200. No crash. | Missing error handling |
+| L3-5 | happy | sam@bebang.ph | Count active BEI Route records via API | Total active routes ≥ 141. Each of the 47 stores has FC+DRY+FM entries. Source warehouses are only 3MD/Pinnacle/Jentec. | Route seeding incomplete |
+| L3-6 | happy | sam@bebang.ph | GET low-stock with threshold 3, 7, 30 (aggregated mode) | count(3d) ≤ count(7d) ≤ count(30d). Monotonicity verified with real data. Response fields: item_code, current_stock, daily_consumption, days_remaining all present. | Aggregation or dedup broken |
 
 ---
 
 ## Design Rationale (For Cold-Start Agents)
 
-1. **Why full data reset.** All current transactional data (802 POs, 1051 GRs, 346 Stock Entries, 23K SLEs, 3K GL Entries) is test/demo data created during sprint development. The system will be reset before go-live. Deleting now prevents future agents from being confused by test data and wrong warehouse names. Sam confirmed: "all the stores and POS on the system and inventory for now is for testing."
+1. **Why this exists.** S134/S135 L3 testing (2026-03-27) discovered that "Stores - BEI" — the default warehouse for POs and low stock — has 31 qty of test data while real inventory (700K+ qty across 51 warehouses) lives in "- Bebang Enterprise Inc." suffix warehouses like `3MD Logistics – Camangyanan - Bebang Enterprise Inc.`. The S136 fix (hrms#381) added a hardcoded route map for store ordering but the BEI Route DocType had 100 records — 95+ being test junk from S026/S027/S037 sprints.
 
-2. **Why rename warehouses.** 47 warehouses use the long suffix `- Bebang Enterprise Inc.` while the correct ERPNext convention is `- BEI` (matching the company abbreviation). Two naming conventions cause agent confusion (S136 spent hours debugging because warehouse names didn't match). Renaming now, when transactional data is deleted, is the safest time -- minimal cascading records.
+2. **Why clean BEI Route instead of just using the hardcoded map.** The hardcoded map in `store.py` is a fallback. The intended architecture is BEI Route DocType as the SSOT for store→3PL mappings. Cleaning junk and seeding proper records makes the DocType authoritative, which means future features (expected deliveries, route optimization) can query it directly.
 
-3. **Why delete ALL BEI Routes.** All 219 records are test data from S026/S027/S037/Codex sprints. Not a single production route exists. Clean slate + proper seeding is cleaner than selective cleanup.
+3. **Why aggregate across 3PLs for low stock.** "Stores - BEI" is a meta/transit warehouse — physical stock lives at 3MD (~40 stores, 151 items), Pinnacle (~30 stores, 69 items), and Jentec (Shaw only, 4 items). The low stock API must query WHERE THE STOCK IS, not where POs are addressed. Aggregating across all 3PLs with dedup gives the procurement team a single view of what's running low.
 
-4. **Why Phase 0 backup is mandatory.** Even though this is test data, a full backup protects against accidental deletion of real config (Items, Suppliers, Employees, Settings). The backup goes to Dropbox for off-system durability.
+4. **Why keep "Stores - BEI" as PO ship_to fallback.** For general procurement (no store context), "Stores - BEI" is the centralized receiving point. Only when a PO is for a specific store should the route map override to the correct 3PL. Removing the default entirely would break existing PO creation.
 
-5. **Store-to-3PL mapping source.** Same Central Warehouse Excel data already hardcoded in S136's `store.py:1251-1322`. 3MD serves ~40 stores, Pinnacle ~30, Jentec 1. After warehouse rename, these become `3MD Logistics - BEI`, `Pinnacle Cold Storage Solutions - BEI`, `Jentec Storage Inc. - BEI`.
+5. **Store→3PL mapping source.** The mapping comes from the Central Warehouse Excel ("MARCH 2026 Central WHSE Inventory Monitoring_BEI.xlsx") already hardcoded in S136's `store.py` lines 1251-1322. This sprint extracts that into BEI Route records so it's queryable, not hardcoded.
 
 ---
 
 ## Requirements Regression Checklist
 
-- [ ] Is a full Frappe backup created and uploaded to Dropbox BEFORE any deletion?
-- [ ] Are ALL test POs, GRs, Invoices, Stock Entries, PRs deleted (zero remaining)?
-- [ ] Are ALL Frappe native procurement transactions deleted?
-- [ ] Are GL Entries and SLEs at zero after cascading deletes?
-- [ ] Are Employees (666) untouched after the reset?
-- [ ] Are real Items (~472) preserved and only test items (27) deleted?
-- [ ] Are real Suppliers (~144 BEI + ~339 native) preserved?
-- [ ] Are 47 warehouses renamed from `- Bebang Enterprise Inc.` to `- BEI`?
-- [ ] Are TEST-* warehouses deleted?
-- [ ] Are ALL BEI Route records deleted and 141 new ones seeded?
-- [ ] Does `get_low_stock_items()` aggregate across 3PL warehouses by default?
-- [ ] Does PO ship_to use route map when store context exists?
-- [ ] Does every modified `@frappe.whitelist()` call `set_backend_observability_context()`?
-- [ ] Does the plan NOT touch `hrms/api/store.py` or `hrms/utils/supply_chain_contracts.py`?
+- [ ] Does `get_low_stock_items()` query real 3PL warehouses (3MD, Pinnacle, Jentec) — NOT "Stores - BEI"?
+- [ ] Is the function signature backward-compatible (existing `warehouse` param still works)?
+- [ ] Is there a new `store` param that uses `resolve_route_source_warehouse()`?
+- [ ] Does the aggregate mode (no params) query all active BEI Route source warehouses?
+- [ ] Are BEI Route test records deleted (S026/S027/S037 junk)?
+- [ ] Are proper BEI Route records created (47 stores × 3 cargo types)?
+- [ ] Do BEI Route records use EXACT Frappe warehouse names (verified before insert)?
+- [ ] Is "Stores - BEI" still the fallback for POs without store context?
+- [ ] Does PO ship_to override to 3PL only when store context exists?
+- [ ] Are test Material Issue entries (MAT-STE-2026-00345/346/347) cancelled?
+- [ ] Does every new/modified `@frappe.whitelist()` endpoint call `set_backend_observability_context()`?
+- [ ] Are module and action parameters correct for Sentry project `bei-hrms`?
+- [ ] Does the plan NOT touch `hrms/api/store.py` or `hrms/utils/supply_chain_contracts.py` (S136 protected)?
 
 ---
 
@@ -175,31 +155,38 @@ All operations via `bench console` through SSM. Each delete batch must be previe
 
 | Source | What It Proves |
 |--------|----------------|
-| `tmp/s138_full_data_audit.md` | Full data audit with counts (2026-03-27) |
-| `tmp/warehouse-routing-investigation.md` | Warehouse architecture investigation |
-| `hrms/api/store.py:1251-1322` | Hardcoded route map (source for BEI Route seeding) |
-| `docs/erp/WAREHOUSE_TREE_2025-12-31.csv` | Canonical warehouse structure |
-| Dropbox: `Full ERP Backup - 2026-03-27/` | Pre-reset backup |
+| `tmp/warehouse-routing-investigation.md` | Full investigation findings (2026-03-27) |
+| `hrms/api/store.py:1251-1322` | Hardcoded route map from Central Warehouse Excel |
+| `hrms/api/procurement.py:6642-6728` | Current low stock API with "Stores - BEI" default |
+| `docs/erp/WAREHOUSE_TREE_2025-12-31.csv` | Canonical warehouse structure (43 stores, 4 3PLs) |
+| Frappe `tabBEI Route` | Current state: 100 records, 95+ test junk |
+| Frappe `tabBin` | Stock distribution: 51 BEI warehouses with stock, 0 per-store company warehouses |
+
+---
+
+## Execution Workflow
+- Test Python changes: `/local-frappe`
+- Deploy changes: `/deploy-frappe`
+- Full workflow: `/agent-kickoff`
+- E2E testing: `/e2e-test` or `/test-full-cycle`
 
 ---
 
 ## Agent Boot Sequence
 1. Read this plan fully.
-2. **Create sprint branch:** `git fetch origin production && git checkout -b s138-warehouse-routing-data-integrity origin/production`.
-3. Read `tmp/s138_full_data_audit.md` for exact record counts.
-4. Read `tmp/warehouse-routing-investigation.md` for warehouse architecture.
-5. **PHASE 0 FIRST:** Create backup and upload to Dropbox before ANY deletion.
+2. **Create sprint branch:** `git fetch origin production && git checkout -b s138-warehouse-routing-data-integrity origin/production`. NEVER write code on production.
+3. Read `docs/plans/SPRINT_REGISTRY.md` for cross-sprint context.
+4. Read `tmp/warehouse-routing-investigation.md` for the full warehouse investigation.
+5. Read `hrms/api/store.py` lines 1251-1322 for the hardcoded route map (source data for BEI Route seeding).
 6. Confirm S136 (hrms#381) is merged before starting.
 
 ## Execution Authority
 This sprint is intended for autonomous end-to-end execution.
 Do not stop for progress-only updates.
 Only pause for items listed in the Autonomous Execution Contract `stop_only_for` section.
-**EXCEPTION:** Phase 0 backup must be confirmed before Phase A begins.
 
 ---
 
 ## Revision History
 
-- **v1 (2026-03-27):** Initial plan. 18 units, routing fixes only.
-- **v2 (2026-03-27):** Expanded to full data reset. 30 units. Added: delete all test transactional data, rename 47 warehouses, delete test items/suppliers. Sam confirmed all current data is test data that will be reset before go-live. Added mandatory Phase 0 backup to Dropbox.
+- **v1 (2026-03-27):** Initial plan. Scope from warehouse routing investigation during S134/S135 L3 testing. 18 units across 3 phases. Depends on S136 route map fix (hrms#381, merged 2026-03-27).
