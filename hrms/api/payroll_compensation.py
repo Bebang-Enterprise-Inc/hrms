@@ -186,6 +186,26 @@ def get_compensation_grid(filters=None):
 	count_sql = f"SELECT COUNT(*) FROM `tabEmployee` e WHERE {where}"
 	total = frappe.db.sql(count_sql, values)[0][0]
 
+	# Check if allowance custom fields exist in DB (safe for deploy-before-SSM)
+	_allowance_fields = [
+		"bei_comm_allow_monthly", "bei_deminimis_monthly", "bei_honorarium_monthly",
+		"bei_meal_allow_monthly", "bei_gasoline_allow_monthly", "bei_other_fixed_monthly",
+	]
+	_existing_cols = {
+		r[0] for r in frappe.db.sql("SHOW COLUMNS FROM tabEmployee LIKE 'bei_%'")
+	}
+	_has_allowance_cols = all(f in _existing_cols for f in _allowance_fields)
+
+	allowance_sql = ""
+	if _has_allowance_cols:
+		allowance_sql = """,
+			COALESCE(e.bei_comm_allow_monthly, 0) AS bei_comm_allow_monthly,
+			COALESCE(e.bei_deminimis_monthly, 0) AS bei_deminimis_monthly,
+			COALESCE(e.bei_honorarium_monthly, 0) AS bei_honorarium_monthly,
+			COALESCE(e.bei_meal_allow_monthly, 0) AS bei_meal_allow_monthly,
+			COALESCE(e.bei_gasoline_allow_monthly, 0) AS bei_gasoline_allow_monthly,
+			COALESCE(e.bei_other_fixed_monthly, 0) AS bei_other_fixed_monthly"""
+
 	# Get employees with salary structure assignment + gov IDs + bank + allowances
 	sql = f"""
 		SELECT
@@ -203,13 +223,7 @@ def get_compensation_grid(filters=None):
 			ssa.payroll_payable_account,
 			e.salary_mode,
 			e.bank_name,
-			e.bank_ac_no,
-			COALESCE(e.bei_comm_allow_monthly, 0) AS bei_comm_allow_monthly,
-			COALESCE(e.bei_deminimis_monthly, 0) AS bei_deminimis_monthly,
-			COALESCE(e.bei_honorarium_monthly, 0) AS bei_honorarium_monthly,
-			COALESCE(e.bei_meal_allow_monthly, 0) AS bei_meal_allow_monthly,
-			COALESCE(e.bei_gasoline_allow_monthly, 0) AS bei_gasoline_allow_monthly,
-			COALESCE(e.bei_other_fixed_monthly, 0) AS bei_other_fixed_monthly
+			e.bank_ac_no{allowance_sql}
 		FROM `tabEmployee` e
 		LEFT JOIN `tabSalary Structure Assignment` ssa
 			ON ssa.employee = e.name

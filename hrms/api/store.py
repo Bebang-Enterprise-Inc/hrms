@@ -1907,28 +1907,27 @@ def get_user_store(surface: str | None = None):
 		or "HR Manager" in user_roles
 		or "Regional Manager" in user_roles
 	):
-		# S133: System Manager always sees ALL stores, overriding Area Supervisor subset.
-		role = "Regional Manager" if "Regional Manager" in user_roles else "System Manager"
-		if surface_key in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY}:
-			for store_row in schedule_rows:
-				append_store(store_row)
-		else:
-			# Clear any stores from earlier role paths (e.g., Area Supervisor)
-			# so System Manager sees the full list, not just their supervised stores.
-			stores.clear()
-			seen_stores.clear()
-			store_rows = frappe.get_all(
-				"Warehouse",
-				filters={"is_group": 0, "disabled": 0},
-				fields=["name", "warehouse_name", "warehouse_type"],
-				order_by="warehouse_name",
-				limit=200,
-			)
-			for store_row in store_rows:
-				# S128/B2 + S133: Skip non-orderable warehouses by type and name.
-				if not _is_orderable_store(store_row):
-					continue
-				append_store(store_row)
+		# S136: Only show ALL stores for admins who have NO stores from earlier role paths.
+		# If Area Supervisor/Store Staff already found stores, keep those — the user
+		# has a real operational role and should see only their assigned stores.
+		if not stores:
+			role = "Regional Manager" if "Regional Manager" in user_roles else "System Manager"
+			if surface_key in {SCHEDULE_SURFACE_STORE, SCHEDULE_SURFACE_COMMISSARY}:
+				for store_row in schedule_rows:
+					append_store(store_row)
+			else:
+				store_rows = frappe.get_all(
+					"Warehouse",
+					filters={"is_group": 0, "disabled": 0},
+					fields=["name", "warehouse_name", "warehouse_type"],
+					order_by="warehouse_name",
+					limit=200,
+				)
+				for store_row in store_rows:
+					# S128/B2 + S133: Skip non-orderable warehouses by type and name.
+					if not _is_orderable_store(store_row):
+						continue
+					append_store(store_row)
 
 	default_store = stores[0]["name"] if stores else None
 
