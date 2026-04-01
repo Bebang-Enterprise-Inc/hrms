@@ -3,10 +3,13 @@
 ```yaml
 sprint: S153
 branch: s153-procurement-defect-remediation
-status: GO
+status: PR_CREATED
 plan_file: docs/plans/2026-04-01-sprint-153-procurement-defect-remediation.md
 depends_on: S152
-registry_row: "| S153 | Sprint 153 | s153-procurement-defect-remediation | — | GO — Fix 7 open defects from S152 E2E testing |"
+registry_row: "| S153 | Sprint 153 | s153-procurement-defect-remediation | hrms#410, BEI-Tasks#298 | PR_CREATED 2026-04-01 |"
+backend_pr: hrms#410
+frontend_pr: BEI-Tasks#298
+execution_started: 2026-04-01
 completed_date:
 execution_summary:
 ```
