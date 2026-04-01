@@ -160,6 +160,8 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S138` | Sprint 138 | `s138-warehouse-routing-data-integrity` | — | PLANNED — Warehouse routing data integrity: clean BEI Route junk, seed proper store→3PL mappings, fix low stock API to use real warehouses, fix PO ship_to default. | `docs/plans/2026-03-27-sprint-138-warehouse-routing-data-integrity.md` |
 
+| `S139` | Sprint 139 | `s139-route-planner` | — | IN_PROGRESS — SCM Route Planner: smart delivery optimizer with Leaflet maps, Google Directions API, truck recommender, multi-option cost comparison. | `docs/plans/2026-04-01-sprint-139-route-planner.md` |
+
 | `S147` | Sprint 147 | `s147-ap-command-center` | hrms#401, BEI-Tasks#289,#291,#293 | COMPLETED — AP Command Center: 5 tabs, 3 backend endpoints, aging matrix, supplier ledger. L3 13/13 PASS. | `docs/plans/2026-03-30-sprint-147-ap-command-center.md` |
 
 | `S152` | Sprint 152 | `s152-procurement-e2e-acceptance` | hrms#408, BEI-Tasks#297 | COMPLETED — Full procurement E2E browser acceptance: 33/40 PASS, 10 defects found (3 fixed in-sprint). | `docs/plans/2026-03-31-sprint-152-procurement-e2e-acceptance.md` |
