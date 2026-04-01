@@ -221,6 +221,22 @@ modules:
       - PROC
     scenario_files:
       - docs/testing/scenarios/modules/procurement.md
+  - key: procurement-e2e
+    status: ready
+    command: flow-procure-pay
+    scenario_count: 35
+    route_count_hint: 38
+    prefixes:
+      - S152
+    scenario_files:
+      - docs/testing/scenarios/modules/s152-procurement-e2e.md
+    test_scripts:
+      - scripts/testing/l3_s152_chain_a.mjs
+      - scripts/testing/l3_s152_chain_bc.mjs
+      - scripts/testing/l3_s152_edge_cases.mjs
+      - scripts/testing/l3_s152_dashboards.mjs
+      - scripts/testing/l3_s152_run_all.mjs
+      - scripts/testing/l3_s152_helpers.mjs
   - key: projects
     status: ready
     command: projects
