@@ -10,15 +10,18 @@ from hrms.utils.sentry import set_backend_observability_context
 
 
 def _get_api_key():
-	"""Get Google Maps API key from site config or BEI HR Settings."""
-	key = frappe.conf.get("google_maps_api_key")
+	"""Get Google Maps API key from environment, site config, or BEI HR Settings."""
+	import os
+	key = os.environ.get("GOOGLE_MAPS_API_KEY")
+	if not key:
+		key = frappe.conf.get("google_maps_api_key")
 	if not key:
 		try:
 			key = frappe.db.get_single_value("BEI HR Settings", "google_maps_api_key")
 		except Exception:
 			pass
 	if not key:
-		frappe.throw(_("Google Maps API key not configured. Set google_maps_api_key in site_config.json or BEI HR Settings."))
+		frappe.throw(_("Google Maps API key not configured. Set GOOGLE_MAPS_API_KEY env var, google_maps_api_key in site_config.json, or BEI HR Settings."))
 	return key
 
 
@@ -83,7 +86,7 @@ def get_directions(origin_lat, origin_lng, waypoints_json, departure_time=None):
 		frappe.throw(_(f"Google Directions API error: {error_msg}"))
 
 	route = data["routes"][0]
-	overview_polyline = route["overview_polyline"]["encoded"]
+	overview_polyline = route["overview_polyline"]["points"]
 
 	legs = []
 	total_distance_m = 0
