@@ -15,33 +15,31 @@ from frappe.utils import nowdate
 
 from hrms.utils.sentry import set_backend_observability_context
 
-# ── Static data paths (loaded from bei-tasks public/data/route-planner/) ──
-# These are loaded once per request from the seed JSON files.
-# In production, these would be cached via Redis.
+# ── Seed data embedded in Python module (no filesystem dependency) ──
+from hrms.api.route_planner_data import (
+	SKU_MASTER,
+	TRUCK_PROFILES,
+	PROVIDER_RATES,
+	STORE_DATA,
+	DISTANCE_MATRIX,
+	STORE_PAIRS,
+)
 
-_CACHE = {}
+_SEED = {
+	"sku_master": SKU_MASTER,
+	"truck_profiles": TRUCK_PROFILES,
+	"provider_rates": PROVIDER_RATES,
+	"store_data": STORE_DATA,
+	"distance_matrix": DISTANCE_MATRIX,
+	"store_pairs": STORE_PAIRS,
+}
 
 
 def _load_seed(name):
-	"""Load a seed JSON file from the site's public folder or bei-tasks."""
-	if name in _CACHE:
-		return _CACHE[name]
-
-	import os
-	# Try bei-tasks public data first
-	paths = [
-		os.path.join(os.path.dirname(__file__), "..", "..", "..", "bei-tasks", "public", "data", "route-planner", f"{name}.json"),
-		os.path.join(frappe.get_site_path(), "public", "files", "route-planner", f"{name}.json"),
-	]
-
-	for path in paths:
-		path = os.path.normpath(path)
-		if os.path.exists(path):
-			with open(path) as f:
-				_CACHE[name] = json.load(f)
-				return _CACHE[name]
-
-	frappe.throw(_(f"Seed data file not found: {name}.json"))
+	"""Return embedded seed data by name."""
+	if name not in _SEED:
+		frappe.throw(_(f"Unknown seed data: {name}"))
+	return _SEED[name]
 
 
 def _get_sku_weights():
