@@ -2056,6 +2056,17 @@ def create_goods_receipt(data: dict[str, Any] | str | None = None) -> dict[str, 
         if not data.get("warehouse") and po.ship_to:
             data["warehouse"] = po.ship_to
 
+        # FIX-D4 (S153): Fallback to BEI Settings default when PO has no ship_to
+        if not data.get("warehouse"):
+            default_wh = frappe.db.get_single_value("BEI Settings", "default_receiving_warehouse")
+            if default_wh:
+                data["warehouse"] = default_wh
+            else:
+                frappe.throw(
+                    _("Warehouse is required. Set a default receiving warehouse in BEI Settings."),
+                    title=_("Missing Warehouse")
+                )
+
     received_by = (data.get("received_by") or "").strip()
     if received_by and not frappe.db.exists("Employee", received_by):
         employee_match = frappe.db.get_value("Employee", {"employee_name": received_by}, "name")

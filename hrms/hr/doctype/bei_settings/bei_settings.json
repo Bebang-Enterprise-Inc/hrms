@@ -44,6 +44,7 @@
   "ceo_approver_email",
   "scm_operational_section",
   "gr_over_receipt_tolerance_pct",
+  "default_receiving_warehouse",
   "three_pl_warehouse_patterns",
   "column_break_scm_operational",
   "commissary_company",
@@ -288,6 +289,13 @@
    "fieldname": "gr_over_receipt_tolerance_pct",
    "fieldtype": "Percent",
    "label": "GR Over-Receipt Tolerance %"
+  },
+  {
+   "description": "Default warehouse for Goods Receipts when the PO has no ship_to address. Used as fallback in create_goods_receipt().",
+   "fieldname": "default_receiving_warehouse",
+   "fieldtype": "Link",
+   "label": "Default Receiving Warehouse",
+   "options": "Warehouse"
   },
   {
    "default": "3MD,Pinnacle,Royal Cold,RCS",

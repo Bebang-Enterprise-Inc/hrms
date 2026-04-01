@@ -38,7 +38,9 @@ class BEIPurchaseOrder(Document):
 		self.check_price_variance_blocks()
 
 	def check_new_vendor_ceo_requirement(self):
-		"""S099/E6: New vendor POs require CEO approval regardless of amount."""
+		"""S099/E6: New vendor POs require CEO approval regardless of amount.
+		FIX-D2 (S153): Clear requires_ceo_approval when supplier is no longer new.
+		"""
 		if not self.supplier:
 			return
 
@@ -54,6 +56,11 @@ class BEIPurchaseOrder(Document):
 
 		if is_new:
 			self.requires_ceo_approval = 1
+		else:
+			# FIX-D2 (S153): Clear the one-way ratchet — supplier aged past window.
+			# This only governs the new-vendor CEO gate. Other CEO requirements
+			# (if any) would be set by their own method.
+			self.requires_ceo_approval = 0
 
 	def before_submit(self):
 		"""Only fully approved POs can be submitted."""
