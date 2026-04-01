@@ -1212,7 +1212,7 @@ _DEPARTMENT_ACTION_CATALOG: dict[str, list[dict]] = {
 			"action_id": "open_receiving_queue",
 			"label": "Open Receiving Queue",
 			"mode": "navigate",
-			"target_route": "/dashboard/warehouse/receive",
+			"target_route": "/dashboard/procurement/goods-receipts",
 		},
 		{
 			"action_id": "open_grn_queue",
@@ -1230,7 +1230,7 @@ _DEPARTMENT_ACTION_CATALOG: dict[str, list[dict]] = {
 			"action_id": "create_mitigation_allocation",
 			"label": "Create Mitigation Allocation",
 			"mode": "execute",
-			"target_route": "/dashboard/warehouse/receive",
+			"target_route": "/dashboard/procurement/goods-receipts",
 			"command": "create_mitigation_allocation",
 		},
 	],
