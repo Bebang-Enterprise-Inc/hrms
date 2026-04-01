@@ -3,11 +3,13 @@
 ```yaml
 id: S139
 type: feature
-status: IN_PROGRESS
+status: PR_CREATED
 created: 2026-04-01
 execution_started: 2026-04-01
 branch: s139-route-planner
-pr: —
+pr: "Branches pushed — create PRs via GitHub links below"
+backend_branch: s139-route-planner (hrms)
+frontend_branch: s139-route-planner (bei-tasks)
 registry_row: "S139 | Sprint 139 | s139-route-planner | — | PLANNED"
 depends_on: S138 (warehouse routing data integrity — clean route data)
 owner: Sam Karazi (CEO)
