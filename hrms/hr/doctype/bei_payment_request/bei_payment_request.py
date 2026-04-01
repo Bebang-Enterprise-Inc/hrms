@@ -143,10 +143,11 @@ class BEIPaymentRequest(Document):
 			self.ceo_required = 1
 			return
 
-		# CEO required for new suppliers (first PO within 6 months)
+		# CEO required for new suppliers (within configured window)
+		# FIX-D2 (S153): Use get_doc to invoke @property (computed), not stored field
 		if self.supplier:
-			is_new = frappe.db.get_value("BEI Supplier", self.supplier, "is_new_supplier")
-			if is_new:
+			supplier_doc = frappe.get_doc("BEI Supplier", self.supplier)
+			if supplier_doc.is_new_supplier:
 				self.ceo_required = 1
 				return
 

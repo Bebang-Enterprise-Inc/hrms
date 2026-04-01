@@ -3,10 +3,13 @@
 ```yaml
 sprint: S153
 branch: s153-procurement-defect-remediation
-status: GO
+status: PR_CREATED
 plan_file: docs/plans/2026-04-01-sprint-153-procurement-defect-remediation.md
 depends_on: S152
-registry_row: "| S153 | Sprint 153 | s153-procurement-defect-remediation | — | GO — Fix 7 open defects from S152 E2E testing |"
+registry_row: "| S153 | Sprint 153 | s153-procurement-defect-remediation | hrms#410, BEI-Tasks#298 | PR_CREATED 2026-04-01 |"
+backend_pr: hrms#410
+frontend_pr: BEI-Tasks#298
+execution_started: 2026-04-01
 completed_date:
 execution_summary:
 ```
@@ -61,11 +64,15 @@ This sprint fixes all 7 open defects. No new features — just make existing fea
 
 | Phase | Units | Description |
 |-------|-------|-------------|
-| Phase 1: Backend Fixes (hrms) | 8 | D4 warehouse default, D2 new vendor window |
-| Phase 2: Frontend Fixes (bei-tasks) | 10 | D8 OR upload, D7 payment method, D10 toast, D4 editable warehouse |
-| Phase 3: L3 Re-Verification + S152 Corner Cuts | 14 | Fix defects + re-test S152 soft passes |
+| Phase 0: DocType Migration | 2 | Add `default_receiving_warehouse` Link field to BEI Settings + migrate |
+| Phase 1: Backend Fixes (hrms) | 8 | D4 warehouse fallback, D2 CEO ratchet fix |
+| Phase 2: Frontend Fixes (bei-tasks) | 10 | D8 OR upload, D7 payment method, D10 toast hook fix, D4 editable warehouse |
+| Phase 2.5: Deploy Gate | 1 | Create PRs (hrms + bei-tasks), user merges, verify both deployed before Phase 3 |
+| Phase 3: L3 Re-Verification + S152 Corner Cuts | 14 | Verify defect fixes + re-test S152 soft passes |
 | Phase 4: Closeout | 2 | Plan + registry update, evidence commit |
-| **TOTAL** | **34** | |
+| **TOTAL** | **37** | |
+
+**AUDIT BLOCKER RESOLVED:** Phase 0 added for DocType migration. Phase 2.5 added as explicit deploy gate between code changes and L3 testing.
 
 ---
 
@@ -79,61 +86,73 @@ This sprint fixes all 7 open defects. No new features — just make existing fea
 
 ---
 
+## Phase 0: DocType Migration (2 units) [PRE-REQUISITE]
+
+### Add `default_receiving_warehouse` to BEI Settings
+
+**AUDIT BLOCKER (CRITICAL):** The field `default_receiving_warehouse` does NOT exist in `bei_settings.json`. FIX-D4 code that calls `get_single_value("BEI Settings", "default_receiving_warehouse")` will silently return `None`.
+
+**Fix:**
+1. Add to `hrms/hr/doctype/bei_settings/bei_settings.json`:
+   ```json
+   {"fieldname": "default_receiving_warehouse", "fieldtype": "Link", "options": "Warehouse", "label": "Default Receiving Warehouse"}
+   ```
+2. Add to `field_order` array in the procurement section
+3. Run `bench migrate` after deploy
+4. Set value to "Stores - BEI" via BEI Settings page
+
+---
+
 ## Phase 1: Backend Fixes — hrms (8 units)
 
-### FIX-D4: GR Warehouse Default (3 units) [EXTEND]
+### FIX-D4: GR Warehouse Fallback (3 units) [EXTEND]
 
 **File:** `hrms/api/procurement.py` — `create_goods_receipt()`
 
 **Problem:** When a PO has empty `ship_to` (common for PR-based POs), the GR is created with empty `warehouse`. The frontend field is read-only.
 
+**AUDIT CORRECTION:** Code at line 2056 already does `data["warehouse"] = po.ship_to` when PO has ship_to. The fix is ONLY for the fallback when PO.ship_to is empty.
+
+**Fix:** Add fallback AFTER the existing po.ship_to check (line ~2057):
+```python
+# Existing code already handles: data["warehouse"] = po.ship_to
+# Add fallback for when po.ship_to is empty:
+if not data.get("warehouse"):
+    default_wh = frappe.db.get_single_value("BEI Settings", "default_receiving_warehouse")
+    if default_wh:
+        data["warehouse"] = default_wh
+    else:
+        frappe.throw(_("Warehouse is required. Set a default receiving warehouse in BEI Settings."))
+```
+
+**HARD BLOCKER:** Phase 0 (DocType migration) MUST complete before this fix. Without the field in BEI Settings, `get_single_value` returns None silently.
+
+**Sentry:** Already exists on `create_goods_receipt`, no change needed.
+
+### FIX-D2: New Vendor CEO Approval — Fix One-Way Ratchet (5 units) [EXTEND]
+
+**File:** `hrms/hr/doctype/bei_purchase_order/bei_purchase_order.py` — `check_new_vendor_ceo_requirement()`
+
+**Problem:** `requires_ceo_approval` is set to 1 when `is_new_supplier` returns True, but NEVER set back to 0. A PO saved while supplier was "new" stays stuck requiring CEO forever, even after the supplier ages past the window.
+
+**AUDIT CORRECTIONS:**
+1. `is_new_supplier` is a **computed `@property`** on BEI Supplier — it already checks the window via `new_supplier_window_days` in BEI Settings. There is NOTHING to "clear" on the supplier.
+2. The correct field name is `new_supplier_window_days` (NOT `new_vendor_window_days` as originally written).
+3. The bug is in `check_new_vendor_ceo_requirement` — it only sets `requires_ceo_approval = 1`, never `= 0`.
+4. **WARNING (DM-5):** `bei_payment_request.py` reads `is_new_supplier` via `frappe.db.get_value` (stored field) while `bei_supplier.py` defines it as a `@property` (computed). If BEI Supplier DocType also has a stored `is_new_supplier` column, it can go stale. Audit this during execution.
+
 **Fix:**
 ```python
-# In create_goods_receipt(), after line ~2057
-if not data.get("warehouse"):
-    # Try PO ship_to first
-    if po and po.ship_to:
-        data["warehouse"] = po.ship_to
-    else:
-        # Default to company main warehouse
-        default_wh = frappe.db.get_single_value("BEI Settings", "default_receiving_warehouse")
-        if not default_wh:
-            default_wh = frappe.db.sql(
-                "SELECT name FROM `tabWarehouse` WHERE name LIKE %s AND is_group = 0 LIMIT 1",
-                "%Stores - BEI%", as_list=True
-            )
-            default_wh = default_wh[0][0] if default_wh else None
-        if default_wh:
-            data["warehouse"] = default_wh
+def check_new_vendor_ceo_requirement(self):
+    if self.supplier:
+        supplier_doc = frappe.get_doc("BEI Supplier", self.supplier)
+        if supplier_doc.is_new_supplier:  # @property, recomputes each call
+            self.requires_ceo_approval = 1
         else:
-            frappe.throw(_("Warehouse is required. Set a default receiving warehouse in BEI Settings."))
+            self.requires_ceo_approval = 0  # AUDIT FIX: clear the ratchet
 ```
 
-**Sentry:** `set_backend_observability_context(module="procurement", action="create_goods_receipt", mutation_type="create")`  — already exists, no change needed.
-
-### FIX-D2: New Vendor CEO Approval Window (5 units) [EXTEND]
-
-**File:** `hrms/hr/doctype/bei_purchase_order/bei_purchase_order.py` or `hrms/api/procurement.py`
-
-**Problem:** Every PO for supplier `1T1MI3` (1 To 1 Marketing) triggers CEO approval because `is_new_supplier=1` never clears. The system should check if the supplier has been active for >30 days (configurable window).
-
-**Fix:** In the PO creation/normalization logic where `requires_ceo_approval` is set:
-```python
-# Check if supplier is genuinely new (within window)
-if supplier_doc.is_new_supplier:
-    window_days = flt(settings.get("new_vendor_window_days", 30))
-    supplier_created = getdate(supplier_doc.creation)
-    if date_diff(nowdate(), supplier_created) > window_days:
-        # Supplier is no longer "new" — clear the flag
-        frappe.db.set_value("BEI Supplier", supplier_doc.name, "is_new_supplier", 0)
-        normalized["requires_ceo_approval"] = 0
-    else:
-        normalized["requires_ceo_approval"] = 1
-```
-
-Also add `new_vendor_window_days` to BEI Settings if not already present.
-
-**HARD BLOCKER:** Do NOT remove the CEO approval for genuinely new suppliers. Only clear the flag after the window expires.
+**HARD BLOCKER:** Do NOT use `frappe.db.set_value` to mutate the supplier's `is_new_supplier` — it's a computed property, not a stored field.
 
 ---
 
@@ -143,7 +162,13 @@ Also add `new_vendor_window_days` to BEI Settings if not already present.
 
 **File:** `bei-tasks/app/dashboard/procurement/payments/[id]/page.tsx`
 
-**Problem:** After RFP is approved, the payment detail page has no OR upload button. Finance cannot record receipt of official receipts.
+**Problem:** After RFP is paid, the payment detail page has no OR upload button. Finance cannot record receipt of official receipts.
+
+**AUDIT CORRECTIONS:**
+1. **Route already exists** — `POST /payment-requests/:name/upload-or` is already at line 188 of route.ts. Do NOT add it again.
+2. **Status visibility CORRECTED** — backend at `procurement.py:4798` only accepts "Paid" and "Paid - Awaiting OR". Showing button at "Approved" will produce a 400 error. **Show button ONLY at "Paid" and "Paid - Awaiting OR".**
+3. **TypeScript gap** — Add `or_status?: string` to the `PaymentRequestDetail` interface. Hide button when `or_status === 'OR Received'`.
+4. **File attachment flow** — For the optional `or_attachment` field, use the same pattern as GR photo upload: POST to `/api/frappe/api/method/upload_file` → get `file_url` → include as `or_attachment`.
 
 **Fix:**
 1. Add `useUploadOfficialReceipt()` hook in `use-procurement.ts`:
@@ -164,14 +189,14 @@ Also add `new_vendor_window_days` to BEI Settings if not already present.
    }
    ```
 
-2. Add `POST /payment-requests/:name/upload-or` route in `[...slug]/route.ts` mapping to `hrms.api.procurement.upload_official_receipt`
-
-3. Add OR upload dialog on payment detail page, visible when status is "Approved" or "Paid" or "Paid - Awaiting OR":
+2. Add OR upload dialog on payment detail page:
+   - **Visible when:** `status === "Paid" || status === "Paid - Awaiting OR"` AND `or_status !== "OR Received"`
+   - **NOT visible at "Approved"** (backend rejects it)
    - OR Number (required text input)
    - OR Date (required date input)
    - OR Amount (required number input, default to payment_amount)
-   - File attachment (optional)
-   - Submit button
+   - File attachment (optional, uses upload_file → file_url pattern)
+   - Submit button with loading/error states
 
 ### FIX-D7: RFP Payment Method Default (2 units) [EXTEND]
 
@@ -191,13 +216,17 @@ const form = useForm({
 
 ### FIX-D10: PO Conversion Toast (1 unit) [FIX]
 
-**File:** `bei-tasks/app/dashboard/procurement/purchase-requisitions/[id]/page.tsx`
+**AUDIT CORRECTION:** The page handler uses a static string `'PO created successfully'` — this cannot produce "undefined". The bug is in the `useConvertPRToPO` hook's `onSuccess` callback which references `data.po_number` but the backend returns `po_name`.
 
-**Problem:** Toast shows "Converted to PO: undefined" — the PO name from the API response isn't captured.
+**File:** `bei-tasks/hooks/use-procurement.ts` — `useConvertPRToPO` hook
 
-**Fix:** In the convert-to-PO success handler, read the PO name from the mutation response:
+**Fix:** In the hook's `onSuccess`, change `data.po_number` to `data.po_name`:
 ```typescript
-toast.success(`Converted to PO: ${result.name || result.po_name || 'created'}`);
+onSuccess: (data) => {
+  queryClient.invalidateQueries({ queryKey: ['purchase-requisitions'] });
+  queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+  toast.success(`Converted to PO: ${data.po_name}`);  // FIX: was data.po_number (undefined)
+},
 ```
 
 ### FIX-D4-frontend: GR Warehouse Editable (3 units) [EXTEND]
@@ -222,7 +251,7 @@ Two groups: (A) verify the 5 defect fixes, (B) re-test the 7 S152 scenarios that
 | L3-A02 | test.finance | Approve RFP → click "Upload OR" → fill OR number, date, amount → submit | or_status="OR Received", status→"Closed" | FIX-D8 not working |
 | L3-A03 | test.finance | Open `/payments/new` → verify payment method field | payment_mode="Bank Transfer" pre-filled | FIX-D7 not working |
 | L3-A04 | test.finance | Convert PR to PO → read toast text content | Toast shows actual PO name (e.g., "PO-2026-XXXXX"), NOT "undefined" | FIX-D10 not working |
-| L3-A05 | test.finance | Create PO for supplier created >30 days ago | requires_ceo_approval=0, Mae-only approval (no CEO) | FIX-D2 not working |
+| L3-A05 | test.finance | **Precondition:** verify supplier `1T1MI3` creation date is >30 days ago via API. Then create PO for that supplier → verify requires_ceo_approval=0 | requires_ceo_approval=0, Mae-only approval (no CEO). If supplier is <30 days old, use a different supplier or adjust `new_supplier_window_days` to 1 in BEI Settings for the test. | FIX-D2 not working |
 | L3-A06 | test.warehouse | Create GR where PO has no ship_to → edit warehouse dropdown | Warehouse field is editable, can select from list | FIX-D4-frontend not working |
 
 ### Group B: S152 Corner Cut Remediation (8 scenarios)
@@ -237,8 +266,24 @@ These re-test S152 scenarios that had soft passes, skipped assertions, or missin
 | L3-B04 | R03 Partial GR | test.warehouse | Create GR → edit qty fields to 50% of ordered → submit | PO status = "Partially Received" (NOT "Fully Received") | S152 couldn't test because GR form had no editable qty (needs FIX-D4-frontend) |
 | L3-B05 | RFP rejection L1 | test.finance | Create RFP → submit → L1 Reviewer REJECTS with reason | Status = "Rejected", rejection level = "Review", reason recorded | S152 only tested L2 rejection |
 | L3-B06 | RFP rejection L3 | sam@bebang.ph | Create RFP → L1 approve → L2 approve → L3 CFO REJECTS | Status = "Rejected", rejection level = "CFO", reason recorded | S152 only tested L2 rejection |
-| L3-B07 | Multi-RFP icons | test.finance | AP Payments tab → find Chain A RFP (3 green + 1 gray) and Chain C RFP (4 green) | Chain A: 3 CheckCircle2 (green) + 1 Circle (gray). Chain C: 4 CheckCircle2 (green). Rejected RFP: XCircle at rejection level. | S152 only had 1 payment row visible, couldn't verify patterns |
+| L3-B07 | Multi-RFP icons | test.finance | **Depends on:** L3-A02, L3-B05, L3-B06 (creates the RFPs). AP Payments tab → find approved RFP, rejected-at-L1 RFP, rejected-at-L3 RFP → verify icon patterns per row | Approved: all green checks. L1-rejected: red X at reviewer level. L3-rejected: green L1+L2, red X at CFO. | S152 only had 1 payment row visible, couldn't verify patterns |
 | L3-B08 | D03 Aging columns | test.finance | AP Aging tab → verify ALL bucket column headers | Headers include "Current", "1-30", "31-60", "61-90", "90+" as text | S152 found current=false, marked PASS on row count only |
+
+---
+
+## Phase 2.5: Deploy Gate (1 unit)
+
+**AUDIT BLOCKER RESOLVED:** Phase 3 tests MUST run against deployed code, not local changes.
+
+1. Create **hrms PR** from branch `s153-procurement-defect-remediation` → base `production`
+2. Create **bei-tasks PR** from matching branch → base `main`
+3. **STOP and wait** for Sam to merge both PRs
+4. Verify hrms deployed: `curl https://hq.bebang.ph/api/method/ping` returns 200
+5. Verify bei-tasks deployed: `curl https://my.bebang.ph/login` returns 200
+6. Commit L3 evidence to branch: `git add -f output/l3/S153/ && git push`
+7. **Only then** proceed to Phase 3
+
+---
 
 ### Execution Notes
 
@@ -310,6 +355,7 @@ blocker_policy:
 signoff_authority: single-owner (Sam)
 canonical_closeout_artifacts:
   - output/l3/S153/form_submissions.json
+  - output/l3/S153/api_mutations.json
   - output/l3/S153/state_verification.json
   - output/l3/S152/DEFECTS.md (updated)
   - docs/plans/2026-04-01-sprint-153-procurement-defect-remediation.md
@@ -323,6 +369,32 @@ canonical_closeout_artifacts:
 This sprint is intended for autonomous end-to-end execution.
 Do not stop for progress-only updates.
 Only pause for items listed in the Autonomous Execution Contract `stop_only_for` section.
+
+---
+
+## Reusable Test Scripts (DO NOT recreate — extend these)
+
+The S152 test scripts are committed to production via Bebang-Enterprise-Inc/hrms#409. S153 should **extend** these scripts, not rewrite them.
+
+| Script | Purpose | Reuse In S153 |
+|--------|---------|---------------|
+| `scripts/testing/l3_s152_helpers.mjs` | Shared: browser login, `browserCreatePO`, `browserApprovePO`, `browserCreateGR`, `browserCreateInvoice`, `browserCreateRFP`, `browserSubmitAndApproveRFP`, `browserRejectPO`, `browserRejectRFP`, evidence tracking, PNG generator | **YES — import all browser actions from here. Do NOT duplicate.** |
+| `scripts/testing/l3_s152_chain_a.mjs` | Chain A: PR→PO≤500K→Mae→GR→Invoice→RFP 3-level→OR | Copy + modify for L3-A02 (OR upload test) and L3-B03 (invoice verify) |
+| `scripts/testing/l3_s152_chain_bc.mjs` | Chain B: >500K dual + Chain C: >1M CEO | Copy + modify for L3-A05 (CEO window test) |
+| `scripts/testing/l3_s152_edge_cases.mjs` | PO reject, RFP reject, partial GR, variance | Copy + modify for L3-B04 (partial GR), L3-B05/B06 (L1/L3 rejection) |
+| `scripts/testing/l3_s152_dashboards.mjs` | AP CC + procurement pages | Copy + modify for L3-B01 (CSV), L3-B02 (timeline), L3-B07 (icons), L3-B08 (aging cols) |
+| `scripts/testing/l3_s152_run_all.mjs` | Master runner | Extend to include S153 scripts |
+
+**Key patterns already solved in helpers (do NOT re-solve):**
+- Login with email match: `loginAs(browser, 'mae')` / `loginAs(browser, 'butch')` / `loginAs(browser, 'sam')`
+- PO approval chain: `browserSubmitPO` → `browserApprovePO(mae)` → `browserApprovePO(butch)` → `browserApprovePO(sam)`
+- GR from PO: `browserCreateGR` handles PO card click, qty fill, photo upload, submit
+- Invoice from PO+GR: `browserCreateInvoice` handles PO card, GR card, invoice#, dates
+- RFP 4-level: `browserSubmitAndApproveRFP` handles submit + approve per level
+- PHT date calculation: `new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10)`
+- Toast dismissal: `page.evaluate(() => document.querySelectorAll('[data-sonner-toast]').forEach(t => t.remove()))`
+
+**Scenario definitions:** `docs/testing/scenarios/modules/s152-procurement-e2e.md` (35 scenarios — extend for S153)
 
 ---
 
@@ -341,3 +413,33 @@ Only pause for items listed in the Autonomous Execution Contract `stop_only_for`
 | Procurement hooks | `bei-tasks/hooks/use-procurement.ts` |
 | API route proxy | `bei-tasks/app/api/procurement/[...slug]/route.ts` |
 | S152 test scripts | `scripts/testing/l3_s152_*.mjs` |
+| BEI Settings DocType | `hrms/hr/doctype/bei_settings/bei_settings.json` |
+| BEI Supplier DocType | `hrms/hr/doctype/bei_supplier/bei_supplier.py` (has `is_new_supplier` @property) |
+| Audit findings | `output/plan-audit/s153-procurement-defect-remediation/*.md` |
+
+---
+
+## Audit History
+
+### Audit v1 — 2026-04-01 (4 domain agents + code verifier)
+
+**Auditors:** frappe-backend, frontend, deployment-qa, code-verifier
+**Result:** 4 blockers, 6 warnings, 5 stale claims corrected, 3 new gaps added
+
+**Amendments applied to authoritative sections above:**
+
+| # | Finding | Amendment |
+|---|---------|-----------|
+| 1 | `default_receiving_warehouse` field missing from BEI Settings | Added Phase 0 (DocType migration) as pre-requisite |
+| 2 | FIX-D4 code already has `po.ship_to` default at line 2056 | Reduced scope to fallback-only when ship_to is empty |
+| 3 | FIX-D2: `is_new_supplier` is a `@property`, not a stored field | Rewrote fix to clear `requires_ceo_approval` ratchet instead |
+| 4 | Field name is `new_supplier_window_days` not `new_vendor_window_days` | Corrected throughout plan |
+| 5 | Upload-or route already exists in route.ts line 188 | Removed duplicate route creation from FIX-D8 |
+| 6 | OR upload button at "Approved" status = backend 400 error | Changed visibility to "Paid" and "Paid - Awaiting OR" only |
+| 7 | `or_status` not in TypeScript interface | Added to FIX-D8 requirements |
+| 8 | FIX-D10 bug is in hook (`po_number` vs `po_name`), not page handler | Changed fix location to `use-procurement.ts` |
+| 9 | No deploy gate between Phase 2 and Phase 3 | Added Phase 2.5 with explicit PR + deploy verification |
+| 10 | `api_mutations.json` missing from evidence contract | Added to canonical closeout artifacts |
+| 11 | L3-A05 missing supplier data precondition | Added creation date check + fallback |
+| 12 | L3-B07 dependency on L3-A02/B05/B06 not explicit | Added dependency note to scenario |
+| 13 | DM-5 risk: `bei_payment_request.py` reads `is_new_supplier` as stored field | Added WARNING to FIX-D2 for audit during execution |
