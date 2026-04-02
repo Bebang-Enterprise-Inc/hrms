@@ -337,18 +337,103 @@ output/l3/S154/state_verification.json
 
 ---
 
+## Implementation Details (Gap Closures — Investigated 2026-04-02)
+
+### ID-1: Branch state — Phase 1 B1-B5 already committed
+- Branch `s154-store-ordering-production-ready` exists in both repos.
+- **bei-erp:** commit `93a9a2ac4` has B1 (item_group filter), B2 (store_category in SQL), B3 (source_item_exists), B4 (priority_score + source_oos_alert), B5 (heuristic returns 0). **Start at B6.**
+- **bei-tasks:** branch created but no commits yet. All frontend work is pending.
+
+### ID-2: Supabase POS — exact table and query
+- **Table:** `pos_orders` (synced daily via `scripts/sync_pos_to_supabase.py`)
+- **Child table:** `pos_order_items` (item_name, qty, price per order)
+- **Key columns:** `location_id` (→ Mosaic store), `business_date` (Manila date), `payment_status` (filter 'PAID')
+- **Query for per-item per-store daily sales:**
+  ```sql
+  SELECT location_id, business_date, item_name, SUM(qty) as qty_sold
+  FROM pos_orders JOIN pos_order_items ON pos_orders.id = pos_order_items.pos_order_id
+  WHERE payment_status = 'PAID' AND business_date >= :since
+  GROUP BY location_id, business_date, item_name
+  ```
+- **Location → Frappe warehouse mapping:** `hrms/fixtures/sales_dashboard_store_mapping.csv`
+- **Credentials:** Doppler `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (project `bei-erp`, config `dev`)
+
+### ID-3: Weather API — Open-Meteo, free, no API key
+- **Service:** Open-Meteo (https://api.open-meteo.com/v1/forecast)
+- **No API key required.** Free tier is sufficient.
+- **Existing code:** `_is_weather_risk(warehouse)` at `hrms/api/store.py:1457-1468`. Queries `BEI Weather Alert` DocType.
+- **Weather multiplier:** `_compose_signal_modifiers()` at line 1428: weather_multiplier = 1.06 if risk, else 1.0.
+- **Supabase weather data:** `daily_weather` table with `max_temp`, `is_rainy`, `business_impact`. Synced by `scripts/sync_weather_to_supabase.py`.
+- **For S154:** Query `daily_weather` for next 3 days forecast. If `max_temp > 35` → multiplier 1.15-1.30. If `is_rainy` → multiplier 0.85-0.90.
+
+### ID-4: BOM Excel column mapping
+- **File:** `data/_CLEANROOM/factcheck_packets/.../BEBANG STANDARD BOM PER SKU.xlsx`
+- **Sheet:** `JV` (company-owned stores)
+- **Structure (matrix):**
+  - Row 1: Columns 0-4 = metadata headers. Columns 5,7,9,11,13,15,17,19,21,23,25,27,29,31,33 = **15 product names** (PRESIDENTIAL, HALUKAY UBE, MANGO GRAHAM CARAMEL, BANANA CINNAMON, BUKO FRUIT SALAD, MELON, BUKO PANDAN, STRAWBERRY PISTACHIO, BLUEBERRY PISTACHIO, MATCHARAP, COOKIE CRUMBLE, SO CORNY, MANGO CLASSIC, SPECIAL, CHOCO BROWNIE). Products are at ODD column indices starting at 5.
+  - Row 1 col 1: "UNIT PRICE, VAT EX". Col 2: "UOM". Col 3: "Store Yield, grams". Col 4: "Price per gram".
+  - Row 2: Sub-headers: "grams per cup" and "price per cup" alternating under each product.
+  - Rows 3-48: **46 ingredient rows.** Col 0 = ingredient name. Col 1 = unit price. Col 2 = UOM (e.g., "600g (12s) pack"). Col 3 = Store Yield in grams. Col 4 = price per gram. Product columns (odd) = grams per cup. Product columns (even) = price per cup.
+- **Canonical CSV export also available:** `data/_CLEANROOM/migration_runs/.../P05_BOM_UOM/inputs_normalized/BOM_RECIPES_PACKET.csv` (columns: Product, Item Code, Ingredient, BOM Reference, Grams per Cup, SKU Conversion)
+- **To extract:** Use the CSV if available; fall back to openpyxl for Excel only if CSV is incomplete.
+
+### ID-5: Store name normalization
+- **Function:** `_normalize_store_name_for_route(warehouse_name)` at `hrms/api/store.py:1331-1340`
+- **Logic:** uppercase, strip " - BEBANG ENTERPRISE INC.", " - BEI", " - BKI", " - BEBANG KITCHEN INC."
+- **Use for:** delivery schedule seeding (match March issuance store names to Frappe warehouse names)
+- **Additional alias maps:** `hrms/services/blip/data/weather.py:44-93` (e.g., "megamall" → "sm_megamall")
+
+### ID-6: Custom Field creation in Frappe
+- **Pattern:** Add to `hrms/fixtures/custom_field.json`
+- **For `store_category`:**
+  ```json
+  {
+    "doctype": "Custom Field",
+    "name": "Item-custom_store_category",
+    "dt": "Item",
+    "fieldname": "custom_store_category",
+    "fieldtype": "Select",
+    "label": "Store Category",
+    "options": "\nToppings\nFrozen\nSauces\nPackaging\nSupplies\nOther",
+    "insert_after": "item_group",
+    "description": "Category for store ordering page tabs (S154)"
+  }
+  ```
+- **Deploy:** Fixture auto-loads on `bench migrate` (registered in `hrms/hooks.py:568`)
+- **ALSO needed for S4:** `BEI Delivery Schedule` DocType — create as a new DocType in `hrms/hr/doctype/bei_delivery_schedule/`
+
+### ID-7: Existing code that must not break
+- `_CENTRAL_WAREHOUSE_ROUTE_MAP` (lines 1264-1328): 47 store→warehouse fallback routing. DO NOT modify.
+- `_is_orderable_store()` (lines 1604-1615): called at 3 locations (1853, 1944, 1958) for store picker filtering. DO NOT modify.
+- `_NON_ORDERABLE_NAME_PATTERNS` (lines 1591-1595): updated by S154 B1 to add "Finished Goods", "Work In Progress" etc. Keep all existing entries.
+- `store_actual_qty` (line 2202): must remain in API response. Frontend depends on it.
+- `source_warehouse_short` (line 2201): must remain. Frontend reads it for Source Avail. column.
+- `_build_recommendation_contract()` (lines 1497-1556): zero-history guard must remain intact.
+
+### ID-8: SCM module in bei-tasks
+- **Route:** `/app/dashboard/scm/delivery-schedule`
+- **Directory:** `app/dashboard/scm/delivery-schedule/page.tsx` (new)
+- **RBAC:** `MODULES.SCM` in `lib/roles.ts:616-623` — includes: PROCUREMENT_USER, PROCUREMENT_MANAGER, SUPPLY_CHAIN_MANAGER, WAREHOUSE_USER, HQ_USER, HQ_FINANCE, SYSTEM_MANAGER, ADMINISTRATOR
+- **Route constant:** Add `SCM_DELIVERY_SCHEDULE: "/dashboard/scm/delivery-schedule"` to `lib/constants.ts`
+- **Sidebar:** SCM section already exists with 6 sub-pages. Add "Delivery Schedule" after "Route Planner".
+- **Pattern to follow:** `app/dashboard/scm/route-planner/page.tsx` (S139 implementation)
+
+---
+
 ## Agent Boot Sequence
 
-1. Read this plan fully — especially the **Brainstorm Decisions** section.
-2. **Create sprint branch (bei-erp):** `git fetch origin production && git checkout -b s154-store-ordering-production-ready origin/production`
-3. **Create sprint branch (bei-tasks):** `cd ../bei-tasks && git fetch origin main && git checkout -b s154-store-ordering-production-ready origin/main`
-4. Read `hrms/api/store.py` — `get_orderable_items()`, `validate_order_schedule()`, `_estimate_projected_sales_and_bom()`.
-5. Read the official BOM: `data/_CLEANROOM/factcheck_packets/.../BEBANG STANDARD BOM PER SKU.xlsx` (JV sheet).
-6. Read POS crosswalk: `data/_CLEANROOM/agent_runs/.../bom_fg_to_pos_crosswalk_compact.csv`.
+1. Read this plan fully — especially **Brainstorm Decisions** and **Implementation Details** sections.
+2. **Check out existing branch (bei-erp):** `git fetch origin && git checkout s154-store-ordering-production-ready && git pull origin s154-store-ordering-production-ready`. Branch already has B1-B5 committed. **Start at B6.**
+3. **Check out existing branch (bei-tasks):** `cd ../bei-tasks && git fetch origin && git checkout s154-store-ordering-production-ready`. No commits yet — all frontend work pending.
+4. Read `hrms/api/store.py` lines 2060-2240 (`get_orderable_items`), lines 2410-2480 (`validate_order_schedule`), lines 1679-1684 (`_estimate_projected_sales_and_bom`).
+5. Read BOM CSV: `data/_CLEANROOM/migration_runs/2026-03-02_frappe_go_live_zero_hallucination_v1/01_packets/P05_BOM_UOM/inputs_normalized/BOM_RECIPES_PACKET.csv`. If insufficient, parse the Excel JV sheet per ID-4 column mapping.
+6. Read POS crosswalk: `data/_CLEANROOM/agent_runs/2026-03-10_s032-dual-repo-safe-clean-start/checkpoints/phase1_snapshots/BEI-ERP/root_untracked_archive/hrms/fixtures/store_ordering/bom_fg_to_pos_crosswalk_compact.csv`.
 7. Read delivery schedule: `data/_CLEANROOM/central_warehouse_2026_03/delivery_schedule.csv`.
-8. Read `memory/supabase-schema.md` for Supabase connection patterns.
-9. Read `bei-tasks/app/dashboard/store-ops/ordering/_components/StoreOrderingPage.tsx`.
-10. Execute phases in order.
+8. Read `memory/supabase-schema.md` for Supabase query patterns. Credentials via Doppler: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`.
+9. Read `bei-tasks/app/dashboard/scm/route-planner/page.tsx` for SCM page pattern.
+10. Read `bei-tasks/app/dashboard/store-ops/ordering/_components/StoreOrderingPage.tsx` for current ordering UI.
+11. Read `hrms/fixtures/custom_field.json` for Custom Field creation pattern.
+12. Execute Phase 1 B6-B8, then Phase 2-5 in order. Stop at PR_CREATED. Output L3 handoff prompt.
 
 ## Execution Authority
 
