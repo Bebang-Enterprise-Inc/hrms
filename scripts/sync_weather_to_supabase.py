@@ -125,31 +125,80 @@ def upsert_batches(client: Client, table: str, rows: list[dict[str, Any]], on_co
 		client.table(table).upsert(batch, on_conflict=on_conflict).execute()
 
 
-def read_store_coordinates(csv_path: str) -> list[dict[str, Any]]:
-	"""Read store coordinates and resolve location IDs from the shared mapping."""
+# Embedded store coordinates — no external file dependency.
+# Source: WAREHOUSE_TREE.csv + sales_dashboard_store_mapping.csv (2026-04-02)
+_STORE_COORDINATES = {
+	"Araneta Gateway": {"lat": 14.6218, "lng": 121.0528, "location_id": 2557},
+	"Ayala Evo": {"lat": 14.4312, "lng": 120.9022, "location_id": 2426},
+	"Ayala Malls Fairview Terraces": {"lat": 14.7364, "lng": 121.0602, "location_id": 2220},
+	"Ayala Market Market": {"lat": 14.5488, "lng": 121.0555, "location_id": 2287},
+	"Ayala Solenad": {"lat": 14.2385, "lng": 121.0560, "location_id": 2547},
+	"Ayala UPTC": {"lat": 14.6495, "lng": 121.0754, "location_id": 2425},
+	"Ayala Vermosa": {"lat": 14.3843, "lng": 120.9598, "location_id": 2428},
+	"BF Homes": {"lat": 14.4549, "lng": 121.0158, "location_id": 2217},
+	"CTTM Tomas Morato": {"lat": 14.6344, "lng": 121.0355, "location_id": 2526},
+	"D'verde Laguna": {"lat": 14.1934, "lng": 121.1654, "location_id": 2766},
+	"Estancia": {"lat": 14.5347, "lng": 121.0637, "location_id": 0},
+	"Ever Commonwealth": {"lat": 14.6783, "lng": 121.0855, "location_id": 2281},
+	"Festival Mall Alabang": {"lat": 14.4174, "lng": 121.0404, "location_id": 2222},
+	"Lucky Chinatown": {"lat": 14.6040, "lng": 120.9729, "location_id": 2311},
+	"Megawide PITX": {"lat": 14.5111, "lng": 120.9914, "location_id": 2179},
+	"Megaworld Paseo Center": {"lat": 14.5577, "lng": 121.0229, "location_id": 2177},
+	"Megaworld Venice Grand Canal": {"lat": 14.5339, "lng": 121.0504, "location_id": 2216},
+	"NAIA T3": {"lat": 14.5086, "lng": 121.0200, "location_id": 2297},
+	"Robinson General Trias": {"lat": 14.3964, "lng": 120.8652, "location_id": 2430},
+	"Robinson Imus": {"lat": 14.4129, "lng": 120.9414, "location_id": 2408},
+	"Robinsons Antipolo": {"lat": 14.5946, "lng": 121.1723, "location_id": 2342},
+	"Robinsons Galleria South": {"lat": 14.3518, "lng": 121.0618, "location_id": 2429},
+	"Shaw BLVD": {"lat": 14.5810, "lng": 121.0550, "location_id": 0},
+	"SJDM": {"lat": 14.7875, "lng": 121.0752, "location_id": 2481},
+	"SM Bicutan": {"lat": 14.4854, "lng": 121.0430, "location_id": 2412},
+	"SM Caloocan": {"lat": 14.7515, "lng": 121.0200, "location_id": 2464},
+	"SM Clark": {"lat": 15.1706, "lng": 120.5805, "location_id": 2646},
+	"SM East Ortigas": {"lat": 14.5870, "lng": 121.1052, "location_id": 2184},
+	"SM Grand Central": {"lat": 14.6552, "lng": 120.9842, "location_id": 2218},
+	"SM Mall Of Asia": {"lat": 14.5341, "lng": 120.9820, "location_id": 2219},
+	"SM Manila": {"lat": 14.5899, "lng": 120.9834, "location_id": 2288},
+	"SM Marikina": {"lat": 14.6262, "lng": 121.0838, "location_id": 2317},
+	"SM Marilao": {"lat": 14.7546, "lng": 120.9559, "location_id": 2413},
+	"SM Megamall": {"lat": 14.5859, "lng": 121.0574, "location_id": 2338},
+	"SM North EDSA": {"lat": 14.6561, "lng": 121.0325, "location_id": 2284},
+	"SM Pulilan": {"lat": 14.8989, "lng": 120.8705, "location_id": 2478},
+	"SM Sangandaan": {"lat": 14.6580, "lng": 120.9720, "location_id": 2482},
+	"SM Southmall": {"lat": 14.4333, "lng": 121.0106, "location_id": 2340},
+	"SM Sta. Rosa": {"lat": 14.2826, "lng": 121.1112, "location_id": 2480},
+	"SM Tanza": {"lat": 14.3935, "lng": 120.8512, "location_id": 2411},
+	"SM Taytay": {"lat": 14.5572, "lng": 121.1340, "location_id": 2339},
+	"SM Valenzuela": {"lat": 14.6854, "lng": 120.9776, "location_id": 2341},
+	"Sta. Lucia East Grand Mall": {"lat": 14.6185, "lng": 121.0992, "location_id": 2558},
+	"The Grid - Rockwell": {"lat": 14.5654, "lng": 121.0367, "location_id": 2250},
+	"The Terminal": {"lat": 14.4168, "lng": 121.0463, "location_id": 2319},
+	"Up Town Mall BGC": {"lat": 14.5565, "lng": 121.0542, "location_id": 2548},
+	"Vista Mall Taguig": {"lat": 14.5301, "lng": 121.0747, "location_id": 2556},
+}
+
+
+def read_store_coordinates(csv_path: str | None = None) -> list[dict[str, Any]]:
+	"""Return store coordinates from embedded data. CSV path accepted for
+	backwards compatibility but ignored."""
 	stores: list[dict[str, Any]] = []
-	with open(csv_path, "r", encoding="utf-8") as handle:
-		reader = csv.DictReader(handle)
-		for row in reader:
-			if row["is_open"] != "True" or not row["latitude"] or not row["longitude"]:
-				continue
-			if row["node_kind"] == "external_storage_hub":
-				continue
-
-			mapping = lookup_sales_location(warehouse_name=row["warehouse_name"])
-			if not mapping:
-				print(f"[WARN] Skipping {row['warehouse_name']} - no shared sales location mapping")
-				continue
-
-			stores.append(
-				{
-					"warehouse_id": row["warehouse_id"],
-					"warehouse_name": row["warehouse_name"],
-					"location_id": int(mapping["location_id"]),
-					"latitude": float(row["latitude"]),
-					"longitude": float(row["longitude"]),
-				}
-			)
+	for name, data in _STORE_COORDINATES.items():
+		loc_id = data["location_id"]
+		if loc_id == 0:
+			mapping = lookup_sales_location(warehouse_name=name)
+			loc_id = int(mapping["location_id"]) if mapping else 0
+		if loc_id == 0:
+			print(f"[WARN] Skipping {name} - no location_id mapping")
+			continue
+		stores.append(
+			{
+				"warehouse_id": name.lower().replace(" ", "_").replace("'", ""),
+				"warehouse_name": name,
+				"location_id": loc_id,
+				"latitude": data["lat"],
+				"longitude": data["lng"],
+			}
+		)
 	return stores
 
 
@@ -378,14 +427,14 @@ def refresh_weather_features(client: Client) -> None:
 	client.rpc("refresh_sales_dashboard_weather_daily_features").execute()
 
 
-def sync_weather(client: Client, date_str: str, warehouse_tree_path: str) -> dict[str, Any]:
+def sync_weather(client: Client, date_str: str, warehouse_tree_path: str | None = None) -> dict[str, Any]:
 	print(f"\n{'=' * 60}")
 	print(f"Syncing weather data for {date_str}")
 	print(f"{'=' * 60}\n")
 
 	print(">> Reading store coordinates...")
-	stores = read_store_coordinates(warehouse_tree_path)
-	print(f"   Found {len(stores)} stores with coordinates and shared location mapping\n")
+	stores = read_store_coordinates()
+	print(f"   Found {len(stores)} stores with embedded coordinates\n")
 
 	print(">> Grouping nearby stores (within 5km)...")
 	groups = group_nearby_stores(stores)
@@ -493,6 +542,15 @@ def main() -> None:
 	else:
 		yesterday = datetime.now(tz=MANILA_TZ) - timedelta(days=1)
 		dates = [yesterday.strftime("%Y-%m-%d")]
+
+	# Always include 7-day forecast for demand projection (unless doing a manual backfill).
+	# 7 days covers the full coverage window for weekly-delivery stores.
+	if not args.start_date and not args.backfill_days:
+		today = datetime.now(tz=MANILA_TZ)
+		for day_offset in range(0, 8):  # today + 7 days ahead
+			forecast_date = (today + timedelta(days=day_offset)).strftime("%Y-%m-%d")
+			if forecast_date not in dates:
+				dates.append(forecast_date)
 
 	print("\nWeather Data Sync")
 	print(f"Dates to process: {', '.join(dates)}")
