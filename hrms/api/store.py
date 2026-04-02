@@ -2176,7 +2176,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		item["uom"] = item.get("stock_uom")
 		item["source_warehouse"] = source_warehouse
 		# S136/B5: Short name for display (strip company suffix).
-		item["source_warehouse_short"] = (source_warehouse or "").replace(" - Bebang Enterprise Inc.", "").strip()
+		item["source_warehouse_short"] = (source_warehouse or "").replace(" - Bebang Enterprise Inc.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
 		item["store_actual_qty"] = store_actual
 		item["last_order_qty"] = last_order_qty
 		item["available_stock"] = available_to_promise
