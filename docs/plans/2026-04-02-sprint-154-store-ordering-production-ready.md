@@ -1,16 +1,17 @@
 ---
 canonical_sprint_id: S154
 display: Sprint 154
-status: GO
+status: PR_CREATED
 branch: s154-store-ordering-production-ready
 lane: single
 created_date: 2026-04-02
 completed_date:
 deployed_at:
-backend_pr:
-frontend_pr:
+backend_pr: 417
+frontend_pr: 305
 l3_result:
-execution_summary:
+execution_started: 2026-04-02
+execution_summary: Phase 1-5 implemented. Backend PR #417 (hrms), Frontend PR #305 (BEI-Tasks). L3 pending in separate session.
 depends_on: S136
 ---
 
