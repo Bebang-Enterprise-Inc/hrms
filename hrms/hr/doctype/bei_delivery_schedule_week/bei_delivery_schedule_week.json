@@ -1,0 +1,102 @@
+{
+  "actions": [],
+  "autoname": "BEI-SCHED-.YYYY.-.#####",
+  "creation": "2026-04-02 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "week_start",
+    "published",
+    "published_by",
+    "published_at",
+    "unpublish_reason",
+    "section_entries",
+    "entries"
+  ],
+  "fields": [
+    {
+      "default": "Today",
+      "fieldname": "week_start",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "Week Start (Monday)",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "published",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Published"
+    },
+    {
+      "fieldname": "published_by",
+      "fieldtype": "Link",
+      "label": "Published By",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "published_at",
+      "fieldtype": "Datetime",
+      "label": "Published At",
+      "read_only": 1
+    },
+    {
+      "fieldname": "unpublish_reason",
+      "fieldtype": "Small Text",
+      "label": "Unpublish Reason"
+    },
+    {
+      "fieldname": "section_entries",
+      "fieldtype": "Section Break",
+      "label": "Schedule Entries"
+    },
+    {
+      "fieldname": "entries",
+      "fieldtype": "Table",
+      "label": "Entries",
+      "options": "BEI Delivery Schedule Entry",
+      "reqd": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "module": "HR",
+  "name": "BEI Delivery Schedule Week",
+  "naming_rule": "Expression",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "read": 1,
+      "write": 1,
+      "role": "System Manager"
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "write": 1,
+      "role": "Supply Chain Manager"
+    },
+    {
+      "create": 1,
+      "read": 1,
+      "write": 1,
+      "role": "Warehouse Manager"
+    },
+    {
+      "read": 1,
+      "role": "Warehouse User"
+    },
+    {
+      "read": 1,
+      "role": "HQ User"
+    }
+  ],
+  "sort_field": "week_start",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

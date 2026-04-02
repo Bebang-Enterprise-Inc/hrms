@@ -1254,6 +1254,139 @@ def _lane_to_cargo_category(lane):
 	return "DRY"
 
 
+# ---------------------------------------------------------------------------
+# S154/B6: Delivery Schedule helpers
+# ---------------------------------------------------------------------------
+
+_DAY_OF_WEEK_NAMES = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+_DAY_ABBR_TO_IDX = {"Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6}
+
+
+def _get_next_deliveries(store_warehouse: str) -> dict:
+	"""Return next COLD and DRY delivery dates + days-until for a store.
+
+	Reads from ``BEI Delivery Schedule Entry`` (child of a published
+	``BEI Delivery Schedule Week``).  Falls back to fixed lane-based
+	coverage windows when the DocType doesn't exist or has no published
+	schedule for the store.
+
+	Returns dict with keys:
+	  next_cold_delivery, next_dry_delivery   (date str or None)
+	  days_to_cold, days_to_dry               (int, >=1)
+	  schedule_source                          ("published" | "fallback_last_week" | "default")
+	"""
+	today = getdate(nowdate())
+	tomorrow = add_days(today, 1)
+
+	defaults = {
+		"next_cold_delivery": None,
+		"next_dry_delivery": None,
+		"days_to_cold": 2,   # Frozen default
+		"days_to_dry": 3,    # Dry default
+		"schedule_source": "default",
+	}
+
+	try:
+		meta = frappe.get_meta("BEI Delivery Schedule Week")
+		if not meta:
+			return defaults
+	except Exception:
+		return defaults
+
+	# Find the published week that covers today (week_start = Monday of this week)
+	# If no published week for this week, fall back to the last published week.
+	import datetime as _dt
+
+	today_weekday = today.weekday()  # 0=Mon
+	this_monday = add_days(today, -today_weekday)
+
+	week_doc = None
+	schedule_source = "published"
+
+	# Try this week first
+	week_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": this_monday, "published": 1},
+		"name",
+	)
+	if not week_name:
+		# Fallback: last published week (most weeks are identical)
+		week_name = frappe.db.get_value(
+			"BEI Delivery Schedule Week",
+			{"published": 1},
+			"name",
+			order_by="week_start desc",
+		)
+		schedule_source = "fallback_last_week" if week_name else "default"
+
+	if not week_name:
+		return defaults
+
+	# Get all schedule entries for this store in the published week
+	entries = frappe.get_all(
+		"BEI Delivery Schedule Entry",
+		filters={"parent": week_name, "store": store_warehouse},
+		fields=["day_of_week", "delivery_type"],
+	)
+
+	if not entries:
+		return defaults
+
+	# Build sets of delivery days per type
+	cold_days = set()
+	dry_days = set()
+	for entry in entries:
+		day_idx = _DAY_ABBR_TO_IDX.get(entry.day_of_week)
+		if day_idx is None:
+			continue
+		if entry.delivery_type == "COLD":
+			cold_days.add(day_idx)
+		elif entry.delivery_type == "DRY":
+			dry_days.add(day_idx)
+
+	def _find_next_delivery_date(delivery_day_indices: set, from_date) -> tuple:
+		"""Find the next delivery date from from_date (inclusive tomorrow).
+		Returns (date, days_until) or (None, default_days)."""
+		if not delivery_day_indices:
+			return None, None
+		from_date = getdate(from_date)
+		# Search up to 14 days ahead (covers 2 full weeks)
+		for offset in range(1, 15):
+			candidate = add_days(from_date, offset)
+			if getdate(candidate).weekday() in delivery_day_indices:
+				return str(candidate), offset
+		return None, None
+
+	next_cold, days_cold = _find_next_delivery_date(cold_days, today)
+	next_dry, days_dry = _find_next_delivery_date(dry_days, today)
+
+	return {
+		"next_cold_delivery": next_cold,
+		"next_dry_delivery": next_dry,
+		"days_to_cold": days_cold or 2,
+		"days_to_dry": days_dry or 3,
+		"schedule_source": schedule_source,
+	}
+
+
+def _is_delivery_window_open(next_delivery_date: str | None) -> bool:
+	"""Check if ordering is still open for the given delivery date.
+
+	Cutoff: 12:00 NN on the day BEFORE delivery.
+	"""
+	if not next_delivery_date:
+		return True  # No schedule → always open
+	delivery = getdate(next_delivery_date)
+	cutoff_date = add_days(delivery, -1)
+	today = getdate(nowdate())
+	if today < getdate(cutoff_date):
+		return True  # Before cutoff day
+	if today > getdate(cutoff_date):
+		return False  # Past cutoff day
+	# Same day as cutoff — check hour
+	return now_datetime().hour < 12
+
+
 # S136: Central Warehouse route map (source: MARCH 2026 Central WHSE Inventory Monitoring_BEI.xlsx)
 # Key: normalized store name (upper, stripped of company suffix)
 # Value: Frappe warehouse name for the source DC
@@ -1377,6 +1510,8 @@ def _build_orderable_source_stock_context(store_warehouse, items):
 			item_codes_by_source.setdefault(source_warehouse, set()).add(item_code)
 
 	stock_map = {}
+	# S154/B3: Track which items have Bin records at source (even if qty=0).
+	source_item_exists = set()
 	for source_warehouse, item_codes in item_codes_by_source.items():
 		stock_rows = frappe.get_all(
 			"Bin",
@@ -1387,11 +1522,13 @@ def _build_orderable_source_stock_context(store_warehouse, items):
 		for row in stock_rows:
 			key = (source_warehouse, row.item_code)
 			stock_map[key] = flt(stock_map.get(key, 0)) + flt(row.actual_qty)
+			source_item_exists.add(key)
 
 	return {
 		"source_warehouse_by_item": source_warehouse_by_item,
 		"lane_by_item": lane_by_item,
 		"stock_map": stock_map,
+		"source_item_exists": source_item_exists,
 	}
 
 
@@ -1673,6 +1810,9 @@ def _load_store_item_demand_snapshots(warehouse, item_codes, target_date):
 
 
 def _estimate_projected_sales_and_bom(last_order_qty, order_count, lane):
+	# S154/B5: Return 0 when genuinely no data — don't fake demand.
+	if flt(last_order_qty) <= 0 and flt(order_count) <= 0:
+		return 0.0, 0.0
 	baseline = max(1.0, flt(last_order_qty), flt(order_count) * 0.75)
 	projected_sales = flt(baseline * 0.65, 2)
 	bom_factor = 0.35 if lane in {"Frozen", "Fresh Market"} else 0.25
@@ -2067,6 +2207,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
         SELECT
             i.name, i.item_name, i.item_group, i.stock_uom, i.image,
             i.valuation_rate, i.standard_rate, i.last_purchase_rate,
+            COALESCE(i.custom_store_category, 'Other') as store_category,
             COALESCE(freq.order_count, 0) as order_count
         FROM `tabItem` i
         LEFT JOIN (
@@ -2077,6 +2218,12 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
             GROUP BY soi.item_code
         ) freq ON freq.item_code = i.name
         WHERE i.is_stock_item = 1 AND i.disabled = 0
+            AND i.item_group IN ('Finished Goods', 'Consumables', 'Packaging Materials', 'Packaging', 'Products')
+            AND i.item_name NOT LIKE '%%SAMPLE%%'
+            AND i.item_name NOT LIKE '%%R&D%%'
+            AND i.item_name NOT LIKE '%%TEST%%'
+            AND i.name NOT LIKE 'E2E-%%'
+            AND i.name NOT LIKE 'R&D%%'
         ORDER BY COALESCE(freq.order_count, 0) DESC, i.item_group, i.item_name
     """,
 		store_warehouse,
@@ -2121,6 +2268,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	source_warehouse_by_item = source_stock_context["source_warehouse_by_item"]
 	lane_by_item = source_stock_context["lane_by_item"]
 	stock_map = source_stock_context["stock_map"]
+	source_item_exists = source_stock_context.get("source_item_exists", set())
 
 	target_date = getdate(date or nowdate())
 	signal_flags = _get_signal_flags(store_warehouse, for_date=target_date)
@@ -2129,6 +2277,9 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	tuned_multiplier = _apply_adaptive_tuning(signal_modifiers["composite_multiplier"], adaptive_delta)
 	item_codes = [row.name for row in items]
 	demand_snapshots = _load_store_item_demand_snapshots(store_warehouse, item_codes, target_date)
+
+	# S154/B8: Get delivery schedule for cargo-specific coverage windows.
+	store_deliveries = _get_next_deliveries(store_warehouse)
 
 	for item in items:
 		item_code = item.name
@@ -2142,7 +2293,12 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		snapshot = demand_snapshots.get(item_code) or {}
 		coverage_window_days = flt(snapshot.get("coverage_window_days") or 0)
 		if coverage_window_days <= 0:
-			coverage_window_days = _coverage_window_days_for_lane(lane)
+			# S154/B8: Use cargo-specific coverage from delivery schedule.
+			cargo = _lane_to_cargo_category(lane)
+			if cargo == "FC":
+				coverage_window_days = store_deliveries.get("days_to_cold") or 2
+			else:
+				coverage_window_days = store_deliveries.get("days_to_dry") or 3
 
 		projected_sales = flt(snapshot.get("projected_sales"), 2)
 		bom_consumption = flt(snapshot.get("bom_consumption"), 2)
@@ -2172,6 +2328,14 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		# S136/B3: Store's own actual stock for On Hand display.
 		store_actual = flt(store_stock_map.get(item_code, 0), 2)
 
+		# S154/B3: Not stocked vs OOS distinction.
+		src_key = (source_warehouse, item_code)
+		item_has_bin_at_source = src_key in source_item_exists
+		if available_to_promise <= 0 and not item_has_bin_at_source:
+			effective_atp = -1  # Not stocked at source — sentinel
+		else:
+			effective_atp = available_to_promise
+
 		item["item_code"] = item_code
 		item["uom"] = item.get("stock_uom")
 		item["source_warehouse"] = source_warehouse
@@ -2179,9 +2343,13 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		item["source_warehouse_short"] = (source_warehouse or "").replace(" - Bebang Enterprise Inc.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
 		item["store_actual_qty"] = store_actual
 		item["last_order_qty"] = last_order_qty
-		item["available_stock"] = available_to_promise
-		item["is_oos"] = 1 if available_to_promise <= 0 else 0
+		item["available_stock"] = effective_atp if effective_atp >= 0 else 0
+		item["available_to_promise"] = effective_atp
+		item["is_oos"] = 1 if effective_atp == 0 else 0
+		item["source_item_exists"] = 1 if item_has_bin_at_source else 0
 		item["cargo_category"] = _lane_to_cargo_category(lane)
+		# S154/B2: Store category from custom field.
+		item["store_category"] = item.get("store_category") or "Other"
 		item["packaging_description"] = item.get("stock_uom") or ""
 		item["unit_price"] = flt(
 			item.get("valuation_rate") or item.get("standard_rate") or item.get("last_purchase_rate") or 0,
@@ -2206,17 +2374,35 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 			item["suggested_qty"] = _round_suggested_qty(max(0, adjusted), item_uom)
 			item["recommended_qty"] = item["suggested_qty"]
 
+		# S154/B4: Invisible priority score for sort order.
+		demand_score = min(40, flt(avg_daily_demand) * 2)
+		freq_score = min(20, flt(item.get("order_count", 0)) * 4)
+		urgency_score = 30 if store_actual <= 0 else (20 if flt(item.get("suggested_qty")) > store_actual else 0)
+		source_alert_score = 10 if (effective_atp == 0 and demand_score >= 20) else 0
+		item["priority_score"] = round(demand_score + freq_score + urgency_score + source_alert_score)
+		item["source_oos_alert"] = 1 if source_alert_score > 0 else 0
+
+	# S154: Sort by priority score (highest first), then "not carried" items last.
 	items = sorted(
 		items,
 		key=lambda row: (
-			cint(row.get("risk_rank", 4)),
-			-flt(row.get("order_count", 0)),
-			row.get("item_group") or "",
+			0 if flt(row.get("available_to_promise", 0)) >= 0 else 1,  # Not-carried items last
+			-cint(row.get("priority_score", 0)),
 			row.get("item_name") or "",
 		),
 	)
 
-	return {"items": items}
+	return {
+		"items": items,
+		# S154/B6+B8: Delivery schedule for frontend banner
+		"next_cold_delivery": store_deliveries.get("next_cold_delivery"),
+		"next_dry_delivery": store_deliveries.get("next_dry_delivery"),
+		"days_to_cold": store_deliveries.get("days_to_cold"),
+		"days_to_dry": store_deliveries.get("days_to_dry"),
+		"cold_window_open": _is_delivery_window_open(store_deliveries.get("next_cold_delivery")),
+		"dry_window_open": _is_delivery_window_open(store_deliveries.get("next_dry_delivery")),
+		"schedule_source": store_deliveries.get("schedule_source"),
+	}
 
 
 def _get_order_cutoff():
@@ -2302,15 +2488,34 @@ def _validate_order_window(delivery_date: str, store: str | None = None) -> dict
 
 @frappe.whitelist()
 def validate_order_schedule(store: str, date: str | None = None, delivery_date: str | None = None) -> dict:
-	"""S093: Check if order submission is allowed for the given store and delivery date."""
+	"""S093+S154: Check if order submission is allowed and return delivery schedule.
+
+	Returns schedule info with separate COLD and DRY delivery dates,
+	cutoff state per delivery type, and ordering window status.
+	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="ordering",
+		action="validate_order_schedule",
+		mutation_type="read",
+	)
+
 	if not store:
 		frappe.throw(_("Store is required"))
 
+	store_warehouse = resolve_warehouse(store)
 	_cutoff_hour, cutoff_time = _get_order_cutoff()
 	target_delivery = delivery_date or str(add_days(date or nowdate(), 1))
 	next_delivery_day = getdate(target_delivery).strftime("%A, %Y-%m-%d")
 
 	window = _validate_order_window(target_delivery, store=store)
+
+	# S154/B6: Get delivery schedule for this store
+	deliveries = _get_next_deliveries(store_warehouse)
+
+	cold_window_open = _is_delivery_window_open(deliveries["next_cold_delivery"])
+	dry_window_open = _is_delivery_window_open(deliveries["next_dry_delivery"])
 
 	return {
 		"allowed": window["allowed"],
@@ -2319,6 +2524,14 @@ def validate_order_schedule(store: str, date: str | None = None, delivery_date: 
 		"reason": window["message"],
 		"message": window["message"],
 		"next_delivery_day": next_delivery_day,
+		# S154/B6: Separate COLD and DRY delivery info
+		"next_cold_delivery": deliveries["next_cold_delivery"],
+		"next_dry_delivery": deliveries["next_dry_delivery"],
+		"days_to_cold": deliveries["days_to_cold"],
+		"days_to_dry": deliveries["days_to_dry"],
+		"cold_window_open": cold_window_open,
+		"dry_window_open": dry_window_open,
+		"schedule_source": deliveries["schedule_source"],
 	}
 
 
@@ -2342,6 +2555,14 @@ def submit_order(
 	    is_emergency (bool/int): If True, bypasses cutoff gate (logs but allows)
 	    notes (str): Optional order notes
 	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="ordering",
+		action="submit_order",
+		mutation_type="create",
+	)
+
 	if not store:
 		frappe.throw(_("Store is required"))
 
@@ -2351,11 +2572,8 @@ def submit_order(
 
 	is_emergency_flag = frappe.utils.cint(is_emergency)
 
-	# S093: Reject emergency orders — stores can now order any time with date selector
-	if is_emergency_flag:
-		frappe.throw(
-			_("Emergency orders are no longer accepted. Use the date selector to place next-day orders.")
-		)
+	# S154/F10: Emergency orders require triple approval chain
+	# (Area Supervisor → Regional Manager → SCM). No longer rejected outright.
 
 	# S093: Validate delivery date window (replaces legacy cutoff)
 	order_window = _validate_order_window(delivery_date or add_days(nowdate(), 1), store=store)
@@ -2419,7 +2637,7 @@ def submit_order(
 	order.order_date = order_date
 	order.delivery_date = delivery_date or add_days(nowdate(), 1)
 	order.cargo_category = normalized_cargo_category
-	order.is_emergency = 0  # S093: no longer written on new orders
+	order.is_emergency = 1 if is_emergency_flag else 0  # S154/F10: emergency orders enabled
 	order.is_bulk_order = is_bulk_order
 	order.notes = notes
 	order.status = "Pending Approval"
@@ -5757,3 +5975,445 @@ def verify_maintenance_from_closing(
 		if not verification_notes:
 			frappe.throw(_("Rejection reason is required"))
 		return doc.reject_completion(notes=verification_notes)
+
+
+# ---------------------------------------------------------------------------
+# S154/S2: Delivery Schedule Management APIs
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_weekly_schedule(
+	week_start: str,
+	warehouse_filter: str | None = None,
+	cluster_filter: str | None = None,
+) -> dict:
+	"""S154/S2: Get the full delivery schedule grid for a week.
+
+	Returns entries grouped by warehouse, with day totals.
+	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="scm",
+		action="get_weekly_schedule",
+		mutation_type="read",
+	)
+
+	week_date = getdate(week_start)
+	# Ensure it's a Monday
+	if week_date.weekday() != 0:
+		monday_offset = -week_date.weekday()
+		week_date = add_days(week_date, monday_offset)
+
+	week_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": str(week_date)},
+		"name",
+	)
+
+	is_published = False
+	published_by = None
+	published_at = None
+
+	if not week_name:
+		# No schedule for this week — return empty with metadata
+		entries = []
+	else:
+		doc = frappe.get_doc("BEI Delivery Schedule Week", week_name)
+		is_published = bool(doc.published)
+		published_by = doc.published_by
+		published_at = doc.published_at
+
+		entries = []
+		for entry in doc.entries or []:
+			entries.append({
+				"name": entry.name,
+				"store": entry.store,
+				"day_of_week": entry.day_of_week,
+				"delivery_type": entry.delivery_type,
+				"route_name": entry.route_name,
+			})
+
+	# Filter by warehouse parent or cluster if requested
+	if warehouse_filter:
+		entries = [e for e in entries if warehouse_filter.lower() in (e.get("store") or "").lower()]
+
+	# Build store metadata (warehouse grouping, cluster)
+	store_names = list({e["store"] for e in entries})
+	store_meta = {}
+	if store_names:
+		warehouses = frappe.get_all(
+			"Warehouse",
+			filters={"name": ["in", store_names]},
+			fields=["name", "parent_warehouse", "custom_territory_cluster"],
+			limit_page_length=100,
+		)
+		for wh in warehouses:
+			# Determine warehouse group from route map
+			normalized = (wh.name or "").upper().replace(" - BEBANG ENTERPRISE INC.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
+			source_wh = _CENTRAL_WAREHOUSE_ROUTE_MAP.get(normalized, "")
+			group = "Other"
+			if "3MD" in source_wh:
+				group = "3MD North"
+			elif "Pinnacle" in source_wh:
+				group = "Pinnacle South"
+			elif "Jentec" in source_wh:
+				group = "Jentec"
+
+			store_meta[wh.name] = {
+				"warehouse_group": group,
+				"parent_warehouse": wh.parent_warehouse,
+				"cluster": wh.custom_territory_cluster or "",
+			}
+
+	if cluster_filter:
+		entries = [e for e in entries if store_meta.get(e["store"], {}).get("cluster") == cluster_filter]
+
+	# Compute day totals
+	day_totals: dict[str, dict[str, int]] = {}
+	for day in ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"):
+		day_totals[day] = {"COLD": 0, "DRY": 0}
+	for entry in entries:
+		day = entry.get("day_of_week", "")
+		dtype = entry.get("delivery_type", "")
+		if day in day_totals and dtype in day_totals[day]:
+			day_totals[day][dtype] += 1
+
+	return {
+		"week_start": str(week_date),
+		"week_name": week_name,
+		"published": is_published,
+		"published_by": published_by,
+		"published_at": published_at,
+		"entries": entries,
+		"store_meta": store_meta,
+		"day_totals": day_totals,
+		"entry_count": len(entries),
+	}
+
+
+@frappe.whitelist()
+def toggle_delivery(store: str, week_start: str, day: str, delivery_type: str) -> dict:
+	"""S154/S2: Toggle a single delivery cell on/off in the schedule grid."""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="scm",
+		action="toggle_delivery",
+		mutation_type="update",
+	)
+
+	check_scm_permission()
+
+	week_date = getdate(week_start)
+	if week_date.weekday() != 0:
+		week_date = add_days(week_date, -week_date.weekday())
+
+	# Get or create the week document
+	week_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": str(week_date)},
+		"name",
+	)
+
+	if not week_name:
+		doc = frappe.new_doc("BEI Delivery Schedule Week")
+		doc.week_start = str(week_date)
+		doc.published = 0
+		doc.save(ignore_permissions=True)
+		week_name = doc.name
+	else:
+		doc = frappe.get_doc("BEI Delivery Schedule Week", week_name)
+
+	# Check if entry already exists
+	existing = None
+	for entry in doc.entries or []:
+		if entry.store == store and entry.day_of_week == day and entry.delivery_type == delivery_type:
+			existing = entry
+			break
+
+	if existing:
+		# Remove (toggle off)
+		doc.entries = [e for e in doc.entries if e.name != existing.name]
+		action = "removed"
+	else:
+		# Add (toggle on)
+		doc.append("entries", {
+			"store": store,
+			"day_of_week": day,
+			"delivery_type": delivery_type,
+		})
+		action = "added"
+
+	doc.save(ignore_permissions=True)
+
+	return {
+		"action": action,
+		"store": store,
+		"day": day,
+		"delivery_type": delivery_type,
+		"entry_count": len(doc.entries),
+	}
+
+
+@frappe.whitelist()
+def copy_week(source_week: str, target_week: str) -> dict:
+	"""S154/S2: Clone all entries from source week to target week."""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="scm",
+		action="copy_week",
+		mutation_type="create",
+	)
+
+	check_scm_permission()
+
+	source_date = getdate(source_week)
+	target_date = getdate(target_week)
+
+	source_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": str(source_date)},
+		"name",
+	)
+	if not source_name:
+		frappe.throw(_("No schedule found for source week {0}").format(source_week))
+
+	source_doc = frappe.get_doc("BEI Delivery Schedule Week", source_name)
+
+	# Create or overwrite target week
+	target_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": str(target_date)},
+		"name",
+	)
+
+	if target_name:
+		target_doc = frappe.get_doc("BEI Delivery Schedule Week", target_name)
+		target_doc.entries = []
+	else:
+		target_doc = frappe.new_doc("BEI Delivery Schedule Week")
+		target_doc.week_start = str(target_date)
+
+	target_doc.published = 0
+
+	for entry in source_doc.entries or []:
+		target_doc.append("entries", {
+			"store": entry.store,
+			"day_of_week": entry.day_of_week,
+			"delivery_type": entry.delivery_type,
+			"route_name": entry.route_name,
+		})
+
+	target_doc.save(ignore_permissions=True)
+
+	return {
+		"target_week": str(target_date),
+		"entries_copied": len(target_doc.entries),
+	}
+
+
+@frappe.whitelist()
+def publish_week(week_start: str) -> dict:
+	"""S154/S2: Publish a schedule week (makes it visible to stores)."""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="scm",
+		action="publish_week",
+		mutation_type="update",
+	)
+
+	check_scm_permission()
+
+	week_date = getdate(week_start)
+	week_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": str(week_date)},
+		"name",
+	)
+	if not week_name:
+		frappe.throw(_("No schedule found for week {0}").format(week_start))
+
+	doc = frappe.get_doc("BEI Delivery Schedule Week", week_name)
+	doc.published = 1
+	doc.published_by = frappe.session.user
+	doc.published_at = now_datetime()
+	doc.save(ignore_permissions=True)
+
+	return {
+		"published": True,
+		"week_start": str(week_date),
+		"published_by": doc.published_by,
+		"published_at": str(doc.published_at),
+		"entry_count": len(doc.entries),
+	}
+
+
+@frappe.whitelist()
+def unpublish_week(week_start: str, reason: str = "") -> dict:
+	"""S154/S2: Unpublish a schedule week with audit reason."""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="scm",
+		action="unpublish_week",
+		mutation_type="update",
+	)
+
+	check_scm_permission()
+
+	if not reason:
+		frappe.throw(_("Unpublish reason is required for audit"))
+
+	week_date = getdate(week_start)
+	week_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": str(week_date)},
+		"name",
+	)
+	if not week_name:
+		frappe.throw(_("No schedule found for week {0}").format(week_start))
+
+	doc = frappe.get_doc("BEI Delivery Schedule Week", week_name)
+	doc.published = 0
+	doc.unpublish_reason = reason
+	doc.save(ignore_permissions=True)
+
+	frappe.log_error(
+		f"Schedule unpublished for {week_start} by {frappe.session.user}: {reason}",
+		"Delivery Schedule Unpublished",
+	)
+
+	return {
+		"published": False,
+		"week_start": str(week_date),
+		"reason": reason,
+	}
+
+
+@frappe.whitelist()
+def get_day_summary(date: str) -> dict:
+	"""S154/S2: Get delivery totals for a specific day."""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="scm",
+		action="get_day_summary",
+		mutation_type="read",
+	)
+
+	target = getdate(date)
+	day_names = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+	day_abbr = day_names[target.weekday()]
+	monday = add_days(target, -target.weekday())
+
+	week_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": str(monday), "published": 1},
+		"name",
+	)
+
+	if not week_name:
+		# Fallback to last published week
+		week_name = frappe.db.get_value(
+			"BEI Delivery Schedule Week",
+			{"published": 1},
+			"name",
+			order_by="week_start desc",
+		)
+
+	if not week_name:
+		return {"date": str(target), "day": day_abbr, "deliveries": [], "totals": {"COLD": 0, "DRY": 0}}
+
+	entries = frappe.get_all(
+		"BEI Delivery Schedule Entry",
+		filters={"parent": week_name, "day_of_week": day_abbr},
+		fields=["store", "delivery_type", "route_name"],
+	)
+
+	totals = {"COLD": 0, "DRY": 0}
+	for e in entries:
+		dtype = e.get("delivery_type", "")
+		if dtype in totals:
+			totals[dtype] += 1
+
+	return {
+		"date": str(target),
+		"day": day_abbr,
+		"deliveries": entries,
+		"totals": totals,
+	}
+
+
+@frappe.whitelist()
+def get_store_schedule(store: str) -> dict:
+	"""S154/S2: Get a single store's full weekly schedule (for store card view)."""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="scm",
+		action="get_store_schedule",
+		mutation_type="read",
+	)
+
+	store_warehouse = resolve_warehouse(store)
+	today = getdate(nowdate())
+	monday = add_days(today, -today.weekday())
+
+	# Current week
+	week_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": str(monday), "published": 1},
+		"name",
+	)
+	schedule_source = "published"
+	if not week_name:
+		week_name = frappe.db.get_value(
+			"BEI Delivery Schedule Week",
+			{"published": 1},
+			"name",
+			order_by="week_start desc",
+		)
+		schedule_source = "fallback"
+
+	current_entries = []
+	if week_name:
+		current_entries = frappe.get_all(
+			"BEI Delivery Schedule Entry",
+			filters={"parent": week_name, "store": store_warehouse},
+			fields=["day_of_week", "delivery_type", "route_name"],
+		)
+
+	# Previous week for comparison
+	prev_monday = add_days(monday, -7)
+	prev_week_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": str(prev_monday)},
+		"name",
+	)
+	prev_entries = []
+	if prev_week_name:
+		prev_entries = frappe.get_all(
+			"BEI Delivery Schedule Entry",
+			filters={"parent": prev_week_name, "store": store_warehouse},
+			fields=["day_of_week", "delivery_type"],
+		)
+
+	# Store metadata
+	wh_data = frappe.db.get_value(
+		"Warehouse", store_warehouse,
+		["name", "parent_warehouse", "custom_territory_cluster"],
+		as_dict=True,
+	) or {}
+
+	return {
+		"store": store_warehouse,
+		"schedule_source": schedule_source,
+		"current_week": str(monday),
+		"entries": current_entries,
+		"prev_week_entries": prev_entries,
+		"cluster": wh_data.get("custom_territory_cluster") or "",
+		"parent_warehouse": wh_data.get("parent_warehouse") or "",
+	}

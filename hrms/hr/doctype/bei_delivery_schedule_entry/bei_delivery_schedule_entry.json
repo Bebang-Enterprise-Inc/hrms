@@ -1,0 +1,55 @@
+{
+  "actions": [],
+  "creation": "2026-04-02 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "store",
+    "day_of_week",
+    "delivery_type",
+    "route_name"
+  ],
+  "fields": [
+    {
+      "fieldname": "store",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Store",
+      "options": "Warehouse",
+      "reqd": 1
+    },
+    {
+      "fieldname": "day_of_week",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Day of Week",
+      "options": "Mon\nTue\nWed\nThu\nFri\nSat\nSun",
+      "reqd": 1
+    },
+    {
+      "fieldname": "delivery_type",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Delivery Type",
+      "options": "COLD\nDRY",
+      "reqd": 1
+    },
+    {
+      "fieldname": "route_name",
+      "fieldtype": "Link",
+      "label": "Route",
+      "options": "BEI Route"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 1,
+  "links": [],
+  "module": "HR",
+  "name": "BEI Delivery Schedule Entry",
+  "naming_rule": "Random",
+  "permissions": [],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

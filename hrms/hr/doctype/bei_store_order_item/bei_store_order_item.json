@@ -22,7 +22,8 @@
     "risk_rank",
     "is_edited",
     "deviation_pct",
-    "deviation_reason"
+    "deviation_reason",
+    "qty_dispatched"
   ],
   "fields": [
     {
@@ -151,6 +152,12 @@
       "fieldname": "deviation_reason",
       "fieldtype": "Small Text",
       "label": "Deviation Reason"
+    },
+    {
+      "fieldname": "qty_dispatched",
+      "fieldtype": "Float",
+      "label": "Qty Dispatched",
+      "description": "S154: SCM override — quantity actually dispatched (may differ from qty_requested)"
     }
   ],
   "istable": 1,
