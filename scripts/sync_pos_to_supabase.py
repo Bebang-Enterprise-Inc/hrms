@@ -387,6 +387,8 @@ def map_order(order: dict) -> dict:
         "receipt_number": order.get("receipt_number"),
         "pax_count": order.get("pax_count"),
         "service_type_id": order.get("service_type_id"),
+        "service_channel_id": order.get("service_channel_id"),
+        "channel": _resolve_channel(order),
         "original_gross_sales": pb.get("original_gross_sales", 0),
         "gross_sales": pb.get("gross_sales", 0),
         "net_sales": pb.get("net_sales", 0),
@@ -400,6 +402,33 @@ def map_order(order: dict) -> dict:
         "billed_at": order.get("billed_at"),
         "paid_at": order.get("paid_at"),
     }
+
+
+# Mosaic service_channel_id mapping (verified 2026-04-02):
+#   1  = GrabFood
+#   2  = FoodPanda
+#   16 = FoodPanda (variant — seen on 8 stores, same order profile)
+#   19 = WebDelivery (bebang.ph orders rung through POS, ref starts with BA/BT)
+#        EXCLUDE from revenue totals — already in web_orders.
+_CHANNEL_MAP = {
+    1: "GrabFood",
+    2: "FoodPanda",
+    16: "FoodPanda",
+    19: "WebDelivery",
+}
+
+
+def _resolve_channel(order: dict) -> str:
+    """Derive channel from service_type_id + service_channel_id."""
+    stype = order.get("service_type_id")
+    if stype == 3:
+        schannel = order.get("service_channel_id")
+        return _CHANNEL_MAP.get(schannel, "Delivery")
+    elif stype in (91, 17):
+        return "POS"
+    elif stype is None:
+        return "Unknown"
+    return "POS"
 
 
 def map_order_items(order: dict) -> list[dict]:

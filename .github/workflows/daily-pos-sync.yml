@@ -2,8 +2,10 @@ name: Daily POS & Web Orders Sync
 
 on:
   schedule:
-    # 12:30 AM PHT = 16:30 UTC (previous day)
+    # 12:30 AM PHT = 16:30 UTC (previous day) - overnight sync
     - cron: "30 16 * * *"
+    # 4:00 PM PHT = 08:00 UTC - afternoon intraday sync
+    - cron: "0 8 * * *"
   workflow_dispatch:
     inputs:
       target_date:
