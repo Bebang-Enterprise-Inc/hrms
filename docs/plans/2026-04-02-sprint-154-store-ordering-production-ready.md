@@ -44,13 +44,20 @@ depends_on: S136
   - Store Yield column for unit conversion (e.g., 600g pack yield for Leche Flan)
 - **Pipeline formula:**
   ```
-  1. Query Supabase POS: store sold X units of each product yesterday
+  1. Query Supabase POS: store sold X units of each product (last 7 days avg)
   2. Explode via BOM: X Presidential × 20g sago = Y grams sago consumed
-  3. Sum all products → total daily ingredient demand per store
-  4. Weather multiplier: heat index > 35°C → ×1.15-1.30 (peak season NOW)
-  5. Coverage window: days until next delivery (from store schedule)
-  6. Suggested = (daily_demand × weather × days_to_delivery) + 15% buffer - store_stock
+  3. Sum all products → base_daily_demand per ingredient per store
+  4. Weather: fetch 7-day forecast from daily_weather table
+     Apply exponential decay weighting (nearer days count more):
+       Day 1: weight 1.00, Day 2: 0.85, Day 3: 0.70, Day 4: 0.55,
+       Day 5: 0.40, Day 6: 0.25, Day 7: 0.15
+     Per-day multiplier: >35°C → 1.15-1.30, rain → 0.85-0.90
+     weighted_multiplier = Σ(day_multiplier × day_weight) / Σ(day_weight)
+       across the coverage window only (not full 7 days)
+  5. Coverage window: days until next delivery (COLD or DRY per item cargo)
+  6. Suggested = (base_daily_demand × weighted_weather × coverage_days) + 15% buffer - store_stock
   ```
+- **Weather weighting rationale:** Tomorrow's 37°C heatwave should drive more ordering than day 6's 35°C. Without decay weighting, a rain forecast on day 7 would dilute a heatwave signal on day 1 — causing understocking when the store needs product most. Confirmed: CEO approved 2026-04-02.
 - **POS → BOM crosswalk:** `bom_fg_to_pos_crosswalk_compact.csv` maps 30+ POS item names to FG names
 - **Nightly batch (2 AM):** pre-computes demand snapshots → writes to `BEI Inventory Risk Snapshot` DocType → ordering API reads from local MariaDB (zero latency)
 - **Rationale for nightly batch over real-time sync:** Demand doesn't change hour-to-hour. Orders placed once/day before noon. Nightly is perfectly fresh. No Supabase→Frappe sync complexity, no redundant data, no sync failures.
@@ -58,8 +65,18 @@ depends_on: S136
 ### BD-3: Delivery schedule — SCM-managed per-store, COLD and DRY separate
 - **Problem:** Shows "Next delivery: Saturday" for all stores. Hard-coded to "tomorrow." Reality: Market Market gets 27 deliveries/month, SM Sangandaan gets 3. COLD and DRY are delivered separately 42% of the time (SM North EDSA: 28 COLD days but only 16 DRY days).
 - **Decision:** Build a **Delivery Schedule Management Page** for SCM team (Ian, Jay, Aldrin) in the SCM module. SCM sets the delivery days per store per week, with separate COLD and DRY checkboxes per day. The ordering page reads this schedule.
-- **Data model:** `BEI Delivery Schedule` DocType — one record per store per week. 14 boolean fields (7 days × 2 types: cold/dry). Plus `published`, `published_by`, `published_at` for audit.
-- **Management page UX:** Weekly calendar grid. Rows = stores (grouped by route/frequency). Columns = Mon-Sun. Click cell to toggle: empty → 🧊 → 📦 → 🧊📦 → empty. "Copy Previous Week" button. "Apply Template" dropdown (MWF, TTHS, Daily). "Publish Week" finalizes.
+- **Data model:** `BEI Delivery Schedule Entry` — one row per store × day × delivery type. 47 stores × 7 days × 4 types (COLD/DRY) = 658 rows per week. Queryable, filterable, auditable. NOT 28 booleans — normalized rows.
+- **3 interactive views on one page (tab navigation):**
+  - **View 1: Weekly Grid** — their Excel digitized. Matrix: stores (grouped by warehouse 3MD/Pinnacle, collapsible) × 7 days × 4 types. Click cell = toggle delivery on/off. Live column totals. Filters by warehouse/cluster/search. "Copy Previous Week" + "Publish Week" buttons.
+  - **View 2: Daily Route View** — select a day, see all deliveries grouped by type then by truck/route. Drag-and-drop stores between routes. Truck capacity bars. "Unassigned" section. Connects to S139 BEI Route.
+  - **View 3: Store Card** — click any store → slide-out panel with full 7-day schedule, supervisor info, this-week-vs-last-week diff, inline edit toggles, "View Store Orders" link.
+- **2 delivery types: COLD and DRY.** Investigated March 2026 actual issuance data (11,343 transactions):
+  - COLD: 5,832 transactions (3MD COLD 2,946 + Pinnacle COLD 2,886). 24 items: finished goods (ice milk, jellies, syrups, toppings) + frozen raw materials.
+  - DRY: 5,510 transactions (3MD DRY 2,540 + Pinnacle DRY 2,844 + Jentec DRY 126). 78 items: packaging, cleaning, office supplies, shelf-stable ingredients.
+  - FM (Fresh Market): **zero transactions** — column exists in Excel but never operationalized. Don't build for it.
+  - DR: "Delivery Receipt" document number, not a delivery type. Zero schedule entries.
+  - ICE: empty/abandoned column.
+- **Grid: 47 × 7 × 2 = 658 cells/week.** Clean, matches reality. If FM becomes real later, add 1 option to the Select field.
 - **Initial seed data:** Computed from March 2026 actual delivery data (11,230 issuance rows analyzed — per-store per-type delivery frequency).
 - **March data summary (actual):**
   - Almost daily (20+/month): 2 stores (Market Market, SM North EDSA)
@@ -101,6 +118,31 @@ depends_on: S136
   └─────────────────────────────────────────────────────┘
   ```
 - **Confirmed:** Sticky bar with item count + estimated cost. CEO approved 2026-04-02.
+
+### BD-9: Emergency orders — 24hr delivery, triple approval
+- **Problem:** What if a store runs out mid-week and next scheduled delivery is 3 days away?
+- **Decision:** Add "Emergency Order" button. Delivery within 24 hours. Requires **triple approval chain:**
+  1. Area Supervisor approves
+  2. Regional Manager (Edlice) approves
+  3. SCM approves (they have to arrange the truck)
+- **All three must approve.** If any rejects, order is cancelled.
+- **UI:** Separate button from regular orders — red/orange, clearly labeled "Emergency — 24hr delivery". Shows warning: "Requires Area Supervisor + Regional Manager + SCM approval."
+- **Confirmed:** CEO approved 2026-04-02.
+
+### BD-10: Order editing and SCM quantity override
+- **Problem:** BOM suggestions may be wrong early on. Stores need to edit. SCM needs final control.
+- **Decision:**
+  - Stores can edit order quantities freely until we have confidence in the system.
+  - Deviations > 10% from suggested still require Area Supervisor approval (existing rule from S129).
+  - **SCM can edit ANY quantity on ANY order** — they have final say on what gets dispatched. The dispatched qty may differ from the ordered qty.
+  - SCM edits are tracked: `qty_requested` (store's order) vs `qty_dispatched` (SCM's final number).
+- **Confirmed:** CEO approved 2026-04-02.
+
+### BD-11: Open questions (to confirm during execution)
+- **Sunday deliveries:** STORE LIST shows 21 Sunday stores but UPDATED DELIVERY SCHEDULE only has Mon-Sat columns. Schedule grid includes Sunday (7 columns). Confirm with SCM if Sunday is active.
+- **Missing orders alert (deferred):** Day before a scheduled delivery, SCM should see which stores haven't ordered. Deferred — needs schedule + ordering both live first.
+- **Schedule change vs existing orders (deferred):** If SCM moves a delivery after stores ordered, existing orders may be undersized. Manual handling for now.
+- **Demand signals on schedule grid (deferred):** Highlight stores running low on the weekly grid. Requires BOM pipeline running first.
 
 ### BD-8: Item sort order — urgency default, alphabetical option
 - **Problem:** With "Need Reorder" filter gone, crew needs to quickly see what's critical within each category tab.
@@ -161,7 +203,7 @@ Store crews are not tech-savvy and currently use Google Sheets. A filter that hi
 
 ---
 
-## Scope (105 units)
+## Scope (122 units)
 
 ### Phase 1: Backend — Item Filtering + Priority Score + Source Status (18 units)
 
@@ -194,28 +236,34 @@ Store crews are not tech-savvy and currently use Google Sheets. A filter that hi
 | D1 | DATA | bei-erp | Frappe | **[DATA] Classify ~106 orderable items into 6 store_category values (BD-1).** Toppings (~35), Frozen (~15), Sauces (~12), Packaging (~25), Supplies (~15), Other (~4). Script via API. Source: item names + Central Warehouse SUMMARY `CATEGORY 2` column. | 4 |
 | D2 | DATA | bei-erp | Frappe | **[DATA] Load store-consumption BOMs into Frappe (BD-2).** 15 POS products with ingredient component lists. Separate from the 17 existing commissary production BOMs. | 4 |
 
-### Phase 4: Delivery Schedule Management Page (15 units)
+### Phase 4: Delivery Schedule Management Page — 3 Interactive Views (26 units)
+
+**Data model:** `BEI Delivery Schedule Entry` — one row per store × day × delivery type. 47 stores × 7 days × 4 types (COLD/DRY) = 658 rows per week. Queryable, filterable, auditable.
 
 | Task | Type | Repo | File | Description | Units |
 |------|------|------|------|-------------|-------|
-| S1 | BUILD | bei-erp | Frappe DocType | **[BUILD] `BEI Delivery Schedule` DocType (BD-3).** Fields: `store` (Link→Warehouse), `week_start` (Date, Monday), 14 booleans (mon_cold, mon_dry, tue_cold, tue_dry... sun_cold, sun_dry), `published` (Check), `published_by`, `published_at`. One record per store per week. | 3 |
-| S2 | BUILD | bei-erp | `hrms/api/store.py` | **[BUILD] API: get/set delivery schedule.** `get_delivery_schedule(store, week_start)` returns the weekly grid. `set_delivery_schedule(store, week_start, schedule)` saves it. `publish_week(store, week_start)` locks the schedule. | 3 |
-| S3 | BUILD | bei-tasks | SCM module | **[BUILD] Schedule management page (BD-3).** Weekly calendar grid: rows=stores (grouped by frequency), cols=Mon-Sun. Click cell toggles: empty→🧊→📦→🧊📦→empty. "Copy Previous Week" button. "Apply Template" dropdown. "Publish Week" button. Color coding by delivery frequency. | 6 |
-| S4 | DATA | bei-erp | Frappe | **[DATA] Seed initial schedule from March actual data.** Compute per-store per-type delivery weekdays from 11,230 March issuance rows. Create first week's schedule records. | 3 |
+| S1 | BUILD | bei-erp | Frappe DocType | **[BUILD] Two DocTypes: `BEI Delivery Schedule Week` (parent) + `BEI Delivery Schedule Entry` (child).** Parent: `week_start` (Date, Monday), `published` (Check), `published_by` (Link→User), `published_at` (Datetime), `unpublish_reason` (Small Text). Child: `store` (Link→Warehouse), `day_of_week` (Select: Mon-Sun), `delivery_type` (Select: COLD/DRY), `route_name` (Link→BEI Route, optional). One parent per week, ~987 child entries. SCM can unpublish with reason (audit logged). Also add `custom_territory_cluster` field on Warehouse (Select: CLUSTER 3-9). | 3 |
+| S2 | BUILD | bei-erp | `hrms/api/store.py` | **[BUILD] API: CRUD + publish + copy week + totals.** `get_weekly_schedule(week_start, warehouse_filter, cluster_filter)` returns full grid grouped by warehouse/cluster. `toggle_delivery(store, week_start, day, type)` toggles one cell. `copy_week(source_week, target_week)` clones all entries. `publish_week(week_start)` locks schedule + makes it visible to stores. `unpublish_week(week_start, reason)` unlocks with audit reason + notifies affected stores. `get_day_summary(date)` returns totals per type per warehouse. `get_store_schedule(store)` returns one store's full week for store card. **Fallback:** If no published schedule for the requested week, fall back to the last published week (most weeks are identical). Ordering page shows subtle note: "Using last week's schedule." | 4 |
+| S3 | BUILD | bei-tasks | `/dashboard/scm/delivery-schedule` | **[BUILD] View 1: Weekly Grid (interactive).** Matrix: rows = stores grouped by warehouse (3MD North / Pinnacle South, collapsible). Cols = Mon-Sun × 4 sub-cols (COLD/DRY). Click cell = toggle 🔴 on/off. Live column totals at bottom ("28 FC, 12 DRY, 5 FM on Monday"). Filters: warehouse, cluster, search. "Copy Previous Week" button. "Publish Week" button (locks, shows who published + when). Week navigator (◄ ►). Store metadata on hover: area supervisor, contact, cluster. | 10 |
+| S4 | BUILD | bei-tasks | `/dashboard/scm/delivery-schedule` | **[BUILD] View 2: Daily Route View (interactive).** Select a day → see all deliveries grouped by delivery type (COLD/DRY), then by truck/route. Drag-and-drop stores between routes to rebalance. Show truck capacity utilization bar. "Unassigned" section for stores not yet on a route. Add/remove truck buttons. Connects to BEI Route DocType (S139 data). If no routes assigned yet, show flat list with "Assign Route" dropdown. | 4 |
+| S5 | BUILD | bei-tasks | `/dashboard/scm/delivery-schedule` | **[BUILD] View 3: Store Card View (interactive).** Click any store → slide-out panel with: full weekly schedule (7-day row with COLD/DRY toggles), area supervisor + contact + cluster + warehouse, this week vs last week comparison (deliveries added/removed), edit delivery types directly from card (same toggle as grid). "View Store Orders" link to ordering page for that store. | 3 |
+| S6 | DATA | bei-erp | Frappe | **[DATA] Seed initial schedule from March actual data + Excel screenshot.** Parse 11,230 March issuance rows for per-store per-type per-weekday delivery patterns. Also incorporate the Excel screenshot data (COLD/DRY columns per day). Create first 2 weeks of schedule entries. | 2 |
 
-### Phase 5: Frontend UX Redesign (22 units)
+### Phase 5: Frontend UX Redesign + Emergency Orders + SCM Override (28 units)
 
 | Task | Type | Repo | File | Description | Units |
 |------|------|------|------|-------------|-------|
 | F1 | BUILD | bei-tasks | `StoreOrderingPage.tsx` | **[BUILD] Category tab bar (BD-1).** 7 tabs: `[All (106)] [Toppings 🔴12] [Frozen 🔴3] [Sauces 🔴5] [Packaging 🔴8] [Supplies 🔴2] [Other]`. Badge = items with 0 stock per category. "All" default. | 4 |
 | F2 | BUILD | bei-tasks | `StoreOrderingPage.tsx` | **[BUILD] Urgency sort + alphabetical toggle (BD-8).** Default: sort by invisible priority_score (highest first). 🔴 Out of stock → 🟡 Low → 🟢 Sufficient. "Not carried" items after divider at bottom. A-Z toggle button persists to localStorage. | 3 |
 | F3 | BUILD | bei-tasks | `StoreOrderingPage.tsx` | **[BUILD] Sticky Review bar with summary (BD-6).** `position: sticky; bottom: 0; z-index: 20; backdrop-blur`. Shows: `🛒 Review Order (9 items · ₱12,450) [Review →]`. Visible when ≥1 item has qty. | 3 |
-| F4 | BUILD | bei-tasks | `OrderWindowBanner.tsx` | **[BUILD] Delivery countdown banner (BD-4).** Replace "Place Order →" with dual delivery countdown: `🧊 Next frozen: Wed Apr 4 (1d 3:42 left)` / `📦 Next dry: Fri Apr 6 (3d 3:42 left)`. Single line when COLD+DRY same day. Cutoff state: "Frozen order closed — next window Wed for Fri". Amber nudge when delivery is tomorrow. | 4 |
+| F4 | BUILD | bei-tasks | `OrderWindowBanner.tsx` | **[BUILD] Delivery countdown banner (BD-4).** Replace "Place Order →" with dual delivery countdown: `🧊 Next COLD: Wed Apr 4 (1d 3:42 left)` / `📦 Next DRY: Fri Apr 6 (3d 3:42 left)`. Single line when COLD+DRY same day. Cutoff state: "COLD order closed — next window Wed for Fri". Amber nudge when delivery is tomorrow. | 4 |
 | F5 | FIX | bei-tasks | `OrderItemTable.tsx` | **[FIX] Item code + UOM prominent (BD-5).** Format: `FROZEN ICE MILK (GRIFFITH) · FG020-GRIFFITH · KG`. Not grey subtext. | 2 |
 | F6 | FIX | bei-tasks | `OrderItemTable.tsx` + `OrderItemCard.tsx` | **[FIX] Source OOS alert badge + Not stocked (BD-7).** `source_oos_alert=true` → orange ⚠️ badge "Source OOS". ATP < 0 → "—" grey. ATP = 0 without alert → "OOS" red. "Not carried" items after `── Not carried by {warehouse} ──` divider. | 3 |
 | F7 | FIX | bei-tasks | `OrderSummaryStrip.tsx` | **[FIX] KPI updates.** "OOS at Source" excludes not-stocked items. Badge counts per category tab. | 1 |
 | F8 | FIX | bei-tasks | `OrderCriticalStrip.tsx` | **[FIX] Critical strip: only truly OOS items with source_oos_alert.** Not "not stocked" items. | 1 |
 | F9 | FIX | bei-tasks | `OrderItemCard.tsx` | **[FIX] Mobile card: same sort, categories, source alert, item code.** | 1 |
+| F10 | BUILD | bei-erp + bei-tasks | `StoreOrderingPage.tsx` + `hrms/api/store.py` | **[BUILD] Emergency Order button (BD-9).** Red/orange button "Emergency — 24hr delivery" on ordering page. Creates order with `is_emergency=true`. Requires triple approval chain: Area Supervisor → Regional Manager (Edlice) → SCM. All three must approve. Backend: new approval chain logic on `submit_order` when `is_emergency=true`. Frontend: warning dialog explaining the 3-step approval. | 4 |
+| F11 | BUILD | bei-erp | `hrms/api/store.py` + BEI Store Order Item | **[BUILD] SCM quantity override (BD-10).** Add `qty_dispatched` field on `BEI Store Order Item` (separate from `qty_requested`). SCM can edit ANY quantity on any approved order via API. Track both: `qty_requested` (what store asked for) vs `qty_dispatched` (what SCM decides to send). Frontend: SCM order review page shows both columns with edit on dispatched. | 2 |
 
 ### Phase 6: L3 Testing (10 units)
 
@@ -232,14 +280,14 @@ Store crews are not tech-savvy and currently use Google Sheets. A filter that hi
 | C1 | DOC | bei-erp | Update plan YAML + SPRINT_REGISTRY.md. Push. | 1 |
 | C2 | DOC | bei-erp | Update S136 plan status to COMPLETED. | 1 |
 
-**Total: 105 units** (18 backend + 20 pipeline + 8 data + 15 schedule page + 22 frontend + 10 L3 + 2 closeout)
+**Total: 122 units** (18 backend + 20 pipeline + 8 data + 26 schedule page + 28 frontend/emergency/SCM + 10 L3 + 2 closeout)
 
 ---
 
 ## Execution Model
 
-105 units split into **1 builder session + 1 L3 session**:
-- **Builder session (this session):** Phase 1-5 + Phase 7 closeout = **95 units**. One agent owns all code. No cold-start context conflicts. Stops at PR_CREATED.
+122 units split into **1 builder session + 1 L3 session**:
+- **Builder session:** Phase 1-5 + Phase 7 closeout = **112 units**. One agent owns all code. No cold-start context conflicts. Stops at PR_CREATED.
 - **L3 session (separate):** Phase 6 = **10 units**. Fresh session, read-only (Playwright tests only, no code changes). Builder outputs L3 handoff prompt. Sam pastes into fresh session.
 
 **Why not multiple builder sessions:** Cold-start agents on the same feature step on each other's code (proven failure in this conversation — branch confusion, wrong commits, patches-on-patches).
@@ -274,6 +322,12 @@ Store crews are not tech-savvy and currently use Google Sheets. A filter that hi
 - [ ] Is item code + UOM shown prominently (not grey subtext)? (F5)
 - [ ] Does Source OOS alert show ⚠️ badge only on high-demand items? (F6)
 - [ ] Are "Not carried" items at bottom of each tab with divider? (F6)
+- [ ] Does emergency order require triple approval: Area Supervisor → Regional Manager → SCM? (F10)
+- [ ] Does `BEI Store Order Item` have `qty_dispatched` field separate from `qty_requested`? (F11)
+- [ ] Can SCM edit `qty_dispatched` on any approved order? (F11)
+- [ ] Does the schedule DocType use parent/child (Week + Entry), not flat rows? (S1)
+- [ ] Does unpublish require a reason and log audit trail? (S2)
+- [ ] Does the weekly grid have 2 sub-columns per day (COLD/DRY), not 4? (S3)
 - [ ] Does every modified `@frappe.whitelist()` call `set_backend_observability_context()`? (B7)
 
 ---
@@ -295,8 +349,15 @@ Store crews are not tech-savvy and currently use Google Sheets. A filter that hi
 | sam@bebang.ph | Find high-demand item OOS at source | ⚠️ Source OOS orange badge visible | B4/F6 broken |
 | sam@bebang.ph | Scroll with qty entered | Sticky bar visible: `🛒 Review Order (N items · ₱X)` | F3 broken |
 | sam@bebang.ph | Tap Review → Confirm & Submit | Order BEI-ORD-xxxx created | Submit regression |
-| sam@bebang.ph | Open SCM schedule page | Weekly grid with stores × days. COLD/DRY toggles. Publish button | S3 broken |
-| sam@bebang.ph | Set Araneta Wed=🧊📦, publish | Ordering page for Araneta shows Wed as next delivery | S2/B6/F4 broken |
+| sam@bebang.ph | Open SCM schedule page | 3 view tabs: Weekly Grid, Daily Route, Store Card. Grid shows 47 stores × 7 days × 4 types | S3 broken |
+| sam@bebang.ph | Click FC cell for Araneta Wednesday | Cell toggles 🔴 on. Column total increments. | S3 toggle broken |
+| sam@bebang.ph | Click "Copy Previous Week" | All entries cloned to next week. Grid populates. | S2 copy broken |
+| sam@bebang.ph | Switch to Daily Route view, select Wednesday | See all Wednesday deliveries grouped by COLD/DRY, truck assignments | S4 broken |
+| sam@bebang.ph | Drag store between routes | Store moves, truck capacity bars update | S4 drag broken |
+| sam@bebang.ph | Click store name → Store Card | Slide-out: full week schedule, supervisor info, edit toggles | S5 broken |
+| sam@bebang.ph | Publish week | Schedule locked. Ordering page shows correct next delivery for each store | S2/B6/F4 broken |
+| sam@bebang.ph | Click "Emergency Order" on ordering page | Warning dialog shows triple approval requirement. Submit creates emergency order with `is_emergency=true` | F10 broken |
+| sam@bebang.ph | Open SCM order view, edit qty_dispatched | Both `qty_requested` and `qty_dispatched` visible. SCM can change dispatched qty. | F11 broken |
 | test.crew1@bebang.ph | Open ordering | Category tabs, no raw materials, correct schedule, urgency sort | Regression |
 
 Evidence files:
@@ -305,6 +366,59 @@ output/l3/S154/form_submissions.json
 output/l3/S154/api_mutations.json
 output/l3/S154/state_verification.json
 ```
+
+---
+
+## Zero-Skip Enforcement (MANDATORY — Read Before Every Phase)
+
+### The Rule
+
+**Every task in this plan MUST be implemented. No exceptions. No "deferred." No "out of scope." No "will do later."**
+
+If a task cannot be completed, the agent MUST:
+1. **STOP immediately**
+2. **State the task ID** (e.g., "BLOCKED on F10")
+3. **Explain WHY** it cannot be completed (specific error, missing dependency, technical impossibility)
+4. **Ask the user** for guidance before proceeding to any other task
+
+**The agent is FORBIDDEN from:**
+- Skipping a task silently
+- Marking a task as "done" when it's partial
+- Replacing a task with a simpler version without explicit user approval
+- Saying "deferred to next sprint" — there is no next sprint for these items
+- Combining multiple tasks into one and dropping features in the merge
+- Implementing the happy path only and skipping edge cases described in the task
+
+### Task Completion Checklist (MANDATORY after each phase)
+
+After completing EACH phase, the agent MUST write a checklist to `output/s154/phase_completion.md`:
+
+```markdown
+## Phase N Completion — [timestamp PHT]
+
+| Task | Status | Evidence | Skipped? | If skipped, why? |
+|------|--------|----------|----------|------------------|
+| B1   | DONE   | SQL WHERE clause added, line XXX | No | — |
+| B2   | DONE   | Custom field in fixtures, line XXX | No | — |
+| ...  | ...    | ... | ... | ... |
+
+Skipped count: 0
+Partial count: 0
+Agent self-declaration: I confirm all tasks in Phase N are fully implemented as described.
+```
+
+**If `Skipped count > 0` or `Partial count > 0`, the agent MUST immediately notify the user BEFORE starting the next phase.**
+
+### PR Description Gate
+
+The PR description MUST include:
+1. A task-by-task checklist with checkmarks
+2. Any task NOT checked must have an explanation
+3. The user will reject any PR missing tasks without explanation
+
+### L3 Handoff Gate
+
+The L3 handoff prompt MUST list every task from every phase with its implementation status. The L3 agent uses this to verify — if a task says "DONE" but L3 can't find the feature, it's a builder lie and gets reported.
 
 ---
 
@@ -319,8 +433,13 @@ output/l3/S154/state_verification.json
   - Sticky Review bar with item count + estimated cost
   - SKU priority score driving sort (invisible) + Source OOS alert badge
   - "Not carried" items at bottom of each tab with divider
-  - All L3 scenarios pass
+  - Emergency order button with triple approval chain (Area Sup → Regional Mgr → SCM)
+  - SCM qty override: `qty_dispatched` editable on any approved order
+  - All L3 scenarios pass (including emergency + SCM override scenarios)
+  - Phase completion checklists written for all phases in `output/s154/phase_completion.md`
+  - PR descriptions include task-by-task checklist
   - Plan + registry updated
+  - **ZERO tasks skipped. If any task is skipped, agent MUST notify user BEFORE proceeding.**
 
 - **stop_only_for:**
   - P3: Supabase POS data doesn't have per-item per-store sales (need to investigate views)
@@ -440,3 +559,5 @@ output/l3/S154/state_verification.json
 This sprint is intended for autonomous end-to-end execution.
 Do not stop for progress-only updates.
 Only pause for items listed in the Autonomous Execution Contract `stop_only_for` section.
+
+**ZERO-SKIP RULE:** After each phase, write the phase completion checklist to `output/s154/phase_completion.md`. If ANY task was skipped or partially done, STOP and notify the user IMMEDIATELY. Do NOT proceed to the next phase with skipped tasks. The user (Sam Karazi, CEO) has explicitly required this — no task is optional, no task can be deferred, no task can be simplified without his approval.
