@@ -1377,6 +1377,8 @@ def _build_orderable_source_stock_context(store_warehouse, items):
 			item_codes_by_source.setdefault(source_warehouse, set()).add(item_code)
 
 	stock_map = {}
+	# S154/B3: Track which items have Bin records at source (even if qty=0).
+	source_item_exists = set()
 	for source_warehouse, item_codes in item_codes_by_source.items():
 		stock_rows = frappe.get_all(
 			"Bin",
@@ -1387,11 +1389,13 @@ def _build_orderable_source_stock_context(store_warehouse, items):
 		for row in stock_rows:
 			key = (source_warehouse, row.item_code)
 			stock_map[key] = flt(stock_map.get(key, 0)) + flt(row.actual_qty)
+			source_item_exists.add(key)
 
 	return {
 		"source_warehouse_by_item": source_warehouse_by_item,
 		"lane_by_item": lane_by_item,
 		"stock_map": stock_map,
+		"source_item_exists": source_item_exists,
 	}
 
 
@@ -1673,6 +1677,9 @@ def _load_store_item_demand_snapshots(warehouse, item_codes, target_date):
 
 
 def _estimate_projected_sales_and_bom(last_order_qty, order_count, lane):
+	# S154/B5: Return 0 when genuinely no data — don't fake demand.
+	if flt(last_order_qty) <= 0 and flt(order_count) <= 0:
+		return 0.0, 0.0
 	baseline = max(1.0, flt(last_order_qty), flt(order_count) * 0.75)
 	projected_sales = flt(baseline * 0.65, 2)
 	bom_factor = 0.35 if lane in {"Frozen", "Fresh Market"} else 0.25
@@ -2067,6 +2074,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
         SELECT
             i.name, i.item_name, i.item_group, i.stock_uom, i.image,
             i.valuation_rate, i.standard_rate, i.last_purchase_rate,
+            COALESCE(i.custom_store_category, 'Other') as store_category,
             COALESCE(freq.order_count, 0) as order_count
         FROM `tabItem` i
         LEFT JOIN (
@@ -2077,6 +2085,12 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
             GROUP BY soi.item_code
         ) freq ON freq.item_code = i.name
         WHERE i.is_stock_item = 1 AND i.disabled = 0
+            AND i.item_group IN ('Finished Goods', 'Consumables', 'Packaging Materials', 'Packaging', 'Products')
+            AND i.item_name NOT LIKE '%%SAMPLE%%'
+            AND i.item_name NOT LIKE '%%R&D%%'
+            AND i.item_name NOT LIKE '%%TEST%%'
+            AND i.name NOT LIKE 'E2E-%%'
+            AND i.name NOT LIKE 'R&D%%'
         ORDER BY COALESCE(freq.order_count, 0) DESC, i.item_group, i.item_name
     """,
 		store_warehouse,
@@ -2121,6 +2135,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	source_warehouse_by_item = source_stock_context["source_warehouse_by_item"]
 	lane_by_item = source_stock_context["lane_by_item"]
 	stock_map = source_stock_context["stock_map"]
+	source_item_exists = source_stock_context.get("source_item_exists", set())
 
 	target_date = getdate(date or nowdate())
 	signal_flags = _get_signal_flags(store_warehouse, for_date=target_date)
@@ -2172,6 +2187,14 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		# S136/B3: Store's own actual stock for On Hand display.
 		store_actual = flt(store_stock_map.get(item_code, 0), 2)
 
+		# S154/B3: Not stocked vs OOS distinction.
+		src_key = (source_warehouse, item_code)
+		item_has_bin_at_source = src_key in source_item_exists
+		if available_to_promise <= 0 and not item_has_bin_at_source:
+			effective_atp = -1  # Not stocked at source — sentinel
+		else:
+			effective_atp = available_to_promise
+
 		item["item_code"] = item_code
 		item["uom"] = item.get("stock_uom")
 		item["source_warehouse"] = source_warehouse
@@ -2179,9 +2202,13 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		item["source_warehouse_short"] = (source_warehouse or "").replace(" - Bebang Enterprise Inc.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
 		item["store_actual_qty"] = store_actual
 		item["last_order_qty"] = last_order_qty
-		item["available_stock"] = available_to_promise
-		item["is_oos"] = 1 if available_to_promise <= 0 else 0
+		item["available_stock"] = effective_atp if effective_atp >= 0 else 0
+		item["available_to_promise"] = effective_atp
+		item["is_oos"] = 1 if effective_atp == 0 else 0
+		item["source_item_exists"] = 1 if item_has_bin_at_source else 0
 		item["cargo_category"] = _lane_to_cargo_category(lane)
+		# S154/B2: Store category from custom field.
+		item["store_category"] = item.get("store_category") or "Other"
 		item["packaging_description"] = item.get("stock_uom") or ""
 		item["unit_price"] = flt(
 			item.get("valuation_rate") or item.get("standard_rate") or item.get("last_purchase_rate") or 0,
@@ -2206,12 +2233,20 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 			item["suggested_qty"] = _round_suggested_qty(max(0, adjusted), item_uom)
 			item["recommended_qty"] = item["suggested_qty"]
 
+		# S154/B4: Invisible priority score for sort order.
+		demand_score = min(40, flt(avg_daily_demand) * 2)
+		freq_score = min(20, flt(item.get("order_count", 0)) * 4)
+		urgency_score = 30 if store_actual <= 0 else (20 if flt(item.get("suggested_qty")) > store_actual else 0)
+		source_alert_score = 10 if (effective_atp == 0 and demand_score >= 20) else 0
+		item["priority_score"] = round(demand_score + freq_score + urgency_score + source_alert_score)
+		item["source_oos_alert"] = 1 if source_alert_score > 0 else 0
+
+	# S154: Sort by priority score (highest first), then "not carried" items last.
 	items = sorted(
 		items,
 		key=lambda row: (
-			cint(row.get("risk_rank", 4)),
-			-flt(row.get("order_count", 0)),
-			row.get("item_group") or "",
+			0 if flt(row.get("available_to_promise", 0)) >= 0 else 1,  # Not-carried items last
+			-cint(row.get("priority_score", 0)),
 			row.get("item_name") or "",
 		),
 	)
