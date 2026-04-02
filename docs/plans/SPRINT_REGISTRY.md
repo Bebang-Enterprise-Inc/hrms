@@ -168,9 +168,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S153` | Sprint 153 | `s153-procurement-defect-remediation` | — | GO — Fix 7 open defects from S152: OR upload, partial GR, GR warehouse, RFP payment method, PO toast, new vendor CEO threshold. | `docs/plans/2026-04-01-sprint-153-procurement-defect-remediation.md` |
 
+| `S154` | Sprint 154 | `s154-store-ordering-production-ready` | — | GO — Store ordering production-ready: category tabs, BOM demand pipeline, SCM delivery schedule page, priority scoring, sticky submit, 8 UX fixes. 105 units. | `docs/plans/2026-04-02-sprint-154-store-ordering-production-ready.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S154`.
-2. Reserve branch name: `s154-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S155`.
+2. Reserve branch name: `s155-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
