@@ -562,3 +562,68 @@ Do not stop for progress-only updates.
 Only pause for items listed in the Autonomous Execution Contract `stop_only_for` section.
 
 **ZERO-SKIP RULE:** After each phase, write the phase completion checklist to `output/s154/phase_completion.md`. If ANY task was skipped or partially done, STOP and notify the user IMMEDIATELY. Do NOT proceed to the next phase with skipped tasks. The user (Sam Karazi, CEO) has explicitly required this — no task is optional, no task can be deferred, no task can be simplified without his approval.
+
+---
+
+## S154 Remediation Addendum (2026-04-02 — 10 Gaps Found By Fact-Check)
+
+The first execution session completed Phase 1-4 fully but cut corners on Phase 5 frontend. The agent marked 6 tasks as DONE in the prose checklist by describing adjacent work (hook/interface changes) instead of actual component file modifications. Fact-check against filesystem confirmed 10 gaps.
+
+### Remediation Task List
+
+| # | Task | Gap | MUST_MODIFY | MUST_CONTAIN |
+|---|------|-----|-------------|--------------|
+| R1 | F2 | A-Z preference not persisted to localStorage | `StoreOrderingPage.tsx` | `localStorage` AND `sortByAlpha` |
+| R2 | F5 | Item display not `NAME · ITEM_CODE · UOM` | `OrderItemTable.tsx` | `item_code` in display row |
+| R3 | F6 | Source OOS badge + "Not carried by" divider missing | `OrderItemTable.tsx` + `OrderItemCard.tsx` | `source_oos_alert` AND `Not carried by` |
+| R4 | F7 | OOS count includes not-stocked items | `OrderSummaryStrip.tsx` | `source_item_exists` |
+| R5 | F8 | Critical strip shows not-stocked items | `OrderCriticalStrip.tsx` | `source_oos_alert` |
+| R6 | F9 | Mobile card missing sort/categories/source alert | `OrderItemCard.tsx` | `store_category` AND `priority_score` |
+| R7 | F10 | No emergency button + no triple approval chain | `StoreOrderingPage.tsx` + `store.py` | Frontend: `Emergency` button. Backend: approval logic |
+| R8 | F11 | No SCM review page for qty_dispatched | New file in `bei-tasks/app/dashboard/scm/` | `qty_dispatched` AND `qty_requested` |
+| R9 | S4 | No drag-and-drop or truck capacity bars | `delivery-schedule/page.tsx` | `onDrag` OR `useDrag` |
+| R10 | C2 | S136 status not updated | `sprint-136-ordering-data-quality.md` | `status: COMPLETED` |
+
+### Machine-Verifiable Phase Gate (Replaces Prose Checklist)
+
+The agent MUST write `output/s154/verify_remediation.py` BEFORE starting remediation. The script checks `grep` against filesystem for every MUST_CONTAIN assertion above. After completing all R1-R10, the agent runs the script. If ANY task shows FAIL, fix before creating PR. Script output is completion evidence — not the agent's self-report.
+
+```python
+#!/usr/bin/env python3
+"""Machine-verifiable gate for S154 remediation."""
+import subprocess, sys, os
+
+BT = os.path.join(os.path.dirname(__file__), "..", "..", "..", "bei-tasks")
+BE = os.path.join(os.path.dirname(__file__), "..", "..")
+C = "app/dashboard/store-ops/ordering/_components"
+
+CHECKS = {
+    "R1":  {f"{BT}/{C}/StoreOrderingPage.tsx": ["localStorage", "sortByAlpha"]},
+    "R2":  {f"{BT}/{C}/OrderItemTable.tsx": ["item_code"]},
+    "R3a": {f"{BT}/{C}/OrderItemTable.tsx": ["source_oos_alert", "Not carried by"]},
+    "R3b": {f"{BT}/{C}/OrderItemCard.tsx": ["source_oos_alert"]},
+    "R4":  {f"{BT}/{C}/OrderSummaryStrip.tsx": ["source_item_exists"]},
+    "R5":  {f"{BT}/{C}/OrderCriticalStrip.tsx": ["source_oos_alert"]},
+    "R6":  {f"{BT}/{C}/OrderItemCard.tsx": ["store_category", "priority_score"]},
+    "R7":  {f"{BT}/{C}/StoreOrderingPage.tsx": ["Emergency"]},
+    "R10": {f"{BE}/docs/plans/2026-03-27-sprint-136-ordering-data-quality.md": ["status: COMPLETED"]},
+}
+
+def grep_count(filepath, pattern):
+    r = subprocess.run(["grep", "-c", pattern, filepath], capture_output=True, text=True)
+    return int(r.stdout.strip() or "0")
+
+fails = 0
+for tid, files in sorted(CHECKS.items()):
+    ok = True
+    for fp, patterns in files.items():
+        for p in patterns:
+            c = grep_count(fp, p)
+            tag = "PASS" if c > 0 else "FAIL"
+            if c == 0: ok = False; fails += 1
+            print(f"  {tid}: {tag} — '{p}' in {os.path.basename(fp)} ({c}x)")
+    print(f"{tid}: {'PASS' if ok else 'FAIL'}")
+
+print(f"\n{'ALL PASS' if fails == 0 else f'{fails} FAILURES'}")
+sys.exit(0 if fails == 0 else 1)
+```
