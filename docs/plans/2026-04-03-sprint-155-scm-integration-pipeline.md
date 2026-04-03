@@ -8,8 +8,8 @@ created_date: 2026-04-03
 execution_started: 2026-04-03
 completed_date:
 deployed_at:
-backend_pr:
-frontend_pr:
+backend_pr: "#425"
+frontend_pr: "BEI-Tasks#314"
 l3_result:
 execution_summary:
 depends_on: S154

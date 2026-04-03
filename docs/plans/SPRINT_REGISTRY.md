@@ -194,7 +194,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S154` | Sprint 154 | `s154-store-ordering-production-ready` | hrms#417, BEI-Tasks#305 | PR_CREATED — Phase 1-5 implemented (122 units). Backend: delivery schedule DocTypes + APIs, BOM demand pipeline, emergency orders, SCM override. Frontend: category tabs, urgency sort, sticky review, delivery countdown, SCM schedule page. L3 pending. | `docs/plans/2026-04-02-sprint-154-store-ordering-production-ready.md` |
 
-| `S155` | Sprint 155 | `s155-scm-integration-pipeline` | — | GO — SCM integration + S154 remediation (72 units). | `docs/plans/2026-04-03-sprint-155-scm-integration-pipeline.md` |
+| `S155` | Sprint 155 | `s155-scm-integration-pipeline` | hrms#425 + BEI-Tasks#314 | IN_PROGRESS — PRs created 2026-04-03. Needs full rebuild + data seeding post-deploy. | `docs/plans/2026-04-03-sprint-155-scm-integration-pipeline.md` |
 
 | `S156` | Sprint 156 | `s156-s154-deferred-ux-polish` | — | PLANNED — S154 deferred UX polish. | `docs/plans/2026-04-03-sprint-156-s154-deferred-ux-polish.md` |
 
