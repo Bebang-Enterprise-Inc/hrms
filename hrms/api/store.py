@@ -2317,12 +2317,10 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 
 		projected_sales = flt(snapshot.get("projected_sales"), 2)
 		bom_consumption = flt(snapshot.get("bom_consumption"), 2)
-		if projected_sales > 0 or bom_consumption > 0:
+		snapshot_demand = flt(snapshot.get("avg_daily_demand"), 4)
+		if projected_sales > 0 or bom_consumption > 0 or snapshot_demand > 0:
 			recommendation_source = snapshot.get("signal_source") or "sales_demand_snapshot"
-			avg_daily_demand = flt(
-				snapshot.get("avg_daily_demand") or (projected_sales + bom_consumption),
-				4,
-			)
+			avg_daily_demand = snapshot_demand or flt(projected_sales + bom_consumption, 4)
 		else:
 			projected_sales, bom_consumption = _estimate_projected_sales_and_bom(
 				last_order_qty, flt(item.order_count), lane
