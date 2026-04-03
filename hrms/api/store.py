@@ -20,7 +20,7 @@ from frappe import _
 from frappe.utils import add_days, cint, flt, get_datetime, getdate, now_datetime, nowdate
 
 from hrms.utils.bei_config import SPACE_OPS, get_chat_space, get_company
-from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
+from hrms.utils.scm_roles import SCM_ADMIN_ROLES, SCM_APPROVAL_ROLES, check_scm_permission
 from hrms.utils.supply_chain_contracts import (
 	FINANCE_TREATMENT_INTERCOMPANY,
 	FINANCE_TREATMENT_SAME_COMPANY,
@@ -6103,7 +6103,7 @@ def toggle_delivery(store: str, week_start: str, day: str, delivery_type: str) -
 		mutation_type="update",
 	)
 
-	check_scm_permission()
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
 
 	week_date = getdate(week_start)
 	if week_date.weekday() != 0:
@@ -6167,7 +6167,7 @@ def copy_week(source_week: str, target_week: str) -> dict:
 		mutation_type="create",
 	)
 
-	check_scm_permission()
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
 
 	source_date = getdate(source_week)
 	target_date = getdate(target_week)
@@ -6225,7 +6225,7 @@ def publish_week(week_start: str) -> dict:
 		mutation_type="update",
 	)
 
-	check_scm_permission()
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
 
 	week_date = getdate(week_start)
 	week_name = frappe.db.get_value(
@@ -6262,7 +6262,7 @@ def unpublish_week(week_start: str, reason: str = "") -> dict:
 		mutation_type="update",
 	)
 
-	check_scm_permission()
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
 
 	if not reason:
 		frappe.throw(_("Unpublish reason is required for audit"))
@@ -6417,3 +6417,100 @@ def get_store_schedule(store: str) -> dict:
 		"cluster": wh_data.get("custom_territory_cluster") or "",
 		"parent_warehouse": wh_data.get("parent_warehouse") or "",
 	}
+
+
+# ---------------------------------------------------------------------------
+# S154/F11: SCM Order Review — qty_requested vs qty_dispatched
+# ---------------------------------------------------------------------------
+
+@frappe.whitelist()
+def get_orders_for_dispatch(
+	store: str | None = None,
+	status: str | None = None,
+	date_from: str | None = None,
+	date_to: str | None = None,
+) -> list[dict]:
+	"""S154/F11: Get approved orders for SCM dispatch review."""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="scm",
+		action="get_orders_for_dispatch",
+		mutation_type="read",
+	)
+
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
+
+	filters = {}
+	if store:
+		filters["store"] = resolve_warehouse(store)
+	if status:
+		filters["status"] = status
+	else:
+		filters["status"] = ["in", ["Approved", "Pending Approval"]]
+	if date_from:
+		filters["delivery_date"] = [">=", date_from]
+	if date_to:
+		if "delivery_date" in filters:
+			filters["delivery_date"] = ["between", [date_from, date_to]]
+		else:
+			filters["delivery_date"] = ["<=", date_to]
+
+	orders = frappe.get_all(
+		"BEI Store Order",
+		filters=filters,
+		fields=[
+			"name", "store", "order_date", "delivery_date", "cargo_category",
+			"status", "is_emergency", "is_bulk_order",
+		],
+		order_by="delivery_date desc, creation desc",
+		limit_page_length=100,
+	)
+
+	for order in orders:
+		order["items"] = frappe.get_all(
+			"BEI Store Order Item",
+			filters={"parent": order["name"]},
+			fields=[
+				"item_code", "item_name", "uom",
+				"qty_requested", "qty_dispatched",
+			],
+		)
+		order["store_short"] = (order.get("store") or "").replace(
+			" - Bebang Enterprise Inc.", ""
+		).replace(" - BEI", "").replace(" - BKI", "").strip()
+
+	return orders
+
+
+@frappe.whitelist()
+def update_qty_dispatched(order_name: str, items: list | str) -> dict:
+	"""S154/F11: SCM updates qty_dispatched on order items."""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="scm",
+		action="update_qty_dispatched",
+		mutation_type="update",
+	)
+
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
+
+	if isinstance(items, str):
+		items = json.loads(items)
+
+	order = frappe.get_doc("BEI Store Order", order_name)
+	updated = 0
+
+	for update in items:
+		item_code = update.get("item_code")
+		qty = flt(update.get("qty_dispatched", 0))
+		for child in order.items:
+			if child.item_code == item_code:
+				child.qty_dispatched = qty
+				updated += 1
+				break
+
+	order.save(ignore_permissions=True)
+
+	return {"order": order_name, "updated_count": updated}

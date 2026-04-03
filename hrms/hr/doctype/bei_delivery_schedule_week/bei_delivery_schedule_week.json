@@ -57,8 +57,7 @@
       "fieldname": "entries",
       "fieldtype": "Table",
       "label": "Entries",
-      "options": "BEI Delivery Schedule Entry",
-      "reqd": 1
+      "options": "BEI Delivery Schedule Entry"
     }
   ],
   "index_web_pages_for_search": 1,
