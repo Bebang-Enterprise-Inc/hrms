@@ -6041,6 +6041,14 @@ def get_weekly_schedule(
 	# Build store metadata for ALL orderable stores (not just those with entries).
 	# This ensures the grid always shows all 47 stores for SCM to set schedules.
 	store_meta = {}
+	# Gracefully handle custom_territory_cluster: field exists in fixtures but may
+	# not be in DB yet if bench migrate hasn't run after the fixture was added.
+	_wh_fields = ["name", "parent_warehouse"]
+	try:
+		if frappe.get_meta("Warehouse").has_field("custom_territory_cluster"):
+			_wh_fields.append("custom_territory_cluster")
+	except Exception:
+		pass
 	all_warehouses = frappe.get_all(
 		"Warehouse",
 		filters={
@@ -6048,7 +6056,7 @@ def get_weekly_schedule(
 			"disabled": 0,
 			"company": ["in", ["Bebang Enterprise Inc.", "Bebang Kitchen Inc."]],
 		},
-		fields=["name", "parent_warehouse", "custom_territory_cluster"],
+		fields=_wh_fields,
 		limit_page_length=200,
 	)
 	for wh in all_warehouses:
@@ -6068,7 +6076,7 @@ def get_weekly_schedule(
 		store_meta[wh.name] = {
 			"warehouse_group": group,
 			"parent_warehouse": wh.parent_warehouse,
-			"cluster": wh.custom_territory_cluster or "",
+			"cluster": getattr(wh, "custom_territory_cluster", "") or "",
 		}
 
 	# Apply warehouse filter to store_meta too
@@ -6410,10 +6418,16 @@ def get_store_schedule(store: str) -> dict:
 			fields=["day_of_week", "delivery_type"],
 		)
 
-	# Store metadata
+	# Store metadata — gracefully handle custom_territory_cluster not yet in DB
+	_store_fields = ["name", "parent_warehouse"]
+	try:
+		if frappe.get_meta("Warehouse").has_field("custom_territory_cluster"):
+			_store_fields.append("custom_territory_cluster")
+	except Exception:
+		pass
 	wh_data = frappe.db.get_value(
 		"Warehouse", store_warehouse,
-		["name", "parent_warehouse", "custom_territory_cluster"],
+		_store_fields,
 		as_dict=True,
 	) or {}
 
