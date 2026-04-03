@@ -1655,7 +1655,10 @@ def _build_recommendation_contract(
 	coverage_window_days=1,
 ):
 	# S128/B1: Zero-history items get all-zero contract — do NOT touch with-history path.
-	if flt(last_order_qty) <= 0 and flt(order_count) <= 0:
+	# S155: Exception — if BOM demand pipeline provided projected_sales or bom_consumption,
+	# use those even without order history (demand comes from POS BOM explode).
+	has_pipeline_demand = flt(projected_sales) > 0 or flt(bom_consumption) > 0
+	if flt(last_order_qty) <= 0 and flt(order_count) <= 0 and not has_pipeline_demand:
 		return {
 			"lane": lane,
 			"available_to_promise": flt(available_to_promise, 2),
@@ -2321,6 +2324,11 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		if projected_sales > 0 or bom_consumption > 0 or snapshot_demand > 0:
 			recommendation_source = snapshot.get("signal_source") or "sales_demand_snapshot"
 			avg_daily_demand = snapshot_demand or flt(projected_sales + bom_consumption, 4)
+			# S155: Pipeline writes avg_daily_demand but not projected_sales/bom_consumption.
+			# Derive them so _build_recommendation_contract computes non-zero suggested_qty.
+			if projected_sales <= 0 and bom_consumption <= 0 and snapshot_demand > 0:
+				projected_sales = flt(snapshot_demand * 0.60, 2)
+				bom_consumption = flt(snapshot_demand * 0.40, 2)
 		else:
 			projected_sales, bom_consumption = _estimate_projected_sales_and_bom(
 				last_order_qty, flt(item.order_count), lane
