@@ -1,17 +1,24 @@
 ---
 canonical_sprint_id: S155
 display: Sprint 155
-status: IN_PROGRESS
+status: DEPLOYED_NOT_VERIFIED
 branch: s155-scm-integration-pipeline
 lane: single
 created_date: 2026-04-03
 execution_started: 2026-04-03
 completed_date:
-deployed_at:
+deployed_at: 2026-04-03
 backend_pr: "#425"
 frontend_pr: "BEI-Tasks#314"
-l3_result:
-execution_summary:
+l3_result: pending-redeploy
+execution_summary: |
+  All code implemented. Audit fixes pushed (INT4, FX5, UX3, UX4).
+  Custom Fields created via API. EX1 (136/138 items classified),
+  EX1b (13/15 BOMs), EX3 (208 schedule entries published),
+  EX2b (765 demand snapshots). Ordering page demand display fix
+  requires redeploy (avg_daily_demand condition). Pipeline scripts
+  fixed (Supabase columns, warehouse mapping, source_reference).
+  VF1-VF3 pending after redeploy.
 depends_on: S154
 ---
 

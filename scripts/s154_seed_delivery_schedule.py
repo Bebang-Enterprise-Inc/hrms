@@ -78,8 +78,39 @@ def _get_secret(env_name: str) -> str:
 
 
 def load_store_mapping() -> dict[str, str]:
-    """Load warehouse_name → warehouse_record_name."""
+    """Load warehouse_name → warehouse_record_name from Frappe API."""
+    api_key = _get_secret("FRAPPE_API_KEY")
+    api_secret = _get_secret("FRAPPE_API_SECRET")
     mapping = {}
+
+    # Fetch real warehouse names from Frappe
+    try:
+        import requests as req_lib
+        resp = req_lib.get(
+            f"{FRAPPE_URL}/api/resource/Warehouse",
+            params={
+                "filters": json.dumps([["is_group", "=", 0], ["disabled", "=", 0]]),
+                "fields": json.dumps(["name"]),
+                "limit_page_length": 200,
+            },
+            headers={"Authorization": f"token {api_key}:{api_secret}"},
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            for wh in resp.json().get("data", []):
+                # Build display→full name map
+                # "ARANETA CITY - BEI" → key "ARANETA CITY"
+                full_name = wh["name"]
+                short = full_name.upper().replace(" - BEBANG ENTERPRISE INC.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
+                mapping[short] = full_name
+                # Also index by title-case
+                mapping[short.title()] = full_name
+            print(f"  Loaded {len(mapping) // 2} warehouse mappings from Frappe")
+            return mapping
+    except Exception as e:
+        print(f"  Warning: Frappe API fetch failed ({e}), falling back to CSV")
+
+    # Fallback to CSV
     with open(STORE_MAPPING, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             name = (row.get("warehouse_name") or "").strip()

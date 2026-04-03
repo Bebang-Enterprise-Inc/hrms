@@ -98,20 +98,44 @@ def main():
         "Content-Type": "application/json",
     }
 
+    # Build product name → item code mapping from Frappe
+    name_to_code = {}
+    try:
+        resp = requests.get(
+            f"{FRAPPE_URL}/api/resource/Item",
+            params={
+                "filters": json.dumps([["item_group", "=", "Finished Goods"]]),
+                "fields": json.dumps(["name", "item_name"]),
+                "limit_page_length": 100,
+            },
+            headers=headers,
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            for item in resp.json().get("data", []):
+                name_to_code[item["item_name"].strip().upper()] = item["name"]
+            print(f"  Loaded {len(name_to_code)} FG item mappings")
+    except Exception as e:
+        print(f"  Warning: Could not load item mappings: {e}")
+
     created = 0
     for product, components in bom_data.items():
-        # Check if BOM already exists for this product
-        # BOM naming: BOM-{item}-{version}
-        # We need the Item record for the product
-        # Store consumption BOMs use a naming convention: "STORE-{product}"
+        item_code = name_to_code.get(product)
+        if not item_code:
+            print(f"  Skipping {product}: no matching Item code found")
+            continue
         bom_doc = {
             "doctype": "BOM",
-            "item": product,  # This needs to be a valid Item code
+            "item": item_code,
+            "company": "Bebang Kitchen Inc.",
             "is_active": 1,
             "is_default": 0,  # Don't override commissary BOMs
             "quantity": 1,
             "uom": "Cup",
             "custom_bom_type": "Store Consumption",
+            "bei_source_file": "s154_load_store_boms.py",
+            "bei_source_sheet": "BOM CSV",
+            "bei_source_row": product,
             "items": [],
         }
 

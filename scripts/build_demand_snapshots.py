@@ -156,20 +156,63 @@ def load_pos_crosswalk() -> dict[str, str]:
 # ---------------------------------------------------------------------------
 
 def load_store_mapping() -> tuple[dict[int, str], dict[str, int]]:
-    """Returns (location_id→warehouse_record_name, warehouse_name→location_id)."""
+    """Returns (location_id→warehouse_record_name, warehouse_name→location_id).
+
+    S155: Queries Frappe API for actual warehouse names to avoid stale CSV mapping.
+    Falls back to CSV if API fails.
+    """
     loc_to_wh: dict[int, str] = {}
     wh_to_loc: dict[str, int] = {}
+
+    # Build location_id map from CSV
+    csv_name_to_loc: dict[str, int] = {}
+    with open(STORE_MAPPING_CSV, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            name = (row.get("warehouse_name") or "").strip()
+            loc = int(row.get("location_id") or 0)
+            if name.startswith("TEST-") or not loc:
+                continue
+            csv_name_to_loc[name.upper()] = loc
+
+    # Fetch real warehouse names from Frappe
+    try:
+        api_key, api_secret = get_frappe_auth()
+        resp = requests.get(
+            f"{FRAPPE_URL}/api/resource/Warehouse",
+            params={
+                "filters": json.dumps([["is_group", "=", 0], ["disabled", "=", 0]]),
+                "fields": json.dumps(["name"]),
+                "limit_page_length": 200,
+            },
+            headers={"Authorization": f"token {api_key}:{api_secret}"},
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            for wh in resp.json().get("data", []):
+                full_name = wh["name"]
+                # Strip suffix to match CSV display name
+                short = full_name.upper().replace(" - BEBANG ENTERPRISE INC.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
+                loc = csv_name_to_loc.get(short)
+                if loc:
+                    loc_to_wh[loc] = full_name
+                    wh_to_loc[full_name] = loc
+            print(f"  Store mapping: {len(loc_to_wh)} stores (Frappe API)")
+            return loc_to_wh, wh_to_loc
+    except Exception as e:
+        print(f"  Warning: Frappe API failed ({e}), falling back to CSV")
+
+    # Fallback to CSV (may have stale names)
     with open(STORE_MAPPING_CSV, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             name = (row.get("warehouse_name") or "").strip()
             record = (row.get("warehouse_record_name") or "").strip()
             loc = int(row.get("location_id") or 0)
-            if name.startswith("TEST-"):
+            if name.startswith("TEST-") or not loc or not record:
                 continue
-            if loc and record:
-                loc_to_wh[loc] = record
-                wh_to_loc[name] = loc
+            loc_to_wh[loc] = record
+            wh_to_loc[name] = loc
     return loc_to_wh, wh_to_loc
 
 
@@ -192,23 +235,36 @@ def fetch_pos_sales(since_date: str) -> list[dict]:
     while current <= today:
         date_str = current.strftime("%Y-%m-%d")
         try:
-            # Query pos_order_items with embedded join to pos_orders
-            rows = _supabase_get("pos_order_items", {
-                "select": "qty,item_name,pos_orders!inner(location_id,business_date,payment_status)",
-                "pos_orders.payment_status": "eq.PAID",
-                "pos_orders.business_date": f"eq.{date_str}",
-                "limit": "10000",
+            # Two-step query: orders first, then items
+            orders = _supabase_get("pos_orders", {
+                "select": "id,location_id",
+                "business_date": f"eq.{date_str}",
+                "payment_status": "eq.PAID",
+                "limit": "5000",
             })
-            for row in rows:
-                order = row.get("pos_orders") or {}
-                if isinstance(order, list):
-                    order = order[0] if order else {}
-                all_rows.append({
-                    "location_id": order.get("location_id"),
-                    "business_date": order.get("business_date") or date_str,
-                    "item_name": row.get("item_name", ""),
-                    "qty": float(row.get("qty") or 0),
+            if not orders:
+                current += timedelta(days=1)
+                continue
+            order_map = {o["id"]: o["location_id"] for o in orders}
+            order_ids = list(order_map.keys())
+            # Batch query items for these orders
+            for batch_start in range(0, len(order_ids), 200):
+                batch = order_ids[batch_start:batch_start + 200]
+                ids_str = ",".join(str(oid) for oid in batch)
+                items = _supabase_get("pos_order_items", {
+                    "select": "order_id,product_name,quantity",
+                    "order_id": f"in.({ids_str})",
+                    "limit": "10000",
                 })
+                for row in items:
+                    loc = order_map.get(row.get("order_id"))
+                    if loc:
+                        all_rows.append({
+                            "location_id": loc,
+                            "business_date": date_str,
+                            "item_name": row.get("product_name", ""),
+                            "qty": float(row.get("quantity") or 0),
+                        })
         except Exception as e:
             print(f"  Warning: POS query failed for {date_str}: {e}")
         current += timedelta(days=1)
@@ -433,13 +489,9 @@ def write_snapshots_to_frappe(
     written = 0
     for item_code, data in demand.items():
         source_ref = json.dumps({
-            "signal_source": "bom_demand_pipeline",
-            "projected_sales": data["projected_sales"],
-            "bom_consumption": data["bom_consumption"],
-            "coverage_window_days": data["coverage_days"],
-            "weather_multiplier": data["weather_multiplier"],
-            "lookback_days": LOOKBACK_DAYS,
-            "bom_breakdown_count": len(data.get("bom_breakdown", [])),
+            "src": "bom_pipeline",
+            "cov": data["coverage_days"],
+            "wx": round(data["weather_multiplier"], 3),
         })
 
         payload = {
@@ -448,6 +500,7 @@ def write_snapshots_to_frappe(
             "item_code": item_code,
             "warehouse": warehouse,
             "avg_daily_demand": data["avg_daily_demand"],
+            "coverage_window_days": data["coverage_days"],
             "source_reference": source_ref,
         }
 

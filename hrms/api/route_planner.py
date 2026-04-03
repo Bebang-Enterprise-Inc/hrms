@@ -346,23 +346,35 @@ def optimize_route(stores_json, goods_type="cold", departure_time=None):
 	warnings = []
 
 	# Calculate per-store totals
+	# S155/INT4: Accept projected_kg directly when stores come from schedule
+	# (no item-level data). Falls back to item-based weight calculation.
 	stores_with_totals = []
 	for s in stores:
-		store_kg = 0
-		store_m3 = 0
-		item_count = 0
-		for item in s.get("items", []):
-			w = sku_weights.get(item["sku"], 1.0)
-			qty = float(item.get("qty", 0))
-			store_kg += w * qty
-			item_count += 1
-		stores_with_totals.append({
-			"store": s["store"],
-			"items": s.get("items", []),
-			"total_kg": round(store_kg, 1),
-			"total_m3": None,  # Mode 1: weight-only
-			"item_count": item_count,
-		})
+		projected = s.get("projected_kg")
+		if projected is not None and not s.get("items"):
+			# Schedule-sourced store with projected load from BOM demand
+			stores_with_totals.append({
+				"store": s["store"],
+				"items": [],
+				"total_kg": round(float(projected), 1),
+				"total_m3": None,
+				"item_count": s.get("item_count", 0),
+			})
+		else:
+			store_kg = 0
+			item_count = 0
+			for item in s.get("items", []):
+				w = sku_weights.get(item["sku"], 1.0)
+				qty = float(item.get("qty", 0))
+				store_kg += w * qty
+				item_count += 1
+			stores_with_totals.append({
+				"store": s["store"],
+				"items": s.get("items", []),
+				"total_kg": round(store_kg, 1),
+				"total_m3": None,
+				"item_count": item_count,
+			})
 
 	total_kg = sum(s["total_kg"] for s in stores_with_totals)
 	total_m3 = None  # Mode 1
