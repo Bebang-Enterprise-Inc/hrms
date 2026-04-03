@@ -6043,7 +6043,7 @@ def get_weekly_schedule(
 	store_meta = {}
 	# Gracefully handle custom_territory_cluster: field exists in fixtures but may
 	# not be in DB yet if bench migrate hasn't run after the fixture was added.
-	_wh_fields = ["name", "parent_warehouse"]
+	_wh_fields = ["name", "parent_warehouse", "warehouse_type"]
 	try:
 		if frappe.get_meta("Warehouse").has_field("custom_territory_cluster"):
 			_wh_fields.append("custom_territory_cluster")
@@ -6061,7 +6061,7 @@ def get_weekly_schedule(
 	)
 	for wh in all_warehouses:
 		# Skip non-orderable warehouses (3PLs, commissaries, meta warehouses)
-		if not _is_orderable_store(wh.name):
+		if not _is_orderable_store(wh):
 			continue
 		normalized = (wh.name or "").upper().replace(" - BEBANG ENTERPRISE INC.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
 		source_wh = _CENTRAL_WAREHOUSE_ROUTE_MAP.get(normalized, "")
