@@ -25,7 +25,7 @@
         "dt": "Item",
         "fieldname": "custom_storage_temp_min",
         "fieldtype": "Float",
-        "label": "Min Storage Temp (\u00c2\u00b0C)",
+        "label": "Min Storage Temp (Â°C)",
         "insert_after": "custom_reorder_days",
         "description": "Minimum storage temperature in Celsius"
     },
@@ -35,7 +35,7 @@
         "dt": "Item",
         "fieldname": "custom_storage_temp_max",
         "fieldtype": "Float",
-        "label": "Max Storage Temp (\u00c2\u00b0C)",
+        "label": "Max Storage Temp (Â°C)",
         "insert_after": "custom_storage_temp_min",
         "description": "Maximum storage temperature in Celsius"
     },
@@ -545,5 +545,16 @@
         "insert_after": "name",
         "unique": 1,
         "description": "Portal display code (e.g., S-9A, C-5P). Used by my.bebang.ph schedule grid."
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Warehouse-custom_territory_cluster",
+        "dt": "Warehouse",
+        "fieldname": "custom_territory_cluster",
+        "fieldtype": "Select",
+        "label": "Territory Cluster",
+        "options": "\nCLUSTER 3\nCLUSTER 4\nCLUSTER 5\nCLUSTER 6\nCLUSTER 7\nCLUSTER 8\nCLUSTER 9",
+        "insert_after": "custom_area_supervisor",
+        "description": "S154: Territory cluster for delivery schedule grouping and filtering"
     }
 ]
