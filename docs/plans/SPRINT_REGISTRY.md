@@ -85,6 +85,8 @@ These documents contain sprint-like naming but are not part of the canonical seq
 | `Geotagged Attendance Sprint 3` | `docs/plans/Completed/GEOTAGGED_ATTENDANCE_SPRINT3_GEOFENCE_UX_2026-02-10.md` | Separate historical track |
 | `Geo-Attendance Sprint 3 E2E` | `docs/plans/archived/GEO_ATTENDANCE_SPRINT3_E2E_TEST_PLAN_2026-02-10.md` | Separate historical track |
 | `S092` | Sprint 92 | `fix/s092-erp-testing-bugs` | #309 | COMPLETED 2026-03-23 — 7 backend + 4 frontend fixes + billing view-only fix. PRs: hrms#309, bei-tasks#225, bei-tasks#226. L3 regression 7/8 PASS. | `docs/plans/2026-03-22-sprint-92-erp-testing-bug-remediation.md` |
+| `S093` | Sprint 93 | — | — | GO — ERP team recommendations Lane A. 6 blockers patched, audit-hardened. | `docs/plans/2026-03-23-sprint-93-erp-team-recommendations-lane-a.md` |
+| `S094` | Sprint 94 | — | — | SKIPPED (number gap) | — |
 | `S095A` | Sprint 95 Lane A | — | — | COMPLETED 2026-03-23 — Agent SDK review backend, confidence gate, cost caps, PreToolUse hooks | `docs/plans/2026-03-23-sprint-95-governor-agent-sdk-upgrade.md` |
 | `S095B` | Sprint 95 Lane B | — | — | COMPLETED 2026-03-23 — Builder subagent dispatch, worktree isolation, conflict resolver, default switched to agent-sdk | `docs/plans/2026-03-23-sprint-95-governor-agent-sdk-upgrade.md` |
 | `S096` | Sprint 96 | — | — | COMPLETED 2026-03-23 — Two-layer release gate (deterministic + AI). Blocks merge without L3 evidence. Re-queue on fix push. | `docs/plans/2026-03-23-sprint-96-release-manager-gate.md` |
@@ -160,9 +162,31 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S138` | Sprint 138 | `s138-warehouse-routing-data-integrity` | — | PLANNED — Warehouse routing data integrity: clean BEI Route junk, seed proper store→3PL mappings, fix low stock API to use real warehouses, fix PO ship_to default. | `docs/plans/2026-03-27-sprint-138-warehouse-routing-data-integrity.md` |
 
-| `S139` | Sprint 139 | `s139-route-planner` | — | IN_PROGRESS — SCM Route Planner: smart delivery optimizer with Leaflet maps, Google Directions API, truck recommender, multi-option cost comparison. | `docs/plans/2026-04-01-sprint-139-route-planner.md` |
+| `S139` | Sprint 139 | `s139-route-planner` | hrms#411,#412,#413,#414 | IN_PROGRESS — SCM Route Planner: smart delivery optimizer with Leaflet maps, Google Directions API, truck recommender, multi-option cost comparison. | `docs/plans/2026-04-01-sprint-139-route-planner.md` |
 
-| `S147` | Sprint 147 | `s147-ap-command-center` | hrms#401, BEI-Tasks#289,#291,#293 | COMPLETED — AP Command Center: 5 tabs, 3 backend endpoints, aging matrix, supplier ledger. L3 13/13 PASS. | `docs/plans/2026-03-30-sprint-147-ap-command-center.md` |
+| `S140` | Sprint 140 | `s140-disable-inventory-sync` | — | IN_PROGRESS — Warehouse setup + inventory resync: disable hooks.py sync, data-only fixes. 8 blockers identified, 5 MUST-FIX + 3 SHOULD-FIX applied. | `docs/plans/2026-03-28-sprint-140-warehouse-setup-inventory-resync.md` |
+
+| `S141` | Sprint 141 | `s141-procurement-module-fix` | BEI-Tasks#274 | COMPLETED 2026-03-28 — PO pagination, approved tab, status filters, dashboard empty states, sidebar dedup. | `docs/plans/2026-03-28-sprint-141-procurement-module-fix.md` |
+
+| `S142` | Sprint 142 | — | — | SKIPPED (number gap) | — |
+
+| `S143` | Sprint 143 | — | — | SKIPPED (number gap) | — |
+
+| `S144` | Sprint 144 | `s144-supplier-items-fix` | hrms#395,#396,#397 | COMPLETED — Supplier approval queue: store field fix (Warehouse not BEI Store), unit_cost column, approve/reject param fix. | — |
+
+| `S145` | Sprint 145 | `s145-ap-opening-balance-sync` | hrms#398 | COMPLETED — AP opening balance sync: make purchase_order optional on BEI Invoice. | `docs/plans/2026-03-30-sprint-145-ap-opening-balance-sync.md` |
+
+| `S146` | Sprint 146 | `s146-payroll-recovery-go-live` | hrms#399 | COMPLETED — Enrich compensation grid API with daily rate, earnings, deductions, bank, tax slab. | — |
+
+| `S147` | Sprint 147 | `s147-ap-command-center` | hrms#400,#401, BEI-Tasks#289,#291,#293 | COMPLETED — AP Command Center: 5 tabs, 3 backend endpoints, aging matrix, supplier ledger. L3 13/13 PASS. | `docs/plans/2026-03-30-sprint-147-ap-command-center.md` |
+
+| `S148` | Sprint 148 | — (on s146 branch) | — | COMPLETED — L3 test evidence: 16/16 PASS + cleanup. Test data cleanup for finance accounts. | — |
+
+| `S149` | Sprint 149 | `s149-compensation-data-enrichment` | hrms#402, BEI-Tasks#295 | COMPLETED — Projected compensation with PH statutory rates (SSS/PhilHealth/Pag-IBIG/TRAIN). L3: 10 PASS, 1 FAIL. | — |
+
+| `S150` | Sprint 150 | `s150-payroll-data-quality` | hrms#403,#405,#406 | IN_PROGRESS — Payroll data quality: import actual salaries, set up allowances, fix blockers, enrich dashboard. Allowance columns + net take-home added. | `docs/plans/2026-03-31-sprint-150-payroll-data-quality.md` |
+
+| `S151` | Sprint 151 | — | — | SKIPPED (number gap) | — |
 
 | `S152` | Sprint 152 | `s152-procurement-e2e-acceptance` | hrms#408, BEI-Tasks#297 | COMPLETED — Full procurement E2E browser acceptance: 33/40 PASS, 10 defects found (3 fixed in-sprint). | `docs/plans/2026-03-31-sprint-152-procurement-e2e-acceptance.md` |
 
@@ -170,9 +194,17 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S154` | Sprint 154 | `s154-store-ordering-production-ready` | hrms#417, BEI-Tasks#305 | PR_CREATED — Phase 1-5 implemented (122 units). Backend: delivery schedule DocTypes + APIs, BOM demand pipeline, emergency orders, SCM override. Frontend: category tabs, urgency sort, sticky review, delivery countdown, SCM schedule page. L3 pending. | `docs/plans/2026-04-02-sprint-154-store-ordering-production-ready.md` |
 
+| `S155` | Sprint 155 | `s155-scm-integration-pipeline` | — | GO — SCM integration + S154 remediation (72 units). | `docs/plans/2026-04-03-sprint-155-scm-integration-pipeline.md` |
+
+| `S156` | Sprint 156 | `s156-s154-deferred-ux-polish` | — | PLANNED — S154 deferred UX polish. | `docs/plans/2026-04-03-sprint-156-s154-deferred-ux-polish.md` |
+
+| `S157` | Sprint 157 | — | — | ON HOLD — Centralized demand planning dashboard. | `docs/plans/2026-04-03-sprint-157-centralized-demand-dashboard-ON-HOLD.md` |
+
+| `S158` | Sprint 158 | `s158-compensation-editor` | — | PLANNED — Single-page compensation editor: clickable employee names, inline allowance editing (7 fields), live statutory preview, batch save with approval workflow. | `docs/plans/2026-04-03-sprint-158-compensation-editor.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S155`.
-2. Reserve branch name: `s155-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S159`.
+2. Reserve branch name: `s159-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 

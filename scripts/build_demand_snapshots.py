@@ -475,6 +475,76 @@ def write_snapshots_to_frappe(
 
 
 # ---------------------------------------------------------------------------
+# S155/EX2a: Delivery schedule → coverage window
+# ---------------------------------------------------------------------------
+
+# Cache schedule coverage across stores to avoid repeated API calls
+_schedule_coverage_cache: dict[str, int] = {}
+
+
+def _get_schedule_coverage(warehouse_name: str, api_key: str, api_secret: str) -> int:
+    """Query delivery schedule to determine how many days between deliveries.
+
+    For a store that gets deliveries Mon+Wed+Fri (3x/week), coverage = 2-3 days.
+    For a store that gets daily, coverage = 1.
+    For a store with no schedule, falls back to 3.
+    """
+    if warehouse_name in _schedule_coverage_cache:
+        return _schedule_coverage_cache[warehouse_name]
+
+    default_coverage = 3
+    if not api_key:
+        _schedule_coverage_cache[warehouse_name] = default_coverage
+        return default_coverage
+
+    try:
+        # Get this week's published schedule for the store
+        from datetime import date as dt_date
+        today = datetime.now(MANILA_TZ).date()
+        # Find Monday of this week
+        monday = today - timedelta(days=today.weekday())
+
+        resp = requests.get(
+            f"{FRAPPE_URL}/api/method/hrms.api.store.get_store_schedule",
+            params={"store": warehouse_name},
+            headers={"Authorization": f"token {api_key}:{api_secret}"},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            _schedule_coverage_cache[warehouse_name] = default_coverage
+            return default_coverage
+
+        data = resp.json().get("message", {})
+        entries = data.get("entries", [])
+        if not entries:
+            _schedule_coverage_cache[warehouse_name] = default_coverage
+            return default_coverage
+
+        # Count unique delivery days per cargo type
+        cold_days = set()
+        dry_days = set()
+        for entry in entries:
+            day = entry.get("day_of_week", "")
+            dtype = entry.get("delivery_type", "")
+            if dtype == "COLD":
+                cold_days.add(day)
+            elif dtype == "DRY":
+                dry_days.add(day)
+
+        # Use the LESS frequent cargo type's coverage
+        # (if store gets COLD 3x/week but DRY 2x/week, use DRY's longer gap)
+        all_days = max(len(cold_days), len(dry_days), 1)
+        # 7 days / delivery_count = average gap between deliveries
+        coverage = max(1, round(7 / all_days))
+        _schedule_coverage_cache[warehouse_name] = coverage
+        return coverage
+
+    except Exception:
+        _schedule_coverage_cache[warehouse_name] = default_coverage
+        return default_coverage
+
+
+# ---------------------------------------------------------------------------
 # Main pipeline
 # ---------------------------------------------------------------------------
 
@@ -537,8 +607,12 @@ def run_pipeline(
         if not store_sales:
             continue
 
-        # Coverage window (default 3 days, can be overridden)
-        coverage = coverage_override or 3
+        # S155/EX2a: Query delivery schedule for per-store coverage window
+        # Stores with daily delivery get coverage=1, weekly stores get coverage=7, etc.
+        if coverage_override:
+            coverage = coverage_override
+        else:
+            coverage = _get_schedule_coverage(wh_name, api_key, api_secret)
 
         # Weather multiplier
         forecast = weather_by_loc.get(loc_id, [])

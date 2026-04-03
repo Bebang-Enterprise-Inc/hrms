@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 import frappe
 from frappe import _
-from frappe.utils import nowdate
+from frappe.utils import add_days, getdate, nowdate
 
 from hrms.utils.sentry import set_backend_observability_context
 
@@ -270,7 +270,8 @@ def _generate_option(label, hub, stops, total_kg, total_m3, goods_type, truck_re
 
 	# Use 5:00 AM default departure for cold, 8:00 AM for dry
 	base_hour = 5 if goods_type == "cold" else 8
-	current_time = datetime(2026, 4, 1, base_hour, 0)
+	now = datetime.now()
+	current_time = datetime(now.year, now.month, now.day, base_hour, 0)
 
 	for seq, stop in enumerate(stops):
 		key = f"{hub}_{stop['store']}"
@@ -502,6 +503,241 @@ def get_store_orders_for_date(date=None):
 		})
 
 	return {"stores": stores, "date": date, "count": len(stores)}
+
+
+# ── S155: Schedule → Route Planner Integration ─────────────────────────────
+
+
+def _normalize_warehouse_to_store_key(warehouse_name):
+	"""Convert Frappe warehouse name to STORE_DATA display name.
+
+	E.g. 'ARANETA CITY - BEI' → 'Araneta City'
+	     'UP TOWN CENTER - BEBANG ENTERPRISE INC.' → 'UP Town Center'
+	"""
+	name = (warehouse_name or "").strip()
+	for suffix in (" - BEBANG ENTERPRISE INC.", " - BEI", " - BKI"):
+		if name.upper().endswith(suffix):
+			name = name[: len(name) - len(suffix)].strip()
+			break
+	return name.title()
+
+
+@frappe.whitelist()
+def get_stores_for_delivery_date(date=None, goods_type="cold"):
+	"""S155/INT1: Return stores scheduled for delivery on a given date.
+
+	Reads from the published BEI Delivery Schedule to find which stores
+	have deliveries on the given date + goods_type. Falls back to
+	get_store_orders_for_date if no schedule exists.
+	"""
+	set_backend_observability_context(
+		module="scm", action="get_stores_for_delivery_date", mutation_type="read",
+	)
+
+	if not date:
+		date = nowdate()
+
+	target_date = getdate(date)
+	day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+	day_of_week = day_names[target_date.weekday()]
+
+	# Find the Monday of this week
+	monday = add_days(target_date, -target_date.weekday())
+
+	# Look up published schedule
+	week_name = frappe.db.get_value(
+		"BEI Delivery Schedule Week",
+		{"week_start": str(monday), "published": 1},
+		"name",
+	)
+
+	if not week_name:
+		# No published schedule — fall back to approved orders
+		return get_store_orders_for_date(date)
+
+	# Map goods_type to delivery_type filter
+	delivery_type_filter = "COLD" if goods_type == "cold" else "DRY"
+
+	entries = frappe.get_all(
+		"BEI Delivery Schedule Entry",
+		filters={
+			"parent": week_name,
+			"day_of_week": day_of_week,
+			"delivery_type": delivery_type_filter,
+		},
+		fields=["store"],
+	)
+
+	if not entries:
+		return {
+			"stores": [],
+			"date": date,
+			"goods_type": goods_type,
+			"source": "schedule",
+			"message": f"No {goods_type} deliveries scheduled for {day_of_week}",
+		}
+
+	store_data = _get_store_data()
+	stores = []
+	for entry in entries:
+		display_name = _normalize_warehouse_to_store_key(entry.store)
+		si = store_data.get(display_name, {})
+		stores.append({
+			"store": display_name,
+			"warehouse": entry.store,
+			"lat": si.get("lat"),
+			"lng": si.get("lng"),
+			"hub": si.get("hub", "3MD Marilao"),
+			"truck_restriction": si.get("truck_restriction"),
+		})
+
+	return {
+		"stores": stores,
+		"date": date,
+		"goods_type": goods_type,
+		"day_of_week": day_of_week,
+		"source": "schedule",
+		"count": len(stores),
+	}
+
+
+@frappe.whitelist()
+def get_projected_load_for_store(store, date=None):
+	"""S155/INT2: Get projected delivery load for a store from BOM demand snapshots.
+
+	Queries BEI Inventory Risk Snapshot for the store and sums projected
+	weight using the existing _get_sku_weights() lookup.
+	"""
+	set_backend_observability_context(
+		module="scm", action="get_projected_load_for_store", mutation_type="read",
+	)
+
+	if not date:
+		date = nowdate()
+
+	# The store param may be a display name or warehouse name
+	warehouse = store
+	# If it looks like a display name (no ' - ' suffix), try to find the warehouse
+	if " - " not in store:
+		# Try to find matching warehouse
+		wh = frappe.db.get_value(
+			"Warehouse",
+			{"name": ["like", f"%{store}%"], "is_group": 0, "disabled": 0},
+			"name",
+		)
+		if wh:
+			warehouse = wh
+
+	# Query latest snapshots for this warehouse
+	snapshots = frappe.get_all(
+		"BEI Inventory Risk Snapshot",
+		filters={
+			"warehouse": warehouse,
+			"snapshot_date": ["<=", str(date)],
+		},
+		fields=["item_code", "avg_daily_demand", "coverage_window_days"],
+		order_by="snapshot_date desc",
+		limit_page_length=500,
+	)
+
+	if not snapshots:
+		return {
+			"store": store,
+			"warehouse": warehouse,
+			"total_kg": 0,
+			"total_m3": None,
+			"item_count": 0,
+			"items": [],
+		}
+
+	# Deduplicate: keep latest snapshot per item
+	seen_items = set()
+	unique_snapshots = []
+	for snap in snapshots:
+		if snap.item_code not in seen_items:
+			seen_items.add(snap.item_code)
+			unique_snapshots.append(snap)
+
+	sku_weights = _get_sku_weights()
+	total_kg = 0
+	items = []
+	for snap in unique_snapshots:
+		demand = snap.avg_daily_demand or 0
+		coverage = snap.coverage_window_days or 3
+		projected_qty = demand * coverage
+		weight_per_unit = sku_weights.get(snap.item_code, 1.0)
+		item_kg = projected_qty * weight_per_unit
+		total_kg += item_kg
+		if projected_qty > 0:
+			items.append({
+				"item_code": snap.item_code,
+				"projected_qty": round(projected_qty, 1),
+				"weight_kg": round(item_kg, 1),
+				"avg_daily_demand": round(demand, 2),
+				"coverage_days": coverage,
+			})
+
+	return {
+		"store": store,
+		"warehouse": warehouse,
+		"total_kg": round(total_kg, 1),
+		"total_m3": None,
+		"item_count": len(items),
+		"items": items,
+	}
+
+
+@frappe.whitelist()
+def load_orders_from_schedule(date=None, goods_type="cold"):
+	"""S155/INT3: Load stores from schedule + their projected demand.
+
+	Combines get_stores_for_delivery_date + get_projected_load_for_store
+	for all scheduled stores. Returns data ready for optimize_route.
+	"""
+	set_backend_observability_context(
+		module="scm", action="load_orders_from_schedule", mutation_type="read",
+	)
+
+	schedule_result = get_stores_for_delivery_date(date, goods_type)
+	schedule_stores = schedule_result.get("stores", [])
+
+	if not schedule_stores:
+		return {
+			"stores": [],
+			"date": date or nowdate(),
+			"goods_type": goods_type,
+			"source": schedule_result.get("source", "schedule"),
+			"message": schedule_result.get("message", "No stores scheduled"),
+			"total_kg": 0,
+		}
+
+	stores_with_load = []
+	total_kg = 0
+	for s in schedule_stores:
+		load = get_projected_load_for_store(s.get("warehouse") or s["store"], date)
+		store_entry = {
+			"store": s["store"],
+			"warehouse": s.get("warehouse", ""),
+			"projected_kg": load["total_kg"],
+			"projected_m3": load.get("total_m3"),
+			"item_count": load["item_count"],
+			"lat": s.get("lat"),
+			"lng": s.get("lng"),
+			"hub": s.get("hub", "3MD Marilao"),
+			"truck_restriction": s.get("truck_restriction"),
+			"items": load.get("items", []),
+		}
+		stores_with_load.append(store_entry)
+		total_kg += load["total_kg"]
+
+	return {
+		"stores": stores_with_load,
+		"date": date or nowdate(),
+		"goods_type": goods_type,
+		"source": "schedule",
+		"count": len(stores_with_load),
+		"total_kg": round(total_kg, 1),
+	}
 
 
 @frappe.whitelist()
