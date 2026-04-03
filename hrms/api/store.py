@@ -20,7 +20,7 @@ from frappe import _
 from frappe.utils import add_days, cint, flt, get_datetime, getdate, now_datetime, nowdate
 
 from hrms.utils.bei_config import SPACE_OPS, get_chat_space, get_company
-from hrms.utils.scm_roles import SCM_APPROVAL_ROLES, check_scm_permission
+from hrms.utils.scm_roles import SCM_ADMIN_ROLES, SCM_APPROVAL_ROLES, check_scm_permission
 from hrms.utils.supply_chain_contracts import (
 	FINANCE_TREATMENT_INTERCOMPANY,
 	FINANCE_TREATMENT_SAME_COMPANY,
@@ -6103,7 +6103,7 @@ def toggle_delivery(store: str, week_start: str, day: str, delivery_type: str) -
 		mutation_type="update",
 	)
 
-	check_scm_permission()
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
 
 	week_date = getdate(week_start)
 	if week_date.weekday() != 0:
@@ -6167,7 +6167,7 @@ def copy_week(source_week: str, target_week: str) -> dict:
 		mutation_type="create",
 	)
 
-	check_scm_permission()
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
 
 	source_date = getdate(source_week)
 	target_date = getdate(target_week)
@@ -6225,7 +6225,7 @@ def publish_week(week_start: str) -> dict:
 		mutation_type="update",
 	)
 
-	check_scm_permission()
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
 
 	week_date = getdate(week_start)
 	week_name = frappe.db.get_value(
@@ -6262,7 +6262,7 @@ def unpublish_week(week_start: str, reason: str = "") -> dict:
 		mutation_type="update",
 	)
 
-	check_scm_permission()
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
 
 	if not reason:
 		frappe.throw(_("Unpublish reason is required for audit"))
@@ -6439,7 +6439,7 @@ def get_orders_for_dispatch(
 		mutation_type="read",
 	)
 
-	check_scm_permission()
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
 
 	filters = {}
 	if store:
@@ -6494,7 +6494,7 @@ def update_qty_dispatched(order_name: str, items: list | str) -> dict:
 		mutation_type="update",
 	)
 
-	check_scm_permission()
+	check_scm_permission(SCM_ADMIN_ROLES, "manage delivery schedules")
 
 	if isinstance(items, str):
 		items = json.loads(items)
