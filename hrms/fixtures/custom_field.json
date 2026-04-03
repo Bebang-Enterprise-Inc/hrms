@@ -556,5 +556,16 @@
         "options": "\nCLUSTER 3\nCLUSTER 4\nCLUSTER 5\nCLUSTER 6\nCLUSTER 7\nCLUSTER 8\nCLUSTER 9",
         "insert_after": "custom_area_supervisor",
         "description": "S154: Territory cluster for delivery schedule grouping and filtering"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Item-custom_store_category",
+        "dt": "Item",
+        "fieldname": "custom_store_category",
+        "fieldtype": "Select",
+        "label": "Store Category",
+        "options": "\nToppings\nFrozen\nSauces\nPackaging\nSupplies\nOther",
+        "insert_after": "item_group",
+        "description": "S154: Store ordering category for grouping items in the ordering page"
     }
 ]

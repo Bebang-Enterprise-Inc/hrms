@@ -20,7 +20,7 @@ from frappe import _
 from frappe.utils import add_days, cint, flt, get_datetime, getdate, now_datetime, nowdate
 
 from hrms.utils.bei_config import SPACE_OPS, get_chat_space, get_company
-from hrms.utils.scm_roles import SCM_ADMIN_ROLES, SCM_APPROVAL_ROLES, check_scm_permission
+from hrms.utils.scm_roles import SCM_ADMIN_ROLES, SCM_APPROVAL_ROLES, SCM_STORE_ROLES, check_scm_permission
 from hrms.utils.supply_chain_contracts import (
 	FINANCE_TREATMENT_INTERCOMPANY,
 	FINANCE_TREATMENT_SAME_COMPANY,
@@ -1021,10 +1021,23 @@ def _get_warehouse_manager_user() -> str:
 
 def _resolve_order_approval_routing(warehouse, is_emergency, submitted_after_cutoff):
 	first_approver, first_source = _resolve_review_approver_for_store(warehouse)
-	return {
+	result = {
 		"first_approver": first_approver,
 		"first_source": first_source,
 	}
+	# S155/FX2: Emergency orders require triple approval chain:
+	# Area Supervisor → Regional Manager (Edlice) → SCM (Warehouse Manager)
+	if is_emergency:
+		area_sup = first_approver
+		regional_manager = ORDER_APPROVAL_FALLBACK_EMAIL  # edlice@bebang.ph
+		scm_approver = WAREHOUSE_MANAGER_EMAIL
+		result["approval_chain"] = [
+			{"role": "area_supervisor", "approver": area_sup},
+			{"role": "regional_manager", "approver": regional_manager},
+			{"role": "scm", "approver": scm_approver},
+		]
+		result["is_emergency_chain"] = True
+	return result
 
 
 def _infer_area_supervisor_for_store(warehouse, role_cache=None):
@@ -2202,13 +2215,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	store_warehouse = resolve_warehouse(store)
 
 	# Get items with order frequency for this store, sorted by most ordered first
-	# Gracefully handle custom_store_category: field may not exist until bench migrate
-	_has_store_category = False
-	try:
-		_has_store_category = frappe.get_meta("Item").has_field("custom_store_category")
-	except Exception:
-		pass
-	_category_col = "COALESCE(i.custom_store_category, 'Other')" if _has_store_category else "'Other'"
+	_category_col = "COALESCE(i.custom_store_category, 'Other')"
 
 	items = frappe.db.sql(
 		f"""
@@ -2687,7 +2694,7 @@ def submit_order(
 	first_source = routing["first_source"]
 
 	requires_manual_approval = bool(
-		is_bulk_order or edited_lines_count > 0 or (is_emergency_flag and submitted_after_cutoff)
+		is_bulk_order or edited_lines_count > 0 or is_emergency_flag or (submitted_after_cutoff)
 	)
 	if requires_manual_approval and not first_approver:
 		frappe.throw(
@@ -2706,8 +2713,39 @@ def submit_order(
 	if order.status == "Pending Approval" and requires_manual_approval:
 		queue_status = "pending"
 		try:
-			if first_approver:
-				queue_priority = "Urgent" if is_emergency_flag and submitted_after_cutoff else "Normal"
+			# S155/FX2: Emergency triple approval chain
+			approval_chain = routing.get("approval_chain")
+			if approval_chain and is_emergency_flag:
+				chain_entries = []
+				for step in approval_chain:
+					approver_email = step.get("approver")
+					if not approver_email:
+						continue
+					entry = _create_approval_queue_entry(
+						order=order,
+						approver=approver_email,
+						priority="Urgent",
+					)
+					if entry:
+						chain_entries.append(entry.name)
+				if chain_entries:
+					queue_name = chain_entries[0]
+					# Assign first approver in chain (Area Supervisor)
+					assigned = _assign_order_for_approval(
+						order_name=order.name,
+						assigned_to=approval_chain[0]["approver"],
+						description=f"EMERGENCY order {order.name} requires triple approval (1 of 3).",
+					)
+					queue_status = "created" if assigned else "failed"
+					if not assigned:
+						warning = (
+							f"Order {order.name} created, but first approver assignment failed."
+						)
+				else:
+					queue_status = "unmapped"
+					warning = "Emergency order created but no approvers found for triple chain."
+			elif first_approver:
+				queue_priority = "Urgent" if is_emergency_flag else "Normal"
 				queue_entry = _create_approval_queue_entry(
 					order=order,
 					approver=first_approver,
@@ -2749,7 +2787,7 @@ def submit_order(
 		"requires_area_supervisor_review": bool(
 			requires_manual_approval and first_source == "area_supervisor"
 		),
-		"requires_regional_manager_review": False,
+		"requires_regional_manager_review": bool(is_emergency_flag),
 		"requires_fallback_approval": bool(requires_manual_approval and first_source == "fallback_approver"),
 		"edited_lines_count": edited_lines_count,
 		"message": f"Order {order.name} submitted successfully",
@@ -2763,7 +2801,7 @@ def submit_order(
 		"submitted_after_cutoff": bool(submitted_after_cutoff),
 		"requires_dual_approval": bool(requires_dual),
 		"approval_stage": order.approval_stage,
-		"is_emergency": False,
+		"is_emergency": bool(is_emergency_flag),
 		"cargo_category": normalized_cargo_category,
 		"dropped_invalid_lines": len(dropped_items),
 	}
@@ -6007,6 +6045,9 @@ def get_weekly_schedule(
 		mutation_type="read",
 	)
 
+	# S155/FX4: Read-level SCM permission check
+	check_scm_permission(SCM_ADMIN_ROLES | SCM_STORE_ROLES, "view delivery schedules")
+
 	week_date = getdate(week_start)
 	# Ensure it's a Monday
 	if week_date.weekday() != 0:
@@ -6049,14 +6090,7 @@ def get_weekly_schedule(
 	# Build store metadata for ALL orderable stores (not just those with entries).
 	# This ensures the grid always shows all 47 stores for SCM to set schedules.
 	store_meta = {}
-	# Gracefully handle custom_territory_cluster: field exists in fixtures but may
-	# not be in DB yet if bench migrate hasn't run after the fixture was added.
-	_wh_fields = ["name", "parent_warehouse", "warehouse_type"]
-	try:
-		if frappe.get_meta("Warehouse").has_field("custom_territory_cluster"):
-			_wh_fields.append("custom_territory_cluster")
-	except Exception:
-		pass
+	_wh_fields = ["name", "parent_warehouse", "warehouse_type", "custom_territory_cluster"]
 	all_warehouses = frappe.get_all(
 		"Warehouse",
 		filters={
@@ -6207,31 +6241,40 @@ def copy_week(source_week: str, target_week: str) -> dict:
 
 	source_doc = frappe.get_doc("BEI Delivery Schedule Week", source_name)
 
-	# Create or overwrite target week
-	target_name = frappe.db.get_value(
-		"BEI Delivery Schedule Week",
-		{"week_start": str(target_date)},
-		"name",
-	)
+	# S155/FX3: Wrap destructive clear + save in savepoint (DM-2)
+	try:
+		frappe.db.savepoint("copy_week")
 
-	if target_name:
-		target_doc = frappe.get_doc("BEI Delivery Schedule Week", target_name)
-		target_doc.entries = []
-	else:
-		target_doc = frappe.new_doc("BEI Delivery Schedule Week")
-		target_doc.week_start = str(target_date)
+		# Create or overwrite target week
+		target_name = frappe.db.get_value(
+			"BEI Delivery Schedule Week",
+			{"week_start": str(target_date)},
+			"name",
+		)
 
-	target_doc.published = 0
+		if target_name:
+			target_doc = frappe.get_doc("BEI Delivery Schedule Week", target_name)
+			target_doc.entries = []
+		else:
+			target_doc = frappe.new_doc("BEI Delivery Schedule Week")
+			target_doc.week_start = str(target_date)
 
-	for entry in source_doc.entries or []:
-		target_doc.append("entries", {
-			"store": entry.store,
-			"day_of_week": entry.day_of_week,
-			"delivery_type": entry.delivery_type,
-			"route_name": entry.route_name,
-		})
+		target_doc.published = 0
 
-	target_doc.save(ignore_permissions=True)
+		for entry in source_doc.entries or []:
+			target_doc.append("entries", {
+				"store": entry.store,
+				"day_of_week": entry.day_of_week,
+				"delivery_type": entry.delivery_type,
+				"route_name": entry.route_name,
+			})
+
+		target_doc.save(ignore_permissions=True)
+		frappe.db.release_savepoint("copy_week")
+	except Exception:
+		frappe.db.rollback_to_savepoint("copy_week")
+		frappe.log_error("copy_week failed", "Delivery Schedule Copy Error")
+		frappe.throw(_("Failed to copy schedule. No changes were made."))
 
 	return {
 		"target_week": str(target_date),
@@ -6426,16 +6469,9 @@ def get_store_schedule(store: str) -> dict:
 			fields=["day_of_week", "delivery_type"],
 		)
 
-	# Store metadata — gracefully handle custom_territory_cluster not yet in DB
-	_store_fields = ["name", "parent_warehouse"]
-	try:
-		if frappe.get_meta("Warehouse").has_field("custom_territory_cluster"):
-			_store_fields.append("custom_territory_cluster")
-	except Exception:
-		pass
 	wh_data = frappe.db.get_value(
 		"Warehouse", store_warehouse,
-		_store_fields,
+		["name", "parent_warehouse", "custom_territory_cluster"],
 		as_dict=True,
 	) or {}
 
