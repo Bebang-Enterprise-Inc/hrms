@@ -2202,12 +2202,20 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	store_warehouse = resolve_warehouse(store)
 
 	# Get items with order frequency for this store, sorted by most ordered first
+	# Gracefully handle custom_store_category: field may not exist until bench migrate
+	_has_store_category = False
+	try:
+		_has_store_category = frappe.get_meta("Item").has_field("custom_store_category")
+	except Exception:
+		pass
+	_category_col = "COALESCE(i.custom_store_category, 'Other')" if _has_store_category else "'Other'"
+
 	items = frappe.db.sql(
-		"""
+		f"""
         SELECT
             i.name, i.item_name, i.item_group, i.stock_uom, i.image,
             i.valuation_rate, i.standard_rate, i.last_purchase_rate,
-            COALESCE(i.custom_store_category, 'Other') as store_category,
+            {_category_col} as store_category,
             COALESCE(freq.order_count, 0) as order_count
         FROM `tabItem` i
         LEFT JOIN (
