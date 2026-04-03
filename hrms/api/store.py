@@ -6048,7 +6048,7 @@ def get_weekly_schedule(
 			"disabled": 0,
 			"company": ["in", ["Bebang Enterprise Inc.", "Bebang Kitchen Inc."]],
 		},
-		fields=["name", "parent_warehouse", "custom_territory_cluster"],
+		fields=["name", "parent_warehouse"],
 		limit_page_length=200,
 	)
 	for wh in all_warehouses:
@@ -6068,7 +6068,7 @@ def get_weekly_schedule(
 		store_meta[wh.name] = {
 			"warehouse_group": group,
 			"parent_warehouse": wh.parent_warehouse,
-			"cluster": wh.custom_territory_cluster or "",
+			"cluster": "",
 		}
 
 	# Apply warehouse filter to store_meta too
@@ -6413,7 +6413,7 @@ def get_store_schedule(store: str) -> dict:
 	# Store metadata
 	wh_data = frappe.db.get_value(
 		"Warehouse", store_warehouse,
-		["name", "parent_warehouse", "custom_territory_cluster"],
+		["name", "parent_warehouse"],
 		as_dict=True,
 	) or {}
 
@@ -6423,7 +6423,7 @@ def get_store_schedule(store: str) -> dict:
 		"current_week": str(monday),
 		"entries": current_entries,
 		"prev_week_entries": prev_entries,
-		"cluster": wh_data.get("custom_territory_cluster") or "",
+		"cluster": "",
 		"parent_warehouse": wh_data.get("parent_warehouse") or "",
 	}
 
