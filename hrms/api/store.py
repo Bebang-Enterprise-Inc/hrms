@@ -6038,33 +6038,42 @@ def get_weekly_schedule(
 	if warehouse_filter:
 		entries = [e for e in entries if warehouse_filter.lower() in (e.get("store") or "").lower()]
 
-	# Build store metadata (warehouse grouping, cluster)
-	store_names = list({e["store"] for e in entries})
+	# Build store metadata for ALL orderable stores (not just those with entries).
+	# This ensures the grid always shows all 47 stores for SCM to set schedules.
 	store_meta = {}
-	if store_names:
-		warehouses = frappe.get_all(
-			"Warehouse",
-			filters={"name": ["in", store_names]},
-			fields=["name", "parent_warehouse", "custom_territory_cluster"],
-			limit_page_length=100,
-		)
-		for wh in warehouses:
-			# Determine warehouse group from route map
-			normalized = (wh.name or "").upper().replace(" - BEBANG ENTERPRISE INC.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
-			source_wh = _CENTRAL_WAREHOUSE_ROUTE_MAP.get(normalized, "")
-			group = "Other"
-			if "3MD" in source_wh:
-				group = "3MD North"
-			elif "Pinnacle" in source_wh:
-				group = "Pinnacle South"
-			elif "Jentec" in source_wh:
-				group = "Jentec"
+	all_warehouses = frappe.get_all(
+		"Warehouse",
+		filters={
+			"is_group": 0,
+			"disabled": 0,
+			"company": ["in", ["Bebang Enterprise Inc.", "Bebang Kitchen Inc."]],
+		},
+		fields=["name", "parent_warehouse", "custom_territory_cluster"],
+		limit_page_length=200,
+	)
+	for wh in all_warehouses:
+		# Skip non-orderable warehouses (3PLs, commissaries, meta warehouses)
+		if not _is_orderable_store(wh.name):
+			continue
+		normalized = (wh.name or "").upper().replace(" - BEBANG ENTERPRISE INC.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
+		source_wh = _CENTRAL_WAREHOUSE_ROUTE_MAP.get(normalized, "")
+		group = "Other"
+		if "3MD" in source_wh:
+			group = "3MD North"
+		elif "Pinnacle" in source_wh:
+			group = "Pinnacle South"
+		elif "Jentec" in source_wh:
+			group = "Jentec"
 
-			store_meta[wh.name] = {
-				"warehouse_group": group,
-				"parent_warehouse": wh.parent_warehouse,
-				"cluster": wh.custom_territory_cluster or "",
-			}
+		store_meta[wh.name] = {
+			"warehouse_group": group,
+			"parent_warehouse": wh.parent_warehouse,
+			"cluster": wh.custom_territory_cluster or "",
+		}
+
+	# Apply warehouse filter to store_meta too
+	if warehouse_filter:
+		store_meta = {k: v for k, v in store_meta.items() if warehouse_filter.lower() in k.lower()}
 
 	if cluster_filter:
 		entries = [e for e in entries if store_meta.get(e["store"], {}).get("cluster") == cluster_filter]
