@@ -15,7 +15,7 @@ import json
 
 import frappe
 from frappe import _
-from frappe.utils import now_datetime, today, getdate, add_months
+from frappe.utils import now_datetime, today, getdate, add_months, flt
 
 from hrms.utils.sentry import set_backend_observability_context
 
@@ -313,6 +313,122 @@ def get_compensation_grid(filters=None):
 
 
 @frappe.whitelist()
+def get_employee_compensation_detail(employee):
+	"""Return full compensation detail for a single employee.
+
+	Includes identity, salary structure, allowances, projected deductions,
+	bank info, pending changes count, and last 10 compensation changes.
+	"""
+	set_backend_observability_context(
+		module="payroll",
+		action="get_employee_compensation_detail",
+		mutation_type="read",
+	)
+
+	if not frappe.db.exists("Employee", employee):
+		frappe.throw(_("Employee {0} not found").format(employee), frappe.DoesNotExistError)
+
+	# Employee identity + allowances
+	emp_fields = [
+		"name", "employee_name", "department", "branch", "designation",
+		"employment_type", "date_of_joining", "salary_mode", "bank_name", "bank_ac_no",
+	]
+
+	# Check for bei_* custom fields
+	_allowance_fields = [
+		"bei_comm_allow_monthly", "bei_deminimis_monthly", "bei_honorarium_monthly",
+		"bei_meal_allow_monthly", "bei_gasoline_allow_monthly", "bei_other_fixed_monthly",
+	]
+	_existing_cols = {
+		r[0] for r in frappe.db.sql("SHOW COLUMNS FROM tabEmployee LIKE 'bei_%'")
+	}
+	_has_allowance_cols = all(f in _existing_cols for f in _allowance_fields)
+	if _has_allowance_cols:
+		emp_fields.extend(_allowance_fields)
+
+	emp = frappe.db.get_value("Employee", employee, emp_fields, as_dict=True)
+	if not emp:
+		frappe.throw(_("Employee {0} not found").format(employee), frappe.DoesNotExistError)
+
+	result = {
+		"employee": emp.name,
+		"employee_name": emp.employee_name,
+		"department": emp.department,
+		"branch": emp.branch,
+		"designation": emp.designation,
+		"employment_type": emp.employment_type,
+		"date_of_joining": str(emp.date_of_joining) if emp.date_of_joining else None,
+		"salary_mode": emp.salary_mode,
+		"bank_name": emp.bank_name,
+		"bank_ac_no": emp.bank_ac_no,
+	}
+
+	# Mask bank account number
+	if result.get("bank_ac_no") and len(result["bank_ac_no"]) > 4:
+		result["bank_ac_no"] = "****" + result["bank_ac_no"][-4:]
+
+	# Allowances
+	for f in _allowance_fields:
+		result[f] = float(emp.get(f) or 0) if _has_allowance_cols else 0
+
+	# Latest SSA
+	ssa = frappe.db.sql(
+		"""
+		SELECT base, salary_structure, income_tax_slab, from_date
+		FROM `tabSalary Structure Assignment`
+		WHERE employee = %s AND docstatus = 1
+		ORDER BY from_date DESC LIMIT 1
+		""",
+		employee,
+		as_dict=True,
+	)
+	if ssa:
+		result["base_salary"] = float(ssa[0].base or 0)
+		result["salary_structure"] = ssa[0].salary_structure
+		result["tax_slab"] = ssa[0].income_tax_slab
+		result["ssa_from_date"] = str(ssa[0].from_date) if ssa[0].from_date else None
+	else:
+		result["base_salary"] = 0
+		result["salary_structure"] = None
+		result["tax_slab"] = None
+		result["ssa_from_date"] = None
+
+	# Projected deductions
+	base = result["base_salary"]
+	result["projected_sss"] = compute_sss_employee(base)
+	result["projected_philhealth"] = compute_philhealth_employee(base)
+	result["projected_pagibig"] = compute_pagibig_employee(base)
+	result["projected_tax"] = compute_monthly_tax(base)
+
+	# Pending changes count
+	pending_count = frappe.db.count(
+		"BEI Compensation Change",
+		filters={
+			"employee": employee,
+			"status": ("in", ["Pending HR Manager", "Pending Accounts Manager"]),
+		},
+	)
+	result["pending_changes_count"] = pending_count
+
+	# Last 10 compensation changes inline
+	changes = frappe.get_all(
+		"BEI Compensation Change",
+		filters={"employee": employee},
+		fields=[
+			"name", "change_type", "salary_component", "employee_field_name",
+			"old_value", "new_value", "effective_date", "reason",
+			"status", "requested_by", "hr_reviewer", "final_approver",
+			"approval_date", "rejection_reason", "submission_date",
+		],
+		order_by="creation DESC",
+		limit_page_length=10,
+	)
+	result["changes"] = changes
+
+	return result
+
+
+@frappe.whitelist()
 def get_compensation_history(employee):
 	"""Return full change history for an employee's compensation.
 
@@ -408,6 +524,8 @@ def update_compensation(
 
 		# Get current value
 		old_value = 0
+		employee_field_name = None
+
 		if change_type == "Salary":
 			ssa = frappe.db.sql(
 				"""
@@ -418,6 +536,10 @@ def update_compensation(
 				emp_id,
 			)
 			old_value = float(ssa[0][0]) if ssa else 0
+		elif salary_component and salary_component.startswith("bei_"):
+			# Direct Employee field allowances — read from Employee record
+			old_value = float(frappe.db.get_value("Employee", emp_id, salary_component) or 0)
+			employee_field_name = salary_component
 		elif salary_component:
 			# Look up current component amount from salary structure
 			sd = frappe.db.sql(
@@ -440,7 +562,8 @@ def update_compensation(
 				"doctype": "BEI Compensation Change",
 				"employee": emp_id,
 				"change_type": change_type,
-				"salary_component": salary_component,
+				"salary_component": None if employee_field_name else salary_component,
+				"employee_field_name": employee_field_name,
 				"old_value": old_value,
 				"new_value": new_value,
 				"effective_date": effective_date,
@@ -502,6 +625,16 @@ def approve_compensation_change(change_id, approver_action, remarks=None):
 		doc.final_approver = frappe.session.user
 		doc.approval_date = now_datetime()
 		doc.save(ignore_permissions=True)
+
+		# Activate the approved change
+		try:
+			frappe.db.savepoint("compensation_activation")
+			_activate_compensation_change(doc)
+			frappe.db.release_savepoint("compensation_activation")
+		except Exception:
+			frappe.db.rollback_to_savepoint("compensation_activation")
+			frappe.log_error("Compensation activation failed")
+
 		return {"status": "success", "message": _("Compensation change approved")}
 
 	else:
@@ -913,6 +1046,40 @@ def get_sensitive_change_detail(request_id):
 # ============================================================================
 # Helpers
 # ============================================================================
+
+
+def _activate_compensation_change(doc):
+	"""Write approved change to Employee record or SSA.
+
+	Called at final approval (Approved status). Handles:
+	- bei_* fields: direct Employee field update
+	- Salary changes: create new SSA
+	- Other Salary Detail components: extend when needed
+	"""
+	if doc.employee_field_name and doc.employee_field_name.startswith("bei_"):
+		# Direct Employee field (bei_* allowances)
+		frappe.db.set_value("Employee", doc.employee, doc.employee_field_name, flt(doc.new_value))
+	elif doc.change_type == "Salary":
+		# New SSA required — NOT set_value on Employee
+		latest_ssa = frappe.db.get_value(
+			"Salary Structure Assignment",
+			{"employee": doc.employee, "docstatus": 1},
+			["salary_structure", "income_tax_slab"],
+			order_by="from_date DESC",
+			as_dict=True,
+		)
+		if latest_ssa:
+			new_ssa = frappe.get_doc({
+				"doctype": "Salary Structure Assignment",
+				"employee": doc.employee,
+				"salary_structure": latest_ssa.salary_structure,
+				"income_tax_slab": latest_ssa.income_tax_slab,
+				"base": flt(doc.new_value),
+				"from_date": doc.effective_date,
+				"company": frappe.db.get_value("Employee", doc.employee, "company"),
+			})
+			new_ssa.insert(ignore_permissions=True)
+			new_ssa.submit()
 
 
 def _get_current_cutoff_start():

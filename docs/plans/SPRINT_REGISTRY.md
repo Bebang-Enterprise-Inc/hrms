@@ -200,7 +200,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S157` | Sprint 157 | — | — | ON HOLD — Centralized demand planning dashboard. | `docs/plans/2026-04-03-sprint-157-centralized-demand-dashboard-ON-HOLD.md` |
 
-| `S158` | Sprint 158 | `s158-compensation-editor` | — | PLANNED — Single-page compensation editor: clickable employee names, inline allowance editing (7 fields), live statutory preview, batch save with approval workflow. | `docs/plans/2026-04-03-sprint-158-compensation-editor.md` |
+| `S158` | Sprint 158 | `s158-compensation-editor` | hrms#426, BEI-Tasks#316 | PR_CREATED 2026-04-03 — Single-page compensation editor: clickable employee names, inline allowance editing (7 fields), live statutory preview, batch save with approval workflow. PRs: hrms#426, BEI-Tasks#316. | `docs/plans/2026-04-03-sprint-158-compensation-editor.md` |
 
 ## Next Sprint Reservation
 1. Next canonical sprint ID to assign: `S159`.

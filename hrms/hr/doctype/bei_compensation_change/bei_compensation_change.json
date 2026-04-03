@@ -16,6 +16,7 @@
   "section_change",
   "change_type",
   "salary_component",
+  "employee_field_name",
   "column_break_change",
   "old_value",
   "new_value",
@@ -106,6 +107,14 @@
    "fieldtype": "Link",
    "label": "Salary Component",
    "options": "Salary Component"
+  },
+  {
+   "fieldname": "employee_field_name",
+   "fieldtype": "Data",
+   "label": "Employee Field Name",
+   "description": "For direct Employee field allowances (bei_* fields)",
+   "depends_on": "eval:doc.salary_component === null || doc.salary_component === ''",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_change",
