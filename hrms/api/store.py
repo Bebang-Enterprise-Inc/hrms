@@ -2242,6 +2242,15 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
             AND i.item_name NOT LIKE '%%TEST%%'
             AND i.name NOT LIKE 'E2E-%%'
             AND i.name NOT LIKE 'R&D%%'
+            AND i.name NOT LIKE 'OFC%%'
+            AND i.name NOT LIKE 'OS1%%'
+            AND i.item_name NOT LIKE '%%Biometric%%'
+            AND i.item_name NOT LIKE '%%ZKTECO%%'
+            AND i.item_name NOT LIKE '%%UPS%%'
+            AND i.item_name NOT LIKE '%%BEEPER%%'
+            AND i.item_name NOT LIKE '%%TRASHBIN%%'
+            AND i.item_name NOT LIKE '%%TRASHCAN%%'
+            AND i.item_name NOT LIKE '%%BALLPEN%%'
         ORDER BY COALESCE(freq.order_count, 0) DESC, i.item_group, i.item_name
     """,
 		store_warehouse,
@@ -2398,7 +2407,14 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		# S154/B4: Invisible priority score for sort order.
 		demand_score = min(40, flt(avg_daily_demand) * 2)
 		freq_score = min(20, flt(item.get("order_count", 0)) * 4)
-		urgency_score = 30 if store_actual <= 0 else (20 if flt(item.get("suggested_qty")) > store_actual else 0)
+		# S159: Only mark urgent if item has demand or order history.
+		# Without this, 100+ zero-demand items (biometrics, UPS, trashbins) rank as
+		# "critical" above actual high-demand ingredients like Frozen Milk.
+		has_signal = avg_daily_demand > 0 or flt(item.get("order_count", 0)) > 0
+		if has_signal:
+			urgency_score = 30 if store_actual <= 0 else (20 if flt(item.get("suggested_qty")) > store_actual else 0)
+		else:
+			urgency_score = 0
 		source_alert_score = 10 if (effective_atp == 0 and demand_score >= 20) else 0
 		item["priority_score"] = round(demand_score + freq_score + urgency_score + source_alert_score)
 		item["source_oos_alert"] = 1 if source_alert_score > 0 else 0
