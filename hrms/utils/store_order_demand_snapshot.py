@@ -761,6 +761,8 @@ def _build_store_warehouse_map() -> dict[str, str]:
 		"NAIA Terminal 3": "NAIA T3",
 		"Robinsons Galleria South": "Robisons Galleria South",
 		"SM San Pablo": "SM San Pablo",
+		"SM SJDM": "SJDM",
+		"SM Manila": "SM  Manila",
 	}
 	for alias, wh_name in pos_aliases.items():
 		if alias not in mapping and wh_name in mapping:
