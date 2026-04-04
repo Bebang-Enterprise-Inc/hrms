@@ -42,7 +42,7 @@
   {"fieldname": "risk_level", "fieldtype": "Select", "label": "Risk Level", "options": "Low\nModerate\nHigh\nCritical", "in_list_view": 1},
   {"fieldname": "value_at_risk", "fieldtype": "Currency", "label": "Value At Risk"},
   {"fieldname": "margin_at_risk", "fieldtype": "Currency", "label": "Margin At Risk"},
-  {"fieldname": "source_reference", "fieldtype": "Data", "label": "Source Reference"}
+  {"fieldname": "source_reference", "fieldtype": "Small Text", "label": "Source Reference"}
  ],
  "index_web_pages_for_search": 1,
  "links": [],

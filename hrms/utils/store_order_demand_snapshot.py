@@ -714,6 +714,24 @@ def write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, Any]]) -> 
 		writer.writerows(rows)
 
 
+def _build_store_warehouse_map() -> dict[str, str]:
+	"""Load store_name → Frappe warehouse DocName from the shadow sync registry."""
+	registry_path = FIXTURE_DIR.parent / "store_inventory_shadow_sync" / "store_inventory_shadow_sync_registry.csv"
+	mapping: dict[str, str] = {}
+	if not registry_path.exists():
+		return mapping
+	with registry_path.open(encoding="utf-8-sig", newline="") as f:
+		for row in csv.DictReader(f):
+			store_name = (row.get("store_name") or "").strip()
+			warehouse_name = (row.get("warehouse_name") or "").strip()
+			docname = (row.get("warehouse_docname") or "").strip()
+			if store_name and docname:
+				mapping[store_name] = docname
+			if warehouse_name and docname and warehouse_name != store_name:
+				mapping[warehouse_name] = docname
+	return mapping
+
+
 def build_outputs(snapshot_date: date, lookback_days: int) -> dict[str, Any]:
 	start_date = snapshot_date - timedelta(days=lookback_days)
 	end_date = snapshot_date - timedelta(days=1)
@@ -721,6 +739,7 @@ def build_outputs(snapshot_date: date, lookback_days: int) -> dict[str, Any]:
 	fg_display_by_norm, crosswalk_by_norm, bom_rows_by_fg_norm = load_bom_catalog()
 	policies_by_code, policies_by_name = load_product_policy_catalog()
 	component_recipes_by_key = load_component_recipe_catalog()
+	store_warehouse_map = _build_store_warehouse_map()
 	pos_web_rows = fetch_pos_web_product_rows(start_date, end_date)
 	foodpanda_rows = [
 		row
@@ -882,11 +901,14 @@ def build_outputs(snapshot_date: date, lookback_days: int) -> dict[str, Any]:
 			item_daily_map[item_key]["demand_qty"] += demand_qty
 			item_daily_map[item_key]["source_targets"].add(target_key)
 
-			snapshot_key = (store_name, item_code)
+			resolved_warehouse = store_warehouse_map.get(
+				store_name, f"{store_name} - Bebang Enterprise Inc."
+			)
+			snapshot_key = (resolved_warehouse, item_code)
 			if snapshot_key not in snapshot_map:
 				snapshot_map[snapshot_key] = {
 					"snapshot_date": snapshot_date.isoformat(),
-					"warehouse": store_name,
+					"warehouse": resolved_warehouse,
 					"item_code": item_code,
 					"item_name": component_item_name,
 					"total_demand_window": 0.0,
