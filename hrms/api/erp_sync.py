@@ -1578,6 +1578,10 @@ def _sync_store_demand_snapshot_rows(
 		frappe.db.savepoint(savepoint)
 		try:
 			source_reference = dict(snapshot["source_reference"])
+			# Strip verbose debug fields that bloat JSON beyond DB field limits
+			source_reference.pop("source_targets", None)
+			source_reference.pop("total_demand_window", None)
+			source_reference.pop("days_with_sales", None)
 			source_reference.update(
 				{
 					"sync_ref": sync_ref,
@@ -1647,6 +1651,11 @@ def _sync_store_demand_snapshot_rows(
 			frappe.db.rollback(save_point=savepoint)
 			results["errors"].append(f"{warehouse}/{item_code}: {exc!s}")
 			results["rows_failed"] += 1
+
+	# Commit all successful upserts (required for standalone script execution;
+	# Frappe request handler auto-commits but SSM/cron scripts do not)
+	if results["rows_created"] > 0 or results["rows_updated"] > 0:
+		frappe.db.commit()
 
 	return results
 
