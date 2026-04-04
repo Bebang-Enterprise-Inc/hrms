@@ -847,7 +847,22 @@ def build_outputs(snapshot_date: date, lookback_days: int) -> dict[str, Any]:
 		if target_type == "fg_recipe":
 			component_rows = bom_rows_by_fg_norm.get(normalize_name(target_key), [])
 		if not component_rows:
-			raise RuntimeError(f"No component rows found for mapped product {product_name} ({target_key}).")
+			# No BOM rows for this product — treat as unmapped (crosswalk entry without BOM)
+			unmapped_rows.append(
+				{
+					"business_date": business_date,
+					"channel": channel,
+					"store_name": store_name,
+					"store_code": store_code,
+					"product_code": product_code,
+					"product_name": product_name,
+					"qty_sold": qty_sold,
+					"net_sales_amount": net_sales_amount,
+					"mapping_method": f"no_bom_components:{target_key}",
+					"mapping_note": f"Crosswalk mapped to {target_key} but no BOM rows found",
+				}
+			)
+			continue
 
 		for bom_row in component_rows:
 			item_code = bom_row["component_item_code"]

@@ -2447,8 +2447,9 @@ def run_scheduled_store_demand_snapshot_sync(
 	)
 
 	if outputs["unmapped_rows"]:
-		raise RuntimeError(
-			f"Aborting scheduled store demand sync: {len(outputs['unmapped_rows'])} unmapped product rows remain."
+		frappe.log_error(
+			title="Store Demand Sync: unmapped products",
+			message=f"{len(outputs['unmapped_rows'])} unmapped product rows (non-BOM items like toppings, packaging, add-ons). Proceeding with mapped products only.",
 		)
 
 	output_dir = _store_demand_output_dir(snapshot_date_value)
