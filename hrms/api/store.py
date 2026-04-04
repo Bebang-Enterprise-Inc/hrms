@@ -1404,7 +1404,7 @@ def _is_delivery_window_open(next_delivery_date: str | None) -> bool:
 # Key: normalized store name (upper, stripped of company suffix)
 # Value: Frappe warehouse name for the source DC
 # All stores use a SINGLE source warehouse for both FROZEN and DRY.
-_3MD = "3MD Logistics \u2013 Camangyanan - BKI"
+_3MD = "3MD Logistics - Camangyanan - BKI"
 _PINNACLE = "Pinnacle Cold Storage Solutions - BKI"
 _JENTEC = "Jentec Storage Inc. - BKI"
 _CENTRAL_WAREHOUSE_ROUTE_MAP = {
