@@ -52,7 +52,7 @@ is_roving = _roving_mod.is_roving
 # ---------------------------------------------------------------------------
 
 INSTANCE_ID = "i-026b7477d27bd46d6"
-DB_CONTAINER = "adms_receiver_adms-db_1"
+DB_CONTAINER = os.environ.get("ADMS_DB_CONTAINER", "adms_receiver-adms-db-1")
 REGION = "ap-southeast-1"
 SSM_TIMEOUT = 60
 SSM_POLL_INTERVAL = 2
@@ -377,8 +377,12 @@ def _fetch_all_devices_range(ssm_client, start: date, end: date, store_filter: s
     return all_punches
 
 
-def _fetch_incremental(ssm_client) -> list[dict]:
-    """Fetch recent punches (last 2 hours) from all devices."""
+def _fetch_incremental(ssm_client) -> list[dict] | None:
+    """Fetch recent punches (last 2 hours) from all devices.
+
+    Returns None if SSM query failed (container unreachable, etc.).
+    Returns empty list if query succeeded but no punches found.
+    """
     sql = (
         "SELECT id, pin, event_time, status_code, verify_code, sn "
         "FROM adms_attlog_raw "
@@ -386,6 +390,8 @@ def _fetch_incremental(ssm_client) -> list[dict]:
         "ORDER BY event_time"
     )
     raw = _run_ssm_query(ssm_client, sql, "incremental-2h")
+    if raw is None:
+        return None  # SSM failed — caller must distinguish from "no data"
     if not raw:
         return []
     return _parse_ssm_output(raw)
@@ -446,6 +452,9 @@ def cmd_incremental(args):
     ssm = _get_ssm_client()
 
     raw = _fetch_incremental(ssm)
+    if raw is None:
+        print("  ERROR: SSM query failed. Check container name and EC2 status.", flush=True)
+        sys.exit(1)
     if not raw:
         print("  No new punches.", flush=True)
         return
