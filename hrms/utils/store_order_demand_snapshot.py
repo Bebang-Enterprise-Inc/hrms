@@ -715,30 +715,63 @@ def write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, Any]]) -> 
 
 
 def _build_store_warehouse_map() -> dict[str, str]:
-	"""Load store_name → Frappe warehouse DocName from the shadow sync registry."""
-	registry_path = FIXTURE_DIR.parent / "store_inventory_shadow_sync" / "store_inventory_shadow_sync_registry.csv"
-	mapping: dict[str, str] = {}
-	if not registry_path.exists():
-		return mapping
-	with registry_path.open(encoding="utf-8-sig", newline="") as f:
-		for row in csv.DictReader(f):
-			store_name = (row.get("store_name") or "").strip()
-			warehouse_name = (row.get("warehouse_name") or "").strip()
-			docname = (row.get("warehouse_docname") or "").strip()
-			if store_name and docname:
-				mapping[store_name] = docname
-			if warehouse_name and docname and warehouse_name != store_name:
-				mapping[warehouse_name] = docname
+	"""Load store_name → Frappe warehouse DocName.
 
-	# POS store names that differ from registry store_name/warehouse_name
+	Uses Frappe DB when available (production), falls back to registry CSV (local).
+	The registry CSV docnames may have wrong company suffixes — Frappe DB is authoritative.
+	"""
+	mapping: dict[str, str] = {}
+
+	# Try Frappe DB first (authoritative — handles BEI vs Bebang Enterprise Inc. suffix)
+	try:
+		import frappe as _frappe
+		if _frappe.local and _frappe.local.site:
+			warehouses = _frappe.get_all(
+				"Warehouse",
+				filters={"is_group": 0},
+				fields=["name", "warehouse_name"],
+				limit_page_length=200,
+			)
+			for wh in warehouses:
+				# Map warehouse_name → DocName (e.g., "Araneta Gateway" → "Araneta Gateway - BEI")
+				if wh.warehouse_name:
+					mapping[wh.warehouse_name] = wh.name
+				# Also map DocName → DocName (identity, for pre-resolved values)
+				mapping[wh.name] = wh.name
+	except Exception:
+		pass
+
+	# Fallback: registry CSV (for local/offline use)
+	if not mapping:
+		registry_path = FIXTURE_DIR.parent / "store_inventory_shadow_sync" / "store_inventory_shadow_sync_registry.csv"
+		if registry_path.exists():
+			with registry_path.open(encoding="utf-8-sig", newline="") as f:
+				for row in csv.DictReader(f):
+					store_name = (row.get("store_name") or "").strip()
+					warehouse_name = (row.get("warehouse_name") or "").strip()
+					docname = (row.get("warehouse_docname") or "").strip()
+					if store_name and docname:
+						mapping[store_name] = docname
+					if warehouse_name and docname and warehouse_name != store_name:
+						mapping[warehouse_name] = docname
+
+	# POS store names that differ from Frappe warehouse_name
 	pos_aliases = {
-		"D'Verde Calamba": "D'verde Laguna - Bebang Enterprise Inc.",
-		"NAIA Terminal 3": "NAIA T3 - BEI",
-		"Robinsons Galleria South": "Robisons Galleria South - Bebang Enterprise Inc.",
-		"SM San Pablo": "SM San Pablo - BEI",
+		"D'Verde Calamba": "D'verde Laguna",
+		"NAIA Terminal 3": "NAIA T3",
+		"Robinsons Galleria South": "Robisons Galleria South",
+		"SM San Pablo": "SM San Pablo",
 	}
-	for alias, docname in pos_aliases.items():
-		mapping.setdefault(alias, docname)
+	for alias, wh_name in pos_aliases.items():
+		if alias not in mapping and wh_name in mapping:
+			mapping[alias] = mapping[wh_name]
+		elif alias not in mapping:
+			# Try with common suffixes
+			for suffix in [" - BEI", " - Bebang Enterprise Inc.", " - BKI"]:
+				candidate = wh_name + suffix
+				if candidate in mapping:
+					mapping[alias] = candidate
+					break
 
 	return mapping
 
