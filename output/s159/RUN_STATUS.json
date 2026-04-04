@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-04-04T10:32:50.685730",
+  "checks": [
+    {
+      "name": "FG BOMs under BKI (>=18)",
+      "status": "PASS",
+      "detail": "count=18"
+    },
+    {
+      "name": "MN BOMs under BEI (>=12)",
+      "status": "PASS",
+      "detail": "count=18"
+    },
+    {
+      "name": "No active FG BOMs under BEI (=0)",
+      "status": "PASS",
+      "detail": "count=0"
+    },
+    {
+      "name": "Item RM216 exists",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Item RM217 exists",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Iskrambol BOM (>=13 components)",
+      "status": "PASS",
+      "detail": "count=13"
+    },
+    {
+      "name": "Pop Lamig BOM (>=7 components)",
+      "status": "PASS",
+      "detail": "count=7"
+    },
+    {
+      "name": "bom_master_compact.csv exists",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Contains ISKRAMBOL",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Contains GINATAANG",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Crosswalk contains Iskrambol",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Hallucinated BOM CSV deleted",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "Hallucinated delivery schedule deleted",
+      "status": "PASS",
+      "detail": ""
+    }
+  ],
+  "passed": 13,
+  "failed": 0
+}
