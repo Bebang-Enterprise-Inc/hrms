@@ -729,6 +729,17 @@ def _build_store_warehouse_map() -> dict[str, str]:
 				mapping[store_name] = docname
 			if warehouse_name and docname and warehouse_name != store_name:
 				mapping[warehouse_name] = docname
+
+	# POS store names that differ from registry store_name/warehouse_name
+	pos_aliases = {
+		"D'Verde Calamba": "D'verde Laguna - Bebang Enterprise Inc.",
+		"NAIA Terminal 3": "NAIA T3 - BEI",
+		"Robinsons Galleria South": "Robisons Galleria South - Bebang Enterprise Inc.",
+		"SM San Pablo": "SM San Pablo - BEI",
+	}
+	for alias, docname in pos_aliases.items():
+		mapping.setdefault(alias, docname)
+
 	return mapping
 
 

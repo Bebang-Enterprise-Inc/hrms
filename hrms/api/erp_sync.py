@@ -1518,7 +1518,12 @@ def _sync_store_demand_snapshot_rows(
 	for row in rows:
 		try:
 			item_code = str(_first_non_empty(row, "item_code", "sku") or "").strip()
-			warehouse = _resolve_warehouse(_first_non_empty(row, "warehouse", "store", "location"))
+			raw_warehouse = _first_non_empty(row, "warehouse", "store", "location")
+			# If already a valid Frappe Warehouse DocName (pre-resolved by pipeline), use it directly
+			if raw_warehouse and frappe.db.exists("Warehouse", raw_warehouse):
+				warehouse = raw_warehouse
+			else:
+				warehouse = _resolve_warehouse(raw_warehouse)
 			snapshot_date = (
 				_safe_date(_first_non_empty(row, "snapshot_date", "as_of_date", "date")) or nowdate()
 			)
