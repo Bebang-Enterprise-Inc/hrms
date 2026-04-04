@@ -54,16 +54,16 @@ WAREHOUSE_ALIAS_DOCNAME_MAP = {
 	"SHAW COMMI": "Shaw BLVD - BKI",
 }
 WAREHOUSE_ALIAS_NAME_MAP = {
-	"3MD": "3MD Logistics – Camangyanan",
-	"3MD WAREHOUSE": "3MD Logistics – Camangyanan",
-	"33MD": "3MD Logistics – Camangyanan",
+	"3MD": "3MD Logistics - Camangyanan",
+	"3MD WAREHOUSE": "3MD Logistics - Camangyanan",
+	"33MD": "3MD Logistics - Camangyanan",
 	"JENTEC": "Jentec Storage Inc.",
 	"JENTEC WAREHOUSE": "Jentec Storage Inc.",
 	"JENTECT WAREHOUSE": "Jentec Storage Inc.",
 	"PINNACLE": "Pinnacle Cold Storage Solutions",
 	"PINNACLE WAREHOUSE": "Pinnacle Cold Storage Solutions",
 	"PINACCLE": "Pinnacle Cold Storage Solutions",
-	"RCS": "Royal Cold Storage – Taytay (RCS)",
+	"RCS": "Royal Cold Storage - Taytay (RCS)",
 	"D VERDE": "D'verde Laguna",
 	"DVERDE": "D'verde Laguna",
 	"CTTM": "CTTM Tomas Morato",
@@ -327,11 +327,11 @@ def _resolve_warehouse_alias(value: str | None) -> str | None:
 		return _resolve_warehouse_exact_or_name(warehouse_name_alias)
 
 	if "3MD" in normalized or "CAMANGYANAN" in normalized:
-		return _resolve_warehouse_exact_or_name("3MD Logistics – Camangyanan")
+		return _resolve_warehouse_exact_or_name("3MD Logistics - Camangyanan")
 	if "JENTEC" in normalized or ("PASIG" in normalized and "ONG" in normalized):
 		return _resolve_warehouse_exact_or_name("Jentec Storage Inc.")
 	if "RCS" in normalized or "ROYAL COLD STORAGE" in normalized:
-		return _resolve_warehouse_exact_or_name("Royal Cold Storage – Taytay (RCS)")
+		return _resolve_warehouse_exact_or_name("Royal Cold Storage - Taytay (RCS)")
 	if "PINNACLE" in normalized or "TURBINA" in normalized or "CALAMBA" in normalized:
 		return _resolve_warehouse_exact_or_name("Pinnacle Cold Storage Solutions")
 	if "SHAW" in normalized:
