@@ -239,6 +239,19 @@ def _load_bom_catalog_from_frappe() -> tuple[dict[str, str], dict[str, str], dic
 
 	BEI = "Bebang Enterprise Inc."
 
+	# POS name crosswalk: read from CSV config (maps POS display names to BOM names)
+	# This is a stable configuration mapping, not runtime data.
+	if COMPACT_CROSSWALK_PATH.exists():
+		with COMPACT_CROSSWALK_PATH.open(encoding="utf-8-sig", newline="") as handle:
+			for row in csv.DictReader(handle):
+				fg_name = str(row.get("fg_name", "")).strip()
+				fg_norm = normalize_name(row.get("fg_name_norm") or fg_name)
+				pos_name = str(row.get("pos_item_name_top1", "")).strip()
+				if fg_name and fg_norm:
+					fg_display_by_norm.setdefault(fg_norm, fg_name)
+				if fg_name and pos_name:
+					crosswalk_by_norm[normalize_name(pos_name)] = fg_name
+
 	# Fetch all active submitted MN-series BOMs (product BOMs under BEI)
 	boms = _frappe.get_all(
 		"BOM",
@@ -253,10 +266,8 @@ def _load_bom_catalog_from_frappe() -> tuple[dict[str, str], dict[str, str], dic
 			continue
 		fg_norm = normalize_name(fg_name)
 		fg_display_by_norm.setdefault(fg_norm, fg_name)
-
-		# POS crosswalk: map the product name to itself (exact match)
-		# FG_NAME_ALIASES handles known POS->BOM name variations
-		crosswalk_by_norm[fg_norm] = fg_name
+		# Also add BOM name as crosswalk entry (identity mapping for exact matches)
+		crosswalk_by_norm.setdefault(fg_norm, fg_name)
 
 		# Fetch child items
 		items = _frappe.get_all(
