@@ -94,7 +94,7 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Field Changed",
-   "options": "bank_name\nbank_ac_no\ntin_number\nsss_number\nphilhealth_number\npagibig_number",
+   "options": "bank_name\nbank_ac_no\nbank_account_name\ntin_number\nsss_number\nphilhealth_number\npagibig_number",
    "reqd": 1
   },
   {

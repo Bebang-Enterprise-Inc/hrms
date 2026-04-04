@@ -567,5 +567,15 @@
         "options": "\nToppings\nFrozen\nSauces\nPackaging\nSupplies\nOther",
         "insert_after": "item_group",
         "description": "S154: Store ordering category for grouping items in the ordering page"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Employee-bank_account_name",
+        "dt": "Employee",
+        "fieldname": "bank_account_name",
+        "fieldtype": "Data",
+        "label": "Bank Account Name",
+        "insert_after": "bank_name",
+        "description": "Account holder name for payroll disbursement (Union Bank API: beneficiary.name, max 30 chars)"
     }
 ]

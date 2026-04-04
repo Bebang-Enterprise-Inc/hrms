@@ -116,6 +116,7 @@ def compute_monthly_tax(base):
 SENSITIVE_FIELDS = frozenset({
 	"bank_name",
 	"bank_ac_no",
+	"bank_account_name",
 	"tin_number",
 	"sss_number",
 	"philhealth_number",
@@ -125,6 +126,7 @@ SENSITIVE_FIELDS = frozenset({
 SENSITIVE_FIELD_LABELS = {
 	"bank_name": "Bank Name",
 	"bank_ac_no": "Bank Account Number",
+	"bank_account_name": "Bank Account Name",
 	"tin_number": "TIN",
 	"sss_number": "SSS Number",
 	"philhealth_number": "PhilHealth Number",
@@ -331,7 +333,7 @@ def get_employee_compensation_detail(employee):
 	# Employee identity + allowances
 	emp_fields = [
 		"name", "employee_name", "department", "branch", "designation",
-		"employment_type", "date_of_joining", "salary_mode", "bank_name", "bank_ac_no",
+		"employment_type", "date_of_joining", "salary_mode", "bank_name", "bank_ac_no", "bank_account_name",
 	]
 
 	# Check for bei_* custom fields
@@ -361,6 +363,7 @@ def get_employee_compensation_detail(employee):
 		"salary_mode": emp.salary_mode,
 		"bank_name": emp.bank_name,
 		"bank_ac_no": emp.bank_ac_no,
+		"bank_account_name": emp.get("bank_account_name") or None,
 	}
 
 	# Mask bank account number
