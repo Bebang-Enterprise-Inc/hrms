@@ -223,7 +223,65 @@ def parse_date_arg(value: str) -> date:
 	return datetime.strptime(value, "%Y-%m-%d").date()
 
 
-def load_bom_catalog() -> tuple[dict[str, str], dict[str, str], dict[str, list[dict[str, Any]]]]:
+def _load_bom_catalog_from_frappe() -> tuple[dict[str, str], dict[str, str], dict[str, list[dict[str, Any]]]]:
+	"""Load BOM catalog directly from Frappe BOM DocType (production SSOT).
+
+	Returns the same three dicts as the CSV-based loader:
+	  - fg_display_by_norm: normalized name -> display name
+	  - crosswalk_by_norm: normalized POS name -> FG display name
+	  - bom_rows_by_fg_norm: normalized name -> list of component dicts
+	"""
+	import frappe as _frappe
+
+	fg_display_by_norm: dict[str, str] = {}
+	crosswalk_by_norm: dict[str, str] = {}
+	bom_rows_by_fg_norm: dict[str, list[dict[str, Any]]] = defaultdict(list)
+
+	BEI = "Bebang Enterprise Inc."
+
+	# Fetch all active submitted MN-series BOMs (product BOMs under BEI)
+	boms = _frappe.get_all(
+		"BOM",
+		filters={"item": ["like", "MN%"], "company": BEI, "is_active": 1, "docstatus": 1},
+		fields=["name", "item", "item_name"],
+		order_by="item asc",
+	)
+
+	for bom in boms:
+		fg_name = (bom.item_name or "").strip().upper()
+		if not fg_name:
+			continue
+		fg_norm = normalize_name(fg_name)
+		fg_display_by_norm.setdefault(fg_norm, fg_name)
+
+		# POS crosswalk: map the product name to itself (exact match)
+		# FG_NAME_ALIASES handles known POS->BOM name variations
+		crosswalk_by_norm[fg_norm] = fg_name
+
+		# Fetch child items
+		items = _frappe.get_all(
+			"BOM Item",
+			filters={"parent": bom.name},
+			fields=["item_code", "item_name", "qty"],
+			order_by="idx asc",
+		)
+		for item in items:
+			qty = parse_float(item.qty)
+			if qty <= 0:
+				continue
+			bom_rows_by_fg_norm[fg_norm].append(
+				{
+					"component_item_code": item.item_code,
+					"component_item_name": item.item_name or "",
+					"qty_per_fg": qty,
+				}
+			)
+
+	return fg_display_by_norm, crosswalk_by_norm, bom_rows_by_fg_norm
+
+
+def _load_bom_catalog_from_csv() -> tuple[dict[str, str], dict[str, str], dict[str, list[dict[str, Any]]]]:
+	"""Fallback: load BOM catalog from CSV fixtures (for local/offline use only)."""
 	fg_display_by_norm: dict[str, str] = {}
 	crosswalk_by_norm: dict[str, str] = {}
 	bom_rows_by_fg_norm: dict[str, list[dict[str, Any]]] = defaultdict(list)
@@ -257,6 +315,17 @@ def load_bom_catalog() -> tuple[dict[str, str], dict[str, str], dict[str, list[d
 			)
 
 	return fg_display_by_norm, crosswalk_by_norm, bom_rows_by_fg_norm
+
+
+def load_bom_catalog() -> tuple[dict[str, str], dict[str, str], dict[str, list[dict[str, Any]]]]:
+	"""Load BOM catalog from Frappe DB (preferred) with CSV fallback for local/offline use."""
+	try:
+		import frappe as _frappe
+		if _frappe.local and _frappe.local.site:
+			return _load_bom_catalog_from_frappe()
+	except Exception:
+		pass
+	return _load_bom_catalog_from_csv()
 
 
 def load_product_policy_catalog() -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:

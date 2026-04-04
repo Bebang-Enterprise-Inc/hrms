@@ -52,7 +52,7 @@ is_roving = _roving_mod.is_roving
 # ---------------------------------------------------------------------------
 
 INSTANCE_ID = "i-026b7477d27bd46d6"
-DB_CONTAINER = os.environ.get("ADMS_DB_CONTAINER", "adms_receiver-adms-db-1")
+DB_CONTAINER = os.environ.get("ADMS_DB_CONTAINER", "62c9d67fd960_adms_receiver_adms-db_1")
 REGION = "ap-southeast-1"
 SSM_TIMEOUT = 60
 SSM_POLL_INTERVAL = 2
