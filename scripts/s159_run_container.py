@@ -17,7 +17,7 @@ import boto3
 
 INSTANCE_ID = "i-026b7477d27bd46d6"
 REGION = "ap-southeast-1"
-SCRIPT_PATH = Path(__file__).parent / "s159_container_fix_boms_v4.py"
+SCRIPT_PATH = Path(__file__).parent / "s159_container_fix_placeholders.py"
 
 
 def main():
