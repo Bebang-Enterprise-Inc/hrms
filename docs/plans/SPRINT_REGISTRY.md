@@ -206,9 +206,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S160` | Sprint 160 | `s160-employee-detail-dialog` | hrms#447, BEI-Tasks#330 | PR_CREATED 2026-04-05 — Employee Master UX overhaul: replace Employee360Drawer with EmployeeDetailDialog (collapsible sections). Inline editing for personal/employment fields, nested CompensationDetailDialog for compensation. PRs: hrms#447, BEI-Tasks#330. | `docs/plans/2026-04-05-sprint-160-employee-detail-dialog.md` |
 
+| `S161` | Sprint 161 | `s161-store-ordering-cleanup` | PR_CREATED | PR_CREATED — Store ordering UX cleanup: Frozen/Dry tabs, hide irrelevant items, merge variants, UOM conversion. | `docs/plans/2026-04-05-sprint-161-store-ordering-cleanup.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S161`.
-2. Reserve branch name: `s161-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S162`.
+2. Reserve branch name: `s162-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
