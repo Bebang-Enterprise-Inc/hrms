@@ -2229,15 +2229,20 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 	store_warehouse = resolve_warehouse(store)
 
 	# Get items with order frequency for this store, sorted by most ordered first
-	_category_col = "COALESCE(i.custom_store_category, 'Other')"
+	_item_meta = frappe.get_meta("Item")
+	_has_store_category = _item_meta.has_field("custom_store_category")
+	_has_store_ordering_uom = _item_meta.has_field("custom_store_ordering_uom")
+	_has_store_orderable = _item_meta.has_field("custom_store_orderable")
+
+	_category_col = "COALESCE(i.custom_store_category, 'Other')" if _has_store_category else "'Other'"
+	_uom_col = "COALESCE(i.custom_store_ordering_uom, i.stock_uom)" if _has_store_ordering_uom else "i.stock_uom"
 
 	items = frappe.db.sql(
 		f"""
         SELECT
             i.name, i.item_name, i.item_group, i.stock_uom, i.image,
             i.valuation_rate, i.standard_rate, i.last_purchase_rate,
-            i.variant_of,
-            COALESCE(i.custom_store_ordering_uom, i.stock_uom) as store_ordering_uom,
+            {_uom_col} as store_ordering_uom,
             {_category_col} as store_category,
             COALESCE(freq.order_count, 0) as order_count,
             freq.last_order_date
@@ -2267,7 +2272,7 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
             AND i.item_name NOT LIKE '%%TRASHBIN%%'
             AND i.item_name NOT LIKE '%%TRASHCAN%%'
             AND i.item_name NOT LIKE '%%BALLPEN%%'
-            AND COALESCE(i.custom_store_orderable, 1) = 1
+            {"AND COALESCE(i.custom_store_orderable, 1) = 1" if _has_store_orderable else ""}
         ORDER BY COALESCE(freq.order_count, 0) DESC, i.item_group, i.item_name
     """,
 		store_warehouse,
@@ -2314,57 +2319,7 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 	stock_map = source_stock_context["stock_map"]
 	source_item_exists = source_stock_context.get("source_item_exists", set())
 
-	# S161/W3B: Merge variant items — group by variant_of, sum stock, pick display item.
-	variant_groups = {}  # {parent_item: [items]}
-	non_variant_items = []
-	for item in items:
-		parent = item.get("variant_of")
-		if parent:
-			variant_groups.setdefault(parent, []).append(item)
-		else:
-			non_variant_items.append(item)
 
-	merged_items = list(non_variant_items)
-	for parent_code, variants in variant_groups.items():
-		if len(variants) <= 1:
-			# Single variant — no merge needed, just pass through
-			merged_items.extend(variants)
-			continue
-
-		# Pick display item: highest order_count, prefer non-bulk UOM on tie
-		variants_sorted = sorted(
-			variants,
-			key=lambda v: (-flt(v.get("order_count", 0)), v.get("stock_uom") or ""),
-		)
-		display = variants_sorted[0]
-		other_codes = [v.name for v in variants_sorted[1:]]
-
-		# Sum ATP from source stock_map for all variants in the group
-		for other in variants_sorted[1:]:
-			other_code = other.name
-			# Merge source stock
-			for key, qty in list(stock_map.items()):
-				wh, ic = key
-				if ic == other_code:
-					display_key = (wh, display.name)
-					stock_map[display_key] = flt(stock_map.get(display_key, 0)) + flt(qty)
-			# Merge store stock
-			if other_code in store_stock_map:
-				store_stock_map[display.name] = flt(store_stock_map.get(display.name, 0)) + flt(store_stock_map.get(other_code, 0))
-			# Merge source_item_exists
-			other_keys = [(wh, other_code) for wh, _ in source_item_exists if _ == other_code]
-			for ok in other_keys:
-				source_item_exists.add((ok[0], display.name))
-			# Sum order_count
-			display["order_count"] = flt(display.get("order_count", 0)) + flt(other.get("order_count", 0))
-			# S161-fix: Merge last_qty_map — inherit from variant if display has no entry
-			if display.name not in last_qty_map and other_code in last_qty_map:
-				last_qty_map[display.name] = last_qty_map[other_code]
-
-		display["merged_variants"] = other_codes
-		merged_items.append(display)
-
-	items = merged_items
 
 	# S161/W4B: Batch-fetch UOM conversion factors for items with store_ordering_uom != stock_uom.
 	uom_cf_map = {}  # {(item_code, uom): conversion_factor}
@@ -2393,9 +2348,7 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 	item_codes = [row.name for row in items]
 	# S161-fix: demand pipeline may key snapshots to the parent item code
 	# (e.g., BOM consumption for FG002, not variant FG002-A)
-	variant_parents = {row.get("variant_of") for row in items if row.get("variant_of")}
-	all_snapshot_codes = list(set(item_codes) | variant_parents)
-	demand_snapshots = _load_store_item_demand_snapshots(store_warehouse, all_snapshot_codes, target_date)
+	demand_snapshots = _load_store_item_demand_snapshots(store_warehouse, item_codes, target_date)
 
 	# S154/B8: Get delivery schedule for cargo-specific coverage windows.
 	store_deliveries = _get_next_deliveries(store_warehouse)
@@ -2410,8 +2363,6 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 
 		available_to_promise = flt(stock_map.get((source_warehouse, item_code), 0), 2)
 		snapshot = demand_snapshots.get(item_code) or {}
-		if not snapshot and item.get("variant_of"):
-			snapshot = demand_snapshots.get(item.get("variant_of")) or {}
 		coverage_window_days = flt(snapshot.get("coverage_window_days") or 0)
 		if coverage_window_days <= 0:
 			# S154/B8: Use cargo-specific coverage from delivery schedule.
@@ -2472,9 +2423,6 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 		item["is_oos"] = 1 if effective_atp == 0 else 0
 		item["source_item_exists"] = 1 if item_has_bin_at_source else 0
 		item["last_order_date"] = item.get("last_order_date")  # S161/W1A: for relevance filter
-		# S161/W3: Pass merged_variants list if this is a display item for a variant group.
-		if item.get("merged_variants"):
-			item["merged_variants"] = item["merged_variants"]
 		item["cargo_category"] = _lane_to_cargo_category(lane)
 		# S161/W2A: Delivery lane for frontend tab filtering.
 		item["delivery_lane"] = "Frozen" if _lane_to_cargo_category(lane) == "FC" else "Dry"
