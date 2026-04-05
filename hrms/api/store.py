@@ -1314,23 +1314,14 @@ def _get_next_deliveries(store_warehouse: str) -> dict:
 	this_monday = add_days(today, -today_weekday)
 
 	week_doc = None
-	schedule_source = "published"
+	schedule_source = "current"
 
-	# Try this week first
+	# S159: publish gate removed — schedules are live immediately
 	week_name = frappe.db.get_value(
 		"BEI Delivery Schedule Week",
-		{"week_start": this_monday, "published": 1},
+		{"week_start": str(this_monday)},
 		"name",
 	)
-	if not week_name:
-		# Fallback: last published week (most weeks are identical)
-		week_name = frappe.db.get_value(
-			"BEI Delivery Schedule Week",
-			{"published": 1},
-			"name",
-			order_by="week_start desc",
-		)
-		schedule_source = "fallback_last_week" if week_name else "default"
 
 	if not week_name:
 		return defaults
@@ -6200,7 +6191,7 @@ def toggle_delivery(store: str, week_start: str, day: str, delivery_type: str) -
 	if not week_name:
 		doc = frappe.new_doc("BEI Delivery Schedule Week")
 		doc.week_start = str(week_date)
-		doc.published = 0
+		doc.published = 1  # S159: schedules are live immediately
 		doc.save(ignore_permissions=True)
 		week_name = doc.name
 	else:
@@ -6281,7 +6272,7 @@ def copy_week(source_week: str, target_week: str) -> dict:
 			target_doc = frappe.new_doc("BEI Delivery Schedule Week")
 			target_doc.week_start = str(target_date)
 
-		target_doc.published = 0
+		target_doc.published = 1  # S159: schedules are live immediately
 
 		for entry in source_doc.entries or []:
 			target_doc.append("entries", {
@@ -6306,7 +6297,7 @@ def copy_week(source_week: str, target_week: str) -> dict:
 
 @frappe.whitelist()
 def publish_week(week_start: str) -> dict:
-	"""S154/S2: Publish a schedule week (makes it visible to stores)."""
+	"""DEPRECATED: publish gate removed in S159. Schedules are live immediately."""
 	from hrms.utils.sentry import set_backend_observability_context
 
 	set_backend_observability_context(
@@ -6343,7 +6334,7 @@ def publish_week(week_start: str) -> dict:
 
 @frappe.whitelist()
 def unpublish_week(week_start: str, reason: str = "") -> dict:
-	"""S154/S2: Unpublish a schedule week with audit reason."""
+	"""DEPRECATED: publish gate removed in S159. Schedules are live immediately."""
 	from hrms.utils.sentry import set_backend_observability_context
 
 	set_backend_observability_context(
@@ -6399,20 +6390,12 @@ def get_day_summary(date: str) -> dict:
 	day_abbr = day_names[target.weekday()]
 	monday = add_days(target, -target.weekday())
 
+	# S159: publish gate removed — schedules are live immediately
 	week_name = frappe.db.get_value(
 		"BEI Delivery Schedule Week",
-		{"week_start": str(monday), "published": 1},
+		{"week_start": str(monday)},
 		"name",
 	)
-
-	if not week_name:
-		# Fallback to last published week
-		week_name = frappe.db.get_value(
-			"BEI Delivery Schedule Week",
-			{"published": 1},
-			"name",
-			order_by="week_start desc",
-		)
 
 	if not week_name:
 		return {"date": str(target), "day": day_abbr, "deliveries": [], "totals": {"COLD": 0, "DRY": 0}}
@@ -6452,21 +6435,13 @@ def get_store_schedule(store: str) -> dict:
 	today = getdate(nowdate())
 	monday = add_days(today, -today.weekday())
 
-	# Current week
+	# S159: publish gate removed — schedules are live immediately
 	week_name = frappe.db.get_value(
 		"BEI Delivery Schedule Week",
-		{"week_start": str(monday), "published": 1},
+		{"week_start": str(monday)},
 		"name",
 	)
-	schedule_source = "published"
-	if not week_name:
-		week_name = frappe.db.get_value(
-			"BEI Delivery Schedule Week",
-			{"published": 1},
-			"name",
-			order_by="week_start desc",
-		)
-		schedule_source = "fallback"
+	schedule_source = "current"
 
 	current_entries = []
 	if week_name:
