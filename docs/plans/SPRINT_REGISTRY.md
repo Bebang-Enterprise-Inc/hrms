@@ -204,9 +204,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S159` | Sprint 159 | `s159-bom-data-fix` | — | COMPLETED 2026-04-04 — Fixed 30 BOMs (18 FG->BKI, 12 MN->BEI), created 6 new BOMs (Iskrambol, Ginataang, Pop Lamig, 3 Tikims), regenerated CSV fixtures from Frappe SSOT. 13/13 verification checks passed. | `docs/plans/2026-04-04-sprint-159-bom-data-fix.md` |
 
+| `S160` | Sprint 160 | `s160-employee-detail-dialog` | hrms#447, BEI-Tasks#330 | PR_CREATED 2026-04-05 — Employee Master UX overhaul: replace Employee360Drawer with EmployeeDetailDialog (collapsible sections). Inline editing for personal/employment fields, nested CompensationDetailDialog for compensation. PRs: hrms#447, BEI-Tasks#330. | `docs/plans/2026-04-05-sprint-160-employee-detail-dialog.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S160`.
-2. Reserve branch name: `s160-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S161`.
+2. Reserve branch name: `s161-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
