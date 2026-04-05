@@ -2391,7 +2391,11 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 	adaptive_delta = _get_adaptive_delta(store_warehouse)
 	tuned_multiplier = _apply_adaptive_tuning(signal_modifiers["composite_multiplier"], adaptive_delta)
 	item_codes = [row.name for row in items]
-	demand_snapshots = _load_store_item_demand_snapshots(store_warehouse, item_codes, target_date)
+	# S161-fix: demand pipeline may key snapshots to the parent item code
+	# (e.g., BOM consumption for FG002, not variant FG002-A)
+	variant_parents = {row.get("variant_of") for row in items if row.get("variant_of")}
+	all_snapshot_codes = list(set(item_codes) | variant_parents)
+	demand_snapshots = _load_store_item_demand_snapshots(store_warehouse, all_snapshot_codes, target_date)
 
 	# S154/B8: Get delivery schedule for cargo-specific coverage windows.
 	store_deliveries = _get_next_deliveries(store_warehouse)
@@ -2406,6 +2410,8 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 
 		available_to_promise = flt(stock_map.get((source_warehouse, item_code), 0), 2)
 		snapshot = demand_snapshots.get(item_code) or {}
+		if not snapshot and item.get("variant_of"):
+			snapshot = demand_snapshots.get(item.get("variant_of")) or {}
 		coverage_window_days = flt(snapshot.get("coverage_window_days") or 0)
 		if coverage_window_days <= 0:
 			# S154/B8: Use cargo-specific coverage from delivery schedule.
@@ -2530,6 +2536,12 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 		item["priority_score"] = round(demand_score + freq_score + urgency_score + source_alert_score)
 		item["source_oos_alert"] = 1 if source_alert_score > 0 else 0
 
+		# S161-fix: Low-stock signal — items with <1.5 days of stock at the store
+		if avg_daily_demand > 0 and store_actual > 0:
+			item["is_low_stock"] = 1 if (store_actual / avg_daily_demand) < 1.5 else 0
+		elif store_actual <= 0 and avg_daily_demand > 0:
+			item["is_low_stock"] = 1
+
 	# S154: Sort by priority score (highest first), then "not carried" items last.
 	items = sorted(
 		items,
@@ -2550,7 +2562,11 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 		source_atp = flt(item.get("available_to_promise", 0))
 		last_ordered = item.get("last_order_date")
 		# Keep visible if: source ATP > 0, ordered within cutoff, not-stocked sentinel (-1), or has demand signal
-		if source_atp > 0 or source_atp < 0 or (last_ordered and str(last_ordered) >= str(cutoff_date)) or flt(item.get("avg_daily_demand")) > 0:
+		if (source_atp > 0
+			or source_atp < 0
+			or (last_ordered and str(last_ordered) >= str(cutoff_date))
+			or flt(item.get("avg_daily_demand")) > 0
+			or flt(item.get("order_count", 0)) > 0):
 			visible_items.append(item)
 		else:
 			item["_hidden"] = 1
