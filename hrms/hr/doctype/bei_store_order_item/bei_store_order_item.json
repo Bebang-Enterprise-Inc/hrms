@@ -23,7 +23,9 @@
     "is_edited",
     "deviation_pct",
     "deviation_reason",
-    "qty_dispatched"
+    "qty_dispatched",
+    "qty_in_store_uom",
+    "store_uom"
   ],
   "fields": [
     {
@@ -158,11 +160,27 @@
       "fieldtype": "Float",
       "label": "Qty Dispatched",
       "description": "S154: SCM override — quantity actually dispatched (may differ from qty_requested)"
+    },
+    {
+      "fieldname": "qty_in_store_uom",
+      "fieldtype": "Float",
+      "label": "Qty (Store UOM)",
+      "read_only": 1,
+      "precision": 3,
+      "description": "S161: Quantity in store-facing UOM (before reverse conversion to stock UOM)"
+    },
+    {
+      "fieldname": "store_uom",
+      "fieldtype": "Link",
+      "label": "Store UOM",
+      "options": "UOM",
+      "read_only": 1,
+      "description": "S161: Store-facing UOM used for ordering (may differ from stock UOM)"
     }
   ],
   "istable": 1,
   "links": [],
-  "modified": "2026-02-17 00:00:00.000000",
+  "modified": "2026-04-05 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "HR",
   "name": "BEI Store Order Item",

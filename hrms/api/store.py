@@ -1718,6 +1718,7 @@ def _coverage_window_days_for_lane(lane):
 _INTEGER_UOMS = frozenset({
 	"Nos", "Pcs", "Box", "Pack", "Bag", "Piece", "Dozen", "Set", "Unit",
 	"Bundle", "Roll", "Can", "Bottle", "Sack", "Gallon",
+	"Kg", "KG", "Kilogram", "Liter", "L",
 })
 
 
@@ -1875,9 +1876,18 @@ def _get_adaptive_delta(warehouse):
 def _normalize_order_line(item_data, lane="Dry"):
 	recommended_qty = flt(item_data.get("recommended_qty", item_data.get("suggested_qty", 0)))
 	qty_requested = flt(item_data.get("qty_requested", 0))
+
+	# S161/W4D: Reverse UOM conversion — convert store UOM qty back to stock UOM.
+	conversion_factor = flt(item_data.get("conversion_factor", 0))
+	store_uom = item_data.get("display_uom") or item_data.get("store_uom") or ""
+	qty_in_store_uom = 0.0
+	if conversion_factor > 0 and conversion_factor != 1.0:
+		qty_in_store_uom = qty_requested  # Preserve what the store entered
+		qty_requested = flt(qty_requested / conversion_factor, 3)  # Convert to stock UOM
+
 	is_edited = 1 if qty_requested != recommended_qty else 0
 	deviation_reason = item_data.get("deviation_reason") or item_data.get("reason_for_edit") or ""
-	return {
+	result = {
 		"item_code": item_data.get("item_code"),
 		"qty_requested": qty_requested,
 		"suggested_qty": recommended_qty,
@@ -1891,6 +1901,11 @@ def _normalize_order_line(item_data, lane="Dry"):
 		"is_edited": is_edited,
 		"deviation_reason": deviation_reason,
 	}
+	# S161/W4D: Store UOM audit fields (backwards-compatible — only set if conversion applied)
+	if qty_in_store_uom > 0:
+		result["qty_in_store_uom"] = qty_in_store_uom
+		result["store_uom"] = store_uom
+	return result
 
 
 def _sanitize_submitted_items(items):
@@ -2195,7 +2210,7 @@ def audit_store_area_supervisor_mapping(
 
 
 @frappe.whitelist()
-def get_orderable_items(store: str, date: str | None = None) -> dict:
+def get_orderable_items(store: str, date: str | None = None, include_hidden: int | str = 0) -> dict:
 	"""
 	Get items available for ordering by this store.
 	Returns lane-aware recommendation fields while preserving `suggested_qty`
@@ -2222,11 +2237,16 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
         SELECT
             i.name, i.item_name, i.item_group, i.stock_uom, i.image,
             i.valuation_rate, i.standard_rate, i.last_purchase_rate,
+            i.variant_of,
+            COALESCE(i.custom_store_ordering_uom, i.stock_uom) as store_ordering_uom,
             {_category_col} as store_category,
-            COALESCE(freq.order_count, 0) as order_count
+            COALESCE(freq.order_count, 0) as order_count,
+            freq.last_order_date
         FROM `tabItem` i
         LEFT JOIN (
-            SELECT soi.item_code, COUNT(DISTINCT soi.parent) as order_count
+            SELECT soi.item_code,
+                   COUNT(DISTINCT soi.parent) as order_count,
+                   MAX(so.order_date) as last_order_date
             FROM `tabBEI Store Order Item` soi
             JOIN `tabBEI Store Order` so ON so.name = soi.parent
             WHERE so.store = %s AND so.status != 'Draft'
@@ -2248,6 +2268,7 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
             AND i.item_name NOT LIKE '%%TRASHBIN%%'
             AND i.item_name NOT LIKE '%%TRASHCAN%%'
             AND i.item_name NOT LIKE '%%BALLPEN%%'
+            AND COALESCE(i.custom_store_orderable, 1) = 1
         ORDER BY COALESCE(freq.order_count, 0) DESC, i.item_group, i.item_name
     """,
 		store_warehouse,
@@ -2293,6 +2314,74 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 	lane_by_item = source_stock_context["lane_by_item"]
 	stock_map = source_stock_context["stock_map"]
 	source_item_exists = source_stock_context.get("source_item_exists", set())
+
+	# S161/W3B: Merge variant items — group by variant_of, sum stock, pick display item.
+	variant_groups = {}  # {parent_item: [items]}
+	non_variant_items = []
+	for item in items:
+		parent = item.get("variant_of")
+		if parent:
+			variant_groups.setdefault(parent, []).append(item)
+		else:
+			non_variant_items.append(item)
+
+	merged_items = list(non_variant_items)
+	for parent_code, variants in variant_groups.items():
+		if len(variants) <= 1:
+			# Single variant — no merge needed, just pass through
+			merged_items.extend(variants)
+			continue
+
+		# Pick display item: highest order_count, prefer non-bulk UOM on tie
+		variants_sorted = sorted(
+			variants,
+			key=lambda v: (-flt(v.get("order_count", 0)), v.get("stock_uom") or ""),
+		)
+		display = variants_sorted[0]
+		other_codes = [v.name for v in variants_sorted[1:]]
+
+		# Sum ATP from source stock_map for all variants in the group
+		for other in variants_sorted[1:]:
+			other_code = other.name
+			# Merge source stock
+			for key, qty in list(stock_map.items()):
+				wh, ic = key
+				if ic == other_code:
+					display_key = (wh, display.name)
+					stock_map[display_key] = flt(stock_map.get(display_key, 0)) + flt(qty)
+			# Merge store stock
+			if other_code in store_stock_map:
+				store_stock_map[display.name] = flt(store_stock_map.get(display.name, 0)) + flt(store_stock_map.get(other_code, 0))
+			# Merge source_item_exists
+			other_keys = [(wh, other_code) for wh, _ in source_item_exists if _ == other_code]
+			for ok in other_keys:
+				source_item_exists.add((ok[0], display.name))
+			# Sum order_count
+			display["order_count"] = flt(display.get("order_count", 0)) + flt(other.get("order_count", 0))
+
+		display["merged_variants"] = other_codes
+		merged_items.append(display)
+
+	items = merged_items
+
+	# S161/W4B: Batch-fetch UOM conversion factors for items with store_ordering_uom != stock_uom.
+	uom_cf_map = {}  # {(item_code, uom): conversion_factor}
+	items_needing_cf = [
+		row.name for row in items
+		if row.get("store_ordering_uom") and row.get("store_ordering_uom") != row.get("stock_uom")
+	]
+	if items_needing_cf:
+		cf_rows = frappe.db.sql(
+			"""
+			SELECT parent as item_code, uom, conversion_factor
+			FROM `tabUOM Conversion Detail`
+			WHERE parenttype = 'Item' AND parent IN %(item_codes)s
+			""",
+			{"item_codes": items_needing_cf},
+			as_dict=True,
+		)
+		for row in cf_rows:
+			uom_cf_map[(row.item_code, row.uom)] = flt(row.conversion_factor)
 
 	target_date = getdate(date or nowdate())
 	signal_flags = _get_signal_flags(store_warehouse, for_date=target_date)
@@ -2374,7 +2463,13 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		item["available_to_promise"] = effective_atp
 		item["is_oos"] = 1 if effective_atp == 0 else 0
 		item["source_item_exists"] = 1 if item_has_bin_at_source else 0
+		item["last_order_date"] = item.get("last_order_date")  # S161/W1A: for relevance filter
+		# S161/W3: Pass merged_variants list if this is a display item for a variant group.
+		if item.get("merged_variants"):
+			item["merged_variants"] = item["merged_variants"]
 		item["cargo_category"] = _lane_to_cargo_category(lane)
+		# S161/W2A: Delivery lane for frontend tab filtering.
+		item["delivery_lane"] = "Frozen" if _lane_to_cargo_category(lane) == "FC" else "Dry"
 		# S154/B2: Store category from custom field.
 		item["store_category"] = item.get("store_category") or "Other"
 		item["packaging_description"] = item.get("stock_uom") or ""
@@ -2401,6 +2496,23 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 			item["suggested_qty"] = _round_suggested_qty(max(0, adjusted), item_uom)
 			item["recommended_qty"] = item["suggested_qty"]
 
+		# S161/W4C: UOM conversion — convert stock_uom quantities to store_ordering_uom.
+		store_uom = item.get("store_ordering_uom") or item.get("stock_uom") or ""
+		stock_uom = item.get("stock_uom") or ""
+		cf = 1.0
+		if store_uom and store_uom != stock_uom:
+			cf = flt(uom_cf_map.get((item_code, store_uom), 0))
+			if cf > 0:
+				item["available_to_promise"] = flt(flt(item["available_to_promise"]) * cf, 2) if flt(item["available_to_promise"]) > 0 else item["available_to_promise"]
+				item["available_stock"] = flt(flt(item["available_stock"]) * cf, 2) if flt(item["available_stock"]) > 0 else item["available_stock"]
+				item["store_actual_qty"] = flt(flt(item["store_actual_qty"]) * cf, 2)
+				item["suggested_qty"] = _round_suggested_qty(flt(item["suggested_qty"]) * cf, store_uom)
+				item["recommended_qty"] = _round_suggested_qty(flt(item["recommended_qty"]) * cf, store_uom)
+			else:
+				cf = 1.0  # No conversion found — safe default
+		item["display_uom"] = store_uom if cf != 1.0 else stock_uom
+		item["conversion_factor"] = cf
+
 		# S154/B4: Invisible priority score for sort order.
 		demand_score = min(40, flt(avg_daily_demand) * 2)
 		freq_score = min(20, flt(item.get("order_count", 0)) * 4)
@@ -2426,8 +2538,31 @@ def get_orderable_items(store: str, date: str | None = None) -> dict:
 		),
 	)
 
+	# S161/W1B: Relevance filter — hide items with no source ATP and no recent orders.
+	_RELEVANCE_CUTOFF_DAYS = 30
+	cutoff_date = add_days(nowdate(), -_RELEVANCE_CUTOFF_DAYS)
+	show_hidden = cint(include_hidden)
+	visible_items = []
+	hidden_items = []
+	for item in items:
+		source_atp = flt(item.get("available_to_promise", 0))
+		last_ordered = item.get("last_order_date")
+		# Keep visible if: source ATP > 0, or ordered within cutoff, or not-stocked sentinel (-1)
+		if source_atp > 0 or source_atp < 0 or (last_ordered and str(last_ordered) >= str(cutoff_date)):
+			visible_items.append(item)
+		else:
+			item["_hidden"] = 1
+			hidden_items.append(item)
+
+	if show_hidden:
+		# Return all items but mark hidden ones
+		result_items = visible_items + hidden_items
+	else:
+		result_items = visible_items
+
 	return {
-		"items": items,
+		"items": result_items,
+		"hidden_count": len(hidden_items),
 		# S154/B6+B8: Delivery schedule for frontend banner
 		"next_cold_delivery": store_deliveries.get("next_cold_delivery"),
 		"next_dry_delivery": store_deliveries.get("next_dry_delivery"),
