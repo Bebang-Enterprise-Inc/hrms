@@ -213,6 +213,10 @@ def _get_employee_detail(employee_id: str) -> dict:
 		"custom_philhealth_verified", "custom_pagibig_verified",
 	]
 
+	# Guard custom fields — filter out any that don't exist on the DocType (S161 lesson)
+	_meta = frappe.get_meta("Employee")
+	emp_fields = [f for f in emp_fields if not f.startswith("custom_") or _meta.has_field(f)]
+
 	# Check bei_* allowance columns exist
 	allowance_fields = [
 		"bei_comm_allow_monthly", "bei_deminimis_monthly", "bei_honorarium_monthly",
