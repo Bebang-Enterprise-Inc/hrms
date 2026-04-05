@@ -102,73 +102,17 @@ jobs:
             python scripts/sync_web_to_supabase.py --rolling-days 7
           fi
 
-  # ── Step 3: FoodPanda orders from Google Sheet (parallel with POS & Web) ───
-  foodpanda-sync:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  # ── FoodPanda sync jobs REMOVED (2026-04-05) ──────────────────────────────
+  # FoodPanda and GrabFood orders now flow through Mosaic POS (since Mar 25).
+  # The Google Sheets sync was obsolete and failing with TimeoutError.
+  # Historical data retained in foodpanda_orders table.
+  # Scripts retained in scripts/ for reference.
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: pip install requests google-auth google-api-python-client pytz
-
-      - name: Setup Google credentials
-        run: |
-          mkdir -p credentials
-          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
-
-      - name: Run FoodPanda sync
-        run: |
-          if [ -n "${{ inputs.target_date }}" ]; then
-            python scripts/sync_foodpanda_to_supabase.py \
-              --date "${{ inputs.target_date }}"
-          else
-            python scripts/sync_foodpanda_to_supabase.py \
-              --rolling-days 7 \
-              --fail-on-empty
-          fi
-
-  # ── Step 4: FoodPanda cups from governed item fact sheet ──────────────────
-  foodpanda-item-sync:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: pip install requests google-auth google-api-python-client
-
-      - name: Setup Google credentials
-        run: |
-          mkdir -p credentials
-          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
-
-      - name: Run FoodPanda item-daily sync
-        run: |
-          if [ -n "${{ inputs.target_date }}" ]; then
-            python scripts/sync_foodpanda_item_daily_to_supabase.py \
-              --date "${{ inputs.target_date }}"
-          else
-            python scripts/sync_foodpanda_item_daily_to_supabase.py \
-              --start-date "$(date -u -d '7 days ago' +%F)" \
-              --end-date "$(date -u -d 'yesterday' +%F)"
-          fi
-
-  # ── Step 5: Refresh dashboard materialized views after all sales feeds ────
+  # ── Step 3: Refresh dashboard materialized views after all sales feeds ────
   refresh-sales-dashboard-views:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs: [pos-sync, web-sync, foodpanda-sync, foodpanda-item-sync]
+    needs: [pos-sync, web-sync]
 
     steps:
       - uses: actions/checkout@v4
@@ -184,7 +128,7 @@ jobs:
         run: |
           python scripts/supabase_exec.py "select public.refresh_sales_dashboard_daily_store_metrics();"
 
-  # ── Step 6: Anomaly detection (AFTER all syncs complete) ─────────────────
+  # ── Step 4: Anomaly detection (AFTER all syncs complete) ─────────────────
   anomaly-detection:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -218,7 +162,7 @@ jobs:
   notify-failure:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [pos-sync, web-sync, foodpanda-sync, foodpanda-item-sync, refresh-sales-dashboard-views, anomaly-detection]
+    needs: [pos-sync, web-sync, refresh-sales-dashboard-views, anomaly-detection]
     if: ${{ always() && contains(needs.*.result, 'failure') }}
 
     steps:
@@ -248,17 +192,30 @@ jobs:
           )
           chat = build('chat', 'v1', credentials=creds)
 
-          msg = (
-              'WORKFLOW FAILURE: Daily POS & Web Sync\n\n'
-              'One or more sync jobs failed.\n'
-              'POS sync: ${{ needs.pos-sync.result }}\n'
-              'Web sync: ${{ needs.web-sync.result }}\n'
-              'FoodPanda sync: ${{ needs.foodpanda-sync.result }}\n'
-              'FoodPanda item sync: ${{ needs.foodpanda-item-sync.result }}\n'
-              'Sales dashboard refresh: ${{ needs.refresh-sales-dashboard-views.result }}\n'
-              'Anomaly detection: ${{ needs.anomaly-detection.result }}\n\n'
-              'Check: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-          )
+          pos = '${{ needs.pos-sync.result }}'
+          web = '${{ needs.web-sync.result }}'
+          views = '${{ needs.refresh-sales-dashboard-views.result }}'
+          anomaly = '${{ needs.anomaly-detection.result }}'
+
+          severity = 'CRITICAL' if pos == 'failure' else 'WARNING'
+          icon = chr(0x1F534) if severity == 'CRITICAL' else chr(0x1F7E1)
+
+          def fmt(name, result):
+              icons = {'success': chr(0x2705), 'failure': chr(0x274C), 'skipped': chr(0x23ED), 'cancelled': chr(0x1F6AB)}
+              return f'{icons.get(result, chr(0x2753))} {name}: {result}'
+
+          lines = [
+              f'{icon} {severity}: Daily Sales Sync',
+              '',
+              fmt('POS sync (revenue)', pos),
+              fmt('Web sync (delivery)', web),
+              fmt('View refresh', views),
+              fmt('Anomaly detection', anomaly),
+              '',
+              f'Re-run: https://github.com/${{ github.repository }}/actions/workflows/daily-pos-sync.yml',
+              f'Details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+          ]
+          msg = chr(10).join(lines)
           chat.spaces().messages().create(
               parent='spaces/AAQABiNmpBg',
               body={'text': msg},
