@@ -5,11 +5,18 @@ from frappe import _
 from frappe.utils import add_days, date_diff, flt, getdate, today
 
 from hrms.api import leave_dashboard as leave_dashboard_api
+from hrms.api.payroll_compensation import (
+	compute_pagibig_employee,
+	compute_philhealth_employee,
+	compute_sss_employee,
+	compute_monthly_tax,
+)
 from hrms.utils.api_helpers import (
 	_check_hr_permission,
 	_paginate,
 	_validate_date_range,
 )
+from hrms.utils.sentry import set_backend_observability_context
 
 
 @frappe.whitelist()
@@ -22,6 +29,7 @@ def get_employee_masterlist(
 	reports_to: str | None = None,
 	page: int = 1,
 	page_size: int = 50,
+	detail: str | None = None,
 ):
 	"""Employee masterlist with operational people-data fields.
 
@@ -34,11 +42,15 @@ def get_employee_masterlist(
 	    reports_to: Filter by manager employee id
 	    page: Page number (1-based)
 	    page_size: Results per page
+	    detail: If provided, return full detail for this single employee ID
 
 	Returns:
-	    dict: Paginated employee list with summary + filter metadata
+	    dict: Paginated employee list with summary + filter metadata, or single employee detail
 	"""
 	_check_hr_permission()
+
+	if detail:
+		return _get_employee_detail(detail)
 
 	page = max(int(page or 1), 1)
 	page_size = min(max(int(page_size or 50), 1), 200)
@@ -162,6 +174,237 @@ def get_employee_masterlist(
 	paginated["summary"] = summary
 	paginated["filters"] = filter_meta
 	return paginated
+
+
+def _get_employee_detail(employee_id: str) -> dict:
+	"""Return structured employee detail grouped by section for the EmployeeDetailDialog.
+
+	Called when get_employee_masterlist(detail=employee_id) is used.
+	"""
+	set_backend_observability_context(
+		module="hr",
+		action="get_employee_detail",
+		mutation_type="read",
+	)
+
+	if not frappe.db.exists("Employee", employee_id):
+		frappe.throw(_("Employee {0} not found").format(employee_id), frappe.DoesNotExistError)
+
+	# --- Personal, emergency, employment fields ---
+	emp_fields = [
+		"name", "employee_name", "first_name", "middle_name", "last_name",
+		"date_of_birth", "gender", "marital_status", "blood_group",
+		"cell_number", "personal_email", "current_address", "permanent_address",
+		"custom_nickname", "custom_uniform_size",
+		# Emergency
+		"person_to_be_contacted", "emergency_phone_number", "relation",
+		# Employment
+		"department", "designation", "branch", "employment_type",
+		"date_of_joining", "status", "company", "reports_to",
+		"company_email", "custom_work_phone", "user_id",
+		# Bank
+		"salary_mode", "bank_name", "bank_account_name", "bank_ac_no",
+		# Gov IDs
+		"tin_number", "sss_number", "philhealth_number", "pagibig_number",
+		# Enrichment
+		"custom_enrichment_status", "custom_enrichment_submitted_date",
+		"custom_enrichment_complete_date",
+		"custom_tin_verified", "custom_sss_verified",
+		"custom_philhealth_verified", "custom_pagibig_verified",
+	]
+
+	# Check bei_* allowance columns exist
+	allowance_fields = [
+		"bei_comm_allow_monthly", "bei_deminimis_monthly", "bei_honorarium_monthly",
+		"bei_meal_allow_monthly", "bei_gasoline_allow_monthly", "bei_other_fixed_monthly",
+	]
+	existing_cols = {
+		r[0] for r in frappe.db.sql("SHOW COLUMNS FROM tabEmployee LIKE 'bei_%'")
+	}
+	has_allowance_cols = all(f in existing_cols for f in allowance_fields)
+	if has_allowance_cols:
+		emp_fields.extend(allowance_fields)
+
+	emp = frappe.db.get_value("Employee", employee_id, emp_fields, as_dict=True)
+	if not emp:
+		frappe.throw(_("Employee {0} not found").format(employee_id), frappe.DoesNotExistError)
+
+	# Resolve reports_to name
+	reports_to_name = ""
+	if emp.get("reports_to"):
+		reports_to_name = frappe.db.get_value("Employee", emp.reports_to, "employee_name") or ""
+
+	# --- Personal section ---
+	personal = {
+		"employee_name": emp.employee_name,
+		"first_name": emp.first_name,
+		"middle_name": emp.middle_name,
+		"last_name": emp.last_name,
+		"date_of_birth": str(emp.date_of_birth) if emp.date_of_birth else None,
+		"gender": emp.gender,
+		"marital_status": emp.marital_status,
+		"blood_group": emp.get("blood_group"),
+		"cell_number": emp.cell_number,
+		"personal_email": emp.personal_email,
+		"current_address": emp.current_address,
+		"permanent_address": emp.permanent_address,
+		"custom_nickname": emp.get("custom_nickname"),
+		"custom_uniform_size": emp.get("custom_uniform_size"),
+	}
+
+	# --- Emergency section ---
+	emergency = {
+		"person_to_be_contacted": emp.get("person_to_be_contacted"),
+		"emergency_phone_number": emp.get("emergency_phone_number"),
+		"relation": emp.get("relation"),
+	}
+
+	# --- Employment section ---
+	employment = {
+		"department": emp.department,
+		"branch": emp.branch,
+		"designation": emp.designation,
+		"employment_type": emp.employment_type,
+		"date_of_joining": str(emp.date_of_joining) if emp.date_of_joining else None,
+		"reports_to": emp.reports_to,
+		"reports_to_name": reports_to_name,
+		"status": emp.status,
+		"company": emp.company,
+		"company_email": emp.company_email,
+		"custom_work_phone": emp.get("custom_work_phone"),
+		"user_id": emp.user_id,
+	}
+
+	# --- Compensation section (reuse payroll_compensation pattern) ---
+	compensation = {}
+	for f in allowance_fields:
+		compensation[f] = float(emp.get(f) or 0) if has_allowance_cols else 0
+
+	# Latest SSA
+	ssa = frappe.db.sql(
+		"""
+		SELECT base, salary_structure, income_tax_slab, from_date
+		FROM `tabSalary Structure Assignment`
+		WHERE employee = %s AND docstatus = 1
+		ORDER BY from_date DESC LIMIT 1
+		""",
+		employee_id,
+		as_dict=True,
+	)
+	if ssa:
+		compensation["base_salary"] = float(ssa[0].base or 0)
+		compensation["salary_structure"] = ssa[0].salary_structure
+		compensation["tax_slab"] = ssa[0].income_tax_slab
+		compensation["ssa_from_date"] = str(ssa[0].from_date) if ssa[0].from_date else None
+	else:
+		compensation["base_salary"] = 0
+		compensation["salary_structure"] = None
+		compensation["tax_slab"] = None
+		compensation["ssa_from_date"] = None
+
+	# Projected deductions
+	base = compensation["base_salary"]
+	compensation["projected_sss"] = compute_sss_employee(base)
+	compensation["projected_philhealth"] = compute_philhealth_employee(base)
+	compensation["projected_pagibig"] = compute_pagibig_employee(base)
+	compensation["projected_tax"] = compute_monthly_tax(base)
+
+	# Bank info (masked)
+	compensation["salary_mode"] = emp.salary_mode
+	compensation["bank_name"] = emp.bank_name
+	compensation["bank_account_name"] = emp.get("bank_account_name")
+	bank_ac_no = emp.bank_ac_no or ""
+	compensation["bank_ac_no"] = ("****" + bank_ac_no[-4:]) if len(bank_ac_no) > 4 else bank_ac_no
+
+	# Pending compensation changes count
+	compensation["pending_changes_count"] = frappe.db.count(
+		"BEI Compensation Change",
+		filters={
+			"employee": employee_id,
+			"status": ("in", ["Pending HR Manager", "Pending Accounts Manager"]),
+		},
+	)
+
+	# --- Gov IDs (masked) ---
+	def _mask(val):
+		val = val or ""
+		return ("****" + val[-4:]) if len(val) > 4 else val
+
+	gov_ids = {
+		"tin_number": _mask(emp.get("tin_number")),
+		"sss_number": _mask(emp.get("sss_number")),
+		"philhealth_number": _mask(emp.get("philhealth_number")),
+		"pagibig_number": _mask(emp.get("pagibig_number")),
+	}
+
+	# --- Enrichment status ---
+	# Check for pending enrichment
+	has_pending_enrichment = bool(
+		frappe.db.exists(
+			"BEI Onboarding Request",
+			{
+				"employee": employee_id,
+				"request_type": "update_existing",
+				"status": ("in", ["Pending", "Escalated", "Revision Requested"]),
+			},
+		)
+	)
+	enrichment = {
+		"custom_enrichment_status": emp.get("custom_enrichment_status") or "Not Started",
+		"custom_enrichment_submitted_date": str(emp.custom_enrichment_submitted_date) if emp.get("custom_enrichment_submitted_date") else None,
+		"custom_enrichment_complete_date": str(emp.custom_enrichment_complete_date) if emp.get("custom_enrichment_complete_date") else None,
+		"custom_tin_verified": emp.get("custom_tin_verified"),
+		"custom_sss_verified": emp.get("custom_sss_verified"),
+		"custom_philhealth_verified": emp.get("custom_philhealth_verified"),
+		"custom_pagibig_verified": emp.get("custom_pagibig_verified"),
+		"has_pending_enrichment": has_pending_enrichment,
+	}
+
+	# --- Recent changes (last 10 combined) ---
+	comp_changes = frappe.get_all(
+		"BEI Compensation Change",
+		filters={"employee": employee_id},
+		fields=[
+			"name", "'compensation' as source", "change_type",
+			"salary_component", "employee_field_name",
+			"old_value", "new_value", "status",
+			"requested_by", "submission_date as change_date",
+		],
+		order_by="creation DESC",
+		limit_page_length=10,
+	)
+	sensitive_changes = frappe.get_all(
+		"BEI Sensitive Change Request",
+		filters={"employee": employee_id},
+		fields=[
+			"name", "'sensitive' as source", "field_name as change_type",
+			"'' as salary_component", "field_name as employee_field_name",
+			"old_value", "new_value", "status",
+			"initiated_by as requested_by", "submission_date as change_date",
+		],
+		order_by="creation DESC",
+		limit_page_length=10,
+	)
+	all_changes = sorted(
+		comp_changes + sensitive_changes,
+		key=lambda r: str(r.get("change_date") or ""),
+		reverse=True,
+	)[:10]
+	# Convert dates to strings for JSON
+	for ch in all_changes:
+		if ch.get("change_date"):
+			ch["change_date"] = str(ch["change_date"])
+
+	return {
+		"employee": emp.name,
+		"personal": personal,
+		"emergency": emergency,
+		"employment": employment,
+		"compensation": compensation,
+		"gov_ids": gov_ids,
+		"enrichment": enrichment,
+		"recent_changes": all_changes,
+	}
 
 
 @frappe.whitelist()
