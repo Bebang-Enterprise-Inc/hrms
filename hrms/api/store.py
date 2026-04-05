@@ -1367,14 +1367,42 @@ def _get_next_deliveries(store_warehouse: str) -> dict:
 				return str(candidate), offset
 		return None, None
 
+	def _delivery_interval(delivery_day_indices: set) -> int:
+		"""Compute days between consecutive deliveries within a week cycle.
+
+		If deliveries are Mon+Thu (indices {0,3}), the gaps are 3 and 4 days.
+		Return the MAX gap — the store must stock enough for the longest stretch.
+		If only 1 delivery day per week, interval is 7.
+		"""
+		if not delivery_day_indices:
+			return 7  # No schedule → assume weekly
+		if len(delivery_day_indices) == 1:
+			return 7  # Once a week
+		days_sorted = sorted(delivery_day_indices)
+		gaps = []
+		for i in range(len(days_sorted)):
+			next_i = (i + 1) % len(days_sorted)
+			gap = (days_sorted[next_i] - days_sorted[i]) % 7
+			if gap == 0:
+				gap = 7
+			gaps.append(gap)
+		return max(gaps)
+
 	next_cold, days_cold = _find_next_delivery_date(cold_days, today)
 	next_dry, days_dry = _find_next_delivery_date(dry_days, today)
+
+	# S161-fix: coverage_interval = days between deliveries (for order qty).
+	# days_to_cold/dry = days until NEXT delivery (for banner display).
+	cold_interval = _delivery_interval(cold_days)
+	dry_interval = _delivery_interval(dry_days)
 
 	return {
 		"next_cold_delivery": next_cold,
 		"next_dry_delivery": next_dry,
 		"days_to_cold": days_cold or 2,
 		"days_to_dry": days_dry or 3,
+		"cold_interval": cold_interval,
+		"dry_interval": dry_interval,
 		"schedule_source": schedule_source,
 	}
 
@@ -2365,12 +2393,13 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 		snapshot = demand_snapshots.get(item_code) or {}
 		coverage_window_days = flt(snapshot.get("coverage_window_days") or 0)
 		if coverage_window_days <= 0:
-			# S154/B8: Use cargo-specific coverage from delivery schedule.
+			# S161-fix: Use delivery INTERVAL (days between deliveries), not days-until-next.
+			# If deliveries are weekly, store needs 7 days of stock, not 1 day.
 			cargo = _lane_to_cargo_category(lane)
 			if cargo == "FC":
-				coverage_window_days = store_deliveries.get("days_to_cold") or 2
+				coverage_window_days = store_deliveries.get("cold_interval") or store_deliveries.get("days_to_cold") or 2
 			else:
-				coverage_window_days = store_deliveries.get("days_to_dry") or 3
+				coverage_window_days = store_deliveries.get("dry_interval") or store_deliveries.get("days_to_dry") or 3
 
 		projected_sales = flt(snapshot.get("projected_sales"), 2)
 		bom_consumption = flt(snapshot.get("bom_consumption"), 2)
@@ -2534,6 +2563,8 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 		"next_dry_delivery": store_deliveries.get("next_dry_delivery"),
 		"days_to_cold": store_deliveries.get("days_to_cold"),
 		"days_to_dry": store_deliveries.get("days_to_dry"),
+		"cold_interval": store_deliveries.get("cold_interval"),
+		"dry_interval": store_deliveries.get("dry_interval"),
 		"cold_window_open": _is_delivery_window_open(store_deliveries.get("next_cold_delivery")),
 		"dry_window_open": _is_delivery_window_open(store_deliveries.get("next_dry_delivery")),
 		"schedule_source": store_deliveries.get("schedule_source"),
