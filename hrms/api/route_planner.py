@@ -614,15 +614,28 @@ def get_stores_for_delivery_date(date=None, goods_type="cold"):
 
 
 @frappe.whitelist()
-def update_store_warehouse(store: str, new_parent_warehouse: str) -> dict:
-	"""S159: Reassign a store to a different hub warehouse."""
+def update_store_warehouse(store: str, target_hub: str) -> dict:
+	"""S159: Reassign a store to a different hub warehouse.
+
+	Args:
+		store: Display name (e.g., "Estancia") or Frappe name ("Estancia - BEI")
+		target_hub: Hub display key from route planner ("3MD Marilao" or "Pinnacle Calamba")
+	"""
 	set_backend_observability_context(
 		module="scm", action="update_store_warehouse", mutation_type="update",
 	)
 
-	VALID_HUBS = ["3MD Marilao - BEI", "Pinnacle Calamba - BEI"]
-	if new_parent_warehouse not in VALID_HUBS:
-		frappe.throw(f"Invalid hub warehouse: {new_parent_warehouse}. Must be one of {VALID_HUBS}")
+	# Map display hub names to Frappe warehouse names
+	HUB_MAP = {
+		"3MD Marilao": "3MD Logistics - Camangyanan - BKI",
+		"Pinnacle Calamba": "Pinnacle Cold Storage Solutions - BKI",
+	}
+	new_parent = HUB_MAP.get(target_hub)
+	if not new_parent:
+		frappe.throw(f"Unknown hub: {target_hub}. Valid: {list(HUB_MAP.keys())}")
+
+	if not frappe.db.exists("Warehouse", new_parent):
+		frappe.throw(f"Hub warehouse not found in DB: {new_parent}")
 
 	# resolve_warehouse handles display name → Frappe warehouse name
 	from hrms.api.store import resolve_warehouse
@@ -630,10 +643,10 @@ def update_store_warehouse(store: str, new_parent_warehouse: str) -> dict:
 
 	wh = frappe.get_doc("Warehouse", store_warehouse)
 	old_parent = wh.parent_warehouse
-	wh.parent_warehouse = new_parent_warehouse
+	wh.parent_warehouse = new_parent
 	wh.save(ignore_permissions=True)
 
-	return {"store": store_warehouse, "old_parent": old_parent, "new_parent": new_parent_warehouse}
+	return {"store": store_warehouse, "old_parent": old_parent, "new_parent": new_parent}
 
 
 @frappe.whitelist()

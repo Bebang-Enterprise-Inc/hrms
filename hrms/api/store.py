@@ -1322,6 +1322,12 @@ def _get_next_deliveries(store_warehouse: str) -> dict:
 		{"week_start": str(this_monday)},
 		"name",
 	)
+	if not week_name:
+		# Fallback: last available week (schedules are typically reused week to week)
+		week_name = frappe.db.get_value(
+			"BEI Delivery Schedule Week", {}, "name", order_by="week_start desc"
+		)
+		schedule_source = "fallback_last_week" if week_name else "default"
 
 	if not week_name:
 		return defaults
@@ -6396,6 +6402,11 @@ def get_day_summary(date: str) -> dict:
 		{"week_start": str(monday)},
 		"name",
 	)
+	if not week_name:
+		# Fallback: last available week (schedules are typically reused)
+		week_name = frappe.db.get_value(
+			"BEI Delivery Schedule Week", {}, "name", order_by="week_start desc"
+		)
 
 	if not week_name:
 		return {"date": str(target), "day": day_abbr, "deliveries": [], "totals": {"COLD": 0, "DRY": 0}}
@@ -6442,6 +6453,12 @@ def get_store_schedule(store: str) -> dict:
 		"name",
 	)
 	schedule_source = "current"
+	if not week_name:
+		# Fallback: last available week (schedules are typically reused)
+		week_name = frappe.db.get_value(
+			"BEI Delivery Schedule Week", {}, "name", order_by="week_start desc"
+		)
+		schedule_source = "fallback_last_week"
 
 	current_entries = []
 	if week_name:
