@@ -1683,10 +1683,9 @@ def _build_recommendation_contract(
 		2,
 	)
 	safety_buffer = flt(max(1.0, forecast_demand * 0.15), 2)
-	recommended_qty = flt(
-		max(0.0, forecast_demand + safety_buffer - flt(available_to_promise)),
-		2,
-	)
+	# S161-fix: Don't subtract source ATP — store orders what it needs.
+	# Store-actual subtraction happens later in get_orderable_items().
+	recommended_qty = flt(forecast_demand + safety_buffer, 2)
 	return {
 		"lane": lane,
 		"available_to_promise": flt(available_to_promise, 2),
@@ -2358,6 +2357,9 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 				source_item_exists.add((ok[0], display.name))
 			# Sum order_count
 			display["order_count"] = flt(display.get("order_count", 0)) + flt(other.get("order_count", 0))
+			# S161-fix: Merge last_qty_map — inherit from variant if display has no entry
+			if display.name not in last_qty_map and other_code in last_qty_map:
+				last_qty_map[display.name] = last_qty_map[other_code]
 
 		display["merged_variants"] = other_codes
 		merged_items.append(display)
@@ -2547,8 +2549,8 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 	for item in items:
 		source_atp = flt(item.get("available_to_promise", 0))
 		last_ordered = item.get("last_order_date")
-		# Keep visible if: source ATP > 0, or ordered within cutoff, or not-stocked sentinel (-1)
-		if source_atp > 0 or source_atp < 0 or (last_ordered and str(last_ordered) >= str(cutoff_date)):
+		# Keep visible if: source ATP > 0, ordered within cutoff, not-stocked sentinel (-1), or has demand signal
+		if source_atp > 0 or source_atp < 0 or (last_ordered and str(last_ordered) >= str(cutoff_date)) or flt(item.get("avg_daily_demand")) > 0:
 			visible_items.append(item)
 		else:
 			item["_hidden"] = 1
