@@ -130,11 +130,21 @@ def get_employee_masterlist(
 		)
 	)
 
+	# Profile completion fields — each filled field adds to the percentage
+	_profile_fields = [
+		"employee_name", "date_of_birth", "gender", "cell_number",
+		"personal_email", "company_email", "department", "designation",
+		"branch", "reports_to", "date_of_joining", "employment_type",
+	]
+
 	for row in results:
 		if not row.get("custom_enrichment_status"):
 			row["custom_enrichment_status"] = "Not Started"
 		row["reports_to_name"] = manager_name_map.get(row.get("reports_to"), "")
 		row["has_pending_enrichment"] = row.get("name") in open_enrichment_employees
+		# Compute profile completion %
+		filled = sum(1 for f in _profile_fields if row.get(f))
+		row["profile_completion"] = round(filled / len(_profile_fields) * 100)
 
 	summary = {
 		"total_employees": len(results),
@@ -142,6 +152,8 @@ def get_employee_masterlist(
 		"inactive": sum(1 for row in results if row.get("status") != "Active"),
 		"missing_manager": sum(1 for row in results if not row.get("reports_to")),
 		"missing_company_email": sum(1 for row in results if not row.get("company_email")),
+		"missing_dob": sum(1 for row in results if not row.get("date_of_birth")),
+		"missing_designation": sum(1 for row in results if not row.get("designation")),
 		"pending_enrichment": sum(1 for row in results if row.get("has_pending_enrichment")),
 		"in_progress_enrichment": sum(
 			1 for row in results if row.get("custom_enrichment_status") == "In Progress"
