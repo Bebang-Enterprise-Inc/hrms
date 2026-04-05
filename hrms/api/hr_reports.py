@@ -213,9 +213,10 @@ def _get_employee_detail(employee_id: str) -> dict:
 		"custom_philhealth_verified", "custom_pagibig_verified",
 	]
 
-	# Guard custom fields — filter out any that don't exist on the DocType (S161 lesson)
+	# Guard ALL fields — filter out any that don't exist on the DocType (S161 lesson)
 	_meta = frappe.get_meta("Employee")
-	emp_fields = [f for f in emp_fields if not f.startswith("custom_") or _meta.has_field(f)]
+	_valid_fields = {f.fieldname for f in _meta.fields} | {"name"}
+	emp_fields = [f for f in emp_fields if f in _valid_fields]
 
 	# Check bei_* allowance columns exist
 	allowance_fields = [
@@ -321,13 +322,15 @@ def _get_employee_detail(employee_id: str) -> dict:
 	compensation["bank_ac_no"] = ("****" + bank_ac_no[-4:]) if len(bank_ac_no) > 4 else bank_ac_no
 
 	# Pending compensation changes count
-	compensation["pending_changes_count"] = frappe.db.count(
-		"BEI Compensation Change",
-		filters={
-			"employee": employee_id,
-			"status": ("in", ["Pending HR Manager", "Pending Accounts Manager"]),
-		},
-	)
+	compensation["pending_changes_count"] = 0
+	if frappe.db.exists("DocType", "BEI Compensation Change"):
+		compensation["pending_changes_count"] = frappe.db.count(
+			"BEI Compensation Change",
+			filters={
+				"employee": employee_id,
+				"status": ("in", ["Pending HR Manager", "Pending Accounts Manager"]),
+			},
+		)
 
 	# --- Gov IDs (masked) ---
 	def _mask(val):
@@ -342,17 +345,19 @@ def _get_employee_detail(employee_id: str) -> dict:
 	}
 
 	# --- Enrichment status ---
-	# Check for pending enrichment
-	has_pending_enrichment = bool(
-		frappe.db.exists(
-			"BEI Onboarding Request",
-			{
-				"employee": employee_id,
-				"request_type": "update_existing",
-				"status": ("in", ["Pending", "Escalated", "Revision Requested"]),
-			},
+	# Check for pending enrichment (guard DocType existence)
+	has_pending_enrichment = False
+	if frappe.db.exists("DocType", "BEI Onboarding Request"):
+		has_pending_enrichment = bool(
+			frappe.db.exists(
+				"BEI Onboarding Request",
+				{
+					"employee": employee_id,
+					"request_type": "update_existing",
+					"status": ("in", ["Pending", "Escalated", "Revision Requested"]),
+				},
+			)
 		)
-	)
 	enrichment = {
 		"custom_enrichment_status": emp.get("custom_enrichment_status") or "Not Started",
 		"custom_enrichment_submitted_date": str(emp.custom_enrichment_submitted_date) if emp.get("custom_enrichment_submitted_date") else None,
@@ -365,30 +370,34 @@ def _get_employee_detail(employee_id: str) -> dict:
 	}
 
 	# --- Recent changes (last 10 combined) ---
-	comp_changes = frappe.get_all(
-		"BEI Compensation Change",
-		filters={"employee": employee_id},
-		fields=[
-			"name", "'compensation' as source", "change_type",
-			"salary_component", "employee_field_name",
-			"old_value", "new_value", "status",
-			"requested_by", "submission_date as change_date",
-		],
-		order_by="creation DESC",
-		limit_page_length=10,
-	)
-	sensitive_changes = frappe.get_all(
-		"BEI Sensitive Change Request",
-		filters={"employee": employee_id},
-		fields=[
-			"name", "'sensitive' as source", "field_name as change_type",
-			"'' as salary_component", "field_name as employee_field_name",
-			"old_value", "new_value", "status",
-			"initiated_by as requested_by", "submission_date as change_date",
-		],
-		order_by="creation DESC",
-		limit_page_length=10,
-	)
+	comp_changes = []
+	if frappe.db.exists("DocType", "BEI Compensation Change"):
+		comp_changes = frappe.get_all(
+			"BEI Compensation Change",
+			filters={"employee": employee_id},
+			fields=[
+				"name", "'compensation' as source", "change_type",
+				"salary_component", "employee_field_name",
+				"old_value", "new_value", "status",
+				"requested_by", "submission_date as change_date",
+			],
+			order_by="creation DESC",
+			limit_page_length=10,
+		)
+	sensitive_changes = []
+	if frappe.db.exists("DocType", "BEI Sensitive Change Request"):
+		sensitive_changes = frappe.get_all(
+			"BEI Sensitive Change Request",
+			filters={"employee": employee_id},
+			fields=[
+				"name", "'sensitive' as source", "field_name as change_type",
+				"'' as salary_component", "field_name as employee_field_name",
+				"old_value", "new_value", "status",
+				"initiated_by as requested_by", "submission_date as change_date",
+			],
+			order_by="creation DESC",
+			limit_page_length=10,
+		)
 	all_changes = sorted(
 		comp_changes + sensitive_changes,
 		key=lambda r: str(r.get("change_date") or ""),
