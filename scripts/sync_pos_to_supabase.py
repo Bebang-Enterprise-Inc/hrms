@@ -500,6 +500,12 @@ def sync_store_day(client: httpx.Client, cred: dict,
                    location_id: int, store_name: str,
                    business_date: str, *, store_raw: bool = False) -> int:
     """Sync one store-day. Returns number of orders synced."""
+    # Determine if this is today (PHT) — today's data is always incomplete,
+    # so mark as 'partial' to allow re-sync on the next run.
+    _PHT = timezone(timedelta(hours=8))
+    _today_pht = datetime.now(_PHT).date().isoformat()
+    _final_status = "partial" if business_date >= _today_pht else "complete"
+
     # Mark in-progress
     set_sync_progress(client, location_id, business_date, "in_progress")
 
@@ -511,7 +517,7 @@ def sync_store_day(client: httpx.Client, cred: dict,
         raise
 
     if not orders:
-        set_sync_progress(client, location_id, business_date, "complete",
+        set_sync_progress(client, location_id, business_date, _final_status,
                           orders_synced=0)
         return 0
 
@@ -540,7 +546,7 @@ def sync_store_day(client: httpx.Client, cred: dict,
 
     n = len(order_rows)
     avg_items = len(item_rows) / n if n else 0
-    set_sync_progress(client, location_id, business_date, "complete",
+    set_sync_progress(client, location_id, business_date, _final_status,
                       orders_synced=n)
     return n
 
@@ -728,9 +734,10 @@ def main():
     # Resolve date range — use PHT (UTC+8) so GH Actions runners (UTC) get the correct "yesterday"
     PHT = timezone(timedelta(hours=8))
     yesterday = datetime.now(PHT).date() - timedelta(days=1)
+    today = datetime.now(PHT).date()
     if args.daily:
         start_date = yesterday
-        end_date = yesterday
+        end_date = today  # include today — marked 'partial', re-synced next run
     else:
         start_date = date.fromisoformat(args.from_date) if args.from_date else EARLIEST_DATE
         end_date = date.fromisoformat(args.to_date) if args.to_date else yesterday
