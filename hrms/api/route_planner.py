@@ -556,15 +556,15 @@ def get_stores_for_delivery_date(date=None, goods_type="cold"):
 	# Find the Monday of this week
 	monday = add_days(target_date, -target_date.weekday())
 
-	# Look up published schedule
+	# S159: publish gate removed — schedules are live immediately
 	week_name = frappe.db.get_value(
 		"BEI Delivery Schedule Week",
-		{"week_start": str(monday), "published": 1},
+		{"week_start": str(monday)},
 		"name",
 	)
 
 	if not week_name:
-		# No published schedule — fall back to approved orders
+		# No schedule for this week — fall back to approved orders
 		return get_store_orders_for_date(date)
 
 	# Map goods_type to delivery_type filter
@@ -611,6 +611,29 @@ def get_stores_for_delivery_date(date=None, goods_type="cold"):
 		"source": "schedule",
 		"count": len(stores),
 	}
+
+
+@frappe.whitelist()
+def update_store_warehouse(store: str, new_parent_warehouse: str) -> dict:
+	"""S159: Reassign a store to a different hub warehouse."""
+	set_backend_observability_context(
+		module="scm", action="update_store_warehouse", mutation_type="update",
+	)
+
+	VALID_HUBS = ["3MD Marilao - BEI", "Pinnacle Calamba - BEI"]
+	if new_parent_warehouse not in VALID_HUBS:
+		frappe.throw(f"Invalid hub warehouse: {new_parent_warehouse}. Must be one of {VALID_HUBS}")
+
+	# resolve_warehouse handles display name → Frappe warehouse name
+	from hrms.api.store import resolve_warehouse
+	store_warehouse = resolve_warehouse(store)
+
+	wh = frappe.get_doc("Warehouse", store_warehouse)
+	old_parent = wh.parent_warehouse
+	wh.parent_warehouse = new_parent_warehouse
+	wh.save(ignore_permissions=True)
+
+	return {"store": store_warehouse, "old_parent": old_parent, "new_parent": new_parent_warehouse}
 
 
 @frappe.whitelist()
