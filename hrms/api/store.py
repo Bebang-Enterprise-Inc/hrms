@@ -2538,9 +2538,12 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 	for item in items:
 		source_atp = flt(item.get("available_to_promise", 0))
 		last_ordered = item.get("last_order_date")
-		# Keep visible if: source ATP > 0, ordered within cutoff, not-stocked sentinel (-1), or has demand signal
+		# Keep visible if any of: source has stock, store has stock, recent order,
+		# has demand signal, or has order history. Only hide truly dead items.
+		store_on_hand = flt(item.get("store_actual_qty", 0))
 		if (source_atp > 0
 			or source_atp < 0
+			or store_on_hand > 0
 			or (last_ordered and str(last_ordered) >= str(cutoff_date))
 			or flt(item.get("avg_daily_demand")) > 0
 			or flt(item.get("order_count", 0)) > 0):
