@@ -27,6 +27,7 @@ def get_employee_masterlist(
 	employment_type: str | None = None,
 	search: str | None = None,
 	reports_to: str | None = None,
+	exception: str | None = None,
 	page: int = 1,
 	page_size: int = 50,
 	detail: str | None = None,
@@ -130,6 +131,15 @@ def get_employee_masterlist(
 		)
 	)
 
+	# Employees with an active (submitted) Salary Structure Assignment
+	employees_with_salary = set(
+		frappe.get_all(
+			"Salary Structure Assignment",
+			filters={"docstatus": 1},
+			pluck="employee",
+		)
+	)
+
 	# Profile completion fields — each filled field adds to the percentage
 	_profile_fields = [
 		"employee_name", "date_of_birth", "gender", "cell_number",
@@ -142,6 +152,7 @@ def get_employee_masterlist(
 			row["custom_enrichment_status"] = "Not Started"
 		row["reports_to_name"] = manager_name_map.get(row.get("reports_to"), "")
 		row["has_pending_enrichment"] = row.get("name") in open_enrichment_employees
+		row["has_salary_structure"] = row.get("name") in employees_with_salary
 		# Compute profile completion %
 		filled = sum(1 for f in _profile_fields if row.get(f))
 		row["profile_completion"] = round(filled / len(_profile_fields) * 100)
@@ -154,6 +165,7 @@ def get_employee_masterlist(
 		"missing_company_email": sum(1 for row in results if not row.get("company_email")),
 		"missing_dob": sum(1 for row in results if not row.get("date_of_birth")),
 		"missing_designation": sum(1 for row in results if not row.get("designation")),
+		"missing_salary": sum(1 for row in results if not row.get("has_salary_structure")),
 		"pending_enrichment": sum(1 for row in results if row.get("has_pending_enrichment")),
 		"in_progress_enrichment": sum(
 			1 for row in results if row.get("custom_enrichment_status") == "In Progress"
@@ -181,6 +193,19 @@ def get_employee_masterlist(
 			key=lambda row: row["employee_name"],
 		),
 	}
+
+	# Apply exception filter AFTER summary so chip counts reflect full data
+	if exception:
+		_exception_filters = {
+			"missing_manager": lambda r: not r.get("reports_to"),
+			"missing_dob": lambda r: not r.get("date_of_birth"),
+			"missing_designation": lambda r: not r.get("designation"),
+			"missing_email": lambda r: not r.get("company_email"),
+			"missing_salary": lambda r: not r.get("has_salary_structure"),
+		}
+		predicate = _exception_filters.get(exception)
+		if predicate:
+			results = [row for row in results if predicate(row)]
 
 	paginated = _paginate(results, page=page, page_size=page_size)
 	paginated["summary"] = summary
