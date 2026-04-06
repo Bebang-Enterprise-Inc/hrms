@@ -54,7 +54,7 @@ def get_employee_masterlist(
 		return _get_employee_detail(detail)
 
 	page = max(int(page or 1), 1)
-	page_size = min(max(int(page_size or 50), 1), 200)
+	page_size = min(max(int(page_size or 50), 1), 1000)
 
 	filters = {}
 	if status:
