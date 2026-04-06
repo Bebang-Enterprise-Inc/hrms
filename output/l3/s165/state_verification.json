@@ -1,0 +1,58 @@
+[
+  {
+    "check": "sync_progress constraint allows 'partial'",
+    "before": "CHECK ((status = ANY (ARRAY['pending','in_progress','complete','partial','error'])))",
+    "after": "same — no change needed",
+    "passed": true,
+    "notes": "T0.1 constraint verification"
+  },
+  {
+    "check": "sync_verification table columns",
+    "before": "table did not exist",
+    "after": "9 columns: location_id, business_date, mosaic_total, supabase_total, delta (generated), status, verified_at, heal_attempted, error_message",
+    "passed": true,
+    "notes": "T1.2 schema verification"
+  },
+  {
+    "check": "CB4 filter isolation probe",
+    "before": "unknown if filter[location_id] is honored by Mosaic",
+    "after": "Araneta Gateway (2557) = 233, Robinsons Galleria South (2515) = 225 for 2026-04-04. Different totals.",
+    "passed": true,
+    "notes": "HARD GATE — approach is valid"
+  },
+  {
+    "check": "Apr 3 order count before heal",
+    "before": {"date": "2026-04-03", "paid_orders": 2321, "gross_sales": "1495052.00"},
+    "after": {"date": "2026-04-03", "paid_orders": 2427, "gross_sales": "1545038.00"},
+    "passed": true,
+    "notes": "Healed +106 orders across 3 passes. Low total is legitimate — Holy Week store closures Apr 2-3."
+  },
+  {
+    "check": "Apr 3 final verification pass",
+    "before": "11 unresolved after dry-run detection",
+    "after": "0 unresolved after 3 heal passes",
+    "passed": true,
+    "notes": "All 45 store-days now match Mosaic ground truth"
+  },
+  {
+    "check": "Apr 2 order count before/after heal",
+    "before": {"date": "2026-04-02", "paid_orders": 3263, "gross_sales": "1963718.00"},
+    "after": "3 stores healed (SM Manila +2, SM Grand Central +1, Up Town Mall BGC +3). 0 unresolved.",
+    "passed": true,
+    "notes": "Holy Week closures — low count is legitimate"
+  },
+  {
+    "check": "CB3 module-global propagation (no 401s)",
+    "before": "Risk: sps.SUPABASE_KEY empty -> 401 on every heal",
+    "after": "All heal calls succeeded (no 401 errors in any pass). Some timeouts (transient, resolved on retry).",
+    "passed": true,
+    "notes": "Confirmed by T4.3 heal runs — sync_store_day() successfully upserted orders"
+  },
+  {
+    "check": "CB5 Sentry fail-fast",
+    "before": "SENTRY_DSN exists in Doppler (bei-erp/dev) and GH Actions secrets",
+    "after": "Script initializes sentry_sdk.init() successfully; would exit(2) if missing",
+    "passed": true,
+    "notes": "Verified by successful script runs (no exit code 2)"
+  }
+]

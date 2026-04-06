@@ -1,0 +1,44 @@
+[
+  {
+    "test": "T4.1 dry-run single store",
+    "command": "python scripts/verify_mosaic_pos_sync.py --date 2026-04-04 --store 2338 --dry-run --no-chat",
+    "result": "SM Megamall (2338) 2026-04-04: Mosaic=344, Supabase=344, OK. No writes (dry-run).",
+    "status": "PASS"
+  },
+  {
+    "test": "T4.2 no-heal dry-run Apr 3",
+    "command": "python scripts/verify_mosaic_pos_sync.py --date 2026-04-03 --no-heal --dry-run --no-chat",
+    "result": "45 store-days verified, 11 unresolved (stores closed for Holy Week show 0/0 OK, open stores show small deltas).",
+    "status": "PASS"
+  },
+  {
+    "test": "T4.3 live heal Apr 3 (pass 1)",
+    "command": "python scripts/verify_mosaic_pos_sync.py --date 2026-04-03 --no-chat",
+    "result": "4 healed (Robinsons Galleria South, Vista Mall Taguig, Robinsons Antipolo, SM Bicutan), 4 timed out (transient). 10 unresolved.",
+    "status": "PARTIAL — rerun needed"
+  },
+  {
+    "test": "T4.3 live heal Apr 3 (pass 2)",
+    "command": "python scripts/verify_mosaic_pos_sync.py --date 2026-04-03 --no-chat",
+    "result": "3 more healed (Ayala Fairview Terraces, Market Market, Vermosa). 1 unresolved.",
+    "status": "PARTIAL — one more pass"
+  },
+  {
+    "test": "T4.3 live heal Apr 3 (pass 3 — final)",
+    "command": "python scripts/verify_mosaic_pos_sync.py --date 2026-04-03 --no-chat",
+    "result": "0 unresolved. All 45 store-days match Mosaic ground truth.",
+    "status": "PASS"
+  },
+  {
+    "test": "T4.4 CB3 heal 401 check",
+    "command": "(verified during T4.3 heal runs)",
+    "result": "No 401 errors observed. sps.SUPABASE_KEY and sps.SUPABASE_MGMT_TOKEN propagation works correctly.",
+    "status": "PASS"
+  },
+  {
+    "test": "T5.1 backfill Apr 2",
+    "command": "python scripts/verify_mosaic_pos_sync.py --date 2026-04-02 --no-chat",
+    "result": "3 healed (SM Manila +2, SM Grand Central +1, Up Town Mall BGC +3). 0 unresolved. Low counts are legitimate — Holy Week closures.",
+    "status": "PASS"
+  }
+]
