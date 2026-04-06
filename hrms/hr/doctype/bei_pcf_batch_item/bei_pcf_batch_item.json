@@ -13,7 +13,14 @@
         "vendor",
         "description",
         "amount",
-        "item_status"
+        "item_status",
+        "section_coa",
+        "suggested_coa",
+        "suggested_coa_label",
+        "coa_confidence",
+        "column_break_coa",
+        "final_coa",
+        "approved_amount"
     ],
     "fields": [
         {
@@ -78,6 +85,48 @@
             "options": "Pending\nApproved\nRejected",
             "default": "Pending",
             "in_list_view": 1
+        },
+        {
+            "fieldname": "section_coa",
+            "fieldtype": "Section Break",
+            "label": "COA Classification",
+            "collapsible": 1
+        },
+        {
+            "fieldname": "suggested_coa",
+            "fieldtype": "Link",
+            "label": "Suggested COA",
+            "options": "Account",
+            "read_only": 1
+        },
+        {
+            "fieldname": "suggested_coa_label",
+            "fieldtype": "Data",
+            "label": "Suggested Category",
+            "read_only": 1
+        },
+        {
+            "fieldname": "coa_confidence",
+            "fieldtype": "Float",
+            "label": "Confidence",
+            "read_only": 1
+        },
+        {
+            "fieldname": "column_break_coa",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "final_coa",
+            "fieldtype": "Link",
+            "label": "Final COA",
+            "options": "Account",
+            "description": "Accounting's decision"
+        },
+        {
+            "fieldname": "approved_amount",
+            "fieldtype": "Currency",
+            "label": "Approved Amount",
+            "description": "Accounting can adjust (defaults to amount)"
         }
     ],
     "index_web_pages_for_search": 0,
