@@ -212,8 +212,10 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S163` | Sprint 163 | `s163-store-ordering-doctypes-product-grouping` | PR_CREATED | PR_CREATED 2026-04-06 — Phases 0-9 in single session. CSV→DocType migration ready for SSM. Group aggregation, multi-row submit, SCM resolution modal, MR savepoint+race check. L3 deferred to fresh session per S099. PRs filled in by builder. | `docs/plans/2026-04-06-sprint-163-store-ordering-doctypes-product-grouping.md` |
 
+| `S164` | Sprint 164 | `s164-add-new-employee-entry-point` | PR_CREATED | PR_CREATED 2026-04-06 — "Add New Employee" dialog on Employee Master Dashboard. Auto-generates Employee ID + Bio ID, uploads Gov ID files, best-effort ADMS auto-enrollment on branch bio device, Google Chat notification. Surfaces "Missing Bio Device" metric card and red "No Bio ID" badge on rows. Phase 0 extracts `getCsrfToken` → `lib/frappe-csrf.ts` and `_get_adms_config` → `hrms/utils/adms_config.py`. L3 deferred to fresh session per S099. PR numbers filled in by builder. | `docs/plans/2026-04-06-sprint-164-add-new-employee-entry-point.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S164`.
+1. Next canonical sprint ID to assign: `S165`.
 2. Reserve branch name: `s164-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**

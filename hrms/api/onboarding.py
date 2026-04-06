@@ -26,6 +26,7 @@ from frappe.utils.data import add_to_date
 
 from hrms.api.contact_validation import validate_email_address, validate_ph_mobile_number
 from hrms.api.profile_policy import classify_employee_policy
+from hrms.utils.employee_id import generate_bei_employee_id
 
 SESSION_DOCTYPE = "BEI Onboarding Session"
 REQUEST_DOCTYPE = "BEI Onboarding Request"
@@ -826,25 +827,10 @@ def _create_employee_from_new_hire_request(req) -> dict[str, Any]:
 		frappe.throw(f"Bio ID {bio_id} is already assigned to Employee {existing}")
 
 	# ── Generate Employee ID ─────────────────────────────────────────────────────
-	# BEI naming series: BEI-EMP-YYYY-NNNNN (e.g., BEI-EMP-2026-00637)
-	year = frappe.utils.nowdate()[:4]
-	last_emp = frappe.db.sql(
-		"""
-        SELECT name FROM tabEmployee
-        WHERE name LIKE %s
-        ORDER BY name DESC LIMIT 1 FOR UPDATE
-    """,
-		(f"BEI-EMP-{year}-%",),
-		as_dict=True,
-	)
-
-	if last_emp:
-		last_num = int(last_emp[0]["name"].split("-")[-1])
-		new_num = last_num + 1
-	else:
-		new_num = 1
-
-	employee_id = f"BEI-EMP-{year}-{new_num:05d}"
+	# BEI naming series: BEI-EMP-YYYY-NNNNN — extracted to hrms.utils.employee_id
+	# in S164 Phase 1 so the new create_employee_direct endpoint shares the same
+	# FOR UPDATE-locked sequence generator.
+	employee_id = generate_bei_employee_id()
 
 	# ── Build full name ──────────────────────────────────────────────────────────
 	first = (flat_changes.get("first_name", "") or "").strip()
@@ -897,31 +883,66 @@ def _create_employee_from_new_hire_request(req) -> dict[str, Any]:
 	return {"employee_id": employee_id, "employee_name": employee_name}
 
 
-def _notify_new_employee_created(employee_id: str, employee_name: str, req) -> None:
-	"""Notify HR team when a new employee record is created via onboarding approval."""
+def _notify_onboarding_approval_created(employee_id: str, employee_name: str, req) -> None:
+	"""Legacy adapter: unwraps the Onboarding Request into keyword args
+	for _notify_new_employee_created. Preserves the existing new_hire flow's
+	Chat payload shape (including the Onboarding Request line)."""
+	try:
+		changes = _as_dict(req.requested_changes)
+		flat_changes = _flatten_requested_changes(changes)
+		_notify_new_employee_created(
+			employee_id=employee_id,
+			employee_name=employee_name,
+			branch=flat_changes.get("branch"),
+			designation=flat_changes.get("designation"),
+			bio_id=flat_changes.get("new_attendance_device_id", "TBD"),
+			source="onboarding_approval",
+			approver_email=req.approver_email,
+			request_name=req.name,
+		)
+	except Exception:
+		pass
+
+
+def _notify_new_employee_created(
+	*,
+	employee_id: str,
+	employee_name: str,
+	branch: str | None,
+	designation: str | None,
+	bio_id: str,
+	source: str,  # "onboarding_approval" | "employee_master_dashboard"
+	approver_email: str,
+	request_name: str | None = None,
+) -> None:
+	"""Notify HR team when a new employee record is created.
+
+	Refactored in S164 Phase 1 to keyword-only args so both the existing
+	onboarding-approval flow and the new create_employee_direct endpoint
+	can share the same Chat notification helper.
+
+	The Onboarding Request line is preserved for the existing flow via the
+	optional ``request_name`` kwarg (audit B6).
+	"""
 	try:
 		from hrms.api.google_chat import send_message_to_space
 		from hrms.utils.bei_config import SPACE_NOTIFICATIONS, get_chat_space
 
 		space = get_chat_space(SPACE_NOTIFICATIONS)
-		changes = _as_dict(req.requested_changes)
 
-		flat_changes = _flatten_requested_changes(changes)
-
-		branch = flat_changes.get("branch", "Unknown Branch")
-		designation = flat_changes.get("designation", "Unknown Designation")
-		bio_id = flat_changes.get("new_attendance_device_id", "TBD")
-		message = (
-			f"*New Employee Created*\n"
-			f"Name: {employee_name}\n"
-			f"Employee ID: {employee_id}\n"
-			f"Bio ID: {bio_id}\n"
-			f"Branch: {branch}\n"
-			f"Designation: {designation}\n"
-			f"Approved by: {req.approver_email}\n"
-			f"Onboarding Request: {req.name}"
-		)
-		send_message_to_space(space, message)
+		lines = [
+			"*New Employee Created*",
+			f"Name: {employee_name}",
+			f"Employee ID: {employee_id}",
+			f"Bio ID: {bio_id}",
+			f"Branch: {branch or 'Unknown Branch'}",
+			f"Designation: {designation or 'Unknown Designation'}",
+			f"Approved by: {approver_email}",
+			f"Source: {source}",
+		]
+		if request_name:
+			lines.append(f"Onboarding Request: {request_name}")
+		send_message_to_space(space, "\n".join(lines))
 	except Exception:
 		pass  # Notification failure must NEVER block employee creation
 
@@ -1118,7 +1139,7 @@ def approve_and_apply(
 			req.save(ignore_permissions=True)
 			frappe.db.commit()
 
-			_notify_new_employee_created(result["employee_id"], result["employee_name"], req)
+			_notify_onboarding_approval_created(result["employee_id"], result["employee_name"], req)
 
 		except frappe.ValidationError as e:
 			frappe.db.rollback()
