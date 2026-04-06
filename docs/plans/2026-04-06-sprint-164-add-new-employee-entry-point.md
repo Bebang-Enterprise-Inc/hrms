@@ -12,8 +12,8 @@ amendment_version: 1
 amendment_date: 2026-04-06
 amendment_reason: "/audit-plan-bei-erp found 13 confirmed blockers + 6 new gaps. All amendments applied inline. No features dropped. See AUDIT: 13 BLOCKERS RESOLVED section at bottom."
 execution_summary: "Phases 0-4 implemented on branch s164-add-new-employee-entry-point (both repos). Phase verification scripts green (80 checks passed across 5 phases). Agent STOPS after PR creation per S099 PR-handoff. L3 tests deferred to a fresh session per S099 L3 handoff rule."
-frontend_pr: PENDING
-backend_pr: PENDING
+frontend_pr: "BEI-Tasks#347"
+backend_pr: "hrms#463"
 registry_row: "| `S164` | Sprint 164 | `s164-add-new-employee-entry-point` | — | PLANNED — \"Add New Employee\" dialog on Employee Master Dashboard. Auto-generates Employee ID + Bio ID, uploads Gov ID files, best-effort ADMS auto-enrollment on branch bio device, Google Chat notification. Surfaces \"Missing Bio Device\" metric card and red \"No Bio ID\" badge on rows. | `docs/plans/2026-04-06-sprint-164-add-new-employee-entry-point.md` |"
 ---
 
