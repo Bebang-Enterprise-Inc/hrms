@@ -1,0 +1,76 @@
+{
+  "actions": [],
+  "creation": "2026-04-06 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "item_code",
+    "item_name",
+    "stock_uom",
+    "conversion_to_display",
+    "priority",
+    "note"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_code",
+      "fieldtype": "Link",
+      "label": "Item Code",
+      "options": "Item",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "label": "Item Name",
+      "fetch_from": "item_code.item_name",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "stock_uom",
+      "fieldtype": "Data",
+      "label": "Stock UOM",
+      "fetch_from": "item_code.stock_uom",
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "conversion_to_display",
+      "fieldtype": "Float",
+      "label": "Conv → Display",
+      "reqd": 1,
+      "default": "1.0",
+      "precision": "6",
+      "in_list_view": 1,
+      "description": "Multiply member stock-UOM qty by this factor to express in the group's display UOM."
+    },
+    {
+      "fieldname": "priority",
+      "fieldtype": "Int",
+      "label": "Priority",
+      "reqd": 1,
+      "default": "100",
+      "in_list_view": 1,
+      "description": "Lower = picked first by auto-resolution."
+    },
+    {
+      "fieldname": "note",
+      "fieldtype": "Small Text",
+      "label": "Note"
+    }
+  ],
+  "istable": 1,
+  "links": [],
+  "modified": "2026-04-06 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Store Item Group Member",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "creation",
+  "sort_order": "ASC",
+  "states": [],
+  "track_changes": 1
+}

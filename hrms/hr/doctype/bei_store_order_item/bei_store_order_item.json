@@ -25,7 +25,12 @@
     "deviation_reason",
     "qty_dispatched",
     "qty_in_store_uom",
-    "store_uom"
+    "store_uom",
+    "section_break_group",
+    "item_group_code",
+    "group_order_seq",
+    "group_resolution_status",
+    "group_qty_requested_total"
   ],
   "fields": [
     {
@@ -176,6 +181,39 @@
       "options": "UOM",
       "read_only": 1,
       "description": "S161: Store-facing UOM used for ordering (may differ from stock UOM)"
+    },
+    {
+      "fieldname": "section_break_group",
+      "fieldtype": "Section Break",
+      "label": "Group Resolution (S163)",
+      "collapsible": 1
+    },
+    {
+      "fieldname": "item_group_code",
+      "fieldtype": "Link",
+      "label": "Item Group",
+      "options": "BEI Store Item Group",
+      "description": "S163: Audit backref to BEI Store Item Group when this row was resolved from a grouped order line. NULL for non-grouped items."
+    },
+    {
+      "fieldname": "group_order_seq",
+      "fieldtype": "Int",
+      "label": "Group Order Seq",
+      "description": "S163: Sibling-row identifier. All rows from the same store ordering line share this seq so the frontend can group them back into one display line."
+    },
+    {
+      "fieldname": "group_resolution_status",
+      "fieldtype": "Select",
+      "label": "Group Resolution Status",
+      "options": "\nPending\nAuto\nManual",
+      "description": "S163: Resolution state for grouped lines. Auto = system picked by member priority/ATP. Manual = SCM overrode. Pending = needs SCM action before MR."
+    },
+    {
+      "fieldname": "group_qty_requested_total",
+      "fieldtype": "Float",
+      "label": "Group Qty Requested Total",
+      "precision": "3",
+      "description": "S163: Total qty the store ordered for this group line in display UOM. Sum of sibling rows must equal this."
     }
   ],
   "istable": 1,

@@ -577,5 +577,27 @@
         "label": "Bank Account Name",
         "insert_after": "bank_name",
         "description": "Account holder name for payroll disbursement (Union Bank API: beneficiary.name, max 30 chars)"
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Material Request Item-custom_source_group_code",
+        "dt": "Material Request Item",
+        "fieldname": "custom_source_group_code",
+        "fieldtype": "Data",
+        "label": "Source Item Group",
+        "insert_after": "item_code",
+        "read_only": 1,
+        "description": "S163: BEI Store Item Group code that resolved into this MR row (audit trail only)."
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Material Request Item-custom_source_order_item",
+        "dt": "Material Request Item",
+        "fieldname": "custom_source_order_item",
+        "fieldtype": "Data",
+        "label": "Source Order Item",
+        "insert_after": "custom_source_group_code",
+        "read_only": 1,
+        "description": "S163: BEI Store Order Item row name that this MR row was generated from (audit trail only)."
     }
 ]

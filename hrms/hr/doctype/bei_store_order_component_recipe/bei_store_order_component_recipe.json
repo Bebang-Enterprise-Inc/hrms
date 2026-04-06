@@ -1,0 +1,113 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "allow_rename": 0,
+  "autoname": "field:recipe_key",
+  "creation": "2026-04-06 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "recipe_key",
+    "description",
+    "disabled",
+    "section_break_components",
+    "components",
+    "section_break_meta",
+    "note"
+  ],
+  "fields": [
+    {
+      "fieldname": "recipe_key",
+      "fieldtype": "Data",
+      "label": "Recipe Key",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "description": "Stable key e.g. FULL-BANANA-CINNAMON, ADDON-MANGO, TIKIM-PRESIDENTIAL"
+    },
+    {
+      "fieldname": "description",
+      "fieldtype": "Small Text",
+      "label": "Description",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "disabled",
+      "fieldtype": "Check",
+      "label": "Disabled",
+      "default": "0",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "section_break_components",
+      "fieldtype": "Section Break",
+      "label": "Components"
+    },
+    {
+      "fieldname": "components",
+      "fieldtype": "Table",
+      "label": "Components",
+      "options": "BEI Store Order Component Recipe Item",
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_meta",
+      "fieldtype": "Section Break",
+      "label": "Notes"
+    },
+    {
+      "fieldname": "note",
+      "fieldtype": "Small Text",
+      "label": "Note"
+    }
+  ],
+  "links": [],
+  "modified": "2026-04-06 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Store Order Component Recipe",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock User",
+      "share": 0,
+      "write": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

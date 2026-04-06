@@ -208,9 +208,13 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S161` | Sprint 161 | `s161-store-ordering-cleanup` | PR_CREATED | PR_CREATED — Store ordering UX cleanup: Frozen/Dry tabs, hide irrelevant items, merge variants, UOM conversion. | `docs/plans/2026-04-05-sprint-161-store-ordering-cleanup.md` |
 
+| `S162` | Sprint 162 | `s162-pcf-frontend-redesign` | — | PLANNED — PCF frontend redesign. | `docs/plans/2026-04-06-sprint-162-pcf-frontend-redesign.md` |
+
+| `S163` | Sprint 163 | `s163-store-ordering-doctypes-product-grouping` | PR_CREATED | PR_CREATED 2026-04-06 — Phases 0-9 in single session. CSV→DocType migration ready for SSM. Group aggregation, multi-row submit, SCM resolution modal, MR savepoint+race check. L3 deferred to fresh session per S099. PRs filled in by builder. | `docs/plans/2026-04-06-sprint-163-store-ordering-doctypes-product-grouping.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S162`.
-2. Reserve branch name: `s162-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S164`.
+2. Reserve branch name: `s164-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 

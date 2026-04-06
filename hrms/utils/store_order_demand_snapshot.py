@@ -339,58 +339,112 @@ def load_bom_catalog() -> tuple[dict[str, str], dict[str, str], dict[str, list[d
 	return _load_bom_catalog_from_csv()
 
 
+def _require_frappe_context(loader_name: str):
+	"""S163 Phase 3.1: CSV fallback was removed because the source CSVs are deleted at Phase 11.
+	Standalone scripts that import these loaders MUST boot a Frappe context first."""
+	try:
+		import frappe  # type: ignore
+	except ImportError as exc:
+		raise RuntimeError(
+			f"{loader_name} requires a Frappe context after S163. "
+			"CSV fallback was removed because the source CSVs are deleted at Phase 11. "
+			"Standalone scripts must boot a Frappe context: "
+			"frappe.init(site='hq.bebang.ph'); frappe.connect()"
+		) from exc
+
+	if not getattr(frappe, "db", None):
+		raise RuntimeError(
+			f"{loader_name} requires a Frappe context after S163. "
+			"Initialize via: frappe.init(site='hq.bebang.ph'); frappe.connect()"
+		)
+	return frappe
+
+
 def load_product_policy_catalog() -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]]]:
+	"""S163: read from BEI Store Order Product Policy DocType. CSV fallback removed."""
+	frappe = _require_frappe_context("load_product_policy_catalog")
+
 	policies_by_code: dict[str, dict[str, str]] = {}
 	policies_by_name: dict[str, dict[str, str]] = {}
-	if not PRODUCT_POLICY_PATH.exists():
-		return policies_by_code, policies_by_name
 
-	with PRODUCT_POLICY_PATH.open(encoding="utf-8-sig", newline="") as handle:
-		for row in csv.DictReader(handle):
-			product_name = str(row.get("product_name", "")).strip()
-			product_code = str(row.get("product_code", "")).strip()
-			policy_type = str(row.get("policy_type", "")).strip()
-			target_key = str(row.get("target_key", "")).strip()
-			note = str(row.get("note", "")).strip()
-			if not policy_type or not (product_name or product_code):
-				continue
-			policy = {
-				"product_name": product_name,
-				"product_code": product_code,
-				"policy_type": policy_type,
-				"target_key": target_key,
-				"note": note,
-			}
-			if product_code:
-				policies_by_code[product_code] = policy
-			if product_name:
-				policies_by_name[normalize_name(product_name)] = policy
+	rows = frappe.get_all(
+		"BEI Store Order Product Policy",
+		fields=[
+			"name",
+			"product_name",
+			"product_code",
+			"policy_type",
+			"target_recipe",
+			"target_fg_name",
+			"exclude_reason",
+			"note",
+			"disabled",
+		],
+	)
+	for row in rows:
+		if row.get("disabled"):
+			continue
+		product_name = (row.get("product_name") or "").strip()
+		product_code = (row.get("product_code") or "").strip()
+		policy_type = (row.get("policy_type") or "").strip()
+		if not policy_type or not (product_name or product_code):
+			continue
+		if policy_type == "component_recipe":
+			target_key = (row.get("target_recipe") or "").strip()
+		elif policy_type == "fg_recipe":
+			target_key = (row.get("target_fg_name") or "").strip()
+		else:
+			target_key = ""
+		note = (row.get("note") or row.get("exclude_reason") or "").strip()
+		policy = {
+			"product_name": product_name,
+			"product_code": product_code,
+			"policy_type": policy_type,
+			"target_key": target_key,
+			"note": note,
+		}
+		if product_code:
+			policies_by_code[product_code] = policy
+		if product_name:
+			policies_by_name[normalize_name(product_name)] = policy
 
 	return policies_by_code, policies_by_name
 
 
 def load_component_recipe_catalog() -> dict[str, list[dict[str, Any]]]:
+	"""S163: read from BEI Store Order Component Recipe DocType. CSV fallback removed."""
+	frappe = _require_frappe_context("load_component_recipe_catalog")
+
 	recipes_by_key: dict[str, list[dict[str, Any]]] = defaultdict(list)
-	if not COMPONENT_RECIPE_PATH.exists():
+
+	parents = frappe.get_all(
+		"BEI Store Order Component Recipe",
+		fields=["name", "recipe_key", "disabled"],
+	)
+	enabled_keys = [p["recipe_key"] for p in parents if not p.get("disabled")]
+	if not enabled_keys:
 		return recipes_by_key
 
-	with COMPONENT_RECIPE_PATH.open(encoding="utf-8-sig", newline="") as handle:
-		for row in csv.DictReader(handle):
-			recipe_key = str(row.get("recipe_key", "")).strip()
-			item_code = str(row.get("item_code", "")).strip()
-			item_name = str(row.get("item_name", "")).strip()
-			qty_per_unit = parse_float(row.get("qty_per_unit"))
-			note = str(row.get("note", "")).strip()
-			if not recipe_key or not item_code or qty_per_unit <= 0:
-				continue
-			recipes_by_key[recipe_key].append(
-				{
-					"component_item_code": item_code,
-					"component_item_name": item_name,
-					"qty_per_fg": qty_per_unit,
-					"note": note,
-				}
-			)
+	children = frappe.get_all(
+		"BEI Store Order Component Recipe Item",
+		filters={"parent": ("in", enabled_keys)},
+		fields=["parent", "item_code", "item_name", "qty_per_unit", "note", "idx"],
+		order_by="parent asc, idx asc",
+	)
+	for child in children:
+		recipe_key = (child.get("parent") or "").strip()
+		item_code = (child.get("item_code") or "").strip()
+		qty_per_unit = parse_float(child.get("qty_per_unit"))
+		if not recipe_key or not item_code or qty_per_unit <= 0:
+			continue
+		recipes_by_key[recipe_key].append(
+			{
+				"component_item_code": item_code,
+				"component_item_name": (child.get("item_name") or "").strip(),
+				"qty_per_fg": qty_per_unit,
+				"note": (child.get("note") or "").strip(),
+			}
+		)
 
 	return recipes_by_key
 
