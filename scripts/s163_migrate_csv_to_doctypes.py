@@ -24,6 +24,7 @@ from __future__ import annotations
 import csv
 import json
 import os
+import re
 import sys
 from collections import defaultdict
 from typing import Any
@@ -45,7 +46,21 @@ POLICY_DOCTYPE = "BEI Store Order Product Policy"
 
 
 def _safe_savepoint_name(recipe_key: str) -> str:
-	return "s163_" + recipe_key.replace("-", "_").replace(".", "_").lower()
+	# MariaDB savepoint identifiers must be alphanumeric/underscore only.
+	# Fix (S163 post-deploy): product_name values contain spaces like
+	# "Banana Cinnamon Con Yelo" which broke raw-key interpolation.
+	safe = re.sub(r"[^a-zA-Z0-9_]", "_", recipe_key)
+	return ("s163_" + safe).lower()[:60]
+
+
+def _rollback_savepoint(name: str) -> None:
+	"""MariaDBDatabase in this Frappe build lacks rollback_to_savepoint — use raw SQL.
+	Fix (S163 post-deploy): caught during first live migration run."""
+	try:
+		frappe.db.sql(f"ROLLBACK TO SAVEPOINT {name}")
+	except Exception:
+		# savepoint may already be gone; swallow so the outer error propagates
+		pass
 
 
 def migrate_component_recipes(csv_path: str) -> dict[str, Any]:
@@ -104,7 +119,7 @@ def migrate_component_recipes(csv_path: str) -> dict[str, Any]:
 			created.append(recipe_key)
 			frappe.db.release_savepoint(savepoint)
 		except Exception as e:
-			frappe.db.rollback_to_savepoint(savepoint)
+			_rollback_savepoint(savepoint)
 			errors.append(f"{recipe_key}: {e}")
 
 	return {
@@ -165,7 +180,7 @@ def migrate_product_policies(csv_path: str) -> dict[str, Any]:
 			created.append(product_name)
 			frappe.db.release_savepoint(savepoint)
 		except Exception as e:
-			frappe.db.rollback_to_savepoint(savepoint)
+			_rollback_savepoint(savepoint)
 			errors.append(f"{product_name}: {e}")
 
 	return {

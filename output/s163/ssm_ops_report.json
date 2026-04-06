@@ -1,0 +1,245 @@
+{
+  "sprint": "S163",
+  "timestamp_utc": "2026-04-06T11:13:19.535329Z",
+  "site": "hq.bebang.ph",
+  "hrms_root": "/home/frappe/frappe-bench/apps/hrms",
+  "migration_recipes": {
+    "csv_rows": 96,
+    "unique_keys": 25,
+    "created_count": 25,
+    "created": [
+      "ADDON-BANANA-CINNAMON",
+      "ADDON-BLUEBERRY-FRUIT",
+      "ADDON-BROWN-SUGAR-BALL",
+      "ADDON-CHOCO-BROWNIE",
+      "ADDON-CRUSHED-OREO",
+      "ADDON-LANGKA",
+      "ADDON-LECHE-FLAN",
+      "ADDON-MACAPUNO",
+      "ADDON-MAIS",
+      "ADDON-MANGO",
+      "ADDON-MINI-MALLOWS",
+      "ADDON-NATA",
+      "ADDON-RED-SAGO",
+      "ADDON-RICE-CRISPIES",
+      "ADDON-STRAWBERRY-FRUIT",
+      "ADDON-UBE-HALAYA",
+      "DIRECT-INSULATED-BAG",
+      "DIRECT-SPOON",
+      "FULL-BANANA-CINNAMON",
+      "FULL-GINATAANG",
+      "FULL-ISKRAMBOL",
+      "POP-LAMIG",
+      "TIKIM-CHOCO-BROWNIE",
+      "TIKIM-MANGO-GRAHAM",
+      "TIKIM-PRESIDENTIAL"
+    ],
+    "skipped_count": 0,
+    "skipped": [],
+    "errors": []
+  },
+  "migration_policies": {
+    "csv_rows": 29,
+    "created_count": 29,
+    "created": [
+      "Banana Cinnamon Con Yelo",
+      "Spoon",
+      "Insulated Bag",
+      "Banana Cinnamon(Adds Ons)",
+      "Choco Brownie (Adds Ons)",
+      "Brown Sugar Ball",
+      "Crystal Ball",
+      "Presidential (Tikim 108)",
+      "Presidential (Tikim 118)",
+      "Mango Graham (Tikim 108)",
+      "Mango Graham (Tikim 118)",
+      "Mango Graham (Tikim)",
+      "Choco Brownie (Tikim 108)",
+      "Choco Brownie (Tikim 118)",
+      "Bottled Water",
+      "Pop Lamig",
+      "Mango",
+      "Red Sago",
+      "Langka",
+      "Ube Halaya",
+      "Nata",
+      "Macapuno",
+      "Crushed Oreo",
+      "Leche Flan",
+      "Rice Crispies",
+      "Strawberry Fruit",
+      "Blueberry Fruit",
+      "Mais",
+      "Mini Mallows"
+    ],
+    "skipped_count": 0,
+    "skipped": [],
+    "errors": []
+  },
+  "inflight_audit": {
+    "draft_orders": 0,
+    "pending_approval_orders": 2,
+    "approved_orders": 0,
+    "order_items_with_group_fields_pre_any_submit": 0,
+    "store_items_with_variant_of": 0,
+    "schema_addition_is_backwards_compatible": true,
+    "note": "All 4 new fields on BEI Store Order Item are optional. Existing rows are untouched."
+  },
+  "manual_verification": {
+    "recipe_parent_count": 25,
+    "recipe_child_count": 96,
+    "policy_count": 29,
+    "bei_store_item_group_count": 0,
+    "bei_store_item_group_member_count": 0,
+    "recipe_keys": [
+      "ADDON-BANANA-CINNAMON",
+      "ADDON-BLUEBERRY-FRUIT",
+      "ADDON-BROWN-SUGAR-BALL",
+      "ADDON-CHOCO-BROWNIE",
+      "ADDON-CRUSHED-OREO",
+      "ADDON-LANGKA",
+      "ADDON-LECHE-FLAN",
+      "ADDON-MACAPUNO",
+      "ADDON-MAIS",
+      "ADDON-MANGO",
+      "ADDON-MINI-MALLOWS",
+      "ADDON-NATA",
+      "ADDON-RED-SAGO",
+      "ADDON-RICE-CRISPIES",
+      "ADDON-STRAWBERRY-FRUIT",
+      "ADDON-UBE-HALAYA",
+      "DIRECT-INSULATED-BAG",
+      "DIRECT-SPOON",
+      "FULL-BANANA-CINNAMON",
+      "FULL-GINATAANG",
+      "FULL-ISKRAMBOL",
+      "POP-LAMIG",
+      "TIKIM-CHOCO-BROWNIE",
+      "TIKIM-MANGO-GRAHAM",
+      "TIKIM-PRESIDENTIAL"
+    ],
+    "addon_recipe_keys": [
+      "ADDON-BANANA-CINNAMON",
+      "ADDON-BLUEBERRY-FRUIT",
+      "ADDON-BROWN-SUGAR-BALL",
+      "ADDON-CHOCO-BROWNIE",
+      "ADDON-CRUSHED-OREO",
+      "ADDON-LANGKA",
+      "ADDON-LECHE-FLAN",
+      "ADDON-MACAPUNO",
+      "ADDON-MAIS",
+      "ADDON-MANGO",
+      "ADDON-MINI-MALLOWS",
+      "ADDON-NATA",
+      "ADDON-RED-SAGO",
+      "ADDON-RICE-CRISPIES",
+      "ADDON-STRAWBERRY-FRUIT",
+      "ADDON-UBE-HALAYA"
+    ],
+    "addon_recipe_count": 16,
+    "sample_policies": [
+      {
+        "product_name": "Banana Cinnamon Con Yelo",
+        "policy_type": "component_recipe",
+        "target_recipe": "FULL-BANANA-CINNAMON",
+        "target_fg_name": null
+      },
+      {
+        "product_name": "Banana Cinnamon(Adds Ons)",
+        "policy_type": "component_recipe",
+        "target_recipe": "ADDON-BANANA-CINNAMON",
+        "target_fg_name": null
+      },
+      {
+        "product_name": "Blueberry Fruit",
+        "policy_type": "component_recipe",
+        "target_recipe": "ADDON-BLUEBERRY-FRUIT",
+        "target_fg_name": null
+      },
+      {
+        "product_name": "Bottled Water",
+        "policy_type": "exclude",
+        "target_recipe": null,
+        "target_fg_name": null
+      },
+      {
+        "product_name": "Brown Sugar Ball",
+        "policy_type": "component_recipe",
+        "target_recipe": "ADDON-BROWN-SUGAR-BALL",
+        "target_fg_name": null
+      },
+      {
+        "product_name": "Choco Brownie (Adds Ons)",
+        "policy_type": "component_recipe",
+        "target_recipe": "ADDON-CHOCO-BROWNIE",
+        "target_fg_name": null
+      },
+      {
+        "product_name": "Choco Brownie (Tikim 108)",
+        "policy_type": "component_recipe",
+        "target_recipe": "TIKIM-CHOCO-BROWNIE",
+        "target_fg_name": null
+      },
+      {
+        "product_name": "Choco Brownie (Tikim 118)",
+        "policy_type": "component_recipe",
+        "target_recipe": "TIKIM-CHOCO-BROWNIE",
+        "target_fg_name": null
+      },
+      {
+        "product_name": "Crushed Oreo",
+        "policy_type": "component_recipe",
+        "target_recipe": "ADDON-CRUSHED-OREO",
+        "target_fg_name": null
+      },
+      {
+        "product_name": "Crystal Ball",
+        "policy_type": "component_recipe",
+        "target_recipe": "ADDON-BROWN-SUGAR-BALL",
+        "target_fg_name": null
+      }
+    ]
+  },
+  "pipeline_parity_check": {
+    "loader_recipe_key_count": 25,
+    "csv_recipe_key_count": 25,
+    "parity_exact_match": true,
+    "missing_vs_csv": [],
+    "extra_vs_csv": [],
+    "loader_policies_by_code_count": 14,
+    "loader_policies_by_name_count": 29,
+    "sample_recipe_detail": {
+      "ADDON-BANANA-CINNAMON": [
+        {
+          "item_code": "FG002",
+          "qty_per_fg": 0.009
+        }
+      ],
+      "ADDON-BLUEBERRY-FRUIT": [
+        {
+          "item_code": "RM004-1",
+          "qty_per_fg": 0.033613
+        }
+      ],
+      "ADDON-BROWN-SUGAR-BALL": [
+        {
+          "item_code": "M003",
+          "qty_per_fg": 0.016
+        }
+      ],
+      "ADDON-CHOCO-BROWNIE": [
+        {
+          "item_code": "RM020",
+          "qty_per_fg": 0.088
+        }
+      ],
+      "ADDON-CRUSHED-OREO": [
+        {
+          "item_code": "RM002",
+          "qty_per_fg": 0.134361
+        }
+      ]
+    }
+  },
+  "ok": true
+}
