@@ -1,0 +1,13 @@
+{
+  "sprint": "S163",
+  "branch": "s163-store-ordering-doctypes-product-grouping",
+  "base_sha": "76cdf2abd77a5c6691965f59e83a4d322acb02f4",
+  "started_at": "2026-04-06",
+  "phases_total": 11,
+  "phase_completed": 0,
+  "status": "IN_PROGRESS",
+  "scope_units": 91,
+  "user_decision": "Option B monolithic",
+  "pr_460_merged": true,
+  "depends_on": ["S159", "S161", "PR#460"]
+}

@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 import re
+from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -2236,6 +2237,245 @@ def audit_store_area_supervisor_mapping(
 	)
 
 
+def _load_store_item_group_index() -> tuple[dict[str, dict], dict[str, dict]]:
+	"""S163: Load active BEI Store Item Group records with members.
+
+	Returns:
+		groups_by_code: {group_code: {display_name, display_uom, delivery_lane, members: [...]}}
+		groups_by_member: {member_item_code: group_record}
+	"""
+	groups_by_code: dict[str, dict] = {}
+	groups_by_member: dict[str, dict] = {}
+
+	parents = frappe.get_all(
+		"BEI Store Item Group",
+		filters={"disabled": 0},
+		fields=["name", "group_code", "display_name", "display_uom", "delivery_lane"],
+	)
+	if not parents:
+		return groups_by_code, groups_by_member
+
+	parent_names = [p["name"] for p in parents]
+	members = frappe.get_all(
+		"BEI Store Item Group Member",
+		filters={"parent": ("in", parent_names)},
+		fields=["parent", "item_code", "item_name", "stock_uom", "conversion_to_display", "priority"],
+		order_by="parent asc, priority asc, idx asc",
+	)
+	members_by_parent: dict[str, list[dict]] = defaultdict(list)
+	for m in members:
+		members_by_parent[m["parent"]].append(
+			{
+				"item_code": m["item_code"],
+				"item_name": m.get("item_name") or "",
+				"stock_uom": m.get("stock_uom") or "",
+				"conversion_to_display": flt(m.get("conversion_to_display") or 1.0),
+				"priority": cint(m.get("priority") or 100),
+			}
+		)
+
+	for parent in parents:
+		group_code = parent["group_code"]
+		record = {
+			"group_code": group_code,
+			"display_name": parent["display_name"],
+			"display_uom": parent["display_uom"],
+			"delivery_lane": parent["delivery_lane"],
+			"members": members_by_parent.get(parent["name"], []),
+		}
+		groups_by_code[group_code] = record
+		for m in record["members"]:
+			groups_by_member[m["item_code"]] = record
+
+	return groups_by_code, groups_by_member
+
+
+def _resolve_group_auto_allocation(
+	group_record: dict,
+	store_warehouse: str,
+	qty_requested_display: float,
+) -> tuple[list[dict], bool]:
+	"""S163: Walk members in priority order and allocate qty against each member's source ATP.
+
+	Returns (rows, fully_resolved) where rows is a list of
+	{member_item_code, source_warehouse, qty_stock_uom, qty_display, conversion_to_display}.
+
+	Greedy allocator. Members are processed in the order returned by the group
+	(already sorted by priority asc, then idx asc). For each member we look up
+	the source warehouse using the same lane logic as get_orderable_items, then
+	consume from Bin.actual_qty up to the remaining requested qty.
+	"""
+	rows: list[dict] = []
+	remaining_display = flt(qty_requested_display)
+	if remaining_display <= 0 or not group_record.get("members"):
+		return rows, False
+
+	lane_label = "Frozen" if (group_record.get("delivery_lane") or "").lower() == "frozen" else "Dry"
+	cargo_category = "FC" if lane_label == "Frozen" else "DC"
+
+	for member in group_record["members"]:
+		if remaining_display <= 0:
+			break
+		conv = flt(member.get("conversion_to_display") or 1.0) or 1.0
+		member_code = member.get("item_code")
+		if not member_code:
+			continue
+		source_wh = (
+			_resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
+		)
+		bin_qty = frappe.db.get_value(
+			"Bin",
+			{"warehouse": source_wh, "item_code": member_code},
+			"actual_qty",
+		)
+		atp_stock_uom = flt(bin_qty or 0)
+		if atp_stock_uom <= 0:
+			continue
+		atp_in_display = atp_stock_uom * conv
+		take_display = min(remaining_display, atp_in_display)
+		take_stock_uom = take_display / conv if conv else take_display
+		rows.append(
+			{
+				"member_item_code": member_code,
+				"source_warehouse": source_wh,
+				"qty_stock_uom": flt(take_stock_uom, 6),
+				"qty_display": flt(take_display, 6),
+				"conversion_to_display": conv,
+				"stock_uom": member.get("stock_uom"),
+			}
+		)
+		remaining_display = max(0.0, remaining_display - take_display)
+
+	if not rows:
+		# No member had stock. Fall back to the highest-priority member with a
+		# zero allocation so the order line still exists for SCM to resolve.
+		first = group_record["members"][0]
+		conv = flt(first.get("conversion_to_display") or 1.0) or 1.0
+		source_wh = _resolve_store_order_source_warehouse(store_warehouse, cargo_category) or store_warehouse
+		rows.append(
+			{
+				"member_item_code": first.get("item_code"),
+				"source_warehouse": source_wh,
+				"qty_stock_uom": flt(qty_requested_display / conv, 6) if conv else flt(qty_requested_display, 6),
+				"qty_display": flt(qty_requested_display, 6),
+				"conversion_to_display": conv,
+				"stock_uom": first.get("stock_uom"),
+			}
+		)
+		return rows, False
+
+	fully_resolved = remaining_display <= 0.0001
+	if not fully_resolved:
+		# Park the unresolved remainder on the last allocated row so SCM sees it
+		rows[-1]["qty_stock_uom"] = flt(rows[-1]["qty_stock_uom"] + remaining_display / (rows[-1]["conversion_to_display"] or 1.0), 6)
+		rows[-1]["qty_display"] = flt(rows[-1]["qty_display"] + remaining_display, 6)
+	return rows, fully_resolved
+
+
+def _aggregate_store_item_groups(items: list[dict], groups_by_code: dict[str, dict], groups_by_member: dict[str, dict]) -> list[dict]:
+	"""S163: Replace member rows with virtual group rows summing stock + demand.
+
+	Non-grouped items pass through unchanged. For each active group, we create
+	ONE virtual row whose item_code is the group_code (e.g. GRP-FROZEN-MANGO),
+	is_group_row=1, and aggregated stock/demand values across members. Members
+	are excluded from the result.
+	"""
+	if not groups_by_code:
+		return items
+
+	# Bucket items by group
+	member_rows_by_group: dict[str, list[dict]] = defaultdict(list)
+	non_group_rows: list[dict] = []
+	for item in items:
+		gm = groups_by_member.get(item.get("item_code"))
+		if gm is not None:
+			member_rows_by_group[gm["group_code"]].append(item)
+		else:
+			non_group_rows.append(item)
+
+	virtual_rows: list[dict] = []
+	for group_code, group_record in groups_by_code.items():
+		members_in_response = member_rows_by_group.get(group_code) or []
+		if not members_in_response:
+			# No member of this group is in the orderable items list — skip the group entirely
+			continue
+
+		# Build conversion lookup so we can express member values in display UOM
+		conv_by_code = {m["item_code"]: m["conversion_to_display"] for m in group_record["members"]}
+
+		def conv(item_code: str) -> float:
+			return flt(conv_by_code.get(item_code, 1.0)) or 1.0
+
+		# Aggregate values
+		store_actual_total = 0.0
+		atp_total = 0.0
+		demand_total = 0.0
+		last_order_max = 0.0
+		any_not_stocked = True
+		any_oos_signal = False
+		first_member = members_in_response[0]
+		# Pick the first member as the basis for display fields
+		for member_row in members_in_response:
+			c = conv(member_row.get("item_code"))
+			store_actual_total += flt(member_row.get("store_actual_qty", 0)) * c
+			atp_value = flt(member_row.get("available_to_promise", 0))
+			if atp_value >= 0:
+				any_not_stocked = False
+				atp_total += atp_value * c
+			else:
+				any_oos_signal = True
+			demand_total += flt(member_row.get("avg_daily_demand", 0)) * c
+			last_order_max = max(last_order_max, flt(member_row.get("last_order_qty", 0)) * c)
+
+		effective_atp_group = atp_total if not any_not_stocked else (-1 if any_oos_signal else 0)
+
+		# Build the virtual group row using first_member as scaffold
+		virtual = dict(first_member)
+		virtual["item_code"] = group_code
+		virtual["name"] = group_code
+		virtual["item_name"] = group_record["display_name"]
+		virtual["uom"] = group_record["display_uom"]
+		virtual["stock_uom"] = group_record["display_uom"]
+		virtual["display_uom"] = group_record["display_uom"]
+		virtual["store_ordering_uom"] = group_record["display_uom"]
+		virtual["conversion_factor"] = 1.0
+		virtual["store_actual_qty"] = flt(store_actual_total, 3)
+		virtual["available_stock"] = max(0.0, flt(atp_total, 3)) if not any_not_stocked else 0.0
+		virtual["available_to_promise"] = effective_atp_group
+		virtual["is_oos"] = 1 if effective_atp_group == 0 else 0
+		virtual["avg_daily_demand"] = flt(demand_total, 4)
+		virtual["last_order_qty"] = flt(last_order_max, 3)
+		# Recompute suggested/recommended off aggregated values via existing contract
+		lane_for_group = "Frozen" if (group_record.get("delivery_lane") or "").lower() == "frozen" else "Dry"
+		virtual["delivery_lane"] = lane_for_group
+		virtual["cargo_category"] = "FC" if lane_for_group == "Frozen" else "DC"
+		# Group-specific markers
+		virtual["is_group_row"] = 1
+		virtual["item_group_code"] = group_code
+		virtual["member_count"] = len(group_record["members"])
+		virtual["member_item_codes"] = [m["item_code"] for m in group_record["members"]]
+		# Recompute suggested using simple aggregated formula — preserve existing rec contract feel
+		coverage_window = max(2.0, flt(first_member.get("coverage_window_days") or 2.0))
+		raw_suggested = max(0.0, flt(demand_total) * coverage_window - flt(store_actual_total))
+		virtual["suggested_qty"] = flt(raw_suggested, 3)
+		virtual["recommended_qty"] = flt(raw_suggested, 3)
+		# Low-stock flag at the group level
+		if demand_total > 0 and store_actual_total > 0:
+			virtual["is_low_stock"] = 1 if (store_actual_total / demand_total) < 1.5 else 0
+		elif store_actual_total <= 0 and demand_total > 0:
+			virtual["is_low_stock"] = 1
+		else:
+			virtual["is_low_stock"] = 0
+		# Priority score: use the highest of the members so the group sorts well
+		virtual["priority_score"] = max(
+			(cint(m.get("priority_score", 0)) for m in members_in_response),
+			default=0,
+		)
+		virtual_rows.append(virtual)
+
+	return non_group_rows + virtual_rows
+
+
 @frappe.whitelist()
 def get_orderable_items(store: str, date: str | None = None, include_hidden: int | str = 0) -> dict:
 	"""
@@ -2255,6 +2495,9 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 
 	# Resolve branch name to warehouse name
 	store_warehouse = resolve_warehouse(store)
+
+	# S163: Load active store item groups (for product grouping aggregation later)
+	groups_by_code, groups_by_member = _load_store_item_group_index()
 
 	# Get items with order frequency for this store, sorted by most ordered first
 	_item_meta = frappe.get_meta("Item")
@@ -2518,6 +2761,10 @@ def get_orderable_items(store: str, date: str | None = None, include_hidden: int
 			item["is_low_stock"] = 1 if (store_actual / avg_daily_demand) < 1.5 else 0
 		elif store_actual <= 0 and avg_daily_demand > 0:
 			item["is_low_stock"] = 1
+
+	# S163: Aggregate grouped members into virtual group rows BEFORE sort/filter.
+	# Non-grouped items pass through unchanged.
+	items = _aggregate_store_item_groups(items, groups_by_code, groups_by_member)
 
 	# S154: Sort by priority score (highest first), then "not carried" items last.
 	items = sorted(
@@ -2801,6 +3048,9 @@ def submit_order(
 	# Determine is_bulk_order: bulk if more than 10 line items
 	is_bulk_order = 1 if len(items) > 10 else 0
 
+	# S163: Load active store item groups so submit_order can expand grouped lines
+	groups_by_code, _groups_by_member = _load_store_item_group_index()
+
 	order = frappe.new_doc("BEI Store Order")
 	order.store = warehouse
 	order.order_date = order_date
@@ -2819,8 +3069,59 @@ def submit_order(
 		order.approval_stage = "Single Approval"
 
 	edited_lines_count = 0
+	group_seq_counter = 0
 	for item_data in items:
 		item_code = item_data.get("item_code")
+
+		# S163: Group expansion — if item_code is a known group code, expand into
+		# one BEI Store Order Item row per (member SKU, source warehouse) tuple.
+		if item_code and item_code in groups_by_code:
+			group_record = groups_by_code[item_code]
+			qty_requested_display = flt(item_data.get("qty_requested") or 0)
+			if qty_requested_display <= 0:
+				continue
+
+			group_seq_counter += 1
+			seq = group_seq_counter
+
+			lane = "Frozen" if (group_record.get("delivery_lane") or "").lower() == "frozen" else "Dry"
+			expected_category = _lane_to_cargo_category(lane)
+			if expected_category != normalized_cargo_category:
+				frappe.throw(
+					_(
+						"Group {0} resolves to lane {1} ({2}) but order category is {3}. "
+						"Submit each lane separately."
+					).format(item_code, lane, expected_category, normalized_cargo_category)
+				)
+
+			allocations, fully_resolved = _resolve_group_auto_allocation(
+				group_record=group_record,
+				store_warehouse=warehouse,
+				qty_requested_display=qty_requested_display,
+			)
+			if not allocations:
+				frappe.throw(
+					_("Group {0} has no members configured. Please configure members or remove the group.").format(item_code)
+				)
+
+			resolution_status = "Auto" if fully_resolved else "Pending"
+			for alloc in allocations:
+				row_payload = {
+					"item_code": alloc["member_item_code"],  # ALWAYS real SKU, never GRP-*
+					"qty_requested": flt(alloc["qty_stock_uom"]),
+					"uom": alloc.get("stock_uom") or None,
+					"lane": lane,
+					"item_group_code": item_code,
+					"group_order_seq": seq,
+					"group_resolution_status": resolution_status,
+					"group_qty_requested_total": qty_requested_display,
+					"qty_in_store_uom": flt(alloc["qty_display"]),
+					"store_uom": group_record.get("display_uom"),
+					"is_edited": 0,
+				}
+				order.append("items", row_payload)
+			continue
+
 		meta = dict(item_meta.get(item_code, {}) or {})
 		meta["lane"] = item_data.get("lane")
 		if item_data.get("cargo_category"):
@@ -3077,6 +3378,24 @@ def approve_order(order_name: str, approved_quantities: list | str | None = None
 		elif not flt(getattr(item, "qty_approved", 0)):
 			item.qty_approved = item.qty_requested
 
+	# S163: Invalidate stale group resolutions when qty_approved diverges from
+	# the original requested total. SCM must re-resolve before MR creation.
+	group_seq_totals: dict[int, float] = defaultdict(float)
+	group_seq_target: dict[int, float] = {}
+	for item in order.items:
+		seq = cint(getattr(item, "group_order_seq", 0) or 0)
+		if not seq:
+			continue
+		group_seq_totals[seq] += flt(getattr(item, "qty_approved", 0))
+		if seq not in group_seq_target:
+			group_seq_target[seq] = flt(getattr(item, "group_qty_requested_total", 0))
+	for seq, requested_total in group_seq_target.items():
+		approved_total = group_seq_totals.get(seq, 0)
+		if requested_total > 0 and abs(approved_total - requested_total) > 0.001:
+			for item in order.items:
+				if cint(getattr(item, "group_order_seq", 0) or 0) == seq:
+					item.group_resolution_status = "Pending"
+
 	area_approver = _get_area_supervisor_for_store(order.store)
 	current_stage = "approved"
 	if fallback_approver and user == fallback_approver and user != area_approver:
@@ -3209,13 +3528,186 @@ def reject_order(order_name: str, reason: str) -> dict:
 	return ordering_reject(order_name=order_name, reason=reason)
 
 
+@frappe.whitelist()
+def resolve_group_order_item(
+	order_name: str,
+	group_order_seq: int | str,
+	resolution: list | str,
+	expected_modified: str,
+) -> dict:
+	"""S163: SCM endpoint to override the auto-resolution of a grouped order line.
+
+	The frontend posts a list of {member_item, source_warehouse, qty} entries.
+	This endpoint validates them, deletes the existing sibling rows for that
+	group_order_seq, and creates new sibling rows in their place. Optimistic
+	locking via expected_modified prevents lost updates from concurrent SCM
+	users.
+	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="store_ordering",
+		action="resolve_group_order_item",
+		mutation_type="update",
+	)
+
+	if not order_name:
+		frappe.throw(_("order_name is required"))
+
+	seq = cint(group_order_seq)
+	if seq <= 0:
+		frappe.throw(_("group_order_seq must be a positive integer"))
+
+	if isinstance(resolution, str):
+		resolution = json.loads(resolution)
+	if not isinstance(resolution, list) or not resolution:
+		frappe.throw(_("resolution must be a non-empty list"))
+
+	# Optimistic locking: reject if order was modified by another user
+	current_modified = frappe.db.get_value("BEI Store Order", order_name, "modified")
+	if current_modified is None:
+		frappe.throw(_("Order {0} not found").format(order_name))
+	if str(current_modified) != str(expected_modified):
+		frappe.throw(
+			_("Order was modified by another user. Please refresh and try again."),
+		)
+
+	check_scm_permission(
+		allowed_roles=SCM_ADMIN_ROLES.union(SCM_APPROVAL_ROLES),
+		operation=f"resolve grouped order line on {order_name}",
+	)
+
+	order = frappe.get_doc("BEI Store Order", order_name)
+
+	sibling_rows = [r for r in order.items if cint(r.group_order_seq or 0) == seq]
+	if not sibling_rows:
+		frappe.throw(_("No grouped order line found for seq {0}").format(seq))
+
+	canonical = sibling_rows[0]
+	group_code = canonical.item_group_code
+	if not group_code:
+		frappe.throw(_("Sibling rows are missing item_group_code; cannot resolve."))
+
+	qty_requested_total = flt(canonical.group_qty_requested_total or 0)
+	qty_target = flt(canonical.qty_approved or 0) or qty_requested_total
+	if qty_target <= 0:
+		frappe.throw(_("Cannot resolve a grouped line with zero target qty."))
+
+	# Validate group + members
+	group_members = frappe.get_all(
+		"BEI Store Item Group Member",
+		filters={"parent": group_code},
+		fields=["item_code", "stock_uom", "conversion_to_display"],
+	)
+	if not group_members:
+		frappe.throw(_("Group {0} has no members defined.").format(group_code))
+	member_set = {m["item_code"] for m in group_members}
+	conv_by_member = {m["item_code"]: flt(m.get("conversion_to_display") or 1.0) or 1.0 for m in group_members}
+	stock_uom_by_member = {m["item_code"]: m.get("stock_uom") for m in group_members}
+
+	# Validate input lines
+	total_display = 0.0
+	for line in resolution:
+		member_item = (line or {}).get("member_item") or (line or {}).get("item_code")
+		source_wh = (line or {}).get("source_warehouse") or (line or {}).get("warehouse")
+		qty = flt((line or {}).get("qty") or 0)
+		if not member_item:
+			frappe.throw(_("Resolution line missing member_item"))
+		if member_item not in member_set:
+			frappe.throw(
+				_("Member {0} is not part of group {1}").format(member_item, group_code)
+			)
+		if not source_wh:
+			frappe.throw(_("Resolution line missing source_warehouse for {0}").format(member_item))
+		if qty < 0:
+			frappe.throw(_("Negative qty not allowed for {0}").format(member_item))
+		# Stock reservation check (against current Bin.actual_qty)
+		if qty > 0:
+			bin_qty = flt(
+				frappe.db.get_value(
+					"Bin",
+					{"warehouse": source_wh, "item_code": member_item},
+					"actual_qty",
+				)
+				or 0
+			)
+			if bin_qty < qty:
+				frappe.throw(
+					_("Stock for {0} at {1} is {2}, less than requested {3}").format(
+						member_item, source_wh, bin_qty, qty
+					)
+				)
+		total_display += qty
+
+	if abs(total_display - qty_target) > 0.001:
+		frappe.throw(
+			_("Total {0} does not match required target {1}").format(total_display, qty_target)
+		)
+
+	# Multi-row swap: remove existing siblings, append new rows
+	order.items = [r for r in order.items if cint(r.group_order_seq or 0) != seq]
+	for line in resolution:
+		member_item = (line or {}).get("member_item") or (line or {}).get("item_code")
+		source_wh = (line or {}).get("source_warehouse") or (line or {}).get("warehouse")
+		qty_display = flt((line or {}).get("qty") or 0)
+		conv = conv_by_member.get(member_item, 1.0) or 1.0
+		qty_stock_uom = qty_display / conv if conv else qty_display
+		order.append(
+			"items",
+			{
+				"item_code": member_item,
+				"qty_requested": flt(qty_stock_uom),
+				"qty_approved": flt(qty_stock_uom),
+				"uom": stock_uom_by_member.get(member_item),
+				"item_group_code": group_code,
+				"group_order_seq": seq,
+				"group_resolution_status": "Manual",
+				"group_qty_requested_total": qty_requested_total,
+				"qty_in_store_uom": qty_display,
+				"store_uom": frappe.db.get_value("BEI Store Item Group", group_code, "display_uom"),
+				"source_warehouse": source_wh,
+			},
+		)
+
+	order.save(ignore_permissions=True)
+
+	return {
+		"success": True,
+		"order_name": order_name,
+		"group_order_seq": seq,
+		"modified": str(order.modified),
+		"sibling_count": len(resolution),
+	}
+
+
 def _create_mr_for_store_order(order):
 	"""
-	Create a Material Request (Material Transfer) for an approved BEI Store Order.
-	Sets custom_store_order so warehouse dispatch can trace MR -> originating store order.
+	Create a Material Request for an approved BEI Store Order.
 
-	Returns the MR name, or None if creation fails so the caller can abort approval.
+	S163: Wrapped in savepoint("create_mr_for_store_order"). Group resolution
+	is enforced (any sibling row with group_resolution_status = Pending blocks
+	creation). Race protection validates Bin.actual_qty for each line at MR
+	creation time. Errors are NO LONGER swallowed silently — the savepoint
+	rolls back and the caller sees the underlying exception.
 	"""
+	# S163 HARD BLOCKER: any grouped sibling row still in "Pending" must be
+	# resolved by SCM before MR creation.
+	pending_seqs = sorted(
+		{
+			cint(item.group_order_seq or 0)
+			for item in order.items
+			if (item.group_resolution_status or "") == "Pending"
+		}
+	)
+	if pending_seqs:
+		frappe.throw(
+			_(
+				"Order {0} has unresolved grouped lines (seq {1}). "
+				"SCM must resolve them in the Order Review page before dispatch."
+			).format(order.name, ", ".join(str(s) for s in pending_seqs))
+		)
+
+	frappe.db.savepoint("create_mr_for_store_order")
 	try:
 		required_by = add_days(nowdate(), 1)
 
@@ -3228,8 +3720,7 @@ def _create_mr_for_store_order(order):
 		# Destination warehouse is the store's warehouse (field name is "store" on BEI Store Order)
 		store_warehouse = order.store
 		if not store_warehouse:
-			frappe.log_error(f"No store warehouse found on order {order.name}", "Store Ordering")
-			return None
+			frappe.throw(_("No store warehouse found on order {0}").format(order.name))
 		cargo_category = getattr(order, "cargo_category", None) or "DRY"
 		source_warehouse = _resolve_store_order_source_warehouse(store_warehouse, cargo_category)
 		buyer_entity_row = resolve_store_buyer_entity(warehouse_docname=store_warehouse)
@@ -3246,10 +3737,6 @@ def _create_mr_for_store_order(order):
 			source_warehouse if is_intercompany and source_warehouse else store_warehouse
 		)
 		mr.material_request_type = "Material Issue" if is_intercompany else "Material Transfer"
-		# Frappe validates Material Transfer requests against the operational stock
-		# owner on the source side of the move. The buyer entity used later for
-		# billing can diverge from that operational company, so keep it in the
-		# stamped contract fields instead of on the header itself.
 		mr.set_warehouse = operational_dispatch_warehouse
 		mr.company = source_company
 		stamp_material_request_contract(
@@ -3268,6 +3755,36 @@ def _create_mr_for_store_order(order):
 			qty = flt(getattr(item, "qty_approved", None) or getattr(item, "qty_requested", 0))
 			if qty <= 0:
 				continue
+
+			# S163: per-row source warehouse — resolution may have set source_warehouse
+			# directly on the order item (Manual SCM pick); fall back to the lane source.
+			row_source_wh = getattr(item, "source_warehouse", None) or source_warehouse
+
+			# S163: stock reservation race check at MR creation time
+			if row_source_wh:
+				bin_qty = flt(
+					frappe.db.get_value(
+						"Bin",
+						{"warehouse": row_source_wh, "item_code": item.item_code},
+						"actual_qty",
+					)
+					or 0
+				)
+				if bin_qty < qty:
+					# Mark this group seq Pending and throw — SCM must re-resolve
+					seq = cint(getattr(item, "group_order_seq", 0) or 0)
+					if seq:
+						for sibling in order.items:
+							if cint(sibling.group_order_seq or 0) == seq:
+								sibling.group_resolution_status = "Pending"
+						order.save(ignore_permissions=True)
+					frappe.throw(
+						_(
+							"Stock decreased between resolution and dispatch — "
+							"SCM must re-resolve order line for {0} (have {1}, need {2}) at {3}."
+						).format(item.item_code, bin_qty, qty, row_source_wh)
+					)
+
 			row = {
 				"item_code": item.item_code,
 				"item_name": item.item_name,
@@ -3278,23 +3795,33 @@ def _create_mr_for_store_order(order):
 				"warehouse": operational_dispatch_warehouse,
 				"schedule_date": required_by,
 			}
-			if source_warehouse and not is_intercompany:
-				row["from_warehouse"] = source_warehouse
+			if row_source_wh and not is_intercompany:
+				row["from_warehouse"] = row_source_wh
+
+			# S163: propagate group audit trail (ignored if custom fields are missing)
+			group_code = getattr(item, "item_group_code", None)
+			if group_code:
+				row["custom_source_group_code"] = group_code
+				row["custom_source_order_item"] = getattr(item, "name", None)
+
 			mr.append("items", row)
 
 		if not mr.items:
+			frappe.db.rollback_to_savepoint("create_mr_for_store_order")
 			return None
 
 		mr.insert(ignore_permissions=True)
 		mr.submit()
+		frappe.db.release_savepoint("create_mr_for_store_order")
 		return mr.name
-
 	except Exception as e:
+		frappe.db.rollback_to_savepoint("create_mr_for_store_order")
 		frappe.log_error(
 			title=f"MR Creation Error for Store Order {order.name}",
 			message=str(e),
 		)
-		return None
+		# S163 audit fix: do NOT swallow — raise so callers see real error
+		raise
 
 
 @frappe.whitelist()
@@ -6683,15 +7210,59 @@ def get_orders_for_dispatch(
 		limit_page_length=100,
 	)
 
+	# S163: Build a per-group member-with-stock cache so the SCM resolution modal
+	# can render without a second roundtrip. We populate it lazily by walking the
+	# orders and only loading members for groups that actually appear.
+	group_members_cache: dict[str, list[dict]] = {}
+
 	for order in orders:
+		order["modified"] = frappe.db.get_value("BEI Store Order", order["name"], "modified")
 		order["items"] = frappe.get_all(
 			"BEI Store Order Item",
 			filters={"parent": order["name"]},
 			fields=[
-				"item_code", "item_name", "uom",
-				"qty_requested", "qty_dispatched",
+				"name", "item_code", "item_name", "uom",
+				"qty_requested", "qty_approved", "qty_dispatched",
+				# S163: group resolution fields
+				"item_group_code", "group_order_seq", "group_resolution_status",
+				"group_qty_requested_total", "qty_in_store_uom", "store_uom",
 			],
+			order_by="idx asc",
 		)
+		# S163: For each unique group_code in this order, ensure we have its
+		# members + per-warehouse stock for the modal to render.
+		for it in order["items"]:
+			it["is_group_order"] = 1 if it.get("item_group_code") else 0
+			grp = it.get("item_group_code")
+			if grp and grp not in group_members_cache:
+				members = frappe.get_all(
+					"BEI Store Item Group Member",
+					filters={"parent": grp},
+					fields=["item_code", "item_name", "stock_uom", "conversion_to_display", "priority"],
+					order_by="priority asc, idx asc",
+				)
+				# Stock per (member_item, warehouse)
+				member_codes = [m["item_code"] for m in members]
+				stock_rows = []
+				if member_codes:
+					stock_rows = frappe.get_all(
+						"Bin",
+						filters={"item_code": ("in", member_codes), "actual_qty": (">", 0)},
+						fields=["item_code", "warehouse", "actual_qty"],
+						limit_page_length=500,
+					)
+				stock_by_member: dict[str, list[dict]] = defaultdict(list)
+				for sr in stock_rows:
+					stock_by_member[sr["item_code"]].append(
+						{"warehouse": sr["warehouse"], "actual_qty": flt(sr["actual_qty"])}
+					)
+				for m in members:
+					m["bins"] = stock_by_member.get(m["item_code"], [])
+				group_members_cache[grp] = members
+		order["group_members_with_stock"] = {
+			grp: group_members_cache[grp]
+			for grp in {it.get("item_group_code") for it in order["items"] if it.get("item_group_code")}
+		}
 		order["store_short"] = (order.get("store") or "").replace(
 			" - Bebang Enterprise Inc.", ""
 		).replace(" - BEI", "").replace(" - BKI", "").strip()

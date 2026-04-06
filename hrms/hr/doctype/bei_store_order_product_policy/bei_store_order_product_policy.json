@@ -1,0 +1,132 @@
+{
+  "actions": [],
+  "allow_import": 1,
+  "allow_rename": 0,
+  "autoname": "field:product_name",
+  "creation": "2026-04-06 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "product_name",
+    "product_code",
+    "policy_type",
+    "target_recipe",
+    "target_fg_name",
+    "exclude_reason",
+    "disabled",
+    "section_break_meta",
+    "note"
+  ],
+  "fields": [
+    {
+      "fieldname": "product_name",
+      "fieldtype": "Data",
+      "label": "Product Name",
+      "reqd": 1,
+      "unique": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "product_code",
+      "fieldtype": "Data",
+      "label": "POS Product Code",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "policy_type",
+      "fieldtype": "Select",
+      "label": "Policy Type",
+      "options": "component_recipe\nfg_recipe\nexclude",
+      "reqd": 1,
+      "in_list_view": 1,
+      "in_standard_filter": 1
+    },
+    {
+      "fieldname": "target_recipe",
+      "fieldtype": "Link",
+      "label": "Target Component Recipe",
+      "options": "BEI Store Order Component Recipe",
+      "depends_on": "eval:doc.policy_type==\"component_recipe\"",
+      "mandatory_depends_on": "eval:doc.policy_type==\"component_recipe\"",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "target_fg_name",
+      "fieldtype": "Data",
+      "label": "Target FG Name",
+      "depends_on": "eval:doc.policy_type==\"fg_recipe\"",
+      "mandatory_depends_on": "eval:doc.policy_type==\"fg_recipe\"",
+      "description": "Frappe BOM target item name (FG SKU)"
+    },
+    {
+      "fieldname": "exclude_reason",
+      "fieldtype": "Small Text",
+      "label": "Exclude Reason",
+      "depends_on": "eval:doc.policy_type==\"exclude\""
+    },
+    {
+      "fieldname": "disabled",
+      "fieldtype": "Check",
+      "label": "Disabled",
+      "default": "0"
+    },
+    {
+      "fieldname": "section_break_meta",
+      "fieldtype": "Section Break",
+      "label": "Notes"
+    },
+    {
+      "fieldname": "note",
+      "fieldtype": "Small Text",
+      "label": "Note"
+    }
+  ],
+  "links": [],
+  "modified": "2026-04-06 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "HR",
+  "name": "BEI Store Order Product Policy",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Stock User",
+      "share": 0,
+      "write": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}
