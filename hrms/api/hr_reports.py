@@ -87,6 +87,7 @@ def get_employee_masterlist(
 			"personal_email",
 			"cell_number",
 			"reports_to",
+			"attendance_device_id",
 			"custom_enrichment_status",
 			"custom_enrichment_submitted_date",
 			"custom_enrichment_complete_date",
@@ -151,6 +152,7 @@ def get_employee_masterlist(
 		if not row.get("custom_enrichment_status"):
 			row["custom_enrichment_status"] = "Not Started"
 		row["reports_to_name"] = manager_name_map.get(row.get("reports_to"), "")
+		row["has_bio_id"] = bool(row.get("attendance_device_id"))
 		row["has_pending_enrichment"] = row.get("name") in open_enrichment_employees
 		row["has_salary_structure"] = row.get("name") in employees_with_salary
 		# Compute profile completion %
@@ -163,6 +165,7 @@ def get_employee_masterlist(
 		"inactive": sum(1 for row in results if row.get("status") != "Active"),
 		"missing_manager": sum(1 for row in results if not row.get("reports_to")),
 		"missing_company_email": sum(1 for row in results if not row.get("company_email")),
+		"missing_bio_id": sum(1 for row in results if not row.get("has_bio_id")),
 		"missing_dob": sum(1 for row in results if not row.get("date_of_birth")),
 		"missing_designation": sum(1 for row in results if not row.get("designation")),
 		"missing_salary": sum(1 for row in results if not row.get("has_salary_structure")),

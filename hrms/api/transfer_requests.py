@@ -17,6 +17,7 @@ from frappe import _
 from frappe.rate_limiter import rate_limit
 from frappe.utils import add_to_date, cint, get_datetime, getdate, now_datetime, nowdate
 
+from hrms.utils.adms_config import get_adms_config
 from hrms.utils.adms_validation import (
 	preflight_check_enrollment,
 	validate_device_batch,
@@ -695,32 +696,8 @@ def _compute_transfer_device_plan(doc, bio_id: str) -> dict[str, Any]:
 	}
 
 
-def _get_adms_config() -> dict[str, Any]:
-	base_url = (
-		(frappe.conf.get("adms_base_url") if getattr(frappe, "conf", None) else None)
-		or os.environ.get("ADMS_BASE_URL")
-		or "http://localhost:8080"
-	)
-	token = (
-		frappe.conf.get("adms_admin_token") if getattr(frappe, "conf", None) else None
-	) or os.environ.get("ADMS_ADMIN_TOKEN")
-	timeout_seconds = cint(
-		(frappe.conf.get("adms_request_timeout_seconds") if getattr(frappe, "conf", None) else None)
-		or os.environ.get("ADMS_REQUEST_TIMEOUT_SECONDS")
-		or 15
-	)
-	stale_timeout_minutes = cint(
-		(frappe.conf.get("adms_sync_stale_timeout_minutes") if getattr(frappe, "conf", None) else None)
-		or os.environ.get("ADMS_SYNC_STALE_TIMEOUT_MINUTES")
-		or 30
-	)
-
-	return {
-		"base_url": (base_url or "").rstrip("/"),
-		"token": token,
-		"timeout_seconds": max(5, timeout_seconds),
-		"stale_timeout_minutes": max(5, stale_timeout_minutes),
-	}
+# NOTE: the private get-adms-config helper was extracted to
+# hrms.utils.adms_config.get_adms_config in S164 Phase 0 (audit NG5).
 
 
 def _require_adms_config(config: dict[str, Any]):
@@ -1012,7 +989,7 @@ def _dispatch_transfer_sync(
 	_require_store_warehouse_mapping(doc)
 	_enforce_effective_date_dispatch_guard(doc)
 
-	config = _get_adms_config()
+	config = get_adms_config()
 	_require_adms_config(config)
 
 	bio_id = _get_employee_bio_id(doc.employee)
@@ -1159,7 +1136,7 @@ def _dispatch_transfer_sync(
 def get_transfer_sync_config_status():
 	"""AUDIT-5 runtime check: confirms ADMS config is present."""
 	_require_any_role(READ_ALL_ROLES, "You do not have permission to view transfer sync configuration")
-	config = _get_adms_config()
+	config = get_adms_config()
 	return {
 		"base_url": config.get("base_url"),
 		"has_base_url": bool(config.get("base_url")),
@@ -1578,7 +1555,7 @@ def reconcile_transfer_sync_status(transfer_request_name: str | None = None, lim
 	if frappe.session.user != "Administrator":
 		_require_any_role(IT_APPROVER_ROLES, "You do not have permission to reconcile transfer sync status")
 
-	config = _get_adms_config()
+	config = get_adms_config()
 	_require_adms_config(config)
 
 	if transfer_request_name:
@@ -1738,7 +1715,7 @@ def run_due_transfer_submissions(limit=100):
 
 
 def _dispatch_reliever_cleanup(doc) -> dict[str, Any]:
-	config = _get_adms_config()
+	config = get_adms_config()
 	_require_adms_config(config)
 
 	bio_id = _get_employee_bio_id(doc.employee)
