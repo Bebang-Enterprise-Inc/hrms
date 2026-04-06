@@ -1,9 +1,12 @@
 """
 Petty Cash Fund (PCF) APIs
-Handles PCF batch submission, threshold monitoring, and auto-submit workflows.
+Handles PCF batch submission, threshold monitoring, and notification workflows.
+
+Supports both store-based and department-based PCF funds.
 
 Author: Claude Code
 Date: 2026-02-03
+Updated: 2026-04-06 (S157 — department funds, COA surface, notify-only threshold)
 """
 import frappe
 from frappe import _
@@ -12,6 +15,89 @@ from hrms.utils.bei_config import get_company
 from calendar import monthrange
 from datetime import datetime
 from hrms.api.store import resolve_employee_store_context, save_base64_image
+
+
+# ============================================================
+# FUND RESOLUTION
+# ============================================================
+
+
+def _get_pcf_fund_for_user(user=None):
+    """
+    Resolve the PCF fund for a user.
+    Checks store first (via branch→warehouse), then department.
+
+    Returns:
+        dict with keys: pcf_fund (name), fund_type, store, department
+        or None if no fund found
+    """
+    user = user or frappe.session.user
+    employee = frappe.db.get_value(
+        "Employee",
+        {"user_id": user, "status": "Active"},
+        ["name", "employee_name", "branch", "department", "company"],
+        as_dict=True,
+    )
+
+    if not employee:
+        return None
+
+    # Try store-based fund first
+    store = _get_store_for_employee(employee)
+    if store:
+        pcf_name = frappe.db.get_value(
+            "BEI Petty Cash Fund",
+            {"store": store, "is_enabled": 1},
+            "name",
+        )
+        if pcf_name:
+            return {
+                "pcf_fund": pcf_name,
+                "fund_type": "Store",
+                "store": store,
+                "department": None,
+                "employee": employee,
+            }
+
+    # Try department-based fund
+    if employee.department:
+        pcf_name = frappe.db.get_value(
+            "BEI Petty Cash Fund",
+            {"fund_type": "Department", "department": employee.department, "is_enabled": 1},
+            "name",
+        )
+        if pcf_name:
+            return {
+                "pcf_fund": pcf_name,
+                "fund_type": "Department",
+                "store": None,
+                "department": employee.department,
+                "employee": employee,
+            }
+
+    return None
+
+
+def _resolve_pcf_fund(pcf_fund=None, store=None):
+    """
+    Resolve a PCF fund name from either pcf_fund or store.
+
+    Args:
+        pcf_fund: Direct PCF fund name (preferred)
+        store: Warehouse name (legacy compat)
+
+    Returns:
+        PCF fund name or None
+    """
+    if pcf_fund:
+        if frappe.db.exists("BEI Petty Cash Fund", pcf_fund):
+            return pcf_fund
+        return None
+
+    if store:
+        return frappe.db.get_value("BEI Petty Cash Fund", {"store": store}, "name")
+
+    return None
 
 
 # ============================================================
@@ -26,6 +112,7 @@ def add_expense_to_pending(
     manual_amount: float,
     manual_date: str,
     receipt_photo: str,
+    pcf_fund: str = None,
 ):
     """
     Add an expense to the pending PCF queue (status='Pending').
@@ -37,6 +124,7 @@ def add_expense_to_pending(
         manual_amount: How much they paid
         manual_date: When they paid
         receipt_photo: Attached receipt image
+        pcf_fund: Optional PCF fund name (for department users)
 
     Returns:
         Success response with expense ID and PCF status
@@ -58,30 +146,28 @@ def add_expense_to_pending(
     if not employee:
         frappe.throw(_("Employee record not found for current user"))
 
-    # Look up warehouse for the employee's branch
-    store = _get_store_for_employee(employee)
-    if not store:
-        frappe.throw(_("Could not find warehouse for your branch. Please contact HR."))
-
-    # Check if store has PCF enabled
-    pcf = frappe.db.get_value(
-        "BEI Petty Cash Fund",
-        {"store": store, "is_enabled": 1},
-        ["name", "fund_amount", "pending_total", "threshold_percentage"],
-        as_dict=True,
-    )
-
-    if not pcf:
-        frappe.throw(
-            _(
-                "PCF is not enabled for this store. Please contact your supervisor or use the regular expense submission."
+    # Resolve PCF fund
+    if pcf_fund:
+        fund_doc = frappe.get_doc("BEI Petty Cash Fund", pcf_fund)
+        if not fund_doc.is_enabled:
+            frappe.throw(_("This PCF fund is not enabled"))
+        store = fund_doc.store  # Will be None for department funds
+    else:
+        # Legacy path: resolve via employee's store
+        fund_context = _get_pcf_fund_for_user()
+        if not fund_context:
+            frappe.throw(
+                _("No PCF fund found for your store or department. Please contact your supervisor.")
             )
-        )
+        pcf_fund = fund_context["pcf_fund"]
+        store = fund_context.get("store")
 
     # Create expense request with Pending status
     expense = frappe.new_doc("BEI Expense Request")
     expense.employee = employee.name
     expense.store = store
+    expense.pcf_fund = pcf_fund
+    expense.expense_type = "PCF"
     expense.request_date = today()
     expense.manual_vendor = manual_vendor
     expense.manual_description = manual_description
@@ -97,25 +183,24 @@ def add_expense_to_pending(
     # Update PCF totals
     from hrms.hr.doctype.bei_petty_cash_fund.bei_petty_cash_fund import update_pcf_totals
 
-    pcf_doc = update_pcf_totals(store)
+    pcf_doc = update_pcf_totals(store=store, pcf_fund=pcf_fund)
 
     # Check if threshold reached
     at_threshold = False
     if pcf_doc and pcf_doc.is_at_threshold():
         at_threshold = True
-        # Send notification
-        send_threshold_notification(store)
+        send_threshold_notification(pcf_fund=pcf_fund, store=store)
 
     return {
         "success": True,
         "expense_id": expense.name,
-        "message": f"Expense added to PCF pending queue",
+        "message": "Expense added to PCF pending queue",
         "pcf_status": {
             "fund_amount": pcf_doc.fund_amount if pcf_doc else 0,
             "pending_total": pcf_doc.pending_total if pcf_doc else 0,
             "pending_count": pcf_doc.pending_count if pcf_doc else 0,
             "current_balance": pcf_doc.current_balance if pcf_doc else 0,
-            "threshold_percentage": pcf_doc.threshold_percentage if pcf_doc else 50,
+            "threshold_percentage": pcf_doc.threshold_percentage if pcf_doc else 60,
             "at_threshold": at_threshold,
         },
     }
@@ -144,6 +229,7 @@ def get_my_pending_expenses():
             "manual_date",
             "added_to_pending_at",
             "receipt_photo",
+            "pcf_fund",
         ],
         order_by="manual_date asc",
     )
@@ -173,15 +259,16 @@ def remove_pending_expense(expense_name: str):
     if expense.status != "Pending":
         frappe.throw(_("Only pending expenses can be cancelled"))
 
-    # Delete the expense
+    # Capture references before deletion
     store = expense.store
+    pcf_fund = expense.pcf_fund
     expense.delete(ignore_permissions=True)
     frappe.db.commit()
 
     # Update PCF totals
     from hrms.hr.doctype.bei_petty_cash_fund.bei_petty_cash_fund import update_pcf_totals
 
-    update_pcf_totals(store)
+    update_pcf_totals(store=store, pcf_fund=pcf_fund)
 
     return {"success": True, "message": "Expense removed from pending queue"}
 
@@ -234,7 +321,7 @@ def edit_pending_expense(
     # Update PCF totals
     from hrms.hr.doctype.bei_petty_cash_fund.bei_petty_cash_fund import update_pcf_totals
 
-    update_pcf_totals(expense.store)
+    update_pcf_totals(store=expense.store, pcf_fund=expense.pcf_fund)
 
     return {
         "success": True,
@@ -255,37 +342,38 @@ def edit_pending_expense(
 
 
 @frappe.whitelist()
-def get_pcf_status(store: str = None):
+def get_pcf_status(store: str = None, pcf_fund: str = None):
     """
-    Get PCF status for a store.
-    If store not provided, uses current user's store.
+    Get PCF status for a fund.
+    If neither store nor pcf_fund provided, uses current user's fund.
 
     Args:
-        store: Warehouse name (optional)
+        store: Warehouse name (optional, legacy)
+        pcf_fund: PCF fund name (optional, preferred)
 
     Returns:
         PCF status including balance, pending, threshold
     """
-    if not store:
-        # Get user's store
-        employee = frappe.db.get_value(
-            "Employee",
-            {"user_id": frappe.session.user},
-            ["branch", "reports_to", "company"],
-            as_dict=True,
-        )
-        if employee:
-            store = _get_store_for_employee(employee)
+    pcf_name = _resolve_pcf_fund(pcf_fund=pcf_fund, store=store)
 
-    if not store:
-        return {"success": False, "error": "Store not found"}
+    if not pcf_name:
+        # Try to resolve from user
+        fund_context = _get_pcf_fund_for_user()
+        if fund_context:
+            pcf_name = fund_context["pcf_fund"]
+
+    if not pcf_name:
+        return {"success": False, "error": "PCF fund not found"}
 
     pcf = frappe.db.get_value(
         "BEI Petty Cash Fund",
-        {"store": store},
+        pcf_name,
         [
             "name",
             "store",
+            "fund_type",
+            "department",
+            "fund_label",
             "is_enabled",
             "fund_amount",
             "current_balance",
@@ -301,7 +389,7 @@ def get_pcf_status(store: str = None):
     )
 
     if not pcf:
-        return {"success": False, "error": "PCF not configured for this store"}
+        return {"success": False, "error": "PCF not configured"}
 
     # Calculate threshold info
     threshold_amount = pcf.fund_amount * pcf.threshold_percentage / 100
@@ -313,16 +401,27 @@ def get_pcf_status(store: str = None):
     # Check for pending batch
     pending_batch = frappe.db.get_value(
         "BEI PCF Batch",
-        {"store": store, "status": ["in", ["Submitted", "Under Review"]]},
+        {"pcf_fund": pcf_name, "status": ["in", ["Submitted", "Under Review"]]},
         ["name", "status", "total_amount", "expense_count", "batch_date"],
         as_dict=True,
     )
+    # Fallback to store-based batch for pre-migration
+    if not pending_batch and pcf.store:
+        pending_batch = frappe.db.get_value(
+            "BEI PCF Batch",
+            {"store": pcf.store, "pcf_fund": ["is", "not set"], "status": ["in", ["Submitted", "Under Review"]]},
+            ["name", "status", "total_amount", "expense_count", "batch_date"],
+            as_dict=True,
+        )
 
     return {
         "success": True,
         "pcf": {
             "name": pcf.name,
             "store": pcf.store,
+            "fund_type": pcf.fund_type,
+            "department": pcf.department,
+            "fund_label": pcf.fund_label,
             "is_enabled": pcf.is_enabled,
             "fund_amount": pcf.fund_amount,
             "current_balance": pcf.current_balance,
@@ -342,38 +441,44 @@ def get_pcf_status(store: str = None):
 
 
 @frappe.whitelist()
-def get_store_pending_summary(store: str):
+def get_fund_pending_summary(pcf_fund: str = None, store: str = None):
     """
-    Get all pending expenses for a store (for custodian view).
+    Get all pending expenses for a fund (for custodian view).
 
     Args:
-        store: Warehouse name
+        pcf_fund: PCF fund name (preferred)
+        store: Warehouse name (legacy compat)
 
     Returns:
         Summary and list of all pending expenses
     """
+    pcf_name = _resolve_pcf_fund(pcf_fund=pcf_fund, store=store)
+    if not pcf_name:
+        frappe.throw(_("PCF fund not found"))
+
     # Verify user is custodian or has permission
     pcf = frappe.db.get_value(
         "BEI Petty Cash Fund",
-        {"store": store},
-        ["name", "custodian", "backup_custodian"],
+        pcf_name,
+        ["name", "fund_label", "custodian", "backup_custodian", "store"],
         as_dict=True,
     )
 
     if not pcf:
-        frappe.throw(_("PCF not configured for this store"))
+        frappe.throw(_("PCF not configured"))
 
     user = frappe.session.user
     is_custodian = user in [pcf.custodian, pcf.backup_custodian]
     is_admin = "System Manager" in frappe.get_roles(user) or "Accounts Manager" in frappe.get_roles(user)
 
     if not is_custodian and not is_admin:
-        frappe.throw(_("Only PCF custodians or managers can view store pending summary"))
+        frappe.throw(_("Only PCF custodians or managers can view fund pending summary"))
 
-    # Get all pending expenses
+    # Get all pending expenses for this fund
+    filters = {"pcf_fund": pcf_name, "status": "Pending"}
     expenses = frappe.get_all(
         "BEI Expense Request",
-        filters={"store": store, "status": "Pending"},
+        filters=filters,
         fields=[
             "name",
             "employee",
@@ -388,40 +493,70 @@ def get_store_pending_summary(store: str):
         order_by="manual_date asc",
     )
 
+    # If no results, try store fallback for pre-migration data
+    if not expenses and pcf.store:
+        expenses = frappe.get_all(
+            "BEI Expense Request",
+            filters={"store": pcf.store, "pcf_fund": ["is", "not set"], "status": "Pending"},
+            fields=[
+                "name",
+                "employee",
+                "employee_name",
+                "manual_vendor",
+                "manual_description",
+                "manual_amount",
+                "manual_date",
+                "added_to_pending_at",
+                "receipt_photo",
+            ],
+            order_by="manual_date asc",
+        )
+
     total_amount = sum(e.manual_amount or 0 for e in expenses)
 
     return {
         "success": True,
-        "store": store,
+        "pcf_fund": pcf_name,
+        "fund_label": pcf.fund_label,
+        "store": pcf.store,
         "expenses": expenses,
         "count": len(expenses),
         "total_amount": total_amount,
     }
 
 
+# Keep old name as alias for backward compatibility
 @frappe.whitelist()
-def get_pcf_custodians(store=None):
+def get_store_pending_summary(store: str):
+    """Backward-compatible alias for get_fund_pending_summary."""
+    return get_fund_pending_summary(store=store)
+
+
+@frappe.whitelist()
+def get_pcf_custodians(store=None, pcf_fund=None):
     """
-    Get custodians for a store.
+    Get custodians for a fund.
 
     Args:
-        store: Warehouse name
+        store: Warehouse name (legacy)
+        pcf_fund: PCF fund name (preferred)
 
     Returns:
         List of custodians
     """
-    if not store:
-        frappe.throw(_("Store is required"))
+    pcf_name = _resolve_pcf_fund(pcf_fund=pcf_fund, store=store)
+    if not pcf_name:
+        return {"success": False, "error": "PCF not configured"}
 
     pcf = frappe.db.get_value(
         "BEI Petty Cash Fund",
-        {"store": store},
+        pcf_name,
         ["custodian", "backup_custodian"],
         as_dict=True,
     )
 
     if not pcf:
-        return {"success": False, "error": "PCF not configured for this store"}
+        return {"success": False, "error": "PCF not configured"}
 
     custodians = []
     if pcf.custodian:
@@ -444,26 +579,30 @@ def get_pcf_custodians(store=None):
 
 
 @frappe.whitelist()
-def submit_batch_now(store: str):
+def submit_batch_now(store: str = None, pcf_fund: str = None):
     """
-    Manually submit a PCF batch for a store.
+    Manually submit a PCF batch for a fund.
 
     Args:
-        store: Warehouse name
+        store: Warehouse name (legacy)
+        pcf_fund: PCF fund name (preferred)
 
     Returns:
         Created batch details
     """
-    # Verify user is custodian
+    pcf_name = _resolve_pcf_fund(pcf_fund=pcf_fund, store=store)
+    if not pcf_name:
+        frappe.throw(_("PCF fund not found"))
+
     pcf = frappe.db.get_value(
         "BEI Petty Cash Fund",
-        {"store": store},
-        ["name", "custodian", "backup_custodian"],
+        pcf_name,
+        ["name", "custodian", "backup_custodian", "store", "fund_label"],
         as_dict=True,
     )
 
     if not pcf:
-        frappe.throw(_("PCF not configured for this store"))
+        frappe.throw(_("PCF not configured"))
 
     user = frappe.session.user
     is_custodian = user in [pcf.custodian, pcf.backup_custodian]
@@ -475,7 +614,7 @@ def submit_batch_now(store: str):
     # Create batch
     from hrms.hr.doctype.bei_pcf_batch.bei_pcf_batch import create_batch_from_pending
 
-    batch = create_batch_from_pending(store, "Manual")
+    batch = create_batch_from_pending(store=pcf.store, submission_type="Manual", pcf_fund=pcf_name)
 
     if not batch:
         frappe.throw(_("No pending expenses to submit"))
@@ -485,6 +624,8 @@ def submit_batch_now(store: str):
         "batch": {
             "name": batch.name,
             "store": batch.store,
+            "pcf_fund": batch.pcf_fund,
+            "fund_label": pcf.fund_label,
             "batch_date": batch.batch_date,
             "status": batch.status,
             "total_amount": batch.total_amount,
@@ -495,26 +636,34 @@ def submit_batch_now(store: str):
 
 
 @frappe.whitelist()
-def get_batch_history(store: str = None, limit: int = 20, offset: int = 0):
+def get_batch_history(store: str = None, pcf_fund: str = None, limit: int = 20, offset: int = 0):
     """
-    Get batch history for a store.
+    Get batch history for a fund.
 
     Args:
-        store: Warehouse name or branch name (will resolve to full warehouse name)
+        store: Warehouse name (legacy)
+        pcf_fund: PCF fund name (preferred)
         limit: Number of batches to return
         offset: Pagination offset
 
     Returns:
         List of past batches
     """
-    # Resolve store from branch if needed
-    resolved_store = _resolve_store_name(store)
-    if not resolved_store:
+    pcf_name = _resolve_pcf_fund(pcf_fund=pcf_fund, store=store)
+
+    # If store was passed but not resolved to a fund, try resolving store name
+    if not pcf_name and store:
+        resolved_store = _resolve_store_name(store)
+        if resolved_store:
+            pcf_name = frappe.db.get_value("BEI Petty Cash Fund", {"store": resolved_store}, "name")
+
+    if not pcf_name:
         return {"success": True, "batches": [], "total": 0, "limit": limit, "offset": offset}
 
+    # Get batches by pcf_fund
     batches = frappe.get_all(
         "BEI PCF Batch",
-        filters={"store": resolved_store},
+        filters={"pcf_fund": pcf_name},
         fields=[
             "name",
             "batch_date",
@@ -526,13 +675,14 @@ def get_batch_history(store: str = None, limit: int = 20, offset: int = 0):
             "submitted_at",
             "reviewed_by",
             "reviewed_at",
+            "pcf_fund",
         ],
         order_by="batch_date desc",
         limit_page_length=limit,
         limit_start=offset,
     )
 
-    total = frappe.db.count("BEI PCF Batch", {"store": resolved_store})
+    total = frappe.db.count("BEI PCF Batch", {"pcf_fund": pcf_name})
 
     return {
         "success": True,
@@ -540,7 +690,7 @@ def get_batch_history(store: str = None, limit: int = 20, offset: int = 0):
         "total": total,
         "limit": limit,
         "offset": offset,
-        "store": resolved_store,
+        "pcf_fund": pcf_name,
     }
 
 
@@ -561,6 +711,7 @@ def get_batch_details(batch_name: str):
     for item in batch.items:
         items.append(
             {
+                "name": item.name,
                 "expense_request": item.expense_request,
                 "employee": item.employee,
                 "employee_name": item.employee_name,
@@ -569,6 +720,11 @@ def get_batch_details(batch_name: str):
                 "description": item.description,
                 "amount": item.amount,
                 "item_status": item.item_status,
+                "suggested_coa": item.suggested_coa,
+                "suggested_coa_label": item.suggested_coa_label,
+                "coa_confidence": item.coa_confidence,
+                "final_coa": item.final_coa,
+                "approved_amount": item.approved_amount,
             }
         )
 
@@ -577,6 +733,7 @@ def get_batch_details(batch_name: str):
         "batch": {
             "name": batch.name,
             "store": batch.store,
+            "pcf_fund": batch.pcf_fund,
             "batch_date": batch.batch_date,
             "status": batch.status,
             "submission_type": batch.submission_type,
@@ -737,12 +894,9 @@ def request_replenishment(batch_name: str, amount: float = None):
     frappe.db.commit()
 
     # Update PCF last replenishment date
-    frappe.db.set_value(
-        "BEI Petty Cash Fund",
-        {"store": batch.store},
-        "last_replenishment_date",
-        nowdate(),
-    )
+    pcf_name = batch.pcf_fund or frappe.db.get_value("BEI Petty Cash Fund", {"store": batch.store}, "name")
+    if pcf_name:
+        frappe.db.set_value("BEI Petty Cash Fund", pcf_name, "last_replenishment_date", nowdate())
 
     return {
         "success": True,
@@ -775,12 +929,21 @@ def _create_replenishment_journal_entry(batch, replenishment_amount: float):
     if pcf_account == source_account:
         return None, "invalid_mapping_same_account"
 
-    cost_center = frappe.db.get_value("Warehouse", batch.store, "cost_center")
+    cost_center = None
+    if batch.store:
+        cost_center = frappe.db.get_value("Warehouse", batch.store, "cost_center")
+
     je = frappe.new_doc("Journal Entry")
     je.company = company
     je.posting_date = nowdate()
     je.voucher_type = "Journal Entry"
-    je.user_remark = f"PCF replenishment request for {batch.name} ({batch.store})"
+
+    fund_label = ""
+    if batch.pcf_fund:
+        fund_label = frappe.db.get_value("BEI Petty Cash Fund", batch.pcf_fund, "fund_label") or batch.pcf_fund
+    else:
+        fund_label = batch.store or ""
+    je.user_remark = f"PCF replenishment request for {batch.name} ({fund_label})"
 
     je.append(
         "accounts",
@@ -841,22 +1004,188 @@ def _get_replenishment_source_account(company: str):
 
 
 # ============================================================
+# COA CLASSIFICATION ENDPOINTS
+# ============================================================
+
+
+@frappe.whitelist()
+def classify_batch_items(batch_name: str):
+    """
+    Run AI classification on all items in a batch.
+    Populates suggested_coa, suggested_coa_label, coa_confidence.
+
+    Args:
+        batch_name: Name of the BEI PCF Batch
+
+    Returns:
+        Classification results per item
+    """
+    batch = frappe.get_doc("BEI PCF Batch", batch_name)
+    from hrms.api.expense_classifier import classify_expense, COA_LABELS
+
+    results = []
+    for item in batch.items:
+        try:
+            classification = classify_expense(
+                description=item.description or "",
+                vendor=item.vendor or "",
+                amount=flt(item.amount),
+            )
+
+            suggested_coa = classification.get("coa")
+            suggested_label = COA_LABELS.get(suggested_coa, "") if suggested_coa else ""
+            confidence = flt(classification.get("confidence", 0))
+
+            # Update batch item
+            frappe.db.set_value(
+                "BEI PCF Batch Item",
+                item.name,
+                {
+                    "suggested_coa": suggested_coa,
+                    "suggested_coa_label": suggested_label,
+                    "coa_confidence": confidence,
+                },
+            )
+
+            # Also backfill onto the linked expense
+            if item.expense_request:
+                frappe.db.set_value(
+                    "BEI Expense Request",
+                    item.expense_request,
+                    {
+                        "internal_suggested_coa": suggested_coa,
+                        "internal_coa_confidence": confidence,
+                        "internal_classification_method": classification.get("method", ""),
+                    },
+                )
+
+            results.append({
+                "item": item.name,
+                "expense_request": item.expense_request,
+                "suggested_coa": suggested_coa,
+                "suggested_coa_label": suggested_label,
+                "coa_confidence": confidence,
+                "method": classification.get("method", ""),
+            })
+        except Exception as e:
+            frappe.log_error(f"Classification failed for item {item.name}: {e}", "PCF COA Classification")
+            results.append({
+                "item": item.name,
+                "expense_request": item.expense_request,
+                "error": str(e),
+            })
+
+    frappe.db.commit()
+    return {"success": True, "results": results, "classified": len([r for r in results if "error" not in r])}
+
+
+@frappe.whitelist()
+def approve_batch_with_coa(batch_name: str, items: str = None, notes: str = None):
+    """
+    Approve a batch with COA decisions per item.
+
+    Args:
+        batch_name: Name of the BEI PCF Batch
+        items: JSON list of {name, final_coa, approved_amount} dicts
+        notes: Optional review notes
+
+    Returns:
+        Updated batch status
+    """
+    import json as json_lib
+
+    # Check permissions
+    user = frappe.session.user
+    is_accounts = "Accounts User" in frappe.get_roles(user) or "Accounts Manager" in frappe.get_roles(user)
+    is_admin = "System Manager" in frappe.get_roles(user)
+
+    if not is_accounts and not is_admin:
+        frappe.throw(_("Only Accounts users can approve batches"))
+
+    batch = frappe.get_doc("BEI PCF Batch", batch_name)
+
+    if batch.status not in ["Submitted", "Under Review"]:
+        frappe.throw(_("Batch is not pending review"))
+
+    # Apply COA decisions to items
+    if items:
+        if isinstance(items, str):
+            items = json_lib.loads(items)
+
+        for item_decision in items:
+            item_name = item_decision.get("name")
+            if not item_name:
+                continue
+
+            updates = {}
+            if item_decision.get("final_coa"):
+                updates["final_coa"] = item_decision["final_coa"]
+            if item_decision.get("approved_amount") is not None:
+                updates["approved_amount"] = flt(item_decision["approved_amount"])
+
+            if updates:
+                frappe.db.set_value("BEI PCF Batch Item", item_name, updates)
+
+                # Also set on linked expense
+                expense_name = frappe.db.get_value("BEI PCF Batch Item", item_name, "expense_request")
+                if expense_name:
+                    exp_updates = {}
+                    if "final_coa" in updates:
+                        exp_updates["internal_final_coa"] = updates["final_coa"]
+                    if "approved_amount" in updates:
+                        exp_updates["internal_approved_amount"] = updates["approved_amount"]
+                    if exp_updates:
+                        frappe.db.set_value("BEI Expense Request", expense_name, exp_updates)
+
+    # Approve the batch
+    batch.status = "Approved"
+    batch.reviewed_by = user
+    batch.reviewed_at = now_datetime()
+    batch.review_notes = notes
+
+    batch.save(ignore_permissions=True)
+    frappe.db.commit()
+
+    from hrms.hr.doctype.bei_pcf_batch.bei_pcf_batch import send_batch_notification
+
+    send_batch_notification(batch, "approved")
+
+    return {
+        "success": True,
+        "message": f"Batch {batch_name} approved with COA classifications",
+        "batch": {
+            "name": batch.name,
+            "status": batch.status,
+            "reviewed_by": batch.reviewed_by,
+            "reviewed_at": batch.reviewed_at,
+        },
+    }
+
+
+# ============================================================
 # ADMIN ENDPOINTS
 # ============================================================
 
 
 @frappe.whitelist()
 def create_pcf_fund(
-    store: str, fund_amount: float, custodian: str, threshold_percentage: float = 50
+    store: str = None,
+    fund_amount: float = 10000,
+    custodian: str = None,
+    threshold_percentage: float = 60,
+    fund_type: str = "Store",
+    department: str = None,
 ):
     """
-    Create PCF configuration for a store.
+    Create PCF configuration for a store or department.
 
     Args:
-        store: Warehouse name
+        store: Warehouse name (for store-type funds)
         fund_amount: Total PCF amount
         custodian: User to assign as custodian
-        threshold_percentage: Auto-submit threshold (default 50%)
+        threshold_percentage: Notification threshold (default 60%)
+        fund_type: "Store" or "Department"
+        department: Department name (for department-type funds)
 
     Returns:
         Created PCF fund details
@@ -864,14 +1193,27 @@ def create_pcf_fund(
     if "System Manager" not in frappe.get_roles():
         frappe.throw(_("Only System Managers can create PCF funds"))
 
-    # Check if already exists
-    existing = frappe.db.exists("BEI Petty Cash Fund", {"store": store})
-    if existing:
-        frappe.throw(_("PCF fund already exists for this store"))
+    # Validate based on fund type
+    if fund_type == "Store":
+        if not store:
+            frappe.throw(_("Store is required for Store-type funds"))
+        existing = frappe.db.exists("BEI Petty Cash Fund", {"fund_type": "Store", "store": store})
+        if existing:
+            frappe.throw(_("PCF fund already exists for this store"))
+    elif fund_type == "Department":
+        if not department:
+            frappe.throw(_("Department is required for Department-type funds"))
+        existing = frappe.db.exists("BEI Petty Cash Fund", {"fund_type": "Department", "department": department})
+        if existing:
+            frappe.throw(_("PCF fund already exists for this department"))
+    else:
+        frappe.throw(_("Invalid fund type. Must be 'Store' or 'Department'"))
 
     # Create PCF
     pcf = frappe.new_doc("BEI Petty Cash Fund")
-    pcf.store = store
+    pcf.fund_type = fund_type
+    pcf.store = store if fund_type == "Store" else None
+    pcf.department = department if fund_type == "Department" else None
     pcf.company = get_company()
     pcf.fund_amount = flt(fund_amount)
     pcf.threshold_percentage = flt(threshold_percentage)
@@ -885,14 +1227,22 @@ def create_pcf_fund(
 
     return {
         "success": True,
-        "message": f"PCF fund created for {store}",
-        "pcf": {"name": pcf.name, "store": pcf.store, "fund_amount": pcf.fund_amount},
+        "message": f"PCF fund created: {pcf.fund_label}",
+        "pcf": {
+            "name": pcf.name,
+            "fund_type": pcf.fund_type,
+            "fund_label": pcf.fund_label,
+            "store": pcf.store,
+            "department": pcf.department,
+            "fund_amount": pcf.fund_amount,
+        },
     }
 
 
 @frappe.whitelist()
 def update_pcf_settings(
-    store: str,
+    store: str = None,
+    pcf_fund: str = None,
     fund_amount: float = None,
     threshold_percentage: float = None,
     custodian: str = None,
@@ -902,10 +1252,11 @@ def update_pcf_settings(
     month_end_auto_submit: int = None,
 ):
     """
-    Update PCF settings for a store.
+    Update PCF settings for a fund.
 
     Args:
-        store: Warehouse name
+        store: Warehouse name (legacy)
+        pcf_fund: PCF fund name (preferred)
         Other args: Settings to update (only non-None values)
 
     Returns:
@@ -914,7 +1265,11 @@ def update_pcf_settings(
     if "System Manager" not in frappe.get_roles():
         frappe.throw(_("Only System Managers can update PCF settings"))
 
-    pcf = frappe.get_doc("BEI Petty Cash Fund", {"store": store})
+    pcf_name = _resolve_pcf_fund(pcf_fund=pcf_fund, store=store)
+    if not pcf_name:
+        frappe.throw(_("PCF fund not found"))
+
+    pcf = frappe.get_doc("BEI Petty Cash Fund", pcf_name)
 
     if fund_amount is not None:
         pcf.fund_amount = flt(fund_amount)
@@ -934,16 +1289,17 @@ def update_pcf_settings(
     pcf.save(ignore_permissions=True)
     frappe.db.commit()
 
-    return {"success": True, "message": f"PCF settings updated for {store}"}
+    return {"success": True, "message": f"PCF settings updated for {pcf.fund_label}"}
 
 
 @frappe.whitelist()
-def assign_pcf_custodian(store: str, user: str, is_backup: bool = False):
+def assign_pcf_custodian(store: str = None, pcf_fund: str = None, user: str = None, is_backup: bool = False):
     """
-    Assign a user as PCF custodian for a store.
+    Assign a user as PCF custodian for a fund.
 
     Args:
-        store: Warehouse name
+        store: Warehouse name (legacy)
+        pcf_fund: PCF fund name (preferred)
         user: User ID to assign
         is_backup: If True, assign as backup custodian
 
@@ -953,7 +1309,11 @@ def assign_pcf_custodian(store: str, user: str, is_backup: bool = False):
     if "System Manager" not in frappe.get_roles():
         frappe.throw(_("Only System Managers can assign custodians"))
 
-    pcf = frappe.get_doc("BEI Petty Cash Fund", {"store": store})
+    pcf_name = _resolve_pcf_fund(pcf_fund=pcf_fund, store=store)
+    if not pcf_name:
+        frappe.throw(_("PCF fund not found"))
+
+    pcf = frappe.get_doc("BEI Petty Cash Fund", pcf_name)
 
     if is_backup:
         pcf.backup_custodian = user
@@ -967,7 +1327,7 @@ def assign_pcf_custodian(store: str, user: str, is_backup: bool = False):
     frappe.db.commit()
 
     role = "backup custodian" if is_backup else "custodian"
-    return {"success": True, "message": f"{user} assigned as {role} for {store}"}
+    return {"success": True, "message": f"{user} assigned as {role} for {pcf.fund_label}"}
 
 
 @frappe.whitelist()
@@ -985,7 +1345,10 @@ def get_all_pcf_funds():
         "BEI Petty Cash Fund",
         fields=[
             "name",
+            "fund_type",
             "store",
+            "department",
+            "fund_label",
             "is_enabled",
             "fund_amount",
             "current_balance",
@@ -995,7 +1358,7 @@ def get_all_pcf_funds():
             "custodian",
             "last_batch_date",
         ],
-        order_by="store asc",
+        order_by="fund_type asc, fund_label asc",
     )
 
     return {"success": True, "funds": funds, "count": len(funds)}
@@ -1006,14 +1369,15 @@ def get_all_pcf_funds():
 # ============================================================
 
 
-def check_threshold_and_auto_submit():
+def check_threshold_and_notify():
     """
-    Hourly job: Check all PCF funds and auto-submit if threshold reached.
+    Hourly job: Check all PCF funds and send notification if threshold reached.
+    Does NOT auto-create batches — custodian decides when to submit.
     """
     # Guard against concurrent runs
     lock_key = "pcf_threshold_check_running"
     if frappe.cache.get(lock_key):
-        frappe.log_error("PCF threshold check already running, skipping", "PCF Auto-Submit")
+        frappe.log_error("PCF threshold check already running, skipping", "PCF Threshold")
         return
 
     frappe.cache.set(lock_key, True, expires_in_sec=3600)
@@ -1022,31 +1386,28 @@ def check_threshold_and_auto_submit():
         funds = frappe.get_all(
             "BEI Petty Cash Fund",
             filters={"is_enabled": 1, "auto_submit_enabled": 1},
-            fields=["name", "store", "fund_amount", "threshold_percentage", "pending_total"],
+            fields=["name", "store", "fund_type", "fund_label", "fund_amount", "threshold_percentage", "pending_total"],
         )
 
-        submitted = 0
+        notified = 0
         for fund in funds:
             threshold_amount = fund.fund_amount * fund.threshold_percentage / 100
             if (fund.pending_total or 0) >= threshold_amount:
                 # Check no batch already under review
                 existing = frappe.db.exists(
                     "BEI PCF Batch",
-                    {"store": fund.store, "status": ["in", ["Submitted", "Under Review"]]},
+                    {"pcf_fund": fund.name, "status": ["in", ["Submitted", "Under Review"]]},
                 )
                 if not existing:
-                    from hrms.hr.doctype.bei_pcf_batch.bei_pcf_batch import create_batch_from_pending
+                    send_threshold_notification(pcf_fund=fund.name)
+                    notified += 1
+                    frappe.log_error(
+                        f"Threshold notification sent for {fund.fund_label} ({fund.name})",
+                        "PCF Threshold",
+                    )
 
-                    batch = create_batch_from_pending(fund.store, "Threshold Auto")
-                    if batch:
-                        submitted += 1
-                        frappe.log_error(
-                            f"Auto-submitted batch {batch.name} for {fund.store} (threshold)",
-                            "PCF Auto-Submit",
-                        )
-
-        if submitted:
-            frappe.log_error(f"PCF threshold check: {submitted} batches auto-submitted", "PCF Auto-Submit")
+        if notified:
+            frappe.log_error(f"PCF threshold check: {notified} notifications sent", "PCF Threshold")
 
     finally:
         frappe.cache.delete(lock_key)
@@ -1068,7 +1429,7 @@ def check_month_end_auto_submit():
     funds = frappe.get_all(
         "BEI Petty Cash Fund",
         filters={"is_enabled": 1, "month_end_auto_submit": 1},
-        fields=["name", "store", "pending_total"],
+        fields=["name", "store", "fund_label", "pending_total"],
     )
 
     submitted = 0
@@ -1076,16 +1437,18 @@ def check_month_end_auto_submit():
         if (fund.pending_total or 0) > 0:
             existing = frappe.db.exists(
                 "BEI PCF Batch",
-                {"store": fund.store, "status": ["in", ["Submitted", "Under Review"]]},
+                {"pcf_fund": fund.name, "status": ["in", ["Submitted", "Under Review"]]},
             )
             if not existing:
                 from hrms.hr.doctype.bei_pcf_batch.bei_pcf_batch import create_batch_from_pending
 
-                batch = create_batch_from_pending(fund.store, "Month-End Auto")
+                batch = create_batch_from_pending(
+                    store=fund.store, submission_type="Month-End Auto", pcf_fund=fund.name
+                )
                 if batch:
                     submitted += 1
                     frappe.log_error(
-                        f"Auto-submitted batch {batch.name} for {fund.store} (month-end)",
+                        f"Auto-submitted batch {batch.name} for {fund.fund_label} (month-end)",
                         "PCF Month-End",
                     )
 
@@ -1103,10 +1466,12 @@ def on_expense_update(doc, method):
     Recalculates PCF totals when status changes.
     """
     if doc.has_value_changed("status") or doc.has_value_changed("manual_amount"):
-        if doc.store:
-            from hrms.hr.doctype.bei_petty_cash_fund.bei_petty_cash_fund import update_pcf_totals
+        from hrms.hr.doctype.bei_petty_cash_fund.bei_petty_cash_fund import update_pcf_totals
 
-            update_pcf_totals(doc.store)
+        if doc.pcf_fund:
+            update_pcf_totals(pcf_fund=doc.pcf_fund)
+        elif doc.store:
+            update_pcf_totals(store=doc.store)
 
 
 def on_expense_delete(doc, method):
@@ -1114,10 +1479,13 @@ def on_expense_delete(doc, method):
     Called when BEI Expense Request is deleted.
     Recalculates PCF totals.
     """
-    if doc.store and doc.status == "Pending":
+    if doc.status == "Pending":
         from hrms.hr.doctype.bei_petty_cash_fund.bei_petty_cash_fund import update_pcf_totals
 
-        update_pcf_totals(doc.store)
+        if doc.pcf_fund:
+            update_pcf_totals(pcf_fund=doc.pcf_fund)
+        elif doc.store:
+            update_pcf_totals(store=doc.store)
 
 
 def validate_pcf_batch(doc, method):
@@ -1166,8 +1534,10 @@ def on_batch_update(doc, method):
     try:
         from hrms.hr.doctype.bei_petty_cash_fund.bei_petty_cash_fund import update_pcf_totals
 
-        if getattr(doc, "store", None):
-            update_pcf_totals(doc.store)
+        if getattr(doc, "pcf_fund", None):
+            update_pcf_totals(pcf_fund=doc.pcf_fund)
+        elif getattr(doc, "store", None):
+            update_pcf_totals(store=doc.store)
     except Exception:
         frappe.log_error(frappe.get_traceback(), "PCF Hook Update Totals Failed")
 
@@ -1177,33 +1547,41 @@ def on_batch_update(doc, method):
 # ============================================================
 
 
-def send_threshold_notification(store: str):
+def send_threshold_notification(pcf_fund: str = None, store: str = None):
     """
     Send notification when threshold is reached.
+
+    Args:
+        pcf_fund: PCF fund name (preferred)
+        store: Warehouse name (legacy)
     """
     try:
+        pcf_name = _resolve_pcf_fund(pcf_fund=pcf_fund, store=store)
+        if not pcf_name:
+            return
+
         pcf = frappe.db.get_value(
             "BEI Petty Cash Fund",
-            {"store": store},
-            ["custodian", "fund_amount", "pending_total", "threshold_percentage", "pending_count"],
+            pcf_name,
+            ["custodian", "fund_amount", "pending_total", "threshold_percentage", "pending_count", "fund_label"],
             as_dict=True,
         )
 
         if not pcf:
             return
 
-        message = f"""*PCF Threshold Reached*
+        message = f"""*PCF at {pcf.threshold_percentage:.0f}% — ready for batch submission*
 
-Store: {store}
+Fund: {pcf.fund_label}
 Pending: PHP {pcf.pending_total:,.2f} ({pcf.pending_count} expenses)
-Fund: PHP {pcf.fund_amount:,.2f}
+Fund Amount: PHP {pcf.fund_amount:,.2f}
 Threshold: {pcf.threshold_percentage}%
 
-Ready for batch submission."""
+Custodian can submit a batch when ready."""
 
         from hrms.api.google_chat import send_message_to_space
-
         from hrms.utils.bei_config import get_chat_space, SPACE_ERP_AUTOMATION
+
         send_message_to_space(get_chat_space(SPACE_ERP_AUTOMATION), message)
     except Exception as e:
         frappe.log_error(f"Failed to send threshold notification: {e}", "PCF Notification")

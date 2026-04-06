@@ -4,7 +4,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import nowdate, now_datetime, getdate
+from frappe.utils import nowdate, now_datetime, getdate, flt
 from hrms.utils.bei_config import get_company
 
 
@@ -20,22 +20,37 @@ class BEIPCFBatch(Document):
             frappe.throw(_("Cannot create batch with no expense items"))
 
     def validate_no_duplicate_batch(self):
-        """Ensure no other batch is under review for this store."""
+        """Ensure no other batch is under review for this fund/store."""
         if self.is_new():
-            existing = frappe.db.exists(
-                "BEI PCF Batch",
-                {
-                    "store": self.store,
-                    "status": ["in", ["Submitted", "Under Review"]],
-                    "name": ["!=", self.name],
-                },
-            )
+            # Check by pcf_fund first
+            if self.pcf_fund:
+                existing = frappe.db.exists(
+                    "BEI PCF Batch",
+                    {
+                        "pcf_fund": self.pcf_fund,
+                        "status": ["in", ["Submitted", "Under Review"]],
+                        "name": ["!=", self.name],
+                    },
+                )
+            elif self.store:
+                existing = frappe.db.exists(
+                    "BEI PCF Batch",
+                    {
+                        "store": self.store,
+                        "status": ["in", ["Submitted", "Under Review"]],
+                        "name": ["!=", self.name],
+                    },
+                )
+            else:
+                existing = None
+
             if existing:
+                label = self.pcf_fund or self.store
                 frappe.throw(
                     _(
-                        "Store {0} already has a batch under review ({1}). "
+                        "{0} already has a batch under review ({1}). "
                         "Please wait for it to be processed."
-                    ).format(self.store, existing)
+                    ).format(label, existing)
                 )
 
     def compute_totals(self):
@@ -84,14 +99,15 @@ class BEIPCFBatch(Document):
 
     def update_pcf_fund(self):
         """Update PCF fund history fields."""
-        pcf = frappe.db.get_value("BEI Petty Cash Fund", {"store": self.store}, "name")
-        if pcf:
+        pcf_name = self.pcf_fund
+        if not pcf_name and self.store:
+            pcf_name = frappe.db.get_value("BEI Petty Cash Fund", {"store": self.store}, "name")
+
+        if pcf_name:
             if self.status in ["Submitted", "Under Review"]:
-                # Update last batch date
-                frappe.db.set_value("BEI Petty Cash Fund", pcf, "last_batch_date", nowdate())
+                frappe.db.set_value("BEI Petty Cash Fund", pcf_name, "last_batch_date", nowdate())
 
             if self.status == "Approved":
-                # Increment total batches
                 frappe.db.sql(
                     """
                     UPDATE `tabBEI Petty Cash Fund`
@@ -99,31 +115,45 @@ class BEIPCFBatch(Document):
                         total_expenses_ytd = total_expenses_ytd + %s
                     WHERE name = %s
                     """,
-                    (self.total_amount, pcf),
+                    (self.total_amount, pcf_name),
                 )
 
             # Trigger recalculation of pending totals
             from hrms.hr.doctype.bei_petty_cash_fund.bei_petty_cash_fund import update_pcf_totals
 
-            update_pcf_totals(self.store)
+            update_pcf_totals(pcf_fund=pcf_name)
 
 
-def create_batch_from_pending(store, submission_type):
+def create_batch_from_pending(store=None, submission_type="Manual", pcf_fund=None):
     """
-    Create a PCF batch from all pending expenses for a store.
+    Create a PCF batch from all pending expenses for a fund.
 
     Args:
-        store: Warehouse name
+        store: Warehouse name (legacy, used if pcf_fund not set)
         submission_type: 'Manual', 'Threshold Auto', or 'Month-End Auto'
+        pcf_fund: PCF fund name (preferred)
 
     Returns:
         BEI PCF Batch document or None if no pending expenses
     """
-    # Get all pending expenses for this store
+    from hrms.api.expense_classifier import COA_LABELS
+
+    # Get all pending expenses
+    if pcf_fund:
+        filters = {"pcf_fund": pcf_fund, "status": "Pending"}
+    elif store:
+        filters = {"store": store, "status": "Pending"}
+    else:
+        return None
+
     pending_expenses = frappe.get_all(
         "BEI Expense Request",
-        filters={"store": store, "status": "Pending"},
-        fields=["name", "employee", "employee_name", "manual_date", "manual_vendor", "manual_description", "manual_amount"],
+        filters=filters,
+        fields=[
+            "name", "employee", "employee_name", "manual_date",
+            "manual_vendor", "manual_description", "manual_amount",
+            "internal_suggested_coa", "internal_coa_confidence",
+        ],
         order_by="manual_date asc",
     )
 
@@ -131,13 +161,21 @@ def create_batch_from_pending(store, submission_type):
         return None
 
     # Check if batch already exists under review
-    existing = frappe.db.exists(
-        "BEI PCF Batch",
-        {"store": store, "status": ["in", ["Submitted", "Under Review"]]},
-    )
+    if pcf_fund:
+        existing = frappe.db.exists(
+            "BEI PCF Batch",
+            {"pcf_fund": pcf_fund, "status": ["in", ["Submitted", "Under Review"]]},
+        )
+    else:
+        existing = frappe.db.exists(
+            "BEI PCF Batch",
+            {"store": store, "status": ["in", ["Submitted", "Under Review"]]},
+        )
+
     if existing:
+        label = pcf_fund or store
         frappe.log_error(
-            f"Skipping batch creation for {store}: batch {existing} already under review",
+            f"Skipping batch creation for {label}: batch {existing} already under review",
             "PCF Auto-Submit",
         )
         return None
@@ -145,26 +183,33 @@ def create_batch_from_pending(store, submission_type):
     # Create the batch
     batch = frappe.new_doc("BEI PCF Batch")
     batch.store = store
+    batch.pcf_fund = pcf_fund
     batch.company = get_company()
     batch.batch_date = nowdate()
     batch.status = "Submitted"
     batch.submission_type = submission_type
 
-    # Add items
+    # Add items with COA data
     for exp in pending_expenses:
-        batch.append(
-            "items",
-            {
-                "expense_request": exp.name,
-                "employee": exp.employee,
-                "employee_name": exp.employee_name,
-                "expense_date": exp.manual_date,
-                "vendor": exp.manual_vendor,
-                "description": exp.manual_description,
-                "amount": exp.manual_amount,
-                "item_status": "Pending",
-            },
-        )
+        item_data = {
+            "expense_request": exp.name,
+            "employee": exp.employee,
+            "employee_name": exp.employee_name,
+            "expense_date": exp.manual_date,
+            "vendor": exp.manual_vendor,
+            "description": exp.manual_description,
+            "amount": exp.manual_amount,
+            "item_status": "Pending",
+            "approved_amount": exp.manual_amount,  # Default to original amount
+        }
+
+        # Copy COA fields from expense if available
+        if exp.internal_suggested_coa:
+            item_data["suggested_coa"] = exp.internal_suggested_coa
+            item_data["suggested_coa_label"] = COA_LABELS.get(exp.internal_suggested_coa, "")
+            item_data["coa_confidence"] = flt(exp.internal_coa_confidence)
+
+        batch.append("items", item_data)
 
     batch.insert(ignore_permissions=True)
 
@@ -195,15 +240,21 @@ def send_batch_notification(batch, event):
     try:
         from hrms.api.google_chat import send_message_to_space
 
+        # Use fund_label for display, fall back to store
+        fund_label = ""
+        if batch.pcf_fund:
+            fund_label = frappe.db.get_value("BEI Petty Cash Fund", batch.pcf_fund, "fund_label") or batch.pcf_fund
+        else:
+            fund_label = batch.store or "Unknown"
+
         messages = {
-            "created": f"*PCF Batch Created*\n\nStore: {batch.store}\nBatch: {batch.name}\nType: {batch.submission_type}\nExpenses: {batch.expense_count}\nTotal: PHP {batch.total_amount:,.2f}\n\nReady for accounting review.",
-            "approved": f"*PCF Batch Approved*\n\nStore: {batch.store}\nBatch: {batch.name}\nTotal: PHP {batch.total_amount:,.2f}\nReviewed by: {batch.reviewed_by}",
-            "rejected": f"*PCF Batch Rejected*\n\nStore: {batch.store}\nBatch: {batch.name}\nTotal: PHP {batch.total_amount:,.2f}\nReason: {batch.review_notes or 'Not specified'}",
+            "created": f"*PCF Batch Created*\n\nFund: {fund_label}\nBatch: {batch.name}\nType: {batch.submission_type}\nExpenses: {batch.expense_count}\nTotal: PHP {batch.total_amount:,.2f}\n\nReady for accounting review.",
+            "approved": f"*PCF Batch Approved*\n\nFund: {fund_label}\nBatch: {batch.name}\nTotal: PHP {batch.total_amount:,.2f}\nReviewed by: {batch.reviewed_by}",
+            "rejected": f"*PCF Batch Rejected*\n\nFund: {fund_label}\nBatch: {batch.name}\nTotal: PHP {batch.total_amount:,.2f}\nReason: {batch.review_notes or 'Not specified'}",
         }
 
         message = messages.get(event)
         if message:
-            # Send to ERP Automation Committee
             from hrms.utils.bei_config import get_chat_space, SPACE_ERP_AUTOMATION
             send_message_to_space(get_chat_space(SPACE_ERP_AUTOMATION), message)
     except Exception as e:

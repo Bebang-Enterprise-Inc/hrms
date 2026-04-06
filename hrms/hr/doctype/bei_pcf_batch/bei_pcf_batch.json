@@ -8,6 +8,7 @@
     "field_order": [
         "section_batch",
         "store",
+        "pcf_fund",
         "company",
         "batch_date",
         "column_break_batch",
@@ -45,6 +46,15 @@
             "fieldtype": "Link",
             "label": "Store",
             "options": "Warehouse",
+            "in_list_view": 1,
+            "in_standard_filter": 1,
+            "description": "Store (for store-type funds)"
+        },
+        {
+            "fieldname": "pcf_fund",
+            "fieldtype": "Link",
+            "label": "PCF Fund",
+            "options": "BEI Petty Cash Fund",
             "reqd": 1,
             "in_list_view": 1,
             "in_standard_filter": 1

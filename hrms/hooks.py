@@ -362,7 +362,7 @@ scheduler_events = {
 	],
 	"hourly": [
 		"hrms.hr.doctype.daily_work_summary_group.daily_work_summary_group.trigger_emails",
-		"hrms.api.pcf.check_threshold_and_auto_submit",
+		"hrms.api.pcf.check_threshold_and_notify",
 		"hrms.tasks.auto_punch_out_stale_shifts",
 		"hrms.api.projects.check_sla_violations",
 		"hrms.api.transfer_requests.run_due_transfer_submissions",

@@ -1,13 +1,16 @@
 {
     "actions": [],
     "allow_rename": 0,
-    "autoname": "format:PCF-{store}",
+    "autoname": "format:PCF-{fund_label}",
     "creation": "2026-02-03 00:00:00.000000",
     "doctype": "DocType",
     "engine": "InnoDB",
     "field_order": [
         "section_store",
+        "fund_type",
         "store",
+        "department",
+        "fund_label",
         "company",
         "is_enabled",
         "column_break_store",
@@ -35,18 +38,46 @@
         {
             "fieldname": "section_store",
             "fieldtype": "Section Break",
-            "label": "Store Configuration"
+            "label": "Fund Configuration"
+        },
+        {
+            "fieldname": "fund_type",
+            "fieldtype": "Select",
+            "label": "Fund Type",
+            "options": "Store\nDepartment",
+            "reqd": 1,
+            "default": "Store",
+            "in_list_view": 1,
+            "in_standard_filter": 1
         },
         {
             "fieldname": "store",
             "fieldtype": "Link",
             "label": "Store",
             "options": "Warehouse",
-            "reqd": 1,
-            "unique": 1,
+            "depends_on": "eval:doc.fund_type=='Store'",
+            "mandatory_depends_on": "eval:doc.fund_type=='Store'",
             "in_list_view": 1,
-            "in_standard_filter": 1,
-            "description": "One PCF fund per store"
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "department",
+            "fieldtype": "Link",
+            "label": "Department",
+            "options": "Department",
+            "depends_on": "eval:doc.fund_type=='Department'",
+            "mandatory_depends_on": "eval:doc.fund_type=='Department'",
+            "in_list_view": 0,
+            "in_standard_filter": 1
+        },
+        {
+            "fieldname": "fund_label",
+            "fieldtype": "Data",
+            "label": "Fund Label",
+            "unique": 1,
+            "read_only": 1,
+            "in_list_view": 1,
+            "description": "Auto-generated display name for this fund"
         },
         {
             "fieldname": "company",
@@ -126,22 +157,22 @@
         {
             "fieldname": "section_threshold",
             "fieldtype": "Section Break",
-            "label": "Auto-Submit Settings"
+            "label": "Threshold & Notification Settings"
         },
         {
             "fieldname": "threshold_percentage",
             "fieldtype": "Percent",
-            "label": "Auto-Submit Threshold",
+            "label": "Notification Threshold",
             "reqd": 1,
-            "default": 50,
-            "description": "Auto-submit batch when pending reaches this % of fund (1-100)"
+            "default": 60,
+            "description": "Send notification when pending reaches this % of fund (1-100)"
         },
         {
             "fieldname": "auto_submit_enabled",
             "fieldtype": "Check",
-            "label": "Enable Threshold Auto-Submit",
+            "label": "Enable Threshold Notification",
             "default": 1,
-            "description": "Automatically create batch when threshold is reached"
+            "description": "Send notification to custodian when threshold is reached"
         },
         {
             "fieldname": "column_break_threshold",
@@ -195,11 +226,11 @@
     "links": [
         {
             "link_doctype": "BEI PCF Batch",
-            "link_fieldname": "store"
+            "link_fieldname": "pcf_fund"
         },
         {
             "link_doctype": "BEI Expense Request",
-            "link_fieldname": "store"
+            "link_fieldname": "pcf_fund"
         }
     ],
     "modified": "2026-02-03 00:00:00.000000",
