@@ -1,0 +1,45 @@
+{
+  "sprint": "S163",
+  "timestamp_utc": "2026-04-06T11:13:19.535329Z",
+  "results": {
+    "loader_recipe_key_count": 25,
+    "csv_recipe_key_count": 25,
+    "parity_exact_match": true,
+    "missing_vs_csv": [],
+    "extra_vs_csv": [],
+    "loader_policies_by_code_count": 14,
+    "loader_policies_by_name_count": 29,
+    "sample_recipe_detail": {
+      "ADDON-BANANA-CINNAMON": [
+        {
+          "item_code": "FG002",
+          "qty_per_fg": 0.009
+        }
+      ],
+      "ADDON-BLUEBERRY-FRUIT": [
+        {
+          "item_code": "RM004-1",
+          "qty_per_fg": 0.033613
+        }
+      ],
+      "ADDON-BROWN-SUGAR-BALL": [
+        {
+          "item_code": "M003",
+          "qty_per_fg": 0.016
+        }
+      ],
+      "ADDON-CHOCO-BROWNIE": [
+        {
+          "item_code": "RM020",
+          "qty_per_fg": 0.088
+        }
+      ],
+      "ADDON-CRUSHED-OREO": [
+        {
+          "item_code": "RM002",
+          "qty_per_fg": 0.134361
+        }
+      ]
+    }
+  }
+}

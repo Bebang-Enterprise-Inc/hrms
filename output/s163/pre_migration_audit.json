@@ -22,13 +22,41 @@
     "commit": "76cdf2abd77a5c6691965f59e83a4d322acb02f4"
   },
   "groundtruth_unique_recipes": [
-    "ADDON-BANANA-CINNAMON","ADDON-BLUEBERRY-FRUIT","ADDON-BROWN-SUGAR-BALL",
-    "ADDON-CHOCO-BROWNIE","ADDON-CRUSHED-OREO","ADDON-LANGKA","ADDON-LECHE-FLAN",
-    "ADDON-MACAPUNO","ADDON-MAIS","ADDON-MANGO","ADDON-MINI-MALLOWS","ADDON-NATA",
-    "ADDON-RED-SAGO","ADDON-RICE-CRISPIES","ADDON-STRAWBERRY-FRUIT","ADDON-UBE-HALAYA",
-    "DIRECT-INSULATED-BAG","DIRECT-SPOON","FULL-BANANA-CINNAMON","FULL-GINATAANG",
-    "FULL-ISKRAMBOL","POP-LAMIG","TIKIM-CHOCO-BROWNIE","TIKIM-MANGO-GRAHAM","TIKIM-PRESIDENTIAL"
+    "ADDON-BANANA-CINNAMON",
+    "ADDON-BLUEBERRY-FRUIT",
+    "ADDON-BROWN-SUGAR-BALL",
+    "ADDON-CHOCO-BROWNIE",
+    "ADDON-CRUSHED-OREO",
+    "ADDON-LANGKA",
+    "ADDON-LECHE-FLAN",
+    "ADDON-MACAPUNO",
+    "ADDON-MAIS",
+    "ADDON-MANGO",
+    "ADDON-MINI-MALLOWS",
+    "ADDON-NATA",
+    "ADDON-RED-SAGO",
+    "ADDON-RICE-CRISPIES",
+    "ADDON-STRAWBERRY-FRUIT",
+    "ADDON-UBE-HALAYA",
+    "DIRECT-INSULATED-BAG",
+    "DIRECT-SPOON",
+    "FULL-BANANA-CINNAMON",
+    "FULL-GINATAANG",
+    "FULL-ISKRAMBOL",
+    "POP-LAMIG",
+    "TIKIM-CHOCO-BROWNIE",
+    "TIKIM-MANGO-GRAHAM",
+    "TIKIM-PRESIDENTIAL"
   ],
-  "in_flight_orders_check": "DEFERRED to migration runtime — query at SSM execution time will report any orders affected by schema additions. Schema additions are all optional fields, so no in-flight order is broken.",
-  "variant_of_distribution": "S161 audit confirmed NULL for all 152 store items"
+  "in_flight_orders_check": {
+    "draft_orders": 0,
+    "pending_approval_orders": 2,
+    "approved_orders": 0,
+    "order_items_with_group_fields_pre_any_submit": 0,
+    "store_items_with_variant_of": 0,
+    "schema_addition_is_backwards_compatible": true,
+    "note": "All 4 new fields on BEI Store Order Item are optional. Existing rows are untouched."
+  },
+  "variant_of_distribution": "S161 audit confirmed NULL for all 152 store items",
+  "in_flight_orders_checked_at": "2026-04-06T11:13:19.535329Z"
 }
