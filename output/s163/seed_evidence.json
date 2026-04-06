@@ -1,0 +1,84 @@
+{
+  "sprint": "S163",
+  "task": "seed BEI Store Item Group",
+  "timestamp_utc": "2026-04-06T12:45:50.634732Z",
+  "groups": [
+    {
+      "group_code": "GRP-FROZEN-MANGO",
+      "status": "created",
+      "member_count": 2
+    },
+    {
+      "group_code": "GRP-FRESH-RIPE-MANGO",
+      "status": "created",
+      "member_count": 2
+    },
+    {
+      "group_code": "GRP-SAGO",
+      "status": "created",
+      "member_count": 2
+    },
+    {
+      "group_code": "GRP-RAG",
+      "status": "created",
+      "member_count": 7
+    },
+    {
+      "group_code": "GRP-CUP-HOLDER",
+      "status": "created",
+      "member_count": 2
+    },
+    {
+      "group_code": "GRP-LECHE-FLAN-X",
+      "status": "created",
+      "member_count": 2
+    }
+  ],
+  "post_seed_group_count": 6,
+  "post_seed_member_count": 17,
+  "all_groups_in_db": [
+    {
+      "group_code": "GRP-CUP-HOLDER",
+      "display_name": "Cup Holder",
+      "display_uom": "PIECE",
+      "delivery_lane": "Dry",
+      "disabled": 0
+    },
+    {
+      "group_code": "GRP-FRESH-RIPE-MANGO",
+      "display_name": "Fresh Ripe Mango",
+      "display_uom": "KG",
+      "delivery_lane": "Frozen",
+      "disabled": 0
+    },
+    {
+      "group_code": "GRP-FROZEN-MANGO",
+      "display_name": "Frozen Mango",
+      "display_uom": "KG",
+      "delivery_lane": "Frozen",
+      "disabled": 0
+    },
+    {
+      "group_code": "GRP-LECHE-FLAN-X",
+      "display_name": "Leche Flan",
+      "display_uom": "PIECE",
+      "delivery_lane": "Frozen",
+      "disabled": 0
+    },
+    {
+      "group_code": "GRP-RAG",
+      "display_name": "Rag",
+      "display_uom": "PIECE",
+      "delivery_lane": "Dry",
+      "disabled": 0
+    },
+    {
+      "group_code": "GRP-SAGO",
+      "display_name": "Sago",
+      "display_uom": "KG",
+      "delivery_lane": "Frozen",
+      "disabled": 0
+    }
+  ],
+  "ok": true
+}
