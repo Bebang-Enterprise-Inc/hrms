@@ -21,6 +21,8 @@ from hrms.utils.bei_config import get_company
 
 # P0-10: Import centralized RBAC role sets
 from hrms.utils.scm_roles import RATE_MANAGEMENT_ROLES, SCM_BILLING_ROLES, check_scm_permission
+from hrms.utils.sentry import set_backend_observability_context
+from hrms.utils.supply_chain_contracts import resolve_store_buyer_entity
 
 
 def _check_rate_permission():
@@ -464,7 +466,18 @@ def get_pending_billings(store: str | None = None, billing_type: str | None = No
 
 @frappe.whitelist()
 def approve_billing(billing_name: str):
-	"""Finance approves a pending billing. Pending → Approved."""
+	"""Finance approves a pending billing. Pending → Approved.
+
+	S168 Phase 10 (R2-C10): On approval, also auto-create a VAT-applied
+	Sales Invoice on the BKI side for the delivery/logistics fees and
+	link it back to the Billing Schedule via custom_bei_store_billing /
+	sales_invoice (custom fields per Phase 1 schema).
+	"""
+	set_backend_observability_context(
+		module="logistics",
+		action="approve_billing",
+		mutation_type="update",
+	)
 	_check_billing_permission("approve billings")
 	billing = frappe.get_doc("BEI Billing Schedule", billing_name)
 	if billing.status != "Pending":
@@ -472,7 +485,465 @@ def approve_billing(billing_name: str):
 
 	billing.status = "Approved"
 	billing.save()
-	return {"success": True, "status": "Approved"}
+
+	# S168 Phase 10: auto-create fee Sales Invoice (VAT applied) on approval
+	si_name = None
+	try:
+		frappe.db.savepoint("s168_approve_billing_si")
+		si_name = _create_fee_sales_invoice_for_billing(billing)
+		if si_name:
+			# Reverse link via BEI Billing Schedule-sales_invoice custom field
+			try:
+				frappe.db.savepoint("s168_billing_rollup")
+				frappe.db.set_value(
+					"BEI Billing Schedule", billing.name, "sales_invoice", si_name
+				)
+				frappe.db.release_savepoint("s168_billing_rollup")
+			except Exception:
+				try:
+					frappe.db.sql("ROLLBACK TO SAVEPOINT s168_billing_rollup")
+				except Exception:
+					pass
+				frappe.log_error(
+					f"S168 Phase 10: rollup link failed for {billing.name}: {frappe.get_traceback()}",
+					"S168 Approve Billing Rollup",
+				)
+		frappe.db.release_savepoint("s168_approve_billing_si")
+	except Exception:
+		try:
+			frappe.db.sql("ROLLBACK TO SAVEPOINT s168_approve_billing_si")
+		except Exception:
+			pass
+		frappe.log_error(
+			f"S168 Phase 10: fee SI creation failed for {billing.name}: {frappe.get_traceback()}",
+			"S168 Approve Billing SI",
+		)
+
+	return {"success": True, "status": "Approved", "fee_sales_invoice": si_name}
+
+
+def _create_fee_sales_invoice_for_billing(billing) -> str | None:
+	"""Create + submit a VAT-applied Sales Invoice for delivery/logistics
+	fees on a BEI Billing Schedule. Returns SI name or None if nothing
+	billable. Mirrors hrms/api/commissary.py::build_bki_store_sale_invoice
+	but for service fees instead of goods. Per CFO Q1: 12% VAT MUST apply.
+	"""
+	delivery_fee = flt(getattr(billing, "delivery_fee", 0) or 0)
+	logistics_fee = flt(getattr(billing, "logistics_fee", 0) or 0)
+	if delivery_fee <= 0 and logistics_fee <= 0:
+		return None
+
+	store_name = getattr(billing, "store", None)
+	if not store_name:
+		frappe.throw(_("Billing {0} has no store; cannot create fee SI").format(billing.name))
+	entity_row = resolve_store_buyer_entity(
+		warehouse_docname=store_name, store_name=store_name
+	)
+	customer = (entity_row or {}).get("buyer_entity_name") or ""
+	if not customer:
+		frappe.throw(
+			_(
+				"S168 Phase 10: no buyer entity resolved for store {0}; cannot create fee SI."
+			).format(store_name)
+		)
+	if not frappe.db.exists("Customer", customer):
+		frappe.throw(
+			_("S168 Phase 10: Customer {0} for store {1} does not exist.").format(customer, store_name)
+		)
+
+	settings = frappe.get_single("BEI Settings")
+	vat_template = (getattr(settings, "bki_sales_vat_template", "") or "").strip()
+	if not vat_template:
+		frappe.throw(
+			_("BEI Settings.bki_sales_vat_template is not set. Cannot create fee SI without 12% VAT (CFO Q1).")
+		)
+	income_account = (getattr(settings, "bki_sales_income_account", "") or "").strip()
+	if not income_account:
+		frappe.throw(_("BEI Settings.bki_sales_income_account is not set. Cannot create fee SI."))
+	debit_to = (getattr(settings, "bki_sales_debit_to_account", "") or "").strip()
+
+	bki_company = get_company("BKI") or get_company()
+
+	fee_item = (
+		getattr(settings, "bki_logistics_fee_item", None)
+		or getattr(settings, "logistics_fee_item", None)
+		or "LOGISTICS-FEE"
+	)
+	if not frappe.db.exists("Item", fee_item):
+		alt = frappe.db.get_value(
+			"Item", {"item_name": ["like", "Logistics Fee%"], "disabled": 0}, "name"
+		)
+		if alt:
+			fee_item = alt
+		else:
+			frappe.throw(
+				_(
+					"S168 Phase 10: No Item found for logistics/delivery fees. "
+					"Finance must create a service Item before approving billing."
+				)
+			)
+
+	si = frappe.new_doc("Sales Invoice")
+	si.company = bki_company
+	si.customer = customer
+	si.is_internal_customer = 0
+	si.posting_date = nowdate()
+	si.set_posting_time = 1
+	si.currency = frappe.db.get_value("Company", bki_company, "default_currency") or "PHP"
+	si.taxes_and_charges = vat_template
+	if debit_to:
+		si.debit_to = debit_to
+	si.custom_bei_store_billing = billing.name
+	si.remarks = (
+		f"S168 Phase 10: Logistics/Delivery fee billing for {store_name} "
+		f"({getattr(billing, 'billing_type', '')} {getattr(billing, 'billing_period', '') or ''}). "
+		f"Source: BEI Billing Schedule {billing.name}."
+	)
+
+	cost_center = frappe.db.get_value("Company", bki_company, "cost_center")
+
+	if delivery_fee > 0:
+		si.append(
+			"items",
+			{
+				"item_code": fee_item,
+				"qty": 1,
+				"rate": delivery_fee,
+				"description": f"Delivery fee — {store_name} ({billing.name})",
+				"income_account": income_account,
+				"cost_center": cost_center,
+			},
+		)
+	if logistics_fee > 0:
+		si.append(
+			"items",
+			{
+				"item_code": fee_item,
+				"qty": 1,
+				"rate": logistics_fee,
+				"description": f"Logistics fee — {store_name} ({billing.name})",
+				"income_account": income_account,
+				"cost_center": cost_center,
+			},
+		)
+
+	try:
+		from erpnext.controllers.accounts_controller import get_taxes_and_charges
+
+		taxes = get_taxes_and_charges("Sales Taxes and Charges Template", vat_template) or []
+		for tax in taxes:
+			si.append("taxes", tax)
+	except Exception:
+		frappe.log_error(
+			f"S168 Phase 10: failed to load taxes from template {vat_template}: {frappe.get_traceback()}",
+			"S168 Approve Billing SI",
+		)
+		raise
+
+	si.insert(ignore_permissions=True)
+	si.submit()
+	return si.name
+
+
+# ================================
+# PHASE 11 — POST-SUBMISSION CREDIT NOTES (S168 R1 Amendment 3)
+# ================================
+
+
+@frappe.whitelist()
+def create_store_sale_credit_note(
+	sales_invoice: str,
+	reason: str,
+	credit_lines: list | str | None = None,
+	attachments: list | str | None = None,
+):
+	"""S168 Phase 11: Create a Return Sales Invoice (credit note) against
+	an already-submitted store sale SI. Used for post-delivery amendments
+	(short delivery, item defects, etc.)."""
+	set_backend_observability_context(
+		module="store",
+		action="create_store_sale_credit_note",
+		mutation_type="create",
+	)
+	check_scm_permission(SCM_BILLING_ROLES, "create store sale credit notes")
+
+	if not sales_invoice:
+		frappe.throw(_("sales_invoice is required"))
+	if not reason or not str(reason).strip():
+		frappe.throw(_("reason is required for credit notes"))
+
+	if isinstance(credit_lines, str):
+		import json as _json
+		try:
+			credit_lines = _json.loads(credit_lines)
+		except Exception:
+			frappe.throw(_("credit_lines must be a JSON list"))
+	if not credit_lines or not isinstance(credit_lines, list):
+		frappe.throw(_("credit_lines must be a non-empty list"))
+
+	original = frappe.get_doc("Sales Invoice", sales_invoice)
+	if original.docstatus != 1:
+		frappe.throw(_("Can only credit submitted Sales Invoices"))
+
+	credit_note_name = None
+	try:
+		frappe.db.savepoint("s168_credit_note")
+
+		cn = frappe.new_doc("Sales Invoice")
+		cn.is_return = 1
+		cn.return_against = original.name
+		cn.company = original.company
+		cn.customer = original.customer
+		cn.currency = original.currency
+		cn.posting_date = nowdate()
+		cn.set_posting_time = 1
+		cn.taxes_and_charges = original.taxes_and_charges
+		if getattr(original, "debit_to", None):
+			cn.debit_to = original.debit_to
+		for fld in (
+			"custom_bei_receiving",
+			"custom_bei_store_order",
+			"custom_bei_store_billing",
+			"custom_stock_entry",
+			"custom_delivery_receipt_no",
+		):
+			val = getattr(original, fld, None)
+			if val:
+				try:
+					setattr(cn, fld, val)
+				except Exception:
+					pass
+		cn.remarks = f"S168 Phase 11 credit note vs {original.name}. Reason: {reason}"
+
+		original_items = {row.item_code: row for row in original.items}
+
+		for line in credit_lines:
+			item_code = (line or {}).get("item_code")
+			qty = flt((line or {}).get("qty"))
+			if not item_code or qty <= 0:
+				continue
+			if item_code not in original_items:
+				frappe.throw(
+					_("Item {0} is not on original Sales Invoice {1}").format(item_code, original.name)
+				)
+			src = original_items[item_code]
+			rate = flt((line or {}).get("rate") or src.rate)
+			cn.append(
+				"items",
+				{
+					"item_code": item_code,
+					"qty": -qty,
+					"uom": src.uom,
+					"rate": rate,
+					"income_account": src.income_account,
+					"warehouse": src.warehouse,
+					"cost_center": src.cost_center,
+				},
+			)
+
+		if not cn.items:
+			frappe.throw(_("No valid credit lines provided"))
+
+		if cn.taxes_and_charges:
+			try:
+				from erpnext.controllers.accounts_controller import get_taxes_and_charges
+
+				taxes = (
+					get_taxes_and_charges("Sales Taxes and Charges Template", cn.taxes_and_charges) or []
+				)
+				for tax in taxes:
+					cn.append("taxes", tax)
+			except Exception:
+				frappe.log_error(
+					f"S168 Phase 11: failed to load taxes for credit note vs {original.name}: {frappe.get_traceback()}",
+					"S168 Credit Note",
+				)
+
+		cn.insert(ignore_permissions=True)
+		cn.submit()
+		credit_note_name = cn.name
+
+		if attachments:
+			frappe.logger().info(
+				f"S168 Phase 11 credit note {credit_note_name} declared {len(attachments)} attachment(s)."
+			)
+
+		frappe.db.release_savepoint("s168_credit_note")
+	except Exception:
+		try:
+			frappe.db.sql("ROLLBACK TO SAVEPOINT s168_credit_note")
+		except Exception:
+			pass
+		frappe.log_error(
+			f"S168 Phase 11: credit note creation failed for {sales_invoice}: {frappe.get_traceback()}",
+			"S168 Credit Note",
+		)
+		raise
+
+	return {
+		"success": True,
+		"credit_note": credit_note_name,
+		"original_sales_invoice": sales_invoice,
+		"reason": reason,
+	}
+
+
+# ================================
+# PHASE 14 — BILLING HOLDS DASHBOARD (S168 R1 Amendment 2)
+# ================================
+
+
+@frappe.whitelist()
+def get_billing_holds():
+	"""S168 Phase 14: Return draft Sales Invoices that are linked to a
+	BEI Store Receiving but failed to auto-submit."""
+	set_backend_observability_context(
+		module="store",
+		action="get_billing_holds",
+		mutation_type="read",
+	)
+	check_scm_permission(SCM_BILLING_ROLES, "view billing holds")
+
+	rows = frappe.get_all(
+		"Sales Invoice",
+		filters={"docstatus": 0, "custom_bei_receiving": ["is", "set"]},
+		fields=[
+			"name",
+			"customer",
+			"custom_bei_receiving",
+			"custom_bei_store_order",
+			"custom_bei_store_billing",
+			"grand_total",
+			"posting_date",
+			"creation",
+		],
+		order_by="creation desc",
+		limit_page_length=500,
+	)
+	return rows
+
+
+@frappe.whitelist()
+def release_billing_hold(sales_invoice: str):
+	"""S168 Phase 14: Submit a held draft Sales Invoice."""
+	set_backend_observability_context(
+		module="store",
+		action="release_billing_hold",
+		mutation_type="update",
+	)
+	check_scm_permission(SCM_BILLING_ROLES, "release billing holds")
+	if not sales_invoice:
+		frappe.throw(_("sales_invoice is required"))
+
+	try:
+		frappe.db.savepoint("s168_release_hold")
+		si = frappe.get_doc("Sales Invoice", sales_invoice)
+		if si.docstatus != 0:
+			frappe.throw(_("Sales Invoice {0} is not a draft").format(sales_invoice))
+		si.submit()
+		frappe.db.release_savepoint("s168_release_hold")
+	except Exception:
+		try:
+			frappe.db.sql("ROLLBACK TO SAVEPOINT s168_release_hold")
+		except Exception:
+			pass
+		frappe.log_error(
+			f"S168 Phase 14: release_billing_hold failed for {sales_invoice}: {frappe.get_traceback()}",
+			"S168 Billing Holds",
+		)
+		raise
+
+	return {"success": True, "sales_invoice": sales_invoice, "status": "Submitted"}
+
+
+@frappe.whitelist()
+def reject_billing_hold(sales_invoice: str, reason: str):
+	"""S168 Phase 14: Reject (delete if draft, cancel if submitted) a held SI."""
+	set_backend_observability_context(
+		module="store",
+		action="reject_billing_hold",
+		mutation_type="delete",
+	)
+	check_scm_permission(SCM_BILLING_ROLES, "reject billing holds")
+	if not sales_invoice:
+		frappe.throw(_("sales_invoice is required"))
+	if not reason or not str(reason).strip():
+		frappe.throw(_("reason is required when rejecting a billing hold"))
+
+	try:
+		frappe.db.savepoint("s168_reject_hold")
+		si = frappe.get_doc("Sales Invoice", sales_invoice)
+		if si.docstatus == 0:
+			si.add_comment("Comment", f"S168 Phase 14 reject reason: {reason}")
+			si.delete(ignore_permissions=True)
+		elif si.docstatus == 1:
+			si.cancel()
+			frappe.db.set_value(
+				"Sales Invoice",
+				sales_invoice,
+				"remarks",
+				(si.remarks or "") + f"\nS168 Phase 14 reject reason: {reason}",
+			)
+		else:
+			frappe.throw(_("Sales Invoice {0} is already cancelled").format(sales_invoice))
+		frappe.db.release_savepoint("s168_reject_hold")
+	except Exception:
+		try:
+			frappe.db.sql("ROLLBACK TO SAVEPOINT s168_reject_hold")
+		except Exception:
+			pass
+		frappe.log_error(
+			f"S168 Phase 14: reject_billing_hold failed for {sales_invoice}: {frappe.get_traceback()}",
+			"S168 Billing Holds",
+		)
+		raise
+
+	return {"success": True, "sales_invoice": sales_invoice, "status": "Rejected", "reason": reason}
+
+
+@frappe.whitelist()
+def reassign_billing_hold_customer(sales_invoice: str, new_customer: str):
+	"""S168 Phase 14: Change the customer on a held draft Sales Invoice."""
+	set_backend_observability_context(
+		module="store",
+		action="reassign_billing_hold_customer",
+		mutation_type="update",
+	)
+	check_scm_permission(SCM_BILLING_ROLES, "reassign billing hold customer")
+	if not sales_invoice:
+		frappe.throw(_("sales_invoice is required"))
+	if not new_customer:
+		frappe.throw(_("new_customer is required"))
+	if not frappe.db.exists("Customer", new_customer):
+		frappe.throw(_("Customer {0} does not exist").format(new_customer))
+
+	try:
+		frappe.db.savepoint("s168_reassign_hold")
+		si = frappe.get_doc("Sales Invoice", sales_invoice)
+		if si.docstatus != 0:
+			frappe.throw(
+				_("Cannot reassign customer on submitted Sales Invoice {0}").format(sales_invoice)
+			)
+		old_customer = si.customer
+		si.customer = new_customer
+		si.add_comment(
+			"Comment",
+			f"S168 Phase 14 customer reassigned: {old_customer} → {new_customer}",
+		)
+		si.save(ignore_permissions=True)
+		frappe.db.release_savepoint("s168_reassign_hold")
+	except Exception:
+		try:
+			frappe.db.sql("ROLLBACK TO SAVEPOINT s168_reassign_hold")
+		except Exception:
+			pass
+		frappe.log_error(
+			f"S168 Phase 14: reassign_billing_hold_customer failed for {sales_invoice}: {frappe.get_traceback()}",
+			"S168 Billing Holds",
+		)
+		raise
+
+	return {"success": True, "sales_invoice": sales_invoice, "customer": new_customer}
 
 
 @frappe.whitelist()
