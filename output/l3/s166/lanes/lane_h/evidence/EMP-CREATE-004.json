@@ -1,0 +1,138 @@
+{
+  "scenario": "EMP-CREATE-004",
+  "final_outcome": "PASS",
+  "unmapped_branch": "CAPITAL HOUSE",
+  "candidates_tried": [
+    "BRITTANY OFFICE",
+    "CAPITAL HOUSE"
+  ],
+  "attempts": [
+    {
+      "candidate_idx": 0,
+      "branch": "BRITTANY OFFICE",
+      "first_name": "Juan",
+      "last_name": "Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+      "started_at": "2026-04-07T04:04:20.981Z",
+      "steps": [
+        "dialog opened",
+        "pre screenshot: output\\l3\\s166\\lanes\\lane_h\\screenshots\\EMP-CREATE-004_candidate0_BRITTANY_OFFICE_pre.png",
+        "text fields filled",
+        "gender=Male",
+        "company=Bebang Enterprise Inc.",
+        "branch=BRITTANY OFFICE",
+        "department=Accounts - BSC",
+        "designation=Cashier",
+        "employment_type=Regular",
+        "submit disabled=false",
+        "submit clicked",
+        "toast=\"Employee BEI-EMP-2026-00004 created. Bio ID 9001882 enrolled on device UDP3251600245.\"",
+        "post screenshot: output\\l3\\s166\\lanes\\lane_h\\screenshots\\EMP-CREATE-004_candidate0_BRITTANY_OFFICE_post.png"
+      ],
+      "toast_text": "Employee BEI-EMP-2026-00004 created. Bio ID 9001882 enrolled on device UDP3251600245.",
+      "api_response": {
+        "message": {
+          "success": true,
+          "data": {
+            "employee_id": "BEI-EMP-2026-00004",
+            "employee_name": "Juan Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+            "bio_id": "9001882",
+            "adms_enrollment": {
+              "enrolled": true,
+              "reason": null,
+              "device_sn": "UDP3251600245"
+            }
+          }
+        }
+      },
+      "api_status": 200,
+      "created_employee_name": null,
+      "outcome": "FAILED",
+      "adms_reason": null
+    },
+    {
+      "candidate_idx": 1,
+      "branch": "CAPITAL HOUSE",
+      "first_name": "Maria",
+      "last_name": "Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+      "started_at": "2026-04-07T04:04:42.383Z",
+      "steps": [
+        "dialog opened",
+        "pre screenshot: output\\l3\\s166\\lanes\\lane_h\\screenshots\\EMP-CREATE-004_candidate1_CAPITAL_HOUSE_pre.png",
+        "text fields filled",
+        "gender=Male",
+        "company=Bebang Enterprise Inc.",
+        "branch=CAPITAL HOUSE",
+        "department=Accounts - BSC",
+        "designation=Cashier",
+        "employment_type=Regular",
+        "submit disabled=false",
+        "submit clicked",
+        "toast=\"Employee BEI-EMP-2026-00004 created. No biometric device mapped to CAPITAL HOUSE — enroll manually.\"",
+        "post screenshot: output\\l3\\s166\\lanes\\lane_h\\screenshots\\EMP-CREATE-004_candidate1_CAPITAL_HOUSE_post.png"
+      ],
+      "toast_text": "Employee BEI-EMP-2026-00004 created. No biometric device mapped to CAPITAL HOUSE — enroll manually.",
+      "api_response": {
+        "message": {
+          "success": true,
+          "data": {
+            "employee_id": "BEI-EMP-2026-00004",
+            "employee_name": "Maria Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+            "bio_id": "9001883",
+            "adms_enrollment": {
+              "enrolled": false,
+              "reason": "NO_DEVICE_FOR_BRANCH",
+              "device_sn": null
+            }
+          }
+        }
+      },
+      "api_status": 200,
+      "created_employee_name": null,
+      "outcome": "NO_DEVICE",
+      "adms_reason": null
+    }
+  ],
+  "winning_attempt": {
+    "candidate_idx": 1,
+    "branch": "CAPITAL HOUSE",
+    "first_name": "Maria",
+    "last_name": "Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+    "started_at": "2026-04-07T04:04:42.383Z",
+    "steps": [
+      "dialog opened",
+      "pre screenshot: output\\l3\\s166\\lanes\\lane_h\\screenshots\\EMP-CREATE-004_candidate1_CAPITAL_HOUSE_pre.png",
+      "text fields filled",
+      "gender=Male",
+      "company=Bebang Enterprise Inc.",
+      "branch=CAPITAL HOUSE",
+      "department=Accounts - BSC",
+      "designation=Cashier",
+      "employment_type=Regular",
+      "submit disabled=false",
+      "submit clicked",
+      "toast=\"Employee BEI-EMP-2026-00004 created. No biometric device mapped to CAPITAL HOUSE — enroll manually.\"",
+      "post screenshot: output\\l3\\s166\\lanes\\lane_h\\screenshots\\EMP-CREATE-004_candidate1_CAPITAL_HOUSE_post.png"
+    ],
+    "toast_text": "Employee BEI-EMP-2026-00004 created. No biometric device mapped to CAPITAL HOUSE — enroll manually.",
+    "api_response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Maria Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+          "bio_id": "9001883",
+          "adms_enrollment": {
+            "enrolled": false,
+            "reason": "NO_DEVICE_FOR_BRANCH",
+            "device_sn": null
+          }
+        }
+      }
+    },
+    "api_status": 200,
+    "created_employee_name": null,
+    "outcome": "NO_DEVICE",
+    "adms_reason": null
+  },
+  "fatal": null
+}

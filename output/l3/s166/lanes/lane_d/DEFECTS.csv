@@ -1,0 +1,3 @@
+scenario,classification,severity,summary
+EMP-OVERTIME-001,product-gap,critical,"Self-service OT filing UI does not exist on production. No File OT / New OT / Request OT / Apply OT button found for crew/supervisor/hr on /dashboard/hr/overtime. Alternate routes /dashboard/hr/overtime/new and /dashboard/hr/overtime/apply return 404. Verified iter 1."
+EMP-LEAVE-003,product-defect,high,"Leave Application HR-LAP-2026-00118 was approved (status=Approved docstatus=1 total_leave_days=1.0) via real UI Approve button by test.supervisor but no Leave Ledger Entry was created. Leave balance ledger pipeline is not running on approval. Production leave balances will not deduct."

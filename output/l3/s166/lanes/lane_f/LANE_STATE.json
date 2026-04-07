@@ -1,0 +1,15 @@
+{
+  "lane": "F",
+  "sprint": "S166",
+  "type": "ux-gaps-and-stubs",
+  "scenarios_total": 15,
+  "scenarios_observed": 15,
+  "mutations_made": 0,
+  "defects_total": 15,
+  "defects_critical": 5,
+  "defects_high": 5,
+  "defects_medium": 3,
+  "defects_not_reproduced": 2,
+  "runtime_seconds": 120,
+  "completed_pht": "4/7/2026, 12:10:37"
+}

@@ -1,0 +1,29 @@
+{
+  "scenario_id": "EMP-LEAVE-003",
+  "timestamp_pht": "2026-04-07T13:46:47+08:00",
+  "fix_iteration": 1,
+  "actions": [
+    "queried Leave Application HR-LAP-2026-00118 → status=Approved, docstatus=1, total_leave_days=1.0",
+    "queried Leave Ledger Entry where transaction_name=HR-LAP-2026-00118 → empty",
+    "queried Leave Ledger Entry where transaction_name LIKE HR-LAP-2026-001% → empty"
+  ],
+  "target_leave": "HR-LAP-2026-00118",
+  "leave_doc": {
+    "status": "Approved",
+    "docstatus": 1,
+    "leave_type": "Casual Leave",
+    "from_date": "2026-04-14",
+    "total_leave_days": 1,
+    "description": "FIX-ITER1-APPROVE-1775538808867 — L3 retest approve path",
+    "modified_by": "test.supervisor@bebang.ph"
+  },
+  "ledger_entries": [],
+  "ledger_delta": 0,
+  "verdict": "DEFECT-PASS",
+  "defect": {
+    "severity": "high",
+    "summary": "Leave Application HR-LAP-2026-00118 was approved (status=Approved, docstatus=1, total_leave_days=1.0) by test.supervisor via the real UI Approve button, but no Leave Ledger Entry was created. The leave balance ledger pipeline is not running on approval. This means leave balances will NOT be deducted in production for any approved leave."
+  },
+  "passed": false,
+  "passed_with_defect": true
+}

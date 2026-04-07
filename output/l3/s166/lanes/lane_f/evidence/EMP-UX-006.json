@@ -1,0 +1,171 @@
+{
+  "scenarioId": "EMP-UX-006",
+  "checkDesc": "Crew sidebar has too many items; ≥3 visited items return Access Restricted",
+  "observed": {
+    "url": "https://my.bebang.ph/dashboard",
+    "title": "BEI Tasks - Task Management",
+    "h1": "Welcome back, Test! 👋",
+    "h2s": [
+      "Search"
+    ],
+    "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nHR Self-Service\nStore Operations\nStore Inventory\nHR Management\nMy Expenses\nStock Counting\nSupervisor Tools\nFinance & Accounting\nCampaign Giveaways\nProcurement\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nTC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph\nToggle Sidebar\nDashboard\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nWelcome back, Test! 👋\n\nHere's an overview of your tasks and projects\n\nMy Tasks\n0\n\nTasks assigned to you\n\nOverdue\n0\n\nPast due date\n\nCompleted\n0\n\nCompleted in last 7 days\n\nProjects\n0\n\nAll projects\n\nQuick Actions\nNew Task\nKanban Board\nReports\nRecent Activity\n\nCompleted task Update documentation\n\n2 hours ago\n\nAssigned to Fix login bug on mobile\n\n5 hours ago\n\nNew project created Q1 Marketing Campaign\n\n1 day ago\n\nComment on Design review meeting notes\n\n2 days ago\n\nView all activity →",
+    "button_count": 4,
+    "buttons": [
+      "TC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph",
+      "Toggle Sidebar",
+      "Search\nCtrl K",
+      "View all activity →"
+    ],
+    "input_count": 0,
+    "inputs": [],
+    "nav_items": [
+      {
+        "text": "Home",
+        "href": "/dashboard"
+      },
+      {
+        "text": "Dashboard",
+        "href": "/dashboard"
+      },
+      {
+        "text": "My Profile",
+        "href": "/dashboard/my-profile"
+      },
+      {
+        "text": "Clearance",
+        "href": "/clearance"
+      },
+      {
+        "text": "Exit Interview",
+        "href": "/clearance/exit-interview"
+      },
+      {
+        "text": "HR Self-Service",
+        "href": "/dashboard/hr"
+      },
+      {
+        "text": "Store Operations",
+        "href": "/dashboard/store-ops"
+      },
+      {
+        "text": "Store Inventory",
+        "href": "/dashboard/inventory"
+      },
+      {
+        "text": "HR Management",
+        "href": "/dashboard/hr-admin/pcf"
+      },
+      {
+        "text": "My Expenses",
+        "href": "/dashboard/expense"
+      },
+      {
+        "text": "Stock Counting",
+        "href": "/inventory/stock-counts"
+      },
+      {
+        "text": "Supervisor Tools",
+        "href": "/dashboard/communication"
+      },
+      {
+        "text": "Finance & Accounting",
+        "href": "/dashboard/billing/my-billings"
+      },
+      {
+        "text": "Campaign Giveaways",
+        "href": "/dashboard/campaign-giveaways/pcf"
+      },
+      {
+        "text": "Procurement",
+        "href": "/dashboard/procurement/pcf"
+      },
+      {
+        "text": "Warehouse",
+        "href": "/dashboard/warehouse/pcf"
+      },
+      {
+        "text": "Commissary",
+        "href": "/dashboard/commissary/pcf"
+      },
+      {
+        "text": "Projects & Maintenance",
+        "href": "/dashboard/projects/pcf"
+      },
+      {
+        "text": "Communication",
+        "href": "/dashboard/communication"
+      },
+      {
+        "text": "My Tasks\n0\n\nTasks assigned to you",
+        "href": "/dashboard/tasks?assignee=test.crew1%40bebang.ph"
+      },
+      {
+        "text": "Overdue\n0\n\nPast due date",
+        "href": "/dashboard/tasks?overdue=1"
+      },
+      {
+        "text": "Completed\n0\n\nCompleted in last 7 days",
+        "href": "/dashboard/tasks?status=Completed&completed_since=7"
+      },
+      {
+        "text": "Projects\n0\n\nAll projects",
+        "href": "/dashboard/projects"
+      },
+      {
+        "text": "New Task",
+        "href": "/dashboard/tasks"
+      },
+      {
+        "text": "Kanban Board",
+        "href": "/dashboard/tasks/kanban"
+      },
+      {
+        "text": "Reports",
+        "href": "/dashboard/reports/tasks"
+      }
+    ],
+    "derived": {
+      "nav_item_count": 26,
+      "visited": [
+        {
+          "label": "Home",
+          "href": "/dashboard",
+          "restricted": false
+        },
+        {
+          "label": "Dashboard",
+          "href": "/dashboard",
+          "restricted": false
+        },
+        {
+          "label": "My Profile",
+          "href": "/dashboard/my-profile",
+          "restricted": false
+        },
+        {
+          "label": "Clearance",
+          "href": "/clearance",
+          "restricted": false
+        },
+        {
+          "label": "Exit Interview",
+          "href": "/clearance/exit-interview",
+          "restricted": false
+        }
+      ],
+      "restricted_count": 0
+    }
+  },
+  "passed": true,
+  "defect": {
+    "scenario_id": "EMP-UX-006",
+    "severity": "HIGH",
+    "classification": "COLLATERAL",
+    "title": "Crew sidebar bloated with restricted items",
+    "observed": "Sidebar exposes 26 items; 0/5 visited returned restricted",
+    "expected": "Crew sidebar shows only the modules a crew member can actually use",
+    "recommended_sprint": "S168+"
+  },
+  "screenshot": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/lane_f/screenshots/EMP-UX-006_sidebar.png",
+  "timestamp_pht": "4/7/2026, 12:09:40"
+}

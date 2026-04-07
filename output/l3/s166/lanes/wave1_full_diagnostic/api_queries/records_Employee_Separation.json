@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "status": 200,
+  "json": {
+    "data": [
+      {
+        "name": "HR-EMP-SEP-2026-00001"
+      }
+    ]
+  },
+  "head": "{\"data\":[{\"name\":\"HR-EMP-SEP-2026-00001\"}]}"
+}

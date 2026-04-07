@@ -1,0 +1,242 @@
+{
+  "scenarioId": "EMP-STUB-002",
+  "checkDesc": "Training page is a stub — no create program button, refers to Frappe Desk",
+  "observed": {
+    "url": "https://my.bebang.ph/dashboard/hr/training",
+    "title": "BEI Tasks - Task Management",
+    "h1": "Training & Development",
+    "h2s": [
+      "Search"
+    ],
+    "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nTraining\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nTraining & Development\n\nManage training programs, events, and track compliance.\n\nActive Programs\n0\nUpcoming Events\n0\nAvg Completion Rate\n0.0%\nPrograms\nCalendar\nCompliance\nNo Training Programs\n\nCreate training programs in Frappe to track development activities.",
+    "button_count": 6,
+    "buttons": [
+      "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+      "Toggle Sidebar",
+      "Search\nCtrl K",
+      "Programs",
+      "Calendar",
+      "Compliance"
+    ],
+    "input_count": 0,
+    "inputs": [],
+    "nav_items": [
+      {
+        "text": "Home",
+        "href": "/dashboard"
+      },
+      {
+        "text": "Dashboard",
+        "href": "/dashboard"
+      },
+      {
+        "text": "My Profile",
+        "href": "/dashboard/my-profile"
+      },
+      {
+        "text": "Clearance",
+        "href": "/clearance"
+      },
+      {
+        "text": "Exit Interview",
+        "href": "/clearance/exit-interview"
+      },
+      {
+        "text": "Supervisor Tools",
+        "href": "/dashboard/supervisor"
+      },
+      {
+        "text": "Analytics",
+        "href": "/dashboard/analytics"
+      },
+      {
+        "text": "HR Self-Service",
+        "href": "/dashboard/hr"
+      },
+      {
+        "text": "Leave",
+        "href": "/dashboard/hr/leave"
+      },
+      {
+        "text": "Attendance",
+        "href": "/dashboard/hr/attendance"
+      },
+      {
+        "text": "My Overtime",
+        "href": "/dashboard/attendance/overtime"
+      },
+      {
+        "text": "Schedule",
+        "href": "/dashboard/hr/schedule"
+      },
+      {
+        "text": "Payslip",
+        "href": "/dashboard/hr/payslip"
+      },
+      {
+        "text": "Coverage Request",
+        "href": "/dashboard/hr/coverage"
+      },
+      {
+        "text": "Official Business",
+        "href": "/dashboard/hr/official-business"
+      },
+      {
+        "text": "Official Business Check-out",
+        "href": "/dashboard/hr/official-business/checkout"
+      },
+      {
+        "text": "Official Business Check-in",
+        "href": "/dashboard/hr/official-business/checkin"
+      },
+      {
+        "text": "OB Geo Check-out",
+        "href": "/dashboard/attendance/ob-checkout"
+      },
+      {
+        "text": "OB Geo Check-in",
+        "href": "/dashboard/attendance/ob-checkin"
+      },
+      {
+        "text": "Remote Punch",
+        "href": "/dashboard/attendance/punch"
+      },
+      {
+        "text": "Punch In",
+        "href": "/dashboard/attendance/punch-in"
+      },
+      {
+        "text": "Punch Out",
+        "href": "/dashboard/attendance/punch-out"
+      },
+      {
+        "text": "Onboarding",
+        "href": "/dashboard/onboarding/me"
+      },
+      {
+        "text": "Leave Command Center",
+        "href": "/dashboard/hr-admin/leaves"
+      },
+      {
+        "text": "HR Management",
+        "href": "/dashboard/hr"
+      },
+      {
+        "text": "Employee Master",
+        "href": "/dashboard/hr/employee-master"
+      },
+      {
+        "text": "Payroll",
+        "href": "/dashboard/hr/payroll"
+      },
+      {
+        "text": "Performance",
+        "href": "/dashboard/hr/performance"
+      },
+      {
+        "text": "Regularization",
+        "href": "/dashboard/hr/performance/regularization"
+      },
+      {
+        "text": "Disciplinary",
+        "href": "/dashboard/hr/disciplinary"
+      },
+      {
+        "text": "Recruitment",
+        "href": "/dashboard/hr/recruitment"
+      },
+      {
+        "text": "Transfers",
+        "href": "/dashboard/hr/transfers"
+      },
+      {
+        "text": "Reports",
+        "href": "/dashboard/hr/reports"
+      },
+      {
+        "text": "Overtime",
+        "href": "/dashboard/hr/overtime"
+      },
+      {
+        "text": "Training",
+        "href": "/dashboard/hr/training"
+      },
+      {
+        "text": "Correction Review",
+        "href": "/dashboard/hr/attendance-correction"
+      },
+      {
+        "text": "Compliance",
+        "href": "/dashboard/hr/compliance"
+      },
+      {
+        "text": "13th Month",
+        "href": "/dashboard/hr/compliance/13th-month"
+      },
+      {
+        "text": "Separations",
+        "href": "/dashboard/hr/separations"
+      },
+      {
+        "text": "Exit Interview Analytics",
+        "href": "/dashboard/hr/exit-interview/analytics"
+      },
+      {
+        "text": "Petty Cash Fund",
+        "href": "/dashboard/hr-admin/pcf"
+      },
+      {
+        "text": "Add PCF Entry",
+        "href": "/dashboard/hr-admin/pcf/add"
+      },
+      {
+        "text": "Pending PCF",
+        "href": "/dashboard/hr-admin/pcf/pending"
+      },
+      {
+        "text": "PCF History",
+        "href": "/dashboard/hr-admin/pcf/history"
+      },
+      {
+        "text": "Biometric Monitoring",
+        "href": "/dashboard/biometric"
+      },
+      {
+        "text": "My Expenses",
+        "href": "/dashboard/expense"
+      },
+      {
+        "text": "Store Operations",
+        "href": "/dashboard/store-ops"
+      },
+      {
+        "text": "Store Inventory",
+        "href": "/dashboard/inventory"
+      },
+      {
+        "text": "Stock Counting",
+        "href": "/inventory/stock-counts"
+      },
+      {
+        "text": "Finance & Accounting",
+        "href": "/dashboard/accounting"
+      }
+    ],
+    "derived": {
+      "has_create_program_btn": false,
+      "refers_to_desk": false
+    }
+  },
+  "passed": true,
+  "defect": {
+    "scenario_id": "EMP-STUB-002",
+    "severity": "HIGH",
+    "classification": "COLLATERAL",
+    "title": "Training module is a stub — no program management",
+    "observed": "No Create Training Program button; desk-reference: false",
+    "expected": "Full training program CRUD, employee enrolment, completion tracking",
+    "recommended_sprint": "S168+"
+  },
+  "screenshot": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/lane_f/screenshots/EMP-STUB-002_observed.png",
+  "timestamp_pht": "4/7/2026, 12:10:24"
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "scenario": "EMP-CREATE-004",
+    "candidate_idx": 0,
+    "branch": "BRITTANY OFFICE",
+    "payload": {
+      "first_name": "Juan",
+      "last_name": "Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+      "date_of_birth": "1995-06-15",
+      "gender": "Male",
+      "company": "Bebang Enterprise Inc.",
+      "branch": "BRITTANY OFFICE"
+    },
+    "outcome": "FAILED",
+    "toast": "Employee BEI-EMP-2026-00004 created. Bio ID 9001882 enrolled on device UDP3251600245.",
+    "created_employee_name": null,
+    "api_status": 200,
+    "submitted_at": "2026-04-07T04:04:42.366Z"
+  },
+  {
+    "scenario": "EMP-CREATE-004",
+    "candidate_idx": 1,
+    "branch": "CAPITAL HOUSE",
+    "payload": {
+      "first_name": "Maria",
+      "last_name": "Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+      "date_of_birth": "1995-06-15",
+      "gender": "Male",
+      "company": "Bebang Enterprise Inc.",
+      "branch": "CAPITAL HOUSE"
+    },
+    "outcome": "NO_DEVICE",
+    "toast": "Employee BEI-EMP-2026-00004 created. No biometric device mapped to CAPITAL HOUSE — enroll manually.",
+    "created_employee_name": null,
+    "api_status": 200,
+    "submitted_at": "2026-04-07T04:05:02.955Z"
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "lane": "H",
+  "scenario": "EMP-CREATE-004",
+  "audited_at": "2026-04-07T04:25:00+08:00",
+  "auditor": "S166 Wave 1.5 Audit Agent (separate from runner)",
+  "verdict": "PASS",
+  "checks": {
+    "file_existence": "PASS (all required files present, non-zero)",
+    "scenario_integrity": "PASS (4/4 catalog assertions)",
+    "trial_and_error_tracked": "PASS (HR-EMP-00030 BRITTANY OFFICE discovery + HR-EMP-00031 CAPITAL HOUSE winning scenario, both in EMP_STATE.json)",
+    "unmapped_branch_in_payload": "PASS (CAPITAL HOUSE in form_submissions.json candidate_idx=1 payload.branch)",
+    "api_200": "PASS (both candidates status 200)",
+    "no_device_marker": "PASS (adms_enrollment.reason=NO_DEVICE_FOR_BRANCH, enrolled=false, device_sn=null)",
+    "bio_id_captured": "PASS (9001883 for Maria, 9001882 for Juan)",
+    "employee_id_captured": "PASS (BEI-EMP-2026-00004 returned; Frappe names HR-EMP-00030 and HR-EMP-00031)",
+    "toast_captured": "PASS ('No biometric device mapped to CAPITAL HOUSE — enroll manually.')",
+    "cleanup_evidence_in_file": "PASS (api_mutations.json shows PUT_resource_minimal status 200 with status=Left, relieving_date=2026-04-07 for both)",
+    "live_cleanup_spotcheck": "PASS (live query to hq.bebang.ph/api/resource/Employee as test.hr@bebang.ph: HR-EMP-00030 status=Left relieving_date=2026-04-07 attendance_device_id=null; HR-EMP-00031 status=Left relieving_date=2026-04-07 attendance_device_id=null; orphan hunt empty)",
+    "anti_fabrication_pngs": "PASS (all 4 PNGs valid signature, 1400x900)",
+    "anti_fabrication_trace_zip": "PASS (18.3 MB, valid PK header)",
+    "timestamps_distributed": "PASS (not clustered)",
+    "catalog_assertions_4_of_4": "PASS"
+  },
+  "notes": [
+    "SUMMARY.md shows employees_created=0 and misclassifies BRITTANY OFFICE as FAILED; LANE_STATE.json and EMP_STATE.json are the authoritative truth and were used for this audit per runner's note.",
+    "The spec allows discovery overhead (HR-EMP-00030) on mapped branches during unmapped-branch hunt. Both were soft-deleted.",
+    "test.hr@bebang.ph session on my.bebang.ph did NOT proxy Frappe cookies (returned Guest 403); auditor fell back to hq.bebang.ph direct API calls which worked and confirmed state."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "status": 200,
+  "json": {
+    "data": [
+      {
+        "name": "Bank Clearance"
+      },
+      {
+        "name": "Bank Clearance Detail"
+      }
+    ]
+  },
+  "head": "{\"data\":[{\"name\":\"Bank Clearance\"},{\"name\":\"Bank Clearance Detail\"}]}"
+}

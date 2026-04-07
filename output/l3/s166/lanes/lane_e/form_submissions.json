@@ -1,0 +1,61 @@
+[
+  {
+    "scenario_id": "EMP-CREATE-008",
+    "role": "test.crew1",
+    "type": "rbac-ui",
+    "action": "navigate /dashboard/hr/employee-master",
+    "result": "pass",
+    "evidence_ref": "evidence/EMP-CREATE-008.json"
+  },
+  {
+    "scenario_id": "EMP-RBAC-001",
+    "role": "test.crew1",
+    "type": "rbac-ui",
+    "action": "navigate /dashboard/hr/employee-master",
+    "result": "pass",
+    "evidence_ref": "evidence/EMP-RBAC-001.json"
+  },
+  {
+    "scenario_id": "EMP-CREATE-009",
+    "role": "test.crew1",
+    "type": "rbac-api",
+    "action": "POST create_employee_direct",
+    "result": "pass",
+    "evidence_ref": "evidence/EMP-CREATE-009.json",
+    "note": "verdict reconciled with EMP-CREATE-009_retry.json (403 PermissionError)"
+  },
+  {
+    "scenario_id": "EMP-RBAC-002",
+    "role": "test.crew1",
+    "type": "rbac-api",
+    "action": "POST create_employee_direct",
+    "result": "pass",
+    "evidence_ref": "evidence/EMP-RBAC-002.json",
+    "note": "verdict reconciled with EMP-CREATE-009_retry.json (403 PermissionError)"
+  },
+  {
+    "scenario_id": "EMP-RBAC-003",
+    "role": "test.crew1",
+    "type": "rbac-api",
+    "action": "set_value Employee.cell_number",
+    "result": "pass",
+    "evidence_ref": "evidence/EMP-RBAC-003.json"
+  },
+  {
+    "scenario_id": "EMP-RBAC-005",
+    "role": "test.crew1",
+    "type": "rbac-ui",
+    "action": "open EmployeeDetailDialog",
+    "result": "pass",
+    "evidence_ref": "evidence/EMP-RBAC-005.json",
+    "note": "access-restricted at route"
+  },
+  {
+    "scenario_id": "EMP-RBAC-004",
+    "role": "test.finance",
+    "type": "rbac-ui",
+    "action": "finance visibility: employee-master + sensitive-changes",
+    "result": "pass",
+    "evidence_ref": "evidence/EMP-RBAC-004.json"
+  }
+]

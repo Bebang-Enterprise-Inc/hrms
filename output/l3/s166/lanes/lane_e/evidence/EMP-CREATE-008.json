@@ -1,0 +1,13 @@
+{
+  "scenario_id": "EMP-CREATE-008",
+  "role": "test.crew1",
+  "ts": "2026-04-07T04:01:19.849Z",
+  "final_url": "https://my.bebang.ph/dashboard/hr/employee-master",
+  "http_status": 200,
+  "access_restricted_text": true,
+  "add_button_count": 0,
+  "add_button_visible": false,
+  "pass": true,
+  "screenshot": "output\\l3\\s166\\lanes\\lane_e\\screenshots\\EMP-CREATE-008_page.png",
+  "note": "crew cannot see Add New Employee"
+}

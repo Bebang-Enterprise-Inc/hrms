@@ -1,0 +1,17 @@
+{
+  "scenario_id": "EMP-RBAC-004",
+  "role": "test.finance",
+  "ts": "2026-04-07T04:01:49.690Z",
+  "employee_master": {
+    "url": "https://my.bebang.ph/dashboard/hr/employee-master",
+    "add_button_count": 1,
+    "add_button_visible": true,
+    "screenshot": "output\\l3\\s166\\lanes\\lane_e\\screenshots\\EMP-RBAC-004_employee_master.png"
+  },
+  "sensitive_changes": {
+    "url": "https://my.bebang.ph/dashboard/hr/payroll/sensitive-changes",
+    "access_restricted": false,
+    "screenshot": "output\\l3\\s166\\lanes\\lane_e\\screenshots\\EMP-RBAC-004_sensitive_changes.png"
+  },
+  "pass": true
+}

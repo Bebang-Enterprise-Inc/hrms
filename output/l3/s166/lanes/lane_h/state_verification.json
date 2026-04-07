@@ -1,0 +1,59 @@
+[
+  {
+    "check": "emp_create_004_no_device_path",
+    "scenario": "EMP-CREATE-004",
+    "status": "PASS",
+    "candidate_idx": 1,
+    "branch": "CAPITAL HOUSE",
+    "toast_text": "Employee BEI-EMP-2026-00004 created. No biometric device mapped to CAPITAL HOUSE — enroll manually.",
+    "api_response_reason": "NO_DEVICE_FOR_BRANCH",
+    "api_response_enrolled": false,
+    "api_response_device_sn": null,
+    "employee_created": "HR-EMP-00031",
+    "employee_name": "Maria Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+    "bio_id_assigned": "9001883",
+    "notes": "Toast string and adms_enrollment.reason both confirm NO_DEVICE_FOR_BRANCH. Employee was still created — server-side soft fail on device enrollment, not a hard failure on create (spec compliant)."
+  },
+  {
+    "check": "emp_create_mapped_control_path",
+    "scenario": "EMP-CREATE-004-control",
+    "status": "INFORMATIONAL",
+    "candidate_idx": 0,
+    "branch": "BRITTANY OFFICE",
+    "toast_text": "Employee BEI-EMP-2026-00004 created. Bio ID 9001882 enrolled on device UDP3251600245.",
+    "api_response_reason": null,
+    "api_response_enrolled": true,
+    "api_response_device_sn": "UDP3251600245",
+    "employee_created": "HR-EMP-00030",
+    "bio_id_assigned": "9001882",
+    "notes": "BRITTANY OFFICE unexpectedly IS mapped to device UDP3251600245 — updates the lane's assumption that office branches would be unmapped. Useful DEVICE_TO_STORE discovery data for future waves."
+  },
+  {
+    "check": "post_run_cleanup_all_orphans_soft_deleted",
+    "status": "PASS",
+    "orphans_before_cleanup": 2,
+    "orphans_after_cleanup": 0,
+    "method": "PUT /api/frappe/api/resource/Employee/{name} with body {status: 'Left', relieving_date: '2026-04-07'}",
+    "notes": "Runner's initial cleanup attempt used frappe.client.set_value which silently rejected status=Left. Second cleanup pass via PUT resource endpoint succeeded on both. attendance_device_id was also cleared on both employees (S164 pattern).",
+    "employees_cleaned": [
+      {
+        "name": "HR-EMP-00030",
+        "employee_name": "Juan Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+        "branch": "BRITTANY OFFICE",
+        "bio_id_cleared_from": "9001882",
+        "status_before": "Active",
+        "status_after": "Left",
+        "relieving_date": "2026-04-07"
+      },
+      {
+        "name": "HR-EMP-00031",
+        "employee_name": "Maria Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+        "branch": "CAPITAL HOUSE",
+        "bio_id_cleared_from": "9001883",
+        "status_before": "Active",
+        "status_after": "Left",
+        "relieving_date": "2026-04-07"
+      }
+    ]
+  }
+]

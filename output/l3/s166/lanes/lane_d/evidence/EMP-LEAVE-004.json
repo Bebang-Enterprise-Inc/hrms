@@ -1,0 +1,56 @@
+{
+  "scenario_id": "EMP-LEAVE-004",
+  "timestamp_pht": "2026-04-07T13:46:47+08:00",
+  "fix_iteration": 1,
+  "actions": [
+    "test.crew1 logged in, navigated to /dashboard/hr/leave",
+    "clicked Request Leave button",
+    "filled LeaveRequestDialog: leave_type=Leave Without Pay, from=2026-04-16, to=2026-04-16, description=FIX-ITER1-REJECT-1775539397992 — L3 retest reject path",
+    "clicked Submit Request → Frappe created HR-LAP-2026-00119",
+    "test.supervisor logged in, navigated to /dashboard/hr/leave-command-center",
+    "clicked Reject button on the pending leave",
+    "POST /api/frappe/api/method/hrms.api.leave_dashboard.bulk_action {leave_ids:[HR-LAP-2026-00119],status:Rejected} returned 200",
+    "verified via API: status=Rejected, modified_by=test.supervisor@bebang.ph"
+  ],
+  "target_leave": "HR-LAP-2026-00119",
+  "reason_discriminator": "FIX-ITER1-REJECT-1775539397992",
+  "verified_state": {
+    "status": "Rejected",
+    "docstatus": 0,
+    "leave_type": "Leave Without Pay",
+    "from_date": "2026-04-16",
+    "total_leave_days": 1,
+    "description": "FIX-ITER1-REJECT-1775539397992 — L3 retest reject path",
+    "modified_by": "test.supervisor@bebang.ph"
+  },
+  "result": {
+    "leave_name": "HR-LAP-2026-00119",
+    "rejected": true
+  },
+  "passed": true,
+  "notes": "Three reject-tagged leaves were created across UI iterations (00119/00120/00121); all three are now in Rejected state. Primary evidence is HR-LAP-2026-00119.",
+  "related_leaves": {
+    "HR-LAP-2026-00120": {
+      "status": "Rejected",
+      "docstatus": 0,
+      "leave_type": "Leave Without Pay",
+      "from_date": "2026-04-16",
+      "total_leave_days": 1,
+      "description": "FIX-ITER1-REJECT-1775539594368 — L3 retest reject path",
+      "modified_by": "test.supervisor@bebang.ph"
+    },
+    "HR-LAP-2026-00121": {
+      "status": "Rejected",
+      "docstatus": 0,
+      "leave_type": "Leave Without Pay",
+      "from_date": "2026-04-16",
+      "total_leave_days": 1,
+      "description": "FIX-ITER1-REJECT-1775539773703 — L3 retest reject path"
+    }
+  },
+  "screenshots": {
+    "pre": "EMP-LEAVE-004_pre.png",
+    "post": "EMP-LEAVE-004_post.png",
+    "queue_pre": "EMP-LEAVE-004_queue_pre.png"
+  }
+}

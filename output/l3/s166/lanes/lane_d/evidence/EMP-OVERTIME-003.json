@@ -1,0 +1,58 @@
+{
+  "scenario_id": "EMP-OVERTIME-003",
+  "timestamp_pht": "2026-04-07T13:46:47+08:00",
+  "fix_iteration": 1,
+  "status": "SKIP",
+  "reason": "PRODUCT_GAP: OT filing UI does not exist for any role on production",
+  "diagnostic": {
+    "ui_exists": false,
+    "verdict": "PRODUCT_GAP",
+    "evidence_file": "OT_DIAGNOSTIC.md",
+    "summary": "Self-service OT filing UI does not exist on production. Verified across 3 roles (crew, supervisor, hr) on /dashboard/hr/overtime and 3 alternate routes (/dashboard/hr/overtime/new, /dashboard/hr/overtime/apply, /dashboard/hr/attendance). For test.crew1, /dashboard/hr/overtime returns Access Restricted. For test.supervisor and test.hr, the page only shows approval controls (Approve/Reject/Clarify/Escalate) with NO File OT / New OT / Request OT / Apply OT button. Alternate routes return 404. Filing entrypoint does not exist.",
+    "per_role": {
+      "crew": {
+        "restricted": true,
+        "file_button": null
+      },
+      "supervisor": {
+        "restricted": false,
+        "file_button": null,
+        "controls_present": [
+          "Approve",
+          "Reject",
+          "Clarify",
+          "Escalate",
+          "Refresh"
+        ]
+      },
+      "hr": {
+        "restricted": false,
+        "file_button": null,
+        "controls_present": [
+          "Approve",
+          "Reject",
+          "Clarify",
+          "Escalate",
+          "Refresh"
+        ]
+      }
+    },
+    "alt_routes": {
+      "/dashboard/hr/overtime/new": {
+        "status": 404
+      },
+      "/dashboard/hr/overtime/apply": {
+        "status": 404
+      },
+      "/dashboard/hr/attendance": {
+        "status": 200,
+        "has_ot_button_text": false
+      }
+    }
+  },
+  "actions": [
+    "verified UI gap on /dashboard/hr/overtime as crew/supervisor/hr",
+    "tested 3 alternate routes (overtime/new, overtime/apply, attendance)",
+    "all routes either 404 or contain no File/New/Request OT button"
+  ]
+}

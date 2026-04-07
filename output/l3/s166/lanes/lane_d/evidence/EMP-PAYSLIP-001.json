@@ -1,0 +1,8 @@
+{
+  "scenario_id": "EMP-PAYSLIP-001",
+  "timestamp_pht": "2026-04-07T13:02:10+08:00",
+  "result": {
+    "slips": 0,
+    "has_fields": true
+  }
+}

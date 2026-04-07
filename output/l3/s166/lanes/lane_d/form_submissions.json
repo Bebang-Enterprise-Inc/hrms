@@ -1,0 +1,179 @@
+[
+  {
+    "scenario_id": "EMP-LEAVE-001",
+    "form": "LeaveRequestDialog",
+    "inputs": {
+      "leave_type": "Casual Leave",
+      "from_date": "2026-04-08",
+      "to_date": "2026-04-08",
+      "reason": "Medical check-up (L3 2026-04-07 12:58)"
+    },
+    "submit_action": "Submit Request",
+    "response": {
+      "status": 0,
+      "body": {
+        "name": "HR-LAP-2026-00117"
+      },
+      "toasts": [
+        "Employee TEST-CREW-001 has already applied for Casual Leave between 08-04-2026 and 08-04-2026 : <a href=\"https://hq.bebang.ph/app/leave-application/HR-LAP-2026-00117\">HR-LAP-2026-00117</a>"
+      ]
+    },
+    "screenshot_after": "output\\l3\\s166\\lanes\\lane_d\\screenshots\\EMP-LEAVE-001_post.png",
+    "timestamp_pht": "2026-04-07T12:58:39+08:00"
+  },
+  {
+    "scenario_id": "EMP-LEAVE-005",
+    "form": "LeaveRequestDialog",
+    "inputs": {
+      "leave_type": "Emergency Leave",
+      "from_date": "2026-04-12",
+      "to_date": "2026-04-12",
+      "reason": "Personal matter"
+    },
+    "submit_action": "Submit Request",
+    "response": {
+      "status": 200,
+      "body": {
+        "name": "HR-LAP-2026-00116"
+      }
+    },
+    "screenshot_after": "output\\l3\\s166\\lanes\\lane_d\\screenshots\\EMP-LEAVE-005_pre.png",
+    "timestamp_pht": "2026-04-07T12:59:59+08:00"
+  },
+  {
+    "scenario_id": "EMP-OVERTIME-002",
+    "form": "OvertimeApproval",
+    "inputs": {
+      "target_ot": null,
+      "action": "Approve",
+      "approved_payable_duration": 2
+    },
+    "submit_action": "Approve",
+    "response": {
+      "status": 0,
+      "body": {
+        "status": "unknown"
+      },
+      "toasts": []
+    },
+    "screenshot_after": "output\\l3\\s166\\lanes\\lane_d\\screenshots\\EMP-OVERTIME-002_post.png",
+    "timestamp_pht": "2026-04-07T13:00:57+08:00"
+  },
+  {
+    "scenario_id": "EMP-ATTENDANCE-001",
+    "form": "AttendanceCorrectionForm",
+    "inputs": {
+      "date": "2026-04-05",
+      "correction_type": "Missing Punch In",
+      "time": "08:00",
+      "reason": "forgot to punch in"
+    },
+    "submit_action": "Submit Request",
+    "response": {
+      "status": 200,
+      "body": {
+        "name": "HR-ARQ-26-04-00033"
+      },
+      "toasts": [
+        "Submission failed: Failed to submit correction request"
+      ]
+    },
+    "screenshot_after": "output\\l3\\s166\\lanes\\lane_d\\screenshots\\EMP-ATTENDANCE-001_post.png",
+    "timestamp_pht": "2026-04-07T13:01:28+08:00"
+  },
+  {
+    "scenario_id": "EMP-ATTENDANCE-002",
+    "form": "AttendanceCorrectionApproval",
+    "inputs": {
+      "target": "HR-ARQ-26-04-00033",
+      "action": "Approve"
+    },
+    "submit_action": "Approve",
+    "response": {
+      "status": 200,
+      "body": {
+        "status": "Approved"
+      },
+      "toasts": []
+    },
+    "screenshot_after": "output\\l3\\s166\\lanes\\lane_d\\screenshots\\EMP-ATTENDANCE-002_post.png",
+    "timestamp_pht": "2026-04-07T13:01:45+08:00"
+  },
+  {
+    "scenario_id": "EMP-PAYSLIP-001",
+    "form": "PayslipPage",
+    "inputs": {
+      "actor": "test.crew1"
+    },
+    "submit_action": "View",
+    "response": {
+      "status": 200,
+      "body": {
+        "slips_visible": 0,
+        "has_fields": true
+      },
+      "toasts": []
+    },
+    "screenshot_after": "output\\l3\\s166\\lanes\\lane_d\\screenshots\\EMP-PAYSLIP-001_post.png",
+    "timestamp_pht": "2026-04-07T13:02:10+08:00"
+  },
+  {
+    "scenario_id": "EMP-PAYSLIP-002",
+    "form": "PayslipPage (rbac)",
+    "inputs": {
+      "attempted_slip": null
+    },
+    "submit_action": "Direct fetch",
+    "response": {
+      "status": 403,
+      "body": {
+        "others_visible": 0
+      },
+      "toasts": []
+    },
+    "screenshot_after": "output\\l3\\s166\\lanes\\lane_d\\screenshots\\EMP-PAYSLIP-002_post.png",
+    "timestamp_pht": "2026-04-07T13:02:18+08:00"
+  },
+  {
+    "scenario_id": "EMP-LEAVE-002",
+    "form": "LeaveApprovalPage (/dashboard/hr/leave-command-center)",
+    "inputs": {
+      "target_leave": "HR-LAP-2026-00118",
+      "action": "Approve",
+      "discriminator": "FIX-ITER1-APPROVE-1775538808867"
+    },
+    "submit_action": "Approve",
+    "response": {
+      "status": 200,
+      "body": {
+        "status": "Approved",
+        "docstatus": 1
+      }
+    },
+    "actor": "test.supervisor@bebang.ph",
+    "screenshot_after": "output\\l3\\s166\\lanes\\lane_d\\screenshots\\EMP-LEAVE-002_post.png",
+    "timestamp_pht": "2026-04-07T13:46:47+08:00",
+    "fix_iteration": 1
+  },
+  {
+    "scenario_id": "EMP-LEAVE-004",
+    "form": "LeaveApprovalPage (/dashboard/hr/leave-command-center)",
+    "inputs": {
+      "target_leave": "HR-LAP-2026-00119",
+      "action": "Reject",
+      "discriminator": "FIX-ITER1-REJECT-1775539397992"
+    },
+    "submit_action": "Reject",
+    "response": {
+      "status": 200,
+      "body": {
+        "status": "Rejected",
+        "docstatus": 0
+      }
+    },
+    "actor": "test.supervisor@bebang.ph",
+    "screenshot_after": "output\\l3\\s166\\lanes\\lane_d\\screenshots\\EMP-LEAVE-004_post.png",
+    "timestamp_pht": "2026-04-07T13:46:47+08:00",
+    "fix_iteration": 1
+  }
+]

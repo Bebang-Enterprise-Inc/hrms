@@ -1,0 +1,8 @@
+{
+  "scenario_id": "EMP-ATTENDANCE-003",
+  "timestamp_pht": "2026-04-07T13:01:57+08:00",
+  "result": {
+    "attendance_rows": 2,
+    "correction_approved": true
+  }
+}

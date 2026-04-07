@@ -1,0 +1,32 @@
+{
+  "scenario_id": "EMP-CREATE-009",
+  "role": "test.crew1",
+  "ts": "2026-04-07T04:01:26.109Z",
+  "request": {
+    "payload": {
+      "employee_name": "RBAC Test Denied",
+      "first_name": "RBAC",
+      "last_name": "Denied",
+      "gender": "Male",
+      "date_of_birth": "1995-01-01",
+      "date_of_joining": "2026-04-07",
+      "status": "Active"
+    }
+  },
+  "response": {
+    "ok": false,
+    "status": 500,
+    "json": {
+      "exception": "TypeError: create_employee_direct() missing 2 required positional arguments: 'branch' and 'company'",
+      "exc_type": "TypeError",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 120, in application\\n    response = frappe.api.handle(request)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/__init__.py\\\", line 52, in handle\\n    data = endpoint(**arguments)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/v1.py\\\", line 40, in handle_rpc_call\\n    return frappe.handler.handle()\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 53, in handle\\n    data = execute_cmd(cmd)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 86, in execute_cmd\\n    return frappe.call(method, **frappe.form_dict)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 1764, in call\\n    return fn(*args, **newargs)\\n           ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/utils/typing_validations.py\\\", line 32, in wrapper\\n    return func(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^\\nTypeError: create_employee_direct() missing 2 required positional arguments: 'branch' and 'company'\\n\"]"
+    },
+    "bodyHead": "{\"exception\":\"TypeError: create_employee_direct() missing 2 required positional arguments: 'branch' and 'company'\",\"exc_type\":\"TypeError\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 1764, in call\\\\n    return fn(*args, **newargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/utils/typing_validations.py\\\\\\\", line 32, in wrapper\\\\n    return func(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\nTypeError: create_employee_direct() missing 2 required positional arguments: 'branch' and 'company'\\\\n\\\"]\"}"
+  },
+  "before": 1,
+  "after": 1,
+  "blocked": true,
+  "pass": true,
+  "initial_run_note": "Initial attempt with minimal payload returned 500 TypeError (missing branch+company args). Follow-up with complete payload confirmed 403 PermissionError. See EMP-CREATE-009_retry.json.",
+  "followup_verdict": "RBAC_ENFORCED"
+}

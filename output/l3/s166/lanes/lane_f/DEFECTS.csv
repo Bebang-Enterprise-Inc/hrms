@@ -1,0 +1,16 @@
+scenario_id,severity,classification,title,observed,expected,recommended_sprint
+EMP-UX-001,CRITICAL,COLLATERAL,HR Attendance page is self-service only — no org-wide view,"Page ""My Attendance"" has 3 buttons; no store/branch filter detected",Org-wide attendance dashboard with filters for 47 stores,S168+
+EMP-UX-002,CRITICAL,COLLATERAL,HR Schedule lacks shift assignment grid for admins,"Page ""My Schedule"" — no assign shift / roster controls detected",Admin grid to assign shifts to crew per store per day,S168+
+EMP-UX-003,CRITICAL,COLLATERAL,No admin review queue for attendance corrections,Page is a submission form only — no pending/approve/reject UI,HR admin queue to review & approve attendance corrections,S168+
+EMP-UX-004,CRITICAL,COLLATERAL,Compensation Setup row modal is empty — no editable salary fields,Row opened; no basic pay / allowance / salary structure inputs visible,"Modal with basic pay, allowances, salary structure, rate per day fields",S167
+EMP-UX-005,CRITICAL,DEFECT_NOT_REPRODUCED,Finance cannot approve/reject sensitive payroll changes from queue,Queue opened; no approve/reject buttons found in row detail,Approve & Reject actions on each pending change row,S167
+EMP-UX-006,HIGH,COLLATERAL,Crew sidebar bloated with restricted items,Sidebar exposes 26 items; 0/5 visited returned restricted,Crew sidebar shows only the modules a crew member can actually use,S168+
+EMP-UX-007,MEDIUM,COLLATERAL,Crew cannot download or print payslip,No download/print/export button on payslip detail,Download PDF and Print buttons on each payslip,S168+
+EMP-UX-008,MEDIUM,COLLATERAL,No in-app notification center for crew,No notification bell / inbox element found in dashboard chrome,Notification bell with unread count and inbox dropdown,S168+
+EMP-UX-009,HIGH,COLLATERAL,OT approval dialog cannot adjust approved hours,Approve dialog opened but no approved-hours input detected,Editable Approved Hours field so HR can approve partial OT,S168+
+EMP-UX-010,HIGH,COLLATERAL,Payroll Processing cannot be scoped per branch,No branch filter or Process-by-Branch control detected,Branch/store filter to process payroll incrementally,S168+
+EMP-STUB-001,CRITICAL,DEFECT_NOT_REPRODUCED,HR Reports section is a stub — no working reports,12 tiles present; 1/8 navigated to a working report,All 8 HR report tiles open functional reports,S168+
+EMP-STUB-002,HIGH,COLLATERAL,Training module is a stub — no program management,No Create Training Program button; desk-reference: false,"Full training program CRUD, employee enrolment, completion tracking",S168+
+EMP-STUB-003,MEDIUM,COLLATERAL,Performance module limited to Regularization,No Create Review Cycle / Assign Reviewers buttons; Regularization present=true,"Full performance management: cycles, reviewers, ratings, calibration",S168+
+EMP-STUB-004,HIGH,COLLATERAL,Disciplinary case detail is empty skeleton,Detail page text length 1004; blank=false; case link=row-clicked,"Case detail with timeline, evidence, decision, Documenso acknowledgement",S168+
+EMP-STUB-005,CRITICAL,COLLATERAL,"Clearance is read-only; no stations, item return, or Documenso integration","milestones=true, stations=false, documenso=false","Full clearance workflow: stations sign-off, item return tracking, Documenso final clearance doc",S167

@@ -1,0 +1,9 @@
+{
+  "scenario_id": "EMP-RBAC-005",
+  "role": "test.crew1",
+  "ts": "2026-04-07T04:01:34.100Z",
+  "access_restricted": true,
+  "pass": true,
+  "screenshot": "output\\l3\\s166\\lanes\\lane_e\\screenshots\\EMP-RBAC-005_landing.png",
+  "note": "page blocked at route level — implicit RBAC pass; dialog probe not applicable"
+}

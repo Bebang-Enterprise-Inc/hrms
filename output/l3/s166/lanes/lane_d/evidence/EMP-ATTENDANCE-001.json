@@ -1,0 +1,22 @@
+{
+  "scenario_id": "EMP-ATTENDANCE-001",
+  "timestamp_pht": "2026-04-07T13:01:28+08:00",
+  "actions": [
+    "form fill",
+    "submit"
+  ],
+  "network": [
+    {
+      "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.attendance_correction.submit_correction",
+      "method": "POST",
+      "status": 417,
+      "postData": "------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"attendance_date\"\r\n\r\n2026-04-05\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"correction_type\"\r\n\r\nMissing Punch In\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"actual_time\"\r\n\r\n08:00\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"reason\"\r\n\r\nL3 attendance correction — forgot to punch in (L3 2026-04-07 13:01)\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z--\r\n"
+    }
+  ],
+  "toasts": [
+    "Submission failed: Failed to submit correction request"
+  ],
+  "result": {
+    "corrName": "HR-ARQ-26-04-00033"
+  }
+}

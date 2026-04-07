@@ -1,0 +1,27 @@
+{
+  "scenario_id": "EMP-CREATE-009_retry",
+  "role": "test.crew1",
+  "ts": "2026-04-07T04:02:47.173Z",
+  "request_payload": {
+    "employee_name": "RBAC Test Denied Retry",
+    "first_name": "RBAC",
+    "last_name": "DeniedRetry",
+    "gender": "Male",
+    "date_of_birth": "1995-01-01",
+    "date_of_joining": "2026-04-07",
+    "status": "Active",
+    "branch": "Main Office",
+    "company": "Bebang Enterprise Inc."
+  },
+  "response": {
+    "status": 403,
+    "exception_head": "frappe.exceptions.PermissionError: <details><summary>You are not permitted to access this resource. Login to access</summary>Function <strong>hrms.api.employee_create.create_employee_direct</strong> is not whitelisted.</details>",
+    "body_head": "{\"exception\":\"frappe.exceptions.PermissionError: <details><summary>You are not permitted to access this resource. Login to access</summary>Function <strong>hrms.api.employee_create.create_employee_direct</strong> is not whitelisted.</details>\",\"exc_type\":\"PermissionError\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 83, in execute_cmd\\\\n    is_whitelisted(method)\\\\n  Fi"
+  },
+  "before_count": null,
+  "after_count": null,
+  "count_unchanged": true,
+  "permission_error_detected": true,
+  "blocked_by_rbac": true,
+  "final_verdict": "RBAC_ENFORCED"
+}
