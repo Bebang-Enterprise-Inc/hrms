@@ -1,0 +1,47 @@
+{
+  "tests": [
+    {
+      "name": "1. ping",
+      "payload": {
+        "event": "ping"
+      }
+    },
+    {
+      "name": "2. live order (round-trip should refuse \u2014 49575311 canonical, still exists)",
+      "payload": {
+        "event": "order.cancelled",
+        "data": {
+          "id": 49575311,
+          "location_id": 2317,
+          "cancelled_at": "2026-04-07T21:00:00+08:00",
+          "cancellation_reason": "webhook test"
+        }
+      }
+    },
+    {
+      "name": "3. already-tombstoned phantom (49575307 \u2014 404 confirm + idempotent UPDATE returns 0 rows)",
+      "payload": {
+        "event": "order.cancelled",
+        "data": {
+          "id": 49575307,
+          "location_id": 2317,
+          "cancelled_at": "2026-04-07T21:00:00+08:00",
+          "cancellation_reason": "webhook test"
+        }
+      }
+    },
+    {
+      "name": "4. invalid JSON body",
+      "payload": null
+    },
+    {
+      "name": "5. unknown event (order.created)",
+      "payload": {
+        "event": "order.created",
+        "data": {
+          "id": 99999999
+        }
+      }
+    }
+  ]
+}

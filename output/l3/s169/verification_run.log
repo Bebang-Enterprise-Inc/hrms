@@ -1,0 +1,125 @@
+S165 verify: window = 2026-03-31 -> 2026-04-06 (7 days)
+S165 verify: 12 credential groups, dry_run=False, no_heal=False, no_chat=True
+  [OK] Ever Commonwealth (2281) 2026-03-31: Mosaic=287, Supabase=287
+  [OK] CTTM Tomas Morato (2526) 2026-03-31: Mosaic=145, Supabase=145
+  [OK] Araneta Gateway (2557) 2026-03-31: Mosaic=172, Supabase=172
+  [OK] Ayala Evo (2426) 2026-03-31: Mosaic=102, Supabase=102
+  [OK] Ayala Solenad (2547) 2026-03-31: Mosaic=142, Supabase=142
+  [OK] D'Verde Calamba (2766) 2026-03-31: Mosaic=121, Supabase=121
+  [OK] SM Taytay (2812) 2026-03-31: Mosaic=263, Supabase=263
+  [OK] Vista Mall Taguig (2556) 2026-03-31: Mosaic=158, Supabase=158
+  [OK] SM SJDM (2481) 2026-03-31: Mosaic=166, Supabase=166
+  [OK] SM Clark (2646) 2026-03-31: Mosaic=98, Supabase=98
+  [OK] SM Sta. Rosa (2774) 2026-03-31: Mosaic=0, Supabase=0
+  [OK] The Grid - Rockwell (2250) 2026-03-31: Mosaic=242, Supabase=242
+  [OK] Araneta Gateway (2557) 2026-04-01: Mosaic=184, Supabase=184
+  [OK] Ever Commonwealth (2281) 2026-04-01: Mosaic=272, Supabase=272
+  [OK] CTTM Tomas Morato (2526) 2026-04-01: Mosaic=113, Supabase=113
+  [OK] Ayala Evo (2426) 2026-04-01: Mosaic=141, Supabase=141
+  [OK] Ayala Solenad (2547) 2026-04-01: Mosaic=206, Supabase=206
+  [OK] D'Verde Calamba (2766) 2026-04-01: Mosaic=144, Supabase=144
+  [OK] SM Taytay (2812) 2026-04-01: Mosaic=257, Supabase=257
+  [OK] Vista Mall Taguig (2556) 2026-04-01: Mosaic=171, Supabase=171
+  [OK] SM SJDM (2481) 2026-04-01: Mosaic=146, Supabase=146
+  [OK] SM Sta. Rosa (2774) 2026-04-01: Mosaic=0, Supabase=0
+  [OK] SM Clark (2646) 2026-04-01: Mosaic=92, Supabase=92
+  [OK] The Grid - Rockwell (2250) 2026-04-01: Mosaic=242, Supabase=242
+  [OK] Araneta Gateway (2557) 2026-04-02: Mosaic=1, Supabase=1
+  [OK] Ever Commonwealth (2281) 2026-04-02: Mosaic=266, Supabase=266
+  [OK] Ayala Evo (2426) 2026-04-02: Mosaic=234, Supabase=234
+  [OK] CTTM Tomas Morato (2526) 2026-04-02: Mosaic=252, Supabase=252
+  [OK] D'Verde Calamba (2766) 2026-04-02: Mosaic=173, Supabase=173
+  [OK] Ayala Solenad (2547) 2026-04-02: Mosaic=231, Supabase=231
+  [OK] SM Taytay (2812) 2026-04-02: Mosaic=0, Supabase=0
+  [OK] SM Clark (2646) 2026-04-02: Mosaic=77, Supabase=77
+  [OK] SM Sta. Rosa (2774) 2026-04-02: Mosaic=0, Supabase=0
+  [OK] SM SJDM (2481) 2026-04-02: Mosaic=1, Supabase=1
+  [OK] Vista Mall Taguig (2556) 2026-04-02: Mosaic=214, Supabase=214
+  [OK] The Grid - Rockwell (2250) 2026-04-02: Mosaic=0, Supabase=0
+  [OK] Ayala Evo (2426) 2026-04-03: Mosaic=193, Supabase=193
+  [OK] Araneta Gateway (2557) 2026-04-03: Mosaic=0, Supabase=0
+  [OK] Ever Commonwealth (2281) 2026-04-03: Mosaic=0, Supabase=0
+  [OK] CTTM Tomas Morato (2526) 2026-04-03: Mosaic=185, Supabase=185
+  [OK] D'Verde Calamba (2766) 2026-04-03: Mosaic=153, Supabase=153
+  [OK] Ayala Solenad (2547) 2026-04-03: Mosaic=202, Supabase=202
+  [OK] SM Taytay (2812) 2026-04-03: Mosaic=0, Supabase=0
+  [OK] SM Sta. Rosa (2774) 2026-04-03: Mosaic=0, Supabase=0
+  [OK] SM Clark (2646) 2026-04-03: Mosaic=69, Supabase=69
+  [OK] Vista Mall Taguig (2556) 2026-04-03: Mosaic=184, Supabase=184
+  [OK] SM SJDM (2481) 2026-04-03: Mosaic=0, Supabase=0
+  [OK] The Grid - Rockwell (2250) 2026-04-03: Mosaic=0, Supabase=0
+  [OK] Ayala Evo (2426) 2026-04-04: Mosaic=150, Supabase=150
+  [OK] Araneta Gateway (2557) 2026-04-04: Mosaic=233, Supabase=233
+  [OK] CTTM Tomas Morato (2526) 2026-04-04: Mosaic=176, Supabase=176
+  [OK] D'Verde Calamba (2766) 2026-04-04: Mosaic=153, Supabase=153
+  [OK] Ayala Solenad (2547) 2026-04-04: Mosaic=229, Supabase=229
+  [OK] Ever Commonwealth (2281) 2026-04-04: Mosaic=288, Supabase=288
+  [OK] SM Taytay (2812) 2026-04-04: Mosaic=317, Supabase=317
+  [OK] SM Sta. Rosa (2774) 2026-04-04: Mosaic=0, Supabase=0
+  [OK] Vista Mall Taguig (2556) 2026-04-04: Mosaic=188, Supabase=188
+  [OK] SM Clark (2646) 2026-04-04: Mosaic=175, Supabase=175
+  [OK] SM SJDM (2481) 2026-04-04: Mosaic=287, Supabase=287
+  [OK] The Grid - Rockwell (2250) 2026-04-04: Mosaic=319, Supabase=319
+  [OK] Ayala Evo (2426) 2026-04-05: Mosaic=250, Supabase=250
+  [OK] Araneta Gateway (2557) 2026-04-05: Mosaic=267, Supabase=267
+  [OK] D'Verde Calamba (2766) 2026-04-05: Mosaic=177, Supabase=177
+  [OK] CTTM Tomas Morato (2526) 2026-04-05: Mosaic=191, Supabase=191
+  [OK] Ayala Solenad (2547) 2026-04-05: Mosaic=222, Supabase=222
+  [OK] SM Sta. Rosa (2774) 2026-04-05: Mosaic=0, Supabase=0
+  [OK] SM Taytay (2812) 2026-04-05: Mosaic=291, Supabase=291
+  [OK] Vista Mall Taguig (2556) 2026-04-05: Mosaic=236, Supabase=236
+  [OK] SM Clark (2646) 2026-04-05: Mosaic=174, Supabase=174
+  [OK] Ever Commonwealth (2281) 2026-04-05: Mosaic=353, Supabase=353
+  [OK] SM SJDM (2481) 2026-04-05: Mosaic=297, Supabase=297
+  [OK] The Grid - Rockwell (2250) 2026-04-05: Mosaic=380, Supabase=380
+  [OK] Ayala Evo (2426) 2026-04-06: Mosaic=96, Supabase=96
+  [OK] Araneta Gateway (2557) 2026-04-06: Mosaic=176, Supabase=176
+  [OK] D'Verde Calamba (2766) 2026-04-06: Mosaic=130, Supabase=130
+  [OK] CTTM Tomas Morato (2526) 2026-04-06: Mosaic=133, Supabase=133
+  [OK] Ayala Solenad (2547) 2026-04-06: Mosaic=172, Supabase=172
+  [OK] SM Sta. Rosa (2774) 2026-04-06: Mosaic=0, Supabase=0
+  [OK] SM Taytay (2812) 2026-04-06: Mosaic=240, Supabase=240
+  [OK] Vista Mall Taguig (2556) 2026-04-06: Mosaic=120, Supabase=120
+  [OK] SM Clark (2646) 2026-04-06: Mosaic=99, Supabase=99
+  [OK] SM SJDM (2481) 2026-04-06: Mosaic=187, Supabase=187
+  [OK] The Grid - Rockwell (2250) 2026-04-06: Mosaic=177, Supabase=177
+  [OK] Ever Commonwealth (2281) 2026-04-06: Mosaic=232, Supabase=232
+  [OK] Ayala Malls Fairview Terraces (2220) 2026-03-31: Mosaic=223, Supabase=223
+  [OK] SM San Pablo (2912) 2026-03-31: Mosaic=0, Supabase=0
+  [OK] Robisons Galleria South (2515) 2026-03-31: Mosaic=180, Supabase=180
+  [OK] SM Caloocan (2464) 2026-03-31: Mosaic=165, Supabase=165
+  [OK] Ayala Malls Fairview Terraces (2220) 2026-04-01: Mosaic=225, Supabase=225
+  [OK] SM San Pablo (2912) 2026-04-01: Mosaic=0, Supabase=0
+  [OK] Robisons Galleria South (2515) 2026-04-01: Mosaic=177, Supabase=177
+  [OK] SM Caloocan (2464) 2026-04-01: Mosaic=159, Supabase=159
+  [OK] Ayala Malls Fairview Terraces (2220) 2026-04-02: Mosaic=249, Supabase=249
+  [OK] SM San Pablo (2912) 2026-04-02: Mosaic=0, Supabase=0
+  [OK] Robisons Galleria South (2515) 2026-04-02: Mosaic=195, Supabase=195
+  [OK] SM Caloocan (2464) 2026-04-02: Mosaic=3, Supabase=3
+  [OK] Ayala Malls Fairview Terraces (2220) 2026-04-03: Mosaic=202, Supabase=202
+  [OK] SM San Pablo (2912) 2026-04-03: Mosaic=0, Supabase=0
+  [OK] Robisons Galleria South (2515) 2026-04-03: Mosaic=3, Supabase=3
+  [OK] SM Caloocan (2464) 2026-04-03: Mosaic=0, Supabase=0
+  [OK] Ayala Malls Fairview Terraces (2220) 2026-04-04: Mosaic=281, Supabase=281
+  [OK] SM San Pablo (2912) 2026-04-04: Mosaic=0, Supabase=0
+  [OK] Robisons Galleria South (2515) 2026-04-04: Mosaic=225, Supabase=225
+  [OK] SM Caloocan (2464) 2026-04-04: Mosaic=182, Supabase=182
+  [OK] Ayala Malls Fairview Terraces (2220) 2026-04-05: Mosaic=346, Supabase=346
+  [OK] SM San Pablo (2912) 2026-04-05: Mosaic=0, Supabase=0
+  [OK] Robisons Galleria South (2515) 2026-04-05: Mosaic=244, Supabase=244
+  [OK] SM Caloocan (2464) 2026-04-05: Mosaic=217, Supabase=217
+  [OK] Ayala Malls Fairview Terraces (2220) 2026-04-06: Mosaic=211, Supabase=211
+  [OK] SM San Pablo (2912) 2026-04-06: Mosaic=0, Supabase=0
+  [OK] Robisons Galleria South (2515) 2026-04-06: Mosaic=164, Supabase=164
+  [OK] SM Caloocan (2464) 2026-04-06: Mosaic=152, Supabase=152
+  [OK] Ayala Market Market (2287) 2026-03-31: Mosaic=252, Supabase=252
+  [OK] SM Sangandaan (2482) 2026-03-31: Mosaic=139, Supabase=139
+  [OK] Ayala Market Market (2287) 2026-04-01: Mosaic=228, Supabase=228
+  [OK] SM Sangandaan (2482) 2026-04-01: Mosaic=131, Supabase=131
+  [OK] Ayala Market Market (2287) 2026-04-02: Mosaic=349, Supabase=349
+  [OK] SM Sangandaan (2482) 2026-04-02: Mosaic=0, Supabase=0
+  [OK] Ayala Market Market (2287) 2026-04-03: Mosaic=319, Supabase=319
+  [OK] SM Sangandaan (2482) 2026-04-03: Mosaic=0, Supabase=0
+  [OK] Ayala Market Market (2287) 2026-04-04: Mosaic=289, Supabase=289
+  [OK] SM Sangandaan (2482) 2026-04-04: Mosaic=148, Supabase=148
+  [OK] Ayala Market Market (2287) 2026-04-05: Mosaic=435, Supabase=435

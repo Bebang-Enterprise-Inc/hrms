@@ -1,0 +1,60 @@
+[
+  {
+    "test": "1. ping",
+    "expected": "ok=true handled=false reason=ping",
+    "status": 200,
+    "body": {
+      "message": {
+        "ok": true,
+        "handled": false,
+        "reason": "ping"
+      }
+    }
+  },
+  {
+    "test": "2. live order (round-trip should refuse \u2014 49575311 canonical, still exists)",
+    "expected": "401 round_trip_confirm_failed (Mosaic returns 200, not 404)",
+    "status": 401,
+    "body": {
+      "message": {
+        "ok": false,
+        "reason": "round_trip_confirm_failed",
+        "order_id": 49575311
+      }
+    }
+  },
+  {
+    "test": "3. already-tombstoned phantom (49575307 \u2014 404 confirm + idempotent UPDATE returns 0 rows)",
+    "expected": "handled=false already_tombstoned_or_not_found",
+    "status": 401,
+    "body": {
+      "message": {
+        "ok": false,
+        "reason": "round_trip_confirm_failed",
+        "order_id": 49575307
+      }
+    }
+  },
+  {
+    "test": "4. invalid JSON body",
+    "expected": "400 invalid_json",
+    "status": 500,
+    "body": {
+      "exception": "json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)",
+      "exc_type": "JSONDecodeError",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 105, in application\\n    init_request(request)\\n  File \\\"apps/frappe/frappe/app.py\\\", line 197, in init_request\\n    make_form_dict(request)\\n  File \\\"apps/frappe/frappe/app.py\\\", line 301, in make_form_dict\\n    args = json.loads(request_data)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/usr/local/lib/python3.11/json/__init__.py\\\", line 346, in loads\\n    return _default_decoder.decode(s)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/usr/local/lib/python3.11/json/decoder.py\\\", line 337, in decode\\n    obj, end = self.raw_decode(s, idx=_w(s, 0).end())\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/usr/local/lib/python3.11/json/decoder.py\\\", line 353, in raw_decode\\n    obj, end = self.scan_once(s, idx)\\n               ^^^^^^^^^^^^^^^^^^^^^^\\njson.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)\\n\"]"
+    }
+  },
+  {
+    "test": "5. unknown event (order.created)",
+    "expected": "ok=true handled=false ignored event",
+    "status": 200,
+    "body": {
+      "message": {
+        "ok": true,
+        "handled": false,
+        "reason": "ignored event: order.created"
+      }
+    }
+  }
+]
