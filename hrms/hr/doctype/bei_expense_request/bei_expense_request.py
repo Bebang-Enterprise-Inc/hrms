@@ -19,11 +19,20 @@ class BEIExpenseRequest(Document):
             if employee:
                 self.employee = employee
 
-        # Auto-set employee's store if not provided
+        # Auto-set employee's store if not provided.
+        # S167 DEFECT-006: custom_store is a Custom Field that is not
+        # installed on every Employee record (test employees created
+        # before the field was added, and irrelevant for dept-only users).
+        # Querying it unconditionally raises a SQL error that blocks ALL
+        # expense submission for any employee missing the field. Guard
+        # the lookup so the expense still inserts with store=None.
         if self.employee and not self.store:
-            store = frappe.db.get_value("Employee", self.employee, "custom_store")
-            if store:
-                self.store = store
+            try:
+                store = frappe.db.get_value("Employee", self.employee, "custom_store")
+                if store:
+                    self.store = store
+            except Exception:
+                pass
 
     def validate(self):
         """Validation logic."""
