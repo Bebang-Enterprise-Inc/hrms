@@ -224,9 +224,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S169` | Sprint 169 | `s169-mosaic-order-lifecycle-tombstone-webhook` | — | PLANNED 2026-04-07 — Mosaic order lifecycle CDC via `order.cancelled` webhook + tombstone pattern. Adds `cancelled_at`, `cancellation_reason`, `order_status`, `completed_at` columns to `pos_orders`, fixes hardcoded `payment_status='PAID'` in `map_order`, subscribes webhook endpoint on all 12 credential groups, upgrades `verify_mosaic_pos_sync.py` `extra` branch to tombstone-not-delete, backfills 30-day window, updates all revenue MVs/views to filter `WHERE cancelled_at IS NULL`, and closes the Apr 4 SM Marikina phantom-void incident (₱2,052) as the first real test. | `docs/plans/2026-04-07-sprint-169-mosaic-order-lifecycle-tombstone-webhook.md` |
 
+| `S170` | Sprint 170 | `s170-s166-defect-fixes` | — | PLANNED 2026-04-07 — Fixes for the 4 product defects surfaced by S166 Wave 1-Pilot + Wave 1-Full diagnostic. Phase 1: Leave Ledger Entry pipeline broken (HIGH — hooks.py `on_submit` exists but ledger rows not created). Phase 2: Compensation route `[employee]/page.tsx` renders empty shell (CRITICAL — file is a Dialog component masquerading as a Page). Phase 3: Self-service OT filing UI missing (CRITICAL — `BEI Overtime Request` doctype exists but no frontend filing page). Phase 4: Minimum-viable Clearance doctypes (CRITICAL/structural — `BEI Clearance`, `BEI Clearance Station`, `BEI Clearance Item` doctypes do not exist). Estimated 68-75 units — within 80-unit ceiling but Phase 4 is high-risk for split. Unblocks S166 Lane A retest. | `docs/plans/2026-04-07-sprint-170-s166-defect-fixes.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S170`.
-2. Reserve branch name: `s170-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S171`.
+2. Reserve branch name: `s171-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
