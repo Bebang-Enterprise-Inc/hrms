@@ -3903,6 +3903,7 @@ def complete_receiving(
 	receiver_1_signature: str | None = None,
 	receiver_2_signature: str | None = None,
 	driver_signature: str | None = None,
+	delivery_receipt_no: str | None = None,  # S168
 ) -> dict:
 	"""
 	Complete receiving for a delivery.
@@ -3961,6 +3962,8 @@ def complete_receiving(
 			has_issues = True
 
 	receiving.status = "With Issues" if has_issues else "Completed"
+	if delivery_receipt_no and _has_column("BEI Store Receiving", "delivery_receipt_no"):
+		receiving.delivery_receipt_no = delivery_receipt_no
 	receiving.insert(ignore_permissions=True)
 
 	contract = _resolve_store_receiving_contract(warehouse, trip)
@@ -3976,6 +3979,25 @@ def complete_receiving(
 	}
 	if stock_entry_name:
 		result["stock_entry"] = stock_entry_name
+
+	# S168 Phase 4: Submit the Draft SI created at fulfillment time. The SE
+	# posting has already succeeded — SI submission failures must NOT
+	# retroactively block receiving. The helper catches its own errors.
+	try:
+		if _has_column("BEI Store Receiving", "acceptance_date"):
+			receiving.acceptance_date = now_datetime()
+			receiving.save(ignore_permissions=True)
+		si_name = _submit_store_sale_invoice(receiving)
+		if si_name and _has_column("BEI Store Receiving", "sales_invoice"):
+			receiving.sales_invoice = si_name
+			receiving.save(ignore_permissions=True)
+			result["sales_invoice"] = si_name
+	except Exception:
+		frappe.log_error(
+			f"S168: complete_receiving SI submission outer guard tripped for {receiving.name}: {frappe.get_traceback()}",
+			"S168 Submit SI Guard",
+		)
+
 	return result
 
 
@@ -5102,13 +5124,34 @@ def _get_store_cost_center(store):
 	return cost_center
 
 
-def _get_store_customer(store):
-	"""Get the Customer linked to a store for AR party field (DM-1)."""
-	# Try to find a Customer with the same name as the warehouse
-	store_name = store.replace(" - BEI", "") if store else ""
-	customer = frappe.db.get_value("Customer", {"customer_name": ["like", f"%{store_name}%"]}, "name")
+def _get_store_customer(store: str) -> str:
+	"""S168: Get the Customer linked to a store's legal buyer entity.
+
+	Uses the S037 store_buyer_entity_register (ICT-005) to resolve the correct
+	legal corporation, then looks up the Customer in Frappe whose customer_name
+	EXACTLY matches the buyer_entity_name. No LIKE matching — the register is
+	authoritative.
+	"""
+	if not store:
+		frappe.throw(_("Store is required"))
+	entity_row = resolve_store_buyer_entity(warehouse_docname=store)
+	buyer_entity_name = (entity_row.get("buyer_entity_name") or "").strip()
+	if not buyer_entity_name:
+		frappe.throw(
+			_(
+				"Store {0} has no buyer entity in the S037 register. "
+				"Add a row to data/_CLEANROOM/2026-03-12-s037-store-buyer-entity-register/ "
+				"before billing can proceed."
+			).format(store)
+		)
+	customer = frappe.db.get_value("Customer", {"customer_name": buyer_entity_name}, "name")
 	if not customer:
-		frappe.throw(_(f"No Customer record found for store '{store_name}'. Create a Customer first."))
+		frappe.throw(
+			_(
+				"No Customer record found for buyer entity '{0}' (store: {1}). "
+				"Run scripts/s168_seed_bki_customers.py to create missing Customers."
+			).format(buyer_entity_name, store)
+		)
 	return customer
 
 
@@ -7301,3 +7344,228 @@ def update_qty_dispatched(order_name: str, items: list | str) -> dict:
 	order.save(ignore_permissions=True)
 
 	return {"order": order_name, "updated_count": updated}
+
+
+# ============================================================================
+# S168: BKI -> Store Sale Billing on Delivery (Phases 3, 4, 15)
+# ============================================================================
+
+
+def _compute_si_row_qty_from_receiving(draft_si_name: str, receiving_doc) -> dict:
+	"""S168 Phase 3: Compute billable qty per item from receiving.
+
+	qty_to_bill = received_qty - rejected_qty. Items with zero billable qty
+	are dropped. Returns {item_code: billable_qty}.
+	"""
+	qty_by_item: dict = defaultdict(float)
+	for ri in receiving_doc.items:
+		received = flt(getattr(ri, "received_qty", 0) or 0)
+		rejected = flt(getattr(ri, "rejected_qty", 0) or 0)
+		billable = max(0.0, received - rejected)
+		if billable > 0:
+			qty_by_item[ri.item_code] += billable
+	return dict(qty_by_item)
+
+
+def _notify_billing_defect(receiving_name: str, draft_si_name) -> None:
+	"""S168 Phase 3: Notify Finance/Ops when SI submission fails at receiving time."""
+	try:
+		from hrms.api.google_chat import get_chat_space, send_message_to_space
+
+		msg = (
+			f"S168 Billing Defect\nReceiving: {receiving_name}\n"
+			f"Draft SI: {draft_si_name or '(missing)'}\n"
+			f"Stock has posted but SI submission failed. Finance review required."
+		)
+		space = get_chat_space(SPACE_OPS)
+		send_message_to_space(space, msg)
+	except Exception:
+		pass
+
+
+def _submit_store_sale_invoice(receiving_doc):
+	"""S168 Phase 3/4: Locate the Draft SI for this delivery, adjust qty for
+	rejections, set acceptance date, and submit.
+
+	Called from complete_receiving after the Material Receipt SE is created.
+	Wrapped in a savepoint — SI submission failure must NOT block the stock
+	posting that already succeeded.
+
+	Returns the submitted SI name, or None if no SI exists (billing hold,
+	same-company transfer, etc.).
+	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="store",
+		action="submit_store_sale_invoice",
+		mutation_type="update",
+	)
+
+	trip = getattr(receiving_doc, "trip", None)
+	if not trip:
+		return None
+
+	mr_name = None
+	if frappe.db.exists("DocType", "BEI Trip Stop"):
+		store_order = frappe.db.get_value(
+			"BEI Trip Stop",
+			{"parent": trip, "store": receiving_doc.store},
+			"store_order",
+		)
+		if store_order and _has_column("Material Request", "custom_store_order"):
+			mr_name = frappe.db.get_value(
+				"Material Request",
+				{"custom_store_order": store_order, "docstatus": 1},
+				"name",
+				order_by="creation desc",
+			)
+	if not mr_name:
+		return None
+
+	# Parameterized SQL — no filters_query kwarg, no f-string injection (R1 Amendment)
+	fulfillment_se_rows = frappe.db.sql(
+		"""
+		SELECT DISTINCT sed.parent
+		FROM `tabStock Entry Detail` sed
+		JOIN `tabStock Entry` se ON se.name = sed.parent
+		WHERE sed.material_request = %s
+		  AND se.purpose = %s
+		  AND se.docstatus = 1
+		ORDER BY se.creation DESC
+		LIMIT 1
+		""",
+		(mr_name, "Material Transfer"),
+		as_list=True,
+	)
+	fulfillment_se_name = fulfillment_se_rows[0][0] if fulfillment_se_rows else None
+	if not fulfillment_se_name:
+		return None
+
+	draft_si_name = None
+	if _has_column("Stock Entry", "custom_sales_invoice_draft"):
+		draft_si_name = frappe.db.get_value(
+			"Stock Entry", fulfillment_se_name, "custom_sales_invoice_draft"
+		)
+	if not draft_si_name and _has_column("Sales Invoice", "custom_stock_entry"):
+		draft_si_name = frappe.db.get_value(
+			"Sales Invoice",
+			{"custom_stock_entry": fulfillment_se_name, "docstatus": 0},
+			"name",
+		)
+	if not draft_si_name or not frappe.db.exists("Sales Invoice", draft_si_name):
+		return None
+
+	try:
+		frappe.db.savepoint("s168_submit_store_si")
+		si = frappe.get_doc("Sales Invoice", draft_si_name)
+		if si.docstatus != 0:
+			frappe.db.release_savepoint("s168_submit_store_si")
+			return si.name if si.docstatus == 1 else None
+
+		qty_by_item = _compute_si_row_qty_from_receiving(draft_si_name, receiving_doc)
+
+		if not qty_by_item:
+			si.delete(ignore_permissions=True)
+			frappe.db.release_savepoint("s168_submit_store_si")
+			return None
+
+		# R1 Amendment: per-SI-row aggregation for grouped orders with
+		# duplicate item_code rows. Deduct billable budget per row.
+		remaining = dict(qty_by_item)
+		new_items = []
+		for row in si.items:
+			budget = remaining.get(row.item_code, 0)
+			if budget <= 0:
+				continue
+			take = min(flt(row.qty), budget)
+			if take <= 0:
+				continue
+			row.qty = take
+			remaining[row.item_code] = budget - take
+			new_items.append(row)
+		if not new_items:
+			si.delete(ignore_permissions=True)
+			frappe.db.release_savepoint("s168_submit_store_si")
+			return None
+		si.items = new_items
+
+		# ICT-007: revenue recognized on DR acceptance
+		acceptance_date = getattr(receiving_doc, "acceptance_date", None) or nowdate()
+		si.posting_date = getdate(acceptance_date)
+		si.set_posting_time = 1
+		if _has_column("Sales Invoice", "custom_bei_receiving"):
+			si.custom_bei_receiving = receiving_doc.name
+		if _has_column("Sales Invoice", "custom_delivery_receipt_no"):
+			si.custom_delivery_receipt_no = getattr(receiving_doc, "delivery_receipt_no", None) or ""
+
+		si.save(ignore_permissions=True)
+		si.submit()
+		frappe.db.release_savepoint("s168_submit_store_si")
+		return si.name
+	except Exception:
+		try:
+			frappe.db.sql("ROLLBACK TO SAVEPOINT s168_submit_store_si")
+		except Exception:
+			pass
+		frappe.log_error(
+			f"S168: SI submission failed for receiving {receiving_doc.name}: {frappe.get_traceback()}",
+			"S168 Submit SI Error",
+		)
+		_notify_billing_defect(receiving_doc.name, draft_si_name)
+		return None
+
+
+@frappe.whitelist()
+def reverse_same_company_reclassification_je(original_je_name: str, reason: str):
+	"""S168 Phase 15 (R2-C10): Cancel a previously-submitted S168 reclassification
+	JE and create a reversing entry. Used when Finance finds the reclassification
+	was wrong (Frappe JEs are immutable after submit). Only acts on S168-tagged JEs."""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="store",
+		action="reverse_same_company_reclassification_je",
+		mutation_type="update",
+	)
+	check_scm_permission(SCM_ADMIN_ROLES, "reverse same-company reclassification JE")
+
+	original = frappe.get_doc("Journal Entry", original_je_name)
+	if "S168 same-company transfer reclassification" not in (original.user_remark or ""):
+		frappe.throw(_("Refusing to reverse: JE is not an S168 reclassification entry."))
+	try:
+		frappe.db.savepoint("s168_reverse_reclass_je")
+		reversing = frappe.new_doc("Journal Entry")
+		reversing.voucher_type = "Journal Entry"
+		reversing.company = original.company
+		reversing.posting_date = nowdate()
+		reversing.user_remark = (
+			f"S168 REVERSAL of {original.name}. Reason: {reason}. "
+			f"Original: {original.user_remark}"
+		)
+		for row in original.accounts:
+			reversing.append(
+				"accounts",
+				{
+					"account": row.account,
+					"debit_in_account_currency": row.credit_in_account_currency,
+					"credit_in_account_currency": row.debit_in_account_currency,
+					"cost_center": row.cost_center,
+					"reference_type": row.reference_type,
+					"reference_name": row.reference_name,
+				},
+			)
+		reversing.insert(ignore_permissions=True)
+		reversing.submit()
+		frappe.db.release_savepoint("s168_reverse_reclass_je")
+		return reversing.name
+	except Exception:
+		try:
+			frappe.db.sql("ROLLBACK TO SAVEPOINT s168_reverse_reclass_je")
+		except Exception:
+			pass
+		frappe.log_error(
+			f"S168 reversal failed for {original_je_name}: {frappe.get_traceback()}",
+			"S168 Reversal Error",
+		)
+		raise

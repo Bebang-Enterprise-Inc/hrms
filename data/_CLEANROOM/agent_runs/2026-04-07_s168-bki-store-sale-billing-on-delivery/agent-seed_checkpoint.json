@@ -1,0 +1,32 @@
+{
+  "agent": "agent-seed",
+  "sprint": "S168",
+  "branch": "s168-bki-store-sale-billing-on-delivery",
+  "phases": ["5", "12", "13"],
+  "timestamp_utc": "2026-04-07T00:00:00Z",
+  "status": "complete",
+  "files_created": [
+    "scripts/s168_seed_gl_accounts.py",
+    "scripts/s168_seed_vat_template.py",
+    "scripts/s168_seed_customer_group.py",
+    "scripts/s168_seed_customers.py",
+    "scripts/s168_seed_cost_centers.py",
+    "scripts/s168_configure_bei_settings.py"
+  ],
+  "verification": {
+    "py_compile_all_six": "PASS",
+    "phase5_verify": "PASS",
+    "phase12_verify": "NOT_OWNED_BY_SEED",
+    "phase12_note": "scripts/s168_verify_phases.sh phase12 gate checks bki_sales_naming_series wiring in commissary.py / billing.py, which is agent-schema territory. agent-seed Phase 12 deliverable is the per-store cost center seed script (scripts/s168_seed_cost_centers.py), which is not gated by phase 12 in the verify script."
+  },
+  "design_notes": [
+    "All scripts run inside Frappe backend container; designed for SSM runner pattern from s163_run_ssm_ops.py.",
+    "Customer + cost-center scripts read CSVs from /tmp (overridable via S168_REGISTER_CSV / S168_TIN_RDO_CSV) -- the SSM runner must docker cp the two source CSVs into the container before invoking.",
+    "Idempotent via frappe.db.exists everywhere.",
+    "Phase 13 (EWT) is no-op REUSE per ICT-004: existing default_ewt_rate / ewt_payable_account / default_vat_rate fields are reused. The new toggle bki_ewt_on_store_sales_enabled is owned by agent-schema (BEI Settings JSON). s168_configure_bei_settings.py verifies the existing fields are present and reports phase13 status.",
+    "Customer custom fields custom_vat_status / custom_bir_rdo_code are written ONLY if the field exists on the Customer DocType (avoids hard dependency on Phase 1 fixture order).",
+    "GL account script writes phase5_account_confirmation.txt to sites/output/s168/ inside the container per plan Task 5.3.",
+    "Known TIN exception (Everyday Delight Food Ventures Inc.) handled as WARNING-skip per plan."
+  ],
+  "not_run": "Scripts are deploy-ready but were NOT executed by agent-seed; Sam runs them via SSM in Session A deploy."
+}
