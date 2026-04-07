@@ -1,0 +1,25 @@
+{
+  "sprint": "S168",
+  "cleanup_completed_at": "2026-04-07",
+  "branches_cleaned": {
+    "hrms": [
+      {"branch": "s168-bki-store-sale-billing-on-delivery", "status": "merged via PR #482, deletable"},
+      {"branch": "fix/s168-audit-gaps", "status": "intermediate work branch (mixed S168 + S169 + S170 commits) — abandoned in favor of clean branch"},
+      {"branch": "fix/s168-audit-gaps-clean", "status": "merged via PR #484, deletable"},
+      {"branch": "closeout/s168-final-artifacts", "status": "this PR — closeout artifacts only"}
+    ],
+    "bei-tasks": [
+      {"branch": "s168-bki-store-sale-billing-on-delivery", "status": "merged via PR #351, deletable"}
+    ]
+  },
+  "worktrees_removed": [],
+  "agent_run_artifacts_preserved": "data/_CLEANROOM/agent_runs/2026-04-07_s168-bki-store-sale-billing-on-delivery/",
+  "test_data_residue": "none — agents ran no SSM mutations against live BKI; all live data mutations are gated behind Sam running the seed scripts manually",
+  "follow_up_tickets": [
+    {"id": "S168-FU-1", "title": "Implement or remove Phase 15 forward helper _create_same_company_reclassification_je", "owner": "Finance + dev", "blocker": true},
+    {"id": "S168-FU-2", "title": "Sam runs bench migrate + 6 seed scripts on hq.bebang.ph (RUNTIME_PREREQS_AUDIT.md)", "owner": "Sam", "blocker": true},
+    {"id": "S168-FU-3", "title": "Run /l3-v2-bei-erp s168 in fresh session after runtime prereqs are met", "owner": "fresh Claude session", "blocker": false},
+    {"id": "S168-FU-4", "title": "Fix verify-script Phase 3 grep (currently points at commissary.py, should be store.py)", "owner": "dev", "blocker": false},
+    {"id": "S168-FU-5", "title": "Add bki_logistics_fee_item field to BEI Settings (current fee Item lookup falls through 4 fallbacks)", "owner": "dev", "blocker": false}
+  ]
+}
