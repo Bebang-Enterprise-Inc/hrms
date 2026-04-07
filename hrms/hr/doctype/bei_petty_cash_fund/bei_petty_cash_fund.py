@@ -110,8 +110,10 @@ class BEIPettyCashFund(Document):
         else:
             pending = {"count": 0, "total": 0}
 
-        self.pending_count = pending.count or 0
-        self.pending_total = pending.total or 0
+        # pending is a dict (from frappe.db.sql(..., as_dict=True)) or a plain dict
+        # fallback — use key access, not attribute access.
+        self.pending_count = pending.get("count") or 0
+        self.pending_total = pending.get("total") or 0
         self.current_balance = self.fund_amount - self.pending_total
 
     def get_threshold_amount(self):
