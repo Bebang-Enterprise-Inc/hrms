@@ -22,7 +22,16 @@ from pathlib import Path
 
 import requests
 
-from hrms.utils.chat_space_lockdown import route_outbound_chat_space
+# Try to import the Frappe-side chat lockdown helper. In CI (where the `hrms`
+# package is not on PYTHONPATH) the import fails and we fall back to a no-op
+# router that always returns the hardcoded BLIP_NOTIFICATION_SPACE below.
+# Per Sam directive 2026-04-07: NO Blip notifications anywhere except
+# "! Blip Notifications" (spaces/AAQABiNmpBg).
+try:
+    from hrms.utils.chat_space_lockdown import route_outbound_chat_space  # type: ignore
+except ImportError:  # CI / standalone runtime
+    def route_outbound_chat_space(requested_space, *, logger=None, context=None, family=None):
+        return "spaces/AAQABiNmpBg"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -33,7 +42,7 @@ log = logging.getLogger("anomaly-detect")
 
 # --- Configuration ---
 SUPABASE_URL = "https://csnniykjrychgajfrgua.supabase.co"
-CHAT_SPACE = "spaces/AAQA3NVVR6c"
+CHAT_SPACE = "spaces/AAQABiNmpBg"  # ! Blip Notifications. Per Sam directive 2026-04-07: NO Blip notifications anywhere else.
 CREDENTIALS_PATH = Path(__file__).resolve().parent.parent / "credentials" / "task-manager-service.json"
 DOPPLER_BIN = r"C:\Users\Sam\bin\doppler.exe"
 

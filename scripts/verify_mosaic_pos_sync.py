@@ -125,7 +125,7 @@ sentry_sdk.set_tag("module", "sync_verification")
 sentry_sdk.set_tag("action", "verify_mosaic_pos_sync")
 
 PHT = timezone(timedelta(hours=8))
-CHAT_SPACE_ANOMALY = "spaces/AAQA3NVVR6c"  # same space as detect_anomalies.py
+CHAT_SPACE_ANOMALY = "spaces/AAQABiNmpBg"  # ! Blip Notifications (sam@bebang.ph private). Per Sam directive 2026-04-07: NO Blip notifications anywhere else.
 
 
 # ---------------------------------------------------------------------------

@@ -142,15 +142,17 @@ jobs:
           python scripts/supabase_exec.py "select public.refresh_sales_dashboard_daily_store_metrics();"
 
   # ── Step 4: Anomaly detection (AFTER all syncs complete) ─────────────────
-  # S165 CB1: != 'true' form is mandatory. Do NOT use !inputs.skip_anomaly.
-  # GH Actions inputs are strings, and !"false" == false silently skips.
+  # S165 follow-up 2026-04-07: type:boolean inputs are evaluated as actual
+  # booleans by GH expressions, so the correct gating form is `!inputs.skip_X`.
+  # The original `!= 'true'` form was wrong (compares boolean to string -> always
+  # truthy -> gate never fires; proven by dispatch test 24058652557).
   # Gated to run ONLY on nightly cron or workflow_dispatch.
   anomaly-detection:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [refresh-sales-dashboard-views]
     if: >-
-      ${{ inputs.skip_anomaly != 'true' &&
+      ${{ !inputs.skip_anomaly &&
           (github.event_name == 'workflow_dispatch' ||
            github.event.schedule == '30 16 * * *') }}
 
@@ -180,14 +182,14 @@ jobs:
   # ── Workflow-level failure notification ─────────────────────────────────────
 
   # notify-failure posts to spaces/AAQABiNmpBg (workflow-level alerts)
-  # verify-sync script posts to spaces/AAQA3NVVR6c (anomaly detection space)
+  # verify-sync script posts to spaces/AAQABiNmpBg (! Blip Notifications, sam@bebang.ph private)
   # These are intentionally separate -- do not merge them.
   verify-sync:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [refresh-sales-dashboard-views]
     if: >-
-      ${{ inputs.skip_verify != 'true' &&
+      ${{ !inputs.skip_verify &&
           (github.event_name == 'workflow_dispatch' ||
            github.event.schedule == '30 16 * * *') }}
 
