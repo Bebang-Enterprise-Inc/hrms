@@ -294,10 +294,29 @@ def edit_pending_expense(
     """
     expense = frappe.get_doc("BEI Expense Request", expense_name)
 
-    # Check ownership
-    employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
-    if expense.employee != employee:
-        frappe.throw(_("You can only edit your own expenses"))
+    # Permission check — S167 DEFECT-022 fix: allow the owner, the fund
+    # custodian/backup custodian, or an admin. Without custodian access,
+    # the custodian has no way to correct a row before submitting the
+    # batch (plan S167 scenario 1.3 requires this).
+    user = frappe.session.user
+    employee = frappe.db.get_value("Employee", {"user_id": user}, "name")
+    is_owner = employee and expense.employee == employee
+
+    is_custodian = False
+    if expense.pcf_fund:
+        fund = frappe.db.get_value(
+            "BEI Petty Cash Fund",
+            expense.pcf_fund,
+            ["custodian", "backup_custodian"],
+            as_dict=True,
+        )
+        if fund:
+            is_custodian = user in [fund.custodian, fund.backup_custodian]
+
+    is_admin = "System Manager" in frappe.get_roles(user) or "Accounts Manager" in frappe.get_roles(user)
+
+    if not (is_owner or is_custodian or is_admin):
+        frappe.throw(_("You can only edit your own expenses, or expenses on a fund you are custodian of"))
 
     # Check status
     if expense.status != "Pending":
