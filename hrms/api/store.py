@@ -3573,8 +3573,8 @@ def resolve_group_order_item(
 		)
 
 	check_scm_permission(
-		allowed_roles=SCM_ADMIN_ROLES.union(SCM_APPROVAL_ROLES),
-		operation=f"resolve grouped order line on {order_name}",
+		SCM_ADMIN_ROLES.union(SCM_APPROVAL_ROLES),
+		f"resolve grouped order line on {order_name}",
 	)
 
 	order = frappe.get_doc("BEI Store Order", order_name)
