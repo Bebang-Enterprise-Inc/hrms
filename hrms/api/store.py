@@ -3998,6 +3998,22 @@ def complete_receiving(
 			"S168 Submit SI Guard",
 		)
 
+	# S168 Phase 10: auto-create a Draft BEI Billing Schedule row for the
+	# logistics delivery fee. Independent of SI submission — if it fails it
+	# must NOT roll back the receiving or block the SI.
+	try:
+		billing_name = _create_delivery_fee_billing_on_acceptance(receiving)
+		if billing_name:
+			result["delivery_fee_billing"] = billing_name
+	except Exception:
+		frappe.log_error(
+			(
+				f"S168 Phase 10: delivery-fee billing outer guard tripped for "
+				f"{receiving.name}: {frappe.get_traceback()}"
+			),
+			"S168 Delivery Fee Billing",
+		)
+
 	return result
 
 
@@ -7381,6 +7397,176 @@ def _notify_billing_defect(receiving_name: str, draft_si_name) -> None:
 		send_message_to_space(space, msg)
 	except Exception:
 		pass
+
+
+def _create_delivery_fee_billing_on_acceptance(receiving_doc):
+	"""S168 Phase 10: On DR acceptance, auto-create a Draft BEI Billing Schedule
+	row for the logistics delivery fee so Finance has something to approve.
+
+	Idempotent: if a row already exists for this (trip, store,
+	billing_type=Delivery) in any live status, returns its name instead of
+	creating a duplicate.
+
+	Defensive: if BEI Delivery Rate lookup yields no match, or the DocType is
+	missing, logs and returns None. A logistics-fee failure MUST NOT roll
+	back the receiving — the outer caller also wraps this in try/except.
+	"""
+	from hrms.utils.sentry import set_backend_observability_context
+
+	set_backend_observability_context(
+		module="store",
+		action="create_delivery_fee_billing",
+		mutation_type="create",
+	)
+
+	trip = getattr(receiving_doc, "trip", None)
+	store = getattr(receiving_doc, "store", None)
+	if not trip or not store:
+		return None
+	if not frappe.db.exists("DocType", "BEI Billing Schedule"):
+		return None
+	if not frappe.db.exists("DocType", "BEI Delivery Rate"):
+		return None
+
+	try:
+		frappe.db.savepoint("s168_delivery_fee_billing")
+
+		# Idempotency: one delivery-fee row per (trip, store).
+		existing = frappe.db.get_value(
+			"BEI Billing Schedule",
+			{
+				"trip_reference": trip,
+				"store": store,
+				"billing_type": "Delivery",
+				"status": [
+					"in",
+					["Draft", "Pending", "Approved", "Sent", "Partially Paid", "Paid"],
+				],
+			},
+			"name",
+		)
+		if existing:
+			try:
+				frappe.db.release_savepoint("s168_delivery_fee_billing")
+			except Exception:
+				pass
+			return existing
+
+		trip_doc = None
+		if frappe.db.exists("BEI Distribution Trip", trip):
+			trip_doc = frappe.db.get_value(
+				"BEI Distribution Trip",
+				trip,
+				["trip_date", "cargo_type"],
+				as_dict=True,
+			)
+		trip_date = (
+			(trip_doc or {}).get("trip_date")
+			or getattr(receiving_doc, "acceptance_date", None)
+			or nowdate()
+		)
+		cargo_type = (trip_doc or {}).get("cargo_type") or None
+
+		rate_filters = {"store": store, "status": "Active"}
+		if cargo_type:
+			rate_filters["cargo_type"] = cargo_type
+		rate_row = frappe.db.get_value(
+			"BEI Delivery Rate",
+			rate_filters,
+			["name", "delivery_fee", "logistics_fee"],
+			as_dict=True,
+			order_by="effective_from desc",
+		)
+		if not rate_row and cargo_type:
+			rate_row = frappe.db.get_value(
+				"BEI Delivery Rate",
+				{"store": store, "status": "Active"},
+				["name", "delivery_fee", "logistics_fee"],
+				as_dict=True,
+				order_by="effective_from desc",
+			)
+		if not rate_row:
+			frappe.log_error(
+				(
+					f"S168 Phase 10: No active BEI Delivery Rate for store={store} "
+					f"cargo={cargo_type} (trip {trip}); delivery-fee billing skipped."
+				),
+				"S168 Delivery Fee Billing",
+			)
+			try:
+				frappe.db.release_savepoint("s168_delivery_fee_billing")
+			except Exception:
+				pass
+			return None
+
+		delivery_fee = flt(rate_row.get("delivery_fee"))
+		logistics_fee = flt(rate_row.get("logistics_fee"))
+		if delivery_fee <= 0 and logistics_fee <= 0:
+			try:
+				frappe.db.release_savepoint("s168_delivery_fee_billing")
+			except Exception:
+				pass
+			return None
+
+		store_type = ""
+		try:
+			store_type = (
+				frappe.db.get_value("Department", store, "custom_store_type") or ""
+			)
+		except Exception:
+			store_type = ""
+
+		schedule = frappe.new_doc("BEI Billing Schedule")
+		schedule.billing_type = "Delivery"
+		try:
+			schedule.naming_series = "BILL-DL-.YYYY.-.#####"
+		except Exception:
+			pass
+		schedule.store = store
+		if store_type:
+			try:
+				schedule.store_type = store_type
+			except Exception:
+				pass
+		schedule.status = "Draft"
+		schedule.trip_reference = trip
+		if cargo_type:
+			try:
+				schedule.cargo_type = cargo_type
+			except Exception:
+				pass
+		schedule.delivery_fee = delivery_fee
+		schedule.logistics_fee = logistics_fee
+		try:
+			schedule.billing_period = (
+				getdate(trip_date).strftime("%Y-%m") if trip_date else None
+			)
+		except Exception:
+			pass
+		try:
+			schedule.generated_on = now_datetime()
+		except Exception:
+			pass
+		schedule.insert(ignore_permissions=True)
+
+		try:
+			frappe.db.release_savepoint("s168_delivery_fee_billing")
+		except Exception:
+			pass
+		return schedule.name
+	except Exception:
+		try:
+			frappe.db.rollback_to_savepoint("s168_delivery_fee_billing")
+		except Exception:
+			pass
+		frappe.log_error(
+			(
+				f"S168 Phase 10: delivery-fee billing failed for receiving "
+				f"{getattr(receiving_doc, 'name', '?')}: {frappe.get_traceback()}"
+			),
+			"S168 Delivery Fee Billing",
+		)
+		return None
 
 
 def _submit_store_sale_invoice(receiving_doc):

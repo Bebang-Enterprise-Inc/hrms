@@ -398,7 +398,11 @@ def map_order(order: dict) -> dict:
         "zero_rated_sales": pb.get("zero_rated_sales", 0),
         "total_discounts": pb.get("total_discounts", 0),
         "delivery_fee": pb.get("delivery_fee", 0),
-        "payment_status": (order.get("payment_status") or "PAID").upper(),
+        # S169 BLOCKER 1 fix: do NOT hardcode 'PAID', do NOT write cancelled_at/cancellation_reason
+        # (the webhook + verify script own those columns; PostgREST merge-duplicates would NULL them out).
+        "payment_status": (lambda v: v.upper() if isinstance(v, str) and v else None)(order.get("payment_status")),
+        "order_status": (lambda v: v.upper() if isinstance(v, str) and v else None)(order.get("order_status")),
+        "completed_at": order.get("completed_at"),
         "billed_at": order.get("billed_at"),
         "paid_at": order.get("paid_at"),
     }

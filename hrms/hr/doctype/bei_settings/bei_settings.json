@@ -58,7 +58,9 @@
   "bki_markup_full_franchise_percent",
   "bki_sales_vat_template",
   "bki_sales_income_account",
-  "bki_default_incoterm"
+  "bki_default_incoterm",
+  "bki_output_vat_account",
+  "bki_ewt_on_store_sales_enabled"
  ],
  "fields": [
   {
@@ -398,6 +400,20 @@
    "label": "BKI Default Incoterm",
    "default": "Destination",
    "description": "ICT-007: Destination terms. Revenue recognized when the store signs and accepts the Delivery Receipt; loss in transit is BKI's."
+  },
+  {
+   "fieldname": "bki_output_vat_account",
+   "fieldtype": "Link",
+   "options": "Account",
+   "label": "BKI Output VAT Account",
+   "description": "Phase 1 / R1 Amendment 9 / ICT-009: Configurable Output VAT GL account for BKI\u2192store SIs. Default 2102205 OUTPUT VAT PAYABLE - BKI."
+  },
+  {
+   "fieldname": "bki_ewt_on_store_sales_enabled",
+   "fieldtype": "Check",
+   "label": "Enable EWT on BKI\u2192Store Sales",
+   "default": "0",
+   "description": "Phase 13 / ICT-004: When checked, BKI\u2192store Sales Invoices include an EWT line using BEI Settings.default_ewt_rate and ewt_payable_account. Default OFF (BEI is not Top 20,000 taxpayer)."
   }
  ],
  "index_web_pages_for_search": 1,

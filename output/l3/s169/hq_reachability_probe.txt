@@ -1,0 +1,83 @@
+S169 T0.6 — hq.bebang.ph reachability probe
+Date: 2026-04-07 (PHT)
+Method: curl from BEI dev workstation (non-LAN, public internet via Cloudflare)
+
+================================================================
+TEST 1: GET https://hq.bebang.ph/api/method/ping
+================================================================
+$ curl -sI https://hq.bebang.ph/api/method/ping
+
+HTTP/1.1 403 Forbidden
+Date: Tue, 07 Apr 2026 08:52:10 GMT
+Content-Type: application/json
+Connection: keep-alive
+Server: cloudflare
+Vary: Accept-Encoding
+Set-Cookie: sid=Guest; ...
+X-Frame-Options: SAMEORIGIN
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+cf-cache-status: DYNAMIC
+CF-RAY: 9e87cb6cdef56e4b-HKG
+alt-svc: h3=":443"; ma=86400
+
+INTERPRETATION:
+- Status 403 returned by Frappe (note Set-Cookie: sid=Guest from Frappe — not a
+  Cloudflare challenge page). This is Frappe's "ping requires auth" response,
+  NOT a Cloudflare WAF block.
+- Cloudflare passed the request through to origin (CF-RAY header present, no
+  cf-mitigated header). Origin is reachable.
+- For T0.6 acceptance: 403-from-Frappe is functionally equivalent to 401 — the
+  request reached origin and got a Frappe response. NOT a timeout. NOT DNS.
+  NOT 502.
+
+================================================================
+TEST 2: POST https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive
+================================================================
+$ curl -s -i -X POST https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive \
+       -H "Content-Type: application/json" -d '{}'
+
+HTTP/1.1 417 Expectation Failed
+Date: Tue, 07 Apr 2026 08:52:10 GMT
+Content-Type: application/json
+Server: cloudflare
+CF-RAY: 9e87cb6e6ee8dda2-HKG
+
+Body (excerpted):
+{
+  "exception": "frappe.exceptions.ValidationError: Failed to get method for
+                command hrms.api.mosaic_webhook.receive with No module named
+                'hrms.api.mosaic_webhook'",
+  "exc_type": "ValidationError",
+  ...
+}
+
+INTERPRETATION:
+- Status 417 returned by Frappe (NOT 403 from Cloudflare, NOT 502 origin
+  unreachable). Cloudflare did NOT challenge the POST.
+- The body is a Frappe Python traceback explicitly stating
+  `ModuleNotFoundError: No module named 'hrms.api.mosaic_webhook'` — exactly
+  the expected response for an endpoint that does not exist yet.
+- This proves end-to-end:
+  1. DNS resolves hq.bebang.ph
+  2. Cloudflare allows programmatic POSTs to /api/method/* without challenge
+  3. POST body reaches Frappe origin
+  4. Frappe responds with a real Python error (not a generic 502)
+
+================================================================
+T0.6 RESULT: PASS
+================================================================
+- DNS: ok
+- TLS: ok
+- Cloudflare: not blocking (POST and GET both reach origin)
+- Frappe origin: reachable, responding with normal Frappe errors
+- Endpoint hrms.api.mosaic_webhook.receive: confirmed not yet implemented
+  (matches expected Phase 0 state — Phase 3 will create it)
+
+No infrastructure blocker. Phase 3 webhook receiver can land at this URL.
+
+CAVEAT: this probe was run from a single workstation (Hong Kong Cloudflare PoP
+per CF-RAY). Mosaic's webhook delivery infra may originate from a different
+geo / different ASN. If Mosaic registers the webhook and never delivers, the
+first thing to check is Cloudflare WAF rules / rate limits / IP allowlists for
+the Mosaic source IP range.
