@@ -14,6 +14,7 @@ commands:
   - expense
   - finance-and-billing
   - hr
+  - hr-employee-lifecycle
   - hr-self-service
   - inventory
   - maintenance
@@ -166,6 +167,50 @@ modules:
       - HRM
     scenario_files:
       - docs/testing/scenarios/modules/hr.md
+  - key: hr-employee-lifecycle
+    status: ready
+    command: hr-employee-lifecycle
+    scenario_count: 137
+    route_count_hint: 26
+    prefixes:
+      - EMP-CREATE
+      - EMP-EDIT-PERSONAL
+      - EMP-EDIT-CONTACT
+      - EMP-EDIT-ADDRESS
+      - EMP-EDIT-EMPLOYMENT
+      - EMP-PHOTO
+      - EMP-BANK
+      - EMP-GOVID
+      - EMP-SALARY-SETUP
+      - EMP-SALARY-CHANGE
+      - EMP-SALARY-PAYROLL
+      - EMP-REGULARIZE
+      - EMP-LEAVE
+      - EMP-OVERTIME
+      - EMP-ATTENDANCE
+      - EMP-PAYROLL-RUN
+      - EMP-PAYSLIP
+      - EMP-DISCIPLINARY
+      - EMP-TRANSFER
+      - EMP-BIOCHANGE
+      - EMP-COMPLETION
+      - EMP-CONFLICT
+      - EMP-ADMS
+      - EMP-CHAT
+      - EMP-RBAC
+      - EMP-TERMINATE
+      - EMP-EXITINTERVIEW
+      - EMP-FINALPAY
+      - EMP-COMPLIANCE
+      - EMP-USERDISABLE
+      - EMP-ADMSREMOVE
+      - EMP-REHIRE
+      - EMP-ENRICHMENT
+      - EMP-UX
+      - EMP-STUB
+      - EMP-CLEAN
+    scenario_files:
+      - docs/testing/scenarios/modules/hr-employee-lifecycle.md
   - key: hr-self-service
     status: ready
     command: hr-self-service
