@@ -1,0 +1,5 @@
+name: Daily POS & Web Orders Sync
+state: active
+path: .github/workflows/daily-pos-sync.yml
+updated_at: 2026-04-07T19:32:32.000+08:00
+verified_at: 2026-04-07T23:37:57.811276
