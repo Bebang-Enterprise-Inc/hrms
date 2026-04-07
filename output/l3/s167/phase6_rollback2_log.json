@@ -1,0 +1,106 @@
+[
+  {
+    "op": "clear_pcf_batch",
+    "name": "BEI-EXP-2026-00078",
+    "result": {
+      "s": 404,
+      "b": "{\"exc_type\":\"DoesNotExistError\",\"_server_messages\":\"[\\\"{\\\\\\\"message\\\\\\\": \\\\\\\"BEI Expense Request BEI-EXP-2026-00078 not found\\\\\\\", \\\\\\\"title\\\\\\\": \\\\\\\"Message\\\\\\\", \\\\\\\"indicator\\\\\\\": \\\\\\\"red\\\\\\\", \\\\\\\"raise_exception\\\\\\\": 1, \\\\\\\"__frappe_exc_id\\\\\\\": \\\\\\\"a5e7c1de142fc5756bd238c4b8f17675160161342bb00796"
+    }
+  },
+  {
+    "op": "clear_pcf_batch",
+    "name": "BEI-EXP-2026-00079",
+    "result": {
+      "s": 200,
+      "b": "{\"data\":{\"name\":\"BEI-EXP-2026-00079\",\"owner\":\"test.hr@bebang.ph\",\"creation\":\"2026-04-07 14:27:13.846932\",\"modified\":\"2026-04-07 15:09:35.044756\",\"modified_by\":\"sam@bebang.ph\",\"docstatus\":0,\"idx\":1,\"employee\":\"TEST-HR-001\",\"employee_name\":\"Test HR\",\"pcf_fund\":\"PCF-HR and Admin\",\"request_date\":\"2026-0"
+    }
+  },
+  {
+    "op": "clear_pcf_batch",
+    "name": "BEI-EXP-2026-00080",
+    "result": {
+      "s": 404,
+      "b": "{\"exc_type\":\"DoesNotExistError\",\"_server_messages\":\"[\\\"{\\\\\\\"message\\\\\\\": \\\\\\\"BEI Expense Request BEI-EXP-2026-00080 not found\\\\\\\", \\\\\\\"title\\\\\\\": \\\\\\\"Message\\\\\\\", \\\\\\\"indicator\\\\\\\": \\\\\\\"red\\\\\\\", \\\\\\\"raise_exception\\\\\\\": 1, \\\\\\\"__frappe_exc_id\\\\\\\": \\\\\\\"c31fa84ab5c1b6c518986e28c4bc7612609e5b035a0abc9b"
+    }
+  },
+  {
+    "op": "clear_pcf_batch",
+    "name": "BEI-EXP-2026-00081",
+    "result": {
+      "s": 404,
+      "b": "{\"exc_type\":\"DoesNotExistError\",\"_server_messages\":\"[\\\"{\\\\\\\"message\\\\\\\": \\\\\\\"BEI Expense Request BEI-EXP-2026-00081 not found\\\\\\\", \\\\\\\"title\\\\\\\": \\\\\\\"Message\\\\\\\", \\\\\\\"indicator\\\\\\\": \\\\\\\"red\\\\\\\", \\\\\\\"raise_exception\\\\\\\": 1, \\\\\\\"__frappe_exc_id\\\\\\\": \\\\\\\"c89123e3c578c66be4bfe2f47deb173098e481b4e706879c"
+    }
+  },
+  {
+    "op": "delete_batch_item",
+    "name": "b7t6fc34lt",
+    "result": {
+      "s": 417,
+      "b": "{\"exception\":\"frappe.exceptions.ValidationError: Cannot create batch with no expense items\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"hrms (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(req"
+    }
+  },
+  {
+    "op": "delete_batch",
+    "name": "BEI-PCF-2026-00003",
+    "result": {
+      "s": 200,
+      "b": "{}"
+    }
+  },
+  {
+    "op": "delete_batch",
+    "name": "BEI-PCF-2026-00004",
+    "result": {
+      "s": 404,
+      "b": "{\"exc_type\":\"DoesNotExistError\"}"
+    }
+  },
+  {
+    "op": "delete_expense",
+    "name": "BEI-EXP-2026-00078",
+    "result": {
+      "s": 404,
+      "b": "{\"exc_type\":\"DoesNotExistError\"}"
+    }
+  },
+  {
+    "op": "delete_expense",
+    "name": "BEI-EXP-2026-00079",
+    "result": {
+      "s": 200,
+      "b": "{}"
+    }
+  },
+  {
+    "op": "delete_expense",
+    "name": "BEI-EXP-2026-00080",
+    "result": {
+      "s": 404,
+      "b": "{\"exc_type\":\"DoesNotExistError\"}"
+    }
+  },
+  {
+    "op": "delete_expense",
+    "name": "BEI-EXP-2026-00081",
+    "result": {
+      "s": 404,
+      "b": "{\"exc_type\":\"DoesNotExistError\"}"
+    }
+  },
+  {
+    "op": "delete_fund",
+    "name": "PCF-HR and Admin",
+    "result": {
+      "s": 200,
+      "b": "{}"
+    }
+  },
+  {
+    "op": "delete_fund",
+    "name": "PCF-Commissary",
+    "result": {
+      "s": 404,
+      "b": "{\"exc_type\":\"DoesNotExistError\"}"
+    }
+  }
+]

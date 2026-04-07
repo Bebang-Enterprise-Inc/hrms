@@ -1,0 +1,59 @@
+BT
+BEI Tasks
+Task Management
+Home
+Dashboard
+My Profile
+Clearance
+Exit Interview
+Store Operations
+Opening Report
+Closing Report
+Mid-Shift Check
+Cashier Handover
+Bank Deposit
+Maintenance Request
+Store Ordering
+Store Inventory
+Maintenance (Legacy)
+Store Receiving
+FQI Report
+My Deliveries
+My R&M Requests
+Petty Cash Fund
+Add PCF Entry
+Pending PCF
+PCF History
+Store Inventory
+Supervisor Tools
+HR Self-Service
+Leave Command Center
+HR Management
+My Expenses
+Stock Counting
+Finance & Accounting
+Campaign Giveaways
+Procurement
+Warehouse
+Commissary
+Projects & Maintenance
+Analytics
+Communication
+Tasks & Reports
+Platform & Admin
+TS
+test.supervisor@bebang.ph
+test.supervisor@bebang.ph
+Toggle Sidebar
+Dashboard
+Store-ops
+Pcf
+Search
+Ctrl K
+Search
+
+Search tasks, projects, and actions
+
+Petty Cash Fund
+No PCF fund assigned
+No PCF fund is configured for your store. Please contact an administrator to have a fund set up.

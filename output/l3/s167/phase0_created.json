@@ -1,0 +1,26 @@
+[
+  {
+    "label": "HR",
+    "deptName": "HR and Admin - BEI",
+    "custodian": "test.hr@bebang.ph",
+    "rawResponse": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: HR and Admin\"}",
+    "preexisting": false,
+    "fundName": "PCF-HR and Admin"
+  },
+  {
+    "label": "SupplyChain",
+    "deptName": "Supply Chain - BEI",
+    "custodian": "test.warehouse@bebang.ph",
+    "rawResponse": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: Supply Chain\"}",
+    "preexisting": false,
+    "fundName": "PCF-Supply Chain"
+  },
+  {
+    "label": "Commissary",
+    "deptName": "Commissary - BEI",
+    "custodian": "test.commissary@bebang.ph",
+    "rawResponse": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: Commissary\"}",
+    "preexisting": false,
+    "fundName": "PCF-Commissary"
+  }
+]

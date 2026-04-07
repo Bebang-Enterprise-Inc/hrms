@@ -5,7 +5,7 @@ sprint_id: S167
 sprint_name: pcf-full-acceptance-test
 sprint_date: 2026-04-06
 plan_version: 1
-status: GO
+status: COMPLETED
 owner_decision_maker: Sam (CEO)
 owner_technical_executor: Claude (single-owner execution)
 branch: s167-pcf-full-acceptance-test
@@ -13,8 +13,8 @@ target_repo: BEI-ERP (evidence only — no code changes)
 target_branch_base: production
 registry_row: "| `S167` | Sprint 167 | `s167-pcf-full-acceptance-test` | — | GO |"
 depends_on: S162 (COMPLETED)
-completed_date: <FILL ON CLOSEOUT>
-execution_summary: <FILL ON CLOSEOUT>
+completed_date: 2026-04-07
+execution_summary: "15/22 scenarios PASS (Phase 1 blocked by DEFECT-004 missing warehouse). 5 fix PRs merged during run: hrms#474, hrms#476, hrms#478, BEI-Tasks#349, BEI-Tasks#350. 8 defects found, 5 fixed in-run, 3 open (DEFECT-004 missing warehouse, DEFECT-009 AI classifier naked COA codes). All test data rolled back in Phase 6. Evidence: output/l3/s167/"
 ```
 
 ---

@@ -1,0 +1,402 @@
+[
+  {
+    "ts": "2026-04-07T05:51:11.335Z",
+    "scenario": "0.1_HR",
+    "check": "fund_created_HR",
+    "before": "no fund",
+    "after": "created",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T05:51:12.468Z",
+    "scenario": "0.1_SupplyChain",
+    "check": "fund_created_SupplyChain",
+    "before": "no fund",
+    "after": "created",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T05:51:39.343Z",
+    "scenario": "0.1_Commissary",
+    "check": "fund_created_Commissary",
+    "before": "no fund",
+    "after": "created",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T05:51:50.002Z",
+    "scenario": "0.2_staff",
+    "check": "fund_resolution_staff",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/store-ops/pcf",
+    "page_tail": "Communication | TS | test.staff@bebang.ph | test.staff@bebang.ph | Toggle Sidebar | Dashboard | Store-ops | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your store. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T05:52:01.567Z",
+    "scenario": "0.2_supv",
+    "check": "fund_resolution_supv",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/store-ops/pcf",
+    "page_tail": "Platform & Admin | TS | test.supervisor@bebang.ph | test.supervisor@bebang.ph | Toggle Sidebar | Dashboard | Store-ops | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your store. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T05:52:11.683Z",
+    "scenario": "0.2_hr",
+    "check": "fund_resolution_hr",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/hr-admin/pcf",
+    "page_tail": "Platform & Admin | TH | test.hr@bebang.ph | test.hr@bebang.ph | Toggle Sidebar | Dashboard | Hr-admin | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your department. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T05:52:21.616Z",
+    "scenario": "0.2_warehouse",
+    "check": "fund_resolution_warehouse",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/warehouse/pcf",
+    "page_tail": "Commissary | TW | test.warehouse@bebang.ph | test.warehouse@bebang.ph | Toggle Sidebar | Dashboard | Warehouse | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your department. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T05:52:32.066Z",
+    "scenario": "0.2_commi",
+    "check": "fund_resolution_commi",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/commissary/pcf",
+    "page_tail": "Expiring Items | TC | test.commissary@bebang.ph | test.commissary@bebang.ph | Toggle Sidebar | Dashboard | Commissary | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your department. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T05:52:42.793Z",
+    "scenario": "0.2_finance",
+    "check": "fund_resolution_finance",
+    "before": "logged_in",
+    "after": "fund_visible",
+    "passed": true,
+    "url": "https://my.bebang.ph/dashboard/accounting/pcf",
+    "page_tail": "Finance Reports | Petty Cash Fund | Store Petty Cash Fund — | Add Entry | Pending (0) | History | Petty Cash Fund Status | Current fund utilization and pending expenses | Threshold Progress | Utilization | 0% | 0% | 60% threshold | 100% | Finance is notified at 60% — the custodian decides when to actually submit the batch."
+  },
+  {
+    "ts": "2026-04-07T06:02:49.359Z",
+    "scenario": "0.2_staff",
+    "check": "fund_resolution_staff",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/store-ops/pcf",
+    "page_tail": "Campaign Giveaways | Procurement | Warehouse | Commissary | Projects & Maintenance | Communication | TS | test.staff@bebang.ph | test.staff@bebang.ph | Toggle Sidebar | Dashboard | Store-ops | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your store. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T06:02:59.630Z",
+    "scenario": "0.2_supv",
+    "check": "fund_resolution_supv",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/store-ops/pcf",
+    "page_tail": "Commissary | Projects & Maintenance | Analytics | Communication | Tasks & Reports | Platform & Admin | TS | test.supervisor@bebang.ph | test.supervisor@bebang.ph | Toggle Sidebar | Dashboard | Store-ops | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your store. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T06:03:09.839Z",
+    "scenario": "0.2_hr",
+    "check": "fund_resolution_hr",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/hr-admin/pcf",
+    "page_tail": "Commissary | Projects & Maintenance | Communication | E-Signature | Tasks & Reports | Platform & Admin | TH | test.hr@bebang.ph | test.hr@bebang.ph | Toggle Sidebar | Dashboard | Hr-admin | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your department. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T06:03:19.957Z",
+    "scenario": "0.2_warehouse",
+    "check": "fund_resolution_warehouse",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/warehouse/pcf",
+    "page_tail": "Orders | Picking | 3PL Billing | Permits | My Delivery | Commissary | TW | test.warehouse@bebang.ph | test.warehouse@bebang.ph | Toggle Sidebar | Dashboard | Warehouse | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your department. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T06:03:29.541Z",
+    "scenario": "0.2_commi",
+    "check": "fund_resolution_commi",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/commissary/pcf",
+    "page_tail": "Raw Materials | Work Orders | Quality | Wastage | Wastage Trends | Expiring Items | TC | test.commissary@bebang.ph | test.commissary@bebang.ph | Toggle Sidebar | Dashboard | Commissary | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your department. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T06:03:40.511Z",
+    "scenario": "0.2_finance",
+    "check": "fund_resolution_finance",
+    "before": "logged_in",
+    "after": "fund_visible",
+    "passed": true,
+    "url": "https://my.bebang.ph/dashboard/accounting/pcf",
+    "page_tail": "SOA | Payables Review | Discount Monitoring | PCF | Form 2307 | Finance Reports | Petty Cash Fund | Store Petty Cash Fund — | Add Entry | Pending (0) | History | Petty Cash Fund Status | Current fund utilization and pending expenses | Threshold Progress | Utilization | 0% | 0% | 60% threshold | 100% | Finance is notified at 60% — the custodian decides when to actually submit the batch."
+  },
+  {
+    "ts": "2026-04-07T06:05:49.118Z",
+    "scenario": "0.2_staff",
+    "check": "fund_resolution_staff",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/store-ops/pcf",
+    "page_tail": "Campaign Giveaways | Procurement | Warehouse | Commissary | Projects & Maintenance | Communication | TS | test.staff@bebang.ph | test.staff@bebang.ph | Toggle Sidebar | Dashboard | Store-ops | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your store. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T06:05:59.367Z",
+    "scenario": "0.2_supv",
+    "check": "fund_resolution_supv",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/store-ops/pcf",
+    "page_tail": "Commissary | Projects & Maintenance | Analytics | Communication | Tasks & Reports | Platform & Admin | TS | test.supervisor@bebang.ph | test.supervisor@bebang.ph | Toggle Sidebar | Dashboard | Store-ops | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your store. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T06:06:11.190Z",
+    "scenario": "0.2_hr",
+    "check": "fund_resolution_hr",
+    "before": "logged_in",
+    "after": "fund_visible",
+    "passed": true,
+    "url": "https://my.bebang.ph/dashboard/hr-admin/pcf",
+    "page_tail": "₱5,000 | Balance | ₱5,000 | Pending Expenses | ₱0 | 0 expenses | Last Batch | Never | Utilization | 0% | 0% | 60% threshold | 100% | Threshold Progress | Utilization | 0% | 0% | 60% threshold | 100% | Finance is notified at 60% — the custodian decides when to actually submit the batch."
+  },
+  {
+    "ts": "2026-04-07T06:06:22.954Z",
+    "scenario": "0.2_warehouse",
+    "check": "fund_resolution_warehouse",
+    "before": "logged_in",
+    "after": "fund_visible",
+    "passed": true,
+    "url": "https://my.bebang.ph/dashboard/warehouse/pcf",
+    "page_tail": "₱5,000 | Balance | ₱5,000 | Pending Expenses | ₱0 | 0 expenses | Last Batch | Never | Utilization | 0% | 0% | 60% threshold | 100% | Threshold Progress | Utilization | 0% | 0% | 60% threshold | 100% | Finance is notified at 60% — the custodian decides when to actually submit the batch."
+  },
+  {
+    "ts": "2026-04-07T06:06:34.472Z",
+    "scenario": "0.2_commi",
+    "check": "fund_resolution_commi",
+    "before": "logged_in",
+    "after": "fund_visible",
+    "passed": true,
+    "url": "https://my.bebang.ph/dashboard/commissary/pcf",
+    "page_tail": "₱5,000 | Balance | ₱5,000 | Pending Expenses | ₱0 | 0 expenses | Last Batch | Never | Utilization | 0% | 0% | 60% threshold | 100% | Threshold Progress | Utilization | 0% | 0% | 60% threshold | 100% | Finance is notified at 60% — the custodian decides when to actually submit the batch."
+  },
+  {
+    "ts": "2026-04-07T06:06:44.929Z",
+    "scenario": "0.2_finance",
+    "check": "fund_resolution_finance",
+    "before": "logged_in",
+    "after": "no_pcf_fund_assigned",
+    "passed": false,
+    "url": "https://my.bebang.ph/dashboard/accounting/pcf",
+    "page_tail": "Accounting | Pcf | Search | Ctrl K | Search | Search tasks, projects, and actions | Finance Operations Command Center | Payables, billing, and finance control lanes | NAVIGATION | AP Command Center | Finance Operations | SOA | Payables Review | Discount Monitoring | PCF | Form 2307 | Finance Reports | Petty Cash Fund | No PCF fund assigned | No PCF fund is configured for your department. Please contact an administrator to have a fund set up."
+  },
+  {
+    "ts": "2026-04-07T06:10:34.618Z",
+    "scenario": "2.1_NBS",
+    "check": "expense_added_NBS",
+    "before": "pending_list",
+    "after": "error_400",
+    "passed": false
+  },
+  {
+    "ts": "2026-04-07T06:10:42.157Z",
+    "scenario": "2.1_Jollibee",
+    "check": "expense_added_Jollibee",
+    "before": "pending_list",
+    "after": "error_400",
+    "passed": false
+  },
+  {
+    "ts": "2026-04-07T06:27:06.621Z",
+    "scenario": "2.1_NBS",
+    "check": "expense_added_NBS",
+    "before": "pending_list",
+    "after": "added_to_pending",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T06:27:14.430Z",
+    "scenario": "2.1_Jollibee",
+    "check": "expense_added_Jollibee",
+    "before": "pending_list",
+    "after": "added_to_pending",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T06:57:42.407Z",
+    "scenario": "2.2_hr_submit",
+    "check": "hr_batch_submitted",
+    "before": "2_pending_expenses",
+    "after": "batch_created",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T06:58:00.783Z",
+    "scenario": "2.1_commi_ice",
+    "check": "expense_added_ice",
+    "before": "pending_list",
+    "after": "added",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T06:58:08.081Z",
+    "scenario": "2.1_commi_wheels",
+    "check": "expense_added_wheels",
+    "before": "pending_list",
+    "after": "added",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T06:58:10.278Z",
+    "scenario": "2.2_commi_submit",
+    "check": "commi_batch_submitted",
+    "before": "2_pending_expenses",
+    "after": "batch_created",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T06:59:38.996Z",
+    "scenario": "3.1_review_queue",
+    "check": "review_queue_shows_batches",
+    "before": "logged_in_as_finance",
+    "after": "hr_visible=true commi_visible=true",
+    "passed": true,
+    "url": "https://my.bebang.ph/dashboard/accounting/pcf/review"
+  },
+  {
+    "ts": "2026-04-07T06:59:39.871Z",
+    "scenario": "3.2a_classify_hr",
+    "check": "ai_classification_ran",
+    "before": "batch_submitted",
+    "after": "classified",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T06:59:41.274Z",
+    "scenario": "3.2b_approve_hr",
+    "check": "hr_batch_approved",
+    "before": "Submitted",
+    "after": "error_400",
+    "passed": false
+  },
+  {
+    "ts": "2026-04-07T06:59:42.675Z",
+    "scenario": "3.3_reject_commi",
+    "check": "commi_batch_rejected",
+    "before": "Submitted",
+    "after": "Rejected",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T06:59:43.249Z",
+    "scenario": "3.4_empty_coa",
+    "check": "empty_coa_blocked",
+    "before": "valid_approval_expected_to_be_blocked",
+    "after": "correctly_blocked",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T06:59:43.823Z",
+    "scenario": "3.5_BEI-PCF-2026-00003",
+    "check": "final_batch_status",
+    "before": "Submitted",
+    "after": "Submitted",
+    "passed": false
+  },
+  {
+    "ts": "2026-04-07T06:59:44.401Z",
+    "scenario": "3.5_BEI-PCF-2026-00004",
+    "check": "final_batch_status",
+    "before": "Submitted",
+    "after": "Rejected",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T07:01:41.154Z",
+    "scenario": "3.2b_approve_hr_retry",
+    "check": "hr_batch_approved_with_coa_overrides",
+    "before": "Submitted",
+    "after": "Approved",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T07:01:41.691Z",
+    "scenario": "3.2b_final_status",
+    "check": "hr_batch_final_status",
+    "before": "Submitted",
+    "after": "Approved",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T07:02:26.350Z",
+    "scenario": "4.1_edit_hr_fund",
+    "check": "hr_fund_settings_updated",
+    "before": "{\"fund_amount\":5000,\"threshold_percentage\":60}",
+    "after": "{\"fund_amount\":8000,\"threshold_percentage\":70}",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T07:02:43.750Z",
+    "scenario": "4.2_verify_hr_view",
+    "check": "hr_sees_updated_settings",
+    "before": "5000/60%",
+    "after": "8000_visible=true 70pct_visible=true",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T07:03:39.755Z",
+    "scenario": "5.1_staff",
+    "check": "sidebar_regression",
+    "before": "logged_in",
+    "after": "R3_dept_pcf=false R10_no_pcf_in_my_expenses=true",
+    "passed": false,
+    "notes": "links=[{\"text\":\"HR Management\",\"href\":\"/dashboard/hr-admin/pcf\"},{\"text\":\"My Expenses\",\"href\":\"/dashboard/expense\"},{\"text\":\"Campaign Giveaways\",\"href\":\"/dashboard/campaign-giveaways/pcf\"},{\"text\":\"Procurement\",\"href\":\"/dashboard/procurement/pcf\"},{\"text\":\"Warehouse\",\"href\":\"/dashboard/warehouse/pcf\"},{\"text\":\"Commissary\",\"href\":\"/dashboard/commissary/pcf\"},{\"text\":\"Projects & Maintenance\",\"href\":\"/dashboard/projects/pcf\"}]"
+  },
+  {
+    "ts": "2026-04-07T07:03:48.610Z",
+    "scenario": "5.1_hr",
+    "check": "sidebar_regression",
+    "before": "logged_in",
+    "after": "R3_dept_pcf=false R10_no_pcf_in_my_expenses=true",
+    "passed": false,
+    "notes": "links=[{\"text\":\"My Expenses\",\"href\":\"/dashboard/expense\"}]"
+  },
+  {
+    "ts": "2026-04-07T07:03:57.485Z",
+    "scenario": "5.1_finance",
+    "check": "sidebar_regression",
+    "before": "logged_in",
+    "after": "R3_dept_pcf=false R10_no_pcf_in_my_expenses=true",
+    "passed": false,
+    "notes": "links=[{\"text\":\"My Expenses\",\"href\":\"/dashboard/expense\"}]"
+  },
+  {
+    "ts": "2026-04-07T07:04:09.851Z",
+    "scenario": "5.2_legacy_redirect_hr",
+    "check": "legacy_expense_pcf_redirect",
+    "before": "/dashboard/expense/pcf",
+    "after": "https://my.bebang.ph/dashboard/accounting/pcf",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-07T07:04:16.856Z",
+    "scenario": "5.2_legacy_redirect_add",
+    "check": "legacy_expense_pcf_add_redirect",
+    "before": "/dashboard/expense/pcf/add",
+    "after": "https://my.bebang.ph/dashboard/accounting/pcf/add",
+    "passed": true
+  }
+]
