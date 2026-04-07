@@ -1,0 +1,29 @@
+{
+  "scenario_id": "EMP-REHIRE-002",
+  "ts": "2026-04-07T14:51:46.442Z",
+  "page_obs": {
+    "has_rehire_option": false,
+    "buttons": [
+      "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+      "Toggle Sidebar",
+      "Search\nCtrl K",
+      "Add New Employee",
+      "Fullscreen",
+      "Missing Manager\n538",
+      "Missing DOB\n137",
+      "Missing Designation\n9",
+      "Missing Salary\n65",
+      "Missing Company Email\n510",
+      "All branches",
+      "All departments",
+      "Active",
+      "All types",
+      "All managers",
+      "100 / page",
+      "Compact density",
+      "Refresh",
+      "ABALLAR, JERRY F.",
+      "Actions"
+    ]
+  }
+}

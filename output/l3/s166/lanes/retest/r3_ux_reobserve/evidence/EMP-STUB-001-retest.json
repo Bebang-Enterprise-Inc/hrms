@@ -1,0 +1,128 @@
+{
+  "scenarioId": "EMP-STUB-001",
+  "retestFor": "S170-context",
+  "note": "Not in S170 scope — context recheck only",
+  "checkDesc": "HR Reports tiles — how many now work after S168/S170 deploys",
+  "verdict": "IMPROVED_POST_DEPLOY",
+  "baseline": {
+    "working_count": 1,
+    "total_tiles": 8,
+    "note": "1/8 working in Lane F — only Employee Master redirect worked"
+  },
+  "observed": {
+    "grid_page": {
+      "url": "https://my.bebang.ph/dashboard/hr/reports",
+      "title": "BEI Tasks - Task Management",
+      "h1": "HR Reports & Analytics",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nReports\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nHR Reports & Analytics\n\nComprehensive reports and insights for workforce management.\n\nOperational people management moved to Employee Master.\n\nUse reports for exports, historical analysis, and summarized reporting. Use the Employee Master dashboard for bulk workforce operations and Employee 360 review.\n\nOpen Employee Master\nEmployee Masterlist\nReport/export companion to the operational Employee Master dashboard\nHeadcount Report\nActive headcount by department, branch, or type\nAttrition Report\nMonthly attrition rates and trends\nNew Hires\nRecently joined employees\nSeparations\nEmployee separations and reasons\nRecruitment Funnel\nApplication to hire conversion rates\nAttendance Summary\nAttendance, tardiness, and leave summary\nOvertime Report\nOT hours and costs by department",
+      "button_count": 3,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "dialog_count": 0,
+      "dialog_contents": []
+    },
+    "tile_results": [
+      {
+        "path": "/dashboard/hr/reports/employee-masterlist",
+        "url": "https://my.bebang.ph/dashboard/hr/reports/employee-masterlist",
+        "h1": "Report Not Found",
+        "notFound": true,
+        "isStub": false,
+        "hasData": false,
+        "working": false
+      },
+      {
+        "path": "/dashboard/hr/reports/headcount",
+        "url": "https://my.bebang.ph/dashboard/hr/reports/headcount",
+        "h1": "Headcount Report",
+        "notFound": false,
+        "isStub": false,
+        "hasData": true,
+        "working": true
+      },
+      {
+        "path": "/dashboard/hr/reports/attrition",
+        "url": "https://my.bebang.ph/dashboard/hr/reports/attrition",
+        "h1": "Attrition Report",
+        "notFound": false,
+        "isStub": false,
+        "hasData": true,
+        "working": true
+      },
+      {
+        "path": "/dashboard/hr/reports/new-hires",
+        "url": "https://my.bebang.ph/dashboard/hr/reports/new-hires",
+        "h1": "",
+        "notFound": false,
+        "isStub": false,
+        "hasData": true,
+        "working": true
+      },
+      {
+        "path": "/dashboard/hr/reports/separations",
+        "url": "https://my.bebang.ph/dashboard/hr/reports/separations",
+        "h1": "",
+        "notFound": false,
+        "isStub": false,
+        "hasData": true,
+        "working": true
+      },
+      {
+        "path": "/dashboard/hr/reports/recruitment-funnel",
+        "url": "https://my.bebang.ph/dashboard/hr/reports/recruitment-funnel",
+        "h1": "Recruitment Funnel",
+        "notFound": false,
+        "isStub": false,
+        "hasData": true,
+        "working": true
+      },
+      {
+        "path": "/dashboard/hr/reports/attendance-summary",
+        "url": "https://my.bebang.ph/dashboard/hr/reports/attendance-summary",
+        "h1": "Report Not Found",
+        "notFound": true,
+        "isStub": false,
+        "hasData": false,
+        "working": false
+      },
+      {
+        "path": "/dashboard/hr/reports/overtime",
+        "url": "https://my.bebang.ph/dashboard/hr/reports/overtime",
+        "h1": "",
+        "notFound": false,
+        "isStub": false,
+        "hasData": true,
+        "working": true
+      }
+    ],
+    "derived": {
+      "working_count": 6,
+      "total_checked": 8,
+      "working_paths": [
+        "/dashboard/hr/reports/headcount",
+        "/dashboard/hr/reports/attrition",
+        "/dashboard/hr/reports/new-hires",
+        "/dashboard/hr/reports/separations",
+        "/dashboard/hr/reports/recruitment-funnel",
+        "/dashboard/hr/reports/overtime"
+      ],
+      "broken_paths": [
+        "/dashboard/hr/reports/employee-masterlist",
+        "/dashboard/hr/reports/attendance-summary"
+      ]
+    }
+  },
+  "screenshots": {
+    "grid": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r3_ux_reobserve/screenshots/EMP-STUB-001_grid.png",
+    "grid_final": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r3_ux_reobserve/screenshots/EMP-STUB-001_grid_final.png"
+  },
+  "timestamp_pht": "4/7/2026, 21:50:43"
+}

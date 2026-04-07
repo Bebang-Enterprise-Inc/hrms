@@ -1,0 +1,119 @@
+{
+  "scenario": "EMP-LEAVE-003",
+  "leave_application": "HR-LAP-2026-00118",
+  "run_timestamp_pht": "4/7/2026, 9:42:48 PM",
+  "login": {
+    "email": "test.hr@bebang.ph",
+    "ok": true,
+    "final_url": "https://hq.bebang.ph/app/home"
+  },
+  "step1_leave_app": {
+    "browser_url": "https://hq.bebang.ph/app/leave-application/HR-LAP-2026-00118",
+    "api_ok": true,
+    "api_status_code": 200,
+    "data": {
+      "name": "HR-LAP-2026-00118",
+      "owner": "Administrator",
+      "creation": "2026-04-07 13:13:49.035589",
+      "modified": "2026-04-07 13:14:13.133263",
+      "modified_by": "test.supervisor@bebang.ph",
+      "docstatus": 1,
+      "idx": 0,
+      "naming_series": "HR-LAP-.YYYY.-",
+      "employee": "TEST-CREW-001",
+      "employee_name": "Test Crew",
+      "leave_type": "Casual Leave",
+      "company": "Bebang Enterprise Inc.",
+      "department": "Management - BAG",
+      "from_date": "2026-04-14",
+      "to_date": "2026-04-14",
+      "half_day": 0,
+      "total_leave_days": 1,
+      "description": "FIX-ITER1-APPROVE-1775538808867 — L3 retest approve path",
+      "leave_balance": 0,
+      "follow_via_email": 1,
+      "posting_date": "2026-04-07",
+      "status": "Approved",
+      "doctype": "Leave Application"
+    },
+    "error": null,
+    "status": "Approved",
+    "docstatus": 1,
+    "total_leave_days": 1,
+    "employee": "TEST-CREW-001"
+  },
+  "step2_ledger_list_browser": {
+    "browser_url": "https://hq.bebang.ph/app/leave-ledger-entry?transaction_name=HR-LAP-2026-00118",
+    "list_row_count": 1,
+    "no_result_visible": true,
+    "page_title": "Leave Ledger Entry",
+    "url": "https://hq.bebang.ph/app/leave-ledger-entry?transaction_name=HR-LAP-2026-00118"
+  },
+  "step3_api_cross_check": {
+    "api_ok": true,
+    "api_status_code": 200,
+    "row_count": 1,
+    "rows": [
+      {
+        "name": "ln52p77bho",
+        "employee": "TEST-CREW-001",
+        "leaves": -1,
+        "transaction_type": "Leave Application",
+        "transaction_name": "HR-LAP-2026-00118",
+        "creation": "2026-04-07 21:37:52.421571",
+        "docstatus": 1
+      }
+    ],
+    "error": null
+  },
+  "step4_leave_balance": {
+    "employee": "TEST-CREW-001",
+    "allocations": null,
+    "ledger_entries_count": 5,
+    "ledger_entries_sample": [
+      {
+        "name": "ln7oe1km0d",
+        "employee": "TEST-CREW-001",
+        "leaves": -1,
+        "transaction_type": "Leave Application",
+        "transaction_name": "HR-LAP-2026-00117",
+        "creation": "2026-04-07 21:37:52.700801"
+      },
+      {
+        "name": "ln6v9g6vo1",
+        "employee": "TEST-CREW-001",
+        "leaves": -2,
+        "transaction_type": "Leave Application",
+        "transaction_name": "HR-LAP-2026-00113",
+        "creation": "2026-04-07 21:37:52.683211"
+      },
+      {
+        "name": "ln6r5k07ek",
+        "employee": "TEST-CREW-001",
+        "leaves": -1,
+        "transaction_type": "Leave Application",
+        "transaction_name": "HR-LAP-2026-00116",
+        "creation": "2026-04-07 21:37:52.667788"
+      },
+      {
+        "name": "ln52p77bho",
+        "employee": "TEST-CREW-001",
+        "leaves": -1,
+        "transaction_type": "Leave Application",
+        "transaction_name": "HR-LAP-2026-00118",
+        "creation": "2026-04-07 21:37:52.421571"
+      },
+      {
+        "name": "0vgpsagkml",
+        "employee": "TEST-CREW-001",
+        "leaves": 5,
+        "transaction_type": "Leave Allocation",
+        "transaction_name": "HR-LAL-2026-00066",
+        "creation": "2026-03-11 02:45:31.190193"
+      }
+    ],
+    "error": null
+  },
+  "verdict": "PASS_POST_FIX",
+  "verdict_reason": "API returned 1 ledger row(s) for HR-LAP-2026-00118. Browser list: 1 rows visible, no_result=true. S170 Phase 1 fix verified working."
+}

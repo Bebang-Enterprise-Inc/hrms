@@ -1,0 +1,124 @@
+{
+  "scenarioId": "EMP-UX-005",
+  "retestFor": "S170",
+  "checkDesc": "Sensitive Changes approve/reject buttons for Finance role",
+  "verdict": "PASS_POST_FIX",
+  "baseline": {
+    "has_approve_reject_buttons": false,
+    "note": "Original DEFECT_NOT_REPRODUCED — queue visible but no row-level approve/reject",
+    "screenshot": "lane_f/screenshots/EMP-UX-005_observed.png"
+  },
+  "observed": {
+    "list_page": {
+      "url": "https://my.bebang.ph/dashboard/hr/payroll/sensitive-changes",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Sensitive Changes Queue",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayroll\nSensitive-changes\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to Payroll\nSensitive Changes Queue\n\nDual-control approval for bank account, TIN, SSS, PhilHealth, and Pag-IBIG changes\n\nAll (15)\nPending HR\nPending Finance (2)\nActivation\nActive\nRejected (13)\nNew Request\nSensitive Change Requests15 request(s)\nExport\nColumns\nEmployee\tField\tChange\tInitiator\tStatus\tEffective\t\n\nJuan Paolo Dela Cruz Dela Cruz (L3 2026-04-07 15:22:29 EMP-A)\nARANETA GATEWAY\n\tPag-IBIG Number\t— → 1234-5678-9012\tHR\tRejected\tJun 6\t\n\n\nJuan Paolo Dela Cruz Dela Cruz (L3 2026-04-07 15:22:29 EMP-A)\nARANETA GATEWAY\n\tPhilHealth Number\t— → 12-345678901-2\tHR\tRejected\tJun 6\t\n\n\nJuan Paolo Dela Cruz Dela Cruz (L3 2026-04-07 15:22:29 EMP-A)\nARANETA GATEWAY\n\tSSS Number\t— → 12-3456789-0\tHR\tRejected\tJun 6\t\n\n\nJuan Paolo Dela Cruz Dela Cruz (L3 2026-04-07 15:22:29 EMP-A)\nARANETA GATEWAY\n\tTIN\t— → 123-456-789-000\tHR\tRejected\tJun 6\t\n\n\nJuan Paolo Dela Cruz Dela Cruz (L3 2026-04-07 15:22:29 EMP-A)\nARANETA GATEWAY\n\tBank Name\t— → Metrobank\tHR\tRejected\tJun 6\t\n\n\nJuan Paolo Dela Cruz Dela Cruz (L3 2026-04-07 15:22:29 EMP-A)\nARANETA GATEWAY\n\tBank Account Number\t— → ****3210\tHR\tRejected\tJun 6\t\n\n\nABALLAR, JERRY F.\nALABANG TOWN CENTER\n\tBank Account Number\t— → ****2233\tHR\tPending Finance Approval\tJun 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tTIN\t— → 123-456-789\tHR\tRejected\tApr 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tPhilHealth Number\t— → 9999999999\tHR\tRejected\tApr 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tSSS Number\t— → 1234567890\tHR\tRejected\tMar 25\t\n\nRows per page\n\n10\nPage 1 of 2\nPrevious\nNext",
+      "button_count": 15,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "All (15)",
+        "Pending HR",
+        "Pending Finance (2)",
+        "Activation",
+        "Active",
+        "Rejected (13)",
+        "New Request",
+        "Export",
+        "Columns",
+        "10",
+        "Previous",
+        "Next"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "dialog_count": 0,
+      "dialog_contents": []
+    },
+    "pending_tab_clicked": true,
+    "pending_tab": {
+      "url": "https://my.bebang.ph/dashboard/hr/payroll/sensitive-changes",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Sensitive Changes Queue",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayroll\nSensitive-changes\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to Payroll\nSensitive Changes Queue\n\nDual-control approval for bank account, TIN, SSS, PhilHealth, and Pag-IBIG changes\n\nAll (2)\nPending HR\nPending Finance (2)\nActivation\nActive\nRejected\nNew Request\nSensitive Change Requests2 request(s)\nExport\nColumns\nEmployee\tField\tChange\tInitiator\tStatus\tEffective\t\n\nABALLAR, JERRY F.\nALABANG TOWN CENTER\n\tBank Account Number\t— → ****2233\tHR\tPending Finance Approval\tJun 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tBank Account Number\t****4545 → ****7890\tHR\tPending Finance Approval\tApr 1\t\n\nRows per page\n\n10\nPage 1 of 1\nPrevious\nNext",
+      "button_count": 15,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "All (2)",
+        "Pending HR",
+        "Pending Finance (2)",
+        "Activation",
+        "Active",
+        "Rejected",
+        "New Request",
+        "Export",
+        "Columns",
+        "10",
+        "Previous",
+        "Next"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "dialog_count": 0,
+      "dialog_contents": []
+    },
+    "row_clicked": true,
+    "row_detail": {
+      "url": "https://my.bebang.ph/dashboard/hr/payroll/sensitive-changes",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Sensitive Changes Queue",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayroll\nSensitive-changes\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to Payroll\nSensitive Changes Queue\n\nDual-control approval for bank account, TIN, SSS, PhilHealth, and Pag-IBIG changes\n\nAll (2)\nPending HR\nPending Finance (2)\nActivation\nActive\nRejected\nNew Request\nSensitive Change Requests2 request(s)\nExport\nColumns\nEmployee\tField\tChange\tInitiator\tStatus\tEffective\t\n\nABALLAR, JERRY F.\nALABANG TOWN CENTER\n\tBank Account Number\t— → ****2233\tHR\tPending Finance Approval\tJun 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tBank Account Number\t****4545 → ****7890\tHR\tPending Finance Approval\tApr 1\t\n\nRows per page\n\n10\nPage 1 of 1\nPrevious\nNext",
+      "button_count": 15,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "All (2)",
+        "Pending HR",
+        "Pending Finance (2)",
+        "Activation",
+        "Active",
+        "Rejected",
+        "New Request",
+        "Export",
+        "Columns",
+        "10",
+        "Previous",
+        "Next"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "dialog_count": 0,
+      "dialog_contents": []
+    },
+    "derived": {
+      "approve_on_list": false,
+      "reject_on_list": true,
+      "approve_in_row_detail": false,
+      "reject_in_row_detail": true,
+      "approve_in_text": true,
+      "reject_in_text": true,
+      "has_approve_reject": true,
+      "dialog_count": 0
+    }
+  },
+  "screenshots": {
+    "list_page": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r3_ux_reobserve/screenshots/EMP-UX-005_list_page.png",
+    "pending_finance_tab": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r3_ux_reobserve/screenshots/EMP-UX-005_pending_finance_tab.png",
+    "row_detail": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r3_ux_reobserve/screenshots/EMP-UX-005_row_detail.png"
+  },
+  "timestamp_pht": "4/7/2026, 21:49:22"
+}

@@ -1,0 +1,30 @@
+{
+  "scenario_id": "EMP-SALARY-CHANGE-006",
+  "ts": "2026-04-07T14:50:11.147Z",
+  "tests": [
+    {
+      "label": "negative",
+      "value": -5000,
+      "accepted": false,
+      "rejected": true,
+      "status": 417,
+      "body": "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payroll' has no attribute 'update_compensation'\",\"exc_type\""
+    },
+    {
+      "label": "zero",
+      "value": 0,
+      "accepted": false,
+      "rejected": true,
+      "status": 417,
+      "body": "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payroll' has no attribute 'update_compensation'\",\"exc_type\""
+    },
+    {
+      "label": "non_numeric_string",
+      "value": "abc",
+      "accepted": false,
+      "rejected": true,
+      "status": 417,
+      "body": "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payroll' has no attribute 'update_compensation'\",\"exc_type\""
+    }
+  ]
+}

@@ -1,0 +1,4780 @@
+[
+  {
+    "scenario": "EMP-EDIT-PERSONAL-001",
+    "phase": "A2",
+    "field": "middle_name",
+    "expected": "Dela Cruz",
+    "actual": "Dela Cruz",
+    "match": true,
+    "ts": "2026-04-07T08:09:58.804Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-002",
+    "phase": "A2",
+    "firstOk": true,
+    "nameOk": true,
+    "actual_employee_name": "Juan Paolo Dela Cruz Dela Cruz (L3 2026-04-07 15:22:29 EMP-A)",
+    "ts": "2026-04-07T08:10:12.453Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-003",
+    "phase": "A2",
+    "expected": "1994-03-21",
+    "actual": "1994-03-21",
+    "match": true,
+    "ts": "2026-04-07T08:10:25.985Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-004",
+    "phase": "A2",
+    "after": "1994-03-21",
+    "rejected": true,
+    "ts": "2026-04-07T08:10:41.262Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-005",
+    "phase": "A2",
+    "expected": "Female",
+    "actual": "Female",
+    "match": true,
+    "ts": "2026-04-07T08:10:54.984Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-006",
+    "phase": "A2",
+    "unchanged": true,
+    "before": "Dela Cruz",
+    "after": "Dela Cruz",
+    "ts": "2026-04-07T08:11:07.551Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-CONTACT-001",
+    "phase": "A2",
+    "cellOk": true,
+    "emailOk": true,
+    "ts": "2026-04-07T08:11:21.586Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-CONTACT-002",
+    "phase": "A2",
+    "ptbcOk": true,
+    "phoneOk": false,
+    "relOk": true,
+    "ts": "2026-04-07T08:11:35.476Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-CONTACT-003",
+    "phase": "A2",
+    "rejected": true,
+    "before": "juan.test.l3@example.com",
+    "after": "juan.test.l3@example.com",
+    "ts": "2026-04-07T08:11:50.744Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-CONTACT-004",
+    "phase": "A2",
+    "rejected": true,
+    "before": "09171234567",
+    "after": "09171234567",
+    "ts": "2026-04-07T08:12:06.292Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-ADDRESS-001",
+    "phase": "A2",
+    "ok": true,
+    "actual": "123 Rizal St, Brgy San Antonio, Pasig City, Metro Manila 1605",
+    "ts": "2026-04-07T08:12:20.014Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-ADDRESS-002",
+    "phase": "A2",
+    "permOk": true,
+    "currentStillRizal": true,
+    "ts": "2026-04-07T08:12:33.697Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-EMPLOYMENT-001",
+    "phase": "A2",
+    "ok": true,
+    "actual": "Store Crew",
+    "ts": "2026-04-07T08:12:59.298Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-EMPLOYMENT-002",
+    "phase": "A2",
+    "persisted": true,
+    "actual": "Operations",
+    "ts": "2026-04-07T08:13:13.914Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-EMPLOYMENT-004",
+    "phase": "A2",
+    "persisted": true,
+    "actual": "Probationary",
+    "ts": "2026-04-07T08:13:41.828Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-EMPLOYMENT-005",
+    "phase": "A2",
+    "apiOk": true,
+    "uiOk": true,
+    "actual": "Assistant Supervisor",
+    "ts": "2026-04-07T08:14:11.842Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-001",
+    "phase": "A3",
+    "ok1": true,
+    "ok2": true,
+    "note": "BEI Sensitive Change Request created (not applied to Employee yet \u00e2\u20ac\u201d requires Finance approval + HR activation)",
+    "ts": "2026-04-07T08:26:53.989Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-002",
+    "phase": "A3",
+    "ok": false,
+    "request_created": false,
+    "ts": "2026-04-07T08:26:57.172Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-003",
+    "phase": "A3",
+    "accepted": false,
+    "observation": "per-field request model; cross-field validation would live in HR/Finance approver UI, not API",
+    "ts": "2026-04-07T08:27:00.396Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-001",
+    "phase": "A3",
+    "ok": true,
+    "request_created": true,
+    "ts": "2026-04-07T08:27:03.853Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-002",
+    "phase": "A3",
+    "ok": true,
+    "ts": "2026-04-07T08:27:07.004Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-003",
+    "phase": "A3",
+    "ok": true,
+    "ts": "2026-04-07T08:27:10.870Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-004",
+    "phase": "A3",
+    "set": false,
+    "reachable": {
+      "status": 200,
+      "ok": true
+    },
+    "ts": "2026-04-07T08:27:16.223Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-005",
+    "phase": "A3",
+    "changed": false,
+    "reachable": {
+      "status": 200,
+      "ok": true
+    },
+    "ts": "2026-04-07T08:27:21.153Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-COMPLETION-002",
+    "phase": "A3",
+    "detail_status": 200,
+    "list_status": 200,
+    "list_total_rows": 500,
+    "profile_completion": 83,
+    "detail_keys": [
+      "employee",
+      "personal",
+      "emergency",
+      "employment",
+      "compensation",
+      "gov_ids",
+      "enrichment",
+      "recent_changes"
+    ],
+    "list_row_found": true,
+    "ts": "2026-04-07T08:27:24.585Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-001",
+    "phase": "A3",
+    "ok1": true,
+    "ok2": true,
+    "note": "BEI Sensitive Change Request created (not applied to Employee yet \u00e2\u20ac\u201d requires Finance approval + HR activation)",
+    "ts": "2026-04-07T08:29:54.436Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-002",
+    "phase": "A3",
+    "ok": true,
+    "request_created": true,
+    "ts": "2026-04-07T08:29:58.937Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-003",
+    "phase": "A3",
+    "accepted": true,
+    "observation": "per-field request model; cross-field validation would live in HR/Finance approver UI, not API",
+    "ts": "2026-04-07T08:30:03.431Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-001",
+    "phase": "A3",
+    "ok": true,
+    "request_created": true,
+    "ts": "2026-04-07T08:30:08.112Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-002",
+    "phase": "A3",
+    "ok": true,
+    "ts": "2026-04-07T08:30:13.131Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-003",
+    "phase": "A3",
+    "ok": true,
+    "ts": "2026-04-07T08:30:19.611Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-004",
+    "phase": "A3",
+    "set": true,
+    "reachable": {
+      "status": 200,
+      "ok": true
+    },
+    "ts": "2026-04-07T08:30:26.194Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-005",
+    "phase": "A3",
+    "changed": true,
+    "reachable": {
+      "status": 200,
+      "ok": true
+    },
+    "ts": "2026-04-07T08:30:32.678Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-COMPLETION-002",
+    "phase": "A3",
+    "detail_status": 200,
+    "list_status": 200,
+    "list_total_rows": 500,
+    "profile_completion": 83,
+    "detail_keys": [
+      "employee",
+      "personal",
+      "emergency",
+      "employment",
+      "compensation",
+      "gov_ids",
+      "enrichment",
+      "recent_changes"
+    ],
+    "list_row_found": true,
+    "ts": "2026-04-07T08:30:36.117Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-PHOTO-001",
+    "phase": "A3",
+    "imgSet": true,
+    "urlReachable": {
+      "status": 200,
+      "ok": true
+    },
+    "ts": "2026-04-07T08:31:53.594Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-PHOTO-002",
+    "phase": "A3",
+    "changed": true,
+    "new_reachable": {
+      "status": 200,
+      "ok": true
+    },
+    "old_reachable_after_replace": {
+      "status": 206,
+      "ok": true
+    },
+    "orphanBehavior": "old_file_orphaned",
+    "ts": "2026-04-07T08:32:00.158Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-001",
+    "phase": "A3",
+    "ok1": true,
+    "ok2": true,
+    "note": "BEI Sensitive Change Request created (not applied to Employee yet \u00e2\u20ac\u201d requires Finance approval + HR activation)",
+    "ts": "2026-04-07T08:32:09.236Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-002",
+    "phase": "A3",
+    "ok": true,
+    "request_created": true,
+    "ts": "2026-04-07T08:32:13.818Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-003",
+    "phase": "A3",
+    "accepted": true,
+    "observation": "per-field request model; cross-field validation would live in HR/Finance approver UI, not API",
+    "ts": "2026-04-07T08:32:17.943Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-001",
+    "phase": "A3",
+    "ok": true,
+    "request_created": true,
+    "ts": "2026-04-07T08:32:22.396Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-002",
+    "phase": "A3",
+    "ok": true,
+    "ts": "2026-04-07T08:32:26.899Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-003",
+    "phase": "A3",
+    "ok": true,
+    "ts": "2026-04-07T08:32:33.192Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-004",
+    "phase": "A3",
+    "set": true,
+    "reachable": {
+      "status": 200,
+      "ok": true
+    },
+    "ts": "2026-04-07T08:32:39.947Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-005",
+    "phase": "A3",
+    "changed": true,
+    "reachable": {
+      "status": 200,
+      "ok": true
+    },
+    "ts": "2026-04-07T08:32:46.359Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-COMPLETION-002",
+    "phase": "A3",
+    "detail_status": 200,
+    "list_status": 200,
+    "list_total_rows": 500,
+    "profile_completion": 83,
+    "detail_keys": [
+      "employee",
+      "personal",
+      "emergency",
+      "employment",
+      "compensation",
+      "gov_ids",
+      "enrichment",
+      "recent_changes"
+    ],
+    "list_row_found": true,
+    "ts": "2026-04-07T08:32:49.864Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-001",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.002Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-002",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.068Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-003",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.135Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-004",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.201Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-001",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.269Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-002",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.335Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-003",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.403Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-004",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.469Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-005",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.536Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-006",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.602Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-PAYROLL-001",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.668Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-PAYROLL-002",
+    "phase": "A4",
+    "blocked": true,
+    "reason": "SPIKE-EDIT-COMP verdict=BLOCKED. Linked to S170 Defect #3 (compensation-setup/[employee] empty shell) + Defect #6 (list-page modal empty). Retest after S170 Phase 2.",
+    "ts": "2026-04-07T08:45:57.734Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-REGULARIZE-001",
+    "phase": "A4",
+    "before": "Probationary",
+    "after": "Regular",
+    "changed": true,
+    "ts": "2026-04-07T08:46:01.470Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-REGULARIZE-002",
+    "phase": "A4",
+    "isRegular": true,
+    "hasRegComment": true,
+    "recent_comments": 5,
+    "sample": [
+      "Employee regularized by test.hr@bebang.ph",
+      "<a href=\"/files/tin_proof_v2a744af.pdf\" target=\"_blank\">tin_proof_v2a744af.pdf</"
+    ],
+    "ts": "2026-04-07T08:46:04.052Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-001",
+    "phase": "A4",
+    "base_before": null,
+    "struct_before": null,
+    "doc_status": "Pending HR Manager",
+    "preferred_structure": "HO Staff - Regular",
+    "ts": "2026-04-07T08:48:06.701Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-002",
+    "phase": "A4",
+    "doc_status": "Pending HR Manager",
+    "ts": "2026-04-07T08:48:10.421Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-003",
+    "phase": "A4",
+    "doc_status": "Pending HR Manager",
+    "component_options_count": 9,
+    "ts": "2026-04-07T08:48:14.784Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-004",
+    "phase": "A4",
+    "architectural_note": "formula components evaluated at payroll run, not at change request",
+    "ts": "2026-04-07T08:48:16.250Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-001",
+    "phase": "A4",
+    "base_before": null,
+    "doc_status": "Pending HR Manager",
+    "change_id": "BCC-2026-00020",
+    "ts": "2026-04-07T08:48:20.564Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-002",
+    "phase": "A4",
+    "stage1Ok": true,
+    "stage2Ok": true,
+    "docA_status": "Pending Accounts Manager",
+    "docB_status": "Approved",
+    "base_after": null,
+    "activated": false,
+    "ts": "2026-04-07T08:48:40.354Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-003",
+    "phase": "A4",
+    "stage1Ok": true,
+    "stage2Ok": true,
+    "final_status": "Approved",
+    "base_unchanged": null,
+    "ts": "2026-04-07T08:49:00.168Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-004",
+    "phase": "A4",
+    "effective_stored": "2026-05-07",
+    "expected": "2026-05-07",
+    "date_ok": true,
+    "ts": "2026-04-07T08:49:03.785Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-005",
+    "phase": "A4",
+    "rejectOk": true,
+    "final_status": "Rejected",
+    "baseUnchanged": true,
+    "base_before": null,
+    "base_after": null,
+    "ts": "2026-04-07T08:49:08.573Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-006",
+    "phase": "A4",
+    "sub_assertions": [
+      {
+        "case": "negative",
+        "http": 417,
+        "rejected": true,
+        "exc": "ValidationError"
+      },
+      {
+        "case": "zero",
+        "http": 200,
+        "accepted": true,
+        "note": "backend validates <0 only; 0 is currently accepted -- documentation-worthy"
+      },
+      {
+        "case": "non_numeric",
+        "http": 500,
+        "rejected": true,
+        "exc": "ValueError"
+      }
+    ],
+    "ts": "2026-04-07T08:49:12.786Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-PAYROLL-001",
+    "phase": "A4",
+    "blocked_by": "Lane G Defect #5 \u00e2\u20ac\u201d Generate Slips button disabled",
+    "ts": "2026-04-07T08:49:14.200Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-PAYROLL-002",
+    "phase": "A4",
+    "blocked_by": "Lane G Defect #5",
+    "ts": "2026-04-07T08:49:15.634Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-REGULARIZE-001",
+    "phase": "A4",
+    "before": "Regular",
+    "after": "Regular",
+    "changed": false,
+    "ts": "2026-04-07T08:49:19.575Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-REGULARIZE-002",
+    "phase": "A4",
+    "isRegular": true,
+    "hasRegComment": true,
+    "recent_comments": 5,
+    "sample": [
+      "Employee regularized by test.hr@bebang.ph",
+      "Employee regularized by test.hr@bebang.ph"
+    ],
+    "ts": "2026-04-07T08:49:22.071Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-CREATE-002",
+    "check": "dual_verification",
+    "api_get_ok": true,
+    "browser_dialog_ok": true,
+    "api_data": {
+      "name": "HR-EMP-00043",
+      "first_name": "Maria",
+      "last_name": "Santos Reyes (L3 2026-04-07 18:57:09 EMP-B)",
+      "gender": "Female",
+      "branch": "BGC",
+      "attendance_device_id": "9001893"
+    },
+    "browser_data": {
+      "dialog_visible": true,
+      "has_first_name": true,
+      "has_marker": false,
+      "dialog_head": "ALFEREZ, MARIA PRISCILA M.\n9000504\n\u00c2\u00b7\nCashier\n\u00c2\u00b7\nProbationary\n\u00c2\u00b7\nJoined Jul 16, 2025\nOperations - BEI\nMEGAWORLD PASEO CENTER\nActive\nCollapse All\nPERSONAL INFO\nEdit\n\nFirst Name\n\nMaria\n\nMiddle Name\n\nPriscila M.\n\nLast Name\n\nAlferez\n\nDate of Birth\n\nJun 2, 2004\n\nGender\n\nFemale\n\nMarital Status\n\nsingle\n\nBlood Group\n\n\u00e2\u20ac\u201d\n\nNickname\n\n\u00e2\u20ac\u201d\n\nUniform Size\n\n\u00e2\u20ac\u201d\n\nPhone\n\n+639064548091\n\nPersonal Email\n\nmariapriscilaalferez0"
+    },
+    "source_lane": "lane_b"
+  },
+  {
+    "check": "cleanup_emp_b",
+    "employee": "HR-EMP-00043",
+    "pass1_ok": true,
+    "pass2_ok": true,
+    "final_status": "Left",
+    "final_relieving_date": "2026-04-07",
+    "cleanup_ok": true,
+    "source_lane": "lane_b"
+  },
+  {
+    "scenario": "EMP-CREATE-003",
+    "check": "date_of_joining_blank_accepted",
+    "status": "PASS",
+    "note": "creation succeeded with blank joining date",
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-CREATE-005",
+    "check": "tin_sss_attach_and_create",
+    "status": "PASS-partial",
+    "attached_count": 2,
+    "note": "files attached and employee created; server URL verification blocked",
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-CREATE-006",
+    "check": "future_dob_rejected",
+    "status": "PASS",
+    "reason": "backend_rejected",
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-CREATE-007",
+    "check": "invalid_gender_rejected",
+    "status": "PASS",
+    "ui_rejected": true,
+    "api_status": 417,
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-CREATE-010",
+    "check": "bio_id_consecutive",
+    "status": "PASS",
+    "c3": 9001889,
+    "c4": 9001890,
+    "delta": 1,
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-TRANSFER-003",
+    "check": "transfer_device_commands",
+    "status": "PRECONDITION_BLOCKED",
+    "note": "no matching doctype",
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-TRANSFER-004",
+    "check": "device_commands_dispatched",
+    "status": "PRECONDITION_BLOCKED",
+    "latency_ms": 61766,
+    "statuses": [],
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-TRANSFER-005",
+    "check": "employee_branch_filter",
+    "status": "FAIL",
+    "in_from": false,
+    "in_to": false,
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario_id": "EMP-LEAVE-005",
+    "check": "Cancel behavior documented",
+    "before": {
+      "status": "Open"
+    },
+    "after": {
+      "status": "Approved",
+      "cancel_ui_present": false
+    },
+    "passed": true,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-OVERTIME-004",
+    "check": "Payroll processing page reachable, OT reference documented",
+    "before": {
+      "ot_approved": null,
+      "approved_duration": 2
+    },
+    "after": {
+      "payroll_page_loaded": true,
+      "page_mentions_overtime": true,
+      "note": "OT cycle mapping documented \u00e2\u20ac\u201d approved OT must fall in an active payroll period to appear"
+    },
+    "passed": true,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-ATTENDANCE-002",
+    "check": "Attendance correction approved (docstatus=1)",
+    "before": {
+      "docstatus": 0
+    },
+    "after": {
+      "docstatus": 1
+    },
+    "passed": true,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-ATTENDANCE-003",
+    "check": "Attendance record reflects correction after approval",
+    "before": {
+      "correction_status": "Pending"
+    },
+    "after": {
+      "correction_status": "Approved",
+      "attendance_rows_visible": 2,
+      "sample": [
+        {
+          "name": "HR-ATT-2026-19056",
+          "status": "Present",
+          "attendance_date": "2026-04-05",
+          "in_time": null
+        },
+        {
+          "name": "ATT-TEST-CREW-001-2026-02-25",
+          "status": "Half Day",
+          "attendance_date": "2026-02-25",
+          "in_time": null
+        }
+      ]
+    },
+    "passed": true,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-PAYSLIP-001",
+    "check": "Payslip page shows own payslips with gross/net/earnings/deductions",
+    "before": {
+      "authenticated_as": "test.crew1"
+    },
+    "after": {
+      "slips_returned": 0,
+      "sample": null,
+      "page_has_fields": true
+    },
+    "passed": true,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-PAYSLIP-002",
+    "check": "RBAC: crew cannot see or fetch other employees' payslips",
+    "before": {
+      "actor": "test.crew1",
+      "my_employee": "TEST-CREW-001"
+    },
+    "after": {
+      "total_slips_visible": 0,
+      "others_visible": 0,
+      "attempted_direct_access": null,
+      "direct_access_blocked": true
+    },
+    "passed": true,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-LEAVE-002",
+    "check": "Leave Application status transitions to Approved after supervisor click",
+    "before": {
+      "name": "HR-LAP-2026-00118",
+      "status": "Open",
+      "docstatus": 0
+    },
+    "after": {
+      "name": "HR-LAP-2026-00118",
+      "status": "Approved",
+      "docstatus": 1,
+      "modified_by": "test.supervisor@bebang.ph"
+    },
+    "passed": true,
+    "fix_iteration": 1,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-LEAVE-003",
+    "check": "Leave Ledger Entry created with deduction for approved leave",
+    "before": {
+      "transaction_name": "HR-LAP-2026-00118",
+      "ledger_count": 0
+    },
+    "after": {
+      "transaction_name": "HR-LAP-2026-00118",
+      "ledger_count": 0,
+      "ledger_delta": 0,
+      "leave_doc_total_leave_days": 1
+    },
+    "passed": false,
+    "defect": "Leave is approved (docstatus=1) but Leave Ledger Entry was not created. Balance ledger pipeline broken.",
+    "fix_iteration": 1,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-LEAVE-004",
+    "check": "Second leave rejected by supervisor",
+    "before": {
+      "name": "HR-LAP-2026-00119",
+      "status": "Open"
+    },
+    "after": {
+      "name": "HR-LAP-2026-00119",
+      "status": "Rejected",
+      "docstatus": 0,
+      "modified_by": "test.supervisor@bebang.ph"
+    },
+    "passed": true,
+    "fix_iteration": 1,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-OVERTIME-001",
+    "check": "Self-service OT filing UI is reachable for at least one role",
+    "before": {
+      "expected": "File OT / New OT / Request OT button on /dashboard/hr/overtime"
+    },
+    "after": {
+      "found": false,
+      "roles_tested": [
+        "crew",
+        "supervisor",
+        "hr"
+      ],
+      "routes_tested": [
+        "/dashboard/hr/overtime",
+        "/dashboard/hr/overtime/new",
+        "/dashboard/hr/overtime/apply",
+        "/dashboard/hr/attendance"
+      ]
+    },
+    "passed": false,
+    "status": "SKIP",
+    "reason": "PRODUCT_GAP",
+    "fix_iteration": 1,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-CREATE-009",
+    "check": "employee_count_unchanged",
+    "before": 1,
+    "after": 1,
+    "unchanged": true,
+    "source_lane": "lane_e"
+  },
+  {
+    "scenario_id": "EMP-RBAC-002",
+    "check": "employee_count_unchanged",
+    "before": 1,
+    "after": 1,
+    "unchanged": true,
+    "source_lane": "lane_e"
+  },
+  {
+    "scenario_id": "EMP-RBAC-003",
+    "check": "cell_number_unchanged",
+    "target": "TEST-CREW-001",
+    "before": "09171234567",
+    "after": "09171234567",
+    "unchanged": true,
+    "source_lane": "lane_e"
+  },
+  {
+    "scenario_id": "EMP-RBAC-005",
+    "check": "page_restricted",
+    "restricted": true,
+    "source_lane": "lane_e"
+  },
+  {
+    "scenario_id": "EMP-RBAC-004",
+    "check": "finance_can_see_sensitive_changes",
+    "restricted": false,
+    "source_lane": "lane_e"
+  },
+  {
+    "scenario_id": "EMP-CREATE-009_retry",
+    "check": "rbac_enforced_full_payload",
+    "before": null,
+    "after": null,
+    "permission_error": true,
+    "verdict": "RBAC_ENFORCED",
+    "source_lane": "lane_e"
+  },
+  {
+    "scenario_id": "EMP-UX-001",
+    "check": "Attendance page is self-service only, not org-wide",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/attendance",
+      "title": "BEI Tasks - Task Management",
+      "h1": "My Attendance",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nAttendance\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nMy Attendance\n\nApril 2026\n\n0\n\nPresent\n\n0\n\nAbsent\n\n0\n\nLate\n\n0\n\nOn Leave\n\nAttendance Records\nYour daily attendance for April 2026\n\nNo attendance records for this month",
+      "button_count": 3,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ],
+      "derived": {
+        "has_store_filter": false,
+        "is_self_service_only": true
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-UX-002",
+    "check": "Schedule page is self-service; no admin shift assignment grid",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/schedule",
+      "title": "BEI Tasks - Task Management",
+      "h1": "My Schedule",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nSchedule\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nMy Schedule\n\nView your shift assignments\n\nCurrent Shift\n\nNo active shift assignment\n\nContact your supervisor for shift assignment\n\nAvailable Shifts\nShift types defined in the system\n\nBEI Standard\n\n6:00 AM - 11:00 PM\n\nClosing\n\n2:00 PM - 10:30 PM\n\nCommissary - AM\n\n5:00 AM - 2:00 PM\n\nCommissary - AM Late\n\n6:00 AM - 3:00 PM\n\nCommissary - Dawn\n\n4:00 AM - 1:00 PM\n\nCommissary - Night\n\n5:00 PM - 2:00 AM\n\nCommissary - PM Night\n\n4:00 PM - 1:00 AM\n\nHO S035 TEST SHIFT\n\n9:00 AM - 6:00 PM\n\nHO Shift\n\n9:00 AM - 6:00 PM\n\nMid\n\n12:00 PM - 8:00 PM\n\nOpening\n\n9:30 AM - 6:30 PM\n\nS035 TEST COMMISSARY SHIFT\n\n8:00 AM - 5:00 PM\n\nS035 TEST STORE SHIFT\n\n9:00 AM - 6:00 PM\n\nStore - Afternoon\n\n12:00 PM - 9:00 PM\n\nStore - Early Opening\n\n8:00 AM - 5:00 PM\n\nStore - Late Afternoon\n\n2:00 PM - 11:00 PM\n\nStore - Late Morning\n\n11:00 AM - 8:00 PM\n\nStore - Mid Afternoon\n\n1:00 PM - 10:00 PM\n\nStore - Mid Morning\n\n10:00 AM - 7:00 PM\n\nStore - Morning\n\n9:00 AM - 6:00 PM\n\nStore Shift\n\n9:00 AM - 9:00 PM\n\nTEST-CLOSING\n\n2:00 PM - 10:00 PM\n\nTEST-MID\n\n10:00 AM - 6:00 PM\n\nTEST-OPENING\n\n6:00 AM - 2:00 PM\n\nShift Change Requests\nRequest a different shift window or temporary reassignment.\nRequest Shift Change\n\nNo shift change requests yet\n\nShift Swap Requests\nRequest a same-day swap with a coworker on your team.\nRequest Shift Swap\n\nNo shift swap requests yet\n\nAssignment History\nYour past and current shift assignments\n\nNo shift assignments found",
+      "button_count": 5,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Request Shift Change",
+        "Request Shift Swap"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ],
+      "derived": {
+        "has_shift_assignment_grid": false
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-UX-003",
+    "check": "Attendance Correction has no admin review queue",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/attendance-correction",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Attendance Correction Request",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nAttendance-correction\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nAttendance Correction Request\n\nSubmit a request to correct attendance records\n\nTotal Requests\n0\nPending\n0\nApproved\n0\nSubmit New Request\nProvide details about the attendance record that needs correction\nAttendance Date *\nPick a date\nCorrection Type *\nSelect type\nMissing Punch In\nMissing Punch Out\nWrong Time\nOther\nActual Time *\nReason *\nSupporting Evidence (Optional)\n\nUpload photos, screenshots, or PDF documents\n\nSubmit Request\nMy Request History\nView all your submitted attendance correction requests\nExport\nColumns\nDate\tType\tRequested Time\tReason\tStatus\tReviewed On\nNo results.\n\nRows per page\n\n10\nPage 1 of 0\nPrevious\nNext",
+      "button_count": 11,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Pick a date",
+        "Select type",
+        "Submit Request",
+        "Export",
+        "Columns",
+        "10",
+        "Previous",
+        "Next"
+      ],
+      "input_count": 5,
+      "inputs": [
+        {
+          "type": "select",
+          "name": "",
+          "placeholder": "",
+          "ariaLabel": ""
+        },
+        {
+          "type": "time",
+          "name": "",
+          "placeholder": "",
+          "ariaLabel": ""
+        },
+        {
+          "type": "textarea",
+          "name": "",
+          "placeholder": "Explain why this correction is needed...",
+          "ariaLabel": ""
+        },
+        {
+          "type": "file",
+          "name": "",
+          "placeholder": "",
+          "ariaLabel": ""
+        },
+        {
+          "type": "input",
+          "name": "",
+          "placeholder": "Search by date...",
+          "ariaLabel": ""
+        }
+      ],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ],
+      "derived": {
+        "has_admin_review_queue": false
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-UX-004",
+    "check": "Compensation Setup row modal is empty / non-editable",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/payroll/compensation-setup",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Compensation Setup",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayroll\nCompensation-setup\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to Payroll\nCompensation Setup\n\nManage employee salary structures, allowances, bonuses, and recurring components\n\nFullscreen\nSearch\nDepartment\nAll Departments\nEmployees 545 total\nPrevious\nPage 1 of 11\nNext\nExport\nColumns\n\tEmployee\tDepartment\tBranch\tDesignation\tType\tSalary Structure\t\nBase Salary\n\t\nDaily Rate\n\t\nAllowances\n\t\nGross Pay est.\n\t\nSSS est.\n\t\nPhilHealth est.\n\t\nPag-IBIG est.\n\t\nTax est.\n\t\nNet Take-Home est.\n\t\nCompany Cost est.\n\tTax Slab\tBank Account\tPay Mode\tPending\t\n\t\nAaron Jan P. Bautista\n9000746\n\tOperations - BEI\tROBINSONS IMUS\tStore Crew\tProbationary\tStore Staff - Regular\t\n\u00e2\u201a\u00b114,606.67\n\t\n\u00e2\u201a\u00b1561.79\n\t\n\u00e2\u201a\u00b13,651.66\n\t\n\u00e2\u201a\u00b118,258.33\n\t\n\u00e2\u201a\u00b1652.50\n\t\n\u00e2\u201a\u00b1365.17\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b117,140.66\n\t\n\u00e2\u201a\u00b120,101.00\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a29424\tBank\t\t\n\n\t\nABADINES, JHARRED AUGUST\n9001784\n\tOperations - BEI\tSM STA ROSA\tProduction\tProbationary\tStore Staff - Regular\t\n\u00e2\u201a\u00b115,650.00\n\t\n\u00e2\u201a\u00b1601.92\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b115,650.00\n\t\n\u00e2\u201a\u00b1697.50\n\t\n\u00e2\u201a\u00b1391.25\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b114,461.25\n\t\n\u00e2\u201a\u00b117,613.75\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a21218\tBank\t\t\n\n\t\nABALLAR, JERRY F.\n9001858\n\tOperations - BEI\tALABANG TOWN CENTER\tSTORE CREW\tProbationary\t\u00e2\u20ac\u201d\t\n\u00e2\u20ac\u201d\n\t\n\u00e2\u20ac\u201d\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\u00e2\u20ac\u201d\t\u00e2\u20ac\u201d\tCash\t\t\n\n\t\nACERO, LIEZEL M.\n9001794\n\tFinance and Accounting - BEI\tBRITTANY OFFICE\tAccounting Analyst\tProbationary\tHO Staff - Regular\t\n\u00e2\u201a\u00b120,000.00\n\t\n\u00e2\u201a\u00b1769.23\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b120,000.00\n\t\n\u00e2\u201a\u00b1900.00\n\t\n\u00e2\u201a\u00b1500.00\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b118,500.00\n\t\n\u00e2\u201a\u00b122,500.00\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a27951\tBank\t\t\n\n\t\nAdore S. Panomblayan\n9000112\n\tCommissary - BEI\tSHAW COMMISSARY - Production\tCommissary Crew\tRegular\tStore Staff - Regular\t\n\u00e2\u201a\u00b118,127.92\n\t\n\u00e2\u201a\u00b1697.23\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b118,127.92\n\t\n\u00e2\u201a\u00b1810.00\n\t\n\u00e2\u201a\u00b1453.20\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b116,764.72\n\t\n\u00e2\u201a\u00b120,391.12\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a25313\tBank\t\t\n\n\t\nAGAO, ANGELA B.\n9001722\n\tOperations - BEI\tLUCKY CHINATOWN\tCashier\tProbationary\tStore Staff - Regular\t\n\u00e2\u201a\u00b119,562.50\n\t\n\u00e2\u201a\u00b1752.40\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b119,562.50\n\t\n\u00e2\u201a\u00b1877.50\n\t\n\u00e2\u201a\u00b1489.06\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b118,095.94\n\t\n\u00e2\u201a\u00b122,004.06\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a28722\tBank\t\t\n\n\t\nAGUADO, NEIL\n9001717\n\tCommissary - BEI\tSHAW COMMISSARY - Production\tCommissary Crew\tSeasonal\tStore Staff - Regular\t\n\u00e2\u201a\u00b118,127.92\n\t\n\u00e2\u201a\u00b1697.23\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b118,127.92\n\t\n\u00e2\u201a\u00b1810.00\n\t\n\u00e2\u201a\u00b1453.20\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b116,764.72\n\t\n\u00e2\u201a\u00b120,391.12\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u201d\tCash\t\t\n\n\t\nAila Mae A. Nebrao\n9000546\n\tOperations - BEI\tAYALA UPTC\tCashier\tRegular\tStore Staff - Regular\t\n\u00e2\u201a\u00b119,562.50\n\t\n\u00e2\u201a\u00b1752.40\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b119,562.50\n\t\n\u00e2\u201a\u00b1877.50\n\t\n\u00e2\u201a\u00b1489.06\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b118,095.94\n\t\n\u00e2\u201a\u00b122,004.06\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a22734\tBank\t\t\n\n\t\nAileen L. Mendoza\n9000152\n\tOperations - BEI\tARANETA GATEWAY\tOpening Team\tRegular\tStore Staff - Regular\t\n\u00e2\u201a\u00b120,000.00\n\t\n\u00e2\u201a\u00b1769.23\n\t\n\u00e2\u201a\u00b11,300.00\n\t\n\u00e2\u201a\u00b121,300.00\n\t\n\u00e2\u201a\u00b1900.00\n\t\n\u00e2\u201a\u00b1500.00\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b119,800.00\n\t\n\u00e2\u201a\u00b123,800.00\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a25789\tBank\t\t\n\n\t\nAilen R. Segurigan\n9000422\n\tOperations - BEI\tGRAND CENTRAL\tStore Crew\tRegular\tStore Staff - Regular\t\n\u00e2\u201a\u00b118,127.92\n\t\n\u00e2\u201a\u00b1697.23\n\t\n\u00e2\u201a\u00b11,300.00\n\t\n\u00e2\u201a\u00b119,427.92\n\t\n\u00e2\u201a\u00b1810.00\n\t\n\u00e2\u201a\u00b1453.20\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b118,064.72\n\t\n\u00e2\u201a\u00b121,691.12\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a24308\tBank\t\t\n\n\t\nAilyn C. Mendoza\n9000791\n\tOperations - BEI\tAYALA EVO\tAssistant Store Supervisor\tProbationary\tStore Staff - Regular\t\n\u00e2\u201a\u00b120,000.00\n\t\n\u00e2\u201a\u00b1769.23\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b120,000.00\n\t\n\u00e2\u201a\u00b1900.00\n\t\n\u00e2\u201a\u00b1500.00\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b118,500.00\n\t\n\u00e2\u201a\u00b122,500.00\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a23107\tBank\t\t\n\n\t\nAira M. Rodero\n9000886\n\tOperations - BEI\tSM TAYTAY\tStore Crew\tProbationary\tStore Staff - Regular\t\n\u00e2\u201a\u00b115,650.00\n\t\n\u00e2\u201a\u00b1601.92\n\t\n\u00e2\u201a\u00b12,477.92\n\t\n\u00e2\u201a\u00b118,127.92\n\t\n\u00e2\u201a\u00b1697.50\n\t\n\u00e2\u201a\u00b1391.25\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b116,939.17\n\t\n\u00e2\u201a\u00b120,091.67\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a23256\tBank\t\t\n\n\t\nAizel Ritual\n9001737\n\tOperations - BEI\tVENICE GRAND CANAL\tCashier\tProbationary\tStore Staff - Regular\t\n\u00e2\u201a\u00b119,562.50\n\t\n\u00e2\u201a\u00b1752.40\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b119,562.50\n\t\n\u00e2\u201a\u00b1877.50\n\t\n\u00e2\u201a\u00b1489.06\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b118,095.94\n\t\n\u00e2\u201a\u00b122,004.06\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a24726\tBank\t\t\n\n\t\nAJRAJ JAMISOLA G.\n9000089\n\tCommissary - BEI\tSHAW COMMISSARY - Production\tTrainee\tRegular\tStore Staff - Regular\t\n\u00e2\u201a\u00b118,127.92\n\t\n\u00e2\u201a\u00b1697.23\n\t\n\u00e2\u201a\u00b11,100.00\n\t\n\u00e2\u201a\u00b119,227.92\n\t\n\u00e2\u201a\u00b1810.00\n\t\n\u00e2\u201a\u00b1453.20\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b117,864.72\n\t\n\u00e2\u201a\u00b121,491.12\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a25275\tBank\t\t\n\n\t\nALCOBER, CHRISTIAN PAUL .\n9001721\n\tOperations - BEI\tSM SANGANDAAN\tStore Crew\tRegular\tStore Staff - Regular\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u20ac\u201d\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u201d\tCash\t\t\n\n\t\nALCOBER, JUANNA MARIE\n9001787\n\tFinance and Accounting - BEI\tBRITTANY OFFICE\tFinance Manager\tRegular\tHO Staff - Regular\t\n\u00e2\u201a\u00b170,000.00\n\t\n\u00e2\u201a\u00b12,692.31\n\t\n\u00e2\u201a\u00b120,000.00\n\t\n\u00e2\u201a\u00b190,000.00\n\t\n\u00e2\u201a\u00b11,575.00\n\t\n\u00e2\u201a\u00b11,750.00\n\t\n\u00e2\u201a\u00b1100.00\n\t\n\u00e2\u201a\u00b19,375.00\n\t\n\u00e2\u201a\u00b177,200.00\n\t\n\u00e2\u201a\u00b195,175.00\n\tTRAIN Law 2025 - Philippines\t\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a2\u00e2\u20ac\u00a27093\tBank\t\t\n\n\t\nALEJO, BINOE LOUISE M.\n9001840\n\tOperations - BEI\tXENTRO MONTALBAN\tStore Crew\tProbationary\t\u00e2\u20ac\u201d\t\n\u00e2\u20ac\u201d\n\t\n\u00e2\u20ac\u201d\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\n\u00e2\u201a\u00b10.00\n\t\u00e2\u20ac\u201d\t\u00e2\u20ac\u201d\tCash\t\t\n\n\t\nAlessandro Rey R. Formoso\n9000559\n\tFinance and Accounting - BEI\tBRITTANY OFFICE\tChief Financial Officer\tProbationary\tHO Staff - Regular\t\n\u00e2\u201a\u00b1368,184.92\n\t\n\u00e2\u201a\u00b114,160.96\n\t\n\u00e2\u201a\u00b120,000",
+      "button_count": 59,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Fullscreen",
+        "All Departments",
+        "Previous",
+        "Next",
+        "Export",
+        "Columns",
+        "Aaron Jan P. Bautista\n9000746",
+        "ABADINES, JHARRED AUGUST\n9001784",
+        "ABALLAR, JERRY F.\n9001858",
+        "ACERO, LIEZEL M.\n9001794",
+        "Adore S. Panomblayan\n9000112",
+        "AGAO, ANGELA B.\n9001722",
+        "AGUADO, NEIL\n9001717",
+        "Aila Mae A. Nebrao\n9000546",
+        "Aileen L. Mendoza\n9000152",
+        "Ailen R. Segurigan\n9000422",
+        "Ailyn C. Mendoza\n9000791",
+        "Aira M. Rodero\n9000886",
+        "Aizel Ritual\n9001737",
+        "AJRAJ JAMISOLA G.\n9000089",
+        "ALCOBER, CHRISTIAN PAUL .\n9001721",
+        "ALCOBER, JUANNA MARIE\n9001787",
+        "ALEJO, BINOE LOUISE M.\n9001840",
+        "Alessandro Rey R. Formoso\n9000559",
+        "Alex Overlap1\nHR-EMP-00025",
+        "Alexandra N. Sayritan\n9000337",
+        "Alexisse Leann . R. Mendoza.\n9000835",
+        "ALFEREZ, MARIA PRISCILA M.\n9000504",
+        "Alicia M. Ramos\n9000599",
+        "Alissa U. Caspe\n9000550",
+        "Allan Gemboy B. Rubio\n9000635",
+        "Allbert Jayson E. Gabatino\n9000026",
+        "Allona H. Pinca\n9000545",
+        "ALMENARIO, MARITES G.\n9000476",
+        "ALONZO, BABIELYN G.\n9001866",
+        "Alvin T. De Guzman\n9000174",
+        "Alyssa May D. Dimaano\n9000740",
+        "Amalia B. Nabus\n9000077",
+        "ANABO, ANGELICO M.\n9001815",
+        "Andrei U. Villanueva\n9000714",
+        "ANDRES, MARY GRACE\n9001726",
+        "Angel Ann Sophia D. Figueroa\n9000585",
+        "Angel Ray F. Clemente\n9000918",
+        "Angela C. Villanueva\n9000970",
+        "Angela M. Godino\n9000899",
+        "Angela P. Laodenio\n9000613",
+        "Angelica L. Iglesia\n9000583",
+        "Angelie Galleros\n9000299",
+        "Angelito A. Espiritu\n9000177",
+        "Ann Zusa San Diego Masayon\n9000727",
+        "Anna Mae B. Balino\n9000155",
+        "Anna Marie . Nepomuceno\n9000603",
+        "Annabel S. Maomay\n9000059",
+        "ANTEGRA, ARCHIE G.\n9001714",
+        "ANTONIO, AIJELOU PIEL P.\n9001694",
+        "April Joy B. Ga\u00c3\u00b1as\n9000830"
+      ],
+      "input_count": 1,
+      "inputs": [
+        {
+          "type": "input",
+          "name": "",
+          "placeholder": "Search by name or ID...",
+          "ariaLabel": ""
+        }
+      ],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ],
+      "derived": {
+        "modal_has_salary_fields": false,
+        "modal_is_empty": true
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-UX-005",
+    "check": "Sensitive Changes queue has no visible Approve/Reject buttons",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/payroll/sensitive-changes",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Sensitive Changes Queue",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTF\ntest.finance@bebang.ph\ntest.finance@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayroll\nSensitive-changes\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to Payroll\nSensitive Changes Queue\n\nDual-control approval for bank account, TIN, SSS, PhilHealth, and Pag-IBIG changes\n\nAll (9)\nPending HR\nPending Finance (2)\nActivation\nActive\nRejected (7)\nNew Request\nSensitive Change Requests9 request(s)\nExport\nColumns\nEmployee\tField\tChange\tInitiator\tStatus\tEffective\t\n\nABALLAR, JERRY F.\nALABANG TOWN CENTER\n\tBank Account Number\t\u00e2\u20ac\u201d \u00e2\u2020\u2019 ****2233\tHR\tPending Finance Approval\tJun 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tTIN\t\u00e2\u20ac\u201d \u00e2\u2020\u2019 123-456-789\tHR\tRejected\tApr 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tPhilHealth Number\t\u00e2\u20ac\u201d \u00e2\u2020\u2019 9999999999\tHR\tRejected\tApr 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tSSS Number\t\u00e2\u20ac\u201d \u00e2\u2020\u2019 1234567890\tHR\tRejected\tMar 25\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tBank Account Number\t****4545 \u00e2\u2020\u2019 ****7890\tHR\tPending Finance Approval\tApr 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tTIN\t\u00e2\u20ac\u201d \u00e2\u2020\u2019 123-456-789\tHR\tRejected\tApr 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tPhilHealth Number\t\u00e2\u20ac\u201d \u00e2\u2020\u2019 9999999999\tHR\tRejected\tApr 1\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tSSS Number\t\u00e2\u20ac\u201d \u00e2\u2020\u2019 1234567890\tHR\tRejected\tMar 25\t\n\n\nARRABIS, MA. CRISTINA C.\nSM MEGAMALL\n\tBank Account Number\t****4545 \u00e2\u2020\u2019 ****7890\tHR\tRejected\tApr 1\t\n\nRows per page\n\n10\nPage 1 of 1\nPrevious\nNext",
+      "button_count": 15,
+      "buttons": [
+        "TF\ntest.finance@bebang.ph\ntest.finance@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "All (9)",
+        "Pending HR",
+        "Pending Finance (2)",
+        "Activation",
+        "Active",
+        "Rejected (7)",
+        "New Request",
+        "Export",
+        "Columns",
+        "10",
+        "Previous",
+        "Next"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ],
+      "derived": {
+        "has_approve_reject_buttons": true
+      }
+    },
+    "passed": false,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-UX-006",
+    "check": "Crew sidebar has too many items; \u00e2\u2030\u00a53 visited items return Access Restricted",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Welcome back, Test! \u00f0\u0178\u2018\u2039",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nHR Self-Service\nStore Operations\nStore Inventory\nHR Management\nMy Expenses\nStock Counting\nSupervisor Tools\nFinance & Accounting\nCampaign Giveaways\nProcurement\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nTC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph\nToggle Sidebar\nDashboard\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nWelcome back, Test! \u00f0\u0178\u2018\u2039\n\nHere's an overview of your tasks and projects\n\nMy Tasks\n0\n\nTasks assigned to you\n\nOverdue\n0\n\nPast due date\n\nCompleted\n0\n\nCompleted in last 7 days\n\nProjects\n0\n\nAll projects\n\nQuick Actions\nNew Task\nKanban Board\nReports\nRecent Activity\n\nCompleted task Update documentation\n\n2 hours ago\n\nAssigned to Fix login bug on mobile\n\n5 hours ago\n\nNew project created Q1 Marketing Campaign\n\n1 day ago\n\nComment on Design review meeting notes\n\n2 days ago\n\nView all activity \u00e2\u2020\u2019",
+      "button_count": 4,
+      "buttons": [
+        "TC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "View all activity \u00e2\u2020\u2019"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/communication"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/billing/my-billings"
+        },
+        {
+          "text": "Campaign Giveaways",
+          "href": "/dashboard/campaign-giveaways/pcf"
+        },
+        {
+          "text": "Procurement",
+          "href": "/dashboard/procurement/pcf"
+        },
+        {
+          "text": "Warehouse",
+          "href": "/dashboard/warehouse/pcf"
+        },
+        {
+          "text": "Commissary",
+          "href": "/dashboard/commissary/pcf"
+        },
+        {
+          "text": "Projects & Maintenance",
+          "href": "/dashboard/projects/pcf"
+        },
+        {
+          "text": "Communication",
+          "href": "/dashboard/communication"
+        },
+        {
+          "text": "My Tasks\n0\n\nTasks assigned to you",
+          "href": "/dashboard/tasks?assignee=test.crew1%40bebang.ph"
+        },
+        {
+          "text": "Overdue\n0\n\nPast due date",
+          "href": "/dashboard/tasks?overdue=1"
+        },
+        {
+          "text": "Completed\n0\n\nCompleted in last 7 days",
+          "href": "/dashboard/tasks?status=Completed&completed_since=7"
+        },
+        {
+          "text": "Projects\n0\n\nAll projects",
+          "href": "/dashboard/projects"
+        },
+        {
+          "text": "New Task",
+          "href": "/dashboard/tasks"
+        },
+        {
+          "text": "Kanban Board",
+          "href": "/dashboard/tasks/kanban"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/reports/tasks"
+        }
+      ],
+      "derived": {
+        "nav_item_count": 26,
+        "visited": [
+          {
+            "label": "Home",
+            "href": "/dashboard",
+            "restricted": false
+          },
+          {
+            "label": "Dashboard",
+            "href": "/dashboard",
+            "restricted": false
+          },
+          {
+            "label": "My Profile",
+            "href": "/dashboard/my-profile",
+            "restricted": false
+          },
+          {
+            "label": "Clearance",
+            "href": "/clearance",
+            "restricted": false
+          },
+          {
+            "label": "Exit Interview",
+            "href": "/clearance/exit-interview",
+            "restricted": false
+          }
+        ],
+        "restricted_count": 0
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-UX-007",
+    "check": "Payslip has no Download PDF / Print / Export button",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/payslip",
+      "title": "BEI Tasks - Task Management",
+      "h1": "My Payslips",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nStore Operations\nStore Inventory\nHR Management\nMy Expenses\nStock Counting\nSupervisor Tools\nFinance & Accounting\nCampaign Giveaways\nProcurement\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nTC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayslip\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nMy Payslips\n\nYear 2026\n\nYTD Gross\n\n\u00e2\u201a\u00b10.00\n\nYTD Deductions\n\n\u00e2\u201a\u00b10.00\n\nYTD Net\n\n\u00e2\u201a\u00b10.00\n\nPayslips\n\n0\n\nPayslip History\nYour salary slips for 2026\n\nNo payslips found for 2026",
+      "button_count": 3,
+      "buttons": [
+        "TC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/communication"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/billing/my-billings"
+        },
+        {
+          "text": "Campaign Giveaways",
+          "href": "/dashboard/campaign-giveaways/pcf"
+        },
+        {
+          "text": "Procurement",
+          "href": "/dashboard/procurement/pcf"
+        },
+        {
+          "text": "Warehouse",
+          "href": "/dashboard/warehouse/pcf"
+        },
+        {
+          "text": "Commissary",
+          "href": "/dashboard/commissary/pcf"
+        },
+        {
+          "text": "Projects & Maintenance",
+          "href": "/dashboard/projects/pcf"
+        },
+        {
+          "text": "Communication",
+          "href": "/dashboard/communication"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Hr",
+          "href": "/dashboard/hr"
+        }
+      ],
+      "derived": {
+        "has_export_button": false
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-UX-008",
+    "check": "Crew has no notification bell or inbox anywhere",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Welcome back, Test! \u00f0\u0178\u2018\u2039",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nHR Self-Service\nStore Operations\nStore Inventory\nHR Management\nMy Expenses\nStock Counting\nSupervisor Tools\nFinance & Accounting\nCampaign Giveaways\nProcurement\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nTC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph\nToggle Sidebar\nDashboard\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nWelcome back, Test! \u00f0\u0178\u2018\u2039\n\nHere's an overview of your tasks and projects\n\nMy Tasks\n0\n\nTasks assigned to you\n\nOverdue\n0\n\nPast due date\n\nCompleted\n0\n\nCompleted in last 7 days\n\nProjects\n0\n\nAll projects\n\nQuick Actions\nNew Task\nKanban Board\nReports\nRecent Activity\n\nCompleted task Update documentation\n\n2 hours ago\n\nAssigned to Fix login bug on mobile\n\n5 hours ago\n\nNew project created Q1 Marketing Campaign\n\n1 day ago\n\nComment on Design review meeting notes\n\n2 days ago\n\nView all activity \u00e2\u2020\u2019",
+      "button_count": 4,
+      "buttons": [
+        "TC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "View all activity \u00e2\u2020\u2019"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/communication"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/billing/my-billings"
+        },
+        {
+          "text": "Campaign Giveaways",
+          "href": "/dashboard/campaign-giveaways/pcf"
+        },
+        {
+          "text": "Procurement",
+          "href": "/dashboard/procurement/pcf"
+        },
+        {
+          "text": "Warehouse",
+          "href": "/dashboard/warehouse/pcf"
+        },
+        {
+          "text": "Commissary",
+          "href": "/dashboard/commissary/pcf"
+        },
+        {
+          "text": "Projects & Maintenance",
+          "href": "/dashboard/projects/pcf"
+        },
+        {
+          "text": "Communication",
+          "href": "/dashboard/communication"
+        },
+        {
+          "text": "My Tasks\n0\n\nTasks assigned to you",
+          "href": "/dashboard/tasks?assignee=test.crew1%40bebang.ph"
+        },
+        {
+          "text": "Overdue\n0\n\nPast due date",
+          "href": "/dashboard/tasks?overdue=1"
+        },
+        {
+          "text": "Completed\n0\n\nCompleted in last 7 days",
+          "href": "/dashboard/tasks?status=Completed&completed_since=7"
+        },
+        {
+          "text": "Projects\n0\n\nAll projects",
+          "href": "/dashboard/projects"
+        },
+        {
+          "text": "New Task",
+          "href": "/dashboard/tasks"
+        },
+        {
+          "text": "Kanban Board",
+          "href": "/dashboard/tasks/kanban"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/reports/tasks"
+        }
+      ],
+      "derived": {
+        "has_notification_bell": false
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-UX-009",
+    "check": "OT approve dialog missing Approved Hours input",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/overtime",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Overtime Admin",
+      "h2s": [
+        "Search",
+        "Approve Overtime Request"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nOvertime\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nOvertime Admin\n\nAudit requests, apply HR overrides, and monitor payroll bridge status before cutoff.\n\nSummary\nRefresh\nMatched Requests\n41\nPending Review\n20\nApproved / Locked\n0\nRejected\n0\nFilters\nFilter by status, store, employee, and attendance date range.\nStatus\nAll statuses\nPending Review\nNeeds Clarification\nClarification Submitted\nApproved\nRejected\nEscalated\nPayroll Locked\nStore\nEmployee ID\nFrom Date\nTo Date\nRequests\nHR can override payable hours and overtime type when the operational review needs correction.\nEmployee\tDate\tShift\tHours\tStatus\tApprover Chain\tPayroll\tActions\n\nMa. Cristina C. Arrabis\n9000003 \u00c2\u00b7 SM MEGAMALL\n\t2026-05-12\t-\t\n1.50h OT\n9.50h total\n\tPending Review\t\nAssigned: -\nFallback: -\nEscalation: -\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nACERO, LIEZEL M.\n9001794 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.20h OT\n9.20h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nLETADA, ANGELAMEL\n9001790 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.03h OT\n9.03h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nIvy M. Domingo\n9000896 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.18h OT\n9.18h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nFranzelle Yvonne F. Abdon\n9000818 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.59h OT\n10.09h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nFernand Angelo A. Orbase\n9000641 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.62h OT\n10.13h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nRon Andrew . Santos\n9000541 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.36h OT\n9.40h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nIslar Catherine A. Isles\n9000510 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.13h OT\n9.83h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nPaula Marie M. Ortiz\n9000437 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.15h OT\n10.13h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nGenalyn B. Alegre\n9000285 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.73h OT\n9.94h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nJulius Jose D. Tin-Ga\n9000190 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.13h OT\n9.84h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nArhie J. Reyes\n9000188 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.05h OT\n9.05h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nIan A. Dionisio\n9000142 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.25h OT\n9.25h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nPrima Maris F. Fernandez\n9000065 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.20h OT\n10.04h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nLyndon D. Olea\n9000220 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-22\tHO Shift\t\n0.34h OT\n9.42h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nDEJAPA, PAQUITO JR.\n9001792 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-19\tHO Shift\t\n0.67h OT\n10.42h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nIvy M. Domingo\n9000896 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-19\tHO Shift\t\n0.58h OT\n9.58h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nFernand Angelo A. Orbase\n9000641 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-19\tHO Shift\t\n0.96h OT\n10.71h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nRuna Mae M. Ortiz\n9000507 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-19\tHO Shift\t\n0.00h OT\n9.92h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nPaula Marie M. Ortiz\n9000437 \u00c2\u00b7 BRITTANY OFFICE\n\t2026-03-19\tHO Shift\t\n0.05h OT\n9",
+      "button_count": 89,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Refresh",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate",
+        "Approve",
+        "Reject",
+        "Clarify",
+        "Escalate"
+      ],
+      "input_count": 8,
+      "inputs": [
+        {
+          "type": "select",
+          "name": "",
+          "placeholder": "",
+          "ariaLabel": ""
+        },
+        {
+          "type": "input",
+          "name": "",
+          "placeholder": "SM Megamall",
+          "ariaLabel": ""
+        },
+        {
+          "type": "input",
+          "name": "",
+          "placeholder": "HR-EMP-0001",
+          "ariaLabel": ""
+        },
+        {
+          "type": "date",
+          "name": "",
+          "placeholder": "",
+          "ariaLabel": ""
+        },
+        {
+          "type": "date",
+          "name": "",
+          "placeholder": "",
+          "ariaLabel": ""
+        },
+        {
+          "type": "number",
+          "name": "",
+          "placeholder": "",
+          "ariaLabel": ""
+        },
+        {
+          "type": "input",
+          "name": "",
+          "placeholder": "Regular Day OT",
+          "ariaLabel": ""
+        },
+        {
+          "type": "textarea",
+          "name": "",
+          "placeholder": "Required for HR override actions.",
+          "ariaLabel": ""
+        }
+      ],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ],
+      "derived": {
+        "has_approved_hours_input": false
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-UX-010",
+    "check": "Payroll Processing has no branch filter / Process-by-Branch option",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/payroll/processing",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Payroll Processing",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayroll\nProcessing\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to Payroll\nPayroll Processing\n\nStep-by-step payroll processing wizard\n\nSelect Period\nReadiness Check\nGenerate Slips\nReview Output\nSubmit Slips\nBank File\nStep 1: Select Payroll Period\nChoose the cutoff date range for this payroll run.\nPayroll Period\nApr 1, 2026 - Apr 30, 2026\nPrevious\nNext",
+      "button_count": 12,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Select Period",
+        "Readiness Check",
+        "Generate Slips",
+        "Review Output",
+        "Submit Slips",
+        "Bank File",
+        "Apr 1, 2026 - Apr 30, 2026",
+        "Previous",
+        "Next"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ],
+      "derived": {
+        "has_branch_filter": false
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-STUB-001",
+    "check": "HR Reports tiles \u00e2\u20ac\u201d none navigate to a working report",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/reports",
+      "title": "BEI Tasks - Task Management",
+      "h1": "HR Reports & Analytics",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nReports\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nHR Reports & Analytics\n\nComprehensive reports and insights for workforce management.\n\nOperational people management moved to Employee Master.\n\nUse reports for exports, historical analysis, and summarized reporting. Use the Employee Master dashboard for bulk workforce operations and Employee 360 review.\n\nOpen Employee Master\nEmployee Masterlist\nReport/export companion to the operational Employee Master dashboard\nHeadcount Report\nActive headcount by department, branch, or type\nAttrition Report\nMonthly attrition rates and trends\nNew Hires\nRecently joined employees\nSeparations\nEmployee separations and reasons\nRecruitment Funnel\nApplication to hire conversion rates\nAttendance Summary\nAttendance, tardiness, and leave summary\nOvertime Report\nOT hours and costs by department",
+      "button_count": 3,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ],
+      "derived": {
+        "tile_count": 12,
+        "clicked": [
+          {
+            "tile": "Operational people management moved to Employee Master.\n\nUse reports for exports",
+            "href": "/dashboard/hr/employee-master",
+            "landed_working": true
+          },
+          {
+            "tile": "Employee Masterlist\nReport/export companion to the operational Employee Master d",
+            "href": null,
+            "landed_working": false
+          },
+          {
+            "tile": "Employee Masterlist",
+            "href": null,
+            "landed_working": false
+          },
+          {
+            "tile": "Headcount Report\nActive headcount by department, branch, or type",
+            "href": null,
+            "landed_working": false
+          },
+          {
+            "tile": "Headcount Report",
+            "href": null,
+            "landed_working": false
+          },
+          {
+            "tile": "Attrition Report\nMonthly attrition rates and trends",
+            "href": null,
+            "landed_working": false
+          },
+          {
+            "tile": "Attrition Report",
+            "href": null,
+            "landed_working": false
+          },
+          {
+            "tile": "New Hires\nRecently joined employees",
+            "href": null,
+            "landed_working": false
+          }
+        ],
+        "working_count": 1
+      }
+    },
+    "passed": false,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-STUB-002",
+    "check": "Training page is a stub \u00e2\u20ac\u201d no create program button, refers to Frappe Desk",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/training",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Training & Development",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nTraining\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nTraining & Development\n\nManage training programs, events, and track compliance.\n\nActive Programs\n0\nUpcoming Events\n0\nAvg Completion Rate\n0.0%\nPrograms\nCalendar\nCompliance\nNo Training Programs\n\nCreate training programs in Frappe to track development activities.",
+      "button_count": 6,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Programs",
+        "Calendar",
+        "Compliance"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ],
+      "derived": {
+        "has_create_program_btn": false,
+        "refers_to_desk": false
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-STUB-003",
+    "check": "Performance page lacks review cycle controls; only Regularization is functional",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/dashboard/hr/performance",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Performance Reviews",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPerformance\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nPerformance Reviews\n\nManage employee performance appraisals.\n\nRegularization Queue\nTotal Reviews\n0\nPending\n0\nCompleted\n0\nAverage Score\n-\nFilters\nReview Period\nJan 1, 2026 - Dec 31, 2026\nPerformance Appraisals\nClick a row to view or score the appraisal\nExport\nColumns\nEmployee\tDepartment\tTemplate\tStatus\tScore\tDue Date\n\nMiko Lester Cabase\nAssistant Supervisor\n\t\t\tDraft\t-\t-\n\nEdlice A. Dela Cruz\nRegional Area Manager\n\t\t\tDraft\t-\t-\n\nMarvin A. Bon\nStore Crew\n\t\t\tDraft\t-\t-\n\nBATINGA, DIANA ROSE .\nCashier\n\t\t\tDraft\t-\t-\n\nRenzo C. Garganta\nStore Supervisor\n\t\t\tDraft\t-\t-\n\nLalaine M. Sugay\nLab Aide\n\t\t\tDraft\t-\t-\n\nAlessandro Rey R. Formoso\nChief Financial Officer\n\t\t\tDraft\t-\t-\n\nKemberg S. Samonte\nStore Supervisor\n\t\t\tDraft\t-\t-\n\nErmina B Mendoza\nSupervisor\n\t\t\tDraft\t-\t-\n\nJames Louie B. Tiu\nAssistant Store Supervisor\n\t\t\tDraft\t-\t-\n\nRows per page\n\n10\nPage 1 of 2\nPrevious\nNext",
+      "button_count": 9,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Jan 1, 2026 - Dec 31, 2026",
+        "Export",
+        "Columns",
+        "10",
+        "Previous",
+        "Next"
+      ],
+      "input_count": 1,
+      "inputs": [
+        {
+          "type": "input",
+          "name": "",
+          "placeholder": "Search by employee name...",
+          "ariaLabel": ""
+        }
+      ],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ],
+      "derived": {
+        "has_review_cycle_btn": false,
+        "has_regularization": true
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-STUB-004",
+    "check": "Disciplinary case detail page renders blank / empty skeleton",
+    "before": null,
+    "after": {
+      "list": {
+        "url": "https://my.bebang.ph/dashboard/hr/disciplinary",
+        "title": "BEI Tasks - Task Management",
+        "h1": "Disciplinary Case Management",
+        "h2s": [
+          "Search"
+        ],
+        "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nDisciplinary\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nDisciplinary Case Management\n\nManage incident reports, NTEs, and disciplinary decisions.\n\nNew Incident Report\nNew Incident Report\nOpen Cases\n0\nPending NTE Responses\n0\nPending Decisions\n0\nOverdue\n0\nFilters\nDate Range\nMar 7, 2026 - Apr 7, 2026\nIncident Reports\nShowing reports from 3/7/2026 to 4/7/2026\nExport\nColumns\nCase #\tEmployee\tType\tSeverity\tStatus\tDate Filed\nIR-2026-00001\t\nSam Admin\n\t\t\tDraft\t2/22/2026\nIR-2026-00002\t\nSam Admin\n\t\t\tDraft\t2/22/2026\nIR-2026-00003\t\nSam Admin\n\t\t\tDraft\t2/22/2026\nIR-2026-00004\t\nSam Admin\n\t\t\tDraft\t2/22/2026\nIR-2026-00005\t\nSam Admin\n\t\t\tDraft\t2/22/2026\nIR-2026-00006\t\nSam Admin\n\t\t\tDraft\t2/22/2026\n\nRows per page\n\n10\nPage 1 of 1\nPrevious\nNext",
+        "button_count": 11,
+        "buttons": [
+          "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "Toggle Sidebar",
+          "Search\nCtrl K",
+          "New Incident Report",
+          "New Incident Report",
+          "Mar 7, 2026 - Apr 7, 2026",
+          "Export",
+          "Columns",
+          "10",
+          "Previous",
+          "Next"
+        ],
+        "input_count": 1,
+        "inputs": [
+          {
+            "type": "input",
+            "name": "",
+            "placeholder": "Search by employee name...",
+            "ariaLabel": ""
+          }
+        ],
+        "nav_items": [
+          {
+            "text": "Home",
+            "href": "/dashboard"
+          },
+          {
+            "text": "Dashboard",
+            "href": "/dashboard"
+          },
+          {
+            "text": "My Profile",
+            "href": "/dashboard/my-profile"
+          },
+          {
+            "text": "Clearance",
+            "href": "/clearance"
+          },
+          {
+            "text": "Exit Interview",
+            "href": "/clearance/exit-interview"
+          },
+          {
+            "text": "Supervisor Tools",
+            "href": "/dashboard/supervisor"
+          },
+          {
+            "text": "Analytics",
+            "href": "/dashboard/analytics"
+          },
+          {
+            "text": "HR Self-Service",
+            "href": "/dashboard/hr"
+          },
+          {
+            "text": "Leave",
+            "href": "/dashboard/hr/leave"
+          },
+          {
+            "text": "Attendance",
+            "href": "/dashboard/hr/attendance"
+          },
+          {
+            "text": "My Overtime",
+            "href": "/dashboard/attendance/overtime"
+          },
+          {
+            "text": "Schedule",
+            "href": "/dashboard/hr/schedule"
+          },
+          {
+            "text": "Payslip",
+            "href": "/dashboard/hr/payslip"
+          },
+          {
+            "text": "Coverage Request",
+            "href": "/dashboard/hr/coverage"
+          },
+          {
+            "text": "Official Business",
+            "href": "/dashboard/hr/official-business"
+          },
+          {
+            "text": "Official Business Check-out",
+            "href": "/dashboard/hr/official-business/checkout"
+          },
+          {
+            "text": "Official Business Check-in",
+            "href": "/dashboard/hr/official-business/checkin"
+          },
+          {
+            "text": "OB Geo Check-out",
+            "href": "/dashboard/attendance/ob-checkout"
+          },
+          {
+            "text": "OB Geo Check-in",
+            "href": "/dashboard/attendance/ob-checkin"
+          },
+          {
+            "text": "Remote Punch",
+            "href": "/dashboard/attendance/punch"
+          },
+          {
+            "text": "Punch In",
+            "href": "/dashboard/attendance/punch-in"
+          },
+          {
+            "text": "Punch Out",
+            "href": "/dashboard/attendance/punch-out"
+          },
+          {
+            "text": "Onboarding",
+            "href": "/dashboard/onboarding/me"
+          },
+          {
+            "text": "Leave Command Center",
+            "href": "/dashboard/hr-admin/leaves"
+          },
+          {
+            "text": "HR Management",
+            "href": "/dashboard/hr"
+          },
+          {
+            "text": "Employee Master",
+            "href": "/dashboard/hr/employee-master"
+          },
+          {
+            "text": "Payroll",
+            "href": "/dashboard/hr/payroll"
+          },
+          {
+            "text": "Performance",
+            "href": "/dashboard/hr/performance"
+          },
+          {
+            "text": "Regularization",
+            "href": "/dashboard/hr/performance/regularization"
+          },
+          {
+            "text": "Disciplinary",
+            "href": "/dashboard/hr/disciplinary"
+          },
+          {
+            "text": "Recruitment",
+            "href": "/dashboard/hr/recruitment"
+          },
+          {
+            "text": "Transfers",
+            "href": "/dashboard/hr/transfers"
+          },
+          {
+            "text": "Reports",
+            "href": "/dashboard/hr/reports"
+          },
+          {
+            "text": "Overtime",
+            "href": "/dashboard/hr/overtime"
+          },
+          {
+            "text": "Training",
+            "href": "/dashboard/hr/training"
+          },
+          {
+            "text": "Correction Review",
+            "href": "/dashboard/hr/attendance-correction"
+          },
+          {
+            "text": "Compliance",
+            "href": "/dashboard/hr/compliance"
+          },
+          {
+            "text": "13th Month",
+            "href": "/dashboard/hr/compliance/13th-month"
+          },
+          {
+            "text": "Separations",
+            "href": "/dashboard/hr/separations"
+          },
+          {
+            "text": "Exit Interview Analytics",
+            "href": "/dashboard/hr/exit-interview/analytics"
+          },
+          {
+            "text": "Petty Cash Fund",
+            "href": "/dashboard/hr-admin/pcf"
+          },
+          {
+            "text": "Add PCF Entry",
+            "href": "/dashboard/hr-admin/pcf/add"
+          },
+          {
+            "text": "Pending PCF",
+            "href": "/dashboard/hr-admin/pcf/pending"
+          },
+          {
+            "text": "PCF History",
+            "href": "/dashboard/hr-admin/pcf/history"
+          },
+          {
+            "text": "Biometric Monitoring",
+            "href": "/dashboard/biometric"
+          },
+          {
+            "text": "My Expenses",
+            "href": "/dashboard/expense"
+          },
+          {
+            "text": "Store Operations",
+            "href": "/dashboard/store-ops"
+          },
+          {
+            "text": "Store Inventory",
+            "href": "/dashboard/inventory"
+          },
+          {
+            "text": "Stock Counting",
+            "href": "/inventory/stock-counts"
+          },
+          {
+            "text": "Finance & Accounting",
+            "href": "/dashboard/accounting"
+          }
+        ]
+      },
+      "detail": {
+        "url": "https://my.bebang.ph/dashboard/hr/disciplinary/IR-2026-00001",
+        "title": "BEI Tasks - Task Management",
+        "h1": "",
+        "h2s": [
+          "Search"
+        ],
+        "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nDisciplinary\nIR-2026-00001\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions",
+        "button_count": 3,
+        "buttons": [
+          "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "Toggle Sidebar",
+          "Search\nCtrl K"
+        ],
+        "input_count": 0,
+        "inputs": [],
+        "nav_items": [
+          {
+            "text": "Home",
+            "href": "/dashboard"
+          },
+          {
+            "text": "Dashboard",
+            "href": "/dashboard"
+          },
+          {
+            "text": "My Profile",
+            "href": "/dashboard/my-profile"
+          },
+          {
+            "text": "Clearance",
+            "href": "/clearance"
+          },
+          {
+            "text": "Exit Interview",
+            "href": "/clearance/exit-interview"
+          },
+          {
+            "text": "Supervisor Tools",
+            "href": "/dashboard/supervisor"
+          },
+          {
+            "text": "Analytics",
+            "href": "/dashboard/analytics"
+          },
+          {
+            "text": "HR Self-Service",
+            "href": "/dashboard/hr"
+          },
+          {
+            "text": "Leave",
+            "href": "/dashboard/hr/leave"
+          },
+          {
+            "text": "Attendance",
+            "href": "/dashboard/hr/attendance"
+          },
+          {
+            "text": "My Overtime",
+            "href": "/dashboard/attendance/overtime"
+          },
+          {
+            "text": "Schedule",
+            "href": "/dashboard/hr/schedule"
+          },
+          {
+            "text": "Payslip",
+            "href": "/dashboard/hr/payslip"
+          },
+          {
+            "text": "Coverage Request",
+            "href": "/dashboard/hr/coverage"
+          },
+          {
+            "text": "Official Business",
+            "href": "/dashboard/hr/official-business"
+          },
+          {
+            "text": "Official Business Check-out",
+            "href": "/dashboard/hr/official-business/checkout"
+          },
+          {
+            "text": "Official Business Check-in",
+            "href": "/dashboard/hr/official-business/checkin"
+          },
+          {
+            "text": "OB Geo Check-out",
+            "href": "/dashboard/attendance/ob-checkout"
+          },
+          {
+            "text": "OB Geo Check-in",
+            "href": "/dashboard/attendance/ob-checkin"
+          },
+          {
+            "text": "Remote Punch",
+            "href": "/dashboard/attendance/punch"
+          },
+          {
+            "text": "Punch In",
+            "href": "/dashboard/attendance/punch-in"
+          },
+          {
+            "text": "Punch Out",
+            "href": "/dashboard/attendance/punch-out"
+          },
+          {
+            "text": "Onboarding",
+            "href": "/dashboard/onboarding/me"
+          },
+          {
+            "text": "Leave Command Center",
+            "href": "/dashboard/hr-admin/leaves"
+          },
+          {
+            "text": "HR Management",
+            "href": "/dashboard/hr"
+          },
+          {
+            "text": "Employee Master",
+            "href": "/dashboard/hr/employee-master"
+          },
+          {
+            "text": "Payroll",
+            "href": "/dashboard/hr/payroll"
+          },
+          {
+            "text": "Performance",
+            "href": "/dashboard/hr/performance"
+          },
+          {
+            "text": "Regularization",
+            "href": "/dashboard/hr/performance/regularization"
+          },
+          {
+            "text": "Disciplinary",
+            "href": "/dashboard/hr/disciplinary"
+          },
+          {
+            "text": "Recruitment",
+            "href": "/dashboard/hr/recruitment"
+          },
+          {
+            "text": "Transfers",
+            "href": "/dashboard/hr/transfers"
+          },
+          {
+            "text": "Reports",
+            "href": "/dashboard/hr/reports"
+          },
+          {
+            "text": "Overtime",
+            "href": "/dashboard/hr/overtime"
+          },
+          {
+            "text": "Training",
+            "href": "/dashboard/hr/training"
+          },
+          {
+            "text": "Correction Review",
+            "href": "/dashboard/hr/attendance-correction"
+          },
+          {
+            "text": "Compliance",
+            "href": "/dashboard/hr/compliance"
+          },
+          {
+            "text": "13th Month",
+            "href": "/dashboard/hr/compliance/13th-month"
+          },
+          {
+            "text": "Separations",
+            "href": "/dashboard/hr/separations"
+          },
+          {
+            "text": "Exit Interview Analytics",
+            "href": "/dashboard/hr/exit-interview/analytics"
+          },
+          {
+            "text": "Petty Cash Fund",
+            "href": "/dashboard/hr-admin/pcf"
+          },
+          {
+            "text": "Add PCF Entry",
+            "href": "/dashboard/hr-admin/pcf/add"
+          },
+          {
+            "text": "Pending PCF",
+            "href": "/dashboard/hr-admin/pcf/pending"
+          },
+          {
+            "text": "PCF History",
+            "href": "/dashboard/hr-admin/pcf/history"
+          },
+          {
+            "text": "Biometric Monitoring",
+            "href": "/dashboard/biometric"
+          },
+          {
+            "text": "My Expenses",
+            "href": "/dashboard/expense"
+          },
+          {
+            "text": "Store Operations",
+            "href": "/dashboard/store-ops"
+          },
+          {
+            "text": "Store Inventory",
+            "href": "/dashboard/inventory"
+          },
+          {
+            "text": "Stock Counting",
+            "href": "/inventory/stock-counts"
+          },
+          {
+            "text": "Finance & Accounting",
+            "href": "/dashboard/accounting"
+          }
+        ]
+      },
+      "derived": {
+        "detail_is_blank": false
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "scenario_id": "EMP-STUB-005",
+    "check": "Clearance page is read-only milestone tracker; no stations, no item return, no Documenso",
+    "before": null,
+    "after": {
+      "url": "https://my.bebang.ph/clearance",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Clearance Status",
+      "h2s": [],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave Command Center\nHR Management\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nClearance\nSearch\nCtrl K\nClearance Status\n\nTrack your separation progress and complete required steps.\n\nSeparation Overview\nType: Resignation | Started: 2026-03-17\nPending\nDOLE Compliance\n0/2\nEmployee\nTest HR\n\nHuman Resources - BAG \u00e2\u20ac\u00a2 Hr Manager\n\nKey Milestones\nComplete these steps for a smooth transition\n1\n\nExit Interview\n\nShare your feedback with HR\n\nStart Interview\n2\n\nFinal Pay Approval\n\nHR computes and approves your final pay\n\nPending HR\n3\n\nCertificate of Employment\n\nDownload your COE after clearance\n\nAvailable after clearance\n\u00f0\u0178\u2019\u00a1\n\nNeed Help?\n\nContact HR at hr@bebang.ph or visit the HR office for any questions about your clearance process. Final pay is released within 30 days per DOLE Labor Advisory No. 06-20.",
+      "button_count": 4,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Start Interview"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        },
+        {
+          "text": "Campaign Giveaways",
+          "href": "/dashboard/campaign-giveaways"
+        },
+        {
+          "text": "Procurement",
+          "href": "/dashboard/procurement"
+        },
+        {
+          "text": "SCM",
+          "href": "/dashboard/scm/critical-items-control-tower"
+        },
+        {
+          "text": "Warehouse",
+          "href": "/dashboard/warehouse"
+        },
+        {
+          "text": "Commissary",
+          "href": "/dashboard/commissary"
+        },
+        {
+          "text": "Projects & Maintenance",
+          "href": "/dashboard/rm-admin"
+        },
+        {
+          "text": "Communication",
+          "href": "/dashboard/communication"
+        },
+        {
+          "text": "Tasks & Reports",
+          "href": "/dashboard/tasks"
+        },
+        {
+          "text": "Platform & Admin",
+          "href": "/dashboard/settings/google-chat"
+        },
+        {
+          "text": "Start Interview",
+          "href": "/clearance/exit-interview"
+        }
+      ],
+      "derived": {
+        "has_clearance_stations": false,
+        "has_item_return": false,
+        "has_documenso": false,
+        "has_milestone_tracker": true
+      }
+    },
+    "passed": true,
+    "defect_logged": true,
+    "source_lane": "lane_f"
+  },
+  {
+    "period": {
+      "start": "2026-04-01",
+      "end": "2026-04-30",
+      "label": "Apr 1, 2026 - Apr 30, 2026"
+    },
+    "slipCount": 0,
+    "slipMath": null,
+    "remittances": {
+      "SSS": {
+        "loaded": true,
+        "sample": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor"
+      },
+      "PhilHealth": {
+        "loaded": true,
+        "sample": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor"
+      },
+      "Pag-IBIG": {
+        "loaded": true,
+        "sample": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor"
+      },
+      "BIR (Tax)": {
+        "loaded": true,
+        "sample": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor"
+      }
+    },
+    "comparison": {
+      "ok": true,
+      "sample": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\n"
+    },
+    "history": {
+      "hasPeriod": true,
+      "sample": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayroll\nHistory\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack "
+    },
+    "source_lane": "lane_g"
+  },
+  {
+    "check": "emp_create_004_no_device_path",
+    "scenario": "EMP-CREATE-004",
+    "status": "PASS",
+    "candidate_idx": 1,
+    "branch": "CAPITAL HOUSE",
+    "toast_text": "Employee BEI-EMP-2026-00004 created. No biometric device mapped to CAPITAL HOUSE \u00e2\u20ac\u201d enroll manually.",
+    "api_response_reason": "NO_DEVICE_FOR_BRANCH",
+    "api_response_enrolled": false,
+    "api_response_device_sn": null,
+    "employee_created": "HR-EMP-00031",
+    "employee_name": "Maria Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+    "bio_id_assigned": "9001883",
+    "notes": "Toast string and adms_enrollment.reason both confirm NO_DEVICE_FOR_BRANCH. Employee was still created \u00e2\u20ac\u201d server-side soft fail on device enrollment, not a hard failure on create (spec compliant).",
+    "source_lane": "lane_h"
+  },
+  {
+    "check": "emp_create_mapped_control_path",
+    "scenario": "EMP-CREATE-004-control",
+    "status": "INFORMATIONAL",
+    "candidate_idx": 0,
+    "branch": "BRITTANY OFFICE",
+    "toast_text": "Employee BEI-EMP-2026-00004 created. Bio ID 9001882 enrolled on device UDP3251600245.",
+    "api_response_reason": null,
+    "api_response_enrolled": true,
+    "api_response_device_sn": "UDP3251600245",
+    "employee_created": "HR-EMP-00030",
+    "bio_id_assigned": "9001882",
+    "notes": "BRITTANY OFFICE unexpectedly IS mapped to device UDP3251600245 \u00e2\u20ac\u201d updates the lane's assumption that office branches would be unmapped. Useful DEVICE_TO_STORE discovery data for future waves.",
+    "source_lane": "lane_h"
+  },
+  {
+    "check": "post_run_cleanup_all_orphans_soft_deleted",
+    "status": "PASS",
+    "orphans_before_cleanup": 2,
+    "orphans_after_cleanup": 0,
+    "method": "PUT /api/frappe/api/resource/Employee/{name} with body {status: 'Left', relieving_date: '2026-04-07'}",
+    "notes": "Runner's initial cleanup attempt used frappe.client.set_value which silently rejected status=Left. Second cleanup pass via PUT resource endpoint succeeded on both. attendance_device_id was also cleared on both employees (S164 pattern).",
+    "employees_cleaned": [
+      {
+        "name": "HR-EMP-00030",
+        "employee_name": "Juan Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+        "branch": "BRITTANY OFFICE",
+        "bio_id_cleared_from": "9001882",
+        "status_before": "Active",
+        "status_after": "Left",
+        "relieving_date": "2026-04-07"
+      },
+      {
+        "name": "HR-EMP-00031",
+        "employee_name": "Maria Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+        "branch": "CAPITAL HOUSE",
+        "bio_id_cleared_from": "9001883",
+        "status_before": "Active",
+        "status_after": "Left",
+        "relieving_date": "2026-04-07"
+      }
+    ],
+    "source_lane": "lane_h"
+  }
+]

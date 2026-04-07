@@ -1,0 +1,58 @@
+[
+  {
+    "role_key": "crew",
+    "email": "test.crew1@bebang.ph",
+    "label": "test.crew1",
+    "ts": "2026-04-07T22:55:48+08:00",
+    "login_success": true,
+    "final_url": "https://my.bebang.ph/dashboard/hr/overtime/apply",
+    "is_restricted": true,
+    "has_form": false,
+    "sidebar_my_overtime": true,
+    "page_text_head": "((a,b,c,d,e,f,g,h)=>{let i=document.documentElement,j=[\"light\",\"dark\"];function k(b){var c;(Array.isArray(a)?a:[a]).forEach(a=>{let c=\"class\"===a,d=c&&f?e.map(a=>f[a]||a):e;c?(i.classList.remove(...d),i.classList.add(f&&f[b]?f[b]:b)):i.setAttribute(a,b)}),c=b,h&&j.includes(c)&&(i.style.colorScheme=c)}if(d)k(d);else try{let a=localStorage.getItem(b)||c,d=g&&\"system\"===a?window.matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\":a;k(d)}catch(a){}})(\"class\",\"theme\",\"light\",null,[\"ligh",
+    "screenshot": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\s166\\lanes\\retest\\r2_fix\\screenshots\\probe_crew_apply_page.png",
+    "error": null
+  },
+  {
+    "role_key": "hr",
+    "email": "test.hr@bebang.ph",
+    "label": "test.hr",
+    "ts": "2026-04-07T22:56:01+08:00",
+    "login_success": true,
+    "final_url": "https://my.bebang.ph/dashboard/hr/overtime/apply",
+    "is_restricted": false,
+    "has_form": true,
+    "sidebar_my_overtime": true,
+    "page_text_head": "((a,b,c,d,e,f,g,h)=>{let i=document.documentElement,j=[\"light\",\"dark\"];function k(b){var c;(Array.isArray(a)?a:[a]).forEach(a=>{let c=\"class\"===a,d=c&&f?e.map(a=>f[a]||a):e;c?(i.classList.remove(...d),i.classList.add(f&&f[b]?f[b]:b)):i.setAttribute(a,b)}),c=b,h&&j.includes(c)&&(i.style.colorScheme=c)}if(d)k(d);else try{let a=localStorage.getItem(b)||c,d=g&&\"system\"===a?window.matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\":a;k(d)}catch(a){}})(\"class\",\"theme\",\"light\",null,[\"ligh",
+    "screenshot": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\s166\\lanes\\retest\\r2_fix\\screenshots\\probe_hr_apply_page.png",
+    "error": null
+  },
+  {
+    "role_key": "supervisor",
+    "email": "test.supervisor@bebang.ph",
+    "label": "test.supervisor",
+    "ts": "2026-04-07T22:56:15+08:00",
+    "login_success": true,
+    "final_url": "https://my.bebang.ph/dashboard/hr/overtime/apply",
+    "is_restricted": false,
+    "has_form": true,
+    "sidebar_my_overtime": true,
+    "page_text_head": "((a,b,c,d,e,f,g,h)=>{let i=document.documentElement,j=[\"light\",\"dark\"];function k(b){var c;(Array.isArray(a)?a:[a]).forEach(a=>{let c=\"class\"===a,d=c&&f?e.map(a=>f[a]||a):e;c?(i.classList.remove(...d),i.classList.add(f&&f[b]?f[b]:b)):i.setAttribute(a,b)}),c=b,h&&j.includes(c)&&(i.style.colorScheme=c)}if(d)k(d);else try{let a=localStorage.getItem(b)||c,d=g&&\"system\"===a?window.matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\":a;k(d)}catch(a){}})(\"class\",\"theme\",\"light\",null,[\"ligh",
+    "screenshot": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\s166\\lanes\\retest\\r2_fix\\screenshots\\probe_supervisor_apply_page.png",
+    "error": null
+  },
+  {
+    "role_key": "area",
+    "email": "test.area@bebang.ph",
+    "label": "test.area",
+    "ts": "2026-04-07T22:56:27+08:00",
+    "login_success": true,
+    "final_url": "https://my.bebang.ph/dashboard/hr/overtime/apply",
+    "is_restricted": false,
+    "has_form": true,
+    "sidebar_my_overtime": true,
+    "page_text_head": "((a,b,c,d,e,f,g,h)=>{let i=document.documentElement,j=[\"light\",\"dark\"];function k(b){var c;(Array.isArray(a)?a:[a]).forEach(a=>{let c=\"class\"===a,d=c&&f?e.map(a=>f[a]||a):e;c?(i.classList.remove(...d),i.classList.add(f&&f[b]?f[b]:b)):i.setAttribute(a,b)}),c=b,h&&j.includes(c)&&(i.style.colorScheme=c)}if(d)k(d);else try{let a=localStorage.getItem(b)||c,d=g&&\"system\"===a?window.matchMedia(\"(prefers-color-scheme: dark)\").matches?\"dark\":\"light\":a;k(d)}catch(a){}})(\"class\",\"theme\",\"light\",null,[\"ligh",
+    "screenshot": "F:\\Dropbox\\Projects\\BEI-ERP\\output\\l3\\s166\\lanes\\retest\\r2_fix\\screenshots\\probe_area_apply_page.png",
+    "error": null
+  }
+]

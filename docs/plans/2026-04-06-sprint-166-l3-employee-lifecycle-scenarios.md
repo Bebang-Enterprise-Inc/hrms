@@ -3,9 +3,9 @@ sprint_id: S166
 display: Sprint 166
 title: "L3 Full Employee Lifecycle Scenarios — Hire → Edit → Compensate → Regularize → Leave → OT → Attendance → Payroll → Disciplinary → Transfer → Terminate → Exit Interview → Final Pay → Deactivate → Rehire"
 branch: s166-l3-employee-lifecycle-scenarios
-status: PLANNED
+status: COMPLETED
 planned_date: 2026-04-06
-completed_date: null
+completed_date: 2026-04-07
 depends_on: S164, S160, S148, S158, S114, employee-transfer flow, clearance module, leave module, overtime module, attendance-correction module, payroll-processing module, disciplinary module
 total_work_units: 63
 amendment_version: 3
@@ -19,6 +19,20 @@ catalog_pr: hrms#469
 phase_0_complete: true
 phase_1_complete: true
 phase_2_complete: true
+execution_summary:
+  total_scenarios: 137
+  pass: 71
+  defect_pass: 20
+  fail: 6
+  skip: 40
+  lanes_completed: 8
+  retest_iterations: 5
+  defects_found: 21
+  defects_closed_by_s170: 6
+  defects_open: 12
+  new_defects_from_retest: 3
+  wave2_pr: hrms#489
+  canonical_evidence: output/l3/s166/SUMMARY.md
 ---
 
 # S166: L3 Full Employee Lifecycle Scenarios

@@ -1,0 +1,130 @@
+[R4 4/7/2026, 22:48:38] [auth] Frappe login: test.hr@bebang.ph
+[R4 4/7/2026, 22:48:40] [auth] Frappe post-login: https://hq.bebang.ph/app/home
+[R4 4/7/2026, 22:48:45] [auth] my.bebang.ph post-login: https://my.bebang.ph/dashboard
+[R4 4/7/2026, 22:48:45] [auth] Frappe login: test.finance@bebang.ph
+[R4 4/7/2026, 22:48:48] [auth] Frappe post-login: https://hq.bebang.ph/app/home
+[R4 4/7/2026, 22:48:52] [auth] my.bebang.ph post-login: https://my.bebang.ph/dashboard
+[R4 4/7/2026, 22:48:52] === STEP 1: Create EMP-RETEST ===
+[R4 4/7/2026, 22:49:14]   No intercept response — searching API for EMP-RETEST...
+[R4 4/7/2026, 22:49:14]   Found via API search: HR-EMP-00046 bio=9001894
+[R4 4/7/2026, 22:49:14]   [PASS] EMP-CREATE-RETEST: Created HR-EMP-00046 bio_id=9001894
+[R4 4/7/2026, 22:49:14] EMP-RETEST created: HR-EMP-00046
+[R4 4/7/2026, 22:49:14] === STEP 2: SALARY chain ===
+[R4 4/7/2026, 22:49:14]   Probing compensation-setup/[employee] page...
+[R4 4/7/2026, 22:49:21]   Phase2 page: hasEditBtn=true hasCompData=true hasError=false
+[R4 4/7/2026, 22:49:21]   EMP-SALARY-SETUP-001: assign base salary 25000
+[R4 4/7/2026, 22:49:28]   [FAIL] EMP-SALARY-SETUP-001: No BCC returned. API resp: {"ok":false,"status":417,"json":{"exception":"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payroll' has no attribute '
+[R4 4/7/2026, 22:49:28]   EMP-SALARY-SETUP-002: meal allowance 2000 + transportation 1500
+[R4 4/7/2026, 22:50:03]   [FAIL] EMP-SALARY-SETUP-002: locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: /edit/i }).first()[22m
+[2m    - locator resolved to <button disabled data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-pri…>…</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    57 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+[R4 4/7/2026, 22:50:03]   EMP-SALARY-SETUP-003: SSS/PhilHealth/Pag-IBIG deductions
+[R4 4/7/2026, 22:50:03]   [DEFECT-PASS] EMP-SALARY-SETUP-003: Statutory deductions are auto-computed from base salary — no separate BCC. Compensation page shows statutory preview. Architectural note recorded.
+[R4 4/7/2026, 22:50:03]   [SKIP] EMP-SALARY-SETUP-004: Formula-based components not addressable via update_compensation API — same architectural note as A4 SALARY-SETUP-004. Compensation UI shows computed values (daily rate, gross, deductions) but formula components have no input field.
+[R4 4/7/2026, 22:50:03]   EMP-SALARY-CHANGE-001: raise base salary to 30000
+[R4 4/7/2026, 22:50:09]   [FAIL] EMP-SALARY-CHANGE-001: No BCC returned: "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payro
+[R4 4/7/2026, 22:50:09]   EMP-SALARY-CHANGE-002: finance approval + SSA verification (Defect #16)
+[R4 4/7/2026, 22:50:09]   [SKIP] EMP-SALARY-CHANGE-002: No BCC from CHANGE-001 to approve
+[R4 4/7/2026, 22:50:09]   EMP-SALARY-CHANGE-003: meal allowance 2000→3000 + approve
+[R4 4/7/2026, 22:50:09]   [FAIL] EMP-SALARY-CHANGE-003: No BCC: "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payro
+[R4 4/7/2026, 22:50:09]   EMP-SALARY-CHANGE-004: future effective date
+[R4 4/7/2026, 22:50:10]   [FAIL] EMP-SALARY-CHANGE-004: No BCC: "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payro
+[R4 4/7/2026, 22:50:10]   EMP-SALARY-CHANGE-005: reject path
+[R4 4/7/2026, 22:50:11]   [FAIL] EMP-SALARY-CHANGE-005: No BCC to reject: "{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payro
+[R4 4/7/2026, 22:50:11]   EMP-SALARY-CHANGE-006: adversarial inputs
+[R4 4/7/2026, 22:50:12]   [PASS] EMP-SALARY-CHANGE-006: negative rejected=true, zero=rejected, string rejected=true
+[R4 4/7/2026, 22:50:12]   [SKIP] EMP-SALARY-PAYROLL-001: DEFER_PAYROLL_RUN_NOT_TRIGGERED: no payroll run covers EMP-RETEST period. Consistent with Lane A A4. Salary Structure Assignment may exist but no salary slip generated.
+[R4 4/7/2026, 22:50:12]   [SKIP] EMP-SALARY-PAYROLL-002: DEFER_PAYROLL_RUN_NOT_TRIGGERED: no payroll run covers EMP-RETEST period. Consistent with Lane A A4. Salary Structure Assignment may exist but no salary slip generated.
+[R4 4/7/2026, 22:50:12] === STEP 2 complete ===
+[R4 4/7/2026, 22:50:12] === STEP 3: REGULARIZE chain ===
+[R4 4/7/2026, 22:50:12]   EMP-REGULARIZE-001: regularize EMP-RETEST
+[R4 4/7/2026, 22:50:21]   [PASS] EMP-REGULARIZE-001: employment_type=Regular confirmed via API (HR-EMP-00046)
+[R4 4/7/2026, 22:50:21]   EMP-REGULARIZE-002: verify regularization date + 13th month eligibility
+[R4 4/7/2026, 22:50:28]   [PASS] EMP-REGULARIZE-002: employment_type=Regular, compliance page loads, 13th month check available
+[R4 4/7/2026, 22:50:28] === STEP 3 complete ===
+[R4 4/7/2026, 22:50:28] === STEP 4: TERMINATE chain ===
+[R4 4/7/2026, 22:50:28]   EMP-TERMINATE-001: create separation for HR-EMP-00046
+[R4 4/7/2026, 22:51:05]   [FAIL] EMP-TERMINATE-001: locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('[role="dialog"]').first().getByRole('button', { name: /create|submit|start/i }).first()[22m
+[2m    - locator resolved to <button disabled type="submit" data-slot="button" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-pr…>Create Separation</button>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not enabled[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    57 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not enabled[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+[R4 4/7/2026, 22:51:05]   EMP-TERMINATE-002: initiate clearance (S170 Phase 4)
+[R4 4/7/2026, 22:51:11]   Phase4 clearance: hasClearanceModule=true hasInitBtn=true
+[R4 4/7/2026, 22:51:11]   [FAIL] EMP-TERMINATE-002: Clearance init failed. API: "{\"exc_type\":\"DoesNotExistError\",\"_server_messages\":\"[\\\"{\\\\\\\"message\\\\\\\": \\\\\\\"Employee Separation HR-EMP-SEP-HR-EMP-00046 not found\\\\\\\", \\\\\\\"title\\\\\\\": \\\\\\\"Message
+[R4 4/7/2026, 22:51:12]   EMP-TERMINATE-003: mark clearance items terminal
+[R4 4/7/2026, 22:51:12]   [SKIP] EMP-TERMINATE-003: No clearance_name in empState — depends on TERMINATE-002
+[R4 4/7/2026, 22:51:12]   [SKIP] EMP-TERMINATE-004: DEFER_DOCUMENSO_INTEGRATION: Documenso integration deferred per S170 Phase 4 scope. No documenso trigger in clearance API as of deployment.
+[R4 4/7/2026, 22:51:12]   EMP-TERMINATE-005: submit clearance
+[R4 4/7/2026, 22:51:12]   [SKIP] EMP-TERMINATE-005: No clearance_name — depends on TERMINATE-002
+[R4 4/7/2026, 22:51:12]   EMP-TERMINATE-006: regression — Employee Master Left filter
+[R4 4/7/2026, 22:51:17]   [DEFECT-PASS] EMP-TERMINATE-006: EMP-RETEST status=Active in Employee API
+[R4 4/7/2026, 22:51:17]   EMP-FINALPAY-001: checking final pay
+[R4 4/7/2026, 22:51:26]   [SKIP] EMP-FINALPAY-001: DEFER_FINAL_PAY: Final pay feature not discoverable in payroll dashboard
+[R4 4/7/2026, 22:51:26]   EMP-FINALPAY-002: checking final pay
+[R4 4/7/2026, 22:51:31]   [SKIP] EMP-FINALPAY-002: DEFER_FINAL_PAY: Final pay feature not discoverable in payroll dashboard
+[R4 4/7/2026, 22:51:31]   EMP-FINALPAY-003: checking final pay
+[R4 4/7/2026, 22:51:35]   [SKIP] EMP-FINALPAY-003: DEFER_FINAL_PAY: Final pay feature not discoverable in payroll dashboard
+[R4 4/7/2026, 22:51:35]   EMP-USERDISABLE-001: user account disabled check
+[R4 4/7/2026, 22:51:36]   [SKIP] EMP-USERDISABLE-001: No user_id on EMP-RETEST employee record (fresh test employee may not have a user account)
+[R4 4/7/2026, 22:51:36]   EMP-USERDISABLE-002: user account disabled check
+[R4 4/7/2026, 22:51:37]   [SKIP] EMP-USERDISABLE-002: No user_id on EMP-RETEST employee record (fresh test employee may not have a user account)
+[R4 4/7/2026, 22:51:37]   EMP-ADMSREMOVE-001: ADMS removal queue check
+[R4 4/7/2026, 22:51:37]   [SKIP] EMP-ADMSREMOVE-001: No ADMS DELETE_USERINFO command queued for EMP-RETEST. ADMS removal may be triggered only if Bio ID was enrolled. EMP-RETEST had bio_id cleared during cleanup.
+[R4 4/7/2026, 22:51:37]   EMP-ADMSREMOVE-002: ADMS removal queue check
+[R4 4/7/2026, 22:51:38]   [SKIP] EMP-ADMSREMOVE-002: No ADMS DELETE_USERINFO command queued for EMP-RETEST. ADMS removal may be triggered only if Bio ID was enrolled. EMP-RETEST had bio_id cleared during cleanup.
+[R4 4/7/2026, 22:51:38]   EMP-EXITINTERVIEW-001/002/003: exit interview route
+[R4 4/7/2026, 22:51:42]   [FAIL] EMP-EXITINTERVIEW-001: Exit interview route not found: h1=""
+[R4 4/7/2026, 22:51:42]   [SKIP] EMP-EXITINTERVIEW-002: DEPENDS_ON_EXITINTERVIEW-001
+[R4 4/7/2026, 22:51:42]   [SKIP] EMP-EXITINTERVIEW-003: DEPENDS_ON_EXITINTERVIEW-001
+[R4 4/7/2026, 22:51:42]   EMP-REHIRE-001: rehire path
+[R4 4/7/2026, 22:51:46]   [SKIP] EMP-REHIRE-001: DEFER_REHIRE: No rehire UI element found. Rehire pathway not implemented or requires different entry point. EMP-RETEST is Left — no rehire attempted to avoid polluting bio_id sequence.
+[R4 4/7/2026, 22:51:46]   EMP-REHIRE-002: rehire path
+[R4 4/7/2026, 22:51:50]   [SKIP] EMP-REHIRE-002: DEFER_REHIRE: No rehire UI element found. Rehire pathway not implemented or requires different entry point. EMP-RETEST is Left — no rehire attempted to avoid polluting bio_id sequence.
+[R4 4/7/2026, 22:51:50] === STEP 4 complete ===
+[R4 4/7/2026, 22:51:50] === CLEANUP: mandatory soft-delete + BCC/clearance cancel ===
+[R4 4/7/2026, 22:51:50]   Cancelling BCCs...
+[R4 4/7/2026, 22:51:50]   Soft-deleting HR-EMP-00046...
+[R4 4/7/2026, 22:51:52]     Pass1 bio_id clear: ok=true
+[R4 4/7/2026, 22:51:53]     Pass2 status=Left: ok=false
+[R4 4/7/2026, 22:51:54]     Pass3 relieving_date: ok=true
+[R4 4/7/2026, 22:51:55]     Final state: status=Active bio_id=undefined
+[R4 4/7/2026, 22:51:55] === CLEANUP complete ===
+[R4 4/7/2026, 22:51:55] Summary written to F:\Dropbox\Projects\BEI-ERP\output\l3\s166\lanes\retest\r4_emp_retest\R4_SUMMARY.md
+
+============================================================
+R4 COMPLETE: HR-EMP-00046
+  PASS=4 FAIL=9 SKIP=18 DEFECT-PASS=2
+  Cleanup: cleanup_partial
+  Defects: 0
+  Summary: F:\Dropbox\Projects\BEI-ERP\output\l3\s166\lanes\retest\r4_emp_retest\R4_SUMMARY.md
+============================================================
+

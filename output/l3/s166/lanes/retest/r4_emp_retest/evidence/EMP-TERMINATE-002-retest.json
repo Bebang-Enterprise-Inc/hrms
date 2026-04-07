@@ -1,0 +1,38 @@
+{
+  "scenario_id": "EMP-TERMINATE-002",
+  "ts": "2026-04-07T14:51:05.700Z",
+  "phase4_check": {
+    "hasClearanceModule": true,
+    "hasInitializeBtn": true,
+    "hasInput": false,
+    "page_loads": true
+  },
+  "page_obs": {
+    "url": "https://my.bebang.ph/dashboard/hr/clearance",
+    "h1": "Employee Clearance",
+    "buttons": [
+      "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+      "Toggle Sidebar",
+      "Search\nCtrl K",
+      "Initialize"
+    ],
+    "inputs": [
+      {
+        "type": "text",
+        "name": "",
+        "placeholder": "HR-EMP-SEP-..."
+      }
+    ],
+    "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF"
+  },
+  "note": "No separation_name in empState — trying to create clearance via API",
+  "api_response": {
+    "ok": false,
+    "status": 404,
+    "json": {
+      "exc_type": "DoesNotExistError",
+      "_server_messages": "[\"{\\\"message\\\": \\\"Employee Separation HR-EMP-SEP-HR-EMP-00046 not found\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"d93f6bbc2f37b6720643efd77d31e37efb55b5911605eaba7019eb92\\\"}\"]"
+    },
+    "bodyHead": "{\"exc_type\":\"DoesNotExistError\",\"_server_messages\":\"[\\\"{\\\\\\\"message\\\\\\\": \\\\\\\"Employee Separation HR-EMP-SEP-HR-EMP-00046 not found\\\\\\\", \\\\\\\"title\\\\\\\": \\\\\\\"Message\\\\\\\", \\\\\\\"indicator\\\\\\\": \\\\\\\"red\\\\\\\", \\\\\\\"raise_exception\\\\\\\": 1, \\\\\\\"__frappe_exc_id\\\\\\\": \\\\\\\"d93f6bbc2f37b6720643efd77d31e37efb55b5911605eaba7019eb92\\\\\\\"}\\\"]\"}"
+  }
+}
