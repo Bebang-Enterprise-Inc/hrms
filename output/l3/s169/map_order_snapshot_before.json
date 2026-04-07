@@ -1,0 +1,23 @@
+{
+  "bill_number": "BILL-0001",
+  "billed_at": "2026-04-04T06:35:30+00:00",
+  "business_date": "2026-04-04",
+  "channel": "POS",
+  "delivery_fee": 0,
+  "gross_sales": 250.0,
+  "id": 123456789,
+  "location_id": 2317,
+  "net_sales": 223.21,
+  "original_gross_sales": 250.0,
+  "paid_at": "2026-04-04T06:35:40+00:00",
+  "pax_count": 2,
+  "payment_status": "PAID",
+  "receipt_number": "RCPT-0001",
+  "service_channel_id": null,
+  "service_type_id": 91,
+  "total_discounts": 0,
+  "vat_amount": 26.79,
+  "vat_exempt_sales": 0,
+  "vatable_sales": 223.21,
+  "zero_rated_sales": 0
+}
