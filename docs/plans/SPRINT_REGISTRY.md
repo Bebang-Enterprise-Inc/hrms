@@ -216,13 +216,15 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S165` | Sprint 165 | `s165-mosaic-sync-verification` | #466 | PR_CREATED 2026-04-06 — Mosaic POS sync verification + hourly sync schedule. Apr 2-3 backfilled. | `docs/plans/2026-04-06-sprint-165-mosaic-sync-verification.md` |
 
-| `S166` | Sprint 166 | `s166-l3-employee-lifecycle-scenarios` | — | IN_PROGRESS 2026-04-07 (amended v2 2026-04-07) — Full 19-stage employee lifecycle L3 browser scenarios (137 scenarios, 36 prefixes): HIRE → EDIT → COMPENSATE → REGULARIZE → LEAVE → OT → ATTENDANCE → PAYROLL RUN → PAYSLIP → DISCIPLINARY → TRANSFER → TERMINATE → EXIT INTERVIEW → FINAL PAY → COMPLIANCE → DEACTIVATE → REHIRE → ENRICHMENT → UX GAPS → STUB PAGES → CLEANUP. 63 work units. Amendment v2 added EMP-UX-* (10) + EMP-STUB-* (5) from 4-agent parallel audit. Execution-only (no product code). | `docs/plans/2026-04-06-sprint-166-l3-employee-lifecycle-scenarios.md` |
+| `S166` | Sprint 166 | `s166-l3-employee-lifecycle-scenarios` (catalog) + `s166-l3-execution-evidence` (evidence) | hrms#469 (catalog merged 2026-04-07) | IN_PROGRESS 2026-04-07 (amended v3 2026-04-07 PM) — Full 19-stage employee lifecycle L3 browser scenarios (137 scenarios, 36 prefixes). v3 replaced single-session execution with 8-lane parallel /teammates topology + mandatory independent Audit Agent gate after the original sequential model proved infeasible (Radix dialog overlay flake + context exhaustion would force corrupt-success). Catalog PR #469 MERGED. Phase 0 preconditions DONE (5/5 logins, 71 branches, salary/leave/Documenso green). Phase 3+ awaits Wave 0 selector discovery + Wave 1-Pilot (D+E+F+H, 42 scenarios) before Wave 1-Full + Wave 2. 63 work units. Execution-only (no product code). | `docs/plans/2026-04-06-sprint-166-l3-employee-lifecycle-scenarios.md` |
 
 | `S167` | Sprint 167 | `s167-pcf-full-acceptance-test` | — | GO — Full L3 PCF acceptance test: multi-department, multi-user, real expense entries through to batch submission, accountant AI COA review, approve/reject, admin fund creation. Browser-only via Playwright. Execution-only sprint (no code changes). | `docs/plans/2026-04-06-sprint-167-pcf-full-acceptance-test.md` |
 
+| `S168` | Sprint 168 | `s168-bki-store-sale-billing-on-delivery` | — | PLANNED 2026-04-07 — Full BKI→store billing fix + completeness (16 phases, 114 units, 2-session execution). Core (phases 0-8): rewire from "intercompany" to external arm's-length sale per ICT-001/002/003/006; bill on Delivery + store DR acceptance; 12% VAT; JV 2.75% / Franchise 8% markup from BEI Settings; S037 register for customer lookup; savepoint atomicity. Completeness (phases 9-16): frontend DR input, logistics auto-billing with fee SI, post-submission credit notes, per-store cost centers for P&L allocation, EWT toggle framework (off per ICT-004), billing hold admin dashboard at /dashboard/accounting/billing-holds, same-company reclassification JE. Exceeds 80-unit ceiling — requires 2 sessions. | `docs/plans/2026-04-07-sprint-168-bki-store-sale-billing-on-delivery.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S168`.
-2. Reserve branch name: `s168-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S169`.
+2. Reserve branch name: `s169-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
