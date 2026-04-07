@@ -1,19 +1,37 @@
 ---
 canonical_sprint_id: S169
 display: Sprint 169
-status: PLANNED (amended 2026-04-07 post-audit)
+status: COMPLETED_WITH_DEFERRED
 branch: s169-mosaic-order-lifecycle-tombstone-webhook
 lane: single
 created_date: 2026-04-07
-completed_date:
-deployed_at:
-backend_pr:
-frontend_pr:
-l3_result:
-execution_summary:
+completed_date: 2026-04-07
+deployed_at: 2026-04-07
+backend_pr: hrms#485, #487, #488, #490
+frontend_pr: n/a
+l3_result: |
+  Phase 8 T8.1-T8.6 PASS — 3 phantoms tombstoned (49575307, 49575308, 49575310).
+  SM Marikina Apr 4 live count 311 -> 308, daily_revenue MV 302 POS rows.
+  sync_verification row: status=extras_tombstoned, delta=0.
+  Phase 8 T8.7 PARTIAL — endpoint deployed, ping + safety refusal verified.
+  Credential-loading gap blocks webhook happy-path. Deferred to S169.1.
+  verify_s169.py: 22/22 PASS. 7-day verify sweep: 123 [OK] / 0 [EXTRA].
+execution_summary: |
+  Phases 0-7 executed live in production Supabase + Frappe.
+  Schema + map_order BLOCKER 1 fix + wrapper view + 13 view/MV rewrites.
+  Webhook endpoint deployed; 12 Mosaic groups subscribed.
+  Apr 4 SM Marikina phantoms tombstoned via SQL with round-trip 404 confirmation.
+  DEFERRED to S169.1: webhook credential loading, HIGH-10 silence detector, T8.7 retry.
 depends_on: S165 (merged — PRs #466, #470, #472) — this sprint replaces S165's "extra" branch handling with a proper tombstone pattern
+follow_up_sprints:
+  - S169.1 — webhook credential loading fix + silence detector + T8.7 re-run
+  - S170-investigation — root cause 2026-03-26 phantom regime shift (535 groups, 10x background)
 amendment_history:
   - 2026-04-07 — v2 post-audit amendments applied (10 verified blockers: 4 CRITICAL + 6 HIGH + 15 MED/LOW). Root cause of BLOCKER 1 was an UPSERT race that would have silently un-tombstoned every cancelled order on the next hourly poll. See ## Amendment History at bottom of plan.
+  - 2026-04-07 (execution) — T0.3 override: phantom scan found 535 groups vs 50 threshold (10.7x). Sam approved override. Root cause deferred to S170-investigation.
+  - 2026-04-07 (execution) — T0.4 scope amended: 13 total downstream objects discovered (plan said 12); v_discount_identity_rolling_30d_usage is transitively covered via v_discount_identity_order_usage.
+  - 2026-04-07 (execution) — Phase 1 index deviation: partial index created as ON pos_orders(location_id, business_date) WHERE cancelled_at IS NOT NULL rather than plan spec single-col (cancelled_at). Composite form better supports tombstone-scan query pattern (store+day filters). Name correct, predicate correct, only indexed column list differs. Intentional improvement.
+  - 2026-04-07 (execution) — Phase 5 coverage note: 30-day backfill ran in 80s but skipped 1317 store-days due to sync_progress dedup. Only 33 newly-synced store-days got order_status + completed_at populated. Existing rows retain NULL. order_status is forward-only from deploy date. payment_status is 100% populated (preserved from existing sync).
 ---
 
 # S169 — Mosaic Order Lifecycle CDC via Webhook + Tombstone Pattern
