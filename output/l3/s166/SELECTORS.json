@@ -1,0 +1,3467 @@
+{
+  "discovered_at": "2026-04-07T10:48:07.342+08:00",
+  "discovered_by": "wave0-selector-discovery-agent",
+  "production_baseline_sha": "33107fded5757b1f0c5ba6a09c07464f6e84be7d",
+  "global_workarounds": {
+    "shadcn_combobox_in_dialog": {
+      "method": "click_force_true",
+      "snippet": "await trigger.click({ force: true }); await page.waitForTimeout(400); await page.locator('[role=\"option\"]').filter({ hasText: /^OPTION$/i }).first().click();",
+      "trigger_locator_strategy": "scope to dialog -> enumerate button[role='combobox'] -> for each, walk up 5 parents to find nearest <label> -> match label text (case-insensitive)",
+      "verified_on": [
+        "AddNewEmployeeDialog.Gender",
+        "AddNewEmployeeDialog.Branch"
+      ],
+      "source_spike": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/COMBOBOX_WORKAROUND.md"
+    },
+    "login_race_condition": {
+      "pattern": "Login to Frappe (hq.bebang.ph/login) first -> wait networkidle -> navigate to my.bebang.ph/login -> if URL still /login, fill form and submit -> wait for dashboard",
+      "reference": "scripts/testing/l3_s166_phase0_preconditions.mjs"
+    },
+    "toast_reading": {
+      "selector": "[data-sonner-toast]",
+      "wait_after_submit_ms": 1200,
+      "note": "not exercised in discovery (no submits) — locator provided for execution waves"
+    }
+  },
+  "surfaces": [
+    {
+      "surface_id": "EmployeeMasterTable",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/employee-master",
+      "notes": "capture filter/search/row-action selectors",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "",
+          "placeholder": "Employee ID, name, email, designation...",
+          "label": "Search"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Add New Employee",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Fullscreen",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Missing Manager\n537",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Missing DOB\n138",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Missing Designation\n9",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Missing Salary\n64",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Missing Company Email\n509",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "All branches",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "All departments",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Active",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "All types",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "All managers",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "100 / page",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Compact density",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Aaron Jan P. Bautista",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Actions",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "ABADINES, JHARRED AUGUST",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Actions",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "ABALLAR, JERRY F.",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Actions",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "Branch",
+          "ariaLabel": null,
+          "currentText": "All branches",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All branches",
+            "ALABANG TOWN CENTER",
+            "ARANETA GATEWAY",
+            "AYALA EVO",
+            "AYALA FAIRVIEW TERRACES",
+            "AYALA MARKET MARKET",
+            "AYALA SOLENAD",
+            "AYALA UPTC",
+            "AYALA VERMOSA",
+            "BF HOMES",
+            "BGC",
+            "BRITTANY OFFICE",
+            "CAPITAL HOUSE",
+            "COMMISSARY SHAW",
+            "CTTM TOMAS MORATO",
+            "D VERDE CALAMBA",
+            "FESTIVAL MALL",
+            "GRAND CENTRAL",
+            "LUCKY CHINATOWN",
+            "MEGAWORLD PASEO CENTER",
+            "NAIA TERMINAL 3",
+            "PITX",
+            "ROBINSON GENTRI",
+            "ROBINSONS ANTIPOLO",
+            "ROBINSONS GALLERIA SOUTH",
+            "ROBINSONS GENERAL TRIAS",
+            "ROBINSONS IMUS",
+            "SHAW COMMISSARY",
+            "SHAW COMMISSARY - Logistics",
+            "SHAW COMMISSARY - Production"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 1,
+          "label": "Department",
+          "ariaLabel": null,
+          "currentText": "All departments",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All departments",
+            "Admin - BEI",
+            "All Departments - BEI",
+            "Audit - BEI",
+            "Business Development - BEI",
+            "Commissary - BEI",
+            "Customer Service - BAG",
+            "Customer Support - BEI",
+            "Dispatch - BAG",
+            "Executive - BEI",
+            "Finance and Accounting - BEI",
+            "HR and Admin - BEI",
+            "Human Resources - BAG",
+            "IT - BEI",
+            "Management - BAG",
+            "Marketing - BEI",
+            "Operations - BEI",
+            "Procurement - BEI",
+            "Projects - BEI",
+            "R&D - BEI",
+            "Supply Chain - BEI"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 2,
+          "label": "Status",
+          "ariaLabel": null,
+          "currentText": "Active",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All statuses",
+            "Active"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 3,
+          "label": "Employment Type",
+          "ariaLabel": null,
+          "currentText": "All types",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All types",
+            "IC",
+            "Probationary",
+            "Regular",
+            "Seasonal"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 4,
+          "label": "Reports To",
+          "ariaLabel": null,
+          "currentText": "All managers",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All managers",
+            "Test Area",
+            "Test Commissary",
+            "Test HR",
+            "Test Projects"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 5,
+          "label": "Search",
+          "ariaLabel": null,
+          "currentText": "100 / page",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "100 / page",
+            "200 / page",
+            "500 / page",
+            "1000 / page"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 6,
+          "label": "Search",
+          "ariaLabel": null,
+          "currentText": "Compact density",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Compact density",
+            "Comfortable density"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/EmployeeMasterTable.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/EmployeeMasterTable.html"
+    },
+    {
+      "surface_id": "AddNewEmployeeDialog",
+      "category": "dialog",
+      "role": "test.hr",
+      "route": "/dashboard/hr/employee-master",
+      "trigger": {
+        "pattern": "/add new employee/i"
+      },
+      "notes": "6 comboboxes expected",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "dialog_root": "[role='dialog']",
+      "fields": [
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "first_name",
+          "placeholder": "",
+          "label": "First Name\n*"
+        },
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "middle_name",
+          "placeholder": "",
+          "label": "Middle Name"
+        },
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "last_name",
+          "placeholder": "",
+          "label": "Last Name\n*"
+        },
+        {
+          "tag": "input",
+          "type": "date",
+          "name": "",
+          "id": "date_of_birth",
+          "placeholder": "",
+          "label": "Date of Birth\n*"
+        },
+        {
+          "tag": "input",
+          "type": "date",
+          "name": "",
+          "id": "date_of_joining",
+          "placeholder": "defaults to today",
+          "label": "Date of Joining"
+        },
+        {
+          "tag": "input",
+          "type": "email",
+          "name": "",
+          "id": "personal_email",
+          "placeholder": "",
+          "label": "Personal Email"
+        },
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "cell_number",
+          "placeholder": "",
+          "label": "Cell Number"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "Select gender…",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Select company…",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Loading…",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Loading…",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Select designation…",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Loading…",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "GOVERNMENT IDS ▸",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Cancel",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Create Employee",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Close",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "Gender\n*",
+          "ariaLabel": null,
+          "currentText": "Select gender…",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Male",
+            "Female",
+            "Other",
+            "Prefer not to say"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 1,
+          "label": "Company\n*",
+          "ariaLabel": null,
+          "currentText": "Select company…",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "BEBANG ARANETA GATEWAY",
+            "BEBANG AYALA SOLENAD",
+            "BEBANG BF HOMES INC.",
+            "BEBANG D'VERDE",
+            "Bebang Enterprise Inc.",
+            "BEBANG EVER GOTESCO COMMONWEALTH",
+            "BEBANG FESTIVAL INC.",
+            "BEBANG FT INC.",
+            "BEBANG GRAND CENTRAL INC.",
+            "Bebang Kitchen Inc.",
+            "BEBANG LCT INC.",
+            "BEBANG MARILAO INC.",
+            "BEBANG MARKET MARKET INC.",
+            "BEBANG MEGA INC.",
+            "BEBANG NORTH EDSA INC.",
+            "BEBANG PASEO INC.",
+            "BEBANG PITX INC.",
+            "BEBANG ROBINSONS GALLERIA SOUTH",
+            "BEBANG SM BICUTAN INC.",
+            "BEBANG SM CALOOCAN",
+            "BEBANG SM CLARK",
+            "BEBANG SM MARIKINA INC.",
+            "BEBANG SM SANGANDAAN",
+            "BEBANG SM SJDM",
+            "BEBANG SM TAYTAY",
+            "BEBANG SMEO INC.",
+            "BEBANG SMM INC.",
+            "BEBANG SMOA INC.",
+            "BEBANG SMV INC.",
+            "BEBANG STARMALL ALABANG INC."
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 2,
+          "label": "Branch\n*",
+          "ariaLabel": null,
+          "currentText": "Select branch…",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "ALABANG TOWN CENTER",
+            "ARANETA GATEWAY",
+            "AYALA EVO",
+            "AYALA FAIRVIEW TERRACES",
+            "Ayala Malls Fairview Terraces",
+            "AYALA MARKET MARKET",
+            "AYALA SOLENAD",
+            "AYALA UPTC",
+            "AYALA VERMOSA",
+            "BF HOMES",
+            "BGC",
+            "BRITTANY OFFICE",
+            "CAPITAL HOUSE",
+            "COMMISSARY SHAW",
+            "CTTM TOMAS MORATO",
+            "D VERDE CALAMBA",
+            "D'Verde Calamba",
+            "ESTANCIA",
+            "Ever Commonwealth",
+            "FESTIVAL MALL",
+            "Festival Mall Alabang",
+            "GRAND CENTRAL",
+            "LUCKY CHINATOWN",
+            "Megawide PITX",
+            "MEGAWORLD PASEO CENTER",
+            "Megaworld Venice Grand Canal",
+            "NAIA TERMINAL 3",
+            "PITX",
+            "Robinson General Trias",
+            "ROBINSON GENTRI"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 3,
+          "label": "Department",
+          "ariaLabel": null,
+          "currentText": "Select department…",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Accounts - BAG",
+            "Accounts - BAS",
+            "Accounts - BBHI",
+            "Accounts - BDV",
+            "Accounts - BEGC",
+            "Accounts - BFI",
+            "Accounts - BFI2",
+            "Accounts - BGCI",
+            "Accounts - BKI",
+            "Accounts - BLI",
+            "Accounts - BMI",
+            "Accounts - BMI2",
+            "Accounts - BMMI",
+            "Accounts - BNEI",
+            "Accounts - BPI",
+            "Accounts - BPI2",
+            "Accounts - BRGS",
+            "Accounts - BSAI",
+            "Accounts - BSBI",
+            "Accounts - BSC",
+            "Accounts - BSC2",
+            "Accounts - BSI",
+            "Accounts - BSI2",
+            "Accounts - BSI3",
+            "Accounts - BSI4",
+            "Accounts - BSMI",
+            "Accounts - BSS",
+            "Accounts - BSS2",
+            "Accounts - BST",
+            "Accounts - BTGF"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 4,
+          "label": "Designation",
+          "ariaLabel": null,
+          "currentText": "Select designation…",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Accounting Analyst",
+            "Accounting Manager",
+            "Accounting Staff",
+            "Accounts Manager",
+            "Admin Assistant",
+            "Administration Officer",
+            "Area Supervisor",
+            "Assistant Store Supervisor",
+            "Assistant Supervisor",
+            "Brand Voice And Community Manager",
+            "Business Development Officer",
+            "Cashier",
+            "Chat Support",
+            "Chief Financial Officer",
+            "Cleaner",
+            "Commissary Crew",
+            "Commissary Supervisor",
+            "Content Creator",
+            "Content Ideations Manager",
+            "Customer Service Manager",
+            "Customer Service Representative",
+            "Customer Service Staff",
+            "Driver",
+            "Electrician/Plumber",
+            "Executive Assistant",
+            "Executive Driver",
+            "External Auditor",
+            "Finance Analyst",
+            "Finance Manager",
+            "Finance Supervisor"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 5,
+          "label": "Employment Type",
+          "ariaLabel": null,
+          "currentText": "Select employment type…",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "IC",
+            "Probationary",
+            "Regular",
+            "Seasonal"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "submit": {
+        "label": "Create Employee",
+        "note": "NOT clicked during discovery"
+      },
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/AddNewEmployeeDialog.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/AddNewEmployeeDialog.html"
+    },
+    {
+      "surface_id": "EmployeeDetailDialog",
+      "category": "row-dialog",
+      "role": "test.hr",
+      "route": "/dashboard/hr/employee-master",
+      "notes": "covers Personal/Contact/Address/Employment/Photo/Bank/GovID sections",
+      "discovery_failure": "row dialog did not open: TimeoutError: locator.waitFor: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[role=\"dialog\"]').first() to be visible\u001b[22m\n",
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/EmployeeDetailDialog.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/EmployeeDetailDialog.html"
+    },
+    {
+      "surface_id": "CompensationSetupPage",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/payroll/compensation-setup",
+      "notes": "dynamic [employee] route — try list first, then navigate to first entry",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "",
+          "placeholder": "Search by name or ID...",
+          "label": "Search"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Fullscreen",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "All Departments",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Previous",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Next",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Export",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Columns",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Aaron Jan P. Bautista\n9000746",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "ABADINES, JHARRED AUGUST\n9001784",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "ABALLAR, JERRY F.\n9001858",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "ACERO, LIEZEL M.\n9001794",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "Department",
+          "ariaLabel": null,
+          "currentText": "All Departments",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All Departments",
+            "Operations",
+            "Finance",
+            "HR",
+            "Commissary",
+            "Warehouse"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/CompensationSetupPage.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/CompensationSetupPage.html"
+    },
+    {
+      "surface_id": "OvertimeForm_HR",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/overtime",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [
+        {
+          "tag": "select",
+          "type": "select",
+          "name": "",
+          "id": "ot-status",
+          "placeholder": "",
+          "label": "Status"
+        },
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "ot-store",
+          "placeholder": "SM Megamall",
+          "label": "Store"
+        },
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "ot-employee",
+          "placeholder": "HR-EMP-0001",
+          "label": "Employee ID"
+        },
+        {
+          "tag": "input",
+          "type": "date",
+          "name": "",
+          "id": "ot-from-date",
+          "placeholder": "",
+          "label": "From Date"
+        },
+        {
+          "tag": "input",
+          "type": "date",
+          "name": "",
+          "id": "ot-to-date",
+          "placeholder": "",
+          "label": "To Date"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Approve",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Reject",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Clarify",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Escalate",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Approve",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Reject",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Clarify",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Escalate",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Approve",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Reject",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Clarify",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Escalate",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Approve",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Reject",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Clarify",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Escalate",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Approve",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Reject",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Clarify",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Escalate",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/OvertimeForm_HR.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/OvertimeForm_HR.html"
+    },
+    {
+      "surface_id": "RegularizationPage",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/performance/regularization",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "",
+          "placeholder": "Search by employee name...",
+          "label": ""
+        }
+      ],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Export",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Columns",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Regularize",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Extend Probation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Regularize",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Extend Probation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Regularize",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Extend Probation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Regularize",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Extend Probation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Regularize",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Extend Probation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Regularize",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Extend Probation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Regularize",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Extend Probation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Regularize",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Extend Probation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Regularize",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Extend Probation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Regularize",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "",
+          "ariaLabel": null,
+          "currentText": "10",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "10",
+            "20",
+            "30",
+            "40",
+            "50"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/RegularizationPage.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/RegularizationPage.html"
+    },
+    {
+      "surface_id": "TransferCreationForm",
+      "category": "dialog",
+      "role": "test.hr",
+      "route": "/dashboard/hr/transfers",
+      "trigger": {
+        "pattern": "/create transfer|new transfer/i"
+      },
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "dialog_root": "[role='dialog']",
+      "fields": [
+        {
+          "tag": "input",
+          "type": "date",
+          "name": "",
+          "id": "",
+          "placeholder": "",
+          "label": "Effective Date"
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "",
+          "id": "",
+          "placeholder": "",
+          "label": "Temporary Reliever Assignment"
+        },
+        {
+          "tag": "textarea",
+          "type": "textarea",
+          "name": "",
+          "id": "",
+          "placeholder": "Why is this transfer needed?",
+          "label": "Reason"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "Select employee",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Select target BEI store",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Select supervisor",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Cancel",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Submit Request",
+          "type": "submit",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Close",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "Employee",
+          "ariaLabel": null,
+          "currentText": "Select employee",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 1,
+          "label": "Target Store (Warehouse + Branch)",
+          "ariaLabel": null,
+          "currentText": "Select target BEI store",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Araneta Gateway (Araneta Gateway)",
+            "Ayala Evo (Ayala Evo)",
+            "Ayala Malls Fairview Terraces (Ayala Malls Fairview Terraces",
+            "Ayala Market Market (Ayala Market Market)",
+            "Ayala Solenad (Ayala Solenad)",
+            "Ayala UPTC (Ayala UPTC)",
+            "Ayala Vermosa (Ayala Vermosa)",
+            "BF Homes (BF Homes)",
+            "CTTM Tomas Morato (CTTM Tomas Morato)",
+            "Estancia (Estancia)",
+            "Ever Commonwealth (Ever Commonwealth)",
+            "Festival Mall Alabang (Festival Mall Alabang)",
+            "Lucky Chinatown (Lucky Chinatown)",
+            "Megawide PITX (Megawide PITX)",
+            "Megaworld Paseo Center (Megaworld Paseo Center)",
+            "Megaworld Venice Grand Canal (Megaworld Venice Grand Canal)",
+            "Robinson General Trias (Robinson General Trias)",
+            "Robinson Imus (Robinson Imus)",
+            "Robinsons Antipolo (Robinsons Antipolo)",
+            "Robisons Galleria South (Robisons Galleria South)",
+            "SM Manila (SM MANILA)",
+            "SM Bicutan (SM Bicutan)",
+            "SM Caloocan (SM Caloocan)",
+            "SM Clark (SM Clark)",
+            "SM East Ortigas (SM East Ortigas)",
+            "SM Grand Central (SM Grand Central)",
+            "SM Mall Of Asia (SM Mall Of Asia)",
+            "SM Marikina (SM Marikina)",
+            "SM Marilao (SM Marilao)",
+            "SM Megamall (SM Megamall)"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 2,
+          "label": "New Reports To (Optional)",
+          "ariaLabel": null,
+          "currentText": "Select supervisor",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Aaron Jan P. Bautista",
+            "ABADINES, JHARRED AUGUST",
+            "ABALLAR, JERRY F.",
+            "ABENALES, MA. LOUISE ANGELICA M.",
+            "ACERO, LIEZEL M.",
+            "ACOSTA, MARICAR I.",
+            "Adore S. Panomblayan",
+            "AGAO, ANGELA B.",
+            "AGUADO, NEIL",
+            "AGUILAR, MARK PAULO M.",
+            "Aila Mae A. Nebrao",
+            "Aileen L. Mendoza",
+            "Ailen R. Segurigan",
+            "Ailyn C. Mendoza",
+            "Aira M. Rodero",
+            "Aizel Ritual",
+            "AJRAJ JAMISOLA G.",
+            "ALCOBER, CHRISTIAN PAUL .",
+            "ALCOBER, JUANNA MARIE",
+            "ALDA, JEMALYN .",
+            "ALEJO, BINOE LOUISE M.",
+            "Alessandro Rey R. Formoso",
+            "Alex Overlap1",
+            "Alexandra N. Sayritan",
+            "Alexisse Leann . R. Mendoza.",
+            "ALFEREZ, MARIA PRISCILA M.",
+            "Alicia M. Ramos",
+            "Alissa U. Caspe",
+            "Allan Gemboy B. Rubio",
+            "Allbert Jayson E. Gabatino"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "submit": {
+        "label": "Submit Request",
+        "note": "NOT clicked during discovery"
+      },
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/TransferCreationForm.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/TransferCreationForm.html"
+    },
+    {
+      "surface_id": "DisciplinaryCaseForm",
+      "category": "dialog",
+      "role": "test.hr",
+      "route": "/dashboard/hr/disciplinary",
+      "trigger": {
+        "pattern": "/create|new case|new/i"
+      },
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "dialog_root": "[role='dialog']",
+      "fields": [
+        {
+          "tag": "input",
+          "type": "date",
+          "name": "",
+          "id": "incident_date",
+          "placeholder": "",
+          "label": "Incident Date *"
+        },
+        {
+          "tag": "select",
+          "type": "select",
+          "name": "",
+          "id": "",
+          "placeholder": "",
+          "label": "Severity *"
+        },
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "incident_type",
+          "placeholder": "e.g., Tardiness, Insubordination, Policy Violation",
+          "label": "Incident Type *"
+        },
+        {
+          "tag": "textarea",
+          "type": "textarea",
+          "name": "",
+          "id": "description",
+          "placeholder": "Provide a detailed description of the incident...",
+          "label": "Description *"
+        },
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "location",
+          "placeholder": "Where did the incident occur?",
+          "label": "Location"
+        },
+        {
+          "tag": "textarea",
+          "type": "textarea",
+          "name": "",
+          "id": "witnesses",
+          "placeholder": "List any witnesses (comma-separated names)",
+          "label": "Witnesses"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "Select employee",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Minor",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Cancel",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Create Report",
+          "type": "submit",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Close",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "Employee *",
+          "ariaLabel": null,
+          "currentText": "Select employee",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 1,
+          "label": "Severity *",
+          "ariaLabel": null,
+          "currentText": "Minor",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Minor",
+            "Major",
+            "Grave",
+            "Termination"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "submit": {
+        "label": "Create Report",
+        "note": "NOT clicked during discovery"
+      },
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/DisciplinaryCaseForm.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/DisciplinaryCaseForm.html"
+    },
+    {
+      "surface_id": "DisciplinaryCaseDetail",
+      "category": "dynamic-detail",
+      "role": "test.hr",
+      "route": "/dashboard/hr/disciplinary",
+      "detail_prefix": "/dashboard/hr/disciplinary/",
+      "discovery_failure": "no detail link found under /dashboard/hr/disciplinary/ on list page; documenting list state only",
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/DisciplinaryCaseDetail.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/DisciplinaryCaseDetail.html"
+    },
+    {
+      "surface_id": "SeparationsPage",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/separations",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Start Separation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/SeparationsPage.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/SeparationsPage.html"
+    },
+    {
+      "surface_id": "ClearancePage",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/clearance",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave Command Center\nHR Management\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Start Interview",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/ClearancePage.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/ClearancePage.html"
+    },
+    {
+      "surface_id": "ExitInterviewClearanceRoute",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/clearance/exit-interview",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave Command Center\nHR Management\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [
+        {
+          "tag": "textarea",
+          "type": "textarea",
+          "name": "",
+          "id": "",
+          "placeholder": "Type your response here...",
+          "label": "5. [TEST] What did you like most about working here?"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "⭐\nRecognition\n0/5",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "📈\nGrowth\n0/5",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "👔\nManagement\n0/6",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "🏢\nCulture\n0/5",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "💰\nCompensation\n0/4",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "🏪\nOperations\n0/4",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "💬\nOpen-Ended\n0/3",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "1",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "2",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "3",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "4",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "5",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "1",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "2",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "3",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "4",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "5",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "1",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "2",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "3",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "4",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/ExitInterviewClearanceRoute.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/ExitInterviewClearanceRoute.html"
+    },
+    {
+      "surface_id": "ExitInterviewDashboardRoute",
+      "category": "dynamic-detail",
+      "role": "test.hr",
+      "route": "/dashboard/hr/exit-interview",
+      "detail_prefix": "/dashboard/hr/exit-interview/",
+      "discovery_failure": "no detail link found under /dashboard/hr/exit-interview/ on list page; documenting list state only",
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/ExitInterviewDashboardRoute.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/ExitInterviewDashboardRoute.html"
+    },
+    {
+      "surface_id": "ExitInterviewAnalytics",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/exit-interview/analytics",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": true
+        }
+      },
+      "fields": [
+        {
+          "tag": "input",
+          "type": "date",
+          "name": "",
+          "id": "",
+          "placeholder": "",
+          "label": "From"
+        },
+        {
+          "tag": "input",
+          "type": "date",
+          "name": "",
+          "id": "",
+          "placeholder": "",
+          "label": "To"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Apply",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/ExitInterviewAnalytics.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/ExitInterviewAnalytics.html"
+    },
+    {
+      "surface_id": "EnrichmentTracker",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/enrichment-tracker",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "",
+          "placeholder": "Employee, email, or branch...",
+          "label": "Search"
+        },
+        {
+          "tag": "textarea",
+          "type": "textarea",
+          "name": "",
+          "id": "",
+          "placeholder": "Add notes for the employee or HR...",
+          "label": "Reviewer Notes"
+        },
+        {
+          "tag": "textarea",
+          "type": "textarea",
+          "name": "",
+          "id": "",
+          "placeholder": "Add notes for the employee or HR...",
+          "label": "Reviewer Notes"
+        },
+        {
+          "tag": "textarea",
+          "type": "textarea",
+          "name": "",
+          "id": "",
+          "placeholder": "Add notes for the employee or HR...",
+          "label": "Reviewer Notes"
+        },
+        {
+          "tag": "textarea",
+          "type": "textarea",
+          "name": "",
+          "id": "",
+          "placeholder": "Add notes for the employee or HR...",
+          "label": "Reviewer Notes"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Refresh",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Send Reminders",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Saved workspace views",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Save Current View",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Delete View",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "All branches",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "All statuses",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Needs Review",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "All claim states",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "All risk levels",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "All proof states",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Review Queue (4)",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Employees (100)",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Branch Health (55)",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Claim",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Approve",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Reject",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Request Revision",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Forward to HR",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Review Full Submission",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "Search",
+          "ariaLabel": null,
+          "currentText": "Saved workspace views",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Saved workspace views"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 1,
+          "label": "Branch",
+          "ariaLabel": null,
+          "currentText": "All branches",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All branches",
+            "ALABANG TOWN CENTER",
+            "ARANETA GATEWAY",
+            "AYALA EVO",
+            "AYALA FAIRVIEW TERRACES",
+            "AYALA MARKET MARKET",
+            "AYALA SOLENAD",
+            "AYALA UPTC",
+            "AYALA VERMOSA",
+            "BF HOMES",
+            "BGC",
+            "BRITTANY OFFICE",
+            "CAPITAL HOUSE",
+            "COMMISSARY SHAW",
+            "CTTM TOMAS MORATO",
+            "D VERDE CALAMBA",
+            "FESTIVAL MALL",
+            "GRAND CENTRAL",
+            "LUCKY CHINATOWN",
+            "MEGAWORLD PASEO CENTER",
+            "NAIA TERMINAL 3",
+            "PITX",
+            "ROBINSON GENTRI",
+            "ROBINSONS ANTIPOLO",
+            "ROBINSONS GALLERIA SOUTH",
+            "ROBINSONS GENERAL TRIAS",
+            "ROBINSONS IMUS",
+            "SHAW COMMISSARY",
+            "SHAW COMMISSARY - Logistics",
+            "SHAW COMMISSARY - Production"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 2,
+          "label": "Status",
+          "ariaLabel": null,
+          "currentText": "All statuses",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All statuses",
+            "Not Started",
+            "In Progress",
+            "Submitted",
+            "Complete"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 3,
+          "label": "Lane",
+          "ariaLabel": null,
+          "currentText": "Needs Review",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Needs Review",
+            "Employees",
+            "Branch Health"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 4,
+          "label": "Claim State",
+          "ariaLabel": null,
+          "currentText": "All claim states",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All claim states",
+            "Claimed",
+            "Unclaimed"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 5,
+          "label": "Risk",
+          "ariaLabel": null,
+          "currentText": "All risk levels",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All risk levels",
+            "high",
+            "low"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 6,
+          "label": "Proof",
+          "ariaLabel": null,
+          "currentText": "All proof states",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "All proof states",
+            "not_required"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/EnrichmentTracker.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/EnrichmentTracker.html"
+    },
+    {
+      "surface_id": "ThirteenthMonthCompliance",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/compliance/13th-month",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "2026",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Export for Payroll",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "",
+          "ariaLabel": null,
+          "currentText": "2026",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "2026",
+            "2025",
+            "2024"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/ThirteenthMonthCompliance.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/ThirteenthMonthCompliance.html"
+    },
+    {
+      "surface_id": "PayrollProcessing",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/payroll/processing",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Select Period",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Readiness Check",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Generate Slips",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Review Output",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Submit Slips",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Bank File",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Apr 1, 2026 - Apr 30, 2026",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Previous",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Next",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/PayrollProcessing.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/PayrollProcessing.html"
+    },
+    {
+      "surface_id": "PayrollReviewOutput",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/payroll/review-output",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Apr 1, 2026 - Apr 30, 2026",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/PayrollReviewOutput.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/PayrollReviewOutput.html"
+    },
+    {
+      "surface_id": "PayrollRemittances",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/payroll/remittances",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "2026",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "April",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "SSS",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "PhilHealth",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Pag-IBIG",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "BIR (Tax)",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Export CSV",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "Year",
+          "ariaLabel": null,
+          "currentText": "2026",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "2026",
+            "2025",
+            "2024"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 1,
+          "label": "Month",
+          "ariaLabel": null,
+          "currentText": "April",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/PayrollRemittances.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/PayrollRemittances.html"
+    },
+    {
+      "surface_id": "PayrollComparison",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/payroll/comparison",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Apr 1, 2026 - Apr 30, 2026",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "History",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Comparison",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/PayrollComparison.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/PayrollComparison.html"
+    },
+    {
+      "surface_id": "PayrollHistory",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/payroll/history",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Apr 1, 2026 - Apr 30, 2026",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "History",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Comparison",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/PayrollHistory.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/PayrollHistory.html"
+    },
+    {
+      "surface_id": "HRReports",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/reports",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/HRReports.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/HRReports.html"
+    },
+    {
+      "surface_id": "TrainingPage",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/training",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Programs",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Calendar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Compliance",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/TrainingPage.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/TrainingPage.html"
+    },
+    {
+      "surface_id": "PerformancePage",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/performance",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "",
+          "placeholder": "Search by employee name...",
+          "label": ""
+        }
+      ],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Jan 1, 2026 - Dec 31, 2026",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Export",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Columns",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "10",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Previous",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Next",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "",
+          "ariaLabel": null,
+          "currentText": "10",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "10",
+            "20",
+            "30",
+            "40",
+            "50"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/PerformancePage.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/PerformancePage.html"
+    },
+    {
+      "surface_id": "AttendancePage",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/attendance",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/AttendancePage.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/AttendancePage.html"
+    },
+    {
+      "surface_id": "SchedulePage",
+      "category": "page",
+      "role": "test.hr",
+      "route": "/dashboard/hr/schedule",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Request Shift Change",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Request Shift Swap",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/SchedulePage.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/SchedulePage.html"
+    },
+    {
+      "surface_id": "SensitiveChangesQueue",
+      "category": "page",
+      "role": "test.finance",
+      "route": "/dashboard/hr/payroll/sensitive-changes",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerfor",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TF\ntest.finance@bebang.ph\ntest.finance@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "All (9)",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Pending HR",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Pending Finance (2)",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Activation",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Active",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Rejected (7)",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "New Request",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Export",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Columns",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "10",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "",
+          "ariaLabel": null,
+          "currentText": "10",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "10",
+            "20",
+            "30",
+            "40",
+            "50"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/SensitiveChangesQueue.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/SensitiveChangesQueue.html"
+    },
+    {
+      "surface_id": "LeaveRequestDialog",
+      "category": "dialog",
+      "role": "test.crew1",
+      "route": "/dashboard/hr/leave",
+      "trigger": {
+        "pattern": "/apply leave|request leave|new leave|\\+/i"
+      },
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nStore Operations\nStore Inventory\nHR Management\nMy Expenses\nStock Counting\nSupervisor Tools\nF",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "dialog_root": "[role='dialog']",
+      "fields": [
+        {
+          "tag": "textarea",
+          "type": "textarea",
+          "name": "",
+          "id": "description",
+          "placeholder": "Provide a reason for your leave...",
+          "label": "Reason (Optional)"
+        }
+      ],
+      "buttons": [
+        {
+          "text": "Select leave type",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Pick a date",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Pick a date",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Cancel",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Submit Request",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Close",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "Leave Type *",
+          "ariaLabel": null,
+          "currentText": "Select leave type",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Casual Leave",
+            "Leave Without Pay"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "submit": {
+        "label": "Submit Request",
+        "note": "NOT clicked during discovery"
+      },
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/LeaveRequestDialog.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/LeaveRequestDialog.html"
+    },
+    {
+      "surface_id": "OvertimeForm_Crew",
+      "category": "page",
+      "role": "test.crew1",
+      "route": "/dashboard/hr/overtime",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nStore Operations\nStore Inventory\nHR Management\nMy Expenses\nStock Counting\nSupervisor Tools\nF",
+        "signals": {
+          "access_restricted": true,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/OvertimeForm_Crew.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/OvertimeForm_Crew.html"
+    },
+    {
+      "surface_id": "AttendanceCorrectionForm",
+      "category": "page",
+      "role": "test.crew1",
+      "route": "/dashboard/hr/attendance-correction",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nStore Operations\nStore Inventory\nHR Management\nMy Expenses\nStock Counting\nSupervisor Tools\nF",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": true
+        }
+      },
+      "fields": [
+        {
+          "tag": "select",
+          "type": "select",
+          "name": "",
+          "id": "",
+          "placeholder": "",
+          "label": "Correction Type *"
+        },
+        {
+          "tag": "input",
+          "type": "time",
+          "name": "",
+          "id": "time",
+          "placeholder": "",
+          "label": "Actual Time *"
+        },
+        {
+          "tag": "textarea",
+          "type": "textarea",
+          "name": "",
+          "id": "reason",
+          "placeholder": "Explain why this correction is needed...",
+          "label": "Reason *"
+        },
+        {
+          "tag": "input",
+          "type": "file",
+          "name": "",
+          "id": "evidence",
+          "placeholder": "",
+          "label": "Supporting Evidence (Optional)"
+        },
+        {
+          "tag": "input",
+          "type": "input",
+          "name": "",
+          "id": "",
+          "placeholder": "Search by date...",
+          "label": ""
+        }
+      ],
+      "buttons": [
+        {
+          "text": "TC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        },
+        {
+          "text": "Pick a date",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Select type",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Submit Request",
+          "type": "submit",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Export",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Columns",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "10",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Previous",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        },
+        {
+          "text": "Next",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": true
+        }
+      ],
+      "comboboxes_indexed": [
+        {
+          "index": 0,
+          "label": "Correction Type *",
+          "ariaLabel": null,
+          "currentText": "Select type",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "Missing Punch In",
+            "Missing Punch Out",
+            "Wrong Time",
+            "Other"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        },
+        {
+          "index": 1,
+          "label": "",
+          "ariaLabel": null,
+          "currentText": "10",
+          "disabled": false,
+          "popoverOpened": true,
+          "options_observed": [
+            "10",
+            "20",
+            "30",
+            "40",
+            "50"
+          ],
+          "use_workaround": "shadcn_combobox_in_dialog"
+        }
+      ],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/AttendanceCorrectionForm.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/AttendanceCorrectionForm.html"
+    },
+    {
+      "surface_id": "PayslipPage",
+      "category": "page",
+      "role": "test.crew1",
+      "route": "/dashboard/hr/payslip",
+      "notes": "",
+      "http_status": 200,
+      "page_state": {
+        "bodyHead": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nStore Operations\nStore Inventory\nHR Management\nMy Expenses\nStock Counting\nSupervisor Tools\nF",
+        "signals": {
+          "access_restricted": false,
+          "not_found": false,
+          "coming_soon": false,
+          "empty_state": false
+        }
+      },
+      "fields": [],
+      "buttons": [
+        {
+          "text": "TC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Toggle Sidebar",
+          "type": "button",
+          "ariaLabel": "",
+          "disabled": false
+        },
+        {
+          "text": "Search\nCtrl K",
+          "type": "button",
+          "ariaLabel": "Search",
+          "disabled": false
+        }
+      ],
+      "comboboxes_indexed": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/PayslipPage.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/PayslipPage.html"
+    },
+    {
+      "surface_id": "CrewSidebar",
+      "category": "sidebar",
+      "role": "test.crew1",
+      "route": "/dashboard",
+      "nav_items": [],
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/CrewSidebar.png",
+      "dom_dump": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/dom_dumps/CrewSidebar.html"
+    }
+  ],
+  "discovery_failures": [
+    {
+      "surface_id": "EmployeeDetailDialog",
+      "route": "/dashboard/hr/employee-master",
+      "reason": "row dialog did not open: TimeoutError: locator.waitFor: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[role=\"dialog\"]').first() to be visible\u001b[22m\n",
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/EmployeeDetailDialog.png"
+    },
+    {
+      "surface_id": "DisciplinaryCaseDetail",
+      "route": "/dashboard/hr/disciplinary",
+      "reason": "no detail link found under /dashboard/hr/disciplinary/ on list page; documenting list state only",
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/DisciplinaryCaseDetail.png"
+    },
+    {
+      "surface_id": "ExitInterviewDashboardRoute",
+      "route": "/dashboard/hr/exit-interview",
+      "reason": "no detail link found under /dashboard/hr/exit-interview/ on list page; documenting list state only",
+      "screenshot": "data/_CLEANROOM/agent_runs/2026-04-07_s166-l3-execution/wave0/screenshots/ExitInterviewDashboardRoute.png"
+    }
+  ],
+  "summary": {
+    "total_surfaces": 32,
+    "discovered": 29,
+    "failures": 3
+  }
+}
