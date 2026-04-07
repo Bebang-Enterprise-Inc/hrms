@@ -1,0 +1,202 @@
+Parsed 13 definitions from before sql
+Loaded 7 existing delta entries
+
+=== MV: public.discount_summary ===
+  substitutions: 1
+  pre_count: 22935
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.payment_reconciliation ===
+  substitutions: 1
+  pre_count: 24726
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.store_daily_baselines ===
+  substitutions: 1
+  pre_count: 308
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.store_daily_closing ===
+  substitutions: 1
+  pre_count: 10080
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.sales_dashboard_daily_store_metrics ===
+  substitutions: 2
+  pre_count: 10100
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== VIEW: public.v_ops_weekly ===
+  SKIP: 0 substitutions (no FROM/JOIN pos_orders pattern)
+
+=== VIEW: public.v_system_daily_totals ===
+  SKIP: 0 substitutions (no FROM/JOIN pos_orders pattern)
+
+Wrote F:\Dropbox\Projects\BEI-ERP\output\l3\s169\view_rewrite_deltas.json
+Wrote F:\Dropbox\Projects\BEI-ERP\tmp\s169_view_definitions_after.sql
+
+Finished. Processed 7 objects.
+Parsed 13 definitions from before sql
+Loaded 12 existing delta entries
+
+=== MV: public.discount_summary ===
+  substitutions: 1
+  pre_count: 22935
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.payment_reconciliation ===
+  substitutions: 1
+  pre_count: 24726
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.store_daily_baselines ===
+  substitutions: 1
+  pre_count: 308
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.store_daily_closing ===
+  substitutions: 1
+  pre_count: 10080
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.sales_dashboard_daily_store_metrics ===
+  substitutions: 2
+  pre_count: 10100
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+Wrote F:\Dropbox\Projects\BEI-ERP\output\l3\s169\view_rewrite_deltas.json
+Wrote F:\Dropbox\Projects\BEI-ERP\tmp\s169_view_definitions_after.sql
+
+Finished. Processed 5 objects.
+Parsed 13 definitions from before sql
+Loaded 17 existing delta entries
+
+=== MV: public.discount_summary ===
+  substitutions: 1
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.payment_reconciliation ===
+  substitutions: 1
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.store_daily_baselines ===
+  substitutions: 1
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.store_daily_closing ===
+  substitutions: 1
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.sales_dashboard_daily_store_metrics ===
+  substitutions: 2
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== VIEW: public.v_system_daily_totals ===
+  0 substitutions — using ORIGINAL body verbatim (false positive)
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+Wrote F:\Dropbox\Projects\BEI-ERP\output\l3\s169\view_rewrite_deltas.json
+Wrote F:\Dropbox\Projects\BEI-ERP\tmp\s169_view_definitions_after.sql
+
+Finished. Processed 6 objects.
+Parsed 13 definitions from before sql
+Loaded 23 existing delta entries
+
+=== MV: public.discount_summary ===
+  substitutions: 1
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  refreshing...
+Traceback (most recent call last):
+  File "F:\Dropbox\Projects\BEI-ERP\tmp\s169_phase4_finisher.py", line 200, in <module>
+    main()
+  File "F:\Dropbox\Projects\BEI-ERP\tmp\s169_phase4_finisher.py", line 176, in main
+    delta = post_count - pre_count
+            ~~~~~~~~~~~^~~~~~~~~~~
+TypeError: unsupported operand type(s) for -: 'int' and 'str'
+Parsed 13 definitions from before sql
+Loaded 23 existing delta entries
+
+=== MV: public.discount_summary ===
+  substitutions: 1
+  pre_count: 22935
+  refreshing...
+  post_count: 22935  delta: 0
+
+=== MV: public.payment_reconciliation ===
+  substitutions: 1
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  refreshing...
+  post_count: 24726  delta: recovered (was: DROPPED (recovery from killed Phase 4 subagent))
+
+=== MV: public.store_daily_baselines ===
+  substitutions: 1
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.store_daily_closing ===
+  substitutions: 1
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== MV: public.sales_dashboard_daily_store_metrics ===
+  substitutions: 2
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+=== VIEW: public.v_system_daily_totals ===
+  0 substitutions — using ORIGINAL body verbatim (false positive)
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  APPLY FAILED: 400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query
+
+Wrote F:\Dropbox\Projects\BEI-ERP\output\l3\s169\view_rewrite_deltas.json
+Wrote F:\Dropbox\Projects\BEI-ERP\tmp\s169_view_definitions_after.sql
+
+Finished. Processed 6 objects.
+Parsed 13 definitions from before sql
+Loaded 29 existing delta entries
+
+=== MV: public.discount_summary ===
+  substitutions: 1
+  pre_count: 22935
+  refreshing...
+  post_count: 22935  delta: 0
+
+=== MV: public.payment_reconciliation ===
+  substitutions: 1
+  pre_count: 24726
+  refreshing...
+  post_count: 24726  delta: 0
+
+=== MV: public.store_daily_baselines ===
+  substitutions: 7
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  refreshing...
+  post_count: 308  delta: recovered (was: DROPPED (recovery from killed Phase 4 subagent))
+
+=== MV: public.store_daily_closing ===
+  substitutions: 12
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  refreshing...
+  post_count: 10080  delta: recovered (was: DROPPED (recovery from killed Phase 4 subagent))
+
+=== MV: public.sales_dashboard_daily_store_metrics ===
+  substitutions: 9
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  refreshing...
+  post_count: 10100  delta: recovered (was: DROPPED (recovery from killed Phase 4 subagent))
+
+=== VIEW: public.v_system_daily_totals ===
+  0 substitutions — using ORIGINAL body verbatim (false positive)
+  pre_count: DROPPED (recovery from killed Phase 4 subagent)
+  post_count: 311  delta: recovered (was: DROPPED (recovery from killed Phase 4 subagent))
+
+Wrote F:\Dropbox\Projects\BEI-ERP\output\l3\s169\view_rewrite_deltas.json
+Wrote F:\Dropbox\Projects\BEI-ERP\tmp\s169_view_definitions_after.sql
+
+Finished. Processed 6 objects.
