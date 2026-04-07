@@ -1,0 +1,196 @@
+{
+  "sprint": "S163",
+  "task": "cleanup L3 test orders",
+  "timestamp_utc": "2026-04-07T00:37:38.750156Z",
+  "target_orders": [
+    "BEI-ORD-2026-00240",
+    "BEI-ORD-2026-00241",
+    "BEI-ORD-2026-00242",
+    "BEI-ORD-2026-00243",
+    "BEI-ORD-2026-00244",
+    "BEI-ORD-2026-00245",
+    "BEI-ORD-2026-00246",
+    "BEI-ORD-2026-00247"
+  ],
+  "before": {
+    "existing_orders": [
+      {
+        "name": "BEI-ORD-2026-00240",
+        "store": "Araneta Gateway - BEI",
+        "status": "Approved",
+        "docstatus": 0,
+        "cargo_category": "FC"
+      },
+      {
+        "name": "BEI-ORD-2026-00244",
+        "store": "Araneta Gateway - BEI",
+        "status": "Pending Approval",
+        "docstatus": 0,
+        "cargo_category": "FC"
+      },
+      {
+        "name": "BEI-ORD-2026-00247",
+        "store": "Araneta Gateway - BEI",
+        "status": "Pending Approval",
+        "docstatus": 0,
+        "cargo_category": "FC"
+      },
+      {
+        "name": "BEI-ORD-2026-00242",
+        "store": "Araneta Gateway - BEI",
+        "status": "Approved",
+        "docstatus": 0,
+        "cargo_category": "FC"
+      },
+      {
+        "name": "BEI-ORD-2026-00246",
+        "store": "Araneta Gateway - BEI",
+        "status": "Pending Approval",
+        "docstatus": 0,
+        "cargo_category": "FC"
+      },
+      {
+        "name": "BEI-ORD-2026-00243",
+        "store": "Araneta Gateway - BEI",
+        "status": "Pending Approval",
+        "docstatus": 0,
+        "cargo_category": "FC"
+      },
+      {
+        "name": "BEI-ORD-2026-00245",
+        "store": "Araneta Gateway - BEI",
+        "status": "Pending Approval",
+        "docstatus": 0,
+        "cargo_category": "FC"
+      },
+      {
+        "name": "BEI-ORD-2026-00241",
+        "store": "Araneta Gateway - BEI",
+        "status": "Approved",
+        "docstatus": 0,
+        "cargo_category": "FC"
+      }
+    ],
+    "existing_order_count": 8,
+    "order_item_count": 9,
+    "material_requests": [
+      {
+        "name": "MAT-MR-2026-00121",
+        "status": "Pending",
+        "docstatus": 1
+      },
+      {
+        "name": "MAT-MR-2026-00120",
+        "status": "Pending",
+        "docstatus": 1
+      },
+      {
+        "name": "MAT-MR-2026-00119",
+        "status": "Pending",
+        "docstatus": 1
+      }
+    ],
+    "approval_queue_entries": [
+      {
+        "name": "BEI-APQ-2026-00177",
+        "status": "Pending"
+      },
+      {
+        "name": "BEI-APQ-2026-00176",
+        "status": "Pending"
+      },
+      {
+        "name": "BEI-APQ-2026-00175",
+        "status": "Pending"
+      },
+      {
+        "name": "BEI-APQ-2026-00174",
+        "status": "Pending"
+      },
+      {
+        "name": "BEI-APQ-2026-00173",
+        "status": "Pending"
+      },
+      {
+        "name": "BEI-APQ-2026-00172",
+        "status": "Approved"
+      },
+      {
+        "name": "BEI-APQ-2026-00171",
+        "status": "Approved"
+      },
+      {
+        "name": "BEI-APQ-2026-00170",
+        "status": "Approved"
+      },
+      {
+        "name": "BEI-APQ-2026-00169",
+        "status": "Approved"
+      },
+      {
+        "name": "BEI-APQ-2026-00168",
+        "status": "Approved"
+      },
+      {
+        "name": "BEI-APQ-2026-00167",
+        "status": "Approved"
+      },
+      {
+        "name": "BEI-APQ-2026-00166",
+        "status": "Approved"
+      },
+      {
+        "name": "BEI-APQ-2026-00165",
+        "status": "Approved"
+      }
+    ]
+  },
+  "actions": [
+    "MR cancelled: MAT-MR-2026-00121",
+    "MR deleted: MAT-MR-2026-00121",
+    "MR cancelled: MAT-MR-2026-00120",
+    "MR deleted: MAT-MR-2026-00120",
+    "MR cancelled: MAT-MR-2026-00119",
+    "MR deleted: MAT-MR-2026-00119",
+    "Approval queue deleted: BEI-APQ-2026-00177",
+    "Approval queue deleted: BEI-APQ-2026-00176",
+    "Approval queue deleted: BEI-APQ-2026-00175",
+    "Approval queue deleted: BEI-APQ-2026-00174",
+    "Approval queue deleted: BEI-APQ-2026-00173",
+    "Approval queue deleted: BEI-APQ-2026-00172",
+    "Approval queue deleted: BEI-APQ-2026-00171",
+    "Approval queue deleted: BEI-APQ-2026-00170",
+    "Approval queue deleted: BEI-APQ-2026-00169",
+    "Approval queue deleted: BEI-APQ-2026-00168",
+    "Approval queue deleted: BEI-APQ-2026-00167",
+    "Approval queue deleted: BEI-APQ-2026-00166",
+    "Approval queue deleted: BEI-APQ-2026-00165",
+    "ToDo deleted: oqgu8a7ohd",
+    "ToDo deleted: kn0fbevt6i",
+    "ToDo deleted: on02oa970d",
+    "ToDo deleted: jopovgqrg0",
+    "ToDo deleted: n6f6bi3j56",
+    "ToDo deleted: ltd09pato5",
+    "ToDo deleted: jld82ueidk",
+    "ToDo deleted: lpvrn4cuq2",
+    "ToDo deleted: iiuu35unto",
+    "ToDo deleted: iffajjl3im",
+    "ToDo deleted: gcel2u4i65",
+    "ToDo deleted: eqv3ji8139",
+    "ToDo deleted: en7o79l4qg",
+    "Order deleted (ORM): BEI-ORD-2026-00240",
+    "Order deleted (ORM): BEI-ORD-2026-00241",
+    "Order deleted (ORM): BEI-ORD-2026-00242",
+    "Order deleted (ORM): BEI-ORD-2026-00243",
+    "Order deleted (ORM): BEI-ORD-2026-00244",
+    "Order deleted (ORM): BEI-ORD-2026-00245",
+    "Order deleted (ORM): BEI-ORD-2026-00246",
+    "Order deleted (ORM): BEI-ORD-2026-00247"
+  ],
+  "after": {
+    "remaining_orders": 0,
+    "remaining_order_items": 0,
+    "remaining_mrs": 0
+  },
+  "ok": true
+}

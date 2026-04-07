@@ -1,0 +1,219 @@
+[
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "payload": "{\"sent_at\":\"2026-04-06T15:51:38.150Z\",\"sdk\":{\"name\":\"sentry.javascript.nextjs\",\"version\":\"10.38.0\"},\"dsn\":\"https://ea029ce9c61b8661c3cff2beb9b8ca5e@o4510861033275392.ingest.us.sentry.io/4510861213040640\"}\n{\"type\":\"session\"}\n{\"sid\":\"15b27059292a452fad42140032b182f1\",\"init\":true,\"started\":\"2026-04-06T15:51:38.150Z\",\"timestamp\":\"2026-04-06T15:51:38.151Z\",\"status\":\"ok\",\"errors\":0,\"attrs\":{\"release\":\"c4084435fa94e5841852f832991fada19fa94e18\",\"environment\":\"production\",\"user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36\"}}",
+    "ts": "2026-04-06T15:51:38.189Z"
+  },
+  {
+    "phase": "response",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "status": 200,
+    "response_body": "{}",
+    "ts": "2026-04-06T15:51:38.303Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"sam@bebang.ph\",\"pwd\":\"2289454\"}",
+    "ts": "2026-04-06T15:51:40.214Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "payload": "{\"dsn\":\"https://ea029ce9c61b8661c3cff2beb9b8ca5e@o4510861033275392.ingest.us.sentry.io/4510861213040640\"}\n{\"type\":\"client_report\"}\n{\"timestamp\":1775490701.542,\"discarded_events\":[{\"reason\":\"sample_rate\",\"category\":\"transaction\",\"quantity\":2},{\"reason\":\"sample_rate\",\"category\":\"span\",\"quantity\":1}]}",
+    "ts": "2026-04-06T15:51:41.543Z"
+  },
+  {
+    "phase": "response",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-06T15:51:41.552Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "payload": "{\"sent_at\":\"2026-04-06T15:51:41.561Z\",\"sdk\":{\"name\":\"sentry.javascript.nextjs\",\"version\":\"10.38.0\"},\"dsn\":\"https://ea029ce9c61b8661c3cff2beb9b8ca5e@o4510861033275392.ingest.us.sentry.io/4510861213040640\"}\n{\"type\":\"session\"}\n{\"sid\":\"15a086537d98499dbfe0ad224e8a0402\",\"init\":true,\"started\":\"2026-04-06T15:51:41.561Z\",\"timestamp\":\"2026-04-06T15:51:41.561Z\",\"status\":\"ok\",\"errors\":0,\"attrs\":{\"release\":\"c4084435fa94e5841852f832991fada19fa94e18\",\"environment\":\"production\",\"user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36\"}}",
+    "ts": "2026-04-06T15:51:41.565Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "payload": "{\"dsn\":\"https://ea029ce9c61b8661c3cff2beb9b8ca5e@o4510861033275392.ingest.us.sentry.io/4510861213040640\"}\n{\"type\":\"client_report\"}\n{\"timestamp\":1775490701.68,\"discarded_events\":[{\"reason\":\"sample_rate\",\"category\":\"transaction\",\"quantity\":1}]}",
+    "ts": "2026-04-06T15:51:41.682Z"
+  },
+  {
+    "phase": "response",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-06T15:51:41.689Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "payload": "{\"sent_at\":\"2026-04-06T15:51:41.692Z\",\"sdk\":{\"name\":\"sentry.javascript.nextjs\",\"version\":\"10.38.0\"},\"dsn\":\"https://ea029ce9c61b8661c3cff2beb9b8ca5e@o4510861033275392.ingest.us.sentry.io/4510861213040640\"}\n{\"type\":\"session\"}\n{\"sid\":\"335ef78d256f433a9cd457a186e74334\",\"init\":true,\"started\":\"2026-04-06T15:51:41.692Z\",\"timestamp\":\"2026-04-06T15:51:41.692Z\",\"status\":\"ok\",\"errors\":0,\"attrs\":{\"release\":\"c4084435fa94e5841852f832991fada19fa94e18\",\"environment\":\"production\",\"user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36\"}}",
+    "ts": "2026-04-06T15:51:41.698Z"
+  },
+  {
+    "phase": "response",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "status": 200,
+    "response_body": "{}",
+    "ts": "2026-04-06T15:51:41.819Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/ordering",
+    "payload": "{\"action\":\"submit_order\",\"store\":\"Araneta Gateway - BEI\",\"items\":[{\"item_code\":\"GRP-FROZEN-MANGO\",\"qty_requested\":5}],\"cargo_category\":\"FC\",\"delivery_date\":\"2026-04-07\",\"is_emergency\":false}",
+    "ts": "2026-04-06T15:52:10.289Z"
+  },
+  {
+    "phase": "direct_api_call",
+    "method": "POST",
+    "url": "/api/ordering",
+    "payload": "{\"action\":\"submit_order\",\"store\":\"Araneta Gateway - BEI\",\"items\":[{\"item_code\":\"GRP-FROZEN-MANGO\",\"qty_requested\":5}],\"cargo_category\":\"FC\"}",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"success\":true,\"name\":\"BEI-ORD-2026-00247\",\"status\":\"Pending Approval\",\"requires_area_supervisor_review\":true,\"requires_regional_manager_review\":false,\"requires_fallback_approval\":false,\"edited_lines_count\":0,\"message\":\"Order BEI-ORD-2026-00247 submitted successfully\",\"approval_queue_status\":\"created\",\"approval_queue_name\":\"BEI-APQ-2026-00176\",\"approval_approver_source\":\"area_supervisor\",\"approval_assigned_approver\":\"test.area@bebang.ph\",\"fallback_approver\":null,\"submitted_after_cutoff\":true,\"requires_dual_approval\":true,\"approval_stage\":\"Pending Area Supervisor\",\"is_emergency\":false,\"cargo_category\":\"FC\",\"dropped_invalid_lines\":0}}",
+    "ts": "2026-04-06T15:52:13.170Z"
+  },
+  {
+    "phase": "response",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/ordering",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"success\":true,\"name\":\"BEI-ORD-2026-00247\",\"status\":\"Pending Approval\",\"requires_area_supervisor_review\":true,\"requires_regional_manager_review\":false,\"requires_fallback_approval\":false,\"edited_lines_count\":0,\"message\":\"Order BEI-ORD-2026-00247 submitted successfully\",\"approval_queue_status\":\"created\",\"approval_queue_name\":\"BEI-APQ-2026-00176\",\"approval_approver_source\":\"area_supervisor\",\"approval_assigned_approver\":\"test.area@bebang.ph\",\"fallback_approver\":null,\"submitted_after_cutoff\":true,\"requires_dual_approval\":true,\"approval_stage\":\"Pending Area Supervisor\",\"is_emergency\":false,\"cargo_category\":\"FC\",\"dropped_invalid_lines\":0}}",
+    "ts": "2026-04-06T15:52:13.171Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "payload": "{\"dsn\":\"https://ea029ce9c61b8661c3cff2beb9b8ca5e@o4510861033275392.ingest.us.sentry.io/4510861213040640\"}\n{\"type\":\"client_report\"}\n{\"timestamp\":1775490733.345,\"discarded_events\":[{\"reason\":\"sample_rate\",\"category\":\"transaction\",\"quantity\":2},{\"reason\":\"sample_rate\",\"category\":\"span\",\"quantity\":1}]}",
+    "ts": "2026-04-06T15:52:13.346Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "payload": "{\"sent_at\":\"2026-04-06T15:52:13.356Z\",\"sdk\":{\"name\":\"sentry.javascript.nextjs\",\"version\":\"10.38.0\"},\"dsn\":\"https://ea029ce9c61b8661c3cff2beb9b8ca5e@o4510861033275392.ingest.us.sentry.io/4510861213040640\"}\n{\"type\":\"session\"}\n{\"sid\":\"f6a0517ea5e743b9bdd6cbf098429b37\",\"init\":true,\"started\":\"2026-04-06T15:52:13.356Z\",\"timestamp\":\"2026-04-06T15:52:13.356Z\",\"status\":\"ok\",\"errors\":0,\"attrs\":{\"release\":\"c4084435fa94e5841852f832991fada19fa94e18\",\"environment\":\"production\",\"user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36\"}}",
+    "ts": "2026-04-06T15:52:13.363Z"
+  },
+  {
+    "phase": "response",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "status": 200,
+    "response_body": "{}",
+    "ts": "2026-04-06T15:52:13.481Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/ordering",
+    "payload": "{\"action\":\"approve_order\",\"order_name\":\"BEI-ORD-2026-00244\",\"adjustments\":[]}",
+    "ts": "2026-04-06T15:52:21.594Z"
+  },
+  {
+    "phase": "response",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/ordering",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"success\":true,\"name\":\"BEI-ORD-2026-00244\",\"status\":\"Pending Approval\",\"approval_stage\":\"Pending Warehouse Manager\",\"message\":\"Order BEI-ORD-2026-00244 approved by Area Supervisor. Awaiting Warehouse Manager approval.\",\"dr_number\":\"\"}}",
+    "ts": "2026-04-06T15:52:23.239Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "payload": "{\"dsn\":\"https://ea029ce9c61b8661c3cff2beb9b8ca5e@o4510861033275392.ingest.us.sentry.io/4510861213040640\"}\n{\"type\":\"client_report\"}\n{\"timestamp\":1775490745.77,\"discarded_events\":[{\"reason\":\"sample_rate\",\"category\":\"transaction\",\"quantity\":2},{\"reason\":\"sample_rate\",\"category\":\"span\",\"quantity\":1}]}",
+    "ts": "2026-04-06T15:52:25.771Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "payload": "{\"sent_at\":\"2026-04-06T15:52:25.778Z\",\"sdk\":{\"name\":\"sentry.javascript.nextjs\",\"version\":\"10.38.0\"},\"dsn\":\"https://ea029ce9c61b8661c3cff2beb9b8ca5e@o4510861033275392.ingest.us.sentry.io/4510861213040640\"}\n{\"type\":\"session\"}\n{\"sid\":\"0b34cf5be0fd405a93dcf931c4f20725\",\"init\":true,\"started\":\"2026-04-06T15:52:25.778Z\",\"timestamp\":\"2026-04-06T15:52:25.778Z\",\"status\":\"ok\",\"errors\":0,\"attrs\":{\"release\":\"c4084435fa94e5841852f832991fada19fa94e18\",\"environment\":\"production\",\"user_agent\":\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/145.0.7632.6 Safari/537.36\"}}",
+    "ts": "2026-04-06T15:52:25.784Z"
+  },
+  {
+    "phase": "response",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "status": 200,
+    "response_body": "{}",
+    "ts": "2026-04-06T15:52:25.917Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "payload": "{\"event_id\":\"11c7cdffaa3140178f64b744b5795f52\",\"sent_at\":\"2026-04-06T15:52:28.409Z\",\"sdk\":{\"name\":\"sentry.javascript.nextjs\",\"version\":\"10.38.0\"},\"dsn\":\"https://ea029ce9c61b8661c3cff2beb9b8ca5e@o4510861033275392.ingest.us.sentry.io/4510861213040640\",\"trace\":{\"environment\":\"production\",\"release\":\"c4084435fa94e5841852f832991fada19fa94e18\",\"public_key\":\"ea029ce9c61b8661c3cff2beb9b8ca5e\",\"trace_id\":\"c8839249296f4f978c7a3350a0b0eb06\",\"org_id\":\"4510861033275392\",\"sampled\":\"true\",\"sample_rand\":\"0.0120787733008475\",\"sample_rate\":\"0.2\"}}\n{\"type\":\"transaction\"}\n{\"contexts\":{\"trace\":{\"span_id\":\"a9ce352287b7c0dd\",\"trace_id\":\"c8839249296f4f978c7a3350a0b0eb06\",\"data\":{\"sentry.origin\":\"auto.pageload.nextjs.app_router_instrumentation\",\"sentry.op\":\"pageload\",\"sentry.source\":\"url\",\"sentry.sample_rate\":0.2,\"effectiveConnectionType\":\"4g\",\"deviceMemory\":\"8 GB\",\"hardwareConcurrency\":\"24\",\"performance.timeOrigin\":1775490745.6958,\"performance.activationStart\":0,\"lcp.element\":\"div.p-4.space-y-4 > div > p.text-xs.text-muted-foreground\",\"lcp.loadTime\":0,\"lcp.renderTime\":952,\"lcp.size\":5328,\"sentry.idle_span_finish_reason\":\"idleTimeout\"},\"op\":\"pageload\",\"status\":\"ok\",\"origin\":\"auto.pageload.nextjs.app_router_instrumentation\"},\"react\":{\"version\":\"19.3.0-canary-52684925-20251110\"}},\"spans\":[{\"data\":{\"sentry.origin\":\"auto.http.browser\",\"sentry.op\":\"http.client\",\"url\":\"/api/employee/me\",\"type\":\"fetch\",\"http.method\":\"GET\",\"http.url\":\"https://my.bebang.ph/api/employee/me\",\"server.address\":\"my.bebang.ph\",\"http.response.status_code\":200,\"network.protocol.version\":\"2\",\"network.protocol.name\":\"http\",\"http.request.redirect_start\":0,\"http.request.redirect_end\":0,\"http.request.worker_start\":0,\"http.request.fetch_start\":1775490745.8223,\"http.request.domain_lookup_start\":1775490745.8223,\"http.request.domain_lookup_end\":1775490745.8223,\"http.request.connect_start\":1775490745.8223,\"http.request.secure_connection_start\":1775490745.8223,\"http.request.connection_end\":1775490745.8223,\"http.request.request_start\":1775490745.8227,\"http.request.response_start\":1775490746.6137,\"http.request.response_end\":1775490746.6146002,\"http.request.time_to_first_byte\":0.9178999999761581},\"description\":\"GET /api/employee/me\",\"op\":\"http.client\",\"parent_span_id\":\"a9ce352287b7c0dd\",\"span_id\":\"87b9eae0f3986aaf\",\"start_timestamp\":1775490745.8216999,\"status\":\"ok\",\"timestamp\":1775490746.616,\"trace_id\":\"c8839249296f4f978c7a3350a0b0eb06\",\"origin\":\"auto.http.browser\"},{\"data\":{\"sentry.origin\":\"auto.http.browser\",\"sentry.op\":\"http.client\",\"url\":\"/api/delivery-schedule?action=get_orders_for_dispatch\",\"type\":\"fetch\",\"http.method\":\"GET\",\"http.query\":\"?action=get_orders_for_dispatch\",\"http.url\":\"https://my.bebang.ph/api/delivery-schedule?action=get_orders_for_dispatch\",\"server.address\":\"my.bebang.ph\",\"http.response.status_code\":200,\"network.protocol.version\":\"2\",\"network.protocol.name\":\"http\",\"http.request.redirect_start\":0,\"http.request.redirect_end\":0,\"http.request.worker_start\":0,\"http.request.fetch_start\":1775490745.8233001,\"http.request.domain_lookup_start\":1775490745.8233001,\"http.request.domain_lookup_end\":1775490745.8233001,\"http.request.connect_start\":1775490745.8233001,\"http.request.secure_connection_start\":1775490745.8233001,\"http.request.connection_end\":1775490745.8233001,\"http.request.request_start\":1775490745.8235,\"http.request.response_start\":1775490746.4084,\"http.request.response_end\":1775490746.4092,\"http.request.time_to_first_byte\":0.7126000000238418},\"description\":\"GET /api/delivery-schedule\",\"op\":\"http.client\",\"parent_span_id\":\"a9ce352287b7c0dd\",\"span_id\":\"8b1da92ea5f52e5a\",\"start_timestamp\":1775490745.8227,\"status\":\"ok\",\"timestamp\":1775490746.4095,\"trace_id\":\"c8839249296f4f978c7a3350a0b0eb06\",\"origin\":\"auto.http.browser\"},{\"data\":{\"sentry.origin\":\"auto.http.browser\",\"sentry.op\":\"http.client\",\"url\":\"https://my.bebang.ph/clearance/exit-interview?_rsc=1moio\",\"type\":\"fetch\",\"http.method\":\"GET\",\"http.url\":\"https://my.bebang.ph/clearance/exit-interview?_rsc=1moio\",\"server.address\":\"my.bebang.ph\",\"http.query\":\"?_rsc=1moio\",\"http.request.prefetch\":true,\"http.response.status_code\":200,\"http.response_content_length\":859,\"network.protocol.version\":\"2\",\"network.protocol.name\":\"http\",\"http.request.redirect_start\":0,\"http.request.redirect_end\":0,\"http.request.worker_start\":0,\"http.request.fetch_start\":1775490745.8281999,\"http.request.domain_lookup_start\":1775490745.8281999,\"http.request.domain_lookup_end\":1775490745.8281999,\"http.request.connect_start\":1775490745.8281999,\"http.request.secure_connection_start\":1775490745.8281999,\"http.request.connection_end\":1775490745.8281999,\"http.request.request_start\":1775490745.8288,\"http.request.response_start\":1775490745.8868,\"http.request.response_end\":1775490745.887,\"http.request.time_to_first_byte\":0.191},\"description\":\"GET https://my.bebang.ph/clearance/exit-interview\",\"op\":\"http.client\",\"parent_span_id\":\"a9ce352287b7c0dd\",\"span_id\":\"aed8fb9b4ec40ae4\",\"start_timestamp\":1775490745.828,\"status\":\"ok\",\"timestamp\":1775490745.8876002,\"trace_i",
+    "ts": "2026-04-06T15:52:28.413Z"
+  },
+  {
+    "phase": "response",
+    "method": "POST",
+    "url": "https://my.bebang.ph/monitoring?o=4510861033275392&p=4510861213040640&r=us",
+    "status": 200,
+    "response_body": "{\"id\":\"11c7cdffaa3140178f64b744b5795f52\"}",
+    "ts": "2026-04-06T15:52:28.684Z"
+  },
+  {
+    "phase": "request",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/delivery-schedule",
+    "payload": "{\"action\":\"resolve_group_order_item\",\"order_name\":\"BEI-ORD-2026-00247\",\"group_order_seq\":1,\"resolution\":[{\"member_item\":\"RM010-A\",\"source_warehouse\":\"BF Homes - BEI\",\"qty\":3},{\"member_item\":\"RM030\",\"source_warehouse\":\"3MD Logistics - Camangyanan - BKI\",\"qty\":2}],\"expected_modified\":\"2026-04-06 23:52:15.209281\"}",
+    "ts": "2026-04-06T15:52:37.416Z"
+  },
+  {
+    "phase": "response",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/delivery-schedule",
+    "status": 500,
+    "response_body": "{\"success\":false,\"error\":\"{\\\"exception\\\":\\\"TypeError: check_scm_permission() got an unexpected keyword argument 'operation'\\\",\\\"exc_type\\\":\\\"TypeError\\\",\\\"_exc_source\\\":\\\"hrms (app)\\\",\\\"exc\\\":\\\"[\\\\\\\"Traceback (most recent call last):\\\\\\\\n  File \\\\\\\\\\\\\\\"apps/frappe/frappe/app.py\\\\\\\\\\\\\\\", line 120, in application\\\\\\\\n    response = frappe.api.handle(request)\\\\\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\\\\\\\\\", line 52, in handle\\\\\\\\n    data = endpoint(**arguments)\\\\\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\\\\\\\\\", line 40, in handle_rpc_call\\\\\\\\n    return frappe.handler.handle()\\\\\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\\\"apps/frappe/frappe/handler.py\\\\\\\\\\\\\\\", line 53, in handle\\\\\\\\n    data = execute_cmd(cmd)\\\\\\\\n           ^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\\\"apps/frappe/frappe/handler.py\\\\\\\\\\\\\\\", line 86, in execute_cmd\\\\\\\\n    return frappe.call(method, **frappe.form_dict)\\\\\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\\\\\\\\\", line 1764, in call\\\\\\\\n    return fn(*args, **newargs)\\\\\\\\n           ^^^^^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\\\"apps/frappe/frappe/utils/typing_validations.py\\\\\\\\\\\\\\\", line 32, in wrapper\\\\\\\\n    return func(*args, **kwargs)\\\\\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\\\\\n  File \\\\\\\\\\\\\\\"apps/hrms/hrms/api/store.py\\\\\\\\\\\\\\\", line 3575, in resolve_group_order_item\\\\\\\\n    check_scm_permission(\\\\\\\\nTypeError: check_scm_permission() got an unexpected keyword argument 'operation'\\\\\\\\n\\\\\\\"]\\\"}\"}",
+    "ts": "2026-04-06T15:52:38.015Z"
+  },
+  {
+    "timestamp_utc": "2026-04-07T00:35:39.027247Z",
+    "scenario": "S7_RETEST",
+    "method": "POST",
+    "endpoint": "/api/method/hrms.api.store.resolve_group_order_item",
+    "payload": {
+      "order_name": "BEI-ORD-2026-00240",
+      "group_order_seq": 1,
+      "resolution": [
+        {
+          "member_item": "RM010-A",
+          "source_warehouse": "3MD Logistics - Camangyanan - BKI",
+          "qty": 3
+        },
+        {
+          "member_item": "RM030",
+          "source_warehouse": "3MD Logistics - Camangyanan - BKI",
+          "qty": 2
+        }
+      ],
+      "expected_modified": "2026-04-06 23:38:13.717973"
+    },
+    "http_status": 200,
+    "response": {
+      "success": true,
+      "order_name": "BEI-ORD-2026-00240",
+      "group_order_seq": 1,
+      "sibling_count": 2
+    }
+  }
+]

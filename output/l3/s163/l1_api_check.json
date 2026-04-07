@@ -1,0 +1,118 @@
+{
+  "sprint": "S163",
+  "test": "L1 API smoke check on get_orderable_items",
+  "timestamp_utc": "2026-04-06T13:36:57.223542+00:00",
+  "base_url": "https://hq.bebang.ph",
+  "store_tested": "Araneta Gateway - BEI",
+  "total_items_returned": 68,
+  "groups_found": [
+    {
+      "group_code": "GRP-FROZEN-MANGO",
+      "expected_member_count": 2,
+      "expected_uom": "KG",
+      "is_present": true,
+      "is_group_row": 1,
+      "item_group_code": "GRP-FROZEN-MANGO",
+      "store_actual_qty": 2.82,
+      "available_to_promise": 700.0,
+      "member_count": 2,
+      "display_uom": "KG",
+      "members_leaked_into_response": []
+    },
+    {
+      "group_code": "GRP-FRESH-RIPE-MANGO",
+      "expected_member_count": 2,
+      "expected_uom": "KG",
+      "is_present": true,
+      "is_group_row": 1,
+      "item_group_code": "GRP-FRESH-RIPE-MANGO",
+      "store_actual_qty": 0.0,
+      "available_to_promise": 0.0,
+      "member_count": 2,
+      "display_uom": "KG",
+      "members_leaked_into_response": []
+    },
+    {
+      "group_code": "GRP-SAGO",
+      "expected_member_count": 2,
+      "expected_uom": "KG",
+      "is_present": true,
+      "is_group_row": 1,
+      "item_group_code": "GRP-SAGO",
+      "store_actual_qty": 23.37,
+      "available_to_promise": 1448.0,
+      "member_count": 2,
+      "display_uom": "KG",
+      "members_leaked_into_response": []
+    },
+    {
+      "group_code": "GRP-RAG",
+      "expected_member_count": 7,
+      "expected_uom": "PIECE",
+      "is_present": true,
+      "is_group_row": 1,
+      "item_group_code": "GRP-RAG",
+      "store_actual_qty": 32.0,
+      "available_to_promise": 352.0,
+      "member_count": 7,
+      "display_uom": "PIECE",
+      "members_leaked_into_response": []
+    },
+    {
+      "group_code": "GRP-CUP-HOLDER",
+      "expected_member_count": 2,
+      "expected_uom": "PIECE",
+      "is_present": true,
+      "is_group_row": 1,
+      "item_group_code": "GRP-CUP-HOLDER",
+      "store_actual_qty": 889.0,
+      "available_to_promise": 166.0,
+      "member_count": 2,
+      "display_uom": "PIECE",
+      "members_leaked_into_response": []
+    },
+    {
+      "group_code": "GRP-LECHE-FLAN-X",
+      "expected_member_count": 2,
+      "expected_uom": "PIECE",
+      "is_present": true,
+      "is_group_row": 1,
+      "item_group_code": "GRP-LECHE-FLAN-X",
+      "store_actual_qty": 2203.0,
+      "available_to_promise": 0.0,
+      "member_count": 2,
+      "display_uom": "PIECE",
+      "members_leaked_into_response": []
+    }
+  ],
+  "negative_checks": {
+    "RM010-A_not_separate_row": true,
+    "RM030_not_separate_row": true,
+    "FG011_not_separate_row": true,
+    "RM010_not_separate_row": true,
+    "FG009_not_separate_row": true,
+    "FG050_not_separate_row": true,
+    "CS013_not_separate_row": true,
+    "CS014_not_separate_row": true,
+    "CS015_not_separate_row": true,
+    "CS016_not_separate_row": true,
+    "CS017_not_separate_row": true,
+    "CS018_not_separate_row": true,
+    "CS019_not_separate_row": true,
+    "PM004_not_separate_row": true,
+    "PM005_not_separate_row": true,
+    "FG001-A_not_separate_row": true,
+    "FG001-B_not_separate_row": true
+  },
+  "pass": true,
+  "failures": [],
+  "warehouses_discovered": [
+    {
+      "name": "Araneta Gateway - BEI",
+      "warehouse_name": "Araneta Gateway",
+      "is_group": 0,
+      "disabled": 0
+    }
+  ],
+  "api_errors": []
+}

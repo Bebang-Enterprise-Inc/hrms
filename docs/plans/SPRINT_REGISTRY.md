@@ -210,17 +210,19 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S162` | Sprint 162 | `s162-pcf-frontend-redesign` | BEI-Tasks#343, #346, #348 | COMPLETED 2026-04-06 — PCF frontend redesign: dept-nested sidebar, NO COA for store crew, AI COA review, admin fund config, 35 page wrappers, legacy redirects. 3 bugs found + fixed by curl smoke (#348). L2/L3: 27 PASS, 0 FAIL, 3 SKIP. R1-R12 all PASS. | `docs/plans/2026-04-06-sprint-162-pcf-frontend-redesign.md` |
 
-| `S163` | Sprint 163 | `s163-store-ordering-doctypes-product-grouping` | PR_CREATED | PR_CREATED 2026-04-06 — Phases 0-9 in single session. CSV→DocType migration ready for SSM. Group aggregation, multi-row submit, SCM resolution modal, MR savepoint+race check. L3 deferred to fresh session per S099. PRs filled in by builder. | `docs/plans/2026-04-06-sprint-163-store-ordering-doctypes-product-grouping.md` |
+| `S163` | Sprint 163 | `s163-store-ordering-doctypes-product-grouping` | COMPLETED | COMPLETED 2026-04-07 — All 11 phases live. CSV→DocType migration (25 recipes + 29 policies, parity exact), 6/9 BEI Store Item Groups seeded (3 mixed-UOM pending SCM review), L3 scenarios 1-7 PASS + S8 MR creation confirmed via cleanup, test data removed, CSV fixtures deleted. PRs: hrms#461, #462, #464, #467; BEI-Tasks#342, #344, #345. | `docs/plans/2026-04-06-sprint-163-store-ordering-doctypes-product-grouping.md` |
 
 | `S164` | Sprint 164 | `s164-add-new-employee-entry-point` | hrms#463, BEI-Tasks#347 | PR_CREATED 2026-04-06 — "Add New Employee" dialog on Employee Master Dashboard. Auto-generates Employee ID + Bio ID, uploads Gov ID files, best-effort ADMS auto-enrollment on branch bio device, Google Chat notification. Surfaces "Missing Bio Device" metric card and red "No Bio ID" badge on rows. Phase 0 extracts `getCsrfToken` → `lib/frappe-csrf.ts` and `_get_adms_config` → `hrms/utils/adms_config.py`. PRs: hrms#463, BEI-Tasks#347. L3 deferred to fresh session per S099. | `docs/plans/2026-04-06-sprint-164-add-new-employee-entry-point.md` |
 
 | `S165` | Sprint 165 | `s165-mosaic-sync-verification` | #466 | PR_CREATED 2026-04-06 — Mosaic POS sync verification + hourly sync schedule. Apr 2-3 backfilled. | `docs/plans/2026-04-06-sprint-165-mosaic-sync-verification.md` |
 
-| `S166` | Sprint 166 | `s166-l3-employee-lifecycle-scenarios` | — | PLANNED 2026-04-06 — Full 19-stage employee lifecycle L3 browser scenarios (118 scenarios, 32 prefixes): HIRE → EDIT → COMPENSATE → REGULARIZE → LEAVE → OT → ATTENDANCE → PAYROLL RUN → PAYSLIP → DISCIPLINARY → TRANSFER → TERMINATE → EXIT INTERVIEW → FINAL PAY → COMPLIANCE → DEACTIVATE → REHIRE → ENRICHMENT → CLEANUP. 60 work units, execution-only (no code changes). | `docs/plans/2026-04-06-sprint-166-l3-employee-lifecycle-scenarios.md` |
+| `S166` | Sprint 166 | `s166-l3-employee-lifecycle-scenarios` | — | IN_PROGRESS 2026-04-07 (amended v2 2026-04-07) — Full 19-stage employee lifecycle L3 browser scenarios (137 scenarios, 36 prefixes): HIRE → EDIT → COMPENSATE → REGULARIZE → LEAVE → OT → ATTENDANCE → PAYROLL RUN → PAYSLIP → DISCIPLINARY → TRANSFER → TERMINATE → EXIT INTERVIEW → FINAL PAY → COMPLIANCE → DEACTIVATE → REHIRE → ENRICHMENT → UX GAPS → STUB PAGES → CLEANUP. 63 work units. Amendment v2 added EMP-UX-* (10) + EMP-STUB-* (5) from 4-agent parallel audit. Execution-only (no product code). | `docs/plans/2026-04-06-sprint-166-l3-employee-lifecycle-scenarios.md` |
+
+| `S167` | Sprint 167 | `s167-pcf-full-acceptance-test` | — | GO — Full L3 PCF acceptance test: multi-department, multi-user, real expense entries through to batch submission, accountant AI COA review, approve/reject, admin fund creation. Browser-only via Playwright. Execution-only sprint (no code changes). | `docs/plans/2026-04-06-sprint-167-pcf-full-acceptance-test.md` |
 
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S167`.
-2. Reserve branch name: `s167-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S168`.
+2. Reserve branch name: `s168-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
