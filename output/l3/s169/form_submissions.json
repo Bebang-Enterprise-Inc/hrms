@@ -1,0 +1,195 @@
+[
+  {
+    "phase": "P0",
+    "form": "phantom-scan SQL probe",
+    "inputs": {
+      "window": "2026-01-01..now"
+    },
+    "submit_action": "Supabase Mgmt API SELECT",
+    "response": "535 phantom groups (10.7x threshold). Sam approved override."
+  },
+  {
+    "phase": "P0",
+    "form": "view dependency audit",
+    "inputs": {
+      "pg_views+pg_matviews": "definition ILIKE %pos_orders%"
+    },
+    "submit_action": "Supabase Mgmt API SELECT",
+    "response": "13 objects discovered (plan said 12)"
+  },
+  {
+    "phase": "P0",
+    "form": "webhook signing probe (desk)",
+    "inputs": {
+      "docs/api/MOSAIC_API.md": "full read"
+    },
+    "submit_action": "manual review",
+    "response": "No HMAC documented, defaulting to Path B round-trip confirm"
+  },
+  {
+    "phase": "P1",
+    "form": "schema migration",
+    "inputs": {
+      "file": "data/supabase/migrations/2026-04-07-pos-orders-lifecycle-columns.sql"
+    },
+    "submit_action": "POST Supabase Mgmt API",
+    "response": "4 columns + index + CHECK constraint applied (HTTP 200, [])"
+  },
+  {
+    "phase": "P2",
+    "form": "map_order edit",
+    "inputs": {
+      "file": "scripts/sync_pos_to_supabase.py:401-405"
+    },
+    "submit_action": "Edit tool",
+    "response": "BLOCKER 1 fix: NULL-safe payment_status, +order_status +completed_at, no cancelled_at write"
+  },
+  {
+    "phase": "P3",
+    "form": "webhook endpoint code",
+    "inputs": {
+      "files": [
+        "hrms/api/mosaic_webhook.py",
+        "hrms/utils/supabase.py"
+      ]
+    },
+    "submit_action": "Write tool",
+    "response": "Path B round-trip confirm, Sentry DM-7, idempotent UPDATE; 217+151 lines"
+  },
+  {
+    "phase": "P4",
+    "form": "workflow disable",
+    "inputs": {
+      "workflow": "daily-pos-sync.yml"
+    },
+    "submit_action": "gh workflow disable",
+    "response": "disabled_manually"
+  },
+  {
+    "phase": "P4",
+    "form": "v_pos_orders_live wrapper",
+    "inputs": {
+      "sql": "CREATE OR REPLACE VIEW v_pos_orders_live AS SELECT * FROM pos_orders WHERE cancelled_at IS NULL"
+    },
+    "submit_action": "Supabase Mgmt API",
+    "response": "created"
+  },
+  {
+    "phase": "P4",
+    "form": "13 view rewrites",
+    "inputs": {
+      "objects": [
+        "daily_revenue",
+        "discount_summary",
+        "payment_reconciliation",
+        "sales_dashboard_daily_store_metrics",
+        "store_daily_baselines",
+        "store_daily_closing",
+        "v_all_channel_daily",
+        "v_orders",
+        "v_monthly_store_summary",
+        "v_system_daily_totals",
+        "v_discount_identity_order_usage",
+        "v_ops_weekly",
+        "v_discount_identity_rolling_30d_usage"
+      ]
+    },
+    "submit_action": "DROP+CREATE per object",
+    "response": "all 13 rewritten/recovered, deltas in view_rewrite_deltas.json"
+  },
+  {
+    "phase": "P4",
+    "form": "workflow re-enable",
+    "inputs": {
+      "workflow": "daily-pos-sync.yml"
+    },
+    "submit_action": "gh workflow enable",
+    "response": "state: active"
+  },
+  {
+    "phase": "P4",
+    "form": "sales_dashboard refresh smoke test",
+    "inputs": {
+      "sql": "SELECT public.refresh_sales_dashboard_daily_store_metrics()"
+    },
+    "submit_action": "Supabase Mgmt API",
+    "response": "success"
+  },
+  {
+    "phase": "P5",
+    "form": "30-day backfill",
+    "inputs": {
+      "cmd": "python scripts/sync_pos_to_supabase.py --from 2026-03-08 --to 2026-04-06 --parallel"
+    },
+    "submit_action": "shell",
+    "response": "33 store-days synced, 1317 skipped (sync_progress dedup), 359 orders. Lifecycle fields populated on newly synced rows; existing rows unchanged due to dedup."
+  },
+  {
+    "phase": "P6",
+    "form": "verify_mosaic_pos_sync upgrade",
+    "inputs": {
+      "file": "scripts/verify_mosaic_pos_sync.py"
+    },
+    "submit_action": "Edit",
+    "response": "488->766 lines: tombstone_extras() + cancelled_at=is.null filter + extras_tombstoned status path + dry-run flag"
+  },
+  {
+    "phase": "P7",
+    "form": "webhook registration",
+    "inputs": {
+      "cmd": "python scripts/s169_register_webhooks.py",
+      "groups": 12
+    },
+    "submit_action": "shell",
+    "response": "12 registered, 0 skipped, 0 failed"
+  },
+  {
+    "phase": "P8",
+    "form": "round-trip 404 confirm",
+    "inputs": {
+      "ids": [
+        49575307,
+        49575308,
+        49575310,
+        49575311
+      ]
+    },
+    "submit_action": "GET https://api.mosaic-pos.com/api/v1/orders/{id} with Accept: application/json",
+    "response": "3 phantoms HTTP 404 'Receipt not found', canonical 49575311 HTTP 200"
+  },
+  {
+    "phase": "P8",
+    "form": "tombstone phantoms",
+    "inputs": {
+      "ids": [
+        49575307,
+        49575308,
+        49575310
+      ]
+    },
+    "submit_action": "UPDATE pos_orders",
+    "response": "3 rows tombstoned, post-state 308 live (matches Mosaic)"
+  },
+  {
+    "phase": "P8",
+    "form": "daily_revenue MV refresh",
+    "inputs": {
+      "mv": "daily_revenue"
+    },
+    "submit_action": "REFRESH MATERIALIZED VIEW",
+    "response": "SM Marikina POS Apr 4 order_count: 305 -> 302 (3 phantoms filtered out)"
+  },
+  {
+    "phase": "P8",
+    "form": "sync_verification record",
+    "inputs": {
+      "loc": 2317,
+      "date": "2026-04-04",
+      "mosaic": 308,
+      "supabase": 308,
+      "status": "extras_tombstoned"
+    },
+    "submit_action": "INSERT",
+    "response": "row written, delta=0, heal_attempted=true"
+  }
+]

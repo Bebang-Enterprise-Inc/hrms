@@ -1,0 +1,154 @@
+[
+  {
+    "endpoint": "https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query",
+    "method": "POST",
+    "phase": "P1",
+    "payload": "ALTER TABLE pos_orders ADD COLUMN cancelled_at,cancellation_reason,order_status,completed_at + partial index + sync_verification CHECK constraint",
+    "status": 200,
+    "response_body": "[]"
+  },
+  {
+    "endpoint": "https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query",
+    "method": "POST",
+    "phase": "P4",
+    "payload": "CREATE OR REPLACE VIEW v_pos_orders_live + 13 view/MV rewrites (5 rewritten by killed subagent + 6 recovered + 2 false positives transitive)",
+    "status": 201,
+    "response_body": "all rewrites applied; deltas in view_rewrite_deltas.json"
+  },
+  {
+    "endpoint": "https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query",
+    "method": "POST",
+    "phase": "P8",
+    "payload": "UPDATE pos_orders SET cancelled_at=NOW(), cancellation_reason='reconciled_from_mosaic_gap', order_status='CANCELLED' WHERE id = ANY(ARRAY[49575307,49575308,49575310]::bigint[]) AND cancelled_at IS NULL RETURNING ...",
+    "status": 200,
+    "response_body": "3 rows updated, all returned with cancelled_at populated"
+  },
+  {
+    "endpoint": "https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query",
+    "method": "POST",
+    "phase": "P8",
+    "payload": "INSERT INTO sync_verification (loc=2317, date=2026-04-04, mosaic_total=308, supabase_total=308, status='extras_tombstoned', heal_attempted=TRUE, error_message='S169 Phase 8: 3 phantoms tombstoned ...') RETURNING ...",
+    "status": 200,
+    "response_body": "row inserted"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "Araneta Group (3 stores)",
+    "webhook_id": "019d6829-d240-73bc-a6fd-5a1370bade51",
+    "registered_at": "2026-04-07T13:37:44.376309+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "Shared Pool (27 stores)",
+    "webhook_id": "019d6829-e397-7177-a73e-f7c74eb9fdb8",
+    "registered_at": "2026-04-07T13:37:48.818127+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "Dedicated",
+    "webhook_id": "019d6829-f424-718d-99aa-56abf2fbda78",
+    "registered_at": "2026-04-07T13:37:53.056837+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "Dedicated",
+    "webhook_id": "019d682a-045f-72ca-b674-603cdfdda4da",
+    "registered_at": "2026-04-07T13:37:57.211906+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "SM Caloocan Group (2 stores)",
+    "webhook_id": "019d682a-175b-73d2-aa49-3ee220f003df",
+    "registered_at": "2026-04-07T13:38:02.074543+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "Dedicated",
+    "webhook_id": "019d682a-27d5-73ef-9c39-8b48c0573ed6",
+    "registered_at": "2026-04-07T13:38:06.283016+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "Dedicated",
+    "webhook_id": "019d682a-37ef-7189-82a8-9c9b3d94e14c",
+    "registered_at": "2026-04-07T13:38:10.410255+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "Dedicated",
+    "webhook_id": "019d682a-4862-70ad-9212-958a0f09f3ba",
+    "registered_at": "2026-04-07T13:38:14.624259+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "SM Sta. Rosa Group (2 stores)",
+    "webhook_id": "019d682a-58d9-73b9-996c-bfff5fef22d9",
+    "registered_at": "2026-04-07T13:38:18.838024+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "Dedicated",
+    "webhook_id": "019d682a-6a21-72f8-960b-7f9667463d65",
+    "registered_at": "2026-04-07T13:38:23.283148+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "Dedicated",
+    "webhook_id": "019d682a-a342-7381-bef7-b3ce3a127454",
+    "registered_at": "2026-04-07T13:38:37.956657+00:00"
+  },
+  {
+    "endpoint": "https://api.mosaic-pos.com/api/v1/webhooks",
+    "method": "POST",
+    "phase": "P7",
+    "payload": "{\"url\": \"https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive\", \"events\": [\"order.cancelled\"]}",
+    "status": 200,
+    "credential_group": "Dedicated",
+    "webhook_id": "019d682a-cef4-73b1-8a7b-cdfcdb2151cc",
+    "registered_at": "2026-04-07T13:38:49.065221+00:00"
+  }
+]

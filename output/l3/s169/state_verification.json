@@ -1,0 +1,84 @@
+{
+  "test": "S169 Phase 8 T8.1-T8.6 Apr 4 SM Marikina tombstone",
+  "incident_id": "S165 alert 2026-04-07T02:47:12 \u2014 SM Marikina 2026-04-04 Mosaic=308 Supabase=311 status=extra",
+  "phantom_ids": [
+    49575307,
+    49575308,
+    49575310
+  ],
+  "canonical_id": 49575311,
+  "round_trip_confirmation": {
+    "method": "GET https://api.mosaic-pos.com/api/v1/orders/{id} with Accept: application/json",
+    "49575307": "HTTP 404 Receipt not found",
+    "49575308": "HTTP 404 Receipt not found",
+    "49575310": "HTTP 404 Receipt not found",
+    "49575311": "HTTP 200 (canonical, still exists)"
+  },
+  "pre_state": {
+    "total_rows": 311,
+    "live_rows_table": 311,
+    "live_rows_wrapper": 311
+  },
+  "tombstone_action": "UPDATE pos_orders SET cancelled_at=NOW(), cancellation_reason='reconciled_from_mosaic_gap', order_status='CANCELLED' WHERE id IN (49575307,49575308,49575310) AND cancelled_at IS NULL",
+  "post_state": [
+    {
+      "total_rows": 311,
+      "live_rows_table": 308,
+      "live_rows_wrapper": 308
+    }
+  ],
+  "tombstoned_rows": [
+    {
+      "id": 49575307,
+      "cancelled_at": "2026-04-07 13:37:02.539657+00",
+      "cancellation_reason": "reconciled_from_mosaic_gap",
+      "order_status": "CANCELLED"
+    },
+    {
+      "id": 49575308,
+      "cancelled_at": "2026-04-07 13:37:02.539657+00",
+      "cancellation_reason": "reconciled_from_mosaic_gap",
+      "order_status": "CANCELLED"
+    },
+    {
+      "id": 49575310,
+      "cancelled_at": "2026-04-07 13:37:02.539657+00",
+      "cancellation_reason": "reconciled_from_mosaic_gap",
+      "order_status": "CANCELLED"
+    }
+  ],
+  "sync_verification_row": [
+    {
+      "location_id": 2317,
+      "business_date": "2026-04-04",
+      "mosaic_total": 308,
+      "supabase_total": 308,
+      "delta": 0,
+      "status": "extras_tombstoned",
+      "heal_attempted": true,
+      "error_message": "S169 Phase 8: 3 phantoms tombstoned (49575307, 49575308, 49575310). Round-trip 404 confirmed via Mosaic GET /orders/{id}."
+    }
+  ],
+  "daily_revenue_mv_post": [
+    {
+      "store_name": "SM Marikina",
+      "channel": "POS",
+      "business_date": "2026-04-04",
+      "order_count": 302,
+      "gross_revenue": "153262.00"
+    },
+    {
+      "store_name": "SM Marikina",
+      "channel": "Website",
+      "business_date": "2026-04-04",
+      "order_count": 3,
+      "gross_revenue": "4545.00"
+    }
+  ],
+  "lifecycle_field_population": [
+    {
+      "rows_with_order_status": 1643,
+      "distinct_order_status": 5
+    }
+  ]
+}

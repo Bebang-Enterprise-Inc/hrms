@@ -1,0 +1,30 @@
+[2026-04-07 21:37:40] Loaded 12 unique credential groups from MOSAIC_POS_API_KEYS.csv
+[2026-04-07 21:37:40] Webhook URL: https://hq.bebang.ph/api/method/hrms.api.mosaic_webhook.receive
+[2026-04-07 21:37:40] Events: ['order.cancelled']
+[2026-04-07 21:37:40] --- Araneta Group (3 stores) (a080acf5...) [3 locations]
+[2026-04-07 21:37:44]   REGISTERED: webhook id=019d6829-d240-73bc-a6fd-5a1370bade51
+[2026-04-07 21:37:45] --- Shared Pool (27 stores) (9ef61a14...) [30 locations]
+[2026-04-07 21:37:48]   REGISTERED: webhook id=019d6829-e397-7177-a73e-f7c74eb9fdb8
+[2026-04-07 21:37:49] --- Dedicated (a0854727...) [1 locations]
+[2026-04-07 21:37:53]   REGISTERED: webhook id=019d6829-f424-718d-99aa-56abf2fbda78
+[2026-04-07 21:37:54] --- Dedicated (a0854702...) [1 locations]
+[2026-04-07 21:37:57]   REGISTERED: webhook id=019d682a-045f-72ca-b674-603cdfdda4da
+[2026-04-07 21:37:58] --- SM Caloocan Group (2 stores) (a08546c1...) [2 locations]
+[2026-04-07 21:38:02]   REGISTERED: webhook id=019d682a-175b-73d2-aa49-3ee220f003df
+[2026-04-07 21:38:03] --- Dedicated (a005bcd8...) [1 locations]
+[2026-04-07 21:38:06]   REGISTERED: webhook id=019d682a-27d5-73ef-9c39-8b48c0573ed6
+[2026-04-07 21:38:07] --- Dedicated (a085463a...) [1 locations]
+[2026-04-07 21:38:10]   REGISTERED: webhook id=019d682a-37ef-7189-82a8-9c9b3d94e14c
+[2026-04-07 21:38:11] --- Dedicated (a08546e1...) [1 locations]
+[2026-04-07 21:38:14]   REGISTERED: webhook id=019d682a-4862-70ad-9212-958a0f09f3ba
+[2026-04-07 21:38:15] --- SM Sta. Rosa Group (2 stores) (a10fbc64...) [2 locations]
+[2026-04-07 21:38:18]   REGISTERED: webhook id=019d682a-58d9-73b9-996c-bfff5fef22d9
+[2026-04-07 21:38:19] --- Dedicated (a10fbcab...) [1 locations]
+[2026-04-07 21:38:23]   REGISTERED: webhook id=019d682a-6a21-72f8-960b-7f9667463d65
+[2026-04-07 21:38:24] --- Dedicated (a005bbb1...) [1 locations]
+[2026-04-07 21:38:37]   REGISTERED: webhook id=019d682a-a342-7381-bef7-b3ce3a127454
+[2026-04-07 21:38:38] --- Dedicated (a0854744...) [1 locations]
+[2026-04-07 21:38:49]   REGISTERED: webhook id=019d682a-cef4-73b1-8a7b-cdfcdb2151cc
+[2026-04-07 21:38:50] ============================================================
+[2026-04-07 21:38:50] Summary: Registered 12 new, skipped 0 existing, failed 0
+[2026-04-07 21:38:50] Registration log: F:\Dropbox\Projects\BEI-ERP-s169-isolated\data\POS_Extraction\MOSAIC_WEBHOOK_REGISTRATIONS.csv
