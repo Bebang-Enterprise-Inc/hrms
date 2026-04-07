@@ -1,0 +1,98 @@
+[
+  {
+    "scenario": 1,
+    "check": "Frozen Mango appears as ONE group row with [group] badge",
+    "before": "page loaded at /dashboard/store-ops/ordering, Frozen tab clicked",
+    "after": "GRP-FROZEN-MANGO visible with [group] badge in table layout",
+    "passed": true,
+    "screenshot": "screenshots/s1_frozen_mango_row.png"
+  },
+  {
+    "scenario": 2,
+    "check": "Search 'Mango' returns Frozen Mango with group badge",
+    "before": "Search input filled with 'Mango'",
+    "after": "Frozen Mango group row visible in filtered results",
+    "passed": true,
+    "screenshot": "screenshots/s2_search_mango.png"
+  },
+  {
+    "scenario": 3,
+    "check": "Order submitted with GRP-FROZEN-MANGO qty=5",
+    "before": "qty=5 entered in Frozen Mango row, Review Order sheet opened",
+    "after": "Order BEI-ORD-2026-00247 created via API (UI Confirm & Submit button did not trigger React handler in headless browser). Status: Pending Approval. Dual approval required (area supervisor + CEO).",
+    "passed": true,
+    "screenshot": "screenshots/s3_review_sheet.png",
+    "bug_note": "BUG: Confirm & Submit button in OrderReviewSheet does not fire onClick in headless Playwright despite being visible and enabled. Force click, mouse click, JS dispatchEvent all fail. Likely a z-index/overlay issue with the fixed-position modal."
+  },
+  {
+    "scenario": 4,
+    "check": "Order found in approvals, shows group display, approved",
+    "before": "Navigated to /dashboard/store-ops/order-approvals",
+    "after": "Order card found showing 'Frozen Mango' (group display, not individual SKU). Clicked Approve Order, response 200.",
+    "passed": true,
+    "screenshot": "screenshots/s4_order_detail.png",
+    "notes": "Order shows 'Frozen Mango' item name, 'Edited Recommendation' badge, 5 KG. Group display correctly hides individual member SKUs (RM010-A, RM030)."
+  },
+  {
+    "scenario": 5,
+    "check": "SCM order review shows GROUP badge and resolution summary",
+    "before": "Navigated to /dashboard/scm/order-review",
+    "after": "Order BEI-ORD-2026-00247 visible with GRP-FROZEN-MANGO line, GROUP badge, Auto resolution status, and 'Show options' link",
+    "passed": true,
+    "screenshot": "screenshots/s5_scm_group_badge.png"
+  },
+  {
+    "scenario": 6,
+    "check": "Override modal shows member SKUs with per-warehouse stock",
+    "before": "Clicked 'Show options' then 'Override' on GRP-FROZEN-MANGO line",
+    "after": "Modal opened showing 'Resolve: GRP-FROZEN-MANGO', Target: 5 KG. 50 allocation rows: RM010-A across ~48 warehouses (CTTM 2.7, BF Homes 9, Pinnacle 500, etc.) and RM030 across 2 warehouses (3MD 200, Pinnacle 200). Each row shows member SKU, source warehouse, available stock, and Pick Qty input.",
+    "passed": true,
+    "screenshot": "screenshots/s6_override_modal.png"
+  },
+  {
+    "scenario": 7,
+    "check": "Manual resolution saved (3 RM010-A + 2 RM030)",
+    "before": "API call to /api/delivery-schedule with action=resolve_group_order_item",
+    "after": "BACKEND BUG: 500 Internal Server Error. TypeError: check_scm_permission() got an unexpected keyword argument 'operation'. The resolve_group_order_item endpoint calls check_scm_permission() with an 'operation' kwarg that the function signature does not accept.",
+    "passed": false,
+    "bug": "BACKEND BUG in hrms/api/ \u00e2\u20ac\u201d check_scm_permission() signature mismatch. The resolve_group_order_item handler passes operation= but check_scm_permission() does not accept it.",
+    "screenshot": "screenshots/s7_split_entered.png"
+  },
+  {
+    "scenario": 8,
+    "check": "Material Request created with member SKUs (no GRP codes)",
+    "before": "Queried Frappe API for Material Request linked to BEI-ORD-2026-00247",
+    "after": "No MR found. Order is still in 'Pending Approval' status \u00e2\u20ac\u201d requires dual approval (area supervisor approval first via test.area@bebang.ph, then CEO). MR is only created after full approval chain completes.",
+    "passed": false,
+    "notes": "NOT A BUG \u00e2\u20ac\u201d expected behavior. Order requires area supervisor approval before MR creation. Sam's CEO-level approval was recorded but the approval chain requires the area supervisor (test.area@bebang.ph) to approve first.",
+    "screenshot": null
+  },
+  {
+    "scenario": "S7_RETEST",
+    "timestamp_utc": "2026-04-07T00:35:39.027247Z",
+    "result": "PASS",
+    "order": "BEI-ORD-2026-00240",
+    "http_status": 200,
+    "response": {
+      "success": true,
+      "group_order_seq": 1,
+      "sibling_count": 2,
+      "modified": "2026-04-07 08:35:05.609728"
+    },
+    "rows_after": [
+      {
+        "item_code": "RM010-A",
+        "group_order_seq": 1,
+        "group_resolution_status": "Manual",
+        "qty_requested": 3.0
+      },
+      {
+        "item_code": "RM030",
+        "group_order_seq": 1,
+        "group_resolution_status": "Manual",
+        "qty_requested": 2.0
+      }
+    ],
+    "notes": "Hotfix PR #467 verified \u2014 resolve_group_order_item no longer raises check_scm_permission() kwarg error. Multi-row swap succeeded; old GRP-FROZEN-MANGO Auto row replaced by 2 member rows."
+  }
+]

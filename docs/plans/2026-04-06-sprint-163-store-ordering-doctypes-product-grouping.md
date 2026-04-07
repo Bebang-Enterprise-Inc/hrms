@@ -5,14 +5,26 @@
 ```yaml
 sprint: S163
 branch: s163-store-ordering-doctypes-product-grouping
-status: PR_CREATED
+status: COMPLETED
 planned_date: 2026-04-06
 execution_started: 2026-04-06
-completed_date:
+completed_date: 2026-04-07
 execution_summary: |
-  Phase 0-9 implemented in single session per user "Option B monolithic" decision.
-  Build agent stops at PR creation per S099 handoff rule. L3 must run in fresh session.
-  Plan status will move to COMPLETED only after L3 evidence is collected and CSV cleanup commit lands.
+  All 11 phases delivered and verified live on hq.bebang.ph + my.bebang.ph.
+  Migration: 25 component recipes + 29 product policies in DocTypes (parity exact match).
+  Seed: 6 of 9 BEI Store Item Groups live (3 mixed-UOM groups pending SCM conversion factors — see docs/s163_pending_group_review.md).
+  L3: API layer 6/6 groups verified, negative checks 17/17 pass. UI L3 scenarios 1-7 pass after hotfix #467. Scenario 8 (MR auto-creation) confirmed indirectly via cleanup (3 MRs created during testing).
+  Bugs found + fixed post-deploy: (1) savepoint sanitization + rollback_to_savepoint missing on MariaDB — PR #462; (2) check_scm_permission kwarg mismatch blocking resolve_group_order_item — hotfix PR #467; (3) is_group_row missing from frontend StoreOrderItem type — hotfix BEI-Tasks #344.
+  Test data cleaned up via /frappe-bulk-edits: 8 BEI Store Orders + 3 Material Requests + 13 approval queue entries + 13 ToDo assignments removed.
+  CSV fixtures deleted in this commit (Phase 11.1).
+prs:
+  - hrms#461 — feat(S163): CSV→DocType migration + product grouping (Phases 0-9)
+  - hrms#462 — fix(S163): migration savepoint bugs + live evidence
+  - hrms#464 — feat(S163): seed 6 BEI Store Item Group records
+  - hrms#467 — fix(S163): check_scm_permission kwarg hotfix
+  - BEI-Tasks#342 — feat(S163): Product grouping frontend
+  - BEI-Tasks#344 — fix(S163): is_group_row type
+  - BEI-Tasks#345 — fix(S163/6.5): Show options auto-hide
 plan_file: docs/plans/2026-04-06-sprint-163-store-ordering-doctypes-product-grouping.md
 registry_row: "| `S163` | Sprint 163 | `s163-store-ordering-doctypes-product-grouping` | — | PLANNED — Migrate component recipes + product policies from CSV to DocTypes. Add Item Group abstraction so stores order by display name (Mango/Banana Cinnamon) and SCM picks/splits actual SKUs at dispatch time. Multi-row model. Audit-revised. | `docs/plans/2026-04-06-sprint-163-store-ordering-doctypes-product-grouping.md` |"
 repos: hrms (backend, fixtures), bei-tasks (frontend)

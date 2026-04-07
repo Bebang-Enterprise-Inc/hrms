@@ -1,0 +1,11 @@
+[
+  {
+    "scenario": 3,
+    "form": "store_order_submit",
+    "inputs": { "item_code": "GRP-FROZEN-MANGO", "qty": 5, "cargo_category": "FC", "store": "Araneta Gateway - BEI" },
+    "submit_action": "API fallback (UI Confirm & Submit button click did not trigger React handler in headless browser)",
+    "response": "BEI-ORD-2026-00247",
+    "screenshot_after": "screenshots/s3_submit_result.png",
+    "notes": "UI review sheet opens correctly showing Frozen Mango qty 5 est PHP 5.00. Button visible and enabled but click does not fire React onConfirm handler in headless Playwright. API direct POST to /api/ordering succeeds. Order requires dual approval (area supervisor + CEO)."
+  }
+]
