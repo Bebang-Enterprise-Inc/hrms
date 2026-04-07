@@ -229,6 +229,7 @@ def supabase_count(location_id: int, business_date: str) -> int:
     params = {
         "location_id": f"eq.{location_id}",
         "business_date": f"eq.{business_date}",
+        "cancelled_at": "is.null",
         "select": "id",
     }
     r = requests.get(
@@ -241,6 +242,237 @@ def supabase_count(location_id: int, business_date: str) -> int:
     # Content-Range header format: "0-0/NNN" or "*/NNN"
     content_range = r.headers.get("content-range", "*/0")
     return int(content_range.split("/")[-1])
+
+
+# ---------------------------------------------------------------------------
+# S169 Phase 6 — Tombstone reconciliation helpers
+# ---------------------------------------------------------------------------
+
+SUPABASE_PROJECT_REF = "csnniykjrychgajfrgua"
+SUPABASE_MGMT_QUERY_URL = f"https://api.supabase.com/v1/projects/{SUPABASE_PROJECT_REF}/database/query"
+
+
+def supabase_ids(client: httpx.Client, location_id: int, business_date: str) -> set[int]:
+    """Paginated GET pos_orders.id (cancelled_at IS NULL) via PostgREST."""
+    headers = {
+        "apikey": sps.SUPABASE_KEY,
+        "Authorization": f"Bearer {sps.SUPABASE_KEY}",
+        "Accept": "application/json",
+    }
+    out: set[int] = set()
+    page_size = 1000
+    offset = 0
+    while True:
+        params = {
+            "location_id": f"eq.{location_id}",
+            "business_date": f"eq.{business_date}",
+            "cancelled_at": "is.null",
+            "select": "id",
+            "order": "id.asc",
+            "limit": str(page_size),
+            "offset": str(offset),
+        }
+        r = client.get(
+            f"{SUPABASE_URL}/rest/v1/pos_orders",
+            headers=headers, params=params, timeout=30,
+        )
+        if r.status_code not in (200, 206):
+            r.raise_for_status()
+        rows = r.json() or []
+        for row in rows:
+            try:
+                out.add(int(row["id"]))
+            except (KeyError, TypeError, ValueError):
+                continue
+        if len(rows) < page_size:
+            break
+        offset += page_size
+    return out
+
+
+def mosaic_ids(client: httpx.Client, cred: dict,
+               location_id: int, business_date: str) -> set[int]:
+    """Paginated fetch of all Mosaic order IDs for a store-day."""
+    token = ensure_token(client, cred)
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+    out: set[int] = set()
+    page_number = 1
+    page_size = 200
+    while True:
+        params = {
+            "filter[business_date]": business_date,
+            "filter[location_id]": location_id,
+            "page[number]": page_number,
+            "page[size]": page_size,
+        }
+        last_exc: Exception | None = None
+        data = None
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                r = client.get(MOSAIC_ORDERS_URL, headers=headers,
+                               params=params, timeout=60)
+                if r.status_code == 200:
+                    data = r.json()
+                    break
+                if r.status_code == 429:
+                    time.sleep(RATE_LIMIT_WAIT)
+                    continue
+                if r.status_code >= 500:
+                    time.sleep(RETRY_WAIT)
+                    continue
+                raise RuntimeError(f"Mosaic API error {r.status_code}: {r.text[:200]}")
+            except httpx.RequestError as e:
+                last_exc = e
+                if attempt < MAX_RETRIES:
+                    time.sleep(RETRY_WAIT)
+                    continue
+                raise
+        if data is None:
+            if last_exc:
+                raise last_exc
+            raise RuntimeError("mosaic_ids: max retries exceeded")
+        rows = data.get("data") or []
+        for row in rows:
+            try:
+                out.add(int(row.get("id")))
+            except (TypeError, ValueError):
+                continue
+        if len(rows) < page_size:
+            break
+        page_number += 1
+        time.sleep(REQUEST_INTERVAL)
+    return out
+
+
+def _supabase_query_sql(sql: str, params: tuple = ()) -> dict:
+    """Execute SQL via Supabase Management API. Naive %s substitution."""
+    token = _resolve_secret("SUPABASE_MGMT_TOKEN")
+    if not token:
+        raise RuntimeError("SUPABASE_MGMT_TOKEN missing — cannot run management SQL")
+
+    def _quote(v):
+        if v is None:
+            return "NULL"
+        if isinstance(v, bool):
+            return "TRUE" if v else "FALSE"
+        if isinstance(v, int):
+            return str(v)
+        if isinstance(v, float):
+            return repr(v)
+        if isinstance(v, (list, tuple)):
+            inner = ",".join(_quote(x) for x in v)
+            return f"ARRAY[{inner}]"
+        s = str(v).replace("'", "''")
+        return f"'{s}'"
+
+    rendered = sql
+    for p in params:
+        rendered = rendered.replace("%s", _quote(p), 1)
+
+    r = requests.post(
+        SUPABASE_MGMT_QUERY_URL,
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        },
+        json={"query": rendered},
+        timeout=60,
+    )
+    if r.status_code not in (200, 201):
+        raise RuntimeError(f"Supabase mgmt query failed ({r.status_code}): {r.text[:300]}")
+    try:
+        return r.json()
+    except Exception:
+        return {}
+
+
+def tombstone_extras(
+    client: httpx.Client,
+    cred: dict,
+    loc_id: int,
+    ds: str,
+    supabase_ids_set: set[int],
+    mosaic_ids_set: set[int],
+    dry_run: bool = False,
+) -> tuple[list[int], list[tuple[int, str]]]:
+    """Confirm extras gone from Mosaic, then tombstone in Supabase.
+
+    Returns (confirmed_ids, unconfirmed_with_reasons).
+    """
+    extras = sorted(supabase_ids_set - mosaic_ids_set)
+    confirmed: list[int] = []
+    unconfirmed: list[tuple[int, str]] = []
+
+    if not extras:
+        return confirmed, unconfirmed
+
+    token = ensure_token(client, cred)
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+
+    for order_id in extras:
+        url = f"{MOSAIC_ORDERS_URL}/{order_id}"
+        status_code: int | None = None
+        last_err: Exception | None = None
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                r = client.get(url, headers=headers, timeout=30)
+                status_code = r.status_code
+                if r.status_code == 429:
+                    time.sleep(RATE_LIMIT_WAIT)
+                    continue
+                if r.status_code >= 500:
+                    time.sleep(RETRY_WAIT)
+                    continue
+                break
+            except httpx.RequestError as e:
+                last_err = e
+                if attempt < MAX_RETRIES:
+                    time.sleep(RETRY_WAIT)
+                    continue
+                status_code = None
+                break
+        time.sleep(REQUEST_INTERVAL)
+
+        if status_code == 404:
+            confirmed.append(order_id)
+        elif status_code == 200:
+            unconfirmed.append((order_id, "still_present"))
+        else:
+            reason = f"lookup_failed:{status_code or 'request_error'}"
+            if last_err and status_code is None:
+                reason = "lookup_failed:request_error"
+            unconfirmed.append((order_id, reason))
+
+    if not confirmed:
+        return confirmed, unconfirmed
+
+    if dry_run:
+        print(
+            f"  [TOMBSTONE_DRYRUN] loc={loc_id} {ds}: would tombstone "
+            f"{len(confirmed)} extras (ids sample={confirmed[:5]})"
+        )
+        return confirmed, unconfirmed
+
+    sql = (
+        "UPDATE pos_orders SET cancelled_at=NOW(), "
+        "cancellation_reason='reconciled_from_mosaic_gap', "
+        "order_status='CANCELLED' "
+        "WHERE id = ANY(%s::int[]) AND cancelled_at IS NULL"
+    )
+    try:
+        _supabase_query_sql(sql, (confirmed,))
+        print(
+            f"  [TOMBSTONE_OK] loc={loc_id} {ds}: tombstoned {len(confirmed)} extras"
+        )
+    except Exception as e:
+        sentry_sdk.capture_exception(e)
+        print(
+            f"  [TOMBSTONE_ERROR] loc={loc_id} {ds}: {e}",
+            file=sys.stderr,
+        )
+        raise
+
+    return confirmed, unconfirmed
 
 
 # ---------------------------------------------------------------------------
@@ -417,10 +649,55 @@ def _process_group(cred: dict, dates: list[str], args) -> tuple[list[dict], list
                             row["error_message"] = str(e)[:500]
                             unresolved.append((store_name, ds, row))
                             print(f"  [HEAL_ERROR] {line} -> {e}")
-                else:  # mosaic_total < sb_total
-                    row["status"] = "extra"
-                    unresolved.append((store_name, ds, row))
-                    print(f"  [EXTRA] {line}, delta={sb_total - mosaic_total}")
+                else:  # mosaic_total < sb_total — S169 Phase 6 tombstone path
+                    print(f"  [EXTRA] {line}, delta={sb_total - mosaic_total}, reconciling...")
+                    try:
+                        sb_id_set = supabase_ids(client, loc_id, ds)
+                        mo_id_set = mosaic_ids(client, cred, loc_id, ds)
+                        confirmed, unconfirmed_pairs = tombstone_extras(
+                            client, cred, loc_id, ds,
+                            sb_id_set, mo_id_set,
+                            dry_run=args.dry_run,
+                        )
+                        row["heal_attempted"] = True
+                        if unconfirmed_pairs or not confirmed:
+                            row["status"] = "unresolved"
+                            row["error_message"] = (
+                                f"extras unconfirmed: {len(unconfirmed_pairs)}; "
+                                f"sample={unconfirmed_pairs[:5]}"
+                            )[:500]
+                            unresolved.append((store_name, ds, row))
+                            print(
+                                f"  [UNRESOLVED] {line}: {len(confirmed)} tombstoned, "
+                                f"{len(unconfirmed_pairs)} unconfirmed"
+                            )
+                        else:
+                            new_sb = supabase_count(loc_id, ds)
+                            row["supabase_total"] = new_sb
+                            if new_sb == mosaic_total:
+                                row["status"] = "extras_tombstoned"
+                                print(
+                                    f"  [EXTRAS_TOMBSTONED] {line} -> {new_sb} "
+                                    f"({len(confirmed)} reconciled)"
+                                )
+                            else:
+                                row["status"] = "unresolved"
+                                row["error_message"] = (
+                                    f"recount mismatch after tombstone: "
+                                    f"sb={new_sb}, mosaic={mosaic_total}"
+                                )[:500]
+                                unresolved.append((store_name, ds, row))
+                                print(
+                                    f"  [UNRESOLVED] {line} -> recount {new_sb} "
+                                    f"!= mosaic {mosaic_total}"
+                                )
+                    except Exception as e:
+                        sentry_sdk.capture_exception(e)
+                        row["status"] = "unresolved"
+                        row["heal_attempted"] = True
+                        row["error_message"] = str(e)[:500]
+                        unresolved.append((store_name, ds, row))
+                        print(f"  [TOMBSTONE_FAIL] {line} -> {e}", file=sys.stderr)
 
                 results.append(row)
     finally:

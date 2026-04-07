@@ -1,0 +1,16 @@
+---
+unknown flag: --json
+
+Usage:  gh workflow view [<workflow-id> | <workflow-name> | <filename>] [flags]
+
+Flags:
+  -r, --ref string   The branch or tag name which contains the version of the workflow file you'd like to view
+  -w, --web          Open workflow in the browser
+  -y, --yaml         View the workflow yaml file
+  
+Daily POS & Web Orders Sync - daily-pos-sync.yml
+ID: 234136621
+
+Total runs 73
+Recent runs
+disabled_manually

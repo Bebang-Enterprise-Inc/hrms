@@ -1,0 +1,267 @@
+[
+  {
+    "name": "v_all_channel_daily",
+    "kind": "VIEW",
+    "pre_count": 311,
+    "post_count": 311,
+    "delta": 0
+  },
+  {
+    "name": "v_orders",
+    "kind": "VIEW",
+    "pre_count": 1423231,
+    "post_count": 1423231,
+    "delta": 0
+  },
+  {
+    "name": "v_monthly_store_summary",
+    "kind": "VIEW",
+    "pre_count": 370,
+    "post_count": 370,
+    "delta": 0
+  },
+  {
+    "name": "v_system_daily_totals",
+    "kind": "VIEW",
+    "pre_count": 311,
+    "post_count": 311,
+    "delta": 0
+  },
+  {
+    "name": "v_discount_identity_order_usage",
+    "kind": "VIEW",
+    "pre_count": 492562,
+    "post_count": 492562,
+    "delta": 0
+  },
+  {
+    "name": "v_ops_weekly",
+    "kind": "VIEW",
+    "pre_count": 46,
+    "post_count": 46,
+    "delta": 0
+  },
+  {
+    "name": "v_discount_identity_rolling_30d_usage",
+    "kind": "VIEW",
+    "pre_count": 126064,
+    "post_count": 126064,
+    "delta": 0
+  },
+  {
+    "name": "discount_summary",
+    "kind": "MV",
+    "pre_count": 22935,
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "payment_reconciliation",
+    "kind": "MV",
+    "pre_count": 24726,
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "store_daily_baselines",
+    "kind": "MV",
+    "pre_count": 308,
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "store_daily_closing",
+    "kind": "MV",
+    "pre_count": 10080,
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "sales_dashboard_daily_store_metrics",
+    "kind": "MV",
+    "pre_count": 10100,
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "discount_summary",
+    "kind": "MV",
+    "pre_count": 22935,
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "payment_reconciliation",
+    "kind": "MV",
+    "pre_count": 24726,
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "store_daily_baselines",
+    "kind": "MV",
+    "pre_count": 308,
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "store_daily_closing",
+    "kind": "MV",
+    "pre_count": 10080,
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "sales_dashboard_daily_store_metrics",
+    "kind": "MV",
+    "pre_count": 10100,
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "discount_summary",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "payment_reconciliation",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "store_daily_baselines",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "store_daily_closing",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "sales_dashboard_daily_store_metrics",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "v_system_daily_totals",
+    "kind": "VIEW",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "discount_summary",
+    "kind": "MV",
+    "pre_count": 22935,
+    "post_count": 22935,
+    "delta": 0
+  },
+  {
+    "name": "payment_reconciliation",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": 24726,
+    "delta": "recovered (was: DROPPED (recovery from killed Phase 4 subagent))"
+  },
+  {
+    "name": "store_daily_baselines",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "store_daily_closing",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "sales_dashboard_daily_store_metrics",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "v_system_daily_totals",
+    "kind": "VIEW",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": null,
+    "delta": null,
+    "error": "400 Client Error: Bad Request for url: https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query"
+  },
+  {
+    "name": "discount_summary",
+    "kind": "MV",
+    "pre_count": 22935,
+    "post_count": 22935,
+    "delta": 0
+  },
+  {
+    "name": "payment_reconciliation",
+    "kind": "MV",
+    "pre_count": 24726,
+    "post_count": 24726,
+    "delta": 0
+  },
+  {
+    "name": "store_daily_baselines",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": 308,
+    "delta": "recovered (was: DROPPED (recovery from killed Phase 4 subagent))"
+  },
+  {
+    "name": "store_daily_closing",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": 10080,
+    "delta": "recovered (was: DROPPED (recovery from killed Phase 4 subagent))"
+  },
+  {
+    "name": "sales_dashboard_daily_store_metrics",
+    "kind": "MV",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": 10100,
+    "delta": "recovered (was: DROPPED (recovery from killed Phase 4 subagent))"
+  },
+  {
+    "name": "v_system_daily_totals",
+    "kind": "VIEW",
+    "pre_count": "DROPPED (recovery from killed Phase 4 subagent)",
+    "post_count": 311,
+    "delta": "recovered (was: DROPPED (recovery from killed Phase 4 subagent))"
+  }
+]
