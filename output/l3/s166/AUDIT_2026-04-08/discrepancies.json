@@ -1,0 +1,10 @@
+[
+  {
+    "agent": "R3",
+    "scenario": "EMP-UX-004",
+    "summary_claimed": "PASS_POST_FIX",
+    "evidence_actual": "STILL_BROKEN",
+    "type": "SUMMARY_LIED",
+    "evidence_path": "output\\l3\\s166\\lanes\\retest\\r3_ux_reobserve\\evidence\\EMP-UX-004-retest.json"
+  }
+]
