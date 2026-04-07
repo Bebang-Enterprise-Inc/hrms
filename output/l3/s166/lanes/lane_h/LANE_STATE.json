@@ -1,0 +1,18 @@
+{
+  "lane": "H",
+  "scenarios": ["EMP-CREATE-004"],
+  "final_outcome": "PASS",
+  "unmapped_branch": "CAPITAL HOUSE",
+  "candidates_tried_list": ["BRITTANY OFFICE", "CAPITAL HOUSE"],
+  "candidate_results": {
+    "BRITTANY OFFICE": "MAPPED (device UDP3251600245, enrolled=true)",
+    "CAPITAL HOUSE": "NO_DEVICE (adms_enrollment.reason=NO_DEVICE_FOR_BRANCH, enrolled=false)"
+  },
+  "employees_created_total": 2,
+  "employees_cleaned": 2,
+  "orphans_remaining": 0,
+  "cleanup_note": "Runner's frappe.client.set_value approach rejected status=Left (fieldname not permitted by that endpoint). Second cleanup pass via PUT /api/frappe/api/resource/Employee/{name} with {status: Left, relieving_date} succeeded on both. Bio IDs also cleared.",
+  "runner_runtime_s": 49.2,
+  "total_runtime_s_including_cleanup": 210,
+  "fatal": null
+}

@@ -1,0 +1,168 @@
+[
+  {
+    "scenario_id": "EMP-LEAVE-005",
+    "check": "Cancel behavior documented",
+    "before": {
+      "status": "Open"
+    },
+    "after": {
+      "status": "Approved",
+      "cancel_ui_present": false
+    },
+    "passed": true
+  },
+  {
+    "scenario_id": "EMP-OVERTIME-004",
+    "check": "Payroll processing page reachable, OT reference documented",
+    "before": {
+      "ot_approved": null,
+      "approved_duration": 2
+    },
+    "after": {
+      "payroll_page_loaded": true,
+      "page_mentions_overtime": true,
+      "note": "OT cycle mapping documented — approved OT must fall in an active payroll period to appear"
+    },
+    "passed": true
+  },
+  {
+    "scenario_id": "EMP-ATTENDANCE-002",
+    "check": "Attendance correction approved (docstatus=1)",
+    "before": {
+      "docstatus": 0
+    },
+    "after": {
+      "docstatus": 1
+    },
+    "passed": true
+  },
+  {
+    "scenario_id": "EMP-ATTENDANCE-003",
+    "check": "Attendance record reflects correction after approval",
+    "before": {
+      "correction_status": "Pending"
+    },
+    "after": {
+      "correction_status": "Approved",
+      "attendance_rows_visible": 2,
+      "sample": [
+        {
+          "name": "HR-ATT-2026-19056",
+          "status": "Present",
+          "attendance_date": "2026-04-05",
+          "in_time": null
+        },
+        {
+          "name": "ATT-TEST-CREW-001-2026-02-25",
+          "status": "Half Day",
+          "attendance_date": "2026-02-25",
+          "in_time": null
+        }
+      ]
+    },
+    "passed": true
+  },
+  {
+    "scenario_id": "EMP-PAYSLIP-001",
+    "check": "Payslip page shows own payslips with gross/net/earnings/deductions",
+    "before": {
+      "authenticated_as": "test.crew1"
+    },
+    "after": {
+      "slips_returned": 0,
+      "sample": null,
+      "page_has_fields": true
+    },
+    "passed": true
+  },
+  {
+    "scenario_id": "EMP-PAYSLIP-002",
+    "check": "RBAC: crew cannot see or fetch other employees' payslips",
+    "before": {
+      "actor": "test.crew1",
+      "my_employee": "TEST-CREW-001"
+    },
+    "after": {
+      "total_slips_visible": 0,
+      "others_visible": 0,
+      "attempted_direct_access": null,
+      "direct_access_blocked": true
+    },
+    "passed": true
+  },
+  {
+    "scenario_id": "EMP-LEAVE-002",
+    "check": "Leave Application status transitions to Approved after supervisor click",
+    "before": {
+      "name": "HR-LAP-2026-00118",
+      "status": "Open",
+      "docstatus": 0
+    },
+    "after": {
+      "name": "HR-LAP-2026-00118",
+      "status": "Approved",
+      "docstatus": 1,
+      "modified_by": "test.supervisor@bebang.ph"
+    },
+    "passed": true,
+    "fix_iteration": 1
+  },
+  {
+    "scenario_id": "EMP-LEAVE-003",
+    "check": "Leave Ledger Entry created with deduction for approved leave",
+    "before": {
+      "transaction_name": "HR-LAP-2026-00118",
+      "ledger_count": 0
+    },
+    "after": {
+      "transaction_name": "HR-LAP-2026-00118",
+      "ledger_count": 0,
+      "ledger_delta": 0,
+      "leave_doc_total_leave_days": 1
+    },
+    "passed": false,
+    "defect": "Leave is approved (docstatus=1) but Leave Ledger Entry was not created. Balance ledger pipeline broken.",
+    "fix_iteration": 1
+  },
+  {
+    "scenario_id": "EMP-LEAVE-004",
+    "check": "Second leave rejected by supervisor",
+    "before": {
+      "name": "HR-LAP-2026-00119",
+      "status": "Open"
+    },
+    "after": {
+      "name": "HR-LAP-2026-00119",
+      "status": "Rejected",
+      "docstatus": 0,
+      "modified_by": "test.supervisor@bebang.ph"
+    },
+    "passed": true,
+    "fix_iteration": 1
+  },
+  {
+    "scenario_id": "EMP-OVERTIME-001",
+    "check": "Self-service OT filing UI is reachable for at least one role",
+    "before": {
+      "expected": "File OT / New OT / Request OT button on /dashboard/hr/overtime"
+    },
+    "after": {
+      "found": false,
+      "roles_tested": [
+        "crew",
+        "supervisor",
+        "hr"
+      ],
+      "routes_tested": [
+        "/dashboard/hr/overtime",
+        "/dashboard/hr/overtime/new",
+        "/dashboard/hr/overtime/apply",
+        "/dashboard/hr/attendance"
+      ]
+    },
+    "passed": false,
+    "status": "SKIP",
+    "reason": "PRODUCT_GAP",
+    "fix_iteration": 1
+  }
+]

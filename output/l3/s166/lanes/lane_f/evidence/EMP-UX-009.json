@@ -1,0 +1,345 @@
+{
+  "scenarioId": "EMP-UX-009",
+  "checkDesc": "OT approve dialog missing Approved Hours input",
+  "observed": {
+    "url": "https://my.bebang.ph/dashboard/hr/overtime",
+    "title": "BEI Tasks - Task Management",
+    "h1": "Overtime Admin",
+    "h2s": [
+      "Search",
+      "Approve Overtime Request"
+    ],
+    "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nOvertime\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nOvertime Admin\n\nAudit requests, apply HR overrides, and monitor payroll bridge status before cutoff.\n\nSummary\nRefresh\nMatched Requests\n41\nPending Review\n20\nApproved / Locked\n0\nRejected\n0\nFilters\nFilter by status, store, employee, and attendance date range.\nStatus\nAll statuses\nPending Review\nNeeds Clarification\nClarification Submitted\nApproved\nRejected\nEscalated\nPayroll Locked\nStore\nEmployee ID\nFrom Date\nTo Date\nRequests\nHR can override payable hours and overtime type when the operational review needs correction.\nEmployee\tDate\tShift\tHours\tStatus\tApprover Chain\tPayroll\tActions\n\nMa. Cristina C. Arrabis\n9000003 · SM MEGAMALL\n\t2026-05-12\t-\t\n1.50h OT\n9.50h total\n\tPending Review\t\nAssigned: -\nFallback: -\nEscalation: -\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nACERO, LIEZEL M.\n9001794 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.20h OT\n9.20h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nLETADA, ANGELAMEL\n9001790 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.03h OT\n9.03h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nIvy M. Domingo\n9000896 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.18h OT\n9.18h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nFranzelle Yvonne F. Abdon\n9000818 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.59h OT\n10.09h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nFernand Angelo A. Orbase\n9000641 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.62h OT\n10.13h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nRon Andrew . Santos\n9000541 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.36h OT\n9.40h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nIslar Catherine A. Isles\n9000510 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.13h OT\n9.83h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nPaula Marie M. Ortiz\n9000437 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.15h OT\n10.13h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nGenalyn B. Alegre\n9000285 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.73h OT\n9.94h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nJulius Jose D. Tin-Ga\n9000190 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.13h OT\n9.84h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nArhie J. Reyes\n9000188 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.05h OT\n9.05h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nIan A. Dionisio\n9000142 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.25h OT\n9.25h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nPrima Maris F. Fernandez\n9000065 · BRITTANY OFFICE\n\t2026-03-23\tHO Shift\t\n0.20h OT\n10.04h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nLyndon D. Olea\n9000220 · BRITTANY OFFICE\n\t2026-03-22\tHO Shift\t\n0.34h OT\n9.42h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nDEJAPA, PAQUITO JR.\n9001792 · BRITTANY OFFICE\n\t2026-03-19\tHO Shift\t\n0.67h OT\n10.42h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nIvy M. Domingo\n9000896 · BRITTANY OFFICE\n\t2026-03-19\tHO Shift\t\n0.58h OT\n9.58h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nFernand Angelo A. Orbase\n9000641 · BRITTANY OFFICE\n\t2026-03-19\tHO Shift\t\n0.96h OT\n10.71h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nRuna Mae M. Ortiz\n9000507 · BRITTANY OFFICE\n\t2026-03-19\tHO Shift\t\n0.00h OT\n9.92h total\n\tPending Review\t\nAssigned: sam@bebang.ph\nFallback: sam@bebang.ph\nEscalation: sam@bebang.ph\n\t\nNot Ready\n-\n\t\nApprove\nReject\nClarify\nEscalate\n\n\nPaula Marie M. Ortiz\n9000437 · BRITTANY OFFICE\n\t2026-03-19\tHO Shift\t\n0.05h OT\n9",
+    "button_count": 89,
+    "buttons": [
+      "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+      "Toggle Sidebar",
+      "Search\nCtrl K",
+      "Refresh",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate",
+      "Approve",
+      "Reject",
+      "Clarify",
+      "Escalate"
+    ],
+    "input_count": 8,
+    "inputs": [
+      {
+        "type": "select",
+        "name": "",
+        "placeholder": "",
+        "ariaLabel": ""
+      },
+      {
+        "type": "input",
+        "name": "",
+        "placeholder": "SM Megamall",
+        "ariaLabel": ""
+      },
+      {
+        "type": "input",
+        "name": "",
+        "placeholder": "HR-EMP-0001",
+        "ariaLabel": ""
+      },
+      {
+        "type": "date",
+        "name": "",
+        "placeholder": "",
+        "ariaLabel": ""
+      },
+      {
+        "type": "date",
+        "name": "",
+        "placeholder": "",
+        "ariaLabel": ""
+      },
+      {
+        "type": "number",
+        "name": "",
+        "placeholder": "",
+        "ariaLabel": ""
+      },
+      {
+        "type": "input",
+        "name": "",
+        "placeholder": "Regular Day OT",
+        "ariaLabel": ""
+      },
+      {
+        "type": "textarea",
+        "name": "",
+        "placeholder": "Required for HR override actions.",
+        "ariaLabel": ""
+      }
+    ],
+    "nav_items": [
+      {
+        "text": "Home",
+        "href": "/dashboard"
+      },
+      {
+        "text": "Dashboard",
+        "href": "/dashboard"
+      },
+      {
+        "text": "My Profile",
+        "href": "/dashboard/my-profile"
+      },
+      {
+        "text": "Clearance",
+        "href": "/clearance"
+      },
+      {
+        "text": "Exit Interview",
+        "href": "/clearance/exit-interview"
+      },
+      {
+        "text": "Supervisor Tools",
+        "href": "/dashboard/supervisor"
+      },
+      {
+        "text": "Analytics",
+        "href": "/dashboard/analytics"
+      },
+      {
+        "text": "HR Self-Service",
+        "href": "/dashboard/hr"
+      },
+      {
+        "text": "Leave",
+        "href": "/dashboard/hr/leave"
+      },
+      {
+        "text": "Attendance",
+        "href": "/dashboard/hr/attendance"
+      },
+      {
+        "text": "My Overtime",
+        "href": "/dashboard/attendance/overtime"
+      },
+      {
+        "text": "Schedule",
+        "href": "/dashboard/hr/schedule"
+      },
+      {
+        "text": "Payslip",
+        "href": "/dashboard/hr/payslip"
+      },
+      {
+        "text": "Coverage Request",
+        "href": "/dashboard/hr/coverage"
+      },
+      {
+        "text": "Official Business",
+        "href": "/dashboard/hr/official-business"
+      },
+      {
+        "text": "Official Business Check-out",
+        "href": "/dashboard/hr/official-business/checkout"
+      },
+      {
+        "text": "Official Business Check-in",
+        "href": "/dashboard/hr/official-business/checkin"
+      },
+      {
+        "text": "OB Geo Check-out",
+        "href": "/dashboard/attendance/ob-checkout"
+      },
+      {
+        "text": "OB Geo Check-in",
+        "href": "/dashboard/attendance/ob-checkin"
+      },
+      {
+        "text": "Remote Punch",
+        "href": "/dashboard/attendance/punch"
+      },
+      {
+        "text": "Punch In",
+        "href": "/dashboard/attendance/punch-in"
+      },
+      {
+        "text": "Punch Out",
+        "href": "/dashboard/attendance/punch-out"
+      },
+      {
+        "text": "Onboarding",
+        "href": "/dashboard/onboarding/me"
+      },
+      {
+        "text": "Leave Command Center",
+        "href": "/dashboard/hr-admin/leaves"
+      },
+      {
+        "text": "HR Management",
+        "href": "/dashboard/hr"
+      },
+      {
+        "text": "Employee Master",
+        "href": "/dashboard/hr/employee-master"
+      },
+      {
+        "text": "Payroll",
+        "href": "/dashboard/hr/payroll"
+      },
+      {
+        "text": "Performance",
+        "href": "/dashboard/hr/performance"
+      },
+      {
+        "text": "Regularization",
+        "href": "/dashboard/hr/performance/regularization"
+      },
+      {
+        "text": "Disciplinary",
+        "href": "/dashboard/hr/disciplinary"
+      },
+      {
+        "text": "Recruitment",
+        "href": "/dashboard/hr/recruitment"
+      },
+      {
+        "text": "Transfers",
+        "href": "/dashboard/hr/transfers"
+      },
+      {
+        "text": "Reports",
+        "href": "/dashboard/hr/reports"
+      },
+      {
+        "text": "Overtime",
+        "href": "/dashboard/hr/overtime"
+      },
+      {
+        "text": "Training",
+        "href": "/dashboard/hr/training"
+      },
+      {
+        "text": "Correction Review",
+        "href": "/dashboard/hr/attendance-correction"
+      },
+      {
+        "text": "Compliance",
+        "href": "/dashboard/hr/compliance"
+      },
+      {
+        "text": "13th Month",
+        "href": "/dashboard/hr/compliance/13th-month"
+      },
+      {
+        "text": "Separations",
+        "href": "/dashboard/hr/separations"
+      },
+      {
+        "text": "Exit Interview Analytics",
+        "href": "/dashboard/hr/exit-interview/analytics"
+      },
+      {
+        "text": "Petty Cash Fund",
+        "href": "/dashboard/hr-admin/pcf"
+      },
+      {
+        "text": "Add PCF Entry",
+        "href": "/dashboard/hr-admin/pcf/add"
+      },
+      {
+        "text": "Pending PCF",
+        "href": "/dashboard/hr-admin/pcf/pending"
+      },
+      {
+        "text": "PCF History",
+        "href": "/dashboard/hr-admin/pcf/history"
+      },
+      {
+        "text": "Biometric Monitoring",
+        "href": "/dashboard/biometric"
+      },
+      {
+        "text": "My Expenses",
+        "href": "/dashboard/expense"
+      },
+      {
+        "text": "Store Operations",
+        "href": "/dashboard/store-ops"
+      },
+      {
+        "text": "Store Inventory",
+        "href": "/dashboard/inventory"
+      },
+      {
+        "text": "Stock Counting",
+        "href": "/inventory/stock-counts"
+      },
+      {
+        "text": "Finance & Accounting",
+        "href": "/dashboard/accounting"
+      }
+    ],
+    "derived": {
+      "has_approved_hours_input": false
+    }
+  },
+  "passed": true,
+  "defect": {
+    "scenario_id": "EMP-UX-009",
+    "severity": "HIGH",
+    "classification": "COLLATERAL",
+    "title": "OT approval dialog cannot adjust approved hours",
+    "observed": "Approve dialog opened but no approved-hours input detected",
+    "expected": "Editable Approved Hours field so HR can approve partial OT",
+    "recommended_sprint": "S168+"
+  },
+  "screenshot": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/lane_f/screenshots/EMP-UX-009_observed.png",
+  "timestamp_pht": "4/7/2026, 12:10:04"
+}

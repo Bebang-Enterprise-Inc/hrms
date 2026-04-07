@@ -1,0 +1,144 @@
+{
+  "scenarioId": "EMP-STUB-005",
+  "checkDesc": "Clearance page is read-only milestone tracker; no stations, no item return, no Documenso",
+  "observed": {
+    "url": "https://my.bebang.ph/clearance",
+    "title": "BEI Tasks - Task Management",
+    "h1": "Clearance Status",
+    "h2s": [],
+    "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave Command Center\nHR Management\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nClearance\nSearch\nCtrl K\nClearance Status\n\nTrack your separation progress and complete required steps.\n\nSeparation Overview\nType: Resignation | Started: 2026-03-17\nPending\nDOLE Compliance\n0/2\nEmployee\nTest HR\n\nHuman Resources - BAG • Hr Manager\n\nKey Milestones\nComplete these steps for a smooth transition\n1\n\nExit Interview\n\nShare your feedback with HR\n\nStart Interview\n2\n\nFinal Pay Approval\n\nHR computes and approves your final pay\n\nPending HR\n3\n\nCertificate of Employment\n\nDownload your COE after clearance\n\nAvailable after clearance\n💡\n\nNeed Help?\n\nContact HR at hr@bebang.ph or visit the HR office for any questions about your clearance process. Final pay is released within 30 days per DOLE Labor Advisory No. 06-20.",
+    "button_count": 4,
+    "buttons": [
+      "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+      "Toggle Sidebar",
+      "Search\nCtrl K",
+      "Start Interview"
+    ],
+    "input_count": 0,
+    "inputs": [],
+    "nav_items": [
+      {
+        "text": "Home",
+        "href": "/dashboard"
+      },
+      {
+        "text": "Dashboard",
+        "href": "/dashboard"
+      },
+      {
+        "text": "My Profile",
+        "href": "/dashboard/my-profile"
+      },
+      {
+        "text": "Clearance",
+        "href": "/clearance"
+      },
+      {
+        "text": "Exit Interview",
+        "href": "/clearance/exit-interview"
+      },
+      {
+        "text": "Supervisor Tools",
+        "href": "/dashboard/supervisor"
+      },
+      {
+        "text": "Analytics",
+        "href": "/dashboard/analytics"
+      },
+      {
+        "text": "HR Self-Service",
+        "href": "/dashboard/hr"
+      },
+      {
+        "text": "Leave Command Center",
+        "href": "/dashboard/hr-admin/leaves"
+      },
+      {
+        "text": "HR Management",
+        "href": "/dashboard/hr"
+      },
+      {
+        "text": "Biometric Monitoring",
+        "href": "/dashboard/biometric"
+      },
+      {
+        "text": "My Expenses",
+        "href": "/dashboard/expense"
+      },
+      {
+        "text": "Store Operations",
+        "href": "/dashboard/store-ops"
+      },
+      {
+        "text": "Store Inventory",
+        "href": "/dashboard/inventory"
+      },
+      {
+        "text": "Stock Counting",
+        "href": "/inventory/stock-counts"
+      },
+      {
+        "text": "Finance & Accounting",
+        "href": "/dashboard/accounting"
+      },
+      {
+        "text": "Campaign Giveaways",
+        "href": "/dashboard/campaign-giveaways"
+      },
+      {
+        "text": "Procurement",
+        "href": "/dashboard/procurement"
+      },
+      {
+        "text": "SCM",
+        "href": "/dashboard/scm/critical-items-control-tower"
+      },
+      {
+        "text": "Warehouse",
+        "href": "/dashboard/warehouse"
+      },
+      {
+        "text": "Commissary",
+        "href": "/dashboard/commissary"
+      },
+      {
+        "text": "Projects & Maintenance",
+        "href": "/dashboard/rm-admin"
+      },
+      {
+        "text": "Communication",
+        "href": "/dashboard/communication"
+      },
+      {
+        "text": "Tasks & Reports",
+        "href": "/dashboard/tasks"
+      },
+      {
+        "text": "Platform & Admin",
+        "href": "/dashboard/settings/google-chat"
+      },
+      {
+        "text": "Start Interview",
+        "href": "/clearance/exit-interview"
+      }
+    ],
+    "derived": {
+      "has_clearance_stations": false,
+      "has_item_return": false,
+      "has_documenso": false,
+      "has_milestone_tracker": true
+    }
+  },
+  "passed": true,
+  "defect": {
+    "scenario_id": "EMP-STUB-005",
+    "severity": "CRITICAL",
+    "classification": "COLLATERAL",
+    "title": "Clearance is read-only; no stations, item return, or Documenso integration",
+    "observed": "milestones=true, stations=false, documenso=false",
+    "expected": "Full clearance workflow: stations sign-off, item return tracking, Documenso final clearance doc",
+    "recommended_sprint": "S167"
+  },
+  "screenshot": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/lane_f/screenshots/EMP-STUB-005_observed.png",
+  "timestamp_pht": "4/7/2026, 12:10:37"
+}

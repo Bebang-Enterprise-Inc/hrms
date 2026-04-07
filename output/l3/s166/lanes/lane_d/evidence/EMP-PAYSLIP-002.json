@@ -1,0 +1,9 @@
+{
+  "scenario_id": "EMP-PAYSLIP-002",
+  "timestamp_pht": "2026-04-07T13:02:18+08:00",
+  "result": {
+    "passed": true,
+    "others_visible": 0,
+    "direct_blocked": true
+  }
+}

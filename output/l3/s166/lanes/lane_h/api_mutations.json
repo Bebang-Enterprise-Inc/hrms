@@ -1,0 +1,224 @@
+[
+  {
+    "type": "create_employee",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Juan Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+          "bio_id": "9001882",
+          "adms_enrollment": {
+            "enrolled": true,
+            "reason": null,
+            "device_sn": "UDP3251600245"
+          }
+        }
+      }
+    },
+    "candidate_idx": 0
+  },
+  {
+    "type": "create_employee",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Maria Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+          "bio_id": "9001883",
+          "adms_enrollment": {
+            "enrolled": false,
+            "reason": "NO_DEVICE_FOR_BRANCH",
+            "device_sn": null
+          }
+        }
+      }
+    },
+    "candidate_idx": 1
+  },
+  {
+    "type": "clear_bio_id",
+    "employee": "HR-EMP-00030",
+    "ok": true,
+    "status": 200
+  },
+  {
+    "type": "soft_delete_status",
+    "employee": "HR-EMP-00030",
+    "ok": false,
+    "status": 417,
+    "response": {
+      "exception": "frappe.exceptions.ValidationError: Please enter relieving date.",
+      "exc_type": "ValidationError",
+      "_exc_source": "erpnext (app)",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 120, in application\\n    response = frappe.api.handle(request)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/__init__.py\\\", line 52, in handle\\n    data = endpoint(**arguments)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/v1.py\\\", line 40, in handle_rpc_call\\n    return frappe.handler.handle()\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 53, in handle\\n    data = execute_cmd(cmd)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 86, in execute_cmd\\n    return frappe.call(method, **frappe.form_dict)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 1764, in call\\n    return fn(*args, **newargs)\\n           ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/utils/typing_validations.py\\\", line 32, in wrapper\\n    return func(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/client.py\\\", line 205, in set_value\\n    doc.save()\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 378, in save\\n    return self._save(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 414, in _save\\n    self.run_before_save_methods()\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1140, in run_before_save_methods\\n    self.run_method(\\\"validate\\\")\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1011, in run_method\\n    out = Document.hook(fn)(self, *args, **kwargs)\\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1371, in composer\\n    return composed(self, method, *args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1353, in runner\\n    add_to_return_value(self, fn(self, *args, **kwargs))\\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1008, in fn\\n    return method_object(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/erpnext/erpnext/setup/doctype/employee/employee.py\\\", line 43, in validate\\n    self.validate_status()\\n  File \\\"apps/erpnext/erpnext/setup/doctype/employee/employee.py\\\", line 185, in validate_status\\n    throw(_(\\\"Please enter relieving date.\\\"))\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 619, in throw\\n    msgprint(\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 584, in msgprint\\n    _raise_exception()\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 535, in _raise_exception\\n    raise exc\\nfrappe.exceptions.ValidationError: Please enter relieving date.\\n\"]",
+      "_server_messages": "[\"{\\\"message\\\": \\\"Please enter relieving date.\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"42ccb661cb379a6da634a72086229567b8189964f577eedaa1d276be\\\"}\"]"
+    }
+  },
+  {
+    "type": "soft_delete_relieving",
+    "employee": "HR-EMP-00030",
+    "ok": true,
+    "status": 200
+  },
+  {
+    "type": "clear_bio_id",
+    "employee": "HR-EMP-00031",
+    "ok": true,
+    "status": 200
+  },
+  {
+    "type": "soft_delete_status",
+    "employee": "HR-EMP-00031",
+    "ok": false,
+    "status": 417,
+    "response": {
+      "exception": "frappe.exceptions.ValidationError: Please enter relieving date.",
+      "exc_type": "ValidationError",
+      "_exc_source": "erpnext (app)",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 120, in application\\n    response = frappe.api.handle(request)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/__init__.py\\\", line 52, in handle\\n    data = endpoint(**arguments)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/v1.py\\\", line 40, in handle_rpc_call\\n    return frappe.handler.handle()\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 53, in handle\\n    data = execute_cmd(cmd)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 86, in execute_cmd\\n    return frappe.call(method, **frappe.form_dict)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 1764, in call\\n    return fn(*args, **newargs)\\n           ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/utils/typing_validations.py\\\", line 32, in wrapper\\n    return func(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/client.py\\\", line 205, in set_value\\n    doc.save()\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 378, in save\\n    return self._save(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 414, in _save\\n    self.run_before_save_methods()\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1140, in run_before_save_methods\\n    self.run_method(\\\"validate\\\")\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1011, in run_method\\n    out = Document.hook(fn)(self, *args, **kwargs)\\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1371, in composer\\n    return composed(self, method, *args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1353, in runner\\n    add_to_return_value(self, fn(self, *args, **kwargs))\\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1008, in fn\\n    return method_object(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/erpnext/erpnext/setup/doctype/employee/employee.py\\\", line 43, in validate\\n    self.validate_status()\\n  File \\\"apps/erpnext/erpnext/setup/doctype/employee/employee.py\\\", line 185, in validate_status\\n    throw(_(\\\"Please enter relieving date.\\\"))\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 619, in throw\\n    msgprint(\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 584, in msgprint\\n    _raise_exception()\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 535, in _raise_exception\\n    raise exc\\nfrappe.exceptions.ValidationError: Please enter relieving date.\\n\"]",
+      "_server_messages": "[\"{\\\"message\\\": \\\"Please enter relieving date.\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"0f0f9ff83db69a81ded0fa320bc3434222eb290d453baf4b0e3b7264\\\"}\"]"
+    }
+  },
+  {
+    "type": "soft_delete_relieving",
+    "employee": "HR-EMP-00031",
+    "ok": true,
+    "status": 200
+  },
+  {
+    "approach": "PUT_resource_minimal",
+    "name": "HR-EMP-00030",
+    "status": 200,
+    "ok": true,
+    "resp": {
+      "data": {
+        "name": "HR-EMP-00030",
+        "owner": "test.hr@bebang.ph",
+        "creation": "2026-04-07 12:04:38.917421",
+        "modified": "2026-04-07 12:08:39.376508",
+        "modified_by": "test.hr@bebang.ph",
+        "docstatus": 0,
+        "idx": 0,
+        "employee": "HR-EMP-00030",
+        "naming_series": "HR-EMP-",
+        "first_name": "Juan",
+        "middle_name": "",
+        "last_name": "Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+        "employee_name": "Juan Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+        "gender": "Male",
+        "date_of_birth": "1995-06-15",
+        "date_of_joining": "2026-04-07",
+        "custom_tin_verified": 0,
+        "custom_sss_verified": 0,
+        "custom_philhealth_verified": 0,
+        "custom_pagibig_verified": 0,
+        "custom_enrichment_status": "Not Started",
+        "status": "Left",
+        "create_user_permission": 1,
+        "company": "Bebang Enterprise Inc.",
+        "department": "Accounts - BSC",
+        "employment_type": "Regular",
+        "schedule_type": "",
+        "designation": "Cashier",
+        "branch": "BRITTANY OFFICE",
+        "notice_number_of_days": 0,
+        "custom_verification_status": "Pending",
+        "custom_issue_type": "",
+        "prefered_contact_email": "",
+        "unsubscribed": 0,
+        "current_accommodation_type": "",
+        "permanent_accommodation_type": "",
+        "ctc": 0,
+        "bei_comm_allow_monthly": 0,
+        "bei_deminimis_monthly": 0,
+        "bei_honorarium_monthly": 0,
+        "bei_meal_allow_monthly": 0,
+        "bei_gasoline_allow_monthly": 0,
+        "bei_other_fixed_monthly": 0,
+        "salary_mode": "",
+        "marital_status": "",
+        "blood_group": "",
+        "relieving_date": "2026-04-07",
+        "leave_encashed": "",
+        "lft": 57,
+        "rgt": 58,
+        "old_parent": "",
+        "doctype": "Employee",
+        "education": [],
+        "external_work_history": [],
+        "internal_work_history": []
+      }
+    }
+  },
+  {
+    "approach": "PUT_resource_minimal",
+    "name": "HR-EMP-00031",
+    "status": 200,
+    "ok": true,
+    "resp": {
+      "data": {
+        "name": "HR-EMP-00031",
+        "owner": "test.hr@bebang.ph",
+        "creation": "2026-04-07 12:04:59.587271",
+        "modified": "2026-04-07 12:08:42.011405",
+        "modified_by": "test.hr@bebang.ph",
+        "docstatus": 0,
+        "idx": 0,
+        "employee": "HR-EMP-00031",
+        "naming_series": "HR-EMP-",
+        "first_name": "Maria",
+        "middle_name": "",
+        "last_name": "Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+        "employee_name": "Maria Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+        "gender": "Male",
+        "date_of_birth": "1995-06-15",
+        "date_of_joining": "2026-04-07",
+        "custom_tin_verified": 0,
+        "custom_sss_verified": 0,
+        "custom_philhealth_verified": 0,
+        "custom_pagibig_verified": 0,
+        "custom_enrichment_status": "Not Started",
+        "status": "Left",
+        "create_user_permission": 1,
+        "company": "Bebang Enterprise Inc.",
+        "department": "Accounts - BSC",
+        "employment_type": "Regular",
+        "schedule_type": "",
+        "designation": "Cashier",
+        "branch": "CAPITAL HOUSE",
+        "notice_number_of_days": 0,
+        "custom_verification_status": "Pending",
+        "custom_issue_type": "",
+        "prefered_contact_email": "",
+        "unsubscribed": 0,
+        "current_accommodation_type": "",
+        "permanent_accommodation_type": "",
+        "ctc": 0,
+        "bei_comm_allow_monthly": 0,
+        "bei_deminimis_monthly": 0,
+        "bei_honorarium_monthly": 0,
+        "bei_meal_allow_monthly": 0,
+        "bei_gasoline_allow_monthly": 0,
+        "bei_other_fixed_monthly": 0,
+        "salary_mode": "",
+        "marital_status": "",
+        "blood_group": "",
+        "relieving_date": "2026-04-07",
+        "leave_encashed": "",
+        "lft": 59,
+        "rgt": 60,
+        "old_parent": "",
+        "doctype": "Employee",
+        "education": [],
+        "external_work_history": [],
+        "internal_work_history": []
+      }
+    }
+  }
+]

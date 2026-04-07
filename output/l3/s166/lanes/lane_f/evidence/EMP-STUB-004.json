@@ -1,0 +1,474 @@
+{
+  "scenarioId": "EMP-STUB-004",
+  "checkDesc": "Disciplinary case detail page renders blank / empty skeleton",
+  "observed": {
+    "list": {
+      "url": "https://my.bebang.ph/dashboard/hr/disciplinary",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Disciplinary Case Management",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nDisciplinary\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nDisciplinary Case Management\n\nManage incident reports, NTEs, and disciplinary decisions.\n\nNew Incident Report\nNew Incident Report\nOpen Cases\n0\nPending NTE Responses\n0\nPending Decisions\n0\nOverdue\n0\nFilters\nDate Range\nMar 7, 2026 - Apr 7, 2026\nIncident Reports\nShowing reports from 3/7/2026 to 4/7/2026\nExport\nColumns\nCase #\tEmployee\tType\tSeverity\tStatus\tDate Filed\nIR-2026-00001\t\nSam Admin\n\t\t\tDraft\t2/22/2026\nIR-2026-00002\t\nSam Admin\n\t\t\tDraft\t2/22/2026\nIR-2026-00003\t\nSam Admin\n\t\t\tDraft\t2/22/2026\nIR-2026-00004\t\nSam Admin\n\t\t\tDraft\t2/22/2026\nIR-2026-00005\t\nSam Admin\n\t\t\tDraft\t2/22/2026\nIR-2026-00006\t\nSam Admin\n\t\t\tDraft\t2/22/2026\n\nRows per page\n\n10\nPage 1 of 1\nPrevious\nNext",
+      "button_count": 11,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "New Incident Report",
+        "New Incident Report",
+        "Mar 7, 2026 - Apr 7, 2026",
+        "Export",
+        "Columns",
+        "10",
+        "Previous",
+        "Next"
+      ],
+      "input_count": 1,
+      "inputs": [
+        {
+          "type": "input",
+          "name": "",
+          "placeholder": "Search by employee name...",
+          "ariaLabel": ""
+        }
+      ],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ]
+    },
+    "detail": {
+      "url": "https://my.bebang.ph/dashboard/hr/disciplinary/IR-2026-00001",
+      "title": "BEI Tasks - Task Management",
+      "h1": "",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nDisciplinary\nIR-2026-00001\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions",
+      "button_count": 3,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "nav_items": [
+        {
+          "text": "Home",
+          "href": "/dashboard"
+        },
+        {
+          "text": "Dashboard",
+          "href": "/dashboard"
+        },
+        {
+          "text": "My Profile",
+          "href": "/dashboard/my-profile"
+        },
+        {
+          "text": "Clearance",
+          "href": "/clearance"
+        },
+        {
+          "text": "Exit Interview",
+          "href": "/clearance/exit-interview"
+        },
+        {
+          "text": "Supervisor Tools",
+          "href": "/dashboard/supervisor"
+        },
+        {
+          "text": "Analytics",
+          "href": "/dashboard/analytics"
+        },
+        {
+          "text": "HR Self-Service",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Leave",
+          "href": "/dashboard/hr/leave"
+        },
+        {
+          "text": "Attendance",
+          "href": "/dashboard/hr/attendance"
+        },
+        {
+          "text": "My Overtime",
+          "href": "/dashboard/attendance/overtime"
+        },
+        {
+          "text": "Schedule",
+          "href": "/dashboard/hr/schedule"
+        },
+        {
+          "text": "Payslip",
+          "href": "/dashboard/hr/payslip"
+        },
+        {
+          "text": "Coverage Request",
+          "href": "/dashboard/hr/coverage"
+        },
+        {
+          "text": "Official Business",
+          "href": "/dashboard/hr/official-business"
+        },
+        {
+          "text": "Official Business Check-out",
+          "href": "/dashboard/hr/official-business/checkout"
+        },
+        {
+          "text": "Official Business Check-in",
+          "href": "/dashboard/hr/official-business/checkin"
+        },
+        {
+          "text": "OB Geo Check-out",
+          "href": "/dashboard/attendance/ob-checkout"
+        },
+        {
+          "text": "OB Geo Check-in",
+          "href": "/dashboard/attendance/ob-checkin"
+        },
+        {
+          "text": "Remote Punch",
+          "href": "/dashboard/attendance/punch"
+        },
+        {
+          "text": "Punch In",
+          "href": "/dashboard/attendance/punch-in"
+        },
+        {
+          "text": "Punch Out",
+          "href": "/dashboard/attendance/punch-out"
+        },
+        {
+          "text": "Onboarding",
+          "href": "/dashboard/onboarding/me"
+        },
+        {
+          "text": "Leave Command Center",
+          "href": "/dashboard/hr-admin/leaves"
+        },
+        {
+          "text": "HR Management",
+          "href": "/dashboard/hr"
+        },
+        {
+          "text": "Employee Master",
+          "href": "/dashboard/hr/employee-master"
+        },
+        {
+          "text": "Payroll",
+          "href": "/dashboard/hr/payroll"
+        },
+        {
+          "text": "Performance",
+          "href": "/dashboard/hr/performance"
+        },
+        {
+          "text": "Regularization",
+          "href": "/dashboard/hr/performance/regularization"
+        },
+        {
+          "text": "Disciplinary",
+          "href": "/dashboard/hr/disciplinary"
+        },
+        {
+          "text": "Recruitment",
+          "href": "/dashboard/hr/recruitment"
+        },
+        {
+          "text": "Transfers",
+          "href": "/dashboard/hr/transfers"
+        },
+        {
+          "text": "Reports",
+          "href": "/dashboard/hr/reports"
+        },
+        {
+          "text": "Overtime",
+          "href": "/dashboard/hr/overtime"
+        },
+        {
+          "text": "Training",
+          "href": "/dashboard/hr/training"
+        },
+        {
+          "text": "Correction Review",
+          "href": "/dashboard/hr/attendance-correction"
+        },
+        {
+          "text": "Compliance",
+          "href": "/dashboard/hr/compliance"
+        },
+        {
+          "text": "13th Month",
+          "href": "/dashboard/hr/compliance/13th-month"
+        },
+        {
+          "text": "Separations",
+          "href": "/dashboard/hr/separations"
+        },
+        {
+          "text": "Exit Interview Analytics",
+          "href": "/dashboard/hr/exit-interview/analytics"
+        },
+        {
+          "text": "Petty Cash Fund",
+          "href": "/dashboard/hr-admin/pcf"
+        },
+        {
+          "text": "Add PCF Entry",
+          "href": "/dashboard/hr-admin/pcf/add"
+        },
+        {
+          "text": "Pending PCF",
+          "href": "/dashboard/hr-admin/pcf/pending"
+        },
+        {
+          "text": "PCF History",
+          "href": "/dashboard/hr-admin/pcf/history"
+        },
+        {
+          "text": "Biometric Monitoring",
+          "href": "/dashboard/biometric"
+        },
+        {
+          "text": "My Expenses",
+          "href": "/dashboard/expense"
+        },
+        {
+          "text": "Store Operations",
+          "href": "/dashboard/store-ops"
+        },
+        {
+          "text": "Store Inventory",
+          "href": "/dashboard/inventory"
+        },
+        {
+          "text": "Stock Counting",
+          "href": "/inventory/stock-counts"
+        },
+        {
+          "text": "Finance & Accounting",
+          "href": "/dashboard/accounting"
+        }
+      ]
+    },
+    "derived": {
+      "detail_is_blank": false
+    }
+  },
+  "passed": true,
+  "defect": {
+    "scenario_id": "EMP-STUB-004",
+    "severity": "HIGH",
+    "classification": "COLLATERAL",
+    "title": "Disciplinary case detail is empty skeleton",
+    "observed": "Detail page text length 1004; blank=false; case link=row-clicked",
+    "expected": "Case detail with timeline, evidence, decision, Documenso acknowledgement",
+    "recommended_sprint": "S168+"
+  },
+  "screenshot": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/lane_f/screenshots/EMP-STUB-004_observed.png",
+  "timestamp_pht": "4/7/2026, 12:10:33"
+}

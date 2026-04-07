@@ -1,0 +1,161 @@
+{
+  "q1": {
+    "deep_inventory": {
+      "tables": 1,
+      "tbody_trs": 100,
+      "role_rows": 0,
+      "data_state_rows": 213,
+      "buttons_total": 246,
+      "buttons_with_bio": 0,
+      "first_table_rows": 100,
+      "body_text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nEmployee-master\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nEmployee Master Dashboard\n\nWorkforce visibility with filters, data quality scanning, and inline employee detail.\n\nAdd New Employee\nReports Companion\nFullscreen\n\nEMPLOYEES\n\n545\n\nTotal filtered rows\n\nACTIVE\n\n545\n\nCurrent headcount\n\nMISSING MANAGER\n\n537\n\nClick to filter\n\nMISSING DOB\n\n138\n\nClick to filter\n\nMISSING DESIGNATION\n\n9\n\nClick to filter\n\nMISSING SALARY\n\n64\n\nClick to filter\n\nMISSING EMAIL\n\n509\n\nClick to filter\n\nMISSING BIO DEVICE\n\n23\n\nEmployees without a Bio ID on file\n\nClick"
+    },
+    "row_inventory": {
+      "roleRows": 0,
+      "dataRowAttrs": [],
+      "firstRowButtons": [],
+      "firstRowLinks": [],
+      "firstRowDataAttrs": {}
+    },
+    "first_tr_probe": {
+      "attrs": {
+        "class": "border-b align-top hover:bg-muted/20 h-16"
+      },
+      "class": "border-b align-top hover:bg-muted/20 h-16",
+      "text": "1\t\nAaron Jan P. Bautista\n9000746\n\tROBINSONS IMUS\tOperations\tStore Crew\tUnassigned\tProbationary\t\n83%\n\tActive\t\naaronjanbautista@gmail.com\n+639615998931\n\t\nActions",
+      "buttons": [
+        {
+          "text": "Aaron Jan P. Bautista",
+          "aria": ""
+        },
+        {
+          "text": "Actions",
+          "aria": ""
+        }
+      ],
+      "links": [],
+      "tds_count": 11,
+      "first_td_class": "sticky left-0 z-10 bg-background px-2 py-3 text-right text-xs text-muted-foreground tabular-nums w-12"
+    },
+    "attempts": [
+      {
+        "label": "tbody_tr_first_click",
+        "opened": false,
+        "info": null
+      },
+      {
+        "label": "first_row_name_button",
+        "opened": true,
+        "info": null
+      }
+    ],
+    "success": true,
+    "dialog_content": {
+      "text_head": "Aaron Jan P. Bautista\n9000746\n·\nStore Crew\n·\nProbationary\n·\nJoined Sep 8, 2025\nOperations - BEI\nROBINSONS IMUS\nActive\nCollapse All\nPERSONAL INFO\nEdit\n\nFirst Name\n\nAaron\n\nMiddle Name\n\nJan P.\n\nLast Name\n\nBautista\n\nDate of Birth\n\nOct 12, 2005\n\nGender\n\nMale\n\nMarital Status\n\nSingle\n\nBlood Group\n\n—\n\nNickname\n\n—\n\nUniform Size\n\n—\n\nPhone\n\n+639615998931\n\nPersonal Email\n\naaronjanbautista@gmail.com\n\nCurrent Address\n\n—\n\nPermanent Address\n\n—\n\nEmergency Contact\n\n—\n\nEmergency Phone\n\n—\n\nRelation\n\n—\n\nEMPLOYMENT\nEdit\n\nDepartment\n\nOperations - BEI\n\nBranch\n\nROBINSONS IMUS\n\nDesignation\n\nStore Crew\n\nEmployment Type\n\nProbationary\n\nDate of Joining\n\nSep 8, 2025\n\nReports To\n\n—\n\nCompany Email\n\n—\n\nWork Phone\n\n—\n\nUser ID\n\n—\n\nStatus\n\nActive\n\nCompany\n\nBebang Enterprise Inc.\n\nCOMPENSATION\n\nBase Salary\n\n₱14,606.67\n\nDaily Rate (base/26)\n\n₱561.80\n\nGross Pay\n\n₱18,258.33\n\nComm\n\n₱0.00\n\nDe Min\n\n₱0.00\n\nHon\n\n₱0.00\n\nMeal\n\n₱0.00\n\nGas\n\n₱0.00\n\nOther\n\n₱3,651.66\n\nSSS\n\n₱652.50\n\nPhilHealth\n\n₱365.17\n\nPag-IBIG\n\n₱100.00\n\nTax\n\n₱0.00\n\nNet Take-Home\n\n₱17,140.66\n\nCompany Cost\n\n₱20,111.13\n\nBank\n\nGcash -Aaron Jan Bautista\n\nAccount Name\n\n—\n\nAccount No.\n\n****9424\n\nEdit Compensation\nGOV IDs & DOCUMENTS\n\nTIN\n\n****22-3\nUnverified\n\nSSS\n\n****3592\nUnverified\n\nPhilHealth\n\n****63-5\nUnverified\n\nPag-IBIG\n\n****-000\nUnverified\n\nEnrichment Status\n\nNot Started\n\nSubmitted\n\n—\n\nCompleted\n\n—\n\nTo update gov IDs, use the Sensitive Changes queue (dual-control approval required).\n\nOpen in HRMS\nRECENT CHANGES\nNo recent changes recorded.\nClose",
+      "h2": [
+        "Aaron Jan P. Bautista"
+      ],
+      "buttons": [
+        "Collapse All",
+        "PERSONAL INFO",
+        "Edit",
+        "EMPLOYMENT",
+        "Edit",
+        "COMPENSATION",
+        "GOV IDs & DOCUMENTS",
+        "RECENT CHANGES",
+        "Close"
+      ],
+      "tabs": [],
+      "inputs": []
+    }
+  },
+  "q2": {
+    "separations_page": {
+      "button_count": 4,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Start Separation"
+      ],
+      "row_count": 0,
+      "text": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nSeparations\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nTeam Separation Dashboard\n\nManage exit interviews, offboarding status, and employee separation setup.\n\nStart Separation\nPending\n0\nIn Progress\n0\nCompleted\n0\nSeparating Team Members\nClick a row to view the exit interview or clearance details\nEmployee\tStore\tSeparation Date\tStatus\tExit Interview\tClearance Progress\n\n\nTest HR\n\nTEST-HR-001\n\n\t\t—\tPending\tNot Started\t\n%"
+    },
+    "clearance_doctypes": [
+      {
+        "name": "Bank Clearance"
+      },
+      {
+        "name": "Bank Clearance Detail"
+      }
+    ],
+    "separation_doctypes": [
+      {
+        "name": "BEI Separation Type Item"
+      },
+      {
+        "name": "Employee Separation"
+      },
+      {
+        "name": "Employee Separation Template"
+      }
+    ],
+    "records_Employee_Separation": [
+      {
+        "name": "HR-EMP-SEP-2026-00001"
+      }
+    ],
+    "clearance_page_view": {
+      "h1": "Clearance Status",
+      "text": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave Command Center\nHR Management\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nClearance\nSearch\nCtrl K\nClearance Status\n\nTrack your separation progress and complete required steps.\n\nSeparation Overview\nType: Resignation | Started: 2026-03-17\nPending\nDOLE Compliance\n0/2\nEmployee\nTest HR\n\nHuman Resources - BAG • Hr Manager\n\nKey Milestones\nComplete these steps for a smooth transition\n1\n\nExit Interview\n\nShare your feedback with HR\n\nStart Interview\n2\n\nFinal Pay Approval\n\nHR computes and approves your final pay\n\nPending HR\n3\n\nCertificate of Employment\n\nDownload your COE after clearance\n\nAvailable after clearance\n💡\n\nNeed Help?\n\nContact HR at hr@bebang.ph or visit the HR office for any questions about your clearance process. Final pay is released within 30 days per DOLE Labor Advisory No. 06-20.",
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Start Interview"
+      ],
+      "has_stations_word": false,
+      "has_documenso_word": false,
+      "has_item_return": false
+    },
+    "separation_links_seen": [
+      "https://my.bebang.ph/clearance/exit-interview",
+      "https://my.bebang.ph/clearance/exit-interview"
+    ]
+  },
+  "q3": {
+    "list_click_result": {
+      "text": "9000746\n9000746\nClose",
+      "inputs": [],
+      "buttons": [
+        "Close"
+      ],
+      "h2": [
+        "9000746"
+      ]
+    },
+    "sample_employee": "9000003",
+    "per_employee_page": {
+      "url": "https://my.bebang.ph/dashboard/hr/payroll/compensation-setup/9000003",
+      "text": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayroll\nCompensation-setup\n9000003\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions",
+      "button_count": 29,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "has_salary_structure": false,
+      "has_basic_pay": false,
+      "has_allowance": false,
+      "has_earnings": false,
+      "has_deductions": false,
+      "has_save_button": false,
+      "has_404": false
+    }
+  },
+  "started_at": "2026-04-07T06:24:11.253Z",
+  "finished_at": "2026-04-07T06:25:39.314Z"
+}

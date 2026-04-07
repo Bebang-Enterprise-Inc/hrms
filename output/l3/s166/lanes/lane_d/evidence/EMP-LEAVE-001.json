@@ -1,0 +1,24 @@
+{
+  "scenario_id": "EMP-LEAVE-001",
+  "timestamp_pht": "2026-04-07T12:58:39+08:00",
+  "actions": [
+    "click Apply Leave",
+    "pick Leave Type",
+    "pick dates",
+    "fill reason",
+    "Submit"
+  ],
+  "network": [],
+  "toasts": [
+    "Employee TEST-CREW-001 has already applied for Casual Leave between 08-04-2026 and 08-04-2026 : <a href=\"https://hq.bebang.ph/app/leave-application/HR-LAP-2026-00117\">HR-LAP-2026-00117</a>"
+  ],
+  "artifacts": {
+    "screenshot_pre": "EMP-LEAVE-001_pre.png",
+    "screenshot_post": "EMP-LEAVE-001_post.png"
+  },
+  "result": {
+    "leave_name": "HR-LAP-2026-00117",
+    "status": "Approved",
+    "passed": true
+  }
+}

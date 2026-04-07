@@ -1,0 +1,182 @@
+{
+  "scenarioId": "EMP-UX-007",
+  "checkDesc": "Payslip has no Download PDF / Print / Export button",
+  "observed": {
+    "url": "https://my.bebang.ph/dashboard/hr/payslip",
+    "title": "BEI Tasks - Task Management",
+    "h1": "My Payslips",
+    "h2s": [
+      "Search"
+    ],
+    "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nStore Operations\nStore Inventory\nHR Management\nMy Expenses\nStock Counting\nSupervisor Tools\nFinance & Accounting\nCampaign Giveaways\nProcurement\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nTC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayslip\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nMy Payslips\n\nYear 2026\n\nYTD Gross\n\n₱0.00\n\nYTD Deductions\n\n₱0.00\n\nYTD Net\n\n₱0.00\n\nPayslips\n\n0\n\nPayslip History\nYour salary slips for 2026\n\nNo payslips found for 2026",
+    "button_count": 3,
+    "buttons": [
+      "TC\ntest.crew1@bebang.ph\ntest.crew1@bebang.ph",
+      "Toggle Sidebar",
+      "Search\nCtrl K"
+    ],
+    "input_count": 0,
+    "inputs": [],
+    "nav_items": [
+      {
+        "text": "Home",
+        "href": "/dashboard"
+      },
+      {
+        "text": "Dashboard",
+        "href": "/dashboard"
+      },
+      {
+        "text": "My Profile",
+        "href": "/dashboard/my-profile"
+      },
+      {
+        "text": "Clearance",
+        "href": "/clearance"
+      },
+      {
+        "text": "Exit Interview",
+        "href": "/clearance/exit-interview"
+      },
+      {
+        "text": "HR Self-Service",
+        "href": "/dashboard/hr"
+      },
+      {
+        "text": "Leave",
+        "href": "/dashboard/hr/leave"
+      },
+      {
+        "text": "Attendance",
+        "href": "/dashboard/hr/attendance"
+      },
+      {
+        "text": "My Overtime",
+        "href": "/dashboard/attendance/overtime"
+      },
+      {
+        "text": "Schedule",
+        "href": "/dashboard/hr/schedule"
+      },
+      {
+        "text": "Payslip",
+        "href": "/dashboard/hr/payslip"
+      },
+      {
+        "text": "Coverage Request",
+        "href": "/dashboard/hr/coverage"
+      },
+      {
+        "text": "Official Business",
+        "href": "/dashboard/hr/official-business"
+      },
+      {
+        "text": "Official Business Check-out",
+        "href": "/dashboard/hr/official-business/checkout"
+      },
+      {
+        "text": "Official Business Check-in",
+        "href": "/dashboard/hr/official-business/checkin"
+      },
+      {
+        "text": "OB Geo Check-out",
+        "href": "/dashboard/attendance/ob-checkout"
+      },
+      {
+        "text": "OB Geo Check-in",
+        "href": "/dashboard/attendance/ob-checkin"
+      },
+      {
+        "text": "Remote Punch",
+        "href": "/dashboard/attendance/punch"
+      },
+      {
+        "text": "Punch In",
+        "href": "/dashboard/attendance/punch-in"
+      },
+      {
+        "text": "Punch Out",
+        "href": "/dashboard/attendance/punch-out"
+      },
+      {
+        "text": "Onboarding",
+        "href": "/dashboard/onboarding/me"
+      },
+      {
+        "text": "Store Operations",
+        "href": "/dashboard/store-ops"
+      },
+      {
+        "text": "Store Inventory",
+        "href": "/dashboard/inventory"
+      },
+      {
+        "text": "HR Management",
+        "href": "/dashboard/hr-admin/pcf"
+      },
+      {
+        "text": "My Expenses",
+        "href": "/dashboard/expense"
+      },
+      {
+        "text": "Stock Counting",
+        "href": "/inventory/stock-counts"
+      },
+      {
+        "text": "Supervisor Tools",
+        "href": "/dashboard/communication"
+      },
+      {
+        "text": "Finance & Accounting",
+        "href": "/dashboard/billing/my-billings"
+      },
+      {
+        "text": "Campaign Giveaways",
+        "href": "/dashboard/campaign-giveaways/pcf"
+      },
+      {
+        "text": "Procurement",
+        "href": "/dashboard/procurement/pcf"
+      },
+      {
+        "text": "Warehouse",
+        "href": "/dashboard/warehouse/pcf"
+      },
+      {
+        "text": "Commissary",
+        "href": "/dashboard/commissary/pcf"
+      },
+      {
+        "text": "Projects & Maintenance",
+        "href": "/dashboard/projects/pcf"
+      },
+      {
+        "text": "Communication",
+        "href": "/dashboard/communication"
+      },
+      {
+        "text": "Dashboard",
+        "href": "/dashboard"
+      },
+      {
+        "text": "Hr",
+        "href": "/dashboard/hr"
+      }
+    ],
+    "derived": {
+      "has_export_button": false
+    }
+  },
+  "passed": true,
+  "defect": {
+    "scenario_id": "EMP-UX-007",
+    "severity": "MEDIUM",
+    "classification": "COLLATERAL",
+    "title": "Crew cannot download or print payslip",
+    "observed": "No download/print/export button on payslip detail",
+    "expected": "Download PDF and Print buttons on each payslip",
+    "recommended_sprint": "S168+"
+  },
+  "screenshot": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/lane_f/screenshots/EMP-UX-007_observed.png",
+  "timestamp_pht": "4/7/2026, 12:09:45"
+}

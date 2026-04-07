@@ -1,0 +1,39 @@
+{
+  "scenario_id": "EMP-LEAVE-002",
+  "timestamp_pht": "2026-04-07T13:46:47+08:00",
+  "fix_iteration": 1,
+  "actions": [
+    "test.crew1 logged in to my.bebang.ph via Frappe SSO",
+    "navigated to /dashboard/hr/leave",
+    "clicked Request Leave button",
+    "filled LeaveRequestDialog: leave_type=Casual Leave, from=2026-04-14, to=2026-04-14, description=FIX-ITER1-APPROVE-1775538808867 — L3 retest approve path",
+    "clicked Submit Request",
+    "Frappe created HR-LAP-2026-00118 (verified via /api/resource/Leave Application/HR-LAP-2026-00118)",
+    "test.supervisor logged in",
+    "navigated to /dashboard/hr/leave-command-center",
+    "clicked Approve button on the only pending leave (queue cleaned in Phase 0)",
+    "POST /api/frappe/api/method/hrms.api.leave_dashboard.bulk_action {leave_ids:[HR-LAP-2026-00118],status:Approved} returned 200",
+    "verified via API: status=Approved, docstatus=1, modified_by=test.supervisor@bebang.ph"
+  ],
+  "target_leave": "HR-LAP-2026-00118",
+  "reason_discriminator": "FIX-ITER1-APPROVE-1775538808867",
+  "verified_state": {
+    "status": "Approved",
+    "docstatus": 1,
+    "leave_type": "Casual Leave",
+    "from_date": "2026-04-14",
+    "total_leave_days": 1,
+    "description": "FIX-ITER1-APPROVE-1775538808867 — L3 retest approve path",
+    "modified_by": "test.supervisor@bebang.ph"
+  },
+  "result": {
+    "leave_name": "HR-LAP-2026-00118",
+    "approved": true
+  },
+  "passed": true,
+  "screenshots": {
+    "pre": "EMP-LEAVE-002_pre.png",
+    "post": "EMP-LEAVE-002_post.png",
+    "queue_pre": "EMP-LEAVE-002_queue_pre.png"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "scenario_id": "EMP-LEAVE-005",
+  "timestamp_pht": "2026-04-07T13:00:04+08:00",
+  "actions": [
+    "file leave3",
+    "attempt cancel"
+  ],
+  "result": {
+    "leaveName3": "HR-LAP-2026-00116",
+    "cancelBehavior": {
+      "cancel_button_present": false,
+      "final_status": "Approved"
+    }
+  }
+}

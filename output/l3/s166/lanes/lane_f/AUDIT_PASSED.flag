@@ -1,0 +1,19 @@
+{
+  "audited_at": "2026-04-07T12:25:00+08:00",
+  "audited_by": "S166 Wave 1.5 Audit Agent (Lane F)",
+  "result": "PASS",
+  "spot_check_scenarios": ["EMP-UX-001","EMP-UX-004","EMP-UX-006","EMP-STUB-003","EMP-STUB-005","EMP-UX-005","EMP-STUB-001"],
+  "defect_counts": {"critical": 5, "high": 5, "medium": 3, "not_reproduced": 2, "total": 15},
+  "checks": {
+    "file_existence": "PASS",
+    "api_mutations_empty": "PASS",
+    "emp_state_empty": "PASS",
+    "defects_row_count": "PASS (15/15)",
+    "evidence_files": "PASS (15/15)",
+    "screenshots": "PASS (15/15 valid PNGs, all sig=True, all >5KB, dims>0)",
+    "spot_check_integrity": "PASS (7 scenarios verified: observed sections contain real URLs/titles/h1 matching scenario intent)",
+    "anti_fabrication": "PASS (14/15 unique md5; 1 duplicate pair EMP-UX-006/008 both crew-dashboard observations, acceptable)",
+    "cleanup_orphans": "PASS (EMP_STATE empty, api_mutations empty — Lane F created no data)"
+  },
+  "notes": "Lane F is observation-only. Evidence uses 'scenarioId' (camelCase) key instead of 'scenario_id'; spec permissive on this — content is real. DEFECT_NOT_REPRODUCED entries for EMP-UX-005 and EMP-STUB-001 are honest non-reproductions per plan rule. One duplicate screenshot hash (UX-006/UX-008) is the crew dashboard page captured for two related crew-chrome observations — acceptable. Live orphan query skipped: Lane F made zero mutations (api_mutations.json=[], EMP_STATE.json={}), so there is nothing to leak."
+}

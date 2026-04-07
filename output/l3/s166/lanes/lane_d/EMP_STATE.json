@@ -1,0 +1,17 @@
+{
+  "created_employees": [],
+  "created_requests": [
+    {
+      "type": "leave",
+      "name": "HR-LAP-2026-00117"
+    },
+    {
+      "type": "leave",
+      "name": "HR-LAP-2026-00116"
+    },
+    {
+      "type": "attendance_correction",
+      "name": "HR-ARQ-26-04-00033"
+    }
+  ]
+}

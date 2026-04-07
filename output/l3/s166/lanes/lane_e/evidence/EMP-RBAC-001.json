@@ -1,0 +1,13 @@
+{
+  "scenario_id": "EMP-RBAC-001",
+  "role": "test.crew1",
+  "ts": "2026-04-07T04:01:23.999Z",
+  "final_url": "https://my.bebang.ph/dashboard/hr/employee-master",
+  "http_status": 200,
+  "access_restricted_text": true,
+  "add_button_count": 0,
+  "add_button_visible": false,
+  "pass": true,
+  "screenshot": "output\\l3\\s166\\lanes\\lane_e\\screenshots\\EMP-RBAC-001_page.png",
+  "note": "crew employee-master visibility"
+}

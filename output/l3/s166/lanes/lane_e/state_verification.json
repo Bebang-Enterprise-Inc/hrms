@@ -1,0 +1,42 @@
+[
+  {
+    "scenario_id": "EMP-CREATE-009",
+    "check": "employee_count_unchanged",
+    "before": 1,
+    "after": 1,
+    "unchanged": true
+  },
+  {
+    "scenario_id": "EMP-RBAC-002",
+    "check": "employee_count_unchanged",
+    "before": 1,
+    "after": 1,
+    "unchanged": true
+  },
+  {
+    "scenario_id": "EMP-RBAC-003",
+    "check": "cell_number_unchanged",
+    "target": "TEST-CREW-001",
+    "before": "09171234567",
+    "after": "09171234567",
+    "unchanged": true
+  },
+  {
+    "scenario_id": "EMP-RBAC-005",
+    "check": "page_restricted",
+    "restricted": true
+  },
+  {
+    "scenario_id": "EMP-RBAC-004",
+    "check": "finance_can_see_sensitive_changes",
+    "restricted": false
+  },
+  {
+    "scenario_id": "EMP-CREATE-009_retry",
+    "check": "rbac_enforced_full_payload",
+    "before": null,
+    "after": null,
+    "permission_error": true,
+    "verdict": "RBAC_ENFORCED"
+  }
+]

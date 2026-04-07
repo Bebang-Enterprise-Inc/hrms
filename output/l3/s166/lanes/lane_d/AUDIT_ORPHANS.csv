@@ -1,0 +1,12 @@
+record_type,name,final_state,docstatus,recommendation
+Leave Application,HR-LAP-2026-00113,Approved,1,terminal — no action
+Leave Application,HR-LAP-2026-00114,Rejected,1,terminal — no action
+Leave Application,HR-LAP-2026-00115,Rejected,1,terminal — no action
+Leave Application,HR-LAP-2026-00116,Approved,1,terminal — no action
+Leave Application,HR-LAP-2026-00117,Approved,1,terminal — no action
+Leave Application,HR-LAP-2026-00118,Approved,1,terminal — no action (subject of EMP-LEAVE-003 defect)
+Leave Application,HR-LAP-2026-00119,Rejected,0,terminal (rejected docstatus=0 is expected for Frappe reject flow)
+Leave Application,HR-LAP-2026-00120,Rejected,0,terminal
+Leave Application,HR-LAP-2026-00121,Rejected,0,terminal
+Attendance Request,HR-ARQ-26-04-00033,Submitted,1,terminal — no action
+SUMMARY,,,,"0 pending/Open leaves found for Jane/TEST-CREW; all 9 touched leaves in terminal state; no Wave 2 cleanup required"

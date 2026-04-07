@@ -1,0 +1,18 @@
+{
+  "lane": "E",
+  "topic": "RBAC",
+  "scenarios": 7,
+  "results": {
+    "EMP-CREATE-008": true,
+    "EMP-RBAC-001": true,
+    "EMP-CREATE-009": true,
+    "EMP-RBAC-002": true,
+    "EMP-RBAC-003": true,
+    "EMP-RBAC-005": true,
+    "EMP-RBAC-004": true
+  },
+  "defects_count": 0,
+  "runtime_sec": 43,
+  "ts": "2026-04-07T04:01:50.600Z",
+  "reconciliation_note": "EMP-CREATE-009 / EMP-RBAC-002 initial TypeError was pre-permission signature validation. Follow-up confirmed 403 PermissionError. RBAC is enforced."
+}

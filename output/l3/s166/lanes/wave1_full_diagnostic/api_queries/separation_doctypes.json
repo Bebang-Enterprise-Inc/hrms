@@ -1,0 +1,18 @@
+{
+  "ok": true,
+  "status": 200,
+  "json": {
+    "data": [
+      {
+        "name": "BEI Separation Type Item"
+      },
+      {
+        "name": "Employee Separation"
+      },
+      {
+        "name": "Employee Separation Template"
+      }
+    ]
+  },
+  "head": "{\"data\":[{\"name\":\"BEI Separation Type Item\"},{\"name\":\"Employee Separation\"},{\"name\":\"Employee Separation Template\"}]}"
+}

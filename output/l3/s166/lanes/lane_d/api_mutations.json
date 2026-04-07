@@ -1,0 +1,25 @@
+[
+  {
+    "scenario_id": "EMP-ATTENDANCE-001",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.attendance_correction.submit_correction",
+    "method": "POST",
+    "status": 417,
+    "postData": "------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"attendance_date\"\r\n\r\n2026-04-05\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"correction_type\"\r\n\r\nMissing Punch In\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"actual_time\"\r\n\r\n08:00\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"reason\"\r\n\r\nL3 attendance correction — forgot to punch in (L3 2026-04-07 13:01)\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z--\r\n"
+  },
+  {
+    "scenario_id": "EMP-LEAVE-002",
+    "endpoint": "/api/frappe/api/method/hrms.api.leave_dashboard.bulk_action",
+    "method": "POST",
+    "payload": "{\"leave_ids\":[\"HR-LAP-2026-00118\"],\"status\":\"Approved\"}",
+    "status": 200,
+    "fix_iteration": 1
+  },
+  {
+    "scenario_id": "EMP-LEAVE-004",
+    "endpoint": "/api/frappe/api/method/hrms.api.leave_dashboard.bulk_action",
+    "method": "POST",
+    "payload": "{\"leave_ids\":[\"HR-LAP-2026-00119\"],\"status\":\"Rejected\"}",
+    "status": 200,
+    "fix_iteration": 1
+  }
+]
