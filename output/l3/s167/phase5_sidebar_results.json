@@ -1,0 +1,53 @@
+{
+  "staff": {
+    "links": [
+      {
+        "text": "HR Management",
+        "href": "/dashboard/hr-admin/pcf"
+      },
+      {
+        "text": "My Expenses",
+        "href": "/dashboard/expense"
+      },
+      {
+        "text": "Campaign Giveaways",
+        "href": "/dashboard/campaign-giveaways/pcf"
+      },
+      {
+        "text": "Procurement",
+        "href": "/dashboard/procurement/pcf"
+      },
+      {
+        "text": "Warehouse",
+        "href": "/dashboard/warehouse/pcf"
+      },
+      {
+        "text": "Commissary",
+        "href": "/dashboard/commissary/pcf"
+      },
+      {
+        "text": "Projects & Maintenance",
+        "href": "/dashboard/projects/pcf"
+      }
+    ],
+    "hasMyExpenses": true
+  },
+  "hr": {
+    "links": [
+      {
+        "text": "My Expenses",
+        "href": "/dashboard/expense"
+      }
+    ],
+    "hasMyExpenses": true
+  },
+  "finance": {
+    "links": [
+      {
+        "text": "My Expenses",
+        "href": "/dashboard/expense"
+      }
+    ],
+    "hasMyExpenses": true
+  }
+}

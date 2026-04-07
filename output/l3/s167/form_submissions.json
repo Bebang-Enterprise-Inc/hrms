@@ -1,0 +1,414 @@
+[
+  {
+    "ts": "2026-04-07T05:51:11.323Z",
+    "scenario": "0.1_HR",
+    "form": "create_department_fund",
+    "inputs": {
+      "department": "HR and Admin - BEI",
+      "custodian": "test.hr@bebang.ph",
+      "fund_amount": 5000,
+      "threshold_percentage": 60
+    },
+    "submit_action": "API: POST /api/pcf",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: HR and Admin\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:51:12.468Z",
+    "scenario": "0.1_SupplyChain",
+    "form": "create_department_fund",
+    "inputs": {
+      "department": "Supply Chain - BEI",
+      "custodian": "test.warehouse@bebang.ph",
+      "fund_amount": 5000,
+      "threshold_percentage": 60
+    },
+    "submit_action": "API: POST /api/pcf",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: Supply Chain\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:51:39.331Z",
+    "scenario": "0.1_Commissary",
+    "form": "create_department_fund",
+    "inputs": {
+      "department": "Commissary - BEI",
+      "custodian": "test.commissary@bebang.ph",
+      "fund_amount": 5000,
+      "threshold_percentage": 60
+    },
+    "submit_action": "UI: Create button",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: Commissary\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:54:07.472Z",
+    "scenario": "0.1_enable_HR",
+    "form": "update_pcf_settings",
+    "inputs": {
+      "pcf_fund": "PCF-HR and Admin",
+      "is_enabled": 1
+    },
+    "submit_action": "POST /api/pcf update_pcf_settings",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:54:08.059Z",
+    "scenario": "0.1_enable_SupplyChain",
+    "form": "update_pcf_settings",
+    "inputs": {
+      "pcf_fund": "PCF-Supply Chain",
+      "is_enabled": 1
+    },
+    "submit_action": "POST /api/pcf update_pcf_settings",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for Supply Chain\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:54:10.023Z",
+    "scenario": "0.1_enable_Commissary",
+    "form": "update_pcf_settings",
+    "inputs": {
+      "pcf_fund": "PCF-Commissary",
+      "is_enabled": 1
+    },
+    "submit_action": "POST /api/pcf update_pcf_settings",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for Commissary\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:54:37.119Z",
+    "scenario": "0.1_enable_HR",
+    "form": "update_pcf_settings",
+    "inputs": {
+      "pcf_fund": "PCF-HR and Admin",
+      "is_enabled": 1
+    },
+    "submit_action": "POST /api/pcf update_pcf_settings",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:54:37.816Z",
+    "scenario": "0.1_enable_SupplyChain",
+    "form": "update_pcf_settings",
+    "inputs": {
+      "pcf_fund": "PCF-Supply Chain",
+      "is_enabled": 1
+    },
+    "submit_action": "POST /api/pcf update_pcf_settings",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for Supply Chain\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:54:38.392Z",
+    "scenario": "0.1_enable_Commissary",
+    "form": "update_pcf_settings",
+    "inputs": {
+      "pcf_fund": "PCF-Commissary",
+      "is_enabled": 1
+    },
+    "submit_action": "POST /api/pcf update_pcf_settings",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for Commissary\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:55:11.772Z",
+    "scenario": "0.1_enable_HR",
+    "form": "update_pcf_settings",
+    "inputs": {
+      "pcf_fund": "PCF-HR and Admin",
+      "is_enabled": 1
+    },
+    "submit_action": "POST /api/pcf update_pcf_settings",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:55:12.366Z",
+    "scenario": "0.1_enable_SupplyChain",
+    "form": "update_pcf_settings",
+    "inputs": {
+      "pcf_fund": "PCF-Supply Chain",
+      "is_enabled": 1
+    },
+    "submit_action": "POST /api/pcf update_pcf_settings",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for Supply Chain\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T05:55:13.187Z",
+    "scenario": "0.1_enable_Commissary",
+    "form": "update_pcf_settings",
+    "inputs": {
+      "pcf_fund": "PCF-Commissary",
+      "is_enabled": 1
+    },
+    "submit_action": "POST /api/pcf update_pcf_settings",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for Commissary\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:10:34.618Z",
+    "scenario": "2.1_NBS",
+    "form": "add_expense_to_pending_hr",
+    "inputs": {
+      "vendor": "National Book Store",
+      "description": "Training manual printouts S167",
+      "amount": 480,
+      "date": "2026-04-07",
+      "receipt": "s167_test_receipt.png"
+    },
+    "submit_action": "Add to Pending",
+    "response": {
+      "status": 400,
+      "body": "{\"success\":false,\"error\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 1764, in call\\\\n    return fn(*args, **newargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/utils/typing_validations.py\\\\\\\", line 32, in wrapper\\\\n    return func(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/hrms/hrms/api/pcf.py\\\\\\\", line 180, in add_expense_to_pending\\\\n    expense.insert(ignore_permissions=True)\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 303, in insert\\\\n    self.run_method(\\\\\\\"before_insert\\\\\\\")\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 1011, in run_method\\\\n    out = Document.hook(fn)(self, *args, **kwargs)\\\\n          ^"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:10:42.156Z",
+    "scenario": "2.1_Jollibee",
+    "form": "add_expense_to_pending_hr",
+    "inputs": {
+      "vendor": "Jollibee",
+      "description": "Team meeting snacks S167",
+      "amount": 350,
+      "date": "2026-04-07",
+      "receipt": "s167_test_receipt.png"
+    },
+    "submit_action": "Add to Pending",
+    "response": {
+      "status": 400,
+      "body": "{\"success\":false,\"error\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 1764, in call\\\\n    return fn(*args, **newargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/utils/typing_validations.py\\\\\\\", line 32, in wrapper\\\\n    return func(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/hrms/hrms/api/pcf.py\\\\\\\", line 180, in add_expense_to_pending\\\\n    expense.insert(ignore_permissions=True)\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 303, in insert\\\\n    self.run_method(\\\\\\\"before_insert\\\\\\\")\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 1011, in run_method\\\\n    out = Document.hook(fn)(self, *args, **kwargs)\\\\n          ^"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:27:06.620Z",
+    "scenario": "2.1_NBS",
+    "form": "add_expense_to_pending_hr",
+    "inputs": {
+      "vendor": "National Book Store",
+      "description": "Training manual printouts S167",
+      "amount": 480,
+      "date": "2026-04-07",
+      "receipt": "s167_test_receipt.png"
+    },
+    "submit_action": "Add to Pending",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00078\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":480,\"pending_count\":1,\"current_balance\":4520,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:27:14.429Z",
+    "scenario": "2.1_Jollibee",
+    "form": "add_expense_to_pending_hr",
+    "inputs": {
+      "vendor": "Jollibee",
+      "description": "Team meeting snacks S167",
+      "amount": 350,
+      "date": "2026-04-07",
+      "receipt": "s167_test_receipt.png"
+    },
+    "submit_action": "Add to Pending",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00079\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":830,\"pending_count\":2,\"current_balance\":4170,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:57:42.394Z",
+    "scenario": "2.2_hr_submit",
+    "form": "submit_batch_now_hr",
+    "inputs": {
+      "pcf_fund": "PCF-HR and Admin"
+    },
+    "submit_action": "POST /api/pcf submit_batch_now",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"batch_name\":\"BEI-PCF-2026-00003\",\"expense_count\":2,\"total_amount\":830},\"message\":\"Batch BEI-PCF-2026-00003 created with 2 expenses\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:58:00.782Z",
+    "scenario": "2.1_commi_ice",
+    "form": "add_expense_to_pending_commissary",
+    "inputs": {
+      "vendor": "7-Eleven",
+      "description": "Ice for production chiller S167",
+      "amount": 250,
+      "date": "2026-04-07"
+    },
+    "submit_action": "Add to Pending",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00080\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":250,\"pending_count\":1,\"current_balance\":4750,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:58:08.080Z",
+    "scenario": "2.1_commi_wheels",
+    "form": "add_expense_to_pending_commissary",
+    "inputs": {
+      "vendor": "Ace Hardware",
+      "description": "Replacement caster wheels S167",
+      "amount": 480,
+      "date": "2026-04-07"
+    },
+    "submit_action": "Add to Pending",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00081\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":730,\"pending_count\":2,\"current_balance\":4270,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:58:10.266Z",
+    "scenario": "2.2_commi_submit",
+    "form": "submit_batch_now_commissary",
+    "inputs": {
+      "pcf_fund": "PCF-Commissary"
+    },
+    "submit_action": "POST /api/pcf submit_batch_now",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"batch_name\":\"BEI-PCF-2026-00004\",\"expense_count\":2,\"total_amount\":730},\"message\":\"Batch BEI-PCF-2026-00004 created with 2 expenses\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:59:39.870Z",
+    "scenario": "3.2a_classify_hr",
+    "form": "classify_batch_items",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00003"
+    },
+    "submit_action": "POST /api/pcf classify_batch_items",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"items\":[],\"total\":0},\"message\":\"Classification complete\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:59:41.273Z",
+    "scenario": "3.2b_approve_hr",
+    "form": "approve_batch_with_coa",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00003",
+      "items": [
+        {
+          "expense_name": "b7tbc3u8q6",
+          "final_coa": "5110 - Office Supplies - BEI",
+          "approved_amount": 480
+        },
+        {
+          "expense_name": "b7t6fc34lt",
+          "final_coa": "5110 - Office Supplies - BEI",
+          "approved_amount": 350
+        }
+      ],
+      "notes": "S167 L3 test"
+    },
+    "submit_action": "POST /api/pcf approve_batch_with_coa",
+    "response": {
+      "status": 400,
+      "body": "{\"success\":false,\"error\":\"Could not find Row #2: Suggested COA: 6010100\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:59:42.673Z",
+    "scenario": "3.3_reject_commi",
+    "form": "reject_batch",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00004",
+      "reason": "S167 L3 test — ..."
+    },
+    "submit_action": "POST /api/pcf reject_batch",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-PCF-2026-00004\",\"status\":\"Rejected\",\"reviewed_by\":\"test.finance@bebang.ph\",\"reviewed_at\":\"2026-04-07 14:59:43.012133\",\"review_notes\":\"S167 L3 test — receipts are unclear on the Ace Hardware expense; please re-upload a legible photo and resubmit.\"},\"message\":\"Batch BEI-PCF-2026-00004 rejected\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T06:59:43.247Z",
+    "scenario": "3.4_empty_coa",
+    "form": "approve_batch_with_coa_empty_validation",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00004",
+      "items": [
+        {
+          "final_coa": ""
+        }
+      ]
+    },
+    "submit_action": "POST /api/pcf approve_batch_with_coa (expect validation error)",
+    "response": {
+      "status": 400,
+      "body": "{\"success\":false,\"error\":\"Batch is not pending review\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T07:01:41.141Z",
+    "scenario": "3.2b_approve_hr_retry",
+    "form": "approve_batch_with_coa",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00003",
+      "items": [
+        {
+          "name": "b7tbc3u8q6",
+          "final_coa": "OFFICE SUPPLIES - Bebang Enterprise Inc.",
+          "approved_amount": 480
+        },
+        {
+          "name": "b7t6fc34lt",
+          "final_coa": "OFFICE SUPPLIES - Bebang Enterprise Inc.",
+          "approved_amount": 300
+        }
+      ],
+      "notes": "S167 L3 test — HR approved with COA + amount override"
+    },
+    "submit_action": "POST /api/pcf approve_batch_with_coa (retry with correct item format)",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-PCF-2026-00003\",\"status\":\"Approved\",\"reviewed_by\":\"test.finance@bebang.ph\",\"reviewed_at\":\"2026-04-07 15:01:41.459924\"},\"message\":\"Batch BEI-PCF-2026-00003 approved with COA classifications\"}"
+    }
+  },
+  {
+    "ts": "2026-04-07T07:02:26.348Z",
+    "scenario": "4.1_edit_hr_fund",
+    "form": "update_pcf_settings",
+    "inputs": {
+      "pcf_fund": "PCF-HR and Admin",
+      "fund_amount": 8000,
+      "threshold_percentage": 70
+    },
+    "submit_action": "POST /api/pcf update_pcf_settings",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}"
+    }
+  }
+]

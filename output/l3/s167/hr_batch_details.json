@@ -1,0 +1,35 @@
+{
+  "name": "BEI-PCF-2026-00003",
+  "store": "",
+  "store_name": "",
+  "batch_date": "2026-04-07",
+  "status": "Submitted",
+  "submission_type": "manual",
+  "total_amount": 830,
+  "expense_count": 2,
+  "submitted_by": "test.hr@bebang.ph",
+  "submitted_by_name": "test.hr@bebang.ph",
+  "replenishment_amount": 0,
+  "items": [
+    {
+      "name": "b7tbc3u8q6",
+      "expense_name": "BEI-EXP-2026-00078",
+      "employee": "TEST-HR-001",
+      "employee_name": "Test HR",
+      "manual_vendor": "National Book Store",
+      "manual_description": "Training manual printouts S167",
+      "manual_amount": 480,
+      "manual_date": "2026-04-07"
+    },
+    {
+      "name": "b7t6fc34lt",
+      "expense_name": "BEI-EXP-2026-00079",
+      "employee": "TEST-HR-001",
+      "employee_name": "Test HR",
+      "manual_vendor": "Jollibee",
+      "manual_description": "Team meeting snacks S167",
+      "manual_amount": 350,
+      "manual_date": "2026-04-07"
+    }
+  ]
+}

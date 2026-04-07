@@ -1,0 +1,784 @@
+[
+  {
+    "phase": "request",
+    "scenario": "phase0",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"sam@bebang.ph\",\"pwd\":\"2289454\"}",
+    "ts": "2026-04-07T05:51:07.937Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "phase0",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T05:51:09.306Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.1_HR",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"create_pcf_fund\",\"fund_type\":\"Department\",\"department\":\"HR and Admin - BEI\",\"custodian\":\"test.hr@bebang.ph\",\"fund_amount\":5000,\"threshold_percentage\":60}",
+    "ts": "2026-04-07T05:51:10.705Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.1_SupplyChain",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: HR and Admin\"}",
+    "ts": "2026-04-07T05:51:11.337Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.1_SupplyChain",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"create_pcf_fund\",\"fund_type\":\"Department\",\"department\":\"Supply Chain - BEI\",\"custodian\":\"test.warehouse@bebang.ph\",\"fund_amount\":5000,\"threshold_percentage\":60}",
+    "ts": "2026-04-07T05:51:11.876Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.1_Commissary",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: Supply Chain\"}",
+    "ts": "2026-04-07T05:51:12.470Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.1_Commissary",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"create_pcf_fund\",\"fund_type\":\"Department\",\"department\":\"Commissary - BEI\",\"custodian\":\"test.commissary@bebang.ph\",\"fund_amount\":5000,\"threshold_percentage\":60}",
+    "ts": "2026-04-07T05:51:38.455Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.1_Commissary",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: Commissary\"}",
+    "ts": "2026-04-07T05:51:39.345Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_staff",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.staff@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T05:51:41.885Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_staff",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T05:51:42.835Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_supv",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.supervisor@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T05:51:51.986Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_supv",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T05:51:54.154Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T05:52:03.534Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T05:52:04.743Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_warehouse",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.warehouse@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T05:52:13.602Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_warehouse",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T05:52:14.574Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_commi",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.commissary@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T05:52:23.633Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_commi",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T05:52:24.889Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_finance",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.finance@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T05:52:34.000Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_finance",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T05:52:35.217Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_staff",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.staff@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:02:40.244Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_staff",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:02:42.092Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_supv",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.supervisor@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:02:51.409Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_supv",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:02:52.599Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:03:01.558Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:03:02.795Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_warehouse",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.warehouse@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:03:11.790Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_warehouse",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:03:13.083Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_commi",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.commissary@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:03:22.025Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_commi",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:03:23.025Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_finance",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.finance@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:03:31.458Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_finance",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:03:32.688Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_staff",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.staff@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:05:40.752Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_staff",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:05:41.890Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_supv",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.supervisor@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:05:51.186Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_supv",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:05:52.353Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:06:01.335Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:06:02.566Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_warehouse",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.warehouse@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:06:13.169Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_warehouse",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:06:14.152Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_commi",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.commissary@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:06:24.951Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_commi",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:06:26.098Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.2_finance",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.finance@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:06:36.450Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.2_finance",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:06:37.679Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "phase2",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:10:23.692Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "phase2",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:10:24.956Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.1_NBS",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"National Book Store\",\"manual_description\":\"Training manual printouts S167\",\"manual_amount\":480,\"manual_date\":\"2026-04-07\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-HR and Admin\"}",
+    "ts": "2026-04-07T06:10:31.588Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.1_NBS",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 400,
+    "response_body": "{\"success\":false,\"error\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 1764, in call\\\\n    return fn(*args, **newargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/utils/typing_validations.py\\\\\\\", line 32, in wrapper\\\\n    return func(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/hrms/hrms/api/pcf.py\\\\\\\", line 180, in add_expense_to_pending\\\\n    expense.insert(ignore_permissions=True)\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 303, in insert\\\\n    self.run_method(\\\\\\\"before_insert\\\\\\\")\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 1011, in run_method\\\\n    out = Document.hook(fn)(self, *args, **kwargs)\\\\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 1371, in composer\\\\n    return composed(self, method, *args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 1353, in runner\\\\n    add_to_return_value(self, fn(self, *args, **kwargs))\\\\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 1008, in fn\\\\n    return method_object(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/hrms/hrms/hr/doctype/bei_expense_request/bei_expense_request.py\\\\\\\", line 24, in before_insert\\\\n    store = frappe.db.get_value(\\\\\\\"Employee\\\\\\\", self.employee, \\\\\\\"custom_store\\\\\\\")\\\\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/database/database.py\\\\\\\", line 514, in get_value\\\\n    result = self.get_values(\\\\n             ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/database/database.py\\\\\\\", line 621, in get_values\\\\n    out = self._get_values_from_table(\\\\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/database/database.py\\\\\\\", line 894, in _get_values_from_table\\\\n    return query.run(as_dict=as_dict, debug=debug, update=update, run=run, pluck=pluck)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/query_builder/utils.py\\\\\\\", line 87, in execute_query\\\\n    result = frappe.db.sql(query, params, *args, **kwargs)  # nosemgrep\\\\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/database/database.py\\\\\\\", line 230, in sql\\\\n    self._cursor.execute(query, values)\\\\n  File \\\\\\\"env/lib/python3.11/site-packages/pymysql/cursors.py\\\\\\\", line 153, in execute\\\\n    result = self._query(query)\\\\n             ^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"env/lib/python3.11/site-packages/pymysql/cursors.py\\\\\\\", line 322, in _query\\\\n    conn.query(q)\\\\n  File \\\\\\\"env/lib/python3.11/site-packages/pymysql/connections.py\\\\\\\", line 563, in query\\\\n    self._affected_rows = self._read_query_result(unbuffered=unbuffered)\\\\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"env/lib/python3.11/site-packages/pymysql/connections.py\\\\\\\", line 825, in _read_query_result\\\\n    result.read()\\\\n  File \\\\\\\"env/lib/python3.11/site-packages/pymysql/connections.py\\\\\\\", line 1199, ",
+    "ts": "2026-04-07T06:10:33.043Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.1_Jollibee",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"Jollibee\",\"manual_description\":\"Team meeting snacks S167\",\"manual_amount\":350,\"manual_date\":\"2026-04-07\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-HR and Admin\"}",
+    "ts": "2026-04-07T06:10:39.936Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.1_Jollibee",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 400,
+    "response_body": "{\"success\":false,\"error\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 1764, in call\\\\n    return fn(*args, **newargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/utils/typing_validations.py\\\\\\\", line 32, in wrapper\\\\n    return func(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/hrms/hrms/api/pcf.py\\\\\\\", line 180, in add_expense_to_pending\\\\n    expense.insert(ignore_permissions=True)\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 303, in insert\\\\n    self.run_method(\\\\\\\"before_insert\\\\\\\")\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 1011, in run_method\\\\n    out = Document.hook(fn)(self, *args, **kwargs)\\\\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 1371, in composer\\\\n    return composed(self, method, *args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 1353, in runner\\\\n    add_to_return_value(self, fn(self, *args, **kwargs))\\\\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/model/document.py\\\\\\\", line 1008, in fn\\\\n    return method_object(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/hrms/hrms/hr/doctype/bei_expense_request/bei_expense_request.py\\\\\\\", line 24, in before_insert\\\\n    store = frappe.db.get_value(\\\\\\\"Employee\\\\\\\", self.employee, \\\\\\\"custom_store\\\\\\\")\\\\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/database/database.py\\\\\\\", line 514, in get_value\\\\n    result = self.get_values(\\\\n             ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/database/database.py\\\\\\\", line 621, in get_values\\\\n    out = self._get_values_from_table(\\\\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/database/database.py\\\\\\\", line 894, in _get_values_from_table\\\\n    return query.run(as_dict=as_dict, debug=debug, update=update, run=run, pluck=pluck)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/query_builder/utils.py\\\\\\\", line 87, in execute_query\\\\n    result = frappe.db.sql(query, params, *args, **kwargs)  # nosemgrep\\\\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/database/database.py\\\\\\\", line 230, in sql\\\\n    self._cursor.execute(query, values)\\\\n  File \\\\\\\"env/lib/python3.11/site-packages/pymysql/cursors.py\\\\\\\", line 153, in execute\\\\n    result = self._query(query)\\\\n             ^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"env/lib/python3.11/site-packages/pymysql/cursors.py\\\\\\\", line 322, in _query\\\\n    conn.query(q)\\\\n  File \\\\\\\"env/lib/python3.11/site-packages/pymysql/connections.py\\\\\\\", line 563, in query\\\\n    self._affected_rows = self._read_query_result(unbuffered=unbuffered)\\\\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"env/lib/python3.11/site-packages/pymysql/connections.py\\\\\\\", line 825, in _read_query_result\\\\n    result.read()\\\\n  File \\\\\\\"env/lib/python3.11/site-packages/pymysql/connections.py\\\\\\\", line 1199, ",
+    "ts": "2026-04-07T06:10:40.589Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "phase2",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:26:56.053Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "phase2",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:26:57.317Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.1_NBS",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"National Book Store\",\"manual_description\":\"Training manual printouts S167\",\"manual_amount\":480,\"manual_date\":\"2026-04-07\",\"receipt_photo\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAIAAAAiOjnJAAAGJ0lEQVR4nO3Ya0yVdQDH8f/DAQLkdg6BAikJhFiy5q0pupauaDbJS+Z60aqt2fRFrcjLur3IVS9SS1ttujXd9E2tdBN1bWyxLsMwrHnnIgIKiohyAA93zqEdTjuyc2ScBr8Xje/n1TnP83/+/4fDl+d5DlbB9nIDTLSwCZ8RICyocMWCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCgkT4OI/PTp3y+vLp4TbL7RnaVVzX2tkfG2XbWPDwklz7ms9PG2Msy2x6NiMnLdbtHtpZfKXZ2ff+2mx7bIQxJsIWlp4U9eLOv3xTLcm1r35imjFmzoy4C9fuGmOKK1q2rM6qvu7yDSivaT9c3hywYk7alOCjfq9s8754b2H1dZdlWdGRYftKrp272unbMnK2FfNSVs5P6en39PS7vzpR39rZ7z9w5LAjWxesHf5x/LtsYdbekqvJ8ZGjrT7JjTesdwszP/qu+nZn/9LZjjeemfHp4dqPX5r128W2/Fy7b8DK+VO7+zxv77+4JNe+4emM7T/UfHak1rdrxdyU5IRI/1RlVc6yKqcx5sjWBVsOVvo2vlOY6X892orBR/kMuod8W2amxGxbk7Vx33n/Fp95mQnLHksqOnCpb9CzMDtx86qsbYe8ewOGjTZn0fOZb357YbTVJ7nx3goTp0REhnsnKa92Hq1oMcZ88uPloxU3/QOW5yWVnG01xpy63F513fs37WMZU7hgavHwIeNccUwNt7ofjLtXsN+6xakHShv7Bj3GmIra9ua23vAwK8TTqL/VPS3xgf947pPIeK9YB0obv3j10T9r238+f/tsQ6cxxukaGDkg3RG9OMe+KCfR1eveW3LVv31Rjr3mhqu9a2D8K45pflbCmfuNzEiOrr3Z7X+7+0R96Kcxd2b8lRHHYoLDKjnberLamZ9r31SQUVbtPPRrU8CACJvV0tG35WDl0tmOosJM373GGPPC4tTdx+vGnD/cZu14Zbbv9f7Sxsom15grBhwbbrOmJ0Vv2HsueDabZYW4aMAuy7K6ege/DOH8J61xhZUQE5HuiLrUdLfkTOupmvZ9G/OCf83OroGTw08hJ6ucbz0307cxNz3W1TvYdKd3zCUCHndCWTH42PX5qQWPJ39fdiNgtqa23qxpMVXDD+OWMZtXZe04eiXEZyxIn7GGPliXnRzvfXyJjwlv7fB+pQpwpqEzLyPOGJOXEVfX8u+9Y31+6uE/mkUrBvu7rnNWWmzw9mOnW15b9lCEzfshPDUnKcIW6gMWtFesju7BPcfrP1z3SP+gx+0xu455/9wDHPylqagw8+Un092eoT3DDzFpjihHXOT54S/nY5/fiLtSZZNrf2njmCsGa7zTkzk12rLuM1u6I+qbDXM6ugfauwa+/qlhtEVD+zxwj1WwvXzEW2Bi8J93SBAWJAgLEoQFCcKCBGFBgrAgQVggLPx/cMWCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhwSj8AzjGCeSXBR8wAAAAAElFTkSuQmCC\",\"pcf_fund\":\"PCF-HR and Admin\"}",
+    "ts": "2026-04-07T06:27:03.949Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.1_NBS",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00078\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":480,\"pending_count\":1,\"current_balance\":4520,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-07T06:27:05.044Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.1_Jollibee",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"Jollibee\",\"manual_description\":\"Team meeting snacks S167\",\"manual_amount\":350,\"manual_date\":\"2026-04-07\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-HR and Admin\"}",
+    "ts": "2026-04-07T06:27:11.930Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.1_Jollibee",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00079\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":830,\"pending_count\":2,\"current_balance\":4170,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-07T06:27:12.870Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.2_hr_submit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:57:29.379Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.2_hr_submit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:57:32.256Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.2_hr_submit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"submit_batch_now\",\"pcf_fund\":\"PCF-HR and Admin\"}",
+    "ts": "2026-04-07T06:57:32.722Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.2_hr_submit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"batch_name\":\"BEI-PCF-2026-00003\",\"expense_count\":2,\"total_amount\":830},\"message\":\"Batch BEI-PCF-2026-00003 created with 2 expenses\"}",
+    "ts": "2026-04-07T06:57:42.409Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.1_commi_setup",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.commissary@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:57:44.361Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.1_commi_setup",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:57:45.824Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "commissary_ice",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"7-Eleven\",\"manual_description\":\"Ice for production chiller S167\",\"manual_amount\":250,\"manual_date\":\"2026-04-07\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-Commissary\"}",
+    "ts": "2026-04-07T06:57:58.543Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "commissary_ice",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00080\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":250,\"pending_count\":1,\"current_balance\":4750,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-07T06:57:59.564Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "commissary_wheels",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"Ace Hardware\",\"manual_description\":\"Replacement caster wheels S167\",\"manual_amount\":480,\"manual_date\":\"2026-04-07\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-Commissary\"}",
+    "ts": "2026-04-07T06:58:05.890Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "commissary_wheels",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00081\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":730,\"pending_count\":2,\"current_balance\":4270,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-07T06:58:06.858Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.2_commi_submit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"submit_batch_now\",\"pcf_fund\":\"PCF-Commissary\"}",
+    "ts": "2026-04-07T06:58:08.086Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.2_commi_submit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"batch_name\":\"BEI-PCF-2026-00004\",\"expense_count\":2,\"total_amount\":730},\"message\":\"Batch BEI-PCF-2026-00004 created with 2 expenses\"}",
+    "ts": "2026-04-07T06:58:10.280Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "phase3",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.finance@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T06:59:18.358Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "phase3",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T06:59:19.657Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.2a_classify_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"classify_batch_items\",\"batch_name\":\"BEI-PCF-2026-00003\"}",
+    "ts": "2026-04-07T06:59:38.998Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.2a_classify_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"items\":[],\"total\":0},\"message\":\"Classification complete\"}",
+    "ts": "2026-04-07T06:59:39.874Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.2b_approve_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"approve_batch_with_coa\",\"batch_name\":\"BEI-PCF-2026-00003\",\"items\":[{\"expense_name\":\"b7tbc3u8q6\",\"final_coa\":\"5110 - Office Supplies - BEI\",\"approved_amount\":480},{\"expense_name\":\"b7t6fc34lt\",\"final_coa\":\"5110 - Office Supplies - BEI\",\"approved_amount\":350}],\"notes\":\"S167 L3 test — HR batch approved with COA overrides\"}",
+    "ts": "2026-04-07T06:59:40.427Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.3_reject_commi",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 400,
+    "response_body": "{\"success\":false,\"error\":\"Could not find Row #2: Suggested COA: 6010100\"}",
+    "ts": "2026-04-07T06:59:41.275Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.3_reject_commi",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"reject_batch\",\"batch_name\":\"BEI-PCF-2026-00004\",\"reason\":\"S167 L3 test — receipts are unclear on the Ace Hardware expense; please re-upload a legible photo and resubmit.\"}",
+    "ts": "2026-04-07T06:59:41.277Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.4_empty_coa",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-PCF-2026-00004\",\"status\":\"Rejected\",\"reviewed_by\":\"test.finance@bebang.ph\",\"reviewed_at\":\"2026-04-07 14:59:43.012133\",\"review_notes\":\"S167 L3 test — receipts are unclear on the Ace Hardware expense; please re-upload a legible photo and resubmit.\"},\"message\":\"Batch BEI-PCF-2026-00004 rejected\"}",
+    "ts": "2026-04-07T06:59:42.676Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.4_empty_coa",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"approve_batch_with_coa\",\"batch_name\":\"BEI-PCF-2026-00004\",\"items\":[{\"expense_name\":\"FAKE\",\"final_coa\":\"\",\"approved_amount\":100}]}",
+    "ts": "2026-04-07T06:59:42.678Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.5_verify_statuses",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 400,
+    "response_body": "{\"success\":false,\"error\":\"Batch is not pending review\"}",
+    "ts": "2026-04-07T06:59:43.250Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "4.1_edit_hr_fund",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"sam@bebang.ph\",\"pwd\":\"2289454\"}",
+    "ts": "2026-04-07T07:02:23.284Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "4.1_edit_hr_fund",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T07:02:24.527Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "4.1_edit_hr_fund",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"update_pcf_settings\",\"pcf_fund\":\"PCF-HR and Admin\",\"fund_amount\":8000,\"threshold_percentage\":70}",
+    "ts": "2026-04-07T07:02:25.163Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "4.1_edit_hr_fund",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}",
+    "ts": "2026-04-07T07:02:25.774Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "4.2_verify_hr_view",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T07:02:28.316Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "4.2_verify_hr_view",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T07:02:29.532Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "5.1_staff",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.staff@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T07:03:27.965Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "5.1_staff",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T07:03:29.142Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "5.1_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T07:03:41.646Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "5.1_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T07:03:42.871Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "5.1_finance",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.finance@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T07:03:50.545Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "5.1_finance",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T07:03:51.558Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "5.2_legacy_redirect_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-07T07:03:59.395Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "5.2_legacy_redirect_hr",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-07T07:04:00.619Z"
+  }
+]

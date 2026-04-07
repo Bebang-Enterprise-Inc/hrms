@@ -1,0 +1,66 @@
+[
+  {
+    "emp": "9001789",
+    "user": "test.hr@bebang.ph",
+    "changed_fields": {
+      "user_id": "test.hr@bebang.ph"
+    },
+    "original_values": {
+      "user_id": null
+    },
+    "set_result": {
+      "status": 409,
+      "body": "{\"exception\":\"frappe.exceptions.DuplicateEntryError: User test.hr@bebang.ph is already assigned to Employee TEST-HR-001\",\"exc_type\":\"DuplicateEntryError\",\"_exc_source\":\"erpnext (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/"
+    },
+    "reason": "link test.hr to existing HR employee"
+  },
+  {
+    "emp": "9000005",
+    "user": "test.commissary@bebang.ph",
+    "changed_fields": {
+      "user_id": "test.commissary@bebang.ph"
+    },
+    "original_values": {
+      "user_id": null
+    },
+    "set_result": {
+      "status": 409,
+      "body": "{\"exception\":\"frappe.exceptions.DuplicateEntryError: User test.commissary@bebang.ph is already assigned to Employee TEST-COMMISSARY-001\",\"exc_type\":\"DuplicateEntryError\",\"_exc_source\":\"erpnext (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n"
+    },
+    "reason": "link test.commissary to existing Commissary employee"
+  },
+  {
+    "emp": "9000070",
+    "user": "test.staff@bebang.ph",
+    "changed_fields": {
+      "user_id": "test.staff@bebang.ph",
+      "branch": "TEST-STORE-BGC"
+    },
+    "original_values": {
+      "user_id": null,
+      "branch": "BRITTANY OFFICE"
+    },
+    "set_result": {
+      "status": 409,
+      "body": "{\"exception\":\"frappe.exceptions.DuplicateEntryError: User test.staff@bebang.ph is already assigned to Employee TEST-STAFF-001\",\"exc_type\":\"DuplicateEntryError\",\"_exc_source\":\"erpnext (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\"
+    },
+    "reason": "link test.staff + move to TEST-STORE-BGC branch for Phase 1"
+  },
+  {
+    "emp": "9000103",
+    "user": "test.supervisor@bebang.ph",
+    "changed_fields": {
+      "user_id": "test.supervisor@bebang.ph",
+      "branch": "TEST-STORE-BGC"
+    },
+    "original_values": {
+      "user_id": null,
+      "branch": "BRITTANY OFFICE"
+    },
+    "set_result": {
+      "status": 409,
+      "body": "{\"exception\":\"frappe.exceptions.DuplicateEntryError: User test.supervisor@bebang.ph is already assigned to Employee TEST-SUPERVISOR-001\",\"exc_type\":\"DuplicateEntryError\",\"_exc_source\":\"erpnext (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n"
+    },
+    "reason": "link test.supervisor + move to TEST-STORE-BGC branch for Phase 1"
+  }
+]

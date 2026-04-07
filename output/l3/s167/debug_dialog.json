@@ -1,0 +1,143 @@
+{
+  "buttons": [
+    {
+      "tag": "BUTTON",
+      "type": null,
+      "name": null,
+      "id": "",
+      "role": null,
+      "ariaLabel": null,
+      "ariaExpanded": null,
+      "dataState": null,
+      "text": "Cancel",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": null,
+      "name": null,
+      "id": "",
+      "role": null,
+      "ariaLabel": null,
+      "ariaExpanded": null,
+      "dataState": null,
+      "text": "Create",
+      "placeholder": null
+    },
+    {
+      "tag": "BUTTON",
+      "type": "button",
+      "name": null,
+      "id": "",
+      "role": null,
+      "ariaLabel": null,
+      "ariaExpanded": null,
+      "dataState": null,
+      "text": "Close",
+      "placeholder": null
+    }
+  ],
+  "inputs": [
+    {
+      "tag": "INPUT",
+      "type": "email",
+      "name": null,
+      "id": "create_custodian",
+      "role": null,
+      "ariaLabel": null,
+      "ariaExpanded": null,
+      "dataState": null,
+      "text": "",
+      "placeholder": "user@bebang.ph"
+    },
+    {
+      "tag": "INPUT",
+      "type": "number",
+      "name": null,
+      "id": "create_fund_amount",
+      "role": null,
+      "ariaLabel": null,
+      "ariaExpanded": null,
+      "dataState": null,
+      "text": "",
+      "placeholder": null
+    },
+    {
+      "tag": "INPUT",
+      "type": "number",
+      "name": null,
+      "id": "create_threshold",
+      "role": null,
+      "ariaLabel": null,
+      "ariaExpanded": null,
+      "dataState": null,
+      "text": "",
+      "placeholder": null
+    }
+  ],
+  "selects": [
+    {
+      "tag": "SELECT",
+      "type": null,
+      "name": null,
+      "id": "create_department",
+      "role": null,
+      "ariaLabel": null,
+      "ariaExpanded": null,
+      "dataState": null,
+      "text": "HR\nFinance & Accounting\nProcurement\nWarehouse\nCommissary\nProjects & Maintenance\n",
+      "placeholder": null
+    }
+  ],
+  "comboboxes": [],
+  "labels": [
+    {
+      "for": "create_department",
+      "text": "Department *"
+    },
+    {
+      "for": "create_custodian",
+      "text": "Custodian (user email)"
+    },
+    {
+      "for": "create_fund_amount",
+      "text": "Fund amount (PHP)"
+    },
+    {
+      "for": "create_threshold",
+      "text": "Threshold %"
+    }
+  ],
+  "all_ids": [
+    {
+      "tag": "H2",
+      "id": "radix-_r_1v_",
+      "text": "Create Department PCF Fund"
+    },
+    {
+      "tag": "P",
+      "id": "radix-_r_20_",
+      "text": "Creates a new department-type petty cash"
+    },
+    {
+      "tag": "SELECT",
+      "id": "create_department",
+      "text": "HR\nFinance & Accounting\nProcurement\nWare"
+    },
+    {
+      "tag": "INPUT",
+      "id": "create_custodian",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "id": "create_fund_amount",
+      "text": ""
+    },
+    {
+      "tag": "INPUT",
+      "id": "create_threshold",
+      "text": ""
+    }
+  ]
+}

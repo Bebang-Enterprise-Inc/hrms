@@ -1,0 +1,50 @@
+[
+  {
+    "emp": "TEST-HR-001",
+    "original": {
+      "department": "Human Resources - BAG",
+      "branch": "BRITTANY OFFICE",
+      "company": "Bebang Enterprise Inc.",
+      "user_id": "test.hr@bebang.ph"
+    },
+    "applied": {
+      "department": "HR and Admin - BEI"
+    },
+    "result": {
+      "status": 200,
+      "body": "{\"data\":{\"name\":\"TEST-HR-001\",\"owner\":\"Administrator\",\"creation\":\"2026-02-22 08:43:32\",\"modified\":\"2026-04-07 14:02:03.312301\",\"modified_by\":\"sam@bebang.ph\",\"docstatus\":0,\"idx\":10,\"employee\":\"TEST-HR-001\",\"naming_series\":\"HR-EMP-\",\"first_name\":\"Test\",\"last_name\":\"HR\",\"employee_name\":\"Test HR\",\"gender\":\"Male\",\"date_of_birth\":\"1990-01-01\",\"date_of_joining\":\"2024-01-01\",\"custom_tin_verified\":0,\"custom_sss_verified\":0,\"custom_philhealth_verified\":0,\"custom_pagibig_verified\":0,\"custom_enrichment_stat"
+    }
+  },
+  {
+    "emp": "TEST-COMMISSARY-001",
+    "original": {
+      "department": "Dispatch - BAG",
+      "branch": "COMMISSARY SHAW",
+      "company": "Bebang Enterprise Inc.",
+      "user_id": "test.commissary@bebang.ph"
+    },
+    "applied": {
+      "department": "Commissary - BEI"
+    },
+    "result": {
+      "status": 200,
+      "body": "{\"data\":{\"name\":\"TEST-COMMISSARY-001\",\"owner\":\"Administrator\",\"creation\":\"2026-02-22 08:43:32\",\"modified\":\"2026-04-07 14:02:05.550869\",\"modified_by\":\"sam@bebang.ph\",\"docstatus\":0,\"idx\":1,\"employee\":\"TEST-COMMISSARY-001\",\"naming_series\":\"HR-EMP-\",\"first_name\":\"Test\",\"last_name\":\"Commissary\",\"employee_name\":\"Test Commissary\",\"gender\":\"Male\",\"date_of_birth\":\"1990-01-01\",\"date_of_joining\":\"2024-01-01\",\"custom_tin_verified\":0,\"custom_sss_verified\":0,\"custom_philhealth_verified\":0,\"custom_pagibig_veri"
+    }
+  },
+  {
+    "emp": "TEST-WAREHOUSE-001",
+    "original": {
+      "department": "Dispatch - BAG",
+      "branch": "COMMISSARY SHAW",
+      "company": "Bebang Enterprise Inc.",
+      "user_id": "test.warehouse@bebang.ph"
+    },
+    "applied": {
+      "department": "Supply Chain - BEI"
+    },
+    "result": {
+      "status": 200,
+      "body": "{\"data\":{\"name\":\"TEST-WAREHOUSE-001\",\"owner\":\"Administrator\",\"creation\":\"2026-02-22 08:43:32\",\"modified\":\"2026-04-07 14:02:07.978819\",\"modified_by\":\"sam@bebang.ph\",\"docstatus\":0,\"idx\":5,\"employee\":\"TEST-WAREHOUSE-001\",\"naming_series\":\"HR-EMP-\",\"first_name\":\"Test\",\"last_name\":\"Warehouse\",\"employee_name\":\"Test Warehouse\",\"gender\":\"Male\",\"date_of_birth\":\"1990-01-01\",\"date_of_joining\":\"2024-01-01\",\"custom_tin_verified\":0,\"custom_sss_verified\":0,\"custom_philhealth_verified\":0,\"custom_pagibig_verified"
+    }
+  }
+]
