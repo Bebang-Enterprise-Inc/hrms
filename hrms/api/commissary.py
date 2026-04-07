@@ -1107,7 +1107,13 @@ def build_bki_store_sale_invoice(
 		"Will be submitted on store DR acceptance (ICT-007)."
 	)
 
-	cost_center = frappe.db.get_value("Company", bki_company, "cost_center")
+	# S168 Phase 12 fix: resolve per-store cost center so BKI->store P&L rolls
+	# up per store, not into the BKI company default. Falls back to company
+	# default only if no per-store / group CC is seeded.
+	resolved_cc = _resolve_store_cost_center(target_warehouse, entity_row)
+	cost_center = resolved_cc or frappe.db.get_value(
+		"Company", bki_company, "cost_center"
+	)
 
 	# Row-level aggregation: one SI row per Stock Entry Detail row (R1 Phase 3.1)
 	# Prevents double-billing when grouped orders (S163) produce duplicate
@@ -1169,6 +1175,71 @@ def build_bki_store_sale_invoice(
 	# DO NOT submit. SI stays Draft until complete_receiving submits it on
 	# store DR acceptance (ICT-007). docstatus=0 is intentional.
 	return si.name
+
+
+def _resolve_store_cost_center(store_warehouse: str, entity_row: dict) -> str | None:
+	"""S168 Phase 12: resolve the per-store Cost Center for a BKI->store sale.
+
+	Cost center hierarchy (seeded by scripts/s168_seed_cost_centers.py):
+		Stores - BKI
+		  JV - BKI
+		    {store} - BKI
+		  Managed Franchise - BKI
+		    {store} - BKI
+		  Full Franchise - BKI
+		    {store} - BKI
+
+	Resolution order:
+	  1. Per-store cost center derived from entity_row.buyer_entity_name
+	     (exact seed-script pattern "{buyer_entity_name} - BKI").
+	  2. Per-store cost center derived from the warehouse name.
+	  3. Store-type parent group ("JV - BKI" / "Managed Franchise - BKI" /
+	     "Full Franchise - BKI").
+	  4. "Stores - BKI" umbrella group.
+	  5. None (caller falls back to Company default).
+	"""
+	try:
+		if not frappe.db.exists("DocType", "Cost Center"):
+			return None
+	except Exception:
+		return None
+
+	bki_company = "Bebang Kitchen Inc."
+	candidates: list[str] = []
+
+	entity_row = entity_row or {}
+	buyer_name = (entity_row.get("buyer_entity_name") or "").strip()
+	if buyer_name:
+		candidates.append(f"{buyer_name} - BKI")
+
+	if store_warehouse:
+		# Warehouse names already look like "Store X - BKI"; try verbatim
+		# and also try re-appending " - BKI" to the stripped form.
+		candidates.append(store_warehouse)
+		bare = store_warehouse
+		if bare.endswith(" - BKI"):
+			bare = bare[: -len(" - BKI")]
+			candidates.append(f"{bare} - BKI")
+
+	store_type = (entity_row.get("store_type") or "").strip()
+	if store_type:
+		candidates.append(f"{store_type} - BKI")
+
+	candidates.append("Stores - BKI")
+
+	seen: set[str] = set()
+	for cc_name in candidates:
+		if not cc_name or cc_name in seen:
+			continue
+		seen.add(cc_name)
+		try:
+			if frappe.db.exists(
+				"Cost Center", {"name": cc_name, "company": bki_company}
+			):
+				return cc_name
+		except Exception:
+			continue
+	return None
 
 
 def _delete_orphan_draft_si_on_se_cancel(doc, method=None):
