@@ -1,0 +1,7 @@
+[2026-04-07 23:10:02] Picked credential group: Dedicated (1 locations)
+[2026-04-07 23:10:02] Test location: Ayala Solenad (id=2547)
+[2026-04-07 23:10:02] Mode: verify | bill_number: 999992
+[2026-04-07 23:10:02] Step 1: OAuth
+[2026-04-07 23:10:04] Step 2: create test order
+[2026-04-07 23:10:07]   [CREATE_WARN] 422 -- retrying without items
+[2026-04-07 23:10:09] FATAL: Mosaic API error: 422 Client Error: Unprocessable Entity for url: https://api.mosaic-pos.com/api/v1/orders -- body: {"errors":[{"status":422,"detail":"The items field is required.","source":{"pointer":"items"}}]}
