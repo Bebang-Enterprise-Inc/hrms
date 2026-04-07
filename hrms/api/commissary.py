@@ -1086,6 +1086,23 @@ def build_bki_store_sale_invoice(
 
 	debit_to = (getattr(settings, "bki_sales_debit_to_account", "") or "").strip()
 
+	# S168 Phase 12: BIR-aware naming series. Finance sets bki_sales_naming_series
+	# in BEI Settings to match the authorized BIR ATP/PTU prefix before the first
+	# production SI is issued. Until set, Frappe uses the SI default naming.
+	bki_sales_naming_series = (
+		getattr(settings, "bki_sales_naming_series", "") or ""
+	).strip()
+
+	# S168 Phase 13: EWT toggle (defaults OFF per ICT-004 — BEI is not Top 20,000).
+	# When Finance flips bki_ewt_on_store_sales_enabled, the SI emits an EWT line
+	# using the existing default_ewt_rate / ewt_payable_account from BEI Settings
+	# (R1 Amendment 9 — reuse existing EWT fields, do not duplicate).
+	ewt_enabled = bool(getattr(settings, "bki_ewt_on_store_sales_enabled", 0) or 0)
+	default_ewt_rate = flt(getattr(settings, "default_ewt_rate", 0) or 0)
+	ewt_payable_account = (
+		getattr(settings, "ewt_payable_account", "") or ""
+	).strip()
+
 	# Build the Draft SI
 	si = frappe.new_doc("Sales Invoice")
 	si.company = bki_company
@@ -1094,6 +1111,8 @@ def build_bki_store_sale_invoice(
 	si.posting_date = stock_entry.posting_date
 	si.set_posting_time = 1
 	si.currency = frappe.db.get_value("Company", bki_company, "default_currency") or "PHP"
+	if bki_sales_naming_series:
+		si.naming_series = bki_sales_naming_series
 	si.taxes_and_charges = vat_template
 	if debit_to:
 		si.debit_to = debit_to
@@ -1170,6 +1189,22 @@ def build_bki_store_sale_invoice(
 			"S168 Draft SI Error",
 		)
 		raise
+
+	# S168 Phase 13: append EWT row only if Finance flipped the toggle.
+	# default_ewt_rate is the % to withhold; ewt_payable_account is the GL credit.
+	# Per ICT-004, this branch is dormant — toggle stays off until BEI is tagged
+	# Top 20,000 by BIR. Code path is in place so Finance can flip without a deploy.
+	if ewt_enabled and default_ewt_rate > 0 and ewt_payable_account:
+		si.append(
+			"taxes",
+			{
+				"charge_type": "On Net Total",
+				"account_head": ewt_payable_account,
+				"description": f"EWT {default_ewt_rate}% (S168 Phase 13)",
+				"rate": -abs(default_ewt_rate),  # negative = deduction
+				"add_deduct_tax": "Deduct",
+			},
+		)
 
 	si.insert(ignore_permissions=True)
 	# DO NOT submit. SI stays Draft until complete_receiving submits it on
