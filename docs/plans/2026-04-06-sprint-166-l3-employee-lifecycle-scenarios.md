@@ -31,7 +31,7 @@ execution_summary:
   defects_closed_by_s170: 6
   defects_open: 12
   new_defects_from_retest: 3
-  wave2_pr: pending
+  wave2_pr: hrms#489
   canonical_evidence: output/l3/s166/SUMMARY.md
 ---
 
