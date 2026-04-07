@@ -1,74 +1,82 @@
 [
-  {
-    "doctype": "BEI Clearance Station",
-    "station_code": "IT",
-    "station_name": "IT / Devices",
-    "default_responsible_role": "System Manager",
-    "enabled": 1,
-    "sort_order": 10,
-    "description": "Laptops, mobile phones, tablets, peripherals, software accounts."
-  },
-  {
-    "doctype": "BEI Clearance Station",
-    "station_code": "POS",
-    "station_name": "POS / Cash Handling",
-    "default_responsible_role": "Store Supervisor",
-    "enabled": 1,
-    "sort_order": 20,
-    "description": "POS access, cash drawer keys, end-of-shift float reconciliation."
-  },
-  {
-    "doctype": "BEI Clearance Station",
-    "station_code": "UNIFORM",
-    "station_name": "Uniform / PPE",
-    "default_responsible_role": "HR User",
-    "enabled": 1,
-    "sort_order": 30,
-    "description": "Issued uniforms, aprons, name tags, PPE."
-  },
-  {
-    "doctype": "BEI Clearance Station",
-    "station_code": "KEYS",
-    "station_name": "Keys / Access Cards",
-    "default_responsible_role": "Store Supervisor",
-    "enabled": 1,
-    "sort_order": 40,
-    "description": "Physical keys, biometric enrollment, RFID/access cards."
-  },
-  {
-    "doctype": "BEI Clearance Station",
-    "station_code": "FINANCE",
-    "station_name": "Finance / Advances",
-    "default_responsible_role": "HQ Finance",
-    "enabled": 1,
-    "sort_order": 50,
-    "description": "Outstanding advances, petty cash float, expense liquidations."
-  },
-  {
-    "doctype": "BEI Clearance Station",
-    "station_code": "HR",
-    "station_name": "HR / 201 File",
-    "default_responsible_role": "HR Manager",
-    "enabled": 1,
-    "sort_order": 60,
-    "description": "201 file handover, exit interview, BIR/SSS/PhilHealth/Pag-IBIG forms."
-  },
-  {
-    "doctype": "BEI Clearance Station",
-    "station_code": "SECURITY",
-    "station_name": "Security / Building Access",
-    "default_responsible_role": "Store Supervisor",
-    "enabled": 1,
-    "sort_order": 70,
-    "description": "Building access, parking, visitor badge."
-  },
-  {
-    "doctype": "BEI Clearance Station",
-    "station_code": "MANAGER",
-    "station_name": "Store Manager Sign-Off",
-    "default_responsible_role": "Store Supervisor",
-    "enabled": 1,
-    "sort_order": 80,
-    "description": "Final store manager sign-off before clearance is released."
-  }
+ {
+  "doctype": "BEI Clearance Station",
+  "station_code": "IT",
+  "station_name": "IT / Devices",
+  "default_responsible_role": "System Manager",
+  "enabled": 1,
+  "sort_order": 10,
+  "description": "Laptops, mobile phones, tablets, peripherals, software accounts.",
+  "name": "IT"
+ },
+ {
+  "doctype": "BEI Clearance Station",
+  "station_code": "POS",
+  "station_name": "POS / Cash Handling",
+  "default_responsible_role": "Store Supervisor",
+  "enabled": 1,
+  "sort_order": 20,
+  "description": "POS access, cash drawer keys, end-of-shift float reconciliation.",
+  "name": "POS"
+ },
+ {
+  "doctype": "BEI Clearance Station",
+  "station_code": "UNIFORM",
+  "station_name": "Uniform / PPE",
+  "default_responsible_role": "HR User",
+  "enabled": 1,
+  "sort_order": 30,
+  "description": "Issued uniforms, aprons, name tags, PPE.",
+  "name": "UNIFORM"
+ },
+ {
+  "doctype": "BEI Clearance Station",
+  "station_code": "KEYS",
+  "station_name": "Keys / Access Cards",
+  "default_responsible_role": "Store Supervisor",
+  "enabled": 1,
+  "sort_order": 40,
+  "description": "Physical keys, biometric enrollment, RFID/access cards.",
+  "name": "KEYS"
+ },
+ {
+  "doctype": "BEI Clearance Station",
+  "station_code": "FINANCE",
+  "station_name": "Finance / Advances",
+  "default_responsible_role": "HQ Finance",
+  "enabled": 1,
+  "sort_order": 50,
+  "description": "Outstanding advances, petty cash float, expense liquidations.",
+  "name": "FINANCE"
+ },
+ {
+  "doctype": "BEI Clearance Station",
+  "station_code": "HR",
+  "station_name": "HR / 201 File",
+  "default_responsible_role": "HR Manager",
+  "enabled": 1,
+  "sort_order": 60,
+  "description": "201 file handover, exit interview, BIR/SSS/PhilHealth/Pag-IBIG forms.",
+  "name": "HR"
+ },
+ {
+  "doctype": "BEI Clearance Station",
+  "station_code": "SECURITY",
+  "station_name": "Security / Building Access",
+  "default_responsible_role": "Store Supervisor",
+  "enabled": 1,
+  "sort_order": 70,
+  "description": "Building access, parking, visitor badge.",
+  "name": "SECURITY"
+ },
+ {
+  "doctype": "BEI Clearance Station",
+  "station_code": "MANAGER",
+  "station_name": "Store Manager Sign-Off",
+  "default_responsible_role": "Store Supervisor",
+  "enabled": 1,
+  "sort_order": 80,
+  "description": "Final store manager sign-off before clearance is released.",
+  "name": "MANAGER"
+ }
 ]
