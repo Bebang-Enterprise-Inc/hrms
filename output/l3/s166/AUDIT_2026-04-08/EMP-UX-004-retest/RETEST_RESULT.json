@@ -1,0 +1,60 @@
+{
+  "retest_at": "2026-04-07T23:32:26.432Z",
+  "steps": [
+    {
+      "step": "login",
+      "url": "https://my.bebang.ph/dashboard"
+    },
+    {
+      "step": "navigate to comp list",
+      "url": "https://my.bebang.ph/dashboard/hr/payroll/compensation-setup"
+    },
+    {
+      "step": "row count",
+      "count": 50
+    },
+    {
+      "step": "row buttons enumeration",
+      "buttons": [
+        {
+          "text": "",
+          "ariaLabel": null
+        },
+        {
+          "text": "ABALLAR, JERRY F.\n9001858",
+          "ariaLabel": null
+        },
+        {
+          "text": "",
+          "ariaLabel": null
+        },
+        {
+          "text": "",
+          "ariaLabel": null
+        }
+      ]
+    },
+    {
+      "step": "clicked button",
+      "index": 1,
+      "text": "ABALLAR, JERRY F.\n9001858"
+    },
+    {
+      "step": "screenshot after row click"
+    },
+    {
+      "step": "dialog count",
+      "count": 1
+    }
+  ],
+  "dialog": {
+    "opened": true,
+    "text_preview": "90018589001858Close",
+    "input_count": 0,
+    "label_count": 0,
+    "button_count": 1,
+    "heading_count": 1
+  },
+  "verdict": "STILL_BROKEN",
+  "verdict_reason": "Dialog rendered but contains only 0 inputs, 0 labels, 1 buttons. Text preview: \"90018589001858Close\""
+}

@@ -1,0 +1,1322 @@
+[
+  {
+    "lane": "lane_a",
+    "sid": "EMP-CREATE-001",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-PERSONAL-001",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-PERSONAL-002",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-PERSONAL-003",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-PERSONAL-004",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-PERSONAL-005",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-PERSONAL-006",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-CONTACT-001",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-CONTACT-002",
+    "raw_status": "FAIL",
+    "norm": "FAIL",
+    "verdict": "VERIFIED_BROWSER_FAIL",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-CONTACT-003",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-CONTACT-004",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-ADDRESS-001",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-ADDRESS-002",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-ADDRESS-003",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-EMPLOYMENT-001",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-EMPLOYMENT-002",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-EMPLOYMENT-003",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-EMPLOYMENT-004",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EDIT-EMPLOYMENT-005",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-PHOTO-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-PHOTO-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-BANK-001",
+    "raw_status": "NEEDS_UI_PROBE",
+    "norm": "REDO",
+    "verdict": "AUDIT_FAILED_NEVER_REDONE",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-BANK-002",
+    "raw_status": "NEEDS_UI_PROBE",
+    "norm": "REDO",
+    "verdict": "AUDIT_FAILED_NEVER_REDONE",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-BANK-003",
+    "raw_status": "NEEDS_UI_PROBE",
+    "norm": "REDO",
+    "verdict": "AUDIT_FAILED_NEVER_REDONE",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-GOVID-001",
+    "raw_status": "NEEDS_UI_PROBE",
+    "norm": "REDO",
+    "verdict": "AUDIT_FAILED_NEVER_REDONE",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-GOVID-002",
+    "raw_status": "NEEDS_UI_PROBE",
+    "norm": "REDO",
+    "verdict": "AUDIT_FAILED_NEVER_REDONE",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-GOVID-003",
+    "raw_status": "NEEDS_UI_PROBE",
+    "norm": "REDO",
+    "verdict": "AUDIT_FAILED_NEVER_REDONE",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-GOVID-004",
+    "raw_status": "NEEDS_UI_PROBE",
+    "norm": "REDO",
+    "verdict": "AUDIT_FAILED_NEVER_REDONE",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-GOVID-005",
+    "raw_status": "NEEDS_UI_PROBE",
+    "norm": "REDO",
+    "verdict": "AUDIT_FAILED_NEVER_REDONE",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-COMPLETION-002",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-SETUP-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-SETUP-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-SETUP-003",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-SETUP-004",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-CHANGE-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-CHANGE-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-CHANGE-003",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-CHANGE-004",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-CHANGE-005",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-CHANGE-006",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-PAYROLL-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-SALARY-PAYROLL-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-REGULARIZE-001",
+    "raw_status": "REDO_REQUIRED",
+    "norm": "REDO",
+    "verdict": "AUDIT_FAILED_NEVER_REDONE",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-REGULARIZE-002",
+    "raw_status": "REDO_REQUIRED",
+    "norm": "REDO",
+    "verdict": "AUDIT_FAILED_NEVER_REDONE",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-ADMS-001",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": false,
+    "has_actions": true,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-ADMS-002",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": false,
+    "has_actions": true,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-CHAT-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-CHAT-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-COMPLETION-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-TERMINATE-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-TERMINATE-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-TERMINATE-003",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-TERMINATE-004",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-TERMINATE-005",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-TERMINATE-006",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-FINALPAY-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-FINALPAY-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-FINALPAY-003",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-USERDISABLE-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-USERDISABLE-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-ADMSREMOVE-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-ADMSREMOVE-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EXITINTERVIEW-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EXITINTERVIEW-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-EXITINTERVIEW-003",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-REHIRE-001",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-REHIRE-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_REASON",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-DISCIPLINARY-001",
+    "raw_status": "DEFECT-PASS",
+    "norm": "DEFECT_PASS",
+    "verdict": "VERIFIED_BROWSER_DEFECT_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-DISCIPLINARY-002",
+    "raw_status": "DEFECT-PASS",
+    "norm": "DEFECT_PASS",
+    "verdict": "VERIFIED_BROWSER_DEFECT_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-DISCIPLINARY-003",
+    "raw_status": "DEFECT-PASS",
+    "norm": "DEFECT_PASS",
+    "verdict": "VERIFIED_BROWSER_DEFECT_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-DISCIPLINARY-004",
+    "raw_status": "DEFECT-PASS",
+    "norm": "DEFECT_PASS",
+    "verdict": "VERIFIED_BROWSER_DEFECT_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-DISCIPLINARY-005",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-COMPLIANCE-001",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-COMPLIANCE-002",
+    "raw_status": "DEFECT-PASS",
+    "norm": "DEFECT_PASS",
+    "verdict": "VERIFIED_BROWSER_DEFECT_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-ENRICHMENT-001",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-ENRICHMENT-002",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-CONFLICT-001",
+    "raw_status": "FAIL",
+    "norm": "FAIL",
+    "verdict": "VERIFIED_BROWSER_FAIL",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": ""
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-CLEAN-001",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "AUDIT_FAILED_NO_BROWSER_PROOF",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": "PASS without browser proof (has_ss=False, has_acts=False)"
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-CLEAN-002",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "AUDIT_FAILED_NO_BROWSER_PROOF",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": "PASS without browser proof (has_ss=False, has_acts=False)"
+  },
+  {
+    "lane": "lane_a",
+    "sid": "EMP-CLEAN-003",
+    "raw_status": "INFO",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": false,
+    "has_actions": false,
+    "reason": "unknown status: INFO"
+  },
+  {
+    "lane": "lane_b",
+    "sid": "EMP-CREATE-002",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_b",
+    "sid": "EMP-SALARY-SETUP-002",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_b",
+    "sid": "EMP-SALARY-SETUP-003",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_b",
+    "sid": "EMP-SALARY-SETUP-004",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_b",
+    "sid": "EMP-SALARY-CHANGE-003",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_b",
+    "sid": "EMP-SALARY-CHANGE-006",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_b",
+    "sid": "EMP-SALARY-PAYROLL-002",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_b",
+    "sid": "EMP-BIOCHANGE-001",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_b",
+    "sid": "EMP-BIOCHANGE-002",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_c",
+    "sid": "EMP-CREATE-003",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_c",
+    "sid": "EMP-CREATE-005",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_c",
+    "sid": "EMP-CREATE-006",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_c",
+    "sid": "EMP-CREATE-007",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_c",
+    "sid": "EMP-CREATE-010",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_d",
+    "sid": "EMP-LEAVE-001",
+    "raw_status": "0",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 0"
+  },
+  {
+    "lane": "lane_d",
+    "sid": "EMP-LEAVE-005",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_d",
+    "sid": "EMP-OVERTIME-002",
+    "raw_status": "0",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 0"
+  },
+  {
+    "lane": "lane_d",
+    "sid": "EMP-ATTENDANCE-001",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_d",
+    "sid": "EMP-ATTENDANCE-002",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_d",
+    "sid": "EMP-PAYSLIP-001",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_d",
+    "sid": "EMP-PAYSLIP-002",
+    "raw_status": "403",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: 403"
+  },
+  {
+    "lane": "lane_d",
+    "sid": "EMP-LEAVE-002",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_d",
+    "sid": "EMP-LEAVE-004",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_e",
+    "sid": "EMP-CREATE-008",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_e",
+    "sid": "EMP-RBAC-001",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_e",
+    "sid": "EMP-CREATE-009",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_e",
+    "sid": "EMP-RBAC-002",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_e",
+    "sid": "EMP-RBAC-003",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_e",
+    "sid": "EMP-RBAC-005",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_e",
+    "sid": "EMP-RBAC-004",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-UX-001",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-UX-002",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-UX-003",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-UX-004",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-UX-005",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-UX-006",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-UX-007",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-UX-008",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-UX-009",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-UX-010",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-STUB-001",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-STUB-002",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-STUB-003",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-STUB-004",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_f",
+    "sid": "EMP-STUB-005",
+    "raw_status": "200",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": "unknown status: 200"
+  },
+  {
+    "lane": "lane_g",
+    "sid": "EMP-PAYROLL-RUN-001",
+    "raw_status": "FAIL",
+    "norm": "FAIL",
+    "verdict": "VERIFIED_BROWSER_FAIL",
+    "has_screenshot": true,
+    "has_actions": true,
+    "reason": ""
+  },
+  {
+    "lane": "lane_g",
+    "sid": "EMP-PAYROLL-RUN-002",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_g",
+    "sid": "EMP-PAYROLL-RUN-003",
+    "raw_status": "SKIP",
+    "norm": "SKIP",
+    "verdict": "LEGITIMATE_SKIP_WITH_PROOF",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_g",
+    "sid": "EMP-PAYROLL-RUN-004",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_g",
+    "sid": "EMP-PAYROLL-RUN-005",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_g",
+    "sid": "EMP-PAYROLL-RUN-006",
+    "raw_status": "PASS",
+    "norm": "PASS",
+    "verdict": "VERIFIED_BROWSER_PASS",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": ""
+  },
+  {
+    "lane": "lane_h",
+    "sid": "EMP-CREATE-004",
+    "raw_status": "None",
+    "norm": "UNKNOWN",
+    "verdict": "AUDIT_FAILED_UNDETERMINED",
+    "has_screenshot": true,
+    "has_actions": false,
+    "reason": "unknown status: None"
+  }
+]

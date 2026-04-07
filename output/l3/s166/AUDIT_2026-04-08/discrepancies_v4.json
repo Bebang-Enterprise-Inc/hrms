@@ -1,0 +1,10 @@
+[
+  {
+    "agent": "R3",
+    "scenario": "EMP-UX-004",
+    "summary_claimed": "PASS_POST_FIX",
+    "evidence_actual": "STILL_BROKEN",
+    "type": "SUMMARY_LIED",
+    "impact": "Defect #6 (compensation list-page modal) NOT closed"
+  }
+]

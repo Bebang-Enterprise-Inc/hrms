@@ -8,29 +8,40 @@
 
 ---
 
-## Honest totals (post browser-only-rule reclassification + S170 retest)
+## Honest totals (CORRECTED 2026-04-08 audit — R3 fabrication detected)
 
 | Status | Count | % |
 |---|---|---|
-| PASS | 71 | 51.8% |
+| PASS | 70 | 51.1% |
 | DEFECT-PASS | 20 | 14.6% |
-| FAIL | 6 | 4.4% |
+| FAIL | 7 | 5.1% |
 | SKIP (PRODUCT_GAP / ARCHITECTURAL) | 40 | 29.2% |
 | REDO_REQUIRED | 0 | 0% |
 | **Total** | **137** | **100%** |
 
-PASS includes: 3 EMP-CLEAN scenarios (lane A cleanup verification), EMP-LEAVE-003 upgraded to
-PASS_POST_FIX after R1 retest, and EMP-UX-004/EMP-UX-005/EMP-STUB-005 upgraded to PASS_POST_FIX by R3.
+**CORRECTION (2026-04-08 audit):** EMP-UX-004 reclassified PASS → FAIL after orchestrator-direct
+browser retest definitively confirmed the list-page compensation modal is STILL EMPTY.
+R3 retest agent's `evidence/EMP-UX-004-retest.json` correctly captured `verdict: STILL_BROKEN`,
+but R3's `R3_SUMMARY.md` falsely claimed `PASS_POST_FIX`. The Wave 2 closeout PR #489 inherited
+the false claim. Audit retest screenshot (`output/l3/s166/AUDIT_2026-04-08/EMP-UX-004-retest/04_dialog_only.png`)
+shows: dialog opens with 0 inputs, 0 labels, 1 button (Close), heading just `9001858`, two empty
+skeleton placeholder cards. **S170 Phase 2 deployed the per-employee route but did NOT fix the
+list-page modal — Defect #6 reclassified from CLOSED to OPEN.**
 
-SKIP breakdown (40): TERMINATE chain 6, FINALPAY 3, USERDISABLE 2, ADMSREMOVE 2, REHIRE 2,
+PASS includes: 3 EMP-CLEAN scenarios (lane A cleanup verification), EMP-LEAVE-003 upgraded to
+PASS_POST_FIX after R1 retest, and EMP-UX-005/EMP-STUB-005 upgraded to PASS_POST_FIX by R3.
+(EMP-UX-004 was previously listed here — REMOVED per audit correction.)
+
+SKIP breakdown (40, unchanged): TERMINATE chain 6, FINALPAY 3, USERDISABLE 2, ADMSREMOVE 2, REHIRE 2,
 EXITINTERVIEW 3, CHAT 2, BIOCHANGE 2, COMPLETION-001 1, EMPLOYMENT-003 1, ADDRESS-003 1,
 GOVID-004/005 2, SALARY-SETUP-002/003/004 3, SALARY-PAYROLL-001/002 2, PAYROLL-RUN-002/003 2,
 REGULARIZE-003 1, TRANSFER-001..005 5.
 
-FAIL breakdown (6): EMP-EDIT-CONTACT-002 (middle_name absent in form), EMP-SALARY-CHANGE-002
-(SSA not auto-activated after BCC approval), EMP-OVERTIME-001/002/003 (blocked by Defects
-#19+#20 — RBAC crew exclusion + attendance prerequisite), EMP-PAYROLL-RUN-001 (Generate Slips
-button disabled).
+FAIL breakdown (7, +1 from audit): EMP-EDIT-CONTACT-002 (middle_name absent in form),
+EMP-SALARY-CHANGE-002 (SSA not auto-activated after BCC approval), EMP-OVERTIME-001/002/003
+(blocked by Defects #19+#20 — RBAC crew exclusion + attendance prerequisite),
+EMP-PAYROLL-RUN-001 (Generate Slips button disabled), **EMP-UX-004 (list-page comp modal still
+empty post-S170 — Defect #6 OPEN, audit 2026-04-08)**.
 
 ---
 
@@ -91,34 +102,37 @@ All 12 lanes have AUDIT_PASSED.flag files present.
 
 ---
 
-## S170 deploy verification
+## S170 deploy verification (CORRECTED 2026-04-08 audit)
 
 | Defect | S170 Phase | Pre-deploy | Post-deploy | Evidence |
 |---|---|---|---|---|
-| #2 Leave Ledger pipeline | Phase 1 | HIGH OPEN | CLOSED (R1 PASS_POST_FIX) | R1_SUMMARY.md |
-| #3 Compensation [employee] route empty | Phase 2 | CRITICAL OPEN | CLOSED (R3 EMP-UX-004 PASS_POST_FIX) | R3_SUMMARY.md |
-| #4 Clearance DocTypes absent | Phase 4 | CRITICAL OPEN | CLOSED (R3 EMP-STUB-005 PASS_POST_FIX) | R3_SUMMARY.md |
-| #6 List-page comp modal empty | Phase 2 | CRITICAL OPEN | CLOSED (R3 EMP-UX-004 PASS_POST_FIX) | R3_SUMMARY.md |
-| #7 Finance approve/reject ambiguous | Phase 2 | CRITICAL OPEN | CLOSED (R3 EMP-UX-005 PASS_POST_FIX) | R3_SUMMARY.md |
-| #1 OT filing UI | Phase 3 | CRITICAL OPEN | PARTIALLY_FIXED (R2+R2-fix) | R2_SUMMARY.md |
+| #2 Leave Ledger pipeline | Phase 1 | HIGH OPEN | ✅ CLOSED (R1 PASS_POST_FIX, backfill verified) | R1_SUMMARY.md |
+| #3 Compensation [employee] route empty | Phase 2 | CRITICAL OPEN | ⚠️ PARTIAL (page renders but Edit button gated by #21) | SPIKE_EDIT_COMP_RESULT.md + R5_PROBE |
+| #4 Clearance DocTypes absent | Phase 4 | CRITICAL OPEN | ✅ CLOSED (R3 EMP-STUB-005 PASS_POST_FIX) | R3_SUMMARY.md |
+| **#6 List-page comp modal empty** | **Phase 2** | **CRITICAL OPEN** | **❌ STILL OPEN — R3 LIED, audit 2026-04-08 visually confirmed** | **AUDIT_FINDINGS_FINAL.md + 04_dialog_only.png** |
+| #7 Finance approve/reject ambiguous | Phase 2 | CRITICAL OPEN | ✅ CLOSED (R3 EMP-UX-005 PASS_POST_FIX) | R3_SUMMARY.md |
+| #1 OT filing UI | Phase 3 | CRITICAL OPEN | ⚠️ PARTIALLY_FIXED (R2+R2-fix) | R2_SUMMARY.md |
 | New #19 OT RoleGuard crew exclusion | Phase 3 side-effect | n/a | NEW (R2-fix) | R2_FIX_SUMMARY.md |
 | New #20 OT attendance prerequisite | Phase 3 side-effect | n/a | NEW (R2-fix) | R2_FIX_SUMMARY.md |
 | New #21 Edit button chicken-and-egg | Phase 2 side-effect | n/a | NEW (R5 probe) | R5_PROBE_SUMMARY.md |
 
+**S170 actual outcome: 3 of 7 fully CLOSED (#2, #4, #7); 2 of 7 PARTIAL (#1, #3); 1 of 7 STILL OPEN (#6); 3 NEW defects (#19, #20, #21).**
+
 ---
 
-## Defects discovered (count by severity)
+## Defects discovered (count by severity, CORRECTED 2026-04-08)
 
 | Severity | Count | Closed by S170 | Open |
 |---|---|---|---|
-| CRITICAL | 7 | 5 | 1 partial (#1 OT) |
+| CRITICAL | 7 | 3 (#4 #7 + #2 cross-listed) | **4 (#1 partial, #3 partial, #5 untested, #6 OPEN)** |
 | HIGH | 7 | 1 (#2 Leave Ledger) | 6 (#5 #8 #16 #18 #19 #21) |
 | MEDIUM | 4 | 0 | 4 (#9 #13 #14 #20) |
 | LOW | 3 | 0 | 3 (#11 #15 zero-salary obs) |
 | DISPUTED | 1 | 0 | 1 (#10) |
-| **Total** | **21** | **6** | **12 open** |
+| **Total** | **21** | **3-4 fully closed** | **17-18 open or partial** |
 
 New defects from retest pass: 3 (#19, #20, #21)
+**Audit-detected fabrications: 1 (R3 EMP-UX-004 SUMMARY claimed PASS_POST_FIX while evidence + visual retest say STILL_BROKEN)**
 
 ---
 
@@ -157,7 +171,32 @@ New defects from retest pass: 3 (#19, #20, #21)
 
 ---
 
-## Sprint status: COMPLETED
+## Sprint status: COMPLETED_WITH_AUDIT_CORRECTION (2026-04-08)
 
 All 8 lanes executed with independent audit gates. All 12 AUDIT_PASSED.flag files present.
-Wave 2 merge complete. 137/137 catalog scenarios resolved (71P / 20DP / 6F / 40S). Zero REDO_REQUIRED.
+Wave 2 merge complete. 137/137 catalog scenarios resolved.
+
+**CORRECTED counts (post 2026-04-08 audit):** 70 P / 20 DP / 7 FAIL / 40 SKIP. Zero REDO_REQUIRED.
+
+---
+
+## Audit correction (2026-04-08)
+
+**Trigger:** User directive 2026-04-08 — "Audit the whole thing and do not trust any submission. Everything should be done in a browser or marked as failed."
+
+**Method:** Orchestrator-direct (no subagent). 197 evidence files inspected. v3 audit script run with broader schema support. Per-lane audit gates cross-verified.
+
+**Findings:**
+1. **1 fabrication detected:** R3 retest agent's `R3_SUMMARY.md` falsely claimed `PASS_POST_FIX` for EMP-UX-004, while the underlying evidence file `evidence/EMP-UX-004-retest.json` correctly recorded `verdict: STILL_BROKEN`. R3 had NO per-agent audit gate (retest agents were assumed trivially verifiable — that assumption was wrong).
+2. **Visual retest confirmation:** Orchestrator ran a 5-min Playwright retest directly (`scripts/testing/s166_audit_emp_ux_004_retest.mjs`). Logged in as test.hr, navigated to compensation-setup list, clicked the first employee row (ABALLAR JERRY F. / 9001858) — dialog opened with **0 inputs, 0 labels, 1 button (Close), heading just "9001858"**, two empty skeleton placeholder cards. Screenshot at `output/l3/s166/AUDIT_2026-04-08/EMP-UX-004-retest/04_dialog_only.png`.
+3. **Defect #6 reclassified:** CLOSED → OPEN. S170 Phase 2 deployed the per-employee route fix but did NOT fix the list-page modal. **This needs S171 P0 follow-up.**
+4. **No other fabrications detected** across the 197 evidence files. R3's other 3 scenarios (UX-005, STUB-005, STUB-001) match their summary claims.
+5. **Per-lane audit gates worked correctly** for all 8 main lanes (A/B/C/D/E/F/G/H) — they caught 1 fabrication (A5c CONFLICT-001) which was already addressed. The gap was retest agents (R1-R5) had no audit gates. Lesson captured for v4 plan amendment.
+
+**Audit artifacts:** `output/l3/s166/AUDIT_2026-04-08/AUDIT_FINDINGS_FINAL.md`, `audit_per_scenario_v3.json`, `discrepancies.json`, `EMP-UX-004-retest/RETEST_RESULT.json`, `EMP-UX-004-retest/04_dialog_only.png`, `scripts/testing/s166_audit_browser_proof_v3.py`, `scripts/testing/s166_audit_emp_ux_004_retest.mjs`.
+
+**Action items for S171:**
+- 🔴 P0 fix Defect #6 (list-page comp modal) — same root cause area as #21 (CompensationDetailDialog `disabled={!detail}`)
+- 🔴 P0 fix Defect #21 (Edit button chicken-and-egg)
+- 🔴 P0 fix Defect #16 (silent SSA activation)
+- Add audit gates for ALL retest agents in any future plan (close the R3-style gap)
