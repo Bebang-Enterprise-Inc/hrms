@@ -1,0 +1,5 @@
+{
+  "scenario_id": "EMP-EXITINTERVIEW-002",
+  "depends_on": "EMP-EXITINTERVIEW-001",
+  "ts": "2026-04-07T14:51:42.202Z"
+}

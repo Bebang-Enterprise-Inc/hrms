@@ -1,0 +1,5 @@
+{
+  "scenario_id": "EMP-SALARY-SETUP-004",
+  "skip_reason": "Formula components rendered read-only in compensation detail dialog. update_compensation API only accepts numeric component keys.",
+  "ts": "2026-04-07T14:50:03.867Z"
+}

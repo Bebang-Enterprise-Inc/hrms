@@ -1,0 +1,21 @@
+{
+  "emp_retest": {
+    "name": "HR-EMP-00046",
+    "bio_id": "9001894",
+    "branch": "ARANETA GATEWAY",
+    "created_at": "2026-04-07T14:49:14.907Z",
+    "cleanup_status": "cleanup_partial",
+    "final_state": {
+      "status": "PARTIAL",
+      "status_after": "Active",
+      "relieving_date_after": "2026-04-07",
+      "pass1_ok": true,
+      "pass2_ok": false,
+      "pass3_ok": true
+    }
+  },
+  "bccs": [],
+  "clearance_name": null,
+  "separation_name": null,
+  "cleanup_status": "pending_cleanup"
+}

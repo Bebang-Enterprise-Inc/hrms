@@ -1,0 +1,1125 @@
+[
+  {
+    "type": "create_employee",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Juan Dela Cruz (L3 2026-04-07 15:22:29 EMP-A)",
+          "bio_id": "9001882",
+          "adms_enrollment": {
+            "enrolled": true,
+            "reason": null,
+            "device_sn": "UDP3252900302"
+          }
+        }
+      }
+    },
+    "source_lane": "lane_a"
+  },
+  {
+    "type": "GET",
+    "scenario": "EMP-ADMS-001",
+    "url": "/api/frappe/api/resource/BEI%20Transfer%20Device%20Command?filters=%5B%5B%22employee%22%2C%22%3D%22%2C%22HR-EMP-00032%22%5D%5D&fields=%5B%22name%22%2C%22command_type%22%2C%22device_sn%22%2C%22status%22%2C%22creation%22%5D&order_by=creation desc&limit_page_length=10",
+    "doctype": "BEI Transfer Device Command",
+    "row_count": 0,
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-001",
+    "phase": "A2",
+    "field": "middle_name",
+    "from": "Dela Cruz",
+    "to": "Dela Cruz",
+    "persisted": true,
+    "ts": "2026-04-07T08:09:58.803Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-002",
+    "phase": "A2",
+    "field": "first_name",
+    "from": "Juan Paolo",
+    "to": "Juan Paolo",
+    "persisted": true,
+    "employee_name_recomputed": true,
+    "ts": "2026-04-07T08:10:12.452Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-003",
+    "phase": "A2",
+    "field": "date_of_birth",
+    "from": "1994-03-21",
+    "to": "1994-03-21",
+    "persisted": true,
+    "ts": "2026-04-07T08:10:25.985Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-004",
+    "phase": "A2",
+    "field": "date_of_birth",
+    "attempted": "2099-12-31",
+    "rejected": true,
+    "errUi": 0,
+    "ts": "2026-04-07T08:10:41.262Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-005",
+    "phase": "A2",
+    "field": "gender",
+    "from": "Female",
+    "to": "Female",
+    "persisted": true,
+    "method": "fill",
+    "ts": "2026-04-07T08:10:54.984Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-PERSONAL-006",
+    "phase": "A2",
+    "field": "middle_name",
+    "attempted": "ShouldNotPersist",
+    "cancelled": true,
+    "persisted": false,
+    "ts": "2026-04-07T08:11:07.550Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-CONTACT-001",
+    "phase": "A2",
+    "fields": [
+      "cell_number",
+      "personal_email"
+    ],
+    "cellOk": true,
+    "emailOk": true,
+    "ts": "2026-04-07T08:11:21.585Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-CONTACT-002",
+    "phase": "A2",
+    "ptbcOk": true,
+    "phoneOk": false,
+    "relOk": true,
+    "ts": "2026-04-07T08:11:35.475Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-CONTACT-003",
+    "phase": "A2",
+    "field": "personal_email",
+    "attempted": "not-an-email",
+    "rejected": true,
+    "before": "juan.test.l3@example.com",
+    "after": "juan.test.l3@example.com",
+    "ts": "2026-04-07T08:11:50.743Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-CONTACT-004",
+    "phase": "A2",
+    "field": "cell_number",
+    "attempted": "abc123",
+    "rejected": true,
+    "before": "09171234567",
+    "after": "09171234567",
+    "ts": "2026-04-07T08:12:06.291Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-ADDRESS-001",
+    "phase": "A2",
+    "field": "current_address",
+    "to": "123 Rizal St, Brgy San Antonio, Pasig City, Metro Manila 1605",
+    "persisted": true,
+    "ts": "2026-04-07T08:12:20.014Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-ADDRESS-002",
+    "phase": "A2",
+    "field": "permanent_address",
+    "to": "456 Mabini Ave, Brgy Poblacion, Tanauan City, Batangas 4232",
+    "persisted": true,
+    "current_unchanged": true,
+    "ts": "2026-04-07T08:12:33.697Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-EMPLOYMENT-001",
+    "phase": "A2",
+    "field": "designation",
+    "from": "Assistant Supervisor",
+    "to": "Store Crew",
+    "persisted": true,
+    "ts": "2026-04-07T08:12:59.297Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-EMPLOYMENT-002",
+    "phase": "A2",
+    "field": "department",
+    "from": "Operations",
+    "to": "Operations",
+    "persisted": true,
+    "ts": "2026-04-07T08:13:13.913Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-EMPLOYMENT-004",
+    "phase": "A2",
+    "field": "employment_type",
+    "from": "Probationary",
+    "to": "Probationary",
+    "persisted": true,
+    "ts": "2026-04-07T08:13:41.827Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-EDIT-EMPLOYMENT-005",
+    "phase": "A2",
+    "field": "designation",
+    "to": "Assistant Supervisor",
+    "persisted_after_reload": true,
+    "ui_contains": true,
+    "ts": "2026-04-07T08:14:11.842Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-001",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "bank_name": {
+      "request_id": "BSCR-2026-00010",
+      "status": "Pending Finance Approval",
+      "new_value": "BDO Unibank"
+    },
+    "bank_ac_no": {
+      "request_id": "BSCR-2026-00011",
+      "status": "Pending Finance Approval",
+      "new_value": "001234567890"
+    },
+    "ts": "2026-04-07T08:26:53.988Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-002",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "bank_ac_no",
+    "request_id": null,
+    "ts": "2026-04-07T08:26:57.171Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-003",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "bank_name",
+    "accepted": false,
+    "request_id": null,
+    "ts": "2026-04-07T08:27:00.395Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-001",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "tin_number",
+    "request_id": "BSCR-2026-00012",
+    "status": "Pending Finance Approval",
+    "new_value": "123-456-789-000",
+    "ts": "2026-04-07T08:27:03.852Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-002",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "sss_number",
+    "request_id": "BSCR-2026-00013",
+    "status": "Pending Finance Approval",
+    "new_value": "12-3456789-0",
+    "ts": "2026-04-07T08:27:07.003Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-003",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "philhealth": {
+      "request_id": "BSCR-2026-00014"
+    },
+    "pagibig": {
+      "request_id": "BSCR-2026-00015"
+    },
+    "ts": "2026-04-07T08:27:10.869Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-004",
+    "phase": "A3",
+    "field": "custom_tin_proof_url",
+    "from": null,
+    "to": null,
+    "file_url": "/files/tin_proof_v1.pdf",
+    "persisted": false,
+    "url_status": 200,
+    "ts": "2026-04-07T08:27:16.222Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-005",
+    "phase": "A3",
+    "field": "custom_tin_proof_url",
+    "from": null,
+    "to": null,
+    "file_url": "/files/tin_proof_v2.pdf",
+    "changed": false,
+    "url_status": 200,
+    "ts": "2026-04-07T08:27:21.152Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-001",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "bank_name": {
+      "request_id": "BSCR-2026-00016",
+      "status": "Pending Finance Approval",
+      "new_value": "BDO Unibank"
+    },
+    "bank_ac_no": {
+      "request_id": "BSCR-2026-00017",
+      "status": "Pending Finance Approval",
+      "new_value": "001234567890"
+    },
+    "ts": "2026-04-07T08:29:54.435Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-002",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "bank_ac_no",
+    "request_id": "BSCR-2026-00017",
+    "status": "Pending Finance Approval",
+    "new_value": "009876543210",
+    "ts": "2026-04-07T08:29:58.936Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-003",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "bank_name",
+    "accepted": true,
+    "request_id": "BSCR-2026-00018",
+    "ts": "2026-04-07T08:30:03.431Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-001",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "tin_number",
+    "request_id": "BSCR-2026-00019",
+    "status": "Pending Finance Approval",
+    "new_value": "123-456-789-000",
+    "ts": "2026-04-07T08:30:08.111Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-002",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "sss_number",
+    "request_id": "BSCR-2026-00020",
+    "status": "Pending Finance Approval",
+    "new_value": "12-3456789-0",
+    "ts": "2026-04-07T08:30:13.131Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-003",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "philhealth": {
+      "request_id": "BSCR-2026-00021"
+    },
+    "pagibig": {
+      "request_id": "BSCR-2026-00022"
+    },
+    "ts": "2026-04-07T08:30:19.610Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-004",
+    "phase": "A3",
+    "field": "custom_tin_proof_url",
+    "from": null,
+    "to": "/files/tin_proof_v1d31dd1.pdf",
+    "file_url": "/files/tin_proof_v1d31dd1.pdf",
+    "persisted": true,
+    "url_status": 200,
+    "ts": "2026-04-07T08:30:26.194Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-005",
+    "phase": "A3",
+    "field": "custom_tin_proof_url",
+    "from": "/files/tin_proof_v1d31dd1.pdf",
+    "to": "/files/tin_proof_v292b001.pdf",
+    "file_url": "/files/tin_proof_v292b001.pdf",
+    "changed": true,
+    "url_status": 200,
+    "ts": "2026-04-07T08:30:32.677Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-PHOTO-001",
+    "phase": "A3",
+    "field": "image",
+    "from": null,
+    "to": "/files/emp_a_photo_v1.png",
+    "file_url": "/files/emp_a_photo_v1.png",
+    "persisted": true,
+    "url_status": 200,
+    "ts": "2026-04-07T08:31:53.593Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-PHOTO-002",
+    "phase": "A3",
+    "field": "image",
+    "from": "/files/emp_a_photo_v1.png",
+    "to": "/files/emp_a_photo_v2.png",
+    "changed": true,
+    "new_url_status": 200,
+    "orphan_behavior": "old_file_orphaned",
+    "ts": "2026-04-07T08:32:00.157Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-001",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "bank_name": {
+      "request_id": "BSCR-2026-00023",
+      "status": "Pending Finance Approval",
+      "new_value": "BDO Unibank"
+    },
+    "bank_ac_no": {
+      "request_id": "BSCR-2026-00024",
+      "status": "Pending Finance Approval",
+      "new_value": "001234567890"
+    },
+    "ts": "2026-04-07T08:32:09.235Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-002",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "bank_ac_no",
+    "request_id": "BSCR-2026-00024",
+    "status": "Pending Finance Approval",
+    "new_value": "009876543210",
+    "ts": "2026-04-07T08:32:13.817Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-BANK-003",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "bank_name",
+    "accepted": true,
+    "request_id": "BSCR-2026-00025",
+    "ts": "2026-04-07T08:32:17.942Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-001",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "tin_number",
+    "request_id": "BSCR-2026-00026",
+    "status": "Pending Finance Approval",
+    "new_value": "123-456-789-000",
+    "ts": "2026-04-07T08:32:22.395Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-002",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "field": "sss_number",
+    "request_id": "BSCR-2026-00027",
+    "status": "Pending Finance Approval",
+    "new_value": "12-3456789-0",
+    "ts": "2026-04-07T08:32:26.898Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-003",
+    "phase": "A3",
+    "routed_via": "submit_sensitive_change_request",
+    "philhealth": {
+      "request_id": "BSCR-2026-00028"
+    },
+    "pagibig": {
+      "request_id": "BSCR-2026-00029"
+    },
+    "ts": "2026-04-07T08:32:33.191Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-004",
+    "phase": "A3",
+    "field": "custom_tin_proof_url",
+    "from": "/files/tin_proof_v292b001.pdf",
+    "to": "/files/tin_proof_v1edba44.pdf",
+    "file_url": "/files/tin_proof_v1edba44.pdf",
+    "persisted": true,
+    "url_status": 200,
+    "ts": "2026-04-07T08:32:39.946Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-GOVID-005",
+    "phase": "A3",
+    "field": "custom_tin_proof_url",
+    "from": "/files/tin_proof_v1edba44.pdf",
+    "to": "/files/tin_proof_v2a744af.pdf",
+    "file_url": "/files/tin_proof_v2a744af.pdf",
+    "changed": true,
+    "url_status": 200,
+    "ts": "2026-04-07T08:32:46.358Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-REGULARIZE-001",
+    "phase": "A4",
+    "routed_via": "regularize_employee",
+    "field": "employment_type",
+    "from": "Probationary",
+    "to": "Regular",
+    "ts": "2026-04-07T08:46:01.469Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-001",
+    "phase": "A4",
+    "routed_via": "update_compensation",
+    "change_type": "Salary",
+    "change_ids": [
+      "BCC-2026-00017"
+    ],
+    "doc_status": "Pending HR Manager",
+    "old_value": 0,
+    "new_value": 25000,
+    "ts": "2026-04-07T08:48:06.700Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-002",
+    "phase": "A4",
+    "routed_via": "update_compensation",
+    "change_type": "Allowance",
+    "change_ids": [
+      "BCC-2026-00018"
+    ],
+    "new_value": 2000,
+    "ts": "2026-04-07T08:48:10.420Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-SETUP-003",
+    "phase": "A4",
+    "routed_via": "update_compensation",
+    "change_type": "Recurring Deduction",
+    "component": "Absence Deduction",
+    "change_ids": [
+      "BCC-2026-00019"
+    ],
+    "ts": "2026-04-07T08:48:14.783Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-001",
+    "phase": "A4",
+    "routed_via": "update_compensation",
+    "change_type": "Salary",
+    "change_ids": [
+      "BCC-2026-00020"
+    ],
+    "old_value": 0,
+    "new_value": 30000,
+    "initial_status": "Pending HR Manager",
+    "ts": "2026-04-07T08:48:20.563Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-002",
+    "phase": "A4",
+    "routed_via": "approve_compensation_change",
+    "change_id": "BCC-2026-00020",
+    "stage1": {
+      "ok": true,
+      "doc_status": "Pending Accounts Manager",
+      "body": {
+        "message": {
+          "status": "success",
+          "message": "Approved by HR Manager. Pending Accounts Manager."
+        }
+      }
+    },
+    "stage2": {
+      "ok": true,
+      "doc_status": "Approved",
+      "body": {
+        "message": {
+          "status": "success",
+          "message": "Compensation change approved"
+        }
+      }
+    },
+    "final_base_salary": null,
+    "ts": "2026-04-07T08:48:40.353Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-003",
+    "phase": "A4",
+    "routed_via": "update_compensation+approve x2",
+    "change_id": "BCC-2026-00021",
+    "component": "bei_meal_allow_monthly",
+    "final_status": "Approved",
+    "ts": "2026-04-07T08:49:00.167Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-004",
+    "phase": "A4",
+    "routed_via": "update_compensation",
+    "change_ids": [
+      "BCC-2026-00022"
+    ],
+    "effective_date": "2026-05-07",
+    "ts": "2026-04-07T08:49:03.784Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-005",
+    "phase": "A4",
+    "routed_via": "approve_compensation_change",
+    "change_id": "BCC-2026-00023",
+    "final_status": "Rejected",
+    "rejection_reason": "L3 S166 A4 EMP-SALARY-CHANGE-005 rejected by test runner to verify reject path",
+    "ts": "2026-04-07T08:49:08.573Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-SALARY-CHANGE-006",
+    "phase": "A4",
+    "routed_via": "update_compensation",
+    "adversarial": [
+      {
+        "case": "negative",
+        "http": 417,
+        "rejected": true,
+        "exc": "ValidationError"
+      },
+      {
+        "case": "zero",
+        "http": 200,
+        "accepted": true,
+        "note": "backend validates <0 only; 0 is currently accepted -- documentation-worthy"
+      },
+      {
+        "case": "non_numeric",
+        "http": 500,
+        "rejected": true,
+        "exc": "ValueError"
+      }
+    ],
+    "ts": "2026-04-07T08:49:12.785Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "scenario": "EMP-REGULARIZE-001",
+    "phase": "A4",
+    "routed_via": "regularize_employee",
+    "field": "employment_type",
+    "from": "Regular",
+    "to": "Regular",
+    "ts": "2026-04-07T08:49:19.574Z",
+    "source_lane": "lane_a"
+  },
+  {
+    "type": "create_employee",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Maria Santos Santos Reyes (L3 2026-04-07 18:57:09 EMP-B)",
+          "bio_id": "9001893",
+          "adms_enrollment": {
+            "enrolled": false,
+            "reason": "NO_DEVICE_FOR_BRANCH",
+            "device_sn": null
+          }
+        }
+      }
+    },
+    "source_lane": "lane_b"
+  },
+  {
+    "type": "cleanup_set_value_relieving_date",
+    "employee": "HR-EMP-00043",
+    "ok": true,
+    "status": 200,
+    "body": "{\"message\":{\"name\":\"HR-EMP-00043\",\"owner\":\"test.hr@bebang.ph\",\"creation\":\"2026-04-07 18:59:38.155227\",\"modified\":\"2026-04-07 19:00:14.032891\",\"modified_by\":\"test.hr@bebang.ph\",\"docstatus\":0,\"idx\":0,\"employee\":\"HR-EMP-00043\",\"naming_series\":\"HR-EMP-\",\"first_name\":\"Maria\",\"middle_name\":\"Santos\",\"last_",
+    "source_lane": "lane_b"
+  },
+  {
+    "type": "cleanup_set_value_status_left",
+    "employee": "HR-EMP-00043",
+    "ok": true,
+    "status": 200,
+    "body": "{\"message\":{\"name\":\"HR-EMP-00043\",\"owner\":\"test.hr@bebang.ph\",\"creation\":\"2026-04-07 18:59:38.155227\",\"modified\":\"2026-04-07 19:00:15.471404\",\"modified_by\":\"test.hr@bebang.ph\",\"docstatus\":0,\"idx\":0,\"employee\":\"HR-EMP-00043\",\"naming_series\":\"HR-EMP-\",\"first_name\":\"Maria\",\"middle_name\":\"Santos\",\"last_",
+    "source_lane": "lane_b"
+  },
+  {
+    "scenario": "EMP-CREATE-003",
+    "type": "create_employee",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Carlos Lane-C (L3 2026-04-07 15:42:30 EMP-C1)",
+          "bio_id": "9001887",
+          "adms_enrollment": {
+            "enrolled": true,
+            "reason": null,
+            "device_sn": "UDP3252900302"
+          }
+        }
+      }
+    },
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-CREATE-005",
+    "type": "create_employee",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Cristina Lane-C (L3 2026-04-07 15:42:49 EMP-C2)",
+          "bio_id": "9001888",
+          "adms_enrollment": {
+            "enrolled": true,
+            "reason": null,
+            "device_sn": "UDP3252900302"
+          }
+        }
+      }
+    },
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-CREATE-006",
+    "type": "create_employee_attempt_invalid",
+    "status": 417,
+    "response": {
+      "exception": "frappe.exceptions.ValidationError: date_of_birth must be in the past",
+      "exc_type": "ValidationError",
+      "_exc_source": "hrms (app)",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 120, in application\\n    response = frappe.api.handle(request)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/__init__.py\\\", line 52, in handle\\n    data = endpoint(**arguments)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/v1.py\\\", line 40, in handle_rpc_call\\n    return frappe.handler.handle()\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 53, in handle\\n    data = execute_cmd(cmd)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 86, in execute_cmd\\n    return frappe.call(method, **frappe.form_dict)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 1764, in call\\n    return fn(*args, **newargs)\\n           ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/utils/typing_validations.py\\\", line 32, in wrapper\\n    return func(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/hrms/hrms/api/employee_create.py\\\", line 151, in create_employee_direct\\n    frappe.throw(_(\\\"date_of_birth must be in the past\\\"))\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 619, in throw\\n    msgprint(\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 584, in msgprint\\n    _raise_exception()\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 535, in _raise_exception\\n    raise exc\\nfrappe.exceptions.ValidationError: date_of_birth must be in the past\\n\"]",
+      "_server_messages": "[\"{\\\"message\\\": \\\"date_of_birth must be in the past\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"e8490297f4055e47931da1c462e95f18042f8a95f34b85b7e6b59737\\\"}\"]"
+    },
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-CREATE-007",
+    "type": "create_employee_invalid_gender",
+    "status": 417,
+    "response": {
+      "exception": "frappe.exceptions.ValidationError: Failed to get method for command hrms.api.employee_management.create_employee_direct with No module named 'hrms.api.employee_management'",
+      "exc_type": "ValidationError",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 75, in execute_cmd\\n    method = get_attr(cmd)\\n             ^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 293, in get_attr\\n    method = frappe.get_attr(cmd)\\n             ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 1754, in get_attr\\n    return getattr(get_module(modulename), methodname)\\n                   ^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 1464, in get_module\\n    return importlib.import_module(modulename)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"/usr/local/lib/python3.11/importlib/__init__.py\\\", line 126, in import_module\\n    return _bootstrap._gcd_import(name[level:], package, level)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"<frozen importlib._bootstrap>\\\", line 1204, in _gcd_import\\n  File \\\"<frozen importlib._bootstrap>\\\", line 1176, in _find_and_load\\n  File \\\"<frozen importlib._bootstrap>\\\", line 1140, in _find_and_load_unlocked\\nModuleNotFoundError: No module named 'hrms.api.employee_management'\\n\\nDuring handling of the above exception, another exception occurred:\\n\\nTraceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 120, in application\\n    response = frappe.api.handle(request)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/__init__.py\\\", line 52, in handle\\n    data = endpoint(**arguments)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/v1.py\\\", line 40, in handle_rpc_call\\n    return frappe.handler.handle()\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 53, in handle\\n    data = execute_cmd(cmd)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 77, in execute_cmd\\n    frappe.throw(_(\\\"Failed to get method for command {0} with {1}\\\").format(cmd, str(e)))\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 619, in throw\\n    msgprint(\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 584, in msgprint\\n    _raise_exception()\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 535, in _raise_exception\\n    raise exc\\nfrappe.exceptions.ValidationError: Failed to get method for command hrms.api.employee_management.create_employee_direct with No module named 'hrms.api.employee_management'\\n\"]",
+      "_server_messages": "[\"{\\\"message\\\": \\\"Failed to get method for command hrms.api.employee_management.create_employee_direct with No module named 'hrms.api.employee_management'\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"75cc5b67af25958ecf31cbe09e25458a7ed7db8ccee54374b8c4ba66\\\"}\"]"
+    },
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-CREATE-010",
+    "type": "create_employee",
+    "tag": "EMP-C3",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Caleb Lane-C (L3 2026-04-07 15:43:35 EMP-C3)",
+          "bio_id": "9001889",
+          "adms_enrollment": {
+            "enrolled": true,
+            "reason": null,
+            "device_sn": "UDP3252900302"
+          }
+        }
+      }
+    },
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario": "EMP-CREATE-010",
+    "type": "create_employee",
+    "tag": "EMP-C4",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Camille Lane-C (L3 2026-04-07 15:43:53 EMP-C4)",
+          "bio_id": "9001890",
+          "adms_enrollment": {
+            "enrolled": true,
+            "reason": null,
+            "device_sn": "UDP3252900302"
+          }
+        }
+      }
+    },
+    "source_lane": "lane_c"
+  },
+  {
+    "scenario_id": "EMP-ATTENDANCE-001",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.attendance_correction.submit_correction",
+    "method": "POST",
+    "status": 417,
+    "postData": "------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"attendance_date\"\r\n\r\n2026-04-05\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"correction_type\"\r\n\r\nMissing Punch In\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"actual_time\"\r\n\r\n08:00\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z\r\nContent-Disposition: form-data; name=\"reason\"\r\n\r\nL3 attendance correction \u00e2\u20ac\u201d forgot to punch in (L3 2026-04-07 13:01)\r\n------WebKitFormBoundaryQxVWKszDTLSk6j3Z--\r\n",
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-LEAVE-002",
+    "endpoint": "/api/frappe/api/method/hrms.api.leave_dashboard.bulk_action",
+    "method": "POST",
+    "payload": "{\"leave_ids\":[\"HR-LAP-2026-00118\"],\"status\":\"Approved\"}",
+    "status": 200,
+    "fix_iteration": 1,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-LEAVE-004",
+    "endpoint": "/api/frappe/api/method/hrms.api.leave_dashboard.bulk_action",
+    "method": "POST",
+    "payload": "{\"leave_ids\":[\"HR-LAP-2026-00119\"],\"status\":\"Rejected\"}",
+    "status": 200,
+    "fix_iteration": 1,
+    "source_lane": "lane_d"
+  },
+  {
+    "scenario_id": "EMP-CREATE-009",
+    "role": "test.crew1",
+    "endpoint": "hrms.api.employee_create.create_employee_direct",
+    "method": "POST",
+    "status": 500,
+    "ok": false,
+    "body_head": "{\"exception\":\"TypeError: create_employee_direct() missing 2 required positional arguments: 'branch' and 'company'\",\"exc_type\":\"TypeError\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 1764, in call\\\\n    return fn(*args, **newargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/utils/typing_validations.py\\\\\\\", line 32, in wrapper\\\\n    return func(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\nTypeError: create_employee_direct() missing 2 required positional arguments: 'branch' and 'company'\\\\n\\\"]\"}",
+    "blocked": false,
+    "ts": "2026-04-07T04:01:26.109Z",
+    "source_lane": "lane_e"
+  },
+  {
+    "scenario_id": "EMP-RBAC-002",
+    "role": "test.crew1",
+    "endpoint": "hrms.api.employee_create.create_employee_direct",
+    "method": "POST",
+    "status": 500,
+    "ok": false,
+    "body_head": "{\"exception\":\"TypeError: create_employee_direct() missing 2 required positional arguments: 'branch' and 'company'\",\"exc_type\":\"TypeError\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 1764, in call\\\\n    return fn(*args, **newargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/utils/typing_validations.py\\\\\\\", line 32, in wrapper\\\\n    return func(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\nTypeError: create_employee_direct() missing 2 required positional arguments: 'branch' and 'company'\\\\n\\\"]\"}",
+    "blocked": false,
+    "ts": "2026-04-07T04:01:27.796Z",
+    "source_lane": "lane_e"
+  },
+  {
+    "scenario_id": "EMP-RBAC-003",
+    "role": "test.crew1",
+    "endpoint": "frappe.client.set_value",
+    "method": "POST",
+    "target": "TEST-CREW-001",
+    "status": 403,
+    "blocked": true,
+    "ts": "2026-04-07T04:01:29.556Z",
+    "source_lane": "lane_e"
+  },
+  {
+    "scenario_id": "EMP-CREATE-009_retry",
+    "role": "test.crew1",
+    "endpoint": "hrms.api.employee_create.create_employee_direct",
+    "method": "POST",
+    "status": 403,
+    "ok": false,
+    "exception": "frappe.exceptions.PermissionError (not whitelisted)",
+    "blocked": true,
+    "ts": "2026-04-07T04:02:47.173Z",
+    "note": "follow-up with complete payload \u00e2\u20ac\u201d confirms RBAC enforcement",
+    "source_lane": "lane_e"
+  },
+  {
+    "type": "create_employee",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Juan Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+          "bio_id": "9001882",
+          "adms_enrollment": {
+            "enrolled": true,
+            "reason": null,
+            "device_sn": "UDP3251600245"
+          }
+        }
+      }
+    },
+    "candidate_idx": 0,
+    "source_lane": "lane_h"
+  },
+  {
+    "type": "create_employee",
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "response": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Maria Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+          "bio_id": "9001883",
+          "adms_enrollment": {
+            "enrolled": false,
+            "reason": "NO_DEVICE_FOR_BRANCH",
+            "device_sn": null
+          }
+        }
+      }
+    },
+    "candidate_idx": 1,
+    "source_lane": "lane_h"
+  },
+  {
+    "type": "clear_bio_id",
+    "employee": "HR-EMP-00030",
+    "ok": true,
+    "status": 200,
+    "source_lane": "lane_h"
+  },
+  {
+    "type": "soft_delete_status",
+    "employee": "HR-EMP-00030",
+    "ok": false,
+    "status": 417,
+    "response": {
+      "exception": "frappe.exceptions.ValidationError: Please enter relieving date.",
+      "exc_type": "ValidationError",
+      "_exc_source": "erpnext (app)",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 120, in application\\n    response = frappe.api.handle(request)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/__init__.py\\\", line 52, in handle\\n    data = endpoint(**arguments)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/v1.py\\\", line 40, in handle_rpc_call\\n    return frappe.handler.handle()\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 53, in handle\\n    data = execute_cmd(cmd)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 86, in execute_cmd\\n    return frappe.call(method, **frappe.form_dict)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 1764, in call\\n    return fn(*args, **newargs)\\n           ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/utils/typing_validations.py\\\", line 32, in wrapper\\n    return func(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/client.py\\\", line 205, in set_value\\n    doc.save()\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 378, in save\\n    return self._save(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 414, in _save\\n    self.run_before_save_methods()\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1140, in run_before_save_methods\\n    self.run_method(\\\"validate\\\")\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1011, in run_method\\n    out = Document.hook(fn)(self, *args, **kwargs)\\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1371, in composer\\n    return composed(self, method, *args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1353, in runner\\n    add_to_return_value(self, fn(self, *args, **kwargs))\\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1008, in fn\\n    return method_object(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/erpnext/erpnext/setup/doctype/employee/employee.py\\\", line 43, in validate\\n    self.validate_status()\\n  File \\\"apps/erpnext/erpnext/setup/doctype/employee/employee.py\\\", line 185, in validate_status\\n    throw(_(\\\"Please enter relieving date.\\\"))\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 619, in throw\\n    msgprint(\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 584, in msgprint\\n    _raise_exception()\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 535, in _raise_exception\\n    raise exc\\nfrappe.exceptions.ValidationError: Please enter relieving date.\\n\"]",
+      "_server_messages": "[\"{\\\"message\\\": \\\"Please enter relieving date.\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"42ccb661cb379a6da634a72086229567b8189964f577eedaa1d276be\\\"}\"]"
+    },
+    "source_lane": "lane_h"
+  },
+  {
+    "type": "soft_delete_relieving",
+    "employee": "HR-EMP-00030",
+    "ok": true,
+    "status": 200,
+    "source_lane": "lane_h"
+  },
+  {
+    "type": "clear_bio_id",
+    "employee": "HR-EMP-00031",
+    "ok": true,
+    "status": 200,
+    "source_lane": "lane_h"
+  },
+  {
+    "type": "soft_delete_status",
+    "employee": "HR-EMP-00031",
+    "ok": false,
+    "status": 417,
+    "response": {
+      "exception": "frappe.exceptions.ValidationError: Please enter relieving date.",
+      "exc_type": "ValidationError",
+      "_exc_source": "erpnext (app)",
+      "exc": "[\"Traceback (most recent call last):\\n  File \\\"apps/frappe/frappe/app.py\\\", line 120, in application\\n    response = frappe.api.handle(request)\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/__init__.py\\\", line 52, in handle\\n    data = endpoint(**arguments)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/api/v1.py\\\", line 40, in handle_rpc_call\\n    return frappe.handler.handle()\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 53, in handle\\n    data = execute_cmd(cmd)\\n           ^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/handler.py\\\", line 86, in execute_cmd\\n    return frappe.call(method, **frappe.form_dict)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 1764, in call\\n    return fn(*args, **newargs)\\n           ^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/utils/typing_validations.py\\\", line 32, in wrapper\\n    return func(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/client.py\\\", line 205, in set_value\\n    doc.save()\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 378, in save\\n    return self._save(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 414, in _save\\n    self.run_before_save_methods()\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1140, in run_before_save_methods\\n    self.run_method(\\\"validate\\\")\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1011, in run_method\\n    out = Document.hook(fn)(self, *args, **kwargs)\\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1371, in composer\\n    return composed(self, method, *args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1353, in runner\\n    add_to_return_value(self, fn(self, *args, **kwargs))\\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/frappe/frappe/model/document.py\\\", line 1008, in fn\\n    return method_object(*args, **kwargs)\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"apps/erpnext/erpnext/setup/doctype/employee/employee.py\\\", line 43, in validate\\n    self.validate_status()\\n  File \\\"apps/erpnext/erpnext/setup/doctype/employee/employee.py\\\", line 185, in validate_status\\n    throw(_(\\\"Please enter relieving date.\\\"))\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 619, in throw\\n    msgprint(\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 584, in msgprint\\n    _raise_exception()\\n  File \\\"apps/frappe/frappe/__init__.py\\\", line 535, in _raise_exception\\n    raise exc\\nfrappe.exceptions.ValidationError: Please enter relieving date.\\n\"]",
+      "_server_messages": "[\"{\\\"message\\\": \\\"Please enter relieving date.\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"0f0f9ff83db69a81ded0fa320bc3434222eb290d453baf4b0e3b7264\\\"}\"]"
+    },
+    "source_lane": "lane_h"
+  },
+  {
+    "type": "soft_delete_relieving",
+    "employee": "HR-EMP-00031",
+    "ok": true,
+    "status": 200,
+    "source_lane": "lane_h"
+  },
+  {
+    "approach": "PUT_resource_minimal",
+    "name": "HR-EMP-00030",
+    "status": 200,
+    "ok": true,
+    "resp": {
+      "data": {
+        "name": "HR-EMP-00030",
+        "owner": "test.hr@bebang.ph",
+        "creation": "2026-04-07 12:04:38.917421",
+        "modified": "2026-04-07 12:08:39.376508",
+        "modified_by": "test.hr@bebang.ph",
+        "docstatus": 0,
+        "idx": 0,
+        "employee": "HR-EMP-00030",
+        "naming_series": "HR-EMP-",
+        "first_name": "Juan",
+        "middle_name": "",
+        "last_name": "Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+        "employee_name": "Juan Dela Cruz (L3 2026-04-07 12:04:20 NO_DEV)",
+        "gender": "Male",
+        "date_of_birth": "1995-06-15",
+        "date_of_joining": "2026-04-07",
+        "custom_tin_verified": 0,
+        "custom_sss_verified": 0,
+        "custom_philhealth_verified": 0,
+        "custom_pagibig_verified": 0,
+        "custom_enrichment_status": "Not Started",
+        "status": "Left",
+        "create_user_permission": 1,
+        "company": "Bebang Enterprise Inc.",
+        "department": "Accounts - BSC",
+        "employment_type": "Regular",
+        "schedule_type": "",
+        "designation": "Cashier",
+        "branch": "BRITTANY OFFICE",
+        "notice_number_of_days": 0,
+        "custom_verification_status": "Pending",
+        "custom_issue_type": "",
+        "prefered_contact_email": "",
+        "unsubscribed": 0,
+        "current_accommodation_type": "",
+        "permanent_accommodation_type": "",
+        "ctc": 0,
+        "bei_comm_allow_monthly": 0,
+        "bei_deminimis_monthly": 0,
+        "bei_honorarium_monthly": 0,
+        "bei_meal_allow_monthly": 0,
+        "bei_gasoline_allow_monthly": 0,
+        "bei_other_fixed_monthly": 0,
+        "salary_mode": "",
+        "marital_status": "",
+        "blood_group": "",
+        "relieving_date": "2026-04-07",
+        "leave_encashed": "",
+        "lft": 57,
+        "rgt": 58,
+        "old_parent": "",
+        "doctype": "Employee",
+        "education": [],
+        "external_work_history": [],
+        "internal_work_history": []
+      }
+    },
+    "source_lane": "lane_h"
+  },
+  {
+    "approach": "PUT_resource_minimal",
+    "name": "HR-EMP-00031",
+    "status": 200,
+    "ok": true,
+    "resp": {
+      "data": {
+        "name": "HR-EMP-00031",
+        "owner": "test.hr@bebang.ph",
+        "creation": "2026-04-07 12:04:59.587271",
+        "modified": "2026-04-07 12:08:42.011405",
+        "modified_by": "test.hr@bebang.ph",
+        "docstatus": 0,
+        "idx": 0,
+        "employee": "HR-EMP-00031",
+        "naming_series": "HR-EMP-",
+        "first_name": "Maria",
+        "middle_name": "",
+        "last_name": "Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+        "employee_name": "Maria Dela Cruz (L3 2026-04-07 12:04:42 NO_DEV)",
+        "gender": "Male",
+        "date_of_birth": "1995-06-15",
+        "date_of_joining": "2026-04-07",
+        "custom_tin_verified": 0,
+        "custom_sss_verified": 0,
+        "custom_philhealth_verified": 0,
+        "custom_pagibig_verified": 0,
+        "custom_enrichment_status": "Not Started",
+        "status": "Left",
+        "create_user_permission": 1,
+        "company": "Bebang Enterprise Inc.",
+        "department": "Accounts - BSC",
+        "employment_type": "Regular",
+        "schedule_type": "",
+        "designation": "Cashier",
+        "branch": "CAPITAL HOUSE",
+        "notice_number_of_days": 0,
+        "custom_verification_status": "Pending",
+        "custom_issue_type": "",
+        "prefered_contact_email": "",
+        "unsubscribed": 0,
+        "current_accommodation_type": "",
+        "permanent_accommodation_type": "",
+        "ctc": 0,
+        "bei_comm_allow_monthly": 0,
+        "bei_deminimis_monthly": 0,
+        "bei_honorarium_monthly": 0,
+        "bei_meal_allow_monthly": 0,
+        "bei_gasoline_allow_monthly": 0,
+        "bei_other_fixed_monthly": 0,
+        "salary_mode": "",
+        "marital_status": "",
+        "blood_group": "",
+        "relieving_date": "2026-04-07",
+        "leave_encashed": "",
+        "lft": 59,
+        "rgt": 60,
+        "old_parent": "",
+        "doctype": "Employee",
+        "education": [],
+        "external_work_history": [],
+        "internal_work_history": []
+      }
+    },
+    "source_lane": "lane_h"
+  }
+]

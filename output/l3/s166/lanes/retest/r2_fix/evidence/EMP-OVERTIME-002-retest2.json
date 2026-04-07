@@ -1,0 +1,7 @@
+{
+  "scenario_id": "EMP-OVERTIME-002",
+  "ts": "2026-04-07T22:57:00+08:00",
+  "passed": false,
+  "verdict": "FAIL",
+  "notes": "SKIP_DEPENDS: OT-001 did not produce a docname"
+}

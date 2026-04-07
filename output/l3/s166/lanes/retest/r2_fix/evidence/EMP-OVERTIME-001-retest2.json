@@ -1,0 +1,50 @@
+{
+  "scenario_id": "EMP-OVERTIME-001",
+  "ts": "2026-04-07T22:56:49+08:00",
+  "filing_role": "test.hr",
+  "filing_email": "test.hr@bebang.ph",
+  "final_url": "https://my.bebang.ph/dashboard/hr/overtime/apply",
+  "is_restricted": false,
+  "has_form": true,
+  "form_filled": true,
+  "submit_attempted": true,
+  "toasts": [
+    "Failed to load resource: the server responded with a status of 417 ()",
+    "{\"exception\":\"frappe.exceptions.ValidationError: No attendance record found on 2026-04-06. Overtime can only be filed for days you actually worked.\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"hrms (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 1764, in call\\\\n    return fn(*args, **newargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/utils/typing_validations.py\\\\\\\", line 32, in wrapper\\\\n    return func(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/hrms/hrms/api/overtime_request.py\\\\\\\", line 94, in create_overtime_request\\\\n    frappe.throw(\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 619, in throw\\\\n    msgprint(\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 584, in msgprint\\\\n    _raise_exception()\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 535, in _raise_exception\\\\n    raise exc\\\\nfrappe.exceptions.ValidationError: No attendance record found on 2026-04-06. Overtime can only be filed for days you actually worked.\\\\n\\\"]\",\"_server_messages\":\"[\\\"{\\\\\\\"message\\\\\\\": \\\\\\\"No attendance record found on 2026-04-06. Overtime can only be filed for days you actually worked.\\\\\\\", \\\\\\\"title\\\\\\\": \\\\\\\"Message\\\\\\\", \\\\\\\"indicator\\\\\\\": \\\\\\\"red\\\\\\\", \\\\\\\"raise_exception\\\\\\\": 1, \\\\\\\"__frappe_exc_id\\\\\\\": \\\\\\\"92dc7a729569148c3742635c801546f957bb5358f283ad3d3417d73c\\\\\\\"}\\\"]\"}"
+  ],
+  "ot_name": null,
+  "api_mutations": [
+    {
+      "url": "https://hq.bebang.ph/api/method/frappe.auth.get_logged_user",
+      "method": "GET",
+      "status": 403,
+      "postData": "",
+      "response": "{\"exception\":\"frappe.exceptions.PermissionError: <details><summary>You are not permitted to access this resource. Login to access</summary>Function <strong>frappe.auth.get_logged_user</strong> is not whitelisted.</details>\",\"exc_type\":\"PermissionError\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 5"
+    },
+    {
+      "url": "https://hq.bebang.ph/api/method/login",
+      "method": "POST",
+      "status": 200,
+      "postData": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+      "response": "{\"message\":\"Logged In\",\"home_page\":\"/app\",\"full_name\":\"Test HR\"}"
+    },
+    {
+      "url": "https://my.bebang.ph/api/frappe/api/method/frappe.auth.get_logged_user",
+      "method": "GET",
+      "status": 200,
+      "postData": "",
+      "response": "{\"message\":\"test.hr@bebang.ph\"}"
+    },
+    {
+      "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.overtime_request.create_overtime_request",
+      "method": "POST",
+      "status": 417,
+      "postData": "{\"attendance_date\":\"2026-04-06\",\"overtime_hours\":2,\"reason_category\":\"Operational Demand\",\"overtime_reason\":\"L3 retest scenario — operational demand test\"}",
+      "response": "{\"exception\":\"frappe.exceptions.ValidationError: No attendance record found on 2026-04-06. Overtime can only be filed for days you actually worked.\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"hrms (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n   "
+    }
+  ],
+  "verification": null,
+  "passed": false,
+  "verdict": "FAIL",
+  "notes": "Submit error: Failed to load resource: the server responded with a status of 417 (); {\"exception\":\"frappe.exceptions.ValidationError: No attendance record found on 2026-04-06. Overtime can only be filed for days you actually worked.\",\"exc_type\":\"ValidationError\",\"_exc_source\":\"hrms (app)\",\"exc\":\"[\\\"Traceback (most recent call last):\\\\n  File \\\\\\\"apps/frappe/frappe/app.py\\\\\\\", line 120, in application\\\\n    response = frappe.api.handle(request)\\\\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/__init__.py\\\\\\\", line 52, in handle\\\\n    data = endpoint(**arguments)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/api/v1.py\\\\\\\", line 40, in handle_rpc_call\\\\n    return frappe.handler.handle()\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 53, in handle\\\\n    data = execute_cmd(cmd)\\\\n           ^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/handler.py\\\\\\\", line 86, in execute_cmd\\\\n    return frappe.call(method, **frappe.form_dict)\\\\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 1764, in call\\\\n    return fn(*args, **newargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/frappe/frappe/utils/typing_validations.py\\\\\\\", line 32, in wrapper\\\\n    return func(*args, **kwargs)\\\\n           ^^^^^^^^^^^^^^^^^^^^^\\\\n  File \\\\\\\"apps/hrms/hrms/api/overtime_request.py\\\\\\\", line 94, in create_overtime_request\\\\n    frappe.throw(\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 619, in throw\\\\n    msgprint(\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 584, in msgprint\\\\n    _raise_exception()\\\\n  File \\\\\\\"apps/frappe/frappe/__init__.py\\\\\\\", line 535, in _raise_exception\\\\n    raise exc\\\\nfrappe.exceptions.ValidationError: No attendance record found on 2026-04-06. Overtime can only be filed for days you actually worked.\\\\n\\\"]\",\"_server_messages\":\"[\\\"{\\\\\\\"message\\\\\\\": \\\\\\\"No attendance record found on 2026-04-06. Overtime can only be filed for days you actually worked.\\\\\\\", \\\\\\\"title\\\\\\\": \\\\\\\"Message\\\\\\\", \\\\\\\"indicator\\\\\\\": \\\\\\\"red\\\\\\\", \\\\\\\"raise_exception\\\\\\\": 1, \\\\\\\"__frappe_exc_id\\\\\\\": \\\\\\\"92dc7a729569148c3742635c801546f957bb5358f283ad3d3417d73c\\\\\\\"}\\\"]\"}"
+}

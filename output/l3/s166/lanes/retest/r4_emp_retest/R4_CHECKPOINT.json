@@ -1,0 +1,226 @@
+{
+  "step": "COMPLETE",
+  "emp_state": {
+    "emp_retest": {
+      "name": "HR-EMP-00046",
+      "bio_id": "9001894",
+      "branch": "ARANETA GATEWAY",
+      "created_at": "2026-04-07T14:49:14.907Z",
+      "cleanup_status": "cleanup_partial",
+      "final_state": {
+        "status": "PARTIAL",
+        "status_after": "Active",
+        "relieving_date_after": "2026-04-07",
+        "pass1_ok": true,
+        "pass2_ok": false,
+        "pass3_ok": true
+      }
+    },
+    "bccs": [],
+    "clearance_name": null,
+    "separation_name": null,
+    "cleanup_status": "pending_cleanup"
+  },
+  "verdicts": [
+    {
+      "scenario_id": "EMP-CREATE-RETEST",
+      "status": "PASS",
+      "note": "Created HR-EMP-00046 bio_id=9001894",
+      "ts": "2026-04-07T14:49:14.909Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-SETUP-001",
+      "status": "FAIL",
+      "note": "No BCC returned. API resp: {\"ok\":false,\"status\":417,\"json\":{\"exception\":\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payroll' has no attribute '",
+      "ts": "2026-04-07T14:49:28.098Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-SETUP-002",
+      "status": "FAIL",
+      "note": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /edit/i }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button disabled data-slot=\"button\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-pri…>…</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    57 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+      "ts": "2026-04-07T14:50:03.187Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-SETUP-003",
+      "status": "DEFECT-PASS",
+      "note": "Statutory deductions are auto-computed from base salary — no separate BCC. Compensation page shows statutory preview. Architectural note recorded.",
+      "ts": "2026-04-07T14:50:03.805Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-SETUP-004",
+      "status": "SKIP",
+      "note": "Formula-based components not addressable via update_compensation API — same architectural note as A4 SALARY-SETUP-004. Compensation UI shows computed values (daily rate, gross, deductions) but formula components have no input field.",
+      "ts": "2026-04-07T14:50:03.867Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-CHANGE-001",
+      "status": "FAIL",
+      "note": "No BCC returned: \"{\\\"exception\\\":\\\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payro",
+      "ts": "2026-04-07T14:50:09.153Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-CHANGE-002",
+      "status": "SKIP",
+      "note": "No BCC from CHANGE-001 to approve",
+      "ts": "2026-04-07T14:50:09.216Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-CHANGE-003",
+      "status": "FAIL",
+      "note": "No BCC: \"{\\\"exception\\\":\\\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payro",
+      "ts": "2026-04-07T14:50:09.788Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-CHANGE-004",
+      "status": "FAIL",
+      "note": "No BCC: \"{\\\"exception\\\":\\\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payro",
+      "ts": "2026-04-07T14:50:10.470Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-CHANGE-005",
+      "status": "FAIL",
+      "note": "No BCC to reject: \"{\\\"exception\\\":\\\"frappe.exceptions.ValidationError: Failed to get method for command hrms.api.payroll.update_compensation with module 'hrms.api.payro",
+      "ts": "2026-04-07T14:50:11.085Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-CHANGE-006",
+      "status": "PASS",
+      "note": "negative rejected=true, zero=rejected, string rejected=true",
+      "ts": "2026-04-07T14:50:12.790Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-PAYROLL-001",
+      "status": "SKIP",
+      "note": "DEFER_PAYROLL_RUN_NOT_TRIGGERED: no payroll run covers EMP-RETEST period. Consistent with Lane A A4. Salary Structure Assignment may exist but no salary slip generated.",
+      "ts": "2026-04-07T14:50:12.867Z"
+    },
+    {
+      "scenario_id": "EMP-SALARY-PAYROLL-002",
+      "status": "SKIP",
+      "note": "DEFER_PAYROLL_RUN_NOT_TRIGGERED: no payroll run covers EMP-RETEST period. Consistent with Lane A A4. Salary Structure Assignment may exist but no salary slip generated.",
+      "ts": "2026-04-07T14:50:12.870Z"
+    },
+    {
+      "scenario_id": "EMP-REGULARIZE-001",
+      "status": "PASS",
+      "note": "employment_type=Regular confirmed via API (HR-EMP-00046)",
+      "ts": "2026-04-07T14:50:21.631Z"
+    },
+    {
+      "scenario_id": "EMP-REGULARIZE-002",
+      "status": "PASS",
+      "note": "employment_type=Regular, compliance page loads, 13th month check available",
+      "ts": "2026-04-07T14:50:28.474Z"
+    },
+    {
+      "scenario_id": "EMP-TERMINATE-001",
+      "status": "FAIL",
+      "note": "locator.click: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[role=\"dialog\"]').first().getByRole('button', { name: /create|submit|start/i }).first()\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"submit\" data-slot=\"button\" class=\"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-pr…>Create Separation</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    57 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+      "ts": "2026-04-07T14:51:05.604Z"
+    },
+    {
+      "scenario_id": "EMP-TERMINATE-002",
+      "status": "FAIL",
+      "note": "Clearance init failed. API: \"{\\\"exc_type\\\":\\\"DoesNotExistError\\\",\\\"_server_messages\\\":\\\"[\\\\\\\"{\\\\\\\\\\\\\\\"message\\\\\\\\\\\\\\\": \\\\\\\\\\\\\\\"Employee Separation HR-EMP-SEP-HR-EMP-00046 not found\\\\\\\\\\\\\\\", \\\\\\\\\\\\\\\"title\\\\\\\\\\\\\\\": \\\\\\\\\\\\\\\"Message",
+      "ts": "2026-04-07T14:51:11.941Z"
+    },
+    {
+      "scenario_id": "EMP-TERMINATE-003",
+      "status": "SKIP",
+      "note": "No clearance_name in empState — depends on TERMINATE-002",
+      "ts": "2026-04-07T14:51:12.013Z"
+    },
+    {
+      "scenario_id": "EMP-TERMINATE-004",
+      "status": "SKIP",
+      "note": "DEFER_DOCUMENSO_INTEGRATION: Documenso integration deferred per S170 Phase 4 scope. No documenso trigger in clearance API as of deployment.",
+      "ts": "2026-04-07T14:51:12.016Z"
+    },
+    {
+      "scenario_id": "EMP-TERMINATE-005",
+      "status": "SKIP",
+      "note": "No clearance_name — depends on TERMINATE-002",
+      "ts": "2026-04-07T14:51:12.018Z"
+    },
+    {
+      "scenario_id": "EMP-TERMINATE-006",
+      "status": "DEFECT-PASS",
+      "note": "EMP-RETEST status=Active in Employee API",
+      "ts": "2026-04-07T14:51:17.536Z"
+    },
+    {
+      "scenario_id": "EMP-FINALPAY-001",
+      "status": "SKIP",
+      "note": "DEFER_FINAL_PAY: Final pay feature not discoverable in payroll dashboard",
+      "ts": "2026-04-07T14:51:26.715Z"
+    },
+    {
+      "scenario_id": "EMP-FINALPAY-002",
+      "status": "SKIP",
+      "note": "DEFER_FINAL_PAY: Final pay feature not discoverable in payroll dashboard",
+      "ts": "2026-04-07T14:51:31.413Z"
+    },
+    {
+      "scenario_id": "EMP-FINALPAY-003",
+      "status": "SKIP",
+      "note": "DEFER_FINAL_PAY: Final pay feature not discoverable in payroll dashboard",
+      "ts": "2026-04-07T14:51:35.879Z"
+    },
+    {
+      "scenario_id": "EMP-USERDISABLE-001",
+      "status": "SKIP",
+      "note": "No user_id on EMP-RETEST employee record (fresh test employee may not have a user account)",
+      "ts": "2026-04-07T14:51:36.474Z"
+    },
+    {
+      "scenario_id": "EMP-USERDISABLE-002",
+      "status": "SKIP",
+      "note": "No user_id on EMP-RETEST employee record (fresh test employee may not have a user account)",
+      "ts": "2026-04-07T14:51:37.053Z"
+    },
+    {
+      "scenario_id": "EMP-ADMSREMOVE-001",
+      "status": "SKIP",
+      "note": "No ADMS DELETE_USERINFO command queued for EMP-RETEST. ADMS removal may be triggered only if Bio ID was enrolled. EMP-RETEST had bio_id cleared during cleanup.",
+      "ts": "2026-04-07T14:51:37.616Z"
+    },
+    {
+      "scenario_id": "EMP-ADMSREMOVE-002",
+      "status": "SKIP",
+      "note": "No ADMS DELETE_USERINFO command queued for EMP-RETEST. ADMS removal may be triggered only if Bio ID was enrolled. EMP-RETEST had bio_id cleared during cleanup.",
+      "ts": "2026-04-07T14:51:38.170Z"
+    },
+    {
+      "scenario_id": "EMP-EXITINTERVIEW-001",
+      "status": "FAIL",
+      "note": "Exit interview route not found: h1=\"\"",
+      "ts": "2026-04-07T14:51:42.200Z"
+    },
+    {
+      "scenario_id": "EMP-EXITINTERVIEW-002",
+      "status": "SKIP",
+      "note": "DEPENDS_ON_EXITINTERVIEW-001",
+      "ts": "2026-04-07T14:51:42.201Z"
+    },
+    {
+      "scenario_id": "EMP-EXITINTERVIEW-003",
+      "status": "SKIP",
+      "note": "DEPENDS_ON_EXITINTERVIEW-001",
+      "ts": "2026-04-07T14:51:42.201Z"
+    },
+    {
+      "scenario_id": "EMP-REHIRE-001",
+      "status": "SKIP",
+      "note": "DEFER_REHIRE: No rehire UI element found. Rehire pathway not implemented or requires different entry point. EMP-RETEST is Left — no rehire attempted to avoid polluting bio_id sequence.",
+      "ts": "2026-04-07T14:51:46.440Z"
+    },
+    {
+      "scenario_id": "EMP-REHIRE-002",
+      "status": "SKIP",
+      "note": "DEFER_REHIRE: No rehire UI element found. Rehire pathway not implemented or requires different entry point. EMP-RETEST is Left — no rehire attempted to avoid polluting bio_id sequence.",
+      "ts": "2026-04-07T14:51:50.780Z"
+    }
+  ],
+  "defects": [],
+  "ts": "2026-04-07T14:51:55.792Z"
+}

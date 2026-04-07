@@ -1,0 +1,76 @@
+{
+  "scenarioId": "EMP-STUB-005",
+  "retestFor": "S170",
+  "checkDesc": "Clearance module — was read-only milestone tracker in Lane F baseline",
+  "verdict": "PASS_POST_FIX",
+  "baseline": {
+    "has_clearance_stations": false,
+    "has_item_return": false,
+    "has_milestone_tracker": true,
+    "h1_baseline": "Clearance Status",
+    "screenshot": "lane_f/screenshots/EMP-STUB-005_observed.png"
+  },
+  "observed": {
+    "hr_clearance_url": {
+      "url": "https://my.bebang.ph/dashboard/hr/clearance",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Employee Clearance",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nClearance\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to HR Dashboard\nEmployee Clearance\n\nInitialize, manage, and submit clearances for separating employees.\n\nINITIALIZE CLEARANCE\n\nPaste the Employee Separation document name (e.g. HR-EMP-SEP-2026-00001) to start a clearance. If a clearance already exists for that separation, it will load instead.\n\nInitialize",
+      "button_count": 4,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Initialize"
+      ],
+      "input_count": 1,
+      "inputs": [
+        {
+          "type": "input",
+          "name": "",
+          "placeholder": "HR-EMP-SEP-...",
+          "ariaLabel": ""
+        }
+      ],
+      "dialog_count": 0,
+      "dialog_contents": []
+    },
+    "emp_clearance_url": {
+      "url": "https://my.bebang.ph/clearance",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Clearance Status",
+      "h2s": [],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave Command Center\nHR Management\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nClearance\nSearch\nCtrl K\nClearance Status\n\nTrack your separation progress and complete required steps.\n\nSeparation Overview\nType: Resignation | Started: 2026-03-17\nPending\nDOLE Compliance\n0/2\nEmployee\nTest HR\n\nHuman Resources - BAG • Hr Manager\n\nKey Milestones\nComplete these steps for a smooth transition\n1\n\nExit Interview\n\nShare your feedback with HR\n\nStart Interview\n2\n\nFinal Pay Approval\n\nHR computes and approves your final pay\n\nPending HR\n3\n\nCertificate of Employment\n\nDownload your COE after clearance\n\nAvailable after clearance\n💡\n\nNeed Help?\n\nContact HR at hr@bebang.ph or visit the HR office for any questions about your clearance process. Final pay is released within 30 days per DOLE Labor Advisory No. 06-20.",
+      "button_count": 4,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Start Interview"
+      ],
+      "input_count": 0,
+      "inputs": [],
+      "dialog_count": 0,
+      "dialog_contents": []
+    },
+    "derived": {
+      "has_initiate_clearance": false,
+      "has_clearance_stations": false,
+      "has_item_return": false,
+      "has_station_management": false,
+      "has_clearance_list": true,
+      "is_milestone_only": false,
+      "emp_is_still_milestone": true,
+      "emp_has_station_content": false,
+      "is_functional": true
+    }
+  },
+  "screenshots": {
+    "hr_clearance": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r3_ux_reobserve/screenshots/EMP-STUB-005_hr_clearance.png",
+    "initiate_form": null
+  },
+  "timestamp_pht": "4/7/2026, 21:49:50"
+}

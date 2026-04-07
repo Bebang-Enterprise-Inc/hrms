@@ -1,0 +1,43 @@
+{
+  "scenario_id": "EMP-CREATE-RETEST",
+  "ts_start": "2026-04-07T14:48:52.848Z",
+  "steps": [
+    "navigated to employee-master",
+    "pre screenshot: F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r4_emp_retest/screenshots/EMP-CREATE-RETEST_pre.png",
+    "dialog opened",
+    "text fields filled",
+    "gender=Male",
+    "company=Bebang Enterprise Inc.",
+    "branch=ARANETA GATEWAY",
+    "department=Operations",
+    "designation=Crew",
+    "employment_type=Probationary",
+    "submit_disabled=false",
+    "pre_submit screenshot: F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r4_emp_retest/screenshots/EMP-CREATE-RETEST_pre_submit.png",
+    "submit clicked",
+    "toast: Employee BEI-EMP-2026-00004 created. Bio ID 9001894 enrolled on device UDP3252900302."
+  ],
+  "api_response": {
+    "url": "https://my.bebang.ph/api/frappe/api/method/hrms.api.employee_create.create_employee_direct",
+    "status": 200,
+    "json": {
+      "message": {
+        "success": true,
+        "data": {
+          "employee_id": "BEI-EMP-2026-00004",
+          "employee_name": "Retest Employee (L3 2026-04-07 EMP-RETEST)",
+          "bio_id": "9001894",
+          "adms_enrollment": {
+            "enrolled": true,
+            "reason": null,
+            "device_sn": "UDP3252900302"
+          }
+        }
+      }
+    }
+  },
+  "emp_name": "HR-EMP-00046",
+  "bio_id": "9001894",
+  "ts_end": "2026-04-07T14:49:14.836Z",
+  "screenshot_post": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r4_emp_retest/screenshots/EMP-CREATE-RETEST_post.png"
+}

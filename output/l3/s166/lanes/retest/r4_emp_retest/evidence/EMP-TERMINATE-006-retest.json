@@ -1,0 +1,12 @@
+{
+  "scenario_id": "EMP-TERMINATE-006",
+  "ts": "2026-04-07T14:51:12.094Z",
+  "filter_buttons": [],
+  "api_result": [
+    {
+      "name": "HR-EMP-00046",
+      "employee_name": "Retest Employee (L3 2026-04-07 EMP-RETEST)",
+      "status": "Active"
+    }
+  ]
+}

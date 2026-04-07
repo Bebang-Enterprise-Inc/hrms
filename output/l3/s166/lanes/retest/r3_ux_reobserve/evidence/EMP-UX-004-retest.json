@@ -1,0 +1,286 @@
+{
+  "scenarioId": "EMP-UX-004",
+  "retestFor": "S170",
+  "checkDesc": "Compensation Setup row modal — was empty in Lane F baseline",
+  "verdict": "STILL_BROKEN",
+  "baseline": {
+    "modal_is_empty": true,
+    "screenshot": "lane_f/screenshots/EMP-UX-004_observed.png"
+  },
+  "observed": {
+    "list_page": {
+      "url": "https://my.bebang.ph/dashboard/hr/payroll/compensation-setup",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Compensation Setup",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayroll\nCompensation-setup\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to Payroll\nCompensation Setup\n\nManage employee salary structures, allowances, bonuses, and recurring components\n\nFullscreen\nSearch\nDepartment\nAll Departments\nEmployees 545 total\nPrevious\nPage 1 of 11\nNext\nExport\nColumns\n\tEmployee\tDepartment\tBranch\tDesignation\tType\tSalary Structure\t\nBase Salary\n\t\nDaily Rate\n\t\nAllowances\n\t\nGross Pay est.\n\t\nSSS est.\n\t\nPhilHealth est.\n\t\nPag-IBIG est.\n\t\nTax est.\n\t\nNet Take-Home est.\n\t\nCompany Cost est.\n\tTax Slab\tBank Account\tPay Mode\tPending\t\n\t\nABALLAR, JERRY F.\n9001858\n\tOperations - BEI\tALABANG TOWN CENTER\tSTORE CREW\tProbationary\t—\t\n—\n\t\n—\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t—\t—\tCash\t\t\n\n\t\nACERO, LIEZEL M.\n9001794\n\tFinance and Accounting - BEI\tBRITTANY OFFICE\tAccounting Analyst\tProbationary\tHO Staff - Regular\t\n₱20,000.00\n\t\n₱769.23\n\t\n₱0.00\n\t\n₱20,000.00\n\t\n₱900.00\n\t\n₱500.00\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,500.00\n\t\n₱22,500.00\n\tTRAIN Law 2025 - Philippines\t•••••••7951\tBank\t\t\n\n\t\nAdore S. Panomblayan\n9000112\n\tCommissary - BEI\tSHAW COMMISSARY - Production\tCommissary Crew\tRegular\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱0.00\n\t\n₱18,127.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱16,764.72\n\t\n₱20,391.12\n\tTRAIN Law 2025 - Philippines\t••••••5313\tBank\t\t\n\n\t\nAGAO, ANGELA B.\n9001722\n\tOperations - BEI\tLUCKY CHINATOWN\tCashier\tProbationary\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t••••••8722\tBank\t\t\n\n\t\nAGUADO, NEIL\n9001717\n\tCommissary - BEI\tSHAW COMMISSARY - Production\tCommissary Crew\tSeasonal\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱0.00\n\t\n₱18,127.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱16,764.72\n\t\n₱20,391.12\n\tTRAIN Law 2025 - Philippines\t—\tCash\t\t\n\n\t\nAila Mae A. Nebrao\n9000546\n\tOperations - BEI\tAYALA UPTC\tCashier\tRegular\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t••••••2734\tBank\t\t\n\n\t\nAileen L. Mendoza\n9000152\n\tOperations - BEI\tARANETA GATEWAY\tOpening Team\tRegular\tStore Staff - Regular\t\n₱20,000.00\n\t\n₱769.23\n\t\n₱1,300.00\n\t\n₱21,300.00\n\t\n₱900.00\n\t\n₱500.00\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱19,800.00\n\t\n₱23,800.00\n\tTRAIN Law 2025 - Philippines\t••••••5789\tBank\t\t\n\n\t\nAilen R. Segurigan\n9000422\n\tOperations - BEI\tGRAND CENTRAL\tStore Crew\tRegular\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱1,300.00\n\t\n₱19,427.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,064.72\n\t\n₱21,691.12\n\tTRAIN Law 2025 - Philippines\t••••••4308\tBank\t\t\n\n\t\nAilyn C. Mendoza\n9000791\n\tOperations - BEI\tAYALA EVO\tAssistant Store Supervisor\tProbationary\tStore Staff - Regular\t\n₱20,000.00\n\t\n₱769.23\n\t\n₱0.00\n\t\n₱20,000.00\n\t\n₱900.00\n\t\n₱500.00\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,500.00\n\t\n₱22,500.00\n\tTRAIN Law 2025 - Philippines\t•••••••3107\tBank\t\t\n\n\t\nAira M. Rodero\n9000886\n\tOperations - BEI\tSM TAYTAY\tStore Crew\tProbationary\tStore Staff - Regular\t\n₱15,650.00\n\t\n₱601.92\n\t\n₱2,477.92\n\t\n₱18,127.92\n\t\n₱697.50\n\t\n₱391.25\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱16,939.17\n\t\n₱20,091.67\n\tTRAIN Law 2025 - Philippines\t•••••••3256\tBank\t\t\n\n\t\nAizel Ritual\n9001737\n\tOperations - BEI\tVENICE GRAND CANAL\tCashier\tProbationary\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t•••••••••4726\tBank\t\t\n\n\t\nAJRAJ JAMISOLA G.\n9000089\n\tCommissary - BEI\tSHAW COMMISSARY - Production\tTrainee\tRegular\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱1,100.00\n\t\n₱19,227.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱17,864.72\n\t\n₱21,491.12\n\tTRAIN Law 2025 - Philippines\t••••••5275\tBank\t\t\n\n\t\nALCOBER, CHRISTIAN PAUL .\n9001721\n\tOperations - BEI\tSM SANGANDAAN\tStore Crew\tRegular\tStore Staff - Regular\t\n₱0.00\n\t\n—\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\tTRAIN Law 2025 - Philippines\t—\tCash\t\t\n\n\t\nALCOBER, JUANNA MARIE\n9001787\n\tFinance and Accounting - BEI\tBRITTANY OFFICE\tFinance Manager\tRegular\tHO Staff - Regular\t\n₱70,000.00\n\t\n₱2,692.31\n\t\n₱20,000.00\n\t\n₱90,000.00\n\t\n₱1,575.00\n\t\n₱1,750.00\n\t\n₱100.00\n\t\n₱9,375.00\n\t\n₱77,200.00\n\t\n₱95,175.00\n\tTRAIN Law 2025 - Philippines\t••••••7093\tBank\t\t\n\n\t\nALEJO, BINOE LOUISE M.\n9001840\n\tOperations - BEI\tXENTRO MONTALBAN\tStore Crew\tProbationary\t—\t\n—\n\t\n—\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t—\t—\tCash\t\t\n\n\t\nAlessandro Rey R. Formoso\n9000559\n\tFinance and Accounting - BEI\tBRITTANY OFFICE\tChief Financial Officer\tProbationary\tHO Staff - Regular\t\n₱368,184.92\n\t\n₱14,160.96\n\t\n₱20,000.00\n\t\n₱388,184.92\n\t\n₱1,575.00\n\t\n₱2,500.00\n\t\n₱100.00\n\t\n₱93,997.14\n\t\n₱290,012.78\n\t\n₱394,109.92\n\tTRAIN Law 2025 - Philippines\t••••••9369\tBank\t\t\n\n\t\nAlex Overlap1\nHR-EMP-00025\n\tOperations - BEI\tARANETA GATEWAY\t\t—\t—\t\n—\n\t\n—\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t—\t—\tCash\t\t\n\n\t\nAlexandra N. Sayritan\n9000337\n\tOperations - BEI\tSM EAST ORTIGAS\tCashier\tRegular\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t••••••6416\tBank\t\t\n\n\t\nAlexisse Leann . R. Mendoza.\n9000835\n\tOperations - BEI\tSM MARIKINA\tAssistant Store Supervisor\tProbationary\tStore Staff - Regular\t\n₱20,000.00\n\t\n₱769.23\n\t\n₱0.00\n\t\n₱20,000.00\n\t\n₱900.00\n\t\n₱500.00\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,500.00\n\t\n₱22,500.00\n\tTRAIN Law 2025 - Philippines\t•••••••7156\tBank\t\t\n\n\t\nALFEREZ, MARIA PRISCILA M.\n9000504\n\tOperations - BEI\tMEGAWORLD PASEO CENTER\tCashier\tProbationary\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t••••••7025\tBank\t\t\n\n\t\nAlicia M. Ramos\n9000599\n\tOperations - BEI\tROBINSONS GENERAL TRIAS\tCashier\tProbationary\tStore Staff - Regular\t\n₱14,085.00\n\t\n₱541.73\n\t\n₱5,477.50\n\t\n₱19,562.50\n\t\n₱630.00\n\t\n₱352.12\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,480.38\n\t\n₱21,344.62\n\tTRAIN Law 2025 - Philippines\t•••••••8023\tBank\t\t\n\n\t\nAlissa U. Caspe\n9000550\n\tOperations - BEI\tAYALA UPTC\tStore Crew\tRegular\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱0.00\n\t\n₱18,127.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱16,764.72\n\t\n₱20,391.12\n\tTRAIN Law 2025 - Philippines\t••••••••7367\tBank\t\t\n\n\t\nAllan Gemboy B. Rubio\n9000635\n\tOperations - BEI\tSM SJDM\tStore Crew\tProbationary\tStore Staff - Regular\t\n₱14,867.50\n\t\n₱571.83\n\t\n₱3,260.42\n\t\n₱18,127.92\n\t\n₱675.00\n\t\n₱371.69\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱16,981.23\n\t\n₱20,024.61\n\tTRAIN Law 2025 - Philippines\t•••••••1473\tBank\t\t\n\n\t\nAllbert Jayson E. Gabatino\n9000026\n\tOperations - BEI\tSM MEGAMALL\tStore Crew\tRegular\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱1,300.00\n\t\n₱19,427.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,064.72\n\t\n₱21,691.12\n\tTRAIN Law 2025 - Philippines\t••••••6157\tBank\t\t\n\n\t\nAllona H. Pinca\n9000545\n\tOperations - BEI\tAYALA UPTC\tCashier\tRegular\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t••••••6356\tBank\t\t\n\n\t\nALMENARIO, MARITES G.\n9000476\n\tOperations - BEI\tVENICE GRAND CANAL\tStore Crew\tRegular\tStore Staff - Regular\t\n",
+      "button_count": 59,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Fullscreen",
+        "All Departments",
+        "Previous",
+        "Next",
+        "Export",
+        "Columns",
+        "ABALLAR, JERRY F.\n9001858",
+        "ACERO, LIEZEL M.\n9001794",
+        "Adore S. Panomblayan\n9000112",
+        "AGAO, ANGELA B.\n9001722",
+        "AGUADO, NEIL\n9001717",
+        "Aila Mae A. Nebrao\n9000546",
+        "Aileen L. Mendoza\n9000152",
+        "Ailen R. Segurigan\n9000422",
+        "Ailyn C. Mendoza\n9000791",
+        "Aira M. Rodero\n9000886",
+        "Aizel Ritual\n9001737",
+        "AJRAJ JAMISOLA G.\n9000089",
+        "ALCOBER, CHRISTIAN PAUL .\n9001721",
+        "ALCOBER, JUANNA MARIE\n9001787",
+        "ALEJO, BINOE LOUISE M.\n9001840",
+        "Alessandro Rey R. Formoso\n9000559",
+        "Alex Overlap1\nHR-EMP-00025",
+        "Alexandra N. Sayritan\n9000337",
+        "Alexisse Leann . R. Mendoza.\n9000835",
+        "ALFEREZ, MARIA PRISCILA M.\n9000504",
+        "Alicia M. Ramos\n9000599",
+        "Alissa U. Caspe\n9000550",
+        "Allan Gemboy B. Rubio\n9000635",
+        "Allbert Jayson E. Gabatino\n9000026",
+        "Allona H. Pinca\n9000545",
+        "ALMENARIO, MARITES G.\n9000476",
+        "ALONZO, BABIELYN G.\n9001866",
+        "Alvin T. De Guzman\n9000174",
+        "Alyssa May D. Dimaano\n9000740",
+        "Amalia B. Nabus\n9000077",
+        "ANABO, ANGELICO M.\n9001815",
+        "Andrei U. Villanueva\n9000714",
+        "ANDRES, MARY GRACE\n9001726",
+        "Angel Ann Sophia D. Figueroa\n9000585",
+        "Angel Ray F. Clemente\n9000918",
+        "Angela C. Villanueva\n9000970",
+        "Angela M. Godino\n9000899",
+        "Angela P. Laodenio\n9000613",
+        "Angelica L. Iglesia\n9000583",
+        "Angelie Galleros\n9000299",
+        "Angelito A. Espiritu\n9000177",
+        "Ann Zusa San Diego Masayon\n9000727",
+        "Anna Mae B. Balino\n9000155",
+        "Anna Marie . Nepomuceno\n9000603",
+        "Annabel S. Maomay\n9000059",
+        "ANTEGRA, ARCHIE G.\n9001714",
+        "ANTONIO, AIJELOU PIEL P.\n9001694",
+        "April Joy B. Gañas\n9000830",
+        "Arhie J. Reyes\n9000188",
+        "Aries D. Frando\n9000553"
+      ],
+      "input_count": 1,
+      "inputs": [
+        {
+          "type": "input",
+          "name": "",
+          "placeholder": "Search by name or ID...",
+          "ariaLabel": ""
+        }
+      ],
+      "dialog_count": 0,
+      "dialog_contents": []
+    },
+    "click_attempt": {
+      "clicked": true,
+      "target": "tbody tr[0]"
+    },
+    "post_click": {
+      "url": "https://my.bebang.ph/dashboard/hr/payroll/compensation-setup",
+      "title": "BEI Tasks - Task Management",
+      "h1": "Compensation Setup",
+      "h2s": [
+        "Search"
+      ],
+      "text_head": "BT\nBEI Tasks\nTask Management\nHome\nDashboard\nMy Profile\nClearance\nExit Interview\nSupervisor Tools\nAnalytics\nHR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business Check-out\nOfficial Business Check-in\nOB Geo Check-out\nOB Geo Check-in\nRemote Punch\nPunch In\nPunch Out\nOnboarding\nLeave Command Center\nHR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOvertime\nTraining\nCorrection Review\nCompliance\n13th Month\nSeparations\nExit Interview Analytics\nPetty Cash Fund\nAdd PCF Entry\nPending PCF\nPCF History\nBiometric Monitoring\nMy Expenses\nStore Operations\nStore Inventory\nStock Counting\nFinance & Accounting\nCampaign Giveaways\nProcurement\nSCM\nWarehouse\nCommissary\nProjects & Maintenance\nCommunication\nE-Signature\nTasks & Reports\nPlatform & Admin\nTH\ntest.hr@bebang.ph\ntest.hr@bebang.ph\nToggle Sidebar\nDashboard\nHr\nPayroll\nCompensation-setup\nSearch\nCtrl K\nSearch\n\nSearch tasks, projects, and actions\n\nBack to Payroll\nCompensation Setup\n\nManage employee salary structures, allowances, bonuses, and recurring components\n\nFullscreen\nSearch\nDepartment\nAll Departments\nEmployees 545 total\nPrevious\nPage 1 of 11\nNext\nExport\nColumns\n\tEmployee\tDepartment\tBranch\tDesignation\tType\tSalary Structure\t\nBase Salary\n\t\nDaily Rate\n\t\nAllowances\n\t\nGross Pay est.\n\t\nSSS est.\n\t\nPhilHealth est.\n\t\nPag-IBIG est.\n\t\nTax est.\n\t\nNet Take-Home est.\n\t\nCompany Cost est.\n\tTax Slab\tBank Account\tPay Mode\tPending\t\n\t\nABALLAR, JERRY F.\n9001858\n\tOperations - BEI\tALABANG TOWN CENTER\tSTORE CREW\tProbationary\t—\t\n—\n\t\n—\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t—\t—\tCash\t\t\n\n\t\nACERO, LIEZEL M.\n9001794\n\tFinance and Accounting - BEI\tBRITTANY OFFICE\tAccounting Analyst\tProbationary\tHO Staff - Regular\t\n₱20,000.00\n\t\n₱769.23\n\t\n₱0.00\n\t\n₱20,000.00\n\t\n₱900.00\n\t\n₱500.00\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,500.00\n\t\n₱22,500.00\n\tTRAIN Law 2025 - Philippines\t•••••••7951\tBank\t\t\n\n\t\nAdore S. Panomblayan\n9000112\n\tCommissary - BEI\tSHAW COMMISSARY - Production\tCommissary Crew\tRegular\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱0.00\n\t\n₱18,127.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱16,764.72\n\t\n₱20,391.12\n\tTRAIN Law 2025 - Philippines\t••••••5313\tBank\t\t\n\n\t\nAGAO, ANGELA B.\n9001722\n\tOperations - BEI\tLUCKY CHINATOWN\tCashier\tProbationary\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t••••••8722\tBank\t\t\n\n\t\nAGUADO, NEIL\n9001717\n\tCommissary - BEI\tSHAW COMMISSARY - Production\tCommissary Crew\tSeasonal\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱0.00\n\t\n₱18,127.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱16,764.72\n\t\n₱20,391.12\n\tTRAIN Law 2025 - Philippines\t—\tCash\t\t\n\n\t\nAila Mae A. Nebrao\n9000546\n\tOperations - BEI\tAYALA UPTC\tCashier\tRegular\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t••••••2734\tBank\t\t\n\n\t\nAileen L. Mendoza\n9000152\n\tOperations - BEI\tARANETA GATEWAY\tOpening Team\tRegular\tStore Staff - Regular\t\n₱20,000.00\n\t\n₱769.23\n\t\n₱1,300.00\n\t\n₱21,300.00\n\t\n₱900.00\n\t\n₱500.00\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱19,800.00\n\t\n₱23,800.00\n\tTRAIN Law 2025 - Philippines\t••••••5789\tBank\t\t\n\n\t\nAilen R. Segurigan\n9000422\n\tOperations - BEI\tGRAND CENTRAL\tStore Crew\tRegular\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱1,300.00\n\t\n₱19,427.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,064.72\n\t\n₱21,691.12\n\tTRAIN Law 2025 - Philippines\t••••••4308\tBank\t\t\n\n\t\nAilyn C. Mendoza\n9000791\n\tOperations - BEI\tAYALA EVO\tAssistant Store Supervisor\tProbationary\tStore Staff - Regular\t\n₱20,000.00\n\t\n₱769.23\n\t\n₱0.00\n\t\n₱20,000.00\n\t\n₱900.00\n\t\n₱500.00\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,500.00\n\t\n₱22,500.00\n\tTRAIN Law 2025 - Philippines\t•••••••3107\tBank\t\t\n\n\t\nAira M. Rodero\n9000886\n\tOperations - BEI\tSM TAYTAY\tStore Crew\tProbationary\tStore Staff - Regular\t\n₱15,650.00\n\t\n₱601.92\n\t\n₱2,477.92\n\t\n₱18,127.92\n\t\n₱697.50\n\t\n₱391.25\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱16,939.17\n\t\n₱20,091.67\n\tTRAIN Law 2025 - Philippines\t•••••••3256\tBank\t\t\n\n\t\nAizel Ritual\n9001737\n\tOperations - BEI\tVENICE GRAND CANAL\tCashier\tProbationary\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t•••••••••4726\tBank\t\t\n\n\t\nAJRAJ JAMISOLA G.\n9000089\n\tCommissary - BEI\tSHAW COMMISSARY - Production\tTrainee\tRegular\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱1,100.00\n\t\n₱19,227.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱17,864.72\n\t\n₱21,491.12\n\tTRAIN Law 2025 - Philippines\t••••••5275\tBank\t\t\n\n\t\nALCOBER, CHRISTIAN PAUL .\n9001721\n\tOperations - BEI\tSM SANGANDAAN\tStore Crew\tRegular\tStore Staff - Regular\t\n₱0.00\n\t\n—\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\tTRAIN Law 2025 - Philippines\t—\tCash\t\t\n\n\t\nALCOBER, JUANNA MARIE\n9001787\n\tFinance and Accounting - BEI\tBRITTANY OFFICE\tFinance Manager\tRegular\tHO Staff - Regular\t\n₱70,000.00\n\t\n₱2,692.31\n\t\n₱20,000.00\n\t\n₱90,000.00\n\t\n₱1,575.00\n\t\n₱1,750.00\n\t\n₱100.00\n\t\n₱9,375.00\n\t\n₱77,200.00\n\t\n₱95,175.00\n\tTRAIN Law 2025 - Philippines\t••••••7093\tBank\t\t\n\n\t\nALEJO, BINOE LOUISE M.\n9001840\n\tOperations - BEI\tXENTRO MONTALBAN\tStore Crew\tProbationary\t—\t\n—\n\t\n—\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t—\t—\tCash\t\t\n\n\t\nAlessandro Rey R. Formoso\n9000559\n\tFinance and Accounting - BEI\tBRITTANY OFFICE\tChief Financial Officer\tProbationary\tHO Staff - Regular\t\n₱368,184.92\n\t\n₱14,160.96\n\t\n₱20,000.00\n\t\n₱388,184.92\n\t\n₱1,575.00\n\t\n₱2,500.00\n\t\n₱100.00\n\t\n₱93,997.14\n\t\n₱290,012.78\n\t\n₱394,109.92\n\tTRAIN Law 2025 - Philippines\t••••••9369\tBank\t\t\n\n\t\nAlex Overlap1\nHR-EMP-00025\n\tOperations - BEI\tARANETA GATEWAY\t\t—\t—\t\n—\n\t\n—\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t\n₱0.00\n\t—\t—\tCash\t\t\n\n\t\nAlexandra N. Sayritan\n9000337\n\tOperations - BEI\tSM EAST ORTIGAS\tCashier\tRegular\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t••••••6416\tBank\t\t\n\n\t\nAlexisse Leann . R. Mendoza.\n9000835\n\tOperations - BEI\tSM MARIKINA\tAssistant Store Supervisor\tProbationary\tStore Staff - Regular\t\n₱20,000.00\n\t\n₱769.23\n\t\n₱0.00\n\t\n₱20,000.00\n\t\n₱900.00\n\t\n₱500.00\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,500.00\n\t\n₱22,500.00\n\tTRAIN Law 2025 - Philippines\t•••••••7156\tBank\t\t\n\n\t\nALFEREZ, MARIA PRISCILA M.\n9000504\n\tOperations - BEI\tMEGAWORLD PASEO CENTER\tCashier\tProbationary\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t••••••7025\tBank\t\t\n\n\t\nAlicia M. Ramos\n9000599\n\tOperations - BEI\tROBINSONS GENERAL TRIAS\tCashier\tProbationary\tStore Staff - Regular\t\n₱14,085.00\n\t\n₱541.73\n\t\n₱5,477.50\n\t\n₱19,562.50\n\t\n₱630.00\n\t\n₱352.12\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,480.38\n\t\n₱21,344.62\n\tTRAIN Law 2025 - Philippines\t•••••••8023\tBank\t\t\n\n\t\nAlissa U. Caspe\n9000550\n\tOperations - BEI\tAYALA UPTC\tStore Crew\tRegular\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱0.00\n\t\n₱18,127.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱16,764.72\n\t\n₱20,391.12\n\tTRAIN Law 2025 - Philippines\t••••••••7367\tBank\t\t\n\n\t\nAllan Gemboy B. Rubio\n9000635\n\tOperations - BEI\tSM SJDM\tStore Crew\tProbationary\tStore Staff - Regular\t\n₱14,867.50\n\t\n₱571.83\n\t\n₱3,260.42\n\t\n₱18,127.92\n\t\n₱675.00\n\t\n₱371.69\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱16,981.23\n\t\n₱20,024.61\n\tTRAIN Law 2025 - Philippines\t•••••••1473\tBank\t\t\n\n\t\nAllbert Jayson E. Gabatino\n9000026\n\tOperations - BEI\tSM MEGAMALL\tStore Crew\tRegular\tStore Staff - Regular\t\n₱18,127.92\n\t\n₱697.23\n\t\n₱1,300.00\n\t\n₱19,427.92\n\t\n₱810.00\n\t\n₱453.20\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,064.72\n\t\n₱21,691.12\n\tTRAIN Law 2025 - Philippines\t••••••6157\tBank\t\t\n\n\t\nAllona H. Pinca\n9000545\n\tOperations - BEI\tAYALA UPTC\tCashier\tRegular\tStore Staff - Regular\t\n₱19,562.50\n\t\n₱752.40\n\t\n₱0.00\n\t\n₱19,562.50\n\t\n₱877.50\n\t\n₱489.06\n\t\n₱100.00\n\t\n₱0.00\n\t\n₱18,095.94\n\t\n₱22,004.06\n\tTRAIN Law 2025 - Philippines\t••••••6356\tBank\t\t\n\n\t\nALMENARIO, MARITES G.\n9000476\n\tOperations - BEI\tVENICE GRAND CANAL\tStore Crew\tRegular\tStore Staff - Regular\t\n",
+      "button_count": 59,
+      "buttons": [
+        "TH\ntest.hr@bebang.ph\ntest.hr@bebang.ph",
+        "Toggle Sidebar",
+        "Search\nCtrl K",
+        "Fullscreen",
+        "All Departments",
+        "Previous",
+        "Next",
+        "Export",
+        "Columns",
+        "ABALLAR, JERRY F.\n9001858",
+        "ACERO, LIEZEL M.\n9001794",
+        "Adore S. Panomblayan\n9000112",
+        "AGAO, ANGELA B.\n9001722",
+        "AGUADO, NEIL\n9001717",
+        "Aila Mae A. Nebrao\n9000546",
+        "Aileen L. Mendoza\n9000152",
+        "Ailen R. Segurigan\n9000422",
+        "Ailyn C. Mendoza\n9000791",
+        "Aira M. Rodero\n9000886",
+        "Aizel Ritual\n9001737",
+        "AJRAJ JAMISOLA G.\n9000089",
+        "ALCOBER, CHRISTIAN PAUL .\n9001721",
+        "ALCOBER, JUANNA MARIE\n9001787",
+        "ALEJO, BINOE LOUISE M.\n9001840",
+        "Alessandro Rey R. Formoso\n9000559",
+        "Alex Overlap1\nHR-EMP-00025",
+        "Alexandra N. Sayritan\n9000337",
+        "Alexisse Leann . R. Mendoza.\n9000835",
+        "ALFEREZ, MARIA PRISCILA M.\n9000504",
+        "Alicia M. Ramos\n9000599",
+        "Alissa U. Caspe\n9000550",
+        "Allan Gemboy B. Rubio\n9000635",
+        "Allbert Jayson E. Gabatino\n9000026",
+        "Allona H. Pinca\n9000545",
+        "ALMENARIO, MARITES G.\n9000476",
+        "ALONZO, BABIELYN G.\n9001866",
+        "Alvin T. De Guzman\n9000174",
+        "Alyssa May D. Dimaano\n9000740",
+        "Amalia B. Nabus\n9000077",
+        "ANABO, ANGELICO M.\n9001815",
+        "Andrei U. Villanueva\n9000714",
+        "ANDRES, MARY GRACE\n9001726",
+        "Angel Ann Sophia D. Figueroa\n9000585",
+        "Angel Ray F. Clemente\n9000918",
+        "Angela C. Villanueva\n9000970",
+        "Angela M. Godino\n9000899",
+        "Angela P. Laodenio\n9000613",
+        "Angelica L. Iglesia\n9000583",
+        "Angelie Galleros\n9000299",
+        "Angelito A. Espiritu\n9000177",
+        "Ann Zusa San Diego Masayon\n9000727",
+        "Anna Mae B. Balino\n9000155",
+        "Anna Marie . Nepomuceno\n9000603",
+        "Annabel S. Maomay\n9000059",
+        "ANTEGRA, ARCHIE G.\n9001714",
+        "ANTONIO, AIJELOU PIEL P.\n9001694",
+        "April Joy B. Gañas\n9000830",
+        "Arhie J. Reyes\n9000188",
+        "Aries D. Frando\n9000553"
+      ],
+      "input_count": 1,
+      "inputs": [
+        {
+          "type": "input",
+          "name": "",
+          "placeholder": "Search by name or ID...",
+          "ariaLabel": ""
+        }
+      ],
+      "dialog_count": 0,
+      "dialog_contents": []
+    },
+    "derived": {
+      "modal_opened": false,
+      "modal_is_empty": false,
+      "has_salary_fields": true,
+      "has_deductions": true,
+      "has_earnings": true,
+      "has_audit_history": true,
+      "dialog_count": 0,
+      "dialog_text_head": ""
+    }
+  },
+  "screenshots": {
+    "list_page": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r3_ux_reobserve/screenshots/EMP-UX-004_list_page.png",
+    "modal_attempt": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r3_ux_reobserve/screenshots/EMP-UX-004_modal_attempt.png"
+  },
+  "timestamp_pht": "4/7/2026, 21:49:05",
+  "precise_check": {
+    "modal_detected": true,
+    "overlay_count": 1,
+    "new_buttons_count": 1,
+    "new_buttons": [
+      "Bulk Change (1)"
+    ],
+    "url_changed": false,
+    "post_url": "https://my.bebang.ph/dashboard/hr/payroll/compensation-setup",
+    "click_info": "tbody td button[0]",
+    "overlays_detail": [
+      {
+        "selector": "[data-state=\"open\"]",
+        "visible": true,
+        "text": "Home\nDashboard\nMy Profile\nClearance\nExit Interview"
+      }
+    ],
+    "verdict": "PASS_POST_FIX",
+    "note": "Modal/sheet/navigation detected after row click"
+  },
+  "verdict_note": "Modal/sheet/navigation detected after row click",
+  "inspect_check": {
+    "modal_actually_open": false,
+    "has_comp_detail_content": false,
+    "modal_info": {
+      "sheet": null,
+      "dialog": null,
+      "open_elements": [
+        {
+          "tag": "DIV",
+          "class": "",
+          "text": "Home\nDashboard\nMy Profile\nClearance\nExit Interview"
+        },
+        {
+          "tag": "BUTTON",
+          "class": "rounded p-1 transition-colors hover:bg-accent",
+          "text": ""
+        },
+        {
+          "tag": "DIV",
+          "class": "",
+          "text": "Dashboard\nMy Profile\nClearance\nExit Interview"
+        },
+        {
+          "tag": "DIV",
+          "class": "",
+          "text": "HR Self-Service\nLeave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOff"
+        },
+        {
+          "tag": "BUTTON",
+          "class": "rounded p-1 transition-colors hover:bg-accent text-foregroun",
+          "text": ""
+        },
+        {
+          "tag": "DIV",
+          "class": "",
+          "text": "Leave\nAttendance\nMy Overtime\nSchedule\nPayslip\nCoverage Request\nOfficial Business\nOfficial Business C"
+        },
+        {
+          "tag": "DIV",
+          "class": "",
+          "text": "HR Management\nEmployee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\n"
+        },
+        {
+          "tag": "BUTTON",
+          "class": "rounded p-1 transition-colors hover:bg-accent text-foregroun",
+          "text": ""
+        },
+        {
+          "tag": "DIV",
+          "class": "",
+          "text": "Employee Master\nPayroll\nPerformance\nRegularization\nDisciplinary\nRecruitment\nTransfers\nReports\nOverti"
+        },
+        {
+          "tag": "DIV",
+          "class": "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "text": ""
+        },
+        {
+          "tag": "DIV",
+          "class": "bg-background data-[state=open]:animate-in data-[state=close",
+          "text": "9001858\n9001858\nClose"
+        }
+      ]
+    },
+    "screenshots": {
+      "before": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r3_ux_reobserve/screenshots/EMP-UX-004-inspect-before.png",
+      "after": "F:/Dropbox/Projects/BEI-ERP/output/l3/s166/lanes/retest/r3_ux_reobserve/screenshots/EMP-UX-004-inspect-after.png"
+    },
+    "note": "Row click did NOT open a compensation modal. False positive in initial R3 run — salary text came from table column headers on list page, not from a modal."
+  }
+}

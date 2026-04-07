@@ -1,0 +1,13 @@
+{
+  "scenario_id": "EMP-EXITINTERVIEW-001",
+  "ts": "2026-04-07T14:51:38.172Z",
+  "page_obs": {
+    "url": "https://my.bebang.ph/dashboard/hr/exit-interview",
+    "h1": "",
+    "buttons": [
+      "Go to Dashboard"
+    ],
+    "text_head": "Page Not Found\n\nThis page doesn't exist. If you followed a link, it may be outdated.\n\nGo to Dashboard"
+  },
+  "page_loads": false
+}
