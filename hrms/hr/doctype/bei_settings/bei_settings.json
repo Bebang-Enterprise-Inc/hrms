@@ -51,7 +51,14 @@
   "allowed_target_companies",
   "contracted_price_section",
   "price_validity_days",
-  "default_price_list"
+  "default_price_list",
+  "section_break_bki_billing",
+  "bki_markup_jv_percent",
+  "bki_markup_managed_franchise_percent",
+  "bki_markup_full_franchise_percent",
+  "bki_sales_vat_template",
+  "bki_sales_income_account",
+  "bki_default_incoterm"
  ],
  "fields": [
   {
@@ -340,6 +347,57 @@
    "label": "Default Buying Price List",
    "options": "Price List",
    "description": "Set to 'Standard Buying' after running the S104 migration"
+  },
+  {
+   "fieldname": "section_break_bki_billing",
+   "fieldtype": "Section Break",
+   "label": "BKI \u2192 Store Billing (S168)",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "bki_markup_jv_percent",
+   "fieldtype": "Float",
+   "label": "BKI Markup % \u2014 JV Stores",
+   "default": "2.75",
+   "precision": "4",
+   "description": "Markup % applied to BKI\u2192JV store sales (ICT-002). Default 2.75% keeps BKI net taxable income \u2264 PHP 5M for 20% CIT eligibility."
+  },
+  {
+   "fieldname": "bki_markup_managed_franchise_percent",
+   "fieldtype": "Float",
+   "label": "BKI Markup % \u2014 Managed Franchise",
+   "default": "8.0",
+   "precision": "4",
+   "description": "Markup % applied to BKI\u2192Managed Franchise store sales (ICT-002, BIL-005)."
+  },
+  {
+   "fieldname": "bki_markup_full_franchise_percent",
+   "fieldtype": "Float",
+   "label": "BKI Markup % \u2014 Full Franchise",
+   "default": "8.0",
+   "precision": "4",
+   "description": "Markup % applied to BKI\u2192Full Franchise store sales (ICT-002, BIL-005)."
+  },
+  {
+   "fieldname": "bki_sales_vat_template",
+   "fieldtype": "Link",
+   "options": "Sales Taxes and Charges Template",
+   "label": "BKI Sales VAT Template",
+   "description": "Tax template applied to BKI\u2192store Sales Invoices. Must be a 12% Output VAT template (ICT-001)."
+  },
+  {
+   "fieldname": "bki_sales_income_account",
+   "fieldtype": "Link",
+   "options": "Account",
+   "label": "BKI Sales Income Account",
+   "description": "GL account used for the credit line on BKI\u2192store Sales Invoices. ICT-008 Option C: 4000101 SALES - BKI TO STORES (under 4000100 WHOLESALE / B2B SALES)."
+  },
+  {
+   "fieldname": "bki_default_incoterm",
+   "fieldtype": "Data",
+   "label": "BKI Default Incoterm",
+   "default": "Destination",
+   "description": "ICT-007: Destination terms. Revenue recognized when the store signs and accepts the Delivery Receipt; loss in transit is BKI's."
   }
  ],
  "index_web_pages_for_search": 1,
