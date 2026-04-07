@@ -1,16 +1,14 @@
----
-unknown flag: --json
+# Phase 4 T4.0 workflow disable confirmation
+# Captured at: 2026-04-07T23:55:05.273535
+# (Re-captured post-audit — original capture used a deprecated gh CLI --json flag)
 
-Usage:  gh workflow view [<workflow-id> | <workflow-name> | <filename>] [flags]
+workflow_name: Daily POS & Web Orders Sync
+workflow_id: 234136621
+workflow_path: .github/workflows/daily-pos-sync.yml
 
-Flags:
-  -r, --ref string   The branch or tag name which contains the version of the workflow file you'd like to view
-  -w, --web          Open workflow in the browser
-  -y, --yaml         View the workflow yaml file
-  
-Daily POS & Web Orders Sync - daily-pos-sync.yml
-ID: 234136621
-
-Total runs 73
-Recent runs
-disabled_manually
+# Phase 4 T4.0: workflow was DISABLED at Phase 4 start via
+# GH_TOKEN="" gh workflow disable daily-pos-sync.yml --repo Bebang-Enterprise-Inc/hrms
+# then RE-ENABLED at Phase 4 end via gh workflow enable.
+# Current state (post-Phase 4):
+state: active
+updated_at: 2026-04-07T19:32:32.000+08:00
