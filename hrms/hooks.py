@@ -261,7 +261,12 @@ doc_events = {
 	"Stock Entry": {
 		# S136: Update production target actuals when Manufacture SE is submitted/cancelled
 		"on_submit": "hrms.api.commissary_planning.on_stock_entry_submit",
-		"on_cancel": "hrms.api.commissary_planning.on_stock_entry_cancel",
+		# S168 Phase 3.1: chain orphan-draft-SI cleanup AFTER the S136 handler.
+		# Frappe doc_events accept a list — handlers run in order.
+		"on_cancel": [
+			"hrms.api.commissary_planning.on_stock_entry_cancel",
+			"hrms.api.commissary._delete_orphan_draft_si_on_se_cancel",
+		],
 	},
 }
 

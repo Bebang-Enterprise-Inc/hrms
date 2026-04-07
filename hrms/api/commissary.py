@@ -1086,6 +1086,23 @@ def build_bki_store_sale_invoice(
 
 	debit_to = (getattr(settings, "bki_sales_debit_to_account", "") or "").strip()
 
+	# S168 Phase 12: BIR-aware naming series. Finance sets bki_sales_naming_series
+	# in BEI Settings to match the authorized BIR ATP/PTU prefix before the first
+	# production SI is issued. Until set, Frappe uses the SI default naming.
+	bki_sales_naming_series = (
+		getattr(settings, "bki_sales_naming_series", "") or ""
+	).strip()
+
+	# S168 Phase 13: EWT toggle (defaults OFF per ICT-004 — BEI is not Top 20,000).
+	# When Finance flips bki_ewt_on_store_sales_enabled, the SI emits an EWT line
+	# using the existing default_ewt_rate / ewt_payable_account from BEI Settings
+	# (R1 Amendment 9 — reuse existing EWT fields, do not duplicate).
+	ewt_enabled = bool(getattr(settings, "bki_ewt_on_store_sales_enabled", 0) or 0)
+	default_ewt_rate = flt(getattr(settings, "default_ewt_rate", 0) or 0)
+	ewt_payable_account = (
+		getattr(settings, "ewt_payable_account", "") or ""
+	).strip()
+
 	# Build the Draft SI
 	si = frappe.new_doc("Sales Invoice")
 	si.company = bki_company
@@ -1094,6 +1111,8 @@ def build_bki_store_sale_invoice(
 	si.posting_date = stock_entry.posting_date
 	si.set_posting_time = 1
 	si.currency = frappe.db.get_value("Company", bki_company, "default_currency") or "PHP"
+	if bki_sales_naming_series:
+		si.naming_series = bki_sales_naming_series
 	si.taxes_and_charges = vat_template
 	if debit_to:
 		si.debit_to = debit_to
@@ -1107,7 +1126,13 @@ def build_bki_store_sale_invoice(
 		"Will be submitted on store DR acceptance (ICT-007)."
 	)
 
-	cost_center = frappe.db.get_value("Company", bki_company, "cost_center")
+	# S168 Phase 12 fix: resolve per-store cost center so BKI->store P&L rolls
+	# up per store, not into the BKI company default. Falls back to company
+	# default only if no per-store / group CC is seeded.
+	resolved_cc = _resolve_store_cost_center(target_warehouse, entity_row)
+	cost_center = resolved_cc or frappe.db.get_value(
+		"Company", bki_company, "cost_center"
+	)
 
 	# Row-level aggregation: one SI row per Stock Entry Detail row (R1 Phase 3.1)
 	# Prevents double-billing when grouped orders (S163) produce duplicate
@@ -1165,10 +1190,91 @@ def build_bki_store_sale_invoice(
 		)
 		raise
 
+	# S168 Phase 13: append EWT row only if Finance flipped the toggle.
+	# default_ewt_rate is the % to withhold; ewt_payable_account is the GL credit.
+	# Per ICT-004, this branch is dormant — toggle stays off until BEI is tagged
+	# Top 20,000 by BIR. Code path is in place so Finance can flip without a deploy.
+	if ewt_enabled and default_ewt_rate > 0 and ewt_payable_account:
+		si.append(
+			"taxes",
+			{
+				"charge_type": "On Net Total",
+				"account_head": ewt_payable_account,
+				"description": f"EWT {default_ewt_rate}% (S168 Phase 13)",
+				"rate": -abs(default_ewt_rate),  # negative = deduction
+				"add_deduct_tax": "Deduct",
+			},
+		)
+
 	si.insert(ignore_permissions=True)
 	# DO NOT submit. SI stays Draft until complete_receiving submits it on
 	# store DR acceptance (ICT-007). docstatus=0 is intentional.
 	return si.name
+
+
+def _resolve_store_cost_center(store_warehouse: str, entity_row: dict) -> str | None:
+	"""S168 Phase 12: resolve the per-store Cost Center for a BKI->store sale.
+
+	Cost center hierarchy (seeded by scripts/s168_seed_cost_centers.py):
+		Stores - BKI
+		  JV - BKI
+		    {store} - BKI
+		  Managed Franchise - BKI
+		    {store} - BKI
+		  Full Franchise - BKI
+		    {store} - BKI
+
+	Resolution order:
+	  1. Per-store cost center derived from entity_row.buyer_entity_name
+	     (exact seed-script pattern "{buyer_entity_name} - BKI").
+	  2. Per-store cost center derived from the warehouse name.
+	  3. Store-type parent group ("JV - BKI" / "Managed Franchise - BKI" /
+	     "Full Franchise - BKI").
+	  4. "Stores - BKI" umbrella group.
+	  5. None (caller falls back to Company default).
+	"""
+	try:
+		if not frappe.db.exists("DocType", "Cost Center"):
+			return None
+	except Exception:
+		return None
+
+	bki_company = "Bebang Kitchen Inc."
+	candidates: list[str] = []
+
+	entity_row = entity_row or {}
+	buyer_name = (entity_row.get("buyer_entity_name") or "").strip()
+	if buyer_name:
+		candidates.append(f"{buyer_name} - BKI")
+
+	if store_warehouse:
+		# Warehouse names already look like "Store X - BKI"; try verbatim
+		# and also try re-appending " - BKI" to the stripped form.
+		candidates.append(store_warehouse)
+		bare = store_warehouse
+		if bare.endswith(" - BKI"):
+			bare = bare[: -len(" - BKI")]
+			candidates.append(f"{bare} - BKI")
+
+	store_type = (entity_row.get("store_type") or "").strip()
+	if store_type:
+		candidates.append(f"{store_type} - BKI")
+
+	candidates.append("Stores - BKI")
+
+	seen: set[str] = set()
+	for cc_name in candidates:
+		if not cc_name or cc_name in seen:
+			continue
+		seen.add(cc_name)
+		try:
+			if frappe.db.exists(
+				"Cost Center", {"name": cc_name, "company": bki_company}
+			):
+				return cc_name
+		except Exception:
+			continue
+	return None
 
 
 def _delete_orphan_draft_si_on_se_cancel(doc, method=None):
