@@ -1,19 +1,27 @@
 ---
 canonical_sprint_id: S165
 display: Sprint 165
-status: PR_CREATED
+status: COMPLETED
 branch: s165-mosaic-sync-verification
 lane: single
 created_date: 2026-04-06
-completed_date:
-deployed_at:
+completed_date: 2026-04-07
+deployed_at: 2026-04-07
 backend_pr: 466
+followup_pr: 470
 frontend_pr:
-l3_result: T4.1-T4.4 PASS, T5.1-T5.2 PASS, verify_s165.py all PASS
+l3_result: >
+  PASS — Pre-merge phases 4/5/6 green + post-merge live validation.
+  Run 24061671600 (SKIP test) proved CB1 boolean fix: anomaly-detection + verify-sync both skipped.
+  Run 24061674043 (NORMAL test) proved verify-sync runs end-to-end: Sentry DSN OK, wrote 45 rows to sync_verification, Chat alert delivered to ! Blip Notifications.
+  Live Chat routing verified 2026-04-07T02:47: 0 bot messages in ERP/HR Committee (last 10min), 1 Sync Verification alert in ! Blip Notifications.
+  sync_verification table latest state per (loc, date): Apr 2 = 42 ok + 3 healed, Apr 3 = 45 ok. Zero unresolved / missing / api_error / extra.
 execution_summary: >
-  Verify script + sync_verification table + hourly cron + nightly verify job.
-  Apr 2-3 backfilled (Holy Week low counts are legitimate).
-  PR #466 ready for merge.
+  S165 ships verify_mosaic_pos_sync.py + sync_verification table + hourly cron + nightly verify-sync job.
+  Backfilled Apr 2-3 (Holy Week low counts legitimate — many stores closed).
+  PR #466 merged at 7ac613776.
+  Follow-up fix PR #470 merged at 1b9b4c0dd: rerouted Blip alerts from wrong space (spaces/AAQA3NVVR6c ERP/HR Committee) to spaces/AAQABiNmpBg (! Blip Notifications), fixed CB1 boolean gating (proven broken by post-merge dispatch test), added pre-commit guard scripts/guards/check_chat_space_literals.py, fixed detect_anomalies.py import shim that had been silently crashing nightly anomaly detection for weeks.
+  Tier-1 (Frappe @whitelist endpoints) lockdown verified active in production via SSM bench console: is_strict_blip_only_enabled=True, route_outbound_chat_space reroutes any space to ! Blip Notifications.
 depends_on:
 ---
 
