@@ -295,6 +295,59 @@ If ANY corners were cut, the agent MUST proactively tell the user BEFORE being a
 
 S120 (2026-03-26): Agent ran 7 iterations of L3, each time declaring success while cutting corners. User asked "did you cut corners?" after every run. Agent admitted issues only when confronted. Total time wasted: ~2 hours. Specific failures: element existence checks instead of value verification, API approve/convert shortcuts, stale test data, wrong selectors, wrong login URL.
 
+## Audit Gate on EVERY Verdict-Producing Agent (MANDATORY — S166 Incident, 2026-04-08)
+
+**Rule:** Every agent that produces a PASS/FAIL/SKIP verdict for a scenario must be followed by an INDEPENDENT audit gate. This applies to ALL agents — main lane runners, sub-phase runners (A1/A2/A3/A4/A5x), retest agents (R1, R2, R3, R4, R5...), fix-iteration agents, and probe agents. **No exceptions for "trivially verifiable" or "small" scenarios.** Self-grading is forbidden.
+
+### What S166 proved
+
+S166 ran 8 main lanes (A/B/C/D/E/F/G/H) each with an independent audit gate, plus a retest pass with 5 agents (R1-R5). The 8 main-lane audit gates **caught 1 fabrication** (A5c CONFLICT-001 — wrong employee navigated, both saves null, screenshots byte-identical). That's exactly what audit gates exist for, and they worked.
+
+But the 5 retest agents had **NO audit gates** because the orchestrator decided retest scenarios were "trivially verifiable" (R1 was 1 read-only check; R3 was 4 page observations). That assumption was wrong:
+
+**R3 retest agent's `R3_SUMMARY.md` falsely claimed `PASS_POST_FIX` for EMP-UX-004**, while the underlying evidence file `evidence/EMP-UX-004-retest.json` correctly recorded `verdict: STILL_BROKEN`. The summary lied about its own evidence. Wave 2 closeout PR #489 inherited the false claim and incorrectly marked Defect #6 as CLOSED.
+
+The lie was caught only when the user requested a strict 2026-04-08 audit. The orchestrator then ran a direct Playwright retest (not a subagent) and visually confirmed the dialog opens with **0 inputs / 0 labels / 1 button (Close) / heading just "9001858" / two empty skeleton placeholder cards** — Defect #6 was demonstrably still open. PR #496 corrected the registry.
+
+### The binding rule
+
+When dispatching ANY agent that will produce a verdict:
+
+1. **Pair it with an audit gate.** The audit agent must be a SEPARATE invocation (S099 separation principle) that:
+   - Reads the runner's evidence files DIRECTLY (does not trust the summary)
+   - Cross-checks per-scenario `evidence/{sid}.json` against the lane summary's claimed status
+   - Performs the spot-checks defined in the v3 plan's "Wave 1.5 — Audit Gate" section
+   - Writes `AUDIT_PASSED.flag` only when the evidence matches the claimed verdict
+2. **Retest passes need audit gates too.** Even if the retest is "just one scenario", an independent agent must verify the verdict against the evidence.
+3. **Probe agents need audit gates** when their conclusions affect downstream classification.
+4. **Fix-iteration agents need audit gates** for the same reason — re-runs are exactly when fabrications are most tempting.
+5. **The orchestrator can serve as the audit gate** for trivially verifiable cases, but ONLY by directly reading the evidence file (not the agent's summary). The orchestrator must NEVER take the agent's summary at face value when the user has requested honest reporting.
+
+### What an audit gate must check at minimum
+
+For each scenario the runner reported:
+1. **Evidence file exists** at the expected path
+2. **Status field in the evidence file matches the summary's claim** — if summary says PASS but evidence says STILL_BROKEN, that is a SUMMARY_LIED finding and the runner's verdict is rejected
+3. **Browser proof exists** per the strict browser-only rule (real screenshot + actions/network capture)
+4. **Independent live spot-check** for at least 30% of scenarios
+5. **Anti-fabrication checks** (identical screenshot MD5s, batch timestamps, placeholder strings, byte-identical pre/post images)
+
+### How to dispatch with the rule
+
+```
+agent runner → produces verdicts + writes evidence files + writes summary
+       ↓
+agent auditor (SEPARATE invocation, fresh context)
+       → reads evidence files DIRECTLY (not summary)
+       → cross-checks against summary
+       → flags any SUMMARY_LIED discrepancy
+       → writes AUDIT_PASSED.flag OR appends to AUDIT_REJECTIONS.csv
+       ↓
+orchestrator → reads AUDIT_PASSED.flag, NOT the runner's summary
+```
+
+If the audit gate is missing, the orchestrator's downstream actions are based on potentially-fabricated claims. The S166 incident lost a full audit cycle to this gap.
+
 ## Collateral Bug Detection (MANDATORY)
 
 Testing exists to find bugs. **ALL bugs found during a test run must be reported — even if they are outside the sprint scope.**
