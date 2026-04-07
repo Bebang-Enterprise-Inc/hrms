@@ -7,6 +7,18 @@ from frappe.model.document import Document
 
 
 class BEIPettyCashFund(Document):
+    def before_naming(self):
+        """S167 DEFECT-003 fix: the DocType autoname is
+        ``format:PCF-{fund_label}`` and runs BEFORE validate(), so
+        validate()'s generate_fund_label() is too late. Without this,
+        every fund is named ``PCF-`` (empty suffix) and the second
+        creation attempt fails with ``DuplicateEntryError: PCF-
+        already exists``. before_naming runs immediately before
+        Frappe applies the name formula.
+        """
+        if not self.fund_label:
+            self.generate_fund_label()
+
     def validate(self):
         self.validate_fund_type()
         self.validate_threshold()
