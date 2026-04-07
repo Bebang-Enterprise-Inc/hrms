@@ -316,6 +316,27 @@ def _parse_leave_ids(leave_ids: Any) -> list[str]:
 
 @frappe.whitelist()
 def bulk_action(leave_ids: list[str] | str, status: str, remarks: str | None = None) -> dict[str, Any]:
+    """Bulk approve or reject Leave Applications.
+
+    S170 fix: previously called `doc.submit()` without setting `doc.status` first,
+    which tripped `LeaveApplication.on_submit`'s guard
+    (status must be Approved or Rejected) and silently failed — leaving leaves
+    submitted via direct DB paths with no Leave Ledger Entry. The result was
+    employees who appeared to have approved leave but whose balances never
+    deducted.
+
+    The fix sets status BEFORE submit so `create_leave_ledger_entry` actually
+    runs, and for the already-submitted edge case it calls
+    `create_leave_ledger_entry()` directly after the status flip.
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+
+    set_backend_observability_context(
+        module="leave",
+        action="bulk_action",
+        mutation_type="update",
+    )
+
     _enforce_access()
 
     normalized_leave_ids = _parse_leave_ids(leave_ids)
@@ -334,20 +355,31 @@ def bulk_action(leave_ids: list[str] | str, status: str, remarks: str | None = N
                 results["failed"].append({"id": leave_id, "error": f"Leave is already {doc.status}"})
                 continue
 
-            if status == "Approved":
-                if doc.docstatus == 0:
-                    doc.flags.ignore_permissions = True
-                    doc.submit()
-                else:
-                    doc.db_set("status", "Approved")
+            if doc.docstatus == 0:
+                # Draft leave: set status, save, then submit so on_submit's guard
+                # passes and create_leave_ledger_entry actually runs.
+                doc.flags.ignore_permissions = True
+                doc.status = status
+                doc.save()
+                doc.submit()
             else:
-                doc.db_set("status", "Rejected")
+                # Already-submitted edge case: status flipped to Open via direct
+                # DB write somewhere upstream. Flip status back AND create the
+                # ledger entry manually since on_submit no longer fires.
+                doc.db_set("status", status)
+                doc.reload()
+                if status == "Approved":
+                    doc.create_leave_ledger_entry()
 
             if remarks and hasattr(doc, "add_comment"):
                 doc.add_comment("Comment", f"Bulk leave action: {status}. Remarks: {remarks}")
 
             results["success"].append(leave_id)
-        except Exception as exc:  # pragma: no cover - pass-through path
+        except Exception as exc:
+            frappe.log_error(
+                message=f"bulk_action failed for {leave_id}: {exc}",
+                title="S170 leave bulk_action",
+            )
             results["failed"].append({"id": leave_id, "error": str(exc)})
 
     return results

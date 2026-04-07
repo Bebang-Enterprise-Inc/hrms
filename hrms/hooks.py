@@ -565,4 +565,4 @@ ignore_translatable_strings_from = ["frappe", "erpnext"]
 
 # Fixtures
 # --------
-fixtures = ["Custom Field"]
+fixtures = ["Custom Field", "BEI Clearance Station"]
