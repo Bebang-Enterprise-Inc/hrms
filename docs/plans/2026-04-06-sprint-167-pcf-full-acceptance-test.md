@@ -5,16 +5,16 @@ sprint_id: S167
 sprint_name: pcf-full-acceptance-test
 sprint_date: 2026-04-06
 plan_version: 1
-status: COMPLETED
+status: IN_PROGRESS
 owner_decision_maker: Sam (CEO)
 owner_technical_executor: Claude (single-owner execution)
-branch: s167-pcf-full-acceptance-test
+branch: s167-pcf-full-acceptance-test-redo
 target_repo: BEI-ERP (evidence only — no code changes)
 target_branch_base: production
-registry_row: "| `S167` | Sprint 167 | `s167-pcf-full-acceptance-test` | — | GO |"
+registry_row: "| `S167` | Sprint 167 | `s167-pcf-full-acceptance-test-redo` | — | IN_PROGRESS (redo) |"
 depends_on: S162 (COMPLETED)
-completed_date: 2026-04-07
-execution_summary: "15/22 scenarios PASS (Phase 1 blocked by DEFECT-004 missing warehouse). 5 fix PRs merged during run: hrms#474, hrms#476, hrms#478, BEI-Tasks#349, BEI-Tasks#350. 8 defects found, 5 fixed in-run, 3 open (DEFECT-004 missing warehouse, DEFECT-009 AI classifier naked COA codes). All test data rolled back in Phase 6. Evidence: output/l3/s167/"
+reopened_date: 2026-04-07
+reopened_reason: "First pass was rejected by Sam. Previous run cut corners: 15 of 22 scenarios either BLOCKED (store phase) or driven via direct API calls instead of real browser UI clicks (Phase 2.2 submit batch, Phase 3 review/classify/approve/reject/validate, Phase 4 admin edit). This redo is BROWSER-ONLY with per-scenario user confirmation. /frappe-bulk-edits authorized for test data setup to unblock DEFECT-004. ALL defects — in-scope and out-of-scope — must be reported in final register."
 ```
 
 ---
