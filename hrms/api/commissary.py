@@ -28,7 +28,10 @@ from hrms.utils.bei_config import get_company
 from hrms.utils.sentry import set_backend_observability_context
 from hrms.utils.supply_chain_contracts import (
 	CANONICAL_COMMISSARY_OPERATION_WAREHOUSE,
+	buyer_entity_requires_billing_hold,
 	get_preferred_commissary_warehouses,
+	load_store_buyer_entity_register,
+	resolve_store_buyer_entity,
 	resolve_warehouse_company,
 )
 
@@ -858,20 +861,27 @@ def fulfill_store_order(mr_name: str, items: str | list[dict[str, Any]]):
 	with _run_as_system_user("Administrator"):
 		se.submit()
 
-	# G-046: Create inter-company invoices for hub transfers (commissary to store)
+	# S168: Create Draft Sales Invoice synchronously so failures surface with the SE.
+	# The SI stays Draft until the store signs the DR at complete_receiving time.
+	# Per ICT-001/004/007: BKI→store is an EXTERNAL sale (12% VAT, no intercompany
+	# auto-mirror, revenue recognized on store DR acceptance).
 	try:
-		store_info = _get_store_type_and_customer(target_warehouse)
-		frappe.enqueue(
-			"hrms.api.commissary._create_intercompany_invoices_async",
-			queue="short",
-			stock_entry_name=se.name,
-			store_info=store_info,
+		frappe.db.savepoint("s168_draft_si_create")
+		store_order_name = frappe.db.get_value("Material Request", mr_name, "custom_store_order")
+		si_name = build_bki_store_sale_invoice(
+			stock_entry=se,
+			store_order_name=store_order_name,
 		)
+		if si_name:
+			frappe.db.set_value("Stock Entry", se.name, "custom_sales_invoice_draft", si_name)
+		frappe.db.release_savepoint("s168_draft_si_create")
 	except Exception:
+		frappe.db.sql("ROLLBACK TO SAVEPOINT s168_draft_si_create")
 		frappe.log_error(
-			f"G-046: Failed to enqueue inter-company invoices for SE {se.name}: {frappe.get_traceback()}",
-			"Intercompany Invoice Error",
+			f"S168: Draft SI creation failed for SE {se.name}: {frappe.get_traceback()}",
+			"S168 Draft SI Error",
 		)
+		# DO NOT raise -- fulfillment must not block on billing errors.
 
 	# Update linked BEI Store Order status based on fulfillment completeness
 	_update_store_order_status_after_fulfillment(mr_name, items)
@@ -949,126 +959,276 @@ def _update_store_order_status_after_fulfillment(mr_name, fulfilled_items):
 		)
 
 
-def _get_store_type_and_customer(warehouse_name):
+# ============================================================
+# S168: BKI -> Store External Sale (Draft SI at Fulfillment)
+# ============================================================
+#
+# Replaces the legacy G-046 intercompany auto-mirror. Stores are SEPARATE
+# BIR-registered corporations (ICT-005), not BKI internal customers.
+# SI is created DRAFT on fulfillment and submitted at store DR acceptance
+# (ICT-007 destination terms). No Purchase Invoice auto-mirror (ICT-003):
+# stores file their own AP/input VAT independently.
+
+
+def build_bki_store_sale_invoice(
+	stock_entry,
+	store_order_name: str | None = None,
+) -> str | None:
+	"""S168: Create a Draft Sales Invoice for a BKI -> store fulfillment.
+
+	The SI is inserted as DRAFT (docstatus=0) and held there until the
+	store signs the Delivery Receipt via complete_receiving. At that
+	point the SI is submitted with the receiving acceptance date as
+	posting_date (ICT-007 destination terms / revenue on DR acceptance).
+
+	Per ICT-001: 12% Output VAT applied via BEI Settings.bki_sales_vat_template.
+	Per ICT-002: markup 2.75% JV / 8% Managed & Full Franchise.
+	Per ICT-003: no auto Purchase Invoice -- stores file their own AP.
+	Per ICT-004: no EWT (not Top 20,000).
+	Per ICT-005: BKI is a separate Frappe Company.
+
+	R1 Phase 3.1 amendment: one SI row per Stock Entry Detail row (row-level
+	aggregation, not per-item_code) to avoid double-billing when S163 grouped
+	orders produce multiple rows for the same item_code.
+
+	Returns the SI name, or None if the buyer entity is on billing hold
+	(provisional / missing register row). Callers MUST NOT raise when
+	None is returned -- fulfillment continues, Finance is notified via
+	the log_error breadcrumb.
 	"""
-	Retrieves the BEI Store Type and linked Customer for a given warehouse.
-	"""
-	# 1. Get Department from BEI Warehouse Department Mapping
-	department = frappe.db.get_value(
-		"BEI Warehouse Department Mapping", {"warehouse": warehouse_name}, "department"
+	set_backend_observability_context(
+		module="commissary",
+		action="create_draft_store_sale_invoices",
+		mutation_type="create",
 	)
-	if not department:
-		frappe.throw(_(f"No Department mapping found for Warehouse: {warehouse_name}"))
 
-	# 2. Get BEI Store Type from Department
-	bei_store_type_doc = frappe.get_doc("BEI Store Type", {"store": department})
-	if not bei_store_type_doc:
-		frappe.throw(_(f"No BEI Store Type found for Department: {department}"))
+	target_warehouse = stock_entry.to_warehouse
+	if not target_warehouse:
+		frappe.log_error(
+			f"S168: Stock Entry {stock_entry.name} has no to_warehouse; cannot create SI",
+			"S168 Draft SI Error",
+		)
+		return None
 
-	store_type = bei_store_type_doc.store_type
+	# Resolve authoritative buyer corporation via S037 register
+	entity_row = resolve_store_buyer_entity(warehouse_docname=target_warehouse) or {}
 
-	# 3. Get Customer for the store
-	customer = _get_store_customer(warehouse_name)
+	if buyer_entity_requires_billing_hold(entity_row):
+		frappe.log_error(
+			(
+				f"S168: Billing hold for warehouse={target_warehouse} "
+				f"(status={entity_row.get('buyer_entity_status') or 'unknown'}); "
+				"Draft SI NOT created. Finance must release the hold or amend the register."
+			),
+			"S168 Billing Hold",
+		)
+		return None
 
-	return {
-		"store_type": store_type,
-		"department": department,
-		"customer": customer,
-		"warehouse_name": warehouse_name,
-	}
-
-
-def _create_intercompany_invoices_async(stock_entry_name, store_info):
-	"""
-	Creates inter-company Sales Invoice (BKI) for a given Stock Entry related to a store transfer.
-	Runs async via enqueue to not block fulfillment.
-	"""
-	try:
-		stock_entry_doc = frappe.get_doc("Stock Entry", stock_entry_name)
-	except frappe.DoesNotExistError:
-		return
-
-	frappe.log_error(
-		f"G-046: Creating inter-company invoices for SE: {stock_entry_name}", "Intercompany Invoice Log"
-	)
+	buyer_entity_name = (entity_row.get("buyer_entity_name") or "").strip()
+	store_type = (entity_row.get("store_type") or "").strip()
+	if not buyer_entity_name:
+		frappe.throw(
+			_("Store {0} has no buyer entity in the S037 register; cannot create SI").format(
+				target_warehouse
+			)
+		)
 
 	bki_company = "Bebang Kitchen Inc."
-
 	if not frappe.db.exists("Company", bki_company):
-		frappe.log_error(f"G-046: Company {bki_company} not found.", "Intercompany Invoice Error")
-		return
+		frappe.throw(_("BKI company does not exist in Frappe (ICT-005)"))
 
-	# Determine markup based on store type
-	markup_rate = 0.0
-	if store_info["store_type"] == "JV":
-		markup_rate = 0.0275  # 2.75%
-	elif store_info["store_type"] in ["Managed Franchise", "Full Franchise"]:
-		markup_rate = 0.08  # 8%
-
-	try:
-		sales_invoice = frappe.new_doc("Sales Invoice")
-		sales_invoice.company = bki_company
-		sales_invoice.customer = store_info["customer"]
-		sales_invoice.posting_date = stock_entry_doc.posting_date
-		sales_invoice.set_posting_time = 1
-		sales_invoice.currency = frappe.db.get_value("Company", bki_company, "default_currency") or "PHP"
-		sales_invoice.is_internal_customer = 1
-		sales_invoice.custom_stock_entry = stock_entry_doc.name
-		sales_invoice.remarks = f"Inter-company Sales Invoice for Hub Transfer SE: {stock_entry_doc.name}"
-
-		for se_item in stock_entry_doc.items:
-			# Use basic_rate (cost) from the Stock Entry item
-			base_price = flt(se_item.basic_rate)
-			if not base_price:
-				# Fallback to item valuation rate if basic_rate is 0
-				base_price = flt(frappe.db.get_value("Item", se_item.item_code, "valuation_rate"))
-
-			selling_price_per_unit = base_price * (1 + markup_rate)
-
-			sales_invoice.append(
-				"items",
-				{
-					"item_code": se_item.item_code,
-					"qty": se_item.qty,
-					"rate": selling_price_per_unit,
-					"warehouse": stock_entry_doc.to_warehouse,
-					"cost_center": frappe.db.get_value("Company", bki_company, "cost_center"),
-				},
-			)
-
-		sales_invoice.insert(ignore_permissions=True)
-		with _run_as_system_user("Administrator"):
-			sales_invoice.submit()
-
-		frappe.log_error(
-			f"G-046: Created Sales Invoice {sales_invoice.name} for {stock_entry_doc.name}",
-			"Intercompany Invoice Log",
+	# Customer lookup: exact customer_name match, no company filter (R1 Amendment 14)
+	customer = frappe.db.get_value(
+		"Customer", {"customer_name": buyer_entity_name}, "name"
+	)
+	if not customer:
+		frappe.throw(
+			_(
+				"No Customer '{0}' found in Frappe (store: {1}). "
+				"Run scripts/s168_seed_customers.py to create missing Customers."
+			).format(buyer_entity_name, target_warehouse)
 		)
 
-		# Let Frappe auto-create the Purchase Invoice if the internal supplier is mapped correctly.
-		# If not mapped, we could call make_inter_company_purchase_invoice(sales_invoice.name) here.
-		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_inter_company_purchase_invoice
+	# Markup + VAT template + income account from BEI Settings
+	settings = frappe.get_single("BEI Settings")
+	markup_by_type = {
+		"JV": flt(getattr(settings, "bki_markup_jv_percent", 0) or 0) / 100,
+		"Managed Franchise": flt(
+			getattr(settings, "bki_markup_managed_franchise_percent", 0) or 0
+		)
+		/ 100,
+		"Full Franchise": flt(
+			getattr(settings, "bki_markup_full_franchise_percent", 0) or 0
+		)
+		/ 100,
+	}
+	markup_rate = markup_by_type.get(store_type)
+	if markup_rate is None:
+		frappe.throw(
+			_(
+				"Unknown store_type '{0}' for {1}. Configure markup in BEI Settings "
+				"or fix the S037 register row."
+			).format(store_type, target_warehouse)
+		)
 
-		try:
-			purchase_invoice = make_inter_company_purchase_invoice(sales_invoice.name)
-			purchase_invoice.insert(ignore_permissions=True)
-			with _run_as_system_user("Administrator"):
-				purchase_invoice.submit()
-			frappe.log_error(
-				f"G-046: Created Purchase Invoice {purchase_invoice.name} for {stock_entry_doc.name}",
-				"Intercompany Invoice Log",
+	vat_template = (getattr(settings, "bki_sales_vat_template", "") or "").strip()
+	if not vat_template:
+		frappe.throw(
+			_(
+				"BEI Settings.bki_sales_vat_template is not set. Cannot create SI "
+				"without 12% VAT template (ICT-001)."
 			)
-		except Exception:
-			frappe.log_error(
-				f"G-046: Failed to auto-create Purchase Invoice for SI {sales_invoice.name}: {frappe.get_traceback()}",
-				"Intercompany Invoice Error",
-			)
+		)
 
+	income_account = (getattr(settings, "bki_sales_income_account", "") or "").strip()
+	if not income_account:
+		frappe.throw(_("BEI Settings.bki_sales_income_account is not set. Cannot create SI."))
+
+	debit_to = (getattr(settings, "bki_sales_debit_to_account", "") or "").strip()
+
+	# Build the Draft SI
+	si = frappe.new_doc("Sales Invoice")
+	si.company = bki_company
+	si.customer = customer
+	si.is_internal_customer = 0  # EXTERNAL sale per ICT-001
+	si.posting_date = stock_entry.posting_date
+	si.set_posting_time = 1
+	si.currency = frappe.db.get_value("Company", bki_company, "default_currency") or "PHP"
+	si.taxes_and_charges = vat_template
+	if debit_to:
+		si.debit_to = debit_to
+	# Linkage (custom fields added by Phase 1 fixtures)
+	si.custom_stock_entry = stock_entry.name
+	if store_order_name:
+		si.custom_bei_store_order = store_order_name
+	si.remarks = (
+		f"S168: Draft BKI->{buyer_entity_name} sale. Store: {target_warehouse} "
+		f"({store_type}). Stock Entry: {stock_entry.name}. Markup: {markup_rate*100:.2f}%. "
+		"Will be submitted on store DR acceptance (ICT-007)."
+	)
+
+	cost_center = frappe.db.get_value("Company", bki_company, "cost_center")
+
+	# Row-level aggregation: one SI row per Stock Entry Detail row (R1 Phase 3.1)
+	# Prevents double-billing when grouped orders (S163) produce duplicate
+	# item_code rows.
+	has_rows = False
+	for se_item in stock_entry.items:
+		qty = flt(se_item.qty)
+		if qty <= 0:
+			continue
+		base_price = flt(se_item.basic_rate)
+		if not base_price:
+			base_price = flt(
+				frappe.db.get_value("Item", se_item.item_code, "valuation_rate")
+			)
+		if base_price <= 0:
+			frappe.throw(
+				_(
+					"Item {0} has no basic_rate or valuation_rate; cannot price Draft SI "
+					"for Stock Entry {1}"
+				).format(se_item.item_code, stock_entry.name)
+			)
+		selling_price = flt(base_price * (1 + markup_rate), 4)
+		row = {
+			"item_code": se_item.item_code,
+			"qty": qty,
+			"uom": getattr(se_item, "uom", None) or getattr(se_item, "stock_uom", None),
+			"rate": selling_price,
+			"income_account": income_account,
+			"warehouse": stock_entry.to_warehouse,
+			"cost_center": cost_center,
+			# Traceability: which SE Detail row this SI row came from
+			"custom_stock_entry_detail": se_item.name,
+		}
+		si.append("items", row)
+		has_rows = True
+
+	if not has_rows:
+		frappe.log_error(
+			f"S168: Stock Entry {stock_entry.name} has no billable items; Draft SI not created",
+			"S168 Draft SI Error",
+		)
+		return None
+
+	# Pull taxes from the configured template (12% VAT per ICT-001)
+	try:
+		from erpnext.controllers.accounts_controller import get_taxes_and_charges
+
+		taxes = get_taxes_and_charges("Sales Taxes and Charges Template", vat_template) or []
+		for tax in taxes:
+			si.append("taxes", tax)
 	except Exception:
 		frappe.log_error(
-			f"G-046: Failed to create invoices for SE {stock_entry_name}: {frappe.get_traceback()}",
-			"Intercompany Invoice Error",
+			f"S168: Failed to load taxes from template {vat_template}: {frappe.get_traceback()}",
+			"S168 Draft SI Error",
 		)
+		raise
+
+	si.insert(ignore_permissions=True)
+	# DO NOT submit. SI stays Draft until complete_receiving submits it on
+	# store DR acceptance (ICT-007). docstatus=0 is intentional.
+	return si.name
+
+
+def _delete_orphan_draft_si_on_se_cancel(doc, method=None):
+	"""S168: If a Stock Entry is cancelled and has a linked Draft SI, delete
+	the orphan Draft SI so it does not linger in the billing holds dashboard.
+
+	Registered on Stock Entry on_cancel via hooks.py (wired by schema agent).
+	Safe to call even if the field or doc does not exist.
+	"""
+	try:
+		si_name = getattr(doc, "custom_sales_invoice_draft", None)
+		if not si_name:
+			return
+		if not frappe.db.exists("Sales Invoice", si_name):
+			return
+		docstatus = frappe.db.get_value("Sales Invoice", si_name, "docstatus")
+		if docstatus != 0:
+			# Only delete DRAFT invoices; never touch submitted/cancelled SIs.
+			frappe.log_error(
+				(
+					f"S168: Stock Entry {doc.name} cancelled but linked SI {si_name} "
+					f"is docstatus={docstatus}; not deleting. Manual review required."
+				),
+				"S168 Draft SI Cancel",
+			)
+			return
+		frappe.delete_doc(
+			"Sales Invoice",
+			si_name,
+			force=True,
+			ignore_permissions=True,
+			delete_permanently=True,
+		)
+		frappe.db.set_value("Stock Entry", doc.name, "custom_sales_invoice_draft", None)
+	except Exception:
+		frappe.log_error(
+			f"S168: Failed to clean up orphan Draft SI on SE cancel {doc.name}: {frappe.get_traceback()}",
+			"S168 Draft SI Cancel",
+		)
+
+
+@frappe.whitelist()
+def clear_buyer_entity_cache():
+	"""S168 Amendment 10: System Manager endpoint to reload the S037 register.
+
+	`load_store_buyer_entity_register` is decorated with @lru_cache(maxsize=1)
+	for performance. After updating the register CSV, call this endpoint to
+	reload it without a bench restart.
+	"""
+	set_backend_observability_context(
+		module="commissary",
+		action="clear_buyer_entity_cache",
+		mutation_type="update",
+	)
+	if "System Manager" not in frappe.get_roles(frappe.session.user):
+		frappe.throw(_("Only System Manager can reload the buyer entity register"))
+	cache_clear = getattr(load_store_buyer_entity_register, "cache_clear", None)
+	if callable(cache_clear):
+		cache_clear()
+	return {"success": True, "message": "Buyer entity register cache cleared"}
 
 
 @frappe.whitelist()
