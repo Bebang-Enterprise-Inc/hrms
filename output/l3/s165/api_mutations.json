@@ -1,0 +1,46 @@
+[
+  {
+    "test": "T0.2 CB4 filter isolation probe",
+    "endpoint": "GET https://api.mosaic-pos.com/api/v1/orders?filter[location_id]=2557&filter[business_date]=2026-04-04&page[size]=1",
+    "method": "GET",
+    "result": {"location_id": 2557, "store_name": "Araneta Gateway", "meta_total": 233},
+    "status": 200,
+    "notes": "Compared with location_id=2515 (Robinsons Galleria South, meta_total=225). Different totals confirm filter[location_id] is honored."
+  },
+  {
+    "test": "T4.1 dry-run Mosaic count fetch",
+    "endpoint": "GET https://api.mosaic-pos.com/api/v1/orders?filter[location_id]=2338&filter[business_date]=2026-04-04&page[size]=1",
+    "method": "GET",
+    "result": {"meta_total": 344},
+    "status": 200
+  },
+  {
+    "test": "T4.1 dry-run Supabase count",
+    "endpoint": "GET https://csnniykjrychgajfrgua.supabase.co/rest/v1/pos_orders?location_id=eq.2338&business_date=eq.2026-04-04 (Prefer: count=exact)",
+    "method": "GET",
+    "result": {"content_range_total": 344},
+    "status": 206
+  },
+  {
+    "test": "T4.3 heal upserts (Apr 3)",
+    "endpoint": "POST https://csnniykjrychgajfrgua.supabase.co/rest/v1/sync_verification",
+    "method": "POST",
+    "result": "45 rows upserted per pass (3 passes total = 135 rows written)",
+    "status": 201
+  },
+  {
+    "test": "T5.1 heal upserts (Apr 2)",
+    "endpoint": "POST https://csnniykjrychgajfrgua.supabase.co/rest/v1/sync_verification",
+    "method": "POST",
+    "result": "45 rows upserted, 3 stores healed via sync_store_day()",
+    "status": 201
+  },
+  {
+    "test": "T1.2 sync_verification table creation",
+    "endpoint": "POST https://api.supabase.com/v1/projects/csnniykjrychgajfrgua/database/query",
+    "method": "POST",
+    "payload": "CREATE TABLE IF NOT EXISTS sync_verification (...)",
+    "status": 201,
+    "result": "Table created with 9 columns including generated delta"
+  }
+]

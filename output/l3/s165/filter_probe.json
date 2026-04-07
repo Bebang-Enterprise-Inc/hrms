@@ -1,0 +1,20 @@
+{
+  "probe_date": "2026-04-04",
+  "credential_group": "Araneta Group (3 stores)",
+  "loc_a": {
+    "location_id": 2557,
+    "store_name": "Araneta Gateway",
+    "status_code": 200,
+    "meta_total": 233,
+    "body_snippet": null
+  },
+  "loc_b": {
+    "location_id": 2515,
+    "store_name": "Robisons Galleria South",
+    "status_code": 200,
+    "meta_total": 225,
+    "body_snippet": null
+  },
+  "filter_isolated": true,
+  "verdict": "PASS \u2014 filter[location_id] is honored"
+}

@@ -2,10 +2,10 @@ name: Daily POS & Web Orders Sync
 
 on:
   schedule:
-    # 12:30 AM PHT = 16:30 UTC (previous day) - overnight sync
+    # S165: Hourly POS sync, 10 AM to midnight PHT (02:00-16:00 UTC, 15 runs/day)
+    - cron: "0 2-16 * * *"
+    # Nightly verification + anomaly detection (00:30 PHT = 16:30 UTC)
     - cron: "30 16 * * *"
-    # 4:00 PM PHT = 08:00 UTC - afternoon intraday sync
-    - cron: "0 8 * * *"
   workflow_dispatch:
     inputs:
       target_date:
@@ -17,6 +17,17 @@ on:
         required: false
         type: boolean
         default: false
+      skip_verify:
+        description: "Skip sync verification step"
+        required: false
+        type: boolean
+        default: false
+
+# S165 CB2: Serialize all runs so hourly and nightly cannot overlap.
+# cancel-in-progress=false lets long runs finish and queues newer ones.
+concurrency:
+  group: daily-pos-sync
+  cancel-in-progress: false
 
 env:
   SUPABASE_URL: "https://csnniykjrychgajfrgua.supabase.co"
@@ -25,10 +36,11 @@ env:
   SUPERADMIN_API_KEY: ${{ secrets.SUPERADMIN_API_KEY }}
 
 jobs:
-  # ── Step 1: POS orders from Mosaic API (with retry) ────────────────────────
+  # -- Step 1: POS orders from Mosaic API (with retry) --
   pos-sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 180  # 3 attempts x 60 min max
+    # S165 CB2: reduced from 180 -> 50 to fit under 1-hour cron boundary.
+    timeout-minutes: 50
 
     steps:
       - uses: actions/checkout@v4
@@ -48,7 +60,7 @@ jobs:
       - name: Run POS sync with retry
         run: |
           MAX_ATTEMPTS=3
-          RETRY_DELAY=1800  # 30 minutes
+          RETRY_DELAY=900  # 15 minutes (reduced from 30 to fit 50-min timeout)
 
           for attempt in $(seq 1 $MAX_ATTEMPTS); do
             echo "=== POS sync attempt $attempt/$MAX_ATTEMPTS ==="
@@ -109,6 +121,7 @@ jobs:
   # Scripts retained in scripts/ for reference.
 
   # ── Step 3: Refresh dashboard materialized views after all sales feeds ────
+  # S165 MW3: This job is intentionally UNGATED. Runs every hour for dashboard freshness.
   refresh-sales-dashboard-views:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -129,11 +142,17 @@ jobs:
           python scripts/supabase_exec.py "select public.refresh_sales_dashboard_daily_store_metrics();"
 
   # ── Step 4: Anomaly detection (AFTER all syncs complete) ─────────────────
+  # S165 CB1: != 'true' form is mandatory. Do NOT use !inputs.skip_anomaly.
+  # GH Actions inputs are strings, and !"false" == false silently skips.
+  # Gated to run ONLY on nightly cron or workflow_dispatch.
   anomaly-detection:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [refresh-sales-dashboard-views]
-    if: ${{ !inputs.skip_anomaly }}
+    if: >-
+      ${{ inputs.skip_anomaly != 'true' &&
+          (github.event_name == 'workflow_dispatch' ||
+           github.event.schedule == '30 16 * * *') }}
 
     steps:
       - uses: actions/checkout@v4
@@ -159,10 +178,64 @@ jobs:
           fi
 
   # ── Workflow-level failure notification ─────────────────────────────────────
+
+  # notify-failure posts to spaces/AAQABiNmpBg (workflow-level alerts)
+  # verify-sync script posts to spaces/AAQA3NVVR6c (anomaly detection space)
+  # These are intentionally separate -- do not merge them.
+  verify-sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [refresh-sales-dashboard-views]
+    if: >-
+      ${{ inputs.skip_verify != 'true' &&
+          (github.event_name == 'workflow_dispatch' ||
+           github.event.schedule == '30 16 * * *') }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install httpx requests google-auth google-api-python-client sentry-sdk
+
+      - name: Fail-fast if Sentry DSN missing (S165 CB5)
+        run: |
+          if [ -z "${{ secrets.SENTRY_DSN }}" ]; then
+            echo "::error::SENTRY_DSN secret not set"
+            exit 1
+          fi
+
+      - name: Setup Mosaic credentials
+        run: |
+          mkdir -p data/POS_Extraction
+          echo "${{ secrets.MOSAIC_CREDS_CSV }}" | base64 -d > data/POS_Extraction/MOSAIC_POS_API_KEYS.csv
+
+      - name: Setup Google credentials
+        run: |
+          mkdir -p credentials
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}" | base64 -d > credentials/task-manager-service.json
+
+      - name: Run sync verification
+        env:
+          SUPABASE_URL: https://csnniykjrychgajfrgua.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_MGMT_TOKEN: ${{ secrets.SUPABASE_MGMT_TOKEN }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+        run: |
+          if [ -n "${{ inputs.target_date }}" ]; then
+            python scripts/verify_mosaic_pos_sync.py --date "${{ inputs.target_date }}"
+          else
+            python scripts/verify_mosaic_pos_sync.py --days 7
+          fi
+
+  # S165: includes verify-sync in needs.
   notify-failure:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    needs: [pos-sync, web-sync, refresh-sales-dashboard-views, anomaly-detection]
+    needs: [pos-sync, web-sync, refresh-sales-dashboard-views, anomaly-detection, verify-sync]
     if: ${{ always() && contains(needs.*.result, 'failure') }}
 
     steps:
@@ -196,6 +269,7 @@ jobs:
           web = '${{ needs.web-sync.result }}'
           views = '${{ needs.refresh-sales-dashboard-views.result }}'
           anomaly = '${{ needs.anomaly-detection.result }}'
+          verify = '${{ needs.verify-sync.result }}'
 
           severity = 'CRITICAL' if pos == 'failure' else 'WARNING'
           icon = chr(0x1F534) if severity == 'CRITICAL' else chr(0x1F7E1)
@@ -211,6 +285,7 @@ jobs:
               fmt('Web sync (delivery)', web),
               fmt('View refresh', views),
               fmt('Anomaly detection', anomaly),
+              fmt('Sync verification', verify),
               '',
               f'Re-run: https://github.com/${{ github.repository }}/actions/workflows/daily-pos-sync.yml',
               f'Details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}',

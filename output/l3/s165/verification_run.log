@@ -1,0 +1,53 @@
+S165 Mosaic Sync Verification — L3 Evidence Log
+Run date: 2026-04-06 (Monday)
+Agent: Claude Opus 4.6
+
+=== Phase 0: Pre-flight ===
+T0.1 PASS — sync_progress constraint allows 'partial'
+T0.2 PASS — CB4 filter isolation: Araneta Gateway=233, Robinsons Galleria South=225
+T0.4 PASS — SENTRY_DSN exists (Doppler + GH Actions)
+T0.5 PASS — SUPABASE_SERVICE_ROLE_KEY and SUPABASE_MGMT_TOKEN accessible
+
+=== Phase 1: Schema ===
+T1.1 PASS — SQL migration file created
+T1.2 PASS — Table created with 9 columns (verified via information_schema)
+
+=== Phase 2: Verify script ===
+T2.1-T2.13 PASS — scripts/verify_mosaic_pos_sync.py created, 400+ lines
+  CLI flags: --date, --days, --store, --no-heal, --no-chat, --dry-run
+  CB3: import sync_pos_to_supabase as sps + sps.SUPABASE_KEY propagation
+  CB5: fail-fast sys.exit(2) if SENTRY_DSN missing
+  MW1: SIGINT handler reinstalled after import
+  MW2: fetch_mosaic_count with full retry/429/5xx loop
+  HW1: supabase_count via PostgREST count=exact (content-range header)
+  HW4: window ends at yesterday PHT
+  HW2: heal calls set_sync_progress('pending') before sync_store_day
+  MW6: Chat alert inlined with correct space
+  MW9: exit 0 on success, 2 on missing DSN, 3 on all groups failed
+
+=== Phase 3: Workflow YAML ===
+T3.1 PASS — concurrency: { group: daily-pos-sync, cancel-in-progress: false }
+T3.2 PASS — pos-sync.timeout-minutes: 50 (was 180)
+T3.3 PASS — cron: "0 2-16 * * *" (hourly) + "30 16 * * *" (nightly)
+T3.4 PASS — anomaly-detection.if fixed: inputs.skip_anomaly != 'true'
+T3.5 PASS — verify-sync job added with inputs.skip_verify != 'true'
+T3.6 PASS — CB5 DSN pre-flight step in workflow
+T3.7 PASS — MW3 documented: refresh-sales-dashboard-views intentionally ungated
+T3.8 PASS — notify-failure.needs includes verify-sync
+
+=== Phase 4: L3 Verification ===
+T4.1 PASS — dry-run: SM Megamall Mosaic=344, Supabase=344, no writes
+T4.2 PASS — no-heal dry-run: 11 stores flagged missing on Apr 3
+T4.3 PASS — live heal: 3 passes needed (transient timeouts), final 0 unresolved
+T4.4 PASS — CB3: no 401 errors during heal (module-global propagation works)
+T4.7/T4.8 DEFERRED — workflow_dispatch tests require merge to production first
+
+=== Phase 5: Backfill ===
+T5.1 PASS — Apr 2: 3 stores healed, 0 unresolved. Low count = Holy Week closures.
+T5.2 PASS — Apr 3: fully healed across 3 passes, 0 unresolved. Same Holy Week explanation.
+
+=== Summary ===
+Apr 2: 3,263 paid orders (3 stores healed, +6 orders) — Holy Week
+Apr 3: 2,427 paid orders (11 stores healed across 3 passes, +106 orders) — Holy Week
+Apr 4: 9,710 paid orders (all OK, no heal needed)
+Apr 5: 10,606 paid orders (previously healed via manual re-sync)

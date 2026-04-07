@@ -214,7 +214,7 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S164` | Sprint 164 | `s164-add-new-employee-entry-point` | hrms#463, BEI-Tasks#347 | PR_CREATED 2026-04-06 — "Add New Employee" dialog on Employee Master Dashboard. Auto-generates Employee ID + Bio ID, uploads Gov ID files, best-effort ADMS auto-enrollment on branch bio device, Google Chat notification. Surfaces "Missing Bio Device" metric card and red "No Bio ID" badge on rows. Phase 0 extracts `getCsrfToken` → `lib/frappe-csrf.ts` and `_get_adms_config` → `hrms/utils/adms_config.py`. PRs: hrms#463, BEI-Tasks#347. L3 deferred to fresh session per S099. | `docs/plans/2026-04-06-sprint-164-add-new-employee-entry-point.md` |
 
-| `S165` | Sprint 165 | `s165-mosaic-sync-verification` | — | GO (audit-hardened 2026-04-06) — Mosaic POS sync verification + hourly sync schedule. | `docs/plans/2026-04-06-sprint-165-mosaic-sync-verification.md` |
+| `S165` | Sprint 165 | `s165-mosaic-sync-verification` | #466 | PR_CREATED 2026-04-06 — Mosaic POS sync verification + hourly sync schedule. Apr 2-3 backfilled. | `docs/plans/2026-04-06-sprint-165-mosaic-sync-verification.md` |
 
 | `S166` | Sprint 166 | `s166-l3-employee-lifecycle-scenarios` | — | PLANNED 2026-04-06 — Full 19-stage employee lifecycle L3 browser scenarios (118 scenarios, 32 prefixes): HIRE → EDIT → COMPENSATE → REGULARIZE → LEAVE → OT → ATTENDANCE → PAYROLL RUN → PAYSLIP → DISCIPLINARY → TRANSFER → TERMINATE → EXIT INTERVIEW → FINAL PAY → COMPLIANCE → DEACTIVATE → REHIRE → ENRICHMENT → CLEANUP. 60 work units, execution-only (no code changes). | `docs/plans/2026-04-06-sprint-166-l3-employee-lifecycle-scenarios.md` |
 
