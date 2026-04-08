@@ -1,0 +1,98 @@
+{
+  "window": {
+    "from": "2026-04-01",
+    "to": "2026-04-07"
+  },
+  "tuples": [
+    {
+      "service_type_id": 91,
+      "service_channel_id": null,
+      "channel": "POS",
+      "n": 30965
+    },
+    {
+      "service_type_id": 3,
+      "service_channel_id": 2,
+      "channel": "FoodPanda",
+      "n": 7738
+    },
+    {
+      "service_type_id": 91,
+      "service_channel_id": null,
+      "channel": null,
+      "n": 5785
+    },
+    {
+      "service_type_id": 3,
+      "service_channel_id": 1,
+      "channel": "GrabFood",
+      "n": 3237
+    },
+    {
+      "service_type_id": 3,
+      "service_channel_id": null,
+      "channel": null,
+      "n": 1409
+    },
+    {
+      "service_type_id": 3,
+      "service_channel_id": null,
+      "channel": "FoodPanda",
+      "n": 301
+    },
+    {
+      "service_type_id": 3,
+      "service_channel_id": 16,
+      "channel": "FoodPanda",
+      "n": 209
+    },
+    {
+      "service_type_id": 17,
+      "service_channel_id": null,
+      "channel": "POS",
+      "n": 160
+    },
+    {
+      "service_type_id": 3,
+      "service_channel_id": 19,
+      "channel": "WebDelivery",
+      "n": 40
+    },
+    {
+      "service_type_id": 17,
+      "service_channel_id": null,
+      "channel": null,
+      "n": 28
+    }
+  ],
+  "misclassified": [
+    {
+      "service_type_id": 91,
+      "service_channel_id": null,
+      "actual_channel": null,
+      "expected_channel": "POS",
+      "row_count": 5785
+    },
+    {
+      "service_type_id": 3,
+      "service_channel_id": null,
+      "actual_channel": null,
+      "expected_channel": "Delivery",
+      "row_count": 1409
+    },
+    {
+      "service_type_id": 3,
+      "service_channel_id": null,
+      "actual_channel": "FoodPanda",
+      "expected_channel": "Delivery",
+      "row_count": 301
+    },
+    {
+      "service_type_id": 17,
+      "service_channel_id": null,
+      "actual_channel": null,
+      "expected_channel": "POS",
+      "row_count": 28
+    }
+  ]
+}

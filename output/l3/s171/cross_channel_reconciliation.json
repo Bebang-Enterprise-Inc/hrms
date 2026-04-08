@@ -1,0 +1,1863 @@
+{
+  "window": {
+    "from": "2026-04-01",
+    "to": "2026-04-07"
+  },
+  "rows": [
+    {
+      "location_id": 2177,
+      "business_date": "2026-04-07",
+      "pos_gross": "111726.60",
+      "web_gross": "0",
+      "combined_gross": "111726.60"
+    },
+    {
+      "location_id": 2179,
+      "business_date": "2026-04-07",
+      "pos_gross": "45428.77",
+      "web_gross": "9682.00",
+      "combined_gross": "55110.77"
+    },
+    {
+      "location_id": 2184,
+      "business_date": "2026-04-07",
+      "pos_gross": "64285.91",
+      "web_gross": "15760.00",
+      "combined_gross": "80045.91"
+    },
+    {
+      "location_id": 2216,
+      "business_date": "2026-04-07",
+      "pos_gross": "137541.56",
+      "web_gross": "0",
+      "combined_gross": "137541.56"
+    },
+    {
+      "location_id": 2217,
+      "business_date": "2026-04-07",
+      "pos_gross": "65006.60",
+      "web_gross": "14554.00",
+      "combined_gross": "79560.60"
+    },
+    {
+      "location_id": 2218,
+      "business_date": "2026-04-07",
+      "pos_gross": "92806.09",
+      "web_gross": "2488.00",
+      "combined_gross": "95294.09"
+    },
+    {
+      "location_id": 2219,
+      "business_date": "2026-04-07",
+      "pos_gross": "128384.47",
+      "web_gross": "29602.00",
+      "combined_gross": "157986.47"
+    },
+    {
+      "location_id": 2220,
+      "business_date": "2026-04-07",
+      "pos_gross": "95070.48",
+      "web_gross": "11116.00",
+      "combined_gross": "106186.48"
+    },
+    {
+      "location_id": 2222,
+      "business_date": "2026-04-07",
+      "pos_gross": "101225.76",
+      "web_gross": "26124.00",
+      "combined_gross": "127349.76"
+    },
+    {
+      "location_id": 2250,
+      "business_date": "2026-04-07",
+      "pos_gross": "93840.78",
+      "web_gross": "34706.00",
+      "combined_gross": "128546.78"
+    },
+    {
+      "location_id": 2281,
+      "business_date": "2026-04-07",
+      "pos_gross": "96764.90",
+      "web_gross": "11366.00",
+      "combined_gross": "108130.90"
+    },
+    {
+      "location_id": 2284,
+      "business_date": "2026-04-07",
+      "pos_gross": "186528.18",
+      "web_gross": "23032.00",
+      "combined_gross": "209560.18"
+    },
+    {
+      "location_id": 2287,
+      "business_date": "2026-04-07",
+      "pos_gross": "164609.00",
+      "web_gross": "40878.00",
+      "combined_gross": "205487.00"
+    },
+    {
+      "location_id": 2311,
+      "business_date": "2026-04-07",
+      "pos_gross": "130338.51",
+      "web_gross": "0",
+      "combined_gross": "130338.51"
+    },
+    {
+      "location_id": 2317,
+      "business_date": "2026-04-07",
+      "pos_gross": "65879.66",
+      "web_gross": "7818.00",
+      "combined_gross": "73697.66"
+    },
+    {
+      "location_id": 2319,
+      "business_date": "2026-04-07",
+      "pos_gross": "66008.89",
+      "web_gross": "684.00",
+      "combined_gross": "66692.89"
+    },
+    {
+      "location_id": 2338,
+      "business_date": "2026-04-07",
+      "pos_gross": "185431.87",
+      "web_gross": "71196.00",
+      "combined_gross": "256627.87"
+    },
+    {
+      "location_id": 2339,
+      "business_date": "2026-04-07",
+      "pos_gross": "119697.44",
+      "web_gross": "21586.00",
+      "combined_gross": "141283.44"
+    },
+    {
+      "location_id": 2340,
+      "business_date": "2026-04-07",
+      "pos_gross": "75140.65",
+      "web_gross": "2764.00",
+      "combined_gross": "77904.65"
+    },
+    {
+      "location_id": 2341,
+      "business_date": "2026-04-07",
+      "pos_gross": "63565.48",
+      "web_gross": "5908.00",
+      "combined_gross": "69473.48"
+    },
+    {
+      "location_id": 2342,
+      "business_date": "2026-04-07",
+      "pos_gross": "103937.78",
+      "web_gross": "1982.00",
+      "combined_gross": "105919.78"
+    },
+    {
+      "location_id": 2408,
+      "business_date": "2026-04-07",
+      "pos_gross": "112772.48",
+      "web_gross": "11012.00",
+      "combined_gross": "123784.48"
+    },
+    {
+      "location_id": 2411,
+      "business_date": "2026-04-07",
+      "pos_gross": "45412.04",
+      "web_gross": "0",
+      "combined_gross": "45412.04"
+    },
+    {
+      "location_id": 2412,
+      "business_date": "2026-04-07",
+      "pos_gross": "66612.78",
+      "web_gross": "15916.00",
+      "combined_gross": "82528.78"
+    },
+    {
+      "location_id": 2413,
+      "business_date": "2026-04-07",
+      "pos_gross": "69717.74",
+      "web_gross": "2734.00",
+      "combined_gross": "72451.74"
+    },
+    {
+      "location_id": 2425,
+      "business_date": "2026-04-07",
+      "pos_gross": "106145.58",
+      "web_gross": "6016.00",
+      "combined_gross": "112161.58"
+    },
+    {
+      "location_id": 2426,
+      "business_date": "2026-04-07",
+      "pos_gross": "59567.43",
+      "web_gross": "0",
+      "combined_gross": "59567.43"
+    },
+    {
+      "location_id": 2428,
+      "business_date": "2026-04-07",
+      "pos_gross": "69971.47",
+      "web_gross": "4884.00",
+      "combined_gross": "74855.47"
+    },
+    {
+      "location_id": 2430,
+      "business_date": "2026-04-07",
+      "pos_gross": "53248.03",
+      "web_gross": "0",
+      "combined_gross": "53248.03"
+    },
+    {
+      "location_id": 2464,
+      "business_date": "2026-04-07",
+      "pos_gross": "59929.45",
+      "web_gross": "15290.00",
+      "combined_gross": "75219.45"
+    },
+    {
+      "location_id": 2478,
+      "business_date": "2026-04-07",
+      "pos_gross": "32718.32",
+      "web_gross": "0",
+      "combined_gross": "32718.32"
+    },
+    {
+      "location_id": 2481,
+      "business_date": "2026-04-07",
+      "pos_gross": "79665.20",
+      "web_gross": "1080.00",
+      "combined_gross": "80745.20"
+    },
+    {
+      "location_id": 2482,
+      "business_date": "2026-04-07",
+      "pos_gross": "57190.77",
+      "web_gross": "2140.00",
+      "combined_gross": "59330.77"
+    },
+    {
+      "location_id": 2515,
+      "business_date": "2026-04-07",
+      "pos_gross": "70615.05",
+      "web_gross": "3884.00",
+      "combined_gross": "74499.05"
+    },
+    {
+      "location_id": 2526,
+      "business_date": "2026-04-07",
+      "pos_gross": "80134.94",
+      "web_gross": "33694.00",
+      "combined_gross": "113828.94"
+    },
+    {
+      "location_id": 2547,
+      "business_date": "2026-04-07",
+      "pos_gross": "76032.49",
+      "web_gross": "0",
+      "combined_gross": "76032.49"
+    },
+    {
+      "location_id": 2548,
+      "business_date": "2026-04-07",
+      "pos_gross": "90801.59",
+      "web_gross": "0",
+      "combined_gross": "90801.59"
+    },
+    {
+      "location_id": 2556,
+      "business_date": "2026-04-07",
+      "pos_gross": "50188.50",
+      "web_gross": "2358.00",
+      "combined_gross": "52546.50"
+    },
+    {
+      "location_id": 2557,
+      "business_date": "2026-04-07",
+      "pos_gross": "78584.80",
+      "web_gross": "8440.00",
+      "combined_gross": "87024.80"
+    },
+    {
+      "location_id": 2558,
+      "business_date": "2026-04-07",
+      "pos_gross": "74899.74",
+      "web_gross": "12546.00",
+      "combined_gross": "87445.74"
+    },
+    {
+      "location_id": 2646,
+      "business_date": "2026-04-07",
+      "pos_gross": "56115.18",
+      "web_gross": "456.00",
+      "combined_gross": "56571.18"
+    },
+    {
+      "location_id": 2766,
+      "business_date": "2026-04-07",
+      "pos_gross": "69635.87",
+      "web_gross": "0",
+      "combined_gross": "69635.87"
+    },
+    {
+      "location_id": 2774,
+      "business_date": "2026-04-07",
+      "pos_gross": "0",
+      "web_gross": "1368.00",
+      "combined_gross": "1368.00"
+    },
+    {
+      "location_id": 2812,
+      "business_date": "2026-04-07",
+      "pos_gross": "93953.52",
+      "web_gross": "2696.00",
+      "combined_gross": "96649.52"
+    },
+    {
+      "location_id": 2177,
+      "business_date": "2026-04-06",
+      "pos_gross": "91983.60",
+      "web_gross": "0",
+      "combined_gross": "91983.60"
+    },
+    {
+      "location_id": 2179,
+      "business_date": "2026-04-06",
+      "pos_gross": "48158.32",
+      "web_gross": "18276.00",
+      "combined_gross": "66434.32"
+    },
+    {
+      "location_id": 2184,
+      "business_date": "2026-04-06",
+      "pos_gross": "66288.61",
+      "web_gross": "6938.00",
+      "combined_gross": "73226.61"
+    },
+    {
+      "location_id": 2216,
+      "business_date": "2026-04-06",
+      "pos_gross": "109547.15",
+      "web_gross": "0",
+      "combined_gross": "109547.15"
+    },
+    {
+      "location_id": 2217,
+      "business_date": "2026-04-06",
+      "pos_gross": "78661.60",
+      "web_gross": "8276.00",
+      "combined_gross": "86937.60"
+    },
+    {
+      "location_id": 2218,
+      "business_date": "2026-04-06",
+      "pos_gross": "82928.97",
+      "web_gross": "4714.00",
+      "combined_gross": "87642.97"
+    },
+    {
+      "location_id": 2219,
+      "business_date": "2026-04-06",
+      "pos_gross": "74158.30",
+      "web_gross": "34346.00",
+      "combined_gross": "108504.30"
+    },
+    {
+      "location_id": 2220,
+      "business_date": "2026-04-06",
+      "pos_gross": "94995.10",
+      "web_gross": "10694.00",
+      "combined_gross": "105689.10"
+    },
+    {
+      "location_id": 2222,
+      "business_date": "2026-04-06",
+      "pos_gross": "77206.07",
+      "web_gross": "12626.00",
+      "combined_gross": "89832.07"
+    },
+    {
+      "location_id": 2250,
+      "business_date": "2026-04-06",
+      "pos_gross": "82969.87",
+      "web_gross": "29564.00",
+      "combined_gross": "112533.87"
+    },
+    {
+      "location_id": 2281,
+      "business_date": "2026-04-06",
+      "pos_gross": "102238.63",
+      "web_gross": "13810.00",
+      "combined_gross": "116048.63"
+    },
+    {
+      "location_id": 2284,
+      "business_date": "2026-04-06",
+      "pos_gross": "132303.21",
+      "web_gross": "10368.00",
+      "combined_gross": "142671.21"
+    },
+    {
+      "location_id": 2287,
+      "business_date": "2026-04-06",
+      "pos_gross": "121755.32",
+      "web_gross": "26132.00",
+      "combined_gross": "147887.32"
+    },
+    {
+      "location_id": 2311,
+      "business_date": "2026-04-06",
+      "pos_gross": "125434.61",
+      "web_gross": "0",
+      "combined_gross": "125434.61"
+    },
+    {
+      "location_id": 2317,
+      "business_date": "2026-04-06",
+      "pos_gross": "64808.64",
+      "web_gross": "8842.00",
+      "combined_gross": "73650.64"
+    },
+    {
+      "location_id": 2319,
+      "business_date": "2026-04-06",
+      "pos_gross": "59037.92",
+      "web_gross": "1368.00",
+      "combined_gross": "60405.92"
+    },
+    {
+      "location_id": 2338,
+      "business_date": "2026-04-06",
+      "pos_gross": "156097.79",
+      "web_gross": "16580.00",
+      "combined_gross": "172677.79"
+    },
+    {
+      "location_id": 2339,
+      "business_date": "2026-04-06",
+      "pos_gross": "110258.25",
+      "web_gross": "19642.00",
+      "combined_gross": "129900.25"
+    },
+    {
+      "location_id": 2340,
+      "business_date": "2026-04-06",
+      "pos_gross": "58313.94",
+      "web_gross": "624.00",
+      "combined_gross": "58937.94"
+    },
+    {
+      "location_id": 2341,
+      "business_date": "2026-04-06",
+      "pos_gross": "55178.18",
+      "web_gross": "4262.00",
+      "combined_gross": "59440.18"
+    },
+    {
+      "location_id": 2342,
+      "business_date": "2026-04-06",
+      "pos_gross": "90804.93",
+      "web_gross": "5738.00",
+      "combined_gross": "96542.93"
+    },
+    {
+      "location_id": 2408,
+      "business_date": "2026-04-06",
+      "pos_gross": "111841.36",
+      "web_gross": "5342.00",
+      "combined_gross": "117183.36"
+    },
+    {
+      "location_id": 2411,
+      "business_date": "2026-04-06",
+      "pos_gross": "57148.96",
+      "web_gross": "0",
+      "combined_gross": "57148.96"
+    },
+    {
+      "location_id": 2412,
+      "business_date": "2026-04-06",
+      "pos_gross": "72050.52",
+      "web_gross": "12306.00",
+      "combined_gross": "84356.52"
+    },
+    {
+      "location_id": 2413,
+      "business_date": "2026-04-06",
+      "pos_gross": "66575.63",
+      "web_gross": "2042.00",
+      "combined_gross": "68617.63"
+    },
+    {
+      "location_id": 2425,
+      "business_date": "2026-04-06",
+      "pos_gross": "98735.46",
+      "web_gross": "8266.00",
+      "combined_gross": "107001.46"
+    },
+    {
+      "location_id": 2426,
+      "business_date": "2026-04-06",
+      "pos_gross": "47632.58",
+      "web_gross": "0",
+      "combined_gross": "47632.58"
+    },
+    {
+      "location_id": 2428,
+      "business_date": "2026-04-06",
+      "pos_gross": "82394.77",
+      "web_gross": "5430.00",
+      "combined_gross": "87824.77"
+    },
+    {
+      "location_id": 2430,
+      "business_date": "2026-04-06",
+      "pos_gross": "51477.90",
+      "web_gross": "0",
+      "combined_gross": "51477.90"
+    },
+    {
+      "location_id": 2464,
+      "business_date": "2026-04-06",
+      "pos_gross": "58816.91",
+      "web_gross": "9068.00",
+      "combined_gross": "67884.91"
+    },
+    {
+      "location_id": 2478,
+      "business_date": "2026-04-06",
+      "pos_gross": "33763.48",
+      "web_gross": "0",
+      "combined_gross": "33763.48"
+    },
+    {
+      "location_id": 2481,
+      "business_date": "2026-04-06",
+      "pos_gross": "78165.74",
+      "web_gross": "1416.00",
+      "combined_gross": "79581.74"
+    },
+    {
+      "location_id": 2482,
+      "business_date": "2026-04-06",
+      "pos_gross": "40228.61",
+      "web_gross": "3836.00",
+      "combined_gross": "44064.61"
+    },
+    {
+      "location_id": 2515,
+      "business_date": "2026-04-06",
+      "pos_gross": "61113.36",
+      "web_gross": "5250.00",
+      "combined_gross": "66363.36"
+    },
+    {
+      "location_id": 2526,
+      "business_date": "2026-04-06",
+      "pos_gross": "76087.32",
+      "web_gross": "14604.00",
+      "combined_gross": "90691.32"
+    },
+    {
+      "location_id": 2547,
+      "business_date": "2026-04-06",
+      "pos_gross": "78058.19",
+      "web_gross": "0",
+      "combined_gross": "78058.19"
+    },
+    {
+      "location_id": 2548,
+      "business_date": "2026-04-06",
+      "pos_gross": "68604.59",
+      "web_gross": "0",
+      "combined_gross": "68604.59"
+    },
+    {
+      "location_id": 2556,
+      "business_date": "2026-04-06",
+      "pos_gross": "55837.46",
+      "web_gross": "7730.00",
+      "combined_gross": "63567.46"
+    },
+    {
+      "location_id": 2557,
+      "business_date": "2026-04-06",
+      "pos_gross": "60823.71",
+      "web_gross": "7134.00",
+      "combined_gross": "67957.71"
+    },
+    {
+      "location_id": 2558,
+      "business_date": "2026-04-06",
+      "pos_gross": "55399.21",
+      "web_gross": "4308.00",
+      "combined_gross": "59707.21"
+    },
+    {
+      "location_id": 2646,
+      "business_date": "2026-04-06",
+      "pos_gross": "53704.29",
+      "web_gross": "228.00",
+      "combined_gross": "53932.29"
+    },
+    {
+      "location_id": 2766,
+      "business_date": "2026-04-06",
+      "pos_gross": "74983.02",
+      "web_gross": "0",
+      "combined_gross": "74983.02"
+    },
+    {
+      "location_id": 2774,
+      "business_date": "2026-04-06",
+      "pos_gross": "0",
+      "web_gross": "1368.00",
+      "combined_gross": "1368.00"
+    },
+    {
+      "location_id": 2812,
+      "business_date": "2026-04-06",
+      "pos_gross": "98580.67",
+      "web_gross": "3914.00",
+      "combined_gross": "102494.67"
+    },
+    {
+      "location_id": 2177,
+      "business_date": "2026-04-05",
+      "pos_gross": "61227.03",
+      "web_gross": "0",
+      "combined_gross": "61227.03"
+    },
+    {
+      "location_id": 2179,
+      "business_date": "2026-04-05",
+      "pos_gross": "49559.61",
+      "web_gross": "4120.00",
+      "combined_gross": "53679.61"
+    },
+    {
+      "location_id": 2184,
+      "business_date": "2026-04-05",
+      "pos_gross": "116131.59",
+      "web_gross": "16916.00",
+      "combined_gross": "133047.59"
+    },
+    {
+      "location_id": 2216,
+      "business_date": "2026-04-05",
+      "pos_gross": "143786.19",
+      "web_gross": "0",
+      "combined_gross": "143786.19"
+    },
+    {
+      "location_id": 2217,
+      "business_date": "2026-04-05",
+      "pos_gross": "155054.07",
+      "web_gross": "35622.00",
+      "combined_gross": "190676.07"
+    },
+    {
+      "location_id": 2218,
+      "business_date": "2026-04-05",
+      "pos_gross": "156366.62",
+      "web_gross": "7442.00",
+      "combined_gross": "163808.62"
+    },
+    {
+      "location_id": 2219,
+      "business_date": "2026-04-05",
+      "pos_gross": "161479.42",
+      "web_gross": "2488.00",
+      "combined_gross": "163967.42"
+    },
+    {
+      "location_id": 2220,
+      "business_date": "2026-04-05",
+      "pos_gross": "183011.31",
+      "web_gross": "25862.00",
+      "combined_gross": "208873.31"
+    },
+    {
+      "location_id": 2222,
+      "business_date": "2026-04-05",
+      "pos_gross": "110651.07",
+      "web_gross": "14212.00",
+      "combined_gross": "124863.07"
+    },
+    {
+      "location_id": 2250,
+      "business_date": "2026-04-05",
+      "pos_gross": "147086.00",
+      "web_gross": "19792.00",
+      "combined_gross": "166878.00"
+    },
+    {
+      "location_id": 2281,
+      "business_date": "2026-04-05",
+      "pos_gross": "180008.16",
+      "web_gross": "22342.00",
+      "combined_gross": "202350.16"
+    },
+    {
+      "location_id": 2284,
+      "business_date": "2026-04-05",
+      "pos_gross": "188906.47",
+      "web_gross": "32976.00",
+      "combined_gross": "221882.47"
+    },
+    {
+      "location_id": 2287,
+      "business_date": "2026-04-05",
+      "pos_gross": "216816.37",
+      "web_gross": "10670.00",
+      "combined_gross": "227486.37"
+    },
+    {
+      "location_id": 2311,
+      "business_date": "2026-04-05",
+      "pos_gross": "121914.35",
+      "web_gross": "0",
+      "combined_gross": "121914.35"
+    },
+    {
+      "location_id": 2317,
+      "business_date": "2026-04-05",
+      "pos_gross": "128403.81",
+      "web_gross": "10154.00",
+      "combined_gross": "138557.81"
+    },
+    {
+      "location_id": 2319,
+      "business_date": "2026-04-05",
+      "pos_gross": "59272.89",
+      "web_gross": "2696.00",
+      "combined_gross": "61968.89"
+    },
+    {
+      "location_id": 2338,
+      "business_date": "2026-04-05",
+      "pos_gross": "203933.52",
+      "web_gross": "16938.00",
+      "combined_gross": "220871.52"
+    },
+    {
+      "location_id": 2339,
+      "business_date": "2026-04-05",
+      "pos_gross": "115146.32",
+      "web_gross": "17056.00",
+      "combined_gross": "132202.32"
+    },
+    {
+      "location_id": 2340,
+      "business_date": "2026-04-05",
+      "pos_gross": "134031.79",
+      "web_gross": "2358.00",
+      "combined_gross": "136389.79"
+    },
+    {
+      "location_id": 2341,
+      "business_date": "2026-04-05",
+      "pos_gross": "105777.47",
+      "web_gross": "15784.00",
+      "combined_gross": "121561.47"
+    },
+    {
+      "location_id": 2342,
+      "business_date": "2026-04-05",
+      "pos_gross": "152741.41",
+      "web_gross": "14298.00",
+      "combined_gross": "167039.41"
+    },
+    {
+      "location_id": 2408,
+      "business_date": "2026-04-05",
+      "pos_gross": "169137.34",
+      "web_gross": "14884.00",
+      "combined_gross": "184021.34"
+    },
+    {
+      "location_id": 2411,
+      "business_date": "2026-04-05",
+      "pos_gross": "104611.63",
+      "web_gross": "3648.00",
+      "combined_gross": "108259.63"
+    },
+    {
+      "location_id": 2412,
+      "business_date": "2026-04-05",
+      "pos_gross": "111133.49",
+      "web_gross": "29818.00",
+      "combined_gross": "140951.49"
+    },
+    {
+      "location_id": 2413,
+      "business_date": "2026-04-05",
+      "pos_gross": "132969.68",
+      "web_gross": "9576.00",
+      "combined_gross": "142545.68"
+    },
+    {
+      "location_id": 2425,
+      "business_date": "2026-04-05",
+      "pos_gross": "121676.74",
+      "web_gross": "16934.00",
+      "combined_gross": "138610.74"
+    },
+    {
+      "location_id": 2426,
+      "business_date": "2026-04-05",
+      "pos_gross": "126142.31",
+      "web_gross": "1784.00",
+      "combined_gross": "127926.31"
+    },
+    {
+      "location_id": 2428,
+      "business_date": "2026-04-05",
+      "pos_gross": "144935.28",
+      "web_gross": "9234.00",
+      "combined_gross": "154169.28"
+    },
+    {
+      "location_id": 2430,
+      "business_date": "2026-04-05",
+      "pos_gross": "81311.59",
+      "web_gross": "0",
+      "combined_gross": "81311.59"
+    },
+    {
+      "location_id": 2464,
+      "business_date": "2026-04-05",
+      "pos_gross": "110195.32",
+      "web_gross": "13614.00",
+      "combined_gross": "123809.32"
+    },
+    {
+      "location_id": 2478,
+      "business_date": "2026-04-05",
+      "pos_gross": "53771.22",
+      "web_gross": "0",
+      "combined_gross": "53771.22"
+    },
+    {
+      "location_id": 2481,
+      "business_date": "2026-04-05",
+      "pos_gross": "140282.99",
+      "web_gross": "6362.00",
+      "combined_gross": "146644.99"
+    },
+    {
+      "location_id": 2482,
+      "business_date": "2026-04-05",
+      "pos_gross": "79914.10",
+      "web_gross": "7740.00",
+      "combined_gross": "87654.10"
+    },
+    {
+      "location_id": 2515,
+      "business_date": "2026-04-05",
+      "pos_gross": "113878.23",
+      "web_gross": "5530.00",
+      "combined_gross": "119408.23"
+    },
+    {
+      "location_id": 2526,
+      "business_date": "2026-04-05",
+      "pos_gross": "92362.87",
+      "web_gross": "21606.00",
+      "combined_gross": "113968.87"
+    },
+    {
+      "location_id": 2547,
+      "business_date": "2026-04-05",
+      "pos_gross": "138217.93",
+      "web_gross": "0",
+      "combined_gross": "138217.93"
+    },
+    {
+      "location_id": 2548,
+      "business_date": "2026-04-05",
+      "pos_gross": "100317.95",
+      "web_gross": "0",
+      "combined_gross": "100317.95"
+    },
+    {
+      "location_id": 2556,
+      "business_date": "2026-04-05",
+      "pos_gross": "107982.09",
+      "web_gross": "19030.00",
+      "combined_gross": "127012.09"
+    },
+    {
+      "location_id": 2557,
+      "business_date": "2026-04-05",
+      "pos_gross": "106989.72",
+      "web_gross": "6592.00",
+      "combined_gross": "113581.72"
+    },
+    {
+      "location_id": 2558,
+      "business_date": "2026-04-05",
+      "pos_gross": "116097.74",
+      "web_gross": "22512.00",
+      "combined_gross": "138609.74"
+    },
+    {
+      "location_id": 2646,
+      "business_date": "2026-04-05",
+      "pos_gross": "81728.45",
+      "web_gross": "0",
+      "combined_gross": "81728.45"
+    },
+    {
+      "location_id": 2766,
+      "business_date": "2026-04-05",
+      "pos_gross": "104320.46",
+      "web_gross": "0",
+      "combined_gross": "104320.46"
+    },
+    {
+      "location_id": 2774,
+      "business_date": "2026-04-05",
+      "pos_gross": "0",
+      "web_gross": "10368.00",
+      "combined_gross": "10368.00"
+    },
+    {
+      "location_id": 2812,
+      "business_date": "2026-04-05",
+      "pos_gross": "155290.54",
+      "web_gross": "14744.00",
+      "combined_gross": "170034.54"
+    },
+    {
+      "location_id": 2177,
+      "business_date": "2026-04-04",
+      "pos_gross": "50512.53",
+      "web_gross": "0",
+      "combined_gross": "50512.53"
+    },
+    {
+      "location_id": 2179,
+      "business_date": "2026-04-04",
+      "pos_gross": "40658.35",
+      "web_gross": "11998.00",
+      "combined_gross": "52656.35"
+    },
+    {
+      "location_id": 2184,
+      "business_date": "2026-04-04",
+      "pos_gross": "91054.85",
+      "web_gross": "23454.00",
+      "combined_gross": "114508.85"
+    },
+    {
+      "location_id": 2216,
+      "business_date": "2026-04-04",
+      "pos_gross": "172655.71",
+      "web_gross": "0",
+      "combined_gross": "172655.71"
+    },
+    {
+      "location_id": 2217,
+      "business_date": "2026-04-04",
+      "pos_gross": "122352.39",
+      "web_gross": "49230.00",
+      "combined_gross": "171582.39"
+    },
+    {
+      "location_id": 2218,
+      "business_date": "2026-04-04",
+      "pos_gross": "124872.33",
+      "web_gross": "2488.00",
+      "combined_gross": "127360.33"
+    },
+    {
+      "location_id": 2219,
+      "business_date": "2026-04-04",
+      "pos_gross": "156617.47",
+      "web_gross": "3846.00",
+      "combined_gross": "160463.47"
+    },
+    {
+      "location_id": 2220,
+      "business_date": "2026-04-04",
+      "pos_gross": "148024.36",
+      "web_gross": "34994.00",
+      "combined_gross": "183018.36"
+    },
+    {
+      "location_id": 2222,
+      "business_date": "2026-04-04",
+      "pos_gross": "128592.33",
+      "web_gross": "8898.00",
+      "combined_gross": "137490.33"
+    },
+    {
+      "location_id": 2250,
+      "business_date": "2026-04-04",
+      "pos_gross": "125188.44",
+      "web_gross": "1586.00",
+      "combined_gross": "126774.44"
+    },
+    {
+      "location_id": 2281,
+      "business_date": "2026-04-04",
+      "pos_gross": "164059.92",
+      "web_gross": "10396.00",
+      "combined_gross": "174455.92"
+    },
+    {
+      "location_id": 2284,
+      "business_date": "2026-04-04",
+      "pos_gross": "170136.94",
+      "web_gross": "17610.00",
+      "combined_gross": "187746.94"
+    },
+    {
+      "location_id": 2287,
+      "business_date": "2026-04-04",
+      "pos_gross": "142870.18",
+      "web_gross": "48460.00",
+      "combined_gross": "191330.18"
+    },
+    {
+      "location_id": 2311,
+      "business_date": "2026-04-04",
+      "pos_gross": "137992.12",
+      "web_gross": "0",
+      "combined_gross": "137992.12"
+    },
+    {
+      "location_id": 2317,
+      "business_date": "2026-04-04",
+      "pos_gross": "141351.81",
+      "web_gross": "4290.00",
+      "combined_gross": "145641.81"
+    },
+    {
+      "location_id": 2319,
+      "business_date": "2026-04-04",
+      "pos_gross": "76234.22",
+      "web_gross": "10258.00",
+      "combined_gross": "86492.22"
+    },
+    {
+      "location_id": 2338,
+      "business_date": "2026-04-04",
+      "pos_gross": "168376.97",
+      "web_gross": "8414.00",
+      "combined_gross": "176790.97"
+    },
+    {
+      "location_id": 2339,
+      "business_date": "2026-04-04",
+      "pos_gross": "90054.23",
+      "web_gross": "12982.00",
+      "combined_gross": "103036.23"
+    },
+    {
+      "location_id": 2340,
+      "business_date": "2026-04-04",
+      "pos_gross": "122513.23",
+      "web_gross": "0",
+      "combined_gross": "122513.23"
+    },
+    {
+      "location_id": 2341,
+      "business_date": "2026-04-04",
+      "pos_gross": "98221.43",
+      "web_gross": "6768.00",
+      "combined_gross": "104989.43"
+    },
+    {
+      "location_id": 2342,
+      "business_date": "2026-04-04",
+      "pos_gross": "147129.01",
+      "web_gross": "18026.00",
+      "combined_gross": "165155.01"
+    },
+    {
+      "location_id": 2408,
+      "business_date": "2026-04-04",
+      "pos_gross": "99282.19",
+      "web_gross": "0",
+      "combined_gross": "99282.19"
+    },
+    {
+      "location_id": 2411,
+      "business_date": "2026-04-04",
+      "pos_gross": "94561.90",
+      "web_gross": "3990.00",
+      "combined_gross": "98551.90"
+    },
+    {
+      "location_id": 2412,
+      "business_date": "2026-04-04",
+      "pos_gross": "109217.65",
+      "web_gross": "13100.00",
+      "combined_gross": "122317.65"
+    },
+    {
+      "location_id": 2413,
+      "business_date": "2026-04-04",
+      "pos_gross": "110167.63",
+      "web_gross": "1556.00",
+      "combined_gross": "111723.63"
+    },
+    {
+      "location_id": 2425,
+      "business_date": "2026-04-04",
+      "pos_gross": "127831.65",
+      "web_gross": "7222.00",
+      "combined_gross": "135053.65"
+    },
+    {
+      "location_id": 2426,
+      "business_date": "2026-04-04",
+      "pos_gross": "91040.78",
+      "web_gross": "4128.00",
+      "combined_gross": "95168.78"
+    },
+    {
+      "location_id": 2428,
+      "business_date": "2026-04-04",
+      "pos_gross": "138122.56",
+      "web_gross": "9828.00",
+      "combined_gross": "147950.56"
+    },
+    {
+      "location_id": 2430,
+      "business_date": "2026-04-04",
+      "pos_gross": "67097.52",
+      "web_gross": "0",
+      "combined_gross": "67097.52"
+    },
+    {
+      "location_id": 2464,
+      "business_date": "2026-04-04",
+      "pos_gross": "106080.34",
+      "web_gross": "8334.00",
+      "combined_gross": "114414.34"
+    },
+    {
+      "location_id": 2478,
+      "business_date": "2026-04-04",
+      "pos_gross": "62714.93",
+      "web_gross": "0",
+      "combined_gross": "62714.93"
+    },
+    {
+      "location_id": 2481,
+      "business_date": "2026-04-04",
+      "pos_gross": "156546.71",
+      "web_gross": "4576.00",
+      "combined_gross": "161122.71"
+    },
+    {
+      "location_id": 2482,
+      "business_date": "2026-04-04",
+      "pos_gross": "71348.39",
+      "web_gross": "3142.00",
+      "combined_gross": "74490.39"
+    },
+    {
+      "location_id": 2515,
+      "business_date": "2026-04-04",
+      "pos_gross": "105458.23",
+      "web_gross": "5204.00",
+      "combined_gross": "110662.23"
+    },
+    {
+      "location_id": 2526,
+      "business_date": "2026-04-04",
+      "pos_gross": "83926.47",
+      "web_gross": "22810.00",
+      "combined_gross": "106736.47"
+    },
+    {
+      "location_id": 2547,
+      "business_date": "2026-04-04",
+      "pos_gross": "134197.68",
+      "web_gross": "0",
+      "combined_gross": "134197.68"
+    },
+    {
+      "location_id": 2548,
+      "business_date": "2026-04-04",
+      "pos_gross": "91007.93",
+      "web_gross": "0",
+      "combined_gross": "91007.93"
+    },
+    {
+      "location_id": 2556,
+      "business_date": "2026-04-04",
+      "pos_gross": "89842.04",
+      "web_gross": "16758.00",
+      "combined_gross": "106600.04"
+    },
+    {
+      "location_id": 2557,
+      "business_date": "2026-04-04",
+      "pos_gross": "91000.08",
+      "web_gross": "7026.00",
+      "combined_gross": "98026.08"
+    },
+    {
+      "location_id": 2558,
+      "business_date": "2026-04-04",
+      "pos_gross": "116637.06",
+      "web_gross": "8204.00",
+      "combined_gross": "124841.06"
+    },
+    {
+      "location_id": 2646,
+      "business_date": "2026-04-04",
+      "pos_gross": "97392.36",
+      "web_gross": "0",
+      "combined_gross": "97392.36"
+    },
+    {
+      "location_id": 2766,
+      "business_date": "2026-04-04",
+      "pos_gross": "91468.49",
+      "web_gross": "228.00",
+      "combined_gross": "91696.49"
+    },
+    {
+      "location_id": 2774,
+      "business_date": "2026-04-04",
+      "pos_gross": "0",
+      "web_gross": "7294.00",
+      "combined_gross": "7294.00"
+    },
+    {
+      "location_id": 2812,
+      "business_date": "2026-04-04",
+      "pos_gross": "160979.99",
+      "web_gross": "4618.00",
+      "combined_gross": "165597.99"
+    },
+    {
+      "location_id": 2179,
+      "business_date": "2026-04-03",
+      "pos_gross": "50451.21",
+      "web_gross": "11198.00",
+      "combined_gross": "61649.21"
+    },
+    {
+      "location_id": 2217,
+      "business_date": "2026-04-03",
+      "pos_gross": "130396.10",
+      "web_gross": "23460.00",
+      "combined_gross": "153856.10"
+    },
+    {
+      "location_id": 2220,
+      "business_date": "2026-04-03",
+      "pos_gross": "122653.23",
+      "web_gross": "18466.00",
+      "combined_gross": "141119.23"
+    },
+    {
+      "location_id": 2287,
+      "business_date": "2026-04-03",
+      "pos_gross": "186265.80",
+      "web_gross": "27720.00",
+      "combined_gross": "213985.80"
+    },
+    {
+      "location_id": 2319,
+      "business_date": "2026-04-03",
+      "pos_gross": "87054.55",
+      "web_gross": "4376.00",
+      "combined_gross": "91430.55"
+    },
+    {
+      "location_id": 2342,
+      "business_date": "2026-04-03",
+      "pos_gross": "130509.07",
+      "web_gross": "3250.00",
+      "combined_gross": "133759.07"
+    },
+    {
+      "location_id": 2412,
+      "business_date": "2026-04-03",
+      "pos_gross": "166.00",
+      "web_gross": "0",
+      "combined_gross": "166.00"
+    },
+    {
+      "location_id": 2426,
+      "business_date": "2026-04-03",
+      "pos_gross": "117909.02",
+      "web_gross": "15280.00",
+      "combined_gross": "133189.02"
+    },
+    {
+      "location_id": 2428,
+      "business_date": "2026-04-03",
+      "pos_gross": "144562.08",
+      "web_gross": "6994.00",
+      "combined_gross": "151556.08"
+    },
+    {
+      "location_id": 2515,
+      "business_date": "2026-04-03",
+      "pos_gross": "1270.00",
+      "web_gross": "0",
+      "combined_gross": "1270.00"
+    },
+    {
+      "location_id": 2526,
+      "business_date": "2026-04-03",
+      "pos_gross": "122895.88",
+      "web_gross": "22628.00",
+      "combined_gross": "145523.88"
+    },
+    {
+      "location_id": 2547,
+      "business_date": "2026-04-03",
+      "pos_gross": "114428.90",
+      "web_gross": "0",
+      "combined_gross": "114428.90"
+    },
+    {
+      "location_id": 2556,
+      "business_date": "2026-04-03",
+      "pos_gross": "107383.53",
+      "web_gross": "8628.00",
+      "combined_gross": "116011.53"
+    },
+    {
+      "location_id": 2646,
+      "business_date": "2026-04-03",
+      "pos_gross": "51441.60",
+      "web_gross": "0",
+      "combined_gross": "51441.60"
+    },
+    {
+      "location_id": 2766,
+      "business_date": "2026-04-03",
+      "pos_gross": "99601.22",
+      "web_gross": "0",
+      "combined_gross": "99601.22"
+    },
+    {
+      "location_id": 2177,
+      "business_date": "2026-04-02",
+      "pos_gross": "1417.00",
+      "web_gross": "0",
+      "combined_gross": "1417.00"
+    },
+    {
+      "location_id": 2179,
+      "business_date": "2026-04-02",
+      "pos_gross": "55179.61",
+      "web_gross": "25600.00",
+      "combined_gross": "80779.61"
+    },
+    {
+      "location_id": 2217,
+      "business_date": "2026-04-02",
+      "pos_gross": "125609.59",
+      "web_gross": "42598.00",
+      "combined_gross": "168207.59"
+    },
+    {
+      "location_id": 2218,
+      "business_date": "2026-04-02",
+      "pos_gross": "1258.00",
+      "web_gross": "912.00",
+      "combined_gross": "2170.00"
+    },
+    {
+      "location_id": 2219,
+      "business_date": "2026-04-02",
+      "pos_gross": "27024.00",
+      "web_gross": "654.00",
+      "combined_gross": "27678.00"
+    },
+    {
+      "location_id": 2220,
+      "business_date": "2026-04-02",
+      "pos_gross": "137833.77",
+      "web_gross": "32356.00",
+      "combined_gross": "170189.77"
+    },
+    {
+      "location_id": 2222,
+      "business_date": "2026-04-02",
+      "pos_gross": "942.00",
+      "web_gross": "0",
+      "combined_gross": "942.00"
+    },
+    {
+      "location_id": 2281,
+      "business_date": "2026-04-02",
+      "pos_gross": "145633.18",
+      "web_gross": "28550.00",
+      "combined_gross": "174183.18"
+    },
+    {
+      "location_id": 2287,
+      "business_date": "2026-04-02",
+      "pos_gross": "208698.88",
+      "web_gross": "71926.00",
+      "combined_gross": "280624.88"
+    },
+    {
+      "location_id": 2319,
+      "business_date": "2026-04-02",
+      "pos_gross": "77084.17",
+      "web_gross": "13722.00",
+      "combined_gross": "90806.17"
+    },
+    {
+      "location_id": 2338,
+      "business_date": "2026-04-02",
+      "pos_gross": "26205.43",
+      "web_gross": "0",
+      "combined_gross": "26205.43"
+    },
+    {
+      "location_id": 2339,
+      "business_date": "2026-04-02",
+      "pos_gross": "204.00",
+      "web_gross": "436.00",
+      "combined_gross": "640.00"
+    },
+    {
+      "location_id": 2342,
+      "business_date": "2026-04-02",
+      "pos_gross": "125066.12",
+      "web_gross": "20714.00",
+      "combined_gross": "145780.12"
+    },
+    {
+      "location_id": 2408,
+      "business_date": "2026-04-02",
+      "pos_gross": "1611.60",
+      "web_gross": "0",
+      "combined_gross": "1611.60"
+    },
+    {
+      "location_id": 2425,
+      "business_date": "2026-04-02",
+      "pos_gross": "134977.03",
+      "web_gross": "20742.00",
+      "combined_gross": "155719.03"
+    },
+    {
+      "location_id": 2426,
+      "business_date": "2026-04-02",
+      "pos_gross": "130743.92",
+      "web_gross": "8156.00",
+      "combined_gross": "138899.92"
+    },
+    {
+      "location_id": 2428,
+      "business_date": "2026-04-02",
+      "pos_gross": "135744.03",
+      "web_gross": "0",
+      "combined_gross": "135744.03"
+    },
+    {
+      "location_id": 2430,
+      "business_date": "2026-04-02",
+      "pos_gross": "893.00",
+      "web_gross": "0",
+      "combined_gross": "893.00"
+    },
+    {
+      "location_id": 2464,
+      "business_date": "2026-04-02",
+      "pos_gross": "1197.00",
+      "web_gross": "0",
+      "combined_gross": "1197.00"
+    },
+    {
+      "location_id": 2481,
+      "business_date": "2026-04-02",
+      "pos_gross": "407.00",
+      "web_gross": "1010.00",
+      "combined_gross": "1417.00"
+    },
+    {
+      "location_id": 2482,
+      "business_date": "2026-04-02",
+      "pos_gross": "0",
+      "web_gross": "1824.00",
+      "combined_gross": "1824.00"
+    },
+    {
+      "location_id": 2515,
+      "business_date": "2026-04-02",
+      "pos_gross": "103798.30",
+      "web_gross": "9878.00",
+      "combined_gross": "113676.30"
+    },
+    {
+      "location_id": 2526,
+      "business_date": "2026-04-02",
+      "pos_gross": "156705.89",
+      "web_gross": "39612.00",
+      "combined_gross": "196317.89"
+    },
+    {
+      "location_id": 2547,
+      "business_date": "2026-04-02",
+      "pos_gross": "140798.03",
+      "web_gross": "0",
+      "combined_gross": "140798.03"
+    },
+    {
+      "location_id": 2548,
+      "business_date": "2026-04-02",
+      "pos_gross": "1107.00",
+      "web_gross": "0",
+      "combined_gross": "1107.00"
+    },
+    {
+      "location_id": 2556,
+      "business_date": "2026-04-02",
+      "pos_gross": "106370.05",
+      "web_gross": "14472.00",
+      "combined_gross": "120842.05"
+    },
+    {
+      "location_id": 2557,
+      "business_date": "2026-04-02",
+      "pos_gross": "476.00",
+      "web_gross": "0",
+      "combined_gross": "476.00"
+    },
+    {
+      "location_id": 2558,
+      "business_date": "2026-04-02",
+      "pos_gross": "0",
+      "web_gross": "3032.00",
+      "combined_gross": "3032.00"
+    },
+    {
+      "location_id": 2646,
+      "business_date": "2026-04-02",
+      "pos_gross": "42943.15",
+      "web_gross": "0",
+      "combined_gross": "42943.15"
+    },
+    {
+      "location_id": 2766,
+      "business_date": "2026-04-02",
+      "pos_gross": "110160.32",
+      "web_gross": "912.00",
+      "combined_gross": "111072.32"
+    },
+    {
+      "location_id": 2177,
+      "business_date": "2026-04-01",
+      "pos_gross": "108930.57",
+      "web_gross": "0",
+      "combined_gross": "108930.57"
+    },
+    {
+      "location_id": 2179,
+      "business_date": "2026-04-01",
+      "pos_gross": "51025.49",
+      "web_gross": "13912.00",
+      "combined_gross": "64937.49"
+    },
+    {
+      "location_id": 2184,
+      "business_date": "2026-04-01",
+      "pos_gross": "77692.91",
+      "web_gross": "16640.00",
+      "combined_gross": "94332.91"
+    },
+    {
+      "location_id": 2216,
+      "business_date": "2026-04-01",
+      "pos_gross": "158953.14",
+      "web_gross": "0",
+      "combined_gross": "158953.14"
+    },
+    {
+      "location_id": 2217,
+      "business_date": "2026-04-01",
+      "pos_gross": "104798.14",
+      "web_gross": "39430.00",
+      "combined_gross": "144228.14"
+    },
+    {
+      "location_id": 2218,
+      "business_date": "2026-04-01",
+      "pos_gross": "100190.09",
+      "web_gross": "13380.00",
+      "combined_gross": "113570.09"
+    },
+    {
+      "location_id": 2219,
+      "business_date": "2026-04-01",
+      "pos_gross": "103387.50",
+      "web_gross": "13192.00",
+      "combined_gross": "116579.50"
+    },
+    {
+      "location_id": 2220,
+      "business_date": "2026-04-01",
+      "pos_gross": "106974.01",
+      "web_gross": "22862.00",
+      "combined_gross": "129836.01"
+    },
+    {
+      "location_id": 2222,
+      "business_date": "2026-04-01",
+      "pos_gross": "116449.07",
+      "web_gross": "16164.00",
+      "combined_gross": "132613.07"
+    },
+    {
+      "location_id": 2250,
+      "business_date": "2026-04-01",
+      "pos_gross": "97510.51",
+      "web_gross": "30434.00",
+      "combined_gross": "127944.51"
+    },
+    {
+      "location_id": 2281,
+      "business_date": "2026-04-01",
+      "pos_gross": "129166.18",
+      "web_gross": "24170.00",
+      "combined_gross": "153336.18"
+    },
+    {
+      "location_id": 2284,
+      "business_date": "2026-04-01",
+      "pos_gross": "144047.54",
+      "web_gross": "29808.00",
+      "combined_gross": "173855.54"
+    },
+    {
+      "location_id": 2287,
+      "business_date": "2026-04-01",
+      "pos_gross": "99457.05",
+      "web_gross": "46258.00",
+      "combined_gross": "145715.05"
+    },
+    {
+      "location_id": 2311,
+      "business_date": "2026-04-01",
+      "pos_gross": "116923.34",
+      "web_gross": "0",
+      "combined_gross": "116923.34"
+    },
+    {
+      "location_id": 2317,
+      "business_date": "2026-04-01",
+      "pos_gross": "56971.05",
+      "web_gross": "0",
+      "combined_gross": "56971.05"
+    },
+    {
+      "location_id": 2319,
+      "business_date": "2026-04-01",
+      "pos_gross": "51030.74",
+      "web_gross": "664.00",
+      "combined_gross": "51694.74"
+    },
+    {
+      "location_id": 2338,
+      "business_date": "2026-04-01",
+      "pos_gross": "177863.93",
+      "web_gross": "35126.00",
+      "combined_gross": "212989.93"
+    },
+    {
+      "location_id": 2339,
+      "business_date": "2026-04-01",
+      "pos_gross": "99121.93",
+      "web_gross": "27248.00",
+      "combined_gross": "126369.93"
+    },
+    {
+      "location_id": 2340,
+      "business_date": "2026-04-01",
+      "pos_gross": "77782.56",
+      "web_gross": "6730.00",
+      "combined_gross": "84512.56"
+    },
+    {
+      "location_id": 2341,
+      "business_date": "2026-04-01",
+      "pos_gross": "100605.89",
+      "web_gross": "9492.00",
+      "combined_gross": "110097.89"
+    },
+    {
+      "location_id": 2342,
+      "business_date": "2026-04-01",
+      "pos_gross": "102072.86",
+      "web_gross": "6884.00",
+      "combined_gross": "108956.86"
+    },
+    {
+      "location_id": 2408,
+      "business_date": "2026-04-01",
+      "pos_gross": "113547.30",
+      "web_gross": "9572.00",
+      "combined_gross": "123119.30"
+    },
+    {
+      "location_id": 2411,
+      "business_date": "2026-04-01",
+      "pos_gross": "69108.56",
+      "web_gross": "456.00",
+      "combined_gross": "69564.56"
+    },
+    {
+      "location_id": 2412,
+      "business_date": "2026-04-01",
+      "pos_gross": "88033.96",
+      "web_gross": "39428.00",
+      "combined_gross": "127461.96"
+    },
+    {
+      "location_id": 2413,
+      "business_date": "2026-04-01",
+      "pos_gross": "75088.76",
+      "web_gross": "2764.00",
+      "combined_gross": "77852.76"
+    },
+    {
+      "location_id": 2425,
+      "business_date": "2026-04-01",
+      "pos_gross": "110494.90",
+      "web_gross": "6476.00",
+      "combined_gross": "116970.90"
+    },
+    {
+      "location_id": 2426,
+      "business_date": "2026-04-01",
+      "pos_gross": "76622.04",
+      "web_gross": "456.00",
+      "combined_gross": "77078.04"
+    },
+    {
+      "location_id": 2428,
+      "business_date": "2026-04-01",
+      "pos_gross": "108049.78",
+      "web_gross": "0",
+      "combined_gross": "108049.78"
+    },
+    {
+      "location_id": 2430,
+      "business_date": "2026-04-01",
+      "pos_gross": "54424.17",
+      "web_gross": "1368.00",
+      "combined_gross": "55792.17"
+    },
+    {
+      "location_id": 2464,
+      "business_date": "2026-04-01",
+      "pos_gross": "88150.90",
+      "web_gross": "12476.00",
+      "combined_gross": "100626.90"
+    },
+    {
+      "location_id": 2478,
+      "business_date": "2026-04-01",
+      "pos_gross": "42096.89",
+      "web_gross": "1576.00",
+      "combined_gross": "43672.89"
+    },
+    {
+      "location_id": 2481,
+      "business_date": "2026-04-01",
+      "pos_gross": "76690.59",
+      "web_gross": "5044.00",
+      "combined_gross": "81734.59"
+    },
+    {
+      "location_id": 2482,
+      "business_date": "2026-04-01",
+      "pos_gross": "53319.75",
+      "web_gross": "4706.00",
+      "combined_gross": "58025.75"
+    },
+    {
+      "location_id": 2515,
+      "business_date": "2026-04-01",
+      "pos_gross": "73221.47",
+      "web_gross": "5350.00",
+      "combined_gross": "78571.47"
+    },
+    {
+      "location_id": 2526,
+      "business_date": "2026-04-01",
+      "pos_gross": "76240.01",
+      "web_gross": "17164.00",
+      "combined_gross": "93404.01"
+    },
+    {
+      "location_id": 2547,
+      "business_date": "2026-04-01",
+      "pos_gross": "117224.05",
+      "web_gross": "0",
+      "combined_gross": "117224.05"
+    },
+    {
+      "location_id": 2548,
+      "business_date": "2026-04-01",
+      "pos_gross": "95956.53",
+      "web_gross": "0",
+      "combined_gross": "95956.53"
+    },
+    {
+      "location_id": 2556,
+      "business_date": "2026-04-01",
+      "pos_gross": "81550.25",
+      "web_gross": "6918.00",
+      "combined_gross": "88468.25"
+    },
+    {
+      "location_id": 2557,
+      "business_date": "2026-04-01",
+      "pos_gross": "75064.78",
+      "web_gross": "5560.00",
+      "combined_gross": "80624.78"
+    },
+    {
+      "location_id": 2558,
+      "business_date": "2026-04-01",
+      "pos_gross": "85722.48",
+      "web_gross": "15110.00",
+      "combined_gross": "100832.48"
+    },
+    {
+      "location_id": 2646,
+      "business_date": "2026-04-01",
+      "pos_gross": "52839.86",
+      "web_gross": "0",
+      "combined_gross": "52839.86"
+    },
+    {
+      "location_id": 2766,
+      "business_date": "2026-04-01",
+      "pos_gross": "89815.73",
+      "web_gross": "0",
+      "combined_gross": "89815.73"
+    },
+    {
+      "location_id": 2774,
+      "business_date": "2026-04-01",
+      "pos_gross": "0",
+      "web_gross": "7840.00",
+      "combined_gross": "7840.00"
+    },
+    {
+      "location_id": 2812,
+      "business_date": "2026-04-01",
+      "pos_gross": "115716.81",
+      "web_gross": "3774.00",
+      "combined_gross": "119490.81"
+    }
+  ]
+}
