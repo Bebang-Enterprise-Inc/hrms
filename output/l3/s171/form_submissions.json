@@ -2,11 +2,20 @@
   {
     "form": "phase1_count_parity",
     "inputs": {
-      "days": 2,
+      "days": 4,
       "creds": 12
     },
     "submit_action": "count_parity_sweep",
-    "response": "{'total_phantoms': 0, 'total_duplicates': 0, 'total_missing': 0, 'total_unconfirmed': 0, 'tuples_audited': 32, 'tuples_with_drift': 0}",
-    "ts": "2026-04-08T09:14:01.359563+08:00"
+    "response": "{'total_phantoms': 744, 'total_duplicates': 0, 'total_missing': 0, 'total_unconfirmed': 0, 'tuples_audited': 180, 'tuples_with_drift': 80}",
+    "ts": "2026-04-08T09:56:44.691030+08:00"
+  },
+  {
+    "form": "phase8_tombstone",
+    "inputs": {
+      "dry_run": false
+    },
+    "submit_action": "tombstone_phantoms",
+    "response": "{'tuples_processed': 80, 'total_tombstoned': 744}",
+    "ts": "2026-04-08T10:19:22.318612+08:00"
   }
 ]

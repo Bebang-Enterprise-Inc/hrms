@@ -1,19 +1,42 @@
 {
   "summary": {
-    "total_phantoms": 0,
+    "total_phantoms": 744,
     "total_duplicates": 0,
     "total_missing": 0,
     "total_unconfirmed": 0,
-    "tuples_audited": 32,
-    "tuples_with_drift": 0
+    "tuples_audited": 180,
+    "tuples_with_drift": 80
   },
   "rows": [
     {
       "location_id": 2557,
       "location_name": "Araneta Gateway",
-      "business_date": "2026-04-06",
-      "mosaic_count": 176,
-      "supabase_count": 176,
+      "business_date": "2026-03-25",
+      "mosaic_count": 112,
+      "supabase_count": 114,
+      "extras_count": 2,
+      "missing_count": 0,
+      "phantom_count": 2,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48668184,
+          "status": "phantom"
+        },
+        {
+          "id": 48682852,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2557,
+      "location_name": "Araneta Gateway",
+      "business_date": "2026-03-26",
+      "mosaic_count": 109,
+      "supabase_count": 109,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -25,9 +48,48 @@
     {
       "location_id": 2557,
       "location_name": "Araneta Gateway",
-      "business_date": "2026-04-07",
-      "mosaic_count": 192,
-      "supabase_count": 192,
+      "business_date": "2026-03-27",
+      "mosaic_count": 171,
+      "supabase_count": 177,
+      "extras_count": 6,
+      "missing_count": 0,
+      "phantom_count": 6,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48872553,
+          "status": "phantom"
+        },
+        {
+          "id": 48872617,
+          "status": "phantom"
+        },
+        {
+          "id": 48879823,
+          "status": "phantom"
+        },
+        {
+          "id": 48885728,
+          "status": "phantom"
+        },
+        {
+          "id": 48886589,
+          "status": "phantom"
+        },
+        {
+          "id": 48889823,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2557,
+      "location_name": "Araneta Gateway",
+      "business_date": "2026-03-28",
+      "mosaic_count": 219,
+      "supabase_count": 219,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -39,7 +101,295 @@
     {
       "location_id": 2515,
       "location_name": "Robisons Galleria South",
-      "business_date": "2026-04-06",
+      "business_date": "2026-03-25",
+      "mosaic_count": 118,
+      "supabase_count": 122,
+      "extras_count": 4,
+      "missing_count": 0,
+      "phantom_count": 4,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48689112,
+          "status": "phantom"
+        },
+        {
+          "id": 48695300,
+          "status": "phantom"
+        },
+        {
+          "id": 48698358,
+          "status": "phantom"
+        },
+        {
+          "id": 48715098,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2515,
+      "location_name": "Robisons Galleria South",
+      "business_date": "2026-03-26",
+      "mosaic_count": 105,
+      "supabase_count": 105,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2515,
+      "location_name": "Robisons Galleria South",
+      "business_date": "2026-03-27",
+      "mosaic_count": 177,
+      "supabase_count": 186,
+      "extras_count": 9,
+      "missing_count": 0,
+      "phantom_count": 9,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48867180,
+          "status": "phantom"
+        },
+        {
+          "id": 48875881,
+          "status": "phantom"
+        },
+        {
+          "id": 48876511,
+          "status": "phantom"
+        },
+        {
+          "id": 48880075,
+          "status": "phantom"
+        },
+        {
+          "id": 48882410,
+          "status": "phantom"
+        },
+        {
+          "id": 48885346,
+          "status": "phantom"
+        },
+        {
+          "id": 48885711,
+          "status": "phantom"
+        },
+        {
+          "id": 48887693,
+          "status": "phantom"
+        },
+        {
+          "id": 48888615,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2515,
+      "location_name": "Robisons Galleria South",
+      "business_date": "2026-03-28",
+      "mosaic_count": 219,
+      "supabase_count": 219,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2482,
+      "location_name": "SM Sangandaan",
+      "business_date": "2026-03-25",
+      "mosaic_count": 67,
+      "supabase_count": 74,
+      "extras_count": 7,
+      "missing_count": 0,
+      "phantom_count": 7,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48668713,
+          "status": "phantom"
+        },
+        {
+          "id": 48670405,
+          "status": "phantom"
+        },
+        {
+          "id": 48673853,
+          "status": "phantom"
+        },
+        {
+          "id": 48676333,
+          "status": "phantom"
+        },
+        {
+          "id": 48688399,
+          "status": "phantom"
+        },
+        {
+          "id": 48688459,
+          "status": "phantom"
+        },
+        {
+          "id": 48703741,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2482,
+      "location_name": "SM Sangandaan",
+      "business_date": "2026-03-26",
+      "mosaic_count": 86,
+      "supabase_count": 86,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2482,
+      "location_name": "SM Sangandaan",
+      "business_date": "2026-03-27",
+      "mosaic_count": 114,
+      "supabase_count": 119,
+      "extras_count": 5,
+      "missing_count": 0,
+      "phantom_count": 5,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48872368,
+          "status": "phantom"
+        },
+        {
+          "id": 48884089,
+          "status": "phantom"
+        },
+        {
+          "id": 48885137,
+          "status": "phantom"
+        },
+        {
+          "id": 48887498,
+          "status": "phantom"
+        },
+        {
+          "id": 48889561,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2482,
+      "location_name": "SM Sangandaan",
+      "business_date": "2026-03-28",
+      "mosaic_count": 122,
+      "supabase_count": 122,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2426,
+      "location_name": "Ayala Evo",
+      "business_date": "2026-03-25",
+      "mosaic_count": 61,
+      "supabase_count": 64,
+      "extras_count": 3,
+      "missing_count": 0,
+      "phantom_count": 3,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48684178,
+          "status": "phantom"
+        },
+        {
+          "id": 48694747,
+          "status": "phantom"
+        },
+        {
+          "id": 48710620,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2426,
+      "location_name": "Ayala Evo",
+      "business_date": "2026-03-26",
+      "mosaic_count": 85,
+      "supabase_count": 85,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2426,
+      "location_name": "Ayala Evo",
+      "business_date": "2026-03-27",
+      "mosaic_count": 91,
+      "supabase_count": 95,
+      "extras_count": 4,
+      "missing_count": 0,
+      "phantom_count": 4,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48877087,
+          "status": "phantom"
+        },
+        {
+          "id": 48882728,
+          "status": "phantom"
+        },
+        {
+          "id": 48888342,
+          "status": "phantom"
+        },
+        {
+          "id": 48891012,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2426,
+      "location_name": "Ayala Evo",
+      "business_date": "2026-03-28",
       "mosaic_count": 164,
       "supabase_count": 164,
       "extras_count": 0,
@@ -51,39 +401,70 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2515,
-      "location_name": "Robisons Galleria South",
-      "business_date": "2026-04-07",
-      "mosaic_count": 173,
-      "supabase_count": 173,
-      "extras_count": 0,
+      "location_id": 2220,
+      "location_name": "Ayala Malls Fairview Terraces",
+      "business_date": "2026-03-25",
+      "mosaic_count": 144,
+      "supabase_count": 155,
+      "extras_count": 11,
       "missing_count": 0,
-      "phantom_count": 0,
+      "phantom_count": 11,
       "duplicate_count": 0,
       "unconfirmed_count": 0,
-      "extras": [],
+      "extras": [
+        {
+          "id": 48672885,
+          "status": "phantom"
+        },
+        {
+          "id": 48673184,
+          "status": "phantom"
+        },
+        {
+          "id": 48680529,
+          "status": "phantom"
+        },
+        {
+          "id": 48683509,
+          "status": "phantom"
+        },
+        {
+          "id": 48684158,
+          "status": "phantom"
+        },
+        {
+          "id": 48688828,
+          "status": "phantom"
+        },
+        {
+          "id": 48692264,
+          "status": "phantom"
+        },
+        {
+          "id": 48699179,
+          "status": "phantom"
+        },
+        {
+          "id": 48701874,
+          "status": "phantom"
+        },
+        {
+          "id": 48705993,
+          "status": "phantom"
+        },
+        {
+          "id": 48715888,
+          "status": "phantom"
+        }
+      ],
       "missing_ids_sample": []
     },
     {
-      "location_id": 2426,
-      "location_name": "Ayala Evo",
-      "business_date": "2026-04-06",
-      "mosaic_count": 96,
-      "supabase_count": 96,
-      "extras_count": 0,
-      "missing_count": 0,
-      "phantom_count": 0,
-      "duplicate_count": 0,
-      "unconfirmed_count": 0,
-      "extras": [],
-      "missing_ids_sample": []
-    },
-    {
-      "location_id": 2426,
-      "location_name": "Ayala Evo",
-      "business_date": "2026-04-07",
-      "mosaic_count": 118,
-      "supabase_count": 118,
+      "location_id": 2220,
+      "location_name": "Ayala Malls Fairview Terraces",
+      "business_date": "2026-03-26",
+      "mosaic_count": 217,
+      "supabase_count": 217,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -95,9 +476,76 @@
     {
       "location_id": 2220,
       "location_name": "Ayala Malls Fairview Terraces",
-      "business_date": "2026-04-06",
-      "mosaic_count": 211,
-      "supabase_count": 211,
+      "business_date": "2026-03-27",
+      "mosaic_count": 237,
+      "supabase_count": 250,
+      "extras_count": 13,
+      "missing_count": 0,
+      "phantom_count": 13,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48864257,
+          "status": "phantom"
+        },
+        {
+          "id": 48866573,
+          "status": "phantom"
+        },
+        {
+          "id": 48869387,
+          "status": "phantom"
+        },
+        {
+          "id": 48877616,
+          "status": "phantom"
+        },
+        {
+          "id": 48877703,
+          "status": "phantom"
+        },
+        {
+          "id": 48878087,
+          "status": "phantom"
+        },
+        {
+          "id": 48878933,
+          "status": "phantom"
+        },
+        {
+          "id": 48879874,
+          "status": "phantom"
+        },
+        {
+          "id": 48883911,
+          "status": "phantom"
+        },
+        {
+          "id": 48884804,
+          "status": "phantom"
+        },
+        {
+          "id": 48887444,
+          "status": "phantom"
+        },
+        {
+          "id": 48889520,
+          "status": "phantom"
+        },
+        {
+          "id": 48892529,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2220,
+      "location_name": "Ayala Malls Fairview Terraces",
+      "business_date": "2026-03-28",
+      "mosaic_count": 278,
+      "supabase_count": 278,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -107,9 +555,52 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2220,
-      "location_name": "Ayala Malls Fairview Terraces",
-      "business_date": "2026-04-07",
+      "location_id": 2287,
+      "location_name": "Ayala Market Market",
+      "business_date": "2026-03-25",
+      "mosaic_count": 209,
+      "supabase_count": 216,
+      "extras_count": 7,
+      "missing_count": 0,
+      "phantom_count": 7,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48669761,
+          "status": "phantom"
+        },
+        {
+          "id": 48676713,
+          "status": "phantom"
+        },
+        {
+          "id": 48681233,
+          "status": "phantom"
+        },
+        {
+          "id": 48685325,
+          "status": "phantom"
+        },
+        {
+          "id": 48687210,
+          "status": "phantom"
+        },
+        {
+          "id": 48710475,
+          "status": "phantom"
+        },
+        {
+          "id": 48712123,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2287,
+      "location_name": "Ayala Market Market",
+      "business_date": "2026-03-26",
       "mosaic_count": 216,
       "supabase_count": 216,
       "extras_count": 0,
@@ -121,11 +612,86 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2547,
-      "location_name": "Ayala Solenad",
-      "business_date": "2026-04-06",
-      "mosaic_count": 172,
-      "supabase_count": 172,
+      "location_id": 2287,
+      "location_name": "Ayala Market Market",
+      "business_date": "2026-03-27",
+      "mosaic_count": 265,
+      "supabase_count": 280,
+      "extras_count": 15,
+      "missing_count": 0,
+      "phantom_count": 15,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48861061,
+          "status": "phantom"
+        },
+        {
+          "id": 48867729,
+          "status": "phantom"
+        },
+        {
+          "id": 48871104,
+          "status": "phantom"
+        },
+        {
+          "id": 48873710,
+          "status": "phantom"
+        },
+        {
+          "id": 48873796,
+          "status": "phantom"
+        },
+        {
+          "id": 48876073,
+          "status": "phantom"
+        },
+        {
+          "id": 48877550,
+          "status": "phantom"
+        },
+        {
+          "id": 48880233,
+          "status": "phantom"
+        },
+        {
+          "id": 48880530,
+          "status": "phantom"
+        },
+        {
+          "id": 48881276,
+          "status": "phantom"
+        },
+        {
+          "id": 48882846,
+          "status": "phantom"
+        },
+        {
+          "id": 48885607,
+          "status": "phantom"
+        },
+        {
+          "id": 48887333,
+          "status": "phantom"
+        },
+        {
+          "id": 48889085,
+          "status": "phantom"
+        },
+        {
+          "id": 48891542,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2287,
+      "location_name": "Ayala Market Market",
+      "business_date": "2026-03-28",
+      "mosaic_count": 295,
+      "supabase_count": 295,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -135,11 +701,516 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2547,
-      "location_name": "Ayala Solenad",
-      "business_date": "2026-04-07",
+      "location_id": 2425,
+      "location_name": "Ayala UPTC",
+      "business_date": "2026-03-25",
+      "mosaic_count": 84,
+      "supabase_count": 95,
+      "extras_count": 11,
+      "missing_count": 0,
+      "phantom_count": 11,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48672031,
+          "status": "phantom"
+        },
+        {
+          "id": 48677241,
+          "status": "phantom"
+        },
+        {
+          "id": 48679877,
+          "status": "phantom"
+        },
+        {
+          "id": 48683769,
+          "status": "phantom"
+        },
+        {
+          "id": 48686153,
+          "status": "phantom"
+        },
+        {
+          "id": 48691013,
+          "status": "phantom"
+        },
+        {
+          "id": 48695550,
+          "status": "phantom"
+        },
+        {
+          "id": 48697940,
+          "status": "phantom"
+        },
+        {
+          "id": 48706070,
+          "status": "phantom"
+        },
+        {
+          "id": 48712063,
+          "status": "phantom"
+        },
+        {
+          "id": 48715625,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2425,
+      "location_name": "Ayala UPTC",
+      "business_date": "2026-03-26",
+      "mosaic_count": 109,
+      "supabase_count": 109,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2425,
+      "location_name": "Ayala UPTC",
+      "business_date": "2026-03-27",
+      "mosaic_count": 153,
+      "supabase_count": 160,
+      "extras_count": 7,
+      "missing_count": 0,
+      "phantom_count": 7,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48859698,
+          "status": "phantom"
+        },
+        {
+          "id": 48869555,
+          "status": "phantom"
+        },
+        {
+          "id": 48872216,
+          "status": "phantom"
+        },
+        {
+          "id": 48883812,
+          "status": "phantom"
+        },
+        {
+          "id": 48884105,
+          "status": "phantom"
+        },
+        {
+          "id": 48889125,
+          "status": "phantom"
+        },
+        {
+          "id": 48889839,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2425,
+      "location_name": "Ayala UPTC",
+      "business_date": "2026-03-28",
+      "mosaic_count": 162,
+      "supabase_count": 162,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2428,
+      "location_name": "Ayala Vermosa",
+      "business_date": "2026-03-25",
+      "mosaic_count": 105,
+      "supabase_count": 121,
+      "extras_count": 16,
+      "missing_count": 0,
+      "phantom_count": 16,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48662921,
+          "status": "phantom"
+        },
+        {
+          "id": 48664351,
+          "status": "phantom"
+        },
+        {
+          "id": 48678719,
+          "status": "phantom"
+        },
+        {
+          "id": 48680745,
+          "status": "phantom"
+        },
+        {
+          "id": 48684916,
+          "status": "phantom"
+        },
+        {
+          "id": 48685005,
+          "status": "phantom"
+        },
+        {
+          "id": 48692351,
+          "status": "phantom"
+        },
+        {
+          "id": 48694737,
+          "status": "phantom"
+        },
+        {
+          "id": 48696985,
+          "status": "phantom"
+        },
+        {
+          "id": 48698307,
+          "status": "phantom"
+        },
+        {
+          "id": 48699576,
+          "status": "phantom"
+        },
+        {
+          "id": 48700099,
+          "status": "phantom"
+        },
+        {
+          "id": 48700404,
+          "status": "phantom"
+        },
+        {
+          "id": 48701748,
+          "status": "phantom"
+        },
+        {
+          "id": 48705198,
+          "status": "phantom"
+        },
+        {
+          "id": 48717489,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2428,
+      "location_name": "Ayala Vermosa",
+      "business_date": "2026-03-26",
+      "mosaic_count": 166,
+      "supabase_count": 166,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2428,
+      "location_name": "Ayala Vermosa",
+      "business_date": "2026-03-27",
+      "mosaic_count": 184,
+      "supabase_count": 188,
+      "extras_count": 4,
+      "missing_count": 0,
+      "phantom_count": 4,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48871650,
+          "status": "phantom"
+        },
+        {
+          "id": 48882657,
+          "status": "phantom"
+        },
+        {
+          "id": 48888161,
+          "status": "phantom"
+        },
+        {
+          "id": 48889435,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2428,
+      "location_name": "Ayala Vermosa",
+      "business_date": "2026-03-28",
+      "mosaic_count": 233,
+      "supabase_count": 233,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2217,
+      "location_name": "BF Homes",
+      "business_date": "2026-03-25",
+      "mosaic_count": 94,
+      "supabase_count": 108,
+      "extras_count": 14,
+      "missing_count": 0,
+      "phantom_count": 14,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48656920,
+          "status": "phantom"
+        },
+        {
+          "id": 48676971,
+          "status": "phantom"
+        },
+        {
+          "id": 48678560,
+          "status": "phantom"
+        },
+        {
+          "id": 48679065,
+          "status": "phantom"
+        },
+        {
+          "id": 48679951,
+          "status": "phantom"
+        },
+        {
+          "id": 48688737,
+          "status": "phantom"
+        },
+        {
+          "id": 48696244,
+          "status": "phantom"
+        },
+        {
+          "id": 48700036,
+          "status": "phantom"
+        },
+        {
+          "id": 48702804,
+          "status": "phantom"
+        },
+        {
+          "id": 48706500,
+          "status": "phantom"
+        },
+        {
+          "id": 48708878,
+          "status": "phantom"
+        },
+        {
+          "id": 48717143,
+          "status": "phantom"
+        },
+        {
+          "id": 48719349,
+          "status": "phantom"
+        },
+        {
+          "id": 48721283,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2217,
+      "location_name": "BF Homes",
+      "business_date": "2026-03-26",
+      "mosaic_count": 129,
+      "supabase_count": 129,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2217,
+      "location_name": "BF Homes",
+      "business_date": "2026-03-27",
+      "mosaic_count": 134,
+      "supabase_count": 152,
+      "extras_count": 18,
+      "missing_count": 0,
+      "phantom_count": 18,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48864959,
+          "status": "phantom"
+        },
+        {
+          "id": 48866525,
+          "status": "phantom"
+        },
+        {
+          "id": 48866564,
+          "status": "phantom"
+        },
+        {
+          "id": 48867979,
+          "status": "phantom"
+        },
+        {
+          "id": 48868749,
+          "status": "phantom"
+        },
+        {
+          "id": 48871699,
+          "status": "phantom"
+        },
+        {
+          "id": 48874253,
+          "status": "phantom"
+        },
+        {
+          "id": 48876270,
+          "status": "phantom"
+        },
+        {
+          "id": 48878435,
+          "status": "phantom"
+        },
+        {
+          "id": 48879334,
+          "status": "phantom"
+        },
+        {
+          "id": 48881704,
+          "status": "phantom"
+        },
+        {
+          "id": 48881803,
+          "status": "phantom"
+        },
+        {
+          "id": 48882281,
+          "status": "phantom"
+        },
+        {
+          "id": 48887440,
+          "status": "phantom"
+        },
+        {
+          "id": 48887884,
+          "status": "phantom"
+        },
+        {
+          "id": 48891341,
+          "status": "phantom"
+        },
+        {
+          "id": 48891549,
+          "status": "phantom"
+        },
+        {
+          "id": 48891670,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2217,
+      "location_name": "BF Homes",
+      "business_date": "2026-03-28",
+      "mosaic_count": 176,
+      "supabase_count": 176,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2222,
+      "location_name": "Festival Mall Alabang",
+      "business_date": "2026-03-25",
       "mosaic_count": 150,
-      "supabase_count": 150,
+      "supabase_count": 159,
+      "extras_count": 9,
+      "missing_count": 0,
+      "phantom_count": 9,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48648457,
+          "status": "phantom"
+        },
+        {
+          "id": 48670003,
+          "status": "phantom"
+        },
+        {
+          "id": 48682632,
+          "status": "phantom"
+        },
+        {
+          "id": 48684326,
+          "status": "phantom"
+        },
+        {
+          "id": 48685249,
+          "status": "phantom"
+        },
+        {
+          "id": 48686091,
+          "status": "phantom"
+        },
+        {
+          "id": 48690512,
+          "status": "phantom"
+        },
+        {
+          "id": 48690863,
+          "status": "phantom"
+        },
+        {
+          "id": 48697056,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2222,
+      "location_name": "Festival Mall Alabang",
+      "business_date": "2026-03-26",
+      "mosaic_count": 169,
+      "supabase_count": 169,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -149,11 +1220,127 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2526,
-      "location_name": "CTTM Tomas Morato",
-      "business_date": "2026-04-06",
+      "location_id": 2222,
+      "location_name": "Festival Mall Alabang",
+      "business_date": "2026-03-27",
+      "mosaic_count": 195,
+      "supabase_count": 200,
+      "extras_count": 5,
+      "missing_count": 0,
+      "phantom_count": 5,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48858860,
+          "status": "phantom"
+        },
+        {
+          "id": 48873381,
+          "status": "phantom"
+        },
+        {
+          "id": 48881622,
+          "status": "phantom"
+        },
+        {
+          "id": 48882135,
+          "status": "phantom"
+        },
+        {
+          "id": 48882834,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2222,
+      "location_name": "Festival Mall Alabang",
+      "business_date": "2026-03-28",
+      "mosaic_count": 227,
+      "supabase_count": 227,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2311,
+      "location_name": "Lucky Chinatown",
+      "business_date": "2026-03-25",
       "mosaic_count": 133,
-      "supabase_count": 133,
+      "supabase_count": 146,
+      "extras_count": 13,
+      "missing_count": 0,
+      "phantom_count": 13,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48666688,
+          "status": "phantom"
+        },
+        {
+          "id": 48670683,
+          "status": "phantom"
+        },
+        {
+          "id": 48674550,
+          "status": "phantom"
+        },
+        {
+          "id": 48675529,
+          "status": "phantom"
+        },
+        {
+          "id": 48676374,
+          "status": "phantom"
+        },
+        {
+          "id": 48677981,
+          "status": "phantom"
+        },
+        {
+          "id": 48679693,
+          "status": "phantom"
+        },
+        {
+          "id": 48681644,
+          "status": "phantom"
+        },
+        {
+          "id": 48683904,
+          "status": "phantom"
+        },
+        {
+          "id": 48688490,
+          "status": "phantom"
+        },
+        {
+          "id": 48692845,
+          "status": "phantom"
+        },
+        {
+          "id": 48707119,
+          "status": "phantom"
+        },
+        {
+          "id": 48709834,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2311,
+      "location_name": "Lucky Chinatown",
+      "business_date": "2026-03-26",
+      "mosaic_count": 125,
+      "supabase_count": 125,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -163,11 +1350,11 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2526,
-      "location_name": "CTTM Tomas Morato",
-      "business_date": "2026-04-07",
-      "mosaic_count": 135,
-      "supabase_count": 135,
+      "location_id": 2311,
+      "location_name": "Lucky Chinatown",
+      "business_date": "2026-03-27",
+      "mosaic_count": 194,
+      "supabase_count": 194,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -177,9 +1364,74 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2766,
-      "location_name": "D'Verde Calamba",
-      "business_date": "2026-04-06",
+      "location_id": 2311,
+      "location_name": "Lucky Chinatown",
+      "business_date": "2026-03-28",
+      "mosaic_count": 186,
+      "supabase_count": 186,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2179,
+      "location_name": "Megawide PITX",
+      "business_date": "2026-03-25",
+      "mosaic_count": 118,
+      "supabase_count": 127,
+      "extras_count": 9,
+      "missing_count": 0,
+      "phantom_count": 9,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48661330,
+          "status": "phantom"
+        },
+        {
+          "id": 48664459,
+          "status": "phantom"
+        },
+        {
+          "id": 48668210,
+          "status": "phantom"
+        },
+        {
+          "id": 48683110,
+          "status": "phantom"
+        },
+        {
+          "id": 48684624,
+          "status": "phantom"
+        },
+        {
+          "id": 48688651,
+          "status": "phantom"
+        },
+        {
+          "id": 48689426,
+          "status": "phantom"
+        },
+        {
+          "id": 48694123,
+          "status": "phantom"
+        },
+        {
+          "id": 48696583,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2179,
+      "location_name": "Megawide PITX",
+      "business_date": "2026-03-26",
       "mosaic_count": 130,
       "supabase_count": 130,
       "extras_count": 0,
@@ -191,25 +1443,66 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2766,
-      "location_name": "D'Verde Calamba",
-      "business_date": "2026-04-07",
-      "mosaic_count": 127,
-      "supabase_count": 127,
-      "extras_count": 0,
-      "missing_count": 0,
-      "phantom_count": 0,
-      "duplicate_count": 0,
-      "unconfirmed_count": 0,
-      "extras": [],
-      "missing_ids_sample": []
-    },
-    {
-      "location_id": 2464,
-      "location_name": "SM Caloocan",
-      "business_date": "2026-04-06",
+      "location_id": 2179,
+      "location_name": "Megawide PITX",
+      "business_date": "2026-03-27",
       "mosaic_count": 152,
-      "supabase_count": 152,
+      "supabase_count": 162,
+      "extras_count": 10,
+      "missing_count": 0,
+      "phantom_count": 10,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48868232,
+          "status": "phantom"
+        },
+        {
+          "id": 48869735,
+          "status": "phantom"
+        },
+        {
+          "id": 48880145,
+          "status": "phantom"
+        },
+        {
+          "id": 48881943,
+          "status": "phantom"
+        },
+        {
+          "id": 48883149,
+          "status": "phantom"
+        },
+        {
+          "id": 48883996,
+          "status": "phantom"
+        },
+        {
+          "id": 48889738,
+          "status": "phantom"
+        },
+        {
+          "id": 48890888,
+          "status": "phantom"
+        },
+        {
+          "id": 48892010,
+          "status": "phantom"
+        },
+        {
+          "id": 48892166,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2179,
+      "location_name": "Megawide PITX",
+      "business_date": "2026-03-28",
+      "mosaic_count": 164,
+      "supabase_count": 164,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -219,9 +1512,246 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2464,
-      "location_name": "SM Caloocan",
-      "business_date": "2026-04-07",
+      "location_id": 2177,
+      "location_name": "Megaworld Paseo Center",
+      "business_date": "2026-03-25",
+      "mosaic_count": 107,
+      "supabase_count": 131,
+      "extras_count": 24,
+      "missing_count": 0,
+      "phantom_count": 24,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48654158,
+          "status": "phantom"
+        },
+        {
+          "id": 48661413,
+          "status": "phantom"
+        },
+        {
+          "id": 48665449,
+          "status": "phantom"
+        },
+        {
+          "id": 48665934,
+          "status": "phantom"
+        },
+        {
+          "id": 48672675,
+          "status": "phantom"
+        },
+        {
+          "id": 48674183,
+          "status": "phantom"
+        },
+        {
+          "id": 48675089,
+          "status": "phantom"
+        },
+        {
+          "id": 48676992,
+          "status": "phantom"
+        },
+        {
+          "id": 48678724,
+          "status": "phantom"
+        },
+        {
+          "id": 48680850,
+          "status": "phantom"
+        },
+        {
+          "id": 48682303,
+          "status": "phantom"
+        },
+        {
+          "id": 48682391,
+          "status": "phantom"
+        },
+        {
+          "id": 48685448,
+          "status": "phantom"
+        },
+        {
+          "id": 48687034,
+          "status": "phantom"
+        },
+        {
+          "id": 48690412,
+          "status": "phantom"
+        },
+        {
+          "id": 48691155,
+          "status": "phantom"
+        },
+        {
+          "id": 48695245,
+          "status": "phantom"
+        },
+        {
+          "id": 48696467,
+          "status": "phantom"
+        },
+        {
+          "id": 48696501,
+          "status": "phantom"
+        },
+        {
+          "id": 48698164,
+          "status": "phantom"
+        },
+        {
+          "id": 48698340,
+          "status": "phantom"
+        },
+        {
+          "id": 48702570,
+          "status": "phantom"
+        },
+        {
+          "id": 48702884,
+          "status": "phantom"
+        },
+        {
+          "id": 48713497,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2177,
+      "location_name": "Megaworld Paseo Center",
+      "business_date": "2026-03-26",
+      "mosaic_count": 141,
+      "supabase_count": 141,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2177,
+      "location_name": "Megaworld Paseo Center",
+      "business_date": "2026-03-27",
+      "mosaic_count": 177,
+      "supabase_count": 183,
+      "extras_count": 6,
+      "missing_count": 0,
+      "phantom_count": 6,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48855136,
+          "status": "phantom"
+        },
+        {
+          "id": 48857932,
+          "status": "phantom"
+        },
+        {
+          "id": 48862896,
+          "status": "phantom"
+        },
+        {
+          "id": 48863260,
+          "status": "phantom"
+        },
+        {
+          "id": 48865220,
+          "status": "phantom"
+        },
+        {
+          "id": 48866445,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2177,
+      "location_name": "Megaworld Paseo Center",
+      "business_date": "2026-03-28",
+      "mosaic_count": 139,
+      "supabase_count": 139,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2216,
+      "location_name": "Megaworld Venice Grand Canal",
+      "business_date": "2026-03-25",
+      "mosaic_count": 124,
+      "supabase_count": 128,
+      "extras_count": 4,
+      "missing_count": 0,
+      "phantom_count": 4,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48696961,
+          "status": "phantom"
+        },
+        {
+          "id": 48704984,
+          "status": "phantom"
+        },
+        {
+          "id": 48716813,
+          "status": "phantom"
+        },
+        {
+          "id": 48729059,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2216,
+      "location_name": "Megaworld Venice Grand Canal",
+      "business_date": "2026-03-26",
+      "mosaic_count": 125,
+      "supabase_count": 125,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2216,
+      "location_name": "Megaworld Venice Grand Canal",
+      "business_date": "2026-03-27",
+      "mosaic_count": 142,
+      "supabase_count": 142,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2216,
+      "location_name": "Megaworld Venice Grand Canal",
+      "business_date": "2026-03-28",
       "mosaic_count": 145,
       "supabase_count": 145,
       "extras_count": 0,
@@ -233,11 +1763,30 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2281,
-      "location_name": "Ever Commonwealth",
-      "business_date": "2026-04-06",
-      "mosaic_count": 232,
-      "supabase_count": 232,
+      "location_id": 2430,
+      "location_name": "Robinson General Trias",
+      "business_date": "2026-03-25",
+      "mosaic_count": 94,
+      "supabase_count": 95,
+      "extras_count": 1,
+      "missing_count": 0,
+      "phantom_count": 1,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48683322,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2430,
+      "location_name": "Robinson General Trias",
+      "business_date": "2026-03-26",
+      "mosaic_count": 103,
+      "supabase_count": 103,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -247,9 +1796,801 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2281,
-      "location_name": "Ever Commonwealth",
-      "business_date": "2026-04-07",
+      "location_id": 2430,
+      "location_name": "Robinson General Trias",
+      "business_date": "2026-03-27",
+      "mosaic_count": 143,
+      "supabase_count": 143,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2430,
+      "location_name": "Robinson General Trias",
+      "business_date": "2026-03-28",
+      "mosaic_count": 172,
+      "supabase_count": 172,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2408,
+      "location_name": "Robinson Imus",
+      "business_date": "2026-03-25",
+      "mosaic_count": 104,
+      "supabase_count": 110,
+      "extras_count": 6,
+      "missing_count": 0,
+      "phantom_count": 6,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48665097,
+          "status": "phantom"
+        },
+        {
+          "id": 48668057,
+          "status": "phantom"
+        },
+        {
+          "id": 48689111,
+          "status": "phantom"
+        },
+        {
+          "id": 48707197,
+          "status": "phantom"
+        },
+        {
+          "id": 48715183,
+          "status": "phantom"
+        },
+        {
+          "id": 48718728,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2408,
+      "location_name": "Robinson Imus",
+      "business_date": "2026-03-26",
+      "mosaic_count": 163,
+      "supabase_count": 163,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2408,
+      "location_name": "Robinson Imus",
+      "business_date": "2026-03-27",
+      "mosaic_count": 190,
+      "supabase_count": 194,
+      "extras_count": 4,
+      "missing_count": 0,
+      "phantom_count": 4,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48870067,
+          "status": "phantom"
+        },
+        {
+          "id": 48877956,
+          "status": "phantom"
+        },
+        {
+          "id": 48879841,
+          "status": "phantom"
+        },
+        {
+          "id": 48880214,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2408,
+      "location_name": "Robinson Imus",
+      "business_date": "2026-03-28",
+      "mosaic_count": 264,
+      "supabase_count": 264,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2342,
+      "location_name": "Robinsons Antipolo",
+      "business_date": "2026-03-25",
+      "mosaic_count": 160,
+      "supabase_count": 167,
+      "extras_count": 7,
+      "missing_count": 0,
+      "phantom_count": 7,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48664686,
+          "status": "phantom"
+        },
+        {
+          "id": 48670375,
+          "status": "phantom"
+        },
+        {
+          "id": 48693067,
+          "status": "phantom"
+        },
+        {
+          "id": 48694670,
+          "status": "phantom"
+        },
+        {
+          "id": 48696889,
+          "status": "phantom"
+        },
+        {
+          "id": 48698933,
+          "status": "phantom"
+        },
+        {
+          "id": 48709438,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2342,
+      "location_name": "Robinsons Antipolo",
+      "business_date": "2026-03-26",
+      "mosaic_count": 214,
+      "supabase_count": 214,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2342,
+      "location_name": "Robinsons Antipolo",
+      "business_date": "2026-03-27",
+      "mosaic_count": 206,
+      "supabase_count": 208,
+      "extras_count": 2,
+      "missing_count": 0,
+      "phantom_count": 2,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48861878,
+          "status": "phantom"
+        },
+        {
+          "id": 48886801,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2342,
+      "location_name": "Robinsons Antipolo",
+      "business_date": "2026-03-28",
+      "mosaic_count": 267,
+      "supabase_count": 267,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2339,
+      "location_name": "SM  Manila",
+      "business_date": "2026-03-25",
+      "mosaic_count": 132,
+      "supabase_count": 149,
+      "extras_count": 17,
+      "missing_count": 0,
+      "phantom_count": 17,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48658876,
+          "status": "phantom"
+        },
+        {
+          "id": 48662051,
+          "status": "phantom"
+        },
+        {
+          "id": 48664529,
+          "status": "phantom"
+        },
+        {
+          "id": 48665963,
+          "status": "phantom"
+        },
+        {
+          "id": 48673314,
+          "status": "phantom"
+        },
+        {
+          "id": 48682196,
+          "status": "phantom"
+        },
+        {
+          "id": 48683181,
+          "status": "phantom"
+        },
+        {
+          "id": 48684808,
+          "status": "phantom"
+        },
+        {
+          "id": 48685192,
+          "status": "phantom"
+        },
+        {
+          "id": 48689017,
+          "status": "phantom"
+        },
+        {
+          "id": 48689285,
+          "status": "phantom"
+        },
+        {
+          "id": 48692462,
+          "status": "phantom"
+        },
+        {
+          "id": 48696770,
+          "status": "phantom"
+        },
+        {
+          "id": 48697484,
+          "status": "phantom"
+        },
+        {
+          "id": 48704415,
+          "status": "phantom"
+        },
+        {
+          "id": 48710486,
+          "status": "phantom"
+        },
+        {
+          "id": 48716687,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2339,
+      "location_name": "SM  Manila",
+      "business_date": "2026-03-26",
+      "mosaic_count": 198,
+      "supabase_count": 198,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2339,
+      "location_name": "SM  Manila",
+      "business_date": "2026-03-27",
+      "mosaic_count": 176,
+      "supabase_count": 201,
+      "extras_count": 25,
+      "missing_count": 0,
+      "phantom_count": 25,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48863839,
+          "status": "phantom"
+        },
+        {
+          "id": 48864198,
+          "status": "phantom"
+        },
+        {
+          "id": 48866752,
+          "status": "phantom"
+        },
+        {
+          "id": 48872233,
+          "status": "phantom"
+        },
+        {
+          "id": 48872491,
+          "status": "phantom"
+        },
+        {
+          "id": 48873157,
+          "status": "phantom"
+        },
+        {
+          "id": 48874408,
+          "status": "phantom"
+        },
+        {
+          "id": 48876060,
+          "status": "phantom"
+        },
+        {
+          "id": 48876116,
+          "status": "phantom"
+        },
+        {
+          "id": 48878244,
+          "status": "phantom"
+        },
+        {
+          "id": 48879011,
+          "status": "phantom"
+        },
+        {
+          "id": 48880097,
+          "status": "phantom"
+        },
+        {
+          "id": 48880685,
+          "status": "phantom"
+        },
+        {
+          "id": 48881125,
+          "status": "phantom"
+        },
+        {
+          "id": 48881311,
+          "status": "phantom"
+        },
+        {
+          "id": 48881610,
+          "status": "phantom"
+        },
+        {
+          "id": 48881868,
+          "status": "phantom"
+        },
+        {
+          "id": 48882025,
+          "status": "phantom"
+        },
+        {
+          "id": 48882228,
+          "status": "phantom"
+        },
+        {
+          "id": 48882509,
+          "status": "phantom"
+        },
+        {
+          "id": 48889411,
+          "status": "phantom"
+        },
+        {
+          "id": 48889722,
+          "status": "phantom"
+        },
+        {
+          "id": 48891064,
+          "status": "phantom"
+        },
+        {
+          "id": 48891500,
+          "status": "phantom"
+        },
+        {
+          "id": 48892667,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2339,
+      "location_name": "SM  Manila",
+      "business_date": "2026-03-28",
+      "mosaic_count": 216,
+      "supabase_count": 216,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2412,
+      "location_name": "SM Bicutan",
+      "business_date": "2026-03-25",
+      "mosaic_count": 170,
+      "supabase_count": 190,
+      "extras_count": 20,
+      "missing_count": 0,
+      "phantom_count": 20,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48663133,
+          "status": "phantom"
+        },
+        {
+          "id": 48663916,
+          "status": "phantom"
+        },
+        {
+          "id": 48664287,
+          "status": "phantom"
+        },
+        {
+          "id": 48666328,
+          "status": "phantom"
+        },
+        {
+          "id": 48675587,
+          "status": "phantom"
+        },
+        {
+          "id": 48678036,
+          "status": "phantom"
+        },
+        {
+          "id": 48679814,
+          "status": "phantom"
+        },
+        {
+          "id": 48680469,
+          "status": "phantom"
+        },
+        {
+          "id": 48685104,
+          "status": "phantom"
+        },
+        {
+          "id": 48687550,
+          "status": "phantom"
+        },
+        {
+          "id": 48687966,
+          "status": "phantom"
+        },
+        {
+          "id": 48698286,
+          "status": "phantom"
+        },
+        {
+          "id": 48700242,
+          "status": "phantom"
+        },
+        {
+          "id": 48701206,
+          "status": "phantom"
+        },
+        {
+          "id": 48701312,
+          "status": "phantom"
+        },
+        {
+          "id": 48702193,
+          "status": "phantom"
+        },
+        {
+          "id": 48702968,
+          "status": "phantom"
+        },
+        {
+          "id": 48703470,
+          "status": "phantom"
+        },
+        {
+          "id": 48705880,
+          "status": "phantom"
+        },
+        {
+          "id": 48716797,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2412,
+      "location_name": "SM Bicutan",
+      "business_date": "2026-03-26",
+      "mosaic_count": 157,
+      "supabase_count": 157,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2412,
+      "location_name": "SM Bicutan",
+      "business_date": "2026-03-27",
+      "mosaic_count": 205,
+      "supabase_count": 219,
+      "extras_count": 14,
+      "missing_count": 0,
+      "phantom_count": 14,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48860720,
+          "status": "phantom"
+        },
+        {
+          "id": 48863101,
+          "status": "phantom"
+        },
+        {
+          "id": 48874628,
+          "status": "phantom"
+        },
+        {
+          "id": 48878603,
+          "status": "phantom"
+        },
+        {
+          "id": 48881091,
+          "status": "phantom"
+        },
+        {
+          "id": 48881606,
+          "status": "phantom"
+        },
+        {
+          "id": 48882478,
+          "status": "phantom"
+        },
+        {
+          "id": 48883098,
+          "status": "phantom"
+        },
+        {
+          "id": 48885595,
+          "status": "phantom"
+        },
+        {
+          "id": 48889109,
+          "status": "phantom"
+        },
+        {
+          "id": 48890507,
+          "status": "phantom"
+        },
+        {
+          "id": 48891482,
+          "status": "phantom"
+        },
+        {
+          "id": 48891633,
+          "status": "phantom"
+        },
+        {
+          "id": 48892120,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2412,
+      "location_name": "SM Bicutan",
+      "business_date": "2026-03-28",
+      "mosaic_count": 242,
+      "supabase_count": 242,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2184,
+      "location_name": "SM East Ortigas",
+      "business_date": "2026-03-25",
+      "mosaic_count": 134,
+      "supabase_count": 152,
+      "extras_count": 18,
+      "missing_count": 0,
+      "phantom_count": 18,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48664321,
+          "status": "phantom"
+        },
+        {
+          "id": 48674209,
+          "status": "phantom"
+        },
+        {
+          "id": 48682412,
+          "status": "phantom"
+        },
+        {
+          "id": 48684515,
+          "status": "phantom"
+        },
+        {
+          "id": 48687867,
+          "status": "phantom"
+        },
+        {
+          "id": 48688433,
+          "status": "phantom"
+        },
+        {
+          "id": 48689546,
+          "status": "phantom"
+        },
+        {
+          "id": 48690023,
+          "status": "phantom"
+        },
+        {
+          "id": 48693739,
+          "status": "phantom"
+        },
+        {
+          "id": 48694852,
+          "status": "phantom"
+        },
+        {
+          "id": 48695242,
+          "status": "phantom"
+        },
+        {
+          "id": 48698292,
+          "status": "phantom"
+        },
+        {
+          "id": 48698574,
+          "status": "phantom"
+        },
+        {
+          "id": 48701982,
+          "status": "phantom"
+        },
+        {
+          "id": 48703923,
+          "status": "phantom"
+        },
+        {
+          "id": 48706702,
+          "status": "phantom"
+        },
+        {
+          "id": 48709596,
+          "status": "phantom"
+        },
+        {
+          "id": 48709810,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2184,
+      "location_name": "SM East Ortigas",
+      "business_date": "2026-03-26",
+      "mosaic_count": 165,
+      "supabase_count": 165,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2184,
+      "location_name": "SM East Ortigas",
+      "business_date": "2026-03-27",
+      "mosaic_count": 207,
+      "supabase_count": 216,
+      "extras_count": 9,
+      "missing_count": 0,
+      "phantom_count": 9,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48860925,
+          "status": "phantom"
+        },
+        {
+          "id": 48871884,
+          "status": "phantom"
+        },
+        {
+          "id": 48874686,
+          "status": "phantom"
+        },
+        {
+          "id": 48876767,
+          "status": "phantom"
+        },
+        {
+          "id": 48879711,
+          "status": "phantom"
+        },
+        {
+          "id": 48880901,
+          "status": "phantom"
+        },
+        {
+          "id": 48883258,
+          "status": "phantom"
+        },
+        {
+          "id": 48884289,
+          "status": "phantom"
+        },
+        {
+          "id": 48889462,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2184,
+      "location_name": "SM East Ortigas",
+      "business_date": "2026-03-28",
       "mosaic_count": 228,
       "supabase_count": 228,
       "extras_count": 0,
@@ -261,11 +2602,42 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2646,
-      "location_name": "SM Clark",
-      "business_date": "2026-04-06",
-      "mosaic_count": 99,
-      "supabase_count": 99,
+      "location_id": 2218,
+      "location_name": "SM Grand Central",
+      "business_date": "2026-03-25",
+      "mosaic_count": 175,
+      "supabase_count": 179,
+      "extras_count": 4,
+      "missing_count": 0,
+      "phantom_count": 4,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48668747,
+          "status": "phantom"
+        },
+        {
+          "id": 48675936,
+          "status": "phantom"
+        },
+        {
+          "id": 48686061,
+          "status": "phantom"
+        },
+        {
+          "id": 48709228,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2218,
+      "location_name": "SM Grand Central",
+      "business_date": "2026-03-26",
+      "mosaic_count": 204,
+      "supabase_count": 204,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -275,11 +2647,38 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2646,
-      "location_name": "SM Clark",
-      "business_date": "2026-04-07",
-      "mosaic_count": 112,
-      "supabase_count": 112,
+      "location_id": 2218,
+      "location_name": "SM Grand Central",
+      "business_date": "2026-03-27",
+      "mosaic_count": 241,
+      "supabase_count": 244,
+      "extras_count": 3,
+      "missing_count": 0,
+      "phantom_count": 3,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48869433,
+          "status": "phantom"
+        },
+        {
+          "id": 48875961,
+          "status": "phantom"
+        },
+        {
+          "id": 48883580,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2218,
+      "location_name": "SM Grand Central",
+      "business_date": "2026-03-28",
+      "mosaic_count": 324,
+      "supabase_count": 324,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -289,11 +2688,58 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2481,
-      "location_name": "SM SJDM",
-      "business_date": "2026-04-06",
-      "mosaic_count": 187,
-      "supabase_count": 187,
+      "location_id": 2219,
+      "location_name": "SM Mall Of Asia",
+      "business_date": "2026-03-25",
+      "mosaic_count": 184,
+      "supabase_count": 192,
+      "extras_count": 8,
+      "missing_count": 0,
+      "phantom_count": 8,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48681676,
+          "status": "phantom"
+        },
+        {
+          "id": 48682477,
+          "status": "phantom"
+        },
+        {
+          "id": 48684702,
+          "status": "phantom"
+        },
+        {
+          "id": 48690344,
+          "status": "phantom"
+        },
+        {
+          "id": 48694284,
+          "status": "phantom"
+        },
+        {
+          "id": 48694796,
+          "status": "phantom"
+        },
+        {
+          "id": 48695106,
+          "status": "phantom"
+        },
+        {
+          "id": 48701634,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2219,
+      "location_name": "SM Mall Of Asia",
+      "business_date": "2026-03-26",
+      "mosaic_count": 176,
+      "supabase_count": 176,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -303,123 +2749,2719 @@
       "missing_ids_sample": []
     },
     {
-      "location_id": 2481,
-      "location_name": "SM SJDM",
-      "business_date": "2026-04-07",
-      "mosaic_count": 188,
-      "supabase_count": 188,
-      "extras_count": 0,
-      "missing_count": 0,
-      "phantom_count": 0,
-      "duplicate_count": 0,
-      "unconfirmed_count": 0,
-      "extras": [],
-      "missing_ids_sample": []
-    },
-    {
-      "location_id": 2774,
-      "location_name": "SM Sta. Rosa",
-      "business_date": "2026-04-06",
-      "mosaic_count": 0,
-      "supabase_count": 0,
-      "extras_count": 0,
-      "missing_count": 0,
-      "phantom_count": 0,
-      "duplicate_count": 0,
-      "unconfirmed_count": 0,
-      "extras": [],
-      "missing_ids_sample": []
-    },
-    {
-      "location_id": 2774,
-      "location_name": "SM Sta. Rosa",
-      "business_date": "2026-04-07",
-      "mosaic_count": 0,
-      "supabase_count": 0,
-      "extras_count": 0,
-      "missing_count": 0,
-      "phantom_count": 0,
-      "duplicate_count": 0,
-      "unconfirmed_count": 0,
-      "extras": [],
-      "missing_ids_sample": []
-    },
-    {
-      "location_id": 2912,
-      "location_name": "SM San Pablo",
-      "business_date": "2026-04-06",
-      "mosaic_count": 0,
-      "supabase_count": 0,
-      "extras_count": 0,
-      "missing_count": 0,
-      "phantom_count": 0,
-      "duplicate_count": 0,
-      "unconfirmed_count": 0,
-      "extras": [],
-      "missing_ids_sample": []
-    },
-    {
-      "location_id": 2912,
-      "location_name": "SM San Pablo",
-      "business_date": "2026-04-07",
-      "mosaic_count": 0,
-      "supabase_count": 0,
-      "extras_count": 0,
-      "missing_count": 0,
-      "phantom_count": 0,
-      "duplicate_count": 0,
-      "unconfirmed_count": 0,
-      "extras": [],
-      "missing_ids_sample": []
-    },
-    {
-      "location_id": 2812,
-      "location_name": "SM Taytay",
-      "business_date": "2026-04-06",
-      "mosaic_count": 240,
-      "supabase_count": 240,
-      "extras_count": 0,
-      "missing_count": 0,
-      "phantom_count": 0,
-      "duplicate_count": 0,
-      "unconfirmed_count": 0,
-      "extras": [],
-      "missing_ids_sample": []
-    },
-    {
-      "location_id": 2812,
-      "location_name": "SM Taytay",
-      "business_date": "2026-04-07",
-      "mosaic_count": 208,
-      "supabase_count": 208,
-      "extras_count": 0,
-      "missing_count": 0,
-      "phantom_count": 0,
-      "duplicate_count": 0,
-      "unconfirmed_count": 0,
-      "extras": [],
-      "missing_ids_sample": []
-    },
-    {
-      "location_id": 2250,
-      "location_name": "The Grid - Rockwell",
-      "business_date": "2026-04-06",
-      "mosaic_count": 177,
-      "supabase_count": 177,
-      "extras_count": 0,
-      "missing_count": 0,
-      "phantom_count": 0,
-      "duplicate_count": 0,
-      "unconfirmed_count": 0,
-      "extras": [],
-      "missing_ids_sample": []
-    },
-    {
-      "location_id": 2250,
-      "location_name": "The Grid - Rockwell",
-      "business_date": "2026-04-07",
-      "mosaic_count": 212,
+      "location_id": 2219,
+      "location_name": "SM Mall Of Asia",
+      "business_date": "2026-03-27",
+      "mosaic_count": 196,
       "supabase_count": 212,
+      "extras_count": 16,
+      "missing_count": 0,
+      "phantom_count": 16,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48863520,
+          "status": "phantom"
+        },
+        {
+          "id": 48864753,
+          "status": "phantom"
+        },
+        {
+          "id": 48867785,
+          "status": "phantom"
+        },
+        {
+          "id": 48867875,
+          "status": "phantom"
+        },
+        {
+          "id": 48868177,
+          "status": "phantom"
+        },
+        {
+          "id": 48868351,
+          "status": "phantom"
+        },
+        {
+          "id": 48871317,
+          "status": "phantom"
+        },
+        {
+          "id": 48872833,
+          "status": "phantom"
+        },
+        {
+          "id": 48873683,
+          "status": "phantom"
+        },
+        {
+          "id": 48875519,
+          "status": "phantom"
+        },
+        {
+          "id": 48875918,
+          "status": "phantom"
+        },
+        {
+          "id": 48879130,
+          "status": "phantom"
+        },
+        {
+          "id": 48880424,
+          "status": "phantom"
+        },
+        {
+          "id": 48882794,
+          "status": "phantom"
+        },
+        {
+          "id": 48884313,
+          "status": "phantom"
+        },
+        {
+          "id": 48886669,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2219,
+      "location_name": "SM Mall Of Asia",
+      "business_date": "2026-03-28",
+      "mosaic_count": 280,
+      "supabase_count": 280,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2317,
+      "location_name": "SM Marikina",
+      "business_date": "2026-03-25",
+      "mosaic_count": 131,
+      "supabase_count": 142,
+      "extras_count": 11,
+      "missing_count": 0,
+      "phantom_count": 11,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48649261,
+          "status": "phantom"
+        },
+        {
+          "id": 48658758,
+          "status": "phantom"
+        },
+        {
+          "id": 48674266,
+          "status": "phantom"
+        },
+        {
+          "id": 48676187,
+          "status": "phantom"
+        },
+        {
+          "id": 48677758,
+          "status": "phantom"
+        },
+        {
+          "id": 48685924,
+          "status": "phantom"
+        },
+        {
+          "id": 48687921,
+          "status": "phantom"
+        },
+        {
+          "id": 48688022,
+          "status": "phantom"
+        },
+        {
+          "id": 48693084,
+          "status": "phantom"
+        },
+        {
+          "id": 48700833,
+          "status": "phantom"
+        },
+        {
+          "id": 48712072,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2317,
+      "location_name": "SM Marikina",
+      "business_date": "2026-03-26",
+      "mosaic_count": 184,
+      "supabase_count": 184,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2317,
+      "location_name": "SM Marikina",
+      "business_date": "2026-03-27",
+      "mosaic_count": 203,
+      "supabase_count": 207,
+      "extras_count": 4,
+      "missing_count": 0,
+      "phantom_count": 4,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48861050,
+          "status": "phantom"
+        },
+        {
+          "id": 48868771,
+          "status": "phantom"
+        },
+        {
+          "id": 48877419,
+          "status": "phantom"
+        },
+        {
+          "id": 48889470,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2317,
+      "location_name": "SM Marikina",
+      "business_date": "2026-03-28",
+      "mosaic_count": 255,
+      "supabase_count": 255,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2413,
+      "location_name": "SM Marilao",
+      "business_date": "2026-03-25",
+      "mosaic_count": 128,
+      "supabase_count": 131,
+      "extras_count": 3,
+      "missing_count": 0,
+      "phantom_count": 3,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48692200,
+          "status": "phantom"
+        },
+        {
+          "id": 48703453,
+          "status": "phantom"
+        },
+        {
+          "id": 48709674,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2413,
+      "location_name": "SM Marilao",
+      "business_date": "2026-03-26",
+      "mosaic_count": 164,
+      "supabase_count": 164,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2413,
+      "location_name": "SM Marilao",
+      "business_date": "2026-03-27",
+      "mosaic_count": 191,
+      "supabase_count": 192,
+      "extras_count": 1,
+      "missing_count": 0,
+      "phantom_count": 1,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48881740,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2413,
+      "location_name": "SM Marilao",
+      "business_date": "2026-03-28",
+      "mosaic_count": 194,
+      "supabase_count": 194,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2338,
+      "location_name": "SM Megamall",
+      "business_date": "2026-03-25",
+      "mosaic_count": 171,
+      "supabase_count": 207,
+      "extras_count": 36,
+      "missing_count": 0,
+      "phantom_count": 36,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48650876,
+          "status": "phantom"
+        },
+        {
+          "id": 48660474,
+          "status": "phantom"
+        },
+        {
+          "id": 48663089,
+          "status": "phantom"
+        },
+        {
+          "id": 48664342,
+          "status": "phantom"
+        },
+        {
+          "id": 48665843,
+          "status": "phantom"
+        },
+        {
+          "id": 48667146,
+          "status": "phantom"
+        },
+        {
+          "id": 48669545,
+          "status": "phantom"
+        },
+        {
+          "id": 48669804,
+          "status": "phantom"
+        },
+        {
+          "id": 48672558,
+          "status": "phantom"
+        },
+        {
+          "id": 48675121,
+          "status": "phantom"
+        },
+        {
+          "id": 48676117,
+          "status": "phantom"
+        },
+        {
+          "id": 48677136,
+          "status": "phantom"
+        },
+        {
+          "id": 48682108,
+          "status": "phantom"
+        },
+        {
+          "id": 48682429,
+          "status": "phantom"
+        },
+        {
+          "id": 48682680,
+          "status": "phantom"
+        },
+        {
+          "id": 48683924,
+          "status": "phantom"
+        },
+        {
+          "id": 48685342,
+          "status": "phantom"
+        },
+        {
+          "id": 48686208,
+          "status": "phantom"
+        },
+        {
+          "id": 48686786,
+          "status": "phantom"
+        },
+        {
+          "id": 48687900,
+          "status": "phantom"
+        },
+        {
+          "id": 48689038,
+          "status": "phantom"
+        },
+        {
+          "id": 48690240,
+          "status": "phantom"
+        },
+        {
+          "id": 48693212,
+          "status": "phantom"
+        },
+        {
+          "id": 48693364,
+          "status": "phantom"
+        },
+        {
+          "id": 48694725,
+          "status": "phantom"
+        },
+        {
+          "id": 48697442,
+          "status": "phantom"
+        },
+        {
+          "id": 48697664,
+          "status": "phantom"
+        },
+        {
+          "id": 48698954,
+          "status": "phantom"
+        },
+        {
+          "id": 48699450,
+          "status": "phantom"
+        },
+        {
+          "id": 48705407,
+          "status": "phantom"
+        },
+        {
+          "id": 48705989,
+          "status": "phantom"
+        },
+        {
+          "id": 48711964,
+          "status": "phantom"
+        },
+        {
+          "id": 48713115,
+          "status": "phantom"
+        },
+        {
+          "id": 48715574,
+          "status": "phantom"
+        },
+        {
+          "id": 48715703,
+          "status": "phantom"
+        },
+        {
+          "id": 48717746,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2338,
+      "location_name": "SM Megamall",
+      "business_date": "2026-03-26",
+      "mosaic_count": 181,
+      "supabase_count": 181,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2338,
+      "location_name": "SM Megamall",
+      "business_date": "2026-03-27",
+      "mosaic_count": 281,
+      "supabase_count": 307,
+      "extras_count": 26,
+      "missing_count": 0,
+      "phantom_count": 26,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48855415,
+          "status": "phantom"
+        },
+        {
+          "id": 48856428,
+          "status": "phantom"
+        },
+        {
+          "id": 48864042,
+          "status": "phantom"
+        },
+        {
+          "id": 48864967,
+          "status": "phantom"
+        },
+        {
+          "id": 48865354,
+          "status": "phantom"
+        },
+        {
+          "id": 48866476,
+          "status": "phantom"
+        },
+        {
+          "id": 48866864,
+          "status": "phantom"
+        },
+        {
+          "id": 48867385,
+          "status": "phantom"
+        },
+        {
+          "id": 48871444,
+          "status": "phantom"
+        },
+        {
+          "id": 48872578,
+          "status": "phantom"
+        },
+        {
+          "id": 48874282,
+          "status": "phantom"
+        },
+        {
+          "id": 48874817,
+          "status": "phantom"
+        },
+        {
+          "id": 48879686,
+          "status": "phantom"
+        },
+        {
+          "id": 48880072,
+          "status": "phantom"
+        },
+        {
+          "id": 48880148,
+          "status": "phantom"
+        },
+        {
+          "id": 48880568,
+          "status": "phantom"
+        },
+        {
+          "id": 48882990,
+          "status": "phantom"
+        },
+        {
+          "id": 48885579,
+          "status": "phantom"
+        },
+        {
+          "id": 48885900,
+          "status": "phantom"
+        },
+        {
+          "id": 48886165,
+          "status": "phantom"
+        },
+        {
+          "id": 48887762,
+          "status": "phantom"
+        },
+        {
+          "id": 48888847,
+          "status": "phantom"
+        },
+        {
+          "id": 48889188,
+          "status": "phantom"
+        },
+        {
+          "id": 48890631,
+          "status": "phantom"
+        },
+        {
+          "id": 48890678,
+          "status": "phantom"
+        },
+        {
+          "id": 48892489,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2338,
+      "location_name": "SM Megamall",
+      "business_date": "2026-03-28",
+      "mosaic_count": 310,
+      "supabase_count": 310,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2284,
+      "location_name": "SM North EDSA",
+      "business_date": "2026-03-25",
+      "mosaic_count": 230,
+      "supabase_count": 253,
+      "extras_count": 23,
+      "missing_count": 0,
+      "phantom_count": 23,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48671694,
+          "status": "phantom"
+        },
+        {
+          "id": 48673750,
+          "status": "phantom"
+        },
+        {
+          "id": 48678261,
+          "status": "phantom"
+        },
+        {
+          "id": 48678543,
+          "status": "phantom"
+        },
+        {
+          "id": 48679206,
+          "status": "phantom"
+        },
+        {
+          "id": 48679566,
+          "status": "phantom"
+        },
+        {
+          "id": 48679762,
+          "status": "phantom"
+        },
+        {
+          "id": 48682064,
+          "status": "phantom"
+        },
+        {
+          "id": 48683330,
+          "status": "phantom"
+        },
+        {
+          "id": 48683792,
+          "status": "phantom"
+        },
+        {
+          "id": 48687103,
+          "status": "phantom"
+        },
+        {
+          "id": 48688445,
+          "status": "phantom"
+        },
+        {
+          "id": 48689792,
+          "status": "phantom"
+        },
+        {
+          "id": 48690960,
+          "status": "phantom"
+        },
+        {
+          "id": 48691223,
+          "status": "phantom"
+        },
+        {
+          "id": 48693948,
+          "status": "phantom"
+        },
+        {
+          "id": 48694426,
+          "status": "phantom"
+        },
+        {
+          "id": 48697403,
+          "status": "phantom"
+        },
+        {
+          "id": 48697696,
+          "status": "phantom"
+        },
+        {
+          "id": 48702775,
+          "status": "phantom"
+        },
+        {
+          "id": 48710520,
+          "status": "phantom"
+        },
+        {
+          "id": 48716010,
+          "status": "phantom"
+        },
+        {
+          "id": 48716591,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2284,
+      "location_name": "SM North EDSA",
+      "business_date": "2026-03-26",
+      "mosaic_count": 276,
+      "supabase_count": 276,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2284,
+      "location_name": "SM North EDSA",
+      "business_date": "2026-03-27",
+      "mosaic_count": 317,
+      "supabase_count": 336,
+      "extras_count": 19,
+      "missing_count": 0,
+      "phantom_count": 19,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48860208,
+          "status": "phantom"
+        },
+        {
+          "id": 48864436,
+          "status": "phantom"
+        },
+        {
+          "id": 48868818,
+          "status": "phantom"
+        },
+        {
+          "id": 48872826,
+          "status": "phantom"
+        },
+        {
+          "id": 48874722,
+          "status": "phantom"
+        },
+        {
+          "id": 48875402,
+          "status": "phantom"
+        },
+        {
+          "id": 48876077,
+          "status": "phantom"
+        },
+        {
+          "id": 48876851,
+          "status": "phantom"
+        },
+        {
+          "id": 48879513,
+          "status": "phantom"
+        },
+        {
+          "id": 48880226,
+          "status": "phantom"
+        },
+        {
+          "id": 48882103,
+          "status": "phantom"
+        },
+        {
+          "id": 48882382,
+          "status": "phantom"
+        },
+        {
+          "id": 48883038,
+          "status": "phantom"
+        },
+        {
+          "id": 48883074,
+          "status": "phantom"
+        },
+        {
+          "id": 48887329,
+          "status": "phantom"
+        },
+        {
+          "id": 48889564,
+          "status": "phantom"
+        },
+        {
+          "id": 48889699,
+          "status": "phantom"
+        },
+        {
+          "id": 48889774,
+          "status": "phantom"
+        },
+        {
+          "id": 48891226,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2284,
+      "location_name": "SM North EDSA",
+      "business_date": "2026-03-28",
+      "mosaic_count": 356,
+      "supabase_count": 356,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2478,
+      "location_name": "SM Pulilan",
+      "business_date": "2026-03-25",
+      "mosaic_count": 62,
+      "supabase_count": 63,
+      "extras_count": 1,
+      "missing_count": 0,
+      "phantom_count": 1,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48709615,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2478,
+      "location_name": "SM Pulilan",
+      "business_date": "2026-03-26",
+      "mosaic_count": 66,
+      "supabase_count": 66,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2478,
+      "location_name": "SM Pulilan",
+      "business_date": "2026-03-27",
+      "mosaic_count": 87,
+      "supabase_count": 87,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2478,
+      "location_name": "SM Pulilan",
+      "business_date": "2026-03-28",
+      "mosaic_count": 111,
+      "supabase_count": 111,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2340,
+      "location_name": "SM Southmall",
+      "business_date": "2026-03-25",
+      "mosaic_count": 122,
+      "supabase_count": 132,
+      "extras_count": 10,
+      "missing_count": 0,
+      "phantom_count": 10,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48663692,
+          "status": "phantom"
+        },
+        {
+          "id": 48677894,
+          "status": "phantom"
+        },
+        {
+          "id": 48685549,
+          "status": "phantom"
+        },
+        {
+          "id": 48686154,
+          "status": "phantom"
+        },
+        {
+          "id": 48687535,
+          "status": "phantom"
+        },
+        {
+          "id": 48689209,
+          "status": "phantom"
+        },
+        {
+          "id": 48689837,
+          "status": "phantom"
+        },
+        {
+          "id": 48696758,
+          "status": "phantom"
+        },
+        {
+          "id": 48711172,
+          "status": "phantom"
+        },
+        {
+          "id": 48711421,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2340,
+      "location_name": "SM Southmall",
+      "business_date": "2026-03-26",
+      "mosaic_count": 172,
+      "supabase_count": 172,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2340,
+      "location_name": "SM Southmall",
+      "business_date": "2026-03-27",
+      "mosaic_count": 198,
+      "supabase_count": 207,
+      "extras_count": 9,
+      "missing_count": 0,
+      "phantom_count": 9,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48859789,
+          "status": "phantom"
+        },
+        {
+          "id": 48863811,
+          "status": "phantom"
+        },
+        {
+          "id": 48865941,
+          "status": "phantom"
+        },
+        {
+          "id": 48879808,
+          "status": "phantom"
+        },
+        {
+          "id": 48886330,
+          "status": "phantom"
+        },
+        {
+          "id": 48886588,
+          "status": "phantom"
+        },
+        {
+          "id": 48886846,
+          "status": "phantom"
+        },
+        {
+          "id": 48889237,
+          "status": "phantom"
+        },
+        {
+          "id": 48890030,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2340,
+      "location_name": "SM Southmall",
+      "business_date": "2026-03-28",
+      "mosaic_count": 268,
+      "supabase_count": 268,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2411,
+      "location_name": "SM Tanza",
+      "business_date": "2026-03-25",
+      "mosaic_count": 122,
+      "supabase_count": 123,
+      "extras_count": 1,
+      "missing_count": 0,
+      "phantom_count": 1,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48678418,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2411,
+      "location_name": "SM Tanza",
+      "business_date": "2026-03-26",
+      "mosaic_count": 142,
+      "supabase_count": 142,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2411,
+      "location_name": "SM Tanza",
+      "business_date": "2026-03-27",
+      "mosaic_count": 157,
+      "supabase_count": 161,
+      "extras_count": 4,
+      "missing_count": 0,
+      "phantom_count": 4,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48868577,
+          "status": "phantom"
+        },
+        {
+          "id": 48887907,
+          "status": "phantom"
+        },
+        {
+          "id": 48888319,
+          "status": "phantom"
+        },
+        {
+          "id": 48888889,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2411,
+      "location_name": "SM Tanza",
+      "business_date": "2026-03-28",
+      "mosaic_count": 180,
+      "supabase_count": 180,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2341,
+      "location_name": "SM Valenzuela",
+      "business_date": "2026-03-25",
+      "mosaic_count": 93,
+      "supabase_count": 99,
+      "extras_count": 6,
+      "missing_count": 0,
+      "phantom_count": 6,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48671744,
+          "status": "phantom"
+        },
+        {
+          "id": 48680873,
+          "status": "phantom"
+        },
+        {
+          "id": 48682240,
+          "status": "phantom"
+        },
+        {
+          "id": 48689305,
+          "status": "phantom"
+        },
+        {
+          "id": 48696526,
+          "status": "phantom"
+        },
+        {
+          "id": 48709732,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2341,
+      "location_name": "SM Valenzuela",
+      "business_date": "2026-03-26",
+      "mosaic_count": 153,
+      "supabase_count": 153,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2341,
+      "location_name": "SM Valenzuela",
+      "business_date": "2026-03-27",
+      "mosaic_count": 144,
+      "supabase_count": 151,
+      "extras_count": 7,
+      "missing_count": 0,
+      "phantom_count": 7,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48852812,
+          "status": "phantom"
+        },
+        {
+          "id": 48867764,
+          "status": "phantom"
+        },
+        {
+          "id": 48874644,
+          "status": "phantom"
+        },
+        {
+          "id": 48884178,
+          "status": "phantom"
+        },
+        {
+          "id": 48886300,
+          "status": "phantom"
+        },
+        {
+          "id": 48888015,
+          "status": "phantom"
+        },
+        {
+          "id": 48890181,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2341,
+      "location_name": "SM Valenzuela",
+      "business_date": "2026-03-28",
+      "mosaic_count": 197,
+      "supabase_count": 197,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2558,
+      "location_name": "Sta. Lucia East Grand Mall",
+      "business_date": "2026-03-25",
+      "mosaic_count": 89,
+      "supabase_count": 97,
+      "extras_count": 8,
+      "missing_count": 0,
+      "phantom_count": 8,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48653992,
+          "status": "phantom"
+        },
+        {
+          "id": 48663328,
+          "status": "phantom"
+        },
+        {
+          "id": 48671849,
+          "status": "phantom"
+        },
+        {
+          "id": 48680984,
+          "status": "phantom"
+        },
+        {
+          "id": 48695044,
+          "status": "phantom"
+        },
+        {
+          "id": 48696546,
+          "status": "phantom"
+        },
+        {
+          "id": 48702685,
+          "status": "phantom"
+        },
+        {
+          "id": 48723987,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2558,
+      "location_name": "Sta. Lucia East Grand Mall",
+      "business_date": "2026-03-26",
+      "mosaic_count": 127,
+      "supabase_count": 127,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2558,
+      "location_name": "Sta. Lucia East Grand Mall",
+      "business_date": "2026-03-27",
+      "mosaic_count": 162,
+      "supabase_count": 168,
+      "extras_count": 6,
+      "missing_count": 0,
+      "phantom_count": 6,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48856866,
+          "status": "phantom"
+        },
+        {
+          "id": 48863858,
+          "status": "phantom"
+        },
+        {
+          "id": 48864844,
+          "status": "phantom"
+        },
+        {
+          "id": 48871286,
+          "status": "phantom"
+        },
+        {
+          "id": 48888275,
+          "status": "phantom"
+        },
+        {
+          "id": 48891273,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2558,
+      "location_name": "Sta. Lucia East Grand Mall",
+      "business_date": "2026-03-28",
+      "mosaic_count": 235,
+      "supabase_count": 235,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2319,
+      "location_name": "The Terminal",
+      "business_date": "2026-03-25",
+      "mosaic_count": 83,
+      "supabase_count": 89,
+      "extras_count": 6,
+      "missing_count": 0,
+      "phantom_count": 6,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48674529,
+          "status": "phantom"
+        },
+        {
+          "id": 48692400,
+          "status": "phantom"
+        },
+        {
+          "id": 48698952,
+          "status": "phantom"
+        },
+        {
+          "id": 48699843,
+          "status": "phantom"
+        },
+        {
+          "id": 48703886,
+          "status": "phantom"
+        },
+        {
+          "id": 48704293,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2319,
+      "location_name": "The Terminal",
+      "business_date": "2026-03-26",
+      "mosaic_count": 114,
+      "supabase_count": 114,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2319,
+      "location_name": "The Terminal",
+      "business_date": "2026-03-27",
+      "mosaic_count": 165,
+      "supabase_count": 172,
+      "extras_count": 7,
+      "missing_count": 0,
+      "phantom_count": 7,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48864123,
+          "status": "phantom"
+        },
+        {
+          "id": 48866624,
+          "status": "phantom"
+        },
+        {
+          "id": 48868101,
+          "status": "phantom"
+        },
+        {
+          "id": 48868270,
+          "status": "phantom"
+        },
+        {
+          "id": 48872393,
+          "status": "phantom"
+        },
+        {
+          "id": 48877714,
+          "status": "phantom"
+        },
+        {
+          "id": 48879499,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2319,
+      "location_name": "The Terminal",
+      "business_date": "2026-03-28",
+      "mosaic_count": 143,
+      "supabase_count": 143,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2548,
+      "location_name": "Up Town Mall BGC",
+      "business_date": "2026-03-25",
+      "mosaic_count": 182,
+      "supabase_count": 191,
+      "extras_count": 9,
+      "missing_count": 0,
+      "phantom_count": 9,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48673331,
+          "status": "phantom"
+        },
+        {
+          "id": 48675007,
+          "status": "phantom"
+        },
+        {
+          "id": 48679475,
+          "status": "phantom"
+        },
+        {
+          "id": 48682678,
+          "status": "phantom"
+        },
+        {
+          "id": 48683140,
+          "status": "phantom"
+        },
+        {
+          "id": 48685475,
+          "status": "phantom"
+        },
+        {
+          "id": 48688823,
+          "status": "phantom"
+        },
+        {
+          "id": 48694146,
+          "status": "phantom"
+        },
+        {
+          "id": 48695385,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2548,
+      "location_name": "Up Town Mall BGC",
+      "business_date": "2026-03-26",
+      "mosaic_count": 147,
+      "supabase_count": 147,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2548,
+      "location_name": "Up Town Mall BGC",
+      "business_date": "2026-03-27",
+      "mosaic_count": 246,
+      "supabase_count": 250,
+      "extras_count": 4,
+      "missing_count": 0,
+      "phantom_count": 4,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48859707,
+          "status": "phantom"
+        },
+        {
+          "id": 48860003,
+          "status": "phantom"
+        },
+        {
+          "id": 48863521,
+          "status": "phantom"
+        },
+        {
+          "id": 48866549,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2548,
+      "location_name": "Up Town Mall BGC",
+      "business_date": "2026-03-28",
+      "mosaic_count": 257,
+      "supabase_count": 257,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2547,
+      "location_name": "Ayala Solenad",
+      "business_date": "2026-03-25",
+      "mosaic_count": 128,
+      "supabase_count": 130,
+      "extras_count": 2,
+      "missing_count": 0,
+      "phantom_count": 2,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48665961,
+          "status": "phantom"
+        },
+        {
+          "id": 48694159,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2547,
+      "location_name": "Ayala Solenad",
+      "business_date": "2026-03-26",
+      "mosaic_count": 130,
+      "supabase_count": 130,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2547,
+      "location_name": "Ayala Solenad",
+      "business_date": "2026-03-27",
+      "mosaic_count": 187,
+      "supabase_count": 197,
+      "extras_count": 10,
+      "missing_count": 0,
+      "phantom_count": 10,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48859530,
+          "status": "phantom"
+        },
+        {
+          "id": 48866831,
+          "status": "phantom"
+        },
+        {
+          "id": 48872585,
+          "status": "phantom"
+        },
+        {
+          "id": 48873103,
+          "status": "phantom"
+        },
+        {
+          "id": 48885011,
+          "status": "phantom"
+        },
+        {
+          "id": 48885230,
+          "status": "phantom"
+        },
+        {
+          "id": 48886352,
+          "status": "phantom"
+        },
+        {
+          "id": 48886435,
+          "status": "phantom"
+        },
+        {
+          "id": 48888675,
+          "status": "phantom"
+        },
+        {
+          "id": 48891339,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2547,
+      "location_name": "Ayala Solenad",
+      "business_date": "2026-03-28",
+      "mosaic_count": 202,
+      "supabase_count": 202,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2526,
+      "location_name": "CTTM Tomas Morato",
+      "business_date": "2026-03-25",
+      "mosaic_count": 99,
+      "supabase_count": 122,
+      "extras_count": 23,
+      "missing_count": 0,
+      "phantom_count": 23,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48656849,
+          "status": "phantom"
+        },
+        {
+          "id": 48669338,
+          "status": "phantom"
+        },
+        {
+          "id": 48669569,
+          "status": "phantom"
+        },
+        {
+          "id": 48672750,
+          "status": "phantom"
+        },
+        {
+          "id": 48676814,
+          "status": "phantom"
+        },
+        {
+          "id": 48676912,
+          "status": "phantom"
+        },
+        {
+          "id": 48688971,
+          "status": "phantom"
+        },
+        {
+          "id": 48691367,
+          "status": "phantom"
+        },
+        {
+          "id": 48691411,
+          "status": "phantom"
+        },
+        {
+          "id": 48693112,
+          "status": "phantom"
+        },
+        {
+          "id": 48693256,
+          "status": "phantom"
+        },
+        {
+          "id": 48694537,
+          "status": "phantom"
+        },
+        {
+          "id": 48694799,
+          "status": "phantom"
+        },
+        {
+          "id": 48694851,
+          "status": "phantom"
+        },
+        {
+          "id": 48696329,
+          "status": "phantom"
+        },
+        {
+          "id": 48696448,
+          "status": "phantom"
+        },
+        {
+          "id": 48698641,
+          "status": "phantom"
+        },
+        {
+          "id": 48699590,
+          "status": "phantom"
+        },
+        {
+          "id": 48703847,
+          "status": "phantom"
+        },
+        {
+          "id": 48704846,
+          "status": "phantom"
+        },
+        {
+          "id": 48707666,
+          "status": "phantom"
+        },
+        {
+          "id": 48712819,
+          "status": "phantom"
+        },
+        {
+          "id": 48736929,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2526,
+      "location_name": "CTTM Tomas Morato",
+      "business_date": "2026-03-26",
+      "mosaic_count": 90,
+      "supabase_count": 90,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2526,
+      "location_name": "CTTM Tomas Morato",
+      "business_date": "2026-03-27",
+      "mosaic_count": 137,
+      "supabase_count": 154,
+      "extras_count": 17,
+      "missing_count": 0,
+      "phantom_count": 17,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48851804,
+          "status": "phantom"
+        },
+        {
+          "id": 48859517,
+          "status": "phantom"
+        },
+        {
+          "id": 48860513,
+          "status": "phantom"
+        },
+        {
+          "id": 48861355,
+          "status": "phantom"
+        },
+        {
+          "id": 48862333,
+          "status": "phantom"
+        },
+        {
+          "id": 48863137,
+          "status": "phantom"
+        },
+        {
+          "id": 48868808,
+          "status": "phantom"
+        },
+        {
+          "id": 48877124,
+          "status": "phantom"
+        },
+        {
+          "id": 48877409,
+          "status": "phantom"
+        },
+        {
+          "id": 48878762,
+          "status": "phantom"
+        },
+        {
+          "id": 48882327,
+          "status": "phantom"
+        },
+        {
+          "id": 48882466,
+          "status": "phantom"
+        },
+        {
+          "id": 48885195,
+          "status": "phantom"
+        },
+        {
+          "id": 48885311,
+          "status": "phantom"
+        },
+        {
+          "id": 48887468,
+          "status": "phantom"
+        },
+        {
+          "id": 48887576,
+          "status": "phantom"
+        },
+        {
+          "id": 48891952,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2526,
+      "location_name": "CTTM Tomas Morato",
+      "business_date": "2026-03-28",
+      "mosaic_count": 170,
+      "supabase_count": 170,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2766,
+      "location_name": "D'Verde Calamba",
+      "business_date": "2026-03-25",
+      "mosaic_count": 73,
+      "supabase_count": 73,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2766,
+      "location_name": "D'Verde Calamba",
+      "business_date": "2026-03-26",
+      "mosaic_count": 93,
+      "supabase_count": 93,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2766,
+      "location_name": "D'Verde Calamba",
+      "business_date": "2026-03-27",
+      "mosaic_count": 117,
+      "supabase_count": 117,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2766,
+      "location_name": "D'Verde Calamba",
+      "business_date": "2026-03-28",
+      "mosaic_count": 146,
+      "supabase_count": 146,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2464,
+      "location_name": "SM Caloocan",
+      "business_date": "2026-03-25",
+      "mosaic_count": 97,
+      "supabase_count": 105,
+      "extras_count": 8,
+      "missing_count": 0,
+      "phantom_count": 8,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48678829,
+          "status": "phantom"
+        },
+        {
+          "id": 48682882,
+          "status": "phantom"
+        },
+        {
+          "id": 48682991,
+          "status": "phantom"
+        },
+        {
+          "id": 48698968,
+          "status": "phantom"
+        },
+        {
+          "id": 48705394,
+          "status": "phantom"
+        },
+        {
+          "id": 48707232,
+          "status": "phantom"
+        },
+        {
+          "id": 48708292,
+          "status": "phantom"
+        },
+        {
+          "id": 48711085,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2464,
+      "location_name": "SM Caloocan",
+      "business_date": "2026-03-26",
+      "mosaic_count": 149,
+      "supabase_count": 149,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2464,
+      "location_name": "SM Caloocan",
+      "business_date": "2026-03-27",
+      "mosaic_count": 162,
+      "supabase_count": 167,
+      "extras_count": 5,
+      "missing_count": 0,
+      "phantom_count": 5,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48870396,
+          "status": "phantom"
+        },
+        {
+          "id": 48871786,
+          "status": "phantom"
+        },
+        {
+          "id": 48881518,
+          "status": "phantom"
+        },
+        {
+          "id": 48881691,
+          "status": "phantom"
+        },
+        {
+          "id": 48881773,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2464,
+      "location_name": "SM Caloocan",
+      "business_date": "2026-03-28",
+      "mosaic_count": 193,
+      "supabase_count": 193,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2281,
+      "location_name": "Ever Commonwealth",
+      "business_date": "2026-03-25",
+      "mosaic_count": 160,
+      "supabase_count": 172,
+      "extras_count": 12,
+      "missing_count": 0,
+      "phantom_count": 12,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48674747,
+          "status": "phantom"
+        },
+        {
+          "id": 48677006,
+          "status": "phantom"
+        },
+        {
+          "id": 48679161,
+          "status": "phantom"
+        },
+        {
+          "id": 48682576,
+          "status": "phantom"
+        },
+        {
+          "id": 48687119,
+          "status": "phantom"
+        },
+        {
+          "id": 48693840,
+          "status": "phantom"
+        },
+        {
+          "id": 48695205,
+          "status": "phantom"
+        },
+        {
+          "id": 48695677,
+          "status": "phantom"
+        },
+        {
+          "id": 48699921,
+          "status": "phantom"
+        },
+        {
+          "id": 48701569,
+          "status": "phantom"
+        },
+        {
+          "id": 48702250,
+          "status": "phantom"
+        },
+        {
+          "id": 48706571,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2281,
+      "location_name": "Ever Commonwealth",
+      "business_date": "2026-03-26",
+      "mosaic_count": 180,
+      "supabase_count": 180,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2281,
+      "location_name": "Ever Commonwealth",
+      "business_date": "2026-03-27",
+      "mosaic_count": 241,
+      "supabase_count": 252,
+      "extras_count": 11,
+      "missing_count": 0,
+      "phantom_count": 11,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48863061,
+          "status": "phantom"
+        },
+        {
+          "id": 48866031,
+          "status": "phantom"
+        },
+        {
+          "id": 48868423,
+          "status": "phantom"
+        },
+        {
+          "id": 48875623,
+          "status": "phantom"
+        },
+        {
+          "id": 48877814,
+          "status": "phantom"
+        },
+        {
+          "id": 48883019,
+          "status": "phantom"
+        },
+        {
+          "id": 48884377,
+          "status": "phantom"
+        },
+        {
+          "id": 48885139,
+          "status": "phantom"
+        },
+        {
+          "id": 48886064,
+          "status": "phantom"
+        },
+        {
+          "id": 48888584,
+          "status": "phantom"
+        },
+        {
+          "id": 48888616,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2281,
+      "location_name": "Ever Commonwealth",
+      "business_date": "2026-03-28",
+      "mosaic_count": 291,
+      "supabase_count": 291,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2646,
+      "location_name": "SM Clark",
+      "business_date": "2026-03-25",
+      "mosaic_count": 77,
+      "supabase_count": 77,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2646,
+      "location_name": "SM Clark",
+      "business_date": "2026-03-26",
+      "mosaic_count": 75,
+      "supabase_count": 75,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2646,
+      "location_name": "SM Clark",
+      "business_date": "2026-03-27",
+      "mosaic_count": 137,
+      "supabase_count": 138,
+      "extras_count": 1,
+      "missing_count": 0,
+      "phantom_count": 1,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48883520,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2646,
+      "location_name": "SM Clark",
+      "business_date": "2026-03-28",
+      "mosaic_count": 132,
+      "supabase_count": 132,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2481,
+      "location_name": "SM SJDM",
+      "business_date": "2026-03-25",
+      "mosaic_count": 129,
+      "supabase_count": 131,
+      "extras_count": 2,
+      "missing_count": 0,
+      "phantom_count": 2,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48696074,
+          "status": "phantom"
+        },
+        {
+          "id": 48717022,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2481,
+      "location_name": "SM SJDM",
+      "business_date": "2026-03-26",
+      "mosaic_count": 116,
+      "supabase_count": 116,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2481,
+      "location_name": "SM SJDM",
+      "business_date": "2026-03-27",
+      "mosaic_count": 187,
+      "supabase_count": 191,
+      "extras_count": 4,
+      "missing_count": 0,
+      "phantom_count": 4,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48863387,
+          "status": "phantom"
+        },
+        {
+          "id": 48868494,
+          "status": "phantom"
+        },
+        {
+          "id": 48874639,
+          "status": "phantom"
+        },
+        {
+          "id": 48877698,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2481,
+      "location_name": "SM SJDM",
+      "business_date": "2026-03-28",
+      "mosaic_count": 248,
+      "supabase_count": 248,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2774,
+      "location_name": "SM Sta. Rosa",
+      "business_date": "2026-03-25",
+      "mosaic_count": 0,
+      "supabase_count": 2,
+      "extras_count": 2,
+      "missing_count": 0,
+      "phantom_count": 2,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48678225,
+          "status": "phantom"
+        },
+        {
+          "id": 48681862,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2774,
+      "location_name": "SM Sta. Rosa",
+      "business_date": "2026-03-26",
+      "mosaic_count": 0,
+      "supabase_count": 0,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2774,
+      "location_name": "SM Sta. Rosa",
+      "business_date": "2026-03-27",
+      "mosaic_count": 0,
+      "supabase_count": 0,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2774,
+      "location_name": "SM Sta. Rosa",
+      "business_date": "2026-03-28",
+      "mosaic_count": 0,
+      "supabase_count": 0,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2912,
+      "location_name": "SM San Pablo",
+      "business_date": "2026-03-25",
+      "mosaic_count": 0,
+      "supabase_count": 0,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2912,
+      "location_name": "SM San Pablo",
+      "business_date": "2026-03-26",
+      "mosaic_count": 0,
+      "supabase_count": 0,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2912,
+      "location_name": "SM San Pablo",
+      "business_date": "2026-03-27",
+      "mosaic_count": 0,
+      "supabase_count": 0,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2912,
+      "location_name": "SM San Pablo",
+      "business_date": "2026-03-28",
+      "mosaic_count": 0,
+      "supabase_count": 0,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2812,
+      "location_name": "SM Taytay",
+      "business_date": "2026-03-25",
+      "mosaic_count": 167,
+      "supabase_count": 170,
+      "extras_count": 3,
+      "missing_count": 0,
+      "phantom_count": 3,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48681231,
+          "status": "phantom"
+        },
+        {
+          "id": 48685592,
+          "status": "phantom"
+        },
+        {
+          "id": 48713308,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2812,
+      "location_name": "SM Taytay",
+      "business_date": "2026-03-26",
+      "mosaic_count": 183,
+      "supabase_count": 183,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2812,
+      "location_name": "SM Taytay",
+      "business_date": "2026-03-27",
+      "mosaic_count": 235,
+      "supabase_count": 237,
+      "extras_count": 2,
+      "missing_count": 0,
+      "phantom_count": 2,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48877081,
+          "status": "phantom"
+        },
+        {
+          "id": 48877379,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2812,
+      "location_name": "SM Taytay",
+      "business_date": "2026-03-28",
+      "mosaic_count": 284,
+      "supabase_count": 284,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2250,
+      "location_name": "The Grid - Rockwell",
+      "business_date": "2026-03-25",
+      "mosaic_count": 197,
+      "supabase_count": 213,
+      "extras_count": 16,
+      "missing_count": 0,
+      "phantom_count": 16,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48666978,
+          "status": "phantom"
+        },
+        {
+          "id": 48667470,
+          "status": "phantom"
+        },
+        {
+          "id": 48671599,
+          "status": "phantom"
+        },
+        {
+          "id": 48673493,
+          "status": "phantom"
+        },
+        {
+          "id": 48674643,
+          "status": "phantom"
+        },
+        {
+          "id": 48678183,
+          "status": "phantom"
+        },
+        {
+          "id": 48681426,
+          "status": "phantom"
+        },
+        {
+          "id": 48683412,
+          "status": "phantom"
+        },
+        {
+          "id": 48685670,
+          "status": "phantom"
+        },
+        {
+          "id": 48688152,
+          "status": "phantom"
+        },
+        {
+          "id": 48688672,
+          "status": "phantom"
+        },
+        {
+          "id": 48694098,
+          "status": "phantom"
+        },
+        {
+          "id": 48694858,
+          "status": "phantom"
+        },
+        {
+          "id": 48708883,
+          "status": "phantom"
+        },
+        {
+          "id": 48712306,
+          "status": "phantom"
+        },
+        {
+          "id": 48714984,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2250,
+      "location_name": "The Grid - Rockwell",
+      "business_date": "2026-03-26",
+      "mosaic_count": 227,
+      "supabase_count": 227,
+      "extras_count": 0,
+      "missing_count": 0,
+      "phantom_count": 0,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2250,
+      "location_name": "The Grid - Rockwell",
+      "business_date": "2026-03-27",
+      "mosaic_count": 259,
+      "supabase_count": 280,
+      "extras_count": 21,
+      "missing_count": 0,
+      "phantom_count": 21,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48860192,
+          "status": "phantom"
+        },
+        {
+          "id": 48861020,
+          "status": "phantom"
+        },
+        {
+          "id": 48869365,
+          "status": "phantom"
+        },
+        {
+          "id": 48869400,
+          "status": "phantom"
+        },
+        {
+          "id": 48871731,
+          "status": "phantom"
+        },
+        {
+          "id": 48872036,
+          "status": "phantom"
+        },
+        {
+          "id": 48872345,
+          "status": "phantom"
+        },
+        {
+          "id": 48873002,
+          "status": "phantom"
+        },
+        {
+          "id": 48873203,
+          "status": "phantom"
+        },
+        {
+          "id": 48875193,
+          "status": "phantom"
+        },
+        {
+          "id": 48876761,
+          "status": "phantom"
+        },
+        {
+          "id": 48877939,
+          "status": "phantom"
+        },
+        {
+          "id": 48879501,
+          "status": "phantom"
+        },
+        {
+          "id": 48881069,
+          "status": "phantom"
+        },
+        {
+          "id": 48881520,
+          "status": "phantom"
+        },
+        {
+          "id": 48881603,
+          "status": "phantom"
+        },
+        {
+          "id": 48882292,
+          "status": "phantom"
+        },
+        {
+          "id": 48882737,
+          "status": "phantom"
+        },
+        {
+          "id": 48883008,
+          "status": "phantom"
+        },
+        {
+          "id": 48883072,
+          "status": "phantom"
+        },
+        {
+          "id": 48884984,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2250,
+      "location_name": "The Grid - Rockwell",
+      "business_date": "2026-03-28",
+      "mosaic_count": 288,
+      "supabase_count": 288,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -431,9 +5473,48 @@
     {
       "location_id": 2556,
       "location_name": "Vista Mall Taguig",
-      "business_date": "2026-04-06",
-      "mosaic_count": 120,
-      "supabase_count": 120,
+      "business_date": "2026-03-25",
+      "mosaic_count": 109,
+      "supabase_count": 115,
+      "extras_count": 6,
+      "missing_count": 0,
+      "phantom_count": 6,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48673198,
+          "status": "phantom"
+        },
+        {
+          "id": 48675497,
+          "status": "phantom"
+        },
+        {
+          "id": 48682939,
+          "status": "phantom"
+        },
+        {
+          "id": 48687891,
+          "status": "phantom"
+        },
+        {
+          "id": 48693225,
+          "status": "phantom"
+        },
+        {
+          "id": 48719142,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2556,
+      "location_name": "Vista Mall Taguig",
+      "business_date": "2026-03-26",
+      "mosaic_count": 139,
+      "supabase_count": 139,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -445,9 +5526,56 @@
     {
       "location_id": 2556,
       "location_name": "Vista Mall Taguig",
-      "business_date": "2026-04-07",
-      "mosaic_count": 125,
-      "supabase_count": 125,
+      "business_date": "2026-03-27",
+      "mosaic_count": 193,
+      "supabase_count": 201,
+      "extras_count": 8,
+      "missing_count": 0,
+      "phantom_count": 8,
+      "duplicate_count": 0,
+      "unconfirmed_count": 0,
+      "extras": [
+        {
+          "id": 48858017,
+          "status": "phantom"
+        },
+        {
+          "id": 48870847,
+          "status": "phantom"
+        },
+        {
+          "id": 48875500,
+          "status": "phantom"
+        },
+        {
+          "id": 48876009,
+          "status": "phantom"
+        },
+        {
+          "id": 48881093,
+          "status": "phantom"
+        },
+        {
+          "id": 48884531,
+          "status": "phantom"
+        },
+        {
+          "id": 48889093,
+          "status": "phantom"
+        },
+        {
+          "id": 48890523,
+          "status": "phantom"
+        }
+      ],
+      "missing_ids_sample": []
+    },
+    {
+      "location_id": 2556,
+      "location_name": "Vista Mall Taguig",
+      "business_date": "2026-03-28",
+      "mosaic_count": 223,
+      "supabase_count": 223,
       "extras_count": 0,
       "missing_count": 0,
       "phantom_count": 0,
@@ -458,7 +5586,7 @@
     }
   ],
   "window": {
-    "from": "2026-04-06",
-    "to": "2026-04-07"
+    "from": "2026-03-25",
+    "to": "2026-03-28"
   }
 }
