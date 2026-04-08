@@ -1,7 +1,7 @@
 ---
 sprint_id: S172
 display: Sprint 172
-title: "S166 Follow-up Defect Fixes — 12-14 OPEN defects after S170 partial deploy + 2026-04-08 audit"
+title: "S166 Follow-up Defect Fixes — 15 OPEN/PARTIAL defects after S170 partial deploy + 2026-04-08 audit"
 branch: s172-s166-followup-defect-fixes
 status: GO
 planned_date: 2026-04-08
@@ -18,12 +18,12 @@ sprint_registry_row: "S172 reserved on 2026-04-08. Branch: s172-s166-followup-de
 
 ## Mission
 
-Close the 12-14 product defects still OPEN after S166 + S170 + the 2026-04-08 audit (PR #496). Each defect has been independently verified by either a per-lane audit gate or by orchestrator-direct browser retest. This sprint fixes them, deploys, and re-runs the L3 scenarios that were previously SKIPPED because the underlying UI/backend was broken.
+Close the 15 product defects still OPEN after S166 + S170 + the 2026-04-08 audit (PR #496). Each defect has been independently verified by either a per-lane audit gate or by orchestrator-direct browser retest. This sprint fixes them, deploys, and re-runs the L3 scenarios that were previously SKIPPED because the underlying UI/backend was broken.
 
 The strict 2026-04-08 audit caught a fabrication: R3's retest summary claimed Defect #6 was CLOSED but the underlying evidence file said `STILL_BROKEN`. PR #496 corrected the registry, PR #497 added the audit-gate rule to `/l3-v2-bei-erp`. S172 now actually fixes the bug.
 
 **Out of scope (any of these = STOP and ask):**
-- New product features beyond fixing the 12-14 listed defects
+- New product features beyond fixing the 15 listed defects
 - Refactoring adjacent code that isn't required by a fix
 - Re-running S166 scenarios that already PASSED (only retest the ones unblocked by these fixes)
 - Any L3 scenario authoring (catalog is frozen)
@@ -89,10 +89,10 @@ Per PR #497 (the new `/l3-v2-bei-erp` rule), every retest agent in this sprint M
 | Defect | Source | Line / Element |
 |---|---|---|
 | #6 + #21 frontend | `../bei-tasks/components/hr/compensation-detail-panel.tsx` | line 165: `<Button onClick={onEditClick} disabled={!detail}>` |
-| #6 + #21 frontend | `../bei-tasks/components/hr/compensation-detail-dialog.tsx` | (per R5 probe, has same `disabled={!detail}` pattern around line 296 — verify at execution time) |
+| #6 list-modal | `../bei-tasks/app/dashboard/hr/payroll/compensation-setup/page.tsx` | **CORRECTION (post-fact-check):** an earlier draft referenced `compensation-detail-dialog.tsx` which DOES NOT EXIST. The list-page row-click modal is rendered by the list page itself (or by `compensation-detail-panel.tsx` reused as a dialog). Execution agent MUST grep `../bei-tasks/app/dashboard/hr/payroll/compensation-setup/` for the row onClick handler and the modal/dialog component it opens, then apply the same `disabled={!detail}` → `disabled={isLoading}` fix AND ensure form fields render when `has_ssa: false`. |
 | #21 backend | `hrms/api/payroll_compensation.py` | line 318: `def get_employee_compensation_detail(employee):` — returns null/exception when employee has no SSA |
 | #16 backend | `hrms/api/payroll_compensation.py` | line 1054: `def _activate_compensation_change(doc):` — contains the try/except that swallows errors (R5 reported lines 633-639 in an older view; execution agent must read lines 1054-1100 for the actual try/except) |
-| #19 frontend | `../bei-tasks/app/dashboard/hr/overtime/apply/page.tsx` | line 23: `import { RoleGuard }`. Lines 239-248: RoleGuard with `[ROLES.EMPLOYEE, STORE_STAFF, STORE_SUPERVISOR, AREA_SUPERVISOR, HR_USER, HR_MANAGER, HQ_FINANCE, SYSTEM_MANAGER]` — investigate why test.crew1 hits "Access Restricted" despite STORE_STAFF being in the list. Possibly test.crew1's actual role is `EMPLOYEE` (line 241 already includes it) — so the bug is not the RoleGuard but something else (maybe the page's middleware OR `lib/roles.ts` mapping). |
+| #19 frontend | `../bei-tasks/app/dashboard/hr/overtime/apply/page.tsx` | line 23: `import { RoleGuard }`. Lines 241-249 (verified post-fact-check): RoleGuard already allows `[EMPLOYEE, STORE_STAFF, STORE_SUPERVISOR, AREA_SUPERVISOR, HR_USER, HR_MANAGER, HQ_FINANCE, SYSTEM_MANAGER, ADMINISTRATOR]` (9 roles). Investigate why test.crew1 still hits "Access Restricted" — bug is likely NOT the RoleGuard list itself but somewhere else (middleware, `lib/roles.ts` mapping, or test.crew1's actual Frappe role does not map to any of those 9). |
 | #19 RBAC source | `../bei-tasks/lib/roles.ts` | grep for `EMPLOYEE`, `STORE_STAFF`, `CREW` — confirm test.crew1's role assignment |
 | #18 doctype | `hrms/hr/doctype/bei_incident_report/bei_incident_report.json` | field `store` has `fieldtype: Link, options: Warehouse, reqd: 0`. UI passes a Branch name like "ARANETA GATEWAY" → 417 LinkValidationError. Fix: change `options` to `Branch` OR rename field to `warehouse` and rewire UI. |
 | #8 backend | `hrms/api/employee_create.py` | line 87: `def create_employee_direct(...)`. Returns dict (line 57 area). Verified by Lane B+C: returns cached `employee_id="BEI-EMP-2026-00004"` for every call. Check the dict construction in the return statement around line 222-231 — the `employee_id` may be hardcoded or refer to a cached variable instead of `generate_bei_employee_id()` result. |
@@ -109,7 +109,7 @@ Source: `output/l3/s166/DEFECTS.csv` post 2026-04-08 audit.
 | 6 | CRITICAL | OPEN (NEW from audit) | List-page compensation modal STILL EMPTY (R3 fabrication caught) |
 | 8 | HIGH | OPEN | create_employee_direct cached employee_id constant |
 | 9 | MEDIUM | OPEN | test.hr proxy permission gap on /api/frappe/api/resource/Employee |
-| 10 | LOW (DISPUTED) | OPEN | employee-master dashboard vs list (Wave 0 disagrees) |
+| 10 | DISPUTED | OPEN | employee-master dashboard vs list (Wave 0 disagrees) |
 | 11 | LOW | OPEN | Soft-delete order dependency: relieving_date before status |
 | 13 | MEDIUM | OPEN | emergency_phone_number silently dropped on Employee save |
 | 14 | MEDIUM | OPEN | Reports To field has no autocomplete |
@@ -120,7 +120,7 @@ Source: `output/l3/s166/DEFECTS.csv` post 2026-04-08 audit.
 | 20 | MEDIUM | OPEN (NEW from retest) | OT filing API requires pre-existing Attendance record |
 | 21 | HIGH | OPEN (NEW from retest) | Comp Edit button gated on existing SSA — chicken-and-egg |
 
-(Defects #2, #3, #4, #7 already CLOSED by S170. Defects #12, #22, #23 reclassified as test-harness bugs / meta — not real product defects.)
+(Defects #2, #3, #4, #7 already CLOSED by S170. Defects #12 and #17 are gaps in the DEFECTS.csv numbering — never assigned. The "#22/#23 test-harness bug" notes from earlier drafts referred to in-session retest failures (R4 Frappe routing typo) that never made it into the canonical CSV.)
 
 ---
 
@@ -163,7 +163,7 @@ Before writing any code, verify your approach against every item:
 ## Agent Boot Sequence
 
 1. **Read this plan fully.** Every phase. Every HARD BLOCKER.
-2. **Read the Requirements Regression Checklist above.** Write your approach for each item to `output/s171/REQUIREMENTS_REGRESSION_CHECK.md`.
+2. **Read the Requirements Regression Checklist above.** Write your approach for each item to `output/s172/REQUIREMENTS_REGRESSION_CHECK.md`.
 3. **Create sprint branch:** `git fetch origin production && git checkout -b s172-s166-followup-defect-fixes origin/production`. Same in bei-tasks: `cd ../bei-tasks && git fetch origin main && git checkout -b s172-s166-followup-defect-fixes origin/main`. NEVER write code on production/main.
 4. **Read the audit findings:** `output/l3/s166/AUDIT_2026-04-08/AUDIT_FINDINGS_FINAL.md`
 5. **Read R5 probe (root causes for #21):** `output/l3/s166/lanes/retest/r5_probe/R5_PROBE_SUMMARY.md`
@@ -180,14 +180,14 @@ Before writing any code, verify your approach against every item:
 ### Phase 0 — Preconditions + branch setup (2 units)
 
 1. Create branches in both repos from current `origin/production` / `origin/main`
-2. Create artifact dir: `mkdir -p output/s171/{diagnostics,verification,retest,evidence}`
-3. Write `output/s171/REQUIREMENTS_REGRESSION_CHECK.md` with one entry per checklist item
-4. Write `output/s171/PHASE_BUDGET.json` with estimated vs actual unit tracking
+2. Create artifact dir: `mkdir -p output/s172/{diagnostics,verification,retest,evidence}`
+3. Write `output/s172/REQUIREMENTS_REGRESSION_CHECK.md` with one entry per checklist item
+4. Write `output/s172/PHASE_BUDGET.json` with estimated vs actual unit tracking
 5. Verify no L3 test pollution exists on production: query `Employee` filtered by `employee_name LIKE '%(L3 2026-04-%' AND status='Active'` — should return empty. If non-zero, escalate to Sam before any new test work.
 
 **Verification:**
 - Both repos on `s172-s166-followup-defect-fixes` branch
-- `output/s171/REQUIREMENTS_REGRESSION_CHECK.md` exists with 11 items filled
+- `output/s172/REQUIREMENTS_REGRESSION_CHECK.md` exists with 11 items filled
 - Production L3 pollution check returns 0
 
 ---
@@ -201,7 +201,7 @@ Before writing any code, verify your approach against every item:
 **Root cause (R5 source-grounded):**
 - Backend: `hrms/api/payroll_compensation.py:318 get_employee_compensation_detail(employee)` returns null/raises when employee has no Salary Structure Assignment.
 - Frontend: `../bei-tasks/components/hr/compensation-detail-panel.tsx:165` has `<Button onClick={onEditClick} disabled={!detail}>` — when `detail` is undefined (no SSA), Edit is permanently disabled.
-- Sister: `../bei-tasks/components/hr/compensation-detail-dialog.tsx` has the same pattern (R5 noted approx line 296 — verify at execution).
+- List-page modal: rendered inside `../bei-tasks/app/dashboard/hr/payroll/compensation-setup/page.tsx` (no separate `compensation-detail-dialog.tsx` file exists — the R5 probe note was incorrect).
 
 **Task 1.1 — Backend fix: return employee stub when no SSA exists** (3 units)
 
@@ -225,12 +225,17 @@ In `../bei-tasks/components/hr/compensation-detail-panel.tsx:165`:
    MUST_MODIFY: `../bei-tasks/components/hr/compensation-detail-panel.tsx`
    MUST_CONTAIN: `disabled={isLoading}` (or equivalent)
 
-**Task 1.3 — Frontend fix: same in CompensationDetailDialog** (2 units)
+**Task 1.3 — Frontend fix: list-page row-click modal** (2 units)
 
-Locate `../bei-tasks/components/hr/compensation-detail-dialog.tsx` (the file used by the LIST page row click). Apply the same `disabled={!detail}` → `disabled={isLoading}` fix. Also verify the dialog actually reads the new backend stub correctly and renders the form fields (rather than the empty skeleton placeholders shown in the audit screenshot).
+**CORRECTION (post-fact-check):** The earlier draft of this plan named `compensation-detail-dialog.tsx` — that file DOES NOT exist. Defect #6 (list-page modal showing only Bio ID) is rendered from inside the compensation-setup list page itself.
 
-   MUST_MODIFY: `../bei-tasks/components/hr/compensation-detail-dialog.tsx`
-   MUST_CONTAIN: `disabled={isLoading}` AND form fields rendering when `has_ssa: false`
+1. `grep -rn "onClick\|Dialog\|Modal" ../bei-tasks/app/dashboard/hr/payroll/compensation-setup/page.tsx` to find the row-click handler and the modal it opens.
+2. The modal is likely either (a) inline JSX in `page.tsx`, or (b) `compensation-detail-panel.tsx` reused inside a `<Dialog>` wrapper.
+3. Apply the same `disabled={!detail}` → `disabled={isLoading}` pattern wherever the Edit button is gated.
+4. Ensure the modal actually renders the form fields when `has_ssa: false` (the audit screenshot showed empty skeleton placeholders — the render path probably bails when `detail` is null).
+
+   MUST_MODIFY: at least one of `../bei-tasks/app/dashboard/hr/payroll/compensation-setup/page.tsx` OR `../bei-tasks/components/hr/compensation-detail-panel.tsx`
+   MUST_CONTAIN: form fields rendering when `has_ssa: false` (verify by browser screenshot in Task 1.5)
 
 **Task 1.4 — Sentry instrumentation** (1 unit)
 
@@ -240,17 +245,17 @@ Confirm Sentry context is set in the new `get_employee_compensation_detail` path
 
 Use `/local-frappe` to test the backend change locally. Use Playwright headless to load the list page in dev mode and click a real employee row — verify the modal opens with a form, not an empty skeleton.
 
-   Verification screenshot: `output/s171/verification/phase1_modal_with_form.png`
+   Verification screenshot: `output/s172/verification/phase1_modal_with_form.png`
 
 **Task 1.6 — Phase 1 verification gate** (1 unit)
 
 ```bash
 git diff --name-only origin/production | grep -E "payroll_compensation\.py" || exit 1
 git diff --name-only origin/main | grep -E "compensation-detail-panel\.tsx" || exit 1
-git diff --name-only origin/main | grep -E "compensation-detail-dialog\.tsx" || exit 1
+git diff --name-only origin/main | grep -E "(compensation-setup/page\.tsx|compensation-detail-panel\.tsx)" || exit 1
 grep -q "has_ssa" hrms/api/payroll_compensation.py || exit 1
 grep -q "disabled={isLoading}" ../bei-tasks/components/hr/compensation-detail-panel.tsx || exit 1
-test -f output/s171/verification/phase1_modal_with_form.png || exit 1
+test -f output/s172/verification/phase1_modal_with_form.png || exit 1
 ```
 
 ---
@@ -282,7 +287,7 @@ Add `set_backend_observability_context(module="payroll", action="_activate_compe
 
 **Task 2.3 — Backfill script for stranded BCCs** (2 units)
 
-Write `scripts/s171_backfill_stranded_bccs.py` (Frappe-executable, mirrors the S170 backfill pattern):
+Write `scripts/s172_backfill_stranded_bccs.py` (Frappe-executable, mirrors the S170 backfill pattern):
 
 ```python
 """
@@ -291,19 +296,19 @@ Caused by Defect #16 silent activation failure.
 """
 # Find BCCs in Approved state where no corresponding SSA exists for the employee
 # For each, attempt to call the (now-fixed) _activate_compensation_change
-# Log results to output/s171/backfilled_bccs.csv
+# Log results to output/s172/backfilled_bccs.csv
 ```
 
 Run via SSM following the `/frappe-bulk-edits` skill pattern (init boilerplate + base64 + docker exec).
 
-   MUST_MODIFY: `scripts/s171_backfill_stranded_bccs.py`
+   MUST_MODIFY: `scripts/s172_backfill_stranded_bccs.py`
    MUST_CONTAIN: `_activate_compensation_change`
 
 **Task 2.4 — Phase 2 verification gate** (1 unit)
 
 ```bash
 git diff --name-only origin/production | grep "payroll_compensation\.py" || exit 1
-git diff --name-only origin/production | grep "s171_backfill_stranded_bccs\.py" || exit 1
+git diff --name-only origin/production | grep "s172_backfill_stranded_bccs\.py" || exit 1
 grep -q "set_backend_observability_context" hrms/api/payroll_compensation.py || exit 1
 # Confirm the broad try/except is gone (should not have a bare except: that returns success)
 ```
@@ -315,7 +320,7 @@ grep -q "set_backend_observability_context" hrms/api/payroll_compensation.py || 
 **Defect:** [HIGH] test.crew1 navigating to `/dashboard/hr/overtime/apply` gets "Access Restricted". The page is the self-service OT filing form deployed by S170 Phase 3.
 
 **HARD BLOCKER for diagnosis:**
-The current RoleGuard at `../bei-tasks/app/dashboard/hr/overtime/apply/page.tsx` lines 239-248 already includes `EMPLOYEE`, `STORE_STAFF`, `STORE_SUPERVISOR`, `AREA_SUPERVISOR`, `HR_USER`, `HR_MANAGER`, `HQ_FINANCE`, `SYSTEM_MANAGER`. If test.crew1's role IS one of those (likely STORE_STAFF or EMPLOYEE), the bug is somewhere ELSE — not the RoleGuard. Possibilities:
+The current RoleGuard at `../bei-tasks/app/dashboard/hr/overtime/apply/page.tsx` lines 241-249 already includes `EMPLOYEE`, `STORE_STAFF`, `STORE_SUPERVISOR`, `AREA_SUPERVISOR`, `HR_USER`, `HR_MANAGER`, `HQ_FINANCE`, `SYSTEM_MANAGER`, `ADMINISTRATOR` (9 roles). If test.crew1's role IS one of those (likely STORE_STAFF or EMPLOYEE), the bug is somewhere ELSE — not the RoleGuard. Possibilities:
 - Middleware in `../bei-tasks/middleware.ts` blocks the route before the page renders
 - `lib/roles.ts` has a stale role mapping
 - The page uses a different access check below the RoleGuard
@@ -325,12 +330,12 @@ The current RoleGuard at `../bei-tasks/app/dashboard/hr/overtime/apply/page.tsx`
 1. Read `../bei-tasks/lib/roles.ts` and find how `test.crew1@bebang.ph` (or the BEI "crew" Frappe role) maps to the bei-tasks role enum
 2. Read `../bei-tasks/middleware.ts` (if exists) and check for any route-specific gating
 3. Read the full `app/dashboard/hr/overtime/apply/page.tsx` body for any additional permission checks below the RoleGuard
-4. Write findings to `output/s171/diagnostics/DEFECT_19_DIAGNOSIS.md`
+4. Write findings to `output/s172/diagnostics/DEFECT_19_DIAGNOSIS.md`
 
 **Task 3.2 — Apply the correct fix** (2 units)
 
 Based on the diagnosis:
-- **If RoleGuard is missing the actual crew role:** add it to lines 239-248
+- **If RoleGuard is missing the actual crew role:** add it to lines 241-249
 - **If middleware blocks the route:** update the middleware allowlist
 - **If `lib/roles.ts` has wrong mapping:** fix the mapping
 - **If a separate access check is wrong:** fix it
@@ -342,7 +347,7 @@ Whatever the fix is, it must result in test.crew1 successfully loading the OT ap
 **Task 3.3 — Phase 3 verification gate** (1 unit)
 
 ```bash
-test -f output/s171/diagnostics/DEFECT_19_DIAGNOSIS.md || exit 1
+test -f output/s172/diagnostics/DEFECT_19_DIAGNOSIS.md || exit 1
 # After local rebuild, the OT apply page must render the form (not Access Restricted) when logged in as test.crew1
 # Verified via headless Playwright in Phase 8 retest
 ```
@@ -368,7 +373,7 @@ test -f output/s171/diagnostics/DEFECT_19_DIAGNOSIS.md || exit 1
 **Task 4.1 — Inventory existing references** (2 units)
 
 ```bash
-grep -rn "bei_incident_report.*store\|incident_report.*store\|BEI Incident Report.*store" hrms/ bei-tasks/ scripts/ 2>&1 | tee output/s171/diagnostics/DEFECT_18_REFERENCE_INVENTORY.md
+grep -rn "bei_incident_report.*store\|incident_report.*store\|BEI Incident Report.*store" hrms/ bei-tasks/ scripts/ 2>&1 | tee output/s172/diagnostics/DEFECT_18_REFERENCE_INVENTORY.md
 ```
 
 Decide A vs B based on the inventory.
@@ -379,7 +384,7 @@ If Option A: edit the doctype JSON, change `options: Warehouse` → `options: Br
 
 If Option B: rename the field via Frappe migration, update all UI/API references, update fixtures.
 
-Document the decision and reasoning in `output/s171/diagnostics/DEFECT_18_DECISION.md`.
+Document the decision and reasoning in `output/s172/diagnostics/DEFECT_18_DECISION.md`.
 
    MUST_MODIFY: `hrms/hr/doctype/bei_incident_report/bei_incident_report.json` (at minimum)
 
@@ -391,8 +396,8 @@ Use `/local-frappe` to run the migration locally. Verify creating a BEI Incident
 
 ```bash
 git diff --name-only origin/production | grep "bei_incident_report\.json" || exit 1
-test -f output/s171/diagnostics/DEFECT_18_DECISION.md || exit 1
-test -f output/s171/diagnostics/DEFECT_18_REFERENCE_INVENTORY.md || exit 1
+test -f output/s172/diagnostics/DEFECT_18_DECISION.md || exit 1
+test -f output/s172/diagnostics/DEFECT_18_REFERENCE_INVENTORY.md || exit 1
 ```
 
 ---
@@ -420,13 +425,13 @@ Add Sentry context if not present.
 
 Use `/local-frappe` to call `create_employee_direct` twice in sequence with different inputs. Verify the two calls return distinct `employee_id` values.
 
-   Verification log: `output/s171/verification/defect_8_dual_create_log.txt`
+   Verification log: `output/s172/verification/defect_8_dual_create_log.txt`
 
 **Task 5.4 — Phase 5 verification gate** (1 unit)
 
 ```bash
 git diff --name-only origin/production | grep "employee_create\.py" || exit 1
-test -f output/s171/verification/defect_8_dual_create_log.txt || exit 1
+test -f output/s172/verification/defect_8_dual_create_log.txt || exit 1
 ```
 
 ---
@@ -466,7 +471,7 @@ git diff --name-only origin/production | grep -E "(employee|hr)" | xargs grep -l
 
 | Defect | Severity | Fix |
 |---|---|---|
-| **#5** Generate Slips disabled | HIGH | Likely auto-fixes when #21+#16 are fixed (button gates on having salary structures in place). Phase 8 retest will confirm. If still disabled, investigate the gate condition in `../bei-tasks/app/dashboard/hr/payroll/processing/page.tsx`. Document either way in `output/s171/diagnostics/DEFECT_5_STATUS.md`. (2 units) |
+| **#5** Generate Slips disabled | HIGH | Likely auto-fixes when #21+#16 are fixed (button gates on having salary structures in place). Phase 8 retest will confirm. If still disabled, investigate the gate condition in `../bei-tasks/app/dashboard/hr/payroll/processing/page.tsx`. Document either way in `output/s172/diagnostics/DEFECT_5_STATUS.md`. (2 units) |
 | **#9** test.hr proxy 403 | MEDIUM | Add `Employee` doctype to the my.bebang.ph proxy permission allowlist for `test.hr` role. Find the proxy auth config in `../bei-tasks/app/api/frappe/[...path]/route.ts` or similar. (2 units) |
 | **#11** Soft-delete order dependency | LOW | Add a docs note in `data/04_Project_Management/Import_Log/CONTEXT.md` documenting the 2-pass PUT pattern (relieving_date first, then status=Left). Also add a helper function in `hrms/api/employee_master.py` if one doesn't exist. (1 unit) |
 | **#14** Reports To no autocomplete | MEDIUM | Replace plain text input with a shadcn combobox bound to the Frappe `User` Link field. Find the EmployeeDetailDialog Employment section. (2 units) |
@@ -477,7 +482,7 @@ git diff --name-only origin/production | grep -E "(employee|hr)" | xargs grep -l
 
 **Phase 7 verification gate:**
 ```bash
-test -f output/s171/diagnostics/DEFECT_5_STATUS.md || exit 1
+test -f output/s172/diagnostics/DEFECT_5_STATUS.md || exit 1
 git diff --name-only origin/production origin/main | grep -cE "(\.py|\.tsx|\.ts|\.md)" | awk '{if ($1 < 4) exit 1}'
 ```
 
@@ -506,7 +511,7 @@ Total retest scope: ~25 scenarios.
 
 After Sam confirms S172 is deployed, dispatch a fresh subagent (NOT the orchestrator session) with this brief:
 
-> Re-run the ~25 unblocked scenarios listed in `docs/plans/2026-04-08-sprint-172-s166-followup-defect-fixes.md` Phase 8. Use real browser via Playwright headless. Use proven patterns from `scripts/testing/l3_s166_lane_a_phase2_runner.mjs`. For each scenario, write evidence to `output/s171/retest/{lane}/evidence/{scenario_id}-retest.json` with `actions: [...]`, `screenshots`, `network: [...]`. Cleanup any test data created in finally via `/frappe-bulk-edits`. STOP after writing files. Do NOT touch git. Do NOT mark scenarios PASS without browser proof.
+> Re-run the ~25 unblocked scenarios listed in `docs/plans/2026-04-08-sprint-172-s166-followup-defect-fixes.md` Phase 8. Use real browser via Playwright headless. Use proven patterns from `scripts/testing/l3_s166_lane_h_runner.mjs` (the only fully-working browser runner currently in repo). For each scenario, write evidence to `output/s172/retest/{lane}/evidence/{scenario_id}-retest.json` with `actions: [...]`, `screenshots`, `network: [...]`. Cleanup any test data created in finally via `/frappe-bulk-edits`. STOP after writing files. Do NOT touch git. Do NOT mark scenarios PASS without browser proof.
 
 Required scenario IDs: list all 25 explicitly in the brief.
 
@@ -514,7 +519,7 @@ Required scenario IDs: list all 25 explicitly in the brief.
 
 After the runner reports back, dispatch a SEPARATE fresh subagent (different model/context) as the audit gate:
 
-> Audit `output/s171/retest/` evidence files. For each scenario, verify (a) screenshot exists and is non-zero bytes, (b) actions array shows real Playwright UI interactions, (c) status field cross-checks against runner summary. Flag any SUMMARY_LIED discrepancy per the post-#497 `/l3-v2-bei-erp` rule. Write `output/s171/retest/AUDIT_REPORT.md` with verdict per scenario and overall PASS/REJECT.
+> Audit `output/s172/retest/` evidence files. For each scenario, verify (a) screenshot exists and is non-zero bytes, (b) actions array shows real Playwright UI interactions, (c) status field cross-checks against runner summary. Flag any SUMMARY_LIED discrepancy per the post-#497 `/l3-v2-bei-erp` rule. Write `output/s172/retest/AUDIT_REPORT.md` with verdict per scenario and overall PASS/REJECT.
 
 If the audit rejects any scenario, dispatch a fix-only agent (3-iteration budget per scenario, per the v3 plan rule).
 
@@ -527,7 +532,7 @@ For each defect that the retest verified CLOSED:
 **Task 8.4 — Phase 8 verification gate** (2 units)
 
 ```bash
-test -f output/s171/retest/AUDIT_REPORT.md || exit 1
+test -f output/s172/retest/AUDIT_REPORT.md || exit 1
 test -f output/l3/s166/DEFECTS.csv || exit 1
 # Confirm at least 20 of 25 scenarios reclassified to CLOSED (allow 5 partial / new defects)
 ```
@@ -580,23 +585,23 @@ For Phase 8 retest. These are the concrete scenarios the L3 retest agent must ru
 | any test user (twice) | Call create_employee_direct twice with different first_names | Returned `employee_id` differs between the two calls | Defect #8 still cached |
 
 Evidence files required (per S092 rule):
-- `output/s171/retest/form_submissions.json` (≥25 entries)
-- `output/s171/retest/api_mutations.json`
-- `output/s171/retest/state_verification.json`
-- `output/s171/retest/AUDIT_REPORT.md`
-- `output/s171/retest/<lane>/evidence/<scenario_id>-retest.json` (per scenario)
-- `output/s171/retest/<lane>/screenshots/*.png` (pre + post per scenario)
+- `output/s172/retest/form_submissions.json` (≥25 entries)
+- `output/s172/retest/api_mutations.json`
+- `output/s172/retest/state_verification.json`
+- `output/s172/retest/AUDIT_REPORT.md`
+- `output/s172/retest/<lane>/evidence/<scenario_id>-retest.json` (per scenario)
+- `output/s172/retest/<lane>/screenshots/*.png` (pre + post per scenario)
 
 ---
 
 ## Zero-Skip Enforcement
 
 Every task in Phase 1-9 MUST be implemented. No exceptions. If a task cannot be completed:
-1. STOP and write a `BLOCKER:` entry to `output/s171/BLOCKERS.csv` with phase, task, error, attempted fix
+1. STOP and write a `BLOCKER:` entry to `output/s172/BLOCKERS.csv` with phase, task, error, attempted fix
 2. Notify Sam via PR comment or session message
 3. Do NOT skip silently, do NOT mark partial as DONE, do NOT defer to "next sprint"
 
-**Phase Completion Checklist** — after each phase, append to `output/s171/PHASE_COMPLETION_CHECKLIST.md`:
+**Phase Completion Checklist** — after each phase, append to `output/s172/PHASE_COMPLETION_CHECKLIST.md`:
 
 | Phase | Task | Status | Evidence | Skipped? | Why |
 |---|---|---|---|---|---|
@@ -609,7 +614,7 @@ Every task in Phase 1-9 MUST be implemented. No exceptions. If a task cannot be 
 - Implementing happy path only, skipping edge cases
 - **Phase 8 retest:** running scenarios via API instead of real browser (the post-#497 rule applies)
 
-**Verification script template** — write `output/s171/verify_phase_<N>.py` BEFORE starting each phase:
+**Verification script template** — write `output/s172/verify_phase_<N>.py` BEFORE starting each phase:
 
 ```python
 import subprocess, sys, os
@@ -659,13 +664,13 @@ sys.exit(0 if passed == len(checks) else 1)
   - business-data → pause
 - **signoff_authority:** single-owner (Sam). PRs land in Sam's inbox for merge.
 - **canonical_closeout_artifacts:**
-  - `output/s171/REQUIREMENTS_REGRESSION_CHECK.md`
-  - `output/s171/PHASE_BUDGET.json`
-  - `output/s171/PHASE_COMPLETION_CHECKLIST.md`
-  - `output/s171/diagnostics/*.md`
-  - `output/s171/verification/*.png`
-  - `output/s171/retest/AUDIT_REPORT.md`
-  - `output/s171/retest/<lane>/evidence/*.json`
+  - `output/s172/REQUIREMENTS_REGRESSION_CHECK.md`
+  - `output/s172/PHASE_BUDGET.json`
+  - `output/s172/PHASE_COMPLETION_CHECKLIST.md`
+  - `output/s172/diagnostics/*.md`
+  - `output/s172/verification/*.png`
+  - `output/s172/retest/AUDIT_REPORT.md`
+  - `output/s172/retest/<lane>/evidence/*.json`
   - `output/l3/s166/DEFECTS.csv` (updated with S172 verification)
   - `docs/plans/2026-04-08-sprint-172-s166-followup-defect-fixes.md` (this file, status=COMPLETED)
   - `docs/plans/SPRINT_REGISTRY.md` (S172 row=COMPLETED)
@@ -680,11 +685,11 @@ Existing scripts the execution agent should reuse / lift patterns from:
 |---|---|
 | Frappe→my.bebang.ph login chain | `scripts/testing/l3_s166_phase0_preconditions.mjs` |
 | Real browser EMP-CREATE pattern | `scripts/testing/l3_s166_lane_h_runner.mjs` |
-| Dialog interaction + force-click combobox | `scripts/testing/l3_s166_lane_a_phase2_runner.mjs` |
+| Dialog interaction + force-click combobox | `scripts/testing/l3_s166_lane_a_conflict001_fix_iter1.mjs` (only lane_a runner currently in repo) |
 | 2-pass PUT soft-delete cleanup | `scripts/testing/l3_s166_lane_h_cleanup2.mjs` |
 | SSM Frappe SQL execution (frappe-bulk-edits skill) | `scripts/testing/s166_cleanup_conflict_orphans.py` (reference for boilerplate) |
 | Audit script template | `scripts/testing/s166_audit_browser_proof_v3.py` |
-| Compensation page interaction | `scripts/testing/l3_s166_lane_a_phase4_runner.mjs` (reference — Lane A4 used the API path; agent must adapt to use real browser for S172) |
+| Compensation page interaction | **No phase4 runner exists in repo.** Lane A4 used the API path; for S172 the agent must build the browser interaction from scratch using `l3_s166_lane_h_runner.mjs` as the template + `output/l3/s166/lanes/lane_a/PHASE_A4_SUMMARY.md` for the workflow steps. |
 
 Test accounts (all passwords `BeiTest2026!`): see `memory/testing-accounts.md`. Primary actors:
 - test.hr@bebang.ph (HR Manager — most defect fixes)
@@ -698,7 +703,7 @@ Test accounts (all passwords `BeiTest2026!`): see `memory/testing-accounts.md`. 
 
 - Test Python changes locally: `/local-frappe`
 - Run frontend dev server: `cd ../bei-tasks && npm run dev`
-- Real browser test: `/playwright-bei-erp` skill (reference: `scripts/testing/l3_s166_lane_a_phase2_runner.mjs`)
+- Real browser test: `/playwright-bei-erp` skill (reference: `scripts/testing/l3_s166_lane_h_runner.mjs`)
 - Frappe bulk operations via SSM: `/frappe-bulk-edits` skill
 - Deployment: **DO NOT invoke `/deploy-frappe` yourself.** Sam handles deploy after PR merge.
 
