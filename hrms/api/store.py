@@ -7702,56 +7702,14 @@ def _submit_store_sale_invoice(receiving_doc):
 		return None
 
 
-@frappe.whitelist()
-def reverse_same_company_reclassification_je(original_je_name: str, reason: str):
-	"""S168 Phase 15 (R2-C10): Cancel a previously-submitted S168 reclassification
-	JE and create a reversing entry. Used when Finance finds the reclassification
-	was wrong (Frappe JEs are immutable after submit). Only acts on S168-tagged JEs."""
-	from hrms.utils.sentry import set_backend_observability_context
-
-	set_backend_observability_context(
-		module="store",
-		action="reverse_same_company_reclassification_je",
-		mutation_type="update",
-	)
-	check_scm_permission(SCM_ADMIN_ROLES, "reverse same-company reclassification JE")
-
-	original = frappe.get_doc("Journal Entry", original_je_name)
-	if "S168 same-company transfer reclassification" not in (original.user_remark or ""):
-		frappe.throw(_("Refusing to reverse: JE is not an S168 reclassification entry."))
-	try:
-		frappe.db.savepoint("s168_reverse_reclass_je")
-		reversing = frappe.new_doc("Journal Entry")
-		reversing.voucher_type = "Journal Entry"
-		reversing.company = original.company
-		reversing.posting_date = nowdate()
-		reversing.user_remark = (
-			f"S168 REVERSAL of {original.name}. Reason: {reason}. "
-			f"Original: {original.user_remark}"
-		)
-		for row in original.accounts:
-			reversing.append(
-				"accounts",
-				{
-					"account": row.account,
-					"debit_in_account_currency": row.credit_in_account_currency,
-					"credit_in_account_currency": row.debit_in_account_currency,
-					"cost_center": row.cost_center,
-					"reference_type": row.reference_type,
-					"reference_name": row.reference_name,
-				},
-			)
-		reversing.insert(ignore_permissions=True)
-		reversing.submit()
-		frappe.db.release_savepoint("s168_reverse_reclass_je")
-		return reversing.name
-	except Exception:
-		try:
-			frappe.db.sql("ROLLBACK TO SAVEPOINT s168_reverse_reclass_je")
-		except Exception:
-			pass
-		frappe.log_error(
-			f"S168 reversal failed for {original_je_name}: {frappe.get_traceback()}",
-			"S168 Reversal Error",
-		)
-		raise
+# S168 Phase 15 closed as canonically-not-needed (2026-04-08):
+# The reverse_same_company_reclassification_je endpoint was removed because the
+# forward helper _create_same_company_reclassification_je was never implemented
+# and the whole Phase 15 concept was scope-drift. Same-company stock transfers
+# (BKI→BKI, BEI→BEI) do NOT require reclassification journal entries under
+# standard accounting practice — the underlying Stock Ledger Entries already
+# record the movement at cost, and both sides hit the same parent stock account
+# within the same legal entity, producing zero net GL impact. Frappe's standard
+# Material Transfer Stock Entry handles this correctly out of the box.
+# Only cross-company transfers (BKI→BEI) need the S168 Sales Invoice flow,
+# which is already implemented by build_bki_store_sale_invoice in commissary.py.
