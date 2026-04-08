@@ -1,0 +1,819 @@
+{
+  "ts": "2026-04-08T08:50:48.033030+08:00",
+  "creds_loaded": 12,
+  "stores": 45,
+  "schema_tables": [
+    "pos_order_items",
+    "pos_order_payments",
+    "pos_orders",
+    "sync_verification",
+    "v_pos_orders_live",
+    "web_order_items",
+    "web_orders"
+  ],
+  "schema_columns": [
+    {
+      "table_name": "pos_order_items",
+      "column_name": "id",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "order_id",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "product_id",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "product_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "quantity",
+      "data_type": "smallint"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "unit_price",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "gross_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "net_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "vatable_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "vat_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "vat_exempt_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "zero_rated_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_id",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_customer_first_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_customer_last_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_reference_number",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "line_number",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_name_normalized",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_customer_full_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_customer_full_name_normalized",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_reference_number_normalized",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_bir_category",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_items",
+      "column_name": "discount_payload",
+      "data_type": "jsonb"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "id",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "order_id",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "payment_type",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "paid_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "returned_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "mdr_rate",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "mdr_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "net_settlement",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "settlement_date",
+      "data_type": "date"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "bank_deposit_date",
+      "data_type": "date"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pos_order_payments",
+      "column_name": "line_number",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "id",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "location_id",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "business_date",
+      "data_type": "date"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "bill_number",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "receipt_number",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "pax_count",
+      "data_type": "smallint"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "service_type_id",
+      "data_type": "smallint"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "original_gross_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "gross_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "net_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "vatable_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "vat_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "vat_exempt_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "zero_rated_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "total_discounts",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "delivery_fee",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "payment_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "billed_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "paid_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "synced_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "channel",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "service_channel_id",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "cancelled_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "cancellation_reason",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "order_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "pos_orders",
+      "column_name": "completed_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "sync_verification",
+      "column_name": "location_id",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "sync_verification",
+      "column_name": "business_date",
+      "data_type": "date"
+    },
+    {
+      "table_name": "sync_verification",
+      "column_name": "mosaic_total",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "sync_verification",
+      "column_name": "supabase_total",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "sync_verification",
+      "column_name": "delta",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "sync_verification",
+      "column_name": "status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "sync_verification",
+      "column_name": "verified_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "sync_verification",
+      "column_name": "heal_attempted",
+      "data_type": "boolean"
+    },
+    {
+      "table_name": "sync_verification",
+      "column_name": "error_message",
+      "data_type": "text"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "id",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "location_id",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "business_date",
+      "data_type": "date"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "bill_number",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "receipt_number",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "pax_count",
+      "data_type": "smallint"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "service_type_id",
+      "data_type": "smallint"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "original_gross_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "gross_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "net_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "vatable_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "vat_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "vat_exempt_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "zero_rated_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "total_discounts",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "delivery_fee",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "payment_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "billed_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "paid_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "synced_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "channel",
+      "data_type": "text"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "service_channel_id",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "cancelled_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "cancellation_reason",
+      "data_type": "text"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "order_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "v_pos_orders_live",
+      "column_name": "completed_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "id",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "order_id",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "product_id",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "product_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "quantity",
+      "data_type": "smallint"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "unit_price",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "gross_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "net_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "vatable_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "vat_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "vat_exempt_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "discount_name",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "discount_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_order_items",
+      "column_name": "created_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "id",
+      "data_type": "bigint"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "location_id",
+      "data_type": "integer"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "business_date",
+      "data_type": "date"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "platform",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "reference_id",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "payment_gateway",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "gateway_reference_id",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "gateway_fee_rate",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "gateway_fee_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "gateway_net_payout",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "original_gross_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "gross_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "net_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "vatable_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "vat_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "vat_exempt_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "zero_rated_sales",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "total_discounts",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "delivery_fee",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "aggregator_order_id",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "aggregator_commission_rate",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "aggregator_commission_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "net_receivable_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "delivery_datetime",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "order_datetime",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "settlement_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "settlement_date",
+      "data_type": "date"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "bank_deposit_date",
+      "data_type": "date"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "refund_flag",
+      "data_type": "boolean"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "refund_amount",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "refund_reason",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "refund_responsible_party",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "payment_status",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "billed_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "paid_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "synced_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "updated_at",
+      "data_type": "timestamp with time zone"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "cod",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "subtotal",
+      "data_type": "numeric"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "order_status_raw",
+      "data_type": "text"
+    },
+    {
+      "table_name": "web_orders",
+      "column_name": "payment_mode",
+      "data_type": "text"
+    }
+  ],
+  "mosaic_health": [
+    {
+      "group": "Araneta Group (3 stores)",
+      "client_id_tail": "47dc70",
+      "location_probed": "Araneta Gateway",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "group": "Shared Pool (27 stores)",
+      "client_id_tail": "253d7a",
+      "location_probed": "Ayala Evo",
+      "status_code": 200,
+      "ok": true
+    },
+    {
+      "group": "Dedicated",
+      "client_id_tail": "97b4b4",
+      "location_probed": "Ayala Solenad",
+      "status_code": 200,
+      "ok": true
+    }
+  ]
+}

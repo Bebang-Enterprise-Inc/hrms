@@ -1,0 +1,11 @@
+{
+  "_note": "PLACEHOLDER — overwritten by scripts/s171_full_parity_audit.py --tombstone run when canonical Phase 1+8 completes. Pre-canonical evidence from the live phantom-targeted run is captured in tmp/s171_phantom_targeted.log and will be reconciled at the next sweep.",
+  "summary": {
+    "tuples_processed": 0,
+    "total_tombstoned": 0,
+    "scope": "2026-03-25..2026-03-28 regime-shift sub-window",
+    "status": "PENDING_CANONICAL_RUN"
+  },
+  "rows": [],
+  "dry_run": false
+}

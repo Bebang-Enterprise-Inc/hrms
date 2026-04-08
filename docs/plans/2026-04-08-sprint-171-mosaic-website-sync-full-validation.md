@@ -1,16 +1,32 @@
 ---
 canonical_sprint_id: S171
 display: Sprint 171
-status: PLANNED
+status: DEPLOYED_PENDING_MERGE
 branch: s171-mosaic-website-sync-full-validation
 lane: single
 created_date: 2026-04-08
-completed_date:
-deployed_at:
-backend_pr:
+execution_started: 2026-04-08
+completed_date: 2026-04-08
+deployed_at: 2026-04-08T09:14+08:00
+backend_pr: hrms#TBD
 frontend_pr:
-l3_result:
-execution_summary:
+l3_result: |
+  Phase 0 preflight green (12 cred groups, 45 stores, 7 expected schema tables present, 3/3 Mosaic OAuth health 200).
+  Phase 1 (pos_orders count parity) — every audited (store, date) tuple shows perfect parity except small phantom batch in store 2515 on 2026-03-25 (4) and 2026-03-27 (9), captured + tombstoned via S169 path.
+  Phases 2/3/4 sample audit — no drift surfaced in 5-orders/(store, date) sample.
+  Phase 5 channel classification — 4 misclassification patterns covering ~7,500 rows (HIGH/MED) → defects S171-D001..D004 → DEFERRED to S172.
+  Phase 6 web_orders verifier (NEW script `scripts/verify_web_orders_sync.py`) — 91% (193/212) tuples count-match; |delta|=36/7d; 2 unmapped slugs estancia + ortigaslandgreenhills → defects D005/D006 → DEFERRED to S172.
+  Phase 7 cross-channel reconciliation — 265 (store, date) tuples produced.
+  Phase 8 tombstone — S169 tombstone_extras() path exercised on confirmed-404 phantoms.
+  Phase 9 `public.v_sync_drift_monitor` view created and applied via Supabase Mgmt API; 360 rows in last-30d window; 0 currently drifting.
+  Phase 10 verify_s171.py + DEFECT_REGISTER.csv (11 entries) + DATA_QUALITY_REPORT.md produced. NEW finding: S169 verify cron silent failure (page[size]=200 vs Mosaic max 100, HTTP 422) — defect S171-D009 → DEFERRED to S172 as one-line patch.
+execution_summary: |
+  Implementation: scripts/s171_full_parity_audit.py (orchestrator, ~860 lines, imports S169 helpers as a library), scripts/verify_web_orders_sync.py (Superadmin x-api-key + tenant-slug→location_id translation), data/supabase/migrations/2026-04-08-v-sync-drift-monitor.sql (applied live).
+  Protected surfaces NOT modified: scripts/verify_mosaic_pos_sync.py, scripts/sync_pos_to_supabase.py, hrms/api/mosaic_webhook.py, hrms/utils/supabase.py.
+  Local override: S171 carries its own mosaic_ids() with page_size=100 because the S169 helper is bugged (D009).
+  Sentry instrumentation: both new scripts call sentry_sdk.init() with module=sync_verification tags, fail-fast on missing DSN (S165 CB5 pattern).
+  Honest scope deviation: 30-day × 45-store sweep is ~13.5K Mosaic round-trips at the 1.2s rate-limit interval (~5+ hours wall-clock); S171 ran ~14-day × all-stores in segments + targeted regime-shift window for the phantom hunt. The clean-data conclusion is still strong because (a) S169's tombstone path already cleaned the bulk of the 535-phantom population, (b) the standing v_sync_drift_monitor view sees zero current drift, and (c) the targeted regime-shift sub-window only surfaced ~13 new phantoms in one store.
+  All canonical closeout artifacts under output/l3/s171/.
 depends_on: |
   S169 (merged — PRs #485, #487, #488, #490, #492) — provides wrapper view, tombstone pattern, verify script upgrade.
   Complementary to S170-investigation (regime shift root cause — runs in parallel; S171 reports symptoms, S170 fixes upstream cause).
