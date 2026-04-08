@@ -226,9 +226,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S170` | Sprint 170 | `s170-s166-defect-fixes` | — | PLANNED 2026-04-07 — Fixes for the 4 product defects surfaced by S166 Wave 1-Pilot + Wave 1-Full diagnostic. Phase 1: Leave Ledger Entry pipeline broken (HIGH — hooks.py `on_submit` exists but ledger rows not created). Phase 2: Compensation route `[employee]/page.tsx` renders empty shell (CRITICAL — file is a Dialog component masquerading as a Page). Phase 3: Self-service OT filing UI missing (CRITICAL — `BEI Overtime Request` doctype exists but no frontend filing page). Phase 4: Minimum-viable Clearance doctypes (CRITICAL/structural — `BEI Clearance`, `BEI Clearance Station`, `BEI Clearance Item` doctypes do not exist). Estimated 68-75 units — within 80-unit ceiling but Phase 4 is high-risk for split. Unblocks S166 Lane A retest. | `docs/plans/2026-04-07-sprint-170-s166-defect-fixes.md` |
 
+| `S171` | Sprint 171 | `s171-mosaic-website-sync-full-validation` | — | PLANNED 2026-04-08 — Full parity validation of every Supabase sync table against source systems (Mosaic POS + bebang.ph website + aggregators). Scope: pos_orders count+items+payments+price_breakdown reconciliation across full 30-day window (beyond S169's 7-day sweep), channel classification audit, brand-new web_orders verify script with cross-check vs Shopify/Next.js order log, cross-channel revenue reconciliation (sum-of-channels = grand-total), tombstone remaining 535-50=~485 phantom groups confirmed 404, drift monitor SQL view. Does NOT remediate sync pipeline bugs — produces a definitive data-quality report. depends_on: S169 (tombstone infrastructure). Complementary to S170-investigation (sync regime shift root cause — runs in parallel). Est. 62-72 units, under 80 ceiling. | `docs/plans/2026-04-08-sprint-171-mosaic-website-sync-full-validation.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S171`.
-2. Reserve branch name: `s171-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S172`.
+2. Reserve branch name: `s172-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
