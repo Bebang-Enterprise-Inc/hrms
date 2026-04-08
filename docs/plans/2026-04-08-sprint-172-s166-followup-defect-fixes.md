@@ -16,6 +16,23 @@ sprint_registry_row: "S172 reserved on 2026-04-08. Branch: s172-s166-followup-de
 
 # S172: S166 Follow-up Defect Fixes
 
+## ⚠️ KNOWN DEBT NOT ADDRESSED BY THIS SPRINT — READ FIRST
+
+S172 fixes **product defects** only. It does NOT burn down the 86-row browser-proof test debt surfaced by the 2026-04-08 audit. That debt is tracked in its own sprint artifacts:
+
+- **S173 — Debt Ledger (LOCKED catalog):** `docs/plans/2026-04-08-sprint-173-s166-retest-debt-ledger.md`
+  - Lists all 86 S166 scenarios that failed the strict browser-proof audit (55 `NO_BROWSER_PROOF` + 29 `API_ONLY` + 2 `MISSING_SCREENSHOT`)
+  - Breakdown by module (EMP-CREATE ×7, EMP-SALARY ×10, EMP-EDIT ×16, EMP-UX ×11, EMP-PAYROLL ×6, EMP-STUB ×6, EMP-RBAC ×5, EMP-TRANSFER ×5, EMP-LEAVE ×4, EMP-ATTENDANCE ×3, EMP-REGULARIZE ×3, EMP-BIOCHANGE ×2, EMP-ADMS ×2, EMP-PAYSLIP ×2, EMP-PHOTO ×2, plus residuals)
+  - This file is the canonical audit trail. It survives compaction, cross-session handoffs, and sprint closeouts.
+- **S174 — Burn-down execution sprint (continuation):** `docs/plans/2026-04-08-sprint-174-s166-browser-reproof-burndown.md`
+  - 75 work units across 7 phases
+  - Pure re-execution via real Playwright headless, with independent audit gate per scenario per PR #497 rule
+  - Depends on S172 deploy + S173 ledger
+
+**S172 Phase 8 retests only ~25 scenarios** (the ones directly unblocked by the 9 product fixes in Phases 1-7). The remaining ~60 scenarios in the ledger remain PENDING after S172 closes — they are NOT forgotten, they are owned by S174.
+
+**At S172 closeout**, Phase 9 MUST update the S173 ledger file, flipping the status of the ~25 retested rows from `PENDING` to `CLOSED_BROWSER_PASS` / `CLOSED_BROWSER_FAIL` / `DEFERRED_BLOCKED`. Not updating the ledger = the sprint is non-compliant.
+
 ## Mission
 
 Close the 15 product defects still OPEN after S166 + S170 + the 2026-04-08 audit (PR #496). Each defect has been independently verified by either a per-lane audit gate or by orchestrator-direct browser retest. This sprint fixes them, deploys, and re-runs the L3 scenarios that were previously SKIPPED because the underlying UI/backend was broken.
@@ -552,6 +569,28 @@ In this file:
 **Task 9.2 — Update SPRINT_REGISTRY.md** (1 unit)
 
 Change S172 row status PLANNED → COMPLETED with date + PR refs. `git add -f` since `docs/` is gitignored.
+
+**Task 9.2b — Update S173 Debt Ledger (MANDATORY — not optional)** (1 unit)
+
+Open `docs/plans/2026-04-08-sprint-173-s166-retest-debt-ledger.md`. For every scenario that S172 Phase 8 actually retested (~25 scenarios), flip its status in the full scenario list:
+
+- `PENDING` → `CLOSED_BROWSER_PASS` (if audit gate passed)
+- `PENDING` → `CLOSED_BROWSER_FAIL` (if audit gate failed — and log a new defect row in `output/l3/s166/DEFECTS.csv`)
+- `PENDING` → `DEFERRED_BLOCKED` (if scenario couldn't run due to upstream block — write blocker to `output/s172/BLOCKERS.csv`)
+
+Also append a dated section at the end of the ledger:
+```
+## 2026-04-08 — S172 Phase 8 update
+- Retested: <count>
+- CLOSED_BROWSER_PASS: <count>
+- CLOSED_BROWSER_FAIL: <count> (new defects: <list of defect IDs>)
+- DEFERRED_BLOCKED: <count>
+- Remaining PENDING: <count> (owned by S174)
+```
+
+**HARD RULE:** Do NOT mark a ledger row CLOSED just because S172 fixed the underlying product defect. The scenario MUST be browser-re-proven through the independent audit gate. A row can only flip PENDING → CLOSED when the audit gate writes a PASS_WITH_PROOF flag.
+
+**Verification:** `grep -c "CLOSED_BROWSER" docs/plans/2026-04-08-sprint-173-s166-retest-debt-ledger.md` must equal the Phase 8 browser-verified count.
 
 **Task 9.3 — Create PRs** (1 unit)
 
