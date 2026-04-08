@@ -228,9 +228,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S171` | Sprint 171 | `s171-mosaic-website-sync-full-validation` | — | PLANNED 2026-04-08 — Full parity validation of every Supabase sync table against source systems (Mosaic POS + bebang.ph website + aggregators). Scope: pos_orders count+items+payments+price_breakdown reconciliation across full 30-day window (beyond S169's 7-day sweep), channel classification audit, brand-new web_orders verify script with cross-check vs Shopify/Next.js order log, cross-channel revenue reconciliation (sum-of-channels = grand-total), tombstone remaining 535-50=~485 phantom groups confirmed 404, drift monitor SQL view. Does NOT remediate sync pipeline bugs — produces a definitive data-quality report. depends_on: S169 (tombstone infrastructure). Complementary to S170-investigation (sync regime shift root cause — runs in parallel). Est. 62-72 units, under 80 ceiling. | `docs/plans/2026-04-08-sprint-171-mosaic-website-sync-full-validation.md` |
 
+| `S172` | Sprint 172 | `s172-s166-followup-defect-fixes` | — | PLANNED 2026-04-08 — Follow-up defect-fix sprint addressing the 12-14 product defects still OPEN after S166 closeout + S170 partial deploy + 2026-04-08 audit (PR #496). Phase 1: Defects #6+#21 compensation Edit button + list-page modal (chicken-and-egg). Phase 2: Defect #16 _activate_compensation_change silent failure. Phase 3: Defect #19 OT/apply RoleGuard crew exclusion. Phase 4: Defect #18 BEI Incident Report.store Link Warehouse but UI passes Branch. Phase 5: Defect #8 create_employee_direct cached employee_id. Phase 6: Defect #13 emergency_phone_number silently dropped. Phase 7: Smaller defects (#5, #9, #11, #14, #15, #20). Phase 8: L3 retest of unblocked S166 SKIP scenarios with mandatory audit gates per post-#497 rule. Phase 9: Closeout. 70 units, cold-start ready. (Renumbered from S171 — collided with mosaic validation sprint.) | `docs/plans/2026-04-08-sprint-172-s166-followup-defect-fixes.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S172`.
-2. Reserve branch name: `s172-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S173`.
+2. Reserve branch name: `s173-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 
