@@ -1,1 +1,1626 @@
-[]
+[
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2557 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48668184,
+        48682852
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 2, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:56:49.681976+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2557 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48872553,
+        48872617,
+        48879823,
+        48885728,
+        48886589,
+        48889823
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 6, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:57:01.111250+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2515 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48689112,
+        48695300,
+        48698358,
+        48715098
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 4, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:57:08.452583+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2515 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48867180,
+        48875881,
+        48876511,
+        48880075,
+        48882410,
+        48885346,
+        48885711,
+        48887693,
+        48888615
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 9, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:57:24.707367+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2482 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48668713,
+        48670405,
+        48673853,
+        48676333,
+        48688399,
+        48688459,
+        48703741
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 7, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:57:37.413119+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2482 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48872368,
+        48884089,
+        48885137,
+        48887498,
+        48889561
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 5, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:57:46.500186+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2426 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48684178,
+        48694747,
+        48710620
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 3, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:57:52.277462+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2426 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48877087,
+        48882728,
+        48888342,
+        48891012
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 4, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:57:59.722001+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2220 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48672885,
+        48673184,
+        48680529,
+        48683509,
+        48684158,
+        48688828,
+        48692264,
+        48699179,
+        48701874,
+        48705993,
+        48715888
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 11, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:58:19.421040+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2220 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48864257,
+        48866573,
+        48869387,
+        48877616,
+        48877703,
+        48878087,
+        48878933,
+        48879874,
+        48883911,
+        48884804,
+        48887444,
+        48889520,
+        48892529
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 13, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:58:42.693825+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2287 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48669761,
+        48676713,
+        48681233,
+        48685325,
+        48687210,
+        48710475,
+        48712123
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 7, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:58:55.647366+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2287 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48861061,
+        48867729,
+        48871104,
+        48873710,
+        48873796,
+        48876073,
+        48877550,
+        48880233,
+        48880530,
+        48881276,
+        48882846,
+        48885607,
+        48887333,
+        48889085,
+        48891542
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 15, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:59:22.713811+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2425 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48672031,
+        48677241,
+        48679877,
+        48683769,
+        48686153,
+        48691013,
+        48695550,
+        48697940,
+        48706070,
+        48712063,
+        48715625
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 11, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:59:42.597468+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2425 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48859698,
+        48869555,
+        48872216,
+        48883812,
+        48884105,
+        48889125,
+        48889839
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 7, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T09:59:55.291495+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2428 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48662921,
+        48664351,
+        48678719,
+        48680745,
+        48684916,
+        48685005,
+        48692351,
+        48694737,
+        48696985,
+        48698307,
+        48699576,
+        48700099,
+        48700404,
+        48701748,
+        48705198,
+        48717489
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 16, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:00:24.914680+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2428 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48871650,
+        48882657,
+        48888161,
+        48889435
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 4, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:00:32.325338+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2217 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48656920,
+        48676971,
+        48678560,
+        48679065,
+        48679951,
+        48688737,
+        48696244,
+        48700036,
+        48702804,
+        48706500,
+        48708878,
+        48717143,
+        48719349,
+        48721283
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 14, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:00:57.402360+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2217 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48864959,
+        48866525,
+        48866564,
+        48867979,
+        48868749,
+        48871699,
+        48874253,
+        48876270,
+        48878435,
+        48879334,
+        48881704,
+        48881803,
+        48882281,
+        48887440,
+        48887884,
+        48891341,
+        48891549,
+        48891670
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 18, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:01:29.462194+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2222 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48648457,
+        48670003,
+        48682632,
+        48684326,
+        48685249,
+        48686091,
+        48690512,
+        48690863,
+        48697056
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 9, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:01:45.768293+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2222 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48858860,
+        48873381,
+        48881622,
+        48882135,
+        48882834
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 5, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:01:54.849324+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2311 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48666688,
+        48670683,
+        48674550,
+        48675529,
+        48676374,
+        48677981,
+        48679693,
+        48681644,
+        48683904,
+        48688490,
+        48692845,
+        48707119,
+        48709834
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 13, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:02:21.645096+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2179 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48661330,
+        48664459,
+        48668210,
+        48683110,
+        48684624,
+        48688651,
+        48689426,
+        48694123,
+        48696583
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 9, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:02:38.162691+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2179 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48868232,
+        48869735,
+        48880145,
+        48881943,
+        48883149,
+        48883996,
+        48889738,
+        48890888,
+        48892010,
+        48892166
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 10, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:02:56.064490+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2177 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48654158,
+        48661413,
+        48665449,
+        48665934,
+        48672675,
+        48674183,
+        48675089,
+        48676992,
+        48678724,
+        48680850,
+        48682303,
+        48682391,
+        48685448,
+        48687034,
+        48690412,
+        48691155,
+        48695245,
+        48696467,
+        48696501,
+        48698164,
+        48698340,
+        48702570,
+        48702884,
+        48713497
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 24, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:03:39.087526+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2177 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48855136,
+        48857932,
+        48862896,
+        48863260,
+        48865220,
+        48866445
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 6, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:03:50.194624+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2216 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48696961,
+        48704984,
+        48716813,
+        48729059
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 4, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:03:57.839389+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2430 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48683322
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 1, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:04:00.145940+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2408 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48665097,
+        48668057,
+        48689111,
+        48707197,
+        48715183,
+        48718728
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 6, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:04:11.167283+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2408 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48870067,
+        48877956,
+        48879841,
+        48880214
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 4, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:04:18.719146+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2342 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48664686,
+        48670375,
+        48693067,
+        48694670,
+        48696889,
+        48698933,
+        48709438
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 7, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:04:31.362117+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2342 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48861878,
+        48886801
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 2, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:04:35.271433+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2339 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48658876,
+        48662051,
+        48664529,
+        48665963,
+        48673314,
+        48682196,
+        48683181,
+        48684808,
+        48685192,
+        48689017,
+        48689285,
+        48692462,
+        48696770,
+        48697484,
+        48704415,
+        48710486,
+        48716687
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 17, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:05:06.074858+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2339 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48863839,
+        48864198,
+        48866752,
+        48872233,
+        48872491,
+        48873157,
+        48874408,
+        48876060,
+        48876116,
+        48878244,
+        48879011,
+        48880097,
+        48880685,
+        48881125,
+        48881311,
+        48881610,
+        48881868,
+        48882025,
+        48882228,
+        48882509,
+        48889411,
+        48889722,
+        48891064,
+        48891500,
+        48892667
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 25, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:05:50.651410+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2412 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48663133,
+        48663916,
+        48664287,
+        48666328,
+        48675587,
+        48678036,
+        48679814,
+        48680469,
+        48685104,
+        48687550,
+        48687966,
+        48698286,
+        48700242,
+        48701206,
+        48701312,
+        48702193,
+        48702968,
+        48703470,
+        48705880,
+        48716797
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 20, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:06:26.335115+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2412 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48860720,
+        48863101,
+        48874628,
+        48878603,
+        48881091,
+        48881606,
+        48882478,
+        48883098,
+        48885595,
+        48889109,
+        48890507,
+        48891482,
+        48891633,
+        48892120
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 14, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:06:51.352305+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2184 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48664321,
+        48674209,
+        48682412,
+        48684515,
+        48687867,
+        48688433,
+        48689546,
+        48690023,
+        48693739,
+        48694852,
+        48695242,
+        48698292,
+        48698574,
+        48701982,
+        48703923,
+        48706702,
+        48709596,
+        48709810
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 18, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:07:23.695111+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2184 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48860925,
+        48871884,
+        48874686,
+        48876767,
+        48879711,
+        48880901,
+        48883258,
+        48884289,
+        48889462
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 9, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:07:40.712287+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2218 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48668747,
+        48675936,
+        48686061,
+        48709228
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 4, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:07:48.097136+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2218 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48869433,
+        48875961,
+        48883580
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 3, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:07:53.688808+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2219 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48681676,
+        48682477,
+        48684702,
+        48690344,
+        48694284,
+        48694796,
+        48695106,
+        48701634
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 8, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:08:08.439200+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2219 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48863520,
+        48864753,
+        48867785,
+        48867875,
+        48868177,
+        48868351,
+        48871317,
+        48872833,
+        48873683,
+        48875519,
+        48875918,
+        48879130,
+        48880424,
+        48882794,
+        48884313,
+        48886669
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 16, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:08:36.750256+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2317 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48649261,
+        48658758,
+        48674266,
+        48676187,
+        48677758,
+        48685924,
+        48687921,
+        48688022,
+        48693084,
+        48700833,
+        48712072
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 11, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:08:56.424552+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2317 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48861050,
+        48868771,
+        48877419,
+        48889470
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 4, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:09:03.971395+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2413 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48692200,
+        48703453,
+        48709674
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 3, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:09:09.682149+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2413 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48881740
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 1, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:09:11.903310+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2338 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48650876,
+        48660474,
+        48663089,
+        48664342,
+        48665843,
+        48667146,
+        48669545,
+        48669804,
+        48672558,
+        48675121,
+        48676117,
+        48677136,
+        48682108,
+        48682429,
+        48682680,
+        48683924,
+        48685342,
+        48686208,
+        48686786,
+        48687900,
+        48689038,
+        48690240,
+        48693212,
+        48693364,
+        48694725,
+        48697442,
+        48697664,
+        48698954,
+        48699450,
+        48705407,
+        48705989,
+        48711964,
+        48713115,
+        48715574,
+        48715703,
+        48717746
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 36, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:10:15.496994+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2338 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48855415,
+        48856428,
+        48864042,
+        48864967,
+        48865354,
+        48866476,
+        48866864,
+        48867385,
+        48871444,
+        48872578,
+        48874282,
+        48874817,
+        48879686,
+        48880072,
+        48880148,
+        48880568,
+        48882990,
+        48885579,
+        48885900,
+        48886165,
+        48887762,
+        48888847,
+        48889188,
+        48890631,
+        48890678,
+        48892489
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 26, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:11:01.766219+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2284 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48671694,
+        48673750,
+        48678261,
+        48678543,
+        48679206,
+        48679566,
+        48679762,
+        48682064,
+        48683330,
+        48683792,
+        48687103,
+        48688445,
+        48689792,
+        48690960,
+        48691223,
+        48693948,
+        48694426,
+        48697403,
+        48697696,
+        48702775,
+        48710520,
+        48716010,
+        48716591
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 23, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:11:43.247408+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2284 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48860208,
+        48864436,
+        48868818,
+        48872826,
+        48874722,
+        48875402,
+        48876077,
+        48876851,
+        48879513,
+        48880226,
+        48882103,
+        48882382,
+        48883038,
+        48883074,
+        48887329,
+        48889564,
+        48889699,
+        48889774,
+        48891226
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 19, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:12:17.110894+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2478 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48709615
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 1, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:12:19.331856+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2340 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48663692,
+        48677894,
+        48685549,
+        48686154,
+        48687535,
+        48689209,
+        48689837,
+        48696758,
+        48711172,
+        48711421
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 10, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:12:37.776846+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2340 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48859789,
+        48863811,
+        48865941,
+        48879808,
+        48886330,
+        48886588,
+        48886846,
+        48889237,
+        48890030
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 9, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:13:02.005865+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2411 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48678418
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 1, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:13:04.299753+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2411 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48868577,
+        48887907,
+        48888319,
+        48888889
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 4, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:13:11.820828+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2341 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48671744,
+        48680873,
+        48682240,
+        48689305,
+        48696526,
+        48709732
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 6, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:13:22.652381+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2341 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48852812,
+        48867764,
+        48874644,
+        48884178,
+        48886300,
+        48888015,
+        48890181
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 7, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:13:35.467455+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2558 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48653992,
+        48663328,
+        48671849,
+        48680984,
+        48695044,
+        48696546,
+        48702685,
+        48723987
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 8, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:13:49.688953+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2558 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48856866,
+        48863858,
+        48864844,
+        48871286,
+        48888275,
+        48891273
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 6, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:14:00.539043+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2319 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48674529,
+        48692400,
+        48698952,
+        48699843,
+        48703886,
+        48704293
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 6, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:14:11.453551+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2319 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48864123,
+        48866624,
+        48868101,
+        48868270,
+        48872393,
+        48877714,
+        48879499
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 7, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:14:24.133760+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2548 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48673331,
+        48675007,
+        48679475,
+        48682678,
+        48683140,
+        48685475,
+        48688823,
+        48694146,
+        48695385
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 9, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:14:40.702365+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2548 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48859707,
+        48860003,
+        48863521,
+        48866549
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 4, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:14:48.299063+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2547 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48665961,
+        48694159
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 2, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:14:52.159561+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2547 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48859530,
+        48866831,
+        48872585,
+        48873103,
+        48885011,
+        48885230,
+        48886352,
+        48886435,
+        48888675,
+        48891339
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 10, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:15:09.842466+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2526 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48656849,
+        48669338,
+        48669569,
+        48672750,
+        48676814,
+        48676912,
+        48688971,
+        48691367,
+        48691411,
+        48693112,
+        48693256,
+        48694537,
+        48694799,
+        48694851,
+        48696329,
+        48696448,
+        48698641,
+        48699590,
+        48703847,
+        48704846,
+        48707666,
+        48712819,
+        48736929
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 23, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:15:50.571226+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2526 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48851804,
+        48859517,
+        48860513,
+        48861355,
+        48862333,
+        48863137,
+        48868808,
+        48877124,
+        48877409,
+        48878762,
+        48882327,
+        48882466,
+        48885195,
+        48885311,
+        48887468,
+        48887576,
+        48891952
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 17, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:16:20.548605+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2464 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48678829,
+        48682882,
+        48682991,
+        48698968,
+        48705394,
+        48707232,
+        48708292,
+        48711085
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 8, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:16:34.878825+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2464 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48870396,
+        48871786,
+        48881518,
+        48881691,
+        48881773
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 5, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:16:43.933224+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2281 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48674747,
+        48677006,
+        48679161,
+        48682576,
+        48687119,
+        48693840,
+        48695205,
+        48695677,
+        48699921,
+        48701569,
+        48702250,
+        48706571
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 12, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:17:05.414178+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2281 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48863061,
+        48866031,
+        48868423,
+        48875623,
+        48877814,
+        48883019,
+        48884377,
+        48885139,
+        48886064,
+        48888584,
+        48888616
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 11, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:17:24.766005+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2646 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48883520
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 1, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:17:26.916909+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2481 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48696074,
+        48717022
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 2, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:17:30.807238+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2481 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48863387,
+        48868494,
+        48874639,
+        48877698
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 4, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:17:38.302714+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2774 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48678225,
+        48681862
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 2, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:17:42.130661+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2812 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48681231,
+        48685592,
+        48713308
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 3, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:17:47.671041+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2812 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48877081,
+        48877379
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 2, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:17:51.527131+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2250 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48666978,
+        48667470,
+        48671599,
+        48673493,
+        48674643,
+        48678183,
+        48681426,
+        48683412,
+        48685670,
+        48688152,
+        48688672,
+        48694098,
+        48694858,
+        48708883,
+        48712306,
+        48714984
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 16, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:18:19.579943+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2250 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48860192,
+        48861020,
+        48869365,
+        48869400,
+        48871731,
+        48872036,
+        48872345,
+        48873002,
+        48873203,
+        48875193,
+        48876761,
+        48877939,
+        48879501,
+        48881069,
+        48881520,
+        48881603,
+        48882292,
+        48882737,
+        48883008,
+        48883072,
+        48884984
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 21, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:18:56.344403+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2556 2026-03-25]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48673198,
+        48675497,
+        48682939,
+        48687891,
+        48693225,
+        48719142
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 6, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:19:07.475156+08:00"
+  },
+  {
+    "endpoint": "UPDATE pos_orders SET cancelled_at=NOW() WHERE id=ANY(...) [loc=2556 2026-03-27]",
+    "method": "UPDATE",
+    "payload": {
+      "ids": [
+        48858017,
+        48870847,
+        48875500,
+        48876009,
+        48881093,
+        48884531,
+        48889093,
+        48890523
+      ]
+    },
+    "status": 200,
+    "response_body": "{\"tombstoned\": 8, \"unconfirmed\": 0}",
+    "ts": "2026-04-08T10:19:22.305109+08:00"
+  }
+]
