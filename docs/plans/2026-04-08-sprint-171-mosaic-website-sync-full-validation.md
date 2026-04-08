@@ -121,6 +121,92 @@ Until these are validated, "our revenue data is correct" is an unsubstantiated c
 
 ---
 
+## Phase 0 Pre-Resolved Findings (cold-start closure)
+
+The plan author ran Phase 0 T0.3-T0.5 probes before committing this plan so a cold-start agent starts with zero investigation. **Do NOT re-probe these unless you suspect drift since 2026-04-08.** Trust and proceed.
+
+### Supabase sync table inventory (as of 2026-04-08)
+
+**`pos_orders`** — audit-relevant columns: `id, location_id, business_date, bill_number, receipt_number, pax_count, service_type_id, service_channel_id, channel, original_gross_sales, gross_sales, net_sales, vatable_sales, vat_amount, vat_exempt_sales, zero_rated_sales, total_discounts, delivery_fee, payment_status, order_status, completed_at, cancelled_at, cancellation_reason, billed_at, paid_at`. Note: the Mosaic `price_breakdown` dict is flattened into the 8 numeric columns at top level, not stored as jsonb.
+
+**`pos_order_items` (20 columns):**
+```
+id bigint, order_id bigint, product_id int, product_name text, quantity smallint,
+unit_price numeric, gross_sales numeric, net_sales numeric, vatable_sales numeric,
+vat_amount numeric, vat_exempt_sales numeric, zero_rated_sales numeric,
+discount_id int, discount_name text, discount_amount numeric,
+discount_customer_first_name text, discount_customer_last_name text,
+discount_reference_number text, created_at timestamptz, line_number int
+```
+Parity checks for Phase 2: `order_id` is the join key. Use `product_id` as the set key for "same item" (not name, which can drift). Use `line_number` ordering for deterministic compare.
+
+**`pos_order_payments` (12 columns):**
+```
+id bigint, order_id bigint, payment_type text, paid_amount numeric,
+returned_amount numeric, mdr_rate numeric, mdr_amount numeric,
+net_settlement numeric, settlement_date date, bank_deposit_date date,
+created_at timestamptz, line_number int
+```
+Parity checks for Phase 3: `payment_type` is the set key. `paid_amount` and `returned_amount` are the values to reconcile within PHP 0.01.
+
+**`web_orders` (42 columns):**
+```
+id bigint, location_id int, business_date date, platform text,
+reference_id text, payment_gateway text, gateway_reference_id text,
+gateway_fee_rate/amount/net_payout numeric,
+original_gross_sales/gross_sales/net_sales/vatable_sales/vat_amount/
+vat_exempt_sales/zero_rated_sales/total_discounts/delivery_fee numeric,
+aggregator_order_id text, aggregator_commission_rate/amount numeric,
+net_receivable_amount numeric,
+order_datetime/delivery_datetime/billed_at/paid_at timestamptz,
+settlement_status/settlement_date/bank_deposit_date,
+refund_flag bool, refund_amount/reason/responsible_party,
+payment_status text, payment_mode text, order_status_raw text,
+synced_at/updated_at timestamptz, cod numeric, subtotal numeric
+```
+`web_order_items` exists as a child table. Schema probe at Phase 0 T0.3 extension if needed.
+
+**`daily_revenue` MV columns:** `store_name, legal_entity, erpnext_cost_center, business_date, channel, order_count, gross_revenue, total_discounts, net_revenue, vatable_sales, output_vat, vat_exempt_sales, zero_rated_sales, net_of_vat`. Join key is `(store_name, business_date, channel)`. **NOTE:** the column is `gross_revenue` NOT `gross` — Phase 7 cross-channel reconciliation SQL must use `gross_revenue`.
+
+### web_orders source-of-truth (Phase 0 T0.5 RESOLVED — no blocker)
+
+- **Existing sync script:** `scripts/sync_web_to_supabase.py` — maps `https://superadmin.bebang.ph/api/online-orders` to `web_orders` + `web_order_items`
+- **Auth:** `SUPERADMIN_API_KEY` env var OR Doppler fallback via `doppler secrets get SUPERADMIN_API_KEY --plain --project bei-erp --config dev`
+- **Auth header:** `x-api-key: <key>` (NOT OAuth Bearer like Mosaic — different auth model)
+- **Base URL:** `https://superadmin.bebang.ph`
+- **List endpoint:** `GET /api/online-orders` — inspect `sync_web_to_supabase.py` for exact query param shape
+- **Phase 6 task scope:** build `scripts/verify_web_orders_sync.py` that mirrors `verify_mosaic_pos_sync.py` shape but uses Superadmin GET + `x-api-key` header instead of Mosaic OAuth. **Do NOT build new auth or schema discovery — both are in sync_web_to_supabase.py already.** Est. effort drops from 10 units to 7 units now that SoT is known.
+
+### Mosaic API constants (from sync_pos_to_supabase.py)
+
+- `REQUEST_INTERVAL = 1.2` seconds between requests per credential group (line 75)
+- `_CHANNEL_MAP` at line 413:
+  - `1` -> `"GrabFood"`
+  - `2` -> `"FoodPanda"`
+  - `16` -> `"FoodPanda"` (variant, 8 stores, same profile)
+  - `19` -> `"WebDelivery"` — **EXCLUDE from revenue totals; already in web_orders**
+- `_resolve_channel(order)` at line 421:
+  - `service_type_id == 3` -> lookup via `_CHANNEL_MAP[service_channel_id]`, fallback `"Delivery"`
+  - `service_type_id in (91, 17)` -> `"POS"`
+  - `service_type_id is None` -> `"Unknown"`
+  - else -> `"POS"`
+- `MOSAIC_BASE_URL = "https://api.mosaic-pos.com"` (line 33)
+- `MOSAIC_TOKEN_URL = /oauth/token` — OAuth requires JSON body
+- `MOSAIC_ORDERS_URL = /api/v1/orders` — GET requires `Accept: application/json` header
+- `ensure_token` pattern at line 280: POST JSON `{"client_id", "client_secret", "grant_type": "client_credentials"}`, token valid for ~55 min
+- `fetch_orders_page` pattern at line 310: params `filter[business_date]`, `filter[location_id]`, `page[number]`, `page[size]`, header `Authorization: Bearer {token}` plus `Accept: application/json`
+
+### Doppler credential inventory (bei-erp/dev)
+
+- `SUPABASE_MGMT_TOKEN` — Supabase Management API (DDL + complex SQL)
+- `SUPABASE_SERVICE_ROLE_KEY` — PostgREST direct writes
+- `SUPABASE_URL` = `https://csnniykjrychgajfrgua.supabase.co`
+- `SENTRY_DSN` — Sentry error capture
+- `SUPERADMIN_API_KEY` — web_orders sync auth (x-api-key header)
+- Mosaic credentials are NOT in Doppler — they live inline in `data/POS_Extraction/MOSAIC_POS_API_KEYS.csv` (46 rows, 12 unique client_id groups). Resolve by `location_id` lookup.
+
+---
+
 ## Phase Budget Contract
 
 | Phase | Description | Units |
@@ -131,14 +217,14 @@ Until these are validated, "our revenue data is correct" is an unsubstantiated c
 | Phase 3 | `pos_order_payments` parity — tender split, payment_type, paid_amount reconciliation | 6 |
 | Phase 4 | `pos_orders.price_breakdown` field-level reconciliation — gross/net/vatable/vat/discounts with ₱0.01 rounding tolerance | 6 |
 | Phase 5 | Channel classification audit — `service_type_id` × `service_channel_id` → channel mapping validated against expected counts | 4 |
-| Phase 6 | `web_orders` verify script build — mirror `verify_mosaic_pos_sync.py` shape for the website sync path | 10 |
+| Phase 6 | `web_orders` verify script build — mirror `verify_mosaic_pos_sync.py` shape. **T0.5 pre-resolved:** use existing `sync_web_to_supabase.py` at `https://superadmin.bebang.ph/api/online-orders` with `x-api-key` auth. | 7 |
 | Phase 7 | Cross-channel revenue reconciliation — per-store-day sum-of-channels vs daily_revenue MV grand total | 5 |
 | Phase 8 | Tombstone confirmed phantoms — run S169's `tombstone_extras` for every confirmed-404 ID across the 30-day window | 5 |
 | Phase 9 | Drift monitor SQL view `v_sync_drift_monitor` + verify it refreshes with sales_dashboard pipeline | 4 |
 | Phase 10 | Defect register + closeout PR + plan + registry update + MEMORY.md lesson if new insights | 5 |
-| **Total** | | **65** |
+| **Total** | | **62** |
 
-Hard limit 15 per phase respected. Total **65** units — under 80-unit single-session ceiling. Phase 6 (web_orders) is the highest-risk due to source-of-truth uncertainty — a Phase 0 gate checks it can proceed before Phase 6 starts.
+Hard limit 15 per phase respected. Total **62** units — under 80-unit single-session ceiling. Phase 6 (web_orders) is now a straightforward port after Phase 0 pre-resolved the source-of-truth.
 
 ---
 
@@ -441,9 +527,9 @@ Every task in this plan MUST be implemented. The agent is FORBIDDEN from:
 - **T5.3** — Also verify that no `service_channel_id=19` row contributes to `daily_revenue` or any other revenue MV (plan says these are excluded). Spot-check via SQL join.
 - **T5.4** — Write `output/l3/s171/channel_classification_audit.json`.
 
-### Phase 6 — web_orders verify script (10 units)
+### Phase 6 — web_orders verify script (7 units — reduced from 10 post-Phase-0 pre-resolution)
 
-**HARD BLOCKER:** Gated on T0.5 outcome. If web_orders SoT is unavailable, skip to Phase 7 and mark Phase 6 DEFERRED.
+**HARD BLOCKER REMOVED:** T0.5 pre-resolved in the Phase 0 Pre-Resolved Findings section. `sync_web_to_supabase.py` already exists and uses `https://superadmin.bebang.ph/api/online-orders` with `x-api-key` auth. Phase 6 scope is now a straightforward port of the S169 verify pattern to the Superadmin API -- not a discovery exercise.
 
 - **T6.1** — Create `scripts/verify_web_orders_sync.py`. Mirror the shape of `scripts/verify_mosaic_pos_sync.py`:
   - `supabase_web_ids(location_id, business_date) -> set[int]`
