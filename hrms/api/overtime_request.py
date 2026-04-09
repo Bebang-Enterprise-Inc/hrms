@@ -44,8 +44,18 @@ def create_overtime_request(
         mutation_type="create",
     )
 
-    # Permission gate
-    frappe.has_permission("BEI Overtime Request", "create", throw=True)
+    # S172 Phase 8 fix (RT-S172-04 collateral): the previous gate was
+    # `frappe.has_permission("BEI Overtime Request", "create", throw=True)`,
+    # but Crew users do NOT have the DocPerm `create` on BEI Overtime Request
+    # (and giving it would open direct Desk inserts outside this API). The
+    # entire point of this endpoint is to let any authenticated employee file
+    # their own OT via self-service — the insert below already runs with
+    # `ignore_permissions=True`, the employee is resolved server-side (no
+    # client-supplied ID means no spoofing), and @frappe.whitelist() enforces
+    # authentication. So the proper gate is "the caller must have a linked
+    # Employee record", which we already enforce immediately below.
+    if frappe.session.user == "Guest":
+        frappe.throw(_("Please sign in to file overtime."), frappe.PermissionError)
 
     # Resolve current user → employee
     employee = frappe.db.get_value(
