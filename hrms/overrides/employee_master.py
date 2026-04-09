@@ -23,18 +23,33 @@ class EmployeeMaster(Employee):
 				self.set_employee_name()
 				self.name = self.employee_name
 
-		# S172 Phase 8 fix (Defect #8 root cause): upstream hrms unconditionally
-		# overwrote `self.employee` with `self.name` (HR-EMP-NNNNN), which clobbered
-		# the BEI-EMP-YYYY-NNNNN business ID that create_employee_direct sets on
-		# the payload. Because `generate_bei_employee_id` reads
-		# `SELECT MAX(employee) WHERE employee LIKE 'BEI-EMP-YYYY-%'`, every row
-		# ended up with employee = HR-EMP-NNNNN and the generator kept returning the
-		# same stale maximum (e.g. BEI-EMP-2026-00004) forever.
-		#
-		# Preserve the BEI business ID when the caller explicitly set it; fall back
-		# to the upstream behaviour (employee = name) only when no BEI ID was set.
+		# S172 Phase 8 fix (Defect #8 root cause, autoname leg):
+		# Preserve the BEI-EMP-YYYY-NNNNN business ID when the caller explicitly
+		# set it via create_employee_direct. See validate() for the durable leg.
 		if not (self.employee or "").startswith("BEI-EMP-"):
 			self.employee = self.name
+
+	def validate(self):
+		# S172 Phase 8 fix (Defect #8 TRUE root cause):
+		# Upstream `erpnext.setup.doctype.employee.employee.Employee.validate()`
+		# contains `self.employee = self.name` at line 125 which runs AFTER our
+		# autoname() override and AFTER every subsequent save, unconditionally
+		# clobbering the BEI-EMP-YYYY-NNNNN business ID back to HR-EMP-NNNNN.
+		#
+		# Because generate_bei_employee_id reads
+		# `SELECT MAX(employee) WHERE employee LIKE 'BEI-EMP-YYYY-%'`, this made
+		# the generator stuck on the same stale maximum (BEI-EMP-2026-00004) for
+		# every create call — no row ever actually persisted with
+		# employee = BEI-EMP-*, so MAX never moved forward.
+		#
+		# Strategy: snapshot the BEI id before calling super().validate(), then
+		# restore it after. This is durable across both create and update flows,
+		# since validate() runs on every save, not just insert.
+		saved_employee = (self.employee or "")
+		is_bei_id = saved_employee.startswith("BEI-EMP-")
+		super().validate()
+		if is_bei_id and self.employee != saved_employee:
+			self.employee = saved_employee
 
 
 def validate_onboarding_process(doc, method=None):

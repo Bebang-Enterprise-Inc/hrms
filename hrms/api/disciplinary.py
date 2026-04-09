@@ -7,7 +7,7 @@ per Philippine DOLE requirements.
 import frappe
 from frappe import _
 from frappe.rate_limiter import rate_limit
-from frappe.utils import getdate, add_days, today
+from frappe.utils import getdate, add_days, today, formatdate
 from hrms.utils.api_helpers import (
     _get_employee_or_throw,
     _get_employee_details,
@@ -106,8 +106,20 @@ def create_incident_report(data=None, **kwargs):
     ir.insert(ignore_permissions=True)
     frappe.db.commit()
 
-    # Notify HR
-    _notify_hr_of_incident(ir)
+    # S172 Phase 8 fix: notification failures MUST NOT kill the API response.
+    # The IR has already been committed above — if email/notify blows up, log
+    # it (Sentry picks up frappe.log_error automatically) and return success so
+    # the frontend sees the created record. Previously an AttributeError from
+    # `frappe.format_date` (the wrong import) was raised after commit, the
+    # client got HTTP 500, and the IR was orphaned in "persisted-but-unseen"
+    # state — which RT-S172-05 caught.
+    try:
+        _notify_hr_of_incident(ir)
+    except Exception:
+        frappe.log_error(
+            title=f"S172: IR notify failed for {ir.name}",
+            message=frappe.get_traceback(),
+        )
 
     return {
         "message": _("Incident report created successfully"),
@@ -146,7 +158,7 @@ def _notify_hr_of_incident(ir):
                 employee=ir.employee,
                 reported_by_name=ir.reported_by_name,
                 category=ir.incident_category,
-                incident_date=frappe.format_date(ir.incident_date),
+                incident_date=formatdate(ir.incident_date),
                 recommended_action=ir.recommended_action or "Not specified",
                 report_id=ir.name,
             ),
@@ -361,9 +373,9 @@ def _notify_employee_of_nte(nte, ir):
         Please respond via my.bebang.ph.
         """).format(
             employee_name=nte.employee_name,
-            incident_date=frappe.format_date(ir.incident_date),
+            incident_date=formatdate(ir.incident_date),
             category=ir.incident_category,
-            deadline=frappe.format_date(nte.response_deadline),
+            deadline=formatdate(nte.response_deadline),
             charges=nte.charges,
         ),
         reference_doctype="BEI Notice to Explain",
@@ -443,7 +455,7 @@ def _notify_hr_of_nte_response(nte):
                 employee_name=nte.employee_name,
                 employee=nte.employee,
                 nte_name=nte.name,
-                response_date=frappe.format_date(nte.response_date),
+                response_date=formatdate(nte.response_date),
             ),
             reference_doctype="BEI Notice to Explain",
             reference_name=nte.name,
@@ -536,7 +548,7 @@ def _notify_employee_of_nod(nod, nte):
         You have the right to appeal this decision within 5 days via my.bebang.ph.
         """).format(
             employee_name=nod.employee_name,
-            decision_date=frappe.format_date(nod.decision_date),
+            decision_date=formatdate(nod.decision_date),
             penalty=nod.penalty,
             suspension_info=(f"<strong>Suspension Days:</strong> {nod.suspension_days}<br>"
                            if nod.penalty == "Suspension" else ""),
@@ -632,7 +644,7 @@ def _notify_hr_of_appeal(appeal, nod):
                 employee_name=appeal.employee_name,
                 employee=appeal.employee,
                 penalty=nod.penalty,
-                appeal_date=frappe.format_date(appeal.appeal_date),
+                appeal_date=formatdate(appeal.appeal_date),
                 appeal_id=appeal.name,
             ),
             reference_doctype="BEI Employee Appeal",
