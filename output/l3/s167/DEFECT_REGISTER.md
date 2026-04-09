@@ -62,3 +62,40 @@ Call log:
 - **expected:** redirect should resolve to the user's dept-specific PCF path based on role.
 - **impact:** minor UX — user has to navigate back to correct path. Page still works via role gate.
 - **status:** OPEN
+
+## DEFECT-029
+- **severity:** MED
+- **title:** Expense classifier ML model missing + OpenAI key not configured in production container
+- **time:** 2026-04-09
+- **discovered during:** S167 DEFECT-009 end-to-end verification
+- **where:** production Frappe container (backend d6949988c1c9 / 457f5de63c5f)
+- **evidence (via SSM probe):**
+  - `/home/frappe/frappe-bench/sites/assets/expense_classifier.joblib` does not exist (ml_model_available=False)
+  - site_config.json has no openai_api_key (openai_key_configured=False)
+  - `classify_expense()` returns `{coa: None, method: "fallback_degraded", fallback_reason: "ml_model_missing_and_openai_unavailable"}` for non-rule-matching vendors (Jollibee, National Book Store, Mercury Drug)
+  - Only rule-engine matches still work (Lalamove matched via keyword rule -> 6009003 -> fully resolved to "DELIVERY RIDERS - Bebang Enterprise Inc.")
+- **impact:** Most HR/store expenses get no AI suggested COA. Accountant must manually set Final COA for every non-rule-matching row. DEFECT-009 fix still works — when classification DOES happen (via rules), the resolved Account name is correct. But the classifier is effectively degraded in production.
+- **fix:** Upload `expense_classifier.joblib` to `/home/frappe/frappe-bench/sites/assets/` in the running container, OR configure `openai_api_key` in `site_config.json` via Doppler secret. Ideally both for fallback redundancy.
+- **status:** OPEN
+
+## Final resolution summary (2026-04-09)
+
+All S167 defects verified on production post-deploy:
+
+### ✅ RESOLVED (code fixed + verified)
+- **#009** — PR #510 (initial fix) + PR #513 (resolver bug follow-up) merged + deployed. SSM probe confirms `_resolve_coa_code_to_account("6010100","Bebang Enterprise Inc.")` returns `"REPRESENTATION & ENTERTAINMENT-OTHERS - Bebang Enterprise Inc."`. End-to-end e2e test (`s167r_e2e_defect_009.py`) created Lalamove expense → submitted batch BEI-PCF-2026-00008 → called `classify_batch_items()` → `suggested_coa` stored as `"DELIVERY RIDERS - Bebang Enterprise Inc."` (NOT naked `6009003`). Rollback clean.
+- **#017** — PR #512 merged + deployed. `create_pcf_fund` response now has flat top-level fields (`name`, `fund_type`, `department`). Verified via Phase 0.1 captured response bodies.
+- **#026** — PR #367 merged + deployed. Browser test: `/dashboard/accounting/pcf/review` → click HR fund → navigates to `/dashboard/accounting/pcf/review/fund/PCF-HR%20and%20Admin` → batch list renders.
+- **#027** — PR #367 (5 dept groups) + PR #370 (3 remaining groups: Procurement, Projects, Campaign Giveaways) merged + deployed. Zero `module: MODULES.PCF` sidebar tags remain. Verified via dept-access test: staff/supv/hr/warehouse/commi/finance all access their own dept PCF with zero cross-dept leaks on their dept route. Residual "leaks" observed at `/dashboard` landing (e.g., test.hr seeing Projects PCF, test.finance seeing Campaign Giveaways PCF) are NOT leaks — they reflect BEI's intentional role-module mapping in `lib/roles.ts` (MODULES.PROJECTS includes HR_USER; MODULES.CAMPAIGN_GIVEAWAYS includes ACCOUNTS_MANAGER).
+- **#028** — PR #367 merged + deployed. test.hr `/dashboard/expense/pcf` → `/dashboard/hr-admin/pcf`. test.commi → `/dashboard/commissary/pcf`. Both PASS.
+
+### ✅ MITIGATED (infrastructure config, not code)
+- **#029** — ML classifier model missing + OpenAI key unconfigured. SSM patch via `s167r_configure_openai.py` installed `openai_api_key` from Doppler into `hq.bebang.ph/site_config.json`. Post-config verification: NBS → `6006003` (Office Supplies), Jollibee → `6010100` (Representation & Entertainment) via `method: "openai"`. Combined with DEFECT-009 resolver, the full chain now works: OpenAI classify → resolve to full Account name → approve. Note: change is persistent in the `sites` Docker volume; a full teardown (not restart) would lose it.
+
+### ✅ TEST INFRA FIX (not a code defect, but blocked meaningful RBAC testing)
+- **test.hr + test.finance excessive roles** — test.hr had System Manager + Accounts Manager + HR Manager making sidebar RBAC untestable. Trimmed to `['Employee','HR User']` and `['Accounts Manager','Accounts User','Employee']` respectively via `s167r_scope_test_roles.py`.
+
+### ⚪ WONTFIX (not a runtime bug)
+- **#015** — Next.js validator false positive on `new URL(req.url).searchParams`. This is a Claude Code session-level warning injected by the vercel plugin; it flags sync Web API usage in API routes because it can't tell API routes (sync `new URL` pattern) from page routes (Next 16 async page-prop `searchParams`). NOT a committed linter, NOT a CI check, NOT a runtime bug. Code pattern is correct per the Web Fetch API spec and Next.js 16 API routes documentation. Closed as WONTFIX.
+
+**Final S167 defect count:** 29 total defects surfaced, 28 resolved (23 via 17 merged PRs + 1 via SSM infra patch + 1 test-infra fix + 3 no-op verifications), 1 WONTFIX (#015 tooling false positive). **Zero open defects.**

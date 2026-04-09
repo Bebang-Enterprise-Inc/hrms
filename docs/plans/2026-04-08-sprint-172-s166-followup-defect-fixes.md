@@ -35,12 +35,62 @@ All PRs deployed to production (hrms via Frappe bench, bei-tasks via Vercel). Yo
 
 ## Rules (non-negotiable, from post-PR #497 `/l3-v2-bei-erp` + S092 + S099)
 
-1. **Real browser only.** Use Playwright headless. Script pattern lives at `scripts/testing/l3_s166_lane_h_runner.mjs`.
-2. **No API shortcuts.** Filling a form via a direct `/api/method/*` call is NOT L3 — it's L1. If you can't drive the UI, the scenario is BLOCKED, not PASS.
-3. **Evidence per scenario** goes to `output/l3/s172/retest/<lane>/evidence/<scenario_id>-retest.json` with keys `actions[]`, `network[]`, `screenshots[]`, `status`, `verdict`. Each entry in `actions[]` must be a real Playwright interaction (`page.click`, `page.fill`, `page.selectOption`). Each screenshot must be a non-zero-byte PNG on disk.
-4. **Independent audit gate (MANDATORY).** After you finish the runner pass, you MUST dispatch a **separate subagent in a clean context** (via the Agent tool, `general-purpose` type) with the audit-gate brief below. The orchestrator reads `output/l3/s172/retest/AUDIT_REPORT.md` and `AUDIT_PASSED.flag`, NOT your self-report. Do not skip this. This rule is in place because S166 R3 fabricated a PASS verdict on EMP-UX-004 and the 2026-04-08 audit reclassified it OPEN (corrupt-success incident).
-5. **Anti-pollution cleanup.** Any test data you create (test employees, BCCs, IRs, SSAs, salary slips) must be soft-deleted in a `finally` block at end of run via the `/frappe-bulk-edits` SSM pattern. Do not leave `(L3 2026-04-%)` artifacts on prod.
-6. **PR-handoff.** You do not merge, you do not deploy. If a scenario reveals a defect, log it to `output/l3/s172/retest/NEW_DEFECTS.csv` and move on; do not attempt to fix it in-session.
+1. **Real browser only.** Use Playwright headless against `https://my.bebang.ph`. Script pattern lives at `scripts/testing/l3_s166_lane_h_runner.mjs`. No local dev server, no mock backend.
+2. **No API shortcuts. Ever.** Filling a form via a direct `fetch('/api/method/*')` call is NOT L3 — it's L1. If you can't drive the UI for any reason, the scenario is **BLOCKED**, not PASS. Examples of shortcuts that auto-REJECT the scenario at audit:
+   - Using `page.evaluate(() => fetch('/api/method/...'))` to bypass the form
+   - Using `frappe.call()` in page context instead of clicking visible buttons
+   - Constructing the API payload yourself and POSTing directly
+   - Skipping form field interactions because "the test only cares about the submit response"
+3. **Minimum interaction contract per scenario.** Each scenario below has a `REQUIRED_ACTIONS_COUNT`, a `REQUIRED_SELECTORS` list, and a `REQUIRED_NETWORK` list. Evidence is REJECTED by the audit gate if any of these are not present in the written evidence file.
+4. **Evidence file shape (strict).** For each scenario write:
+   ```
+   output/l3/s172/retest/<scenario_id>/evidence.json
+   ```
+   with this exact shape (fields marked `required:true` cannot be empty):
+   ```json
+   {
+     "scenario_id": "RT-S172-NN",
+     "started_at": "<ISO PHT timestamp>",
+     "ended_at": "<ISO PHT timestamp>",
+     "url": "<actual URL the test ran against>",
+     "login_user": "<test email>",
+     "actions": [
+       {"t": "<iso>", "kind": "click|fill|select|waitForSelector|reload", "selector": "<css>", "value": "<text or null>"}
+     ],
+     "selectors_seen": ["<css of every selector the runner asserted visible>"],
+     "network": [
+       {"t": "<iso>", "method": "GET|POST|PUT", "url": "<relative>", "status": <int>, "response_excerpt": "<first 300 chars>"}
+     ],
+     "screenshots": [
+       {"label": "pre|post|<step-name>", "path": "<relative path>", "bytes": <int>, "taken_at_url": "<url>"}
+     ],
+     "ssm_queries": [
+       {"sql": "<query>", "rows": <int>, "result_excerpt": "<first 500 chars>"}
+     ],
+     "negative_assertions": [
+       {"description": "<what should NOT be visible>", "satisfied": true}
+     ],
+     "runner_status": "PASS|FAIL|BLOCKED|NEW_DEFECT",
+     "runner_verdict_note": "<1 sentence>"
+   }
+   ```
+   Minimum sizes audit gate enforces per scenario:
+   - `actions[]` length ≥ the scenario's `REQUIRED_ACTIONS_COUNT`
+   - Every item in `REQUIRED_SELECTORS` must appear in `selectors_seen[]`
+   - Every item in `REQUIRED_NETWORK` must appear in `network[]` (method + URL pattern match)
+   - `screenshots[]` length ≥ 2 (pre + post minimum); each file must be ≥ 5000 bytes on disk
+   - Every `ssm_queries[]` entry the scenario calls for must be present with row count recorded
+   - Every `negative_assertions[]` entry the scenario calls for must have `satisfied: true`
+5. **Independent audit gate (MANDATORY).** After finishing the runner pass, you MUST dispatch a **separate subagent in a clean context** (via the Agent tool, `general-purpose` type) with the audit-gate brief below. The orchestrator reads `output/l3/s172/retest/AUDIT_REPORT.md` and `AUDIT_PASSED.flag`, NOT your self-report. Do not skip this. This rule exists because S166 R3 fabricated a PASS verdict on EMP-UX-004 (corrupt-success incident corrected by the 2026-04-08 audit).
+6. **`SUMMARY_LIED` detection rubric.** The audit gate flags a scenario as SUMMARY_LIED (worse than FAIL — it means the runner is compromised) when any of these are true:
+   - `runner_status = PASS` but `actions[]` length < `REQUIRED_ACTIONS_COUNT`
+   - `runner_status = PASS` but any `REQUIRED_NETWORK` endpoint missing
+   - `runner_status = PASS` but any required SSM query returned 0 rows or wrong row count
+   - `runner_status = PASS` but any screenshot file is ≤ 4999 bytes or doesn't exist
+   - `runner_status = PASS` but any `negative_assertions` item is `satisfied: false`
+   A single SUMMARY_LIED detection REJECTS the entire retest pass — `AUDIT_PASSED.flag` is NOT created and Sam is escalated.
+7. **Anti-pollution cleanup.** Any test data you create (test employees, BCCs, IRs, SSAs, salary slips) must be soft-deleted in a `finally` block at end of run via the `/frappe-bulk-edits` SSM pattern. Do not leave `(L3 2026-04-%)` artifacts on prod. Record cleanup in `output/l3/s172/retest/CLEANUP_LOG.md`.
+8. **PR-handoff.** You do not merge, you do not deploy. If a scenario reveals a defect, log it to `output/l3/s172/retest/NEW_DEFECTS.csv` and move on; do not attempt to fix it in-session.
 
 ## Test accounts (all passwords `BeiTest2026!`)
 
@@ -63,80 +113,203 @@ Every scenario maps to one or more deployed defect fixes. Each scenario has expl
 **Login:** `test.hr@bebang.ph`
 **Steps:**
 1. Navigate to compensation-setup page
-2. Wait for employee grid to load (table rows visible)
-3. Click any employee row (pick one that has NO SSA yet — ideally a freshly-created test employee; see RT-S172-07 for how to create one)
-4. Wait for `CompensationDetailDialog` to open
-5. Verify the dialog body renders form fields for: Base Salary, Commission Allowance, De Minimis, Honorarium, Meal, Gasoline, Other Fixed (should show 0 or empty, not empty skeleton)
-6. Verify "Edit" button is **enabled** (not disabled) — this is the #21 fix
+2. Wait for employee grid to load (`[data-testid="compensation-row"]` or `table tbody tr` visible, count ≥ 1)
+3. Click the first employee row — capture `clicked_employee_id` from the row's `data-employee` attribute or DOM text
+4. Wait for `CompensationDetailDialog` to open (selector `[role="dialog"]` visible)
+5. Assert the dialog body contains visible form labels: "Base Salary", "Commission", "De Minimis", "Honorarium", "Meal", "Gasoline", "Other Fixed" (query all 7 labels)
+6. Assert the "Edit" button exists and is NOT disabled (`button:has-text("Edit"):not([disabled])`)
 7. Click Edit
-8. Verify edit fields become editable inputs
-9. Cancel without saving
+8. Assert at least 3 input fields become editable (`input[type="number"]:not([disabled])` count ≥ 3)
+9. Take post-edit screenshot
+10. Click Cancel (no save)
+11. Take post-cancel screenshot (dialog closed)
+
+**REQUIRED_ACTIONS_COUNT:** 8 (minimum: goto, waitForSelector grid, click row, waitForSelector dialog, waitForSelector edit-button, click edit, waitForSelector inputs, click cancel)
+**REQUIRED_SELECTORS:**
+- `table tbody tr` (or `[data-testid="compensation-row"]`) — grid loaded
+- `[role="dialog"]` — modal opened
+- `button:has-text("Edit"):not([disabled])` — #21 fix visible
+- At least 3 of `input[type="number"]` — form fields rendered (not skeleton)
+**REQUIRED_NETWORK:**
+- `GET` matching `/api/method/hrms.api.payroll_compensation.get_employee_compensation_detail` — status 200
+- Response JSON must contain the `has_ssa` key (boolean) — this is the #21 backend fix proof
+**REQUIRED_SSM_QUERIES:** none (read-only scenario)
+**REQUIRED_NEGATIVE_ASSERTIONS:**
+- Post-dialog screenshot does NOT contain text "No employee selected" or "Skeleton" placeholder text
+- Dialog HTML does NOT contain a single `<Skeleton>` element visible after load
+**REQUIRED_SCREENSHOTS:** pre-click (grid), post-open (dialog with form), post-edit (edit fields visible), post-cancel
 **Expected:** modal opens with visible form fields, Edit button is enabled even with no SSA.
-**Failure means:** #6 regressed (empty skeleton) OR #21 regressed (Edit button disabled).
+**Failure means:** #6 regressed (empty skeleton) OR #21 regressed (Edit button disabled). If response JSON lacks `has_ssa`, the backend fix didn't ship — escalate.
 
 ### Scenario RT-S172-02 — Compensation change activation creates SSA (end-to-end)
 **Covers Defect #16 + #21**
-**URL:** `https://my.bebang.ph/dashboard/hr/payroll/compensation-setup/<employee_id>`
-**Login:** `test.hr@bebang.ph` then `test.finance@bebang.ph` for approval
+**URL A:** `https://my.bebang.ph/dashboard/hr/employee-master` (to create test employee)
+**URL B:** `https://my.bebang.ph/dashboard/hr/payroll/compensation-setup/<new_employee_id>` (to submit comp change)
+**URL C:** `https://my.bebang.ph/dashboard/hr/payroll/compensation-queue` (Finance approval queue — confirm actual path via UI nav; if the queue lives elsewhere, capture the real path as `url_c` in evidence)
+**Login:** `test.hr@bebang.ph` for steps 1-5, then `test.finance@bebang.ph` for steps 6-9
 **Steps:**
-1. Create a fresh test employee via the Employee Master dashboard (see RT-S172-07 path)
-2. As `test.hr`, navigate to `/dashboard/hr/payroll/compensation-setup/<new_employee_id>`
-3. Click Edit, set Base Salary = 25000, set reason = "L3 retest RT-S172-02"
-4. Click Save → verify toast "compensation change submitted for approval"
-5. Log out, log in as `test.finance@bebang.ph`
-6. Navigate to sensitive-change / compensation-change queue
-7. Find the pending change request, click Approve
-8. Verify toast success (not an error about activation)
-9. Query via `frappe-bulk-edits` SSM: `SELECT base FROM tabSalary Structure Assignment WHERE employee = '<new_employee_id>' AND docstatus = 1`
-10. Assert: returns exactly 1 row with base = 25000.0
-**Expected:** SSA exists with correct base value after approval.
-**Failure means:** #16 regressed (silent activation failure) — BCC reached Approved but no SSA created.
+1. As test.hr: create a fresh test employee via the employee-master "Add Employee" button (first_name="L3RT2", last_name="RETEST02", DOB=1990-01-01, gender=Male, branch=any active, company=any). Capture `new_employee_name` (HR-EMP-NNNNN) and `new_employee_id` (BEI-EMP-YYYY-NNNNN) from the create network response.
+2. Navigate to `/dashboard/hr/payroll/compensation-setup/<new_employee_id>`
+3. Wait for dialog/page load, click Edit
+4. Fill `input[name="base_salary"]` (or the labelled input) with `25000`
+5. Fill `textarea[name="reason"]` (or the labelled textarea) with `L3 retest RT-S172-02`
+6. Click Save
+7. Assert: toast or success banner contains "submitted for approval" (case-insensitive)
+8. Assert: POST to `/api/method/hrms.api.payroll_compensation.update_compensation` OR `hrms.api.payroll_compensation.submit_sensitive_change_request` (whichever the frontend calls) is in network[] with status 200
+9. Log out. Take screenshot of the logged-out state.
+10. Log in as test.finance@bebang.ph
+11. Navigate to the sensitive-change / compensation-change approval queue page (capture the actual URL)
+12. Find the row for `new_employee_name` with reason "L3 retest RT-S172-02"
+13. Click the Approve button for that row (NOT via API — click a visible button)
+14. Wait for the approve network call to complete
+15. Assert: POST to `/api/method/hrms.api.payroll_compensation.approve_compensation_change` (or equivalent) is in network[] with status 200
+16. Assert: toast contains "approved" or "success" AND does NOT contain "activation failed"
+17. Take post-approve screenshot
+18. Run SSM query: `SELECT name, base FROM \`tabSalary Structure Assignment\` WHERE employee = '<new_employee_name>' AND docstatus = 1`
+19. Assert: exactly 1 row returned with `base = 25000.0`
+20. Cleanup (finally): SSM cancel the SSA + mark_employee_left the test employee
+
+**REQUIRED_ACTIONS_COUNT:** 15 (create employee: goto + click + fill×5 + click; edit+save: goto + click + fill×2 + click; logout+login; approve: goto + click)
+**REQUIRED_SELECTORS:**
+- `[role="dialog"]` OR the compensation-setup page's Edit button container
+- `input[name="base_salary"]` OR `label:has-text("Base Salary") + input`
+- `textarea[name="reason"]` OR `label:has-text("Reason") + textarea`
+- `button:has-text("Save")`
+- Approval queue: `button:has-text("Approve")` or `[data-action="approve"]`
+**REQUIRED_NETWORK:**
+- `POST /api/method/hrms.api.employee_create.create_employee_direct` (or the wrapper endpoint the frontend uses) — status 200, response contains `employee_id` and `name`
+- `POST /api/method/hrms.api.payroll_compensation.update_compensation` OR `...submit_sensitive_change_request` — status 200
+- `POST /api/method/hrms.api.payroll_compensation.approve_compensation_change` — status 200, response NOT containing "activation failed" OR "frappe.throw"
+**REQUIRED_SSM_QUERIES:**
+- `SELECT name, base FROM \`tabSalary Structure Assignment\` WHERE employee = '<new_employee_name>' AND docstatus = 1` → must return exactly 1 row, `base = 25000.0`
+- `SELECT status FROM \`tabBEI Compensation Change\` WHERE employee = '<new_employee_name>' ORDER BY creation DESC LIMIT 1` → must return status = 'Approved'
+**REQUIRED_NEGATIVE_ASSERTIONS:**
+- Approve response does NOT contain the string "Activation Failed" (the frappe.throw title from the #16 fix)
+- SSA query does NOT return 0 rows (the exact pre-fix failure mode)
+**REQUIRED_SCREENSHOTS:** pre-create, post-create, pre-save-comp, post-save-comp, logged-out, logged-in-as-finance, post-approve, SSM-query-result (optional)
+**Expected:** SSA exists with `base=25000.0` after approval.
+**Failure means:** #16 regressed — BCC reached Approved but no SSA created (the exact pre-fix silent corrupt-success). If approve response contains "Activation Failed", the #16 fix IS working (caller is now throwing instead of silently claiming success) but some downstream condition broke — log as NEW_DEFECT, not #16 regression.
 
 ### Scenario RT-S172-03 — Overtime self-service page loads for crew
 **Covers Defect #19**
 **URL:** `https://my.bebang.ph/dashboard/hr/overtime/apply`
 **Login:** `test.crew1@bebang.ph`
 **Steps:**
-1. Log in as test.crew1
-2. Navigate to `/dashboard/hr/overtime/apply`
-3. Verify page renders the OT filing form (fields for date, hours, reason)
-4. Do **NOT** see the "Access Restricted" lock-icon screen
-5. Screenshot the form
-**Expected:** Form renders.
-**Failure means:** #19 regressed — RoleGuard re-added or crew role still not permitted.
+1. Log in as test.crew1@bebang.ph (fresh session, not test.hr)
+2. Capture pre-screenshot of the login page + role in session cookie
+3. Navigate to `/dashboard/hr/overtime/apply`
+4. Wait for `networkidle` state
+5. Assert: the form exists — locate an input or select for date, an input for hours, and a textarea/input for reason
+6. Assert: the text "Access Restricted" is NOT anywhere in the page's visible text content (case-insensitive)
+7. Assert: a Submit button exists and is enabled
+8. Take post-load screenshot showing the rendered form
+9. Do NOT submit the form (Defect #20 scenario covers submission)
+
+**REQUIRED_ACTIONS_COUNT:** 5 (login sequence + goto + waitForSelector form + waitForSelector submit + screenshot)
+**REQUIRED_SELECTORS:**
+- `input[type="date"]` OR `input[name*="date"]` (date input)
+- `input[type="number"]` OR `input[name*="hours"]` (hours input)
+- `textarea` OR `input[name*="reason"]` (reason input)
+- `button[type="submit"]:not([disabled])` (enabled Submit)
+**REQUIRED_NETWORK:**
+- `GET` to `/dashboard/hr/overtime/apply` (or the Next.js route — status 200)
+- No `GET` / `POST` to anything returning 401/403 for the current user
+**REQUIRED_NEGATIVE_ASSERTIONS:**
+- Page body text does NOT contain "Access Restricted" (case-insensitive)
+- Page body text does NOT contain "You don't have permission" (case-insensitive)
+- No `<Lock>` icon SVG is visible in the rendered page (check via `[data-lucide="lock"]` or presence of the AccessDenied component DOM)
+- Logged-in user is test.crew1@bebang.ph (verify via a `/api/method/frappe.auth.get_logged_user` call OR session cookie)
+**REQUIRED_SCREENSHOTS:** login-success, post-navigation (form visible)
+**Expected:** Form renders; no Access Restricted.
+**Failure means:** #19 regressed — RoleGuard re-added or the removal commit didn't ship in the frontend deploy.
 **Do NOT attempt to submit the form** — submission requires an existing Attendance record and that's the subject of Defect #20 (by-design). Scenario RT-S172-04 tests the error message path.
 
 ### Scenario RT-S172-04 — Overtime submit without attendance shows clear error
 **Covers Defect #20**
 **URL:** Same as RT-S172-03
-**Login:** `test.crew1@bebang.ph`
+**Login:** `test.crew1@bebang.ph` (continue from RT-S172-03 session)
+**Pre-condition:** test.crew1 has no Attendance record for the target date (pick a date at least 7 days ago to be safe).
 **Steps:**
-1. On the OT apply form, fill: date = yesterday, hours = 2, reason = "L3 retest RT-S172-04"
-2. Click Submit
-3. Read the error toast/banner
-4. Assert: error text contains the phrase "attendance correction" (or "Attendance Correction Request") — this is the improved message from #20
-**Expected:** Clear error message explaining to file an attendance correction first.
-**Failure means:** #20 regressed to the old terse message.
+1. On the OT apply form, `page.fill` the date input with a date 7+ days ago (e.g., today minus 8 days in YYYY-MM-DD)
+2. `page.fill` the hours input with `2`
+3. `page.fill` the reason textarea with `L3 retest RT-S172-04`
+4. Take pre-submit screenshot
+5. `page.click` the Submit button
+6. Wait for the network response to `create_overtime_request`
+7. Assert: the response status is 417 (frappe.throw returns HTTP 417) OR 400
+8. Assert: the response body contains the string "attendance correction" (case-insensitive) — this is the improved #20 message
+9. Assert: the UI shows a visible error toast/banner containing "attendance correction"
+10. Take post-submit screenshot with the error visible
+
+**REQUIRED_ACTIONS_COUNT:** 6 (fill date + fill hours + fill reason + click submit + wait for network + read error)
+**REQUIRED_SELECTORS:**
+- All from RT-S172-03 plus
+- `[role="alert"]` OR `[data-sonner-toast]` OR `.toast` — the error banner
+**REQUIRED_NETWORK:**
+- `POST /api/method/hrms.api.overtime_request.create_overtime_request` — status 417 OR 400 (NOT 200, NOT 500)
+- Response body JSON/text must contain the phrase "attendance correction" (case-insensitive)
+**REQUIRED_NEGATIVE_ASSERTIONS:**
+- Error message does NOT exactly match the old terse message: "No attendance record found on {date}. Overtime can only be filed for days you actually worked." (the new message is longer and explicitly mentions correction workflow)
+- No OT request was actually created: SSM query `SELECT COUNT(*) FROM \`tabBEI Overtime Request\` WHERE employee IN (SELECT name FROM tabEmployee WHERE user_id='test.crew1@bebang.ph') AND attendance_date='<the date>' AND creation > NOW() - INTERVAL 5 MINUTE` → must return 0
+**REQUIRED_SSM_QUERIES:**
+- The COUNT query above (proves no OT request was accidentally created)
+**REQUIRED_SCREENSHOTS:** pre-submit (form filled), post-submit (error visible)
+**Expected:** Clear error message explaining to file an attendance correction first; no OT request created.
+**Failure means:** #20 regressed to the old terse message, OR the validation check was bypassed and an OT was created without an attendance record (worse — that would be a new defect).
 
 ### Scenario RT-S172-05 — Disciplinary case create succeeds with Branch value
 **Covers Defect #18 + #24**
 **URL:** `https://my.bebang.ph/dashboard/hr/disciplinary`
 **Login:** `test.hr@bebang.ph`
+**Pre-condition:** need a target employee with a valid `branch` populated. Use the RT-S172-07 test employee if running scenarios in order, or query for any active Employee whose `branch` is not NULL.
 **Steps:**
-1. Navigate to disciplinary page
-2. Click "New Case" / "Create Incident Report"
-3. Fill form:
-   - Employee: pick any active employee (e.g., the RT-S172-07 test employee)
-   - Incident Date: today
-   - Incident Type / Category: "Attendance" (frontend sends `incident_type`; backend should alias to `incident_category` per #24 fix)
-   - Severity: "Minor" (frontend sends `severity`; backend should accept via the new DocType field per #24 fix)
-   - Description: "L3 retest RT-S172-05"
-4. Click Create/Submit
-5. Verify: success toast, no LinkValidationError, no "Missing required field" error
-6. Query `tabBEI Incident Report WHERE employee = '<emp>' ORDER BY creation DESC LIMIT 1` via SSM
-7. Assert: row exists with `store` populated (should be the employee's branch via the #18 default), `incident_category` populated (via the #24 alias), `severity` = "Minor" (via the #24 new field)
-**Expected:** IR created end-to-end.
-**Failure means:** #18 regressed (LinkValidationError on Branch value) OR #24 regressed (missing field error).
+1. Navigate to `/dashboard/hr/disciplinary`
+2. Click "New Case" button (visible button, not API)
+3. Wait for the create form/dialog to open
+4. `page.fill` or `page.selectOption` Employee = `<target_employee_id>` (capture the ID)
+5. `page.fill` Incident Date = today (YYYY-MM-DD)
+6. `page.selectOption` Incident Type = "Attendance" (this is `incident_type` in the payload — the frontend field name)
+7. `page.selectOption` Severity = "Minor" (the frontend sends this; backend accepts via the new #24 DocType field)
+8. `page.fill` Description = "L3 retest RT-S172-05"
+9. Take pre-submit screenshot
+10. `page.click` the Create/Submit button
+11. Wait for network response to `create_incident_report`
+12. Assert: response status 200 (NOT 417, NOT "Missing required field", NOT "LinkValidationError")
+13. Assert: response body contains an IR name (e.g., `BEI-IR-2026-NNNN`)
+14. Take post-submit screenshot
+15. Run SSM query:
+    ```sql
+    SELECT name, employee, store, incident_category, severity
+    FROM `tabBEI Incident Report`
+    WHERE employee = '<target_employee>'
+    ORDER BY creation DESC LIMIT 1
+    ```
+16. Assert: row exists with:
+    - `store` = target employee's branch (verify by cross-query `SELECT branch FROM tabEmployee WHERE name='<target>'`)
+    - `incident_category` = "Attendance" (proves #24 alias mapping worked)
+    - `severity` = "Minor" (proves #24 new field accepts the value)
+17. Cleanup (finally): SSM delete this IR row + any linked NTE/NOD
+
+**REQUIRED_ACTIONS_COUNT:** 10 (goto + click new + select emp + fill date + select type + select severity + fill desc + click submit + wait net + screenshot)
+**REQUIRED_SELECTORS:**
+- `button:has-text("New Case")` OR `[data-testid="new-incident"]`
+- Form inputs: employee selector, date input, incident type select, severity select, description textarea
+- Submit button
+**REQUIRED_NETWORK:**
+- `POST /api/method/hrms.api.disciplinary.create_incident_report` — status 200
+- Request payload (visible in browser network tab) must include `incident_type` AND `severity` — prove the frontend actually sent the #24-affected fields
+- Response body must contain the new IR name
+**REQUIRED_SSM_QUERIES:**
+- `SELECT name, employee, store, incident_category, severity FROM \`tabBEI Incident Report\` WHERE employee = '<target>' ORDER BY creation DESC LIMIT 1` → must return 1 row with all 4 fields non-null AND `store` matching the employee's branch
+- `SELECT branch FROM \`tabEmployee\` WHERE name = '<target>'` → cross-reference to confirm store=branch equivalence
+**REQUIRED_NEGATIVE_ASSERTIONS:**
+- Response body does NOT contain "LinkValidationError" (would mean #18 regressed)
+- Response body does NOT contain "Missing required field: incident_category" (would mean #24 regressed)
+- Response body does NOT contain "Missing required field: severity"
+- The created IR's `store` is NOT NULL (would mean the #18 default-to-employee-branch fallback didn't run)
+**REQUIRED_SCREENSHOTS:** pre-open (disciplinary list), form-filled, post-submit (success toast)
+**Expected:** IR created end-to-end, all 4 fields persisted, no errors.
+**Failure means:** #18 regressed (LinkValidationError) OR #24 regressed (field mismatch errors) OR the fallback branch population didn't run.
 
 ### Scenario RT-S172-06 — Employee Reports To autocomplete works
 **Covers Defect #14**
@@ -145,60 +318,148 @@ Every scenario maps to one or more deployed defect fixes. Each scenario has expl
 **Steps:**
 1. Navigate to employee-master page
 2. Click any employee row to open `EmployeeDetailDialog`
-3. Open the Employment section
-4. Click Edit
-5. Click the "Reports To" field input
-6. Type the first 3 letters of any employee's first name (e.g., "abr" for Abraham, "ana" for Ana)
-7. Wait for the browser's native datalist to populate suggestions
-8. Take a screenshot showing suggestions visible
-9. Select a suggestion
-10. Assert: the input value becomes the employee_id from the suggestion (e.g., HR-EMP-00123)
-11. Cancel without saving
-**Expected:** Datalist shows suggestions, selecting one populates the field.
-**Failure means:** #14 regressed — either the `search_employees` endpoint is unreachable, or the datalist is not wired up, or the `ReportsToLookupField` component did not render.
+3. Click the "Employment" section header to expand it (Collapsible)
+4. Assert the section is expanded (`[data-state="open"]` on the CollapsibleContent)
+5. Click the global "Edit" button for the Employment section
+6. Assert the Reports To field is now rendered as `ReportsToLookupField` (the lookup component, not a plain `<input>`)
+    - Selector: `input[list="reports-to-employee-list"]` — this exact selector IS the proof the new component rendered (the plain Input would not have the `list` attribute)
+7. `page.focus` the Reports To input
+8. `page.fill` the Reports To input with `ana` (or `abr` — 3 letters of any common name)
+9. Wait for the search_employees network call (debounced by useQuery; should fire within 1-2 seconds)
+10. After the network call, query the DOM for `datalist#reports-to-employee-list option` — assert count ≥ 1 (suggestions populated)
+11. Capture the first suggestion's `value` attribute (this is the employee_id, e.g., HR-EMP-00123)
+12. Take a screenshot showing the focused input with the typed text
+13. Optionally: `page.fill` the input with the captured employee_id (simulates the user picking from the datalist)
+14. Cancel without saving (no save network call should happen)
+
+**REQUIRED_ACTIONS_COUNT:** 9 (goto + click row + click section + click edit + focus + fill + waitForNetwork + DOM query + screenshot)
+**REQUIRED_SELECTORS:**
+- `[role="dialog"]` — employee detail dialog
+- `[data-state="open"]` on the Employment Collapsible content (section expanded)
+- `input[list="reports-to-employee-list"]` — **this proves the ReportsToLookupField component rendered** (plain Input has no `list` attribute)
+- `datalist#reports-to-employee-list` — the datalist element exists in the DOM
+- At least 1 `datalist#reports-to-employee-list option` after the search fires (suggestions populated)
+**REQUIRED_NETWORK:**
+- `GET /api/method/hrms.api.enrichment.search_employees?query=ana*` (query parameter starts with the typed text) — status 200
+- Response body is a JSON array/object with at least 1 entry containing `employee_id` and `employee_name`
+**REQUIRED_NEGATIVE_ASSERTIONS:**
+- The Reports To input does NOT have `type="text"` without the `list` attribute (would mean the old plain `<Input>` rendered instead of the lookup component)
+- After typing, `datalist#reports-to-employee-list option` count is NOT 0 (suggestions actually populated)
+**REQUIRED_SCREENSHOTS:** pre-expand (dialog open, section collapsed), post-expand (section open), post-edit (Reports To field visible), post-fill (with typed text visible)
+**Expected:** `search_employees` fires, datalist populates, suggestions are selectable.
+**Failure means:** #14 regressed — ReportsToLookupField component didn't render (still using old plain Input) OR `search_employees` endpoint is unreachable OR the datalist options aren't being populated.
 
 ### Scenario RT-S172-07 — Employee create returns distinct IDs across calls
-**Covers Defect #8**
+**Covers Defect #8 + #11 (cleanup path)**
 **URL:** `https://my.bebang.ph/dashboard/hr/employee-master`
 **Login:** `test.hr@bebang.ph`
 **Steps:**
 1. Navigate to employee-master page
-2. Click "Add Employee" / new employee button
-3. Fill required fields:
-   - First Name: "L3TEST"
-   - Last Name: "RETEST01"
-   - Date of Birth: 1990-01-01
-   - Gender: Male
-   - Branch: pick any active branch (e.g., "ARANETA GATEWAY")
-   - Company: pick any company
-4. Click Create/Submit
-5. Read the response toast or success message → record the returned `employee_id` (should be like `BEI-EMP-2026-NNNNN`) AND the Frappe `name` (should be like `HR-EMP-NNNNN`)
-6. **Do steps 2-5 again** with a different last name ("RETEST02")
-7. Assert: the two `employee_id` values are DIFFERENT (this is the #8 fix — previously both returned BEI-EMP-2026-00004)
-8. Also assert: the two `name` values are different (sanity check)
-**Expected:** distinct IDs per call.
-**Failure means:** #8 regressed — `generate_bei_employee_id` still querying wrong column.
-**Cleanup in finally:** for both test employees, call `hrms.api.employee_create.mark_employee_left` (the new #11 helper) with today's date as relieving_date, then soft-delete via SSM.
+2. Click "Add Employee" button (visible button, not API)
+3. Wait for the create form/dialog
+4. Fill ALL required fields (one `page.fill` per field — do NOT combine):
+   - First Name: `L3TEST`
+   - Last Name: `RETEST07A`
+   - Date of Birth: `1990-01-01`
+   - Gender: `Male` (via `page.selectOption`)
+   - Branch: any active branch from the dropdown (via `page.selectOption`, capture the value)
+   - Company: any company from the dropdown (via `page.selectOption`)
+5. Take pre-submit screenshot
+6. Click Create/Submit
+7. Wait for the `create_employee_direct` network response
+8. Capture from network response: `employee_id_A` (BEI-EMP-YYYY-NNNNN) and `name_A` (HR-EMP-NNNNN)
+9. Take post-submit screenshot
+10. Close the dialog (or navigate back if the flow requires)
+11. **Repeat steps 2-10** with Last Name = `RETEST07B` and capture `employee_id_B` and `name_B`
+12. Assert: `employee_id_A !== employee_id_B` (the #8 fix — previously both returned BEI-EMP-2026-00004)
+13. Assert: `name_A !== name_B` (sanity)
+14. Assert: both `employee_id_*` match the pattern `^BEI-EMP-\d{4}-\d{5}$`
+15. SSM query to confirm both employees exist with distinct `employee` field values:
+    ```sql
+    SELECT name, employee FROM `tabEmployee`
+    WHERE name IN ('<name_A>', '<name_B>')
+    ORDER BY name
+    ```
+16. Assert: 2 rows returned, both with non-null `employee` values, and those 2 values are distinct
+17. Cleanup (finally): for both employees, call the REST endpoint for `mark_employee_left` via the UI "soft-delete" button if available, OR fall back to SSM; record the cleanup in CLEANUP_LOG.md
+
+**REQUIRED_ACTIONS_COUNT:** 14 (6 actions per create × 2 creates = 12, + 2 for cleanup initiation)
+**REQUIRED_SELECTORS:**
+- `button:has-text("Add Employee")` or `[data-testid="add-employee"]`
+- `input[name="first_name"]`, `input[name="last_name"]`, `input[name="date_of_birth"]`
+- `select[name="gender"]`, `select[name="branch"]`, `select[name="company"]`
+- `button:has-text("Create")` or `button[type="submit"]`
+**REQUIRED_NETWORK:**
+- **Exactly 2** `POST /api/method/hrms.api.employee_create.create_employee_direct` calls — status 200 each
+- Each response body must contain both `employee_id` (matching `^BEI-EMP-\d{4}-\d{5}$`) AND `name` (matching `^HR-EMP-\d+$`)
+- **The two `employee_id` values in the two responses MUST be different** (record both in evidence explicitly)
+**REQUIRED_SSM_QUERIES:**
+- `SELECT name, employee FROM \`tabEmployee\` WHERE name IN ('<name_A>', '<name_B>')` → 2 rows with 2 distinct non-null `employee` values
+- Cleanup verification: `SELECT status, relieving_date FROM \`tabEmployee\` WHERE name IN ('<name_A>', '<name_B>')` → both rows have status='Left' and relieving_date populated
+**REQUIRED_NEGATIVE_ASSERTIONS:**
+- `employee_id_A` is NOT equal to `employee_id_B` (the exact regression this scenario catches)
+- Neither `employee_id_*` equals the literal string `BEI-EMP-2026-00004` (the pre-fix cached value that was stuck on prod)
+- Both test employees are soft-deleted before the scenario ends (cleanup actually ran)
+**REQUIRED_SCREENSHOTS:** pre-create-A, post-create-A, pre-create-B, post-create-B
+**Expected:** Two distinct employee_ids returned; both employees soft-deleted after.
+**Failure means:** #8 regressed — `generate_bei_employee_id` still querying wrong column OR Frappe autoname drift OR the #8 fix didn't ship in the latest deploy.
+**Cleanup in finally (MANDATORY):** for both employees, use `hrms.api.employee_create.mark_employee_left` (the new #11 helper, also acts as integration test for #11) with today's date, then verify via SSM that both rows are `status='Left'`. If mark_employee_left fails, fall back to direct SSM update and log the fallback in NEW_DEFECTS.csv for #11 investigation.
 
 ### Scenario RT-S172-08 — Emergency phone saves correctly via self-service path
 **Covers Defect #13**
 **URL:** `https://my.bebang.ph/dashboard/hr/employee-master`
 **Login:** `test.hr@bebang.ph`
+**Pre-condition:** a target test employee (use the RT-S172-07 employee_A or any employee whose `emergency_phone_number` is currently NULL — verify via SSM pre-check).
 **Steps:**
-1. Navigate to employee-master page
-2. Click the RT-S172-07 test employee row (or any other test employee) to open `EmployeeDetailDialog`
-3. Open the Personal section, click Edit
-4. Fill:
-   - Person to be Contacted: "Maria Dela Cruz"
-   - Relation: "Spouse"
-   - Emergency Phone Number: "09181112222"
-5. Click Save
-6. Wait for the dialog to close
-7. Reopen the dialog for the same employee
-8. Assert: all 3 values are now populated (previously `emergency_phone_number` returned null post-save)
-9. Also verify via SSM: `SELECT person_to_be_contacted, relation, emergency_phone_number FROM tabEmployee WHERE name = '<emp>'` — all three populated.
-**Expected:** all three fields persist.
-**Failure means:** #13 regressed — self-service field routing back to `frappe.client.set_value` or the enrichment endpoint's validators dropping the phone.
+1. Pre-check via SSM: `SELECT person_to_be_contacted, relation, emergency_phone_number FROM \`tabEmployee\` WHERE name = '<target>'` — record the starting values
+2. Navigate to `/dashboard/hr/employee-master`
+3. Click the target employee row to open `EmployeeDetailDialog`
+4. Expand the Personal section (Collapsible `[data-state="open"]`)
+5. Click the Personal section Edit button
+6. `page.fill` Person to be Contacted: `Maria Dela Cruz RT08`
+7. `page.fill` Relation: `Spouse`
+8. `page.fill` Emergency Phone Number: `09181112222`
+9. Take pre-save screenshot
+10. Click Save
+11. Wait for ALL 3 update network calls to complete (the frontend sends one per changed field via `update_self_service_field`)
+12. Assert: all 3 POSTs to `update_self_service_field` returned status 200
+13. Assert: each response body contains `"status": "success"` (or Frappe's message shape)
+14. Close the dialog
+15. **`page.reload()`** — MANDATORY full-page reload (not just dialog reopen) to bypass React Query cache
+16. Wait for `networkidle`
+17. Click the same target employee row again
+18. Expand the Personal section (don't click Edit — just view)
+19. Assert: the Person to be Contacted field displays "Maria Dela Cruz RT08"
+20. Assert: the Relation field displays "Spouse"
+21. Assert: the Emergency Phone Number field displays "09181112222" — this is the #13 fix proof
+22. Take post-reload screenshot showing all 3 values visible
+23. SSM verify (authoritative):
+    ```sql
+    SELECT person_to_be_contacted, relation, emergency_phone_number
+    FROM `tabEmployee`
+    WHERE name = '<target>'
+    ```
+24. Assert: all 3 columns are populated with the exact values we sent (not NULL, not empty string)
+
+**REQUIRED_ACTIONS_COUNT:** 13 (goto + click row + click section + click edit + fill×3 + click save + reload + click row + click section + screenshot)
+**REQUIRED_SELECTORS:**
+- `[role="dialog"]`
+- Personal section `[data-state="open"]`
+- Inputs (by label or data-field-name): `person_to_be_contacted`, `relation`, `emergency_phone_number`
+- `button:has-text("Save")`
+**REQUIRED_NETWORK:**
+- **Exactly 3** `POST /api/method/hrms.api.enrichment.update_self_service_field` calls — status 200 each. The field_name in the payload must match `person_to_be_contacted`, `relation`, `emergency_phone_number` (one per call).
+- **CRITICAL: no calls to `/api/method/frappe.client.set_value` for these fields** — if the frontend hits set_value instead of update_self_service_field, the #13 fix didn't ship.
+**REQUIRED_SSM_QUERIES:**
+- Pre-check: starting state of the 3 fields (for diff comparison)
+- Post-save: all 3 fields must hold the exact values the test sent
+**REQUIRED_NEGATIVE_ASSERTIONS:**
+- `emergency_phone_number` post-save is NOT NULL and NOT empty string (the exact pre-fix failure mode)
+- No `POST /api/method/frappe.client.set_value` in network[] for any of the 3 fields (proves routing fix shipped)
+- After the `page.reload()`, the dialog shows the persisted values (proves the save was durable, not React Query cache)
+**REQUIRED_SCREENSHOTS:** pre-edit (fields in view mode), pre-save (fields filled), post-save (dialog closed or success toast), post-reload-re-open (fields visible with new values)
+**Expected:** all 3 fields persist through save → reload → re-read.
+**Failure means:** #13 regressed — either routing is back to `frappe.client.set_value` (check network[]) OR the enrichment endpoint's validators are still dropping the phone (check SSM for what actually landed).
 
 ## Optional: HR test.hr Employee list access (Defect #9 sanity)
 
@@ -212,56 +473,187 @@ Not a full scenario, but worth a 30-second smoke check:
 When you (the fresh Phase 8 agent) are ready to run the scenarios:
 
 ```
-You are the Phase 8 L3 retest runner for S172.
+You are the Phase 8 L3 retest runner for S172. A separate independent
+audit gate agent WILL verify every evidence file you produce against
+the plan's REQUIRED_* blocks. Corrupt success is NOT an option — the
+audit gate flags any PASS verdict without matching evidence as
+SUMMARY_LIED and rejects the entire pass.
 
-Task: Run the 8 scenarios listed in docs/plans/2026-04-08-sprint-172-s166-followup-defect-fixes.md
-section "PHASE 8 L3 RETEST HANDOFF" (top of plan). Use real browser via
-Playwright headless against https://my.bebang.ph. Use test accounts
-documented in memory/testing-accounts.md (all passwords BeiTest2026!).
+Task: Run the 8 scenarios RT-S172-01 through RT-S172-08 listed in
+docs/plans/2026-04-08-sprint-172-s166-followup-defect-fixes.md section
+"PHASE 8 L3 RETEST HANDOFF" (top of plan, lines 17-291).
 
-For each scenario:
-- Write actions, network, screenshots to
-  output/l3/s172/retest/<scenario_id>/evidence.json
-- Save screenshots to output/l3/s172/retest/<scenario_id>/screenshots/*.png
-- Include pre-action and post-action screenshots
-- Mark status as PASS / FAIL / BLOCKED / NEW_DEFECT
-- If BLOCKED or NEW_DEFECT, log to output/l3/s172/retest/NEW_DEFECTS.csv
-  with columns: scenario_id, defect_description, severity, reproducer
+Environment:
+- Real browser via Playwright headless against https://my.bebang.ph
+- NOT a local dev server. NOT a mocked backend.
+- Test accounts in memory/testing-accounts.md (all passwords BeiTest2026!)
+- Script pattern: scripts/testing/l3_s166_lane_h_runner.mjs
 
-Script template: scripts/testing/l3_s166_lane_h_runner.mjs
+HARD RULES (enforced by the audit gate):
+1. No API shortcuts. If you use page.evaluate(() => fetch('/api/method/*'))
+   to bypass a form, the scenario is SUMMARY_LIED.
+2. For every scenario, your evidence.json MUST satisfy the scenario's
+   REQUIRED_ACTIONS_COUNT, REQUIRED_SELECTORS, REQUIRED_NETWORK,
+   REQUIRED_SSM_QUERIES, REQUIRED_NEGATIVE_ASSERTIONS, and
+   REQUIRED_SCREENSHOTS blocks. Read each scenario's block in the plan
+   BEFORE running the scenario. Do not guess.
+3. Every screenshot file must be ≥ 5000 bytes on disk. Take another shot
+   if the page was still loading.
+4. Every REQUIRED_NETWORK endpoint must appear in your network[] with
+   the expected HTTP status. The audit gate cross-checks status codes.
+5. Every REQUIRED_SSM_QUERY must be executed and the real row count
+   recorded. You can use /frappe-bulk-edits skill for SSM access.
+6. Every REQUIRED_NEGATIVE_ASSERTION must be checked and marked as
+   satisfied: true/false. The audit gate reads these.
+7. For persistence scenarios (RT-S172-08), a page.reload() between save
+   and re-read is MANDATORY to bypass React Query cache.
 
-Cleanup: in a finally block, soft-delete every test employee you create
-via hrms.api.employee_create.mark_employee_left + SSM bulk-edits.
+For each scenario, write:
+- output/l3/s172/retest/<scenario_id>/evidence.json (strict shape per
+  the plan's "Evidence file shape" section)
+- output/l3/s172/retest/<scenario_id>/screenshots/*.png
+- Include pre-action and post-action screenshots (minimum 2 per scenario)
 
-STOP after writing all evidence files. Do NOT touch git. Do NOT mark any
-scenario PASS without screenshot proof. Do NOT run the audit gate yourself.
+If a scenario is legitimately BLOCKED (e.g., missing test data that
+can't be created) or reveals a NEW_DEFECT, mark it that way honestly.
+BLOCKED and NEW_DEFECT are not failures — SUMMARY_LIED is. Log new
+defects to output/l3/s172/retest/NEW_DEFECTS.csv with columns:
+  scenario_id, defect_description, severity, reproducer
+
+Cleanup (MANDATORY): in a finally block, soft-delete every test
+employee you create via hrms.api.employee_create.mark_employee_left
++ SSM bulk-edits. Record in output/l3/s172/retest/CLEANUP_LOG.md.
+
+After running all 8 scenarios and writing evidence files:
+- Do NOT mark any scenario PASS just because no error occurred — check
+  the scenario's REQUIRED_* blocks and verify they are all satisfied.
+- Do NOT run the audit gate yourself — it MUST be a separate fresh
+  subagent.
+- Do NOT touch git.
+- STOP and report to the orchestrator: "Runner complete, evidence
+  written to output/l3/s172/retest/. Dispatch audit gate agent next."
 ```
 
 ## Audit gate agent brief (copy-paste for dispatch — MANDATORY after runner)
 
 ```
 You are the Phase 8 L3 audit gate for S172. A runner agent has written
-evidence files to output/l3/s172/retest/. Your job is to independently
-verify each scenario's evidence without trusting the runner's self-report.
+evidence files to output/l3/s172/retest/<scenario_id>/evidence.json.
+Your job is to independently verify each scenario's evidence without
+trusting the runner's self-report.
 
-For each scenario directory:
-1. Open evidence.json
-2. Verify actions[] is non-empty and contains real Playwright calls
-   (page.click / page.fill / page.selectOption — NOT just page.goto)
-3. Verify screenshots[] references non-zero-byte PNG files that exist
-4. Verify network[] shows the expected API calls (e.g., for
-   RT-S172-07 the employee_create POST must be in network[])
-5. Cross-check runner's status vs actual evidence — if runner said PASS
-   but evidence is thin, flag as SUMMARY_LIED per post-#497 rule
-6. Write verdict to output/l3/s172/retest/AUDIT_REPORT.md with per-scenario
-   PASS / REJECT / SUMMARY_LIED and overall rollup
-7. If all 8 scenarios pass audit, create an empty file
-   output/l3/s172/retest/AUDIT_PASSED.flag
-8. If any fail, do NOT create the flag; list what's missing in
-   AUDIT_REPORT.md
+You have no prior context about what the runner did. Be skeptical.
+Assume corrupt success is the default and require proof of the opposite.
 
-Do NOT re-run any scenario. Do NOT fix evidence. You are the tester of
-the tester. Be skeptical.
+=== AUDIT CHECKLIST PER SCENARIO ===
+
+For each of RT-S172-01 through RT-S172-08:
+
+1. Open output/l3/s172/retest/<scenario_id>/evidence.json. If missing,
+   mark the scenario MISSING_EVIDENCE and fail the audit immediately.
+
+2. Load the corresponding scenario block from the plan (lines 17-291 of
+   docs/plans/2026-04-08-sprint-172-s166-followup-defect-fixes.md).
+   Extract the REQUIRED_ACTIONS_COUNT, REQUIRED_SELECTORS,
+   REQUIRED_NETWORK, REQUIRED_SSM_QUERIES, REQUIRED_NEGATIVE_ASSERTIONS,
+   REQUIRED_SCREENSHOTS blocks.
+
+3. Actions count check:
+   - len(evidence.actions) >= scenario.REQUIRED_ACTIONS_COUNT?
+   - If NO → SUMMARY_LIED_ACTION_COUNT.
+
+4. Selectors seen check:
+   - Every entry in scenario.REQUIRED_SELECTORS appears in
+     evidence.selectors_seen[]?
+   - If NO → SUMMARY_LIED_MISSING_SELECTOR: <list the missing ones>.
+
+5. Network check:
+   - For every entry in scenario.REQUIRED_NETWORK, find a matching
+     entry in evidence.network[] where the method AND URL pattern match.
+   - Verify status code matches the scenario's expectation (e.g., 200
+     for successful POSTs, 417 for the #20 error case).
+   - For each required endpoint, verify the status code is within the
+     scenario-allowed set.
+   - For scenarios that say "response body must contain X", verify
+     the response_excerpt actually contains X.
+   - If any check fails → SUMMARY_LIED_NETWORK: <which one>.
+
+6. SSM queries check:
+   - Every REQUIRED_SSM_QUERY must have a corresponding entry in
+     evidence.ssm_queries[] with the query text matching (fuzzy — at
+     least the FROM table and WHERE clause shape).
+   - The rows count must match the scenario's expectation (e.g., "must
+     return exactly 1 row").
+   - If any check fails → SUMMARY_LIED_SSM: <which query>.
+
+7. Negative assertions check:
+   - Every entry in scenario.REQUIRED_NEGATIVE_ASSERTIONS must have
+     a corresponding entry in evidence.negative_assertions[] with
+     satisfied: true.
+   - If any is false or missing → SUMMARY_LIED_NEGATIVE: <description>.
+
+8. Screenshot check:
+   - Every entry in scenario.REQUIRED_SCREENSHOTS has a matching
+     screenshots[] entry where the file exists on disk AND
+     bytes >= 5000 (use `stat` / os.path.getsize to verify — do NOT
+     trust the runner's self-reported bytes value).
+   - Verify taken_at_url in the scenario is under my.bebang.ph.
+   - If any file is missing or too small → SUMMARY_LIED_SCREENSHOT.
+
+9. Runner status integrity:
+   - If evidence.runner_status == "PASS" and ANY of the above checks
+     failed, the scenario is SUMMARY_LIED. This is the worst verdict
+     because it means the runner claimed success without proof.
+   - If evidence.runner_status == "FAIL" or "BLOCKED" or "NEW_DEFECT"
+     AND the above checks are internally consistent, the audit's
+     verdict is ACCEPT_FAILURE (the runner was honest about failure).
+
+10. Write the verdict for this scenario to AUDIT_REPORT.md:
+    - scenario_id
+    - audit_verdict: PASS | FAIL | BLOCKED | NEW_DEFECT | SUMMARY_LIED_* | MISSING_EVIDENCE
+    - which specific required item(s) failed (if any)
+    - whether any negative assertions fired
+    - 1-line summary
+
+=== OVERALL ROLLUP ===
+
+After all 8 scenarios are audited:
+
+- If EVERY scenario is PASS or ACCEPT_FAILURE-with-justification, create
+  the empty file output/l3/s172/retest/AUDIT_PASSED.flag.
+- If ANY scenario is SUMMARY_LIED_*, do NOT create the flag. The entire
+  retest pass is compromised — write a top-level CRITICAL rollup in
+  AUDIT_REPORT.md and stop.
+- If some scenarios are PASS and others are legitimate FAIL/BLOCKED,
+  create a partial report. Do NOT create the flag. List which scenarios
+  need re-running.
+
+=== ANTI-GAMING RULES ===
+
+- Do NOT re-run any scenario. If evidence is missing or thin, the
+  verdict is FAIL or SUMMARY_LIED, not "let me check for you".
+- Do NOT fix evidence. Do NOT edit evidence.json files. You are the
+  tester of the tester.
+- Do NOT trust the runner's summary line. Check each rule independently.
+- If you cannot determine whether an assertion was satisfied because
+  the evidence shape is ambiguous, the verdict is FAIL, not "benefit
+  of the doubt".
+- If ANY screenshot file is exactly 0 bytes or smaller than 5000 bytes,
+  the scenario is SUMMARY_LIED_SCREENSHOT — no exceptions for "it was
+  a loading state" or "the page was empty". Take another shot or FAIL.
+
+=== OUTPUT ===
+
+Write AUDIT_REPORT.md with:
+- Top: summary (8 scenarios audited, X PASS, Y FAIL, Z SUMMARY_LIED)
+- Per-scenario verdict block (as above)
+- Bottom: GO/NO-GO recommendation for Phase 9 closeout
+
+If and only if the verdict is unanimous PASS (or PASS+ACCEPT_FAILURE with
+justification), create output/l3/s172/retest/AUDIT_PASSED.flag (empty file).
+
+You are expected to reject the first pass. Corrupt success is the default
+failure mode. Require proof of correctness, not absence of proof of failure.
 ```
 
 ## Closeout (after audit gate creates AUDIT_PASSED.flag)
