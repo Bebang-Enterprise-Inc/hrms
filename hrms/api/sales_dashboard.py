@@ -772,6 +772,55 @@ def _get_grabfood_channel_totals(
 	}
 
 
+def _get_foodpanda_channel_totals(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+) -> dict[str, Any]:
+	"""S176 hotfix 2026-04-09: FoodPanda direct-aggregation parallel to GrabFood.
+
+	Background: the sales_dashboard_daily_store_metrics view's foodpanda_subtotal
+	column is sourced from the legacy foodpanda_orders Google Sheet ingest, which
+	was halted 2026-03-31. For every day from 2026-04-01 onward the view returns
+	0.00 while the real FoodPanda data lives in pos_orders.channel='FoodPanda'.
+
+	This mirrors _get_grabfood_channel_totals — same columns, same derivation
+	(net_wo_vat = net_sales - vat_amount), same zero-default on empty result.
+
+	Returns keys: foodpanda_sales, foodpanda_sales_without_vat, foodpanda_orders,
+	foodpanda_avg_ticket. These OVERRIDE the stale values injected by
+	_aggregate_sales() from the view.
+	"""
+	if not location_ids:
+		return {
+			"foodpanda_sales": 0.0,
+			"foodpanda_sales_without_vat": 0.0,
+			"foodpanda_orders": 0,
+			"foodpanda_avg_ticket": 0.0,
+		}
+	params: list[tuple[str, Any]] = [
+		("select", "gross_sales,net_sales,vat_amount"),
+		("channel", "eq.FoodPanda"),
+		("payment_status", "eq.PAID"),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("location_id", f"in.({_location_scope_key(location_ids)})"),
+	]
+	rows = _supabase_get_all("pos_orders", params, page_size=1000)
+	gross_total = sum(_to_float(row.get("gross_sales")) for row in rows)
+	net_wo_vat_total = sum(
+		_to_float(row.get("net_sales")) - _to_float(row.get("vat_amount")) for row in rows
+	)
+	order_count = len(rows)
+	avg_ticket = _round_half_up(gross_total / order_count) if order_count else 0.0
+	return {
+		"foodpanda_sales": _round_half_up(gross_total),
+		"foodpanda_sales_without_vat": _round_half_up(net_wo_vat_total),
+		"foodpanda_orders": order_count,
+		"foodpanda_avg_ticket": avg_ticket,
+	}
+
+
 def _build_data_quality_warnings(start_day: date, end_day: date, freshness: dict[str, Any]) -> list[str]:
 	warnings: list[str] = []
 	foodpanda_cups_max = freshness.get("foodpanda_cups_max_business_date")
@@ -2012,6 +2061,8 @@ def _build_dashboard_summary_payload(
 		summary = _aggregate_sales(sales_rows)
 		# S176 DD-14 Option A: inject real GrabFood totals from pos_orders direct query.
 		summary.update(_get_grabfood_channel_totals(start_day, effective_end, selected_location_ids))
+		# S176 hotfix 2026-04-09: override FoodPanda totals (view is stale post-2026-03-31).
+		summary.update(_get_foodpanda_channel_totals(start_day, effective_end, selected_location_ids))
 		projection_window_rows = [
 			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
 		]
@@ -2104,6 +2155,8 @@ def _build_dashboard_overview_payload(
 		summary = _aggregate_sales(sales_rows)
 		# S176 DD-14 Option A: inject real GrabFood totals from pos_orders direct query.
 		summary.update(_get_grabfood_channel_totals(start_day, effective_end, selected_location_ids))
+		# S176 hotfix 2026-04-09: override FoodPanda totals (view is stale post-2026-03-31).
+		summary.update(_get_foodpanda_channel_totals(start_day, effective_end, selected_location_ids))
 		mode_state = _build_mode_state(view_mode, start_day, effective_end, scope)
 		projection_window_rows = [
 			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
