@@ -1030,20 +1030,41 @@ def _get_replenishment_source_account(company: str):
 def _resolve_coa_code_to_account(code: str, company: str) -> str | None:
     """
     DEFECT-009 fix: Map a naked GL code (e.g. "6010100") to a full Account
-    DocType name (e.g. "6010100 - Representation & Entertainment - BEI") for
-    the given company. Returns None if no match.
+    DocType name (e.g. "REPRESENTATION & ENTERTAINMENT-OTHERS - Bebang
+    Enterprise Inc.") for the given company. Returns None if no match.
 
     The classifier returns naked codes from Liezel's training data; the
     batch approve flow validates against tabAccount link, which fails on
     a bare code. Resolve once at classify-time so approve always succeeds.
+
+    Lookup strategy: BEI's Chart of Accounts stores the GL code in the
+    `account_number` column, NOT in the name. Account names look like
+    "REPRESENTATION & ENTERTAINMENT-OTHERS - Bebang Enterprise Inc.".
+    First-pass tried `name LIKE '{code} - %'` and never matched anything.
+    Correct query: filter by `account_number` (and disabled=0).
     """
     if not code or not company:
         return None
-    # Prefer non-group leaf accounts whose name starts with the code + " - "
     rows = frappe.db.sql(
         """
         SELECT name FROM `tabAccount`
-        WHERE company=%s AND is_group=0 AND name LIKE %s
+        WHERE company=%s
+          AND is_group=0
+          AND COALESCE(disabled, 0) = 0
+          AND account_number=%s
+        ORDER BY name LIMIT 1
+        """,
+        (company, str(code)),
+        as_dict=False,
+    )
+    if rows:
+        return rows[0][0]
+    # Fallback: legacy CoA layouts where the code IS in the name prefix
+    rows = frappe.db.sql(
+        """
+        SELECT name FROM `tabAccount`
+        WHERE company=%s AND is_group=0 AND COALESCE(disabled, 0) = 0
+          AND name LIKE %s
         ORDER BY name LIMIT 1
         """,
         (company, f"{code} - %"),
