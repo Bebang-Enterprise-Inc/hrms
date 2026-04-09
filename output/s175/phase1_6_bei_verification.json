@@ -1,0 +1,286 @@
+{
+  "company": "Bebang Enterprise Inc.",
+  "deleted": [
+    {
+      "num": "4000001",
+      "name": "IN-STORE SALES - Bebang Enterprise Inc."
+    },
+    {
+      "num": "4000002",
+      "name": "ONLINE SALES - Bebang Enterprise Inc."
+    },
+    {
+      "num": "4000003",
+      "name": "4000003 - ROYALTY INCOME - BEI"
+    },
+    {
+      "num": "4000004",
+      "name": "4000004 - MANAGEMENT FEE INCOME - BEI"
+    },
+    {
+      "num": "4000006",
+      "name": "4000006 - MARKETING FEE INCOME - BEI"
+    },
+    {
+      "num": "4000201",
+      "name": "SALES DISCOUNT DUE TO FREE HALOHALO - Bebang Enterprise Inc."
+    },
+    {
+      "num": "4000202",
+      "name": "SALES DISCOUNT OF SENIOR CITIZENS - Bebang Enterprise Inc."
+    },
+    {
+      "num": "4000203",
+      "name": "SALES DISCOUNTS OF PWDS - Bebang Enterprise Inc."
+    },
+    {
+      "num": "4000204",
+      "name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES - Bebang Enterprise Inc."
+    },
+    {
+      "num": "4000205",
+      "name": "SALES DISCOUNTS FROM VAT OF PWD - Bebang Enterprise Inc."
+    },
+    {
+      "num": "4000206",
+      "name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS - Bebang Enterprise Inc."
+    },
+    {
+      "num": "4000207",
+      "name": "SALES REFUNDS TO CUSTOMER - Bebang Enterprise Inc."
+    },
+    {
+      "num": "4000208",
+      "name": "4000208 - SALES DISCOUNTS - EMPLOYEE DISC - BEI"
+    },
+    {
+      "num": "4000301",
+      "name": "ROYALTIES INCOME - BEI"
+    },
+    {
+      "num": "4000302",
+      "name": "MARKETING FEE INCOME - BEI"
+    },
+    {
+      "num": "4000303",
+      "name": "MANAGEMENT FEE INCOME - BEI"
+    },
+    {
+      "num": "4000304",
+      "name": "ECOMMERCE FEE INCOME - BEI"
+    },
+    {
+      "num": "4000305",
+      "name": "DELIVERY INCOME - BEI"
+    },
+    {
+      "num": "4000306",
+      "name": "LOGISTICS INCOME - BEI"
+    },
+    {
+      "num": "4000200",
+      "name": "DISCOUNTS AND PROMO - Bebang Enterprise Inc."
+    },
+    {
+      "num": "4000300",
+      "name": "FRANCHISE INCOME - BEI"
+    }
+  ],
+  "skipped_absent": [],
+  "hb_blocked": [],
+  "errors": [],
+  "preserved": [
+    "4000005"
+  ],
+  "pre_snapshot": [
+    {
+      "name": "4000003 - ROYALTY INCOME - BEI",
+      "account_number": "4000003",
+      "account_name": "ROYALTY INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "SALES - Bebang Enterprise Inc."
+    },
+    {
+      "name": "4000004 - MANAGEMENT FEE INCOME - BEI",
+      "account_number": "4000004",
+      "account_name": "MANAGEMENT FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "SALES - Bebang Enterprise Inc."
+    },
+    {
+      "name": "4000006 - MARKETING FEE INCOME - BEI",
+      "account_number": "4000006",
+      "account_name": "MARKETING FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "SALES - Bebang Enterprise Inc."
+    },
+    {
+      "name": "4000208 - SALES DISCOUNTS - EMPLOYEE DISC - BEI",
+      "account_number": "4000208",
+      "account_name": "SALES DISCOUNTS - EMPLOYEE DISC",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "DISCOUNTS AND PROMO - Bebang Enterprise Inc."
+    },
+    {
+      "name": "DELIVERY INCOME - BEI",
+      "account_number": "4000305",
+      "account_name": "DELIVERY INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "FRANCHISE INCOME - BEI"
+    },
+    {
+      "name": "DISCOUNTS AND PROMO - Bebang Enterprise Inc.",
+      "account_number": "4000200",
+      "account_name": "DISCOUNTS AND PROMO",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    },
+    {
+      "name": "ECOMMERCE FEE INCOME - BEI",
+      "account_number": "4000304",
+      "account_name": "ECOMMERCE FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "FRANCHISE INCOME - BEI"
+    },
+    {
+      "name": "FRANCHISE INCOME - BEI",
+      "account_number": "4000300",
+      "account_name": "FRANCHISE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "SALES - Bebang Enterprise Inc."
+    },
+    {
+      "name": "IN-STORE SALES - Bebang Enterprise Inc.",
+      "account_number": "4000001",
+      "account_name": "IN-STORE SALES",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    },
+    {
+      "name": "LOGISTICS INCOME - BEI",
+      "account_number": "4000306",
+      "account_name": "LOGISTICS INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "FRANCHISE INCOME - BEI"
+    },
+    {
+      "name": "MANAGEMENT FEE INCOME - BEI",
+      "account_number": "4000303",
+      "account_name": "MANAGEMENT FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "FRANCHISE INCOME - BEI"
+    },
+    {
+      "name": "MARKETING FEE INCOME - BEI",
+      "account_number": "4000302",
+      "account_name": "MARKETING FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "FRANCHISE INCOME - BEI"
+    },
+    {
+      "name": "ONLINE SALES - Bebang Enterprise Inc.",
+      "account_number": "4000002",
+      "account_name": "ONLINE SALES",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    },
+    {
+      "name": "ROYALTIES INCOME - BEI",
+      "account_number": "4000301",
+      "account_name": "ROYALTIES INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "FRANCHISE INCOME - BEI"
+    },
+    {
+      "name": "SALES DISCOUNT DUE TO FREE HALOHALO - Bebang Enterprise Inc.",
+      "account_number": "4000201",
+      "account_name": "SALES DISCOUNT DUE TO FREE HALOHALO",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    },
+    {
+      "name": "SALES DISCOUNT OF SENIOR CITIZENS - Bebang Enterprise Inc.",
+      "account_number": "4000202",
+      "account_name": "SALES DISCOUNT OF SENIOR CITIZENS",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    },
+    {
+      "name": "SALES DISCOUNTS FROM VAT OF PWD - Bebang Enterprise Inc.",
+      "account_number": "4000205",
+      "account_name": "SALES DISCOUNTS FROM VAT OF PWD",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    },
+    {
+      "name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS - Bebang Enterprise Inc.",
+      "account_number": "4000206",
+      "account_name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    },
+    {
+      "name": "SALES DISCOUNTS OF PWDS - Bebang Enterprise Inc.",
+      "account_number": "4000203",
+      "account_name": "SALES DISCOUNTS OF PWDS",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    },
+    {
+      "name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES - Bebang Enterprise Inc.",
+      "account_number": "4000204",
+      "account_name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    },
+    {
+      "name": "SALES REFUNDS TO CUSTOMER - Bebang Enterprise Inc.",
+      "account_number": "4000207",
+      "account_name": "SALES REFUNDS TO CUSTOMER",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    }
+  ],
+  "4000005_preserved": {
+    "name": "4000005 - BRAND GROWTH FEE INCOME - BEI",
+    "account_name": "BRAND GROWTH FEE INCOME",
+    "root_type": "Income"
+  },
+  "post_4xxx": [
+    {
+      "account_number": "4000000",
+      "account_name": "SALES",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": null
+    },
+    {
+      "account_number": "4000005",
+      "account_name": "BRAND GROWTH FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "parent_account": "SALES - Bebang Enterprise Inc."
+    }
+  ]
+}
