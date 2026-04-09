@@ -14,6 +14,7 @@
   "store",
   "incident_date",
   "incident_category",
+  "severity",
   "column_break_1",
   "status",
   "recommended_action",
@@ -82,6 +83,13 @@
    "label": "Incident Category",
    "options": "Attendance\nConduct\nPerformance\nPolicy Violation\nSafety\nTheft-Fraud\nInsubordination\nOther",
    "reqd": 1
+  },
+  {
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "label": "Severity",
+   "options": "\nMinor\nMajor\nGrave\nTermination",
+   "default": "Minor"
   },
   {
    "fieldname": "column_break_1",
