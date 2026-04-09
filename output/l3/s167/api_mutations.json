@@ -1460,5 +1460,39 @@
     "status": 200,
     "response_body": "{\"success\":true,\"message\":\"PCF settings updated for Commissary\"}",
     "ts": "2026-04-09T02:38:18.970Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "verify",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.finance@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T05:09:14.091Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "verify",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T05:09:15.317Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "verify",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.finance@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T06:57:48.901Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "verify",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T06:57:50.075Z"
   }
 ]

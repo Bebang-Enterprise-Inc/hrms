@@ -672,5 +672,85 @@
     "before": "no fund",
     "after": "create:200 enable:200",
     "passed": true
+  },
+  {
+    "ts": "2026-04-09T05:08:07.485Z",
+    "scenario": "verify_027_staff",
+    "check": "staff sees only store PCF",
+    "passed": false,
+    "before": "all PCF leaked",
+    "after": "unexpected:0"
+  },
+  {
+    "ts": "2026-04-09T05:08:36.195Z",
+    "scenario": "verify_027_hr",
+    "check": "hr sees only HR PCF",
+    "passed": false,
+    "before": "all PCF leaked",
+    "after": "unexpected:1"
+  },
+  {
+    "ts": "2026-04-09T05:08:54.597Z",
+    "scenario": "verify_028_hr",
+    "check": "legacy redirect lands on HR dept",
+    "passed": true,
+    "before": "/dashboard/expense/pcf",
+    "after": "https://my.bebang.ph/dashboard/hr-admin/pcf"
+  },
+  {
+    "ts": "2026-04-09T05:09:12.010Z",
+    "scenario": "verify_028_commi",
+    "check": "legacy redirect lands on commissary",
+    "passed": true,
+    "before": "/dashboard/expense/pcf",
+    "after": "https://my.bebang.ph/dashboard/commissary/pcf"
+  },
+  {
+    "ts": "2026-04-09T05:09:36.731Z",
+    "scenario": "verify_026",
+    "check": "review fund drilldown",
+    "passed": true,
+    "before": "/review",
+    "after": "https://my.bebang.ph/dashboard/accounting/pcf/review/fund/PCF-HR%20and%20Admin"
+  },
+  {
+    "ts": "2026-04-09T06:56:45.148Z",
+    "scenario": "verify_027_staff",
+    "check": "staff sees only store PCF",
+    "passed": false,
+    "before": "all PCF leaked",
+    "after": "unexpected:0"
+  },
+  {
+    "ts": "2026-04-09T06:57:11.901Z",
+    "scenario": "verify_027_hr",
+    "check": "hr sees only HR PCF",
+    "passed": false,
+    "before": "all PCF leaked",
+    "after": "unexpected:1"
+  },
+  {
+    "ts": "2026-04-09T06:57:29.356Z",
+    "scenario": "verify_028_hr",
+    "check": "legacy redirect lands on HR dept",
+    "passed": true,
+    "before": "/dashboard/expense/pcf",
+    "after": "https://my.bebang.ph/dashboard/hr-admin/pcf"
+  },
+  {
+    "ts": "2026-04-09T06:57:46.989Z",
+    "scenario": "verify_028_commi",
+    "check": "legacy redirect lands on commissary",
+    "passed": true,
+    "before": "/dashboard/expense/pcf",
+    "after": "https://my.bebang.ph/dashboard/commissary/pcf"
+  },
+  {
+    "ts": "2026-04-09T06:58:10.001Z",
+    "scenario": "verify_026",
+    "check": "review fund drilldown",
+    "passed": true,
+    "before": "/review",
+    "after": "https://my.bebang.ph/dashboard/accounting/pcf/review/fund/PCF-HR%20and%20Admin"
   }
 ]
