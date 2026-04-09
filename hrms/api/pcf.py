@@ -1027,6 +1027,31 @@ def _get_replenishment_source_account(company: str):
 # ============================================================
 
 
+def _resolve_coa_code_to_account(code: str, company: str) -> str | None:
+    """
+    DEFECT-009 fix: Map a naked GL code (e.g. "6010100") to a full Account
+    DocType name (e.g. "6010100 - Representation & Entertainment - BEI") for
+    the given company. Returns None if no match.
+
+    The classifier returns naked codes from Liezel's training data; the
+    batch approve flow validates against tabAccount link, which fails on
+    a bare code. Resolve once at classify-time so approve always succeeds.
+    """
+    if not code or not company:
+        return None
+    # Prefer non-group leaf accounts whose name starts with the code + " - "
+    rows = frappe.db.sql(
+        """
+        SELECT name FROM `tabAccount`
+        WHERE company=%s AND is_group=0 AND name LIKE %s
+        ORDER BY name LIMIT 1
+        """,
+        (company, f"{code} - %"),
+        as_dict=False,
+    )
+    return rows[0][0] if rows else None
+
+
 @frappe.whitelist()
 def classify_batch_items(batch_name: str):
     """
@@ -1039,6 +1064,14 @@ def classify_batch_items(batch_name: str):
     Returns:
         Classification results per item
     """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(
+        module="pcf",
+        action="classify_batch_items",
+        mutation_type="update",
+        extras={"batch_name": batch_name},
+    )
+
     batch = frappe.get_doc("BEI PCF Batch", batch_name)
     from hrms.api.expense_classifier import classify_expense, COA_LABELS
 
@@ -1051,9 +1084,19 @@ def classify_batch_items(batch_name: str):
                 amount=flt(item.amount),
             )
 
-            suggested_coa = classification.get("coa")
-            suggested_label = COA_LABELS.get(suggested_coa, "") if suggested_coa else ""
+            suggested_code = classification.get("coa")
+            suggested_label = COA_LABELS.get(suggested_code, "") if suggested_code else ""
             confidence = flt(classification.get("confidence", 0))
+
+            # DEFECT-009: classifier returns naked GL codes like "6010100";
+            # resolve to the full Account DocType name so later approve
+            # calls don't hit LinkValidationError. Store the resolved name
+            # in suggested_coa (Link field), and keep the raw code on the
+            # label for diagnostics if resolution fails.
+            suggested_coa = _resolve_coa_code_to_account(suggested_code, batch.company) if suggested_code else None
+            if suggested_code and not suggested_coa:
+                # Lookup failed - leave suggested_coa empty, surface via label
+                suggested_label = f"{suggested_label} (unresolved: {suggested_code})" if suggested_label else f"Unresolved: {suggested_code}"
 
             # Update batch item
             frappe.db.set_value(
