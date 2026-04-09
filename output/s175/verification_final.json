@@ -1,0 +1,70 @@
+{
+  "1_company_count": {
+    "value": 40,
+    "expected": 40,
+    "pass": true
+  },
+  "2_template_on_all_companies": {
+    "total_assertions": 1080,
+    "passing": 1080,
+    "missing_per_company": {},
+    "pass": true
+  },
+  "3_bki_legacy": {
+    "4000100_is_legacy_wholesale_absent": true,
+    "4000101_absent": true,
+    "4000200_BKI_SALES_exists": true,
+    "4000210_DELIVERIES_exists": true,
+    "pass": true
+  },
+  "4_bei_legacy": {
+    "4000005_preserved": true,
+    "legacy_ROYALTY_INCOME_absent": true,
+    "legacy_MANAGEMENT_FEE_INCOME_absent": true,
+    "legacy_FRANCHISE_INCOME_absent": true,
+    "pass": true
+  },
+  "5_bei_settings_cutover": {
+    "value": "4000210 - DELIVERIES - BKI",
+    "resolves": true,
+    "contains_DELIVERIES": true,
+    "contains_BKI": true,
+    "pass": true
+  },
+  "6_bei_6xxxxxx": {
+    "income_count": 0,
+    "expense_count": 136,
+    "total": 136,
+    "pass": true
+  },
+  "7_bfc": {
+    "bfc": {
+      "tax_id": "672-618-804-00000",
+      "abbr": "BFC",
+      "default_currency": "PHP"
+    },
+    "pass": true
+  },
+  "8_intercompany": {
+    "2104200_BEI": "2104200 - DUE TO BFC - BEI",
+    "1104200_BFC": "1104200 - DUE FROM BEI - BFC",
+    "2102205_BFC": "2102205 - OUTPUT VAT PAYABLE - BFC",
+    "pass": true
+  },
+  "9_4000200_not_discounts": {
+    "wrong_count": 0,
+    "wrong_entries": [],
+    "pass": true
+  },
+  "10_bki_store_customers": {
+    "value": 35,
+    "expected": 35,
+    "pass": true
+  },
+  "11_s168_custom_fields": {
+    "count_by_label": 30,
+    "bki_sales_income_account_setting_present": true,
+    "pass": true
+  },
+  "overall_pass": true
+}
