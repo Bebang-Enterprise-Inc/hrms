@@ -1,0 +1,21 @@
+{
+  "sprint": "S175",
+  "status": "IN_PROGRESS",
+  "phase": "0_complete",
+  "started_at": "2026-04-09T00:00:00+08:00",
+  "branch": "s175-coa-master-template-uniform-group-restructure",
+  "baseline": "output/s175/preflight_audit.json",
+  "phase0_reverify": "output/s175/phase0_reverify.json",
+  "phase0_result": {
+    "companies_count": 39,
+    "bei_6xxx_total": 136,
+    "bei_6xxx_gl_entries": 0,
+    "bki_delete_targets_present": "19/20",
+    "bei_delete_targets_present": "22/22",
+    "bfc_exists_real": false,
+    "hard_blockers": []
+  },
+  "phases_complete": ["0"],
+  "blockers": [],
+  "hard_blockers_hit": []
+}

@@ -1,0 +1,492 @@
+{
+  "companies_count": 39,
+  "companies": [
+    "BEBANG ARANETA GATEWAY",
+    "BEBANG AYALA SOLENAD",
+    "BEBANG BF HOMES INC.",
+    "BEBANG D'VERDE",
+    "BEBANG EVER GOTESCO COMMONWEALTH",
+    "BEBANG FESTIVAL INC.",
+    "BEBANG FT INC.",
+    "BEBANG GRAND CENTRAL INC.",
+    "BEBANG LCT INC.",
+    "BEBANG MARILAO INC.",
+    "BEBANG MARKET MARKET INC.",
+    "BEBANG MEGA INC.",
+    "BEBANG NORTH EDSA INC.",
+    "BEBANG PASEO INC.",
+    "BEBANG PITX INC.",
+    "BEBANG ROBINSONS GALLERIA SOUTH",
+    "BEBANG SM BICUTAN INC.",
+    "BEBANG SM CALOOCAN",
+    "BEBANG SM CLARK",
+    "BEBANG SM MARIKINA INC.",
+    "BEBANG SM SANGANDAAN",
+    "BEBANG SM SJDM",
+    "BEBANG SM TAYTAY",
+    "BEBANG SMEO INC.",
+    "BEBANG SMM INC.",
+    "BEBANG SMOA INC.",
+    "BEBANG SMV INC.",
+    "BEBANG STARMALL ALABANG INC.",
+    "BEBANG THE GRID FOOD MARKET",
+    "BEBANG TOMAS MORATO",
+    "BEBANG UP TOWN CENTER INC.",
+    "BEBANG VENICE GRAND CANAL INC.",
+    "BEBANG VISTAMALL",
+    "Bebang Enterprise Inc.",
+    "Bebang Kitchen Inc.",
+    "DMD HOLDINGS INC.",
+    "JV",
+    "Managed Franchise",
+    "Triple I Holdings"
+  ],
+  "bfc_exists_real": false,
+  "bei_6xxx": {
+    "total": 136,
+    "breakdown": [
+      {
+        "root_type": "Expense",
+        "report_type": "Profit and Loss",
+        "count": 2
+      },
+      {
+        "root_type": "Income",
+        "report_type": "Profit and Loss",
+        "count": 134
+      }
+    ],
+    "gl_entries": 0
+  },
+  "bki_delete_targets": {
+    "4000001": {
+      "name": "IN-STORE SALES - BKI",
+      "account_name": "IN-STORE SALES",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000002": {
+      "name": "ONLINE SALES - BKI",
+      "account_name": "ONLINE SALES",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000100": {
+      "name": "WHOLESALE / B2B SALES - BKI",
+      "account_name": "WHOLESALE / B2B SALES",
+      "is_group": 1,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 1
+    },
+    "4000101": {
+      "name": "SALES - BKI TO STORES - BKI",
+      "account_name": "SALES - BKI TO STORES",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000200": {
+      "name": "DISCOUNTS AND PROMO - BKI",
+      "account_name": "DISCOUNTS AND PROMO",
+      "is_group": 1,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000201": {
+      "name": "SALES DISCOUNT DUE TO FREE HALOHALO - BKI",
+      "account_name": "SALES DISCOUNT DUE TO FREE HALOHALO",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000202": {
+      "name": "SALES DISCOUNT OF SENIOR CITIZENS - BKI",
+      "account_name": "SALES DISCOUNT OF SENIOR CITIZENS",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000203": {
+      "name": "SALES DISCOUNTS OF PWDS - BKI",
+      "account_name": "SALES DISCOUNTS OF PWDS",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000204": {
+      "name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES - BKI",
+      "account_name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000205": {
+      "name": "SALES DISCOUNTS FROM VAT OF PWD - BKI",
+      "account_name": "SALES DISCOUNTS FROM VAT OF PWD",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000206": {
+      "name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS - BKI",
+      "account_name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000207": {
+      "name": "SALES REFUNDS TO CUSTOMER - BKI",
+      "account_name": "SALES REFUNDS TO CUSTOMER",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000208": {
+      "exists": false
+    },
+    "4000300": {
+      "name": "FRANCHISE INCOME - BKI",
+      "account_name": "FRANCHISE INCOME",
+      "is_group": 1,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 6
+    },
+    "4000301": {
+      "name": "ROYALTIES INCOME - BKI",
+      "account_name": "ROYALTIES INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000302": {
+      "name": "MARKETING FEE INCOME - BKI",
+      "account_name": "MARKETING FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000303": {
+      "name": "MANAGEMENT FEE INCOME - BKI",
+      "account_name": "MANAGEMENT FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000304": {
+      "name": "ECOMMERCE FEE INCOME - BKI",
+      "account_name": "ECOMMERCE FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000305": {
+      "name": "DELIVERY INCOME - BKI",
+      "account_name": "DELIVERY INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000306": {
+      "name": "LOGISTICS INCOME - BKI",
+      "account_name": "LOGISTICS INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    }
+  },
+  "bei_delete_targets": {
+    "4000001": {
+      "name": "IN-STORE SALES - Bebang Enterprise Inc.",
+      "account_name": "IN-STORE SALES",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000002": {
+      "name": "ONLINE SALES - Bebang Enterprise Inc.",
+      "account_name": "ONLINE SALES",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000003": {
+      "name": "4000003 - ROYALTY INCOME - BEI",
+      "account_name": "ROYALTY INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000004": {
+      "name": "4000004 - MANAGEMENT FEE INCOME - BEI",
+      "account_name": "MANAGEMENT FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000005": {
+      "name": "4000005 - BRAND GROWTH FEE INCOME - BEI",
+      "account_name": "BRAND GROWTH FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000006": {
+      "name": "4000006 - MARKETING FEE INCOME - BEI",
+      "account_name": "MARKETING FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000200": {
+      "name": "DISCOUNTS AND PROMO - Bebang Enterprise Inc.",
+      "account_name": "DISCOUNTS AND PROMO",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 1
+    },
+    "4000201": {
+      "name": "SALES DISCOUNT DUE TO FREE HALOHALO - Bebang Enterprise Inc.",
+      "account_name": "SALES DISCOUNT DUE TO FREE HALOHALO",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000202": {
+      "name": "SALES DISCOUNT OF SENIOR CITIZENS - Bebang Enterprise Inc.",
+      "account_name": "SALES DISCOUNT OF SENIOR CITIZENS",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000203": {
+      "name": "SALES DISCOUNTS OF PWDS - Bebang Enterprise Inc.",
+      "account_name": "SALES DISCOUNTS OF PWDS",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000204": {
+      "name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES - Bebang Enterprise Inc.",
+      "account_name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000205": {
+      "name": "SALES DISCOUNTS FROM VAT OF PWD - Bebang Enterprise Inc.",
+      "account_name": "SALES DISCOUNTS FROM VAT OF PWD",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000206": {
+      "name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS - Bebang Enterprise Inc.",
+      "account_name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000207": {
+      "name": "SALES REFUNDS TO CUSTOMER - Bebang Enterprise Inc.",
+      "account_name": "SALES REFUNDS TO CUSTOMER",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000208": {
+      "name": "4000208 - SALES DISCOUNTS - EMPLOYEE DISC - BEI",
+      "account_name": "SALES DISCOUNTS - EMPLOYEE DISC",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000300": {
+      "name": "FRANCHISE INCOME - BEI",
+      "account_name": "FRANCHISE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 6
+    },
+    "4000301": {
+      "name": "ROYALTIES INCOME - BEI",
+      "account_name": "ROYALTIES INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000302": {
+      "name": "MARKETING FEE INCOME - BEI",
+      "account_name": "MARKETING FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000303": {
+      "name": "MANAGEMENT FEE INCOME - BEI",
+      "account_name": "MANAGEMENT FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000304": {
+      "name": "ECOMMERCE FEE INCOME - BEI",
+      "account_name": "ECOMMERCE FEE INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000305": {
+      "name": "DELIVERY INCOME - BEI",
+      "account_name": "DELIVERY INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    },
+    "4000306": {
+      "name": "LOGISTICS INCOME - BEI",
+      "account_name": "LOGISTICS INCOME",
+      "is_group": 0,
+      "root_type": "Income",
+      "exists": true,
+      "gl_entries": 0,
+      "children_count": 0
+    }
+  },
+  "bei_settings": {
+    "bki_sales_income_account": {
+      "value": "SALES - BKI TO STORES - BKI",
+      "linked_account_exists": true
+    },
+    "bki_output_vat_account": {
+      "value": "OUTPUT VAT PAYABLE - BKI",
+      "linked_account_exists": true
+    },
+    "gr_ir_clearing_account": {
+      "value": "GR/IR CLEARING - BEI",
+      "linked_account_exists": true
+    },
+    "input_vat_goods_account": {
+      "value": "",
+      "linked_account_exists": false
+    },
+    "input_vat_services_account": {
+      "value": "INPUT VAT - SERVICES - Bebang Enterprise Inc.",
+      "linked_account_exists": true
+    },
+    "input_vat_capital_goods_account": {
+      "value": "INPUT VAT - GOODS - Bebang Enterprise Inc.",
+      "linked_account_exists": true
+    },
+    "advances_to_suppliers_account": {
+      "value": "1105203 - ADVANCES TO SUPPLIERS - BEI",
+      "linked_account_exists": true
+    },
+    "ewt_payable_account": {
+      "value": "CREDITABLE WITHHOLDING TAXES - Bebang Enterprise Inc.",
+      "linked_account_exists": true
+    },
+    "ap_trade_account": {
+      "value": "ACCOUNTS PAYABLE - Bebang Enterprise Inc.",
+      "linked_account_exists": true
+    }
+  },
+  "bei_2104_range": [
+    {
+      "account_number": "2104100",
+      "account_name": "SHORT TERM DEBT",
+      "is_group": 0
+    },
+    {
+      "account_number": "2104101",
+      "account_name": "LOANS PAYABLE - CURRENT",
+      "is_group": 0
+    }
+  ],
+  "bei_2104200_exists": false,
+  "bki_store_customer_count": 35,
+  "_drift": [],
+  "_hard_blockers": [],
+  "_verified_at": "2026-04-09T11:24:36.101581+00:00"
+}
