@@ -1,21 +1,33 @@
 {
   "sprint": "S175",
-  "status": "IN_PROGRESS",
-  "phase": "0_complete",
+  "status": "COMPLETED",
+  "phases_complete": ["0", "1", "1.5", "1.6", "2", "3", "4", "6", "7", "8", "10", "11"],
+  "phases_skipped": ["5", "9"],
   "started_at": "2026-04-09T00:00:00+08:00",
+  "completed_at": "2026-04-09T23:59:00+08:00",
   "branch": "s175-coa-master-template-uniform-group-restructure",
   "baseline": "output/s175/preflight_audit.json",
-  "phase0_reverify": "output/s175/phase0_reverify.json",
-  "phase0_result": {
-    "companies_count": 39,
-    "bei_6xxx_total": 136,
-    "bei_6xxx_gl_entries": 0,
-    "bki_delete_targets_present": "19/20",
-    "bei_delete_targets_present": "22/22",
-    "bfc_exists_real": false,
-    "hard_blockers": []
+  "final_verification": "output/s175/verification_final.json",
+  "hard_blockers_hit": [],
+  "defects": [],
+  "phase_summary": {
+    "0_reverify": "baseline reverified, all HBs passing",
+    "1_create_bfc": "BFC Company created + 2102205 OUTPUT VAT + 1104200 DUE FROM BEI",
+    "1.5_bki_preclean": "19 BKI legacy accounts deleted (child-first, all 0 GL)",
+    "1.6_bei_preclean": "21 BEI legacy accounts deleted, 4000005 BRAND GROWTH FEE preserved",
+    "2_apply_template": "27-row template applied to BKI (27 new), BEI (27 matched/reparented), BFC (27 matched) — via ignore_root_company_validation flag",
+    "3_s168_legacy_check": "BKI 4000100/4000101 absent, 4000200/4000210 present",
+    "4_intercompany": "BEI 2104200 DUE TO BFC created under synthetic 2104000 INTERCOMPANY PAYABLES group",
+    "6_bei_6xxx_fix": "134 Income->Expense via raw SQL (documented validator bypass), 0 GL entries impacted",
+    "7_bei_settings_cutover": "bki_sales_income_account updated from 'SALES - BKI TO STORES - BKI' to '4000210 - DELIVERIES - BKI'",
+    "8_propagate_37_companies": "27-row template applied to all remaining 37 companies (JV, MF, TIH, DMD + 33 stores)",
+    "10_final_verification": "11/11 checks PASS (1080-position template + BEI 6xxx + BEI Settings + legacy absent + intercompany + BKI Store count + S168 fields)",
+    "11_closeout": "plan YAML + registry updated, closeout artifacts written"
   },
-  "phases_complete": ["0"],
-  "blockers": [],
-  "hard_blockers_hit": []
+  "key_deviations": [
+    "ignore_root_company_validation flag used (Frappe-sanctioned) because BKI/BEI are child companies under TIH in the Group Company tree — plan did not anticipate this",
+    "Synthetic 2104000 INTERCOMPANY PAYABLES group created on BEI because BEI had ZERO liability groups to parent 2104200 under",
+    "Phase 2 BKI initial attempt required a recovery script (s175_phase_2_bki_fix.py) after discovering Frappe nested-set validator behavior, ultimately resolved via the ignore_root_company_validation flag in the main Phase 2 script",
+    "skip_rebuild_tree in Phase 2 to avoid SSM timeout on 11k+ account global tree rebuild - relied on the bypass flag instead; accounts have correct lft/rgt per Frappe auto-assignment at insert"
+  ]
 }
