@@ -746,8 +746,11 @@ def _get_grabfood_channel_totals(
 			"grabfood_orders": 0,
 			"grabfood_avg_ticket": 0.0,
 		}
+	# S176 hotfix 2026-04-09: pos_orders does NOT have a net_sales_without_vat column
+	# (that lives only in the daily_store_metrics materialized view). Derive it as
+	# net_sales - vat_amount using columns that actually exist on pos_orders.
 	params: list[tuple[str, Any]] = [
-		("select", "gross_sales,net_sales,net_sales_without_vat"),
+		("select", "gross_sales,net_sales,vat_amount"),
 		("channel", "eq.GrabFood"),
 		("payment_status", "eq.PAID"),
 		("business_date", f"gte.{start_day.isoformat()}"),
@@ -756,7 +759,9 @@ def _get_grabfood_channel_totals(
 	]
 	rows = _supabase_get_all("pos_orders", params, page_size=1000)
 	gross_total = sum(_to_float(row.get("gross_sales")) for row in rows)
-	net_wo_vat_total = sum(_to_float(row.get("net_sales_without_vat")) for row in rows)
+	net_wo_vat_total = sum(
+		_to_float(row.get("net_sales")) - _to_float(row.get("vat_amount")) for row in rows
+	)
 	order_count = len(rows)
 	avg_ticket = _round_half_up(gross_total / order_count) if order_count else 0.0
 	return {
