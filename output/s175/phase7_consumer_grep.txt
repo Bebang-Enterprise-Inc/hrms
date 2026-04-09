@@ -1,0 +1,4 @@
+hrms/api/billing.py:560:	income_account = (getattr(settings, "bki_sales_income_account", "") or "").strip()
+hrms/api/billing.py:562:		frappe.throw(_("BEI Settings.bki_sales_income_account is not set. Cannot create fee SI."))
+hrms/api/commissary.py:1083:	income_account = (getattr(settings, "bki_sales_income_account", "") or "").strip()
+hrms/api/commissary.py:1085:		frappe.throw(_("BEI Settings.bki_sales_income_account is not set. Cannot create SI."))

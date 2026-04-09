@@ -1,0 +1,3 @@
+S175_P67_JSON_START
+{"phase6": {"gl_count_pre": 0, "pre_count": 136, "pre_breakdown": {"Income|Profit and Loss": 134, "Expense|Profit and Loss": 2}, "post_breakdown": {"Expense": 136}, "post_income_count": 0, "post_expense_count": 136, "success": true, "snapshot_path": "/tmp/phase6_pretouch_backup.json"}, "phase7": {"new_account": "4000210 - DELIVERIES - BKI", "old_value": "SALES - BKI TO STORES - BKI", "new_value": "4000210 - DELIVERIES - BKI", "linked_account_exists": true}}
+S175_P67_JSON_END

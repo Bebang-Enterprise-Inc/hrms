@@ -1,0 +1,15 @@
+{
+  "gl_count_pre": 0,
+  "pre_count": 136,
+  "pre_breakdown": {
+    "Income|Profit and Loss": 134,
+    "Expense|Profit and Loss": 2
+  },
+  "post_breakdown": {
+    "Expense": 136
+  },
+  "post_income_count": 0,
+  "post_expense_count": 136,
+  "success": true,
+  "snapshot_path": "/tmp/phase6_pretouch_backup.json"
+}

@@ -1,0 +1,16 @@
+{
+  "steps": [
+    "normalized BKI empty-string parents to NULL: rowcount=0",
+    "initial rebuild_tree OK"
+  ],
+  "walk": {
+    "created": [],
+    "matched": [],
+    "errors": []
+  },
+  "bki_root_groups_count": 61,
+  "bki_income_root_groups": [],
+  "top_error": "Please add the account to root level Company - Triple I Holdings",
+  "traceback": "Traceback (most recent call last):\n  File \"/tmp/s175_phase2_bki_fix.py\", line 110, in <module>\n    root.insert(ignore_permissions=True, ignore_mandatory=True)\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 309, in insert\n    self.run_before_save_methods()\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 1140, in run_before_save_methods\n    self.run_method(\"validate\")\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 1011, in run_method\n    out = Document.hook(fn)(self, *args, **kwargs)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 1371, in composer\n    return composed(self, method, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 1353, in runner\n    add_to_return_value(self, fn(self, *args, **kwargs))\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/model/document.py\", line 1008, in fn\n    return method_object(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/accounts/doctype/account/account.py\", line 120, in validate\n    self.validate_root_company_and_sync_account_to_children()\n  File \"/home/frappe/frappe-bench/apps/erpnext/erpnext/accounts/doctype/account/account.py\", line 232, in validate_root_company_and_sync_account_to_children\n    frappe.throw(_(\"Please add the account to root level Company - {}\").format(ancestors[0]))\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py\", line 619, in throw\n    msgprint(\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py\", line 584, in msgprint\n    _raise_exception()\n  File \"/home/frappe/frappe-bench/apps/frappe/frappe/__init__.py\", line 535, in _raise_exception\n    raise exc\nfrappe.exceptions.ValidationError: Please add the account to root level Company - Triple I Holdings\n",
+  "post_4000xxx": []
+}
