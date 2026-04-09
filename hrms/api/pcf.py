@@ -1287,17 +1287,25 @@ def create_pcf_fund(
     pcf.insert(ignore_permissions=True)
     frappe.db.commit()
 
+    # DEFECT-017: flatten fund fields at the top level so the frontend
+    # normalizer (which reads message.name / message.fund_type) sees real
+    # values. The nested `pcf` block is retained for any older consumers.
+    payload = {
+        "name": pcf.name,
+        "fund_type": pcf.fund_type,
+        "fund_label": pcf.fund_label,
+        "store": pcf.store,
+        "department": pcf.department,
+        "fund_amount": pcf.fund_amount,
+        "threshold_percentage": pcf.threshold_percentage,
+        "custodian": pcf.custodian,
+        "is_enabled": pcf.is_enabled,
+    }
     return {
         "success": True,
         "message": f"PCF fund created: {pcf.fund_label}",
-        "pcf": {
-            "name": pcf.name,
-            "fund_type": pcf.fund_type,
-            "fund_label": pcf.fund_label,
-            "store": pcf.store,
-            "department": pcf.department,
-            "fund_amount": pcf.fund_amount,
-        },
+        "pcf": payload,
+        **payload,
     }
 
 
