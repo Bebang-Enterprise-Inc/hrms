@@ -628,19 +628,30 @@ def approve_compensation_change(change_id, approver_action, remarks=None):
 	elif doc.status == "Pending Accounts Manager":
 		if "Accounts Manager" not in roles and "System Manager" not in roles:
 			frappe.throw(_("Only Accounts Manager can approve at this stage"))
-		doc.status = "Approved"
-		doc.final_approver = frappe.session.user
-		doc.approval_date = now_datetime()
-		doc.save(ignore_permissions=True)
 
-		# Activate the approved change
+		# S172 Defect #16 fix: wrap status-change + activation in ONE savepoint so
+		# that activation failure reverts the Approved status instead of silently
+		# stranding the BCC with status=Approved but no SSA created.
 		try:
 			frappe.db.savepoint("compensation_activation")
+			doc.status = "Approved"
+			doc.final_approver = frappe.session.user
+			doc.approval_date = now_datetime()
+			doc.save(ignore_permissions=True)
 			_activate_compensation_change(doc)
 			frappe.db.release_savepoint("compensation_activation")
-		except Exception:
+		except Exception as e:
 			frappe.db.rollback_to_savepoint("compensation_activation")
-			frappe.log_error("Compensation activation failed")
+			frappe.log_error(
+				message=frappe.get_traceback(),
+				title=f"S172: Compensation activation failed for {doc.name}",
+			)
+			# Propagate the real error to the caller so the frontend can show it
+			# and HR knows to fix the underlying issue (e.g., missing salary structure).
+			frappe.throw(
+				_("Compensation activation failed: {0}. Change not applied.").format(str(e)),
+				title=_("Activation Failed"),
+			)
 
 		return {"status": "success", "message": _("Compensation change approved")}
 
@@ -1060,13 +1071,20 @@ def _activate_compensation_change(doc):
 
 	Called at final approval (Approved status). Handles:
 	- bei_* fields: direct Employee field update
-	- Salary changes: create new SSA
+	- Salary changes: create new SSA (with fallback to default structure for new hires)
 	- Other Salary Detail components: extend when needed
+
+	S172 Defect #16 fix: when the employee has no prior SSA (new hire), fall back
+	to the first active salary structure instead of silently skipping. If no
+	active salary structure exists at all, raise a clear error so the caller
+	can surface it (previously: silent corrupt-success).
 	"""
 	if doc.employee_field_name and doc.employee_field_name.startswith("bei_"):
 		# Direct Employee field (bei_* allowances)
 		frappe.db.set_value("Employee", doc.employee, doc.employee_field_name, flt(doc.new_value))
-	elif doc.change_type == "Salary":
+		return
+
+	if doc.change_type == "Salary":
 		# New SSA required — NOT set_value on Employee
 		latest_ssa = frappe.db.get_value(
 			"Salary Structure Assignment",
@@ -1075,18 +1093,46 @@ def _activate_compensation_change(doc):
 			order_by="from_date DESC",
 			as_dict=True,
 		)
+
 		if latest_ssa:
-			new_ssa = frappe.get_doc({
-				"doctype": "Salary Structure Assignment",
-				"employee": doc.employee,
-				"salary_structure": latest_ssa.salary_structure,
-				"income_tax_slab": latest_ssa.income_tax_slab,
-				"base": flt(doc.new_value),
-				"from_date": doc.effective_date,
-				"company": frappe.db.get_value("Employee", doc.employee, "company"),
-			})
-			new_ssa.insert(ignore_permissions=True)
-			new_ssa.submit()
+			salary_structure = latest_ssa.salary_structure
+			income_tax_slab = latest_ssa.income_tax_slab
+		else:
+			# S172 Defect #16: no prior SSA — fall back to first active structure.
+			fallback = frappe.db.get_value(
+				"Salary Structure",
+				{"docstatus": 1, "is_active": "Yes"},
+				["name"],
+				order_by="creation ASC",
+			)
+			if not fallback:
+				frappe.throw(
+					_(
+						"Cannot activate salary change for {0}: no existing Salary "
+						"Structure Assignment and no active Salary Structure available "
+						"as a template. Please create an active Salary Structure first."
+					).format(doc.employee)
+				)
+			salary_structure = fallback
+			# Look up any active tax slab for the company.
+			income_tax_slab = frappe.db.get_value(
+				"Income Tax Slab",
+				{"disabled": 0},
+				"name",
+				order_by="effective_from DESC",
+			)
+
+		new_ssa = frappe.get_doc({
+			"doctype": "Salary Structure Assignment",
+			"employee": doc.employee,
+			"salary_structure": salary_structure,
+			"income_tax_slab": income_tax_slab,
+			"base": flt(doc.new_value),
+			"from_date": doc.effective_date,
+			"company": frappe.db.get_value("Employee", doc.employee, "company"),
+		})
+		new_ssa.insert(ignore_permissions=True)
+		new_ssa.submit()
 
 
 def _get_current_cutoff_start():
