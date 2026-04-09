@@ -25,7 +25,9 @@ MANILA_TZ = ZoneInfo("Asia/Manila")
 # S176 DD-19: Mosaic channel tagging regime-shift boundary dates.
 # Before these dates, FoodPanda/GrabFood orders exist in pos_orders under legacy
 # channel labels ('Delivery', 'Unknown', NULL) - they were not retroactively retagged.
-_FOODPANDA_MOSAIC_START = date(2026, 3, 26)
+# S176 hotfix #3 2026-04-09: cutover bumped 2026-03-26 -> 2026-03-27 after
+# live data inspection showed 2026-03-25 and 2026-03-26 were PARTIAL Mosaic days.
+_FOODPANDA_MOSAIC_START = date(2026, 3, 27)
 _GRABFOOD_MOSAIC_START = date(2026, 4, 1)
 ROLE_SALES_STAKEHOLDER = "Sales Stakeholder"
 ROLE_AREA_SUPERVISOR = "Area Supervisor"
@@ -772,32 +774,37 @@ def _get_grabfood_channel_totals(
 	}
 
 
-def _get_foodpanda_channel_totals(
+def _get_foodpanda_legacy_totals(
 	start_day: date,
 	end_day: date,
 	location_ids: list[int],
-) -> dict[str, Any]:
-	"""S176 hotfix 2026-04-09: FoodPanda direct-aggregation parallel to GrabFood.
+) -> dict[str, float | int]:
+	"""S176 hotfix #3: pre-cutover FoodPanda totals from legacy Google Sheet."""
+	if not location_ids or start_day > end_day:
+		return {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0}
+	params: list[tuple[str, Any]] = [
+		("select", "subtotal,tax_charge"),
+		("order_status", "ilike.delivered"),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("location_id", f"in.({_location_scope_key(location_ids)})"),
+	]
+	rows = _supabase_get_all("foodpanda_orders", params, page_size=1000)
+	gross = sum(_to_float(row.get("subtotal")) for row in rows)
+	net_wo_vat = sum(
+		_to_float(row.get("subtotal")) - _to_float(row.get("tax_charge")) for row in rows
+	)
+	return {"gross": gross, "net_wo_vat": net_wo_vat, "orders": len(rows)}
 
-	Background: the sales_dashboard_daily_store_metrics view's foodpanda_subtotal
-	column is sourced from the legacy foodpanda_orders Google Sheet ingest, which
-	was halted 2026-03-31. For every day from 2026-04-01 onward the view returns
-	0.00 while the real FoodPanda data lives in pos_orders.channel='FoodPanda'.
 
-	This mirrors _get_grabfood_channel_totals — same columns, same derivation
-	(net_wo_vat = net_sales - vat_amount), same zero-default on empty result.
-
-	Returns keys: foodpanda_sales, foodpanda_sales_without_vat, foodpanda_orders,
-	foodpanda_avg_ticket. These OVERRIDE the stale values injected by
-	_aggregate_sales() from the view.
-	"""
-	if not location_ids:
-		return {
-			"foodpanda_sales": 0.0,
-			"foodpanda_sales_without_vat": 0.0,
-			"foodpanda_orders": 0,
-			"foodpanda_avg_ticket": 0.0,
-		}
+def _get_foodpanda_mosaic_totals(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+) -> dict[str, float | int]:
+	"""S176 hotfix #3: post-cutover FoodPanda totals from pos_orders Mosaic channel."""
+	if not location_ids or start_day > end_day:
+		return {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0}
 	params: list[tuple[str, Any]] = [
 		("select", "gross_sales,net_sales,vat_amount"),
 		("channel", "eq.FoodPanda"),
@@ -807,11 +814,48 @@ def _get_foodpanda_channel_totals(
 		("location_id", f"in.({_location_scope_key(location_ids)})"),
 	]
 	rows = _supabase_get_all("pos_orders", params, page_size=1000)
-	gross_total = sum(_to_float(row.get("gross_sales")) for row in rows)
-	net_wo_vat_total = sum(
+	gross = sum(_to_float(row.get("gross_sales")) for row in rows)
+	net_wo_vat = sum(
 		_to_float(row.get("net_sales")) - _to_float(row.get("vat_amount")) for row in rows
 	)
-	order_count = len(rows)
+	return {"gross": gross, "net_wo_vat": net_wo_vat, "orders": len(rows)}
+
+
+def _get_foodpanda_channel_totals(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+) -> dict[str, Any]:
+	"""S176 hotfix #3 2026-04-09: date-split FoodPanda aggregation.
+
+	Pre-cutover (< _FOODPANDA_MOSAIC_START = 2026-03-27) reads legacy foodpanda_orders
+	(frozen 2026-03-31). Post-cutover reads pos_orders channel=FoodPanda via Mosaic.
+	Per CEO direction: prior data from sheet, current/future from Mosaic.
+	"""
+	if not location_ids:
+		return {
+			"foodpanda_sales": 0.0,
+			"foodpanda_sales_without_vat": 0.0,
+			"foodpanda_orders": 0,
+			"foodpanda_avg_ticket": 0.0,
+		}
+	from datetime import timedelta
+	cutover = _FOODPANDA_MOSAIC_START
+	legacy_end = min(end_day, cutover - timedelta(days=1))
+	mosaic_start = max(start_day, cutover)
+	legacy = (
+		_get_foodpanda_legacy_totals(start_day, legacy_end, location_ids)
+		if start_day <= legacy_end
+		else {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0}
+	)
+	mosaic = (
+		_get_foodpanda_mosaic_totals(mosaic_start, end_day, location_ids)
+		if mosaic_start <= end_day
+		else {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0}
+	)
+	gross_total = legacy["gross"] + mosaic["gross"]
+	net_wo_vat_total = legacy["net_wo_vat"] + mosaic["net_wo_vat"]
+	order_count = legacy["orders"] + mosaic["orders"]
 	avg_ticket = _round_half_up(gross_total / order_count) if order_count else 0.0
 	return {
 		"foodpanda_sales": _round_half_up(gross_total),
@@ -843,8 +887,9 @@ def _build_data_quality_warnings(start_day: date, end_day: date, freshness: dict
 	# S176 DD-19: regime-shift boundary warnings for Mosaic channel tagging.
 	if start_day < _FOODPANDA_MOSAIC_START:
 		warnings.append(
-			"FoodPanda channel tagging via Mosaic began 2026-03-26; earlier dates "
-			"may under-count FoodPanda orders (legacy rows tagged 'Delivery' or 'Unknown')."
+			"FoodPanda source split at 2026-03-27: earlier dates come from the legacy "
+			"foodpanda_orders Google Sheet (frozen 2026-03-31), later dates come from "
+			"Mosaic pos_orders. Historical totals are complete."
 		)
 	if start_day < _GRABFOOD_MOSAIC_START:
 		warnings.append(
