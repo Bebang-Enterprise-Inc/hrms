@@ -255,3 +255,53 @@ def create_employee_direct(
 			"adms_enrollment": adms_result,
 		},
 	}
+
+
+@frappe.whitelist()
+def mark_employee_left(employee: str, relieving_date: str) -> dict:
+	"""S172 Defect #11 helper — soft-delete an Employee in the correct 2-pass order.
+
+	Frappe's Employee validator requires `relieving_date` to be populated
+	before `status` flips to "Left". A single PUT with both fields in the
+	same payload can fail because validators run in field-declaration order.
+	This helper encapsulates the correct 2-pass sequence so callers (bei-tasks,
+	scripts, admin tools) don't have to implement it inline.
+
+	Args:
+		employee: Employee ID (HR-EMP-NNNNN or BEI-EMP-YYYY-NNNNN)
+		relieving_date: ISO date string (YYYY-MM-DD)
+
+	Returns:
+		{"status": "success", "employee": <id>, "relieving_date": <date>}
+	"""
+	set_backend_observability_context(
+		module="hr",
+		action="mark_employee_left",
+		mutation_type="update",
+		extras={"employee": employee, "relieving_date": relieving_date},
+	)
+
+	if not frappe.db.exists("Employee", employee):
+		frappe.throw(_("Employee {0} not found").format(employee))
+
+	frappe.has_permission("Employee", "write", throw=True)
+
+	try:
+		rdate = getdate(relieving_date)
+	except Exception:
+		frappe.throw(_("Invalid relieving_date: {0}").format(relieving_date))
+
+	# Pass 1: set relieving_date in isolation so the validator sees it present
+	# before the status flip in pass 2.
+	frappe.db.set_value("Employee", employee, "relieving_date", rdate, update_modified=True)
+	frappe.db.commit()
+
+	# Pass 2: now flip status to Left.
+	frappe.db.set_value("Employee", employee, "status", "Left", update_modified=True)
+	frappe.db.commit()
+
+	return {
+		"status": "success",
+		"employee": employee,
+		"relieving_date": str(rdate),
+	}
