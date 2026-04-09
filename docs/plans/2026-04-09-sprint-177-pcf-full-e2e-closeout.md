@@ -21,7 +21,30 @@ execution_summary: null
 
 ## Mission
 
-S167 REDO proved the PCF happy path works end-to-end in browser. But S167's scope was the happy path. There are **7 real-user paths** that S167 did not exercise. A real BEI crew member rolling out this feature will hit these paths on day one. This sprint closes each gap with browser or SSM evidence, fixes any bugs found, and gives Sam a factual green-light decision for full rollout (45 stores + all dept custodians).
+S167 REDO proved the PCF happy path works end-to-end in browser. But S167's scope was the happy path. There are **7 real-user paths + 1 infra gap = 8 total gaps** that S167 did not exercise. A real BEI crew member rolling out this feature will hit these paths on day one. This sprint closes each gap with browser or SSM evidence, fixes any bugs found, and gives Sam a factual green-light decision for full rollout (45 stores + all dept custodians).
+
+---
+
+## Pre-execution policy decisions (LOCKED before Phase 0)
+
+Decisions made before sprint kickoff so the executing agent never stalls on a business-policy question.
+
+### PD-1. PCF replenishment is a cash-swap, NOT a withholding event
+**Decision (Sam, 2026-04-09):** The PCF float is a reimbursement mechanism — the custodian pre-pays for expenses on behalf of BEI and the replenishment JE is a **cash-to-cash transfer** from a source bank/cash account to the custodian's PCF float. EWT and VAT are handled at the **original supplier invoice booking** (which happens separately when the actual procurement invoice is processed), NOT at the PCF replenishment step. The 2-row JE (Dr PCF cash 1113000 / Cr source account) is correct accounting for a cash swap.
+
+**Implication for Phase 1:**
+- DM-3 (EWT/VAT) is **DOCUMENTED NON-APPLICABLE** for the replenishment JE. Phase 1 does NOT add EWT Payable or Input VAT lines. This is a policy decision, not a code gap.
+- Custodian `party_type="Employee"` + `party=<custodian_employee_id>` IS still required on the Dr row per DM-1 (subsidiary ledger traceability — which employee holds the float).
+- Source account row has no party (internal cash account, not receivable/payable).
+
+### PD-2. Phase 5.3 fund-disabled-mid-submission policy
+**Decision:** If admin disables a fund with pending expenses: (a) existing pending expenses stay visible and submittable by the custodian, (b) new `add_expense_to_pending` calls return 4xx "fund disabled", (c) custodian CAN still submit the existing batch. Matches existing `is_enabled` guard pattern; avoids destroying in-flight work.
+
+### PD-3. Phase 2 HEIC + 10 MB cap policy
+**Decision:** HEIC is expected to either be rejected by the OS file picker (`accept="image/*,.pdf"`) OR to fail gracefully client-side. The 10 MB `alert()` cap in `document-upload-field.tsx` is acceptable for MVP — iPhone camera JPGs are typically 2-5 MB. Phase 2.4 accepts "picker rejects OR clear error surfaces" as PASS.
+
+### PD-4. Phase 1.5 UI path
+**Decision:** No `Request Replenishment` button exists on the accountant review page as of 2026-04-09 (verified via grep — `request_replenishment` is wired in `app/api/pcf/route.ts` and `hooks/use-pcf.ts` but no component renders it). Phase 1.5 runs as **SSM-only** backend call via `bench execute`. DEFECT-036 candidate (out of S177 scope): add custodian-facing Request Replenishment button.
 
 ---
 
@@ -267,9 +290,9 @@ Before writing code, confirm:
 - [ ] Module parameter = `"pcf"`, action parameter = the function name.
 - [ ] Every browser mutation goes through `page.getByRole('button').click()` + `waitForResponse` — NO `page.request.post`, NO in-page `fetch()`, NO synthetic API calls.
 - [ ] Every SSM script prints actual values from `frappe.db.get_value()` / `frappe.db.sql()` — not inferred values.
-- [ ] Every new Journal Entry created in Phase 1 has `party_type` + `party` on ALL rows (DM-1).
-- [ ] Every multi-doc mutation uses `frappe.db.savepoint()` (DM-2).
-- [ ] Every Payment-related feature addresses EWT + VAT treatment (DM-3).
+- [ ] The PCF cash Dr row has `party_type="Employee"` + `party=<custodian_employee_id>` (DM-1). Source row is a Bank/Cash account with no party (internal cash movement).
+- [ ] `request_replenishment` wraps its mutation span in `frappe.db.savepoint("pcf_replenish")` with rollback on exception, AND the `frappe.db.commit()` is moved to AFTER the final `set_value` (DM-2).
+- [ ] DM-3 (EWT + VAT) is DOCUMENTED NON-APPLICABLE per PD-1 — PCF replenishment is a cash swap, not a withholding event. EWT/VAT are handled at the original supplier invoice booking upstream.
 - [ ] No stored duplicate fields introduced (DM-5).
 - [ ] Phase 6 rollback leaves zero orphans (verify via `scripts/s167_audit_orphans.py` — 0 BEI PCF Batch Item orphans, 0 dangling `pcf_batch` references).
 - [ ] No existing S167 script is modified without a `# S177: ...` comment explaining why.
@@ -308,95 +331,197 @@ Every phase ends with a checklist file `output/l3/s177/phase<N>_checklist.md`:
 
 ## L3 Workflow Scenarios
 
-Every scenario below specifies exact user, exact action, exact outcome, exact failure meaning.
+Every scenario specifies exact user, exact action, exact outcome, exact failure meaning, **and machine-verifiable assertions (MUST_MODIFY / MUST_CONTAIN / HARD BLOCKER)** so the phase gate script verifies completion from filesystem rather than agent self-report. Closes S154 corrupt-success risk.
 
-### Phase 0 — Preconditions
+### Phase 0 — Preconditions + baseline snapshot + policy probes
 
-| User | Action | Expected Outcome | Failure Means |
+**Phase 0 Verification Contract:**
+- `MUST_CREATE: output/l3/s177/baseline_snapshot.json`
+- `MUST_CREATE: output/l3/s177/phase0_probes.json`
+- `HARD BLOCKER: chat_space_erp_automation is not None` (Phase 4 cannot run without a real Chat space)
+- `HARD BLOCKER: fallback_source_account is not None` (Phase 1 cannot run without a cash account)
+- `verify_script: scripts/s177r_verify_phase0.py`
+
+| # | User | Action | Expected Outcome |
 |---|---|---|---|
-| sam | `scripts/s177r_phase0_setup.js`: run s167r_phase0_1.js equivalent + realign test emps via SSM | 3 dept funds created + enabled + employees aligned | S167 Phase 0.1 regressed or employees weren't restored by earlier rollback |
+| 0.1 | sam (browser) | Run `scripts/s177r_phase0_1.js` (wraps s167r_phase0_1.js) → creates 3 dept funds + enables each via switch click | 3 funds exist + `is_enabled=1` via SSM |
+| 0.2 | SSM | `scripts/s177r_realign_emps.py` — realign test employees to match dept funds | 3 employee depts realigned |
+| 0.3 | SSM | Set `frappe.db.set_value("BEI Petty Cash Fund", "PCF-HR and Admin", "month_end_auto_submit", 1)` | flag set on HR fund (required for Phase 7) |
+| 0.4 | SSM probe | Print BEI Settings `pcf_replenishment_source_account` + Company `default_cash_account` fallback → save to `phase0_probes.json` | fallback non-null |
+| 0.5 | SSM probe | `from hrms.utils.bei_config import get_chat_space, SPACE_ERP_AUTOMATION; print(repr(get_chat_space(SPACE_ERP_AUTOMATION)))` → save to `phase0_probes.json` | **HARD BLOCKER if None/raises** |
+| 0.6 | SSM | `scripts/s167_ssm_run.py scripts/s167r_handoff_snapshot.py` → `output/l3/s177/baseline_snapshot.json` | file exists, non-empty |
 
-### Phase 1 — Replenishment flow
+### Phase 1 — Replenishment DM-1/DM-2 retrofit + e2e verify
 
-| # | User | Action | Expected Outcome | Failure Means |
-|---|---|---|---|---|
-| 1.1 | test.staff | Add 3 store expenses (Mercury Drug ₱250, 7-Eleven ₱150, Globe ₱299) via `/dashboard/store-ops/pcf/add` form + "Add to Pending" clicks | 3 expenses pending, 200 OK each | store add regressed |
-| 1.2 | test.supervisor | Click Submit Batch on `/dashboard/store-ops/pcf/pending` | batch created, `status=Submitted`, total 699 | submit_batch_now regressed |
-| 1.3 | test.finance | Navigate `/review` → click fund → click batch → click Run AI Classification | 3 items classified with resolved Account names (not naked codes) | DEFECT-009/029 regression |
-| 1.4 | test.finance | Click Approve with COA | batch status Approved, 200 OK | approve path regressed |
-| 1.5 | test.finance | **(SSM)** Call `request_replenishment(batch_name)` via browser's request button OR SSM | Journal Entry created with party_type + party on cash account row; source account debited, custodian bank credited | DM-1 failure (no party) OR missing source account OR JE not created |
-| 1.6 | SSM probe | Verify JE has `accounts[].party = custodian`, `accounts[].party_type = "Employee"`, `reference_type`/`reference_name` pointing to batch | all rows compliant | DM-1/DM-6 broken |
-| 1.7 | SSM probe | Verify `pending_total` on fund dropped by ₱699 after replenishment | fund balance restored | replenishment didn't credit fund |
+**Phase 1 Verification Contract:**
+- `MUST_MODIFY: hrms/api/pcf.py` (must appear in `git diff --name-only`)
+- `MUST_CONTAIN: "set_backend_observability_context" inside def request_replenishment`
+- `MUST_CONTAIN: "\"party_type\": \"Employee\"" inside _create_replenishment_journal_entry`
+- `MUST_CONTAIN: "frappe.db.savepoint(\"pcf_replenish\")" inside def request_replenishment`
+- `MUST_NOT_CONTAIN: "frappe.db.commit()" BEFORE the final set_value call inside def request_replenishment` (commit must move AFTER set_value)
+- `HARD BLOCKER: DM-3 EWT/VAT is DOCUMENTED NON-APPLICABLE per PD-1 — do NOT add EWT Payable or Input VAT lines`
+- `HARD BLOCKER: cash flows FROM source TO PCF — source is CREDITED, PCF cash 1113000 is DEBITED (never the reverse)`
+- `HARD BLOCKER: Phase 1.5 is SSM-only per PD-4 — no Request Replenishment button exists`
+- `verify_script: scripts/s177r_verify_phase1.py`
 
-### Phase 2 — Receipt upload stress
+#### Phase 1 code tasks (BEFORE scenarios run)
 
-| # | User | Action | Expected Outcome | Failure Means |
-|---|---|---|---|---|
-| 2.1 | test.staff | Upload 2 MB JPG via `<input type=file>` → add expense | 200 OK, no 413 | downscale broken |
-| 2.2 | test.staff | Upload 5 MB JPG | 200 OK after canvas downscale | DEFECT-023 regression |
-| 2.3 | test.staff | Upload 8 MB JPG | 200 OK OR graceful "file too large" error with actionable message | no silent hang |
-| 2.4 | test.staff | Upload .HEIC file | either transparent conversion OR clear "HEIC not supported, convert to JPG" error | silent failure = FAIL |
+| Task | File | Change | MUST_CONTAIN |
+|---|---|---|---|
+| 1A | `hrms/api/pcf.py::_create_replenishment_journal_entry` ~line 967 | Add `party_type="Employee"` + `party=<custodian_employee_id>` on PCF cash Dr row. Custodian employee ID resolved via `frappe.db.get_value("Employee", {"user_id": batch.custodian}, "name")`. Source row has no party (internal cash account). | `"party_type": "Employee"` inside the function |
+| 1B | `hrms/api/pcf.py::request_replenishment` ~line 905-918 | Wrap mutation block in `frappe.db.savepoint("pcf_replenish")` with rollback-on-exception. Move `frappe.db.commit()` to AFTER the final `set_value` on `last_replenishment_date`. | `frappe.db.savepoint("pcf_replenish")` |
+| 1C | `hrms/api/pcf.py::request_replenishment` ~line 880 | Add `set_backend_observability_context(module="pcf", action="request_replenishment", mutation_type="update", extras={"batch_name": batch_name})` as first line after docstring. | `set_backend_observability_context(` inside `def request_replenishment` |
+| 1D | this plan file | Narrative fix: scenario 1.5 must say "source account CREDITED, PCF cash 1113000 DEBITED" (done in v2 amendments) | "source CREDITED" |
 
-### Phase 3 — Mobile viewport
+#### Phase 1 browser/SSM scenarios (AFTER code tasks)
+
+| # | User | Action | Expected Outcome |
+|---|---|---|---|
+| 1.1 | test.staff (browser) | Add 3 store expenses (Mercury Drug ₱250, 7-Eleven ₱150, Globe ₱299) via `/dashboard/store-ops/pcf/add` | 3 expenses pending, 200 OK each |
+| 1.2 | test.supervisor (browser) | Click Submit Batch | batch `status=Submitted`, total 699 |
+| 1.3 | test.finance (browser) | `/review` → click fund → click batch → Run AI Classification | items classified with resolved Account names |
+| 1.4 | test.finance (browser) | Approve with COA | batch `status=Approved` (prereq for 1.5) |
+| 1.5 | **SSM only (per PD-4)** | `bench execute hrms.api.pcf.request_replenishment --kwargs '{"batch_name":"<from 1.4>"}'` | returns `{"success": True, "journal_entry": "<JE-name>"}` |
+| 1.6 | SSM probe | Read JE accounts — assert PCF cash 1113000 is DEBITED, source account is CREDITED; PCF cash row has `party_type == "Employee"` AND `party` equals the custodian's Employee ID; `reference_type`/`reference_name` point to batch | all assertions pass |
+| 1.7 | SSM probe | `last_replenishment_date` is today; `pending_total` is 0 | state matches |
+| 1.8 | SSM negative | Temporarily mock `_get_account_by_number` to return None for 1113000 → call `request_replenishment` → expect error returned AND `batch.replenishment_requested` STILL 0 (no half-state — savepoint rolled back) | half-state prevented |
+| 1.9 | SSM observability | `grep "set_backend_observability_context" hrms/api/pcf.py` shows call inside `def request_replenishment` | Sentry context wired |
+
+### Phase 2 — Receipt upload stress (locked selectors + Vercel body assertion)
+
+**Phase 2 Verification Contract:**
+- `MUST_CONTAIN: "#pcf_receipt_photo" in scripts/s177r_phase2.js` — real DocumentUploadField selector
+- `MUST_CONTAIN: postData().length OR content-length assertion <4.5 MB` — Vercel body-limit guard
+- `HARD BLOCKER: HEIC outcome is "picker rejects OR clear error" per PD-3 — both PASS`
+- `HARD BLOCKER: do NOT test >10 MB files (alert() client cap per PD-3)`
+- `verify_script: scripts/s177r_verify_phase2.py`
+
+| # | User | Action | Expected Outcome |
+|---|---|---|---|
+| 2.1 | test.staff | Upload 2 MB JPG via `page.locator('#pcf_receipt_photo').setInputFiles(...)` | 200 OK, POST body <4.5 MB via `waitForRequest` + `postData().length` assertion |
+| 2.2 | test.staff | Upload 5 MB JPG | 200 OK, POST body <4.5 MB (canvas downscale verified) |
+| 2.3 | test.staff | Upload 8 MB JPG | 200 OK, POST body <4.5 MB (canvas resize to 1800px/0.85 active) |
+| 2.4 | test.staff | Upload `.heic` file | EITHER OS picker rejects (Playwright throws) OR client alert fires — both PASS per PD-3 |
+| 2.5 | test.staff | Upload 1 MB PDF | 200 OK (PDF is in `accept="image/*,.pdf"` but was never tested in S167) |
+| 2.6 | test.staff | Attempt upload 11 MB JPG | Client `alert("File size must be less than 10MB")` fires, POST is NOT made — 10 MB cap proven |
+
+### Phase 3 — Mobile viewport (locked Sidebar trigger + newMobileBrowser helper)
+
+**Phase 3 Verification Contract:**
+- `MUST_CREATE: scripts/s177_lib.js` with `newMobileBrowser(deviceName)` helper
+- `MUST_CONTAIN: "devices['iPhone 13 Pro']" AND "devices['Pixel 7']" in scripts/s177r_phase3.js`
+- `MUST_CONTAIN: exact SidebarTrigger selector locked per Boot Sequence step 15 (after reading sidebar.tsx)`
+- `HARD BLOCKER: desktop viewport in Phase 3 = FAIL — mobile device emulation is required, verified via Chromium screenshot dimensions`
+- `verify_script: scripts/s177r_verify_phase3.py`
 
 | # | User | Viewport | Action | Expected Outcome |
 |---|---|---|---|---|
-| 3.1 | test.staff | iPhone 13 Pro (390×844) | Login → navigate → open sidebar hamburger → PCF → Add entry → fill form → submit | full flow succeeds without layout breakage |
-| 3.2 | test.supervisor | iPhone 13 Pro | Inline edit 7-Eleven dialog → amount field → save | edit dialog fits in viewport, Save button reachable |
-| 3.3 | test.finance | Pixel 7 (412×915) | Review queue → fund drilldown → batch review → approve with COA | full path, COA input cells usable, Approve button not offscreen |
-| 3.4 | test.staff | iPhone 13 Pro | Upload 3 MB camera JPG via file input | same result as Phase 2.2 |
+| 3.1 | test.staff | iPhone 13 Pro (390×844) | Login → `SidebarTrigger` click → PCF → Add entry → fill → submit | full flow, no layout breakage, Submit button on screen |
+| 3.2 | test.supervisor | iPhone 13 Pro | Inline edit 7-Eleven dialog → amount → Save | dialog fits, Save button reachable |
+| 3.3 | test.finance | Pixel 7 (412×915) | Review queue → fund drilldown → batch review → Approve with COA | full path, COA cells usable |
+| 3.4 | test.staff | iPhone 13 Pro | Upload 3 MB camera JPG | same result as Phase 2.2 |
 
-### Phase 4 — Chat threshold notification
+### Phase 4 — Chat threshold notification (dual trigger: inline + hourly)
 
-| # | User | Action | Expected Outcome | Failure Means |
-|---|---|---|---|---|
-| 4.1 | test.hr | Add expenses totaling ≥ 60% of HR fund (e.g., 5 × ₱700 = ₱3,500 ≥ ₱3,000) | pending_total crosses threshold | threshold math wrong |
-| 4.2 | SSM probe | Read `frappe.log_error` or custom log for threshold notification attempt | log entry "threshold_reached notification sent" | notification never fired |
-| 4.3 | manual + Chat API | Check actual Google Chat space for the delivered message OR `hrms/api/google_chat.py` call trace | real message posted, not just a log | webhook client broken |
+**Phase 4 Verification Contract:**
+- `HARD BLOCKER: Phase 0.5 get_chat_space(SPACE_ERP_AUTOMATION) must be non-None`
+- `MUST_CONTAIN: grep for BOTH success log ("Threshold notification sent for") AND failure log ("Failed to send threshold notification") in scripts/s177r_verify_phase4.py`
+- `HARD BLOCKER: notification fires from TWO triggers per code reality — (a) inline from add_expense_to_pending at pcf.py:192, (b) hourly cron via check_threshold_and_notify. Test BOTH.`
+- `verify_script: scripts/s177r_verify_phase4.py`
 
-### Phase 5 — Edge cases
+| # | User | Action | Expected Outcome |
+|---|---|---|---|
+| 4.1 | test.hr (browser) | Add expenses totaling ≥60% of HR fund (₱4,800 ≥ 60% of ₱8,000) | `pending_total` crosses threshold; inline `send_threshold_notification` fires from `add_expense_to_pending` |
+| 4.2 | SSM probe | `frappe.get_all("Error Log", filters={"error":["like","%Threshold notification sent for PCF-HR%"]}, order_by="creation desc", limit=1)` — shows success log within last 60s | inline trigger confirmed |
+| 4.3 | SSM invoke | `bench execute hrms.api.pcf.check_threshold_and_notify` (hourly cron path) — drive the second trigger directly | second notification attempt logged |
+| 4.4 | manual + Chat | Open ERP_AUTOMATION Chat space, verify "Threshold reached" message is visible | real delivery confirmed (not just logged) |
+
+### Phase 5 — Edge cases (real controls only, phantom scenarios removed)
+
+**Phase 5 Verification Contract:**
+- `HARD BLOCKER: no cancel_batch/cancel_draft/custodian-resubmit UI exists as of 2026-04-09 — do not hunt for phantom buttons`
+- `MUST_CONTAIN: 'button[aria-label^="Remove expense"]' in scripts/s177r_phase5.js` — real delete selector
+- `verify_script: scripts/s177r_verify_phase5.py`
+
+| # | User | Scenario | Expected |
+|---|---|---|---|
+| 5.1 | test.staff (browser) | Add 3 pending expenses → click per-expense `button[aria-label="Remove expense Mercury Drug"]` → confirm → pending_total decrements | `remove_pending_expense` 200 OK, pending list updates |
+| 5.2 | test.finance reject → test.staff new-batch workaround | Accountant rejects batch → custodian adds new expenses → submits a NEW batch (real-world workaround per PD-4 since no custodian-resubmit UI exists) | new batch `status=Submitted`, old batch stays `Rejected` |
+| 5.3 | sam + test.hr (per PD-2) | Admin disables HR fund while test.hr has 2 pending expenses | Existing pendings stay visible; `add_expense_to_pending` returns 4xx "fund disabled"; test.hr CAN still submit existing batch |
+| 5.4 | DEFECT log | Custodian-facing Request Replenishment button does NOT exist — log DEFECT-036 candidate for S178 | entry added to `output/l3/s177/DEFECT_REGISTER.md` |
+
+### Phase 6 — Concurrent users (Promise.all + per-context mutation files)
+
+**Phase 6 Verification Contract:**
+- `MUST_CONTAIN: "Promise.all" in scripts/s177r_phase6.js` — genuine parallel execution
+- `MUST_CREATE: scripts/s177_lib.js` provides per-context `attachNetwork` writing to `api_mutations_ctx<N>.json` (avoids race on shared file)
+- `HARD BLOCKER: sequential awaits (await A; await B) are NOT a race — must use Promise.all([ctxA_click, ctxB_click])`
+- `HARD BLOCKER: each scenario runs ≥10 iterations; PASS = 9/10 AND zero 500s AND pending_total reconciles every run`
+- `verify_script: scripts/s177r_verify_phase6.py`
 
 | # | Scenario | Expected |
 |---|---|---|
-| 5.1 | Custodian adds expense → cancels before submitting batch | expense deleted via `remove_pending_expense`, pending_total decremented |
-| 5.2 | Custodian submits batch → before accountant reviews, accountant rejects → custodian edits one expense → resubmits | new batch created, old batch stays Rejected, pending expenses flow through |
-| 5.3 | Admin disables fund while custodian has 2 pending expenses | existing pending expenses stay visible to custodian; new `add_expense_to_pending` returns 4xx; batch submit still allowed? **Policy TBD — flag to Sam if unclear** |
-| 5.4 | Accountant opens a Draft batch (never submitted) and tries to approve | either UI blocks or backend returns validation error |
+| 6.1 | 10× iterations: 2 Playwright contexts via `Promise.all` both call `add_expense_to_pending` on the same store fund | All 20 adds succeed, `pending_total` reconciles per iteration, no 500s |
+| 6.2 | 10× iterations: both contexts submit batch simultaneously via `Promise.all` | One wins 200 OK, other gets clean 4xx "batch already in progress", no 500s |
+| 6.3 | 10× iterations: supv edits `7-Eleven 150→180` concurrently with staff adding Globe ₱299 | Both succeed, final pending math is exact |
+| 6.4 | SSM SQL stress fallback | 5 parallel `add_expense_to_pending` SSM calls via `multiprocessing.Pool` — DB-level race test | All succeed, pending_total reconciles |
 
-### Phase 6 — Concurrent users
+### Phase 7 — Daily job with inside-day guard at `last_day - 1` (NOT month-end cron)
 
-| # | Scenario | Expected |
-|---|---|---|
-| 6.1 | 2 Playwright contexts: test.staff adds expense A at t=0, test.supervisor adds expense B at t=0.1s | both succeed, `pending_total = A + B`, no race |
-| 6.2 | Both submit batch simultaneously | one wins, other gets a clean "batch already in progress" error (not a 500) |
-| 6.3 | test.supervisor edits 7-Eleven 150→180 while test.staff adds Globe 299 | both succeed, final pending matches 180+299 + any pre-existing |
-
-### Phase 7 — Month-end auto-submit cron
-
-| # | Action | Expected |
-|---|---|---|
-| 7.1 | SSM: set HR fund `month_end_auto_submit=1`, add 1 expense, monkey-patch `frappe.utils.nowdate()` to return last-day-of-month, call the daily scheduler hook manually | auto-submitted batch created for the expense |
-| 7.2 | SSM: verify the scheduler entry exists in `hooks.py` and the function is registered | config-level correctness |
-
-### Phase 8 — DEFECT-029 Dockerfile bootstrap
+**Phase 7 Verification Contract:**
+- `HARD BLOCKER: monkey-patch target is hrms.api.pcf.datetime (via unittest.mock.patch), NOT frappe.utils.nowdate`
+- `HARD BLOCKER: test date is last_day - 1 (second-to-last day of month), NOT last_day`
+- `HARD BLOCKER: Phase 0.3 must have set month_end_auto_submit=1 (NOT auto_submit_enabled=1 — that's a different filter on a different function)`
+- `HARD BLOCKER: no monkey-patch of datetime/nowdate may be committed to hrms/ files — only inside scripts/s177r_*.py`
+- `MUST_CONTAIN: "unittest.mock.patch" AND "hrms.api.pcf.datetime" in scripts/s177r_phase7.py`
+- `verify_script: scripts/s177r_verify_phase7.py`
 
 | # | Action | Expected |
 |---|---|---|
-| 8.1 | Edit `frappe_docker_build/images/bench/Dockerfile` (or entrypoint script) to read `OPENAI_API_KEY` env and jq-patch `site_config.json` on container start | new Dockerfile builds cleanly |
-| 8.2 | Build new image locally, run container with env var, verify `site_config.json` has key | idempotent, safe |
-| 8.3 | Document the Doppler integration so the env var is passed to the container at deploy time | ECS/K8s env mapping updated |
+| 7.1 | SSM verify | Phase 0.3 set `month_end_auto_submit=1` on PCF-HR and Admin | flag is 1 |
+| 7.2 | SSM probe | Read `hrms/hooks.py` lines 360-440, assert `"hrms.api.pcf.check_month_end_auto_submit"` under `"daily"` at line 425 | registration confirmed (already exists) |
+| 7.3 | SSM mock | `with unittest.mock.patch("hrms.api.pcf.datetime") as mock_dt: mock_dt.now.return_value = datetime(2026, 4, 29)` (2026-04-30 is last_day, so 29 is last_day-1) → call `hrms.api.pcf.check_month_end_auto_submit()` directly | function enters auto-submit branch |
+| 7.4 | SSM verify | New batch created on HR fund with `status=Submitted`, pending expenses rolled into it | cron logic works |
+
+### Phase 8 — DEFECT-029 persistence via `hrms/hooks.py::before_migrate` hook (NOT Dockerfile)
+
+**Phase 8 Verification Contract:**
+- `MUST_MODIFY: hrms/hooks.py` (add before_migrate entry)
+- `MUST_CREATE: hrms/utils/bei_openai_bootstrap.py` with `sync_openai_key_from_env()` function
+- `MUST_CONTAIN: "before_migrate" in hrms/hooks.py` AND `"openai_api_key" in hrms/utils/bei_openai_bootstrap.py`
+- `HARD BLOCKER: do NOT edit frappe_docker_build/images/bench/Dockerfile — it is a dev builder, no ENTRYPOINT/CMD (verified by audit 2026-04-09)`
+- `HARD BLOCKER: bootstrap must be idempotent — running twice must not corrupt site_config.json`
+- `HARD BLOCKER: bootstrap must NOT clear an existing non-empty openai_api_key if env var is empty (no silent overwrite)`
+- `verify_script: scripts/s177r_verify_phase8.py`
+
+| # | Action | Expected |
+|---|---|---|
+| 8.1 | Code | Create `hrms/utils/bei_openai_bootstrap.py::sync_openai_key_from_env()` — reads `os.environ.get("OPENAI_API_KEY")`, calls `frappe.installer.update_site_config("openai_api_key", value)` ONLY if non-empty. No-op if env unset. | helper exists, imports clean |
+| 8.2 | Code | Register in `hrms/hooks.py` under `before_migrate = ["hrms.utils.bei_openai_bootstrap.sync_openai_key_from_env"]` (append to existing list if present) | hook registered |
+| 8.3 | Local test | `bench --site hq.bebang.ph migrate` with `OPENAI_API_KEY` env var set → verify `site_config.json` has the key | integration works |
+| 8.4 | Idempotency test | Run `bench migrate` twice → verify `site_config.json` is valid JSON with single key entry | no corruption |
+| 8.5 | Empty env test | Run `bench migrate` with `OPENAI_API_KEY` unset → existing `site_config.json` key NOT cleared | no silent overwrite |
+| 8.6 | SSM prod verify | After deploy: `docker exec frappe_backend bench --site hq.bebang.ph migrate` → key still present | prod migration clean |
 
 ### Phase 9 — Rollback + closeout
 
+**Phase 9 Verification Contract:**
+- `MUST_MODIFY: docs/plans/2026-04-09-sprint-177-pcf-full-e2e-closeout.md` (status PLANNED → COMPLETED)
+- `MUST_MODIFY: docs/plans/SPRINT_REGISTRY.md` (S177 row status + PR number)
+- `HARD BLOCKER: git add -f for output/l3/s177/ AND docs/plans/ (both may be gitignored)`
+- `HARD BLOCKER: orphan audit returns 0 BEI PCF Batch Item orphans + 0 dangling pcf_batch references`
+- `verify_script: scripts/s177r_verify_phase9.py`
+
 | # | Action |
 |---|---|
-| 9.1 | Delete S177 batches/expenses/funds via `scripts/s177r_phase9_rollback.py` |
-| 9.2 | Restore employee depts |
-| 9.3 | Verify 0 orphans via orphan-check script |
-| 9.4 | Update plan YAML `status: COMPLETED`, `completed_date`, `execution_summary` |
-| 9.5 | Update SPRINT_REGISTRY.md row with PR number + status |
-| 9.6 | `git add -f` evidence files, commit, push |
-| 9.7 | `gh pr create` against production, share PR number, STOP (per PR-Handoff rule) |
+| 9.1 | `scripts/s177r_phase9_rollback.py` — delete S177 batches/expenses/funds |
+| 9.2 | Restore 3 employee depts to originals |
+| 9.3 | Run `scripts/s167_audit_orphans.py` — assert 0 orphans |
+| 9.4 | Update plan YAML: `status: COMPLETED`, fill `completed_date`, fill `execution_summary` |
+| 9.5 | Update `SPRINT_REGISTRY.md` row: status COMPLETED + PR number |
+| 9.6 | `git add -f docs/plans/2026-04-09-sprint-177-pcf-full-e2e-closeout.md docs/plans/SPRINT_REGISTRY.md output/l3/s177/` — explicit path enumeration |
+| 9.7 | `git commit` + `git push origin s177-pcf-full-e2e-closeout` |
+| 9.8 | PR #517 auto-updates with new commits. Share updated state with Sam. STOP per PR-Handoff rule. |
 
 ---
 
@@ -439,19 +564,29 @@ Frontend API routes are auto-instrumented by `@sentry/nextjs`. No new backend ro
 ownership_matrix:
   artifact: output/l3/s177/S177_SURFACE_OWNERSHIP_MATRIX.csv
   owned_files:
-    - hrms/api/pcf.py (only request_replenishment + _create_replenishment_journal_entry + add Sentry context)
-    - frappe_docker_build/images/bench/Dockerfile (Phase 8)
-    - scripts/s177r_*.js + scripts/s177r_*.py (new)
-    - output/l3/s177/* (new)
+    - hrms/api/pcf.py (ONLY request_replenishment + _create_replenishment_journal_entry — party fields, savepoint, commit reorder, Sentry context)
+    - hrms/hooks.py (Phase 8: add before_migrate hook entry)
+    - hrms/utils/bei_openai_bootstrap.py (Phase 8: NEW file)
+    - scripts/s177r_*.js + scripts/s177r_*.py (all NEW)
+    - scripts/s177_lib.js (Phase 3/6: NEW, mobile + per-context helpers)
+    - output/l3/s177/* (all NEW)
     - docs/plans/2026-04-09-sprint-177-pcf-full-e2e-closeout.md
     - docs/plans/SPRINT_REGISTRY.md (S177 row + Next Sprint Reservation)
+  do_not_touch:
+    - frappe_docker_build/images/bench/Dockerfile (dev builder, NOT runtime — Phase 8 uses hrms/hooks.py instead per Amendment B)
+    - scripts/s167_lib.js (Phase 3/6 creates scripts/s177_lib.js instead of modifying S167 lib, per Requirements Regression Checklist line 275)
 protected_surfaces:
-  - hrms/api/pcf.py::classify_batch_items (owned by S167 PR #513, do not touch)
-  - hrms/api/pcf.py::_resolve_coa_code_to_account (owned by S167 PR #510+#513)
+  - hrms/api/pcf.py::classify_batch_items at line ~1077 (owned by S167 PR #513, do not touch)
+  - hrms/api/pcf.py::_resolve_coa_code_to_account (owned by S167 PR #510+#513, do not touch)
+  - hrms/api/pcf.py::check_month_end_auto_submit at line 1507 (DO NOT modify — Phase 7 only monkey-patches in test scripts, never in this file)
+  - hrms/api/pcf.py::check_threshold_and_notify at line ~1479 (DO NOT modify — Phase 4 verifies, never modifies)
+  - hrms/api/pcf.py::send_threshold_notification at line 1641 (DO NOT modify — Phase 4 verifies)
+  - hrms/api/pcf.py::add_expense_to_pending (DO NOT modify — already calls send_threshold_notification inline at pcf.py:192)
   - bei-tasks/components/pcf/* (owned by S167 PRs #357/#358/#359/#360/#361)
   - bei-tasks/components/layout/nav-main.tsx PCF sidebar groups (owned by S167 #367+#370)
   - bei-tasks/app/dashboard/accounting/pcf/review/fund/[fund_name]/page.tsx (owned by S167 #367)
   - bei-tasks/components/pcf/pcf-legacy-redirect.tsx (owned by S167 #367)
+  - frappe_docker_build/** (Phase 8 does NOT edit any file in this tree — uses hrms/hooks.py instead)
 remote_truth_baseline:
   artifact: output/l3/s177/S177_REMOTE_TRUTH_BASELINE.json
   captured_at_phase_0: true
@@ -499,7 +634,8 @@ Whenever counts, blockers, stage, or certification status changes during executi
 certified_universe:
   gaps: 8
   phases: 10  # Phase 0 + 8 gap phases + Phase 9 closeout
-  scenarios: 28  # sum of L3 Workflow Scenarios table rows
+  scenarios: 48  # sum of all L3 Workflow Scenarios table rows after v2 amendments
+  # Breakdown: P0=6, P1=9 (4 code tasks + 5 browser/SSM), P2=6, P3=4, P4=4, P5=4, P6=4, P7=4, P8=6, P9=8
 closeout_zero_equations:
   gaps_open_after_closeout: 0
   scenarios_skipped: 0
@@ -511,7 +647,7 @@ allowed_skips:
 final_readiness_basis:
   - output/l3/s177/RUN_STATUS.json passed = true
   - output/l3/s177/DEFECT_REGISTER.md final_defects_open = 0 HIGH/CRITICAL
-  - output/l3/s177/form_submissions.json entries ≥ 22 (matching L3 Workflow Scenarios row count minus SSM-only entries)
+  - output/l3/s177/form_submissions.json entries ≥ 28 (browser-only scenarios after v2 amendments — SSM-only rows like Phase 1.5-1.9, 4.2-4.3, 7.1-7.4, 8.1-8.6 are counted in state_verification.json instead)
   - output/l3/s177/api_mutations.json 200 OK responses ≥ expected count
   - orphan audit output showing 0 BEI PCF Batch Item + 0 dangling pcf_batch
 ```
@@ -527,13 +663,16 @@ Current estimate: **76 units across 10 phases**. This is within the 80-unit hard
 
 ---
 
-## Risks + Known Unknowns
+## Risks + Known Unknowns (after 2026-04-09 audit pass, v2 amendments)
 
-1. **`request_replenishment` may not be wired to a UI button.** If not, Phase 1.5 becomes SSM-only, which is still valid but can't be called "browser-proved".
-2. **Google Chat threshold notification may not exist in prod code at all.** If `hrms/api/pcf.py` has no `_send_threshold_notification()` call path, Gap 4 becomes a BUILD sprint, not a test sprint. Log as DEFECT-030 and defer.
-3. **Month-end auto-submit cron may not be registered in `hooks.py`.** Similar — log as DEFECT-031 and defer.
-4. **Dockerfile bootstrap may conflict with existing entrypoint.** Needs careful test in a local container before pushing.
-5. **Concurrent-user race may be masked by single-region network latency.** If 2 contexts from the same machine can't reproduce the race, document as "not-reproducible-in-test-harness" and move on.
+1. **Phase 1.5 `request_replenishment` is SSM-only per PD-4.** No UI button exists (grep confirmed). Backend call via `bench execute`. Browser-proved column will be "N/A — SSM-only". Follow-up DEFECT-036 candidate: add custodian-facing Request Replenishment button in a future sprint.
+2. **Chat space existence is a HARD BLOCKER (Phase 0.5)** — if `get_chat_space(SPACE_ERP_AUTOMATION)` returns None, Phase 4 cannot run. Agent STOPS and asks Sam to configure the space before resuming. Space ID is in `hrms.utils.bei_config::SPACE_ERP_AUTOMATION`.
+3. **Phase 7 monkey-patch must target `hrms.api.pcf.datetime`** via `unittest.mock.patch`. Target is NOT `frappe.utils.nowdate`. Test date is `last_day - 1` (second-to-last day). Patching only works in-process for the function invocation from the test script — not for real scheduler runs.
+4. **Phase 8 `hrms/hooks.py::before_migrate` hook requires careful idempotency** — the bootstrap must be a no-op if the env var is unset AND must not silently clear an existing key. Tested via 8.4/8.5 scenarios. Fails-safe.
+5. **Concurrent-user race may be masked by Playwright's single-process model.** Phase 6 uses `Promise.all` across 2 contexts AND a 5-worker `multiprocessing.Pool` SSM fallback. If neither reproduces a race across 10 iterations, classify as "not-reproducible-in-test-harness, monitor prod via Sentry" and move on.
+6. **Replenishment JE party resolution edge case** — the custodian's employee ID is derived via `frappe.db.get_value("Employee", {"user_id": batch.custodian}, "name")`. If the custodian user has no Employee record (like test.finance per S167), the JE party cannot be set and Phase 1.8 negative path must cover this.
+7. **Phase 1 DM-1 code change is narrow** — only 2 param assignments + 1 savepoint wrap + 1 `commit()` move + 1 Sentry context call. Total change ≤30 LOC in `hrms/api/pcf.py`. If the code change exceeds 100 LOC, STOP and convert to S178 per Scope Size Warning.
+8. **PR #517 already exists against production** — this amendment pass updates the same branch, so the PR description should be refreshed via `gh pr edit 517` at closeout, not a new PR.
 
 ---
 
@@ -548,6 +687,38 @@ Per `.claude/rules/core-governance.md` and CLAUDE.md, agents NEVER merge PRs or 
    - Any new defects discovered with severity
    - Link to evidence files in `output/l3/s177/`
 3. Share PR number via chat + STOP. Do not deploy.
+
+---
+
+## Amendment Log
+
+### v2 — 2026-04-09 (Amendments A-K, audit response)
+
+Applied after `/audit-plan-bei-erp` full pass (6 domain agents + code-verifier + adversarial fact-checker) identified 12 SUPPORTED blockers + 2 policy-gated findings + 1 unverified. All 15 addressed in-place while preserving all 8 gap scopes. Authoritative sections updated: Phase Budget Contract, L3 Workflow Scenarios, Agent Boot Sequence, Requirements Regression Checklist, Anti-Rewind Protection, Risks, Certification Coverage Contract.
+
+**Amendments applied:**
+
+- **A (Branch handling)** — Agent Boot Sequence Step 2 now handles pre-existing `s177-pcf-full-e2e-closeout` branch via conditional `show-ref` check + `reset --hard`. Previously would have failed with `fatal: A branch named '...' already exists`.
+- **B (Phase 8 retarget)** — Phase 8 now adds a `before_migrate` hook in `hrms/hooks.py` + a new `hrms/utils/bei_openai_bootstrap.py` helper. Does NOT edit `frappe_docker_build/images/bench/Dockerfile` (which is a dev builder with no ENTRYPOINT/CMD — verified by code-verifier CF-8). This survives container rebuilds without forking the Docker image.
+- **C (Phase 7 strategy)** — Monkey-patch target changed from `frappe.utils.nowdate` to `hrms.api.pcf.datetime` via `unittest.mock.patch`. Test date changed from `last_day` to `last_day - 1`. Removed "cron may not be registered" hedge (it IS registered at `hrms/hooks.py:425` under `daily`).
+- **D (Phase 1 build+verify)** — Phase 1 increased 12 → 15 units. Added 4 explicit code tasks (1A party fields, 1B savepoint + commit reorder, 1C Sentry context, 1D scenario 1.5 narrative fix). Added negative test 1.8 (missing 1113000 account) and observability check 1.9. DM-3 documented non-applicable per PD-1.
+- **E (Phase 5 phantom removal)** — Deleted "Cancel Draft batch" (no backend action exists), deleted "Draft batch approval" (no such state). Kept remove-pending-expense (real control: `button[aria-label^="Remove expense"]`). Rejected-batch resubmit downgraded to "new batch workaround" (no custodian-facing resubmit UI). Custodian Request Replenishment logged as DEFECT-036 candidate.
+- **F (Phase 0 expansion)** — Phase 0 increased 4 → 6 units. Added 3 SSM probes: BEI Settings source account fallback, `get_chat_space(SPACE_ERP_AUTOMATION)` existence, `month_end_auto_submit=1` flag set on HR fund. Baseline snapshot captured to `baseline_snapshot.json`.
+- **G (Machine-verifiable phase gate)** — Every phase now has a Verification Contract block with `MUST_MODIFY` / `MUST_CONTAIN` / `MUST_CREATE` / `MUST_NOT_CONTAIN` / `HARD BLOCKER` assertions. Each phase has a named `scripts/s177r_verify_phaseN.py` that reads filesystem evidence (git diff + grep), not agent prose. Closes S154 corrupt-success risk.
+- **H (Housekeeping)** — Fixed unit count mismatch (registry said 70, plan said 76 — now 76 everywhere). Clarified `depends_on` to list real merged PRs (#510, #512, #513, #367, #370). Fixed "7 paths" vs "8 gaps" narrative inconsistency.
+- **I (Phase 6 concurrency fix)** — Mandated `Promise.all` for genuine parallel execution. Replaced shared `api_mutations.json` with per-context files (`api_mutations_ctx1.json`, `api_mutations_ctx2.json`) via new `scripts/s177_lib.js`. Each scenario runs ≥10 iterations; PASS = 9/10 + zero 500s. Added SSM-level 5-worker `multiprocessing.Pool` SQL stress fallback.
+- **J (Phase 2 selectors + PDF)** — Locked `#pcf_receipt_photo` selector + Vercel body-limit assertion (POST body <4.5 MB verified via `waitForRequest` + `postData().length`). Added 2.5 PDF scenario and 2.6 explicit 11 MB `alert()` cap verification. HEIC policy per PD-3.
+- **K (Mobile Sidebar trigger)** — Added Agent Boot Sequence step 15 to read `components/ui/sidebar.tsx` + `nav-main.tsx` and lock `SidebarTrigger` selector before writing Phase 3 script. `newMobileBrowser(deviceName)` helper must live in `scripts/s177_lib.js`, NOT by modifying `s167_lib.js`.
+
+**Policy decisions captured as PD-1 through PD-4** (top of plan):
+- PD-1: PCF replenishment is cash-swap, not withholding event (closes Blockers 6 + 7).
+- PD-2: Fund-disabled-mid-submission semantics (pending stays visible + submittable, new adds 4xx).
+- PD-3: HEIC + 10 MB cap accepted for MVP.
+- PD-4: Phase 1.5 is SSM-only (no UI button exists).
+
+**Feature capabilities preserved:** all 8 gaps still in scope. Zero scope cuts. The amendments are narrower and more precise, not smaller.
+
+**Net unit delta:** still 76 units (Phase 1 +3, Phase 0 +2, Phase 2 +0, Phase 4 -2, Phase 5 -2, Phase 6 +1, Phase 7 +0, Phase 8 -2 = net 0). Phase sizes now better-matched to actual work.
 
 ---
 
