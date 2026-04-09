@@ -1,0 +1,442 @@
+{
+  "ok": true,
+  "checks": {
+    "dept_funds": {
+      "all_funds_count": 44,
+      "all_funds": [
+        {
+          "name": "PCF-Araneta Gateway - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Araneta Gateway - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Ayala Evo - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Ayala Evo - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Ayala Malls Fairview Terraces - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Ayala Malls Fairview Terraces - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Ayala Market Market - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Ayala Market Market - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Ayala Solenad - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Ayala Solenad - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Ayala UPTC - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Ayala UPTC - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Ayala Vermosa - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Ayala Vermosa - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-BF Homes - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "BF Homes - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-CTTM Tomas Morato - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "CTTM Tomas Morato - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-D'verde Laguna - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "D'verde Laguna - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Ever Commonwealth - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Ever Commonwealth - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Festival Mall Alabang - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Festival Mall Alabang - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Lucky Chinatown - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Lucky Chinatown - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Megawide PITX - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Megawide PITX - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Megaworld Paseo Center - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Megaworld Paseo Center - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Megaworld Venice Grand Canal - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Megaworld Venice Grand Canal - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Robinson General Trias - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Robinson General Trias - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Robinson Imus - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Robinson Imus - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Robinsons Antipolo - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Robinsons Antipolo - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Robisons Galleria South - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Robisons Galleria South - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Shaw BLVD - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Shaw BLVD - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SJDM - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SJDM - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM  Manila - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM  Manila - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Bicutan - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Bicutan - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Caloocan - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Caloocan - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Clark - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Clark - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM East Ortigas - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM East Ortigas - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Grand Central - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Grand Central - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Mall Of Asia - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Mall Of Asia - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Marikina - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Marikina - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Marilao - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Marilao - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Megamall - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 1,
+          "department": null,
+          "store": "SM Megamall - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM North EDSA - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM North EDSA - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Pulilan - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Pulilan - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Sangandaan - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Sangandaan - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Southmall - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Southmall - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Tanza - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Tanza - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-SM Valenzuela - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "SM Valenzuela - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Sta. Lucia East Grand Mall - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Sta. Lucia East Grand Mall - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-TEST-STORE-BGC - BEI",
+          "fund_type": "Store",
+          "is_enabled": 1,
+          "department": null,
+          "store": "TEST-STORE-BGC - BEI",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-The Grid - Rockwell - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "The Grid - Rockwell - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-The Terminal - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "The Terminal - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Up Town Mall BGC - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Up Town Mall BGC - Bebang Enterprise Inc.",
+          "fund_label": null
+        },
+        {
+          "name": "PCF-Vista Mall Taguig - Bebang Enterprise Inc.",
+          "fund_type": "Store",
+          "is_enabled": 0,
+          "department": null,
+          "store": "Vista Mall Taguig - Bebang Enterprise Inc.",
+          "fund_label": null
+        }
+      ],
+      "dept_funds": [],
+      "dept_funds_remaining_count": 0,
+      "target_dept_funds_found": []
+    },
+    "store_fund": {
+      "exists": true,
+      "doc": {
+        "name": "PCF-TEST-STORE-BGC - BEI",
+        "fund_type": "Store",
+        "is_enabled": 1,
+        "store": "TEST-STORE-BGC - BEI",
+        "department": null,
+        "current_balance": 10000.0,
+        "fund_amount": 10000.0
+      }
+    },
+    "warehouse": {
+      "exists": true,
+      "doc": {
+        "name": "TEST-STORE-BGC - BEI",
+        "disabled": 0,
+        "is_group": 0,
+        "parent_warehouse": null,
+        "company": "Bebang Enterprise Inc."
+      }
+    },
+    "employees": {
+      "TEST-HR-001": {
+        "name": "TEST-HR-001",
+        "department": "Human Resources - BAG",
+        "status": "Active",
+        "employee_name": "Test HR"
+      },
+      "TEST-COMMISSARY-001": {
+        "name": "TEST-COMMISSARY-001",
+        "department": "Dispatch - BAG",
+        "status": "Active",
+        "employee_name": "Test Commissary"
+      },
+      "TEST-WAREHOUSE-001": {
+        "name": "TEST-WAREHOUSE-001",
+        "department": "Dispatch - BAG",
+        "status": "Active",
+        "employee_name": "Test Warehouse"
+      }
+    },
+    "batches": {
+      "targets_still_existing": [],
+      "recent_48h": {
+        "48h": [],
+        "last_20_all_time": [
+          {
+            "name": "BEI-PCF-2026-00002",
+            "status": "Approved",
+            "pcf_fund": "PCF-TEST-STORE-BGC - BEI",
+            "docstatus": 0,
+            "creation": "2026-02-03 17:12:09.591550"
+          },
+          {
+            "name": "BEI-PCF-2026-00001",
+            "status": "Approved",
+            "pcf_fund": "PCF-SM Megamall - Bebang Enterprise Inc.",
+            "docstatus": 0,
+            "creation": "2026-02-03 14:42:28.835857"
+          }
+        ]
+      }
+    },
+    "expenses": {
+      "targets_still_existing": [],
+      "recent_48h": []
+    },
+    "orphan_batch_items": {
+      "count": 0,
+      "sample": []
+    },
+    "dangling_pcf_batch_refs": {
+      "count": 0,
+      "sample": []
+    }
+  },
+  "errors": []
+}
