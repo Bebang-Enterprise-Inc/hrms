@@ -1,0 +1,408 @@
+{
+  "Bebang Kitchen Inc.": {
+    "first_8_by_lft": [
+      {
+        "name": "13TH MONTH ACCRUALS - BKI",
+        "account_name": "13TH MONTH ACCRUALS",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": "",
+        "lft": 1,
+        "rgt": 2
+      },
+      {
+        "name": "ACCOUNTING FEES - BKI",
+        "account_name": "ACCOUNTING FEES",
+        "is_group": 0,
+        "root_type": "Expense",
+        "parent_account": "",
+        "lft": 63,
+        "rgt": 64
+      },
+      {
+        "name": "ACCOUNTS PAYABLE - BKI",
+        "account_name": "ACCOUNTS PAYABLE",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": "",
+        "lft": 69,
+        "rgt": 70
+      },
+      {
+        "name": "ACCOUNTS PAYABLE - OTHERS - BKI",
+        "account_name": "ACCOUNTS PAYABLE - OTHERS",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": "",
+        "lft": 73,
+        "rgt": 74
+      },
+      {
+        "name": "ACCOUNTS RECEIVABLE - BKI",
+        "account_name": "ACCOUNTS RECEIVABLE",
+        "is_group": 0,
+        "root_type": "Asset",
+        "parent_account": "",
+        "lft": 81,
+        "rgt": 82
+      },
+      {
+        "name": "ACCRUAL - OTHERS - BKI",
+        "account_name": "ACCRUAL - OTHERS",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": "",
+        "lft": 87,
+        "rgt": 88
+      },
+      {
+        "name": "ACCRUAL - PROFESSIONAL FEES - BKI",
+        "account_name": "ACCRUAL - PROFESSIONAL FEES",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": "",
+        "lft": 93,
+        "rgt": 94
+      },
+      {
+        "name": "ACCUM DEP - BUILDINGS - BKI",
+        "account_name": "ACCUM DEP - BUILDINGS",
+        "is_group": 1,
+        "root_type": "Asset",
+        "parent_account": "",
+        "lft": 99,
+        "rgt": 100
+      }
+    ],
+    "min_lft": 1,
+    "max_rgt": 8619,
+    "count": 297
+  },
+  "Bebang Enterprise Inc.": {
+    "first_8_by_lft": [
+      {
+        "name": "ADVANCES TO SSS - BEI",
+        "account_name": "ADVANCES TO SSS",
+        "is_group": 0,
+        "root_type": "Asset",
+        "parent_account": "NON-TRADE RECEIVABLES - BEI",
+        "lft": 0,
+        "rgt": 0
+      },
+      {
+        "name": "GR/IR CLEARING - BEI",
+        "account_name": "GR/IR CLEARING",
+        "is_group": 0,
+        "root_type": "Asset",
+        "parent_account": "INVENTORY - BEI",
+        "lft": 0,
+        "rgt": 0
+      },
+      {
+        "name": "PROPERTY, PLANT AND EQUIPMENT - BEI",
+        "account_name": "PROPERTY, PLANT AND EQUIPMENT",
+        "is_group": 0,
+        "root_type": "Asset",
+        "parent_account": "NON-CURRENT ASSETS - BEI",
+        "lft": 0,
+        "rgt": 0
+      },
+      {
+        "name": "STOCK ADJUSTMENT - BEI",
+        "account_name": "STOCK ADJUSTMENT",
+        "is_group": 0,
+        "root_type": "Expense",
+        "parent_account": "COST OF SALES - BEI",
+        "lft": 0,
+        "rgt": 0
+      },
+      {
+        "name": "Temporary Opening - Bebang Enterprise Inc.",
+        "account_name": "Temporary Opening",
+        "is_group": 0,
+        "root_type": "Asset",
+        "parent_account": "ASSETS - Bebang Enterprise Inc.",
+        "lft": 0,
+        "rgt": 0
+      },
+      {
+        "name": "ACCOUNTS RECEIVABLE - Bebang Enterprise Inc.",
+        "account_name": "ACCOUNTS RECEIVABLE",
+        "is_group": 0,
+        "root_type": "Asset",
+        "parent_account": "PROPERTY, PLANT AND EQUIPMENT - BEI",
+        "lft": 41,
+        "rgt": 42
+      },
+      {
+        "name": "ACCOUNTING FEES - Bebang Enterprise Inc.",
+        "account_name": "ACCOUNTING FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": null,
+        "lft": 61,
+        "rgt": 62
+      },
+      {
+        "name": "ADVANCE S TO SSS - Bebang Enterprise Inc.",
+        "account_name": "ADVANCE S TO SSS",
+        "is_group": 0,
+        "root_type": "Asset",
+        "parent_account": "PROPERTY, PLANT AND EQUIPMENT - BEI",
+        "lft": 151,
+        "rgt": 152
+      }
+    ],
+    "min_lft": 0,
+    "max_rgt": 8718,
+    "count": 327
+  },
+  "BEBANG FRANCHISE CORP.": {
+    "first_8_by_lft": [
+      {
+        "name": "4000000 - SALES - BFC",
+        "account_name": "SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": null,
+        "lft": 7,
+        "rgt": 60
+      },
+      {
+        "name": "4000100 - STORE SALES - BFC",
+        "account_name": "STORE SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000000 - SALES - BFC",
+        "lft": 8,
+        "rgt": 19
+      },
+      {
+        "name": "4000110 - IN-STORE SALES - BFC",
+        "account_name": "IN-STORE SALES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000100 - STORE SALES - BFC",
+        "lft": 9,
+        "rgt": 10
+      },
+      {
+        "name": "4000120 - ONLINE SALES - BFC",
+        "account_name": "ONLINE SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000100 - STORE SALES - BFC",
+        "lft": 11,
+        "rgt": 18
+      },
+      {
+        "name": "4000121 - BEI WEBSITE - BFC",
+        "account_name": "BEI WEBSITE",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BFC",
+        "lft": 12,
+        "rgt": 13
+      },
+      {
+        "name": "4000122 - FOOD PANDA - BFC",
+        "account_name": "FOOD PANDA",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BFC",
+        "lft": 14,
+        "rgt": 15
+      },
+      {
+        "name": "4000123 - GRAB - BFC",
+        "account_name": "GRAB",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BFC",
+        "lft": 16,
+        "rgt": 17
+      },
+      {
+        "name": "4000200 - BKI SALES - BFC",
+        "account_name": "BKI SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000000 - SALES - BFC",
+        "lft": 20,
+        "rgt": 29
+      }
+    ],
+    "min_lft": 7,
+    "max_rgt": 7014,
+    "count": 111
+  },
+  "Triple I Holdings": {
+    "first_8_by_lft": [
+      {
+        "name": "13TH MONTH ACCRUALS - TIH",
+        "account_name": "13TH MONTH ACCRUALS",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": null,
+        "lft": 5,
+        "rgt": 6
+      },
+      {
+        "name": "ACCOUNTING FEES - TIH",
+        "account_name": "ACCOUNTING FEES",
+        "is_group": 0,
+        "root_type": "Expense",
+        "parent_account": null,
+        "lft": 67,
+        "rgt": 68
+      },
+      {
+        "name": "ACCOUNTS PAYABLE - OTHERS - TIH",
+        "account_name": "ACCOUNTS PAYABLE - OTHERS",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": null,
+        "lft": 77,
+        "rgt": 78
+      },
+      {
+        "name": "ACCOUNTS PAYABLE - TIH",
+        "account_name": "ACCOUNTS PAYABLE",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": null,
+        "lft": 79,
+        "rgt": 80
+      },
+      {
+        "name": "ACCOUNTS RECEIVABLE - TIH",
+        "account_name": "ACCOUNTS RECEIVABLE",
+        "is_group": 0,
+        "root_type": "Asset",
+        "parent_account": null,
+        "lft": 85,
+        "rgt": 86
+      },
+      {
+        "name": "ACCRUAL - OTHERS - TIH",
+        "account_name": "ACCRUAL - OTHERS",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": null,
+        "lft": 91,
+        "rgt": 92
+      },
+      {
+        "name": "ACCRUAL - PROFESSIONAL FEES - TIH",
+        "account_name": "ACCRUAL - PROFESSIONAL FEES",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": null,
+        "lft": 97,
+        "rgt": 98
+      },
+      {
+        "name": "ACCUM DEP - BUILDINGS - TIH",
+        "account_name": "ACCUM DEP - BUILDINGS",
+        "is_group": 1,
+        "root_type": "Asset",
+        "parent_account": null,
+        "lft": 103,
+        "rgt": 104
+      }
+    ],
+    "min_lft": 5,
+    "max_rgt": 8386,
+    "count": 313
+  },
+  "Managed Franchise": {
+    "first_8_by_lft": [
+      {
+        "name": "13TH MONTH ACCRUALS - MF",
+        "account_name": "13TH MONTH ACCRUALS",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": null,
+        "lft": 3,
+        "rgt": 4
+      },
+      {
+        "name": "ACCOUNTING FEES - MF",
+        "account_name": "ACCOUNTING FEES",
+        "is_group": 0,
+        "root_type": "Expense",
+        "parent_account": null,
+        "lft": 65,
+        "rgt": 66
+      },
+      {
+        "name": "ACCOUNTS PAYABLE - MF",
+        "account_name": "ACCOUNTS PAYABLE",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": null,
+        "lft": 71,
+        "rgt": 72
+      },
+      {
+        "name": "ACCOUNTS PAYABLE - OTHERS - MF",
+        "account_name": "ACCOUNTS PAYABLE - OTHERS",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": null,
+        "lft": 75,
+        "rgt": 76
+      },
+      {
+        "name": "ACCOUNTS RECEIVABLE - MF",
+        "account_name": "ACCOUNTS RECEIVABLE",
+        "is_group": 0,
+        "root_type": "Asset",
+        "parent_account": null,
+        "lft": 83,
+        "rgt": 84
+      },
+      {
+        "name": "ACCRUAL - OTHERS - MF",
+        "account_name": "ACCRUAL - OTHERS",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": null,
+        "lft": 89,
+        "rgt": 90
+      },
+      {
+        "name": "ACCRUAL - PROFESSIONAL FEES - MF",
+        "account_name": "ACCRUAL - PROFESSIONAL FEES",
+        "is_group": 0,
+        "root_type": "Liability",
+        "parent_account": null,
+        "lft": 95,
+        "rgt": 96
+      },
+      {
+        "name": "ACCUM DEP - BUILDINGS - MF",
+        "account_name": "ACCUM DEP - BUILDINGS",
+        "is_group": 1,
+        "root_type": "Asset",
+        "parent_account": null,
+        "lft": 101,
+        "rgt": 102
+      }
+    ],
+    "min_lft": 3,
+    "max_rgt": 8384,
+    "count": 312
+  },
+  "bki_4000000_ancestors": [
+    {
+      "name": "SALES - BKI",
+      "parent_account": null,
+      "lft": 6739,
+      "rgt": 6740,
+      "root_type": "Income",
+      "is_group": 1
+    }
+  ],
+  "bki_4000000_containing_by_lftrgt": []
+}

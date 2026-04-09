@@ -1,0 +1,1153 @@
+{
+  "Bebang Kitchen Inc.": {
+    "income_roots_no_parent": [],
+    "all_income_groups": [
+      {
+        "name": "SALES - BKI",
+        "account_name": "SALES",
+        "is_group": 1,
+        "parent_account": "SALES - BKI",
+        "lft": 6687
+      }
+    ],
+    "4000000": [
+      {
+        "name": "SALES - BKI",
+        "account_name": "SALES",
+        "parent_account": "SALES - BKI",
+        "root_type": "Income",
+        "is_group": 1,
+        "lft": 6687,
+        "rgt": 6688
+      }
+    ]
+  },
+  "Bebang Enterprise Inc.": {
+    "income_roots_no_parent": [
+      {
+        "name": "ACCOUNTING FEES - Bebang Enterprise Inc.",
+        "account_name": "ACCOUNTING FEES",
+        "is_group": 0,
+        "lft": 7,
+        "rgt": 8
+      },
+      {
+        "name": "AIRCON/CHILLED - Bebang Enterprise Inc.",
+        "account_name": "AIRCON/CHILLED",
+        "is_group": 0,
+        "lft": 129,
+        "rgt": 130
+      },
+      {
+        "name": "AUDIT FEES - Bebang Enterprise Inc.",
+        "account_name": "AUDIT FEES",
+        "is_group": 0,
+        "lft": 2041,
+        "rgt": 2042
+      },
+      {
+        "name": "BANK CHARGES - Bebang Enterprise Inc.",
+        "account_name": "BANK CHARGES",
+        "is_group": 0,
+        "lft": 2049,
+        "rgt": 2050
+      },
+      {
+        "name": "BASIC RENTALS - Bebang Enterprise Inc.",
+        "account_name": "BASIC RENTALS",
+        "is_group": 0,
+        "lft": 2057,
+        "rgt": 2058
+      },
+      {
+        "name": "BASIC RENTALS - FIXED - Bebang Enterprise Inc.",
+        "account_name": "BASIC RENTALS - FIXED",
+        "is_group": 0,
+        "lft": 2061,
+        "rgt": 2062
+      },
+      {
+        "name": "BONUSES - Bebang Enterprise Inc.",
+        "account_name": "BONUSES",
+        "is_group": 0,
+        "lft": 2361,
+        "rgt": 2362
+      },
+      {
+        "name": "BUSINESS DEVELOPMENT - Bebang Enterprise Inc.",
+        "account_name": "BUSINESS DEVELOPMENT",
+        "is_group": 0,
+        "lft": 2387,
+        "rgt": 2388
+      },
+      {
+        "name": "BUSINESS PERMITS & LICENSES - Bebang Enterprise Inc.",
+        "account_name": "BUSINESS PERMITS & LICENSES",
+        "is_group": 0,
+        "lft": 2395,
+        "rgt": 2396
+      },
+      {
+        "name": "CAR PLAN - Bebang Enterprise Inc.",
+        "account_name": "CAR PLAN",
+        "is_group": 0,
+        "lft": 2403,
+        "rgt": 2404
+      },
+      {
+        "name": "CAR REGISTRATION FEE - Bebang Enterprise Inc.",
+        "account_name": "CAR REGISTRATION FEE",
+        "is_group": 0,
+        "lft": 2411,
+        "rgt": 2412
+      },
+      {
+        "name": "CELLPHONE - Bebang Enterprise Inc.",
+        "account_name": "CELLPHONE",
+        "is_group": 0,
+        "lft": 2443,
+        "rgt": 2444
+      },
+      {
+        "name": "COMPETETIVE CHECK - Bebang Enterprise Inc.",
+        "account_name": "COMPETETIVE CHECK",
+        "is_group": 0,
+        "lft": 2467,
+        "rgt": 2468
+      },
+      {
+        "name": "CONTROLLABLES - Bebang Enterprise Inc.",
+        "account_name": "CONTROLLABLES",
+        "is_group": 0,
+        "lft": 2487,
+        "rgt": 2488
+      },
+      {
+        "name": "COST OF SALES - Bebang Enterprise Inc.",
+        "account_name": "COST OF SALES",
+        "is_group": 0,
+        "lft": 2495,
+        "rgt": 2502
+      },
+      {
+        "name": "CREW/STAFF SALARIES - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES",
+        "is_group": 0,
+        "lft": 2537,
+        "rgt": 2538
+      },
+      {
+        "name": "CREW/STAFF SALARIES-13TH MONTH PAY - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-13TH MONTH PAY",
+        "is_group": 0,
+        "lft": 2545,
+        "rgt": 2546
+      },
+      {
+        "name": "CREW/STAFF SALARIES-ALLOWANCES - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-ALLOWANCES",
+        "is_group": 0,
+        "lft": 2553,
+        "rgt": 2554
+      },
+      {
+        "name": "CREW/STAFF SALARIES-BASIC PAY - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-BASIC PAY",
+        "is_group": 0,
+        "lft": 2561,
+        "rgt": 2562
+      },
+      {
+        "name": "CREW/STAFF SALARIES-DE MINIMIS - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-DE MINIMIS",
+        "is_group": 0,
+        "lft": 2569,
+        "rgt": 2570
+      },
+      {
+        "name": "CREW/STAFF SALARIES-HOLIDAY PAY - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-HOLIDAY PAY",
+        "is_group": 0,
+        "lft": 2577,
+        "rgt": 2578
+      },
+      {
+        "name": "CREW/STAFF SALARIES-HONORARIUM - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-HONORARIUM",
+        "is_group": 0,
+        "lft": 2585,
+        "rgt": 2586
+      },
+      {
+        "name": "CREW/STAFF SALARIES-LAST PAY CREW/STAFF - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-LAST PAY CREW/STAFF",
+        "is_group": 0,
+        "lft": 2593,
+        "rgt": 2594
+      },
+      {
+        "name": "CREW/STAFF SALARIES-NIGHT DIFFERENTIAL - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-NIGHT DIFFERENTIAL",
+        "is_group": 0,
+        "lft": 2601,
+        "rgt": 2602
+      },
+      {
+        "name": "CREW/STAFF SALARIES-OVERTIME PAY - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-OVERTIME PAY",
+        "is_group": 0,
+        "lft": 2609,
+        "rgt": 2610
+      },
+      {
+        "name": "CREW/STAFF SALARIES-REST DAY PAY - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-REST DAY PAY",
+        "is_group": 0,
+        "lft": 2617,
+        "rgt": 2618
+      },
+      {
+        "name": "CREW/STAFF SALARIES-SL/VL CONVERSION - Bebang Enterprise Inc.",
+        "account_name": "CREW/STAFF SALARIES-SL/VL CONVERSION",
+        "is_group": 0,
+        "lft": 2625,
+        "rgt": 2626
+      },
+      {
+        "name": "CUSA CHARGES - Bebang Enterprise Inc.",
+        "account_name": "CUSA CHARGES",
+        "is_group": 0,
+        "lft": 2663,
+        "rgt": 2664
+      },
+      {
+        "name": "DELIVERY RIDERS - Bebang Enterprise Inc.",
+        "account_name": "DELIVERY RIDERS",
+        "is_group": 0,
+        "lft": 2687,
+        "rgt": 2688
+      },
+      {
+        "name": "DEPRECIATION - Bebang Enterprise Inc.",
+        "account_name": "DEPRECIATION",
+        "is_group": 0,
+        "lft": 2695,
+        "rgt": 2696
+      },
+      {
+        "name": "DEPRECIATION - BUILDINGS - Bebang Enterprise Inc.",
+        "account_name": "DEPRECIATION - BUILDINGS",
+        "is_group": 0,
+        "lft": 2699,
+        "rgt": 2700
+      },
+      {
+        "name": "DEPRECIATION - LEASEHOLD IMPROVEMENTS - Bebang Enterprise Inc.",
+        "account_name": "DEPRECIATION - LEASEHOLD IMPROVEMENTS",
+        "is_group": 0,
+        "lft": 2707,
+        "rgt": 2708
+      },
+      {
+        "name": "DEPRECIATION -COMPUTER EQUIPMENT - Bebang Enterprise Inc.",
+        "account_name": "DEPRECIATION -COMPUTER EQUIPMENT",
+        "is_group": 0,
+        "lft": 2719,
+        "rgt": 2720
+      },
+      {
+        "name": "DEPRECIATION -FURNITURES AND FIXTURES - Bebang Enterprise Inc.",
+        "account_name": "DEPRECIATION -FURNITURES AND FIXTURES",
+        "is_group": 0,
+        "lft": 2727,
+        "rgt": 2728
+      },
+      {
+        "name": "DEPRECIATION -KITCHEN EQUIPMENT - Bebang Enterprise Inc.",
+        "account_name": "DEPRECIATION -KITCHEN EQUIPMENT",
+        "is_group": 0,
+        "lft": 2735,
+        "rgt": 2736
+      },
+      {
+        "name": "DEPRECIATION -MOTOR VEHICLE - Bebang Enterprise Inc.",
+        "account_name": "DEPRECIATION -MOTOR VEHICLE",
+        "is_group": 0,
+        "lft": 2743,
+        "rgt": 2744
+      },
+      {
+        "name": "DEPRECIATION -OFFICE EQUIPMENT - Bebang Enterprise Inc.",
+        "account_name": "DEPRECIATION -OFFICE EQUIPMENT",
+        "is_group": 0,
+        "lft": 2751,
+        "rgt": 2752
+      },
+      {
+        "name": "DEPRECIATION -PROJECT COST RELATED - Bebang Enterprise Inc.",
+        "account_name": "DEPRECIATION -PROJECT COST RELATED",
+        "is_group": 0,
+        "lft": 2759,
+        "rgt": 2760
+      },
+      {
+        "name": "DOC. STAMP TAX - Bebang Enterprise Inc.",
+        "account_name": "DOC. STAMP TAX",
+        "is_group": 0,
+        "lft": 2771,
+        "rgt": 2772
+      },
+      {
+        "name": "DONATION - Bebang Enterprise Inc.",
+        "account_name": "DONATION",
+        "is_group": 0,
+        "lft": 2779,
+        "rgt": 2780
+      },
+      {
+        "name": "ECOM FEES (5%) - Bebang Enterprise Inc.",
+        "account_name": "ECOM FEES (5%)",
+        "is_group": 0,
+        "lft": 2787,
+        "rgt": 2788
+      },
+      {
+        "name": "ELECTRICITY - Bebang Enterprise Inc.",
+        "account_name": "ELECTRICITY",
+        "is_group": 0,
+        "lft": 2795,
+        "rgt": 2796
+      },
+      {
+        "name": "EMPLOYEE BENEFITS - Bebang Enterprise Inc.",
+        "account_name": "EMPLOYEE BENEFITS",
+        "is_group": 0,
+        "lft": 2803,
+        "rgt": 2804
+      },
+      {
+        "name": "EQUIPMENT RENTAL - Bebang Enterprise Inc.",
+        "account_name": "EQUIPMENT RENTAL",
+        "is_group": 0,
+        "lft": 2811,
+        "rgt": 2812
+      },
+      {
+        "name": "FINES & PENALTIES - Bebang Enterprise Inc.",
+        "account_name": "FINES & PENALTIES",
+        "is_group": 0,
+        "lft": 5339,
+        "rgt": 5340
+      },
+      {
+        "name": "FIRST AID SUPPLIES - Bebang Enterprise Inc.",
+        "account_name": "FIRST AID SUPPLIES",
+        "is_group": 0,
+        "lft": 5347,
+        "rgt": 5348
+      },
+      {
+        "name": "FOOD - Bebang Enterprise Inc.",
+        "account_name": "FOOD",
+        "is_group": 0,
+        "lft": 5355,
+        "rgt": 5356
+      },
+      {
+        "name": "FOREIGN & LOCAL TRAVEL - Bebang Enterprise Inc.",
+        "account_name": "FOREIGN & LOCAL TRAVEL",
+        "is_group": 0,
+        "lft": 5363,
+        "rgt": 5364
+      },
+      {
+        "name": "FRINGE BENEFIT TAX - Bebang Enterprise Inc.",
+        "account_name": "FRINGE BENEFIT TAX",
+        "is_group": 0,
+        "lft": 5371,
+        "rgt": 5372
+      },
+      {
+        "name": "GAS & OIL - Bebang Enterprise Inc.",
+        "account_name": "GAS & OIL",
+        "is_group": 0,
+        "lft": 5385,
+        "rgt": 5386
+      },
+      {
+        "name": "GEN MEET EXPENSES - Bebang Enterprise Inc.",
+        "account_name": "GEN MEET EXPENSES",
+        "is_group": 0,
+        "lft": 5393,
+        "rgt": 5394
+      },
+      {
+        "name": "HDMF CONTRIBUTION-CREW/STAFF - Bebang Enterprise Inc.",
+        "account_name": "HDMF CONTRIBUTION-CREW/STAFF",
+        "is_group": 0,
+        "lft": 5401,
+        "rgt": 5402
+      },
+      {
+        "name": "HDMF CONTRIBUTION-MGT - Bebang Enterprise Inc.",
+        "account_name": "HDMF CONTRIBUTION-MGT",
+        "is_group": 0,
+        "lft": 5409,
+        "rgt": 5410
+      },
+      {
+        "name": "INSURANCE - Bebang Enterprise Inc.",
+        "account_name": "INSURANCE",
+        "is_group": 0,
+        "lft": 5849,
+        "rgt": 5850
+      },
+      {
+        "name": "INTEREST EXPENSE-BANKS - Bebang Enterprise Inc.",
+        "account_name": "INTEREST EXPENSE-BANKS",
+        "is_group": 0,
+        "lft": 5857,
+        "rgt": 5858
+      },
+      {
+        "name": "INTEREST EXPENSE-OTHERS - Bebang Enterprise Inc.",
+        "account_name": "INTEREST EXPENSE-OTHERS",
+        "is_group": 0,
+        "lft": 5865,
+        "rgt": 5866
+      },
+      {
+        "name": "INTERNET CHARGES - Bebang Enterprise Inc.",
+        "account_name": "INTERNET CHARGES",
+        "is_group": 0,
+        "lft": 5873,
+        "rgt": 5874
+      },
+      {
+        "name": "JANITORIAL SUPPLIES - Bebang Enterprise Inc.",
+        "account_name": "JANITORIAL SUPPLIES",
+        "is_group": 0,
+        "lft": 5909,
+        "rgt": 5910
+      },
+      {
+        "name": "LEASE RELATED EXPENSES - Bebang Enterprise Inc.",
+        "account_name": "LEASE RELATED EXPENSES",
+        "is_group": 0,
+        "lft": 5923,
+        "rgt": 5924
+      },
+      {
+        "name": "LEGAL FEES - Bebang Enterprise Inc.",
+        "account_name": "LEGAL FEES",
+        "is_group": 0,
+        "lft": 5937,
+        "rgt": 5938
+      },
+      {
+        "name": "LOGISTIC COST - Bebang Enterprise Inc.",
+        "account_name": "LOGISTIC COST",
+        "is_group": 0,
+        "lft": 5977,
+        "rgt": 5978
+      },
+      {
+        "name": "LOGISTICS COST-COMMISSARY - Bebang Enterprise Inc.",
+        "account_name": "LOGISTICS COST-COMMISSARY",
+        "is_group": 0,
+        "lft": 5985,
+        "rgt": 5986
+      },
+      {
+        "name": "LOGISTICS COST-PCF - Bebang Enterprise Inc.",
+        "account_name": "LOGISTICS COST-PCF",
+        "is_group": 0,
+        "lft": 5993,
+        "rgt": 5994
+      },
+      {
+        "name": "LOGISTICS COST-WAREHOUSE - Bebang Enterprise Inc.",
+        "account_name": "LOGISTICS COST-WAREHOUSE",
+        "is_group": 0,
+        "lft": 6001,
+        "rgt": 6002
+      },
+      {
+        "name": "MANAGEMENT & CREW INCENTIVES - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT & CREW INCENTIVES",
+        "is_group": 0,
+        "lft": 6019,
+        "rgt": 6020
+      },
+      {
+        "name": "MANAGEMENT FEE (2.5%) - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT FEE (2.5%)",
+        "is_group": 0,
+        "lft": 6027,
+        "rgt": 6028
+      },
+      {
+        "name": "MANAGEMENT FEE (2%) - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT FEE (2%)",
+        "is_group": 0,
+        "lft": 6035,
+        "rgt": 6036
+      },
+      {
+        "name": "MANAGEMENT SALARIES - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES",
+        "is_group": 0,
+        "lft": 6043,
+        "rgt": 6044
+      },
+      {
+        "name": "MANAGEMENT SALARIES-13TH MONTH PAY - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-13TH MONTH PAY",
+        "is_group": 0,
+        "lft": 6051,
+        "rgt": 6052
+      },
+      {
+        "name": "MANAGEMENT SALARIES-ALLOWANCES - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-ALLOWANCES",
+        "is_group": 0,
+        "lft": 6059,
+        "rgt": 6060
+      },
+      {
+        "name": "MANAGEMENT SALARIES-BASIC PAY - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-BASIC PAY",
+        "is_group": 0,
+        "lft": 6067,
+        "rgt": 6068
+      },
+      {
+        "name": "MANAGEMENT SALARIES-DE MINIMIS - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-DE MINIMIS",
+        "is_group": 0,
+        "lft": 6075,
+        "rgt": 6076
+      },
+      {
+        "name": "MANAGEMENT SALARIES-HOLIDAY PAY - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-HOLIDAY PAY",
+        "is_group": 0,
+        "lft": 6083,
+        "rgt": 6084
+      },
+      {
+        "name": "MANAGEMENT SALARIES-HONORARIUM - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-HONORARIUM",
+        "is_group": 0,
+        "lft": 6091,
+        "rgt": 6092
+      },
+      {
+        "name": "MANAGEMENT SALARIES-LAST PAY - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-LAST PAY",
+        "is_group": 0,
+        "lft": 6099,
+        "rgt": 6100
+      },
+      {
+        "name": "MANAGEMENT SALARIES-NIGHT DIFFERENTIAL - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-NIGHT DIFFERENTIAL",
+        "is_group": 0,
+        "lft": 6107,
+        "rgt": 6108
+      },
+      {
+        "name": "MANAGEMENT SALARIES-OVERTIME PAY - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-OVERTIME PAY",
+        "is_group": 0,
+        "lft": 6115,
+        "rgt": 6116
+      },
+      {
+        "name": "MANAGEMENT SALARIES-REST DAY PAY - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-REST DAY PAY",
+        "is_group": 0,
+        "lft": 6123,
+        "rgt": 6124
+      },
+      {
+        "name": "MANAGEMENT SALARIES-SEPARATION PAY - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-SEPARATION PAY",
+        "is_group": 0,
+        "lft": 6131,
+        "rgt": 6132
+      },
+      {
+        "name": "MANAGEMENT SALARIES-SL/VL CONVERSION - Bebang Enterprise Inc.",
+        "account_name": "MANAGEMENT SALARIES-SL/VL CONVERSION",
+        "is_group": 0,
+        "lft": 6139,
+        "rgt": 6140
+      },
+      {
+        "name": "MEALS - Bebang Enterprise Inc.",
+        "account_name": "MEALS",
+        "is_group": 0,
+        "lft": 6147,
+        "rgt": 6148
+      },
+      {
+        "name": "MEDICAL & PERSONAL ACCIDENT INSURANCE - Bebang Enterprise Inc.",
+        "account_name": "MEDICAL & PERSONAL ACCIDENT INSURANCE",
+        "is_group": 0,
+        "lft": 6155,
+        "rgt": 6156
+      },
+      {
+        "name": "MEMBERSHIP DUES & SUBSCRIPTION - Bebang Enterprise Inc.",
+        "account_name": "MEMBERSHIP DUES & SUBSCRIPTION",
+        "is_group": 0,
+        "lft": 6163,
+        "rgt": 6164
+      },
+      {
+        "name": "MINIMUM GUARANTEED RENT - Bebang Enterprise Inc.",
+        "account_name": "MINIMUM GUARANTEED RENT",
+        "is_group": 0,
+        "lft": 6171,
+        "rgt": 6172
+      },
+      {
+        "name": "MISCELLANEOUS EXPENSES - Bebang Enterprise Inc.",
+        "account_name": "MISCELLANEOUS EXPENSES",
+        "is_group": 0,
+        "lft": 6179,
+        "rgt": 6180
+      },
+      {
+        "name": "MOTOR & CAR TAXI/JEEPNEY FARES - Bebang Enterprise Inc.",
+        "account_name": "MOTOR & CAR TAXI/JEEPNEY FARES",
+        "is_group": 0,
+        "lft": 6187,
+        "rgt": 6188
+      },
+      {
+        "name": "MYSTERY SHOPPER COST - Bebang Enterprise Inc.",
+        "account_name": "MYSTERY SHOPPER COST",
+        "is_group": 0,
+        "lft": 6201,
+        "rgt": 6202
+      },
+      {
+        "name": "NATIONAL ADVERTISING FUND (3% ON NET SALES) - Bebang Enterprise Inc.",
+        "account_name": "NATIONAL ADVERTISING FUND (3% ON NET SALES)",
+        "is_group": 0,
+        "lft": 6209,
+        "rgt": 6210
+      },
+      {
+        "name": "NATIONAL ADVERTISING FUND (5% ON NET SALES) - Bebang Enterprise Inc.",
+        "account_name": "NATIONAL ADVERTISING FUND (5% ON NET SALES)",
+        "is_group": 0,
+        "lft": 6217,
+        "rgt": 6218
+      },
+      {
+        "name": "NON-CONTROLLABLES - Bebang Enterprise Inc.",
+        "account_name": "NON-CONTROLLABLES",
+        "is_group": 0,
+        "lft": 6225,
+        "rgt": 6226
+      },
+      {
+        "name": "OFFICE SUPPLIES - Bebang Enterprise Inc.",
+        "account_name": "OFFICE SUPPLIES",
+        "is_group": 0,
+        "lft": 6283,
+        "rgt": 6284
+      },
+      {
+        "name": "OPERATING EXPENSES - Bebang Enterprise Inc.",
+        "account_name": "OPERATING EXPENSES",
+        "is_group": 0,
+        "lft": 6295,
+        "rgt": 6296
+      },
+      {
+        "name": "OPERATING SUPPLIES - Bebang Enterprise Inc.",
+        "account_name": "OPERATING SUPPLIES",
+        "is_group": 0,
+        "lft": 6303,
+        "rgt": 6304
+      },
+      {
+        "name": "OPERATING SUPPLIES-COMMISSARY - Bebang Enterprise Inc.",
+        "account_name": "OPERATING SUPPLIES-COMMISSARY",
+        "is_group": 0,
+        "lft": 6311,
+        "rgt": 6312
+      },
+      {
+        "name": "OTHER CHARGES - Bebang Enterprise Inc.",
+        "account_name": "OTHER CHARGES",
+        "is_group": 0,
+        "lft": 6325,
+        "rgt": 6326
+      },
+      {
+        "name": "OTHER INCOME - Bebang Enterprise Inc.",
+        "account_name": "OTHER INCOME",
+        "is_group": 0,
+        "lft": 6339,
+        "rgt": 6340
+      },
+      {
+        "name": "OTHER PROFESSIONAL FEE - Bebang Enterprise Inc.",
+        "account_name": "OTHER PROFESSIONAL FEE",
+        "is_group": 0,
+        "lft": 6353,
+        "rgt": 6354
+      },
+      {
+        "name": "OTHER TAXES & LICENSES - Bebang Enterprise Inc.",
+        "account_name": "OTHER TAXES & LICENSES",
+        "is_group": 0,
+        "lft": 6367,
+        "rgt": 6368
+      },
+      {
+        "name": "OTHERS - Bebang Enterprise Inc.",
+        "account_name": "OTHERS",
+        "is_group": 0,
+        "lft": 6375,
+        "rgt": 6376
+      },
+      {
+        "name": "OTHERS EMPLOYEE BENEFITS - Bebang Enterprise Inc.",
+        "account_name": "OTHERS EMPLOYEE BENEFITS",
+        "is_group": 0,
+        "lft": 6383,
+        "rgt": 6384
+      },
+      {
+        "name": "OUTING/SPORTSFEST & PARTIES - Bebang Enterprise Inc.",
+        "account_name": "OUTING/SPORTSFEST & PARTIES",
+        "is_group": 0,
+        "lft": 6391,
+        "rgt": 6392
+      },
+      {
+        "name": "OUTSIDE SERVICES - Bebang Enterprise Inc.",
+        "account_name": "OUTSIDE SERVICES",
+        "is_group": 0,
+        "lft": 6405,
+        "rgt": 6406
+      },
+      {
+        "name": "OUTSIDE SERVICES-OTHERS - Bebang Enterprise Inc.",
+        "account_name": "OUTSIDE SERVICES-OTHERS",
+        "is_group": 0,
+        "lft": 6413,
+        "rgt": 6414
+      },
+      {
+        "name": "PACKAGING - Bebang Enterprise Inc.",
+        "account_name": "PACKAGING",
+        "is_group": 0,
+        "lft": 6421,
+        "rgt": 6422
+      },
+      {
+        "name": "PAYMONGO CHARGES - Bebang Enterprise Inc.",
+        "account_name": "PAYMONGO CHARGES",
+        "is_group": 0,
+        "lft": 6429,
+        "rgt": 6430
+      },
+      {
+        "name": "PAYROLL TAXES - Bebang Enterprise Inc.",
+        "account_name": "PAYROLL TAXES",
+        "is_group": 0,
+        "lft": 6437,
+        "rgt": 6438
+      },
+      {
+        "name": "PERCENTAGE RENT - VARIABLE - Bebang Enterprise Inc.",
+        "account_name": "PERCENTAGE RENT - VARIABLE",
+        "is_group": 0,
+        "lft": 6451,
+        "rgt": 6452
+      },
+      {
+        "name": "PEST CONTROL SERVICES - Bebang Enterprise Inc.",
+        "account_name": "PEST CONTROL SERVICES",
+        "is_group": 0,
+        "lft": 6459,
+        "rgt": 6460
+      },
+      {
+        "name": "PHIC CONTRIBUTION-CREW/STAFF - Bebang Enterprise Inc.",
+        "account_name": "PHIC CONTRIBUTION-CREW/STAFF",
+        "is_group": 0,
+        "lft": 6473,
+        "rgt": 6474
+      },
+      {
+        "name": "PHIC CONTRIBUTION-MGT - Bebang Enterprise Inc.",
+        "account_name": "PHIC CONTRIBUTION-MGT",
+        "is_group": 0,
+        "lft": 6481,
+        "rgt": 6482
+      },
+      {
+        "name": "PHOTOCOPY & FILM DEVELOPING - Bebang Enterprise Inc.",
+        "account_name": "PHOTOCOPY & FILM DEVELOPING",
+        "is_group": 0,
+        "lft": 6489,
+        "rgt": 6490
+      },
+      {
+        "name": "POSTAGE & COURIER - Bebang Enterprise Inc.",
+        "account_name": "POSTAGE & COURIER ",
+        "is_group": 0,
+        "lft": 6503,
+        "rgt": 6504
+      },
+      {
+        "name": "PRODUCT TEST - Bebang Enterprise Inc.",
+        "account_name": "PRODUCT TEST",
+        "is_group": 0,
+        "lft": 6541,
+        "rgt": 6542
+      },
+      {
+        "name": "PROFESSIONAL FEES - Bebang Enterprise Inc.",
+        "account_name": "PROFESSIONAL FEES",
+        "is_group": 0,
+        "lft": 6549,
+        "rgt": 6550
+      },
+      {
+        "name": "R&M - CONTRACT SERVICES - Bebang Enterprise Inc.",
+        "account_name": "R&M - CONTRACT SERVICES",
+        "is_group": 0,
+        "lft": 6569,
+        "rgt": 6570
+      },
+      {
+        "name": "R&M - IN-HOUSE - Bebang Enterprise Inc.",
+        "account_name": "R&M - IN-HOUSE",
+        "is_group": 0,
+        "lft": 6577,
+        "rgt": 6578
+      },
+      {
+        "name": "R&M - MATERIALS AND SUPPLIES - Bebang Enterprise Inc.",
+        "account_name": "R&M - MATERIALS AND SUPPLIES",
+        "is_group": 0,
+        "lft": 6585,
+        "rgt": 6586
+      },
+      {
+        "name": "R&M - VEHICLE - Bebang Enterprise Inc.",
+        "account_name": "R&M - VEHICLE",
+        "is_group": 0,
+        "lft": 6593,
+        "rgt": 6594
+      },
+      {
+        "name": "RECRUITMENT EXPENSES - Bebang Enterprise Inc.",
+        "account_name": "RECRUITMENT EXPENSES",
+        "is_group": 0,
+        "lft": 6607,
+        "rgt": 6608
+      },
+      {
+        "name": "RENT-OTHERS - Bebang Enterprise Inc.",
+        "account_name": "RENT-OTHERS",
+        "is_group": 0,
+        "lft": 6621,
+        "rgt": 6622
+      },
+      {
+        "name": "REPAIRS & MAINTENANCE - Bebang Enterprise Inc.",
+        "account_name": "REPAIRS & MAINTENANCE",
+        "is_group": 0,
+        "lft": 6629,
+        "rgt": 6630
+      },
+      {
+        "name": "REPRESENTATION & ENTERTAINMENT-OTHERS - Bebang Enterprise Inc.",
+        "account_name": "REPRESENTATION & ENTERTAINMENT-OTHERS",
+        "is_group": 0,
+        "lft": 6637,
+        "rgt": 6638
+      },
+      {
+        "name": "ROYALTY FEE (5.0%) - Bebang Enterprise Inc.",
+        "account_name": "ROYALTY FEE (5.0%)",
+        "is_group": 0,
+        "lft": 6661,
+        "rgt": 6662
+      },
+      {
+        "name": "ROYALTY FEE (7.0%) - Bebang Enterprise Inc.",
+        "account_name": "ROYALTY FEE (7.0%)",
+        "is_group": 0,
+        "lft": 6669,
+        "rgt": 6670
+      },
+      {
+        "name": "SALES - Bebang Enterprise Inc.",
+        "account_name": "SALES",
+        "is_group": 0,
+        "lft": 6683,
+        "rgt": 6686
+      },
+      {
+        "name": "SMALLWARES SUPPLIES - Bebang Enterprise Inc.",
+        "account_name": "SMALLWARES SUPPLIES",
+        "is_group": 0,
+        "lft": 6783,
+        "rgt": 6784
+      },
+      {
+        "name": "SPONSORSHIP - Bebang Enterprise Inc.",
+        "account_name": "SPONSORSHIP",
+        "is_group": 0,
+        "lft": 7773,
+        "rgt": 7774
+      },
+      {
+        "name": "SSS/MED/ECC-CREW/STAFF - Bebang Enterprise Inc.",
+        "account_name": "SSS/MED/ECC-CREW/STAFF",
+        "is_group": 0,
+        "lft": 7787,
+        "rgt": 7788
+      },
+      {
+        "name": "SSS/MED/ECC-MGT - Bebang Enterprise Inc.",
+        "account_name": "SSS/MED/ECC-MGT",
+        "is_group": 0,
+        "lft": 7795,
+        "rgt": 7796
+      },
+      {
+        "name": "STORE SUPPLIES - Bebang Enterprise Inc.",
+        "account_name": "STORE SUPPLIES",
+        "is_group": 0,
+        "lft": 7813,
+        "rgt": 7814
+      },
+      {
+        "name": "TAX EXPENSE - Bebang Enterprise Inc.",
+        "account_name": "TAX EXPENSE",
+        "is_group": 0,
+        "lft": 7821,
+        "rgt": 7822
+      },
+      {
+        "name": "TAXES AND LICENSES - Bebang Enterprise Inc.",
+        "account_name": "TAXES AND LICENSES",
+        "is_group": 0,
+        "lft": 7829,
+        "rgt": 7830
+      },
+      {
+        "name": "TELEPHONE & FAX CHARGES - Bebang Enterprise Inc.",
+        "account_name": "TELEPHONE & FAX CHARGES",
+        "is_group": 0,
+        "lft": 8021,
+        "rgt": 8022
+      },
+      {
+        "name": "TOLL & PARKING FEES - Bebang Enterprise Inc.",
+        "account_name": "TOLL & PARKING FEES",
+        "is_group": 0,
+        "lft": 8029,
+        "rgt": 8030
+      },
+      {
+        "name": "TRAINING & SEMINAR - Bebang Enterprise Inc.",
+        "account_name": "TRAINING & SEMINAR",
+        "is_group": 0,
+        "lft": 8059,
+        "rgt": 8060
+      },
+      {
+        "name": "TRANSPORTATION & TRAVEL - Bebang Enterprise Inc.",
+        "account_name": "TRANSPORTATION & TRAVEL",
+        "is_group": 0,
+        "lft": 8067,
+        "rgt": 8068
+      },
+      {
+        "name": "UNIFORMS - Bebang Enterprise Inc.",
+        "account_name": "UNIFORMS",
+        "is_group": 0,
+        "lft": 8075,
+        "rgt": 8076
+      },
+      {
+        "name": "UTILITY COSTS - Bebang Enterprise Inc.",
+        "account_name": "UTILITY COSTS",
+        "is_group": 0,
+        "lft": 8101,
+        "rgt": 8102
+      },
+      {
+        "name": "WASTAGES & SHRINKAGES - Bebang Enterprise Inc.",
+        "account_name": "WASTAGES & SHRINKAGES",
+        "is_group": 0,
+        "lft": 8291,
+        "rgt": 8292
+      },
+      {
+        "name": "WATER - Bebang Enterprise Inc.",
+        "account_name": "WATER",
+        "is_group": 0,
+        "lft": 8299,
+        "rgt": 8300
+      },
+      {
+        "name": "WTAX EXPENSE - Bebang Enterprise Inc.",
+        "account_name": "WTAX EXPENSE",
+        "is_group": 0,
+        "lft": 8325,
+        "rgt": 8326
+      }
+    ],
+    "all_income_groups": [],
+    "4000000": [
+      {
+        "name": "SALES - Bebang Enterprise Inc.",
+        "account_name": "SALES",
+        "parent_account": null,
+        "root_type": "Income",
+        "is_group": 0,
+        "lft": 6683,
+        "rgt": 6686
+      }
+    ]
+  },
+  "BEBANG FRANCHISE CORP.": {
+    "income_roots_no_parent": [
+      {
+        "name": "Income - BFC",
+        "account_name": "Income",
+        "is_group": 1,
+        "lft": 5471,
+        "rgt": 5534
+      }
+    ],
+    "all_income_groups": [
+      {
+        "name": "Income - BFC",
+        "account_name": "Income",
+        "is_group": 1,
+        "parent_account": null,
+        "lft": 5471
+      },
+      {
+        "name": "4000000 - SALES - BFC",
+        "account_name": "SALES",
+        "is_group": 1,
+        "parent_account": "Income - BFC",
+        "lft": 5472
+      },
+      {
+        "name": "4000100 - STORE SALES - BFC",
+        "account_name": "STORE SALES",
+        "is_group": 1,
+        "parent_account": "4000000 - SALES - BFC",
+        "lft": 5473
+      },
+      {
+        "name": "4000120 - ONLINE SALES - BFC",
+        "account_name": "ONLINE SALES",
+        "is_group": 1,
+        "parent_account": "4000100 - STORE SALES - BFC",
+        "lft": 5476
+      },
+      {
+        "name": "4000200 - BKI SALES - BFC",
+        "account_name": "BKI SALES",
+        "is_group": 1,
+        "parent_account": "4000000 - SALES - BFC",
+        "lft": 5485
+      },
+      {
+        "name": "4000220 - LOGISTICS - BFC",
+        "account_name": "LOGISTICS",
+        "is_group": 1,
+        "parent_account": "4000200 - BKI SALES - BFC",
+        "lft": 5488
+      },
+      {
+        "name": "4000230 - FEES - BFC",
+        "account_name": "FEES",
+        "is_group": 1,
+        "parent_account": "4000000 - SALES - BFC",
+        "lft": 5495
+      },
+      {
+        "name": "4000900 - DISCOUNTS AND PROMO - BFC",
+        "account_name": "DISCOUNTS AND PROMO",
+        "is_group": 1,
+        "parent_account": "4000000 - SALES - BFC",
+        "lft": 5507
+      },
+      {
+        "name": "Direct Income - BFC",
+        "account_name": "Direct Income",
+        "is_group": 1,
+        "parent_account": "Income - BFC",
+        "lft": 5526
+      },
+      {
+        "name": "Indirect Income - BFC",
+        "account_name": "Indirect Income",
+        "is_group": 1,
+        "parent_account": "Income - BFC",
+        "lft": 5532
+      }
+    ],
+    "4000000": [
+      {
+        "name": "4000000 - SALES - BFC",
+        "account_name": "SALES",
+        "parent_account": "Income - BFC",
+        "root_type": "Income",
+        "is_group": 1,
+        "lft": 5472,
+        "rgt": 5525
+      }
+    ]
+  },
+  "Triple I Holdings": {
+    "income_roots_no_parent": [
+      {
+        "name": "OTHER INCOME - TIH",
+        "account_name": "OTHER INCOME",
+        "is_group": 0,
+        "lft": 6345,
+        "rgt": 6346
+      }
+    ],
+    "all_income_groups": [
+      {
+        "name": "FRANCHISE INCOME - TIH",
+        "account_name": "FRANCHISE INCOME",
+        "is_group": 1,
+        "parent_account": "SALES - TIH",
+        "lft": 6704
+      }
+    ],
+    "4000000": [
+      {
+        "name": "SALES - TIH",
+        "account_name": "SALES",
+        "parent_account": null,
+        "root_type": "Expense",
+        "is_group": 1,
+        "lft": 6703,
+        "rgt": 6718
+      }
+    ]
+  }
+}

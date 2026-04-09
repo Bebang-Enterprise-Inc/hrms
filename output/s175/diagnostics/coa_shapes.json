@@ -1,0 +1,889 @@
+{
+  "Bebang Enterprise Inc.": {
+    "root_level_count": 151,
+    "root_level": [
+      {
+        "account_name": "LOCAL AD & PROMO",
+        "account_number": "6005000",
+        "root_type": "Expense",
+        "is_group": 1
+      }
+    ],
+    "income_groups_count": 0,
+    "total_accounts": 301,
+    "4000000": [
+      {
+        "name": "SALES - Bebang Enterprise Inc.",
+        "account_name": "SALES",
+        "account_number": "4000000",
+        "parent_account": null,
+        "is_group": 0,
+        "root_type": "Income",
+        "lft": 6683,
+        "rgt": 6686
+      }
+    ],
+    "4000000_gl_entries": 0
+  },
+  "Bebang Kitchen Inc.": {
+    "root_level_count": 0,
+    "root_level": [],
+    "income_groups_count": 1,
+    "total_accounts": 297,
+    "4000000": [
+      {
+        "name": "SALES - BKI",
+        "account_name": "SALES",
+        "account_number": "4000000",
+        "parent_account": "SALES - BKI",
+        "is_group": 1,
+        "root_type": "Income",
+        "lft": 6687,
+        "rgt": 6688
+      }
+    ],
+    "4000000_children": [
+      {
+        "name": "SALES - BKI",
+        "account_number": "4000000",
+        "account_name": "SALES",
+        "is_group": 1,
+        "root_type": "Income"
+      }
+    ],
+    "4000000_gl_entries": 0
+  },
+  "Triple I Holdings": {
+    "root_level_count": 294,
+    "root_level": [
+      {
+        "account_name": "ACCUM DEP - BUILDINGS",
+        "account_number": "1206500",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - COMPUTER EQUIPMENT",
+        "account_number": "1206504",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - FURNITURES AND FIXTURES",
+        "account_number": "1206503",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - KITCHEN EQUIPMENT",
+        "account_number": "1206502",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - LEASEHOLD IMPROVEMENTS",
+        "account_number": "1206501",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - MOTOR VEHICLE",
+        "account_number": "1206506",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - OFFICE EQUIPMENT",
+        "account_number": "1206505",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - PROJECT COST RELATED",
+        "account_number": "1206507",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ASSETS",
+        "account_number": "1000000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "BASIC RENTALS",
+        "account_number": "6020200",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "BUILDINGS",
+        "account_number": "1206400",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "CASH",
+        "account_number": "1101000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "CASH IN BANK",
+        "account_number": "1101100",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "CASH ON HAND",
+        "account_number": "1112000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "COMPUTER EQUIPMENT",
+        "account_number": "1206404",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "CONTROLLABLES",
+        "account_number": "6001000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "COST OF SALES",
+        "account_number": "5000000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "CREW/STAFF SALARIES",
+        "account_number": "6002000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "CURRENT ASSETS",
+        "account_number": "1100000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "CURRENT LIABILITIES",
+        "account_number": "2100000",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "DEPRECIATION",
+        "account_number": "6020800",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "DISCOUNTS AND PROMO",
+        "account_number": "4000200",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "EMPLOYEE BENEFITS",
+        "account_number": "6002300",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "FURNITURES AND FIXTURES",
+        "account_number": "1206403",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "INVENTORY",
+        "account_number": "1104000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "KITCHEN EQUIPMENT",
+        "account_number": "1206402",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "LEASE RELATED EXPENSES",
+        "account_number": "6020300",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "LEASEHOLD IMPROVEMENTS",
+        "account_number": "1206401",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "LIABILITIES",
+        "account_number": "2000000",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "LOGISTIC COST",
+        "account_number": "6003000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "LONG-TERM DEBT",
+        "account_number": "2201000",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "MANAGEMENT SALARIES",
+        "account_number": "6001001",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "MISCELLANEOUS EXPENSES",
+        "account_number": "6010200",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "MOTOR VEHICLE",
+        "account_number": "1206406",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "NON-CONTROLLABLES",
+        "account_number": "6020000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "NON-CURRENT ASSETS",
+        "account_number": "1200000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "NON-CURRENT LIABILITIES",
+        "account_number": "2200000",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "NON-TRADE PAYABLES",
+        "account_number": "2101000",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "NON-TRADE RECEIVABLES",
+        "account_number": "1103200",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "OFFICE EQUIPMENT",
+        "account_number": "1206405",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "OPERATING EXPENSES",
+        "account_number": "6000000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "OPERATING SUPPLIES",
+        "account_number": "6006000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "OTHER ASSETS",
+        "account_number": "1207100",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "OTHER CHARGES",
+        "account_number": "6030001",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "OTHER CURRENT ASSETS",
+        "account_number": "1105000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "OTHER PAYABLES",
+        "account_number": "2102100",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "OUTSIDE SERVICES",
+        "account_number": "6009000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "PAYROLL TAXES",
+        "account_number": "6002200",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "PREPAID EXPENSES",
+        "account_number": "1105200",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "PROFESSIONAL FEES",
+        "account_number": "6020600",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "PROJECT COST RELATED",
+        "account_number": "1206407",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "REPAIRS & MAINTENANCE",
+        "account_number": "6008000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "SALES",
+        "account_number": "4000000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "SHORT TERM DEBT",
+        "account_number": "2104100",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "STOCKHOLDER'S EQUITY",
+        "account_number": "3000000",
+        "root_type": "Equity",
+        "is_group": 1
+      },
+      {
+        "account_name": "TAXES AND LICENSES",
+        "account_number": "6020500",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "TAXES PAYABLES",
+        "account_number": "2102200",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "TRADE AND OTHER PAYABLES",
+        "account_number": "2101100",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "TRADE AND OTHER RECEIVABLES",
+        "account_number": "1103000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "TRADE RECEIVABLES",
+        "account_number": "1103100",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "TRANSPORTATION & TRAVEL",
+        "account_number": "6010000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "UTILITY COSTS",
+        "account_number": "6004000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "VAT, WITHHOLDING AND TAX CREDITS",
+        "account_number": "1105100",
+        "root_type": "Asset",
+        "is_group": 1
+      }
+    ],
+    "income_groups_count": 1,
+    "total_accounts": 313,
+    "4000000": [
+      {
+        "name": "SALES - TIH",
+        "account_name": "SALES",
+        "account_number": "4000000",
+        "parent_account": null,
+        "is_group": 1,
+        "root_type": "Expense",
+        "lft": 6703,
+        "rgt": 6718
+      }
+    ],
+    "4000000_children": [
+      {
+        "name": "FRANCHISE INCOME - TIH",
+        "account_number": "4000300",
+        "account_name": "FRANCHISE INCOME",
+        "is_group": 1,
+        "root_type": "Income"
+      }
+    ],
+    "4000000_gl_entries": 0
+  },
+  "JV": {
+    "root_level_count": 10,
+    "root_level": [],
+    "income_groups_count": 0,
+    "total_accounts": 312,
+    "4000000": [
+      {
+        "name": "SALES - JV",
+        "account_name": "SALES",
+        "account_number": "4000000",
+        "parent_account": "FRANCHISE INCOME - JV",
+        "is_group": 0,
+        "root_type": "Income",
+        "lft": 7345,
+        "rgt": 7360
+      }
+    ],
+    "4000000_gl_entries": 0
+  },
+  "Managed Franchise": {
+    "root_level_count": 294,
+    "root_level": [
+      {
+        "account_name": "ACCUM DEP - BUILDINGS",
+        "account_number": "1206500",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - COMPUTER EQUIPMENT",
+        "account_number": "1206504",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - FURNITURES AND FIXTURES",
+        "account_number": "1206503",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - KITCHEN EQUIPMENT",
+        "account_number": "1206502",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - LEASEHOLD IMPROVEMENTS",
+        "account_number": "1206501",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - MOTOR VEHICLE",
+        "account_number": "1206506",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - OFFICE EQUIPMENT",
+        "account_number": "1206505",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ACCUM DEP - PROJECT COST RELATED",
+        "account_number": "1206507",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "ASSETS",
+        "account_number": "1000000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "BASIC RENTALS",
+        "account_number": "6020200",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "BUILDINGS",
+        "account_number": "1206400",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "CASH",
+        "account_number": "1101000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "CASH IN BANK",
+        "account_number": "1101100",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "CASH ON HAND",
+        "account_number": "1112000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "COMPUTER EQUIPMENT",
+        "account_number": "1206404",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "CONTROLLABLES",
+        "account_number": "6001000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "COST OF SALES",
+        "account_number": "5000000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "CREW/STAFF SALARIES",
+        "account_number": "6002000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "CURRENT ASSETS",
+        "account_number": "1100000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "CURRENT LIABILITIES",
+        "account_number": "2100000",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "DEPRECIATION",
+        "account_number": "6020800",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "DISCOUNTS AND PROMO",
+        "account_number": "4000200",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "EMPLOYEE BENEFITS",
+        "account_number": "6002300",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "FURNITURES AND FIXTURES",
+        "account_number": "1206403",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "INVENTORY",
+        "account_number": "1104000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "KITCHEN EQUIPMENT",
+        "account_number": "1206402",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "LEASE RELATED EXPENSES",
+        "account_number": "6020300",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "LEASEHOLD IMPROVEMENTS",
+        "account_number": "1206401",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "LIABILITIES",
+        "account_number": "2000000",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "LOGISTIC COST",
+        "account_number": "6003000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "LONG-TERM DEBT",
+        "account_number": "2201000",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "MANAGEMENT SALARIES",
+        "account_number": "6001001",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "MISCELLANEOUS EXPENSES",
+        "account_number": "6010200",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "MOTOR VEHICLE",
+        "account_number": "1206406",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "NON-CONTROLLABLES",
+        "account_number": "6020000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "NON-CURRENT ASSETS",
+        "account_number": "1200000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "NON-CURRENT LIABILITIES",
+        "account_number": "2200000",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "NON-TRADE PAYABLES",
+        "account_number": "2101000",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "NON-TRADE RECEIVABLES",
+        "account_number": "1103200",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "OFFICE EQUIPMENT",
+        "account_number": "1206405",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "OPERATING EXPENSES",
+        "account_number": "6000000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "OPERATING SUPPLIES",
+        "account_number": "6006000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "OTHER ASSETS",
+        "account_number": "1207100",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "OTHER CHARGES",
+        "account_number": "6030001",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "OTHER CURRENT ASSETS",
+        "account_number": "1105000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "OTHER PAYABLES",
+        "account_number": "2102100",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "OUTSIDE SERVICES",
+        "account_number": "6009000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "PAYROLL TAXES",
+        "account_number": "6002200",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "PREPAID EXPENSES",
+        "account_number": "1105200",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "PROFESSIONAL FEES",
+        "account_number": "6020600",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "PROJECT COST RELATED",
+        "account_number": "1206407",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "REPAIRS & MAINTENANCE",
+        "account_number": "6008000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "SALES",
+        "account_number": "4000000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "SHORT TERM DEBT",
+        "account_number": "2104100",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "STOCKHOLDER'S EQUITY",
+        "account_number": "3000000",
+        "root_type": "Equity",
+        "is_group": 1
+      },
+      {
+        "account_name": "TAXES AND LICENSES",
+        "account_number": "6020500",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "TAXES PAYABLES",
+        "account_number": "2102200",
+        "root_type": "Liability",
+        "is_group": 1
+      },
+      {
+        "account_name": "TRADE AND OTHER PAYABLES",
+        "account_number": "2101100",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "TRADE AND OTHER RECEIVABLES",
+        "account_number": "1103000",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "TRADE RECEIVABLES",
+        "account_number": "1103100",
+        "root_type": "Asset",
+        "is_group": 1
+      },
+      {
+        "account_name": "TRANSPORTATION & TRAVEL",
+        "account_number": "6010000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "UTILITY COSTS",
+        "account_number": "6004000",
+        "root_type": "Expense",
+        "is_group": 1
+      },
+      {
+        "account_name": "VAT, WITHHOLDING AND TAX CREDITS",
+        "account_number": "1105100",
+        "root_type": "Asset",
+        "is_group": 1
+      }
+    ],
+    "income_groups_count": 1,
+    "total_accounts": 312,
+    "4000000": [
+      {
+        "name": "SALES - MF",
+        "account_name": "SALES",
+        "account_number": "4000000",
+        "parent_account": null,
+        "is_group": 1,
+        "root_type": "Expense",
+        "lft": 6687,
+        "rgt": 6702
+      }
+    ],
+    "4000000_children": [
+      {
+        "name": "FRANCHISE INCOME - MF",
+        "account_number": "4000300",
+        "account_name": "FRANCHISE INCOME",
+        "is_group": 1,
+        "root_type": "Income"
+      }
+    ],
+    "4000000_gl_entries": 0
+  }
+}

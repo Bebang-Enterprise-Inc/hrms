@@ -1,0 +1,116 @@
+{
+  "bki_parent_categories": {
+    "NULL": 283,
+    "empty_string": 0,
+    "non_null": 13
+  },
+  "bki_income_accounts": [
+    {
+      "name": "OTHER INCOME - BKI",
+      "account_name": "OTHER INCOME",
+      "is_group": 0,
+      "parent_account": null,
+      "lft": 6341,
+      "rgt": 6342
+    }
+  ],
+  "bki_lft_range": [
+    1,
+    8637,
+    296
+  ],
+  "tih_lft_range": [
+    5,
+    8384,
+    313
+  ],
+  "global_lft_1_10": [
+    {
+      "name": "13TH MONTH ACCRUALS - BKI",
+      "company": "Bebang Kitchen Inc.",
+      "account_name": "13TH MONTH ACCRUALS",
+      "is_group": 0,
+      "parent_account": null,
+      "lft": 1,
+      "rgt": 2
+    },
+    {
+      "name": "13TH MONTH ACCRUALS - MF",
+      "company": "Managed Franchise",
+      "account_name": "13TH MONTH ACCRUALS",
+      "is_group": 0,
+      "parent_account": null,
+      "lft": 3,
+      "rgt": 4
+    },
+    {
+      "name": "13TH MONTH ACCRUALS - TIH",
+      "company": "Triple I Holdings",
+      "account_name": "13TH MONTH ACCRUALS",
+      "is_group": 0,
+      "parent_account": null,
+      "lft": 5,
+      "rgt": 6
+    },
+    {
+      "name": "4000000 - SALES - BFC",
+      "company": "BEBANG FRANCHISE CORP.",
+      "account_name": "SALES",
+      "is_group": 1,
+      "parent_account": null,
+      "lft": 7,
+      "rgt": 60
+    },
+    {
+      "name": "4000100 - STORE SALES - BFC",
+      "company": "BEBANG FRANCHISE CORP.",
+      "account_name": "STORE SALES",
+      "is_group": 1,
+      "parent_account": "4000000 - SALES - BFC",
+      "lft": 8,
+      "rgt": 19
+    },
+    {
+      "name": "4000110 - IN-STORE SALES - BFC",
+      "company": "BEBANG FRANCHISE CORP.",
+      "account_name": "IN-STORE SALES",
+      "is_group": 0,
+      "parent_account": "4000100 - STORE SALES - BFC",
+      "lft": 9,
+      "rgt": 10
+    }
+  ],
+  "global_max": [
+    {
+      "name": "NATIONAL ADVERTISING FUND (5% ON NET SALES) - JV",
+      "company": "JV",
+      "lft": 8804,
+      "rgt": 8805
+    },
+    {
+      "name": "WTAX EXPENSE - JV",
+      "company": "JV",
+      "lft": 8799,
+      "rgt": 8800
+    },
+    {
+      "name": "WATER - JV",
+      "company": "JV",
+      "lft": 8759,
+      "rgt": 8760
+    },
+    {
+      "name": "WASTAGES & SHRINKAGES - JV",
+      "company": "JV",
+      "lft": 8749,
+      "rgt": 8750
+    },
+    {
+      "name": "VAT, WITHHOLDING AND TAX CREDITS - Bebang Enterprise Inc.",
+      "company": "Bebang Enterprise Inc.",
+      "lft": 8735,
+      "rgt": 8736
+    }
+  ],
+  "bki_would_normalize": 0
+}

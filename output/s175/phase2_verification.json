@@ -1,0 +1,697 @@
+{
+  "fixups": [],
+  "summary": {
+    "Bebang Kitchen Inc.": {
+      "created": [
+        "4000000",
+        "4000100",
+        "4000110",
+        "4000120",
+        "4000121",
+        "4000122",
+        "4000123",
+        "4000200",
+        "4000210",
+        "4000220",
+        "4000221",
+        "4000222",
+        "4000230",
+        "4000231",
+        "4000232",
+        "4000233",
+        "4000234",
+        "4000235",
+        "4000900",
+        "4000901",
+        "4000902",
+        "4000903",
+        "4000904",
+        "4000905",
+        "4000906",
+        "4000907",
+        "4000908"
+      ],
+      "matched": [],
+      "reparented": [],
+      "root_type_fixed": [],
+      "name_fixed": [],
+      "errors": []
+    },
+    "Bebang Enterprise Inc.": {
+      "created": [],
+      "matched": [
+        "4000000",
+        "4000100",
+        "4000110",
+        "4000120",
+        "4000121",
+        "4000122",
+        "4000123",
+        "4000200",
+        "4000210",
+        "4000220",
+        "4000221",
+        "4000222",
+        "4000230",
+        "4000231",
+        "4000232",
+        "4000233",
+        "4000234",
+        "4000235",
+        "4000900",
+        "4000901",
+        "4000902",
+        "4000903",
+        "4000904",
+        "4000905",
+        "4000906",
+        "4000907",
+        "4000908"
+      ],
+      "reparented": [],
+      "root_type_fixed": [],
+      "name_fixed": [],
+      "errors": []
+    },
+    "BEBANG FRANCHISE CORP.": {
+      "created": [],
+      "matched": [
+        "4000000",
+        "4000100",
+        "4000110",
+        "4000120",
+        "4000121",
+        "4000122",
+        "4000123",
+        "4000200",
+        "4000210",
+        "4000220",
+        "4000221",
+        "4000222",
+        "4000230",
+        "4000231",
+        "4000232",
+        "4000233",
+        "4000234",
+        "4000235",
+        "4000900",
+        "4000901",
+        "4000902",
+        "4000903",
+        "4000904",
+        "4000905",
+        "4000906",
+        "4000907",
+        "4000908"
+      ],
+      "reparented": [],
+      "root_type_fixed": [],
+      "name_fixed": [],
+      "errors": []
+    }
+  },
+  "verification": {
+    "Bebang Kitchen Inc.": [
+      {
+        "account_number": "4000000",
+        "account_name": "SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": null
+      },
+      {
+        "account_number": "4000100",
+        "account_name": "STORE SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000000 - SALES - BKI"
+      },
+      {
+        "account_number": "4000110",
+        "account_name": "IN-STORE SALES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000100 - STORE SALES - BKI"
+      },
+      {
+        "account_number": "4000120",
+        "account_name": "ONLINE SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000100 - STORE SALES - BKI"
+      },
+      {
+        "account_number": "4000121",
+        "account_name": "BEI WEBSITE",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BKI"
+      },
+      {
+        "account_number": "4000122",
+        "account_name": "FOOD PANDA",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BKI"
+      },
+      {
+        "account_number": "4000123",
+        "account_name": "GRAB",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BKI"
+      },
+      {
+        "account_number": "4000200",
+        "account_name": "BKI SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000000 - SALES - BKI"
+      },
+      {
+        "account_number": "4000210",
+        "account_name": "DELIVERIES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000200 - BKI SALES - BKI"
+      },
+      {
+        "account_number": "4000220",
+        "account_name": "LOGISTICS",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000200 - BKI SALES - BKI"
+      },
+      {
+        "account_number": "4000221",
+        "account_name": "DELIVERY INCOME",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000220 - LOGISTICS - BKI"
+      },
+      {
+        "account_number": "4000222",
+        "account_name": "LOGISTICS INCOME",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000220 - LOGISTICS - BKI"
+      },
+      {
+        "account_number": "4000230",
+        "account_name": "FEES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000000 - SALES - BKI"
+      },
+      {
+        "account_number": "4000231",
+        "account_name": "ROYALTY FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BKI"
+      },
+      {
+        "account_number": "4000232",
+        "account_name": "MANAGEMENT FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BKI"
+      },
+      {
+        "account_number": "4000233",
+        "account_name": "FRANCHISE FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BKI"
+      },
+      {
+        "account_number": "4000234",
+        "account_name": "MARKETING FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BKI"
+      },
+      {
+        "account_number": "4000235",
+        "account_name": "E-COMMERCE FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BKI"
+      },
+      {
+        "account_number": "4000900",
+        "account_name": "DISCOUNTS AND PROMO",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000000 - SALES - BKI"
+      },
+      {
+        "account_number": "4000901",
+        "account_name": "SALES DISCOUNT DUE TO FREE HALOHALO",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BKI"
+      },
+      {
+        "account_number": "4000902",
+        "account_name": "SALES DISCOUNT OF SENIOR CITIZENS",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BKI"
+      },
+      {
+        "account_number": "4000903",
+        "account_name": "SALES DISCOUNTS OF PWDS",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BKI"
+      },
+      {
+        "account_number": "4000904",
+        "account_name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BKI"
+      },
+      {
+        "account_number": "4000905",
+        "account_name": "SALES DISCOUNTS FROM VAT OF PWD",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BKI"
+      },
+      {
+        "account_number": "4000906",
+        "account_name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BKI"
+      },
+      {
+        "account_number": "4000907",
+        "account_name": "SALES REFUNDS TO CUSTOMER",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BKI"
+      },
+      {
+        "account_number": "4000908",
+        "account_name": "SALES DISCOUNTS - EMPLOYEE DISC",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BKI"
+      }
+    ],
+    "Bebang Enterprise Inc.": [
+      {
+        "account_number": "4000000",
+        "account_name": "SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": null
+      },
+      {
+        "account_number": "4000005",
+        "account_name": "BRAND GROWTH FEE INCOME",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "SALES - Bebang Enterprise Inc."
+      },
+      {
+        "account_number": "4000100",
+        "account_name": "STORE SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "SALES - Bebang Enterprise Inc."
+      },
+      {
+        "account_number": "4000110",
+        "account_name": "IN-STORE SALES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000100 - STORE SALES - BEI"
+      },
+      {
+        "account_number": "4000120",
+        "account_name": "ONLINE SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000100 - STORE SALES - BEI"
+      },
+      {
+        "account_number": "4000121",
+        "account_name": "BEI WEBSITE",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BEI"
+      },
+      {
+        "account_number": "4000122",
+        "account_name": "FOOD PANDA",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BEI"
+      },
+      {
+        "account_number": "4000123",
+        "account_name": "GRAB",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BEI"
+      },
+      {
+        "account_number": "4000200",
+        "account_name": "BKI SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "SALES - Bebang Enterprise Inc."
+      },
+      {
+        "account_number": "4000210",
+        "account_name": "DELIVERIES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000200 - BKI SALES - BEI"
+      },
+      {
+        "account_number": "4000220",
+        "account_name": "LOGISTICS",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000200 - BKI SALES - BEI"
+      },
+      {
+        "account_number": "4000221",
+        "account_name": "DELIVERY INCOME",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000220 - LOGISTICS - BEI"
+      },
+      {
+        "account_number": "4000222",
+        "account_name": "LOGISTICS INCOME",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000220 - LOGISTICS - BEI"
+      },
+      {
+        "account_number": "4000230",
+        "account_name": "FEES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "SALES - Bebang Enterprise Inc."
+      },
+      {
+        "account_number": "4000231",
+        "account_name": "ROYALTY FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BEI"
+      },
+      {
+        "account_number": "4000232",
+        "account_name": "MANAGEMENT FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BEI"
+      },
+      {
+        "account_number": "4000233",
+        "account_name": "FRANCHISE FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BEI"
+      },
+      {
+        "account_number": "4000234",
+        "account_name": "MARKETING FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BEI"
+      },
+      {
+        "account_number": "4000235",
+        "account_name": "E-COMMERCE FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BEI"
+      },
+      {
+        "account_number": "4000900",
+        "account_name": "DISCOUNTS AND PROMO",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "SALES - Bebang Enterprise Inc."
+      },
+      {
+        "account_number": "4000901",
+        "account_name": "SALES DISCOUNT DUE TO FREE HALOHALO",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BEI"
+      },
+      {
+        "account_number": "4000902",
+        "account_name": "SALES DISCOUNT OF SENIOR CITIZENS",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BEI"
+      },
+      {
+        "account_number": "4000903",
+        "account_name": "SALES DISCOUNTS OF PWDS",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BEI"
+      },
+      {
+        "account_number": "4000904",
+        "account_name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BEI"
+      },
+      {
+        "account_number": "4000905",
+        "account_name": "SALES DISCOUNTS FROM VAT OF PWD",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BEI"
+      },
+      {
+        "account_number": "4000906",
+        "account_name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BEI"
+      },
+      {
+        "account_number": "4000907",
+        "account_name": "SALES REFUNDS TO CUSTOMER",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BEI"
+      },
+      {
+        "account_number": "4000908",
+        "account_name": "SALES DISCOUNTS - EMPLOYEE DISC",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BEI"
+      }
+    ],
+    "BEBANG FRANCHISE CORP.": [
+      {
+        "account_number": "4000000",
+        "account_name": "SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": null
+      },
+      {
+        "account_number": "4000100",
+        "account_name": "STORE SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000000 - SALES - BFC"
+      },
+      {
+        "account_number": "4000110",
+        "account_name": "IN-STORE SALES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000100 - STORE SALES - BFC"
+      },
+      {
+        "account_number": "4000120",
+        "account_name": "ONLINE SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000100 - STORE SALES - BFC"
+      },
+      {
+        "account_number": "4000121",
+        "account_name": "BEI WEBSITE",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BFC"
+      },
+      {
+        "account_number": "4000122",
+        "account_name": "FOOD PANDA",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BFC"
+      },
+      {
+        "account_number": "4000123",
+        "account_name": "GRAB",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000120 - ONLINE SALES - BFC"
+      },
+      {
+        "account_number": "4000200",
+        "account_name": "BKI SALES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000000 - SALES - BFC"
+      },
+      {
+        "account_number": "4000210",
+        "account_name": "DELIVERIES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000200 - BKI SALES - BFC"
+      },
+      {
+        "account_number": "4000220",
+        "account_name": "LOGISTICS",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000200 - BKI SALES - BFC"
+      },
+      {
+        "account_number": "4000221",
+        "account_name": "DELIVERY INCOME",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000220 - LOGISTICS - BFC"
+      },
+      {
+        "account_number": "4000222",
+        "account_name": "LOGISTICS INCOME",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000220 - LOGISTICS - BFC"
+      },
+      {
+        "account_number": "4000230",
+        "account_name": "FEES",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000000 - SALES - BFC"
+      },
+      {
+        "account_number": "4000231",
+        "account_name": "ROYALTY FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BFC"
+      },
+      {
+        "account_number": "4000232",
+        "account_name": "MANAGEMENT FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BFC"
+      },
+      {
+        "account_number": "4000233",
+        "account_name": "FRANCHISE FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BFC"
+      },
+      {
+        "account_number": "4000234",
+        "account_name": "MARKETING FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BFC"
+      },
+      {
+        "account_number": "4000235",
+        "account_name": "E-COMMERCE FEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000230 - FEES - BFC"
+      },
+      {
+        "account_number": "4000900",
+        "account_name": "DISCOUNTS AND PROMO",
+        "is_group": 1,
+        "root_type": "Income",
+        "parent_account": "4000000 - SALES - BFC"
+      },
+      {
+        "account_number": "4000901",
+        "account_name": "SALES DISCOUNT DUE TO FREE HALOHALO",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BFC"
+      },
+      {
+        "account_number": "4000902",
+        "account_name": "SALES DISCOUNT OF SENIOR CITIZENS",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BFC"
+      },
+      {
+        "account_number": "4000903",
+        "account_name": "SALES DISCOUNTS OF PWDS",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BFC"
+      },
+      {
+        "account_number": "4000904",
+        "account_name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BFC"
+      },
+      {
+        "account_number": "4000905",
+        "account_name": "SALES DISCOUNTS FROM VAT OF PWD",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BFC"
+      },
+      {
+        "account_number": "4000906",
+        "account_name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BFC"
+      },
+      {
+        "account_number": "4000907",
+        "account_name": "SALES REFUNDS TO CUSTOMER",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BFC"
+      },
+      {
+        "account_number": "4000908",
+        "account_name": "SALES DISCOUNTS - EMPLOYEE DISC",
+        "is_group": 0,
+        "root_type": "Income",
+        "parent_account": "4000900 - DISCOUNTS AND PROMO - BFC"
+      }
+    ]
+  },
+  "_rebuild_post_fixup": "SKIPPED (rely on ignore_root_company_validation flag)",
+  "_rebuild_final": "SKIPPED"
+}

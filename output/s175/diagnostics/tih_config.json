@@ -1,0 +1,116 @@
+{
+  "tih_config": [
+    {
+      "name": "Triple I Holdings",
+      "allow_account_creation_against_child_company": 0,
+      "is_group": 1
+    }
+  ],
+  "tih_matching_template": {
+    "SALES": [
+      {
+        "name": "SALES - TIH",
+        "account_number": "4000000",
+        "is_group": 1,
+        "root_type": "Expense"
+      }
+    ],
+    "IN-STORE SALES": [
+      {
+        "name": "IN-STORE SALES - TIH",
+        "account_number": "4000001",
+        "is_group": 0,
+        "root_type": "Expense"
+      }
+    ],
+    "ONLINE SALES": [
+      {
+        "name": "ONLINE SALES - TIH",
+        "account_number": "4000002",
+        "is_group": 0,
+        "root_type": "Expense"
+      }
+    ],
+    "DELIVERY INCOME": [
+      {
+        "name": "DELIVERY INCOME - TIH",
+        "account_number": "4000305",
+        "is_group": 0,
+        "root_type": "Income"
+      }
+    ],
+    "LOGISTICS INCOME": [
+      {
+        "name": "LOGISTICS INCOME - TIH",
+        "account_number": "4000306",
+        "is_group": 0,
+        "root_type": "Income"
+      }
+    ],
+    "DISCOUNTS AND PROMO": [
+      {
+        "name": "DISCOUNTS AND PROMO - TIH",
+        "account_number": "4000200",
+        "is_group": 1,
+        "root_type": "Expense"
+      }
+    ],
+    "SALES DISCOUNT DUE TO FREE HALOHALO": [
+      {
+        "name": "SALES DISCOUNT DUE TO FREE HALOHALO - TIH",
+        "account_number": "4000201",
+        "is_group": 0,
+        "root_type": "Expense"
+      }
+    ],
+    "SALES DISCOUNT OF SENIOR CITIZENS": [
+      {
+        "name": "SALES DISCOUNT OF SENIOR CITIZENS - TIH",
+        "account_number": "4000202",
+        "is_group": 0,
+        "root_type": "Expense"
+      }
+    ],
+    "SALES DISCOUNTS OF PWDS": [
+      {
+        "name": "SALES DISCOUNTS OF PWDS - TIH",
+        "account_number": "4000203",
+        "is_group": 0,
+        "root_type": "Expense"
+      }
+    ],
+    "SALES DISCOUNTS OF STAFFS AND EMPLOYEES": [
+      {
+        "name": "SALES DISCOUNTS OF STAFFS AND EMPLOYEES - TIH",
+        "account_number": "4000204",
+        "is_group": 0,
+        "root_type": "Expense"
+      }
+    ],
+    "SALES DISCOUNTS FROM VAT OF PWD": [
+      {
+        "name": "SALES DISCOUNTS FROM VAT OF PWD - TIH",
+        "account_number": "4000205",
+        "is_group": 0,
+        "root_type": "Expense"
+      }
+    ],
+    "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS": [
+      {
+        "name": "SALES DISCOUNTS FROM VAT OF SENIOR CITIZENS - TIH",
+        "account_number": "4000206",
+        "is_group": 0,
+        "root_type": "Expense"
+      }
+    ],
+    "SALES REFUNDS TO CUSTOMER": [
+      {
+        "name": "SALES REFUNDS TO CUSTOMER - TIH",
+        "account_number": "4000207",
+        "is_group": 0,
+        "root_type": "Expense"
+      }
+    ]
+  },
+  "tih_4xxxxxx_count": 18
+}

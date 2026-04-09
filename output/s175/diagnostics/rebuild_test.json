@@ -1,0 +1,37 @@
+{
+  "pre_rebuild_bki_range": [
+    1,
+    8637
+  ],
+  "pre_rebuild_tih_range": [
+    5,
+    8384
+  ],
+  "bki_max_rgt": 8637,
+  "above_bki_max": [
+    [
+      "Bebang Enterprise Inc.",
+      5,
+      8653,
+      8736
+    ],
+    [
+      "JV",
+      8,
+      8669,
+      8805
+    ]
+  ],
+  "rebuild_ok": true,
+  "post_rebuild_bki_range": [
+    1,
+    8637
+  ],
+  "post_rebuild_tih_range": [
+    5,
+    8384
+  ],
+  "global_max_rgt": 8805,
+  "sim_insert_containers": [],
+  "bki_zero_lft_count": 0
+}
