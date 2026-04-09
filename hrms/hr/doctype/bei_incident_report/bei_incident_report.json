@@ -68,7 +68,7 @@
    "fieldname": "store",
    "fieldtype": "Link",
    "label": "Store",
-   "options": "Warehouse"
+   "options": "Branch"
   },
   {
    "fieldname": "incident_date",

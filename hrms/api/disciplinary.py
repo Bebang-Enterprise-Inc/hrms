@@ -15,6 +15,7 @@ from hrms.utils.api_helpers import (
     _check_manager_permission,
     _paginate,
 )
+from hrms.utils.sentry import set_backend_observability_context
 
 
 @frappe.whitelist()
@@ -31,6 +32,12 @@ def create_incident_report(data):
 
     Access: Supervisor
     """
+    set_backend_observability_context(
+        module="hr",
+        action="create_incident_report",
+        mutation_type="create",
+    )
+
     import json
 
     if isinstance(data, str):
@@ -50,12 +57,17 @@ def create_incident_report(data):
     if not is_hr:
         _check_manager_permission(data["employee"])
 
+    # S172 Defect #18 fix: `store` is a Link to Branch (was incorrectly Link to
+    # Warehouse). If the caller didn't send a store/branch, default to the
+    # employee's current branch so the IR is always tagged to the right store.
+    store_value = data.get("store") or frappe.db.get_value("Employee", data["employee"], "branch")
+
     # Create incident report
     ir = frappe.get_doc({
         "doctype": "BEI Incident Report",
         "employee": data["employee"],
         "reported_by": current_employee,
-        "store": data.get("store"),
+        "store": store_value,
         "incident_date": getdate(data["incident_date"]),
         "incident_category": data["incident_category"],
         "description": data["description"],
