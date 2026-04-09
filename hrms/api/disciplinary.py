@@ -20,12 +20,22 @@ from hrms.utils.sentry import set_backend_observability_context
 
 @frappe.whitelist()
 @rate_limit(limit=10, seconds=60)
-def create_incident_report(data):
+def create_incident_report(data=None, **kwargs):
     """File new incident report.
 
-    Args:
-        data: JSON string with fields: employee, incident_date, incident_category,
-              description, store, recommended_action, witnesses
+    Accepts either shape (S172 Phase 8 fix for the RT-S172-05 new defect):
+    - Legacy: `data` kwarg (JSON string or dict) — used by internal callers
+      and the original contract.
+    - Frontend: flat kwargs (`employee`, `incident_date`, `incident_type`, ...)
+      — this is what `useCreateIncidentReport` in bei-tasks actually sends,
+      because Frappe's `frappe.api.handle` unwraps the JSON POST body into
+      individual keyword arguments. Before this fix the positional `data`
+      parameter was never populated, raising `TypeError: missing 1 required
+      positional argument: 'data'` on every frontend call.
+
+    Args (via either shape):
+        employee, incident_date, incident_category (or alias incident_type),
+        description, store, recommended_action, witnesses, severity
 
     Returns:
         Created incident report name
@@ -42,6 +52,14 @@ def create_incident_report(data):
 
     if isinstance(data, str):
         data = json.loads(data)
+    if data is None:
+        # Frontend calls land here — Frappe unwrapped the JSON body into kwargs.
+        data = kwargs
+    elif isinstance(data, dict) and kwargs:
+        # Defensive merge in case a caller sends both shapes.
+        merged = dict(data)
+        merged.update(kwargs)
+        data = merged
 
     # S172 Defect #24 fix: accept both incident_type (frontend field name) and
     # incident_category (backend field name). The frontend `useCreateIncidentReport`
