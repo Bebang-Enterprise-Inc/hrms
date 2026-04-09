@@ -242,10 +242,14 @@ def create_employee_direct(
 			message=get_traceback(),
 		)
 
+	# S172 Defect #8 fix: include both the BEI business ID (employee_id) and
+	# the Frappe primary key (name = HR-EMP-NNNNN) so callers can look up the
+	# record by either identifier without a separate query.
 	return {
 		"success": True,
 		"data": {
 			"employee_id": employee_id,
+			"name": employee_doc.name,
 			"employee_name": employee_name,
 			"bio_id": bio_id,
 			"adms_enrollment": adms_result,
