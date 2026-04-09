@@ -18,8 +18,15 @@ import requests
 import frappe
 
 from hrms.utils.sales_location_mapping import lookup_location_id, normalize_store_key
+from hrms.utils.sentry import set_backend_observability_context
 
 MANILA_TZ = ZoneInfo("Asia/Manila")
+
+# S176 DD-19: Mosaic channel tagging regime-shift boundary dates.
+# Before these dates, FoodPanda/GrabFood orders exist in pos_orders under legacy
+# channel labels ('Delivery', 'Unknown', NULL) - they were not retroactively retagged.
+_FOODPANDA_MOSAIC_START = date(2026, 3, 26)
+_GRABFOOD_MOSAIC_START = date(2026, 4, 1)
 ROLE_SALES_STAKEHOLDER = "Sales Stakeholder"
 ROLE_AREA_SUPERVISOR = "Area Supervisor"
 ROLE_STORE_SUPERVISOR = "Store Supervisor"
@@ -622,8 +629,31 @@ def _get_discount_max_business_date(location_ids: list[int]) -> str | None:
 	)
 
 
+def _get_resource_last_sync_at(
+	resource: str,
+	location_ids: list[int] | None = None,
+	extra_params: list[tuple[str, Any]] | None = None,
+) -> str | None:
+	"""S176 DD-11: fetch MAX(synced_at) for a Supabase resource via PostgREST.
+
+	Uses the existing _supabase_get_all helper. Returns ISO-8601 timestamp string
+	with timezone, or None if no rows match.
+	"""
+	params: list[tuple[str, Any]] = [("select", "synced_at")]
+	if extra_params:
+		params.extend(extra_params)
+	if location_ids:
+		params.append(("location_id", f"in.({_location_scope_key(location_ids)})"))
+	params.extend([("order", "synced_at.desc"), ("limit", "1")])
+	rows = _supabase_get_all(resource, params, page_size=1)
+	return str(rows[0]["synced_at"]) if rows and rows[0].get("synced_at") is not None else None
+
+
 def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
-	cache_key = _sales_dashboard_cache_key("freshness", location_ids)
+	# S176 DD-21: cache topic bumped from "freshness" -> "freshness_v2" to invalidate
+	# all stale cache entries on deploy. Without this, new tiles render "N/A" until
+	# the old TTL expires.
+	cache_key = _sales_dashboard_cache_key("freshness_v2", location_ids)
 
 	def builder() -> dict[str, Any]:
 		return {
@@ -639,20 +669,102 @@ def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
 				"eq.Completed",
 				location_ids=location_ids,
 			),
-			"foodpanda_max_business_date": _get_resource_max_business_date(
+			# S176 DD-10: FoodPanda freshness now reads from Mosaic-derived pos_orders
+			# channel (single source of truth since S165). The legacy foodpanda_orders
+			# Google Sheet ingest was halted 2026-03-31.
+			"foodpanda_max_business_date": _get_resource_boundary_business_date(
+				"pos_orders",
+				order="business_date.desc",
+				location_ids=location_ids,
+				extra_params=[
+					("channel", "eq.FoodPanda"),
+					("payment_status", "eq.PAID"),
+				],
+			),
+			# S176 DD-10 / DD-20: legacy Google-Sheet ingest preserved for audit /
+			# diagnostic use. Frozen at 2026-03-31. Do NOT surface in primary UI.
+			"foodpanda_legacy_sheet_max_business_date": _get_resource_max_business_date(
 				"foodpanda_orders",
 				"order_status",
 				"ilike.delivered",
 				location_ids=location_ids,
+			),
+			# S176 DD-11: GrabFood freshness via Mosaic pos_orders channel tag.
+			"grabfood_max_business_date": _get_resource_boundary_business_date(
+				"pos_orders",
+				order="business_date.desc",
+				location_ids=location_ids,
+				extra_params=[
+					("channel", "eq.GrabFood"),
+					("payment_status", "eq.PAID"),
+				],
 			),
 			"foodpanda_cups_max_business_date": _get_foodpanda_cups_max_business_date(location_ids),
 			"weather_max_business_date": _get_weather_max_business_date(location_ids),
 			"discount_max_business_date": _get_discount_max_business_date(location_ids),
 			"sales_history_start_date": _get_sales_history_start_date(location_ids),
 			"discount_history_start_date": _get_discount_history_start_date(location_ids),
+			# S176 DD-11 / DD-12: Mosaic sync timestamps (ISO-8601 w/ tz) for the
+			# "Last synced HH:MM PHT" subtitle rendering on the frontend.
+			"mosaic_last_sync_at": _get_resource_last_sync_at(
+				"pos_orders",
+				location_ids=location_ids,
+			),
+			"foodpanda_last_sync_at": _get_resource_last_sync_at(
+				"pos_orders",
+				location_ids=location_ids,
+				extra_params=[("channel", "eq.FoodPanda")],
+			),
+			"grabfood_last_sync_at": _get_resource_last_sync_at(
+				"pos_orders",
+				location_ids=location_ids,
+				extra_params=[("channel", "eq.GrabFood")],
+			),
 		}
 
 	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_FRESHNESS_CACHE_TTL)
+
+
+def _get_grabfood_channel_totals(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+) -> dict[str, Any]:
+	"""S176 DD-14 Option A: Python-side aggregation for GrabFood totals.
+
+	The materialized view daily_store_metrics has no grabfood_* columns, so we
+	fall back to a direct PostgREST query against pos_orders filtered by
+	channel='GrabFood'. Sums are computed client-side in Python.
+
+	Returns keys: grabfood_sales, grabfood_sales_without_vat, grabfood_orders,
+	grabfood_avg_ticket. All zeros on empty result set.
+	"""
+	if not location_ids:
+		return {
+			"grabfood_sales": 0.0,
+			"grabfood_sales_without_vat": 0.0,
+			"grabfood_orders": 0,
+			"grabfood_avg_ticket": 0.0,
+		}
+	params: list[tuple[str, Any]] = [
+		("select", "gross_sales,net_sales,net_sales_without_vat"),
+		("channel", "eq.GrabFood"),
+		("payment_status", "eq.PAID"),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("location_id", f"in.({_location_scope_key(location_ids)})"),
+	]
+	rows = _supabase_get_all("pos_orders", params, page_size=1000)
+	gross_total = sum(_to_float(row.get("gross_sales")) for row in rows)
+	net_wo_vat_total = sum(_to_float(row.get("net_sales_without_vat")) for row in rows)
+	order_count = len(rows)
+	avg_ticket = _round_half_up(gross_total / order_count) if order_count else 0.0
+	return {
+		"grabfood_sales": _round_half_up(gross_total),
+		"grabfood_sales_without_vat": _round_half_up(net_wo_vat_total),
+		"grabfood_orders": order_count,
+		"grabfood_avg_ticket": avg_ticket,
+	}
 
 
 def _build_data_quality_warnings(start_day: date, end_day: date, freshness: dict[str, Any]) -> list[str]:
@@ -672,6 +784,18 @@ def _build_data_quality_warnings(start_day: date, end_day: date, freshness: dict
 	if weather_max and str(weather_max) < end_day.isoformat():
 		warnings.append(
 			f"Weather context is validated only through {weather_max}; later dates will not have complete weather overlays."
+		)
+
+	# S176 DD-19: regime-shift boundary warnings for Mosaic channel tagging.
+	if start_day < _FOODPANDA_MOSAIC_START:
+		warnings.append(
+			"FoodPanda channel tagging via Mosaic began 2026-03-26; earlier dates "
+			"may under-count FoodPanda orders (legacy rows tagged 'Delivery' or 'Unknown')."
+		)
+	if start_day < _GRABFOOD_MOSAIC_START:
+		warnings.append(
+			"GrabFood channel tagging via Mosaic began 2026-04-01; earlier dates "
+			"may under-count GrabFood orders (legacy rows tagged 'Delivery' or 'Unknown')."
 		)
 
 	if effective_end_date and str(effective_end_date) < end_day.isoformat():
@@ -826,6 +950,12 @@ def _aggregate_sales(rows: list[dict[str, Any]]) -> dict[str, Any]:
 		"foodpanda_sales_without_vat": 0.0,
 		"pickup_sales_without_vat": 0.0,
 		"delivery_sales_without_vat": 0.0,
+		# S176 DD-14: GrabFood defaults - populated by _get_grabfood_channel_totals()
+		# after _aggregate_sales() returns (GrabFood is not in daily_store_metrics view).
+		"grabfood_sales": 0.0,
+		"grabfood_sales_without_vat": 0.0,
+		"grabfood_orders": 0,
+		"grabfood_avg_ticket": 0.0,
 	}
 	for row in rows:
 		totals["gross_sales"] += _to_float(row.get("total_gross_sales"))
@@ -1581,6 +1711,14 @@ def _build_channel_mix(summary: dict[str, Any]) -> list[dict[str, Any]]:
 			"sales_without_vat": summary["website_cod_sales_without_vat"],
 		},
 		{
+			# S176 DD-14 Option A: GrabFood surfaced via pos_orders direct query.
+			"key": "grabfood",
+			"label": "GrabFood",
+			"orders": summary.get("grabfood_orders", 0),
+			"sales_with_vat": summary.get("grabfood_sales", 0.0),
+			"sales_without_vat": summary.get("grabfood_sales_without_vat", 0.0),
+		},
+		{
 			"key": "foodpanda",
 			"label": "FoodPanda",
 			"sales_with_vat": summary["foodpanda_sales"],
@@ -1867,6 +2005,8 @@ def _build_dashboard_summary_payload(
 			else []
 		)
 		summary = _aggregate_sales(sales_rows)
+		# S176 DD-14 Option A: inject real GrabFood totals from pos_orders direct query.
+		summary.update(_get_grabfood_channel_totals(start_day, effective_end, selected_location_ids))
 		projection_window_rows = [
 			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
 		]
@@ -1957,6 +2097,8 @@ def _build_dashboard_overview_payload(
 			else []
 		)
 		summary = _aggregate_sales(sales_rows)
+		# S176 DD-14 Option A: inject real GrabFood totals from pos_orders direct query.
+		summary.update(_get_grabfood_channel_totals(start_day, effective_end, selected_location_ids))
 		mode_state = _build_mode_state(view_mode, start_day, effective_end, scope)
 		projection_window_rows = [
 			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
@@ -2073,6 +2215,11 @@ def get_sales_dashboard_overview(
 	ranking_mode: str = DEFAULT_RANKING_MODE,
 	include_comparisons: bool | str | int | None = None,
 ) -> dict[str, Any]:
+	set_backend_observability_context(
+		module="sales",
+		action="get_sales_dashboard_overview",
+		mutation_type="read",
+	)
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
 	return _build_dashboard_overview_payload(
@@ -2096,6 +2243,11 @@ def get_sales_dashboard_summary(
 	ranking_mode: str = DEFAULT_RANKING_MODE,
 	include_comparisons: bool | str | int | None = None,
 ) -> dict[str, Any]:
+	set_backend_observability_context(
+		module="sales",
+		action="get_sales_dashboard_summary",
+		mutation_type="read",
+	)
 	_ = ranking_mode
 	scope = _selected_scope(_parse_stores_param(stores))
 	start_day, end_day = _resolve_date_range(start_date, end_date)
