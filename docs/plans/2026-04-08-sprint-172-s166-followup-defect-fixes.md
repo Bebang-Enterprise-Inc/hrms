@@ -3,18 +3,297 @@ sprint_id: S172
 display: Sprint 172
 title: "S166 Follow-up Defect Fixes — 15 OPEN/PARTIAL defects after S170 partial deploy + 2026-04-08 audit"
 branch: s172-s166-followup-defect-fixes
-status: GO
+status: PHASE_8_READY
 planned_date: 2026-04-08
 completed_date: null
 depends_on: S166 (catalog + audit), S170 (partial fixes already deployed), audit PR #496
-total_work_units: 70
+total_work_units: 71
 execution_type: product-code-fix-sprint + L3-retest
-frontend_pr: null
-backend_pr: null
+frontend_pr: "Bebang-Enterprise-Inc/BEI-Tasks#362, #363, #364, #365, #366"
+backend_pr: "Bebang-Enterprise-Inc/hrms#507, #509, #511, #514"
 sprint_registry_row: "S172 reserved on 2026-04-08. Branch: s172-s166-followup-defect-fixes. Parent: origin/production (post #497 merge)."
 ---
 
 # S172: S166 Follow-up Defect Fixes
+
+# ═══════════════════════════════════════════════════════════════════════
+# ▶ PHASE 8 L3 RETEST HANDOFF — READ THIS SECTION FIRST
+# ═══════════════════════════════════════════════════════════════════════
+
+**You are the fresh agent running Phase 8 L3 retest.** Everything you need is in this section. If you find yourself needing to read the rest of the plan, something is wrong — check the "read only until here" marker below.
+
+## Context (30 seconds)
+
+S172 shipped 13 defect fixes across 8 PRs (merged 2026-04-08 → 2026-04-09):
+
+| Repo | PRs merged | Defects fixed |
+|---|---|---|
+| hrms | #507, #509, #511, #514 | #6, #21, #16, #18, #8, #9, #11, #15, #20, #24 (+traceability retrofit in #514) |
+| BEI-Tasks | #362, #363, #364, #365, #366 | #6, #21, #19, #13, #14 |
+
+All PRs deployed to production (hrms via Frappe bench, bei-tasks via Vercel). Your job: drive real browser through the 8 retest scenarios below and produce audit-proof evidence. You do NOT write code. You do NOT merge PRs.
+
+## Rules (non-negotiable, from post-PR #497 `/l3-v2-bei-erp` + S092 + S099)
+
+1. **Real browser only.** Use Playwright headless. Script pattern lives at `scripts/testing/l3_s166_lane_h_runner.mjs`.
+2. **No API shortcuts.** Filling a form via a direct `/api/method/*` call is NOT L3 — it's L1. If you can't drive the UI, the scenario is BLOCKED, not PASS.
+3. **Evidence per scenario** goes to `output/l3/s172/retest/<lane>/evidence/<scenario_id>-retest.json` with keys `actions[]`, `network[]`, `screenshots[]`, `status`, `verdict`. Each entry in `actions[]` must be a real Playwright interaction (`page.click`, `page.fill`, `page.selectOption`). Each screenshot must be a non-zero-byte PNG on disk.
+4. **Independent audit gate (MANDATORY).** After you finish the runner pass, you MUST dispatch a **separate subagent in a clean context** (via the Agent tool, `general-purpose` type) with the audit-gate brief below. The orchestrator reads `output/l3/s172/retest/AUDIT_REPORT.md` and `AUDIT_PASSED.flag`, NOT your self-report. Do not skip this. This rule is in place because S166 R3 fabricated a PASS verdict on EMP-UX-004 and the 2026-04-08 audit reclassified it OPEN (corrupt-success incident).
+5. **Anti-pollution cleanup.** Any test data you create (test employees, BCCs, IRs, SSAs, salary slips) must be soft-deleted in a `finally` block at end of run via the `/frappe-bulk-edits` SSM pattern. Do not leave `(L3 2026-04-%)` artifacts on prod.
+6. **PR-handoff.** You do not merge, you do not deploy. If a scenario reveals a defect, log it to `output/l3/s172/retest/NEW_DEFECTS.csv` and move on; do not attempt to fix it in-session.
+
+## Test accounts (all passwords `BeiTest2026!`)
+
+From `memory/testing-accounts.md`:
+
+| Email | Role | Used in |
+|---|---|---|
+| test.hr@bebang.ph | HR Manager | HR-001, CC-001, CC-002, DC-001, PR-001, EC-001, EMP-001 |
+| test.crew1@bebang.ph | Crew (Store Staff) | OT-001 |
+| test.finance@bebang.ph | Accounts Manager | CC-002 (dual-control approval) |
+| test.supervisor@bebang.ph | Store Supervisor | — (available if needed) |
+
+## The 8 retest scenarios (priority-ordered)
+
+Every scenario maps to one or more deployed defect fixes. Each scenario has explicit steps, expected outcome, and a failure meaning (what regression it would reveal).
+
+### Scenario RT-S172-01 — Compensation list-page modal renders full form
+**Covers Defect #6 + #21 + partially #16**
+**URL:** `https://my.bebang.ph/dashboard/hr/payroll/compensation-setup`
+**Login:** `test.hr@bebang.ph`
+**Steps:**
+1. Navigate to compensation-setup page
+2. Wait for employee grid to load (table rows visible)
+3. Click any employee row (pick one that has NO SSA yet — ideally a freshly-created test employee; see RT-S172-07 for how to create one)
+4. Wait for `CompensationDetailDialog` to open
+5. Verify the dialog body renders form fields for: Base Salary, Commission Allowance, De Minimis, Honorarium, Meal, Gasoline, Other Fixed (should show 0 or empty, not empty skeleton)
+6. Verify "Edit" button is **enabled** (not disabled) — this is the #21 fix
+7. Click Edit
+8. Verify edit fields become editable inputs
+9. Cancel without saving
+**Expected:** modal opens with visible form fields, Edit button is enabled even with no SSA.
+**Failure means:** #6 regressed (empty skeleton) OR #21 regressed (Edit button disabled).
+
+### Scenario RT-S172-02 — Compensation change activation creates SSA (end-to-end)
+**Covers Defect #16 + #21**
+**URL:** `https://my.bebang.ph/dashboard/hr/payroll/compensation-setup/<employee_id>`
+**Login:** `test.hr@bebang.ph` then `test.finance@bebang.ph` for approval
+**Steps:**
+1. Create a fresh test employee via the Employee Master dashboard (see RT-S172-07 path)
+2. As `test.hr`, navigate to `/dashboard/hr/payroll/compensation-setup/<new_employee_id>`
+3. Click Edit, set Base Salary = 25000, set reason = "L3 retest RT-S172-02"
+4. Click Save → verify toast "compensation change submitted for approval"
+5. Log out, log in as `test.finance@bebang.ph`
+6. Navigate to sensitive-change / compensation-change queue
+7. Find the pending change request, click Approve
+8. Verify toast success (not an error about activation)
+9. Query via `frappe-bulk-edits` SSM: `SELECT base FROM tabSalary Structure Assignment WHERE employee = '<new_employee_id>' AND docstatus = 1`
+10. Assert: returns exactly 1 row with base = 25000.0
+**Expected:** SSA exists with correct base value after approval.
+**Failure means:** #16 regressed (silent activation failure) — BCC reached Approved but no SSA created.
+
+### Scenario RT-S172-03 — Overtime self-service page loads for crew
+**Covers Defect #19**
+**URL:** `https://my.bebang.ph/dashboard/hr/overtime/apply`
+**Login:** `test.crew1@bebang.ph`
+**Steps:**
+1. Log in as test.crew1
+2. Navigate to `/dashboard/hr/overtime/apply`
+3. Verify page renders the OT filing form (fields for date, hours, reason)
+4. Do **NOT** see the "Access Restricted" lock-icon screen
+5. Screenshot the form
+**Expected:** Form renders.
+**Failure means:** #19 regressed — RoleGuard re-added or crew role still not permitted.
+**Do NOT attempt to submit the form** — submission requires an existing Attendance record and that's the subject of Defect #20 (by-design). Scenario RT-S172-04 tests the error message path.
+
+### Scenario RT-S172-04 — Overtime submit without attendance shows clear error
+**Covers Defect #20**
+**URL:** Same as RT-S172-03
+**Login:** `test.crew1@bebang.ph`
+**Steps:**
+1. On the OT apply form, fill: date = yesterday, hours = 2, reason = "L3 retest RT-S172-04"
+2. Click Submit
+3. Read the error toast/banner
+4. Assert: error text contains the phrase "attendance correction" (or "Attendance Correction Request") — this is the improved message from #20
+**Expected:** Clear error message explaining to file an attendance correction first.
+**Failure means:** #20 regressed to the old terse message.
+
+### Scenario RT-S172-05 — Disciplinary case create succeeds with Branch value
+**Covers Defect #18 + #24**
+**URL:** `https://my.bebang.ph/dashboard/hr/disciplinary`
+**Login:** `test.hr@bebang.ph`
+**Steps:**
+1. Navigate to disciplinary page
+2. Click "New Case" / "Create Incident Report"
+3. Fill form:
+   - Employee: pick any active employee (e.g., the RT-S172-07 test employee)
+   - Incident Date: today
+   - Incident Type / Category: "Attendance" (frontend sends `incident_type`; backend should alias to `incident_category` per #24 fix)
+   - Severity: "Minor" (frontend sends `severity`; backend should accept via the new DocType field per #24 fix)
+   - Description: "L3 retest RT-S172-05"
+4. Click Create/Submit
+5. Verify: success toast, no LinkValidationError, no "Missing required field" error
+6. Query `tabBEI Incident Report WHERE employee = '<emp>' ORDER BY creation DESC LIMIT 1` via SSM
+7. Assert: row exists with `store` populated (should be the employee's branch via the #18 default), `incident_category` populated (via the #24 alias), `severity` = "Minor" (via the #24 new field)
+**Expected:** IR created end-to-end.
+**Failure means:** #18 regressed (LinkValidationError on Branch value) OR #24 regressed (missing field error).
+
+### Scenario RT-S172-06 — Employee Reports To autocomplete works
+**Covers Defect #14**
+**URL:** `https://my.bebang.ph/dashboard/hr/employee-master`
+**Login:** `test.hr@bebang.ph`
+**Steps:**
+1. Navigate to employee-master page
+2. Click any employee row to open `EmployeeDetailDialog`
+3. Open the Employment section
+4. Click Edit
+5. Click the "Reports To" field input
+6. Type the first 3 letters of any employee's first name (e.g., "abr" for Abraham, "ana" for Ana)
+7. Wait for the browser's native datalist to populate suggestions
+8. Take a screenshot showing suggestions visible
+9. Select a suggestion
+10. Assert: the input value becomes the employee_id from the suggestion (e.g., HR-EMP-00123)
+11. Cancel without saving
+**Expected:** Datalist shows suggestions, selecting one populates the field.
+**Failure means:** #14 regressed — either the `search_employees` endpoint is unreachable, or the datalist is not wired up, or the `ReportsToLookupField` component did not render.
+
+### Scenario RT-S172-07 — Employee create returns distinct IDs across calls
+**Covers Defect #8**
+**URL:** `https://my.bebang.ph/dashboard/hr/employee-master`
+**Login:** `test.hr@bebang.ph`
+**Steps:**
+1. Navigate to employee-master page
+2. Click "Add Employee" / new employee button
+3. Fill required fields:
+   - First Name: "L3TEST"
+   - Last Name: "RETEST01"
+   - Date of Birth: 1990-01-01
+   - Gender: Male
+   - Branch: pick any active branch (e.g., "ARANETA GATEWAY")
+   - Company: pick any company
+4. Click Create/Submit
+5. Read the response toast or success message → record the returned `employee_id` (should be like `BEI-EMP-2026-NNNNN`) AND the Frappe `name` (should be like `HR-EMP-NNNNN`)
+6. **Do steps 2-5 again** with a different last name ("RETEST02")
+7. Assert: the two `employee_id` values are DIFFERENT (this is the #8 fix — previously both returned BEI-EMP-2026-00004)
+8. Also assert: the two `name` values are different (sanity check)
+**Expected:** distinct IDs per call.
+**Failure means:** #8 regressed — `generate_bei_employee_id` still querying wrong column.
+**Cleanup in finally:** for both test employees, call `hrms.api.employee_create.mark_employee_left` (the new #11 helper) with today's date as relieving_date, then soft-delete via SSM.
+
+### Scenario RT-S172-08 — Emergency phone saves correctly via self-service path
+**Covers Defect #13**
+**URL:** `https://my.bebang.ph/dashboard/hr/employee-master`
+**Login:** `test.hr@bebang.ph`
+**Steps:**
+1. Navigate to employee-master page
+2. Click the RT-S172-07 test employee row (or any other test employee) to open `EmployeeDetailDialog`
+3. Open the Personal section, click Edit
+4. Fill:
+   - Person to be Contacted: "Maria Dela Cruz"
+   - Relation: "Spouse"
+   - Emergency Phone Number: "09181112222"
+5. Click Save
+6. Wait for the dialog to close
+7. Reopen the dialog for the same employee
+8. Assert: all 3 values are now populated (previously `emergency_phone_number` returned null post-save)
+9. Also verify via SSM: `SELECT person_to_be_contacted, relation, emergency_phone_number FROM tabEmployee WHERE name = '<emp>'` — all three populated.
+**Expected:** all three fields persist.
+**Failure means:** #13 regressed — self-service field routing back to `frappe.client.set_value` or the enrichment endpoint's validators dropping the phone.
+
+## Optional: HR test.hr Employee list access (Defect #9 sanity)
+
+Not a full scenario, but worth a 30-second smoke check:
+1. As `test.hr`, GET `https://my.bebang.ph/api/frappe/api/resource/Employee?limit_page_length=5`
+2. Assert: status 200, response JSON has `data` array (possibly empty if `permission_query_conditions` filters everything out, but NOT a 403)
+3. **If 403:** #9's patch didn't run on deploy. Escalate to Sam; do NOT attempt to fix the patch from this session.
+
+## Runner agent brief (copy-paste for dispatch)
+
+When you (the fresh Phase 8 agent) are ready to run the scenarios:
+
+```
+You are the Phase 8 L3 retest runner for S172.
+
+Task: Run the 8 scenarios listed in docs/plans/2026-04-08-sprint-172-s166-followup-defect-fixes.md
+section "PHASE 8 L3 RETEST HANDOFF" (top of plan). Use real browser via
+Playwright headless against https://my.bebang.ph. Use test accounts
+documented in memory/testing-accounts.md (all passwords BeiTest2026!).
+
+For each scenario:
+- Write actions, network, screenshots to
+  output/l3/s172/retest/<scenario_id>/evidence.json
+- Save screenshots to output/l3/s172/retest/<scenario_id>/screenshots/*.png
+- Include pre-action and post-action screenshots
+- Mark status as PASS / FAIL / BLOCKED / NEW_DEFECT
+- If BLOCKED or NEW_DEFECT, log to output/l3/s172/retest/NEW_DEFECTS.csv
+  with columns: scenario_id, defect_description, severity, reproducer
+
+Script template: scripts/testing/l3_s166_lane_h_runner.mjs
+
+Cleanup: in a finally block, soft-delete every test employee you create
+via hrms.api.employee_create.mark_employee_left + SSM bulk-edits.
+
+STOP after writing all evidence files. Do NOT touch git. Do NOT mark any
+scenario PASS without screenshot proof. Do NOT run the audit gate yourself.
+```
+
+## Audit gate agent brief (copy-paste for dispatch — MANDATORY after runner)
+
+```
+You are the Phase 8 L3 audit gate for S172. A runner agent has written
+evidence files to output/l3/s172/retest/. Your job is to independently
+verify each scenario's evidence without trusting the runner's self-report.
+
+For each scenario directory:
+1. Open evidence.json
+2. Verify actions[] is non-empty and contains real Playwright calls
+   (page.click / page.fill / page.selectOption — NOT just page.goto)
+3. Verify screenshots[] references non-zero-byte PNG files that exist
+4. Verify network[] shows the expected API calls (e.g., for
+   RT-S172-07 the employee_create POST must be in network[])
+5. Cross-check runner's status vs actual evidence — if runner said PASS
+   but evidence is thin, flag as SUMMARY_LIED per post-#497 rule
+6. Write verdict to output/l3/s172/retest/AUDIT_REPORT.md with per-scenario
+   PASS / REJECT / SUMMARY_LIED and overall rollup
+7. If all 8 scenarios pass audit, create an empty file
+   output/l3/s172/retest/AUDIT_PASSED.flag
+8. If any fail, do NOT create the flag; list what's missing in
+   AUDIT_REPORT.md
+
+Do NOT re-run any scenario. Do NOT fix evidence. You are the tester of
+the tester. Be skeptical.
+```
+
+## Closeout (after audit gate creates AUDIT_PASSED.flag)
+
+1. Update plan YAML: `status: PHASE_8_READY` → `status: COMPLETED`, fill `completed_date` (ISO PHT).
+2. Update `docs/plans/SPRINT_REGISTRY.md` S172 row to COMPLETED with date + all PR refs.
+3. Update `docs/plans/2026-04-08-sprint-173-s166-retest-debt-ledger.md` — flip PENDING → CLOSED_BROWSER_PASS for the ~25 S166 scenarios that were unblocked by the S172 defect fixes (the 8 RT-S172-* scenarios cover the ground-truth subset; the rest are downstream unblocks that the ledger maintainer should close only if independently verified by similar browser evidence).
+4. `git add -f` (docs/ is gitignored) and commit to a new branch `s172-p9-closeout`.
+5. Create PR and STOP.
+
+## Evidence files required for closeout
+
+- `output/l3/s172/retest/RT-S172-01/evidence.json` through `RT-S172-08/evidence.json`
+- `output/l3/s172/retest/RT-S172-*/screenshots/*.png` (pre + post per scenario)
+- `output/l3/s172/retest/AUDIT_REPORT.md`
+- `output/l3/s172/retest/AUDIT_PASSED.flag` (empty file, created by audit gate only if all 8 PASS)
+- `output/l3/s172/retest/NEW_DEFECTS.csv` (may be empty if none found)
+
+## What-if: a scenario finds a new defect
+
+1. Log to `output/l3/s172/retest/NEW_DEFECTS.csv` with columns: `scenario_id,defect_description,severity,reproducer`
+2. Do NOT fix it in this session. Phase 8 runner is a tester, not a builder.
+3. Escalate to Sam: "Phase 8 found N new defects, here they are, please decide: add to S173 ledger, or spawn a new sprint?"
+4. You can still mark the other 7 scenarios PASS if their evidence is clean.
+
+---
+
+# 🛑 read only until here unless necessary — Plan was completed 2026-04-09 13:12 PHT
+
+Everything below is the original build-phase plan that produced PRs #507, #509, #511, #514 (hrms) and #362, #363, #364, #365, #366 (bei-tasks). Phases 1-7 are all merged and deployed. Phase 8 runner: you do not need to read the rest unless a scenario above references a specific commit or diagnostic file you need to cross-check.
+
+---
 
 ## ⚠️ KNOWN DEBT NOT ADDRESSED BY THIS SPRINT — READ FIRST
 
