@@ -780,5 +780,413 @@
     "status": 200,
     "response_body": null,
     "ts": "2026-04-07T07:04:00.619Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p2",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-08T11:49:01.254Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p2",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-08T11:49:03.767Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.1_NBS",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"National Book Store\",\"manual_description\":\"Training manual S167\",\"manual_amount\":480,\"manual_date\":\"2026-04-08\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-HR and Admin\"}",
+    "ts": "2026-04-08T11:49:21.091Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.1_NBS",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00086\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":1310,\"pending_count\":3,\"current_balance\":3690,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-08T11:49:22.189Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.1_Jollibee",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"Jollibee\",\"manual_description\":\"Team meeting snacks S167\",\"manual_amount\":350,\"manual_date\":\"2026-04-08\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-HR and Admin\"}",
+    "ts": "2026-04-08T11:49:35.369Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.1_Jollibee",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00087\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":1660,\"pending_count\":4,\"current_balance\":3340,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-08T11:49:36.286Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p2",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.hr@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T01:08:47.387Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p2",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T01:08:49.577Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.1_NBS",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"National Book Store\",\"manual_description\":\"Training manual S167\",\"manual_amount\":480,\"manual_date\":\"2026-04-08\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-HR and Admin\"}",
+    "ts": "2026-04-09T01:09:02.915Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.1_NBS",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00087\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":1310,\"pending_count\":3,\"current_balance\":3690,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-09T01:09:04.853Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.1_Jollibee",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"Jollibee\",\"manual_description\":\"Team meeting snacks S167\",\"manual_amount\":350,\"manual_date\":\"2026-04-08\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-HR and Admin\"}",
+    "ts": "2026-04-09T01:09:18.115Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.1_Jollibee",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00088\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":1660,\"pending_count\":4,\"current_balance\":3340,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-09T01:09:19.150Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "2.2_submit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"submit_batch_now\",\"pcf_fund\":\"PCF-HR and Admin\"}",
+    "ts": "2026-04-09T01:09:29.780Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "2.2_submit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"batch_name\":\"BEI-PCF-2026-00004\",\"expense_count\":4,\"total_amount\":1660},\"message\":\"Batch BEI-PCF-2026-00004 created with 4 expenses\"}",
+    "ts": "2026-04-09T01:09:37.840Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p3setup",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.commissary@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T01:10:24.650Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p3setup",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T01:10:26.053Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3setup_SM",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"SM Supermarket\",\"manual_description\":\"Commissary cleaning supplies S167\",\"manual_amount\":420,\"manual_date\":\"2026-04-09\",\"receipt_photo\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAIAAAAiOjnJAAAGJ0lEQVR4nO3Ya0yVdQDH8f/DAQLkdg6BAikJhFiy5q0pupauaDbJS+Z60aqt2fRFrcjLur3IVS9SS1ttujXd9E2tdBN1bWyxLsMwrHnnIgIKiohyAA93zqEdTjuyc2ScBr8Xje/n1TnP83/+/4fDl+d5DlbB9nIDTLSwCZ8RICyocMWCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCgkT4OI/PTp3y+vLp4TbL7RnaVVzX2tkfG2XbWPDwklz7ms9PG2Msy2x6NiMnLdbtHtpZfKXZ2ff+2mx7bIQxJsIWlp4U9eLOv3xTLcm1r35imjFmzoy4C9fuGmOKK1q2rM6qvu7yDSivaT9c3hywYk7alOCjfq9s8754b2H1dZdlWdGRYftKrp272unbMnK2FfNSVs5P6en39PS7vzpR39rZ7z9w5LAjWxesHf5x/LtsYdbekqvJ8ZGjrT7JjTesdwszP/qu+nZn/9LZjjeemfHp4dqPX5r128W2/Fy7b8DK+VO7+zxv77+4JNe+4emM7T/UfHak1rdrxdyU5IRI/1RlVc6yKqcx5sjWBVsOVvo2vlOY6X892orBR/kMuod8W2amxGxbk7Vx33n/Fp95mQnLHksqOnCpb9CzMDtx86qsbYe8ewOGjTZn0fOZb357YbTVJ7nx3goTp0REhnsnKa92Hq1oMcZ88uPloxU3/QOW5yWVnG01xpy63F513fs37WMZU7hgavHwIeNccUwNt7ofjLtXsN+6xakHShv7Bj3GmIra9ua23vAwK8TTqL/VPS3xgf947pPIeK9YB0obv3j10T9r238+f/tsQ6cxxukaGDkg3RG9OMe+KCfR1eveW3LVv31Rjr3mhqu9a2D8K45pflbCmfuNzEiOrr3Z7X+7+0R96Kcxd2b8lRHHYoLDKjnberLamZ9r31SQUVbtPPRrU8CACJvV0tG35WDl0tmOosJM373GGPPC4tTdx+vGnD/cZu14Zbbv9f7Sxsom15grBhwbbrOmJ0Vv2HsueDabZYW4aMAuy7K6ege/DOH8J61xhZUQE5HuiLrUdLfkTOupmvZ9G/OCf83OroGTw08hJ6ucbz0307cxNz3W1TvYdKd3zCUCHndCWTH42PX5qQWPJ39fdiNgtqa23qxpMVXDD+OWMZtXZe04eiXEZyxIn7GGPliXnRzvfXyJjwlv7fB+pQpwpqEzLyPOGJOXEVfX8u+9Y31+6uE/mkUrBvu7rnNWWmzw9mOnW15b9lCEzfshPDUnKcIW6gMWtFesju7BPcfrP1z3SP+gx+0xu455/9wDHPylqagw8+Un092eoT3DDzFpjihHXOT54S/nY5/fiLtSZZNrf2njmCsGa7zTkzk12rLuM1u6I+qbDXM6ugfauwa+/qlhtEVD+zxwj1WwvXzEW2Bi8J93SBAWJAgLEoQFCcKCBGFBgrAgQVggLPx/cMWCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhwSj8AzjGCeSXBR8wAAAAAElFTkSuQmCC\",\"pcf_fund\":\"PCF-Commissary\"}",
+    "ts": "2026-04-09T01:10:45.797Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3setup_SM",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00089\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":420,\"pending_count\":1,\"current_balance\":4580,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-09T01:10:46.698Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3setup_Puregold",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"Puregold\",\"manual_description\":\"Commissary packing materials S167\",\"manual_amount\":310,\"manual_date\":\"2026-04-09\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-Commissary\"}",
+    "ts": "2026-04-09T01:10:59.795Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3setup_Puregold",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00090\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":730,\"pending_count\":2,\"current_balance\":4270,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-09T01:11:00.514Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3setup_submit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"submit_batch_now\",\"pcf_fund\":\"PCF-Commissary\"}",
+    "ts": "2026-04-09T01:11:10.944Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3setup_submit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"batch_name\":\"BEI-PCF-2026-00005\",\"expense_count\":2,\"total_amount\":730},\"message\":\"Batch BEI-PCF-2026-00005 created with 2 expenses\"}",
+    "ts": "2026-04-09T01:11:12.597Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p3.1",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.finance@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T01:17:01.801Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p3.1",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T01:17:03.096Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.2a_ai_classify",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"classify_batch_items\",\"batch_name\":\"BEI-PCF-2026-00004\"}",
+    "ts": "2026-04-09T01:17:33.935Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.2a_ai_classify",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"items\":[],\"total\":0},\"message\":\"Classification complete\"}",
+    "ts": "2026-04-09T01:17:34.753Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.2b_edit_coa",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"approve_batch_with_coa\",\"batch_name\":\"BEI-PCF-2026-00004\",\"items\":[{\"expense_name\":\"BEI-EXP-2026-00084\",\"final_coa\":\"5040 - Office Supplies - BEI\",\"approved_amount\":480},{\"expense_name\":\"BEI-EXP-2026-00085\",\"final_coa\":\"5040 - Office Supplies - BEI\",\"approved_amount\":350},{\"expense_name\":\"BEI-EXP-2026-00087\",\"final_coa\":\"5040 - Office Supplies - BEI\",\"approved_amount\":480},{\"expense_name\":\"BEI-EXP-2026-00088\",\"final_coa\":\"5040 - Office Supplies - BEI\",\"approved_amount\":350}]}",
+    "ts": "2026-04-09T01:17:39.179Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.2b_edit_coa",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 400,
+    "response_body": "{\"success\":false,\"error\":\"Could not find Row #2: Suggested COA: 6010100, Row #4: Suggested COA: 6010100\"}",
+    "ts": "2026-04-09T01:17:40.057Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p3.1",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.finance@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T01:21:09.124Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p3.1",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T01:21:10.359Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.2a_ai_classify",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"classify_batch_items\",\"batch_name\":\"BEI-PCF-2026-00004\"}",
+    "ts": "2026-04-09T01:21:41.269Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.2a_ai_classify",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"items\":[],\"total\":0},\"message\":\"Classification complete\"}",
+    "ts": "2026-04-09T01:21:42.103Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.2b_edit_coa",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"approve_batch_with_coa\",\"batch_name\":\"BEI-PCF-2026-00004\",\"items\":[{\"expense_name\":\"BEI-EXP-2026-00084\",\"final_coa\":\"5100 - Cost of Goods Sold - BEI\",\"approved_amount\":480},{\"expense_name\":\"BEI-EXP-2026-00085\",\"final_coa\":\"5100 - Cost of Goods Sold - BEI\",\"approved_amount\":350},{\"expense_name\":\"BEI-EXP-2026-00087\",\"final_coa\":\"5100 - Cost of Goods Sold - BEI\",\"approved_amount\":480},{\"expense_name\":\"BEI-EXP-2026-00088\",\"final_coa\":\"5100 - Cost of Goods Sold - BEI\",\"approved_amount\":350}]}",
+    "ts": "2026-04-09T01:21:46.452Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.2b_edit_coa",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 400,
+    "response_body": "{\"success\":false,\"error\":\"Could not find Row #2: Suggested COA: 6010100, Row #4: Suggested COA: 6010100\"}",
+    "ts": "2026-04-09T01:21:47.281Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.3_reject",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"reject_batch\",\"batch_name\":\"BEI-PCF-2026-00005\",\"reason\":\"S167 test reject — Commissary batch rejected as expected test case\"}",
+    "ts": "2026-04-09T01:22:00.902Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.3_reject",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-PCF-2026-00005\",\"status\":\"Rejected\",\"reviewed_by\":\"test.finance@bebang.ph\",\"reviewed_at\":\"2026-04-09 09:22:03.083602\",\"review_notes\":\"S167 test reject — Commissary batch rejected as expected test case\"},\"message\":\"Batch BEI-PCF-2026-00005 rejected\"}",
+    "ts": "2026-04-09T01:22:02.337Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.2b_retry",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.finance@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T01:23:44.219Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.2b_retry",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T01:23:45.956Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "3.2b_retry",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"approve_batch_with_coa\",\"batch_name\":\"BEI-PCF-2026-00004\",\"items\":[{\"expense_name\":\"BEI-EXP-2026-00084\",\"final_coa\":\"5100 - Cost of Goods Sold - BEI\",\"approved_amount\":480},{\"expense_name\":\"BEI-EXP-2026-00085\",\"final_coa\":\"5100 - Cost of Goods Sold - BEI\",\"approved_amount\":350},{\"expense_name\":\"BEI-EXP-2026-00087\",\"final_coa\":\"5100 - Cost of Goods Sold - BEI\",\"approved_amount\":480},{\"expense_name\":\"BEI-EXP-2026-00088\",\"final_coa\":\"5100 - Cost of Goods Sold - BEI\",\"approved_amount\":350}]}",
+    "ts": "2026-04-09T01:23:57.163Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "3.2b_retry",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-PCF-2026-00004\",\"status\":\"Approved\",\"reviewed_by\":\"test.finance@bebang.ph\",\"reviewed_at\":\"2026-04-09 09:23:59.549618\"},\"message\":\"Batch BEI-PCF-2026-00004 approved with COA classifications\"}",
+    "ts": "2026-04-09T01:23:58.789Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p4",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"sam@bebang.ph\",\"pwd\":\"2289454\"}",
+    "ts": "2026-04-09T01:24:51.200Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p4",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T01:24:52.519Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "4.1_edit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"update_pcf_settings\",\"pcf_fund\":\"PCF-Ayala Malls Fairview Terraces - Bebang Enterprise Inc.\",\"fund_amount\":10000,\"threshold_percentage\":50,\"custodian\":\"Administrator\",\"auto_submit_enabled\":false,\"month_end_auto_submit\":false,\"is_enabled\":0}",
+    "ts": "2026-04-09T01:25:13.819Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "4.1_edit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 400,
+    "response_body": "{\"success\":false,\"error\":\"Could not find Store: Ayala Malls Fairview Terraces - Bebang Enterprise Inc.\"}",
+    "ts": "2026-04-09T01:25:14.747Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p4",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"sam@bebang.ph\",\"pwd\":\"2289454\"}",
+    "ts": "2026-04-09T01:28:48.771Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p4",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T01:28:50.104Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "4.1_edit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"update_pcf_settings\",\"pcf_fund\":\"PCF-HR and Admin\",\"fund_amount\":8000,\"threshold_percentage\":70,\"custodian\":\"test.hr@bebang.ph\",\"auto_submit_enabled\":false,\"month_end_auto_submit\":false,\"is_enabled\":0}",
+    "ts": "2026-04-09T01:29:03.283Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "4.1_edit",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}",
+    "ts": "2026-04-09T01:29:04.200Z"
   }
 ]

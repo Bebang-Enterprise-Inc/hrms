@@ -398,5 +398,135 @@
     "before": "/dashboard/expense/pcf/add",
     "after": "https://my.bebang.ph/dashboard/accounting/pcf/add",
     "passed": true
+  },
+  {
+    "ts": "2026-04-08T11:49:24.767Z",
+    "scenario": "2.1_NBS",
+    "check": "hr_NBS_BROWSER",
+    "before": "pending list",
+    "after": "added",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-08T11:49:38.858Z",
+    "scenario": "2.1_Jollibee",
+    "check": "hr_Jollibee_BROWSER",
+    "before": "pending list",
+    "after": "added",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-08T11:50:05.246Z",
+    "scenario": "2.2_submit",
+    "check": "hr_batch_submitted_BROWSER",
+    "before": "2 pending ₱830",
+    "after": "error_0",
+    "passed": false
+  },
+  {
+    "ts": "2026-04-09T01:09:07.419Z",
+    "scenario": "2.1_NBS",
+    "check": "hr_NBS_BROWSER",
+    "before": "pending list",
+    "after": "added",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T01:09:21.698Z",
+    "scenario": "2.1_Jollibee",
+    "check": "hr_Jollibee_BROWSER",
+    "before": "pending list",
+    "after": "added",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T01:09:40.391Z",
+    "scenario": "2.2_submit",
+    "check": "hr_batch_submitted_BROWSER",
+    "before": "2 pending ₱830",
+    "after": "batch created",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T01:17:14.592Z",
+    "scenario": "3.1_queue",
+    "check": "review_queue_renders",
+    "before": "queue page",
+    "after": "HR:true Commi:true table:true",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T01:17:25.859Z",
+    "scenario": "3.4_empty_coa",
+    "check": "client_validation_blocks_empty_coa",
+    "before": "empty COA fields",
+    "after": "blocked: Some rows are invalid — see highlighted items",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T01:21:21.304Z",
+    "scenario": "3.1_queue",
+    "check": "review_queue_renders",
+    "before": "queue page",
+    "after": "HR:true Commi:true table:true",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T01:21:33.033Z",
+    "scenario": "3.4_empty_coa",
+    "check": "client_validation_blocks_empty_coa",
+    "before": "empty COA fields",
+    "after": "blocked: Some rows are invalid — see highlighted items",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T01:25:30.198Z",
+    "scenario": "4.2_verify",
+    "check": "hr_dashboard_shows_new_values",
+    "before": "HR 5000/60",
+    "after": "amt8k:false thr70:false",
+    "passed": false
+  },
+  {
+    "ts": "2026-04-09T01:29:19.488Z",
+    "scenario": "4.2_verify",
+    "check": "hr_dashboard_shows_new_values",
+    "before": "HR 5000/60",
+    "after": "amt8k:false thr70:false",
+    "passed": false
+  },
+  {
+    "ts": "2026-04-09T01:30:34.215Z",
+    "scenario": "4.2_verify_retry",
+    "check": "hr_dashboard_shows_8000_70",
+    "before": "HR 5000/60",
+    "after": "8k:true 70:true",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T01:31:38.323Z",
+    "scenario": "5_staff_sidebar",
+    "check": "sidebar_R3_and_R10",
+    "before": "sidebar dump",
+    "after": "R3:true R10_noPcf:true",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T01:32:17.185Z",
+    "scenario": "5_hr_sidebar",
+    "check": "sidebar_R3_and_R10",
+    "before": "sidebar dump",
+    "after": "R3:true R10_noPcf:true",
+    "passed": true,
+    "legacy_pcf_url": "https://my.bebang.ph/dashboard/accounting/pcf",
+    "legacy_pcf_add_url": "https://my.bebang.ph/dashboard/accounting/pcf/add"
+  },
+  {
+    "ts": "2026-04-09T01:32:33.710Z",
+    "scenario": "5_finance_sidebar",
+    "check": "sidebar_R3_and_R10",
+    "before": "sidebar dump",
+    "after": "R3:true R10_noPcf:true",
+    "passed": true
   }
 ]

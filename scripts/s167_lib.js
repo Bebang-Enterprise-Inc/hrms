@@ -1,7 +1,7 @@
 /**
  * S167 shared helpers — login, evidence recorders, screenshots.
  */
-const { chromium } = require("playwright");
+const { chromium } = require("F:/Dropbox/Projects/BEI-Tasks-S060-sales-dashboard-ui/node_modules/playwright");
 const fs = require("fs");
 const path = require("path");
 
