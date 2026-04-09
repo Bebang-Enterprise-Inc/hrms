@@ -528,5 +528,149 @@
     "before": "sidebar dump",
     "after": "R3:true R10_noPcf:true",
     "passed": true
+  },
+  {
+    "ts": "2026-04-09T02:25:00.410Z",
+    "scenario": "0.2_commi",
+    "check": "fund_resolution_browser_page_load",
+    "method": "BROWSER page.goto + DOM scrape",
+    "route": "/dashboard/commissary/pcf",
+    "passed": true,
+    "matched_snippet": "Commissary",
+    "before": "no page load",
+    "after": "fund visible: Commissary"
+  },
+  {
+    "ts": "2026-04-09T02:25:14.596Z",
+    "scenario": "0.2_finance",
+    "check": "fund_resolution_browser_page_load",
+    "method": "BROWSER page.goto + DOM scrape",
+    "route": "/dashboard/accounting/pcf/review",
+    "passed": true,
+    "matched_snippet": "Fund",
+    "before": "no page load",
+    "after": "fund visible: Fund"
+  },
+  {
+    "ts": "2026-04-09T02:27:04.551Z",
+    "scenario": "0.2_staff",
+    "check": "fund_resolution_browser_page_load",
+    "method": "BROWSER page.goto + DOM scrape",
+    "route": "/dashboard/store-ops/pcf",
+    "passed": true,
+    "matched_snippet": "Store",
+    "before": "no page load",
+    "after": "fund visible: Store"
+  },
+  {
+    "ts": "2026-04-09T02:27:15.518Z",
+    "scenario": "0.2_supv",
+    "check": "fund_resolution_browser_page_load",
+    "method": "BROWSER page.goto + DOM scrape",
+    "route": "/dashboard/store-ops/pcf",
+    "passed": true,
+    "matched_snippet": "Store",
+    "before": "no page load",
+    "after": "fund visible: Store"
+  },
+  {
+    "ts": "2026-04-09T02:27:25.716Z",
+    "scenario": "0.2_hr",
+    "check": "fund_resolution_browser_page_load",
+    "method": "BROWSER page.goto + DOM scrape",
+    "route": "/dashboard/hr-admin/pcf",
+    "passed": true,
+    "matched_snippet": "HR and Admin",
+    "before": "no page load",
+    "after": "fund visible: HR and Admin"
+  },
+  {
+    "ts": "2026-04-09T02:27:37.170Z",
+    "scenario": "0.2_warehouse",
+    "check": "fund_resolution_browser_page_load",
+    "method": "BROWSER page.goto + DOM scrape",
+    "route": "/dashboard/warehouse/pcf",
+    "passed": true,
+    "matched_snippet": "Supply Chain",
+    "before": "no page load",
+    "after": "fund visible: Supply Chain"
+  },
+  {
+    "ts": "2026-04-09T02:27:48.066Z",
+    "scenario": "0.2_commi",
+    "check": "fund_resolution_browser_page_load",
+    "method": "BROWSER page.goto + DOM scrape",
+    "route": "/dashboard/commissary/pcf",
+    "passed": true,
+    "matched_snippet": "Commissary",
+    "before": "no page load",
+    "after": "fund visible: Commissary"
+  },
+  {
+    "ts": "2026-04-09T02:28:01.617Z",
+    "scenario": "0.2_finance",
+    "check": "fund_resolution_browser_page_load",
+    "method": "BROWSER page.goto + DOM scrape",
+    "route": "/dashboard/accounting/pcf/review",
+    "passed": true,
+    "matched_snippet": "Fund",
+    "before": "no page load",
+    "after": "fund visible: Fund"
+  },
+  {
+    "ts": "2026-04-09T02:29:23.718Z",
+    "scenario": "1.1_MercuryDrug",
+    "check": "store_MercuryDrug_added",
+    "before": "pending list",
+    "after": "added",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T02:29:38.197Z",
+    "scenario": "1.1_7Eleven",
+    "check": "store_7Eleven_added",
+    "before": "pending list",
+    "after": "added",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T02:29:53.060Z",
+    "scenario": "1.1_Globe",
+    "check": "store_Globe_added",
+    "before": "pending list",
+    "after": "added",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T02:30:04.810Z",
+    "scenario": "1.2_supv_pending",
+    "check": "custodian_sees_all_3",
+    "before": "pending list",
+    "after": "all3:true total699:true",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T02:37:11.613Z",
+    "scenario": "0.1_HR",
+    "check": "fund_HR_created_and_enabled",
+    "before": "no fund",
+    "after": "create:200 enable:200",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T02:37:53.074Z",
+    "scenario": "0.1_SupplyChain",
+    "check": "fund_SupplyChain_created_and_enabled",
+    "before": "no fund",
+    "after": "create:200 enable:200",
+    "passed": true
+  },
+  {
+    "ts": "2026-04-09T02:38:19.678Z",
+    "scenario": "0.1_Commissary",
+    "check": "fund_Commissary_created_and_enabled",
+    "before": "no fund",
+    "after": "create:200 enable:200",
+    "passed": true
   }
 ]

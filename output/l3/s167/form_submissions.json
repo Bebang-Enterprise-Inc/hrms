@@ -679,5 +679,155 @@
       "status": 200,
       "body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}"
     }
+  },
+  {
+    "ts": "2026-04-09T02:29:23.717Z",
+    "scenario": "1.1_MercuryDrug",
+    "form": "add_expense_to_pending_store",
+    "method": "BROWSER UI form clicks",
+    "inputs": {
+      "vendor": "Mercury Drug",
+      "description": "Store first aid supplies S167 REDO",
+      "amount": 250,
+      "date": "2026-04-09",
+      "label": "MercuryDrug"
+    },
+    "submit_action": "click 'Add to Pending'",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00091\",\"pcf_status\":{\"fund_amount\":10000,\"pending_total\":250,\"pending_count\":1,\"current_balance\":9750,\"threshold_percentage\":50,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T02:29:38.196Z",
+    "scenario": "1.1_7Eleven",
+    "form": "add_expense_to_pending_store",
+    "method": "BROWSER UI form clicks",
+    "inputs": {
+      "vendor": "7-Eleven",
+      "description": "Snacks for store team S167 REDO",
+      "amount": 150,
+      "date": "2026-04-09",
+      "label": "7Eleven"
+    },
+    "submit_action": "click 'Add to Pending'",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00092\",\"pcf_status\":{\"fund_amount\":10000,\"pending_total\":400,\"pending_count\":2,\"current_balance\":9600,\"threshold_percentage\":50,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T02:29:53.059Z",
+    "scenario": "1.1_Globe",
+    "form": "add_expense_to_pending_store",
+    "method": "BROWSER UI form clicks",
+    "inputs": {
+      "vendor": "Globe Telecom",
+      "description": "Store mobile prepaid S167 REDO",
+      "amount": 299,
+      "date": "2026-04-09",
+      "label": "Globe"
+    },
+    "submit_action": "click 'Add to Pending'",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00093\",\"pcf_status\":{\"fund_amount\":10000,\"pending_total\":699,\"pending_count\":3,\"current_balance\":9301,\"threshold_percentage\":50,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T02:32:28.008Z",
+    "scenario": "1.3_edit",
+    "form": "edit_pending_expense",
+    "method": "BROWSER inline dialog clicks",
+    "inputs": {
+      "expense": "7-Eleven",
+      "old_amount": 150,
+      "new_amount": 180
+    },
+    "submit_action": "click Edit button → fill 180 → click Save",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00092\",\"manual_vendor\":\"7-Eleven\",\"manual_description\":\"Snacks for store team S167 REDO\",\"manual_amount\":180,\"manual_date\":\"2026-04-09\"},\"message\":\"Expense updated\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T02:32:42.062Z",
+    "scenario": "1.4_submit",
+    "form": "submit_batch_now_store",
+    "method": "BROWSER click Submit Batch",
+    "inputs": {
+      "pcf_fund": "PCF-TEST-STORE-BGC - BEI"
+    },
+    "submit_action": "click Submit Batch",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"batch_name\":\"BEI-PCF-2026-00006\",\"expense_count\":3,\"total_amount\":729},\"message\":\"Batch BEI-PCF-2026-00006 created with 3 expenses\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T02:37:11.611Z",
+    "scenario": "0.1_HR",
+    "form": "create_pcf_fund + enable",
+    "method": "BROWSER dialog clicks + switch + save",
+    "inputs": {
+      "dept": "HR and Admin - BEI",
+      "custodian": "test.hr@bebang.ph",
+      "amount": 5000,
+      "threshold": 60,
+      "label": "HR"
+    },
+    "submit_action": "combobox pick + fill + Create click → navigate + switch click + Save click",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: HR and Admin\"}"
+    },
+    "enable_response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T02:37:53.073Z",
+    "scenario": "0.1_SupplyChain",
+    "form": "create_pcf_fund + enable",
+    "method": "BROWSER dialog clicks + switch + save",
+    "inputs": {
+      "dept": "Supply Chain - BEI",
+      "custodian": "test.warehouse@bebang.ph",
+      "amount": 5000,
+      "threshold": 60,
+      "label": "SupplyChain"
+    },
+    "submit_action": "combobox pick + fill + Create click → navigate + switch click + Save click",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: Supply Chain\"}"
+    },
+    "enable_response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T02:38:19.677Z",
+    "scenario": "0.1_Commissary",
+    "form": "create_pcf_fund + enable",
+    "method": "BROWSER dialog clicks + switch + save",
+    "inputs": {
+      "dept": "Commissary - BEI",
+      "custodian": "test.commissary@bebang.ph",
+      "amount": 5000,
+      "threshold": 60,
+      "label": "Commissary"
+    },
+    "submit_action": "combobox pick + fill + Create click → navigate + switch click + Save click",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: Commissary\"}"
+    },
+    "enable_response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for Commissary\"}"
+    }
   }
 ]

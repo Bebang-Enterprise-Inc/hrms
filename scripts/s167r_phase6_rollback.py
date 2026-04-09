@@ -5,7 +5,7 @@ NOT deleted:
   - PCF-TEST-STORE-BGC - BEI fund (pre-existing before S167)
 """
 import os, json
-for d in ["/home/frappe/logs","/home/frappe/frappe-bench/logs","/home/frappe/frappe-bench/sites/hq.bebang.ph/logs"]:
+for d in ["/home/frappe/logs","/home/frappe/frappe-bench/logs","/home/frappe/frappe-bench/sites/hq.bebang.ph/logs","/home/frappe/frappe-bench/hq.bebang.ph/logs"]:
     os.makedirs(d, exist_ok=True)
 import frappe
 frappe.init(site="hq.bebang.ph", sites_path="/home/frappe/frappe-bench/sites")

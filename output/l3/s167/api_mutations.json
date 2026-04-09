@@ -1188,5 +1188,277 @@
     "status": 200,
     "response_body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}",
     "ts": "2026-04-09T01:29:04.200Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p1",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.staff@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T02:28:15.563Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p1",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 521,
+    "response_body": "{\"success\":false,\"error\":\"Authentication service unavailable (521)\",\"issueClass\":\"upstream_failure\",\"expectedOutcome\":\"retry_or_fix\",\"uiState\":\"error_state\",\"alreadyCaptured\":true}",
+    "ts": "2026-04-09T02:28:16.116Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p1",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.staff@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T02:29:01.460Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p1",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T02:29:06.077Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "1.1_MercuryDrug",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"Mercury Drug\",\"manual_description\":\"Store first aid supplies S167 REDO\",\"manual_amount\":250,\"manual_date\":\"2026-04-09\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-TEST-STORE-BGC - BEI\"}",
+    "ts": "2026-04-09T02:29:19.292Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "1.1_MercuryDrug",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00091\",\"pcf_status\":{\"fund_amount\":10000,\"pending_total\":250,\"pending_count\":1,\"current_balance\":9750,\"threshold_percentage\":50,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-09T02:29:21.149Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "1.1_7Eleven",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"7-Eleven\",\"manual_description\":\"Snacks for store team S167 REDO\",\"manual_amount\":150,\"manual_date\":\"2026-04-09\",\"receipt_photo\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAIAAAAiOjnJAAAGJ0lEQVR4nO3Ya0yVdQDH8f/DAQLkdg6BAikJhFiy5q0pupauaDbJS+Z60aqt2fRFrcjLur3IVS9SS1ttujXd9E2tdBN1bWyxLsMwrHnnIgIKiohyAA93zqEdTjuyc2ScBr8Xje/n1TnP83/+/4fDl+d5DlbB9nIDTLSwCZ8RICyocMWCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCgkT4OI/PTp3y+vLp4TbL7RnaVVzX2tkfG2XbWPDwklz7ms9PG2Msy2x6NiMnLdbtHtpZfKXZ2ff+2mx7bIQxJsIWlp4U9eLOv3xTLcm1r35imjFmzoy4C9fuGmOKK1q2rM6qvu7yDSivaT9c3hywYk7alOCjfq9s8754b2H1dZdlWdGRYftKrp272unbMnK2FfNSVs5P6en39PS7vzpR39rZ7z9w5LAjWxesHf5x/LtsYdbekqvJ8ZGjrT7JjTesdwszP/qu+nZn/9LZjjeemfHp4dqPX5r128W2/Fy7b8DK+VO7+zxv77+4JNe+4emM7T/UfHak1rdrxdyU5IRI/1RlVc6yKqcx5sjWBVsOVvo2vlOY6X892orBR/kMuod8W2amxGxbk7Vx33n/Fp95mQnLHksqOnCpb9CzMDtx86qsbYe8ewOGjTZn0fOZb357YbTVJ7nx3goTp0REhnsnKa92Hq1oMcZ88uPloxU3/QOW5yWVnG01xpy63F513fs37WMZU7hgavHwIeNccUwNt7ofjLtXsN+6xakHShv7Bj3GmIra9ua23vAwK8TTqL/VPS3xgf947pPIeK9YB0obv3j10T9r238+f/tsQ6cxxukaGDkg3RG9OMe+KCfR1eveW3LVv31Rjr3mhqu9a2D8K45pflbCmfuNzEiOrr3Z7X+7+0R96Kcxd2b8lRHHYoLDKjnberLamZ9r31SQUVbtPPRrU8CACJvV0tG35WDl0tmOosJM373GGPPC4tTdx+vGnD/cZu14Zbbv9f7Sxsom15grBhwbbrOmJ0Vv2HsueDabZYW4aMAuy7K6ege/DOH8J61xhZUQE5HuiLrUdLfkTOupmvZ9G/OCf83OroGTw08hJ6ucbz0307cxNz3W1TvYdKd3zCUCHndCWTH42PX5qQWPJ39fdiNgtqa23qxpMVXDD+OWMZtXZe04eiXEZyxIn7GGPliXnRzvfXyJjwlv7fB+pQpwpqEzLyPOGJOXEVfX8u+9Y31+6uE/mkUrBvu7rnNWWmzw9mOnW15b9lCEzfshPDUnKcIW6gMWtFesju7BPcfrP1z3SP+gx+0xu455/9wDHPylqagw8+Un092eoT3DDzFpjihHXOT54S/nY5/fiLtSZZNrf2njmCsGa7zTkzk12rLuM1u6I+qbDXM6ugfauwa+/qlhtEVD+zxwj1WwvXzEW2Bi8J93SBAWJAgLEoQFCcKCBGFBgrAgQVggLPx/cMWCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhQYKwIEFYkCAsSBAWJAgLEoQFCcKCBGFBgrAgQViQICxIEBYkCAsShAUJwoIEYUGCsCBBWJAgLEgQFiQICxKEBQnCggRhwSj8AzjGCeSXBR8wAAAAAElFTkSuQmCC\",\"pcf_fund\":\"PCF-TEST-STORE-BGC - BEI\"}",
+    "ts": "2026-04-09T02:29:34.589Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "1.1_7Eleven",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00092\",\"pcf_status\":{\"fund_amount\":10000,\"pending_total\":400,\"pending_count\":2,\"current_balance\":9600,\"threshold_percentage\":50,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-09T02:29:35.634Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "1.1_Globe",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"add_expense_to_pending\",\"manual_vendor\":\"Globe Telecom\",\"manual_description\":\"Store mobile prepaid S167 REDO\",\"manual_amount\":299,\"manual_date\":\"2026-04-09\",\"receipt_photo\":\"data:image/png;base64,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\",\"pcf_fund\":\"PCF-TEST-STORE-BGC - BEI\"}",
+    "ts": "2026-04-09T02:29:48.972Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "1.1_Globe",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00093\",\"pcf_status\":{\"fund_amount\":10000,\"pending_total\":699,\"pending_count\":3,\"current_balance\":9301,\"threshold_percentage\":50,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}",
+    "ts": "2026-04-09T02:29:50.489Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "1.1_Globe",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.supervisor@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T02:29:55.026Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "1.1_Globe",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T02:29:56.454Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p1.3",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"test.supervisor@bebang.ph\",\"pwd\":\"BeiTest2026!\"}",
+    "ts": "2026-04-09T02:32:11.837Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p1.3",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T02:32:13.050Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "1.3",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"edit_pending_expense\",\"expense_name\":\"BEI-EXP-2026-00092\",\"manual_vendor\":\"7-Eleven\",\"manual_description\":\"Snacks for store team S167 REDO\",\"manual_amount\":180,\"manual_date\":\"2026-04-09\"}",
+    "ts": "2026-04-09T02:32:24.532Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "1.3",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00092\",\"manual_vendor\":\"7-Eleven\",\"manual_description\":\"Snacks for store team S167 REDO\",\"manual_amount\":180,\"manual_date\":\"2026-04-09\"},\"message\":\"Expense updated\"}",
+    "ts": "2026-04-09T02:32:25.454Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "1.4",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"submit_batch_now\",\"store\":\"TEST-STORE-BGC - BEI\"}",
+    "ts": "2026-04-09T02:32:34.682Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "1.4",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"batch_name\":\"BEI-PCF-2026-00006\",\"expense_count\":3,\"total_amount\":729},\"message\":\"Batch BEI-PCF-2026-00006 created with 3 expenses\"}",
+    "ts": "2026-04-09T02:32:41.992Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "p0.1",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "payload": "{\"usr\":\"sam@bebang.ph\",\"pwd\":\"2289454\"}",
+    "ts": "2026-04-09T02:36:28.426Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "p0.1",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/auth/login",
+    "status": 200,
+    "response_body": null,
+    "ts": "2026-04-09T02:36:31.354Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.1_HR",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"create_pcf_fund\",\"fund_type\":\"Department\",\"department\":\"HR and Admin - BEI\",\"custodian\":\"test.hr@bebang.ph\",\"fund_amount\":5000,\"threshold_percentage\":60}",
+    "ts": "2026-04-09T02:36:57.136Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.1_HR",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: HR and Admin\"}",
+    "ts": "2026-04-09T02:36:58.010Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.1_HR",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"update_pcf_settings\",\"pcf_fund\":\"PCF-HR and Admin\",\"fund_amount\":5000,\"threshold_percentage\":60,\"custodian\":\"test.hr@bebang.ph\",\"auto_submit_enabled\":false,\"month_end_auto_submit\":false,\"is_enabled\":1}",
+    "ts": "2026-04-09T02:37:09.972Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.1_HR",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}",
+    "ts": "2026-04-09T02:37:10.872Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.1_SupplyChain",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"create_pcf_fund\",\"fund_type\":\"Department\",\"department\":\"Supply Chain - BEI\",\"custodian\":\"test.warehouse@bebang.ph\",\"fund_amount\":5000,\"threshold_percentage\":60}",
+    "ts": "2026-04-09T02:37:38.507Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.1_SupplyChain",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: Supply Chain\"}",
+    "ts": "2026-04-09T02:37:39.366Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.1_SupplyChain",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"update_pcf_settings\",\"pcf_fund\":\"PCF-HR and Admin\",\"fund_amount\":5000,\"threshold_percentage\":60,\"custodian\":\"test.hr@bebang.ph\",\"auto_submit_enabled\":false,\"month_end_auto_submit\":false,\"is_enabled\":1}",
+    "ts": "2026-04-09T02:37:51.721Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.1_SupplyChain",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}",
+    "ts": "2026-04-09T02:37:52.384Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.1_Commissary",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"create_pcf_fund\",\"fund_type\":\"Department\",\"department\":\"Commissary - BEI\",\"custodian\":\"test.commissary@bebang.ph\",\"fund_amount\":5000,\"threshold_percentage\":60}",
+    "ts": "2026-04-09T02:38:05.569Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.1_Commissary",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"data\":{\"name\":\"\",\"fund_type\":\"\"},\"message\":\"PCF fund created: Commissary\"}",
+    "ts": "2026-04-09T02:38:06.414Z"
+  },
+  {
+    "phase": "request",
+    "scenario": "0.1_Commissary",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "payload": "{\"action\":\"update_pcf_settings\",\"pcf_fund\":\"PCF-Commissary\",\"fund_amount\":5000,\"threshold_percentage\":60,\"custodian\":\"test.commissary@bebang.ph\",\"auto_submit_enabled\":false,\"month_end_auto_submit\":false,\"is_enabled\":1}",
+    "ts": "2026-04-09T02:38:18.084Z"
+  },
+  {
+    "phase": "response",
+    "scenario": "0.1_Commissary",
+    "method": "POST",
+    "url": "https://my.bebang.ph/api/pcf",
+    "status": 200,
+    "response_body": "{\"success\":true,\"message\":\"PCF settings updated for Commissary\"}",
+    "ts": "2026-04-09T02:38:18.970Z"
   }
 ]
