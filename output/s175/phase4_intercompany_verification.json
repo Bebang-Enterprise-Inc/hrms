@@ -1,0 +1,11 @@
+{
+  "liability_groups_count": 0,
+  "created_parent_group": "2104000 - INTERCOMPANY PAYABLES - BEI",
+  "resolved_parent_source": "new 2104000 INTERCOMPANY PAYABLES group",
+  "resolved_parent": "2104000 - INTERCOMPANY PAYABLES - BEI",
+  "2104200_status": "created",
+  "2104200_name": "2104200 - DUE TO BFC - BEI",
+  "bei_2104200": "2104200 - DUE TO BFC - BEI",
+  "bfc_1104200": "1104200 - DUE FROM BEI - BFC",
+  "bfc_2102205": "2102205 - OUTPUT VAT PAYABLE - BFC"
+}
