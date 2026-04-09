@@ -23,7 +23,18 @@ class EmployeeMaster(Employee):
 				self.set_employee_name()
 				self.name = self.employee_name
 
-		self.employee = self.name
+		# S172 Phase 8 fix (Defect #8 root cause): upstream hrms unconditionally
+		# overwrote `self.employee` with `self.name` (HR-EMP-NNNNN), which clobbered
+		# the BEI-EMP-YYYY-NNNNN business ID that create_employee_direct sets on
+		# the payload. Because `generate_bei_employee_id` reads
+		# `SELECT MAX(employee) WHERE employee LIKE 'BEI-EMP-YYYY-%'`, every row
+		# ended up with employee = HR-EMP-NNNNN and the generator kept returning the
+		# same stale maximum (e.g. BEI-EMP-2026-00004) forever.
+		#
+		# Preserve the BEI business ID when the caller explicitly set it; fall back
+		# to the upstream behaviour (employee = name) only when no BEI ID was set.
+		if not (self.employee or "").startswith("BEI-EMP-"):
+			self.employee = self.name
 
 
 def validate_onboarding_process(doc, method=None):

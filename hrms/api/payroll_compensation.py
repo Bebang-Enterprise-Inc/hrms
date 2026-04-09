@@ -524,6 +524,23 @@ def update_compensation(
 
 	employee_list = bulk_employees or [employee]
 
+	# S172 Phase 8 fix (Defect #16 unblock): when the originator is already an
+	# HR Manager, the dual-control flow should skip the HR Manager stage and
+	# send the request directly to Accounts Manager for final approval. An HR
+	# Manager approving their own submission would defeat dual control; the
+	# real second set of eyes in this case is the Accounts Manager. Without
+	# this auto-advance, HR-originated comp changes got stranded at
+	# "Pending HR Manager" because Finance's queue filters on
+	# "Pending Accounts Manager" and never saw them — which is the exact failure
+	# mode RT-S172-02 reproduced (the SSA-creation savepoint fix in
+	# approve_compensation_change was never reached).
+	submitter_roles = frappe.get_roles(frappe.session.user)
+	initial_status = (
+		"Pending Accounts Manager"
+		if ("HR Manager" in submitter_roles or "System Manager" in submitter_roles)
+		else "Pending HR Manager"
+	)
+
 	created = []
 	for emp_id in employee_list:
 		if not frappe.db.exists("Employee", emp_id):
@@ -575,8 +592,15 @@ def update_compensation(
 				"new_value": new_value,
 				"effective_date": effective_date,
 				"reason": reason,
-				"status": "Pending HR Manager",
+				"status": initial_status,
 				"requested_by": frappe.session.user,
+				# When an HR Manager originates, their submission IS the HR-stage
+				# sign-off — record it so the audit trail is complete.
+				"hr_reviewer": (
+					frappe.session.user
+					if initial_status == "Pending Accounts Manager"
+					else None
+				),
 			}
 		)
 		doc.insert(ignore_permissions=True)
