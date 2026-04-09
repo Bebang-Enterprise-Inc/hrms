@@ -386,11 +386,15 @@ def get_employee_compensation_detail(employee):
 		as_dict=True,
 	)
 	if ssa:
+		result["has_ssa"] = True
 		result["base_salary"] = float(ssa[0].base or 0)
 		result["salary_structure"] = ssa[0].salary_structure
 		result["tax_slab"] = ssa[0].income_tax_slab
 		result["ssa_from_date"] = str(ssa[0].from_date) if ssa[0].from_date else None
 	else:
+		# S172 Defect #21 fix: return stub so frontend Edit button can enable
+		# and HR can set up the first salary for employees without SSA.
+		result["has_ssa"] = False
 		result["base_salary"] = 0
 		result["salary_structure"] = None
 		result["tax_slab"] = None
