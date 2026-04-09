@@ -410,5 +410,274 @@
       "status": 200,
       "body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}"
     }
+  },
+  {
+    "ts": "2026-04-08T11:49:24.765Z",
+    "scenario": "2.1_NBS",
+    "form": "add_expense_to_pending_hr",
+    "method": "BROWSER UI form clicks",
+    "inputs": {
+      "vendor": "National Book Store",
+      "description": "Training manual S167",
+      "amount": 480,
+      "date": "2026-04-08",
+      "label": "NBS"
+    },
+    "submit_action": "click 'Add to Pending'",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00086\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":1310,\"pending_count\":3,\"current_balance\":3690,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-08T11:49:38.857Z",
+    "scenario": "2.1_Jollibee",
+    "form": "add_expense_to_pending_hr",
+    "method": "BROWSER UI form clicks",
+    "inputs": {
+      "vendor": "Jollibee",
+      "description": "Team meeting snacks S167",
+      "amount": 350,
+      "date": "2026-04-08",
+      "label": "Jollibee"
+    },
+    "submit_action": "click 'Add to Pending'",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00087\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":1660,\"pending_count\":4,\"current_balance\":3340,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-08T11:50:05.245Z",
+    "scenario": "2.2_submit",
+    "form": "submit_batch_now_hr",
+    "method": "BROWSER UI button click",
+    "inputs": {
+      "pcf_fund": "PCF-HR and Admin"
+    },
+    "submit_action": "click Submit Batch",
+    "response": {
+      "status": 0,
+      "error": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^submit batch$/i }).first() to be visible\u001b[22m\n"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:09:07.418Z",
+    "scenario": "2.1_NBS",
+    "form": "add_expense_to_pending_hr",
+    "method": "BROWSER UI form clicks",
+    "inputs": {
+      "vendor": "National Book Store",
+      "description": "Training manual S167",
+      "amount": 480,
+      "date": "2026-04-08",
+      "label": "NBS"
+    },
+    "submit_action": "click 'Add to Pending'",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00087\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":1310,\"pending_count\":3,\"current_balance\":3690,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:09:21.697Z",
+    "scenario": "2.1_Jollibee",
+    "form": "add_expense_to_pending_hr",
+    "method": "BROWSER UI form clicks",
+    "inputs": {
+      "vendor": "Jollibee",
+      "description": "Team meeting snacks S167",
+      "amount": 350,
+      "date": "2026-04-08",
+      "label": "Jollibee"
+    },
+    "submit_action": "click 'Add to Pending'",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00088\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":1660,\"pending_count\":4,\"current_balance\":3340,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:09:40.390Z",
+    "scenario": "2.2_submit",
+    "form": "submit_batch_now_hr",
+    "method": "BROWSER UI button click",
+    "inputs": {
+      "pcf_fund": "PCF-HR and Admin"
+    },
+    "submit_action": "click Submit Batch",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"batch_name\":\"BEI-PCF-2026-00004\",\"expense_count\":4,\"total_amount\":1660},\"message\":\"Batch BEI-PCF-2026-00004 created with 4 expenses\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:10:49.291Z",
+    "scenario": "3setup_SM",
+    "form": "add_expense_to_pending_commi",
+    "method": "BROWSER",
+    "inputs": {
+      "vendor": "SM Supermarket",
+      "description": "Commissary cleaning supplies S167",
+      "amount": 420,
+      "date": "2026-04-09",
+      "label": "SM"
+    },
+    "submit_action": "click 'Add to Pending'",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00089\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":420,\"pending_count\":1,\"current_balance\":4580,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:11:03.080Z",
+    "scenario": "3setup_Puregold",
+    "form": "add_expense_to_pending_commi",
+    "method": "BROWSER",
+    "inputs": {
+      "vendor": "Puregold",
+      "description": "Commissary packing materials S167",
+      "amount": 310,
+      "date": "2026-04-09",
+      "label": "Puregold"
+    },
+    "submit_action": "click 'Add to Pending'",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-EXP-2026-00090\",\"pcf_status\":{\"fund_amount\":5000,\"pending_total\":730,\"pending_count\":2,\"current_balance\":4270,\"threshold_percentage\":60,\"at_threshold\":false}},\"message\":\"Expense added to PCF pending queue\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:11:12.668Z",
+    "scenario": "3setup_submit",
+    "form": "submit_batch_now_commi",
+    "method": "BROWSER",
+    "inputs": {
+      "pcf_fund": "PCF-Commissary"
+    },
+    "submit_action": "click Submit Batch",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"batch_name\":\"BEI-PCF-2026-00005\",\"expense_count\":2,\"total_amount\":730},\"message\":\"Batch BEI-PCF-2026-00005 created with 2 expenses\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:17:37.844Z",
+    "scenario": "3.2a_ai_classify",
+    "form": "classify_batch_items",
+    "method": "BROWSER",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00004"
+    },
+    "submit_action": "click Run AI Classification",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"items\":[],\"total\":0},\"message\":\"Classification complete\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:17:43.760Z",
+    "scenario": "3.2b_approve",
+    "form": "approve_batch_with_coa",
+    "method": "BROWSER",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00004",
+      "final_coa": "5040 - Office Supplies - BEI"
+    },
+    "submit_action": "fill COAs + click Approve",
+    "response": {
+      "status": 400,
+      "body": "{\"success\":false,\"error\":\"Could not find Row #2: Suggested COA: 6010100, Row #4: Suggested COA: 6010100\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:21:45.200Z",
+    "scenario": "3.2a_ai_classify",
+    "form": "classify_batch_items",
+    "method": "BROWSER",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00004"
+    },
+    "submit_action": "click Run AI Classification",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"items\":[],\"total\":0},\"message\":\"Classification complete\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:21:51.051Z",
+    "scenario": "3.2b_approve",
+    "form": "approve_batch_with_coa",
+    "method": "BROWSER",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00004",
+      "final_coa": "5100 - Cost of Goods Sold - BEI"
+    },
+    "submit_action": "fill COAs + click Approve",
+    "response": {
+      "status": 400,
+      "body": "{\"success\":false,\"error\":\"Could not find Row #2: Suggested COA: 6010100, Row #4: Suggested COA: 6010100\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:22:05.541Z",
+    "scenario": "3.3_reject",
+    "form": "reject_batch",
+    "method": "BROWSER",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00005"
+    },
+    "submit_action": "click Reject + fill reason + confirm",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-PCF-2026-00005\",\"status\":\"Rejected\",\"reviewed_by\":\"test.finance@bebang.ph\",\"reviewed_at\":\"2026-04-09 09:22:03.083602\",\"review_notes\":\"S167 test reject — Commissary batch rejected as expected test case\"},\"message\":\"Batch BEI-PCF-2026-00005 rejected\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:24:01.998Z",
+    "scenario": "3.2b_retry",
+    "form": "approve_batch_with_coa",
+    "method": "BROWSER",
+    "inputs": {
+      "batch_name": "BEI-PCF-2026-00004",
+      "final_coa": "5100 - Cost of Goods Sold - BEI"
+    },
+    "submit_action": "fill 4 COAs + click Approve + confirm",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"data\":{\"name\":\"BEI-PCF-2026-00004\",\"status\":\"Approved\",\"reviewed_by\":\"test.finance@bebang.ph\",\"reviewed_at\":\"2026-04-09 09:23:59.549618\"},\"message\":\"Batch BEI-PCF-2026-00004 approved with COA classifications\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:25:18.013Z",
+    "scenario": "4.1_edit_hr_fund",
+    "form": "update_pcf_settings",
+    "method": "BROWSER",
+    "inputs": {
+      "pcf_fund": "PCF-HR and Admin",
+      "fund_amount": 8000,
+      "threshold_percentage": 70
+    },
+    "submit_action": "edit admin dialog + save",
+    "response": {
+      "status": 400,
+      "body": "{\"success\":false,\"error\":\"Could not find Store: Ayala Malls Fairview Terraces - Bebang Enterprise Inc.\"}"
+    }
+  },
+  {
+    "ts": "2026-04-09T01:29:07.805Z",
+    "scenario": "4.1_edit_hr_fund",
+    "form": "update_pcf_settings",
+    "method": "BROWSER",
+    "inputs": {
+      "pcf_fund": "PCF-HR and Admin",
+      "fund_amount": 8000,
+      "threshold_percentage": 70
+    },
+    "submit_action": "edit admin dialog + save",
+    "response": {
+      "status": 200,
+      "body": "{\"success\":true,\"message\":\"PCF settings updated for HR and Admin\"}"
+    }
   }
 ]

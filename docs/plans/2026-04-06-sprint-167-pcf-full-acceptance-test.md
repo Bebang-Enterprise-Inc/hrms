@@ -5,13 +5,13 @@ sprint_id: S167
 sprint_name: pcf-full-acceptance-test
 sprint_date: 2026-04-06
 plan_version: 1
-status: IN_PROGRESS
+status: COMPLETED
 owner_decision_maker: Sam (CEO)
 owner_technical_executor: Claude (single-owner execution)
 branch: s167-pcf-full-acceptance-test-redo
 target_repo: BEI-ERP (evidence only — no code changes)
 target_branch_base: production
-registry_row: "| `S167` | Sprint 167 | `s167-pcf-full-acceptance-test-redo` | — | IN_PROGRESS (redo) |"
+registry_row: "| `S167` | Sprint 167 | `s167-pcf-full-acceptance-test-redo` | — | COMPLETED |"
 depends_on: S162 (COMPLETED)
 reopened_date: 2026-04-07
 reopened_reason: "First pass was rejected by Sam. Previous run cut corners: 15 of 22 scenarios either BLOCKED (store phase) or driven via direct API calls instead of real browser UI clicks (Phase 2.2 submit batch, Phase 3 review/classify/approve/reject/validate, Phase 4 admin edit). This redo is BROWSER-ONLY with per-scenario user confirmation. /frappe-bulk-edits authorized for test data setup to unblock DEFECT-004. ALL defects — in-scope and out-of-scope — must be reported in final register."
