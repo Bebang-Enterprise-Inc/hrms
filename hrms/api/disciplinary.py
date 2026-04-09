@@ -43,7 +43,15 @@ def create_incident_report(data):
     if isinstance(data, str):
         data = json.loads(data)
 
-    # Validate required fields
+    # S172 Defect #24 fix: accept both incident_type (frontend field name) and
+    # incident_category (backend field name). The frontend `useCreateIncidentReport`
+    # mutation sends `incident_type` to stay aligned with the TypeScript
+    # IncidentReport interface. Map it to incident_category here so either
+    # payload shape works and neither side needs to break backwards compatibility.
+    if not data.get("incident_category") and data.get("incident_type"):
+        data["incident_category"] = data["incident_type"]
+
+    # Validate required fields (after the incident_type→incident_category alias)
     required_fields = ["employee", "incident_date", "incident_category", "description"]
     for field in required_fields:
         if not data.get(field):
@@ -70,6 +78,7 @@ def create_incident_report(data):
         "store": store_value,
         "incident_date": getdate(data["incident_date"]),
         "incident_category": data["incident_category"],
+        "severity": data.get("severity") or "Minor",
         "description": data["description"],
         "recommended_action": data.get("recommended_action"),
         "witnesses": data.get("witnesses"),

@@ -893,6 +893,12 @@ def submit_sensitive_change_request(
 		}
 	)
 	doc.insert(ignore_permissions=True)
+	# S172 Defect #15 fix: explicit commit prevents the first-of-session
+	# silent rollback pattern — some downstream code later in the request
+	# cycle was rolling the transaction back, leaving the BSCR invisible
+	# despite the endpoint returning success. Committing here ensures the
+	# insert is durable regardless of what else happens in the request.
+	frappe.db.commit()
 
 	return {
 		"status": "success",

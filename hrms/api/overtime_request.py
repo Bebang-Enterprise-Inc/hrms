@@ -91,10 +91,16 @@ def create_overtime_request(
         order_by="modified desc",
     )
     if not attendance_name:
+        # S172 Defect #20 clearer message: explain *why* attendance is required
+        # so crew understand this is by design, not a bug.
         frappe.throw(
             _(
-                "No attendance record found on {0}. Overtime can only be filed for "
-                "days you actually worked."
+                "No attendance record found for {0}. Overtime can only be filed "
+                "for days you actually clocked in (ADMS biometric log). This is "
+                "by design — OT must be anchored to a real attendance record "
+                "so it can be cross-checked against biometric punches. If you "
+                "worked but your attendance wasn't captured, please file an "
+                "attendance correction request first, then retry OT filing."
             ).format(attendance_date)
         )
 

@@ -54,3 +54,4 @@ hrms.patches.v16_0.s099_seed_procurement_settings #2026-03-23
 hrms.patches.v16_0.s099_create_tardiness_salary_components
 hrms.patches.v16_0.s104_setup_contracted_prices #2026-03-24
 hrms.patches.v16_0.s157_pcf_department_migration #2026-04-06
+hrms.patches.v16_0.s172_ensure_hr_employee_permissions #2026-04-09

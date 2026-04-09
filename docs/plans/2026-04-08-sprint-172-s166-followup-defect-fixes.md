@@ -170,10 +170,10 @@ Before writing any code, verify your approach against every item:
 | Phase 4 | 8 | Defect #18 — BEI Incident Report Warehouse→Branch rewire |
 | Phase 5 | 6 | Defect #8 — `create_employee_direct` cached employee_id |
 | Phase 6 | 5 | Defect #13 — emergency_phone_number drop |
-| Phase 7 | 8 | Defects #5 #9 #11 #14 #15 #20 (smaller defects + docs) |
+| Phase 7 | 9 | Defects #5 #9 #11 #14 #15 #20 + #24 (newly discovered Phase 4 follow-up) |
 | Phase 8 | 15 | L3 retest of unblocked S166 SKIP scenarios + per-agent audit gate |
 | Phase 9 | 4 | Closeout (plan + registry + final PR) |
-| **Total** | **70** | Within 80-unit ceiling. No phase exceeds 15. |
+| **Total** | **71** | Within 80-unit ceiling. No phase exceeds 15. |
 
 ---
 
@@ -484,7 +484,7 @@ git diff --name-only origin/production | grep -E "(employee|hr)" | xargs grep -l
 
 ---
 
-### Phase 7 — Smaller defects bundled (8 units)
+### Phase 7 — Smaller defects bundled + Phase 4 follow-up (9 units)
 
 | Defect | Severity | Fix |
 |---|---|---|
@@ -494,6 +494,7 @@ git diff --name-only origin/production | grep -E "(employee|hr)" | xargs grep -l
 | **#14** Reports To no autocomplete | MEDIUM | Replace plain text input with a shadcn combobox bound to the Frappe `User` Link field. Find the EmployeeDetailDialog Employment section. (2 units) |
 | **#15** First-of-session BSCR rolled back | LOW | Investigate the rollback path in `hrms/api/payroll_compensation.py submit_sensitive_change_request`. Likely a missing `frappe.db.commit()` after the first call in a session. (1 unit) |
 | **#20** OT requires attendance | MEDIUM | NOT a code fix — document as expected behavior in `data/04_Project_Management/Import_Log/CONTEXT.md` AND add a clearer error message to `hrms/api/overtime_request.py` line 94 (already says "Overtime can only be filed for days you actually worked" — confirm acceptable). (1 unit — minimal) |
+| **#24** Disciplinary create field mismatch | HIGH | **NEW — added 2026-04-09 during Phase 4 inventory.** Frontend `useCreateIncidentReport` (`lib/queries/hr-disciplinary.ts:179-187`) sends `incident_type` + `severity`. Backend `create_incident_report` (`hrms/api/disciplinary.py:40`) requires `incident_category`. Every IR create call fails with "Missing required field: incident_category". Independent blocker on the disciplinary chain beyond Defect #18. Fix: accept both `incident_type` and `incident_category` in the backend payload; map `incident_type` → `incident_category` with `severity` passed through. Also check DocType JSON for a `severity` field. (1 unit) |
 
    MUST_MODIFY: at least 4 files across the bundle
 
@@ -501,6 +502,7 @@ git diff --name-only origin/production | grep -E "(employee|hr)" | xargs grep -l
 ```bash
 test -f output/s172/diagnostics/DEFECT_5_STATUS.md || exit 1
 git diff --name-only origin/production origin/main | grep -cE "(\.py|\.tsx|\.ts|\.md)" | awk '{if ($1 < 4) exit 1}'
+grep -q 'incident_type' hrms/api/disciplinary.py || exit 1
 ```
 
 ---
