@@ -1009,15 +1009,21 @@ def _get_account_by_number(company: str, account_number: str):
 
 
 def _get_replenishment_source_account(company: str):
-    if frappe.db.has_column("tabBEI Settings", "pcf_replenishment_source_account"):
-        source = frappe.db.get_single_value("BEI Settings", "pcf_replenishment_source_account")
-        if source:
-            return source
+    try:
+        if frappe.db.has_column("tabBEI Settings", "pcf_replenishment_source_account"):
+            source = frappe.db.get_single_value("BEI Settings", "pcf_replenishment_source_account")
+            if source:
+                return source
+    except Exception:
+        pass  # BEI Settings DocType may not exist yet
 
-    if frappe.db.has_column("tabCompany", "default_cash_account"):
-        source = frappe.db.get_value("Company", company, "default_cash_account")
-        if source:
-            return source
+    try:
+        if frappe.db.has_column("tabCompany", "default_cash_account"):
+            source = frappe.db.get_value("Company", company, "default_cash_account")
+            if source:
+                return source
+    except Exception:
+        pass
 
     return None
 
