@@ -1,0 +1,24 @@
+{
+  "fixes": [
+    {
+      "orphan": "ADVANCES TO SSS - BEI",
+      "old": "NON-TRADE RECEIVABLES - BEI",
+      "new": "NON-TRADE RECEIVABLES - Bebang Enterprise Inc.",
+      "status": "FIXED"
+    },
+    {
+      "orphan": "GR/IR CLEARING - BEI",
+      "old": "INVENTORY - BEI",
+      "new": "INVENTORY - Bebang Enterprise Inc.",
+      "status": "FIXED"
+    },
+    {
+      "orphan": "PROPERTY, PLANT AND EQUIPMENT - BEI",
+      "old": "NON-CURRENT ASSETS - BEI",
+      "new": "NON-CURRENT ASSETS - Bebang Enterprise Inc.",
+      "status": "FIXED"
+    }
+  ],
+  "remaining_orphans": 0,
+  "all_pass": true
+}

@@ -1,0 +1,39 @@
+{
+  "steps": [
+    "Fixed store_locations CF: search_index=0, in_standard_filter=0",
+    "partner_names Custom Field inserted via SQL",
+    "partner_names column materialized via ALTER TABLE",
+    "Populated partner_names on 38 companies"
+  ],
+  "errors": [],
+  "companies_with_partner_names": 38,
+  "companies_with_store_locations": 40,
+  "sample": [
+    {
+      "name": "BEBANG ARANETA GATEWAY",
+      "store_locations": "Araneta Gateway",
+      "partner_names": "Wilford Wong, Winchell Wong, Wei Min Choy"
+    },
+    {
+      "name": "BEBANG AYALA SOLENAD",
+      "store_locations": "Ayala Solenad 2",
+      "partner_names": "Francis Patrick Jose Fontanilla Tanjangco, Francisco Suntay "
+    },
+    {
+      "name": "BEBANG BF HOMES INC.",
+      "store_locations": "BF Homes Paranaque (Aguirre Ave.)",
+      "partner_names": "Edward Cheson Sy, Ralph Kenneth Ty"
+    },
+    {
+      "name": "BEBANG D'VERDE",
+      "store_locations": "D'Verde Calamba",
+      "partner_names": "Alyssa Young, Timothy Patrick Uy, Pablo Hicban"
+    },
+    {
+      "name": "Bebang Enterprise Inc.",
+      "store_locations": "Head Office, SM Megamall, SM Manila, SM Southmall, Robinsons",
+      "partner_names": "(Head Office - parent entity)"
+    }
+  ],
+  "all_pass": true
+}
