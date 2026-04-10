@@ -736,5 +736,47 @@
         "insert_after": "custom_vat_status",
         "length": 10,
         "description": "S168 Phase 5: BIR Revenue District Office code for the buyer entity. From data/_CONSOLIDATED/01_FINANCE/ENTITY_TIN_RDO_2026-02-27.csv."
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Company-store_locations",
+        "dt": "Company",
+        "fieldname": "store_locations",
+        "fieldtype": "Small Text",
+        "label": "Store Locations",
+        "insert_after": "company_name",
+        "description": "S178: Physical store names registered under this entity. Searchable in dropdowns."
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Company-partner_names",
+        "dt": "Company",
+        "fieldname": "partner_names",
+        "fieldtype": "Small Text",
+        "label": "Franchisee / Partner Names",
+        "insert_after": "store_locations",
+        "description": "S178: Names of franchisees or JV partners who own or operate this entity. Searchable in dropdowns."
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Company-stakeholders_section",
+        "dt": "Company",
+        "fieldname": "stakeholders_section",
+        "fieldtype": "Section Break",
+        "label": "Stakeholders / Ownership",
+        "insert_after": "partner_names",
+        "collapsible": 1,
+        "description": "S178: Structured ownership and partner data. Each row = one stakeholder with role, ownership %, email, and portal access flag."
+    },
+    {
+        "doctype": "Custom Field",
+        "name": "Company-stakeholders",
+        "dt": "Company",
+        "fieldname": "stakeholders",
+        "fieldtype": "Table",
+        "label": "Stakeholders",
+        "options": "BEI Company Stakeholder",
+        "insert_after": "stakeholders_section",
+        "description": "S178: Structured partner/shareholder/director table. Use for JV ownership, franchise partnerships, holding company structure, and partner portal access control."
     }
 ]

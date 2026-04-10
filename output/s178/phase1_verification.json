@@ -1,0 +1,61 @@
+{
+  "orphans": [
+    {
+      "name": "ADVANCES TO SSS - BEI",
+      "parent_account": "NON-TRADE RECEIVABLES - BEI"
+    },
+    {
+      "name": "GR/IR CLEARING - BEI",
+      "parent_account": "INVENTORY - BEI"
+    },
+    {
+      "name": "PROPERTY, PLANT AND EQUIPMENT - BEI",
+      "parent_account": "NON-CURRENT ASSETS - BEI"
+    }
+  ],
+  "orphan_count": 3,
+  "input_vat": "INPUT VAT - GOODS - Bebang Enterprise Inc.",
+  "input_vat_exists": true,
+  "col_exists": true,
+  "companies_with_stores": 40,
+  "sample": [
+    {
+      "name": "BEBANG ARANETA GATEWAY",
+      "store_locations": "Araneta Gateway"
+    },
+    {
+      "name": "BEBANG AYALA SOLENAD",
+      "store_locations": "Ayala Solenad 2"
+    },
+    {
+      "name": "BEBANG BF HOMES INC.",
+      "store_locations": "BF Homes Paranaque (Aguirre Ave.)"
+    },
+    {
+      "name": "BEBANG D'VERDE",
+      "store_locations": "D'Verde Calamba"
+    },
+    {
+      "name": "Bebang Enterprise Inc.",
+      "store_locations": "Head Office, SM Megamall, SM Manila, SM Southmall, Robinsons Place Antipolo"
+    }
+  ],
+  "cf_exists": true,
+  "orphan_STOCK ADJUSTMENT - B": {
+    "parent": "LOCAL AD & PROMO - Bebang Enterprise Inc.",
+    "valid": true
+  },
+  "orphan_GR/IR CLEARING - BEI": {
+    "parent": "INVENTORY - BEI",
+    "valid": false
+  },
+  "orphan_PROPERTY, PLANT AND ": {
+    "parent": "NON-CURRENT ASSETS - BEI",
+    "valid": false
+  },
+  "orphan_ADVANCES TO SSS - BE": {
+    "parent": "NON-TRADE RECEIVABLES - BEI",
+    "valid": false
+  },
+  "all_pass": false
+}

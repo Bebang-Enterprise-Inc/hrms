@@ -1,6 +1,8 @@
 # S175 Locked Decisions + Fee Routing Matrix
 
-**All decisions are locked as of 2026-04-09 23:00 PHT.** Every decision cites its source (chat, contract, audit, or this session). Any change requires a new `COA-175-###` decision block that supersedes an existing one — never silent edit.
+**All decisions are locked as of 2026-04-10 PHT.** Every decision cites its source (chat, contract, audit, questionnaire, or session). Any change requires a new `COA-175-###` decision block that supersedes an existing one — never silent edit.
+
+**2026-04-10 update:** Butch Formoso returned the completed questionnaire. Fork 1, Option B (VAT), Option C (cutover), OQ-4 fix-now, OQ-5 Customer Group filter — all locked. See `06_BUTCH_ANSWERS.md` for verbatim responses.
 
 ---
 
@@ -97,26 +99,52 @@ Total GL entries: 0
 **Verification:** LIVE-CONFIRMED. The plan v1 said "134 of 136" which matches the live audit exactly. The concern about off-by-one against the Feb-2026 design CSV (135 rows) was a CSV-vs-live discrepancy, not a plan error — live has one extra 6xxxxxx row added post-CSV.
 **Action:** Single SQL UPDATE in Phase 7 after re-verifying 0 GL entries at execution time.
 
-### COA-175-013 — Structural scaffolding ready, routing policy deferred (REVISED 2026-04-09)
-**Decision:** S175 creates the **full Fork 1 structural scaffolding** on disk + in Frappe (BFC Company, the `4000231-4000235 FEES` sub-tree on BFC, `2104200 DUE TO BFC - BEI`, `1104200 DUE FROM BEI - BFC`, `2102205 OUTPUT VAT PAYABLE - BFC`) but **does NOT enforce any revenue-routing policy during this sprint**. The Finance team (Butch + Sam + controller) will later decide — via the Butch questionnaire at `tmp/butch_s175_questionnaire.docx` — whether to:
-- **Route new franchise fees through Fork 1** (collection-agent model, requires signed collection-agent letter + operational BFC OR booklet), OR
-- **Continue routing through BEI's existing accounts** until BFC has its own bank account, then flip at cutover, OR
-- **Some hybrid** (e.g., new franchisees onboarded to BFC directly, historical franchisees grandfathered on BEI).
+### COA-175-013 — FORK 1 LOCKED (Butch answered 2026-04-10)
+**Decision:** **Fork 1 (collection-agent from day 1) is the confirmed revenue-recognition model** for BFC franchise fees during the interim period before BFC has an operating bank account.
 
-**What S175 delivers:** The GL STRUCTURE that makes any of those routing choices trivial to implement later. No routing policy enforcement in this sprint.
+**Butch's verbatim (2026-04-10):** *"I would humbly recommend Option A to consider that this matches the signed contract with our Franchisee, BIR Compliant, Low Risk of Audit Findings and no need for financials to be restated. The companies just need to execute a Collection-Agent Agreement between BFC and BEI. Then, BEI is only the agent so BFC BIR-Registered documents will be issued for this revenue streams."*
 
-**Accounting flow (preserved for future reference — NOT enforced in S175 execution):**
-- **Fork 1 agent model:** `Dr Cash on Hand - BEI / Cr 2104200 DUE TO BFC - BEI`, mirror on BFC
-- **Fork 2 interim model:** `Dr Cash on Hand - BEI / Cr 4000231-235 (appropriate fee) - BEI`, no BFC involvement
-- Both models are **operable** once the structural scaffolding exists — choice is Finance's, not S175's
+**Accounting flow (now OPERATIVE, not reference-only):**
+- **On BEI (agent):** `Dr Cash on Hand - BEI / Cr 2104200 DUE TO BFC - BEI` (liability, not revenue)
+- **On BFC (principal):** `Dr 1104200 DUE FROM BEI - BFC / Cr 4000231-235 + 2102205 OUTPUT VAT PAYABLE - BFC` (revenue recognized on invoice date)
+- **At cutover:** BEI sweeps the `DUE TO BFC` balance to BFC's new bank; both intercompany accounts zero out.
 
-**Contracts prerequisite:** NONE for S175. The Collection Agent Letter draft (`data/_CLEANROOM/2026-04-09_franchise_agreements/04_BEI_BFC_Collection_Agent_Letter_DRAFT.md`) remains in cleanroom as a **future artifact**. It is not a prerequisite for S175 execution. It becomes a prerequisite only if Finance later chooses Fork 1.
+**Tax:**
+- **OR** issued by BFC using its own BIR OR booklet (not BEI's) — **BLOCKED** until BFC Authority to Print is approved by RDO 044 (Sir Noel applying now per Butch's instruction)
+- **Output VAT** filed by BFC on 2550Q. VAT funded via **Option B** (partial sweep of DUE TO BFC cash — no new accounts needed). Locked per COA-175-017.
+- **EWT (2307)** issued by franchisees to BFC, not BEI
+- **Corporate income tax** (1702Q) — BFC recognizes the revenue, BEI does not
 
-**Source:** Sam Karazi decision 2026-04-09 PM (this session) after recognizing the policy-vs-structure conflation. BEI has been operationally collecting franchise fees for ~1 year; the structural work must not be gated by a policy debate.
+**Cutover trigger:** **Option C** — full receive-AND-pay cycle on BFC's BDO (depository) + UnionBank (disbursing) accounts. Locked per COA-175-018.
 
-**Rationale:** Separates what MUST be fixed (uniform COA, BFC Company, BEI 6xxxxxx bug, S168 legacy accounts) from what CAN BE DEBATED (revenue routing policy). Structural work proceeds autonomously; Butch's answers become inputs to a future Finance decision session, not a block on S175 execution.
+**Contracts prerequisite:** BEI-BFC Collection Agent Appointment Letter (draft at `data/_CLEANROOM/2026-04-09_franchise_agreements/04_BEI_BFC_Collection_Agent_Letter_DRAFT.md`) must be signed + board-resolved before first fee is collected.
 
-**Supersedes:** Plan v2's "Fork 1 from day 1" framing. The Fork 1 JE patterns in `04_INTERCOMPANY_ACCOUNTING.md` remain valid as reference material for the future policy decision.
+**Execution blocker:** BFC BIR OR booklet. Sir Noel is applying Authority to Print. GL structure is ready; first real collection waits on this.
+
+**Source:** Butch Formoso questionnaire return 2026-04-10 (`06_BUTCH_ANSWERS.md`). Sam Karazi confirmation same day.
+
+**History:** This decision went through 3 versions:
+1. Plan v2 (2026-04-09 AM): "Fork 1 from day 1" — gated by Butch + OR booklet
+2. Plan v3 (2026-04-09 PM): "Structural scaffolding ready, policy deferred" — Sam decoupled structure from policy
+3. **Final (2026-04-10):** "Fork 1 LOCKED" — Butch confirmed Fork 1, OR booklet blocker tracked separately
+
+### COA-175-017 — VAT payment mechanism: Option B (partial sweep) — LOCKED
+**Decision:** During the Fork 1 interim, BFC's Output VAT is funded by a partial sweep of the `2104200 DUE TO BFC - BEI` cash held by BEI. BFC's own money pays BFC's own VAT to BIR. Zero new intercompany advance accounts needed.
+**Source:** Butch Formoso OQ-2 answer, 2026-04-10.
+**Additional context:** BFC needs BDO (depository) + UnionBank (disbursing) bank accounts opened. Ma'am Rox at BDO confirmed no BFC account exists yet.
+
+### COA-175-018 — Cutover trigger: Option C (full receive + pay cycle) — LOCKED
+**Decision:** The collection-agent letter auto-terminates when BFC has completed a full receive-AND-pay cycle through its own bank accounts (BDO depository + UnionBank disbursing). "Fully operational" = inbound deposit tested + outbound BIR payment tested.
+**Source:** Butch Formoso OQ-3 answer, 2026-04-10.
+
+### COA-175-019 — BEI Settings input_vat_goods_account: FIX NOW — LOCKED
+**Decision:** Link `INPUT VAT - GOODS - Bebang Enterprise Inc.` to `BEI Settings.input_vat_goods_account` immediately. The account exists but was never wired.
+**Source:** Butch Formoso OQ-4 answer, 2026-04-10.
+
+### COA-175-020 — JV fee GL routing: Customer Group filter — LOCKED
+**Decision:** JV Marketing (5%) posts to `4000234 MARKETING FEES - BEI`. JV E-Commerce (5%) posts to `4000235 E-COMMERCE FEES - BEI`. Separated from BFC franchise fees by Customer Group filter (`JV Partners` vs `BFC Franchisees`).
+**Brand Growth Fee placement:** Butch's discretion — can stay on legacy `4000005`, move to `4000233`, or get a dedicated `4000236`. Not a blocker. Sam confirmed 2026-04-10: "Butch decides; all that matters is it stays on BEI."
+**Source:** Butch Formoso OQ-5 answer + Sam Karazi clarification, 2026-04-10.
 
 ### COA-175-014 — Interim OR/VAT issuer policy (NEW)
 **Decision:** During the Fork 1 interim period, every Official Receipt for a franchise fee is issued by **BFC**, using BFC's own BIR-registered OR booklet at RDO 044. BFC files its own 2550Q. BEI never issues an OR for a franchise fee.
