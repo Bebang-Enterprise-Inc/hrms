@@ -1220,7 +1220,15 @@ def _query_discount_item_rows_for_orders(
 			("order", "order_id.asc,line_number.asc"),
 		]
 		if categories:
-			params.append(("discount_bir_category", f"in.({','.join(sorted(categories))})"))
+			# S176 hotfix #5 2026-04-10: include NULL discount_bir_category rows.
+			# Mosaic populates discount_name (e.g. "Senior Citizen Discount", "PWD")
+			# but leaves discount_bir_category as NULL for all rows. The Python-side
+			# _canonical_discount_category() classifier handles the name->category
+			# mapping, but it never sees the rows if PostgREST filters them out here.
+			# The OR filter fetches rows where the column matches OR is NULL, letting
+			# the downstream Python classifier do name-based fallback.
+			cat_list = ",".join(sorted(categories))
+			params.append(("or", f"(discount_bir_category.in.({cat_list}),discount_bir_category.is.null)"))
 		rows = _supabase_get_all("pos_order_items", params)
 		for row in rows:
 			order_id = int(row.get("order_id") or 0)
