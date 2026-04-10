@@ -558,20 +558,24 @@ def _get_weather_max_business_date(location_ids: list[int]) -> str | None:
 
 
 def _get_foodpanda_cups_max_business_date(location_ids: list[int]) -> str | None:
+	"""S176 hotfix #6: switched from legacy foodpanda_daily_item_metrics (frozen
+	2026-03-15) to Mosaic pos_order_items joined with pos_orders channel=FoodPanda.
+	The POS terminal processes all FoodPanda orders, so item-level quantity data
+	is available from the same Mosaic sync that provides gross_sales.
+	"""
 	if not location_ids:
 		return None
-	location_filter = ",".join(str(location_id) for location_id in sorted(set(location_ids)))
-	rows = _supabase_get_all(
-		"foodpanda_daily_item_metrics",
-		[
-			("select", "business_date"),
-			("location_id", f"in.({location_filter})"),
-			("order", "business_date.desc"),
-			("limit", "1"),
+	# Use pos_orders directly since pos_order_items has no business_date column.
+	# The max business_date for FoodPanda orders with items = max FoodPanda order date.
+	return _get_resource_boundary_business_date(
+		"pos_orders",
+		order="business_date.desc",
+		location_ids=location_ids,
+		extra_params=[
+			("channel", "eq.FoodPanda"),
+			("payment_status", "eq.PAID"),
 		],
-		page_size=1,
 	)
-	return str(rows[0]["business_date"]) if rows else None
 
 
 def _get_resource_boundary_business_date(
@@ -862,6 +866,71 @@ def _get_foodpanda_channel_totals(
 		"foodpanda_sales_without_vat": _round_half_up(net_wo_vat_total),
 		"foodpanda_orders": order_count,
 		"foodpanda_avg_ticket": avg_ticket,
+	}
+
+
+def _get_channel_cups_from_mosaic(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+) -> dict[str, int]:
+	"""S176 hotfix #6: per-channel cups (item quantity) from Mosaic pos_order_items.
+
+	Joins pos_order_items.order_id -> pos_orders.id to get channel, then sums
+	quantity per channel. The view's pos_cups_sold already includes all channels
+	(POS terminal processes everything), but we need the per-channel BREAKDOWN
+	for FoodPanda and GrabFood specifically.
+
+	Returns: {foodpanda_cups, grabfood_cups, pos_cups, total_mosaic_cups}.
+	"""
+	if not location_ids:
+		return {"foodpanda_cups": 0, "grabfood_cups": 0, "pos_cups": 0, "total_mosaic_cups": 0}
+	# PostgREST cannot do JOINs, so we first get order IDs per channel from
+	# pos_orders, then sum quantities from pos_order_items.
+	# For FoodPanda:
+	fp_order_params: list[tuple[str, Any]] = [
+		("select", "id"),
+		("channel", "eq.FoodPanda"),
+		("payment_status", "eq.PAID"),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("location_id", f"in.({_location_scope_key(location_ids)})"),
+	]
+	fp_orders = _supabase_get_all("pos_orders", fp_order_params, page_size=1000)
+	fp_ids = [int(r["id"]) for r in fp_orders if r.get("id")]
+	# For GrabFood:
+	gf_order_params: list[tuple[str, Any]] = [
+		("select", "id"),
+		("channel", "eq.GrabFood"),
+		("payment_status", "eq.PAID"),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("location_id", f"in.({_location_scope_key(location_ids)})"),
+	]
+	gf_orders = _supabase_get_all("pos_orders", gf_order_params, page_size=1000)
+	gf_ids = [int(r["id"]) for r in gf_orders if r.get("id")]
+
+	def _sum_cups_for_order_ids(order_ids: list[int]) -> int:
+		if not order_ids:
+			return 0
+		total = 0
+		for chunk in [order_ids[i:i+500] for i in range(0, len(order_ids), 500)]:
+			id_list = ",".join(str(oid) for oid in chunk)
+			params: list[tuple[str, Any]] = [
+				("select", "quantity"),
+				("order_id", f"in.({id_list})"),
+			]
+			rows = _supabase_get_all("pos_order_items", params, page_size=1000)
+			total += sum(int(r.get("quantity") or 0) for r in rows)
+		return total
+
+	fp_cups = _sum_cups_for_order_ids(fp_ids)
+	gf_cups = _sum_cups_for_order_ids(gf_ids)
+	return {
+		"foodpanda_cups": fp_cups,
+		"grabfood_cups": gf_cups,
+		"pos_cups": 0,  # POS cups = total - fp - gf (computed by caller if needed)
+		"total_mosaic_cups": fp_cups + gf_cups,
 	}
 
 
@@ -2108,6 +2177,8 @@ def _build_dashboard_summary_payload(
 		summary.update(_get_grabfood_channel_totals(start_day, effective_end, selected_location_ids))
 		# S176 hotfix 2026-04-09: override FoodPanda totals (view is stale post-2026-03-31).
 		summary.update(_get_foodpanda_channel_totals(start_day, effective_end, selected_location_ids))
+		# S176 hotfix #6: per-channel cups from Mosaic pos_order_items.
+		summary.update(_get_channel_cups_from_mosaic(start_day, effective_end, selected_location_ids))
 		projection_window_rows = [
 			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
 		]
@@ -2202,6 +2273,8 @@ def _build_dashboard_overview_payload(
 		summary.update(_get_grabfood_channel_totals(start_day, effective_end, selected_location_ids))
 		# S176 hotfix 2026-04-09: override FoodPanda totals (view is stale post-2026-03-31).
 		summary.update(_get_foodpanda_channel_totals(start_day, effective_end, selected_location_ids))
+		# S176 hotfix #6: per-channel cups from Mosaic pos_order_items.
+		summary.update(_get_channel_cups_from_mosaic(start_day, effective_end, selected_location_ids))
 		mode_state = _build_mode_state(view_mode, start_day, effective_end, scope)
 		projection_window_rows = [
 			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
