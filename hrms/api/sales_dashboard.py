@@ -1296,6 +1296,8 @@ def _aggregate_discount_metrics(
 		"sc_discount_percentage": _pct(sc_discount_amount, denominator),
 		"pwd_discount_amount": _round_half_up(pwd_discount_amount),
 		"pwd_discount_percentage": _pct(pwd_discount_amount, denominator),
+		"other_discount_amount": _round_half_up(max(0.0, total_discount_amount - sc_discount_amount - pwd_discount_amount)),
+		"other_discount_percentage": _pct(max(0.0, total_discount_amount - sc_discount_amount - pwd_discount_amount), denominator),
 		"discount_effective_end_date": discount_effective_end_day.isoformat(),
 		"discount_scope_coverage_pct": coverage_pct,
 		"covered_store_count": covered_store_count,
@@ -1355,6 +1357,10 @@ def _build_discount_rankings(
 		row["discount_percentage"] = _pct(row["discount_amount"], row["pos_original_gross_sales"])
 		row["sc_discount_percentage"] = _pct(row["sc_discount_amount"], row["pos_original_gross_sales"])
 		row["pwd_discount_percentage"] = _pct(row["pwd_discount_amount"], row["pos_original_gross_sales"])
+		row["other_discount_amount"] = _round_half_up(
+			max(0.0, row["discount_amount"] - row["sc_discount_amount"] - row["pwd_discount_amount"])
+		)
+		row["other_discount_percentage"] = _pct(row["other_discount_amount"], row["pos_original_gross_sales"])
 		if row["pos_original_gross_sales"] >= RANKING_MIN_POS_ORIGINAL_GROSS and row["discount_percentage"] is not None:
 			eligible_rows.append(row)
 
@@ -1601,10 +1607,39 @@ def _share_pct(count: int, total: int) -> float:
 	return round((count / total) * 100, 2) if total else 0.0
 
 
+def _get_grabfood_daily_delivery(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+) -> dict[str, float]:
+	"""S176 hotfix #7: GrabFood net-w/o-VAT per business_date for daily signals.
+	The daily_store_metrics MV has no GrabFood column, so pickup_share was
+	inflated (~92%%) because GrabFood delivery was missing from the denominator.
+	"""
+	if not location_ids:
+		return {}
+	params: list[tuple[str, Any]] = [
+		("select", "business_date,net_sales,vat_amount"),
+		("channel", "eq.GrabFood"),
+		("payment_status", "eq.PAID"),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("location_id", f"in.({_location_scope_key(location_ids)})"),
+	]
+	rows = _supabase_get_all("pos_orders", params, page_size=1000)
+	daily: dict[str, float] = {}
+	for r in rows:
+		day = str(r.get("business_date"))
+		net_wo_vat = _to_float(r.get("net_sales")) - _to_float(r.get("vat_amount"))
+		daily[day] = daily.get(day, 0.0) + net_wo_vat
+	return daily
+
+
 def _aggregate_daily_series(
 	stores: list[dict[str, Any]],
 	sales_rows: list[dict[str, Any]],
 	weather_rows: list[dict[str, Any]],
+	grabfood_daily: dict[str, float] | None = None,
 ) -> list[dict[str, Any]]:
 	weather_map = _weather_by_store_day(weather_rows)
 	calendar_map = _calendar_map_for_scope(stores, {str(row.get("business_date")) for row in sales_rows})
@@ -1639,6 +1674,12 @@ def _aggregate_daily_series(
 		weather_row = weather_map.get((_to_int(row.get("location_id")), day_key))
 		if weather_row:
 			bucket["weather_rows"].append(weather_row)
+
+	# S176 hotfix #7: inject GrabFood delivery into daily buckets
+	if grabfood_daily:
+		for day_key, gf_net_wo_vat in grabfood_daily.items():
+			if day_key in day_buckets:
+				day_buckets[day_key]["delivery_sales_without_vat"] += gf_net_wo_vat
 
 	series: list[dict[str, Any]] = []
 	for day_key in sorted(day_buckets):
@@ -2294,7 +2335,8 @@ def _build_dashboard_overview_payload(
 		)
 		freshness["discount_scope_coverage_pct"] = summary["discount_metrics"]["discount_scope_coverage_pct"]
 		freshness["data_quality_warnings"] = _build_data_quality_warnings(start_day, end_day, freshness)
-		series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows)
+		grabfood_daily = _get_grabfood_daily_delivery(start_day, effective_end, selected_location_ids)
+		series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows, grabfood_daily)
 		analysis = _build_weather_context(series)
 		analysis["effects"] = _build_weather_effects(scope, start_day, effective_end, sales_rows, summary)
 		discount_ranking_payload = _build_discount_rankings(scope, discount_rows, ranking_mode)
@@ -2557,7 +2599,8 @@ def export_sales_dashboard_detail(
 	effective_end = _effective_end_day(end_day, freshness)
 	sales_rows = _query_daily_rows(start_day, effective_end, selected_location_ids)
 	weather_rows = _query_weather_rows(start_day, effective_end, selected_location_ids)
-	series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows)
+	grabfood_daily = _get_grabfood_daily_delivery(start_day, effective_end, selected_location_ids)
+	series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows, grabfood_daily)
 	export_rows = _build_export_rows(scope, series, sales_rows)
 
 	buffer = io.StringIO()
