@@ -1,0 +1,304 @@
+{
+  "products": [
+    {
+      "product_name": "Presidential",
+      "total_quantity": 1337800,
+      "total_gross_sales": 238294840.69,
+      "avg_unit_price": 192.8,
+      "order_count": 858004,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "GrabFood",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "Special",
+      "total_quantity": 337081,
+      "total_gross_sales": 51962747.92,
+      "avg_unit_price": 163.41,
+      "order_count": 222115,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "GrabFood",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "Spoon",
+      "total_quantity": 197394,
+      "total_gross_sales": 1010.0,
+      "avg_unit_price": 0,
+      "order_count": 16650,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "POS"
+      ]
+    },
+    {
+      "product_name": "Mango Graham",
+      "total_quantity": 169983,
+      "total_gross_sales": 30583745.9,
+      "avg_unit_price": 190.9,
+      "order_count": 149686,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS"
+      ]
+    },
+    {
+      "product_name": "Buko Fruit Salad",
+      "total_quantity": 119065,
+      "total_gross_sales": 20786677.27,
+      "avg_unit_price": 190.98,
+      "order_count": 103859,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS"
+      ]
+    },
+    {
+      "product_name": "Halokay Ube",
+      "total_quantity": 113491,
+      "total_gross_sales": 20127947.51,
+      "avg_unit_price": 190.69,
+      "order_count": 96419,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "So Corny",
+      "total_quantity": 104648,
+      "total_gross_sales": 17426929.77,
+      "avg_unit_price": 173.43,
+      "order_count": 90956,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "GrabFood",
+        "POS"
+      ]
+    },
+    {
+      "product_name": "Leche Flan",
+      "total_quantity": 100606,
+      "total_gross_sales": 3042501.94,
+      "avg_unit_price": 30.0,
+      "order_count": 74480,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS"
+      ]
+    },
+    {
+      "product_name": "Buko Pandan",
+      "total_quantity": 65397,
+      "total_gross_sales": 11506847.76,
+      "avg_unit_price": 190.93,
+      "order_count": 60132,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "Mango Classic",
+      "total_quantity": 59511,
+      "total_gross_sales": 9789215.48,
+      "avg_unit_price": 171.0,
+      "order_count": 53014,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "Choco Brownie",
+      "total_quantity": 52141,
+      "total_gross_sales": 9306432.37,
+      "avg_unit_price": 190.39,
+      "order_count": 48603,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "Blueberry Pistachio",
+      "total_quantity": 51889,
+      "total_gross_sales": 8771813.33,
+      "avg_unit_price": 180.79,
+      "order_count": 48175,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "Banana Cinnamon Con Yelo",
+      "total_quantity": 51534,
+      "total_gross_sales": 8927505.83,
+      "avg_unit_price": 180.91,
+      "order_count": 47804,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "Melon",
+      "total_quantity": 49735,
+      "total_gross_sales": 8483627.83,
+      "avg_unit_price": 180.97,
+      "order_count": 45791,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "Strawberry Pistachio",
+      "total_quantity": 49584,
+      "total_gross_sales": 8457242.7,
+      "avg_unit_price": 180.79,
+      "order_count": 46859,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "Cookie Crumble",
+      "total_quantity": 33763,
+      "total_gross_sales": 5770505.98,
+      "avg_unit_price": 181.26,
+      "order_count": 31250,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "GrabFood",
+        "POS",
+        "Unknown"
+      ]
+    },
+    {
+      "product_name": "Matcharap",
+      "total_quantity": 29182,
+      "total_gross_sales": 5283933.07,
+      "avg_unit_price": 193.22,
+      "order_count": 27691,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "GrabFood",
+        "POS",
+        "Unknown"
+      ]
+    },
+    {
+      "product_name": "Cup 16 oz",
+      "total_quantity": 13465,
+      "total_gross_sales": 136956.98,
+      "avg_unit_price": 10.0,
+      "order_count": 10427,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "POS"
+      ]
+    },
+    {
+      "product_name": "Insulated Bag",
+      "total_quantity": 12885,
+      "total_gross_sales": 1112836.14,
+      "avg_unit_price": 92.27,
+      "order_count": 11679,
+      "store_count": 44,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "GrabFood",
+        "POS",
+        "Unknown",
+        "WebDelivery"
+      ]
+    },
+    {
+      "product_name": "Uberload",
+      "total_quantity": 11739,
+      "total_gross_sales": 2545134.8,
+      "avg_unit_price": 233.41,
+      "order_count": 9093,
+      "store_count": 42,
+      "channels": [
+        "Delivery",
+        "FoodPanda",
+        "GrabFood",
+        "POS"
+      ]
+    }
+  ],
+  "meta": {
+    "start_date": "2026-04-03",
+    "end_date": "2026-04-09",
+    "channel_filter": "all",
+    "total_products": 83,
+    "total_quantity": 3080121,
+    "total_gross_sales": 474017937.64,
+    "returned_count": 20,
+    "raw_mv_rows_fetched": 236344
+  }
+}

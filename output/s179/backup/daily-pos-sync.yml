@@ -141,11 +141,6 @@ jobs:
         run: |
           python scripts/supabase_exec.py "select public.refresh_sales_dashboard_daily_store_metrics();"
 
-      - name: Refresh product channel daily mix view
-        continue-on-error: true
-        run: |
-          python scripts/supabase_exec.py "select public.refresh_product_channel_daily_mix();"
-
   # ── Step 4: Anomaly detection (AFTER all syncs complete) ─────────────────
   # S165 follow-up 2026-04-07: type:boolean inputs are evaluated as actual
   # booleans by GH expressions, so the correct gating form is `!inputs.skip_X`.
