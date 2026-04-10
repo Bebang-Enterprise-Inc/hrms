@@ -3,14 +3,14 @@ sprint_id: S172
 display: Sprint 172
 title: "S166 Follow-up Defect Fixes — 15 OPEN/PARTIAL defects after S170 partial deploy + 2026-04-08 audit"
 branch: s172-s166-followup-defect-fixes
-status: PHASE_8_READY
+status: COMPLETED
 planned_date: 2026-04-08
-completed_date: null
+completed_date: 2026-04-10T11:30:00+08:00
 depends_on: S166 (catalog + audit), S170 (partial fixes already deployed), audit PR #496
 total_work_units: 71
 execution_type: product-code-fix-sprint + L3-retest
-frontend_pr: "Bebang-Enterprise-Inc/BEI-Tasks#362, #363, #364, #365, #366"
-backend_pr: "Bebang-Enterprise-Inc/hrms#507, #509, #511, #514"
+frontend_pr: "Bebang-Enterprise-Inc/BEI-Tasks#362, #363, #364, #365, #366, #371"
+backend_pr: "Bebang-Enterprise-Inc/hrms#507, #509, #511, #514, #518, #525"
 sprint_registry_row: "S172 reserved on 2026-04-08. Branch: s172-s166-followup-defect-fixes. Parent: origin/production (post #497 merge)."
 ---
 
