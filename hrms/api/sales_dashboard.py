@@ -731,187 +731,142 @@ def _build_freshness(location_ids: list[int]) -> dict[str, Any]:
 	return _cache_get_or_set(cache_key, builder, SALES_DASHBOARD_FRESHNESS_CACHE_TTL)
 
 
-def _get_grabfood_channel_totals(
+
+
+
+
+
+
+
+
+
+
+def _get_mosaic_channel_split(
 	start_day: date,
 	end_day: date,
 	location_ids: list[int],
-) -> dict[str, Any]:
-	"""S176 DD-14 Option A: Python-side aggregation for GrabFood totals.
+) -> dict[str, dict[str, float]]:
+	"""S176 hotfix #9 (2026-04-11): CORRECT per-channel split from Mosaic.
 
-	The materialized view daily_store_metrics has no grabfood_* columns, so we
-	fall back to a direct PostgREST query against pos_orders filtered by
-	channel='GrabFood'. Sums are computed client-side in Python.
+	Background: the materialized view daily_store_metrics has a `pos_*` column
+	family that is computed from `v_pos_orders_live` WITHOUT any channel filter.
+	So `pos_net_sales_without_vat` actually contains ALL channels summed together
+	(POS + FoodPanda + GrabFood + WebDelivery), not just POS pickup. Earlier
+	hotfixes #7 and #8 + S179 were built on the wrong assumption that the MV's
+	pos_* was POS-only, which caused the Channel Mix donut to double-count
+	GrabFood + FoodPanda and hotfix #8 made it worse by adding them to the
+	headline Net Sales card too.
 
-	Returns keys: grabfood_sales, grabfood_sales_without_vat, grabfood_orders,
-	grabfood_avg_ticket. All zeros on empty result set.
+	The CORRECT fix is to split the MV's all-POS-channels total into per-channel
+	buckets using a direct query against v_pos_orders_live grouped by channel.
+
+	CRITICAL: v_pos_orders_live.net_sales is ALREADY net of VAT (gross - vat).
+	Do NOT subtract vat_amount again — that's a double-subtraction bug.
+
+	Returns a dict keyed by channel lowercase name, each mapping to:
+		{"gross": float, "net_wo_vat": float, "orders": int}
+
+	Known channel keys: "pos", "foodpanda", "grabfood", "webdelivery".
+	Empty result set returns an empty dict.
 	"""
 	if not location_ids:
-		return {
-			"grabfood_sales": 0.0,
-			"grabfood_sales_without_vat": 0.0,
-			"grabfood_orders": 0,
-			"grabfood_avg_ticket": 0.0,
-		}
-	# S176 hotfix 2026-04-09: pos_orders does NOT have a net_sales_without_vat column
-	# (that lives only in the daily_store_metrics materialized view). Derive it as
-	# net_sales - vat_amount using columns that actually exist on pos_orders.
+		return {}
 	params: list[tuple[str, Any]] = [
-		("select", "gross_sales,net_sales,vat_amount"),
-		("channel", "eq.GrabFood"),
+		("select", "channel,gross_sales,net_sales"),
 		("payment_status", "eq.PAID"),
 		("business_date", f"gte.{start_day.isoformat()}"),
 		("business_date", f"lte.{end_day.isoformat()}"),
 		("location_id", f"in.({_location_scope_key(location_ids)})"),
 	]
-	rows = _supabase_get_all("pos_orders", params, page_size=1000)
-	gross_total = sum(_to_float(row.get("gross_sales")) for row in rows)
-	net_wo_vat_total = sum(
-		_to_float(row.get("net_sales")) - _to_float(row.get("vat_amount")) for row in rows
-	)
-	order_count = len(rows)
-	avg_ticket = _round_half_up(gross_total / order_count) if order_count else 0.0
-	return {
-		"grabfood_sales": _round_half_up(gross_total),
-		"grabfood_sales_without_vat": _round_half_up(net_wo_vat_total),
-		"grabfood_orders": order_count,
-		"grabfood_avg_ticket": avg_ticket,
-	}
+	# v_pos_orders_live is a view, not a base table, but PostgREST handles it.
+	rows = _supabase_get_all("v_pos_orders_live", params, page_size=1000)
+	split: dict[str, dict[str, float]] = {}
+	for row in rows:
+		raw_channel = row.get("channel")
+		key = str(raw_channel).lower() if raw_channel else "unknown"
+		bucket = split.setdefault(key, {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+		bucket["gross"] += _to_float(row.get("gross_sales"))
+		# net_sales is already net of VAT (gross - vat) per v_pos_orders_live contract
+		bucket["net_wo_vat"] += _to_float(row.get("net_sales"))
+		bucket["orders"] += 1
+	# Round all floats
+	for bucket in split.values():
+		bucket["gross"] = _round_half_up(bucket["gross"])
+		bucket["net_wo_vat"] = _round_half_up(bucket["net_wo_vat"])
+	return split
 
 
-def _get_foodpanda_legacy_totals(
-	start_day: date,
-	end_day: date,
-	location_ids: list[int],
-) -> dict[str, float | int]:
-	"""S176 hotfix #3: pre-cutover FoodPanda totals from legacy Google Sheet."""
-	if not location_ids or start_day > end_day:
-		return {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0}
-	params: list[tuple[str, Any]] = [
-		("select", "subtotal,tax_charge"),
-		("order_status", "ilike.delivered"),
-		("business_date", f"gte.{start_day.isoformat()}"),
-		("business_date", f"lte.{end_day.isoformat()}"),
-		("location_id", f"in.({_location_scope_key(location_ids)})"),
-	]
-	rows = _supabase_get_all("foodpanda_orders", params, page_size=1000)
-	gross = sum(_to_float(row.get("subtotal")) for row in rows)
-	net_wo_vat = sum(
-		_to_float(row.get("subtotal")) - _to_float(row.get("tax_charge")) for row in rows
-	)
-	return {"gross": gross, "net_wo_vat": net_wo_vat, "orders": len(rows)}
-
-
-def _get_foodpanda_mosaic_totals(
-	start_day: date,
-	end_day: date,
-	location_ids: list[int],
-) -> dict[str, float | int]:
-	"""S176 hotfix #3: post-cutover FoodPanda totals from pos_orders Mosaic channel."""
-	if not location_ids or start_day > end_day:
-		return {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0}
-	params: list[tuple[str, Any]] = [
-		("select", "gross_sales,net_sales,vat_amount"),
-		("channel", "eq.FoodPanda"),
-		("payment_status", "eq.PAID"),
-		("business_date", f"gte.{start_day.isoformat()}"),
-		("business_date", f"lte.{end_day.isoformat()}"),
-		("location_id", f"in.({_location_scope_key(location_ids)})"),
-	]
-	rows = _supabase_get_all("pos_orders", params, page_size=1000)
-	gross = sum(_to_float(row.get("gross_sales")) for row in rows)
-	net_wo_vat = sum(
-		_to_float(row.get("net_sales")) - _to_float(row.get("vat_amount")) for row in rows
-	)
-	return {"gross": gross, "net_wo_vat": net_wo_vat, "orders": len(rows)}
-
-
-def _get_foodpanda_channel_totals(
-	start_day: date,
-	end_day: date,
-	location_ids: list[int],
-) -> dict[str, Any]:
-	"""S176 hotfix #3 2026-04-09: date-split FoodPanda aggregation.
-
-	Pre-cutover (< _FOODPANDA_MOSAIC_START = 2026-03-27) reads legacy foodpanda_orders
-	(frozen 2026-03-31). Post-cutover reads pos_orders channel=FoodPanda via Mosaic.
-	Per CEO direction: prior data from sheet, current/future from Mosaic.
-	"""
-	if not location_ids:
-		return {
-			"foodpanda_sales": 0.0,
-			"foodpanda_sales_without_vat": 0.0,
-			"foodpanda_orders": 0,
-			"foodpanda_avg_ticket": 0.0,
-		}
-	from datetime import timedelta
-	cutover = _FOODPANDA_MOSAIC_START
-	legacy_end = min(end_day, cutover - timedelta(days=1))
-	mosaic_start = max(start_day, cutover)
-	legacy = (
-		_get_foodpanda_legacy_totals(start_day, legacy_end, location_ids)
-		if start_day <= legacy_end
-		else {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0}
-	)
-	mosaic = (
-		_get_foodpanda_mosaic_totals(mosaic_start, end_day, location_ids)
-		if mosaic_start <= end_day
-		else {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0}
-	)
-	gross_total = legacy["gross"] + mosaic["gross"]
-	net_wo_vat_total = legacy["net_wo_vat"] + mosaic["net_wo_vat"]
-	order_count = legacy["orders"] + mosaic["orders"]
-	avg_ticket = _round_half_up(gross_total / order_count) if order_count else 0.0
-	return {
-		"foodpanda_sales": _round_half_up(gross_total),
-		"foodpanda_sales_without_vat": _round_half_up(net_wo_vat_total),
-		"foodpanda_orders": order_count,
-		"foodpanda_avg_ticket": avg_ticket,
-	}
-
-
-def _reconcile_headline_totals_with_mosaic(
+def _apply_mosaic_channel_split(
 	summary: dict[str, Any],
-	fp_from_mv_wo_vat: float,
-	fp_from_mv_gross: float,
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
 ) -> None:
-	"""S176 hotfix #8 (2026-04-10): reconcile headline totals with injected channels.
+	"""S176 hotfix #9: replace misleading per-channel keys in `summary` with the
+	TRUE Mosaic per-channel split, without touching headline totals.
 
-	The MV daily_store_metrics has NO grabfood column and a STALE foodpanda column
-	(frozen 2026-03-31, returns 0 for April). S179 injected correct per-channel
-	data for the Channel Mix donut via _get_grabfood_channel_totals and
-	_get_foodpanda_channel_totals, but those calls only overwrite the per-channel
-	keys (grabfood_sales, foodpanda_sales, etc.) — they do NOT adjust the headline
-	net_sales_without_vat / gross_sales / delivery_sales_without_vat fields that
-	feed the Net Sales card, Daily Signals, and Store Leaders.
+	The MV's `pos_net_sales_without_vat` (stored in summary as `pickup_sales_without_vat`)
+	is actually POS + FoodPanda + GrabFood + WebDelivery summed together. This
+	function splits it into true per-channel buckets, so the Channel Mix donut
+	displays correctly and the sum STILL equals the MV's total (no inflation).
 
-	Result without this fix: Channel Mix shows ₱5.4M (correct) while every other
-	total on the same page shows ₱4.1M (missing ₱1.28M = GrabFood ₱640K + FoodPanda
-	₱645K). Same day, same dashboard, two different totals.
+	Overwrites:
+		- pickup_sales_without_vat  → POS channel only (true pickup)
+		- pickup_sales              → POS channel only (gross)
+		- foodpanda_sales_without_vat → FoodPanda from Mosaic
+		- foodpanda_sales           → FoodPanda gross from Mosaic
+		- grabfood_sales_without_vat → GrabFood from Mosaic
+		- grabfood_sales            → GrabFood gross from Mosaic
+		- webdelivery_sales_without_vat → WebDelivery from Mosaic (new key)
+		- webdelivery_sales         → WebDelivery gross from Mosaic (new key)
+		- delivery_sales_without_vat → recalculated = FP + Grab + WebDel + web_non_cod + web_cod
+		- pickup_share / delivery_share (if present) → recomputed from true totals
 
-	Call AFTER the injection helpers. Pass the MV-based foodpanda values captured
-	BEFORE the override so the delta can be computed correctly. Mutates summary
-	in place (also recomputes average_daily_sales and average_guest_check).
+	Does NOT touch:
+		- net_sales_without_vat (MV total — already correct)
+		- gross_sales            (MV total — already correct)
+		- transactions           (MV total — already correct)
+		- cups_sold              (MV total — already correct)
 	"""
-	grab_wo_vat = _to_float(summary.get("grabfood_sales_without_vat"))
-	grab_gross = _to_float(summary.get("grabfood_sales"))
-	fp_wo_vat = _to_float(summary.get("foodpanda_sales_without_vat"))
-	fp_gross = _to_float(summary.get("foodpanda_sales"))
-	fp_delta_wo_vat = fp_wo_vat - fp_from_mv_wo_vat
-	fp_delta_gross = fp_gross - fp_from_mv_gross
-	summary["net_sales_without_vat"] = _round_half_up(
-		_to_float(summary.get("net_sales_without_vat")) + grab_wo_vat + fp_delta_wo_vat
+	split = _get_mosaic_channel_split(start_day, end_day, location_ids)
+	pos_bucket = split.get("pos", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+	fp_bucket = split.get("foodpanda", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+	gf_bucket = split.get("grabfood", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+	wd_bucket = split.get("webdelivery", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+
+	# True pickup = POS channel only
+	summary["pickup_sales"] = pos_bucket["gross"]
+	summary["pickup_sales_without_vat"] = pos_bucket["net_wo_vat"]
+
+	# Mosaic delivery channels — use the CORRECT net_sales column (not net - vat twice)
+	summary["foodpanda_sales"] = fp_bucket["gross"]
+	summary["foodpanda_sales_without_vat"] = fp_bucket["net_wo_vat"]
+	summary["foodpanda_orders"] = fp_bucket["orders"]
+	summary["foodpanda_avg_ticket"] = (
+		_round_half_up(fp_bucket["gross"] / fp_bucket["orders"]) if fp_bucket["orders"] else 0.0
 	)
-	summary["gross_sales"] = _round_half_up(
-		_to_float(summary.get("gross_sales")) + grab_gross + fp_delta_gross
+
+	summary["grabfood_sales"] = gf_bucket["gross"]
+	summary["grabfood_sales_without_vat"] = gf_bucket["net_wo_vat"]
+	summary["grabfood_orders"] = gf_bucket["orders"]
+	summary["grabfood_avg_ticket"] = (
+		_round_half_up(gf_bucket["gross"] / gf_bucket["orders"]) if gf_bucket["orders"] else 0.0
 	)
-	summary["net_sales_with_vat"] = summary["gross_sales"]
+
+	summary["webdelivery_sales"] = wd_bucket["gross"]
+	summary["webdelivery_sales_without_vat"] = wd_bucket["net_wo_vat"]
+	summary["webdelivery_orders"] = wd_bucket["orders"]
+
+	# True delivery = all Mosaic non-POS channels + Superadmin website (non-COD + COD)
+	web_non_cod = _to_float(summary.get("website_sales_without_vat"))
+	web_cod = _to_float(summary.get("website_cod_sales_without_vat"))
 	summary["delivery_sales_without_vat"] = _round_half_up(
-		_to_float(summary.get("delivery_sales_without_vat")) + grab_wo_vat + fp_delta_wo_vat
+		fp_bucket["net_wo_vat"]
+		+ gf_bucket["net_wo_vat"]
+		+ wd_bucket["net_wo_vat"]
+		+ web_non_cod
+		+ web_cod
 	)
-	day_count = _to_int(summary.get("day_count")) or 1
-	transactions = _to_int(summary.get("transactions")) or 1
-	summary["average_daily_sales"] = _round_half_up(summary["net_sales_without_vat"] / day_count)
-	summary["average_guest_check"] = _round_half_up(summary["net_sales_without_vat"] / transactions)
 
 
 def _get_channel_cups_from_mosaic(
@@ -1163,8 +1118,10 @@ def _aggregate_sales(rows: list[dict[str, Any]]) -> dict[str, Any]:
 		"foodpanda_sales_without_vat": 0.0,
 		"pickup_sales_without_vat": 0.0,
 		"delivery_sales_without_vat": 0.0,
-		# S176 DD-14: GrabFood defaults - populated by _get_grabfood_channel_totals()
-		# after _aggregate_sales() returns (GrabFood is not in daily_store_metrics view).
+		# S176 hotfix #9: GrabFood + WebDelivery defaults - populated by
+		# _apply_mosaic_channel_split() after _aggregate_sales() returns, which
+		# splits the MV's all-POS-channels pos_net_sales_without_vat into
+		# true per-channel buckets via a direct query against v_pos_orders_live.
 		"grabfood_sales": 0.0,
 		"grabfood_sales_without_vat": 0.0,
 		"grabfood_orders": 0,
@@ -1652,39 +1609,48 @@ def _share_pct(count: int, total: int) -> float:
 	return round((count / total) * 100, 2) if total else 0.0
 
 
-def _get_grabfood_daily_delivery(
+def _get_mosaic_channel_split_per_day(
 	start_day: date,
 	end_day: date,
 	location_ids: list[int],
-) -> dict[str, float]:
-	"""S176 hotfix #7: GrabFood net-w/o-VAT per business_date for daily signals.
-	The daily_store_metrics MV has no GrabFood column, so pickup_share was
-	inflated (~92%%) because GrabFood delivery was missing from the denominator.
+) -> dict[str, dict[str, float]]:
+	"""S176 hotfix #9 (2026-04-11): per-day per-channel split from Mosaic.
+
+	Returns dict keyed by `YYYY-MM-DD` → dict keyed by channel lowercase name → float
+	of net_sales (already net of VAT per v_pos_orders_live contract).
+
+	Used by _aggregate_daily_series to correctly split MV's all-POS-channels
+	pos_net_sales_without_vat into true pickup (POS-only) vs delivery buckets
+	(FP + Grab + WebDel from Mosaic, plus Superadmin website non-COD + COD
+	which already come from the MV separately).
+
+	CRITICAL: v_pos_orders_live.net_sales is ALREADY net of VAT. Do NOT subtract
+	vat_amount again (that was the hotfix #7 bug).
 	"""
 	if not location_ids:
 		return {}
 	params: list[tuple[str, Any]] = [
-		("select", "business_date,net_sales,vat_amount"),
-		("channel", "eq.GrabFood"),
+		("select", "business_date,channel,net_sales"),
 		("payment_status", "eq.PAID"),
 		("business_date", f"gte.{start_day.isoformat()}"),
 		("business_date", f"lte.{end_day.isoformat()}"),
 		("location_id", f"in.({_location_scope_key(location_ids)})"),
 	]
-	rows = _supabase_get_all("pos_orders", params, page_size=1000)
-	daily: dict[str, float] = {}
+	rows = _supabase_get_all("v_pos_orders_live", params, page_size=1000)
+	per_day: dict[str, dict[str, float]] = {}
 	for r in rows:
 		day = str(r.get("business_date"))
-		net_wo_vat = _to_float(r.get("net_sales")) - _to_float(r.get("vat_amount"))
-		daily[day] = daily.get(day, 0.0) + net_wo_vat
-	return daily
+		ch = str(r.get("channel") or "unknown").lower()
+		day_bucket = per_day.setdefault(day, {})
+		day_bucket[ch] = day_bucket.get(ch, 0.0) + _to_float(r.get("net_sales"))
+	return per_day
 
 
 def _aggregate_daily_series(
 	stores: list[dict[str, Any]],
 	sales_rows: list[dict[str, Any]],
 	weather_rows: list[dict[str, Any]],
-	grabfood_daily: dict[str, float] | None = None,
+	mosaic_split_per_day: dict[str, dict[str, float]] | None = None,
 ) -> list[dict[str, Any]]:
 	weather_map = _weather_by_store_day(weather_rows)
 	calendar_map = _calendar_map_for_scope(stores, {str(row.get("business_date")) for row in sales_rows})
@@ -1700,6 +1666,8 @@ def _aggregate_daily_series(
 				"net_sales_without_vat": 0.0,
 				"pickup_sales_without_vat": 0.0,
 				"delivery_sales_without_vat": 0.0,
+				"mv_all_mosaic_wo_vat": 0.0,
+				"superadmin_delivery_wo_vat": 0.0,
 				"cups_sold": 0,
 				"transactions": 0,
 				"weather_rows": [],
@@ -1708,11 +1676,14 @@ def _aggregate_daily_series(
 		bucket["gross_sales"] += _to_float(row.get("total_gross_sales"))
 		bucket["net_sales_with_vat"] += _to_float(row.get("total_gross_sales"))
 		bucket["net_sales_without_vat"] += _to_float(row.get("total_net_sales_without_vat"))
-		bucket["pickup_sales_without_vat"] += _to_float(row.get("pos_net_sales_without_vat"))
-		bucket["delivery_sales_without_vat"] += (
+		# NOTE: pos_net_sales_without_vat from MV is ALL POS-terminal channels summed
+		# (POS + FP + Grab + WebDel), NOT POS-only. We'll correct this below using
+		# the Mosaic per-channel split so pickup = POS-only.
+		bucket["mv_all_mosaic_wo_vat"] += _to_float(row.get("pos_net_sales_without_vat"))
+		bucket["superadmin_delivery_wo_vat"] += (
 			_to_float(row.get("website_non_cod_net_sales_without_vat"))
 			+ _to_float(row.get("web_cod_net_sales_without_vat"))
-			+ _to_float(row.get("foodpanda_vat_deducted_sales"))
+			+ _to_float(row.get("foodpanda_vat_deducted_sales"))  # legacy sheet, usually 0
 		)
 		bucket["cups_sold"] += _to_int(row.get("cups_sold"))
 		bucket["transactions"] += _to_int(row.get("transactions"))
@@ -1720,11 +1691,33 @@ def _aggregate_daily_series(
 		if weather_row:
 			bucket["weather_rows"].append(weather_row)
 
-	# S176 hotfix #7: inject GrabFood delivery into daily buckets
-	if grabfood_daily:
-		for day_key, gf_net_wo_vat in grabfood_daily.items():
-			if day_key in day_buckets:
-				day_buckets[day_key]["delivery_sales_without_vat"] += gf_net_wo_vat
+	# S176 hotfix #9: rebuild pickup/delivery using the TRUE Mosaic channel split.
+	# True pickup = POS channel only from Mosaic.
+	# True delivery = FP + Grab + WebDel from Mosaic + Superadmin website (non-COD + COD).
+	if mosaic_split_per_day:
+		for day_key, bucket in day_buckets.items():
+			split = mosaic_split_per_day.get(day_key, {})
+			pos_only_wo_vat = split.get("pos", 0.0)
+			mosaic_delivery_wo_vat = (
+				split.get("foodpanda", 0.0)
+				+ split.get("grabfood", 0.0)
+				+ split.get("webdelivery", 0.0)
+			)
+			bucket["pickup_sales_without_vat"] = pos_only_wo_vat
+			bucket["delivery_sales_without_vat"] = (
+				mosaic_delivery_wo_vat + bucket["superadmin_delivery_wo_vat"]
+			)
+	else:
+		# Fallback: if split unavailable, use MV all-Mosaic as pickup (original behavior,
+		# known-wrong label but headline totals still sum correctly).
+		for bucket in day_buckets.values():
+			bucket["pickup_sales_without_vat"] = bucket["mv_all_mosaic_wo_vat"]
+			bucket["delivery_sales_without_vat"] = bucket["superadmin_delivery_wo_vat"]
+
+	# Drop helper keys from public output
+	for bucket in day_buckets.values():
+		bucket.pop("mv_all_mosaic_wo_vat", None)
+		bucket.pop("superadmin_delivery_wo_vat", None)
 
 	series: list[dict[str, Any]] = []
 	for day_key in sorted(day_buckets):
@@ -2259,18 +2252,18 @@ def _build_dashboard_summary_payload(
 			else []
 		)
 		summary = _aggregate_sales(sales_rows)
-		# S176 hotfix #8: capture MV-based FoodPanda values BEFORE override for delta calc.
-		_fp_mv_wo_vat_1 = _to_float(summary.get("foodpanda_sales_without_vat"))
-		_fp_mv_gross_1 = _to_float(summary.get("foodpanda_sales"))
-		# S176 DD-14 Option A: inject real GrabFood totals from pos_orders direct query.
-		summary.update(_get_grabfood_channel_totals(start_day, effective_end, selected_location_ids))
-		# S176 hotfix 2026-04-09: override FoodPanda totals (view is stale post-2026-03-31).
-		summary.update(_get_foodpanda_channel_totals(start_day, effective_end, selected_location_ids))
+		# S176 hotfix #9 (2026-04-11): REPLACE the previous hotfix #7/#8 + S179
+		# injection logic with the CORRECT per-channel split. The MV's
+		# pos_net_sales_without_vat already contains ALL Mosaic channels (POS + FP +
+		# Grab + WebDel), so:
+		#   1. net_sales_without_vat and gross_sales are ALREADY correct (MV total)
+		#   2. But the per-channel labels were wrong ("Pickup" was all-POS-channels)
+		#   3. Previous hotfixes double-counted by adding FP + Grab again on top
+		# This function splits the all-POS total into true per-channel buckets
+		# without touching the headline totals.
+		_apply_mosaic_channel_split(summary, start_day, effective_end, selected_location_ids)
 		# S176 hotfix #6: per-channel cups from Mosaic pos_order_items.
 		summary.update(_get_channel_cups_from_mosaic(start_day, effective_end, selected_location_ids))
-		# S176 hotfix #8: reconcile Net Sales card / Daily Signals / Store Leaders headline
-		# totals with injected GrabFood + FoodPanda (MV has no grabfood, stale foodpanda).
-		_reconcile_headline_totals_with_mosaic(summary, _fp_mv_wo_vat_1, _fp_mv_gross_1)
 		projection_window_rows = [
 			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
 		]
@@ -2361,17 +2354,10 @@ def _build_dashboard_overview_payload(
 			else []
 		)
 		summary = _aggregate_sales(sales_rows)
-		# S176 hotfix #8: capture MV-based FoodPanda values BEFORE override for delta calc.
-		_fp_mv_wo_vat_2 = _to_float(summary.get("foodpanda_sales_without_vat"))
-		_fp_mv_gross_2 = _to_float(summary.get("foodpanda_sales"))
-		# S176 DD-14 Option A: inject real GrabFood totals from pos_orders direct query.
-		summary.update(_get_grabfood_channel_totals(start_day, effective_end, selected_location_ids))
-		# S176 hotfix 2026-04-09: override FoodPanda totals (view is stale post-2026-03-31).
-		summary.update(_get_foodpanda_channel_totals(start_day, effective_end, selected_location_ids))
+		# S176 hotfix #9 (2026-04-11): CORRECT per-channel split (see overview path).
+		_apply_mosaic_channel_split(summary, start_day, effective_end, selected_location_ids)
 		# S176 hotfix #6: per-channel cups from Mosaic pos_order_items.
 		summary.update(_get_channel_cups_from_mosaic(start_day, effective_end, selected_location_ids))
-		# S176 hotfix #8: reconcile headline totals with injected GrabFood + FoodPanda.
-		_reconcile_headline_totals_with_mosaic(summary, _fp_mv_wo_vat_2, _fp_mv_gross_2)
 		mode_state = _build_mode_state(view_mode, start_day, effective_end, scope)
 		projection_window_rows = [
 			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
@@ -2391,8 +2377,9 @@ def _build_dashboard_overview_payload(
 		)
 		freshness["discount_scope_coverage_pct"] = summary["discount_metrics"]["discount_scope_coverage_pct"]
 		freshness["data_quality_warnings"] = _build_data_quality_warnings(start_day, end_day, freshness)
-		grabfood_daily = _get_grabfood_daily_delivery(start_day, effective_end, selected_location_ids)
-		series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows, grabfood_daily)
+		# S176 hotfix #9: pass per-day per-channel split so pickup/delivery are labeled correctly
+		mosaic_split_per_day = _get_mosaic_channel_split_per_day(start_day, effective_end, selected_location_ids)
+		series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows, mosaic_split_per_day)
 		analysis = _build_weather_context(series)
 		analysis["effects"] = _build_weather_effects(scope, start_day, effective_end, sales_rows, summary)
 		discount_ranking_payload = _build_discount_rankings(scope, discount_rows, ranking_mode)
@@ -2655,8 +2642,9 @@ def export_sales_dashboard_detail(
 	effective_end = _effective_end_day(end_day, freshness)
 	sales_rows = _query_daily_rows(start_day, effective_end, selected_location_ids)
 	weather_rows = _query_weather_rows(start_day, effective_end, selected_location_ids)
-	grabfood_daily = _get_grabfood_daily_delivery(start_day, effective_end, selected_location_ids)
-	series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows, grabfood_daily)
+	# S176 hotfix #9: pass per-day per-channel split so pickup/delivery are labeled correctly
+	mosaic_split_per_day = _get_mosaic_channel_split_per_day(start_day, effective_end, selected_location_ids)
+	series = _aggregate_daily_series(scope["selected_stores"], sales_rows, weather_rows, mosaic_split_per_day)
 	export_rows = _build_export_rows(scope, series, sales_rows)
 
 	buffer = io.StringIO()
