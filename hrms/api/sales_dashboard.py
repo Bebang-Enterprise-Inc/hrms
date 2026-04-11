@@ -1127,12 +1127,18 @@ def _get_store_website_split_map(
 	end_day: date,
 	location_ids: list[int],
 ) -> dict[int, dict[str, float]]:
-	"""S182: per-store website non-COD + COD net sales from `daily_store_metrics` MV.
+	"""S182: per-store website non-COD + COD net sales from the daily store MV.
 
 	Website channels do NOT exist in `v_pos_orders_live` (per `sales_dashboard.py:849`
 	docstring) — they are sourced from the MV. The MV columns are
 	`website_non_cod_net_sales_without_vat` and `web_cod_net_sales_without_vat`
 	(verified at `output/s182/mv_column_verification.md`).
+
+	**Relation name:** `public.sales_dashboard_daily_store_metrics` — NOT
+	`public.daily_store_metrics`. The original Phase B helper used the shorthand
+	from the docstring at line ~831 which does not match the real relation name.
+	Fix landed post-PR#540 deploy when L3 smoke surfaced
+	`SQL error at FROM public.daily_store_metrics`.
 
 	Returns: { location_id: { website_non_cod, website_cod } } with both keys present.
 	Zero-fill stores with no rows.
@@ -1145,7 +1151,7 @@ def _get_store_website_split_map(
 			location_id,
 			SUM(website_non_cod_net_sales_without_vat)::numeric(14,2) AS web_non_cod,
 			SUM(web_cod_net_sales_without_vat)::numeric(14,2) AS web_cod
-		FROM public.daily_store_metrics
+		FROM public.{SUPABASE_DAILY_VIEW}
 		WHERE business_date >= '{start_day.isoformat()}'
 		  AND business_date <= '{end_day.isoformat()}'
 		  AND location_id IN ({loc_csv})
@@ -1164,7 +1170,7 @@ def _get_store_website_split_map(
 			("business_date", f"lte.{end_day.isoformat()}"),
 			("location_id", f"in.({_location_scope_key(location_ids)})"),
 		]
-		raw_rows = _supabase_get_all("daily_store_metrics", params, page_size=1000)
+		raw_rows = _supabase_get_all(SUPABASE_DAILY_VIEW, params, page_size=1000)
 		acc: dict[int, dict[str, float]] = {}
 		for raw in raw_rows:
 			lid = _to_int(raw.get("location_id"))
