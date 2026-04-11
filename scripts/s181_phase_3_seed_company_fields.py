@@ -52,15 +52,15 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
 
-S037_CSV = REPO_ROOT / "data" / "_CLEANROOM" / (
-	"2026-03-12-s037-store-buyer-entity-register"
-) / "store_buyer_entity_register_2026-03-12.csv"
+# HOTFIX 2026-04-11: reference CSVs ship inside the hrms Python package
+# at `hrms/data_seed/` (the original v1 paths under `data/_CLEANROOM/...`
+# and `docs/stores/...` are gitignored and never reach the Frappe Docker
+# image). The package-internal location ships with the source code.
+DATA_SEED = REPO_ROOT / "hrms" / "data_seed"
 
-MOSAIC_CSV = REPO_ROOT / "data" / "POS_Extraction" / "MOSAIC_POS_API_KEYS.csv"
-
-LOCATIONS_CSV = REPO_ROOT / "docs" / "stores" / (
-	"Bebang_Halo-Halo_Stores_Locations_2025-12-29.csv"
-)
+S037_CSV = DATA_SEED / "store_buyer_entity_register_2026-03-12.csv"
+MOSAIC_CSV = DATA_SEED / "MOSAIC_POS_API_KEYS.csv"
+LOCATIONS_CSV = DATA_SEED / "Bebang_Halo-Halo_Stores_Locations_2025-12-29.csv"
 
 RESULTS_PATH = REPO_ROOT / "output" / "s181" / "phase3_seed_results.json"
 
