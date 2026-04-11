@@ -869,6 +869,51 @@ def _get_foodpanda_channel_totals(
 	}
 
 
+def _reconcile_headline_totals_with_mosaic(
+	summary: dict[str, Any],
+	fp_from_mv_wo_vat: float,
+	fp_from_mv_gross: float,
+) -> None:
+	"""S176 hotfix #8 (2026-04-10): reconcile headline totals with injected channels.
+
+	The MV daily_store_metrics has NO grabfood column and a STALE foodpanda column
+	(frozen 2026-03-31, returns 0 for April). S179 injected correct per-channel
+	data for the Channel Mix donut via _get_grabfood_channel_totals and
+	_get_foodpanda_channel_totals, but those calls only overwrite the per-channel
+	keys (grabfood_sales, foodpanda_sales, etc.) — they do NOT adjust the headline
+	net_sales_without_vat / gross_sales / delivery_sales_without_vat fields that
+	feed the Net Sales card, Daily Signals, and Store Leaders.
+
+	Result without this fix: Channel Mix shows ₱5.4M (correct) while every other
+	total on the same page shows ₱4.1M (missing ₱1.28M = GrabFood ₱640K + FoodPanda
+	₱645K). Same day, same dashboard, two different totals.
+
+	Call AFTER the injection helpers. Pass the MV-based foodpanda values captured
+	BEFORE the override so the delta can be computed correctly. Mutates summary
+	in place (also recomputes average_daily_sales and average_guest_check).
+	"""
+	grab_wo_vat = _to_float(summary.get("grabfood_sales_without_vat"))
+	grab_gross = _to_float(summary.get("grabfood_sales"))
+	fp_wo_vat = _to_float(summary.get("foodpanda_sales_without_vat"))
+	fp_gross = _to_float(summary.get("foodpanda_sales"))
+	fp_delta_wo_vat = fp_wo_vat - fp_from_mv_wo_vat
+	fp_delta_gross = fp_gross - fp_from_mv_gross
+	summary["net_sales_without_vat"] = _round_half_up(
+		_to_float(summary.get("net_sales_without_vat")) + grab_wo_vat + fp_delta_wo_vat
+	)
+	summary["gross_sales"] = _round_half_up(
+		_to_float(summary.get("gross_sales")) + grab_gross + fp_delta_gross
+	)
+	summary["net_sales_with_vat"] = summary["gross_sales"]
+	summary["delivery_sales_without_vat"] = _round_half_up(
+		_to_float(summary.get("delivery_sales_without_vat")) + grab_wo_vat + fp_delta_wo_vat
+	)
+	day_count = _to_int(summary.get("day_count")) or 1
+	transactions = _to_int(summary.get("transactions")) or 1
+	summary["average_daily_sales"] = _round_half_up(summary["net_sales_without_vat"] / day_count)
+	summary["average_guest_check"] = _round_half_up(summary["net_sales_without_vat"] / transactions)
+
+
 def _get_channel_cups_from_mosaic(
 	start_day: date,
 	end_day: date,
@@ -2214,12 +2259,18 @@ def _build_dashboard_summary_payload(
 			else []
 		)
 		summary = _aggregate_sales(sales_rows)
+		# S176 hotfix #8: capture MV-based FoodPanda values BEFORE override for delta calc.
+		_fp_mv_wo_vat_1 = _to_float(summary.get("foodpanda_sales_without_vat"))
+		_fp_mv_gross_1 = _to_float(summary.get("foodpanda_sales"))
 		# S176 DD-14 Option A: inject real GrabFood totals from pos_orders direct query.
 		summary.update(_get_grabfood_channel_totals(start_day, effective_end, selected_location_ids))
 		# S176 hotfix 2026-04-09: override FoodPanda totals (view is stale post-2026-03-31).
 		summary.update(_get_foodpanda_channel_totals(start_day, effective_end, selected_location_ids))
 		# S176 hotfix #6: per-channel cups from Mosaic pos_order_items.
 		summary.update(_get_channel_cups_from_mosaic(start_day, effective_end, selected_location_ids))
+		# S176 hotfix #8: reconcile Net Sales card / Daily Signals / Store Leaders headline
+		# totals with injected GrabFood + FoodPanda (MV has no grabfood, stale foodpanda).
+		_reconcile_headline_totals_with_mosaic(summary, _fp_mv_wo_vat_1, _fp_mv_gross_1)
 		projection_window_rows = [
 			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
 		]
@@ -2310,12 +2361,17 @@ def _build_dashboard_overview_payload(
 			else []
 		)
 		summary = _aggregate_sales(sales_rows)
+		# S176 hotfix #8: capture MV-based FoodPanda values BEFORE override for delta calc.
+		_fp_mv_wo_vat_2 = _to_float(summary.get("foodpanda_sales_without_vat"))
+		_fp_mv_gross_2 = _to_float(summary.get("foodpanda_sales"))
 		# S176 DD-14 Option A: inject real GrabFood totals from pos_orders direct query.
 		summary.update(_get_grabfood_channel_totals(start_day, effective_end, selected_location_ids))
 		# S176 hotfix 2026-04-09: override FoodPanda totals (view is stale post-2026-03-31).
 		summary.update(_get_foodpanda_channel_totals(start_day, effective_end, selected_location_ids))
 		# S176 hotfix #6: per-channel cups from Mosaic pos_order_items.
 		summary.update(_get_channel_cups_from_mosaic(start_day, effective_end, selected_location_ids))
+		# S176 hotfix #8: reconcile headline totals with injected GrabFood + FoodPanda.
+		_reconcile_headline_totals_with_mosaic(summary, _fp_mv_wo_vat_2, _fp_mv_gross_2)
 		mode_state = _build_mode_state(view_mode, start_day, effective_end, scope)
 		projection_window_rows = [
 			row for row in sales_rows if str(row.get("business_date")) <= discount_effective_end.isoformat()
