@@ -802,43 +802,50 @@ def _apply_mosaic_channel_split(
 	end_day: date,
 	location_ids: list[int],
 ) -> None:
-	"""S176 hotfix #9: replace misleading per-channel keys in `summary` with the
-	TRUE Mosaic per-channel split, without touching headline totals.
+	"""S176 hotfix #9 + #10: replace misleading per-channel keys in `summary` with
+	the TRUE Mosaic per-channel split AND fix headline total inflation.
 
-	The MV's `pos_net_sales_without_vat` (stored in summary as `pickup_sales_without_vat`)
-	is actually POS + FoodPanda + GrabFood + WebDelivery summed together. This
-	function splits it into true per-channel buckets, so the Channel Mix donut
-	displays correctly and the sum STILL equals the MV's total (no inflation).
+	Two root causes this fixes:
 
-	Overwrites:
-		- pickup_sales_without_vat  → POS channel only (true pickup)
-		- pickup_sales              → POS channel only (gross)
-		- foodpanda_sales_without_vat → FoodPanda from Mosaic
-		- foodpanda_sales           → FoodPanda gross from Mosaic
-		- grabfood_sales_without_vat → GrabFood from Mosaic
-		- grabfood_sales            → GrabFood gross from Mosaic
-		- webdelivery_sales_without_vat → WebDelivery from Mosaic (new key)
-		- webdelivery_sales         → WebDelivery gross from Mosaic (new key)
-		- delivery_sales_without_vat → recalculated = FP + Grab + WebDel + web_non_cod + web_cod
-		- pickup_share / delivery_share (if present) → recomputed from true totals
+	1. MV's `pos_net_sales_without_vat` is all-Mosaic-channels summed (POS + FP +
+	   Grab + WebDel + legacy "Delivery"/"Unknown" channels from pre-regime-shift
+	   era). Fix #9 split this into true per-channel buckets.
 
-	Does NOT touch:
-		- net_sales_without_vat (MV total — already correct)
-		- gross_sales            (MV total — already correct)
-		- transactions           (MV total — already correct)
-		- cups_sold              (MV total — already correct)
+	2. MV's `total_net_sales_without_vat` double-counts FoodPanda for the regime
+	   overlap period (Mar 26-31): Mosaic FP data exists from 2026-03-26, AND the
+	   legacy foodpanda_orders Google Sheet has data through 2026-03-31. The MV
+	   adds both (pos_net_sales_without_vat + foodpanda_vat_deducted_sales),
+	   inflating the 14-day total by ~₱3.4M. Fix #10 overrides the headline
+	   net_sales_without_vat and gross_sales with the true sum from the channel
+	   split, eliminating the double-count.
+
+	Overwrites in summary:
+		- pickup_sales / pickup_sales_without_vat       → POS channel only
+		- foodpanda_sales / foodpanda_sales_without_vat → FoodPanda from Mosaic
+		- grabfood_sales / grabfood_sales_without_vat   → GrabFood from Mosaic
+		- webdelivery_sales / webdelivery_sales_without_vat → WebDelivery Mosaic
+		- other_mosaic_sales / other_mosaic_sales_without_vat → legacy "Delivery"
+		  / "Unknown" channels from Mosaic pre-regime-shift
+		- delivery_sales_without_vat → sum of all non-POS Mosaic + web non-COD + COD
+		- net_sales_without_vat → pickup + delivery (replaces MV value to remove
+		  the FoodPanda legacy-sheet double-count)
+		- gross_sales / net_sales_with_vat → recomputed from true per-channel gross
+		- average_daily_sales / average_guest_check → recomputed
 	"""
 	split = _get_mosaic_channel_split(start_day, end_day, location_ids)
-	pos_bucket = split.get("pos", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
-	fp_bucket = split.get("foodpanda", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
-	gf_bucket = split.get("grabfood", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
-	wd_bucket = split.get("webdelivery", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+	pos_bucket = split.pop("pos", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+	fp_bucket = split.pop("foodpanda", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+	gf_bucket = split.pop("grabfood", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+	wd_bucket = split.pop("webdelivery", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+	# All remaining Mosaic channels (legacy "Delivery", "Unknown", etc.) roll up to "other".
+	other_gross = sum(b["gross"] for b in split.values())
+	other_net_wo_vat = sum(b["net_wo_vat"] for b in split.values())
+	other_orders = sum(b["orders"] for b in split.values())
 
 	# True pickup = POS channel only
 	summary["pickup_sales"] = pos_bucket["gross"]
 	summary["pickup_sales_without_vat"] = pos_bucket["net_wo_vat"]
 
-	# Mosaic delivery channels — use the CORRECT net_sales column (not net - vat twice)
 	summary["foodpanda_sales"] = fp_bucket["gross"]
 	summary["foodpanda_sales_without_vat"] = fp_bucket["net_wo_vat"]
 	summary["foodpanda_orders"] = fp_bucket["orders"]
@@ -857,16 +864,55 @@ def _apply_mosaic_channel_split(
 	summary["webdelivery_sales_without_vat"] = wd_bucket["net_wo_vat"]
 	summary["webdelivery_orders"] = wd_bucket["orders"]
 
-	# True delivery = all Mosaic non-POS channels + Superadmin website (non-COD + COD)
-	web_non_cod = _to_float(summary.get("website_sales_without_vat"))
-	web_cod = _to_float(summary.get("website_cod_sales_without_vat"))
+	summary["other_mosaic_sales"] = _round_half_up(other_gross)
+	summary["other_mosaic_sales_without_vat"] = _round_half_up(other_net_wo_vat)
+	summary["other_mosaic_orders"] = other_orders
+
+	# Superadmin website channels from the MV (these are already correct)
+	web_non_cod_gross = _to_float(summary.get("website_sales"))
+	web_non_cod_net = _to_float(summary.get("website_sales_without_vat"))
+	web_cod_gross = _to_float(summary.get("website_cod_sales_with_vat"))
+	web_cod_net = _to_float(summary.get("website_cod_sales_without_vat"))
+
+	# True delivery = ALL non-POS Mosaic channels + Superadmin website non-COD + COD
 	summary["delivery_sales_without_vat"] = _round_half_up(
 		fp_bucket["net_wo_vat"]
 		+ gf_bucket["net_wo_vat"]
 		+ wd_bucket["net_wo_vat"]
-		+ web_non_cod
-		+ web_cod
+		+ other_net_wo_vat
+		+ web_non_cod_net
+		+ web_cod_net
 	)
+
+	# Hotfix #10: override headline totals with TRUE per-channel sum to eliminate
+	# the MV's FoodPanda legacy-sheet double-count.
+	true_net_wo_vat = (
+		pos_bucket["net_wo_vat"]
+		+ fp_bucket["net_wo_vat"]
+		+ gf_bucket["net_wo_vat"]
+		+ wd_bucket["net_wo_vat"]
+		+ other_net_wo_vat
+		+ web_non_cod_net
+		+ web_cod_net
+	)
+	true_gross = (
+		pos_bucket["gross"]
+		+ fp_bucket["gross"]
+		+ gf_bucket["gross"]
+		+ wd_bucket["gross"]
+		+ other_gross
+		+ web_non_cod_gross
+		+ web_cod_gross
+	)
+	summary["net_sales_without_vat"] = _round_half_up(true_net_wo_vat)
+	summary["gross_sales"] = _round_half_up(true_gross)
+	summary["net_sales_with_vat"] = summary["gross_sales"]
+
+	# Recompute derived metrics with corrected totals
+	day_count = _to_int(summary.get("day_count")) or 1
+	transactions = _to_int(summary.get("transactions")) or 1
+	summary["average_daily_sales"] = _round_half_up(summary["net_sales_without_vat"] / day_count)
+	summary["average_guest_check"] = _round_half_up(summary["net_sales_without_vat"] / transactions)
 
 
 def _get_channel_cups_from_mosaic(
@@ -1691,21 +1737,28 @@ def _aggregate_daily_series(
 		if weather_row:
 			bucket["weather_rows"].append(weather_row)
 
-	# S176 hotfix #9: rebuild pickup/delivery using the TRUE Mosaic channel split.
-	# True pickup = POS channel only from Mosaic.
-	# True delivery = FP + Grab + WebDel from Mosaic + Superadmin website (non-COD + COD).
+	# S176 hotfix #9 + #10: rebuild pickup/delivery/net_sales using the TRUE
+	# Mosaic channel split. True pickup = POS channel only. True delivery = ALL
+	# non-POS Mosaic channels (FP + Grab + WebDel + legacy "Delivery" + "Unknown")
+	# + Superadmin website (non-COD + COD). net_sales_without_vat is overridden
+	# with the true sum to eliminate the MV's FoodPanda legacy-sheet double-count
+	# for the Mar 26-31 regime overlap period.
 	if mosaic_split_per_day:
 		for day_key, bucket in day_buckets.items():
 			split = mosaic_split_per_day.get(day_key, {})
-			pos_only_wo_vat = split.get("pos", 0.0)
-			mosaic_delivery_wo_vat = (
-				split.get("foodpanda", 0.0)
-				+ split.get("grabfood", 0.0)
-				+ split.get("webdelivery", 0.0)
+			pos_only_wo_vat = _to_float(split.get("pos"))
+			# Sum ALL non-POS Mosaic channels (not just the 3 common ones)
+			mosaic_delivery_wo_vat = sum(
+				_to_float(v) for k, v in split.items() if k != "pos"
 			)
 			bucket["pickup_sales_without_vat"] = pos_only_wo_vat
 			bucket["delivery_sales_without_vat"] = (
 				mosaic_delivery_wo_vat + bucket["superadmin_delivery_wo_vat"]
+			)
+			# Override net_sales_without_vat = pickup + delivery to remove the
+			# FoodPanda legacy-sheet double-count that lives in MV total
+			bucket["net_sales_without_vat"] = (
+				pos_only_wo_vat + mosaic_delivery_wo_vat + bucket["superadmin_delivery_wo_vat"]
 			)
 	else:
 		# Fallback: if split unavailable, use MV all-Mosaic as pickup (original behavior,
@@ -1937,28 +1990,34 @@ def _build_weather_context(series: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _build_channel_mix(summary: dict[str, Any]) -> list[dict[str, Any]]:
+	"""S176 hotfix #10: build channel mix entries that sum to net_sales_without_vat.
+
+	All 7 possible channels are returned: pickup (POS), website non-COD, website
+	COD, grabfood, foodpanda, webdelivery, other mosaic (legacy Delivery/Unknown
+	channels pre-regime-shift). Channels with 0 sales are still returned so the
+	frontend can consistently match them; the frontend may hide empty entries.
+	"""
 	return [
 		{
 			"key": "pickup",
 			"label": "Pickup Sales",
-			"sales_with_vat": summary["pickup_sales"],
-			"sales_without_vat": summary["pickup_sales_without_vat"],
+			"sales_with_vat": summary.get("pickup_sales", 0.0),
+			"sales_without_vat": summary.get("pickup_sales_without_vat", 0.0),
 		},
 		{
 			"key": "website",
 			"label": "Website Sales (Non-COD)",
-			"sales_with_vat": summary["website_sales"],
-			"sales_without_vat": summary["website_sales_without_vat"],
+			"sales_with_vat": summary.get("website_sales", 0.0),
+			"sales_without_vat": summary.get("website_sales_without_vat", 0.0),
 		},
 		{
 			"key": "website_cod",
 			"label": "Website COD",
-			"orders": summary["website_cod_orders"],
-			"sales_with_vat": summary["website_cod_sales_with_vat"],
-			"sales_without_vat": summary["website_cod_sales_without_vat"],
+			"orders": summary.get("website_cod_orders", 0),
+			"sales_with_vat": summary.get("website_cod_sales_with_vat", 0.0),
+			"sales_without_vat": summary.get("website_cod_sales_without_vat", 0.0),
 		},
 		{
-			# S176 DD-14 Option A: GrabFood surfaced via pos_orders direct query.
 			"key": "grabfood",
 			"label": "GrabFood",
 			"orders": summary.get("grabfood_orders", 0),
@@ -1968,8 +2027,23 @@ def _build_channel_mix(summary: dict[str, Any]) -> list[dict[str, Any]]:
 		{
 			"key": "foodpanda",
 			"label": "FoodPanda",
-			"sales_with_vat": summary["foodpanda_sales"],
-			"sales_without_vat": summary["foodpanda_sales_without_vat"],
+			"orders": summary.get("foodpanda_orders", 0),
+			"sales_with_vat": summary.get("foodpanda_sales", 0.0),
+			"sales_without_vat": summary.get("foodpanda_sales_without_vat", 0.0),
+		},
+		{
+			"key": "webdelivery",
+			"label": "Web Delivery (Mosaic)",
+			"orders": summary.get("webdelivery_orders", 0),
+			"sales_with_vat": summary.get("webdelivery_sales", 0.0),
+			"sales_without_vat": summary.get("webdelivery_sales_without_vat", 0.0),
+		},
+		{
+			"key": "other_mosaic",
+			"label": "Other (legacy Mosaic)",
+			"orders": summary.get("other_mosaic_orders", 0),
+			"sales_with_vat": summary.get("other_mosaic_sales", 0.0),
+			"sales_without_vat": summary.get("other_mosaic_sales_without_vat", 0.0),
 		},
 	]
 
