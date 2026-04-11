@@ -183,6 +183,10 @@ doc_events = {
 		"on_update": [
 			"hrms.overrides.company.make_company_fixtures",
 			"hrms.overrides.company.set_default_hr_accounts",
+			# S181 — sentinel-gated auto-provision (runs once per Company)
+			"hrms.overrides.company.auto_provision_company",
+			# S181 — ADMS enqueue worker (idempotent, non-blocking)
+			"hrms.overrides.company.auto_enroll_adms_devices",
 		],
 		"on_trash": "hrms.overrides.company.handle_linked_docs",
 	},

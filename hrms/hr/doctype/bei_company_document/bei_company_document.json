@@ -1,0 +1,113 @@
+{
+ "actions": [],
+ "creation": "2026-04-11 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "document_type",
+  "document_name",
+  "column_break_1",
+  "file",
+  "drive_file_url",
+  "status",
+  "section_break_dates",
+  "issue_date",
+  "column_break_2",
+  "expiry_date",
+  "section_break_notes",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Select",
+   "label": "Document Type",
+   "options": "\nLease Agreement\nBusiness Permit\nBIR Form 2303\nFire Safety Certificate\nSanitary Permit\nSEC Certificate\nOther",
+   "in_list_view": 1,
+   "reqd": 1,
+   "columns": 2
+  },
+  {
+   "fieldname": "document_name",
+   "fieldtype": "Data",
+   "label": "Document Name",
+   "in_list_view": 1,
+   "columns": 3
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "file",
+   "fieldtype": "Attach",
+   "label": "File (Upload)",
+   "description": "Optional: upload a copy of the document directly to Frappe. Use this for ad-hoc uploads, scanned receipts, or documents not yet in Google Drive."
+  },
+  {
+   "fieldname": "drive_file_url",
+   "fieldtype": "Data",
+   "label": "Google Drive URL",
+   "options": "URL",
+   "description": "Direct link to this specific document in Google Drive. Preferred over Attach when the document already lives in the branch Drive folder (avoids duplication and keeps Drive as the source of truth). Either `file` or `drive_file_url` must be set — both are allowed."
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "\nValid\nExpired\nPending Renewal\nNot Required",
+   "in_list_view": 1,
+   "default": "Valid",
+   "columns": 1
+  },
+  {
+   "fieldname": "section_break_dates",
+   "fieldtype": "Section Break",
+   "label": "Dates"
+  },
+  {
+   "fieldname": "issue_date",
+   "fieldtype": "Date",
+   "label": "Issue Date",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expiry_date",
+   "fieldtype": "Date",
+   "label": "Expiry Date",
+   "in_list_view": 1,
+   "columns": 1
+  },
+  {
+   "fieldname": "section_break_notes",
+   "fieldtype": "Section Break",
+   "collapsible": 1,
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-04-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Company Document",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 0
+}

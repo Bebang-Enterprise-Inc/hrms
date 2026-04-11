@@ -1,0 +1,15 @@
+-- PENDING — to be overwritten at deploy time by Step 2 of BACKUP_RUNBOOK.md.
+--
+-- This placeholder exists so the HB-6 gate sees all three backup files.
+-- At deploy time (just before `bench --site hq.bebang.ph migrate`), run:
+--
+--   bench --site hq.bebang.ph mariadb -e "
+--     SELECT * FROM \`tabCustom Field\`
+--     WHERE dt='Company'
+--     ORDER BY idx, name;
+--   " > output/s181/backups/tabCustomField_Company_BEFORE.sql
+--
+-- The resulting file must contain the 4 S178 Company Custom Field rows
+-- (store_locations, partner_names, stakeholders_section, stakeholders)
+-- and zero S181 rows. If the row count is not 4, stop and reconcile
+-- before running migrate.

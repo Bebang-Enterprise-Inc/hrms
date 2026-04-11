@@ -1,0 +1,55 @@
+{
+  "dry_run": true,
+  "total_companies_considered": 5,
+  "planned_updates": 5,
+  "updated": 0,
+  "skipped_already_current": 0,
+  "unmatched": [],
+  "per_field_mutation_counts": {},
+  "sample_planned_first_5": [
+    {
+      "docname": "Bebang Enterprise Inc.",
+      "payload": {
+        "branch_tin": "647-243-690-00005",
+        "bir_rdo_code": "RDO 045"
+      },
+      "matched_entity": "Bebang Enterprise Inc.",
+      "current_tax_id": "647-243-690-00000"
+    },
+    {
+      "docname": "Bebang Kitchen Inc.",
+      "payload": {
+        "bir_rdo_code": "RDO 041"
+      },
+      "matched_entity": "Bebang Kitchen Inc",
+      "current_tax_id": "010-880-681-00001"
+    },
+    {
+      "docname": "Ayala Evo - Bebang Enterprise Inc.",
+      "payload": {
+        "branch_tin": "010-885-436-00003",
+        "bir_rdo_code": "RDO 54B"
+      },
+      "matched_entity": "Bebang Mega Inc",
+      "current_tax_id": "647-243-690-00000"
+    },
+    {
+      "docname": "Ayala Malls Fairview Terraces - Bebang Enterprise Inc.",
+      "payload": {
+        "branch_tin": "663-440-106-00001",
+        "bir_rdo_code": "RDO 028"
+      },
+      "matched_entity": "Bebang FTE Inc.",
+      "current_tax_id": "647-243-690-00000"
+    },
+    {
+      "docname": "Irresistible Infusions Inc.",
+      "payload": {
+        "branch_tin": "634-954-873-00000",
+        "bir_rdo_code": "RDO 041"
+      },
+      "matched_entity": "Irresistible Infusions Inc",
+      "current_tax_id": null
+    }
+  ]
+}
