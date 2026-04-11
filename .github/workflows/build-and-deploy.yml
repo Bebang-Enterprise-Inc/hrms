@@ -167,6 +167,7 @@ jobs:
           SENTRY_DSN="__SENTRY_DSN__"
           SUPABASE_URL="__SUPABASE_URL__"
           SUPABASE_KEY="__SUPABASE_KEY__"
+          SUPABASE_MGMT_TOKEN="__SUPABASE_MGMT_TOKEN__"
           MIN_FREE_KB=6291456
 
           echo "💾 Root disk before deploy:"
@@ -207,6 +208,10 @@ jobs:
             if [ -n "$SUPABASE_URL" ]; then
               ENV_ARGS="$ENV_ARGS --env-rm SUPABASE_URL --env-rm SUPABASE_SERVICE_ROLE_KEY"
               ENV_ARGS="$ENV_ARGS --env-add SUPABASE_URL=$SUPABASE_URL --env-add SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_KEY"
+            fi
+            if [ -n "$SUPABASE_MGMT_TOKEN" ]; then
+              ENV_ARGS="$ENV_ARGS --env-rm SUPABASE_MGMT_TOKEN"
+              ENV_ARGS="$ENV_ARGS --env-add SUPABASE_MGMT_TOKEN=$SUPABASE_MGMT_TOKEN"
             fi
             docker service update --detach=true --update-failure-action=rollback --image $DEPLOY_IMAGE $ENV_ARGS $SVC
             echo "  ↳ $SVC update dispatched"
@@ -250,6 +255,7 @@ jobs:
           DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__SENTRY_DSN__/${{ secrets.SENTRY_DSN }}}"
           DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__SUPABASE_URL__/${{ env.SUPABASE_URL }}}"
           DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__SUPABASE_KEY__/${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}}"
+          DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__SUPABASE_MGMT_TOKEN__/${{ secrets.SUPABASE_MGMT_TOKEN }}}"
           DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__GHCR_TOKEN__/${{ secrets.GITHUB_TOKEN }}}"
           DEPLOY_SCRIPT="${DEPLOY_SCRIPT//__GHCR_USER__/${{ github.actor }}}"
 
