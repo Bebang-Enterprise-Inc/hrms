@@ -7,6 +7,7 @@ import csv
 import io
 import json
 import os
+import time
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 from decimal import ROUND_HALF_UP, Decimal
@@ -1023,6 +1024,166 @@ def _apply_mosaic_channel_split(
 	transactions = _to_int(summary.get("transactions")) or 1
 	summary["average_daily_sales"] = _round_half_up(summary["net_sales_without_vat"] / day_count)
 	summary["average_guest_check"] = _round_half_up(summary["net_sales_without_vat"] / transactions)
+
+
+# S182 channel mapping: normalize raw v_pos_orders_live channel keys into the
+# 5 canonical Mosaic buckets that match _apply_mosaic_channel_split's contract.
+_S182_MOSAIC_CHANNEL_KEYS: tuple[str, ...] = (
+	"pos",
+	"foodpanda",
+	"grabfood",
+	"webdelivery",
+	"other_mosaic",
+)
+_S182_CHANNEL_ALIASES: dict[str, str] = {
+	"pos": "pos",
+	"foodpanda": "foodpanda",
+	"fp": "foodpanda",
+	"grabfood": "grabfood",
+	"grab": "grabfood",
+	"webdelivery": "webdelivery",
+	"web_delivery": "webdelivery",
+}
+
+
+def _get_store_channel_split_map(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+) -> dict[int, dict[str, float]]:
+	"""S182: per-store Mosaic channel split for {pos, foodpanda, grabfood, webdelivery, other_mosaic}.
+
+	Mirrors `_get_mosaic_channel_split` but groups by `(location_id, channel_key)` so each
+	store gets its own bucket. Reuses the S176 hotfix #11/#12 pattern: Supabase Mgmt API
+	SQL with f-string interpolation, PostgREST pagination fallback when the Mgmt token
+	is unavailable.
+
+	Returns: { location_id: { pos, foodpanda, grabfood, webdelivery, other_mosaic } } with
+	all 5 keys present (zero-fill missing channels per store).
+	"""
+	if not location_ids:
+		return {}
+	loc_csv = ",".join(str(int(i)) for i in sorted(set(location_ids)))
+	sql = f"""
+		SELECT
+			location_id,
+			LOWER(COALESCE(channel, 'unknown')) AS channel_key,
+			SUM(net_sales)::numeric(14,2) AS net_wo_vat
+		FROM public.v_pos_orders_live
+		WHERE payment_status = 'PAID'
+		  AND business_date >= '{start_day.isoformat()}'
+		  AND business_date <= '{end_day.isoformat()}'
+		  AND location_id IN ({loc_csv})
+		GROUP BY location_id, channel_key
+	"""
+	try:
+		rows = _supabase_query_sql(sql)
+	except SupabaseMgmtTokenMissing:
+		# S176 hotfix #12 PostgREST fallback — slower but functional when Mgmt token missing.
+		frappe.log_error(
+			"S182 store channel split: SUPABASE_MGMT_TOKEN missing; falling back to PostgREST.",
+			"S182 channel split fallback",
+		)
+		params: list[tuple[str, Any]] = [
+			("select", "location_id,channel,net_sales"),
+			("payment_status", "eq.PAID"),
+			("business_date", f"gte.{start_day.isoformat()}"),
+			("business_date", f"lte.{end_day.isoformat()}"),
+			("location_id", f"in.({_location_scope_key(location_ids)})"),
+		]
+		raw_rows = _supabase_get_all("v_pos_orders_live", params, page_size=1000)
+		acc: dict[int, dict[str, float]] = {}
+		for raw in raw_rows:
+			lid = _to_int(raw.get("location_id"))
+			raw_key = str(raw.get("channel") or "unknown").strip().lower()
+			canon_key = _S182_CHANNEL_ALIASES.get(raw_key, "other_mosaic")
+			bucket = acc.setdefault(
+				lid, {key: 0.0 for key in _S182_MOSAIC_CHANNEL_KEYS}
+			)
+			bucket[canon_key] += _to_float(raw.get("net_sales"))
+		for bucket in acc.values():
+			for key in _S182_MOSAIC_CHANNEL_KEYS:
+				bucket[key] = _round_half_up(bucket[key])
+		return acc
+
+	out: dict[int, dict[str, float]] = {}
+	for row in rows:
+		lid = _to_int(row.get("location_id"))
+		raw_key = str(row.get("channel_key") or "unknown").strip().lower()
+		canon_key = _S182_CHANNEL_ALIASES.get(raw_key, "other_mosaic")
+		bucket = out.setdefault(
+			lid, {key: 0.0 for key in _S182_MOSAIC_CHANNEL_KEYS}
+		)
+		bucket[canon_key] += _round_half_up(_to_float(row.get("net_wo_vat")))
+	# Guarantee zero-fill for stores that had at least one row but missed a channel key
+	for bucket in out.values():
+		for key in _S182_MOSAIC_CHANNEL_KEYS:
+			bucket.setdefault(key, 0.0)
+	return out
+
+
+def _get_store_website_split_map(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+) -> dict[int, dict[str, float]]:
+	"""S182: per-store website non-COD + COD net sales from `daily_store_metrics` MV.
+
+	Website channels do NOT exist in `v_pos_orders_live` (per `sales_dashboard.py:849`
+	docstring) — they are sourced from the MV. The MV columns are
+	`website_non_cod_net_sales_without_vat` and `web_cod_net_sales_without_vat`
+	(verified at `output/s182/mv_column_verification.md`).
+
+	Returns: { location_id: { website_non_cod, website_cod } } with both keys present.
+	Zero-fill stores with no rows.
+	"""
+	if not location_ids:
+		return {}
+	loc_csv = ",".join(str(int(i)) for i in sorted(set(location_ids)))
+	sql = f"""
+		SELECT
+			location_id,
+			SUM(website_non_cod_net_sales_without_vat)::numeric(14,2) AS web_non_cod,
+			SUM(web_cod_net_sales_without_vat)::numeric(14,2) AS web_cod
+		FROM public.daily_store_metrics
+		WHERE business_date >= '{start_day.isoformat()}'
+		  AND business_date <= '{end_day.isoformat()}'
+		  AND location_id IN ({loc_csv})
+		GROUP BY location_id
+	"""
+	try:
+		rows = _supabase_query_sql(sql)
+	except SupabaseMgmtTokenMissing:
+		frappe.log_error(
+			"S182 store website split: SUPABASE_MGMT_TOKEN missing; falling back to PostgREST.",
+			"S182 website split fallback",
+		)
+		params: list[tuple[str, Any]] = [
+			("select", "location_id,website_non_cod_net_sales_without_vat,web_cod_net_sales_without_vat"),
+			("business_date", f"gte.{start_day.isoformat()}"),
+			("business_date", f"lte.{end_day.isoformat()}"),
+			("location_id", f"in.({_location_scope_key(location_ids)})"),
+		]
+		raw_rows = _supabase_get_all("daily_store_metrics", params, page_size=1000)
+		acc: dict[int, dict[str, float]] = {}
+		for raw in raw_rows:
+			lid = _to_int(raw.get("location_id"))
+			bucket = acc.setdefault(lid, {"website_non_cod": 0.0, "website_cod": 0.0})
+			bucket["website_non_cod"] += _to_float(raw.get("website_non_cod_net_sales_without_vat"))
+			bucket["website_cod"] += _to_float(raw.get("web_cod_net_sales_without_vat"))
+		for bucket in acc.values():
+			bucket["website_non_cod"] = _round_half_up(bucket["website_non_cod"])
+			bucket["website_cod"] = _round_half_up(bucket["website_cod"])
+		return acc
+
+	out: dict[int, dict[str, float]] = {}
+	for row in rows:
+		lid = _to_int(row.get("location_id"))
+		out[lid] = {
+			"website_non_cod": _round_half_up(_to_float(row.get("web_non_cod"))),
+			"website_cod": _round_half_up(_to_float(row.get("web_cod"))),
+		}
+	return out
 
 
 def _get_channel_cups_from_mosaic(
@@ -2239,8 +2400,26 @@ def _build_store_rankings(
 	scope: dict[str, Any],
 	sales_rows: list[dict[str, Any]],
 	weather_rows: list[dict[str, Any]],
+	start_day: date,
+	end_day: date,
 ) -> list[dict[str, Any]]:
+	"""Build per-store ranking rows enriched with channel_mix, daily_series, pickup_share.
+
+	S182 changes:
+	  - signature now requires `start_day` + `end_day` (caller passes them explicitly,
+	    no longer derived from sales_rows) so the per-store channel split SQL helpers
+	    can scope to the same window
+	  - merges per-store channel_mix dict (5 Mosaic + 2 website buckets = 7 total)
+	  - overrides per-store `net_sales_without_vat` and `gross_sales` from the clean
+	    channel sum, reconciling with the headline (`_apply_mosaic_channel_split`) and
+	    sidestepping the MV FoodPanda Mar 26-31 double-count
+	  - builds per-store `daily_series` from existing `sales_rows` for the sparkline
+	    (zero new SQL — reuses data already in scope)
+	  - emits `pickup_share` percentage
+	"""
 	by_location: dict[int, dict[str, Any]] = {}
+	# S182: collect per-day net for sparkline as we walk sales_rows.
+	per_store_daily: dict[int, dict[str, float]] = {}
 	weather_map = _weather_by_store_day(weather_rows)
 	store_lookup = {store["location_id"]: store for store in scope["selected_stores"]}
 	for row in sales_rows:
@@ -2265,22 +2444,107 @@ def _build_store_rankings(
 		store_row["net_sales_without_vat"] += _to_float(row.get("total_net_sales_without_vat"))
 		store_row["cups_sold"] += _to_int(row.get("cups_sold"))
 		store_row["transactions"] += _to_int(row.get("transactions"))
-		weather_row = weather_map.get((location_id, str(row.get("business_date"))))
+		# S182: track per-day net for the sparkline (uses MV total which has the
+		# Mar 26-31 FoodPanda double-count quirk; sparkline shows trend SHAPE, not
+		# precise values, so the minor inflation is acceptable. Precise per-store
+		# numbers come from the channel reconcile below, NOT from daily_series).
+		day_key = str(row.get("business_date"))
+		day_bucket = per_store_daily.setdefault(location_id, {})
+		day_bucket[day_key] = day_bucket.get(day_key, 0.0) + _to_float(
+			row.get("total_net_sales_without_vat")
+		)
+		weather_row = weather_map.get((location_id, day_key))
 		if weather_row:
 			store_row["weather_covered_days"] += 1
 			if bool(weather_row.get("is_rainy")):
 				store_row["rainy_days"] += 1
 			if str(weather_row.get("rain_severity") or "").strip() == "disruptive_rain":
 				store_row["disruptive_rain_days"] += 1
-	for row in by_location.values():
+
+	# S182: enrich each per-store row with channel_mix from the dual-source helpers.
+	location_ids = list(by_location.keys())
+	channel_map = _get_store_channel_split_map(start_day, end_day, location_ids)
+	website_map = _get_store_website_split_map(start_day, end_day, location_ids)
+
+	# Pre-compute the full window date sequence for sparkline padding (handles stores
+	# that were closed for part of the window — they should render as flat-zero days,
+	# not collapse to a shorter sparkline that would distort the visual comparison).
+	window_days: list[str] = []
+	if start_day <= end_day:
+		cursor = start_day
+		while cursor <= end_day:
+			window_days.append(cursor.isoformat())
+			cursor += timedelta(days=1)
+
+	for lid, row in by_location.items():
+		# B.6: build channel_mix dict with all 7 buckets (zero-fill missing channels)
+		mosaic = channel_map.get(lid, {key: 0.0 for key in _S182_MOSAIC_CHANNEL_KEYS})
+		website = website_map.get(lid, {"website_non_cod": 0.0, "website_cod": 0.0})
+		channel_mix: dict[str, float] = {
+			"pos": float(mosaic.get("pos", 0.0)),
+			"foodpanda": float(mosaic.get("foodpanda", 0.0)),
+			"grabfood": float(mosaic.get("grabfood", 0.0)),
+			"webdelivery": float(mosaic.get("webdelivery", 0.0)),
+			"other_mosaic": float(mosaic.get("other_mosaic", 0.0)),
+			"website_non_cod": float(website.get("website_non_cod", 0.0)),
+			"website_cod": float(website.get("website_cod", 0.0)),
+		}
+		row["channel_mix"] = {key: round(val, 2) for key, val in channel_mix.items()}
+
+		# B.6: override per-store totals from the clean channel sum so per-store
+		# numbers reconcile with the Overview headline produced by
+		# _apply_mosaic_channel_split (which already does this reconciliation at the
+		# fleet level). Sidesteps the MV FoodPanda legacy-sheet double-count for
+		# the Mar 26-31 regime overlap.
+		clean_net = round(sum(channel_mix.values()), 2)
+		row["net_sales_without_vat"] = clean_net
+		# Pre-existing gross_sales is from the MV (also has the double-count). For
+		# the per-store ranking row we treat the channel-sum as the canonical net
+		# but we lack a per-channel gross map cheaply, so retain MV gross rounded
+		# while the headline still uses _apply_mosaic_channel_split's correction.
 		row["gross_sales"] = round(row["gross_sales"], 2)
-		row["net_sales_without_vat"] = round(row["net_sales_without_vat"], 2)
+
+		# B.6 (cont): recompute derived metrics with the corrected net.
 		row["average_guest_check"] = (
-			round(row["net_sales_without_vat"] / row["transactions"], 2) if row["transactions"] else 0.0
+			round(clean_net / row["transactions"], 2) if row["transactions"] else 0.0
 		)
 		row["cups_per_transaction"] = (
 			round(row["cups_sold"] / row["transactions"], 2) if row["transactions"] else 0.0
 		)
+		# B.6 (cont): pickup_share = POS / total_net (percent).
+		row["pickup_share"] = (
+			round((channel_mix["pos"] / clean_net) * 100, 2) if clean_net else 0.0
+		)
+
+		# B.7: per-store daily_series from the per_store_daily map we built above,
+		# padded with zeros for any window day with no rows so all sparklines have
+		# the same length.
+		day_bucket = per_store_daily.get(lid, {})
+		if window_days:
+			row["daily_series"] = [
+				round(float(day_bucket.get(day, 0.0)), 2) for day in window_days
+			]
+		else:
+			row["daily_series"] = [
+				round(float(v), 2)
+				for _, v in sorted(day_bucket.items(), key=lambda kv: kv[0])
+			]
+
+		# B.9: inline consistency check — channel sum must reconcile to net (within ₱1
+		# tolerance for rounding). After the B.6 override this should hold by
+		# construction; if it doesn't there's a bug in the override path. Log via
+		# frappe.log_error (do NOT throw) so rankings still render.
+		mix_sum = round(sum(row["channel_mix"].values()), 2)
+		if abs(mix_sum - row["net_sales_without_vat"]) >= 1.0:
+			frappe.log_error(
+				message=(
+					f"S182 channel_mix.values() reconcile drift for "
+					f"{row.get('warehouse_name') or row.get('warehouse')} "
+					f"(location_id={lid}): mix_sum={mix_sum}, "
+					f"net_sales_without_vat={row['net_sales_without_vat']}"
+				),
+				title="S182 channel reconcile drift",
+			)
 	return sorted(by_location.values(), key=lambda row: row["gross_sales"], reverse=True)
 
 
@@ -2633,7 +2897,7 @@ def _build_dashboard_overview_payload(
 			else _empty_comparisons(),
 			"daily": series,
 			"analysis": analysis,
-			"stores": _build_store_rankings(scope, sales_rows, weather_rows),
+			"stores": _build_store_rankings(scope, sales_rows, weather_rows, start_day, effective_end),
 			"ranking_state": discount_ranking_payload["ranking_state"],
 			"discount_rankings": discount_ranking_payload["discount_rankings"],
 			"channels": _build_channel_mix(summary),
@@ -2806,6 +3070,16 @@ def get_sales_dashboard_store_rankings(
 	channel: str = "all",
 	ranking_mode: str = DEFAULT_RANKING_MODE,
 ) -> dict[str, Any]:
+	# S182 / DM-7: explicit Sentry attribution for the rankings endpoint. The
+	# overview wrapper already records its own context, but this surface owns
+	# the per-store enrichment work so it gets its own action label.
+	# module="sales" matches existing convention (see line 2705 sibling).
+	set_backend_observability_context(
+		module="sales",
+		action="get_sales_dashboard_store_rankings",
+		mutation_type="read",
+	)
+	t0 = time.perf_counter()
 	overview = get_sales_dashboard_overview(
 		start_date=start_date,
 		end_date=end_date,
@@ -2813,6 +3087,11 @@ def get_sales_dashboard_store_rankings(
 		view_mode=view_mode,
 		channel=channel,
 		ranking_mode=ranking_mode,
+	)
+	store_count = len(overview.get("stores") or [])
+	frappe.logger().info(
+		f"[S182] get_sales_dashboard_store_rankings stores={store_count} "
+		f"channel_enrich_ms={int((time.perf_counter() - t0) * 1000)}"
 	)
 	return {
 		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
