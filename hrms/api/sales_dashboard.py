@@ -1341,7 +1341,18 @@ def _effective_end_day(requested_end_day: date, freshness: dict[str, Any]) -> da
 	]
 	if not core_sales_dates:
 		return requested_end_day
-	return min(requested_end_day, min(core_sales_dates))
+	# S182 fix (2026-04-11): ignore "dead" channels for the current scope —
+	# channels whose max business_date is more than 7 days behind the newest
+	# channel have not been syncing for this scope and clamping by them
+	# collapses per-store drill-down windows where one particular store has
+	# never had web orders (so web_max is ancient). For the fleet-wide Sales
+	# Dashboard view both channels are typically within 1 day of each other
+	# so this filter is a no-op and the old `min(pos, web)` semantics still
+	# apply. Only per-store drill-downs see a behavior change, and for them
+	# the old behavior was wrong.
+	newest = max(core_sales_dates)
+	relevant_dates = [d for d in core_sales_dates if (newest - d).days <= 7]
+	return min(requested_end_day, min(relevant_dates))
 
 
 def _effective_discount_end_day(sales_effective_end_day: date, freshness: dict[str, Any]) -> date:
