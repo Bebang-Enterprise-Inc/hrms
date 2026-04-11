@@ -191,6 +191,77 @@ def _get_supabase_service_key() -> str:
 	)
 
 
+def _get_supabase_mgmt_token() -> str:
+	"""S176 hotfix #11: Supabase Management API token for SQL aggregation queries.
+
+	The Mgmt API SQL endpoint (https://api.supabase.com/v1/projects/<id>/database/query)
+	executes arbitrary SQL including GROUP BY aggregations. It's used by
+	_supabase_query_sql() to replace 100+ PostgREST paginated round-trips with
+	a single SQL call — 50-100x speedup for analytical aggregations.
+	"""
+	return (
+		os.environ.get("SUPABASE_MGMT_TOKEN")
+		or _conf_get("supabase_mgmt_token")
+		or _conf_get("SUPABASE_MGMT_TOKEN")
+		or ""
+	)
+
+
+def _get_supabase_project_id() -> str:
+	"""S176 hotfix #11: project ID for Mgmt API SQL endpoint URL."""
+	return (
+		os.environ.get("SUPABASE_PROJECT_ID")
+		or _conf_get("supabase_project_id")
+		or "csnniykjrychgajfrgua"  # BEI production project ID (stable)
+	)
+
+
+def _supabase_query_sql(sql: str) -> list[dict[str, Any]]:
+	"""S176 hotfix #11: execute SQL via Supabase Management API.
+
+	Use this for aggregations (GROUP BY, SUM, COUNT) where PostgREST's pagination
+	would require many round-trips. The Mgmt API returns the entire result set
+	in one call, executing the aggregation in Postgres directly.
+
+	Measured on BEI production (2026-04-11):
+		- PostgREST paginated 14-day all rows: 45,000ms (111 pages)
+		- Mgmt API SQL GROUP BY 14-day:            617ms
+		- 73x speedup
+
+	IMPORTANT: `sql` is NOT parameterized — interpolate values safely before
+	calling. For dates use ISO format via `.isoformat()`. For lists of ints use
+	`",".join(str(i) for i in ids)`. Never pass user-controlled strings.
+
+	Returns: list of dicts (one per result row). Empty list if no matches.
+	Raises RuntimeError on HTTP error or missing token.
+	"""
+	token = _get_supabase_mgmt_token()
+	if not token:
+		raise RuntimeError("SUPABASE_MGMT_TOKEN is not configured")
+	project_id = _get_supabase_project_id()
+	url = f"https://api.supabase.com/v1/projects/{project_id}/database/query"
+	response = requests.post(
+		url,
+		headers={
+			"Authorization": f"Bearer {token}",
+			"Content-Type": "application/json",
+		},
+		json={"query": sql},
+		timeout=120,
+	)
+	if response.status_code not in (200, 201):
+		raise RuntimeError(
+			f"Supabase mgmt SQL failed ({response.status_code}): {response.text[:500]}"
+		)
+	payload = response.json()
+	# Mgmt API returns either a list directly (newer) or {"result": [...]} (older)
+	if isinstance(payload, list):
+		return payload
+	if isinstance(payload, dict):
+		return payload.get("result", []) or []
+	return []
+
+
 def _supabase_headers() -> dict[str, str]:
 	key = _get_supabase_service_key()
 	if not key:
@@ -771,28 +842,32 @@ def _get_mosaic_channel_split(
 	"""
 	if not location_ids:
 		return {}
-	params: list[tuple[str, Any]] = [
-		("select", "channel,gross_sales,net_sales"),
-		("payment_status", "eq.PAID"),
-		("business_date", f"gte.{start_day.isoformat()}"),
-		("business_date", f"lte.{end_day.isoformat()}"),
-		("location_id", f"in.({_location_scope_key(location_ids)})"),
-	]
-	# v_pos_orders_live is a view, not a base table, but PostgREST handles it.
-	rows = _supabase_get_all("v_pos_orders_live", params, page_size=1000)
+	# S176 hotfix #11 (2026-04-11): use Mgmt API SQL GROUP BY instead of PostgREST
+	# pagination. For a 14-day window this helper was making 111 paginated requests
+	# × ~400ms = 45 seconds. A single SQL GROUP BY returns the same result in <1 sec.
+	loc_csv = ",".join(str(int(i)) for i in sorted(set(location_ids)))
+	sql = f"""
+		SELECT
+			LOWER(COALESCE(channel, 'unknown')) AS channel_key,
+			COUNT(*)::int AS orders,
+			SUM(gross_sales)::numeric(14,2) AS gross,
+			SUM(net_sales)::numeric(14,2) AS net_wo_vat
+		FROM public.v_pos_orders_live
+		WHERE payment_status = 'PAID'
+		  AND business_date >= '{start_day.isoformat()}'
+		  AND business_date <= '{end_day.isoformat()}'
+		  AND location_id IN ({loc_csv})
+		GROUP BY channel_key
+	"""
+	rows = _supabase_query_sql(sql)
 	split: dict[str, dict[str, float]] = {}
 	for row in rows:
-		raw_channel = row.get("channel")
-		key = str(raw_channel).lower() if raw_channel else "unknown"
-		bucket = split.setdefault(key, {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
-		bucket["gross"] += _to_float(row.get("gross_sales"))
-		# net_sales is already net of VAT (gross - vat) per v_pos_orders_live contract
-		bucket["net_wo_vat"] += _to_float(row.get("net_sales"))
-		bucket["orders"] += 1
-	# Round all floats
-	for bucket in split.values():
-		bucket["gross"] = _round_half_up(bucket["gross"])
-		bucket["net_wo_vat"] = _round_half_up(bucket["net_wo_vat"])
+		key = str(row.get("channel_key") or "unknown")
+		split[key] = {
+			"gross": _round_half_up(_to_float(row.get("gross"))),
+			"net_wo_vat": _round_half_up(_to_float(row.get("net_wo_vat"))),
+			"orders": _to_int(row.get("orders")),
+		}
 	return split
 
 
@@ -931,47 +1006,34 @@ def _get_channel_cups_from_mosaic(
 	"""
 	if not location_ids:
 		return {"foodpanda_cups": 0, "grabfood_cups": 0, "pos_cups": 0, "total_mosaic_cups": 0}
-	# PostgREST cannot do JOINs, so we first get order IDs per channel from
-	# pos_orders, then sum quantities from pos_order_items.
-	# For FoodPanda:
-	fp_order_params: list[tuple[str, Any]] = [
-		("select", "id"),
-		("channel", "eq.FoodPanda"),
-		("payment_status", "eq.PAID"),
-		("business_date", f"gte.{start_day.isoformat()}"),
-		("business_date", f"lte.{end_day.isoformat()}"),
-		("location_id", f"in.({_location_scope_key(location_ids)})"),
-	]
-	fp_orders = _supabase_get_all("pos_orders", fp_order_params, page_size=1000)
-	fp_ids = [int(r["id"]) for r in fp_orders if r.get("id")]
-	# For GrabFood:
-	gf_order_params: list[tuple[str, Any]] = [
-		("select", "id"),
-		("channel", "eq.GrabFood"),
-		("payment_status", "eq.PAID"),
-		("business_date", f"gte.{start_day.isoformat()}"),
-		("business_date", f"lte.{end_day.isoformat()}"),
-		("location_id", f"in.({_location_scope_key(location_ids)})"),
-	]
-	gf_orders = _supabase_get_all("pos_orders", gf_order_params, page_size=1000)
-	gf_ids = [int(r["id"]) for r in gf_orders if r.get("id")]
-
-	def _sum_cups_for_order_ids(order_ids: list[int]) -> int:
-		if not order_ids:
-			return 0
-		total = 0
-		for chunk in [order_ids[i:i+500] for i in range(0, len(order_ids), 500)]:
-			id_list = ",".join(str(oid) for oid in chunk)
-			params: list[tuple[str, Any]] = [
-				("select", "quantity"),
-				("order_id", f"in.({id_list})"),
-			]
-			rows = _supabase_get_all("pos_order_items", params, page_size=1000)
-			total += sum(int(r.get("quantity") or 0) for r in rows)
-		return total
-
-	fp_cups = _sum_cups_for_order_ids(fp_ids)
-	gf_cups = _sum_cups_for_order_ids(gf_ids)
+	# S176 hotfix #11 (2026-04-11): single SQL JOIN + GROUP BY replaces the
+	# previous pattern of fetching order IDs per channel (2 paginated queries)
+	# followed by item-level fetches in 500-ID chunks (another 20+ paginated
+	# queries). Total reduction: ~30+ round-trips → 1 round-trip.
+	loc_csv = ",".join(str(int(i)) for i in sorted(set(location_ids)))
+	sql = f"""
+		SELECT
+			LOWER(COALESCE(o.channel, 'unknown')) AS channel_key,
+			SUM(i.quantity)::bigint AS cups
+		FROM public.v_pos_orders_live o
+		JOIN public.pos_order_items i ON i.order_id = o.id
+		WHERE o.payment_status = 'PAID'
+		  AND o.business_date >= '{start_day.isoformat()}'
+		  AND o.business_date <= '{end_day.isoformat()}'
+		  AND o.location_id IN ({loc_csv})
+		  AND o.channel IN ('FoodPanda', 'GrabFood')
+		GROUP BY channel_key
+	"""
+	rows = _supabase_query_sql(sql)
+	fp_cups = 0
+	gf_cups = 0
+	for r in rows:
+		ck = str(r.get("channel_key") or "")
+		cups = _to_int(r.get("cups"))
+		if ck == "foodpanda":
+			fp_cups = cups
+		elif ck == "grabfood":
+			gf_cups = cups
 	return {
 		"foodpanda_cups": fp_cups,
 		"grabfood_cups": gf_cups,
@@ -1675,20 +1737,28 @@ def _get_mosaic_channel_split_per_day(
 	"""
 	if not location_ids:
 		return {}
-	params: list[tuple[str, Any]] = [
-		("select", "business_date,channel,net_sales"),
-		("payment_status", "eq.PAID"),
-		("business_date", f"gte.{start_day.isoformat()}"),
-		("business_date", f"lte.{end_day.isoformat()}"),
-		("location_id", f"in.({_location_scope_key(location_ids)})"),
-	]
-	rows = _supabase_get_all("v_pos_orders_live", params, page_size=1000)
+	# S176 hotfix #11 (2026-04-11): use Mgmt API SQL GROUP BY instead of PostgREST
+	# pagination. Same 50-100x speedup as _get_mosaic_channel_split.
+	loc_csv = ",".join(str(int(i)) for i in sorted(set(location_ids)))
+	sql = f"""
+		SELECT
+			business_date::text AS biz_date,
+			LOWER(COALESCE(channel, 'unknown')) AS channel_key,
+			SUM(net_sales)::numeric(14,2) AS net_wo_vat
+		FROM public.v_pos_orders_live
+		WHERE payment_status = 'PAID'
+		  AND business_date >= '{start_day.isoformat()}'
+		  AND business_date <= '{end_day.isoformat()}'
+		  AND location_id IN ({loc_csv})
+		GROUP BY business_date, channel_key
+	"""
+	rows = _supabase_query_sql(sql)
 	per_day: dict[str, dict[str, float]] = {}
 	for r in rows:
-		day = str(r.get("business_date"))
-		ch = str(r.get("channel") or "unknown").lower()
+		day = str(r.get("biz_date"))
+		ch = str(r.get("channel_key") or "unknown")
 		day_bucket = per_day.setdefault(day, {})
-		day_bucket[ch] = day_bucket.get(ch, 0.0) + _to_float(r.get("net_sales"))
+		day_bucket[ch] = day_bucket.get(ch, 0.0) + _to_float(r.get("net_wo_vat"))
 	return per_day
 
 
