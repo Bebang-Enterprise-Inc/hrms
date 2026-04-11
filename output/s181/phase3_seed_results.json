@@ -1,0 +1,67 @@
+{
+  "dry_run": true,
+  "total_companies_considered": 5,
+  "planned_updates": 5,
+  "updated": 0,
+  "skipped_already_current": 0,
+  "unmatched": [],
+  "per_field_mutation_counts": {},
+  "sample_planned_first_5": [
+    {
+      "docname": "Bebang Enterprise Inc.",
+      "payload": {
+        "entity_category": "Head Office",
+        "operational_status": "Active"
+      }
+    },
+    {
+      "docname": "Bebang Kitchen Inc.",
+      "payload": {
+        "entity_category": "Commissary",
+        "operational_status": "Active"
+      }
+    },
+    {
+      "docname": "Ayala Evo - Bebang Enterprise Inc.",
+      "payload": {
+        "entity_category": "Store",
+        "store_ownership_type": "Managed Franchise",
+        "mosaic_location_id": "2426",
+        "pos_system": "Mosaic",
+        "gps_latitude": 14.4312273,
+        "gps_longitude": 120.9022224,
+        "city": "Kawit",
+        "full_address": "Bebang Halo-Halo, Evo City, Kawit, Cavite, Philippines",
+        "operational_status": "Active"
+      }
+    },
+    {
+      "docname": "Ayala Malls Fairview Terraces - Bebang Enterprise Inc.",
+      "payload": {
+        "entity_category": "Store",
+        "store_ownership_type": "JV",
+        "mosaic_location_id": "2220",
+        "pos_system": "Mosaic",
+        "gps_latitude": 14.7363856,
+        "gps_longitude": 121.0601532,
+        "city": "Quezon City",
+        "full_address": "Bebang Halo Halo, Garden Center Upper Gound Floor, Ayala Malls Fairview Terraces, Maligaya Street, Novaliches, Quezon City, Metro Manila, Philippines",
+        "operational_status": "Active"
+      }
+    },
+    {
+      "docname": "SM Megamall - Bebang Enterprise Inc.",
+      "payload": {
+        "entity_category": "Store",
+        "store_ownership_type": "JV",
+        "mosaic_location_id": "2338",
+        "pos_system": "Mosaic",
+        "gps_latitude": 14.5858675,
+        "gps_longitude": 121.0573778,
+        "city": "Mandaluyong City",
+        "full_address": "Bebang Halo Halo, Lower Ground, SM Megamall, Bldg A, Ortigas Center, Mandaluyong, 1555 Metro Manila",
+        "operational_status": "Active"
+      }
+    }
+  ]
+}
