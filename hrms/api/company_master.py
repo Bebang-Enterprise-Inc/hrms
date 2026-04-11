@@ -470,14 +470,14 @@ def retry_provision(company: str) -> dict:
 # ============================================================================
 
 
-# S037 register path, resolved relative to the hrms app root
-_S037_RELPATH = (
-	"..",
-	"data",
-	"_CLEANROOM",
-	"2026-03-12-s037-store-buyer-entity-register",
-	"store_buyer_entity_register_2026-03-12.csv",
-)
+# S037 register path. HOTFIX 2026-04-11: lives inside the hrms Python
+# package at `hrms/data_seed/` so the file ships in the Frappe Docker
+# image. The original first hotfix pointed at `data/_CLEANROOM/...` at
+# the repo root, but that directory is gitignored — those files are
+# never cloned by GitHub Actions when it builds the bench image, so
+# `_load_s037_rows()` returned an empty list and the entire feature
+# silently produced 0 store rows. L3 testing caught this on first run.
+_S037_RELPATH = ("data_seed", "store_buyer_entity_register_2026-03-12.csv")
 
 # Non-store legal entities that don't appear in S037 but should still
 # appear in the list. Category maps to the S181 entity_category field.

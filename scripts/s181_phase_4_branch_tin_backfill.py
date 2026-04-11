@@ -39,13 +39,12 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
 
-S037_CSV = REPO_ROOT / "data" / "_CLEANROOM" / (
-	"2026-03-12-s037-store-buyer-entity-register"
-) / "store_buyer_entity_register_2026-03-12.csv"
+# HOTFIX 2026-04-11: reference CSVs ship inside the hrms Python package
+# at `hrms/data_seed/`. See `hrms/data_seed/__init__.py` for context.
+DATA_SEED = REPO_ROOT / "hrms" / "data_seed"
 
-TIN_RDO_CSV = REPO_ROOT / "data" / "_CLEANROOM" / "batch_2026-02-28_cleanroom_v1" / (
-	"raw_snapshot"
-) / "ENTITY_TIN_RDO_2026-02-27.csv"
+S037_CSV = DATA_SEED / "store_buyer_entity_register_2026-03-12.csv"
+TIN_RDO_CSV = DATA_SEED / "ENTITY_TIN_RDO_2026-02-27.csv"
 
 RESULTS_PATH = REPO_ROOT / "output" / "s181" / "phase4_tin_results.json"
 

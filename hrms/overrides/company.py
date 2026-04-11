@@ -473,17 +473,13 @@ def _s181_set_default_accounts(doc):
 
 
 # --- S037 register paths used by _s181_ensure_bki_customer (Blocker 4 fix) ---
-# Resolved relative to the hrms app so the helper works in Docker and on local
-# benches without depending on CWD.
-_S037_REGISTER_RELPATH = (
-	"2026-03-12-s037-store-buyer-entity-register",
-	"store_buyer_entity_register_2026-03-12.csv",
-)
-_ENTITY_TIN_RDO_RELPATH = (
-	"batch_2026-02-28_cleanroom_v1",
-	"raw_snapshot",
-	"ENTITY_TIN_RDO_2026-02-27.csv",
-)
+# HOTFIX 2026-04-11: now resolved from `hrms/data_seed/` (inside the
+# Python package, ships in the Docker image). The original v1 paths
+# pointed at `data/_CLEANROOM/...` at the repo root, which is gitignored
+# and never reaches the Frappe Docker image. L3 testing caught this on
+# the deployed S181 hotfix1 -- _ensure_bki_customer was silently no-op.
+_S037_REGISTER_RELPATH = ("data_seed", "store_buyer_entity_register_2026-03-12.csv")
+_ENTITY_TIN_RDO_RELPATH = ("data_seed", "ENTITY_TIN_RDO_2026-02-27.csv")
 
 
 def _s181_ensure_bki_customer(doc):
@@ -509,7 +505,12 @@ def _s181_ensure_bki_customer(doc):
 	  5. De-dups: if a Customer with the same customer_name already exists,
 	     does nothing (shared across stores in the same buyer entity group).
 	"""
-	app_path = frappe.get_app_path("hrms", "..", "data", "_CLEANROOM")
+	# HOTFIX 2026-04-11: paths now resolve inside the hrms Python package.
+	# `frappe.get_app_path("hrms")` returns the inner package directory
+	# (`apps/hrms/hrms`), and `data_seed/` is a subdirectory of that
+	# package. The CSVs ship with the source code, so they are guaranteed
+	# to be in the Docker image whenever a new build deploys.
+	app_path = frappe.get_app_path("hrms")
 	s037_path = os.path.normpath(os.path.join(app_path, *_S037_REGISTER_RELPATH))
 	tin_register_path = os.path.normpath(os.path.join(app_path, *_ENTITY_TIN_RDO_RELPATH))
 

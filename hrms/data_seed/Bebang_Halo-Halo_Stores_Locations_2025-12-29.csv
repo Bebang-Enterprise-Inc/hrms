@@ -1,0 +1,43 @@
+id,store_name,city,address,latitude,longitude,delivery_radius_km,is_open,accepts_online_orders
+smcaloocan,SM Caloocan,Caloocan,"Bebang Halo-Halo, SM Caloocan, Lower Ground Floor, Deparo Road, Bagumbong, Caloocan, Metro Manila, Philippines",14.7515128,121.0199509,5.0,True,True
+market2,Ayala Market Market,City of Makati,"Bebang Halo-Halo, Market Market Open Food Court, Ayala Malls Market Market, Taguig City, 1214 Metro Manila",14.548829,121.0555315,5.0,True,True
+megamall,SM Megamall,Mandaluyong City,"Bebang Halo Halo, Lower Ground, SM Megamall, Bldg A, Ortigas Center, Mandaluyong, 1555 Metro Manila",14.5858675,121.0573778,5.0,True,True
+smmanila,SM  Manila,Manila,"Bebang Halo Halo, SM City Manila, San Marcelino Street, Ermita, Manila, Metro Manila, Philippines",14.589923351967391,120.9833572203771,3.0,True,True
+robinsonsantipolo,Robinsons Antipolo,Antipolo City,"Bebang Halo-Halo, Lower Ground, Robinsons Antipolo, Antipolo City, 1870 Rizal, Philippines",14.594579,121.1722829,5.0,True,True
+smvalenzuela,SM Valenzuela,Valenzuela,"Bebang Halo Halo, SM Valenzuela Parking, MacArthur Highway, Valenzuela, Metro Manila, Philippines",14.685388577001596,120.977610285437,5.0,True,True
+theterminal,The Terminal,Muntinlupa,"Bebang Halo Halo, AllHome - The Terminal, The Terminal, South Luzon Expressway, Muntinlupa, Metro Manila, Philippines",14.416836053074096,121.04627852330543,5.0,True,True
+smgrandcentral,SM Grand Central,Caloocan,"Bebang Halo Halo, SM City Grand Central Mall NCR, Rizal Avenue Extension, Grace Park East, Caloocan, Metro Manila, Philippines",14.6551954,120.9841883,5.0,True,True
+AyalaFairview,Ayala Malls Fairview Terraces,Quezon City,"Bebang Halo Halo, Garden Center Upper Gound Floor, Ayala Malls Fairview Terraces, Maligaya Street, Novaliches, Quezon City, Metro Manila, Philippines",14.7363856,121.0601532,5.0,True,True
+smeastortigas,SM East Ortigas,Pasig,"Bebang Halo-Halo - SM City East Ortigas, Ortigas Avenue Extension, Pasig City, Metro Manila, Philippines",14.5870108,121.105181,5.0,True,True
+smmarikina,SM Marikina,Marikina,"Ground Level, Bebang Halo-Halo, Marcos Highway, Barangay Calumpang, Marikina City, Metro Manila, Philippines",14.6262014,121.0837754,5.0,True,True
+megaworldpaseocenter,Megaworld Paseo Center,Makati City,"2F, Bebang Halo-Halo, 8757 Paseo de Roxas, Makati City, Metro Manila, Philippines",14.557702,121.022928,5.0,True,True
+megawidepitx,Megawide PITX,Parañaque,"Bebang Halo-Halo, Second Floor, Integrated Terminal Exchange (PITX, near Gate 1), Kennedy Road, Brgy Tambo, Paranaque City, 1701 Metro Manila",14.511058206569622,120.99141456939789,5.0,True,True
+megaworldvenicegrandcanal,Megaworld Venice Grand Canal,Taguig,"Bebang Halo Halo, Venice Grand Canal Mall, McKinley Hill Drive, Taguig City, Metro Manila, Philippines",14.533866951580583,121.05037198420777,5.0,True,True
+luckychinatown,Lucky Chinatown,Manila,"Bebang Halo-Halo, Lucky Chinatown Mall, Reina Regente Street, Binondo, City Of Manila, Metro Manila, Philippines",14.604011064801922,120.97292225807651,5.0,True,True
+smnorthedsa,SM North EDSA,Quezon City,"Bebang Halo-Halo, SM NORTH EDSA, Ground Level, The Block North Avenue, corner Epifanio de los Santos Ave, Quezon City, 1100, Quezon City, 1105 Metro Manila, Philippines",14.6561106,121.0325002,5.0,True,True
+smsouthmall,SM Southmall,Las Piñas,"Bebang Halo-Halo, Lower Ground Floor, SM Southmall Alabang–Zapote Road, Almanza, Las Piñas, Metro Manila, Philippines",14.4332614,121.0105665,5.0,True,True
+festivalmall,Festival Mall Alabang,Muntinlupa,"Bebang Halo-Halo, Lower Ground Floor, East Wing, River Side Water Garden, Festival Mall, Filinvest City, Alabang, Muntinlupa, 1781 Metro Manila",14.4174491,121.0404472,5.0,True,True
+moa,SM Mall Of Asia,Pasay City,"Bebang Halo-Halo, Level 1, South Parking Building, SM Mall of Asia, J.W. Diokno Blvd, Pasay City",14.5340966,120.9819625,5.0,True,True
+EverGotescoCommonwealth,Ever Commonwealth,Quezon City,"Bebang Halo-Halo, Lower Ground Floor, Ever Commonwealth, Commonwealth Ave, Quezon City, 1121 Metro Manila, Philippines",14.6782758,121.0854928,5.0,True,True
+thegridrockwell,The Grid - Rockwell,Makati City,"Bebang Halo- halo R2 Level, The Grid, Powerplant Mall, Rockwell Center, Stall 2, Makati City",14.565443,121.036708,5.0,True,True
+bfhomes,BF Homes,Manila,"Bebang Halo-Halo BF Homes Aguirre, Aguirre Avenue, Manila, Metro Manila, Philippines",14.454856913402462,121.01579183012318,5.0,True,True
+smtanza,SM Tanza,Tanza,"Bebang Halo-Halo, Antero Soriano Hwy, Tanza, 4108 Cavite, Philippines",14.3934799,120.8511976,2.0,True,True
+sdjm,SJDM,San Jose del Monte,"Bebang halo halo, Upper Ground Level, SM City, Quirino Hwy, SJDM, 3023 Bulacan",14.7875203,121.0751558,5.0,True,True
+smsangandaan,SM Sangandaan,Caloocan,"Bebang Halo-halo Ground floor, SM Sangandaan, Samson Road, Sangandaan, Caloocan City",14.657986373648935,120.97204376921395,5.0,True,True
+smmarilao,SM Marilao,Marilao,"Bebang Halo-halo, 2nd Level, West Wing Expansion of SM City Marilao",14.754563877606701,120.95589671953255,5.0,True,True
+smbicutan,SM Bicutan,Parañaque,"Bebang Halo-Halo, Upper Ground Floor, SM Bicutan Doña Soledad Avenue, corner South Luzon Expy, Parañaque, Metro Manila",14.4853989,121.043006,5.0,True,True
+robimus,Robinson Imus,Imus,"Bebang Halo-Halo, Ground Floor, Robinsons Place Imus, Imus, 4103 Cavite",14.4128841,120.9413895,5.0,True,True
+smpulilan,SM Pulilan,Pulilan,"Bebang Halo-halo SM Pulilan Ground Floor, Plaridel-Pulilan Diversion Road, Pulilan, Bulacan",14.8988651,120.8705327,5.0,True,True
+ayalaevo,Ayala Evo,Kawit,"Bebang Halo-Halo, Evo City, Kawit, Cavite, Philippines",14.4312273,120.9022224,5.0,True,True
+robgentri,Robinson General Trias,General Trias,"Bebang Halo-Halo, Ground Floor, Robinsons Place General Trias, Antero Soriano Highway, General Trias, Cavite, Philippines.",14.3964074,120.8652024,6.0,True,True
+ayalavermosa,Ayala Vermosa,Imus,"Bebang Halo-Halo, Ayala Malls Vermosa, Vermosa, Imus, Cavite, Philippines",14.3843003,120.9598265,5.0,True,True
+solenad,Ayala Solenad,City of Santa Rosa,"Bebang Halo-halo, Ayala Malls Solenad 2 Parking, Santa Rosa-Tagaytay Rd, City of Santa Rosa, Laguna, Philippines",14.2385444,121.0560272,5.0,True,True
+robigalleriasouth,Robisons Galleria South,San Pedro,"Bebang Halo-Halo Robinsons Galleria South, Manila South Road, San Pedro, Laguna, Philippines",14.3518262,121.0617776,5.0,True,True
+uptc,Ayala UPTC,Quezon City,"Bebang Halo-Halo, UP Town Center, Katipunan Avenue, Diliman, Quezon City, Metro Manila, Philippines",14.6495137,121.0754301,5.0,True,True
+vistamall,Vista Mall Taguig,Taguig,"Bebang halo halo - Vista Mall Taguig, Camella Taguig Road, Taguig, Metro Manila, Philippines",14.5301403,121.0746722,3.0,True,True
+staluciaeastgrandmall,Sta. Lucia East Grand Mall,Cainta,"Bebang Halo-Halo Sta. Lucia East Grand Mall, Felix Avenue, Cainta, Rizal, Philippines",14.61845234729775,121.09918734852931,5.0,True,True
+uptownbgc,Up Town Mall BGC,Taguig,"Bebang Halo halo - Lower Ground Floor Uptown Mall - BGC Mall, 9th Avenue, Taguig, Metro Manila, Philippines.",14.5564554,121.0542316,3.0,True,True
+smclark,SM Clark,Angeles,"Bebang halo halo - Ground Leverl - Sky Line Tech Hub 8 /  SM City Clark, Manuel A. Roxas Highway, Clark Freeport, Angeles, Pampanga, Philippines",15.170579543371533,120.5805044647756,3.0,True,True
+aranetagateway,Araneta Gateway,Quezon City,"Gateway Mall, Gen. Aguinaldo Avenue, Cubao, Quezon City, Metro Manila, Philippines",14.6217945,121.0528441,3.0,True,True
+cttm,CTTM Tomas Morato,Quezon City,"Bebang Halo-Halo CTTM Square, Tomas Morato Avenue, Diliman, Quezon City, Metro Manila, Philippines",14.6344499,121.0355087,5.0,True,True
+dverdelaguna,D'verde Laguna,Calamba,"D'Verde Building, Manila South Road, Calamba, Laguna, Philippines",14.1933801,121.165382,3.0,True,False
