@@ -216,6 +216,15 @@ def _get_supabase_project_id() -> str:
 	)
 
 
+class SupabaseMgmtTokenMissing(RuntimeError):
+	"""Raised when SUPABASE_MGMT_TOKEN is not configured.
+
+	Callers catch this specifically to fall back to a slower PostgREST
+	pagination path so the dashboard still works (just more slowly) in
+	environments where the Mgmt token hasn't been provisioned yet.
+	"""
+
+
 def _supabase_query_sql(sql: str) -> list[dict[str, Any]]:
 	"""S176 hotfix #11: execute SQL via Supabase Management API.
 
@@ -237,7 +246,7 @@ def _supabase_query_sql(sql: str) -> list[dict[str, Any]]:
 	"""
 	token = _get_supabase_mgmt_token()
 	if not token:
-		raise RuntimeError("SUPABASE_MGMT_TOKEN is not configured")
+		raise SupabaseMgmtTokenMissing("SUPABASE_MGMT_TOKEN is not configured")
 	project_id = _get_supabase_project_id()
 	url = f"https://api.supabase.com/v1/projects/{project_id}/database/query"
 	response = requests.post(
@@ -859,7 +868,33 @@ def _get_mosaic_channel_split(
 		  AND location_id IN ({loc_csv})
 		GROUP BY channel_key
 	"""
-	rows = _supabase_query_sql(sql)
+	try:
+		rows = _supabase_query_sql(sql)
+	except SupabaseMgmtTokenMissing:
+		# S176 hotfix #12: PostgREST fallback when Mgmt token missing.
+		frappe.log_error(
+			"Sales Dashboard perf degraded: SUPABASE_MGMT_TOKEN missing; falling back to slow PostgREST.",
+			"Sales Dashboard perf fallback",
+		)
+		params: list[tuple[str, Any]] = [
+			("select", "channel,gross_sales,net_sales"),
+			("payment_status", "eq.PAID"),
+			("business_date", f"gte.{start_day.isoformat()}"),
+			("business_date", f"lte.{end_day.isoformat()}"),
+			("location_id", f"in.({_location_scope_key(location_ids)})"),
+		]
+		raw_rows = _supabase_get_all("v_pos_orders_live", params, page_size=1000)
+		agg: dict[str, dict[str, float]] = {}
+		for raw in raw_rows:
+			key = str(raw.get("channel") or "unknown").lower()
+			bucket = agg.setdefault(key, {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+			bucket["gross"] += _to_float(raw.get("gross_sales"))
+			bucket["net_wo_vat"] += _to_float(raw.get("net_sales"))
+			bucket["orders"] += 1
+		for bucket in agg.values():
+			bucket["gross"] = _round_half_up(bucket["gross"])
+			bucket["net_wo_vat"] = _round_half_up(bucket["net_wo_vat"])
+		return agg
 	split: dict[str, dict[str, float]] = {}
 	for row in rows:
 		key = str(row.get("channel_key") or "unknown")
@@ -1024,16 +1059,45 @@ def _get_channel_cups_from_mosaic(
 		  AND o.channel IN ('FoodPanda', 'GrabFood')
 		GROUP BY channel_key
 	"""
-	rows = _supabase_query_sql(sql)
-	fp_cups = 0
-	gf_cups = 0
-	for r in rows:
-		ck = str(r.get("channel_key") or "")
-		cups = _to_int(r.get("cups"))
-		if ck == "foodpanda":
-			fp_cups = cups
-		elif ck == "grabfood":
-			gf_cups = cups
+	try:
+		rows = _supabase_query_sql(sql)
+		fp_cups = 0
+		gf_cups = 0
+		for r in rows:
+			ck = str(r.get("channel_key") or "")
+			cups = _to_int(r.get("cups"))
+			if ck == "foodpanda":
+				fp_cups = cups
+			elif ck == "grabfood":
+				gf_cups = cups
+	except SupabaseMgmtTokenMissing:
+		def _ids(channel: str) -> list[int]:
+			p: list[tuple[str, Any]] = [
+				("select", "id"),
+				("channel", f"eq.{channel}"),
+				("payment_status", "eq.PAID"),
+				("business_date", f"gte.{start_day.isoformat()}"),
+				("business_date", f"lte.{end_day.isoformat()}"),
+				("location_id", f"in.({_location_scope_key(location_ids)})"),
+			]
+			return [int(r["id"]) for r in _supabase_get_all("pos_orders", p, page_size=1000) if r.get("id")]
+
+		def _sum_cups(order_ids: list[int]) -> int:
+			if not order_ids:
+				return 0
+			total = 0
+			for chunk in [order_ids[i:i+500] for i in range(0, len(order_ids), 500)]:
+				id_list = ",".join(str(oid) for oid in chunk)
+				p: list[tuple[str, Any]] = [
+					("select", "quantity"),
+					("order_id", f"in.({id_list})"),
+				]
+				rows_fb = _supabase_get_all("pos_order_items", p, page_size=1000)
+				total += sum(int(r.get("quantity") or 0) for r in rows_fb)
+			return total
+
+		fp_cups = _sum_cups(_ids("FoodPanda"))
+		gf_cups = _sum_cups(_ids("GrabFood"))
 	return {
 		"foodpanda_cups": fp_cups,
 		"grabfood_cups": gf_cups,
@@ -1752,7 +1816,24 @@ def _get_mosaic_channel_split_per_day(
 		  AND location_id IN ({loc_csv})
 		GROUP BY business_date, channel_key
 	"""
-	rows = _supabase_query_sql(sql)
+	try:
+		rows = _supabase_query_sql(sql)
+	except SupabaseMgmtTokenMissing:
+		params: list[tuple[str, Any]] = [
+			("select", "business_date,channel,net_sales"),
+			("payment_status", "eq.PAID"),
+			("business_date", f"gte.{start_day.isoformat()}"),
+			("business_date", f"lte.{end_day.isoformat()}"),
+			("location_id", f"in.({_location_scope_key(location_ids)})"),
+		]
+		raw_rows = _supabase_get_all("v_pos_orders_live", params, page_size=1000)
+		per_day_fb: dict[str, dict[str, float]] = {}
+		for raw in raw_rows:
+			day = str(raw.get("business_date"))
+			ch = str(raw.get("channel") or "unknown").lower()
+			day_bucket = per_day_fb.setdefault(day, {})
+			day_bucket[ch] = day_bucket.get(ch, 0.0) + _to_float(raw.get("net_sales"))
+		return per_day_fb
 	per_day: dict[str, dict[str, float]] = {}
 	for r in rows:
 		day = str(r.get("biz_date"))
