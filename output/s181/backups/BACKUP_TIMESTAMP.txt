@@ -1,0 +1,9 @@
+PENDING — to be overwritten at deploy time
+
+The PRE-S181 fixture snapshot (`custom_field_BEFORE.json`) was captured
+offline on 2026-04-11 from `git show HEAD:hrms/fixtures/custom_field.json`
+at commit ad4c030f3 (the plan renumber commit, which did not touch the
+fixture). The DB-level snapshot and the real timestamp must be written at
+production deploy time, just before `bench --site hq.bebang.ph migrate`.
+
+See BACKUP_RUNBOOK.md in this directory for the exact deploy-time steps.

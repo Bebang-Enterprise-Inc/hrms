@@ -1,0 +1,96 @@
+{
+ "actions": [],
+ "creation": "2026-04-11 10:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "device_serial",
+  "device_name",
+  "bio_device_id",
+  "column_break_1",
+  "adms_enrolled",
+  "enrollment_date",
+  "ip_address",
+  "section_break_notes",
+  "notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "device_serial",
+   "fieldtype": "Data",
+   "label": "Device Serial No.",
+   "reqd": 1,
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "The ZKTeco MB10-VL serial number (printed on device back). Must be unique across all companies."
+  },
+  {
+   "fieldname": "device_name",
+   "fieldtype": "Data",
+   "label": "Device Name",
+   "in_list_view": 1,
+   "columns": 2,
+   "description": "Human-readable label, e.g. 'SM Bicutan - Main Entrance'"
+  },
+  {
+   "fieldname": "bio_device_id",
+   "fieldtype": "Data",
+   "label": "Bio Device ID",
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "The ADMS device ID used for attendance punch matching (e.g., 1, 2, 3)"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "adms_enrolled",
+   "fieldtype": "Check",
+   "label": "ADMS Enrolled",
+   "default": "0",
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1,
+   "description": "Auto-set to 1 when the device is successfully enrolled in the ADMS receiver via API"
+  },
+  {
+   "fieldname": "enrollment_date",
+   "fieldtype": "Date",
+   "label": "Enrollment Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ip_address",
+   "fieldtype": "Data",
+   "label": "IP Address",
+   "description": "Device IP on the store's local network (if known)"
+  },
+  {
+   "fieldname": "section_break_notes",
+   "fieldtype": "Section Break",
+   "collapsible": 1,
+   "label": "Notes"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-04-11 10:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "HR",
+ "name": "BEI Company ADMS Device",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 0
+}
