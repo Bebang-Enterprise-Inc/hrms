@@ -852,56 +852,367 @@ def populate_s181_fields() -> dict:
 	if not user_roles & {"System Manager", "Accounts Manager", "Administrator"}:
 		frappe.throw(_("Only System Manager / Accounts Manager can run populate_s181_fields."))
 
-	# Import the script logic directly so this runs inline without needing
-	# bench execute
-	import importlib.util
+	# HOTFIX4 2026-04-12: fully self-contained seed logic. No importlib from
+	# scripts/ (which doesn't ship in the Docker image). All CSV reads go
+	# through data_seed/ inside the hrms Python package.
+	import csv
 	import os
+	import re
 
-	scripts_dir = os.path.normpath(
-		os.path.join(frappe.get_app_path("hrms"), "..", "scripts")
-	)
-
-	def load_script(filename: str):
-		spec_path = os.path.join(scripts_dir, filename)
-		spec = importlib.util.spec_from_file_location(filename.replace(".py", ""), spec_path)
-		mod = importlib.util.module_from_spec(spec)
-		spec.loader.exec_module(mod)
-		return mod
-
-	phase3 = load_script("s181_phase_3_seed_company_fields.py")
-	phase4 = load_script("s181_phase_4_branch_tin_backfill.py")
-
-	# --- Phase 3 seed ---
-	company_names = frappe.get_all("Company", pluck="name")
-	p3_planned, p3_unmatched = phase3.plan_updates(company_names)
-	p3_updated, p3_skipped, p3_per_field = phase3.apply_updates(p3_planned)
-
-	# --- Phase 4 TIN backfill ---
-	companies = frappe.get_all("Company", fields=["name", "tax_id"])
-	s037_buyer_map = phase4.load_s037_buyer_map()
-	tin_by_entity = phase4.load_tin_rdo_by_entity()
-	p4_planned, p4_unmatched = phase4.plan_updates(companies, s037_buyer_map, tin_by_entity)
-	p4_updated, p4_skipped, p4_per_field = phase4.apply_updates(p4_planned)
-
-	# --- Pre-existing sentinel fix ---
-	# Every Company that already has at least one posting account was
-	# provisioned by an earlier sprint (S175 etc.) and does not need the
-	# S181 on_update hook to run. Set first_provision_done=1 so the
-	# "Run First Provisioning" pill hides for them.
+	data_seed = os.path.join(frappe.get_app_path("hrms"), "data_seed")
 	company_meta = frappe.get_meta("Company")
+
+	def _csv(filename: str) -> list[dict]:
+		path = os.path.join(data_seed, filename)
+		if not os.path.exists(path):
+			frappe.log_error(title="S181 populate: missing CSV", message=path)
+			return []
+		with open(path, encoding="utf-8-sig") as f:
+			return list(csv.DictReader(f))
+
+	def _norm(s: str) -> str:
+		"""Lowercase, strip Inc/Corp/OPC, remove punct, collapse whitespace."""
+		s = s.lower()
+		s = re.sub(r"\b(inc\.?|corp\.?|corporation|opc|company|co\.?)\b", "", s)
+		s = re.sub(r"[.,'\"!\(\)\[\]]", " ", s)
+		return re.sub(r"\s+", " ", s).strip()
+
+	def _set(docname: str, field: str, value):
+		"""Set a Company field if it exists on the DocType and differs from current."""
+		if not company_meta.has_field(field):
+			return False
+		current = frappe.db.get_value("Company", docname, field)
+		if current == value:
+			return False
+		frappe.db.set_value("Company", docname, field, value, update_modified=False)
+		return True
+
+	# Load all reference CSVs
+	s037_rows = _csv("store_buyer_entity_register_2026-03-12.csv")
+	mosaic_rows = _csv("MOSAIC_POS_API_KEYS.csv")
+	locations_rows = _csv("Bebang_Halo-Halo_Stores_Locations_2025-12-29.csv")
+	tin_rows = _csv("ENTITY_TIN_RDO_2026-02-27.csv")
+	adms_rows = _csv("BIOMETRIC_MACHINE_MAPPING_ALL_2026-01-14.csv")
+	dimstore_rows = _csv("dim_store.csv")
+
+	# Build lookup indices
+	all_company_names = set(frappe.get_all("Company", pluck="name"))
+	lower_idx: dict[str, str] = {n.lower().rstrip(".").strip(): n for n in all_company_names}
+
+	# S037 by warehouse_docname + by normalized buyer_entity_name
+	s037_by_docname: dict[str, dict] = {}
+	s037_by_norm: dict[str, dict] = {}
+	for row in s037_rows:
+		docname = (row.get("warehouse_docname") or "").strip()
+		if docname:
+			s037_by_docname[docname] = row
+		buyer = (row.get("buyer_entity_name") or "").strip()
+		if buyer:
+			s037_by_norm[_norm(buyer)] = row
+
+	# Mosaic by normalized store name
+	mosaic_by_norm: dict[str, dict] = {}
+	for row in mosaic_rows:
+		n = (row.get("Store Name") or "").strip()
+		if n:
+			mosaic_by_norm[_norm(n)] = row
+
+	# Locations by normalized store name
+	loc_by_norm: dict[str, dict] = {}
+	for row in locations_rows:
+		n = (row.get("store_name") or "").strip()
+		if n:
+			loc_by_norm[_norm(n)] = row
+
+	# TIN/RDO by normalized entity name
+	tin_by_norm: dict[str, dict] = {}
+	for row in tin_rows:
+		n = (row.get("Entity Name") or "").strip()
+		if n:
+			tin_by_norm[_norm(n)] = row
+
+	# dim_store by normalized store name (for opening_date, region)
+	dimstore_by_norm: dict[str, dict] = {}
+	for row in dimstore_rows:
+		n = (row.get("store_name") or "").strip()
+		if n:
+			dimstore_by_norm[_norm(n)] = row
+
+	# ADMS devices by normalized location name
+	adms_by_norm: dict[str, dict] = {}
+	for row in adms_rows:
+		n = (row.get("canonical_location_name") or "").strip()
+		if n:
+			adms_by_norm[_norm(n)] = row
+
+	# Non-store entity category map
+	non_store_categories: dict[str, str] = {
+		"Bebang Enterprise Inc.": "Head Office",
+		"Bebang Kitchen Inc.": "Commissary",
+		"BEBANG FRANCHISE CORP.": "Franchisor",
+		"Bebang Franchise Corporation": "Franchisor",
+		"BFC": "Franchisor",
+		"Irresistible Infusions Inc.": "Holding Company",
+		"DMD HOLDINGS INC.": "Holding Company",
+		"DMD Holdings Inc": "Holding Company",
+		"Resto Tech Inc": "Head Office",
+	}
+
+	# ------------ Phase 3: entity_category + mosaic + GPS + city + status + pos -----------
+	p3_updated = 0
+	p3_per_field: dict[str, int] = {}
+	for company_name in all_company_names:
+		# Resolve S037 row for this Company
+		s037 = None
+		for r in s037_rows:
+			buyer = (r.get("buyer_entity_name") or "").strip()
+			if buyer and _norm(buyer) == _norm(company_name):
+				s037 = r
+				break
+			if buyer:
+				key = buyer.lower().rstrip(".").strip()
+				if key in lower_idx and lower_idx[key] == company_name:
+					s037 = r
+					break
+
+		# Resolve store name for Mosaic + Locations lookup
+		store_name_for_lookup = None
+		if s037:
+			store_name_for_lookup = (s037.get("store_name") or "").strip()
+
+		mosaic = mosaic_by_norm.get(_norm(store_name_for_lookup or ""))
+		if not mosaic:
+			# Fallback: try normalizing the company docname itself
+			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
+			mosaic = mosaic_by_norm.get(_norm(prefix))
+
+		loc = loc_by_norm.get(_norm(store_name_for_lookup or ""))
+		if not loc:
+			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
+			loc = loc_by_norm.get(_norm(prefix))
+
+		dimstore = dimstore_by_norm.get(_norm(store_name_for_lookup or ""))
+		if not dimstore:
+			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
+			dimstore = dimstore_by_norm.get(_norm(prefix))
+
+		changed = False
+		# entity_category + store_ownership_type
+		if s037:
+			if _set(company_name, "entity_category", "Store"):
+				p3_per_field["entity_category"] = p3_per_field.get("entity_category", 0) + 1
+				changed = True
+			st = (s037.get("store_type") or "").strip()
+			ownership = st if st in ("JV", "Managed Franchise", "Full Franchise", "Company Owned") else "Company Owned"
+			if _set(company_name, "store_ownership_type", ownership):
+				p3_per_field["store_ownership_type"] = p3_per_field.get("store_ownership_type", 0) + 1
+				changed = True
+			active = (s037.get("active_fulfillment_status") or "").strip().lower()
+			status = "Active" if active == "active" else "Temporarily Closed"
+			if _set(company_name, "operational_status", status):
+				p3_per_field["operational_status"] = p3_per_field.get("operational_status", 0) + 1
+				changed = True
+		elif company_name in non_store_categories:
+			if _set(company_name, "entity_category", non_store_categories[company_name]):
+				p3_per_field["entity_category"] = p3_per_field.get("entity_category", 0) + 1
+				changed = True
+			if _set(company_name, "operational_status", "Active"):
+				p3_per_field["operational_status"] = p3_per_field.get("operational_status", 0) + 1
+				changed = True
+
+		# mosaic_location_id + pos_system
+		if mosaic:
+			loc_id = (mosaic.get("Mosaic Location ID") or "").strip()
+			if loc_id and _set(company_name, "mosaic_location_id", loc_id):
+				p3_per_field["mosaic_location_id"] = p3_per_field.get("mosaic_location_id", 0) + 1
+				changed = True
+			if loc_id and _set(company_name, "pos_system", "Mosaic"):
+				p3_per_field["pos_system"] = p3_per_field.get("pos_system", 0) + 1
+				changed = True
+
+		# GPS (prefer locations CSV, fall back to Mosaic)
+		lat = lng = None
+		if loc:
+			try:
+				lat = float(loc["latitude"]) if loc.get("latitude") else None
+				lng = float(loc["longitude"]) if loc.get("longitude") else None
+			except (ValueError, TypeError):
+				pass
+		if (lat is None or lng is None) and mosaic:
+			try:
+				if mosaic.get("Latitude"):
+					lat = float(mosaic["Latitude"])
+				if mosaic.get("Longitude"):
+					lng = float(mosaic["Longitude"])
+			except (ValueError, TypeError):
+				pass
+		if lat is not None and _set(company_name, "gps_latitude", lat):
+			p3_per_field["gps_latitude"] = p3_per_field.get("gps_latitude", 0) + 1
+			changed = True
+		if lng is not None and _set(company_name, "gps_longitude", lng):
+			p3_per_field["gps_longitude"] = p3_per_field.get("gps_longitude", 0) + 1
+			changed = True
+
+		# City (prefer locations, fall back to Mosaic)
+		city = None
+		if loc and loc.get("city"):
+			city = loc["city"].strip()
+		elif mosaic and mosaic.get("City"):
+			city = mosaic["City"].strip()
+		if city and _set(company_name, "city", city):
+			p3_per_field["city"] = p3_per_field.get("city", 0) + 1
+			changed = True
+
+		# full_address
+		addr = None
+		if loc and loc.get("address"):
+			addr = loc["address"].strip()
+		elif mosaic and mosaic.get("Address"):
+			addr = mosaic["Address"].strip()
+		if addr and _set(company_name, "full_address", addr):
+			p3_per_field["full_address"] = p3_per_field.get("full_address", 0) + 1
+			changed = True
+
+		# opening_date + region from dim_store
+		if dimstore:
+			od = (dimstore.get("opening_date") or "").strip()
+			if od:
+				# Convert "2025-09-28 00:00:00" to "2025-09-28"
+				od = od.split(" ")[0] if " " in od else od
+				if _set(company_name, "opening_date", od):
+					p3_per_field["opening_date"] = p3_per_field.get("opening_date", 0) + 1
+					changed = True
+			reg = (dimstore.get("region") or "").strip()
+			if reg:
+				# Map dim_store region codes to S181 Select options
+				reg_map = {"NCR": "NCR", "4-A": "Luzon", "3": "Luzon", "CALABARZON": "Luzon"}
+				mapped = reg_map.get(reg, "Luzon")
+				if _set(company_name, "region", mapped):
+					p3_per_field["region"] = p3_per_field.get("region", 0) + 1
+					changed = True
+
+		if changed:
+			p3_updated += 1
+
+	# ------------ Phase 4: branch_tin + bir_rdo_code -----------
+	p4_updated = 0
+	p4_per_field: dict[str, int] = {}
+	for company_name in all_company_names:
+		current_tax_id = (frappe.db.get_value("Company", company_name, "tax_id") or "").strip() or None
+		# Resolve entity via S037 buyer_entity_name or direct match
+		entity = None
+		# Path 1: S037-bridged lookup
+		for r in s037_rows:
+			wh = (r.get("warehouse_docname") or "").strip()
+			buyer = (r.get("buyer_entity_name") or "").strip()
+			if wh == company_name or (buyer and _norm(buyer) == _norm(company_name)):
+				entity = tin_by_norm.get(_norm(buyer))
+				if entity:
+					break
+		# Path 2: direct match
+		if not entity:
+			for candidate in [company_name, company_name.rsplit(" - ", 1)[-1] if " - " in company_name else company_name]:
+				entity = tin_by_norm.get(_norm(candidate))
+				if entity:
+					break
+		if not entity:
+			continue
+
+		changed = False
+		resolved_tin = (entity.get("TIN") or "").strip() or None
+		resolved_rdo = (entity.get("RDO Code") or "").strip() or None
+		if resolved_tin and resolved_tin != current_tax_id:
+			if _set(company_name, "branch_tin", resolved_tin):
+				p4_per_field["branch_tin"] = p4_per_field.get("branch_tin", 0) + 1
+				changed = True
+		if resolved_rdo:
+			if _set(company_name, "bir_rdo_code", resolved_rdo):
+				p4_per_field["bir_rdo_code"] = p4_per_field.get("bir_rdo_code", 0) + 1
+				changed = True
+		if changed:
+			p4_updated += 1
+
+	# ------------ ADMS device seeding -----------
+	adms_seeded = 0
+	if company_meta.has_field("adms_devices"):
+		for company_name in all_company_names:
+			# Find matching ADMS row by normalized store name
+			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
+			adms = adms_by_norm.get(_norm(prefix))
+			if not adms:
+				# Try S037 store_name bridge
+				for r in s037_rows:
+					buyer = (r.get("buyer_entity_name") or "").strip()
+					if buyer and _norm(buyer) == _norm(company_name):
+						sn = (r.get("store_name") or "").strip()
+						adms = adms_by_norm.get(_norm(sn))
+						if adms:
+							break
+			if not adms:
+				continue
+			serial = (adms.get("device_serial_number") or "").strip()
+			if not serial:
+				continue
+			# Check if this device is already registered on this company
+			existing = frappe.db.get_value(
+				"BEI Company ADMS Device",
+				{"parent": company_name, "device_serial": serial},
+				"name",
+			)
+			if existing:
+				continue
+			try:
+				doc = frappe.get_doc("Company", company_name)
+				doc.append("adms_devices", {
+					"device_serial": serial,
+					"device_name": (adms.get("canonical_location_name") or "").strip() or None,
+					"bio_device_id": (adms.get("canonical_location_id") or "").strip() or None,
+				})
+				doc.flags.ignore_permissions = True
+				doc.flags.ignore_mandatory = True
+				doc.save()
+				adms_seeded += 1
+			except Exception as e:
+				frappe.log_error(title=f"S181 ADMS seed: {company_name}", message=str(e))
+
+	# ------------ Store supervisor from Employee master -----------
+	supervisors_set = 0
+	if company_meta.has_field("store_manager"):
+		# Query live Employee data for Store Supervisors / Area Supervisors
+		sup_employees = frappe.get_all(
+			"Employee",
+			filters={"designation": ["in", ["Store Supervisor", "STORE SUPERVISOR"]], "status": "Active"},
+			fields=["name", "employee_name", "company"],
+		)
+		for emp in sup_employees:
+			if emp.company and emp.company in all_company_names:
+				current = frappe.db.get_value("Company", emp.company, "store_manager")
+				if not current:
+					frappe.db.set_value("Company", emp.company, "store_manager", emp.name, update_modified=False)
+					supervisors_set += 1
+
+		area_sups = frappe.get_all(
+			"Employee",
+			filters={"designation": ["in", ["Area Supervisor", "AREA SUPERVISOR"]], "status": "Active"},
+			fields=["name", "employee_name", "company"],
+		)
+		for emp in area_sups:
+			if emp.company and emp.company in all_company_names:
+				current = frappe.db.get_value("Company", emp.company, "area_supervisor")
+				if not current:
+					frappe.db.set_value("Company", emp.company, "area_supervisor", emp.name, update_modified=False)
+
+	# ------------ Pre-existing sentinel fix -----------
+	pre_count = 0
 	if company_meta.has_field("first_provision_done"):
-		pre_provisioned: list[str] = []
-		for cname in company_names:
+		for cname in all_company_names:
 			if _company_has_coa(cname) and not frappe.db.get_value(
 				"Company", cname, "first_provision_done"
 			):
 				frappe.db.set_value(
 					"Company", cname, "first_provision_done", 1, update_modified=False
 				)
-				pre_provisioned.append(cname)
-		pre_count = len(pre_provisioned)
-	else:
-		pre_count = 0
+				pre_count += 1
 
 	frappe.db.commit()
 
@@ -909,17 +1220,13 @@ def populate_s181_fields() -> dict:
 		"ok": True,
 		"phase3": {
 			"updated": p3_updated,
-			"skipped": p3_skipped,
 			"per_field": p3_per_field,
-			"unmatched_count": len(p3_unmatched),
-			"unmatched": p3_unmatched[:10],
 		},
 		"phase4": {
 			"updated": p4_updated,
-			"skipped": p4_skipped,
 			"per_field": p4_per_field,
-			"unmatched_count": len(p4_unmatched),
-			"unmatched": p4_unmatched[:10],
 		},
+		"adms_devices_seeded": adms_seeded,
+		"supervisors_set": supervisors_set,
 		"pre_provisioned_sentinels_set": pre_count,
 	}

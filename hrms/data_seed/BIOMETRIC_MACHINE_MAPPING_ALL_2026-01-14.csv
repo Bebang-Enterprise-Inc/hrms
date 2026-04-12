@@ -1,0 +1,46 @@
+canonical_location_kind,canonical_location_name,canonical_location_id,canonical_store_code,device_model,device_serial_number,status,install_date
+commissary,Commissary (Shaw Blvd),commissary_shaw_blvd,,ZKTeco MB10-VL,UDP3235200629,Active,
+head_office,Head Office 1 (Brittany Hotel),head_office_1_brittany_hotel,,ZKTeco MB10-VL,UDP3251600245,Active,8/30/2025
+head_office,Head Office 2 (Capital House),head_office_2_capital_house,,ZKTeco MB10-VL,UDP3235200625,Active,
+store,Araneta Gateway,aranetagateway,ARGW,ZKTeco MB10-VL,UDP3252900302,Active,11/18/2025
+store,Ayala Evo,ayalaevo,AYEVO,ZKTeco MB10-VL,UDP3252300333,Active,9/28/2025
+store,Ayala Fairview Terraces,AyalaFairview,AFT,ZKTeco MB10-VL,CNYG242061619,Active,
+store,Ayala Market Market,market2,AMM,ZKTeco MB10-VL,UDP3235200627,Active,
+store,Ayala Solenad,solenad,AYSOL,ZKTeco MB10-VL,UDP3252900284,Active,10/19/2025
+store,Ayala Vermosa,ayalavermosa,AYVER,ZKTeco MB10-VL,UDP3252300360,Active,10/26/2025
+store,BF Homes,bfhomes,BFH,ZKTeco MB10-VL,UDP3251600215,Active,8/1/2025
+store,CTTM Tomas Morato,cttm,CTTM,ZKTeco MB10-VL,UDP3252100384,Active,11/19/2025
+store,Dverde Calamba,dverde,DVCAL,ZKTeco MB10-VL,UDP3252900188,Active,11/30/2025
+store,Festival Mall Alabang,festivalmall,FMA,ZKTeco MB10-VL,UDP3251200195,Active,5/21/2025
+store,Lucky Chinatown,luckychinatown,LCT,ZKTeco MB10-VL,UDP3235200526,Active,3/1/2025
+store,Megaworld Paseo de Roxas,megaworldpaseocenter,MPD,ZKTeco MB10-VL,UDP3251200168,Active,4/24/2025
+store,NAIA T3,naiat3,NAIA,ZKTeco MB10-VL,UDP3252900287,Active,12/5/2025
+store,PITX,megawidepitx,PTX,ZKTeco MB10-VL,UDP3251200212,Active,4/30/2025
+store,Robinsons Galleria South,robigalleriasouth,ROBGS,ZKTeco MB10-VL,UDP3252300355,Active,10/12/2025
+store,Robinsons General Trias,robgentri,ROBGT,ZKTeco MB10-VL,UDP3252100385,Active,10/2/2025
+store,Robinsons Imus,robimus,ROBIM,ZKTeco MB10-VL,UDP3252300350,Active,9/5/2025
+store,Robinsons Place Antipolo,robinsonsantipolo,ROA,ZKTeco MB10-VL,UDP3235200594,Active,2/12/2025
+store,SJDM,sdjm,,ZKTeco MB10-VL,UDP3251400170,Active,8/14/2025
+store,SM Bicutan,smbicutan,SMBIC,ZKTeco MB10-VL,UDP3251600317,Active,8/23/2025
+store,SM Caloocan,smcaloocan,SMCAL,ZKTeco MB10-VL,UDP3251600338,Active,9/7/2025
+store,SM Clark,smclark,SMCLK,ZKTeco MB10-VL,UDP3252100496,Active,10/29/2025
+store,SM East Ortigas,smeastortigas,SMEO,ZKTeco MB10-VL,UDP3251200193,Active,5/3/2025
+store,SM Grand Central,smgrandcentral,SMGC,ZKTeco MB10-VL,CNYG242061011,Active,3/29/2025
+store,SM Mall of Asia,moa,SMMOA,ZKTeco MB10-VL,UDP3251400192,Active,6/7/2025
+store,SM Manila,smmanila,SMM,ZKTeco MB10-VL,UDP3235200633,Active,
+store,SM Marikina,smmarikina,SMK,ZKTeco MB10-VL,CNYG242061071,Active,4/9/2025
+store,SM Marilao,smmarilao,SMMAR,ZKTeco MB10-VL,UDP3252100422,Active,8/22/2025
+store,SM Megamall,megamall,SMMM,ZKTeco MB10-VL,UDP3235200631,Active,
+store,SM North Edsa,smnorthedsa,SMNE,ZKTeco MB10-VL,UDP3235200831,Active,
+store,SM Pulilan,smpulilan,SMPUL,ZKTeco MB10-VL,UDP3252300354,Active,9/4/2025
+store,SM Sangandaan,smsangandaan,SMSDN,ZKTeco MB10-VL,UDP3252100358,Active,8/21/2025
+store,SM Southmall,smsouthmall,SMS,ZKTeco MB10-VL,CNYG242061620,Active,
+store,SM Tanza,smtanza,SMTZ,ZKTeco MB10-VL,UDP3251600219,Active,8/16/2025
+store,SM Taytay,smtaytay,,ZKTeco MB10-VL,UDP3252900048,Active,1/9/2026
+store,SM Valenzuela,smvalenzuela,SMV,ZKTeco MB10-VL,UDP3235201051,Active,
+store,Sta. Lucia Grand Mall,staluciaeastgrandmall,SLGM,ZKTeco MB10-VL,UDP3252900155,Active,11/22/2025
+store,The Terminal,theterminal,,ZKTeco MB10-VL,CNYG242061718,Active,3/15/2025
+store,UP Town Center,uptc,UPTC,ZKTeco MB10-VL,UDP3252900282,Active,10/17/2025
+store,Uptown Mall BGC,uptownbgc,UMBGC,ZKTeco MB10-VL,UDP3252900298,Active,11/14/2025
+store,Venice Grand Canal,megaworldvenicegrandcanal,VGC,ZKTeco MB10-VL,UDP3251200197,Active,5/14/2025
+store,Vista Mall Taguig,vistamall,VMTAG,ZKTeco MB10-VL,UDP3252900305,Active,10/25/2025
