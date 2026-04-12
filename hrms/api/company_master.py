@@ -36,6 +36,7 @@ Security posture:
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import frappe
@@ -43,6 +44,24 @@ from frappe import _
 from frappe.utils import add_days, getdate, today
 
 from hrms.utils.sentry import set_backend_observability_context
+
+
+# Module-level name normalizer used by list_stores company resolution AND
+# populate_s181_fields CSV matching. Strips Inc/Corp/OPC suffixes, removes
+# punctuation, lowercases, collapses whitespace.
+_STRIP_RE = re.compile(r"\b(inc\.?|corp\.?|corporation|opc|company|co\.?)\b", re.I)
+_PUNCT_RE = re.compile(r"[.,'\"!\(\)\[\]]")
+_WS_RE = re.compile(r"\s+")
+
+
+def _norm_name(s: str) -> str:
+	"""Normalize a company/store name for fuzzy comparison."""
+	if not s:
+		return ""
+	s = s.lower()
+	s = _STRIP_RE.sub("", s)
+	s = _PUNCT_RE.sub(" ", s)
+	return _WS_RE.sub(" ", s).strip()
 
 
 # Fields the frontend is allowed to write, grouped by section.
@@ -568,9 +587,8 @@ def _resolve_company_for_s037_row(
 		return None
 	if buyer in all_companies:
 		return buyer
-	# Case-insensitive normalized fallback
-	# Normalize: lowercase + strip trailing period
-	key = buyer.lower().rstrip(".").strip()
+	# Normalized fallback: strip Inc/Corp/OPC + lowercase + remove punctuation
+	key = _norm_name(buyer)
 	return lower_name_index.get(key)
 
 
@@ -643,8 +661,9 @@ def list_stores(
 	all_company_names = set(frappe.get_all("Company", pluck="name"))
 	lower_name_index: dict[str, str] = {}
 	for name in all_company_names:
-		key = name.lower().rstrip(".").strip()
-		lower_name_index[key] = name
+		key = _norm_name(name)
+		if key:
+			lower_name_index[key] = name
 
 	# Figure out which Companies we'll need field data for (store rows +
 	# non-store rows), then bulk-fetch in one query.
@@ -785,10 +804,10 @@ def get_store_context(store_name: str | None = None, company: str | None = None)
 				if buyer and frappe.db.exists("Company", buyer):
 					resolved_company = buyer
 					break
-				# Case-insensitive fallback
+				# Normalized fallback (strips Inc/Corp/OPC + lowercase)
 				all_names = frappe.get_all("Company", pluck="name")
-				lookup = {n.lower().rstrip(".").strip(): n for n in all_names}
-				key = buyer.lower().rstrip(".").strip()
+				lookup = {_norm_name(n): n for n in all_names if _norm_name(n)}
+				key = _norm_name(buyer)
 				if key in lookup:
 					resolved_company = lookup[key]
 					break
@@ -871,11 +890,8 @@ def populate_s181_fields() -> dict:
 			return list(csv.DictReader(f))
 
 	def _norm(s: str) -> str:
-		"""Lowercase, strip Inc/Corp/OPC, remove punct, collapse whitespace."""
-		s = s.lower()
-		s = re.sub(r"\b(inc\.?|corp\.?|corporation|opc|company|co\.?)\b", "", s)
-		s = re.sub(r"[.,'\"!\(\)\[\]]", " ", s)
-		return re.sub(r"\s+", " ", s).strip()
+		"""Alias for the module-level _norm_name."""
+		return _norm_name(s)
 
 	def _set(docname: str, field: str, value):
 		"""Set a Company field if it exists on the DocType and differs from current.
@@ -933,6 +949,72 @@ def populate_s181_fields() -> dict:
 					best = idx_val
 					best_len = overlap
 		return best
+
+	# Explicit name bridge: maps S037 store_name to the exact name used in
+	# Mosaic, Locations, and dim_store CSVs for cases where algorithmic
+	# matching (normalization + starts-with) fails due to totally different
+	# naming conventions (abbreviations, reordering, missing words).
+	# Built by manual cross-reference on 2026-04-12.
+	_BRIDGE: dict[str, str] = {
+		# S037 store_name -> canonical name used in Mosaic/Locations/dim_store
+		"Ayala Fairview Terraces": "Ayala Malls Fairview Terraces",
+		"Ayala UP Town Center": "Ayala UPTC",
+		"Food Express (Gateway Mall)": "Araneta Gateway",
+		"Lucky China Town": "Lucky Chinatown",
+		"Ortigas Estancia": "Ortigas Estancia",  # no Mosaic entry exists
+		"Ortigas Greenhills": "Ortigas Greenhills",  # no Mosaic entry exists
+		"PITX Terminal": "Megawide PITX",
+		"Paseo Center": "Megaworld Paseo Center",
+		"SM San Jose Del Monte": "SM SJDM",
+		"SM Center Pulilan": "SM Pulilan",
+		"Tomas Morato (CTTM Square)": "CTTM Tomas Morato",
+		"Venice Grand Canal": "Megaworld Venice Grand Canal",
+		"Uptown Mall": "Up Town Mall BGC",
+		"Robinsons Place Gen. Trias": "Robinson General Trias",
+		"Robinsons Place Imus": "Robinson Imus",
+		"Robinsons Galleria South": "Robisons Galleria South",  # Mosaic typo preserved
+		"Robinsons Place Antipolo": "Robinsons Antipolo",
+		"Robinsons Place Dasmarinas": "Robinsons Place Dasmarinas",  # may not be in Mosaic
+		"The Terminal Exchange": "The Terminal",
+		"SM North EDSA": "SM North EDSA",
+		"SM Sta. Rosa": "SM Sta. Rosa",
+		"The Grid - Rockwell": "The Grid - Rockwell",
+		"Ever Commonwealth": "Ever Commonwealth",
+		"D'Verde Calamba": "D'Verde Calamba",
+	}
+
+	# Also bridge for dim_store where names differ further
+	_BRIDGE_DIMSTORE: dict[str, str] = {
+		"Ever Commonwealth": "Ever Gotesco Commonwealth",
+		"Paseo Center": "Megaworld Paseo de Roxas",
+		"PITX Terminal": "PITX",
+		"D'Verde Calamba": "Dverde Calamba",
+		"SM Mall of Asia": "SM Mall of Asia",
+		"Uptown Mall": "Uptown Mall BGC",
+	}
+
+	def _bridged_lookup(index: dict[str, dict], store_name: str, bridge: dict[str, str] | None = None) -> dict | None:
+		"""Try: exact _norm match → bridge mapping → _fuzzy_get fallback."""
+		if not store_name:
+			return None
+		# Direct
+		result = _fuzzy_get(index, store_name)
+		if result:
+			return result
+		# Bridge
+		if bridge:
+			bridged = bridge.get(store_name)
+			if bridged:
+				result = _fuzzy_get(index, bridged)
+				if result:
+					return result
+		# Also try the global _BRIDGE
+		bridged = _BRIDGE.get(store_name)
+		if bridged and bridged != store_name:
+			result = _fuzzy_get(index, bridged)
+			if result:
+				return result
+		return None
 
 	# Load all reference CSVs
 	s037_rows = _csv("store_buyer_entity_register_2026-03-12.csv")
@@ -1027,20 +1109,20 @@ def populate_s181_fields() -> dict:
 		if s037:
 			store_name_for_lookup = (s037.get("store_name") or "").strip()
 
-		mosaic = _fuzzy_get(mosaic_by_norm, store_name_for_lookup or "")
+		mosaic = _bridged_lookup(mosaic_by_norm, store_name_for_lookup or "")
 		if not mosaic:
 			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
-			mosaic = _fuzzy_get(mosaic_by_norm, prefix)
+			mosaic = _bridged_lookup(mosaic_by_norm, prefix)
 
-		loc = _fuzzy_get(loc_by_norm, store_name_for_lookup or "")
+		loc = _bridged_lookup(loc_by_norm, store_name_for_lookup or "")
 		if not loc:
 			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
-			loc = _fuzzy_get(loc_by_norm, prefix)
+			loc = _bridged_lookup(loc_by_norm, prefix)
 
-		dimstore = _fuzzy_get(dimstore_by_norm, store_name_for_lookup or "")
+		dimstore = _bridged_lookup(dimstore_by_norm, store_name_for_lookup or "", _BRIDGE_DIMSTORE)
 		if not dimstore:
 			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
-			dimstore = _fuzzy_get(dimstore_by_norm, prefix)
+			dimstore = _bridged_lookup(dimstore_by_norm, prefix, _BRIDGE_DIMSTORE)
 
 		changed = False
 		# entity_category + store_ownership_type
@@ -1182,14 +1264,14 @@ def populate_s181_fields() -> dict:
 		for company_name in all_company_names:
 			# Find matching ADMS row by normalized store name
 			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
-			adms = _fuzzy_get(adms_by_norm, prefix)
+			adms = _bridged_lookup(adms_by_norm, prefix)
 			if not adms:
 				# Try S037 store_name bridge
 				for r in s037_rows:
 					buyer = (r.get("buyer_entity_name") or "").strip()
 					if buyer and _norm(buyer) == _norm(company_name):
 						sn = (r.get("store_name") or "").strip()
-						adms = _fuzzy_get(adms_by_norm, sn)
+						adms = _bridged_lookup(adms_by_norm, sn)
 						if adms:
 							break
 			if not adms:
