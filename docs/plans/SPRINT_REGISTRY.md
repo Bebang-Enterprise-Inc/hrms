@@ -254,12 +254,14 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S185` | Sprint 185 | `s185-period-comparison-rank-delta` (bei-tasks) + `s185-store-rank-comparison` (hrms) | — | PLANNED 2026-04-12 — Sales Analytics: period-over-period comparison per store + weekly ranking with position delta. Extends store leaderboard with prior-period comparison (any date range → compare to same-length prior period), per-store net sales delta, and weekly rank tracking showing how many positions each store moved up/down. Backend: extend `_build_store_rankings` with per-store comparison + rank delta. Frontend: comparison columns in leaderboard + rank change badges. | `docs/plans/2026-04-12-sprint-185-period-comparison-rank-delta.md` |
 
+| `S184` | Sprint 184 | `s184-company-master-data-hub` (hrms) + `s184-company-master-hub-frontend` (bei-tasks) | hrms #550, bei-tasks #384 | DEPLOYED 2026-04-12 — Company Master Data Hub: Connected Ecosystem. Transforms the Company DocType into a structural hub. Phase 1: Seed 54 Bank Account records + GPS sync from Superadmin API (48 stores). Phase 2: Expand auto_provision_company hook to auto-create bank accounts, ADMS device, GPS for new stores. Phase 3: 4 new API endpoints (get_headcount, get_bank_accounts, get_bki_billing, get_warehouse_stock). Phase 3B: Frontend connected data sections (Bank Accounts, BKI Billing, People, Warehouse) + GPS map link + Sales Analytics link. Phase 3C: Auto-provisioned summary banner. 75 units. Depends on: S181 (Company Master Extension). | `docs/plans/2026-04-12-sprint-184-company-master-data-hub.md` |
+
 ## Next Sprint Reservation
 1. Next canonical sprint ID to assign: `S186`.
 2. Reserve branch name: `s185-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
-5. **MANDATORY cross-check before reserving any S###:** run `git branch -a | grep -iE 's(17[5-9]|18[0-9])'` on BOTH `hrms` and `bei-tasks` AND `ls docs/plans/ | grep -E 'sprint-(17[5-9]|18[0-9])'` — if any match the ID you're about to reserve, pick the next free number. The local registry is not authoritative; remote branches and plan files are. (Origin: 2026-04-11 S179 collision — registry claimed S179 free but hrms#530 + bei-tasks#375 had already merged using that number, forcing a mid-flight renumber of the Company Master Extension plan to S181.)
+5. **MANDATORY cross-check before reserving any S###:** run `git branch -a | grep -iE 's(17[5-9]|18[0-9]|19[0-9])'` on BOTH `hrms` and `bei-tasks` AND `ls docs/plans/ | grep -E 'sprint-(17[5-9]|18[0-9]|19[0-9])'` — if any match the ID you're about to reserve, pick the next free number. The local registry is not authoritative; remote branches and plan files are.
 
 ## Superseded Plans
 | Original | Superseded By | Reason |
