@@ -1259,47 +1259,162 @@ def populate_s181_fields() -> dict:
 			p4_updated += 1
 
 	# ------------ ADMS device seeding -----------
+	# Uses DEVICE_TO_STORE from hrms/utils/device_mapping.py — the AUTHORITATIVE
+	# source of truth for all 48 ZKTeco MB10-VL devices across all BEI locations.
+	# This is inside the hrms Python package, so it ships in the Docker image.
+	# The old CSV-based lookup only matched ~9 devices; this covers all 48.
 	adms_seeded = 0
 	if company_meta.has_field("adms_devices"):
+		from hrms.utils.device_mapping import DEVICE_TO_STORE
+
+		# Build reverse index: normalized ADMS location → [(serial, location_name)]
+		adms_by_location: dict[str, list[tuple[str, str]]] = {}
+		for serial_key, loc_name in DEVICE_TO_STORE.items():
+			key = _norm(loc_name)
+			if key not in adms_by_location:
+				adms_by_location[key] = []
+			adms_by_location[key].append((serial_key, loc_name))
+
+		# Bridge: ADMS canonical location name → S037 store_name
+		# Built by manual cross-reference of DEVICE_TO_STORE keys vs S037 store names
+		_ADMS_TO_S037: dict[str, str] = {
+			"ARANETA GATEWAY": "Food Express (Gateway Mall)",
+			"AYALA EVO": "Ayala Evo City",
+			"AYALA FAIRVIEW": "Ayala Fairview Terraces",
+			"AYALA SOLENAD": "Ayala Solenad 2",
+			"AYALA UP TOWN CENTER": "Ayala UP Town Center",
+			"AYALA VERMOSA": "Ayala Vermosa",
+			"BF HOMES": "BF Homes Paranaque (Aguirre Ave.)",
+			"BGC CAPITAL HOUSE": "_HEAD_OFFICE_",
+			"BRITTANY OFFICE": "_HEAD_OFFICE_",
+			"CTTM TOMAS MORATO": "Tomas Morato (CTTM Square)",
+			"D VERDE CALAMBA": "D'Verde Calamba",
+			"FESTIVAL MALL": "Festival Mall Alabang",
+			"GREENHILLS": "Ortigas Greenhills",
+			"LCT": "Lucky China Town",
+			"MARKET MARKET": "Ayala Market! Market!",
+			"MYTOWN": "Ever Commonwealth",
+			"NAIA T3": "NAIA T3 (Departure)",
+			"PASEO": "Paseo Center",
+			"PITX": "PITX Terminal",
+			"ROBINSON ANTIPOLO": "Robinsons Place Antipolo",
+			"ROBINSON GENERAL TRIAS": "Robinsons Place Gen. Trias",
+			"ROBINSONS GALLERIA SOUTH": "Robinsons Galleria South",
+			"ROBINSONS IMUS": "Robinsons Place Imus",
+			"SHAW COMMISSARY": "_COMMISSARY_",
+			"SM BICUTAN": "SM Bicutan",
+			"SM CALOOCAN": "SM Caloocan",
+			"SM CLARK": "SM Clark",
+			"SM EAST ORTIGAS": "SM East Ortigas",
+			"SM GRAND CENTRAL": "SM Grand Central",
+			"SM MANILA": "SM Manila",
+			"SM MARIKINA": "SM Marikina",
+			"SM MARILAO": "SM Marilao",
+			"SM MEGAMALL": "SM Megamall",
+			"SM MOA": "SM Mall of Asia",
+			"SM NORTH EDSA": "SM North EDSA",
+			"SM PULILAN": "SM Center Pulilan",
+			"SM SANGANDAAN": "SM Sangandaan",
+			"SM SJDM": "SM San Jose Del Monte",
+			"SM SOUTHMALL": "SM Southmall",
+			"SM STA. ROSA": "SM Sta. Rosa",
+			"SM TANZA": "SM Tanza",
+			"SM TAYTAY": "SM Taytay",
+			"SM VALENZUELA": "SM Valenzuela",
+			"STA LUCIA GRAND MALL": "Sta. Lucia East Grand Mall",
+			"THE TERMINAL": "The Terminal Exchange",
+			"UPTOWN BGC": "Uptown Mall",
+			"VENICE GRAND CANAL": "Venice Grand Canal",
+			"VISTA MALL TAGUIG": "Vista Mall Taguig",
+		}
+
+		# Reverse bridge: S037 store_name → ADMS location name
+		_S037_TO_ADMS: dict[str, str] = {v: k for k, v in _ADMS_TO_S037.items() if not v.startswith("_")}
+
+		# For head office / commissary, map Company docname directly
+		_COMPANY_TO_ADMS: dict[str, list[str]] = {
+			"Bebang Enterprise Inc.": ["BRITTANY OFFICE", "BGC CAPITAL HOUSE"],
+			"Bebang Kitchen Inc.": ["SHAW COMMISSARY"],
+		}
+
 		for company_name in all_company_names:
-			# Find matching ADMS row by normalized store name
+			# Strategy 1: explicit Company → ADMS location(s) map (head office, commissary)
+			adms_locations = _COMPANY_TO_ADMS.get(company_name)
+			if adms_locations:
+				for adms_loc in adms_locations:
+					devs = adms_by_location.get(_norm(adms_loc), [])
+					for serial_val, loc_label in devs:
+						existing = frappe.db.get_value(
+							"BEI Company ADMS Device",
+							{"parent": company_name, "device_serial": serial_val},
+							"name",
+						)
+						if existing:
+							continue
+						try:
+							doc = frappe.get_doc("Company", company_name)
+							doc.append("adms_devices", {
+								"device_serial": serial_val,
+								"device_name": loc_label,
+							})
+							doc.flags.ignore_permissions = True
+							doc.flags.ignore_mandatory = True
+							doc.save()
+							adms_seeded += 1
+						except Exception as e:
+							frappe.log_error(title=f"S181 ADMS seed: {company_name}", message=str(e))
+				continue
+
+			# Strategy 2: S037 store_name → reverse bridge → ADMS location
 			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
-			adms = _bridged_lookup(adms_by_norm, prefix)
-			if not adms:
-				# Try S037 store_name bridge
-				for r in s037_rows:
-					buyer = (r.get("buyer_entity_name") or "").strip()
-					if buyer and _norm(buyer) == _norm(company_name):
-						sn = (r.get("store_name") or "").strip()
-						adms = _bridged_lookup(adms_by_norm, sn)
-						if adms:
+			matched_adms_loc = None
+
+			# Try via S037 bridge: Company → S037 buyer_entity_name → S037 store_name → _S037_TO_ADMS
+			for r in s037_rows:
+				buyer = (r.get("buyer_entity_name") or "").strip()
+				if buyer and (_norm(buyer) == _norm(company_name) or buyer == company_name):
+					sn_s037 = (r.get("store_name") or "").strip()
+					adms_loc = _S037_TO_ADMS.get(sn_s037)
+					if adms_loc:
+						matched_adms_loc = adms_loc
+						break
+
+			# Strategy 3: fuzzy match company prefix → ADMS location
+			if not matched_adms_loc:
+				nk = _norm(prefix)
+				for loc_key in adms_by_location:
+					if len(loc_key) >= 4 and len(nk) >= 4:
+						if nk.startswith(loc_key) or loc_key.startswith(nk):
+							# Reverse-lookup the original name
+							for serial_val, loc_label in adms_by_location[loc_key]:
+								matched_adms_loc = loc_label
+								break
 							break
-			if not adms:
+
+			if not matched_adms_loc:
 				continue
-			serial = (adms.get("device_serial_number") or "").strip()
-			if not serial:
-				continue
-			# Check if this device is already registered on this company
-			existing = frappe.db.get_value(
-				"BEI Company ADMS Device",
-				{"parent": company_name, "device_serial": serial},
-				"name",
-			)
-			if existing:
-				continue
-			try:
-				doc = frappe.get_doc("Company", company_name)
-				doc.append("adms_devices", {
-					"device_serial": serial,
-					"device_name": (adms.get("canonical_location_name") or "").strip() or None,
-					"bio_device_id": (adms.get("canonical_location_id") or "").strip() or None,
-				})
-				doc.flags.ignore_permissions = True
-				doc.flags.ignore_mandatory = True
-				doc.save()
-				adms_seeded += 1
-			except Exception as e:
-				frappe.log_error(title=f"S181 ADMS seed: {company_name}", message=str(e))
+
+			devs = adms_by_location.get(_norm(matched_adms_loc), [])
+			for serial_val, loc_label in devs:
+				existing = frappe.db.get_value(
+					"BEI Company ADMS Device",
+					{"parent": company_name, "device_serial": serial_val},
+					"name",
+				)
+				if existing:
+					continue
+				try:
+					doc = frappe.get_doc("Company", company_name)
+					doc.append("adms_devices", {
+						"device_serial": serial_val,
+						"device_name": loc_label,
+					})
+					doc.flags.ignore_permissions = True
+					doc.flags.ignore_mandatory = True
+					doc.save()
+					adms_seeded += 1
+				except Exception as e:
+					frappe.log_error(title=f"S181 ADMS seed: {company_name}", message=str(e))
 
 	# ------------ Store supervisor from Employee master -----------
 	supervisors_set = 0
