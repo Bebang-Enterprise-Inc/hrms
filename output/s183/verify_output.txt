@@ -1,0 +1,44 @@
+=== Backend checks ===
+  PASS: daily_series appears >=2 times
+  PASS: fleet_rank appears >=2 times
+  PASS: fleet_product_map appears >=2 times
+  PASS: allowed_location_ids appears >=2 times (B-2)
+  PASS: trend_slope appears >=2 times
+  PASS: trend_label appears >=2 times
+  PASS: contribution_pct appears >=1 time
+  PASS: wow_delta appears >=2 times
+  PASS: assortment_gap appears >=2 times
+  PASS: per_store_breakdown appears >=2 times
+  PASS: is_single_store appears >=1 time
+  PASS: drop_candidate appears >=1 time
+  PASS: denominator > 0 guard present (B-3)
+  PASS: _supabase_query_sql used in fleet query (B-1)
+  PASS: _cache_get_or_set used for fleet caching (B-1)
+  PASS: velocity field present
+
+=== Frontend checks ===
+  PASS: selectedStore state present
+  PASS: selectedStore.warehouse used (B-5)
+  PASS: sortMode state present (B-4)
+  PASS: Sparkline polyline present
+  PASS: bg-emerald signal color present
+  PASS: bg-rose signal color present
+  PASS: cups/day velocity label present
+  PASS: fleet_rank present
+  PASS: wow_delta present
+  PASS: contribution present
+  PASS: Signal Summary tile present
+  PASS: Assortment gap present
+  PASS: expandedProduct state for drill-down
+  PASS: per_store_breakdown present
+  PASS: Not sold here badge present
+  PASS: showGapProducts toggle state
+  PASS: access-context endpoint called
+
+=== Protected surface checks ===
+  PASS: No ToggleGroup (not installed)
+  PASS: No useMediaQuery (doesn't exist)
+  PASS: No workflow files modified (found: [])
+
+==================================================
+PASS: All checks passed.
