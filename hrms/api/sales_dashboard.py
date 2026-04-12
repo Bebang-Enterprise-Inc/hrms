@@ -2419,6 +2419,7 @@ def _build_store_rankings(
 	weather_rows: list[dict[str, Any]],
 	start_day: date,
 	end_day: date,
+	include_comparisons: bool = False,
 ) -> list[dict[str, Any]]:
 	"""Build per-store ranking rows enriched with channel_mix, daily_series, pickup_share.
 
@@ -2562,7 +2563,82 @@ def _build_store_rankings(
 				),
 				title="S182 channel reconcile drift",
 			)
-	return sorted(by_location.values(), key=lambda row: row["gross_sales"], reverse=True)
+	# S185: per-store comparison + rank delta (AFTER channel-split Pass 2)
+	store_list = list(by_location.values())
+	if include_comparisons:
+		span_days = (end_day - start_day).days + 1
+		prev_start, prev_end = _shift_range(start_day, end_day, span_days)
+		allowed_ids = {s["location_id"] for s in scope["selected_stores"]}
+		prev_location_ids = [s["location_id"] for s in scope["selected_stores"]]
+		prev_rows = _query_daily_rows(prev_start, prev_end, prev_location_ids)
+
+		# S185 task 1.4: aggregate prior period per-store
+		prev_by_location: dict[int, dict[str, float]] = {}
+		for pr in prev_rows:
+			lid = _to_int(pr.get("location_id"))
+			if lid not in allowed_ids:
+				continue
+			if lid not in prev_by_location:
+				prev_by_location[lid] = {"net": 0.0, "gross": 0.0}
+			prev_by_location[lid]["net"] += _to_float(pr.get("total_net_sales_without_vat"))
+			prev_by_location[lid]["gross"] += _to_float(pr.get("total_gross_sales"))
+
+		# S185 task 1.6: rank current stores by net_sales_without_vat (AFTER channel-split override)
+		ranked_current = sorted(store_list, key=lambda s: s["net_sales_without_vat"], reverse=True)
+		rank_map: dict[int, int] = {}
+		for rank_idx, store in enumerate(ranked_current, 1):
+			rank_map[store["location_id"]] = rank_idx
+
+		# S185 task 1.7: rank previous period stores by prior net
+		prev_ranked = sorted(prev_by_location.items(), key=lambda x: x[1]["net"], reverse=True)
+		prev_rank_map: dict[int, int] = {}
+		for rank_idx, (lid, _) in enumerate(prev_ranked, 1):
+			prev_rank_map[lid] = rank_idx
+
+		# S185 tasks 1.5, 1.8: enrich each store with comparison + rank + position_change
+		for store in store_list:
+			lid = store["location_id"]
+			current_rank = rank_map.get(lid)
+			store["rank"] = current_rank
+			prev_data = prev_by_location.get(lid)
+			if prev_data is not None:
+				prev_net = round(prev_data["net"], 2)
+				prev_gross = round(prev_data["gross"], 2)
+				current_net = store["net_sales_without_vat"]
+				current_gross = store["gross_sales"]
+				net_delta = round(current_net - prev_net, 2)
+				gross_delta = round(current_gross - prev_gross, 2)
+				net_delta_pct = round((net_delta / prev_net) * 100, 1) if prev_net > 0 else None
+				gross_delta_pct = round((gross_delta / prev_gross) * 100, 1) if prev_gross > 0 else None
+				store["comparison"] = {
+					"prior_net_sales": prev_net,
+					"net_delta": net_delta,
+					"net_delta_pct": net_delta_pct,
+					"prior_gross_sales": prev_gross,
+					"gross_delta": gross_delta,
+					"gross_delta_pct": gross_delta_pct,
+					"prior_period": {"start": prev_start.isoformat(), "end": prev_end.isoformat()},
+					"prior_period_zero": prev_net == 0.0,
+				}
+				previous_rank = prev_rank_map.get(lid)
+				store["previous_rank"] = previous_rank
+				store["position_change"] = (previous_rank - current_rank) if previous_rank is not None and current_rank is not None else None
+				store["is_new_store"] = False
+			else:
+				store["comparison"] = None
+				store["previous_rank"] = None
+				store["position_change"] = None
+				store["is_new_store"] = True
+	else:
+		# No comparisons requested — add null fields for consistent response shape
+		for store in store_list:
+			store["rank"] = None
+			store["comparison"] = None
+			store["previous_rank"] = None
+			store["position_change"] = None
+			store["is_new_store"] = False
+
+	return sorted(store_list, key=lambda row: row["gross_sales"], reverse=True)
 
 
 def _sales_row_metrics(row: dict[str, Any]) -> dict[str, Any]:
@@ -2914,7 +2990,7 @@ def _build_dashboard_overview_payload(
 			else _empty_comparisons(),
 			"daily": series,
 			"analysis": analysis,
-			"stores": _build_store_rankings(scope, sales_rows, weather_rows, start_day, effective_end),
+			"stores": _build_store_rankings(scope, sales_rows, weather_rows, start_day, effective_end, include_comparisons=include_comparisons),
 			"ranking_state": discount_ranking_payload["ranking_state"],
 			"discount_rankings": discount_ranking_payload["discount_rankings"],
 			"channels": _build_channel_mix(summary),
@@ -3086,6 +3162,7 @@ def get_sales_dashboard_store_rankings(
 	view_mode: str = "canonical",
 	channel: str = "all",
 	ranking_mode: str = DEFAULT_RANKING_MODE,
+	include_comparisons: bool | str | None = None,
 ) -> dict[str, Any]:
 	# S182 / DM-7: explicit Sentry attribution for the rankings endpoint. The
 	# overview wrapper already records its own context, but this surface owns
@@ -3096,6 +3173,8 @@ def get_sales_dashboard_store_rankings(
 		action="get_sales_dashboard_store_rankings",
 		mutation_type="read",
 	)
+	# S185: parse include_comparisons via _to_bool_flag (audit fix B-5)
+	_include_comparisons = _to_bool_flag(include_comparisons, default=False)
 	t0 = time.perf_counter()
 	overview = get_sales_dashboard_overview(
 		start_date=start_date,
@@ -3104,12 +3183,26 @@ def get_sales_dashboard_store_rankings(
 		view_mode=view_mode,
 		channel=channel,
 		ranking_mode=ranking_mode,
+		include_comparisons=_include_comparisons,
 	)
 	store_count = len(overview.get("stores") or [])
 	frappe.logger().info(
-		f"[S182] get_sales_dashboard_store_rankings stores={store_count} "
+		f"[S185] get_sales_dashboard_store_rankings stores={store_count} "
+		f"include_comparisons={_include_comparisons} "
 		f"channel_enrich_ms={int((time.perf_counter() - t0) * 1000)}"
 	)
+	# S185 task 1.9: comparison_meta
+	comparison_meta = None
+	if _include_comparisons:
+		start_day, end_day = _resolve_date_range(start_date, end_date)
+		span_days = (end_day - start_day).days + 1
+		prev_start, prev_end = _shift_range(start_day, end_day, span_days)
+		comparison_meta = {
+			"prior_period_start": prev_start.isoformat(),
+			"prior_period_end": prev_end.isoformat(),
+			"comparison_available": True,
+			"rank_delta_reliable": span_days >= 7,
+		}
 	return {
 		"scope": {"selected_stores": overview["scope"]["selected_stores"], "channel": channel},
 		"date_window": overview["date_window"],
@@ -3117,6 +3210,7 @@ def get_sales_dashboard_store_rankings(
 		"stores": overview["stores"],
 		"ranking_state": overview["ranking_state"],
 		"discount_rankings": overview["discount_rankings"],
+		"comparison_meta": comparison_meta,
 	}
 
 
