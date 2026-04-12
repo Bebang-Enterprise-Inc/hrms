@@ -910,6 +910,30 @@ def populate_s181_fields() -> dict:
 				continue
 		return None
 
+	def _fuzzy_get(index: dict[str, dict], key: str) -> dict | None:
+		"""Look up a normalized key in an index. Tries in order:
+		1. Exact normalized match
+		2. key starts-with an index key (or vice versa), minimum 6 chars overlap
+		This handles 'Ayala Evo' (Mosaic) vs 'Ayala Evo City' (S037)."""
+		if not key:
+			return None
+		nk = _norm(key)
+		if not nk:
+			return None
+		if nk in index:
+			return index[nk]
+		best = None
+		best_len = 0
+		for idx_key, idx_val in index.items():
+			if len(idx_key) < 6 or len(nk) < 6:
+				continue
+			if nk.startswith(idx_key) or idx_key.startswith(nk):
+				overlap = min(len(nk), len(idx_key))
+				if overlap > best_len:
+					best = idx_val
+					best_len = overlap
+		return best
+
 	# Load all reference CSVs
 	s037_rows = _csv("store_buyer_entity_register_2026-03-12.csv")
 	mosaic_rows = _csv("MOSAIC_POS_API_KEYS.csv")
@@ -1003,21 +1027,20 @@ def populate_s181_fields() -> dict:
 		if s037:
 			store_name_for_lookup = (s037.get("store_name") or "").strip()
 
-		mosaic = mosaic_by_norm.get(_norm(store_name_for_lookup or ""))
+		mosaic = _fuzzy_get(mosaic_by_norm, store_name_for_lookup or "")
 		if not mosaic:
-			# Fallback: try normalizing the company docname itself
 			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
-			mosaic = mosaic_by_norm.get(_norm(prefix))
+			mosaic = _fuzzy_get(mosaic_by_norm, prefix)
 
-		loc = loc_by_norm.get(_norm(store_name_for_lookup or ""))
+		loc = _fuzzy_get(loc_by_norm, store_name_for_lookup or "")
 		if not loc:
 			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
-			loc = loc_by_norm.get(_norm(prefix))
+			loc = _fuzzy_get(loc_by_norm, prefix)
 
-		dimstore = dimstore_by_norm.get(_norm(store_name_for_lookup or ""))
+		dimstore = _fuzzy_get(dimstore_by_norm, store_name_for_lookup or "")
 		if not dimstore:
 			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
-			dimstore = dimstore_by_norm.get(_norm(prefix))
+			dimstore = _fuzzy_get(dimstore_by_norm, prefix)
 
 		changed = False
 		# entity_category + store_ownership_type
@@ -1159,14 +1182,14 @@ def populate_s181_fields() -> dict:
 		for company_name in all_company_names:
 			# Find matching ADMS row by normalized store name
 			prefix = company_name.split(" - ")[0] if " - " in company_name else company_name
-			adms = adms_by_norm.get(_norm(prefix))
+			adms = _fuzzy_get(adms_by_norm, prefix)
 			if not adms:
 				# Try S037 store_name bridge
 				for r in s037_rows:
 					buyer = (r.get("buyer_entity_name") or "").strip()
 					if buyer and _norm(buyer) == _norm(company_name):
 						sn = (r.get("store_name") or "").strip()
-						adms = adms_by_norm.get(_norm(sn))
+						adms = _fuzzy_get(adms_by_norm, sn)
 						if adms:
 							break
 			if not adms:
