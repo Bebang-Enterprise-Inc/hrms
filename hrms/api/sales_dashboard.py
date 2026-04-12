@@ -3252,11 +3252,17 @@ def get_product_mix_analytics(
 
 	rows = _supabase_get_all("product_channel_daily_mix", params, page_size=1000)
 
+	# S183: detect single-store mode for per-store analytics
+	is_single_store = len(selected_location_ids) == 1
+	window_days = (end_day - start_day).days + 1
+
 	# Aggregate in Python: group by (product_name, channel_filter_applied)
 	# If channel=all, we group by product_name only (sum across channels).
 	# If channel=specific, rows are already filtered.
 	from collections import defaultdict
 	agg: dict[str, dict[str, Any]] = {}
+	# S183 task 1.2: collect per-product daily quantities for sparkline + trend
+	per_product_daily: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 	for r in rows:
 		pname = r.get("product_name") or "Unknown"
 		if pname not in agg:
@@ -3283,7 +3289,8 @@ def get_product_mix_analytics(
 			entry["product_ids"].update(pids)
 		elif isinstance(pids, str) and pids.startswith("{"):
 			entry["product_ids"].update(int(x) for x in pids.strip("{}").split(",") if x.strip())
-		entry["total_quantity"] += int(r.get("total_quantity") or 0)
+		qty = int(r.get("total_quantity") or 0)
+		entry["total_quantity"] += qty
 		entry["total_gross_sales"] += float(r.get("total_gross_sales") or 0)
 		entry["total_net_sales"] += float(r.get("total_net_sales") or 0)
 		entry["total_vat_amount"] += float(r.get("total_vat_amount") or 0)
@@ -3305,14 +3312,83 @@ def get_product_mix_analytics(
 		ch = r.get("channel")
 		if ch:
 			entry["channels"].add(ch)
+		# S183: accumulate daily quantities
+		if is_single_store:
+			bdate = r.get("business_date")
+			if bdate:
+				per_product_daily[pname][str(bdate)] += qty
+
+	# S183 task 1.2: build daily_series (zero-padded to window_days)
+	daily_series_map: dict[str, list[int]] = {}
+	if is_single_store:
+		from datetime import timedelta
+		all_dates = [(start_day + timedelta(days=i)).isoformat() for i in range(window_days)]
+		for pname, day_map in per_product_daily.items():
+			daily_series_map[pname] = [day_map.get(d, 0) for d in all_dates]
+
+	# S183 task 1.3: fleet-wide comparison query (single-store mode only)
+	# S183: fleet scope = ALL allowed stores (for rank + assortment gap).
+	# selected_location_ids is already scoped to the ONE selected store.
+	# These are DIFFERENT sets — do NOT use selected_location_ids for fleet.
+	fleet_product_map: dict[str, dict[int, int]] = {}  # {product_name: {location_id: total_qty}}
+	fleet_store_lookup: dict[int, str] = {}  # {location_id: warehouse_name}
+	allowed_location_ids: list[int] = []
+	if is_single_store:
+		allowed_location_ids = [s["location_id"] for s in scope["stores"]]
+		fleet_store_lookup = {s["location_id"]: s["warehouse_name"] for s in scope["stores"]}
+		loc_csv = ",".join(str(int(i)) for i in sorted(set(allowed_location_ids)))
+
+		def _build_fleet_product_mix():
+			fleet_sql = (
+				f"SELECT location_id, product_name, SUM(total_quantity)::int AS qty "
+				f"FROM public.product_channel_daily_mix "
+				f"WHERE business_date >= '{start_day.isoformat()}' "
+				f"AND business_date <= '{end_day.isoformat()}' "
+				f"AND location_id IN ({loc_csv}) "
+			)
+			if channel and channel.lower() != "all":
+				fleet_sql += f"AND channel = '{channel}' "
+			fleet_sql += "GROUP BY location_id, product_name"
+			return _supabase_query_sql(fleet_sql)
+
+		fleet_cache_key = _sales_dashboard_cache_key(
+			"fleet_product_mix", allowed_location_ids,
+			start_day=start_day, end_day=end_day, channel=channel,
+		)
+		try:
+			fleet_rows = _cache_get_or_set(fleet_cache_key, _build_fleet_product_mix, 60)
+		except SupabaseMgmtTokenMissing:
+			# Fallback to paginated PostgREST
+			fleet_params: list[tuple[str, str]] = [
+				("select", "location_id,product_name,total_quantity"),
+				("business_date", f"gte.{start_day.isoformat()}"),
+				("business_date", f"lte.{end_day.isoformat()}"),
+				("location_id", f"in.({loc_csv})"),
+			]
+			if channel and channel.lower() != "all":
+				fleet_params.append(("channel", f"eq.{channel}"))
+			fleet_rows = _supabase_get_all("product_channel_daily_mix", fleet_params, page_size=5000)
+
+		for fr in fleet_rows:
+			fpname = fr.get("product_name") or "Unknown"
+			floc = int(fr.get("location_id") or 0)
+			fqty = int(fr.get("qty") or fr.get("total_quantity") or 0)
+			if fpname not in fleet_product_map:
+				fleet_product_map[fpname] = {}
+			fleet_product_map[fpname][floc] = fleet_product_map[fpname].get(floc, 0) + fqty
+
+	# S183 task 1.10: fix store_coverage — use allowed scope in single-store mode
+	total_stores = len(allowed_location_ids) if is_single_store else (len(selected_location_ids) if selected_location_ids else 44)
+
+	# S183 task 1.7: compute store total net sales for contribution %
+	store_total_net = sum(e["total_net_sales"] for e in agg.values()) if is_single_store else 0.0
 
 	# Build product list
-	total_stores = len(selected_location_ids) if selected_location_ids else 44
 	products = []
 	for pname, e in agg.items():
 		avg_price = round(e["price_sum"] / e["price_count"], 2) if e["price_count"] > 0 else 0.0
 		store_count = len(e["store_ids"])
-		products.append({
+		product_dict: dict[str, Any] = {
 			"product_name": pname,
 			"product_ids": sorted(e["product_ids"]),
 			"total_quantity": e["total_quantity"],
@@ -3327,7 +3403,93 @@ def get_product_mix_analytics(
 			"store_count": store_count,
 			"store_coverage": f"{store_count}/{total_stores}",
 			"channels": sorted(e["channels"]),
-		})
+		}
+
+		# S183: per-store trend/signal fields
+		if is_single_store:
+			series = daily_series_map.get(pname, [])
+			product_dict["daily_series"] = series
+
+			# Task 1.5: WoW delta
+			wow_delta_pct = None
+			if window_days >= 8 and len(series) >= 8:
+				mid = len(series) // 2
+				last_week_sum = sum(series[:mid])
+				this_week_sum = sum(series[mid:])
+				if last_week_sum > 0:
+					wow_delta_pct = round(((this_week_sum - last_week_sum) / last_week_sum) * 100, 1)
+			product_dict["wow_delta_pct"] = wow_delta_pct
+
+			# Task 1.6: trend slope via simple linear regression
+			if len(series) == 0:
+				slope = 0.0
+			else:
+				x_vals = list(range(len(series)))
+				x_mean = sum(x_vals) / len(x_vals)
+				y_mean = sum(series) / len(series)
+				numerator = sum((x - x_mean) * (y - y_mean) for x, y in zip(x_vals, series))
+				denominator = sum((x - x_mean) ** 2 for x in x_vals)
+				slope = round(numerator / denominator, 4) if denominator > 0 else 0.0
+			product_dict["trend_slope"] = slope
+
+			# Task 1.7: velocity + contribution %
+			velocity = round(e["total_quantity"] / window_days, 1) if window_days > 0 else 0.0
+			contribution_pct = round((e["total_net_sales"] / store_total_net) * 100, 1) if store_total_net > 0 else 0.0
+			product_dict["velocity"] = velocity
+			product_dict["contribution_pct"] = contribution_pct
+
+			# Task 1.4: fleet rank
+			fleet_data = fleet_product_map.get(pname, {})
+			if fleet_data:
+				ranked_stores = sorted(fleet_data.items(), key=lambda x: x[1], reverse=True)
+				this_store_id = selected_location_ids[0]
+				fleet_rank = None
+				for rank_idx, (loc_id, _qty) in enumerate(ranked_stores, 1):
+					if loc_id == this_store_id:
+						fleet_rank = rank_idx
+						break
+				product_dict["fleet_rank"] = fleet_rank
+				product_dict["fleet_total_stores"] = len(ranked_stores)
+			else:
+				product_dict["fleet_rank"] = None
+				product_dict["fleet_total_stores"] = 0
+
+			# Task 1.7: trend_label (three-tier signal)
+			fleet_rank = product_dict["fleet_rank"]
+			fleet_total = product_dict["fleet_total_stores"]
+			trend_label = None
+			if fleet_rank is not None and fleet_total > 0:
+				rank_pct = fleet_rank / fleet_total  # 0..1, lower = better
+				bottom_quartile = rank_pct > 0.75
+				bottom_half = rank_pct > 0.5
+				declining = slope < 0
+				if bottom_quartile and declining and contribution_pct < 1.0:
+					trend_label = "drop_candidate"
+				elif bottom_half or declining:
+					trend_label = "watch"
+				else:
+					trend_label = "strong"
+			product_dict["trend_label"] = trend_label
+
+			# Task 1.9: per-store breakdown for drill-down (top 20 stores)
+			if fleet_data:
+				ranked_stores = sorted(fleet_data.items(), key=lambda x: x[1], reverse=True)[:20]
+				breakdown = []
+				for rank_pos, (loc_id, loc_qty) in enumerate(ranked_stores, 1):
+					loc_velocity = round(loc_qty / window_days, 1) if window_days > 0 else 0.0
+					# Compute per-store slope from fleet data (not available per-day, use velocity proxy)
+					breakdown.append({
+						"location_id": loc_id,
+						"warehouse_name": fleet_store_lookup.get(loc_id, f"Store {loc_id}"),
+						"velocity": loc_velocity,
+						"rank": rank_pos,
+						"trend_slope": slope if loc_id == selected_location_ids[0] else 0.0,
+					})
+				product_dict["per_store_breakdown"] = breakdown
+			else:
+				product_dict["per_store_breakdown"] = []
+
+		products.append(product_dict)
 
 	# Sort
 	sort_keys = {
@@ -3342,6 +3504,27 @@ def get_product_mix_analytics(
 	# Apply limit
 	products_limited = products[:limit_int]
 
+	# S183 task 1.8: assortment gap (products in fleet but not at this store)
+	assortment_gap_count = 0
+	assortment_gap_products: list[dict[str, Any]] = []
+	if is_single_store:
+		this_store_products = set(agg.keys())
+		for fpname, fleet_stores in fleet_product_map.items():
+			if fpname not in this_store_products:
+				fleet_velocity = round(sum(fleet_stores.values()) / (window_days * len(fleet_stores)), 1) if window_days > 0 and fleet_stores else 0.0
+				assortment_gap_products.append({
+					"product_name": fpname,
+					"fleet_velocity": fleet_velocity,
+					"fleet_stores_count": len(fleet_stores),
+				})
+		assortment_gap_products.sort(key=lambda x: x["fleet_velocity"], reverse=True)
+		assortment_gap_count = len(assortment_gap_products)
+
+	# S183 task 1.10: store name for single-store display
+	store_name = None
+	if is_single_store and scope.get("selected_stores"):
+		store_name = scope["selected_stores"][0].get("warehouse_name")
+
 	return {
 		"products": products_limited,
 		"meta": {
@@ -3354,5 +3537,10 @@ def get_product_mix_analytics(
 			"returned_count": len(products_limited),
 			"sort_by": sort_by,
 			"limit": limit_int,
+			"is_single_store": is_single_store,
+			"store_name": store_name,
+			"store_total_net": round(store_total_net, 2) if is_single_store else None,
+			"assortment_gap_count": assortment_gap_count,
+			"assortment_gap_products": assortment_gap_products,
 		},
 	}
