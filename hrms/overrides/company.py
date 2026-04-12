@@ -680,15 +680,29 @@ def auto_provision_company(doc, method=None):
 		# Step 6: BKI Customer via S037 register (Blocker 4 fix)
 		_s181_ensure_bki_customer(doc)
 
-		# Step 7: flip the sentinel so this hook never re-runs for this company
+		# Step 7 (S184): Create default Bank Account placeholders
+		_s184_create_default_bank_accounts(doc)
+
+		# Step 8 (S184): Assign ADMS device from DEVICE_TO_STORE
+		_s184_assign_adms_device(doc)
+
+		# Step 9 (S184): Pull GPS from Superadmin API
+		_s184_pull_gps(doc)
+
+		# Step 10: flip the sentinel so this hook never re-runs for this company
 		frappe.db.set_value(
 			"Company", doc.name, "first_provision_done", 1, update_modified=False
 		)
 
 		frappe.db.release_savepoint("s181_auto_provision")
+
+		# Build summary of what was auto-provisioned
+		provisions = ["COA", "Warehouse", "Cost Center", "Default Accounts", "BKI Customer"]
+		provisions.append("Bank Accounts (2 placeholders)")
+		provisions.append("ADMS Device" if doc.get("adms_devices") else "ADMS Device (none matched)")
+		provisions.append("GPS")
 		frappe.msgprint(
-			f"S181: auto-provisioned COA, Warehouse, Cost Center, default accounts "
-			f"and BKI Customer for {doc.name}",
+			f"S184: auto-provisioned {', '.join(provisions)} for {doc.name}",
 			indicator="green",
 			alert=True,
 		)
@@ -707,6 +721,265 @@ def auto_provision_company(doc, method=None):
 			indicator="red",
 			alert=True,
 		)
+
+
+# ============================================================================
+# S184 auto-provision helpers (called inside auto_provision_company)
+# ============================================================================
+
+
+def _s184_create_default_bank_accounts(doc):
+	"""Create 2 placeholder Bank Account records for a new store Company.
+
+	HB-1: bank_account_no is NOT required — left blank for Finance to fill.
+	"""
+	if not frappe.db.get_value("Company", doc.name, "entity_category"):
+		# Not yet tagged; assume Store for new companies
+		pass
+
+	# Default bank account pattern: BDO Operations + BDO Payroll
+	defaults = [
+		{"bank": "BDO", "suffix": "Operations"},
+		{"bank": "BDO", "suffix": "Payroll"},
+	]
+
+	for d in defaults:
+		acct_name = f"{doc.name} - {d['suffix']}"
+		if frappe.db.exists("Bank Account", {"account_name": acct_name, "company": doc.name}):
+			continue
+		try:
+			ba = frappe.get_doc({
+				"doctype": "Bank Account",
+				"account_name": acct_name,
+				"bank": d["bank"],
+				"company": doc.name,
+				"bank_account_no": "",  # HB-1: NOT required
+				"is_company_account": 1,
+			})
+			ba.flags.ignore_permissions = True
+			ba.flags.ignore_mandatory = True
+			ba.insert()
+		except Exception as e:
+			frappe.log_error(
+				title=f"S184 bank account auto-create: {acct_name}",
+				message=str(e),
+			)
+
+
+def _s184_assign_adms_device(doc):
+	"""Assign ADMS device from DEVICE_TO_STORE for a new Company.
+
+	HB-3: MUST import from hrms/utils/device_mapping.py (authoritative source).
+	"""
+	company_meta = frappe.get_meta("Company")
+	if not company_meta.has_field("adms_devices"):
+		return
+
+	from hrms.utils.device_mapping import DEVICE_TO_STORE
+
+	# Build S037 store_name for this Company
+	store_name = None
+	s037_path = os.path.join(frappe.get_app_path("hrms"), "data_seed", "store_buyer_entity_register_2026-03-12.csv")
+	if os.path.exists(s037_path):
+		with open(s037_path, encoding="utf-8-sig") as f:
+			import csv as csv_mod
+			for row in csv_mod.DictReader(f):
+				buyer = (row.get("buyer_entity_name") or "").strip()
+				if buyer and buyer.lower().rstrip(".").strip() == doc.name.lower().rstrip(".").strip():
+					store_name = (row.get("store_name") or "").strip()
+					break
+
+	# Bridge: ADMS canonical name → S037 store name (same as in populate_s181_fields)
+	_ADMS_TO_S037 = {
+		"ARANETA GATEWAY": "Food Express (Gateway Mall)",
+		"AYALA EVO": "Ayala Evo City",
+		"AYALA FAIRVIEW": "Ayala Fairview Terraces",
+		"AYALA SOLENAD": "Ayala Solenad 2",
+		"AYALA UP TOWN CENTER": "Ayala UP Town Center",
+		"AYALA VERMOSA": "Ayala Vermosa",
+		"BF HOMES": "BF Homes Paranaque (Aguirre Ave.)",
+		"BGC CAPITAL HOUSE": "_HEAD_OFFICE_",
+		"BRITTANY OFFICE": "_HEAD_OFFICE_",
+		"CTTM TOMAS MORATO": "Tomas Morato (CTTM Square)",
+		"D VERDE CALAMBA": "D'Verde Calamba",
+		"FESTIVAL MALL": "Festival Mall Alabang",
+		"GREENHILLS": "Ortigas Greenhills",
+		"LCT": "Lucky China Town",
+		"MARKET MARKET": "Ayala Market! Market!",
+		"MYTOWN": "Ever Commonwealth",
+		"NAIA T3": "NAIA T3 (Departure)",
+		"PASEO": "Paseo Center",
+		"PITX": "PITX Terminal",
+		"ROBINSON ANTIPOLO": "Robinsons Place Antipolo",
+		"ROBINSON GENERAL TRIAS": "Robinsons Place Gen. Trias",
+		"ROBINSONS GALLERIA SOUTH": "Robinsons Galleria South",
+		"ROBINSONS IMUS": "Robinsons Place Imus",
+		"SHAW COMMISSARY": "_COMMISSARY_",
+		"SM BICUTAN": "SM Bicutan",
+		"SM CALOOCAN": "SM Caloocan",
+		"SM CLARK": "SM Clark",
+		"SM EAST ORTIGAS": "SM East Ortigas",
+		"SM GRAND CENTRAL": "SM Grand Central",
+		"SM MANILA": "SM Manila",
+		"SM MARIKINA": "SM Marikina",
+		"SM MARILAO": "SM Marilao",
+		"SM MEGAMALL": "SM Megamall",
+		"SM MOA": "SM Mall of Asia",
+		"SM NORTH EDSA": "SM North EDSA",
+		"SM PULILAN": "SM Center Pulilan",
+		"SM SANGANDAAN": "SM Sangandaan",
+		"SM SJDM": "SM San Jose Del Monte",
+		"SM SOUTHMALL": "SM Southmall",
+		"SM STA. ROSA": "SM Sta. Rosa",
+		"SM TANZA": "SM Tanza",
+		"SM TAYTAY": "SM Taytay",
+		"SM VALENZUELA": "SM Valenzuela",
+		"STA LUCIA GRAND MALL": "Sta. Lucia East Grand Mall",
+		"THE TERMINAL": "The Terminal Exchange",
+		"UPTOWN BGC": "Uptown Mall",
+		"VENICE GRAND CANAL": "Venice Grand Canal",
+		"VISTA MALL TAGUIG": "Vista Mall Taguig",
+	}
+
+	# Reverse bridge
+	_S037_TO_ADMS = {v: k for k, v in _ADMS_TO_S037.items() if not v.startswith("_")}
+
+	# Head office / commissary explicit map
+	_COMPANY_TO_ADMS = {
+		"Bebang Enterprise Inc.": ["BRITTANY OFFICE", "BGC CAPITAL HOUSE"],
+		"Bebang Kitchen Inc.": ["SHAW COMMISSARY"],
+	}
+
+	# Strategy 1: explicit Company → ADMS
+	adms_locs = _COMPANY_TO_ADMS.get(doc.name)
+	if not adms_locs and store_name:
+		# Strategy 2: S037 → reverse bridge → ADMS
+		adms_loc = _S037_TO_ADMS.get(store_name)
+		if adms_loc:
+			adms_locs = [adms_loc]
+
+	if not adms_locs:
+		return
+
+	# Normalize DEVICE_TO_STORE for lookup
+	adms_by_location = {}
+	for serial_key, loc_name in DEVICE_TO_STORE.items():
+		key = loc_name.upper().strip()
+		if key not in adms_by_location:
+			adms_by_location[key] = []
+		adms_by_location[key].append((serial_key, loc_name))
+
+	for adms_loc in adms_locs:
+		devs = adms_by_location.get(adms_loc.upper().strip(), [])
+		for serial_val, loc_label in devs:
+			existing = frappe.db.get_value(
+				"BEI Company ADMS Device",
+				{"parent": doc.name, "device_serial": serial_val},
+				"name",
+			)
+			if existing:
+				continue
+			try:
+				doc.append("adms_devices", {
+					"device_serial": serial_val,
+					"device_name": loc_label,
+				})
+				doc.flags.ignore_permissions = True
+				doc.flags.ignore_mandatory = True
+				doc.save()
+			except Exception as e:
+				frappe.log_error(
+					title=f"S184 ADMS auto-assign: {doc.name}",
+					message=str(e),
+				)
+
+
+def _s184_pull_gps(doc):
+	"""Pull GPS coordinates from Superadmin API for a new Company.
+
+	Falls back to the locations CSV if the API is unavailable.
+	"""
+	company_meta = frappe.get_meta("Company")
+	if not company_meta.has_field("gps_latitude"):
+		return
+
+	# Try Superadmin API
+	from hrms.api.company_master import _s184_fetch_superadmin_stores, _norm_name
+
+	stores = _s184_fetch_superadmin_stores()
+	matched = None
+
+	# Build S037 store_name for matching
+	store_name = None
+	s037_path = os.path.join(frappe.get_app_path("hrms"), "data_seed", "store_buyer_entity_register_2026-03-12.csv")
+	if os.path.exists(s037_path):
+		with open(s037_path, encoding="utf-8-sig") as f:
+			import csv as csv_mod
+			for row in csv_mod.DictReader(f):
+				buyer = (row.get("buyer_entity_name") or "").strip()
+				if buyer and buyer.lower().rstrip(".").strip() == doc.name.lower().rstrip(".").strip():
+					store_name = (row.get("store_name") or "").strip()
+					break
+
+	if stores and store_name:
+		# Normalize index
+		sa_by_norm = {}
+		for st in stores:
+			sn = (st.get("store_name") or "").strip()
+			if sn:
+				sa_by_norm[_norm_name(sn)] = st
+
+		# Try matching
+		nk = _norm_name(store_name)
+		matched = sa_by_norm.get(nk)
+		if not matched:
+			# Fuzzy starts-with
+			for k, v in sa_by_norm.items():
+				if len(k) >= 6 and len(nk) >= 6:
+					if nk.startswith(k) or k.startswith(nk):
+						matched = v
+						break
+
+	if matched:
+		try:
+			lat = float(matched.get("latitude", 0))
+			lng = float(matched.get("longitude", 0))
+			if lat and lng:
+				frappe.db.set_value("Company", doc.name, "gps_latitude", lat, update_modified=False)
+				frappe.db.set_value("Company", doc.name, "gps_longitude", lng, update_modified=False)
+				addr = (matched.get("address") or "").strip()
+				if addr:
+					frappe.db.set_value("Company", doc.name, "full_address", addr, update_modified=False)
+				city = (matched.get("city") or "").strip()
+				if city:
+					frappe.db.set_value("Company", doc.name, "city", city, update_modified=False)
+		except (ValueError, TypeError):
+			pass
+		return
+
+	# Fallback: locations CSV
+	loc_path = os.path.join(frappe.get_app_path("hrms"), "data_seed", "Bebang_Halo-Halo_Stores_Locations_2025-12-29.csv")
+	if os.path.exists(loc_path) and store_name:
+		with open(loc_path, encoding="utf-8-sig") as f:
+			import csv as csv_mod
+			for row in csv_mod.DictReader(f):
+				sn = (row.get("store_name") or "").strip()
+				if sn and _norm_name(sn) == _norm_name(store_name):
+					try:
+						lat = float(row.get("latitude", 0))
+						lng = float(row.get("longitude", 0))
+						if lat and lng:
+							frappe.db.set_value("Company", doc.name, "gps_latitude", lat, update_modified=False)
+							frappe.db.set_value("Company", doc.name, "gps_longitude", lng, update_modified=False)
+							addr = (row.get("address") or "").strip()
+							if addr:
+								frappe.db.set_value("Company", doc.name, "full_address", addr, update_modified=False)
+							city = (row.get("city") or "").strip()
+							if city:
+								frappe.db.set_value("Company", doc.name, "city", city, update_modified=False)
+					except (ValueError, TypeError):
+						pass
+					break
 
 
 def auto_enroll_adms_devices(doc, method=None):

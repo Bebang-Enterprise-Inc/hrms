@@ -1455,6 +1455,129 @@ def populate_s181_fields() -> dict:
 				)
 				pre_count += 1
 
+	# ------------ S184: Bank Account seeding -----------
+	bank_accounts_seeded = 0
+	bank_accounts_skipped = 0
+	bank_csv_path = os.path.join(data_seed, "bank_accounts_2026-04-10.csv")
+	if os.path.exists(bank_csv_path):
+		bank_rows = _csv("bank_accounts_2026-04-10.csv")
+		for brow in bank_rows:
+			acct_name = (brow.get("account_name") or "").strip()
+			gl_desc = (brow.get("gl_description") or "").strip()
+			acct_number = (brow.get("account_number") or "").strip()
+			bank_name = (brow.get("bank") or "").strip()
+			branch = (brow.get("branch_of_account") or "").strip()
+
+			if not acct_name or not gl_desc:
+				continue
+
+			# Resolve Company from account_name using _norm matching
+			matched_company = None
+			norm_acct = _norm(acct_name)
+			for cname in all_company_names:
+				if _norm(cname) == norm_acct:
+					matched_company = cname
+					break
+			# Fallback: account_name contains a parenthetical store hint
+			if not matched_company and "(" in acct_name:
+				# e.g. "BEBANG MEGA INC (SM TANZA)" -> try "Bebang Mega Inc"
+				base = acct_name.split("(")[0].strip()
+				norm_base = _norm(base)
+				for cname in all_company_names:
+					if _norm(cname) == norm_base:
+						matched_company = cname
+						break
+
+			if not matched_company:
+				# Try direct lower-case index
+				key = acct_name.lower().rstrip(".").strip()
+				matched_company = lower_idx.get(key)
+
+			if not matched_company:
+				continue
+
+			# Build unique account label: "GL_DESC - COMPANY"
+			ba_name = f"{gl_desc} - {matched_company}"
+
+			# Check if Bank Account already exists
+			existing = frappe.db.exists("Bank Account", {"account_name": ba_name})
+			if existing:
+				bank_accounts_skipped += 1
+				continue
+
+			try:
+				ba = frappe.get_doc({
+					"doctype": "Bank Account",
+					"account_name": ba_name,
+					"bank": bank_name,
+					"company": matched_company,
+					"bank_account_no": acct_number or "",
+					"is_company_account": 1,
+				})
+				if branch:
+					ba.branch_code = branch
+				ba.flags.ignore_permissions = True
+				ba.flags.ignore_mandatory = True
+				ba.insert()
+				bank_accounts_seeded += 1
+			except Exception as e:
+				frappe.log_error(
+					title=f"S184 bank account seed: {ba_name}",
+					message=str(e),
+				)
+
+	# ------------ S184: GPS sync from Superadmin API -----------
+	gps_synced = 0
+	gps_failed = 0
+	superadmin_stores = _s184_fetch_superadmin_stores()
+	if superadmin_stores:
+		# Build index: normalized store_name -> store data
+		sa_by_norm: dict[str, dict] = {}
+		for st in superadmin_stores:
+			sn = (st.get("store_name") or "").strip()
+			if sn:
+				sa_by_norm[_norm(sn)] = st
+
+		for company_name in all_company_names:
+			# Only update stores (need S037 match)
+			store_name_for_lookup = None
+			for r in s037_rows:
+				buyer = (r.get("buyer_entity_name") or "").strip()
+				if buyer and (_norm(buyer) == _norm(company_name)):
+					store_name_for_lookup = (r.get("store_name") or "").strip()
+					break
+				if buyer:
+					key = buyer.lower().rstrip(".").strip()
+					if key in lower_idx and lower_idx[key] == company_name:
+						store_name_for_lookup = (r.get("store_name") or "").strip()
+						break
+
+			if not store_name_for_lookup:
+				continue
+
+			sa = _bridged_lookup(sa_by_norm, store_name_for_lookup)
+			if not sa:
+				gps_failed += 1
+				continue
+
+			try:
+				sa_lat = float(sa.get("latitude", 0))
+				sa_lng = float(sa.get("longitude", 0))
+			except (ValueError, TypeError):
+				gps_failed += 1
+				continue
+
+			if sa_lat and sa_lng:
+				_set(company_name, "gps_latitude", sa_lat)
+				_set(company_name, "gps_longitude", sa_lng)
+				sa_addr = (sa.get("address") or "").strip()
+				if sa_addr:
+					_set(company_name, "full_address", sa_addr)
+				sa_city = (sa.get("city") or "").strip()
+				if sa_city:
+					_set(company_name, "city", sa_city)
+				gps_synced += 1
+
 	frappe.db.commit()
 
 	return {
@@ -1470,4 +1593,302 @@ def populate_s181_fields() -> dict:
 		"adms_devices_seeded": adms_seeded,
 		"supervisors_set": supervisors_set,
 		"pre_provisioned_sentinels_set": pre_count,
+		"bank_accounts_seeded": bank_accounts_seeded,
+		"bank_accounts_skipped": bank_accounts_skipped,
+		"gps_synced": gps_synced,
+		"gps_failed": gps_failed,
+	}
+
+
+# ============================================================================
+# S184 helpers
+# ============================================================================
+
+
+def _s184_fetch_superadmin_stores() -> list[dict]:
+	"""Fetch store list from Superadmin API. Returns [] on failure."""
+	import requests
+
+	api_key = frappe.conf.get("superadmin_stores_api_key") or ""
+	if not api_key:
+		# Try Doppler fallback (local dev only)
+		import subprocess
+		import sys
+
+		try:
+			result = subprocess.run(
+				["doppler", "secrets", "get", "SUPERADMIN_STORES_API_KEY",
+				 "--plain", "--project", "bei-erp", "--config", "dev"],
+				capture_output=True, text=True, timeout=10,
+				creationflags=0x08000000 if sys.platform == "win32" else 0,
+			)
+			if result.returncode == 0 and result.stdout.strip():
+				api_key = result.stdout.strip()
+		except (FileNotFoundError, subprocess.TimeoutExpired):
+			pass
+
+	if not api_key:
+		frappe.log_error(title="S184 GPS sync", message="SUPERADMIN_STORES_API_KEY not available")
+		return []
+
+	try:
+		resp = requests.get(
+			"https://superadmin.bebang.ph/api/stores",
+			headers={"x-api-key": api_key},
+			timeout=30,
+		)
+		resp.raise_for_status()
+		data = resp.json()
+		return data if isinstance(data, list) else data.get("data", [])
+	except Exception as e:
+		frappe.log_error(title="S184 GPS sync: API call failed", message=str(e))
+		return []
+
+
+# ============================================================================
+# S184 Phase 3: Connected data endpoints
+# ============================================================================
+
+
+@frappe.whitelist()
+def get_headcount(company: str) -> dict:
+	"""Return live employee headcount for a Company, grouped by designation.
+
+	S184 Task 3.1 — always queries live tabEmployee data.
+	"""
+	set_backend_observability_context(
+		module="company",
+		action="get_headcount",
+		mutation_type="read",
+	)
+
+	frappe.has_permission("Company", "read", doc=company, throw=True)
+
+	rows = frappe.db.sql(
+		"""
+		SELECT designation, COUNT(*) as cnt
+		FROM tabEmployee
+		WHERE company = %s AND status = 'Active'
+		GROUP BY designation
+		ORDER BY cnt DESC
+		""",
+		(company,),
+		as_dict=True,
+	)
+
+	by_designation = {r["designation"]: r["cnt"] for r in rows if r.get("designation")}
+	total_active = sum(r["cnt"] for r in rows)
+
+	# Recent hires (last 90 days)
+	recent = frappe.get_all(
+		"Employee",
+		filters={
+			"company": company,
+			"status": "Active",
+			"date_of_joining": [">=", add_days(today(), -90)],
+		},
+		fields=["employee_name", "designation", "date_of_joining"],
+		order_by="date_of_joining DESC",
+		limit=5,
+	)
+
+	return {
+		"total_active": total_active,
+		"by_designation": by_designation,
+		"recent_hires": [
+			{
+				"name": r.employee_name,
+				"designation": r.designation,
+				"date_of_joining": str(r.date_of_joining),
+			}
+			for r in recent
+		],
+	}
+
+
+@frappe.whitelist()
+def get_bank_accounts(company: str) -> list[dict]:
+	"""Return all Bank Account records linked to a Company.
+
+	S184 Task 3.2.
+	"""
+	set_backend_observability_context(
+		module="company",
+		action="get_bank_accounts",
+		mutation_type="read",
+	)
+
+	frappe.has_permission("Company", "read", doc=company, throw=True)
+
+	accounts = frappe.get_all(
+		"Bank Account",
+		filters={"company": company},
+		fields=[
+			"name", "bank", "account_name", "bank_account_no",
+			"is_company_account", "branch_code",
+		],
+		order_by="bank ASC, account_name ASC",
+	)
+
+	return [
+		{
+			"name": a.name,
+			"bank": a.bank,
+			"account_name": a.account_name,
+			"bank_account_no": a.bank_account_no or "",
+			"is_company_account": a.is_company_account,
+			"branch_code": a.get("branch_code") or "",
+		}
+		for a in accounts
+	]
+
+
+@frappe.whitelist()
+def get_bki_billing(company: str) -> dict:
+	"""Return BKI billing summary for a Company.
+
+	S184 Task 3.3 — follows the S037 register → Customer → Sales Invoice chain.
+	"""
+	set_backend_observability_context(
+		module="company",
+		action="get_bki_billing",
+		mutation_type="read",
+	)
+
+	frappe.has_permission("Company", "read", doc=company, throw=True)
+
+	import csv
+	import os
+
+	data_seed = os.path.join(frappe.get_app_path("hrms"), "data_seed")
+	s037_path = os.path.join(data_seed, "store_buyer_entity_register_2026-03-12.csv")
+
+	buyer_entity_name = None
+	warehouse_docname = None
+	if os.path.exists(s037_path):
+		with open(s037_path, encoding="utf-8-sig") as f:
+			for row in csv.DictReader(f):
+				buyer = (row.get("buyer_entity_name") or "").strip()
+				if buyer and _norm_name(buyer) == _norm_name(company):
+					buyer_entity_name = buyer
+					warehouse_docname = (row.get("warehouse_docname") or "").strip()
+					break
+
+	if not buyer_entity_name:
+		return {
+			"buyer_entity_name": None,
+			"billing_status": "Not linked",
+			"outstanding_count": 0,
+			"outstanding_total": 0,
+			"last_delivery_date": None,
+		}
+
+	# Check if Customer exists
+	customer_exists = frappe.db.exists("Customer", buyer_entity_name)
+	if not customer_exists:
+		return {
+			"buyer_entity_name": buyer_entity_name,
+			"billing_status": "Customer not created",
+			"outstanding_count": 0,
+			"outstanding_total": 0,
+			"last_delivery_date": None,
+		}
+
+	# Outstanding invoices
+	outstanding = frappe.db.sql(
+		"""
+		SELECT COUNT(*) as cnt, COALESCE(SUM(outstanding_amount), 0) as total
+		FROM `tabSales Invoice`
+		WHERE customer = %s AND outstanding_amount > 0 AND docstatus = 1
+		""",
+		(buyer_entity_name,),
+		as_dict=True,
+	)
+
+	# Last delivery date (most recent submitted Sales Invoice)
+	last_inv = frappe.db.sql(
+		"""
+		SELECT posting_date
+		FROM `tabSales Invoice`
+		WHERE customer = %s AND docstatus = 1
+		ORDER BY posting_date DESC
+		LIMIT 1
+		""",
+		(buyer_entity_name,),
+		as_dict=True,
+	)
+
+	out = outstanding[0] if outstanding else {"cnt": 0, "total": 0}
+
+	return {
+		"buyer_entity_name": buyer_entity_name,
+		"billing_status": "Active" if customer_exists else "Not linked",
+		"outstanding_count": out["cnt"],
+		"outstanding_total": float(out["total"]),
+		"last_delivery_date": str(last_inv[0]["posting_date"]) if last_inv else None,
+	}
+
+
+@frappe.whitelist()
+def get_warehouse_stock(company: str) -> dict:
+	"""Return warehouse stock summary for a Company.
+
+	S184 Task 3.4 — follows Company → Warehouse → tabBin chain.
+	"""
+	set_backend_observability_context(
+		module="company",
+		action="get_warehouse_stock",
+		mutation_type="read",
+	)
+
+	frappe.has_permission("Company", "read", doc=company, throw=True)
+
+	# Find the Company's primary warehouse
+	abbr = frappe.db.get_value("Company", company, "abbr") or ""
+	wh_name = f"{company} - {abbr}" if abbr else company
+
+	# Check if warehouse exists
+	wh_exists = frappe.db.exists("Warehouse", wh_name)
+	if not wh_exists:
+		# Try S037 warehouse_docname match
+		import csv
+		import os
+
+		data_seed = os.path.join(frappe.get_app_path("hrms"), "data_seed")
+		s037_path = os.path.join(data_seed, "store_buyer_entity_register_2026-03-12.csv")
+		if os.path.exists(s037_path):
+			with open(s037_path, encoding="utf-8-sig") as f:
+				for row in csv.DictReader(f):
+					buyer = (row.get("buyer_entity_name") or "").strip()
+					if buyer and _norm_name(buyer) == _norm_name(company):
+						wh_name = (row.get("warehouse_docname") or "").strip()
+						wh_exists = frappe.db.exists("Warehouse", wh_name) if wh_name else False
+						break
+
+	if not wh_exists:
+		return {
+			"warehouse_name": None,
+			"item_count": 0,
+			"stock_value": 0,
+			"is_open": False,
+		}
+
+	# Query tabBin for stock data
+	stock = frappe.db.sql(
+		"""
+		SELECT COUNT(*) as item_count, COALESCE(SUM(stock_value), 0) as stock_value
+		FROM tabBin
+		WHERE warehouse = %s AND actual_qty > 0
+		""",
+		(wh_name,),
+		as_dict=True,
+	)
+
+	st = stock[0] if stock else {"item_count": 0, "stock_value": 0}
+
+	return {
+		"warehouse_name": wh_name,
+		"item_count": st["item_count"],
+		"stock_value": float(st["stock_value"]),
+		"is_open": True,
 	}
