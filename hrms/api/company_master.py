@@ -878,14 +878,37 @@ def populate_s181_fields() -> dict:
 		return re.sub(r"\s+", " ", s).strip()
 
 	def _set(docname: str, field: str, value):
-		"""Set a Company field if it exists on the DocType and differs from current."""
+		"""Set a Company field if it exists on the DocType and differs from current.
+		Wraps set_value in try/except so one bad value (e.g. a malformed date)
+		does not crash the entire populate batch."""
 		if not company_meta.has_field(field):
 			return False
 		current = frappe.db.get_value("Company", docname, field)
 		if current == value:
 			return False
-		frappe.db.set_value("Company", docname, field, value, update_modified=False)
-		return True
+		try:
+			frappe.db.set_value("Company", docname, field, value, update_modified=False)
+			return True
+		except Exception as e:
+			frappe.log_error(
+				title=f"S181 populate: set {field} on {docname}",
+				message=f"value={value!r}, error={e}",
+			)
+			return False
+
+	def _parse_date(raw: str) -> str | None:
+		"""Normalize any date string to YYYY-MM-DD or return None.
+		Handles: 2025-09-28, 2025-09-28 00:00:00, 14-May-2025, 09/28/2025, etc."""
+		if not raw:
+			return None
+		raw = raw.strip().split(" ")[0]  # strip time portion
+		from datetime import datetime
+		for fmt in ("%Y-%m-%d", "%d-%b-%Y", "%d/%m/%Y", "%m/%d/%Y", "%Y/%m/%d"):
+			try:
+				return datetime.strptime(raw, fmt).strftime("%Y-%m-%d")
+			except ValueError:
+				continue
+		return None
 
 	# Load all reference CSVs
 	s037_rows = _csv("store_buyer_entity_register_2026-03-12.csv")
@@ -1075,10 +1098,8 @@ def populate_s181_fields() -> dict:
 
 		# opening_date + region from dim_store
 		if dimstore:
-			od = (dimstore.get("opening_date") or "").strip()
+			od = _parse_date((dimstore.get("opening_date") or "").strip())
 			if od:
-				# Convert "2025-09-28 00:00:00" to "2025-09-28"
-				od = od.split(" ")[0] if " " in od else od
 				if _set(company_name, "opening_date", od):
 					p3_per_field["opening_date"] = p3_per_field.get("opening_date", 0) + 1
 					changed = True
