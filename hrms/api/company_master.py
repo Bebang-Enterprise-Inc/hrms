@@ -576,18 +576,40 @@ def _resolve_company_for_s037_row(
 ) -> str | None:
 	"""Find the Frappe Company docname that corresponds to an S037 row.
 
-	Resolution order:
-	1. `row['buyer_entity_name']` exact match against Company docnames
-	2. `row['buyer_entity_name']` case-insensitive match (handles "Bebang
-	   Mega Inc" vs "BEBANG MEGA INC." variants)
-	3. None (store is mapped in S037 but no Frappe Company exists yet)
+	Resolution order (S188 per-store model):
+	1. Check if a per-store child company exists for this specific store
+	2. `row['buyer_entity_name']` exact match against Company docnames
+	3. `row['buyer_entity_name']` case-insensitive match
+	4. None (store is mapped in S037 but no Frappe Company exists yet)
 	"""
 	buyer = (row.get("buyer_entity_name") or "").strip()
+	store_name = (row.get("store_name") or "").strip()
 	if not buyer:
 		return None
+
+	# S188: per-store child company lookup — check if a child company
+	# exists for this specific store before falling back to the parent
+	_STORE_TO_CHILD: dict[str, str] = {
+		"SM Megamall": "Bebang Enterprise Inc. - SM Megamall",
+		"SM Manila": "Bebang Enterprise Inc. - SM Manila",
+		"SM Southmall": "Bebang Enterprise Inc. - SM Southmall",
+		"Robinsons Place Antipolo": "Bebang Enterprise Inc. - Robinsons Antipolo",
+		"Ayala Evo City": "Bebang Mega Inc. - Ayala Evo City",
+		"Ayala Vermosa": "Bebang Mega Inc. - Ayala Vermosa",
+		"Robinsons Place Gen. Trias": "Bebang Mega Inc. - Robinsons Gen Trias",
+		"Robinsons Place Imus": "Bebang Mega Inc. - Robinsons Imus",
+		"SM Tanza": "Bebang Mega Inc. - SM Tanza",
+		"Sta. Lucia East Grand Mall": "Bebang SM Marikina Inc. - Sta Lucia",
+		"D'Verde Calamba": "TAJ Food Corp. - DVerde Calamba",
+		"Food Express (Gateway Mall)": "Tungsten Capital - Gateway Mall",
+	}
+	if store_name and store_name in _STORE_TO_CHILD:
+		child = _STORE_TO_CHILD[store_name]
+		if child in all_companies:
+			return child
+
 	if buyer in all_companies:
 		return buyer
-	# Normalized fallback: strip Inc/Corp/OPC + lowercase + remove punctuation
 	key = _norm_name(buyer)
 	return lower_name_index.get(key)
 
@@ -1644,6 +1666,19 @@ def populate_s181_fields() -> dict:
 			"BEIFRANCHISE FOOD OPC": "Ortigas Land Greenhills",
 			"TAJ FOOD CORP.": "D'Verde Calamba",
 			"Bebang Kitchen Inc.": "Shaw BLVD",
+			# S188: per-store child companies
+			"Bebang Enterprise Inc. - SM Megamall": "SM Megamall",
+			"Bebang Enterprise Inc. - SM Manila": "SM  Manila",
+			"Bebang Enterprise Inc. - SM Southmall": "SM Southmall",
+			"Bebang Enterprise Inc. - Robinsons Antipolo": "Robinsons Antipolo",
+			"Bebang Mega Inc. - Ayala Evo City": "Ayala Evo",
+			"Bebang Mega Inc. - Ayala Vermosa": "Ayala Vermosa",
+			"Bebang Mega Inc. - Robinsons Gen Trias": "Robinson General Trias",
+			"Bebang Mega Inc. - Robinsons Imus": "Robinson Imus",
+			"Bebang Mega Inc. - SM Tanza": "SM Tanza",
+			"Bebang SM Marikina Inc. - Sta Lucia": "Sta. Lucia East Grand Mall",
+			"TAJ Food Corp. - DVerde Calamba": "D'Verde Calamba",
+			"Tungsten Capital - Gateway Mall": "Araneta Gateway",
 		}
 
 		for company_name in all_company_names:
