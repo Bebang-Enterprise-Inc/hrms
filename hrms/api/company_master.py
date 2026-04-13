@@ -602,6 +602,10 @@ def _resolve_company_for_s037_row(
 		"Sta. Lucia East Grand Mall": "Bebang SM Marikina Inc. - Sta Lucia",
 		"D'Verde Calamba": "TAJ Food Corp. - DVerde Calamba",
 		"Food Express (Gateway Mall)": "Tungsten Capital - Gateway Mall",
+		# Existing per-store companies (pre-S188, now re-parented)
+		"SM Caloocan": "BEBANG SM CALOOCAN",
+		"SM Sangandaan": "BEBANG SM SANGANDAAN",
+		"Robinsons Galleria South": "BEBANG ROBINSONS GALLERIA SOUTH",
 	}
 	if store_name and store_name in _STORE_TO_CHILD:
 		child = _STORE_TO_CHILD[store_name]
