@@ -1614,7 +1614,7 @@ def populate_s181_fields() -> dict:
 			# Untagged companies Sam identified
 			"TASTECARTEL CORP.": "The Grid - Rockwell",
 			"JL TRADE OPC": "SM SJDM",
-			"DLS Dessert Craft Inc.": "Ever Gotesco Commonwealth",
+			"DLS Dessert Craft Inc.": "Ever Commonwealth",
 			# Companies whose S037 buyer differs from Frappe name
 			"BEBANG BF HOMES INC.": "BF Homes",
 			"BEBANG FT INC.": "Ayala Malls Fairview Terraces",
@@ -1626,6 +1626,9 @@ def populate_s181_fields() -> dict:
 			"BEBANG MARKET MARKET INC.": "Ayala Market Market",
 			"BEBANG SMM INC.": "SM  Manila",
 			"BEBANG SMOA INC.": "SM Mall Of Asia",
+			"BEIFRANCHISE FOOD OPC": "Ortigas Land Greenhills",
+			"TAJ FOOD CORP.": "D'Verde Calamba",
+			"Bebang Kitchen Inc.": "Shaw BLVD",
 		}
 
 		for company_name in all_company_names:
