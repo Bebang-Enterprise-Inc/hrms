@@ -7800,11 +7800,13 @@ def get_supplier_grid(
 
 
 @frappe.whitelist()
-def get_supplier_overview(supplier):
+def get_supplier_overview(name=None, supplier=None):
     """Single-call supplier detail — identity, metrics, items, POs, GRs, invoices, monthly spend.
 
     Returns everything the Supplier Overview page needs in one round-trip.
     All metrics are computed live via SQL (not from stored DocType fields).
+
+    Accepts `name` (from proxy :name param) or `supplier` for direct calls.
     """
     from hrms.utils.sentry import set_backend_observability_context
     set_backend_observability_context(module="procurement", action="get_supplier_overview")
@@ -7814,6 +7816,8 @@ def get_supplier_overview(supplier):
         _("You do not have permission to view the Supplier Hub."),
     )
 
+    # Accept either `name` (proxy convention) or `supplier` (direct call)
+    supplier = name or supplier
     if not supplier:
         frappe.throw(_("Supplier is required."))
 
