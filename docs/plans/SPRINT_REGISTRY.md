@@ -256,9 +256,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S184` | Sprint 184 | `s184-company-master-data-hub` (hrms) + `s184-company-master-hub-frontend` (bei-tasks) | hrms #550, bei-tasks #384 | DEPLOYED 2026-04-12 — Company Master Data Hub: Connected Ecosystem. Transforms the Company DocType into a structural hub. Phase 1: Seed 54 Bank Account records + GPS sync from Superadmin API (48 stores). Phase 2: Expand auto_provision_company hook to auto-create bank accounts, ADMS device, GPS for new stores. Phase 3: 4 new API endpoints (get_headcount, get_bank_accounts, get_bki_billing, get_warehouse_stock). Phase 3B: Frontend connected data sections (Bank Accounts, BKI Billing, People, Warehouse) + GPS map link + Sales Analytics link. Phase 3C: Auto-provisioned summary banner. 75 units. Depends on: S181 (Company Master Extension). | `docs/plans/2026-04-12-sprint-184-company-master-data-hub.md` |
 
+| `S186` | Sprint 186 | `s186-supplier-hub-backend` (hrms) + `s186-supplier-hub-frontend` (bei-tasks) | hrms #553 | PR_CREATED 2026-04-13 — Supplier Hub Redesign: dense grid + single-page overview. Backend: 2 new endpoints (get_supplier_grid, get_supplier_overview) with live SQL metrics, SQL-safe sort, RBAC incl Warehouse User. Frontend: Employee-Master-style grid with 7 KPI cards, frozen columns, fullscreen, URL-backed filters, page_size 50/100/200. Compensation-Setup-style overview with NO tabs, vertical card stacking, recharts bar chart, collapsible sections. | `docs/plans/2026-04-13-sprint-186-supplier-hub-redesign.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S186`.
-2. Reserve branch name: `s185-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S187`.
+2. Reserve branch name: `s187-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 5. **MANDATORY cross-check before reserving any S###:** run `git branch -a | grep -iE 's(17[5-9]|18[0-9]|19[0-9])'` on BOTH `hrms` and `bei-tasks` AND `ls docs/plans/ | grep -E 'sprint-(17[5-9]|18[0-9]|19[0-9])'` — if any match the ID you're about to reserve, pick the next free number. The local registry is not authoritative; remote branches and plan files are.
