@@ -992,6 +992,19 @@ def populate_s181_fields() -> dict:
 		"D'Verde Calamba": "Dverde Calamba",
 		"SM Mall of Asia": "SM Mall of Asia",
 		"Uptown Mall": "Uptown Mall BGC",
+		"The Terminal Exchange": "The Terminal Alabang",
+		"Sta. Lucia East Grand Mall": "Sta. Lucia Grand Mall",
+		"The Grid - Rockwell": "The Grid Rockwell",
+		"Ayala UP Town Center": "UP Town Center",
+		"Lucky China Town": "Lucky Chinatown",
+		"Food Express (Gateway Mall)": "Araneta Gateway",
+		"Robinsons Place Gen. Trias": "Robinsons General Trias",
+		"Robinsons Place Imus": "Robinsons Imus",
+		"NAIA T3 (Departure)": "NAIA T3",
+		"SM North EDSA": "SM North Edsa",
+		"Tomas Morato (CTTM Square)": "CTTM Tomas Morato",
+		"Robinsons Galleria South": "Robinsons Galleria South",
+		"Venice Grand Canal": "Venice Grand Canal",
 	}
 
 	def _bridged_lookup(index: dict[str, dict], store_name: str, bridge: dict[str, str] | None = None) -> dict | None:
@@ -1122,6 +1135,8 @@ def populate_s181_fields() -> dict:
 		store_name_for_lookup = None
 		if s037:
 			store_name_for_lookup = (s037.get("store_name") or "").strip()
+		elif company_name in _STORE_OVERRIDES:
+			store_name_for_lookup = _STORE_OVERRIDES[company_name].get("store")
 
 		mosaic = _bridged_lookup(mosaic_by_norm, store_name_for_lookup or "")
 		if not mosaic:
