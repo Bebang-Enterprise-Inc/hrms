@@ -737,10 +737,20 @@ def _s184_create_default_bank_accounts(doc):
 		# Not yet tagged; assume Store for new companies
 		pass
 
+	# Ensure BDO Bank master record exists (Bank Account requires a Bank Link)
+	bank_name = "BDO Unibank"
+	if not frappe.db.exists("Bank", bank_name):
+		try:
+			frappe.get_doc({"doctype": "Bank", "bank_name": bank_name}).insert(
+				ignore_permissions=True
+			)
+		except Exception:
+			pass  # May already exist from concurrent creation
+
 	# Default bank account pattern: BDO Operations + BDO Payroll
 	defaults = [
-		{"bank": "BDO", "suffix": "Operations"},
-		{"bank": "BDO", "suffix": "Payroll"},
+		{"bank": bank_name, "suffix": "Operations"},
+		{"bank": bank_name, "suffix": "Payroll"},
 	]
 
 	for d in defaults:

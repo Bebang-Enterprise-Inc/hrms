@@ -961,8 +961,9 @@ def populate_s181_fields() -> dict:
 		"Ayala UP Town Center": "Ayala UPTC",
 		"Food Express (Gateway Mall)": "Araneta Gateway",
 		"Lucky China Town": "Lucky Chinatown",
-		"Ortigas Estancia": "Ortigas Estancia",  # no Mosaic entry exists
+		"Ortigas Estancia": "Ortigas Land Estancia",
 		"Ortigas Greenhills": "Ortigas Greenhills",  # no Mosaic entry exists
+		"NAIA T3 (Departure)": "NAIA T3",
 		"PITX Terminal": "Megawide PITX",
 		"Paseo Center": "Megaworld Paseo Center",
 		"SM San Jose Del Monte": "SM SJDM",
@@ -1458,17 +1459,53 @@ def populate_s181_fields() -> dict:
 	# ------------ S184: Bank Account seeding -----------
 	bank_accounts_seeded = 0
 	bank_accounts_skipped = 0
+	bank_accounts_unmatched = 0
 	bank_csv_path = os.path.join(data_seed, "bank_accounts_2026-04-10.csv")
 	if os.path.exists(bank_csv_path):
 		bank_rows = _csv("bank_accounts_2026-04-10.csv")
+
+		# Step 0: ensure Bank master records exist (Frappe Bank Account requires a
+		# Bank Link field pointing to the Bank DocType — without these records,
+		# every Bank Account insert fails with "Could not find Bank: X").
+		_BANK_NAMES = {
+			"BDO": "BDO Unibank",
+			"BPI": "Bank of the Philippine Islands",
+			"UB": "Union Bank of the Philippines",
+			"PNB": "Philippine National Bank",
+			"AUB": "Asia United Bank",
+		}
+		for csv_code, full_name in _BANK_NAMES.items():
+			# Try the full name first, then the CSV abbreviation
+			if not frappe.db.exists("Bank", full_name):
+				if not frappe.db.exists("Bank", csv_code):
+					try:
+						bank_doc = frappe.get_doc({"doctype": "Bank", "bank_name": full_name})
+						bank_doc.flags.ignore_permissions = True
+						bank_doc.insert()
+					except Exception as e:
+						frappe.log_error(title=f"S184 Bank master create: {full_name}", message=str(e))
+
+		# Build bank-name resolution map: CSV code → Frappe Bank docname
+		_bank_resolve: dict[str, str] = {}
+		for csv_code, full_name in _BANK_NAMES.items():
+			if frappe.db.exists("Bank", full_name):
+				_bank_resolve[csv_code] = full_name
+			elif frappe.db.exists("Bank", csv_code):
+				_bank_resolve[csv_code] = csv_code
+
 		for brow in bank_rows:
 			acct_name = (brow.get("account_name") or "").strip()
 			gl_desc = (brow.get("gl_description") or "").strip()
 			acct_number = (brow.get("account_number") or "").strip()
-			bank_name = (brow.get("bank") or "").strip()
+			bank_code = (brow.get("bank") or "").strip()
 			branch = (brow.get("branch_of_account") or "").strip()
 
 			if not acct_name or not gl_desc:
+				continue
+
+			# Resolve Bank docname from CSV abbreviation
+			resolved_bank = _bank_resolve.get(bank_code)
+			if not resolved_bank:
 				continue
 
 			# Resolve Company from account_name using _norm matching
@@ -1479,8 +1516,8 @@ def populate_s181_fields() -> dict:
 					matched_company = cname
 					break
 			# Fallback: account_name contains a parenthetical store hint
+			# e.g. "BEBANG MEGA INC (SM TANZA)" -> try matching "BEBANG MEGA INC"
 			if not matched_company and "(" in acct_name:
-				# e.g. "BEBANG MEGA INC (SM TANZA)" -> try "Bebang Mega Inc"
 				base = acct_name.split("(")[0].strip()
 				norm_base = _norm(base)
 				for cname in all_company_names:
@@ -1494,6 +1531,7 @@ def populate_s181_fields() -> dict:
 				matched_company = lower_idx.get(key)
 
 			if not matched_company:
+				bank_accounts_unmatched += 1
 				continue
 
 			# Build unique account label: "GL_DESC - COMPANY"
@@ -1509,13 +1547,11 @@ def populate_s181_fields() -> dict:
 				ba = frappe.get_doc({
 					"doctype": "Bank Account",
 					"account_name": ba_name,
-					"bank": bank_name,
+					"bank": resolved_bank,
 					"company": matched_company,
 					"bank_account_no": acct_number or "",
 					"is_company_account": 1,
 				})
-				if branch:
-					ba.branch_code = branch
 				ba.flags.ignore_permissions = True
 				ba.flags.ignore_mandatory = True
 				ba.insert()
@@ -1595,6 +1631,7 @@ def populate_s181_fields() -> dict:
 		"pre_provisioned_sentinels_set": pre_count,
 		"bank_accounts_seeded": bank_accounts_seeded,
 		"bank_accounts_skipped": bank_accounts_skipped,
+		"bank_accounts_unmatched": bank_accounts_unmatched,
 		"gps_synced": gps_synced,
 		"gps_failed": gps_failed,
 	}
