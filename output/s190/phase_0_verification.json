@@ -1,0 +1,7 @@
+{
+  "warehouses_total": 54,
+  "warehouses_with_company": 54,
+  "warehouses_missing_company": 0,
+  "missing_customers": [],
+  "notes": "All 54 store warehouses have company set. Most point to parent BEI/BKI — per-store children only have new-format warehouses. Company-first resolution will work for new-format warehouses; old-format falls through to CSV fallback. 4 missing Customers created for child companies."
+}
