@@ -961,8 +961,9 @@ def populate_s181_fields() -> dict:
 		"Ayala UP Town Center": "Ayala UPTC",
 		"Food Express (Gateway Mall)": "Araneta Gateway",
 		"Lucky China Town": "Lucky Chinatown",
-		"Ortigas Estancia": "Ortigas Estancia",  # no Mosaic entry exists
+		"Ortigas Estancia": "Ortigas Land Estancia",
 		"Ortigas Greenhills": "Ortigas Greenhills",  # no Mosaic entry exists
+		"NAIA T3 (Departure)": "NAIA T3",
 		"PITX Terminal": "Megawide PITX",
 		"Paseo Center": "Megaworld Paseo Center",
 		"SM San Jose Del Monte": "SM SJDM",
