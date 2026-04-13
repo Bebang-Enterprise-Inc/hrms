@@ -1712,11 +1712,20 @@ def populate_s181_fields() -> dict:
 
 def _s184_fetch_superadmin_stores() -> list[dict]:
 	"""Fetch store list from Superadmin API. Returns [] on failure."""
+	import os
 	import requests
 
-	api_key = frappe.conf.get("superadmin_stores_api_key") or ""
+	# Try multiple sources for the API key:
+	# 1. Frappe site_config.json
+	# 2. Environment variable (set by Docker/Doppler)
+	# 3. Doppler CLI fallback (local dev only)
+	api_key = (
+		frappe.conf.get("superadmin_stores_api_key")
+		or os.environ.get("SUPERADMIN_STORES_API_KEY")
+		or os.environ.get("SUPERADMIN_API_KEY")
+		or ""
+	)
 	if not api_key:
-		# Try Doppler fallback (local dev only)
 		import subprocess
 		import sys
 
@@ -1733,7 +1742,13 @@ def _s184_fetch_superadmin_stores() -> list[dict]:
 			pass
 
 	if not api_key:
-		frappe.log_error(title="S184 GPS sync", message="SUPERADMIN_STORES_API_KEY not available")
+		frappe.log_error(
+			title="S184 GPS sync: no API key",
+			message="Checked: frappe.conf.superadmin_stores_api_key, "
+			"env SUPERADMIN_STORES_API_KEY, env SUPERADMIN_API_KEY, doppler CLI. "
+			"None available. Add the key to site_config.json: "
+			'bench set-config superadmin_stores_api_key "bebang_..."',
+		)
 		return []
 
 	try:
