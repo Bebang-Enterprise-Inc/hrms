@@ -258,8 +258,12 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S186` | Sprint 186 | `s186-supplier-hub-backend` (hrms) + `s186-supplier-hub-frontend` (bei-tasks) | hrms #553 | PR_CREATED 2026-04-13 — Supplier Hub Redesign: dense grid + single-page overview. Backend: 2 new endpoints (get_supplier_grid, get_supplier_overview) with live SQL metrics, SQL-safe sort, RBAC incl Warehouse User. Frontend: Employee-Master-style grid with 7 KPI cards, frozen columns, fullscreen, URL-backed filters, page_size 50/100/200. Compensation-Setup-style overview with NO tabs, vertical card stacking, recharts bar chart, collapsible sections. | `docs/plans/2026-04-13-sprint-186-supplier-hub-redesign.md` |
 
+| `S188` | Sprint 188 | `s188-per-store-company-restructure` (hrms) | hrms #559, #560, #562 | DEPLOYED 2026-04-13 — Per-Store Company Restructure: 49 stores = 49 Frappe companies. Created 12 per-store child companies under multi-store parents, set is_group on 5 parents, fixed TINs/branch_tins/RDOs. | `docs/plans/2026-04-13-sprint-188-per-store-company-restructure.md` |
+
+| `S190` | Sprint 190 | `s190-store-company-integration` (hrms) + `s190-store-company-frontend` (bei-tasks) | hrms #563, bei-tasks #391 | DEPLOYED 2026-04-14 — Store-Company Integration: Company-first, zero silos. Rewire ordering/billing/supply-chain to use Company Master as SSOT. resolve_warehouse_company: no suffix guess. resolve_store_buyer_entity: Company-first + CSV fallback. submit_order stamps company on BEI Store Order. BKI billing uses Company→Customer chain. APIs return company per store. 65 units. | `docs/plans/2026-04-13-sprint-190-store-company-integration.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S187`.
+1. Next canonical sprint ID to assign: `S191`.
 2. Reserve branch name: `s187-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
