@@ -1,0 +1,50 @@
+store_name,buyer_entity_name,store_type,warehouse_docname,billing_policy,active_status
+Ayala Evo City,Bebang Mega Inc,Managed Franchise,Ayala Evo - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Ayala Fairview Terraces,Bebang FTE Inc.,JV,Ayala Malls Fairview Terraces - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Ayala Market! Market!,Bebang Market Market Inc.,JV,Ayala Market Market - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Ayala Solenad 2,HFFM Solenad Food Services Inc.,Managed Franchise,Ayala Solenad - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Ayala UP Town Center,Bebang UP Town Center Inc.,JV,Ayala UPTC - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Ayala Vermosa,Bebang Mega Inc,Managed Franchise,Ayala Vermosa - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+BF Homes Paranaque (Aguirre Ave.),Bebang BF Homes Inc.,JV,BF Homes - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+D'Verde Calamba,TAJ Food Corp,Managed Franchise,D'verde Laguna - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Ever Gotesco Commonwealth,DLS Dessert Craft Inc.,Full Franchise,Ever Commonwealth - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY__PROVISIONAL_ENTITY_HOLD,active_with_billing_hold
+Festival Mall Alabang,Bebang Festival Inc.,JV,Festival Mall Alabang - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Food Express (Gateway Mall),Tungsten Capital Holdings OPC,Managed Franchise,Araneta Gateway - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Lucky China Town,Bebang LCT Inc,JV,Lucky Chinatown - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+NAIA T3 (Departure),Halo-Halo Terminal Food Corp.,Managed Franchise,NAIA T3 - BKI,BKI_TO_STORE_INTERCOMPANY,active
+Ortigas Estancia,BB Estancia Food Corp.,Managed Franchise,,BKI_TO_STORE_INTERCOMPANY,active
+Ortigas Greenhills,BEIFranchise Food OPC,Managed Franchise,Greenhills Ortigas - BKI,BKI_TO_STORE_INTERCOMPANY,active
+PITX Terminal,Bebang PITX Inc,JV,Megawide PITX - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Paseo Center,Bebang Paseo Inc,JV,,BKI_TO_STORE_INTERCOMPANY,active
+Robinsons Galleria South,Tungsten Capital Holdings OPC,Managed Franchise,Robisons Galleria South - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Robinsons Place Antipolo,Bebang Enterprise Inc.,JV,Robinsons Antipolo - Bebang Enterprise Inc.,BKI_TO_BEI_INTERCOMPANY_WITH_STORE_ALLOCATION,active
+Robinsons Place Dasmarinas,Freeze Delight Inc.,Managed Franchise,,BKI_TO_STORE_INTERCOMPANY,excluded
+Robinsons Place Gen. Trias,Bebang Mega Inc,Managed Franchise,,BKI_TO_STORE_INTERCOMPANY,active
+Robinsons Place Imus,Bebang Mega Inc,Managed Franchise,,BKI_TO_STORE_INTERCOMPANY,active
+SM Bicutan,Bebang SM Bicutan Inc.,JV,SM Bicutan - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Caloocan,TAJ Food Corp,Managed Franchise,SM Caloocan - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Center Pulilan,Bebang SMM Inc.,Managed Franchise,SM Pulilan - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Clark,Red Taldawa Foods OPC,Managed Franchise,SM Clark - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM East Ortigas,Bebang SMEO Inc,JV,SM East Ortigas - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Grand Central,Bebang Grand Central Inc.,JV,SM Grand Central - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Mall of Asia,Bebang SMOA Inc.,JV,SM Mall Of Asia - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Manila,Bebang Enterprise Inc.,JV,SM  Manila - Bebang Enterprise Inc.,BKI_TO_BEI_INTERCOMPANY_WITH_STORE_ALLOCATION,active
+SM Marikina,Bebang SM Marikina Inc.,JV,SM Marikina - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Marilao,Bebang Marilao Inc,JV,SM Marilao - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Megamall,Bebang Enterprise Inc.,JV,SM Megamall - Bebang Enterprise Inc.,BKI_TO_BEI_INTERCOMPANY_WITH_STORE_ALLOCATION,active
+SM North EDSA,Bebang North Edsa Inc.,JV,SM North EDSA - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM San Jose Del Monte,Legacy77 Food Corp,Managed Franchise,SJDM - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Sangandaan,Tungsten Capital Holdings OPC,Managed Franchise,SM Sangandaan - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Southmall,Bebang Enterprise Inc.,JV,SM Southmall - Bebang Enterprise Inc.,BKI_TO_BEI_INTERCOMPANY_WITH_STORE_ALLOCATION,active
+SM Sta. Rosa,Sweet Harmony Food Corp,Managed Franchise,SM Sta. Rosa - BKI,BKI_TO_STORE_INTERCOMPANY,active
+SM Tanza,Bebang Mega Inc,Managed Franchise,SM Tanza - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+SM Taytay,Day Ones Food and Drink Establishments Corp.,Managed Franchise,SM Taytay - BKI,BKI_TO_STORE_INTERCOMPANY,active
+SM Valenzuela,Bebang SMV Inc.,JV,SM Valenzuela - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Sta. Lucia East Grand Mall,Bebang SM Marikina Inc.,JV,Sta. Lucia East Grand Mall - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+The Grid - Rockwell,TASTECARTEL CORP.,Full Franchise,The Grid - Rockwell - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY__PROVISIONAL_ENTITY_HOLD,active_with_billing_hold
+The Terminal Exchange,Bebang Starmall Alabang Inc.,JV,The Terminal - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Tomas Morato (CTTM Square),B Cubed Ventures Corp.,Managed Franchise,CTTM Tomas Morato - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Uptown Mall,DMD Holdings Inc,Managed Franchise,Up Town Mall BGC - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Venice Grand Canal,Bebang Venice Grand Canal Inc.,JV,Megaworld Venice Grand Canal - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Vista Mall Taguig,Tricern Food Corp.,Managed Franchise,Vista Mall Taguig - Bebang Enterprise Inc.,BKI_TO_STORE_INTERCOMPANY,active
+Xentromall Montalban,Perpetual Food Corp.,Managed Franchise,,,

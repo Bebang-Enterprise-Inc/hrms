@@ -496,7 +496,7 @@ def retry_provision(company: str) -> dict:
 # never cloned by GitHub Actions when it builds the bench image, so
 # `_load_s037_rows()` returned an empty list and the entire feature
 # silently produced 0 store rows. L3 testing caught this on first run.
-_S037_RELPATH = ("data_seed", "store_buyer_entity_register_2026-03-12.csv")
+_S037_RELPATH = ("data_seed", "store_entity_mapping_2026-04-13.csv")
 
 # Non-store legal entities that don't appear in S037 but should still
 # appear in the list. Category maps to the S181 entity_category field.
@@ -1186,7 +1186,7 @@ def populate_s181_fields() -> dict:
 			if _set(company_name, "store_ownership_type", ownership):
 				p3_per_field["store_ownership_type"] = p3_per_field.get("store_ownership_type", 0) + 1
 				changed = True
-			active = (s037.get("active_fulfillment_status") or "").strip().lower()
+			active = (s037.get("active_status") or s037.get("active_fulfillment_status") or "").strip().lower()
 			status = "Active" if active == "active" else "Temporarily Closed"
 			if _set(company_name, "operational_status", status):
 				p3_per_field["operational_status"] = p3_per_field.get("operational_status", 0) + 1
