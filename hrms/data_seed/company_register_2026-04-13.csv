@@ -1,0 +1,41 @@
+frappe_company_name,abbr,company_type,parent_company,bir_entity_name,tin,rdo_code,vat_status
+Irresistible Infusions Inc.,III,Holding Company,(standalone),Irresistible Infusions Inc.,634-954-873-00000,041,VAT Registered
+Bebang Enterprise Inc.,BEI,Head Office,Irresistible Infusions Inc.,Bebang Enterprise Inc.,647-243-690-00000,041,VAT Registered
+Bebang Kitchen Inc.,BKI,Commissary,Irresistible Infusions Inc.,Bebang Kitchen Inc,010-880-681-00001,041,VAT Registered
+BEBANG FRANCHISE CORP.,BFC,Franchisor,(standalone),BEBANG FRANCHISE CORP.,672-618-804-00000,044,VAT Registered
+DMD HOLDINGS INC.,DHI,Holdings,(standalone),DMD Holdings Inc,649-154-841-00000,041,VAT Registered
+TUNGSTEN CAPITAL HOLDINGS OPC,BAG,Store Corporation,(standalone),TUNGSTEN CAPITAL HOLDINGS OPC,679-843-234-00000,044,VAT Registered
+HFFM SOLENAD FOOD SERVICES INC.,BAS,Store Corporation,(standalone),HFFM SOLENAD FOOD SERVICES INC.,681-476-808-00000,034,VAT Registered
+BEBANG BF HOMES INC.,BBHI,Store Corporation,(standalone),Bebang BF Homes Inc.,673-762-767-00000,052,VAT Registered
+TAJ FOOD CORP.,BDV,Store Corporation,(standalone),TAJ Food Corp.,681-325-053-00000,042,VAT Registered
+DLS Dessert Craft Inc.,BEGC,Store Corporation,(standalone),DLS Dessert Craft Inc.,671-219-097-00000,RDO,
+BEBANG FESTIVAL INC.,BFI,Store Corporation,(standalone),Bebang Festival Inc.,672-618-586-00000,044,VAT Registered
+BEBANG FT INC.,BFI2,Store Corporation,(standalone),Bebang FT Inc.,663-440-106-00000,044,VAT Registered
+BEBANG GRAND CENTRAL INC.,BGCI,Store Corporation,(standalone),Bebang Grand Central Inc.,010-880-753-00000,044,VAT Registered
+BEBANG LCT INC.,BLI,Store Corporation,(standalone),Bebang LCT Inc,665-462-689-00000,044,VAT Registered
+BEBANG MARILAO INC.,BMI,Store Corporation,(standalone),Bebang Marilao Inc,675-267-457-00000,044,VAT Registered
+BEBANG MARKET MARKET INC.,BMMI,Store Corporation,(standalone),Bebang Market Market Inc.,656-572-595-00000,044,VAT Registered
+BEBANG MEGA INC.,BMI2,Store Corporation,(standalone),Bebang Mega Inc,010-885-436-00000,044,VAT Registered
+BEBANG NORTH EDSA INC.,BNEI,Store Corporation,(standalone),Bebang North Edsa,663-447-579-00000,044,VAT Registered
+BEBANG PASEO INC.,BPI,Store Corporation,(standalone),Bebang Paseo Inc,010-880-720-00000,044,VAT Registered
+BEBANG PITX INC.,BPI2,Store Corporation,(standalone),Bebang PITX Inc,010-880-712-00000,044,VAT Registered
+BEBANG SM BICUTAN INC.,BSBI,Store Corporation,(standalone),Bebang SM Bicutan Inc.,010-887-661-00000,044,VAT Registered
+RED TALDAWA FOODS OPC,BSC2,Store Corporation,(standalone),RED TALDAWA FOODS OPC,687-525-727-00000,21B,VAT Registered
+BEBANG SM MARIKINA INC.,BSMI,Store Corporation,(standalone),Bebang SM Marikina Inc.,670-282-332-00000,044,VAT Registered
+JL TRADE OPC,BSS2,Store Corporation,(standalone),JL TRADE OPC,775-842-763-00000,045,VAT Registered
+DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,BST,Store Corporation,(standalone),DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,010-939-944-00000,049,VAT Registered
+BEBANG SMEO INC.,BSI,Store Corporation,(standalone),Bebang SMEO Inc,665-312-808-00000,044,VAT Registered
+BEBANG SMM INC.,BSI2,Store Corporation,(standalone),Bebang SMM Inc.,662-567-267-00000,044,VAT Registered
+BEBANG SMOA INC.,BSI3,Store Corporation,(standalone),Bebang SMOA Inc.,665-459-236-00000,044,VAT Registered
+BEBANG SMV INC.,BSI4,Store Corporation,(standalone),Bebang SMV Inc.,665-313-198-00000,044,VAT Registered
+BEBANG STARMALL ALABANG INC.,BSAI,Store Corporation,(standalone),Bebang Starmall Alabang Inc.,670-277-140-00000,044,VAT Registered
+TASTECARTEL CORP.,BTGF,Store Corporation,(standalone),TASTECARTEL CORP.,672-270-879-00000,040,VAT Registered
+B CUBED VENTURES CORP.,BTM,Store Corporation,(standalone),B CUBED VENTURES CORP.,682-574-745-00000,039,VAT Registered
+BEBANG UP TOWN CENTER INC.,BUTC,Store Corporation,(standalone),Bebang UP Town Center Inc.,675-270-405-00000,044,VAT Registered
+BEBANG VENICE GRAND CANAL INC.,BVGC,Store Corporation,(standalone),Bebang Venice Grand Canal Inc.,010-880-690-00000,044,VAT Registered
+TRICERN FOOD CORP.,BV,Store Corporation,(standalone),TRICERN FOOD CORP.,010-038-108-00000,53A,VAT Registered
+SWEET HARMONY FOOD CORP.,,Store Corporation,(standalone),SWEET HARMONY FOOD CORP.,691-378-334-00000,057,VAT Registered
+HALO-HALO TERMINAL FOOD CORP.,,Store Corporation,(standalone),HALO-HALO TERMINAL FOOD CORP.,690-528-808-00000,051,VAT Registered
+BEIFRANCHISE FOOD OPC,,Store Corporation,(standalone),BEIFRANCHISE FOOD OPC,688-721-280-00000,028,VAT Registered
+BB ESTANCIA FOOD CORP.,,Store Corporation,(standalone),BB ESTANCIA FOOD CORP.,693-136-289-00000,043,VAT Registered
+PERPETUAL FOOD CORP.,,Store Corporation,(standalone),PERPETUAL FOOD CORP.,698-838-619-00000,045,VAT Registered
