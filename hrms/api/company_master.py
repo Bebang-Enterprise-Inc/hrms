@@ -1088,6 +1088,19 @@ def populate_s181_fields() -> dict:
 		"Resto Tech Inc": "Head Office",
 	}
 
+	# Companies not in S037 that are Stores — Sam confirmed 2026-04-13.
+	# These get entity_category=Store + TIN/RDO directly.
+	_STORE_OVERRIDES: dict[str, dict] = {
+		"TASTECARTEL CORP.": {"store": "The Grid - Rockwell", "tin": "672-270-879-00000", "rdo": "049"},
+		"JL TRADE OPC": {"store": "SM San Jose Del Monte", "tin": "775-842-763-00003", "rdo": "25B"},
+		"DLS Dessert Craft Inc.": {"store": "Ever Gotesco Commonwealth", "tin": "671-219-097-00001", "rdo": "028"},
+		"BEBANG FT INC.": {"store": "Ayala Fairview Terraces"},
+		"BEBANG SM CALOOCAN": {"store": "SM Caloocan"},
+		"BEBANG SM SANGANDAAN": {"store": "SM Sangandaan"},
+		"BEBANG ROBINSONS GALLERIA SOUTH": {"store": "Robinsons Galleria South"},
+		"SWEET HARMONY FOOD CORP.": {"store": "SM Sta. Rosa"},
+	}
+
 	# ------------ Phase 3: entity_category + mosaic + GPS + city + status + pos -----------
 	p3_updated = 0
 	p3_per_field: dict[str, int] = {}
@@ -1148,6 +1161,26 @@ def populate_s181_fields() -> dict:
 			if _set(company_name, "operational_status", "Active"):
 				p3_per_field["operational_status"] = p3_per_field.get("operational_status", 0) + 1
 				changed = True
+		elif company_name in _STORE_OVERRIDES:
+			# Companies not in S037 but confirmed as Stores by Sam
+			override = _STORE_OVERRIDES[company_name]
+			if _set(company_name, "entity_category", "Store"):
+				p3_per_field["entity_category"] = p3_per_field.get("entity_category", 0) + 1
+				changed = True
+			if _set(company_name, "operational_status", "Active"):
+				p3_per_field["operational_status"] = p3_per_field.get("operational_status", 0) + 1
+				changed = True
+			if _set(company_name, "store_ownership_type", "Company Owned"):
+				p3_per_field["store_ownership_type"] = p3_per_field.get("store_ownership_type", 0) + 1
+				changed = True
+			if override.get("tin"):
+				if _set(company_name, "branch_tin", override["tin"]):
+					p3_per_field["branch_tin"] = p3_per_field.get("branch_tin", 0) + 1
+					changed = True
+			if override.get("rdo"):
+				if _set(company_name, "bir_rdo_code", override["rdo"]):
+					p3_per_field["bir_rdo_code"] = p3_per_field.get("bir_rdo_code", 0) + 1
+					changed = True
 
 		# mosaic_location_id + pos_system
 		if mosaic:
@@ -1574,24 +1607,56 @@ def populate_s181_fields() -> dict:
 			if sn:
 				sa_by_norm[_norm(sn)] = st
 
-		for company_name in all_company_names:
-			# Only update stores (need S037 match)
-			store_name_for_lookup = None
-			for r in s037_rows:
-				buyer = (r.get("buyer_entity_name") or "").strip()
-				if buyer and (_norm(buyer) == _norm(company_name)):
-					store_name_for_lookup = (r.get("store_name") or "").strip()
-					break
-				if buyer:
-					key = buyer.lower().rstrip(".").strip()
-					if key in lower_idx and lower_idx[key] == company_name:
-						store_name_for_lookup = (r.get("store_name") or "").strip()
-						break
+		# Direct Frappe Company → Superadmin API store name for cases where
+		# S037 buyer_entity_name doesn't match the Company docname.
+		# Sam confirmed these mappings 2026-04-13.
+		_COMPANY_TO_SA_STORE: dict[str, str] = {
+			# Untagged companies Sam identified
+			"TASTECARTEL CORP.": "The Grid - Rockwell",
+			"JL TRADE OPC": "SM SJDM",
+			"DLS Dessert Craft Inc.": "Ever Gotesco Commonwealth",
+			# Companies whose S037 buyer differs from Frappe name
+			"BEBANG BF HOMES INC.": "BF Homes",
+			"BEBANG FT INC.": "Ayala Malls Fairview Terraces",
+			"BEBANG SM CALOOCAN": "SM Caloocan",
+			"BEBANG SM SANGANDAAN": "SM Sangandaan",
+			"BEBANG ROBINSONS GALLERIA SOUTH": "Robisons Galleria South",
+			"SWEET HARMONY FOOD CORP.": "SM Sta. Rosa",
+			"HFFM SOLENAD FOOD SERVICES INC.": "Ayala Solenad",
+			"BEBANG MARKET MARKET INC.": "Ayala Market Market",
+			"BEBANG SMM INC.": "SM  Manila",
+			"BEBANG SMOA INC.": "SM Mall Of Asia",
+		}
 
-			if not store_name_for_lookup:
+		for company_name in all_company_names:
+			# Skip if already has GPS
+			current_lat = frappe.db.get_value("Company", company_name, "gps_latitude")
+			if current_lat:
 				continue
 
-			sa = _bridged_lookup(sa_by_norm, store_name_for_lookup)
+			# Strategy 1: direct Company → SA store map
+			sa = None
+			direct_sa_name = _COMPANY_TO_SA_STORE.get(company_name)
+			if direct_sa_name:
+				sa = _bridged_lookup(sa_by_norm, direct_sa_name)
+
+			# Strategy 2: S037 buyer → store_name → bridge → SA
+			if not sa:
+				store_name_for_lookup = None
+				for r in s037_rows:
+					buyer = (r.get("buyer_entity_name") or "").strip()
+					if buyer and (_norm(buyer) == _norm(company_name)):
+						store_name_for_lookup = (r.get("store_name") or "").strip()
+						break
+					if buyer:
+						key = buyer.lower().rstrip(".").strip()
+						if key in lower_idx and lower_idx[key] == company_name:
+							store_name_for_lookup = (r.get("store_name") or "").strip()
+							break
+
+				if store_name_for_lookup:
+					sa = _bridged_lookup(sa_by_norm, store_name_for_lookup)
+
 			if not sa:
 				gps_failed += 1
 				continue
