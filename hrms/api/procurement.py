@@ -7571,3 +7571,433 @@ def bulk_update_invoice_acctg_status(invoice_names: list[str] | str, acctg_statu
 
     frappe.db.commit()
     return {"updated": updated, "total": len(invoice_names), "tag": tag}
+
+
+# =============================================================================
+# SUPPLIER HUB ENDPOINTS (S186)
+# =============================================================================
+
+SUPPLIER_GRID_ALLOWED_SORT_COLUMNS = frozenset({
+    "supplier_name", "supplier_code", "status",
+    "total_po_value", "total_po_count", "total_outstanding", "on_time_rate",
+})
+SUPPLIER_GRID_ALLOWED_SORT_DIRECTIONS = frozenset({"ASC", "DESC"})
+
+SUPPLIER_HUB_ALLOWED_ROLES = {
+    "Procurement User", "Procurement Manager", "Warehouse User", "System Manager",
+}
+
+# Pending PO statuses — full strings per DocType Select options
+_PENDING_PO_STATUSES = (
+    "'Draft'", "'Pending Mae Approval'", "'Pending Butch Approval'", "'Pending CEO Approval'"
+)
+
+
+@frappe.whitelist()
+def get_supplier_grid(
+    search=None, status=None, compliance=None,
+    sort_by=None, sort_order=None,
+    page=1, page_size=50,
+):
+    """Paginated supplier grid with live-computed metrics and fleet-level summary.
+
+    Returns supplier rows with PO/GR/Invoice aggregates computed via JOINs (not
+    stored DocType fields), plus a summary object covering ALL suppliers.
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_supplier_grid")
+
+    _require_roles(
+        SUPPLIER_HUB_ALLOWED_ROLES,
+        _("You do not have permission to view the Supplier Hub."),
+    )
+
+    # --- Sanitize sort params (SQL injection prevention) ---
+    sort_col = sort_by if sort_by in SUPPLIER_GRID_ALLOWED_SORT_COLUMNS else "supplier_name"
+    sort_dir = sort_order.upper() if sort_order and sort_order.upper() in SUPPLIER_GRID_ALLOWED_SORT_DIRECTIONS else "ASC"
+
+    page = max(1, cint(page))
+    page_size = min(200, max(1, cint(page_size) or 50))
+    offset = (page - 1) * page_size
+
+    # --- Build WHERE conditions ---
+    conditions = ["1=1"]
+    values: dict[str, Any] = {}
+
+    if search:
+        conditions.append(
+            "(s.supplier_name LIKE %(search)s OR s.supplier_code LIKE %(search)s "
+            "OR s.contact_person LIKE %(search)s OR s.email LIKE %(search)s)"
+        )
+        values["search"] = f"%{search}%"
+
+    if status:
+        conditions.append("s.status = %(status_filter)s")
+        values["status_filter"] = status
+
+    if compliance:
+        if compliance == "missing_bir":
+            conditions.append("(s.bir_2307 IS NULL OR s.bir_2307 = '')")
+        elif compliance == "missing_sec":
+            conditions.append("(s.sec_certificate IS NULL OR s.sec_certificate = '')")
+        elif compliance == "missing_permit":
+            conditions.append("(s.business_permit IS NULL OR s.business_permit = '')")
+        elif compliance == "expiring_soon":
+            conditions.append(
+                "(s.bir_expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) "
+                "OR s.sec_expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) "
+                "OR s.permit_expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY))"
+            )
+
+    where_clause = " AND ".join(conditions)
+
+    # --- Main query: suppliers + live PO aggregates ---
+    pending_statuses = ", ".join(_PENDING_PO_STATUSES)
+    suppliers = frappe.db.sql(f"""
+        SELECT
+            s.name,
+            s.supplier_code,
+            s.supplier_name,
+            s.status,
+            s.contact_person,
+            s.email,
+            s.contact_number,
+            s.tin,
+            s.payment_terms,
+            /* Live PO aggregates */
+            COALESCE(po_agg.total_po_count, 0) AS total_po_count,
+            COALESCE(po_agg.total_po_value, 0) AS total_po_value,
+            COALESCE(po_agg.pending_po_count, 0) AS pending_po_count,
+            COALESCE(po_agg.last_order_date, NULL) AS last_order_date,
+            /* Live outstanding from invoices */
+            COALESCE(inv_agg.total_outstanding, 0) AS total_outstanding,
+            /* Live GR pending count */
+            COALESCE(gr_agg.pending_gr_count, 0) AS pending_gr_count,
+            /* Stored performance metrics (acceptable — computed by background job) */
+            COALESCE(s.on_time_rate, 0) AS on_time_rate,
+            COALESCE(s.avg_delivery_days, 0) AS avg_delivery_days,
+            /* Compliance fields — cast to boolean */
+            CASE WHEN s.bir_2307 IS NOT NULL AND s.bir_2307 != '' THEN 1 ELSE 0 END AS bir_2307,
+            s.bir_expiry_date,
+            CASE WHEN s.sec_certificate IS NOT NULL AND s.sec_certificate != '' THEN 1 ELSE 0 END AS sec_certificate,
+            s.sec_expiry_date,
+            CASE WHEN s.business_permit IS NOT NULL AND s.business_permit != '' THEN 1 ELSE 0 END AS business_permit,
+            s.permit_expiry_date,
+            /* Items count */
+            COALESCE(item_agg.items_count, 0) AS items_count
+        FROM `tabBEI Supplier` s
+        /* PO aggregates */
+        LEFT JOIN (
+            SELECT
+                supplier,
+                COUNT(*) AS total_po_count,
+                SUM(grand_total) AS total_po_value,
+                SUM(CASE WHEN status IN ({pending_statuses}) THEN 1 ELSE 0 END) AS pending_po_count,
+                MAX(po_date) AS last_order_date
+            FROM `tabBEI Purchase Order`
+            WHERE status NOT IN ('Cancelled', 'Rejected')
+            GROUP BY supplier
+        ) po_agg ON po_agg.supplier = s.name
+        /* Invoice outstanding */
+        LEFT JOIN (
+            SELECT
+                supplier,
+                SUM(balance_due) AS total_outstanding
+            FROM `tabBEI Invoice`
+            WHERE payment_status != 'Paid' AND docstatus = 1
+            GROUP BY supplier
+        ) inv_agg ON inv_agg.supplier = s.name
+        /* Pending GRs: POs that have no completed GR */
+        LEFT JOIN (
+            SELECT
+                po.supplier,
+                COUNT(DISTINCT po.name) AS pending_gr_count
+            FROM `tabBEI Purchase Order` po
+            LEFT JOIN `tabBEI Goods Receipt` gr ON gr.purchase_order = po.name
+                AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected')
+            WHERE po.status IN ('Approved', 'Sent to Supplier', 'Partially Received')
+                AND gr.name IS NULL
+            GROUP BY po.supplier
+        ) gr_agg ON gr_agg.supplier = s.name
+        /* Distinct items count */
+        LEFT JOIN (
+            SELECT
+                po.supplier,
+                COUNT(DISTINCT poi.item_code) AS items_count
+            FROM `tabBEI PO Item` poi
+            JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+            WHERE po.status NOT IN ('Cancelled', 'Rejected')
+            GROUP BY po.supplier
+        ) item_agg ON item_agg.supplier = s.name
+        WHERE {where_clause}
+        ORDER BY {sort_col} {sort_dir}
+        LIMIT %(page_size)s OFFSET %(offset)s
+    """, {**values, "page_size": page_size, "offset": offset}, as_dict=True)
+
+    # --- Total count for pagination ---
+    total = frappe.db.sql(
+        f"SELECT COUNT(*) FROM `tabBEI Supplier` s WHERE {where_clause}",
+        values,
+    )[0][0]
+
+    # --- Fleet-level summary (across ALL suppliers, ignoring pagination) ---
+    summary = frappe.db.sql("""
+        SELECT
+            COUNT(*) AS total_suppliers,
+            SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END) AS active,
+            SUM(CASE WHEN status = 'Inactive' THEN 1 ELSE 0 END) AS inactive,
+            SUM(CASE WHEN status = 'Blacklisted' THEN 1 ELSE 0 END) AS blacklisted,
+            SUM(CASE WHEN status = 'Pending Verification' THEN 1 ELSE 0 END) AS pending_verification,
+            SUM(CASE WHEN bir_2307 IS NULL OR bir_2307 = '' THEN 1 ELSE 0 END) AS missing_bir,
+            SUM(CASE WHEN sec_certificate IS NULL OR sec_certificate = '' THEN 1 ELSE 0 END) AS missing_sec,
+            SUM(CASE WHEN business_permit IS NULL OR business_permit = '' THEN 1 ELSE 0 END) AS missing_permit,
+            SUM(CASE WHEN (
+                (bir_expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY))
+                OR (sec_expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY))
+                OR (permit_expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY))
+            ) THEN 1 ELSE 0 END) AS expiring_soon
+        FROM `tabBEI Supplier`
+    """, as_dict=True)[0]
+
+    # Pending POs and GRs fleet-level
+    pending_fleet = frappe.db.sql(f"""
+        SELECT
+            SUM(CASE WHEN po.status IN ({pending_statuses}) THEN 1 ELSE 0 END) AS total_pending_pos
+        FROM `tabBEI Purchase Order` po
+        WHERE po.status NOT IN ('Cancelled', 'Rejected')
+    """, as_dict=True)[0]
+
+    outstanding_fleet = frappe.db.sql("""
+        SELECT COALESCE(SUM(balance_due), 0) AS total_outstanding
+        FROM `tabBEI Invoice`
+        WHERE payment_status != 'Paid' AND docstatus = 1
+    """)[0][0]
+
+    pending_grs_fleet = frappe.db.sql(f"""
+        SELECT COUNT(DISTINCT po.name) AS total_pending_grs
+        FROM `tabBEI Purchase Order` po
+        LEFT JOIN `tabBEI Goods Receipt` gr ON gr.purchase_order = po.name
+            AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected')
+        WHERE po.status IN ('Approved', 'Sent to Supplier', 'Partially Received')
+            AND gr.name IS NULL
+    """)[0][0]
+
+    summary["total_outstanding"] = flt(outstanding_fleet)
+    summary["total_pending_pos"] = cint(pending_fleet.get("total_pending_pos"))
+    summary["total_pending_grs"] = cint(pending_grs_fleet)
+
+    return {
+        "data": suppliers,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": max(1, -(-total // page_size)),
+        "summary": summary,
+        "filters": {
+            "statuses": ["Active", "Inactive", "Blacklisted", "Pending Verification"],
+        },
+    }
+
+
+@frappe.whitelist()
+def get_supplier_overview(supplier):
+    """Single-call supplier detail — identity, metrics, items, POs, GRs, invoices, monthly spend.
+
+    Returns everything the Supplier Overview page needs in one round-trip.
+    All metrics are computed live via SQL (not from stored DocType fields).
+    """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="get_supplier_overview")
+
+    _require_roles(
+        SUPPLIER_HUB_ALLOWED_ROLES,
+        _("You do not have permission to view the Supplier Hub."),
+    )
+
+    if not supplier:
+        frappe.throw(_("Supplier is required."))
+
+    if not frappe.db.exists("BEI Supplier", supplier):
+        frappe.throw(
+            _("Supplier '{0}' not found.").format(supplier),
+            frappe.DoesNotExistError,
+        )
+
+    # --- Supplier doc (all fields) ---
+    supplier_doc = frappe.get_doc("BEI Supplier", supplier)
+    supplier_data = supplier_doc.as_dict()
+    # Remove internal Frappe fields
+    for key in ("_user_tags", "_comments", "_assign", "_liked_by", "doctype", "docstatus"):
+        supplier_data.pop(key, None)
+
+    # --- Live metrics from PO/Invoice/GR ---
+    pending_statuses = ", ".join(_PENDING_PO_STATUSES)
+
+    po_metrics = frappe.db.sql(f"""
+        SELECT
+            COUNT(*) AS total_po_count,
+            COALESCE(SUM(grand_total), 0) AS total_po_value,
+            MAX(po_date) AS last_order_date,
+            MIN(po_date) AS first_order_date,
+            SUM(CASE WHEN status IN ({pending_statuses}) THEN 1 ELSE 0 END) AS pending_po_count
+        FROM `tabBEI Purchase Order`
+        WHERE supplier = %(supplier)s
+          AND status NOT IN ('Cancelled', 'Rejected')
+    """, {"supplier": supplier}, as_dict=True)[0]
+
+    inv_metrics = frappe.db.sql("""
+        SELECT
+            COALESCE(SUM(balance_due), 0) AS total_outstanding,
+            COUNT(CASE WHEN payment_status != 'Paid' THEN 1 END) AS pending_invoice_count
+        FROM `tabBEI Invoice`
+        WHERE supplier = %(supplier)s AND docstatus = 1
+    """, {"supplier": supplier}, as_dict=True)[0]
+
+    pending_gr_count = frappe.db.sql(f"""
+        SELECT COUNT(DISTINCT po.name) AS cnt
+        FROM `tabBEI Purchase Order` po
+        LEFT JOIN `tabBEI Goods Receipt` gr ON gr.purchase_order = po.name
+            AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected')
+        WHERE po.supplier = %(supplier)s
+          AND po.status IN ('Approved', 'Sent to Supplier', 'Partially Received')
+          AND gr.name IS NULL
+    """, {"supplier": supplier})[0][0]
+
+    items_count = frappe.db.sql("""
+        SELECT COUNT(DISTINCT poi.item_code) AS cnt
+        FROM `tabBEI PO Item` poi
+        JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+        WHERE po.supplier = %(supplier)s
+          AND po.status NOT IN ('Cancelled', 'Rejected')
+    """, {"supplier": supplier})[0][0]
+
+    # YTD spend
+    ytd_spend = frappe.db.sql("""
+        SELECT COALESCE(SUM(grand_total), 0)
+        FROM `tabBEI Purchase Order`
+        WHERE supplier = %(supplier)s
+          AND po_date >= CONCAT(YEAR(CURDATE()), '-01-01')
+          AND status NOT IN ('Cancelled', 'Rejected', 'Draft')
+    """, {"supplier": supplier})[0][0]
+
+    # Monthly spend (last 12 months)
+    monthly_spend = frappe.db.sql("""
+        SELECT
+            DATE_FORMAT(po_date, '%%Y-%%m') AS month,
+            SUM(grand_total) AS amount
+        FROM `tabBEI Purchase Order`
+        WHERE supplier = %(supplier)s
+          AND po_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+          AND status NOT IN ('Cancelled', 'Rejected', 'Draft')
+        GROUP BY month
+        ORDER BY month
+    """, {"supplier": supplier}, as_dict=True)
+
+    # Last month spend
+    last_month_spend = frappe.db.sql("""
+        SELECT COALESCE(SUM(grand_total), 0)
+        FROM `tabBEI Purchase Order`
+        WHERE supplier = %(supplier)s
+          AND po_date >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 MONTH), '%%Y-%%m-01')
+          AND po_date < DATE_FORMAT(CURDATE(), '%%Y-%%m-01')
+          AND status NOT IN ('Cancelled', 'Rejected', 'Draft')
+    """, {"supplier": supplier})[0][0]
+
+    # Avg monthly spend (from the 12-month window)
+    total_months = max(1, len(monthly_spend))
+    total_12m = sum(flt(m.get("amount", 0)) for m in monthly_spend)
+    avg_monthly_spend = total_12m / total_months
+
+    metrics = {
+        "total_po_count": cint(po_metrics.get("total_po_count")),
+        "total_po_value": flt(po_metrics.get("total_po_value")),
+        "total_outstanding": flt(inv_metrics.get("total_outstanding")),
+        "pending_po_count": cint(po_metrics.get("pending_po_count")),
+        "pending_gr_count": cint(pending_gr_count),
+        "pending_invoice_count": cint(inv_metrics.get("pending_invoice_count")),
+        "last_order_date": po_metrics.get("last_order_date"),
+        "first_order_date": po_metrics.get("first_order_date"),
+        "on_time_rate": flt(supplier_doc.on_time_rate),
+        "avg_delivery_days": flt(supplier_doc.avg_delivery_days),
+        "items_count": cint(items_count),
+        "ytd_spend": flt(ytd_spend),
+        "last_month_spend": flt(last_month_spend),
+        "avg_monthly_spend": flt(avg_monthly_spend, 2),
+    }
+
+    # --- Items aggregated from PO data ---
+    items = frappe.db.sql("""
+        SELECT
+            poi.item_code,
+            poi.item_name,
+            poi.uom,
+            COUNT(DISTINCT poi.parent) AS po_count,
+            SUM(poi.qty) AS total_qty,
+            ROUND(AVG(poi.unit_cost), 2) AS avg_unit_cost,
+            SUM(poi.amount) AS total_amount,
+            MAX(po.po_date) AS last_purchase_date
+        FROM `tabBEI PO Item` poi
+        JOIN `tabBEI Purchase Order` po ON poi.parent = po.name
+        WHERE po.supplier = %(supplier)s
+          AND po.status NOT IN ('Cancelled', 'Rejected')
+        GROUP BY poi.item_code, poi.item_name, poi.uom
+        ORDER BY total_amount DESC
+    """, {"supplier": supplier}, as_dict=True)
+
+    # --- Recent POs (last 20) ---
+    recent_pos = frappe.db.sql("""
+        SELECT name, po_no, po_date, grand_total, status, delivery_date
+        FROM `tabBEI Purchase Order`
+        WHERE supplier = %(supplier)s
+          AND status NOT IN ('Cancelled', 'Rejected')
+        ORDER BY po_date DESC
+        LIMIT 20
+    """, {"supplier": supplier}, as_dict=True)
+
+    # --- Pending POs ---
+    pending_pos = frappe.db.sql(f"""
+        SELECT name, po_no, po_date, grand_total, status, delivery_date
+        FROM `tabBEI Purchase Order`
+        WHERE supplier = %(supplier)s
+          AND status IN ({pending_statuses}, 'Approved', 'Sent to Supplier', 'Partially Received')
+        ORDER BY po_date DESC
+    """, {"supplier": supplier}, as_dict=True)
+
+    # --- Pending GRs (POs awaiting goods receipt) ---
+    pending_grs = frappe.db.sql(f"""
+        SELECT
+            po.name AS po_name,
+            po.po_no,
+            po.po_date,
+            po.grand_total,
+            po.status,
+            po.delivery_date
+        FROM `tabBEI Purchase Order` po
+        LEFT JOIN `tabBEI Goods Receipt` gr ON gr.purchase_order = po.name
+            AND gr.status NOT IN ('Draft', 'Cancelled', 'Rejected')
+        WHERE po.supplier = %(supplier)s
+          AND po.status IN ('Approved', 'Sent to Supplier', 'Partially Received')
+          AND gr.name IS NULL
+        ORDER BY po.po_date DESC
+    """, {"supplier": supplier}, as_dict=True)
+
+    # --- Recent invoices (last 20) ---
+    recent_invoices = frappe.db.sql("""
+        SELECT name, invoice_no, invoice_date, due_date, grand_total,
+               payment_status, balance_due
+        FROM `tabBEI Invoice`
+        WHERE supplier = %(supplier)s AND docstatus = 1
+        ORDER BY invoice_date DESC
+        LIMIT 20
+    """, {"supplier": supplier}, as_dict=True)
+
+    return {
+        "supplier": supplier_data,
+        "metrics": metrics,
+        "items": items,
+        "recent_pos": recent_pos,
+        "pending_pos": pending_pos,
+        "pending_grs": pending_grs,
+        "recent_invoices": recent_invoices,
+        "monthly_spend": monthly_spend,
+    }
