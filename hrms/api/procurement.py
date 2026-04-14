@@ -134,6 +134,81 @@ def _resolve_supplier_identity(supplier: str) -> tuple[str, str]:
     )
 
 
+# S193 — Supplier Status Guard
+# Statuses that block ALL create flows (new business with this supplier).
+_SUPPLIER_BLOCK_ALL_STATUSES = frozenset({"Blacklisted", "Pending Verification"})
+# Statuses that additionally block new PO creation (no new business with inactive).
+# Invoices and payment requests on pre-existing POs remain allowed so in-flight
+# work is not stranded when a supplier is deactivated.
+_SUPPLIER_BLOCK_NEW_PO_STATUSES = frozenset({"Inactive"})
+
+
+def _assert_supplier_active(supplier: str, operation: str) -> None:
+    """Block creation against suppliers in forbidden statuses (S193).
+
+    Args:
+        supplier: BEI Supplier document name (resolved by caller).
+        operation: one of "purchase_order", "invoice", "payment_request".
+
+    Policy:
+        - Blacklisted / Pending Verification: block all three operations.
+        - Inactive: block purchase_order only.
+        - Active (or any unknown/empty status): allow.
+
+    Raises:
+        frappe.ValidationError: with the supplier name, current status, and
+        the next step the operator should take. Maps to HTTP 417 and surfaces
+        in the frontend via parseFrappeError.
+    """
+    status = frappe.db.get_value("BEI Supplier", supplier, "status")
+    if not status:
+        # Supplier does not exist — Link-field validation would normally catch
+        # this upstream. If we got here via a stale ID, let the caller handle
+        # non-existence (existing flows already throw on get_doc).
+        return
+
+    blocked = status in _SUPPLIER_BLOCK_ALL_STATUSES
+    if operation == "purchase_order" and status in _SUPPLIER_BLOCK_NEW_PO_STATUSES:
+        blocked = True
+
+    if not blocked:
+        return
+
+    name_display = frappe.db.get_value("BEI Supplier", supplier, "supplier_name") or supplier
+
+    if status == "Blacklisted":
+        next_step = _("Contact the Procurement Manager to review the blacklist decision.")
+    elif status == "Pending Verification":
+        next_step = _("Complete supplier verification (TIN, SEC, bank details) before transacting.")
+    else:  # Inactive
+        next_step = _("Re-activate the supplier in the Supplier Hub if business continues.")
+
+    op_label = {
+        "purchase_order": _("Purchase Order"),
+        "invoice": _("Invoice"),
+        "payment_request": _("Payment Request"),
+    }.get(operation, operation)
+
+    # DM-7 observability — policy denials should be visible in Sentry.
+    # Wrapped in try/except so observability failure NEVER breaks the guard.
+    try:
+        from hrms.utils.sentry import set_backend_observability_context
+        set_backend_observability_context(
+            module="procurement",
+            action="assert_supplier_active_denied",
+            extras={"supplier": supplier, "status": status, "operation": operation},
+        )
+    except Exception:
+        pass
+
+    frappe.throw(
+        _("Cannot create {0}: Supplier {1} is {2}. {3}").format(
+            op_label, name_display, status, next_step
+        ),
+        frappe.ValidationError,
+    )
+
+
 def _table_has_column(table_name: str, column_name: str) -> bool:
     """Return True when a physical table column exists in the current site schema."""
     rows = frappe.db.sql(
@@ -1459,12 +1534,20 @@ def create_purchase_order(data: dict[str, Any] | str | None = None) -> dict[str,
     - Mandatory TIN for suppliers with >₱250K annual purchases
     Ref: Internal Audit Jan 30, 2026 - Max's Bakeshop ₱10M not in master list
     """
+    from hrms.utils.sentry import set_backend_observability_context
+    set_backend_observability_context(module="procurement", action="create_purchase_order", mutation_type="create")
+
     if not data:
         frappe.throw(_("Missing required parameter: data"), frappe.ValidationError)
     if isinstance(data, str):
         data = frappe.parse_json(data)
 
     supplier_name = (data or {}).get("supplier")
+
+    # S193 Guard: block new PO for Blacklisted / Pending Verification / Inactive suppliers.
+    if supplier_name:
+        _assert_supplier_active(supplier_name, "purchase_order")
+
     data = _normalize_purchase_order_payload(data, supplier_code=supplier_name)
 
     warnings = []
@@ -2402,6 +2485,17 @@ def create_invoice(data: dict[str, Any] | str) -> dict[str, Any]:
         data = frappe.parse_json(data)
     data = _normalize_invoice_payload(data)
 
+    # S193 Guard: block new invoice for Blacklisted / Pending Verification suppliers.
+    # Supplier may be set directly, or derivable from a linked PO/GR — resolve via
+    # fallback so the guard fires for every creation path, not just direct-supplier.
+    _s193_supplier = data.get("supplier")
+    if not _s193_supplier and data.get("purchase_order"):
+        _s193_supplier = frappe.db.get_value("BEI Purchase Order", data["purchase_order"], "supplier")
+    if not _s193_supplier and data.get("goods_receipt"):
+        _s193_supplier = frappe.db.get_value("BEI Goods Receipt", data["goods_receipt"], "supplier")
+    if _s193_supplier:
+        _assert_supplier_active(_s193_supplier, "invoice")
+
     purchase_order = data.get("purchase_order")
     goods_receipt = data.get("goods_receipt")
     po = None
@@ -2720,6 +2814,18 @@ def create_payment_request(data: dict[str, Any] | str) -> dict[str, Any]:
     set_backend_observability_context(module="procurement", action="create_payment_request", mutation_type="create")
     if isinstance(data, str):
         data = frappe.parse_json(data)
+
+    # S193 Guard: block new payment request for Blacklisted / Pending Verification suppliers.
+    # Payment requests are typically linked to an invoice; supplier is rarely passed
+    # directly. Resolve via invoice → PO fallback so denial fires before the
+    # Double-Payment guard and before any DB writes.
+    _s193_supplier = data.get("supplier")
+    if not _s193_supplier and data.get("invoice"):
+        _s193_supplier = frappe.db.get_value("BEI Invoice", data["invoice"], "supplier")
+    if not _s193_supplier and data.get("purchase_order"):
+        _s193_supplier = frappe.db.get_value("BEI Purchase Order", data["purchase_order"], "supplier")
+    if _s193_supplier:
+        _assert_supplier_active(_s193_supplier, "payment_request")
 
     # AUDIT CONTROL 2.5: Double-payment guard — block if PO fully covered by advance
     _po_for_guard = data.get("purchase_order")
