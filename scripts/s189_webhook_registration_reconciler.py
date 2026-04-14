@@ -70,8 +70,81 @@ def oauth(client_id: str, client_secret: str, attempts: int = 3) -> str | None:
     return None
 
 
+def _try_list_webhooks(token: str) -> list[dict] | None:
+    """GET /api/v1/webhooks — per Mosaic OpenAPI doc (docs/api/MOSAIC_API_OPENAPI_2026-04-14.json).
+
+    Returns the list of webhooks or None if Mosaic returned 5xx (known flaky).
+    """
+    try:
+        r = requests.get(
+            f"{MOSAIC_BASE}/api/v1/webhooks",
+            headers={**DEFAULT_HEADERS, "Authorization": f"Bearer {token}"},
+            timeout=20,
+        )
+    except requests.RequestException:
+        return None
+    if not r.ok:
+        return None
+    try:
+        body = r.json()
+    except (ValueError, TypeError):
+        return None
+    hooks = body.get("data", body) if isinstance(body, dict) else body
+    return hooks if isinstance(hooks, list) else None
+
+
+def _update_webhook(token: str, webhook_id: str, events: list[str]) -> tuple[bool, str, dict | None]:
+    """PUT /api/v1/webhooks/{id} — update events for an existing registration."""
+    try:
+        r = requests.put(
+            f"{MOSAIC_BASE}/api/v1/webhooks/{webhook_id}",
+            headers={**DEFAULT_HEADERS, "Authorization": f"Bearer {token}"},
+            json={"url": WEBHOOK_URL, "events": events},
+            timeout=30,
+        )
+    except requests.RequestException as e:
+        return False, f"network_error: {e}", None
+    if r.ok:
+        try:
+            body = r.json()
+            data = body.get("data", body) if isinstance(body, dict) else body
+            return True, "updated", data
+        except (ValueError, TypeError):
+            return True, "updated_but_body_unparseable", None
+    return False, f"put_http_{r.status_code}: {(r.text or '')[:200]}", None
+
+
 def register(token: str, events: list[str]) -> tuple[bool, str, dict | None]:
-    """POST webhook registration. Returns (ok, reason, body)."""
+    """Reconcile webhook registration for our URL.
+
+    Per Mosaic OpenAPI (docs/api/MOSAIC_API_OPENAPI_2026-04-14.json):
+      - POST /api/v1/webhooks creates {url, events}
+      - PUT  /api/v1/webhooks/{id} updates events for existing registration
+      - GET  /api/v1/webhooks lists (known flaky — 500 for ~11/12 groups)
+
+    Strategy: try GET first. If it works:
+      - Our URL absent → POST to create
+      - Our URL present with matching events → already_registered (no-op)
+      - Our URL present with different events → PUT to update
+    If GET fails (most common case due to Mosaic 500s): fall through to POST
+    and rely on Mosaic's duplicate-URL handling (409/422 swallowed as
+    already_registered).
+    """
+    existing = _try_list_webhooks(token)
+    if existing is not None:
+        matching = [h for h in existing if (h.get("url") or "") == WEBHOOK_URL]
+        if matching:
+            current_events = set(matching[0].get("events") or matching[0].get("event_types") or [])
+            wanted = set(events)
+            if wanted.issubset(current_events):
+                return True, "already_registered", matching[0]
+            # Registration exists but doesn't cover all our events → PUT to update
+            webhook_id = matching[0].get("id")
+            if webhook_id:
+                union = sorted(current_events | wanted)
+                return _update_webhook(token, str(webhook_id), union)
+        # No matching registration → POST below
+
     try:
         r = requests.post(
             f"{MOSAIC_BASE}/api/v1/webhooks",

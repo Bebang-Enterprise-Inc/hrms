@@ -2,6 +2,7 @@
 
 **Last updated:** 2026-04-14
 **Sprint plan:** `docs/plans/2026-04-13-sprint-189-realtime-bom-consumption.md`
+**Mosaic API spec (authoritative):** `docs/api/MOSAIC_API_OPENAPI_2026-04-14.json` — always check this first for any Mosaic endpoint ambiguity; the markdown summary at `docs/api/MOSAIC_API.md` is derived from it.
 
 ## Purpose
 
