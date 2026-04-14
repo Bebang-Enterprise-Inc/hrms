@@ -1,0 +1,20 @@
+{
+  "sprint": "S194",
+  "run_mode": "attempted",
+  "run_timestamp": "2026-04-14T13:20:00+08:00",
+  "total_scenarios": 31,
+  "executed_scenarios": 1,
+  "notes": "Only S194-24 attempted as smoke to prove framework wiring. All other scenarios require SSM seeding (createBEISupplier / createBEIItem) which cannot run in this session because the dev-config FRAPPE_URL (lfg.bebang.ph) returns HTTP 502 and the production hq.bebang.ph API also returns 502. No form submissions actually reached the backend.",
+  "scenarios": [
+    {
+      "id": "S194-24",
+      "result": "BLOCKED",
+      "form_submissions": [],
+      "blocker": "Login flow failed — auth cookies not set after 60s poll. Root cause likely the same 502 backend outage; my.bebang.ph login calls hq.bebang.ph internally. Page did render (Sign in button clicked), but session never established.",
+      "evidence": {
+        "trace": "output/l3/s194/har/S194-24-trace.zip",
+        "error_context": "output/l3/s194/defects/S194-24-error-context.md"
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "sprint": "S194",
+  "run_mode": "attempted",
+  "run_timestamp": "2026-04-14T13:20:00+08:00",
+  "notes": "No backend mutations captured. All scenarios blocked at login step because Frappe backend (hq.bebang.ph / lfg.bebang.ph) returns HTTP 502. See RUN_SUMMARY.md § 'Environmental blockers'.",
+  "mutations": []
+}

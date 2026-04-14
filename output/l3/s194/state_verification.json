@@ -1,0 +1,7 @@
+{
+  "sprint": "S194",
+  "run_mode": "attempted",
+  "run_timestamp": "2026-04-14T13:20:00+08:00",
+  "notes": "No frappeReadback state verifications captured. Every scenario uses readDoc() after UI confirm; since no UI action completed, no readbacks were performed.",
+  "verifications": []
+}
