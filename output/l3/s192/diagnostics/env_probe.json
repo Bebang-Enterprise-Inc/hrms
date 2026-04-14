@@ -1,0 +1,139 @@
+STATUS: Success
+{
+  "tanza": [
+    {
+      "name": "Bebang Mega Inc. - SM Tanza - BMI-SMT",
+      "company": "Bebang Mega Inc. - SM Tanza",
+      "warehouse_type": null
+    },
+    {
+      "name": "SM Tanza - BEI",
+      "company": "BEBANG MEGA INC.",
+      "warehouse_type": null
+    }
+  ],
+  "megamall": [
+    {
+      "name": "Bebang Enterprise Inc. - SM Megamall - BEI-SMG",
+      "company": "Bebang Enterprise Inc. - SM Megamall"
+    },
+    {
+      "name": "SM Megamall - BEI",
+      "company": "Bebang Enterprise Inc. - SM Megamall"
+    }
+  ],
+  "grid": [
+    {
+      "name": "The Grid - Rockwell - BEI",
+      "company": "TASTECARTEL CORP."
+    }
+  ],
+  "evo": [
+    {
+      "name": "Bebang Mega Inc. - Ayala Evo City - BMI-AEC",
+      "company": "Bebang Mega Inc. - Ayala Evo City"
+    },
+    {
+      "name": "Ayala Evo - BEI",
+      "company": "BEBANG MEGA INC."
+    }
+  ],
+  "sources": [
+    {
+      "name": "Royal Cold Storage - Taytay (RCS) - BKI",
+      "company": "Bebang Kitchen Inc."
+    },
+    {
+      "name": "3MD Logistics - Camangyanan - BKI",
+      "company": "Bebang Kitchen Inc."
+    },
+    {
+      "name": "Royal Cold Storage \u2013 Taytay (RCS) - BKI",
+      "company": "Bebang Kitchen Inc."
+    },
+    {
+      "name": "Jentec Storage Inc. - BKI",
+      "company": "Bebang Kitchen Inc."
+    },
+    {
+      "name": "Pinnacle Cold Storage Solutions - BKI",
+      "company": "Bebang Kitchen Inc."
+    },
+    {
+      "name": "3MD Logistics \u2013 Camangyanan - BKI",
+      "company": "Bebang Kitchen Inc."
+    },
+    {
+      "name": "Shaw BLVD - BKI",
+      "company": "Bebang Kitchen Inc."
+    }
+  ],
+  "dry_items": [
+    {
+      "item_code": "RM010-A",
+      "item_name": "Frozen Mango"
+    },
+    {
+      "item_code": "A054",
+      "item_name": "MANGO FLAVORED SAUCE"
+    },
+    {
+      "item_code": "RM030",
+      "item_name": "FROZEN MANGO"
+    },
+    {
+      "item_code": "RM014",
+      "item_name": "MANGO SYRUP"
+    },
+    {
+      "item_code": "RM010",
+      "item_name": "FRESH RIPE MANGO"
+    }
+  ],
+  "has_bsds": false,
+  "has_route": true,
+  "route_cols": [
+    "name",
+    "creation",
+    "modified",
+    "modified_by",
+    "owner",
+    "docstatus",
+    "idx",
+    "naming_series",
+    "route_name",
+    "cargo_type",
+    "source_warehouse",
+    "default_vehicle",
+    "default_driver",
+    "estimated_duration_hrs",
+    "active",
+    "notes",
+    "_user_tags",
+    "_comments",
+    "_assign",
+    "_liked_by"
+  ],
+  "sample_routes": [
+    {
+      "name": "BEI-ROUTE-0507"
+    },
+    {
+      "name": "BEI-ROUTE-0508"
+    },
+    {
+      "name": "BEI-ROUTE-0509"
+    },
+    {
+      "name": "BEI-ROUTE-0513"
+    },
+    {
+      "name": "BEI-ROUTE-0514"
+    }
+  ],
+  "sample_bin": {
+    "item": "RM010-A",
+    "warehouse": "3MD Logistics - Camangyanan - BKI",
+    "qty": 500.0
+  }
+}
