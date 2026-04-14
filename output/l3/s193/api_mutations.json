@@ -1,0 +1,68 @@
+{
+  "sprint": "S193",
+  "deploy_sha": "63139b5",
+  "image_digest": "sha256:79e28e0c224bfe593d5acb1d2e501ce5b5ce45266b23ff9e832491a07e2516d2",
+  "tested_at": "2026-04-14T05:59:16.099Z",
+  "tests": [
+    {
+      "name": "S186 get_supplier_grid live",
+      "pass": true,
+      "detail": {
+        "summary": "HTTP 200",
+        "extra": "summary.total_suppliers=103"
+      }
+    },
+    {
+      "name": "create_purchase_order blocks Blacklisted",
+      "pass": null,
+      "detail": {
+        "summary": "SKIP — no Blacklisted supplier in prod"
+      }
+    },
+    {
+      "name": "create_purchase_order blocks Pending Verification",
+      "pass": true,
+      "detail": {
+        "summary": "HTTP 417",
+        "extra": "msg=\"Cannot create Purchase Order: Supplier 3M DRAGON LOGISTICS CORPORATION is Pending Verification. Complete supplier verification (TIN, SEC, bank details) before transacting.\""
+      }
+    },
+    {
+      "name": "create_invoice blocks Pending Verification",
+      "pass": true,
+      "detail": {
+        "summary": "HTTP 417",
+        "extra": "msg=\"Cannot create Invoice: Supplier 3M DRAGON LOGISTICS CORPORATION is Pending Verification. Complete supplier verification (TIN, SEC, bank details) before transacting.\""
+      }
+    },
+    {
+      "name": "create_payment_request blocks Pending Verification",
+      "pass": true,
+      "detail": {
+        "summary": "HTTP 417",
+        "extra": "msg=\"Cannot create Payment Request: Supplier 3M DRAGON LOGISTICS CORPORATION is Pending Verification. Complete supplier verification (TIN, SEC, bank details) before transacting.\""
+      }
+    },
+    {
+      "name": "Inactive policy tests",
+      "pass": null,
+      "detail": {
+        "summary": "SKIP — no Inactive supplier"
+      }
+    },
+    {
+      "name": "Active supplier passes S193 guard (fails other validations)",
+      "pass": true,
+      "detail": {
+        "summary": "HTTP 417",
+        "extra": "msg=\"Error: Value missing for BEI Purchase Order: Expected Delivery Date\""
+      }
+    }
+  ],
+  "supplier_counts": {
+    "Active": 3,
+    "Inactive": 0,
+    "Blacklisted": 0,
+    "Pending Verification": 3
+  }
+}
