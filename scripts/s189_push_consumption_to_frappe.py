@@ -30,6 +30,12 @@ SB_HEADERS = {"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}"}
 
 BEI_SOURCE = "S189_POS_BOM_CONSUMPTION"
 DEFAULT_WAREHOUSE = "Stores - BEI"
+DEFAULT_COMPANY = "Bebang Enterprise Inc."
+
+# Frappe rejects qty < 0.001 on Kg UOM Stock Entries with "Qty in Stock UOM can not be
+# zero". Set a floor at 0.001 Kg = 1 gram. Below this, the consumption is negligible
+# and not worth an SE line.
+MIN_QTY = 0.001
 
 # UOM mapping: Supabase material_code prefix -> Frappe UOM + conversion
 # RM/FG items: grams -> KG (divide by 1000)
@@ -144,13 +150,18 @@ def create_or_update_draft_se(date, consumption_rows):
             float(row.get("total_grams", 0)),
             int(row.get("total_cups", 0)),
         )
-        if qty <= 0:
+        if qty < MIN_QTY:
             continue
         items.append({
             "item_code": row["material_code"],
             "qty": qty,
             "uom": uom,
             "s_warehouse": DEFAULT_WAREHOUSE,
+            # HOTFIX (2026-04-14): items without a valuation rate set fail stock
+            # entry submission. For BEI's consumption-tracking use case we don't
+            # care about valuation here — the accounting comes from invoices.
+            "allow_zero_valuation_rate": 1,
+            "basic_rate": 0,
         })
 
     if not items:
@@ -171,6 +182,8 @@ def create_or_update_draft_se(date, consumption_rows):
         result = frappe_post("/api/resource/Stock Entry", {
             "stock_entry_type": "Material Issue",
             "posting_date": date,
+            # HOTFIX (2026-04-14): company is mandatory on Stock Entry; default to BEI.
+            "company": DEFAULT_COMPANY,
             "bei_source": BEI_SOURCE,
             "bei_supabase_date": date,
             "items": items,

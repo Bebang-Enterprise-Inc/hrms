@@ -90,16 +90,39 @@ def fetch_frappe_boms():
     boms = r.json()["data"]
     print(f"  Found {len(boms)} active default BOMs")
 
+    # HOTFIX (2026-04-14): `/api/resource/BOM Item?filters=[["parent",...]]` returns
+    # HTTP 403 for our API token. `GET /api/resource/BOM/{name}` returns the full BOM
+    # doc with embedded `items` child table, which works for us.
     for bom in boms:
-        items_r = requests.get(f"{FRAPPE_URL}/api/resource/BOM Item", params={
-            "filters": f'[["parent","=","{bom["name"]}"]]',
-            "fields": '["item_code","item_name","qty","uom","rate"]',
-            "limit_page_length": 0,
-        }, headers=FRAPPE_AUTH, timeout=30)
-        items_r.raise_for_status()
-        bom["items"] = items_r.json()["data"]
+        detail_r = requests.get(f"{FRAPPE_URL}/api/resource/BOM/{bom['name']}",
+                                headers=FRAPPE_AUTH, timeout=30)
+        detail_r.raise_for_status()
+        bom["items"] = detail_r.json().get("data", {}).get("items", [])
 
     return boms
+
+
+def _qty_to_grams(qty, uom):
+    """Convert BOM item (qty, uom) to grams per serving.
+
+    Frappe BOM items store qty in their native UOM (usually KG for raw materials,
+    G for finer items, Nos/Pcs for packaging). This normalizes everything to
+    grams for RM/FG rows. Packaging items (Nos/Pcs/Pack/Box) keep their count.
+    """
+    if not qty:
+        return 0
+    q = float(qty)
+    u = (uom or "").strip().upper()
+    if u == "KG":
+        return q * 1000
+    if u in ("G", "GRAM", "GRAMS"):
+        return q
+    if u in ("L", "LITER", "LITERS"):
+        return q * 1000  # approximate liquids
+    if u == "ML":
+        return q
+    # Nos, Pcs, Pack, Box — packaging items; count is the meaningful unit
+    return q
 
 
 def fetch_tikim_recipes():
@@ -183,8 +206,10 @@ def build_product_bom_rows(boms, tikim_recipes):
         for item in bom["items"]:
             material_code = item["item_code"]
             material_name = item["item_name"]
-            # grams_per_serving = qty in BOM / bom_quantity (normalize to 1 serving)
-            grams = float(item["qty"]) / bom_qty
+            # grams_per_serving = qty-in-grams / bom_quantity (normalize to 1 serving)
+            # HOTFIX (2026-04-14): BOM items store qty in their native UOM (mostly KG).
+            # Must multiply by 1000 for KG items — _qty_to_grams does this.
+            grams = _qty_to_grams(item.get("qty"), item.get("uom")) / bom_qty
 
             key = (product_name, material_code)
             if key in seen:
