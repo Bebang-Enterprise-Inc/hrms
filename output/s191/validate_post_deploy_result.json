@@ -1,0 +1,54 @@
+{
+  "results": {
+    "march_2026": {
+      "fp_net": 19394423.0,
+      "fp_gross": 21721417.06,
+      "fp_orders": 34752,
+      "gf_net": 0.0,
+      "pos_net": 58071521.57
+    },
+    "feb_2026": {
+      "fp_net": 8446244.58,
+      "fp_orders": 16118
+    },
+    "apr_2026": {
+      "fp_net": 8877934.93
+    },
+    "comparisons_march": {
+      "available": false,
+      "baseline_gross": 0.0
+    }
+  },
+  "gates": [
+    [
+      "L3-191-01 March FP net \u2265 \u20b118M",
+      true,
+      19394423.0
+    ],
+    [
+      "L3-191-02 March FP orders \u2265 30,000",
+      true,
+      34752
+    ],
+    [
+      "L3-191-03 Feb FP net \u2265 \u20b18M",
+      true,
+      8446244.58
+    ],
+    [
+      "L3-191-04 Apr FP net between \u20b11M and \u20b112M (Mosaic-only band)",
+      true,
+      8877934.93
+    ],
+    [
+      "L3-191-09 March GrabFood net \u2248 \u20b10 (unchanged)",
+      true,
+      0.0
+    ],
+    [
+      "L3-191-14 comparison previous_period available",
+      false,
+      false
+    ]
+  ]
+}
