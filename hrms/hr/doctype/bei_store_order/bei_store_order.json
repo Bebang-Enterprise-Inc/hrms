@@ -54,6 +54,15 @@
       "in_standard_filter": 1
     },
     {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "label": "Company",
+      "options": "Company",
+      "reqd": 0,
+      "read_only": 1,
+      "description": "S190: Resolved from Warehouse.company at submit time"
+    },
+    {
       "fieldname": "order_date",
       "fieldtype": "Date",
       "label": "Order Date",

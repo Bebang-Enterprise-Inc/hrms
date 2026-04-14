@@ -162,6 +162,16 @@ def normalize_lookup_key(value: str | None) -> str:
 
 
 def resolve_warehouse_company(warehouse_name: str | None) -> str | None:
+	"""S190: Resolve warehouse → Company via Warehouse.company Link field only.
+
+	No suffix guessing (" - BEI" / " - BKI"). If Warehouse.company is not set,
+	returns None. Callers MUST handle None per the S190 callsite contract:
+	- submit_order: THROW
+	- _create_mr_for_store_order: reads order.company (never calls this)
+	- stamp_material_request_contract: THROW if both source and target are None
+	- build_bki_store_sale_invoice: fall back to CSV
+	- _create_fee_sales_invoice_for_billing: fall back to CSV
+	"""
 	if not warehouse_name:
 		return None
 	try:
@@ -170,12 +180,7 @@ def resolve_warehouse_company(warehouse_name: str | None) -> str | None:
 			return company
 	except Exception:
 		pass
-
-	warehouse_label = str(warehouse_name).upper()
-	if " - BKI" in warehouse_label or warehouse_label.endswith(" BKI"):
-		return "Bebang Kitchen Inc."
-	if " - BEI" in warehouse_label or warehouse_label.endswith(" BEI"):
-		return "Bebang Enterprise Inc."
+	# S190: No suffix guessing — Warehouse.company is mandatory
 	return None
 
 
@@ -198,11 +203,77 @@ def load_store_buyer_entity_register() -> list[dict[str, str]]:
 	return rows
 
 
+def _build_company_first_entity_row(
+	company_name: str, warehouse_name: str, store_name: str | None = None,
+) -> dict[str, Any]:
+	"""S190: Build a 14-key entity_row from Company Master fields.
+
+	CRITICAL (B1 fix): buyer_entity_requires_billing_hold() checks
+	buyer_entity_status — if missing, returns True → billing hold on ALL stores.
+	Every key that callers read MUST be present.
+	"""
+	store_ownership_type = ""
+	try:
+		store_ownership_type = frappe.db.get_value(
+			"Company", company_name, "store_ownership_type"
+		) or ""
+	except Exception:
+		pass
+
+	return {
+		"store_name": store_name or strip_company_suffix(warehouse_name),
+		"buyer_entity_name": company_name,
+		"buyer_entity_status": BUYER_ENTITY_STATUS_CONFIRMED,
+		"buyer_entity_source": "company_master",
+		"billing_policy": "BKI_TO_STORE_INTERCOMPANY",
+		"billing_post_policy": "standard",
+		"store_type": store_ownership_type or "Company Owned",
+		"store_type_status": "active",
+		"store_allocation_required": "no",
+		"markup_rule_mode": "standard",
+		"markup_rule_source": "company_master",
+		"active_fulfillment_status": "active",
+		"warehouse_docname": warehouse_name,
+		"evidence_primary": "company_master",
+	}
+
+
 def resolve_store_buyer_entity(
 	*,
 	warehouse_docname: str | None = None,
 	store_name: str | None = None,
 ) -> dict[str, Any]:
+	"""S190: Company-first resolution with CSV fallback.
+
+	Resolution order:
+	1. Resolve warehouse → Company (via Warehouse.company Link)
+	2. If Company found AND it's a per-store child (not a parent/group), build
+	   entity_row from Company fields with all 14 required keys
+	3. If not resolved via Company, fall through to CSV register lookup (unchanged)
+	4. If CSV also misses, return the standard "missing" dict
+	"""
+	# --- S190: Company-first path ---
+	if warehouse_docname:
+		company = resolve_warehouse_company(warehouse_docname)
+		if company:
+			# Only use Company-first for non-group companies (per-store children).
+			# Group companies (parents like "Bebang Enterprise Inc.") have multiple
+			# stores — we can't determine the buyer entity without the CSV.
+			try:
+				is_group = frappe.db.get_value("Company", company, "is_group")
+			except Exception:
+				is_group = 0
+			if not is_group:
+				# Verify this company has a matching Customer (S181 auto_provision)
+				customer = frappe.db.get_value(
+					"Customer", {"customer_name": company}, "name"
+				)
+				if customer:
+					return _build_company_first_entity_row(
+						company, warehouse_docname, store_name
+					)
+
+	# --- CSV fallback (unchanged from pre-S190) ---
 	rows = load_store_buyer_entity_register()
 	warehouse_key = normalize_lookup_key(warehouse_docname)
 	store_key = normalize_lookup_key(store_name or warehouse_docname)
@@ -374,6 +445,14 @@ def stamp_material_request_contract(
 	source_company = source_company or resolve_warehouse_company(source_warehouse)
 	destination_warehouse = destination_warehouse or getattr(doc, "set_warehouse", None)
 	target_company = target_company or resolve_warehouse_company(destination_warehouse)
+	# S190 B4: if both companies are None, log error — finance treatment will be wrong
+	if not source_company and not target_company:
+		frappe.log_error(
+			f"S190: stamp_material_request_contract — both source and target company are None "
+			f"(source_wh={source_warehouse}, dest_wh={destination_warehouse}). "
+			f"Finance treatment will default to same_company which may be incorrect.",
+			"S190 Missing Company Warning",
+		)
 	resolved_treatment = finance_treatment or infer_finance_treatment(source_company, target_company)
 	set_if_column(doc, "custom_request_source", normalize_request_source(request_source))
 	set_if_column(doc, "custom_cargo_lane", cargo_lane)

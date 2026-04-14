@@ -2021,10 +2021,13 @@ def get_user_store(surface: str | None = None):
 				row = matched_row
 			elif not allow_unmapped:
 				return
+		# S190: Include company from Warehouse.company
+		warehouse_company = row.get("company") or resolve_warehouse_company(store_name)
 		stores.append(
 			{
 				"name": store_name,
 				"warehouse_name": row.get("warehouse_name") or store_name,
+				"company": warehouse_company or "",
 			}
 		)
 		seen_stores.add(store_name)
@@ -2034,7 +2037,7 @@ def get_user_store(surface: str | None = None):
 		area_stores = frappe.get_all(
 			"Warehouse",
 			filters={"custom_area_supervisor": user, "is_group": 0, "disabled": 0},
-			fields=["name", "warehouse_name", "warehouse_type"],
+			fields=["name", "warehouse_name", "warehouse_type", "company"],
 			order_by="warehouse_name",
 		)
 		for store_row in area_stores:
@@ -2125,7 +2128,7 @@ def get_user_store(surface: str | None = None):
 			store_rows = frappe.get_all(
 				"Warehouse",
 				filters={"is_group": 0, "disabled": 0},
-				fields=["name", "warehouse_name", "warehouse_type"],
+				fields=["name", "warehouse_name", "warehouse_type", "company"],
 				order_by="warehouse_name",
 				limit=200,
 			)
@@ -2139,7 +2142,7 @@ def get_user_store(surface: str | None = None):
 		store_rows = frappe.get_all(
 			"Warehouse",
 			filters={"is_group": 0, "disabled": 0},
-			fields=["name", "warehouse_name", "warehouse_type"],
+			fields=["name", "warehouse_name", "warehouse_type", "company"],
 			order_by="warehouse_name",
 			limit=200,
 		)
@@ -2175,7 +2178,7 @@ def set_warehouse_types(dry_run: int | str = 1) -> dict:
 	warehouses = frappe.get_all(
 		"Warehouse",
 		filters={"is_group": 0, "disabled": 0},
-		fields=["name", "warehouse_name", "warehouse_type"],
+		fields=["name", "warehouse_name", "warehouse_type", "company"],
 	)
 
 	updates = []
@@ -2999,6 +3002,13 @@ def submit_order(
 	# Resolve branch name to warehouse name
 	warehouse = resolve_warehouse(store)
 
+	# S190: Resolve warehouse → Company and stamp on order
+	order_company = resolve_warehouse_company(warehouse)
+	if not order_company:
+		frappe.throw(
+			_("Store warehouse {0} has no Company set. Contact admin.").format(warehouse)
+		)
+
 	if isinstance(items, str):
 		items = json.loads(items)
 
@@ -3053,6 +3063,7 @@ def submit_order(
 
 	order = frappe.new_doc("BEI Store Order")
 	order.store = warehouse
+	order.company = order_company  # S190: stamped from Warehouse.company
 	order.order_date = order_date
 	order.delivery_date = delivery_date or add_days(nowdate(), 1)
 	order.cargo_category = normalized_cargo_category
@@ -3725,7 +3736,8 @@ def _create_mr_for_store_order(order):
 		source_warehouse = _resolve_store_order_source_warehouse(store_warehouse, cargo_category)
 		buyer_entity_row = resolve_store_buyer_entity(warehouse_docname=store_warehouse)
 		source_company = resolve_warehouse_company(source_warehouse) or get_company()
-		operational_target_company = resolve_warehouse_company(store_warehouse) or get_company()
+		# S190: Read company from order (set at submit time) instead of guessing
+		operational_target_company = getattr(order, "company", None) or resolve_warehouse_company(store_warehouse) or get_company()
 		billing_target_company = (
 			str(buyer_entity_row.get("buyer_entity_name") or "").strip()
 			or operational_target_company
@@ -5141,12 +5153,12 @@ def _get_store_cost_center(store):
 
 
 def _get_store_customer(store: str) -> str:
-	"""S168: Get the Customer linked to a store's legal buyer entity.
+	"""S190: Company-first customer resolution with CSV fallback.
 
-	Uses the S037 store_buyer_entity_register (ICT-005) to resolve the correct
-	legal corporation, then looks up the Customer in Frappe whose customer_name
-	EXACTLY matches the buyer_entity_name. No LIKE matching — the register is
-	authoritative.
+	Resolution order:
+	1. resolve_store_buyer_entity (which tries Company-first, then CSV)
+	2. Look up Customer by buyer_entity_name exact match
+	3. If neither works, throw — store needs configuration.
 	"""
 	if not store:
 		frappe.throw(_("Store is required"))
@@ -5155,9 +5167,8 @@ def _get_store_customer(store: str) -> str:
 	if not buyer_entity_name:
 		frappe.throw(
 			_(
-				"Store {0} has no buyer entity in the S037 register. "
-				"Add a row to data/_CLEANROOM/2026-03-12-s037-store-buyer-entity-register/ "
-				"before billing can proceed."
+				"Store {0} has no buyer entity (checked Company Master and S037 register). "
+				"Ensure Warehouse.company is set or add a row to the buyer entity register."
 			).format(store)
 		)
 	customer = frappe.db.get_value("Customer", {"customer_name": buyer_entity_name}, "name")
@@ -5165,7 +5176,7 @@ def _get_store_customer(store: str) -> str:
 		frappe.throw(
 			_(
 				"No Customer record found for buyer entity '{0}' (store: {1}). "
-				"Run scripts/s168_seed_bki_customers.py to create missing Customers."
+				"Run S181 auto_provision or scripts/s168_seed_bki_customers.py."
 			).format(buyer_entity_name, store)
 		)
 	return customer

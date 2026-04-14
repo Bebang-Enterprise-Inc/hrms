@@ -536,19 +536,25 @@ def _create_fee_sales_invoice_for_billing(billing) -> str | None:
 	store_name = getattr(billing, "store", None)
 	if not store_name:
 		frappe.throw(_("Billing {0} has no store; cannot create fee SI").format(billing.name))
+	# S190: resolve_store_buyer_entity now tries Company-first, then CSV fallback
 	entity_row = resolve_store_buyer_entity(
 		warehouse_docname=store_name, store_name=store_name
 	)
-	customer = (entity_row or {}).get("buyer_entity_name") or ""
-	if not customer:
+	buyer_entity_name = (entity_row or {}).get("buyer_entity_name") or ""
+	if not buyer_entity_name:
 		frappe.throw(
 			_(
-				"S168 Phase 10: no buyer entity resolved for store {0}; cannot create fee SI."
+				"No buyer entity resolved for store {0}; cannot create fee SI. "
+				"Check Warehouse.company or buyer entity register."
 			).format(store_name)
 		)
-	if not frappe.db.exists("Customer", customer):
+	# S190: Look up Customer by customer_name (not by name) for robustness
+	customer = frappe.db.get_value("Customer", {"customer_name": buyer_entity_name}, "name")
+	if not customer:
 		frappe.throw(
-			_("S168 Phase 10: Customer {0} for store {1} does not exist.").format(customer, store_name)
+			_("No Customer record for buyer entity '{0}' (store: {1}).").format(
+				buyer_entity_name, store_name
+			)
 		)
 
 	settings = frappe.get_single("BEI Settings")

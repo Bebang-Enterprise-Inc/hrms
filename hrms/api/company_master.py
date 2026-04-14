@@ -859,12 +859,19 @@ def get_store_context(store_name: str | None = None, company: str | None = None)
 	]
 	doc_row = frappe.db.get_value("Company", resolved_company, wanted, as_dict=True) or {}
 
+	# S190: Also resolve warehouse → Company for the direct Warehouse.company Link
+	warehouse_company = None
+	if warehouse_docname:
+		from hrms.utils.supply_chain_contracts import resolve_warehouse_company
+		warehouse_company = resolve_warehouse_company(warehouse_docname)
+
 	return {
 		"store_name": store_name,
 		"company": resolved_company,
 		"company_label": doc_row.get("company_name"),
 		"abbr": doc_row.get("abbr"),
 		"warehouse_docname": warehouse_docname,
+		"warehouse_company": warehouse_company,
 		"entity_category": doc_row.get("entity_category"),
 		"store_ownership_type": doc_row.get("store_ownership_type"),
 	}

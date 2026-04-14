@@ -1010,17 +1010,17 @@ def build_bki_store_sale_invoice(
 		)
 		return None
 
-	# Resolve authoritative buyer corporation via S037 register
+	# S190: Company-first buyer entity resolution with CSV fallback
 	entity_row = resolve_store_buyer_entity(warehouse_docname=target_warehouse) or {}
 
 	if buyer_entity_requires_billing_hold(entity_row):
 		frappe.log_error(
 			(
-				f"S168: Billing hold for warehouse={target_warehouse} "
+				f"S190: Billing hold for warehouse={target_warehouse} "
 				f"(status={entity_row.get('buyer_entity_status') or 'unknown'}); "
 				"Draft SI NOT created. Finance must release the hold or amend the register."
 			),
-			"S168 Billing Hold",
+			"S190 Billing Hold",
 		)
 		return None
 
@@ -1028,9 +1028,10 @@ def build_bki_store_sale_invoice(
 	store_type = (entity_row.get("store_type") or "").strip()
 	if not buyer_entity_name:
 		frappe.throw(
-			_("Store {0} has no buyer entity in the S037 register; cannot create SI").format(
-				target_warehouse
-			)
+			_(
+				"Store {0} has no buyer entity (checked Company Master and S037 register); "
+				"cannot create SI"
+			).format(target_warehouse)
 		)
 
 	bki_company = "Bebang Kitchen Inc."
