@@ -1,0 +1,80 @@
+idx,company_name,abbr,company_type,parent_frappe,parent_should_be,bir_entity_name,tin,rdo,vat_status,franchisees,stores
+1,Irresistible Infusions Inc.,III,Holding Company,(standalone),(TOP LEVEL — Is Group Company),Irresistible Infusions Inc.,634-954-873-00000,041,VAT Registered,,(Holding company — no stores)
+2,Bebang Enterprise Inc.,BEI,Head Office,Irresistible Infusions Inc.,Irresistible Infusions Inc. (current — correct?),Bebang Enterprise Inc.,647-243-690-00000,041,VAT Registered,,"Head Office (TIN: 647-243-690-00000, RDO 041)
+SM Megamall (TIN: 647-243-690-00001, RDO 041)
+SM Manila (TIN: 647-243-690-00002, RDO 033)
+SM Southmall (TIN: 647-243-690-00004, RDO 53A)
+Robinsons Place Antipolo (TIN: 647-243-690-00005, RDO 045)"
+3,Bebang Kitchen Inc.,BKI,Commissary,Irresistible Infusions Inc.,Irresistible Infusions Inc. (current — correct?),Bebang Kitchen Inc,010-880-681-00001,041,VAT Registered,,"Commissary (Shaw Blvd, Mandaluyong)"
+4,BEBANG FRANCHISE CORP.,BFC,Franchisor,(standalone),Bebang Enterprise Inc.? or Irresistible Infusions Inc.? (TEAM TO CONFIRM),BEBANG FRANCHISE CORP.,672-618-804-00000,044,VAT Registered,,(Franchisor entity — no stores)
+5,DMD HOLDINGS INC.,DHI,Holdings,(standalone),DMD HOLDINGS INC.,DMD Holdings Inc,649-154-841-00000,041,VAT Registered,Andrew Rodel Manansala,"Uptown Mall (TIN: 649-154-841-00001, RDO 044)"
+6,TUNGSTEN CAPITAL HOLDINGS OPC,BAG,Store Corporation,(standalone),TUNGSTEN CAPITAL HOLDINGS OPC,TUNGSTEN CAPITAL HOLDINGS OPC,679-843-234-00000,044,VAT Registered,"Wilford Wong 
+Winchell Wong 
+Wei Min Choy","SM Sangandaan (TIN: 679-843-234-00001, RDO 027)
+Robinsons Galleria South (TIN: 679-843-234-00002, RDO 057)
+Food Express, Gateway (TIN: 679-843-234-00003, RDO 040)"
+7,HFFM SOLENAD FOOD SERVICES INC.,BAS,Store Corporation,(standalone),HFFM SOLENAD FOOD SERVICES INC.,HFFM SOLENAD FOOD SERVICES INC.,681-476-808-00000,034,VAT Registered,"Francis Patrick Jose Fontanilla Tanjangco
+Francisco Suntay Tanjangco
+Hernando Diokno Hernandez
+Maribeth Elagdon Salazar","Ayala Solenad (TIN: 681-476-808-00000, RDO 057)"
+8,BEBANG BF HOMES INC.,BBHI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang BF Homes Inc.,673-762-767-00000,052,VAT Registered,"Edward Cheson Sy
+Ralph Kenneth Ty","BF Homes Paranaque (Aguirre Ave.) (TIN: 673-762-767-00000, RDO 052)"
+9,TAJ FOOD CORP.,BDV,Store Corporation,(standalone),TAJ Food Corp.,TAJ Food Corp.,681-325-053-00000,042,VAT Registered,"Alyssa Young
+Timothy Patrick Uy
+Pablo Hicban","SM Caloocan (TIN: 681-325-053-00001, RDO 027)
+D'Verde Calamba (TIN: 681-325-053-00002, RDO 056)"
+10,DLS Dessert Craft Inc.,BEGC,Store Corporation,(standalone),DLS Dessert Craft Inc.,DLS Dessert Craft Inc.,671-219-097-00000,,,"Francis Lopez
+Angela ""Mai"" Mylene C. Sediaren
+Michelle Defensor","Ever Gotesco Commonwealth (TIN: 671-219-097-00001, RDO 028)"
+11,BEBANG FESTIVAL INC.,BFI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang Festival Inc.,672-618-586-00000,044,VAT Registered,Jose Paulo Legaspi,"Festival Mall Alabang (TIN: 672-618-586-00001, RDO 53B)"
+12,BEBANG FT INC.,BFI2,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang FT Inc.,663-440-106-00000,044,VAT Registered,Andrew Rodel Manansala,"Fairview Terraces (TIN: 663-440-106-00001, RDO 028)"
+13,BEBANG GRAND CENTRAL INC.,BGCI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang Grand Central Inc.,010-880-753-00000,044,VAT Registered,"Rommel Gabaldon
+Veronica Gabaldon","SM Grand Central (TIN: 010-880-753-00001, RDO 027)"
+14,BEBANG LCT INC.,BLI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang LCT Inc,665-462-689-00000,044,VAT Registered,Ian Umali,"Lucky China Town (TIN: 665-462-689-00001, RDO 030)"
+15,BEBANG MARILAO INC.,BMI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang Marilao Inc,675-267-457-00000,044,VAT Registered,Hernando Diokno Hernandez,"SM Marilao (TIN: 675-267-457-00001, RDO 025B)"
+16,BEBANG MARKET MARKET INC.,BMMI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang Market Market Inc.,656-572-595-00000,044,VAT Registered,Andrew Rodel Manansala,"Ayala Market! Market! (TIN: 656-572-595-00001, RDO 044)"
+17,BEBANG MEGA INC.,BMI2,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang Mega Inc,010-885-436-00000,044,VAT Registered,Ian Umali,"SM Tanza (TIN: 010-885-436-00001, RDO 054B)
+Robinsons Place Imus (TIN: 010-885-436-00002, RDO 54A)
+Ayala Evo City (TIN: 010-885-436-00004, RDO 54B)
+Ayala Vermosa (TIN: 010-885-436-00005, RDO 54A)
+Robinsons Place Gen. Trias (TIN: 010-885-436-00003, RDO 54B)"
+18,BEBANG NORTH EDSA INC.,BNEI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang North Edsa,663-447-579-00000,044,VAT Registered,Andrew Rodel Manansala,"SM North EDSA (TIN: 663-447-579-00001, RDO 038)"
+19,BEBANG PASEO INC.,BPI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang Paseo Inc,010-880-720-00000,044,VAT Registered,"Julian Anthony De Guzman 
+Lorenzo Santos Castillo","Paseo Center (TIN: 010-880-720-00001, RDO 050)"
+20,BEBANG PITX INC.,BPI2,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang PITX Inc,010-880-712-00000,044,VAT Registered,Jose Paulo Legaspi,"PITX Terminal (TIN: 010-880-712-00001, RDO 052)"
+21,BEBANG SM BICUTAN INC.,BSBI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang SM Bicutan Inc.,010-887-661-00000,044,VAT Registered,Vishal Shaq Daswani,"SM Bicutan (TIN: 010-887-661-00001, RDO 052)"
+22,RED TALDAWA FOODS OPC,BSC2,Store Corporation,(standalone),RED TALDAWA FOODS OPC,RED TALDAWA FOODS OPC,687-525-727-00000,21B,VAT Registered,"Maria Luisa Gonzales Manliclic
+Abel Clarin Manliclic","SM Clark (TIN: 687-525-727-00001, RDO 21A)"
+23,BEBANG SM MARIKINA INC.,BSMI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang SM Marikina Inc.,670-282-332-00000,044,VAT Registered,"Imelda Soriano
+Ana Soriano","SM Marikina (TIN: 670-282-332-00001, RDO 045)
+Sta. Lucia East Grand Mall (TIN: 670-282-332-00002, RDO 046)"
+24,JL TRADE OPC,BSS2,Store Corporation,(standalone),JL TRADE OPC,JL TRADE OPC,775-842-763-00000,045,VAT Registered,"Jose Paulo Legaspi
+Carla Joyce Garcia","SM SJDM (TIN 775-842-763-00003, RDO 25B)"
+25,DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,BST,Store Corporation,(standalone),DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.,010-939-944-00000,049,VAT Registered,"Kiefer Isaac Crisologo Ravena
+Jose Paolo Gabriel Darroca
+Mickey Ingles","SM Taytay (TIN 010-939-944-00001, RDO 046)"
+26,BEBANG SMEO INC.,BSI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang SMEO Inc,665-312-808-00000,044,VAT Registered,"Lorenzo Castillo
+Julian Anthony De Guzman","SM East Ortigas (TIN: 665-312-808-00001, RDO 043)"
+27,BEBANG SMM INC.,BSI2,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang SMM Inc.,662-567-267-00000,044,VAT Registered,"Lewis Alfred V Tenorio
+Kiefer Isaac Crisologo Ravena","SM Center Pulilan (TIN: 662-567-267-00001, RDO 25A)"
+28,BEBANG SMOA INC.,BSI3,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang SMOA Inc.,665-459-236-00000,044,VAT Registered,Ian Umali,"SM Mall of Asia (TIN: 665-459-236-00001, RDO 051)"
+29,BEBANG SMV INC.,BSI4,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang SMV Inc.,665-313-198-00000,044,VAT Registered,Benjamin Christopher Sunga,"SM Valenzuela (TIN: 665-313-198-00001, RDO 024)"
+30,BEBANG STARMALL ALABANG INC.,BSAI,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang Starmall Alabang Inc.,670-277-140-00000,044,VAT Registered,Jose Paulo Legaspi,"The Terminal Exchange (TIN: 670-277-140-00001, RDO 53B)"
+31,TASTECARTEL CORP.,BTGF,Store Corporation,(standalone),TASTECARTEL CORP.,TASTECARTEL CORP.,672-270-879-00000,040,VAT Registered,Howard Paw,"The Grid (TIN: 672-270-879-00000, RDO 049)"
+32,B CUBED VENTURES CORP.,BTM,Store Corporation,(standalone),B CUBED VENTURES CORP.,B CUBED VENTURES CORP.,682-574-745-00000,039,VAT Registered,"Cherry Go 
+Jason Go","CTTM Square Tomas Morato (TIN 682-574-745-00001, RDO 039)"
+33,BEBANG UP TOWN CENTER INC.,BUTC,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang UP Town Center Inc.,675-270-405-00000,044,VAT Registered,"Imelda Soriano
+Ana Soriano
+Dennis Soriano","Ayala UP Town Center (TIN: 675-270-405-00001, RDO 039)"
+34,BEBANG VENICE GRAND CANAL INC.,BVGC,Store Corporation,(standalone),Bebang Enterprise Inc.,Bebang Venice Grand Canal Inc.,010-880-690-00000,044,VAT Registered,"Rommel Gabaldon
+Veronica Gabaldon","Venice Grand Canal (TIN: 010-880-690-00001, RDO 044)"
+35,TRICERN FOOD CORP.,BV,Store Corporation,(standalone),TRICERN FOOD CORP.,TRICERN FOOD CORP.,010-038-108-00000,53A,VAT Registered,Martin Lim,"Vista Mall Taguig (TIN: 010-038-108-00005, RDO 044)"
+36,SWEET HARMONY FOOD CORP.,,Store Corporation,(standalone),SWEET HARMONY FOOD CORP.,SWEET HARMONY FOOD CORP.,691-378-334-00000,057,VAT Registered,"Anne Marie Chua Siy
+Caroline Pamela Ong
+Hans Kendrick Tan
+Marc Ivan Ong","SM Sta. Rosa (TIN: 691-378-334-00000, RDO 057)"
+37,HALO-HALO TERMINAL FOOD CORP.,,Store Corporation,(standalone),HALO-HALO TERMINAL FOOD CORP.,HALO-HALO TERMINAL FOOD CORP.,690-528-808-00000,051,VAT Registered,Michaelvin Chiong,"NAIA T3 (TIN: 690-528-808-00000, RDO 051)"
+38,BEIFRANCHISE FOOD OPC,,Store Corporation,(standalone),BEIFRANCHISE FOOD OPC,BEIFRANCHISE FOOD OPC,688-721-280-00000,028,VAT Registered,"Josefino Rafael ""JR"" Sebastian Gonzales","Greenhills Mall (TIN: 688-721-280-00001, RDO 042)"
+39,BB ESTANCIA FOOD CORP.,,Store Corporation,(standalone),BB ESTANCIA FOOD CORP.,BB ESTANCIA FOOD CORP.,693-136-289-00000,043,VAT Registered,Ian Umali,"Estancia Mall (TIN: 693-136-289-00000, RDO 043)"
+40,PERPETUAL FOOD CORP.,,Store Corporation,(standalone),PERPETUAL FOOD CORP.,PERPETUAL FOOD CORP.,698-838-619-00000,045,VAT Registered,"Julian Anthony De Guzman 
+Beverly Ann De Guzman","Xentromall Montalban (TIN: 698-838-619-00000, RDO 045)"
