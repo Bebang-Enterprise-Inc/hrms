@@ -28,6 +28,10 @@ MANILA_TZ = ZoneInfo("Asia/Manila")
 # channel labels ('Delivery', 'Unknown', NULL) - they were not retroactively retagged.
 # S176 hotfix #3 2026-04-09: cutover bumped 2026-03-26 -> 2026-03-27 after
 # live data inspection showed 2026-03-25 and 2026-03-26 were PARTIAL Mosaic days.
+# S191 2026-04-14: DEPRECATED as cutover date. Per-(store,day) FULL OUTER JOIN in
+# _get_unified_foodpanda_totals replaces the global date because the per-store
+# Mosaic rollout happened over ~1 week in late March. Constant retained ONLY for
+# the freshness warning at ~line 1552 that tells users about the historical split.
 _FOODPANDA_MOSAIC_START = date(2026, 3, 27)
 _GRABFOOD_MOSAIC_START = date(2026, 4, 1)
 ROLE_SALES_STAKEHOLDER = "Sales Stakeholder"
@@ -1195,8 +1199,13 @@ def _apply_mosaic_channel_split(
 		- average_daily_sales / average_guest_check → recomputed
 	"""
 	split = _get_mosaic_channel_split(start_day, end_day, location_ids)
+	# S191 2026-04-14: FoodPanda now comes from the unified (legacy + Mosaic) source,
+	# not from the Mosaic-only `split`. Drop Mosaic FP so the "other" rollup below
+	# does NOT double-count it, then override fp_bucket with the unified totals.
+	fp_unified = _get_unified_foodpanda_totals_aggregate(start_day, end_day, location_ids)
 	pos_bucket = split.pop("pos", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
-	fp_bucket = split.pop("foodpanda", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+	split.pop("foodpanda", None)  # discard Mosaic-only FP — now using unified source
+	fp_bucket = fp_unified
 	gf_bucket = split.pop("grabfood", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
 	wd_bucket = split.pop("webdelivery", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
 	# All remaining Mosaic channels (legacy "Delivery", "Unknown", etc.) roll up to "other".
@@ -3055,8 +3064,10 @@ def _build_dashboard_summary_payload(
 ) -> dict[str, Any]:
 	view_mode = _canonical_view_mode(view_mode)
 	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
+	# S191 2026-04-14: prefix bumped so pre-deploy cached payloads (with Mosaic-only
+	# FP) are invalidated on the first request after the deploy.
 	cache_key = _sales_dashboard_cache_key(
-		"summary",
+		"summary_s191",
 		selected_location_ids,
 		start_day=start_day,
 		end_day=end_day,
@@ -3163,8 +3174,10 @@ def _build_dashboard_overview_payload(
 	freshness["sales_effective_end_date"] = effective_end.isoformat()
 	freshness["discount_effective_end_date"] = discount_effective_end.isoformat()
 	freshness["requested_end_date"] = end_day.isoformat()
+	# S191 2026-04-14: prefix bumped so pre-deploy cached overview payloads (with
+	# Mosaic-only FP) are invalidated on the first request after the deploy.
 	cache_key = _sales_dashboard_cache_key(
-		"overview",
+		"overview_s191",
 		selected_location_ids,
 		start_day=start_day,
 		end_day=effective_end,
