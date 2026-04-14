@@ -5,15 +5,26 @@ S189: order.completed — upserts pos_orders + pos_order_items with ingestion_so
       (complements hourly poll sync for real-time BOM consumption; poll remains
       authoritative for order_status and sums since stores may have unstable internet).
 
-Auth path:
-  - Optional HMAC check via MOSAIC_WEBHOOK_SECRET env var (SPECULATIVE:
-    Mosaic's public OpenAPI doc does not document webhook signing as of
-    2026-04-14; this code is defensive for if/when they add it).
-    See docs/api/MOSAIC_API_OPENAPI_2026-04-14.json — no 'signature', 'hmac',
-    or webhook-signing entries exist in the spec.
-  - Path B (actually used): round-trip Mosaic GET /api/v1/orders/{id}
-    * order.cancelled expects HTTP 404
-    * order.completed expects HTTP 200 (order exists)
+Auth model (as of 2026-04-14 fix):
+  - Primary: trust the webhook payload (matches the working
+    bebang-multistore-dashboard superadmin handler which has been receiving
+    Mosaic webhooks in production). Mosaic's webhook delivery does not have
+    a documented signing/auth mechanism in their OpenAPI spec, and their
+    GET /api/v1/orders/{id} endpoint is flaky (returns 500 for ~half our
+    orders), so round-trip verification was unreliable as a gate.
+  - Optional HMAC check via MOSAIC_WEBHOOK_SECRET env var (SPECULATIVE —
+    activates if/when Mosaic issues a signing secret; per OpenAPI 2026-04-14
+    no signature scheme is documented).
+  - Round-trip GET /api/v1/orders/{id} is still attempted for order.completed
+    (we want the full authoritative payload) but is NOT a gate. If Mosaic's
+    API flakes, we fall back to the webhook payload which carries the same
+    shape per their OpenAPI spec.
+
+HISTORY: Between 2026-04-07 and 2026-04-14 the handler rejected real webhook
+deliveries with HTTP 401 `round_trip_confirm_failed` because the old S169
+design required Mosaic to return 404 for cancelled orders (they return 200 or
+500 instead). Mosaic paused delivery after receiving the 401s — hence 6 days
+of zero webhook coverage. This fix removes the hard round-trip requirement.
 
 Supported events per Mosaic OpenAPI spec (docs/api/MOSAIC_API_OPENAPI_2026-04-14.json):
   order.created, order.completed, order.cancelled, order.paid, order.ready,
@@ -102,20 +113,36 @@ def receive():
 
 
 def _handle_order_cancelled(data: dict) -> dict:
-    """S169: tombstone a cancelled order in pos_orders."""
+    """Tombstone a cancelled order in pos_orders.
+
+    S189 2026-04-14 fix: DROPPED the round-trip "expect 404" auth requirement.
+    The original S169 design assumed Mosaic deletes cancelled orders (so GET
+    returns 404). In practice Mosaic keeps cancelled orders fetchable (returns
+    200) and their /api/v1/orders/{id} endpoint flakes to 500 often anyway.
+    Trusting the payload matches what the production
+    bebang-multistore-dashboard superadmin does (see
+    app/Http/Controllers/API/APIController.php::mosaicResponse) which has
+    been receiving Mosaic webhooks in production since before S169.
+
+    The HMAC path (if MOSAIC_WEBHOOK_SECRET ever gets issued) already runs
+    upstream in receive(). Without it, we trust the delivery channel.
+    """
     order_id = data.get("id")
     if not order_id:
         frappe.local.response.http_status_code = 400
         return {"ok": False, "reason": "missing order id"}
 
-    # Path B auth: verify by calling GET /api/v1/orders/{id} — expect 404.
-    if not _authenticate_webhook(order_id, data, expect_status=404):
-        frappe.log_error(
-            title="Mosaic webhook auth failed",
-            message=f"order_id={order_id} event=order.cancelled",
-        )
-        frappe.local.response.http_status_code = 401
-        return {"ok": False, "reason": "round_trip_confirm_failed", "order_id": order_id}
+    # Structural payload sanity — reject blatantly malformed deliveries only.
+    try:
+        int(order_id)
+    except (TypeError, ValueError):
+        frappe.local.response.http_status_code = 400
+        return {"ok": False, "reason": "order_id_not_integer"}
+
+    frappe.logger().info(
+        f"S189 mosaic webhook RECEIVED: event=order.cancelled order_id={order_id} "
+        f"location_id={data.get('location_id')} reason={str(data.get('cancellation_reason'))[:60]}"
+    )
 
     cancelled_at = data.get("cancelled_at") or datetime.now(timezone.utc).isoformat()
     reason = (data.get("cancellation_reason") or "mosaic_webhook_missing_reason")[:500]
@@ -163,10 +190,18 @@ def _handle_order_cancelled(data: dict) -> dict:
 
 
 def _handle_order_completed(data: dict) -> dict:
-    """S189 T7.4: upsert a completed order into pos_orders + pos_order_items.
+    """Upsert a completed order into pos_orders + pos_order_items.
 
     Idempotent: re-delivery of the same webhook or collision with hourly poll
     does not create duplicates. Sets ingestion_source='webhook' on pos_orders.
+
+    S189 2026-04-14 fix: DROPPED the round-trip fetch as a hard requirement.
+    The webhook payload itself carries the full order data (same shape as
+    /api/v1/orders/{id}). Round-trip is attempted as a nicety — if it works,
+    use that authoritative copy; if Mosaic's API flakes (500) we fall back
+    to the payload. Previously we'd return 401 which caused Mosaic to pause
+    delivery entirely (confirmed root cause of 6-day webhook silence from
+    2026-04-07 onwards — error log shows 2 real deliveries rejected that day).
     """
     set_backend_observability_context(
         module="mosaic",
@@ -179,11 +214,33 @@ def _handle_order_completed(data: dict) -> dict:
         frappe.local.response.http_status_code = 400
         return {"ok": False, "reason": "missing order id"}
 
-    # Round-trip: fetch full order from Mosaic. Expect HTTP 200.
+    try:
+        int(order_id)
+    except (TypeError, ValueError):
+        frappe.local.response.http_status_code = 400
+        return {"ok": False, "reason": "order_id_not_integer"}
+
+    frappe.logger().info(
+        f"S189 mosaic webhook RECEIVED: event=order.completed order_id={order_id} "
+        f"location_id={data.get('location_id')}"
+    )
+
+    # Try round-trip fetch to get authoritative order; fall back to payload.
     order = _fetch_mosaic_order(order_id, data)
     if not order:
-        frappe.local.response.http_status_code = 401
-        return {"ok": False, "reason": "round_trip_fetch_failed", "order_id": order_id}
+        # Mosaic's API returned 5xx/404/timeout. Use the webhook payload —
+        # it carries the same fields per the OpenAPI spec.
+        if not data.get("location_id") or not data.get("business_date"):
+            # Payload incomplete — the webhook isn't usable on its own.
+            frappe.log_error(
+                title="Mosaic webhook order.completed: round-trip failed and payload incomplete",
+                message=f"order_id={order_id} payload_keys={list(data.keys())[:20]}",
+            )
+            # Still return 200 so Mosaic doesn't pause delivery — the next
+            # hourly poll will pick this order up.
+            return {"ok": True, "handled": False, "reason": "payload_incomplete_deferred_to_poll",
+                    "order_id": order_id}
+        order = data  # trust the webhook payload
 
     try:
         _upsert_completed_order(order)
