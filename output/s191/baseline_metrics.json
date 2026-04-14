@@ -1,0 +1,39 @@
+{
+  "total_stores": 45,
+  "overlap_rows": 275,
+  "overlap_gross_variance": 844256.52,
+  "overlap_net_variance": 754104.06,
+  "max_single_day_gross_variance": 37724.0,
+  "unified_gross_march": 21721417.059999995,
+  "unified_net_march": 19394422.999999996,
+  "unified_orders_march": 34752,
+  "legacy_orders_total": 50525,
+  "mosaic_orders_total": 24872,
+  "dupes": 0,
+  "by_month": {
+    "2026-02": {
+      "legacy_gross": 9506654.0,
+      "legacy_net": 8488083.85,
+      "legacy_orders": 16188,
+      "mosaic_gross": 0.0,
+      "mosaic_net": 0.0,
+      "mosaic_orders": 0
+    },
+    "2026-03": {
+      "legacy_gross": 21722238.0,
+      "legacy_net": 19394855.549999982,
+      "legacy_orders": 34337,
+      "mosaic_gross": 5000718.0600000005,
+      "mosaic_net": 4465227.280000001,
+      "mosaic_orders": 8136
+    },
+    "2026-04": {
+      "legacy_gross": 0.0,
+      "legacy_net": 0.0,
+      "legacy_orders": 0,
+      "mosaic_gross": 10691820.069999995,
+      "mosaic_net": 9547287.590000005,
+      "mosaic_orders": 16736
+    }
+  }
+}
