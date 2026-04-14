@@ -1,0 +1,21 @@
+{
+  "sprint": "S192",
+  "dependency": "S190 Company-first billing chain",
+  "pr_563": {
+    "repo": "Bebang-Enterprise-Inc/hrms",
+    "state": "MERGED",
+    "merged_at": "2026-04-14T00:36:22Z",
+    "title": "S190 Phase 1-4: Company-first resolution chain"
+  },
+  "pr_566": {
+    "repo": "Bebang-Enterprise-Inc/hrms",
+    "state": "MERGED",
+    "merged_at": "2026-04-14T01:30:28Z",
+    "title": "S190 Phase 5: CSV retired, 37 warehouses re-pointed"
+  },
+  "production_deploy_date": "2026-04-14",
+  "deploy_verified_via": "gh pr view mergedAt timestamps (both merged same day as sprint start)",
+  "go_ready": true,
+  "verified_at": "2026-04-14T00:00:00+08:00",
+  "verified_by": "execute-plan-bei-erp session"
+}
