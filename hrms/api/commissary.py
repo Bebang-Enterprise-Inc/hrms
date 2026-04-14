@@ -1135,10 +1135,12 @@ def build_bki_store_sale_invoice(
 	if debit_to:
 		si.debit_to = debit_to
 	# S192: bei_legal_entity + bei_store_label are mandatory custom fields on
-	# Sales Invoice for ERP-sync attribution. Set them from the resolved
-	# Company-first chain (S190).
+	# Sales Invoice for ERP-sync attribution.
+	# bei_legal_entity must equal the issuing company (per BEI P10 D04 issuance
+	# guard server script). For BKI -> store sales, the issuer IS BKI; the
+	# buyer entity goes on the Customer (which already encodes the S190 chain).
 	if frappe.get_meta("Sales Invoice").has_field("bei_legal_entity"):
-		si.bei_legal_entity = buyer_entity_name
+		si.bei_legal_entity = bki_company
 	if frappe.get_meta("Sales Invoice").has_field("bei_store_label"):
 		si.bei_store_label = target_warehouse
 	# Linkage (custom fields added by Phase 1 fixtures)
