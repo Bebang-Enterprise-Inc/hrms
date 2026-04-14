@@ -422,7 +422,7 @@ def set_production_targets(production_date=None, targets=None):
 		}
 
 	except Exception as e:
-		frappe.db.rollback_to_savepoint("set_targets")
+		frappe.db.rollback(save_point="set_targets")
 		frappe.log_error("set_production_targets failed", str(e))
 		return {"success": False, "saved": [], "failed": failed, "error": str(e)}
 

@@ -707,7 +707,7 @@ def auto_provision_company(doc, method=None):
 			alert=True,
 		)
 	except Exception:
-		frappe.db.rollback_to_savepoint("s181_auto_provision")
+		frappe.db.rollback(save_point="s181_auto_provision")
 		frappe.log_error(
 			title=f"S181 auto-provision failed for {doc.name}",
 			message=frappe.get_traceback(),
