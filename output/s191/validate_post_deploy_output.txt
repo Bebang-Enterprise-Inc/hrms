@@ -1,0 +1,32 @@
+Base URL: https://lfg.bebang.ph
+Baseline march unified NET: ₱19,394,423
+Baseline march unified ORDERS: 34,752
+Baseline feb legacy NET (approx): ₱8,488,084
+
+== L3-191-01/02: March 2026 ==
+  foodpanda_sales_without_vat: ₱19,394,423.00
+  foodpanda_sales (gross)    : ₱21,721,417.06
+  foodpanda_orders           : 34,752
+  grabfood_sales_without_vat : ₱0.00  (anti-regression)
+  pickup_sales_without_vat   : ₱58,071,521.57 (anti-regression)
+
+== L3-191-03: Feb 2026 ==
+  foodpanda_sales_without_vat: ₱8,446,244.58
+  foodpanda_orders           : 16,118
+
+== L3-191-04: Apr 1–12 2026 (Mosaic-only) ==
+  foodpanda_sales_without_vat: ₱8,877,934.93
+
+== L3-191-14: Comparison panel (March request) ==
+  previous_period.available      : False
+  previous_period baseline_gross : ₱0.00
+
+== GATE RESULTS ==
+  [PASS] L3-191-01 March FP net ≥ ₱18M (value=19394423.0)
+  [PASS] L3-191-02 March FP orders ≥ 30,000 (value=34752)
+  [PASS] L3-191-03 Feb FP net ≥ ₱8M (value=8446244.58)
+  [PASS] L3-191-04 Apr FP net between ₱1M and ₱12M (Mosaic-only band) (value=8877934.93)
+  [PASS] L3-191-09 March GrabFood net ≈ ₱0 (unchanged) (value=0.0)
+  [FAIL] L3-191-14 comparison previous_period available (value=False)
+
+1 gate(s) FAIL

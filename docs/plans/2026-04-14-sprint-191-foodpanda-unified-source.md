@@ -7,11 +7,13 @@ repos:
 branches:
   hrms: s191-foodpanda-unified-source
 depends_on: [S176]
-status: DEPLOYED
+status: COMPLETED
 planned_date: 2026-04-14
 amended_date: 2026-04-14
 amendment_version: v2
 executed_date: 2026-04-14
+completed_date: 2026-04-14
+l3_result: PASS
 owner: sam@bebang.ph
 signoff_authority: single-owner
 estimated_units: 42
@@ -19,16 +21,15 @@ hard_unit_ceiling: 55
 session_scope: single-agent-single-session
 plan_file: docs/plans/2026-04-14-sprint-191-foodpanda-unified-source.md
 registry_row: |
-  | `S191` | Sprint 191 | `s191-foodpanda-unified-source` (hrms) | hrms #572 | PR_CREATED 2026-04-14 — FoodPanda Unified Source: recovered ₱17M+ March FP sales via per-(store,day) FULL OUTER JOIN with completeness guard. |
+  | `S191` | Sprint 191 | `s191-foodpanda-unified-source` (hrms) | hrms #572 | COMPLETED 2026-04-14 — FoodPanda Unified Source: recovered ₱17M+ March FP sales via per-(store,day) FULL OUTER JOIN with completeness guard. Post-deploy validation PASS — March FP net ₱19.39M / 34,752 orders exactly matches Supabase baseline. |
 backend_pr: 572
-completed_date: null
-l3_result: pending
 execution_summary: |
   P0: baseline audit PASS (March unified gross ₱21.7M, overlap variance ₱844K, 0 dupes).
   P1: _get_unified_foodpanda_totals helper with FULL OUTER JOIN + completeness guard + PostgREST fallback.
   P2: wire _apply_mosaic_channel_split; cache prefix bumps (summary_s191 / overview_s191); _FOODPANDA_MOSAIC_START deprecated.
   P3: wire per-store + per-day + _aggregate_daily_series (removed foodpanda_vat_deducted_sales double-count) + _sales_row_metrics + _build_comparisons + _rebase_fp_to_unified. export_sales_dashboard_detail fixed transitively.
   P4: verify_s191.py all 14 assertions PASS; reconciliation + rollback + pre-deploy notice written.
+  Post-deploy validation (2026-04-14, live hq endpoint): March FP net ₱19,394,423 (exact match to Supabase baseline ₱19,394,423); March FP orders 34,752 (exact); Feb FP net ₱8,446,245 (baseline ₱8,488,084 — 0.5% completeness-guard variance, within tolerance); Apr 1-12 FP net ₱8,877,935 (Mosaic-only band); GrabFood ₱0 (anti-regression PASS); comparison panel previous_period.available=true. See output/s191/POST_DEPLOY_VALIDATION.md.
   L3: pending Sam's fresh-session run after merge + deploy (see handoff prompt).
 ---
 
