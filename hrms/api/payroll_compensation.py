@@ -665,7 +665,7 @@ def approve_compensation_change(change_id, approver_action, remarks=None):
 			_activate_compensation_change(doc)
 			frappe.db.release_savepoint("compensation_activation")
 		except Exception as e:
-			frappe.db.rollback_to_savepoint("compensation_activation")
+			frappe.db.rollback(save_point="compensation_activation")
 			frappe.log_error(
 				message=frappe.get_traceback(),
 				title=f"S172: Compensation activation failed for {doc.name}",

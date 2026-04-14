@@ -3819,7 +3819,7 @@ def _create_mr_for_store_order(order):
 			mr.append("items", row)
 
 		if not mr.items:
-			frappe.db.rollback_to_savepoint("create_mr_for_store_order")
+			frappe.db.rollback(save_point="create_mr_for_store_order")
 			return None
 
 		mr.insert(ignore_permissions=True)
@@ -3827,7 +3827,7 @@ def _create_mr_for_store_order(order):
 		frappe.db.release_savepoint("create_mr_for_store_order")
 		return mr.name
 	except Exception as e:
-		frappe.db.rollback_to_savepoint("create_mr_for_store_order")
+		frappe.db.rollback(save_point="create_mr_for_store_order")
 		frappe.log_error(
 			title=f"MR Creation Error for Store Order {order.name}",
 			message=str(e),
@@ -7023,7 +7023,7 @@ def copy_week(source_week: str, target_week: str) -> dict:
 		target_doc.save(ignore_permissions=True)
 		frappe.db.release_savepoint("copy_week")
 	except Exception:
-		frappe.db.rollback_to_savepoint("copy_week")
+		frappe.db.rollback(save_point="copy_week")
 		frappe.log_error("copy_week failed", "Delivery Schedule Copy Error")
 		frappe.throw(_("Failed to copy schedule. No changes were made."))
 
@@ -7567,7 +7567,7 @@ def _create_delivery_fee_billing_on_acceptance(receiving_doc):
 		return schedule.name
 	except Exception:
 		try:
-			frappe.db.rollback_to_savepoint("s168_delivery_fee_billing")
+			frappe.db.rollback(save_point="s168_delivery_fee_billing")
 		except Exception:
 			pass
 		frappe.log_error(
