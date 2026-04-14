@@ -262,9 +262,11 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S190` | Sprint 190 | `s190-store-company-integration` (hrms) + `s190-store-company-frontend` (bei-tasks) | hrms #563, bei-tasks #391 | DEPLOYED 2026-04-14 — Store-Company Integration: Company-first, zero silos. Rewire ordering/billing/supply-chain to use Company Master as SSOT. resolve_warehouse_company: no suffix guess. resolve_store_buyer_entity: Company-first + CSV fallback. submit_order stamps company on BEI Store Order. BKI billing uses Company→Customer chain. APIs return company per store. 65 units. | `docs/plans/2026-04-13-sprint-190-store-company-integration.md` |
 
+| `S193` | Sprint 193 | `s193-supplier-status-guard` (hrms) | hrms #569 | PR_CREATED 2026-04-14 — Supplier Status Guard: enforce `Blacklisted` / `Pending Verification` / `Inactive` statuses at PO / Invoice / Payment Request creation. New `_assert_supplier_active(supplier, operation)` helper + 3 call sites + 5 unit tests. `Inactive` blocks PO only (in-flight invoices/payments on pre-existing POs pass). Also closes pre-existing DM-7 gap in `create_purchase_order`. | `docs/plans/2026-04-14-sprint-193-supplier-status-guard.md` |
+
 ## Next Sprint Reservation
-1. Next canonical sprint ID to assign: `S191`.
-2. Reserve branch name: `s187-{slug}` (fill slug from plan filename).
+1. Next canonical sprint ID to assign: `S194`.
+2. Reserve branch name: `s194-{slug}` (fill slug from plan filename).
 3. Create new sprint plan only after adding row here first.
 4. **Agent MUST `git checkout -b <branch>` before writing any code.**
 5. **MANDATORY cross-check before reserving any S###:** run `git branch -a | grep -iE 's(17[5-9]|18[0-9]|19[0-9])'` on BOTH `hrms` and `bei-tasks` AND `ls docs/plans/ | grep -E 'sprint-(17[5-9]|18[0-9]|19[0-9])'` — if any match the ID you're about to reserve, pick the next free number. The local registry is not authoritative; remote branches and plan files are.
