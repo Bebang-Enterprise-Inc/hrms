@@ -1,0 +1,52 @@
+name: S189 Webhook Health Monitor
+on:
+  schedule:
+    - cron: "0 * * * *"  # hourly
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Days to include (default 7)"
+        required: false
+        default: "7"
+      skip_alert:
+        description: "Do NOT post Chat alert"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: s189-webhook-health
+  cancel-in-progress: false
+
+env:
+  SUPABASE_MGMT_TOKEN: ${{ secrets.SUPABASE_MGMT_TOKEN }}
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests google-auth google-api-python-client
+      - name: Setup Google credentials (for Chat alert)
+        env:
+          GSA_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$GSA_JSON" ]; then
+            mkdir -p credentials
+            echo "$GSA_JSON" | base64 -d > credentials/task-manager-service.json
+          else
+            echo "::warning::GOOGLE_SERVICE_ACCOUNT_JSON not set; Chat alerts disabled"
+          fi
+      - name: Run health monitor
+        run: |
+          DAYS="${{ inputs.days }}"
+          DAYS="${DAYS:-7}"
+          if [ "${{ inputs.skip_alert }}" = "true" ]; then
+            python scripts/s189_webhook_health_monitor.py --days "$DAYS"
+          else
+            python scripts/s189_webhook_health_monitor.py --days "$DAYS" --alert
+          fi

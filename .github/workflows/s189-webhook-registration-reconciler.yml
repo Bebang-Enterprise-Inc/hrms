@@ -1,0 +1,52 @@
+name: S189 Webhook Registration Reconciler
+on:
+  schedule:
+    - cron: "0 19 * * *"  # 3 AM PHT daily (19:00 UTC)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview only"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: s189-webhook-registration
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests google-auth google-api-python-client
+      - name: Setup Mosaic credentials CSV
+        env:
+          CREDS_B64: ${{ secrets.MOSAIC_CREDS_CSV }}
+        run: |
+          mkdir -p data/POS_Extraction
+          if [ -n "$CREDS_B64" ]; then
+            echo "$CREDS_B64" | base64 -d > data/POS_Extraction/MOSAIC_POS_API_KEYS.csv
+          else
+            echo "::error::MOSAIC_CREDS_CSV secret not set"
+            exit 1
+          fi
+      - name: Setup Google credentials
+        env:
+          GSA_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$GSA_JSON" ]; then
+            mkdir -p credentials
+            echo "$GSA_JSON" | base64 -d > credentials/task-manager-service.json
+          fi
+      - name: Run reconciler
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python scripts/s189_webhook_registration_reconciler.py --dry-run
+          else
+            python scripts/s189_webhook_registration_reconciler.py --alert
+          fi
