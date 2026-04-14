@@ -1130,6 +1130,13 @@ def build_bki_store_sale_invoice(
 	si.taxes_and_charges = vat_template
 	if debit_to:
 		si.debit_to = debit_to
+	# S192: bei_legal_entity + bei_store_label are mandatory custom fields on
+	# Sales Invoice for ERP-sync attribution. Set them from the resolved
+	# Company-first chain (S190).
+	if frappe.get_meta("Sales Invoice").has_field("bei_legal_entity"):
+		si.bei_legal_entity = buyer_entity_name
+	if frappe.get_meta("Sales Invoice").has_field("bei_store_label"):
+		si.bei_store_label = target_warehouse
 	# Linkage (custom fields added by Phase 1 fixtures)
 	si.custom_stock_entry = stock_entry.name
 	if store_order_name:
