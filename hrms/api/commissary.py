@@ -1002,7 +1002,20 @@ def build_bki_store_sale_invoice(
 		mutation_type="create",
 	)
 
+	# S192 fix: accept either a SE docname (string) or a Stock Entry doc
+	if isinstance(stock_entry, str):
+		stock_entry = frappe.get_doc("Stock Entry", stock_entry)
+
+	# S192 fix: Material Issue intercompany SEs have no header.to_warehouse;
+	# fall back to item-level t_warehouse (dispatch destination).
 	target_warehouse = stock_entry.to_warehouse
+	if not target_warehouse:
+		for se_item in stock_entry.items:
+			t_wh = getattr(se_item, "t_warehouse", None)
+			s_wh = getattr(se_item, "s_warehouse", None)
+			if t_wh and t_wh != s_wh:
+				target_warehouse = t_wh
+				break
 	if not target_warehouse:
 		frappe.log_error(
 			f"S168: Stock Entry {stock_entry.name} has no to_warehouse; cannot create SI",
