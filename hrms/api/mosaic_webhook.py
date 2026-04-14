@@ -6,10 +6,18 @@ S189: order.completed — upserts pos_orders + pos_order_items with ingestion_so
       authoritative for order_status and sums since stores may have unstable internet).
 
 Auth path:
-  - Optional HMAC check via MOSAIC_WEBHOOK_SECRET env var (if set, verify X-Mosaic-Signature)
-  - Path B fallback: round-trip Mosaic GET /api/v1/orders/{id}
+  - Optional HMAC check via MOSAIC_WEBHOOK_SECRET env var (SPECULATIVE:
+    Mosaic's public OpenAPI doc does not document webhook signing as of
+    2026-04-14; this code is defensive for if/when they add it).
+    See docs/api/MOSAIC_API_OPENAPI_2026-04-14.json — no 'signature', 'hmac',
+    or webhook-signing entries exist in the spec.
+  - Path B (actually used): round-trip Mosaic GET /api/v1/orders/{id}
     * order.cancelled expects HTTP 404
     * order.completed expects HTTP 200 (order exists)
+
+Supported events per Mosaic OpenAPI spec (docs/api/MOSAIC_API_OPENAPI_2026-04-14.json):
+  order.created, order.completed, order.cancelled, order.paid, order.ready,
+  location.created, location.updated
 
 See docs/plans/2026-04-13-sprint-189-realtime-bom-consumption.md (Phase 7) and
 docs/plans/2026-04-07-sprint-169-mosaic-order-lifecycle-tombstone-webhook.md (Phase 0).
@@ -68,8 +76,11 @@ def receive():
         frappe.local.response.http_status_code = 400
         return {"ok": False, "reason": "invalid_json"}
 
-    # S189 T7.2: if MOSAIC_WEBHOOK_SECRET is set, verify HMAC signature before processing.
-    # Falls back to round-trip Path B auth if no secret is configured.
+    # SPECULATIVE HMAC check: Mosaic's public OpenAPI spec does NOT document a
+    # signature scheme (verified 2026-04-14 against docs/api/MOSAIC_API_OPENAPI_2026-04-14.json).
+    # This branch only runs if someone sets MOSAIC_WEBHOOK_SECRET — meaning they've
+    # received a signing secret out-of-band from Mosaic. Without the env var,
+    # verify() returns True and we fall through to Path B round-trip auth.
     if not _verify_hmac_signature(raw_body):
         frappe.local.response.http_status_code = 401
         return {"ok": False, "reason": "hmac_signature_invalid"}
@@ -229,11 +240,20 @@ def _authenticate_webhook(order_id, data: dict, expect_status: int = 404) -> boo
 
 
 def _verify_hmac_signature(raw_body: str) -> bool:
-    """S189 T7.2: optional HMAC signature verification.
+    """SPECULATIVE: Optional HMAC signature verification.
 
-    If MOSAIC_WEBHOOK_SECRET is set, verify the ``X-Mosaic-Signature`` header
-    matches HMAC-SHA256(secret, raw_body). If the secret is not set, return
-    True (fall through to Path B round-trip auth).
+    Mosaic's public OpenAPI spec (docs/api/MOSAIC_API_OPENAPI_2026-04-14.json)
+    does NOT document any webhook signing. This function exists for forward
+    compatibility: if Mosaic later publishes a signing spec and issues us a
+    secret, setting MOSAIC_WEBHOOK_SECRET env var activates verification.
+
+    Current behavior:
+      - MOSAIC_WEBHOOK_SECRET unset → returns True, falls through to Path B
+      - MOSAIC_WEBHOOK_SECRET set → expects X-Mosaic-Signature header to
+        match HMAC-SHA256(secret, raw_body). Missing/mismatch → 401.
+
+    The header name ``X-Mosaic-Signature`` is a guess. When Mosaic actually
+    documents signing, update both the header name and the HMAC scheme here.
     """
     secret = (os.environ.get("MOSAIC_WEBHOOK_SECRET") or "").strip()
     if not secret:
