@@ -1002,7 +1002,24 @@ def build_bki_store_sale_invoice(
 		mutation_type="create",
 	)
 
+	# S192 fix: accept either a SE docname (string) or a Stock Entry doc
+	if isinstance(stock_entry, str):
+		stock_entry = frappe.get_doc("Stock Entry", stock_entry)
+
+	# S192 fix: Material Issue intercompany SEs have no header.to_warehouse;
+	# fall back to item-level t_warehouse (dispatch destination).
 	target_warehouse = stock_entry.to_warehouse
+	# S192 fix: intercompany Material Issue SEs put the destination on
+	# custom_destination_warehouse, not header.to_warehouse.
+	if not target_warehouse:
+		target_warehouse = getattr(stock_entry, "custom_destination_warehouse", None)
+	if not target_warehouse:
+		for se_item in stock_entry.items:
+			t_wh = getattr(se_item, "t_warehouse", None)
+			s_wh = getattr(se_item, "s_warehouse", None)
+			if t_wh and t_wh != s_wh:
+				target_warehouse = t_wh
+				break
 	if not target_warehouse:
 		frappe.log_error(
 			f"S168: Stock Entry {stock_entry.name} has no to_warehouse; cannot create SI",
@@ -1117,6 +1134,13 @@ def build_bki_store_sale_invoice(
 	si.taxes_and_charges = vat_template
 	if debit_to:
 		si.debit_to = debit_to
+	# S192: bei_legal_entity + bei_store_label are mandatory custom fields on
+	# Sales Invoice for ERP-sync attribution. Set them from the resolved
+	# Company-first chain (S190).
+	if frappe.get_meta("Sales Invoice").has_field("bei_legal_entity"):
+		si.bei_legal_entity = buyer_entity_name
+	if frappe.get_meta("Sales Invoice").has_field("bei_store_label"):
+		si.bei_store_label = target_warehouse
 	# Linkage (custom fields added by Phase 1 fixtures)
 	si.custom_stock_entry = stock_entry.name
 	if store_order_name:
