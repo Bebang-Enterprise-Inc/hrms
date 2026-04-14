@@ -272,6 +272,11 @@ doc_events = {
 			"hrms.api.commissary._delete_orphan_draft_si_on_se_cancel",
 		],
 	},
+	# S189: Auto-sync BOM recipe changes to Supabase product_bom table
+	"BOM": {
+		"on_update": "hrms.utils.bom_supabase_sync.sync_bom_to_supabase",
+		"after_insert": "hrms.utils.bom_supabase_sync.sync_bom_to_supabase",
+	},
 }
 
 # ============================================================

@@ -1,0 +1,48 @@
+name: Hourly Consumption -> Frappe
+on:
+  schedule:
+    - cron: "10 * * * *"   # 10 minutes past every hour (after POS sync at :00)
+    - cron: "0 17 * * *"   # 1 AM PHT = finalize yesterday drafts
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Business date (YYYY-MM-DD), default today"
+        required: false
+      mode:
+        description: "delta (default) or finalize"
+        required: false
+        default: "delta"
+
+concurrency:
+  group: consumption-to-frappe
+  cancel-in-progress: false
+
+env:
+  SUPABASE_URL: "https://csnniykjrychgajfrgua.supabase.co"
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  FRAPPE_URL: "https://hq.bebang.ph"
+  FRAPPE_API_KEY: ${{ secrets.FRAPPE_API_KEY }}
+  FRAPPE_API_SECRET: ${{ secrets.FRAPPE_API_SECRET }}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Push consumption to Frappe
+        run: |
+          DATE="${{ inputs.date }}"
+          MODE="${{ inputs.mode }}"
+
+          if [ "${{ github.event.schedule }}" = "0 17 * * *" ]; then
+            python scripts/s189_push_consumption_to_frappe.py --date yesterday --mode finalize
+          elif [ -n "$DATE" ]; then
+            python scripts/s189_push_consumption_to_frappe.py --date "$DATE" --mode "${MODE:-delta}"
+          else
+            python scripts/s189_push_consumption_to_frappe.py --date today --mode delta
+          fi
