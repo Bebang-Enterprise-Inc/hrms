@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-04-14T06:48:11.623Z",
+  "url": "https://my.bebang.ph/dashboard/store-ops/ordering",
+  "title": "BEI Tasks - Task Management",
+  "storePickerVisible": false,
+  "submitButtonVisible": false,
+  "qtyInputsFound": 108,
+  "sampleQtyTestIds": [
+    "qty-FG001",
+    "qty-FG002",
+    "qty-GRP-FRESH-RIPE-MANGO",
+    "qty-FG023",
+    "qty-FG010",
+    "qty-CM30",
+    "qty-CM31",
+    "qty-CM38",
+    "qty-CM37",
+    "qty-PM010-A"
+  ],
+  "bodyContainsOrdering": true,
+  "bodyContainsStore": true
+}
