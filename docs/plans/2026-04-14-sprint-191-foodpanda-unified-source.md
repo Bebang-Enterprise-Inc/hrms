@@ -19,7 +19,8 @@ hard_unit_ceiling: 55
 session_scope: single-agent-single-session
 plan_file: docs/plans/2026-04-14-sprint-191-foodpanda-unified-source.md
 registry_row: |
-  | `S191` | Sprint 191 | `s191-foodpanda-unified-source` (hrms) | PR TBD | DEPLOYED 2026-04-14 — FoodPanda Unified Source: recovered ₱17M+ March FP sales via per-(store,day) FULL OUTER JOIN with completeness guard. |
+  | `S191` | Sprint 191 | `s191-foodpanda-unified-source` (hrms) | hrms #572 | PR_CREATED 2026-04-14 — FoodPanda Unified Source: recovered ₱17M+ March FP sales via per-(store,day) FULL OUTER JOIN with completeness guard. |
+backend_pr: 572
 completed_date: null
 l3_result: pending
 execution_summary: |
