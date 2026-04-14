@@ -511,3 +511,25 @@ Phase 1 boot checks this file exists and `warehouses_missing_company == 0` befor
 - L3 should run in a **separate fresh session** (65 units > 40-unit threshold).
 - Phase 5 closeout must include `git add -f output/l3/s190/ && git push` for release manager gate.
 - Governor feedback loop: REJECT → read PR comment, fix, push. NEEDS_FIX → apply, push. Merge Conflict → rebase, resolve, push.
+
+---
+
+## Amendment v3 — Phase 5: CSV Retirement (2026-04-14)
+
+**Trigger:** Post-deploy audit found 27/53 stores (51%) billable via Company-first; 23 missing from CSV register. Rather than patching CSV rows, retire the CSV entirely.
+
+**Canonical source of truth:** `F:\Downloads\bei_company_register (2).xlsx` → extracted to `hrms/data_seed/company_register_2026-04-14.csv` and `hrms/data_seed/store_entity_mapping_2026-04-14.csv`. No other data source.
+
+### Phase 5 Tasks (12u)
+
+- **Task 5.1:** Re-point all 49 store warehouses to correct buyer entity Company per workbook mapping. If buyer has per-store child in Frappe, point to child; else point to buyer entity directly. Skip excluded.
+- **Task 5.2:** Ensure Customer exists for every target Company with tax_id from Company.tax_id. Create missing.
+- **Task 5.3:** Remove CSV fallback from `resolve_store_buyer_entity`. Company-first becomes the only path. Missing Customer → return hold dict (fail-safe).
+- **Task 5.4:** `load_store_buyer_entity_register` raises NotImplementedError pointing to Company Master.
+- **Task 5.5:** Delete `hrms/fixtures/store_buyer_entity_register/` + `data/_CLEANROOM/2026-03-12-s037-store-buyer-entity-register/`.
+- **Task 5.6:** Post-retirement forensic audit. Target: 100% billable (minus explicit excluded/hold).
+
+### HARD BLOCKERS (Phase 5)
+
+- **HB-5:** Every Active store warehouse has `Warehouse.company` = non-group Company with matching Customer.
+- **HB-6:** PR review before merge (destructive — deletes CSV fixtures).

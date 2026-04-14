@@ -184,23 +184,18 @@ def resolve_warehouse_company(warehouse_name: str | None) -> str | None:
 	return None
 
 
-@lru_cache(maxsize=1)
 def load_store_buyer_entity_register() -> list[dict[str, str]]:
-	register_path = next((path for path in _candidate_register_paths() if path.exists()), None)
-	if not register_path:
-		return []
+	"""S190 Phase 5: CSV register RETIRED. Company Master is the only source of truth.
 
-	with register_path.open("r", encoding="utf-8-sig", newline="") as handle:
-		rows = list(csv.DictReader(handle))
-
-	for row in rows:
-		row["_store_name_key"] = normalize_lookup_key(row.get("store_name"))
-		row["_warehouse_docname_key"] = normalize_lookup_key(row.get("warehouse_docname"))
-		row["_buyer_entity_status"] = str(row.get("buyer_entity_status") or "").strip()
-		row["_billing_post_policy"] = str(row.get("billing_post_policy") or "").strip()
-		row["_active_fulfillment_status"] = str(row.get("active_fulfillment_status") or "").strip()
-
-	return rows
+	If any caller still invokes this, they must be migrated to read Warehouse.company
+	and Company DocType fields directly.
+	"""
+	raise NotImplementedError(
+		"S190 Phase 5: store_buyer_entity_register CSV has been retired. "
+		"Use Warehouse.company + Company Master fields. "
+		"See hrms/utils/supply_chain_contracts.py::resolve_store_buyer_entity "
+		"for the Company-first resolution pattern."
+	)
 
 
 def _build_company_first_entity_row(
@@ -243,65 +238,46 @@ def resolve_store_buyer_entity(
 	warehouse_docname: str | None = None,
 	store_name: str | None = None,
 ) -> dict[str, Any]:
-	"""S190: Company-first resolution with CSV fallback.
+	"""S190 Phase 5: Company Master is the only source of truth. No CSV fallback.
 
-	Resolution order:
+	Resolution:
 	1. Resolve warehouse → Company (via Warehouse.company Link)
-	2. If Company found AND it's a per-store child (not a parent/group), build
-	   entity_row from Company fields with all 14 required keys
-	3. If not resolved via Company, fall through to CSV register lookup (unchanged)
-	4. If CSV also misses, return the standard "missing" dict
+	2. If Company has a matching Customer, build 14-key entity_row from Company
+	3. If no Company or no Customer, return the "missing" dict with billing hold
+	   (fail-safe — billing halts cleanly instead of throwing/guessing).
 	"""
-	# --- S190: Company-first path ---
 	if warehouse_docname:
 		company = resolve_warehouse_company(warehouse_docname)
 		if company:
-			# Only use Company-first for non-group companies (per-store children).
-			# Group companies (parents like "Bebang Enterprise Inc.") have multiple
-			# stores — we can't determine the buyer entity without the CSV.
-			try:
-				is_group = frappe.db.get_value("Company", company, "is_group")
-			except Exception:
-				is_group = 0
-			if not is_group:
-				# Verify this company has a matching Customer (S181 auto_provision)
-				customer = frappe.db.get_value(
-					"Customer", {"customer_name": company}, "name"
+			# Company IS the buyer entity. Accept both per-store children and parent
+			# companies (S190 Phase 5: the 49 warehouses point to the correct billing
+			# target via Warehouse.company, whether that's a child or a direct entity).
+			customer = frappe.db.get_value(
+				"Customer", {"customer_name": company}, "name"
+			)
+			if customer:
+				return _build_company_first_entity_row(
+					company, warehouse_docname, store_name
 				)
-				if customer:
-					return _build_company_first_entity_row(
-						company, warehouse_docname, store_name
-					)
 
-	# --- CSV fallback (unchanged from pre-S190) ---
-	rows = load_store_buyer_entity_register()
-	warehouse_key = normalize_lookup_key(warehouse_docname)
-	store_key = normalize_lookup_key(store_name or warehouse_docname)
-
-	for row in rows:
-		if warehouse_key and warehouse_key == row["_warehouse_docname_key"]:
-			return row
-	for row in rows:
-		if store_key and store_key == row["_store_name_key"]:
-			return row
-
+	# No Company or no Customer → fail-safe hold (caller's billing_hold check fires).
 	return {
 		"store_name": store_name or strip_company_suffix(warehouse_docname),
 		"buyer_entity_name": "",
 		"buyer_entity_status": BUYER_ENTITY_STATUS_MISSING,
 		"buyer_entity_source": "",
 		"billing_policy": "",
-		"billing_post_policy": "DRAFT_ONLY__BILLING_HOLD_PENDING_REGISTER",
+		"billing_post_policy": "DRAFT_ONLY__BILLING_HOLD_PENDING_COMPANY_MASTER",
 		"store_type": "",
 		"store_type_status": "",
 		"store_allocation_required": 0,
-		"markup_rule_mode": "CONFIG_PENDING_REGISTER",
-		"markup_rule_source": "store_buyer_entity_register_missing",
-		"active_fulfillment_status": "blocked_missing_register",
+		"markup_rule_mode": "CONFIG_PENDING_COMPANY_MASTER",
+		"markup_rule_source": "company_master_missing",
+		"active_fulfillment_status": "blocked_missing_company_master",
 		"warehouse_docname": warehouse_docname or "",
 		"evidence_primary": "",
 		"evidence_secondary": "",
-		"notes": "No canonical buyer-entity register row found",
+		"notes": "No Warehouse.company or no Customer for that company. Fix Company Master.",
 	}
 
 
