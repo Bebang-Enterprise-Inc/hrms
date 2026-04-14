@@ -28,6 +28,10 @@ MANILA_TZ = ZoneInfo("Asia/Manila")
 # channel labels ('Delivery', 'Unknown', NULL) - they were not retroactively retagged.
 # S176 hotfix #3 2026-04-09: cutover bumped 2026-03-26 -> 2026-03-27 after
 # live data inspection showed 2026-03-25 and 2026-03-26 were PARTIAL Mosaic days.
+# S191 2026-04-14: DEPRECATED as cutover date. Per-(store,day) FULL OUTER JOIN in
+# _get_unified_foodpanda_totals replaces the global date because the per-store
+# Mosaic rollout happened over ~1 week in late March. Constant retained ONLY for
+# the freshness warning at ~line 1552 that tells users about the historical split.
 _FOODPANDA_MOSAIC_START = date(2026, 3, 27)
 _GRABFOOD_MOSAIC_START = date(2026, 4, 1)
 ROLE_SALES_STAKEHOLDER = "Sales Stakeholder"
@@ -907,6 +911,257 @@ def _get_mosaic_channel_split(
 	return split
 
 
+# S191 2026-04-14: Unified FoodPanda source — per-(store, day) FULL OUTER JOIN of
+# Mosaic POS (`v_pos_orders_live`) and legacy Google Sheet (`foodpanda_orders`).
+# Replaces the global `_FOODPANDA_MOSAIC_START` cutover because the per-store
+# Mosaic rollout happened over ~1 week in late March 2026. Mosaic wins on overlap
+# days only when it meets the completeness guard (≥50% of legacy orders OR gross),
+# otherwise we treat it as a partial-sync day and keep legacy.
+
+
+def _get_unified_foodpanda_totals(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+) -> dict[int, dict[str, dict[str, Any]]]:
+	"""S191: per-(location_id, business_date) unified FoodPanda totals.
+
+	Returns nested dict:
+	    {location_id: {business_date_iso: {"gross", "net_wo_vat", "orders", "source"}}}
+
+	`source` is one of {"mosaic", "legacy", "legacy_partial_mosaic"}.
+
+	Sources:
+	- Mosaic POS (`v_pos_orders_live`): channel='FoodPanda', payment_status='PAID'.
+	  `net_sales` is already net of VAT (see `_get_mosaic_channel_split` docstring).
+	- Legacy (`foodpanda_orders`): LOWER(order_status)='delivered'. Net imputed as
+	  SUM(subtotal)/1.12 to match the MV's legacy-FP net formula.
+
+	Completeness guard: when both sources have data for the same (store, day), Mosaic
+	wins ONLY IF (mosaic_orders >= 0.5 * legacy_orders OR mosaic_gross >= 0.5 *
+	legacy_gross). Otherwise legacy is preferred and `source` = 'legacy_partial_mosaic'
+	— this guards against partial Mosaic sync days where Mosaic shows a small slice
+	of the day's legacy revenue (which would silently drop revenue if we blindly
+	picked Mosaic).
+
+	Dedup: Task 0.4 verified 0 duplicate `order_id` rows in Feb–Mar 2026 delivered
+	FP orders → straight SUM is safe. If dupes ever appear, wrap the legacy CTE in
+	`SELECT DISTINCT ON (order_id) ... ORDER BY order_id, synced_at DESC`.
+	"""
+	if not location_ids:
+		return {}
+	cache_key = _sales_dashboard_cache_key(
+		"fp_unified_v2",
+		location_ids,
+		start_day=start_day,
+		end_day=end_day,
+	)
+
+	def builder() -> dict[int, dict[str, dict[str, Any]]]:
+		loc_csv = ",".join(str(int(i)) for i in sorted(set(location_ids)))
+		sql = f"""
+			WITH fp_mosaic AS (
+				SELECT location_id, business_date,
+				       SUM(gross_sales)::numeric(14,2) AS gross,
+				       SUM(net_sales)::numeric(14,2)   AS net,
+				       COUNT(*)::int                    AS orders
+				FROM public.v_pos_orders_live
+				WHERE channel = 'FoodPanda' AND payment_status = 'PAID'
+				  AND business_date BETWEEN '{start_day.isoformat()}' AND '{end_day.isoformat()}'
+				  AND location_id IN ({loc_csv})
+				GROUP BY location_id, business_date
+			),
+			fp_legacy AS (
+				SELECT location_id, business_date,
+				       SUM(subtotal)::numeric(14,2)        AS gross,
+				       (SUM(subtotal)/1.12)::numeric(14,2) AS net,
+				       COUNT(*)::int                        AS orders
+				FROM public.foodpanda_orders
+				WHERE LOWER(order_status) = 'delivered'
+				  AND business_date BETWEEN '{start_day.isoformat()}' AND '{end_day.isoformat()}'
+				  AND location_id IN ({loc_csv})
+				GROUP BY location_id, business_date
+			)
+			SELECT
+				COALESCE(m.location_id, l.location_id)     AS location_id,
+				COALESCE(m.business_date, l.business_date) AS business_date,
+				COALESCE(m.gross, 0)  AS mosaic_gross,
+				COALESCE(m.net, 0)    AS mosaic_net,
+				COALESCE(m.orders, 0) AS mosaic_orders,
+				COALESCE(l.gross, 0)  AS legacy_gross,
+				COALESCE(l.net, 0)    AS legacy_net,
+				COALESCE(l.orders, 0) AS legacy_orders,
+				(m.location_id IS NOT NULL) AS has_mosaic,
+				(l.location_id IS NOT NULL) AS has_legacy
+			FROM fp_mosaic m
+			FULL OUTER JOIN fp_legacy l
+				ON m.location_id = l.location_id AND m.business_date = l.business_date
+		"""
+		try:
+			rows = _supabase_query_sql(sql)
+		except SupabaseMgmtTokenMissing:
+			# S191 PostgREST fallback — used only when Mgmt API token is unavailable.
+			# Long ranges are refused because they would burn through paginated
+			# requests (Feb 1 – Apr 14 is 70+ days and could exceed 10s).
+			if (end_day - start_day).days > 45:
+				raise RuntimeError(
+					"FP unified: Mgmt API required for ranges > 45 days (PostgREST fallback too slow)"
+				)
+			frappe.log_error(
+				"Sales Dashboard perf degraded: SUPABASE_MGMT_TOKEN missing; FP unified fallback",
+				"Sales Dashboard perf fallback",
+			)
+			return _get_unified_foodpanda_totals_postgrest(start_day, end_day, location_ids)
+
+		out: dict[int, dict[str, dict[str, Any]]] = {}
+		for row in rows:
+			lid = _to_int(row.get("location_id"))
+			day = str(row.get("business_date"))
+			mg = _to_float(row.get("mosaic_gross"))
+			mn = _to_float(row.get("mosaic_net"))
+			mo = _to_int(row.get("mosaic_orders"))
+			lg = _to_float(row.get("legacy_gross"))
+			ln = _to_float(row.get("legacy_net"))
+			lo = _to_int(row.get("legacy_orders"))
+			has_m = bool(row.get("has_mosaic"))
+			has_l = bool(row.get("has_legacy"))
+			gross, net, orders, source = _apply_fp_completeness_guard(
+				mg, mn, mo, lg, ln, lo, has_m, has_l
+			)
+			out.setdefault(lid, {})[day] = {
+				"gross": _round_half_up(gross),
+				"net_wo_vat": _round_half_up(net),
+				"orders": orders,
+				"source": source,
+			}
+		return out
+
+	return _cache_get_or_set(cache_key, builder, 300)
+
+
+def _apply_fp_completeness_guard(
+	mg: float, mn: float, mo: int,
+	lg: float, ln: float, lo: int,
+	has_m: bool, has_l: bool,
+) -> tuple[float, float, int, str]:
+	"""S191: pick Mosaic vs legacy per (store, day) with partial-sync protection.
+
+	Mosaic wins on overlap ONLY IF it has ≥50% of legacy orders OR gross — otherwise
+	we treat it as a partial-sync day and fall back to legacy as 'legacy_partial_mosaic'.
+	"""
+	if has_m and not has_l:
+		return mg, mn, mo, "mosaic"
+	if has_l and not has_m:
+		return lg, ln, lo, "legacy"
+	# Both present — completeness guard
+	if mo >= (lo * 0.5) or mg >= (lg * 0.5):
+		return mg, mn, mo, "mosaic"
+	return lg, ln, lo, "legacy_partial_mosaic"
+
+
+def _get_unified_foodpanda_totals_postgrest(
+	start_day: date,
+	end_day: date,
+	location_ids: list[int],
+) -> dict[int, dict[str, dict[str, Any]]]:
+	"""S191 PostgREST fallback for _get_unified_foodpanda_totals.
+
+	IMPORTANT: uses `ilike.delivered` (case-insensitive), NOT `eq.delivered`,
+	because PostgREST doesn't support SQL `LOWER()` in filter expressions and the
+	legacy table has mixed-case `order_status` values.
+	"""
+	loc_csv = _location_scope_key(location_ids)
+	mosaic_params: list[tuple[str, Any]] = [
+		("select", "location_id,business_date,gross_sales,net_sales"),
+		("channel", "eq.FoodPanda"),
+		("payment_status", "eq.PAID"),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("location_id", f"in.({loc_csv})"),
+	]
+	legacy_params: list[tuple[str, Any]] = [
+		("select", "order_id,location_id,business_date,subtotal,synced_at"),
+		("order_status", "ilike.delivered"),
+		("business_date", f"gte.{start_day.isoformat()}"),
+		("business_date", f"lte.{end_day.isoformat()}"),
+		("location_id", f"in.({loc_csv})"),
+	]
+	mosaic_raw = _supabase_get_all("v_pos_orders_live", mosaic_params, page_size=5000)
+	legacy_raw = _supabase_get_all("foodpanda_orders", legacy_params, page_size=5000)
+
+	# Dedup legacy by (order_id, latest synced_at) in case future data has dupes.
+	legacy_by_id: dict[Any, dict[str, Any]] = {}
+	for raw in legacy_raw:
+		oid = raw.get("order_id")
+		if oid is None:
+			continue
+		prev = legacy_by_id.get(oid)
+		if prev is None or str(raw.get("synced_at") or "") > str(prev.get("synced_at") or ""):
+			legacy_by_id[oid] = raw
+
+	mosaic_cells: dict[tuple[int, str], dict[str, float]] = {}
+	for raw in mosaic_raw:
+		lid = _to_int(raw.get("location_id"))
+		day = str(raw.get("business_date"))
+		cell = mosaic_cells.setdefault((lid, day), {"gross": 0.0, "net": 0.0, "orders": 0})
+		cell["gross"] += _to_float(raw.get("gross_sales"))
+		cell["net"] += _to_float(raw.get("net_sales"))
+		cell["orders"] += 1
+
+	legacy_cells: dict[tuple[int, str], dict[str, float]] = {}
+	for raw in legacy_by_id.values():
+		lid = _to_int(raw.get("location_id"))
+		day = str(raw.get("business_date"))
+		cell = legacy_cells.setdefault((lid, day), {"gross": 0.0, "net": 0.0, "orders": 0})
+		cell["gross"] += _to_float(raw.get("subtotal"))
+		cell["orders"] += 1
+	for cell in legacy_cells.values():
+		cell["net"] = cell["gross"] / 1.12
+
+	out: dict[int, dict[str, dict[str, Any]]] = {}
+	for key in set(mosaic_cells) | set(legacy_cells):
+		lid, day = key
+		m = mosaic_cells.get(key)
+		l = legacy_cells.get(key)
+		mg = _to_float(m["gross"]) if m else 0.0
+		mn = _to_float(m["net"]) if m else 0.0
+		mo = _to_int(m["orders"]) if m else 0
+		lg = _to_float(l["gross"]) if l else 0.0
+		ln = _to_float(l["net"]) if l else 0.0
+		lo = _to_int(l["orders"]) if l else 0
+		gross, net, orders, source = _apply_fp_completeness_guard(
+			mg, mn, mo, lg, ln, lo, m is not None, l is not None
+		)
+		out.setdefault(lid, {})[day] = {
+			"gross": _round_half_up(gross),
+			"net_wo_vat": _round_half_up(net),
+			"orders": orders,
+			"source": source,
+		}
+	return out
+
+
+def _get_unified_foodpanda_totals_aggregate(
+	start_day: date, end_day: date, location_ids: list[int],
+) -> dict[str, Any]:
+	"""S191: sum of unified FP totals across all stores/days. Used by
+	_apply_mosaic_channel_split for the headline Channel Mix donut."""
+	by_store_day = _get_unified_foodpanda_totals(start_day, end_day, location_ids)
+	total_gross = 0.0
+	total_net = 0.0
+	total_orders = 0
+	for store_map in by_store_day.values():
+		for cell in store_map.values():
+			total_gross += _to_float(cell.get("gross"))
+			total_net += _to_float(cell.get("net_wo_vat"))
+			total_orders += _to_int(cell.get("orders"))
+	return {
+		"gross": _round_half_up(total_gross),
+		"net_wo_vat": _round_half_up(total_net),
+		"orders": total_orders,
+	}
+
+
 def _apply_mosaic_channel_split(
 	summary: dict[str, Any],
 	start_day: date,
@@ -944,8 +1199,13 @@ def _apply_mosaic_channel_split(
 		- average_daily_sales / average_guest_check → recomputed
 	"""
 	split = _get_mosaic_channel_split(start_day, end_day, location_ids)
+	# S191 2026-04-14: FoodPanda now comes from the unified (legacy + Mosaic) source,
+	# not from the Mosaic-only `split`. Drop Mosaic FP so the "other" rollup below
+	# does NOT double-count it, then override fp_bucket with the unified totals.
+	fp_unified = _get_unified_foodpanda_totals_aggregate(start_day, end_day, location_ids)
 	pos_bucket = split.pop("pos", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
-	fp_bucket = split.pop("foodpanda", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
+	split.pop("foodpanda", None)  # discard Mosaic-only FP — now using unified source
+	fp_bucket = fp_unified
 	gf_bucket = split.pop("grabfood", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
 	wd_bucket = split.pop("webdelivery", {"gross": 0.0, "net_wo_vat": 0.0, "orders": 0})
 	# All remaining Mosaic channels (legacy "Delivery", "Unknown", etc.) roll up to "other".
@@ -1092,33 +1352,45 @@ def _get_store_channel_split_map(
 			("location_id", f"in.({_location_scope_key(location_ids)})"),
 		]
 		raw_rows = _supabase_get_all("v_pos_orders_live", params, page_size=1000)
-		acc: dict[int, dict[str, float]] = {}
+		out: dict[int, dict[str, float]] = {}
 		for raw in raw_rows:
 			lid = _to_int(raw.get("location_id"))
 			raw_key = str(raw.get("channel") or "unknown").strip().lower()
 			canon_key = _S182_CHANNEL_ALIASES.get(raw_key, "other_mosaic")
-			bucket = acc.setdefault(
+			bucket = out.setdefault(
 				lid, {key: 0.0 for key in _S182_MOSAIC_CHANNEL_KEYS}
 			)
 			bucket[canon_key] += _to_float(raw.get("net_sales"))
-		for bucket in acc.values():
+		for bucket in out.values():
 			for key in _S182_MOSAIC_CHANNEL_KEYS:
 				bucket[key] = _round_half_up(bucket[key])
-		return acc
+	else:
+		out = {}
+		for row in rows:
+			lid = _to_int(row.get("location_id"))
+			raw_key = str(row.get("channel_key") or "unknown").strip().lower()
+			canon_key = _S182_CHANNEL_ALIASES.get(raw_key, "other_mosaic")
+			bucket = out.setdefault(
+				lid, {key: 0.0 for key in _S182_MOSAIC_CHANNEL_KEYS}
+			)
+			bucket[canon_key] += _round_half_up(_to_float(row.get("net_wo_vat")))
+		# Guarantee zero-fill for stores that had at least one row but missed a channel key
+		for bucket in out.values():
+			for key in _S182_MOSAIC_CHANNEL_KEYS:
+				bucket.setdefault(key, 0.0)
 
-	out: dict[int, dict[str, float]] = {}
-	for row in rows:
-		lid = _to_int(row.get("location_id"))
-		raw_key = str(row.get("channel_key") or "unknown").strip().lower()
-		canon_key = _S182_CHANNEL_ALIASES.get(raw_key, "other_mosaic")
-		bucket = out.setdefault(
-			lid, {key: 0.0 for key in _S182_MOSAIC_CHANNEL_KEYS}
+	# S191 2026-04-14: override per-store `foodpanda` key with the unified totals
+	# (legacy Google Sheet + Mosaic) so the leaderboard Channel Mix and derived
+	# `net_sales_without_vat` match the headline donut. We sum `net_wo_vat` per
+	# store across all business_dates — this preserves the existing float-per-
+	# channel contract (consumer at line ~2502 does `float(mosaic.get("foodpanda"))`).
+	fp_unified_by_store = _get_unified_foodpanda_totals(start_day, end_day, location_ids)
+	for lid, store_map in fp_unified_by_store.items():
+		total_net = sum(_to_float(cell.get("net_wo_vat")) for cell in store_map.values())
+		out.setdefault(lid, {key: 0.0 for key in _S182_MOSAIC_CHANNEL_KEYS})["foodpanda"] = (
+			_round_half_up(total_net)
 		)
-		bucket[canon_key] += _round_half_up(_to_float(row.get("net_wo_vat")))
-	# Guarantee zero-fill for stores that had at least one row but missed a channel key
-	for bucket in out.values():
-		for key in _S182_MOSAIC_CHANNEL_KEYS:
-			bucket.setdefault(key, 0.0)
+	# Stores that exist in `out` but have no unified FP data keep the 0.0 zero-fill.
 	return out
 
 
@@ -1757,6 +2029,37 @@ def _shift_range(start_day: date, end_day: date, delta_days: int) -> tuple[date,
 	return start_day - timedelta(days=delta_days), end_day - timedelta(days=delta_days)
 
 
+def _rebase_fp_to_unified(
+	agg: dict[str, Any],
+	period_start: date,
+	period_end: date,
+	loc_ids: list[int],
+) -> None:
+	"""S191 2026-04-14: rebase an _aggregate_sales result so its FP figures come from
+	the unified source (legacy Google Sheet + Mosaic) instead of MV-only. Mutates
+	`agg` in place. Safe to call on empty agg (no-op).
+
+	Keeps comparison baselines apples-to-apples with the current-period headline —
+	pre-fix, Feb 2026 baselines would show ₱0 FP from the MV while the current period
+	showed ₱19M FP from unified, producing garbage deltas.
+	"""
+	if not agg:
+		return
+	old_fp_gross = _to_float(agg.get("foodpanda_sales"))
+	old_fp_net = _to_float(agg.get("foodpanda_sales_without_vat"))
+	fp_unified = _get_unified_foodpanda_totals_aggregate(period_start, period_end, loc_ids)
+	new_fp_gross = _to_float(fp_unified.get("gross"))
+	new_fp_net = _to_float(fp_unified.get("net_wo_vat"))
+	agg["foodpanda_sales"] = new_fp_gross
+	agg["foodpanda_sales_without_vat"] = new_fp_net
+	agg["foodpanda_orders"] = _to_int(fp_unified.get("orders"))
+	fp_gross_delta = new_fp_gross - old_fp_gross
+	fp_net_delta = new_fp_net - old_fp_net
+	agg["gross_sales"] = _to_float(agg.get("gross_sales")) + fp_gross_delta
+	agg["net_sales_with_vat"] = _to_float(agg.get("net_sales_with_vat")) + fp_gross_delta
+	agg["net_sales_without_vat"] = _to_float(agg.get("net_sales_without_vat")) + fp_net_delta
+
+
 def _build_comparisons(
 	start_day: date,
 	end_day: date,
@@ -1768,6 +2071,9 @@ def _build_comparisons(
 	prev_start, prev_end = _shift_range(start_day, end_day, span_days)
 	prev_rows = _query_daily_rows(prev_start, prev_end, location_ids)
 	prev = _aggregate_sales(prev_rows) if prev_rows else {}
+	# S191: rebase the previous-period baseline to unified FP so prev.FP matches
+	# the unified current period (MV-only FP = ₱0 for Feb pre-S191 → garbage deltas).
+	_rebase_fp_to_unified(prev, prev_start, prev_end, location_ids)
 	last_year_start = start_day - timedelta(days=365)
 	last_year_end = end_day - timedelta(days=365)
 	last_year_history_floor = (
@@ -1777,6 +2083,8 @@ def _build_comparisons(
 	if not last_year_history_floor or last_year_start >= last_year_history_floor:
 		last_year_rows = _query_daily_rows(last_year_start, last_year_end, location_ids)
 	last_year = _aggregate_sales(last_year_rows) if last_year_rows else {}
+	# S191: same rebase for the same-period-last-year baseline.
+	_rebase_fp_to_unified(last_year, last_year_start, last_year_end, location_ids)
 
 	def delta_payload(baseline: dict[str, Any], reason: str | None = None) -> dict[str, Any]:
 		if not baseline:
@@ -2005,19 +2313,39 @@ def _get_mosaic_channel_split_per_day(
 			("location_id", f"in.({_location_scope_key(location_ids)})"),
 		]
 		raw_rows = _supabase_get_all("v_pos_orders_live", params, page_size=1000)
-		per_day_fb: dict[str, dict[str, float]] = {}
+		per_day: dict[str, dict[str, float]] = {}
 		for raw in raw_rows:
 			day = str(raw.get("business_date"))
 			ch = str(raw.get("channel") or "unknown").lower()
-			day_bucket = per_day_fb.setdefault(day, {})
+			day_bucket = per_day.setdefault(day, {})
 			day_bucket[ch] = day_bucket.get(ch, 0.0) + _to_float(raw.get("net_sales"))
-		return per_day_fb
-	per_day: dict[str, dict[str, float]] = {}
-	for r in rows:
-		day = str(r.get("biz_date"))
-		ch = str(r.get("channel_key") or "unknown")
-		day_bucket = per_day.setdefault(day, {})
-		day_bucket[ch] = day_bucket.get(ch, 0.0) + _to_float(r.get("net_wo_vat"))
+	else:
+		per_day = {}
+		for r in rows:
+			day = str(r.get("biz_date"))
+			ch = str(r.get("channel_key") or "unknown")
+			day_bucket = per_day.setdefault(day, {})
+			day_bucket[ch] = day_bucket.get(ch, 0.0) + _to_float(r.get("net_wo_vat"))
+
+	# S191 2026-04-14: override per-day `foodpanda` with the unified (legacy + Mosaic)
+	# net. Aggregate across all stores per day so the daily-series chart and CSV
+	# export reflect the same FP numbers as the headline donut. Preserves the
+	# float-per-channel return shape that consumers depend on (see _aggregate_daily_series
+	# which does `_to_float(v)` on each channel value).
+	fp_unified = _get_unified_foodpanda_totals(start_day, end_day, location_ids)
+	fp_by_day: dict[str, float] = {}
+	for store_map in fp_unified.values():
+		for day_key, cell in store_map.items():
+			fp_by_day[day_key] = fp_by_day.get(day_key, 0.0) + _to_float(cell.get("net_wo_vat"))
+	for day_key, fp_net in fp_by_day.items():
+		day_bucket = per_day.setdefault(day_key, {})
+		day_bucket["foodpanda"] = _round_half_up(fp_net)
+	# Days present in per_day without any unified FP data get foodpanda = 0.0 so the
+	# downstream "sum non-pos channels" loop in _aggregate_daily_series doesn't double-count
+	# the now-dropped Mosaic FP from the raw SQL.
+	for day_key, day_bucket in per_day.items():
+		if "foodpanda" not in day_bucket:
+			day_bucket["foodpanda"] = 0.0
 	return per_day
 
 
@@ -2055,10 +2383,13 @@ def _aggregate_daily_series(
 		# (POS + FP + Grab + WebDel), NOT POS-only. We'll correct this below using
 		# the Mosaic per-channel split so pickup = POS-only.
 		bucket["mv_all_mosaic_wo_vat"] += _to_float(row.get("pos_net_sales_without_vat"))
+		# S191 2026-04-14: removed the legacy-FP MV-column term from this sum.
+		# Unified FP totals from _get_mosaic_channel_split_per_day (Task 3.5) now
+		# include the legacy Google Sheet FP for pre-cutover dates. Keeping the MV's
+		# legacy-FP column here caused a ~₱17M Feb/March delivery double-count.
 		bucket["superadmin_delivery_wo_vat"] += (
 			_to_float(row.get("website_non_cod_net_sales_without_vat"))
 			+ _to_float(row.get("web_cod_net_sales_without_vat"))
-			+ _to_float(row.get("foodpanda_vat_deducted_sales"))  # legacy sheet, usually 0
 		)
 		bucket["cups_sold"] += _to_int(row.get("cups_sold"))
 		bucket["transactions"] += _to_int(row.get("transactions"))
@@ -2641,10 +2972,29 @@ def _build_store_rankings(
 	return sorted(store_list, key=lambda row: row["gross_sales"], reverse=True)
 
 
-def _sales_row_metrics(row: dict[str, Any]) -> dict[str, Any]:
+def _sales_row_metrics(
+	row: dict[str, Any],
+	fp_unified_by_loc_day: dict[int, dict[str, dict[str, Any]]] | None = None,
+) -> dict[str, Any]:
+	"""S191 2026-04-14: optional `fp_unified_by_loc_day` parameter.
+
+	When provided (caller precomputes `_get_unified_foodpanda_totals` once for the
+	whole window), the per-row legacy-FP MV column is OVERRIDDEN with the unified
+	(legacy + Mosaic) net for that (location_id, business_date). This keeps the
+	per-day delivery panel consistent with the unified Channel Mix on the main
+	dashboard. When omitted, the function falls back to the MV column (pre-S191
+	behavior) so legacy callers are unaffected.
+	"""
+	lid = _to_int(row.get("location_id"))
+	day = str(row.get("business_date"))
+	if fp_unified_by_loc_day is not None:
+		fp_cell = fp_unified_by_loc_day.get(lid, {}).get(day)
+		fp_net = _to_float(fp_cell.get("net_wo_vat")) if fp_cell else 0.0
+	else:
+		fp_net = _to_float(row.get("foodpanda_vat_deducted_sales"))
 	return {
-		"location_id": _to_int(row.get("location_id")),
-		"business_date": str(row.get("business_date")),
+		"location_id": lid,
+		"business_date": day,
 		"net_sales_without_vat": _to_float(row.get("total_net_sales_without_vat")),
 		"transactions": _to_int(row.get("transactions")),
 		"cups_sold": _to_int(row.get("cups_sold")),
@@ -2652,7 +3002,7 @@ def _sales_row_metrics(row: dict[str, Any]) -> dict[str, Any]:
 		"delivery_sales_without_vat": (
 			_to_float(row.get("website_non_cod_net_sales_without_vat"))
 			+ _to_float(row.get("web_cod_net_sales_without_vat"))
-			+ _to_float(row.get("foodpanda_vat_deducted_sales"))
+			+ fp_net
 		),
 	}
 
@@ -2688,9 +3038,17 @@ def _build_weather_effects(
 	all_dates.update(str(row.get("business_date")) for row in history_rows)
 	calendar_map = _calendar_map_for_scope(scope["selected_stores"], all_dates)
 
+	# S191 2026-04-14: precompute unified FP once across baseline + current window.
+	# Passed into every `_sales_row_metrics` call so per-row delivery reflects unified
+	# (legacy + Mosaic) FP instead of the MV-only legacy column. Single query (with
+	# 300s cache), cheap relative to the per-row iteration below.
+	fp_unified_window = _get_unified_foodpanda_totals(
+		baseline_start, end_day, selected_location_ids
+	)
+
 	by_context: dict[tuple[Any, ...], list[dict[str, Any]]] = {}
 	for row in history_rows:
-		metrics = _sales_row_metrics(row)
+		metrics = _sales_row_metrics(row, fp_unified_window)
 		calendar = calendar_map.get(metrics["business_date"], {})
 		day_of_week = calendar.get("day_of_week")
 		is_weekend = bool(calendar.get("is_weekend"))
@@ -2714,7 +3072,7 @@ def _build_weather_effects(
 	matched_days = 0
 
 	for row in current_rows:
-		metrics = _sales_row_metrics(row)
+		metrics = _sales_row_metrics(row, fp_unified_window)
 		calendar = calendar_map.get(metrics["business_date"], {})
 		context_candidates = [
 			(
@@ -2804,8 +3162,10 @@ def _build_dashboard_summary_payload(
 ) -> dict[str, Any]:
 	view_mode = _canonical_view_mode(view_mode)
 	selected_location_ids = [store["location_id"] for store in scope["selected_stores"]]
+	# S191 2026-04-14: prefix bumped so pre-deploy cached payloads (with Mosaic-only
+	# FP) are invalidated on the first request after the deploy.
 	cache_key = _sales_dashboard_cache_key(
-		"summary",
+		"summary_s191",
 		selected_location_ids,
 		start_day=start_day,
 		end_day=end_day,
@@ -2912,8 +3272,10 @@ def _build_dashboard_overview_payload(
 	freshness["sales_effective_end_date"] = effective_end.isoformat()
 	freshness["discount_effective_end_date"] = discount_effective_end.isoformat()
 	freshness["requested_end_date"] = end_day.isoformat()
+	# S191 2026-04-14: prefix bumped so pre-deploy cached overview payloads (with
+	# Mosaic-only FP) are invalidated on the first request after the deploy.
 	cache_key = _sales_dashboard_cache_key(
-		"overview",
+		"overview_s191",
 		selected_location_ids,
 		start_day=start_day,
 		end_day=effective_end,

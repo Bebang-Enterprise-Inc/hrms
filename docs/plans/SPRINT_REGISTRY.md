@@ -266,6 +266,8 @@ These documents contain sprint-like naming but are not part of the canonical seq
 
 | `S193` | Sprint 193 | `s193-supplier-status-guard` (hrms) | hrms #569 | PR_CREATED 2026-04-14 — Supplier Status Guard: enforce `Blacklisted` / `Pending Verification` / `Inactive` statuses at PO / Invoice / Payment Request creation. New `_assert_supplier_active(supplier, operation)` helper + 3 call sites + 5 unit tests. `Inactive` blocks PO only (in-flight invoices/payments on pre-existing POs pass). Also closes pre-existing DM-7 gap in `create_purchase_order`. | `docs/plans/2026-04-14-sprint-193-supplier-status-guard.md` |
 
+| `S191` | Sprint 191 | `s191-foodpanda-unified-source` (hrms) | hrms #572 | PR_CREATED 2026-04-14 — FoodPanda Unified Source: per-(store,day) FULL OUTER JOIN of `v_pos_orders_live` + `foodpanda_orders`. Recovers ₱17M+ pre-cutover March FP sales. New `_get_unified_foodpanda_totals` + `_get_unified_foodpanda_totals_aggregate` + `_rebase_fp_to_unified` helpers; rewires `_apply_mosaic_channel_split`, `_get_store_channel_split_map`, `_get_mosaic_channel_split_per_day`, `_aggregate_daily_series` (dropped MV legacy-FP double-count), `_sales_row_metrics`, `_build_comparisons`; outer cache prefixes bumped to `summary_s191` / `overview_s191`; completeness guard with `legacy_partial_mosaic` source marker. Backend-only. L3 handoff (L3-191-01..15) pending post-merge fresh session. | `docs/plans/2026-04-14-sprint-191-foodpanda-unified-source.md` |
+
 ## Next Sprint Reservation
 1. Next canonical sprint ID to assign: `S194`.
 2. Reserve branch name: `s194-{slug}` (fill slug from plan filename).

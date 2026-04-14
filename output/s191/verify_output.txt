@@ -1,0 +1,17 @@
+[OK] a. fp_bucket = split.pop count: got=0 want=0
+[OK] b. fp_bucket = fp_unified count: got=1 want=1
+[OK] c. fp_unified_v2 cache prefix: got=1 want>=1
+[OK] d.1 overview_s191 outer cache prefix: got=1 want>=1
+[OK] d.2 summary_s191 outer cache prefix: got=1 want>=1
+[OK] e. ilike.delivered (PostgREST fallback): got=3 want>=1
+[OK] f. legacy_partial_mosaic marker: got=4 want>=1
+[OK] g. _get_unified_foodpanda_totals call count: got=13 want>=4
+[OK] h. _get_unified_foodpanda_totals_aggregate count: got=3 want>=2
+[OK] i. foodpanda_vat_deducted_sales count (baseline 6 minus 1): got=5 want=5
+[OK] j. set_backend_observability_context count: got=5 want=5
+[OK] k. grabfood count (anti-regression): got=28 want=28
+[OK] x.1 _rebase_fp_to_unified count (def + 2 calls): got=3 want>=3
+[OK] AST parse
+[OK] Protected surfaces clean
+
+All assertions PASS
