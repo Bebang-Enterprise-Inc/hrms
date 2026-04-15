@@ -1,0 +1,20 @@
+== MARCH 2026 Mosaic FoodPanda per store ==
+  2774 SM Sta. Rosa       orders=     0 gross=P           0 net=P           0
+  2317 SM Marikina        orders=   132 gross=P      82,750 net=P      73,884
+  2284 SM North EDSA      orders=   349 gross=P     232,758 net=P     207,820
+  2481 SM SJDM            orders=   146 gross=P      88,794 net=P      79,280
+  2812 SM Taytay          orders=   213 gross=P     143,288 net=P     127,936
+
+== MARCH 2026 Legacy (Google Sheet) FoodPanda per store ==
+  2774 SM Sta. Rosa       orders=   836 gross=P     505,574 net=P     451,405
+  2317 SM Marikina        orders=   468 gross=P     305,822 net=P     273,055
+  2284 SM North EDSA      orders=  1275 gross=P     863,940 net=P     771,375
+  2481 SM SJDM            orders=   667 gross=P     416,928 net=P     372,257
+  2812 SM Taytay          orders=  1089 gross=P     705,054 net=P     629,512
+
+== MARCH 2026 UNIFIED (legacy + Mosaic w/ completeness guard) ==
+  2774 SM Sta. Rosa       orders=   836 gross=P     505,574 net=P     451,405  days(mosaic/legacy/overlap)=0/31/0
+  2317 SM Marikina        orders=   474 gross=P     301,716 net=P     269,389  days(mosaic/legacy/overlap)=0/25/6
+  2284 SM North EDSA      orders=  1291 gross=P     860,858 net=P     768,624  days(mosaic/legacy/overlap)=0/24/7
+  2481 SM SJDM            orders=   669 gross=P     411,142 net=P     367,091  days(mosaic/legacy/overlap)=0/25/6
+  2812 SM Taytay          orders=  1094 gross=P     699,488 net=P     624,543  days(mosaic/legacy/overlap)=0/25/6

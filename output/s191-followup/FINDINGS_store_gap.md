@@ -45,11 +45,26 @@ The Analytics scope is built by `_resolve_allowed_store_scope` → `_filter_sale
 
 The 3 stores "missing from all data sources" are most likely brand-new store openings (post-March) whose sales pipeline (Mosaic POS upload or legacy FP export) hasn't landed data yet, or stores that are physically open but have been paused operationally. Those are an **ops-pipeline problem**, not an Analytics code problem.
 
-## Top 5 SM stores FP variance (Dave's item 3.2)
+## Top 5 SM stores FP variance (Dave's item 3.2) — probed live
 
 SM Sta. Rosa (2774), SM Marikina (2317), SM North EDSA (2284), SM SJDM (2481), SM Taytay (2812) — **all 5 are IN the Analytics scope already** (confirmed from the 37-store scope dump). So this is not a "store missing" problem for those 5.
 
-The variance Dave describes ("majority is due to Foodpanda orders not being counted, does not translate to pickup sales") is an S191-adjacent issue about **Mosaic FP data completeness** at those stores. With S191's completeness guard, partial-sync Mosaic days fall back to legacy; but if BOTH sources are incomplete for a given day, the displayed FP is understated. Separate probe needed (see Followup #2 below).
+**Live per-store FP probe for March 2026 (Supabase):**
+
+| Store | Mosaic FP orders | Legacy FP orders | Unified (post-S191) | Completeness source |
+|---|---|---|---|---|
+| 2774 SM Sta. Rosa | **0 / ₱0** | 836 / ₱505,574 gross (₱451,405 net) | 836 / ₱451,405 net | 31 legacy-only days (NOT YET on Mosaic) |
+| 2317 SM Marikina | 132 / ₱73,884 net | 468 / ₱273,055 net | 474 / ₱269,389 net | 25 legacy-only + 6 overlap |
+| 2284 SM North EDSA | 349 / ₱207,820 net | 1,275 / ₱771,375 net | 1,291 / ₱768,624 net | 24 legacy-only + 7 overlap |
+| 2481 SM SJDM | 146 / ₱79,280 net | 667 / ₱372,257 net | 669 / ₱367,091 net | 25 legacy-only + 6 overlap |
+| 2812 SM Taytay | 213 / ₱127,936 net | 1,089 / ₱629,512 net | 1,094 / ₱624,543 net | 25 legacy-only + 6 overlap |
+
+**Interpretation:**
+- **S191 is resolving correctly for all 5 stores** — the unified FP numbers above are what the Analytics Leaderboard now shows post-deploy.
+- **SM Sta. Rosa has ZERO Mosaic FP data for all of March 2026** — the store has not yet been cut over to Mosaic POS for FoodPanda orders; all 836 orders come from the legacy Google Sheet. Dave's report "Frappe only counts website sales (lalamove)" was accurate BEFORE S191 deployed (FP was being silently overwritten by Mosaic's ₱0). **Post-S191, SM Sta. Rosa's full ₱451K FP net is counted.**
+- The other 4 SM stores have mostly legacy data with a small Mosaic overlap from late March — expected per the per-store rolling cutover pattern. Unified net exceeds pre-S191 Mosaic-only net by a 3–4× multiple, recovering the bulk of the reported variance.
+
+**Likely explanation for Dave's observation:** his data pull predated the S191 deploy (merged + deployed 2026-04-14 evening). His spreadsheet reflects the Mosaic-only era. A fresh pull against `hq.bebang.ph` today (post-store-mapping-fix PR #582) should show the full unified numbers for all 5 stores.
 
 ## What to do (proposed)
 
