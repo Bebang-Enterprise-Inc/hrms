@@ -587,27 +587,25 @@ def _resolve_company_for_s037_row(
 	if not buyer:
 		return None
 
-	# S196: per-store child company lookup — STORE-FIRST naming convention
-	# (CEO directive 2026-04-15: operators recognize store names, not corp names).
-	# Values updated from `<Corp> - <Store>` to `<Store> - <Corp>`.
-	# Invoice print reversal (corp-first display) handled via print-format — out of scope here.
+	# S188: per-store child company lookup — check if a child company
+	# exists for this specific store before falling back to the parent
 	_STORE_TO_CHILD: dict[str, str] = {
-		"SM Megamall": "SM Megamall - Bebang Enterprise Inc.",
-		"SM Manila": "SM Manila - Bebang Enterprise Inc.",
-		"SM Southmall": "SM Southmall - Bebang Enterprise Inc.",
-		"Robinsons Place Antipolo": "Robinsons Antipolo - Bebang Enterprise Inc.",
-		"Ayala Evo City": "Ayala Evo City - Bebang Mega Inc.",
-		"Ayala Vermosa": "Ayala Vermosa - Bebang Mega Inc.",
-		"Robinsons Place Gen. Trias": "Robinsons Gen Trias - Bebang Mega Inc.",
-		"Robinsons Place Imus": "Robinsons Imus - Bebang Mega Inc.",
-		"SM Tanza": "SM Tanza - Bebang Mega Inc.",
-		"Sta. Lucia East Grand Mall": "Sta Lucia - Bebang SM Marikina Inc.",
-		"D'Verde Calamba": "DVerde Calamba - TAJ Food Corp.",
-		"Food Express (Gateway Mall)": "Gateway Mall - Tungsten Capital",
-		# S196: legacy `BEBANG <STORE>` Companies replaced with new store-first per-store children.
-		"SM Caloocan": "SM Caloocan - TAJ Food Corp.",
-		"SM Sangandaan": "SM Sangandaan - Tungsten Capital",
-		"Robinsons Galleria South": "Robinsons Galleria South - Tungsten Capital",
+		"SM Megamall": "Bebang Enterprise Inc. - SM Megamall",
+		"SM Manila": "Bebang Enterprise Inc. - SM Manila",
+		"SM Southmall": "Bebang Enterprise Inc. - SM Southmall",
+		"Robinsons Place Antipolo": "Bebang Enterprise Inc. - Robinsons Antipolo",
+		"Ayala Evo City": "Bebang Mega Inc. - Ayala Evo City",
+		"Ayala Vermosa": "Bebang Mega Inc. - Ayala Vermosa",
+		"Robinsons Place Gen. Trias": "Bebang Mega Inc. - Robinsons Gen Trias",
+		"Robinsons Place Imus": "Bebang Mega Inc. - Robinsons Imus",
+		"SM Tanza": "Bebang Mega Inc. - SM Tanza",
+		"Sta. Lucia East Grand Mall": "Bebang SM Marikina Inc. - Sta Lucia",
+		"D'Verde Calamba": "TAJ Food Corp. - DVerde Calamba",
+		"Food Express (Gateway Mall)": "Tungsten Capital - Gateway Mall",
+		# Existing per-store companies (pre-S188, now re-parented)
+		"SM Caloocan": "BEBANG SM CALOOCAN",
+		"SM Sangandaan": "BEBANG SM SANGANDAAN",
+		"Robinsons Galleria South": "BEBANG ROBINSONS GALLERIA SOUTH",
 	}
 	if store_name and store_name in _STORE_TO_CHILD:
 		child = _STORE_TO_CHILD[store_name]
@@ -1143,10 +1141,9 @@ def populate_s181_fields() -> dict:
 		"JL TRADE OPC": {"store": "SM San Jose Del Monte", "tin": "775-842-763-00003", "rdo": "25B"},
 		"DLS Dessert Craft Inc.": {"store": "Ever Gotesco Commonwealth", "tin": "671-219-097-00001", "rdo": "028"},
 		"BEBANG FT INC.": {"store": "Ayala Fairview Terraces"},
-		# S196: legacy `BEBANG <STORE>` Companies replaced with new store-first per-store children.
-		"SM Caloocan - TAJ Food Corp.": {"store": "SM Caloocan"},
-		"SM Sangandaan - Tungsten Capital": {"store": "SM Sangandaan"},
-		"Robinsons Galleria South - Tungsten Capital": {"store": "Robinsons Galleria South"},
+		"BEBANG SM CALOOCAN": {"store": "SM Caloocan"},
+		"BEBANG SM SANGANDAAN": {"store": "SM Sangandaan"},
+		"BEBANG ROBINSONS GALLERIA SOUTH": {"store": "Robinsons Galleria South"},
 		"SWEET HARMONY FOOD CORP.": {"store": "SM Sta. Rosa"},
 	}
 
@@ -1669,10 +1666,9 @@ def populate_s181_fields() -> dict:
 			# Companies whose S037 buyer differs from Frappe name
 			"BEBANG BF HOMES INC.": "BF Homes",
 			"BEBANG FT INC.": "Ayala Malls Fairview Terraces",
-			# S196: 3 legacy `BEBANG <STORE>` Companies replaced with new store-first per-store children.
-			"SM Caloocan - TAJ Food Corp.": "SM Caloocan",
-			"SM Sangandaan - Tungsten Capital": "SM Sangandaan",
-			"Robinsons Galleria South - Tungsten Capital": "Robisons Galleria South",
+			"BEBANG SM CALOOCAN": "SM Caloocan",
+			"BEBANG SM SANGANDAAN": "SM Sangandaan",
+			"BEBANG ROBINSONS GALLERIA SOUTH": "Robisons Galleria South",
 			"SWEET HARMONY FOOD CORP.": "SM Sta. Rosa",
 			"HFFM SOLENAD FOOD SERVICES INC.": "Ayala Solenad",
 			"BEBANG MARKET MARKET INC.": "Ayala Market Market",
@@ -1681,19 +1677,19 @@ def populate_s181_fields() -> dict:
 			"BEIFRANCHISE FOOD OPC": "Ortigas Land Greenhills",
 			"TAJ FOOD CORP.": "D'Verde Calamba",
 			"Bebang Kitchen Inc.": "Shaw BLVD",
-			# S196: S188 per-store child companies renamed store-first (CEO directive 2026-04-15)
-			"SM Megamall - Bebang Enterprise Inc.": "SM Megamall",
-			"SM Manila - Bebang Enterprise Inc.": "SM  Manila",
-			"SM Southmall - Bebang Enterprise Inc.": "SM Southmall",
-			"Robinsons Antipolo - Bebang Enterprise Inc.": "Robinsons Antipolo",
-			"Ayala Evo City - Bebang Mega Inc.": "Ayala Evo",
-			"Ayala Vermosa - Bebang Mega Inc.": "Ayala Vermosa",
-			"Robinsons Gen Trias - Bebang Mega Inc.": "Robinson General Trias",
-			"Robinsons Imus - Bebang Mega Inc.": "Robinson Imus",
-			"SM Tanza - Bebang Mega Inc.": "SM Tanza",
-			"Sta Lucia - Bebang SM Marikina Inc.": "Sta. Lucia East Grand Mall",
-			"DVerde Calamba - TAJ Food Corp.": "D'Verde Calamba",
-			"Gateway Mall - Tungsten Capital": "Araneta Gateway",
+			# S188: per-store child companies
+			"Bebang Enterprise Inc. - SM Megamall": "SM Megamall",
+			"Bebang Enterprise Inc. - SM Manila": "SM  Manila",
+			"Bebang Enterprise Inc. - SM Southmall": "SM Southmall",
+			"Bebang Enterprise Inc. - Robinsons Antipolo": "Robinsons Antipolo",
+			"Bebang Mega Inc. - Ayala Evo City": "Ayala Evo",
+			"Bebang Mega Inc. - Ayala Vermosa": "Ayala Vermosa",
+			"Bebang Mega Inc. - Robinsons Gen Trias": "Robinson General Trias",
+			"Bebang Mega Inc. - Robinsons Imus": "Robinson Imus",
+			"Bebang Mega Inc. - SM Tanza": "SM Tanza",
+			"Bebang SM Marikina Inc. - Sta Lucia": "Sta. Lucia East Grand Mall",
+			"TAJ Food Corp. - DVerde Calamba": "D'Verde Calamba",
+			"Tungsten Capital - Gateway Mall": "Araneta Gateway",
 		}
 
 		for company_name in all_company_names:
@@ -2077,3 +2073,159 @@ def get_warehouse_stock(company: str) -> dict:
 		"stock_value": float(st["stock_value"]),
 		"is_open": True,
 	}
+
+
+# ====================================================================
+# S196: canonical helpers for orderable-store-universe lookups
+# ====================================================================
+
+
+def get_orderable_companies(include_commissary: bool = True) -> list[str]:
+	"""Return list of Company docnames that are orderable (stores + optionally commissary).
+
+	S196 helper — single source of truth for "what Companies appear on the Delivery
+	Schedule grid and the ordering surfaces".
+
+	Filter semantics (Audit v3 CR-7 ALLOWLIST):
+	  - `entity_category in ("Store", "Commissary")` (or only "Store" if include_commissary=False)
+	  - `operational_status in ("Active", "Pre-Opening", "Temporarily Closed", "Pipeline")`
+	    — NULL `operational_status` is EXCLUDED (no pass-through) to prevent misconfigured
+	    new Companies from leaking onto the grid.
+
+	Defensive checks:
+	  - If `entity_category` Custom Field is missing from Company DocType (pre-S181),
+	    return [] and log via frappe.log_error.
+	  - Runs a drift assertion (W-5): every key in `_NON_STORE_ENTITIES` must have
+	    entity_category != Store/Commissary. Raises on drift so mis-classified
+	    Holding/Head-Office/Franchisor Companies don't leak through.
+
+	Does NOT use `_load_s037_rows()` — Company DocType is the SSOT, not the S037 CSV.
+	"""
+	meta = frappe.get_meta("Company")
+	if not meta.has_field("entity_category"):
+		frappe.log_error(
+			title="S196: Company.entity_category field missing",
+			message="get_orderable_companies called but entity_category Custom Field not on Company DocType. Check S181 fixtures.",
+		)
+		return []
+
+	target_categories = ["Store", "Commissary"] if include_commissary else ["Store"]
+	# CR-7 allowlist (NOT `not in ("Permanently Closed",)` — NULL must be excluded)
+	allowed_statuses = ["Active", "Pre-Opening", "Temporarily Closed", "Pipeline"]
+
+	# W-5 drift assertion — keys in _NON_STORE_ENTITIES must NOT be in orderable result
+	# (module-level constant defined earlier in this file at ~line 503)
+	_drift_check_non_store_entities()
+
+	return frappe.get_all(
+		"Company",
+		filters={
+			"entity_category": ["in", target_categories],
+			"operational_status": ["in", allowed_statuses],
+		},
+		pluck="name",
+		order_by="name",
+	)
+
+
+def _drift_check_non_store_entities():
+	"""S196 W-5 — assert every key in _NON_STORE_ENTITIES has entity_category != Store/Commissary.
+
+	Catches drift where someone adds a Store-category Company to _NON_STORE_ENTITIES
+	(or forgets to update it when creating a new Holding/Head Office). Logs + raises.
+	"""
+	for co_name in _NON_STORE_ENTITIES.keys():
+		if not frappe.db.exists("Company", co_name):
+			continue
+		ec = frappe.db.get_value("Company", co_name, "entity_category")
+		if ec in ("Store", "Commissary"):
+			msg = (
+				f"S196 drift: Company {co_name!r} is in _NON_STORE_ENTITIES "
+				f"(expected non-store) but has entity_category={ec!r}. "
+				"Update the map OR the Company's entity_category."
+			)
+			frappe.log_error(title="S196 _NON_STORE_ENTITIES drift", message=msg)
+			raise frappe.ValidationError(msg)
+
+
+def get_orderable_store_warehouses(include_commissary: bool = True) -> list[dict]:
+	"""Return one orderable Warehouse per orderable Company.
+
+	S196 primary helper consumed by `get_weekly_schedule` and other SCM surfaces.
+
+	Algorithm:
+	  1. orderable = get_orderable_companies(include_commissary)
+	  2. G1 short-circuit: if not orderable, return [] (MariaDB `IN ()` is invalid)
+	  3. Query Warehouse filtered by company in orderable, is_group=0, disabled=0
+	  4. Apply `_is_orderable_store()` (lazy-imported from hrms.api.store)
+	  5. Group surviving warehouses by Company
+	  6. G3 deterministic tie-break for >1 orderable wh per Company:
+	     sorted(key=(route_map_membership, name)) — locale-independent
+	  7. Return one row per Company with canonical warehouse.
+
+	Shape per row:
+	  {"company": str, "warehouse": str, "warehouse_meta": {...raw fields...}}
+	"""
+	orderable = get_orderable_companies(include_commissary=include_commissary)
+	if not orderable:
+		return []
+
+	# Lazy import to avoid circular dep (hrms.api.store imports from this module)
+	from hrms.api.store import (
+		_is_orderable_store,
+		_CENTRAL_WAREHOUSE_ROUTE_MAP,
+		_normalize_store_name_for_route,
+	)
+
+	whs = frappe.get_all(
+		"Warehouse",
+		filters={
+			"company": ["in", orderable],
+			"is_group": 0,
+			"disabled": 0,
+		},
+		fields=[
+			"name",
+			"company",
+			"warehouse_name",
+			"warehouse_type",
+			"parent_warehouse",
+		],
+	)
+
+	# Apply orderable-store filter
+	filtered = [w for w in whs if _is_orderable_store(w)]
+
+	# Group by Company
+	by_company: dict[str, list[dict]] = {}
+	for w in filtered:
+		by_company.setdefault(w["company"], []).append(w)
+
+	# Deterministic tie-break (G3): prefer route-map membership, then locale-pinned str sort
+	def sort_key(w):
+		normalized = _normalize_store_name_for_route(w["name"])
+		route_map_hit = 0 if normalized in _CENTRAL_WAREHOUSE_ROUTE_MAP else 1
+		return (route_map_hit, w["name"])
+
+	result = []
+	for company, group in by_company.items():
+		if len(group) > 1:
+			# Log warning — multi-wh should be rare after S196 Phase 2 cleanup
+			chosen = sorted(group, key=sort_key)[0]
+			others = [w["name"] for w in group if w["name"] != chosen["name"]]
+			frappe.log_error(
+				title="S196: multi-warehouse Company",
+				message=(
+					f"Company {company!r} has {len(group)} orderable warehouses. "
+					f"Chose {chosen['name']!r}; runners-up: {others}"
+				),
+			)
+		else:
+			chosen = group[0]
+		result.append({
+			"company": company,
+			"warehouse": chosen["name"],
+			"warehouse_meta": chosen,
+		})
+
+	return result

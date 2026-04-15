@@ -1503,19 +1503,12 @@ _CENTRAL_WAREHOUSE_ROUTE_MAP = {
 def _normalize_store_name_for_route(warehouse_name):
 	"""Normalize a Frappe warehouse name to match the Central Warehouse route map.
 
-	Handles multiple warehouse naming conventions accumulated across sprints:
-
-	- **S188 corp-first child pattern:** ``Bebang Enterprise Inc. - <Store> - BEI-<ABBR>``
-	  (e.g. ``Bebang Enterprise Inc. - SM Megamall - BEI-SMG``). Before S192, such
-	  warehouses fell through the route map and caused OOS regression.
-	- **S192 fix:** strips the leading "BEBANG ENTERPRISE INC. - " prefix + trailing
-	  "- BEI-XXX" / "- BKI-XXX" S188 abbreviations.
-	- **S196 store-first pattern (CEO directive 2026-04-15):** new per-store warehouses
-	  use ``<Store> - <Corp>`` naming. E.g. ``Ortigas Estancia - BB ESTANCIA FOOD CORP.``,
-	  ``Paseo Center - BEBANG PASEO INC.``, ``Vista Mall Taguig - TRICERN FOOD CORP.``,
-	  ``SM Taytay - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.``,
-	  ``SM Clark - RED TALDAWA FOODS OPC``. Regex strips trailing corp suffix
-	  matching common PH corporation endings (INC., CORP., OPC, HOLDINGS OPC).
+	Handles S188 per-store child warehouses whose docnames follow the pattern
+	``Bebang Enterprise Inc. - <Store> - BEI-<ABBR>`` (e.g.
+	``Bebang Enterprise Inc. - SM Megamall - BEI-SMG``). Before S192, such
+	warehouses fell through the route map and had their own docname set as
+	source warehouse, causing every item to appear OOS and hiding them from
+	the ordering UI.
 	"""
 	import re
 	name = (warehouse_name or "").upper()
@@ -1532,18 +1525,7 @@ def _normalize_store_name_for_route(warehouse_name):
 	name = re.sub(r" - BEI-[A-Z0-9]+$", "", name)
 	name = re.sub(r" - BKI-[A-Z0-9]+$", "", name)
 
-	# S196: Trailing store-first corp suffixes (CEO directive 2026-04-15 rename).
-	# Matches " - <CORPNAME>" where corpname ends in INC., CORP., OPC, HOLDINGS OPC.
-	# Must run BEFORE the generic " - BEI" / " - BKI" replace to avoid partial matches.
-	# Order-sensitive: longer + more specific patterns first.
-	name = re.sub(r" - BEBANG [A-Z][A-Z 0-9.\-]* INC\.$", "", name)  # Bebang Mega Inc., Bebang SM Marikina Inc., Bebang Paseo Inc., etc.
-	name = re.sub(r" - TAJ FOOD CORP\.$", "", name)
-	name = re.sub(r" - TUNGSTEN CAPITAL(?: HOLDINGS OPC)?$", "", name)
-	name = re.sub(r" - [A-Z][A-Z 0-9.\-]+ CORP\.$", "", name)  # generic "<X> CORP." — catches BB ESTANCIA FOOD CORP., TRICERN FOOD CORP., DAY ONES ... CORP., SWEET HARMONY FOOD CORP., etc.
-	name = re.sub(r" - [A-Z][A-Z 0-9.\-]+ OPC$", "", name)  # "<X> OPC" — catches RED TALDAWA FOODS OPC, BEIFRANCHISE FOOD OPC, HALO-HALO TERMINAL FOOD CORP., etc.
-	name = re.sub(r" - [A-Z][A-Z 0-9.\-]+ INC\.$", "", name)  # generic "<X> INC." catch-all (after more specific Bebang pattern above)
-
-	# Strip generic company suffixes (S192 pre-existing — now the final fallback)
+	# Strip company suffixes (generic cases after S188 handling above)
 	for suffix in (
 		" - BEBANG ENTERPRISE INC.", " - BEI", " - BKI",
 		" - BEBANG KITCHEN INC.",
@@ -6878,25 +6860,24 @@ def get_weekly_schedule(
 	if warehouse_filter:
 		entries = [e for e in entries if warehouse_filter.lower() in (e.get("store") or "").lower()]
 
-	# Build store metadata for ALL orderable stores (not just those with entries).
-	# This ensures the grid always shows all 47 stores for SCM to set schedules.
+	# S196: Build store metadata for ALL orderable stores via the single canonical
+	# helper that reads from the Company DocType SSOT (entity_category in Store/Commissary
+	# AND operational_status in allowed-statuses). Replaces the pre-S188 hardcoded
+	# `company in [BEI, BKI]` filter which excluded post-S190 franchise-owned warehouses
+	# and caused the grid to show only 7 of 47 stores.
+	from hrms.api.company_master import get_orderable_store_warehouses
+
 	store_meta = {}
-	_wh_fields = ["name", "parent_warehouse", "warehouse_type", "custom_territory_cluster"]
-	all_warehouses = frappe.get_all(
-		"Warehouse",
-		filters={
-			"is_group": 0,
-			"disabled": 0,
-			"company": ["in", ["Bebang Enterprise Inc.", "Bebang Kitchen Inc."]],
-		},
-		fields=_wh_fields,
-		limit_page_length=200,
-	)
-	for wh in all_warehouses:
-		# Skip non-orderable warehouses (3PLs, commissaries, meta warehouses)
-		if not _is_orderable_store(wh):
+	orderable_rows = get_orderable_store_warehouses(include_commissary=True)
+	for row in orderable_rows:
+		wh_name = row["warehouse"]
+		wh_meta = row["warehouse_meta"]
+		# Defensive: re-check orderable (helper already filters but cheap to verify)
+		if not _is_orderable_store(wh_meta):
 			continue
-		normalized = (wh.name or "").upper().replace(" - BEBANG ENTERPRISE INC.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
+		# Determine warehouse_group from _CENTRAL_WAREHOUSE_ROUTE_MAP (preserves
+		# original grouping: 3MD North / Pinnacle South / Jentec / Other)
+		normalized = _normalize_store_name_for_route(wh_name)
 		source_wh = _CENTRAL_WAREHOUSE_ROUTE_MAP.get(normalized, "")
 		group = "Other"
 		if "3MD" in source_wh:
@@ -6906,10 +6887,13 @@ def get_weekly_schedule(
 		elif "Jentec" in source_wh:
 			group = "Jentec"
 
-		store_meta[wh.name] = {
+		# Fetch custom_territory_cluster separately (helper's warehouse_meta doesn't include it)
+		cluster = frappe.db.get_value("Warehouse", wh_name, "custom_territory_cluster") or ""
+
+		store_meta[wh_name] = {
 			"warehouse_group": group,
-			"parent_warehouse": wh.parent_warehouse,
-			"cluster": getattr(wh, "custom_territory_cluster", "") or "",
+			"parent_warehouse": wh_meta.get("parent_warehouse"),
+			"cluster": cluster,
 		}
 
 	# Apply warehouse filter to store_meta too

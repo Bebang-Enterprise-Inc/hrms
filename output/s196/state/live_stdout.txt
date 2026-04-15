@@ -1,0 +1,132 @@
+Backend: fb10eb92c36f
+=== Pre-Phase-2 bench backup ===
+OCI runtime exec failed: exec failed: unable to start container process: exec: "/home/frappe/frappe-bench/env/bin/bench": stat /home/frappe/frappe-bench/env/bin/bench: no such file or directory: unknown
+========================================================================
+S196 PHASE 2 DATA MIGRATION — LIVE EXECUTION
+========================================================================
+
+Captured abbr for 12 Companies pre-rename
+
+=== STEP A: Rename 12 Companies (corp-first → store-first) ===
+  [DONE   ] A: rename_company 'Bebang Enterprise Inc. - Robinsons Antipolo -> Robinsons Antipolo - Bebang Enterprise Inc.' 
+  [DONE   ] A: rename_company 'Bebang Enterprise Inc. - SM Manila -> SM Manila - Bebang Enterprise Inc.' 
+  [DONE   ] A: rename_company 'Bebang Enterprise Inc. - SM Megamall -> SM Megamall - Bebang Enterprise Inc.' 
+  [DONE   ] A: rename_company 'Bebang Enterprise Inc. - SM Southmall -> SM Southmall - Bebang Enterprise Inc.' 
+  [DONE   ] A: rename_company 'Bebang Mega Inc. - Ayala Evo City -> Ayala Evo City - Bebang Mega Inc.' 
+  [DONE   ] A: rename_company 'Bebang Mega Inc. - Ayala Vermosa -> Ayala Vermosa - Bebang Mega Inc.' 
+  [DONE   ] A: rename_company 'Bebang Mega Inc. - Robinsons Gen Trias -> Robinsons Gen Trias - Bebang Mega Inc.' 
+  [DONE   ] A: rename_company 'Bebang Mega Inc. - Robinsons Imus -> Robinsons Imus - Bebang Mega Inc.' 
+  [DONE   ] A: rename_company 'Bebang Mega Inc. - SM Tanza -> SM Tanza - Bebang Mega Inc.' 
+  [DONE   ] A: rename_company 'Bebang SM Marikina Inc. - Sta Lucia -> Sta Lucia - Bebang SM Marikina Inc.' 
+  [DONE   ] A: rename_company 'TAJ Food Corp. - DVerde Calamba -> DVerde Calamba - TAJ Food Corp.' 
+  [DONE   ] A: rename_company 'Tungsten Capital - Gateway Mall -> Gateway Mall - Tungsten Capital' 
+
+=== STEP B+B+: Rename 5 warehouses ===
+  [FAIL   ] B: rename_warehouse 'BB ESTANCIA FOOD CORP. - Ortigas Estancia - BBEFC -> Ortigas Estancia - BB ESTANCIA FOOD CORP.' — Warehouse not allowed to be renamed
+  [FAIL   ] B: rename_warehouse 'BEBANG PASEO INC. - Paseo Center - BPI -> Paseo Center - BEBANG PASEO INC.' — Warehouse not allowed to be renamed
+  [FAIL   ] B: rename_warehouse 'Vista Mall Taguig - BEI -> Vista Mall Taguig - Tricern Food Corp.' — Warehouse not allowed to be renamed
+  [FAIL   ] B: rename_warehouse 'SM Taytay - BEI -> SM Taytay - Day Ones Food and Drink Establishments Corp.' — Warehouse not allowed to be renamed
+  [FAIL   ] B: rename_warehouse 'SM Clark - BEI -> SM Clark - Red Taldawa Foods OPC' — Warehouse not allowed to be renamed
+
+=== STEP C: Create 3 new Companies (first_provision_done=1 suppresses hook) ===
+'Syntax error in query:\nsavepoint create_co_TCH-RGS '
+'Syntax error in query:\nrollback to savepoint create_co_TCH-RGS '
+  ROLLBACK FAILED at savepoint create_co_TCH-RGS: 'MariaDBDatabase' object has no attribute 'rollback_to_savepoint'
+  [FAIL   ] C: create_company 'Robinsons Galleria South - Tungsten Capital' — (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use n
+'Syntax error in query:\nsavepoint create_co_TFC-SMC '
+'Syntax error in query:\nrollback to savepoint create_co_TFC-SMC '
+  ROLLBACK FAILED at savepoint create_co_TFC-SMC: 'MariaDBDatabase' object has no attribute 'rollback_to_savepoint'
+  [FAIL   ] C: create_company 'SM Caloocan - TAJ Food Corp.' — (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use n
+'Syntax error in query:\nsavepoint create_co_TCH-SMS '
+'Syntax error in query:\nrollback to savepoint create_co_TCH-SMS '
+  ROLLBACK FAILED at savepoint create_co_TCH-SMS: 'MariaDBDatabase' object has no attribute 'rollback_to_savepoint'
+  [FAIL   ] C: create_company 'SM Sangandaan - Tungsten Capital' — (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use n
+
+=== STEP D: Re-point 4 warehouses + SLE/GL back-fill ===
+'Syntax error in query:\nsavepoint repoint_Araneta_Gateway_-_BEI '
+'Syntax error in query:\nrollback to savepoint repoint_Araneta_Gateway_-_BEI '
+  ROLLBACK FAILED at savepoint repoint_Araneta_Gateway_-_BEI: 'MariaDBDatabase' object has no attribute 'rollback_to_savepoint'
+  [FAIL   ] D: repoint_warehouse 'Araneta Gateway - BEI' — (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use n
+  [FAIL   ] D: repoint_warehouse 'Robisons Galleria South - BEI' — new_co Robinsons Galleria South - Tungsten Capital missing
+  [FAIL   ] D: repoint_warehouse 'SM Caloocan - BEI' — new_co SM Caloocan - TAJ Food Corp. missing
+'Syntax error in query:\nsavepoint repoint_Dverde_Laguna_-_BEI '
+'Syntax error in query:\nrollback to savepoint repoint_Dverde_Laguna_-_BEI '
+  ROLLBACK FAILED at savepoint repoint_Dverde_Laguna_-_BEI: 'MariaDBDatabase' object has no attribute 'rollback_to_savepoint'
+  [FAIL   ] D: repoint_warehouse "D'verde Laguna - BEI" — (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use n
+
+=== STEP E: Re-point SM Sangandaan warehouse before BSS deletion ===
+  [DONE   ] E: repoint_sangandaan 'SM Sangandaan - BEI' — SLE back-filled=946; GL back-filled=30
+
+=== STEP F+ (W-3): Pre-delete link audit for 3 Companies ===
+  [BLOCKED] F+: link_audit 'BEBANG ROBINSONS GALLERIA SOUTH' — linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+  [BLOCKED] F+: link_audit 'BEBANG SM CALOOCAN' — linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+  [BLOCKED] F+: link_audit 'BEBANG SM SANGANDAAN' — linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+
+=== STEP F: Archive 3 misnamed legacy Companies (delete blocked by linked GL docs) ===
+  [DONE   ] F: archive_company 'BEBANG ROBINSONS GALLERIA SOUTH' — operational_status=Permanently Closed; 5 child warehouses disabled; linked_docs={'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+  [DONE   ] F: archive_company 'BEBANG SM CALOOCAN' — operational_status=Permanently Closed; 5 child warehouses disabled; linked_docs={'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+  [DONE   ] F: archive_company 'BEBANG SM SANGANDAAN' — operational_status=Permanently Closed; 5 child warehouses disabled; linked_docs={'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+
+=== STEP G: Delete 3 cryptic duplicate warehouses ===
+'Syntax error in query:\nsavepoint delete_wh_TRICERN_FOOD_CORP_- '
+'Syntax error in query:\nrollback to savepoint delete_wh_TRICERN_FOOD_CORP_- '
+  ROLLBACK FAILED at savepoint delete_wh_TRICERN_FOOD_CORP_-: 'MariaDBDatabase' object has no attribute 'rollback_to_savepoint'
+  [SQL-DONE] G: delete_warehouse 'TRICERN FOOD CORP. - BV' — ORM failed, SQL fallback succeeded
+  [DONE   ] G: delete_warehouse 'DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP. - BST' 
+  [DONE   ] G: delete_warehouse 'RED TALDAWA FOODS OPC - BSC2' 
+
+=== STEP H: JL TRADE OPC deletion SKIPPED (Phase 1 finding) ===
+  [SKIP   ] H: delete_jl_trade_opc 'JL TRADE OPC' — has BIR TIN 775-842-763-00003 for SM SJDM — needs Sam decision
+
+=== STEP I: Abbr invariance check (12 Companies) ===
+  [DONE   ] I: abbr_check 'Robinsons Antipolo - Bebang Enterprise Inc.' — abbr preserved: BEI-RPA
+  [DONE   ] I: abbr_check 'SM Manila - Bebang Enterprise Inc.' — abbr preserved: BEI-SMM
+  [DONE   ] I: abbr_check 'SM Megamall - Bebang Enterprise Inc.' — abbr preserved: BEI-SMG
+  [DONE   ] I: abbr_check 'SM Southmall - Bebang Enterprise Inc.' — abbr preserved: BEI-SMS
+  [DONE   ] I: abbr_check 'Ayala Evo City - Bebang Mega Inc.' — abbr preserved: BMI-AEC
+  [DONE   ] I: abbr_check 'Ayala Vermosa - Bebang Mega Inc.' — abbr preserved: BMI-AV
+  [DONE   ] I: abbr_check 'Robinsons Gen Trias - Bebang Mega Inc.' — abbr preserved: BMI-RGT
+  [DONE   ] I: abbr_check 'Robinsons Imus - Bebang Mega Inc.' — abbr preserved: BMI-RI
+  [DONE   ] I: abbr_check 'SM Tanza - Bebang Mega Inc.' — abbr preserved: BMI-SMT
+  [DONE   ] I: abbr_check 'Sta Lucia - Bebang SM Marikina Inc.' — abbr preserved: BSMM-SL
+  [DONE   ] I: abbr_check 'DVerde Calamba - TAJ Food Corp.' — abbr preserved: TFC-DVC
+  [DONE   ] I: abbr_check 'Gateway Mall - Tungsten Capital' — abbr preserved: TCH-GW
+
+=== STEP J: Final verification — count orderable warehouses ===
+  Orderable Companies (allowlist filter): 47
+  Orderable warehouses: 46
+  Companies with 1 wh: 46
+  Companies with >1 wh: 0
+  Companies with 0 wh: 1
+  Zero-wh Companies (silently omitted from grid): ['JL TRADE OPC']
+
+========================================================================
+{
+  "dry_run": false,
+  "total_actions": 47,
+  "by_status": {
+    "DONE": 30,
+    "FAIL": 12,
+    "BLOCKED": 3,
+    "SQL-DONE": 1,
+    "SKIP": 1
+  },
+  "by_step": {
+    "A": 12,
+    "B": 5,
+    "C": 3,
+    "D": 4,
+    "E": 1,
+    "F+": 3,
+    "F": 3,
+    "G": 3,
+    "H": 1,
+    "I": 12
+  }
+}
+
+Action log written to /tmp/s196_phase_2_rename_matrix_executed.csv
+
+========================================================================
+S196 PHASE 2 DONE (LIVE)
+========================================================================

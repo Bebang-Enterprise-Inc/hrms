@@ -1,0 +1,101 @@
+Backend: fb10eb92c36f
+========================================================================
+S196 PHASE 2 DATA MIGRATION — LIVE EXECUTION
+========================================================================
+
+Captured abbr for 0 Companies pre-rename
+
+=== STEP A: Rename 12 Companies (corp-first → store-first) ===
+  [SKIP   ] A: rename_company 'Bebang Enterprise Inc. - Robinsons Antipolo' — not found
+  [SKIP   ] A: rename_company 'Bebang Enterprise Inc. - SM Manila' — not found
+  [SKIP   ] A: rename_company 'Bebang Enterprise Inc. - SM Megamall' — not found
+  [SKIP   ] A: rename_company 'Bebang Enterprise Inc. - SM Southmall' — not found
+  [SKIP   ] A: rename_company 'Bebang Mega Inc. - Ayala Evo City' — not found
+  [SKIP   ] A: rename_company 'Bebang Mega Inc. - Ayala Vermosa' — not found
+  [SKIP   ] A: rename_company 'Bebang Mega Inc. - Robinsons Gen Trias' — not found
+  [SKIP   ] A: rename_company 'Bebang Mega Inc. - Robinsons Imus' — not found
+  [SKIP   ] A: rename_company 'Bebang Mega Inc. - SM Tanza' — not found
+  [SKIP   ] A: rename_company 'Bebang SM Marikina Inc. - Sta Lucia' — not found
+  [SKIP   ] A: rename_company 'TAJ Food Corp. - DVerde Calamba' — not found
+  [SKIP   ] A: rename_company 'Tungsten Capital - Gateway Mall' — not found
+
+=== STEP B+B+: Rename 5 warehouses ===
+  [FAIL   ] B: rename_warehouse 'BB ESTANCIA FOOD CORP. - Ortigas Estancia - BBEFC -> Ortigas Estancia - BB ESTANCIA FOOD CORP.' — rename_doc() got an unexpected keyword argument 'ignore_permissions'
+  [FAIL   ] B: rename_warehouse 'BEBANG PASEO INC. - Paseo Center - BPI -> Paseo Center - BEBANG PASEO INC.' — rename_doc() got an unexpected keyword argument 'ignore_permissions'
+  [FAIL   ] B: rename_warehouse 'Vista Mall Taguig - BEI -> Vista Mall Taguig - Tricern Food Corp.' — rename_doc() got an unexpected keyword argument 'ignore_permissions'
+  [FAIL   ] B: rename_warehouse 'SM Taytay - BEI -> SM Taytay - Day Ones Food and Drink Establishments Corp.' — rename_doc() got an unexpected keyword argument 'ignore_permissions'
+  [FAIL   ] B: rename_warehouse 'SM Clark - BEI -> SM Clark - Red Taldawa Foods OPC' — rename_doc() got an unexpected keyword argument 'ignore_permissions'
+
+=== STEP C: Create 3 new Companies (first_provision_done=1 suppresses hook) ===
+  [DONE   ] C: create_company 'Robinsons Galleria South - Tungsten Capital' — abbr=TCH-RGS parent=TUNGSTEN CAPITAL HOLDINGS OPC
+  [DONE   ] C: create_company 'SM Caloocan - TAJ Food Corp.' — abbr=TFC-SMC parent=TAJ FOOD CORP.
+  [DONE   ] C: create_company 'SM Sangandaan - Tungsten Capital' — abbr=TCH-SMS parent=TUNGSTEN CAPITAL HOLDINGS OPC
+
+=== STEP D: Re-point 4 warehouses + SLE/GL back-fill ===
+  [DONE   ] D: repoint_warehouse 'Araneta Gateway - BEI' — TUNGSTEN CAPITAL HOLDINGS OPC -> Gateway Mall - Tungsten Capital; SLE back-filled=894; GL back-filled=30
+  [DONE   ] D: repoint_warehouse 'Robisons Galleria South - BEI' — TUNGSTEN CAPITAL HOLDINGS OPC -> Robinsons Galleria South - Tungsten Capital; SLE back-filled=947; GL back-filled=30
+  [DONE   ] D: repoint_warehouse 'SM Caloocan - BEI' — TAJ FOOD CORP. -> SM Caloocan - TAJ Food Corp.; SLE back-filled=836; GL back-filled=30
+  [DONE   ] D: repoint_warehouse "D'verde Laguna - BEI" — TAJ FOOD CORP. -> DVerde Calamba - TAJ Food Corp.; SLE back-filled=1048; GL back-filled=32
+
+=== STEP E: Re-point SM Sangandaan warehouse before BSS deletion ===
+  [DONE   ] E: repoint_sangandaan 'SM Sangandaan - BEI' — SLE back-filled=0; GL back-filled=0
+
+=== STEP F+ (W-3): Pre-delete link audit for 3 Companies ===
+  [BLOCKED] F+: link_audit 'BEBANG ROBINSONS GALLERIA SOUTH' — linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+  [BLOCKED] F+: link_audit 'BEBANG SM CALOOCAN' — linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+  [BLOCKED] F+: link_audit 'BEBANG SM SANGANDAAN' — linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+
+=== STEP F: Archive 3 misnamed legacy Companies (delete blocked by linked GL docs) ===
+  [SKIP   ] F: archive_company 'BEBANG ROBINSONS GALLERIA SOUTH' — already Permanently Closed
+  [SKIP   ] F: archive_company 'BEBANG SM CALOOCAN' — already Permanently Closed
+  [SKIP   ] F: archive_company 'BEBANG SM SANGANDAAN' — already Permanently Closed
+
+=== STEP G: Delete 3 cryptic duplicate warehouses ===
+  [SKIP   ] G: delete_warehouse 'TRICERN FOOD CORP. - BV' — not found
+  [SKIP   ] G: delete_warehouse 'DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP. - BST' — not found
+  [SKIP   ] G: delete_warehouse 'RED TALDAWA FOODS OPC - BSC2' — not found
+
+=== STEP H: JL TRADE OPC deletion SKIPPED (Phase 1 finding) ===
+  [SKIP   ] H: delete_jl_trade_opc 'JL TRADE OPC' — has BIR TIN 775-842-763-00003 for SM SJDM — needs Sam decision
+
+=== STEP I: Abbr invariance check (0 Companies) ===
+
+=== STEP J: Final verification — count orderable warehouses ===
+  Orderable Companies (allowlist filter): 50
+  Orderable warehouses: 51
+  Companies with 1 wh: 47
+  Companies with >1 wh: 2
+  Companies with 0 wh: 1
+  Multi-wh cases:
+    DVerde Calamba - TAJ Food Corp.: 2
+    Gateway Mall - Tungsten Capital: 2
+  Zero-wh Companies (silently omitted from grid): ['JL TRADE OPC']
+
+========================================================================
+{
+  "dry_run": false,
+  "total_actions": 35,
+  "by_status": {
+    "SKIP": 19,
+    "FAIL": 5,
+    "DONE": 8,
+    "BLOCKED": 3
+  },
+  "by_step": {
+    "A": 12,
+    "B": 5,
+    "C": 3,
+    "D": 4,
+    "E": 1,
+    "F+": 3,
+    "F": 3,
+    "G": 3,
+    "H": 1
+  }
+}
+
+Action log written to /tmp/s196_phase_2_rename_matrix_executed.csv
+
+========================================================================
+S196 PHASE 2 DONE (LIVE)
+========================================================================
