@@ -1,0 +1,36 @@
+{
+  "verdict": "FAIL",
+  "verdict_rule": "Sam 2026-04-16: partial = fail; corner cutting = fail; every corner cut restarts the WHOLE test from scratch browser-only.",
+  "score": { "pass": 1, "fail": 6, "total": 7 },
+  "run_date": "2026-04-15",
+  "honest_verdict_date": "2026-04-16",
+  "plan": "docs/plans/2026-04-14-sprint-192-s190-l3-e2e-store-order-billing.md",
+  "scenarios": [
+    { "scenario": "S1", "verdict": "FAIL", "reason": "Not re-run browser-only this session; prior-session evidence used Python via SSM for approval / dispatch / GR / SI (HB-4 violation)." },
+    { "scenario": "S2", "verdict": "FAIL", "reason": "Only RR-1 (order+company stamp) was asserted. assertCompanyChainCorrect never ran. No approval, no dispatch, no GR, no SI. Partial = fail." },
+    { "scenario": "S3", "verdict": "FAIL", "reason": "Approval step failed in the browser; full chain never completed." },
+    { "scenario": "S4", "verdict": "FAIL", "reason": "Only RR-1 asserted. assertCompanyChainCorrect never ran. Partial = fail." },
+    { "scenario": "F1", "verdict": "PASS", "reason": "Empty-order UI gate verified browser-only: Review / Submit controls hidden with no qty > 0." },
+    { "scenario": "F2", "verdict": "FAIL", "reason": "Not executed." },
+    { "scenario": "F3", "verdict": "FAIL", "reason": "Not executed." }
+  ],
+  "retry_must_produce": {
+    "S1_SI_docname": null,
+    "S2_SI_docname": null,
+    "S3_SI_docname": null,
+    "S4_SI_docname": null,
+    "S4_customer_equals_S1_customer": null,
+    "F1_ui_gate_repeat": null,
+    "F2_validation_error_observed": null,
+    "F3_billing_hold_log_entry": null
+  },
+  "retry_blockers_resolved_for_retry": [
+    "hrms#583 MERGED — _normalize_store_name_for_route handles S188 child pattern (unblocks S2 ordering)",
+    "bei-tasks 2109e36 on main — OrderCard testid + react-aware page object + queue polling (unblocks S1/S3 approval step)"
+  ],
+  "retry_blockers_still_open": [
+    "Dispatch UI testid coverage needs audit (dispatch-row-${mrName}, dispatch-qty-${code}, dispatch-button)",
+    "Receiving UI testid coverage needs audit (delivery-row-${mrName}, receiving-qty-${code}, accept-delivery-button)",
+    "Vercel deploy of 2109e36 must be verified live on my.bebang.ph before the retry starts"
+  ]
+}

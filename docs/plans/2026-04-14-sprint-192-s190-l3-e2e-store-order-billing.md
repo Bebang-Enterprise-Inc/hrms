@@ -2,17 +2,17 @@
 
 ```yaml
 sprint: S192
-status: LIBRARY_DEPLOYED_PENDING_L3_EXECUTION
+status: FAIL_RETRY_REQUIRED
 planned_date: 2026-04-14
 plan_file: docs/plans/2026-04-14-sprint-192-s190-l3-e2e-store-order-billing.md
 depends_on:
   - S190 Phase 5 deployed (PR #566) — Company-first resolution, CSV retired
 completed_date: ""
-execution_summary: "Phase 0 + Phase L complete. Library (18 files) + spec + data-testid + preflight script shipped via BEI-Tasks PR. Phases 1-3 execution BLOCKED on SSM (deploy hook requires Sam password) — handoff to Sam to unblock + run scenarios via preflight_setup.py. See output/l3/s192/SUMMARY.md."
-branch: s192-s190-l3-e2e
-frontend_pr: https://github.com/Bebang-Enterprise-Inc/BEI-Tasks/pull/new/s192-s190-l3-e2e
-backend_pr: https://github.com/Bebang-Enterprise-Inc/hrms/pull/new/s192-preflight-artifacts
-canonical_unit_total: 25
+execution_summary: "HARD FAIL. Sam's pass/fail rule: partial = fail; corner cutting = fail; every corner cut restarts the WHOLE test from scratch browser-only. 2026-04-15 run did not run all 7 scenarios browser-only: S1 was not re-executed (prior session used Python via SSM for approval/dispatch/GR/SI = HB-4 violation); S2/S4 only asserted RR-1 order+company stamp, never ran assertCompanyChainCorrect (approve → dispatch → GR → SI); S3 failed at approval; F2 / F3 not executed. Only F1 (empty-order UI gate) is a genuine pass. VERDICT: 1 PASS / 6 FAIL. Sprint status rolled back to FAIL_RETRY_REQUIRED. Value retained: hrms#583 (F04 normalizer) is merged and useful; bei-tasks 2109e36 (testids + react-aware Page Object) is on main and useful — both enable the retry run to actually pass. Retry must cover all 7 scenarios end-to-end in a real browser with assertCompanyChainCorrect on S1/S2/S3 producing real Sales Invoices."
+branch: fix/s192-closeout (this PR now records the FAIL verdict)
+frontend_pr: bei-tasks commit 2109e36 on main (testids + page object) — unblocks retry
+backend_pr: https://github.com/Bebang-Enterprise-Inc/hrms/pull/583 (F04 fix, merged)
+canonical_unit_total: 40
 ```
 
 ---

@@ -80,5 +80,25 @@
     "suggested_fix": "Error message should name the four functions in order and link to the runbook.",
     "repro": "Call fulfill_store_order → ValidationError('Commissary direct store fulfillment is retired. Use the warehouse-centered flow: ...').",
     "seen_at": "2026-04-14T12:40:00Z"
+  },
+  {
+    "id": "BUG-S192-D09",
+    "surface": "bei-tasks app/dashboard/store-ops/order-approvals/page.tsx + hooks/use-order-review.ts",
+    "description": "useOrderReviewQueue uses SWR with revalidateOnFocus: false. Freshly-submitted orders from another session (or another tab) take ~30s to appear in the approver's queue; page refresh doesn't revalidate unless the SWR key changes. For L3 tests that submit then approve in quick succession, the test either polls for the order to appear or times out.",
+    "severity": "medium",
+    "blocks_tests": false,
+    "suggested_fix": "Call mutate() on route entry via useEffect, or switch to revalidateOnFocus: true / revalidateOnMount: true in the SWR config. Also add a Refresh button bound to mutate() so humans can force-reload.",
+    "repro": "Submit order at ordering page, then immediately navigate to /dashboard/store-ops/order-approvals. Order doesn't appear until SWR's dedup window expires (~30s).",
+    "seen_at": "2026-04-15T14:15:00Z"
+  },
+  {
+    "id": "BUG-S192-D10",
+    "surface": "hrms/api/store.py _CENTRAL_WAREHOUSE_ROUTE_MAP",
+    "description": "Map key 'THE GRID ROCKWELL' (no hyphen) does not match the warehouse_name 'The Grid - Rockwell' after normalization. The resolver currently falls through to BEI Route lookup (resolve_route_source_warehouse), which succeeds for this store, so it is not test-blocking. Still a latent mismatch - any store added with the same 'CITY - MALL' pattern and no BEI Route row would silently fail.",
+    "severity": "low",
+    "blocks_tests": false,
+    "suggested_fix": "Either migrate the hardcoded map to 'THE GRID - ROCKWELL' to match warehouse_name exactly, or deprecate the hardcoded map in favor of BEI Route as the single source of truth (preferred - the map was meant as a temporary fallback per its own comment).",
+    "repro": "Expression: _normalize_store_name_for_route('The Grid - Rockwell - BEI') -> 'THE GRID - ROCKWELL'. Map lookup with that key returns None; only BEI Route saves this store from empty-queue behaviour.",
+    "seen_at": "2026-04-15T13:47:00Z"
   }
 ]
