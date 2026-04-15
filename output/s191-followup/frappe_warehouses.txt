@@ -1,0 +1,253 @@
+total warehouses: 300
+active leaves: 249
+
+All active leaves:
+  3MD Logistics - Camangyanan                    name=3MD Logistics - Camangyanan - BKI  company=Bebang Kitchen Inc.
+  3MD Logistics – Camangyanan                    name=3MD Logistics – Camangyanan - BKI  company=Bebang Kitchen Inc.
+  Araneta Gateway                                name=Araneta Gateway - BEI  company=TUNGSTEN CAPITAL HOLDINGS OPC
+  Ayala Evo                                      name=Ayala Evo - BEI  company=BEBANG MEGA INC.
+  Ayala Malls Fairview Terraces                  name=Ayala Malls Fairview Terraces - BEI  company=BEBANG FT INC.
+  Ayala Market Market                            name=Ayala Market Market - BEI  company=BEBANG MARKET MARKET INC.
+  Ayala Solenad                                  name=Ayala Solenad - BEI  company=HFFM SOLENAD FOOD SERVICES INC.
+  Ayala UPTC                                     name=Ayala UPTC - BEI  company=BEBANG UP TOWN CENTER INC.
+  Ayala Vermosa                                  name=Ayala Vermosa - BEI  company=BEBANG MEGA INC.
+  BB ESTANCIA FOOD CORP. - Ortigas Estancia - BBEFC  name=BB ESTANCIA FOOD CORP. - Ortigas Estancia - BBEFC  company=BB ESTANCIA FOOD CORP.
+  BEBANG PASEO INC. - Paseo Center - BPI         name=BEBANG PASEO INC. - Paseo Center - BPI  company=BEBANG PASEO INC.
+  BF Homes                                       name=BF Homes - BEI  company=BEBANG BF HOMES INC.
+  Bebang Enterprise Inc. - Robinsons Antipolo    name=Bebang Enterprise Inc. - Robinsons Antipolo - BEI-RPA  company=Bebang Enterprise Inc. - Robinsons Antipolo
+  Bebang Enterprise Inc. - SM Manila             name=Bebang Enterprise Inc. - SM Manila - BEI-SMM  company=Bebang Enterprise Inc. - SM Manila
+  Bebang Enterprise Inc. - SM Megamall           name=Bebang Enterprise Inc. - SM Megamall - BEI-SMG  company=Bebang Enterprise Inc. - SM Megamall
+  Bebang Enterprise Inc. - SM Southmall          name=Bebang Enterprise Inc. - SM Southmall - BEI-SMS  company=Bebang Enterprise Inc. - SM Southmall
+  Bebang Mega Inc. - Ayala Evo City              name=Bebang Mega Inc. - Ayala Evo City - BMI-AEC  company=Bebang Mega Inc. - Ayala Evo City
+  Bebang Mega Inc. - Ayala Vermosa               name=Bebang Mega Inc. - Ayala Vermosa - BMI-AV  company=Bebang Mega Inc. - Ayala Vermosa
+  Bebang Mega Inc. - Robinsons Gen Trias         name=Bebang Mega Inc. - Robinsons Gen Trias - BMI-RGT  company=Bebang Mega Inc. - Robinsons Gen Trias
+  Bebang Mega Inc. - Robinsons Imus              name=Bebang Mega Inc. - Robinsons Imus - BMI-RI  company=Bebang Mega Inc. - Robinsons Imus
+  Bebang Mega Inc. - SM Tanza                    name=Bebang Mega Inc. - SM Tanza - BMI-SMT  company=Bebang Mega Inc. - SM Tanza
+  Bebang SM Marikina Inc. - Sta Lucia            name=Bebang SM Marikina Inc. - Sta Lucia - BSMM-SL  company=Bebang SM Marikina Inc. - Sta Lucia
+  CTTM Tomas Morato                              name=CTTM Tomas Morato - BEI  company=B CUBED VENTURES CORP.
+  D'verde Laguna                                 name=D'verde Laguna - BEI  company=TAJ FOOD CORP.
+  DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.   name=DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP. - BST  company=DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.
+  Ever Commonwealth                              name=Ever Commonwealth - BEI  company=DLS Dessert Craft Inc.
+  FREEZE DELIGHT INC.                            name=FREEZE DELIGHT INC. - FDI  company=FREEZE DELIGHT INC.
+  Festival Mall Alabang                          name=Festival Mall Alabang - BEI  company=BEBANG FESTIVAL INC.
+  Finished Goods                                 name=Finished Goods - BAG  company=TUNGSTEN CAPITAL HOLDINGS OPC
+  Finished Goods                                 name=Finished Goods - BAS  company=HFFM SOLENAD FOOD SERVICES INC.
+  Finished Goods                                 name=Finished Goods - BBEFC  company=BB ESTANCIA FOOD CORP.
+  Finished Goods                                 name=Finished Goods - BBHI  company=BEBANG BF HOMES INC.
+  Finished Goods                                 name=Finished Goods - BDV  company=TAJ FOOD CORP.
+  Finished Goods                                 name=Finished Goods - BEGC  company=DLS Dessert Craft Inc.
+  Finished Goods                                 name=Finished Goods - BFC  company=BEBANG FRANCHISE CORP.
+  Finished Goods                                 name=Finished Goods - BFI  company=BEBANG FESTIVAL INC.
+  Finished Goods                                 name=Finished Goods - BFI2  company=BEBANG FT INC.
+  Finished Goods                                 name=Finished Goods - BFOPC  company=BEIFRANCHISE FOOD OPC
+  Finished Goods                                 name=Finished Goods - BGCI  company=BEBANG GRAND CENTRAL INC.
+  Finished Goods                                 name=Finished Goods - BLI  company=BEBANG LCT INC.
+  Finished Goods                                 name=Finished Goods - BMI  company=BEBANG MARILAO INC.
+  Finished Goods                                 name=Finished Goods - BMI-AEC  company=Bebang Mega Inc. - Ayala Evo City
+  Finished Goods                                 name=Finished Goods - BMI-AV  company=Bebang Mega Inc. - Ayala Vermosa
+  Finished Goods                                 name=Finished Goods - BMI-RGT  company=Bebang Mega Inc. - Robinsons Gen Trias
+  Finished Goods                                 name=Finished Goods - BMI-RI  company=Bebang Mega Inc. - Robinsons Imus
+  Finished Goods                                 name=Finished Goods - BMI-SMT  company=Bebang Mega Inc. - SM Tanza
+  Finished Goods                                 name=Finished Goods - BMI2  company=BEBANG MEGA INC.
+  Finished Goods                                 name=Finished Goods - BMMI  company=BEBANG MARKET MARKET INC.
+  Finished Goods                                 name=Finished Goods - BNEI  company=BEBANG NORTH EDSA INC.
+  Finished Goods                                 name=Finished Goods - BPI  company=BEBANG PASEO INC.
+  Finished Goods                                 name=Finished Goods - BPI2  company=BEBANG PITX INC.
+  Finished Goods                                 name=Finished Goods - BRGS  company=BEBANG ROBINSONS GALLERIA SOUTH
+  Finished Goods                                 name=Finished Goods - BSAI  company=BEBANG STARMALL ALABANG INC.
+  Finished Goods                                 name=Finished Goods - BSBI  company=BEBANG SM BICUTAN INC.
+  Finished Goods                                 name=Finished Goods - BSC  company=BEBANG SM CALOOCAN
+  Finished Goods                                 name=Finished Goods - BSC2  company=RED TALDAWA FOODS OPC
+  Finished Goods                                 name=Finished Goods - BSI  company=BEBANG SMEO INC.
+  Finished Goods                                 name=Finished Goods - BSI2  company=BEBANG SMM INC.
+  Finished Goods                                 name=Finished Goods - BSI3  company=BEBANG SMOA INC.
+  Finished Goods                                 name=Finished Goods - BSI4  company=BEBANG SMV INC.
+  Finished Goods                                 name=Finished Goods - BSMI  company=BEBANG SM MARIKINA INC.
+  Finished Goods                                 name=Finished Goods - BSMM-SL  company=Bebang SM Marikina Inc. - Sta Lucia
+  Finished Goods                                 name=Finished Goods - BSS  company=BEBANG SM SANGANDAAN
+  Finished Goods                                 name=Finished Goods - BSS2  company=JL TRADE OPC
+  Finished Goods                                 name=Finished Goods - BST  company=DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.
+  Finished Goods                                 name=Finished Goods - BTGF  company=TASTECARTEL CORP.
+  Finished Goods                                 name=Finished Goods - BTM  company=B CUBED VENTURES CORP.
+  Finished Goods                                 name=Finished Goods - BUTC  company=BEBANG UP TOWN CENTER INC.
+  Finished Goods                                 name=Finished Goods - BV  company=TRICERN FOOD CORP.
+  Finished Goods                                 name=Finished Goods - BVGC  company=BEBANG VENICE GRAND CANAL INC.
+  Finished Goods                                 name=Finished Goods - DHI  company=DMD HOLDINGS INC.
+  Finished Goods                                 name=Finished Goods - FDI  company=FREEZE DELIGHT INC.
+  Finished Goods                                 name=Finished Goods - HTFC  company=HALO-HALO TERMINAL FOOD CORP.
+  Finished Goods                                 name=Finished Goods - L77  company=LEGACY77 FOOD CORP.
+  Finished Goods                                 name=Finished Goods - PFC  company=PERPETUAL FOOD CORP.
+  Finished Goods                                 name=Finished Goods - SHFC  company=SWEET HARMONY FOOD CORP.
+  Finished Goods                                 name=Finished Goods - TCH-GW  company=Tungsten Capital - Gateway Mall
+  Finished Goods                                 name=Finished Goods - TFC-DVC  company=TAJ Food Corp. - DVerde Calamba
+  Goods In Transit                               name=Goods In Transit - BAG  company=TUNGSTEN CAPITAL HOLDINGS OPC
+  Goods In Transit                               name=Goods In Transit - BAS  company=HFFM SOLENAD FOOD SERVICES INC.
+  Goods In Transit                               name=Goods In Transit - BBEFC  company=BB ESTANCIA FOOD CORP.
+  Goods In Transit                               name=Goods In Transit - BBHI  company=BEBANG BF HOMES INC.
+  Goods In Transit                               name=Goods In Transit - BDV  company=TAJ FOOD CORP.
+  Goods In Transit                               name=Goods In Transit - BEGC  company=DLS Dessert Craft Inc.
+  Goods In Transit                               name=Goods In Transit - BFC  company=BEBANG FRANCHISE CORP.
+  Goods In Transit                               name=Goods In Transit - BFI  company=BEBANG FESTIVAL INC.
+  Goods In Transit                               name=Goods In Transit - BFI2  company=BEBANG FT INC.
+  Goods In Transit                               name=Goods In Transit - BFOPC  company=BEIFRANCHISE FOOD OPC
+  Goods In Transit                               name=Goods In Transit - BGCI  company=BEBANG GRAND CENTRAL INC.
+  Goods In Transit                               name=Goods In Transit - BLI  company=BEBANG LCT INC.
+  Goods In Transit                               name=Goods In Transit - BMI  company=BEBANG MARILAO INC.
+  Goods In Transit                               name=Goods In Transit - BMI-AEC  company=Bebang Mega Inc. - Ayala Evo City
+  Goods In Transit                               name=Goods In Transit - BMI-AV  company=Bebang Mega Inc. - Ayala Vermosa
+  Goods In Transit                               name=Goods In Transit - BMI-RGT  company=Bebang Mega Inc. - Robinsons Gen Trias
+  Goods In Transit                               name=Goods In Transit - BMI-RI  company=Bebang Mega Inc. - Robinsons Imus
+  Goods In Transit                               name=Goods In Transit - BMI-SMT  company=Bebang Mega Inc. - SM Tanza
+  Goods In Transit                               name=Goods In Transit - BMI2  company=BEBANG MEGA INC.
+  Goods In Transit                               name=Goods In Transit - BMMI  company=BEBANG MARKET MARKET INC.
+  Goods In Transit                               name=Goods In Transit - BNEI  company=BEBANG NORTH EDSA INC.
+  Goods In Transit                               name=Goods In Transit - BPI  company=BEBANG PASEO INC.
+  Goods In Transit                               name=Goods In Transit - BPI2  company=BEBANG PITX INC.
+  Goods In Transit                               name=Goods In Transit - BRGS  company=BEBANG ROBINSONS GALLERIA SOUTH
+  Goods In Transit                               name=Goods In Transit - BSAI  company=BEBANG STARMALL ALABANG INC.
+  Goods In Transit                               name=Goods In Transit - BSBI  company=BEBANG SM BICUTAN INC.
+  Goods In Transit                               name=Goods In Transit - BSC  company=BEBANG SM CALOOCAN
+  Goods In Transit                               name=Goods In Transit - BSC2  company=RED TALDAWA FOODS OPC
+  Goods In Transit                               name=Goods In Transit - BSI  company=BEBANG SMEO INC.
+  Goods In Transit                               name=Goods In Transit - BSI2  company=BEBANG SMM INC.
+  Goods In Transit                               name=Goods In Transit - BSI3  company=BEBANG SMOA INC.
+  Goods In Transit                               name=Goods In Transit - BSI4  company=BEBANG SMV INC.
+  Goods In Transit                               name=Goods In Transit - BSMI  company=BEBANG SM MARIKINA INC.
+  Goods In Transit                               name=Goods In Transit - BSMM-SL  company=Bebang SM Marikina Inc. - Sta Lucia
+  Goods In Transit                               name=Goods In Transit - BSS  company=BEBANG SM SANGANDAAN
+  Goods In Transit                               name=Goods In Transit - BSS2  company=JL TRADE OPC
+  Goods In Transit                               name=Goods In Transit - BST  company=DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.
+  Goods In Transit                               name=Goods In Transit - BTGF  company=TASTECARTEL CORP.
+  Goods In Transit                               name=Goods In Transit - BTM  company=B CUBED VENTURES CORP.
+  Goods In Transit                               name=Goods In Transit - BUTC  company=BEBANG UP TOWN CENTER INC.
+  Goods In Transit                               name=Goods In Transit - BV  company=TRICERN FOOD CORP.
+  Goods In Transit                               name=Goods In Transit - BVGC  company=BEBANG VENICE GRAND CANAL INC.
+  Goods In Transit                               name=Goods In Transit - DHI  company=DMD HOLDINGS INC.
+  Goods In Transit                               name=Goods In Transit - FDI  company=FREEZE DELIGHT INC.
+  Goods In Transit                               name=Goods In Transit - HTFC  company=HALO-HALO TERMINAL FOOD CORP.
+  Goods In Transit                               name=Goods In Transit - L77  company=LEGACY77 FOOD CORP.
+  Goods In Transit                               name=Goods In Transit - PFC  company=PERPETUAL FOOD CORP.
+  Goods In Transit                               name=Goods In Transit - SHFC  company=SWEET HARMONY FOOD CORP.
+  Goods In Transit                               name=Goods In Transit - TCH-GW  company=Tungsten Capital - Gateway Mall
+  Goods In Transit                               name=Goods In Transit - TFC-DVC  company=TAJ Food Corp. - DVerde Calamba
+  Greenhills Ortigas                             name=Greenhills Ortigas - BEI  company=BEIFRANCHISE FOOD OPC
+  Jentec Storage Inc.                            name=Jentec Storage Inc. - BKI  company=Bebang Kitchen Inc.
+  Lucky Chinatown                                name=Lucky Chinatown - BEI  company=BEBANG LCT INC.
+  Megawide PITX                                  name=Megawide PITX - BEI  company=BEBANG PITX INC.
+  Megaworld Venice Grand Canal                   name=Megaworld Venice Grand Canal - BEI  company=BEBANG VENICE GRAND CANAL INC.
+  NAIA T3                                        name=NAIA T3 - BEI  company=HALO-HALO TERMINAL FOOD CORP.
+  PERPETUAL FOOD CORP.                           name=PERPETUAL FOOD CORP. - PFC  company=PERPETUAL FOOD CORP.
+  Pinnacle Cold Storage Solutions                name=Pinnacle Cold Storage Solutions - BKI  company=Bebang Kitchen Inc.
+  RED TALDAWA FOODS OPC                          name=RED TALDAWA FOODS OPC - BSC2  company=RED TALDAWA FOODS OPC
+  Robisons Galleria South                        name=Robisons Galleria South - BEI  company=TUNGSTEN CAPITAL HOLDINGS OPC
+  Royal Cold Storage - Taytay (RCS)              name=Royal Cold Storage - Taytay (RCS) - BKI  company=Bebang Kitchen Inc.
+  Royal Cold Storage – Taytay (RCS)              name=Royal Cold Storage – Taytay (RCS) - BKI  company=Bebang Kitchen Inc.
+  SJDM                                           name=SJDM - BEI  company=LEGACY77 FOOD CORP.
+  SM Bicutan                                     name=SM Bicutan - BEI  company=BEBANG SM BICUTAN INC.
+  SM Caloocan                                    name=SM Caloocan - BEI  company=TAJ FOOD CORP.
+  SM Clark                                       name=SM Clark - BEI  company=RED TALDAWA FOODS OPC
+  SM East Ortigas                                name=SM East Ortigas - BEI  company=BEBANG SMEO INC.
+  SM Grand Central                               name=SM Grand Central - BEI  company=BEBANG GRAND CENTRAL INC.
+  SM Mall Of Asia                                name=SM Mall Of Asia - BEI  company=BEBANG SMOA INC.
+  SM Marikina                                    name=SM Marikina - BEI  company=BEBANG SM MARIKINA INC.
+  SM Marilao                                     name=SM Marilao - BEI  company=BEBANG MARILAO INC.
+  SM North EDSA                                  name=SM North EDSA - BEI  company=BEBANG NORTH EDSA INC.
+  SM Pulilan                                     name=SM Pulilan - BEI  company=BEBANG SMM INC.
+  SM Sangandaan                                  name=SM Sangandaan - BEI  company=BEBANG SM SANGANDAAN
+  SM Sta. Rosa                                   name=SM Sta. Rosa - BEI  company=SWEET HARMONY FOOD CORP.
+  SM Tanza                                       name=SM Tanza - BEI  company=BEBANG MEGA INC.
+  SM Taytay                                      name=SM Taytay - BEI  company=DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.
+  SM Valenzuela                                  name=SM Valenzuela - BEI  company=BEBANG SMV INC.
+  Shaw BLVD                                      name=Shaw BLVD - BKI  company=Bebang Kitchen Inc.
+  Stores                                         name=Stores - BAG  company=TUNGSTEN CAPITAL HOLDINGS OPC
+  Stores                                         name=Stores - BAS  company=HFFM SOLENAD FOOD SERVICES INC.
+  Stores                                         name=Stores - BBEFC  company=BB ESTANCIA FOOD CORP.
+  Stores                                         name=Stores - BBHI  company=BEBANG BF HOMES INC.
+  Stores                                         name=Stores - BDV  company=TAJ FOOD CORP.
+  Stores                                         name=Stores - BEGC  company=DLS Dessert Craft Inc.
+  Stores                                         name=Stores - BEI  company=Bebang Enterprise Inc.
+  Stores                                         name=Stores - BFC  company=BEBANG FRANCHISE CORP.
+  Stores                                         name=Stores - BFI  company=BEBANG FESTIVAL INC.
+  Stores                                         name=Stores - BFI2  company=BEBANG FT INC.
+  Stores                                         name=Stores - BFOPC  company=BEIFRANCHISE FOOD OPC
+  Stores                                         name=Stores - BGCI  company=BEBANG GRAND CENTRAL INC.
+  Stores                                         name=Stores - BLI  company=BEBANG LCT INC.
+  Stores                                         name=Stores - BMI  company=BEBANG MARILAO INC.
+  Stores                                         name=Stores - BMI-AEC  company=Bebang Mega Inc. - Ayala Evo City
+  Stores                                         name=Stores - BMI-AV  company=Bebang Mega Inc. - Ayala Vermosa
+  Stores                                         name=Stores - BMI-RGT  company=Bebang Mega Inc. - Robinsons Gen Trias
+  Stores                                         name=Stores - BMI-RI  company=Bebang Mega Inc. - Robinsons Imus
+  Stores                                         name=Stores - BMI-SMT  company=Bebang Mega Inc. - SM Tanza
+  Stores                                         name=Stores - BMI2  company=BEBANG MEGA INC.
+  Stores                                         name=Stores - BMMI  company=BEBANG MARKET MARKET INC.
+  Stores                                         name=Stores - BNEI  company=BEBANG NORTH EDSA INC.
+  Stores                                         name=Stores - BPI  company=BEBANG PASEO INC.
+  Stores                                         name=Stores - BPI2  company=BEBANG PITX INC.
+  Stores                                         name=Stores - BRGS  company=BEBANG ROBINSONS GALLERIA SOUTH
+  Stores                                         name=Stores - BSAI  company=BEBANG STARMALL ALABANG INC.
+  Stores                                         name=Stores - BSBI  company=BEBANG SM BICUTAN INC.
+  Stores                                         name=Stores - BSC  company=BEBANG SM CALOOCAN
+  Stores                                         name=Stores - BSC2  company=RED TALDAWA FOODS OPC
+  Stores                                         name=Stores - BSI  company=BEBANG SMEO INC.
+  Stores                                         name=Stores - BSI2  company=BEBANG SMM INC.
+  Stores                                         name=Stores - BSI3  company=BEBANG SMOA INC.
+  Stores                                         name=Stores - BSI4  company=BEBANG SMV INC.
+  Stores                                         name=Stores - BSMI  company=BEBANG SM MARIKINA INC.
+  Stores                                         name=Stores - BSMM-SL  company=Bebang SM Marikina Inc. - Sta Lucia
+  Stores                                         name=Stores - BSS  company=BEBANG SM SANGANDAAN
+  Stores                                         name=Stores - BSS2  company=JL TRADE OPC
+  Stores                                         name=Stores - BST  company=DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.
+  Stores                                         name=Stores - BTGF  company=TASTECARTEL CORP.
+  Stores                                         name=Stores - BTM  company=B CUBED VENTURES CORP.
+  Stores                                         name=Stores - BUTC  company=BEBANG UP TOWN CENTER INC.
+  Stores                                         name=Stores - BV  company=TRICERN FOOD CORP.
+  Stores                                         name=Stores - BVGC  company=BEBANG VENICE GRAND CANAL INC.
+  Stores                                         name=Stores - DHI  company=DMD HOLDINGS INC.
+  Stores                                         name=Stores - FDI  company=FREEZE DELIGHT INC.
+  Stores                                         name=Stores - HTFC  company=HALO-HALO TERMINAL FOOD CORP.
+  Stores                                         name=Stores - L77  company=LEGACY77 FOOD CORP.
+  Stores                                         name=Stores - PFC  company=PERPETUAL FOOD CORP.
+  Stores                                         name=Stores - SHFC  company=SWEET HARMONY FOOD CORP.
+  Stores                                         name=Stores - TCH-GW  company=Tungsten Capital - Gateway Mall
+  Stores                                         name=Stores - TFC-DVC  company=TAJ Food Corp. - DVerde Calamba
+  TAJ FOOD CORP.                                 name=TAJ FOOD CORP. - BDV  company=TAJ FOOD CORP.
+  TAJ Food Corp. - DVerde Calamba                name=TAJ Food Corp. - DVerde Calamba - TFC-DVC  company=TAJ Food Corp. - DVerde Calamba
+  TEST-COMMISSARY                                name=TEST-COMMISSARY - BEI  company=Bebang Enterprise Inc.
+  TEST-STORE-BGC                                 name=TEST-STORE-BGC - BEI  company=Bebang Enterprise Inc.
+  TRICERN FOOD CORP.                             name=TRICERN FOOD CORP. - BV  company=TRICERN FOOD CORP.
+  TUNGSTEN CAPITAL HOLDINGS OPC                  name=TUNGSTEN CAPITAL HOLDINGS OPC - BAG  company=TUNGSTEN CAPITAL HOLDINGS OPC
+  The Grid - Rockwell                            name=The Grid - Rockwell - BEI  company=TASTECARTEL CORP.
+  The Terminal                                   name=The Terminal - BEI  company=BEBANG STARMALL ALABANG INC.
+  Tungsten Capital - Gateway Mall                name=Tungsten Capital - Gateway Mall - TCH-GW  company=Tungsten Capital - Gateway Mall
+  Up Town Mall BGC                               name=Up Town Mall BGC - BEI  company=DMD HOLDINGS INC.
+  Vista Mall Taguig                              name=Vista Mall Taguig - BEI  company=TRICERN FOOD CORP.
+  Work In Progress                               name=Work In Progress - BAG  company=TUNGSTEN CAPITAL HOLDINGS OPC
+  Work In Progress                               name=Work In Progress - BAS  company=HFFM SOLENAD FOOD SERVICES INC.
+  Work In Progress                               name=Work In Progress - BBEFC  company=BB ESTANCIA FOOD CORP.
+  Work In Progress                               name=Work In Progress - BBHI  company=BEBANG BF HOMES INC.
+  Work In Progress                               name=Work In Progress - BDV  company=TAJ FOOD CORP.
+  Work In Progress                               name=Work In Progress - BEGC  company=DLS Dessert Craft Inc.
+  Work In Progress                               name=Work In Progress - BFC  company=BEBANG FRANCHISE CORP.
+  Work In Progress                               name=Work In Progress - BFI  company=BEBANG FESTIVAL INC.
+  Work In Progress                               name=Work In Progress - BFI2  company=BEBANG FT INC.
+  Work In Progress                               name=Work In Progress - BFOPC  company=BEIFRANCHISE FOOD OPC
+  Work In Progress                               name=Work In Progress - BGCI  company=BEBANG GRAND CENTRAL INC.
+  Work In Progress                               name=Work In Progress - BLI  company=BEBANG LCT INC.
+  Work In Progress                               name=Work In Progress - BMI  company=BEBANG MARILAO INC.
+  Work In Progress                               name=Work In Progress - BMI-AEC  company=Bebang Mega Inc. - Ayala Evo City
+  Work In Progress                               name=Work In Progress - BMI-AV  company=Bebang Mega Inc. - Ayala Vermosa
+  Work In Progress                               name=Work In Progress - BMI-RGT  company=Bebang Mega Inc. - Robinsons Gen Trias
+  Work In Progress                               name=Work In Progress - BMI-RI  company=Bebang Mega Inc. - Robinsons Imus
+  Work In Progress                               name=Work In Progress - BMI-SMT  company=Bebang Mega Inc. - SM Tanza
+  Work In Progress                               name=Work In Progress - BMI2  company=BEBANG MEGA INC.
+  Work In Progress                               name=Work In Progress - BMMI  company=BEBANG MARKET MARKET INC.
+  Work In Progress                               name=Work In Progress - BNEI  company=BEBANG NORTH EDSA INC.
+  Work In Progress                               name=Work In Progress - BPI  company=BEBANG PASEO INC.
+  Work In Progress                               name=Work In Progress - BPI2  company=BEBANG PITX INC.
+  Work In Progress                               name=Work In Progress - BRGS  company=BEBANG ROBINSONS GALLERIA SOUTH
+  Work In Progress                               name=Work In Progress - BSAI  company=BEBANG STARMALL ALABANG INC.
+  Work In Progress                               name=Work In Progress - BSBI  company=BEBANG SM BICUTAN INC.
+  Work In Progress                               name=Work In Progress - BSC  company=BEBANG SM CALOOCAN
+  Work In Progress                               name=Work In Progress - BSC2  company=RED TALDAWA FOODS OPC
+  Work In Progress                               name=Work In Progress - BSI  company=BEBANG SMEO INC.
+  Work In Progress                               name=Work In Progress - BSI2  company=BEBANG SMM INC.

@@ -1,0 +1,11 @@
+total warehouses: 300
+active leaves: 249
+
+=== Matching the 9 missing stores ===
+  [SM Megamall] name=Bebang Enterprise Inc. - SM Megamall - BEI-SMG | warehouse_name=Bebang Enterprise Inc. - SM Megamall | company=Bebang Enterprise Inc. - SM Megamall
+  [SM Manila] name=Bebang Enterprise Inc. - SM Manila - BEI-SMM | warehouse_name=Bebang Enterprise Inc. - SM Manila | company=Bebang Enterprise Inc. - SM Manila
+  [SM Southmall] name=Bebang Enterprise Inc. - SM Southmall - BEI-SMS | warehouse_name=Bebang Enterprise Inc. - SM Southmall | company=Bebang Enterprise Inc. - SM Southmall
+  [Robinsons Antipolo] name=Bebang Enterprise Inc. - Robinsons Antipolo - BEI-RPA | warehouse_name=Bebang Enterprise Inc. - Robinsons Antipolo | company=Bebang Enterprise Inc. - Robinsons Antipolo
+  [Robinsons Imus] name=Bebang Mega Inc. - Robinsons Imus - BMI-RI | warehouse_name=Bebang Mega Inc. - Robinsons Imus | company=Bebang Mega Inc. - Robinsons Imus
+  [Sta Lucia] name=Bebang SM Marikina Inc. - Sta Lucia - BSMM-SL | warehouse_name=Bebang SM Marikina Inc. - Sta Lucia | company=Bebang SM Marikina Inc. - Sta Lucia
+  [NAIA] name=NAIA T3 - BEI | warehouse_name=NAIA T3 | company=HALO-HALO TERMINAL FOOD CORP.

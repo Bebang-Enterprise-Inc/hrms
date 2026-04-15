@@ -1,0 +1,49 @@
+scope keys: ['selected_stores', 'selected_location_ids', 'channel']
+selected_stores count: 37
+
+sample store record:
+{
+  "warehouse": "Araneta Gateway - BEI",
+  "warehouse_name": "Araneta Gateway",
+  "company": "TUNGSTEN CAPITAL HOLDINGS OPC",
+  "location_id": 2557
+}
+
+ALL selected (location_id + name):
+    2557  Araneta Gateway
+    2426  Ayala Evo
+    2220  Ayala Malls Fairview Terraces
+    2287  Ayala Market Market
+    2547  Ayala Solenad
+    2425  Ayala UPTC
+    2428  Ayala Vermosa
+    2217  BF Homes
+    2526  CTTM Tomas Morato
+    2766  D'verde Laguna
+    2281  Ever Commonwealth
+    2222  Festival Mall Alabang
+    2311  Lucky Chinatown
+    2179  Megawide PITX
+    2216  Megaworld Venice Grand Canal
+    2515  Robisons Galleria South
+    2481  SJDM
+    2412  SM Bicutan
+    2464  SM Caloocan
+    2646  SM Clark
+    2184  SM East Ortigas
+    2218  SM Grand Central
+    2219  SM Mall Of Asia
+    2317  SM Marikina
+    2413  SM Marilao
+    2284  SM North EDSA
+    2478  SM Pulilan
+    2482  SM Sangandaan
+    2774  SM Sta. Rosa
+    2411  SM Tanza
+    2812  SM Taytay
+    2341  SM Valenzuela
+    2548  TEST-STORE-BGC
+    2250  The Grid - Rockwell
+    2319  The Terminal
+    2548  Up Town Mall BGC
+    2556  Vista Mall Taguig

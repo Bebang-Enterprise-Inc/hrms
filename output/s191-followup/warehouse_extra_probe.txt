@@ -1,0 +1,31 @@
+=== "Paseo" ===
+  name=BEBANG PASEO INC. - Paseo Center - BPI | wn=BEBANG PASEO INC. - Paseo Center - BPI | co=BEBANG PASEO INC.
+  name=Finished Goods - BPI | wn=Finished Goods | co=BEBANG PASEO INC.
+  name=Goods In Transit - BPI | wn=Goods In Transit | co=BEBANG PASEO INC.
+  name=Stores - BPI | wn=Stores | co=BEBANG PASEO INC.
+  name=Work In Progress - BPI | wn=Work In Progress | co=BEBANG PASEO INC.
+=== "Gen Trias" ===
+  name=Bebang Mega Inc. - Robinsons Gen Trias - BMI-RGT | wn=Bebang Mega Inc. - Robinsons Gen Trias | co=Bebang Mega Inc. - Robinsons Gen Trias
+  name=Finished Goods - BMI-RGT | wn=Finished Goods | co=Bebang Mega Inc. - Robinsons Gen Trias
+  name=Goods In Transit - BMI-RGT | wn=Goods In Transit | co=Bebang Mega Inc. - Robinsons Gen Trias
+  name=Stores - BMI-RGT | wn=Stores | co=Bebang Mega Inc. - Robinsons Gen Trias
+  name=Work In Progress - BMI-RGT | wn=Work In Progress | co=Bebang Mega Inc. - Robinsons Gen Trias
+=== "General Trias" ===
+=== "RGT" ===
+  name=Bebang Mega Inc. - Robinsons Gen Trias - BMI-RGT | wn=Bebang Mega Inc. - Robinsons Gen Trias | co=Bebang Mega Inc. - Robinsons Gen Trias
+  name=Finished Goods - BMI-RGT | wn=Finished Goods | co=Bebang Mega Inc. - Robinsons Gen Trias
+  name=Goods In Transit - BMI-RGT | wn=Goods In Transit | co=Bebang Mega Inc. - Robinsons Gen Trias
+  name=Stores - BMI-RGT | wn=Stores | co=Bebang Mega Inc. - Robinsons Gen Trias
+  name=Work In Progress - BMI-RGT | wn=Work In Progress | co=Bebang Mega Inc. - Robinsons Gen Trias
+=== "BPI" ===
+  name=BEBANG PASEO INC. - Paseo Center - BPI | wn=BEBANG PASEO INC. - Paseo Center - BPI | co=BEBANG PASEO INC.
+  name=Finished Goods - BPI | wn=Finished Goods | co=BEBANG PASEO INC.
+  name=Finished Goods - BPI2 | wn=Finished Goods | co=BEBANG PITX INC.
+  name=Goods In Transit - BPI | wn=Goods In Transit | co=BEBANG PASEO INC.
+  name=Goods In Transit - BPI2 | wn=Goods In Transit | co=BEBANG PITX INC.
+  name=Stores - BPI | wn=Stores | co=BEBANG PASEO INC.
+  name=Stores - BPI2 | wn=Stores | co=BEBANG PITX INC.
+  name=Work In Progress - BPI | wn=Work In Progress | co=BEBANG PASEO INC.
+  name=Work In Progress - BPI2 | wn=Work In Progress | co=BEBANG PITX INC.
+=== "Megaworld" ===
+  name=Megaworld Venice Grand Canal - BEI | wn=Megaworld Venice Grand Canal | co=BEBANG VENICE GRAND CANAL INC.

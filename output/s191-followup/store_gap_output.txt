@@ -1,0 +1,24 @@
+[S191-followup] Store gap investigation
+  Supabase project: csnniykjrychgajfrgua
+  Frappe URL: https://lfg.bebang.ph
+
+== Supabase distinct location_ids (last 60 days) ==
+  v_pos_orders_live (all channels): 44 stores
+  v_pos_orders_live (FoodPanda):    43 stores
+  foodpanda_orders (legacy 90 days): 45 stores
+  sales_dashboard_daily_store_metrics MV: 45 stores
+
+== Frappe companies (S188 per-store) ==
+  Frappe Company (disabled=0): 59 rows
+    - {'name': 'B CUBED VENTURES CORP.', 'company_name': 'B CUBED VENTURES CORP.', 'parent_company': None, 'is_group': 0, 'default_currency': 'PHP'}
+    - {'name': 'BB ESTANCIA FOOD CORP.', 'company_name': 'BB ESTANCIA FOOD CORP.', 'parent_company': None, 'is_group': 0, 'default_currency': 'PHP'}
+    - {'name': 'BEBANG BF HOMES INC.', 'company_name': 'BEBANG BF HOMES INC.', 'parent_company': 'Bebang Enterprise Inc.', 'is_group': 0, 'default_currency': 'PHP'}
+    - {'name': 'Bebang Enterprise Inc.', 'company_name': 'Bebang Enterprise Inc.', 'parent_company': 'Irresistible Infusions Inc.', 'is_group': 1, 'default_currency': 'PHP'}
+    - {'name': 'Bebang Enterprise Inc. - Robinsons Antipolo', 'company_name': 'Bebang Enterprise Inc. - Robinsons Antipolo', 'parent_company': 'Bebang Enterprise Inc.', 'is_group': 0, 'default_currency': 'PHP'}
+
+== Frappe Analytics scope (sales_dashboard) ==
+  Analytics scope.selected_stores: 37 stores
+  Analytics distinct location_ids: 36
+
+== UNIVERSE (union of all sources): 45 location_ids ==
+Supabase SQL failed (400): {"message":"Failed to run sql query: ERROR:  42703: column \"warehouse\" does not exist\nLINE 2:             SELECT DISTINCT location_id, warehouse\n                                                 ^\n"}
