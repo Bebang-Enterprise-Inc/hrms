@@ -1,0 +1,25 @@
+============================================================
+S196 SJDM ATTRIBUTION FIX
+============================================================
+
+=== Step 1: Re-point SJDM - BEI LEGACY77 FOOD CORP. -> JL TRADE OPC ===
+  current company: 'LEGACY77 FOOD CORP.'
+  DONE: SJDM - BEI -> JL TRADE OPC; SLE backfilled=944; GL backfilled=30
+
+=== Step 2: Rename JL TRADE OPC -> SM San Jose Del Monte - JL TRADE OPC ===
+  DONE: renamed. abbr preserved: BSS2 -> BSS2
+
+=== Step 3: Archive LEGACY77 FOOD CORP. ===
+  DONE: operational_status=Permanently Closed; 5 child warehouses disabled
+
+=== Step 4: Verification ===
+  Orderable Companies: 50
+  JL_NEW in orderable: True
+  LEGACY in orderable (should be False after archive): False
+  SJDM - BEI company: 'SM San Jose Del Monte - JL TRADE OPC'
+  Orderable warehouses: 50
+  Companies w/ 0 wh: []
+
+============================================================
+S196 SJDM FIX DONE
+============================================================

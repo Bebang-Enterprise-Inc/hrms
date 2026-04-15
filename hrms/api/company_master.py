@@ -1138,7 +1138,8 @@ def populate_s181_fields() -> dict:
 	# These get entity_category=Store + TIN/RDO directly.
 	_STORE_OVERRIDES: dict[str, dict] = {
 		"TASTECARTEL CORP.": {"store": "The Grid - Rockwell", "tin": "672-270-879-00000", "rdo": "049"},
-		"JL TRADE OPC": {"store": "SM San Jose Del Monte", "tin": "775-842-763-00003", "rdo": "25B"},
+		# S196 follow-up (2026-04-16): Sam confirmed JL Trade OPC runs SJDM. Legacy77 archived. Renamed store-first.
+		"SM San Jose Del Monte - JL TRADE OPC": {"store": "SM San Jose Del Monte", "tin": "775-842-763-00003", "rdo": "045"},
 		"DLS Dessert Craft Inc.": {"store": "Ever Gotesco Commonwealth", "tin": "671-219-097-00001", "rdo": "028"},
 		"BEBANG FT INC.": {"store": "Ayala Fairview Terraces"},
 		"BEBANG SM CALOOCAN": {"store": "SM Caloocan"},
@@ -1661,7 +1662,7 @@ def populate_s181_fields() -> dict:
 		_COMPANY_TO_SA_STORE: dict[str, str] = {
 			# Untagged companies Sam identified
 			"TASTECARTEL CORP.": "The Grid - Rockwell",
-			"JL TRADE OPC": "SM SJDM",
+			"SM San Jose Del Monte - JL TRADE OPC": "SM SJDM",
 			"DLS Dessert Craft Inc.": "Ever Commonwealth",
 			# Companies whose S037 buyer differs from Frappe name
 			"BEBANG BF HOMES INC.": "BF Homes",
