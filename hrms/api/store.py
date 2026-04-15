@@ -1503,12 +1503,19 @@ _CENTRAL_WAREHOUSE_ROUTE_MAP = {
 def _normalize_store_name_for_route(warehouse_name):
 	"""Normalize a Frappe warehouse name to match the Central Warehouse route map.
 
-	Handles S188 per-store child warehouses whose docnames follow the pattern
-	``Bebang Enterprise Inc. - <Store> - BEI-<ABBR>`` (e.g.
-	``Bebang Enterprise Inc. - SM Megamall - BEI-SMG``). Before S192, such
-	warehouses fell through the route map and had their own docname set as
-	source warehouse, causing every item to appear OOS and hiding them from
-	the ordering UI.
+	Handles multiple warehouse naming conventions accumulated across sprints:
+
+	- **S188 corp-first child pattern:** ``Bebang Enterprise Inc. - <Store> - BEI-<ABBR>``
+	  (e.g. ``Bebang Enterprise Inc. - SM Megamall - BEI-SMG``). Before S192, such
+	  warehouses fell through the route map and caused OOS regression.
+	- **S192 fix:** strips the leading "BEBANG ENTERPRISE INC. - " prefix + trailing
+	  "- BEI-XXX" / "- BKI-XXX" S188 abbreviations.
+	- **S196 store-first pattern (CEO directive 2026-04-15):** new per-store warehouses
+	  use ``<Store> - <Corp>`` naming. E.g. ``Ortigas Estancia - BB ESTANCIA FOOD CORP.``,
+	  ``Paseo Center - BEBANG PASEO INC.``, ``Vista Mall Taguig - TRICERN FOOD CORP.``,
+	  ``SM Taytay - DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.``,
+	  ``SM Clark - RED TALDAWA FOODS OPC``. Regex strips trailing corp suffix
+	  matching common PH corporation endings (INC., CORP., OPC, HOLDINGS OPC).
 	"""
 	import re
 	name = (warehouse_name or "").upper()
@@ -1525,7 +1532,18 @@ def _normalize_store_name_for_route(warehouse_name):
 	name = re.sub(r" - BEI-[A-Z0-9]+$", "", name)
 	name = re.sub(r" - BKI-[A-Z0-9]+$", "", name)
 
-	# Strip company suffixes (generic cases after S188 handling above)
+	# S196: Trailing store-first corp suffixes (CEO directive 2026-04-15 rename).
+	# Matches " - <CORPNAME>" where corpname ends in INC., CORP., OPC, HOLDINGS OPC.
+	# Must run BEFORE the generic " - BEI" / " - BKI" replace to avoid partial matches.
+	# Order-sensitive: longer + more specific patterns first.
+	name = re.sub(r" - BEBANG [A-Z][A-Z 0-9.\-]* INC\.$", "", name)  # Bebang Mega Inc., Bebang SM Marikina Inc., Bebang Paseo Inc., etc.
+	name = re.sub(r" - TAJ FOOD CORP\.$", "", name)
+	name = re.sub(r" - TUNGSTEN CAPITAL(?: HOLDINGS OPC)?$", "", name)
+	name = re.sub(r" - [A-Z][A-Z 0-9.\-]+ CORP\.$", "", name)  # generic "<X> CORP." — catches BB ESTANCIA FOOD CORP., TRICERN FOOD CORP., DAY ONES ... CORP., SWEET HARMONY FOOD CORP., etc.
+	name = re.sub(r" - [A-Z][A-Z 0-9.\-]+ OPC$", "", name)  # "<X> OPC" — catches RED TALDAWA FOODS OPC, BEIFRANCHISE FOOD OPC, HALO-HALO TERMINAL FOOD CORP., etc.
+	name = re.sub(r" - [A-Z][A-Z 0-9.\-]+ INC\.$", "", name)  # generic "<X> INC." catch-all (after more specific Bebang pattern above)
+
+	# Strip generic company suffixes (S192 pre-existing — now the final fallback)
 	for suffix in (
 		" - BEBANG ENTERPRISE INC.", " - BEI", " - BKI",
 		" - BEBANG KITCHEN INC.",

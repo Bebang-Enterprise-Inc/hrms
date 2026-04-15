@@ -587,25 +587,27 @@ def _resolve_company_for_s037_row(
 	if not buyer:
 		return None
 
-	# S188: per-store child company lookup — check if a child company
-	# exists for this specific store before falling back to the parent
+	# S196: per-store child company lookup — STORE-FIRST naming convention
+	# (CEO directive 2026-04-15: operators recognize store names, not corp names).
+	# Values updated from `<Corp> - <Store>` to `<Store> - <Corp>`.
+	# Invoice print reversal (corp-first display) handled via print-format — out of scope here.
 	_STORE_TO_CHILD: dict[str, str] = {
-		"SM Megamall": "Bebang Enterprise Inc. - SM Megamall",
-		"SM Manila": "Bebang Enterprise Inc. - SM Manila",
-		"SM Southmall": "Bebang Enterprise Inc. - SM Southmall",
-		"Robinsons Place Antipolo": "Bebang Enterprise Inc. - Robinsons Antipolo",
-		"Ayala Evo City": "Bebang Mega Inc. - Ayala Evo City",
-		"Ayala Vermosa": "Bebang Mega Inc. - Ayala Vermosa",
-		"Robinsons Place Gen. Trias": "Bebang Mega Inc. - Robinsons Gen Trias",
-		"Robinsons Place Imus": "Bebang Mega Inc. - Robinsons Imus",
-		"SM Tanza": "Bebang Mega Inc. - SM Tanza",
-		"Sta. Lucia East Grand Mall": "Bebang SM Marikina Inc. - Sta Lucia",
-		"D'Verde Calamba": "TAJ Food Corp. - DVerde Calamba",
-		"Food Express (Gateway Mall)": "Tungsten Capital - Gateway Mall",
-		# Existing per-store companies (pre-S188, now re-parented)
-		"SM Caloocan": "BEBANG SM CALOOCAN",
-		"SM Sangandaan": "BEBANG SM SANGANDAAN",
-		"Robinsons Galleria South": "BEBANG ROBINSONS GALLERIA SOUTH",
+		"SM Megamall": "SM Megamall - Bebang Enterprise Inc.",
+		"SM Manila": "SM Manila - Bebang Enterprise Inc.",
+		"SM Southmall": "SM Southmall - Bebang Enterprise Inc.",
+		"Robinsons Place Antipolo": "Robinsons Antipolo - Bebang Enterprise Inc.",
+		"Ayala Evo City": "Ayala Evo City - Bebang Mega Inc.",
+		"Ayala Vermosa": "Ayala Vermosa - Bebang Mega Inc.",
+		"Robinsons Place Gen. Trias": "Robinsons Gen Trias - Bebang Mega Inc.",
+		"Robinsons Place Imus": "Robinsons Imus - Bebang Mega Inc.",
+		"SM Tanza": "SM Tanza - Bebang Mega Inc.",
+		"Sta. Lucia East Grand Mall": "Sta Lucia - Bebang SM Marikina Inc.",
+		"D'Verde Calamba": "DVerde Calamba - TAJ Food Corp.",
+		"Food Express (Gateway Mall)": "Gateway Mall - Tungsten Capital",
+		# S196: legacy `BEBANG <STORE>` Companies replaced with new store-first per-store children.
+		"SM Caloocan": "SM Caloocan - TAJ Food Corp.",
+		"SM Sangandaan": "SM Sangandaan - Tungsten Capital",
+		"Robinsons Galleria South": "Robinsons Galleria South - Tungsten Capital",
 	}
 	if store_name and store_name in _STORE_TO_CHILD:
 		child = _STORE_TO_CHILD[store_name]
@@ -1141,9 +1143,10 @@ def populate_s181_fields() -> dict:
 		"JL TRADE OPC": {"store": "SM San Jose Del Monte", "tin": "775-842-763-00003", "rdo": "25B"},
 		"DLS Dessert Craft Inc.": {"store": "Ever Gotesco Commonwealth", "tin": "671-219-097-00001", "rdo": "028"},
 		"BEBANG FT INC.": {"store": "Ayala Fairview Terraces"},
-		"BEBANG SM CALOOCAN": {"store": "SM Caloocan"},
-		"BEBANG SM SANGANDAAN": {"store": "SM Sangandaan"},
-		"BEBANG ROBINSONS GALLERIA SOUTH": {"store": "Robinsons Galleria South"},
+		# S196: legacy `BEBANG <STORE>` Companies replaced with new store-first per-store children.
+		"SM Caloocan - TAJ Food Corp.": {"store": "SM Caloocan"},
+		"SM Sangandaan - Tungsten Capital": {"store": "SM Sangandaan"},
+		"Robinsons Galleria South - Tungsten Capital": {"store": "Robinsons Galleria South"},
 		"SWEET HARMONY FOOD CORP.": {"store": "SM Sta. Rosa"},
 	}
 
@@ -1666,9 +1669,10 @@ def populate_s181_fields() -> dict:
 			# Companies whose S037 buyer differs from Frappe name
 			"BEBANG BF HOMES INC.": "BF Homes",
 			"BEBANG FT INC.": "Ayala Malls Fairview Terraces",
-			"BEBANG SM CALOOCAN": "SM Caloocan",
-			"BEBANG SM SANGANDAAN": "SM Sangandaan",
-			"BEBANG ROBINSONS GALLERIA SOUTH": "Robisons Galleria South",
+			# S196: 3 legacy `BEBANG <STORE>` Companies replaced with new store-first per-store children.
+			"SM Caloocan - TAJ Food Corp.": "SM Caloocan",
+			"SM Sangandaan - Tungsten Capital": "SM Sangandaan",
+			"Robinsons Galleria South - Tungsten Capital": "Robisons Galleria South",
 			"SWEET HARMONY FOOD CORP.": "SM Sta. Rosa",
 			"HFFM SOLENAD FOOD SERVICES INC.": "Ayala Solenad",
 			"BEBANG MARKET MARKET INC.": "Ayala Market Market",
@@ -1677,19 +1681,19 @@ def populate_s181_fields() -> dict:
 			"BEIFRANCHISE FOOD OPC": "Ortigas Land Greenhills",
 			"TAJ FOOD CORP.": "D'Verde Calamba",
 			"Bebang Kitchen Inc.": "Shaw BLVD",
-			# S188: per-store child companies
-			"Bebang Enterprise Inc. - SM Megamall": "SM Megamall",
-			"Bebang Enterprise Inc. - SM Manila": "SM  Manila",
-			"Bebang Enterprise Inc. - SM Southmall": "SM Southmall",
-			"Bebang Enterprise Inc. - Robinsons Antipolo": "Robinsons Antipolo",
-			"Bebang Mega Inc. - Ayala Evo City": "Ayala Evo",
-			"Bebang Mega Inc. - Ayala Vermosa": "Ayala Vermosa",
-			"Bebang Mega Inc. - Robinsons Gen Trias": "Robinson General Trias",
-			"Bebang Mega Inc. - Robinsons Imus": "Robinson Imus",
-			"Bebang Mega Inc. - SM Tanza": "SM Tanza",
-			"Bebang SM Marikina Inc. - Sta Lucia": "Sta. Lucia East Grand Mall",
-			"TAJ Food Corp. - DVerde Calamba": "D'Verde Calamba",
-			"Tungsten Capital - Gateway Mall": "Araneta Gateway",
+			# S196: S188 per-store child companies renamed store-first (CEO directive 2026-04-15)
+			"SM Megamall - Bebang Enterprise Inc.": "SM Megamall",
+			"SM Manila - Bebang Enterprise Inc.": "SM  Manila",
+			"SM Southmall - Bebang Enterprise Inc.": "SM Southmall",
+			"Robinsons Antipolo - Bebang Enterprise Inc.": "Robinsons Antipolo",
+			"Ayala Evo City - Bebang Mega Inc.": "Ayala Evo",
+			"Ayala Vermosa - Bebang Mega Inc.": "Ayala Vermosa",
+			"Robinsons Gen Trias - Bebang Mega Inc.": "Robinson General Trias",
+			"Robinsons Imus - Bebang Mega Inc.": "Robinson Imus",
+			"SM Tanza - Bebang Mega Inc.": "SM Tanza",
+			"Sta Lucia - Bebang SM Marikina Inc.": "Sta. Lucia East Grand Mall",
+			"DVerde Calamba - TAJ Food Corp.": "D'Verde Calamba",
+			"Gateway Mall - Tungsten Capital": "Araneta Gateway",
 		}
 
 		for company_name in all_company_names:
