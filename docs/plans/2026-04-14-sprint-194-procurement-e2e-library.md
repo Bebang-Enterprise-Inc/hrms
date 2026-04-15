@@ -481,17 +481,69 @@ output/l3/s194/LIBRARY_IMPROVEMENTS.md     # (if ≥3 library fixes made during 
 
 ---
 
-## Failure Response
+## Failure Response — Iterate Until Green (v5 amendment 2026-04-15)
 
-Per Discipline doc §"Failure Discipline", every failure during Phase S falls into one of three modes:
+**The agent MUST NOT stop until every test-blocking defect is fixed, committed, pushed, AND the next sweep re-attempted. "Defects documented" is NOT a closeout state.** S194's first run cycle stopped at 0 PASS / 31 FAIL because the agent treated documentation as completion. That mode is forbidden going forward.
 
-| Mode | Trigger | Response |
+### Defect classification (mandatory before deciding to stop)
+
+Every failure must be tagged BLOCKING or DEFERRABLE before any closeout decision:
+
+| Class | Definition | Required action |
 |---|---|---|
-| **A — App bug** | Scenario fails because production code has a bug (e.g., approve button doesn't actually approve) | File [BUG-S194-N] in `output/l3/s194/defects/`. Do NOT touch the test or library. Re-run after fix deploys. Document in RUN_SUMMARY. |
-| **B — Test bug** | Scenario fails because the Page Object method is wrong (e.g., wrong selector) | Fix the Page Object. If the fix helps other tests (3-use rule), promote shared helper to library. |
-| **C — Brittleness** | Scenario fails intermittently (flakiness) | Fix the library, not the spec. Replace `waitForTimeout` with `waitForResponse` / `waitForSelector`. No `test.retry(3)` masks. |
+| **BLOCKING** | The defect prevents a scenario from reaching its assertion phase. Examples: Page Object selector that times out, fixture that fails to provision, login that fails, navigation that returns 4xx, dependent test chain (S194-1 fails → S194-2..3..9..10..11..12.. cascade fail). | **Fix in this session. Commit. Push. Re-run.** No exceptions. Continue iteration loop until the scenario reaches its assertion phase (PASS or genuine FAIL on assertion, not on infrastructure). |
+| **DEFERRABLE** | The defect is real but does NOT prevent the scenario from reaching its assertion phase, OR is a product finding outside the test's certification scope. Examples: missing data-testid that has a working text fallback; UI cosmetic glitch; backend RBAC finding (S194-24 Warehouse role) that is a real product issue but separate from the workflow being certified; missing OR optional UI surface (S194-22 advance-payment checkbox absent). | **Document in `output/l3/s194/defects/POST_CERT_DEFECTS.md`** with reproduction steps and severity. Do NOT fix in this session. Do NOT block other tests. Fix as a single follow-up PR after all 31 scenarios PASS. |
 
-If ≥3 library fixes happen during Phase S, the agent MUST emit `output/l3/s194/LIBRARY_IMPROVEMENTS.md` listing each fix + its promotion rationale as a closeout artifact.
+### Iterate-Until-Green Loop (mandatory)
+
+```
+1. Run sweep (or single scenario): npx playwright test ...
+2. For each FAIL:
+   a. Open the trace: npx playwright show-trace output/l3/s194/har/<file>.zip
+   b. Identify the failure point (selector / wait / fixture / chain)
+   c. Classify: BLOCKING or DEFERRABLE
+   d. If BLOCKING:
+      - Patch the smallest unit (Page Object selector, fixture, ssmSetup helper)
+      - Commit with message: "fix(S194 P-iter): <scenario> <one-line>"
+      - Push immediately so PR #398 / #579 reflect every iteration
+      - Add the fix to `output/l3/s194/LIBRARY_IMPROVEMENTS.md`
+   e. If DEFERRABLE:
+      - Append to `output/l3/s194/defects/POST_CERT_DEFECTS.md` with repro
+      - Do not patch
+3. After ALL blocking fixes for the cycle: re-run the sweep
+4. Repeat until: 31 PASS / 0 FAIL OR a true Stop-Only-For trigger fires
+5. Only then write the final RUN_SUMMARY and advance plan status to COMPLETED
+```
+
+### Stop-Only-For (the only reasons to halt iteration)
+
+The agent stops the iteration loop ONLY for items that match the `stop_only_for` list in the Autonomous Execution Contract:
+
+- Missing credentials / access that cannot be resolved with available Doppler secrets
+- Backend hard-down (502 / DNS) that persists for >15 min — wait or escalate to Sam
+- A defect that requires a destructive backend mutation (DDL / data wipe) needing explicit operator authorization
+- A defect rooted in an in-flight separate sprint's code where overwriting risks losing that work
+
+A test FAILING is **not** a stop reason. A defect being hard to fix is **not** a stop reason. Lack of energy is **not** a stop reason. The stop condition is binary: green or one of the four triggers above.
+
+### Post-cert cleanup PR
+
+After the certification run shows 31/31 PASS, the agent creates a single follow-up PR titled `chore(S194): post-cert deferred defects + library polish` that:
+
+1. Reads `output/l3/s194/defects/POST_CERT_DEFECTS.md`
+2. Fixes every entry that has a clear remedy (data-testids, RBAC corrections, etc.)
+3. Files true product issues (e.g., missing UI surfaces) as separate sprint plans (`docs/plans/YYYY-MM-DD-sprint-NNN-<slug>.md`) with reservation in `SPRINT_REGISTRY.md`
+4. Closes out S194 fully (plan YAML → COMPLETED, registry → COMPLETED)
+
+### Library improvements log
+
+Throughout the iterate-until-green cycle, every Page Object / fixture / helper change goes into `output/l3/s194/LIBRARY_IMPROVEMENTS.md` with:
+
+- File touched
+- One-line reason
+- Which scenarios it unblocks (e.g., "fix `convertToPO` waits for `pr.status === 'Pending Approval'` — unblocks S194-1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 16, 17, 19, 20, 21, 22, 25, 26, 27, 28, 29, 30, 31")
+
+This file IS the certification-cycle audit trail and informs the post-cert cleanup PR.
 
 ---
 
