@@ -204,6 +204,7 @@ def cmd_delete_item(args: argparse.Namespace) -> None:
 def cmd_create_match_exception(args: argparse.Namespace) -> None:
     fields = {
         "invoice": args.invoice,
+        "purchase_order": args.invoice,  # MX needs both; callers pass PO name as invoice arg
         "reason": args.reason,
         "status": "Pending CPO",
     }
