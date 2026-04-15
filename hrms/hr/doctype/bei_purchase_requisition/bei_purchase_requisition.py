@@ -137,6 +137,12 @@ class BEIPurchaseRequisition(Document):
         if not frappe.db.exists("BEI Supplier", supplier_code):
             frappe.throw(_("Supplier not found"))
 
+        # S193 guard — block conversion against Blacklisted / Pending Verification /
+        # Inactive suppliers. convert_to_po was previously bypassing the guard that
+        # applies to direct create_purchase_order calls. Discovered by S194-6.
+        from hrms.api.procurement import _assert_supplier_active
+        _assert_supplier_active(supplier_code, "purchase_order")
+
         # Create PO
         po = frappe.new_doc("BEI Purchase Order")
         po.pr_reference = self.name
