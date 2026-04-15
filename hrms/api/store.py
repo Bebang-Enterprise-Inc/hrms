@@ -1501,9 +1501,31 @@ _CENTRAL_WAREHOUSE_ROUTE_MAP = {
 
 
 def _normalize_store_name_for_route(warehouse_name):
-	"""Normalize a Frappe warehouse name to match the Central Warehouse route map."""
+	"""Normalize a Frappe warehouse name to match the Central Warehouse route map.
+
+	Handles S188 per-store child warehouses whose docnames follow the pattern
+	``Bebang Enterprise Inc. - <Store> - BEI-<ABBR>`` (e.g.
+	``Bebang Enterprise Inc. - SM Megamall - BEI-SMG``). Before S192, such
+	warehouses fell through the route map and had their own docname set as
+	source warehouse, causing every item to appear OOS and hiding them from
+	the ordering UI.
+	"""
+	import re
 	name = (warehouse_name or "").upper()
-	# Strip company suffixes
+
+	# S192: S188 child prefix — "BEBANG ENTERPRISE INC. - <STORE> - BEI-XXX"
+	# Strip the leading entity prefix so the remaining text starts with the
+	# store portion.
+	if name.startswith("BEBANG ENTERPRISE INC. - "):
+		name = name[len("BEBANG ENTERPRISE INC. - "):]
+
+	# S192: Trailing "- BEI-XXX" S188 abbreviation suffixes (SMG, ARG, MML,
+	# etc.) — strip first so the generic " - BEI" pass below doesn't leave
+	# a dangling "-XXX" fragment glued to the store name.
+	name = re.sub(r" - BEI-[A-Z0-9]+$", "", name)
+	name = re.sub(r" - BKI-[A-Z0-9]+$", "", name)
+
+	# Strip company suffixes (generic cases after S188 handling above)
 	for suffix in (
 		" - BEBANG ENTERPRISE INC.", " - BEI", " - BKI",
 		" - BEBANG KITCHEN INC.",
