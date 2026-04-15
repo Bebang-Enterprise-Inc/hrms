@@ -1,0 +1,22 @@
+{
+  "cleanup_date": "2026-04-15",
+  "method": "direct Frappe delete_doc (Draft-status orders) via SSM + Frappe ORM",
+  "reversed": [
+    { "kind": "order-create", "payload": { "name": "BEI-ORD-2026-00248" }, "operation": "deleted (Draft)" },
+    { "kind": "order-create", "payload": { "name": "BEI-ORD-2026-00249" }, "operation": "deleted (Draft)" },
+    { "kind": "order-create", "payload": { "name": "BEI-ORD-2026-00250" }, "operation": "deleted (Draft)" },
+    { "kind": "order-create", "payload": { "name": "BEI-ORD-2026-00251" }, "operation": "deleted (Draft)" },
+    { "kind": "order-create", "payload": { "name": "BEI-ORD-2026-00252" }, "operation": "deleted (Draft)" },
+    { "kind": "order-create", "payload": { "name": "BEI-ORD-2026-00253" }, "operation": "deleted (Draft)" }
+  ],
+  "failed": [],
+  "skipped": [],
+  "mutations_persisted": [
+    "hrms#583 (MERGED) — _normalize_store_name_for_route S188 handling",
+    "Hot-patch of _normalize_store_name_for_route on running frappe_backend replicas",
+    "BKI Company master defaults (from prior session): default_receivable_account, round_off_account, cost_center, round_off_cost_center",
+    "Cost Center 'Stores - BKI' flipped to leaf (from prior session)",
+    "BEI Settings.allowed_target_companies expanded to 57 companies (from prior session)"
+  ],
+  "notes": "Current-session test orders (248-253) were all at Draft docstatus because dual approval never completed in this run. No GL was posted, no inventory moved; deletion is atomic. Prior session's S1 chain (BEI-ORD-2026-00247 + downstream docs) was cleaned up at the end of that session per the handover."
+}

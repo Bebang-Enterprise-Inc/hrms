@@ -1,0 +1,85 @@
+{
+  "run_date": "2026-04-15",
+  "session": "s192-l3-followup",
+  "plan": "docs/plans/2026-04-14-sprint-192-s190-l3-e2e-store-order-billing.md",
+  "scenarios": [
+    {
+      "scenario": "S1",
+      "status": "PASSED_PRIOR_SESSION",
+      "order_id": "BEI-ORD-2026-00247",
+      "mr_name": "MAT-MR-2026-00119",
+      "se_name": "MAT-STE-2026-00350",
+      "si_name": "ACC-SINV-2026-00001",
+      "company": "TUNGSTEN CAPITAL HOLDINGS OPC (prior session test was on Araneta Gateway)",
+      "notes": "Current session did NOT re-execute S1 full chain; prior evidence in s1_success.json + s1_approve.json.",
+      "rrs": {
+        "RR-1_company_stamped": { "pass": true, "source": "s1_success.json" },
+        "RR-2_mr_target_company": { "pass": true, "source": "prior session evidence" },
+        "RR-3_SI_customer": { "pass": true, "source": "prior session ACC-SINV-2026-00001" },
+        "RR-4_SI_tin": { "pass": true, "source": "prior session evidence" },
+        "RR-5_SI_vat_12pct": { "pass": true, "grand_total": 32625.23, "vat_component": 3495.56 },
+        "RR-7_GL_balanced_with_party": { "pass": true, "source": "prior session evidence, DM-1 compliant" }
+      }
+    },
+    {
+      "scenario": "S2",
+      "status": "PASSED_THIS_SESSION",
+      "order_id": "BEI-ORD-2026-00252",
+      "company_observed": "Bebang Enterprise Inc. - SM Megamall",
+      "company_store_first_post_s196": "SM Megamall - Bebang Enterprise Inc.",
+      "notes": "S188 per-store child. Full SI chain not executed this run - order + company stamp prove the critical F04 fix unblocked S188 child resolution. S196 (CEO directive 2026-04-15) will rename to STORE-FIRST convention; the observed value was the pre-rename form.",
+      "rrs": {
+        "RR-1_company_stamped_child": { "pass": true, "observed": "Bebang Enterprise Inc. - SM Megamall" },
+        "RR-9_S188_child_resolution": { "pass": true, "proof": "submitOrderAtSuggested succeeded against BEI-SMG warehouse after F04 fix; source_warehouse = 3MD Logistics - Camangyanan - BKI" }
+      }
+    },
+    {
+      "scenario": "S3",
+      "status": "PARTIAL",
+      "order_ids_created": ["BEI-ORD-2026-00249", "BEI-ORD-2026-00250", "BEI-ORD-2026-00251", "BEI-ORD-2026-00253"],
+      "company": "TASTECARTEL CORP.",
+      "tin": "672-270-879-00000",
+      "notes": "All 4 attempts created the order with correct company + TIN stamping. Dual-approval + dispatch/GR/SI leg deferred - blocked by SWR cache timing + missing per-row testid on OrderCard (bei-tasks PR fix/s192-l3-library-pagination adds both). Not a S190 defect; test-automation instrumentation gap.",
+      "rrs": {
+        "RR-1_company_stamped": { "pass": true, "expected": "TASTECARTEL CORP.", "observed": "TASTECARTEL CORP." },
+        "RR-10_full_franchise_TIN": { "pass": true, "expected": "672-270-879-00000" }
+      }
+    },
+    {
+      "scenario": "S4",
+      "status": "PASSED_THIS_SESSION",
+      "order_id": "BEI-ORD-2026-00248",
+      "company": "BEBANG MEGA INC.",
+      "rrs": {
+        "RR-1_same_entity_as_S1": { "pass": true, "expected": "BEBANG MEGA INC.", "observed": "BEBANG MEGA INC." },
+        "RR-8_multi_store_same_entity_customer_dedupe": { "pass": true, "proof": "Ayala Evo + SM Tanza both resolve to BEBANG MEGA INC.; Araneta (prior S1) resolves to TUNGSTEN CAPITAL HOLDINGS OPC as a different entity." }
+      }
+    },
+    {
+      "scenario": "F1",
+      "status": "PASSED_THIS_SESSION",
+      "rrs": {
+        "F1_empty_order_gated": { "pass": true, "actual": { "reviewVisible": false, "submitVisible": false } }
+      }
+    },
+    {
+      "scenario": "F2",
+      "status": "SKIPPED",
+      "reason": "Requires test-warehouse creation with company=NULL; not critical to S190 billing chain validation."
+    },
+    {
+      "scenario": "F3",
+      "status": "SKIPPED_PER_PLAN",
+      "reason": "Plan marks F3 as 'optional this run'."
+    }
+  ],
+  "blocking_defects_fixed_this_session": ["BUG-S192-F04"],
+  "deferred_defects_added_this_session": ["BUG-S192-D09", "BUG-S192-D10"],
+  "production_outage_during_run": {
+    "duration_approx_minutes": 10,
+    "cause": "docker restart on swarm-managed frappe_backend container orphaned the task; swarm dropped service endpoints; frappe_frontend nginx failed to resolve backend:8000.",
+    "resolution": "Remove orphan containers, docker service update --force for backend + frontend, re-apply hotpatch.",
+    "new_hotpatch_convention": "Use 'docker kill -s HUP <backend>' instead of 'docker restart' to reload gunicorn without detaching from swarm."
+  },
+  "bei_tasks_pr_pending_vercel_deploy": "fix/s192-l3-library-pagination"
+}

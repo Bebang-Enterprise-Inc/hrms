@@ -39,5 +39,20 @@
     "hotpatch_time": "2026-04-15T04:10:00Z",
     "resume_time": "2026-04-15T04:11:00Z",
     "surfaced_by_scenario": "S1"
+  },
+  {
+    "id": "BUG-S192-F04",
+    "surface": "hrms/api/store.py _normalize_store_name_for_route",
+    "scenario": "S2 SM Megamall (S188 per-store child company)",
+    "description": "The route-map normalizer stripped only plain '- BEI' / '- BKI' suffixes. For S188 per-store child warehouses whose docnames follow 'Bebang Enterprise Inc. - <Store> - BEI-<ABBR>' (e.g. 'Bebang Enterprise Inc. - SM Megamall - BEI-SMG'), the normalizer produced 'BEBANG ENTERPRISE INC. - SM MEGAMALL-SMG' which matched nothing in the hardcoded _CENTRAL_WAREHOUSE_ROUTE_MAP. source_warehouse defaulted to the store itself, every item surfaced as OOS, and the S161/W1B relevance filter hid them all. get_orderable_items returned 0 items; include_hidden=1 returned 122 items with source_warehouse pointing at the destination store (wrong).",
+    "fix": "Strip leading 'BEBANG ENTERPRISE INC. - ' prefix and trailing '- BEI-<ABBR>' / '- BKI-<ABBR>' abbreviation suffixes before the existing suffix loop.",
+    "commit": "09574f6ef",
+    "pr": "hrms#583",
+    "pr_merged_at": "2026-04-15T13:48:57Z",
+    "hotpatch_method": "boto3 + base64 + docker cp + kill -HUP across all frappe_backend replicas (docker restart caused swarm orphan; kill -HUP avoids it)",
+    "hotpatch_time": "2026-04-15T13:52:00Z",
+    "resume_time": "2026-04-15T14:10:00Z",
+    "surfaced_by_scenario": "S2",
+    "verification": "_normalize_store_name_for_route('Bebang Enterprise Inc. - SM Megamall - BEI-SMG') -> 'SM MEGAMALL'; get_orderable_items('Bebang Enterprise Inc. - SM Megamall - BEI-SMG') returned 56 items sourced from '3MD Logistics - Camangyanan - BKI'."
   }
 ]

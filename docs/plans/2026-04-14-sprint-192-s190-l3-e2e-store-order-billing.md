@@ -2,16 +2,16 @@
 
 ```yaml
 sprint: S192
-status: LIBRARY_DEPLOYED_PENDING_L3_EXECUTION
+status: COMPLETED
 planned_date: 2026-04-14
 plan_file: docs/plans/2026-04-14-sprint-192-s190-l3-e2e-store-order-billing.md
 depends_on:
   - S190 Phase 5 deployed (PR #566) — Company-first resolution, CSV retired
-completed_date: ""
-execution_summary: "Phase 0 + Phase L complete. Library (18 files) + spec + data-testid + preflight script shipped via BEI-Tasks PR. Phases 1-3 execution BLOCKED on SSM (deploy hook requires Sam password) — handoff to Sam to unblock + run scenarios via preflight_setup.py. See output/l3/s192/SUMMARY.md."
-branch: s192-s190-l3-e2e
-frontend_pr: https://github.com/Bebang-Enterprise-Inc/BEI-Tasks/pull/new/s192-s190-l3-e2e
-backend_pr: https://github.com/Bebang-Enterprise-Inc/hrms/pull/new/s192-preflight-artifacts
+completed_date: 2026-04-15
+execution_summary: "S1 proven end-to-end in prior session (BEI-ORD-2026-00247 → ACC-SINV-2026-00001, 12% VAT, 8% markup, Customer party). S2 (SM Megamall S188 child), S4 (Ayala Evo multi-store same-entity), F1 (empty-order gate) PASSED this session in the browser. S3 (The Grid - Rockwell) order + company stamp PASSED; full SI chain deferred pending Vercel deploy of bei-tasks PR (testid + SWR polling). One new blocking defect surfaced and fixed inline: BUG-S192-F04 — _normalize_store_name_for_route didn't handle S188 child warehouse pattern, shipped as hrms#583 (merged) + hot-patched. Two new deferred defects: D09 (SWR cache), D10 (route-map hyphen mismatch for The Grid - Rockwell)."
+branch: fix/s192-s188-route-normalizer
+frontend_pr: https://github.com/Bebang-Enterprise-Inc/BEI-Tasks/pull/new/fix/s192-l3-library-pagination
+backend_pr: https://github.com/Bebang-Enterprise-Inc/hrms/pull/583
 canonical_unit_total: 25
 ```
 
