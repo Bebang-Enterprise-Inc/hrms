@@ -1,0 +1,444 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e7]:
+      - generic [ref=e9]:
+        - generic [ref=e11]: BT
+        - generic [ref=e12]:
+          - generic [ref=e13]: BEI Tasks
+          - generic [ref=e14]: Task Management
+      - generic [ref=e15]:
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - link "Home" [ref=e19] [cursor=pointer]:
+              - /url: /dashboard
+            - button "Collapse section" [expanded] [ref=e20]:
+              - img [ref=e21]
+          - list [ref=e25]:
+            - listitem [ref=e26]:
+              - link "Dashboard" [ref=e27] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e28]
+                - generic [ref=e33]: Dashboard
+            - listitem [ref=e34]:
+              - link "My Profile" [ref=e35] [cursor=pointer]:
+                - /url: /dashboard/my-profile
+                - img [ref=e36]
+                - generic [ref=e40]: My Profile
+            - listitem [ref=e41]:
+              - link "Clearance" [ref=e42] [cursor=pointer]:
+                - /url: /clearance
+                - img [ref=e43]
+                - generic [ref=e46]: Clearance
+            - listitem [ref=e47]:
+              - link "Exit Interview" [ref=e48] [cursor=pointer]:
+                - /url: /clearance/exit-interview
+                - img [ref=e49]
+                - generic [ref=e52]: Exit Interview
+        - generic [ref=e55]:
+          - link "Supervisor Tools" [ref=e56] [cursor=pointer]:
+            - /url: /dashboard/supervisor
+          - button "Expand section" [ref=e57]:
+            - img [ref=e58]
+        - generic [ref=e62]:
+          - link "Analytics" [ref=e63] [cursor=pointer]:
+            - /url: /dashboard/analytics
+          - button "Expand section" [ref=e64]:
+            - img [ref=e65]
+        - generic [ref=e69]:
+          - link "HR Self-Service" [ref=e70] [cursor=pointer]:
+            - /url: /dashboard/hr
+          - button "Expand section" [ref=e71]:
+            - img [ref=e72]
+        - generic [ref=e76]:
+          - link "Leave Command Center" [ref=e77] [cursor=pointer]:
+            - /url: /dashboard/hr-admin/leaves
+          - button "Expand section" [ref=e78]:
+            - img [ref=e79]
+        - generic [ref=e83]:
+          - link "HR Management" [ref=e84] [cursor=pointer]:
+            - /url: /dashboard/hr
+          - button "Expand section" [ref=e85]:
+            - img [ref=e86]
+        - generic [ref=e90]:
+          - link "Biometric Monitoring" [ref=e91] [cursor=pointer]:
+            - /url: /dashboard/biometric
+          - button "Expand section" [ref=e92]:
+            - img [ref=e93]
+        - generic [ref=e97]:
+          - link "My Expenses" [ref=e98] [cursor=pointer]:
+            - /url: /dashboard/expense
+          - button "Expand section" [ref=e99]:
+            - img [ref=e100]
+        - generic [ref=e104]:
+          - link "Store Operations" [ref=e105] [cursor=pointer]:
+            - /url: /dashboard/store-ops
+          - button "Expand section" [ref=e106]:
+            - img [ref=e107]
+        - generic [ref=e111]:
+          - link "Store Inventory" [ref=e112] [cursor=pointer]:
+            - /url: /dashboard/inventory
+          - button "Expand section" [ref=e113]:
+            - img [ref=e114]
+        - generic [ref=e118]:
+          - link "Stock Counting" [ref=e119] [cursor=pointer]:
+            - /url: /inventory/stock-counts
+          - button "Expand section" [ref=e120]:
+            - img [ref=e121]
+        - generic [ref=e125]:
+          - link "Business Development" [ref=e126] [cursor=pointer]:
+            - /url: /dashboard/bd/companies
+          - button "Expand section" [ref=e127]:
+            - img [ref=e128]
+        - generic [ref=e132]:
+          - link "Finance & Accounting" [ref=e133] [cursor=pointer]:
+            - /url: /dashboard/accounting
+          - button "Expand section" [ref=e134]:
+            - img [ref=e135]
+        - generic [ref=e139]:
+          - link "Campaign Giveaways" [ref=e140] [cursor=pointer]:
+            - /url: /dashboard/campaign-giveaways
+          - button "Expand section" [ref=e141]:
+            - img [ref=e142]
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - link "Procurement" [ref=e147] [cursor=pointer]:
+              - /url: /dashboard/procurement
+            - button "Collapse section" [expanded] [ref=e148]:
+              - img [ref=e149]
+          - list [ref=e153]:
+            - listitem [ref=e154]:
+              - link "Dashboard" [ref=e155] [cursor=pointer]:
+                - /url: /dashboard/procurement
+                - img [ref=e156]
+                - generic [ref=e161]: Dashboard
+            - listitem [ref=e162]:
+              - link "Critical Items Control Tower" [ref=e163] [cursor=pointer]:
+                - /url: /dashboard/procurement/critical-items-control-tower
+                - img [ref=e164]
+                - generic [ref=e166]: Critical Items Control Tower
+            - listitem [ref=e167]:
+              - link "Critical Stockout Incidents" [ref=e168] [cursor=pointer]:
+                - /url: /dashboard/procurement/critical-stockout-incidents
+                - img [ref=e169]
+                - generic [ref=e171]: Critical Stockout Incidents
+            - listitem [ref=e172]:
+              - link "Purchase Requisitions" [ref=e173] [cursor=pointer]:
+                - /url: /dashboard/procurement/purchase-requisitions
+                - img [ref=e174]
+                - generic [ref=e177]: Purchase Requisitions
+            - listitem [ref=e178]:
+              - link "Purchase Orders" [ref=e179] [cursor=pointer]:
+                - /url: /dashboard/procurement/purchase-orders
+                - img [ref=e180]
+                - generic [ref=e184]: Purchase Orders
+            - listitem [ref=e185]:
+              - link "Suppliers" [ref=e186] [cursor=pointer]:
+                - /url: /dashboard/procurement/suppliers
+                - img [ref=e187]
+                - generic [ref=e191]: Suppliers
+            - listitem [ref=e192]:
+              - link "Goods Receipts" [ref=e193] [cursor=pointer]:
+                - /url: /dashboard/procurement/goods-receipts
+                - img [ref=e194]
+                - generic [ref=e198]: Goods Receipts
+            - listitem [ref=e199]:
+              - link "Invoices" [ref=e200] [cursor=pointer]:
+                - /url: /dashboard/procurement/invoices
+                - img [ref=e201]
+                - generic [ref=e205]: Invoices
+            - listitem [ref=e206]:
+              - link "Payment Requests" [ref=e207] [cursor=pointer]:
+                - /url: /dashboard/procurement/payments
+                - img [ref=e208]
+                - generic [ref=e210]: Payment Requests
+            - listitem [ref=e211]:
+              - link "Approvals" [ref=e212] [cursor=pointer]:
+                - /url: /dashboard/procurement/approvals
+                - img [ref=e213]
+                - generic [ref=e216]: Approvals
+            - listitem [ref=e217]:
+              - link "SOA" [ref=e218] [cursor=pointer]:
+                - /url: /dashboard/accounting/soa
+                - img [ref=e219]
+                - generic [ref=e222]: SOA
+            - listitem [ref=e223]:
+              - link "OR Follow-Up" [ref=e224] [cursor=pointer]:
+                - /url: /dashboard/procurement/or-follow-up
+                - img [ref=e225]
+                - generic [ref=e228]: OR Follow-Up
+            - listitem [ref=e229]:
+              - link "Reports" [ref=e230] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports
+                - img [ref=e231]
+                - generic [ref=e233]: Reports
+            - listitem [ref=e234]:
+              - link "Monthly Spend" [ref=e235] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/monthly-spend
+                - img [ref=e236]
+                - generic [ref=e238]: Monthly Spend
+            - listitem [ref=e239]:
+              - link "Supplier Performance" [ref=e240] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/supplier-performance
+                - img [ref=e241]
+                - generic [ref=e244]: Supplier Performance
+            - listitem [ref=e245]:
+              - link "Single-Source Suppliers" [ref=e246] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/single-source-suppliers
+                - img [ref=e247]
+                - generic [ref=e249]: Single-Source Suppliers
+            - listitem [ref=e250]:
+              - link "Three-Way Match" [ref=e251] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/three-way-match
+                - img [ref=e252]
+                - generic [ref=e255]: Three-Way Match
+            - listitem [ref=e256]:
+              - link "Single Source Suppliers" [ref=e257] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/single-source-suppliers
+                - img [ref=e258]
+                - generic [ref=e260]: Single Source Suppliers
+            - listitem [ref=e261]:
+              - link "Payment Disbursement" [ref=e262] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/payment-disbursement
+                - img [ref=e263]
+                - generic [ref=e265]: Payment Disbursement
+            - listitem [ref=e266]:
+              - link "Goods Receipt Log" [ref=e267] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/goods-receipt-log
+                - img [ref=e268]
+                - generic [ref=e271]: Goods Receipt Log
+            - listitem [ref=e272]:
+              - link "PO Aging" [ref=e273] [cursor=pointer]:
+                - /url: /dashboard/procurement/audit/aging
+                - img [ref=e274]
+                - generic [ref=e277]: PO Aging
+            - listitem [ref=e278]:
+              - link "Price History" [ref=e279] [cursor=pointer]:
+                - /url: /dashboard/procurement/audit/price-history
+                - img [ref=e280]
+                - generic [ref=e282]: Price History
+            - listitem [ref=e283]:
+              - link "Settings" [ref=e284] [cursor=pointer]:
+                - /url: /dashboard/procurement/settings
+                - img [ref=e285]
+                - generic [ref=e288]: Settings
+            - listitem [ref=e289]:
+              - link "Critical Items Control Tower" [ref=e290] [cursor=pointer]:
+                - /url: /dashboard/procurement/critical-items-control-tower
+                - img [ref=e291]
+                - generic [ref=e294]: Critical Items Control Tower
+            - listitem [ref=e295]:
+              - link "Critical Stockout Incidents" [ref=e296] [cursor=pointer]:
+                - /url: /dashboard/procurement/critical-stockout-incidents
+                - img [ref=e297]
+                - generic [ref=e299]: Critical Stockout Incidents
+            - listitem [ref=e300]:
+              - link "Petty Cash Fund" [ref=e301] [cursor=pointer]:
+                - /url: /dashboard/procurement/pcf
+                - img [ref=e302]
+                - generic [ref=e305]: Petty Cash Fund
+            - listitem [ref=e306]:
+              - link "Add PCF Entry" [ref=e307] [cursor=pointer]:
+                - /url: /dashboard/procurement/pcf/add
+                - img [ref=e308]
+                - generic [ref=e312]: Add PCF Entry
+            - listitem [ref=e313]:
+              - link "Pending PCF" [ref=e314] [cursor=pointer]:
+                - /url: /dashboard/procurement/pcf/pending
+                - img [ref=e315]
+                - generic [ref=e318]: Pending PCF
+            - listitem [ref=e319]:
+              - link "PCF History" [ref=e320] [cursor=pointer]:
+                - /url: /dashboard/procurement/pcf/history
+                - img [ref=e321]
+                - generic [ref=e325]: PCF History
+        - generic [ref=e328]:
+          - link "SCM" [ref=e329] [cursor=pointer]:
+            - /url: /dashboard/scm/critical-items-control-tower
+          - button "Expand section" [ref=e330]:
+            - img [ref=e331]
+        - generic [ref=e335]:
+          - link "Warehouse" [ref=e336] [cursor=pointer]:
+            - /url: /dashboard/warehouse
+          - button "Expand section" [ref=e337]:
+            - img [ref=e338]
+        - generic [ref=e342]:
+          - link "Commissary" [ref=e343] [cursor=pointer]:
+            - /url: /dashboard/commissary
+          - button "Expand section" [ref=e344]:
+            - img [ref=e345]
+        - generic [ref=e349]:
+          - link "Projects & Maintenance" [ref=e350] [cursor=pointer]:
+            - /url: /dashboard/rm-admin
+          - button "Expand section" [ref=e351]:
+            - img [ref=e352]
+        - generic [ref=e356]:
+          - link "Communication" [ref=e357] [cursor=pointer]:
+            - /url: /dashboard/communication
+          - button "Expand section" [ref=e358]:
+            - img [ref=e359]
+        - generic [ref=e363]:
+          - generic [ref=e364]: E-Signature
+          - button "Expand section" [ref=e365]:
+            - img [ref=e366]
+        - generic [ref=e370]:
+          - link "Tasks & Reports" [ref=e371] [cursor=pointer]:
+            - /url: /dashboard/tasks
+          - button "Expand section" [ref=e372]:
+            - img [ref=e373]
+        - generic [ref=e377]:
+          - link "Platform & Admin" [ref=e378] [cursor=pointer]:
+            - /url: /dashboard/settings/google-chat
+          - button "Expand section" [ref=e379]:
+            - img [ref=e380]
+      - list [ref=e383]:
+        - listitem [ref=e384]:
+          - button "SA sam@bebang.ph sam@bebang.ph" [ref=e385]:
+            - generic [ref=e387]: SA
+            - generic [ref=e388]:
+              - generic [ref=e389]: sam@bebang.ph
+              - generic [ref=e390]: sam@bebang.ph
+            - img [ref=e391]
+      - button "Toggle Sidebar" [ref=e394]
+    - main [ref=e395]:
+      - generic [ref=e396]:
+        - button "Toggle Sidebar" [ref=e397]:
+          - img
+          - generic [ref=e398]: Toggle Sidebar
+        - navigation "breadcrumb" [ref=e399]:
+          - list [ref=e400]:
+            - listitem [ref=e401]:
+              - link "Dashboard" [ref=e402] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e403]:
+              - img [ref=e404]
+            - listitem [ref=e406]:
+              - link "Procurement" [ref=e407] [cursor=pointer]:
+                - /url: /dashboard/procurement
+            - listitem [ref=e408]:
+              - img [ref=e409]
+            - listitem [ref=e411]:
+              - link "Purchase-requisitions" [ref=e412] [cursor=pointer]:
+                - /url: /dashboard/procurement/purchase-requisitions
+            - listitem [ref=e413]:
+              - img [ref=e414]
+            - listitem [ref=e416]:
+              - link "New" [disabled] [ref=e417]
+        - generic [ref=e418]:
+          - generic [ref=e419]:
+            - button "Switch to light theme" [ref=e420]:
+              - img
+            - button "Switch to dark theme" [ref=e421]:
+              - img
+            - button "Switch to Christmas theme" [ref=e422]:
+              - img
+          - button "Search" [ref=e423]:
+            - img
+            - generic [ref=e424]: Search
+            - generic [ref=e425]: Ctrl K
+      - generic [ref=e426]:
+        - heading "Search" [level=2] [ref=e427]
+        - paragraph [ref=e428]: Search tasks, projects, and actions
+      - main [ref=e429]:
+        - generic [ref=e430]:
+          - generic [ref=e431]:
+            - link [ref=e432] [cursor=pointer]:
+              - /url: /dashboard/procurement/purchase-requisitions
+              - button [ref=e433]:
+                - img
+            - generic [ref=e434]:
+              - heading "New Purchase Requisition" [level=1] [ref=e435]
+              - paragraph [ref=e436]: Create a new purchase requisition for approval
+          - generic [ref=e437]:
+            - generic [ref=e438]:
+              - generic [ref=e439]:
+                - generic [ref=e440]:
+                  - img [ref=e441]
+                  - text: Requester Information
+                - generic [ref=e444]: Your information will be auto-filled based on your login
+              - generic [ref=e446]:
+                - generic [ref=e447]:
+                  - text: Requester Name
+                  - generic [ref=e448]:
+                    - text: Current User
+                    - paragraph [ref=e449]: (Auto-filled from session)
+                - generic [ref=e450]:
+                  - generic [ref=e451]: Department *
+                  - combobox "Department *" [ref=e452]:
+                    - generic: Operations
+                    - img
+                  - combobox [ref=e453]
+            - generic [ref=e454]:
+              - generic [ref=e456]:
+                - generic [ref=e457]:
+                  - generic [ref=e458]:
+                    - img [ref=e459]
+                    - text: Requested Items
+                  - generic [ref=e463]: Add items you need to requisition
+                - button "Add Item" [ref=e464]:
+                  - img
+                  - text: Add Item
+              - table [ref=e467]:
+                - rowgroup [ref=e468]:
+                  - row "Item * Description Qty * UOM * Est. Price * Total" [ref=e469]:
+                    - columnheader "Item *" [ref=e470]
+                    - columnheader "Description" [ref=e471]
+                    - columnheader "Qty *" [ref=e472]
+                    - columnheader "UOM *" [ref=e473]
+                    - columnheader "Est. Price *" [ref=e474]
+                    - columnheader "Total" [ref=e475]
+                    - columnheader [ref=e476]
+                - rowgroup [ref=e477]:
+                  - row "1 0 ₱0.00" [ref=e478]:
+                    - cell [ref=e479]:
+                      - combobox [ref=e480]:
+                        - generic [ref=e481]: Search by code or name...
+                        - img
+                    - cell [ref=e482]:
+                      - textbox "Description" [ref=e484]
+                    - cell "1" [ref=e485]:
+                      - spinbutton [active] [ref=e487]: "15"
+                    - cell [ref=e488]:
+                      - generic [ref=e489]:
+                        - combobox [ref=e490]:
+                          - generic: UOM
+                          - img
+                        - combobox [ref=e491]
+                    - cell "0" [ref=e492]:
+                      - spinbutton [ref=e494]: "0"
+                    - cell "₱0.00" [ref=e495]
+                    - cell [ref=e496]:
+                      - button [disabled]:
+                        - img
+                - rowgroup [ref=e497]:
+                  - 'row "Total Amount: ₱0.00" [ref=e498]':
+                    - cell "Total Amount:" [ref=e499]
+                    - cell "₱0.00" [ref=e500]
+                    - cell [ref=e501]
+            - generic [ref=e502]:
+              - generic [ref=e503]:
+                - generic [ref=e504]:
+                  - img [ref=e505]
+                  - text: Purpose
+                - generic [ref=e508]: Explain why these items are needed and their intended use
+              - generic [ref=e510]:
+                - textbox "Explain why these items are needed, their intended use, and any urgency..." [ref=e511]
+                - paragraph [ref=e512]: A clear justification helps expedite the approval process
+            - generic [ref=e515]:
+              - generic [ref=e516]:
+                - generic [ref=e517]:
+                  - paragraph [ref=e518]: Total Items
+                  - paragraph [ref=e519]: "1"
+                - generic [ref=e520]:
+                  - paragraph [ref=e521]: Total Amount
+                  - paragraph [ref=e522]: ₱0.00
+              - generic [ref=e523]:
+                - link "Cancel" [ref=e524] [cursor=pointer]:
+                  - /url: /dashboard/procurement/purchase-requisitions
+                  - button "Cancel" [ref=e525]
+                - button "Create PR" [ref=e526]
+  - region "Notifications alt+T"
+  - alert [ref=e527]
+```

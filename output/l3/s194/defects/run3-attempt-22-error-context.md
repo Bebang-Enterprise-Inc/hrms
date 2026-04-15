@@ -1,0 +1,1992 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e7]:
+      - generic [ref=e9]:
+        - generic [ref=e11]: BT
+        - generic [ref=e12]:
+          - generic [ref=e13]: BEI Tasks
+          - generic [ref=e14]: Task Management
+      - generic [ref=e15]:
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - link "Home" [ref=e19] [cursor=pointer]:
+              - /url: /dashboard
+            - button "Collapse section" [expanded] [ref=e20]:
+              - img [ref=e21]
+          - list [ref=e25]:
+            - listitem [ref=e26]:
+              - link "Dashboard" [ref=e27] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e28]
+                - generic [ref=e33]: Dashboard
+        - generic [ref=e36]:
+          - link "Warehouse" [ref=e37] [cursor=pointer]:
+            - /url: /dashboard/warehouse
+          - button "Expand section" [ref=e38]:
+            - img [ref=e39]
+        - generic [ref=e43]:
+          - link "Commissary" [ref=e44] [cursor=pointer]:
+            - /url: /dashboard/commissary
+          - button "Expand section" [ref=e45]:
+            - img [ref=e46]
+      - list [ref=e49]:
+        - listitem [ref=e50]:
+          - button "TW test.warehouse@bebang.ph test.warehouse@bebang.ph" [ref=e51]:
+            - generic [ref=e53]: TW
+            - generic [ref=e54]:
+              - generic [ref=e55]: test.warehouse@bebang.ph
+              - generic [ref=e56]: test.warehouse@bebang.ph
+            - img [ref=e57]
+      - button "Toggle Sidebar" [ref=e60]
+    - main [ref=e61]:
+      - generic [ref=e62]:
+        - button "Toggle Sidebar" [ref=e63]:
+          - img
+          - generic [ref=e64]: Toggle Sidebar
+        - navigation "breadcrumb" [ref=e65]:
+          - list [ref=e66]:
+            - listitem [ref=e67]:
+              - link "Dashboard" [ref=e68] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e69]:
+              - img [ref=e70]
+            - listitem [ref=e72]:
+              - link "Procurement" [ref=e73] [cursor=pointer]:
+                - /url: /dashboard/procurement
+            - listitem [ref=e74]:
+              - img [ref=e75]
+            - listitem [ref=e77]:
+              - link "Suppliers" [disabled] [ref=e78]
+        - generic [ref=e79]:
+          - generic [ref=e80]:
+            - button "Switch to light theme" [ref=e81]:
+              - img
+            - button "Switch to dark theme" [ref=e82]:
+              - img
+            - button "Switch to Christmas theme" [ref=e83]:
+              - img
+          - button "Search" [ref=e84]:
+            - img
+            - generic [ref=e85]: Search
+            - generic [ref=e86]: Ctrl K
+      - generic [ref=e87]:
+        - heading "Search" [level=2] [ref=e88]
+        - paragraph [ref=e89]: Search tasks, projects, and actions
+      - main [ref=e90]:
+        - generic [ref=e92]:
+          - generic [ref=e93]:
+            - link "Procurement" [ref=e94] [cursor=pointer]:
+              - /url: /dashboard/procurement
+              - img
+              - text: Procurement
+            - generic [ref=e95]:
+              - generic [ref=e97]:
+                - heading "Supplier Hub" [level=1] [ref=e98]
+                - paragraph [ref=e99]: Bird's eye view of all suppliers — compliance, spending, and performance
+              - link "Add Supplier" [ref=e101] [cursor=pointer]:
+                - /url: /dashboard/procurement/suppliers/new
+                - img
+                - text: Add Supplier
+          - generic [ref=e102]:
+            - generic [ref=e104] [cursor=pointer]:
+              - generic [ref=e105]:
+                - paragraph [ref=e106]: Total Suppliers
+                - generic [ref=e107]: Active
+              - paragraph [ref=e108]: "104"
+              - paragraph [ref=e109]: All registered
+            - generic [ref=e111] [cursor=pointer]:
+              - paragraph [ref=e113]: Active
+              - paragraph [ref=e114]: "5"
+              - paragraph [ref=e115]: Currently active
+            - generic [ref=e117] [cursor=pointer]:
+              - paragraph [ref=e119]: Missing BIR
+              - paragraph [ref=e120]: "104"
+              - paragraph [ref=e121]: No BIR 2307 on file
+            - generic [ref=e123] [cursor=pointer]:
+              - paragraph [ref=e125]: Missing SEC
+              - paragraph [ref=e126]: "104"
+              - paragraph [ref=e127]: No SEC certificate
+            - generic [ref=e129] [cursor=pointer]:
+              - paragraph [ref=e131]: Missing Permit
+              - paragraph [ref=e132]: "104"
+              - paragraph [ref=e133]: No business permit
+            - generic [ref=e135] [cursor=pointer]:
+              - paragraph [ref=e137]: Expiring Soon
+              - paragraph [ref=e138]: "0"
+              - paragraph [ref=e139]: Within 30 days
+            - generic [ref=e141]:
+              - paragraph [ref=e143]: Pending POs
+              - paragraph [ref=e144]: "72"
+              - paragraph [ref=e145]: Awaiting approval
+          - generic [ref=e148]:
+            - generic [ref=e149]:
+              - img [ref=e150]
+              - textbox "Search by name, code, email, contact..." [ref=e153]
+            - combobox [ref=e154]:
+              - generic: All Statuses
+              - img
+            - combobox [ref=e155]:
+              - generic: Name
+              - img
+            - button "↑" [ref=e156]
+            - combobox [ref=e157]:
+              - generic: 50 rows
+              - img
+            - button "Comfortable" [ref=e158]
+            - button [ref=e159]:
+              - img
+          - table [ref=e164]:
+            - rowgroup [ref=e165]:
+              - row "Supplier Status Contact Documents Payment Terms POs Total Spend Outstanding Pending POs Pending GRs Last Order On-Time Items" [ref=e166]:
+                - columnheader "Supplier" [ref=e167]
+                - columnheader "Status" [ref=e168]
+                - columnheader "Contact" [ref=e169]
+                - columnheader "Documents" [ref=e170]
+                - columnheader "Payment Terms" [ref=e171]
+                - columnheader "POs" [ref=e172]
+                - columnheader "Total Spend" [ref=e173]
+                - columnheader "Outstanding" [ref=e174]
+                - columnheader "Pending POs" [ref=e175]
+                - columnheader "Pending GRs" [ref=e176]
+                - columnheader "Last Order" [ref=e177]
+                - columnheader "On-Time" [ref=e178]
+                - columnheader "Items" [ref=e179]
+                - columnheader [ref=e180]
+            - rowgroup [ref=e181]:
+              - row "1 To 1 Marketing, Inc. 1T1MI3 Active litoberos@gmail.com 09619348033 BIR SEC Permit — 164 ₱34,308,384 — 36 24 2026-04-02 — 7" [ref=e182] [cursor=pointer]:
+                - cell "1 To 1 Marketing, Inc. 1T1MI3" [ref=e183]:
+                  - generic [ref=e184]:
+                    - img [ref=e186]
+                    - generic [ref=e190]:
+                      - paragraph [ref=e191]: 1 To 1 Marketing, Inc.
+                      - paragraph [ref=e192]: 1T1MI3
+                - cell "Active" [ref=e193]:
+                  - generic [ref=e194]: Active
+                - cell "litoberos@gmail.com 09619348033" [ref=e195]:
+                  - generic [ref=e196]:
+                    - paragraph [ref=e197]: litoberos@gmail.com
+                    - paragraph [ref=e198]: "09619348033"
+                - cell "BIR SEC Permit" [ref=e199]:
+                  - generic [ref=e200]:
+                    - generic [ref=e201]:
+                      - img [ref=e202]
+                      - text: BIR
+                    - generic [ref=e207]:
+                      - img [ref=e208]
+                      - text: SEC
+                    - generic [ref=e213]:
+                      - img [ref=e214]
+                      - text: Permit
+                - cell "—" [ref=e219]
+                - cell "164" [ref=e220]
+                - cell "₱34,308,384" [ref=e221]
+                - cell "—" [ref=e222]
+                - cell "36" [ref=e223]:
+                  - generic [ref=e224]: "36"
+                - cell "24" [ref=e225]:
+                  - generic [ref=e226]: "24"
+                - cell "2026-04-02" [ref=e227]
+                - cell "—" [ref=e228]
+                - cell "7" [ref=e229]
+                - cell [ref=e230]:
+                  - button [ref=e231]:
+                    - img
+              - row "3J PLASTIC WORLD 3PW30 Pending Verification airamichaelaf@gmail.com 09078267263 BIR SEC Permit — 7 ₱797,843 — 2 4 2026-04-08 — 2" [ref=e232] [cursor=pointer]:
+                - cell "3J PLASTIC WORLD 3PW30" [ref=e233]:
+                  - generic [ref=e234]:
+                    - img [ref=e236]
+                    - generic [ref=e240]:
+                      - paragraph [ref=e241]: 3J PLASTIC WORLD
+                      - paragraph [ref=e242]: 3PW30
+                - cell "Pending Verification" [ref=e243]:
+                  - generic [ref=e244]: Pending Verification
+                - cell "airamichaelaf@gmail.com 09078267263" [ref=e245]:
+                  - generic [ref=e246]:
+                    - paragraph [ref=e247]: airamichaelaf@gmail.com
+                    - paragraph [ref=e248]: "09078267263"
+                - cell "BIR SEC Permit" [ref=e249]:
+                  - generic [ref=e250]:
+                    - generic [ref=e251]:
+                      - img [ref=e252]
+                      - text: BIR
+                    - generic [ref=e257]:
+                      - img [ref=e258]
+                      - text: SEC
+                    - generic [ref=e263]:
+                      - img [ref=e264]
+                      - text: Permit
+                - cell "—" [ref=e269]
+                - cell "7" [ref=e270]
+                - cell "₱797,843" [ref=e271]
+                - cell "—" [ref=e272]
+                - cell "2" [ref=e273]:
+                  - generic [ref=e274]: "2"
+                - cell "4" [ref=e275]:
+                  - generic [ref=e276]: "4"
+                - cell "2026-04-08" [ref=e277]
+                - cell "—" [ref=e278]
+                - cell "2" [ref=e279]
+                - cell [ref=e280]:
+                  - button [ref=e281]:
+                    - img
+              - row "3M DRAGON LOGISTICS CORPORATION 3MDLC100 Pending Verification BIR SEC Permit — 0 ₱0 — — — — — —" [ref=e282] [cursor=pointer]:
+                - cell "3M DRAGON LOGISTICS CORPORATION 3MDLC100" [ref=e283]:
+                  - generic [ref=e284]:
+                    - img [ref=e286]
+                    - generic [ref=e290]:
+                      - paragraph [ref=e291]: 3M DRAGON LOGISTICS CORPORATION
+                      - paragraph [ref=e292]: 3MDLC100
+                - cell "Pending Verification" [ref=e293]:
+                  - generic [ref=e294]: Pending Verification
+                - cell [ref=e295]
+                - cell "BIR SEC Permit" [ref=e296]:
+                  - generic [ref=e297]:
+                    - generic [ref=e298]:
+                      - img [ref=e299]
+                      - text: BIR
+                    - generic [ref=e304]:
+                      - img [ref=e305]
+                      - text: SEC
+                    - generic [ref=e310]:
+                      - img [ref=e311]
+                      - text: Permit
+                - cell "—" [ref=e316]
+                - cell "0" [ref=e317]
+                - cell "₱0" [ref=e318]
+                - cell "—" [ref=e319]
+                - cell "—" [ref=e320]
+                - cell "—" [ref=e321]
+                - cell "—" [ref=e322]
+                - cell "—" [ref=e323]
+                - cell "—" [ref=e324]
+                - cell [ref=e325]:
+                  - button [ref=e326]:
+                    - img
+              - row "A&N BANANA TRADING ABT21 Pending Verification renajaneboras@gmail.com 9972766167 BIR SEC Permit — 5 ₱1,102,892 — — — 2025-12-16 — 2" [ref=e327] [cursor=pointer]:
+                - cell "A&N BANANA TRADING ABT21" [ref=e328]:
+                  - generic [ref=e329]:
+                    - img [ref=e331]
+                    - generic [ref=e335]:
+                      - paragraph [ref=e336]: A&N BANANA TRADING
+                      - paragraph [ref=e337]: ABT21
+                - cell "Pending Verification" [ref=e338]:
+                  - generic [ref=e339]: Pending Verification
+                - cell "renajaneboras@gmail.com 9972766167" [ref=e340]:
+                  - generic [ref=e341]:
+                    - paragraph [ref=e342]: renajaneboras@gmail.com
+                    - paragraph [ref=e343]: "9972766167"
+                - cell "BIR SEC Permit" [ref=e344]:
+                  - generic [ref=e345]:
+                    - generic [ref=e346]:
+                      - img [ref=e347]
+                      - text: BIR
+                    - generic [ref=e352]:
+                      - img [ref=e353]
+                      - text: SEC
+                    - generic [ref=e358]:
+                      - img [ref=e359]
+                      - text: Permit
+                - cell "—" [ref=e364]
+                - cell "5" [ref=e365]
+                - cell "₱1,102,892" [ref=e366]
+                - cell "—" [ref=e367]
+                - cell "—" [ref=e368]
+                - cell "—" [ref=e369]
+                - cell "2025-12-16" [ref=e370]
+                - cell "—" [ref=e371]
+                - cell "2" [ref=e372]
+                - cell [ref=e373]:
+                  - button [ref=e374]:
+                    - img
+              - row "ADVANCE FOOD CONCEPTS MANUFACTURING INC. AFCMI24 Pending Verification s.famadico@afcmi.com.ph 9178369132 BIR SEC Permit — 7 ₱1,822,545 — — 1 2026-01-15 — 2" [ref=e375] [cursor=pointer]:
+                - cell "ADVANCE FOOD CONCEPTS MANUFACTURING INC. AFCMI24" [ref=e376]:
+                  - generic [ref=e377]:
+                    - img [ref=e379]
+                    - generic [ref=e383]:
+                      - paragraph [ref=e384]: ADVANCE FOOD CONCEPTS MANUFACTURING INC.
+                      - paragraph [ref=e385]: AFCMI24
+                - cell "Pending Verification" [ref=e386]:
+                  - generic [ref=e387]: Pending Verification
+                - cell "s.famadico@afcmi.com.ph 9178369132" [ref=e388]:
+                  - generic [ref=e389]:
+                    - paragraph [ref=e390]: s.famadico@afcmi.com.ph
+                    - paragraph [ref=e391]: "9178369132"
+                - cell "BIR SEC Permit" [ref=e392]:
+                  - generic [ref=e393]:
+                    - generic [ref=e394]:
+                      - img [ref=e395]
+                      - text: BIR
+                    - generic [ref=e400]:
+                      - img [ref=e401]
+                      - text: SEC
+                    - generic [ref=e406]:
+                      - img [ref=e407]
+                      - text: Permit
+                - cell "—" [ref=e412]
+                - cell "7" [ref=e413]
+                - cell "₱1,822,545" [ref=e414]
+                - cell "—" [ref=e415]
+                - cell "—" [ref=e416]
+                - cell "1" [ref=e417]:
+                  - generic [ref=e418]: "1"
+                - cell "2026-01-15" [ref=e419]
+                - cell "—" [ref=e420]
+                - cell "2" [ref=e421]
+                - cell [ref=e422]:
+                  - button [ref=e423]:
+                    - img
+              - row "Alyana Chua AC23 Pending Verification janazoie@gmail.com 09277021225 BIR SEC Permit — 8 ₱378,997 — — 1 2026-02-25 — 2" [ref=e424] [cursor=pointer]:
+                - cell "Alyana Chua AC23" [ref=e425]:
+                  - generic [ref=e426]:
+                    - img [ref=e428]
+                    - generic [ref=e432]:
+                      - paragraph [ref=e433]: Alyana Chua
+                      - paragraph [ref=e434]: AC23
+                - cell "Pending Verification" [ref=e435]:
+                  - generic [ref=e436]: Pending Verification
+                - cell "janazoie@gmail.com 09277021225" [ref=e437]:
+                  - generic [ref=e438]:
+                    - paragraph [ref=e439]: janazoie@gmail.com
+                    - paragraph [ref=e440]: "09277021225"
+                - cell "BIR SEC Permit" [ref=e441]:
+                  - generic [ref=e442]:
+                    - generic [ref=e443]:
+                      - img [ref=e444]
+                      - text: BIR
+                    - generic [ref=e449]:
+                      - img [ref=e450]
+                      - text: SEC
+                    - generic [ref=e455]:
+                      - img [ref=e456]
+                      - text: Permit
+                - cell "—" [ref=e461]
+                - cell "8" [ref=e462]
+                - cell "₱378,997" [ref=e463]
+                - cell "—" [ref=e464]
+                - cell "—" [ref=e465]
+                - cell "1" [ref=e466]:
+                  - generic [ref=e467]: "1"
+                - cell "2026-02-25" [ref=e468]
+                - cell "—" [ref=e469]
+                - cell "2" [ref=e470]
+                - cell [ref=e471]:
+                  - button [ref=e472]:
+                    - img
+              - row "Armig Plasprint Manufacturing Corporation APMC22 Pending Verification armigpgm@gmail.com BIR SEC Permit — 1 ₱2,400 — — 1 2025-10-13 — 1" [ref=e473] [cursor=pointer]:
+                - cell "Armig Plasprint Manufacturing Corporation APMC22" [ref=e474]:
+                  - generic [ref=e475]:
+                    - img [ref=e477]
+                    - generic [ref=e481]:
+                      - paragraph [ref=e482]: Armig Plasprint Manufacturing Corporation
+                      - paragraph [ref=e483]: APMC22
+                - cell "Pending Verification" [ref=e484]:
+                  - generic [ref=e485]: Pending Verification
+                - cell "armigpgm@gmail.com" [ref=e486]:
+                  - paragraph [ref=e488]: armigpgm@gmail.com
+                - cell "BIR SEC Permit" [ref=e489]:
+                  - generic [ref=e490]:
+                    - generic [ref=e491]:
+                      - img [ref=e492]
+                      - text: BIR
+                    - generic [ref=e497]:
+                      - img [ref=e498]
+                      - text: SEC
+                    - generic [ref=e503]:
+                      - img [ref=e504]
+                      - text: Permit
+                - cell "—" [ref=e509]
+                - cell "1" [ref=e510]
+                - cell "₱2,400" [ref=e511]
+                - cell "—" [ref=e512]
+                - cell "—" [ref=e513]
+                - cell "1" [ref=e514]:
+                  - generic [ref=e515]: "1"
+                - cell "2025-10-13" [ref=e516]
+                - cell "—" [ref=e517]
+                - cell "1" [ref=e518]
+                - cell [ref=e519]:
+                  - button [ref=e520]:
+                    - img
+              - row "ARVIN INTERNATIONAL MARKETING, INC. AIMI70 Pending Verification trisha.rosa@arvinintl.com 09998853272 BIR SEC Permit — 2 ₱1,330,319 — 1 — 2026-01-15 — 1" [ref=e521] [cursor=pointer]:
+                - cell "ARVIN INTERNATIONAL MARKETING, INC. AIMI70" [ref=e522]:
+                  - generic [ref=e523]:
+                    - img [ref=e525]
+                    - generic [ref=e529]:
+                      - paragraph [ref=e530]: ARVIN INTERNATIONAL MARKETING, INC.
+                      - paragraph [ref=e531]: AIMI70
+                - cell "Pending Verification" [ref=e532]:
+                  - generic [ref=e533]: Pending Verification
+                - cell "trisha.rosa@arvinintl.com 09998853272" [ref=e534]:
+                  - generic [ref=e535]:
+                    - paragraph [ref=e536]: trisha.rosa@arvinintl.com
+                    - paragraph [ref=e537]: "09998853272"
+                - cell "BIR SEC Permit" [ref=e538]:
+                  - generic [ref=e539]:
+                    - generic [ref=e540]:
+                      - img [ref=e541]
+                      - text: BIR
+                    - generic [ref=e546]:
+                      - img [ref=e547]
+                      - text: SEC
+                    - generic [ref=e552]:
+                      - img [ref=e553]
+                      - text: Permit
+                - cell "—" [ref=e558]
+                - cell "2" [ref=e559]
+                - cell "₱1,330,319" [ref=e560]
+                - cell "—" [ref=e561]
+                - cell "1" [ref=e562]:
+                  - generic [ref=e563]: "1"
+                - cell "—" [ref=e564]
+                - cell "2026-01-15" [ref=e565]
+                - cell "—" [ref=e566]
+                - cell "1" [ref=e567]
+                - cell [ref=e568]:
+                  - button [ref=e569]:
+                    - img
+              - row "Baker's Boulevard BB57 Pending Verification bakersboulevardph@gmail.com 09198888936 BIR SEC Permit — 0 ₱0 — — — — — —" [ref=e570] [cursor=pointer]:
+                - cell "Baker's Boulevard BB57" [ref=e571]:
+                  - generic [ref=e572]:
+                    - img [ref=e574]
+                    - generic [ref=e578]:
+                      - paragraph [ref=e579]: Baker's Boulevard
+                      - paragraph [ref=e580]: BB57
+                - cell "Pending Verification" [ref=e581]:
+                  - generic [ref=e582]: Pending Verification
+                - cell "bakersboulevardph@gmail.com 09198888936" [ref=e583]:
+                  - generic [ref=e584]:
+                    - paragraph [ref=e585]: bakersboulevardph@gmail.com
+                    - paragraph [ref=e586]: "09198888936"
+                - cell "BIR SEC Permit" [ref=e587]:
+                  - generic [ref=e588]:
+                    - generic [ref=e589]:
+                      - img [ref=e590]
+                      - text: BIR
+                    - generic [ref=e595]:
+                      - img [ref=e596]
+                      - text: SEC
+                    - generic [ref=e601]:
+                      - img [ref=e602]
+                      - text: Permit
+                - cell "—" [ref=e607]
+                - cell "0" [ref=e608]
+                - cell "₱0" [ref=e609]
+                - cell "—" [ref=e610]
+                - cell "—" [ref=e611]
+                - cell "—" [ref=e612]
+                - cell "—" [ref=e613]
+                - cell "—" [ref=e614]
+                - cell "—" [ref=e615]
+                - cell [ref=e616]:
+                  - button [ref=e617]:
+                    - img
+              - row "BLIZZARDREF SALES CORP. BSC48 Pending Verification j.tupaz@blizzardref.com 0917 866 9910 BIR SEC Permit — 4 ₱1,039,500 — 1 1 2026-04-14 — 1" [ref=e618] [cursor=pointer]:
+                - cell "BLIZZARDREF SALES CORP. BSC48" [ref=e619]:
+                  - generic [ref=e620]:
+                    - img [ref=e622]
+                    - generic [ref=e626]:
+                      - paragraph [ref=e627]: BLIZZARDREF SALES CORP.
+                      - paragraph [ref=e628]: BSC48
+                - cell "Pending Verification" [ref=e629]:
+                  - generic [ref=e630]: Pending Verification
+                - cell "j.tupaz@blizzardref.com 0917 866 9910" [ref=e631]:
+                  - generic [ref=e632]:
+                    - paragraph [ref=e633]: j.tupaz@blizzardref.com
+                    - paragraph [ref=e634]: 0917 866 9910
+                - cell "BIR SEC Permit" [ref=e635]:
+                  - generic [ref=e636]:
+                    - generic [ref=e637]:
+                      - img [ref=e638]
+                      - text: BIR
+                    - generic [ref=e643]:
+                      - img [ref=e644]
+                      - text: SEC
+                    - generic [ref=e649]:
+                      - img [ref=e650]
+                      - text: Permit
+                - cell "—" [ref=e655]
+                - cell "4" [ref=e656]
+                - cell "₱1,039,500" [ref=e657]
+                - cell "—" [ref=e658]
+                - cell "1" [ref=e659]:
+                  - generic [ref=e660]: "1"
+                - cell "1" [ref=e661]:
+                  - generic [ref=e662]: "1"
+                - cell "2026-04-14" [ref=e663]
+                - cell "—" [ref=e664]
+                - cell "1" [ref=e665]
+                - cell [ref=e666]:
+                  - button [ref=e667]:
+                    - img
+              - row "CARANDANG CONSUMER GOODS TRADING CCGT31 Pending Verification sales@carandangconsumer.com. 09178047189 BIR SEC Permit — 12 ₱696,886 — — 4 2026-04-08 — 6" [ref=e668] [cursor=pointer]:
+                - cell "CARANDANG CONSUMER GOODS TRADING CCGT31" [ref=e669]:
+                  - generic [ref=e670]:
+                    - img [ref=e672]
+                    - generic [ref=e676]:
+                      - paragraph [ref=e677]: CARANDANG CONSUMER GOODS TRADING
+                      - paragraph [ref=e678]: CCGT31
+                - cell "Pending Verification" [ref=e679]:
+                  - generic [ref=e680]: Pending Verification
+                - cell "sales@carandangconsumer.com. 09178047189" [ref=e681]:
+                  - generic [ref=e682]:
+                    - paragraph [ref=e683]: sales@carandangconsumer.com.
+                    - paragraph [ref=e684]: "09178047189"
+                - cell "BIR SEC Permit" [ref=e685]:
+                  - generic [ref=e686]:
+                    - generic [ref=e687]:
+                      - img [ref=e688]
+                      - text: BIR
+                    - generic [ref=e693]:
+                      - img [ref=e694]
+                      - text: SEC
+                    - generic [ref=e699]:
+                      - img [ref=e700]
+                      - text: Permit
+                - cell "—" [ref=e705]
+                - cell "12" [ref=e706]
+                - cell "₱696,886" [ref=e707]
+                - cell "—" [ref=e708]
+                - cell "—" [ref=e709]
+                - cell "4" [ref=e710]:
+                  - generic [ref=e711]: "4"
+                - cell "2026-04-08" [ref=e712]
+                - cell "—" [ref=e713]
+                - cell "6" [ref=e714]
+                - cell [ref=e715]:
+                  - button [ref=e716]:
+                    - img
+              - row "Chocolate Lover Inc. CLI19 Pending Verification chocolateloverincorporated@gmail.com 639615682522 BIR SEC Permit — 3 ₱75,050 — — 1 2025-11-03 — 1" [ref=e717] [cursor=pointer]:
+                - cell "Chocolate Lover Inc. CLI19" [ref=e718]:
+                  - generic [ref=e719]:
+                    - img [ref=e721]
+                    - generic [ref=e725]:
+                      - paragraph [ref=e726]: Chocolate Lover Inc.
+                      - paragraph [ref=e727]: CLI19
+                - cell "Pending Verification" [ref=e728]:
+                  - generic [ref=e729]: Pending Verification
+                - cell "chocolateloverincorporated@gmail.com 639615682522" [ref=e730]:
+                  - generic [ref=e731]:
+                    - paragraph [ref=e732]: chocolateloverincorporated@gmail.com
+                    - paragraph [ref=e733]: "639615682522"
+                - cell "BIR SEC Permit" [ref=e734]:
+                  - generic [ref=e735]:
+                    - generic [ref=e736]:
+                      - img [ref=e737]
+                      - text: BIR
+                    - generic [ref=e742]:
+                      - img [ref=e743]
+                      - text: SEC
+                    - generic [ref=e748]:
+                      - img [ref=e749]
+                      - text: Permit
+                - cell "—" [ref=e754]
+                - cell "3" [ref=e755]
+                - cell "₱75,050" [ref=e756]
+                - cell "—" [ref=e757]
+                - cell "—" [ref=e758]
+                - cell "1" [ref=e759]:
+                  - generic [ref=e760]: "1"
+                - cell "2025-11-03" [ref=e761]
+                - cell "—" [ref=e762]
+                - cell "1" [ref=e763]
+                - cell [ref=e764]:
+                  - button [ref=e765]:
+                    - img
+              - row "CK Baker's Center Inc CBCI52 Pending Verification sales@ckbakers.com 09178987118 BIR SEC Permit — 0 ₱0 — — — — — —" [ref=e766] [cursor=pointer]:
+                - cell "CK Baker's Center Inc CBCI52" [ref=e767]:
+                  - generic [ref=e768]:
+                    - img [ref=e770]
+                    - generic [ref=e774]:
+                      - paragraph [ref=e775]: CK Baker's Center Inc
+                      - paragraph [ref=e776]: CBCI52
+                - cell "Pending Verification" [ref=e777]:
+                  - generic [ref=e778]: Pending Verification
+                - cell "sales@ckbakers.com 09178987118" [ref=e779]:
+                  - generic [ref=e780]:
+                    - paragraph [ref=e781]: sales@ckbakers.com
+                    - paragraph [ref=e782]: "09178987118"
+                - cell "BIR SEC Permit" [ref=e783]:
+                  - generic [ref=e784]:
+                    - generic [ref=e785]:
+                      - img [ref=e786]
+                      - text: BIR
+                    - generic [ref=e791]:
+                      - img [ref=e792]
+                      - text: SEC
+                    - generic [ref=e797]:
+                      - img [ref=e798]
+                      - text: Permit
+                - cell "—" [ref=e803]
+                - cell "0" [ref=e804]
+                - cell "₱0" [ref=e805]
+                - cell "—" [ref=e806]
+                - cell "—" [ref=e807]
+                - cell "—" [ref=e808]
+                - cell "—" [ref=e809]
+                - cell "—" [ref=e810]
+                - cell "—" [ref=e811]
+                - cell [ref=e812]:
+                  - button [ref=e813]:
+                    - img
+              - row "CLE ACE CORPORATION CAC15 Pending Verification maryjane.sarte@cleacecorp.com 09761675434 BIR SEC Permit — 16 ₱14,513,872 — — 6 2026-04-08 — 5" [ref=e814] [cursor=pointer]:
+                - cell "CLE ACE CORPORATION CAC15" [ref=e815]:
+                  - generic [ref=e816]:
+                    - img [ref=e818]
+                    - generic [ref=e822]:
+                      - paragraph [ref=e823]: CLE ACE CORPORATION
+                      - paragraph [ref=e824]: CAC15
+                - cell "Pending Verification" [ref=e825]:
+                  - generic [ref=e826]: Pending Verification
+                - cell "maryjane.sarte@cleacecorp.com 09761675434" [ref=e827]:
+                  - generic [ref=e828]:
+                    - paragraph [ref=e829]: maryjane.sarte@cleacecorp.com
+                    - paragraph [ref=e830]: "09761675434"
+                - cell "BIR SEC Permit" [ref=e831]:
+                  - generic [ref=e832]:
+                    - generic [ref=e833]:
+                      - img [ref=e834]
+                      - text: BIR
+                    - generic [ref=e839]:
+                      - img [ref=e840]
+                      - text: SEC
+                    - generic [ref=e845]:
+                      - img [ref=e846]
+                      - text: Permit
+                - cell "—" [ref=e851]
+                - cell "16" [ref=e852]
+                - cell "₱14,513,872" [ref=e853]
+                - cell "—" [ref=e854]
+                - cell "—" [ref=e855]
+                - cell "6" [ref=e856]:
+                  - generic [ref=e857]: "6"
+                - cell "2026-04-08" [ref=e858]
+                - cell "—" [ref=e859]
+                - cell "5" [ref=e860]
+                - cell [ref=e861]:
+                  - button [ref=e862]:
+                    - img
+              - row "COLOURMART INC. CI94 Pending Verification colourmart2022@gmail.com 09563005901 BIR SEC Permit — 1 ₱24,187 — — 1 2026-04-13 — 1" [ref=e863] [cursor=pointer]:
+                - cell "COLOURMART INC. CI94" [ref=e864]:
+                  - generic [ref=e865]:
+                    - img [ref=e867]
+                    - generic [ref=e871]:
+                      - paragraph [ref=e872]: COLOURMART INC.
+                      - paragraph [ref=e873]: CI94
+                - cell "Pending Verification" [ref=e874]:
+                  - generic [ref=e875]: Pending Verification
+                - cell "colourmart2022@gmail.com 09563005901" [ref=e876]:
+                  - generic [ref=e877]:
+                    - paragraph [ref=e878]: colourmart2022@gmail.com
+                    - paragraph [ref=e879]: "09563005901"
+                - cell "BIR SEC Permit" [ref=e880]:
+                  - generic [ref=e881]:
+                    - generic [ref=e882]:
+                      - img [ref=e883]
+                      - text: BIR
+                    - generic [ref=e888]:
+                      - img [ref=e889]
+                      - text: SEC
+                    - generic [ref=e894]:
+                      - img [ref=e895]
+                      - text: Permit
+                - cell "—" [ref=e900]
+                - cell "1" [ref=e901]
+                - cell "₱24,187" [ref=e902]
+                - cell "—" [ref=e903]
+                - cell "—" [ref=e904]
+                - cell "1" [ref=e905]:
+                  - generic [ref=e906]: "1"
+                - cell "2026-04-13" [ref=e907]
+                - cell "—" [ref=e908]
+                - cell "1" [ref=e909]
+                - cell [ref=e910]:
+                  - button [ref=e911]:
+                    - img
+              - row "CORNELL INGREDIENTS CORP. CIC71 Pending Verification galusorio@cornell-ingredients.com 09171356594 BIR SEC Permit — 2 ₱15,000 — — — 2026-01-12 — 1" [ref=e912] [cursor=pointer]:
+                - cell "CORNELL INGREDIENTS CORP. CIC71" [ref=e913]:
+                  - generic [ref=e914]:
+                    - img [ref=e916]
+                    - generic [ref=e920]:
+                      - paragraph [ref=e921]: CORNELL INGREDIENTS CORP.
+                      - paragraph [ref=e922]: CIC71
+                - cell "Pending Verification" [ref=e923]:
+                  - generic [ref=e924]: Pending Verification
+                - cell "galusorio@cornell-ingredients.com 09171356594" [ref=e925]:
+                  - generic [ref=e926]:
+                    - paragraph [ref=e927]: galusorio@cornell-ingredients.com
+                    - paragraph [ref=e928]: "09171356594"
+                - cell "BIR SEC Permit" [ref=e929]:
+                  - generic [ref=e930]:
+                    - generic [ref=e931]:
+                      - img [ref=e932]
+                      - text: BIR
+                    - generic [ref=e937]:
+                      - img [ref=e938]
+                      - text: SEC
+                    - generic [ref=e943]:
+                      - img [ref=e944]
+                      - text: Permit
+                - cell "—" [ref=e949]
+                - cell "2" [ref=e950]
+                - cell "₱15,000" [ref=e951]
+                - cell "—" [ref=e952]
+                - cell "—" [ref=e953]
+                - cell "—" [ref=e954]
+                - cell "2026-01-12" [ref=e955]
+                - cell "—" [ref=e956]
+                - cell "1" [ref=e957]
+                - cell [ref=e958]:
+                  - button [ref=e959]:
+                    - img
+              - row "DANE INTERNATIONAL COMMODITIES INC DICI92 Pending Verification daneintlph@gmail.com 0917 537 2361 / 0977 823 3382 BIR SEC Permit — 2 ₱85,680 — — 1 2026-04-08 — 1" [ref=e960] [cursor=pointer]:
+                - cell "DANE INTERNATIONAL COMMODITIES INC DICI92" [ref=e961]:
+                  - generic [ref=e962]:
+                    - img [ref=e964]
+                    - generic [ref=e968]:
+                      - paragraph [ref=e969]: DANE INTERNATIONAL COMMODITIES INC
+                      - paragraph [ref=e970]: DICI92
+                - cell "Pending Verification" [ref=e971]:
+                  - generic [ref=e972]: Pending Verification
+                - cell "daneintlph@gmail.com 0917 537 2361 / 0977 823 3382" [ref=e973]:
+                  - generic [ref=e974]:
+                    - paragraph [ref=e975]: daneintlph@gmail.com
+                    - paragraph [ref=e976]: 0917 537 2361 / 0977 823 3382
+                - cell "BIR SEC Permit" [ref=e977]:
+                  - generic [ref=e978]:
+                    - generic [ref=e979]:
+                      - img [ref=e980]
+                      - text: BIR
+                    - generic [ref=e985]:
+                      - img [ref=e986]
+                      - text: SEC
+                    - generic [ref=e991]:
+                      - img [ref=e992]
+                      - text: Permit
+                - cell "—" [ref=e997]
+                - cell "2" [ref=e998]
+                - cell "₱85,680" [ref=e999]
+                - cell "—" [ref=e1000]
+                - cell "—" [ref=e1001]
+                - cell "1" [ref=e1002]:
+                  - generic [ref=e1003]: "1"
+                - cell "2026-04-08" [ref=e1004]
+                - cell "—" [ref=e1005]
+                - cell "1" [ref=e1006]
+                - cell [ref=e1007]:
+                  - button [ref=e1008]:
+                    - img
+              - row "DAREEN FRUIT STORE DFS32 Pending Verification llamadosaimon30@gmail.com 09352743217 BIR SEC Permit — 0 ₱0 — — — — — —" [ref=e1009] [cursor=pointer]:
+                - cell "DAREEN FRUIT STORE DFS32" [ref=e1010]:
+                  - generic [ref=e1011]:
+                    - img [ref=e1013]
+                    - generic [ref=e1017]:
+                      - paragraph [ref=e1018]: DAREEN FRUIT STORE
+                      - paragraph [ref=e1019]: DFS32
+                - cell "Pending Verification" [ref=e1020]:
+                  - generic [ref=e1021]: Pending Verification
+                - cell "llamadosaimon30@gmail.com 09352743217" [ref=e1022]:
+                  - generic [ref=e1023]:
+                    - paragraph [ref=e1024]: llamadosaimon30@gmail.com
+                    - paragraph [ref=e1025]: "09352743217"
+                - cell "BIR SEC Permit" [ref=e1026]:
+                  - generic [ref=e1027]:
+                    - generic [ref=e1028]:
+                      - img [ref=e1029]
+                      - text: BIR
+                    - generic [ref=e1034]:
+                      - img [ref=e1035]
+                      - text: SEC
+                    - generic [ref=e1040]:
+                      - img [ref=e1041]
+                      - text: Permit
+                - cell "—" [ref=e1046]
+                - cell "0" [ref=e1047]
+                - cell "₱0" [ref=e1048]
+                - cell "—" [ref=e1049]
+                - cell "—" [ref=e1050]
+                - cell "—" [ref=e1051]
+                - cell "—" [ref=e1052]
+                - cell "—" [ref=e1053]
+                - cell "—" [ref=e1054]
+                - cell [ref=e1055]:
+                  - button [ref=e1056]:
+                    - img
+              - row "DIMAX FOOD WHOLESALING DFW2 Pending Verification Dimax.nad@gmail.com 9156040511 BIR SEC Permit — 13 ₱1,872,547 — — 3 2026-04-08 — 5" [ref=e1057] [cursor=pointer]:
+                - cell "DIMAX FOOD WHOLESALING DFW2" [ref=e1058]:
+                  - generic [ref=e1059]:
+                    - img [ref=e1061]
+                    - generic [ref=e1065]:
+                      - paragraph [ref=e1066]: DIMAX FOOD WHOLESALING
+                      - paragraph [ref=e1067]: DFW2
+                - cell "Pending Verification" [ref=e1068]:
+                  - generic [ref=e1069]: Pending Verification
+                - cell "Dimax.nad@gmail.com 9156040511" [ref=e1070]:
+                  - generic [ref=e1071]:
+                    - paragraph [ref=e1072]: Dimax.nad@gmail.com
+                    - paragraph [ref=e1073]: "9156040511"
+                - cell "BIR SEC Permit" [ref=e1074]:
+                  - generic [ref=e1075]:
+                    - generic [ref=e1076]:
+                      - img [ref=e1077]
+                      - text: BIR
+                    - generic [ref=e1082]:
+                      - img [ref=e1083]
+                      - text: SEC
+                    - generic [ref=e1088]:
+                      - img [ref=e1089]
+                      - text: Permit
+                - cell "—" [ref=e1094]
+                - cell "13" [ref=e1095]
+                - cell "₱1,872,547" [ref=e1096]
+                - cell "—" [ref=e1097]
+                - cell "—" [ref=e1098]
+                - cell "3" [ref=e1099]:
+                  - generic [ref=e1100]: "3"
+                - cell "2026-04-08" [ref=e1101]
+                - cell "—" [ref=e1102]
+                - cell "5" [ref=e1103]
+                - cell [ref=e1104]:
+                  - button [ref=e1105]:
+                    - img
+              - row "DKSH Philippines DP84 Pending Verification leamarie.perez@dksh.com BIR SEC Permit — 2 ₱23,005 — — 2 2026-03-03 — 2" [ref=e1106] [cursor=pointer]:
+                - cell "DKSH Philippines DP84" [ref=e1107]:
+                  - generic [ref=e1108]:
+                    - img [ref=e1110]
+                    - generic [ref=e1114]:
+                      - paragraph [ref=e1115]: DKSH Philippines
+                      - paragraph [ref=e1116]: DP84
+                - cell "Pending Verification" [ref=e1117]:
+                  - generic [ref=e1118]: Pending Verification
+                - cell "leamarie.perez@dksh.com" [ref=e1119]:
+                  - paragraph [ref=e1121]: leamarie.perez@dksh.com
+                - cell "BIR SEC Permit" [ref=e1122]:
+                  - generic [ref=e1123]:
+                    - generic [ref=e1124]:
+                      - img [ref=e1125]
+                      - text: BIR
+                    - generic [ref=e1130]:
+                      - img [ref=e1131]
+                      - text: SEC
+                    - generic [ref=e1136]:
+                      - img [ref=e1137]
+                      - text: Permit
+                - cell "—" [ref=e1142]
+                - cell "2" [ref=e1143]
+                - cell "₱23,005" [ref=e1144]
+                - cell "—" [ref=e1145]
+                - cell "—" [ref=e1146]
+                - cell "2" [ref=e1147]:
+                  - generic [ref=e1148]: "2"
+                - cell "2026-03-03" [ref=e1149]
+                - cell "—" [ref=e1150]
+                - cell "2" [ref=e1151]
+                - cell [ref=e1152]:
+                  - button [ref=e1153]:
+                    - img
+              - row "DOXO INGREDIENTS INC. DII14 Pending Verification injoysanjuan@gmail.com 09178077279 BIR SEC Permit — 5 ₱331,946 — — — 2026-03-30 — 2" [ref=e1154] [cursor=pointer]:
+                - cell "DOXO INGREDIENTS INC. DII14" [ref=e1155]:
+                  - generic [ref=e1156]:
+                    - img [ref=e1158]
+                    - generic [ref=e1162]:
+                      - paragraph [ref=e1163]: DOXO INGREDIENTS INC.
+                      - paragraph [ref=e1164]: DII14
+                - cell "Pending Verification" [ref=e1165]:
+                  - generic [ref=e1166]: Pending Verification
+                - cell "injoysanjuan@gmail.com 09178077279" [ref=e1167]:
+                  - generic [ref=e1168]:
+                    - paragraph [ref=e1169]: injoysanjuan@gmail.com
+                    - paragraph [ref=e1170]: "09178077279"
+                - cell "BIR SEC Permit" [ref=e1171]:
+                  - generic [ref=e1172]:
+                    - generic [ref=e1173]:
+                      - img [ref=e1174]
+                      - text: BIR
+                    - generic [ref=e1179]:
+                      - img [ref=e1180]
+                      - text: SEC
+                    - generic [ref=e1185]:
+                      - img [ref=e1186]
+                      - text: Permit
+                - cell "—" [ref=e1191]
+                - cell "5" [ref=e1192]
+                - cell "₱331,946" [ref=e1193]
+                - cell "—" [ref=e1194]
+                - cell "—" [ref=e1195]
+                - cell "—" [ref=e1196]
+                - cell "2026-03-30" [ref=e1197]
+                - cell "—" [ref=e1198]
+                - cell "2" [ref=e1199]
+                - cell [ref=e1200]:
+                  - button [ref=e1201]:
+                    - img
+              - row "Dulce Cupcakes Corp DCC62 Pending Verification jsmirasol@lemonsquare.com.ph 0926 7186613 BIR SEC Permit — 1 ₱5,000 — — — 2025-10-27 — 1" [ref=e1202] [cursor=pointer]:
+                - cell "Dulce Cupcakes Corp DCC62" [ref=e1203]:
+                  - generic [ref=e1204]:
+                    - img [ref=e1206]
+                    - generic [ref=e1210]:
+                      - paragraph [ref=e1211]: Dulce Cupcakes Corp
+                      - paragraph [ref=e1212]: DCC62
+                - cell "Pending Verification" [ref=e1213]:
+                  - generic [ref=e1214]: Pending Verification
+                - cell "jsmirasol@lemonsquare.com.ph 0926 7186613" [ref=e1215]:
+                  - generic [ref=e1216]:
+                    - paragraph [ref=e1217]: jsmirasol@lemonsquare.com.ph
+                    - paragraph [ref=e1218]: 0926 7186613
+                - cell "BIR SEC Permit" [ref=e1219]:
+                  - generic [ref=e1220]:
+                    - generic [ref=e1221]:
+                      - img [ref=e1222]
+                      - text: BIR
+                    - generic [ref=e1227]:
+                      - img [ref=e1228]
+                      - text: SEC
+                    - generic [ref=e1233]:
+                      - img [ref=e1234]
+                      - text: Permit
+                - cell "—" [ref=e1239]
+                - cell "1" [ref=e1240]
+                - cell "₱5,000" [ref=e1241]
+                - cell "—" [ref=e1242]
+                - cell "—" [ref=e1243]
+                - cell "—" [ref=e1244]
+                - cell "2025-10-27" [ref=e1245]
+                - cell "—" [ref=e1246]
+                - cell "1" [ref=e1247]
+                - cell [ref=e1248]:
+                  - button [ref=e1249]:
+                    - img
+              - row "ECOTHERM INC EI73 Pending Verification hv.vinas@ecotherminc.com 639282966318 BIR SEC Permit — 4 ₱272,300 — — 4 2026-03-26 — 17" [ref=e1250] [cursor=pointer]:
+                - cell "ECOTHERM INC EI73" [ref=e1251]:
+                  - generic [ref=e1252]:
+                    - img [ref=e1254]
+                    - generic [ref=e1258]:
+                      - paragraph [ref=e1259]: ECOTHERM INC
+                      - paragraph [ref=e1260]: EI73
+                - cell "Pending Verification" [ref=e1261]:
+                  - generic [ref=e1262]: Pending Verification
+                - cell "hv.vinas@ecotherminc.com 639282966318" [ref=e1263]:
+                  - generic [ref=e1264]:
+                    - paragraph [ref=e1265]: hv.vinas@ecotherminc.com
+                    - paragraph [ref=e1266]: "639282966318"
+                - cell "BIR SEC Permit" [ref=e1267]:
+                  - generic [ref=e1268]:
+                    - generic [ref=e1269]:
+                      - img [ref=e1270]
+                      - text: BIR
+                    - generic [ref=e1275]:
+                      - img [ref=e1276]
+                      - text: SEC
+                    - generic [ref=e1281]:
+                      - img [ref=e1282]
+                      - text: Permit
+                - cell "—" [ref=e1287]
+                - cell "4" [ref=e1288]
+                - cell "₱272,300" [ref=e1289]
+                - cell "—" [ref=e1290]
+                - cell "—" [ref=e1291]
+                - cell "4" [ref=e1292]:
+                  - generic [ref=e1293]: "4"
+                - cell "2026-03-26" [ref=e1294]
+                - cell "—" [ref=e1295]
+                - cell "17" [ref=e1296]
+                - cell [ref=e1297]:
+                  - button [ref=e1298]:
+                    - img
+              - 'row "Elcano Trading Corporation ETC86 Pending Verification edgar.hokia@elcanotrade.com #ERROR! (Formula parse error.) BIR SEC Permit — 3 ₱201,001 — — — 2026-03-25 — 1" [ref=e1299] [cursor=pointer]':
+                - cell "Elcano Trading Corporation ETC86" [ref=e1300]:
+                  - generic [ref=e1301]:
+                    - img [ref=e1303]
+                    - generic [ref=e1307]:
+                      - paragraph [ref=e1308]: Elcano Trading Corporation
+                      - paragraph [ref=e1309]: ETC86
+                - cell "Pending Verification" [ref=e1310]:
+                  - generic [ref=e1311]: Pending Verification
+                - 'cell "edgar.hokia@elcanotrade.com #ERROR! (Formula parse error.)" [ref=e1312]':
+                  - generic [ref=e1313]:
+                    - paragraph [ref=e1314]: edgar.hokia@elcanotrade.com
+                    - paragraph [ref=e1315]: "#ERROR! (Formula parse error.)"
+                - cell "BIR SEC Permit" [ref=e1316]:
+                  - generic [ref=e1317]:
+                    - generic [ref=e1318]:
+                      - img [ref=e1319]
+                      - text: BIR
+                    - generic [ref=e1324]:
+                      - img [ref=e1325]
+                      - text: SEC
+                    - generic [ref=e1330]:
+                      - img [ref=e1331]
+                      - text: Permit
+                - cell "—" [ref=e1336]
+                - cell "3" [ref=e1337]
+                - cell "₱201,001" [ref=e1338]
+                - cell "—" [ref=e1339]
+                - cell "—" [ref=e1340]
+                - cell "—" [ref=e1341]
+                - cell "2026-03-25" [ref=e1342]
+                - cell "—" [ref=e1343]
+                - cell "1" [ref=e1344]
+                - cell [ref=e1345]:
+                  - button [ref=e1346]:
+                    - img
+              - row "EOMONG TRADE SALES INC. ETSI33 Pending Verification inquiry@eomongtradesales.com 09177014581 BIR SEC Permit — 0 ₱0 — — — — — —" [ref=e1347] [cursor=pointer]:
+                - cell "EOMONG TRADE SALES INC. ETSI33" [ref=e1348]:
+                  - generic [ref=e1349]:
+                    - img [ref=e1351]
+                    - generic [ref=e1355]:
+                      - paragraph [ref=e1356]: EOMONG TRADE SALES INC.
+                      - paragraph [ref=e1357]: ETSI33
+                - cell "Pending Verification" [ref=e1358]:
+                  - generic [ref=e1359]: Pending Verification
+                - cell "inquiry@eomongtradesales.com 09177014581" [ref=e1360]:
+                  - generic [ref=e1361]:
+                    - paragraph [ref=e1362]: inquiry@eomongtradesales.com
+                    - paragraph [ref=e1363]: "09177014581"
+                - cell "BIR SEC Permit" [ref=e1364]:
+                  - generic [ref=e1365]:
+                    - generic [ref=e1366]:
+                      - img [ref=e1367]
+                      - text: BIR
+                    - generic [ref=e1372]:
+                      - img [ref=e1373]
+                      - text: SEC
+                    - generic [ref=e1378]:
+                      - img [ref=e1379]
+                      - text: Permit
+                - cell "—" [ref=e1384]
+                - cell "0" [ref=e1385]
+                - cell "₱0" [ref=e1386]
+                - cell "—" [ref=e1387]
+                - cell "—" [ref=e1388]
+                - cell "—" [ref=e1389]
+                - cell "—" [ref=e1390]
+                - cell "—" [ref=e1391]
+                - cell "—" [ref=e1392]
+                - cell [ref=e1393]:
+                  - button [ref=e1394]:
+                    - img
+              - row "ESV International Corporation EIC24 Active rtenalpe@ptccom.com.ph 0917-703-8131 BIR SEC Permit — 12 ₱2,815,504 — — 2 2026-03-26 — 1" [ref=e1395] [cursor=pointer]:
+                - cell "ESV International Corporation EIC24" [ref=e1396]:
+                  - generic [ref=e1397]:
+                    - img [ref=e1399]
+                    - generic [ref=e1403]:
+                      - paragraph [ref=e1404]: ESV International Corporation
+                      - paragraph [ref=e1405]: EIC24
+                - cell "Active" [ref=e1406]:
+                  - generic [ref=e1407]: Active
+                - cell "rtenalpe@ptccom.com.ph 0917-703-8131" [ref=e1408]:
+                  - generic [ref=e1409]:
+                    - paragraph [ref=e1410]: rtenalpe@ptccom.com.ph
+                    - paragraph [ref=e1411]: 0917-703-8131
+                - cell "BIR SEC Permit" [ref=e1412]:
+                  - generic [ref=e1413]:
+                    - generic [ref=e1414]:
+                      - img [ref=e1415]
+                      - text: BIR
+                    - generic [ref=e1420]:
+                      - img [ref=e1421]
+                      - text: SEC
+                    - generic [ref=e1426]:
+                      - img [ref=e1427]
+                      - text: Permit
+                - cell "—" [ref=e1432]
+                - cell "12" [ref=e1433]
+                - cell "₱2,815,504" [ref=e1434]
+                - cell "—" [ref=e1435]
+                - cell "—" [ref=e1436]
+                - cell "2" [ref=e1437]:
+                  - generic [ref=e1438]: "2"
+                - cell "2026-03-26" [ref=e1439]
+                - cell "—" [ref=e1440]
+                - cell "1" [ref=e1441]
+                - cell [ref=e1442]:
+                  - button [ref=e1443]:
+                    - img
+              - row "EVANA BCBB ENTERPRISES EBE29 Pending Verification caluagelena@yahoo.com 09178640777 BIR SEC Permit — 0 ₱0 — — — — — —" [ref=e1444] [cursor=pointer]:
+                - cell "EVANA BCBB ENTERPRISES EBE29" [ref=e1445]:
+                  - generic [ref=e1446]:
+                    - img [ref=e1448]
+                    - generic [ref=e1452]:
+                      - paragraph [ref=e1453]: EVANA BCBB ENTERPRISES
+                      - paragraph [ref=e1454]: EBE29
+                - cell "Pending Verification" [ref=e1455]:
+                  - generic [ref=e1456]: Pending Verification
+                - cell "caluagelena@yahoo.com 09178640777" [ref=e1457]:
+                  - generic [ref=e1458]:
+                    - paragraph [ref=e1459]: caluagelena@yahoo.com
+                    - paragraph [ref=e1460]: "09178640777"
+                - cell "BIR SEC Permit" [ref=e1461]:
+                  - generic [ref=e1462]:
+                    - generic [ref=e1463]:
+                      - img [ref=e1464]
+                      - text: BIR
+                    - generic [ref=e1469]:
+                      - img [ref=e1470]
+                      - text: SEC
+                    - generic [ref=e1475]:
+                      - img [ref=e1476]
+                      - text: Permit
+                - cell "—" [ref=e1481]
+                - cell "0" [ref=e1482]
+                - cell "₱0" [ref=e1483]
+                - cell "—" [ref=e1484]
+                - cell "—" [ref=e1485]
+                - cell "—" [ref=e1486]
+                - cell "—" [ref=e1487]
+                - cell "—" [ref=e1488]
+                - cell "—" [ref=e1489]
+                - cell [ref=e1490]:
+                  - button [ref=e1491]:
+                    - img
+              - row "EVERGOOD CONSUMER GOODS TRADING ECGT34 Pending Verification tomgotan@gmail.com 09228474474 BIR SEC Permit — 0 ₱0 — — — — — —" [ref=e1492] [cursor=pointer]:
+                - cell "EVERGOOD CONSUMER GOODS TRADING ECGT34" [ref=e1493]:
+                  - generic [ref=e1494]:
+                    - img [ref=e1496]
+                    - generic [ref=e1500]:
+                      - paragraph [ref=e1501]: EVERGOOD CONSUMER GOODS TRADING
+                      - paragraph [ref=e1502]: ECGT34
+                - cell "Pending Verification" [ref=e1503]:
+                  - generic [ref=e1504]: Pending Verification
+                - cell "tomgotan@gmail.com 09228474474" [ref=e1505]:
+                  - generic [ref=e1506]:
+                    - paragraph [ref=e1507]: tomgotan@gmail.com
+                    - paragraph [ref=e1508]: "09228474474"
+                - cell "BIR SEC Permit" [ref=e1509]:
+                  - generic [ref=e1510]:
+                    - generic [ref=e1511]:
+                      - img [ref=e1512]
+                      - text: BIR
+                    - generic [ref=e1517]:
+                      - img [ref=e1518]
+                      - text: SEC
+                    - generic [ref=e1523]:
+                      - img [ref=e1524]
+                      - text: Permit
+                - cell "—" [ref=e1529]
+                - cell "0" [ref=e1530]
+                - cell "₱0" [ref=e1531]
+                - cell "—" [ref=e1532]
+                - cell "—" [ref=e1533]
+                - cell "—" [ref=e1534]
+                - cell "—" [ref=e1535]
+                - cell "—" [ref=e1536]
+                - cell "—" [ref=e1537]
+                - cell [ref=e1538]:
+                  - button [ref=e1539]:
+                    - img
+              - row "Fast Trax Corporation FTC95 Pending Verification fast_trax_corporation@yahoo.com 09178998909 BIR SEC Permit — 1 ₱142,500 — — 1 2026-04-14 — 1" [ref=e1540] [cursor=pointer]:
+                - cell "Fast Trax Corporation FTC95" [ref=e1541]:
+                  - generic [ref=e1542]:
+                    - img [ref=e1544]
+                    - generic [ref=e1548]:
+                      - paragraph [ref=e1549]: Fast Trax Corporation
+                      - paragraph [ref=e1550]: FTC95
+                - cell "Pending Verification" [ref=e1551]:
+                  - generic [ref=e1552]: Pending Verification
+                - cell "fast_trax_corporation@yahoo.com 09178998909" [ref=e1553]:
+                  - generic [ref=e1554]:
+                    - paragraph [ref=e1555]: fast_trax_corporation@yahoo.com
+                    - paragraph [ref=e1556]: "09178998909"
+                - cell "BIR SEC Permit" [ref=e1557]:
+                  - generic [ref=e1558]:
+                    - generic [ref=e1559]:
+                      - img [ref=e1560]
+                      - text: BIR
+                    - generic [ref=e1565]:
+                      - img [ref=e1566]
+                      - text: SEC
+                    - generic [ref=e1571]:
+                      - img [ref=e1572]
+                      - text: Permit
+                - cell "—" [ref=e1577]
+                - cell "1" [ref=e1578]
+                - cell "₱142,500" [ref=e1579]
+                - cell "—" [ref=e1580]
+                - cell "—" [ref=e1581]
+                - cell "1" [ref=e1582]:
+                  - generic [ref=e1583]: "1"
+                - cell "2026-04-14" [ref=e1584]
+                - cell "—" [ref=e1585]
+                - cell "1" [ref=e1586]
+                - cell [ref=e1587]:
+                  - button [ref=e1588]:
+                    - img
+              - row "FORWARD DYNAMIC FD98 Pending Verification BIR SEC Permit — 0 ₱0 — — — — — —" [ref=e1589] [cursor=pointer]:
+                - cell "FORWARD DYNAMIC FD98" [ref=e1590]:
+                  - generic [ref=e1591]:
+                    - img [ref=e1593]
+                    - generic [ref=e1597]:
+                      - paragraph [ref=e1598]: FORWARD DYNAMIC
+                      - paragraph [ref=e1599]: FD98
+                - cell "Pending Verification" [ref=e1600]:
+                  - generic [ref=e1601]: Pending Verification
+                - cell [ref=e1602]
+                - cell "BIR SEC Permit" [ref=e1603]:
+                  - generic [ref=e1604]:
+                    - generic [ref=e1605]:
+                      - img [ref=e1606]
+                      - text: BIR
+                    - generic [ref=e1611]:
+                      - img [ref=e1612]
+                      - text: SEC
+                    - generic [ref=e1617]:
+                      - img [ref=e1618]
+                      - text: Permit
+                - cell "—" [ref=e1623]
+                - cell "0" [ref=e1624]
+                - cell "₱0" [ref=e1625]
+                - cell "—" [ref=e1626]
+                - cell "—" [ref=e1627]
+                - cell "—" [ref=e1628]
+                - cell "—" [ref=e1629]
+                - cell "—" [ref=e1630]
+                - cell "—" [ref=e1631]
+                - cell [ref=e1632]:
+                  - button [ref=e1633]:
+                    - img
+              - row "FOUR COOLITZ FC97 Pending Verification BIR SEC Permit — 0 ₱0 — — — — — —" [ref=e1634] [cursor=pointer]:
+                - cell "FOUR COOLITZ FC97" [ref=e1635]:
+                  - generic [ref=e1636]:
+                    - img [ref=e1638]
+                    - generic [ref=e1642]:
+                      - paragraph [ref=e1643]: FOUR COOLITZ
+                      - paragraph [ref=e1644]: FC97
+                - cell "Pending Verification" [ref=e1645]:
+                  - generic [ref=e1646]: Pending Verification
+                - cell [ref=e1647]
+                - cell "BIR SEC Permit" [ref=e1648]:
+                  - generic [ref=e1649]:
+                    - generic [ref=e1650]:
+                      - img [ref=e1651]
+                      - text: BIR
+                    - generic [ref=e1656]:
+                      - img [ref=e1657]
+                      - text: SEC
+                    - generic [ref=e1662]:
+                      - img [ref=e1663]
+                      - text: Permit
+                - cell "—" [ref=e1668]
+                - cell "0" [ref=e1669]
+                - cell "₱0" [ref=e1670]
+                - cell "—" [ref=e1671]
+                - cell "—" [ref=e1672]
+                - cell "—" [ref=e1673]
+                - cell "—" [ref=e1674]
+                - cell "—" [ref=e1675]
+                - cell "—" [ref=e1676]
+                - cell [ref=e1677]:
+                  - button [ref=e1678]:
+                    - img
+              - row "GLOBAL PACIFIC DISTRIBUTION NETWORK CORP. GPDNC5 Pending Verification nice@globalpacific.com.ph 09615113774 BIR SEC Permit — 5 ₱2,272,293 — — 1 2026-03-09 — 2" [ref=e1679] [cursor=pointer]:
+                - cell "GLOBAL PACIFIC DISTRIBUTION NETWORK CORP. GPDNC5" [ref=e1680]:
+                  - generic [ref=e1681]:
+                    - img [ref=e1683]
+                    - generic [ref=e1687]:
+                      - paragraph [ref=e1688]: GLOBAL PACIFIC DISTRIBUTION NETWORK CORP.
+                      - paragraph [ref=e1689]: GPDNC5
+                - cell "Pending Verification" [ref=e1690]:
+                  - generic [ref=e1691]: Pending Verification
+                - cell "nice@globalpacific.com.ph 09615113774" [ref=e1692]:
+                  - generic [ref=e1693]:
+                    - paragraph [ref=e1694]: nice@globalpacific.com.ph
+                    - paragraph [ref=e1695]: "09615113774"
+                - cell "BIR SEC Permit" [ref=e1696]:
+                  - generic [ref=e1697]:
+                    - generic [ref=e1698]:
+                      - img [ref=e1699]
+                      - text: BIR
+                    - generic [ref=e1704]:
+                      - img [ref=e1705]
+                      - text: SEC
+                    - generic [ref=e1710]:
+                      - img [ref=e1711]
+                      - text: Permit
+                - cell "—" [ref=e1716]
+                - cell "5" [ref=e1717]
+                - cell "₱2,272,293" [ref=e1718]
+                - cell "—" [ref=e1719]
+                - cell "—" [ref=e1720]
+                - cell "1" [ref=e1721]:
+                  - generic [ref=e1722]: "1"
+                - cell "2026-03-09" [ref=e1723]
+                - cell "—" [ref=e1724]
+                - cell "2" [ref=e1725]
+                - cell [ref=e1726]:
+                  - button [ref=e1727]:
+                    - img
+              - row "Green District Fruits and Vegetables Trading GDFaVT55 Pending Verification greendistrictfv@gmail.com 09176279809 BIR SEC Permit — 11 ₱1,212,288 — — 2 2026-04-14 — 2" [ref=e1728] [cursor=pointer]:
+                - cell "Green District Fruits and Vegetables Trading GDFaVT55" [ref=e1729]:
+                  - generic [ref=e1730]:
+                    - img [ref=e1732]
+                    - generic [ref=e1736]:
+                      - paragraph [ref=e1737]: Green District Fruits and Vegetables Trading
+                      - paragraph [ref=e1738]: GDFaVT55
+                - cell "Pending Verification" [ref=e1739]:
+                  - generic [ref=e1740]: Pending Verification
+                - cell "greendistrictfv@gmail.com 09176279809" [ref=e1741]:
+                  - generic [ref=e1742]:
+                    - paragraph [ref=e1743]: greendistrictfv@gmail.com
+                    - paragraph [ref=e1744]: "09176279809"
+                - cell "BIR SEC Permit" [ref=e1745]:
+                  - generic [ref=e1746]:
+                    - generic [ref=e1747]:
+                      - img [ref=e1748]
+                      - text: BIR
+                    - generic [ref=e1753]:
+                      - img [ref=e1754]
+                      - text: SEC
+                    - generic [ref=e1759]:
+                      - img [ref=e1760]
+                      - text: Permit
+                - cell "—" [ref=e1765]
+                - cell "11" [ref=e1766]
+                - cell "₱1,212,288" [ref=e1767]
+                - cell "—" [ref=e1768]
+                - cell "—" [ref=e1769]
+                - cell "2" [ref=e1770]:
+                  - generic [ref=e1771]: "2"
+                - cell "2026-04-14" [ref=e1772]
+                - cell "—" [ref=e1773]
+                - cell "2" [ref=e1774]
+                - cell [ref=e1775]:
+                  - button [ref=e1776]:
+                    - img
+              - row "Griffift Foods Philippines Inc. GFPI6 Pending Verification cprosete@griffithfoods.com 09176395091 BIR SEC Permit — 20 ₱9,994,230 — 1 8 2026-04-14 — 9" [ref=e1777] [cursor=pointer]:
+                - cell "Griffift Foods Philippines Inc. GFPI6" [ref=e1778]:
+                  - generic [ref=e1779]:
+                    - img [ref=e1781]
+                    - generic [ref=e1785]:
+                      - paragraph [ref=e1786]: Griffift Foods Philippines Inc.
+                      - paragraph [ref=e1787]: GFPI6
+                - cell "Pending Verification" [ref=e1788]:
+                  - generic [ref=e1789]: Pending Verification
+                - cell "cprosete@griffithfoods.com 09176395091" [ref=e1790]:
+                  - generic [ref=e1791]:
+                    - paragraph [ref=e1792]: cprosete@griffithfoods.com
+                    - paragraph [ref=e1793]: "09176395091"
+                - cell "BIR SEC Permit" [ref=e1794]:
+                  - generic [ref=e1795]:
+                    - generic [ref=e1796]:
+                      - img [ref=e1797]
+                      - text: BIR
+                    - generic [ref=e1802]:
+                      - img [ref=e1803]
+                      - text: SEC
+                    - generic [ref=e1808]:
+                      - img [ref=e1809]
+                      - text: Permit
+                - cell "—" [ref=e1814]
+                - cell "20" [ref=e1815]
+                - cell "₱9,994,230" [ref=e1816]
+                - cell "—" [ref=e1817]
+                - cell "1" [ref=e1818]:
+                  - generic [ref=e1819]: "1"
+                - cell "8" [ref=e1820]:
+                  - generic [ref=e1821]: "8"
+                - cell "2026-04-14" [ref=e1822]
+                - cell "—" [ref=e1823]
+                - cell "9" [ref=e1824]
+                - cell [ref=e1825]:
+                  - button [ref=e1826]:
+                    - img
+              - row "Handyware Philippines incorporated HPi65 Pending Verification cristina_enesio@handyware.net.ph 09954866110 BIR SEC Permit — 3 ₱502,501 — — 1 2026-03-17 — 3" [ref=e1827] [cursor=pointer]:
+                - cell "Handyware Philippines incorporated HPi65" [ref=e1828]:
+                  - generic [ref=e1829]:
+                    - img [ref=e1831]
+                    - generic [ref=e1835]:
+                      - paragraph [ref=e1836]: Handyware Philippines incorporated
+                      - paragraph [ref=e1837]: HPi65
+                - cell "Pending Verification" [ref=e1838]:
+                  - generic [ref=e1839]: Pending Verification
+                - cell "cristina_enesio@handyware.net.ph 09954866110" [ref=e1840]:
+                  - generic [ref=e1841]:
+                    - paragraph [ref=e1842]: cristina_enesio@handyware.net.ph
+                    - paragraph [ref=e1843]: "09954866110"
+                - cell "BIR SEC Permit" [ref=e1844]:
+                  - generic [ref=e1845]:
+                    - generic [ref=e1846]:
+                      - img [ref=e1847]
+                      - text: BIR
+                    - generic [ref=e1852]:
+                      - img [ref=e1853]
+                      - text: SEC
+                    - generic [ref=e1858]:
+                      - img [ref=e1859]
+                      - text: Permit
+                - cell "—" [ref=e1864]
+                - cell "3" [ref=e1865]
+                - cell "₱502,501" [ref=e1866]
+                - cell "—" [ref=e1867]
+                - cell "—" [ref=e1868]
+                - cell "1" [ref=e1869]:
+                  - generic [ref=e1870]: "1"
+                - cell "2026-03-17" [ref=e1871]
+                - cell "—" [ref=e1872]
+                - cell "3" [ref=e1873]
+                - cell [ref=e1874]:
+                  - button [ref=e1875]:
+                    - img
+              - row "HAPPYBEE PACKAGING INC. HPI17 Pending Verification smmacaraeg.bestchoice@gmail.com 0917-638-5950 BIR SEC Permit — 26 ₱1,550,113 — — 4 2026-03-18 — 21" [ref=e1876] [cursor=pointer]:
+                - cell "HAPPYBEE PACKAGING INC. HPI17" [ref=e1877]:
+                  - generic [ref=e1878]:
+                    - img [ref=e1880]
+                    - generic [ref=e1884]:
+                      - paragraph [ref=e1885]: HAPPYBEE PACKAGING INC.
+                      - paragraph [ref=e1886]: HPI17
+                - cell "Pending Verification" [ref=e1887]:
+                  - generic [ref=e1888]: Pending Verification
+                - cell "smmacaraeg.bestchoice@gmail.com 0917-638-5950" [ref=e1889]:
+                  - generic [ref=e1890]:
+                    - paragraph [ref=e1891]: smmacaraeg.bestchoice@gmail.com
+                    - paragraph [ref=e1892]: 0917-638-5950
+                - cell "BIR SEC Permit" [ref=e1893]:
+                  - generic [ref=e1894]:
+                    - generic [ref=e1895]:
+                      - img [ref=e1896]
+                      - text: BIR
+                    - generic [ref=e1901]:
+                      - img [ref=e1902]
+                      - text: SEC
+                    - generic [ref=e1907]:
+                      - img [ref=e1908]
+                      - text: Permit
+                - cell "—" [ref=e1913]
+                - cell "26" [ref=e1914]
+                - cell "₱1,550,113" [ref=e1915]
+                - cell "—" [ref=e1916]
+                - cell "—" [ref=e1917]
+                - cell "4" [ref=e1918]:
+                  - generic [ref=e1919]: "4"
+                - cell "2026-03-18" [ref=e1920]
+                - cell "—" [ref=e1921]
+                - cell "21" [ref=e1922]
+                - cell [ref=e1923]:
+                  - button [ref=e1924]:
+                    - img
+              - row "Hi-Las Marketing Corporation HMC67 Pending Verification info@hilasmc.com 639209080302 BIR SEC Permit — 4 ₱1,585,974 — — — 2026-02-06 — 4" [ref=e1925] [cursor=pointer]:
+                - cell "Hi-Las Marketing Corporation HMC67" [ref=e1926]:
+                  - generic [ref=e1927]:
+                    - img [ref=e1929]
+                    - generic [ref=e1933]:
+                      - paragraph [ref=e1934]: Hi-Las Marketing Corporation
+                      - paragraph [ref=e1935]: HMC67
+                - cell "Pending Verification" [ref=e1936]:
+                  - generic [ref=e1937]: Pending Verification
+                - cell "info@hilasmc.com 639209080302" [ref=e1938]:
+                  - generic [ref=e1939]:
+                    - paragraph [ref=e1940]: info@hilasmc.com
+                    - paragraph [ref=e1941]: "639209080302"
+                - cell "BIR SEC Permit" [ref=e1942]:
+                  - generic [ref=e1943]:
+                    - generic [ref=e1944]:
+                      - img [ref=e1945]
+                      - text: BIR
+                    - generic [ref=e1950]:
+                      - img [ref=e1951]
+                      - text: SEC
+                    - generic [ref=e1956]:
+                      - img [ref=e1957]
+                      - text: Permit
+                - cell "—" [ref=e1962]
+                - cell "4" [ref=e1963]
+                - cell "₱1,585,974" [ref=e1964]
+                - cell "—" [ref=e1965]
+                - cell "—" [ref=e1966]
+                - cell "—" [ref=e1967]
+                - cell "2026-02-06" [ref=e1968]
+                - cell "—" [ref=e1969]
+                - cell "4" [ref=e1970]
+                - cell [ref=e1971]:
+                  - button [ref=e1972]:
+                    - img
+              - row "HIGHTOWER, INC. HI88 Pending Verification viviangan@hightower.com.ph 0998-5001282 BIR SEC Permit — 1 ₱311,143 — — — 2026-03-17 — 1" [ref=e1973] [cursor=pointer]:
+                - cell "HIGHTOWER, INC. HI88" [ref=e1974]:
+                  - generic [ref=e1975]:
+                    - img [ref=e1977]
+                    - generic [ref=e1981]:
+                      - paragraph [ref=e1982]: HIGHTOWER, INC.
+                      - paragraph [ref=e1983]: HI88
+                - cell "Pending Verification" [ref=e1984]:
+                  - generic [ref=e1985]: Pending Verification
+                - cell "viviangan@hightower.com.ph 0998-5001282" [ref=e1986]:
+                  - generic [ref=e1987]:
+                    - paragraph [ref=e1988]: viviangan@hightower.com.ph
+                    - paragraph [ref=e1989]: 0998-5001282
+                - cell "BIR SEC Permit" [ref=e1990]:
+                  - generic [ref=e1991]:
+                    - generic [ref=e1992]:
+                      - img [ref=e1993]
+                      - text: BIR
+                    - generic [ref=e1998]:
+                      - img [ref=e1999]
+                      - text: SEC
+                    - generic [ref=e2004]:
+                      - img [ref=e2005]
+                      - text: Permit
+                - cell "—" [ref=e2010]
+                - cell "1" [ref=e2011]
+                - cell "₱311,143" [ref=e2012]
+                - cell "—" [ref=e2013]
+                - cell "—" [ref=e2014]
+                - cell "—" [ref=e2015]
+                - cell "2026-03-17" [ref=e2016]
+                - cell "—" [ref=e2017]
+                - cell "1" [ref=e2018]
+                - cell [ref=e2019]:
+                  - button [ref=e2020]:
+                    - img
+              - row "ICON PRINTING SOLUTION INC IPSI36 Pending Verification jayreiquizon@gmail.com 09173034553 BIR SEC Permit — 12 ₱21,419,967 — 5 — 2026-04-10 — 2" [ref=e2021] [cursor=pointer]:
+                - cell "ICON PRINTING SOLUTION INC IPSI36" [ref=e2022]:
+                  - generic [ref=e2023]:
+                    - img [ref=e2025]
+                    - generic [ref=e2029]:
+                      - paragraph [ref=e2030]: ICON PRINTING SOLUTION INC
+                      - paragraph [ref=e2031]: IPSI36
+                - cell "Pending Verification" [ref=e2032]:
+                  - generic [ref=e2033]: Pending Verification
+                - cell "jayreiquizon@gmail.com 09173034553" [ref=e2034]:
+                  - generic [ref=e2035]:
+                    - paragraph [ref=e2036]: jayreiquizon@gmail.com
+                    - paragraph [ref=e2037]: "09173034553"
+                - cell "BIR SEC Permit" [ref=e2038]:
+                  - generic [ref=e2039]:
+                    - generic [ref=e2040]:
+                      - img [ref=e2041]
+                      - text: BIR
+                    - generic [ref=e2046]:
+                      - img [ref=e2047]
+                      - text: SEC
+                    - generic [ref=e2052]:
+                      - img [ref=e2053]
+                      - text: Permit
+                - cell "—" [ref=e2058]
+                - cell "12" [ref=e2059]
+                - cell "₱21,419,967" [ref=e2060]
+                - cell "—" [ref=e2061]
+                - cell "5" [ref=e2062]:
+                  - generic [ref=e2063]: "5"
+                - cell "—" [ref=e2064]
+                - cell "2026-04-10" [ref=e2065]
+                - cell "—" [ref=e2066]
+                - cell "2" [ref=e2067]
+                - cell [ref=e2068]:
+                  - button [ref=e2069]:
+                    - img
+              - row "ICONIC DEALERSHIP INC. IDI81 Pending Verification jay@bebang.ph BIR SEC Permit — 1 ₱38,574 — — 1 2026-01-30 — 1" [ref=e2070] [cursor=pointer]:
+                - cell "ICONIC DEALERSHIP INC. IDI81" [ref=e2071]:
+                  - generic [ref=e2072]:
+                    - img [ref=e2074]
+                    - generic [ref=e2078]:
+                      - paragraph [ref=e2079]: ICONIC DEALERSHIP INC.
+                      - paragraph [ref=e2080]: IDI81
+                - cell "Pending Verification" [ref=e2081]:
+                  - generic [ref=e2082]: Pending Verification
+                - cell "jay@bebang.ph" [ref=e2083]:
+                  - paragraph [ref=e2085]: jay@bebang.ph
+                - cell "BIR SEC Permit" [ref=e2086]:
+                  - generic [ref=e2087]:
+                    - generic [ref=e2088]:
+                      - img [ref=e2089]
+                      - text: BIR
+                    - generic [ref=e2094]:
+                      - img [ref=e2095]
+                      - text: SEC
+                    - generic [ref=e2100]:
+                      - img [ref=e2101]
+                      - text: Permit
+                - cell "—" [ref=e2106]
+                - cell "1" [ref=e2107]
+                - cell "₱38,574" [ref=e2108]
+                - cell "—" [ref=e2109]
+                - cell "—" [ref=e2110]
+                - cell "1" [ref=e2111]:
+                  - generic [ref=e2112]: "1"
+                - cell "2026-01-30" [ref=e2113]
+                - cell "—" [ref=e2114]
+                - cell "1" [ref=e2115]
+                - cell [ref=e2116]:
+                  - button [ref=e2117]:
+                    - img
+              - row "INNOPAK INC. II46 Pending Verification Innopak.inc@gmail.com 09338673872 BIR SEC Permit — 1 ₱280,000 — — — 2025-11-27 — 1" [ref=e2118] [cursor=pointer]:
+                - cell "INNOPAK INC. II46" [ref=e2119]:
+                  - generic [ref=e2120]:
+                    - img [ref=e2122]
+                    - generic [ref=e2126]:
+                      - paragraph [ref=e2127]: INNOPAK INC.
+                      - paragraph [ref=e2128]: II46
+                - cell "Pending Verification" [ref=e2129]:
+                  - generic [ref=e2130]: Pending Verification
+                - cell "Innopak.inc@gmail.com 09338673872" [ref=e2131]:
+                  - generic [ref=e2132]:
+                    - paragraph [ref=e2133]: Innopak.inc@gmail.com
+                    - paragraph [ref=e2134]: "09338673872"
+                - cell "BIR SEC Permit" [ref=e2135]:
+                  - generic [ref=e2136]:
+                    - generic [ref=e2137]:
+                      - img [ref=e2138]
+                      - text: BIR
+                    - generic [ref=e2143]:
+                      - img [ref=e2144]
+                      - text: SEC
+                    - generic [ref=e2149]:
+                      - img [ref=e2150]
+                      - text: Permit
+                - cell "—" [ref=e2155]
+                - cell "1" [ref=e2156]
+                - cell "₱280,000" [ref=e2157]
+                - cell "—" [ref=e2158]
+                - cell "—" [ref=e2159]
+                - cell "—" [ref=e2160]
+                - cell "2025-11-27" [ref=e2161]
+                - cell "—" [ref=e2162]
+                - cell "1" [ref=e2163]
+                - cell [ref=e2164]:
+                  - button [ref=e2165]:
+                    - img
+              - row "J.T. Antonio Trading Corp. JATC63 Pending Verification carloantonio@jtacorpph.com 9178467164 BIR SEC Permit — 2 ₱207,180 — — — 2025-12-03 — 4" [ref=e2166] [cursor=pointer]:
+                - cell "J.T. Antonio Trading Corp. JATC63" [ref=e2167]:
+                  - generic [ref=e2168]:
+                    - img [ref=e2170]
+                    - generic [ref=e2174]:
+                      - paragraph [ref=e2175]: J.T. Antonio Trading Corp.
+                      - paragraph [ref=e2176]: JATC63
+                - cell "Pending Verification" [ref=e2177]:
+                  - generic [ref=e2178]: Pending Verification
+                - cell "carloantonio@jtacorpph.com 9178467164" [ref=e2179]:
+                  - generic [ref=e2180]:
+                    - paragraph [ref=e2181]: carloantonio@jtacorpph.com
+                    - paragraph [ref=e2182]: "9178467164"
+                - cell "BIR SEC Permit" [ref=e2183]:
+                  - generic [ref=e2184]:
+                    - generic [ref=e2185]:
+                      - img [ref=e2186]
+                      - text: BIR
+                    - generic [ref=e2191]:
+                      - img [ref=e2192]
+                      - text: SEC
+                    - generic [ref=e2197]:
+                      - img [ref=e2198]
+                      - text: Permit
+                - cell "—" [ref=e2203]
+                - cell "2" [ref=e2204]
+                - cell "₱207,180" [ref=e2205]
+                - cell "—" [ref=e2206]
+                - cell "—" [ref=e2207]
+                - cell "—" [ref=e2208]
+                - cell "2025-12-03" [ref=e2209]
+                - cell "—" [ref=e2210]
+                - cell "4" [ref=e2211]
+                - cell [ref=e2212]:
+                  - button [ref=e2213]:
+                    - img
+              - row "JC BENE STOCKWELL CORP. JBSC78 Pending Verification arjayjcbene@yahoo.com 0969-377-1071 BIR SEC Permit — 3 ₱38,220 — — 1 2026-04-14 — 2" [ref=e2214] [cursor=pointer]:
+                - cell "JC BENE STOCKWELL CORP. JBSC78" [ref=e2215]:
+                  - generic [ref=e2216]:
+                    - img [ref=e2218]
+                    - generic [ref=e2222]:
+                      - paragraph [ref=e2223]: JC BENE STOCKWELL CORP.
+                      - paragraph [ref=e2224]: JBSC78
+                - cell "Pending Verification" [ref=e2225]:
+                  - generic [ref=e2226]: Pending Verification
+                - cell "arjayjcbene@yahoo.com 0969-377-1071" [ref=e2227]:
+                  - generic [ref=e2228]:
+                    - paragraph [ref=e2229]: arjayjcbene@yahoo.com
+                    - paragraph [ref=e2230]: 0969-377-1071
+                - cell "BIR SEC Permit" [ref=e2231]:
+                  - generic [ref=e2232]:
+                    - generic [ref=e2233]:
+                      - img [ref=e2234]
+                      - text: BIR
+                    - generic [ref=e2239]:
+                      - img [ref=e2240]
+                      - text: SEC
+                    - generic [ref=e2245]:
+                      - img [ref=e2246]
+                      - text: Permit
+                - cell "—" [ref=e2251]
+                - cell "3" [ref=e2252]
+                - cell "₱38,220" [ref=e2253]
+                - cell "—" [ref=e2254]
+                - cell "—" [ref=e2255]
+                - cell "1" [ref=e2256]:
+                  - generic [ref=e2257]: "1"
+                - cell "2026-04-14" [ref=e2258]
+                - cell "—" [ref=e2259]
+                - cell "2" [ref=e2260]
+                - cell [ref=e2261]:
+                  - button [ref=e2262]:
+                    - img
+              - row "JOVYLYN AND VIOLETA UBE HOUSE JAVUH7 Active violetaopalla288@gmail.com 09308370387 BIR SEC Permit — 26 ₱8,238,969 — 2 3 2026-04-13 — 5" [ref=e2263] [cursor=pointer]:
+                - cell "JOVYLYN AND VIOLETA UBE HOUSE JAVUH7" [ref=e2264]:
+                  - generic [ref=e2265]:
+                    - img [ref=e2267]
+                    - generic [ref=e2271]:
+                      - paragraph [ref=e2272]: JOVYLYN AND VIOLETA UBE HOUSE
+                      - paragraph [ref=e2273]: JAVUH7
+                - cell "Active" [ref=e2274]:
+                  - generic [ref=e2275]: Active
+                - cell "violetaopalla288@gmail.com 09308370387" [ref=e2276]:
+                  - generic [ref=e2277]:
+                    - paragraph [ref=e2278]: violetaopalla288@gmail.com
+                    - paragraph [ref=e2279]: "09308370387"
+                - cell "BIR SEC Permit" [ref=e2280]:
+                  - generic [ref=e2281]:
+                    - generic [ref=e2282]:
+                      - img [ref=e2283]
+                      - text: BIR
+                    - generic [ref=e2288]:
+                      - img [ref=e2289]
+                      - text: SEC
+                    - generic [ref=e2294]:
+                      - img [ref=e2295]
+                      - text: Permit
+                - cell "—" [ref=e2300]
+                - cell "26" [ref=e2301]
+                - cell "₱8,238,969" [ref=e2302]
+                - cell "—" [ref=e2303]
+                - cell "2" [ref=e2304]:
+                  - generic [ref=e2305]: "2"
+                - cell "3" [ref=e2306]:
+                  - generic [ref=e2307]: "3"
+                - cell "2026-04-13" [ref=e2308]
+                - cell "—" [ref=e2309]
+                - cell "5" [ref=e2310]
+                - cell [ref=e2311]:
+                  - button [ref=e2312]:
+                    - img
+              - row "Kairos TPH KT90 Pending Verification info.kairosph@gmail.com 09701907874 BIR SEC Permit — 0 ₱0 — — — — — —" [ref=e2313] [cursor=pointer]:
+                - cell "Kairos TPH KT90" [ref=e2314]:
+                  - generic [ref=e2315]:
+                    - img [ref=e2317]
+                    - generic [ref=e2321]:
+                      - paragraph [ref=e2322]: Kairos TPH
+                      - paragraph [ref=e2323]: KT90
+                - cell "Pending Verification" [ref=e2324]:
+                  - generic [ref=e2325]: Pending Verification
+                - cell "info.kairosph@gmail.com 09701907874" [ref=e2326]:
+                  - generic [ref=e2327]:
+                    - paragraph [ref=e2328]: info.kairosph@gmail.com
+                    - paragraph [ref=e2329]: "09701907874"
+                - cell "BIR SEC Permit" [ref=e2330]:
+                  - generic [ref=e2331]:
+                    - generic [ref=e2332]:
+                      - img [ref=e2333]
+                      - text: BIR
+                    - generic [ref=e2338]:
+                      - img [ref=e2339]
+                      - text: SEC
+                    - generic [ref=e2344]:
+                      - img [ref=e2345]
+                      - text: Permit
+                - cell "—" [ref=e2350]
+                - cell "0" [ref=e2351]
+                - cell "₱0" [ref=e2352]
+                - cell "—" [ref=e2353]
+                - cell "—" [ref=e2354]
+                - cell "—" [ref=e2355]
+                - cell "—" [ref=e2356]
+                - cell "—" [ref=e2357]
+                - cell "—" [ref=e2358]
+                - cell [ref=e2359]:
+                  - button [ref=e2360]:
+                    - img
+              - row "KAIROS TPH ELECTRONCS GADGETS AND ACCESSORIES TRADING KTEGAAT91 Pending Verification info.kairosph@gmail.com 09701907874 BIR SEC Permit — 1 ₱28,217 — — 1 2026-03-18 — 1" [ref=e2361] [cursor=pointer]:
+                - cell "KAIROS TPH ELECTRONCS GADGETS AND ACCESSORIES TRADING KTEGAAT91" [ref=e2362]:
+                  - generic [ref=e2363]:
+                    - img [ref=e2365]
+                    - generic [ref=e2369]:
+                      - paragraph [ref=e2370]: KAIROS TPH ELECTRONCS GADGETS AND ACCESSORIES TRADING
+                      - paragraph [ref=e2371]: KTEGAAT91
+                - cell "Pending Verification" [ref=e2372]:
+                  - generic [ref=e2373]: Pending Verification
+                - cell "info.kairosph@gmail.com 09701907874" [ref=e2374]:
+                  - generic [ref=e2375]:
+                    - paragraph [ref=e2376]: info.kairosph@gmail.com
+                    - paragraph [ref=e2377]: "09701907874"
+                - cell "BIR SEC Permit" [ref=e2378]:
+                  - generic [ref=e2379]:
+                    - generic [ref=e2380]:
+                      - img [ref=e2381]
+                      - text: BIR
+                    - generic [ref=e2386]:
+                      - img [ref=e2387]
+                      - text: SEC
+                    - generic [ref=e2392]:
+                      - img [ref=e2393]
+                      - text: Permit
+                - cell "—" [ref=e2398]
+                - cell "1" [ref=e2399]
+                - cell "₱28,217" [ref=e2400]
+                - cell "—" [ref=e2401]
+                - cell "—" [ref=e2402]
+                - cell "1" [ref=e2403]:
+                  - generic [ref=e2404]: "1"
+                - cell "2026-03-18" [ref=e2405]
+                - cell "—" [ref=e2406]
+                - cell "1" [ref=e2407]
+                - cell [ref=e2408]:
+                  - button [ref=e2409]:
+                    - img
+              - row "KALINISAN CHEMICALS CORP. KCC37 Pending Verification Kimrendel.Palajoren@kalinisanchemicals.com 09176351039 BIR SEC Permit — 6 ₱1,061,502 — — 1 2026-02-25 — 4" [ref=e2410] [cursor=pointer]:
+                - cell "KALINISAN CHEMICALS CORP. KCC37" [ref=e2411]:
+                  - generic [ref=e2412]:
+                    - img [ref=e2414]
+                    - generic [ref=e2418]:
+                      - paragraph [ref=e2419]: KALINISAN CHEMICALS CORP.
+                      - paragraph [ref=e2420]: KCC37
+                - cell "Pending Verification" [ref=e2421]:
+                  - generic [ref=e2422]: Pending Verification
+                - cell "Kimrendel.Palajoren@kalinisanchemicals.com 09176351039" [ref=e2423]:
+                  - generic [ref=e2424]:
+                    - paragraph [ref=e2425]: Kimrendel.Palajoren@kalinisanchemicals.com
+                    - paragraph [ref=e2426]: "09176351039"
+                - cell "BIR SEC Permit" [ref=e2427]:
+                  - generic [ref=e2428]:
+                    - generic [ref=e2429]:
+                      - img [ref=e2430]
+                      - text: BIR
+                    - generic [ref=e2435]:
+                      - img [ref=e2436]
+                      - text: SEC
+                    - generic [ref=e2441]:
+                      - img [ref=e2442]
+                      - text: Permit
+                - cell "—" [ref=e2447]
+                - cell "6" [ref=e2448]
+                - cell "₱1,061,502" [ref=e2449]
+                - cell "—" [ref=e2450]
+                - cell "—" [ref=e2451]
+                - cell "1" [ref=e2452]:
+                  - generic [ref=e2453]: "1"
+                - cell "2026-02-25" [ref=e2454]
+                - cell "—" [ref=e2455]
+                - cell "4" [ref=e2456]
+                - cell [ref=e2457]:
+                  - button [ref=e2458]:
+                    - img
+              - row "KHLOE'S DELIGHT HOMEMADE FOOD RETAILING KDHFR11 Pending Verification jkkecarma@gmail.com 09507474664 BIR SEC Permit — 10 ₱2,518,414 — — 1 2026-03-12 — 3" [ref=e2459] [cursor=pointer]:
+                - cell "KHLOE'S DELIGHT HOMEMADE FOOD RETAILING KDHFR11" [ref=e2460]:
+                  - generic [ref=e2461]:
+                    - img [ref=e2463]
+                    - generic [ref=e2467]:
+                      - paragraph [ref=e2468]: KHLOE'S DELIGHT HOMEMADE FOOD RETAILING
+                      - paragraph [ref=e2469]: KDHFR11
+                - cell "Pending Verification" [ref=e2470]:
+                  - generic [ref=e2471]: Pending Verification
+                - cell "jkkecarma@gmail.com 09507474664" [ref=e2472]:
+                  - generic [ref=e2473]:
+                    - paragraph [ref=e2474]: jkkecarma@gmail.com
+                    - paragraph [ref=e2475]: "09507474664"
+                - cell "BIR SEC Permit" [ref=e2476]:
+                  - generic [ref=e2477]:
+                    - generic [ref=e2478]:
+                      - img [ref=e2479]
+                      - text: BIR
+                    - generic [ref=e2484]:
+                      - img [ref=e2485]
+                      - text: SEC
+                    - generic [ref=e2490]:
+                      - img [ref=e2491]
+                      - text: Permit
+                - cell "—" [ref=e2496]
+                - cell "10" [ref=e2497]
+                - cell "₱2,518,414" [ref=e2498]
+                - cell "—" [ref=e2499]
+                - cell "—" [ref=e2500]
+                - cell "1" [ref=e2501]:
+                  - generic [ref=e2502]: "1"
+                - cell "2026-03-12" [ref=e2503]
+                - cell "—" [ref=e2504]
+                - cell "3" [ref=e2505]
+                - cell [ref=e2506]:
+                  - button [ref=e2507]:
+                    - img
+              - row "LABELMEN ENTERPRISES LE38 Pending Verification mergen.castillon@labelmenenterprises.com 09454131740 BIR SEC Permit — 1 ₱100,000 — 1 — 2026-04-10 — 1" [ref=e2508] [cursor=pointer]:
+                - cell "LABELMEN ENTERPRISES LE38" [ref=e2509]:
+                  - generic [ref=e2510]:
+                    - img [ref=e2512]
+                    - generic [ref=e2516]:
+                      - paragraph [ref=e2517]: LABELMEN ENTERPRISES
+                      - paragraph [ref=e2518]: LE38
+                - cell "Pending Verification" [ref=e2519]:
+                  - generic [ref=e2520]: Pending Verification
+                - cell "mergen.castillon@labelmenenterprises.com 09454131740" [ref=e2521]:
+                  - generic [ref=e2522]:
+                    - paragraph [ref=e2523]: mergen.castillon@labelmenenterprises.com
+                    - paragraph [ref=e2524]: "09454131740"
+                - cell "BIR SEC Permit" [ref=e2525]:
+                  - generic [ref=e2526]:
+                    - generic [ref=e2527]:
+                      - img [ref=e2528]
+                      - text: BIR
+                    - generic [ref=e2533]:
+                      - img [ref=e2534]
+                      - text: SEC
+                    - generic [ref=e2539]:
+                      - img [ref=e2540]
+                      - text: Permit
+                - cell "—" [ref=e2545]
+                - cell "1" [ref=e2546]
+                - cell "₱100,000" [ref=e2547]
+                - cell "—" [ref=e2548]
+                - cell "1" [ref=e2549]:
+                  - generic [ref=e2550]: "1"
+                - cell "—" [ref=e2551]
+                - cell "2026-04-10" [ref=e2552]
+                - cell "—" [ref=e2553]
+                - cell "1" [ref=e2554]
+                - cell [ref=e2555]:
+                  - button [ref=e2556]:
+                    - img
+              - row "LABTRADERS,INC. L75 Pending Verification airen.fernandez@labtraders.com.ph 639178626299 BIR SEC Permit — 1 ₱144,473 — — 1 2025-12-03 — 1" [ref=e2557] [cursor=pointer]:
+                - cell "LABTRADERS,INC. L75" [ref=e2558]:
+                  - generic [ref=e2559]:
+                    - img [ref=e2561]
+                    - generic [ref=e2565]:
+                      - paragraph [ref=e2566]: LABTRADERS,INC.
+                      - paragraph [ref=e2567]: L75
+                - cell "Pending Verification" [ref=e2568]:
+                  - generic [ref=e2569]: Pending Verification
+                - cell "airen.fernandez@labtraders.com.ph 639178626299" [ref=e2570]:
+                  - generic [ref=e2571]:
+                    - paragraph [ref=e2572]: airen.fernandez@labtraders.com.ph
+                    - paragraph [ref=e2573]: "639178626299"
+                - cell "BIR SEC Permit" [ref=e2574]:
+                  - generic [ref=e2575]:
+                    - generic [ref=e2576]:
+                      - img [ref=e2577]
+                      - text: BIR
+                    - generic [ref=e2582]:
+                      - img [ref=e2583]
+                      - text: SEC
+                    - generic [ref=e2588]:
+                      - img [ref=e2589]
+                      - text: Permit
+                - cell "—" [ref=e2594]
+                - cell "1" [ref=e2595]
+                - cell "₱144,473" [ref=e2596]
+                - cell "—" [ref=e2597]
+                - cell "—" [ref=e2598]
+                - cell "1" [ref=e2599]:
+                  - generic [ref=e2600]: "1"
+                - cell "2025-12-03" [ref=e2601]
+                - cell "—" [ref=e2602]
+                - cell "1" [ref=e2603]
+                - cell [ref=e2604]:
+                  - button [ref=e2605]:
+                    - img
+          - generic [ref=e2606]:
+            - paragraph [ref=e2607]: Showing 1–50 of 104 suppliers
+            - generic [ref=e2608]:
+              - button "Previous" [disabled]:
+                - img
+                - text: Previous
+              - generic [ref=e2609]: Page 1 of 3
+              - button "Next" [ref=e2610]:
+                - text: Next
+                - img
+  - region "Notifications alt+T"
+  - alert [ref=e2611]
+```

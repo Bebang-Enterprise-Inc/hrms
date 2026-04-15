@@ -35,12 +35,13 @@ from typing import Any, Dict
 try:
     import urllib.request as urlreq
     import urllib.error as urlerr
+    import urllib.parse as urlparse
 except Exception:  # pragma: no cover
     _err("urllib not available", 3)
 
 
 SUPPLIER_DOCTYPE = "BEI Supplier"
-ITEM_DOCTYPE = "BEI Item"  # confirmed by procurement.py Item lookups
+ITEM_DOCTYPE = "Item"  # procurement.py references frappe.db.exists("Item", ...) — stock Frappe doctype, not BEI Item
 MATCH_EXC_DOCTYPE = "BEI Match Exception"
 
 
@@ -70,7 +71,18 @@ def _auth_header(env: Dict[str, str]) -> Dict[str, str]:
 def _request(method: str, path: str, body: Any = None) -> Dict[str, Any]:
     env = _frappe_env()
     data = None
-    headers = {"Accept": "application/json", **_auth_header(env)}
+    # Cloudflare in front of *.bebang.ph blocks the default Python-urllib UA
+    # (Error 1010). Spoof a real browser. Curl + node use their own UAs which
+    # also work — but Python's default does not.
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/132.0.0.0 Safari/537.36"
+        ),
+        **_auth_header(env),
+    }
     if body is not None:
         data = json.dumps(body).encode("utf-8")
         headers["Content-Type"] = "application/json"
@@ -94,20 +106,25 @@ def _request(method: str, path: str, body: Any = None) -> Dict[str, Any]:
     return {}
 
 
+def _enc(s: str) -> str:
+    """URL-encode a path segment (DocType names contain spaces)."""
+    return urlparse.quote(s, safe="")
+
+
 def _get_doc(doctype: str, name: str) -> Dict[str, Any]:
-    return _request("GET", f"/api/resource/{doctype}/{name}").get("data", {})
+    return _request("GET", f"/api/resource/{_enc(doctype)}/{_enc(name)}").get("data", {})
 
 
 def _create_doc(doctype: str, fields: Dict[str, Any]) -> Dict[str, Any]:
-    return _request("POST", f"/api/resource/{doctype}", fields).get("data", {})
+    return _request("POST", f"/api/resource/{_enc(doctype)}", fields).get("data", {})
 
 
 def _update_doc(doctype: str, name: str, fields: Dict[str, Any]) -> Dict[str, Any]:
-    return _request("PUT", f"/api/resource/{doctype}/{name}", fields).get("data", {})
+    return _request("PUT", f"/api/resource/{_enc(doctype)}/{_enc(name)}", fields).get("data", {})
 
 
 def _delete_doc(doctype: str, name: str) -> None:
-    _request("DELETE", f"/api/resource/{doctype}/{name}")
+    _request("DELETE", f"/api/resource/{_enc(doctype)}/{_enc(name)}")
 
 
 def cmd_create_supplier(args: argparse.Namespace) -> None:
@@ -160,6 +177,8 @@ def cmd_create_item(args: argparse.Namespace) -> None:
     fields = {
         "item_code": args.code,
         "item_name": args.name,
+        "stock_uom": "Nos",  # Frappe-default UoM; required field on Item
+        "is_stock_item": 0,  # tests don't need stock-tracked items
     }
     if args.group:
         fields["item_group"] = args.group
@@ -238,7 +257,7 @@ def main(argv: list[str]) -> int:
     s = sub.add_parser("create-bei-item")
     s.add_argument("--code", required=True)
     s.add_argument("--name", required=True)
-    s.add_argument("--group", default="Test")
+    s.add_argument("--group", default="TEST-Raw Materials")
     s.set_defaults(func=cmd_create_item)
 
     s = sub.add_parser("delete-bei-item")
