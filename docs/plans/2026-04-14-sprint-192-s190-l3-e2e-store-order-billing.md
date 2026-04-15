@@ -2,17 +2,17 @@
 
 ```yaml
 sprint: S192
-status: COMPLETED
+status: FAIL_RETRY_REQUIRED
 planned_date: 2026-04-14
 plan_file: docs/plans/2026-04-14-sprint-192-s190-l3-e2e-store-order-billing.md
 depends_on:
   - S190 Phase 5 deployed (PR #566) — Company-first resolution, CSV retired
-completed_date: 2026-04-15
-execution_summary: "S1 proven end-to-end in prior session (BEI-ORD-2026-00247 → ACC-SINV-2026-00001, 12% VAT, 8% markup, Customer party). S2 (SM Megamall S188 child), S4 (Ayala Evo multi-store same-entity), F1 (empty-order gate) PASSED this session in the browser. S3 (The Grid - Rockwell) order + company stamp PASSED; full SI chain deferred pending Vercel deploy of bei-tasks PR (testid + SWR polling). One new blocking defect surfaced and fixed inline: BUG-S192-F04 — _normalize_store_name_for_route didn't handle S188 child warehouse pattern, shipped as hrms#583 (merged) + hot-patched. Two new deferred defects: D09 (SWR cache), D10 (route-map hyphen mismatch for The Grid - Rockwell)."
-branch: fix/s192-s188-route-normalizer
-frontend_pr: https://github.com/Bebang-Enterprise-Inc/BEI-Tasks/pull/new/fix/s192-l3-library-pagination
-backend_pr: https://github.com/Bebang-Enterprise-Inc/hrms/pull/583
-canonical_unit_total: 25
+completed_date: ""
+execution_summary: "HARD FAIL. Sam's pass/fail rule: partial = fail; corner cutting = fail; every corner cut restarts the WHOLE test from scratch browser-only. 2026-04-15 run did not run all 7 scenarios browser-only: S1 was not re-executed (prior session used Python via SSM for approval/dispatch/GR/SI = HB-4 violation); S2/S4 only asserted RR-1 order+company stamp, never ran assertCompanyChainCorrect (approve → dispatch → GR → SI); S3 failed at approval; F2 / F3 not executed. Only F1 (empty-order UI gate) is a genuine pass. VERDICT: 1 PASS / 6 FAIL. Sprint status rolled back to FAIL_RETRY_REQUIRED. Value retained: hrms#583 (F04 normalizer) is merged and useful; bei-tasks 2109e36 (testids + react-aware Page Object) is on main and useful — both enable the retry run to actually pass. Retry must cover all 7 scenarios end-to-end in a real browser with assertCompanyChainCorrect on S1/S2/S3 producing real Sales Invoices."
+branch: fix/s192-closeout (this PR now records the FAIL verdict)
+frontend_pr: bei-tasks commit 2109e36 on main (testids + page object) — unblocks retry
+backend_pr: https://github.com/Bebang-Enterprise-Inc/hrms/pull/583 (F04 fix, merged)
+canonical_unit_total: 40
 ```
 
 ---
