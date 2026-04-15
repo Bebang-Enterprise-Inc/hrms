@@ -179,6 +179,7 @@ def cmd_create_item(args: argparse.Namespace) -> None:
         "item_name": args.name,
         "stock_uom": "Nos",  # Frappe-default UoM; required field on Item
         "is_stock_item": 0,  # tests don't need stock-tracked items
+        "standard_rate": 50000,  # PR form gates submit on non-zero rate
     }
     if args.group:
         fields["item_group"] = args.group
