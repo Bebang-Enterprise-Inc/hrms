@@ -568,6 +568,22 @@ All SSM mutations (Task 3.1 warehouse create, Task 3.3 Customer rename) logged i
 - **HB-3:** No write to production orders that won't be cleaned up. If a test order reaches submitted state and can't be cancelled, log as [BUG] and escalate.
 - **HB-4 (BROWSER ONLY):** No workflow operation may be executed via `page.request.*`, `fetch()`, `curl`, or direct API call. Every workflow step must be driven through UI controls (form fields + buttons) in a real browser. Evidence: HAR files must show API calls triggered by `click()` events from the test, not by the test script directly.
 - **HB-5:** Network evidence required: per-scenario HAR file, grep the test source for `page\.request` — must return 0 hits.
+- **HB-6 (Defect Response Protocol — FIX-NOW vs DEFER):** For every defect the L3 run surfaces, classify it **before** pausing the run:
+  - **BLOCKS-TEST** — the defect prevents the current or downstream scenarios from completing.
+    1. Fix the defect in code.
+    2. Commit with a descriptive message referencing the scenario that surfaced it.
+    3. Open the PR and merge (admin merge OK — use `# 2289454` password gate).
+    4. Hot-patch the live container so the run can continue **this session** (do not wait for the next scheduled deploy).
+    5. Restart the affected container(s), log the deploy.
+    6. Resume the L3 run from the failing scenario.
+    7. Append one entry to `output/l3/s192/blocking_defects.json` — fields: `{id, surface, scenario, commit, pr, hotpatch_time, resume_time}`.
+  - **DOES-NOT-BLOCK-TEST** — the defect is noise, cosmetic, out of scope, or only affects later scenarios that can be reordered around it.
+    1. **Do NOT** commit a code fix mid-run.
+    2. Append an entry to `output/l3/s192/deferred_defects.json` — fields: `{id, surface, description, severity, suggested_fix, repro, seen_at}`.
+    3. Continue running scenarios.
+    4. After Phase 4 closeout, **batch-fix** all deferred defects in a single follow-up branch (`fix/s192-deferred-defects`) with one commit per defect and a single PR.
+  - **When unsure which class a defect belongs to:** default to FIX-NOW. The cost of a mid-run fix is bounded; the cost of cascading failures from a mis-classified defer is not.
+  - **Discipline anti-pattern (banned):** do **not** pause execution mid-run to ask the user which bucket a defect belongs to. The agent is authorized to make the call via the rule above.
 
 ---
 
@@ -576,6 +592,9 @@ All SSM mutations (Task 3.1 warehouse create, Task 3.3 Customer rename) logged i
 ```yaml
 completion_condition:
   - All 7 L3 scenarios executed with assertion-level pass/fail
+  - Every BLOCKS-TEST defect fixed + committed + PR merged + hot-patched mid-run
+  - Every DOES-NOT-BLOCK-TEST defect captured in deferred_defects.json
+    and batch-fixed in a follow-up PR after Phase 4
   - Evidence files written to output/l3/s192/
   - Cleanup ledger shows all mutations reversed
   - SUMMARY.md written with overall pass/fail
@@ -585,6 +604,11 @@ stop_only_for:
   - Missing credentials for test accounts (no tool can resolve)
   - Cleanup fails and test data can't be reversed (ask human)
   - HARD BLOCKER violated
+  - Fix-forward is architecturally unsafe (e.g., schema migration during live run) — document + escalate
+
+never_stop_for:
+  - A test-blocking defect — fix-commit-PR-hotpatch-resume per HB-6
+  - A non-blocking defect — log to deferred_defects.json and continue
 
 signoff_authority: single-owner (Sam Karazi)
 
@@ -594,6 +618,8 @@ canonical_closeout_artifacts:
   - output/l3/s192/api_mutations.json
   - output/l3/s192/state_verification.json
   - output/l3/s192/cleanup_report.json
+  - output/l3/s192/blocking_defects.json
+  - output/l3/s192/deferred_defects.json
   - docs/plans/2026-04-14-sprint-192-s190-l3-e2e-store-order-billing.md (status → COMPLETED)
 ```
 
@@ -605,11 +631,62 @@ During execution, every test failure is classified before any fix is attempted (
 
 | Mode | Symptom | Response |
 |------|---------|----------|
-| **A — App bug** | Repeated same-state failure; manual UI verification confirms app is broken | File as `[BUG]` in the defect register. **Do NOT** modify test or library. Continue remaining scenarios. |
+| **A — App bug, BLOCKS-TEST** | Repeated same-state failure; manual UI verification confirms app is broken; the current scenario or any downstream scenario cannot proceed until fixed | **FIX-NOW** path in HB-6: fix code → commit → PR → admin-merge → hot-patch live container → restart → resume run. Append to `blocking_defects.json`. Never skip scenarios or stub the assertion. |
+| **A′ — App bug, DOES-NOT-BLOCK-TEST** | App-side defect but scenarios can run around it (cosmetic, late-stage, or already-covered elsewhere) | Append to `deferred_defects.json` with repro + suggested fix. **Do NOT** commit mid-run. Continue. Batch-fix in `fix/s192-deferred-defects` after Phase 4. |
 | **B — Test bug** | App works when verified by hand; test assumption or selector is wrong | Fix the test. If the same error pattern would bite other tests, promote the fix into the Page Object / fixture / assertion in this same PR. |
 | **C — Brittleness / flakiness** | Fails intermittently; "timing issue"; needs retries | Fix the **library**, not the spec. Strengthen the Page Object: add `waitForResponse` / `waitForLoadState`, replace CSS selectors with `data-testid`, remove races. No `page.waitForTimeout(N)`, no `test.retry(3)` masking, no silent quarantine. |
 
 **Closeout artifact:** if ≥3 library fixes are made during this run, emit `output/l3/s192/LIBRARY_IMPROVEMENTS.md` as a changelog of what the library learned. This is tribal knowledge made explicit and reviewed by the next L3 run.
+
+### Defect response workflow (step-by-step)
+
+```
+On test failure
+      ↓
+┌──────────────────────────────────────────────┐
+│ 1. Capture: DOM dump, screenshot, API trace,  │
+│    backend error log (Error Log doctype)      │
+└──────────────────────────────────────────────┘
+      ↓
+┌──────────────────────────────────────────────┐
+│ 2. Classify: Mode A / A′ / B / C?              │
+│   - Does it block the current scenario?        │
+│   - Does it block ANY downstream scenario?     │
+│   - If yes to either → FIX-NOW (Mode A)        │
+│   - If no to both   → DEFER (Mode A′)          │
+└──────────────────────────────────────────────┘
+      ↓
+  FIX-NOW branch
+      ↓
+┌──────────────────────────────────────────────┐
+│ 3. Fix-commit-PR-hotpatch-resume               │
+│    a. Write the minimal code change           │
+│    b. git commit (no mid-run rebases)          │
+│    c. git push + gh pr create                  │
+│    d. gh pr merge --admin (password gate)      │
+│    e. Hot-patch via SSM + base64 + docker cp   │
+│    f. docker restart frappe_backend (all)      │
+│    g. Append to blocking_defects.json          │
+│    h. Resume L3 at the failing scenario        │
+└──────────────────────────────────────────────┘
+      ↓
+  DEFER branch
+      ↓
+┌──────────────────────────────────────────────┐
+│ 3'. Defer + continue                           │
+│    a. Append to deferred_defects.json          │
+│    b. Continue the L3 run                      │
+│    c. After Phase 4:                           │
+│       git checkout -b fix/s192-deferred-       │
+│         defects origin/production              │
+│       one commit per deferred defect            │
+│       single PR, single review, single merge   │
+└──────────────────────────────────────────────┘
+```
+
+**Why this asymmetry:**
+- FIX-NOW defects block test signal. Every minute they live, the run produces false failures. Cost of fixing: bounded (one code edit + one deploy). Cost of deferring: unbounded (cascading failures, corrupted cleanup ledger, re-runs).
+- DEFER defects are noise. Fixing them mid-run adds deploys, context switches, and rebase surface. Cost of deferring: tiny (one JSON entry). Cost of fixing mid-run: wasted minutes.
 
 ---
 

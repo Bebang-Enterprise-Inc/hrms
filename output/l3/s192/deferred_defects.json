@@ -1,0 +1,84 @@
+[
+  {
+    "id": "BUG-S192-D01",
+    "surface": "BEI Settings",
+    "description": "allowed_target_companies in BEI Settings did not list TUNGSTEN CAPITAL HOLDINGS OPC (or any company beyond BEI/BKI). Warehouse Receiving into non-BEI/BKI stores was rejected.",
+    "severity": "high",
+    "blocks_tests": true,
+    "reclassified": "Initially deferred but proved BLOCKING once S2 (SM Megamall JV child) was reached. Fixed mid-run by expanding the allowlist via SSM (not a code fix; a settings change). Logged here for traceability — follow-up needed to make the allowlist derive from Warehouse→Company automatically.",
+    "suggested_fix": "Have _get_allowed_target_companies() read from Warehouse.company DISTINCT instead of a stale comma list in BEI Settings, so the allowlist auto-expands as new companies spin up.",
+    "repro": "create_warehouse_receiving with a target_warehouse whose company is outside the BEI/BKI pair → ValidationError.",
+    "seen_at": "2026-04-14T11:55:00Z"
+  },
+  {
+    "id": "BUG-S192-D02",
+    "surface": "Frappe Company master (Bebang Kitchen Inc.)",
+    "description": "BKI Company had no default_receivable_account, round_off_account, or round_off_cost_center configured. Any Sales Invoice against BKI fails validation.",
+    "severity": "high",
+    "blocks_tests": true,
+    "reclassified": "Fixed mid-run (settings change, not code). Logged here because it should never have been missing at Frappe-company setup time — follow-up to audit all Company masters for these defaults.",
+    "suggested_fix": "Add Company-master audit script that verifies default_receivable_account, default_payable_account, round_off_account, round_off_cost_center, cost_center are non-null for every active Company. Run in CI.",
+    "repro": "Create a new Sales Invoice on BKI without setting Company.round_off_* → AttributeError: 'NoneType' object has no attribute 'lower'.",
+    "seen_at": "2026-04-14T12:17:00Z"
+  },
+  {
+    "id": "BUG-S192-D03",
+    "surface": "Cost Center master (Stores - BKI)",
+    "description": "Stores - BKI is a group cost center but was being attached to SI rows. Group CCs cannot be used in transactions, so GL entry validation fails.",
+    "severity": "medium",
+    "blocks_tests": false,
+    "suggested_fix": "_resolve_store_cost_center() in commissary.py should reject is_group=1 cost centers and fall back to a leaf CC; and Finance should retire the group CC from anywhere it's referenced as a transaction default.",
+    "repro": "Any SI row with cost_center pointing to a group CC → 'group cost centers cannot be used in transactions'.",
+    "seen_at": "2026-04-15T04:15:00Z"
+  },
+  {
+    "id": "BUG-S192-D04",
+    "surface": "hrms/api/store.py get_orderable_items",
+    "description": "BEI Weather Alert and Weather Alert doctype queries throw 'Error in query' traceback to stderr on every get_orderable_items call. Non-blocking (warnings only) but noisy — pollutes SSM output and Sentry.",
+    "severity": "low",
+    "blocks_tests": false,
+    "suggested_fix": "Wrap the weather-alert lookups in frappe.db.has_column / frappe.db.exists('DocType', ...) guards.",
+    "repro": "stderr on any get_orderable_items call.",
+    "seen_at": "2026-04-14T11:40:00Z"
+  },
+  {
+    "id": "BUG-S192-D05",
+    "surface": "bei-tasks/app/dashboard/store-ops/ordering/_components/StoreOrderingPage.tsx",
+    "description": "The store-select header is a <select>, not a clearly blocking modal, but on some initial loads it renders before default-store binding settles and the ordering page appears 'grayed out'. Misled the test for multiple iterations.",
+    "severity": "low",
+    "blocks_tests": false,
+    "suggested_fix": "Add a visible loading skeleton + auto-focus on the default store once useUserStore resolves, so both humans and automation can tell 'not yet loaded' from 'needs a click'.",
+    "repro": "Open /dashboard/store-ops/ordering as a new Playwright context; first 300-600ms shows grayed-out page with small modal-looking header.",
+    "seen_at": "2026-04-14T10:50:00Z"
+  },
+  {
+    "id": "BUG-S192-D06",
+    "surface": "hrms/api/warehouse.py approve_material_request",
+    "description": "Error message 'Missing required parameters: mr_name, approved_items' is raised even when mr_name is provided, because approved_items is required and the error listed both. Caller confusion.",
+    "severity": "low",
+    "blocks_tests": false,
+    "suggested_fix": "Differentiate errors: 'mr_name is required' vs 'approved_items is required'. Separate throws.",
+    "repro": "approve_material_request(mr_name='X') without approved_items.",
+    "seen_at": "2026-04-14T13:30:00Z"
+  },
+  {
+    "id": "BUG-S192-D07",
+    "surface": "hrms User creation (on_update -> send_welcome_mail_to_user)",
+    "description": "Creating test users via Frappe User.insert() attempts to email a welcome letter, which fails because of a bundled-asset path issue (AttributeError: 'NoneType' object has no attribute 'get' inside bundled_asset). Must set flags.mute_emails + send_welcome_email=0 every time.",
+    "severity": "low",
+    "blocks_tests": false,
+    "suggested_fix": "Frappe upstream issue, but we can monkey-patch bundled_asset to fall back gracefully; or set a site-level 'disable welcome email' toggle.",
+    "repro": "Create a User without mute_emails flag on this site → AttributeError on email body building.",
+    "seen_at": "2026-04-14T09:55:00Z"
+  },
+  {
+    "id": "BUG-S192-D08",
+    "surface": "hrms/api/commissary.py fulfill_store_order",
+    "description": "The 'retired direct fulfillment' error message doesn't clearly document the new flow. Developers hitting this waste time before finding approve_material_request → create_stock_transfer → create_warehouse_receiving → complete_warehouse_receiving is the correct chain.",
+    "severity": "low",
+    "blocks_tests": false,
+    "suggested_fix": "Error message should name the four functions in order and link to the runbook.",
+    "repro": "Call fulfill_store_order → ValidationError('Commissary direct store fulfillment is retired. Use the warehouse-centered flow: ...').",
+    "seen_at": "2026-04-14T12:40:00Z"
+  }
+]
