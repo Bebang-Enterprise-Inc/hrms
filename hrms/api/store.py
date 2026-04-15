@@ -6860,25 +6860,24 @@ def get_weekly_schedule(
 	if warehouse_filter:
 		entries = [e for e in entries if warehouse_filter.lower() in (e.get("store") or "").lower()]
 
-	# Build store metadata for ALL orderable stores (not just those with entries).
-	# This ensures the grid always shows all 47 stores for SCM to set schedules.
+	# S196: Build store metadata for ALL orderable stores via the single canonical
+	# helper that reads from the Company DocType SSOT (entity_category in Store/Commissary
+	# AND operational_status in allowed-statuses). Replaces the pre-S188 hardcoded
+	# `company in [BEI, BKI]` filter which excluded post-S190 franchise-owned warehouses
+	# and caused the grid to show only 7 of 47 stores.
+	from hrms.api.company_master import get_orderable_store_warehouses
+
 	store_meta = {}
-	_wh_fields = ["name", "parent_warehouse", "warehouse_type", "custom_territory_cluster"]
-	all_warehouses = frappe.get_all(
-		"Warehouse",
-		filters={
-			"is_group": 0,
-			"disabled": 0,
-			"company": ["in", ["Bebang Enterprise Inc.", "Bebang Kitchen Inc."]],
-		},
-		fields=_wh_fields,
-		limit_page_length=200,
-	)
-	for wh in all_warehouses:
-		# Skip non-orderable warehouses (3PLs, commissaries, meta warehouses)
-		if not _is_orderable_store(wh):
+	orderable_rows = get_orderable_store_warehouses(include_commissary=True)
+	for row in orderable_rows:
+		wh_name = row["warehouse"]
+		wh_meta = row["warehouse_meta"]
+		# Defensive: re-check orderable (helper already filters but cheap to verify)
+		if not _is_orderable_store(wh_meta):
 			continue
-		normalized = (wh.name or "").upper().replace(" - BEBANG ENTERPRISE INC.", "").replace(" - BEI", "").replace(" - BKI", "").strip()
+		# Determine warehouse_group from _CENTRAL_WAREHOUSE_ROUTE_MAP (preserves
+		# original grouping: 3MD North / Pinnacle South / Jentec / Other)
+		normalized = _normalize_store_name_for_route(wh_name)
 		source_wh = _CENTRAL_WAREHOUSE_ROUTE_MAP.get(normalized, "")
 		group = "Other"
 		if "3MD" in source_wh:
@@ -6888,10 +6887,13 @@ def get_weekly_schedule(
 		elif "Jentec" in source_wh:
 			group = "Jentec"
 
-		store_meta[wh.name] = {
+		# Fetch custom_territory_cluster separately (helper's warehouse_meta doesn't include it)
+		cluster = frappe.db.get_value("Warehouse", wh_name, "custom_territory_cluster") or ""
+
+		store_meta[wh_name] = {
 			"warehouse_group": group,
-			"parent_warehouse": wh.parent_warehouse,
-			"cluster": getattr(wh, "custom_territory_cluster", "") or "",
+			"parent_warehouse": wh_meta.get("parent_warehouse"),
+			"cluster": cluster,
 		}
 
 	# Apply warehouse filter to store_meta too

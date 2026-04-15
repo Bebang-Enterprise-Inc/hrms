@@ -1,0 +1,11 @@
+Sending 8 commands to i-026b7477d27bd46d6 (DRY-RUN)...
+Command ID: d10f3a14-8141-4ac7-904f-ad05fa80de59
+Polling for completion...
+  [   0s] status=Success
+Traceback (most recent call last):
+  File "F:\Dropbox\Projects\BEI-ERP\scripts\s196_ssm_dispatch.py", line 93, in <module>
+    print(f"\n=== STDOUT ===\n{inv.get('StandardOutputContent', '')}")
+  File "C:\Users\Sam\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 329: character maps to <undefined>

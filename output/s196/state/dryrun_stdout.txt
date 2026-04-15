@@ -1,0 +1,138 @@
+Backend container: fb10eb92c36f
+========================================================================
+S196 PHASE 2 DATA MIGRATION — DRY-RUN
+========================================================================
+
+Captured abbr for 12 Companies pre-rename
+
+=== STEP A: Rename 12 Companies (corp-first → store-first) ===
+  [DRY    ] A: rename_company (dry) 'Bebang Enterprise Inc. - Robinsons Antipolo -> Robinsons Antipolo - Bebang Enterprise Inc.' 
+  [DRY    ] A: rename_company (dry) 'Bebang Enterprise Inc. - SM Manila -> SM Manila - Bebang Enterprise Inc.' 
+  [DRY    ] A: rename_company (dry) 'Bebang Enterprise Inc. - SM Megamall -> SM Megamall - Bebang Enterprise Inc.' 
+  [DRY    ] A: rename_company (dry) 'Bebang Enterprise Inc. - SM Southmall -> SM Southmall - Bebang Enterprise Inc.' 
+  [DRY    ] A: rename_company (dry) 'Bebang Mega Inc. - Ayala Evo City -> Ayala Evo City - Bebang Mega Inc.' 
+  [DRY    ] A: rename_company (dry) 'Bebang Mega Inc. - Ayala Vermosa -> Ayala Vermosa - Bebang Mega Inc.' 
+  [DRY    ] A: rename_company (dry) 'Bebang Mega Inc. - Robinsons Gen Trias -> Robinsons Gen Trias - Bebang Mega Inc.' 
+  [DRY    ] A: rename_company (dry) 'Bebang Mega Inc. - Robinsons Imus -> Robinsons Imus - Bebang Mega Inc.' 
+  [DRY    ] A: rename_company (dry) 'Bebang Mega Inc. - SM Tanza -> SM Tanza - Bebang Mega Inc.' 
+  [DRY    ] A: rename_company (dry) 'Bebang SM Marikina Inc. - Sta Lucia -> Sta Lucia - Bebang SM Marikina Inc.' 
+  [DRY    ] A: rename_company (dry) 'TAJ Food Corp. - DVerde Calamba -> DVerde Calamba - TAJ Food Corp.' 
+  [DRY    ] A: rename_company (dry) 'Tungsten Capital - Gateway Mall -> Gateway Mall - Tungsten Capital' 
+
+=== STEP B+B+: Rename 5 warehouses ===
+  [DRY    ] B: rename_warehouse (dry) 'BB ESTANCIA FOOD CORP. - Ortigas Estancia - BBEFC -> Ortigas Estancia - BB ESTANCIA FOOD CORP.' 
+  [DRY    ] B: rename_warehouse (dry) 'BEBANG PASEO INC. - Paseo Center - BPI -> Paseo Center - BEBANG PASEO INC.' 
+  [DRY    ] B: rename_warehouse (dry) 'Vista Mall Taguig - BEI -> Vista Mall Taguig - Tricern Food Corp.' 
+  [DRY    ] B: rename_warehouse (dry) 'SM Taytay - BEI -> SM Taytay - Day Ones Food and Drink Establishments Corp.' 
+  [DRY    ] B: rename_warehouse (dry) 'SM Clark - BEI -> SM Clark - Red Taldawa Foods OPC' 
+
+=== STEP C: Create 3 new Companies (first_provision_done=1 suppresses hook) ===
+  [DRY    ] C: create_company (dry) 'Robinsons Galleria South - Tungsten Capital' — parent=TUNGSTEN CAPITAL HOLDINGS OPC abbr=TCH-RGS
+  [DRY    ] C: create_company (dry) 'SM Caloocan - TAJ Food Corp.' — parent=TAJ FOOD CORP. abbr=TFC-SMC
+  [DRY    ] C: create_company (dry) 'SM Sangandaan - Tungsten Capital' — parent=TUNGSTEN CAPITAL HOLDINGS OPC abbr=TCH-SMS
+
+=== STEP D: Re-point 4 warehouses + SLE/GL back-fill ===
+  [FAIL   ] D: repoint_warehouse 'Araneta Gateway - BEI' — new_co Gateway Mall - Tungsten Capital missing
+  [FAIL   ] D: repoint_warehouse 'Robisons Galleria South - BEI' — new_co Robinsons Galleria South - Tungsten Capital missing
+  [FAIL   ] D: repoint_warehouse 'SM Caloocan - BEI' — new_co SM Caloocan - TAJ Food Corp. missing
+  [FAIL   ] D: repoint_warehouse "D'verde Laguna - BEI" — new_co DVerde Calamba - TAJ Food Corp. missing
+
+=== STEP E: Re-point SM Sangandaan warehouse before BSS deletion ===
+  [DRY    ] E: repoint_sangandaan (dry) 'SM Sangandaan - BEI' — BEBANG SM SANGANDAAN -> SM Sangandaan - Tungsten Capital
+
+=== STEP F+ (W-3): Pre-delete link audit for 3 Companies ===
+  [BLOCKED] F+: link_audit 'BEBANG ROBINSONS GALLERIA SOUTH' — linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+  [BLOCKED] F+: link_audit 'BEBANG SM CALOOCAN' — linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+  [BLOCKED] F+: link_audit 'BEBANG SM SANGANDAAN' — linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+
+=== STEP F: Delete 3 misnamed legacy Companies ===
+  [BLOCKED] F: delete_company 'BEBANG ROBINSONS GALLERIA SOUTH' — has linked docs: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+  [BLOCKED] F: delete_company 'BEBANG SM CALOOCAN' — has linked docs: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+  [BLOCKED] F: delete_company 'BEBANG SM SANGANDAAN' — has linked docs: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}
+
+=== STEP G: Delete 3 cryptic duplicate warehouses ===
+  [DRY    ] G: delete_warehouse (dry) 'TRICERN FOOD CORP. - BV' — SLE=0 Bin=0 safe
+  [DRY    ] G: delete_warehouse (dry) 'DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP. - BST' — SLE=0 Bin=0 safe
+  [DRY    ] G: delete_warehouse (dry) 'RED TALDAWA FOODS OPC - BSC2' — SLE=0 Bin=0 safe
+
+=== STEP H: JL TRADE OPC deletion SKIPPED (Phase 1 finding) ===
+  [SKIP   ] H: delete_jl_trade_opc 'JL TRADE OPC' — has BIR TIN 775-842-763-00003 for SM SJDM — needs Sam decision
+
+=== STEP I: Abbr invariance check (12 Companies) ===
+
+=== STEP J: Final verification — count orderable warehouses ===
+  Orderable Companies (allowlist filter): 50
+  Orderable warehouses: 50
+  Companies with 1 wh: 44
+  Companies with >1 wh: 3
+  Companies with 0 wh: 3
+  Multi-wh cases:
+    TRICERN FOOD CORP.: 2
+    DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP.: 2
+    RED TALDAWA FOODS OPC: 2
+  Zero-wh Companies (silently omitted from grid): ['BEBANG ROBINSONS GALLERIA SOUTH', 'BEBANG SM CALOOCAN', 'JL TRADE OPC']
+
+========================================================================
+{
+  "dry_run": true,
+  "total_actions": 35,
+  "by_status": {
+    "DRY": 24,
+    "FAIL": 4,
+    "BLOCKED": 6,
+    "SKIP": 1
+  },
+  "by_step": {
+    "A": 12,
+    "B": 5,
+    "C": 3,
+    "D": 4,
+    "E": 1,
+    "F+": 3,
+    "F": 3,
+    "G": 3,
+    "H": 1
+  }
+}
+
+Action log written to /tmp/s196_phase_2_rename_matrix_executed.csv
+
+========================================================================
+S196 PHASE 2 DONE (DRY-RUN)
+========================================================================
+step,action,target,status,note
+A,rename_company (dry),Bebang Enterprise Inc. - Robinsons Antipolo -> Robinsons Antipolo - Bebang Enterprise Inc.,DRY,
+A,rename_company (dry),Bebang Enterprise Inc. - SM Manila -> SM Manila - Bebang Enterprise Inc.,DRY,
+A,rename_company (dry),Bebang Enterprise Inc. - SM Megamall -> SM Megamall - Bebang Enterprise Inc.,DRY,
+A,rename_company (dry),Bebang Enterprise Inc. - SM Southmall -> SM Southmall - Bebang Enterprise Inc.,DRY,
+A,rename_company (dry),Bebang Mega Inc. - Ayala Evo City -> Ayala Evo City - Bebang Mega Inc.,DRY,
+A,rename_company (dry),Bebang Mega Inc. - Ayala Vermosa -> Ayala Vermosa - Bebang Mega Inc.,DRY,
+A,rename_company (dry),Bebang Mega Inc. - Robinsons Gen Trias -> Robinsons Gen Trias - Bebang Mega Inc.,DRY,
+A,rename_company (dry),Bebang Mega Inc. - Robinsons Imus -> Robinsons Imus - Bebang Mega Inc.,DRY,
+A,rename_company (dry),Bebang Mega Inc. - SM Tanza -> SM Tanza - Bebang Mega Inc.,DRY,
+A,rename_company (dry),Bebang SM Marikina Inc. - Sta Lucia -> Sta Lucia - Bebang SM Marikina Inc.,DRY,
+A,rename_company (dry),TAJ Food Corp. - DVerde Calamba -> DVerde Calamba - TAJ Food Corp.,DRY,
+A,rename_company (dry),Tungsten Capital - Gateway Mall -> Gateway Mall - Tungsten Capital,DRY,
+B,rename_warehouse (dry),BB ESTANCIA FOOD CORP. - Ortigas Estancia - BBEFC -> Ortigas Estancia - BB ESTANCIA FOOD CORP.,DRY,
+B,rename_warehouse (dry),BEBANG PASEO INC. - Paseo Center - BPI -> Paseo Center - BEBANG PASEO INC.,DRY,
+B,rename_warehouse (dry),Vista Mall Taguig - BEI -> Vista Mall Taguig - Tricern Food Corp.,DRY,
+B,rename_warehouse (dry),SM Taytay - BEI -> SM Taytay - Day Ones Food and Drink Establishments Corp.,DRY,
+B,rename_warehouse (dry),SM Clark - BEI -> SM Clark - Red Taldawa Foods OPC,DRY,
+C,create_company (dry),Robinsons Galleria South - Tungsten Capital,DRY,parent=TUNGSTEN CAPITAL HOLDINGS OPC abbr=TCH-RGS
+C,create_company (dry),SM Caloocan - TAJ Food Corp.,DRY,parent=TAJ FOOD CORP. abbr=TFC-SMC
+C,create_company (dry),SM Sangandaan - Tungsten Capital,DRY,parent=TUNGSTEN CAPITAL HOLDINGS OPC abbr=TCH-SMS
+D,repoint_warehouse,Araneta Gateway - BEI,FAIL,new_co Gateway Mall - Tungsten Capital missing
+D,repoint_warehouse,Robisons Galleria South - BEI,FAIL,new_co Robinsons Galleria South - Tungsten Capital missing
+D,repoint_warehouse,SM Caloocan - BEI,FAIL,new_co SM Caloocan - TAJ Food Corp. missing
+D,repoint_warehouse,D'verde Laguna - BEI,FAIL,new_co DVerde Calamba - TAJ Food Corp. missing
+E,repoint_sangandaan (dry),SM Sangandaan - BEI,DRY,BEBANG SM SANGANDAAN -> SM Sangandaan - Tungsten Capital
+F+,link_audit,BEBANG ROBINSONS GALLERIA SOUTH,BLOCKED,"linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}"
+F+,link_audit,BEBANG SM CALOOCAN,BLOCKED,"linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}"
+F+,link_audit,BEBANG SM SANGANDAAN,BLOCKED,"linked: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}"
+F,delete_company,BEBANG ROBINSONS GALLERIA SOUTH,BLOCKED,"has linked docs: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}"
+F,delete_company,BEBANG SM CALOOCAN,BLOCKED,"has linked docs: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}"
+F,delete_company,BEBANG SM SANGANDAAN,BLOCKED,"has linked docs: {'tabCost Center': 2, 'tabAccount': 109, 'tabCustomer': 1}"
+G,delete_warehouse (dry),TRICERN FOOD CORP. - BV,DRY,SLE=0 Bin=0 safe
+G,delete_warehouse (dry),DAY ONES FOOD AND DRINK ESTABLISHMENTS CORP. - BST,DRY,SLE=0 Bin=0 safe
+G,delete_warehouse (dry),RED TALDAWA FOODS OPC - BSC2,DRY,SLE=0 Bin=0 safe
+H,delete_jl_trade_opc,JL TRADE OPC,SKIP,has BIR TIN 775-842-763-00003 for SM SJDM — needs Sam decision
