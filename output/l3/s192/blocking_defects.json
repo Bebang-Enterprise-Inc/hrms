@@ -1,0 +1,43 @@
+[
+  {
+    "id": "BUG-S192-F01",
+    "surface": "hrms/api/store.py + 3 other files",
+    "scenario": "S1 approval leg (test.area → test.scm dual approval → MR creation)",
+    "description": "frappe.db.rollback_to_savepoint(name) does not exist on Frappe 15.103 MariaDBDatabase; raises AttributeError in all 7 savepoint-wrapped mutations, masking the real error.",
+    "fix": "Replace with frappe.db.rollback(save_point=<name>) at all 7 callsites.",
+    "commit": "1b8a6943e",
+    "pr": "hrms#577",
+    "pr_merged_at": "2026-04-14T11:51:56Z",
+    "hotpatch_method": "boto3 + base64 + docker cp + sed in /home/frappe/frappe-bench/apps/hrms + docker restart",
+    "hotpatch_time": "2026-04-14T11:55:00Z",
+    "resume_time": "2026-04-14T11:56:00Z",
+    "surfaced_by_scenario": "S1"
+  },
+  {
+    "id": "BUG-S192-F02",
+    "surface": "hrms/api/commissary.py build_bki_store_sale_invoice",
+    "scenario": "S1 fulfillment (MR → SE → Draft SI build)",
+    "description": "Three compounding issues: (1) stock_entry param rejected when passed as a docname string; (2) header.to_warehouse is empty on intercompany Material Issue SEs so target_warehouse resolved to None and SI was silently skipped; (3) mandatory custom fields bei_legal_entity + bei_store_label were never set on the draft SI, failing mandatory validation on insert.",
+    "fix": "Accept docname or doc; fall back to custom_destination_warehouse then item.t_warehouse; populate bei_legal_entity (= issuing company, BKI) and bei_store_label (= target warehouse).",
+    "commit": "91dfacb7b",
+    "pr": "hrms#578",
+    "pr_merged_at": "2026-04-14T12:19:04Z",
+    "hotpatch_method": "boto3 + base64 + docker cp Python replace on both backend replicas + docker restart",
+    "hotpatch_time": "2026-04-14T12:20:30Z",
+    "resume_time": "2026-04-14T12:21:00Z",
+    "surfaced_by_scenario": "S1"
+  },
+  {
+    "id": "BUG-S192-F03",
+    "surface": "hrms/api/commissary.py build_bki_store_sale_invoice",
+    "scenario": "S1 SI submit (BEI P10 D04 issuance guard)",
+    "description": "bei_legal_entity was initially written as buyer_entity_name (customer side). Server script bei_p10_d04_si_issuance_guard requires legal_entity == company, blocking submit. Correct semantics: legal_entity is the SI-issuing company (BKI); buyer side is encoded in Customer.",
+    "fix": "Set si.bei_legal_entity = bki_company (the seller).",
+    "commit": "5242dfaf0",
+    "pr": "hrms/s194-docs-and-script (rolled forward)",
+    "hotpatch_method": "boto3 + base64 + sed on all 3 backend replicas + docker restart",
+    "hotpatch_time": "2026-04-15T04:10:00Z",
+    "resume_time": "2026-04-15T04:11:00Z",
+    "surfaced_by_scenario": "S1"
+  }
+]
