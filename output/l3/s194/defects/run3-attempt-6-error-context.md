@@ -1,0 +1,605 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e7]:
+      - generic [ref=e9]:
+        - generic [ref=e11]: BT
+        - generic [ref=e12]:
+          - generic [ref=e13]: BEI Tasks
+          - generic [ref=e14]: Task Management
+      - generic [ref=e15]:
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - link "Home" [ref=e19] [cursor=pointer]:
+              - /url: /dashboard
+            - button "Collapse section" [expanded] [ref=e20]:
+              - img [ref=e21]
+          - list [ref=e25]:
+            - listitem [ref=e26]:
+              - link "Dashboard" [ref=e27] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e28]
+                - generic [ref=e33]: Dashboard
+            - listitem [ref=e34]:
+              - link "My Profile" [ref=e35] [cursor=pointer]:
+                - /url: /dashboard/my-profile
+                - img [ref=e36]
+                - generic [ref=e40]: My Profile
+            - listitem [ref=e41]:
+              - link "Clearance" [ref=e42] [cursor=pointer]:
+                - /url: /clearance
+                - img [ref=e43]
+                - generic [ref=e46]: Clearance
+            - listitem [ref=e47]:
+              - link "Exit Interview" [ref=e48] [cursor=pointer]:
+                - /url: /clearance/exit-interview
+                - img [ref=e49]
+                - generic [ref=e52]: Exit Interview
+        - generic [ref=e55]:
+          - link "Supervisor Tools" [ref=e56] [cursor=pointer]:
+            - /url: /dashboard/supervisor
+          - button "Expand section" [ref=e57]:
+            - img [ref=e58]
+        - generic [ref=e62]:
+          - link "Analytics" [ref=e63] [cursor=pointer]:
+            - /url: /dashboard/analytics
+          - button "Expand section" [ref=e64]:
+            - img [ref=e65]
+        - generic [ref=e69]:
+          - link "HR Self-Service" [ref=e70] [cursor=pointer]:
+            - /url: /dashboard/hr
+          - button "Expand section" [ref=e71]:
+            - img [ref=e72]
+        - generic [ref=e76]:
+          - link "Leave Command Center" [ref=e77] [cursor=pointer]:
+            - /url: /dashboard/hr-admin/leaves
+          - button "Expand section" [ref=e78]:
+            - img [ref=e79]
+        - generic [ref=e83]:
+          - link "HR Management" [ref=e84] [cursor=pointer]:
+            - /url: /dashboard/hr
+          - button "Expand section" [ref=e85]:
+            - img [ref=e86]
+        - generic [ref=e90]:
+          - link "Biometric Monitoring" [ref=e91] [cursor=pointer]:
+            - /url: /dashboard/biometric
+          - button "Expand section" [ref=e92]:
+            - img [ref=e93]
+        - generic [ref=e97]:
+          - link "My Expenses" [ref=e98] [cursor=pointer]:
+            - /url: /dashboard/expense
+          - button "Expand section" [ref=e99]:
+            - img [ref=e100]
+        - generic [ref=e104]:
+          - link "Store Operations" [ref=e105] [cursor=pointer]:
+            - /url: /dashboard/store-ops
+          - button "Expand section" [ref=e106]:
+            - img [ref=e107]
+        - generic [ref=e111]:
+          - link "Store Inventory" [ref=e112] [cursor=pointer]:
+            - /url: /dashboard/inventory
+          - button "Expand section" [ref=e113]:
+            - img [ref=e114]
+        - generic [ref=e118]:
+          - link "Stock Counting" [ref=e119] [cursor=pointer]:
+            - /url: /inventory/stock-counts
+          - button "Expand section" [ref=e120]:
+            - img [ref=e121]
+        - generic [ref=e125]:
+          - link "Business Development" [ref=e126] [cursor=pointer]:
+            - /url: /dashboard/bd/companies
+          - button "Expand section" [ref=e127]:
+            - img [ref=e128]
+        - generic [ref=e131]:
+          - generic [ref=e132]:
+            - link "Finance & Accounting" [ref=e133] [cursor=pointer]:
+              - /url: /dashboard/accounting
+            - button "Collapse section" [expanded] [ref=e134]:
+              - img [ref=e135]
+          - list [ref=e139]:
+            - listitem [ref=e140]:
+              - link "AP Command Center" [ref=e141] [cursor=pointer]:
+                - /url: /dashboard/accounting/ap-command-center
+                - img [ref=e142]
+                - generic [ref=e144]: AP Command Center
+            - listitem [ref=e145]:
+              - link "Finance Operations" [ref=e146] [cursor=pointer]:
+                - /url: /dashboard/accounting
+                - img [ref=e147]
+                - generic [ref=e149]: Finance Operations
+            - listitem [ref=e150]:
+              - link "Critical Items Control Tower" [ref=e151] [cursor=pointer]:
+                - /url: /dashboard/accounting/critical-items-control-tower
+                - img [ref=e152]
+                - generic [ref=e154]: Critical Items Control Tower
+            - listitem [ref=e155]:
+              - link "Critical Stockout Incidents" [ref=e156] [cursor=pointer]:
+                - /url: /dashboard/accounting/critical-stockout-incidents
+                - img [ref=e157]
+                - generic [ref=e159]: Critical Stockout Incidents
+            - listitem [ref=e160]:
+              - link "SOA" [ref=e161] [cursor=pointer]:
+                - /url: /dashboard/accounting/soa
+                - img [ref=e162]
+                - generic [ref=e165]: SOA
+            - listitem [ref=e166]:
+              - link "Payables Review" [ref=e167] [cursor=pointer]:
+                - /url: /dashboard/accounting/expenses
+                - img [ref=e168]
+                - generic [ref=e172]: Payables Review
+            - listitem [ref=e173]:
+              - link "Review Queue" [ref=e174] [cursor=pointer]:
+                - /url: /dashboard/accounting/expenses/review
+                - img [ref=e175]
+                - generic [ref=e178]: Review Queue
+            - listitem [ref=e179]:
+              - link "Batch Approval" [ref=e180] [cursor=pointer]:
+                - /url: /dashboard/accounting/expenses/batch
+                - img [ref=e181]
+                - generic [ref=e184]: Batch Approval
+            - listitem [ref=e185]:
+              - link "Discount Monitoring" [ref=e186] [cursor=pointer]:
+                - /url: /dashboard/accounting/discount-abuse
+                - img [ref=e187]
+                - generic [ref=e189]: Discount Monitoring
+            - listitem [ref=e190]:
+              - link "Payment Requests" [ref=e191] [cursor=pointer]:
+                - /url: /dashboard/procurement/payments
+                - img [ref=e192]
+                - generic [ref=e194]: Payment Requests
+            - listitem [ref=e195]:
+              - link "Invoices" [ref=e196] [cursor=pointer]:
+                - /url: /dashboard/procurement/invoices
+                - img [ref=e197]
+                - generic [ref=e201]: Invoices
+            - listitem [ref=e202]:
+              - link "Exception Approvals" [ref=e203] [cursor=pointer]:
+                - /url: /dashboard/accounting/exceptions
+                - img [ref=e204]
+                - generic [ref=e207]: Exception Approvals
+            - listitem [ref=e208]:
+              - link "Awaiting OR" [ref=e209] [cursor=pointer]:
+                - /url: /dashboard/accounting/awaiting-or
+                - img [ref=e210]
+                - generic [ref=e213]: Awaiting OR
+            - listitem [ref=e214]:
+              - link "Outstanding Advances" [ref=e215] [cursor=pointer]:
+                - /url: /dashboard/accounting/outstanding-advances
+                - img [ref=e216]
+                - generic [ref=e218]: Outstanding Advances
+            - listitem [ref=e219]:
+              - link "Critical Items Control Tower" [ref=e220] [cursor=pointer]:
+                - /url: /dashboard/accounting/critical-items-control-tower
+                - img [ref=e221]
+                - generic [ref=e224]: Critical Items Control Tower
+            - listitem [ref=e225]:
+              - link "Critical Stockout Incidents" [ref=e226] [cursor=pointer]:
+                - /url: /dashboard/accounting/critical-stockout-incidents
+                - img [ref=e227]
+                - generic [ref=e229]: Critical Stockout Incidents
+            - listitem [ref=e230]:
+              - link "Pending Payments" [ref=e231] [cursor=pointer]:
+                - /url: /dashboard/accounting/pending-payments
+                - img [ref=e232]
+                - generic [ref=e234]: Pending Payments
+            - listitem [ref=e235]:
+              - link "AP Reports" [ref=e236] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports
+                - img [ref=e237]
+                - generic [ref=e239]: AP Reports
+            - listitem [ref=e240]:
+              - link "Finance Reports" [ref=e241] [cursor=pointer]:
+                - /url: /dashboard/accounting/reports
+                - img [ref=e242]
+                - generic [ref=e244]: Finance Reports
+            - listitem [ref=e245]:
+              - link "Monthly Close Report" [ref=e246] [cursor=pointer]:
+                - /url: /dashboard/accounting/reports/monthly
+                - img [ref=e247]
+                - generic [ref=e249]: Monthly Close Report
+            - listitem [ref=e250]:
+              - link "Form 2307" [ref=e251] [cursor=pointer]:
+                - /url: /dashboard/accounting/form-2307
+                - img [ref=e252]
+                - generic [ref=e256]: Form 2307
+            - listitem [ref=e257]:
+              - link "Billing" [ref=e258] [cursor=pointer]:
+                - /url: /dashboard/billing
+                - img [ref=e259]
+                - generic [ref=e262]: Billing
+            - listitem [ref=e263]:
+              - link "Delivery Rates" [ref=e264] [cursor=pointer]:
+                - /url: /dashboard/billing/rates
+                - img [ref=e265]
+                - generic [ref=e268]: Delivery Rates
+            - listitem [ref=e269]:
+              - link "Billing Approval" [ref=e270] [cursor=pointer]:
+                - /url: /dashboard/billing/approval
+                - img [ref=e271]
+                - generic [ref=e274]: Billing Approval
+            - listitem [ref=e275]:
+              - link "My Billings" [ref=e276] [cursor=pointer]:
+                - /url: /dashboard/billing/my-billings
+                - img [ref=e277]
+                - generic [ref=e279]: My Billings
+            - listitem [ref=e280]:
+              - link "Petty Cash Fund" [ref=e281] [cursor=pointer]:
+                - /url: /dashboard/accounting/pcf
+                - img [ref=e282]
+                - generic [ref=e285]: Petty Cash Fund
+            - listitem [ref=e286]:
+              - link "Add PCF Entry" [ref=e287] [cursor=pointer]:
+                - /url: /dashboard/accounting/pcf/add
+                - img [ref=e288]
+                - generic [ref=e292]: Add PCF Entry
+            - listitem [ref=e293]:
+              - link "Pending PCF" [ref=e294] [cursor=pointer]:
+                - /url: /dashboard/accounting/pcf/pending
+                - img [ref=e295]
+                - generic [ref=e298]: Pending PCF
+            - listitem [ref=e299]:
+              - link "PCF Review Queue" [ref=e300] [cursor=pointer]:
+                - /url: /dashboard/accounting/pcf/review
+                - img [ref=e301]
+                - generic [ref=e304]: PCF Review Queue
+            - listitem [ref=e305]:
+              - link "PCF Fund Configuration" [ref=e306] [cursor=pointer]:
+                - /url: /dashboard/accounting/pcf/admin
+                - img [ref=e307]
+                - generic [ref=e310]: PCF Fund Configuration
+            - listitem [ref=e311]:
+              - link "PCF History" [ref=e312] [cursor=pointer]:
+                - /url: /dashboard/accounting/pcf/history
+                - img [ref=e313]
+                - generic [ref=e317]: PCF History
+        - generic [ref=e320]:
+          - link "Campaign Giveaways" [ref=e321] [cursor=pointer]:
+            - /url: /dashboard/campaign-giveaways
+          - button "Expand section" [ref=e322]:
+            - img [ref=e323]
+        - generic [ref=e326]:
+          - generic [ref=e327]:
+            - link "Procurement" [ref=e328] [cursor=pointer]:
+              - /url: /dashboard/procurement
+            - button "Collapse section" [expanded] [ref=e329]:
+              - img [ref=e330]
+          - list [ref=e334]:
+            - listitem [ref=e335]:
+              - link "Dashboard" [ref=e336] [cursor=pointer]:
+                - /url: /dashboard/procurement
+                - img [ref=e337]
+                - generic [ref=e342]: Dashboard
+            - listitem [ref=e343]:
+              - link "Critical Items Control Tower" [ref=e344] [cursor=pointer]:
+                - /url: /dashboard/procurement/critical-items-control-tower
+                - img [ref=e345]
+                - generic [ref=e347]: Critical Items Control Tower
+            - listitem [ref=e348]:
+              - link "Critical Stockout Incidents" [ref=e349] [cursor=pointer]:
+                - /url: /dashboard/procurement/critical-stockout-incidents
+                - img [ref=e350]
+                - generic [ref=e352]: Critical Stockout Incidents
+            - listitem [ref=e353]:
+              - link "Purchase Requisitions" [ref=e354] [cursor=pointer]:
+                - /url: /dashboard/procurement/purchase-requisitions
+                - img [ref=e355]
+                - generic [ref=e358]: Purchase Requisitions
+            - listitem [ref=e359]:
+              - link "Purchase Orders" [ref=e360] [cursor=pointer]:
+                - /url: /dashboard/procurement/purchase-orders
+                - img [ref=e361]
+                - generic [ref=e365]: Purchase Orders
+            - listitem [ref=e366]:
+              - link "Suppliers" [ref=e367] [cursor=pointer]:
+                - /url: /dashboard/procurement/suppliers
+                - img [ref=e368]
+                - generic [ref=e372]: Suppliers
+            - listitem [ref=e373]:
+              - link "Goods Receipts" [ref=e374] [cursor=pointer]:
+                - /url: /dashboard/procurement/goods-receipts
+                - img [ref=e375]
+                - generic [ref=e379]: Goods Receipts
+            - listitem [ref=e380]:
+              - link "Invoices" [ref=e381] [cursor=pointer]:
+                - /url: /dashboard/procurement/invoices
+                - img [ref=e382]
+                - generic [ref=e386]: Invoices
+            - listitem [ref=e387]:
+              - link "Payment Requests" [ref=e388] [cursor=pointer]:
+                - /url: /dashboard/procurement/payments
+                - img [ref=e389]
+                - generic [ref=e391]: Payment Requests
+            - listitem [ref=e392]:
+              - link "Approvals" [ref=e393] [cursor=pointer]:
+                - /url: /dashboard/procurement/approvals
+                - img [ref=e394]
+                - generic [ref=e397]: Approvals
+            - listitem [ref=e398]:
+              - link "SOA" [ref=e399] [cursor=pointer]:
+                - /url: /dashboard/accounting/soa
+                - img [ref=e400]
+                - generic [ref=e403]: SOA
+            - listitem [ref=e404]:
+              - link "OR Follow-Up" [ref=e405] [cursor=pointer]:
+                - /url: /dashboard/procurement/or-follow-up
+                - img [ref=e406]
+                - generic [ref=e409]: OR Follow-Up
+            - listitem [ref=e410]:
+              - link "Reports" [ref=e411] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports
+                - img [ref=e412]
+                - generic [ref=e414]: Reports
+            - listitem [ref=e415]:
+              - link "Monthly Spend" [ref=e416] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/monthly-spend
+                - img [ref=e417]
+                - generic [ref=e419]: Monthly Spend
+            - listitem [ref=e420]:
+              - link "Supplier Performance" [ref=e421] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/supplier-performance
+                - img [ref=e422]
+                - generic [ref=e425]: Supplier Performance
+            - listitem [ref=e426]:
+              - link "Single-Source Suppliers" [ref=e427] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/single-source-suppliers
+                - img [ref=e428]
+                - generic [ref=e430]: Single-Source Suppliers
+            - listitem [ref=e431]:
+              - link "Three-Way Match" [ref=e432] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/three-way-match
+                - img [ref=e433]
+                - generic [ref=e436]: Three-Way Match
+            - listitem [ref=e437]:
+              - link "Single Source Suppliers" [ref=e438] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/single-source-suppliers
+                - img [ref=e439]
+                - generic [ref=e441]: Single Source Suppliers
+            - listitem [ref=e442]:
+              - link "Payment Disbursement" [ref=e443] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/payment-disbursement
+                - img [ref=e444]
+                - generic [ref=e446]: Payment Disbursement
+            - listitem [ref=e447]:
+              - link "Goods Receipt Log" [ref=e448] [cursor=pointer]:
+                - /url: /dashboard/procurement/reports/goods-receipt-log
+                - img [ref=e449]
+                - generic [ref=e452]: Goods Receipt Log
+            - listitem [ref=e453]:
+              - link "PO Aging" [ref=e454] [cursor=pointer]:
+                - /url: /dashboard/procurement/audit/aging
+                - img [ref=e455]
+                - generic [ref=e458]: PO Aging
+            - listitem [ref=e459]:
+              - link "Price History" [ref=e460] [cursor=pointer]:
+                - /url: /dashboard/procurement/audit/price-history
+                - img [ref=e461]
+                - generic [ref=e463]: Price History
+            - listitem [ref=e464]:
+              - link "Settings" [ref=e465] [cursor=pointer]:
+                - /url: /dashboard/procurement/settings
+                - img [ref=e466]
+                - generic [ref=e469]: Settings
+            - listitem [ref=e470]:
+              - link "Critical Items Control Tower" [ref=e471] [cursor=pointer]:
+                - /url: /dashboard/procurement/critical-items-control-tower
+                - img [ref=e472]
+                - generic [ref=e475]: Critical Items Control Tower
+            - listitem [ref=e476]:
+              - link "Critical Stockout Incidents" [ref=e477] [cursor=pointer]:
+                - /url: /dashboard/procurement/critical-stockout-incidents
+                - img [ref=e478]
+                - generic [ref=e480]: Critical Stockout Incidents
+            - listitem [ref=e481]:
+              - link "Petty Cash Fund" [ref=e482] [cursor=pointer]:
+                - /url: /dashboard/procurement/pcf
+                - img [ref=e483]
+                - generic [ref=e486]: Petty Cash Fund
+            - listitem [ref=e487]:
+              - link "Add PCF Entry" [ref=e488] [cursor=pointer]:
+                - /url: /dashboard/procurement/pcf/add
+                - img [ref=e489]
+                - generic [ref=e493]: Add PCF Entry
+            - listitem [ref=e494]:
+              - link "Pending PCF" [ref=e495] [cursor=pointer]:
+                - /url: /dashboard/procurement/pcf/pending
+                - img [ref=e496]
+                - generic [ref=e499]: Pending PCF
+            - listitem [ref=e500]:
+              - link "PCF History" [ref=e501] [cursor=pointer]:
+                - /url: /dashboard/procurement/pcf/history
+                - img [ref=e502]
+                - generic [ref=e506]: PCF History
+        - generic [ref=e509]:
+          - link "SCM" [ref=e510] [cursor=pointer]:
+            - /url: /dashboard/scm/critical-items-control-tower
+          - button "Expand section" [ref=e511]:
+            - img [ref=e512]
+        - generic [ref=e516]:
+          - link "Warehouse" [ref=e517] [cursor=pointer]:
+            - /url: /dashboard/warehouse
+          - button "Expand section" [ref=e518]:
+            - img [ref=e519]
+        - generic [ref=e523]:
+          - link "Commissary" [ref=e524] [cursor=pointer]:
+            - /url: /dashboard/commissary
+          - button "Expand section" [ref=e525]:
+            - img [ref=e526]
+        - generic [ref=e530]:
+          - link "Projects & Maintenance" [ref=e531] [cursor=pointer]:
+            - /url: /dashboard/rm-admin
+          - button "Expand section" [ref=e532]:
+            - img [ref=e533]
+        - generic [ref=e537]:
+          - link "Communication" [ref=e538] [cursor=pointer]:
+            - /url: /dashboard/communication
+          - button "Expand section" [ref=e539]:
+            - img [ref=e540]
+        - generic [ref=e544]:
+          - generic [ref=e545]: E-Signature
+          - button "Expand section" [ref=e546]:
+            - img [ref=e547]
+        - generic [ref=e551]:
+          - link "Tasks & Reports" [ref=e552] [cursor=pointer]:
+            - /url: /dashboard/tasks
+          - button "Expand section" [ref=e553]:
+            - img [ref=e554]
+        - generic [ref=e558]:
+          - link "Platform & Admin" [ref=e559] [cursor=pointer]:
+            - /url: /dashboard/settings/google-chat
+          - button "Expand section" [ref=e560]:
+            - img [ref=e561]
+      - list [ref=e564]:
+        - listitem [ref=e565]:
+          - button "SA sam@bebang.ph sam@bebang.ph" [ref=e566]:
+            - generic [ref=e568]: SA
+            - generic [ref=e569]:
+              - generic [ref=e570]: sam@bebang.ph
+              - generic [ref=e571]: sam@bebang.ph
+            - img [ref=e572]
+      - button "Toggle Sidebar" [ref=e575]
+    - main [ref=e576]:
+      - generic [ref=e577]:
+        - button "Toggle Sidebar" [ref=e578]:
+          - img
+          - generic [ref=e579]: Toggle Sidebar
+        - navigation "breadcrumb" [ref=e580]:
+          - list [ref=e581]:
+            - listitem [ref=e582]:
+              - link "Dashboard" [ref=e583] [cursor=pointer]:
+                - /url: /dashboard
+            - listitem [ref=e584]:
+              - img [ref=e585]
+            - listitem [ref=e587]:
+              - link "Procurement" [ref=e588] [cursor=pointer]:
+                - /url: /dashboard/procurement
+            - listitem [ref=e589]:
+              - img [ref=e590]
+            - listitem [ref=e592]:
+              - link "Payments" [ref=e593] [cursor=pointer]:
+                - /url: /dashboard/procurement/payments
+            - listitem [ref=e594]:
+              - img [ref=e595]
+            - listitem [ref=e597]:
+              - link "New" [disabled] [ref=e598]
+        - generic [ref=e599]:
+          - generic [ref=e600]:
+            - button "Switch to light theme" [ref=e601]:
+              - img
+            - button "Switch to dark theme" [ref=e602]:
+              - img
+            - button "Switch to Christmas theme" [ref=e603]:
+              - img
+          - button "Search" [ref=e604]:
+            - img
+            - generic [ref=e605]: Search
+            - generic [ref=e606]: Ctrl K
+      - generic [ref=e607]:
+        - heading "Search" [level=2] [ref=e608]
+        - paragraph [ref=e609]: Search tasks, projects, and actions
+      - main [ref=e610]:
+        - generic [ref=e611]:
+          - generic [ref=e612]:
+            - link [ref=e613] [cursor=pointer]:
+              - /url: /dashboard/procurement/payments
+              - button [ref=e614]:
+                - img
+            - generic [ref=e615]:
+              - heading "New Payment Request" [level=1] [ref=e616]
+              - paragraph [ref=e617]: Create a request for payment with 4-level approval
+          - generic [ref=e619]:
+            - generic [ref=e620]:
+              - generic [ref=e621]:
+                - generic [ref=e622]:
+                  - generic [ref=e623]:
+                    - img [ref=e624]
+                    - text: Select Invoice
+                  - generic [ref=e627]: Link this payment request to an invoice
+                - textbox "Search invoice by number or supplier..." [ref=e629]
+              - generic [ref=e631]:
+                - generic [ref=e633]:
+                  - img [ref=e634]
+                  - text: Payment Details
+                - generic [ref=e637]:
+                  - generic [ref=e638]:
+                    - generic [ref=e639]: Payment Amount *
+                    - spinbutton "Payment Amount *" [ref=e640]: "0"
+                  - generic [ref=e641]:
+                    - generic [ref=e642]: Payment Method *
+                    - combobox "Payment Method *" [ref=e643]:
+                      - generic:
+                        - generic:
+                          - img
+                          - text: Bank Transfer
+                      - img
+                    - combobox [ref=e644]
+                  - generic [ref=e645]:
+                    - generic [ref=e646]: Target Payment Date
+                    - textbox "Target Payment Date" [ref=e647]
+              - generic [ref=e648]:
+                - generic [ref=e649]:
+                  - generic [ref=e650]:
+                    - img [ref=e651]
+                    - text: RFP Details
+                  - generic [ref=e654]: Request for Payment classification and details
+                - generic [ref=e655]:
+                  - generic [ref=e656]:
+                    - generic [ref=e657]:
+                      - generic [ref=e658]: RFP Type
+                      - combobox "RFP Type" [ref=e659]:
+                        - generic: Select RFP type
+                        - img
+                      - combobox [ref=e660]
+                      - paragraph [ref=e661]: Determines GL account assignment and validation rules
+                    - generic [ref=e662]:
+                      - generic [ref=e663]: Payee TIN
+                      - textbox "Payee TIN" [ref=e664]:
+                        - /placeholder: Tax Identification Number
+                  - generic [ref=e665]:
+                    - generic [ref=e666]: RFP Purpose
+                    - textbox "RFP Purpose" [ref=e667]:
+                      - /placeholder: Detailed purpose and justification for this payment request...
+                  - generic [ref=e668]:
+                    - generic [ref=e669]: Payee Address
+                    - textbox "Payee Address" [ref=e670]:
+                      - /placeholder: Full address of the payee...
+            - generic [ref=e671]:
+              - generic [ref=e672]:
+                - generic [ref=e674]: Payment Summary
+                - generic [ref=e675]:
+                  - generic [ref=e677]:
+                    - generic [ref=e678]: Payment
+                    - generic [ref=e679]: ₱0.00
+                  - generic [ref=e680]:
+                    - img [ref=e681]
+                    - generic [ref=e683]: via Bank Transfer
+                  - generic [ref=e684]:
+                    - paragraph [ref=e685]: No remaining balance
+                    - paragraph [ref=e686]: This invoice is already fully covered. Reconcile the existing payment records before creating another RFP.
+                  - generic [ref=e687]:
+                    - button "Create Payment Request" [disabled]
+                    - link "Cancel" [ref=e688] [cursor=pointer]:
+                      - /url: /dashboard/procurement/payments
+                      - button "Cancel" [ref=e689]
+              - generic [ref=e690]:
+                - generic [ref=e691]:
+                  - generic [ref=e692]: Approval Workflow
+                  - generic [ref=e693]: This request will follow 4-level approval
+                - generic [ref=e695]:
+                  - generic [ref=e696]:
+                    - img [ref=e698]
+                    - generic [ref=e701]: 1. Reviewer
+                  - generic [ref=e702]:
+                    - img [ref=e704]
+                    - generic [ref=e707]: 2. Budget
+                  - generic [ref=e708]:
+                    - img [ref=e710]
+                    - generic [ref=e712]: 3. CFO
+                  - generic [ref=e713]:
+                    - img [ref=e715]
+                    - generic [ref=e717]: 4. CEO
+                    - generic [ref=e718]: ">1M only"
+  - region "Notifications alt+T"
+  - alert [ref=e719]
+```

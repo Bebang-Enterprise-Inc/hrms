@@ -1,0 +1,7 @@
+{
+  "sprint": "S194",
+  "run_mode": "executed",
+  "run_timestamp": "2026-04-15T08:50:00+08:00",
+  "notes": "frappeReadback.readDoc was never reached in any scenario — every test failed before the post-UI assertion phase. The procurementAssertions module is wired correctly (compiles, imports cleanly) but had no opportunity to verify backend state because no UI mutation succeeded.",
+  "verifications": []
+}

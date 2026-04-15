@@ -1,0 +1,10 @@
+{
+  "sprint": "S194",
+  "run_mode": "executed",
+  "run_timestamp": "2026-04-15T08:50:00+08:00",
+  "notes": "Per-scenario the framework created 1 BEI Supplier + 0..3 Items via Frappe REST (lfg.bebang.ph) before the test body executed. None of those mutations was a procurement-chain mutation (PR/PO/GR/Invoice/RFP) — the test bodies failed before any procurement endpoint was hit. Cleanup post-run: 0 TEST-S194-* records remain on production.",
+  "fixture_mutations_per_scenario": "1 supplier + 0-3 items via /api/resource/{BEI Supplier|Item}",
+  "procurement_chain_mutations_captured": [],
+  "cleanup_verified": true,
+  "cleanup_query_post_run": "GET /api/resource/BEI%20Supplier?filters=[['name','like','TEST-S194-%']] -> 0 rows; GET /api/resource/Item?filters=[['name','like','TEST-S194-%']] -> 0 rows"
+}
