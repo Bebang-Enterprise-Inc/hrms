@@ -52,6 +52,54 @@ class EmployeeMaster(Employee):
 			self.employee = saved_employee
 
 
+def derive_company_from_branch(doc, method=None):
+	"""S201: auto-populate Employee.company based on branch + rule hierarchy.
+
+	Rule:
+	  - is_non_store_billing(doc) -> BEI parent (BEBANG ENTERPRISE INC.)
+	  - department == Commissary AND branch is bare commissary -> BKI
+	  - else branch resolves via company_lookup -> store child Company
+	  - unresolvable -> leave existing value untouched (no throw)
+
+	HR Manager override: if the current user has HR Manager role AND the
+	form explicitly set company != derived value, keep the user's value.
+	Flag: ``flags.company_manual_override`` set on doc.
+	"""
+	from hrms.utils.company_lookup import (
+		UnknownBranch,
+		get_non_store_parent,
+		resolve_branch_to_company,
+	)
+	from hrms.utils.non_store_billing import is_non_store_billing_doc
+
+	if not doc.branch:
+		return
+
+	try:
+		is_hr_manager = "HR Manager" in frappe.get_roles(frappe.session.user)
+	except Exception:
+		is_hr_manager = False
+	manual_override = bool(getattr(doc, "flags", {}).get("company_manual_override"))
+
+	if is_non_store_billing_doc(doc):
+		target = get_non_store_parent()
+	else:
+		try:
+			target = resolve_branch_to_company(doc.branch, department=doc.department)
+		except UnknownBranch:
+			# Unresolvable branch — do not change company. Let HR fix the branch.
+			return
+
+	if doc.company == target:
+		return
+
+	if is_hr_manager and manual_override:
+		# HR Manager intentionally set a different company; honor it.
+		return
+
+	doc.company = target
+
+
 def validate_onboarding_process(doc, method=None):
 	"""Validates Employee Creation for linked Employee Onboarding"""
 	if not doc.job_applicant:

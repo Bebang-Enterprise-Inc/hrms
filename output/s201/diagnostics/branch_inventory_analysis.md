@@ -7,20 +7,29 @@
 ## 60 distinct branch values
 
 ### A. Head Office / non-store (route → `BEBANG ENTERPRISE INC.`)
+Per Sam 2026-04-17: **3 HOs in BGC** (confirmed below):
 | Branch | Count | Notes |
 |---|---|---|
-| `BRITTANY OFFICE` | 70 | HQ — confirmed roving home |
-| `CAPITAL HOUSE` | 12 | Likely HO exec/finance — verify live |
-| `MYTOWN` | 3 | Brittany MyTown annex — HO |
+| `BRITTANY OFFICE` | 70 | = **Brittany Hotel - BGC** (HO) |
+| `CAPITAL HOUSE` | 12 | = **Capital House - BGC** (HO) |
+| `MYTOWN` | 3 | = **My Town - BGC** (HO) |
 
-### B. Commissary (route → `BEBANG KITCHEN INC.`)
-| Branch | Count | Notes |
-|---|---|---|
-| `SHAW COMMISSARY - Production` | 23 | BKI |
-| `COMMISSARY SHAW` | 10 | BKI — rename to canonical "SHAW COMMISSARY" |
-| `SHAW COMMISSARY - Logistics` | 9 | BKI |
-| `SHAW COMMISSARY` | 6 | BKI |
-| `SHAW COMMISSARY - RD QC` | 1 | BKI — R&D cell |
+### B. Commissary (route → `BEBANG KITCHEN INC.` except SCM which stays on BEI)
+Per Sam 2026-04-17: **SCM team at commissary = BEI parent**, NOT BKI.
+Branch suffix drives routing:
+| Branch | Count | Routes to | Reason |
+|---|---|---|---|
+| `SHAW COMMISSARY - Production` | 23 | **BKI** | Actual kitchen/production crew |
+| `COMMISSARY SHAW` | 10 | **BKI** (if dept=Commissary) / BEI otherwise | Needs dept check — rename to canonical |
+| `SHAW COMMISSARY - Logistics` | 9 | **BEI parent** | SCM team — per Sam |
+| `SHAW COMMISSARY` | 6 | **BKI** (if dept=Commissary) / BEI otherwise | Needs dept check |
+| `SHAW COMMISSARY - RD QC` | 1 | **BEI parent** | R&D dept → BEI via dept rule |
+
+Canonical post-rename suffixes:
+- `SHAW COMMISSARY` (bare) → dept-driven
+- `SHAW COMMISSARY - PRODUCTION` → BKI
+- `SHAW COMMISSARY - LOGISTICS` → BEI (SCM)
+- `SHAW COMMISSARY - RD QC` → BEI (R&D)
 
 ### C. Stores that match S037 store_name directly [19 branches]
 | Branch | S037 store_name |
@@ -58,7 +67,7 @@
 | `FESTIVAL MALL` | Festival Mall Alabang | `FESTIVAL MALL ALABANG` | HIGH |
 | `ROBINSONS IMUS` | Robinsons Place Imus | `ROBINSONS IMUS` (keep) | HIGH |
 | `SM SJDM` | SM San Jose Del Monte (not in S037?) | `SM SJDM` (verify) | MED |
-| `UPTOWN BGC` | Uptown BGC (not in S037?) | `UPTOWN BGC` (verify) | MED |
+| `UPTOWN BGC` | Uptown BGC (BGC store 1 of 3 per Sam) | `UPTOWN BGC` (keep) | HIGH |
 | `AYALA SOLENAD` | Ayala Solenad 2 | `AYALA SOLENAD` (keep — drop "2") | HIGH |
 | `AYALA UPTC` | Ayala UP Town Center | `AYALA UP TOWN CENTER` | HIGH |
 | `ROBINSONS ANTIPOLO` | Robinsons Place Antipolo | `ROBINSONS ANTIPOLO` (keep) | HIGH |
@@ -95,7 +104,12 @@
 
 **Per sprint plan:** `branch_rename_map.csv` handles the rename migration; `branch_company_map.csv` is the post-rename canonical store list.
 
-## Open verifications (for Phase 0 live diagnostic)
-1. SM MOA, SM SJDM, UPTOWN BGC, SM PULILAN, CTTM TOMAS MORATO, PITX, ALABANG TOWN CENTER, GRAND CENTRAL, MEGAWORLD PASEO CENTER — confirm each has a Frappe Company (entity_category=Store).
-2. CAPITAL HOUSE, MYTOWN — confirm these are HO annexes (not stores).
-3. 10 blank-branch employees — re-fetch from live Frappe and re-classify.
+## Sam clarifications 2026-04-17 (locked)
+- **BGC = 3 HOs + 3 stores**: Brittany Hotel/Capital House/MyTown are HOs. Stores are UPTOWN BGC + VENICE GRAND CANAL + AYALA MARKET MARKET (best inference — confirm).
+- **SCM team at commissary → BEI parent** (not BKI). Branch `SHAW COMMISSARY - Logistics` routes to BEI.
+- **`BGC` (1 employee)** → flag for manual review. Too ambiguous without the employee's name/dept/designation.
+
+## Still pending for Phase 0 live diagnostic
+1. `SM MOA`, `SM SJDM`, `SM PULILAN`, `CTTM TOMAS MORATO`, `PITX`, `ALABANG TOWN CENTER`, `GRAND CENTRAL`, `MEGAWORLD PASEO CENTER` — confirm each has a Frappe Company (`entity_category='Store'`).
+2. Bare `SHAW COMMISSARY` + `COMMISSARY SHAW` — require per-employee department check (Commissary → BKI, else BEI).
+3. ~10 employees with blank branch — re-fetch from live Frappe and reclassify.
